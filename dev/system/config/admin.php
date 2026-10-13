@@ -66,34 +66,16 @@ $_['action_event']       = [
 
 // Webhook Events
 $_['webhook_event'] = array (
-    'order/create' => [
-        0 => 'event/order/create'
-    ],
-    'order/update' => [
-        0 => 'event/order/update'
-    ],
-    'order/cancel' => [
-        0 => 'event/order/cancel'
-    ],
-    'order/refund' => [
-        0 => 'event/order/refund'
-    ],
-    'order/ship' => [
-        0 => 'event/order/ship'
-    ],
-    'order/return' => [
-        0 => 'event/order/return'
-    ],
-    'order/capture' => [
-        0 => 'event/order/capture'
-    ],
-    'order/void' => [
-        0 => 'event/order/void'
-    ],
-    'order/confirm' => [
-        0 => 'event/order/confirm'
-    ],
-    'order/confirm' => [
-        0 => 'event/order/confirm'
-    ],
+    'model/catalog/product/addProduct/after' => array(
+        'catalog/product/add'
+    ),
+    'model/catalog/product/editProduct/after' => array(
+        'catalog/product/edit'
+    ),
+    'model/catalog/product/deleteProduct/after' => array(
+        'catalog/product/delete'
+    ),
+    'model/catalog/product/copyProduct/after' => array(
+        'catalog/product/copy'
+    ),
 );
