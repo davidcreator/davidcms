@@ -1,0 +1,40 @@
+{
+    "name": "reamurcms/reamurcms",
+    "description": "ReamurCMS is a PHP-based open source content management system.",
+    "type": "project",
+    "keywords": [
+      "reamurcms",
+      "cms",
+      "blog",
+      "ecommerce",
+      "framework",
+      "opensource"
+    ],
+    "homepage": "https://www.reamurcms.com/",
+    "license": "GPL-3.0-or-later",
+    "support": {
+      "email": "support@reamurcms.com",
+      "issues": "https://github.com/reamurcms/reamurcms/issues",
+      "forum": "https://forum.reamurcms.com/",
+      "wiki": "https://github.com/reamurcms/reamurcms/wiki",
+      "source": "https://github.com/reamurcms/reamurcms/releases",
+      "docs": "http://docs.reamurcms.com/"
+    },
+    "config": {
+      "vendor-dir": "vendor/"
+    },
+    "require": {
+      "php": ">=8.0.0",
+      "scssphp/scssphp": "^1.10.0",
+      "twig/twig": "^3.3.7",
+      "aws/aws-sdk-php": "^3.142.1",
+      "phpdocumentor/phpdocumentor": "^3.4",
+      "guzzlehttp/guzzle": "^7.0",
+      "guzzlehttp/promises": "^1.0",
+      "guzzlehttp/psr7": "^1.0",
+      "guzzlehttp/uri-template": "^1.0",
+        "mustache/mustache": "^3.0",
+        "latte/latte": "^3.0"
+
+    }
+  }
