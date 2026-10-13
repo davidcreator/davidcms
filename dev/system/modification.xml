@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<modification>
+  <name>Modification Default</name>
+  <code>default</code>
+  <version>1.2</version>
+  <author>ReamurCMS</author>
+  <link>https://reamurcms.com</link>
+  <file path="system/{engine,library}/{action,loader,config,language}*.php|system/library/template/template.php">
+    <operation error="log">
+      <search regex="true">
+        <![CDATA[~(require|include)(_once)?\(([^)]+)~]]>
+      </search>
+      <add position="replace">
+        <![CDATA[$1$2(modification($3))]]>
+      </add>
+    </operation>
+  </file>
+  
+  <file path="system/library/template/twig.php">
+    <operation error="log">
+      <search>
+        <![CDATA[$loader = new \Twig_Loader_Filesystem(DIR_TEMPLATE);]]>
+      </search>
+      <add position="replace">
+        <![CDATA[
+        // Initialize template loader with modification paths
+        $loader = new \Twig_Loader_Filesystem();
+        
+        // Add modification paths with security checks
+        $modPaths = [
+            'admin' => DIR_MODIFICATION . 'admin/view/template/',
+            'catalog' => DIR_MODIFICATION . 'catalog/view/theme/'
+        ];
+        
+        foreach ($modPaths as $type => $path) {
+            if (is_dir($path) && strpos($path, '..') === false) {
+                $loader->addPath($path, $type);
+            }
+        }
+        
+        // Add default template path
+        $loader->addPath(DIR_TEMPLATE);
+        
+        // Enable cache in production with directory check
+        if ((!defined('DEV_MODE') || !DEV_MODE) && is_writable(DIR_CACHE)) {
+            $cacheDir = DIR_CACHE . 'twig/';
+            if (!is_dir($cacheDir)) {
+                mkdir($cacheDir, 0755, true);
+            }
+            $loader->setCache($cacheDir);
+        }]]>
+      </add>
+    </operation>
+  </file>
+  
+  <!-- Enhanced security with path validation -->
+  <file path="system/engine/action.php">
+    <operation error="abort">
+      <search>
+        <![CDATA[$this->registry = $registry;]]>
+      </search>
+      <add position="after">
+        <![CDATA[
+        // Security: Validate controller path with additional checks
+        if (strpos($route, '..') !== false || 
+            !is_file($file) || 
+            !is_readable($file) || 
+            strpos(realpath($file), DIR_APPLICATION) !== 0) {
+            throw new \Exception('Security violation: Invalid controller path');
+        }]]>
+      </add>
+    </operation>
+  </file>
+  
+  <!-- New: Add modification timestamp tracking -->
+  <file path="system/library/modification.php">
+    <operation>
+      <search>
+        <![CDATA[public function modification($filename) {]]>
+      </search>
+      <add position="after">
+        <![CDATA[
+        // Track modification timestamps for cache invalidation
+        static $modTimes = [];
+        $modTime = filemtime($filename);
+        
+        if (isset($modTimes[$filename]) && $modTimes[$filename] === $modTime) {
+            return $filename;
+        }
+        
+        $modTimes[$filename] = $modTime;]]>
+      </add>
+    </operation>
+  </file>
+</modification>
