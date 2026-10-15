@@ -1,4 +1,4 @@
-# David Almeida - ReamurCMS
+# David Almeida ReamurCMS
 
 > CMS open source em **PHP 8+** com arquitetura **MVCL**, inspirado no OpenCart, criado para ser a nova base do portfólio e do ecossistema de serviços de **[davidalmeida.xyz](https://davidalmeida.xyz)**.
 
@@ -12,7 +12,7 @@
 
 ## Índice
 
-- [David Almeida - ReamurCMS](#david-almeida---reamurcms)
+- [David Almeida ReamurCMS](#david-almeida-reamurcms)
   - [Índice](#índice)
   - [Sobre o projeto](#sobre-o-projeto)
     - [Por que "inspirado no OpenCart"?](#por-que-inspirado-no-opencart)
@@ -80,6 +80,10 @@ O OpenCart provou, ao longo de anos, que a separação em quatro aplicações (`
 ```text
 davidcms/
 ├── .github/workflows/      # CI (GitHub Actions – PHP Composer)
+├── agents-ia/              # 🤖 Agentes de IA: regras globais + agentes por aplicação
+│   ├── regras/             #   Constituição (contexto, convenções, padrões, anti-alucinação)
+│   ├── agentes/            #   orquestrador, system, install, admin, catalog
+│   └── decisoes/           #   Registro de decisões (ADR)
 ├── docs/                   # 📚 Documentação do projeto (este guia e manuais)
 │   ├── Analise-DavidAlmeida.md   # Análise do site atual → plano de migração
 │   ├── Arquitetura-MVCL.md       # Como o MVCL do ReamurCMS funciona
@@ -88,6 +92,7 @@ davidcms/
 │   ├── Guia-Composer.md          # Composer, dependências e CI
 │   ├── Guia-Twig.md              # Twig 3 e adaptadores de template
 │   ├── Guia-ThreeJS.md           # Three.js no front-end do novo site
+│   ├── Implementacao-ThreeJS.md  # Plano de implementação do front 3D
 │   ├── Webhooks.md               # Sistema de webhooks (pedidos e produtos)
 │   └── Estrutura-de-Pastas.md    # Referência completa da árvore de diretórios
 ├── dev/                    # Código-fonte da aplicação
@@ -163,8 +168,11 @@ Toda a documentação do projeto vive na pasta [`docs/`](docs/README.md):
 | [Guia Composer](docs/Guia-Composer.md) | Dependências, autoload, comandos e integração com o CI |
 | [Guia Twig](docs/Guia-Twig.md) | Sintaxe, herança de templates e integração com o núcleo |
 | [Guia Three.js](docs/Guia-ThreeJS.md) | Cenas 3D para o novo front-end do site |
+| [Implementação Three.js](docs/Implementacao-ThreeJS.md) | Plano prático do front 3D: módulos de cena, budgets e critérios de aceite |
 | [Webhooks](docs/Webhooks.md) | Engine de webhooks para pedidos e produtos |
 | [Estrutura de Pastas](docs/Estrutura-de-Pastas.md) | Mapa completo e anotado do diretório `dev/` |
+
+**Desenvolvimento assistido por IA:** os agentes (`agente-system`, `agente-install`, `agente-admin`, `agente-catalog` + orquestrador), as regras globais (contexto, convenções, padrões e protocolo anti-alucinação) e o registro de decisões vivem em [`agents-ia/`](agents-ia/README.md).
 
 ---
 
