@@ -32,20 +32,19 @@
       "twig/twig": "^3.3.7",
       "aws/aws-sdk-php": "^3.142.1",
       "guzzlehttp/guzzle": "^7.0",
-      "guzzlehttp/promises": "^1.0",
-      "guzzlehttp/psr7": "^1.0",
+      "guzzlehttp/promises": "^2.0",
+      "guzzlehttp/psr7": "^2.4",
       "guzzlehttp/uri-template": "^1.0",
       "mustache/mustache": "^3.0",
       "latte/latte": "^3.0"
     },
     "require-dev": {
-      "phpdocumentor/phpdocumentor": "^3.4",
       "phpstan/phpstan": "^1.10",
       "phpunit/phpunit": "^10.5"
     },
     "scripts": {
       "analyse": "phpstan analyse --memory-limit=512M",
       "test": "phpunit --configuration ../../tests/phpunit.xml.dist",
-      "docs": "phpDocumentor run -d ../engine -d ../library -t ../../../docs/api"
+      "docs": "@php phpDocumentor.phar run -d ../engine -d ../library -t ../../../docs/api"
     }
 }

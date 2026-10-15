@@ -39,3 +39,14 @@ Aprovar e versionar **todos** os itens de amarração:
 ## Documentos/arquivos criados ou atualizados
 
 `docs/Contrato-Bootstrap.md` · `docs/Dicionario-de-Dados.md` · `agents-ia/modelos/**` · `.github/workflows/php.yml` · `.github/pull_request_template.md` · `.gitignore` · `.editorconfig` · `CONTRIBUTING.md` · `SECURITY.md` · `CHANGELOG.md` · `dev/system/storage/composer.json` · `dev/system/storage/phpstan.neon` · `dev/tests/README.md` · `agents-ia/regras/00` e `03` (patches)
+
+---
+
+## Adendo (15/10/2026) — correção de constraints do Composer
+
+Ao gerar o `composer.lock`, duas inviabilidades surgiram no manifesto herdado e foram corrigidas:
+
+1. **`guzzlehttp/psr7` fixado em `^1.0`** → alterado para `^2.4` (série 1.x bloqueada por advisories de segurança; AWS SDK atual exige ≥ 2.4) e **`guzzlehttp/promises`** ajustado de `^1.0` para `^2.0`;
+2. **phpDocumentor sai do Composer** → suas dependências (`league/flysystem 1.x`) são bloqueadas por advisories. Passa a ser usado **via PHAR** sob demanda (`composer docs`), mantendo `require-dev` enxuto (PHPStan + PHPUnit).
+
+Lock gerado com **zero advisories** e validado com `composer validate --strict` (o mesmo comando do CI).

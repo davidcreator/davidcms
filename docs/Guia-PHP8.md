@@ -263,14 +263,16 @@ Regras:
 
 ## 8. Documentação de API com phpDocumentor
 
-O `composer.json` já inclui `phpdocumentor/phpdocumentor ^3.4`. Para gerar a documentação técnica das classes do núcleo:
+O phpDocumentor é usado **via PHAR** (não via Composer — ver adendo da [ADR 0004](../agents-ia/decisoes/0004-contratos-qualidade-e-modelos.md): suas dependências têm advisories). Para gerar a documentação técnica das classes do núcleo:
 
 ```bash
 cd dev/system/storage
-vendor/bin/phpDocumentor run -d ../engine -d ../library -t ../../../docs/api --title="ReamurCMS Core API"
+# baixar uma vez: https://github.com/phpDocumentor/phpDocumentor/releases
+curl -L -o phpDocumentor.phar https://github.com/phpDocumentor/phpDocumentor/releases/latest/download/phpDocumentor.phar
+composer docs -- --title="ReamurCMS Core API"
 ```
 
-Como os docblocks do núcleo já seguem padrão (`@package`, `@param`, `@return`), a saída fica navegável imediatamente. Publicar `docs/api/` fora do Git (adicionar ao `.gitignore`) ou em página interna.
+Como os docblocks do núcleo já seguem padrão (`@package`, `@param`, `@return`), a saída fica navegável imediatamente. Publicar `docs/api/` fora do Git (já está no `.gitignore`).
 
 ---
 

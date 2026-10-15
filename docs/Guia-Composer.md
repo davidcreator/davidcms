@@ -71,13 +71,16 @@ Manifesto real do projeto (`dev/system/storage/composer.json`), comentado bloco 
 | `twig/twig` | `^3.3.7` | **Template engine padrão** — ver [Guia Twig](Guia-Twig.md) |
 | `scssphp/scssphp` | `^1.10.0` | Compilação de SCSS no servidor (temas admin/catalog) |
 | `guzzlehttp/guzzle` | `^7.0` | Cliente HTTP — webhooks, Mercado Pago, APIs externas |
-| `guzzlehttp/promises`, `psr7`, `uri-template` | `^1.0` | Utilitários do ecossistema Guzzle (PSR-7, async) |
+| `guzzlehttp/promises` | `^2.0` | Utilitários do ecossistema Guzzle (async) |
+| `guzzlehttp/psr7` | `^2.4` | PSR-7 — **pin ≥ 2.4**: série 1.x tem advisories de segurança e conflita com o AWS SDK atual |
+| `guzzlehttp/uri-template` | `^1.0` | Exigência do AWS SDK |
 | `aws/aws-sdk-php` | `^3.142.1` | Integrações AWS (S3 para mídia, SES para e-mail etc.) |
 | `mustache/mustache` | `^3.0` | Adaptador de template Mustache |
 | `latte/latte` | `^3.0` | Adaptador de template Latte |
-| `phpdocumentor/phpdocumentor` | `^3.4` | Geração da documentação de API — ver [Guia PHP 8 §8](Guia-PHP8.md#8-documentação-de-api-com-phpdocumentor) |
 
-> 💡 Mover `phpdocumentor/phpdocumentor` para `require-dev` reduz o vendor de produção — avaliar na Fase 1.
+**require-dev (ADR 0004):** `phpstan/phpstan ^1.10` · `phpunit/phpunit ^10.5`.
+
+> ⚠️ **phpDocumentor via PHAR, não via Composer:** suas dependências (flysystem 1.x) são bloqueadas por advisories. Baixar `phpDocumentor.phar` quando precisar gerar a doc de API e rodar `composer docs` (ver [Guia PHP 8 §8](Guia-PHP8.md#8-documentação-de-api-com-phpdocumentor)).
 
 ---
 

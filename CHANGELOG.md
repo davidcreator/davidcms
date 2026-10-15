@@ -15,7 +15,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/), 
 ### Corrigido
 - CI (`.github/workflows/php.yml`): `working-directory` correto (`dev/system/storage`), setup PHP 8.2, cache do vendor corrigido + jobs de `php -l` e link check (ADR 0003);
 - `.gitignore`: cobre `**/system/storage/vendor/`, caches/logs/temp do storage e `config.php` gerados;
-- `composer.json`: phpDocumentor movido para `require-dev`; adicionados PHPStan/PHPUnit (dev) e scripts `analyse`/`test`/`docs` (ADR 0004).
+- `composer.json`: `require-dev` com PHPStan/PHPUnit e scripts `analyse`/`test`/`docs`; constraints do Guzzle corrigidos (`psr7 ^2.4`, `promises ^2.0`) resolvendo advisories e conflito com o AWS SDK; phpDocumentor passa a ser usado via PHAR (adendo ADR 0004);
+- `composer.lock` regenerado e sincronizado com o novo manifesto (CI verde).
 
 ## [1.0.0] — 2026-10-12
 
