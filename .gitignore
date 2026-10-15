@@ -1,2 +1,28 @@
+# ReamurCMS — .gitignore (ADR 0003)
+
+# Planejamento local
 /planejamento/
-/system/storage/vendor
+
+# Vendor do Composer (onde quer que exista dentro de system/storage)
+**/system/storage/vendor/
+
+# Dados voláteis do storage (manter as pastas versionadas com index.html)
+dev/system/storage/cache/*
+dev/system/storage/logs/*
+dev/system/storage/session/*
+dev/system/storage/temp/*
+!dev/system/storage/**/index.html
+
+# Configs geradas pelo instalador (credenciais — nunca versionar)
+dev/catalog/config.php
+dev/admin/config.php
+dev/install/config.php
+
+# Documentação de API gerada pelo phpDocumentor
+docs/api/
+
+# Sistema operacional / IDEs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

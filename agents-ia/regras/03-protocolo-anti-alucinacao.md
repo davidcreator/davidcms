@@ -27,6 +27,11 @@ Quando houver dúvida, consulte nesta ordem — o primeiro que responder vence:
 | 5 | **Declarar incerteza.** Se não verificou, escrever explicitamente: *"Não verifiquei X; assumi Y — deseja confirmar?"* |
 | 6 | **Escopo cirúrgico.** Entregar exatamente o pedido; melhorias adjacentes viram *sugestão* separada |
 | 7 | **Sem auto-completar o sistema.** Se falta uma peça (ex.: método no Loader), propor a criação como tarefa — não fingir que existe |
+| 8 | **Sem acesso ao arquivo = pedir ao humano (L9/ADR 0004).** Se o ambiente não permite ler o repositório (chat sem ferramentas), o agente **deve solicitar explicitamente o conteúdo** dos arquivos-alvo antes de propor mudança — nunca assumir o conteúdo "pela estrutura". Resposta esperada: *"Para editar `X.php` preciso que você cole o conteúdo atual do arquivo."* |
+
+### 2.1 Arquivos novos nunca são gerados "de memória"
+
+Artefatos recorrentes (front controller, CRUD admin, model, language, lista/form do painel, cena Three.js) começam **copiando o esqueleto** de [`agents-ia/modelos/`](../modelos/) e substituindo placeholders — não por redação livre do formato.
 
 ## 3. Alertas vermelhos (stop & verify)
 

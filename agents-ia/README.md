@@ -33,8 +33,17 @@ agents-ia/
 │   ├── agente-install.md           # Instalador: wizard, SQL, migrações
 │   ├── agente-admin.md             # Painel: CRUDs, ACL, settings, relatórios
 │   └── agente-catalog.md           # Site público: tema Twig, Three.js, rotas do front
-└── decisoes/                       # 🗂️ Registro de decisões (ADR) alimentado pelos agentes
-    └── README.md
+├── modelos/                        # 🧩 Esqueletos canônicos de arquivo (copiar, nunca gerar "de memória")
+│   ├── README.md                   #   Como usar os modelos
+│   ├── front-controller-index.php.tpl
+│   ├── controller-crud-admin.php.tpl
+│   ├── model.php.tpl
+│   ├── language.php.tpl
+│   ├── admin-list.twig.tpl · admin-form.twig.tpl
+│   └── scene-threejs.js.tpl
+└── decisoes/                       # 🗂️ Registro de decisões (ADR) — ver decisoes/README.md
+    ├── README.md
+    └── 0001..0004-*.md             # Idioma, blog, CI/.gitignore, contratos+qualidade
 ```
 
 ---
@@ -45,7 +54,10 @@ agents-ia/
 
 1. Abra o arquivo do agente desejado em [`agentes/`](agentes/) e **cole o conteúdo como prompt de sistema** (ou referencie os arquivos no contexto, se a ferramenta suportar leitura de pastas);
 2. As 4 regras de [`regras/`](regras/) são **pré-requisito**: o agente as referencia, mas para contextos curtos cole também o `00` e o `03`;
-3. Descreva a tarefa em linguagem natural. O agente deve responder com o **cabeçalho padrão** (ver abaixo) antes de propor código.
+3. Arquivos novos saem de [`modelos/`](modelos/) (cópia + placeholders) — nunca "de memória";
+4. Descreva a tarefa em linguagem natural. O agente deve responder com o **cabeçalho padrão** (ver abaixo) antes de propor código.
+
+> ⚠️ **Chat sem acesso a arquivos?** Cole também o conteúdo dos arquivos-alvo da tarefa. O agente tem instrução explícita (regra 03 §2 item 8) de **pedir o conteúdo** em vez de assumi-lo.
 
 ### 2. Fluxo recomendado de trabalho
 

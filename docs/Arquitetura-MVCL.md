@@ -294,9 +294,9 @@ $this->load->language('common/home');          // carrega o idioma ativo
 $data['heading_title'] = $this->language->get('heading_title');
 ```
 
-Idiomas previstos: **pt-br** (padrão do novo site), **en-us**, **es-eu**.
+Idiomas previstos: **`en-us`** (padrão — [ADR 0001](../agents-ia/decisoes/0001-idioma-padrao-en-us.md)), **pt-br**, **es-eu**.
 
-> ⚠️ **Pendência identificada:** `system/config/default.php` declara `language_code = 'en-gb'`, mas as pastas criadas são `en-us`, `es-eu`, `pt-br`. Padronizar para `pt-br`/`en-us` na Fase 1 do núcleo.
+> ✅ **Decidido (ADR 0001):** o `default.php` declara `language_code = 'en-gb'`; será padronizado para `en-us` na Fase 1 do núcleo. Até lá, nenhum agente "corrige" por conta própria (regra de quirks — `agents-ia/regras/00`).
 
 ---
 

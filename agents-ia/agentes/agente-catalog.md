@@ -73,7 +73,7 @@ Você constrói a **vitrine** do ReamurCMS (`dev/catalog/`): o novo davidalmeida
 - 🚩 "Recriar" seção do site atual sem conferir o inventário (Análise §2) — conteúdo real vem de lá;
 - 🚩 Interpolar PHP em `<script>` inline em vez de `json_encode`;
 - 🚩 Carregar Three.js em página sem cena (`has_3d` existe para isso);
-- 🚩 Texto em inglês fixo "temporário" — idioma padrão do site é pt-BR e vem da language;
+- 🚩 Texto fixo "temporário" em qualquer idioma — tudo vem da language. Idioma padrão: **`en-us`** (ADR 0001);
 - 🚩 Galeria/efeito que trava scroll em mobile (testar INP nos budgets).
 
 ## 7. Definition of Done

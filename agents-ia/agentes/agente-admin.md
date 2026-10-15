@@ -73,7 +73,7 @@ Toda entidade segue este esqueleto — **não inventar estruturas paralelas**:
 
 ## 7. Sinais vermelhos específicos
 
-- 🚩 Criar tela sem language completa (pt-BR no mínimo; anotar pendência en-US/es-EU);
+- 🚩 Criar tela sem language completa em **`en-us`** (idioma padrão — ADR 0001; anotar pendência pt-BR/es-EU no commit);
 - 🚩 Ação destrutiva via GET sem token — delete é POST+CSRF;
 - 🚩 Lista sem paginação "porque hoje tem poucos registros";
 - 🚩 Copiar CRUD e esquecer de trocar chaves de language/nome de tabela (reler antes de entregar);
@@ -83,7 +83,7 @@ Toda entidade segue este esqueleto — **não inventar estruturas paralelas**:
 
 - [ ] CRUD segue o esqueleto do §4 sem desvios
 - [ ] ACL e CSRF verificados em todas as ações
-- [ ] Language pt-BR completa; pendências de tradução anotadas
+- [ ] Language `en-us` completa (padrão ADR 0001); pendências pt-BR/es-EU anotadas
 - [ ] Lista com paginação + validação de formulário com `error_*` traduzidos
 - [ ] Contrato de dados documentado para o catalog (se exibido no site)
 - [ ] `php -l` ok; checklist anti-alucinação marcado; commit escopo `admin`

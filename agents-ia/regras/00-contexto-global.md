@@ -20,7 +20,7 @@
 | Prefixo de tabelas | `DB_PREFIX` (ex.: `rms_`) |
 | Tag atual | `v1.0.0` |
 | Branches | `main` (estável) · `staging` (homologação) · `feature/*` |
-| Idiomas da estrutura | `pt-br` (padrão), `en-us`, `es-eu` |
+| **Idioma padrão** | **`en-us`** (ADR 0001) — secundários: `pt-br`, `es-eu`. Language obrigatória primeiro em `en-us` |
 | Estado do projeto | **Esqueleto**: pastas + `index.html` placeholders; engine/library/webhook já têm código PHP real |
 | PHP mínimo | `>=8.0.0` |
 | Composer | manifesto em `dev/system/storage/composer.json` — vendor em `dev/system/storage/vendor/` (**não commitar**) |
@@ -76,12 +76,22 @@ Dentro de Controller/Model, via `$this->`:
 
 **Obrigação:** se uma tarefa mudar comportamento/estrutura, **atualizar o doc correspondente no mesmo commit**.
 
-## 7. Pendências conhecidas (não "corrigir" sem tarefa explícita)
+## 7. Decisões em vigor (ADRs — consultar `agents-ia/decisoes/`)
 
-1. `config/default.php` declara `en-gb`, mas as pastas de idioma são `en-us/es-eu/pt-br` → padronização prevista na Fase 1;
-2. Workflow de CI precisa de `working-directory: dev/system/storage` (correção documentada em `docs/Guia-Composer.md` §5);
-3. `.gitignore` precisa cobrir `dev/system/storage/vendor/` (documentado em §6 do mesmo guia);
-4. `phpdocumentor` candidato a `require-dev` (avaliação pendente).
+| ADR | Decisão |
+| --- | --- |
+| **0001** | Idioma padrão `en-us`; eliminar referência `en-gb` do `default.php` na Fase 1 |
+| **0002** | Blog híbrido: externo (davidcreator.com) no lançamento; migração interna pós-lançamento — **não criar módulo de blog agora** |
+| **0003** | CI corrigido (`working-directory` + `php -l` + links); `.gitignore` cobre vendor; limpeza do histórico na Fase 1 |
+| **0004** | Contratos de fundação aprovados: `docs/Contrato-Bootstrap.md`, `docs/Dicionario-de-Dados.md`, `agents-ia/modelos/`, PHPStan/PHPUnit (`require-dev`), `dev/tests/` (única pasta de 1º nível autorizada), `.editorconfig`, PR template |
+
+## 8. Peculiaridades intencionais (NÃO "corrigir" sem ADR)
+
+1. **`catalog/controller/localisation/`** (sem "z") **vs `admin/controller/localization/`** (com "z") — herança intencional do OpenCart: manter exatamente assim;
+2. **`dev/system/storage/vendor/` commitado** — aceito até a limpeza da Fase 1 (ADR 0003); novos commits não devem adicionar nada ao vendor;
+3. **`config/default.php` com restos `en-gb`** — resolvido pela ADR 0001; a mudança ocorre na Fase 1, não adiantar;
+4. **Merge `hotfix/login` (15/10)** pré-contratos — qualquer desvio dele deve ser normalizado na revisão da Fase 1, não replicado como precedente;
+5. **Domínios fictícios do pacote** (`reamurcms.com` no composer.json/README) — placeholder oficial até o domínio real existir; o link check do CI já os exclui.
 
 ---
 

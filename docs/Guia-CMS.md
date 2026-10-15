@@ -130,7 +130,7 @@ Boas práticas obrigatórias:
 
 ## 6. Multi-idioma
 
-- Idiomas previstos: **pt-br** (padrão), **en-us**, **es-eu** — estrutura já criada em `catalog/language/`, `admin/language/` e `install/language/`.
+- Idiomas previstos: **`en-us`** (padrão — [ADR 0001](../agents-ia/decisoes/0001-idioma-padrao-en-us.md)), **pt-br**, **es-eu** — estrutura já criada em `catalog/language/`, `admin/language/` e `install/language/`. Conteúdo novo nasce primeiro em `en-us`; versões pt-BR/es-EU das páginas-chave entram no checklist de go-live (§11).
 - Detecção inicial via `system/library/language/detect.php` (Accept-Language) com persistência em sessão/cookie.
 - Conteúdo de banco traduzível por tabela de tradução (padrão `*_description`: um registro por idioma, como `product_description`).
 - URLs localizadas futuras: `/pt/portfolio/jwa`, `/en/portfolio/jwa` (Fase 6 — SEO internacional).

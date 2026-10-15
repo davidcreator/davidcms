@@ -228,7 +228,7 @@ git commit -m "build: remover vendor do versionamento (gerenciado pelo Composer)
 
 ### 6.2 Idioma padrão do config
 
-`system/config/default.php` referencia `en-gb`, mas as pastas de idiomas criadas são `en-us`, `es-eu`, `pt-br`. Não é Composer, mas vale registrar aqui: padronizar para `pt-br` na Fase 1 (ver [Análise §8](Analise-DavidAlmeida.md#8-plano-de-migração)).
+`system/config/default.php` referencia `en-gb`, mas as pastas de idiomas criadas são `en-us`, `es-eu`, `pt-br`. **Resolvido pela [ADR 0001](../agents-ia/decisoes/0001-idioma-padrao-en-us.md): padrão `en-us`**, ajuste aplicado na Fase 1. Recomendação adicional: adicionar `"platform": {"php": "8.2"}` ao `config` (já aplicado na versão de referência em `dev/system/storage/composer.json` — ADR 0004).
 
 ---
 

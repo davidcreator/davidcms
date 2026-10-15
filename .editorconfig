@@ -1,0 +1,28 @@
+# ReamurCMS — padrão de formatação para humanos e agentes de IA (ADR 0004 / L7)
+# Regra-mestra: arquivos NOVOS usam 4 espaços; arquivos legados mantêm seu estilo
+# até serem refatorados em tarefa própria. Não reformatar em PR de feature.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{php,twig,js,css,md}]
+indent_style = space
+indent_size = 4
+
+[*.{json,yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[dev/system/storage/vendor/**]
+# gerado pelo Composer — EditorConfig não se aplica
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+indent_style = unset
+indent_size = unset

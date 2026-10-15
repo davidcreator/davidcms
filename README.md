@@ -1,4 +1,4 @@
-# David Almeida ReamurCMS
+# ReamurCMS
 
 > CMS open source em **PHP 8+** com arquitetura **MVCL**, inspirado no OpenCart, criado para ser a nova base do portfólio e do ecossistema de serviços de **[davidalmeida.xyz](https://davidalmeida.xyz)**.
 
@@ -12,22 +12,19 @@
 
 ## Índice
 
-- [David Almeida ReamurCMS](#david-almeida-reamurcms)
-  - [Índice](#índice)
-  - [Sobre o projeto](#sobre-o-projeto)
-    - [Por que "inspirado no OpenCart"?](#por-que-inspirado-no-opencart)
-  - [Principais recursos](#principais-recursos)
-  - [Stack técnica](#stack-técnica)
-  - [Estrutura do repositório](#estrutura-do-repositório)
-  - [Requisitos](#requisitos)
-  - [Instalação](#instalação)
-  - [Fluxo de desenvolvimento](#fluxo-de-desenvolvimento)
-  - [Documentação](#documentação)
-  - [Roadmap](#roadmap)
-  - [Segurança](#segurança)
-  - [Licença](#licença)
-  - [Autor](#autor)
-  - [Créditos](#créditos)
+- [Sobre o projeto](#sobre-o-projeto)
+- [Principais recursos](#principais-recursos)
+- [Stack técnica](#stack-técnica)
+- [Estrutura do repositório](#estrutura-do-repositório)
+- [Requisitos](#requisitos)
+- [Instalação](#instalação)
+- [Fluxo de desenvolvimento](#fluxo-de-desenvolvimento)
+- [Documentação](#documentação)
+- [Roadmap](#roadmap)
+- [Segurança](#segurança)
+- [Licença](#licença)
+- [Autor](#autor)
+- [Créditos](#créditos)
 
 ---
 
@@ -79,14 +76,21 @@ O OpenCart provou, ao longo de anos, que a separação em quatro aplicações (`
 
 ```text
 davidcms/
-├── .github/workflows/      # CI (GitHub Actions – PHP Composer)
+├── .github/workflows/      # CI (composer ✔ + php -l ✔ + link check ✔)
+├── .github/pull_request_template.md   # DoD obrigatório por PR
+├── .editorconfig           # Formatação unificada (humanos + agentes)
+├── CONTRIBUTING.md · SECURITY.md · CHANGELOG.md
 ├── agents-ia/              # 🤖 Agentes de IA: regras globais + agentes por aplicação
 │   ├── regras/             #   Constituição (contexto, convenções, padrões, anti-alucinação)
 │   ├── agentes/            #   orquestrador, system, install, admin, catalog
-│   └── decisoes/           #   Registro de decisões (ADR)
+│   ├── modelos/            #   Esqueletos canônicos de arquivo (copiar e preencher)
+│   └── decisoes/           #   Registro de decisões (ADR 0001–0004)
 ├── docs/                   # 📚 Documentação do projeto (este guia e manuais)
 │   ├── Analise-DavidAlmeida.md   # Análise do site atual → plano de migração
 │   ├── Arquitetura-MVCL.md       # Como o MVCL do ReamurCMS funciona
+│   ├── Auditoria-Fundacao.md     # Auditoria: o que faltava amarrar (L1–L10)
+│   ├── Contrato-Bootstrap.md     # Contrato dos pontos de entrada (index.php)
+│   ├── Dicionario-de-Dados.md    # Schema canônico do banco de dados
 │   ├── Guia-CMS.md               # Conceitos de CMS aplicados ao projeto
 │   ├── Guia-PHP8.md              # PHP 8+ no ReamurCMS
 │   ├── Guia-Composer.md          # Composer, dependências e CI
@@ -99,8 +103,9 @@ davidcms/
 │   ├── admin/              # Painel administrativo (controller, model, view, language)
 │   ├── catalog/            # Loja/site público (front-end do CMS)
 │   ├── install/            # Wizard de instalação/upgrade + SQL
-│   └── system/             # Núcleo do framework (engine, library, helper, config,
-│                           #   storage, webhook, vendor.php, framework.php, startup.php)
+│   ├── system/             # Núcleo do framework (engine, library, helper, config,
+│   │                       #   storage, webhook, vendor.php, framework.php, startup.php)
+│   └── tests/              # Suíte PHPUnit (ativa na Fase 1 — ADR 0004)
 └── README.md               # Este arquivo
 ```
 

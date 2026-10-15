@@ -127,7 +127,7 @@ Observações levantadas a partir do site em produção e do repositório:
 - **CMS simples demais:** sem separação formal de camadas; difícil evoluir (multi-idioma, temas, integrações).
 - **Sem multi-idioma estruturado** — o site mistura inglês/PT; o ReamurCMS já nasce com `pt-br`, `en-us`, `es-eu`.
 - **jQuery como base do front** — oportunidade de modernizar (JS vanilla + Three.js apenas onde agrega valor).
-- **Blog fora do domínio** — dilui autoridade SEO do domínio principal.
+- **Blog fora do domínio** — dilui autoridade SEO do domínio principal *(decisão híbrida registrada: externo no lançamento, migração interna pós-lançamento — [ADR 0002](../agents-ia/decisoes/0002-blog-hibrido.md))*.
 - **Sem sistema de eventos/webhooks** — integrações (ex.: novo pedido → notificação) hoje exigem código pontual.
 - **Hospedagem/manutenção manual** — sem pipeline de deploy/testes.
 
@@ -164,9 +164,9 @@ Decisão registrada: **manter a estrutura base com o nome ReamurCMS** em vez de 
 | Pedidos/orçamentos de clientes | `admin/controller/sale/order/` + `system/webhook/controller/sale/order.php` | Webhooks `order_add` / `order_edit` já esboçados |
 | Ferramentas (Fluxa, Quotia, Vertex, Solis) | `catalog/controller/tool/` (+ cards administráveis em `admin/controller/tool/`) | Rota atual `/catalog/tools/open?id=N` → URL amigável `/tools/{slug}` |
 | Clientes (área de conta) | `catalog/controller/account/` + `admin/controller/customer/` | Login, acompanhamento de pedidos |
-| Blog / notícias | `catalog/controller/cms/` (novo blog interno) **ou** manter davidcreator.com | Decisão na Fase 3 — recomendado internalizar |
+| Blog / notícias | Lançamento: externo (davidcreator.com) via feed; migração interna pós-lançamento | **Decidido: híbrido** ([ADR 0002](../agents-ia/decisoes/0002-blog-hibrido.md)) — não criar módulo de blog agora |
 | Páginas legais (Cookies, Políticas) | `catalog/controller/information/` | Reaproveita conceito *information pages* do OpenCart |
-| Multi-idioma (EN/PT/ES) | `dev/{admin,catalog,install}/language/{en-us,es-eu,pt-br}` | Estrutura já criada; pt-BR como padrão do novo site |
+| Multi-idioma (EN/PT/ES) | `dev/{admin,catalog,install}/language/{en-us,es-eu,pt-br}` | **Padrão: `en-us`** ([ADR 0001](../agents-ia/decisoes/0001-idioma-padrao-en-us.md)); pt-BR/es-EU no go-live |
 | SEO / URLs amigáveis | `system/helper/seo.php`, `system/helper/slug.php` | Tabela `seo_url` no padrão OpenCart |
 
 ---
@@ -191,8 +191,11 @@ Decisão registrada: **manter a estrutura base com o nome ReamurCMS** em vez de 
 **Fase 1 — Núcleo**
 - [ ] Revisar `engine/*` (autoloader, registry, config, loader, router, action, event, proxy) com tipagem PHP 8
 - [ ] Revisar `library/*` (db, cache, session, template, mail, image, language)
-- [ ] Definir `index.php` de entrada por aplicação (`catalog`, `admin`, `install`)
-- [ ] Alinhar `config/default.php` (hoje declara `en-gb`, mas as pastas de idioma são `en-us` — padronizar)
+- [ ] Definir `index.php` de entrada por aplicação conforme [Contrato-Bootstrap](Contrato-Bootstrap.md) (modelo em `agents-ia/modelos/`) — tarefa única do `agente-system`
+- [ ] Alinhar `config/default.php` para `en-us` conforme ADR 0001
+- [ ] Schema do banco conforme [Dicionário de Dados](Dicionario-de-Dados.md) (alimenta a Fase 2)
+- [ ] Limpeza do vendor versionado (`git rm -r --cached`) — ADR 0003
+- [ ] Ativar PHPStan (`composer analyse`) e PHPUnit em `dev/tests/` — ADR 0004
 
 **Fase 2 — Instalador**
 - [ ] Passos do wizard: licença → requisitos → banco → admin → concluir
@@ -205,8 +208,8 @@ Decisão registrada: **manter a estrutura base com o nome ReamurCMS** em vez de 
 - [ ] Páginas de portfólio com galeria e SEO por projeto
 - [ ] Páginas das ferramentas (Fluxa, Quotia, Vertex, Solis)
 - [ ] Formulário de contato + SMTP + webhook de notificação
-- [ ] **Decisão:** blog interno (ReamurCMS `cms`) × manter davidcreator.com
-- [ ] Versões pt-BR / en-US / es-EU dos textos
+- [ ] Seção "Latest News" lendo o feed do davidcreator.com (**blog externo no lançamento** — ADR 0002; módulo interno fica para fase posterior)
+- [ ] Textos en-US completos (padrão — ADR 0001) + versões pt-BR / es-EU das páginas-chave
 
 **Fase 4 — Admin**
 - [ ] Login/ACL (usuários e grupos)

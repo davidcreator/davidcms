@@ -47,4 +47,7 @@ Copiar para o novo arquivo `NNNN-titulo-curto.md`:
 
 | ADR | Título | Status | Data |
 | --- | --- | --- | --- |
-| — | (nenhum ADR registrado ainda) | — | — |
+| [0001](0001-idioma-padrao-en-us.md) | Idioma padrão do sistema: `en-us` | ✅ aceita | 2026-10-15 |
+| [0002](0002-blog-hibrido.md) | Blog híbrido (externo no lançamento, interno depois) | ✅ aceita | 2026-10-15 |
+| [0003](0003-ci-e-gitignore.md) | Correção do CI e do `.gitignore` | ✅ aceita | 2026-10-15 |
+| [0004](0004-contratos-qualidade-e-modelos.md) | Contratos de fundação e infra de qualidade (L1–L10) | ✅ aceita | 2026-10-15 |
