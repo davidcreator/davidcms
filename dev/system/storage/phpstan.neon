@@ -1,0 +1,11 @@
+parameters:
+    # ADR 0004: começar baixo e subir por fase (0→2 na Fase 1, meta nível 5+ na Fase 6)
+    level: 2
+    paths:
+        - ../engine
+        - ../library
+        - ../helper
+    excludePaths:
+        - ../storage/vendor/*
+        - ../webhook/controller/*   # estilo-ponte legado (ControllerWebhook*), tratamento na Fase 5
+    treatPhpDocTypesAsCertain: false
