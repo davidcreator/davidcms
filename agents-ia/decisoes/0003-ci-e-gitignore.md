@@ -27,6 +27,11 @@ O workflow `.github/workflows/php.yml` **falhava desde o primeiro run**: executa
 - ✅ Erros de sintaxe PHP e links quebrados deixam de passar silenciosamente;
 - ⚠️ Histórico continua pesado até a limpeza da Fase 1 (aceito).
 
+## Adendo F1-5 (2026-10-16 — Fase 1 · Tarefa 5)
+
+- **Limpeza do vendor (decisão 3): ENCERRADA.** Verificação na árvore da `main`: `dev/system/storage/vendor` não consta versionado e `**/system/storage/vendor/` permanece no `.gitignore` — nenhum `git rm --cached` adicional necessário. Histórico antigo segue pesado, conforme aceito na decisão;
+- **PHPStan destravado no CI** com `continue-on-error: true`: os paths do `phpstan.neon` (`engine/`, `library/`, `helper/`) dependem do núcleo (Fase 1 · Tarefa 6); o flag sai quando o primeiro run com o núcleo ficar verde. `phpstan.neon` não foi alterado (paths já são o alvo correto).
+
 ## Documentos atualizados
 
 - `.github/workflows/php.yml` (corrigido)

@@ -74,10 +74,29 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Futuro (Fase 1, ADR 0004 — após require-dev instalado):
-  # static-analysis:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #   - name: PHPStan
-  #     run: composer analyse
+  static-analysis:
+    runs-on: ubuntu-latest
+    # Fase 1·Tarefa 5: job DESTRAVADO, porém não-bloqueante — engine/, library/ e helper/
+    # (paths do phpstan.neon) só nascem com o núcleo (Tarefa 6). Remover a linha abaixo
+    # assim que o primeiro run com o núcleo ficar verde.
+    continue-on-error: true
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, curl, gd, zip, intl
+
+    - name: Cache Composer packages
+      uses: actions/cache@v4
+      with:
+        path: dev/system/storage/vendor
+        key: ${{ runner.os }}-phpstan-${{ hashFiles('**/composer.lock') }}
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress --no-interaction
+
+    - name: PHPStan (nível 2 — subir por fase, ADR 0004)
+      run: composer analyse
