@@ -1,3 +1,6 @@
+includes:
+	- phpstan-baseline.neon   # dívida legada congelada (Adendo F2-0, ADR 0004)
+
 parameters:
     # ADR 0004: começar baixo e subir por fase (0→2 na Fase 1, meta nível 5+ na Fase 6)
     level: 2

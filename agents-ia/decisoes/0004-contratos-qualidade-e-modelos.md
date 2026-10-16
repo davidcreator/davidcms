@@ -36,6 +36,15 @@ Aprovar e versionar **todos** os itens de amarração:
 - ✅ `dev/tests/` é a primeira pasta de primeiro nível nova — fica **registrada aqui** como exceção aprovada (não abre precedente informal);
 - ⚠️ PHPStan deve começar em nível baixo (0–2) e subir por fase, para não travar a entrega com dezenas de findings legados.
 
+## Adendo F2-0 (2026-10-16 — hotfix CI: baseline da dívida legada)
+
+- **Fato:** a matriz legada (biblioteca derivada do OpenCart) entrou em `library/`, `helper/` e `engine/` (+84 arquivos) após a Fase 1; o escopo do `static-analysis` saltou de 24 → **107 arquivos** e o job recém-bloqueante reprovou com **844 findings de nível 2 — 100% no código legado** (núcleo novo permaneceu 0 erros/24 arquivos, conferido localmente);
+- **Decisão:** congelar a dívida via **`phpstan-baseline.neon`** (mecanismo oficial do PHPStan para bases legadas), incluído no `phpstan.neon` via `includes:`. `paths` permanecem **integrais** — o mapa real da dívida (202 pares regra/arquivo) fica visível e versionado;
+- **Portão afiado:** erro **novo** (em arquivo novo ou alterado) reprova o build imediatamente; dívida antiga só sai por queima deliberada;
+- **Regra de queima:** quem modernizar arquivo coberto pelo baseline **remove/regenera suas entradas no mesmo commit** (`vendor/bin/phpstan analyse --generate-baseline`); meta acoplada à subida de nível (2 → 5+ na Fase 6) = baseline vazio;
+- **Alternativa recusada:** reduzir `paths` ou excluir módulos inteiros — esconderia o mapa da dívida e premiaria arquivos esquecidos (maiores ofensores hoje: `library/googleshopping` 43 entradas, `library/openbay/ebay.php` 28, `library/openbay.php` 26);
+- **Observação arquitetural:** parte do legado usa constantes fora do Contrato §1.1 (ex.: `DIR_CACHE`) — a modernização desses módulos passa a exigir alinhamento ao §1.1 (registrado aqui como pendência por-módulo).
+
 ## Documentos/arquivos criados ou atualizados
 
 `docs/Contrato-Bootstrap.md` · `docs/Dicionario-de-Dados.md` · `agents-ia/modelos/**` · `.github/workflows/php.yml` · `.github/pull_request_template.md` · `.gitignore` · `.editorconfig` · `CONTRIBUTING.md` · `SECURITY.md` · `CHANGELOG.md` · `dev/system/storage/composer.json` · `dev/system/storage/phpstan.neon` · `dev/tests/README.md` · `agents-ia/regras/00` e `03` (patches)
