@@ -26,10 +26,10 @@ $_['db_database']         = defined('DB_DATABASE') ? DB_DATABASE : '';
 $_['db_port']             = defined('DB_PORT') ? (int)DB_PORT : 3306;
 
 // Actions
-$_['action_default']      = 'common/dashboard'; // Contrato §4 (após login — Fase 2)
+$_['action_default']      = 'common/dashboard'; // Contrato §4 (atrás da muralha startup/login)
 $_['action_router']       = '';                 // Fase 1: dispatch direto
 $_['action_error']        = 'error/not_found';
-$_['action_pre_action']   = [];                 // startup/{login,permission}: Fase 2
+$_['action_pre_action']   = ['startup/login', 'startup/permission']; // F2-2: sessão → ACL (ADR 0005)
 $_['action_post_action']  = [];
 
 // Erros
