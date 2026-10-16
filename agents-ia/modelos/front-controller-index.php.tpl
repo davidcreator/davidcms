@@ -24,11 +24,13 @@ if (is_file('config.php')) {
 
 // 4. Instalação pendente?
 // TEMPLATE (catalog/admin): descomentar o bloco abaixo.
-// TEMPLATE (install): NUNCA incluir este bloco — o wizard roda sem config.php.
 // if (!defined('DIR_APPLICATION')) {
 //     header('Location: install/index.php');
 //     exit();
 // }
+// TEMPLATE (install): NUNCA incluir o bloco de redirect acima. Em seu lugar,
+// autodefinir DIR_* + HTTP_* do Contrato §1.1 (ver dev/install/index.php —
+// Adendo F1-4): o wizard roda sem config.php porque ele próprio o cria.
 
 // 5. Bootstrap do núcleo — ordem inviolável, nada entre estes requires
 require_once(DIR_SYSTEM . 'startup.php');
