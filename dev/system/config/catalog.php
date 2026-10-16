@@ -15,8 +15,14 @@ $_['site_url']            = defined('HTTP_SERVER') ? HTTP_SERVER : '';
 // Sessão de visitante (Contrato §4): cookie RMSSESSION do default.php
 $_['session_autostart']   = true;
 
-// DB: será ligado na Tarefa 6c junto com library/db (mysqli/pdo)
-$_['db_autostart']        = false;
+// DB: driver e credenciais vêm das constantes do config.php gerado pelo wizard (Contrato §1.1)
+$_['db_autostart']        = true;
+$_['db_engine']           = defined('DB_DRIVER') ? DB_DRIVER : 'mysqli';
+$_['db_hostname']         = defined('DB_HOSTNAME') ? DB_HOSTNAME : 'localhost';
+$_['db_username']         = defined('DB_USERNAME') ? DB_USERNAME : '';
+$_['db_password']         = defined('DB_PASSWORD') ? DB_PASSWORD : '';
+$_['db_database']         = defined('DB_DATABASE') ? DB_DATABASE : '';
+$_['db_port']             = defined('DB_PORT') ? (int)DB_PORT : 3306;
 
 // Actions
 $_['action_default']      = 'common/home'; // Contrato §4

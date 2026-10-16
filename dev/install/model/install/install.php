@@ -97,14 +97,18 @@ class Install extends \Reamur\System\Engine\Model {
      * atinge somente nomes de tabelas — inclusive nos INSERTs de seed.
      */
     public function importSchema(string $prefix): void {
-        $sql = (string)file_get_contents(dirname(__DIR__, 3) . '/sql/schema.sql');
+        $sql = (string)file_get_contents(dirname(__DIR__, 2) . '/sql/schema.sql'); // dev/install/sql/schema.sql
+
+        // Linhas de comentário (cabeçalhos de seção do arquivo) saem ANTES do split —
+        // um chunk começando com '--' não pode derrubar o CREATE/INSERT que o segue.
+        $sql = (string)preg_replace('/^\s*--[^\n]*$/m', '', $sql);
 
         if ($prefix !== 'rms_') {
             $sql = str_replace('`rms_', '`' . $prefix, $sql);
         }
 
         foreach (array_filter(array_map('trim', explode(";\n", $sql))) as $statement) {
-            if ($statement === '' || str_starts_with($statement, '--')) {
+            if ($statement === '') {
                 continue;
             }
 

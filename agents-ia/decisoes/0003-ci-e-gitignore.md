@@ -31,6 +31,7 @@ O workflow `.github/workflows/php.yml` **falhava desde o primeiro run**: executa
 
 - **Limpeza do vendor (decisão 3): ENCERRADA.** Verificação na árvore da `main`: `dev/system/storage/vendor` não consta versionado e `**/system/storage/vendor/` permanece no `.gitignore` — nenhum `git rm --cached` adicional necessário. Histórico antigo segue pesado, conforme aceito na decisão;
 - **PHPStan destravado no CI** com `continue-on-error: true`: os paths do `phpstan.neon` (`engine/`, `library/`, `helper/`) dependem do núcleo (Fase 1 · Tarefa 6); o flag sai quando o primeiro run com o núcleo ficar verde. `phpstan.neon` não foi alterado (paths já são o alvo correto).
+- **Adendo F1-6c:** condição atingida na Tarefa 6c — núcleo completo no repo e `composer analyse` rodado localmente com **0 erros** (24 arquivos, level 2). `continue-on-error` **removido**: static-analysis passa a bloquear merges. As constantes do Contrato §1.1 usadas pelo núcleo em tempo de execução são simuladas para o analisador via `phpstan-bootstrap.php` (`bootstrapFiles`) — padrão indicado no user guide do PHPStan.
 
 ## Documentos atualizados
 

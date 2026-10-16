@@ -1,146 +1,60 @@
-<?php
-namespace Reamur\System\Library\DB;
-
+<?php declare(strict_types=1);
 /**
- * Class MySQLi
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
  *
- * @package Reamur\System\Library\DB
+ * Driver MySQLi (utf8mb4). Erros de conexão/SQL viram \Exception com mensagem clara —
+ * a camada de handlers do framework decide exibir ou logar (config error_display).
  */
-class MySQLi {
-	/**
-	 * @var \mysqli|null
-	 */
-	private ?\mysqli $connection = null;
+namespace Reamur\System\Library\Db;
 
-	/**
-	 * Constructor
-	 *
-	 * @param    string  $hostname
-	 * @param    string  $username
-	 * @param    string  $password
-	 * @param    string  $database
-	 * @param    string  $port
-	 */
-	public function __construct(string $hostname, string $username, string $password, string $database, string $port = '3306') {
-		try {
-			$mysqli = new \MySQLi($hostname, $username, $password, $database, (int)$port);
+final class Mysqli {
+    private \mysqli $connection;
 
-			if ($mysqli->connect_error) {
-				throw new \mysqli_sql_exception('Connection failed: ' . $mysqli->connect_error);
-			}
+    public function __construct(string $hostname, string $username, string $password, string $database, string $port = '3306') {
+        try {
+            $this->connection = new \mysqli($hostname, $username, $password, $database, (int)$port);
+        } catch (\mysqli_sql_exception $e) {
+            throw new \Exception('MySQLi: falha na conexão — ' . $e->getMessage());
+        }
 
-			$this->connection = $mysqli;
-			$this->connection->set_charset('utf8mb4');
+        $this->connection->set_charset('utf8mb4');
+    }
 
-			$this->query("SET SESSION sql_mode = 'NO_ZERO_IN_DATE,NO_ENGINE_SUBSTITUTION'");
-			$this->query("SET FOREIGN_KEY_CHECKS = 0");
+    public function query(string $sql): \stdClass|bool {
+        try {
+            $result = $this->connection->query($sql);
+        } catch (\mysqli_sql_exception $e) {
+            throw new \Exception('MySQLi: ' . $e->getMessage() . ' | SQL: ' . $sql);
+        }
 
-			// Sync PHP and DB time zones
-			$this->query("SET `time_zone` = '" . $this->escape(date('P')) . "'");
-		} catch (\mysqli_sql_exception $e) {
-			throw new \Exception('Error: Could not make a database link using ' . $username . '@' . $hostname . '!<br/>Message: ' . $e->getMessage());
-		}
-	}
+        if ($result instanceof \mysqli_result) {
+            $rows = $result->fetch_all(MYSQLI_ASSOC);
+            $result->free();
 
-	/**
-	 * Query
-	 *
-	 * @param    string  $sql
-	 *
-	 * @return   bool|object
-	 */
-	public function query(string $sql): bool|object {
-		if (!$this->connection) {
-			throw new \Exception('Database connection is not available');
-		}
+            $data           = new \stdClass();
+            $data->row      = $rows[0] ?? [];
+            $data->rows     = $rows;
+            $data->num_rows = count($rows);
 
-		try {
-			$query = $this->connection->query($sql);
+            return $data;
+        }
 
-			if ($query instanceof \mysqli_result) {
-				$data = [];
+        return $result;
+    }
 
-				while ($row = $query->fetch_assoc()) {
-					$data[] = $row;
-				}
+    public function escape(string $value): string {
+        return $this->connection->real_escape_string($value);
+    }
 
-				$result = new \stdClass();
-				$result->num_rows = $query->num_rows;
-				$result->row = isset($data[0]) ? $data[0] : [];
-				$result->rows = $data;
+    public function countAffected(): int {
+        return $this->connection->affected_rows;
+    }
 
-				$query->close();
-
-				unset($data);
-
-				return $result;
-			} else {
-				return true;
-			}
-		} catch (\mysqli_sql_exception $e) {
-			throw new \Exception('Error: ' . $this->connection->error . '<br/>Error No: ' . $this->connection->errno . '<br/>' . $sql);
-		}
-	}
-
-	/**
-	 * Escape
-	 *
-	 * @param    string  $value
-	 *
-	 * @return   string
-	 */
-	public function escape(string $value): string {
-		if (!$this->connection) {
-			throw new \Exception('Database connection is not available');
-		}
-		
-		return $this->connection->real_escape_string($value);
-	}
-	
-	/**
-	 * countAffected
-	 *
-	 * @return   int
-	 */
-	public function countAffected(): int {
-		if (!$this->connection) {
-			throw new \Exception('Database connection is not available');
-		}
-		
-		return $this->connection->affected_rows;
-	}
-
-	/**
-	 * getLastId
-	 *
-	 * @return   int
-	 */
-	public function getLastId(): int {
-		if (!$this->connection) {
-			throw new \Exception('Database connection is not available');
-		}
-		
-		return $this->connection->insert_id;
-	}
-	
-	/**
-	 * isConnected
-	 *
-	 * @return   bool
-	 */
-	public function isConnected(): bool {
-		return $this->connection !== null && $this->connection->ping();
-	}
-
-	/**
-	 * Destructor
-	 *
-	 * Closes the DB connection when this object is destroyed.
-	 */
-	public function __destruct() {
-		if ($this->connection) {
-			$this->connection->close();
-			$this->connection = null;
-		}
-	}
+    public function getLastId(): int {
+        return (int)$this->connection->insert_id;
+    }
 }

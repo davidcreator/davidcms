@@ -76,10 +76,9 @@ jobs:
 
   static-analysis:
     runs-on: ubuntu-latest
-    # Fase 1·Tarefa 5: job DESTRAVADO, porém não-bloqueante — engine/, library/ e helper/
-    # (paths do phpstan.neon) só nascem com o núcleo (Tarefa 6). Remover a linha abaixo
-    # assim que o primeiro run com o núcleo ficar verde.
-    continue-on-error: true
+    # Fase 1·Tarefa 6c: BLOQUEANTE — núcleo completo (engine/+library/+helper/) e run verde
+    # validados localmente (0 errors, PHPStan level 2). Constantes do Contrato §1.1 são
+    # simuladas por dev/system/storage/phpstan-bootstrap.php (bootstrapFiles).
     steps:
     - uses: actions/checkout@v4
 

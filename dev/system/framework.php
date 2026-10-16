@@ -87,14 +87,26 @@ foreach ((array)$config->get('response_header', []) as $header) {
 $response->setCompression((int)$config->get('response_compression', 0));
 $registry->set('response', $response);
 
-// 8. DB (driver chega na Tarefa 6c; config avisa se tentar montar antes)
+// 8. DB — somente quando a app pede via db_autostart (install fica off deliberadamente)
 if ($config->get('db_autostart')) {
-    $dbClass = 'Reamur\\System\\Library\\Db\\' . ucfirst((string)$config->get('db_engine', 'mysqli'));
-
-    if (!class_exists($dbClass)) {
-        throw new \Exception("DB autostart ligado, mas o driver {$dbClass} ainda não existe (Tarefa 6c).");
-    }
+    $registry->set('db', new \Reamur\System\Library\Db(
+        (string)$config->get('db_engine', 'mysqli'),
+        (string)$config->get('db_hostname', 'localhost'),
+        (string)$config->get('db_username', 'root'),
+        (string)$config->get('db_password', ''),
+        (string)$config->get('db_database', ''),
+        (string)($config->get('db_port') ?? 3306)
+    ));
 }
+
+// 8.1 Cache — sempre montado; driver vem de cache_engine (padrão file)
+$cacheClass = 'Reamur\\System\\Library\\Cache\\' . ucfirst((string)$config->get('cache_engine', 'file'));
+
+if (!class_exists($cacheClass)) {
+    throw new \Exception("Driver de cache {$cacheClass} não encontrado.");
+}
+
+$registry->set('cache', new $cacheClass((int)$config->get('cache_expire', 3600)));
 
 // 9. Session
 if ($config->get('session_autostart')) {

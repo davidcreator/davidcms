@@ -1,147 +1,68 @@
-<?php
-namespace Reamur\System\Library\DB;
+<?php declare(strict_types=1);
 /**
- * Class PDO
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
  *
- * @package
+ * Driver PDO (mysql, utf8mb4). Mesma API do driver MySQLi.
  */
-class PDO {
-	/**
-	 * @var object|\PDO|null
-	 */
-	private object|null $connection;
-	/**
-	 * @var array
-	 */
-	private array $data = [];
-	/**
-	 * @var int
-	 */
-	private int $affected;
-	
-	/**
-	 * Constructor
-	 *
-	 * @param    string  $hostname
-	 * @param    string  $username
-	 * @param    string  $password
-	 * @param    string  $database
-	 * @param    string  $port
-	 */
-	public function __construct(string $hostname, string $username, string $password, string $database, string $port = '') {
-		if (!$port) {
-			$port = '3306';
-		}
+namespace Reamur\System\Library\Db;
 
-		try {
-			$pdo = @new \PDO('mysql:host=' . $hostname . ';port=' . $port . ';dbname=' . $database . ';charset=utf8mb4', $username, $password, array(\PDO::ATTR_PERSISTENT => false, \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4 COLLATE utf8mb4_general_ci'));
-		} catch (\PDOException $e) {
-			throw new \Exception('Error: Could not make a database link using ' . $username . '@' . $hostname . '!');
-		}
+final class Pdo {
+    private \PDO $connection;
 
-		if ($pdo) {
-			$this->connection = $pdo;
+    private int $affected = 0;
 
-			$this->query("SET SESSION sql_mode = 'NO_ZERO_IN_DATE,NO_ENGINE_SUBSTITUTION'");
-			$this->query("SET FOREIGN_KEY_CHECKS = 0");
+    public function __construct(string $hostname, string $username, string $password, string $database, string $port = '3306') {
+        try {
+            $this->connection = new \PDO(
+                sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $hostname, (int)$port, $database),
+                $username,
+                $password,
+                [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]
+            );
+        } catch (\PDOException $e) {
+            throw new \Exception('PDO: falha na conexão — ' . $e->getMessage());
+        }
+    }
 
-			// Sync PHP and DB time zones
-			$this->query("SET `time_zone` = '" . $this->escape(date('P')) . "'");
-		}
-	}
-	
-	/**
-	 * Query
-	 *
-	 * @param    string  $sql
-	 *
-	 * @return   bool|object
-	 */
-	public function query(string $sql): bool|object {
-		$sql = preg_replace('/(?:\'\:)([a-z0-9]*.)(?:\')/', ':$1', $sql);
+    public function query(string $sql): \stdClass|bool {
+        try {
+            $stmt = $this->connection->query($sql);
+        } catch (\PDOException $e) {
+            throw new \Exception('PDO: ' . $e->getMessage() . ' | SQL: ' . $sql);
+        }
 
-		$statement = $this->connection->prepare($sql);
+        if ($stmt instanceof \PDOStatement && $stmt->columnCount() > 0) {
+            $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $stmt->closeCursor();
 
-		try {
-			if ($statement && $statement->execute($this->data)) {
-				$this->data = [];
+            $this->affected = count($rows);
 
-				if ($statement->columnCount()) {
-					$data = $statement->fetchAll(\PDO::FETCH_ASSOC);
+            $data           = new \stdClass();
+            $data->row      = $rows[0] ?? [];
+            $data->rows     = $rows;
+            $data->num_rows = count($rows);
 
-					$result = new \stdClass();
-					$result->row = isset($data[0]) ? $data[0] : [];
-					$result->rows = $data;
-					$result->num_rows = count($data);
-					$this->affected = 0;
+            return $data;
+        }
 
-					return $result;
-				} else {
-					$this->affected = $statement->rowCount();
+        $this->affected = $stmt instanceof \PDOStatement ? $stmt->rowCount() : 0;
 
-					return true;
-				}
+        return true;
+    }
 
-				$statement->closeCursor();
-			} else {
-				return true;
-			}
-		} catch (\PDOException $e) {
-			throw new \Exception('Error: ' . $e->getMessage() . ' <br/>Error Code : ' . $e->getCode() . ' <br/>' . $sql);
-		}
+    public function escape(string $value): string {
+        return substr((string)$this->connection->quote($value), 1, -1);
+    }
 
-		return false;
-	}
+    public function countAffected(): int {
+        return $this->affected;
+    }
 
-	/**
-	 * Escape
-	 *
-	 * @param    string  value
-	 *
-	 * @return   string
-	 */
-	public function escape(string $value): string {
-		$key = ':' . count($this->data);
-
-		$this->data[$key] = $value;
-
-		return $key;
-	}
-
-	/**
-	 * countAffected
-	 *
-	 * @return   int
-	 */
-	public function countAffected(): int {
-		return $this->affected;
-	}
-
-	/**
-	 * getLastId
-	 *
-	 * @return   int
-	 */
-	public function getLastId(): int {
-		return $this->connection->lastInsertId();
-	}
-
-	/**
-	 * isConnected
-	 *
-	 * @return   bool
-	 */
-	public function isConnected(): bool {
-		return $this->connection;
-	}
-
-	/**
-	 * Destructor
-	 *
-	 * Closes the DB connection when this object is destroyed.
-	 *
-	 */
-	public function __destruct() {
-		$this->connection = null;
-	}
+    public function getLastId(): int {
+        return (int)$this->connection->lastInsertId();
+    }
 }
