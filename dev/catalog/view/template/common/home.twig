@@ -1,0 +1,41 @@
+{# dev/catalog/view/template/common/home.twig — Primeira página pública (hero de marca) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ heading_title }} · ReamurCMS</title>
+  <link rel="stylesheet" href="view/css/common.css">
+</head>
+<body class="rms-home">
+  <main class="hero">
+    <p class="brand">⭐ ReamurCMS</p>
+    <h1>{{ heading_title }}</h1>
+    <p class="tagline">{{ text_tagline }}</p>
+    <p class="lead">{{ text_lead }}</p>
+
+    <nav class="cta">
+      <a class="btn primary" href="{{ admin }}">{{ button_admin }}</a>
+    </nav>
+
+    <section class="features">
+      <article class="feature">
+        <h2>{{ text_feature_1 }}</h2>
+        <p>{{ text_feature_1_alt }}</p>
+      </article>
+      <article class="feature">
+        <h2>{{ text_feature_2 }}</h2>
+        <p>{{ text_feature_2_alt }}</p>
+      </article>
+      <article class="feature">
+        <h2>{{ text_feature_3 }}</h2>
+        <p>{{ text_feature_3_alt }}</p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>{{ text_footer }}</p>
+  </footer>
+</body>
+</html>
