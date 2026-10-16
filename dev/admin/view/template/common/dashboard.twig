@@ -1,0 +1,50 @@
+{# dev/admin/view/template/common/dashboard.twig — primeira página do painel #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ heading_title }} · ReamurCMS Admin</title>
+  <link rel="stylesheet" href="view/css/admin.css">
+</head>
+<body class="rms-dash">
+  <header class="bar-top">
+    <strong>ReamurCMS</strong>
+    <nav>
+      <a class="btn ghost" href="{{ logout }}">{{ button_logout }}</a>
+    </nav>
+  </header>
+
+  <main class="dash">
+    <h1>{{ heading_title }}</h1>
+    <p class="muted">{{ text_welcome }}</p>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>{{ text_profile }}</h2>
+        <dl>
+          <dt>{{ text_username }}</dt>
+          <dd>{{ username }}</dd>
+          <dt>{{ text_email }}</dt>
+          <dd>{{ email }}</dd>
+          <dt>{{ text_user_group }}</dt>
+          <dd>#{{ user_group_id }}</dd>
+        </dl>
+      </article>
+
+      <article class="panel">
+        <h2>{{ text_acl }}</h2>
+        <dl>
+          <dt>{{ text_access_routes }}</dt>
+          <dd>{{ access_routes }}</dd>
+          <dt>{{ text_modify_routes }}</dt>
+          <dd>{{ modify_routes }}</dd>
+        </dl>
+        <p class="muted small">{{ text_acl_note }}</p>
+      </article>
+    </section>
+
+    <footer class="muted small">{{ text_version }}</footer>
+  </main>
+</body>
+</html>
