@@ -55,8 +55,8 @@ class Step_3 extends \Reamur\System\Engine\Controller {
                 $prefix = strtolower(trim((string)$this->request->post['db_prefix']));
                 $error  = '';
 
-                if (!$this->model_install_install->connect($db, $error)) {
-                    $data['error']['connect'] = $this->language->get('error_connect') . ' ' . $error;
+                if (!$this->model_install_install->connect($db)) {
+                    $data['error']['connect'] = $this->language->get('error_connect') . ' ' . $this->model_install_install->getError();
                 } elseif ($this->model_install_install->hasTables($prefix)) {
                     // Banco não vazio: aborta antes de importar (protege instalação existente)
                     $data['error']['database'] = $this->language->get('error_db_exists');

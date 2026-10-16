@@ -1,72 +1,58 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * @package ReamurCMS
- * @author David L. Almeida
- * @copyright Copyryght (c) 2025, ReamurCMS (https://reamurcms.com)
- * @license https://opensource.org/licenses/GPL-3.0
- * @link https://reamurcms.com
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * Autoloader das classes Reamur\* (Arquitetura-MVCL §2/§3).
+ * Regra de mapeamento: cada segmento do namespace vira snake_case no caminho —
+ * Reamur\Install\Controller\Install\Step_1 → {DIR_APPLICATION}controller/install/step_1.php
+ * Reamur\System\Engine\Autoloader         → {DIR_SYSTEM}engine/autoloader.php
  */
-
 namespace Reamur\System\Engine;
-/** Class Autoloader */
-class Autoloader {
-    /** @var array */
-    private array $path = [];
 
-    /** Constructor */
-    public function __construct() {
-        spl_autoload_register([$this, 'load']);
-        spl_autoload_extensions('.php');
-    }
+final class Autoloader {
+    /** @var array<string, string> Par namespace-pai => diretório-base */
+    private array $paths = [];
 
-    /**
-     * Register
-     * @param string $namespace
-     * @param string $directory
-     * @param bool $psr4
-     * @return void
-     * 
-     * @psr-4 filename standard is stupid composer has lower case file structure than its packages have camelcase file names!
-     */
-    public function register(string $namespace, string $directory, $psr4 = false): void {
-        $this->path[$namespace] = [
-            'directory' => $directory,
-            'psr4'      => $psr4
-        ];
-    }
+    private bool $registered = false;
 
-    /**
-     * Load
-     * @param string $class
-     * @return bool
-     */
-    public function load(string $class): bool {
-        $namespace = '';
+    public function register(string $namespace, string $directory): void {
+        $this->paths[trim($namespace, '\\')] = rtrim($directory, '/\\') . '/';
 
-        $parts = explode('\\', $class);
-
-        foreach ($parts as $part) {
-            if (!$namespace) {
-                $namespace .= $part;
-            } else {
-                $namespace .= '\\' . $part;
-            }
-
-            if (isset($this->path[$namespace])) {
-                if (!$this->path[$namespace]['psr4']) {
-                    $file = $this->path[$namespace]['directory'] . trim(str_replace('\\', '/', strtolower(preg_replace('~([a-z])([A-Z]|[0-9])~', '\\1_\\2', substr($class, strlen($namespace))))), '/') . '.php';
-                } else {
-                    $file = $this->path[$namespace]['directory'] . trim(str_replace('\\', '/', substr($class, strlen($namespace))), '/') . '.php';
-                }
-            }
+        if (!$this->registered) {
+            spl_autoload_register([$this, 'load']);
+            $this->registered = true;
         }
+    }
 
-        if (isset($file) && is_file($file)) {
-            include_once($file);
+    public function load(string $class): bool {
+        foreach ($this->paths as $namespace => $directory) {
+            $prefix = $namespace . '\\';
 
-            return true;
-        } else {
+            if (!str_starts_with($class, $prefix)) {
+                continue;
+            }
+
+            $segments = explode('\\', substr($class, strlen($prefix)));
+            $file     = $directory . implode('/', array_map([self::class, 'toSnake'], $segments)) . '.php';
+
+            if (is_file($file)) {
+                require_once($file);
+
+                return true;
+            }
+
             return false;
         }
+
+        return false;
+    }
+
+    /** PascalCase / CamelCase / Step_1 → snake_case */
+    private static function toSnake(string $segment): string {
+        return strtolower((string)preg_replace('/(?<!^)[A-Z]/', '_$0', $segment));
     }
 }

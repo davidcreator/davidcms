@@ -1,87 +1,30 @@
 <?php
+/**
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * Config da aplicação CATALOG — mescla sobre default.php (Contrato-Bootstrap §4).
+ */
+
 // Site
-$_['site_url']           = HTTP_SERVER;
-//$_['site_ssl']		 = HTTPS_SERVER;
+$_['site_url']            = defined('HTTP_SERVER') ? HTTP_SERVER : '';
 
-// Url
-$_['url_autostart']		 = false;
+// Sessão de visitante (Contrato §4): cookie RMSSESSION do default.php
+$_['session_autostart']   = true;
 
-// Database
-$_['db_autostart']       = true;
-$_['db_engine']          = DB_DRIVER; // mysqli, pdo or pgsql
-$_['db_hostname']        = DB_HOSTNAME;
-$_['db_username']        = DB_USERNAME;
-$_['db_password']        = DB_PASSWORD;
-$_['db_database']        = DB_DATABASE;
-$_['db_port']            = DB_PORT;
-
-// Session
-$_['session_autostart']  = false;
-$_['session_engine']     = 'db'; // db or file
-$_['session_name']		 = 'RMSSESSIOM';
-
-// Template
-$_['template_engine']    = 'twig';
-$_['template_directory'] = '';
-$_['template_cache']	 = true;
-
-// Autoload Libraries
-$_['library_autoload']   = [
-	'openbay'
-];
+// DB: será ligado na Tarefa 6c junto com library/db (mysqli/pdo)
+$_['db_autostart']        = false;
 
 // Actions
-$_['action_pre_action']  = [
-	'startup/setting',
-	'startup/seo_url',
-	'startup/session',
-	'startup/language',
-	'startup/customer',
-	'startup/currency',
-	'startup/tax',
-	'startup/application',
-	'startup/extension',
-	'startup/startup',
-	'startup/marketing',
-	'startup/error',
-	'startup/event',
-	'startup/sass',
-	'startup/api',
-	'startup/maintenance'
-];
+$_['action_default']      = 'common/home'; // Contrato §4
+$_['action_router']       = '';            // Fase 1: dispatch direto
+$_['action_error']        = 'error/not_found';
+$_['action_pre_action']   = [];            // startup/{session,language,seo_url}: Fase 2
+$_['action_post_action']  = [];
 
-// Action Events
-$_['action_event']      = [
-	'controller/*/before' => [
-		0 => 'event/language.before',
-	//	1 => 'event/debug.before'
-	],
-	'controller/*/after' => [
-		0 => 'event/language.after',
-	//	2 => 'event/debug.after'
-	],
-	'view/*/before' => [
-		500 => 'event/theme',
-		998 => 'event/language'
-	],
-	'language/*/after' => [
-		0 => 'startup/language.after',
-		1 => 'event/translation'
-	]
-];
-
-// Webhook Events
-$_['action_webhook']     = [
-	'model/checkout/order/addOrderHistory/before' => [
-		'catalog/product/order'
-	],
-	'model/checkout/order/editOrder/before' => [
-		'sale/order/edit'
-	],
-	'model/checkout/order/addOrderHistory/before' => [
-		'sale/order/addOrderHistory'
-	],
-	'model/checkout/order/addOrder/after' => [
-		'sale/order/add'
-	],
-];
+// Erros
+$_['error_display']       = true; // virar false em produção
+$_['error_log']           = true;

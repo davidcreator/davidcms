@@ -1,97 +1,45 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * @package ReamurCMS
- * @author David L. Almeida
- * @copyright Copyryght (c) 2025, ReamurCMS (https://reamurcms.com)
- * @license https://opensource.org/licenses/GPL-3.0
- * @link https://reamurcms.com
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * Leitura/escrita dos arquivos de config ($_[]) de dev/system/config/.
+ * default.php carrega sempre; depois config/{aplicacao}.php mescla por cima (Contrato §4).
  */
-
 namespace Reamur\System\Engine;
-/** Class Config */
-class Config {
-	/** @var string */
-	protected string $directory;
-	
-    /** @var array */
-	private array $path = [];
-	
-    /** @var array */
-	private array $data = [];
 
-	/**
-     * addPath
-	 * @param string $namespace
-	 * @param string $directory
-	 */
-	public function addPath(string $namespace, string $directory = ''): void {
-		if (!$directory) {
-			$this->directory = $namespace;
-		} else {
-			$this->path[$namespace] = $directory;
-		}
-	}
+final class Config {
+    /** @var array<string, mixed> */
+    private array $data = [];
 
-	/**
-	 * Get
-	 * @param string $key
-	 * @return mixed
-	 */
-	public function get(string $key): mixed {
-		return isset($this->data[$key]) ? $this->data[$key] : '';
-	}
+    public function get(string $key, mixed $default = null): mixed {
+        return $this->data[$key] ?? $default;
+    }
 
-	/**
-	 * Set
-	 * @param string $key
-	 * @param string $value
-	 */
-	public function set(string $key, mixed $value): void {
-		$this->data[$key] = $value;
-	}
+    public function set(string $key, mixed $value): void {
+        $this->data[$key] = $value;
+    }
 
-	/**
-	 * Has
-	 * @param string $key
-	 * @return mixed
-	 */
-	public function has(string $key): bool {
-		return isset($this->data[$key]);
-	}
+    public function has(string $key): bool {
+        return isset($this->data[$key]);
+    }
 
-	/**
-	 * Load
-	 * @param string $filename
-	 */
-	public function load(string $filename): array {
-		$file = $this->directory . $filename . '.php';
+    /**
+     * Carrega DIR_CONFIG . {arquivo}.php e mescla o $_[] resultante.
+     * Arquivo inexistente é ignorado (config por aplicação é opcional).
+     */
+    public function load(string $filename): void {
+        $file = DIR_CONFIG . preg_replace('/[^a-z0-9_\-]/i', '', $filename) . '.php';
 
-		$namespace = '';
+        $_ = [];
 
-		$parts = explode('/', $filename);
+        if (is_file($file)) {
+            require($file);
+        }
 
-		foreach ($parts as $part) {
-			if (!$namespace) {
-				$namespace .= $part;
-			} else {
-				$namespace .= '/' . $part;
-			}
-
-			if (isset($this->path[$namespace])) {
-				$file = $this->path[$namespace] . substr($filename, strlen($namespace)) . '.php';
-			}
-		}
-
-		if (is_file($file)) {
-			$_ = [];
-
-			require($file);
-
-			$this->data = array_merge($this->data, $_);
-
-			return $this->data;
-		} else {
-			return [];
-		}
-	}
+        $this->data = array_replace($this->data, $_);
+    }
 }

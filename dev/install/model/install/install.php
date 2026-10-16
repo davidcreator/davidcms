@@ -18,13 +18,20 @@ class Install extends \Reamur\System\Engine\Model {
     /** @var \mysqli|\PDO|null Conexão aberta pela última chamada a connect() */
     private $handle = null;
 
+    /** Última mensagem de erro de connect() (via getError) */
+    private string $error = '';
+
     /**
      * Testa/abre conexão com as credenciais do formulário.
      *
+     * REGRA (motor Reamur): models rodam via Proxy/__call — argumentos &by-ref
+     * NÃO atravessam. Em caso de false, leia a mensagem em getError().
+     *
      * @param array{db_driver: string, db_hostname: string, db_username: string, db_password: string, db_database: string, db_port: int|string} $data
      */
-    public function connect(array $data, string &$error = ''): bool {
+    public function connect(array $data): bool {
         $this->handle = null;
+        $this->error  = '';
 
         try {
             if ($data['db_driver'] === 'mysqli') {
@@ -53,12 +60,17 @@ class Install extends \Reamur\System\Engine\Model {
                 );
             }
         } catch (\mysqli_sql_exception|\PDOException $e) {
-            $error = $e->getMessage();
+            $this->error = $e->getMessage();
 
             return false;
         }
 
         return true;
+    }
+
+    /** Mensagem da última falha de connect() ('' quando a conexão abriu) */
+    public function getError(): string {
+        return $this->error;
     }
 
     /**

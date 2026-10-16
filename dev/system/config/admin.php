@@ -1,81 +1,31 @@
 <?php
+/**
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * Config da aplicação ADMIN — mescla sobre default.php (Contrato-Bootstrap §4).
+ */
+
 // Site
-$_['site_url']         = HTTP_SERVER;
-//$_['site_ssl']       = HTTPS_SERVER;
+$_['site_url']            = defined('HTTP_SERVER') ? HTTP_SERVER : '';
 
-// Database
-$_['db_autostart']      = true;
-$_['db_engine']         = 'DB_DRIVER'; // mysqli, pdo or pgsql
-$_['db_engine']         = 'DB_HOSTNAME';
-$_['db_username']       = 'DB_USERNAME';
-$_['db_password']       = 'DB_PASSWORD';
-$_['db_database']       = 'DB_DATABASE';
-$_['db_port']           = 'DB_PORT';
+// Sessão do painel (Contrato §4): cookie próprio; token ACL chega na Fase 2 (startup/login)
+$_['session_autostart']   = true;
+$_['session_name']        = 'RMSADMIN';
 
-// Session
-$_['session_autostart'] = true;
-$_['session_engine']    = 'db'; // db or file
-
-// Template
-$_['template_cache']    = true;
-
-// Error
-$_['error_display']     = true;
+// DB: será ligado na Tarefa 6c junto com library/db (mysqli/pdo)
+$_['db_autostart']        = false;
 
 // Actions
-$_['action_pre_action'] = [
-    'startup/setting',
-	'startup/session',
-	'startup/language',
-	'startup/application',
-	'startup/extension',
-	'startup/startup',
-	'startup/error',
-	'startup/event',
-	'startup/sass',
-	'startup/login',
-	'startup/authorize',
-	'startup/permission'
-]; 
+$_['action_default']      = 'common/dashboard'; // Contrato §4 (após login — Fase 2)
+$_['action_router']       = '';                 // Fase 1: dispatch direto
+$_['action_error']        = 'error/not_found';
+$_['action_pre_action']   = [];                 // startup/{login,permission}: Fase 2
+$_['action_post_action']  = [];
 
-// Actions
-$_['action_default']     = 'common/dashboard';
-
-// Action Events
-$_['action_event']       = [
-	'controller/*/before' => [
-		0 => 'event/language.before'
-	],
-	'controller/*/after' => [
-		0 => 'event/language.after'
-	],
-	//'model/*/after' => [
-	//	0 => 'event/debug.before'
-	//],
-	//'model/*/after' => [
-	//	0 => 'event/debug.after'
-	//],
-	'view/*/before' => [
-		999  => 'event/language',
-		1000 => 'event/theme'
-	],
-    'language/*/after' => [
-        0 => 'startup/language.after'
-    ]
-];
-
-// Webhook Events
-$_['webhook_event'] = array (
-    'model/catalog/product/addProduct/after' => array(
-        'catalog/product/add'
-    ),
-    'model/catalog/product/editProduct/after' => array(
-        'catalog/product/edit'
-    ),
-    'model/catalog/product/deleteProduct/after' => array(
-        'catalog/product/delete'
-    ),
-    'model/catalog/product/copyProduct/after' => array(
-        'catalog/product/copy'
-    ),
-);
+// Erros
+$_['error_display']       = true; // virar false em produção
+$_['error_log']           = true;

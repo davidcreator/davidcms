@@ -1,33 +1,32 @@
 <?php
+/**
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * Config da aplicação INSTALL — mescla sobre default.php (Contrato-Bootstrap §4).
+ */
+
 // Site
-$_['site_url']          = HTTP_SERVER;
-//$_['site_ssl']        = HTTPS_SERVER;
+$_['site_url']            = defined('HTTP_SERVER') ? HTTP_SERVER : '';
 
-// Language
-$_['language_code']     = 'en-gb';
-$_['language_autoload'] = ['en-gb'];
+// Sessão efêmera do wizard (Contrato §4)
+$_['session_autostart']   = true;
+$_['session_name']        = 'RMSINSTALL';
+$_['session_expire']      = 3600;
 
-// Session
-$_['session_engine']    = 'file';
-$_['session_autostart'] = true;
-$_['session_name']	    = 'RMSSESSION';
-
-// Template
-$_['template_engine']   = 'twig';
-$_['template_cache']    = true;
-
-// Error
-$_['error_display']     = true;
+// DB: o wizard conecta nativamente via model (sem config.php existir ainda)
+$_['db_autostart']        = false;
 
 // Actions
-$_['action_default']    = 'install/step_1';
-$_['action_router']     = 'start/router';
-$_['action_error']      = 'error/not_found';
-$_['action_pre_action'] = [
-							'startup/install',
-							'startup/upgrade',
-							'startup/database'
-						  ];
+$_['action_default']      = 'install/step_1'; // Contrato §4
+$_['action_router']       = '';               // Fase 1: dispatch direto (startup/router virá com startup/*)
+$_['action_error']        = 'error/not_found';
+$_['action_pre_action']   = [];               // startup/requirements: delegado ao próprio step_2 nesta fase
+$_['action_post_action']  = [];
 
-// Action Events
-$_['action_event']      = [];
+// Erros (ambiente de setup: sempre visível)
+$_['error_display']       = true;
+$_['error_log']           = true;

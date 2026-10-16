@@ -48,8 +48,8 @@ class Step_4 extends \Reamur\System\Engine\Controller {
             if (!$data['error']) {
                 $db = $this->session->data['install_db'];
 
-                if (!$this->model_install_install->connect($db, $error_msg)) {
-                    $data['error']['warning'] = $this->language->get('error_connect') . ' ' . $error_msg;
+                if (!$this->model_install_install->connect($db)) {
+                    $data['error']['warning'] = $this->language->get('error_connect') . ' ' . $this->model_install_install->getError();
                 } else {
                     $this->model_install_install->createAdministrator([
                         'username'  => trim((string)$this->request->post['username']),

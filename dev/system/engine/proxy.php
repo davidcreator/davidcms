@@ -1,75 +1,45 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * @package ReamurCMS
- * @author David L. Almeida
- * @copyright Copyryght (c) 2025, ReamurCMS (https://reamurcms.com)
- * @license https://opensource.org/licenses/GPL-3.0
- * @link https://reamurcms.com
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * Proxy de lazy loading de models (Arquitetura-MVCL §7).
+ * $this->load->model('grupo/modulo') registra este Proxy no Registry;
+ * a classe real Reamur\{APP}\Model\{Grupo}\{Modulo} só é instanciada
+ * na primeira chamada de método (__call).
+ *
+ * REGRA: métodos de model NÃO usam parâmetros por referência — &ref não
+ * atravessa __call(). Devolva arrays/estado (ex.: getError()).
  */
-
 namespace Reamur\System\Engine;
-/** Class Proxy */
+
 class Proxy {
-    /** @var array */
-    protected $data = [];
+    private object|null $instance = null;
 
-    /** 
-     * __get
-     * @param string $key
-     * @return object|null
-     */
-    public function &__get(string $key): object|null {
-        if (isset($this->data[$key])) {
-            return $this->data[$key];
-        } else {
-            throw new \Exception('Error: Could not call proxy key' . $key . '!');
-        }
-    }
+    public function __construct(private Registry $registry, private string $route) {}
 
-    /**
-     * __get
-     * @param string $key
-     * @param string $value
-     * @return void
-     */
-    public function __set(string $key, object $value): void {
-        $this->data[$key] = $value;
-    }
-
-    /**
-     * __isset
-     * @param string $key
-     * @return void
-     */
-    public function __isset(string $key) {
-        return isset($this->data[$key]);
-    }
-
-    /**
-     * __unset
-     * @param string $key
-     * @return void
-     */
-    public function __unset(string $key) {
-        unset($this->data[$key]);
-    }
-
-    /** 
-     * __call
-     * @param string $method
-     * @param array  $args
-     * @return mixed
-     */
     public function __call(string $method, array $args): mixed {
-        // Hack for pass-by-reference
-        foreach ($args as $key => &$value);
+        return call_user_func_array([$this->getInstance(), $method], $args);
+    }
 
-        if (isset($this->data[$method])) {
-            return call_user_func_array($this->data[$method], $args);
-        } else {
-            $trace = debug_backtrace();
+    /** Instancia (uma única vez) o model real: route 'cms/portfolio' → Model\Cms\Portfolio */
+    public function getInstance(): object {
+        if ($this->instance === null) {
+            $class = 'Reamur\\' . APPLICATION . '\\Model\\' . implode(
+                '\\',
+                array_map('ucfirst', explode('/', $this->route))
+            );
 
-            throw new \Exception('<b>Notice</b>:  Undefined property: Proxy::' . $method . ' in <b>' . $trace[0]['file'] . '</b> on line <b>' . $trace[0]['line'] . '</b>');
+            if (!class_exists($class)) {
+                throw new \Exception(sprintf('Model class not found: %s (route "%s")', $class, $this->route));
+            }
+
+            $this->instance = new $class($this->registry);
         }
+
+        return $this->instance;
     }
 }

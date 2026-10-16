@@ -1,115 +1,47 @@
-<?php
+<?php declare(strict_types=1);
+/**
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * Adaptador Twig — engine padrão oficial (Guia-Twig §1).
+ * Resolve {rota}.twig em DIR_TEMPLATE (com subpasta de tema via config
+ * template_directory, se existir). Cache compilado: storage/cache/template/.
+ */
 namespace Reamur\System\Library\Template;
 
-/**
- * Class Twig
- * Provides Twig template engine integration with custom namespace handling
- */
-class Twig {
-    protected string $root;
-    protected object $loader;
-    protected string $directory;
-    protected array $path = [];
+final class Twig {
+    private \Twig\Environment $twig;
 
-    /**
-     * Constructor
-     * Initializes Twig filesystem loader with root directory
-     */
-    public function __construct() {
-        $this->root = rtrim(str_replace('\\', '/', DIR_REAMUR), '/');
-        $this->loader = new \Twig\Loader\FilesystemLoader('/', $this->root);
-    }
+    public function __construct(string $directory = '', bool $cache = false) {
+        $paths = [DIR_TEMPLATE];
 
-    /**
-     * Add template path namespace
-     * @param string $namespace Path namespace
-     * @param string $directory Directory path (optional)
-     * @throws \InvalidArgumentException If namespace is empty
-     */
-    public function addPath(string $namespace, string $directory = ''): void {
-        if (empty($namespace)) {
-            throw new \InvalidArgumentException('Namespace cannot be empty');
+        if ($directory !== '' && is_dir(DIR_TEMPLATE . $directory)) {
+            array_unshift($paths, DIR_TEMPLATE . rtrim($directory, '/') . '/');
         }
 
-        $source = '';
+        $cacheDir = DIR_STORAGE . 'cache/template/';
 
-        if (!$directory) {
-            $this->directory = $namespace;
-            $path = $this->normalizeLoaderPath($namespace);
-            $source = $namespace;
-        } else {
-            $this->path[$namespace] = $directory;
-            $path = $this->normalizeLoaderPath($directory);
-            $source = $directory;
+        if ($cache && !is_dir($cacheDir)) {
+            mkdir($cacheDir, 0755, true);
         }
 
-        if ($path !== '' && is_dir($source)) {
-            $this->loader->addPath($path);
-        }
-    }
-
-    /**
-     * Normalize an absolute template directory to the loader root.
-     */
-    protected function normalizeLoaderPath(string $path): string {
-        $path = rtrim(str_replace('\\', '/', $path), '/');
-
-        if (str_starts_with($path, $this->root . '/')) {
-            return substr($path, strlen($this->root) + 1);
-        }
-
-        if ($path === $this->root) {
-            return '/';
-        }
-
-        return ltrim($path, '/');
-    }
-
-    /**
-     * Render template
-     * @param string $filename Template filename
-     * @param array $data Template variables
-     * @param string $code Optional template code to render instead of file
-     * @return string Rendered template
-     * @throws \RuntimeException If template cannot be loaded or rendered
-     */
-    public function render(string $filename, array $data = [], string $code = ''): string {
-        if (empty($filename)) {
-            throw new \InvalidArgumentException('Filename cannot be empty');
-        }
-
-        $file = $this->directory . $filename . '.twig';
-        $namespace = '';
-
-        $parts = explode('/', $filename);
-        foreach ($parts as $part) {
-            $namespace = $namespace ? $namespace . '/' . $part : $part;
-
-            if (isset($this->path[$namespace])) {
-                $file = $this->path[$namespace] . substr($filename, strlen($namespace) + 1) . '.twig';
-            }
-        }
-
-        $file = substr($file, strlen($this->root) + 1);
-
-        try {
-            $loader = $code ? new \Twig\Loader\ArrayLoader([$file => $code]) : $this->loader;
-            
-            $config = [
-                'charset'     => 'utf-8',
-                'autoescape'  => false,
-                'debug'       => false,
+        $this->twig = new \Twig\Environment(
+            new \Twig\Loader\FilesystemLoader($paths),
+            [
+                'autoescape'  => 'html',
+                'cache'       => $cache ? $cacheDir : false,
                 'auto_reload' => true,
-                'cache'       => new TwigCache(
-                    DIR_CACHE . 'template/',
-                    \Twig\Cache\FilesystemCache::FORCE_BYTECODE_INVALIDATION
-                )
-            ];
+            ]
+        );
+    }
 
-            $twig = new \Twig\Environment($loader, $config);
-            return $twig->render($file, $data);
-        } catch (\Exception $e) {
-            throw new \RuntimeException('Failed to render template: ' . $e->getMessage());
-        }
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function render(string $route, array $data = []): string {
+        return $this->twig->render($route . '.twig', $data);
     }
 }

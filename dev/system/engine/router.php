@@ -1,86 +1,50 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * @package ReamurCMS
- * @author David L. Almeida
- * @copyright Copyryght (c) 2025, ReamurCMS (https://reamurcms.com)
- * @license https://opensource.org/licenses/GPL-3.0
- * @link https://reamurcms.com
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * Despacha a Action da requisição (Arquitetura-MVCL §4):
+ * tenta a rota pedida; em falha, cai na rota de erro da aplicação (action_error);
+ * se até a de erro faltar, responde o mínimo honesto.
+ * Um controller pode retornar outra Action para encadear o fluxo.
  */
-
 namespace Reamur\System\Engine;
 
-/** Class Router */
-class Router {
-    private $registry;
-    private $pre_action = [];
-    private $post_action = [];
-    private $error;
+final class Router {
+    public function __construct(protected Registry $registry) {}
 
-    /**
-     * Constructor
-     *
-     * @param    object $route
-     */
-	public function __construct($registry) {
-		$this->registry = $registry;
-	}
+    public function dispatch(Action $action, Action $error): void {
+        while ($action instanceof Action) {
+            try {
+                $result = $action->execute($this->registry);
+            } catch (\Throwable $e) {
+                $log = $this->registry->get('log');
 
-    /**
-     * @param    object $pre_action
-     */
-	public function addPreAction(Action $pre_action) {
-		$this->pre_action[] = $pre_action;
-	}
-	/**
-     * @param    object $post_action
-     */
-	public function addPostAction(Action $post_action) {
-		$this->post_action[] = $post_action;
-	}
+                if ($log && method_exists($log, 'write')) {
+                    $log->write($e->getMessage());
+                }
 
-    /**
-     * @param    object $action
-     * @param    object $error
-     */
-	public function dispatch(Action $action, Action $error) {
-		$this->error = $error;
+                if ($action->getRoute() === $error->getRoute()) {
+                    // Nem a rota de erro existe — resposta mínima, sem esconder a falha
+                    $response = $this->registry->get('response');
 
-		foreach ($this->pre_action as $pre_action) {
-			$result = $this->execute($pre_action);
+                    if ($response && method_exists($response, 'setOutput')) {
+                        $response->setOutput('ReamurCMS error: ' . $e->getMessage());
+                    }
 
-			if ($result instanceof Action) {
-				$action = $result;
+                    return;
+                }
 
-				break;
-			}
-		}
+                $action = $error;
 
-		while ($action instanceof Action) {
-			$action = $this->execute($action);
-		}
+                continue;
+            }
 
-		foreach ($this->post_action as $post_action) {
-			$result = $this->execute($post_action);
-		}
-	}
-
-    /**
-     * @param    object $action
-     * @return    object
-     */
-	private function execute(Action $action) {
-		$result = $action->execute($this->registry);
-
-		if ($result instanceof Action) {
-			return $result;
-		}
-
-		if ($result instanceof Exception) {
-			$action = $this->error;
-
-			$this->error = null;
-
-			return $action;
-		}
-	}
+            // Encadeamento: só continua se o controller devolveu outra Action
+            $action = $result instanceof Action ? $result : null;
+        }
+    }
 }

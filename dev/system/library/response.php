@@ -1,22 +1,23 @@
-<?php
+<?php declare(strict_types=1);
 /**
- * @package ReamurCMS
- * @author David L. Almeida
+ * @package   ReamurCMS
+ * @author    David L. Almeida
  * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
- * @license https://opensource.org/licenses/GPL-3.0
- * @link https://reamurcms.com
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * Resposta HTTP (Arquitetura-MVCL §4): headers + corpo + redirect.
+ * Em CLI (testes headless), redirect NÃO dá exit — apenas registra o destino.
  */
-
 namespace Reamur\System\Library;
 
-/**
- * Class Response
- * Stores the response so the correct headers can go out before the response output is shown.
- */
-class Response {
+final class Response {
+    /** @var array<int, string> */
     private array $headers = [];
-    private int $level = 0;
+
     private string $output = '';
+
+    private int $compression = 0;
 
     public function addHeader(string $header): void {
         if (!in_array($header, $this->headers, true)) {
@@ -24,25 +25,13 @@ class Response {
         }
     }
 
+    /** @return array<int, string> */
     public function getHeaders(): array {
         return $this->headers;
     }
 
-    public function redirect(string $url, int $status = 302): void {
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            throw new \InvalidArgumentException('Invalid URL provided for redirect');
-        }
-
-        $cleanUrl = str_replace(['&amp;', "\n", "\r"], ['&', '', ''], $url);
-        header('Location: ' . $cleanUrl, true, $status);
-        exit();
-    }
-
     public function setCompression(int $level): void {
-        if ($level < -1 || $level > 9) {
-            throw new \InvalidArgumentException('Compression level must be between -1 and 9');
-        }
-        $this->level = $level;
+        $this->compression = $level;
     }
 
     public function setOutput(string $output): void {
@@ -53,47 +42,32 @@ class Response {
         return $this->output;
     }
 
-    private function compress(string $data, int $level = 0): string {
-        if (!isset($_SERVER['HTTP_ACCEPT_ENCODING'])) {
-            return $data;
+    /** Redirect HTTP; em web, encerra a execução (padrão OpenCart) */
+    public function redirect(string $url, int $status = 302): void {
+        if (PHP_SAPI !== 'cli') {
+            header('Location: ' . str_replace(['&amp;', "\n", "\r"], ['&'], $url), true, $status);
+            exit();
         }
 
-        $encoding = null;
-        if (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false) {
-            $encoding = 'gzip';
-        } elseif (strpos($_SERVER['HTTP_ACCEPT_ENCODING'], 'x-gzip') !== false) {
-            $encoding = 'x-gzip';
-        }
-
-        if (!$encoding || $level < -1 || $level > 9) {
-            return $data;
-        }
-
-        if (!extension_loaded('zlib') || ini_get('zlib.output_compression')) {
-            return $data;
-        }
-
-        if (headers_sent() || connection_status()) {
-            return $data;
-        }
-
-        $this->addHeader('Content-Encoding: ' . $encoding);
-        return gzencode($data, $level);
+        $this->addHeader('Location: ' . $url);
     }
 
+    /** Envia headers + corpo (com compressão opcional) */
     public function output(): void {
-        if (!$this->output) {
-            return;
-        }
-
-        $output = $this->level ? $this->compress($this->output, $this->level) : $this->output;
-
-        if (!headers_sent()) {
+        if (PHP_SAPI !== 'cli') {
             foreach ($this->headers as $header) {
-                header($header, true);
+                header($header);
             }
         }
 
-        echo $output;
+        if ($this->compression > 0 && extension_loaded('zlib') && PHP_SAPI !== 'cli') {
+            ob_start('ob_gzhandler');
+        }
+
+        echo $this->output;
+
+        if ($this->compression > 0 && extension_loaded('zlib') && PHP_SAPI !== 'cli' && ob_get_level() > 0) {
+            ob_end_flush();
+        }
     }
 }
