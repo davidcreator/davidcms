@@ -1,0 +1,151 @@
+<?php
+/**
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * Model do wizard: conexão, importação do schema e criação do administrador.
+ * REGRA MVCL: todo SQL da instalação vive aqui — nenhum SQL em controller.
+ * NOTA: usa extensões nativas (mysqli/PDO) porque system/library/db/* ainda não
+ * existe nesta fase; o wizard precisa operar ANTES do config.php existir.
+ */
+namespace Reamur\Install\Model\Install;
+
+class Install extends \Reamur\System\Engine\Model {
+
+    /** @var \mysqli|\PDO|null Conexão aberta pela última chamada a connect() */
+    private $handle = null;
+
+    /**
+     * Testa/abre conexão com as credenciais do formulário.
+     *
+     * @param array{db_driver: string, db_hostname: string, db_username: string, db_password: string, db_database: string, db_port: int|string} $data
+     */
+    public function connect(array $data, string &$error = ''): bool {
+        $this->handle = null;
+
+        try {
+            if ($data['db_driver'] === 'mysqli') {
+                $mysqli = new \mysqli(
+                    (string)$data['db_hostname'],
+                    (string)$data['db_username'],
+                    (string)$data['db_password'],
+                    (string)$data['db_database'],
+                    (int)($data['db_port'] ?: 3306)
+                );
+
+                $mysqli->set_charset('utf8mb4');
+
+                $this->handle = $mysqli;
+            } else { // pdo (pdo_mysql)
+                $this->handle = new \PDO(
+                    sprintf(
+                        'mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
+                        $data['db_hostname'],
+                        (int)($data['db_port'] ?: 3306),
+                        $data['db_database']
+                    ),
+                    (string)$data['db_username'],
+                    (string)$data['db_password'],
+                    [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]
+                );
+            }
+        } catch (\mysqli_sql_exception|\PDOException $e) {
+            $error = $e->getMessage();
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Verifica se o banco já contém tabelas do prefixo (instalação deve partir de banco vazio).
+     */
+    public function hasTables(string $prefix): bool {
+        $like = str_replace(['%', '_'], ['\\%', '\\_'], $prefix) . '%';
+
+        if ($this->handle instanceof \mysqli) {
+            $result = $this->handle->query("SHOW TABLES LIKE '" . $this->handle->real_escape_string($like) . "'");
+
+            return $result && $result->num_rows > 0;
+        }
+
+        $stmt = $this->handle->prepare('SHOW TABLES LIKE ?');
+        $stmt->execute([$like]);
+
+        return (bool)$stmt->fetchColumn();
+    }
+
+    /**
+     * Importa sql/schema.sql trocando o prefixo-padrão `rms_` pelo escolhido.
+     * O arquivo usa identificadores cravados (`rms_tabela`), então a troca cirúrgica
+     * atinge somente nomes de tabelas — inclusive nos INSERTs de seed.
+     */
+    public function importSchema(string $prefix): void {
+        $sql = (string)file_get_contents(dirname(__DIR__, 3) . '/sql/schema.sql');
+
+        if ($prefix !== 'rms_') {
+            $sql = str_replace('`rms_', '`' . $prefix, $sql);
+        }
+
+        foreach (array_filter(array_map('trim', explode(";\n", $sql))) as $statement) {
+            if ($statement === '' || str_starts_with($statement, '--')) {
+                continue;
+            }
+
+            $this->handle instanceof \mysqli
+                ? $this->handle->query($statement)
+                : $this->handle->exec($statement);
+        }
+    }
+
+    /**
+     * Cria o grupo 'Administrator' (ACL completa é semeada na Fase 2) e o
+     * primeiro usuário admin. Colunas 1:1 com docs/Dicionario-de-Dados.md.
+     *
+     * @param array{username: string, firstname: string, lastname: string, email: string, password: string} $data
+     */
+    public function createAdministrator(array $data, string $prefix): void {
+        $permission = json_encode(['access' => [], 'modify' => []]);
+
+        if ($this->handle instanceof \mysqli) {
+            $e = fn(string $v): string => $this->handle->real_escape_string($v);
+
+            $this->handle->query("INSERT INTO `" . $e($prefix) . "user_group`
+                SET `name` = 'Administrator', `permission` = '" . $e($permission) . "'");
+
+            $group_id = (int)$this->handle->insert_id;
+
+            $this->handle->query("INSERT INTO `" . $e($prefix) . "user`
+                SET `user_group_id` = '" . $group_id . "',
+                    `username`  = '" . $e($data['username']) . "',
+                    `password`  = '" . $e(password_hash($data['password'], PASSWORD_DEFAULT)) . "',
+                    `email`     = '" . $e($data['email']) . "',
+                    `firstname` = '" . $e($data['firstname']) . "',
+                    `lastname`  = '" . $e($data['lastname']) . "',
+                    `image`     = '',
+                    `status`    = '1',
+                    `date_added` = NOW()");
+        } else {
+            $stmt = $this->handle->prepare("INSERT INTO `" . $prefix . "user_group` SET `name` = 'Administrator', `permission` = ?");
+            $stmt->execute([$permission]);
+
+            $group_id = (int)$this->handle->lastInsertId();
+
+            $stmt = $this->handle->prepare("INSERT INTO `" . $prefix . "user`
+                SET `user_group_id` = ?, `username` = ?, `password` = ?, `email` = ?,
+                    `firstname` = ?, `lastname` = ?, `image` = '', `status` = '1', `date_added` = NOW()");
+            $stmt->execute([
+                $group_id,
+                $data['username'],
+                password_hash($data['password'], PASSWORD_DEFAULT),
+                $data['email'],
+                $data['firstname'],
+                $data['lastname'],
+            ]);
+        }
+    }
+}
