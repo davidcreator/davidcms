@@ -20,6 +20,13 @@ class Step_1 extends \Reamur\System\Engine\Controller {
 
         $this->document->setTitle($this->language->get('heading_title'));
 
+        // Textos da view (regra de ouro: nenhum texto solto no template)
+        $data['step']            = sprintf($this->language->get('text_step'), 1);
+        $data['heading_title']   = $this->language->get('heading_title');
+        $data['text_license']    = $this->language->get('text_license');
+        $data['text_agree']      = $this->language->get('text_agree');
+        $data['button_continue'] = $this->language->get('button_continue');
+
         $data['error'] = '';
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {

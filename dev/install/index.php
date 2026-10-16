@@ -22,8 +22,29 @@ if (is_file('config.php')) {
     require_once('config.php');
 }
 
-// 4. SEM fallback de instalação: esta aplicação É o wizard —
-//    roda sem config.php justamente para criá-lo (Contrato-Bootstrap §2).
+// 4. Install NUNCA redireciona (ela É o wizard). Para rodar ANTES do config.php
+//    existir, autodefine o ambiente usando SOMENTE constantes do Contrato-Bootstrap §1.1
+//    (Adendo F1-4 — nenhuma constante nova). Se config.php existir, o bloco é ignorado.
+if (!defined('DIR_APPLICATION')) {
+    $app_dir = str_replace('\\', '/', (string)realpath(__DIR__));
+
+    // DIR (§1.1) — raízes derivadas da posição real de dev/install
+    define('DIR_REAMUR', dirname(dirname($app_dir)) . '/');
+    define('DIR_APPLICATION', $app_dir . '/');
+    define('DIR_SYSTEM', DIR_REAMUR . 'dev/system/');
+    define('DIR_LANGUAGE', DIR_APPLICATION . 'language/');
+    define('DIR_TEMPLATE', DIR_APPLICATION . 'view/template/');
+    define('DIR_CONFIG', DIR_SYSTEM . 'config/');
+    define('DIR_STORAGE', DIR_SYSTEM . 'storage/');
+    define('DIR_EXTENSION', DIR_REAMUR . 'dev/extension/');
+
+    // HTTP (§1.1) — URL base da própria aplicação install
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $base   = str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/install/index.php')));
+
+    define('HTTP_SERVER', $scheme . '://' . (string)($_SERVER['HTTP_HOST'] ?? 'localhost') . rtrim($base, '/') . '/');
+    define('HTTPS_SERVER', HTTP_SERVER);
+}
 
 // 5. Bootstrap do núcleo — ordem inviolável, nada entre estes requires
 require_once(DIR_SYSTEM . 'startup.php');

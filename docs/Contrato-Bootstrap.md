@@ -81,7 +81,9 @@ Depois do passo 5, o fluxo é o documentado em [Arquitetura-MVCL §4](Arquitetur
 | Aplicação | Regra do fallback de instalação |
 | --- | --- |
 | `catalog`, `admin` | Sem `config.php` → redirecionar para `install/index.php` |
-| `install` | Nunca redireciona; roda sem `config.php` (o wizard cria um) |
+| `install` | Nunca redireciona; **autodefine** `DIR_*` + `HTTP_*` (somente as já previstas no §1.1) quando `config.php` ausente — Adendo F1-4 |
+
+> **Adendo F1-4 (Fase 1 · Tarefa 4 — aceito pelo dono):** o passo 4 do `install/index.php` autodefine o ambiente (padrão OpenCart) para o wizard rodar **antes** do `config.php` existir — sem criar nenhuma constante nova (§5.2 preservado). Pendente para a verificação de bootstrap: criar `dev/system/config/install.php` e garantir que o `framework.php` não monte o serviço `db` sem `DB_*` (db-autoload desligado na app install).
 
 ---
 

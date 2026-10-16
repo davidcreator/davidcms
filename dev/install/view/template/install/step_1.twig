@@ -1,0 +1,33 @@
+{# dev/install/view/template/install/step_1.twig — Licença #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ heading_title }} · ReamurCMS</title>
+  <link rel="stylesheet" href="css/wizard.css">
+</head>
+<body class="rms-wizard">
+  <main class="card">
+    <p class="step">{{ step }}</p>
+    <h1>{{ heading_title }}</h1>
+    <p>{{ text_license }}</p>
+
+    {% if error %}
+    <div class="alert error">{{ error }}</div>
+    {% endif %}
+
+    <pre class="license">{{ license }}</pre>
+
+    <form method="post" action="{{ action }}">
+      <label class="check">
+        <input type="checkbox" name="agree" value="1"{% if agree %} checked{% endif %}>
+        {{ text_agree }}
+      </label>
+      <div class="actions right">
+        <button type="submit" class="btn primary">{{ button_continue }}</button>
+      </div>
+    </form>
+  </main>
+</body>
+</html>

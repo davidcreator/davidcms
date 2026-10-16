@@ -24,6 +24,14 @@ class Step_5 extends \Reamur\System\Engine\Controller {
 
         $this->document->setTitle($this->language->get('heading_title'));
 
+        // Textos da view
+        $data['step']                = sprintf($this->language->get('text_step'), 5);
+        $data['heading_title']       = $this->language->get('heading_title');
+        $data['text_success']        = $this->language->get('text_success');
+        $data['text_remove_install'] = $this->language->get('text_remove_install');
+        $data['text_catalog']        = $this->language->get('text_catalog');
+        $data['text_admin']          = $this->language->get('text_admin');
+
         // URLs das aplicações derivadas do próprio request do wizard (../{app}/)
         $base = rtrim(dirname((string)($this->request->server['SCRIPT_NAME'] ?? '/install/index.php')), '/\\') . '/';
 

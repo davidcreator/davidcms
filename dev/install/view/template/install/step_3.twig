@@ -1,0 +1,81 @@
+{# dev/install/view/template/install/step_3.twig — Banco de dados #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ heading_title }} · ReamurCMS</title>
+  <link rel="stylesheet" href="css/wizard.css">
+</head>
+<body class="rms-wizard">
+  <main class="card">
+    <p class="step">{{ step }}</p>
+    <h1>{{ heading_title }}</h1>
+    <p>{{ text_db }}</p>
+
+    <form method="post" action="{{ action }}">
+      {% if error.connect or error.database or error.config %}
+      <div class="alert error">{{ error.connect }}{{ error.database }}{{ error.config }}</div>
+      {% endif %}
+
+      <div class="field">
+        <label for="db_driver">{{ entry_db_driver }}</label>
+        <select id="db_driver" name="db_driver">
+          {% for driver in drivers %}
+          <option value="{{ driver }}"{% if driver == db_driver %} selected{% endif %}>{{ driver }}</option>
+          {% endfor %}
+        </select>
+        {% if error.db_driver %}<small class="field-error">{{ error.db_driver }}</small>{% endif %}
+      </div>
+
+      <div class="field">
+        <label for="db_hostname">{{ entry_db_hostname }}</label>
+        <input type="text" id="db_hostname" name="db_hostname" value="{{ db_hostname }}" required>
+        {% if error.db_hostname %}<small class="field-error">{{ error.db_hostname }}</small>{% endif %}
+      </div>
+
+      <div class="grid two">
+        <div class="field">
+          <label for="db_username">{{ entry_db_username }}</label>
+          <input type="text" id="db_username" name="db_username" value="{{ db_username }}" required>
+          {% if error.db_username %}<small class="field-error">{{ error.db_username }}</small>{% endif %}
+        </div>
+        <div class="field">
+          <label for="db_password">{{ entry_db_password }}</label>
+          <input type="password" id="db_password" name="db_password" value="{{ db_password }}">
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="field">
+          <label for="db_database">{{ entry_db_database }}</label>
+          <input type="text" id="db_database" name="db_database" value="{{ db_database }}" required>
+          {% if error.db_database %}<small class="field-error">{{ error.db_database }}</small>{% endif %}
+        </div>
+        <div class="field">
+          <label for="db_port">{{ entry_db_port }}</label>
+          <input type="number" id="db_port" name="db_port" value="{{ db_port }}" min="1" max="65535">
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="field">
+          <label for="db_prefix">{{ entry_db_prefix }}</label>
+          <input type="text" id="db_prefix" name="db_prefix" value="{{ db_prefix }}" maxlength="20" required>
+          {% if error.db_prefix %}<small class="field-error">{{ error.db_prefix }}</small>{% endif %}
+        </div>
+        <div class="field">
+          <label for="http_server">{{ entry_http_server }}</label>
+          <input type="url" id="http_server" name="http_server" value="{{ http_server }}" placeholder="https://" required>
+          {% if error.http_server %}<small class="field-error">{{ error.http_server }}</small>{% endif %}
+        </div>
+      </div>
+
+      <div class="actions">
+        <a href="{{ back }}" class="btn">{{ button_back }}</a>
+        <button type="submit" class="btn primary">{{ button_continue }}</button>
+      </div>
+    </form>
+  </main>
+</body>
+</html>

@@ -22,6 +22,21 @@ class Step_3 extends \Reamur\System\Engine\Controller {
 
         $this->document->setTitle($this->language->get('heading_title'));
 
+        // Textos da view
+        $data['step']             = sprintf($this->language->get('text_step'), 3);
+        $data['heading_title']    = $this->language->get('heading_title');
+        $data['text_db']          = $this->language->get('text_db');
+        $data['entry_db_driver']  = $this->language->get('entry_db_driver');
+        $data['entry_db_hostname']= $this->language->get('entry_db_hostname');
+        $data['entry_db_username']= $this->language->get('entry_db_username');
+        $data['entry_db_password']= $this->language->get('entry_db_password');
+        $data['entry_db_database']= $this->language->get('entry_db_database');
+        $data['entry_db_port']    = $this->language->get('entry_db_port');
+        $data['entry_db_prefix']  = $this->language->get('entry_db_prefix');
+        $data['entry_http_server']= $this->language->get('entry_http_server');
+        $data['button_back']      = $this->language->get('button_back');
+        $data['button_continue']  = $this->language->get('button_continue');
+
         $data['error'] = [];
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
@@ -66,7 +81,7 @@ class Step_3 extends \Reamur\System\Engine\Controller {
         ]));
 
         // Repopula o formulário
-        foreach (['db_driver', 'db_hostname', 'db_username', 'db_password', 'db_database', 'db_port', 'db_prefix'] as $field) {
+        foreach (['db_driver', 'db_hostname', 'db_username', 'db_password', 'db_database', 'db_port', 'db_prefix', 'http_server'] as $field) {
             $data[$field] = $this->request->post[$field] ?? match ($field) {
                 'db_driver'   => 'mysqli',
                 'db_hostname' => 'localhost',

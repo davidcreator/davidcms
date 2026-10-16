@@ -21,6 +21,19 @@ class Step_4 extends \Reamur\System\Engine\Controller {
 
         $this->document->setTitle($this->language->get('heading_title'));
 
+        // Textos da view
+        $data['step']             = sprintf($this->language->get('text_step'), 4);
+        $data['heading_title']    = $this->language->get('heading_title');
+        $data['text_admin']       = $this->language->get('text_admin');
+        $data['entry_username']   = $this->language->get('entry_username');
+        $data['entry_firstname']  = $this->language->get('entry_firstname');
+        $data['entry_lastname']   = $this->language->get('entry_lastname');
+        $data['entry_email']      = $this->language->get('entry_email');
+        $data['entry_password']   = $this->language->get('entry_password');
+        $data['entry_confirm']    = $this->language->get('entry_confirm');
+        $data['button_back']      = $this->language->get('button_back');
+        $data['button_continue']  = $this->language->get('button_continue');
+
         // Guarda de sequência: sem credenciais validadas, volta ao banco
         if (empty($this->session->data['install_db'])) {
             $this->response->redirect($this->url->link('install/step_3'));

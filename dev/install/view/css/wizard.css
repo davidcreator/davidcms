@@ -1,0 +1,120 @@
+/* ReamurCMS — wizard de instalação (dev/install/view/css/wizard.css) */
+:root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --ok: #4ade80;
+    --fail: #f87171;
+    --warn-bg: #422006;
+    --warn-border: #f59e0b;
+    --error-bg: #450a0a;
+    --error-border: #ef4444;
+}
+
+* { box-sizing: border-box; margin: 0; }
+
+body.rms-wizard {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 3rem 1rem;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.5;
+}
+
+.card {
+    width: 100%;
+    max-width: 640px;
+    background: var(--card);
+    border-radius: 12px;
+    padding: 2rem 2.25rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .35);
+}
+
+.card.center { text-align: center; }
+
+.step {
+    color: var(--muted);
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    margin-bottom: .5rem;
+}
+
+h1 { font-size: 1.5rem; margin-bottom: .75rem; }
+h1.ok { color: var(--ok); }
+
+p { margin-bottom: 1rem; color: var(--muted); }
+
+.license {
+    max-height: 260px;
+    overflow: auto;
+    white-space: pre-wrap;
+    background: rgba(0, 0, 0, .25);
+    border: 1px solid rgba(148, 163, 184, .2);
+    border-radius: 8px;
+    padding: 1rem;
+    font-size: .8rem;
+    margin-bottom: 1rem;
+}
+
+.check { display: flex; gap: .5rem; align-items: center; margin-bottom: 1.25rem; cursor: pointer; }
+
+table.checks { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: .9rem; }
+table.checks th,
+table.checks td { text-align: left; padding: .5rem .75rem; border-bottom: 1px solid rgba(148, 163, 184, .15); }
+table.checks th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: .75rem; letter-spacing: .06em; }
+table.checks code { color: var(--muted); }
+
+.ok { color: var(--ok); font-weight: 600; }
+.fail { color: var(--fail); font-weight: 600; }
+
+.grid.two { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+.field { margin-bottom: 1rem; }
+.field label { display: block; margin-bottom: .35rem; font-size: .9rem; }
+.field input,
+.field select {
+    width: 100%;
+    padding: .55rem .75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, .3);
+    background: rgba(0, 0, 0, .25);
+    color: var(--text);
+    font: inherit;
+}
+.field input:focus,
+.field select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.field-error { color: var(--fail); display: block; margin-top: .3rem; font-size: .8rem; }
+
+.alert { border-radius: 8px; padding: .8rem 1rem; margin-bottom: 1.25rem; font-size: .9rem; border: 1px solid transparent; }
+.alert.error { background: var(--error-bg); border-color: var(--error-border); }
+.alert.warning { background: var(--warn-bg); border-color: var(--warn-border); }
+
+.actions { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.5rem; }
+.actions.right { justify-content: flex-end; }
+.actions.center { justify-content: center; }
+
+.btn {
+    display: inline-block;
+    padding: .6rem 1.4rem;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, .4);
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #082f49; font-weight: 600; }
+.btn:hover { filter: brightness(1.1); }
+
+@media (max-width: 560px) {
+    .grid.two { grid-template-columns: 1fr; }
+    .card { padding: 1.5rem; }
+}

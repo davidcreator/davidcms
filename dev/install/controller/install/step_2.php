@@ -19,6 +19,19 @@ class Step_2 extends \Reamur\System\Engine\Controller {
 
         $this->document->setTitle($this->language->get('heading_title'));
 
+        // Textos da view
+        $data['step']               = sprintf($this->language->get('text_step'), 2);
+        $data['heading_title']      = $this->language->get('heading_title');
+        $data['text_requirements']  = $this->language->get('text_requirements');
+        $data['text_column_check']  = $this->language->get('text_column_check');
+        $data['text_column_status'] = $this->language->get('text_column_status');
+        $data['text_column_detail'] = $this->language->get('text_column_detail');
+        $data['text_ok']            = $this->language->get('text_ok');
+        $data['text_fail']          = $this->language->get('text_fail');
+        $data['text_error_summary'] = $this->language->get('text_error_summary');
+        $data['button_back']        = $this->language->get('button_back');
+        $data['button_continue']    = $this->language->get('button_continue');
+
         $checks = $this->checks();
 
         $ok = !in_array(false, array_column($checks, 'status'), true);
