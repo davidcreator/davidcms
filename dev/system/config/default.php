@@ -7,9 +7,9 @@ $_['site_ssl']             = false;
 $_['url_autostart']        = true;
 
 // Language
-$_['language_code']        = 'en-gb';
-$_['language_directory']   = 'en-gb';
-$_['language_autoload']    = ['en-gb'];
+$_['language_code']        = 'en-us';
+$_['language_directory']   = 'en-us';
+$_['language_autoload']    = ['en-us'];
 
 // Date
 $_['date_timezone']        = 'UTC';
