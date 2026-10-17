@@ -1,0 +1,35 @@
+{# dev/admin/view/template/user/user_group_list.twig — grupos de usuários (F2-6) #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ heading_title }}</h1>
+    <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
+  </div>
+  <p class="muted">{{ text_list }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+  {% endif %}
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ column_name }}</th>
+        <th>{{ column_users }}</th>
+        <th class="right">{{ column_action }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for group in groups %}
+      <tr>
+        <td>{{ group.name }}</td>
+        <td>{{ group.total_users }}</td>
+        <td class="right actions">
+          <a class="btn ghost small" href="{{ group.edit }}">{{ button_edit }}</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</main>
+{{ footer|raw }}

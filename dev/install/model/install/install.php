@@ -119,13 +119,17 @@ class Install extends \Reamur\System\Engine\Model {
     }
 
     /**
-     * Cria o grupo 'Administrator' (ACL completa é semeada na Fase 2) e o
-     * primeiro usuário admin. Colunas 1:1 com docs/Dicionario-de-Dados.md.
+     * Cria o grupo 'Administrator' e o primeiro usuário admin. O grupo nasce
+     * (F2-6) com access+modify nas rotas-base mínimas de autogestão —
+     * 'user/user' e 'user/user_group' — senão o único admin sairia do wizard
+     * sem poder administrar as próprias contas. Colunas 1:1 com
+     * docs/Dicionario-de-Dados.md.
      *
      * @param array{username: string, firstname: string, lastname: string, email: string, password: string} $data
      */
     public function createAdministrator(array $data, string $prefix): void {
-        $permission = json_encode(['access' => [], 'modify' => []]);
+        $seedRoutes = ['user/user', 'user/user_group'];
+        $permission = json_encode(['access' => $seedRoutes, 'modify' => $seedRoutes]);
 
         if ($this->handle instanceof \mysqli) {
             $e = fn(string $v): string => $this->handle->real_escape_string($v);

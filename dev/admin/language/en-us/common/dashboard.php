@@ -6,24 +6,26 @@
  * @license   https://opensource.org/licenses/GPL-3.0
  * @link      https://reamurcms.com
  *
- * Language en-us — common/dashboard (primeira página do painel).
- * PENDÊNCIA (ADR 0001): traduzir para pt-br e es-eu quando o idioma estiver habilitado.
+ * Language en-us — common/dashboard (first page of the panel).
  */
 
 // Heading
 $_['heading_title'] = 'Dashboard';
 
 // Text
-$_['text_welcome']      = 'Glad to see you, %s.';
-$_['text_profile']      = 'Your profile';
-$_['text_username']     = 'Username';
-$_['text_email']        = 'E-mail';
-$_['text_user_group']   = 'User group (ID)';
-$_['text_acl']          = 'Your group permissions';
-$_['text_access_routes'] = 'Access routes';
-$_['text_modify_routes'] = 'Modify routes';
-$_['text_acl_note']     = 'A fresh install grants no explicit routes yet — every new module must declare its routes in the user group (ADR 0005).';
-$_['text_version']      = 'ReamurCMS %s';
+$_['text_welcome']       = 'Good to see you, %s.';
+$_['text_profile']       = 'Your profile';
+$_['text_username']      = 'Username';
+$_['text_email']         = 'E-mail';
+$_['text_user_group']    = 'User group (ID)';
+$_['text_acl']           = 'Your group permissions';
+$_['text_access_routes'] = 'Routes with access';
+$_['text_modify_routes'] = 'Routes with modify';
+$_['text_acl_note']      = 'A new installation grants the user-management routes to the Administrator group; review grants in User Groups (ADR 0005, F2-6 addition).';
+$_['text_modules']       = 'Modules';
+$_['text_manage_users']  = 'Users';
+$_['text_manage_user_groups'] = 'User Groups';
+$_['text_version']       = 'ReamurCMS %s';
 
 // Button
-$_['button_logout']     = 'Logout';
+$_['button_logout']      = 'Logout';

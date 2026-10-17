@@ -1,0 +1,48 @@
+{# dev/admin/view/template/user/user_group_form.twig — matriz de permissões do grupo (F2-6) #}
+{{ header|raw }}
+<main class="dash form-page">
+  <h1>{{ heading_title }}</h1>
+
+  {% if error %}
+  <div class="alert error">{{ error|nl2br }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ action }}" class="panel form">
+    <div class="field">
+      <label for="input-name">{{ entry_name }}</label>
+      <input type="text" name="name" id="input-name" value="{{ name }}" required>
+    </div>
+
+    <h2>{{ text_permissions }}</h2>
+    <p class="muted small">{{ text_group_note }}</p>
+
+    <table class="table perms">
+      <thead>
+        <tr>
+          <th>{{ column_route }}</th>
+          <th class="center">{{ text_access }}</th>
+          <th class="center">{{ text_modify }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in routes %}
+        <tr>
+          <td><code>{{ row.route }}</code></td>
+          <td class="center">
+            <input type="checkbox" name="access[]" value="{{ row.route }}"{{ row.access_granted ? ' checked' : '' }}>
+          </td>
+          <td class="center">
+            <input type="checkbox" name="modify[]" value="{{ row.route }}"{{ row.modify_granted ? ' checked' : '' }}>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="actions right">
+      <a class="btn ghost" href="{{ cancel }}">{{ button_cancel }}</a>
+      <button type="submit" class="btn primary">{{ button_save }}</button>
+    </div>
+  </form>
+</main>
+{{ footer|raw }}

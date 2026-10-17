@@ -37,7 +37,25 @@ class Dashboard extends \Reamur\System\Engine\Controller {
         $data['text_modify_routes']   = $this->language->get('text_modify_routes');
         $data['text_acl_note']        = $this->language->get('text_acl_note');
         $data['text_version']         = sprintf($this->language->get('text_version'), REAMUR_VERSION);
+        $data['text_modules']         = $this->language->get('text_modules');
         $data['button_logout']        = $this->language->get('button_logout');
+
+        // Módulos visíveis = módulos PERMITIDOS ao grupo (ACL manda na âncora, F2-6)
+        $data['modules'] = [];
+
+        if ($this->user->hasPermission('access', 'user/user')) {
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_users'),
+                'href' => $this->url->link('user/user'),
+            ];
+        }
+
+        if ($this->user->hasPermission('access', 'user/user_group')) {
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_user_groups'),
+                'href' => $this->url->link('user/user_group'),
+            ];
+        }
 
         $data['username']      = $this->user->getUsername();
         $data['email']         = $this->user->getEmail();

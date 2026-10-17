@@ -71,9 +71,13 @@ class Router extends \Reamur\System\Engine\Controller {
      */
     public function rewrite(string $url): string {
         return (string)preg_replace_callback(
-            '#index\.php\?route=([a-zA-Z0-9_/]+)(?:&(amp;)?(.*))?#',
+            '#index\.php\?route=([a-zA-Z0-9_/.|]+)(?:&(amp;)?(.*))?#',
             function (array $m): string {
                 $route = (string)$m[1];
+
+                if (str_contains($route, '.') || str_contains($route, '|')) {
+                    return (string)$m[0]; // método/args (F2-6): link não-limpo fica intacto
+                }
 
                 foreach (self::ALIASES as $clean => $long) {
                     if ($route === $long) {

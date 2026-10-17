@@ -46,6 +46,16 @@ class Permission extends \Reamur\System\Engine\Controller {
             return;
         }
 
+        // Granularidade base-route (Adendo F2-6 do ADR 0005): 'user/user.add|3',
+        // 'user/user.delete' etc. herdam a ACL do arquivo 'user/user'. Um grant
+        // cobre TODOS os métodos do controller — métodos com efeito colateral
+        // verificam adicionalmente hasPermission('modify', ...).
+        $route = (string)(preg_split('/[.|]/', $route, 2)[0] ?? $route);
+
+        if ($route === '' || in_array($route, self::ALLOWED_ROUTES, true)) {
+            return;
+        }
+
         // Rota inexistente NÃO é negação de permissão: deixa o dispatcher entregar o 404
         if (!is_file(DIR_APPLICATION . 'controller/' . $route . '.php')) {
             return;

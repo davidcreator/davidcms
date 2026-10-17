@@ -27,6 +27,17 @@
       </dl>
       <p class="muted small">{{ text_acl_note }}</p>
     </article>
+
+    {% if modules %}
+    <article class="panel">
+      <h2>{{ text_modules }}</h2>
+      <ul class="module-list">
+        {% for module in modules %}
+        <li><a class="btn ghost" href="{{ module.href }}">{{ module.name }}</a></li>
+        {% endfor %}
+      </ul>
+    </article>
+    {% endif %}
   </section>
 
   <p class="muted small">{{ text_version }}</p>

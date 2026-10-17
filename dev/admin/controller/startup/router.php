@@ -63,12 +63,18 @@ class Router extends \Reamur\System\Engine\Controller {
     /**
      * Reescrita transparente de links internos (espelha o catalog):
      * 'index.php?route=grupo/modulo&x=y' → 'grupo/modulo?x=y' com aliases curtos.
+     * Rotas com gramática de método/args ('grupo/mod.metodo|arg', F2-6) NÃO têm
+     * URL limpa — devolve os 'index.php?route=' intactos (Adendo F2-6 do ADR 0006).
      */
     public function rewrite(string $url): string {
         return (string)preg_replace_callback(
-            '#index\.php\?route=([a-zA-Z0-9_/]+)(?:&(amp;)?(.*))?#',
+            '#index\.php\?route=([a-zA-Z0-9_/.|]+)(?:&(amp;)?(.*))?#',
             function (array $m): string {
                 $route = (string)$m[1];
+
+                if (str_contains($route, '.') || str_contains($route, '|')) {
+                    return (string)$m[0]; // método/args: link não-limpo (action framework decide)
+                }
 
                 foreach (self::ALIASES as $clean => $long) {
                     if ($route === $long) {
