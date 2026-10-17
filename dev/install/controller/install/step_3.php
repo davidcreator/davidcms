@@ -74,8 +74,10 @@ class Step_3 extends \Reamur\System\Engine\Controller {
             }
         }
 
-        // Drivers oferecidos = os realmente disponíveis no ambiente (S2 do plano)
-        $data['drivers'] = array_values(array_filter([
+        // Drivers oferecidos = os realmente disponíveis no ambiente (S2 do plano).
+        // As OPÇÕES são as CHAVES das extensões carregadas — array_values aqui
+        // devolveria os booleans (true → opção "1" no select, bug real F2-1).
+        $data['drivers'] = array_keys(array_filter([
             'mysqli' => extension_loaded('mysqli'),
             'pdo'    => extension_loaded('pdo_mysql'),
         ]));
