@@ -1,66 +1,49 @@
-{# dev/install/view/template/install/step_4.twig — Conta do administrador #}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ heading_title }} · ReamurCMS</title>
-  <link rel="stylesheet" href="view/css/wizard.css">
-</head>
-<body class="rms-wizard">
-  <main class="card">
-    <p class="step">{{ step }}</p>
-    <h1>{{ heading_title }}</h1>
-    <p>{{ text_admin }}</p>
+{# dev/install/view/template/install/step_4.twig — Concluído (ADR 0007) #}
+{{ header|raw }}
+<main id="content" role="main">
+	<div class="page-header">
+		<div class="container">
+			<div class="float-end">{{ language|raw }}</div>
+			<h1>{{ heading_title }}</h1>
+		</div>
+	</div>
+	<div class="container">
+		<div class="alert alert-success" role="alert">
+			<i class="fa-solid fa-check-circle" aria-hidden="true"></i>
+			<span class="ms-2">{{ text_success }}</span>
+		</div>
+		<div class="alert alert-danger" role="alert">
+			<i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+			<span class="ms-2">{{ text_delete_folder }}</span>
+		</div>
 
-    <form method="post" action="{{ action }}">
-      {% if error.warning %}
-      <div class="alert error">{{ error.warning }}</div>
-      {% endif %}
-
-      <div class="field">
-        <label for="username">{{ entry_username }}</label>
-        <input type="text" id="username" name="username" value="{{ username }}" maxlength="32" required>
-        {% if error.username %}<small class="field-error">{{ error.username }}</small>{% endif %}
-      </div>
-
-      <div class="grid two">
-        <div class="field">
-          <label for="firstname">{{ entry_firstname }}</label>
-          <input type="text" id="firstname" name="firstname" value="{{ firstname }}" maxlength="32" required>
-          {% if error.firstname %}<small class="field-error">{{ error.firstname }}</small>{% endif %}
-        </div>
-        <div class="field">
-          <label for="lastname">{{ entry_lastname }}</label>
-          <input type="text" id="lastname" name="lastname" value="{{ lastname }}" maxlength="32" required>
-          {% if error.lastname %}<small class="field-error">{{ error.lastname }}</small>{% endif %}
-        </div>
-      </div>
-
-      <div class="field">
-        <label for="email">{{ entry_email }}</label>
-        <input type="email" id="email" name="email" value="{{ email }}" maxlength="96" required>
-        {% if error.email %}<small class="field-error">{{ error.email }}</small>{% endif %}
-      </div>
-
-      <div class="grid two">
-        <div class="field">
-          <label for="password">{{ entry_password }}</label>
-          <input type="password" id="password" name="password" autocomplete="new-password" required>
-          {% if error.password %}<small class="field-error">{{ error.password }}</small>{% endif %}
-        </div>
-        <div class="field">
-          <label for="confirm">{{ entry_confirm }}</label>
-          <input type="password" id="confirm" name="confirm" autocomplete="new-password" required>
-          {% if error.confirm %}<small class="field-error">{{ error.confirm }}</small>{% endif %}
-        </div>
-      </div>
-
-      <div class="actions">
-        <a href="{{ back }}" class="btn">{{ button_back }}</a>
-        <button type="submit" class="btn primary">{{ button_continue }}</button>
-      </div>
-    </form>
-  </main>
-</body>
-</html>
+		<div class="card mb-3">
+			<div class="card-header">
+				<i class="fa-solid fa-flag-checkered" aria-hidden="true"></i>
+				<span class="ms-2">{{ text_step_4 }}</span>
+			</div>
+			<div class="card-body">
+				<p class="text-muted mb-3">{{ text_installed }}</p>
+				<div class="row">
+					<div class="col-sm-6 mb-3 mb-sm-0">
+						<div class="card h-100 text-center">
+							<div class="card-body d-flex flex-column">
+								<h5 class="card-title"><i class="fa-solid fa-store me-2" aria-hidden="true"></i>{{ text_catalog }}</h5>
+								<div class="mt-auto"><a href="{{ catalog }}" class="btn btn-primary" target="_blank" rel="noopener">{{ text_catalog }}</a></div>
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-6">
+						<div class="card h-100 text-center">
+							<div class="card-body d-flex flex-column">
+								<h5 class="card-title"><i class="fa-solid fa-lock me-2" aria-hidden="true"></i>{{ text_admin }}</h5>
+								<div class="mt-auto"><a href="{{ admin }}" class="btn btn-primary" target="_blank" rel="noopener">{{ text_admin }}</a></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</main>
+{{ footer|raw }}

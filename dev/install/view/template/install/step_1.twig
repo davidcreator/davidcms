@@ -1,33 +1,27 @@
-{# dev/install/view/template/install/step_1.twig — Licença #}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ heading_title }} · ReamurCMS</title>
-  <link rel="stylesheet" href="view/css/wizard.css">
-</head>
-<body class="rms-wizard">
-  <main class="card">
-    <p class="step">{{ step }}</p>
-    <h1>{{ heading_title }}</h1>
-    <p>{{ text_license }}</p>
-
-    {% if error %}
-    <div class="alert error">{{ error }}</div>
-    {% endif %}
-
-    <pre class="license">{{ license }}</pre>
-
-    <form method="post" action="{{ action }}">
-      <label class="check">
-        <input type="checkbox" name="agree" value="1"{% if agree %} checked{% endif %}>
-        {{ text_agree }}
-      </label>
-      <div class="actions right">
-        <button type="submit" class="btn primary">{{ button_continue }}</button>
-      </div>
-    </form>
-  </main>
-</body>
-</html>
+{# dev/install/view/template/install/step_1.twig — Licença (ADR 0007: aceite por continuação) #}
+{{ header|raw }}
+<main id="content" role="main">
+	<div class="page-header">
+		<div class="container">
+			<div class="float-end">{{ language|raw }}</div>
+			<h1>{{ heading_title }}</h1>
+		</div>
+	</div>
+	<div class="container">
+		<div class="card">
+			<div class="card-header">
+				<i class="fab fa-reamurcms" aria-hidden="true"></i>
+				<span class="ms-2">{{ text_step_1 }}</span>
+			</div>
+			<div class="card-body">
+				<div class="form-control overflow-auto" style="max-height: 300px;" tabindex="0" aria-label="{{ text_step_1 }}">{{ license }}</div>
+				<div class="row mt-3">
+					<div class="col text-end">
+						<a href="{{ continue }}" class="btn btn-primary" role="button">{{ button_continue }}</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</main>
+{{ footer|raw }}

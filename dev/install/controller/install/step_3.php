@@ -6,86 +6,150 @@
  * @license   https://opensource.org/licenses/GPL-3.0
  * @link      https://reamurcms.com
  *
- * Wizard — Passo 3: Banco de dados.
- * Testa a conexão, importa sql/schema.sql (Tarefa 1) e GERA os config.php
- * de catalog e admin a partir de dev/install/config.php.tpl (Contrato §1.1).
- * As credenciais validadas ficam na sessão efêmera do wizard para o passo 4.
+ * Wizard — Passo 3 (ADR 0007, fluxo em paridade com o instalador ReamurCMS):
+ * Configuração UNIFICADA — conexão do banco + URL pública + administrador em
+ * uma única tela (antes: s3 banco / s4 admin). Um POST valida tudo, grava os
+ * configs (catalog+admin), importa o schema e semeia o grupo Administrator
+ * com os grants mínimos do painel (F2-6). Método test| responde JSON para o
+ * botão "Testar conexão" — leitura pura, nunca grava.
  */
 namespace Reamur\Install\Controller\Install;
 
 class Step_3 extends \Reamur\System\Engine\Controller {
 
-    /** GET exibe o formulário; POST valida, instala e avança */
+    /** GET: formulário de configuração · POST: valida e executa a instalação inteira */
     public function index(): void {
         $this->load->language('install/step_3');
+
         $this->load->model('install/install');
 
         $this->document->setTitle($this->language->get('heading_title'));
 
-        // Textos da view
-        $data['step']             = sprintf($this->language->get('text_step'), 3);
-        $data['heading_title']    = $this->language->get('heading_title');
-        $data['text_db']          = $this->language->get('text_db');
-        $data['entry_db_driver']  = $this->language->get('entry_db_driver');
-        $data['entry_db_hostname']= $this->language->get('entry_db_hostname');
-        $data['entry_db_username']= $this->language->get('entry_db_username');
-        $data['entry_db_password']= $this->language->get('entry_db_password');
-        $data['entry_db_database']= $this->language->get('entry_db_database');
-        $data['entry_db_port']    = $this->language->get('entry_db_port');
-        $data['entry_db_prefix']  = $this->language->get('entry_db_prefix');
-        $data['entry_http_server']= $this->language->get('entry_http_server');
-        $data['button_back']      = $this->language->get('button_back');
-        $data['button_continue']  = $this->language->get('button_continue');
-
-        $data['error'] = [];
+        $data = $this->viewData();
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
             $data['error'] = $this->validate();
 
-            if (!$data['error']) {
-                $db = [
-                    'db_driver'   => (string)$this->request->post['db_driver'],
-                    'db_hostname' => trim((string)$this->request->post['db_hostname']),
-                    'db_username' => trim((string)$this->request->post['db_username']),
-                    'db_password' => (string)$this->request->post['db_password'],
-                    'db_database' => trim((string)$this->request->post['db_database']),
-                    'db_port'     => (int)$this->request->post['db_port'],
-                ];
+            if ($data['error'] === []) {
+                $db = $this->dbCredentials();
 
-                $prefix = strtolower(trim((string)$this->request->post['db_prefix']));
-                $error  = '';
+                $prefix = trim((string)$this->request->post['db_prefix']);
 
                 if (!$this->model_install_install->connect($db)) {
-                    $data['error']['connect'] = $this->language->get('error_connect') . ' ' . $this->model_install_install->getError();
+                    $data['error']['connect'] = $this->language->get('error_db_connect') . ' ' . $this->model_install_install->getError();
                 } elseif ($this->model_install_install->hasTables($prefix)) {
-                    // Banco não vazio: aborta antes de importar (protege instalação existente)
+                    // Banco não vazio: aborta (protege instalação existente)
                     $data['error']['database'] = $this->language->get('error_db_exists');
-                } elseif (!$this->writeConfigs($db, $prefix, $error)) {
-                    $data['error']['config'] = $this->language->get('error_config') . ' ' . $error;
                 } else {
-                    $this->model_install_install->importSchema($prefix);
+                    $error_config = '';
 
-                    // Sessão efêmera do wizard (Contrato-Bootstrap §4): passo 4 precisa das credenciais
-                    $this->session->data['install_db'] = $db + ['db_prefix' => $prefix];
+                    if (!$this->writeConfigs($db, $prefix, $error_config)) {
+                        $data['error']['config'] = $this->language->get('error_config') . ' ' . $error_config;
+                    } else {
+                        $this->model_install_install->importSchema($prefix);
 
-                    $this->response->redirect($this->url->link('install/step_4'));
-                    return;
+                        // Grupo Administrator já nasce com access+modify em
+                        // 'user/user' e 'user/user_group' (Adendo F2-6 do ADR 0005)
+                        $this->model_install_install->createAdministrator([
+                            'username'  => trim((string)$this->request->post['username']),
+                            'firstname' => trim((string)$this->request->post['firstname']),
+                            'lastname'  => trim((string)$this->request->post['lastname']),
+                            'email'     => trim((string)$this->request->post['email']),
+                            'password'  => (string)$this->request->post['password'],
+                        ], $prefix);
+
+                        // URLs públicas REAIS vêm da entrada do usuário (site_url) —
+                        // jamais de SCRIPT_NAME/PATH_INFO (armadilha SAPI corrigida na F2-5).
+                        $this->session->data['install_done'] = true;
+                        $this->session->data['install_site'] = rtrim((string)$this->request->post['http_server'], '/') . '/';
+
+                        unset($this->session->data['install_db']); // legado do fluxo s3/s4 separado
+
+                        $this->response->redirect($this->url->link('install/step_4'));
+
+                        return;
+                    }
                 }
             }
         }
 
+        $this->chrome($data);
+
+        $this->response->setOutput($this->load->view('install/step_3', $data));
+    }
+
+    /**
+     * Botão "Testar conexão" do passo 3 — leitura pura (não grava configs,
+     * não importa nada). Responde JSON {success, error}.
+     */
+    public function test(): void {
+        $this->load->model('install/install');
+
+        $db = $this->dbCredentials();
+
+        $ok = in_array($db['db_driver'], ['mysqli', 'pdo'], true)
+            && $this->model_install_install->connect($db);
+
+        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
+
+        $this->response->setOutput((string)json_encode([
+            'success' => $ok,
+            'error'   => $ok ? '' : $this->model_install_install->getError(),
+        ]));
+    }
+
+    // ─── internos ────────────────────────────────────────────────────────
+
+    /**
+     * @return array{db_driver: string, db_hostname: string, db_username: string, db_password: string, db_database: string, db_port: string}
+     */
+    private function dbCredentials(): array {
+        $post = $this->request->post;
+
+        return [
+            'db_driver'   => (string)($post['db_driver'] ?? ''),
+            'db_hostname' => trim((string)($post['db_hostname'] ?? '')),
+            'db_username' => trim((string)($post['db_username'] ?? '')),
+            'db_password' => (string)($post['db_password'] ?? ''),
+            'db_database' => trim((string)($post['db_database'] ?? '')),
+            'db_port'     => trim((string)($post['db_port'] ?? '3306')),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function viewData(): array {
+        $this->load->language('install/step_3');
+
+        $data = [];
+
+        foreach ([
+            'heading_title', 'text_step_3', 'text_db_connection', 'text_db_administration',
+            'text_db_ok', 'text_password_hint', 'entry_db_driver', 'entry_db_hostname',
+            'entry_db_username', 'entry_db_password', 'entry_db_database', 'entry_db_port',
+            'entry_db_prefix', 'entry_http_server', 'entry_username', 'entry_firstname',
+            'entry_lastname', 'entry_email', 'entry_password', 'entry_confirm',
+            'button_back', 'button_continue', 'button_test_db', 'button_generate',
+            'button_toggle_password',
+        ] as $key) {
+            $data[$key] = $this->language->get($key);
+        }
+
+        $data['error'] = [];
+
         // Drivers oferecidos = os realmente disponíveis no ambiente (S2 do plano).
         // As OPÇÕES são as CHAVES das extensões carregadas — array_values aqui
-        // devolveria os booleans (true → opção "1" no select, bug real F2-1).
+        // devolveria os booleans (true → opção "1" no select, bug hotfix F2).
         $data['drivers'] = array_keys(array_filter([
             'mysqli' => extension_loaded('mysqli'),
             'pdo'    => extension_loaded('pdo_mysql'),
         ]));
 
-        // Repopula o formulário
-        foreach (['db_driver', 'db_hostname', 'db_username', 'db_password', 'db_database', 'db_port', 'db_prefix', 'http_server'] as $field) {
+        // Repopula o formulário (POST) ou aplica defaults honestos
+        foreach (['db_driver', 'db_hostname', 'db_username', 'db_password', 'db_database', 'db_port', 'db_prefix', 'http_server', 'username', 'firstname', 'lastname', 'email'] as $field) {
             $data[$field] = $this->request->post[$field] ?? match ($field) {
-                'db_driver'   => 'mysqli',
+                'db_driver'   => in_array('mysqli', $data['drivers'], true) ? 'mysqli' : (string)($data['drivers'][0] ?? 'mysqli'),
                 'db_hostname' => 'localhost',
                 'db_port'     => '3306',
                 'db_prefix'   => 'rms_',
@@ -93,10 +157,81 @@ class Step_3 extends \Reamur\System\Engine\Controller {
             };
         }
 
-        $data['action'] = $this->url->link('install/step_3');
-        $data['back']   = $this->url->link('install/step_2');
+        $data['action']    = $this->url->link('install/step_3');
+        $data['test_json'] = $this->url->link('install/step_3.test');
+        $data['back']      = $this->url->link('install/step_2');
 
-        $this->response->setOutput($this->load->view('install/step_3', $data));
+        return $data;
+    }
+
+    /**
+     * Validação unificada: banco (espelha o que o model vai exigir), URL
+     * pública e administrador (espelho das regras do CRUD user/user, F2-6).
+     *
+     * @return array<string, string> Erros por campo (vazio = válido)
+     */
+    private function validate(): array {
+        $error = [];
+        $post  = $this->request->post;
+
+        // ── conexão ──
+        if (!in_array((string)($post['db_driver'] ?? ''), ['mysqli', 'pdo'], true)) {
+            $error['db_driver'] = $this->language->get('error_db_driver');
+        }
+
+        foreach (['db_hostname', 'db_username', 'db_database'] as $field) {
+            if (trim((string)($post[$field] ?? '')) === '') {
+                $error[$field] = $this->language->get('error_required');
+            }
+        }
+
+        if (!preg_match('/^[a-z][a-z0-9_]{0,19}$/', (string)($post['db_prefix'] ?? ''))) {
+            $error['db_prefix'] = $this->language->get('error_db_prefix');
+        }
+
+        if ($this->varchar((string)($post['db_port'] ?? ''), 1, 5) === '' || !ctype_digit((string)($post['db_port'] ?? ''))) {
+            $error['db_port'] = $this->language->get('error_db_port');
+        }
+
+        if (trim((string)($post['http_server'] ?? '')) === ''
+            || !filter_var((string)$post['http_server'], FILTER_VALIDATE_URL)) {
+            $error['http_server'] = $this->language->get('error_http_server');
+        }
+
+        // ── administração (mesmas regras do antigo s4 e do CRUD do painel) ──
+        $username = trim((string)($post['username'] ?? ''));
+
+        if (mb_strlen($username) < 3 || mb_strlen($username) > 32) {
+            $error['username'] = $this->language->get('error_username');
+        }
+
+        foreach (['firstname' => 'error_firstname', 'lastname' => 'error_lastname'] as $field => $key) {
+            $len = mb_strlen(trim((string)($post[$field] ?? '')));
+
+            if ($len < 1 || $len > 32) {
+                $error[$field] = $this->language->get($key);
+            }
+        }
+
+        if (!filter_var((string)($post['email'] ?? ''), FILTER_VALIDATE_EMAIL)) {
+            $error['email'] = $this->language->get('error_email');
+        }
+
+        $password = (string)($post['password'] ?? '');
+
+        if (mb_strlen($password) < 8) {
+            $error['password'] = $this->language->get('error_password');
+        } elseif ($password !== (string)($post['confirm'] ?? '')) {
+            $error['confirm'] = $this->language->get('error_confirm');
+        }
+
+        return $error;
+    }
+
+    private function varchar(string $value, int $min, int $max): string {
+        $len = mb_strlen($value);
+
+        return ($len >= $min && $len <= $max) ? $value : '';
     }
 
     /**
@@ -143,35 +278,11 @@ class Step_3 extends \Reamur\System\Engine\Controller {
         return true;
     }
 
-    /**
-     * @return array<string, string> Erros por campo (todos via language)
-     */
-    private function validate(): array {
-        $error = [];
-
-        $driver = (string)($this->request->post['db_driver'] ?? '');
-
-        if (!in_array($driver, ['mysqli', 'pdo'], true)) {
-            $error['db_driver'] = $this->language->get('error_db_driver');
-        }
-
-        foreach (['db_hostname', 'db_username', 'db_database'] as $field) {
-            if (trim((string)($this->request->post[$field] ?? '')) === '') {
-                $error[$field] = $this->language->get('error_required');
-            }
-        }
-
-        $prefix = (string)($this->request->post['db_prefix'] ?? '');
-
-        if (!preg_match('/^[a-z][a-z0-9_]{0,19}$/', $prefix)) {
-            $error['db_prefix'] = $this->language->get('error_db_prefix');
-        }
-
-        if (trim((string)($this->request->post['http_server'] ?? '')) === ''
-            || !filter_var((string)$this->request->post['http_server'], FILTER_VALIDATE_URL)) {
-            $error['http_server'] = $this->language->get('error_http_server');
-        }
-
-        return $error;
+    /** Chrome compartilhado do wizard (header + seletor de idiomas + footer) */
+    private function chrome(array &$data): void {
+        $data['page_title'] = $this->language->get('heading_title');
+        $data['header']     = $this->load->controller('common/header', $data);
+        $data['language']   = $this->load->controller('common/language');
+        $data['footer']     = $this->load->controller('common/footer');
     }
 }

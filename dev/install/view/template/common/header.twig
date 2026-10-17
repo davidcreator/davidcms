@@ -1,0 +1,29 @@
+{# dev/install/view/template/common/header.twig — chrome do wizard (ADR 0007) #}
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ dir }}">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{{ title }} · ReamurCMS</title>
+
+    <!-- CSS (assets relativos — wizard só responde em index.php, ADR 0006) -->
+    <link rel="stylesheet" media="screen" href="view/css/bootstrap.css"/>
+    <link rel="stylesheet" media="screen" href="view/css/reamur.css"/>
+    <link rel="stylesheet" media="screen" href="view/css/fonts/fontawesome/css/all.min.css"/>
+
+    <!-- JS -->
+    <script type="text/javascript" src="view/js/jquery/jquery-3.7.1.min.js"></script>
+    <script type="text/javascript" src="view/js/bootstrap/js/bootstrap.bundle.js"></script>
+    <script type="text/javascript" src="view/js/common.js"></script>
+</head>
+<body>
+    <div id="container">
+        <header id="header" class="navbar navbar-expand navbar-light bg-light">
+            <div class="container">
+                <a class="navbar-brand d-block" href="{{ home }}">
+                    <img src="view/images/reamurcms.png" alt="ReamurCMS" title="ReamurCMS"/>
+                </a>
+                <span class="navbar-text text-muted small d-none d-md-inline">{{ version }}</span>
+            </div>
+        </header>

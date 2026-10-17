@@ -1,22 +1,28 @@
-{# dev/install/view/template/error/not_found.twig — 404 do wizard (reusa css/wizard.css) #}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ heading_title }} · ReamurCMS</title>
-  <link rel="stylesheet" href="view/css/wizard.css">
-</head>
-<body class="rms-wizard">
-  <main class="card">
-    <p class="step">{{ text_code }}</p>
-    <h1>{{ heading_title }}</h1>
-    <p>{{ text_error }}</p>
-    <p>{{ text_suggestion }}</p>
-
-    <div class="actions center">
-      <a class="btn primary" href="{{ home }}">{{ button_continue }}</a>
-    </div>
-  </main>
-</body>
-</html>
+{# dev/install/view/template/error/not_found.twig — 404 do wizard (ADR 0007: mesmo shell dos passos) #}
+{{ header|raw }}
+<main id="content" role="main">
+	<div class="page-header">
+		<div class="container">
+			<div class="float-end">{{ language|raw }}</div>
+			<h1>{{ heading_title }}</h1>
+		</div>
+	</div>
+	<div class="container">
+		<div class="card">
+			<div class="card-header">
+				<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+				<span class="ms-2">{{ text_code }}</span>
+			</div>
+			<div class="card-body">
+				<p>{{ text_error }}</p>
+				<p class="text-muted">{{ text_suggestion }}</p>
+				<div class="row mt-3">
+					<div class="col text-end">
+						<a href="{{ home }}" class="btn btn-primary" role="button">{{ button_continue }}</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</main>
+{{ footer|raw }}

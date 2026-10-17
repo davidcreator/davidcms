@@ -7,8 +7,8 @@
  * @link      https://reamurcms.com
  *
  * Página 404 da aplicação install (rota de erro do Router: error/not_found).
- * Rotas inexistentes do wizard caem aqui com status HTTP honesto, com estilo
- * reaproveitado do wizard (css/wizard.css) e retorno para o passo 1.
+ * Rotas inexistentes do wizard caem aqui com status HTTP honesto, no mesmo
+ * shell visual dos passos (ADR 0007) e retorno para o passo 1.
  */
 namespace Reamur\Install\Controller\Error;
 
@@ -30,6 +30,12 @@ class Not_found extends \Reamur\System\Engine\Controller {
 
         // Install não tem config.php gerado (site_url vazio): volta sempre ao passo 1
         $data['home'] = $this->url->link('install/step_1');
+
+        // Chrome do wizard (ADR 0007): mesmo shell e estilos dos passos
+        $data['page_title'] = $this->language->get('heading_title');
+        $data['header']     = $this->load->controller('common/header', $data);
+        $data['language']   = $this->load->controller('common/language');
+        $data['footer']     = $this->load->controller('common/footer');
 
         $this->response->setOutput($this->load->view('error/not_found', $data));
     }

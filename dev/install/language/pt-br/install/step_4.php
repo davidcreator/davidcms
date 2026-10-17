@@ -6,33 +6,16 @@
  * @license   https://opensource.org/licenses/GPL-3.0
  * @link      https://reamurcms.com
  *
- * Language pt-br — wizard passo 4 (conta do administrador). Traduzido do en-us (ADR 0001).
+ * Language pt-br — wizard passo 4: Concluído (ADR 0007). Traduzido do en-us (ADR 0001).
  */
 
 // Heading
-$_['heading_title'] = 'Conta do Administrador';
+$_['heading_title'] = 'Instalação Concluída';
 
 // Text
-$_['text_step']  = 'Passo %s de 5';
-$_['text_admin'] = 'Crie o primeiro administrador do painel do ReamurCMS.';
-
-// Entry
-$_['entry_username']  = 'Usuário';
-$_['entry_firstname'] = 'Nome';
-$_['entry_lastname']  = 'Sobrenome';
-$_['entry_email']     = 'E-mail';
-$_['entry_password']  = 'Senha';
-$_['entry_confirm']   = 'Confirmar Senha';
-
-// Button
-$_['button_back']     = 'Voltar';
-$_['button_continue'] = 'Continuar';
-
-// Error
-$_['error_connect']   = 'Não foi possível conectar ao banco de dados:';
-$_['error_username']  = 'O usuário precisa ter entre 3 e 32 caracteres!';
-$_['error_email']     = 'Endereço de e-mail inválido!';
-$_['error_firstname'] = 'O nome precisa ter entre 1 e 32 caracteres!';
-$_['error_lastname']  = 'O sobrenome precisa ter entre 1 e 32 caracteres!';
-$_['error_password']  = 'A senha precisa ter pelo menos 8 caracteres!';
-$_['error_confirm']   = 'A confirmação da senha não confere!';
+$_['text_step_4']        = 'O ReamurCMS foi instalado com sucesso';
+$_['text_success']       = 'Parabéns! Você instalou o ReamurCMS com sucesso.';
+$_['text_installed']     = 'Sua loja e seu painel de administração estão prontos:';
+$_['text_delete_folder'] = 'Atenção: por segurança, exclua o diretório "install" do seu servidor antes de ir para produção.';
+$_['text_catalog']       = 'Ir para sua Loja Online';
+$_['text_admin']         = 'Acessar a Administração';

@@ -1,81 +1,272 @@
-{# dev/install/view/template/install/step_3.twig — Banco de dados #}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ heading_title }} · ReamurCMS</title>
-  <link rel="stylesheet" href="view/css/wizard.css">
-</head>
-<body class="rms-wizard">
-  <main class="card">
-    <p class="step">{{ step }}</p>
-    <h1>{{ heading_title }}</h1>
-    <p>{{ text_db }}</p>
+{# dev/install/view/template/install/step_3.twig — Configuração unificada DB+admin (ADR 0007) #}
+{{ header|raw }}
+<main id="content" role="main">
+	<div class="page-header">
+		<div class="container">
+			<div class="float-end">{{ language|raw }}</div>
+			<h1>{{ heading_title }}</h1>
+		</div>
+	</div>
+	<div class="container">
+		{% if error.connect or error.database or error.config %}
+		<div class="alert alert-danger" role="alert">
+			<i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+			<span class="ms-2">{{ error.connect }}{{ error.database }}{{ error.config }}</span>
+		</div>
+		{% endif %}
+		<form action="{{ action }}" method="post" id="install-form">
+			<div class="card">
+				<div class="card-header">
+					<i class="fa-solid fa-pencil" aria-hidden="true"></i>
+					<span class="ms-2">{{ text_step_3 }}</span>
+				</div>
+				<div class="card-body">
+					<fieldset>
+						<legend>{{ text_db_connection }}</legend>
+						<div class="row mb-3 required">
+							<label for="input-db-driver" class="col-sm-3 col-form-label">{{ entry_db_driver }}</label>
+							<div class="col-sm-9">
+								<select name="db_driver" id="input-db-driver" class="form-select">
+									{% for driver in drivers %}
+									<option value="{{ driver }}"{% if driver == db_driver %} selected{% endif %}>{{ driver }}</option>
+									{% endfor %}
+								</select>
+								{% if error.db_driver %}<div class="invalid-feedback d-block">{{ error.db_driver }}</div>{% endif %}
+							</div>
+						</div>
+						<div class="row mb-3 required">
+							<label for="input-db-hostname" class="col-sm-3 col-form-label">{{ entry_db_hostname }}</label>
+							<div class="col-sm-9">
+								<input type="text" name="db_hostname" value="{{ db_hostname }}" id="input-db-hostname" class="form-control" required/>
+								{% if error.db_hostname %}<div class="invalid-feedback d-block">{{ error.db_hostname }}</div>{% endif %}
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6 mb-3 required">
+								<label for="input-db-username" class="form-label">{{ entry_db_username }}</label>
+								<input type="text" name="db_username" value="{{ db_username }}" id="input-db-username" class="form-control" required/>
+								{% if error.db_username %}<div class="invalid-feedback d-block">{{ error.db_username }}</div>{% endif %}
+							</div>
+							<div class="col-md-6 mb-3 required">
+								<label for="input-db-password" class="form-label">{{ entry_db_password }}</label>
+								<input type="password" name="db_password" value="{{ db_password }}" id="input-db-password" class="form-control" autocomplete="new-password"/>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6 mb-3 required">
+								<label for="input-db-database" class="form-label">{{ entry_db_database }}</label>
+								<input type="text" name="db_database" value="{{ db_database }}" id="input-db-database" class="form-control" required/>
+								{% if error.db_database %}<div class="invalid-feedback d-block">{{ error.db_database }}</div>{% endif %}
+							</div>
+							<div class="col-md-3 col-sm-6 mb-3">
+								<label for="input-db-port" class="form-label">{{ entry_db_port }}</label>
+								<input type="number" name="db_port" value="{{ db_port }}" id="input-db-port" class="form-control" required/>
+								{% if error.db_port %}<div class="invalid-feedback d-block">{{ error.db_port }}</div>{% endif %}
+							</div>
+							<div class="col-md-3 col-sm-6 mb-3">
+								<label for="input-db-prefix" class="form-label">{{ entry_db_prefix }}</label>
+								<input type="text" name="db_prefix" value="{{ db_prefix }}" id="input-db-prefix" class="form-control" pattern="[a-z0-9_]+" required/>
+								{% if error.db_prefix %}<div class="invalid-feedback d-block">{{ error.db_prefix }}</div>{% endif %}
+							</div>
+						</div>
+						<div class="row mb-3 required">
+							<label for="input-http-server" class="col-sm-3 col-form-label">{{ entry_http_server }}</label>
+							<div class="col-sm-9">
+								<input type="url" name="http_server" value="{{ http_server }}" id="input-http-server" class="form-control" placeholder="https://" required/>
+								{% if error.http_server %}<div class="invalid-feedback d-block">{{ error.http_server }}</div>{% endif %}
+							</div>
+						</div>
+						<div class="row mb-2">
+							<div class="col text-end">
+								<button type="button" class="btn btn-outline-secondary" id="btn-test-db">
+									<i class="fa-solid fa-plug" aria-hidden="true"></i> {{ button_test_db }}
+								</button>
+								<span id="db-test-result" class="ms-2 align-middle" role="status" aria-live="polite"></span>
+							</div>
+						</div>
+					</fieldset>
 
-    <form method="post" action="{{ action }}">
-      {% if error.connect or error.database or error.config %}
-      <div class="alert error">{{ error.connect }}{{ error.database }}{{ error.config }}</div>
-      {% endif %}
+					<fieldset>
+						<legend>{{ text_db_administration }}</legend>
+						<div class="row">
+							<div class="col-md-6 mb-3 required">
+								<label for="input-username" class="form-label">{{ entry_username }}</label>
+								<input type="text" name="username" value="{{ username }}" id="input-username" class="form-control" required/>
+								<div class="invalid-feedback d-none" id="error-username"></div>
+								{% if error.username %}<div class="invalid-feedback d-block">{{ error.username }}</div>{% endif %}
+							</div>
+							<div class="col-md-6 mb-3 required">
+								<label for="input-email" class="form-label">{{ entry_email }}</label>
+								<input type="email" name="email" value="{{ email }}" id="input-email" class="form-control" required/>
+								<div class="invalid-feedback d-none" id="error-email"></div>
+								{% if error.email %}<div class="invalid-feedback d-block">{{ error.email }}</div>{% endif %}
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6 mb-3 required">
+								<label for="input-firstname" class="form-label">{{ entry_firstname }}</label>
+								<input type="text" name="firstname" value="{{ firstname }}" id="input-firstname" class="form-control" required/>
+								{% if error.firstname %}<div class="invalid-feedback d-block">{{ error.firstname }}</div>{% endif %}
+							</div>
+							<div class="col-md-6 mb-3 required">
+								<label for="input-lastname" class="form-label">{{ entry_lastname }}</label>
+								<input type="text" name="lastname" value="{{ lastname }}" id="input-lastname" class="form-control" required/>
+								{% if error.lastname %}<div class="invalid-feedback d-block">{{ error.lastname }}</div>{% endif %}
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-6 mb-1 required">
+								<label for="input-password" class="form-label">{{ entry_password }}</label>
+								<div class="input-group">
+									<input type="password" name="password" value="" id="input-password" class="form-control" autocomplete="new-password" minlength="8" required/>
+									<button class="btn btn-outline-secondary" type="button" id="btn-toggle-password" aria-label="{{ button_toggle_password }}"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
+								</div>
+								<div class="progress mt-2" style="height: 6px;" role="progressbar" aria-hidden="true">
+									<div id="password-strength-bar" class="progress-bar" style="width: 0%;"></div>
+								</div>
+								<small id="password-strength-text" class="text-muted"></small>
+								<div class="invalid-feedback d-none" id="error-password"></div>
+								{% if error.password %}<div class="invalid-feedback d-block">{{ error.password }}</div>{% endif %}
+							</div>
+							<div class="col-md-6 mb-1 required">
+								<label for="input-confirm" class="form-label">{{ entry_confirm }}</label>
+								<div class="input-group">
+									<input type="password" name="confirm" value="" id="input-confirm" class="form-control" autocomplete="new-password" minlength="8" required/>
+									<button class="btn btn-outline-secondary" type="button" id="btn-toggle-confirm" aria-label="{{ button_toggle_password }}"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
+								</div>
+								<small class="text-muted d-block">{{ text_password_hint }}</small>
+								<div class="invalid-feedback d-none" id="error-confirm"></div>
+								{% if error.confirm %}<div class="invalid-feedback d-block">{{ error.confirm }}</div>{% endif %}
+							</div>
+						</div>
+						<div class="row mb-3">
+							<div class="col text-end">
+								<button type="button" class="btn btn-outline-secondary btn-sm" id="btn-generate-password">
+									<i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> {{ button_generate }}
+								</button>
+							</div>
+						</div>
+					</fieldset>
 
-      <div class="field">
-        <label for="db_driver">{{ entry_db_driver }}</label>
-        <select id="db_driver" name="db_driver">
-          {% for driver in drivers %}
-          <option value="{{ driver }}"{% if driver == db_driver %} selected{% endif %}>{{ driver }}</option>
-          {% endfor %}
-        </select>
-        {% if error.db_driver %}<small class="field-error">{{ error.db_driver }}</small>{% endif %}
-      </div>
+					<div class="row mt-3">
+						<div class="col"><a href="{{ back }}" class="btn btn-light" role="button">{{ button_back }}</a></div>
+						<div class="col text-end"><input type="submit" value="{{ button_continue }}" class="btn btn-primary" id="install-button"/></div>
+					</div>
+				</div>
+			</div>
+		</form>
 
-      <div class="field">
-        <label for="db_hostname">{{ entry_db_hostname }}</label>
-        <input type="text" id="db_hostname" name="db_hostname" value="{{ db_hostname }}" required>
-        {% if error.db_hostname %}<small class="field-error">{{ error.db_hostname }}</small>{% endif %}
-      </div>
+		{# Overlay cosmético de progresso (o POST é síncrono) — janela de expectativa honesta #}
+		<div id="progress-container" class="position-fixed top-0 start-0 w-100 h-100 d-none" style="background: rgba(255,255,255,.85); z-index: 1080;">
+			<div class="d-flex flex-column align-items-center justify-content-center h-100">
+				<div class="card shadow-sm" id="installation-form" style="min-width: 320px;">
+					<div class="card-body">
+						<h5 class="card-title mb-3">{{ heading_title }}</h5>
+						<div class="progress mb-2" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+							<div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%;"></div>
+						</div>
+						<div id="progress-text" class="small text-muted"></div>
+						<div id="completion-message" class="small text-success mt-2"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</main>
 
-      <div class="grid two">
-        <div class="field">
-          <label for="db_username">{{ entry_db_username }}</label>
-          <input type="text" id="db_username" name="db_username" value="{{ db_username }}" required>
-          {% if error.db_username %}<small class="field-error">{{ error.db_username }}</small>{% endif %}
-        </div>
-        <div class="field">
-          <label for="db_password">{{ entry_db_password }}</label>
-          <input type="password" id="db_password" name="db_password" value="{{ db_password }}">
-        </div>
-      </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+	const $ = (id) => document.getElementById(id);
+	const form = $('install-form');
+	const i18n = {
+		hint:      '{{ text_password_hint|e('js') }}',
+		mismatch:  '{{ error_confirm|default('')|e('js') }}' || '{{ text_js_password_mismatch|e('js') }}',
+		weak:      '{{ text_js_password_weak|e('js') }}',
+		medium:    '{{ text_js_password_medium|e('js') }}',
+		strong:    '{{ text_js_password_strong|e('js') }}',
+		generated: '{{ text_js_password_generated|e('js') }}',
+		dbOk:      '{{ text_db_ok|e('js') }}',
+		testing:   '{{ text_js_db_testing|e('js') }}',
+		user:      '{{ text_js_username_hint|e('js') }}',
+		show:      '{{ button_toggle_password|e('js') }}'
+	};
 
-      <div class="grid two">
-        <div class="field">
-          <label for="db_database">{{ entry_db_database }}</label>
-          <input type="text" id="db_database" name="db_database" value="{{ db_database }}" required>
-          {% if error.db_database %}<small class="field-error">{{ error.db_database }}</small>{% endif %}
-        </div>
-        <div class="field">
-          <label for="db_port">{{ entry_db_port }}</label>
-          <input type="number" id="db_port" name="db_port" value="{{ db_port }}" min="1" max="65535">
-        </div>
-      </div>
+	/* ── medidor de força (espelho do visual do instalador ReamurCMS) ── */
+	const strength = (v) => {
+		let s = 0;
+		if (v.length >= 8) s++;
+		if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
+		if (/\d/.test(v)) s++;
+		if (/[^A-Za-z0-9]/.test(v)) s++;
+		return s;
+	};
+	const paint = () => {
+		const s = strength($('input-password').value);
+		const pct = [0, 25, 55, 80, 100][s];
+		const cls = ['bg-danger', 'bg-danger', 'bg-warning', 'bg-info', 'bg-success'][s];
+		const txt = [i18n.weak, i18n.weak, i18n.medium, i18n.medium, i18n.strong][s];
+		const bar = $('password-strength-bar');
+		bar.style.width = pct + '%';
+		bar.className = 'progress-bar ' + cls;
+		$('password-strength-text').textContent = $('input-password').value ? txt : '';
+	};
+	$('input-password').addEventListener('input', paint);
 
-      <div class="grid two">
-        <div class="field">
-          <label for="db_prefix">{{ entry_db_prefix }}</label>
-          <input type="text" id="db_prefix" name="db_prefix" value="{{ db_prefix }}" maxlength="20" required>
-          {% if error.db_prefix %}<small class="field-error">{{ error.db_prefix }}</small>{% endif %}
-        </div>
-        <div class="field">
-          <label for="http_server">{{ entry_http_server }}</label>
-          <input type="url" id="http_server" name="http_server" value="{{ http_server }}" placeholder="https://" required>
-          {% if error.http_server %}<small class="field-error">{{ error.http_server }}</small>{% endif %}
-        </div>
-      </div>
+	/* ── mostrar/esconder senha ── */
+	[['btn-toggle-password', 'input-password'], ['btn-toggle-confirm', 'input-confirm']].forEach(([b, f]) => {
+		$(b).addEventListener('click', () => {
+			const el = $(f);
+			const icon = $(b).querySelector('i');
+			el.type = el.type === 'password' ? 'text' : 'password';
+			icon.className = el.type === 'password' ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+		});
+	});
 
-      <div class="actions">
-        <a href="{{ back }}" class="btn">{{ button_back }}</a>
-        <button type="submit" class="btn primary">{{ button_continue }}</button>
-      </div>
-    </form>
-  </main>
-</body>
-</html>
+	/* ── gerador client-side (crypto do navegador; preenche os dois campos) ── */
+	$('btn-generate-password').addEventListener('click', () => {
+		const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*?';
+		const rnd = new Uint32Array(16);
+		window.crypto.getRandomValues(rnd);
+		let pwd = '';
+		for (const n of rnd) pwd += chars[n % chars.length];
+		$('input-password').value = pwd;
+		$('input-confirm').value = pwd;
+		paint();
+		$('password-strength-text').textContent = i18n.generated + ' (' + i18n.strong.toLowerCase() + ')';
+	});
+
+	/* ── confirmação ao vivo ── */
+	$('input-confirm').addEventListener('input', () => {
+		const el = $('error-confirm');
+		const bad = $('input-confirm').value && $('input-confirm').value !== $('input-password').value;
+		el.textContent = bad ? i18n.mismatch : '';
+		el.classList.toggle('d-none', !bad);
+		el.classList.toggle('d-block', bad);
+	});
+
+	/* ── teste de conexão (AJAX leitura pura, endpoint install/step_3.test) ── */
+	$('btn-test-db').addEventListener('click', () => {
+		const out = $('db-test-result');
+		out.className = 'ms-2 align-middle text-muted';
+		out.textContent = i18n.testing;
+		const body = new URLSearchParams(new FormData(form));
+		fetch('{{ test_json|e('js') }}', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body })
+			.then((r) => r.json())
+			.then((j) => {
+				out.className = 'ms-2 align-middle ' + (j.success ? 'text-success' : 'text-danger');
+				out.textContent = j.success ? i18n.dbOk : (j.error || 'Error');
+			})
+			.catch(() => { out.className = 'ms-2 align-middle text-danger'; out.textContent = 'Error'; });
+	});
+
+	/* ── overlay de progresso (cosmético) ao submeter ── */
+	form.addEventListener('submit', () => {
+		$('progress-container').classList.remove('d-none');
+		$('install-button').disabled = true;
+		const steps = ['25%', '50%', '75%'];
+		const bar = $('progress-bar');
+		steps.forEach((w, i) => setTimeout(() => { bar.style.width = w; }, 400 * (i + 1)));
+	});
+});
+</script>
+{{ footer|raw }}

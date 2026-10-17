@@ -46,6 +46,12 @@ class Step_2 extends \Reamur\System\Engine\Controller {
         $data['action']  = $this->url->link('install/step_2');
         $data['back']    = $this->url->link('install/step_1');
 
+        // Chrome do wizard (ADR 0007)
+        $data['page_title'] = $this->language->get('heading_title');
+        $data['header']     = $this->load->controller('common/header', $data);
+        $data['language']   = $this->load->controller('common/language');
+        $data['footer']     = $this->load->controller('common/footer');
+
         $this->response->setOutput($this->load->view('install/step_2', $data));
     }
 

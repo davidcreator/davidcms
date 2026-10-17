@@ -6,113 +6,71 @@
  * @license   https://opensource.org/licenses/GPL-3.0
  * @link      https://reamurcms.com
  *
- * Wizard — Passo 4: Conta do administrador.
- * Só roda após o passo 3 (credenciais na sessão efêmera do wizard).
- * Colunas escritas 1:1 com docs/Dicionario-de-Dados.md (rms_user / rms_user_group).
+ * Wizard — Passo 4: Concluído (ADR 0007). Só exibe quando ESTA sessão
+ * concluiu a instalação (session install_done gravada pelo passo 3).
+ * Conteúdo exclusivo do ReamurCMS público (módulos blog/chat/mooc, loja de
+ * extensões, promotion) NÃO faz parte deste projeto — decisão do mantenedor.
  */
 namespace Reamur\Install\Controller\Install;
 
 class Step_4 extends \Reamur\System\Engine\Controller {
 
-    /** GET exibe o formulário; POST cria grupo + usuário e conclui a instalação */
+    /** Página de conclusão: links do site/painel + alerta para remover o install */
     public function index(): void {
-        $this->load->language('install/step_4');
-        $this->load->model('install/install');
+        if (empty($this->session->data['install_done'])) {
+            $this->response->redirect($this->url->link('install/step_1'));
 
-        $this->document->setTitle($this->language->get('heading_title'));
-
-        // Textos da view
-        $data['step']             = sprintf($this->language->get('text_step'), 4);
-        $data['heading_title']    = $this->language->get('heading_title');
-        $data['text_admin']       = $this->language->get('text_admin');
-        $data['entry_username']   = $this->language->get('entry_username');
-        $data['entry_firstname']  = $this->language->get('entry_firstname');
-        $data['entry_lastname']   = $this->language->get('entry_lastname');
-        $data['entry_email']      = $this->language->get('entry_email');
-        $data['entry_password']   = $this->language->get('entry_password');
-        $data['entry_confirm']    = $this->language->get('entry_confirm');
-        $data['button_back']      = $this->language->get('button_back');
-        $data['button_continue']  = $this->language->get('button_continue');
-
-        // Guarda de sequência: sem credenciais validadas, volta ao banco
-        if (empty($this->session->data['install_db'])) {
-            $this->response->redirect($this->url->link('install/step_3'));
             return;
         }
 
-        $data['error'] = [];
+        $this->load->language('install/step_4');
 
-        if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $data['error'] = $this->validate();
+        $this->document->setTitle($this->language->get('heading_title'));
 
-            if (!$data['error']) {
-                $db = $this->session->data['install_db'];
+        $data['heading_title']      = $this->language->get('heading_title');
+        $data['text_step_4']        = $this->language->get('text_step_4');
+        $data['text_success']       = $this->language->get('text_success');
+        $data['text_delete_folder'] = $this->language->get('text_delete_folder');
+        $data['text_catalog']       = $this->language->get('text_catalog');
+        $data['text_admin']         = $this->language->get('text_admin');
+        $data['text_installed']     = $this->language->get('text_installed');
 
-                if (!$this->model_install_install->connect($db)) {
-                    $data['error']['warning'] = $this->language->get('error_connect') . ' ' . $this->model_install_install->getError();
-                } else {
-                    $this->model_install_install->createAdministrator([
-                        'username'  => trim((string)$this->request->post['username']),
-                        'firstname' => trim((string)$this->request->post['firstname']),
-                        'lastname'  => trim((string)$this->request->post['lastname']),
-                        'email'     => trim((string)$this->request->post['email']),
-                        'password'  => (string)$this->request->post['password'],
-                    ], $db['db_prefix']);
+        // Base pública real: gravada pelo passo 3 a partir do site_url informado
+        // (fallback honesto: lê o define já escrito, nunca SCRIPT_NAME — F2-5).
+        $site = (string)($this->session->data['install_site'] ?? '');
 
-                    $this->session->data['install_done'] = true;
-
-                    $this->response->redirect($this->url->link('install/step_5'));
-                    return;
-                }
-            }
+        if ($site === '') {
+            $site = $this->siteFromConfig();
         }
 
-        foreach (['username', 'firstname', 'lastname', 'email'] as $field) {
-            $data[$field] = $this->request->post[$field] ?? '';
-        }
+        $data['catalog'] = $site !== '' ? $site : '#';
+        $data['admin']   = $site !== '' ? $site . 'admin/' : '#';
 
-        $data['action'] = $this->url->link('install/step_4');
-        $data['back']   = $this->url->link('install/step_3');
+        // Sessão efêmera do wizard: encerra antes da despedida (links já montados)
+        unset($this->session->data['install_db'], $this->session->data['install_site'], $this->session->data['install_done']);
+
+        $this->chrome($data);
 
         $this->response->setOutput($this->load->view('install/step_4', $data));
     }
 
-    /**
-     * Limites conforme Dicionario-de-Dados (username/firstname/lastname 32, email 96).
-     *
-     * @return array<string, string>
-     */
-    private function validate(): array {
-        $error = [];
+    /** HTTP_SERVER do catalog recém-escrito ('' se o arquivo nem existir) */
+    private function siteFromConfig(): string {
+        $config = dirname(__DIR__, 3) . '/catalog/config.php'; // dev/catalog/config.php
 
-        $username = trim((string)($this->request->post['username'] ?? ''));
-
-        if (mb_strlen($username) < 3 || mb_strlen($username) > 32) {
-            $error['username'] = $this->language->get('error_username');
+        if (is_file($config)
+            && preg_match("/define\\('HTTP_SERVER',\\s*'([^']+)'\\)/", (string)file_get_contents($config), $m)) {
+            return (string)$m[1];
         }
 
-        $email = trim((string)($this->request->post['email'] ?? ''));
+        return '';
+    }
 
-        if ($email === '' || mb_strlen($email) > 96 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $error['email'] = $this->language->get('error_email');
-        }
-
-        foreach (['firstname', 'lastname'] as $field) {
-            $value = trim((string)($this->request->post[$field] ?? ''));
-
-            if (mb_strlen($value) < 1 || mb_strlen($value) > 32) {
-                $error[$field] = $this->language->get('error_' . $field);
-            }
-        }
-
-        $password = (string)($this->request->post['password'] ?? '');
-
-        if (strlen($password) < 8) {
-            $error['password'] = $this->language->get('error_password');
-        } elseif (!hash_equals($password, (string)($this->request->post['confirm'] ?? ''))) {
-            $error['confirm'] = $this->language->get('error_confirm');
-        }
-
-        return $error;
+    /** Chrome compartilhado do wizard (header + seletor de idiomas + footer) */
+    private function chrome(array &$data): void {
+        $data['page_title'] = $this->language->get('heading_title');
+        $data['header']     = $this->load->controller('common/header', $data);
+        $data['language']   = $this->load->controller('common/language');
+        $data['footer']     = $this->load->controller('common/footer');
     }
 }

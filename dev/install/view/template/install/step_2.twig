@@ -1,49 +1,64 @@
-{# dev/install/view/template/install/step_2.twig — Pré-requisitos #}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ heading_title }} · ReamurCMS</title>
-  <link rel="stylesheet" href="view/css/wizard.css">
-</head>
-<body class="rms-wizard">
-  <main class="card">
-    <p class="step">{{ step }}</p>
-    <h1>{{ heading_title }}</h1>
-    <p>{{ text_requirements }}</p>
-
-    {% if not ok %}
-    <div class="alert error">{{ text_error_summary }}</div>
-    {% endif %}
-
-    <table class="checks">
-      <thead>
-        <tr>
-          <th>{{ text_column_check }}</th>
-          <th>{{ text_column_detail }}</th>
-          <th>{{ text_column_status }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for check in checks %}
-        <tr>
-          <td>{{ check.name }}</td>
-          <td><code>{{ check.detail }}</code></td>
-          <td class="{% if check.status %}ok{% else %}fail{% endif %}">
-            {% if check.status %}{{ text_ok }}{% else %}{{ text_fail }}{% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-    <form method="post" action="{{ action }}">
-      <div class="actions">
-        <a href="{{ back }}" class="btn">{{ button_back }}</a>
-        <button type="submit" class="btn primary">{{ button_continue }}</button>
-      </div>
-    </form>
-  </main>
-</body>
-</html>
+{# dev/install/view/template/install/step_2.twig — Pré-requisitos (ADR 0007) #}
+{{ header|raw }}
+<main id="content" role="main">
+	<div class="page-header">
+		<div class="container">
+			<div class="float-end">{{ language|raw }}</div>
+			<h1>{{ heading_title }}</h1>
+		</div>
+	</div>
+	<div class="container">
+		{% if not ok %}
+		<div class="alert alert-danger" role="alert">
+			<i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+			<span class="ms-2">{{ text_error_summary }}</span>
+		</div>
+		{% endif %}
+		<form action="{{ action }}" method="post">
+			<div class="card">
+				<div class="card-header">
+					<i class="fa-solid fa-pencil" aria-hidden="true"></i>
+					<span class="ms-2">{{ text_requirements }}</span>
+				</div>
+				<div class="card-body">
+					<div class="table-responsive">
+						<table class="table table-bordered">
+							<caption class="visually-hidden">{{ text_requirements }}</caption>
+							<thead>
+								<tr>
+									<th scope="col" style="width: 55%">{{ text_column_check }}</th>
+									<th scope="col" style="width: 25%">{{ text_column_detail }}</th>
+									<th scope="col" style="width: 20%" class="text-center">{{ text_column_status }}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for check in checks %}
+								<tr{% if not check.status %} class="table-danger"{% endif %}>
+									<td>{{ check.name }}</td>
+									<td>{{ check.detail }}</td>
+									<td class="text-center">
+										{% if check.status %}
+										<span class="text-success" aria-label="{{ text_ok }}" title="{{ text_ok }}">
+											<i class="fa-solid fa-check" aria-hidden="true"></i>
+										</span>
+										{% else %}
+										<span class="text-danger" aria-label="{{ text_fail }}" title="{{ text_fail }}">
+											<i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+										</span>
+										{% endif %}
+									</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+					<div class="row mt-3">
+						<div class="col"><a href="{{ back }}" class="btn btn-light" role="button">{{ button_back }}</a></div>
+						<div class="col text-end"><input type="submit" value="{{ button_continue }}" class="btn btn-primary"/></div>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+</main>
+{{ footer|raw }}

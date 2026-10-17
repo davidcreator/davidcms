@@ -6,15 +6,10 @@
  * @license   https://opensource.org/licenses/GPL-3.0
  * @link      https://reamurcms.com
  *
- * Language es-eu — wizard paso 5 (conclusión). Traducido del en-us (ADR 0001).
+ * Rota legada (ADR 0007): o "Concluído" mora no passo 4 — o controller
+ * redireciona (301) antes de qualquer render; este arquivo fica só como
+ * placeholder de idioma caso alguma extensão referencie a rota.
  */
 
 // Heading
-$_['heading_title'] = 'Instalación Completada';
-
-// Text
-$_['text_step']           = 'Paso %s de 5';
-$_['text_success']        = '¡ReamurCMS se ha instalado correctamente!';
-$_['text_remove_install'] = 'Por seguridad, borre (o renombre) el directorio de instalación (dev/install/) antes de usar el sitio.';
-$_['text_catalog']        = 'Ir a la Tienda';
-$_['text_admin']          = 'Ir a la Administración';
+$_['heading_title'] = 'Installation Complete';
