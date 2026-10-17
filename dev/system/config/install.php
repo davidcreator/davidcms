@@ -24,7 +24,7 @@ $_['db_autostart']        = false;
 $_['action_default']      = 'install/step_1'; // Contrato §4
 $_['action_router']       = '';               // Fase 1: dispatch direto (startup/router virá com startup/*)
 $_['action_error']        = 'error/not_found';
-$_['action_pre_action']   = [];               // startup/requirements: delegado ao próprio step_2 nesta fase
+$_['action_pre_action']   = ['startup/language']; // F2-3: idioma do wizard (?language= → sessão)
 $_['action_post_action']  = [];
 
 // Erros (ambiente de setup: sempre visível)

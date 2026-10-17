@@ -6,22 +6,21 @@
  * @license   https://opensource.org/licenses/GPL-3.0
  * @link      https://reamurcms.com
  *
- * Language en-us — common/login (tela de acesso ao painel).
- * PENDÊNCIA (ADR 0001): traduzir para pt-br e es-eu quando o idioma estiver habilitado.
+ * Language es-eu — common/login (pantalla de acceso al panel). Traducido del en-us (ADR 0001).
  */
 
 // Heading
-$_['heading_title'] = 'Administration';
+$_['heading_title'] = 'Administración';
 
 // Text
-$_['text_login']    = 'Please enter your login credentials to access the panel.';
+$_['text_login']    = 'Introduzca sus credenciales de acceso para entrar al panel.';
 
 // Entry
-$_['entry_username'] = 'Username';
-$_['entry_password'] = 'Password';
+$_['entry_username'] = 'Usuario';
+$_['entry_password'] = 'Contraseña';
 
 // Button
-$_['button_login']  = 'Login';
+$_['button_login']  = 'Entrar';
 
 // Error
-$_['error_match']   = 'No match for Username and/or Password.';
+$_['error_match']   = 'Usuario y/o contraseña incorrectos.';

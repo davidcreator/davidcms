@@ -1,0 +1,28 @@
+<?php
+/**
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * Language pt-br — common/dashboard (primeira página do painel). Traduzido do en-us (ADR 0001).
+ */
+
+// Heading
+$_['heading_title'] = 'Painel';
+
+// Text
+$_['text_welcome']       = 'Que bom ver você, %s.';
+$_['text_profile']       = 'Seu perfil';
+$_['text_username']      = 'Usuário';
+$_['text_email']         = 'E-mail';
+$_['text_user_group']    = 'Grupo de usuários (ID)';
+$_['text_acl']           = 'Permissões do seu grupo';
+$_['text_access_routes'] = 'Rotas com acesso';
+$_['text_modify_routes'] = 'Rotas com modificação';
+$_['text_acl_note']      = 'Uma instalação nova ainda não concede rotas explícitas — cada módulo novo precisa declarar suas rotas no grupo de usuários (ADR 0005).';
+$_['text_version']       = 'ReamurCMS %s';
+
+// Button
+$_['button_logout']      = 'Sair';

@@ -28,7 +28,7 @@ $_['db_port']             = defined('DB_PORT') ? (int)DB_PORT : 3306;
 $_['action_default']      = 'common/home'; // Contrato §4
 $_['action_router']       = '';            // Fase 1: dispatch direto
 $_['action_error']        = 'error/not_found';
-$_['action_pre_action']   = [];            // startup/{session,language,seo_url}: Fase 2
+$_['action_pre_action']   = ['startup/language']; // F2-3: idioma da requisição (Adendo ADR 0001)
 $_['action_post_action']  = [];
 
 // Erros
