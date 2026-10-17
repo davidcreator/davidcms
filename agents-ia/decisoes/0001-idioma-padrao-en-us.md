@@ -1,4 +1,13 @@
-# ADR 0001 — Idioma padrão do sistema: `en-us`
+# ADR 0001
+
+## Adendo F2-3 (2026-10-16) — mecanismo de seleção de idioma
+
+- **Decisão:** a escolha do idioma da requisição é da pré-ação **`startup/language`** (mesmo código nas 3 apps, por contrato). Ordem: `?language=codigo` validado **contra os diretórios que existem** em `{app}/language/` → persistido na sessão → senão a sessão → senão o padrão (`en-us`);
+- **Fonte da verdade = filesystem**: nasceu o diretório `xx-yy` com os arquivos, o idioma entra no ar sem tocar em código. A tabela `rms_language` (seed presente) entra em cena quando a UI de gerenciamento de idiomas chegar ao admin — a pré-ação **não toca no banco** (install app tem `db_autostart=false` deliberado);
+- **Fallback silencioso**: código inválido ou ausente nunca explode erro — cai para sessão/padrão;
+- **Mecânica**: substitui o serviço `language` montado pelo framework e atualiza `config.language_directory` da requisição;
+- **Conteúdo F2-3**: os 12 arquivos de language en-us (install ×6, catalog ×2, admin ×4) ganharam **pt-br e es-eu completos**, com validador de paridade tripla (mesmas chaves por rota em en-us/pt-br/es-eu + paridade das 404 entre apps);
+- **Pendências declaradas:** atributo `<html lang>` dinâmico chega junto do header/footer compartilhado (F2 blocos comuns); switcher de idioma na UI (hoje a troca é via `?language=`); tradução dos textos da seed `rms_language` / campos dinâmicos. — Idioma padrão do sistema: `en-us`
 
 | | |
 | --- | --- |
