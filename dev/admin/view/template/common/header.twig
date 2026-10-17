@@ -1,0 +1,25 @@
+{# dev/admin/view/template/common/header.twig — <head> + barra do painel (F2-4) #}
+<!DOCTYPE html>
+<html lang="{{ locale }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title ?: 'ReamurCMS Admin' }}</title>
+  {% for href, rel in styles %}
+  <link rel="{{ rel }}" href="{{ href }}">
+  {% endfor %}
+</head>
+<body class="{{ body_class }}">
+<header class="site-header">
+  <strong class="brand">⭐ ReamurCMS</strong>
+  <nav class="nav-right">
+    <span class="lang-switcher" aria-label="{{ text_languages }}">
+      {% for lang in languages %}
+      <a class="lang{{ lang.active ? ' active' : '' }}" href="{{ lang.href }}" hreflang="{{ lang.code }}">{{ lang.name }}</a>
+      {% endfor %}
+    </span>
+    {% if logged %}
+    <a class="btn ghost" href="{{ logout }}">{{ button_logout }}</a>
+    {% endif %}
+  </nav>
+</header>

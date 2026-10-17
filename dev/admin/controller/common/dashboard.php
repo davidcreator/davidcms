@@ -47,6 +47,13 @@ class Dashboard extends \Reamur\System\Engine\Controller {
 
         $data['logout'] = $this->url->link('common/logout');
 
+        // Chrome compartilhado (F2-4)
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+
+        $data['body_class'] = 'rms-dash';
+        $data['header']     = $this->load->controller('common/header', $data);
+        $data['footer']     = $this->load->controller('common/footer', $data);
+
         $this->response->setOutput($this->load->view('common/dashboard', $data));
     }
 }

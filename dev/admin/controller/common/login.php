@@ -52,6 +52,13 @@ class Login extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('common/login');
 
+        // Chrome compartilhado (F2-4)
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+
+        $data['body_class'] = 'rms-login';
+        $data['header']     = $this->load->controller('common/header', $data);
+        $data['footer']     = $this->load->controller('common/footer', $data);
+
         $this->response->setOutput($this->load->view('common/login', $data));
     }
 }

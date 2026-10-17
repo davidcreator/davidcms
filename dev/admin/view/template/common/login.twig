@@ -1,32 +1,23 @@
-{# dev/admin/view/template/common/login.twig — muralha do painel #}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ heading_title }} · ReamurCMS Admin</title>
-  <link rel="stylesheet" href="view/css/admin.css">
-</head>
-<body class="rms-login">
-  <main class="card-login">
-    <h1>{{ heading_title }}</h1>
-    <p class="muted">{{ text_login }}</p>
+{# dev/admin/view/template/common/login.twig — muralha do painel (chrome compartilhado) #}
+{{ header|raw }}
+<main class="card-login">
+  <h1>{{ heading_title }}</h1>
+  <p class="muted">{{ text_login }}</p>
 
-    {% if error %}
-    <div class="alert error">{{ error }}</div>
-    {% endif %}
+  {% if error %}
+  <div class="alert error">{{ error }}</div>
+  {% endif %}
 
-    <form method="post" action="{{ action }}">
-      <div class="field">
-        <label for="input-username">{{ entry_username }}</label>
-        <input type="text" name="username" id="input-username" value="{{ username }}" autocomplete="username" required autofocus>
-      </div>
-      <div class="field">
-        <label for="input-password">{{ entry_password }}</label>
-        <input type="password" name="password" id="input-password" autocomplete="current-password" required>
-      </div>
-      <button type="submit" class="btn primary block">{{ button_login }}</button>
-    </form>
-  </main>
-</body>
-</html>
+  <form method="post" action="{{ action }}">
+    <div class="field">
+      <label for="input-username">{{ entry_username }}</label>
+      <input type="text" name="username" id="input-username" value="{{ username }}" autocomplete="username" required autofocus>
+    </div>
+    <div class="field">
+      <label for="input-password">{{ entry_password }}</label>
+      <input type="password" name="password" id="input-password" autocomplete="current-password" required>
+    </div>
+    <button type="submit" class="btn primary block">{{ button_login }}</button>
+  </form>
+</main>
+{{ footer|raw }}

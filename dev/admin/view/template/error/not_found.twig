@@ -1,19 +1,10 @@
-{# dev/admin/view/template/error/not_found.twig — 404 do painel (login chega na Fase 2) #}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ heading_title }} · ReamurCMS Admin</title>
-  <link rel="stylesheet" href="view/css/admin.css">
-</head>
-<body class="rms-404">
-  <main class="card-404">
-    <p class="code">{{ text_code }}</p>
-    <h1>{{ heading_title }}</h1>
-    <p>{{ text_error }}</p>
-    <p class="muted">{{ text_suggestion }}</p>
-    <a class="btn primary" href="{{ home }}">{{ button_continue }}</a>
-  </main>
-</body>
-</html>
+{# dev/admin/view/template/error/not_found.twig — 404 do painel (chrome compartilhado) #}
+{{ header|raw }}
+<main class="card-404">
+  <p class="code">{{ text_code }}</p>
+  <h1>{{ heading_title }}</h1>
+  <p>{{ text_error }}</p>
+  <p class="muted">{{ text_suggestion }}</p>
+  <a class="btn primary" href="{{ home }}">{{ button_continue }}</a>
+</main>
+{{ footer|raw }}
