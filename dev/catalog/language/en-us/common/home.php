@@ -22,7 +22,6 @@ $_['text_feature_2']     = 'AI-governed build';
 $_['text_feature_2_alt'] = 'Development driven by auditable agents under explicit human rules.';
 $_['text_feature_3']     = 'Your data, your rules';
 $_['text_feature_3_alt'] = 'Your own database, your own template engine, GPL-3.0 licensed code.';
-$_['text_footer']        = 'ReamurCMS %s · GPL-3.0 · davidalmeida.xyz';
 
 // Button
 $_['button_admin'] = 'Go to the administrator';

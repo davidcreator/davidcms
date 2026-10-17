@@ -18,17 +18,35 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 32px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   color: var(--rms-text);
   background: radial-gradient(1200px 600px at 70% -10%, #2a2060 0%, var(--rms-bg) 55%) fixed;
   text-align: center;
-  padding: 48px 20px;
 }
 
 a { color: var(--rms-accent-2); text-decoration: none; }
+
+/* — Blocos compartilhados (F2-4) — */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 28px;
+}
+.site-header .brand { color: var(--rms-text); font-weight: 700; letter-spacing: .03em; }
+.lang-switcher { display: flex; gap: 14px; font-size: .9rem; }
+.lang-switcher .lang { color: var(--rms-muted); }
+.lang-switcher .lang.active { color: var(--rms-accent-2); font-weight: 700; }
+.site-footer {
+  margin-top: auto;
+  padding: 22px 28px;
+  color: var(--rms-muted);
+  font-size: .85rem;
+}
+
+/* Centro da página (após header/footer entrarem no fluxo) */
+.hero, .card-404 { margin: auto; width: min(100%, 980px); padding: 24px 20px; }
 
 .btn {
   display: inline-block;

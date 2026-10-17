@@ -31,9 +31,15 @@ class Home extends \Reamur\System\Engine\Controller {
         $data['text_feature_2_alt'] = $this->language->get('text_feature_2_alt');
         $data['text_feature_3_alt'] = $this->language->get('text_feature_3_alt');
         $data['button_admin']       = $this->language->get('button_admin');
-        $data['text_footer']        = sprintf($this->language->get('text_footer'), REAMUR_VERSION);
 
         $data['admin'] = $this->config->get('site_url') . 'admin/';
+
+        // Chrome compartilhado (F2-4): css via document + header/footer por sub-controller
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/common.css');
+
+        $data['body_class'] = 'rms-home';
+        $data['header']     = $this->load->controller('common/header', $data);
+        $data['footer']     = $this->load->controller('common/footer', $data);
 
         $this->response->setOutput($this->load->view('common/home', $data));
     }

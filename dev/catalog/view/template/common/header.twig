@@ -1,0 +1,20 @@
+{# dev/catalog/view/template/common/header.twig — <head> + barra de marca/switcher (F2-4) #}
+<!DOCTYPE html>
+<html lang="{{ locale }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title ?: 'ReamurCMS' }}</title>
+  {% for href, rel in styles %}
+  <link rel="{{ rel }}" href="{{ href }}">
+  {% endfor %}
+</head>
+<body class="{{ body_class }}">
+<header class="site-header">
+  <a class="brand" href="{{ home }}">⭐ ReamurCMS</a>
+  <nav class="lang-switcher" aria-label="{{ text_languages }}">
+    {% for lang in languages %}
+    <a class="lang{{ lang.active ? ' active' : '' }}" href="{{ lang.href }}" hreflang="{{ lang.code }}">{{ lang.name }}</a>
+    {% endfor %}
+  </nav>
+</header>
