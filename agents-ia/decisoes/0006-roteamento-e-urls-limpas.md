@@ -59,3 +59,21 @@ limpa.
    com efeitos colaterais de boot (sessão/ACL) e esconderia a ordem real;
 2. **Tabela `seo_url` já agora** — rejeitada: sem entidades com slug (catálogo
    vazio), prematuro; o lookup entra junto da primeira entidade publicável.
+
+## Adendo F2-6 — Rotas com método/args ficam fora das URLs limpas
+
+**Contexto.** Métodos de controller endereçáveis (F2-6) usam a gramática
+`grupo/modulo.metodo|arg1` da rota. Permitir que essa forma virasse URL limpa
+('/user/user.edit|3') criaria patrimônio de links lembráveis porém ilegíveis e
+códigos de mounted paths com `.` e `|` — superfície real de confusão em
+proxies/CDNs.
+
+**Decisão.** URLs limpas cobrem somente `grupo/modulo` (e aliases). A
+expressão do `rewrite()` admite `[a-zA-Z0-9_/.|]+` apenas para **reconhecer**
+a gramática; quando a `route` contém `.` ou `|` o match é devolvido intacto
+(`index.php?route=user/user.edit|3` funciona assim mesmo, sem rewrite).
+_Listar/ler = limpo; agir = explícito._
+
+**Consequências.** ✅ zero chance de link quebrado gerado por rewrite parcial;
+⚠️ filtros/exports futuros que combinem método+args devem compor a query
+manualmente (`?route=...&filtro=x` segue funcionando após o `|args`).

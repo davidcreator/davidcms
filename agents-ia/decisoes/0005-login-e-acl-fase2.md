@@ -51,3 +51,33 @@ explícitas — `permission: {"access":[],"modify":[]}`).
   vira regra de arquitetura testável;
 - ⚠️ Todo módulo novo do admin precisará declarar suas rotas ao grupo
   (grants) — retrabalho evitado por ADR, não por convenção informal.
+
+## Adendo F2-6 — Granularidade base-route e telas de autogestão
+
+**Contexto.** A F2-6 entrega o CRUD `user/user` + `user/user_group` (a pendência
+"UI para administrar o JSON de permissões" acima **deixa de existir**) e expõe
+métodos de controller via URL — o que este ADR não previu.
+
+**Decisões.**
+
+1. **Granularidade da ACL = base-route** (o *arquivo* `grupo/modulo`). Rotas
+   com gramática de método/args (`user/user.add`, `user/user.delete|3`) são
+   normalizadas para `user/user` antes de `is_file`/`hasPermission` em
+   `startup/permission`. Um grant cobre **todos** os métodos do controller;
+2. **`modify` protege efeitos colaterais**: qualquer POST mutável verifica
+   `hasPermission('modify', $baseRoute)` dentro do método — `access` abre a
+   tela, `modify` altera dados. GET jamais muta;
+3. **Seed honesto**: o wizard (F2-1) cria o grupo `Administrator` já com
+   `access`+`modify` em `user/user` e `user/user_group` — senão o único admin
+   saía da instalação incapaz de administrar contas sem SQL manual;
+4. **Sem autoexclusão**: `user/user.delete` recusa apagar o próprio usuário
+   logado (servidor + botão omitido na lista). Grupo não tem delete (evita
+   órfãos de `user.user_group_id` sem FK rígida nesta fase);
+5. **Args de método vêm do `|` na rota, nunca da querystring** — o `Action`
+   não transporta `$_GET` para argumentos; URLs do tipo
+   `?route=user/user.edit&user_id=3` chamam `edit()` **sem** argumento.
+
+**Consequências.** ⚠️ Alguém com `access` mas sem `modify` em `user/user` vê
+telas, mas toda ação mutável é derrubada para `error/permission`; ✅ a matriz
+de permissões descobre rotas do filesystem (`controller/**.php`) — módulo novo
+aparece na grade sem migration.
