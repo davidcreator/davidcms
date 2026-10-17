@@ -27,7 +27,7 @@ $_['db_port']             = defined('DB_PORT') ? (int)DB_PORT : 3306;
 
 // Actions
 $_['action_default']      = 'common/dashboard'; // Contrato §4 (atrás da muralha startup/login)
-$_['action_router']       = '';                 // Fase 1: dispatch direto
+$_['action_router']       = 'startup/router';  // F2-5: URLs limpas + aliases /login /logout (ADR 0006)
 $_['action_error']        = 'error/not_found';
 $_['action_pre_action']   = ['startup/language', 'startup/login', 'startup/permission']; // F2-3 idioma ANTES da muralha; F2-2 sessão→ACL
 $_['action_post_action']  = [];

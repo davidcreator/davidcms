@@ -150,18 +150,33 @@ if ($config->get('url_autostart')) {
 // 13. Document
 $registry->set('document', new \Reamur\System\Library\Document());
 
-// 14. Pré-ações (startup/*): idioma, sessão, seo, login... (Arquitetura §4)
+// 14. Rota da requisição (ADR 0006): ?route= tem prioridade absoluta; senão o
+// router da aplicação (config action_router = 'startup/router') resolve o
+// caminho limpo; senão a rota padrão da app.
+$route = (string)($request->get['route'] ?? '');
+
+if ($route === '') {
+    $actionRouter = (string)$config->get('action_router', '');
+
+    if ($actionRouter !== '') {
+        $result = (new Action($actionRouter))->execute($registry);
+        $route  = is_string($result) ? trim($result, '/') : '';
+    }
+
+    if ($route === '') {
+        $route = (string)$config->get('action_default', 'common/home');
+    }
+}
+
+// Fonte única da rota para pré-ações e controllers (URL limpa não traz ?route=)
+$config->set('_route', $route);
+
+// 15. Pré-ações (startup/*): idioma, sessão, seo, login... (Arquitetura §4)
 foreach ((array)$config->get('action_pre_action', []) as $preAction) {
     (new Action((string)$preAction))->execute($registry);
 }
 
-// 15. Rota pedida → dispatch (com fallback da rota de erro da app)
-$route = (string)($request->get['route'] ?? '');
-
-if ($route === '') {
-    $route = (string)$config->get('action_default', 'common/home');
-}
-
+// 16. Rota pedida → dispatch (com fallback da rota de erro da app)
 (new Router($registry))->dispatch(new Action($route), new Action((string)$config->get('action_error', 'error/not_found')));
 
 // 16. Saída

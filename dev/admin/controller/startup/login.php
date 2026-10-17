@@ -24,7 +24,13 @@ class Login extends \Reamur\System\Engine\Controller {
             $this->registry->set('user', new \Reamur\System\Library\User($this->registry));
         }
 
-        $route = (string)($this->request->get['route'] ?? '');
+        // Fonte única da rota (ADR 0006): _route (via config) cobre URL limpa;
+        // ?route= dropdown para harnesses CLI/cron que pulam o framework
+        $route = (string)$this->config->get('_route', '');
+
+        if ($route === '') {
+            $route = (string)($this->request->get['route'] ?? '');
+        }
 
         if ($route === '') {
             $route = (string)$this->config->get('action_default', 'common/dashboard');

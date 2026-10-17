@@ -32,7 +32,11 @@ class Permission extends \Reamur\System\Engine\Controller {
             return; // muralha de login já tratou
         }
 
-        $route = (string)($this->request->get['route'] ?? '');
+        $route = (string)$this->config->get('_route', '');
+
+        if ($route === '') {
+            $route = (string)($this->request->get['route'] ?? '');
+        }
 
         if ($route === '') {
             $route = (string)$this->config->get('action_default', 'common/dashboard');
