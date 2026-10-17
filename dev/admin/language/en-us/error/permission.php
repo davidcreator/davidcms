@@ -6,16 +6,17 @@
  * @license   https://opensource.org/licenses/GPL-3.0
  * @link      https://reamurcms.com
  *
- * Language es-eu — error/permission (403 del panel). Traducido del en-us (ADR 0001).
+ * Language en-us — error/permission (403 do painel).
+ * PENDÊNCIA (ADR 0001): traduzir para pt-br e es-eu quando o idioma estiver habilitado.
  */
 
 // Heading
-$_['heading_title'] = '¡Permiso Denegado!';
+$_['heading_title'] = 'Permission Denied!';
 
 // Text
 $_['text_code']       = '403';
-$_['text_error']      = 'No tiene permiso para acceder a esta ruta.';
-$_['text_suggestion'] = 'Pida al administrador principal que conceda esta ruta a su grupo de usuarios (ADR 0005).';
+$_['text_error']      = 'You do not have permission to access this route.';
+$_['text_suggestion'] = 'Ask the primary administrator to grant this route to your user group (ADR 0005).';
 
 // Button
-$_['button_back']     = 'Volver al panel';
+$_['button_back']     = 'Back to dashboard';

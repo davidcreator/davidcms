@@ -6,23 +6,24 @@
  * @license   https://opensource.org/licenses/GPL-3.0
  * @link      https://reamurcms.com
  *
- * Language es-eu — common/dashboard (primera página del panel). Traducido del en-us (ADR 0001).
+ * Language en-us — common/dashboard (primeira página do painel).
+ * PENDÊNCIA (ADR 0001): traduzir para pt-br e es-eu quando o idioma estiver habilitado.
  */
 
 // Heading
-$_['heading_title'] = 'Panel';
+$_['heading_title'] = 'Dashboard';
 
 // Text
-$_['text_welcome']       = 'Encantado de verle, %s.';
-$_['text_profile']       = 'Su perfil';
-$_['text_username']      = 'Usuario';
-$_['text_email']         = 'E-mail';
-$_['text_user_group']    = 'Grupo de usuarios (ID)';
-$_['text_acl']           = 'Permisos de su grupo';
-$_['text_access_routes'] = 'Rutas con acceso';
-$_['text_modify_routes'] = 'Rutas con modificación';
-$_['text_acl_note']      = 'Una instalación nueva aún no concede rutas explícitas: cada módulo nuevo debe declarar sus rutas en el grupo de usuarios (ADR 0005).';
-$_['text_version']       = 'ReamurCMS %s';
+$_['text_welcome']      = 'Glad to see you, %s.';
+$_['text_profile']      = 'Your profile';
+$_['text_username']     = 'Username';
+$_['text_email']        = 'E-mail';
+$_['text_user_group']   = 'User group (ID)';
+$_['text_acl']          = 'Your group permissions';
+$_['text_access_routes'] = 'Access routes';
+$_['text_modify_routes'] = 'Modify routes';
+$_['text_acl_note']     = 'A fresh install grants no explicit routes yet — every new module must declare its routes in the user group (ADR 0005).';
+$_['text_version']      = 'ReamurCMS %s';
 
 // Button
-$_['button_logout']      = 'Salir';
+$_['button_logout']     = 'Logout';

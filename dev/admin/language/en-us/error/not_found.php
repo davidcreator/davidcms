@@ -6,17 +6,18 @@
  * @license   https://opensource.org/licenses/GPL-3.0
  * @link      https://reamurcms.com
  *
- * Language es-eu — página 404 del admin. Traducido del en-us (ADR 0001).
+ * Language en-us — página 404 do admin.
+ * PENDÊNCIA (ADR 0001): traduzir para pt-br e es-eu quando o idioma estiver habilitado.
  * Chaves espelhadas nas 3 aplicações (catalog/admin/install) — ver paridade §regras.
  */
 
 // Heading
-$_['heading_title'] = 'Página no Encontrada';
+$_['heading_title'] = 'Page Not Found';
 
 // Text
 $_['text_code']       = '404';
-$_['text_error']      = 'Esta ruta del panel no existe (o aún no se ha construido).';
-$_['text_suggestion'] = 'Use el botón inferior para volver al punto de entrada del panel.';
+$_['text_error']      = 'This administrator route does not exist (or has not been built yet).';
+$_['text_suggestion'] = 'Use the button below to return to the panel entry point.';
 
 // Button
-$_['button_continue'] = 'Volver al panel';
+$_['button_continue'] = 'Back to panel';
