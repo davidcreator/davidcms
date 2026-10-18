@@ -24,6 +24,7 @@ $_['text_modify_routes'] = 'Rutas con modificación';
 $_['text_acl_note']      = 'Una instalación nueva concede las rutas de gestión de usuarios al grupo Administrator; revisa los permisos en Grupos de Usuarios (ADR 0005, adenda F2-6).';
 $_['text_modules']       = 'Módulos';
 $_['text_manage_portfolio'] = 'Portafolio';
+$_['text_manage_categories'] = 'Categorías';
 $_['text_manage_users']  = 'Usuarios';
 $_['text_manage_user_groups'] = 'Grupos de Usuarios';
 $_['text_version']       = 'ReamurCMS %s';

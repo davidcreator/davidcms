@@ -24,6 +24,7 @@ $_['text_modify_routes'] = 'Rotas com modificação';
 $_['text_acl_note']      = 'Instalações novas concedem as rotas de gestão de usuários ao grupo Administrator; revise os grants em Grupos de Usuários (ADR 0005, adendo F2-6).';
 $_['text_modules']       = 'Módulos';
 $_['text_manage_portfolio'] = 'Portfólio';
+$_['text_manage_categories'] = 'Categorias';
 $_['text_manage_users']  = 'Usuários';
 $_['text_manage_user_groups'] = 'Grupos de Usuários';
 $_['text_version']       = 'ReamurCMS %s';

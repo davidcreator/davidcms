@@ -50,6 +50,13 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        if ($this->user->hasPermission('access', 'catalog/category')) {
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_categories'),
+                'href' => $this->url->link('catalog/category'),
+            ];
+        }
+
         if ($this->user->hasPermission('access', 'user/user')) {
             $data['modules'][] = [
                 'name' => $this->language->get('text_manage_users'),
