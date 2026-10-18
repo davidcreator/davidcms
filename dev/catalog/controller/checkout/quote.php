@@ -41,16 +41,30 @@ class Quote extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            [$errors, $products] = $this->validateQuote();
+            // F2-18 (ADR 0018): CSRF + rate limit por IP antes de validar/gravar.
+            $errors   = [];
+            $products = [];
+
+            if (!\Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '')) {
+                $errors[] = $this->language->get('error_csrf');
+            }
+
+            if ($errors === [] && !$this->rateLimitAllow('quote', 5, 600)) {
+                $errors[] = $this->language->get('error_rate_limit');
+            }
+
+            if ($errors === []) {
+                [$errors, $products] = $this->validateQuote();
+            }
 
             if ($errors === []) {
                 $this->load->model('checkout/quote');
 
                 $order_id = $this->model_checkout_quote->addQuote(
                     [
-                        'firstname' => trim((string)$this->request->post['firstname']),
+                        'firstname' => trim((string)($this->request->post['firstname'] ?? '')),
                         'lastname'  => trim((string)($this->request->post['lastname'] ?? '')),
-                        'email'     => trim((string)$this->request->post['email']),
+                        'email'     => trim((string)($this->request->post['email'] ?? '')),
                         'telephone' => trim((string)($this->request->post['telephone'] ?? '')),
                         'comment'   => trim((string)($this->request->post['comment'] ?? '')),
                         'ip'        => (string)($this->request->server['REMOTE_ADDR'] ?? ''),
@@ -79,6 +93,13 @@ class Quote extends \Reamur\System\Engine\Controller {
 
     private function isBot(): bool {
         return trim((string)($this->request->post['company'] ?? '')) !== '';
+    }
+
+    /** F2-18: rate limit — true quando a janela ainda não estourou */
+    private function rateLimitAllow(string $scope, int $max, int $windowSeconds): bool {
+        $limiter = new \Reamur\System\Library\Security\RateLimit($this->db);
+
+        return $limiter->allow($scope, (string)($this->request->server['REMOTE_ADDR'] ?? ''), $max, $windowSeconds);
     }
 
     /**
@@ -165,6 +186,7 @@ class Quote extends \Reamur\System\Engine\Controller {
             'button_send'       => $this->language->get('button_send'),
             'button_back_home'  => $this->language->get('button_back_home'),
             'text_flash'        => $this->flash(),
+            'csrf_token'        => \Reamur\System\Library\Security\Csrf::token($this->session),
             'services'          => $services,
             'value_firstname'   => (string)($post['firstname'] ?? ''),
             'value_lastname'    => (string)($post['lastname'] ?? ''),

@@ -24,3 +24,6 @@ $_['button_login']  = 'Entrar';
 
 // Error
 $_['error_match']   = 'Usuario y/o contraseña incorrectos.';
+
+$_['error_csrf']       = 'Falló la verificación de seguridad — entra de nuevo.';
+$_['error_rate_limit'] = 'Demasiados intentos de acceso. Espera 15 minutos e inténtalo de nuevo.';

@@ -35,17 +35,30 @@ class Contact extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $errors = $this->validateContact();
+            // F2-18 (ADR 0018): CSRF antes de qualquer validação; rate limit por IP.
+            $errors = [];
+
+            if (!\Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '')) {
+                $errors[] = $this->language->get('error_csrf');
+            }
+
+            if ($errors === [] && !$this->rateLimitAllow('contact', 5, 600)) {
+                $errors[] = $this->language->get('error_rate_limit');
+            }
+
+            if ($errors === []) {
+                $errors = $this->validateContact();
+            }
 
             if ($errors === []) {
                 $this->load->model('communication/contact_message');
 
                 $this->model_communication_contact_message->addContactMessage([
-                    'name'      => trim((string)$this->request->post['name']),
-                    'email'     => trim((string)$this->request->post['email']),
+                    'name'      => trim((string)($this->request->post['name'] ?? '')),
+                    'email'     => trim((string)($this->request->post['email'] ?? '')),
                     'telephone' => trim((string)($this->request->post['telephone'] ?? '')),
-                    'subject'   => trim((string)$this->request->post['subject']),
-                    'message'   => trim((string)$this->request->post['message']),
+                    'subject'   => trim((string)($this->request->post['subject'] ?? '')),
+                    'message'   => trim((string)($this->request->post['message'] ?? '')),
                     'ip'        => (string)($this->request->server['REMOTE_ADDR'] ?? ''),
                 ]);
 
@@ -69,6 +82,13 @@ class Contact extends \Reamur\System\Engine\Controller {
     /** Honeypot: humanos não veem nem preenchem o campo 'company' */
     private function isBot(): bool {
         return trim((string)($this->request->post['company'] ?? '')) !== '';
+    }
+
+    /** F2-18: rate limit — true quando a janela ainda não estourou */
+    private function rateLimitAllow(string $scope, int $max, int $windowSeconds): bool {
+        $limiter = new \Reamur\System\Library\Security\RateLimit($this->db);
+
+        return $limiter->allow($scope, (string)($this->request->server['REMOTE_ADDR'] ?? ''), $max, $windowSeconds);
     }
 
     /**
@@ -125,6 +145,7 @@ class Contact extends \Reamur\System\Engine\Controller {
             'button_send'     => $this->language->get('button_send'),
             'button_back_home'=> $this->language->get('button_back_home'),
             'text_flash'      => $this->flash(),
+            'csrf_token'      => \Reamur\System\Library\Security\Csrf::token($this->session),
             'value_name'      => (string)($post['name'] ?? ''),
             'value_email'     => (string)($post['email'] ?? ''),
             'value_telephone' => (string)($post['telephone'] ?? ''),

@@ -28,3 +28,6 @@ $_['error_email']     = 'Please inform a valid e-mail address.';
 $_['error_telephone'] = 'Phone looks too long (up to 32 chars).';
 $_['error_subject']   = 'Please inform the subject (up to 128 chars).';
 $_['error_message']   = 'Please write your message (3 to 5000 chars).';
+
+$_['error_csrf']       = 'Security check failed — please resend the form.';
+$_['error_rate_limit'] = 'Too many attempts. Please wait a few minutes and try again.';

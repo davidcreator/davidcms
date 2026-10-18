@@ -64,7 +64,14 @@ $_['error_filename']       = 'error.log';
 $_['error_page']           = 'error.html';
 
 // Response
-$_['response_header']      = ['Content-Type: text/html; charset=utf-8'];
+$_['response_header']      = [
+    'Content-Type: text/html; charset=utf-8',
+    // Hardening F2-18 (ADR 0018): defesa padrão de enquadramento/sniff/referrer.
+    // Apps podem sobrescrever nos próprios configs quando precisarem divergir.
+    'X-Content-Type-Options: nosniff',
+    'X-Frame-Options: SAMEORIGIN',
+    'Referrer-Policy: strict-origin-when-cross-origin',
+];
 $_['response_compression'] = 0;
 
 // Autoload Configs

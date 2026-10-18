@@ -49,3 +49,6 @@ $_['service_seo_onpage']      = 'SEO — On-Page';
 $_['service_seo_content']     = 'SEO — Contenido';
 $_['service_seo_linkbuilding']= 'SEO — Link Building';
 $_['service_seo_audit']       = 'SEO — Auditoría';
+
+$_['error_csrf']       = 'Falló la verificación de seguridad — reenvía el formulario.';
+$_['error_rate_limit'] = 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';

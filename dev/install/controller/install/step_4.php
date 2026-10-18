@@ -23,6 +23,12 @@ class Step_4 extends \Reamur\System\Engine\Controller {
             return;
         }
 
+        // F2-18 (ADR 0018): sela o installer — a partir desta página concluída,
+        // todo acesso a install/ recebe 403 até install.lock ser removido.
+        if (defined('DIR_STORAGE')) {
+            @file_put_contents(DIR_STORAGE . 'install.lock', "installed " . date('c') . "\n");
+        }
+
         $this->load->language('install/step_4');
 
         $this->document->setTitle($this->language->get('heading_title'));

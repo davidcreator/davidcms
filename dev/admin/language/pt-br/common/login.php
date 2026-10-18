@@ -24,3 +24,6 @@ $_['button_login']  = 'Entrar';
 
 // Error
 $_['error_match']   = 'Usuário e/ou senha não encontrados.';
+
+$_['error_csrf']       = 'Falha na verificação de segurança — entre novamente.';
+$_['error_rate_limit'] = 'Muitas tentativas de login. Aguarde 15 minutos e tente novamente.';

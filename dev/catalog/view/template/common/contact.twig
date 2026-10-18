@@ -16,6 +16,7 @@
   {% endif %}
 
   <form method="post" action="{{ action }}" style="display:grid;gap:16px;margin-top:16px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     {# honeypot invisível para bots #}
     <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
       <label>{{ text_honeypot_label|default('Company') }} <input type="text" name="company" value="" tabindex="-1" autocomplete="off"></label>

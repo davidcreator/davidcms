@@ -25,3 +25,6 @@ $_['button_login']  = 'Login';
 
 // Error
 $_['error_match']   = 'No match for Username and/or Password.';
+
+$_['error_csrf']       = 'Security check failed — please sign in again.';
+$_['error_rate_limit'] = 'Too many login attempts. Wait 15 minutes and try again.';

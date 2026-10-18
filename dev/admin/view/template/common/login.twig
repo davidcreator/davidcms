@@ -9,6 +9,7 @@
   {% endif %}
 
   <form method="post" action="{{ action }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <div class="field">
       <label for="input-username">{{ entry_username }}</label>
       <input type="text" name="username" id="input-username" value="{{ username }}" autocomplete="username" required autofocus>

@@ -28,3 +28,6 @@ $_['error_email']     = 'Indica un e-mail válido.';
 $_['error_telephone'] = 'Teléfono demasiado largo (hasta 32 caracteres).';
 $_['error_subject']   = 'Indica el asunto (hasta 128 caracteres).';
 $_['error_message']   = 'Escribe tu mensaje (de 3 a 5000 caracteres).';
+
+$_['error_csrf']       = 'Falló la verificación de seguridad — reenvía el formulario.';
+$_['error_rate_limit'] = 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
