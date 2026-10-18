@@ -1,0 +1,46 @@
+{# dev/admin/view/template/cms/page_list.twig — grade de páginas (F2-10) #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ heading_title }}</h1>
+    <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
+  </div>
+  <p class="muted">{{ text_list }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+  {% endif %}
+
+  {% if pages %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ column_title }}</th>
+        <th>{{ column_status }}</th>
+        <th>{{ column_sort_order }}</th>
+        <th>{{ column_date_modified }}</th>
+        <th class="right">{{ column_action }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for page in pages %}
+      <tr>
+        <td>{{ page.title }}</td>
+        <td>{{ page.status ? text_enabled : text_disabled }}</td>
+        <td>{{ page.sort_order }}</td>
+        <td>{{ page.date_modified }}</td>
+        <td class="right actions">
+          <a class="btn ghost small" href="{{ page.edit }}">{{ button_edit }}</a>
+          <form method="post" action="{{ page.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
+            <button type="submit" class="btn danger small">{{ button_delete }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ text_no_results }}</p>
+  {% endif %}
+</main>
+{{ footer|raw }}

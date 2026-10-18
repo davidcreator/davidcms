@@ -57,6 +57,13 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        if ($this->user->hasPermission('access', 'cms/page')) {
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_pages'),
+                'href' => $this->url->link('cms/page'),
+            ];
+        }
+
         if ($this->user->hasPermission('access', 'user/user')) {
             $data['modules'][] = [
                 'name' => $this->language->get('text_manage_users'),
