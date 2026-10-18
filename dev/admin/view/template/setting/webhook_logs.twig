@@ -1,0 +1,47 @@
+{# dev/admin/view/template/setting/webhook_logs.twig — entregas recentes (F2-16) #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ text_logs_title }}</h1>
+    <a class="btn ghost" href="{{ back }}">{{ button_back }}</a>
+  </div>
+  <p class="muted">{{ text_logs_hint }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+  {% endif %}
+
+  {% if logs %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ column_delivery }}</th>
+        <th>{{ column_trigger }}</th>
+        <th>{{ column_http_code }}</th>
+        <th>{{ column_duration }}</th>
+        <th>{{ column_attempt }}</th>
+        <th>{{ column_date_added }}</th>
+        <th class="right">{{ column_action }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td><code class="delivery-{{ log.webhook_log_id }}">{{ log.delivery }}</code></td>
+        <td>{{ log.trigger }}</td>
+        <td>
+          <span class="badge" style="display:inline-block;padding:2px 10px;border-radius:10px;border:1px solid currentColor;color:{{ log.ok ? '#15803d' : '#b91c1c' }};">{{ log.http_code }}</span>
+        </td>
+        <td>{{ log.duration }}s</td>
+        <td>{{ log.attempt }}</td>
+        <td>{{ log.date_added }}</td>
+        <td class="right"><a class="btn ghost small" href="{{ log.view }}">{{ button_view }}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ text_no_results }}</p>
+  {% endif %}
+</main>
+{{ footer|raw }}

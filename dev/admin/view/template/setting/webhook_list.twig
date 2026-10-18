@@ -1,0 +1,56 @@
+{# dev/admin/view/template/setting/webhook_list.twig — grade de endpoints (F2-16) #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ heading_title }}</h1>
+    <div class="actions">
+      <a class="btn ghost" href="{{ logs_all }}">{{ text_logs_all }}</a>
+      <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
+    </div>
+  </div>
+  <p class="muted">{{ text_list }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+  {% endif %}
+
+  {% if webhooks %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ column_trigger }}</th>
+        <th>{{ column_url }}</th>
+        <th>{{ column_secret }}</th>
+        <th>{{ column_description }}</th>
+        <th>{{ column_status }}</th>
+        <th>{{ column_deliveries }}</th>
+        <th>{{ column_date_added }}</th>
+        <th class="right">{{ column_action }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for wh in webhooks %}
+      <tr>
+        <td><code class="trg-{{ wh.webhook_id }}">{{ wh.trigger }}</code></td>
+        <td><a href="{{ wh.url }}" target="_blank" rel="noopener">{{ wh.url }}</a></td>
+        <td><code class="secret-mask">{{ wh.secret_mask }}</code></td>
+        <td>{{ wh.description }}</td>
+        <td>{{ wh.status ? text_enabled : text_disabled }}</td>
+        <td>{{ wh.log_count }}</td>
+        <td>{{ wh.date_added }}</td>
+        <td class="right actions">
+          <a class="btn ghost small" href="{{ wh.logs }}">{{ button_logs }}</a>
+          <a class="btn ghost small" href="{{ wh.edit }}">{{ button_edit }}</a>
+          <form method="post" action="{{ wh.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
+            <button type="submit" class="btn danger small">{{ button_delete }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ text_no_results }}</p>
+  {% endif %}
+</main>
+{{ footer|raw }}

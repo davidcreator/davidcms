@@ -99,6 +99,13 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        if ($this->user->hasPermission('access', 'setting/webhook')) {
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_webhooks'),
+                'href' => $this->url->link('setting/webhook'),
+            ];
+        }
+
         if ($this->user->hasPermission('access', 'user/user')) {
             $data['modules'][] = [
                 'name' => $this->language->get('text_manage_users'),

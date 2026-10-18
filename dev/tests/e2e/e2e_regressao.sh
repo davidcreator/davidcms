@@ -32,12 +32,12 @@ curl -s -c $JW -b $JW -X POST "$B/install/index.php?route=install/step_3" \
   --data-urlencode "email=david@example.com" --data-urlencode "password=SenhaForte!2026" --data-urlencode "confirm=SenhaForte!2026" \
   -D /tmp/regr_i.hdr -o /dev/null
 L=$(loc /tmp/regr_i.hdr); RC=0; [[ "$L" == *step_4* ]] || RC=1
-for r in user/user user/user_group catalog/project catalog/category cms/page marketing/testimonial marketing/client_logo tool/tool sale/order communication/contact_message; do
+for r in user/user user/user_group catalog/project catalog/category cms/page marketing/testimonial marketing/client_logo tool/tool sale/order communication/contact_message setting/webhook; do
   G=$(q "SELECT JSON_SEARCH(permission, 'one', '$r', NULL, '\$.access') IS NOT NULL FROM reamur_test.rms_user_group WHERE name='Administrator'")
   [ "$G" = "1" ] || { RC=1; echo "  grant faltando: $r"; }
 done
 L3=$(q "SELECT COUNT(*) FROM reamur_test.rms_language"); [ "$L3" = "3" ] || RC=1
-ck 1 $RC "wizard-seed-10-grants-idiomas"
+ck 1 $RC "wizard-seed-11-grants-idiomas"
 
 echo '══ 2 — login + dashboard tem os 5 cartões de módulo ══'
 curl -s -c $JA -b $JA "$B/admin/login" -o /tmp/regr_login.html -w "%{http_code}" | grep -q 200
@@ -47,10 +47,10 @@ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=common/login" \
   -D /tmp/regr_al.hdr -o /dev/null
 L=$(loc /tmp/regr_al.hdr); OK=0; [[ "$L" == *dashboard* ]] || OK=1
 curl -s -c $JA -b $JA "$B/admin/common/dashboard" -o /tmp/regr_dash.html
-for m in catalog/project catalog/category cms/page marketing/testimonial marketing/client_logo tool/tool sale/order communication/contact_message; do
+for m in catalog/project catalog/category cms/page marketing/testimonial marketing/client_logo tool/tool sale/order communication/contact_message setting/webhook; do
   grep -q "$m" /tmp/regr_dash.html || { OK=1; echo "  card faltando: $m"; }
 done
-ck 2 $OK "login-dashboard-8-cards"
+ck 2 $OK "login-dashboard-9-cards"
 
 echo '══ 3 — project: create multilang + capa + SEO (base p/ testes globais) ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/project.upload" -F "file=@/tmp/rok.png;type=image/png" -o /tmp/regr_up.json

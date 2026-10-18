@@ -1,0 +1,31 @@
+{# dev/admin/view/template/setting/webhook_log.twig — entrega individual, payload read-only (F2-16) #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ heading_title }}</h1>
+    <a class="btn ghost" href="{{ back }}">{{ button_back }}</a>
+  </div>
+  <p class="muted">{{ text_log_detail }}</p>
+
+  <section class="panel" style="margin-bottom:16px;">
+    <table class="table">
+      <tbody>
+        <tr><th style="width:160px;">{{ entry_delivery }}</th><td><code>{{ log.delivery }}</code></td></tr>
+        <tr><th>{{ entry_trigger }}</th><td>{{ log.trigger }}</td></tr>
+        <tr><th>{{ entry_url }}</th><td>{{ log.url }}</td></tr>
+        <tr><th>{{ entry_http_code }}</th><td>
+          <span class="badge" style="display:inline-block;padding:2px 10px;border-radius:10px;border:1px solid currentColor;color:{{ log.ok ? '#15803d' : '#b91c1c' }};">{{ log.http_code }}</span>
+        </td></tr>
+        <tr><th>{{ entry_duration }}</th><td>{{ log.duration }}s</td></tr>
+        <tr><th>{{ entry_attempt }}</th><td>{{ log.attempt }}</td></tr>
+        <tr><th>{{ entry_date_added }}</th><td>{{ log.date_added }}</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2 style="margin-top:0;">{{ entry_payload }}</h2>
+    <pre class="payload-body" style="border:1px solid #e5e7eb;border-radius:6px;padding:12px;background:#fafafa;overflow:auto;">{{ log.payload }}</pre>
+  </section>
+</main>
+{{ footer|raw }}

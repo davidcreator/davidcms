@@ -1,0 +1,69 @@
+{# dev/admin/view/template/setting/webhook_form.twig — criar/editar endpoint (F2-16) #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ heading_title }}</h1>
+  </div>
+  <p class="muted">{{ text_form }}</p>
+
+  {% if error %}
+  <div class="alert danger" style="white-space:pre-line;">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ action }}">
+    <fieldset class="panel">
+      <div class="field">
+        <label for="input-trigger">{{ entry_trigger }}</label>
+        <input type="text" name="trigger" id="input-trigger" value="{{ value_trigger }}" maxlength="64" list="trigger-options" autocomplete="off">
+        <datalist id="trigger-options">
+          {% for t in trigger_suggestions %}
+          <option value="{{ t }}"></option>
+          {% endfor %}
+        </datalist>
+        <p class="muted">{{ text_trigger_hint }}</p>
+      </div>
+
+      <div class="field">
+        <label for="input-url">{{ entry_url }}</label>
+        <input type="url" name="url" id="input-url" value="{{ value_url }}" maxlength="255" placeholder="https://">
+        <p class="muted">{{ text_url_hint }}</p>
+      </div>
+
+      <div class="field">
+        <label for="input-secret">{{ entry_secret }}</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" name="secret" id="input-secret" value="{{ value_secret }}" maxlength="64" autocomplete="off" style="flex:1;">
+          <button type="button" class="btn ghost small" id="btn-gen-secret">{{ button_generate }}</button>
+        </div>
+        <p class="muted">{{ text_secret_hint }}</p>
+      </div>
+
+      <div class="field">
+        <label for="input-description">{{ entry_description }}</label>
+        <input type="text" name="description" id="input-description" value="{{ value_description }}" maxlength="255">
+      </div>
+
+      <div class="field">
+        <label>
+          <input type="checkbox" name="status" value="1"{% if value_status %} checked{% endif %}> {{ entry_status }}
+        </label>
+        <p class="muted">{{ text_status_hint }}</p>
+      </div>
+    </fieldset>
+
+    <div class="actions" style="display:flex;gap:8px;">
+      <button type="submit" class="btn primary">{{ button_save }}</button>
+      <a class="btn ghost" href="{{ cancel }}">{{ button_cancel }}</a>
+    </div>
+  </form>
+</main>
+<script>
+// Gerador local de secret (32 hex). JS puro, sem dependência externa.
+document.getElementById('btn-gen-secret').addEventListener('click', function () {
+  var buf = new Uint8Array(16);
+  crypto.getRandomValues(buf);
+  document.getElementById('input-secret').value =
+    Array.from(buf).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+});
+</script>
+{{ footer|raw }}
