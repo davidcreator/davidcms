@@ -85,6 +85,13 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        if ($this->user->hasPermission('access', 'sale/order')) {
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_orders'),
+                'href' => $this->url->link('sale/order'),
+            ];
+        }
+
         if ($this->user->hasPermission('access', 'user/user')) {
             $data['modules'][] = [
                 'name' => $this->language->get('text_manage_users'),

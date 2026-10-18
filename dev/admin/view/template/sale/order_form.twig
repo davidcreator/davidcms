@@ -1,0 +1,142 @@
+{# dev/admin/view/template/sale/order_form.twig — criação/edição de pedido (F2-14) #}
+{{ header|raw }}
+<main class="dash form-page">
+  <h1>{{ heading_title }}{% if order_id %} #{{ order_id }} · {{ text_edit }}{% else %} · {{ text_add }}{% endif %}</h1>
+
+  {% if error %}
+  <div class="alert error">{{ error|nl2br }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ action }}" class="panel form">
+
+    <h2>{{ text_customer }}</h2>
+    <div class="grid two">
+      <div class="field">
+        <label for="input-firstname">{{ entry_firstname }} *</label>
+        <input type="text" name="firstname" id="input-firstname" value="{{ firstname }}" maxlength="32" required>
+      </div>
+      <div class="field">
+        <label for="input-lastname">{{ entry_lastname }}</label>
+        <input type="text" name="lastname" id="input-lastname" value="{{ lastname }}" maxlength="32">
+      </div>
+      <div class="field">
+        <label for="input-email">{{ entry_email }} *</label>
+        <input type="email" name="email" id="input-email" value="{{ email }}" maxlength="96" required>
+      </div>
+      <div class="field">
+        <label for="input-telephone">{{ entry_telephone }}</label>
+        <input type="text" name="telephone" id="input-telephone" value="{{ telephone }}" maxlength="32">
+      </div>
+    </div>
+
+    <h2>{{ text_products }}</h2>
+    <div id="products">
+      {% for product in products %}
+      <div class="grid product-row" data-row style="grid-template-columns:1fr 90px 140px auto;gap:.5rem;align-items:end;margin-bottom:.5rem;">
+        <div class="field">
+          <label>{{ entry_product }}</label>
+          <input type="text" name="order_product[{{ loop.index0 }}][name]" value="{{ product.name }}" maxlength="255">
+        </div>
+        <div class="field">
+          <label>{{ entry_quantity }}</label>
+          <input type="number" name="order_product[{{ loop.index0 }}][quantity]" value="{{ product.quantity }}" min="1" step="1">
+        </div>
+        <div class="field">
+          <label>{{ entry_price }}</label>
+          <input type="text" name="order_product[{{ loop.index0 }}][price]" value="{{ product.price }}" placeholder="0.0000">
+        </div>
+        <div class="field">
+          <button type="button" class="btn ghost small" data-remove>{{ button_remove }}</button>
+        </div>
+      </div>
+      {% else %}
+      <p class="muted" data-empty>{{ text_no_products }}</p>
+      {% endfor %}
+    </div>
+    <button type="button" class="btn ghost small" id="btn-add-product">{{ button_add_product }}</button>
+
+    <h2>{{ text_data }}</h2>
+    <div class="grid two">
+      <div class="field">
+        <label for="input-status">{{ entry_status }}</label>
+        <select name="order_status_id" id="input-status">
+          {% for status in statuses %}
+          <option value="{{ status.order_status_id }}"{{ status.order_status_id == order_status_id ? ' selected' : '' }}>{{ status.name }}</option>
+          {% endfor %}
+        </select>
+        <small class="muted">{{ text_status_hint }}</small>
+      </div>
+      <div class="field">
+        <label for="input-comment">{{ entry_comment }}</label>
+        <textarea name="comment" id="input-comment" rows="3">{{ comment }}</textarea>
+      </div>
+    </div>
+
+    {% if history %}
+    <h2>{{ text_history }}</h2>
+    <table class="table">
+      <thead>
+        <tr><th>{{ column_status }}</th><th>{{ column_comment }}</th><th>{{ column_date_added }}</th></tr>
+      </thead>
+      <tbody>
+        {% for row in history %}
+        <tr><td>{{ row.status_name }}</td><td>{{ row.comment }}</td><td>{{ row.date_added }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    <div class="actions right">
+      <a class="btn ghost" href="{{ cancel }}">{{ button_cancel }}</a>
+      <button type="submit" class="btn primary">{{ button_save }}</button>
+    </div>
+  </form>
+</main>
+<script>
+(function () {
+  var wrap   = document.getElementById('products');
+  var addBtn = document.getElementById('btn-add-product');
+  var TPL    = {{ entry_product|json_encode|raw }};
+  var TPL_Q  = {{ entry_quantity|json_encode|raw }};
+  var TPL_P  = {{ entry_price|json_encode|raw }};
+  var TPL_R  = {{ button_remove|json_encode|raw }};
+
+  function rowHtml(i, name, qty, price) {
+    var d = document.createElement('div');
+    d.className = 'grid product-row';
+    d.setAttribute('data-row', '');
+    d.style.cssText = 'grid-template-columns:1fr 90px 140px auto;gap:.5rem;align-items:end;margin-bottom:.5rem;';
+    d.innerHTML =
+      '<div class="field"><label>' + TPL + '</label><input type="text" name="order_product[' + i + '][name]" value="' + name + '" maxlength="255"></div>' +
+      '<div class="field"><label>' + TPL_Q + '</label><input type="number" name="order_product[' + i + '][quantity]" value="' + qty + '" min="1" step="1"></div>' +
+      '<div class="field"><label>' + TPL_P + '</label><input type="text" name="order_product[' + i + '][price]" value="' + price + '" placeholder="0.0000"></div>' +
+      '<div class="field"><button type="button" class="btn ghost small" data-remove>' + TPL_R + '</button></div>';
+    return d;
+  }
+
+  function nextIndex() {
+    var n = 0;
+    wrap.querySelectorAll('input[name^="order_product["]').forEach(function (el) {
+      var m = el.getAttribute('name').match(/^order_product\[(\d+)\]/);
+      if (m) { n = Math.max(n, parseInt(m[1], 10) + 1); }
+    });
+    return n;
+  }
+
+  function refreshEmpty() {
+    var empty = wrap.querySelector('[data-empty]');
+    if (empty && wrap.querySelector('[data-row]')) { empty.remove(); }
+  }
+
+  addBtn.addEventListener('click', function () {
+    wrap.appendChild(rowHtml(nextIndex(), '', 1, ''));
+    refreshEmpty();
+  });
+
+  wrap.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-remove]');
+    if (btn) { btn.closest('[data-row]').remove(); }
+  });
+})();
+</script>
+{{ footer|raw }}

@@ -1,0 +1,52 @@
+{# dev/admin/view/template/sale/order_list.twig — grade de pedidos/orçamentos (F2-14) #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ heading_title }}</h1>
+    <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
+  </div>
+  <p class="muted">{{ text_list }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+  {% endif %}
+
+  {% if orders %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ column_order }}</th>
+        <th>{{ column_customer }}</th>
+        <th>{{ column_email }}</th>
+        <th class="right">{{ column_total }}</th>
+        <th>{{ column_status }}</th>
+        <th>{{ column_date_added }}</th>
+        <th>{{ column_date_modified }}</th>
+        <th class="right">{{ column_action }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td>#{{ order.order_id }}</td>
+        <td>{{ order.customer }}</td>
+        <td>{{ order.email }}</td>
+        <td class="right">{{ order.total }}</td>
+        <td>{{ order.status_name }}</td>
+        <td>{{ order.date_added }}</td>
+        <td>{{ order.date_modified }}</td>
+        <td class="right actions">
+          <a class="btn ghost small" href="{{ order.edit }}">{{ button_edit }}</a>
+          <form method="post" action="{{ order.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
+            <button type="submit" class="btn danger small">{{ button_delete }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ text_no_results }}</p>
+  {% endif %}
+</main>
+{{ footer|raw }}
