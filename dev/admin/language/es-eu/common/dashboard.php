@@ -30,6 +30,7 @@ $_['text_manage_testimonials'] = 'Testimonios';
 $_['text_manage_client_logos'] = 'Logotipos de Clientes';
 $_['text_manage_tools'] = 'Herramientas';
 $_['text_manage_orders'] = 'Pedidos';
+$_['text_manage_messages'] = 'Mensajes';
 $_['text_manage_users']  = 'Usuarios';
 $_['text_manage_user_groups'] = 'Grupos de Usuarios';
 $_['text_version']       = 'ReamurCMS %s';

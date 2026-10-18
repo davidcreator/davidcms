@@ -121,14 +121,14 @@ class Install extends \Reamur\System\Engine\Model {
     /**
      * Cria o grupo 'Administrator' e o primeiro usuário admin. O grupo nasce
      * (F2-6) com access+modify nas rotas-base mínimas de autogestão —
-     * 'user/user', 'user/user_group', 'catalog/project', 'catalog/category', 'cms/page', 'marketing/testimonial', 'marketing/client_logo', 'tool/tool' e 'sale/order' (F2-14) — senão o único admin sairia do wizard
+     * 'user/user', 'user/user_group', 'catalog/project', 'catalog/category', 'cms/page', 'marketing/testimonial', 'marketing/client_logo', 'tool/tool', 'sale/order' e 'communication/contact_message' (F2-15) — senão o único admin sairia do wizard
      * sem poder administrar as próprias contas. Colunas 1:1 com
      * docs/Dicionario-de-Dados.md.
      *
      * @param array{username: string, firstname: string, lastname: string, email: string, password: string} $data
      */
     public function createAdministrator(array $data, string $prefix): void {
-        $seedRoutes = ['user/user', 'user/user_group', 'catalog/project', 'catalog/category', 'cms/page', 'marketing/testimonial', 'marketing/client_logo', 'tool/tool', 'sale/order']; // F2-8..14: + ferramentas + pedidos
+        $seedRoutes = ['user/user', 'user/user_group', 'catalog/project', 'catalog/category', 'cms/page', 'marketing/testimonial', 'marketing/client_logo', 'tool/tool', 'sale/order', 'communication/contact_message']; // F2-8..15: + ferramentas + pedidos + inbox de contato
         $permission = json_encode(['access' => $seedRoutes, 'modify' => $seedRoutes]);
 
         if ($this->handle instanceof \mysqli) {

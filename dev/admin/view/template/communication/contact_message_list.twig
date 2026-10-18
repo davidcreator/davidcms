@@ -1,0 +1,55 @@
+{# dev/admin/view/template/communication/contact_message_list.twig — caixa de entrada (F2-15) #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ heading_title }}</h1>
+  </div>
+  <p class="muted">{{ text_list }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+  {% endif %}
+
+  <nav class="tabbar" role="tablist" aria-label="{{ column_status }}" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px;">
+    {% for f in filters %}
+    <a href="{{ f.href }}" class="btn {{ f.active ? 'primary' : 'ghost' }} small">{{ f.label }} <span class="muted">({{ f.count }})</span></a>
+    {% endfor %}
+  </nav>
+
+  {% if messages %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ column_name }}</th>
+        <th>{{ column_email }}</th>
+        <th>{{ column_subject }}</th>
+        <th>{{ column_status }}</th>
+        <th>{{ column_date_added }}</th>
+        <th class="right">{{ column_action }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for msg in messages %}
+      <tr{% if msg.is_new %} style="font-weight:600;"{% endif %} class="row-status-{{ msg.status }}">
+        <td>{{ msg.name }}</td>
+        <td>{{ msg.email }}</td>
+        <td>{{ msg.subject }}</td>
+        <td>
+          <span class="badge badge-{{ msg.status }}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:.85em;border:1px solid currentColor;color:{% if msg.status == 0 %}#2563eb{% elseif msg.status == 2 %}#15803d{% else %}#6b7280{% endif %};">{{ msg.status_label }}</span>
+        </td>
+        <td>{{ msg.date_added }}</td>
+        <td class="right actions">
+          <a class="btn ghost small" href="{{ msg.read }}">{{ button_read }}</a>
+          <form method="post" action="{{ msg.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
+            <button type="submit" class="btn danger small">{{ button_delete }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ text_no_results }}</p>
+  {% endif %}
+</main>
+{{ footer|raw }}

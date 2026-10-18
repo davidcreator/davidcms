@@ -1,0 +1,61 @@
+{# dev/admin/view/template/communication/contact_message_read.twig — leitura da mensagem (F2-15): read-only, sem formulário de edição #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ heading_title }}</h1>
+    <a class="btn ghost" href="{{ back }}">{{ button_back }}</a>
+  </div>
+  <p class="muted">{{ text_message_detail }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+  {% endif %}
+
+  <section class="panel" style="margin-bottom:16px;">
+    <table class="table">
+      <tbody>
+        <tr><th style="width:160px;">{{ entry_name }}</th><td>{{ message.name }}</td></tr>
+        <tr><th>{{ entry_email }}</th><td><a href="mailto:{{ message.email }}">{{ message.email }}</a></td></tr>
+        <tr><th>{{ entry_telephone }}</th><td>{{ message.telephone }}</td></tr>
+        <tr><th>{{ entry_subject }}</th><td>{{ message.subject }}</td></tr>
+        <tr><th>{{ entry_status }}</th><td>
+          <span class="badge badge-{{ message.status }}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:.85em;border:1px solid currentColor;color:{% if message.status == 0 %}#2563eb{% elseif message.status == 2 %}#15803d{% else %}#6b7280{% endif %};">{{ message.status_label }}</span>
+        </td></tr>
+        <tr><th>{{ entry_date_added }}</th><td>{{ message.date_added }}</td></tr>
+        <tr><th>{{ entry_ip }}</th><td><code>{{ message.ip }}</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel" style="margin-bottom:16px;">
+    <h2 style="margin-top:0;">{{ entry_message }}</h2>
+    <div class="message-body" style="white-space:pre-wrap;border:1px solid #e5e7eb;border-radius:6px;padding:12px;background:#fafafa;">{{ message.message }}</div>
+  </section>
+
+  <section class="panel actions" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <a class="btn primary" href="{{ reply_href }}">{{ button_reply }}</a>
+
+    <form method="post" action="{{ status_action }}">
+      <input type="hidden" name="from" value="read">
+      <input type="hidden" name="status" value="2">
+      <button type="submit" class="btn ghost"{% if message.status == 2 %} disabled style="opacity:.5;"{% endif %}>{{ button_mark_replied }}</button>
+    </form>
+
+    <form method="post" action="{{ status_action }}">
+      <input type="hidden" name="from" value="read">
+      <input type="hidden" name="status" value="1">
+      <button type="submit" class="btn ghost"{% if message.status == 1 %} disabled style="opacity:.5;"{% endif %}>{{ button_mark_read }}</button>
+    </form>
+
+    <form method="post" action="{{ status_action }}">
+      <input type="hidden" name="from" value="read">
+      <input type="hidden" name="status" value="0">
+      <button type="submit" class="btn ghost"{% if message.status == 0 %} disabled style="opacity:.5;"{% endif %}>{{ button_mark_new }}</button>
+    </form>
+
+    <form method="post" action="{{ delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
+      <button type="submit" class="btn danger">{{ button_delete }}</button>
+    </form>
+  </section>
+</main>
+{{ footer|raw }}
