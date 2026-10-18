@@ -78,6 +78,13 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        if ($this->user->hasPermission('access', 'tool/tool')) {
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_tools'),
+                'href' => $this->url->link('tool/tool'),
+            ];
+        }
+
         if ($this->user->hasPermission('access', 'user/user')) {
             $data['modules'][] = [
                 'name' => $this->language->get('text_manage_users'),

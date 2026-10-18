@@ -1,0 +1,52 @@
+{# dev/admin/view/template/tool/tool_list.twig — grade de ferramentas (F2-13) #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ heading_title }}</h1>
+    <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
+  </div>
+  <p class="muted">{{ text_list }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+  {% endif %}
+
+  {% if tools %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ column_image }}</th>
+        <th>{{ column_name }}</th>
+        <th>{{ column_vendor }}</th>
+        <th>{{ column_url }}</th>
+        <th>{{ column_status }}</th>
+        <th>{{ column_sort_order }}</th>
+        <th>{{ column_date_added }}</th>
+        <th class="right">{{ column_action }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for tool in tools %}
+      <tr>
+        <td>{% if tool.thumb %}<img src="{{ tool.thumb }}" alt="" width="48" style="object-fit:contain;border-radius:4px;">{% else %}<span class="muted">{{ text_placeholder }}</span>{% endif %}</td>
+        <td>{{ tool.name }}</td>
+        <td>{{ tool.vendor }}</td>
+        <td>{% if tool.url %}<a href="{{ tool.url }}" target="_blank" rel="noopener">{{ tool.url }}</a>{% else %}<span class="muted">{{ text_none }}</span>{% endif %}</td>
+        <td>{{ tool.status ? text_enabled : text_disabled }}</td>
+        <td>{{ tool.sort_order }}</td>
+        <td>{{ tool.date_added }}</td>
+        <td class="right actions">
+          <a class="btn ghost small" href="{{ tool.edit }}">{{ button_edit }}</a>
+          <form method="post" action="{{ tool.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
+            <button type="submit" class="btn danger small">{{ button_delete }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ text_no_results }}</p>
+  {% endif %}
+</main>
+{{ footer|raw }}
