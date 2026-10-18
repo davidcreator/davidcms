@@ -1,0 +1,68 @@
+{# dev/catalog/view/template/checkout/quote.twig — pedido de orçamento público (F2-17) #}
+{{ header|raw }}
+<main class="site-main" style="padding:40px 24px;max-width:760px;margin:0 auto;">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;">
+    <h1 style="margin:0;">{{ heading_title }}</h1>
+    <a href="{{ home }}" style="text-decoration:none;">{{ button_back_home }}</a>
+  </div>
+  <p class="lead">{{ text_lead }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type }}" style="padding:12px;border-radius:6px;margin:12px 0;background:#ecfdf5;border:1px solid #10b981;">{{ text_flash.text }}</div>
+  {% endif %}
+
+  {% if error %}
+  <div class="alert danger" style="white-space:pre-line;padding:12px;border-radius:6px;margin:12px 0;background:#fef2f2;border:1px solid #ef4444;">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ action }}" style="display:grid;gap:18px;margin-top:16px;">
+    {# honeypot #}
+    <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+      <label>{{ text_honeypot_label|default('Company') }} <input type="text" name="company" value="" tabindex="-1" autocomplete="off"></label>
+    </div>
+
+    <fieldset style="border:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div>
+        <label for="q-firstname">{{ entry_firstname }}</label>
+        <input type="text" name="firstname" id="q-firstname" value="{{ value_firstname }}" maxlength="32" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+      </div>
+      <div>
+        <label for="q-lastname">{{ entry_lastname }}</label>
+        <input type="text" name="lastname" id="q-lastname" value="{{ value_lastname }}" maxlength="32" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+      </div>
+      <div>
+        <label for="q-email">{{ entry_email }}</label>
+        <input type="email" name="email" id="q-email" value="{{ value_email }}" maxlength="96" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+      </div>
+      <div>
+        <label for="q-tel">{{ entry_telephone }}</label>
+        <input type="tel" name="telephone" id="q-tel" value="{{ value_telephone }}" maxlength="32" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+      </div>
+    </fieldset>
+
+    <fieldset style="border:1px solid #e5e7eb;border-radius:8px;padding:16px;">
+      <legend style="padding:0 8px;font-weight:600;">{{ entry_services }}</legend>
+      <p class="lead" style="margin-top:0;">{{ text_services }}</p>
+      <ul style="columns:2;gap:24px;list-style:none;padding:0;margin:0;">
+        {% for s in services %}
+        <li style="break-inside:avoid;margin:6px 0;">
+          <label style="display:flex;gap:8px;align-items:center;cursor:pointer;">
+            <input type="checkbox" name="services[]" value="{{ s.key }}"{% if s.checked %} checked{% endif %}> {{ s.label }}
+          </label>
+        </li>
+        {% endfor %}
+      </ul>
+    </fieldset>
+
+    <fieldset style="border:none;padding:0;">
+      <label for="q-comment" style="display:block;margin-bottom:6px;">{{ entry_comment }}</label>
+      <p class="lead" style="margin:0 0 6px;">{{ text_briefing }}</p>
+      <textarea name="comment" id="q-comment" rows="5" maxlength="5000" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">{{ value_comment }}</textarea>
+    </fieldset>
+
+    <div>
+      <button type="submit" class="btn primary" style="padding:12px 24px;border-radius:6px;">{{ button_send }}</button>
+    </div>
+  </form>
+</main>
+{{ footer|raw }}

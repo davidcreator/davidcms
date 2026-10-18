@@ -1,0 +1,42 @@
+{# dev/catalog/view/template/catalog/project_info.twig — página dedicada do projeto (F2-17, SEO) #}
+{{ header|raw }}
+<main class="site-main" style="padding:40px 24px;max-width:900px;margin:0 auto;">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;">
+    <h1 style="margin:0;">{{ heading_title }}</h1>
+    <a href="{{ back_portfolio }}" style="text-decoration:none;">{{ button_back }}</a>
+  </div>
+
+  {% if text_summary %}<p class="lead">{{ text_summary }}</p>{% endif %}
+
+  {% if categories %}
+  <p style="display:flex;gap:8px;flex-wrap:wrap;">
+    {% for cat in categories %}
+    <a href="{{ cat.href }}" style="padding:2px 10px;border-radius:10px;border:1px solid currentColor;text-decoration:none;font-size:.85em;">{{ cat.name }}</a>
+    {% endfor %}
+  </p>
+  {% endif %}
+
+  {% if project.image %}
+  <p><img src="{{ project.image }}" alt="{{ project.name }}" style="max-width:100%;border-radius:8px;"></p>
+  {% endif %}
+
+  {% if project.description %}
+  <div class="description" style="margin:16px 0;">{{ project.description }}</div>
+  {% endif %}
+
+  <table style="border-collapse:collapse;margin:16px 0;">
+    {% if project.client %}<tr><th style="text-align:left;padding:4px 12px 4px 0;">{{ entry_client }}</th><td>{{ project.client }}</td></tr>{% endif %}
+    {% if project.url %}<tr><th style="text-align:left;padding:4px 12px 4px 0;">{{ entry_url }}</th><td><a href="{{ project.url }}" target="_blank" rel="noopener">{{ project.url }}</a></td></tr>{% endif %}
+    {% if text_tag %}<tr><th style="text-align:left;padding:4px 12px 4px 0;">{{ entry_tags }}</th><td><code>{{ text_tag }}</code></td></tr>{% endif %}
+  </table>
+
+  {% if images %}
+  <h2>{{ entry_gallery }}</h2>
+  <ul style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;list-style:none;padding:0;">
+    {% for img in images %}
+    <li><img src="{{ img.src }}" alt="{{ img.alt }}" style="width:100%;border-radius:8px;" loading="lazy"></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</main>
+{{ footer|raw }}

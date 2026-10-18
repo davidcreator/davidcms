@@ -1,0 +1,210 @@
+<?php
+/**
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * checkout/quote (CATALOG) — pedido de orçamento público (F2-17): cliente
+ * escolhe serviços (taxonomy estática do Dicionário/service keys) + briefing
+ * e grava rms_order de valor 0.0000 (orçamento — semântica do schema):
+ * itens com price/total 0.0000 aceitos server-side, histórico inicial.
+ * Anti-spam: honeypot 'company'; POST jamais carrega preço do cliente.
+ */
+namespace Reamur\Catalog\Controller\Checkout;
+
+class Quote extends \Reamur\System\Engine\Controller {
+
+    /** Catálogo de serviços oferecidos (chaves → lang entries). Estático por decisão de produto. */
+    private const SERVICES = [
+        'gd_brand', 'gd_ui', 'gd_illustration', 'gd_social', 'gd_installations',
+        'wd_landing', 'wd_cms', 'wd_ecommerce', 'wd_webapp', 'wd_institutional',
+        'seo_keyword', 'seo_onpage', 'seo_content', 'seo_linkbuilding', 'seo_audit',
+    ];
+
+    /** GET: formulário · POST: valida e grava orçamento; sucesso → flash + redirect */
+    public function index(): void {
+        $this->load->language('checkout/quote');
+
+        $this->document->setTitle($this->language->get('heading_title'));
+        $this->document->setDescription($this->language->get('text_lead'));
+
+        $data = $this->formData();
+
+        if ($this->request->server['REQUEST_METHOD'] === 'POST') {
+            if ($this->isBot()) {
+                $this->setFlash($this->language->get('text_success'));
+
+                $this->response->redirect($this->url->link('checkout/quote'));
+
+                return;
+            }
+
+            [$errors, $products] = $this->validateQuote();
+
+            if ($errors === []) {
+                $this->load->model('checkout/quote');
+
+                $order_id = $this->model_checkout_quote->addQuote(
+                    [
+                        'firstname' => trim((string)$this->request->post['firstname']),
+                        'lastname'  => trim((string)($this->request->post['lastname'] ?? '')),
+                        'email'     => trim((string)$this->request->post['email']),
+                        'telephone' => trim((string)($this->request->post['telephone'] ?? '')),
+                        'comment'   => trim((string)($this->request->post['comment'] ?? '')),
+                        'ip'        => (string)($this->request->server['REMOTE_ADDR'] ?? ''),
+                    ],
+                    $products
+                );
+
+                if ($order_id) {
+                    $this->setFlash(sprintf($this->language->get('text_success'), $order_id));
+
+                    $this->response->redirect($this->url->link('checkout/quote'));
+
+                    return;
+                }
+            }
+
+            $data['error'] = implode("\n", $errors);
+        }
+
+        $data['action'] = $this->url->link('checkout/quote');
+
+        $this->chrome($data);
+
+        $this->response->setOutput($this->load->view('checkout/quote', $data));
+    }
+
+    private function isBot(): bool {
+        return trim((string)($this->request->post['company'] ?? '')) !== '';
+    }
+
+    /**
+     * Valida e normaliza: serviços vêm da whitelist (chaves POSTadas
+     * são apenas referências ao catálogo estático — nunca texto livre ).
+     *
+     * @return array{0: array<int, string>, 1: array<int, array{name: string, quantity: int}>}
+     */
+    private function validateQuote(): array {
+        $post     = $this->request->post;
+        $errors   = [];
+        $products = [];
+
+        $firstname = trim((string)($post['firstname'] ?? ''));
+        $lastname  = trim((string)($post['lastname'] ?? ''));
+        $email     = trim((string)($post['email'] ?? ''));
+        $tel       = trim((string)($post['telephone'] ?? ''));
+        $comment   = trim((string)($post['comment'] ?? ''));
+        $picked    = (array)($post['services'] ?? []);
+
+        if ($firstname === '' || mb_strlen($firstname) > 32) {
+            $errors[] = $this->language->get('error_firstname');
+        }
+
+        if (mb_strlen($lastname) > 32) {
+            $errors[] = $this->language->get('error_lastname');
+        }
+
+        if ($email === '' || mb_strlen($email) > 96 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = $this->language->get('error_email');
+        }
+
+        if (mb_strlen($tel) > 32) {
+            $errors[] = $this->language->get('error_telephone');
+        }
+
+        if (mb_strlen($comment) > 5000) {
+            $errors[] = $this->language->get('error_comment');
+        }
+
+        foreach ($picked as $key) {
+            $key = (string)$key;
+
+            if (in_array($key, self::SERVICES, true)) {
+                $products[] = ['name' => $this->language->get('service_' . $key), 'quantity' => 1];
+            }
+        }
+
+        if ($products === []) {
+            $errors[] = $this->language->get('error_services');
+        }
+
+        return [$errors, array_values($products)];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function formData(): array {
+        $post = $this->request->post;
+        $picked = (array)($post['services'] ?? []);
+
+        $services = [];
+
+        foreach (self::SERVICES as $key) {
+            $services[] = [
+                'key'     => $key,
+                'label'   => $this->language->get('service_' . $key),
+                'checked' => in_array($key, $picked, true),
+            ];
+        }
+
+        return [
+            'heading_title'     => $this->language->get('heading_title'),
+            'text_lead'         => $this->language->get('text_lead'),
+            'text_services'     => $this->language->get('text_services'),
+            'text_briefing'     => $this->language->get('text_briefing'),
+            'entry_firstname'   => $this->language->get('entry_firstname'),
+            'entry_lastname'    => $this->language->get('entry_lastname'),
+            'entry_email'       => $this->language->get('entry_email'),
+            'entry_telephone'   => $this->language->get('entry_telephone'),
+            'entry_services'    => $this->language->get('entry_services'),
+            'entry_comment'     => $this->language->get('entry_comment'),
+            'button_send'       => $this->language->get('button_send'),
+            'button_back_home'  => $this->language->get('button_back_home'),
+            'text_flash'        => $this->flash(),
+            'services'          => $services,
+            'value_firstname'   => (string)($post['firstname'] ?? ''),
+            'value_lastname'    => (string)($post['lastname'] ?? ''),
+            'value_email'       => (string)($post['email'] ?? ''),
+            'value_telephone'   => (string)($post['telephone'] ?? ''),
+            'value_comment'     => (string)($post['comment'] ?? ''),
+            'home'              => $this->config->get('site_url', ''),
+            'error'             => '',
+        ];
+    }
+
+    private function flash(): array {
+        $session = $this->session;
+
+        $data = ['type' => '', 'text' => ''];
+
+        if ($session instanceof \Reamur\System\Library\Session && !empty($session->data['flash'])) {
+            $data         = (array)$session->data['flash'];
+            $data['type'] = (string)($data['type'] ?? 'success');
+            $data['text'] = (string)($data['text'] ?? '');
+
+            unset($session->data['flash']);
+        }
+
+        return $data;
+    }
+
+    private function setFlash(string $text, string $type = 'success'): void {
+        $session = $this->session;
+
+        if ($session instanceof \Reamur\System\Library\Session) {
+            $session->data['flash'] = ['type' => $type, 'text' => $text];
+        }
+    }
+
+    private function chrome(array &$data): void {
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/common.css');
+
+        $data['body_class'] = 'rms-quote';
+        $data['header']     = $this->load->controller('common/header', $data);
+        $data['footer']     = $this->load->controller('common/footer', $data);
+    }
+}

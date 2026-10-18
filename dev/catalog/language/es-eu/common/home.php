@@ -6,21 +6,46 @@
  * @license   https://opensource.org/licenses/GPL-3.0
  * @link      https://reamurcms.com
  *
- * Language es-eu — página inicial pública (catalog). Traducido del en-us (ADR 0001).
+ * Language es-eu — published home (catalog one-page, F2-17).
  */
 
-// Heading
-$_['heading_title'] = 'ReamurCMS';
+// Hero
+$_['heading_title'] = 'David Almeida';
+$_['text_tagline'] = 'Desarrollador Creativo';
+$_['text_hero_lead'] = 'Identidad de marca, diseño web y desarrollo — todo en un solo lugar, con ReamurCMS.';
 
-// Text
-$_['text_tagline']       = 'El CMS con precisión de 1°C para quien publica en serio.';
-$_['text_lead']          = 'Núcleo moderno, arquitectura disciplinada y plena propiedad de su contenido — moviendo davidalmeida.xyz.';
-$_['text_feature_1']     = 'MVCL por contrato';
-$_['text_feature_1_alt'] = 'Cada punto de entrada, modelo y vista sigue un contrato de arquitectura versionado.';
-$_['text_feature_2']     = 'Construcción gobernada por IA';
-$_['text_feature_2_alt'] = 'Desarrollo dirigido por agentes auditables bajo reglas humanas explícitas.';
-$_['text_feature_3']     = 'Sus datos, sus reglas';
-$_['text_feature_3_alt'] = 'Su propia base de datos, su propio motor de plantillas, código con licencia GPL-3.0.';
+// Buttons
+$_['button_portfolio'] = 'Mira mis trabajos';
+$_['button_contact'] = 'Hablemos';
+$_['button_quote'] = 'Pedir presupuesto';
+$_['button_admin'] = 'Administrador';
 
-// Button
-$_['button_admin'] = 'Ir al administrador';
+// About
+$_['text_about_title'] = '¿Quién soy?';
+$_['text_about_lead'] = 'Diseñador y desarrollador de São Paulo, Brasil.';
+$_['text_about_body']   = "I build brands and websites with a 6-step methodology: Discovery, Strategy, Identity, Interface, Build, Launch.\nUnity, credibility and attraction — brand visual identity you can measure.";
+$_['text_services_title'] = '¿Qué hago?';
+$_['text_services_body']  = "Graphic Design — Brand, UI, Illustrations, Social Media, Digital Installations.\nWeb Design — Landing Page, CMS, E-commerce, Web App, Institutional.\nSEO — Keyword Analysis, On-Page, Content, Link Building, Audit.";
+$_['text_skills_title'] = 'Habilidades';
+$_['text_skills_body']  = "Developer, Brand Design, Visual Identity, Product Design, Illustrations, Brand Action.\nHTML, CSS, PHP, JavaScript, jQuery — WordPress, Prestashop, Joomla, Winter.";
+$_['text_method_title'] = 'Metodología';
+$_['text_method_body']  = "Discovery → Strategy → Identity → Interface → Build → Launch.\nTransparent checkpoints at every step; you follow the build from day one.";
+
+// Portfolio
+$_['text_portfolio_title'] = '¿Cómo se ven?';
+$_['text_portfolio_lead'] = 'Proyectos seleccionados del portafolio.';
+$_['text_view_all'] = 'Ver todos los proyectos';
+$_['text_featured'] = 'Destacado';
+
+// Testimonials / clients / tools
+$_['text_testimonials_title'] = 'Testimonios de Clientes';
+$_['text_clients_title'] = 'Clientes queridos';
+$_['text_tools_title'] = 'Herramientas conectadas';
+$_['text_tools_lead'] = 'El ecosistema DavidCreator que mueve mi flujo de trabajo.';
+
+// Contact
+$_['text_contact_title'] = '¿Conversamos?';
+$_['text_contact_lead'] = 'Cuéntame sobre tu proyecto — respondo normalmente en un día hábil.';
+$_['text_contact_address'] = 'Home and Office: São Paulo, Brasil';
+$_['text_contact_email'] = 'contato@davidalmeida.xyz';
+$_['text_contact_whatsapp'] = '+55 11 98393-8347';

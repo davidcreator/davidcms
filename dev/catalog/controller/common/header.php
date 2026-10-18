@@ -31,6 +31,21 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['text_languages'] = $this->language->get('text_languages');
         $data['body_class']     = (string)($data['body_class'] ?? '');
 
+        // Marca + navegação da publicação (F2-17): idioma é a fonte de verdade
+        $data['text_brand']        = $this->language->get('text_brand');
+        $data['text_nav_home']     = $this->language->get('text_nav_home');
+        $data['text_nav_about']    = $this->language->get('text_nav_about');
+        $data['text_nav_portfolio']= $this->language->get('text_nav_portfolio');
+        $data['text_nav_contact']  = $this->language->get('text_nav_contact');
+        $data['text_nav_quote']    = $this->language->get('text_nav_quote');
+
+        $base = rtrim($data['home'], '/');
+
+        $data['nav_about']    = $base . '/#about';
+        $data['nav_portfolio']= $this->url->link('catalog/project');
+        $data['nav_contact']  = $this->url->link('common/contact');
+        $data['nav_quote']    = $this->url->link('checkout/quote');
+
         // Switcher: diretórios que EXISTEM são as opções (fonte da verdade = filesystem)
         $args  = $this->request->get;
         $route = (string)($args['route'] ?? '');

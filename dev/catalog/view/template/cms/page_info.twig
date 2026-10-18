@@ -1,0 +1,8 @@
+{# dev/catalog/view/template/cms/page_info.twig — página CMS pública (F2-17, SEO) #}
+{{ header|raw }}
+<main class="site-main" style="padding:40px 24px;max-width:860px;margin:0 auto;">
+  <h1>{{ heading_title }}</h1>
+  <div class="page-content">{{ description|raw }}</div>
+  <p><a href="{{ home }}" style="text-decoration:none;">← {{ heading_home|default('') }}</a></p>
+</main>
+{{ footer|raw }}
