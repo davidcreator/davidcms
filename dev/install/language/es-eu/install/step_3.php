@@ -20,6 +20,8 @@ $_['text_db_administration'] = '2. Introduzca un nombre de usuario y una contras
 $_['text_db_ok']             = 'Conexión con la base de datos realizada con éxito.';
 $_['text_password_hint']     = 'Use al menos 8 caracteres. Se aceptan letras, números y símbolos.';
 
+$_['text_http_server_hint'] = 'Dirección pública de la TIENDA. La prerellenamos desde la dirección de su navegador (catalog/ está junto a install/). El panel admin se deriva automáticamente a .../admin/. Si la tienda responde en la raíz del dominio, indique ej.: https://misitio.com/.';
+
 // Text (JavaScript de la pantalla)
 $_['text_js_password_mismatch']  = 'Las contraseñas no coinciden.';
 $_['text_js_password_weak']       = 'Débil';

@@ -24,7 +24,7 @@ if (is_file('config.php')) {
 
 // 4. Instalação pendente? → wizard
 if (!defined('DIR_APPLICATION')) {
-    header('Location: install/index.php');
+    header('Location: ../install/index.php'); // install/ é irmão de catalog/ no filesystem
     exit();
 }
 

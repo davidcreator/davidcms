@@ -20,6 +20,8 @@ $_['text_db_administration'] = '2. Insira um nome de usuário e uma senha para a
 $_['text_db_ok']             = 'Conexão com o banco de dados realizada com sucesso.';
 $_['text_password_hint']     = 'Use no mínimo 8 caracteres. Letras, números e símbolos são aceitos.';
 
+$_['text_http_server_hint'] = 'Endereço público da LOJA. Pré-preenchemos a partir do endereço do seu navegador (catalog/ fica ao lado de install/). O painel admin é derivado automaticamente para .../admin/. Se a loja responder na raiz do domínio, informe ex.: https://meusite.com.br/.';
+
 // Text (JavaScript da tela)
 $_['text_js_password_mismatch']  = 'As senhas não coincidem.';
 $_['text_js_password_weak']       = 'Fraca';

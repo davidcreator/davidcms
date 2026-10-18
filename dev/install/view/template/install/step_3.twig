@@ -74,6 +74,7 @@
 							<div class="col-sm-9">
 								<input type="url" name="http_server" value="{{ http_server }}" id="input-http-server" class="form-control" placeholder="https://" required/>
 								{% if error.http_server %}<div class="invalid-feedback d-block">{{ error.http_server }}</div>{% endif %}
+								<small class="text-muted d-block mt-1">{{ text_http_server_hint }}</small>
 							</div>
 						</div>
 						<div class="row mb-2">

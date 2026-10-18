@@ -43,11 +43,21 @@ class Step_4 extends \Reamur\System\Engine\Controller {
             $site = $this->siteFromConfig();
         }
 
+        // Painel: gravado pelo passo 3 (regra irmãos: catalog/ → admin/).
+        // Fallback para sessões antigas: aplica a mesma regra sobre $site.
+        $admin = (string)($this->session->data['install_admin'] ?? '');
+
+        if ($admin === '' && $site !== '') {
+            $admin = str_ends_with($site, 'catalog/')
+                ? substr($site, 0, -strlen('catalog/')) . 'admin/'
+                : $site . 'admin/';
+        }
+
         $data['catalog'] = $site !== '' ? $site : '#';
-        $data['admin']   = $site !== '' ? $site . 'admin/' : '#';
+        $data['admin']   = $admin !== '' ? $admin : '#';
 
         // Sessão efêmera do wizard: encerra antes da despedida (links já montados)
-        unset($this->session->data['install_db'], $this->session->data['install_site'], $this->session->data['install_done']);
+        unset($this->session->data['install_db'], $this->session->data['install_site'], $this->session->data['install_admin'], $this->session->data['install_done']);
 
         $this->chrome($data);
 

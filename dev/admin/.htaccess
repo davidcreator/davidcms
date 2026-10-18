@@ -1,0 +1,16 @@
+# ReamurCMS — Admin: URLs limpas do painel (ADR 0006). Tudo que não existe
+# fisicamente cai no front controller, que resolve a rota pelo REQUEST_URI.
+Options -Indexes
+Options +FollowSymLinks
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L,QSA]
+</IfModule>
+
+# Nunca expor config/twig/log/arquivos internos
+<FilesMatch "^(config\.php|index\.html)$|\.(tpl|twig|log|sql)$">
+    Require all denied
+</FilesMatch>

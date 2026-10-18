@@ -60,8 +60,9 @@ class Step_3 extends \Reamur\System\Engine\Controller {
 
                         // URLs públicas REAIS vêm da entrada do usuário (site_url) —
                         // jamais de SCRIPT_NAME/PATH_INFO (armadilha SAPI corrigida na F2-5).
-                        $this->session->data['install_done'] = true;
-                        $this->session->data['install_site'] = rtrim((string)$this->request->post['http_server'], '/') . '/';
+                        $this->session->data['install_done']  = true;
+                        $this->session->data['install_site']  = rtrim((string)$this->request->post['http_server'], '/') . '/';
+                        $this->session->data['install_admin'] = $this->adminUrl((string)$this->session->data['install_site']);
 
                         unset($this->session->data['install_db']); // legado do fluxo s3/s4 separado
 
@@ -157,6 +158,15 @@ class Step_3 extends \Reamur\System\Engine\Controller {
             };
         }
 
+        // Site URL: prefill honesto por tentativa (o usuário pode — e deve —
+        // revisar). Localhost/dev sai pronto; o esquema/teste de porta obedece
+        // ao request do próprio wizard. POST já traz o valor (normalizado).
+        if ($this->request->server['REQUEST_METHOD'] !== 'POST' && trim((string)$data['http_server']) === '') {
+            $data['http_server'] = $this->guessSiteUrl();
+        }
+
+        $data['text_http_server_hint'] = $this->language->get('text_http_server_hint');
+
         $data['action']    = $this->url->link('install/step_3');
         $data['test_json'] = $this->url->link('install/step_3.test');
         $data['back']      = $this->url->link('install/step_2');
@@ -193,9 +203,26 @@ class Step_3 extends \Reamur\System\Engine\Controller {
             $error['db_port'] = $this->language->get('error_db_port');
         }
 
-        if (trim((string)($post['http_server'] ?? '')) === ''
-            || !filter_var((string)$post['http_server'], FILTER_VALIDATE_URL)) {
+        // Site URL: ajuda de digitação — vazio assume a tentativa (endereço
+        // de onde o wizard responde); esquema ausente vira http:// (o valor
+        // normalizado volta ao POST para repovoar o form e gravar o config
+        // com o endereço FINAL). Localhost/porta dedicada vale sempre.
+        $httpServer = trim((string)($post['http_server'] ?? ''));
+
+        if ($httpServer === '') {
+            $httpServer = $this->guessSiteUrl();
+        }
+
+        if (!str_contains($httpServer, '://')) {
+            $httpServer = 'http://' . $httpServer;
+        }
+
+        $httpServer = rtrim(str_replace('\\', '/', $httpServer), '/'); // sem barra final aqui — writeConfigs recompõe
+
+        if ($httpServer === '' || !filter_var($httpServer, FILTER_VALIDATE_URL)) {
             $error['http_server'] = $this->language->get('error_http_server');
+        } else {
+            $this->request->post['http_server'] = $httpServer . '/';
         }
 
         // ── administração (mesmas regras do antigo s4 e do CRUD do painel) ──
@@ -235,6 +262,52 @@ class Step_3 extends \Reamur\System\Engine\Controller {
     }
 
     /**
+     * Tentativa de Site URL a partir do pedido do wizard. É GUESS de formulário
+     * (o usuário revisa antes de gravar) — a regra de ouro do F2-5 (nunca
+     * derivar base em runtime) continua intocada: o valor final é o digitado
+     * e vai para o config como HTTP_SERVER.
+     * Modo irmãos (Apache/XAMPP em subpasta): {projeto}/install/ ⇒ sobe um
+     * nível e aponta a LOJA em {projeto}/catalog/ (admin é derivado como irmão
+     * — ver adminUrl()). Docroot dedicado (php -S / vhost por app) ⇒ '/'.
+     */
+    private function guessSiteUrl(): string {
+        $server = $this->request->server;
+
+        $https = (!empty($server['HTTPS']) && strtolower((string)$server['HTTPS']) !== 'off')
+            || (int)($server['SERVER_PORT'] ?? 80) === 443
+            || strtolower((string)($server['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+
+        $scheme = $https ? 'https://' : 'http://';
+        $host   = (string)($server['HTTP_HOST'] ?? 'localhost');
+
+        $script = str_replace('\\', '/', (string)($server['SCRIPT_NAME'] ?? '/index.php'));
+        $dir    = rtrim((string)dirname($script), '/');
+
+        if (basename($dir) === 'install') {
+            $dir = rtrim((string)dirname($dir), '/');
+        }
+
+        $path = ($dir === '' || $dir === '.') ? '/' : $dir . '/catalog/';
+
+        return $scheme . $host . $path;
+    }
+
+    /**
+     * URL do painel derivada da URL da LOJA: layout irmãos (catalog/ e admin/
+     * lado a lado) ⇒ troca o sufixo; demais layouts (docroot dedicado,
+     * convenção OpenCart com admin sob a loja) ⇒ {site}admin/.
+     */
+    private function adminUrl(string $catalogBase): string {
+        $base = rtrim($catalogBase, '/') . '/';
+
+        if (str_ends_with($base, 'catalog/')) {
+            return substr($base, 0, -strlen('catalog/')) . 'admin/';
+        }
+
+        return $base . 'admin/';
+    }
+
+    /**
      * Gera dev/catalog/config.php e dev/admin/config.php a partir do template.
      * admin usa HTTP_SERVER = {url}admin/ (S5 do plano — precedente OpenCart).
      */
@@ -248,13 +321,14 @@ class Step_3 extends \Reamur\System\Engine\Controller {
             return false;
         }
 
-        $tpl  = (string)file_get_contents($template);
-        $base = rtrim((string)$this->request->post['http_server'], '/') . '/';
+        $tpl      = (string)file_get_contents($template);
+        $base     = rtrim((string)$this->request->post['http_server'], '/') . '/';
+        $adminUrl = $this->adminUrl($base); // irmão da loja (catalog/ → admin/) — ver método
 
         foreach (['catalog', 'admin'] as $app) {
             $output = strtr($tpl, [
-                '{{HTTP_SERVER}}'  => $app === 'admin' ? $base . 'admin/' : $base,
-                '{{HTTPS_SERVER}}' => $app === 'admin' ? $base . 'admin/' : $base,
+                '{{HTTP_SERVER}}'  => $app === 'admin' ? $adminUrl : $base,
+                '{{HTTPS_SERVER}}' => $app === 'admin' ? $adminUrl : $base,
                 '{{DIR_REAMUR}}'   => dirname($dir_dev) . '/',
                 '{{APP_DIR}}'      => $app,
                 '{{DB_DRIVER}}'    => $db['db_driver'],

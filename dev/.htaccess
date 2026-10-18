@@ -1,0 +1,3 @@
+# ReamurCMS — raiz de desenvolvimento: abrir {projeto}/ cai na loja (catalog/).
+Options -Indexes
+DirectoryIndex index.php index.html

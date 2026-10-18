@@ -61,3 +61,36 @@ fora** deste projeto neste momento, entrando só sob demanda.
    tela de configuração dividida);
 3. **Skins CSS sobre o markup antigo** — rejeitada: o markup antigo era
    standalone por passo (sem chrome comum); a paridade honesta exigia o shell.
+
+## Adendo — Site URL sem atrito em localhost (hotfix)
+
+- Site URL vem **pré-preenchida por tentativa** do pedido do wizard (esquema +
+  host + caminho-pai de `…/install/`); é guess de formulário — a autoridade
+  final continua sendo o que o usuário digita (regra F2-5 intocada);
+- Digitação **sem esquema** (`localhost:8000`) é normalizada para
+  `http://localhost:8000` antes da validação e volta normalizada ao POST/à
+  repopulação/ao config; valor realmente inválido rejeita com erro por campo
+  no idioma ativo;
+- Dica contextual `text_http_server_hint` sob o campo nos 3 idiomas.
+
+## Adendo 2 — Layout de pastas irmãs (XAMPP/subpasta) como alvo padrão
+
+- **Modelo de deploy assumido**: `catalog/` e `admin/` são irmãs sob a pasta do
+  projeto (ex. XAMPP: `http://localhost/davidcms/dev/`). A LOJA responde em
+  `{projeto}/catalog/` e o painel em `{projeto}/admin/`.
+- **Site URL = URL pública da LOJA.** A tentativa do passo 3 sobe um nível a
+  partir de `…/install/` e aponta `…/catalog/`; vazio no POST assume a
+  tentativa. O PAINEL é derivado por regra única: site terminando em
+  `catalog/` → troca para `admin/`; demais layouts (docroot dedicado,
+  convenção admin-sob-a-loja) → `{site}admin/`. A mesma regra alimenta os
+  config.php E o link do passo 4 (sessão `install_admin`).
+- **`catalog/index.php`**: redirect de bootstrap corrigido para
+  `../install/index.php` (irmão) — antes apontava `install/index.php` e quebrava
+  sob subpasta/docroot dedicado.
+- **.htaccess padrão front-controller** entregues em `admin/`, `catalog/`
+  (URLs limpas somem sem mod_rewrite — No XAMPP padrão, mod_rewrite +
+  AllowOverride All estão ativos), `system/` (Require all denied) e raiz `dev/`
+  (`DirectoryIndex index.php` + `index.php` atalho → `catalog/index.php`).
+  PHP CLI server ignora .htaccess e resolve por conta própria — a resolução de
+  rota pelo REQUEST_URI (resolve() do router) cobre os dois mundos. Em Apache
+  com AllowOverride None as URLs limpas degradam: usar os links `index.php?route=`.

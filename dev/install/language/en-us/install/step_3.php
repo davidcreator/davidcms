@@ -19,6 +19,8 @@ $_['text_db_administration'] = '2. Please enter a username and password for the 
 $_['text_db_ok']             = 'Database connection successful.';
 $_['text_password_hint']     = 'Use at least 8 characters. Letters, numbers and symbols are accepted.';
 
+$_['text_http_server_hint'] = 'Public address of the STORE. We prefill it from your browser address (catalog/ sits next to install/). The admin panel is derived automatically to .../admin/. If the store answers at the domain root, enter e.g. https://example.com/.';
+
 // Text (JavaScript da tela — nunca hardcoded no Twig)
 $_['text_js_password_mismatch']  = 'Passwords do not match.';
 $_['text_js_password_weak']       = 'Weak';
