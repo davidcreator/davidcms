@@ -1,0 +1,73 @@
+{# dev/admin/view/template/marketing/client_logo_form.twig — criação/edição de logo de cliente (F2-12) #}
+{{ header|raw }}
+<main class="dash form-page">
+  <h1>{{ heading_title }}{% if client_logo_id %} · {{ text_edit }}{% else %} · {{ text_add }}{% endif %}</h1>
+
+  {% if error %}
+  <div class="alert error">{{ error|nl2br }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ action }}" class="panel form">
+
+    <h2>{{ text_data }}</h2>
+    <div class="grid two">
+      <div class="field">
+        <label for="input-name">{{ entry_name }} *</label>
+        <input type="text" name="name" id="input-name" value="{{ name }}" maxlength="128" required>
+      </div>
+      <div class="field">
+        <label for="input-url">{{ entry_url }}</label>
+        <input type="url" name="url" id="input-url" value="{{ url }}" maxlength="255" placeholder="https://">
+      </div>
+      <div class="field">
+        <label for="input-sort-order">{{ entry_sort_order }}</label>
+        <input type="number" name="sort_order" id="input-sort-order" value="{{ sort_order }}" min="0" step="1">
+      </div>
+      <div class="field check">
+        <label><input type="checkbox" name="status" value="1"{% if status == '1' %} checked{% endif %}> {{ entry_status }}</label>
+      </div>
+    </div>
+
+    <h2>{{ text_image }}</h2>
+    <div class="field">
+      <input type="hidden" name="image" id="input-image" value="{{ image }}">
+      <div id="logo-preview">
+        {% if image %}<img src="{{ catalog }}{{ image }}" alt="" width="96" style="object-fit:contain;border-radius:4px;">{% endif %}
+      </div>
+      <input type="file" id="input-logo-file" accept="image/jpeg,image/png,image/webp,image/gif">
+      <button type="button" class="btn ghost small" id="btn-upload-logo">{{ button_upload }}</button>
+      <small class="muted">{{ text_upload_hint }}</small>
+    </div>
+
+    <div class="actions right">
+      <a class="btn ghost" href="{{ cancel }}">{{ button_cancel }}</a>
+      <button type="submit" class="btn primary">{{ button_save }}</button>
+    </div>
+  </form>
+</main>
+<script>
+(function () {
+  var uploadUrl = {{ upload|json_encode|raw }};
+  var errMsg    = {{ text_error_upload_js|json_encode|raw }};
+
+  document.getElementById('btn-upload-logo').addEventListener('click', function () {
+    var input = document.getElementById('input-logo-file');
+    if (!input.files || !input.files[0]) { return; }
+    var fd = new FormData();
+    fd.append('file', input.files[0]);
+    fetch(uploadUrl, { method: 'POST', body: fd, credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j.success) {
+          document.getElementById('input-image').value = j.path;
+          document.getElementById('logo-preview').innerHTML =
+            '<img src="' + {{ catalog|json_encode|raw }} + j.path + '" alt="" width="96" style="object-fit:contain;border-radius:4px;">';
+        } else {
+          alert(j.error || errMsg);
+        }
+      })
+      .catch(function () { alert(errMsg); });
+  });
+})();
+</script>
+{{ footer|raw }}

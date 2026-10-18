@@ -1,0 +1,48 @@
+{# dev/admin/view/template/marketing/client_logo_list.twig — grade de logos de clientes (F2-12) #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ heading_title }}</h1>
+    <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
+  </div>
+  <p class="muted">{{ text_list }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+  {% endif %}
+
+  {% if client_logos %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ column_image }}</th>
+        <th>{{ column_name }}</th>
+        <th>{{ column_url }}</th>
+        <th>{{ column_status }}</th>
+        <th>{{ column_sort_order }}</th>
+        <th class="right">{{ column_action }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for logo in client_logos %}
+      <tr>
+        <td>{% if logo.thumb %}<img src="{{ logo.thumb }}" alt="" width="48" style="object-fit:contain;border-radius:4px;">{% else %}<span class="muted">{{ text_placeholder }}</span>{% endif %}</td>
+        <td>{{ logo.name }}</td>
+        <td>{% if logo.url %}<a href="{{ logo.url }}" target="_blank" rel="noopener">{{ logo.url }}</a>{% else %}<span class="muted">{{ text_none }}</span>{% endif %}</td>
+        <td>{{ logo.status ? text_enabled : text_disabled }}</td>
+        <td>{{ logo.sort_order }}</td>
+        <td class="right actions">
+          <a class="btn ghost small" href="{{ logo.edit }}">{{ button_edit }}</a>
+          <form method="post" action="{{ logo.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
+            <button type="submit" class="btn danger small">{{ button_delete }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ text_no_results }}</p>
+  {% endif %}
+</main>
+{{ footer|raw }}

@@ -71,6 +71,13 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        if ($this->user->hasPermission('access', 'marketing/client_logo')) {
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_client_logos'),
+                'href' => $this->url->link('marketing/client_logo'),
+            ];
+        }
+
         if ($this->user->hasPermission('access', 'user/user')) {
             $data['modules'][] = [
                 'name' => $this->language->get('text_manage_users'),
