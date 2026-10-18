@@ -26,6 +26,7 @@ $_['text_modules']       = 'Módulos';
 $_['text_manage_portfolio'] = 'Portfólio';
 $_['text_manage_categories'] = 'Categorias';
 $_['text_manage_pages'] = 'Páginas';
+$_['text_manage_testimonials'] = 'Depoimentos';
 $_['text_manage_users']  = 'Usuários';
 $_['text_manage_user_groups'] = 'Grupos de Usuários';
 $_['text_version']       = 'ReamurCMS %s';

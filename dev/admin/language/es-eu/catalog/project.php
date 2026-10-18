@@ -32,7 +32,7 @@ $_['text_success_delete']  = 'Proyecto eliminado.';
 $_['text_placeholder']     = '(sin portada)';
 
 // Columns
-$_['column_image']         = 'Imagen';
+$_['column_image']         = 'Foto';
 $_['column_name']          = 'Nombre';
 $_['column_client']        = 'Cliente';
 $_['column_featured']      = 'Destacado';
@@ -42,20 +42,20 @@ $_['column_date_modified'] = 'Modificado';
 $_['column_action']        = 'Acción';
 
 // Entries
-$_['entry_name']             = 'Título';
+$_['entry_name']             = 'Nombre';
 $_['entry_summary']          = 'Resumen';
 $_['entry_description']      = 'Descripción';
 $_['entry_tag']              = 'Etiquetas (separadas por coma)';
 $_['entry_meta_title']       = 'Título Meta Tag';
 $_['entry_meta_description'] = 'Descripción Meta Tag';
 $_['entry_keyword']          = 'Keyword SEO';
-$_['entry_client']           = 'Client';
+$_['entry_client']           = 'Cliente';
 $_['entry_url']              = 'URL del Proyecto';
-$_['entry_image']            = 'Portada';
+$_['entry_image']            = 'Foto';
 $_['entry_category']         = 'Categorías';
-$_['entry_featured']         = 'Featured';
-$_['entry_status']           = 'Status';
-$_['entry_sort_order']       = 'Sort Order';
+$_['entry_featured']         = 'Destacado';
+$_['entry_status']           = 'Estado';
+$_['entry_sort_order']       = 'Orden';
 $_['entry_alt']              = 'Texto alternativo';
 
 // Buttons

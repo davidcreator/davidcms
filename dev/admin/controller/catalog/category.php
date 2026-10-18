@@ -8,17 +8,17 @@
  *
  * catalog/category — CRUD de categorias do portfólio (F2-9, ADR 0009) — segundo
  * CRUD no molde F2-8: method-grammar, ACL base-route, multi-idioma, seo_url,
- * upload com diretório próprio (regra dos três: o terceiro módulo que subir
- * arquivo extrai o componente compartilhado).
+ * upload delegando ao componente compartilhado MediaUpload (componente extraído
+ * na F2-11, regra dos três — ADR 0011).
  * Rotas: /catalog/category · .add · .edit|N · .delete|N (POST) · .upload (POST→JSON)
  */
 namespace Reamur\Admin\Controller\Catalog;
 
+use Reamur\System\Library\MediaUpload;
+
 class Category extends \Reamur\System\Engine\Controller {
 
     private const UPLOAD_DIR  = 'view/image/category/';
-    private const UPLOAD_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    private const UPLOAD_MAX  = 2097152; // 2 MB
 
     /** Lista categorias (200) */
     public function index(): void {
@@ -188,11 +188,7 @@ class Category extends \Reamur\System\Engine\Controller {
             $image = (string)$category['image'];
 
             if ($image !== '') {
-                $path = $this->imagePath($image);
-
-                if ($path !== '' && is_file($path)) {
-                    @unlink($path);
-                }
+                $this->media()->delete($image);
             }
 
             $this->model_catalog_category->deleteCategory($category_id);
@@ -216,48 +212,13 @@ class Category extends \Reamur\System\Engine\Controller {
         } elseif (!$this->user->hasPermission('modify', 'catalog/category')) {
             $msg = $this->language->get('error_permission');
         } else {
-            $f = (array)($this->request->files['file'] ?? []);
+            $result = $this->media()->store((array)($this->request->files['file'] ?? []), self::UPLOAD_DIR);
 
-            $tmp  = (string)($f['tmp_name'] ?? '');
-            $size = (int)($f['size'] ?? 0);
-
-            if ($tmp === '' || (int)($f['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file($tmp)) {
-                $msg = $this->language->get('error_upload');
-            } elseif ($size <= 0 || $size > self::UPLOAD_MAX) {
-                $msg = sprintf($this->language->get('error_upload_size'), '2 MB');
+            if ($result['ok']) {
+                $ok   = true;
+                $path = $result['path'];
             } else {
-                $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                $mime  = $finfo ? (string)(finfo_file($finfo, $tmp) ?: '') : '';
-
-                if ($finfo) {
-                    finfo_close($finfo);
-                }
-
-                if (!in_array($mime, self::UPLOAD_MIME, true)) {
-                    $msg = $this->language->get('error_upload_type');
-                } else {
-                    $ext = match ($mime) {
-                        'image/jpeg' => 'jpg',
-                        'image/png'  => 'png',
-                        'image/webp' => 'webp',
-                        default      => 'gif',
-                    };
-
-                    $dir = rtrim((string)dirname(DIR_APPLICATION), '/') . '/catalog/' . self::UPLOAD_DIR;
-
-                    if (!is_dir($dir)) {
-                        @mkdir($dir, 0755, true);
-                    }
-
-                    $filename = date('YmdHis') . '-' . bin2hex(random_bytes(6)) . '.' . $ext;
-
-                    if (@move_uploaded_file($tmp, $dir . $filename)) {
-                        $ok   = true;
-                        $path = self::UPLOAD_DIR . $filename;
-                    } else {
-                        $msg = $this->language->get('error_upload_move');
-                    }
-                }
+                $msg = $this->uploadErrorMessage($result['error']);
             }
         }
 
@@ -421,22 +382,30 @@ class Category extends \Reamur\System\Engine\Controller {
         return $errors;
     }
 
-    /** Só vale path relativo dentro de view/image/category/ e arquivo existente */
-    private function imageGuard(string $path): string {
-        $path = str_replace('\\', '/', trim($path));
 
-        if ($path === '' || !str_starts_with($path, self::UPLOAD_DIR) || str_contains($path, '..')) {
-            return '';
-        }
-
-        return $this->imagePath($path) !== '' ? $path : '';
+    /** Componente compartilhado de upload (regra dos três — ADR 0011); root = catalog/ irmão do admin */
+    private function media(): MediaUpload {
+        return new MediaUpload(rtrim((string)dirname(DIR_APPLICATION), '/') . '/catalog/');
     }
 
-    /** Resolve o path físico no catalog (irmão do admin); '' se não existir */
-    private function imagePath(string $relative): string {
-        $path = rtrim((string)dirname(DIR_APPLICATION), '/') . '/catalog/' . $relative;
+    /** Código simbólico do MediaUpload → mensagem do módulo (idioma vigente) */
+    private function uploadErrorMessage(string $code): string {
+        return match ($code) {
+            'size'  => sprintf($this->language->get('error_upload_size'), '2 MB'),
+            'type'  => $this->language->get('error_upload_type'),
+            'move'  => $this->language->get('error_upload_move'),
+            default => $this->language->get('error_upload'),
+        };
+    }
 
-        return is_file($path) ? $path : '';
+    /** Só vale path relativo dentro do diretório de uploads do módulo e arquivo existente (delega ao MediaUpload) */
+    private function imageGuard(string $path): string {
+        return $this->media()->guard($path, self::UPLOAD_DIR);
+    }
+
+    /** Resolve o path físico no catalog (irmão do admin); '' se não existir (delega ao MediaUpload) */
+    private function imagePath(string $relative): string {
+        return $this->media()->absolute($relative);
     }
 
     /** Base pública do CATALOG derivada do site_url do admin (mesma regra do F2-8) */

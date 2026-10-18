@@ -1,0 +1,50 @@
+{# dev/admin/view/template/marketing/testimonial_list.twig — grade de depoimentos (F2-11) #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ heading_title }}</h1>
+    <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
+  </div>
+  <p class="muted">{{ text_list }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+  {% endif %}
+
+  {% if testimonials %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ column_image }}</th>
+        <th>{{ column_author }}</th>
+        <th>{{ column_company }}</th>
+        <th>{{ column_status }}</th>
+        <th>{{ column_sort_order }}</th>
+        <th>{{ column_date_added }}</th>
+        <th class="right">{{ column_action }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for testimonial in testimonials %}
+      <tr>
+        <td>{% if testimonial.thumb %}<img src="{{ testimonial.thumb }}" alt="" width="48" style="object-fit:cover;border-radius:4px;">{% else %}<span class="muted">{{ text_placeholder }}</span>{% endif %}</td>
+        <td>{{ testimonial.author }}</td>
+        <td>{{ testimonial.company }}</td>
+        <td>{{ testimonial.status ? text_enabled : text_disabled }}</td>
+        <td>{{ testimonial.sort_order }}</td>
+        <td>{{ testimonial.date_added }}</td>
+        <td class="right actions">
+          <a class="btn ghost small" href="{{ testimonial.edit }}">{{ button_edit }}</a>
+          <form method="post" action="{{ testimonial.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
+            <button type="submit" class="btn danger small">{{ button_delete }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ text_no_results }}</p>
+  {% endif %}
+</main>
+{{ footer|raw }}

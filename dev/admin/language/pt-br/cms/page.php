@@ -33,13 +33,13 @@ $_['column_date_modified'] = 'Modificado';
 $_['column_action']        = 'Ação';
 
 // Entries
-$_['entry_title']            = 'Title';
+$_['entry_title']            = 'Título';
 $_['entry_description']      = 'Descrição';
 $_['entry_meta_title']       = 'Meta Tag Título';
 $_['entry_meta_description'] = 'Meta Tag Descrição';
 $_['entry_keyword']          = 'Keyword SEO';
 $_['entry_status']           = 'Status';
-$_['entry_sort_order']       = 'Sort Order';
+$_['entry_sort_order']       = 'Ordenação';
 
 // Buttons
 $_['button_add']        = 'Adicionar';

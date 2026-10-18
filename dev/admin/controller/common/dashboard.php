@@ -64,6 +64,13 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        if ($this->user->hasPermission('access', 'marketing/testimonial')) {
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_testimonials'),
+                'href' => $this->url->link('marketing/testimonial'),
+            ];
+        }
+
         if ($this->user->hasPermission('access', 'user/user')) {
             $data['modules'][] = [
                 'name' => $this->language->get('text_manage_users'),

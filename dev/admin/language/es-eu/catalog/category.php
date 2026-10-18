@@ -30,7 +30,7 @@ $_['text_placeholder']     = '(sin imagen)';
 $_['text_none']            = '(ninguno)';
 
 // Columns
-$_['column_image']         = 'Image';
+$_['column_image']         = 'Foto';
 $_['column_name']          = 'Nombre';
 $_['column_parent']        = 'Padre';
 $_['column_status']        = 'Estado';
@@ -39,15 +39,15 @@ $_['column_date_modified'] = 'Modificado';
 $_['column_action']        = 'Acción';
 
 // Entries
-$_['entry_name']             = 'Name';
+$_['entry_name']             = 'Nombre';
 $_['entry_description']      = 'Descripción';
 $_['entry_meta_title']       = 'Título Meta Tag';
 $_['entry_meta_description'] = 'Descripción Meta Tag';
 $_['entry_keyword']          = 'Keyword SEO';
-$_['entry_parent']           = 'Parent';
-$_['entry_image']            = 'Image';
-$_['entry_status']           = 'Status';
-$_['entry_sort_order']       = 'Sort Order';
+$_['entry_parent']           = 'Padre';
+$_['entry_image']            = 'Foto';
+$_['entry_status']           = 'Estado';
+$_['entry_sort_order']       = 'Orden';
 
 // Buttons
 $_['button_add']        = 'Agregar';
