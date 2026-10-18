@@ -1,0 +1,52 @@
+{# dev/admin/view/template/catalog/project_list.twig — grade do portfólio (F2-8) #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ heading_title }}</h1>
+    <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
+  </div>
+  <p class="muted">{{ text_list }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+  {% endif %}
+
+  {% if projects %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ column_image }}</th>
+        <th>{{ column_name }}</th>
+        <th>{{ column_client }}</th>
+        <th>{{ column_featured }}</th>
+        <th>{{ column_status }}</th>
+        <th>{{ column_sort_order }}</th>
+        <th>{{ column_date_modified }}</th>
+        <th class="right">{{ column_action }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for project in projects %}
+      <tr>
+        <td>{% if project.thumb %}<img src="{{ project.thumb }}" alt="" width="48" height="48" style="object-fit:cover;border-radius:4px;">{% else %}<span class="muted">{{ text_placeholder }}</span>{% endif %}</td>
+        <td>{{ project.name }}</td>
+        <td>{{ project.client }}</td>
+        <td>{{ project.featured ? text_yes : text_no }}</td>
+        <td>{{ project.status ? text_enabled : text_disabled }}</td>
+        <td>{{ project.sort_order }}</td>
+        <td>{{ project.date_modified }}</td>
+        <td class="right actions">
+          <a class="btn ghost small" href="{{ project.edit }}">{{ button_edit }}</a>
+          <form method="post" action="{{ project.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
+            <button type="submit" class="btn danger small">{{ button_delete }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ text_no_results }}</p>
+  {% endif %}
+</main>
+{{ footer|raw }}

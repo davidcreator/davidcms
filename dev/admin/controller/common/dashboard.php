@@ -43,6 +43,13 @@ class Dashboard extends \Reamur\System\Engine\Controller {
         // Módulos visíveis = módulos PERMITIDOS ao grupo (ACL manda na âncora, F2-6)
         $data['modules'] = [];
 
+        if ($this->user->hasPermission('access', 'catalog/project')) {
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_portfolio'),
+                'href' => $this->url->link('catalog/project'),
+            ];
+        }
+
         if ($this->user->hasPermission('access', 'user/user')) {
             $data['modules'][] = [
                 'name' => $this->language->get('text_manage_users'),

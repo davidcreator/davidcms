@@ -1,0 +1,182 @@
+{# dev/admin/view/template/catalog/project_form.twig — criação/edição de projeto (F2-8) #}
+{{ header|raw }}
+<main class="dash form-page">
+  <h1>{{ heading_title }}{% if project_id %} · {{ text_edit }}{% else %} · {{ text_add }}{% endif %}</h1>
+
+  {% if error %}
+  <div class="alert error">{{ error|nl2br }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ action }}" class="panel form">
+
+    <h2>{{ text_general }}</h2>
+    <p class="muted">{{ text_languages_note }}</p>
+
+    {% for language in languages %}
+    <fieldset class="panel" style="margin-bottom:1rem;">
+      <legend>{{ language.name }} <span class="muted">({{ language.code }})</span></legend>
+      <div class="grid two">
+        <div class="field">
+          <label for="input-name-{{ language.language_id }}">{{ entry_name }}{% if language.language_id == 1 %} *{% endif %}</label>
+          <input type="text" name="project_description[{{ language.language_id }}][name]" id="input-name-{{ language.language_id }}" value="{{ language.fields.name }}" maxlength="255"{% if language.language_id == 1 %} required{% endif %}>
+        </div>
+        <div class="field">
+          <label for="input-summary-{{ language.language_id }}">{{ entry_summary }}</label>
+          <input type="text" name="project_description[{{ language.language_id }}][summary]" id="input-summary-{{ language.language_id }}" value="{{ language.fields.summary }}" maxlength="255">
+        </div>
+      </div>
+      <div class="field">
+        <label for="input-description-{{ language.language_id }}">{{ entry_description }}</label>
+        <textarea name="project_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="6">{{ language.fields.description }}</textarea>
+      </div>
+      <div class="grid two">
+        <div class="field">
+          <label for="input-tag-{{ language.language_id }}">{{ entry_tag }}</label>
+          <input type="text" name="project_description[{{ language.language_id }}][tag]" id="input-tag-{{ language.language_id }}" value="{{ language.fields.tag }}" maxlength="255">
+        </div>
+        <div class="field">
+          <label for="input-keyword-{{ language.language_id }}">{{ entry_keyword }}</label>
+          <input type="text" name="project_description[{{ language.language_id }}][keyword]" id="input-keyword-{{ language.language_id }}" value="{{ language.fields.keyword }}" maxlength="64" placeholder="meu-projeto" pattern="[a-z0-9]+(-[a-z0-9]+)*">
+        </div>
+        <div class="field">
+          <label for="input-meta-title-{{ language.language_id }}">{{ entry_meta_title }}</label>
+          <input type="text" name="project_description[{{ language.language_id }}][meta_title]" id="input-meta-title-{{ language.language_id }}" value="{{ language.fields.meta_title }}" maxlength="255">
+        </div>
+        <div class="field">
+          <label for="input-meta-description-{{ language.language_id }}">{{ entry_meta_description }}</label>
+          <input type="text" name="project_description[{{ language.language_id }}][meta_description]" id="input-meta-description-{{ language.language_id }}" value="{{ language.fields.meta_description }}" maxlength="255">
+        </div>
+      </div>
+    </fieldset>
+    {% endfor %}
+
+    <h2>{{ text_data }}</h2>
+    <div class="grid two">
+      <div class="field">
+        <label for="input-client">{{ entry_client }}</label>
+        <input type="text" name="client" id="input-client" value="{{ client }}" maxlength="128">
+      </div>
+      <div class="field">
+        <label for="input-url">{{ entry_url }}</label>
+        <input type="url" name="url" id="input-url" value="{{ url }}" maxlength="255" placeholder="https://">
+      </div>
+      <div class="field">
+        <label for="input-sort-order">{{ entry_sort_order }}</label>
+        <input type="number" name="sort_order" id="input-sort-order" value="{{ sort_order }}" min="0" step="1">
+      </div>
+      <div class="field check">
+        <label><input type="checkbox" name="featured" value="1"{% if featured == '1' %} checked{% endif %}> {{ entry_featured }}</label>
+        <label><input type="checkbox" name="status" value="1"{% if status == '1' %} checked{% endif %}> {{ entry_status }}</label>
+      </div>
+    </div>
+
+    {% if categories %}
+    <div class="field">
+      <label>{{ entry_category }}</label>
+      {% for category in categories %}
+      <label class="check"><input type="checkbox" name="project_category[]" value="{{ category.category_id }}"{% if category.checked %} checked{% endif %}> {{ category.name }}</label>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <h2>{{ text_image_cover }}</h2>
+    <div class="field">
+      <input type="hidden" name="image" id="input-image" value="{{ image }}">
+      <div id="cover-preview">
+        {% if image %}<img src="{{ catalog }}{{ image }}" alt="" width="96" style="object-fit:cover;border-radius:4px;">{% endif %}
+      </div>
+      <input type="file" id="input-cover-file" accept="image/jpeg,image/png,image/webp,image/gif">
+      <button type="button" class="btn ghost small" data-upload data-target="input-image" data-file="input-cover-file" data-preview="cover-preview">{{ button_upload }}</button>
+      <small class="muted">{{ text_upload_hint }}</small>
+    </div>
+
+    <h2>{{ text_gallery }}</h2>
+    <div id="gallery">
+      {% for img in images %}
+      <div class="grid two gallery-row" data-row>
+        <input type="hidden" name="project_image[{{ loop.index0 }}][image]" value="{{ img.image }}" data-img>
+        <div class="field">
+          <label>{{ entry_alt }}</label>
+          <input type="text" name="project_image[{{ loop.index0 }}][alt]" value="{{ img.alt }}" maxlength="255">
+        </div>
+        <div class="field">
+          <label>{{ entry_sort_order }}</label>
+          <input type="number" name="project_image[{{ loop.index0 }}][sort_order]" value="{{ img.sort_order }}" min="0" step="1">
+        </div>
+        <div class="field">
+          <img src="{{ catalog }}{{ img.image }}" alt="" width="64" data-thumb style="object-fit:cover;border-radius:4px;">
+          <button type="button" class="btn ghost small" data-remove>{{ button_remove }}</button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="field">
+      <input type="file" id="input-gallery-file" accept="image/jpeg,image/png,image/webp,image/gif">
+      <button type="button" class="btn ghost small" id="btn-add-image">{{ button_add_image }}</button>
+    </div>
+
+    <div class="actions right">
+      <a class="btn ghost" href="{{ cancel }}">{{ button_cancel }}</a>
+      <button type="submit" class="btn primary">{{ button_save }}</button>
+    </div>
+  </form>
+</main>
+<script>
+(function () {
+  var uploadUrl = {{ upload|json_encode|raw }};
+  var errMsg    = {{ text_error_upload_js|json_encode|raw }};
+
+  function doUpload(fileInput, done) {
+    var input = document.getElementById(fileInput);
+    if (!input || !input.files || !input.files[0]) { return; }
+    var fd = new FormData();
+    fd.append('file', input.files[0]);
+    fetch(uploadUrl, { method: 'POST', body: fd, credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j.success) { done(j.path); } else { alert(j.error || errMsg); }
+      })
+      .catch(function () { alert(errMsg); });
+  }
+
+  var coverBtn = document.querySelector('[data-upload]');
+  if (coverBtn) {
+    coverBtn.addEventListener('click', function () {
+      doUpload(coverBtn.getAttribute('data-file'), function (path) {
+        document.getElementById('input-image').value = path;
+        document.getElementById('cover-preview').innerHTML =
+          '<img src="' + {{ catalog|json_encode|raw }} + path + '" alt="" width="96" style="object-fit:cover;border-radius:4px;">';
+      });
+    });
+  }
+
+  var rowIdx = {{ images|length }};
+
+  document.getElementById('btn-add-image').addEventListener('click', function () {
+    doUpload('input-gallery-file', function (path) {
+      var wrap = document.getElementById('gallery');
+      var div  = document.createElement('div');
+      div.className = 'grid two gallery-row';
+      div.setAttribute('data-row', '');
+      div.innerHTML =
+        '<input type="hidden" name="project_image[' + rowIdx + '][image]" value="' + path + '" data-img>' +
+        '<div class="field"><label>{{ entry_alt }}</label>' +
+        '<input type="text" name="project_image[' + rowIdx + '][alt]" value="" maxlength="255"></div>' +
+        '<div class="field"><label>{{ entry_sort_order }}</label>' +
+        '<input type="number" name="project_image[' + rowIdx + '][sort_order]" value="0" min="0" step="1"></div>' +
+        '<div class="field"><img src="' + {{ catalog|json_encode|raw }} + path + '" alt="" width="64" data-thumb style="object-fit:cover;border-radius:4px;"> ' +
+        '<button type="button" class="btn ghost small" data-remove>{{ button_remove }}</button></div>';
+      wrap.appendChild(div);
+      rowIdx++;
+    });
+  });
+
+  document.getElementById('gallery').addEventListener('click', function (e) {
+    if (e.target && e.target.hasAttribute('data-remove')) {
+      var row = e.target.closest('[data-row]');
+      if (row) { row.parentNode.removeChild(row); }
+    }
+  });
+})();
+</script>
+{{ footer|raw }}
