@@ -91,6 +91,11 @@ class Home extends \Reamur\System\Engine\Controller {
             'text_contact_email'    => $this->language->get('text_contact_email'),
             'text_contact_whatsapp' => $this->language->get('text_contact_whatsapp'),
 
+            'text_news_title'     => $this->language->get('text_news_title'),
+            'text_news_kicker'    => $this->language->get('text_news_kicker'),
+            'text_news_read_more' => $this->language->get('text_news_read_more'),
+            'text_news_source'    => $this->language->get('text_news_source'),
+
             'text_socials_title' => $this->language->get('text_socials_title'),
         ];
 
@@ -180,6 +185,11 @@ class Home extends \Reamur\System\Engine\Controller {
                 'href'        => $this->url->link('tool/tool.info|' . (int)$tool['tool_id']), // página dedicada (F3-04)
             ];
         }
+
+        // ── Latest News: blog externo com cache + degradação silenciosa (F3-05, ADR 0023) ──
+        $this->load->model('feed/news');
+
+        $data['news_items'] = $this->model_feed_news->getLatestNews(3);
 
         // ── Conteúdo estático estruturado do language (partials) ────────
         $data['about_paragraphs'] = [

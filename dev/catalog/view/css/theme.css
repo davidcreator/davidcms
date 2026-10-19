@@ -33,6 +33,13 @@ h2 { font-size: 1.75em; }
 .tool-actions a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: .92em; }
 .tool-card .tool-link { color: inherit; text-decoration: none; }
 .tool-card .tool-link:hover { color: var(--accent); }
+/* ── Latest News — blog externo (F3-05) ── */
+.news-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+.news-card h3 { margin: 6px 0 8px; font-size: 1.05rem; line-height: 1.3; }
+.news-meta { color: var(--muted); font-size: .8rem; margin: 0; text-transform: uppercase; letter-spacing: .04em; }
+.news-cta { color: var(--accent); text-decoration: none; font-weight: 600; font-size: .92em; }
+.news-source { margin-top: 20px; font-size: .85rem; color: var(--muted); }
+.news-source a { color: var(--accent); text-decoration: none; }
 .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; list-style: none; padding: 0; }
 .gallery-grid img { width: 100%; border-radius: var(--radius); }
 .section { padding: 56px 0; }

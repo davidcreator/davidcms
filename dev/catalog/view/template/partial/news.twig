@@ -1,0 +1,21 @@
+{# dev/catalog/view/template/partial/news.twig — Latest News do blog externo (F3-05, ADR 0002/0023) #}
+{# Oculta a seção inteira quando o feed falha: nunca quebra a home #}
+{% if news_items %}
+<section class="section" id="news">
+  <div class="container">
+    <span class="kicker">{{ text_news_kicker }}</span>
+    <h2>{{ text_news_title }}</h2>
+    <div class="grid-3">
+    {% for n in news_items %}
+      <article class="news-card">
+        <p class="news-meta">{{ n.date }} · {{ n.source }}</p>
+        <h3>{{ n.title }}</h3>
+        <p>{{ n.excerpt }}</p>
+        <p><a class="news-cta" href="{{ n.url }}" target="_blank" rel="noopener">{{ text_news_read_more }} ↗</a></p>
+      </article>
+    {% endfor %}
+    </div>
+    <p class="news-source">{{ text_news_source }} <a href="https://davidcreator.com" target="_blank" rel="noopener">davidcreator.com ↗</a></p>
+  </div>
+</section>
+{% endif %}

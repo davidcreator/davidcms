@@ -122,3 +122,9 @@ $_['text_contact_lead']     = 'Tell me about your project — I reply typically 
 $_['text_contact_address']  = 'Home and Office: São Paulo, Brazil';
 $_['text_contact_email']    = 'contato@davidalmeida.xyz';
 $_['text_contact_whatsapp'] = '+55 11 98393-8347';
+
+// ── Latest News (blog externo — ADR 0002/0023) ──
+$_['text_news_kicker']    = 'From the blog';
+$_['text_news_title']     = 'Latest news';
+$_['text_news_read_more'] = 'Read on davidcreator.com';
+$_['text_news_source']    = 'Posts served from the external blog:';

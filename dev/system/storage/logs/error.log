@@ -13,3 +13,8 @@
 2026-10-19 12:33:06 - Route not found: catalog/view/js/three/mainjs.index
 2026-10-19 12:33:07 - Route not found: catalog/view/js/three/mainjs.index
 2026-10-19 12:33:08 - Route not found: catalog/view/js/three/mainjs.index
+2026-10-19 13:24:38 - Route not found: catalog/view/js/three/mainjs.index
+2026-10-19 13:24:55 - MySQLi: Table 'davidcms.rms_rate_limit' doesn't exist | SQL: INSERT INTO `rms_rate_limit` (`scope`, `ip`, `attempts`, `window_start`) VALUES ('login','::1',1, NOW()) ON DUPLICATE KEY UPDATE `attempts` = IF(TIMESTAMPDIFF(SECOND, `window_start`, NOW()) >= 900, 1, `attempts` + 1), `window_start` = IF(TIMESTAMPDIFF(SECOND, `window_start`, NOW()) >= 900, NOW(), `window_start`)
+2026-10-19 13:25:08 - MySQLi: Table 'davidcms.rms_rate_limit' doesn't exist | SQL: INSERT INTO `rms_rate_limit` (`scope`, `ip`, `attempts`, `window_start`) VALUES ('login','::1',1, NOW()) ON DUPLICATE KEY UPDATE `attempts` = IF(TIMESTAMPDIFF(SECOND, `window_start`, NOW()) >= 900, 1, `attempts` + 1), `window_start` = IF(TIMESTAMPDIFF(SECOND, `window_start`, NOW()) >= 900, NOW(), `window_start`)
+2026-10-19 13:56:18 - MySQLi: Table 'davidcms.rms_rate_limit' doesn't exist | SQL: INSERT INTO `rms_rate_limit` (`scope`, `ip`, `attempts`, `window_start`) VALUES ('login','::1',1, NOW()) ON DUPLICATE KEY UPDATE `attempts` = IF(TIMESTAMPDIFF(SECOND, `window_start`, NOW()) >= 900, 1, `attempts` + 1), `window_start` = IF(TIMESTAMPDIFF(SECOND, `window_start`, NOW()) >= 900, NOW(), `window_start`)
+2026-10-19 13:56:34 - Route not found: catalog/view/js/three/mainjs.index
