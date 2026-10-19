@@ -106,6 +106,14 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        if ($this->user->hasPermission('access', 'setting/setting')) {
+            // F4-01 (ADR 0024): configurações operacionais do painel
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_settings'),
+                'href' => $this->url->link('setting/setting'),
+            ];
+        }
+
         if ($this->user->hasPermission('access', 'user/user')) {
             $data['modules'][] = [
                 'name' => $this->language->get('text_manage_users'),

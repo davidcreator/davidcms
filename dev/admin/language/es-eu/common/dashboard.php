@@ -38,3 +38,5 @@ $_['text_version']       = 'ReamurCMS %s';
 
 // Button
 $_['button_logout']      = 'Salir';
+
+$_['text_manage_settings'] = 'Configuración';

@@ -24,8 +24,13 @@ class Header extends \Reamur\System\Engine\Controller {
         $this->load->language('common/header');
 
         $data['locale'] = (string)$this->config->get('language_directory', 'en-us');
-        $data['title']       = $this->document->getTitle();
-        $data['description'] = $this->document->getDescription(); // meta description real (F3-03)
+        // F4-01 (ADR 0024): sem título/descrição explícita da página,
+        // o fallback é o que o admin gravou em setting/setting (rms_setting).
+        $title       = $this->document->getTitle();
+        $description = $this->document->getDescription();
+
+        $data['title']       = $title       !== '' ? $title       : (string)$this->config->get('config_meta_title', '');
+        $data['description'] = $description !== '' ? $description : (string)$this->config->get('config_meta_description', '');
         $data['styles']      = $this->document->getStyles();
 
         $data['home']           = (string)$this->config->get('site_url');

@@ -56,4 +56,18 @@ final class File {
             unlink($file);
         }
     }
+
+    /**
+     * Limpa TODOS os arquivos cache.* (botão "Limpar cache" do painel — F4-01).
+     * O framework registra o adapter cru no Registry (sd no wrapper Cache),
+     * o que tornava o method_exists do wrapper cache/Cache::clear() a apenas
+     * proteção — o adapter em si precisa existir com o mesmo contrato.
+     */
+    public function clear(): void {
+        foreach (glob($this->directory . 'cache.*') ?: [] as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
+    }
 }

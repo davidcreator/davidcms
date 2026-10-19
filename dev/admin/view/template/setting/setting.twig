@@ -1,0 +1,116 @@
+{# dev/admin/view/template/setting/setting.twig — ecrã operacional (F4-01, ADR 0024). Padrão = testimonial_form.twig #}
+{{ header|raw }}
+<main class="dash form-page">
+  <h1>{{ heading_title }}</h1>
+  <p class="muted">{{ text_settings }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type == 'success' ? 'success' : 'error' }}">{{ text_flash.text }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="alert error">{{ error|nl2br }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ action }}" class="panel form">
+
+    <fieldset class="panel" style="margin-bottom:1rem;">
+      <legend>{{ fieldset_store }}</legend>
+      <div class="grid two">
+        <div class="field">
+          <label>{{ entry_config_name }}</label>
+          <input type="text" name="config_name" value="{{ config_name }}" required>
+          <small class="muted">{{ help_config_name }}</small>
+        </div>
+        <div class="field">
+          <label>{{ entry_config_meta_title }}</label>
+          <input type="text" name="config_meta_title" value="{{ config_meta_title }}">
+          <small class="muted">{{ help_config_meta_title }}</small>
+        </div>
+      </div>
+      <div class="field">
+        <label>{{ entry_config_meta_description }}</label>
+        <textarea name="config_meta_description" rows="3">{{ config_meta_description }}</textarea>
+        <small class="muted">{{ help_config_meta_description }}</small>
+      </div>
+    </fieldset>
+
+    <fieldset class="panel" style="margin-bottom:1rem;">
+      <legend>{{ fieldset_mail }}</legend>
+      <div class="grid two">
+        <div class="field">
+          <label>{{ entry_mail_engine }}</label>
+          <select name="mail_engine">
+            {% for val, lab in mail_engines %}
+            <option value="{{ val }}"{{ mail_engine == val ? ' selected' : '' }}>{{ lab }}</option>
+            {% endfor %}
+          </select>
+          <small class="muted">{{ help_mail_engine }}</small>
+        </div>
+        <div class="field">
+          <label>{{ entry_mail_reply_to }}</label>
+          <input type="email" name="mail_reply_to" value="{{ mail_reply_to }}">
+          <small class="muted">{{ help_mail_reply_to }}</small>
+        </div>
+      </div>
+      <div class="grid two">
+        <div class="field">
+          <label>{{ entry_mail_smtp_hostname }}</label>
+          <input type="text" name="mail_smtp_hostname" value="{{ mail_smtp_hostname }}" autocomplete="off">
+          <small class="muted">{{ help_mail_smtp_hostname }}</small>
+        </div>
+        <div class="field">
+          <label>{{ entry_mail_smtp_username }}</label>
+          <input type="text" name="mail_smtp_username" value="{{ mail_smtp_username }}" autocomplete="off">
+          <small class="muted">{{ help_mail_smtp_username }}</small>
+        </div>
+      </div>
+      <div class="grid two">
+        <div class="field">
+          <label>{{ entry_mail_smtp_password }}</label>
+          <input type="password" name="mail_smtp_password" value="{{ mail_smtp_password }}" autocomplete="new-password">
+          <small class="muted">{{ help_mail_smtp_password }}</small>
+        </div>
+        <div class="field">
+          <label>{{ entry_mail_smtp_port }}</label>
+          <input type="text" name="mail_smtp_port" value="{{ mail_smtp_port }}">
+          <small class="muted">{{ help_mail_smtp_port }}</small>
+        </div>
+      </div>
+      <div class="field">
+        <label>{{ entry_mail_smtp_timeout }}</label>
+        <input type="text" name="mail_smtp_timeout" value="{{ mail_smtp_timeout }}">
+        <small class="muted">{{ help_mail_smtp_timeout }}</small>
+      </div>
+    </fieldset>
+
+    <fieldset class="panel" style="margin-bottom:1rem;">
+      <legend>{{ fieldset_cache }}</legend>
+      <div class="grid two">
+        <div class="field">
+          <label>{{ entry_cache_engine }}</label>
+          <select name="cache_engine">
+            {% for val, lab in cache_engines %}
+            <option value="{{ val }}"{{ cache_engine == val ? ' selected' : '' }}>{{ lab }}</option>
+            {% endfor %}
+          </select>
+          <small class="muted">{{ help_cache_engine }}</small>
+        </div>
+        <div class="field">
+          <label>{{ entry_cache_expire }}</label>
+          <input type="text" name="cache_expire" value="{{ cache_expire }}">
+          <small class="muted">{{ help_cache_expire }}</small>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="form-actions">
+      <button class="btn primary" type="submit">{{ button_save }}</button>
+      <a class="btn ghost" href="{{ back }}">{{ button_back }}</a>
+    </div>
+  </form>
+
+  <form method="post" action="{{ clear_cache }}" class="panel form" style="margin-top:1rem;">
+    <button class="btn ghost" type="submit">{{ button_clear_cache }}</button>
+  </form>
+</main>
+{{ footer|raw }}

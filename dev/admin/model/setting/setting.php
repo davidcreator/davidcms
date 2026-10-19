@@ -1,0 +1,103 @@
+<?php
+/**
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * setting/setting (ADMIN) — chaves operacionais persistidas em rms_setting
+ * (F4-01, ADR 0024): code='config'. Sobrescrevem, no boot, os defaults de
+ * system/config + config.php gerado. Sem inventar tabela nova.
+ */
+namespace Reamur\Admin\Model\Setting;
+
+class Setting extends \Reamur\System\Engine\Model {
+
+    private const CACHE_KEY = 'setting.config';
+    private const CODE      = 'config';
+
+    /**
+     * Todas as chaves do code 'config' (mapa key=>value pronto para merge).
+     *
+     * @return array<string, string>
+     */
+    public function getSettings(): array {
+        $cached = $this->cache->get(self::CACHE_KEY);
+
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $rows  = $this->db->query(
+            "SELECT `key`, `value`, `serialized` FROM `" . $this->t('setting') . "` WHERE `code` = '" . self::CODE . "'"
+        );
+
+        $map = [];
+
+        if ($rows instanceof \stdClass && !empty($rows->rows)) {
+            foreach ($rows->rows as $row) {
+                $row = (array)$row;
+                $map[(string)$row['key']] = $this->unserialize((string)$row['value'], (int)$row['serialized']);
+            }
+        }
+
+        $this->cache->set(self::CACHE_KEY, $map, 3600);
+
+        return $map;
+    }
+
+    /**
+     * @param array<string, string> $data Novo mapa completo (keys são validadas pela ALLOWLIST)
+     */
+    public function editSettings(array $data): void {
+        // Allowlist: sem espaço p/ chave arbitrária (SQL/engine nunca vê chave estranha)
+        $allow = [
+            'config_name', 'config_meta_title', 'config_meta_description',
+            'mail_engine', 'mail_smtp_hostname', 'mail_smtp_username',
+            'mail_smtp_password', 'mail_smtp_port', 'mail_smtp_timeout',
+            'mail_reply_to',
+            'cache_engine', 'cache_expire',
+        ];
+
+        foreach ($data as $key => $value) {
+            $key = (string)$key;
+
+            if (!in_array($key, $allow, true)) {
+                continue;
+            }
+
+            $serialized = is_array($value) ? 1 : 0;
+            $v = $this->db->escape($serialized ? serialize($value) : (string)$value);
+
+            $this->db->query(
+                "UPDATE `" . $this->t('setting') . "`
+                    SET `value` = '" . $v . "',
+                        `serialized` = '" . $serialized . "'
+                  WHERE `code` = '" . self::CODE . "' AND `key` = '" . $this->db->escape($key) . "'"
+            );
+
+            // INSERT ignorando duplicata: idempotente contra upgrade parcial
+            $this->db->query(
+                "INSERT INTO `" . $this->t('setting') . "` (`code`, `key`, `value`, `serialized`)
+                 SELECT '" . self::CODE . "', '" . $this->db->escape($key) . "', '" . $v . "', '" . $serialized . "'
+                 WHERE NOT EXISTS (
+                    SELECT 1 FROM `" . $this->t('setting') . "` WHERE `code` = '" . self::CODE . "' AND `key` = '" . $this->db->escape($key) . "'
+                 )"
+            );
+        }
+
+        $this->cache->delete(self::CACHE_KEY);
+    }
+
+    private function unserialize(string $value, int $serialized): string {
+        return $serialized
+            ? (string)unserialize($value, ['allowed_classes' => false])
+            : $value;
+    }
+
+    /** Tabela com prefixo (mesmo helper dos demais models F2) */
+    private function t(string $table): string {
+        return DB_PREFIX . $table;
+    }
+}

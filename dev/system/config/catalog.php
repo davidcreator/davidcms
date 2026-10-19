@@ -28,7 +28,7 @@ $_['db_port']             = defined('DB_PORT') ? (int)DB_PORT : 3306;
 $_['action_default']      = 'common/home'; // Contrato §4
 $_['action_router']       = 'startup/router'; // F2-5: URLs limpas (ADR 0006); ?route= segue funcionando
 $_['action_error']        = 'error/not_found';
-$_['action_pre_action']   = ['startup/language']; // F2-3: idioma da requisição (Adendo ADR 0001)
+$_['action_pre_action']   = ['startup/language', 'startup/setting']; // F2-3: idioma da requisição (Adendo ADR 0001); F4-01: rms_setting code=config sobrescreve defaults (ADR 0024)
 $_['action_post_action']  = [];
 
 // Erros
