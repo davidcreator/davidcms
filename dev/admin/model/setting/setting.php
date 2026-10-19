@@ -58,6 +58,8 @@ class Setting extends \Reamur\System\Engine\Model {
             'mail_smtp_password', 'mail_smtp_port', 'mail_smtp_timeout',
             'mail_reply_to',
             'cache_engine', 'cache_expire',
+            // F4-02 (ADR 0025): idioma padrão por aplicação
+            'config_language_catalog', 'config_language_admin',
         ];
 
         foreach ($data as $key => $value) {

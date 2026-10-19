@@ -1,0 +1,72 @@
+{# dev/admin/view/template/localisation/language_list.twig — gestão de idiomas (F4-02, ADR 0025) #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ heading_title }}</h1>
+  </div>
+  <p class="muted">{{ text_list }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+  {% endif %}
+
+  {% if languages %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ column_name }}</th>
+        <th>{{ column_code }}</th>
+        <th>{{ column_locale }}</th>
+        <th>{{ column_sort_order }}</th>
+        <th>{{ column_status }}</th>
+        <th class="right">{{ column_action }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for language in languages %}
+      <tr>
+        <td>{{ language.name }}</td>
+        <td><code>{{ language.code }}</code>{% if not language.dir_exists %} <span class="muted" title="{{ text_dir_missing }}">⚠</span>{% endif %}</td>
+        <td class="muted">{{ language.locale }}</td>
+        <td>{{ language.sort_order }}</td>
+        <td>{{ language.status ? text_enabled : text_disabled }}</td>
+        <td class="right actions">
+          <a class="btn ghost small" href="{{ language.edit }}">{{ button_edit }}</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ text_no_results }}</p>
+  {% endif %}
+
+  <div class="panel form">
+    <h2>{{ text_default_catalog }} / {{ text_default_admin }}</h2>
+    <p class="muted">{{ text_defaults_note }}</p>
+    <form method="post" action="{{ action }}">
+      <div class="grid two">
+        <div class="field">
+          <label for="config_language_catalog">{{ text_default_catalog }}</label>
+          <select id="config_language_catalog" name="config_language_catalog">
+            {% for language in languages %}
+            <option value="{{ language.code }}" {{ language.code == default_catalog ? 'selected' }} {{ language.status ? '' : 'disabled' }}>{{ language.name }} ({{ language.code }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="config_language_admin">{{ text_default_admin }}</label>
+          <select id="config_language_admin" name="config_language_admin">
+            {% for language in languages %}
+            <option value="{{ language.code }}" {{ language.code == default_admin ? 'selected' }} {{ language.status ? '' : 'disabled' }}>{{ language.name }} ({{ language.code }})</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn primary">{{ button_save }}</button>
+      </div>
+    </form>
+  </div>
+</main>
+{{ footer|raw }}

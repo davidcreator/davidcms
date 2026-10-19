@@ -374,8 +374,8 @@ CREATE TABLE IF NOT EXISTS `rms_session` (
 
 INSERT INTO `rms_language` (`language_id`, `name`, `code`, `locale`, `sort_order`, `status`) VALUES
 (1, 'English (US)',    'en-us', 'en_US.UTF-8', 1, 1),
-(2, 'Português (BR)',  'pt-br', 'pt_BR.UTF-8', 2, 0),
-(3, 'Español (ES)',    'es-eu', 'es_ES.UTF-8', 3, 0);
+(2, 'Português (BR)',  'pt-br', 'pt_BR.UTF-8', 2, 1),
+(3, 'Español (ES)',    'es-eu', 'es_ES.UTF-8', 3, 1);
 
 -- Status de pedido/orçamento em inglês (language_id = 1, padrão ADR 0001).
 -- As traduções pt-br/es-eu serão inseridas junto com a ativação dos idiomas.

@@ -1,0 +1,49 @@
+{# dev/admin/view/template/localization/language_form.twig — edição de um idioma (F4-02, ADR 0025) #}
+{{ header|raw }}
+<main class="dash">
+  <div class="page-head">
+    <h1>{{ heading_title }}</h1>
+    <a class="btn ghost" href="{{ back }}">{{ button_cancel }}</a>
+  </div>
+  <p class="muted">{{ text_list }}</p>
+
+  {% if error %}<div class="alert error">{{ error|nl2br }}</div>{% endif %}
+  {% if text_flash.text %}<div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>{% endif %}
+
+  <div class="panel form">
+    <form method="post" action="{{ action }}">
+      <div class="grid two">
+        <div class="field">
+          <label for="name">{{ entry_name_label }}</label>
+          <input type="text" id="name" name="name" value="{{ entry.name }}" maxlength="32" required>
+        </div>
+        <div class="field">
+          <label for="code">{{ entry_code_label }}</label>
+          <input type="text" id="code" value="{{ entry.code }}" disabled>
+        </div>
+      </div>
+      <div class="grid two">
+        <div class="field">
+          <label for="locale">{{ entry_locale_label }}</label>
+          <input type="text" id="locale" name="locale" value="{{ entry.locale }}" maxlength="32" required>
+        </div>
+        <div class="field">
+          <label for="sort_order">{{ entry_sort_order_label }}</label>
+          <input type="number" id="sort_order" name="sort_order" value="{{ entry.sort_order }}" min="0" step="1">
+        </div>
+      </div>
+      <div class="field check">
+        <label>
+          <input type="checkbox" name="status" value="1" {{ entry.status ? 'checked' }}> {{ entry_status_label }}
+        </label>
+      </div>
+      {% if is_default_catalog or is_default_admin %}
+      <p class="muted">{{ text_default_locked }}</p>
+      {% endif %}
+      <div class="actions">
+        <button type="submit" class="btn primary">{{ button_save }}</button>
+      </div>
+    </form>
+  </div>
+</main>
+{{ footer|raw }}

@@ -29,7 +29,7 @@ $_['db_port']             = defined('DB_PORT') ? (int)DB_PORT : 3306;
 $_['action_default']      = 'common/dashboard'; // Contrato §4 (atrás da muralha startup/login)
 $_['action_router']       = 'startup/router';  // F2-5: URLs limpas + aliases /login /logout (ADR 0006)
 $_['action_error']        = 'error/not_found';
-$_['action_pre_action']   = ['startup/language', 'startup/setting', 'startup/login', 'startup/permission']; // F2-3 idioma ANTES da muralha; F4-01 rms_setting code=config (ADR 0024); F2-2 sessão→ACL
+$_['action_pre_action']   = ['startup/setting', 'startup/language', 'startup/login', 'startup/permission']; // F2-3 idioma ANTES da muralha; F4-01 rms_setting code=config (ADR 0024); F2-2 sessão→ACL
 $_['action_post_action']  = [];
 
 // Erros
