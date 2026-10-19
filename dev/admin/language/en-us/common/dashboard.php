@@ -40,5 +40,3 @@ $_['text_version']       = 'ReamurCMS %s';
 $_['button_logout']      = 'Logout';
 
 $_['text_manage_settings'] = 'Settings';
-$_['text_manage_languages']  = 'Languages';
-$_['text_manage_site_info'] = 'Site Information';

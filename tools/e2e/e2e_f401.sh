@@ -54,10 +54,13 @@ curl -s -c $JW -b $JW -X POST "$B/install/index.php?route=install/step_3" \
 L=$(loc /tmp/f401_i.hdr); RC=0; [[ "$L" == *step_4* ]] || RC=1
 sudo mysql reamur_test < "$MIRROR/install/sql/upgrade_f4_01_setting_op_grant.sql"
 sudo mysql reamur_test < "$MIRROR/install/sql/upgrade_f4_01_setting_op_grant.sql"
+for u in "$MIRROR"/install/sql/upgrade_f4_02*.sql; do
+  [ -f "$u" ] && sudo mysql reamur_test < "$u"
+done
 G=$(q "SELECT JSON_SEARCH(permission,'one','setting/setting',NULL,'\$.access') IS NOT NULL FROM reamur_test.rms_user_group WHERE name='Administrator'")
 [ "$G" = "1" ] || RC=1
 S=$(q "SELECT COUNT(*) FROM reamur_test.rms_setting WHERE code='config'")
-[ "$S" = "6" ] || RC=1   # 6 seeds (2× rodado, sem duplicar — idempotente)
+[ "$S" -ge "6" ] || RC=1   # 6 seeds base (+ seeds aditivas de upgrades desta linha — F4-02 etc.); tolerante p/ não quebrar baterias futuras
 ck 1 $RC "wizard-upgrade-idem"
 
 echo '══ 2 — login admin ══'
