@@ -13,9 +13,9 @@
         {% else %}
         <span class="tool-icon">{{ t.name[:1] }}</span>
         {% endif %}
-        <strong>{{ t.name }}</strong>{% if t.vendor %} <small style="color:var(--muted);">· {{ t.vendor }}</small>{% endif %}
+        <strong><a class="tool-link" href="{{ t.href }}">{{ t.name }}</a></strong>{% if t.vendor %} <small style="color:var(--muted);">· {{ t.vendor }}</small>{% endif %}
         {% if t.description %}<p>{{ t.description }}</p>{% endif %}
-        {% if t.url %}<p style="margin-top:10px;"><a href="{{ t.url }}" target="_blank" rel="noopener">{{ text_tool_open }} →</a></p>{% endif %}
+        {% if t.url %}<p style="margin-top:10px;"><a href="{{ t.url }}" target="_blank" rel="noopener">{{ text_tool_open }} ↗</a></p>{% endif %}
       </div>
       {% endfor %}
     </div>

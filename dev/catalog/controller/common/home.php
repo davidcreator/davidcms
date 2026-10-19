@@ -177,6 +177,7 @@ class Home extends \Reamur\System\Engine\Controller {
                 'description' => (string)$tool['description'],
                 'image'       => ((string)$tool['image'] !== '') ? $base . (string)$tool['image'] : '',
                 'url'         => (string)$tool['url'],
+                'href'        => $this->url->link('tool/tool.info|' . (int)$tool['tool_id']), // página dedicada (F3-04)
             ];
         }
 

@@ -106,6 +106,14 @@ INSERT INTO `rms_tool_description` (`tool_id`,`language_id`,`name`,`description`
  (2,1,'Quotia','Platform to request and organize quotes in a single flow.'),
  (3,1,'Vertex','Free resume builder focused on clarity and professional presentation.'),
  (4,1,'Solis','Strategic generator for social media content planning and posting.');
+-- Keywords SEO das páginas dedicadas (F3-04): /fluxa … → tool/tool.info|N.
+-- Nomes próprios → mesma keyword nas 3 línguas (somente en no seed + coalesce).
+DELETE FROM `rms_seo_url` WHERE `key` IN ('tool_id=1','tool_id=2','tool_id=3','tool_id=4') OR `value` IN ('fluxa','quotia','vertex','solis');
+INSERT INTO `rms_seo_url` (`key`,`value`,`language_id`,`sort_order`) VALUES
+ ('tool_id=1','fluxa',1,0),
+ ('tool_id=2','quotia',1,0),
+ ('tool_id=3','vertex',1,0),
+ ('tool_id=4','solis',1,0);
 
 -- ─── PÁGINAS LEGAIS (2 — conteúdo real da produção) ──────────────────────────
 

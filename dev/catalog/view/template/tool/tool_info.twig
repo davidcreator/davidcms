@@ -1,0 +1,25 @@
+{# dev/catalog/view/template/tool/tool_info.twig — página dedicada da ferramenta (F3-04, SEO) #}
+{{ header|raw }}
+<main class="site-main">
+  <div class="container">
+    <div class="page-head">
+      <h1>{{ heading_title }}</h1>
+      <a class="back-link" href="{{ back_tools }}">{{ button_back }}</a>
+    </div>
+
+    {% if text_lead %}<p class="lead">{{ text_lead }}</p>{% endif %}
+
+    <table class="fact-table">
+      {% if tool.vendor %}<tr><th>{{ entry_vendor }}</th><td>{{ tool.vendor }}</td></tr>{% endif %}
+      {% if tool.external %}<tr><th>{{ entry_external_url }}</th><td><a href="{{ tool.url }}" target="_blank" rel="noopener">{{ text_open }} ↗</a></td></tr>{% endif %}
+    </table>
+
+    {% if tool.external %}
+    <p><a class="btn primary" href="{{ tool.url }}" target="_blank" rel="noopener">{{ text_open }} ↗</a></p>
+    {% else %}
+    <p class="muted">{{ text_open_hint }}</p>
+    <p><a class="btn" href="{{ contact }}">{{ button_contact }}</a></p>
+    {% endif %}
+  </div>
+</main>
+{{ footer|raw }}

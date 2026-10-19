@@ -25,12 +25,14 @@ class Router extends \Reamur\System\Engine\Controller {
         'orcamento' => 'checkout/quote',
         'quote'     => 'checkout/quote',
         'portfolio' => 'catalog/project',
+        'tools'     => 'tool/tool',
     ];
 
-    /** Mapa das queries suportadas → prefixo de rota interna (padrão gramática F2-6) */
+    /** Mapa das queries suportadas → prefixo de rota interna (padrão gramática F2-6; + tool_id F3-04) */
     private const SEO_ROUTES = [
         'project_id' => 'catalog/project.info|',
         'page_id'    => 'cms/page.info|',
+        'tool_id'    => 'tool/tool.info|',
     ];
 
     /** Chamado pelo framework quando não há ?route= — resolve e prepara saída limpa */
@@ -116,9 +118,10 @@ class Router extends \Reamur\System\Engine\Controller {
             function (array $m): string {
                 $route = (string)$m[1];
 
-                // SEO: 'catalog/project.info|7' / 'cms/page.info|3' → '/jwa' (keyword do idioma)
-                if (preg_match('/^(catalog\/project|cms\/page)\.info\|(\d+)$/', $route, $g)) {
-                    $query_key = ($g[1] === 'catalog/project' ? 'project_id=' : 'page_id=') . (int)$g[2];
+                // SEO: 'catalog/project.info|7' / 'cms/page.info|3' / 'tool/tool.info|1' → '/jwa' (keyword do idioma)
+                if (preg_match('/^(catalog\/project|cms\/page|tool\/tool)\.info\|(\d+)$/', $route, $g)) {
+                    $prefix = ['catalog/project' => 'project_id=', 'cms/page' => 'page_id=', 'tool/tool' => 'tool_id='];
+                    $query_key = $prefix[$g[1]] . (int)$g[2];
 
                     $this->load->model('design/seo_url');
 
