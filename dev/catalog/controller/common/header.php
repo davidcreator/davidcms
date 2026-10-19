@@ -68,8 +68,12 @@ class Header extends \Reamur\System\Engine\Controller {
 
         $data['languages'] = [];
 
-        foreach ((array)glob(DIR_APPLICATION . 'language/*', GLOB_ONLYDIR) as $dir) {
-            $code            = basename((string)$dir);
+        // F4-02 (ADR 0025): switcher mostra só idiomas ATIVOS (rms_language),
+        // na ordem definida pelo painel (sort_order) — ainda cruzando com o
+        // diretório real no filesystem.
+        $this->load->model('localization/language');
+
+        foreach ($this->model_localization_language->getEnabledCodes() as $code) {
             $langArgs        = $args;
             $langArgs['language'] = $code;
 

@@ -114,6 +114,14 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        if ($this->user->hasPermission('access', 'localization/language')) {
+            // F4-02 (ADR 0025): gestão de idiomas (metadados/status/defaults)
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_languages'),
+                'href' => $this->url->link('localization/language'),
+            ];
+        }
+
         if ($this->user->hasPermission('access', 'user/user')) {
             $data['modules'][] = [
                 'name' => $this->language->get('text_manage_users'),
