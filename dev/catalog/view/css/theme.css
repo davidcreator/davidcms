@@ -40,6 +40,27 @@ h2 { font-size: 1.75em; }
 
 /* ── Hero ─────────────────────────────────────────────── */
 .hero { padding: 96px 0 72px; text-align: center; }
+
+/* ── Hero 3D (F3-02, ADR 0020): cena WebGL em camada atrás do conteúdo ── */
+.hero--3d { position: relative; overflow: hidden; color: #f3e8ff; }
+.hero-3d__canvas { position: absolute; inset: 0; z-index: 0; }
+.hero-3d__canvas canvas { display: block; width: 100%; height: 100%; }
+/* Fallback CSS (sem binário): gradiente de marca visível até o 1º frame —
+   e permanência única quando WebGL/reduced-motion estiverem bloqueados */
+.hero-3d__fallback { position: absolute; inset: 0;
+    background: radial-gradient(1200px 600px at 70% 20%, #3b1a80 0%, #1e0b45 55%, #12062b 100%); }
+.hero-3d__content { position: relative; z-index: 1; }
+.hero--3d h1,
+.hero--3d .kicker { color: #fff; }
+.hero--3d .tagline { color: #c4b5fd; }
+.hero--3d .hero-lead { color: #e0d7f5; }
+.hero--3d .social-row a { color: #d8ccf5; }
+.hero--3d .social-row a:hover { color: #fff; }
+.hero--3d .btn { border-color: rgba(255,255,255,.5); color: #fff; }
+.hero--3d .btn.primary { border-color: transparent; background: var(--accent); }
+@media (prefers-reduced-motion: reduce) {
+    .hero-3d__canvas canvas { display: none; } /* redundância de segurança p/ o boot do JS */
+}
 .hero h1 { font-size: 3em; margin-bottom: 4px; }
 .hero .tagline { color: var(--accent); font-weight: 700; font-size: 1.25em; margin: 0 0 12px; }
 .hero .hero-lead { color: var(--muted); max-width: 620px; margin: 0 auto 28px; }

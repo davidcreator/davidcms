@@ -1,0 +1,30 @@
+{# dev/catalog/view/template/partial/hero-3d.twig — hero com cena Three.js
+   Cena 1 (herdada de partial/hero.twig F3-01; 3D = F3-02, ADR 0020).
+   Container data-scene="hero-particles": o scene-runner dá lazy-init;
+   o fallback (gradiente CSS) permanece quando WebGL/reduced-motion estiverem
+   bloqueados — substitui o hero-fallback.webp do guia enquanto não há asset. #}
+<section class="hero hero--3d" id="top">
+  <div class="hero-3d__canvas" aria-hidden="true"
+       data-scene="hero-particles"
+       data-count="{{ hero3d.count }}"
+       data-color="{{ hero3d.color }}"
+       data-speed="{{ hero3d.speed }}">
+    <div class="hero-3d__fallback" data-fallback></div>
+  </div>
+  <div class="container hero-3d__content">
+    <span class="kicker">{{ text_hero_kicker }}</span>
+    <h1>{{ heading_title }}</h1>
+    <p class="tagline">{{ text_tagline }}</p>
+    <p class="hero-lead">{{ text_hero_lead }}</p>
+    <p class="ctas">
+      <a class="btn primary" href="{{ portfolio }}">{{ button_portfolio }}</a>
+      <a class="btn" href="{{ quote }}">{{ button_quote }}</a>
+      <a class="btn" href="{{ contact }}">{{ button_contact }}</a>
+    </p>
+    {% if socials %}
+    <nav class="social-row" aria-label="{{ text_socials_title }}">
+      {% for s in socials %}<a href="{{ s.href }}" target="_blank" rel="noopener me">{{ s.name }}</a>{% endfor %}
+    </nav>
+    {% endif %}
+  </div>
+</section>

@@ -8,6 +8,18 @@
   {% for href, rel in styles %}
   <link rel="{{ rel }}" href="{{ href }}">
   {% endfor %}
+  {% if has_3d|default(false) %}
+  {# Slot WebGL (F3-02, ADR 0020): import map ANTES do módulo; apenas em rotas com has_3d #}
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "{{ asset_base }}catalog/view/js/vendor/three.module.js",
+      "three/addons/": "{{ asset_base }}catalog/view/js/vendor/three-addons/"
+    }
+  }
+  </script>
+  <script type="module" src="{{ asset_base }}catalog/view/js/three/main.js" defer></script>
+  {% endif %}
 </head>
 <body class="{{ body_class }}">
 <header class="site-header">
