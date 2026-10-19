@@ -58,3 +58,5 @@ $_['error_password']        = 'Password must be at least 8 characters!';
 $_['error_confirm']         = 'Password confirmation does not match!';
 $_['error_group']           = 'Choose a user group!';
 $_['error_self_delete']     = 'You cannot delete your own user while logged in!';
+$_['error_self_disable']      = 'You cannot deactivate your own account while you are logged in.';
+$_['error_last_active_admin'] = 'Cannot inactivate/demote/delete the last active user able to administer users (user/user).';

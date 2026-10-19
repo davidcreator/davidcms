@@ -23,6 +23,7 @@ class Permission extends \Reamur\System\Engine\Controller {
         'common/login',
         'common/logout',
         'common/dashboard',
+        'user/profile',
         'error/not_found',
         'error/permission',
     ];

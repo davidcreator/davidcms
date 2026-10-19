@@ -57,6 +57,28 @@ class User extends \Reamur\System\Engine\Model {
         $this->db->query($sql);
     }
 
+    /**
+     * Auto-perfil (F4-04, ADR 0027): SOMENTE campos de identidade — nunca
+     * username/grupo/status (troca de grupo fica em user/user, com ACL explícita).
+     * Password entra só quando não vazia (bcrypt, PASSWORD_DEFAULT).
+     *
+     * @param array<string, string> $data email, firstname, lastname, password_new
+     */
+    public function editProfile(int $user_id, array $data): void {
+        $sql = "UPDATE `" . $this->t('user') . "` SET
+                    `email`     = '" . $this->db->escape((string)$data['email']) . "',
+                    `firstname` = '" . $this->db->escape((string)$data['firstname']) . "',
+                    `lastname`  = '" . $this->db->escape((string)$data['lastname']) . "'";
+
+        if ((string)$data['password_new'] !== '') {
+            $sql .= ", `password` = '" . $this->db->escape(password_hash((string)$data['password_new'], PASSWORD_DEFAULT)) . "'";
+        }
+
+        $sql .= " WHERE `user_id` = '" . $user_id . "'";
+
+        $this->db->query($sql);
+    }
+
     public function deleteUser(int $user_id): void {
         $this->db->query("DELETE FROM `" . $this->t('user') . "` WHERE `user_id` = '" . $user_id . "'");
     }

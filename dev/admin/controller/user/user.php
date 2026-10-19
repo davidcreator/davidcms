@@ -143,6 +143,21 @@ class User extends \Reamur\System\Engine\Controller {
 
             $errors = $this->validateUser($user_id, $data);
 
+            // F4-04 (ADR 0027): guardas de auto-trava do USUÁRIO LOGADO —
+            // desativar a si mesmo fecha o painel; inativar/demovê-lo do
+            // grupo que concede user/user quando é o último ativo idem.
+            if ($user_id === $this->user->getUserId() && ($this->request->post['status'] ?? null) === null && (int)($user['status'] ?? 0) === 1) {
+                $errors[] = $this->language->get('error_self_disable');
+            }
+
+            if ($errors === []) {
+                $this->load->model('user/user_group');
+
+                if (!$this->model_user_user_group->hasOtherActiveUserAdmin($user_id)) {
+                    $errors[] = $this->language->get('error_last_active_admin');
+                }
+            }
+
             if ($errors === []) {
                 $this->model_user_user->editUser($user_id, $this->postPayload());
 
@@ -180,9 +195,16 @@ class User extends \Reamur\System\Engine\Controller {
 
         if ($user_id > 0 && $user_id !== $this->user->getUserId()) {
             if ($this->model_user_user->getUser($user_id)) {
-                $this->model_user_user->deleteUser($user_id);
+                // F4-04 (ADR 0027): evitar deletar o último usuário ativo capaz de administrar usuários
+                $this->load->model('user/user_group');
 
-                $this->setFlash($this->language->get('text_success_delete'));
+                if ($this->model_user_user_group->hasOtherActiveUserAdmin($user_id)) {
+                    $this->model_user_user->deleteUser($user_id);
+
+                    $this->setFlash($this->language->get('text_success_delete'));
+                } else {
+                    $this->setFlash($this->language->get('error_last_active_admin'), 'error');
+                }
             }
         } elseif ($user_id === $this->user->getUserId()) {
             $this->setFlash($this->language->get('error_self_delete'), 'error');

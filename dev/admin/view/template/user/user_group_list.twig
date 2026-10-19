@@ -26,6 +26,11 @@
         <td>{{ group.total_users }}</td>
         <td class="right actions">
           <a class="btn ghost small" href="{{ group.edit }}">{{ button_edit }}</a>
+          {% if group.total_users == 0 %}
+          <form method="post" action="{{ group.delete }}" style="display:inline;" onsubmit="return confirm('{{ text_confirm_delete }}');">
+            <button type="submit" class="btn danger small">{{ button_delete }}</button>
+          </form>
+          {% endif %}
         </td>
       </tr>
       {% endfor %}

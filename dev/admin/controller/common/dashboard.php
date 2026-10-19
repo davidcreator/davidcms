@@ -155,6 +155,8 @@ class Dashboard extends \Reamur\System\Engine\Controller {
         $data['username']      = $this->user->getUsername();
         $data['email']         = $this->user->getEmail();
         $data['user_group_id'] = $this->user->getUserGroupId();
+        $data['text_manage_profile'] = $this->language->get('text_manage_profile');
+        $data['profile']             = $this->url->link('user/profile');
         $data['access_routes'] = $this->user->countPermissions('access');
         $data['modify_routes'] = $this->user->countPermissions('modify');
 

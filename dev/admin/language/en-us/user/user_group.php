@@ -40,3 +40,9 @@ $_['button_edit']   = 'Edit';
 
 // Error
 $_['error_name'] = 'Group name must be between 1 and 64 characters!';
+
+$_['button_delete']          = 'Delete';
+$_['text_confirm_delete']    = 'Delete this group permanently?';
+$_['text_success_delete']    = 'User group deleted successfully!';
+$_['error_group_in_use']     = 'Cannot delete: %d user(s) are still assigned to this group.';
+$_['error_group_last_admin'] = 'Cannot delete: this is the only group that grants user administration (user/user).';

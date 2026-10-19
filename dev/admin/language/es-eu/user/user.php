@@ -58,3 +58,5 @@ $_['error_password']        = '¡La contraseña debe tener al menos 8 caracteres
 $_['error_confirm']         = '¡La confirmación de la contraseña no coincide!';
 $_['error_group']           = '¡Elija un grupo de usuarios!';
 $_['error_self_delete']     = '¡No puede eliminar su propio usuario conectado!';
+$_['error_self_disable']      = 'No puedes desactivar tu propia cuenta mientras estás conectado.';
+$_['error_last_active_admin'] = 'No se puede inactivar/quitar/eliminar al último usuario activo con administración de usuarios (user/user).';

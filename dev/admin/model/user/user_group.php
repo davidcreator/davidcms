@@ -70,6 +70,60 @@ class User_group extends \Reamur\System\Engine\Model {
         ]);
     }
 
+
+    /** F4-04 (ADR 0027): total de usuários vinculados (0 = grupo segregável) */
+    public function countUsers(int $user_group_id): int {
+        $query = $this->db->query(
+            "SELECT COUNT(*) AS c FROM `" . $this->t('user') . "` WHERE `user_group_id` = '" . $user_group_id . "'"
+        );
+
+        return ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['c'] : 0;
+    }
+
+    /**
+     * F4-04 (ADR 0027): existe outro grupo (≠ $user_group_id) cuja ACL cobre
+     * a rota 'user/user' (administração)? Conservador: LIKE no JSON, não-decoded —
+     * heurística super-strings; falso-positivo tripolar simplifica o cache p/ admin.
+     * Decisão documentada na ADR 0027 (§6).
+     */
+    public function hasOtherGroupGrantingUserAdmin(int $user_group_id): bool {
+        $query = $this->db->query(
+            // Conservador: '%user%user%' casa 'user/user' cru, 'user\\/user' escaped e variantes.
+            "SELECT `user_group_id` FROM `" . $this->t('user_group') . "` 
+             WHERE `user_group_id` <> '" . $user_group_id . "' 
+               AND `permission` LIKE '%user%user%' 
+             LIMIT 1"
+        );
+
+        return ($query instanceof \stdClass && !empty($query->row));
+    }
+
+    /**
+     * F4-04 (ADR 0027): existe OUTRO usuário ATIVO (≠ $exclude_user_id) num
+     * grupo cuja ACL cobre 'user/user'? Senão a operação tranca a gestão de
+     * usuários. Mesmo padrão conservador do hasOtherGroupGrantingUserAdmin (tolerante a JSON com slash escapado — ADR 0027 §5).
+     */
+    public function hasOtherActiveUserAdmin(int $exclude_user_id): bool {
+        $query = $this->db->query(
+            "SELECT u.user_id
+               FROM `" . $this->t('user') . "` AS u
+               JOIN `" . $this->t('user_group') . "` AS g ON g.user_group_id = u.user_group_id
+              WHERE u.user_id <> '" . $exclude_user_id . "'
+                AND u.status = '1'
+                AND g.permission LIKE '%user%user%'
+              LIMIT 1"
+        );
+
+        return ($query instanceof \stdClass && !empty($query->row));
+    }
+
+    /** @return array<int, array<string, mixed>> grupos que concedem 'user/user' (delete-guard) */
+    public function deleteUserGroup(int $user_group_id): void {
+        $this->db->query(
+            "DELETE FROM `" . $this->t('user_group') . "` WHERE `user_group_id` = '" . $user_group_id . "'"
+        );
+    }
+
     private function t(string $table): string {
         return $this->prefix() . $table;
     }

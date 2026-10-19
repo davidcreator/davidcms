@@ -58,3 +58,5 @@ $_['error_password']        = 'A senha precisa ter pelo menos 8 caracteres!';
 $_['error_confirm']         = 'A confirmação da senha não confere!';
 $_['error_group']           = 'Escolha um grupo de usuários!';
 $_['error_self_delete']     = 'Você não pode excluir o próprio usuário logado!';
+$_['error_self_disable']      = 'Você não pode desativar a própria conta enquanto estiver logado.';
+$_['error_last_active_admin'] = 'Não é possível inativar/remover/excluir o último usuário ativo com administração de usuários (user/user).';

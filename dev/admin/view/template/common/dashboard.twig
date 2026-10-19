@@ -15,6 +15,9 @@
         <dt>{{ text_user_group }}</dt>
         <dd>#{{ user_group_id }}</dd>
       </dl>
+      {% if profile is defined and profile %}
+      <p><a class="btn ghost small" href="{{ profile }}">{{ text_manage_profile }}</a></p>
+      {% endif %}
     </article>
 
     <article class="panel">

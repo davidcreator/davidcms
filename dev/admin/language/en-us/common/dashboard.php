@@ -42,3 +42,4 @@ $_['button_logout']      = 'Logout';
 $_['text_manage_settings'] = 'Settings';
 $_['text_manage_site_info'] = 'Site Information';
 $_['text_manage_languages']  = 'Languages';
+$_['text_manage_profile'] = 'Edit profile';

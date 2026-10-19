@@ -1,0 +1,67 @@
+{# dev/admin/view/template/user/profile.twig — auto-perfil (F4-04, ADR 0027). Padrão = user_form.twig #}
+{{ header|raw }}
+<main class="dash form-page">
+  <h1>{{ heading_title }}</h1>
+  <p class="muted">{{ text_profile }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type == 'success' ? 'success' : 'error' }}">{{ text_flash.text }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="alert error">{{ error|nl2br }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ action }}" class="panel form">
+
+    <fieldset class="panel" style="margin-bottom:1rem;">
+      <legend>{{ fieldset_identity }}</legend>
+      <div class="field">
+        <label>{{ entry_username }}</label>
+        <input type="text" value="{{ value_username }}" disabled>
+        <small class="muted">{{ help_username }}</small>
+      </div>
+      <div class="field">
+        <label>{{ entry_email }}</label>
+        <input type="email" name="email" value="{{ value_email }}" required>
+        <small class="muted">{{ help_email }}</small>
+      </div>
+      <div class="grid two">
+        <div class="field">
+          <label>{{ entry_firstname }}</label>
+          <input type="text" name="firstname" value="{{ value_firstname }}" maxlength="32" required>
+        </div>
+        <div class="field">
+          <label>{{ entry_lastname }}</label>
+          <input type="text" name="lastname" value="{{ value_lastname }}" maxlength="32" required>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="panel" style="margin-bottom:1rem;">
+      <legend>{{ fieldset_password }}</legend>
+      <div class="field">
+        <label>{{ entry_password_current }}</label>
+        <input type="password" name="password_current" value="" autocomplete="current-password">
+        <small class="muted">{{ help_password_current }}</small>
+      </div>
+      <div class="grid two">
+        <div class="field">
+          <label>{{ entry_password_new }}</label>
+          <input type="password" name="password_new" value="" autocomplete="new-password">
+          <small class="muted">{{ help_password_new }}</small>
+        </div>
+        <div class="field">
+          <label>{{ entry_password_confirm }}</label>
+          <input type="password" name="password_confirm" value="" autocomplete="new-password">
+          <small class="muted">{{ help_password_confirm }}</small>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="actions" style="display:flex;gap:8px;">
+      <button type="submit" class="btn primary">{{ button_save }}</button>
+      <a class="btn" href="{{ back }}">{{ button_back }}</a>
+    </div>
+  </form>
+</main>
+{{ footer|raw }}

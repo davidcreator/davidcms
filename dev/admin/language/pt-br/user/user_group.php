@@ -40,3 +40,9 @@ $_['button_edit']   = 'Editar';
 
 // Error
 $_['error_name'] = 'O nome do grupo precisa ter entre 1 e 64 caracteres!';
+
+$_['button_delete']          = 'Excluir';
+$_['text_confirm_delete']    = 'Excluir definitivamente este grupo?';
+$_['text_success_delete']    = 'Grupo excluído com sucesso!';
+$_['error_group_in_use']     = 'Não é possível excluir: há %d usuário(s) vinculado(s) a este grupo.';
+$_['error_group_last_admin'] = 'Não é possível excluir: este é o único grupo que confere administração de usuários (user/user).';

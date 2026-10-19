@@ -42,6 +42,7 @@ class User_group extends \Reamur\System\Engine\Controller {
                 'name'          => (string)$group['name'],
                 'total_users'   => (int)$group['total_users'],
                 'edit'          => $this->url->link('user/user_group.edit|' . $gid),
+                'delete'        => $this->url->link('user/user_group.delete|' . $gid),
             ];
         }
 
@@ -78,6 +79,43 @@ class User_group extends \Reamur\System\Engine\Controller {
         }
 
         $this->form($user_group_id, $group);
+    }
+
+    /** DELETE grupo (POST): trava por usuarios vinculados + última associação admin (ADR 0027) */
+    public function delete(string $user_group_id = '0'): void {
+        $user_group_id = (int)$user_group_id;
+
+        if ($this->request->server['REQUEST_METHOD'] !== 'POST' || !$this->user->hasPermission('modify', 'user/user_group')) {
+            $this->response->redirect($this->url->link('error/permission'));
+
+            return;
+        }
+
+        $this->load->language('user/user_group');
+        $this->load->model('user/user_group');
+
+        $group = $this->model_user_user_group->getUserGroup($user_group_id);
+
+        if (!$group) {
+            $this->response->redirect($this->url->link('user/user_group'));
+
+            return;
+        }
+
+        $total = $this->model_user_user_group->countUsers($user_group_id);
+
+        if ($total > 0) {
+            $this->setFlash(sprintf($this->language->get('error_group_in_use'), $total), 'error');
+        } elseif (!$this->model_user_user_group->hasOtherGroupGrantingUserAdmin($user_group_id)) {
+            // único grupo capaz de administrar usuários → remoção trancaria o painel
+            $this->setFlash($this->language->get('error_group_last_admin'), 'error');
+        } else {
+            $this->model_user_user_group->deleteUserGroup($user_group_id);
+
+            $this->setFlash($this->language->get('text_success_delete'));
+        }
+
+        $this->response->redirect($this->url->link('user/user_group'));
     }
 
     // ─── internos ────────────────────────────────────────────────────────
