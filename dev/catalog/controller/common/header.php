@@ -31,6 +31,10 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['text_languages'] = $this->language->get('text_languages');
         $data['body_class']     = (string)($data['body_class'] ?? '');
 
+        // Tema base (F3-01, ADR 0019): folha própria do site publicado
+        $this->document->addStyle(rtrim($data['home'], '/') . '/view/css/theme.css');
+        $data['styles'] = $this->document->getStyles();
+
         // Marca + navegação da publicação (F2-17): idioma é a fonte de verdade
         $data['text_brand']        = $this->language->get('text_brand');
         $data['text_nav_home']     = $this->language->get('text_nav_home');

@@ -1,0 +1,102 @@
+/* ReamurCMS — tema base do site publicado (F3-01, ADR 0019)
+   Fixos: 950px; acento índigo da marca DavidCreator. Sem dependências externas. */
+:root {
+    --bg: #ffffff;
+    --ink: #111827;
+    --muted: #6b7280;
+    --accent: #6d28d9;
+    --accent-ink: #ffffff;
+    --card: #f8fafc;
+    --line: #e5e7eb;
+    --radius: 10px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+img { max-width: 100%; }
+a { color: var(--accent); }
+h1, h2, h3, h4 { line-height: 1.2; margin: 0 0 12px; }
+h2 { font-size: 1.75em; }
+.container { max-width: 950px; margin: 0 auto; padding: 0 24px; }
+.section { padding: 56px 0; }
+.section + .section { border-top: 1px solid var(--line); }
+.section-alt { background: var(--card); }
+.lead { color: var(--muted); margin: 0 0 24px; max-width: 760px; }
+.kicker { display: block; font-size: .8em; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 8px; }
+.btn { display: inline-block; padding: 12px 22px; border: 1px solid var(--line); border-radius: var(--radius); text-decoration: none; font-weight: 600; color: var(--ink); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn + .btn { margin-left: 10px; }
+
+/* ── Header ───────────────────────────────────────────── */
+.site-header { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 24px; padding: 12px 24px; flex-wrap: wrap; }
+.brand-chip { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 800; text-decoration: none; }
+.brand-name { font-weight: 700; text-decoration: none; color: var(--ink); }
+.site-nav { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+.site-nav a { color: var(--ink); text-decoration: none; font-size: .95em; }
+.site-nav a.cta { background: var(--accent); color: #fff; padding: 8px 14px; border-radius: var(--radius); }
+.lang-switcher { margin-left: auto; display: flex; gap: 8px; }
+.lang-switcher a { font-size: .8em; color: var(--muted); text-decoration: none; }
+.lang-switcher a.active { color: var(--accent); font-weight: 700; }
+
+/* ── Hero ─────────────────────────────────────────────── */
+.hero { padding: 96px 0 72px; text-align: center; }
+.hero h1 { font-size: 3em; margin-bottom: 4px; }
+.hero .tagline { color: var(--accent); font-weight: 700; font-size: 1.25em; margin: 0 0 12px; }
+.hero .hero-lead { color: var(--muted); max-width: 620px; margin: 0 auto 28px; }
+.hero .ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.social-row { display: flex; gap: 14px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
+.social-row a { color: var(--muted); text-decoration: none; font-size: .9em; }
+.social-row a:hover { color: var(--accent); }
+
+/* ── Steps / cards ────────────────────────────────────── */
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 24px; }
+.step-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; background: #fff; }
+.step-card .num { display: inline-flex; width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff; align-items: center; justify-content: center; font-weight: 700; margin-bottom: 10px; }
+.step-card h3 { font-size: 1.05em; margin: 0 0 8px; }
+.step-card p { margin: 0; font-size: .92em; color: var(--muted); }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+
+/* ── Skills (chips) ───────────────────────────────────── */
+.chip-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0 22px; }
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-size: .88em; background: #fff; }
+.chip.solid { background: var(--accent); color: #fff; border-color: var(--accent); }
+.skill-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 22px; margin-top: 18px; }
+.skill-groups h3 { font-size: 1em; margin-bottom: 8px; }
+.skill-groups ul { margin: 0; padding-left: 18px; color: var(--muted); }
+
+/* ── Portfolio grid ───────────────────────────────────── */
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+.pcard { display: block; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; text-decoration: none; color: inherit; background: #fff; transition: transform .15s ease, box-shadow .15s ease; }
+.pcard:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(17,24,39,.08); }
+.pcard .thumb { aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ede9fe, #faf5ff); color: var(--accent); font-size: 2.4em; font-weight: 800; }
+.pcard .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pcard .body { padding: 14px; }
+.pcard .body strong { display: block; }
+.pcard .body small { color: var(--muted); display: block; margin-top: 4px; }
+.badge { display: inline-block; font-size: .72em; font-weight: 700; background: #ede9fe; color: var(--accent); border-radius: 999px; padding: 2px 10px; margin-top: 8px; }
+.filter-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+.filter-chips .chip { text-decoration: none; }
+.filter-chips .chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ── Depoimentos / clientes / ferramentas ─────────────── */
+.quote-card { border-left: 4px solid var(--accent); background: var(--card); border-radius: 0 var(--radius) var(--radius) 0; padding: 18px 20px; }
+.quote-card p { margin: 0 0 10px; }
+.quote-card footer { color: var(--muted); font-size: .9em; }
+.client-pills { display: flex; gap: 14px; flex-wrap: wrap; }
+.client-pill { display: inline-flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px 8px 8px; background: #fff; }
+.client-pill .monogram { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #a78bfa); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: .85em; }
+.tool-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; background: #fff; }
+.tool-card .tool-icon { width: 40px; height: 40px; border-radius: 10px; background: #ede9fe; color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 800; margin-bottom: 10px; }
+.tool-card p { color: var(--muted); font-size: .92em; margin: 6px 0 0; }
+
+/* ── Rodapé ───────────────────────────────────────────── */
+.site-footer { border-top: 1px solid var(--line); margin-top: 40px; padding: 32px 24px; }
+.site-footer .container { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+.site-footer small { color: var(--muted); }
+.site-footer nav { display: flex; gap: 14px; flex-wrap: wrap; }
+.site-footer nav a { color: var(--muted); text-decoration: none; font-size: .9em; }
+
+@media (max-width: 640px) {
+    .hero h1 { font-size: 2.2em; }
+    .section { padding: 40px 0; }
+}

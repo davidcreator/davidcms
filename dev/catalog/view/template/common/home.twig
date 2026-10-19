@@ -1,128 +1,15 @@
-{# dev/catalog/view/template/common/home.twig — one-page publicada (F2-17) #}
+{# dev/catalog/view/template/common/home.twig — home composta de partials (F3-01) #}
 {{ header|raw }}
-<main class="site-main">
-
-  <section class="hero" id="top" style="padding:56px 24px;text-align:center;">
-    <h1 style="font-size:2.2em;margin:0 0 12px;">{{ heading_title }}</h1>
-    <p class="tagline" style="font-size:1.25em;margin:0 0 8px;">{{ text_tagline }}</p>
-    <p class="lead" style="max-width:720px;margin:0 auto 24px;">{{ text_hero_lead }}</p>
-    <p class="cta" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-      <a class="btn primary" href="{{ portfolio }}" style="padding:10px 18px;border-radius:6px;text-decoration:none;">{{ button_portfolio }}</a>
-      <a class="btn" href="{{ quote }}" style="padding:10px 18px;border:1px solid #9ca3af;border-radius:6px;text-decoration:none;">{{ button_quote }}</a>
-      <a class="btn" href="{{ contact }}" style="padding:10px 18px;border:1px solid #9ca3af;border-radius:6px;text-decoration:none;">{{ button_contact }}</a>
-    </p>
-  </section>
-
-  <section id="about" style="padding:40px 24px;max-width:900px;margin:0 auto;">
-    <h2>{{ text_about_title }}</h2>
-    <p class="lead">{{ text_about_lead }}</p>
-    <p style="white-space:pre-line;">{{ text_about_body }}</p>
-  </section>
-
-  <section id="services" style="padding:40px 24px;max-width:900px;margin:0 auto;">
-    <h2>{{ text_services_title }}</h2>
-    <p style="white-space:pre-line;">{{ text_services_body }}</p>
-  </section>
-
-  <section id="skills" style="padding:40px 24px;max-width:900px;margin:0 auto;">
-    <h2>{{ text_skills_title }}</h2>
-    <p style="white-space:pre-line;">{{ text_skills_body }}</p>
-  </section>
-
-  <section id="methodology" style="padding:40px 24px;max-width:900px;margin:0 auto;">
-    <h2>{{ text_method_title }}</h2>
-    <p style="white-space:pre-line;">{{ text_method_body }}</p>
-  </section>
-
-  <section id="portfolio" style="padding:40px 24px;max-width:960px;margin:0 auto;">
-    <h2>{{ text_portfolio_title }}</h2>
-    <p class="lead">{{ text_portfolio_lead }}</p>
-    {% if projects %}
-    <ul class="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;list-style:none;padding:0;">
-      {% for p in projects %}
-      <li style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
-        <a href="{{ p.href }}" style="text-decoration:none;color:inherit;display:block;">
-          {% if p.image %}
-          <img src="{{ p.image }}" alt="{{ p.name }}" style="width:100%;height:140px;object-fit:cover;display:block;" loading="lazy">
-          {% endif %}
-          <span style="display:block;padding:12px;">
-            <strong>{{ p.name }}</strong>
-            {% if p.featured %}<em style="font-size:.8em;">· {{ text_featured }}</em>{% endif %}
-            {% if p.client %}<br><small style="color:#6b7280;">{{ p.client }}</small>{% endif %}
-          </span>
-        </a>
-      </li>
-      {% endfor %}
-    </ul>
-    <p><a href="{{ portfolio }}">{{ text_view_all }} →</a></p>
-    {% else %}
-    <p class="muted">{{ text_portfolio_lead }}</p>
-    {% endif %}
-  </section>
-
-  {% if testimonials %}
-  <section id="testimonials" style="padding:40px 24px;max-width:900px;margin:0 auto;">
-    <h2>{{ text_testimonials_title }}</h2>
-    <div style="display:grid;gap:16px;">
-      {% for t in testimonials %}
-      <blockquote style="border-left:4px solid #9ca3af;padding:12px 16px;margin:0;">
-        <p style="margin:0 0 8px;">{{ t.text }}</p>
-        <footer style="font-size:.9em;color:#6b7280;"><strong>{{ t.author }}</strong>{% if t.company %} · {{ t.company }}{% endif %}</footer>
-      </blockquote>
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
-
-  {% if client_logos %}
-  <section id="clients" style="padding:40px 24px;max-width:960px;margin:0 auto;">
-    <h2>{{ text_clients_title }}</h2>
-    <ul style="display:flex;gap:24px;flex-wrap:wrap;list-style:none;padding:0;align-items:center;">
-      {% for c in client_logos %}
-      <li>
-        {% if c.image and c.url %}<a href="{{ c.url }}" target="_blank" rel="noopener"><img src="{{ c.image }}" alt="{{ c.name }}" style="height:48px;object-fit:contain;" loading="lazy"></a>
-        {% elseif c.image %}<img src="{{ c.image }}" alt="{{ c.name }}" style="height:48px;object-fit:contain;" loading="lazy">
-        {% elseif c.url %}<a href="{{ c.url }}" target="_blank" rel="noopener">{{ c.name }}</a>
-        {% else %}{{ c.name }}{% endif %}
-      </li>
-      {% endfor %}
-    </ul>
-  </section>
-  {% endif %}
-
-  {% if tools %}
-  <section id="tools" style="padding:40px 24px;max-width:960px;margin:0 auto;">
-    <h2>{{ text_tools_title }}</h2>
-    <p class="lead">{{ text_tools_lead }}</p>
-    <ul style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;list-style:none;padding:0;">
-      {% for t in tools %}
-      <li style="border:1px solid #e5e7eb;border-radius:8px;padding:12px;">
-        {% if t.image %}<img src="{{ t.image }}" alt="" style="height:32px;object-fit:contain;margin-bottom:8px;" loading="lazy">{% endif %}
-        <strong>{{ t.name }}</strong>{% if t.vendor %} <small style="color:#6b7280;">({{ t.vendor }})</small>{% endif %}
-        {% if t.description %}<p style="margin:6px 0 0;font-size:.9em;">{{ t.description }}</p>{% endif %}
-        {% if t.url %}<p style="margin:6px 0 0;font-size:.85em;"><a href="{{ t.url }}" target="_blank" rel="noopener">{{ t.url }}</a></p>{% endif %}
-      </li>
-      {% endfor %}
-    </ul>
-  </section>
-  {% endif %}
-
-  <section id="contact" style="padding:40px 24px;max-width:900px;margin:0 auto;">
-    <h2>{{ text_contact_title }}</h2>
-    <p class="lead">{{ text_contact_lead }}</p>
-    <ul style="list-style:none;padding:0;">
-      {% if text_contact_address %}<li style="margin:6px 0;">📍 {{ text_contact_address }}</li>{% endif %}
-      {% if text_contact_email %}<li style="margin:6px 0;">✉️ <a href="mailto:{{ text_contact_email }}">{{ text_contact_email }}</a></li>{% endif %}
-      {% if text_contact_whatsapp %}<li style="margin:6px 0;">💬 <a href="https://wa.me/5511983938347?text=Hi" target="_blank" rel="noopener">{{ text_contact_whatsapp }}</a></li>{% endif %}
-    </ul>
-    <p>
-      <a class="btn primary" href="{{ contact }}" style="padding:10px 18px;border-radius:6px;text-decoration:none;">{{ button_contact }}</a>
-      <a class="btn" href="{{ quote }}" style="padding:10px 18px;border:1px solid #9ca3af;border-radius:6px;text-decoration:none;">{{ button_quote }}</a>
-    </p>
-  </section>
-
-  <p style="text-align:center;color:#6b7280;font-size:.85em;padding:0 24px 24px;">
-    <a href="{{ admin }}">{{ button_admin }}</a>
-  </p>
+<main>
+{% include 'partial/hero.twig' %}
+{% include 'partial/about.twig' %}
+{% include 'partial/methodology.twig' %}
+{% include 'partial/testimonials.twig' %}
+{% include 'partial/skills.twig' %}
+{% include 'partial/services.twig' %}
+{% include 'partial/portfolio.twig' %}
+{% include 'partial/tools.twig' %}
+{% include 'partial/clients.twig' %}
+{% include 'partial/contact.twig' %}
 </main>
 {{ footer|raw }}

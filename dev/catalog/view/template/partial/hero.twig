@@ -1,0 +1,19 @@
+{# dev/catalog/view/template/partial/hero.twig — hero estático (F3-01; 3D = F3-02) #}
+<section class="hero" id="top">
+  <div class="container">
+    <span class="kicker">{{ text_hero_kicker }}</span>
+    <h1>{{ heading_title }}</h1>
+    <p class="tagline">{{ text_tagline }}</p>
+    <p class="hero-lead">{{ text_hero_lead }}</p>
+    <p class="ctas">
+      <a class="btn primary" href="{{ portfolio }}">{{ button_portfolio }}</a>
+      <a class="btn" href="{{ quote }}">{{ button_quote }}</a>
+      <a class="btn" href="{{ contact }}">{{ button_contact }}</a>
+    </p>
+    {% if socials %}
+    <nav class="social-row" aria-label="{{ text_socials_title }}">
+      {% for s in socials %}<a href="{{ s.href }}" target="_blank" rel="noopener me">{{ s.name }}</a>{% endfor %}
+    </nav>
+    {% endif %}
+  </div>
+</section>

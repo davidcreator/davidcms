@@ -1,0 +1,24 @@
+{# dev/catalog/view/template/partial/tools.twig — ferramentas conectadas #}
+{% if tools %}
+<section class="section section-alt" id="tools">
+  <div class="container">
+    <span class="kicker">{{ text_tools_kicker }}</span>
+    <h2>{{ text_tools_title }}</h2>
+    <p class="lead">{{ text_tools_lead }}</p>
+    <div class="grid-3">
+      {% for t in tools %}
+      <div class="tool-card">
+        {% if t.image %}
+        <img class="tool-icon" src="{{ t.image }}" alt="" loading="lazy">
+        {% else %}
+        <span class="tool-icon">{{ t.name[:1] }}</span>
+        {% endif %}
+        <strong>{{ t.name }}</strong>{% if t.vendor %} <small style="color:var(--muted);">· {{ t.vendor }}</small>{% endif %}
+        {% if t.description %}<p>{{ t.description }}</p>{% endif %}
+        {% if t.url %}<p style="margin-top:10px;"><a href="{{ t.url }}" target="_blank" rel="noopener">{{ text_tool_open }} →</a></p>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}

@@ -1,0 +1,22 @@
+{# dev/catalog/view/template/partial/clients.twig — logos/monogramas do schema #}
+{% if client_logos %}
+<section class="section" id="clients">
+  <div class="container">
+    <span class="kicker">{{ text_clients_kicker }}</span>
+    <h2>{{ text_clients_title }}</h2>
+    <div class="client-pills">
+      {% for c in client_logos %}
+      {% if c.image and c.url %}
+      <a class="client-pill" href="{{ c.url }}" target="_blank" rel="noopener"><img src="{{ c.image }}" alt="{{ c.name }}" style="height:40px;object-fit:contain;">{{ c.name }}</a>
+      {% elseif c.image %}
+      <span class="client-pill"><img src="{{ c.image }}" alt="{{ c.name }}" style="height:40px;object-fit:contain;">{{ c.name }}</span>
+      {% elseif c.url %}
+      <a class="client-pill" href="{{ c.url }}" target="_blank" rel="noopener"><span class="monogram">{{ c.name[:1] }}</span>{{ c.name }}</a>
+      {% else %}
+      <span class="client-pill"><span class="monogram">{{ c.name[:1] }}</span>{{ c.name }}</span>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}

@@ -1,0 +1,31 @@
+{# dev/catalog/view/template/partial/methodology.twig — processo em 6 etapas (real) #}
+<section class="section section-alt" id="methodology">
+  <div class="container">
+    <span class="kicker">{{ text_method_kicker }}</span>
+    <h2>{{ text_method_title }}</h2>
+    <p class="lead">{{ text_method_lead }}</p>
+    <div class="steps">
+      {% for m in method_steps %}
+      <div class="step-card">
+        <span class="num">{{ m.n }}</span>
+        <h3>{{ m.title }}</h3>
+        <p>{{ m.text }}</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if identity_reasons %}
+    <div style="margin-top:40px;">
+      <h3>{{ text_identity_title }}</h3>
+      <div class="grid-3" style="margin-top:16px;">
+        {% for r in identity_reasons %}
+        <div class="step-card">
+          <h3>{{ r.title }}</h3>
+          <p>{{ r.text }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>

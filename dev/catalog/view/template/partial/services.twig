@@ -1,0 +1,19 @@
+{# dev/catalog/view/template/partial/services.twig — 15 serviços (taxonomia F2-17) #}
+<section class="section section-alt" id="services">
+  <div class="container">
+    <span class="kicker">{{ text_services_kicker }}</span>
+    <h2>{{ text_services_title }}</h2>
+    <p class="lead">{{ text_services_lead }}</p>
+    <div class="grid-3">
+      {% for g in service_groups %}
+      <div class="step-card">
+        <h3>{{ g.title }}</h3>
+        <ul style="margin:8px 0 0;padding-left:18px;color:var(--muted);">
+          {% for item in g.items %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="lead" style="margin-top:24px;">{{ text_services_cta }} <a href="{{ quote }}">{{ button_quote }} →</a></p>
+  </div>
+</section>

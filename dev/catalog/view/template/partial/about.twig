@@ -1,0 +1,13 @@
+{# dev/catalog/view/template/partial/about.twig — Who I Am (textos reais) #}
+<section class="section" id="about">
+  <div class="container">
+    <span class="kicker">{{ text_about_kicker }}</span>
+    <h2>{{ text_about_title }}</h2>
+    <p class="lead">{{ text_about_lead }}</p>
+    {% for p in about_paragraphs %}
+    <p>{{ p }}</p>
+    {% endfor %}
+    <h3 style="margin-top:28px;">{{ text_about_focus }}</h3>
+    <p>{{ text_about_focus_body }}</p>
+  </div>
+</section>

@@ -1,0 +1,17 @@
+{# dev/catalog/view/template/partial/testimonials.twig — depoimentos do schema #}
+{% if testimonials %}
+<section class="section section-alt" id="testimonials">
+  <div class="container">
+    <span class="kicker">{{ text_testimonials_kicker }}</span>
+    <h2>{{ text_testimonials_title }}</h2>
+    <div style="display:grid;gap:16px;">
+      {% for t in testimonials %}
+      <blockquote class="quote-card">
+        <p>“{{ t.text }}”</p>
+        <footer><strong>{{ t.author }}</strong>{% if t.company %} · {{ t.company }}{% endif %}</footer>
+      </blockquote>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}

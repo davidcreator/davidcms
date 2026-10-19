@@ -10,3 +10,7 @@
  */
 // Text
 $_['text_powered'] = 'Movido a ReamurCMS %s';
+
+
+$_['text_copyright'] = '© %s Todos os direitos reservados. David L. Almeida — Desenvolvedor Criativo.';
+$_['text_legal'] = 'Legais';

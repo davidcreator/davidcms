@@ -1,0 +1,21 @@
+{# dev/catalog/view/template/partial/skills.twig — skills reais (4 grupos) #}
+<section class="section" id="skills">
+  <div class="container">
+    <span class="kicker">{{ text_skills_kicker }}</span>
+    <h2>{{ text_skills_title }}</h2>
+    <p class="lead">{{ text_skills_lead }}</p>
+    <div class="chip-row">
+      {% for s in skill_chips %}<span class="chip solid">{{ s }}</span>{% endfor %}
+    </div>
+    <div class="skill-groups">
+      {% for g in skill_groups %}
+      <div>
+        <h3>{{ g.title }}</h3>
+        <ul>
+          {% for item in g.items %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>

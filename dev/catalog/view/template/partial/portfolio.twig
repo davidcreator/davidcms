@@ -1,0 +1,40 @@
+{# dev/catalog/view/template/partial/portfolio.twig — grid + filtro por categoria #}
+<section class="section" id="portfolio">
+  <div class="container">
+    <span class="kicker">{{ text_portfolio_kicker }}</span>
+    <h2>{{ text_portfolio_title }}</h2>
+    <p class="lead">{{ text_portfolio_lead }}</p>
+
+    {% if categories %}
+    <nav class="filter-chips" aria-label="{{ text_filter }}">
+      <a class="chip{{ not active_category ? ' active' : '' }}" href="{{ portfolio }}">{{ text_all }}</a>
+      {% for c in categories %}
+      <a class="chip{{ active_category == c.category_id ? ' active' : '' }}" href="{{ c.href }}">{{ c.name }}</a>
+      {% endfor %}
+    </nav>
+    {% endif %}
+
+    {% if projects %}
+    <div class="pgrid">
+      {% for p in projects %}
+      <a class="pcard" href="{{ p.href }}"{{ p.external ? ' target="_blank" rel="noopener"' : '' }}>
+        <span class="thumb">
+          {% if p.image %}
+          <img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy">
+          {% else %}
+          {{ p.name[:1] }}
+          {% endif %}
+        </span>
+        <span class="body">
+          <strong>{{ p.name }}</strong>
+          {% if p.client %}<small>{{ p.client }}</small>{% endif %}
+          {% if p.featured %}<span class="badge">{{ text_featured }}</span>{% endif %}
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="lead">{{ text_no_results }}</p>
+    {% endif %}
+  </div>
+</section>

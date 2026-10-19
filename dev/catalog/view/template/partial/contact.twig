@@ -1,0 +1,17 @@
+{# dev/catalog/view/template/partial/contact.twig — CTA de contato da home #}
+<section class="section" id="contact">
+  <div class="container" style="text-align:center;">
+    <span class="kicker" style="text-align:center;">{{ text_contact_kicker }}</span>
+    <h2>{{ text_contact_title }}</h2>
+    <p class="lead" style="margin-left:auto;margin-right:auto;">{{ text_contact_lead }}</p>
+    <p style="display:grid;gap:6px;justify-content:center;list-style:none;padding:0;">
+      <span>📍 {{ text_contact_address }}</span>
+      <span>✉️ <a href="mailto:{{ text_contact_email }}">{{ text_contact_email }}</a></span>
+      <span>💬 <a href="https://wa.me/5511983938347" target="_blank" rel="noopener">{{ text_contact_whatsapp }}</a></span>
+    </p>
+    <p style="margin-top:16px;">
+      <a class="btn primary" href="{{ contact }}">{{ button_contact }}</a>
+      <a class="btn" href="{{ quote }}">{{ button_quote }}</a>
+    </p>
+  </div>
+</section>

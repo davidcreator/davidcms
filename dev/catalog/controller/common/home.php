@@ -6,12 +6,10 @@
  * @license   https://opensource.org/licenses/GPL-3.0
  * @link      https://reamurcms.com
  *
- * common/home — HOME PUBLICADA (F2-17, ADR 0017): one-page com seções reais
- * lidas do schema (portfólio, depoimentos, clientes, ferramentas) + seções
- * estáticas via language (sobre/serviços/skills/metodologia) + CTA de contato
- * e orçamento. Tema minimalista atual (common.css) — o design definitivo com
- * Three.js é Fase 3. Nada aqui inventa tabela: seções sem módulo ficam por
- * conta do idioma, nunca de DDL improvisada.
+ * common/home — home composta de partials (F3-01, ADR 0019).
+ * Hero estático por enquanto; a cena 3D com Three.js entra na F3-02.
+ * Conteúdo real vem do schema (seed upgrade_f3_01) + language (textos da
+ * produção). Nenhuma regra inventa tabela não prevista no schema.
  */
 namespace Reamur\Catalog\Controller\Common;
 
@@ -24,58 +22,85 @@ class Home extends \Reamur\System\Engine\Controller {
         $this->document->setTitle($this->language->get('heading_title'));
         $this->document->setDescription($this->language->get('text_tagline'));
 
-        $base = $this->config->get('site_url', '');
+        $base = rtrim((string)$this->config->get('site_url', ''), '/') . '/';
 
-        // Marca / hero
-        $data['heading_title'] = $this->language->get('heading_title');
-        $data['text_tagline']  = $this->language->get('text_tagline');
-        $data['text_hero_lead']= $this->language->get('text_hero_lead');
-        $data['button_portfolio'] = $this->language->get('button_portfolio');
-        $data['button_contact']   = $this->language->get('button_contact');
-        $data['button_quote']     = $this->language->get('button_quote');
+        // ── Textos estáticos (language × 3) ─────────────────────────────
+        $data = [
+            'heading_title'     => $this->language->get('heading_title'),
+            'text_tagline'      => $this->language->get('text_tagline'),
+            'text_hero_lead'    => $this->language->get('text_hero_lead'),
+            'text_hero_kicker'  => $this->language->get('text_hero_kicker'),
+            'button_portfolio'  => $this->language->get('button_portfolio'),
+            'button_contact'    => $this->language->get('button_contact'),
+            'button_quote'      => $this->language->get('button_quote'),
+            'button_admin'      => $this->language->get('button_admin'),
 
-        // Seções estáticas
-        $data['text_about_title']  = $this->language->get('text_about_title');
-        $data['text_about_lead']   = $this->language->get('text_about_lead');
-        $data['text_about_body']   = $this->language->get('text_about_body');
-        $data['text_services_title'] = $this->language->get('text_services_title');
-        $data['text_services_body']  = $this->language->get('text_services_body');
-        $data['text_skills_title'] = $this->language->get('text_skills_title');
-        $data['text_skills_body']  = $this->language->get('text_skills_body');
-        $data['text_method_title'] = $this->language->get('text_method_title');
-        $data['text_method_body']  = $this->language->get('text_method_body');
+            'text_about_kicker' => $this->language->get('text_about_kicker'),
+            'text_about_title'  => $this->language->get('text_about_title'),
+            'text_about_lead'   => $this->language->get('text_about_lead'),
+            'text_about_focus'  => $this->language->get('text_about_focus'),
+            'text_about_focus_body' => $this->language->get('text_about_focus_body'),
 
-        // Portfólio
-        $data['text_portfolio_title'] = $this->language->get('text_portfolio_title');
-        $data['text_portfolio_lead']  = $this->language->get('text_portfolio_lead');
-        $data['text_view_all']        = $this->language->get('text_view_all');
-        $data['text_featured']        = $this->language->get('text_featured');
+            'text_method_kicker' => $this->language->get('text_method_kicker'),
+            'text_method_title'  => $this->language->get('text_method_title'),
+            'text_method_lead'   => $this->language->get('text_method_lead'),
 
-        // Depoimentos / clientes / ferramentas
-        $data['text_testimonials_title'] = $this->language->get('text_testimonials_title');
-        $data['text_clients_title']      = $this->language->get('text_clients_title');
-        $data['text_tools_title']        = $this->language->get('text_tools_title');
-        $data['text_tools_lead']         = $this->language->get('text_tools_lead');
+            'text_identity_title' => $this->language->get('text_identity_title'),
 
-        // Contato (CTA para a página de formulário)
-        $data['text_contact_title'] = $this->language->get('text_contact_title');
-        $data['text_contact_lead']  = $this->language->get('text_contact_lead');
-        $data['text_contact_address'] = $this->language->get('text_contact_address');
-        $data['text_contact_email']   = $this->language->get('text_contact_email');
-        $data['text_contact_whatsapp']= $this->language->get('text_contact_whatsapp');
+            'text_skills_kicker' => $this->language->get('text_skills_kicker'),
+            'text_skills_title'  => $this->language->get('text_skills_title'),
+            'text_skills_lead'   => $this->language->get('text_skills_lead'),
 
-        $data['quote']    = $this->url->link('checkout/quote');
-        $data['contact']  = $this->url->link('common/contact');
-        $data['portfolio']    = $this->url->link('catalog/project');
-        $data['admin']        = $base . 'admin/';
-        $data['button_admin'] = $this->language->get('button_admin');
+            'text_services_kicker' => $this->language->get('text_services_kicker'),
+            'text_services_title'  => $this->language->get('text_services_title'),
+            'text_services_lead'   => $this->language->get('text_services_lead'),
+            'text_services_cta'    => $this->language->get('text_services_cta'),
 
-        // Seções do schema (lazy — falha silenciosa não deve derrubar a home inteira? Não: se falhar, estoura — disciplina de erro honesta)
+            'text_portfolio_kicker' => $this->language->get('text_portfolio_kicker'),
+            'text_portfolio_title'  => $this->language->get('text_portfolio_title'),
+            'text_portfolio_lead'   => $this->language->get('text_portfolio_lead'),
+            'text_all'              => $this->language->get('text_all'),
+            'text_filter'           => $this->language->get('text_filter'),
+            'text_featured'         => $this->language->get('text_featured'),
+            'text_no_results'       => $this->language->get('text_no_results'),
+
+            'text_testimonials_kicker' => $this->language->get('text_testimonials_kicker'),
+            'text_testimonials_title'  => $this->language->get('text_testimonials_title'),
+            'text_clients_kicker'      => $this->language->get('text_clients_kicker'),
+            'text_clients_title'       => $this->language->get('text_clients_title'),
+            'text_tools_kicker'        => $this->language->get('text_tools_kicker'),
+            'text_tools_title'         => $this->language->get('text_tools_title'),
+            'text_tools_lead'          => $this->language->get('text_tools_lead'),
+            'text_tool_open'           => $this->language->get('text_tool_open'),
+
+            'text_contact_kicker'   => $this->language->get('text_contact_kicker'),
+            'text_contact_title'    => $this->language->get('text_contact_title'),
+            'text_contact_lead'     => $this->language->get('text_contact_lead'),
+            'text_contact_address'  => $this->language->get('text_contact_address'),
+            'text_contact_email'    => $this->language->get('text_contact_email'),
+            'text_contact_whatsapp' => $this->language->get('text_contact_whatsapp'),
+
+            'text_socials_title' => $this->language->get('text_socials_title'),
+        ];
+
+        // ── Links de destino ────────────────────────────────────────────
+        $data['quote']     = $this->url->link('checkout/quote');
+        $data['contact']   = $this->url->link('common/contact');
+        $data['portfolio'] = $this->url->link('catalog/project');
+        $data['admin']     = $base . 'admin/';
+
+        // ── Conteúdo do schema (todas as seções dinâmicas) ──────────────
         $this->load->model('catalog/project');
         $this->load->model('catalog/category');
         $this->load->model('marketing/testimonial');
         $this->load->model('marketing/client_logo');
         $this->load->model('tool/tool');
+
+        // Filtro ativo via ?category_id= (o router resolve o keyword para
+        // catalog/project.info|N; a grade ouve o id direto da requisição)
+        $active = (int)($this->request->get['category_id'] ?? 0);
+
+        $data['active_category'] = $active;
 
         $data['categories'] = [];
 
@@ -83,14 +108,15 @@ class Home extends \Reamur\System\Engine\Controller {
             $cat = (array)$cat;
 
             $data['categories'][] = [
-                'name' => (string)$cat['name'],
-                'href' => $this->url->link('catalog/project', ['category_id' => (int)$cat['category_id']]),
+                'category_id' => (int)$cat['category_id'],
+                'name'        => (string)$cat['name'],
+                'href'        => $this->url->link('catalog/project', ['category_id' => (int)$cat['category_id']]),
             ];
         }
 
         $data['projects'] = [];
 
-        foreach ($this->model_catalog_project->getProjects(null) as $p) {
+        foreach ($this->model_catalog_project->getProjects($active ?: null) as $p) {
             $p = (array)$p;
 
             $data['projects'][] = [
@@ -99,7 +125,8 @@ class Home extends \Reamur\System\Engine\Controller {
                 'client'   => (string)$p['client'],
                 'featured' => (int)$p['featured'],
                 'image'    => ((string)$p['image'] !== '') ? $base . (string)$p['image'] : '',
-                'href'     => $this->url->link('catalog/project.info|' . (int)$p['project_id']),
+                'href'     => $this->projectHref($p),
+                'external' => ((string)$p['url'] !== '') ? 1 : 0,
             ];
         }
 
@@ -142,13 +169,107 @@ class Home extends \Reamur\System\Engine\Controller {
             ];
         }
 
-        // CMS do rodapé (cookies/políticas): NÃO seedado aqui — linka se houver keyword
-        $this->document->addStyle($base . 'view/css/common.css');
+        // ── Conteúdo estático estruturado do language (partials) ────────
+        $data['about_paragraphs'] = [
+            $this->language->get('text_about_p1'),
+            $this->language->get('text_about_p2'),
+            $this->language->get('text_about_p3'),
+        ];
 
-        $data['body_class'] = 'rms-home';
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
+        $data['skill_chips'] = [
+            'Developer', 'Brand Design', 'Visual Identity',
+            'Product Design', 'Illustrations', 'Brand Action',
+        ];
+
+        $data['skill_groups'] = [
+            [
+                'title' => $this->language->get('text_skill_tech'),
+                'items' => array_values(array_filter([
+                    'HTML', 'CSS', 'PHP', 'JavaScript', 'jQuery',
+                ])),
+            ],
+            [
+                'title' => $this->language->get('text_skill_platforms'),
+                'items' => ['Wordpress', 'Prestashop', 'Joomla', 'Blogger', 'Winter'],
+            ],
+            [
+                'title' => $this->language->get('text_skill_programs'),
+                'items' => ['VS Code', 'Illustrator', 'Photoshop', 'CorelDRAW', 'Figma'],
+            ],
+            [
+                'title' => $this->language->get('text_skill_scm'),
+                'items' => ['GitHub', 'GitLab'],
+            ],
+        ];
+
+        $data['method_steps'] = [];
+
+        for ($i = 1; $i <= 6; $i++) {
+            $data['method_steps'][] = [
+                'n'     => $i,
+                'title' => $this->language->get('text_method_' . $i . '_title'),
+                'text'  => $this->language->get('text_method_' . $i . '_text'),
+            ];
+        }
+
+        $data['identity_reasons'] = [];
+
+        foreach (['unity', 'credibility', 'attraction'] as $reason) {
+            $data['identity_reasons'][] = [
+                'title' => $this->language->get('text_identity_' . $reason . '_title'),
+                'text'  => $this->language->get('text_identity_' . $reason . '_text'),
+            ];
+        }
+
+        $data['service_groups'] = [
+            [
+                'title' => $this->language->get('text_service_gd_title'),
+                'items' => explode('|', $this->language->get('text_service_gd_items')),
+            ],
+            [
+                'title' => $this->language->get('text_service_wd_title'),
+                'items' => explode('|', $this->language->get('text_service_wd_items')),
+            ],
+            [
+                'title' => $this->language->get('text_service_seo_title'),
+                'items' => explode('|', $this->language->get('text_service_seo_items')),
+            ],
+        ];
+
+        $data['socials'] = [];
+
+        foreach (['facebook', 'instagram', 'pinterest', 'x', 'google_business', 'redbubble'] as $net) {
+            $href = (string)$this->language->get('text_social_' . $net . '_href');
+
+            if ($href !== '') {
+                $data['socials'][] = [
+                    'name' => $this->language->get('text_social_' . $net),
+                    'href' => $href,
+                ];
+            }
+        }
+
+        // Chrome compartilhado (header + rodapé) — template agora é o tema
+        // da home composta (F3-01), o que permite os partials do guia.
+        $data['header'] = $this->load->controller('common/header', $data);
+        $data['footer'] = $this->load->controller('common/footer', $data);
 
         $this->response->setOutput($this->load->view('common/home', $data));
+    }
+
+    /**
+     * href do card de projeto: keyword limpa quando existir (router reescreve),
+     * senão o link externo real (target=_blank no partial).
+     *
+     * @param array<string, mixed> $p
+     */
+    private function projectHref(array $p): string {
+        // Card externo quando o projeto tem URL real cadastrada (Hiperion Gamer
+        // abre o site dele — mesma regra da produção); senão a página interna.
+        if ((string)($p['url'] ?? '') !== '') {
+            return (string)$p['url'];
+        }
+
+        return $this->url->link('catalog/project.info|' . (int)$p['project_id']);
     }
 }
