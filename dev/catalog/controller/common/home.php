@@ -25,6 +25,27 @@ class Home extends \Reamur\System\Engine\Controller {
         $base = rtrim((string)$this->config->get('site_url', ''), '/') . '/';
 
         // ── Textos estáticos (language × 3) ─────────────────────────────
+        // F4-03 (ADR 0026): institucional do banco > lang file (degradação
+        // silenciosa ADR 0023). Chave existente governa; ausência cai no idioma.
+        $this->load->model('setting/setting');
+
+        $siteInfo = $this->model_setting_setting->getSettings();
+        $langCode = (string)($this->session->data['language'] ?? 'en-us');
+
+        $addrKey = 'config_contact_address_' . $langCode;
+
+        $siteAddress      = array_key_exists($addrKey, $siteInfo)
+            ? (string)$siteInfo[$addrKey]
+            : $this->language->get('text_contact_address');
+        $siteEmail        = array_key_exists('config_contact_email', $siteInfo)
+            ? (string)$siteInfo['config_contact_email']
+            : $this->language->get('text_contact_email');
+        $siteWhatsappText = array_key_exists('config_contact_whatsapp_text', $siteInfo)
+            ? (string)$siteInfo['config_contact_whatsapp_text']
+            : $this->language->get('text_contact_whatsapp');
+        $siteWhatsDigits  = (string)($siteInfo['config_contact_whatsapp_href'] ?? '');
+        $siteWhatsappHref = $siteWhatsDigits !== '' ? 'https://wa.me/' . $siteWhatsDigits : '';
+
         $data = [
             // Hero 3D (F3-02, ADR 0020): has_3d liga o slot WebGL no header.
             // Configs numéricas/visuais da cena moram aqui (não são texto de
@@ -87,9 +108,10 @@ class Home extends \Reamur\System\Engine\Controller {
             'text_contact_kicker'   => $this->language->get('text_contact_kicker'),
             'text_contact_title'    => $this->language->get('text_contact_title'),
             'text_contact_lead'     => $this->language->get('text_contact_lead'),
-            'text_contact_address'  => $this->language->get('text_contact_address'),
-            'text_contact_email'    => $this->language->get('text_contact_email'),
-            'text_contact_whatsapp' => $this->language->get('text_contact_whatsapp'),
+            'text_contact_address'  => $siteAddress,
+            'text_contact_email'    => $siteEmail,
+            'text_contact_whatsapp' => $siteWhatsappText,
+            'contact_whatsapp_href' => $siteWhatsappHref,
 
             'text_news_title'     => $this->language->get('text_news_title'),
             'text_news_kicker'    => $this->language->get('text_news_kicker'),
@@ -261,7 +283,10 @@ class Home extends \Reamur\System\Engine\Controller {
         $data['socials'] = [];
 
         foreach (['facebook', 'instagram', 'pinterest', 'x', 'google_business', 'redbubble'] as $net) {
-            $href = (string)$this->language->get('text_social_' . $net . '_href');
+            $key  = 'config_social_' . $net . '_href';
+            $href = array_key_exists($key, $siteInfo)
+                ? (string)$siteInfo[$key]
+                : (string)$this->language->get('text_social_' . $net . '_href');
 
             if ($href !== '') {
                 $data['socials'][] = [

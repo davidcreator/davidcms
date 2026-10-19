@@ -23,7 +23,19 @@ class Footer extends \Reamur\System\Engine\Controller {
         $this->load->language('common/home'); // redes sociais (F3-01)
 
         $data['text_powered']   = sprintf($this->language->get('text_powered'), REAMUR_VERSION);
-        $data['text_copyright'] = sprintf($this->language->get('text_copyright'), date('Y'));
+
+        // F4-03 (ADR 0026): copyright institucional por idioma — banco governa
+        // quando a chave EXISTE; ausência cai no lang file (degradação silenciosa ADR 0023)
+        $this->load->model('setting/setting');
+
+        $settings  = $this->model_setting_setting->getSettings();
+        $langCode  = (string)($this->session->data['language'] ?? 'en-us');
+        $copyKey   = 'config_copyright_' . $langCode;
+        $copy      = array_key_exists($copyKey, $settings)
+            ? (string)$settings[$copyKey]
+            : $this->language->get('text_copyright');
+
+        $data['text_copyright'] = sprintf($copy, date('Y'));
         $data['text_legal']     = $this->language->get('text_legal');
 
         // Páginas legais (F3-01): aparecem só se as keywords existirem para o
@@ -45,11 +57,15 @@ class Footer extends \Reamur\System\Engine\Controller {
 
         $data['legal'] = $legal;
 
-        // Redes sociais (mesms fonte do hero — language/common/home)
+        // Redes sociais (F4-03: banco governa — chave existente + vazia = esconder;
+        // chave ausente = fallback p/ o lang file — mesmo contrato do hero/home)
         $socials = [];
 
         foreach (['facebook', 'instagram', 'pinterest', 'x', 'google_business', 'redbubble'] as $net) {
-            $href = (string)$this->language->get('text_social_' . $net . '_href');
+            $key  = 'config_social_' . $net . '_href';
+            $href = array_key_exists($key, $settings)
+                ? (string)$settings[$key]
+                : (string)$this->language->get('text_social_' . $net . '_href');
 
             if ($href !== '') {
                 $socials[] = [

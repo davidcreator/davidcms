@@ -122,6 +122,14 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        if ($this->user->hasPermission('access', 'setting/site_info')) {
+            // F4-03 (ADR 0026): informações institucionais do site (contato/rodapé/social)
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_site_info'),
+                'href' => $this->url->link('setting/site_info'),
+            ];
+        }
+
         if ($this->user->hasPermission('access', 'user/user')) {
             $data['modules'][] = [
                 'name' => $this->language->get('text_manage_users'),

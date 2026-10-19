@@ -7,7 +7,9 @@
     <p style="display:grid;gap:6px;justify-content:center;list-style:none;padding:0;">
       <span>📍 {{ text_contact_address }}</span>
       <span>✉️ <a href="mailto:{{ text_contact_email }}">{{ text_contact_email }}</a></span>
-      <span>💬 <a href="https://wa.me/5511983938347" target="_blank" rel="noopener">{{ text_contact_whatsapp }}</a></span>
+      {% if contact_whatsapp_href is defined and contact_whatsapp_href != '' %}
+      <span>💬 <a href="{{ contact_whatsapp_href }}" target="_blank" rel="noopener">{{ text_contact_whatsapp }}</a></span>
+      {% endif %}
     </p>
     <p style="margin-top:16px;">
       <a class="btn primary" href="{{ contact }}">{{ button_contact }}</a>

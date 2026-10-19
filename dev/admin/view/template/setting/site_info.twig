@@ -1,0 +1,96 @@
+{# dev/admin/view/template/setting/site_info.twig — informações do site (F4-03, ADR 0026). Padrão = setting.twig #}
+{{ header|raw }}
+<main class="dash form-page">
+  <h1>{{ heading_title }}</h1>
+  <p class="muted">{{ text_site_info }}</p>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type == 'success' ? 'success' : 'error' }}">{{ text_flash.text }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="alert error">{{ error|nl2br }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ action }}" class="panel form">
+
+    <fieldset class="panel" style="margin-bottom:1rem;">
+      <legend>{{ fieldset_contact }}</legend>
+      <div class="grid two">
+        <div class="field">
+          <label>{{ entry_config_contact_email }}</label>
+          <input type="email" name="config_contact_email" value="{{ value_config_contact_email }}" required>
+          <small class="muted">{{ help_config_contact_email }}</small>
+        </div>
+        <div class="field">
+          <label>{{ entry_config_contact_whatsapp_text }}</label>
+          <input type="text" name="config_contact_whatsapp_text" value="{{ value_config_contact_whatsapp_text }}" required>
+          <small class="muted">{{ help_config_contact_whatsapp_text }}</small>
+        </div>
+      </div>
+      <div class="field">
+        <label>{{ entry_config_contact_whatsapp_href }}</label>
+        <input type="text" name="config_contact_whatsapp_href" value="{{ value_config_contact_whatsapp_href }}" inputmode="numeric">
+        <small class="muted">{{ help_config_contact_whatsapp_href }}</small>
+      </div>
+    </fieldset>
+
+    <fieldset class="panel" style="margin-bottom:1rem;">
+      <legend>{{ fieldset_address }}</legend>
+      <p class="muted" style="margin-top:0;">{{ help_fallback }}</p>
+      {% for lang in languages %}
+      <div class="field">
+        <label>{{ entry_contact_address }} ({{ lang.code }})</label>
+        <input type="text" name="config_contact_address_{{ lang.code }}" value="{{ value_contact_address[lang.code] }}" required>
+      </div>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset class="panel" style="margin-bottom:1rem;">
+      <legend>{{ fieldset_copyright }}</legend>
+      <p class="muted" style="margin-top:0;">{{ help_copyright }}</p>
+      {% for lang in languages %}
+      <div class="field">
+        <label>{{ entry_copyright }} ({{ lang.code }})</label>
+        <input type="text" name="config_copyright_{{ lang.code }}" value="{{ value_copyright[lang.code] }}" required>
+      </div>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset class="panel" style="margin-bottom:1rem;">
+      <legend>{{ fieldset_social }}</legend>
+      <p class="muted" style="margin-top:0;">{{ help_fallback }}</p>
+      <div class="grid two">
+        <div class="field">
+          <label>{{ entry_config_social_facebook_href }}</label>
+          <input type="url" name="config_social_facebook_href" value="{{ value_config_social_facebook_href }}">
+        </div>
+        <div class="field">
+          <label>{{ entry_config_social_instagram_href }}</label>
+          <input type="url" name="config_social_instagram_href" value="{{ value_config_social_instagram_href }}">
+        </div>
+        <div class="field">
+          <label>{{ entry_config_social_pinterest_href }}</label>
+          <input type="url" name="config_social_pinterest_href" value="{{ value_config_social_pinterest_href }}">
+        </div>
+        <div class="field">
+          <label>{{ entry_config_social_x_href }}</label>
+          <input type="url" name="config_social_x_href" value="{{ value_config_social_x_href }}">
+        </div>
+        <div class="field">
+          <label>{{ entry_config_social_google_business_href }}</label>
+          <input type="url" name="config_social_google_business_href" value="{{ value_config_social_google_business_href }}">
+        </div>
+        <div class="field">
+          <label>{{ entry_config_social_redbubble_href }}</label>
+          <input type="url" name="config_social_redbubble_href" value="{{ value_config_social_redbubble_href }}">
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="actions" style="display:flex;gap:8px;">
+      <button type="submit" class="btn primary">{{ button_save }}</button>
+      <a class="btn" href="{{ back }}">{{ button_back }}</a>
+    </div>
+  </form>
+</main>
+{{ footer|raw }}

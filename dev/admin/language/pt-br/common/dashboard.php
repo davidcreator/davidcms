@@ -41,3 +41,4 @@ $_['button_logout']      = 'Sair';
 
 $_['text_manage_settings'] = 'Configurações';
 $_['text_manage_languages']  = 'Idiomas';
+$_['text_manage_site_info'] = 'Informações do Site';
