@@ -24,8 +24,9 @@ class Header extends \Reamur\System\Engine\Controller {
         $this->load->language('common/header');
 
         $data['locale'] = (string)$this->config->get('language_directory', 'en-us');
-        $data['title']  = $this->document->getTitle();
-        $data['styles'] = $this->document->getStyles();
+        $data['title']       = $this->document->getTitle();
+        $data['description'] = $this->document->getDescription(); // meta description real (F3-03)
+        $data['styles']      = $this->document->getStyles();
 
         $data['home']           = (string)$this->config->get('site_url');
         $data['text_languages'] = $this->language->get('text_languages');

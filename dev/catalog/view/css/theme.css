@@ -18,6 +18,18 @@ a { color: var(--accent); }
 h1, h2, h3, h4 { line-height: 1.2; margin: 0 0 12px; }
 h2 { font-size: 1.75em; }
 .container { max-width: 950px; margin: 0 auto; padding: 0 24px; }
+/* ── Páginas de conteúdo (F3-03): head de página, capa, tabela de fatos, galeria ── */
+.site-main { padding: 48px 0; }
+.page-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.page-head h1 { margin: 0; }
+.back-link { color: var(--muted); text-decoration: none; }
+.back-link:hover { color: var(--accent); }
+.project-cover { max-width: 100%; border-radius: var(--radius); }
+.prose { margin: 16px 0; line-height: 1.7; }
+.fact-table { border-collapse: collapse; margin: 16px 0; }
+.fact-table th { text-align: left; padding: 4px 12px 4px 0; color: var(--muted); font-weight: 600; }
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; list-style: none; padding: 0; }
+.gallery-grid img { width: 100%; border-radius: var(--radius); }
 .section { padding: 56px 0; }
 .section + .section { border-top: 1px solid var(--line); }
 .section-alt { background: var(--card); }
@@ -61,6 +73,21 @@ h2 { font-size: 1.75em; }
 @media (prefers-reduced-motion: reduce) {
     .hero-3d__canvas canvas { display: none; } /* redundância de segurança p/ o boot do JS */
 }
+
+/* ── 404 3D (F3-03, ADR 0021): fog de partículas na página de erro ── */
+.card-404--3d { position: relative; overflow: hidden; border-radius: var(--radius); min-height: 60vh;
+    display: flex; flex-direction: column; justify-content: center; color: #f3e8ff; text-align: center; }
+.nf-3d__canvas { position: absolute; inset: 0; z-index: 0; }
+.nf-3d__canvas canvas { display: block; width: 100%; height: 100%; }
+.nf-3d__fallback { position: absolute; inset: 0;
+    background: radial-gradient(900px 480px at 50% 30%, #2a1157 0%, #150832 60%, #0d0520 100%); }
+.nf-3d__content { position: relative; z-index: 1; }
+.card-404--3d .code { color: #c4b5fd; }
+.card-404--3d h1 { color: #fff; }
+.card-404--3d .muted { color: #d8ccf5; }
+@media (prefers-reduced-motion: reduce) {
+    .nf-3d__canvas canvas { display: none; }
+}
 .hero h1 { font-size: 3em; margin-bottom: 4px; }
 .hero .tagline { color: var(--accent); font-weight: 700; font-size: 1.25em; margin: 0 0 12px; }
 .hero .hero-lead { color: var(--muted); max-width: 620px; margin: 0 auto 28px; }
@@ -87,8 +114,10 @@ h2 { font-size: 1.75em; }
 
 /* ── Portfolio grid ───────────────────────────────────── */
 .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
-.pcard { display: block; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; text-decoration: none; color: inherit; background: #fff; transition: transform .15s ease, box-shadow .15s ease; }
-.pcard:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(17,24,39,.08); }
+.pcard { display: block; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; text-decoration: none; color: inherit; background: #fff; transition: transform .25s ease, box-shadow .25s ease; transform-style: preserve-3d; }
+/* Cena 3 etapa 1 (F3-03, Guia §7): tilt 3D por CSS — barato e acessível */
+.pcard:hover { transform: perspective(800px) rotateX(4deg) rotateY(-4deg) translateY(-4px); box-shadow: 0 10px 24px rgba(17,24,39,.08); }
+@media (prefers-reduced-motion: reduce) { .pcard:hover { transform: none; } }
 .pcard .thumb { aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ede9fe, #faf5ff); color: var(--accent); font-size: 2.4em; font-weight: 800; }
 .pcard .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pcard .body { padding: 14px; }
