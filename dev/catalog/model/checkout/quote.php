@@ -87,6 +87,37 @@ class Quote extends \Reamur\System\Engine\Model {
         return $order_id;
     }
 
+    /**
+     * F5-01 (ADR 0033): pedido + itens para o payload de notificação do
+     * webhook. Read-only; sem join em *_description (operacional).
+     *
+     * @return array<string, mixed> order + 'items' (pode ser [])
+     */
+    public function getQuoteForNotification(int $order_id): array {
+        $query = $this->db->query(
+            "SELECT `firstname`, `lastname`, `email`, `telephone`, `comment`, `total`, `order_status_id`
+               FROM `" . $this->t('order') . "`
+              WHERE `order_id` = '" . $order_id . "'"
+        );
+
+        if (!($query instanceof \stdClass) || empty($query->row)) {
+            return [];
+        }
+
+        $order = (array)$query->row;
+
+        $items = $this->db->query(
+            "SELECT `name`, `quantity`, `price`
+               FROM `" . $this->t('order_product') . "`
+              WHERE `order_id` = '" . $order_id . "'
+              ORDER BY `order_product_id` ASC"
+        );
+
+        $order['items'] = ($items instanceof \stdClass && !empty($items->rows)) ? (array)$items->rows : [];
+
+        return $order;
+    }
+
     private function t(string $table): string {
         return DB_PREFIX . $table;
     }

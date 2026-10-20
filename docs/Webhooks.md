@@ -2,7 +2,41 @@
 
 > **Objetivo:** documentar o sistema de **webhooks** do ReamurCMS (engine + controllers de pedidos e produtos), como criar novos gatilhos e as práticas de segurança e confiabilidade.
 
+> ⚠️ **ESTADO VIGENTE — F5-01 / ADR 0033 (out/2026).** O dispatcher descrito nas seções 2–4 (`system/webhook/` + tabelas `webhook_client`/`webhook_request_history`) era o **esqueleto da Fase 0 e nunca rodou** (tabelas inexistentes). O sistema NO AR é o do **§0 abaixo**: `Library\Webhook\Dispatcher` + Models `setting/webhook` + tabelas `rms_webhook`/`rms_webhook_log`. As seções seguintes permanecem como referência histórica da Fase 0 — leia o §0 primeiro.
+
 ---
+
+## 0. Protocolo no ar (F5-01 / ADR 0033)
+
+**Fluxo:** orçamento criado no catálogo (`order_add`) ou pedido editado no admin (`order_edit`; `order_history_edit` quando o status muda) → controller lê endpoints ativos no Model `setting/webhook` (`getHooksForEvent`, wildcard `*`/`?` em SQL) → `Library\Webhook\Dispatcher` entrega e o Model grava **1 linha em `rms_webhook_log` por tentativa**.
+
+**Envelope JSON (corpo):**
+```json
+{
+  "event":       "order_add",
+  "delivery_id": "9f1c2a7e-4b3d-4f8a-9c1e-7a2b5d8f0c34",
+  "timestamp":   1729468800,
+  "data": { "order_id": 42, "firstname": "Maria", "lastname": "Silva",
+            "email": "maria@x.com", "telephone": "...", "comment": "...",
+            "total": 0.0, "status_id": 1, "items": [{"name":"Logo","quantity":1,"price":0}] }
+}
+```
+
+**Headers:** `Content-Type: application/json` · `User-Agent: ReamurCMS-Webhook/1.0` · `X-Reamur-Event` · `X-Reamur-Delivery` (uuid **estável nos retries** — deduplique por ele) · `X-Reamur-Signature: sha256=<HMAC>`.
+
+**Verificação HMAC no receptor (PHP):**
+```php
+$esperado = 'sha256=' . hash_hmac('sha256', $corpoCru, $secretCadastrado);
+if (!hash_equals($esperado, $_SERVER['HTTP_X_REAMUR_SIGNATURE'] ?? '')) { http_response_code(401); exit; }
+```
+
+**Retries:** até **3 tentativas síncronas** com backoff 0s/2s/4s; sucesso = HTTP 2xx. `attempt` crescente no log, mesmo `delivery`. Endpoint esgotado com falha vira linha no `error_log` — e **jamais** impede o orçamento/pedido de ser criado (guarda `try/catch (\Throwable)` nos callers).
+
+**Cadastro:** admin `Configurações → Webhooks` (F2-16): URL **somente https://**, secret 16–64 chars, trigger com wildcard (`order_add`, `order_*`, `*_add`), logs read-only por endpoint.
+
+---
+
+
 
 ## Sumário
 

@@ -141,7 +141,15 @@ class Order extends \Reamur\System\Engine\Controller {
             $errors = $this->validateOrder();
 
             if ($errors === []) {
+                $status_mudou = (int)($order['order_status_id'] ?? 0) !== (int)($this->request->post['order_status_id'] ?? ($order['order_status_id'] ?? 0));
+
                 $this->model_sale_order->editOrder($order_id, $this->postPayload($order));
+
+                $this->dispatchOrderWebhook('order_edit', $order_id);
+
+                if ($status_mudou) {
+                    $this->dispatchOrderWebhook('order_history_edit', $order_id);
+                }
 
                 $this->setFlash($this->language->get('text_success_edit'));
 
@@ -392,5 +400,63 @@ class Order extends \Reamur\System\Engine\Controller {
         $data['body_class'] = 'rms-dash';
         $data['header']     = $this->load->controller('common/header', $data);
         $data['footer']     = $this->load->controller('common/footer', $data);
+    }
+
+    // ── F5-01 (ADR 0033) — notificação de webhooks ────────────────────────
+
+    /**
+     * Despacha o evento aos endpoints ativos. GUARDA-CHUVA idêntica ao
+     * catálogo: falha de webhook NUNCA afeta a edição do pedido — só loga.
+     */
+    private function dispatchOrderWebhook(string $event, int $order_id): void {
+        try {
+            $this->load->model('setting/webhook');
+
+            $hooks = $this->model_setting_webhook->getHooksForEvent($event);
+
+            if (!$hooks) {
+                return;
+            }
+
+            $dispatcher = new \Reamur\System\Library\Webhook\Dispatcher($this->log);
+
+            $results = $dispatcher->dispatch($event, $this->webhookOrderPayload($order_id), $hooks);
+
+            foreach ($results as $r) {
+                $this->model_setting_webhook->addLog(
+                    (int)$r['webhook_id'],
+                    (string)$r['delivery'],
+                    (string)$r['payload'],
+                    (int)$r['http_code'],
+                    (float)$r['duration'],
+                    (int)$r['attempt']
+                );
+            }
+        } catch (\Throwable $e) {
+            $this->log->write("webhook {$event} (pedido #{$order_id}) falhou e foi isolado: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Payload de domínio (mesmo formato do catálogo — receptores tratam um
+     * único schema independente da aplicação de origem). Itens quando
+     * existirem; model já expõe getOrderProducts.
+     *
+     * @return array<string, mixed>
+     */
+    private function webhookOrderPayload(int $order_id): array {
+        $order = $this->model_sale_order->getOrder($order_id);
+
+        return [
+            'order_id'  => $order_id,
+            'firstname' => (string)($order['firstname'] ?? ''),
+            'lastname'  => (string)($order['lastname'] ?? ''),
+            'email'     => (string)($order['email'] ?? ''),
+            'telephone' => (string)($order['telephone'] ?? ''),
+            'comment'   => (string)($order['comment'] ?? ''),
+            'total'     => (float)($order['total'] ?? 0),
+            'status_id' => (int)($order['order_status_id'] ?? 0),
+            'items'     => $this->model_sale_order->getOrderProducts($order_id),
+        ];
     }
 }
