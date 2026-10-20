@@ -43,6 +43,7 @@
     {% endif %}
   </section>
 
+  <p class="muted small">{{ text_cache_indicator }}{% if text_cache_fallback %} · {{ text_cache_fallback }}{% endif %}</p>
   <p class="muted small">{{ text_version }}</p>
 </main>
 {{ footer|raw }}

@@ -15,6 +15,7 @@ $_['text_settings']      = 'Operational keys that override the install defaults.
 $_['text_edit']          = 'Change manage = requires ACL modify on "setting/setting".';
 $_['text_success']       = 'Settings saved.';
 $_['text_cache_cleared'] = 'Cache cleared.';
+$_['text_cache_clear_unsupported'] = 'The active cache engine does not support full clearing from the panel.';
 
 // Fieldsets
 $_['fieldset_store']     = 'Store';
@@ -46,7 +47,7 @@ $_['help_mail_smtp_password']      = 'Never shown again. Leave empty spaces if t
 $_['help_mail_smtp_port']          = '25 (insecure), 465 (ssl), 587 (starttls) or 2525.';
 $_['help_mail_smtp_timeout']       = 'Seconds before time-out (1–60).';
 $_['help_mail_reply_to']           = 'Optional. Reply-To header of outbound emails.';
-$_['help_cache_engine']            = 'Applied on next request (cache assembled early in boot).';
+$_['help_cache_engine']            = 'Effective at boot (reads rms_setting — F4-06); an engine unavailable on this server falls back to file with a log notice.';
 $_['help_cache_expire']            = '60 to 2,592,000 seconds (max 30 days).';
 
 // Errors

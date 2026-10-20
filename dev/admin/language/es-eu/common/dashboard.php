@@ -36,6 +36,10 @@ $_['text_manage_users']  = 'Usuarios';
 $_['text_manage_user_groups'] = 'Grupos de Usuarios';
 $_['text_version']       = 'ReamurCMS %s';
 
+// F4-06 (ADR 0030): indicador de cache (engine ativa × configurada)
+$_['text_cache_indicator'] = 'Caché: %s · TTL %ss';
+$_['text_cache_fallback']  = 'el panel configuró "%s" — fallback activo';
+
 // Button
 $_['button_logout']      = 'Salir';
 

@@ -117,6 +117,16 @@ class Setting extends \Reamur\System\Engine\Controller {
             return;
         }
 
+        // F4-06 (ADR 0030): nem todo adapter implementa clear() — só File, hoje.
+        // Com outra engine ativa, limpar aqui viraria 500; flash informativo protege.
+        if (!method_exists($this->cache, 'clear')) {
+            $this->session->data['flash'] = ['type' => 'error', 'text' => $this->language->get('text_cache_clear_unsupported')];
+
+            $this->response->redirect($this->url->link('setting/setting'));
+
+            return;
+        }
+
         $this->cache->clear();
 
         $this->session->data['flash'] = ['type' => 'success', 'text' => $this->language->get('text_cache_cleared')];

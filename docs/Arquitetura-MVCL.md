@@ -120,7 +120,7 @@ dev/system/
 ### Papel de cada arquivo de bootstrap
 
 1. **`startup.php`** — valida a versão do PHP, define constantes de diretório (`DIR_REAMUR`, `DIR_SYSTEM`, `DIR_APPLICATION`, `DIR_CONFIG`, `DIR_STORAGE`...) e prepara o ambiente.
-2. **`framework.php`** — instancia *Autoloader → Registry → Config → Log → Error/Exception Handlers → Event → Loader → Request → Response → DB → Cache → Session → Template → Language → Url* nesta ordem, registrando tudo no Registry.
+2. **`framework.php`** — instancia *Autoloader → Registry → Config → Log → Error/Exception Handlers → Event → Loader → Request → Response → DB → Cache → Session → Template → Language → Url* nesta ordem, registrando tudo no Registry. O **Cache** (F4-06, ADR 0030) resolve o driver pelo `rms_setting` do painel (leitura direta no boot, já que a startup/setting que o injetaria só roda depois — e precisa do cache pronto); engine indisponível no servidor cai em `File` com aviso no log, nunca em 500.
 3. **`vendor.php`** — faz `require` do `storage/vendor/autoload.php` (Composer), expondo Twig, Guzzle etc. ao núcleo.
 
 ---
@@ -141,7 +141,7 @@ startup.php ──► framework.php
     │             4. Log + error/exception handlers
     │             5. Event registra listeners do config ('action_event')
     │             6. Loader, Request, Response
-    │             7. DB (se db_autostart), Cache, Session
+    │             7. DB (se db_autostart), Cache (driver do rms_setting — ADR 0030), Session
     │             8. Template engine (twig), Language, Url
     ▼
 SEO URL / parâmetro ?route=grupo/modulo
@@ -187,7 +187,7 @@ class Registry {
 }
 ```
 
-> **Princípio:** nunca instancie serviços com `new` dentro de controllers (`new Db()`, `new Twig()`...). Sempre use o Registry/`$this->load` — é o que torna o sistema testável e permite trocar drivers (ex.: cache `file` → `redis`) só pelo config.
+> **Princípio:** nunca instancie serviços com `new` dentro de controllers (`new Db()`, `new Twig()`...). Sempre use o Registry/`$this->load` — é o que torna o sistema testável e permite trocar drivers (ex.: cache `file` → `redis`) pelo painel de configurações (`setting/setting`, efetivo desde a F4-06/ADR 0030 — antes era só o `default.php`).
 
 ---
 

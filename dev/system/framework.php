@@ -99,14 +99,87 @@ if ($config->get('db_autostart')) {
     ));
 }
 
-// 8.1 Cache — sempre montado; driver vem de cache_engine (padrão file)
-$cacheClass = 'Reamur\\System\\Library\\Cache\\' . ucfirst((string)$config->get('cache_engine', 'file'));
+// 8.1 Cache — sempre montado, ANTES das pré-ações (sessão/idiomas/settings
+// dependem dele). F4-06 (ADR 0030): o driver efetivo vem de rms_setting — o
+// painel (F4-01) edita cache_engine/cache_expire, mas a startup/setting que os
+// injetaria no Config roda APÓS a montagem e ela mesma precisa do cache pronto
+// para cachear settings (ovo e galinha). Solução: o boot consulta a tabela
+// diretamente, com a mesma semântica da startup (valor não-vazio vence o
+// default.php). Escolha ruim NUNCA derruba a app: fallback File + linha no log.
+$cacheEngine = strtolower(trim((string)$config->get('cache_engine', 'file'))) ?: 'file';
+$cacheExpire = (int)$config->get('cache_expire', 3600);
 
-if (!class_exists($cacheClass)) {
-    throw new \Exception("Driver de cache {$cacheClass} não encontrado.");
+if ($config->get('db_autostart')) {
+    try {
+        $dbBoot = $registry->has('db') ? $registry->get('db') : null;
+
+        if ($dbBoot !== null) {
+            $bootPrefix = defined('DB_PREFIX') ? DB_PREFIX : 'rms_';
+
+            $bootRows = $dbBoot->query(
+                "SELECT `key`, `value` FROM `" . $bootPrefix . "setting`
+                 WHERE `code` = 'config' AND `key` IN ('cache_engine', 'cache_expire')"
+            );
+
+            if ($bootRows instanceof \stdClass && !empty($bootRows->rows)) {
+                foreach ((array)$bootRows->rows as $bootRow) {
+                    $bootRow = (array)$bootRow;
+                    $bootKey = (string)($bootRow['key'] ?? '');
+                    $bootVal = (string)($bootRow['value'] ?? '');
+
+                    if ($bootKey === 'cache_engine' && $bootVal !== '') {
+                        $cacheEngine = strtolower(trim($bootVal)) ?: $cacheEngine;
+                    } elseif ($bootKey === 'cache_expire' && (int)$bootVal > 0) {
+                        $cacheExpire = (int)$bootVal;
+                    }
+                }
+            }
+        }
+    } catch (\Throwable $e) {
+        // tabela ausente (pré-install), DB fora do ar — seguem os defaults do arquivo
+        $log->write('cache boot: rms_setting indisponível, usando defaults (' . $e->getMessage() . ')');
+    }
 }
 
-$registry->set('cache', new $cacheClass((int)$config->get('cache_expire', 3600)));
+// Verificador de usabilidade: alias do form, driver real e pré-requisito no servidor
+$cacheDrivers = [
+    'file'      => 'File',
+    'apc'       => 'APCU', // alias histórico do form F4-01 (classe real: APCU)
+    'apcu'      => 'APCU',
+    'mem'       => 'Mem',
+    'memcached' => 'Memcached',
+    'redis'     => 'Redis',
+];
+
+$cachePrereq = [
+    'File'      => static fn(): bool => true,
+    'APCU'      => static fn(): bool => extension_loaded('apcu'),
+    'Mem'       => static fn(): bool => extension_loaded('memcache'),
+    'Memcached' => static fn(): bool => extension_loaded('memcached')
+        && defined('CACHE_HOSTNAME') && defined('CACHE_PORT') && defined('CACHE_PREFIX'),
+    'Redis'     => static fn(): bool => extension_loaded('redis'),
+];
+
+$cacheDriver = $cacheDrivers[$cacheEngine] ?? '';
+$cacheClass  = $cacheDriver !== '' ? ('Reamur\\System\\Library\\Cache\\' . $cacheDriver) : '';
+
+$cache = null;
+
+if ($cacheDriver !== '' && $cacheDriver !== 'File'
+    && class_exists($cacheClass)
+    && ($cachePrereq[$cacheDriver] ?? static fn(): bool => false)()) {
+    try {
+        $cache = new $cacheClass($cacheExpire);
+    } catch (\Throwable $e) {
+        $log->write("cache: driver {$cacheEngine} recusou montagem ({$e->getMessage()}); fallback file");
+    }
+}
+
+if ($cache === null && $cacheEngine !== 'file') {
+    $log->write("cache: engine {$cacheEngine} indisponível neste servidor; fallback file");
+}
+
+$registry->set('cache', $cache ?? new \Reamur\System\Library\Cache\File($cacheExpire));
 
 // 9. Session
 if ($config->get('session_autostart')) {

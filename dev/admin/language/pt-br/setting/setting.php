@@ -15,6 +15,7 @@ $_['text_settings']      = 'Chaves operacionais que sobrescrevem os padrões da 
 $_['text_edit']          = 'Alterar = exige ACL modify em "setting/setting".';
 $_['text_success']       = 'Configurações salvas.';
 $_['text_cache_cleared'] = 'Cache limpo.';
+$_['text_cache_clear_unsupported'] = 'A engine de cache ativa não suporta limpeza total pelo painel.';
 
 // Fieldsets
 $_['fieldset_store']     = 'Loja';
@@ -46,7 +47,7 @@ $_['help_mail_smtp_password']      = 'Nunca é exibida novamente. Deixe os espa�
 $_['help_mail_smtp_port']          = '25 (insegura), 465 (ssl), 587 (starttls) ou 2525.';
 $_['help_mail_smtp_timeout']       = 'Segundos antes de dar timeout (1–60).';
 $_['help_mail_reply_to']           = 'Opcional. Cabeçalho Reply-To dos e-mails enviados.';
-$_['help_cache_engine']            = 'Aplicado na próxima requisição (cache montado cedo no boot).';
+$_['help_cache_engine']            = 'Efetivo no boot (lê rms_setting — F4-06); engine indisponível no servidor cai em file com aviso no log.';
 $_['help_cache_expire']            = '60 a 2.592.000 segundos (máx 30 dias).';
 
 // Errors

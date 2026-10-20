@@ -157,6 +157,18 @@ class Dashboard extends \Reamur\System\Engine\Controller {
         $data['user_group_id'] = $this->user->getUserGroupId();
         $data['text_manage_profile'] = $this->language->get('text_manage_profile');
         $data['profile']             = $this->url->link('user/profile');
+
+        // F4-06 (ADR 0030): indicador de cache — engine ATIVA (classe real do
+        // adapter no Registry) × configurada no painel; divergência = o boot
+        // aplicou fallback (engine escolhida indisponível neste servidor)
+        $data['cache_active'] = strtolower((string)substr((string)strrchr(get_class($this->cache), '\\'), 1));
+        $data['cache_expire'] = (int)$this->config->get('cache_expire', 3600);
+        $cacheConfigured = strtolower(trim((string)$this->config->get('cache_engine', 'file')));
+
+        $data['text_cache_indicator'] = sprintf($this->language->get('text_cache_indicator'), $data['cache_active'], $data['cache_expire']);
+        $data['text_cache_fallback']  = ($cacheConfigured === 'apc' ? 'apcu' : $cacheConfigured) !== $data['cache_active']
+            ? sprintf($this->language->get('text_cache_fallback'), $cacheConfigured)
+            : '';
         $data['access_routes'] = $this->user->countPermissions('access');
         $data['modify_routes'] = $this->user->countPermissions('modify');
 

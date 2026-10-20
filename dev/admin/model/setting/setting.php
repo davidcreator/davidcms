@@ -67,13 +67,6 @@ class Setting extends \Reamur\System\Engine\Model {
             'config_copyright_en-us', 'config_copyright_pt-br', 'config_copyright_es-eu',
             'config_social_facebook_href', 'config_social_instagram_href', 'config_social_pinterest_href',
             'config_social_x_href', 'config_social_google_business_href', 'config_social_redbubble_href',
-
-            // F4-03 (ADR 0026): informações do site (tela setting/site_info)
-            'config_contact_email', 'config_contact_whatsapp_text', 'config_contact_whatsapp_href',
-            'config_contact_address_en-us', 'config_contact_address_pt-br', 'config_contact_address_es-eu',
-            'config_copyright_en-us', 'config_copyright_pt-br', 'config_copyright_es-eu',
-            'config_social_facebook_href', 'config_social_instagram_href', 'config_social_pinterest_href',
-            'config_social_x_href', 'config_social_google_business_href', 'config_social_redbubble_href',
         ];
 
         foreach ($data as $key => $value) {
