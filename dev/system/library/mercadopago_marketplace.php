@@ -1,9 +1,19 @@
 <?php
 namespace Reamur\System\Library;
 
+/**
+ * Mercado Pago Marketplace — OAuth do conector de vendedores (F5-02/ADR 0034).
+ *
+ * Config aceita no construtor: app_id, client_secret, redirect_uri e
+ * (opcional) token_url / users_me_url — costuras de ambiente documentadas
+ * no ADR 0034 §4: permitem apontar o handshake para o MOCK das baterias e2e
+ * (e para qualquer gateway de sandbox) sem tocar o código; o default é
+ * sempre o endpoint oficial do Mercado Pago.
+ */
 class MercadopagoMarketplace {
     private const AUTHORIZATION_URL = 'https://auth.mercadopago.com.br/authorization';
     private const TOKEN_URL = 'https://api.mercadopago.com/oauth/token';
+    private const USERS_ME_URL = 'https://api.mercadopago.com/users/me';
 
     private array $config;
 
@@ -117,9 +127,59 @@ class MercadopagoMarketplace {
         return 'Mercado Pago OAuth request failed.';
     }
 
+    /**
+     * Dados públicos do vendedor recém-conectado (nickname/email para a
+     * grade admin). Falha aqui NÃO invalida a conexão — o caller segue com
+     * campos vazios (o token já foi concedido). Nunca lança exceção.
+     *
+     * @return array{nickname:string,email:string}
+     */
+    public function getUserInfo(string $access_token): array {
+        $empty = ['nickname' => '', 'email' => ''];
+
+        if (trim($access_token) === '') {
+            return $empty;
+        }
+
+        $request = $this->request(
+            $this->usersMeUrl(),
+            '',
+            ['accept: application/json', 'authorization: Bearer ' . trim($access_token)],
+            'GET'
+        );
+
+        $data = json_decode($request['body'], true);
+
+        if (!is_array($data) || ($request['status'] < 200 || $request['status'] >= 300)) {
+            return $empty;
+        }
+
+        return [
+            'nickname' => trim((string)($data['nickname'] ?? '')),
+            'email'    => trim((string)($data['email'] ?? '')),
+        ];
+    }
+
+    /** Costura de ambiente (ADR 0034 §4): mock das baterias × endpoint oficial */
+    private function tokenUrl(): string {
+        $override = trim((string)($this->config['token_url'] ?? ''));
+
+        return ($override !== '' && filter_var($override, FILTER_VALIDATE_URL) !== false)
+            ? $override
+            : self::TOKEN_URL;
+    }
+
+    private function usersMeUrl(): string {
+        $override = trim((string)($this->config['users_me_url'] ?? ''));
+
+        return ($override !== '' && filter_var($override, FILTER_VALIDATE_URL) !== false)
+            ? $override
+            : self::USERS_ME_URL;
+    }
+
     private function oauthTokenRequest(array $payload): array {
         $request = $this->request(
-            self::TOKEN_URL,
+            $this->tokenUrl(),
             http_build_query($payload, '', '&', PHP_QUERY_RFC3986),
             [
                 'accept: application/json',

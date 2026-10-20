@@ -32,6 +32,7 @@ $_['text_manage_tools'] = 'Tools';
 $_['text_manage_orders'] = 'Orders';
 $_['text_manage_messages'] = 'Messages';
 $_['text_manage_webhooks'] = 'Webhooks';
+$_['text_manage_marketplace'] = 'Mercado Pago Marketplace'; // F5-02 (ADR 0034)
 $_['text_manage_users']  = 'Users';
 $_['text_manage_user_groups'] = 'User Groups';
 $_['text_version']       = 'ReamurCMS %s';

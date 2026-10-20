@@ -1,0 +1,94 @@
+{# dev/admin/view/template/setting/marketplace.twig — fundação MP Marketplace (F5-02, ADR 0034) #}
+{{ header|raw }}
+<main class="dash form-page">
+  <h1>{{ heading_title }}</h1>
+
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type == 'success' ? 'success' : 'error' }}">{{ text_flash.text }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ action_save }}" class="panel form" style="margin-bottom:1.5rem;">
+    <fieldset class="panel">
+      <legend>{{ text_config }}</legend>
+      <div class="grid two">
+        <div class="field">
+          <label>{{ entry_app_id }}</label>
+          <input type="text" name="mp_app_id" value="{{ mp_app_id }}" inputmode="numeric" placeholder="1234567890123456">
+        </div>
+        <div class="field">
+          <label>{{ entry_client_secret }}</label>
+          <input type="password" name="mp_client_secret" value="" autocomplete="new-password" placeholder="{{ mp_has_secret ? '••••••••' : '' }}">
+          <small class="muted">{{ text_secret_hint }}</small>
+        </div>
+      </div>
+      <div class="grid two">
+        <div class="field">
+          <label>{{ text_env }}</label>
+          <select name="mp_env">
+            <option value="test"{% if mp_env == 'test' %} selected{% endif %}>{{ text_env_test }}</option>
+            <option value="prod"{% if mp_env == 'prod' %} selected{% endif %}>{{ text_env_prod }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ entry_redirect_uri }}</label>
+          <input type="url" name="mp_redirect_uri" value="{{ mp_redirect_uri }}" placeholder="https://…/admin/index.php?route=setting/marketplace.callback">
+          <small class="muted">{{ text_redirect_hint }}</small>
+        </div>
+      </div>
+      <button type="submit" class="btn">{{ button_save }}</button>
+    </fieldset>
+  </form>
+
+  <section class="panel">
+    <h2 style="margin-top:0;">{{ text_sellers }}</h2>
+
+    {% if not mp_configured %}
+      <div class="alert error">{{ text_not_configured }}</div>
+      <p><button type="button" class="btn" disabled>{{ button_connect }}</button></p>
+    {% else %}
+      <form method="post" action="{{ action_connect }}" style="margin-bottom:1rem;">
+        <button type="submit" class="btn">{{ button_connect }}</button>
+      </form>
+    {% endif %}
+
+    {% if sellers %}
+    <table class="list">
+      <thead>
+        <tr>
+          <th>{{ column_mp_user }}</th>
+          <th>{{ column_nickname }}</th>
+          <th>{{ column_email }}</th>
+          <th>{{ column_scope }}</th>
+          <th>{{ column_expires }}</th>
+          <th>{{ column_status }}</th>
+          <th>{{ column_action }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in sellers %}
+        <tr>
+          <td>{{ s.mp_user_id }}</td>
+          <td>{{ s.nickname ?: '—' }}</td>
+          <td>{{ s.email ?: '—' }}</td>
+          <td><code>{{ s.scope }}</code></td>
+          <td>{{ s.token_expires_at }}</td>
+          <td>{{ s.status == 1 ? '✔' : '✘' }}</td>
+          <td style="white-space:nowrap;">
+            <form method="post" action="{{ action_refresh }}|{{ s.mp_seller_id }}" style="display:inline;">
+              <button type="submit" class="btn">{{ button_refresh }}</button>
+            </form>
+            <form method="post" action="{{ action_delete }}|{{ s.mp_seller_id }}" style="display:inline;" onsubmit="return confirm('?');">
+              <button type="submit" class="btn danger">{{ button_disconnect }}</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted">{{ text_disconnect_note }}</p>
+    {% else %}
+    <p class="muted">{{ text_no_sellers }}</p>
+    {% endif %}
+  </section>
+</main>
+{{ footer|raw }}

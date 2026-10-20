@@ -67,6 +67,12 @@ class Setting extends \Reamur\System\Engine\Model {
             'config_copyright_en-us', 'config_copyright_pt-br', 'config_copyright_es-eu',
             'config_social_facebook_href', 'config_social_instagram_href', 'config_social_pinterest_href',
             'config_social_x_href', 'config_social_google_business_href', 'config_social_redbubble_href',
+            // F5-02 (ADR 0034): app do Mercado Pago Marketplace — credenciais gravadas
+            // no banco via painel, NUNCA versionadas no git
+            'mp_app_id', 'mp_client_secret', 'mp_env', 'mp_redirect_uri',
+            // costuras de ambiente (ADR 0034 §4): não expostas em tela; existem p/
+            // baterias e2e e manutenção apontarem rotas alternativas (mock/sandbox)
+            'mp_token_url', 'mp_users_me_url',
         ];
 
         foreach ($data as $key => $value) {

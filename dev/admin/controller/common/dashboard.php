@@ -122,6 +122,14 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        if ($this->user->hasPermission('access', 'setting/marketplace')) {
+            // F5-02 (ADR 0034): fundação do Mercado Pago Marketplace (OAuth de vendedores)
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_marketplace'),
+                'href' => $this->url->link('setting/marketplace'),
+            ];
+        }
+
         if ($this->user->hasPermission('access', 'localization/language')) {
             // F4-02 (ADR 0025): gestão de idiomas (metadados/status/defaults)
             $data['modules'][] = [
