@@ -39,7 +39,7 @@ $_['entry_cache_expire']            = 'TTL de la caché (s)';
 $_['help_config_name']             = 'Usado en <title> y correos alineados a la marca.';
 $_['help_config_meta_title']       = 'Título de respaldo cuando la página no tiene uno (120 caracteres).';
 $_['help_config_meta_description'] = '<meta name="description"> para páginas sin uno propio (ideal ~160; el campo valida hasta 255).';
-$_['help_mail_engine']             = 'mail() renderiza local; SMTP para relé externo (en cola hasta que llegue el envío).';
+$_['help_mail_engine']             = 'mail() envía vía PHP; SMTP para relé externo; capture graba en storage/logs/mail_capture.json (dev/CI).';
 $_['help_mail_smtp_hostname']      = 'Ej.: smtp.hostinger.com';
 $_['help_mail_smtp_username']      = 'Normalmente el usuario/correo completo.';
 $_['help_mail_smtp_password']      = 'Nunca se muestra de nuevo. Deja espacios si pertenecen a la contraseña.';
@@ -58,6 +58,15 @@ $_['error_smtp_timeout']           = 'El timeout debe ser de 1 a 60 segundos.';
 $_['error_mail_reply_to']          = 'Correo de Reply-To inválido.';
 $_['error_cache_engine']           = 'Motor de caché inválido.';
 $_['error_cache_expire']           = 'El TTL debe ser de 60s a 30 días.';
+
+// F4-05 (ADR 0029): prueba de envío (setting/setting.testMail)
+$_['button_test_mail']          = 'Enviar correo de prueba';
+$_['text_mail_test_hint']       = 'usa la configuración guardada; va al correo de tu usuario.';
+$_['text_mail_test_subject']    = '[ReamurCMS] Prueba de envío';
+$_['text_mail_test_body']       = "Si recibiste este mensaje, el motor de correo configurado está funcionando.";
+$_['text_mail_test_sent']       = 'Correo de prueba enviado a %s.';
+$_['text_mail_test_error']      = 'Fallo al enviar el correo de prueba: %s';
+$_['error_mail_test_recipient'] = 'el usuario conectado no tiene un correo válido';
 
 // Buttons
 $_['button_save']        = 'Guardar configuración';

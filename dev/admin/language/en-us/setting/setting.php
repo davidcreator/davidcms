@@ -39,7 +39,7 @@ $_['entry_cache_expire']            = 'Cache TTL (s)';
 $_['help_config_name']             = 'Used in <title> and emails aligned with the brand.';
 $_['help_config_meta_title']       = 'Fallback title when the page has no specific title (120 chars).';
 $_['help_config_meta_description'] = '<meta name="description"> used by pages without their own (max ~160 chars ideal; field validates up to 255).';
-$_['help_mail_engine']             = 'mail() renders locally; SMTP to an external relay (queued for sending feature).';
+$_['help_mail_engine']             = 'mail() sends via PHP; SMTP for an external relay; capture writes to storage/logs/mail_capture.json (dev/CI).';
 $_['help_mail_smtp_hostname']      = 'Ex.: smtp.hostinger.com';
 $_['help_mail_smtp_username']      = 'Usually the username/full email.';
 $_['help_mail_smtp_password']      = 'Never shown again. Leave empty spaces if they belong to the password.';
@@ -58,6 +58,15 @@ $_['error_smtp_timeout']           = 'Timeout must be between 1 and 60 seconds.'
 $_['error_mail_reply_to']          = 'Invalid Reply-To email.';
 $_['error_cache_engine']           = 'Invalid cache engine.';
 $_['error_cache_expire']           = 'TTL must be 60s to 30 days.';
+
+// F4-05 (ADR 0029): send test (setting/setting.testMail)
+$_['button_test_mail']          = 'Send test e-mail';
+$_['text_mail_test_hint']       = 'uses the saved settings; goes to your user e-mail.';
+$_['text_mail_test_subject']    = '[ReamurCMS] Send test';
+$_['text_mail_test_body']       = "If you received this message, the configured mail engine is working.";
+$_['text_mail_test_sent']       = 'Test e-mail sent to %s.';
+$_['text_mail_test_error']      = 'Failed to send the test e-mail: %s';
+$_['error_mail_test_recipient'] = 'the logged-in user has no valid e-mail';
 
 // Buttons
 $_['button_save']        = 'Save settings';

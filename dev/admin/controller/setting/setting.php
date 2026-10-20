@@ -10,9 +10,10 @@
  *  · GET  → formulário com os valores efetivos (settings > config default)
  *  · POST → valida e persiste em rms_setting code='config' (via model)
  *  · Botão "Clear cache" separado: método clearCache (POST, modify-only)
- * Sem fakear: mail_* persiste hoje; o consumo real chega quando a engine de
- * envio for acoplada (Fase 5). cache_engine/expire idem (framework monta o
- * cache antes de pré-ações). Declarado na ADR 0024.
+ *  · Botão "Enviar teste" separado: método testMail (POST, modify-only) —
+ *    F4-05 (ADR 0029): mail_* passam a ser CONSUMIDAS pela Mail\Factory.
+ * cache_engine/expire persistem; a montagem do cache no framework é anterior
+ * às pré-ações (declarado na ADR 0024).
  */
 namespace Reamur\Admin\Controller\Setting;
 
@@ -79,15 +80,20 @@ class Setting extends \Reamur\System\Engine\Controller {
         }
 
         // Opções das engines (mesmos valores da lib — Guia PHP8 §13)
-        $data['mail_engines']  = ['mail' => 'mail()', 'smtp' => 'SMTP'];
+        // F4-05 (ADR 0029): 'capture' entra como ferramenta de dev/CI — grava em
+        // DIR_STORAGE/logs/mail_capture.json, nunca sai pela rede
+        $data['mail_engines']  = ['mail' => 'mail()', 'smtp' => 'SMTP', 'capture' => 'capture (dev/CI)'];
         $data['cache_engines'] = ['file' => 'file (disco)', 'apc' => 'apc', 'memcached' => 'memcached', 'redis' => 'redis'];
 
         $data['button_save']        = $this->language->get('button_save');
         $data['button_clear_cache'] = $this->language->get('button_clear_cache');
+        $data['button_test_mail']   = $this->language->get('button_test_mail');
+        $data['text_mail_test_hint'] = $this->language->get('text_mail_test_hint');
         $data['button_back']        = $this->language->get('button_back');
 
         $data['action']      = $this->url->link('setting/setting');
         $data['clear_cache'] = $this->url->link('setting/setting.clearCache');
+        $data['test_mail']   = $this->url->link('setting/setting.testMail');
         $data['back']        = $this->url->link('common/dashboard');
 
         $this->chrome($data);
@@ -114,6 +120,56 @@ class Setting extends \Reamur\System\Engine\Controller {
         $this->cache->clear();
 
         $this->session->data['flash'] = ['type' => 'success', 'text' => $this->language->get('text_cache_cleared')];
+
+        $this->response->redirect($this->url->link('setting/setting'));
+    }
+
+    /**
+     * POST dedicado: envia um e-mail de TESTE com as mail_* EFETIVAS carregadas
+     * (startup/setting já injetou o rms_setting no Config) para o endereço do
+     * usuário logado — prova ponta-a-ponta engine+identidade (F4-05, ADR 0029).
+     * Falha NÃO quebra a tela: registrada no log e reportada no flash.
+     */
+    public function testMail(): void {
+        $this->load->language('setting/setting');
+
+        if ($this->request->server['REQUEST_METHOD'] !== 'POST') {
+            $this->response->redirect($this->url->link('setting/setting'));
+
+            return;
+        }
+
+        if (!$this->user->hasPermission('modify', 'setting/setting')) {
+            $this->response->redirect($this->url->link('error/permission'));
+
+            return;
+        }
+
+        $to = $this->user->getEmail();
+
+        if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            $this->session->data['flash'] = ['type' => 'error', 'text' => sprintf($this->language->get('text_mail_test_error'), $this->language->get('error_mail_test_recipient'))];
+
+            $this->response->redirect($this->url->link('setting/setting'));
+
+            return;
+        }
+
+        try {
+            $mail = \Reamur\System\Library\Mail\Factory::create($this->config, [
+                'to'      => $to,
+                'subject' => $this->language->get('text_mail_test_subject'),
+                'text'    => $this->language->get('text_mail_test_body'),
+            ]);
+
+            $mail->send();
+
+            $this->session->data['flash'] = ['type' => 'success', 'text' => sprintf($this->language->get('text_mail_test_sent'), $to)];
+        } catch (\Throwable $e) {
+            $this->log->write('setting/setting.testMail: ' . $e->getMessage());
+
+            $this->session->data['flash'] = ['type' => 'error', 'text' => sprintf($this->language->get('text_mail_test_error'), $e->getMessage())];
+        }
 
         $this->response->redirect($this->url->link('setting/setting'));
     }
@@ -185,7 +241,8 @@ class Setting extends \Reamur\System\Engine\Controller {
             $errors['config_name'] = $this->language->get('error_config_name');
         }
 
-        if (!in_array($post['mail_engine'], ['mail', 'smtp'], true)) {
+        // F4-05 (ADR 0029): 'capture' passa a ser engine válida (dev/CI)
+        if (!in_array($post['mail_engine'], ['mail', 'smtp', 'capture'], true)) {
             $errors['mail_engine'] = $this->language->get('error_mail_engine');
         }
 

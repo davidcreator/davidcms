@@ -31,3 +31,7 @@ $_['error_message']   = 'Please write your message (3 to 5000 chars).';
 
 $_['error_csrf']       = 'Security check failed — please resend the form.';
 $_['error_rate_limit'] = 'Too many attempts. Please wait a few minutes and try again.';
+
+// F4-05 (ADR 0029): e-mail notification to the site owner
+$_['text_mail_subject'] = 'New contact from the site: %s';
+$_['text_mail_body']    = "Name: %s\nE-mail: %s\nTelephone: %s\n\nMessage:\n%s";

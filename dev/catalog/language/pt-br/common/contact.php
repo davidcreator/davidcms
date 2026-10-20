@@ -31,3 +31,7 @@ $_['error_message']   = 'Escreva sua mensagem (de 3 a 5000 caracteres).';
 
 $_['error_csrf']       = 'Falha na verificação de segurança — reenvie o formulário.';
 $_['error_rate_limit'] = 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+
+// F4-05 (ADR 0029): notificação por e-mail ao dono do site
+$_['text_mail_subject'] = 'Novo contato pelo site: %s';
+$_['text_mail_body']    = "Nome: %s\nE-mail: %s\nTelefone: %s\n\nMensagem:\n%s";

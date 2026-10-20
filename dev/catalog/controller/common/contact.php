@@ -8,9 +8,10 @@
  *
  * common/contact (CATALOG) — formulário público "Let's have a chat?" (F2-17):
  * cria a ÚNICA escrita do front — INSERT em rms_contact_message (status 0,
- * IP do cliente). Anti-spam: honeypot invisível 'company' (bot preenche —
- * fingimos sucesso e não gravamos). Validação espelha a régua do schema;
- * repovo padrão molde-ouro; PRG com flash (sessão) para a própria página.
+ * IP do cliente) + notificação por e-mail ao dono do site (F4-05, ADR 0029 —
+ * falha silenciosa). Anti-spam: honeypot invisível 'company' (bot preenche —
+ * fingimos sucesso e não gravamos/notificamos). Validação espelha a régua do
+ * schema; repovo padrão molde-ouro; PRG com flash (sessão) para a própria página.
  */
 namespace Reamur\Catalog\Controller\Common;
 
@@ -53,14 +54,19 @@ class Contact extends \Reamur\System\Engine\Controller {
             if ($errors === []) {
                 $this->load->model('communication/contact_message');
 
-                $this->model_communication_contact_message->addContactMessage([
+                $contact = [
                     'name'      => trim((string)($this->request->post['name'] ?? '')),
                     'email'     => trim((string)($this->request->post['email'] ?? '')),
                     'telephone' => trim((string)($this->request->post['telephone'] ?? '')),
                     'subject'   => trim((string)($this->request->post['subject'] ?? '')),
                     'message'   => trim((string)($this->request->post['message'] ?? '')),
                     'ip'        => (string)($this->request->server['REMOTE_ADDR'] ?? ''),
-                ]);
+                ];
+
+                $this->model_communication_contact_message->addContactMessage($contact);
+
+                // F4-05 (ADR 0029): notificação por e-mail — nunca atrapalha o visitante
+                $this->notifyOwner($contact);
 
                 $this->setFlash($this->language->get('text_success'));
 
@@ -82,6 +88,45 @@ class Contact extends \Reamur\System\Engine\Controller {
     /** Honeypot: humanos não veem nem preenchem o campo 'company' */
     private function isBot(): bool {
         return trim((string)($this->request->post['company'] ?? '')) !== '';
+    }
+
+    /**
+     * F4-05 (ADR 0029): envia cópia da mensagem para o dono do site via a
+     * engine efetiva (mail_engine do painel — mail/smtp/capture). Falha é
+     * SILENCIOSA para o visitante (mesma renúncia da ADR 0023 — Latest News):
+     * o INSERT já garantiu a mensagem; o erro vai só para o log.
+     * Reply-To = e-mail do visitante (responder cai direto nele), salvo quando
+     * o painel define mail_reply_to fixo — esse vence.
+     *
+     * @param array<string, string> $contact campos já validados/sanitizados
+     */
+    private function notifyOwner(array $contact): void {
+        $to = (string)$this->config->get('config_contact_email', '');
+
+        if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        $fixedReplyTo = (string)$this->config->get('mail_reply_to', '');
+
+        try {
+            $mail = \Reamur\System\Library\Mail\Factory::create($this->config, [
+                'to'       => $to,
+                'reply_to' => $fixedReplyTo !== '' ? $fixedReplyTo : (string)$contact['email'],
+                'subject'  => sprintf($this->language->get('text_mail_subject'), (string)$contact['subject']),
+                'text'     => sprintf(
+                    $this->language->get('text_mail_body'),
+                    (string)$contact['name'],
+                    (string)$contact['email'],
+                    (string)$contact['telephone'],
+                    (string)$contact['message']
+                ),
+            ]);
+
+            $mail->send();
+        } catch (\Throwable $e) {
+            $this->log->write('contact.notifyOwner: ' . $e->getMessage());
+        }
     }
 
     /** F2-18: rate limit — true quando a janela ainda não estourou */

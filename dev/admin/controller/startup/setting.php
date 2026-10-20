@@ -7,7 +7,8 @@
  * @link      https://reamurcms.com
  *
  * Pré-ação startup/setting do ADMIN: idem catalog (F4-01, ADR 0024) — o painel
- *mostra os valores configurados sem precisar reler a tabela em cada controller.
+ * mostra os valores configurados sem precisar reler a tabela em cada controller.
+ * mail_* alimentam a Mail\Factory (F4-05, ADR 0029 — teste de envio).
  */
 namespace Reamur\Admin\Controller\Startup;
 
@@ -20,16 +21,6 @@ class Setting extends \Reamur\System\Engine\Controller {
         'mail_reply_to',
         'cache_engine', 'cache_expire',
 
-        // F4-02 (ADR 0025): injeta também os idiomas governados pela tela
-        // localization/language — tela edita os dois aqui
-        'config_language_catalog', 'config_language_admin',
-
-        // F4-03 (ADR 0026): informações do site (tela setting/site_info)
-        'config_contact_email', 'config_contact_whatsapp_text', 'config_contact_whatsapp_href',
-        'config_contact_address_en-us', 'config_contact_address_pt-br', 'config_contact_address_es-eu',
-        'config_copyright_en-us', 'config_copyright_pt-br', 'config_copyright_es-eu',
-        'config_social_facebook_href', 'config_social_instagram_href', 'config_social_pinterest_href',
-        'config_social_x_href', 'config_social_google_business_href', 'config_social_redbubble_href',
         // F4-02 (ADR 0025): injeta também os idiomas governados pela tela
         // localization/language — tela edita os dois aqui
         'config_language_catalog', 'config_language_admin',
