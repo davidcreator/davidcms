@@ -1,0 +1,12 @@
+{# dev/catalog/view/template/common/sitemap.twig — urlset XML (F4-07, ADR 0031). Conteúdo = URLs; XML estrutural não é texto de interface #}
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{% for u in urls %}
+  <url>
+    <loc>{{ u.loc }}</loc>
+    {% if u.lastmod %}<lastmod>{{ u.lastmod }}</lastmod>{% endif %}
+    <changefreq>{{ u.changefreq }}</changefreq>
+    <priority>{{ u.priority }}</priority>
+  </url>
+{% endfor %}
+</urlset>

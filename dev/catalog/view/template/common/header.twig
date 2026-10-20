@@ -6,6 +6,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ title ?: 'ReamurCMS' }}</title>
   {% if description %}<meta name="description" content="{{ description }}">{% endif %}
+  {# F4-07 (ADR 0031): canonical honesto (só URL limpa), sitemap discovery, OG/Twitter #}
+  {% if canonical %}<link rel="canonical" href="{{ canonical }}">{% endif %}
+  <link rel="sitemap" type="application/xml" href="{{ sitemap_href }}">
+  <meta property="og:type" content="{{ og.type }}">
+  <meta property="og:site_name" content="{{ og.site_name }}">
+  <meta property="og:title" content="{{ og.title }}">
+  {% if og.description %}<meta property="og:description" content="{{ og.description }}">{% endif %}
+  {% if og.url %}<meta property="og:url" content="{{ og.url }}">{% endif %}
+  <meta property="og:locale" content="{{ og.locale }}">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{{ og.title }}">
+  {% if og.description %}<meta name="twitter:description" content="{{ og.description }}">{% endif %}
   {% for href, rel in styles %}
   <link rel="{{ rel }}" href="{{ href }}">
   {% endfor %}

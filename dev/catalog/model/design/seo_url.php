@@ -69,6 +69,37 @@ class Seo_url extends \Reamur\System\Engine\Model {
         return null;
     }
 
+    /**
+     * F4-07 (ADR 0031): entradas cruas para o sitemap — key (query alvo, ex.:
+     * 'project_id=7'), value (keyword amigável) e language_id de TODAS as
+     * linhas; o controller deduplica por alvo preferindo language_id=1 (en-us,
+     * ADR 0001) e valida que a entidade segue ATIVA via models de conteúdo.
+     *
+     * @return array<int, array{key: string, value: string, language_id: int}>
+     */
+    public function getEntriesForSitemap(): array {
+        $query = $this->db->query(
+            "SELECT `key`, `value`, `language_id` FROM `" . DB_PREFIX . "seo_url`
+             ORDER BY `seo_url_id` ASC"
+        );
+
+        $out = [];
+
+        if ($query instanceof \stdClass && !empty($query->rows)) {
+            foreach ((array)$query->rows as $row) {
+                $row = (array)$row;
+
+                $out[] = [
+                    'key'         => (string)($row['key'] ?? ''),
+                    'value'       => (string)($row['value'] ?? ''),
+                    'language_id' => (int)($row['language_id'] ?? 0),
+                ];
+            }
+        }
+
+        return $out;
+    }
+
     private function currentLanguageId(): int {
         static $cache = 0;
 

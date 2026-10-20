@@ -26,6 +26,8 @@ class Router extends \Reamur\System\Engine\Controller {
         'quote'     => 'checkout/quote',
         'portfolio' => 'catalog/project',
         'tools'     => 'tool/tool',
+        // F4-07 (ADR 0031): endpoint dinâmico do índice público
+        'sitemap.xml' => 'common/sitemap',
     ];
 
     /** Mapa das queries suportadas → prefixo de rota interna (padrão gramática F2-6; + tool_id F3-04) */

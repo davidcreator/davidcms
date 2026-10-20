@@ -37,6 +37,26 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['text_languages'] = $this->language->get('text_languages');
         $data['body_class']     = (string)($data['body_class'] ?? '');
 
+        // F4-07 (ADR 0031): canonical + Open Graph/Twitter + descoberta do sitemap.
+        // Regra honesta: canonical/og:url SÓ quando a requisição chegou por caminho
+        // limpo — com ?route= o canonical derivado ficaria errado e canonical
+        // errado é pior que nenhum. og:title/description sempre (já com fallback).
+        $origin    = $this->requestOrigin();
+        $path      = (string)(parse_url((string)($this->request->server['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?: '');
+        $isClean   = $path !== '' && !str_ends_with(strtolower($path), 'index.php');
+        $canonical = $isClean ? $origin . $path : '';
+
+        $data['canonical']    = $canonical;
+        $data['sitemap_href'] = $this->url->link('common/sitemap');
+        $data['og'] = [
+            'type'        => 'website',
+            'site_name'   => (string)$this->config->get('config_name', ''),
+            'title'       => $data['title'],
+            'description' => $data['description'],
+            'url'         => $canonical,
+            'locale'      => str_replace('-', '_', (string)$data['locale']),
+        ];
+
         // Tema base (F3-01, ADR 0019): folha própria do site publicado
         $this->document->addStyle(rtrim($data['home'], '/') . '/view/css/theme.css');
         $data['styles'] = $this->document->getStyles();
@@ -86,5 +106,19 @@ class Header extends \Reamur\System\Engine\Controller {
         }
 
         return $this->load->view('common/header', $data);
+    }
+
+    /**
+     * Origem scheme+host da publicação. Fonte = site_url gravado pelo wizard
+     * (honra o deploy real, inclusive porta — localhost:8090 nas baterias);
+     * NUNCA o header Host cru (preview/proxy pode mascarar).
+     */
+    private function requestOrigin(): string {
+        $site   = (string)$this->config->get('site_url', '');
+        $scheme = (string)(parse_url($site, PHP_URL_SCHEME) ?: 'http');
+        $host   = (string)(parse_url($site, PHP_URL_HOST) ?: 'localhost');
+        $port   = parse_url($site, PHP_URL_PORT);
+
+        return $scheme . '://' . $host . ($port !== null ? ':' . $port : '');
     }
 }
