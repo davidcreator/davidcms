@@ -39,6 +39,7 @@
 | `webhook`, `webhook_log` | `marketing/` ou `setting/` | `system/webhook/` |
 | `seo_url` | `design/` | todas as rotas amigáveis |
 | `session` | (engine) | `session_engine=db` |
+| `import_contact` | (migração — staging) | F4-08/ADR 0032: espelho da `contact_messages` legada; **não é lida por nenhum Model** |
 
 ---
 
@@ -183,6 +184,10 @@
 
 ### `session`
 `session_id` VARCHAR(64) PK · `data` MEDIUMTEXT · `expire` DATETIME · índice(`expire`)
+
+### `import_contact` *(staging de migração — F4-08/ADR 0032)*
+`legacy_id` INT UNSIGNED PK · `name` VARCHAR(190) · `email` VARCHAR(190) · `phone` VARCHAR(60) · `subject` VARCHAR(255) · `message` TEXT · `status` VARCHAR(40) *(aceitos na importação: `new`·`replied`·`archived`·`closed`; outros ignorados)* · `ip_address` VARCHAR(64) · `created_at` DATETIME · `updated_at` DATETIME
+Uso: bloco INSERT do dump legado é colado pelo usuário nesta tabela; `upgrade_f4_08_*.sql` move para `rms_order` com guarda `NOT EXISTS`. Nenhum Model/catalog a lê — não possui `*_description`.
 
 ---
 
