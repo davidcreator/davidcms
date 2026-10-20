@@ -36,3 +36,23 @@ $_['error_not_configured'] = 'Configure and save the app credentials first.';
 $_['error_state']          = 'Invalid OAuth state — connection attempt rejected (possible forged callback).';
 $_['error_exchange']       = 'Could not exchange the authorization code: %s';
 $_['error_refresh']        = 'Could not rotate the token: %s';
+
+// ── F5-03 (ADR 0035): checkout com split + link de pagamento ──
+$_['text_paylinks']        = 'Payment links (Checkout Pro)';
+$_['text_no_payments']     = 'No payment links yet. Generate one from the order list (💳 button in Sales → Orders).';
+$_['text_fee_current']     = 'Current platform fee: %s%% of the order total (change via mp_marketplace_fee_percent key in the database in this delivery).';
+$_['text_item_title']      = 'Order #%s';
+$_['text_paylink_created'] = 'Payment link created: %s';
+$_['text_paylink_reused']  = 'This order already has a pending link — reusing: %s';
+$_['column_order']         = 'Order';
+$_['column_customer']      = 'Customer';
+$_['column_amount']        = 'Amount';
+$_['column_fee']           = 'Fee';
+$_['column_seller']        = 'Seller';
+$_['column_payment_status']= 'Status';
+$_['column_pay_link']      = 'Link';
+$_['button_copy']          = 'Copy';
+$_['error_already_paid']   = 'Order #%s already has an approved payment — link not regenerated.';
+$_['error_no_seller']      = 'No active connected seller. Connect a seller first.';
+$_['error_no_total']       = 'Order #%s has zero total. Set the price in Sales → Orders → Edit first.';
+$_['error_preference']     = 'Could not create the payment preference: %s';

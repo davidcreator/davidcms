@@ -4,6 +4,10 @@ namespace Reamur\System\Library;
 /**
  * Mercado Pago Marketplace — OAuth do conector de vendedores (F5-02/ADR 0034).
  *
+ * F5-03 (ADR 0035): createPreference() (checkout com split marketplace_fee)
+ * e getPayment() (consulta usada pelo controller público de notificação —
+ * a fonte da verdade NUNCA é o POST do webhook).
+ *
  * Config aceita no construtor: app_id, client_secret, redirect_uri e
  * (opcional) token_url / users_me_url — costuras de ambiente documentadas
  * no ADR 0034 §4: permitem apontar o handshake para o MOCK das baterias e2e
@@ -14,6 +18,9 @@ class MercadopagoMarketplace {
     private const AUTHORIZATION_URL = 'https://auth.mercadopago.com.br/authorization';
     private const TOKEN_URL = 'https://api.mercadopago.com/oauth/token';
     private const USERS_ME_URL = 'https://api.mercadopago.com/users/me';
+
+    /** Base da API (F5-03): preferences + consulta de pagamentos */
+    private const API_URL = 'https://api.mercadopago.com';
 
     private array $config;
 
@@ -134,6 +141,68 @@ class MercadopagoMarketplace {
      *
      * @return array{nickname:string,email:string}
      */
+    /**
+     * Cria uma preference (Checkout Pro) autenticada no SELLER (split real).
+     * O $payload é montado pelo caller (items/marketplace_fee/forms externos
+     * são domínio do pedido) — o método só adiciona transporte+auth.
+     *
+     * @param array<string, mixed> $payload   corpo JSON /checkout/preferences
+     * @return array<string, mixed> resposta decodificada + _http_status
+     */
+    public function createPreference(array $payload, string $access_token): array {
+        $request = $this->request(
+            $this->apiUrl() . '/checkout/preferences',
+            json_encode($payload) ?: '{}',
+            [
+                'accept: application/json',
+                'content-type: application/json',
+                'authorization: Bearer ' . trim($access_token),
+            ]
+        );
+
+        $data = json_decode($request['body'], true);
+
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        $data['_http_status'] = $request['status'];
+        $data['_curl_error']  = $request['error'];
+
+        return $data;
+    }
+
+    /**
+     * Consulta um pagamento no MP autenticado no SELLER. É A VERIFICAÇÃO de
+     * verdade do webhook/IPN: o notify do controller público NUNCA confia no
+     * corpo recebido — sempre confirma o status aqui (ADR 0035 §4).
+     *
+     * @return array<string, mixed> recurso do pagamento + _http_status ({} fora de 2xx vira checagem)
+     */
+    public function getPayment(int $payment_id, string $access_token): array {
+        if ($payment_id <= 0) {
+            return ['_http_status' => 0, '_curl_error' => 'invalid payment id'];
+        }
+
+        $request = $this->request(
+            $this->apiUrl() . '/v1/payments/' . $payment_id,
+            '',
+            ['accept: application/json', 'authorization: Bearer ' . trim($access_token)],
+            'GET'
+        );
+
+        $data = json_decode($request['body'], true);
+
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        $data['_http_status'] = $request['status'];
+        $data['_curl_error']  = $request['error'];
+
+        return $data;
+    }
+
     public function getUserInfo(string $access_token): array {
         $empty = ['nickname' => '', 'email' => ''];
 
@@ -175,6 +244,15 @@ class MercadopagoMarketplace {
         return ($override !== '' && filter_var($override, FILTER_VALIDATE_URL) !== false)
             ? $override
             : self::USERS_ME_URL;
+    }
+
+    /** Costura de ambiente (ADR 0034 §4 / 0035 §3): mock das baterias × API oficial */
+    private function apiUrl(): string {
+        $override = trim((string)($this->config['api_url'] ?? ''));
+
+        return ($override !== '' && filter_var($override, FILTER_VALIDATE_URL) !== false)
+            ? rtrim($override, '/')
+            : self::API_URL;
     }
 
     private function oauthTokenRequest(array $payload): array {

@@ -36,3 +36,23 @@ $_['error_not_configured'] = 'Configura y guarda primero las credenciales de la 
 $_['error_state']          = 'State OAuth no válido — intento de conexión rechazado (posible callback falsificado).';
 $_['error_exchange']       = 'No se pudo canjear el código de autorización: %s';
 $_['error_refresh']        = 'No se pudo renovar el token: %s';
+
+// ── F5-03 (ADR 0035): checkout con split + enlace de pago ──
+$_['text_paylinks']        = 'Enlaces de pago (Checkout Pro)';
+$_['text_no_payments']     = 'Aún no hay enlaces de pago. Genera uno en la lista de pedidos (botón 💳 en Ventas → Pedidos).';
+$_['text_fee_current']     = 'Comisión actual de la plataforma: %s%% del total del pedido (en esta entrega, cámbiala por la clave mp_marketplace_fee_percent en la base de datos).';
+$_['text_item_title']      = 'Pedido n.º %s';
+$_['text_paylink_created'] = 'Enlace de pago creado: %s';
+$_['text_paylink_reused']  = 'Este pedido ya tiene un enlace pendiente — reutilizando: %s';
+$_['column_order']         = 'Pedido';
+$_['column_customer']      = 'Cliente';
+$_['column_amount']        = 'Importe';
+$_['column_fee']           = 'Comisión';
+$_['column_seller']        = 'Vendedor';
+$_['column_payment_status']= 'Estado';
+$_['column_pay_link']      = 'Enlace';
+$_['button_copy']          = 'Copiar';
+$_['error_already_paid']   = 'El pedido n.º %s ya tiene un pago aprobado — enlace no regenerado.';
+$_['error_no_seller']      = 'No hay ningún vendedor activo conectado. Conecta un vendedor primero.';
+$_['error_no_total']       = 'El pedido n.º %s tiene total cero. Define el precio en Ventas → Pedidos → Editar antes.';
+$_['error_preference']     = 'No se pudo crear la preferencia de pago: %s';

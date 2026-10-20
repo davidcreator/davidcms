@@ -53,6 +53,7 @@ $_['entry_status']     = 'Estado';
 $_['button_add']          = 'Agregar';
 $_['button_edit']         = 'Editar';
 $_['button_delete']       = 'Eliminar';
+$_['button_mp_paylink'] = '💳 Enlace de pago MP'; // F5-03 (ADR 0035)
 $_['button_save']         = 'Guardar';
 $_['button_cancel']       = 'Cancelar';
 $_['button_add_product']  = 'Agregar Ítem';

@@ -37,6 +37,12 @@
         <td>{{ order.date_modified }}</td>
         <td class="right actions">
           <a class="btn ghost small" href="{{ order.edit }}">{{ button_edit }}</a>
+          {% if order.paylink %}
+          {# F5-03 (ADR 0035): gerar/reusar link de pagamento MP (redirect p/ marketplace) #}
+          <form method="post" action="{{ order.paylink }}" style="display:inline;">
+            <button type="submit" class="btn ghost small">{{ button_mp_paylink }}</button>
+          </form>
+          {% endif %}
           <form method="post" action="{{ order.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
             <button type="submit" class="btn danger small">{{ button_delete }}</button>
           </form>

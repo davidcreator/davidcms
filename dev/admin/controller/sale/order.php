@@ -43,6 +43,12 @@ class Order extends \Reamur\System\Engine\Controller {
         $data['button_delete']       = $this->language->get('button_delete');
         $data['text_flash']          = $this->flash();
 
+        // F5-03 (ADR 0035): botão 💳 por pedido → gerar link de pagamento MP
+        // (só aparece para quem tem modify em setting/marketplace; route admin)
+        $can_mp_paylink = $this->user->hasPermission('modify', 'setting/marketplace');
+
+        $data['button_mp_paylink'] = $this->language->get('button_mp_paylink');
+
         $data['orders'] = [];
 
         foreach ($this->model_sale_order->getOrders() as $order) {
@@ -59,6 +65,7 @@ class Order extends \Reamur\System\Engine\Controller {
                 'date_modified' => (string)$order['date_modified'],
                 'edit'          => $this->url->link('sale/order.edit|' . $oid),
                 'delete'        => $this->url->link('sale/order.delete|' . $oid),
+                'paylink'       => $can_mp_paylink ? $this->url->link('setting/marketplace.paylink|' . $oid) : '',
             ];
         }
 

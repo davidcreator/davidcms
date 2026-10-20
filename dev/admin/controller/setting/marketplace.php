@@ -18,7 +18,9 @@
  *                hash_equals, troca code→tokens, enriquece com /users/me e
  *                faz upsert por mp_user_id (reconectar ≠ duplicar);
  *  · refresh   → POST: rotaciona tokens do vendedor via refresh_token;
- *  · delete    → POST: desconecta LOCALMENTE (revogação é no painel do MP).
+ *  · delete    → POST: desconecta LOCALMENTE (revogação é no painel do MP);
+ *  · paylink   → POST|ORDER: gera preference c/ marketplace_fee (F5-03,
+ *                ADR 0035) e devolve link público checkout/payment.pay|TOKEN.
  * CSRF admin: padrão dos CRUDs da casa — guarda = sessão + hasPermission
  * (decisão declarada no ADR 0034 §5; coerente com F2/F3/F4).
  */
@@ -71,6 +73,25 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             'mp_env'               => (string)($settings['mp_env'] ?? 'test'),
             'mp_redirect_uri'      => (string)($settings['mp_redirect_uri'] ?? ''),
             'mp_configured'        => $mp->isConfigured(),
+            'text_paylinks'        => $this->language->get('text_paylinks'),
+            'text_no_payments'     => $this->language->get('text_no_payments'),
+            'text_fee_current'     => sprintf($this->language->get('text_fee_current'), (string)($settings['mp_marketplace_fee_percent'] ?? '10')),
+            'column_order'         => $this->language->get('column_order'),
+            'column_customer'      => $this->language->get('column_customer'),
+            'column_amount'        => $this->language->get('column_amount'),
+            'column_fee'           => $this->language->get('column_fee'),
+            'column_seller'        => $this->language->get('column_seller'),
+            'column_payment_status'=> $this->language->get('column_payment_status'),
+            'column_pay_link'      => $this->language->get('column_pay_link'),
+            'button_copy'          => $this->language->get('button_copy'),
+            'payments'             => array_map(
+                function (array $p): array {
+                    $p['pay_url'] = $this->publicPayUrl((string)$p['public_token']);
+
+                    return $p;
+                },
+                $this->model_setting_marketplace->getPayments()
+            ),
             'action_save'          => $this->url->link('setting/marketplace.save'),
             'action_connect'       => $this->url->link('setting/marketplace.authorize'),
             'action_refresh'       => $this->url->link('setting/marketplace.refresh'),
@@ -304,6 +325,149 @@ class Marketplace extends \Reamur\System\Engine\Controller {
         $this->response->redirect($this->url->link('setting/marketplace'));
     }
 
+    /**
+     * POST|ORDER_ID — gera o link de pagamento (preference no MP com split).
+     * Re-uso: pedido já com tentativa pending devolve o MESMO link (não cria
+     * preference duplicada no MP); pedido já approved/rejected não regenera.
+     */
+    public function paylink(string $order_id = '0'): void {
+        $this->load->language('setting/marketplace');
+
+        $order_id = (int)$order_id;
+
+        if ($this->request->server['REQUEST_METHOD'] !== 'POST' || !$this->user->hasPermission('modify', 'setting/marketplace')) {
+            $this->response->redirect($this->url->link('error/permission'));
+
+            return;
+        }
+
+        $this->load->model('sale/order');
+        $this->load->model('setting/setting');
+        $this->load->model('setting/marketplace');
+
+        $order = $this->model_sale_order->getOrder($order_id);
+
+        if (!$order) {
+            $this->response->redirect($this->url->link('error/not_found'));
+
+            return;
+        }
+
+        $settings = $this->model_setting_setting->getSettings();
+
+        $existing = $this->model_setting_marketplace->getPaymentByOrder($order_id);
+
+        if ($existing && (string)$existing['status'] === 'approved') {
+            $this->session->data['flash'] = ['type' => 'warning', 'text' => sprintf($this->language->get('error_already_paid'), $order_id)];
+
+            $this->response->redirect($this->url->link('setting/marketplace'));
+
+            return;
+        }
+
+        if ($existing && (string)$existing['status'] === 'pending' && (string)($existing['init_point'] ?? '') !== '') {
+            $this->session->data['flash'] = [
+                'type' => 'info',
+                'text' => sprintf($this->language->get('text_paylink_reused'), $this->publicPayUrl((string)$existing['public_token'])),
+            ];
+
+            $this->response->redirect($this->url->link('setting/marketplace'));
+
+            return;
+        }
+
+        $seller = $this->model_setting_marketplace->getActiveSeller();
+
+        if (!$seller) {
+            $this->session->data['flash'] = ['type' => 'warning', 'text' => $this->language->get('error_no_seller')];
+
+            $this->response->redirect($this->url->link('setting/marketplace'));
+
+            return;
+        }
+
+        $amount = round((float)$order['total'], 2);
+
+        if ($amount <= 0) {
+            $this->session->data['flash'] = ['type' => 'warning', 'text' => sprintf($this->language->get('error_no_total'), $order_id)];
+
+            $this->response->redirect($this->url->link('setting/marketplace'));
+
+            return;
+        }
+
+        $percent = (float)str_replace(',', '.', (string)($settings['mp_marketplace_fee_percent'] ?? '10'));
+        $percent = max(0.0, min(100.0, $percent));
+        $fee     = round($amount * $percent / 100, 2);
+
+        $mp = $this->mpFromSettings($settings);
+
+        $preference = $mp->createPreference([
+            'items' => [[
+                'title'       => sprintf($this->language->get('text_item_title'), $order_id),
+                'quantity'    => 1,
+                'currency_id' => 'BRL',
+                'unit_price'  => $amount,
+            ]],
+            'marketplace_fee'    => $fee,
+            'external_reference' => (string)$order_id,
+            'notification_url'   => $this->catalogUrl('checkout/payment.notify'),
+        ], (string)$seller['access_token']);
+
+        $preference_id = (string)($preference['id'] ?? '');
+        $init_point    = (string)($preference['init_point'] ?? $preference['sandbox_init_point'] ?? '');
+
+        if ((int)($preference['_http_status'] ?? 0) < 200 || (int)($preference['_http_status'] ?? 0) >= 300 || $preference_id === '' || $init_point === '') {
+            $this->session->data['flash'] = [
+                'type' => 'danger',
+                'text' => sprintf($this->language->get('error_preference'), $mp->extractErrorMessage($preference)),
+            ];
+
+            $this->response->redirect($this->url->link('setting/marketplace'));
+
+            return;
+        }
+
+        $this->model_setting_marketplace->addPayment([
+            'order_id'        => $order_id,
+            'mp_seller_id'    => (int)$seller['mp_seller_id'],
+            'preference_id'   => $preference_id,
+            'public_token'    => bin2hex(random_bytes(24)),
+            'amount'          => $amount,
+            'marketplace_fee' => $fee,
+            'init_point'      => $init_point,
+        ]);
+
+        $public = $this->publicPayUrl(
+            (string)$this->model_setting_marketplace->getPaymentByOrder($order_id)['public_token']
+        );
+
+        $this->session->data['flash'] = ['type' => 'success', 'text' => sprintf($this->language->get('text_paylink_created'), $public)];
+
+        $this->response->redirect($this->url->link('setting/marketplace'));
+    }
+
+    /** Link público do cliente (catálogo — sem sessão) */
+    private function publicPayUrl(string $token): string {
+        return $this->catalogUrl('checkout/payment.pay|' . $token);
+    }
+
+    /**
+     * Base pública do CATÁLOGO a partir do admin: site_url da admin termina em
+     * /admin/ (HTTP_SERVER do wizard); o catálogo mora em /catalog/ (mesma
+     * convenção do Contrato-Bootstrap). Nunca usar site_url "cru" aqui:
+     * apontaria o cliente para a aplicação admin (bug da revisão F5-03).
+     */
+    private function catalogUrl(string $route): string {
+        $base = rtrim((string)$this->config->get('site_url'), '/');
+
+        if (str_ends_with($base, '/admin')) {
+            $base = substr($base, 0, -6);
+        }
+
+        return $base . '/catalog/index.php?route=' . $route;
+    }
+
     // ── internos ──────────────────────────────────────────────────────────
 
     /** Monta a library OAuth a partir de rms_setting (credenciais fora do git) */
@@ -316,6 +480,8 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             // alguém gravar as chaves-opcionais — fora das telas e do seed.
             'token_url'     => (string)($settings['mp_token_url'] ?? ''),
             'users_me_url'  => (string)($settings['mp_users_me_url'] ?? ''),
+            // F5-03 (ADR 0035 §3): base /checkout/preferences + /v1/payments
+            'api_url'       => (string)($settings['mp_api_url'] ?? ''),
         ]);
     }
 

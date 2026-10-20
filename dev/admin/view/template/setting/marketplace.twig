@@ -90,5 +90,47 @@
     <p class="muted">{{ text_no_sellers }}</p>
     {% endif %}
   </section>
+
+  {# F5-03 (ADR 0035): links de pagamento gerados (Checkout Pro, split) #}
+  <section class="panel">
+    <h2 style="margin-top:0;">{{ text_paylinks }}</h2>
+    <p class="muted">{{ text_fee_current }}</p>
+    {% if payments %}
+    <table class="list">
+      <thead>
+        <tr>
+          <th>{{ column_order }}</th>
+          <th>{{ column_customer }}</th>
+          <th>{{ column_amount }}</th>
+          <th>{{ column_fee }}</th>
+          <th>{{ column_seller }}</th>
+          <th>{{ column_payment_status }}</th>
+          <th>{{ column_pay_link }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td>#{{ p.order_id }}</td>
+          <td>{{ p.firstname }} {{ p.lastname }}</td>
+          <td>{{ p.currency_id }} {{ p.amount }}</td>
+          <td>{{ p.currency_id }} {{ p.marketplace_fee }}</td>
+          <td>{{ p.seller_nickname ?: p.seller_mp_user_id }}</td>
+          <td><code>{{ p.status }}</code></td>
+          <td style="max-width:22rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            {% if p.status == 'pending' %}
+              <code title="{{ p.pay_url }}">{{ p.pay_url }}</code>
+            {% else %}
+              —
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">{{ text_no_payments }}</p>
+    {% endif %}
+  </section>
 </main>
 {{ footer|raw }}

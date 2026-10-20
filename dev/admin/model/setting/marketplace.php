@@ -85,6 +85,68 @@ class Marketplace extends \Reamur\System\Engine\Model {
         $this->db->query("DELETE FROM `" . $this->t('mp_seller') . "` WHERE `mp_seller_id` = '" . $mp_seller_id . "'");
     }
 
+    // ── F5-03 (ADR 0035): checkout com split ────────────────────────────────
+
+    /** Vendedor que recebe o líquido: o PRIMEIRO conectado ainda ativo (§5) */
+    public function getActiveSeller(): array {
+        $query = $this->db->query(
+            "SELECT `mp_seller_id`, `mp_user_id`, `nickname`, `email`, `access_token`
+               FROM `" . $this->t('mp_seller') . "`
+              WHERE `status` = 1
+              ORDER BY `mp_seller_id` ASC LIMIT 1"
+        );
+
+        return ($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : [];
+    }
+
+    /** Tentativa vigente do pedido (a mais recente, qualquer status) */
+    public function getPaymentByOrder(int $order_id): array {
+        $query = $this->db->query(
+            "SELECT * FROM `" . $this->t('mp_payment') . "`
+              WHERE `order_id` = '" . (int)$order_id . "'
+              ORDER BY `mp_payment_id` DESC LIMIT 1"
+        );
+
+        return ($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : [];
+    }
+
+    /** Grava a preference criada (status pending). public_token NUNCA do order_id. */
+    public function addPayment(array $p): int {
+        $this->db->query(
+            "INSERT INTO `" . $this->t('mp_payment') . "` SET
+              `order_id`        = '" . (int)$p['order_id'] . "',
+              `mp_seller_id`    = '" . (int)$p['mp_seller_id'] . "',
+              `preference_id`   = '" . $this->db->escape((string)$p['preference_id']) . "',
+              `public_token`    = '" . $this->db->escape((string)$p['public_token']) . "',
+              `amount`          = '" . (float)$p['amount'] . "',
+              `marketplace_fee` = '" . (float)$p['marketplace_fee'] . "',
+              `currency_id`     = '" . $this->db->escape((string)($p['currency_id'] ?? 'BRL')) . "',
+              `status`          = 'pending',
+              `init_point`      = '" . $this->db->escape((string)$p['init_point']) . "',
+              `date_added`      = NOW(),
+              `date_modified`   = NOW()"
+        );
+
+        return (int)$this->db->getLastId();
+    }
+
+    /** Grade da tela: payment + pedido + vendedor (sem tokens) */
+    public function getPayments(): array {
+        $query = $this->db->query(
+            "SELECT p.`mp_payment_id`, p.`order_id`, p.`preference_id`, p.`payment_id`,
+                    p.`public_token`, p.`amount`, p.`marketplace_fee`, p.`currency_id`,
+                    p.`status`, p.`date_added`,
+                    o.`firstname`, o.`lastname`, o.`order_status_id`,
+                    s.`nickname` AS `seller_nickname`, s.`mp_user_id` AS `seller_mp_user_id`
+               FROM `" . $this->t('mp_payment') . "` p
+               LEFT JOIN `" . $this->t('order') . "` o ON o.`order_id` = p.`order_id`
+               LEFT JOIN `" . $this->t('mp_seller') . "` s ON s.`mp_seller_id` = p.`mp_seller_id`
+              ORDER BY p.`mp_payment_id` DESC"
+        );
+
+        return (array)$query->rows;
+    }
+
     /** Tabela com prefixo (mesmo helper dos demais models) */
     private function t(string $table): string {
         return DB_PREFIX . $table;

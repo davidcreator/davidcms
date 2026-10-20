@@ -4,8 +4,8 @@
 | --- | --- |
 | **Autor** | David L. Almeida |
 | **Projeto** | ReamurCMS |
-| **Entrega** | F5-02 · ADR 0034 · fundação OAuth (conectar/renovar/desconectar vendedores) |
-| **Fora do escopo** | Checkout com split (`marketplace_fee`), IPN de pagamento → **F5-03**, com credenciais reais de teste |
+| **Entregas** | F5-02 · ADR 0034 · fundação OAuth (vendedores)<br>F5-03 · ADR 0035 · checkout com split + notificação de pagamento |
+| **Validação** | Baterias com mock local; sandbox real quando houver credenciais de teste |
 
 ## 1. O que esta entrega faz
 
@@ -61,7 +61,20 @@ Config: `rms_setting` chaves `mp_app_id`, `mp_client_secret`, `mp_env`, `mp_redi
 
 Rode com o ambiente padrão: `bash tools/e2e/e2e_f502.sh` (precisa do Apache + banco `reamur_test` ativos).
 
-## 6. Segurança — o que já vale e o que é dívida
+## 6. Checkout com split (F5-03)
+
+1. **Defina o preço do pedido** em *Vendas → Pedidos → Editar* (o orçamento nasce com total zero).
+2. Na lista de pedidos, clique **💳 Link de pagamento MP** — o CMS cria a preference no seller conectado com `marketplace_fee` (comissão da plataforma, default **10%** via chave `mp_marketplace_fee_percent`) e exibe o **link público copiável** na tela *Mercado Pago Marketplace*.
+3. Envie o link ao cliente (WhatsApp/e-mail). O cliente não precisa de login: o link abre o Checkout Pro do vendedor.
+4. O Mercado Pago **notifica** o CMS em `catalog/index.php?route=checkout/payment.notify` (esse endereço vai na preference automaticamente, derivado da URL pública do catálogo — precisa ser alcançável pela internet em produção). Pagamento **aprovado** → pedido vai para *Approved*; **rejeitado/cancelado** → *Canceled*.
+5. Regerar link para pedido pendente **reutiliza** o mesmo link (não duplica cobrança no MP).
+
+### Segurança do endpoint de notificação
+
+- O CMS **nunca confia no POST** do webhook: extrai o id e **consulta `/v1/payments/{id}`** com o token do vendedor — só o status confirmado pela API é refletido no banco (idempotente).
+- Opcional e recomendado para produção: cadastre a chave de **assinatura de webhooks** no app do MP e grave-a em `rms_setting` (`mp_webhook_secret`) — o CMS valida o header `x-signature` antes de chamar a API.
+
+## 7. Segurança — o que já vale e o que é dívida
 
 - `state` aleatório de 16 bytes, comparado com `hash_equals` e consumido após uso ✔
 - Redirect URI `https://` obrigatório ✔ · credenciais fora do git ✔ · grade sem tokens ✔
