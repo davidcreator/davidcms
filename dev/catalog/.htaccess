@@ -5,6 +5,40 @@ Options +FollowSymLinks
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
+
+# ═══ F6-03 (ADR 0038) — Mapa 301 do site legado (Análise §9) ═══════════
+# Regras CIRÚRGICAS, avaliadas ANTES do front controller.
+# CMSBASE captura o prefixo real da URL (em subpasta: /davidcms/dev/ ; na
+# raiz do domínio: /) → os mesmos destinos funcionam nos dois cenários sem
+# editar RewriteBase.
+# /catalog/index.php e seu path_info NÃO são tocados: é o endpoint do POST
+# de notificação do Mercado Pago (F5-03), webhooks e URLs gramaticais.
+RewriteCond %{REQUEST_URI} ^(.*/)catalog/
+RewriteRule ^ - [E=CMSBASE:%1]
+
+# Ferramentas: tools/open?id=N → keyword atual (ids do seed F3-01, nomes reais)
+RewriteCond %{QUERY_STRING} (?:^|&)id=1(?:&|$)
+RewriteRule ^tools/open/?$ %{ENV:CMSBASE}catalog/fluxa? [R=301,L]
+RewriteCond %{QUERY_STRING} (?:^|&)id=2(?:&|$)
+RewriteRule ^tools/open/?$ %{ENV:CMSBASE}catalog/quotia? [R=301,L]
+RewriteCond %{QUERY_STRING} (?:^|&)id=3(?:&|$)
+RewriteRule ^tools/open/?$ %{ENV:CMSBASE}catalog/vertex? [R=301,L]
+RewriteCond %{QUERY_STRING} (?:^|&)id=4(?:&|$)
+RewriteRule ^tools/open/?$ %{ENV:CMSBASE}catalog/solis? [R=301,L]
+# id ausente/desconhecido → home pública (não deixa morrer em 404)
+RewriteRule ^tools/open/?$ %{ENV:CMSBASE}catalog/? [R=301,L]
+
+# Portfólio: portfolio/{slug} → {slug} (slug preservado — cobre os 10 slugs
+# reais, inclusive históricos 'pitbul-color', 'farmer', 'chameleon', 'rc',
+# 'classic-car' mantidos de propósito no seed F3-01)
+RewriteRule ^portfolio/([a-z0-9-]+)/?$ %{ENV:CMSBASE}catalog/$1 [R=301,L]
+
+# /catalog/cookies e /catalog/politicas-internas: já SÃO as URLs canônicas
+# atuais (200 via seo_url) — a mudança p/ raiz do domínio (Análise §9) é
+# decisão de topologia do cutover (runbook F6-03), redirect p/ 404 seria pior.
+# Âncora /#profile etc.: fragmento não chega ao servidor; o browser reaplica
+# o #fragment após qualquer 301 — tratamento client-side (Análise §9).
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [L,QSA]
