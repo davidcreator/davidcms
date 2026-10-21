@@ -64,6 +64,14 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        // F7-01 (ADR 0042): blog interno — card com o mesmo gate de ACL
+        if ($this->user->hasPermission('access', 'blog/blog')) {
+            $data['modules'][] = [
+                'name' => $this->language->get('text_manage_blog'),
+                'href' => $this->url->link('blog/blog'),
+            ];
+        }
+
         if ($this->user->hasPermission('access', 'marketing/testimonial')) {
             $data['modules'][] = [
                 'name' => $this->language->get('text_manage_testimonials'),

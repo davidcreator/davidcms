@@ -28,13 +28,16 @@ class Router extends \Reamur\System\Engine\Controller {
         'tools'     => 'tool/tool',
         // F4-07 (ADR 0031): endpoint dinâmico do índice público
         'sitemap.xml' => 'common/sitemap',
+        // F7-01 (ADR 0042): seção pública do blog interno
+        'blog'      => 'blog/blog',
     ];
 
-    /** Mapa das queries suportadas → prefixo de rota interna (padrão gramática F2-6; + tool_id F3-04) */
+    /** Mapa das queries suportadas → prefixo de rota interna (padrão gramática F2-6; + tool_id F3-04; + blog_id F7-01) */
     private const SEO_ROUTES = [
         'project_id' => 'catalog/project.info|',
         'page_id'    => 'cms/page.info|',
         'tool_id'    => 'tool/tool.info|',
+        'blog_id'    => 'blog/blog.info|',
     ];
 
     /** Chamado pelo framework quando não há ?route= — resolve e prepara saída limpa */
@@ -121,8 +124,8 @@ class Router extends \Reamur\System\Engine\Controller {
                 $route = (string)$m[1];
 
                 // SEO: 'catalog/project.info|7' / 'cms/page.info|3' / 'tool/tool.info|1' → '/jwa' (keyword do idioma)
-                if (preg_match('/^(catalog\/project|cms\/page|tool\/tool)\.info\|(\d+)$/', $route, $g)) {
-                    $prefix = ['catalog/project' => 'project_id=', 'cms/page' => 'page_id=', 'tool/tool' => 'tool_id='];
+                if (preg_match('/^(catalog\/project|cms\/page|tool\/tool|blog\/blog)\.info\|(\d+)$/', $route, $g)) {
+                    $prefix = ['catalog/project' => 'project_id=', 'cms/page' => 'page_id=', 'tool/tool' => 'tool_id=', 'blog/blog' => 'blog_id='];
                     $query_key = $prefix[$g[1]] . (int)$g[2];
 
                     $this->load->model('design/seo_url');

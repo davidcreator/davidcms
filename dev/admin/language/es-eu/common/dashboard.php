@@ -26,6 +26,7 @@ $_['text_modules']       = 'Módulos';
 $_['text_manage_portfolio'] = 'Portafolio';
 $_['text_manage_categories'] = 'Categorías';
 $_['text_manage_pages'] = 'Páginas';
+$_['text_manage_blog']  = 'Blog'; // F7-01 (ADR 0042)
 $_['text_manage_testimonials'] = 'Testimonios';
 $_['text_manage_client_logos'] = 'Logotipos de Clientes';
 $_['text_manage_tools'] = 'Herramientas';
