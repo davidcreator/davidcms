@@ -26,3 +26,9 @@ docs/api/
 Thumbs.db
 .idea/
 .vscode/
+
+# Build de produção (ADR 0039): artefato derivado — a fonte é dev/ + tools/build_prod.sh
+/prod/
+
+# Zips de build/deploy (gerados por build_prod.sh ou à mão — nunca versionar)
+/build-prod-*.zip
