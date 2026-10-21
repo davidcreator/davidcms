@@ -1,154 +1,170 @@
 #!/usr/bin/env bash
-# ══════════════════════════════════════════════════════════════════
-# e2e_f305.sh — "Latest News" do blog externo na home (ADR 0023)
+# ════════════════════════════════════════════════════════════════════
+# e2e_f305.sh — seção "Latest News" da home — F7-02 (ADR 0043)
 #
-#   PRÉ-CONDIÇÃO: instalação concluída (rode e2e_f301.sh antes).
-#   Não requer seed novo (seção importa feed ao vivo com cache).
+# REESCRITA em F7-02: a bateria original (F3-05, ADR 0023) validava o
+# feed WP EXTERNO (crawl + cache + CTA externo) — contrato REVOGADO.
+# A seção agora lê o blog INTERNO (posts publicados, cronológico DESC,
+# links internos). Numeração e régua histórica preservadas.
 #
 # Checks:
-#   1 home 200 → seção #news presente com kicker real ×1 idioma
-#   2 conteúdo REAL: card extraído do feed ao vivo bate coma a home
-#   3 metadados: data d/m/Y + fonte davidcreator.com + CTA externo ↗
-#   4 layout: classes do tema (news-card/grid-3), zero inline na seção
-#   5 RESILIÊNCIA: cache file criado; segundo hit NÃO re-pede o feed
-#     (mtime da página estável) e continua 200
-#   6 RESILIÊNCIA: feed quebrado → home continua 200, seção se oculta
-#     (cache de erro cobre o TTL — resultado negativo NÃO lança)
-#   7 i18n ×3: kicker traduzido em pt/es, títulos do feed intocados
-#   8 (negativo) nada escapa para o banco (nenhum INSERT/UPDATE de news no storage)
-#   9 não pesa: payload da home cresce < 15 KB vs. sem seção
-#  10 cabeçalho da home sem erros de PHP (logs limpos)
-# ══════════════════════════════════════════════════════════════════
+#   1 home 200 → seção #news presente com kicker real (com posts seed)
+#   2 conteúdo REAL do banco aparece: títulos, data e excerpt dos seeds
+#     públicos; rascunho NÃO aparece
+#   3 metadados: fonte '· Blog', CTA interno SEM target=_blank nem
+#     rel=noopener, href interno resolve para post page (anti-link-externo)
+#   4 layout do tema: grid-3 + news-card + zero style= na seção
+#   5 determinismo de leitura: 2 hits consecutivos → mesmo payload de
+#     news; storage SEM cache.news_feed (não há mais crawl nem cache)
+#   6 degradação silenciosa (contrato ADR 0023 preservado): 0 posts
+#     publicados → home ainda 200, seção se oculta, resto da home íntegro
+#   7 i18n ×3: kicker traduzido pt/es/en; título do post coalesce (EN)
+#   8 sem side-effects: storage sem artefatos de feed/rss; banco de
+#     conteúdo idêntico ao pré-seção (posts blog intactos)
+#   9 payload razoável: home com news < 15 KB a mais que home sem news
+#  10 ponte: CTA da 1ª news → post page interna 200 com título do post
+# ════════════════════════════════════════════════════════════════════
 set -u
 B="${BASE:-http://127.0.0.1:8090/davidcms/dev}"
 C="$B/catalog"
-FUI="/tmp/fui/dev"
+FUI="${FUI:-/var/www/html/davidcms/dev}"
+MIRROR="${MIRROR:-/home/user/davidcms/dev}"
 CACHE_FILE="$FUI/system/storage/cache/cache.news_feed"
 PASS=0; FAIL=0
 ck() { if [ "$2" -eq 0 ]; then PASS=$((PASS+1)); echo "$1 pass — $3"; else FAIL=$((FAIL+1)); echo "$1 FAIL — $3"; fi; }
 hdr() { grep -i "^HTTP" "$1" | tail -1 | grep -o "[0-9][0-9][0-9]"; }
+q(){ sudo mysql -N --default-character-set=utf8mb4 -e "$1"; }
 
-sudo rm -f "$CACHE_FILE"
+echo '══ setup: estado virgem (wizard + seed f3 + blog) ══'
+sudo mysql -e "DROP DATABASE IF EXISTS reamur_test; CREATE DATABASE reamur_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+rm -f $FUI/catalog/config.php $FUI/admin/config.php $FUI/system/storage/install.lock $CACHE_FILE
+JW=/tmp/f305w.jar; rm -f $JW
+curl -s -c $JW -b $JW "$B/install/index.php?route=install/step_1" -o /dev/null
+curl -s -c $JW -b $JW -X POST "$B/install/index.php?route=install/step_1" -o /dev/null
+curl -s -c $JW -b $JW -X POST "$B/install/index.php?route=install/step_2" -o /dev/null
+curl -s -c $JW -b $JW -X POST "$B/install/index.php?route=install/step_3" \
+  --data-urlencode "db_driver=mysqli" --data-urlencode "db_hostname=127.0.0.1" --data-urlencode "db_port=3306" \
+  --data-urlencode "db_username=reamur" --data-urlencode "db_password=reamur123" --data-urlencode "db_database=reamur_test" \
+  --data-urlencode "db_prefix=rms_" --data-urlencode "http_server=" \
+  --data-urlencode "username=admin" --data-urlencode "firstname=David" --data-urlencode "lastname=Almeida" \
+  --data-urlencode "email=david@example.com" --data-urlencode "password=SenhaForte!2026" --data-urlencode "confirm=SenhaForte!2026" \
+  -o /dev/null
+for u in "$MIRROR"/install/sql/upgrade_*.sql; do [ -f "$u" ] && sudo mysql reamur_test < "$u"; done
+sudo rm -f $FUI/system/storage/cache/cache.setting.config
+q "INSERT INTO reamur_test.rms_blog_post (image,status,date_published,date_added,date_modified) VALUES
+   ('',1,'2026-10-20 10:00:00',NOW(),NOW()),
+   ('',1,'2026-10-21 09:00:00',NOW(),NOW()),
+   ('',0,'2026-10-19 08:00:00',NOW(),NOW())"
+q "INSERT INTO reamur_test.rms_blog_post_description (post_id,language_id,title,description,meta_title,meta_description) VALUES
+   (1,1,'Notícia antiga da seção','<p>Texto da notícia antiga seedada.</p>','',''),
+   (2,1,'Grande lançamento de outubro','<p>Texto de resumo do lançamento com bastante conteúdo para o excerpt aparecer direitinho na home.</p>','',''),
+   (3,1,'Rascunho escondido','<p>Não pode aparecer.</p>','','')"
+q "INSERT INTO reamur_test.rms_seo_url (\`key\`,\`value\`,language_id,sort_order) VALUES ('blog_id=2','lancamento-outubro',1,0)"
 
 echo '══ 1 — home 200 + seção #news + kicker real ══'
-curl -s -D /tmp/f305_a.hdr -o /tmp/f305_a.html "$C/"
-curl -s "$C/?language=en-us" -o /tmp/f305_a.html > /dev/null 2>&1 # garante en como cookie default? não — GET ignora. refresh:
-curl -s "$C/" -o /tmp/f305_a.html
+curl -s -D /tmp/f305_a.hdr "$C/" -o /tmp/f305_a.html
 OK=0
 [ "$(hdr /tmp/f305_a.hdr)" = "200" ] || OK=1
 grep -q 'id="news"' /tmp/f305_a.html || OK=1
 grep -q 'class="kicker"' /tmp/f305_a.html || OK=1
-grep -q 'news-card' /tmp/f305_a.html || OK=1
+grep -qE "From the blog|Do blog|Desde el blog" /tmp/f305_a.html || OK=1
 ck 1 $OK "news-presente"
 
-echo '══ 2 — conteúdo REAL do feed aparece (amostra feita de XML → home) ══'
-T0=$(curl -s -m 12 https://davidcreator.com/feed/ | grep -oPm1 '(?<=<title>)[^<]+')
-T1=$(curl -s -m 12 https://davidcreator.com/feed/ | sed -n '/<item>/,/<\/item>/p' | grep -oPm1 '(?<=<title>)[^<]+' | sed 's/[[:space:]]\+/ /g;s/^\s\+//;s/\s\+$//')
+echo '══ 2 — conteúdo REAL do banco aparece (título, data, excerpt) ══'
 OK=0
-[ -n "$T1" ] || OK=1
-# o primeiro título do feed precisa aparecer (normalizado p/ espaço single)
-grep -qiF "$(printf '%s' "$T1" | sed 's/&/\\&/g')" /tmp/f305_a.html || OK=1
-ck 2 $OK "feed-real-bate"
+grep -q "Grande lançamento de outubro" /tmp/f305_a.html || OK=1
+grep -q "Notícia antiga da seção" /tmp/f305_a.html || OK=1
+grep -q "2026-10-21" /tmp/f305_a.html || OK=1         # date_published do post novo
+grep -q "2026-10-20" /tmp/f305_a.html || OK=1         # e do antigo
+grep -q "Post de blog" /tmp/f305_a.html && OK=1       # rascunho NÃO pode pingar como post publicado
+grep -q "Rascunho escondido" /tmp/f305_a.html && OK=1 # rascunho ausente
+ck 2 $OK "conteudo-real-banco"
 
-echo '══ 3 — metadados: data d/m/Y, fonte, CTA externo rel=noopener ══'
+echo '══ 3 — metadados: fonte Blog, CTA interno, sem target=_blank ══'
 OK=0
-grep -qE '[0-9]{2}/[0-9]{2}/[0-9]{4} · <b?davidcreator\.com|davidcreator\.com</p>?' /tmp/f305_a.html \
-  || ( grep -qE 'news-meta">[0-9]{2}/[0-9]{2}/[0-9]{4} · davidcreator\.com' /tmp/f305_a.html ) || OK=1
-grep -q 'target="_blank" rel="noopener">' /tmp/f305_a.html || OK=1
-grep -q 'Read on davidcreator.com ↗' /tmp/f305_a.html || grep -q 'news-cta"' /tmp/f305_a.html || OK=1
-ck 3 $OK "metadados-ok"
-
-echo '══ 4 — layout do tema: grid-3 + news-card + zero style= na seção ══'
-OK=0
-# seção completa existe e sem inline dentro do bloco
+grep -o '<p class="news-meta">[^<]*</p>' /tmp/f305_a.html | grep -q "· Blog" || OK=1
+# nenhum link do bloco #news abre em nova aba nem rel externo
 python3 - <<'PY' > /tmp/f305_sec.txt
 import re
 h=open('/tmp/f305_a.html',encoding='utf-8',errors='ignore').read()
 m=re.search(r'<section[^>]+id="news".*?</section>', h, re.S)
 print(m.group(0) if m else '')
 PY
+grep -q 'target="_blank"' /tmp/f305_sec.txt && OK=1
+grep -q 'rel="noopener' /tmp/f305_sec.txt && OK=1
+grep -q 'href="http://127.0.0.1:8090/davidcms/dev/catalog/lancamento-outubro"' /tmp/f305_sec.txt || OK=1
+grep -q 'href="http://127.0.0.1:8090/davidcms/dev/catalog/index.php?route=blog/blog.info|1"' /tmp/f305_sec.txt || OK=1
+ck 3 $OK "metadados-cta-interno"
+
+echo '══ 4 — layout do tema: grid-3 + news-card + zero style= na seção ══'
+OK=0
 grep -q 'news-card' /tmp/f305_sec.txt || OK=1
 grep -q 'grid-3' /tmp/f305_sec.txt || OK=1
 grep -q 'style=' /tmp/f305_sec.txt && OK=1
 ck 4 $OK "sem-inline"
 
-echo '══ 5 — cache criado + 2º hit sem re-crawl (mtime estável, 200) ══'
+echo '══ 5 — determinismo: 2º hit idêntico e SEM cache de crawl ══'
 OK=0
-[ -f "$CACHE_FILE" ] || OK=1
-T1M=$(stat -c %Y "$CACHE_FILE" 2>/dev/null || echo 0)
-curl -s -D /tmp/f305_b.hdr -o /tmp/f305_b.html "$C/"
-T2M=$(stat -c %Y "$CACHE_FILE" 2>/dev/null || echo 0)
-[ "$T1M" = "$T2M" ] || OK=1   # cache servido: arquivo não regravado
-[ "$(hdr /tmp/f305_b.hdr)" = "200" ] || OK=1
-diff -q <(grep -c 'news-card' /tmp/f305_a.html) <(grep -c 'news-card' /tmp/f305_b.html) > /dev/null || OK=1
-ck 5 $OK "cache-ativo"
+curl -s "$C/" -o /tmp/f305_b.html
+diff -q <(grep -o 'news-card' /tmp/f305_a.html | wc -l) <(grep -o 'news-card' /tmp/f305_b.html | wc -l) > /dev/null || OK=1
+diff -q <(grep -A3 'class="news-card"' /tmp/f305_a.html) <(grep -A3 'class="news-card"' /tmp/f305_b.html) > /dev/null || OK=1
+[ -e "$CACHE_FILE" ] && { OK=1; echo "  cache.news_feed ressurgiu?!"; }   # legado do feed externo não existe mais
+ck 5 $OK "determinismo-sem-crawl"
 
-echo '══ 6 — degradação silenciosa: cache NEGATIVO → home ainda 200, seção se oculta ══'
+echo '══ 6 — degradação silenciosa: 0 posts publicados → home ainda 200, seção oculta ══'
 OK=0
-FE=$(sudo date +%s); FE=$((FE+3600))
-printf '{"expire":%d,"data":{"items":[]}}' "$FE" | sudo tee "$CACHE_FILE" > /dev/null
-curl -s -D /tmp/f305_c.hdr -o /tmp/f305_c.html "$C/"
+q "UPDATE reamur_test.rms_blog_post SET status=0 WHERE status=1"
+curl -s -D /tmp/f305_c.hdr "$C/" -o /tmp/f305_c.html
 [ "$(hdr /tmp/f305_c.hdr)" = "200" ] || OK=1
-! grep -q 'id="news"' /tmp/f305_c.html || OK=1   # seção oculta quando feed vazio
-grep -q 'id="portfolio"' /tmp/f305_c.html || OK=1  # resto da home íntegro
-sudo rm -f "$CACHE_FILE"
+grep -q 'id="news"' /tmp/f305_c.html && OK=1            # seção oculta sem posts
+grep -q 'id="portfolio"' /tmp/f305_c.html || OK=1        # resto da home íntegro
+q "UPDATE reamur_test.rms_blog_post SET status=1 WHERE post_id IN (1,2)"  # repõe p/ checks finais
 ck 6 $OK "negativo-ok"
 
-echo '══ 7 — i18n ×3: kicker traduzido; títulos do feed intocados ══'
+echo '══ 7 — i18n ×3: kicker traduzido; conteúdo coalesce (EN) ══'
 curl -s "$C/?language=pt-br" -o /tmp/f305_pt.html
 curl -s "$C/?language=es-eu" -o /tmp/f305_es.html
 curl -s "$C/?language=en-us" -o /tmp/f305_en.html
 OK=0
-grep -q "Últimas notícias" /tmp/f305_pt.html || OK=1
-grep -q "Últimas noticias" /tmp/f305_es.html || OK=1
-grep -q "Latest news" /tmp/f305_en.html || OK=1
-grep -q "Ler no davidcreator.com" /tmp/f305_pt.html || OK=1
-# títulos vêm do feed em pt → mesmos nos 3 idiomas (escopo: só o 1º card da seção #news)
-news_h3() {
-  python3 - "$1" <<'PY'
-import re,sys
-h=open(sys.argv[1],encoding='utf-8',errors='ignore').read()
-m=re.search(r'<section[^>]+id="news".*?</section>', h, re.S)
-print(re.search(r'<h3>(.*?)</h3>', m.group(0), re.S).group(1).strip() if m else '')
-PY
-}
-T0P=$(news_h3 /tmp/f305_pt.html)
-T0E=$(news_h3 /tmp/f305_en.html)
-[ -n "$T0P" ] && [ "$T0P" = "$T0E" ] || OK=1
-sudo rm -f "$CACHE_FILE"; sudo rm -f "$CACHE_FILE"
+grep -q "Do blog" /tmp/f305_pt.html || OK=1
+grep -q "Desde el blog" /tmp/f305_es.html || OK=1
+grep -q "From the blog" /tmp/f305_en.html || OK=1
+# título só existe em EN no seed → coalesce garante exibição nos 3 idiomas
+for f in pt es en; do grep -q "Grande lançamento de outubro" /tmp/f305_$f.html || OK=1; done
 ck 7 $OK "i18n-news"
 
-echo '══ 8 — sem side-effects: storage sem arquivos de feed fora do cache; banco intocado ══'
+echo '══ 8 — sem side-effects: storage limpo de feed/rss; banco idêntico ══'
 OK=0
-# model só pode escrever em cache.news_feed — nada com nome 'feed'/'rss' em outros diretórios
-sudo find /tmp/fui/dev/system/storage -type f \( -name "*rss*" -o -name "*feed*" \) 2>/dev/null | grep -v "cache.news_feed" | grep -q . && OK=1
-# banco de conteúdo idêntico ao pré-seção (model news não toca tabelas)
-CNT=$(sudo mysql reamur_test -N -e "SELECT (SELECT COUNT(*) FROM rms_project) + (SELECT COUNT(*) FROM rms_tool) + (SELECT COUNT(*) FROM rms_testimonial)" 2>/dev/null)
-[ "$CNT" = "17" ] || OK=1   # 10 projetos + 4 tools + 3 depoimentos (F3-01 seed)
+sudo find $FUI/system/storage -type f \( -name "*rss*" -o -name "*feed*" \) 2>/dev/null | grep -v "session/sess_" | grep -q . && OK=1
+CNT=$(q "SELECT (SELECT COUNT(*) FROM reamur_test.rms_project) + (SELECT COUNT(*) FROM reamur_test.rms_tool) + (SELECT COUNT(*) FROM reamur_test.rms_testimonial)")
+[ "$CNT" = "17" ] || OK=1   # 10 projetos + 4 tools + 3 depoimentos (seed F3-01) intocados pela seção
+[ "$(q "SELECT COUNT(*) FROM reamur_test.rms_blog_post WHERE status=1")" = "2" ] || OK=1  # posts só vagaram de status no check 6 e voltaram
 ck 8 $OK "sem-side-effects"
 
-echo '══ 9 — payload razoável: home com news < 15 KB a mais que home sem news ══'
-curl -s "$C/" -o > /dev/null 2>&1
-SZ_FULL=$(wc -c < /tmp/f305_a.html | tr -d ' ')
-printf '{"expire":%d,"data":{"items":[]}}' $(($(sudo date +%s)+3600)) | sudo tee "$CACHE_FILE" > /dev/null
-curl -s "$C/" -o /tmp/f305_c.html
-SZ_BARE=$(wc -c < /tmp/f305_c.html | tr -d ' ')
+echo '══ 9 — payload razoável: com news < 15 KB a mais que sem news ══'
+SZ_FULL=$(wc -c < /tmp/f305_en.html | tr -d ' ')
+q "UPDATE reamur_test.rms_blog_post SET status=0 WHERE status=1"
+curl -s "$C/?language=en-us" -o /tmp/f305_bare.html
+q "UPDATE reamur_test.rms_blog_post SET status=1 WHERE post_id IN (1,2)"
+SZ_BARE=$(wc -c < /tmp/f305_bare.html | tr -d ' ')
 DELTA=$((SZ_FULL - SZ_BARE))
 OK=0
-[ "$DELTA" -lt 15360 ] || OK=1
-[ "$DELTA" -gt 500 ] || OK=1   # sanity — news realmente ocupa algo
-sudo rm -f "$CACHE_FILE"
-ck 9 $OK "payload-ok ($DELTA bytes)"
+[ "$DELTA" -lt 15360 ] || { OK=1; echo "  payload +$DELTA bytes"; }
+[ "$DELTA" -gt 500 ]   || { OK=1; echo "  seção ficou pequena demais (+$DELTA)"; }
+ck 9 $OK "payload-ok"
 
-echo '══ 10 — error.log não cresceu de warnings/news nos GETs acima ══'
-LOG="/tmp/fui/dev/system/storage/logs/error.log"
+echo '══ 10 — ponte: CTA da 1ª news leva ao post page interno 200 ══'
 OK=0
-if sudo test -f "$LOG"; then
-  sudo grep -iE "news|feed|simplexml|curl|News|Feed" "$LOG" | grep -qiE "ERROR|Exception|Warning|Fatal" && OK=1
+curl -s "$C/?language=en-us" -o /tmp/f305_d.html
+HREF=$(grep -o 'href="http[^"]*catalog/lancamento-outubro"' /tmp/f305_d.html | head -1 | sed 's/href="//;s/"//')
+[ -n "$HREF" ] || { OK=1; echo "  href da news não achado"; }
+if [ -n "$HREF" ]; then
+  H=$(curl -s -o /tmp/f305_post.html -w "%{http_code}" "$HREF")
+  [ "$H" = "200" ] || { OK=1; echo "  post page → $H"; }
+  grep -q "Grande lançamento de outubro" /tmp/f305_post.html || OK=1
 fi
-# reidrata o cache real (caminho feliz) p/ o próximo run
-curl -s "$C/" -o /dev/null 2>&1
-ck 10 $OK "log-limpo"
+ck 10 $OK "ponte-news-post"
 
-echo "═══ RESUMO: $PASS pass, $FAIL fail ═══"
-[ $FAIL -eq 0 ]
+echo
+echo "════════════════ summary: $PASS pass / $FAIL fail ════════════════"
+[ "$FAIL" = "0" ]

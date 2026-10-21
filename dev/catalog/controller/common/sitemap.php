@@ -9,7 +9,7 @@
  * common/sitemap (CATALOG) — sitemap.xml DINÂMICO (F4-07, ADR 0031):
  *  · home + aliases públicas estáticas (portfolio, tools, contato, orcamento)
  *  · keywords de rms_seo_url resolvidas para rotas e FILTRADAS por entidade
- *    ativa (status=1 via models de conteúdo — projeto/page/tool despublicado
+ *    ativa (status=1 via models de conteúdo — projeto/page/tool/blog despublicado
  *    sai do índice junto); dedup por alvo preferindo language_id=1 (en-us,
  *    ADR 0001 — matriz hreflang é tarefa futura, renúncia na ADR)
  *  · lastmod de date_modified/date_added quando a coluna existe
@@ -25,6 +25,8 @@ class Sitemap extends \Reamur\System\Engine\Controller {
         'project_id' => 'catalog/project.info|',
         'page_id'    => 'cms/page.info|',
         'tool_id'    => 'tool/tool.info|',
+        // F7-02 (ADR 0043): posts do blog interno entram no índice
+        'blog_id'    => 'blog/blog.info|',
     ];
 
     public function index(): void {
@@ -37,6 +39,7 @@ class Sitemap extends \Reamur\System\Engine\Controller {
         foreach ([
             'catalog/project' => ['changefreq' => 'weekly',  'priority' => '0.8'],
             'tool/tool'       => ['changefreq' => 'weekly',  'priority' => '0.8'],
+            'blog/blog'       => ['changefreq' => 'weekly',  'priority' => '0.7'],
             'common/contact'  => ['changefreq' => 'monthly', 'priority' => '0.5'],
             'checkout/quote'  => ['changefreq' => 'monthly', 'priority' => '0.5'],
         ] as $route => $seoHints) {
@@ -134,6 +137,9 @@ class Sitemap extends \Reamur\System\Engine\Controller {
         } elseif ($kind === 'tool_id') {
             $this->load->model('tool/tool');
             $found = $this->model_tool_tool->getTool($id);
+        } elseif ($kind === 'blog_id') {
+            $this->load->model('blog/blog');
+            $found = $this->model_blog_blog->getPost($id);
         }
 
         $row = is_array($found) ? $found : [];

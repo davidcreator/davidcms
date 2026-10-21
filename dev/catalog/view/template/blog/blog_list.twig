@@ -1,0 +1,31 @@
+{# dev/catalog/view/template/blog/blog_list.twig — lista pública do blog (F7-02, ADR 0043) #}
+{# Reaproveita as classes news-card/news-meta/news-cta do CSS existente (zero CSS novo) #}
+{{ header|raw }}
+<main class="site-main">
+  <div class="container">
+    <div class="page-head">
+      <h1>{{ heading_title }}</h1>
+      <a class="back-link" href="{{ home }}">{{ button_back_home }}</a>
+    </div>
+    <p class="lead">{{ text_lead }}</p>
+
+    {% if posts %}
+    <div class="grid-3">
+      {% for p in posts %}
+      <article class="news-card">
+        {% if p.image %}
+        <img src="{{ p.image }}" alt="{{ p.title }}" loading="lazy">
+        {% endif %}
+        {% if p.date %}<p class="news-meta">{{ p.date }}</p>{% endif %}
+        <h3>{{ p.title }}</h3>
+        {% if p.excerpt %}<p>{{ p.excerpt }}</p>{% endif %}
+        <p><a class="news-cta" href="{{ p.href }}">{{ text_read_more }} →</a></p>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="lead">{{ text_no_results }}</p>
+    {% endif %}
+  </div>
+</main>
+{{ footer|raw }}

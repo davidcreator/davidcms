@@ -1,0 +1,22 @@
+{# dev/catalog/view/template/blog/blog_info.twig — post completo do blog (F7-02, ADR 0043) #}
+{# Descrição é HTML do editor do admin (F7-01) → render raw #}
+{{ header|raw }}
+<main class="site-main">
+  <div class="container">
+    <div class="page-head">
+      <h1>{{ heading_title }}</h1>
+      <a class="back-link" href="{{ back_blog }}">{{ button_back }}</a>
+    </div>
+
+    <article class="blog-post">
+      {% if post.image %}
+      <img src="{{ post.image }}" alt="{{ post.title }}">
+      {% endif %}
+      {% if post.date %}<p class="news-meta">{{ text_published_on }} {{ post.date }}</p>{% endif %}
+      <div class="blog-content">
+        {{ post.description|raw }}
+      </div>
+    </article>
+  </div>
+</main>
+{{ footer|raw }}

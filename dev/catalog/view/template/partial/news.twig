@@ -1,5 +1,6 @@
-{# dev/catalog/view/template/partial/news.twig — Latest News do blog externo (F3-05, ADR 0002/0023) #}
-{# Oculta a seção inteira quando o feed falha: nunca quebra a home #}
+{# dev/catalog/view/template/partial/news.twig — Latest News do blog INTERNO (F7-02, ADR 0043) #}
+{# Oculta a seção inteira quando não há posts publicados: nunca quebra a home #}
+{# Links internos (mesmo domínio) — sem target=_blank #}
 {% if news_items %}
 <section class="section" id="news">
   <div class="container">
@@ -11,11 +12,11 @@
         <p class="news-meta">{{ n.date }} · {{ n.source }}</p>
         <h3>{{ n.title }}</h3>
         <p>{{ n.excerpt }}</p>
-        <p><a class="news-cta" href="{{ n.url }}" target="_blank" rel="noopener">{{ text_news_read_more }} ↗</a></p>
+        <p><a class="news-cta" href="{{ n.url }}">{{ text_news_read_more }} →</a></p>
       </article>
     {% endfor %}
     </div>
-    <p class="news-source">{{ text_news_source }} <a href="https://davidcreator.com" target="_blank" rel="noopener">davidcreator.com ↗</a></p>
+    <p class="news-source">{{ text_news_source }} <a href="{{ news_blog_href }}">{{ text_news_visit_blog }} →</a></p>
   </div>
 </section>
 {% endif %}

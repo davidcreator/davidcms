@@ -208,10 +208,26 @@ class Home extends \Reamur\System\Engine\Controller {
             ];
         }
 
-        // ── Latest News: blog externo com cache + degradação silenciosa (F3-05, ADR 0023) ──
-        $this->load->model('feed/news');
+        // ── Latest News: blog INTERNO (F7-02, ADR 0043 — feed WP externo aposentado) ──
+        $this->load->model('blog/blog');
 
-        $data['news_items'] = $this->model_feed_news->getLatestNews(3);
+        $data['news_items'] = [];
+
+        foreach ($this->model_blog_blog->getPosts(3) as $news_post) {
+            $news_post = (array)$news_post;
+
+            $news_plain = trim(preg_replace('/\s+/', ' ', strip_tags(html_entity_decode((string)$news_post['description'], ENT_QUOTES | ENT_HTML5, 'UTF-8'))) ?? '');
+
+            $data['news_items'][] = [
+                'title'   => (string)$news_post['title'],
+                'url'     => $this->url->link('blog/blog.info|' . (int)$news_post['post_id']),
+                'date'    => date('Y-m-d', (int)strtotime((string)$news_post['date_published'])),
+                'excerpt' => mb_strlen($news_plain) > 160 ? mb_strimwidth($news_plain, 0, 160, '…', 'UTF-8') : $news_plain,
+                'source'  => 'Blog',
+            ];
+        }
+
+        $data['news_blog_href'] = $this->url->link('blog/blog');
 
         // ── Conteúdo estático estruturado do language (partials) ────────
         $data['about_paragraphs'] = [

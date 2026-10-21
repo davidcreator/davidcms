@@ -126,5 +126,6 @@ $_['text_contact_whatsapp'] = '+55 11 98393-8347';
 // ── Latest News (blog externo — ADR 0002/0023) ──
 $_['text_news_kicker']    = 'Desde el blog';
 $_['text_news_title']     = 'Últimas noticias';
-$_['text_news_read_more'] = 'Leer en davidcreator.com';
-$_['text_news_source']    = 'Posts servidos desde el blog externo:';
+$_['text_news_read_more'] = 'Leer más';
+$_['text_news_source']    = 'Publicado en el blog:';
+$_['text_news_visit_blog']= 'Ver todas las entradas en el blog';
