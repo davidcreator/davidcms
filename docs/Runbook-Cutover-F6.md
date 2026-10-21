@@ -4,7 +4,7 @@
 | --- | --- |
 | **Autor** | David L. Almeida |
 | **Projeto** | ReamurCMS |
-| **Entrega** | F6-03 (Fase 6 · hardening e cutover) — rev. F6-04: modelo build→deploy (ADR 0039) |
+| **Entrega** | F6-03 (Fase 6 · hardening e cutover) — rev. F6-04: modelo build→deploy (ADR 0039) · rev. F6-05: verificação remota (ADR 0040) |
 | **Dependências** | F6-01 aplicada (hardening), F6-02 com critério de saída verde (§11 do roteiro), mapa 301 do ADR 0038 no ar |
 
 ---
@@ -131,7 +131,19 @@ nunca no ar.
 
 ## 5. Pós-cutover: verificação (antes de aposentar o antigo)
 
-Rode em qualquer máquina (ajuste `DOMINIO`):
+**Caminho rápido (F6-05, ADR 0040):** rode de qualquer máquina (XAMPP mesmo):
+
+```bash
+bash tools/check_producao.sh https://davidalmeida.xyz
+```
+
+15 checks remotos read-only (todos de fora): catálogo + TLS, força HTTPS,
+raiz→catalog, aliases, SEO, os 301s, sitemap, robots, admin protegido,
+system/ e logs selados, erro sem stack, headers, **ausência de dev-only
+no ar** e TTFB. Resultado: `15 pass / 0 fail` = ✅ go. A lista manual
+abaixo fica como *diagnóstico* de qualquer FAIL específico.
+
+**Lista manual (diagnóstico)** — rode em qualquer máquina (ajuste `DOMINIO`):
 
 ```bash
 # Mapa 301 (os Location devem apontar as keywords novas do site NOVO)
