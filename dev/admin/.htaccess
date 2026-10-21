@@ -5,6 +5,11 @@ Options +FollowSymLinks
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
+# F6-06 (ADR 0041): assets estáticos inexistentes = 404 nativo (sem PHP/log).
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule \.(?:js|css|map|png|jpe?g|gif|webp|avif|svg|ico|woff2?|tiff?|otf|eot|mp4|webm|m4a|mp3)$ - [R=404,L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [L,QSA]

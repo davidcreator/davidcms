@@ -24,7 +24,17 @@ final class Router {
                 $log = $this->registry->get('log');
 
                 if ($log && method_exists($log, 'write')) {
-                    $log->write($e->getMessage());
+                    // F6-06 (ADR 0041): o router sanitiza '.' e '-' do path
+                    // (resolve() → 'mainjs'), então a mensagem da exceção
+                    // sozinha esconde a URL original. REQUEST_URI junto,
+                    // mensagem continua primeiro (compatível com greps antigos).
+                    $request_uri = (string)($_SERVER['REQUEST_URI'] ?? '');
+
+                    if ($request_uri !== '') {
+                        $log->write($e->getMessage() . ' — request: ' . $request_uri);
+                    } else {
+                        $log->write($e->getMessage());
+                    }
                 }
 
                 if ($action->getRoute() === $error->getRoute()) {

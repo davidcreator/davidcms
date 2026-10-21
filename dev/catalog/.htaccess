@@ -39,6 +39,18 @@ RewriteRule ^portfolio/([a-z0-9-]+)/?$ %{ENV:CMSBASE}catalog/$1 [R=301,L]
 # Âncora /#profile etc.: fragmento não chega ao servidor; o browser reaplica
 # o #fragment após qualquer 301 — tratamento client-side (Análise §9).
 
+# ═══ F6-06 (ADR 0041) — assets estáticos inexistentes = 404 NATIVO ══════
+# Sem arquivo físico, uma URL de asset caía no front controller, o router
+# sanitizava o path (removendo '.') e o dispatcher logava "Route not found:
+# catalog/view/js/three/mainjs.index" — 27 entradas de ruído em 2 dias.
+# Regra: extensões de asset sem arquivo → 404 binário do Apache, sem PHP,
+# sem log. Arquivos EXISTENTES passam pelo !-f e são servidos normalmente.
+# xml/txt/json FICAM FORA de propósito: têm rotas dinâmicas reais
+# (sitemap.xml) que precisam continuar chegando ao app.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule \.(?:js|css|map|png|jpe?g|gif|webp|avif|svg|ico|woff2?|tiff?|otf|eot|mp4|webm|m4a|mp3)$ - [R=404,L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [L,QSA]
