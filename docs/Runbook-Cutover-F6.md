@@ -4,7 +4,7 @@
 | --- | --- |
 | **Autor** | David L. Almeida |
 | **Projeto** | ReamurCMS |
-| **Entrega** | F6-03 (Fase 6 · hardening e cutover) |
+| **Entrega** | F6-03 (Fase 6 · hardening e cutover) — rev. F6-04: modelo build→deploy (ADR 0039) |
 | **Dependências** | F6-01 aplicada (hardening), F6-02 com critério de saída verde (§11 do roteiro), mapa 301 do ADR 0038 no ar |
 
 ---
@@ -63,44 +63,68 @@ A seção 7 (rollback) é o botão de emergência — leia **antes** de começar
 - [ ] **2.4** Anote onde os backups ficaram (pasta/pen drive/nuvem) — o
        rollback (§7) depende deles.
 
-## 3. Decisão de topologia (escolha A **ou** B — uma vez)
+## 3. O que sobe para o servidor (modelo build → deploy, ADR 0039 — **decidido**)
 
-| | **B — Subpasta (recomendada)** | **A — Raiz pura do domínio** |
-|---|---|---|
-| Domínio aponta para | pasta que **contém** `dev/` (ex.: `public_html/davidcms/`) | `dev/` virando a raiz pública |
-| Home pública fica | `https://dominio.com/dev/catalog/` (e `/` redireciona p/ ela automaticamente) | `https://dominio.com/` direto |
-| Admin | `https://dominio.com/dev/admin/` | exige subdomínio (`admin.dominio.com`) ou porta separada — **trabalho extra de vhost** |
-| Mapa 301 do ADR 0038 | **funciona sem edição** (CMSBASE resolve) | funciona, e você pode **opcionalmente** encurtar destinos (`catalog/fluxa`→`/fluxa`) |
-| Esforço/risco | Baixo | Médio (vhost + admin fora + https em 2 vhosts) |
+**Produção NÃO é a pasta `dev/`.** Você sobe apenas a build de produção,
+gerada com 1 comando a partir da sua pasta local (XAMPP):
 
-**Recomendo B para o go-live** (é o formato que você já opera no XAMPP e
-nas baterias). A migração para A fica como melhoria futura — o §9 da
-Análise ("home na raiz") vira realidade trocando o docroot e ajustando os
-destinos das regras (me chama que é meia hora com testes).
+```bash
+~/davidcms$ bash tools/build_prod.sh
+```
 
-- [ ] **3.1** Decisão marcada: ☐ B (recomendada) · ☐ A (com plano de
-       vhost/subdomínio para o admin)
+Isso recria `~/davidcms/prod/` com **somente o runtime** (`catalog/`,
+`admin/`, `system/`, `.htaccess`, `index.php`, `index.html`, `robots.txt`)
+— e **sem**: `install/` (o wizard nunca vai ao ar), `tests/`,
+planejamento/agentes/docs, configs reais, phpstan/composer, logs e sessões
+antigas. O script termina com um veredito automático (algo obrigatório
+faltando ou algo proibido presente = ele acusa). `agents-ia/`, `docs/`,
+`tools/`, `dev/` inteiro: **ficam só na sua máquina** (e no git privado),
+nunca no ar.
+
+| | Valor em produção (davidalmeida.xyz) |
+|---|---|
+| Pasta que recebe o **conteúdo** de `prod/` | a raiz pública do domínio (ex.: `public_html/`) |
+| Home pública | `https://davidalmeida.xyz/catalog/` (e `/` redireciona p/ ela — vem no `index.php` da build) |
+| Admin | `https://davidalmeida.xyz/admin/` |
+| Mapa 301 do ADR 0038 | **funciona sem edição nenhuma** (CMSBASE resolve o prefixo real; provado em `/prodtest/` pela f604) |
+
+- [ ] **3.1** Build gerada e veredito "OK — build pronta" ✔
+- [ ] **3.2** (opcional) Zip da build para upload mais rápido:
+      `cd prod/ && zip -qr ../build-prod-AAAA-MM-DD.zip .` — no servidor,
+      extrair o zip na raiz pública. Os próprios zips ficam fora do git.
 
 ## 4. Deploy (passo a passo)
 
-- [ ] **4.1** Subir o código final para o destino (FTP/cPanel/clone git):
-       a pasta `davidcms/` com `dev/`, `agents-ia/`, `docs/` etc.
-- [ ] **4.2** Banco: criar o banco de produção; importar o schema/upgrade
-       **na ordem da cadeia** (igual você já fez no XAMPP: schema inicial
-       → todos `upgrade_*.sql` idempotentes).
-- [ ] **4.3** `dev/catalog/config.php` e `dev/admin/config.php` de
-       **produção**: host/banco/usuário/senha **de produção** e a URL pública
-       (sem `localhost`!). Conferir `REAMUR_ERROR_DISPLAY` (item 1.5).
-       🔴 Senhas de produção ≠ senhas do XAMPP. Não commite config no git.
-- [ ] **4.4** Permissões: `dev/system/storage/` (e subpastas) gravável
-       pelo PHP (cache, logs, session).
+- [ ] **4.1** Subir o **conteúdo de `prod/`** para a raiz pública do
+       domínio (FTP/cPanel ou zip do 3.2 + "Extract" no cPanel). O resultado
+       SEMPRE é: `public_html/{catalog,admin,system,index.php,index.html,
+       robots.txt,.htaccess}` (sem nenhuma pasta `prod/` ou `dev/` no meio).
+- [ ] **4.2** Banco de produção **via SQL, sem wizard** (install/ não foi
+       ao ar). No phpMyAdmin do painel da hospedagem, nessa ordem:
+  1. criar o banco vazio (utf8mb4);
+  2. importar `install/sql/schema.sql` (o arquivo está no seu XAMPP — os
+     SQLs **não** precisam subir para o servidor);
+  3. **semeá-lo como o wizard faria** (antes dos upgrades!): no seu XAMPP,
+     rode `php tools/seed_admin_sql.php SEU-USUARIO "SENHA-FORTE" SEU-EMAIL`
+     → ele gera o SQL pronto (grupo *Administrator* + usuário com bcrypt);
+     cole no phpMyAdmin da hospedagem;
+  4. importar todos os `upgrade_*.sql` **em ordem alfabética** (são
+     idempotentes; os grants só funcionam depois do passo 3).
+- [ ] **4.3** Configs: na raiz pública, renomeie `catalog/config.php.EXEMPLO`
+       → `config.php` e `admin/config.php.EXEMPLO` → `config.php`, editando
+       os `{{...}}` reais. ⚠ `HTTP_SERVER`/`HTTPS_SERVER` **terminam com**
+       `/catalog/` e `/admin/` respectivamente (nunca a raiz `https://dominio/`
+       sozinha — o router subtrai essa base; detalhe na ADR 0039). Confira
+       credenciais do banco **de produção** (≠ XAMPP) e deixe
+       `REAMUR_ERROR_DISPLAY` **off** (vem doc no próprio exemplo). Não
+       commite esses configs no git.
+- [ ] **4.4** Permissões: `system/storage/` (e subpastas cache/ logs/
+       session/ temp/) gravável pelo PHP do servidor.
 - [ ] **4.5** HTTPS: emitir/ativar o certificado do domínio (painel da
        hospedagem, geralmente 1 clique). **Só depois** do cert válido:
-  - [ ] forçar HTTPS (opção "Force HTTPS" do painel, ou peça o bloco de
-        redirect 80→443 — fica fora do `.htaccess` até o cert existir);
-  - [ ] conferir cadeado em `https://dominio.com/dev/catalog/`.
-- [ ] **4.6** Ajustar a **URL pública** nas configs (4.3) para o domínio
-       final já com `https://`.
+  - [ ] forçar HTTPS (opção "Force HTTPS" do painel);
+  - [ ] conferir cadeado em `https://davidalmeida.xyz/catalog/`.
+- [ ] **4.6** Ajustar a **URL pública** nas configs (4.3) já com `https://`.
 - [ ] **4.7** Site antigo: com o novo validado (§5), aposentar (mover para
        pasta `_old` ou apontar o domínio de vez). **Não apague** nada
        antes do §5.9.
@@ -111,14 +135,14 @@ Rode em qualquer máquina (ajuste `DOMINIO`):
 
 ```bash
 # Mapa 301 (os Location devem apontar as keywords novas do site NOVO)
-curl -sI "https://DOMINIO/dev/catalog/tools/open?id=1" | grep -i "HTTP\|location"
-curl -sI "https://DOMINIO/dev/catalog/portfolio/jwa" | grep -i "HTTP\|location"
-curl -sI "https://DOMINIO/dev/catalog/portfolio/pitbul-color" | grep -i "HTTP\|location"
+curl -sI "https://DOMINIO/catalog/tools/open?id=1" | grep -i "HTTP\|location"
+curl -sI "https://DOMINIO/catalog/portfolio/jwa" | grep -i "HTTP\|location"
+curl -sI "https://DOMINIO/catalog/portfolio/pitbul-color" | grep -i "HTTP\|location"
 # Canônicas diretas (200)
-curl -s -o /dev/null -w "%{http_code}\n" https://DOMINIO/dev/catalog/cookies
-curl -s -o /dev/null -w "%{http_code}\n" https://DOMINIO/dev/catalog/fluxa
+curl -s -o /dev/null -w "%{http_code}\n" https://DOMINIO/catalog/cookies
+curl -s -o /dev/null -w "%{http_code}\n" https://DOMINIO/catalog/fluxa
 # Webhook MP atende POST (sem redirect)
-curl -s -X POST "https://DOMINIO/dev/catalog/index.php?route=checkout/payment.notify&type=payment&data.id=0" \
+curl -s -X POST "https://DOMINIO/catalog/index.php?route=checkout/payment.notify&type=payment&data.id=0" \
   -H "Content-Type: application/json" -d '{"type":"payment","data":{"id":"0"}}'
 ```
 
@@ -129,14 +153,14 @@ curl -s -X POST "https://DOMINIO/dev/catalog/index.php?route=checkout/payment.no
 - [ ] **5.5** Jornada pública real: envie um **contato** e um **orçamento** de teste pelo site no ar → chegam em Mensagens/Pedidos + e-mail ao dono (SMTP 1.6). Marque-os como "TESTE CUTOVER" para excluir depois.
 - [ ] **5.6** Webhooks (se ativos): verifique a última entrega em Admin → Webhooks (HTTP 200 no receptor real).
 - [ ] **5.7** Mercado Pago produção (quando credenciais prontas): confira `docs/MercadoPago-Marketplace.md` — salvar config **env=prod**, redirect URI `https://DOMINIO/...callback` **cadastrada no app do MP**, conectar vendedor real, gerar link num pedido de teste e pagar valor mínimo real; conferir notify→status Pago. 🔴 Só depois disso anuncie os links 💳.
-- [ ] **5.8** error.log de produção (`dev/system/storage/logs/error.log`) sem erros novos inesperados.
+- [ ] **5.8** error.log de produção (`system/storage/logs/error.log` no servidor) sem erros novos inesperados.
 - [ ] **5.9** Tudo verde → pode aposentar o site antigo (4.7). Guardou os backups? (§2.4)
 
 ## 6. Monitoramento — primeiros 30 dias
 
 | Frequência | O que fazer | Como |
 |---|---|---|
-| Diário (semana 1), depois semanal | `error.log` sem erros novos | abrir `dev/system/storage/logs/error.log` |
+| Diário (semana 1), depois semanal | `error.log` sem erros novos | abrir `system/storage/logs/error.log` no servidor |
 | Semanal | Caçar 404 de URLs antigas | log de acesso da hospedagem: procurar ` 404 ` com `/catalog/` nas URLs → se aparecer URL legada nova, adiciono regra no mapa |
 | Semanal | Jornadas críticas vivas | refazer C2 (contato) e C6 (orçamento) do roteiro F6-02 em 3 minutos |
 | Semanal | Webhooks entregando | Admin → Webhooks → entregas recentes 2xx |
