@@ -1,0 +1,20 @@
+F6-01 — REMOÇÕES DE LEGADO MORTO (ADR 0037)
+============================================
+
+Este zip é aditivo (extrai arquivos novos/alterados). As REMOÇÕES abaixo
+precisam ser feitas à mão no clone, na raiz do repositório, depois de
+extrair:
+
+    git rm -r dev/system/webhook
+    git rm    dev/system/library/openbay.php
+    git rm -r dev/system/library/openbay
+    git rm    dev/system/library/googleshopping.php
+    git rm -r dev/system/library/googleshopping
+    git rm    dev/system/library/squareup.php
+    git rm -r dev/system/library/squareup
+
+Justificativa e provas (zero referências fora das próprias pastas,
+phpstan verde, suíte e2e 24 baterias / 281 asserts / 0 fail): ADR 0037 em
+agents-ia/decisoes/0037-hardening-pre-cutover-modo-producao-headers-remocao-legado.md
+
+SEM SQL nesta tarefa (nada para rodar no phpMyAdmin).

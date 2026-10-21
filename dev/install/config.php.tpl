@@ -9,6 +9,12 @@
 define('HTTP_SERVER', '{{HTTP_SERVER}}');
 define('HTTPS_SERVER', '{{HTTPS_SERVER}}');
 
+// F6-01 (ADR 0037 §1): exibição de erros na tela. Instalações NOVAS nascem
+// em modo desenvolvimento (true). EM PRODUÇÃO: mude para false — ou REMOVA
+// a constante: sem ela o núcleo assume false (display_errors desligado,
+// erros SEMPRE em system/storage/logs/error.log).
+define('REAMUR_ERROR_DISPLAY', true);
+
 // DIR (raízes calculadas a partir de DIR_REAMUR — ver §1.1)
 define('DIR_REAMUR', '{{DIR_REAMUR}}');
 define('DIR_APPLICATION', DIR_REAMUR . 'dev/{{APP_DIR}}/');

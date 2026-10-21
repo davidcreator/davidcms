@@ -280,640 +280,132 @@ parameters:
 			count: 1
 			path: ../library/db/pgsql.php
 
-		-
-			message: "#^Access to an undefined property googleshopping\\\\Googleshopping\\:\\:\\$config\\.$#"
-			count: 51
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to an undefined property googleshopping\\\\Googleshopping\\:\\:\\$currency\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to an undefined property googleshopping\\\\Googleshopping\\:\\:\\$db\\.$#"
-			count: 39
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to an undefined property googleshopping\\\\Googleshopping\\:\\:\\$language\\.$#"
-			count: 3
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to an undefined property googleshopping\\\\Googleshopping\\:\\:\\$load\\.$#"
-			count: 17
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to an undefined property googleshopping\\\\Googleshopping\\:\\:\\$model_localisation_country\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to an undefined property googleshopping\\\\Googleshopping\\:\\:\\$model_localisation_currency\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to an undefined property googleshopping\\\\Googleshopping\\:\\:\\$model_localisation_language\\.$#"
-			count: 3
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to an undefined property googleshopping\\\\Googleshopping\\:\\:\\$model_setting_setting\\.$#"
-			count: 4
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to an undefined property googleshopping\\\\Googleshopping\\:\\:\\$setting\\.$#"
-			count: 25
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to an undefined property googleshopping\\\\Googleshopping\\:\\:\\$tax\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to property \\$parameter on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to property \\$protocol on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to property \\$smtp_hostname on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to property \\$smtp_password on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to property \\$smtp_port on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to property \\$smtp_timeout on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Access to property \\$smtp_username on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Call to method addRewrite\\(\\) on an unknown class Url\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Call to method convert\\(\\) on an unknown class Cart\\\\Currency\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Call to method get\\(\\) on an unknown class Cache\\.$#"
-			count: 2
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Call to method link\\(\\) on an unknown class Url\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Call to method resize\\(\\) on an unknown class Image\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Call to method save\\(\\) on an unknown class Image\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Call to method send\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Call to method set\\(\\) on an unknown class Cache\\.$#"
-			count: 2
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Call to method setFrom\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Call to method setHtml\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Call to method setSender\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Call to method setSubject\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Call to method setText\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Call to method setTo\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Class googleshopping\\\\Exception\\\\AccessForbidden referenced with incorrect case\\: googleshopping\\\\exception\\\\AccessForbidden\\.$#"
-			count: 3
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Class googleshopping\\\\Exception\\\\Connection referenced with incorrect case\\: googleshopping\\\\exception\\\\Connection\\.$#"
-			count: 4
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Constant DIR_IMAGE not found\\.$#"
-			count: 17
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Constant HTTPS_CATALOG not found\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Instantiated class Cache not found\\.$#"
-			count: 2
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Instantiated class Cart\\\\Currency not found\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Instantiated class Config not found\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Instantiated class Image not found\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Instantiated class Mail not found\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Instantiated class Url not found\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Method googleshopping\\\\Googleshopping\\:\\:updateProductReports\\(\\) invoked with 2 parameters, 1 required\\.$#"
-			count: 1
-			path: ../library/googleshopping/googleshopping.php
-
-		-
-			message: "#^Constant DIR_LOGS not found\\.$#"
-			count: 3
-			path: ../library/googleshopping/log.php
-
-		-
-			message: "#^Access to an undefined property Openbay\\:\\:\\$config\\.$#"
-			count: 25
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to an undefined property Openbay\\:\\:\\$currency\\.$#"
-			count: 3
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to an undefined property Openbay\\:\\:\\$db\\.$#"
-			count: 21
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to an undefined property Openbay\\:\\:\\$language\\.$#"
-			count: 3
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to an undefined property Openbay\\:\\:\\$load\\.$#"
-			count: 6
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to an undefined property Openbay\\:\\:\\$model_checkout_order\\.$#"
-			count: 6
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to an undefined property Openbay\\:\\:\\$model_extension_module_openstock\\.$#"
-			count: 1
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to an undefined property Openbay\\:\\:\\$model_tool_image\\.$#"
-			count: 1
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to an undefined property Openbay\\:\\:\\$model_tool_upload\\.$#"
-			count: 1
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to property \\$parameter on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to property \\$smtp_hostname on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to property \\$smtp_password on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to property \\$smtp_port on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to property \\$smtp_timeout on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to property \\$smtp_username on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay.php
-
-		-
-			message: "#^Call to method send\\(\\) on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay.php
-
-		-
-			message: "#^Call to method setFrom\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/openbay.php
-
-		-
-			message: "#^Call to method setSender\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/openbay.php
-
-		-
-			message: "#^Call to method setSubject\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/openbay.php
-
-		-
-			message: "#^Call to method setText\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/openbay.php
-
-		-
-			message: "#^Call to method setTo\\(\\) on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay.php
-
-		-
-			message: "#^Constant DIR_IMAGE not found\\.$#"
-			count: 1
-			path: ../library/openbay.php
-
-		-
-			message: "#^Instantiated class Log not found\\.$#"
-			count: 1
-			path: ../library/openbay.php
-
-		-
-			message: "#^Instantiated class Mail not found\\.$#"
-			count: 1
-			path: ../library/openbay.php
-
-		-
-			message: "#^Method Openbay\\:\\:createMailInstance\\(\\) has invalid return type Mail\\.$#"
-			count: 1
-			path: ../library/openbay.php
-
-		-
-			message: "#^Parameter \\$mail of method Openbay\\:\\:sendToAdditionalEmails\\(\\) has invalid type Mail\\.$#"
-			count: 1
-			path: ../library/openbay.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Amazon\\:\\:\\$config\\.$#"
-			count: 9
-			path: ../library/openbay/amazon.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Amazon\\:\\:\\$db\\.$#"
-			count: 8
-			path: ../library/openbay/amazon.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Amazon\\:\\:\\$load\\.$#"
-			count: 3
-			path: ../library/openbay/amazon.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Amazon\\:\\:\\$model_extension_module_openstock\\.$#"
-			count: 1
-			path: ../library/openbay/amazon.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Amazon\\:\\:\\$model_extension_openbay_amazon\\.$#"
-			count: 3
-			path: ../library/openbay/amazon.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Amazon\\:\\:\\$openbay\\.$#"
-			count: 3
-			path: ../library/openbay/amazon.php
-
-		-
-			message: "#^Call to method write\\(\\) on an unknown class Log\\.$#"
-			count: 16
-			path: ../library/openbay/amazon.php
-
-		-
-			message: "#^Constant VERSION not found\\.$#"
-			count: 2
-			path: ../library/openbay/amazon.php
-
-		-
-			message: "#^Instantiated class Log not found\\.$#"
-			count: 4
-			path: ../library/openbay/amazon.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Amazonus\\:\\:\\$config\\.$#"
-			count: 9
-			path: ../library/openbay/amazonus.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Amazonus\\:\\:\\$db\\.$#"
-			count: 8
-			path: ../library/openbay/amazonus.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Amazonus\\:\\:\\$load\\.$#"
-			count: 3
-			path: ../library/openbay/amazonus.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Amazonus\\:\\:\\$model_extension_module_openstock\\.$#"
-			count: 1
-			path: ../library/openbay/amazonus.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Amazonus\\:\\:\\$model_extension_openbay_amazonus\\.$#"
-			count: 3
-			path: ../library/openbay/amazonus.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Amazonus\\:\\:\\$openbay\\.$#"
-			count: 3
-			path: ../library/openbay/amazonus.php
-
-		-
-			message: "#^Call to method write\\(\\) on an unknown class Log\\.$#"
-			count: 16
-			path: ../library/openbay/amazonus.php
-
-		-
-			message: "#^Constant VERSION not found\\.$#"
-			count: 2
-			path: ../library/openbay/amazonus.php
-
-		-
-			message: "#^Instantiated class Log not found\\.$#"
-			count: 4
-			path: ../library/openbay/amazonus.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Ebay\\:\\:\\$config\\.$#"
-			count: 41
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Ebay\\:\\:\\$db\\.$#"
-			count: 167
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Ebay\\:\\:\\$lasterror\\.$#"
-			count: 6
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Ebay\\:\\:\\$lastmsg\\.$#"
-			count: 5
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Ebay\\:\\:\\$load\\.$#"
-			count: 4
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Ebay\\:\\:\\$logging\\.$#"
-			count: 2
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Ebay\\:\\:\\$model_extension_module_openstock\\.$#"
-			count: 3
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Ebay\\:\\:\\$openbay\\.$#"
-			count: 6
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Ebay\\:\\:\\$secret\\.$#"
-			count: 3
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Ebay\\:\\:\\$server\\.$#"
-			count: 3
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Ebay\\:\\:\\$tax\\.$#"
-			count: 1
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to property \\$parameter on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to property \\$protocol on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to property \\$smtp_hostname on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to property \\$smtp_password on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to property \\$smtp_port on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to property \\$smtp_timeout on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to property \\$smtp_username on an unknown class Mail\\.$#"
-			count: 2
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Call to method send\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Call to method setFrom\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Call to method setSender\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Call to method setSubject\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Call to method setText\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Call to method setTo\\(\\) on an unknown class Mail\\.$#"
-			count: 1
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Constant DIR_LOGS not found\\.$#"
-			count: 4
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Constant VERSION not found\\.$#"
-			count: 2
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Instantiated class Log not found\\.$#"
-			count: 1
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Instantiated class Mail not found\\.$#"
-			count: 1
-			path: ../library/openbay/ebay.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Etsy\\:\\:\\$config\\.$#"
-			count: 8
-			path: ../library/openbay/etsy.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Etsy\\:\\:\\$db\\.$#"
-			count: 15
-			path: ../library/openbay/etsy.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Etsy\\:\\:\\$logging\\.$#"
-			count: 2
-			path: ../library/openbay/etsy.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\Etsy\\:\\:\\$openbay\\.$#"
-			count: 3
-			path: ../library/openbay/etsy.php
-
-		-
-			message: "#^Constant DIR_LOGS not found\\.$#"
-			count: 4
-			path: ../library/openbay/etsy.php
-
-		-
-			message: "#^Instantiated class Log not found\\.$#"
-			count: 1
-			path: ../library/openbay/etsy.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\fba\\:\\:\\$config\\.$#"
-			count: 9
-			path: ../library/openbay/fba.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\fba\\:\\:\\$db\\.$#"
-			count: 19
-			path: ../library/openbay/fba.php
-
-		-
-			message: "#^Access to an undefined property openbay\\\\fba\\:\\:\\$logger\\.$#"
-			count: 2
-			path: ../library/openbay/fba.php
-
-		-
-			message: "#^Constant DIR_LOGS not found\\.$#"
-			count: 5
-			path: ../library/openbay/fba.php
-
-		-
-			message: "#^Instantiated class Log not found\\.$#"
-			count: 1
-			path: ../library/openbay/fba.php
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 		-
 			message: "#^Call to method escape\\(\\) on an unknown class Reamur\\\\System\\\\Library\\\\DB\\\\Driver\\.$#"
@@ -960,30 +452,10 @@ parameters:
 			count: 1
 			path: ../library/session/redis.php
 
-		-
-			message: "#^Call to method get\\(\\) on an unknown class Language\\.$#"
-			count: 2
-			path: ../library/squareup/exception.php
 
-		-
-			message: "#^Call to method get\\(\\) on an unknown class Registry\\.$#"
-			count: 3
-			path: ../library/squareup/exception.php
 
-		-
-			message: "#^Parameter \\$registry of method Squareup\\\\Exception\\:\\:__construct\\(\\) has invalid type Registry\\.$#"
-			count: 1
-			path: ../library/squareup/exception.php
 
-		-
-			message: "#^Property Squareup\\\\Exception\\:\\:\\$language has unknown class Language as its type\\.$#"
-			count: 1
-			path: ../library/squareup/exception.php
 
-		-
-			message: "#^Property Squareup\\\\Exception\\:\\:\\$log has unknown class Log as its type\\.$#"
-			count: 1
-			path: ../library/squareup/exception.php
 
 		-
 			message: "#^Constant DIR_CACHE not found\\.$#"

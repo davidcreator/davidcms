@@ -20,7 +20,9 @@ namespace Reamur\Admin\Controller\Setting;
 
 class Webhook extends \Reamur\System\Engine\Controller {
 
-    /** Sugestões de trigger (engine in-memory + ponte system/webhook, Fase 5) */
+    /** Sugestões de trigger dos eventos implementados no F5-01 + triggers-futuros
+     *  (o disparo real vive em Library\Webhook\Dispatcher — ADR 0033; a ponte
+     *  legada 'system/webhook' da Fase 0 foi removida no F6-01 — ADR 0037). */
     private const TRIGGER_SUGGESTIONS = ['order_add', 'order_edit', 'order_history_edit', 'contact_add', 'product_add', 'product_edit', 'product_delete', 'product_*', 'order_*'];
 
     /** Grade de endpoints */

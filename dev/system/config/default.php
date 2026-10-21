@@ -58,7 +58,11 @@ $_['template_cache']       = false;
 $_['template_extension']   = '.twig';
 
 // Error
-$_['error_display']        = true; // You need to change this to false on a live site.
+// F6-01 (ADR 0037 §1): default SEGURO de produção — erros NUNCA na tela.
+// Override por config.php (define REAMUR_ERROR_DISPLAY — semeado pelo wizard
+// a partir desta tarefa): true em dev/sandbox, false (ou constante ausente)
+// em produção. O log em storage/logs/error.log vale independentemente.
+$_['error_display']        = defined('REAMUR_ERROR_DISPLAY') ? (bool)REAMUR_ERROR_DISPLAY : false;
 $_['error_log']            = true;
 $_['error_filename']       = 'error.log';
 $_['error_page']           = 'error.html';
@@ -71,6 +75,12 @@ $_['response_header']      = [
     'X-Content-Type-Options: nosniff',
     'X-Frame-Options: SAMEORIGIN',
     'Referrer-Policy: strict-origin-when-cross-origin',
+    // F6-01 (ADR 0037 §2): minimização de superfície sem quebrar jornadas —
+    // desliga sensores que o CMS não usa; CSP em Report-Only (observar antes
+    // de endurecer: hero 3D, fontes externas e scripts inline do tema atual
+    // precisam de exceções — por isso NÃO é enforce ainda).
+    'Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()',
+    "Content-Security-Policy-Report-Only: default-src 'self' https:; img-src * data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; font-src 'self' https: data:; connect-src 'self' https:; frame-ancestors 'self'",
 ];
 $_['response_compression'] = 0;
 
