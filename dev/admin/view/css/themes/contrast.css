@@ -1,0 +1,41 @@
+/* Alto Contraste — acessibilidade máxima (F8-V, ADR 0047, alvo AAA) */
+:root {
+  --rms-accent: #0039c9;        /* 6.28:1 sobre branco */
+  --rms-accent-contrast: #ffffff;
+  --rms-accent-hover: #002fa6;
+  --bs-body-color: #000000;      /* AAA no light */
+}
+html[data-rms-sidebar="auto"][data-bs-theme="light"]:root,
+:root[data-rms-sidebar="auto"][data-bs-theme="light"] {
+  --rms-sidebar-bg: #000000;
+  --rms-sidebar-fg: #ffffff;
+  --rms-sidebar-fg-muted: #ececec;
+  --rms-sidebar-fg-title: #c9c9c9;
+  --rms-sidebar-border: #4d4d4d;
+  --rms-sidebar-hover-bg: #262626;
+  --rms-brand-filter: invert(1);
+}
+html[data-rms-sidebar="auto"][data-bs-theme="dark"]:root,
+:root[data-rms-sidebar="auto"][data-bs-theme="dark"] {
+  --rms-sidebar-bg: #000000;
+  --rms-sidebar-fg: #ffffff;
+  --rms-sidebar-fg-muted: #f0f0f0;
+  --rms-sidebar-fg-title: #d4d4d4;
+  --rms-sidebar-border: #595959;
+  --rms-sidebar-hover-bg: #2b2b2b;
+  --rms-brand-filter: invert(1);
+}
+html[data-bs-theme="dark"]:root, :root[data-bs-theme="dark"] {
+  --rms-accent: #7abaff;         /* ≥7:1 sobre o bg escuro */
+  --rms-accent-contrast: #001a40;
+  --bs-body-color: #f2f2f2;
+}
+html[data-rms-sidebar="light"]:root, :root[data-rms-sidebar="light"] {
+  --rms-sidebar-bg: #ffffff;
+  --rms-sidebar-fg: #000000;
+  --rms-sidebar-fg-muted: #000000;
+  --rms-sidebar-fg-title: #404040;
+  --rms-sidebar-border: #000000;
+  --rms-sidebar-hover-bg: #e0e0e0;
+  --rms-brand-filter: none;
+}

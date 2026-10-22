@@ -76,12 +76,46 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['text_toggle_theme'] = $this->language->get('text_toggle_theme');
         $data['text_user_menu']    = $this->language->get('text_user_menu');
         $data['text_profile']      = $this->language->get('text_profile');
+        $data['text_appearance']   = $this->language->get('text_appearance');
+        $data['appearance_href']   = $this->url->link('setting/appearance');
 
         $data['user_fullname'] = $data['logged'] ? ($this->user->getFullname() ?: $this->user->getUsername()) : '';
         $data['user_username'] = $data['logged'] ? $this->user->getUsername() : '';
         $data['user_initials'] = $this->initials($data['user_fullname']);
         $data['profile_href']  = $this->url->link('user/profile');
         $data['version_label'] = sprintf($this->language->get('text_version_label'), REAMUR_VERSION);
+
+        // ── F8-V (ADR 0047): tema efetivo (override do usuário > padrão global > defaults) ──
+        $this->load->model('setting/appearance');
+
+        $prefs = ($data['logged'] && method_exists($this->user, 'getThemePrefs'))
+            ? $this->user->getThemePrefs()
+            : [];
+
+        $theme = $this->model_setting_appearance->resolveTheme($prefs);
+
+        // override só conta se o usuário de fato personalizou algo (flag explícita)
+        if (empty($prefs['override'])) {
+            $theme = $this->model_setting_appearance->resolveTheme([]);
+        }
+
+        $data['theme_mode']       = $theme['mode'];
+        $data['theme_skin']       = $theme['skin'];
+        $data['theme_sidebar']    = $theme['sidebar'];
+        $data['theme_density']    = $theme['density'];
+        $data['theme_font_scale'] = $theme['font_scale'];
+
+        // acento efetivo (par light/dark; '' = o da skin) com contraste computado
+        $data['theme_accent_light'] = $theme['accent'];
+        $data['theme_accent_dark']  = $theme['accent_dark'] !== '' ? $theme['accent_dark'] : $theme['accent'];
+        $data['theme_accent_light_contrast'] = $theme['accent'] !== ''
+            ? $this->model_setting_appearance->bestContrastOn($theme['accent'])['contrast'] : '';
+        $data['theme_accent_dark_contrast'] = $data['theme_accent_dark'] !== ''
+            ? $this->model_setting_appearance->bestContrastOn($data['theme_accent_dark'])['contrast'] : '';
+
+        // endpoint AJAX do toggle salva o AND csrf p/ chamadas no shell
+        $data['csrf_token']      = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['appearance_mode_url'] = $this->url->link('setting/appearance.saveMode');
 
         return $this->load->view('common/header', $data);
     }
@@ -146,6 +180,7 @@ class Header extends \Reamur\System\Engine\Controller {
                 'title' => $this->language->get('text_group_system'),
                 'items' => [
                     ['route' => 'setting/setting',      'icon' => 'bi bi-gear',           'key' => 'text_menu_settings'],
+                    ['route' => 'setting/appearance',   'icon' => 'bi bi-palette2',       'key' => 'text_menu_appearance'],
                     ['route' => 'setting/site_info',    'icon' => 'bi bi-info-square',    'key' => 'text_menu_site_info'],
                     ['route' => 'setting/webhook',      'icon' => 'bi bi-diagram-3',      'key' => 'text_menu_webhooks'],
                     ['route' => 'localization/language','icon' => 'bi bi-translate',      'key' => 'text_menu_languages'],

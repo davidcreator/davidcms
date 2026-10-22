@@ -29,11 +29,45 @@
     return document.documentElement.getAttribute('data-bs-theme') || 'light';
   }
 
+  /* F8-V (ADR 0047): o modo é PREFERÊNCIA DO USUÁRIO no servidor.
+     - window.__rmsAppearanceMode = pref server-side ('system'|'light'|'dark')
+     - explicit: obedece ao servidor (localStorage ignorado)
+     - system:   aplica escolha local fast-path e PERSISTE no servidor no toggle
+  */
+  var APPEARANCE_MODE = (typeof window.__rmsAppearanceMode === 'string') ? window.__rmsAppearanceMode : 'system';
+
+  function systemPrefersDark() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  function effectiveTheme() { /* tema de fato aplicado considerando a policy */
+    if (APPEARANCE_MODE === 'light' || APPEARANCE_MODE === 'dark') { return APPEARANCE_MODE; }
+    return currentTheme() === 'dark' ? 'dark' : 'light';
+  }
+
+  function persistAppearanceMode(mode) {
+    var urlMeta = document.querySelector('meta[name="appearance-mode-url"]');
+    if (!urlMeta || !urlMeta.content || !window.fetch) { return; }
+    var csrf = document.querySelector('meta[name="csrf-token"]');
+    try {
+      var body = new URLSearchParams();
+      body.set('mode', mode);
+      if (csrf && csrf.content) { body.set('csrf_token', csrf.content); }
+      fetch(urlMeta.content, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
+        body: body
+      }).catch(function () { /* offline — local segue como fallback */ });
+    } catch (e) { /* silencioso */ }
+  }
+
   function toggleTheme() {
     var next = currentTheme() === 'dark' ? 'light' : 'dark';
     try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* modo privado */ }
     applyTheme(next);
     refreshToggleIcon(next);
+    persistAppearanceMode(next);
   }
 
   function refreshToggleIcon(theme) {

@@ -1,0 +1,39 @@
+/* Ardósia — grafite neutro, máxima sobriedade (F8-V, ADR 0047) · WCAG AA */
+:root {
+  --rms-accent: #46586b;
+  --rms-accent-contrast: #ffffff;
+  --rms-accent-hover: #37485a;
+}
+html[data-rms-sidebar="auto"][data-bs-theme="light"]:root,
+:root[data-rms-sidebar="auto"][data-bs-theme="light"] {
+  --rms-sidebar-bg: #2b3138;
+  --rms-sidebar-fg: #eceef0;
+  --rms-sidebar-fg-muted: #c0c6cc;
+  --rms-sidebar-fg-title: #9da6ae;
+  --rms-sidebar-border: rgb(255 255 255 / 9%);
+  --rms-sidebar-hover-bg: rgb(255 255 255 / 8%);
+  --rms-brand-filter: invert(1);
+}
+html[data-rms-sidebar="auto"][data-bs-theme="dark"]:root,
+:root[data-rms-sidebar="auto"][data-bs-theme="dark"] {
+  --rms-sidebar-bg: #1c2024;
+  --rms-sidebar-fg: #e5e8ea;
+  --rms-sidebar-fg-muted: #b3bac0;
+  --rms-sidebar-fg-title: #8f99a1;
+  --rms-sidebar-border: rgb(255 255 255 / 9%);
+  --rms-sidebar-hover-bg: rgb(255 255 255 / 8%);
+  --rms-brand-filter: invert(1);
+}
+html[data-rms-sidebar="light"]:root, :root[data-rms-sidebar="light"] {
+  --rms-sidebar-bg: #f7f8f9;
+  --rms-sidebar-fg: #2b3138;
+  --rms-sidebar-fg-muted: #4b535c;
+  --rms-sidebar-fg-title: #626b75;
+  --rms-sidebar-border: #e2e5e8;
+  --rms-sidebar-hover-bg: #eceef0;
+  --rms-brand-filter: none;
+}
+:root[data-bs-theme="dark"] {
+  --rms-accent: #9fb4c9;
+  --rms-accent-contrast: #101a24;
+}

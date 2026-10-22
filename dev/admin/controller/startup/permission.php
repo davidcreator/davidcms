@@ -24,6 +24,11 @@ class Permission extends \Reamur\System\Engine\Controller {
         'common/logout',
         'common/dashboard',
         'user/profile',
+        // F8-V (ADR 0047): "Minha aparência" é preferência PRÓPRIA (mesma classe
+        // de rota de user/profile — qualquer usuário logado personaliza o seu
+        // painel). A seção GLOBAL da tela verifica hasPermission('modify') no
+        // controller — rota permitida ≠ persistência global liberada.
+        'setting/appearance',
         'error/not_found',
         'error/permission',
     ];

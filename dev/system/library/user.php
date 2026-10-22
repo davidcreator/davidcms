@@ -148,6 +148,100 @@ final class User {
         return $this->user_group_id;
     }
 
+    /* ── F8-V (ADR 0047): preferências de aparência (override por usuário) ── */
+
+    private ?array $themePrefsCache = null; // null = ainda não lido; [] = coluna ausente
+
+    /**
+     * Preferências de tema do usuário logado (JSON rms_user.theme_prefs).
+     * Defensiva: instalações sem a coluna (pré-upgrade) recebem [] — o chamador
+     * cai para o padrão global. Cacheia por instância.
+     *
+     * @return array<string, mixed>
+     */
+    public function getThemePrefs(): array {
+        if ($this->themePrefsCache !== null) {
+            return $this->themePrefsCache;
+        }
+
+        $this->themePrefsCache = [];
+
+        if (!$this->logged || $this->user_id <= 0) {
+            return $this->themePrefsCache;
+        }
+
+        $db = $this->db();
+
+        if (!$db instanceof Db) {
+            return $this->themePrefsCache;
+        }
+
+        // Guard de coluna (padrão ADR 0043): instalação pré-upgrade não quebra
+        $col = $db->query(
+            "SELECT COUNT(*) AS `n` FROM `information_schema`.`COLUMNS`
+              WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = '" . $this->prefix() . "user'
+                AND `COLUMN_NAME` = 'theme_prefs'"
+        );
+
+        if (!$col instanceof \stdClass || (int)($col->row['n'] ?? 0) === 0) {
+            return $this->themePrefsCache;
+        }
+
+        $query = $db->query(
+            "SELECT `theme_prefs` FROM `" . $this->prefix() . "user` WHERE `user_id` = '" . $this->user_id . "' LIMIT 1"
+        );
+
+        $json = ($query instanceof \stdClass && !empty($query->row)) ? (string)($query->row['theme_prefs'] ?? '') : '';
+
+        if ($json !== '') {
+            $decoded = json_decode($json, true);
+
+            if (is_array($decoded)) {
+                $this->themePrefsCache = $decoded;
+            }
+        }
+
+        return $this->themePrefsCache;
+    }
+
+    /**
+     * Persiste as preferências de tema do usuário logado (chaves validadas).
+     *
+     * @param array<string, mixed> $prefs
+     */
+    public function saveThemePrefs(array $prefs): bool {
+        if (!$this->logged || $this->user_id <= 0) {
+            return false;
+        }
+
+        $db = $this->db();
+
+        if (!$db instanceof Db) {
+            return false;
+        }
+
+        // mesma guarda de coluna do getter (instalações pré-upgrade)
+        $col = $db->query(
+            "SELECT COUNT(*) AS `n` FROM `information_schema`.`COLUMNS`
+              WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = '" . $this->prefix() . "user'
+                AND `COLUMN_NAME` = 'theme_prefs'"
+        );
+
+        if (!$col instanceof \stdClass || (int)($col->row['n'] ?? 0) === 0) {
+            return false;
+        }
+
+        $db->query(
+            "UPDATE `" . $this->prefix() . "user` SET `theme_prefs` = '"
+            . $db->escape((string)json_encode($prefs, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))
+            . "' WHERE `user_id` = '" . $this->user_id . "'"
+        );
+
+        $this->themePrefsCache = $prefs;
+
+        return true;
+    }
+
     /**
      * Hidrata o estado a partir do banco; usuário desativado perde a
      * sessão efetiva (logged=false) sem derrubar a aplicação.

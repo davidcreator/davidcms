@@ -15,14 +15,72 @@
  */
 
 /* ═══ 1. Tokens do shell ═══ */
+/* F8-V (ADR 0047): defaults abaixo = skin "light" embutida (fallback quando o
+   arquivo da skin falha em carregar). Todo par texto/fundo desta camada é
+   >= 4.5:1 WCAG AA — validado por dev/tools/validate-themes.php. As skins em
+   admin/view/css/themes/*.css redefinem APENAS estes tokens. */
 :root {
-  --rms-admin-accent:     var(--bs-primary);
-  --rms-admin-accent-2:   var(--bs-secondary);
+  /* acento principal */
+  --rms-accent:            #0d6efd;
+  --rms-accent-contrast:   #ffffff;
+  --rms-accent-hover:      #0b5ed7;
+
+  /* sidebar (variante dark como padrão-intencional no skin light) */
+  --rms-sidebar-bg:        #212529;
+  --rms-sidebar-fg:        #f8f9fa;
+  --rms-sidebar-fg-muted:  #c9ced4;   /* 10.0:1 sobre bg */
+  --rms-sidebar-fg-title:  #a9b2bb;   /* 5.9:1 sobre bg */
+  --rms-sidebar-border:    rgb(255 255 255 / 8%);
+  --rms-sidebar-hover-bg:  rgb(255 255 255 / 8%);
+  --rms-brand-filter:      invert(1);
+
+  /* badge "rascunho" (pending review) — corrigido p/ AA nos 2 modos */
+  --rms-badge-draft-fg:    #7a6400;   /* ≥4.5:1 sobre branco */
+  --rms-badge-draft-bg:    rgb(255 193 7 / 18%);
+
+  /* alternância por modo escuro do bootstrap */
   --rms-sidebar-w:        262px;
   --rms-sidebar-w-coll:   76px;
   --rms-topbar-h:         60px;
   --rms-radius:           12px;
   --rms-transition:       180ms ease-in-out;
+}
+
+html[data-bs-theme="dark"]:root, :root[data-bs-theme="dark"] {
+  --rms-badge-draft-fg:    #f3c343;
+  --rms-badge-draft-bg:    rgb(255 193 7 / 14%);
+  --rms-accent:            #5c9dff;
+  --rms-accent-contrast:   #00132e;
+}
+
+/* sidebar clara (variante light) — skin pode ajustar estes valores */
+html[data-rms-sidebar="light"]:root, :root[data-rms-sidebar="light"] {
+  --rms-sidebar-bg:        #ffffff;
+  --rms-sidebar-fg:        #1f2328;
+  --rms-sidebar-fg-muted:  #4d5560;
+  --rms-sidebar-fg-title:  #5f6873;
+  --rms-sidebar-border:    var(--bs-border-color, #dee2e6);
+  --rms-sidebar-hover-bg:  rgb(0 0 0 / 5%);
+  --rms-brand-filter:      none;
+}
+
+/* F8-V fix semântico: o reamurcms.css (identidade do FRONT) remapeia
+   --bs-secondary para verde; no ADMIN, secondary volta a ser neutro. */
+body.admin-shell { --bs-secondary: #6c757d; }
+
+/* F8-V fix de foco visível AA em todo o painel */
+.admin-shell :focus-visible {
+  outline: 2px solid var(--rms-accent);
+  outline-offset: 2px;
+}
+
+/* F8-V densidade compacta (ADR 0047) */
+html[data-rms-density="compact"] .admin-content { padding: .9rem 1rem; }
+html[data-rms-density="compact"] .data-card .table thead th { padding: .45rem .7rem; }
+html[data-rms-density="compact"] .data-card .table tbody td { padding: .35rem .7rem; }
+html[data-rms-density="compact"] .filter-bar { padding: .4rem .55rem; }
+html[data-rms-density="compact"] .page-titlebar { margin-bottom: .6rem; }
+html[data-rms-density="compact"] .admin-sidebar .nav-link { padding: 6px 12px; }
 }
 
 /* ═══ 2. Layout base (desktop-first; offcanvas rege o mobile) ═══ */
@@ -37,15 +95,15 @@
 
 .audit-note { display: none; } /* utilidade interna (não aparecer no painel) */
 
-/* ═══ 3. Sidebar ═══ */
+/* ═══ 3. Sidebar (F8-V ADR 0047: todos os tons vêm de tokens da skin ativa) ═══ */
 .admin-sidebar {
   width: var(--rms-sidebar-w);
   flex: 0 0 var(--rms-sidebar-w);
   display: flex;
   flex-direction: column;
-  background: var(--bs-dark-bg-subtle, var(--bs-gray-900));
-  color: #f8f9fa;
-  border-right: 1px solid rgb(255 255 255 / 6%);
+  background: var(--rms-sidebar-bg);
+  color: var(--rms-sidebar-fg);
+  border-right: 1px solid var(--rms-sidebar-border);
   position: sticky;
   top: 0;
   height: 100vh;
@@ -60,7 +118,7 @@
   justify-content: center;
   min-height: var(--rms-topbar-h);
   padding: 10px 18px;
-  border-bottom: 1px solid rgb(255 255 255 / 8%);
+  border-bottom: 1px solid var(--rms-sidebar-border);
 }
 
 .admin-sidebar .brand img {
@@ -68,7 +126,7 @@
   height: 28px;
   width: auto;
   object-fit: contain;
-  filter: invert(1); /* o wordmark é preto; sidebar é escura em ambos os temas */
+  filter: var(--rms-brand-filter, none);
 }
 
 .admin-sidebar .nav-group {
@@ -82,7 +140,7 @@
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: rgb(255 255 255 / 45%);
+  color: var(--rms-sidebar-fg-title);
 }
 
 .admin-sidebar .nav-link {
@@ -92,7 +150,7 @@
   padding: 9px 12px;
   margin: 2px 0;
   border-radius: 8px;
-  color: rgb(255 255 255 / 75%);
+  color: var(--rms-sidebar-fg-muted);
   text-decoration: none;
   font-size: .92rem;
   font-weight: 500;
@@ -107,22 +165,22 @@
 }
 
 .admin-sidebar .nav-link:hover {
-  background: rgb(255 255 255 / 8%);
-  color: #fff;
+  background: var(--rms-sidebar-hover-bg);
+  color: var(--rms-sidebar-fg);
 }
 
 .admin-sidebar .nav-link.active {
-  background: var(--rms-admin-accent);
-  color: #fff;
+  background: var(--rms-accent);
+  color: var(--rms-accent-contrast);
 }
 
-.admin-sidebar .nav-link.active .bi { color: #fff; }
+.admin-sidebar .nav-link.active .bi { color: var(--rms-accent-contrast); }
 
 .admin-sidebar .sidebar-footer {
   margin-top: auto;
   padding: 14px 18px;
   font-size: .74rem;
-  color: rgb(255 255 255 / 38%);
+  color: var(--rms-sidebar-fg-title);
   border-top: 1px solid rgb(255 255 255 / 7%);
 }
 
@@ -199,7 +257,7 @@
   border-radius: 8px;
 }
 .admin-topbar .lang-switcher .lang.active {
-  color: var(--rms-admin-accent);
+  color: var(--rms-accent);
   font-weight: 700;
 }
 .admin-topbar .lang-switcher .lang:hover { background: var(--bs-secondary-bg); }
@@ -224,7 +282,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--rms-admin-accent);
+  background: var(--rms-accent);
   color: #fff;
   font-size: .8rem;
   font-weight: 700;
@@ -289,8 +347,8 @@
 .admin-content .btn.primary,
 .admin-content button.btn.primary,
 .admin-content input.btn.primary {
-  background: var(--rms-admin-accent);
-  border-color: var(--rms-admin-accent);
+  background: var(--rms-accent);
+  border-color: var(--rms-accent);
   color: #fff;
 }
 .admin-content .btn.primary:hover { filter: brightness(.94); }
@@ -374,7 +432,7 @@
   color: inherit;
   transition: border-color var(--rms-transition), transform var(--rms-transition);
 }
-.stat-card:hover { border-color: var(--rms-admin-accent); transform: translateY(-1px); color: inherit; }
+.stat-card:hover { border-color: var(--rms-accent); transform: translateY(-1px); color: inherit; }
 
 .stat-card .stat-icon {
   display: inline-flex;
@@ -383,8 +441,8 @@
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--rms-admin-accent) 14%, transparent);
-  color: var(--rms-admin-accent);
+  background: color-mix(in srgb, var(--rms-accent) 14%, transparent);
+  color: var(--rms-accent);
   font-size: 1.25rem;
   flex: 0 0 42px;
 }
@@ -485,9 +543,9 @@
 }
 
 /* ═══ 11. Detalhe fino ═══ */
-.visually-hidden-focusable:focus { outline-color: var(--rms-admin-accent); }
+.visually-hidden-focusable:focus { outline-color: var(--rms-accent); }
 
-::selection { background: color-mix(in srgb, var(--rms-admin-accent) 25%, transparent); }
+::selection { background: color-mix(in srgb, var(--rms-accent) 25%, transparent); }
 
 /* ═══════════════════════════════════════════════════════════════════════
    F8-02 · Módulo Blog migrado para o shell (ADR 0046)
@@ -616,10 +674,9 @@
   color: var(--bs-success-text-emphasis, var(--bs-success));
 }
 .badge-status--draft {
-  background: rgba(var(--bs-warning-rgb), .18);
-  color: var(--bs-warning-text-emphasis, #b58b00);
+  background: var(--rms-badge-draft-bg);
+  color: var(--rms-badge-draft-fg);
 }
-[data-bs-theme="dark"] .badge-status--draft { color: #f3c343; }
 
 .icon-btn--danger:hover, .icon-btn--danger:focus { color: var(--bs-danger); }
 .link-plain { color: var(--bs-emphasis-color); text-decoration: none; }
@@ -711,3 +768,31 @@
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* ── F8-V · setting/appearance (ADR 0047) ─────────────────────────────── */
+.rms-skin-card {
+  height: 100%;
+  text-align: left;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.btn-check:checked + .rms-skin-card {
+  border-color: var(--rms-accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rms-accent) 25%, transparent);
+}
+.btn-check:focus-visible + .rms-skin-card {
+  outline: 2px solid var(--rms-accent);
+  outline-offset: 2px;
+}
+.rms-accent-card { border: 1px solid var(--bs-border-color); }
+.btn-check:checked + .rms-accent-card {
+  border-color: var(--rms-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rms-accent) 25%, transparent);
+  font-weight: 600;
+}
+.btn-check:focus-visible + .rms-accent-card,
+.row .btn-check:focus-visible + .btn-outline-secondary {
+  outline: 2px solid var(--rms-accent);
+  outline-offset: 2px;
+}
+.rms-accent-custom-box { background: var(--bs-tertiary-bg); }
+.rms-accent-verdict { min-height: 1.4em; }

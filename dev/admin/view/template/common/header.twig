@@ -1,19 +1,29 @@
 {# dev/admin/view/template/common/header.twig — shell do painel (F8-01, ADR 0045) #}
 <!DOCTYPE html>
-<html lang="{{ locale }}" data-bs-theme="light">
+<html lang="{{ locale }}" data-bs-theme="{{ theme_mode != 'system' ? theme_mode : 'light' }}" data-rms-skin="{{ theme_skin }}" data-rms-sidebar="{{ theme_sidebar }}" data-rms-density="{{ theme_density }}" data-rms-mode-pref="{{ theme_mode }}"{% if theme_font_scale != '100' %} style="font-size: {{ theme_font_scale }}%"{% endif %}>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <meta name="appearance-mode-url" content="{{ appearance_mode_url }}">
   <title>{{ title ?: 'ReamurCMS Admin' }}</title>
   <script>
-    /* anti-flash: aplica o tema salvo antes do primeiro paint (admin.js re-sincroniza) */
+    /* anti-flash (F8-V, ADR 0047): modo vem do servidor; quando mode=system,
+       o cliente decide por prefers-color-scheme antes do primeiro paint.
+       localStorage legado segue como fast-path apenas se pref=system. */
     (function () {
       try {
+        var root = document.documentElement;
+        var pref = root.getAttribute('data-rms-mode-pref') || 'system';
+        if (pref === 'light' || pref === 'dark') {
+          root.setAttribute('data-bs-theme', pref);
+          return;
+        }
         var t = localStorage.getItem('rms-admin-theme');
-        if (t === 'dark' || t === 'light') {
-          document.documentElement.setAttribute('data-bs-theme', t);
+        if (pref === 'system' && (t === 'dark' || t === 'light')) {
+          root.setAttribute('data-bs-theme', t);
         } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          document.documentElement.setAttribute('data-bs-theme', 'dark');
+          root.setAttribute('data-bs-theme', 'dark');
         }
       } catch (e) { /* modo privado — light padrão */ }
     })();
@@ -21,12 +31,20 @@
   <link rel="stylesheet" href="{{ site_url }}view/css/bootstrap.css?v={{ asset_v }}">
   <link rel="stylesheet" href="{{ site_url }}view/css/bootstrap-icons.css?v={{ asset_v }}">
   <link rel="stylesheet" href="{{ site_url }}view/css/reamurcms.css?v={{ asset_v }}">
+  <link rel="stylesheet" href="{{ site_url }}view/css/themes/{{ theme_skin }}.css?v={{ asset_v }}" id="rms-skin-css">
   {% for href, rel in styles %}
   <link rel="{{ rel }}" href="{{ href }}">
   {% endfor %}
+  {% if theme_accent_light %}
+  <style id="rms-accent-custom">
+    :root { --rms-accent: {{ theme_accent_light }}; --rms-accent-contrast: {{ theme_accent_light_contrast }}; }
+    [data-bs-theme="dark"] { --rms-accent: {{ theme_accent_dark }}; --rms-accent-contrast: {{ theme_accent_dark_contrast }}; }
+  </style>
+  {% endif %}
   {% for src in scripts %}
   <script src="{{ src }}"></script>
   {% endfor %}
+  <script>window.__rmsAppearanceMode = '{{ theme_mode }}';</script>
 </head>
 <body class="admin-shell {{ logged ? '' : 'auth-layout' }} {{ body_class }}">
 
@@ -83,6 +101,7 @@
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
           <li><a class="dropdown-item" href="{{ profile_href }}"><i class="bi bi-person me-2" aria-hidden="true"></i>{{ text_profile }}</a></li>
+          <li><a class="dropdown-item" href="{{ appearance_href }}"><i class="bi bi-palette2 me-2" aria-hidden="true"></i>{{ text_appearance }}</a></li>
           <li><hr class="dropdown-divider"></li>
           <li><a class="dropdown-item" href="{{ logout }}"><i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>{{ button_logout }}</a></li>
         </ul>

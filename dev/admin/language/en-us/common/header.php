@@ -44,3 +44,5 @@ $_['text_menu_webhooks']     = 'Webhooks';
 $_['text_menu_languages']    = 'Languages';
 $_['text_menu_users']        = 'Users';
 $_['text_menu_user_groups']  = 'User Groups';
+$_['text_menu_appearance']   = 'Panel Appearance';
+$_['text_appearance']        = 'Appearance';

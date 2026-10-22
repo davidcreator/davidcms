@@ -73,6 +73,10 @@ class Setting extends \Reamur\System\Engine\Model {
             // costuras de ambiente (ADR 0034 §4): não expostas em tela; existem p/
             // baterias e2e e manutenção apontarem rotas alternativas (mock/sandbox)
             'mp_token_url', 'mp_users_me_url',
+            // F8-V (ADR 0047): aparência do painel (padrão global; override por usuário em rms_user.theme_prefs)
+            'config_admin_skin', 'config_admin_accent', 'config_admin_accent_dark',
+            'config_admin_sidebar_variant', 'config_admin_density',
+            'config_admin_font_scale', 'config_admin_theme_mode',
         ];
 
         foreach ($data as $key => $value) {

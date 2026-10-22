@@ -1,0 +1,39 @@
+/* Ameixa — roxo profundo (F8-V, ADR 0047) · WCAG AA validada */
+:root {
+  --rms-accent: #7b4397;
+  --rms-accent-contrast: #ffffff;
+  --rms-accent-hover: #66357d;
+}
+html[data-rms-sidebar="auto"][data-bs-theme="light"]:root,
+:root[data-rms-sidebar="auto"][data-bs-theme="light"] {
+  --rms-sidebar-bg: #271730;
+  --rms-sidebar-fg: #f0e7f5;
+  --rms-sidebar-fg-muted: #cdbbda;
+  --rms-sidebar-fg-title: #b09bc0;
+  --rms-sidebar-border: rgb(255 255 255 / 9%);
+  --rms-sidebar-hover-bg: rgb(255 255 255 / 8%);
+  --rms-brand-filter: invert(1);
+}
+html[data-rms-sidebar="auto"][data-bs-theme="dark"]:root,
+:root[data-rms-sidebar="auto"][data-bs-theme="dark"] {
+  --rms-sidebar-bg: #1e1126;
+  --rms-sidebar-fg: #eadff1;
+  --rms-sidebar-fg-muted: #c2abd2;
+  --rms-sidebar-fg-title: #a68bb9;
+  --rms-sidebar-border: rgb(255 255 255 / 9%);
+  --rms-sidebar-hover-bg: rgb(255 255 255 / 8%);
+  --rms-brand-filter: invert(1);
+}
+html[data-rms-sidebar="light"]:root, :root[data-rms-sidebar="light"] {
+  --rms-sidebar-bg: #fbf5fd;
+  --rms-sidebar-fg: #3d234c;
+  --rms-sidebar-fg-muted: #644a75;
+  --rms-sidebar-fg-title: #7a5f8c;
+  --rms-sidebar-border: #eadbf0;
+  --rms-sidebar-hover-bg: #f1e4f6;
+  --rms-brand-filter: none;
+}
+:root[data-bs-theme="dark"] {
+  --rms-accent: #c58ae0;
+  --rms-accent-contrast: #2b0d3a;
+}

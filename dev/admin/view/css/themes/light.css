@@ -1,0 +1,43 @@
+/* ════════════════════════════════════════════════════════════
+   Reamur Light — skin padrão do painel (F8-V, ADR 0047)
+   Família: azul institucional · sidebar escura
+   Validada (WCAG AA, 2 modos) por dev/tools/validate-themes.php
+   ════════════════════════════════════════════════════════════ */
+:root {
+  --rms-accent: #0d6efd;
+  --rms-accent-contrast: #ffffff;
+  --rms-accent-hover: #0b5ed7;
+}
+html[data-rms-sidebar="auto"][data-bs-theme="light"]:root,
+:root[data-rms-sidebar="auto"][data-bs-theme="light"] {
+  --rms-sidebar-bg: #212529;
+  --rms-sidebar-fg: #f8f9fa;
+  --rms-sidebar-fg-muted: #c9ced4;
+  --rms-sidebar-fg-title: #a9b2bb;
+  --rms-sidebar-border: rgb(255 255 255 / 8%);
+  --rms-sidebar-hover-bg: rgb(255 255 255 / 8%);
+  --rms-brand-filter: invert(1);
+}
+html[data-rms-sidebar="auto"][data-bs-theme="dark"]:root,
+:root[data-rms-sidebar="auto"][data-bs-theme="dark"] {
+  --rms-sidebar-bg: #16181b;
+  --rms-sidebar-fg: #f1f3f5;
+  --rms-sidebar-fg-muted: #b9c0c8;
+  --rms-sidebar-fg-title: #96a0aa;
+  --rms-sidebar-border: rgb(255 255 255 / 8%);
+  --rms-sidebar-hover-bg: rgb(255 255 255 / 8%);
+  --rms-brand-filter: invert(1);
+}
+html[data-rms-sidebar="light"]:root, :root[data-rms-sidebar="light"] {
+  --rms-sidebar-bg: #ffffff;
+  --rms-sidebar-fg: #1f2328;
+  --rms-sidebar-fg-muted: #4d5560;
+  --rms-sidebar-fg-title: #5f6873;
+  --rms-sidebar-border: #dee2e6;
+  --rms-sidebar-hover-bg: rgb(0 0 0 / 5%);
+  --rms-brand-filter: none;
+}
+:root[data-bs-theme="dark"] {
+  --rms-accent: #5c9dff;
+  --rms-accent-contrast: #00132e;
+}

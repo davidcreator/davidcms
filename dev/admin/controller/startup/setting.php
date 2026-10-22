@@ -31,6 +31,12 @@ class Setting extends \Reamur\System\Engine\Controller {
         'config_copyright_en-us', 'config_copyright_pt-br', 'config_copyright_es-eu',
         'config_social_facebook_href', 'config_social_instagram_href', 'config_social_pinterest_href',
         'config_social_x_href', 'config_social_google_business_href', 'config_social_redbubble_href',
+
+        // F8-V (ADR 0047): aparência do painel (padrão global; o override por
+        // usuário NÃO entra aqui — fica em rms_user.theme_prefs)
+        'config_admin_skin', 'config_admin_accent', 'config_admin_accent_dark',
+        'config_admin_sidebar_variant', 'config_admin_density',
+        'config_admin_font_scale', 'config_admin_theme_mode',
     ];
 
     public function index(): void {
