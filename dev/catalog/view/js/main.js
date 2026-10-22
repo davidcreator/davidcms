@@ -1,0 +1,3 @@
+// Front JS
+
+import 'bootstrap';

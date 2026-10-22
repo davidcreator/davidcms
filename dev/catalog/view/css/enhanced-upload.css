@@ -1,0 +1,133 @@
+/**
+ * Enhanced Upload Styles
+ * 
+ * Styles for the enhanced upload functionality including:
+ * - Progress bar
+ * - Validation feedback
+ * - Status indicators
+ */
+
+/* Progress Bar Container */
+.upload-progress-container {
+    width: 100%;
+    background-color: #f1f1f1;
+    border-radius: 4px;
+    margin: 10px 0;
+    height: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Progress Bar */
+.upload-progress-bar {
+    height: 100%;
+    background-color: #4CAF50;
+    width: 0%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* Progress Text */
+.upload-progress-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    font-size: 12px;
+    font-weight: bold;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.7);
+}
+
+/* Validation Feedback Container */
+.upload-validation-feedback {
+    margin: 10px 0;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* Valid File Indicator */
+.upload-valid {
+    color: #2e7d32;
+    background-color: #e8f5e9;
+    border: 1px solid #c8e6c9;
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.upload-valid::before {
+    content: '✓';
+    margin-right: 8px;
+    font-weight: bold;
+}
+
+/* Invalid File Indicator */
+.upload-error,
+.upload-invalid {
+    color: #c62828;
+    background-color: #ffebee;
+    border: 1px solid #ffcdd2;
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.upload-error::before,
+.upload-invalid::before {
+    content: '✗';
+    margin-right: 8px;
+    font-weight: bold;
+}
+
+/* Scanning Animation */
+.upload-scanning {
+    color: #0277bd;
+    background-color: #e1f5fe;
+    border: 1px solid #b3e5fc;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.upload-scanning::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 8px;
+    border: 2px solid #0277bd;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: scan-spin 1s linear infinite;
+}
+
+@keyframes scan-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .upload-progress-container {
+        height: 16px;
+    }
+    
+    .upload-progress-text {
+        font-size: 10px;
+    }
+    
+    .upload-validation-feedback {
+        font-size: 12px;
+    }
+}

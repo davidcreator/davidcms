@@ -1,0 +1,166 @@
+:root {
+  --mooc-primary: var(--accent, #23a1d1);
+  --mooc-primary-2: var(--accent-2, #1f90bb);
+  --mooc-ink: var(--text-00, #0f172a);
+  --mooc-muted: var(--muted, #64748b);
+  --mooc-card: var(--card, #ffffff);
+  --mooc-card-border: var(--card-border, rgba(15, 23, 42, 0.12));
+}
+
+.rms-mooc-shell .rms-catalog-hero-card {
+  background:
+    radial-gradient(circle at 12% 22%, color-mix(in srgb, var(--mooc-primary) 18%, transparent), transparent 38%),
+    radial-gradient(circle at 84% 10%, color-mix(in srgb, var(--mooc-primary-2) 16%, transparent), transparent 34%),
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--mooc-card) 96%, transparent) 0%,
+      color-mix(in srgb, var(--mooc-card) 88%, var(--mooc-primary) 12%) 100%
+    );
+}
+
+.rms-mooc-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1.2rem;
+  margin: 1rem 0 0;
+  color: var(--mooc-muted);
+}
+
+.rms-mooc-summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.rms-mooc-media {
+  overflow: hidden;
+  border-radius: calc(var(--rms-catalog-radius) - 4px);
+  border: 1px solid var(--mooc-card-border);
+  background: color-mix(in srgb, var(--mooc-primary) 7%, transparent);
+}
+
+.rms-mooc-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rms-mooc-card {
+  position: relative;
+}
+
+.rms-mooc-card .badge {
+  align-self: flex-start;
+}
+
+.rms-mooc-content,
+.rms-mooc-richtext {
+  color: var(--mooc-ink);
+  line-height: 1.75;
+}
+
+.rms-mooc-content h2,
+.rms-mooc-content h3,
+.rms-mooc-content h4,
+.rms-mooc-richtext h2,
+.rms-mooc-richtext h3,
+.rms-mooc-richtext h4 {
+  color: var(--mooc-ink);
+  margin-top: 1.6rem;
+}
+
+.rms-mooc-content iframe,
+.rms-mooc-richtext iframe {
+  width: 100%;
+  min-height: min(60vw, 420px);
+  border: 0;
+  border-radius: 1rem;
+}
+
+.rms-mooc-progress-bar {
+  height: 0.85rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mooc-primary) 12%, transparent);
+}
+
+.rms-mooc-progress-bar > .progress-bar {
+  border-radius: inherit;
+}
+
+.rms-mooc-list,
+.rms-mooc-enrollment-list {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rms-mooc-list li,
+.rms-mooc-enrollment-list li {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--mooc-card-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--mooc-card) 95%, transparent);
+}
+
+.rms-mooc-inline-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.rms-mooc-inline-form--rating {
+  grid-template-columns: minmax(0, 110px) minmax(0, 1fr) auto;
+}
+
+.rms-mooc-forum-actions,
+.rms-mooc-course-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.rms-mooc-topic-list,
+.rms-mooc-reply-list,
+.rms-mooc-comment-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.rms-mooc-topic-item,
+.rms-mooc-reply-item,
+.rms-mooc-comment-item,
+.rms-mooc-resource-card {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--mooc-card-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--mooc-card) 96%, transparent);
+}
+
+.rms-mooc-certificate {
+  max-width: 860px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.rms-mooc-certificate__code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  letter-spacing: 0.06em;
+}
+
+.rms-mooc-certificate__qr {
+  display: inline-flex;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--mooc-card-border);
+  background: color-mix(in srgb, var(--mooc-card) 96%, transparent);
+}
+
+@media (max-width: 767px) {
+  .rms-mooc-inline-form--rating {
+    grid-template-columns: 1fr;
+  }
+}
