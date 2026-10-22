@@ -27,6 +27,21 @@ $_['text_success_delete']  = 'Client logo deleted.';
 $_['text_placeholder']     = '(no logo)';
 $_['text_none']            = '(none)';
 
+// F8-04 — filtros, paginação e proteção CSRF
+$_['text_filter'] = 'Filter client logos';
+$_['text_all_status'] = 'All statuses';
+$_['text_showing'] = 'Showing %s–%s of %s client logos';
+$_['text_no_results_filtered'] = 'No client logos match these filters.';
+$_['text_close'] = 'Close';
+$_['text_page_first'] = '« First';
+$_['text_page_last'] = 'Last »';
+$_['text_page_next'] = 'Next ›';
+$_['text_page_prev'] = '‹ Previous';
+$_['entry_filter_name'] = 'Name';
+$_['button_filter'] = 'Apply filters';
+$_['button_reset'] = 'Reset';
+$_['error_csrf'] = 'The security token is invalid or expired. Refresh the page and try again.';
+
 // Columns
 $_['column_image']         = 'Logo';
 $_['column_name']          = 'Name';

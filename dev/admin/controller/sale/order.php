@@ -18,63 +18,125 @@ namespace Reamur\Admin\Controller\Sale;
 
 class Order extends \Reamur\System\Engine\Controller {
 
-    /** Lista pedidos (200) */
+    /** Lista pedidos com filtros server-side e paginação. */
     public function index(): void {
         $this->load->language('sale/order');
-
         $this->document->setTitle($this->language->get('heading_title'));
-
         $this->load->model('sale/order');
 
-        $data['heading_title']       = $this->language->get('heading_title');
-        $data['text_list']           = $this->language->get('text_list');
-        $data['text_no_results']     = $this->language->get('text_no_results');
-        $data['text_confirm_delete'] = $this->language->get('text_confirm_delete');
-        $data['column_order']        = $this->language->get('column_order');
-        $data['column_customer']     = $this->language->get('column_customer');
-        $data['column_email']        = $this->language->get('column_email');
-        $data['column_total']        = $this->language->get('column_total');
-        $data['column_status']       = $this->language->get('column_status');
-        $data['column_date_added']   = $this->language->get('column_date_added');
-        $data['column_date_modified'] = $this->language->get('column_date_modified');
-        $data['column_action']       = $this->language->get('column_action');
-        $data['button_add']          = $this->language->get('button_add');
-        $data['button_edit']         = $this->language->get('button_edit');
-        $data['button_delete']       = $this->language->get('button_delete');
-        $data['text_flash']          = $this->flash();
-        // F8-03: setting/marketplace.paylink exige POST protegido por CSRF.
+        foreach ([
+            'heading_title', 'text_list', 'text_no_results', 'text_no_results_filtered',
+            'text_confirm_delete', 'text_close', 'text_filter', 'text_all_status', 'text_showing',
+            'column_order', 'column_customer', 'column_email', 'column_total', 'column_status',
+            'column_date_added', 'column_date_modified', 'column_action',
+            'entry_filter_order_id', 'entry_filter_customer', 'entry_filter_email',
+            'button_filter', 'button_reset', 'button_add', 'button_edit', 'button_delete', 'button_mp_paylink',
+        ] as $key) {
+            $data[$key] = $this->language->get($key);
+        }
+
+        $data['text_flash'] = $this->flash();
         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['can_modify'] = $this->user->hasPermission('modify', 'sale/order');
+        $data['can_mp_paylink'] = $this->user->hasPermission('modify', 'setting/marketplace');
 
-        // F5-03 (ADR 0035): botão 💳 por pedido → gerar link de pagamento MP
-        // (só aparece para quem tem modify em setting/marketplace; route admin)
-        $can_mp_paylink = $this->user->hasPermission('modify', 'setting/marketplace');
+        $filter_order_id = $this->queryValue('filter_order_id');
+        if ($filter_order_id !== '' && !ctype_digit($filter_order_id)) {
+            $filter_order_id = '';
+        }
+        $filter_order_id = $filter_order_id !== '' ? (string)(int)$filter_order_id : '';
+        if ($filter_order_id === '0') {
+            $filter_order_id = '';
+        }
 
-        $data['button_mp_paylink'] = $this->language->get('button_mp_paylink');
+        $filter_customer = mb_substr($this->queryValue('filter_customer'), 0, 128);
+        $filter_email = mb_substr($this->queryValue('filter_email'), 0, 96);
+        $status_options = array_map(
+            static fn(array $row): array => [
+                'order_status_id' => (int)$row['order_status_id'],
+                'name' => (string)$row['name'],
+            ],
+            $this->model_sale_order->getOrderStatusOptions()
+        );
+        $valid_status_ids = array_column($status_options, 'order_status_id');
+        $filter_status = $this->queryValue('filter_status');
+        $filter_status_id = ctype_digit($filter_status) ? (int)$filter_status : 0;
+        if ($filter_status_id <= 0 || !in_array($filter_status_id, $valid_status_ids, true)) {
+            $filter_status = 'all';
+            $filter_status_id = 0;
+        } else {
+            $filter_status = (string)$filter_status_id;
+        }
+
+        $filters = [
+            'order_id' => (int)$filter_order_id,
+            'customer' => $filter_customer,
+            'email' => $filter_email,
+            'status_id' => $filter_status_id,
+        ];
+        $page = max(1, (int)$this->queryValue('page'));
+        $limit = 20;
+        $total = $this->model_sale_order->getTotalOrders($filters);
+        $page = $total > 0 ? min($page, (int)ceil($total / $limit)) : 1;
+        $rows = $this->model_sale_order->getOrders($filters, ($page - 1) * $limit, $limit);
 
         $data['orders'] = [];
-
-        foreach ($this->model_sale_order->getOrders() as $order) {
+        foreach ($rows as $order) {
             $order = (array)$order;
-            $oid   = (int)$order['order_id'];
-
+            $oid = (int)$order['order_id'];
             $data['orders'][] = [
-                'order_id'      => $oid,
-                'customer'      => trim((string)$order['firstname'] . ' ' . (string)$order['lastname']),
-                'email'         => (string)$order['email'],
-                'total'         => number_format((float)$order['total'], 2, '.', ''),
-                'status_name'   => (string)$order['status_name'],
-                'date_added'    => (string)$order['date_added'],
+                'order_id' => $oid,
+                'customer' => trim((string)$order['firstname'] . ' ' . (string)$order['lastname']),
+                'email' => (string)$order['email'],
+                'total' => number_format((float)$order['total'], 2, '.', ''),
+                'status_name' => (string)$order['status_name'],
+                'date_added' => (string)$order['date_added'],
                 'date_modified' => (string)$order['date_modified'],
-                'edit'          => $this->url->link('sale/order.edit|' . $oid),
-                'delete'        => $this->url->link('sale/order.delete|' . $oid),
-                'paylink'       => $can_mp_paylink ? $this->url->link('setting/marketplace.paylink|' . $oid) : '',
+                'edit' => $this->url->link('sale/order.edit|' . $oid),
+                'delete' => $this->url->link('sale/order.delete|' . $oid),
+                'paylink' => $data['can_mp_paylink'] ? $this->url->link('setting/marketplace.paylink|' . $oid) : '',
             ];
         }
 
+        $data['statuses'] = $status_options;
         $data['add'] = $this->url->link('sale/order.add');
+        $data['filter_action'] = $this->url->link('sale/order');
+        $data['filter_order_id'] = $filter_order_id;
+        $data['filter_customer'] = $filter_customer;
+        $data['filter_email'] = $filter_email;
+        $data['filter_status'] = $filter_status;
+        $data['filter_status_id'] = $filter_status_id;
+        $data['filters_active'] = $filter_order_id !== '' || $filter_customer !== '' || $filter_email !== '' || $filter_status !== 'all';
+        $data['total_orders'] = $total;
+        $data['showing'] = $total > 0
+            ? sprintf($data['text_showing'], (($page - 1) * $limit) + 1, min($page * $limit, $total), $total)
+            : '';
+
+        require_once DIR_SYSTEM . 'library/pagination.php';
+        $pagination = new \Pagination();
+        $pagination->total = $total;
+        $pagination->page = $page;
+        $pagination->limit = $limit;
+        $query = 'page={page}';
+        foreach ([
+            'filter_order_id' => $filter_order_id,
+            'filter_customer' => $filter_customer,
+            'filter_email' => $filter_email,
+            'filter_status' => $filter_status === 'all' ? '' : $filter_status,
+        ] as $key => $value) {
+            if ($value !== '') {
+                $query .= '&' . $key . '=' . rawurlencode($value);
+            }
+        }
+        $pagination->url = $this->url->link('sale/order', $query);
+        $pagination->css_class = 'pagination pagination-sm mb-0';
+        $pagination->text_first = $this->language->get('text_page_first');
+        $pagination->text_last = $this->language->get('text_page_last');
+        $pagination->text_next = $this->language->get('text_page_next');
+        $pagination->text_prev = $this->language->get('text_page_prev');
+        $data['pagination'] = $pagination->render();
 
         $this->chrome($data);
-
         $this->response->setOutput($this->load->view('sale/order_list', $data));
     }
 
@@ -95,7 +157,9 @@ class Order extends \Reamur\System\Engine\Controller {
         $data = $this->formData([]);
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $errors = $this->validateOrder();
+            $errors = $this->csrfValid()
+                ? $this->validateOrder()
+                : [$this->language->get('error_csrf')];
 
             if ($errors === []) {
                 $order_id = $this->model_sale_order->addOrder($this->postPayload());
@@ -147,7 +211,9 @@ class Order extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $errors = $this->validateOrder();
+            $errors = $this->csrfValid()
+                ? $this->validateOrder()
+                : [$this->language->get('error_csrf')];
 
             if ($errors === []) {
                 $status_mudou = (int)($order['order_status_id'] ?? 0) !== (int)($this->request->post['order_status_id'] ?? ($order['order_status_id'] ?? 0));
@@ -189,6 +255,13 @@ class Order extends \Reamur\System\Engine\Controller {
 
         $this->load->language('sale/order');
 
+        if (!$this->csrfValid()) {
+            $this->setFlash($this->language->get('error_csrf'), 'error');
+            $this->response->redirect($this->url->link('sale/order'));
+
+            return;
+        }
+
         $this->load->model('sale/order');
 
         if ($this->model_sale_order->getOrder($order_id)) {
@@ -210,7 +283,7 @@ class Order extends \Reamur\System\Engine\Controller {
         $this->load->language('sale/order');
 
         foreach ([
-            'heading_title', 'text_edit', 'text_add', 'text_customer', 'text_products', 'text_data',
+            'heading_title', 'text_list', 'text_edit', 'text_add', 'text_customer', 'text_products', 'text_data',
             'text_history', 'text_status_hint', 'text_no_products',
             'entry_firstname', 'entry_lastname', 'entry_email', 'entry_telephone',
             'entry_product', 'entry_quantity', 'entry_price', 'entry_total', 'entry_comment', 'entry_status',
@@ -222,6 +295,8 @@ class Order extends \Reamur\System\Engine\Controller {
 
         $data['error']      = '';
         $data['text_flash'] = '';
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['can_modify'] = $this->user->hasPermission('modify', 'sale/order');
 
         $oid    = (int)($order['order_id'] ?? 0);
         $isPost = $this->request->server['REQUEST_METHOD'] === 'POST';
@@ -402,9 +477,22 @@ class Order extends \Reamur\System\Engine\Controller {
         }
     }
 
+    private function queryValue(string $key): string {
+        $value = $this->request->get[$key] ?? '';
+
+        return is_scalar($value) ? trim((string)$value) : '';
+    }
+
+    private function csrfValid(): bool {
+        return \Reamur\System\Library\Security\Csrf::check(
+            $this->session,
+            $this->request->post['csrf_token'] ?? ''
+        );
+    }
+
     /** Chrome compartilhado + estilo do módulo */
     private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $data['body_class'] = 'rms-dash';
         $data['header']     = $this->load->controller('common/header', $data);

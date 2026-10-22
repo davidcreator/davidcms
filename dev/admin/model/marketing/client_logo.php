@@ -16,16 +16,54 @@ namespace Reamur\Admin\Model\Marketing;
 class Client_logo extends \Reamur\System\Engine\Model {
 
     /**
+     * Grade paginável. Sem limite, mantém o comportamento histórico de retornar todas as linhas.
+     *
+     * @param array<string, mixed> $filters Filtros normalizados pelo controller
      * @return array<int, array<string, mixed>>
      */
-    public function getClientLogos(): array {
+    public function getClientLogos(array $filters = [], int $start = 0, int $limit = 0): array {
+        $where = $this->clientLogoFilterSql($filters);
+        $limitSql = $limit > 0 ? ' LIMIT ' . max(0, $start) . ', ' . max(1, $limit) : '';
+
         $query = $this->db->query(
             "SELECT `client_logo_id`, `name`, `image`, `url`, `status`, `sort_order`
-               FROM `" . $this->t('client_logo') . "`
+               FROM `" . $this->t('client_logo') . "`"
+            . $where . "
            ORDER BY `sort_order` ASC, `name` ASC"
+            . $limitSql
         );
 
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
+    /** Total para paginação, usando os mesmos filtros da grade. */
+    public function getTotalClientLogos(array $filters = []): int {
+        $query = $this->db->query(
+            "SELECT COUNT(*) AS `total` FROM `" . $this->t('client_logo') . "`"
+            . $this->clientLogoFilterSql($filters)
+        );
+
+        return ($query instanceof \stdClass && isset($query->row['total'])) ? (int)$query->row['total'] : 0;
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     */
+    private function clientLogoFilterSql(array $filters): string {
+        $where = [];
+        $name = is_scalar($filters['name'] ?? null) ? trim((string)$filters['name']) : '';
+
+        if ($name !== '') {
+            $where[] = "`name` LIKE '%" . $this->db->escape($name) . "%'";
+        }
+
+        $status = is_scalar($filters['status'] ?? null) ? (string)$filters['status'] : 'all';
+
+        if (in_array($status, ['0', '1'], true)) {
+            $where[] = "`status` = '" . $status . "'";
+        }
+
+        return $where !== [] ? ' WHERE ' . implode(' AND ', $where) : '';
     }
 
     /**

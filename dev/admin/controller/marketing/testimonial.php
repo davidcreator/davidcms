@@ -20,59 +20,91 @@ class Testimonial extends \Reamur\System\Engine\Controller {
 
     private const UPLOAD_DIR = 'view/image/testimonial/';
 
-    /** Lista depoimentos (200) */
+    /** Lista depoimentos com busca por autor/empresa, filtro de status e paginação. */
     public function index(): void {
         $this->load->language('marketing/testimonial');
-
         $this->document->setTitle($this->language->get('heading_title'));
-
         $this->load->model('marketing/testimonial');
 
-        $data['heading_title']       = $this->language->get('heading_title');
-        $data['text_list']           = $this->language->get('text_list');
-        $data['text_no_results']     = $this->language->get('text_no_results');
-        $data['text_confirm_delete'] = $this->language->get('text_confirm_delete');
-        $data['text_enabled']        = $this->language->get('text_enabled');
-        $data['text_disabled']       = $this->language->get('text_disabled');
-        $data['text_placeholder']    = $this->language->get('text_placeholder');
-        $data['column_image']        = $this->language->get('column_image');
-        $data['column_author']       = $this->language->get('column_author');
-        $data['column_company']      = $this->language->get('column_company');
-        $data['column_status']       = $this->language->get('column_status');
-        $data['column_sort_order']   = $this->language->get('column_sort_order');
-        $data['column_date_added']   = $this->language->get('column_date_added');
-        $data['column_action']       = $this->language->get('column_action');
-        $data['button_add']          = $this->language->get('button_add');
-        $data['button_edit']         = $this->language->get('button_edit');
-        $data['button_delete']       = $this->language->get('button_delete');
-        $data['text_flash']          = $this->flash();
+        foreach ([
+            'heading_title', 'text_list', 'text_no_results', 'text_no_results_filtered',
+            'text_confirm_delete', 'text_close', 'text_enabled', 'text_disabled',
+            'text_filter', 'text_all_status', 'text_showing', 'text_placeholder',
+            'column_image', 'column_author', 'column_company', 'column_status',
+            'column_sort_order', 'column_date_added', 'column_action',
+            'entry_filter_author', 'button_filter', 'button_reset',
+            'button_add', 'button_edit', 'button_delete',
+        ] as $key) {
+            $data[$key] = $this->language->get($key);
+        }
 
+        $data['text_flash'] = $this->flash();
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['can_modify'] = $this->user->hasPermission('modify', 'marketing/testimonial');
+
+        $filter_author = mb_substr($this->queryValue('filter_author'), 0, 128);
+        $filter_status = $this->queryValue('filter_status');
+        if (!in_array($filter_status, ['all', '0', '1'], true)) {
+            $filter_status = 'all';
+        }
+
+        $filters = ['author' => $filter_author, 'status' => $filter_status];
+        $page = max(1, (int)$this->queryValue('page'));
+        $limit = 20;
+        $total = $this->model_marketing_testimonial->getTotalTestimonials($filters);
+        $page = $total > 0 ? min($page, (int)ceil($total / $limit)) : 1;
+        $rows = $this->model_marketing_testimonial->getTestimonials($filters, ($page - 1) * $limit, $limit);
         $catalog = $this->catalogUrl();
 
         $data['testimonials'] = [];
-
-        foreach ($this->model_marketing_testimonial->getTestimonials() as $testimonial) {
+        foreach ($rows as $testimonial) {
             $testimonial = (array)$testimonial;
-            $tid         = (int)$testimonial['testimonial_id'];
-            $image       = (string)$testimonial['image'];
-
+            $tid = (int)$testimonial['testimonial_id'];
+            $image = (string)$testimonial['image'];
             $data['testimonials'][] = [
                 'testimonial_id' => $tid,
-                'thumb'          => $image !== '' ? $catalog . $image : '',
-                'author'         => (string)$testimonial['author'],
-                'company'        => (string)$testimonial['company'],
-                'status'         => (int)$testimonial['status'],
-                'sort_order'     => (int)$testimonial['sort_order'],
-                'date_added'     => (string)$testimonial['date_added'],
-                'edit'           => $this->url->link('marketing/testimonial.edit|' . $tid),
-                'delete'         => $this->url->link('marketing/testimonial.delete|' . $tid),
+                'thumb' => $image !== '' ? $catalog . $image : '',
+                'author' => (string)$testimonial['author'],
+                'company' => (string)$testimonial['company'],
+                'status' => (int)$testimonial['status'],
+                'sort_order' => (int)$testimonial['sort_order'],
+                'date_added' => (string)$testimonial['date_added'],
+                'edit' => $this->url->link('marketing/testimonial.edit|' . $tid),
+                'delete' => $this->url->link('marketing/testimonial.delete|' . $tid),
             ];
         }
 
         $data['add'] = $this->url->link('marketing/testimonial.add');
+        $data['filter_action'] = $this->url->link('marketing/testimonial');
+        $data['filter_author'] = $filter_author;
+        $data['filter_status'] = $filter_status;
+        $data['filters_active'] = $filter_author !== '' || $filter_status !== 'all';
+        $data['total_testimonials'] = $total;
+        $data['showing'] = $total > 0
+            ? sprintf($data['text_showing'], (($page - 1) * $limit) + 1, min($page * $limit, $total), $total)
+            : '';
+
+        require_once DIR_SYSTEM . 'library/pagination.php';
+        $pagination = new \Pagination();
+        $pagination->total = $total;
+        $pagination->page = $page;
+        $pagination->limit = $limit;
+        $query = 'page={page}';
+        if ($filter_author !== '') {
+            $query .= '&filter_author=' . rawurlencode($filter_author);
+        }
+        if ($filter_status !== 'all') {
+            $query .= '&filter_status=' . $filter_status;
+        }
+        $pagination->url = $this->url->link('marketing/testimonial', $query);
+        $pagination->css_class = 'pagination pagination-sm mb-0';
+        $pagination->text_first = $this->language->get('text_page_first');
+        $pagination->text_last = $this->language->get('text_page_last');
+        $pagination->text_next = $this->language->get('text_page_next');
+        $pagination->text_prev = $this->language->get('text_page_prev');
+        $data['pagination'] = $pagination->render();
 
         $this->chrome($data);
-
         $this->response->setOutput($this->load->view('marketing/testimonial_list', $data));
     }
 
@@ -93,7 +125,9 @@ class Testimonial extends \Reamur\System\Engine\Controller {
         $data = $this->formData([]);
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $errors = $this->validateTestimonial();
+            $errors = $this->csrfValid()
+                ? $this->validateTestimonial()
+                : [$this->language->get('error_csrf')];
 
             if ($errors === []) {
                 $testimonial_id = $this->model_marketing_testimonial->addTestimonial($this->postPayload());
@@ -145,7 +179,9 @@ class Testimonial extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $errors = $this->validateTestimonial();
+            $errors = $this->csrfValid()
+                ? $this->validateTestimonial()
+                : [$this->language->get('error_csrf')];
 
             if ($errors === []) {
                 $this->model_marketing_testimonial->editTestimonial($testimonial_id, $this->postPayload());
@@ -179,6 +215,13 @@ class Testimonial extends \Reamur\System\Engine\Controller {
 
         $this->load->language('marketing/testimonial');
 
+        if (!$this->csrfValid()) {
+            $this->setFlash($this->language->get('error_csrf'), 'error');
+            $this->response->redirect($this->url->link('marketing/testimonial'));
+
+            return;
+        }
+
         $this->load->model('marketing/testimonial');
 
         $testimonial = $this->model_marketing_testimonial->getTestimonial($testimonial_id);
@@ -210,6 +253,8 @@ class Testimonial extends \Reamur\System\Engine\Controller {
             $msg = $this->language->get('error_upload_method');
         } elseif (!$this->user->hasPermission('modify', 'marketing/testimonial')) {
             $msg = $this->language->get('error_permission');
+        } elseif (!$this->csrfValid()) {
+            $msg = $this->language->get('error_csrf');
         } else {
             $result = $this->media()->store((array)($this->request->files['file'] ?? []), self::UPLOAD_DIR);
 
@@ -251,6 +296,8 @@ class Testimonial extends \Reamur\System\Engine\Controller {
 
         $data['error']      = '';
         $data['text_flash'] = '';
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['can_modify'] = $this->user->hasPermission('modify', 'marketing/testimonial');
 
         $tid          = (int)($testimonial['testimonial_id'] ?? 0);
         $isPost       = $this->request->server['REQUEST_METHOD'] === 'POST';
@@ -394,9 +441,22 @@ class Testimonial extends \Reamur\System\Engine\Controller {
         }
     }
 
+    private function queryValue(string $key): string {
+        $value = $this->request->get[$key] ?? '';
+
+        return is_scalar($value) ? trim((string)$value) : '';
+    }
+
+    private function csrfValid(): bool {
+        return \Reamur\System\Library\Security\Csrf::check(
+            $this->session,
+            $this->request->post['csrf_token'] ?? ''
+        );
+    }
+
     /** Chrome compartilhado + estilo do módulo */
     private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $data['body_class'] = 'rms-dash';
         $data['header']     = $this->load->controller('common/header', $data);

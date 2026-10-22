@@ -1,50 +1,95 @@
-{# dev/admin/view/template/marketing/testimonial_list.twig — grade de depoimentos (F2-11) #}
+{# F8-04 — depoimentos: lista Bootstrap, busca por autor/empresa e paginação #}
 {{ header|raw }}
-<main class="dash">
-  <div class="page-head">
-    <h1>{{ heading_title }}</h1>
-    <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
+<main class="rms-main" id="content">
+  <div class="container-fluid py-3 px-3 px-lg-4">
+    {% if text_flash.text %}
+    <div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">
+      {{ text_flash.text }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ text_close }}"></button>
+    </div>
+    {% endif %}
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+      <div>
+        <h1 class="h3 mb-1"><i class="bi bi-chat-quote me-2" aria-hidden="true"></i>{{ heading_title }}{% if total_testimonials > 0 %} <span class="badge rounded-pill text-bg-secondary align-middle">{{ total_testimonials }}</span>{% endif %}</h1>
+        <p class="text-body-secondary mb-0">{{ text_list }}</p>
+      </div>
+      {% if can_modify %}<a class="btn btn-primary" href="{{ add }}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ button_add }}</a>{% endif %}
+    </div>
+
+    <section class="card border-0 shadow-sm mb-3" aria-labelledby="testimonialFilterTitle">
+      <div class="card-body">
+        <h2 class="h6 mb-3" id="testimonialFilterTitle"><i class="bi bi-funnel me-1" aria-hidden="true"></i>{{ text_filter }}</h2>
+        <form method="get" action="{{ filter_action }}" class="row g-2 align-items-end" role="search">
+          <div class="col-12 col-md-6 col-xl-5">
+            <label class="form-label" for="filter-author">{{ entry_filter_author }}</label>
+            <input class="form-control" type="search" name="filter_author" id="filter-author" value="{{ filter_author }}" maxlength="128">
+          </div>
+          <div class="col-12 col-md-4 col-xl-3">
+            <label class="form-label" for="filter-status">{{ column_status }}</label>
+            <select class="form-select" name="filter_status" id="filter-status">
+              <option value="all"{% if filter_status == 'all' %} selected{% endif %}>{{ text_all_status }}</option>
+              <option value="1"{% if filter_status == '1' %} selected{% endif %}>{{ text_enabled }}</option>
+              <option value="0"{% if filter_status == '0' %} selected{% endif %}>{{ text_disabled }}</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-2 col-xl-4 d-flex gap-2">
+            <button class="btn btn-primary flex-grow-1" type="submit"><i class="bi bi-search me-1" aria-hidden="true"></i>{{ button_filter }}</button>
+            {% if filters_active %}<a class="btn btn-outline-secondary" href="{{ filter_action }}">{{ button_reset }}</a>{% endif %}
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="card border-0 shadow-sm">
+      <div class="card-header bg-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <h2 class="h6 mb-0">{{ text_list }}</h2>
+        {% if showing %}<span class="small text-body-secondary">{{ showing }}</span>{% endif %}
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead><tr>
+            <th scope="col">{{ column_image }}</th>
+            <th scope="col">{{ column_author }}</th>
+            <th scope="col" class="d-none d-md-table-cell">{{ column_company }}</th>
+            <th scope="col">{{ column_status }}</th>
+            <th scope="col" class="d-none d-lg-table-cell">{{ column_sort_order }}</th>
+            <th scope="col" class="d-none d-lg-table-cell">{{ column_date_added }}</th>
+            {% if can_modify %}<th scope="col" class="text-end">{{ column_action }}</th>{% endif %}
+          </tr></thead>
+          <tbody>
+          {% for testimonial in testimonials %}
+            <tr>
+              <td>
+                {% if testimonial.thumb %}<img src="{{ testimonial.thumb }}" alt="" width="48" height="48" class="rounded object-fit-cover" loading="lazy">{% else %}<span class="text-body-secondary small">{{ text_placeholder }}</span>{% endif %}
+              </td>
+              <td class="fw-semibold">{{ testimonial.author }}</td>
+              <td class="d-none d-md-table-cell">{{ testimonial.company }}</td>
+              <td><span class="badge text-bg-{{ testimonial.status ? 'success' : 'secondary' }}">{{ testimonial.status ? text_enabled : text_disabled }}</span></td>
+              <td class="d-none d-lg-table-cell">{{ testimonial.sort_order }}</td>
+              <td class="d-none d-lg-table-cell text-nowrap">{{ testimonial.date_added }}</td>
+              {% if can_modify %}
+              <td class="text-end text-nowrap">
+                <a class="btn btn-sm btn-outline-primary" href="{{ testimonial.edit }}"><i class="bi bi-pencil me-1" aria-hidden="true"></i>{{ button_edit }}</a>
+                <form method="post" action="{{ testimonial.delete }}" class="d-inline" data-rms-confirm-delete="{{ text_confirm_delete }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash me-1" aria-hidden="true"></i>{{ button_delete }}</button>
+                </form>
+              </td>
+              {% endif %}
+            </tr>
+          {% else %}
+            <tr><td colspan="{{ can_modify ? 7 : 6 }}" class="text-center text-body-secondary py-4">{{ filters_active ? text_no_results_filtered : text_no_results }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if showing or pagination %}
+      <div class="card-footer bg-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span class="small text-body-secondary">{{ showing }}</span>{{ pagination|replace({'&amp;amp;': '&amp;'})|raw }}
+      </div>
+      {% endif %}
+    </section>
   </div>
-  <p class="muted">{{ text_list }}</p>
-
-  {% if text_flash.text %}
-  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
-  {% endif %}
-
-  {% if testimonials %}
-  <table class="table">
-    <thead>
-      <tr>
-        <th>{{ column_image }}</th>
-        <th>{{ column_author }}</th>
-        <th>{{ column_company }}</th>
-        <th>{{ column_status }}</th>
-        <th>{{ column_sort_order }}</th>
-        <th>{{ column_date_added }}</th>
-        <th class="right">{{ column_action }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for testimonial in testimonials %}
-      <tr>
-        <td>{% if testimonial.thumb %}<img src="{{ testimonial.thumb }}" alt="" width="48" style="object-fit:cover;border-radius:4px;">{% else %}<span class="muted">{{ text_placeholder }}</span>{% endif %}</td>
-        <td>{{ testimonial.author }}</td>
-        <td>{{ testimonial.company }}</td>
-        <td>{{ testimonial.status ? text_enabled : text_disabled }}</td>
-        <td>{{ testimonial.sort_order }}</td>
-        <td>{{ testimonial.date_added }}</td>
-        <td class="right actions">
-          <a class="btn ghost small" href="{{ testimonial.edit }}">{{ button_edit }}</a>
-          <form method="post" action="{{ testimonial.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
-            <button type="submit" class="btn danger small">{{ button_delete }}</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p class="muted">{{ text_no_results }}</p>
-  {% endif %}
 </main>
 {{ footer|raw }}

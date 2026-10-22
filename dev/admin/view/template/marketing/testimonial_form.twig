@@ -1,87 +1,132 @@
-{# dev/admin/view/template/marketing/testimonial_form.twig — criação/edição de depoimento (F2-11) #}
+{# F8-04 — depoimento: formulário Bootstrap em duas colunas; names/ids de conteúdo preservados #}
 {{ header|raw }}
-<main class="dash form-page">
-  <h1>{{ heading_title }}{% if testimonial_id %} · {{ text_edit }}{% else %} · {{ text_add }}{% endif %}</h1>
+<main class="rms-main" id="content">
+  <div class="container-fluid py-3 px-3 px-lg-4">
+    <div class="mb-3">
+      <h1 class="h3 mb-1"><i class="bi bi-chat-quote me-2" aria-hidden="true"></i>{{ heading_title }}{% if testimonial_id %} · {{ text_edit }}{% else %} · {{ text_add }}{% endif %}</h1>
+      <p class="text-body-secondary mb-0">{{ text_languages_note }}</p>
+    </div>
 
-  {% if error %}
-  <div class="alert error">{{ error|nl2br }}</div>
-  {% endif %}
+    {% if error %}<div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ error|nl2br }}</div>{% endif %}
 
-  <form method="post" action="{{ action }}" class="panel form">
-
-    <h2>{{ text_general }}</h2>
-    <p class="muted">{{ text_languages_note }}</p>
-
-    {% for language in languages %}
-    <fieldset class="panel" style="margin-bottom:1rem;">
-      <legend>{{ language.name }} <span class="muted">({{ language.code }})</span></legend>
-      <div class="grid two">
-        <div class="field">
-          <label for="input-author-{{ language.language_id }}">{{ entry_author }}{% if language.language_id == 1 %} *{% endif %}</label>
-          <input type="text" name="testimonial_description[{{ language.language_id }}][author]" id="input-author-{{ language.language_id }}" value="{{ language.fields.author }}" maxlength="128"{% if language.language_id == 1 %} required{% endif %}>
+    <form method="post" action="{{ action }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="row g-3">
+        <div class="col-12 col-xl-8">
+          <fieldset class="border-0 p-0 m-0"{% if not can_modify %} disabled{% endif %}>
+            <section class="card border-0 shadow-sm mb-3">
+              <div class="card-header bg-body"><h2 class="h6 mb-0"><i class="bi bi-translate me-2" aria-hidden="true"></i>{{ text_general }}</h2></div>
+              <div class="card-body">
+                <ul class="nav nav-tabs" id="testimonialLangTabs" role="tablist">
+                  {% for language in languages %}
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link{{ loop.first ? ' active' : '' }}" id="testimonial-lang-tab-{{ language.language_id }}" data-bs-toggle="tab" data-bs-target="#testimonial-lang-{{ language.language_id }}" type="button" role="tab" aria-controls="testimonial-lang-{{ language.language_id }}" aria-selected="{{ loop.first ? 'true' : 'false' }}">{{ language.name }} <span class="small text-body-secondary">({{ language.code }})</span></button>
+                  </li>
+                  {% endfor %}
+                </ul>
+                <div class="tab-content border border-top-0 rounded-bottom p-3">
+                  {% for language in languages %}
+                  <div class="tab-pane fade{{ loop.first ? ' show active' : '' }}" id="testimonial-lang-{{ language.language_id }}" role="tabpanel" aria-labelledby="testimonial-lang-tab-{{ language.language_id }}" tabindex="0">
+                    <div class="row g-3">
+                      <div class="col-12 col-md-6">
+                        <label class="form-label" for="input-author-{{ language.language_id }}">{{ entry_author }}{% if language.language_id == 1 %} *{% endif %}</label>
+                        <input class="form-control" type="text" name="testimonial_description[{{ language.language_id }}][author]" id="input-author-{{ language.language_id }}" value="{{ language.fields.author }}" maxlength="128"{% if language.language_id == 1 %} required{% endif %}>
+                      </div>
+                      <div class="col-12 col-md-6">
+                        <label class="form-label" for="input-company-{{ language.language_id }}">{{ entry_company }}</label>
+                        <input class="form-control" type="text" name="testimonial_description[{{ language.language_id }}][company]" id="input-company-{{ language.language_id }}" value="{{ language.fields.company }}" maxlength="128">
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label" for="input-text-{{ language.language_id }}">{{ entry_text }}</label>
+                        <textarea class="form-control" name="testimonial_description[{{ language.language_id }}][text]" id="input-text-{{ language.language_id }}" rows="5">{{ language.fields.text }}</textarea>
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </section>
+          </fieldset>
         </div>
-        <div class="field">
-          <label for="input-company-{{ language.language_id }}">{{ entry_company }}</label>
-          <input type="text" name="testimonial_description[{{ language.language_id }}][company]" id="input-company-{{ language.language_id }}" value="{{ language.fields.company }}" maxlength="128">
+
+        <div class="col-12 col-xl-4">
+          <fieldset class="border-0 p-0 m-0"{% if not can_modify %} disabled{% endif %}>
+            <section class="card border-0 shadow-sm mb-3">
+              <div class="card-header bg-body"><h2 class="h6 mb-0"><i class="bi bi-sliders me-2" aria-hidden="true"></i>{{ text_data }}</h2></div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label class="form-label" for="input-sort-order">{{ entry_sort_order }}</label>
+                  <input class="form-control" type="number" name="sort_order" id="input-sort-order" value="{{ sort_order }}" min="0" step="1">
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" name="status" id="input-status" value="1"{% if status == '1' %} checked{% endif %}>
+                  <label class="form-check-label" for="input-status">{{ entry_status }}</label>
+                </div>
+              </div>
+            </section>
+
+            <section class="card border-0 shadow-sm mb-3">
+              <div class="card-header bg-body"><h2 class="h6 mb-0"><i class="bi bi-image me-2" aria-hidden="true"></i>{{ text_image }}</h2></div>
+              <div class="card-body">
+                <input type="hidden" name="image" id="input-image" value="{{ image }}">
+                <div id="photo-preview" class="d-flex align-items-center justify-content-center bg-body-tertiary rounded p-2 mb-3" style="min-height: 120px;">
+                  {% if image %}<img src="{{ catalog }}{{ image }}" alt="" width="96" height="96" class="rounded object-fit-cover">{% else %}<i class="bi bi-person-square fs-1 text-body-secondary" aria-hidden="true"></i>{% endif %}
+                </div>
+                {% if can_modify %}
+                <label class="form-label" for="input-photo-file">{{ entry_image }}</label>
+                <input class="form-control mb-2" type="file" id="input-photo-file" accept="image/jpeg,image/png,image/webp,image/gif">
+                <button type="button" class="btn btn-outline-primary w-100" id="btn-upload-photo"><i class="bi bi-upload me-1" aria-hidden="true"></i>{{ button_upload }}</button>
+                {% endif %}
+                <div class="form-text mt-2">{{ text_upload_hint }}</div>
+              </div>
+            </section>
+          </fieldset>
+
+          <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex flex-column gap-2">
+              <a class="btn btn-outline-secondary" href="{{ cancel }}"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>{{ button_cancel }}</a>
+              {% if can_modify %}<button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1" aria-hidden="true"></i>{{ button_save }}</button>{% endif %}
+            </div>
+          </div>
         </div>
       </div>
-      <div class="field">
-        <label for="input-text-{{ language.language_id }}">{{ entry_text }}</label>
-        <textarea name="testimonial_description[{{ language.language_id }}][text]" id="input-text-{{ language.language_id }}" rows="4">{{ language.fields.text }}</textarea>
-      </div>
-    </fieldset>
-    {% endfor %}
-
-    <h2>{{ text_data }}</h2>
-    <div class="grid two">
-      <div class="field">
-        <label for="input-sort-order">{{ entry_sort_order }}</label>
-        <input type="number" name="sort_order" id="input-sort-order" value="{{ sort_order }}" min="0" step="1">
-      </div>
-      <div class="field check">
-        <label><input type="checkbox" name="status" value="1"{% if status == '1' %} checked{% endif %}> {{ entry_status }}</label>
-      </div>
-    </div>
-
-    <h2>{{ text_image }}</h2>
-    <div class="field">
-      <input type="hidden" name="image" id="input-image" value="{{ image }}">
-      <div id="photo-preview">
-        {% if image %}<img src="{{ catalog }}{{ image }}" alt="" width="96" style="object-fit:cover;border-radius:4px;">{% endif %}
-      </div>
-      <input type="file" id="input-photo-file" accept="image/jpeg,image/png,image/webp,image/gif">
-      <button type="button" class="btn ghost small" id="btn-upload-photo">{{ button_upload }}</button>
-      <small class="muted">{{ text_upload_hint }}</small>
-    </div>
-
-    <div class="actions right">
-      <a class="btn ghost" href="{{ cancel }}">{{ button_cancel }}</a>
-      <button type="submit" class="btn primary">{{ button_save }}</button>
-    </div>
-  </form>
+    </form>
+  </div>
 </main>
 <script>
 (function () {
+  var uploadButton = document.getElementById('btn-upload-photo');
+  if (!uploadButton) { return; }
   var uploadUrl = {{ upload|json_encode|raw }};
-  var errMsg    = {{ text_error_upload_js|json_encode|raw }};
+  var catalogUrl = {{ catalog|json_encode|raw }};
+  var csrfToken = {{ csrf_token|json_encode|raw }};
+  var errorMessage = {{ text_error_upload_js|json_encode|raw }};
 
-  document.getElementById('btn-upload-photo').addEventListener('click', function () {
+  uploadButton.addEventListener('click', function () {
     var input = document.getElementById('input-photo-file');
     if (!input.files || !input.files[0]) { return; }
-    var fd = new FormData();
-    fd.append('file', input.files[0]);
-    fetch(uploadUrl, { method: 'POST', body: fd, credentials: 'same-origin' })
-      .then(function (r) { return r.json(); })
-      .then(function (j) {
-        if (j.success) {
-          document.getElementById('input-image').value = j.path;
-          document.getElementById('photo-preview').innerHTML =
-            '<img src="' + {{ catalog|json_encode|raw }} + j.path + '" alt="" width="96" style="object-fit:cover;border-radius:4px;">';
-        } else {
-          alert(j.error || errMsg);
-        }
+    var formData = new FormData();
+    formData.append('file', input.files[0]);
+    formData.append('csrf_token', csrfToken);
+    uploadButton.disabled = true;
+
+    fetch(uploadUrl, { method: 'POST', body: formData, credentials: 'same-origin' })
+      .then(function (response) { return response.json(); })
+      .then(function (result) {
+        if (!result.success) { window.alert(result.error || errorMessage); return; }
+        document.getElementById('input-image').value = result.path;
+        var preview = document.getElementById('photo-preview');
+        var image = document.createElement('img');
+        image.src = catalogUrl + String(result.path || '').replace(/^\/+/, '');
+        image.alt = '';
+        image.width = 96;
+        image.height = 96;
+        image.className = 'rounded object-fit-cover';
+        preview.replaceChildren(image);
+        input.value = '';
       })
-      .catch(function () { alert(errMsg); });
+      .catch(function () { window.alert(errorMessage); })
+      .finally(function () { uploadButton.disabled = false; });
   });
 })();
 </script>

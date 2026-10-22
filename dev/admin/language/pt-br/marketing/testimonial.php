@@ -28,6 +28,21 @@ $_['text_success_edit']    = 'Depoimento atualizado.';
 $_['text_success_delete']  = 'Depoimento excluído.';
 $_['text_placeholder']     = '(sem foto)';
 
+// F8-04 — filtros, paginação e proteção CSRF
+$_['text_filter'] = 'Filtrar depoimentos';
+$_['text_all_status'] = 'Todos os status';
+$_['text_showing'] = 'Exibindo %s–%s de %s depoimentos';
+$_['text_no_results_filtered'] = 'Nenhum depoimento corresponde a esses filtros.';
+$_['text_close'] = 'Fechar';
+$_['text_page_first'] = '« Primeiro';
+$_['text_page_last'] = 'Último »';
+$_['text_page_next'] = 'Próximo ›';
+$_['text_page_prev'] = '‹ Anterior';
+$_['entry_filter_author'] = 'Autor ou empresa';
+$_['button_filter'] = 'Aplicar filtros';
+$_['button_reset'] = 'Limpar';
+$_['error_csrf'] = 'O token de segurança é inválido ou expirou. Atualize a página e tente novamente.';
+
 // Columns
 $_['column_image']         = 'Foto';
 $_['column_author']        = 'Autor';

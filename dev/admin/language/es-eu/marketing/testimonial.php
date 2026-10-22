@@ -28,6 +28,21 @@ $_['text_success_edit']    = 'Testimonio actualizado.';
 $_['text_success_delete']  = 'Testimonio eliminado.';
 $_['text_placeholder']     = '(sin foto)';
 
+// F8-04 — filtros, paginação e proteção CSRF
+$_['text_filter'] = 'Filtrar testimonios';
+$_['text_all_status'] = 'Todos los estados';
+$_['text_showing'] = 'Mostrando %s–%s de %s testimonios';
+$_['text_no_results_filtered'] = 'Ningún testimonio coincide con estos filtros.';
+$_['text_close'] = 'Cerrar';
+$_['text_page_first'] = '« Primero';
+$_['text_page_last'] = 'Último »';
+$_['text_page_next'] = 'Siguiente ›';
+$_['text_page_prev'] = '‹ Anterior';
+$_['entry_filter_author'] = 'Autor o empresa';
+$_['button_filter'] = 'Aplicar filtros';
+$_['button_reset'] = 'Limpiar';
+$_['error_csrf'] = 'El token de seguridad no es válido o ha caducado. Actualice la página e inténtelo de nuevo.';
+
 // Columns
 $_['column_image']         = 'Foto';
 $_['column_author']        = 'Autor';

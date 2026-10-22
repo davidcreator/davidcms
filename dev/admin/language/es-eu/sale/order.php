@@ -26,6 +26,23 @@ $_['text_success_edit']    = 'Pedido actualizado.';
 $_['text_success_delete']  = 'Pedido eliminado.';
 $_['text_no_products']     = 'Aún no hay ítems — agregue la primera fila.';
 
+// F8-04 — filtros, paginação e proteção CSRF
+$_['text_filter'] = 'Filtrar pedidos';
+$_['text_all_status'] = 'Todos los estados';
+$_['text_showing'] = 'Mostrando %s–%s de %s pedidos';
+$_['text_no_results_filtered'] = 'Ningún pedido coincide con estos filtros.';
+$_['text_close'] = 'Cerrar';
+$_['text_page_first'] = '« Primero';
+$_['text_page_last'] = 'Último »';
+$_['text_page_next'] = 'Siguiente ›';
+$_['text_page_prev'] = '‹ Anterior';
+$_['entry_filter_order_id'] = 'ID del pedido';
+$_['entry_filter_customer'] = 'Cliente';
+$_['entry_filter_email'] = 'Correo electrónico';
+$_['button_filter'] = 'Aplicar filtros';
+$_['button_reset'] = 'Limpiar';
+$_['error_csrf'] = 'El token de seguridad no es válido o ha caducado. Actualice la página e inténtelo de nuevo.';
+
 // Columns
 $_['column_order']         = 'Pedido';
 $_['column_customer']      = 'Cliente';

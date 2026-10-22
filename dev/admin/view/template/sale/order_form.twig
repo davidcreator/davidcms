@@ -1,141 +1,192 @@
-{# dev/admin/view/template/sale/order_form.twig — criação/edição de pedido (F2-14) #}
+{# F8-04 — pedidos/orçamentos: formulário Bootstrap; ids e names do CRUD preservados #}
 {{ header|raw }}
-<main class="dash form-page">
-  <h1>{{ heading_title }}{% if order_id %} #{{ order_id }} · {{ text_edit }}{% else %} · {{ text_add }}{% endif %}</h1>
-
-  {% if error %}
-  <div class="alert error">{{ error|nl2br }}</div>
-  {% endif %}
-
-  <form method="post" action="{{ action }}" class="panel form">
-
-    <h2>{{ text_customer }}</h2>
-    <div class="grid two">
-      <div class="field">
-        <label for="input-firstname">{{ entry_firstname }} *</label>
-        <input type="text" name="firstname" id="input-firstname" value="{{ firstname }}" maxlength="32" required>
-      </div>
-      <div class="field">
-        <label for="input-lastname">{{ entry_lastname }}</label>
-        <input type="text" name="lastname" id="input-lastname" value="{{ lastname }}" maxlength="32">
-      </div>
-      <div class="field">
-        <label for="input-email">{{ entry_email }} *</label>
-        <input type="email" name="email" id="input-email" value="{{ email }}" maxlength="96" required>
-      </div>
-      <div class="field">
-        <label for="input-telephone">{{ entry_telephone }}</label>
-        <input type="text" name="telephone" id="input-telephone" value="{{ telephone }}" maxlength="32">
+<main class="rms-main" id="content">
+  <div class="container-fluid py-3 px-3 px-lg-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+      <div>
+        <h1 class="h3 mb-1"><i class="bi bi-receipt me-2" aria-hidden="true"></i>{{ heading_title }}{% if order_id %} #{{ order_id }} · {{ text_edit }}{% else %} · {{ text_add }}{% endif %}</h1>
+        <p class="text-body-secondary mb-0">{{ text_list }}</p>
       </div>
     </div>
 
-    <h2>{{ text_products }}</h2>
-    <div id="products">
-      {% for product in products %}
-      <div class="grid product-row" data-row style="grid-template-columns:1fr 90px 140px auto;gap:.5rem;align-items:end;margin-bottom:.5rem;">
-        <div class="field">
-          <label>{{ entry_product }}</label>
-          <input type="text" name="order_product[{{ loop.index0 }}][name]" value="{{ product.name }}" maxlength="255">
+    {% if error %}<div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ error|nl2br }}</div>{% endif %}
+
+    <form method="post" action="{{ action }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="row g-3">
+        <div class="col-12 col-xl-8">
+          <fieldset class="border-0 p-0 m-0"{% if not can_modify %} disabled{% endif %}>
+            <section class="card border-0 shadow-sm mb-3">
+              <div class="card-header bg-body"><h2 class="h6 mb-0"><i class="bi bi-person-vcard me-2" aria-hidden="true"></i>{{ text_customer }}</h2></div>
+              <div class="card-body"><div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="input-firstname">{{ entry_firstname }} *</label>
+                  <input class="form-control" type="text" name="firstname" id="input-firstname" value="{{ firstname }}" maxlength="32" autocomplete="given-name" required>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="input-lastname">{{ entry_lastname }}</label>
+                  <input class="form-control" type="text" name="lastname" id="input-lastname" value="{{ lastname }}" maxlength="32" autocomplete="family-name">
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="input-email">{{ entry_email }} *</label>
+                  <input class="form-control" type="email" name="email" id="input-email" value="{{ email }}" maxlength="96" autocomplete="email" required>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="input-telephone">{{ entry_telephone }}</label>
+                  <input class="form-control" type="text" name="telephone" id="input-telephone" value="{{ telephone }}" maxlength="32" autocomplete="tel">
+                </div>
+              </div></div>
+            </section>
+
+            <section class="card border-0 shadow-sm mb-3">
+              <div class="card-header bg-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <h2 class="h6 mb-0"><i class="bi bi-list-check me-2" aria-hidden="true"></i>{{ text_products }}</h2>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="btn-add-product"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ button_add_product }}</button>
+              </div>
+              <div class="card-body">
+                <div id="products">
+                  {% for product in products %}
+                  <div class="row g-2 align-items-end mb-3 order-product-row" data-row>
+                    <div class="col-12 col-lg-5">
+                      <label class="form-label" for="input-product-{{ loop.index0 }}">{{ entry_product }}</label>
+                      <input class="form-control" type="text" name="order_product[{{ loop.index0 }}][name]" id="input-product-{{ loop.index0 }}" value="{{ product.name }}" maxlength="255">
+                    </div>
+                    <div class="col-6 col-lg-2">
+                      <label class="form-label" for="input-quantity-{{ loop.index0 }}">{{ entry_quantity }}</label>
+                      <input class="form-control" type="number" name="order_product[{{ loop.index0 }}][quantity]" id="input-quantity-{{ loop.index0 }}" value="{{ product.quantity }}" min="1" step="1">
+                    </div>
+                    <div class="col-6 col-lg-3">
+                      <label class="form-label" for="input-price-{{ loop.index0 }}">{{ entry_price }}</label>
+                      <input class="form-control" type="text" name="order_product[{{ loop.index0 }}][price]" id="input-price-{{ loop.index0 }}" value="{{ product.price }}" placeholder="0.0000">
+                    </div>
+                    <div class="col-12 col-lg-2 d-grid">
+                      <button type="button" class="btn btn-outline-danger" data-remove aria-label="{{ button_remove }}"><i class="bi bi-x-lg me-1" aria-hidden="true"></i>{{ button_remove }}</button>
+                    </div>
+                  </div>
+                  {% else %}
+                  <p class="text-body-secondary mb-3" data-empty>{{ text_no_products }}</p>
+                  {% endfor %}
+                </div>
+              </div>
+            </section>
+          </fieldset>
+
+          {% if history %}
+          <section class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-body"><h2 class="h6 mb-0"><i class="bi bi-clock-history me-2" aria-hidden="true"></i>{{ text_history }}</h2></div>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead><tr><th scope="col">{{ column_status }}</th><th scope="col">{{ column_comment }}</th><th scope="col" class="text-nowrap">{{ column_date_added }}</th></tr></thead>
+                <tbody>{% for row in history %}<tr><td>{{ row.status_name }}</td><td>{{ row.comment }}</td><td class="text-nowrap">{{ row.date_added }}</td></tr>{% endfor %}</tbody>
+              </table>
+            </div>
+          </section>
+          {% endif %}
         </div>
-        <div class="field">
-          <label>{{ entry_quantity }}</label>
-          <input type="number" name="order_product[{{ loop.index0 }}][quantity]" value="{{ product.quantity }}" min="1" step="1">
-        </div>
-        <div class="field">
-          <label>{{ entry_price }}</label>
-          <input type="text" name="order_product[{{ loop.index0 }}][price]" value="{{ product.price }}" placeholder="0.0000">
-        </div>
-        <div class="field">
-          <button type="button" class="btn ghost small" data-remove>{{ button_remove }}</button>
+
+        <div class="col-12 col-xl-4">
+          <fieldset class="border-0 p-0 m-0"{% if not can_modify %} disabled{% endif %}>
+            <section class="card border-0 shadow-sm mb-3">
+              <div class="card-header bg-body"><h2 class="h6 mb-0"><i class="bi bi-sliders me-2" aria-hidden="true"></i>{{ text_data }}</h2></div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label class="form-label" for="input-status">{{ entry_status }}</label>
+                  <select class="form-select" name="order_status_id" id="input-status">
+                    {% for status in statuses %}
+                    <option value="{{ status.order_status_id }}"{% if status.order_status_id == order_status_id %} selected{% endif %}>{{ status.name }}</option>
+                    {% endfor %}
+                  </select>
+                  <div class="form-text">{{ text_status_hint }}</div>
+                </div>
+                <div>
+                  <label class="form-label" for="input-comment">{{ entry_comment }}</label>
+                  <textarea class="form-control" name="comment" id="input-comment" rows="5">{{ comment }}</textarea>
+                </div>
+              </div>
+            </section>
+          </fieldset>
+          <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex flex-column gap-2">
+              <a class="btn btn-outline-secondary" href="{{ cancel }}"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>{{ button_cancel }}</a>
+              {% if can_modify %}<button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1" aria-hidden="true"></i>{{ button_save }}</button>{% endif %}
+            </div>
+          </div>
         </div>
       </div>
-      {% else %}
-      <p class="muted" data-empty>{{ text_no_products }}</p>
-      {% endfor %}
-    </div>
-    <button type="button" class="btn ghost small" id="btn-add-product">{{ button_add_product }}</button>
-
-    <h2>{{ text_data }}</h2>
-    <div class="grid two">
-      <div class="field">
-        <label for="input-status">{{ entry_status }}</label>
-        <select name="order_status_id" id="input-status">
-          {% for status in statuses %}
-          <option value="{{ status.order_status_id }}"{{ status.order_status_id == order_status_id ? ' selected' : '' }}>{{ status.name }}</option>
-          {% endfor %}
-        </select>
-        <small class="muted">{{ text_status_hint }}</small>
-      </div>
-      <div class="field">
-        <label for="input-comment">{{ entry_comment }}</label>
-        <textarea name="comment" id="input-comment" rows="3">{{ comment }}</textarea>
-      </div>
-    </div>
-
-    {% if history %}
-    <h2>{{ text_history }}</h2>
-    <table class="table">
-      <thead>
-        <tr><th>{{ column_status }}</th><th>{{ column_comment }}</th><th>{{ column_date_added }}</th></tr>
-      </thead>
-      <tbody>
-        {% for row in history %}
-        <tr><td>{{ row.status_name }}</td><td>{{ row.comment }}</td><td>{{ row.date_added }}</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% endif %}
-
-    <div class="actions right">
-      <a class="btn ghost" href="{{ cancel }}">{{ button_cancel }}</a>
-      <button type="submit" class="btn primary">{{ button_save }}</button>
-    </div>
-  </form>
+    </form>
+  </div>
 </main>
 <script>
 (function () {
-  var wrap   = document.getElementById('products');
+  var wrap = document.getElementById('products');
   var addBtn = document.getElementById('btn-add-product');
-  var TPL    = {{ entry_product|json_encode|raw }};
-  var TPL_Q  = {{ entry_quantity|json_encode|raw }};
-  var TPL_P  = {{ entry_price|json_encode|raw }};
-  var TPL_R  = {{ button_remove|json_encode|raw }};
+  if (!wrap || !addBtn) { return; }
 
-  function rowHtml(i, name, qty, price) {
-    var d = document.createElement('div');
-    d.className = 'grid product-row';
-    d.setAttribute('data-row', '');
-    d.style.cssText = 'grid-template-columns:1fr 90px 140px auto;gap:.5rem;align-items:end;margin-bottom:.5rem;';
-    d.innerHTML =
-      '<div class="field"><label>' + TPL + '</label><input type="text" name="order_product[' + i + '][name]" value="' + name + '" maxlength="255"></div>' +
-      '<div class="field"><label>' + TPL_Q + '</label><input type="number" name="order_product[' + i + '][quantity]" value="' + qty + '" min="1" step="1"></div>' +
-      '<div class="field"><label>' + TPL_P + '</label><input type="text" name="order_product[' + i + '][price]" value="' + price + '" placeholder="0.0000"></div>' +
-      '<div class="field"><button type="button" class="btn ghost small" data-remove>' + TPL_R + '</button></div>';
-    return d;
+  var productLabel = {{ entry_product|json_encode|raw }};
+  var quantityLabel = {{ entry_quantity|json_encode|raw }};
+  var priceLabel = {{ entry_price|json_encode|raw }};
+  var removeLabel = {{ button_remove|json_encode|raw }};
+
+  function makeField(parent, columnClass, labelText, id, name, type, value) {
+    var column = document.createElement('div');
+    column.className = columnClass;
+    var label = document.createElement('label');
+    label.className = 'form-label';
+    label.htmlFor = id;
+    label.textContent = labelText;
+    var input = document.createElement('input');
+    input.className = 'form-control';
+    input.type = type;
+    input.id = id;
+    input.name = name;
+    input.value = value;
+    if (type === 'text' && name.indexOf('[name]') !== -1) { input.maxLength = 255; }
+    if (type === 'number') { input.min = '1'; input.step = '1'; }
+    if (name.indexOf('[price]') !== -1) { input.placeholder = '0.0000'; }
+    column.append(label, input);
+    parent.appendChild(column);
+  }
+
+  function makeRow(index) {
+    var row = document.createElement('div');
+    row.className = 'row g-2 align-items-end mb-3 order-product-row';
+    row.setAttribute('data-row', '');
+    makeField(row, 'col-12 col-lg-5', productLabel, 'input-product-' + index, 'order_product[' + index + '][name]', 'text', '');
+    makeField(row, 'col-6 col-lg-2', quantityLabel, 'input-quantity-' + index, 'order_product[' + index + '][quantity]', 'number', '1');
+    makeField(row, 'col-6 col-lg-3', priceLabel, 'input-price-' + index, 'order_product[' + index + '][price]', 'text', '');
+
+    var actions = document.createElement('div');
+    actions.className = 'col-12 col-lg-2 d-grid';
+    var remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'btn btn-outline-danger';
+    remove.setAttribute('data-remove', '');
+    remove.setAttribute('aria-label', removeLabel);
+    remove.innerHTML = '<i class="bi bi-x-lg me-1" aria-hidden="true"></i>';
+    remove.appendChild(document.createTextNode(removeLabel));
+    actions.appendChild(remove);
+    row.appendChild(actions);
+    return row;
   }
 
   function nextIndex() {
-    var n = 0;
-    wrap.querySelectorAll('input[name^="order_product["]').forEach(function (el) {
-      var m = el.getAttribute('name').match(/^order_product\[(\d+)\]/);
-      if (m) { n = Math.max(n, parseInt(m[1], 10) + 1); }
+    var next = 0;
+    wrap.querySelectorAll('input[name^="order_product["]').forEach(function (input) {
+      var match = input.name.match(/^order_product\[(\d+)\]/);
+      if (match) { next = Math.max(next, parseInt(match[1], 10) + 1); }
     });
-    return n;
-  }
-
-  function refreshEmpty() {
-    var empty = wrap.querySelector('[data-empty]');
-    if (empty && wrap.querySelector('[data-row]')) { empty.remove(); }
+    return next;
   }
 
   addBtn.addEventListener('click', function () {
-    wrap.appendChild(rowHtml(nextIndex(), '', 1, ''));
-    refreshEmpty();
+    var empty = wrap.querySelector('[data-empty]');
+    if (empty) { empty.remove(); }
+    wrap.appendChild(makeRow(nextIndex()));
   });
 
-  wrap.addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-remove]');
-    if (btn) { btn.closest('[data-row]').remove(); }
+  wrap.addEventListener('click', function (event) {
+    var button = event.target.closest('[data-remove]');
+    if (button) { button.closest('[data-row]').remove(); }
   });
 })();
 </script>

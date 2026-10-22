@@ -42,11 +42,14 @@ ck 1 $RC "wizard-seed-11-grants-idiomas"
 echo '══ 2 — login + dashboard tem os 5 cartões de módulo ══'
 curl -s -c $JA -b $JA "$B/admin/login" -o /tmp/regr_login.html -w "%{http_code}" | grep -q 200
 TOKEN=$(grep -o 'name="user_token" value="[^"]*"' /tmp/regr_login.html | sed 's/.*value="//;s/"//')
+CSRF_LOGIN=$(grep -o 'name="csrf_token" value="[^"]*"' /tmp/regr_login.html | sed 's/.*value="//;s/"//')
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=common/login" \
   --data-urlencode "username=admin" --data-urlencode "password=SenhaForte!2026" --data-urlencode "user_token=$TOKEN" \
+  --data-urlencode "csrf_token=$CSRF_LOGIN" \
   -D /tmp/regr_al.hdr -o /dev/null
 L=$(loc /tmp/regr_al.hdr); OK=0; [[ "$L" == *dashboard* ]] || OK=1
 curl -s -c $JA -b $JA "$B/admin/common/dashboard" -o /tmp/regr_dash.html
+CSRF=$(grep -o 'meta name="csrf-token" content="[^"]*"' /tmp/regr_dash.html | sed 's/.*content="//;s/"//')
 for m in catalog/project catalog/category cms/page marketing/testimonial marketing/client_logo tool/tool sale/order communication/contact_message setting/webhook; do
   grep -q "$m" /tmp/regr_dash.html || { OK=1; echo "  card faltando: $m"; }
 done
@@ -115,10 +118,11 @@ OK=0; [ "$K1" = "1" ] && [ "$K0" = "0" ] || OK=1
 ck 6 $OK "page-seo-swap"
 
 echo '══ 7 — testimonial: upload via componente + create ══'
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/testimonial.upload" -F "file=@/tmp/rok.png;type=image/png" -o /tmp/regr_up2.json
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/testimonial.upload" -F "file=@/tmp/rok.png;type=image/png" -o /tmp/regr_up2.json -F "csrf_token=$CSRF"
 TPATH=$(grep -o '"path":"[^"]*"' /tmp/regr_up2.json | sed 's/"path":"//;s/"//;s|\\/|/|g')
 case "$TPATH" in view/image/testimonial/*) :;; *) TPATH=1;; esac
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/testimonial.add" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "testimonial_description[1][author]=Ana" \
   --data-urlencode "image=$TPATH" \
   -D /tmp/regr_tt.hdr -o /dev/null
@@ -126,6 +130,15 @@ L=$(loc /tmp/regr_tt.hdr); OK=0; [[ "$L" == *marketing/testimonial* ]] || OK=1
 [ "$TPATH" = "1" ] && OK=1
 N=$(q "SELECT COUNT(*) FROM reamur_test.rms_testimonial"); [ "$N" = "1" ] || OK=1
 ck 7 $OK "testimonial-create"
+
+echo '══ 7b — filtros server-side de depoimento ══'
+curl -s -c $JA -b $JA "$B/admin/index.php?route=marketing/testimonial&filter_author=Ana&filter_status=0&language=en-us" -o /tmp/regr_testimonial_filter.html
+OK=0
+grep -q "Ana" /tmp/regr_testimonial_filter.html || OK=1
+grep -q "Showing 1" /tmp/regr_testimonial_filter.html || OK=1
+curl -s -c $JA -b $JA "$B/admin/index.php?route=marketing/testimonial&filter_author=missing&language=en-us" -o /tmp/regr_testimonial_filter_empty.html
+grep -q "No testimonials match these filters" /tmp/regr_testimonial_filter_empty.html || OK=1
+ck 7b $OK "filtros-testimonial"
 
 echo '══ 8 — ACL deny (project) + migração f2_8 idempotente ══'
 sudo mysql reamur_test -e "UPDATE rms_user_group SET permission=JSON_REMOVE(permission, JSON_UNQUOTE(JSON_SEARCH(permission,'one','catalog/project',NULL,'\$.access')), JSON_UNQUOTE(JSON_SEARCH(permission,'one','catalog/project',NULL,'\$.modify'))) WHERE name='Administrator'"

@@ -40,11 +40,15 @@ ck 1 $RC "wizard-seed-grant"
 echo '══ 2 — login ══'
 curl -s -c $JA -b $JA "$B/admin/login" -o /tmp/f212_login.html -w "%{http_code}" | grep -q 200
 TOKEN=$(grep -o 'name="user_token" value="[^"]*"' /tmp/f212_login.html | sed 's/.*value="//;s/"//')
+CSRF_LOGIN=$(grep -o 'name="csrf_token" value="[^"]*"' /tmp/f212_login.html | sed 's/.*value="//;s/"//')
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=common/login" \
   --data-urlencode "username=admin" --data-urlencode "password=SenhaForte!2026" --data-urlencode "user_token=$TOKEN" \
+  --data-urlencode "csrf_token=$CSRF_LOGIN" \
   -D /tmp/f212_al.hdr -o /dev/null
 L=$(loc /tmp/f212_al.hdr); [[ "$L" == *dashboard* ]]
 ck 2 $? "admin-login"
+curl -s -c $JA -b $JA "$B/admin/common/dashboard" -o /tmp/f212_csrf.html
+CSRF=$(grep -o 'meta name="csrf-token" content="[^"]*"' /tmp/f212_csrf.html | sed 's/.*content="//;s/"//')
 
 echo '══ 3 — lista vazia honesta ══'
 curl -s -c $JA -b $JA "$B/admin/marketing/client_logo" -o /tmp/f212_list0.html -D /tmp/f212_l0.hdr
@@ -59,7 +63,7 @@ curl -s -c $JA -b $JA "$B/admin/common/dashboard" -o /tmp/f212_dash.html
 grep -q "Client Logos" /tmp/f212_dash.html && grep -q "marketing/client_logo" /tmp/f212_dash.html
 ck 4 $? "dashboard-card"
 
-echo '══ 5 — form single-table: sem fieldset de idioma, name/url/sort/status + upload ══'
+echo '══ 5 — form single-table: sem idioma/SEO, name/url/sort/status + upload ══'
 curl -s -c $JA -b $JA "$B/admin/index.php?route=marketing/client_logo.add" -o /tmp/f212_form.html -D /tmp/f212_f.hdr
 H=$(hdr /tmp/f212_f.hdr)
 OK=0; [ "$H" = "200" ] || OK=1
@@ -67,11 +71,24 @@ N=$(grep -c "<legend>" /tmp/f212_form.html); [ "$N" = "0" ] || OK=1
 grep -q 'id="input-name"' /tmp/f212_form.html || OK=1
 grep -q 'id="input-url"' /tmp/f212_form.html || OK=1
 grep -q "client_logo.upload" /tmp/f212_form.html || OK=1
-grep -qi "keyword\|fieldset" /tmp/f212_form.html && OK=1
+grep -qi "keyword" /tmp/f212_form.html && OK=1
 ck 5 $OK "form-single-table"
+
+echo '══ 5b — POST sem CSRF rejeitado (formulário e upload) ══'
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/client_logo.add" \
+  --data-urlencode "name=Sem Token" -o /tmp/f212_csrf_err.html
+grep -qi "security token is invalid or expired" /tmp/f212_csrf_err.html
+OK=$?
+C=$(q "SELECT COUNT(*) FROM reamur_test.rms_client_logo"); [ "$C" = "0" ] || OK=1
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/client_logo.upload" \
+  -F "file=@/tmp/lok.png;type=image/png" -o /tmp/f212_upload_csrf_err.json
+grep -q '"success":false' /tmp/f212_upload_csrf_err.json || OK=1
+grep -qi "security token is invalid or expired" /tmp/f212_upload_csrf_err.json || OK=1
+ck 5b $OK "post-e-upload-sem-csrf"
 
 echo '══ 6 — POST inválido (nome vazio) → erro, nada persistido ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/client_logo.add" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "name=" \
   -o /tmp/f212_err.html
 grep -q "Name is required" /tmp/f212_err.html
@@ -81,6 +98,7 @@ ck 6 $OK "validacao-nome"
 
 echo '══ 7 — URL inválida (ftp://) → rejeitada ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/client_logo.add" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "name=SEVEN A" --data-urlencode "url=ftp://sevena.test" \
   -o /tmp/f212_err2.html
 grep -q "must start with http" /tmp/f212_err2.html
@@ -89,14 +107,14 @@ C=$(q "SELECT COUNT(*) FROM reamur_test.rms_client_logo"); [ "$C" = "0" ] || OK=
 ck 7 $OK "validacao-url"
 
 echo '══ 8 — upload real via COMPONENTE → path do módulo; fake rejeitado; GET → JSON ══'
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/client_logo.upload" -F "file=@/tmp/lok.png;type=image/png" -o /tmp/f212_up1.json
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/client_logo.upload" -F "file=@/tmp/lok.png;type=image/png" -o /tmp/f212_up1.json -F "csrf_token=$CSRF"
 grep -q '"success":true' /tmp/f212_up1.json
 A=$?
 LPATH=$(grep -o '"path":"[^"]*"' /tmp/f212_up1.json | sed 's/"path":"//;s/"//;s|\\/|/|g')
 [ -f "/tmp/fui/dev/catalog/$LPATH" ]
 OK=$?
 case "$LPATH" in view/image/client_logo/*) :;; *) OK=1;; esac
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/client_logo.upload" -F "file=@/tmp/lfake.png;type=image/png" -o /tmp/f212_up2.json
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/client_logo.upload" -F "file=@/tmp/lfake.png;type=image/png" -o /tmp/f212_up2.json -F "csrf_token=$CSRF"
 grep -q '"success":false' /tmp/f212_up2.json
 B2=$?
 curl -s -c $JA -b $JA "$B/admin/index.php?route=marketing/client_logo.upload" -o /tmp/f212_up3.json
@@ -105,6 +123,7 @@ ck 8 $(( A + OK + B2 + $? )) "upload-componente"
 
 echo '══ 9 — create completo com logo + URL ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/client_logo.add" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "name=SEVEN A" --data-urlencode "url=https://sevena.example.com" \
   --data-urlencode "image=$LPATH" --data-urlencode "sort_order=1" --data-urlencode "status=1" \
   -D /tmp/f212_add.hdr -o /dev/null
@@ -125,15 +144,25 @@ grep -q "<img" /tmp/f212_list1.html || OK=1
 grep -q "sevena.example.com" /tmp/f212_list1.html || OK=1
 ck 10 $OK "lista-thumb-flash"
 
+echo '══ 10b — filtros por nome/status e estado sem resultados ══'
+curl -s -c $JA -b $JA "$B/admin/index.php?route=marketing/client_logo&filter_name=SEVEN%20A&filter_status=1&language=en-us" -o /tmp/f212_filter.html
+OK=0
+grep -q "SEVEN A" /tmp/f212_filter.html || OK=1
+grep -q "Showing 1" /tmp/f212_filter.html || OK=1
+curl -s -c $JA -b $JA "$B/admin/index.php?route=marketing/client_logo&filter_name=missing&language=en-us" -o /tmp/f212_filter_empty.html
+grep -q "No client logos match these filters" /tmp/f212_filter_empty.html || OK=1
+ck 10b $OK "filtros-server-side"
+
 echo '══ 11 — edição repovoa + swap de logo + toggle de status ══'
 curl -s -c $JA -b $JA "$B/admin/index.php?route=marketing/client_logo.edit|1" -o /tmp/f212_edit.html -D /tmp/f212_e.hdr
 H=$(hdr /tmp/f212_e.hdr)
 OK=0; [ "$H" = "200" ] || OK=1
 grep -q 'value="SEVEN A"' /tmp/f212_edit.html || OK=1
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/client_logo.upload" -F "file=@/tmp/lok.png;type=image/png" -o /tmp/f212_up4.json
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/client_logo.upload" -F "file=@/tmp/lok.png;type=image/png" -o /tmp/f212_up4.json -F "csrf_token=$CSRF"
 LPATH2=$(grep -o '"path":"[^"]*"' /tmp/f212_up4.json | sed 's/"path":"//;s/"//;s|\\/|/|g')
 [ -n "$LPATH2" ] && [ "$LPATH2" != "$LPATH" ] || OK=1
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/client_logo.edit|1" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "name=SEVEN A Ltda" --data-urlencode "url=" \
   --data-urlencode "image=$LPATH2" --data-urlencode "sort_order=9" \
   -D /tmp/f212_editp.hdr -o /dev/null
@@ -150,12 +179,37 @@ L=$(loc /tmp/f212_dg.hdr); OK=0
 [[ "$L" == *error/permission* ]] || OK=1
 N=$(q "SELECT COUNT(*) FROM reamur_test.rms_client_logo WHERE client_logo_id=1"); [ "$N" = "1" ] || OK=1
 [ -f "/tmp/fui/dev/catalog/$LPATH2" ] || OK=1
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/client_logo.delete|1" -D /tmp/f212_dp.hdr -o /dev/null
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=marketing/client_logo.delete|1" -D /tmp/f212_dp.hdr -o /dev/null --data-urlencode "csrf_token=$CSRF"
 N1=$(q "SELECT COUNT(*) FROM reamur_test.rms_client_logo")
 [ "$N1" = "0" ] || OK=1
 [ ! -f "/tmp/fui/dev/catalog/$LPATH2" ] || OK=1
 L=$(loc /tmp/f212_dp.hdr); [[ "$L" == *marketing/client_logo* ]] || OK=1
 ck 12 $OK "delete-com-arquivo"
+
+echo '══ 12b — paginação server-side (21 registros, limite de 20) + filtros preservados ══'
+VALUES=""
+for i in $(seq 1 21); do
+  printf -v NAME 'F804 Page %02d' "$i"
+  [ -n "$VALUES" ] && VALUES+=","
+  VALUES+="('$NAME','','',1,$i)"
+done
+sudo mysql reamur_test -e "INSERT INTO rms_client_logo (name,image,url,status,sort_order) VALUES $VALUES"
+curl -s -c $JA -b $JA "$B/admin/index.php?route=marketing/client_logo&language=en-us" -o /tmp/f212_page1.html
+P1=$(grep -o 'F804 Page [0-9][0-9]' /tmp/f212_page1.html | wc -l | tr -d ' ')
+OK=0; [ "$P1" = "20" ] || OK=1
+grep -q "F804 Page 01" /tmp/f212_page1.html || OK=1
+grep -q "F804 Page 20" /tmp/f212_page1.html || OK=1
+! grep -q "F804 Page 21" /tmp/f212_page1.html || OK=1
+grep -q "Showing 1.*of 21 client logos" /tmp/f212_page1.html || OK=1
+curl -s -c $JA -b $JA "$B/admin/index.php?route=marketing/client_logo&page=2&filter_name=F804%20Page&filter_status=1&language=en-us" -o /tmp/f212_page2.html
+P2=$(grep -o 'F804 Page [0-9][0-9]' /tmp/f212_page2.html | wc -l | tr -d ' ')
+[ "$P2" = "1" ] || OK=1
+grep -q "F804 Page 21" /tmp/f212_page2.html || OK=1
+! grep -q "F804 Page 20" /tmp/f212_page2.html || OK=1
+grep -q "Showing 21.*of 21 client logos" /tmp/f212_page2.html || OK=1
+sudo mysql reamur_test -e "DELETE FROM rms_client_logo WHERE name LIKE 'F804 Page %'"
+C=$(q "SELECT COUNT(*) FROM reamur_test.rms_client_logo"); [ "$C" = "0" ] || OK=1
+ck 12b $OK "paginacao-e-preservacao-dos-filtros"
 
 echo '══ 13 — idiomas pt-br / es-eu ══'
 curl -s -c $JA -b $JA "$B/admin/index.php?route=marketing/client_logo&language=pt-br" -o /tmp/f212_pt.html

@@ -19,12 +19,15 @@ namespace Reamur\Admin\Model\Sale;
 class Order extends \Reamur\System\Engine\Model {
 
     /**
-     * Grade: totais + nome do status com coalesce idioma ativo → en-US.
+     * Grade paginável: totais + nome do status com coalesce idioma ativo → en-US.
+     * Sem limite, mantém o comportamento histórico de retornar todas as linhas.
      *
+     * @param array<string, mixed> $filters Filtros normalizados pelo controller
      * @return array<int, array<string, mixed>>
      */
-    public function getOrders(): array {
+    public function getOrders(array $filters = [], int $start = 0, int $limit = 0): array {
         $lang = $this->currentLanguageId();
+        $limitSql = $limit > 0 ? ' LIMIT ' . max(0, $start) . ', ' . max(1, $limit) : '';
 
         $query = $this->db->query(
             "SELECT o.`order_id`, o.`firstname`, o.`lastname`, o.`email`, o.`total`,
@@ -34,11 +37,58 @@ class Order extends \Reamur\System\Engine\Model {
           LEFT JOIN `" . $this->t('order_status') . "` sn
                  ON sn.`order_status_id` = o.`order_status_id` AND sn.`language_id` = '" . $lang . "'
           LEFT JOIN `" . $this->t('order_status') . "` se
-                 ON se.`order_status_id` = o.`order_status_id` AND se.`language_id` = 1
+                 ON se.`order_status_id` = o.`order_status_id` AND se.`language_id` = 1"
+            . $this->orderFilterSql($filters) . "
            ORDER BY o.`date_added` DESC, o.`order_id` DESC"
+            . $limitSql
         );
 
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
+    /** Total para paginação, usando os mesmos filtros da grade. */
+    public function getTotalOrders(array $filters = []): int {
+        $query = $this->db->query(
+            "SELECT COUNT(*) AS `total` FROM `" . $this->t('order') . "` o"
+            . $this->orderFilterSql($filters)
+        );
+
+        return ($query instanceof \stdClass && isset($query->row['total'])) ? (int)$query->row['total'] : 0;
+    }
+
+    /**
+     * @param array<string, mixed> $filters
+     */
+    private function orderFilterSql(array $filters): string {
+        $where = [];
+        $order_id = max(0, (int)($filters['order_id'] ?? 0));
+
+        if ($order_id > 0) {
+            $where[] = "o.`order_id` = '" . $order_id . "'";
+        }
+
+        $customer = is_scalar($filters['customer'] ?? null) ? trim((string)$filters['customer']) : '';
+
+        if ($customer !== '') {
+            $customer = $this->db->escape($customer);
+            $where[] = "(CONCAT_WS(' ', o.`firstname`, o.`lastname`) LIKE '%" . $customer . "%'
+                        OR o.`firstname` LIKE '%" . $customer . "%'
+                        OR o.`lastname` LIKE '%" . $customer . "%')";
+        }
+
+        $email = is_scalar($filters['email'] ?? null) ? trim((string)$filters['email']) : '';
+
+        if ($email !== '') {
+            $where[] = "o.`email` LIKE '%" . $this->db->escape($email) . "%'";
+        }
+
+        $status_id = max(0, (int)($filters['status_id'] ?? 0));
+
+        if ($status_id > 0) {
+            $where[] = "o.`order_status_id` = '" . $status_id . "'";
+        }
+
+        return $where !== [] ? ' WHERE ' . implode(' AND ', $where) : '';
     }
 
     /**

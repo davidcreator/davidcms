@@ -34,11 +34,15 @@ ck 1 $RC "wizard-seed-grant-status"
 echo '══ 2 — login ══'
 curl -s -c $JA -b $JA "$B/admin/login" -o /tmp/f214_login.html -w "%{http_code}" | grep -q 200
 TOKEN=$(grep -o 'name="user_token" value="[^"]*"' /tmp/f214_login.html | sed 's/.*value="//;s/"//')
+CSRF_LOGIN=$(grep -o 'name="csrf_token" value="[^"]*"' /tmp/f214_login.html | sed 's/.*value="//;s/"//')
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=common/login" \
   --data-urlencode "username=admin" --data-urlencode "password=SenhaForte!2026" --data-urlencode "user_token=$TOKEN" \
+  --data-urlencode "csrf_token=$CSRF_LOGIN" \
   -D /tmp/f214_al.hdr -o /dev/null
 L=$(loc /tmp/f214_al.hdr); [[ "$L" == *dashboard* ]]
 ck 2 $? "admin-login"
+curl -s -c $JA -b $JA "$B/admin/common/dashboard" -o /tmp/f214_csrf.html
+CSRF=$(grep -o 'meta name="csrf-token" content="[^"]*"' /tmp/f214_csrf.html | sed 's/.*content="//;s/"//')
 
 echo '══ 3 — lista vazia honesta ══'
 curl -s -c $JA -b $JA "$B/admin/sale/order" -o /tmp/f214_list0.html -D /tmp/f214_l0.hdr
@@ -65,8 +69,18 @@ grep -q 'btn-add-product' /tmp/f214_form.html || OK=1
 grep -qi "upload\|keyword" /tmp/f214_form.html && OK=1
 ck 5 $OK "form-operacional"
 
+echo '══ 5b — POST sem CSRF é rejeitado sem criar pedido ══'
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=sale/order.add&language=en-us" \
+  --data-urlencode "firstname=Sem Token" --data-urlencode "email=no-token@test.dev" \
+  -o /tmp/f214_csrf_err.html
+grep -qi "security token is invalid or expired" /tmp/f214_csrf_err.html
+OK=$?
+C=$(q "SELECT COUNT(*) FROM reamur_test.rms_order"); [ "$C" = "0" ] || OK=1
+ck 5b $OK "post-sem-csrf"
+
 echo '══ 6 — validações: nome vazio + e-mail inválido + item sem nome ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=sale/order.add&language=en-us" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "firstname=" --data-urlencode "email=sem-arroba" \
   -o /tmp/f214_err.html
 grep -q "First name is required" /tmp/f214_err.html
@@ -74,6 +88,7 @@ A=$?
 grep -q "valid e-mail" /tmp/f214_err.html
 BB=$?
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=sale/order.add&language=en-us" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "firstname=Ana" --data-urlencode "email=ana@test.dev" \
   --data-urlencode "order_product[0][name]=" --data-urlencode "order_product[0][price]=10" \
   -o /tmp/f214_err2.html
@@ -84,6 +99,7 @@ ck 6 $(( A + BB + CC )) "validacoes"
 
 echo '══ 7 — create com 2 itens + 1 linha vazia → totais SERVER-SIDE + histórico inicial ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=sale/order.add&language=en-us" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "firstname=Ana" --data-urlencode "lastname=Souza" \
   --data-urlencode "email=ana@test.dev" --data-urlencode "telephone=+55 19 98877-6655" \
   --data-urlencode "comment=Quero landing page" \
@@ -110,6 +126,15 @@ grep -q "Received" /tmp/f214_list1.html || OK=1
 grep -qi "Order created" /tmp/f214_list1.html || OK=1
 ck 8 $OK "lista-flash-total"
 
+echo '══ 8b — filtros de cliente/status e busca sem resultados ══'
+curl -s -c $JA -b $JA "$B/admin/index.php?route=sale/order&filter_customer=Ana&filter_status=1&language=en-us" -o /tmp/f214_filter.html
+OK=0
+grep -q "Ana Souza" /tmp/f214_filter.html || OK=1
+grep -q "Showing 1" /tmp/f214_filter.html || OK=1
+curl -s -c $JA -b $JA "$B/admin/index.php?route=sale/order&filter_email=missing%40example.test&language=en-us" -o /tmp/f214_filter_empty.html
+grep -q "No orders match these filters" /tmp/f214_filter_empty.html || OK=1
+ck 8b $OK "filtros-server-side"
+
 echo '══ 9 — edição repovoa (itens+histórico visíveis); MUDAR status → +1 histórico; total recalculado ══'
 curl -s -c $JA -b $JA "$B/admin/index.php?route=sale/order.edit|1" -o /tmp/f214_edit.html -D /tmp/f214_e.hdr
 H=$(hdr /tmp/f214_e.hdr)
@@ -119,6 +144,7 @@ grep -q 'value="Landing Page"' /tmp/f214_edit.html || OK=1
 grep -q "Status History" /tmp/f214_edit.html || OK=1
 grep -q "Received" /tmp/f214_edit.html || OK=1
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=sale/order.edit|1" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "firstname=Ana" --data-urlencode "lastname=Souza" \
   --data-urlencode "email=ana@test.dev" \
   --data-urlencode "order_status_id=3" \
@@ -135,6 +161,7 @@ ck 9 $OK "edicao-status-historico-recalc"
 
 echo '══ 10 — edição SEM mudar status → histórico NÃO cresce ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=sale/order.edit|1" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "firstname=Ana" --data-urlencode "lastname=Silva" \
   --data-urlencode "email=ana@test.dev" \
   --data-urlencode "order_status_id=3" \
@@ -150,7 +177,7 @@ curl -s -c $JA -b $JA "$B/admin/index.php?route=sale/order.delete|1" -D /tmp/f21
 L=$(loc /tmp/f214_dg.hdr); OK=0
 [[ "$L" == *error/permission* ]] || OK=1
 N=$(q "SELECT COUNT(*) FROM reamur_test.rms_order WHERE order_id=1"); [ "$N" = "1" ] || OK=1
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=sale/order.delete|1" -D /tmp/f214_dp.hdr -o /dev/null
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=sale/order.delete|1" -D /tmp/f214_dp.hdr -o /dev/null --data-urlencode "csrf_token=$CSRF"
 N1=$(q "SELECT COUNT(*) FROM reamur_test.rms_order")
 N2=$(q "SELECT COUNT(*) FROM reamur_test.rms_order_product")
 N3=$(q "SELECT COUNT(*) FROM reamur_test.rms_order_history")
@@ -180,11 +207,13 @@ ck 13 $OK "acl-deny-migracao"
 
 echo '══ 14 — status inválido via POST adulterado → rejeitado ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=sale/order.add&language=en-us" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "firstname=Bob" --data-urlencode "email=" --data-urlencode "order_status_id=99" \
   -D /tmp/f214_st.hdr -o /tmp/f214_st.html
 grep -q "valid e-mail\|Invalid status" /tmp/f214_st.html
 A=$?
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=sale/order.add&language=en-us" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "firstname=Bob" --data-urlencode "email=bob@test.dev" --data-urlencode "order_status_id=99" \
   -o /tmp/f214_st2.html
 grep -q "Invalid status" /tmp/f214_st2.html
@@ -194,6 +223,7 @@ ck 14 $(( A + BBB )) "status-adulterado"
 
 echo '══ 15 — preço adulterado (negativo/texto) → 0.0000 seguro; total confiável ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=sale/order.add&language=en-us" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "firstname=Eve" --data-urlencode "email=eve@test.dev" \
   --data-urlencode "order_product[0][name]=Item X" --data-urlencode "order_product[0][quantity]=5" --data-urlencode "order_product[0][price]=-100" \
   --data-urlencode "order_product[1][name]=Item Y" --data-urlencode "order_product[1][quantity]=2" --data-urlencode "order_product[1][price]=abc" \
