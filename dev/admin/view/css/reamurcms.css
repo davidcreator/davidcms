@@ -88,6 +88,17 @@
      --lte-sidebar-active-bg: rgba(255, 255, 255, 0.1);
    }
 
+   /* F8-V: o tema escuro do Bootstrap precisa vencer os tokens claros herdados
+      do :root legado acima; sem este override, fundos terciários ficam escuros,
+      mas o canvas permanece claro e perde contraste. */
+   :root[data-bs-theme="dark"] {
+     --bs-body-color: #dee2e6;
+     --bs-body-color-rgb: 222, 226, 230;
+     --bs-body-bg: #212529;
+     --bs-body-bg-rgb: 33, 37, 41;
+     --bs-border-color: #495057;
+   }
+
    /* ==========================================================================
       2. BASIC STYLES AND RESET
       ========================================================================== */
