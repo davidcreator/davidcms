@@ -47,13 +47,24 @@ INSERT IGNORE INTO `rms_setting` (`code`, `key`, `value`, `serialized`)
 SELECT 'config', 'config_admin_theme_mode', 'system', 0 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM `rms_setting` WHERE `code`='config' AND `key`='config_admin_theme_mode');
 
--- ── 3) Grant da rota setting/appearance (idiom canônico ADR 0045) ──
+-- ── 3) Grant da rota setting/appearance (v2: idiom com JSON_EXTRACT, testado) ──
+-- NOTA v2: a forma anterior com JSON_SEARCH(permission,...,NULL,'$.access')
+-- era silenciosamente ineficaz em MariaDB ≥10.4 (path 4º arg com escape NULL).
+-- Alvo: grupo Administrator (por id OU nome). Idempotente.
 UPDATE `rms_user_group`
 SET `permission` = JSON_ARRAY_APPEND(`permission`, '$.access', 'setting/appearance')
-WHERE `name` = 'Administrator'
-  AND JSON_SEARCH(`permission`, 'one', 'setting/appearance', NULL, '$.access') IS NULL;
+WHERE (`name` = 'Administrator' OR `user_group_id` = 1)
+  AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.access'), 'one', 'setting/appearance') IS NULL;
 
 UPDATE `rms_user_group`
 SET `permission` = JSON_ARRAY_APPEND(`permission`, '$.modify', 'setting/appearance')
-WHERE `name` = 'Administrator'
-  AND JSON_SEARCH(`permission`, 'one', 'setting/appearance', NULL, '$.modify') IS NULL;
+WHERE (`name` = 'Administrator' OR `user_group_id` = 1)
+  AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.modify'), 'one', 'setting/appearance') IS NULL;
+
+-- ── 3b) Falback: se as UPDATE acima não tocaram nenhuma linha porque o grupo
+--        tem outro nome/slug, rode manualmente (phpMyAdmin → rms_user_group):
+--        UPDATE rms_user_group
+--        SET permission = JSON_ARRAY_APPEND(permission, '$.access', 'setting/appearance')
+--        WHERE user_group_id = <id_do_seu_grupo_admin>
+--          AND JSON_SEARCH(JSON_EXTRACT(permission,'$.access'),'one','setting/appearance') IS NULL;
+--        (idem para '$.modify'.)

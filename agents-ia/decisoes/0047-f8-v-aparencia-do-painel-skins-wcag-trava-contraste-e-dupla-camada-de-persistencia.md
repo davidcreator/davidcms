@@ -138,3 +138,113 @@ passa a virar preferência dele (cria o override `mode` automaticamente).
   (está na bateria);
 - O even-driven `theme-switcher.js` (`window.__adminAppearanceTheme`) do pacote de
   assets do usuário permanece como futura integração, não usada nesta fase.
+
+## Adendo v2 (2026-10-22) — retrabalho de aceitação visual
+
+A v1 foi **rejeitada na avaliação visual do usuário** (screenshots do próprio painel):
+modo claro com superfícies legíveis mas **tela de personalização praticamente sem controles
+visíveis** (radios sem texto, skin cards invisíveis, pills de accent vazias) e seção global
+travada com badge **"ACL: view"**, além de itens do menu Sistema ausentes.
+
+### Causas raízes identificadas (diagnóstico por screenshot headless + HTML vivo)
+
+1. **Bug-macro do engine Twig (dominante):** a tela usava
+   `{% macro theme_form(...) %}` + `{% from _self import theme_form %}`. O motor Twig do
+   projeto **não propaga o contexto da renderização para macros** — nem mesmo via `_context`
+   (só *Twig globals* explícitos entram). Resultado: `{{ text_skin_card }}`, `{{ skins }}`,
+   `{{ accents }}`, todos os `text_*` e o `attribute(_context, 'accent_' ~ aid)` resolviam
+   para vazio dentro do macro. Visível: botões rádio sem texto, row de skins vazia, chips
+   de accent sem nome. A bateria v1 **não detectou** porque grepava apenas os containers
+   (`rms-skin-picker`, h1, p-i18n), nunca o conteúdo das labels.
+   **Correção:** macro removida; criado o partial
+   `admin/view/template/setting/appearance_form.twig`, renderizado pelo controller com
+   `$data` explícito (mesmo padrão de header/footer) e embutido em `appearance.twig` via
+   `{{ form_global_html|raw }}`/`{{ form_user_html|raw }}`. O controller ganhou
+   `themeFormView()` (flags curated/custom, valores dos inputs hex) e `accentChoices()`
+   (accents já rotulados por i18n — elimina `attribute(_context,...)`).
+
+2. **`.btn` é `inline-flex` no pacote do usuário (reamurcms.css) e tem
+   `white-space: nowrap` (Bootstrap):** com o texto finalmente presente, labels dos skin
+   cards escapavam horizontalmente (swatch + nome lado a lado) e descrições vazavam do
+   card. **Correção:** no escopo `.rms-appearance`, `label.rms-skin-card { flex-flow:
+   column }`, `white-space: normal` em card/radio-group, `overflow-wrap: anywhere` +
+   `hyphens: auto` nas descrições, e labels curtas (i18n: "Clara/Escura", "Azul",
+   descrições de 1 linha).
+
+3. **Token legado realocado:** o retrabalho CSS reintroduziu `var(--rms-admin-accent)`
+   (nome da era F4). Migrado para o canônico `var(--rms-accent)` (o check 13 da bateria
+   pegou).
+
+4. **Grant `setting/appearance` silenciosamente não aplicado (MariaDB):** o UPDATE do
+   upgrade SQL usava `JSON_SEARCH(permission,'one',route,NULL,'$.access')` — forma que no
+   ambiente do usuário (e no lab real) **não casa o path aninhado** ⇒ menu da rota e seção
+   global sumiam (`ACL: view` para o grupo admin). **Correção idempotente:**
+   `JSON_SEARCH(JSON_EXTRACT(permission,'$.access'),'one','setting/appearance') IS NULL`,
+   alvo `name='Administrator' OR user_group_id=1`, com fallback documentado no SQL para
+   grupos de nome personalizado (phpMyAdmin).
+
+5. **Rate-limit do login atrapalhou a depuração** (6 tentativas/15min — o IP do lab
+   travou durante os testes; contornado com limpeza de `rms_rate_limit`/sessões no lab —
+   sem alteração de produto).
+
+### Mudanças da v2 (arquivos)
+
+- `admin/view/template/setting/appearance.twig` — sem macro; cards globais/usuário por
+  partial.
+- **novo** `admin/view/template/setting/appearance_form.twig` — o bloco de controles
+  (skin/accent/layout), consumido duas vezes via controller.
+- `admin/controller/setting/appearance.php` — `themeFormView()`, `accentChoices()`,
+  forms pré-renderizados (`form_global_html`, `form_user_html`).
+- `admin/view/css/admin.css` — bloco "F8-V v2" (coluna no card, wraps, radio-groups com
+  rótulos visíveis e tokens `--rms-accent` canônicos).
+- `admin/language/{en-us,pt-br,es-eu}/setting/appearance.php` — labels curtas para os
+  grupos apertados + `text_accent_suggest_title`, `text_preview_hint`.
+- `install/sql/upgrade_f8_05_admin_theming.sql` — §3 reescrito (JSON_EXTRACT +
+  id/nome + fallback manual documentado).
+- `tools/e2e/e2e_f805.sh` — **check 14 (regressão visual de labels)** e **check 15
+  (zero macro no escopo)**, cobrindo exatamente os falsos-verdes da v1.
+
+### Verificação v2
+
+- `e2e_f805.sh` — **15/15** (13 originais + 14 regressão visual de labels renderizadas +
+  15 banimento de macro no escopo).
+- Regressões **f801 10/10, f802 13/13, f701 10/10, f703 10/10, f406 10/10**.
+- **Screenshots headless (chrome-headless-shell + puppeteer-core) da live**: tela
+  Aparência em modo claro e escuro mostra grid de skins com swatches + descrições,
+  accents com pílulas coloridas + nomes, rádios de modo/sidebar/densidade/fonte com
+  texto legível, e a seção global com form completo e botão "Save panel default" (sem
+  badge ACL) para o grupo Administrator.
+
+### Regra duradoura (para o projeto)
+
+- **Macros Twig não veem dados de render** no nosso engine → **proibido** usar
+  `{% macro %}` em telas com dados de controller; usar partials `$this->load->view()` com
+  `$data` explícito.
+- Checagem e2e de telas legíveis devem grepar **conteúdo textual das labels**, nunca só
+  os containers.
+- Grants ACL por JSON: usar sempre o idiom
+  `JSON_SEARCH(JSON_EXTRACT(col,'$.grupo'),'one',route) IS NULL`.
+
+### Adendo v2.1 — os 2 bugs de CSS que matavam o dark mode (causa dos prints)
+
+Medido com DOM-computed (headless), não adivinhado:
+
+6. **`:root` é pseudo-classe (0,1,0)** — o `reamurcms.css` do usuário redeclara
+   `--bs-body-color: #212529` e `--bs-body-bg: #f4f6f9` em `:root` e carrega DEPOIS do
+   `bootstrap.css`. Como `[data-bs-theme=dark]` do Bootstrap tem a MESMA especificidade
+   (0,1,0), o pacote vence por ordem de cascata → o painel nunca escurecia (fundo claro
+   com texto escuro). Fix em escopo: `html[data-bs-theme="dark"] body.admin-shell { color-scheme:
+   dark; --bs-body-*: tokens dark; --bs-border-color: #495057; links dark }` (0,2,2 > 0,1,0).
+7. **`.card{--bs-card-bg:#fff}` do Bootstrap 5.3 é ESTÁTICO** (não reage ao tema) →
+   todos os painéis/cards do painel ficavam brancos no escuro e qualquer texto
+   secundário `rgba(222,226,230,.75)` sobre eles ficava invisível. Fix no mesmo escopo:
+   `--bs-card-bg: #2b3035; background-color: #2b3035` para `.card`/`.panel`, fundos de
+   header/footer sutis, e `--bs-list-group-bg`, `--bs-modal-bg`, `--bs-dropdown-bg`,
+   `--bs-accordion-bg` compatíveis.
+8. Pills do picker: superfícies forçadas `--bs-tertiary-bg` por pele (`.rms-surface`)
+   para manter contraste uniforme em qualquer tema.
+
+**Lição processual que fecha o ciclo:** o lab local NÃO fica "bonito" depois da bateria
+de regressões — a `e2e_f406.sh` reinstala o banco SEM os upgrade SQL do F8-V (ela é da F4
+e não conhece as rotas novas). Se o screenshot do lab mostrar "ACL: view" após uma rodada
+de regressões, é artefato do reset da última bateria, não regressão de produto.

@@ -22,8 +22,8 @@ $_['text_mode_light']       = 'Light';
 $_['text_mode_dark']        = 'Dark';
 $_['text_sidebar']          = 'Sidebar';
 $_['text_sidebar_auto']     = 'Auto';
-$_['text_sidebar_light']    = 'Always light';
-$_['text_sidebar_dark']     = 'Always dark';
+$_['text_sidebar_light']    = 'Light';
+$_['text_sidebar_dark']     = 'Dark';
 $_['text_density']          = 'Density';
 $_['text_density_comfortable'] = 'Comfortable';
 $_['text_density_compact']  = 'Compact';
@@ -32,6 +32,8 @@ $_['text_accent_skin']      = 'From the skin';
 $_['text_accent_custom']    = 'Custom color';
 $_['text_accent_custom_dark'] = 'Dark-mode variant';
 $_['help_accent_dark']      = 'Optional. Used in dark mode; if empty, the base color is applied there too.';
+$_['text_accent_suggest_title'] = 'Auto-refine to pass WCAG AA';
+$_['text_preview_hint'] = 'Preview updates instantly after you pick.';
 $_['text_accent_help']      = 'Colors must reach a 4.5:1 contrast ratio on both light and dark surfaces (WCAG AA). Use the magic button to suggest a dark-mode variant.';
 $_['text_validating_contrast'] = 'Checking contrast…';
 $_['text_contrast_fail']    = 'Fails WCAG AA (ratio below 4.5:1). Choose another color or use the suggestion button.';
@@ -42,20 +44,20 @@ $_['button_save_user']      = 'Save my appearance';
 
 // Skins
 $_['skin_light']          = 'Classic light';
-$_['skin_light_desc']     = 'Neutral Bootstrap theme — the shell default.';
+$_['skin_light_desc']     = 'Neutral Bootstrap base.';
 $_['skin_ocean']          = 'Ocean';
-$_['skin_ocean_desc']     = 'Cool blues with a deep-sea sidebar.';
+$_['skin_ocean_desc']     = 'Cool blues, deep-sea sidebar.';
 $_['skin_forest']         = 'Forest';
-$_['skin_forest_desc']    = 'Calm greens with high legibility.';
+$_['skin_forest_desc']    = 'Calm greens, high legibility.';
 $_['skin_plum']           = 'Plum';
-$_['skin_plum_desc']      = 'Soft purples, gentle on the eyes.';
+$_['skin_plum_desc']      = 'Soft purples, gentle palette.';
 $_['skin_slate']          = 'Slate';
-$_['skin_slate_desc']     = 'Desaturated grays for dense panels.';
+$_['skin_slate_desc']     = 'Desaturated grays, dense panels.';
 $_['skin_contrast']       = 'High contrast';
-$_['skin_contrast_desc']  = 'Maximum distinction for accessibility.';
+$_['skin_contrast_desc']  = 'Max distinction (WCAG boost).';
 
 // Accents
-$_['accent_blue']    = 'Institutional blue';
+$_['accent_blue']    = 'Blue';
 $_['accent_ocean']   = 'Ocean';
 $_['accent_forest']  = 'Forest';
 $_['accent_plum']    = 'Plum';

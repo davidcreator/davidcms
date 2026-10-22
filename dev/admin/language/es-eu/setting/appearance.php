@@ -22,8 +22,8 @@ $_['text_mode_light']       = 'Claro';
 $_['text_mode_dark']        = 'Oscuro';
 $_['text_sidebar']          = 'Sidebar';
 $_['text_sidebar_auto']     = 'Automática';
-$_['text_sidebar_light']    = 'Siempre clara';
-$_['text_sidebar_dark']     = 'Siempre oscura';
+$_['text_sidebar_light']    = 'Clara';
+$_['text_sidebar_dark']     = 'Oscura';
 $_['text_density']          = 'Densidad';
 $_['text_density_comfortable'] = 'Cómoda';
 $_['text_density_compact']  = 'Compacta';
@@ -32,6 +32,8 @@ $_['text_accent_skin']      = 'De la propia skin';
 $_['text_accent_custom']    = 'Color personalizado';
 $_['text_accent_custom_dark'] = 'Variante del modo oscuro';
 $_['help_accent_dark']      = 'Opcional. Usada en el modo oscuro; si está vacía, el color base también se aplica ahí.';
+$_['text_accent_suggest_title'] = 'Sugerir variante válida WCAG AA';
+$_['text_preview_hint'] = 'Al elegir, la vista previa se actualiza al instante.';
 $_['text_accent_help']      = 'Los colores deben alcanzar contraste 4.5:1 en superficies claras y oscuras (WCAG AA). Use el botón mágico para sugerir la variante del modo oscuro.';
 $_['text_validating_contrast'] = 'Comprobando contraste…';
 $_['text_contrast_fail']    = 'No cumple WCAG AA (razón por debajo de 4.5:1). Elija otro color o use la sugerencia.';
@@ -42,20 +44,20 @@ $_['button_save_user']      = 'Guardar mi apariencia';
 
 // Skins
 $_['skin_light']          = 'Clásico claro';
-$_['skin_light_desc']     = 'Tema neutro de Bootstrap — el predeterminado.';
+$_['skin_light_desc']     = 'Base neutra de Bootstrap.';
 $_['skin_ocean']          = 'Océano';
-$_['skin_ocean_desc']     = 'Azules fríos con sidebar de mar profundo.';
+$_['skin_ocean_desc']     = 'Azules fríos, barra mar.';
 $_['skin_forest']         = 'Bosque';
-$_['skin_forest_desc']    = 'Verdes tranquilos de alta legibilidad.';
+$_['skin_forest_desc']    = 'Verdes tranquilos, legibles.';
 $_['skin_plum']           = 'Ciruela';
-$_['skin_plum_desc']      = 'Violetas suaves, cómodo a la vista.';
+$_['skin_plum_desc']      = 'Violetas suaves, cómodo.';
 $_['skin_slate']          = 'Pizarra';
-$_['skin_slate_desc']     = 'Grises desaturados para paneles densos.';
+$_['skin_slate_desc']     = 'Grises densos, marcados.';
 $_['skin_contrast']       = 'Alto contraste';
-$_['skin_contrast_desc']  = 'Distinción máxima para accesibilidad.';
+$_['skin_contrast_desc']  = 'Distinción máxima (a11y).';
 
 // Accents
-$_['accent_blue']    = 'Azul institucional';
+$_['accent_blue']    = 'Azul';
 $_['accent_ocean']   = 'Océano';
 $_['accent_forest']  = 'Bosque';
 $_['accent_plum']    = 'Ciruela';

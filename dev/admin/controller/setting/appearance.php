@@ -83,8 +83,27 @@ class Appearance extends \Reamur\System\Engine\Controller {
         }
         $data['user_override_on'] = !empty($data['user_prefs']['override']);
 
-        $data['skins']   = $this->skinCards();
-        $data['accents'] = \Reamur\Admin\Model\Setting\Appearance::CURATED_ACCENTS;
+        // forms renderizados via partial dedicado (o motor Twig do projeto NÃO
+        // propaga o contexto da render para {% macro %} — era por isso que os
+        // textos/swatches saíam vazios na v1 da tela; bug de UI F8-V v2)
+        $shared = [
+            'skins'   => $this->skinCards(),
+            'accents' => $this->accentChoices(),
+        ];
+
+        $data['form_global_html'] = $this->load->view('setting/appearance_form', array_merge($data, $shared, [
+            'theme'        => $this->themeFormView($data['global_theme']),
+            'form_id'      => 'g',
+            'submit_label' => $this->language->get('button_save_global'),
+            'disabled'     => false,
+        ]));
+
+        $data['form_user_html'] = $this->load->view('setting/appearance_form', array_merge($data, $shared, [
+            'theme'        => $this->themeFormView($data['user_theme']),
+            'form_id'      => 'u',
+            'submit_label' => $this->language->get('button_save_user'),
+            'disabled'     => false,
+        ]));
 
         $data['action']    = $this->url->link('setting/appearance');
         $data['text_flash'] = $this->flash();
@@ -161,6 +180,48 @@ class Appearance extends \Reamur\System\Engine\Controller {
         ];
     }
 
+    /**
+     * Normaliza o tema (resolvido do DB) para o shape que o partial consome:
+     * flags de seleção curada vs custom e valores prontos para os inputs hex.
+     *
+     * @param array<string, string> $theme
+     * @return array<string, mixed>
+     */
+    private function themeFormView(array $theme): array {
+        $curatedPairs = [];
+        foreach (\Reamur\Admin\Model\Setting\Appearance::CURATED_ACCENTS as $pair) {
+            $curatedPairs[] = $pair['light'];
+        }
+
+        $accent = (string)($theme['accent'] ?? '');
+        $isCustom = $accent !== '' && !in_array($accent, $curatedPairs, true);
+
+        $theme['accent_is_curated'] = !$isCustom;
+        $theme['accent_box_open']   = $isCustom;
+        // inputs hex: sempre exigem #rrggbb; curated ou vazio → placeholder limpo
+        $theme['accent_custom_value'] = $isCustom ? $accent : '';
+        $theme['accent_dark_value']   = $isCustom ? (string)($theme['accent_dark'] ?? '') : '';
+
+        return $theme;
+    }
+
+    /** Accents curados já rotulados (i18n) para o partial */
+    private function accentChoices(): array {
+        $choices = [];
+
+        foreach (\Reamur\Admin\Model\Setting\Appearance::CURATED_ACCENTS as $id => $pair) {
+            if ($id === '') { continue; }
+            $choices[] = [
+                'id'    => $id,
+                'label' => $this->language->get('accent_' . $id),
+                'light' => $pair['light'],
+                'dark'  => $pair['dark'],
+            ];
+        }
+
+        return $choices;
+    }
+
     /** Cards de skin com swatches para o radio-group da tela */
     private function skinCards(): array {
         // swatches visuais por skin (tonalidade principal da sidebar+a accent)
@@ -198,6 +259,7 @@ class Appearance extends \Reamur\System\Engine\Controller {
             'text_font_scale', 'text_font_95', 'text_font_100', 'text_font_105',
             'text_accent_skin', 'text_accent_custom', 'text_accent_custom_dark',
             'text_accent_help', 'text_validating_contrast', 'text_contrast_fail',
+            'text_accent_suggest_title', 'text_preview_hint',
             'button_save_global', 'button_save_user', 'button_reset_mine',
             'help_accent_dark',
         ];
