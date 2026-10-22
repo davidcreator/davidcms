@@ -18,7 +18,7 @@ namespace Reamur\Admin\Controller\Common;
 class Header extends \Reamur\System\Engine\Controller {
 
     /** Versão dos assets self-hosted (cache-bust por query string) */
-    public const ASSET_V = '8.1.0';
+    public const ASSET_V = '8.1.1';
 
     /**
      * @param array<string, mixed> $data Dados passados pelo controller chamador

@@ -24,6 +24,7 @@ ck() {
 q() { sudo mysql -N --default-character-set=utf8mb4 -e "$1"; }
 loc() { grep -i '^location:' "$1" | tail -1 | tr -d '\r' | cut -d' ' -f2-; }
 csrf_from() { grep -o 'name="csrf_token" value="[^"]*"' "$1" | head -1 | sed 's/.*value="//;s/"//'; }
+csrf_meta() { grep -o 'name="csrf-token" content="[^"]*"' "$1" | head -1 | sed 's/.*content="//;s/"//'; }
 
 A="$B/admin/index.php?route=setting/appearance"
 
@@ -70,6 +71,7 @@ RC=0
 [ "$(grep -o 'name="csrf_token" value="[^"]*"' /tmp/f8v2_appearance_get.html | wc -l)" -eq 2 ] || RC=1
 grep -q 'id="user-override"' /tmp/f8v2_appearance_get.html || RC=1
 grep -q 'view/js/appearance.js' /tmp/f8v2_appearance_get.html || RC=1
+grep -q 'view/js/appearance.js?v=8.1.1' /tmp/f8v2_appearance_get.html || RC=1
 grep -q 'id="g-skin-ocean"' /tmp/f8v2_appearance_get.html || RC=1
 grep -q 'id="g-acc-blue"' /tmp/f8v2_appearance_get.html || RC=1
 grep -q 'Institutional blue' /tmp/f8v2_appearance_get.html || RC=1
@@ -157,6 +159,25 @@ node --check "$MIRROR/admin/view/js/appearance.js" >/dev/null 2>&1 || RC=1
 grep -q 'syncUserControls' "$MIRROR/admin/view/js/appearance.js" || RC=1
 grep -q 'data-rms-skin' "$MIRROR/admin/view/template/common/header.twig" || RC=1
 ck 7 "$RC" 'php-node-theme-contracts'
+
+printf '%s\n' '══ 8 — toggle claro/escuro do shell persiste e reativa override pessoal ══'
+curl -s -c "$JA" -b "$JA" "$B/admin/index.php?route=common/dashboard" -o /tmp/f8v2_mode_dashboard.html
+MODE_URL="$B/admin/index.php?route=setting/appearance.saveMode"
+CSRF=$(csrf_meta /tmp/f8v2_mode_dashboard.html)
+RC=0
+[ -n "$MODE_URL" ] && [ -n "$CSRF" ] || RC=1
+RESP=$(curl -s -c "$JA" -b "$JA" -X POST "$MODE_URL" --data-urlencode "csrf_token=$CSRF" --data-urlencode 'mode=dark')
+[[ "$RESP" == *'"ok":true'* && "$RESP" == *'"mode":"dark"'* ]] || RC=1
+[ "$(q "SELECT JSON_UNQUOTE(JSON_EXTRACT(theme_prefs,'$.override')) FROM reamur_test.rms_user WHERE user_id=1")" = 'true' ] || RC=1
+[ "$(q "SELECT JSON_UNQUOTE(JSON_EXTRACT(theme_prefs,'$.mode')) FROM reamur_test.rms_user WHERE user_id=1")" = 'dark' ] || RC=1
+curl -s -c "$JA" -b "$JA" "$B/admin/index.php?route=common/dashboard" -o /tmp/f8v2_mode_dark.html
+ROOT=$(grep -o '<html[^>]*>' /tmp/f8v2_mode_dark.html | head -1)
+[[ "$ROOT" == *'data-rms-mode-pref="dark"'* && "$ROOT" == *'data-bs-theme="dark"'* ]] || RC=1
+CSRF=$(csrf_meta /tmp/f8v2_mode_dark.html)
+RESP=$(curl -s -c "$JA" -b "$JA" -X POST "$MODE_URL" --data-urlencode "csrf_token=$CSRF" --data-urlencode 'mode=light')
+[[ "$RESP" == *'"ok":true'* && "$RESP" == *'"mode":"light"'* ]] || RC=1
+[ "$(q "SELECT JSON_UNQUOTE(JSON_EXTRACT(theme_prefs,'$.mode')) FROM reamur_test.rms_user WHERE user_id=1")" = 'light' ] || RC=1
+ck 8 "$RC" 'topbar-mode-dark-light-persisted'
 
 echo
 echo "════════════════ summary: $PASS pass / $FAIL fail ════════════════"
