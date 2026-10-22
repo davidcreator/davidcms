@@ -49,6 +49,7 @@ $_['button_edit']             = 'Edit';
 $_['button_delete']           = 'Delete';
 $_['button_save']             = 'Save';
 $_['button_cancel']           = 'Cancel';
+$_['button_import_wp']        = 'Import from WordPress'; // F7-03 (ADR 0044)
 
 // Error
 $_['error_title']             = 'Title (en-us) is required and must be up to 255 characters.';

@@ -3,7 +3,10 @@
 <main class="dash">
   <div class="page-head">
     <h1>{{ heading_title }}</h1>
-    <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
+    <div class="actions">
+      {% if import_href %}<a class="btn ghost" href="{{ import_href }}">{{ button_import_wp }}</a>{% endif %}
+      <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
+    </div>
   </div>
   <p class="muted">{{ text_list }}</p>
 

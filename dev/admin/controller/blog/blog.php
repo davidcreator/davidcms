@@ -41,6 +41,12 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['button_delete']        = $this->language->get('button_delete');
         $data['text_flash']           = $this->flash();
 
+        // F7-03 (ADR 0044): acesso ao importador WP somente com modify no módulo
+        $data['button_import_wp'] = $this->language->get('button_import_wp');
+        $data['import_href']      = $this->user->hasPermission('modify', 'blog/blog')
+            ? $this->url->link('blog/import')
+            : '';
+
         $data['posts'] = [];
 
         foreach ($this->model_blog_blog->getPosts() as $post) {
