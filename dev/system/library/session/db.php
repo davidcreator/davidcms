@@ -74,7 +74,7 @@ class DB {
             "REPLACE INTO `" . DB_PREFIX . "session` SET " .
             "`session_id` = '" . $this->db->escape($session_id) . "', " .
             "`data` = '" . $this->db->escape($json) . "', " .
-            "`expire` = '" . $this->db->escape(gmdate('Y-m-d H:i:s', time() + (int)$this->config->get('session_expire'))) . "'"
+            "`expire` = '" . $this->db->escape(gmdate('Y-m-d H:i:s', time() + (((int)$this->config->get('session_expire')) ?: 3600))) . "'"
         );
 
         return true;

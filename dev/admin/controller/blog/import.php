@@ -196,9 +196,12 @@ class Import extends \Reamur\System\Engine\Controller {
         return $data;
     }
 
-    /** Chrome compartilhado + estilo do módulo */
+    /** Chrome compartilhado + estilo do módulo (F8-01, ADR 0045: par header/footer) */
     private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+
+        $data['header'] = $this->load->controller('common/header', $data);
+        $data['footer'] = $this->load->controller('common/footer', $data);
     }
 
     /** log do model já vem formatado; sem suco extra */

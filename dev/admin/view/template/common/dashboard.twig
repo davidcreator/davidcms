@@ -1,49 +1,89 @@
-{# dev/admin/view/template/common/dashboard.twig — primeira página do painel (chrome compartilhado) #}
+{# dev/admin/view/template/common/dashboard.twig — painel inicial (F8-01, ADR 0045) #}
 {{ header|raw }}
-<main class="dash">
-  <h1>{{ heading_title }}</h1>
-  <p class="muted">{{ text_welcome }}</p>
+<main class="dash-page">
+  <div class="dash-welcome">
+    <h1>{{ heading_title }}</h1>
+    <p class="muted">{{ text_welcome_overview }}</p>
+  </div>
 
-  <section class="grid">
-    <article class="panel">
-      <h2>{{ text_profile }}</h2>
-      <dl>
-        <dt>{{ text_username }}</dt>
-        <dd>{{ username }}</dd>
-        <dt>{{ text_email }}</dt>
-        <dd>{{ email }}</dd>
-        <dt>{{ text_user_group }}</dt>
-        <dd>#{{ user_group_id }}</dd>
-      </dl>
-      {% if profile is defined and profile %}
-      <p><a class="btn ghost small" href="{{ profile }}">{{ text_manage_profile }}</a></p>
-      {% endif %}
-    </article>
+  {% if cards %}
+  <div class="stat-grid" role="list" aria-label="{{ text_stats_overview }}">
+    {% for card in cards %}
+    <a class="stat-card" role="listitem" href="{{ card.href }}">
+      <span class="stat-icon"><i class="{{ card.icon }}" aria-hidden="true"></i></span>
+      <span class="stat-body">
+        <span class="stat-num">{{ card.num }}</span>
+        <span class="stat-label">{{ card.label }}</span>
+        {% if card.extra_line %}<span class="stat-label d-block">{{ card.extra_line }}</span>{% endif %}
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
 
-    <article class="panel">
-      <h2>{{ text_acl }}</h2>
-      <dl>
-        <dt>{{ text_access_routes }}</dt>
-        <dd>{{ access_routes }}</dd>
-        <dt>{{ text_modify_routes }}</dt>
-        <dd>{{ modify_routes }}</dd>
-      </dl>
-      <p class="muted small">{{ text_acl_note }}</p>
-    </article>
+  {% if quick_actions %}
+  <div class="quick-actions" aria-label="{{ text_quick_actions }}">
+    {% for qa in quick_actions %}
+    <a class="btn ghost" href="{{ qa.href }}"><i class="{{ qa.icon }}" aria-hidden="true"></i>{{ qa.text }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
 
-    {% if modules %}
-    <article class="panel">
-      <h2>{{ text_modules }}</h2>
-      <ul class="module-list">
-        {% for module in modules %}
-        <li><a class="btn ghost" href="{{ module.href }}">{{ module.name }}</a></li>
+  <div class="dash-cols">
+    {% if latest_posts %}
+    <section class="panel">
+      <h2>{{ text_latest_posts }}</h2>
+      <ul class="list-unstyled mb-2">
+        {% for p in latest_posts %}
+        <li class="d-flex justify-content-between align-items-baseline gap-2 py-1">
+          <a href="{{ p.href }}">{{ p.title ?: '—' }}</a>
+          <span class="muted small text-nowrap">{{ p.date|slice(0, 10) }}</span>
+        </li>
         {% endfor %}
       </ul>
-    </article>
+      <a class="btn ghost small" href="{{ blog_list_href }}">{{ text_view_all }}</a>
+    </section>
     {% endif %}
-  </section>
 
-  <p class="muted small">{{ text_cache_indicator }}{% if text_cache_fallback %} · {{ text_cache_fallback }}{% endif %}</p>
-  <p class="muted small">{{ text_version }}</p>
+    {% if latest_messages %}
+    <section class="panel">
+      <h2>{{ text_latest_messages }}</h2>
+      <ul class="list-unstyled mb-2">
+        {% for m in latest_messages %}
+        <li class="d-flex justify-content-between align-items-baseline gap-2 py-1">
+          <span><a href="{{ m.href }}">{{ m.subject }}</a> <span class="muted">· {{ m.name }}</span></span>
+          <span class="muted small text-nowrap">{{ m.date|slice(0, 10) }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      <a class="btn ghost small" href="{{ message_list_href }}">{{ text_view_all }}</a>
+    </section>
+    {% endif %}
+
+    {% if not latest_posts and not latest_messages %}
+    <section class="panel">
+      <p class="muted mb-0">{{ text_no_posts }}</p>
+    </section>
+    {% endif %}
+
+    <section class="panel">
+      <h2>{{ text_panel_tech }}</h2>
+      <dl class="row small mb-2">
+        <dt class="col-6">{{ text_username }}</dt>
+        <dd class="col-6">{{ username }}</dd>
+        <dt class="col-6">{{ text_email }}</dt>
+        <dd class="col-6">{{ email }}</dd>
+        <dt class="col-6">{{ text_user_group }}</dt>
+        <dd class="col-6">#{{ user_group_id }}</dd>
+        <dt class="col-6">{{ text_access_routes }}</dt>
+        <dd class="col-6">{{ access_routes }}</dd>
+        <dt class="col-6">{{ text_modify_routes }}</dt>
+        <dd class="col-6">{{ modify_routes }}</dd>
+      </dl>
+      <p class="muted small mb-1">{{ text_cache_indicator }}{% if text_cache_fallback %} · {{ text_cache_fallback }}{% endif %}</p>
+      <p class="muted small mb-2">{{ text_version }}</p>
+      <a class="btn ghost small" href="{{ profile }}">{{ text_manage_profile }}</a>
+    </section>
+  </div>
 </main>
 {{ footer|raw }}

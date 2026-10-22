@@ -1,8 +1,8 @@
-{# dev/admin/view/template/common/login.twig — muralha do painel (chrome compartilhado) #}
+{# dev/admin/view/template/common/login.twig — muralha do painel (F8-01, ADR 0045) #}
 {{ header|raw }}
-<main class="card-login">
+<main class="auth-card" role="main">
+  <img class="auth-brand" src="{{ site_url }}view/image/reamurcms.png" alt="ReamurCMS" width="181" height="36">
   <h1>{{ heading_title }}</h1>
-  <p class="muted">{{ text_login }}</p>
 
   {% if error %}
   <div class="alert error">{{ error }}</div>
@@ -12,13 +12,19 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <div class="field">
       <label for="input-username">{{ entry_username }}</label>
-      <input type="text" name="username" id="input-username" value="{{ username }}" autocomplete="username" required autofocus>
+      <input type="text" name="username" id="input-username" class="form-control" value="{{ username }}" autocomplete="username" required autofocus>
     </div>
     <div class="field">
       <label for="input-password">{{ entry_password }}</label>
-      <input type="password" name="password" id="input-password" autocomplete="current-password" required>
+      <input type="password" name="password" id="input-password" class="form-control" autocomplete="current-password" required>
     </div>
-    <button type="submit" class="btn primary block">{{ button_login }}</button>
+    <button type="submit" class="btn primary btn-submit">{{ button_login }}</button>
   </form>
+
+  <nav class="lang-switcher d-flex justify-content-center mt-4 gap-3" aria-label="{{ text_languages }}">
+    {% for lang in languages %}
+    <a class="lang{{ lang.active ? ' active' : '' }}" href="{{ lang.href }}" hreflang="{{ lang.code }}" style="font-size:.8rem;color:var(--bs-secondary-color);text-decoration:none;{{ lang.active ? 'color:var(--bs-primary);font-weight:700;' }}">{{ lang.name }}</a>
+    {% endfor %}
+  </nav>
 </main>
 {{ footer|raw }}

@@ -1,25 +1,90 @@
-{# dev/admin/view/template/common/header.twig — <head> + barra do painel (F2-4) #}
+{# dev/admin/view/template/common/header.twig — shell do painel (F8-01, ADR 0045) #}
 <!DOCTYPE html>
-<html lang="{{ locale }}">
+<html lang="{{ locale }}" data-bs-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ title ?: 'ReamurCMS Admin' }}</title>
+  <script>
+    /* anti-flash: aplica o tema salvo antes do primeiro paint (admin.js re-sincroniza) */
+    (function () {
+      try {
+        var t = localStorage.getItem('rms-admin-theme');
+        if (t === 'dark' || t === 'light') {
+          document.documentElement.setAttribute('data-bs-theme', t);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.setAttribute('data-bs-theme', 'dark');
+        }
+      } catch (e) { /* modo privado — light padrão */ }
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ site_url }}view/css/bootstrap.css?v={{ asset_v }}">
+  <link rel="stylesheet" href="{{ site_url }}view/css/bootstrap-icons.css?v={{ asset_v }}">
+  <link rel="stylesheet" href="{{ site_url }}view/css/reamurcms.css?v={{ asset_v }}">
   {% for href, rel in styles %}
   <link rel="{{ rel }}" href="{{ href }}">
   {% endfor %}
 </head>
-<body class="{{ body_class }}">
-<header class="site-header">
-  <strong class="brand">⭐ ReamurCMS</strong>
-  <nav class="nav-right">
-    <span class="lang-switcher" aria-label="{{ text_languages }}">
-      {% for lang in languages %}
-      <a class="lang{{ lang.active ? ' active' : '' }}" href="{{ lang.href }}" hreflang="{{ lang.code }}">{{ lang.name }}</a>
+<body class="admin-shell {{ logged ? '' : 'auth-layout' }} {{ body_class }}">
+
+{% if logged %}
+<div class="admin-layout">
+  <aside class="admin-sidebar" id="adminSidebar" aria-label="{{ text_menu }}">
+    <div class="brand">
+      <img src="{{ site_url }}view/image/reamurcms.png" alt="ReamurCMS" width="160" height="32">
+      <span class="visually-hidden">ReamurCMS</span>
+    </div>
+    <nav aria-label="{{ text_menu }}">
+      {% for group in menu %}
+      {% if group.items %}
+      <div class="nav-group">
+        <span class="nav-title">{{ group.title }}</span>
+        {% for item in group.items %}
+        <a class="nav-link{{ item.active ? ' active' : '' }}" href="{{ item.href }}" {% if item.active %}aria-current="page"{% endif %} data-route="{{ item.route }}">
+          <i class="{{ item.icon }}" aria-hidden="true"></i>
+          <span class="nav-text">{{ item.text }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
       {% endfor %}
-    </span>
-    {% if logged %}
-    <a class="btn ghost" href="{{ logout }}">{{ button_logout }}</a>
-    {% endif %}
-  </nav>
-</header>
+    </nav>
+    <div class="sidebar-footer">{{ version_label }}</div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <button type="button" class="icon-btn" id="rmsSidebarToggle" aria-label="{{ text_toggle_menu }}" aria-controls="adminSidebar">
+        <i class="bi bi-list" aria-hidden="true"></i>
+      </button>
+      <a class="brand-mini" href="{{ home }}" aria-label="ReamurCMS">
+        <img src="{{ site_url }}view/image/reamurcms.png" alt="ReamurCMS" width="120" height="24">
+      </a>
+      <div class="topbar-spacer"></div>
+      <button type="button" class="icon-btn" id="rmsThemeToggle" aria-label="{{ text_toggle_theme }}" aria-pressed="false">
+        <i class="bi bi-moon-stars" aria-hidden="true"></i>
+      </button>
+      <nav class="lang-switcher" aria-label="{{ text_languages }}">
+        {% for lang in languages %}
+        <a class="lang{{ lang.active ? ' active' : '' }}" href="{{ lang.href }}" hreflang="{{ lang.code }}">{{ lang.name }}</a>
+        {% endfor %}
+      </nav>
+      <div class="dropdown">
+        <button type="button" class="admin-user-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ text_user_menu }}">
+          <span class="avatar" aria-hidden="true">{{ user_initials }}</span>
+          <span class="who">
+            <span class="name">{{ user_fullname }}</span>
+            <span class="role">{{ user_username }}</span>
+          </span>
+          <i class="bi bi-chevron-down" aria-hidden="true"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="{{ profile_href }}"><i class="bi bi-person me-2" aria-hidden="true"></i>{{ text_profile }}</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="{{ logout }}"><i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>{{ button_logout }}</a></li>
+        </ul>
+      </div>
+    </header>
+
+    <div class="admin-content">
+{% endif %}

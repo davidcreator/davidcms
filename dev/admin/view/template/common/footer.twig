@@ -1,6 +1,14 @@
-{# dev/admin/view/template/common/footer.twig — assinatura do núcleo (F2-4) #}
-<footer class="site-footer">
-  <p>{{ text_powered }}</p>
-</footer>
+{# dev/admin/view/template/common/footer.twig — fecha o shell (F8-01, ADR 0045) #}
+{% if logged %}
+    </div>{# /.admin-content #}
+    <footer class="site-footer">
+      <p>{{ text_powered }}</p>
+    </footer>
+  </div>{# /.admin-main #}
+</div>{# /.admin-layout #}
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+{% endif %}
+<script src="{{ site_url }}view/js/bootstrap/js/bootstrap.bundle.min.js?v={{ asset_v }}" defer></script>
+<script src="{{ site_url }}view/js/admin.js?v={{ asset_v }}" defer></script>
 </body>
 </html>

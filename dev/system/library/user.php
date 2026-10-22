@@ -198,9 +198,19 @@ final class User {
             return ['access' => [], 'modify' => []];
         }
 
+        // F8-01 (ADR 0045 §bugfix-escape-ACL): instalações pré-fix podem ter
+        // gravado valores "user\/user" (json_encode + real_escape_string no
+        // wizard mysqli). Normalizamos no decode — inocuo e retro-compatível.
+        $canon = static function (array $routes): array {
+            return array_values(array_map(
+                static fn($r): string => str_replace('\\/', '/', (string)$r),
+                $routes
+            ));
+        };
+
         return [
-            'access' => array_values(array_map('strval', (array)($decoded['access'] ?? []))),
-            'modify' => array_values(array_map('strval', (array)($decoded['modify'] ?? []))),
+            'access' => $canon((array)($decoded['access'] ?? [])),
+            'modify' => $canon((array)($decoded['modify'] ?? [])),
         ];
     }
 
