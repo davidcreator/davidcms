@@ -56,3 +56,23 @@ $_['error_title']             = 'Title (en-us) is required and must be up to 255
 $_['error_date_published']    = 'Publish date: expected format YYYY-MM-DD HH:MM (optional).';
 $_['error_keyword_format']    = 'Keyword of language %d: only lowercase letters, digits and hyphens.';
 $_['error_keyword_taken']     = "Keyword '%s' is already used by another page, project, tool or post.";
+
+// F8-02 (ADR 0046): filters bar, badges, states, publish sidebar
+$_['text_total_posts']         = 'posts';
+$_['text_showing']             = 'Showing %d–%d of %d posts';
+$_['text_search_placeholder']  = 'Search by title…';
+$_['text_all_status']          = 'All statuses';
+$_['text_published']           = 'Published';
+$_['text_draft']               = 'Draft';
+$_['text_view_site']           = 'View on site';
+$_['text_empty_state']         = 'No posts matched — adjust the filters or create the first one.';
+$_['text_empty_state_cta']     = 'Create post';
+$_['button_filter']            = 'Filter';
+$_['button_reset']             = 'Reset';
+$_['text_publish_card']        = 'Publication';
+$_['text_content_card']        = 'Content';
+$_['text_meta_group']          = 'SEO';
+$_['text_seo_url_preview']     = 'SEO URL prefix';
+$_['text_cover_preview']       = 'Cover image';
+$_['text_status_help']         = 'Published posts appear on the journal area of the site.';
+$_['text_chars']               = 'characters';

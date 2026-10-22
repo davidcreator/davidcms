@@ -170,6 +170,8 @@ class Import extends \Reamur\System\Engine\Controller {
             'text_action_skip', 'text_action_error',
             'button_back_list', 'button_submit',
             'text_no_rows', 'text_log_header', 'text_imported_edit',
+            // F8-02 (ADR 0046): títulos dos cards do formulário
+            'text_source_card', 'text_pagination_card',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }

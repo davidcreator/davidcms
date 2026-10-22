@@ -54,3 +54,7 @@ $_['button_submit']            = 'Ir';
 $_['error_action']             = 'Acción desconocida (esperado preview o run).';
 $_['error_base_url']           = 'La URL base es obligatoria.';
 $_['error_fetch']              = 'Falla al leer el endpoint de WordPress: %s';
+
+// F8-02 (ADR 0046): cards
+$_['text_source_card']     = 'Fuente';
+$_['text_pagination_card'] = 'Ventana de la muestra';

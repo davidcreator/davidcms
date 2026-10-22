@@ -1,91 +1,130 @@
-{# dev/admin/view/template/blog/blog_import.twig — importador WP (F7-03, ADR 0044) #}
+{# dev/admin/view/template/blog/blog_import.twig — importador WP (F8-02, ADR 0046: cards + badges de ação + log colapsável) #}
 {{ header|raw }}
-<main class="dash form-page">
-  <h1>{{ heading_title }}</h1>
-  <p class="muted">{{ text_form_intro }}</p>
 
-  {% if error %}
-  <div class="alert error">{{ error|nl2br }}</div>
-  {% endif %}
+<div class="page-titlebar">
+  <div class="title-group">
+    <h1 class="page-title"><i class="bi bi-wordpress me-2" aria-hidden="true"></i>{{ heading_title }}</h1>
+  </div>
+  <div class="titlebar-actions">
+    <a class="btn btn-outline-secondary btn-sm" href="{{ back }}"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>{{ button_back_list }}</a>
+  </div>
+</div>
 
-  <form method="post" action="{{ action }}" class="panel form">
-    <div class="grid three">
-      <div class="field">
-        <label for="input-base-url">{{ entry_base_url }}</label>
-        <input type="url" name="base_url" id="input-base-url" value="{{ form.base_url }}" maxlength="255" required>
-        <p class="muted small">{{ help_base_url }}</p>
-      </div>
-      <div class="field">
-        <label for="input-page">{{ entry_page }}</label>
-        <input type="number" name="page" id="input-page" value="{{ form.page }}" min="1" max="999">
-        <p class="muted small">{{ help_page }}</p>
-      </div>
-      <div class="field">
-        <label for="input-per-page">{{ entry_per_page }}</label>
-        <input type="number" name="per_page" id="input-per-page" value="{{ form.per_page }}" min="1" max="100">
-        <p class="muted small">{{ help_per_page }}</p>
-      </div>
-      <div class="field">
-        <label for="input-public-url">{{ entry_public_url }}</label>
-        <input type="url" name="public_url" id="input-public-url" value="{{ form.public_url }}" maxlength="255">
-        <p class="muted small">{{ help_public_url }}</p>
+<p class="text-muted">{{ text_form_intro }}</p>
+
+{% if error %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+  {{ error|nl2br }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<form method="post" action="{{ action }}" class="row g-3">
+  <div class="col-lg-7">
+    <div class="card data-card h-100">
+      <div class="card-body">
+        <h2 class="card-title h6 mb-3"><i class="bi bi-globe2 me-1" aria-hidden="true"></i>{{ text_source_card }}</h2>
+        <div class="mb-3 field">
+          <label class="form-label" for="input-base-url">{{ entry_base_url }}</label>
+          <input type="url" class="form-control" name="base_url" id="input-base-url" value="{{ form.base_url }}" maxlength="255" required>
+          <p class="text-muted small mt-1 mb-0">{{ help_base_url }}</p>
+        </div>
+        <div class="mb-0 field">
+          <label class="form-label" for="input-public-url">{{ entry_public_url }}</label>
+          <input type="url" class="form-control" name="public_url" id="input-public-url" value="{{ form.public_url }}" maxlength="255">
+          <p class="text-muted small mt-1 mb-0">{{ help_public_url }}</p>
+        </div>
       </div>
     </div>
-    <div class="actions">
-      <button type="submit" name="action" value="preview" class="btn ghost">{{ text_preview }}</button>
-      <button type="submit" name="action" value="run" class="btn primary" onclick="return confirm('{{ text_confirm|default('Importar de verdade?') }}');">{{ text_run }}</button>
-      <a class="btn ghost" href="{{ back }}">{{ button_back_list }}</a>
+  </div>
+  <div class="col-lg-5">
+    <div class="card data-card h-100">
+      <div class="card-body">
+        <h2 class="card-title h6 mb-3"><i class="bi bi-collection me-1" aria-hidden="true"></i>{{ text_pagination_card }}</h2>
+        <div class="row g-3">
+          <div class="col-6 field">
+            <label class="form-label" for="input-page">{{ entry_page }}</label>
+            <input type="number" class="form-control" name="page" id="input-page" value="{{ form.page }}" min="1" max="999">
+            <p class="text-muted small mt-1 mb-0">{{ help_page }}</p>
+          </div>
+          <div class="col-6 field">
+            <label class="form-label" for="input-per-page">{{ entry_per_page }}</label>
+            <input type="number" class="form-control" name="per_page" id="input-per-page" value="{{ form.per_page }}" min="1" max="100">
+            <p class="text-muted small mt-1 mb-0">{{ help_per_page }}</p>
+          </div>
+        </div>
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" name="action" value="preview" class="btn btn-outline-primary"><i class="bi bi-eye me-1" aria-hidden="true"></i>{{ text_preview }}</button>
+          <button type="submit" name="action" value="run" class="btn btn-primary" onclick="return confirm('{{ text_confirm|default('Importar de verdade?') }}');"><i class="bi bi-play-fill me-1" aria-hidden="true"></i>{{ text_run }}</button>
+        </div>
+      </div>
     </div>
-  </form>
+  </div>
+</form>
 
-  {% if ran %}
-  <h2>{{ text_summary_header }}</h2>
-  {% if summary %}
-  <div class="alert {% if was_commit %}success{% else %}info{% endif %}">{{ summary|nl2br }}</div>
-  {% endif %}
+{% if ran %}
+<div class="card data-card mt-3">
+  <div class="card-body">
+    <h2 class="card-title h6 mb-2">{{ text_summary_header }}</h2>
+    {% if summary %}
+    <div class="alert {% if was_commit %}alert-success{% else %}alert-info{% endif %} mb-3">{{ summary|nl2br }}</div>
+    {% endif %}
 
-  {% if rows %}
-  <table class="table">
-    <thead>
-      <tr>
-        <th>{{ column_wp_id }}</th>
-        <th>{{ column_title }}</th>
-        <th>{{ column_date }}</th>
-        <th>{{ column_keyword }}</th>
-        <th>{{ column_action_taken }}</th>
-        <th>{{ column_image }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in rows %}
-      <tr>
-        <td>{{ row.wp_id }}</td>
-        <td>{{ row.title }}</td>
-        <td>{{ row.date }}</td>
-        <td>{{ row.keyword }}</td>
-        <td>
-          {% if row.action == 'imported' %}{{ text_action_imported }}
-          {% elseif row.action == 'import' %}{{ text_actions }}
-          {% elseif row.action == 'import_with_suffix' %}{{ text_action_import_with_suffix }}
-          {% elseif row.action == 'skip' %}{{ text_action_skip }}{% if row.reason %} <span class="muted">({{ row.reason }})</span>{% endif %}
-          {% elseif row.action == 'error' %}{{ text_action_error }}{% if row.reason %} <span class="muted">({{ row.reason }})</span>{% endif %}
-          {% else %}{{ row.action }}{% if row.reason %} <span class="muted">({{ row.reason }})</span>{% endif %}
-          {% endif %}
-          {% if row.href %} · <a href="{{ row.href }}">{{ text_imported_edit }}</a>{% endif %}
-        </td>
-        <td>{% if row.image %}{{ row.image }}{% elseif row.has_image %}<span class="muted">[[ imagem falhou ]]</span>{% else %}—{% endif %}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p class="muted">{{ text_no_rows }}</p>
-  {% endif %}
+    {% if rows %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>{{ column_wp_id }}</th>
+            <th>{{ column_title }}</th>
+            <th class="d-none d-md-table-cell">{{ column_date }}</th>
+            <th class="d-none d-md-table-cell">{{ column_keyword }}</th>
+            <th>{{ column_action_taken }}</th>
+            <th class="col-status">{{ column_image }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>{{ row.wp_id }}</td>
+            <td>{{ row.title }} {% if row.href %} · <a href="{{ row.href }}">{{ text_imported_edit }}</a>{% endif %}</td>
+            <td class="d-none d-md-table-cell text-nowrap">{{ row.date }}</td>
+            <td class="d-none d-md-table-cell">{{ row.keyword }}</td>
+            <td>
+              {% if row.action == 'imported' %}<span class="badge badge-status badge-status--published">{{ text_action_imported }}</span>
+              {% elseif row.action == 'import' %}<span class="badge badge-status badge-status--published">{{ text_actions }}</span>
+              {% elseif row.action == 'import_with_suffix' %}<span class="badge badge-status badge-status--draft">{{ text_action_import_with_suffix }}</span>
+              {% elseif row.action == 'skip' %}<span class="badge text-bg-secondary">{{ text_action_skip }}</span>{% if row.reason %} <span class="text-muted small">({{ row.reason }})</span>{% endif %}
+              {% elseif row.action == 'error' %}<span class="badge text-bg-danger">{{ text_action_error }}</span>{% if row.reason %} <span class="text-muted small">({{ row.reason }})</span>{% endif %}
+              {% else %}<span class="badge text-bg-secondary">{{ row.action }}</span>{% if row.reason %} <span class="text-muted small">({{ row.reason }})</span>{% endif %}
+              {% endif %}
+            </td>
+            <td class="col-status">
+              {% if row.image %}<i class="bi bi-check-circle text-success" title="{{ row.image }}" aria-hidden="true"></i>
+              {% elseif row.has_image %}<i class="bi bi-x-circle text-danger" title="imagem falhou" aria-hidden="true"></i>
+              {% else %}<span class="text-muted">—</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">{{ text_no_results|default(text_no_rows) }}</p>
+    {% endif %}
 
-  {% if log_lines %}
-  <h2>{{ text_log_header }}</h2>
-  <pre class="muted small">{{ log_lines|join("\n") }}</pre>
-  {% endif %}
-  {% endif %}
-</main>
+    {% if log_lines %}
+    <div class="mt-3">
+      <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#importLog" aria-expanded="false">
+        <i class="bi bi-terminal me-1" aria-hidden="true"></i>{{ text_log_header }}
+      </button>
+      <div class="collapse mt-2" id="importLog">
+        <pre class="log-block">{{ log_lines|join("\n") }}</pre>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
 {{ footer|raw }}

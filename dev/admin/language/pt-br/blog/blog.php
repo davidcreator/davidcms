@@ -56,3 +56,23 @@ $_['error_title']             = 'Título (en-us) é obrigatório e deve ter até
 $_['error_date_published']    = 'Data de publicação: formato esperado AAAA-MM-DD HH:MM (opcional).';
 $_['error_keyword_format']    = 'Keyword do idioma %d: apenas letras minúsculas, dígitos e hífens.';
 $_['error_keyword_taken']     = "A keyword '%s' já é usada por outra página, projeto, ferramenta ou post.";
+
+// F8-02 (ADR 0046): barra de filtros, badges, estados, sidebar de publicação
+$_['text_total_posts']         = 'posts';
+$_['text_showing']             = 'Exibindo %d–%d de %d posts';
+$_['text_search_placeholder']  = 'Buscar por título…';
+$_['text_all_status']          = 'Todos os status';
+$_['text_published']           = 'Publicado';
+$_['text_draft']               = 'Rascunho';
+$_['text_view_site']           = 'Ver no site';
+$_['text_empty_state']         = 'Nenhum post encontrado — ajuste os filtros ou crie o primeiro.';
+$_['text_empty_state_cta']     = 'Criar post';
+$_['button_filter']            = 'Filtrar';
+$_['button_reset']             = 'Limpar';
+$_['text_publish_card']        = 'Publicação';
+$_['text_content_card']        = 'Conteúdo';
+$_['text_meta_group']          = 'SEO';
+$_['text_seo_url_preview']     = 'Prefixo da URL SEO';
+$_['text_cover_preview']       = 'Imagem de capa';
+$_['text_status_help']         = 'Posts publicados aparecem na área de jornal do site.';
+$_['text_chars']               = 'caracteres';

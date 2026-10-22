@@ -1,68 +1,124 @@
-{# dev/admin/view/template/blog/blog_form.twig — criar/editar post (F7-01, ADR 0042) #}
+{# dev/admin/view/template/blog/blog_form.twig — criar/editar post (F8-02, ADR 0046: abas por idioma, CKEditor, sidebar de publicação) #}
 {{ header|raw }}
-<main class="dash form-page">
-  <h1>{{ heading_title }}{% if post_id %} · {{ text_edit }}{% else %} · {{ text_add }}{% endif %}</h1>
 
-  {% if error %}
-  <div class="alert error">{{ error|nl2br }}</div>
-  {% endif %}
+<div class="page-titlebar">
+  <div class="title-group">
+    <h1 class="page-title">
+      <i class="bi bi-journal-text me-2" aria-hidden="true"></i>{{ heading_title }}{% if post_id %} · {{ text_edit }}{% else %} · {{ text_add }}{% endif %}
+    </h1>
+  </div>
+</div>
 
-  <form method="post" action="{{ action }}" class="panel form">
+{% if error %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+  {{ error|nl2br }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
 
-    <h2>{{ text_general }}</h2>
-    <p class="muted">{{ text_languages_note }}</p>
+<form method="post" action="{{ action }}" class="row g-3 form-layout">
 
-    {% for language in languages %}
-    <fieldset class="panel" style="margin-bottom:1rem;">
-      <legend>{{ language.name }} <span class="muted">({{ language.code }})</span></legend>
-      <div class="grid two">
-        <div class="field">
-          <label for="input-title-{{ language.language_id }}">{{ entry_title }}{% if language.language_id == 1 %} *{% endif %}</label>
-          <input type="text" name="blog_description[{{ language.language_id }}][title]" id="input-title-{{ language.language_id }}" value="{{ language.fields.title }}" maxlength="255"{% if language.language_id == 1 %} required{% endif %}>
+  <div class="col-lg-8">
+    <div class="card data-card mb-3">
+      <div class="card-body">
+        <h2 class="card-title h6 mb-1">{{ text_content_card }}</h2>
+        <p class="text-muted small mb-3">{{ text_languages_note }}</p>
+
+        <ul class="nav nav-tabs tabs-lang" id="blogLangTabs" role="tablist">
+          {% for language in languages %}
+          <li class="nav-item" role="presentation">
+            <button class="nav-link{% if loop.first %} active{% endif %}" id="tab-lang-{{ language.language_id }}" data-bs-toggle="tab" data-bs-target="#pane-lang-{{ language.language_id }}" type="button" role="tab" data-lang-tab="{{ language.code }}">
+              {{ language.name }} <span class="text-muted">({{ language.code }})</span>
+            </button>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <div class="tab-content pt-3">
+          {% for language in languages %}
+          <div class="tab-pane fade{% if loop.first %} show active{% endif %}" id="pane-lang-{{ language.language_id }}" role="tabpanel">
+
+            <div class="mb-3 field">
+              <label class="form-label" for="input-title-{{ language.language_id }}">{{ entry_title }}{% if language.language_id == 1 %} <span class="text-danger">*</span>{% endif %}</label>
+              <input type="text" class="form-control" name="blog_description[{{ language.language_id }}][title]" id="input-title-{{ language.language_id }}" value="{{ language.fields.title }}" maxlength="255" data-counter{% if language.language_id == 1 %} required{% endif %}>
+            </div>
+
+            <div class="mb-3 field">
+              <label class="form-label" for="input-keyword-{{ language.language_id }}">{{ entry_keyword }}</label>
+              <div class="input-group">
+                <span class="input-group-text seo-base" title="{{ text_seo_url_preview }}">{{ seo_base }}</span>
+                <input type="text" class="form-control" name="blog_description[{{ language.language_id }}][keyword]" id="input-keyword-{{ language.language_id }}" value="{{ language.fields.keyword }}" maxlength="64" placeholder="meu-primeiro-post" pattern="[a-z0-9]+(-[a-z0-9]+)*">
+              </div>
+            </div>
+
+            <div class="mb-3 field">
+              <label class="form-label" for="input-description-{{ language.language_id }}">{{ entry_description }}</label>
+              <textarea class="form-control" name="blog_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="12" data-rte>{{ language.fields.description }}</textarea>
+            </div>
+
+            <h3 class="h6 text-muted mt-4 mb-2">{{ text_meta_group }}</h3>
+            <div class="row g-3">
+              <div class="col-md-6 field">
+                <label class="form-label" for="input-meta-title-{{ language.language_id }}">{{ entry_meta_title }}</label>
+                <input type="text" class="form-control" name="blog_description[{{ language.language_id }}][meta_title]" id="input-meta-title-{{ language.language_id }}" value="{{ language.fields.meta_title }}" maxlength="255" data-counter>
+              </div>
+              <div class="col-md-6 field">
+                <label class="form-label" for="input-meta-description-{{ language.language_id }}">{{ entry_meta_description }}</label>
+                <input type="text" class="form-control" name="blog_description[{{ language.language_id }}][meta_description]" id="input-meta-description-{{ language.language_id }}" value="{{ language.fields.meta_description }}" maxlength="255" data-counter>
+              </div>
+            </div>
+
+          </div>
+          {% endfor %}
         </div>
-        <div class="field">
-          <label for="input-keyword-{{ language.language_id }}">{{ entry_keyword }}</label>
-          <input type="text" name="blog_description[{{ language.language_id }}][keyword]" id="input-keyword-{{ language.language_id }}" value="{{ language.fields.keyword }}" maxlength="64" placeholder="meu-primeiro-post" pattern="[a-z0-9]+(-[a-z0-9]+)*">
-        </div>
-      </div>
-      <div class="field">
-        <label for="input-description-{{ language.language_id }}">{{ entry_description }}</label>
-        <textarea name="blog_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="12">{{ language.fields.description }}</textarea>
-      </div>
-      <div class="grid two">
-        <div class="field">
-          <label for="input-meta-title-{{ language.language_id }}">{{ entry_meta_title }}</label>
-          <input type="text" name="blog_description[{{ language.language_id }}][meta_title]" id="input-meta-title-{{ language.language_id }}" value="{{ language.fields.meta_title }}" maxlength="255">
-        </div>
-        <div class="field">
-          <label for="input-meta-description-{{ language.language_id }}">{{ entry_meta_description }}</label>
-          <input type="text" name="blog_description[{{ language.language_id }}][meta_description]" id="input-meta-description-{{ language.language_id }}" value="{{ language.fields.meta_description }}" maxlength="255">
-        </div>
-      </div>
-    </fieldset>
-    {% endfor %}
-
-    <h2>{{ text_data }}</h2>
-    <div class="grid two">
-      <div class="field">
-        <label for="input-image">{{ entry_image }}</label>
-        <input type="text" name="image" id="input-image" value="{{ image }}" maxlength="255" placeholder="uploads/2026/capa-post.jpg ou https://…">
-        <p class="muted small">{{ help_image }}</p>
-      </div>
-      <div class="field">
-        <label for="input-date-published">{{ entry_date_published }}</label>
-        <input type="datetime-local" name="date_published" id="input-date-published" value="{{ date_published|replace({' ': 'T'}) }}">
-        <p class="muted small">{{ help_date_published }}</p>
       </div>
     </div>
-    <div class="field check">
-      <label><input type="checkbox" name="status" value="1"{% if status == '1' %} checked{% endif %}> {{ entry_status }}</label>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card data-card mb-3 side-card">
+      <div class="card-body">
+        <h2 class="card-title h6 mb-3">{{ text_publish_card }}</h2>
+
+        <div class="form-check form-switch mb-3 field check">
+          <input class="form-check-input" type="checkbox" role="switch" id="input-status" name="status" value="1"{% if status == '1' %} checked{% endif %}>
+          <label class="form-check-label" for="input-status">
+            <span class="d-block">{{ entry_status }}</span>
+            <span class="text-muted small" data-status-hint data-text-published="{{ text_published }}" data-text-draft="{{ text_draft }}">{% if status == '1' %}{{ text_published }}{% else %}{{ text_draft }}{% endif %}</span>
+          </label>
+        </div>
+
+        <div class="mb-0 field">
+          <label class="form-label" for="input-date-published">{{ entry_date_published }}</label>
+          <input type="datetime-local" class="form-control" name="date_published" id="input-date-published" value="{{ date_published|replace({' ': 'T'}) }}">
+          <p class="text-muted small mt-1 mb-0">{{ help_date_published }}</p>
+        </div>
+      </div>
     </div>
 
-    <div class="actions">
-      <button type="submit" class="btn primary">{{ button_save }}</button>
-      <a class="btn ghost" href="{{ cancel }}">{{ button_cancel }}</a>
+    <div class="card data-card mb-3 side-card">
+      <div class="card-body">
+        <h2 class="card-title h6 mb-3">{{ text_cover_preview }}</h2>
+        <div class="cover-preview" id="coverPreview">
+          {% if image %}<img src="{% if image matches '#^https?://#' %}{{ image }}{% else %}{{ seo_base }}{{ image }}{% endif %}" alt="" id="coverPreviewImg">{% endif %}
+          <span class="cover-preview--empty" id="coverPreviewEmpty"{% if image %} hidden{% endif %}><i class="bi bi-image" aria-hidden="true"></i></span>
+        </div>
+        <div class="field mt-3 mb-0">
+          <label class="form-label" for="input-image">{{ entry_image }}</label>
+          <input type="text" class="form-control" name="image" id="input-image" value="{{ image }}" maxlength="255" placeholder="catalog/view/image/blog/capa.jpg ou https://…" data-preview-base="{{ seo_base }}">
+          <p class="text-muted small mt-1 mb-0">{{ help_image }}</p>
+        </div>
+      </div>
     </div>
-  </form>
-</main>
+
+    <div class="card data-card side-card">
+      <div class="card-body d-grid gap-2">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ button_save }}</button>
+        <a class="btn btn-outline-secondary" href="{{ cancel }}">{{ button_cancel }}</a>
+      </div>
+    </div>
+  </div>
+
+</form>
+
 {{ footer|raw }}

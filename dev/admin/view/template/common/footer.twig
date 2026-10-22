@@ -7,6 +7,24 @@
   </div>{# /.admin-main #}
 </div>{# /.admin-layout #}
 <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+{# F8-02 (ADR 0046): modal global de confirmação de exclusão (admin.js abre via
+   data-rms-confirm-delete nos forms; fallback confirm() nativo sem bootstrap) #}
+<div class="modal fade" id="rmsDeleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-exclamation-triangle text-danger me-2" aria-hidden="true"></i>{{ text_confirm_title|default('Confirmação') }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ button_cancel|default('Cancel') }}</button>
+        <button type="button" class="btn btn-danger" data-rms-delete-confirm><i class="bi bi-trash me-1" aria-hidden="true"></i>{{ button_delete|default('Delete') }}</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endif %}
 <script src="{{ site_url }}view/js/bootstrap/js/bootstrap.bundle.min.js?v={{ asset_v }}" defer></script>
 <script src="{{ site_url }}view/js/admin.js?v={{ asset_v }}" defer></script>

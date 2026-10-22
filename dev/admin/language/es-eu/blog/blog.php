@@ -56,3 +56,23 @@ $_['error_title']             = 'Título (en-us) es obligatorio y debe tener has
 $_['error_date_published']    = 'Fecha de publicación: formato esperado YYYY-MM-DD HH:MM (opcional).';
 $_['error_keyword_format']    = 'Palabra clave del idioma %d: solo minúsculas, dígitos y guiones.';
 $_['error_keyword_taken']     = "La palabra clave '%s' ya la usa otra página, proyecto, herramienta o entrada.";
+
+// F8-02 (ADR 0046): barra de filtros, badges, estados, sidebar de publicación
+$_['text_total_posts']         = 'entradas';
+$_['text_showing']             = 'Mostrando %d–%d de %d entradas';
+$_['text_search_placeholder']  = 'Buscar por título…';
+$_['text_all_status']          = 'Todos los estados';
+$_['text_published']           = 'Publicado';
+$_['text_draft']               = 'Borrador';
+$_['text_view_site']           = 'Ver en el sitio';
+$_['text_empty_state']         = 'Ninguna entrada encontrada — ajusta los filtros o crea la primera.';
+$_['text_empty_state_cta']     = 'Crear entrada';
+$_['button_filter']            = 'Filtrar';
+$_['button_reset']             = 'Limpiar';
+$_['text_publish_card']        = 'Publicación';
+$_['text_content_card']        = 'Contenido';
+$_['text_meta_group']          = 'SEO';
+$_['text_seo_url_preview']     = 'Prefijo de la URL SEO';
+$_['text_cover_preview']       = 'Imagen de portada';
+$_['text_status_help']         = 'Las entradas publicadas aparecen en el área del journal del sitio.';
+$_['text_chars']               = 'caracteres';

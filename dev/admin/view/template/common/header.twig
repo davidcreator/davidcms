@@ -24,6 +24,9 @@
   {% for href, rel in styles %}
   <link rel="{{ rel }}" href="{{ href }}">
   {% endfor %}
+  {% for src in scripts %}
+  <script src="{{ src }}"></script>
+  {% endfor %}
 </head>
 <body class="admin-shell {{ logged ? '' : 'auth-layout' }} {{ body_class }}">
 

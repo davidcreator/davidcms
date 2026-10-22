@@ -1,49 +1,101 @@
-{# dev/admin/view/template/blog/blog_list.twig — grade do blog (F7-01, ADR 0042) #}
+{# dev/admin/view/template/blog/blog_list.twig — grade do blog (F8-02, ADR 0046: shell Bootstrap, filtros server, paginação) #}
 {{ header|raw }}
-<main class="dash">
-  <div class="page-head">
-    <h1>{{ heading_title }}</h1>
-    <div class="actions">
-      {% if import_href %}<a class="btn ghost" href="{{ import_href }}">{{ button_import_wp }}</a>{% endif %}
-      <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
-    </div>
+
+<div class="page-titlebar">
+  <div class="title-group">
+    <h1 class="page-title"><i class="bi bi-journal-text me-2" aria-hidden="true"></i>{{ heading_title }}</h1>
+    {% if total_posts > 0 %}<span class="badge rounded-pill badge-total">{{ total_posts }}</span>{% endif %}
   </div>
-  <p class="muted">{{ text_list }}</p>
+  <div class="titlebar-actions">
+    {% if import_href %}<a class="btn btn-outline-primary btn-sm" href="{{ import_href }}"><i class="bi bi-wordpress me-1" aria-hidden="true"></i>{{ button_import_wp }}</a>{% endif %}
+    <a class="btn btn-primary btn-sm" href="{{ add }}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ button_add }}</a>
+  </div>
+</div>
 
-  {% if text_flash.text %}
-  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
-  {% endif %}
+{% if text_flash.text %}
+<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">
+  {{ text_flash.text }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
 
-  {% if posts %}
-  <table class="table">
-    <thead>
-      <tr>
-        <th>{{ column_title }}</th>
-        <th>{{ column_status }}</th>
-        <th>{{ column_date_published }}</th>
-        <th>{{ column_date_modified }}</th>
-        <th class="right">{{ column_action }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for post in posts %}
-      <tr>
-        <td>{{ post.title }}</td>
-        <td>{{ post.status ? text_enabled : text_disabled }}</td>
-        <td>{{ post.date_published }}</td>
-        <td>{{ post.date_modified }}</td>
-        <td class="right actions">
-          <a class="btn ghost small" href="{{ post.edit }}">{{ button_edit }}</a>
-          <form method="post" action="{{ post.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
-            <button type="submit" class="btn danger small">{{ button_delete }}</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p class="muted">{{ text_no_results }}</p>
+<form method="get" action="{{ filter_action }}" class="filter-bar" role="search" aria-label="{{ button_filter }}">
+  <input type="hidden" name="route" value="blog/blog">
+  <div class="filter-search">
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <input type="text" name="filter_title" value="{{ filter_title }}" placeholder="{{ text_search_placeholder }}" aria-label="{{ column_title }}">
+  </div>
+  <select name="filter_status" class="form-select form-select-sm" aria-label="{{ column_status }}">
+    <option value="all"{% if filter_status == 'all' %} selected{% endif %}>{{ text_all_status }}</option>
+    <option value="1"{% if filter_status == '1' %} selected{% endif %}>{{ text_published }}</option>
+    <option value="0"{% if filter_status == '0' %} selected{% endif %}>{{ text_draft }}</option>
+  </select>
+  <button type="submit" class="btn btn-primary btn-sm">{{ button_filter }}</button>
+  {% if filter_title or filter_status != 'all' %}
+  <a class="btn btn-outline-secondary btn-sm" href="{{ filter_reset }}">{{ button_reset }}</a>
   {% endif %}
-</main>
+</form>
+
+{% if posts %}
+<div class="card data-card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th class="col-cover" aria-hidden="true"></th>
+          <th>{{ column_title }}</th>
+          <th class="col-status">{{ column_status }}</th>
+          <th class="d-none d-md-table-cell">{{ column_date_published }}</th>
+          <th class="d-none d-md-table-cell">{{ column_date_modified }}</th>
+          <th class="text-end">{{ column_action }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for post in posts %}
+        <tr>
+          <td class="col-cover">
+            {% if post.thumb %}<img class="cover-thumb" src="{{ post.thumb }}" alt="" loading="lazy">{% else %}<span class="cover-thumb cover-thumb--empty"><i class="bi bi-image" aria-hidden="true"></i></span>{% endif %}
+          </td>
+          <td class="fw-semibold">
+            <a href="{{ post.edit }}" class="link-plain">{{ post.title }}</a>
+          </td>
+          <td class="col-status">
+            {% if post.status %}
+            <span class="badge badge-status badge-status--published"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>{{ text_published }}</span>
+            {% else %}
+            <span class="badge badge-status badge-status--draft"><i class="bi bi-pencil-square me-1" aria-hidden="true"></i>{{ text_draft }}</span>
+            {% endif %}
+          </td>
+          <td class="d-none d-md-table-cell text-nowrap">{{ post.date_published }}</td>
+          <td class="d-none d-md-table-cell text-nowrap">{{ post.date_modified }}</td>
+          <td class="text-end text-nowrap">
+            {% if post.status %}<a class="icon-btn" href="{{ post.view_site }}" target="_blank" rel="noopener" title="{{ text_view_site }}" aria-label="{{ text_view_site }}"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>{% endif %}
+            <a class="icon-btn" href="{{ post.edit }}" title="{{ button_edit }}" aria-label="{{ button_edit }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+            <form method="post" action="{{ post.delete }}" class="d-inline" data-rms-confirm-delete="{{ text_confirm_delete }}">
+              <button type="submit" class="icon-btn icon-btn--danger" title="{{ button_delete }}" aria-label="{{ button_delete }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if showing or pagination %}
+<div class="list-footer">
+  <span class="text-muted small">{{ showing }}</span>
+  {{ pagination|raw }}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+  <i class="bi bi-journal-text" aria-hidden="true"></i>
+  <h2>{{ text_no_results }}</h2>
+  <p class="text-muted">{{ text_empty_state }}</p>
+  <a class="btn btn-primary" href="{{ add }}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ text_empty_state_cta }}</a>
+</div>
+{% endif %}
+
 {{ footer|raw }}

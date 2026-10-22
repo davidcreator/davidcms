@@ -47,11 +47,50 @@ class Blog extends \Reamur\System\Engine\Controller {
             ? $this->url->link('blog/import')
             : '';
 
+        // F8-02: rótulos da barra de filtros, badges e estados
+        foreach ([
+            'text_total_posts', 'text_showing', 'text_search_placeholder',
+            'text_all_status', 'text_published', 'text_draft', 'text_view_site',
+            'text_empty_state', 'text_empty_state_cta',
+            'button_filter', 'button_reset',
+        ] as $key) {
+            $data[$key] = $this->language->get($key);
+        }
+
+        // F8-02 (ADR 0046): filtros server-side (busca por título, status)
+        // e paginação 20/página preservando os filtros nos links.
+        $filter_title  = trim((string)($this->request->get['filter_title'] ?? ''));
+        $filter_status = (string)($this->request->get['filter_status'] ?? 'all');
+
+        if (!in_array($filter_status, ['all', '0', '1'], true)) {
+            $filter_status = 'all';
+        }
+
+        $page    = max(1, (int)($this->request->get['page'] ?? 1));
+        $limit   = 20;
+        $filters = ['title' => $filter_title, 'status' => $filter_status];
+
+        $total = $this->model_blog_blog->getTotalPosts($filters);
+
+        // Página além do fim (ex.: após deleções) → recua para a última válida
+        if ($total > 0 && ($page - 1) * $limit >= $total) {
+            $page = max(1, (int)ceil($total / $limit));
+        }
+
+        $rows = $this->model_blog_blog->getPosts($filters + [
+            'start' => ($page - 1) * $limit,
+            'limit' => $limit,
+        ]);
+
+        // URL pública do catalog (thumb de capa + "ver no site")
+        $catalogUrl = $this->catalogUrl();
+
         $data['posts'] = [];
 
-        foreach ($this->model_blog_blog->getPosts() as $post) {
+        foreach ($rows as $post) {
             $post = (array)$post;
             $pid  = (int)$post['post_id'];
+            $img  = trim((string)($post['image'] ?? ''));
 
             $data['posts'][] = [
                 'post_id'        => $pid,
@@ -59,12 +98,41 @@ class Blog extends \Reamur\System\Engine\Controller {
                 'status'         => (int)$post['status'],
                 'date_published' => (string)$post['date_published'],
                 'date_modified'  => (string)$post['date_modified'],
+                'thumb'          => $img === '' ? '' : (preg_match('#^https?://#i', $img) ? $img : $catalogUrl . ltrim($img, '/')),
+                'view_site'      => $catalogUrl . 'index.php?route=blog/blog.info|' . $pid,
                 'edit'           => $this->url->link('blog/blog.edit|' . $pid),
                 'delete'         => $this->url->link('blog/blog.delete|' . $pid),
             ];
         }
 
         $data['add'] = $this->url->link('blog/blog.add');
+
+        $data['total_posts']     = $total;
+        $data['filter_title']    = $filter_title;
+        $data['filter_status']   = $filter_status;
+
+        $data['filter_action'] = $this->url->link('blog/blog');
+        $data['filter_reset']  = $this->url->link('blog/blog');
+
+        // mudança de filtro sempre volta para a página 1 (JS-admin: submit puro)
+        require_once DIR_SYSTEM . 'library/pagination.php';
+
+        $pagination           = new \Pagination();
+        $pagination->total    = $total;
+        $pagination->page     = $page;
+        $pagination->limit    = $limit;
+        $pagination->url      = $this->url->link('blog/blog', 'page={page}' . ($filter_title !== '' ? '&filter_title=' . rawurlencode($filter_title) : '') . ($filter_status !== 'all' ? '&filter_status=' . $filter_status : ''));
+        $pagination->css_class = 'pagination pagination-sm mb-0';
+
+        $data['pagination'] = $pagination->render();
+        $data['showing']    = $total > 0
+            ? sprintf(
+                $this->language->get('text_showing'),
+                (($page - 1) * $limit) + 1,
+                min($page * $limit, $total),
+                $total
+              )
+            : '';
 
         $this->chrome($data);
 
@@ -195,9 +263,18 @@ class Blog extends \Reamur\System\Engine\Controller {
             'entry_meta_title', 'entry_meta_description', 'entry_keyword',
             'entry_image', 'entry_date_published', 'entry_status', 'help_image', 'help_date_published',
             'button_save', 'button_cancel',
+            // F8-02: publish sidebar + tabs + contadores + preview de SEO/capa
+            'text_publish_card', 'text_published', 'text_draft', 'text_content_card',
+            'text_meta_group', 'text_seo_url_preview', 'text_cover_preview',
+            'text_status_help', 'text_chars',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
+
+        // CKEditor 4 (assets locais, ADR 0046): init fica no admin.js (textarea[data-rte])
+        $this->document->addScript($this->config->get('site_url') . 'view/js/ckeditor/ckeditor.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+
+        $data['seo_base'] = $this->catalogUrl();
 
         $data['error']      = '';
         $data['text_flash'] = '';
@@ -353,5 +430,12 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         $data['header'] = $this->load->controller('common/header', $data);
         $data['footer'] = $this->load->controller('common/footer', $data);
+    }
+
+    /** URL pública do catalog (deriva da base admin: …/admin/ → …/) — F8-02 */
+    private function catalogUrl(): string {
+        $siteUrl = rtrim((string)$this->config->get('site_url'), '/') . '/';
+
+        return str_ireplace('/admin/', '/', $siteUrl);
     }
 }

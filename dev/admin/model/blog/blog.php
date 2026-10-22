@@ -21,21 +21,71 @@ class Blog extends \Reamur\System\Engine\Model {
      *
      * @return array<int, array<string, mixed>>
      */
-    public function getPosts(): array {
+    /**
+     * Lista posts com filtros server-side (F8-02, ADR 0046).
+     *
+     * @param array<string,mixed> $filters title (LIKE), status (''|0|1),
+     *                                     start (OFFSET), limit (LIMIT).
+     * @return array<int, array<string,mixed>>
+     */
+    public function getPosts(array $filters = []): array {
         $lang = $this->currentLanguageId();
 
+        $where = '';
+        if (isset($filters['status']) && $filters['status'] !== '' && $filters['status'] !== 'all') {
+            $where .= " AND p.`status` = '" . (int)$filters['status'] . "'";
+        }
+        if (!empty($filters['title'])) {
+            $where .= " AND (pd.`title` LIKE '%" . $this->db->escape((string)$filters['title']) . "%'"
+                    . " OR pd_en.`title` LIKE '%" . $this->db->escape((string)$filters['title']) . "%')";
+        }
+
+        $lim = '';
+        if (isset($filters['limit']) && (int)$filters['limit'] > 0) {
+            $lim = ' LIMIT ' . (int)($filters['start'] ?? 0) . ', ' . (int)$filters['limit'];
+        }
+
         $query = $this->db->query(
-            "SELECT p.`post_id`, p.`status`, p.`date_published`, p.`date_modified`,
+            "SELECT p.`post_id`, p.`image`, p.`status`, p.`date_published`, p.`date_modified`,
                     COALESCE(NULLIF(pd.`title`, ''), pd_en.`title`, '') AS `title`
              FROM `" . $this->t('blog_post') . "` p
              LEFT JOIN `" . $this->t('blog_post_description') . "` pd
                  ON pd.`post_id` = p.`post_id` AND pd.`language_id` = '" . $lang . "'
              LEFT JOIN `" . $this->t('blog_post_description') . "` pd_en
                  ON pd_en.`post_id` = p.`post_id` AND pd_en.`language_id` = 1
-             ORDER BY p.`date_published` DESC, p.`post_id` DESC"
+             WHERE 1=1" . $where . "
+             ORDER BY p.`date_published` DESC, p.`post_id` DESC" . $lim
         );
 
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
+    /**
+     * Total de posts sob os mesmos filtros (F8-02) — alimenta badge + paginação.
+     */
+    public function getTotalPosts(array $filters = []): int {
+        $lang = $this->currentLanguageId();
+
+        $where = '';
+        if (isset($filters['status']) && $filters['status'] !== '' && $filters['status'] !== 'all') {
+            $where .= " AND p.`status` = '" . (int)$filters['status'] . "'";
+        }
+        if (!empty($filters['title'])) {
+            $where .= " AND (pd.`title` LIKE '%" . $this->db->escape((string)$filters['title']) . "%'"
+                    . " OR pd_en.`title` LIKE '%" . $this->db->escape((string)$filters['title']) . "%')";
+        }
+
+        $query = $this->db->query(
+            "SELECT COUNT(*) AS `total`
+             FROM `" . $this->t('blog_post') . "` p
+             LEFT JOIN `" . $this->t('blog_post_description') . "` pd
+                 ON pd.`post_id` = p.`post_id` AND pd.`language_id` = '" . $lang . "'
+             LEFT JOIN `" . $this->t('blog_post_description') . "` pd_en
+                 ON pd_en.`post_id` = p.`post_id` AND pd_en.`language_id` = 1
+             WHERE 1=1" . $where
+        );
+
+        return ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['total'] : 0;
     }
 
     /**

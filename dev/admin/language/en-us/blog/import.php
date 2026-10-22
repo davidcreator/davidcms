@@ -54,3 +54,7 @@ $_['button_submit']            = 'Go';
 $_['error_action']             = 'Unknown action (expected preview or run).';
 $_['error_base_url']           = 'Base URL is required.';
 $_['error_fetch']              = 'Failed to read the WordPress endpoint: %s';
+
+// F8-02 (ADR 0046): cards
+$_['text_source_card']     = 'Source';
+$_['text_pagination_card'] = 'Sample window';
