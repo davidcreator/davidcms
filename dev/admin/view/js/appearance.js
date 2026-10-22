@@ -1,15 +1,13 @@
-/**
- * ReamurCMS — appearance.js (F8-V, ADR 0047)
- * setting/appearance: preview AO VIVO do tema no próprio painel, validador de
- * contraste WCAG AA (≥4.5:1) no cliente (espelho do model PHP / validador CLI)
- * que BLOQUEIA o submit com cor inválida, e sugestão automática da variante
- * da cor para o modo escuro.
+/*
+ * ReamurCMS — appearance.js (F8-V2, revisão da ADR 0047)
+ * setting/appearance: prévia ao vivo no painel, aplicação coerente com o
+ * override pessoal, validação WCAG AA e sugestão da variante escura.
  */
 (function () {
   'use strict';
 
-  var root = document.getElementById('content');
-  if (!root || !document.querySelector('.rms-appearance')) { return; }
+  var page = document.querySelector('.rms-appearance');
+  if (!page) { return; }
 
   /* ── WCAG (mesma fórmula do validate-themes.php e do model PHP) ── */
   function hexToRgb(hex) {
@@ -59,14 +57,22 @@
     return rgbToHex(c);
   }
 
-  /* ── estado da página (para restaurar se o usuário cancelar navegando) ── */
+  /* ── estado inicial: permite voltar à aparência efetiva do servidor ── */
   var htmlEl = document.documentElement;
   var skinLink = document.getElementById('rms-skin-css');
-
-  function isDark() { return htmlEl.getAttribute('data-bs-theme') === 'dark'; }
-
-  /* injeta/limpa o <style> do acento custom */
   var accentStyle = document.getElementById('rms-accent-custom');
+  var initialPreview = {
+    mode: htmlEl.getAttribute('data-bs-theme'),
+    modePref: htmlEl.getAttribute('data-rms-mode-pref'),
+    skin: htmlEl.getAttribute('data-rms-skin'),
+    sidebar: htmlEl.getAttribute('data-rms-sidebar'),
+    density: htmlEl.getAttribute('data-rms-density'),
+    fontSize: htmlEl.style.fontSize,
+    skinHref: skinLink ? skinLink.getAttribute('href') : null,
+    accentCss: accentStyle ? accentStyle.textContent : null
+  };
+  var previewers = {};
+
   function applyAccentPreview(light, dark, enabled) {
     if (!accentStyle) {
       accentStyle = document.createElement('style');
@@ -82,36 +88,129 @@
       '[data-bs-theme="dark"]{--rms-accent:' + dEff + ';--rms-accent-contrast:' + dc + ';}';
   }
 
-  /* ── preview por form ── */
+  function setAttributeOrRemove(element, name, value) {
+    if (value === null || value === '') { element.removeAttribute(name); }
+    else { element.setAttribute(name, value); }
+  }
+
+  function restoreInitialPreview() {
+    setAttributeOrRemove(htmlEl, 'data-bs-theme', initialPreview.mode);
+    setAttributeOrRemove(htmlEl, 'data-rms-mode-pref', initialPreview.modePref);
+    setAttributeOrRemove(htmlEl, 'data-rms-skin', initialPreview.skin);
+    setAttributeOrRemove(htmlEl, 'data-rms-sidebar', initialPreview.sidebar);
+    setAttributeOrRemove(htmlEl, 'data-rms-density', initialPreview.density);
+    htmlEl.style.fontSize = initialPreview.fontSize || '';
+
+    if (skinLink && initialPreview.skinHref !== null) {
+      skinLink.setAttribute('href', initialPreview.skinHref);
+    }
+    if (initialPreview.accentCss === null) {
+      if (accentStyle) { accentStyle.remove(); accentStyle = null; }
+    } else {
+      if (!accentStyle) {
+        accentStyle = document.createElement('style');
+        accentStyle.id = 'rms-accent-custom';
+        document.head.appendChild(accentStyle);
+      }
+      accentStyle.textContent = initialPreview.accentCss;
+    }
+  }
+
+  function applyResolvedPreview(theme) {
+    theme = theme || {};
+    var skin = String(theme.skin || 'light');
+    if (skinLink && skinLink.dataset.base) {
+      skinLink.setAttribute('href', skinLink.dataset.base.replace('{skin}', skin));
+    }
+    htmlEl.setAttribute('data-rms-skin', skin);
+    htmlEl.setAttribute('data-rms-sidebar', String(theme.sidebar || 'auto'));
+    htmlEl.setAttribute('data-rms-density', String(theme.density || 'comfortable'));
+
+    var fontScale = String(theme.font_scale || '100');
+    htmlEl.style.fontSize = fontScale === '100' ? '' : fontScale + '%';
+
+    var mode = String(theme.mode || 'system');
+    htmlEl.setAttribute('data-rms-mode-pref', mode);
+    if (mode === 'light' || mode === 'dark') {
+      htmlEl.setAttribute('data-bs-theme', mode);
+    } else {
+      var darkPreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      htmlEl.setAttribute('data-bs-theme', darkPreferred ? 'dark' : 'light');
+    }
+
+    var accent = String(theme.accent || '');
+    var accentDark = String(theme.accent_dark || '');
+    applyAccentPreview(accent, accentDark, accent !== '');
+  }
+
+  function parseGlobalTheme(wrapper) {
+    if (!wrapper) { return null; }
+    try {
+      var theme = JSON.parse(wrapper.getAttribute('data-global-theme') || '');
+      return theme && typeof theme === 'object' ? theme : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function previewGlobal(wrapper, currentForm) {
+    if (previewers.global && previewers.global !== currentForm) {
+      previewers.global();
+      return;
+    }
+    var globalTheme = parseGlobalTheme(wrapper);
+    if (globalTheme) { applyResolvedPreview(globalTheme); }
+    else { restoreInitialPreview(); }
+  }
+
+  /* ── preview e validação por formulário ── */
   function wireForm(form) {
     if (!form) { return; }
 
+    var scopeInput = form.querySelector('input[name="scope"]');
+    var scope = scopeInput ? scopeInput.value : '';
+    var isUserForm = scope === 'user';
+    var overrideToggle = isUserForm ? form.querySelector('input[name="user_override"]') : null;
+    var userFields = isUserForm ? form.querySelector('#user-theme-fields') : null;
     var verdict = form.querySelector('.rms-accent-verdict');
     var saveBtn = form.querySelector('.rms-btn-save');
     var customBox = form.querySelector('.rms-accent-custom-box');
     var lightInput = form.querySelector('input[name="accent_custom"]');
     var darkInput = form.querySelector('input[name="accent_custom_dark"]');
     var suggestBtn = form.querySelector('.rms-btn-suggest');
+    var saveLabel = saveBtn ? saveBtn.querySelector('.rms-btn-save-label') : null;
 
     function selectedAccent() {
       var c = form.querySelector('input[name="accent_choice"]:checked');
       return c ? c.value : '';
     }
     function isCustom() { return selectedAccent() === 'custom'; }
+    function userOverrideEnabled() { return !isUserForm || !overrideToggle || overrideToggle.checked; }
 
     function refreshCustomBox() {
-      if (customBox) { customBox.classList.toggle('d-none', !isCustom()); }
+      if (customBox) {
+        customBox.classList.toggle('d-none', !isCustom() || !userOverrideEnabled());
+      }
+    }
+
+    function clearVerdict() {
+      if (verdict) {
+        verdict.className = 'rms-accent-verdict small text-body-secondary';
+        verdict.textContent = '';
+      }
     }
 
     function validate() {
       refreshCustomBox();
       if (!saveBtn) { return; }
+      if (!userOverrideEnabled()) {
+        saveBtn.disabled = false;
+        clearVerdict();
+        return;
+      }
       if (!isCustom()) {
         saveBtn.disabled = false;
-        if (verdict) {
-          verdict.className = 'rms-accent-verdict small text-body-secondary';
-          verdict.textContent = '';
-        }
+        clearVerdict();
         return;
       }
       var light = normalizeHex(lightInput ? lightInput.value : '');
@@ -142,7 +241,26 @@
       }
     }
 
+    function syncUserControls() {
+      if (!isUserForm || !userFields || !overrideToggle) { return; }
+      var enabled = overrideToggle.checked;
+      userFields.querySelectorAll('input, select, textarea, button').forEach(function (control) {
+        if (control === saveBtn || control.type === 'hidden') { return; }
+        control.disabled = !enabled;
+      });
+      if (saveLabel) {
+        saveLabel.textContent = enabled
+          ? (userFields.dataset.labelActive || '')
+          : (userFields.dataset.labelInactive || '');
+      }
+    }
+
     function preview() {
+      if (isUserForm && !userOverrideEnabled()) {
+        previewGlobal(userFields, preview);
+        return;
+      }
+
       var skin = form.querySelector('input[name="skin"]:checked');
       if (skin && skinLink && skinLink.dataset.base) {
         skinLink.setAttribute('href', skinLink.dataset.base.replace('{skin}', skin.value));
@@ -153,21 +271,19 @@
       var density = form.querySelector('input[name="density"]:checked');
       if (density) { htmlEl.setAttribute('data-rms-density', density.value); }
       var font = form.querySelector('input[name="font_scale"]:checked');
-      if (font) {
-        if (font.value === '100') { htmlEl.style.fontSize = ''; }
-        else { htmlEl.style.fontSize = font.value + '%'; }
-      }
+      if (font) { htmlEl.style.fontSize = font.value === '100' ? '' : font.value + '%'; }
+
       var mode = form.querySelector('input[name="mode"]:checked');
       if (mode) {
         htmlEl.setAttribute('data-rms-mode-pref', mode.value);
         if (mode.value === 'light' || mode.value === 'dark') {
           htmlEl.setAttribute('data-bs-theme', mode.value);
-        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          htmlEl.setAttribute('data-bs-theme', 'dark');
         } else {
-          htmlEl.setAttribute('data-bs-theme', 'light');
+          var darkPreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          htmlEl.setAttribute('data-bs-theme', darkPreferred ? 'dark' : 'light');
         }
       }
+
       var choice = form.querySelector('input[name="accent_choice"]:checked');
       if (choice && choice.value !== 'custom' && choice.value !== '' && choice.dataset.light) {
         applyAccentPreview(choice.dataset.light, choice.dataset.dark || '', true);
@@ -180,24 +296,40 @@
       }
     }
 
-    form.addEventListener('change', function () { validate(); preview(); });
+    form.addEventListener('change', function (event) {
+      if (isUserForm && event.target === overrideToggle) {
+        syncUserControls();
+        validate();
+        if (overrideToggle.checked) { preview(); }
+        else { previewGlobal(userFields, preview); }
+        return;
+      }
+      validate();
+      preview();
+    });
     if (lightInput) { lightInput.addEventListener('input', function () { validate(); preview(); }); }
     if (darkInput) { darkInput.addEventListener('input', function () { validate(); preview(); }); }
 
     if (suggestBtn) {
       suggestBtn.addEventListener('click', function () {
         var light = normalizeHex(lightInput ? lightInput.value : '');
-        if (!light || !darkInput) { return; }
+        if (!light || !darkInput || !userOverrideEnabled()) { return; }
         darkInput.value = suggestVariant(light, 'dark');
         validate();
         preview();
       });
     }
 
+    if (scope === 'global') { previewers.global = preview; }
+    if (scope === 'user') {
+      previewers.user = preview;
+      syncUserControls();
+    }
     validate();
+    if (isUserForm) { preview(); }
   }
 
-  // base do link da skin p/ preview
+  // Base do link da skin para a prévia ao vivo.
   if (skinLink) {
     var href = skinLink.getAttribute('href') || '';
     skinLink.dataset.base = href.replace(/themes\/[a-z-]+\.css/, 'themes/{skin}.css');

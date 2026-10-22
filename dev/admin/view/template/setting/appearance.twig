@@ -22,6 +22,168 @@
       </div>
     </div>
 
+    {# Macros Twig não herdam o contexto do template: passe explicitamente os dados e labels. #}
+    {% set appearance_ui = {
+      'skins': skins,
+      'accents': accents,
+      'accent_labels': accent_labels,
+      'text_skin_card': text_skin_card,
+      'text_accent_card': text_accent_card,
+      'text_accent_skin': text_accent_skin,
+      'text_accent_custom': text_accent_custom,
+      'text_accent_custom_dark': text_accent_custom_dark,
+      'help_accent_dark': help_accent_dark,
+      'text_accent_help': text_accent_help,
+      'text_layout_card': text_layout_card,
+      'text_mode': text_mode,
+      'text_mode_system': text_mode_system,
+      'text_mode_light': text_mode_light,
+      'text_mode_dark': text_mode_dark,
+      'text_sidebar': text_sidebar,
+      'text_sidebar_auto': text_sidebar_auto,
+      'text_sidebar_light': text_sidebar_light,
+      'text_sidebar_dark': text_sidebar_dark,
+      'text_density': text_density,
+      'text_density_comfortable': text_density_comfortable,
+      'text_density_compact': text_density_compact,
+      'text_font_scale': text_font_scale
+    } %}
+
+    {% macro theme_form(theme, form_id, submit_label, disabled, ui) %}
+      <div class="mb-4">
+        <h2 class="h6 text-uppercase text-body-secondary fw-semibold">{{ ui.text_skin_card }}</h2>
+        <div class="row g-2 rms-skin-picker" role="radiogroup">
+          {% for skin in ui.skins %}
+          <div class="col-6 col-md-4 col-xl-2">
+            <input type="radio" class="btn-check rms-in-skin" name="skin" id="{{ form_id }}-skin-{{ skin.id }}"
+                   value="{{ skin.id }}" {{ theme.skin == skin.id ? 'checked' }} {{ disabled ? 'disabled' }}
+                   data-accent="{{ skin.preview.accent }}">
+            <label class="btn w-100 p-2 border rms-skin-card" for="{{ form_id }}-skin-{{ skin.id }}">
+              <span class="d-flex gap-1 mb-2" aria-hidden="true">
+                <span class="rounded d-inline-block" style="width:28px;height:28px;background:{{ skin.preview.sidebar }}"></span>
+                <span class="rounded d-inline-block border" style="width:28px;height:28px;background:{{ skin.preview.surface }}"></span>
+                <span class="rounded-pill d-inline-block mt-2" style="width:28px;height:12px;background:{{ skin.preview.accent }}"></span>
+              </span>
+              <span class="d-block fw-semibold">{{ skin.label }}</span>
+              <span class="d-block small text-body-secondary">{{ skin.desc }}</span>
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <h2 class="h6 text-uppercase text-body-secondary fw-semibold">{{ ui.text_accent_card }}</h2>
+        <div class="row g-2 rms-accent-picker" role="radiogroup">
+          <div class="col-auto">
+            <input type="radio" class="btn-check rms-in-accent-choice" name="accent_choice" id="{{ form_id }}-acc-skin"
+                   value="" {{ theme.accent == '' and not (theme.accent in ['#0b5ed7','#106084','#135c26','#66357d','#37485a','#9f2f4e','#8a6d00']) ? 'checked' }} {{ disabled ? 'disabled' }}>
+            <label class="btn px-3 rms-accent-card" for="{{ form_id }}-acc-skin">
+              <span class="badge rms-badge-status--draft" style="background:repeating-linear-gradient(45deg,#6c757d,#6c757d 6px,#adb5bd 6px,#6c757d 12px)">&nbsp;</span>
+              {{ ui.text_accent_skin }}
+            </label>
+          </div>
+          {% for aid, pair in ui.accents %}
+            {% if aid != '' %}
+            <div class="col-auto">
+              <input type="radio" class="btn-check rms-in-accent-choice" name="accent_choice" id="{{ form_id }}-acc-{{ aid }}"
+                     value="{{ aid }}" {{ theme.accent == pair.light ? 'checked' }} {{ disabled ? 'disabled' }}
+                     data-light="{{ pair.light }}" data-dark="{{ pair.dark }}">
+              <label class="btn px-3 rms-accent-card" for="{{ form_id }}-acc-{{ aid }}">
+                <span class="badge me-1" style="background:{{ pair.light }}">&nbsp;</span>{{ ui.accent_labels[aid]|default(aid) }}
+              </label>
+            </div>
+            {% endif %}
+          {% endfor %}
+          <div class="col-auto">
+            <input type="radio" class="btn-check rms-in-accent-choice" name="accent_choice" id="{{ form_id }}-acc-custom"
+                   value="custom" {{ theme.accent != '' and not (theme.accent in ['#0b5ed7','#106084','#135c26','#66357d','#37485a','#9f2f4e','#8a6d00']) ? 'checked' }} {{ disabled ? 'disabled' }}>
+            <label class="btn px-3 rms-accent-card" for="{{ form_id }}-acc-custom">
+              <i class="bi bi-eyedropper"></i> {{ ui.text_accent_custom }}
+            </label>
+          </div>
+        </div>
+
+        <div class="rms-accent-custom-box border rounded-3 p-3 mt-2 {{ theme.accent != '' and not (theme.accent in ['#0b5ed7','#106084','#135c26','#66357d','#37485a','#9f2f4e','#8a6d00']) ? '' : 'd-none' }}">
+          <div class="row g-3 align-items-end">
+            <div class="col-sm-6 col-lg-4">
+              <label class="form-label small mb-1" for="{{ form_id }}-accent-custom">{{ ui.text_accent_custom }} <span class="text-body-secondary">(modo claro)</span></label>
+              <input type="text" name="accent_custom" id="{{ form_id }}-accent-custom" class="form-control rms-in-accent-hex"
+                     value="{{ theme.accent }}" placeholder="#rrggbb" maxlength="7" spellcheck="false" {{ disabled ? 'disabled' }}>
+            </div>
+            <div class="col-sm-6 col-lg-4">
+              <label class="form-label small mb-1" for="{{ form_id }}-accent-custom-dark">{{ ui.text_accent_custom_dark }}</label>
+              <div class="input-group">
+                <input type="text" name="accent_custom_dark" id="{{ form_id }}-accent-custom-dark" class="form-control rms-in-accent-hex"
+                       value="{{ theme.accent_dark }}" placeholder="#rrggbb" maxlength="7" spellcheck="false" {{ disabled ? 'disabled' }}>
+                <button type="button" class="btn btn-outline-secondary rms-btn-suggest" {{ disabled ? 'disabled' }}>
+                  <i class="bi bi-magic"></i>
+                </button>
+              </div>
+              <div class="form-text">{{ ui.help_accent_dark }}</div>
+            </div>
+            <div class="col-lg-4">
+              <div class="rms-accent-verdict small" role="status" aria-live="polite"></div>
+            </div>
+          </div>
+          <div class="form-text mt-2">{{ ui.text_accent_help }}</div>
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <h2 class="h6 text-uppercase text-body-secondary fw-semibold">{{ ui.text_layout_card }}</h2>
+        <div class="row g-3">
+          <div class="col-md-6 col-xl-3">
+            <div class="fw-semibold mb-1">{{ ui.text_mode }}</div>
+            <div class="btn-group w-100" role="radiogroup">
+              {% for m, lbl in {'system': ui.text_mode_system, 'light': ui.text_mode_light, 'dark': ui.text_mode_dark} %}
+              <input type="radio" class="btn-check rms-in-mode" name="mode" id="{{ form_id }}-mode-{{ m }}" value="{{ m }}"
+                     {{ theme.mode == m ? 'checked' }} {{ disabled ? 'disabled' }}>
+              <label class="btn btn-outline-secondary" for="{{ form_id }}-mode-{{ m }}">{{ lbl }}</label>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <div class="fw-semibold mb-1">{{ ui.text_sidebar }}</div>
+            <div class="btn-group w-100" role="radiogroup">
+              <input type="radio" class="btn-check rms-in-sidebar" name="sidebar" id="{{ form_id }}-sb-auto" value="auto" {{ theme.sidebar == 'auto' ? 'checked' }} {{ disabled ? 'disabled' }}>
+              <label class="btn btn-outline-secondary" for="{{ form_id }}-sb-auto">{{ ui.text_sidebar_auto }}</label>
+              <input type="radio" class="btn-check rms-in-sidebar" name="sidebar" id="{{ form_id }}-sb-light" value="light" {{ theme.sidebar == 'light' ? 'checked' }} {{ disabled ? 'disabled' }}>
+              <label class="btn btn-outline-secondary" for="{{ form_id }}-sb-light">{{ ui.text_sidebar_light }}</label>
+              <input type="radio" class="btn-check rms-in-sidebar" name="sidebar" id="{{ form_id }}-sb-dark" value="dark" {{ theme.sidebar == 'dark' ? 'checked' }} {{ disabled ? 'disabled' }}>
+              <label class="btn btn-outline-secondary" for="{{ form_id }}-sb-dark">{{ ui.text_sidebar_dark }}</label>
+            </div>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <div class="fw-semibold mb-1">{{ ui.text_density }}</div>
+            <div class="btn-group w-100" role="radiogroup">
+              <input type="radio" class="btn-check" name="density" id="{{ form_id }}-ds-comfortable" value="comfortable" {{ theme.density == 'comfortable' ? 'checked' }} {{ disabled ? 'disabled' }}>
+              <label class="btn btn-outline-secondary" for="{{ form_id }}-ds-comfortable">{{ ui.text_density_comfortable }}</label>
+              <input type="radio" class="btn-check" name="density" id="{{ form_id }}-ds-compact" value="compact" {{ theme.density == 'compact' ? 'checked' }} {{ disabled ? 'disabled' }}>
+              <label class="btn btn-outline-secondary" for="{{ form_id }}-ds-compact">{{ ui.text_density_compact }}</label>
+            </div>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <div class="fw-semibold mb-1">{{ ui.text_font_scale }}</div>
+            <div class="btn-group w-100" role="radiogroup">
+              {% for pct in ['95', '100', '105'] %}
+              <input type="radio" class="btn-check rms-in-font" name="font_scale" id="{{ form_id }}-fs-{{ pct }}" value="{{ pct }}" {{ theme.font_scale == pct ? 'checked' }} {{ disabled ? 'disabled' }}>
+              <label class="btn btn-outline-secondary" for="{{ form_id }}-fs-{{ pct }}">{{ pct }}%</label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-top d-flex gap-2">
+        <button type="submit" class="btn btn-primary rms-btn-save">
+          <i class="bi bi-save me-1"></i><span class="rms-btn-save-label">{{ submit_label }}</span>
+        </button>
+      </div>
+    {% endmacro %}
+
+    {% from _self import theme_form %}
+
     {# ══ 1. Padrão do painel (GLOBAL) ══ #}
     <div class="card mb-4">
       <div class="card-header d-flex align-items-baseline justify-content-between gap-2 flex-wrap">
@@ -29,10 +191,12 @@
         {% if not can_edit_global %}<span class="badge text-bg-secondary rms-badge-status--draft">ACL: view</span>{% endif %}
       </div>
       <div class="card-body">
+        <p class="form-text mb-3">{{ text_global_override_note }}</p>
         {% if can_edit_global %}
         <form method="post" action="{{ action }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <input type="hidden" name="scope" value="global">
-          {{ form_global_html|raw }}
+          {{ theme_form(global_theme, 'g', button_save_global, false, appearance_ui) }}
         </form>
         {% else %}
         <p class="text-body-secondary mb-0"><i class="bi bi-lock me-1"></i>{{ text_global_locked }}</p>
@@ -45,6 +209,7 @@
       <div class="card-header"><h2 class="card-title h5 mb-0"><i class="bi bi-person me-1"></i>{{ text_user_section }}</h2></div>
       <div class="card-body">
         <form method="post" action="{{ action }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <input type="hidden" name="scope" value="user">
           <div class="form-check form-switch mb-3">
             <input class="form-check-input" type="checkbox" role="switch" id="user-override" name="user_override" value="1"
@@ -52,8 +217,11 @@
             <label class="form-check-label fw-semibold" for="user-override">{{ text_apply_override }}</label>
             <div class="form-text">{{ text_override_hint }}</div>
           </div>
-          <div id="user-theme-fields">
-            {{ form_user_html|raw }}
+          <div id="user-theme-fields"
+               data-global-theme="{{ global_theme|json_encode|e('html_attr') }}"
+               data-label-active="{{ button_save_user }}"
+               data-label-inactive="{{ button_use_global }}">
+            {{ theme_form(user_theme, 'u', user_override_on ? button_save_user : button_use_global, not user_override_on, appearance_ui) }}
           </div>
         </form>
       </div>

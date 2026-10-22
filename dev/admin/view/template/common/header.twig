@@ -31,10 +31,11 @@
   <link rel="stylesheet" href="{{ site_url }}view/css/bootstrap.css?v={{ asset_v }}">
   <link rel="stylesheet" href="{{ site_url }}view/css/bootstrap-icons.css?v={{ asset_v }}">
   <link rel="stylesheet" href="{{ site_url }}view/css/reamurcms.css?v={{ asset_v }}">
-  <link rel="stylesheet" href="{{ site_url }}view/css/themes/{{ theme_skin }}.css?v={{ asset_v }}" id="rms-skin-css">
   {% for href, rel in styles %}
   <link rel="{{ rel }}" href="{{ href }}">
   {% endfor %}
+  {# Carregar a skin depois do admin.css: a skin redefine tokens RMS e precisa vencer os defaults/fallbacks. #}
+  <link rel="stylesheet" href="{{ site_url }}view/css/themes/{{ theme_skin }}.css?v={{ asset_v }}" id="rms-skin-css">
   {% if theme_accent_light %}
   <style id="rms-accent-custom">
     :root { --rms-accent: {{ theme_accent_light }}; --rms-accent-contrast: {{ theme_accent_light_contrast }}; }

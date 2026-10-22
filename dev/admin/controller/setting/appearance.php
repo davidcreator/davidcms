@@ -25,87 +25,115 @@ class Appearance extends \Reamur\System\Engine\Controller {
         $this->load->model('setting/appearance');
 
         $data = $this->baseData();
-
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
         $data['can_edit_global'] = $this->user->hasPermission('modify', 'setting/appearance');
 
-        // ── POST ──
-        if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $scope = (string)($this->request->post['scope'] ?? 'user');
+        $isPost = $this->request->server['REQUEST_METHOD'] === 'POST';
+        $scope = (string)($this->request->post['scope'] ?? '');
 
-            $merged = $this->readFormTheme();
-            $errors = $this->model_setting_appearance->validateAccentPair($merged['accent'], $merged['accent_dark']);
+        if ($isPost) {
+            $csrfOk = \Reamur\System\Library\Security\Csrf::check(
+                $this->session,
+                (string)($this->request->post['csrf_token'] ?? '')
+            );
 
-            if ($errors !== []) {
-                $data['error'] = implode("\n", array_map(
-                    fn(string $e): string => $this->language->get('error_' . $e),
-                    $errors
-                ));
+            if (!$csrfOk) {
+                $data['error'] = $this->language->get('error_csrf');
+            } elseif (!in_array($scope, ['global', 'user'], true)) {
+                $data['error'] = $this->language->get('error_invalid_scope');
+            } elseif ($scope === 'global' && !$data['can_edit_global']) {
+                $data['error'] = $this->language->get('error_modify_denied');
+            } elseif ($scope === 'user' && (string)($this->request->post['user_override'] ?? '') !== '1') {
+                // Desligar o override preserva os valores pessoais, mas passa a
+                // usar o padrão global imediatamente no próximo GET (PRG).
+                $prefs = $this->user->getThemePrefs();
+                $prefs['override'] = false;
+
+                if ($this->user->saveThemePrefs($prefs)) {
+                    $this->setFlash($this->language->get('text_success_user_reset'));
+                    $this->response->redirect($this->url->link('setting/appearance'));
+
+                    return;
+                }
+
+                $data['error'] = $this->language->get('error_preferences_unavailable');
             } else {
-                $merged = $this->model_setting_appearance->sanitize($merged);
+                $merged = $this->readFormTheme();
+                $errors = $this->model_setting_appearance->validateAccentPair($merged['accent'], $merged['accent_dark']);
 
-                if ($scope === 'global' && $data['can_edit_global']) {
-                    $this->load->model('setting/setting');
-                    $this->model_setting_setting->editSettings([
-                        'config_admin_skin'            => $merged['skin'],
-                        'config_admin_accent'          => $merged['accent'],
-                        'config_admin_accent_dark'     => $merged['accent_dark'],
-                        'config_admin_sidebar_variant' => $merged['sidebar'],
-                        'config_admin_density'         => $merged['density'],
-                        'config_admin_font_scale'      => $merged['font_scale'],
-                        'config_admin_theme_mode'      => $merged['mode'],
-                    ]);
+                if ($errors !== []) {
+                    $data['error'] = implode("\n", array_map(
+                        fn(string $e): string => $this->language->get('error_' . $e),
+                        $errors
+                    ));
+                } else {
+                    $merged = $this->model_setting_appearance->sanitize($merged);
 
-                    // settings são cacheadas (CACHE_KEY setting.config; ver F8 setup)
-                    if (method_exists($this->cache, 'delete')) {
-                        $this->cache->delete('setting.config');
+                    if ($scope === 'global') {
+                        $this->load->model('setting/setting');
+                        $this->model_setting_setting->editSettings([
+                            'config_admin_skin'            => $merged['skin'],
+                            'config_admin_accent'          => $merged['accent'],
+                            'config_admin_accent_dark'     => $merged['accent_dark'],
+                            'config_admin_sidebar_variant' => $merged['sidebar'],
+                            'config_admin_density'         => $merged['density'],
+                            'config_admin_font_scale'      => $merged['font_scale'],
+                            'config_admin_theme_mode'      => $merged['mode'],
+                        ]);
+
+                        $this->setFlash($this->language->get('text_success_global'));
+                        $this->response->redirect($this->url->link('setting/appearance'));
+
+                        return;
                     }
 
-                    $this->setFlash($this->language->get('text_success_global'));
-                } elseif ($scope === 'user') {
-                    $prefs = $merged;
-                    $prefs['override'] = (($this->request->post['user_override'] ?? '') === '1');
-                    $this->user->saveThemePrefs($prefs);
-                    $this->setFlash($this->language->get('text_success_user'));
-                } else {
-                    $data['error'] = $this->language->get('error_modify_denied');
+                    $merged['override'] = true;
+
+                    if ($this->user->saveThemePrefs($merged)) {
+                        $this->setFlash($this->language->get('text_success_user'));
+                        $this->response->redirect($this->url->link('setting/appearance'));
+
+                        return;
+                    }
+
+                    $data['error'] = $this->language->get('error_preferences_unavailable');
                 }
             }
         }
 
-        // ── dados do form (pós-POST reflete o que veio; na 1a carga, o atual) ──
-        $postedTheme = ($this->request->server['REQUEST_METHOD'] === 'POST') ? $this->readFormTheme() : null;
-
+        // ── dados do form; erros preservam os valores postados no escopo correto ──
         $data['global_theme'] = $this->model_setting_appearance->resolveTheme([]);
-        $data['user_prefs']   = $this->user->getThemePrefs();
-        $data['user_theme']   = $this->model_setting_appearance->resolveTheme($data['user_prefs']);
-        if ($postedTheme) {
-            $data['user_theme'] = $this->model_setting_appearance->sanitize($postedTheme);
-        }
+        $data['user_prefs'] = $this->user->getThemePrefs();
+        $data['user_theme'] = $this->model_setting_appearance->resolveTheme($data['user_prefs']);
         $data['user_override_on'] = !empty($data['user_prefs']['override']);
 
-        // forms renderizados via partial dedicado (o motor Twig do projeto NÃO
-        // propaga o contexto da render para {% macro %} — era por isso que os
-        // textos/swatches saíam vazios na v1 da tela; bug de UI F8-V v2)
-        $shared = [
-            'skins'   => $this->skinCards(),
-            'accents' => $this->accentChoices(),
-        ];
+        if ($isPost && $data['error'] !== '') {
+            $data['user_override_on'] = $scope === 'user'
+                ? ((string)($this->request->post['user_override'] ?? '') === '1')
+                : $data['user_override_on'];
 
-        $data['form_global_html'] = $this->load->view('setting/appearance_form', array_merge($data, $shared, [
-            'theme'        => $this->themeFormView($data['global_theme']),
-            'form_id'      => 'g',
-            'submit_label' => $this->language->get('button_save_global'),
-            'disabled'     => false,
-        ]));
+            // Não substitui o estado salvo por campos ausentes/disabled.
+            if ($scope === 'global' || ($scope === 'user' && $data['user_override_on'])) {
+                $postedTheme = $this->model_setting_appearance->sanitize($this->readFormTheme());
 
-        $data['form_user_html'] = $this->load->view('setting/appearance_form', array_merge($data, $shared, [
-            'theme'        => $this->themeFormView($data['user_theme']),
-            'form_id'      => 'u',
-            'submit_label' => $this->language->get('button_save_user'),
-            'disabled'     => false,
-        ]));
+                if ($scope === 'global' && $data['can_edit_global']) {
+                    $data['global_theme'] = $postedTheme;
+                } elseif ($scope === 'user') {
+                    $data['user_theme'] = $postedTheme;
+                }
+            }
+        }
 
-        $data['action']    = $this->url->link('setting/appearance');
+        $data['skins'] = $this->skinCards();
+        $data['accents'] = \Reamur\Admin\Model\Setting\Appearance::CURATED_ACCENTS;
+        $data['accent_labels'] = [];
+        foreach (array_keys(\Reamur\Admin\Model\Setting\Appearance::CURATED_ACCENTS) as $accentId) {
+            if ($accentId !== '') {
+                $data['accent_labels'][$accentId] = $this->language->get('accent_' . $accentId);
+            }
+        }
+
+        $data['action'] = $this->url->link('setting/appearance');
         $data['text_flash'] = $this->flash();
 
         $this->chrome($data);
@@ -180,48 +208,6 @@ class Appearance extends \Reamur\System\Engine\Controller {
         ];
     }
 
-    /**
-     * Normaliza o tema (resolvido do DB) para o shape que o partial consome:
-     * flags de seleção curada vs custom e valores prontos para os inputs hex.
-     *
-     * @param array<string, string> $theme
-     * @return array<string, mixed>
-     */
-    private function themeFormView(array $theme): array {
-        $curatedPairs = [];
-        foreach (\Reamur\Admin\Model\Setting\Appearance::CURATED_ACCENTS as $pair) {
-            $curatedPairs[] = $pair['light'];
-        }
-
-        $accent = (string)($theme['accent'] ?? '');
-        $isCustom = $accent !== '' && !in_array($accent, $curatedPairs, true);
-
-        $theme['accent_is_curated'] = !$isCustom;
-        $theme['accent_box_open']   = $isCustom;
-        // inputs hex: sempre exigem #rrggbb; curated ou vazio → placeholder limpo
-        $theme['accent_custom_value'] = $isCustom ? $accent : '';
-        $theme['accent_dark_value']   = $isCustom ? (string)($theme['accent_dark'] ?? '') : '';
-
-        return $theme;
-    }
-
-    /** Accents curados já rotulados (i18n) para o partial */
-    private function accentChoices(): array {
-        $choices = [];
-
-        foreach (\Reamur\Admin\Model\Setting\Appearance::CURATED_ACCENTS as $id => $pair) {
-            if ($id === '') { continue; }
-            $choices[] = [
-                'id'    => $id,
-                'label' => $this->language->get('accent_' . $id),
-                'light' => $pair['light'],
-                'dark'  => $pair['dark'],
-            ];
-        }
-
-        return $choices;
-    }
-
     /** Cards de skin com swatches para o radio-group da tela */
     private function skinCards(): array {
         // swatches visuais por skin (tonalidade principal da sidebar+a accent)
@@ -259,9 +245,8 @@ class Appearance extends \Reamur\System\Engine\Controller {
             'text_font_scale', 'text_font_95', 'text_font_100', 'text_font_105',
             'text_accent_skin', 'text_accent_custom', 'text_accent_custom_dark',
             'text_accent_help', 'text_validating_contrast', 'text_contrast_fail',
-            'text_accent_suggest_title', 'text_preview_hint',
-            'button_save_global', 'button_save_user', 'button_reset_mine',
-            'help_accent_dark',
+            'button_save_global', 'button_save_user', 'button_use_global', 'button_reset_mine',
+            'text_global_override_note', 'help_accent_dark',
         ];
 
         $data = [];

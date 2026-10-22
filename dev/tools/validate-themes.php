@@ -56,6 +56,49 @@ function parseColor(string $raw, ?array $over = null): ?array {
     return null;
 }
 
+/**
+ * Valida o balanceamento estrutural de blocos e strings CSS.
+ * Não substitui um parser CSS completo; detecta erros básicos que fariam
+ * o navegador descartar regras subsequentes silenciosamente.
+ */
+function cssStructureIsBalanced(string $css): bool {
+    $css = preg_replace('#/\\*.*?\\*/#s', '', $css) ?? $css;
+    $depth = 0;
+    $quote = null;
+    $escaped = false;
+    $length = strlen($css);
+
+    for ($i = 0; $i < $length; $i++) {
+        $char = $css[$i];
+
+        if ($quote !== null) {
+            if ($escaped) {
+                $escaped = false;
+            } elseif ($char === chr(92)) {
+                $escaped = true;
+            } elseif ($char === $quote) {
+                $quote = null;
+            }
+
+            continue;
+        }
+
+        if ($char === chr(34) || $char === chr(39)) {
+            $quote = $char;
+        } elseif ($char === '{') {
+            $depth++;
+        } elseif ($char === '}') {
+            $depth--;
+
+            if ($depth < 0) {
+                return false;
+            }
+        }
+    }
+
+    return $depth === 0 && $quote === null;
+}
+
 /** parser bem simples: extrai --var: valor; dentro de blocos seletor { } na ordem */
 function parseCssVars(string $css): array {
     // [seletor, [var => valor]]
@@ -97,6 +140,31 @@ $TEXT = ['light' => [33, 37, 41],   'dark' => [222, 226, 230]];   // body-color
 $fails = 0;
 $files = glob($themesDir . '/*.css') ?: [];
 sort($files);
+
+/* Sintaxe estrutural mínima: evita chaves soltas que o parser de cores não detecta. */
+$structureFiles = array_merge($files, [$adminCss]);
+foreach ($structureFiles as $file) {
+    $css = file_get_contents($file);
+
+    if (!is_string($css) || !cssStructureIsBalanced($css)) {
+        printf("FALHOU  CSS estrutural: %s\n", $file);
+        $fails++;
+    }
+}
+
+/* A folha de skin precisa vencer os defaults do admin.css na cascata CSS. */
+$headerPath = dirname(__DIR__) . '/admin/view/template/common/header.twig';
+$headerTemplate = file_get_contents($headerPath);
+$baseCssPosition = is_string($headerTemplate) ? strpos($headerTemplate, 'view/css/reamurcms.css') : false;
+$stylesPosition = is_string($headerTemplate) ? strpos($headerTemplate, '{% for href, rel in styles %}') : false;
+$skinPosition = is_string($headerTemplate) ? strpos($headerTemplate, 'view/css/themes/{{ theme_skin }}.css') : false;
+$accentPosition = is_string($headerTemplate) ? strpos($headerTemplate, '<style id="rms-accent-custom">') : false;
+
+if ($baseCssPosition === false || $stylesPosition === false || $skinPosition === false || $accentPosition === false
+    || !($baseCssPosition < $stylesPosition && $stylesPosition < $skinPosition && $skinPosition < $accentPosition)) {
+    echo "FALHOU  Ordem de cascata: base CSS → admin.css (styles) → skin → accent custom.\n";
+    $fails++;
+}
 
 /* corpora: cada skin arquivo + o fallback embutido no admin.css */
 $corpora = [];
@@ -145,7 +213,7 @@ foreach ($corpora as $skin => $css) {
 }
 
 echo $fails === 0
-    ? "OK — todas as skins passam WCAG AA nos pares críticos (" . count($corpora) . " skins).\n"
+    ? "OK — skins WCAG AA, CSS estrutural e ordem de cascata validados (" . count($corpora) . " skins).\n"
     : "Total de falhas: $fails\n";
 
 exit($fails === 0 ? 0 : 1);
