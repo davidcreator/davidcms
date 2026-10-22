@@ -46,3 +46,17 @@ $_['text_confirm_delete']    = 'Delete this group permanently?';
 $_['text_success_delete']    = 'User group deleted successfully!';
 $_['error_group_in_use']     = 'Cannot delete: %d user(s) are still assigned to this group.';
 $_['error_group_last_admin'] = 'Cannot delete: this is the only group that grants user administration (user/user).';
+
+// F8-03: search, pagination and request protection
+$_['text_filter'] = 'Filter groups';
+$_['text_no_results'] = 'No user groups found.';
+$_['text_showing'] = 'Showing %s–%s of %s';
+$_['entry_filter_name'] = 'Group name';
+$_['button_filter'] = 'Apply filters';
+$_['button_reset'] = 'Reset';
+$_['error_csrf'] = 'This form expired or could not be verified. Reload the page and try again.';
+$_['text_close'] = 'Close';
+$_['text_page_first'] = '« First';
+$_['text_page_last'] = 'Last »';
+$_['text_page_next'] = 'Next ›';
+$_['text_page_prev'] = '‹ Prev';

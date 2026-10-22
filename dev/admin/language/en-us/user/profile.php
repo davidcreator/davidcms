@@ -43,3 +43,6 @@ $_['error_password_confirm'] = 'New password confirmation does not match!';
 // Buttons
 $_['button_save'] = 'Save';
 $_['button_back'] = 'Back';
+
+$_['error_csrf'] = 'This form expired or could not be verified. Reload the page and try again.';
+$_['text_close'] = 'Close';

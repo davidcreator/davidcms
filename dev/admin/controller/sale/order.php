@@ -42,6 +42,8 @@ class Order extends \Reamur\System\Engine\Controller {
         $data['button_edit']         = $this->language->get('button_edit');
         $data['button_delete']       = $this->language->get('button_delete');
         $data['text_flash']          = $this->flash();
+        // F8-03: setting/marketplace.paylink exige POST protegido por CSRF.
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
 
         // F5-03 (ADR 0035): botão 💳 por pedido → gerar link de pagamento MP
         // (só aparece para quem tem modify em setting/marketplace; route admin)

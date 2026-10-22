@@ -46,3 +46,17 @@ $_['text_confirm_delete']    = '¿Eliminar definitivamente este grupo?';
 $_['text_success_delete']    = '¡Grupo eliminado correctamente!';
 $_['error_group_in_use']     = 'No se puede eliminar: hay %d usuario(s) vinculado(s) a este grupo.';
 $_['error_group_last_admin'] = 'No se puede eliminar: es el único grupo que otorga administración de usuarios (user/user).';
+
+// F8-03: filtros, paginación y protección de solicitudes
+$_['text_filter'] = 'Filtrar grupos';
+$_['text_no_results'] = 'No se encontraron grupos de usuarios.';
+$_['text_showing'] = 'Mostrando %s–%s de %s';
+$_['entry_filter_name'] = 'Nombre del grupo';
+$_['button_filter'] = 'Aplicar filtros';
+$_['button_reset'] = 'Limpiar';
+$_['error_csrf'] = 'El formulario ha caducado o no se pudo verificar. Recarga la página e inténtalo de nuevo.';
+$_['text_close'] = 'Cerrar';
+$_['text_page_first'] = '« Primera';
+$_['text_page_last'] = 'Última »';
+$_['text_page_next'] = 'Siguiente ›';
+$_['text_page_prev'] = '‹ Anterior';

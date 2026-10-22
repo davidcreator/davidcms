@@ -43,3 +43,6 @@ $_['error_password_confirm'] = 'A confirmação da nova senha não confere!';
 // Buttons
 $_['button_save'] = 'Salvar';
 $_['button_back'] = 'Voltar';
+
+$_['error_csrf'] = 'O formulário expirou ou não pôde ser verificado. Recarregue a página e tente novamente.';
+$_['text_close'] = 'Fechar';

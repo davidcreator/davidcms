@@ -40,6 +40,7 @@
           {% if order.paylink %}
           {# F5-03 (ADR 0035): gerar/reusar link de pagamento MP (redirect p/ marketplace) #}
           <form method="post" action="{{ order.paylink }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button type="submit" class="btn ghost small">{{ button_mp_paylink }}</button>
           </form>
           {% endif %}

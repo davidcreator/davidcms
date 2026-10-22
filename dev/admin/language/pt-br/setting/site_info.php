@@ -49,3 +49,6 @@ $_['error_url']            = '%s deve começar com http:// ou https://!';
 // Buttons
 $_['button_save'] = 'Salvar';
 $_['button_back'] = 'Voltar';
+
+$_['error_csrf'] = 'O formulário expirou ou não pôde ser verificado. Recarregue a página e tente novamente.';
+$_['text_close'] = 'Fechar';

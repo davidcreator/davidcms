@@ -47,28 +47,31 @@ class Site_info extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $post   = $this->sanitize($this->request->post);
-            $errors = $this->validate($post, $this->activeLanguages());
+            if (!$this->csrfValid()) {
+                $errors = ['csrf' => $this->language->get('error_csrf')];
+            } else {
+                $post   = $this->sanitize($this->request->post);
+                $errors = $this->validate($post, $this->activeLanguages());
 
-            if (!$errors) {
-                $this->model_setting_setting->editSettings($post);
-
-                $this->session->data['flash'] = ['type' => 'success', 'text' => $this->language->get('text_success')];
-
-                $this->response->redirect($this->url->link('setting/site_info'));
-
-                return;
+                if (!$errors) {
+                    $this->model_setting_setting->editSettings($post);
+                    $this->session->data['flash'] = ['type' => 'success', 'text' => $this->language->get('text_success')];
+                    $this->response->redirect($this->url->link('setting/site_info'));
+                    return;
+                }
+                // POST inválido: repovoa do próprio POST (não perde o digitado)
+                $settings = array_merge($settings, $post);
             }
-
-            // POST inválido: repovoa do próprio POST (não perde o digitado — padrão setting/setting)
-            $settings = array_merge($settings, $post);
         }
 
         $data = [];
 
         $data['heading_title'] = $this->language->get('heading_title');
+        $data['text_close'] = $this->language->get('text_close');
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
         $data['text_site_info'] = $this->language->get('text_site_info');
         $data['text_flash']    = $this->flash();
+        $data['can_modify']    = $this->user->hasPermission('modify', 'setting/site_info');
         $data['error']         = implode("\n", array_filter(array_map('strval', $errors)));
 
         // Seções
@@ -221,8 +224,15 @@ class Site_info extends \Reamur\System\Engine\Controller {
         return $data;
     }
 
+    private function csrfValid(): bool {
+        return \Reamur\System\Library\Security\Csrf::check(
+            $this->session,
+            (string)($this->request->post['csrf_token'] ?? '')
+        );
+    }
+
     private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $data['body_class'] = 'rms-dash';
         $data['header']     = $this->load->controller('common/header', $data);

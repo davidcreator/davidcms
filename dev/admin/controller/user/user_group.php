@@ -14,42 +14,61 @@ namespace Reamur\Admin\Controller\User;
 
 class User_group extends \Reamur\System\Engine\Controller {
 
-    /** Lista grupos com contagem de usuários vinculados (200) */
+    /** Lista grupos com contagem, filtro por nome e paginação server-side. */
     public function index(): void {
         $this->load->language('user/user_group');
-
         $this->document->setTitle($this->language->get('heading_title'));
-
         $this->load->model('user/user_group');
 
-        $data['heading_title']  = $this->language->get('heading_title');
-        $data['text_list']      = $this->language->get('text_list');
-        $data['column_name']    = $this->language->get('column_name');
-        $data['column_users']   = $this->language->get('column_users');
-        $data['column_action']  = $this->language->get('column_action');
-        $data['button_add']     = $this->language->get('button_add');
-        $data['button_edit']    = $this->language->get('button_edit');
-        $data['text_flash']     = $this->flash();
+        $filter = ['name' => mb_substr($this->queryValue('filter_name'), 0, 64)];
+        $page = max(1, (int)$this->queryValue('page'));
+        $limit = 20;
+        $total = $this->model_user_user_group->getTotalUserGroups($filter);
+        $page = min($page, max(1, (int)ceil($total / $limit)));
+        $filter['start'] = ($page - 1) * $limit;
+        $filter['limit'] = $limit;
 
+        $data = [];
+        foreach ([
+            'heading_title', 'text_list', 'text_close', 'column_name', 'column_users', 'column_action',
+            'button_add', 'button_edit', 'button_delete', 'text_filter',
+            'entry_filter_name', 'button_filter', 'button_reset', 'text_showing',
+            'text_confirm_delete', 'text_no_results',
+        ] as $key) { $data[$key] = $this->language->get($key); }
+        $data['text_flash'] = $this->flash();
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['can_modify'] = $this->user->hasPermission('modify', 'user/user_group');
+        $data['filter_name'] = $filter['name'];
+        $data['filter_action'] = $this->url->link('user/user_group');
         $data['groups'] = [];
-
-        foreach ($this->model_user_user_group->getUserGroups() as $group) {
+        foreach ($this->model_user_user_group->getUserGroups($filter) as $group) {
             $group = (array)$group;
-            $gid   = (int)$group['user_group_id'];
-
+            $gid = (int)$group['user_group_id'];
             $data['groups'][] = [
                 'user_group_id' => $gid,
-                'name'          => (string)$group['name'],
-                'total_users'   => (int)$group['total_users'],
-                'edit'          => $this->url->link('user/user_group.edit|' . $gid),
-                'delete'        => $this->url->link('user/user_group.delete|' . $gid),
+                'name' => (string)$group['name'],
+                'total_users' => (int)$group['total_users'],
+                'edit' => $this->url->link('user/user_group.edit|' . $gid),
+                'delete' => $this->url->link('user/user_group.delete|' . $gid),
             ];
         }
-
         $data['add'] = $this->url->link('user/user_group.add');
+        $data['total'] = $total;
+        $data['showing'] = $total > 0 ? sprintf($data['text_showing'], (($page - 1) * $limit) + 1, min($page * $limit, $total), $total) : '';
+        require_once DIR_SYSTEM . 'library/pagination.php';
+        $pagination = new \Pagination();
+        $pagination->total = $total;
+        $pagination->page = $page;
+        $pagination->limit = $limit;
+        $pagination->url = $this->url->link('user/user_group', 'page={page}' . ($filter['name'] !== '' ? '&filter_name=' . rawurlencode($filter['name']) : ''));
+        $pagination->css_class = 'pagination pagination-sm mb-0';
+        $pagination->text_first = $this->language->get('text_page_first');
+        $pagination->text_last = $this->language->get('text_page_last');
+        $pagination->text_next = $this->language->get('text_page_next');
+        $pagination->text_prev = $this->language->get('text_page_prev');
+        $data['pagination'] = $pagination->render();
 
         $this->chrome($data);
-
         $this->response->setOutput($this->load->view('user/user_group_list', $data));
     }
 
@@ -92,6 +111,11 @@ class User_group extends \Reamur\System\Engine\Controller {
         }
 
         $this->load->language('user/user_group');
+        if (!$this->csrfValid()) {
+            $this->setFlash($this->language->get('error_csrf'), 'error');
+            $this->response->redirect($this->url->link('user/user_group'));
+            return;
+        }
         $this->load->model('user/user_group');
 
         $group = $this->model_user_user_group->getUserGroup($user_group_id);
@@ -152,6 +176,8 @@ class User_group extends \Reamur\System\Engine\Controller {
         $data['button_cancel']   = $this->language->get('button_cancel');
         $data['error']           = '';
         $data['text_flash']      = '';
+        $data['csrf_token']      = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['can_modify']      = $this->user->hasPermission('modify', 'user/user_group');
 
         $data['name'] = (string)($this->request->post['name'] ?? ($group['name'] ?? ''));
 
@@ -162,33 +188,32 @@ class User_group extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $access = array_map('strval', (array)($this->request->post['access'] ?? []));
-            $modify = array_map('strval', (array)($this->request->post['modify'] ?? []));
+            if (!$this->csrfValid()) {
+                $data['error'] = $this->language->get('error_csrf');
+                $errors = [];
+            } else {
+                $access = array_map('strval', (array)($this->request->post['access'] ?? []));
+                $modify = array_map('strval', (array)($this->request->post['modify'] ?? []));
+                $errors = [];
 
-            $errors = [];
-
-            if (mb_strlen($data['name']) < 1 || mb_strlen($data['name']) > 64) {
-                $errors[] = $this->language->get('error_name');
-            }
-
-            if ($errors === []) {
-                if ($user_group_id > 0) {
-                    $this->model_user_user_group->editUserGroup($user_group_id, $data['name'], $access, $modify);
-                } else {
-                    $this->model_user_user_group->addUserGroup($data['name'], $access, $modify);
+                if (mb_strlen($data['name']) < 1 || mb_strlen($data['name']) > 64) {
+                    $errors[] = $this->language->get('error_name');
                 }
 
-                $this->setFlash(
-                    $this->language->get($user_group_id > 0 ? 'text_success_edit' : 'text_success_add')
-                );
-
-                $this->response->redirect($this->url->link('user/user_group'));
-
-                return;
+                if ($errors === []) {
+                    if ($user_group_id > 0) {
+                        $this->model_user_user_group->editUserGroup($user_group_id, $data['name'], $access, $modify);
+                    } else {
+                        $this->model_user_user_group->addUserGroup($data['name'], $access, $modify);
+                    }
+                    $this->setFlash($this->language->get($user_group_id > 0 ? 'text_success_edit' : 'text_success_add'));
+                    $this->response->redirect($this->url->link('user/user_group'));
+                    return;
+                }
+                $permission = ['access' => $access, 'modify' => $modify];
+                $data['error'] = implode("\n", $errors);
             }
 
-            $permission = ['access' => $access, 'modify' => $modify];
-            $data['error'] = implode("\n", $errors);
         }
 
         $data['action'] = $user_group_id > 0
@@ -259,8 +284,20 @@ class User_group extends \Reamur\System\Engine\Controller {
         }
     }
 
+    private function queryValue(string $key): string {
+        $value = $this->request->get[$key] ?? '';
+        return is_scalar($value) ? trim((string)$value) : '';
+    }
+
+    private function csrfValid(): bool {
+        return \Reamur\System\Library\Security\Csrf::check(
+            $this->session,
+            (string)($this->request->post['csrf_token'] ?? '')
+        );
+    }
+
     private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $data['body_class'] = 'rms-dash';
         $data['header']     = $this->load->controller('common/header', $data);

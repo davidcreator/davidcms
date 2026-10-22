@@ -1,48 +1,92 @@
-{# dev/admin/view/template/user/user_list.twig — lista de usuários (F2-6) #}
+{# F8-03 — usuários: busca, filtros e paginação server-side #}
 {{ header|raw }}
-<main class="dash">
-  <div class="page-head">
-    <h1>{{ heading_title }}</h1>
-    <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
+<main class="rms-main" id="content">
+  <div class="container-fluid py-3 px-3 px-lg-4">
+    {% if text_flash.text %}
+    <div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">
+      {{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ text_close }}"></button>
+    </div>
+    {% endif %}
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+      <div>
+        <h1 class="h3 mb-1"><i class="bi bi-people me-2" aria-hidden="true"></i>{{ heading_title }}</h1>
+        <p class="text-body-secondary mb-0">{{ text_list }}</p>
+      </div>
+      {% if can_modify %}<a class="btn btn-primary" href="{{ add }}"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>{{ button_add }}</a>{% endif %}
+    </div>
+
+    <section class="card border-0 shadow-sm mb-3" aria-labelledby="userFilterTitle">
+      <div class="card-body">
+        <h2 class="h6 mb-3" id="userFilterTitle"><i class="bi bi-funnel me-1" aria-hidden="true"></i>{{ text_filter }}</h2>
+        <form method="get" action="{{ filter_action }}" class="row g-2 align-items-end">
+          <div class="col-12 col-md-6 col-xl-3">
+            <label class="form-label" for="filter-username">{{ entry_filter_username }}</label>
+            <input class="form-control" type="search" name="filter_username" id="filter-username" value="{{ filter_username }}" maxlength="32">
+          </div>
+          <div class="col-12 col-md-6 col-xl-3">
+            <label class="form-label" for="filter-email">{{ entry_filter_email }}</label>
+            <input class="form-control" type="search" name="filter_email" id="filter-email" value="{{ filter_email }}" maxlength="96">
+          </div>
+          <div class="col-12 col-md-6 col-xl-2">
+            <label class="form-label" for="filter-group">{{ entry_filter_group }}</label>
+            <select class="form-select" name="filter_user_group_id" id="filter-group">
+              <option value="0">{{ text_all_groups }}</option>
+              {% for group in user_groups %}<option value="{{ group.user_group_id }}"{{ filter_user_group_id == group.user_group_id ? ' selected' : '' }}>{{ group.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="col-12 col-md-6 col-xl-2">
+            <label class="form-label" for="filter-status">{{ text_status }}</label>
+            <select class="form-select" name="filter_status" id="filter-status">
+              <option value="all">{{ text_all_status }}</option>
+              <option value="1"{{ filter_status == '1' ? ' selected' : '' }}>{{ text_enabled }}</option>
+              <option value="0"{{ filter_status == '0' ? ' selected' : '' }}>{{ text_disabled }}</option>
+            </select>
+          </div>
+          <div class="col-12 col-xl-2 d-flex gap-2">
+            <button class="btn btn-primary flex-grow-1" type="submit"><i class="bi bi-search me-1" aria-hidden="true"></i>{{ button_filter }}</button>
+            <a class="btn btn-outline-secondary" href="{{ filter_action }}">{{ button_reset }}</a>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="card border-0 shadow-sm">
+      <div class="card-header bg-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <h2 class="h6 mb-0">{{ text_list }}</h2>
+        <span class="small text-body-secondary">{{ showing }}</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead><tr>
+            <th scope="col">{{ column_username }}</th><th scope="col">{{ column_email }}</th><th scope="col">{{ column_group }}</th><th scope="col">{{ column_status }}</th>
+            {% if can_modify %}<th scope="col" class="text-end">{{ column_action }}</th>{% endif %}
+          </tr></thead>
+          <tbody>
+          {% for user in users %}
+            <tr>
+              <td class="fw-semibold">{{ user.username }}{% if user.self %} <span class="badge text-bg-secondary">{{ text_self }}</span>{% endif %}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.group_name }}</td>
+              <td><span class="badge text-bg-{{ user.status ? 'success' : 'secondary' }}">{{ user.status ? text_enabled : text_disabled }}</span></td>
+              {% if can_modify %}<td class="text-end text-nowrap">
+                <a class="btn btn-sm btn-outline-primary" href="{{ user.edit }}"><i class="bi bi-pencil me-1" aria-hidden="true"></i>{{ button_edit }}</a>
+                {% if not user.self %}
+                <form method="post" action="{{ user.delete }}" class="d-inline" onsubmit="return confirm('{{ text_confirm_delete|e('js') }}');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash me-1" aria-hidden="true"></i>{{ button_delete }}</button>
+                </form>
+                {% endif %}
+              </td>{% endif %}
+            </tr>
+          {% else %}
+            <tr><td colspan="{{ can_modify ? 5 : 4 }}" class="text-center text-body-secondary py-4">{{ text_no_results }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if pagination %}<div class="card-footer bg-body d-flex flex-wrap align-items-center justify-content-between gap-2"><span class="small text-body-secondary">{{ showing }}</span>{{ pagination|replace({'&amp;amp;': '&amp;'})|raw }}</div>{% endif %}
+    </section>
   </div>
-  <p class="muted">{{ text_list }}</p>
-
-  {% if text_flash.text %}
-  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
-  {% endif %}
-
-  {% if users %}
-  <table class="table">
-    <thead>
-      <tr>
-        <th>{{ column_username }}</th>
-        <th>{{ column_email }}</th>
-        <th>{{ column_group }}</th>
-        <th>{{ column_status }}</th>
-        <th class="right">{{ column_action }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for user in users %}
-      <tr>
-        <td>{{ user.username }}{% if user.self %} <span class="badge">you</span>{% endif %}</td>
-        <td>{{ user.email }}</td>
-        <td>{{ user.group_name }}</td>
-        <td>{{ user.status ? text_enabled : text_disabled }}</td>
-        <td class="right actions">
-          <a class="btn ghost small" href="{{ user.edit }}">{{ button_edit }}</a>
-          {% if not user.self %}
-          <form method="post" action="{{ user.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
-            <button type="submit" class="btn danger small">{{ button_delete }}</button>
-          </form>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p class="muted">{{ text_no_results }}</p>
-  {% endif %}
 </main>
 {{ footer|raw }}

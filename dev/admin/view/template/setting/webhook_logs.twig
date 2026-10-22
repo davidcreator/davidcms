@@ -1,47 +1,24 @@
-{# dev/admin/view/template/setting/webhook_logs.twig — entregas recentes (F2-16) #}
+{# F8-03 — logs de entrega filtrados e paginados #}
 {{ header|raw }}
-<main class="dash">
-  <div class="page-head">
-    <h1>{{ text_logs_title }}</h1>
-    <a class="btn ghost" href="{{ back }}">{{ button_back }}</a>
+<main class="rms-main" id="content">
+  <div class="container-fluid py-3 px-3 px-lg-4">
+    {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">{{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ text_close }}"></button></div>{% endif %}
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3"><div><h1 class="h3 mb-1"><i class="bi bi-clock-history me-2" aria-hidden="true"></i>{{ text_logs_title }}</h1><p class="text-body-secondary mb-0">{{ text_logs_hint }}</p></div><a class="btn btn-outline-secondary" href="{{ back }}"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>{{ button_back }}</a></div>
+    <section class="card border-0 shadow-sm">
+      <div class="card-header bg-body d-flex flex-wrap justify-content-between align-items-center gap-2"><h2 class="h6 mb-0">{{ text_logs_title }}</h2><span class="small text-body-secondary">{{ showing }}</span></div>
+      <div class="card-body border-bottom">
+        <form method="get" action="{{ filter_action }}" class="row g-2 align-items-end" aria-label="{{ text_filter }}">
+          <div class="col-12 col-md-5"><label class="form-label" for="filter-delivery">{{ entry_delivery }}</label><input class="form-control" id="filter-delivery" name="filter_delivery" value="{{ filter_delivery }}" maxlength="64"></div>
+          <div class="col-12 col-md-3"><label class="form-label" for="filter-trigger">{{ entry_trigger }}</label><input class="form-control" id="filter-trigger" name="filter_trigger" value="{{ filter_trigger }}" maxlength="64"></div>
+          <div class="col-12 col-md-2"><label class="form-label" for="filter-http-code">{{ entry_http_code }}</label><input class="form-control" type="number" id="filter-http-code" name="filter_http_code" value="{{ filter_http_code ?: '' }}" min="100" max="599" step="1"></div>
+          <div class="col-12 col-md-2 d-flex gap-2"><button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-search me-1" aria-hidden="true"></i>{{ button_filter }}</button><a class="btn btn-outline-secondary" href="{{ filter_reset }}" aria-label="{{ button_reset }}"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></a></div>
+        </form>
+      </div>
+      <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th scope="col">{{ column_delivery }}</th><th scope="col">{{ column_trigger }}</th><th scope="col">{{ column_http_code }}</th><th scope="col">{{ column_duration }}</th><th scope="col">{{ column_attempt }}</th><th scope="col">{{ column_date_added }}</th><th scope="col" class="text-end">{{ column_action }}</th></tr></thead><tbody>
+        {% for log in logs %}<tr><td><code>{{ log.delivery }}</code></td><td><code>{{ log.trigger }}</code></td><td><span class="badge text-bg-{{ log.ok ? 'success' : 'danger' }}">{{ log.http_code }}</span></td><td>{{ log.duration }}s</td><td>{{ log.attempt }}</td><td class="text-nowrap">{{ log.date_added }}</td><td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ log.view }}"><i class="bi bi-eye me-1" aria-hidden="true"></i>{{ button_view }}</a></td></tr>{% else %}<tr><td colspan="7" class="text-center text-body-secondary py-4">{{ text_no_results }}</td></tr>{% endfor %}
+      </tbody></table></div>
+      {% if pagination %}<div class="card-footer bg-body d-flex flex-wrap justify-content-between align-items-center gap-2"><span class="small text-body-secondary">{{ showing }}</span>{{ pagination|replace({'&amp;amp;': '&amp;'})|raw }}</div>{% endif %}
+    </section>
   </div>
-  <p class="muted">{{ text_logs_hint }}</p>
-
-  {% if text_flash.text %}
-  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
-  {% endif %}
-
-  {% if logs %}
-  <table class="table">
-    <thead>
-      <tr>
-        <th>{{ column_delivery }}</th>
-        <th>{{ column_trigger }}</th>
-        <th>{{ column_http_code }}</th>
-        <th>{{ column_duration }}</th>
-        <th>{{ column_attempt }}</th>
-        <th>{{ column_date_added }}</th>
-        <th class="right">{{ column_action }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for log in logs %}
-      <tr>
-        <td><code class="delivery-{{ log.webhook_log_id }}">{{ log.delivery }}</code></td>
-        <td>{{ log.trigger }}</td>
-        <td>
-          <span class="badge" style="display:inline-block;padding:2px 10px;border-radius:10px;border:1px solid currentColor;color:{{ log.ok ? '#15803d' : '#b91c1c' }};">{{ log.http_code }}</span>
-        </td>
-        <td>{{ log.duration }}s</td>
-        <td>{{ log.attempt }}</td>
-        <td>{{ log.date_added }}</td>
-        <td class="right"><a class="btn ghost small" href="{{ log.view }}">{{ button_view }}</a></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p class="muted">{{ text_no_results }}</p>
-  {% endif %}
 </main>
 {{ footer|raw }}

@@ -1,67 +1,28 @@
-{# dev/admin/view/template/user/profile.twig — auto-perfil (F4-04, ADR 0027). Padrão = user_form.twig #}
+{# F8-03 — perfil do usuário com proteção CSRF #}
 {{ header|raw }}
-<main class="dash form-page">
-  <h1>{{ heading_title }}</h1>
-  <p class="muted">{{ text_profile }}</p>
+<main class="rms-main" id="content">
+  <div class="container-fluid py-3 px-3 px-lg-4">
+    {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">{{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ text_close }}"></button></div>{% endif %}
+    <div class="mb-3"><h1 class="h3 mb-1"><i class="bi bi-person-circle me-2" aria-hidden="true"></i>{{ heading_title }}</h1><p class="text-body-secondary mb-0">{{ text_profile }}</p></div>
+    {% if error %}<div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ error|nl2br }}</div>{% endif %}
 
-  {% if text_flash.text %}
-  <div class="alert {{ text_flash.type == 'success' ? 'success' : 'error' }}">{{ text_flash.text }}</div>
-  {% endif %}
-  {% if error %}
-  <div class="alert error">{{ error|nl2br }}</div>
-  {% endif %}
-
-  <form method="post" action="{{ action }}" class="panel form">
-
-    <fieldset class="panel" style="margin-bottom:1rem;">
-      <legend>{{ fieldset_identity }}</legend>
-      <div class="field">
-        <label>{{ entry_username }}</label>
-        <input type="text" value="{{ value_username }}" disabled>
-        <small class="muted">{{ help_username }}</small>
+    <form method="post" action="{{ action }}" class="card border-0 shadow-sm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="card-body">
+        <fieldset class="mb-4"><legend class="h5">{{ fieldset_identity }}</legend><div class="row g-3">
+          <div class="col-12 col-md-6"><label class="form-label" for="profile-username">{{ entry_username }}</label><input class="form-control" id="profile-username" type="text" value="{{ value_username }}" disabled><div class="form-text">{{ help_username }}</div></div>
+          <div class="col-12 col-md-6"><label class="form-label" for="profile-email">{{ entry_email }}</label><input class="form-control" id="profile-email" type="email" name="email" value="{{ value_email }}" maxlength="96" autocomplete="email" required><div class="form-text">{{ help_email }}</div></div>
+          <div class="col-12 col-md-6"><label class="form-label" for="profile-firstname">{{ entry_firstname }}</label><input class="form-control" id="profile-firstname" type="text" name="firstname" value="{{ value_firstname }}" maxlength="32" autocomplete="given-name" required></div>
+          <div class="col-12 col-md-6"><label class="form-label" for="profile-lastname">{{ entry_lastname }}</label><input class="form-control" id="profile-lastname" type="text" name="lastname" value="{{ value_lastname }}" maxlength="32" autocomplete="family-name" required></div>
+        </div></fieldset>
+        <fieldset><legend class="h5">{{ fieldset_password }}</legend><div class="row g-3">
+          <div class="col-12"><label class="form-label" for="profile-password-current">{{ entry_password_current }}</label><input class="form-control" id="profile-password-current" type="password" name="password_current" autocomplete="current-password"><div class="form-text">{{ help_password_current }}</div></div>
+          <div class="col-12 col-md-6"><label class="form-label" for="profile-password-new">{{ entry_password_new }}</label><input class="form-control" id="profile-password-new" type="password" name="password_new" minlength="8" autocomplete="new-password"><div class="form-text">{{ help_password_new }}</div></div>
+          <div class="col-12 col-md-6"><label class="form-label" for="profile-password-confirm">{{ entry_password_confirm }}</label><input class="form-control" id="profile-password-confirm" type="password" name="password_confirm" minlength="8" autocomplete="new-password"><div class="form-text">{{ help_password_confirm }}</div></div>
+        </div></fieldset>
       </div>
-      <div class="field">
-        <label>{{ entry_email }}</label>
-        <input type="email" name="email" value="{{ value_email }}" required>
-        <small class="muted">{{ help_email }}</small>
-      </div>
-      <div class="grid two">
-        <div class="field">
-          <label>{{ entry_firstname }}</label>
-          <input type="text" name="firstname" value="{{ value_firstname }}" maxlength="32" required>
-        </div>
-        <div class="field">
-          <label>{{ entry_lastname }}</label>
-          <input type="text" name="lastname" value="{{ value_lastname }}" maxlength="32" required>
-        </div>
-      </div>
-    </fieldset>
-
-    <fieldset class="panel" style="margin-bottom:1rem;">
-      <legend>{{ fieldset_password }}</legend>
-      <div class="field">
-        <label>{{ entry_password_current }}</label>
-        <input type="password" name="password_current" value="" autocomplete="current-password">
-        <small class="muted">{{ help_password_current }}</small>
-      </div>
-      <div class="grid two">
-        <div class="field">
-          <label>{{ entry_password_new }}</label>
-          <input type="password" name="password_new" value="" autocomplete="new-password">
-          <small class="muted">{{ help_password_new }}</small>
-        </div>
-        <div class="field">
-          <label>{{ entry_password_confirm }}</label>
-          <input type="password" name="password_confirm" value="" autocomplete="new-password">
-          <small class="muted">{{ help_password_confirm }}</small>
-        </div>
-      </div>
-    </fieldset>
-
-    <div class="actions" style="display:flex;gap:8px;">
-      <button type="submit" class="btn primary">{{ button_save }}</button>
-      <a class="btn" href="{{ back }}">{{ button_back }}</a>
-    </div>
-  </form>
+      <div class="card-footer bg-body d-flex justify-content-end gap-2"><a class="btn btn-outline-secondary" href="{{ back }}">{{ button_back }}</a><button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1" aria-hidden="true"></i>{{ button_save }}</button></div>
+    </form>
+  </div>
 </main>
 {{ footer|raw }}

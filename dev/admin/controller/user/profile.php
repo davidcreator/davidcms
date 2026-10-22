@@ -35,10 +35,15 @@ class Profile extends \Reamur\System\Engine\Controller {
         }
 
         $errors = [];
+        $post = [];
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $post   = $this->sanitize($this->request->post);
-            $errors = $this->validate($post, (string)$user['password']);
+            if (!$this->csrfValid()) {
+                $errors = ['csrf' => $this->language->get('error_csrf')];
+            } else {
+                $post   = $this->sanitize($this->request->post);
+                $errors = $this->validate($post, (string)$user['password']);
+            }
 
             if ($errors === []) {
                 $this->model_user_user->editProfile($user_id, $post);
@@ -55,6 +60,8 @@ class Profile extends \Reamur\System\Engine\Controller {
         }
 
         $data['heading_title'] = $this->language->get('heading_title');
+        $data['text_close'] = $this->language->get('text_close');
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
         $data['text_profile']  = $this->language->get('text_profile');
         $data['text_flash']    = $this->flash();
         $data['error']         = implode("\n", array_filter(array_map('strval', $errors)));
@@ -163,9 +170,16 @@ class Profile extends \Reamur\System\Engine\Controller {
         }
     }
 
+    private function csrfValid(): bool {
+        return \Reamur\System\Library\Security\Csrf::check(
+            $this->session,
+            (string)($this->request->post['csrf_token'] ?? '')
+        );
+    }
+
     /** Chrome compartilhado com as telas do dashboard (mesma assinatura do módulo) */
     private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $data['body_class'] = 'rms-dash';
         $data['header']     = $this->load->controller('common/header', $data);

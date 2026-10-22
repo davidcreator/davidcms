@@ -17,23 +17,44 @@ namespace Reamur\Admin\Model\Setting;
 
 class Webhook extends \Reamur\System\Engine\Model {
 
-    /** Teto do log exibido (idempotência/auditoria recente; sem paginação ainda) */
-    private const LOG_LIMIT = 200;
 
     /**
-     * Todos os endpoints, agrupados por trigger.
-     *
+     * Endpoints filtrados e paginados, agrupados por trigger.
+     * @param array<string, mixed> $filter_data
      * @return array<int, array<string, mixed>>
      */
-    public function getWebhooks(): array {
-        $query = $this->db->query(
-            "SELECT w.`webhook_id`, w.`trigger`, w.`url`, w.`secret`, w.`description`, w.`status`, w.`date_added`,
+    public function getWebhooks(array $filter_data = []): array {
+        $where = $this->webhookFilterWhere($filter_data);
+        $sql = "SELECT w.`webhook_id`, w.`trigger`, w.`url`, CASE WHEN w.`secret` <> '' THEN 1 ELSE 0 END AS `secret_is_set`, w.`description`, w.`status`, w.`date_added`,
                     (SELECT COUNT(*) FROM `" . $this->t('webhook_log') . "` l WHERE l.`webhook_id` = w.`webhook_id`) AS `log_count`
-               FROM `" . $this->t('webhook') . "` w
-           ORDER BY w.`trigger` ASC, w.`webhook_id` ASC"
-        );
-
+               FROM `" . $this->t('webhook') . "` w";
+        if ($where !== '') { $sql .= ' WHERE ' . $where; }
+        $start = max(0, (int)($filter_data['start'] ?? 0));
+        $limit = min(100, max(1, (int)($filter_data['limit'] ?? 20)));
+        $sql .= " ORDER BY w.`trigger` ASC, w.`webhook_id` ASC LIMIT " . $start . "," . $limit;
+        $query = $this->db->query($sql);
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
+    /** @param array<string, mixed> $filter_data */
+    public function getTotalWebhooks(array $filter_data = []): int {
+        $sql = "SELECT COUNT(*) AS `total` FROM `" . $this->t('webhook') . "` w";
+        $where = $this->webhookFilterWhere($filter_data);
+        if ($where !== '') { $sql .= ' WHERE ' . $where; }
+        $query = $this->db->query($sql);
+        return ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['total'] : 0;
+    }
+
+    /** @param array<string, mixed> $filter_data */
+    private function webhookFilterWhere(array $filter_data): string {
+        $where = [];
+        foreach (['trigger' => 'w.`trigger`', 'url' => 'w.`url`'] as $key => $column) {
+            $value = trim((string)($filter_data[$key] ?? ''));
+            if ($value !== '') { $where[] = $column . " LIKE '%" . $this->db->escape($value) . "%'"; }
+        }
+        $status = (string)($filter_data['status'] ?? 'all');
+        if (in_array($status, ['0', '1'], true)) { $where[] = "w.`status` = '" . $status . "'"; }
+        return implode(' AND ', $where);
     }
 
     /**
@@ -99,25 +120,46 @@ class Webhook extends \Reamur\System\Engine\Model {
     }
 
     /**
-     * Entregas recentes — todas, ou filtradas por endpoint.
-     *
+     * Entregas paginadas — todas ou filtradas por endpoint, delivery, trigger e HTTP.
+     * @param array<string, mixed> $filter_data
      * @return array<int, array<string, mixed>>
      */
-    public function getLogs(?int $webhook_id = null): array {
+    public function getLogs(?int $webhook_id = null, int $start = 0, int $limit = 20, array $filter_data = []): array {
         $sql = "SELECT l.`webhook_log_id`, l.`webhook_id`, l.`delivery`, l.`http_code`, l.`duration`, l.`attempt`, l.`date_added`,
                        w.`trigger`, w.`url`
                   FROM `" . $this->t('webhook_log') . "` l
              LEFT JOIN `" . $this->t('webhook') . "` w ON w.`webhook_id` = l.`webhook_id`";
-
-        if ($webhook_id !== null && $webhook_id > 0) {
-            $sql .= " WHERE l.`webhook_id` = '" . $webhook_id . "'";
-        }
-
-        $sql .= " ORDER BY l.`date_added` DESC, l.`webhook_log_id` DESC LIMIT " . self::LOG_LIMIT;
-
+        $where = $this->logFilterWhere($webhook_id, $filter_data);
+        if ($where !== '') { $sql .= ' WHERE ' . $where; }
+        $start = max(0, $start);
+        $limit = min(100, max(1, $limit));
+        $sql .= " ORDER BY l.`date_added` DESC, l.`webhook_log_id` DESC LIMIT " . $start . "," . $limit;
         $query = $this->db->query($sql);
-
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
+    /** @param array<string, mixed> $filter_data */
+    public function getTotalLogs(?int $webhook_id = null, array $filter_data = []): int {
+        $sql = "SELECT COUNT(*) AS `total`
+                  FROM `" . $this->t('webhook_log') . "` l
+             LEFT JOIN `" . $this->t('webhook') . "` w ON w.`webhook_id` = l.`webhook_id`";
+        $where = $this->logFilterWhere($webhook_id, $filter_data);
+        if ($where !== '') { $sql .= ' WHERE ' . $where; }
+        $query = $this->db->query($sql);
+        return ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['total'] : 0;
+    }
+
+    /** @param array<string, mixed> $filter_data */
+    private function logFilterWhere(?int $webhook_id, array $filter_data): string {
+        $where = [];
+        if ($webhook_id !== null && $webhook_id > 0) { $where[] = 'l.`webhook_id` = ' . $webhook_id; }
+        foreach (['delivery' => 'l.`delivery`', 'trigger' => 'w.`trigger`'] as $key => $column) {
+            $value = trim((string)($filter_data[$key] ?? ''));
+            if ($value !== '') { $where[] = $column . " LIKE '%" . $this->db->escape($value) . "%'"; }
+        }
+        $httpCode = (int)($filter_data['http_code'] ?? 0);
+        if ($httpCode > 0) { $where[] = 'l.`http_code` = ' . $httpCode; }
+        return implode(' AND ', $where);
     }
 
     /**

@@ -49,3 +49,6 @@ $_['error_url']            = '%s must start with http:// or https://!';
 // Buttons
 $_['button_save'] = 'Save';
 $_['button_back'] = 'Back';
+
+$_['error_csrf'] = 'This form expired or could not be verified. Reload the page and try again.';
+$_['text_close'] = 'Close';

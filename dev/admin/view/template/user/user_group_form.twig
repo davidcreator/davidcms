@@ -1,48 +1,43 @@
-{# dev/admin/view/template/user/user_group_form.twig — matriz de permissões do grupo (F2-6) #}
+{# F8-03 — ACL do grupo com matriz acessível e token CSRF #}
 {{ header|raw }}
-<main class="dash form-page">
-  <h1>{{ heading_title }}</h1>
+<main class="rms-main" id="content">
+  <div class="container-fluid py-3 px-3 px-lg-4">
+    <div class="mb-3"><h1 class="h3 mb-1"><i class="bi bi-shield-lock me-2" aria-hidden="true"></i>{{ heading_title }}</h1></div>
+    {% if error %}<div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ error|nl2br }}</div>{% endif %}
 
-  {% if error %}
-  <div class="alert error">{{ error|nl2br }}</div>
-  {% endif %}
-
-  <form method="post" action="{{ action }}" class="panel form">
-    <div class="field">
-      <label for="input-name">{{ entry_name }}</label>
-      <input type="text" name="name" id="input-name" value="{{ name }}" required>
-    </div>
-
-    <h2>{{ text_permissions }}</h2>
-    <p class="muted small">{{ text_group_note }}</p>
-
-    <table class="table perms">
-      <thead>
-        <tr>
-          <th>{{ column_route }}</th>
-          <th class="center">{{ text_access }}</th>
-          <th class="center">{{ text_modify }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for row in routes %}
-        <tr>
-          <td><code>{{ row.route }}</code></td>
-          <td class="center">
-            <input type="checkbox" name="access[]" value="{{ row.route }}"{{ row.access_granted ? ' checked' : '' }}>
-          </td>
-          <td class="center">
-            <input type="checkbox" name="modify[]" value="{{ row.route }}"{{ row.modify_granted ? ' checked' : '' }}>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-    <div class="actions right">
-      <a class="btn ghost" href="{{ cancel }}">{{ button_cancel }}</a>
-      <button type="submit" class="btn primary">{{ button_save }}</button>
-    </div>
-  </form>
+    <form method="post" action="{{ action }}" class="card border-0 shadow-sm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <fieldset {{ not can_modify ? 'disabled' : '' }}>
+      <div class="card-body">
+        <div class="mb-4"><label class="form-label" for="input-name">{{ entry_name }}</label><input class="form-control" type="text" name="name" id="input-name" value="{{ name }}" maxlength="64" required></div>
+        <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+          <div><h2 class="h5 mb-1">{{ text_permissions }}</h2><p class="small text-body-secondary mb-0">{{ text_group_note }}</p></div>
+        </div>
+        <div class="table-responsive border rounded-3">
+          <table class="table table-sm table-hover align-middle mb-0 perms">
+            <thead class="table-light"><tr>
+              <th scope="col">{{ column_route }}</th>
+              <th scope="col" class="text-center">{{ text_access }}<div class="form-check d-flex justify-content-center mt-1"><input class="form-check-input js-select-all" type="checkbox" data-permission="access" aria-label="{{ text_select_all }} — {{ text_access }}"></div></th>
+              <th scope="col" class="text-center">{{ text_modify }}<div class="form-check d-flex justify-content-center mt-1"><input class="form-check-input js-select-all" type="checkbox" data-permission="modify" aria-label="{{ text_select_all }} — {{ text_modify }}"></div></th>
+            </tr></thead>
+            <tbody>{% for row in routes %}<tr>
+              <td><code>{{ row.route }}</code></td>
+              <td class="text-center"><input class="form-check-input" type="checkbox" name="access[]" value="{{ row.route }}"{{ row.access_granted ? ' checked' : '' }} aria-label="{{ text_access }} — {{ row.route }}"></td>
+              <td class="text-center"><input class="form-check-input" type="checkbox" name="modify[]" value="{{ row.route }}"{{ row.modify_granted ? ' checked' : '' }} aria-label="{{ text_modify }} — {{ row.route }}"></td>
+            </tr>{% endfor %}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer bg-body d-flex justify-content-end gap-2"><a class="btn btn-outline-secondary" href="{{ cancel }}">{{ button_cancel }}</a>{% if can_modify %}<button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1" aria-hidden="true"></i>{{ button_save }}</button>{% endif %}</div>
+      </fieldset>
+    </form>
+  </div>
 </main>
+<script>
+document.querySelectorAll('.js-select-all').forEach(function (toggle) {
+  toggle.addEventListener('change', function () {
+    document.querySelectorAll('input[name="' + toggle.dataset.permission + '[]"]').forEach(function (box) { box.checked = toggle.checked; });
+  });
+});
+</script>
 {{ footer|raw }}

@@ -18,52 +18,85 @@ namespace Reamur\Admin\Controller\User;
 
 class User extends \Reamur\System\Engine\Controller {
 
-    /** Lista usuários com nome do grupo (200) */
+    /** Lista usuários com filtros e paginação server-side. */
     public function index(): void {
         $this->load->language('user/user');
-
         $this->document->setTitle($this->language->get('heading_title'));
-
         $this->load->model('user/user');
 
-        $data['heading_title']        = $this->language->get('heading_title');
-        $data['text_list']            = $this->language->get('text_list');
-        $data['text_no_results']      = $this->language->get('text_no_results');
-        $data['text_confirm_delete']  = $this->language->get('text_confirm_delete');
-        $data['text_enabled']         = $this->language->get('text_enabled');
-        $data['text_disabled']        = $this->language->get('text_disabled');
-        $data['column_username']      = $this->language->get('column_username');
-        $data['column_email']         = $this->language->get('column_email');
-        $data['column_group']         = $this->language->get('column_group');
-        $data['column_status']        = $this->language->get('column_status');
-        $data['column_action']        = $this->language->get('column_action');
-        $data['button_add']           = $this->language->get('button_add');
-        $data['button_edit']          = $this->language->get('button_edit');
-        $data['button_delete']        = $this->language->get('button_delete');
-        $data['text_flash']           = $this->flash();
+        $filter = [
+            'username' => mb_substr($this->queryValue('filter_username'), 0, 32),
+            'email' => mb_substr($this->queryValue('filter_email'), 0, 96),
+            'user_group_id' => max(0, (int)$this->queryValue('filter_user_group_id')),
+            'status' => $this->queryValue('filter_status') === '' ? 'all' : $this->queryValue('filter_status'),
+        ];
+        if (!in_array($filter['status'], ['all', '0', '1'], true)) { $filter['status'] = 'all'; }
+        $page = max(1, (int)$this->queryValue('page'));
+        $limit = 20;
+        $total = $this->model_user_user->getTotalUsers($filter);
+        $page = min($page, max(1, (int)ceil($total / $limit)));
+        $filter['start'] = ($page - 1) * $limit;
+        $filter['limit'] = $limit;
 
+        $data = [];
+        foreach ([
+            'heading_title', 'text_list', 'text_no_results', 'text_confirm_delete', 'text_close',
+            'text_enabled', 'text_disabled', 'text_filter', 'text_all_groups',
+            'text_all_status', 'text_showing', 'text_self', 'text_status',
+            'entry_filter_username', 'entry_filter_email', 'entry_filter_group',
+            'button_filter', 'button_reset', 'column_username', 'column_email',
+            'column_group', 'column_status', 'column_action', 'button_add',
+            'button_edit', 'button_delete',
+        ] as $key) { $data[$key] = $this->language->get($key); }
+        $data['text_flash'] = $this->flash();
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['can_modify'] = $this->user->hasPermission('modify', 'user/user');
+        $data['filter_username'] = $filter['username'];
+        $data['filter_email'] = $filter['email'];
+        $data['filter_user_group_id'] = $filter['user_group_id'];
+        $data['filter_status'] = $filter['status'];
+        $data['user_groups'] = $this->model_user_user->getUserGroups();
         $data['users'] = [];
 
-        foreach ($this->model_user_user->getUsers() as $user) {
+        foreach ($this->model_user_user->getUsers($filter) as $user) {
             $user = (array)$user;
-            $uid  = (int)$user['user_id'];
-
+            $uid = (int)$user['user_id'];
             $data['users'][] = [
-                'user_id'    => $uid,
-                'username'   => (string)$user['username'],
-                'email'      => (string)$user['email'],
+                'user_id' => $uid,
+                'username' => (string)$user['username'],
+                'email' => (string)$user['email'],
                 'group_name' => (string)($user['group_name'] ?? ''),
-                'status'     => (int)$user['status'],
-                'self'       => $uid === $this->user->getUserId(),
-                'edit'       => $this->url->link('user/user.edit|' . $uid),
-                'delete'     => $this->url->link('user/user.delete|' . $uid),
+                'status' => (int)$user['status'],
+                'self' => $uid === $this->user->getUserId(),
+                'edit' => $this->url->link('user/user.edit|' . $uid),
+                'delete' => $this->url->link('user/user.delete|' . $uid),
             ];
         }
 
         $data['add'] = $this->url->link('user/user.add');
+        $data['filter_action'] = $this->url->link('user/user');
+        $data['total'] = $total;
+        $data['showing'] = $total > 0 ? sprintf($data['text_showing'], (($page - 1) * $limit) + 1, min($page * $limit, $total), $total) : '';
+        require_once DIR_SYSTEM . 'library/pagination.php';
+        $pagination = new \Pagination();
+        $pagination->total = $total;
+        $pagination->page = $page;
+        $pagination->limit = $limit;
+        $query = 'page={page}';
+        foreach (['username' => 'filter_username', 'email' => 'filter_email', 'user_group_id' => 'filter_user_group_id', 'status' => 'filter_status'] as $key => $param) {
+            if ((string)$filter[$key] !== '' && !($key === 'status' && $filter[$key] === 'all') && !($key === 'user_group_id' && (int)$filter[$key] === 0)) {
+                $query .= '&' . $param . '=' . rawurlencode((string)$filter[$key]);
+            }
+        }
+        $pagination->url = $this->url->link('user/user', $query);
+        $pagination->css_class = 'pagination pagination-sm mb-0';
+        $pagination->text_first = $this->language->get('text_page_first');
+        $pagination->text_last = $this->language->get('text_page_last');
+        $pagination->text_next = $this->language->get('text_page_next');
+        $pagination->text_prev = $this->language->get('text_page_prev');
+        $data['pagination'] = $pagination->render();
 
         $this->chrome($data);
-
         $this->response->setOutput($this->load->view('user/user_list', $data));
     }
 
@@ -87,7 +120,7 @@ class User extends \Reamur\System\Engine\Controller {
         ]);
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $errors = $this->validateUser(0, $data);
+            $errors = $this->csrfValid() ? $this->validateUser(0, $data) : [$this->language->get('error_csrf')];
 
             if ($errors === []) {
                 // Payload normalizado do POST (NÃO o $data de view — que
@@ -141,16 +174,18 @@ class User extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $errors = $this->validateUser($user_id, $data);
+            $csrfOk = $this->csrfValid();
+            $errors = $csrfOk ? $this->validateUser($user_id, $data) : [];
+            if (!$csrfOk) { $data['error'] = $this->language->get('error_csrf'); }
 
             // F4-04 (ADR 0027): guardas de auto-trava do USUÁRIO LOGADO —
             // desativar a si mesmo fecha o painel; inativar/demovê-lo do
             // grupo que concede user/user quando é o último ativo idem.
-            if ($user_id === $this->user->getUserId() && ($this->request->post['status'] ?? null) === null && (int)($user['status'] ?? 0) === 1) {
+            if ($csrfOk && $user_id === $this->user->getUserId() && ($this->request->post['status'] ?? null) === null && (int)($user['status'] ?? 0) === 1) {
                 $errors[] = $this->language->get('error_self_disable');
             }
 
-            if ($errors === []) {
+            if ($csrfOk && $errors === []) {
                 $this->load->model('user/user_group');
 
                 if (!$this->model_user_user_group->hasOtherActiveUserAdmin($user_id)) {
@@ -158,7 +193,7 @@ class User extends \Reamur\System\Engine\Controller {
                 }
             }
 
-            if ($errors === []) {
+            if ($csrfOk && $errors === []) {
                 $this->model_user_user->editUser($user_id, $this->postPayload());
 
                 $this->setFlash($this->language->get('text_success_edit'));
@@ -168,7 +203,7 @@ class User extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $data['error'] = implode("\n", $errors);
+            if ($csrfOk) { $data['error'] = implode("\n", $errors); }
         }
 
         $data['action'] = $this->url->link('user/user.edit|' . $user_id);
@@ -190,6 +225,12 @@ class User extends \Reamur\System\Engine\Controller {
         }
 
         $this->load->language('user/user');
+
+        if (!$this->csrfValid()) {
+            $this->setFlash($this->language->get('error_csrf'), 'error');
+            $this->response->redirect($this->url->link('user/user'));
+            return;
+        }
 
         $this->load->model('user/user');
 
@@ -234,6 +275,8 @@ class User extends \Reamur\System\Engine\Controller {
         $data['entry_group']       = $this->language->get('entry_group');
         $data['entry_status']      = $this->language->get('entry_status');
         $data['text_password_hint'] = $this->language->get('text_password_hint');
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['can_modify'] = $this->user->hasPermission('modify', 'user/user');
         $data['button_save']       = $this->language->get('button_save');
         $data['button_cancel']     = $this->language->get('button_cancel');
         $data['error']             = '';
@@ -348,9 +391,21 @@ class User extends \Reamur\System\Engine\Controller {
         }
     }
 
+    private function queryValue(string $key): string {
+        $value = $this->request->get[$key] ?? '';
+        return is_scalar($value) ? trim((string)$value) : '';
+    }
+
+    private function csrfValid(): bool {
+        return \Reamur\System\Library\Security\Csrf::check(
+            $this->session,
+            (string)($this->request->post['csrf_token'] ?? '')
+        );
+    }
+
     /** Chrome compartilhado + estilo do módulo */
     private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $data['body_class'] = 'rms-dash';
         $data['header']     = $this->load->controller('common/header', $data);

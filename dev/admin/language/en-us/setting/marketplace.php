@@ -56,3 +56,31 @@ $_['error_already_paid']   = 'Order #%s already has an approved payment — link
 $_['error_no_seller']      = 'No active connected seller. Connect a seller first.';
 $_['error_no_total']       = 'Order #%s has zero total. Set the price in Sales → Orders → Edit first.';
 $_['error_preference']     = 'Could not create the payment preference: %s';
+
+$_['error_csrf'] = 'This form expired or could not be verified. Reload the page and try again.';
+$_['text_confirm_disconnect'] = 'Disconnect this seller from this local installation?';
+
+// F8-03: search and pagination for marketplace lists
+$_['text_filter'] = 'Filter';
+$_['text_showing'] = 'Showing %s–%s of %s';
+$_['text_all_status'] = 'All statuses';
+$_['text_active'] = 'Active';
+$_['text_inactive'] = 'Inactive';
+$_['text_payment_pending'] = 'Pending';
+$_['text_payment_approved'] = 'Approved';
+$_['text_payment_rejected'] = 'Rejected';
+$_['text_payment_cancelled'] = 'Cancelled';
+$_['text_payment_refunded'] = 'Refunded';
+$_['text_payment_in_process'] = 'In process';
+$_['entry_filter_seller'] = 'Seller (name, email or ID)';
+$_['entry_filter_seller_status'] = 'Seller status';
+$_['entry_filter_order_id'] = 'Order ID';
+$_['entry_filter_customer'] = 'Customer';
+$_['entry_filter_payment_status'] = 'Payment status';
+$_['button_filter'] = 'Apply filters';
+$_['button_reset'] = 'Reset';
+$_['text_close'] = 'Close';
+$_['text_page_first'] = '« First';
+$_['text_page_last'] = 'Last »';
+$_['text_page_next'] = 'Next ›';
+$_['text_page_prev'] = '‹ Prev';

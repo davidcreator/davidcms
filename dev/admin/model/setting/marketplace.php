@@ -14,16 +14,40 @@ namespace Reamur\Admin\Model\Setting;
 
 class Marketplace extends \Reamur\System\Engine\Model {
 
-    /** @return array<int, array<string, mixed>> grade (tokens NÃO sobem) */
-    public function getSellers(): array {
-        $query = $this->db->query(
-            "SELECT `mp_seller_id`, `mp_user_id`, `nickname`, `email`, `scope`,
+    /** @param array<string, mixed> $filter_data @return array<int, array<string, mixed>> grade (tokens NÃO sobem) */
+    public function getSellers(array $filter_data = []): array {
+        $where = $this->sellerFilterWhere($filter_data);
+        $sql = "SELECT `mp_seller_id`, `mp_user_id`, `nickname`, `email`, `scope`,
                     `token_expires_at`, `status`, `date_added`, `date_modified`
-               FROM `" . $this->t('mp_seller') . "`
-              ORDER BY `date_added` DESC, `mp_seller_id` DESC"
-        );
-
+               FROM `" . $this->t('mp_seller') . "`";
+        if ($where !== '') { $sql .= ' WHERE ' . $where; }
+        $start = max(0, (int)($filter_data['start'] ?? 0));
+        $limit = min(100, max(1, (int)($filter_data['limit'] ?? 10)));
+        $sql .= " ORDER BY `date_added` DESC, `mp_seller_id` DESC LIMIT " . $start . "," . $limit;
+        $query = $this->db->query($sql);
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
+    /** @param array<string, mixed> $filter_data */
+    public function getTotalSellers(array $filter_data = []): int {
+        $sql = "SELECT COUNT(*) AS `total` FROM `" . $this->t('mp_seller') . "`";
+        $where = $this->sellerFilterWhere($filter_data);
+        if ($where !== '') { $sql .= ' WHERE ' . $where; }
+        $query = $this->db->query($sql);
+        return ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['total'] : 0;
+    }
+
+    /** @param array<string, mixed> $filter_data */
+    private function sellerFilterWhere(array $filter_data): string {
+        $where = [];
+        $search = trim((string)($filter_data['search'] ?? ''));
+        if ($search !== '') {
+            $like = "'%" . $this->db->escape($search) . "%'";
+            $where[] = "(`nickname` LIKE " . $like . " OR `email` LIKE " . $like . " OR CAST(`mp_user_id` AS CHAR) LIKE " . $like . ")";
+        }
+        $status = (string)($filter_data['status'] ?? 'all');
+        if (in_array($status, ['0', '1'], true)) { $where[] = "`status` = '" . $status . "'"; }
+        return implode(' AND ', $where);
     }
 
     /** @return array<string, mixed> vendedor completo (com tokens — uso interno) */
@@ -130,21 +154,50 @@ class Marketplace extends \Reamur\System\Engine\Model {
         return (int)$this->db->getLastId();
     }
 
-    /** Grade da tela: payment + pedido + vendedor (sem tokens) */
-    public function getPayments(): array {
-        $query = $this->db->query(
-            "SELECT p.`mp_payment_id`, p.`order_id`, p.`preference_id`, p.`payment_id`,
+    /** Grade paginada: payment + pedido + vendedor (sem tokens). */
+    public function getPayments(array $filter_data = []): array {
+        $sql = "SELECT p.`mp_payment_id`, p.`order_id`, p.`preference_id`, p.`payment_id`,
                     p.`public_token`, p.`amount`, p.`marketplace_fee`, p.`currency_id`,
                     p.`status`, p.`date_added`,
                     o.`firstname`, o.`lastname`, o.`order_status_id`,
                     s.`nickname` AS `seller_nickname`, s.`mp_user_id` AS `seller_mp_user_id`
                FROM `" . $this->t('mp_payment') . "` p
                LEFT JOIN `" . $this->t('order') . "` o ON o.`order_id` = p.`order_id`
-               LEFT JOIN `" . $this->t('mp_seller') . "` s ON s.`mp_seller_id` = p.`mp_seller_id`
-              ORDER BY p.`mp_payment_id` DESC"
-        );
+               LEFT JOIN `" . $this->t('mp_seller') . "` s ON s.`mp_seller_id` = p.`mp_seller_id`";
+        $where = $this->paymentFilterWhere($filter_data);
+        if ($where !== '') { $sql .= ' WHERE ' . $where; }
+        $start = max(0, (int)($filter_data['start'] ?? 0));
+        $limit = min(100, max(1, (int)($filter_data['limit'] ?? 10)));
+        $sql .= " ORDER BY p.`mp_payment_id` DESC LIMIT " . $start . "," . $limit;
+        $query = $this->db->query($sql);
+        return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
 
-        return (array)$query->rows;
+    /** @param array<string, mixed> $filter_data */
+    public function getTotalPayments(array $filter_data = []): int {
+        $sql = "SELECT COUNT(*) AS `total` FROM `" . $this->t('mp_payment') . "` p
+               LEFT JOIN `" . $this->t('order') . "` o ON o.`order_id` = p.`order_id`";
+        $where = $this->paymentFilterWhere($filter_data);
+        if ($where !== '') { $sql .= ' WHERE ' . $where; }
+        $query = $this->db->query($sql);
+        return ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['total'] : 0;
+    }
+
+    /** @param array<string, mixed> $filter_data */
+    private function paymentFilterWhere(array $filter_data): string {
+        $where = [];
+        $orderId = (int)($filter_data['order_id'] ?? 0);
+        if ($orderId > 0) { $where[] = 'p.`order_id` = ' . $orderId; }
+        $customer = trim((string)($filter_data['customer'] ?? ''));
+        if ($customer !== '') {
+            $like = "'%" . $this->db->escape($customer) . "%'";
+            $where[] = "(o.`firstname` LIKE " . $like . " OR o.`lastname` LIKE " . $like . " OR o.`email` LIKE " . $like . ")";
+        }
+        $status = (string)($filter_data['status'] ?? 'all');
+        if (in_array($status, ['pending', 'approved', 'rejected', 'cancelled', 'refunded', 'in_process'], true)) {
+            $where[] = "p.`status` = '" . $this->db->escape($status) . "'";
+        }
+        return implode(' AND ', $where);
     }
 
     /** Tabela com prefixo (mesmo helper dos demais models) */

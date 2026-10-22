@@ -60,3 +60,22 @@ $_['error_group']           = '¡Elija un grupo de usuarios!';
 $_['error_self_delete']     = '¡No puede eliminar su propio usuario conectado!';
 $_['error_self_disable']      = 'No puedes desactivar tu propia cuenta mientras estás conectado.';
 $_['error_last_active_admin'] = 'No se puede inactivar/quitar/eliminar al último usuario activo con administración de usuarios (user/user).';
+
+// F8-03: filtros, paginación y protección de solicitudes
+$_['text_filter'] = 'Filtrar usuarios';
+$_['text_all_groups'] = 'Todos los grupos';
+$_['text_all_status'] = 'Todos los estados';
+$_['text_showing'] = 'Mostrando %s–%s de %s';
+$_['text_self'] = 'Tú';
+$_['entry_filter_username'] = 'Usuario';
+$_['entry_filter_email'] = 'Correo';
+$_['entry_filter_group'] = 'Grupo de usuarios';
+$_['button_filter'] = 'Aplicar filtros';
+$_['button_reset'] = 'Limpiar';
+$_['error_csrf'] = 'El formulario ha caducado o no se pudo verificar. Recarga la página e inténtalo de nuevo.';
+$_['text_status'] = 'Estado';
+$_['text_close'] = 'Cerrar';
+$_['text_page_first'] = '« Primera';
+$_['text_page_last'] = 'Última »';
+$_['text_page_next'] = 'Siguiente ›';
+$_['text_page_prev'] = '‹ Anterior';

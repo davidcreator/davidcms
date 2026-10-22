@@ -1,96 +1,68 @@
-{# dev/admin/view/template/setting/site_info.twig — informações do site (F4-03, ADR 0026). Padrão = setting.twig #}
+{# F8-03 — informações institucionais com edição por idioma e CSRF #}
 {{ header|raw }}
-<main class="dash form-page">
-  <h1>{{ heading_title }}</h1>
-  <p class="muted">{{ text_site_info }}</p>
+<main class="rms-main" id="content">
+  <div class="container-fluid py-3 px-3 px-lg-4">
+    {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">{{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ text_close }}"></button></div>{% endif %}
+    {% if error %}<div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ error|nl2br }}</div>{% endif %}
+    <div class="mb-3"><h1 class="h3 mb-1"><i class="bi bi-info-circle me-2" aria-hidden="true"></i>{{ heading_title }}</h1><p class="text-body-secondary mb-0">{{ text_site_info }}</p></div>
 
-  {% if text_flash.text %}
-  <div class="alert {{ text_flash.type == 'success' ? 'success' : 'error' }}">{{ text_flash.text }}</div>
-  {% endif %}
-  {% if error %}
-  <div class="alert error">{{ error|nl2br }}</div>
-  {% endif %}
+    <form method="post" action="{{ action }}" class="card border-0 shadow-sm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <fieldset {{ not can_modify ? 'disabled' : '' }}>
+      <div class="card-body">
+        <section class="mb-4" aria-labelledby="contact-title">
+          <h2 class="h5 mb-3" id="contact-title">{{ fieldset_contact }}</h2>
+          <div class="row g-3">
+            <div class="col-12 col-lg-6"><label class="form-label" for="contact-email">{{ entry_config_contact_email }}</label><input class="form-control" type="email" name="config_contact_email" id="contact-email" value="{{ value_config_contact_email }}" maxlength="96" required><div class="form-text">{{ help_config_contact_email }}</div></div>
+            <div class="col-12 col-lg-6"><label class="form-label" for="whatsapp-text">{{ entry_config_contact_whatsapp_text }}</label><input class="form-control" type="text" name="config_contact_whatsapp_text" id="whatsapp-text" value="{{ value_config_contact_whatsapp_text }}" maxlength="32" required><div class="form-text">{{ help_config_contact_whatsapp_text }}</div></div>
+            <div class="col-12 col-lg-6"><label class="form-label" for="whatsapp-href">{{ entry_config_contact_whatsapp_href }}</label><input class="form-control" type="text" name="config_contact_whatsapp_href" id="whatsapp-href" value="{{ value_config_contact_whatsapp_href }}" inputmode="numeric" maxlength="16"><div class="form-text">{{ help_config_contact_whatsapp_href }}</div></div>
+          </div>
+        </section>
 
-  <form method="post" action="{{ action }}" class="panel form">
+        <hr class="my-4">
+        <section class="mb-4" aria-labelledby="address-title">
+          <h2 class="h5 mb-2" id="address-title">{{ fieldset_address }}</h2><p class="small text-body-secondary">{{ help_fallback }}</p>
+          <ul class="nav nav-pills gap-1 mb-3" role="tablist" aria-label="{{ fieldset_address }}">
+            {% for lang in languages %}<li class="nav-item" role="presentation"><button class="nav-link{{ loop.first ? ' active' : '' }}" id="address-tab-{{ loop.index }}" data-bs-toggle="tab" data-bs-target="#address-pane-{{ loop.index }}" type="button" role="tab" aria-controls="address-pane-{{ loop.index }}" aria-selected="{{ loop.first ? 'true' : 'false' }}">{{ lang.name|default(lang.code) }}</button></li>{% endfor %}
+          </ul>
+          <div class="tab-content border rounded-3 p-3">
+            {% for lang in languages %}<div class="tab-pane fade{{ loop.first ? ' show active' : '' }}" id="address-pane-{{ loop.index }}" role="tabpanel" aria-labelledby="address-tab-{{ loop.index }}" tabindex="0">
+              <label class="form-label" for="address-{{ loop.index }}">{{ entry_contact_address }} <span class="text-body-secondary">({{ lang.code }})</span></label>
+              <input class="form-control" type="text" name="config_contact_address_{{ lang.code }}" id="address-{{ loop.index }}" value="{{ value_contact_address[lang.code] }}" maxlength="128" required><div class="form-text">{{ help_contact_address }}</div>
+            </div>{% endfor %}
+          </div>
+        </section>
 
-    <fieldset class="panel" style="margin-bottom:1rem;">
-      <legend>{{ fieldset_contact }}</legend>
-      <div class="grid two">
-        <div class="field">
-          <label>{{ entry_config_contact_email }}</label>
-          <input type="email" name="config_contact_email" value="{{ value_config_contact_email }}" required>
-          <small class="muted">{{ help_config_contact_email }}</small>
-        </div>
-        <div class="field">
-          <label>{{ entry_config_contact_whatsapp_text }}</label>
-          <input type="text" name="config_contact_whatsapp_text" value="{{ value_config_contact_whatsapp_text }}" required>
-          <small class="muted">{{ help_config_contact_whatsapp_text }}</small>
-        </div>
+        <hr class="my-4">
+        <section class="mb-4" aria-labelledby="copyright-title">
+          <h2 class="h5 mb-2" id="copyright-title">{{ fieldset_copyright }}</h2><p class="small text-body-secondary">{{ help_copyright }}</p>
+          <ul class="nav nav-pills gap-1 mb-3" role="tablist" aria-label="{{ fieldset_copyright }}">
+            {% for lang in languages %}<li class="nav-item" role="presentation"><button class="nav-link{{ loop.first ? ' active' : '' }}" id="copyright-tab-{{ loop.index }}" data-bs-toggle="tab" data-bs-target="#copyright-pane-{{ loop.index }}" type="button" role="tab" aria-controls="copyright-pane-{{ loop.index }}" aria-selected="{{ loop.first ? 'true' : 'false' }}">{{ lang.name|default(lang.code) }}</button></li>{% endfor %}
+          </ul>
+          <div class="tab-content border rounded-3 p-3">
+            {% for lang in languages %}<div class="tab-pane fade{{ loop.first ? ' show active' : '' }}" id="copyright-pane-{{ loop.index }}" role="tabpanel" aria-labelledby="copyright-tab-{{ loop.index }}" tabindex="0">
+              <label class="form-label" for="copyright-{{ loop.index }}">{{ entry_copyright }} <span class="text-body-secondary">({{ lang.code }})</span></label>
+              <input class="form-control" type="text" name="config_copyright_{{ lang.code }}" id="copyright-{{ loop.index }}" value="{{ value_copyright[lang.code] }}" maxlength="255" required><div class="form-text">{{ help_copyright }}</div>
+            </div>{% endfor %}
+          </div>
+        </section>
+
+        <hr class="my-4">
+        <section aria-labelledby="social-title">
+          <h2 class="h5 mb-2" id="social-title">{{ fieldset_social }}</h2><p class="small text-body-secondary">{{ help_fallback }}</p>
+          <div class="row g-3">
+            <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="social-facebook">{{ entry_config_social_facebook_href }}</label><input class="form-control" type="url" name="config_social_facebook_href" id="social-facebook" value="{{ value_config_social_facebook_href }}"></div>
+            <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="social-instagram">{{ entry_config_social_instagram_href }}</label><input class="form-control" type="url" name="config_social_instagram_href" id="social-instagram" value="{{ value_config_social_instagram_href }}"></div>
+            <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="social-pinterest">{{ entry_config_social_pinterest_href }}</label><input class="form-control" type="url" name="config_social_pinterest_href" id="social-pinterest" value="{{ value_config_social_pinterest_href }}"></div>
+            <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="social-x">{{ entry_config_social_x_href }}</label><input class="form-control" type="url" name="config_social_x_href" id="social-x" value="{{ value_config_social_x_href }}"></div>
+            <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="social-google">{{ entry_config_social_google_business_href }}</label><input class="form-control" type="url" name="config_social_google_business_href" id="social-google" value="{{ value_config_social_google_business_href }}"></div>
+            <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="social-redbubble">{{ entry_config_social_redbubble_href }}</label><input class="form-control" type="url" name="config_social_redbubble_href" id="social-redbubble" value="{{ value_config_social_redbubble_href }}"></div>
+          </div>
+        </section>
       </div>
-      <div class="field">
-        <label>{{ entry_config_contact_whatsapp_href }}</label>
-        <input type="text" name="config_contact_whatsapp_href" value="{{ value_config_contact_whatsapp_href }}" inputmode="numeric">
-        <small class="muted">{{ help_config_contact_whatsapp_href }}</small>
-      </div>
-    </fieldset>
-
-    <fieldset class="panel" style="margin-bottom:1rem;">
-      <legend>{{ fieldset_address }}</legend>
-      <p class="muted" style="margin-top:0;">{{ help_fallback }}</p>
-      {% for lang in languages %}
-      <div class="field">
-        <label>{{ entry_contact_address }} ({{ lang.code }})</label>
-        <input type="text" name="config_contact_address_{{ lang.code }}" value="{{ value_contact_address[lang.code] }}" required>
-      </div>
-      {% endfor %}
-    </fieldset>
-
-    <fieldset class="panel" style="margin-bottom:1rem;">
-      <legend>{{ fieldset_copyright }}</legend>
-      <p class="muted" style="margin-top:0;">{{ help_copyright }}</p>
-      {% for lang in languages %}
-      <div class="field">
-        <label>{{ entry_copyright }} ({{ lang.code }})</label>
-        <input type="text" name="config_copyright_{{ lang.code }}" value="{{ value_copyright[lang.code] }}" required>
-      </div>
-      {% endfor %}
-    </fieldset>
-
-    <fieldset class="panel" style="margin-bottom:1rem;">
-      <legend>{{ fieldset_social }}</legend>
-      <p class="muted" style="margin-top:0;">{{ help_fallback }}</p>
-      <div class="grid two">
-        <div class="field">
-          <label>{{ entry_config_social_facebook_href }}</label>
-          <input type="url" name="config_social_facebook_href" value="{{ value_config_social_facebook_href }}">
-        </div>
-        <div class="field">
-          <label>{{ entry_config_social_instagram_href }}</label>
-          <input type="url" name="config_social_instagram_href" value="{{ value_config_social_instagram_href }}">
-        </div>
-        <div class="field">
-          <label>{{ entry_config_social_pinterest_href }}</label>
-          <input type="url" name="config_social_pinterest_href" value="{{ value_config_social_pinterest_href }}">
-        </div>
-        <div class="field">
-          <label>{{ entry_config_social_x_href }}</label>
-          <input type="url" name="config_social_x_href" value="{{ value_config_social_x_href }}">
-        </div>
-        <div class="field">
-          <label>{{ entry_config_social_google_business_href }}</label>
-          <input type="url" name="config_social_google_business_href" value="{{ value_config_social_google_business_href }}">
-        </div>
-        <div class="field">
-          <label>{{ entry_config_social_redbubble_href }}</label>
-          <input type="url" name="config_social_redbubble_href" value="{{ value_config_social_redbubble_href }}">
-        </div>
-      </div>
-    </fieldset>
-
-    <div class="actions" style="display:flex;gap:8px;">
-      <button type="submit" class="btn primary">{{ button_save }}</button>
-      <a class="btn" href="{{ back }}">{{ button_back }}</a>
-    </div>
-  </form>
+      <div class="card-footer bg-body d-flex justify-content-end gap-2"><a class="btn btn-outline-secondary" href="{{ back }}">{{ button_back }}</a>{% if can_modify %}<button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1" aria-hidden="true"></i>{{ button_save }}</button>{% endif %}</div>
+      </fieldset>
+    </form>
+  </div>
 </main>
 {{ footer|raw }}

@@ -25,61 +25,84 @@ class Webhook extends \Reamur\System\Engine\Controller {
      *  legada 'system/webhook' da Fase 0 foi removida no F6-01 — ADR 0037). */
     private const TRIGGER_SUGGESTIONS = ['order_add', 'order_edit', 'order_history_edit', 'contact_add', 'product_add', 'product_edit', 'product_delete', 'product_*', 'order_*'];
 
-    /** Grade de endpoints */
+    /** Grade de endpoints com filtros e paginação server-side. */
     public function index(): void {
         $this->load->language('setting/webhook');
-
         $this->document->setTitle($this->language->get('heading_title'));
-
         $this->load->model('setting/webhook');
 
-        $data['heading_title']       = $this->language->get('heading_title');
-        $data['text_list']           = $this->language->get('text_list');
-        $data['text_no_results']     = $this->language->get('text_no_results');
-        $data['text_confirm_delete'] = $this->language->get('text_confirm_delete');
-        $data['text_enabled']        = $this->language->get('text_enabled');
-        $data['text_disabled']       = $this->language->get('text_disabled');
-        $data['text_logs_all']       = $this->language->get('text_logs_all');
-        $data['column_trigger']      = $this->language->get('column_trigger');
-        $data['column_url']          = $this->language->get('column_url');
-        $data['column_secret']       = $this->language->get('column_secret');
-        $data['column_description']  = $this->language->get('column_description');
-        $data['column_status']       = $this->language->get('column_status');
-        $data['column_deliveries']   = $this->language->get('column_deliveries');
-        $data['column_date_added']   = $this->language->get('column_date_added');
-        $data['column_action']       = $this->language->get('column_action');
-        $data['button_add']          = $this->language->get('button_add');
-        $data['button_edit']         = $this->language->get('button_edit');
-        $data['button_delete']       = $this->language->get('button_delete');
-        $data['button_logs']         = $this->language->get('button_logs');
-        $data['text_flash']          = $this->flash();
+        $filter = [
+            'trigger' => mb_substr($this->queryValue('filter_trigger'), 0, 64),
+            'url' => mb_substr($this->queryValue('filter_url'), 0, 255),
+            'status' => $this->queryValue('filter_status') === '' ? 'all' : $this->queryValue('filter_status'),
+        ];
+        if (!in_array($filter['status'], ['all', '0', '1'], true)) { $filter['status'] = 'all'; }
+        $page = max(1, (int)$this->queryValue('page'));
+        $limit = 20;
+        $total = $this->model_setting_webhook->getTotalWebhooks($filter);
+        $page = min($page, max(1, (int)ceil($total / $limit)));
+        $filter['start'] = ($page - 1) * $limit;
+        $filter['limit'] = $limit;
 
+        foreach ([
+            'heading_title', 'text_list', 'text_close', 'text_no_results', 'text_confirm_delete',
+            'text_enabled', 'text_disabled', 'text_logs_all', 'column_trigger',
+            'column_url', 'column_secret', 'column_description', 'column_status',
+            'column_deliveries', 'column_date_added', 'column_action', 'button_add',
+            'button_edit', 'button_delete', 'button_logs', 'text_filter',
+            'entry_filter_trigger', 'entry_filter_url', 'text_all_status',
+            'button_filter', 'button_reset', 'text_showing', 'text_secret_unset',
+            'text_secret_badge_set', 'text_secret_badge_unset',
+        ] as $key) { $data[$key] = $this->language->get($key); }
+        $data['text_flash'] = $this->flash();
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['can_modify'] = $this->user->hasPermission('modify', 'setting/webhook');
+        $data['filter_trigger'] = $filter['trigger'];
+        $data['filter_url'] = $filter['url'];
+        $data['filter_status'] = $filter['status'];
+        $data['filter_action'] = $this->url->link('setting/webhook');
         $data['webhooks'] = [];
-
-        foreach ($this->model_setting_webhook->getWebhooks() as $wh) {
-            $wh   = (array)$wh;
-            $wid  = (int)$wh['webhook_id'];
-
+        foreach ($this->model_setting_webhook->getWebhooks($filter) as $wh) {
+            $wh = (array)$wh;
+            $wid = (int)$wh['webhook_id'];
             $data['webhooks'][] = [
-                'webhook_id'  => $wid,
-                'trigger'     => (string)$wh['trigger'],
-                'url'         => (string)$wh['url'],
-                'secret_mask' => $this->maskSecret((string)$wh['secret']),
+                'webhook_id' => $wid,
+                'trigger' => (string)$wh['trigger'],
+                'url' => (string)$wh['url'],
+                'secret_is_set' => (int)($wh['secret_is_set'] ?? 0) === 1,
                 'description' => (string)$wh['description'],
-                'status'      => (int)$wh['status'],
-                'log_count'   => (int)$wh['log_count'],
-                'date_added'  => (string)$wh['date_added'],
-                'logs'        => $this->url->link('setting/webhook.logs|' . $wid),
-                'edit'        => $this->url->link('setting/webhook.edit|' . $wid),
-                'delete'      => $this->url->link('setting/webhook.delete|' . $wid),
+                'status' => (int)$wh['status'],
+                'log_count' => (int)$wh['log_count'],
+                'date_added' => (string)$wh['date_added'],
+                'logs' => $this->url->link('setting/webhook.logs|' . $wid),
+                'edit' => $this->url->link('setting/webhook.edit|' . $wid),
+                'delete' => $this->url->link('setting/webhook.delete|' . $wid),
             ];
         }
-
-        $data['add']      = $this->url->link('setting/webhook.add');
+        $data['add'] = $this->url->link('setting/webhook.add');
         $data['logs_all'] = $this->url->link('setting/webhook.logs|0');
+        $data['total'] = $total;
+        $data['showing'] = $total > 0 ? sprintf($data['text_showing'], (($page - 1) * $limit) + 1, min($page * $limit, $total), $total) : '';
+        require_once DIR_SYSTEM . 'library/pagination.php';
+        $pagination = new \Pagination();
+        $pagination->total = $total;
+        $pagination->page = $page;
+        $pagination->limit = $limit;
+        $query = 'page={page}';
+        foreach (['trigger' => 'filter_trigger', 'url' => 'filter_url', 'status' => 'filter_status'] as $key => $param) {
+            if ($filter[$key] !== '' && !($key === 'status' && $filter[$key] === 'all')) {
+                $query .= '&' . $param . '=' . rawurlencode((string)$filter[$key]);
+            }
+        }
+        $pagination->url = $this->url->link('setting/webhook', $query);
+        $pagination->css_class = 'pagination pagination-sm mb-0';
+        $pagination->text_first = $this->language->get('text_page_first');
+        $pagination->text_last = $this->language->get('text_page_last');
+        $pagination->text_next = $this->language->get('text_page_next');
+        $pagination->text_prev = $this->language->get('text_page_prev');
+        $data['pagination'] = $pagination->render();
 
         $this->chrome($data);
-
         $this->response->setOutput($this->load->view('setting/webhook_list', $data));
     }
 
@@ -101,7 +124,7 @@ class Webhook extends \Reamur\System\Engine\Controller {
         $data['error'] = '';
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $errors = $this->validateWebhook();
+            $errors = $this->csrfValid() ? $this->validateWebhook() : [$this->language->get('error_csrf')];
 
             if ($errors === []) {
                 $webhook_id = $this->model_setting_webhook->addWebhook($this->postPayload());
@@ -153,7 +176,22 @@ class Webhook extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $errors = $this->validateWebhook($webhook_id);
+            $csrfOk = $this->csrfValid();
+            $allowEmptySecret = false;
+            if ($csrfOk) {
+                $secretInput = (string)($this->request->post['secret'] ?? '');
+                $clearSecret = (string)($this->request->post['secret_clear'] ?? '') === '1';
+                if ($secretInput === '' && $clearSecret) {
+                    // Limpar o segredo HMAC desativa o endpoint para impedir envios sem assinatura.
+                    $this->request->post['secret'] = '';
+                    $this->request->post['status'] = '0';
+                    $allowEmptySecret = true;
+                } elseif ($secretInput === '') {
+                    $this->request->post['secret'] = (string)($webhook['secret'] ?? '');
+                    $allowEmptySecret = (string)($webhook['secret'] ?? '') === '';
+                }
+            }
+            $errors = $csrfOk ? $this->validateWebhook($webhook_id, $allowEmptySecret) : [$this->language->get('error_csrf')];
 
             if ($errors === []) {
                 $this->model_setting_webhook->editWebhook($webhook_id, $this->postPayload());
@@ -186,6 +224,11 @@ class Webhook extends \Reamur\System\Engine\Controller {
         }
 
         $this->load->language('setting/webhook');
+        if (!$this->csrfValid()) {
+            $this->setFlash($this->language->get('error_csrf'), 'error');
+            $this->response->redirect($this->url->link('setting/webhook'));
+            return;
+        }
 
         $this->load->model('setting/webhook');
 
@@ -223,12 +266,24 @@ class Webhook extends \Reamur\System\Engine\Controller {
             $filter = $webhook_id;
         }
 
+        $logFilter = [
+            'delivery' => mb_substr($this->queryValue('filter_delivery'), 0, 64),
+            'trigger' => mb_substr($this->queryValue('filter_trigger'), 0, 64),
+            'http_code' => max(0, (int)$this->queryValue('filter_http_code')),
+        ];
         $data['heading_title']    = $this->language->get('heading_title');
         $data['text_logs_title']  = $webhook
             ? sprintf($this->language->get('text_logs_of'), (string)$webhook['trigger'], '#' . $webhook_id)
             : $this->language->get('text_logs_all');
         $data['text_logs_hint']   = $this->language->get('text_logs_hint');
+        $data['text_close']       = $this->language->get('text_close');
         $data['text_no_results']  = $this->language->get('text_no_logs');
+        $data['text_filter']      = $this->language->get('text_filter');
+        $data['entry_delivery']   = $this->language->get('entry_delivery');
+        $data['entry_trigger']    = $this->language->get('entry_trigger');
+        $data['entry_http_code']  = $this->language->get('entry_http_code');
+        $data['button_filter']    = $this->language->get('button_filter');
+        $data['button_reset']     = $this->language->get('button_reset');
         $data['column_delivery']  = $this->language->get('column_delivery');
         $data['column_trigger']   = $this->language->get('column_trigger');
         $data['column_http_code'] = $this->language->get('column_http_code');
@@ -239,13 +294,23 @@ class Webhook extends \Reamur\System\Engine\Controller {
         $data['button_back']      = $this->language->get('button_back');
         $data['button_view']      = $this->language->get('button_view');
         $data['text_flash']       = $this->flash();
+        $data['text_showing']     = $this->language->get('text_showing');
+        $data['filter_delivery']  = $logFilter['delivery'];
+        $data['filter_trigger']   = $logFilter['trigger'];
+        $data['filter_http_code'] = $logFilter['http_code'];
+        $data['filter_action']    = $this->url->link('setting/webhook.logs|' . $webhook_id);
+        $data['filter_reset']     = $this->url->link('setting/webhook.logs|' . $webhook_id);
+        $data['total'] = $this->model_setting_webhook->getTotalLogs($filter, $logFilter);
+        $page = max(1, (int)$this->queryValue('page'));
+        $limit = 25;
+        $page = min($page, max(1, (int)ceil($data['total'] / $limit)));
+        $start = ($page - 1) * $limit;
+        $data['showing'] = $data['total'] > 0 ? sprintf($data['text_showing'], $start + 1, min($start + $limit, $data['total']), $data['total']) : '';
 
         $data['logs'] = [];
-
-        foreach ($this->model_setting_webhook->getLogs($filter) as $log) {
+        foreach ($this->model_setting_webhook->getLogs($filter, $start, $limit, $logFilter) as $log) {
             $log = (array)$log;
             $lid = (int)$log['webhook_log_id'];
-
             $data['logs'][] = [
                 'webhook_log_id' => $lid,
                 'delivery'       => (string)$log['delivery'],
@@ -261,6 +326,24 @@ class Webhook extends \Reamur\System\Engine\Controller {
 
         $data['back'] = $this->url->link('setting/webhook');
         $data['logs_base'] = $this->url->link('setting/webhook.logs|0');
+        require_once DIR_SYSTEM . 'library/pagination.php';
+        $pagination = new \Pagination();
+        $pagination->total = $data['total'];
+        $pagination->page = $page;
+        $pagination->limit = $limit;
+        $logQuery = 'page={page}';
+        foreach (['delivery' => 'filter_delivery', 'trigger' => 'filter_trigger', 'http_code' => 'filter_http_code'] as $key => $param) {
+            if ((string)$logFilter[$key] !== '' && !($key === 'http_code' && $logFilter[$key] === 0)) {
+                $logQuery .= '&' . $param . '=' . rawurlencode((string)$logFilter[$key]);
+            }
+        }
+        $pagination->url = $this->url->link('setting/webhook.logs|' . $webhook_id, $logQuery);
+        $pagination->css_class = 'pagination pagination-sm mb-0';
+        $pagination->text_first = $this->language->get('text_page_first');
+        $pagination->text_last = $this->language->get('text_page_last');
+        $pagination->text_next = $this->language->get('text_page_next');
+        $pagination->text_prev = $this->language->get('text_page_prev');
+        $data['pagination'] = $pagination->render();
 
         $this->chrome($data);
 
@@ -339,6 +422,11 @@ class Webhook extends \Reamur\System\Engine\Controller {
             'text_trigger_hint'  => $this->language->get('text_trigger_hint'),
             'text_url_hint'      => $this->language->get('text_url_hint'),
             'text_secret_hint'   => $this->language->get('text_secret_hint'),
+            'text_secret_set'    => $this->language->get('text_secret_set'),
+            'text_secret_unset'  => $this->language->get('text_secret_unset'),
+            'text_secret_clear_help' => $this->language->get('text_secret_clear_help'),
+            'entry_secret_clear' => $this->language->get('entry_secret_clear'),
+            'csrf_token'         => \Reamur\System\Library\Security\Csrf::token($this->session),
             'text_status_hint'   => $this->language->get('text_status_hint'),
             'entry_trigger'      => $this->language->get('entry_trigger'),
             'entry_url'          => $this->language->get('entry_url'),
@@ -348,10 +436,16 @@ class Webhook extends \Reamur\System\Engine\Controller {
             'button_save'        => $this->language->get('button_save'),
             'button_cancel'      => $this->language->get('button_cancel'),
             'button_generate'    => $this->language->get('button_generate'),
+            'webhook_id'         => (int)($webhook['webhook_id'] ?? 0),
+            'can_modify'         => $this->user->hasPermission('modify', 'setting/webhook'),
+            'secret_required'    => empty($webhook['webhook_id']),
             'trigger_suggestions' => self::TRIGGER_SUGGESTIONS,
             'value_trigger'      => (string)($post['trigger'] ?? ($webhook['trigger'] ?? '')),
             'value_url'          => (string)($post['url'] ?? ($webhook['url'] ?? '')),
-            'value_secret'       => (string)($post['secret'] ?? ($webhook['secret'] ?? '')),
+            // Segredos jamais são devolvidos no HTML nem após erro de validação.
+            'value_secret'       => '',
+            'secret_is_set'      => (string)($webhook['secret'] ?? '') !== '',
+            'value_secret_clear' => (string)($post['secret_clear'] ?? '') === '1' && (string)($post['secret'] ?? '') === '',
             'value_description'  => (string)($post['description'] ?? ($webhook['description'] ?? '')),
             'value_status'       => $post ? (int)($post['status'] ?? 0) : (int)($webhook['status'] ?? 1),
             'cancel'             => $this->url->link('setting/webhook'),
@@ -364,7 +458,7 @@ class Webhook extends \Reamur\System\Engine\Controller {
      *
      * @return array<int, string>
      */
-    private function validateWebhook(int $except_webhook_id = 0): array {
+    private function validateWebhook(int $except_webhook_id = 0, bool $allow_empty_secret = false): array {
         $post   = $this->request->post;
         $errors = [];
 
@@ -381,7 +475,8 @@ class Webhook extends \Reamur\System\Engine\Controller {
             $errors[] = $this->language->get('error_url_https');
         }
 
-        if (mb_strlen($secret) < 16 || mb_strlen($secret) > 64) {
+        $emptySecretAllowed = $secret === '' && $allow_empty_secret && $except_webhook_id > 0 && empty($post['status']);
+        if (!($emptySecretAllowed || (mb_strlen($secret) >= 16 && mb_strlen($secret) <= 64))) {
             $errors[] = $this->language->get('error_secret');
         }
 
@@ -412,11 +507,6 @@ class Webhook extends \Reamur\System\Engine\Controller {
         ];
     }
 
-    /** 'abcd1234xyz' → '••••••••3xyz' */
-    private function maskSecret(string $secret): string {
-        return ($secret === '') ? '' : str_repeat('•', 8) . substr($secret, -4);
-    }
-
     /** Leia-uma-vez (consume) do flash da sessão — mesmo helper dos demais CRUDs */
     private function flash(): array {
         $session = $this->session;
@@ -442,9 +532,21 @@ class Webhook extends \Reamur\System\Engine\Controller {
         }
     }
 
+    private function queryValue(string $key): string {
+        $value = $this->request->get[$key] ?? '';
+        return is_scalar($value) ? trim((string)$value) : '';
+    }
+
+    private function csrfValid(): bool {
+        return \Reamur\System\Library\Security\Csrf::check(
+            $this->session,
+            (string)($this->request->post['csrf_token'] ?? '')
+        );
+    }
+
     /** Chrome compartilhado + estilo do módulo */
     private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $data['body_class'] = 'rms-dash';
         $data['header']     = $this->load->controller('common/header', $data);

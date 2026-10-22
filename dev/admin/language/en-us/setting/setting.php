@@ -43,7 +43,7 @@ $_['help_config_meta_description'] = '<meta name="description"> used by pages wi
 $_['help_mail_engine']             = 'mail() sends via PHP; SMTP for an external relay; capture writes to storage/logs/mail_capture.json (dev/CI).';
 $_['help_mail_smtp_hostname']      = 'Ex.: smtp.hostinger.com';
 $_['help_mail_smtp_username']      = 'Usually the username/full email.';
-$_['help_mail_smtp_password']      = 'Never shown again. Leave empty spaces if they belong to the password.';
+$_['help_mail_smtp_password']      = 'The current password is never displayed. Leave blank to keep it; enter a new value to replace it. Use the checkbox to clear it. If validation fails, re-enter the new password.';
 $_['help_mail_smtp_port']          = '25 (insecure), 465 (ssl), 587 (starttls) or 2525.';
 $_['help_mail_smtp_timeout']       = 'Seconds before time-out (1–60).';
 $_['help_mail_reply_to']           = 'Optional. Reply-To header of outbound emails.';
@@ -73,3 +73,10 @@ $_['error_mail_test_recipient'] = 'the logged-in user has no valid e-mail';
 $_['button_save']        = 'Save settings';
 $_['button_clear_cache'] = 'Clear cache';
 $_['button_back']        = 'Back to dashboard';
+
+// F8-03: secret handling and request protection
+$_['text_smtp_password_set'] = 'A password is already configured. Leave this field blank to keep it.';
+$_['text_smtp_password_unset'] = 'No SMTP password is configured.';
+$_['entry_mail_smtp_password_clear'] = 'Clear the saved SMTP password';
+$_['error_csrf'] = 'This form expired or could not be verified. Reload the page and try again.';
+$_['text_close'] = 'Close';

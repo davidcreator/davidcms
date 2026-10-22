@@ -1,121 +1,63 @@
-{# dev/admin/view/template/setting/setting.twig — ecrã operacional (F4-01, ADR 0024). Padrão = testimonial_form.twig #}
+{# F8-03 — configurações operacionais; segredos nunca são renderizados #}
 {{ header|raw }}
-<main class="dash form-page">
-  <h1>{{ heading_title }}</h1>
-  <p class="muted">{{ text_settings }}</p>
+<main class="rms-main" id="content">
+  <div class="container-fluid py-3 px-3 px-lg-4">
+    {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">{{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ text_close }}"></button></div>{% endif %}
+    {% if error %}<div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ error|nl2br }}</div>{% endif %}
+    <div class="mb-3"><h1 class="h3 mb-1"><i class="bi bi-gear me-2" aria-hidden="true"></i>{{ heading_title }}</h1><p class="text-body-secondary mb-0">{{ text_settings }}</p></div>
 
-  {% if text_flash.text %}
-  <div class="alert {{ text_flash.type == 'success' ? 'success' : 'error' }}">{{ text_flash.text }}</div>
-  {% endif %}
-  {% if error %}
-  <div class="alert error">{{ error|nl2br }}</div>
-  {% endif %}
+    <form method="post" action="{{ action }}" class="card border-0 shadow-sm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <fieldset {{ not can_modify ? 'disabled' : '' }}>
+        <div class="card-body">
+          <section class="mb-4" aria-labelledby="store-settings-title">
+            <h2 class="h5 mb-3" id="store-settings-title"><i class="bi bi-shop me-2" aria-hidden="true"></i>{{ fieldset_store }}</h2>
+            <div class="row g-3">
+              <div class="col-12 col-lg-6"><label class="form-label" for="config-name">{{ entry_config_name }}</label><input class="form-control" type="text" name="config_name" id="config-name" value="{{ config_name }}" maxlength="64" required><div class="form-text">{{ help_config_name }}</div></div>
+              <div class="col-12 col-lg-6"><label class="form-label" for="meta-title">{{ entry_config_meta_title }}</label><input class="form-control" type="text" name="config_meta_title" id="meta-title" value="{{ config_meta_title }}" maxlength="128"><div class="form-text">{{ help_config_meta_title }}</div></div>
+              <div class="col-12"><label class="form-label" for="meta-description">{{ entry_config_meta_description }}</label><textarea class="form-control" name="config_meta_description" id="meta-description" rows="3" maxlength="255">{{ config_meta_description }}</textarea><div class="form-text">{{ help_config_meta_description }}</div></div>
+            </div>
+          </section>
 
-  <form method="post" action="{{ action }}" class="panel form">
+          <hr class="my-4">
+          <section class="mb-4" aria-labelledby="mail-settings-title">
+            <h2 class="h5 mb-3" id="mail-settings-title"><i class="bi bi-envelope me-2" aria-hidden="true"></i>{{ fieldset_mail }}</h2>
+            <div class="row g-3">
+              <div class="col-12 col-md-6"><label class="form-label" for="mail-engine">{{ entry_mail_engine }}</label><select class="form-select" name="mail_engine" id="mail-engine">{% for val, lab in mail_engines %}<option value="{{ val }}"{{ mail_engine == val ? ' selected' : '' }}>{{ lab }}</option>{% endfor %}</select><div class="form-text">{{ help_mail_engine }}</div></div>
+              <div class="col-12 col-md-6"><label class="form-label" for="mail-reply-to">{{ entry_mail_reply_to }}</label><input class="form-control" type="email" name="mail_reply_to" id="mail-reply-to" value="{{ mail_reply_to }}" maxlength="96"><div class="form-text">{{ help_mail_reply_to }}</div></div>
+              <div class="col-12 col-md-6"><label class="form-label" for="smtp-host">{{ entry_mail_smtp_hostname }}</label><input class="form-control" type="text" name="mail_smtp_hostname" id="smtp-host" value="{{ mail_smtp_hostname }}" maxlength="128" autocomplete="off"><div class="form-text">{{ help_mail_smtp_hostname }}</div></div>
+              <div class="col-12 col-md-6"><label class="form-label" for="smtp-user">{{ entry_mail_smtp_username }}</label><input class="form-control" type="text" name="mail_smtp_username" id="smtp-user" value="{{ mail_smtp_username }}" maxlength="128" autocomplete="username"><div class="form-text">{{ help_mail_smtp_username }}</div></div>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="smtp-password">{{ entry_mail_smtp_password }}</label>
+                <input class="form-control" type="password" name="mail_smtp_password" id="smtp-password" value="" autocomplete="new-password">
+                <div class="form-text">{{ help_mail_smtp_password }}</div>
+                <div class="small mt-2"><span class="badge text-bg-{{ mail_smtp_password_set ? 'success' : 'secondary' }}">{{ mail_smtp_password_set ? text_smtp_password_set : text_smtp_password_unset }}</span></div>
+                {% if mail_smtp_password_set or mail_smtp_password_clear %}<div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="mail_smtp_password_clear" id="smtp-password-clear" value="1"{{ mail_smtp_password_clear ? ' checked' : '' }}><label class="form-check-label" for="smtp-password-clear">{{ entry_mail_smtp_password_clear }}</label></div>{% endif %}
+              </div>
+              <div class="col-12 col-md-3"><label class="form-label" for="smtp-port">{{ entry_mail_smtp_port }}</label><input class="form-control" type="number" name="mail_smtp_port" id="smtp-port" value="{{ mail_smtp_port }}" min="1" max="65535"><div class="form-text">{{ help_mail_smtp_port }}</div></div>
+              <div class="col-12 col-md-3"><label class="form-label" for="smtp-timeout">{{ entry_mail_smtp_timeout }}</label><input class="form-control" type="number" name="mail_smtp_timeout" id="smtp-timeout" value="{{ mail_smtp_timeout }}" min="1" max="60"><div class="form-text">{{ help_mail_smtp_timeout }}</div></div>
+            </div>
+          </section>
 
-    <fieldset class="panel" style="margin-bottom:1rem;">
-      <legend>{{ fieldset_store }}</legend>
-      <div class="grid two">
-        <div class="field">
-          <label>{{ entry_config_name }}</label>
-          <input type="text" name="config_name" value="{{ config_name }}" required>
-          <small class="muted">{{ help_config_name }}</small>
+          <hr class="my-4">
+          <section aria-labelledby="cache-settings-title">
+            <h2 class="h5 mb-3" id="cache-settings-title"><i class="bi bi-lightning-charge me-2" aria-hidden="true"></i>{{ fieldset_cache }}</h2>
+            <div class="row g-3">
+              <div class="col-12 col-md-6"><label class="form-label" for="cache-engine">{{ entry_cache_engine }}</label><select class="form-select" name="cache_engine" id="cache-engine">{% for val, lab in cache_engines %}<option value="{{ val }}"{{ cache_engine == val ? ' selected' : '' }}>{{ lab }}</option>{% endfor %}</select><div class="form-text">{{ help_cache_engine }}</div></div>
+              <div class="col-12 col-md-6"><label class="form-label" for="cache-expire">{{ entry_cache_expire }}</label><input class="form-control" type="number" name="cache_expire" id="cache-expire" value="{{ cache_expire }}" min="60" max="2592000"><div class="form-text">{{ help_cache_expire }}</div></div>
+            </div>
+          </section>
         </div>
-        <div class="field">
-          <label>{{ entry_config_meta_title }}</label>
-          <input type="text" name="config_meta_title" value="{{ config_meta_title }}">
-          <small class="muted">{{ help_config_meta_title }}</small>
-        </div>
-      </div>
-      <div class="field">
-        <label>{{ entry_config_meta_description }}</label>
-        <textarea name="config_meta_description" rows="3">{{ config_meta_description }}</textarea>
-        <small class="muted">{{ help_config_meta_description }}</small>
-      </div>
-    </fieldset>
+        <div class="card-footer bg-body d-flex justify-content-end gap-2"><a class="btn btn-outline-secondary" href="{{ back }}">{{ button_back }}</a><button class="btn btn-primary" type="submit"><i class="bi bi-check2 me-1" aria-hidden="true"></i>{{ button_save }}</button></div>
+      </fieldset>
+    </form>
 
-    <fieldset class="panel" style="margin-bottom:1rem;">
-      <legend>{{ fieldset_mail }}</legend>
-      <div class="grid two">
-        <div class="field">
-          <label>{{ entry_mail_engine }}</label>
-          <select name="mail_engine">
-            {% for val, lab in mail_engines %}
-            <option value="{{ val }}"{{ mail_engine == val ? ' selected' : '' }}>{{ lab }}</option>
-            {% endfor %}
-          </select>
-          <small class="muted">{{ help_mail_engine }}</small>
-        </div>
-        <div class="field">
-          <label>{{ entry_mail_reply_to }}</label>
-          <input type="email" name="mail_reply_to" value="{{ mail_reply_to }}">
-          <small class="muted">{{ help_mail_reply_to }}</small>
-        </div>
-      </div>
-      <div class="grid two">
-        <div class="field">
-          <label>{{ entry_mail_smtp_hostname }}</label>
-          <input type="text" name="mail_smtp_hostname" value="{{ mail_smtp_hostname }}" autocomplete="off">
-          <small class="muted">{{ help_mail_smtp_hostname }}</small>
-        </div>
-        <div class="field">
-          <label>{{ entry_mail_smtp_username }}</label>
-          <input type="text" name="mail_smtp_username" value="{{ mail_smtp_username }}" autocomplete="off">
-          <small class="muted">{{ help_mail_smtp_username }}</small>
-        </div>
-      </div>
-      <div class="grid two">
-        <div class="field">
-          <label>{{ entry_mail_smtp_password }}</label>
-          <input type="password" name="mail_smtp_password" value="{{ mail_smtp_password }}" autocomplete="new-password">
-          <small class="muted">{{ help_mail_smtp_password }}</small>
-        </div>
-        <div class="field">
-          <label>{{ entry_mail_smtp_port }}</label>
-          <input type="text" name="mail_smtp_port" value="{{ mail_smtp_port }}">
-          <small class="muted">{{ help_mail_smtp_port }}</small>
-        </div>
-      </div>
-      <div class="field">
-        <label>{{ entry_mail_smtp_timeout }}</label>
-        <input type="text" name="mail_smtp_timeout" value="{{ mail_smtp_timeout }}">
-        <small class="muted">{{ help_mail_smtp_timeout }}</small>
-      </div>
-    </fieldset>
-
-    <fieldset class="panel" style="margin-bottom:1rem;">
-      <legend>{{ fieldset_cache }}</legend>
-      <div class="grid two">
-        <div class="field">
-          <label>{{ entry_cache_engine }}</label>
-          <select name="cache_engine">
-            {% for val, lab in cache_engines %}
-            <option value="{{ val }}"{{ cache_engine == val ? ' selected' : '' }}>{{ lab }}</option>
-            {% endfor %}
-          </select>
-          <small class="muted">{{ help_cache_engine }}</small>
-        </div>
-        <div class="field">
-          <label>{{ entry_cache_expire }}</label>
-          <input type="text" name="cache_expire" value="{{ cache_expire }}">
-          <small class="muted">{{ help_cache_expire }}</small>
-        </div>
-      </div>
-    </fieldset>
-
-    <div class="form-actions">
-      <button class="btn primary" type="submit">{{ button_save }}</button>
-      <a class="btn ghost" href="{{ back }}">{{ button_back }}</a>
+    {% if can_modify %}
+    <div class="row g-3 mt-1">
+      <div class="col-12 col-lg-6"><form method="post" action="{{ test_mail }}" class="card border-0 shadow-sm h-100"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3"><div><h2 class="h6 mb-1">{{ button_test_mail }}</h2><p class="small text-body-secondary mb-0">{{ text_mail_test_hint }}</p></div><button class="btn btn-outline-primary" type="submit"><i class="bi bi-send me-1" aria-hidden="true"></i>{{ button_test_mail }}</button></div></form></div>
+      <div class="col-12 col-lg-6"><form method="post" action="{{ clear_cache }}" class="card border-0 shadow-sm h-100"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3"><div><h2 class="h6 mb-1">{{ fieldset_cache }}</h2><p class="small text-body-secondary mb-0">{{ help_cache_engine }}</p></div><button class="btn btn-outline-secondary" type="submit"><i class="bi bi-trash3 me-1" aria-hidden="true"></i>{{ button_clear_cache }}</button></div></form></div>
     </div>
-  </form>
-
-  <form method="post" action="{{ test_mail }}" class="panel form" style="margin-top:1rem;">
-    <button class="btn ghost" type="submit">{{ button_test_mail }}</button>
-    <small class="muted" style="margin-left:.5rem;">{{ text_mail_test_hint }}</small>
-  </form>
-
-  <form method="post" action="{{ clear_cache }}" class="panel form" style="margin-top:1rem;">
-    <button class="btn ghost" type="submit">{{ button_clear_cache }}</button>
-  </form>
+    {% endif %}
+  </div>
 </main>
 {{ footer|raw }}

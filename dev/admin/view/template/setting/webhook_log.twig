@@ -1,31 +1,12 @@
-{# dev/admin/view/template/setting/webhook_log.twig — entrega individual, payload read-only (F2-16) #}
+{# F8-03 — detalhe somente leitura da entrega #}
 {{ header|raw }}
-<main class="dash">
-  <div class="page-head">
-    <h1>{{ heading_title }}</h1>
-    <a class="btn ghost" href="{{ back }}">{{ button_back }}</a>
+<main class="rms-main" id="content">
+  <div class="container-fluid py-3 px-3 px-lg-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3"><div><h1 class="h3 mb-1"><i class="bi bi-file-earmark-code me-2" aria-hidden="true"></i>{{ heading_title }}</h1><p class="text-body-secondary mb-0">{{ text_log_detail }}</p></div><a class="btn btn-outline-secondary" href="{{ back }}"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>{{ button_back }}</a></div>
+    <section class="card border-0 shadow-sm mb-3"><div class="card-body"><div class="table-responsive"><table class="table table-sm align-middle mb-0"><tbody>
+      <tr><th scope="row" class="w-25">{{ entry_delivery }}</th><td><code>{{ log.delivery }}</code></td></tr><tr><th scope="row">{{ entry_trigger }}</th><td><code>{{ log.trigger }}</code></td></tr><tr><th scope="row">{{ entry_url }}</th><td><a href="{{ log.url }}" target="_blank" rel="noopener noreferrer" class="text-break">{{ log.url }}</a></td></tr><tr><th scope="row">{{ entry_http_code }}</th><td><span class="badge text-bg-{{ log.ok ? 'success' : 'danger' }}">{{ log.http_code }}</span></td></tr><tr><th scope="row">{{ entry_duration }}</th><td>{{ log.duration }}s</td></tr><tr><th scope="row">{{ entry_attempt }}</th><td>{{ log.attempt }}</td></tr><tr><th scope="row">{{ entry_date_added }}</th><td>{{ log.date_added }}</td></tr>
+    </tbody></table></div></div></section>
+    <section class="card border-0 shadow-sm"><div class="card-header bg-body"><h2 class="h6 mb-0">{{ entry_payload }}</h2></div><div class="card-body p-0"><pre class="mb-0 p-3 text-body bg-body-tertiary" style="max-height:65vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;">{{ log.payload }}</pre></div></section>
   </div>
-  <p class="muted">{{ text_log_detail }}</p>
-
-  <section class="panel" style="margin-bottom:16px;">
-    <table class="table">
-      <tbody>
-        <tr><th style="width:160px;">{{ entry_delivery }}</th><td><code>{{ log.delivery }}</code></td></tr>
-        <tr><th>{{ entry_trigger }}</th><td>{{ log.trigger }}</td></tr>
-        <tr><th>{{ entry_url }}</th><td>{{ log.url }}</td></tr>
-        <tr><th>{{ entry_http_code }}</th><td>
-          <span class="badge" style="display:inline-block;padding:2px 10px;border-radius:10px;border:1px solid currentColor;color:{{ log.ok ? '#15803d' : '#b91c1c' }};">{{ log.http_code }}</span>
-        </td></tr>
-        <tr><th>{{ entry_duration }}</th><td>{{ log.duration }}s</td></tr>
-        <tr><th>{{ entry_attempt }}</th><td>{{ log.attempt }}</td></tr>
-        <tr><th>{{ entry_date_added }}</th><td>{{ log.date_added }}</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="panel">
-    <h2 style="margin-top:0;">{{ entry_payload }}</h2>
-    <pre class="payload-body" style="border:1px solid #e5e7eb;border-radius:6px;padding:12px;background:#fafafa;overflow:auto;">{{ log.payload }}</pre>
-  </section>
 </main>
 {{ footer|raw }}

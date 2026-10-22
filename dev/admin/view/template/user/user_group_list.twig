@@ -1,40 +1,55 @@
-{# dev/admin/view/template/user/user_group_list.twig — grupos de usuários (F2-6) #}
+{# F8-03 — grupos de usuários: busca e paginação server-side #}
 {{ header|raw }}
-<main class="dash">
-  <div class="page-head">
-    <h1>{{ heading_title }}</h1>
-    <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
+<main class="rms-main" id="content">
+  <div class="container-fluid py-3 px-3 px-lg-4">
+    {% if text_flash.text %}
+    <div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">
+      {{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ text_close }}"></button>
+    </div>
+    {% endif %}
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+      <div><h1 class="h3 mb-1"><i class="bi bi-shield-lock me-2" aria-hidden="true"></i>{{ heading_title }}</h1><p class="text-body-secondary mb-0">{{ text_list }}</p></div>
+      {% if can_modify %}<a class="btn btn-primary" href="{{ add }}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ button_add }}</a>{% endif %}
+    </div>
+
+    <section class="card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <h2 class="h6 mb-3"><i class="bi bi-funnel me-1" aria-hidden="true"></i>{{ text_filter }}</h2>
+        <form method="get" action="{{ filter_action }}" class="row g-2 align-items-end">
+          <div class="col-12 col-md-8 col-xl-5"><label class="form-label" for="filter-name">{{ entry_filter_name }}</label><input class="form-control" type="search" name="filter_name" id="filter-name" value="{{ filter_name }}" maxlength="64"></div>
+          <div class="col-12 col-md-auto d-flex gap-2"><button class="btn btn-primary" type="submit"><i class="bi bi-search me-1" aria-hidden="true"></i>{{ button_filter }}</button><a class="btn btn-outline-secondary" href="{{ filter_action }}">{{ button_reset }}</a></div>
+        </form>
+      </div>
+    </section>
+
+    <section class="card border-0 shadow-sm">
+      <div class="card-header bg-body d-flex flex-wrap align-items-center justify-content-between gap-2"><h2 class="h6 mb-0">{{ text_list }}</h2><span class="small text-body-secondary">{{ showing }}</span></div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead><tr><th scope="col">{{ column_name }}</th><th scope="col">{{ column_users }}</th>{% if can_modify %}<th scope="col" class="text-end">{{ column_action }}</th>{% endif %}</tr></thead>
+          <tbody>
+            {% for group in groups %}
+            <tr>
+              <td class="fw-semibold">{{ group.name }}</td><td><span class="badge text-bg-light border">{{ group.total_users }}</span></td>
+              {% if can_modify %}<td class="text-end text-nowrap">
+                <a class="btn btn-sm btn-outline-primary" href="{{ group.edit }}"><i class="bi bi-pencil me-1" aria-hidden="true"></i>{{ button_edit }}</a>
+                {% if group.total_users == 0 %}
+                <form method="post" action="{{ group.delete }}" class="d-inline" onsubmit="return confirm('{{ text_confirm_delete|e('js') }}');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash me-1" aria-hidden="true"></i>{{ button_delete }}</button>
+                </form>
+                {% endif %}
+              </td>{% endif %}
+            </tr>
+            {% else %}
+            <tr><td colspan="{{ can_modify ? 3 : 2 }}" class="text-center text-body-secondary py-4">{{ text_no_results }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if pagination %}<div class="card-footer bg-body d-flex flex-wrap align-items-center justify-content-between gap-2"><span class="small text-body-secondary">{{ showing }}</span>{{ pagination|replace({'&amp;amp;': '&amp;'})|raw }}</div>{% endif %}
+    </section>
   </div>
-  <p class="muted">{{ text_list }}</p>
-
-  {% if text_flash.text %}
-  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
-  {% endif %}
-
-  <table class="table">
-    <thead>
-      <tr>
-        <th>{{ column_name }}</th>
-        <th>{{ column_users }}</th>
-        <th class="right">{{ column_action }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for group in groups %}
-      <tr>
-        <td>{{ group.name }}</td>
-        <td>{{ group.total_users }}</td>
-        <td class="right actions">
-          <a class="btn ghost small" href="{{ group.edit }}">{{ button_edit }}</a>
-          {% if group.total_users == 0 %}
-          <form method="post" action="{{ group.delete }}" style="display:inline;" onsubmit="return confirm('{{ text_confirm_delete }}');">
-            <button type="submit" class="btn danger small">{{ button_delete }}</button>
-          </form>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
 </main>
 {{ footer|raw }}

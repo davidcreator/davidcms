@@ -28,6 +28,7 @@ class Setting extends \Reamur\System\Engine\Controller {
         $this->load->model('setting/setting');
 
         [$data, $errors] = $this->hydrate();
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
             if (!$this->user->hasPermission('modify', 'setting/setting')) {
@@ -36,29 +37,51 @@ class Setting extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $post = $this->sanitize($this->request->post);
+            if (!$this->csrfValid()) {
+                $errors = ['csrf' => $this->language->get('error_csrf')];
+            } else {
+                $post = $this->sanitize($this->request->post);
+                $storedPassword = $this->storedSmtpPassword();
+                $newPassword = (string)($post['mail_smtp_password'] ?? '');
+                $clearPassword = (string)($this->request->post['mail_smtp_password_clear'] ?? '') === '1';
 
-            $errors = $this->validate($post);
+                // Vazio mantém o segredo atual; a remoção exige a checkbox explícita.
+                if ($newPassword === '' && !$clearPassword) {
+                    $post['mail_smtp_password'] = $storedPassword;
+                } elseif ($newPassword === '' && $clearPassword) {
+                    $post['mail_smtp_password'] = '';
+                }
 
-            if (!$errors) {
-                $this->model_setting_setting->editSettings($post);
+                $errors = $this->validate($post);
 
-                $this->session->data['flash'] = ['type' => 'success', 'text' => $this->language->get('text_success')];
+                if (!$errors) {
+                    $this->model_setting_setting->editSettings($post);
+                    $this->session->data['flash'] = ['type' => 'success', 'text' => $this->language->get('text_success')];
+                    $this->response->redirect($this->url->link('setting/setting'));
+                    return;
+                }
 
-                $this->response->redirect($this->url->link('setting/setting'));
-
-                return;
+                // Segredos nunca voltam em value, mesmo quando a validação falha.
+                $safePost = $post;
+                $safePost['mail_smtp_password'] = '';
+                unset($safePost['mail_smtp_password_clear']);
+                $data = array_merge($data, $safePost);
+                $clearApplied = $clearPassword && $newPassword === '';
+                $data['mail_smtp_password_clear'] = $clearApplied;
+                $data['mail_smtp_password_set'] = $storedPassword !== '';
             }
-
-            // POST inválido → repovoa do próprio POST (não perde o digitado)
-            $data = array_merge($data, $post);
         }
 
         $data['heading_title'] = $this->language->get('heading_title');
         $data['text_settings'] = $this->language->get('text_settings');
+        $data['text_close'] = $this->language->get('text_close');
+        $data['text_smtp_password_set'] = $this->language->get('text_smtp_password_set');
+        $data['text_smtp_password_unset'] = $this->language->get('text_smtp_password_unset');
+        $data['entry_mail_smtp_password_clear'] = $this->language->get('entry_mail_smtp_password_clear');
         $data['text_edit']     = $this->language->get('text_edit');
         $data['text_success']  = $this->language->get('text_success');
         $data['text_flash']    = $this->flash();
+        $data['can_modify']    = $this->user->hasPermission('modify', 'setting/setting');
         // Padrão da casa (testimonial): erros de validação agregados no alerta do topo
         $data['error']         = implode("\n", array_filter(array_map('strval', $errors)));
 
@@ -71,7 +94,7 @@ class Setting extends \Reamur\System\Engine\Controller {
         foreach ([
             'config_name', 'config_meta_title', 'config_meta_description',
             'mail_engine', 'mail_smtp_hostname', 'mail_smtp_username',
-            'mail_smtp_password', 'mail_smtp_port', 'mail_smtp_timeout',
+            'mail_smtp_port', 'mail_smtp_timeout',
             'mail_reply_to', 'cache_engine', 'cache_expire',
         ] as $field) {
             $data['entry_' . $field]  = $this->language->get('entry_' . $field);
@@ -116,6 +139,11 @@ class Setting extends \Reamur\System\Engine\Controller {
 
             return;
         }
+        if (!$this->csrfValid()) {
+            $this->session->data['flash'] = ['type' => 'error', 'text' => $this->language->get('error_csrf')];
+            $this->response->redirect($this->url->link('setting/setting'));
+            return;
+        }
 
         // F4-06 (ADR 0030): nem todo adapter implementa clear() — só File, hoje.
         // Com outra engine ativa, limpar aqui viraria 500; flash informativo protege.
@@ -154,6 +182,11 @@ class Setting extends \Reamur\System\Engine\Controller {
 
             return;
         }
+        if (!$this->csrfValid()) {
+            $this->session->data['flash'] = ['type' => 'error', 'text' => $this->language->get('error_csrf')];
+            $this->response->redirect($this->url->link('setting/setting'));
+            return;
+        }
 
         $to = $this->user->getEmail();
 
@@ -185,11 +218,11 @@ class Setting extends \Reamur\System\Engine\Controller {
     }
 
     /**
-     * Valor efetivo atual: rms_setting > config default (config.php). P/ password,
-     * máscara manual: não-trunc'a por segurança — devolve o valor real ao form
-     * (não vazia-value), assim salvar não-cadastra "mantém valor" inválido.
+     * Valor efetivo atual: rms_setting > config default (config.php). O segredo
+     * SMTP é lido apenas no servidor para preservar o valor vazio e indicar se
+     * já existe uma senha; o conteúdo nunca é incluído na view.
      *
-     * @return array{0: array<string, string>, 1: array<string, string>}
+     * @return array{0: array<string, mixed>, 1: array<string, string>}
      */
     private function hydrate(): array {
         $settings = $this->model_setting_setting->getSettings();
@@ -208,6 +241,9 @@ class Setting extends \Reamur\System\Engine\Controller {
                 ? (string)$settings[$f]
                 : (string)$this->config->get($f, '');
         }
+        $out['mail_smtp_password'] = '';
+        $out['mail_smtp_password_set'] = $this->storedSmtpPassword() !== '';
+        $out['mail_smtp_password_clear'] = false;
 
         return [$out, []];
     }
@@ -238,6 +274,20 @@ class Setting extends \Reamur\System\Engine\Controller {
             'cache_engine'            => $str('cache_engine', 16),
             'cache_expire'            => $str('cache_expire', 10),
         ];
+    }
+
+    private function storedSmtpPassword(): string {
+        $settings = $this->model_setting_setting->getSettings();
+        return array_key_exists('mail_smtp_password', $settings)
+            ? (string)$settings['mail_smtp_password']
+            : (string)$this->config->get('mail_smtp_password', '');
+    }
+
+    private function csrfValid(): bool {
+        return \Reamur\System\Library\Security\Csrf::check(
+            $this->session,
+            (string)($this->request->post['csrf_token'] ?? '')
+        );
     }
 
     /**
@@ -286,7 +336,7 @@ class Setting extends \Reamur\System\Engine\Controller {
     }
 
     private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $data['body_class'] = 'rms-dash';
         $data['header']     = $this->load->controller('common/header', $data);

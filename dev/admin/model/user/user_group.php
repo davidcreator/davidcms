@@ -50,16 +50,30 @@ class User_group extends \Reamur\System\Engine\Model {
         return ($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : [];
     }
 
-    /** @return array<int, array<string, mixed>> grupos com total de usuários vinculados */
-    public function getUserGroups(): array {
+    /** @param array<string, mixed> $filter_data search, start, limit
+     *  @return array<int, array<string, mixed>> grupos com total de usuários vinculados
+     */
+    public function getUserGroups(array $filter_data = []): array {
+        $name = trim((string)($filter_data['name'] ?? ''));
+        $where = $name !== '' ? " WHERE ug.name LIKE '%" . $this->db->escape($name) . "%'" : '';
+        $start = max(0, (int)($filter_data['start'] ?? 0));
+        $limit = min(100, max(1, (int)($filter_data['limit'] ?? 20)));
         $query = $this->db->query(
             "SELECT ug.*,
                     (SELECT COUNT(u.user_id) FROM `" . $this->t('user') . "` AS u
                       WHERE u.user_group_id = ug.user_group_id) AS total_users
-             FROM `" . $this->t('user_group') . "` AS ug ORDER BY ug.name"
+             FROM `" . $this->t('user_group') . "` AS ug" . $where . " ORDER BY ug.name, ug.user_group_id LIMIT " . $start . "," . $limit
         );
 
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
+    /** @param array<string, mixed> $filter_data */
+    public function getTotalUserGroups(array $filter_data = []): int {
+        $name = trim((string)($filter_data['name'] ?? ''));
+        $where = $name !== '' ? " WHERE `name` LIKE '%" . $this->db->escape($name) . "%'" : '';
+        $query = $this->db->query("SELECT COUNT(*) AS `total` FROM `" . $this->t('user_group') . "`" . $where);
+        return ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['total'] : 0;
     }
 
     /** permission JSON (nunca inventa formato: access/modify) */

@@ -1,136 +1,60 @@
-{# dev/admin/view/template/setting/marketplace.twig — fundação MP Marketplace (F5-02, ADR 0034) #}
+{# F8-03 — marketplace com formulários CSRF, filtros e listas paginadas #}
 {{ header|raw }}
-<main class="dash form-page">
-  <h1>{{ heading_title }}</h1>
+<main class="rms-main" id="content">
+  <div class="container-fluid py-3 px-3 px-lg-4">
+    {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">{{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ text_close }}"></button></div>{% endif %}
+    <div class="mb-3"><h1 class="h3 mb-1"><i class="bi bi-credit-card-2-front me-2" aria-hidden="true"></i>{{ heading_title }}</h1></div>
 
-  {% if text_flash.text %}
-  <div class="alert {{ text_flash.type == 'success' ? 'success' : 'error' }}">{{ text_flash.text }}</div>
-  {% endif %}
+    <form method="post" action="{{ action_save }}" class="card border-0 shadow-sm mb-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <fieldset {{ not can_modify ? 'disabled' : '' }}>
+        <div class="card-body"><h2 class="h5 mb-3">{{ text_config }}</h2><div class="row g-3">
+          <div class="col-12 col-lg-6"><label class="form-label" for="mp-app-id">{{ entry_app_id }}</label><input class="form-control" type="text" name="mp_app_id" id="mp-app-id" value="{{ mp_app_id }}" inputmode="numeric" autocomplete="off" placeholder="1234567890123456"></div>
+          <div class="col-12 col-lg-6"><label class="form-label" for="mp-client-secret">{{ entry_client_secret }}</label><input class="form-control" type="password" name="mp_client_secret" id="mp-client-secret" value="" autocomplete="new-password" placeholder="{{ mp_has_secret ? '••••••••••••' : '' }}"><div class="form-text">{{ text_secret_hint }}</div></div>
+          <div class="col-12 col-md-6"><label class="form-label" for="mp-env">{{ text_env }}</label><select class="form-select" name="mp_env" id="mp-env"><option value="test"{{ mp_env == 'test' ? ' selected' : '' }}>{{ text_env_test }}</option><option value="prod"{{ mp_env == 'prod' ? ' selected' : '' }}>{{ text_env_prod }}</option></select></div>
+          <div class="col-12 col-md-6"><label class="form-label" for="mp-redirect-uri">{{ entry_redirect_uri }}</label><input class="form-control" type="url" name="mp_redirect_uri" id="mp-redirect-uri" value="{{ mp_redirect_uri }}" placeholder="https://…/admin/index.php?route=setting/marketplace.callback"><div class="form-text">{{ text_redirect_hint }}</div></div>
+        </div></div>
+        {% if can_modify %}<div class="card-footer bg-body d-flex justify-content-end"><button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1" aria-hidden="true"></i>{{ button_save }}</button></div>{% endif %}
+      </fieldset>
+    </form>
 
-  <form method="post" action="{{ action_save }}" class="panel form" style="margin-bottom:1.5rem;">
-    <fieldset class="panel">
-      <legend>{{ text_config }}</legend>
-      <div class="grid two">
-        <div class="field">
-          <label>{{ entry_app_id }}</label>
-          <input type="text" name="mp_app_id" value="{{ mp_app_id }}" inputmode="numeric" placeholder="1234567890123456">
-        </div>
-        <div class="field">
-          <label>{{ entry_client_secret }}</label>
-          <input type="password" name="mp_client_secret" value="" autocomplete="new-password" placeholder="{{ mp_has_secret ? '••••••••' : '' }}">
-          <small class="muted">{{ text_secret_hint }}</small>
-        </div>
+    <section class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-body d-flex flex-wrap align-items-center justify-content-between gap-2"><h2 class="h5 mb-0">{{ text_sellers }}</h2>
+        {% if not mp_configured %}<span class="badge text-bg-warning">{{ text_not_configured }}</span>{% elseif can_modify %}<form method="post" action="{{ action_connect }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-primary"><i class="bi bi-link-45deg me-1" aria-hidden="true"></i>{{ button_connect }}</button></form>{% endif %}
       </div>
-      <div class="grid two">
-        <div class="field">
-          <label>{{ text_env }}</label>
-          <select name="mp_env">
-            <option value="test"{% if mp_env == 'test' %} selected{% endif %}>{{ text_env_test }}</option>
-            <option value="prod"{% if mp_env == 'prod' %} selected{% endif %}>{{ text_env_prod }}</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>{{ entry_redirect_uri }}</label>
-          <input type="url" name="mp_redirect_uri" value="{{ mp_redirect_uri }}" placeholder="https://…/admin/index.php?route=setting/marketplace.callback">
-          <small class="muted">{{ text_redirect_hint }}</small>
-        </div>
+      <div class="card-body">
+        <form method="get" action="{{ filter_action }}" class="row g-2 align-items-end mb-3">
+          <div class="col-12 col-md-6 col-xl-4"><label class="form-label" for="filter-seller">{{ entry_filter_seller }}</label><input class="form-control" type="search" name="filter_seller" id="filter-seller" value="{{ seller_filter_search }}" maxlength="128"></div>
+          <div class="col-12 col-md-4 col-xl-3"><label class="form-label" for="filter-seller-status">{{ entry_filter_seller_status }}</label><select class="form-select" name="filter_seller_status" id="filter-seller-status"><option value="all">{{ text_all_status }}</option><option value="1"{{ seller_filter_status == '1' ? ' selected' : '' }}>{{ text_active }}</option><option value="0"{{ seller_filter_status == '0' ? ' selected' : '' }}>{{ text_inactive }}</option></select></div>
+          <div class="col-12 col-md-auto d-flex gap-2"><button class="btn btn-outline-primary" type="submit">{{ button_filter }}</button><a class="btn btn-outline-secondary" href="{{ filter_action }}">{{ button_reset }}</a></div>
+        </form>
+        {% if sellers %}<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th scope="col">{{ column_mp_user }}</th><th scope="col">{{ column_nickname }}</th><th scope="col">{{ column_email }}</th><th scope="col">{{ column_scope }}</th><th scope="col">{{ column_expires }}</th><th scope="col">{{ column_status }}</th>{% if can_modify %}<th scope="col" class="text-end">{{ column_action }}</th>{% endif %}</tr></thead><tbody>
+          {% for s in sellers %}<tr><td class="fw-semibold">{{ s.mp_user_id }}</td><td>{{ s.nickname ?: '—' }}</td><td>{{ s.email ?: '—' }}</td><td><code>{{ s.scope }}</code></td><td>{{ s.token_expires_at }}</td><td><span class="badge text-bg-{{ s.status == 1 ? 'success' : 'secondary' }}">{{ s.status == 1 ? text_active : text_inactive }}</span></td>
+            {% if can_modify %}<td class="text-end text-nowrap"><form method="post" action="{{ action_refresh }}|{{ s.mp_seller_id }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>{{ button_refresh }}</button></form> <form method="post" action="{{ action_delete }}|{{ s.mp_seller_id }}" class="d-inline" onsubmit="return confirm('{{ text_confirm_disconnect|e('js') }}');"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-link-45deg me-1" aria-hidden="true"></i>{{ button_disconnect }}</button></form></td>{% endif %}
+          </tr>{% endfor %}
+        </tbody></table></div>{% else %}<p class="text-body-secondary">{{ text_no_sellers }}</p>{% endif %}
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3"><span class="small text-body-secondary">{{ seller_showing }}</span>{{ seller_pagination|replace({'&amp;amp;': '&amp;'})|raw }}</div>
+        <p class="small text-body-secondary mt-2 mb-0">{{ text_disconnect_note }}</p>
       </div>
-      <button type="submit" class="btn">{{ button_save }}</button>
-    </fieldset>
-  </form>
+    </section>
 
-  <section class="panel">
-    <h2 style="margin-top:0;">{{ text_sellers }}</h2>
-
-    {% if not mp_configured %}
-      <div class="alert error">{{ text_not_configured }}</div>
-      <p><button type="button" class="btn" disabled>{{ button_connect }}</button></p>
-    {% else %}
-      <form method="post" action="{{ action_connect }}" style="margin-bottom:1rem;">
-        <button type="submit" class="btn">{{ button_connect }}</button>
-      </form>
-    {% endif %}
-
-    {% if sellers %}
-    <table class="list">
-      <thead>
-        <tr>
-          <th>{{ column_mp_user }}</th>
-          <th>{{ column_nickname }}</th>
-          <th>{{ column_email }}</th>
-          <th>{{ column_scope }}</th>
-          <th>{{ column_expires }}</th>
-          <th>{{ column_status }}</th>
-          <th>{{ column_action }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for s in sellers %}
-        <tr>
-          <td>{{ s.mp_user_id }}</td>
-          <td>{{ s.nickname ?: '—' }}</td>
-          <td>{{ s.email ?: '—' }}</td>
-          <td><code>{{ s.scope }}</code></td>
-          <td>{{ s.token_expires_at }}</td>
-          <td>{{ s.status == 1 ? '✔' : '✘' }}</td>
-          <td style="white-space:nowrap;">
-            <form method="post" action="{{ action_refresh }}|{{ s.mp_seller_id }}" style="display:inline;">
-              <button type="submit" class="btn">{{ button_refresh }}</button>
-            </form>
-            <form method="post" action="{{ action_delete }}|{{ s.mp_seller_id }}" style="display:inline;" onsubmit="return confirm('?');">
-              <button type="submit" class="btn danger">{{ button_disconnect }}</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    <p class="muted">{{ text_disconnect_note }}</p>
-    {% else %}
-    <p class="muted">{{ text_no_sellers }}</p>
-    {% endif %}
-  </section>
-
-  {# F5-03 (ADR 0035): links de pagamento gerados (Checkout Pro, split) #}
-  <section class="panel">
-    <h2 style="margin-top:0;">{{ text_paylinks }}</h2>
-    <p class="muted">{{ text_fee_current }}</p>
-    {% if payments %}
-    <table class="list">
-      <thead>
-        <tr>
-          <th>{{ column_order }}</th>
-          <th>{{ column_customer }}</th>
-          <th>{{ column_amount }}</th>
-          <th>{{ column_fee }}</th>
-          <th>{{ column_seller }}</th>
-          <th>{{ column_payment_status }}</th>
-          <th>{{ column_pay_link }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for p in payments %}
-        <tr>
-          <td>#{{ p.order_id }}</td>
-          <td>{{ p.firstname }} {{ p.lastname }}</td>
-          <td>{{ p.currency_id }} {{ p.amount }}</td>
-          <td>{{ p.currency_id }} {{ p.marketplace_fee }}</td>
-          <td>{{ p.seller_nickname ?: p.seller_mp_user_id }}</td>
-          <td><code>{{ p.status }}</code></td>
-          <td style="max-width:22rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-            {% if p.status == 'pending' %}
-              <code title="{{ p.pay_url }}">{{ p.pay_url }}</code>
-            {% else %}
-              —
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <p class="muted">{{ text_no_payments }}</p>
-    {% endif %}
-  </section>
+    <section class="card border-0 shadow-sm">
+      <div class="card-header bg-body d-flex flex-wrap align-items-center justify-content-between gap-2"><h2 class="h5 mb-0">{{ text_paylinks }}</h2><span class="small text-body-secondary">{{ text_fee_current }}</span></div>
+      <div class="card-body">
+        <form method="get" action="{{ filter_action }}" class="row g-2 align-items-end mb-3">
+          <div class="col-12 col-sm-4 col-xl-2"><label class="form-label" for="filter-order-id">{{ entry_filter_order_id }}</label><input class="form-control" type="number" name="filter_order_id" id="filter-order-id" value="{{ payment_filter_order_id ?: '' }}" min="1"></div>
+          <div class="col-12 col-sm-8 col-xl-4"><label class="form-label" for="filter-customer">{{ entry_filter_customer }}</label><input class="form-control" type="search" name="filter_customer" id="filter-customer" value="{{ payment_filter_customer }}" maxlength="96"></div>
+          <div class="col-12 col-sm-6 col-xl-3"><label class="form-label" for="filter-payment-status">{{ entry_filter_payment_status }}</label><select class="form-select" name="filter_payment_status" id="filter-payment-status"><option value="all">{{ text_all_status }}</option>
+            {% for value, label in {'pending':text_payment_pending,'approved':text_payment_approved,'rejected':text_payment_rejected,'cancelled':text_payment_cancelled,'refunded':text_payment_refunded,'in_process':text_payment_in_process} %}<option value="{{ value }}"{{ payment_filter_status == value ? ' selected' : '' }}>{{ label }}</option>{% endfor %}
+          </select></div>
+          <div class="col-12 col-xl-3 d-flex gap-2"><button class="btn btn-outline-primary" type="submit">{{ button_filter }}</button><a class="btn btn-outline-secondary" href="{{ filter_action }}">{{ button_reset }}</a></div>
+        </form>
+        {% if payments %}<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th scope="col">{{ column_order }}</th><th scope="col">{{ column_customer }}</th><th scope="col">{{ column_amount }}</th><th scope="col">{{ column_fee }}</th><th scope="col">{{ column_seller }}</th><th scope="col">{{ column_payment_status }}</th><th scope="col">{{ column_pay_link }}</th></tr></thead><tbody>
+          {% for p in payments %}<tr><td class="fw-semibold">#{{ p.order_id }}</td><td>{{ p.firstname }} {{ p.lastname }}</td><td>{{ p.currency_id }} {{ p.amount }}</td><td>{{ p.currency_id }} {{ p.marketplace_fee }}</td><td>{{ p.seller_nickname ?: p.seller_mp_user_id }}</td><td><span class="badge text-bg-{{ p.status == 'approved' ? 'success' : (p.status == 'pending' ? 'warning' : 'secondary') }}">{{ p.status }}</span></td><td>{% if p.status == 'pending' %}<a class="d-inline-block text-truncate" style="max-width:22rem;" title="{{ p.pay_url }}" href="{{ p.pay_url }}" target="_blank" rel="noopener">{{ p.pay_url }}</a>{% else %}—{% endif %}</td></tr>{% endfor %}
+        </tbody></table></div>{% else %}<p class="text-body-secondary">{{ text_no_payments }}</p>{% endif %}
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3"><span class="small text-body-secondary">{{ payment_showing }}</span>{{ payment_pagination|replace({'&amp;amp;': '&amp;'})|raw }}</div>
+      </div>
+    </section>
+  </div>
 </main>
 {{ footer|raw }}

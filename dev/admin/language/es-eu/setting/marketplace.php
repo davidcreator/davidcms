@@ -56,3 +56,31 @@ $_['error_already_paid']   = 'El pedido n.º %s ya tiene un pago aprobado — en
 $_['error_no_seller']      = 'No hay ningún vendedor activo conectado. Conecta un vendedor primero.';
 $_['error_no_total']       = 'El pedido n.º %s tiene total cero. Define el precio en Ventas → Pedidos → Editar antes.';
 $_['error_preference']     = 'No se pudo crear la preferencia de pago: %s';
+
+$_['error_csrf'] = 'El formulario ha caducado o no se pudo verificar. Recarga la página e inténtalo de nuevo.';
+$_['text_confirm_disconnect'] = '¿Desconectar a este vendedor de esta instalación local?';
+
+// F8-03: búsqueda y paginación de las listas del marketplace
+$_['text_filter'] = 'Filtrar';
+$_['text_showing'] = 'Mostrando %s–%s de %s';
+$_['text_all_status'] = 'Todos los estados';
+$_['text_active'] = 'Activo';
+$_['text_inactive'] = 'Inactivo';
+$_['text_payment_pending'] = 'Pendiente';
+$_['text_payment_approved'] = 'Aprobado';
+$_['text_payment_rejected'] = 'Rechazado';
+$_['text_payment_cancelled'] = 'Cancelado';
+$_['text_payment_refunded'] = 'Reembolsado';
+$_['text_payment_in_process'] = 'En proceso';
+$_['entry_filter_seller'] = 'Vendedor (nombre, correo o ID)';
+$_['entry_filter_seller_status'] = 'Estado del vendedor';
+$_['entry_filter_order_id'] = 'ID del pedido';
+$_['entry_filter_customer'] = 'Cliente';
+$_['entry_filter_payment_status'] = 'Estado del pago';
+$_['button_filter'] = 'Aplicar filtros';
+$_['button_reset'] = 'Limpiar';
+$_['text_close'] = 'Cerrar';
+$_['text_page_first'] = '« Primera';
+$_['text_page_last'] = 'Última »';
+$_['text_page_next'] = 'Siguiente ›';
+$_['text_page_prev'] = '‹ Anterior';

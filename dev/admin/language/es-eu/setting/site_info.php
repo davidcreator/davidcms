@@ -49,3 +49,6 @@ $_['error_url']            = '¡%s debe comenzar con http:// o https://!';
 // Buttons
 $_['button_save'] = 'Guardar';
 $_['button_back'] = 'Volver';
+
+$_['error_csrf'] = 'El formulario ha caducado o no se pudo verificar. Recarga la página e inténtalo de nuevo.';
+$_['text_close'] = 'Cerrar';

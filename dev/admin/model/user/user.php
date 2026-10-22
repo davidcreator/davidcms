@@ -99,15 +99,32 @@ class User extends \Reamur\System\Engine\Model {
         return ($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : [];
     }
 
-    /** @return array<int, array<string, mixed>> usuários com nome do grupo */
-    public function getUsers(): array {
-        $query = $this->db->query(
-            "SELECT u.*, ug.name AS group_name FROM `" . $this->t('user') . "` AS u
-             LEFT JOIN `" . $this->t('user_group') . "` AS ug ON (u.user_group_id = ug.user_group_id)
-             ORDER BY u.username"
-        );
+    /** @param array<string, mixed> $filter_data search, group_id, status, start, limit
+     *  @return array<int, array<string, mixed>> usuários com nome do grupo
+     */
+    public function getUsers(array $filter_data = []): array {
+        $sql = "SELECT u.*, ug.name AS group_name FROM `" . $this->t('user') . "` AS u
+                LEFT JOIN `" . $this->t('user_group') . "` AS ug ON (u.user_group_id = ug.user_group_id)";
+        $where = $this->userFilterWhere($filter_data);
+        if ($where !== '') { $sql .= ' WHERE ' . $where; }
+        $start = max(0, (int)($filter_data['start'] ?? 0));
+        $limit = min(100, max(1, (int)($filter_data['limit'] ?? 20)));
+        $sql .= " ORDER BY u.username ASC, u.user_id ASC LIMIT " . $start . "," . $limit;
+
+        $query = $this->db->query($sql);
 
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
+    /** @param array<string, mixed> $filter_data */
+    public function getTotalUsers(array $filter_data = []): int {
+        $sql = "SELECT COUNT(*) AS `total` FROM `" . $this->t('user') . "` AS u
+                LEFT JOIN `" . $this->t('user_group') . "` AS ug ON (u.user_group_id = ug.user_group_id)";
+        $where = $this->userFilterWhere($filter_data);
+        if ($where !== '') { $sql .= ' WHERE ' . $where; }
+        $query = $this->db->query($sql);
+
+        return ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['total'] : 0;
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -115,6 +132,20 @@ class User extends \Reamur\System\Engine\Model {
         $query = $this->db->query("SELECT * FROM `" . $this->t('user_group') . "` ORDER BY `name`");
 
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
+    /** @param array<string, mixed> $filter_data */
+    private function userFilterWhere(array $filter_data): string {
+        $where = [];
+        foreach (['username' => 'u.username', 'email' => 'u.email'] as $key => $column) {
+            $value = trim((string)($filter_data[$key] ?? ''));
+            if ($value !== '') { $where[] = $column . " LIKE '%" . $this->db->escape($value) . "%'"; }
+        }
+        $groupId = (int)($filter_data['user_group_id'] ?? 0);
+        if ($groupId > 0) { $where[] = 'u.user_group_id = ' . $groupId; }
+        $status = (string)($filter_data['status'] ?? 'all');
+        if (in_array($status, ['0', '1'], true)) { $where[] = "u.status = '" . $status . "'"; }
+        return implode(' AND ', $where);
     }
 
     private function t(string $table): string {

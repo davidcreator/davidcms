@@ -43,7 +43,7 @@ $_['help_config_meta_description'] = '<meta name="description"> para páginas se
 $_['help_mail_engine']             = 'mail() envia via PHP; SMTP para relé externo; capture grava em storage/logs/mail_capture.json (dev/CI).';
 $_['help_mail_smtp_hostname']      = 'Ex.: smtp.hostinger.com';
 $_['help_mail_smtp_username']      = 'Geralmente o usuário/e-mail completo.';
-$_['help_mail_smtp_password']      = 'Nunca é exibida novamente. Deixe os espaços se eles pertencem à senha.';
+$_['help_mail_smtp_password']      = 'A senha atual nunca é exibida. Deixe vazio para mantê-la; informe um novo valor para substituí-la. Use a caixa para removê-la. Se a validação falhar, informe novamente a nova senha.';
 $_['help_mail_smtp_port']          = '25 (insegura), 465 (ssl), 587 (starttls) ou 2525.';
 $_['help_mail_smtp_timeout']       = 'Segundos antes de dar timeout (1–60).';
 $_['help_mail_reply_to']           = 'Opcional. Cabeçalho Reply-To dos e-mails enviados.';
@@ -73,3 +73,10 @@ $_['error_mail_test_recipient'] = 'o usuário logado não tem um e-mail válido'
 $_['button_save']        = 'Salvar configurações';
 $_['button_clear_cache'] = 'Limpar cache';
 $_['button_back']        = 'Voltar ao dashboard';
+
+// F8-03: tratamento de segredo e proteção de requisições
+$_['text_smtp_password_set'] = 'Já há uma senha configurada. Deixe este campo vazio para mantê-la.';
+$_['text_smtp_password_unset'] = 'Nenhuma senha SMTP está configurada.';
+$_['entry_mail_smtp_password_clear'] = 'Remover a senha SMTP salva';
+$_['error_csrf'] = 'O formulário expirou ou não pôde ser verificado. Recarregue a página e tente novamente.';
+$_['text_close'] = 'Fechar';

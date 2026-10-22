@@ -60,3 +60,22 @@ $_['error_group']           = 'Choose a user group!';
 $_['error_self_delete']     = 'You cannot delete your own user while logged in!';
 $_['error_self_disable']      = 'You cannot deactivate your own account while you are logged in.';
 $_['error_last_active_admin'] = 'Cannot inactivate/demote/delete the last active user able to administer users (user/user).';
+
+// F8-03: search, pagination and request protection
+$_['text_filter'] = 'Filter users';
+$_['text_all_groups'] = 'All groups';
+$_['text_all_status'] = 'All statuses';
+$_['text_showing'] = 'Showing %s–%s of %s';
+$_['text_self'] = 'You';
+$_['entry_filter_username'] = 'Username';
+$_['entry_filter_email'] = 'E-mail';
+$_['entry_filter_group'] = 'User group';
+$_['button_filter'] = 'Apply filters';
+$_['button_reset'] = 'Reset';
+$_['error_csrf'] = 'This form expired or could not be verified. Reload the page and try again.';
+$_['text_status'] = 'Status';
+$_['text_close'] = 'Close';
+$_['text_page_first'] = '« First';
+$_['text_page_last'] = 'Last »';
+$_['text_page_next'] = 'Next ›';
+$_['text_page_prev'] = '‹ Prev';

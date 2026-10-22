@@ -19,11 +19,11 @@ $_['text_enabled']         = 'Activo';
 $_['text_disabled']        = 'Inactivo';
 $_['text_trigger_hint']    = 'Sintaxis de evento: order_add, order_edit, contact_add, product_* ... los comodines casan prefijos de evento.';
 $_['text_url_hint']        = 'Solo HTTPS — el payload firmado viaja protegido.';
-$_['text_secret_hint']     = 'Secret HMAC usado para firmar cada entrega (16 a 64 caracteres). Mantenlo privado.';
+$_['text_secret_hint'] = 'El secreto HMAC nunca se muestra. Déjalo vacío para conservarlo o introduce un nuevo valor para sustituirlo. Si falla la validación, vuelve a introducir el nuevo secreto.';
 $_['text_status_hint']     = 'Los endpoints inactivos conservan su historial pero no reciben nuevas entregas.';
 $_['text_logs_all']        = 'Todas las entregas';
 $_['text_logs_of']         = 'Entregas de %s (%s)';
-$_['text_logs_hint']       = 'Entregas más recientes (hasta 200). 2xx = éxito; cualquier otra cosa = candidata a cola de reintento.';
+$_['text_logs_hint'] = 'Filtra por ID de entrega, evento o código HTTP y usa los controles de página para recorrer los resultados. 2xx = éxito; otros códigos pueden requerir revisión o reintento.';
 $_['text_no_logs']         = 'Aún no hay entregas.';
 $_['text_log_detail']      = 'Detalle de la entrega (solo lectura).';
 $_['text_success_add']     = 'Webhook creado.';
@@ -75,3 +75,24 @@ $_['error_url_https']      = 'La URL debe empezar con https:// (hasta 255 caract
 $_['error_secret']         = 'El secret debe tener de 16 a 64 caracteres.';
 $_['error_description']    = 'La descripción es obligatoria (1 a 255 caracteres).';
 $_['error_duplicate']      = 'Este par evento + URL ya existe (el par debe ser único).';
+
+// F8-03: filtros, paginación y tratamiento de secretos
+$_['text_filter'] = 'Filtrar webhooks';
+$_['entry_filter_trigger'] = 'Evento / trigger';
+$_['entry_filter_url'] = 'URL del endpoint';
+$_['text_all_status'] = 'Todos los estados';
+$_['button_filter'] = 'Aplicar filtros';
+$_['button_reset'] = 'Limpiar';
+$_['text_showing'] = 'Mostrando %s–%s de %s';
+$_['text_secret_set'] = 'Hay un secreto de firma configurado. Nunca se muestra en este formulario.';
+$_['text_secret_unset'] = 'No hay un secreto de firma configurado. El endpoint se desactiva hasta que se defina uno.';
+$_['text_secret_badge_set'] = 'Configurado · oculto';
+$_['text_secret_badge_unset'] = 'Ausente · inactivo';
+$_['entry_secret_clear'] = 'Borrar el secreto guardado y desactivar este endpoint';
+$_['text_secret_clear_help'] = 'Al borrar el secreto, el endpoint se desactiva automáticamente para no enviar entregas sin firma.';
+$_['error_csrf'] = 'El formulario ha caducado o no se pudo verificar. Recarga la página e inténtalo de nuevo.';
+$_['text_close'] = 'Cerrar';
+$_['text_page_first'] = '« Primera';
+$_['text_page_last'] = 'Última »';
+$_['text_page_next'] = 'Siguiente ›';
+$_['text_page_prev'] = '‹ Anterior';

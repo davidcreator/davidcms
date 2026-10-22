@@ -41,10 +41,90 @@ class Marketplace extends \Reamur\System\Engine\Controller {
 
         $mp = $this->mpFromSettings($settings);
 
+        $sellerFilter = [
+            'search' => mb_substr($this->queryValue('filter_seller'), 0, 128),
+            'status' => $this->queryValue('filter_seller_status') === '' ? 'all' : $this->queryValue('filter_seller_status'),
+        ];
+        if (!in_array($sellerFilter['status'], ['all', '0', '1'], true)) { $sellerFilter['status'] = 'all'; }
+        $sellerLimit = 10;
+        $sellerPage = max(1, (int)$this->queryValue('seller_page'));
+        $sellerTotal = $this->model_setting_marketplace->getTotalSellers($sellerFilter);
+        $sellerPage = min($sellerPage, max(1, (int)ceil($sellerTotal / $sellerLimit)));
+        $sellerFilter['start'] = ($sellerPage - 1) * $sellerLimit;
+        $sellerFilter['limit'] = $sellerLimit;
+
+        $paymentFilter = [
+            'order_id' => max(0, (int)$this->queryValue('filter_order_id')),
+            'customer' => mb_substr($this->queryValue('filter_customer'), 0, 96),
+            'status' => ($this->queryValue('filter_payment_status') ?: 'all'),
+        ];
+        if (!in_array($paymentFilter['status'], ['all', 'pending', 'approved', 'rejected', 'cancelled', 'refunded', 'in_process'], true)) { $paymentFilter['status'] = 'all'; }
+        $paymentLimit = 20;
+        $paymentPage = max(1, (int)$this->queryValue('payment_page'));
+        $paymentTotal = $this->model_setting_marketplace->getTotalPayments($paymentFilter);
+        $paymentPage = min($paymentPage, max(1, (int)ceil($paymentTotal / $paymentLimit)));
+        $paymentFilter['start'] = ($paymentPage - 1) * $paymentLimit;
+        $paymentFilter['limit'] = $paymentLimit;
+
+        require_once DIR_SYSTEM . 'library/pagination.php';
+        $sellerPagination = new \Pagination();
+        $sellerPagination->total = $sellerTotal;
+        $sellerPagination->page = $sellerPage;
+        $sellerPagination->limit = $sellerLimit;
+        $sellerQuery = 'seller_page={page}';
+        if ($sellerFilter['search'] !== '') { $sellerQuery .= '&filter_seller=' . rawurlencode($sellerFilter['search']); }
+        if ($sellerFilter['status'] !== 'all') { $sellerQuery .= '&filter_seller_status=' . $sellerFilter['status']; }
+        $sellerPagination->url = $this->url->link('setting/marketplace', $sellerQuery);
+        $sellerPagination->css_class = 'pagination pagination-sm mb-0';
+        $sellerPagination->text_first = $this->language->get('text_page_first');
+        $sellerPagination->text_last = $this->language->get('text_page_last');
+        $sellerPagination->text_next = $this->language->get('text_page_next');
+        $sellerPagination->text_prev = $this->language->get('text_page_prev');
+
+        $paymentPagination = new \Pagination();
+        $paymentPagination->total = $paymentTotal;
+        $paymentPagination->page = $paymentPage;
+        $paymentPagination->limit = $paymentLimit;
+        $paymentQuery = 'payment_page={page}';
+        if ($paymentFilter['order_id'] > 0) { $paymentQuery .= '&filter_order_id=' . $paymentFilter['order_id']; }
+        if ($paymentFilter['customer'] !== '') { $paymentQuery .= '&filter_customer=' . rawurlencode($paymentFilter['customer']); }
+        if ($paymentFilter['status'] !== 'all') { $paymentQuery .= '&filter_payment_status=' . rawurlencode($paymentFilter['status']); }
+        $paymentPagination->url = $this->url->link('setting/marketplace', $paymentQuery);
+        $paymentPagination->css_class = 'pagination pagination-sm mb-0';
+        $paymentPagination->text_first = $this->language->get('text_page_first');
+        $paymentPagination->text_last = $this->language->get('text_page_last');
+        $paymentPagination->text_next = $this->language->get('text_page_next');
+        $paymentPagination->text_prev = $this->language->get('text_page_prev');
+
+        $rawPayments = $this->model_setting_marketplace->getPayments($paymentFilter);
+        $payments = array_map(function (array $payment): array {
+            $payment['pay_url'] = $this->publicPayUrl((string)$payment['public_token']);
+            return $payment;
+        }, $rawPayments);
+
         $data = [
             'heading_title'        => $this->language->get('heading_title'),
             'text_config'          => $this->language->get('text_config'),
             'text_sellers'         => $this->language->get('text_sellers'),
+            'text_filter'          => $this->language->get('text_filter'),
+            'text_close'           => $this->language->get('text_close'),
+            'text_showing'         => $this->language->get('text_showing'),
+            'text_all_status'      => $this->language->get('text_all_status'),
+            'text_active'          => $this->language->get('text_active'),
+            'text_inactive'        => $this->language->get('text_inactive'),
+            'text_payment_pending' => $this->language->get('text_payment_pending'),
+            'text_payment_approved' => $this->language->get('text_payment_approved'),
+            'text_payment_rejected' => $this->language->get('text_payment_rejected'),
+            'text_payment_cancelled' => $this->language->get('text_payment_cancelled'),
+            'text_payment_refunded' => $this->language->get('text_payment_refunded'),
+            'text_payment_in_process' => $this->language->get('text_payment_in_process'),
+            'entry_filter_seller'  => $this->language->get('entry_filter_seller'),
+            'entry_filter_seller_status' => $this->language->get('entry_filter_seller_status'),
+            'entry_filter_order_id' => $this->language->get('entry_filter_order_id'),
+            'entry_filter_customer' => $this->language->get('entry_filter_customer'),
+            'entry_filter_payment_status' => $this->language->get('entry_filter_payment_status'),
+            'button_filter'        => $this->language->get('button_filter'),
+            'button_reset'         => $this->language->get('button_reset'),
             'text_no_sellers'      => $this->language->get('text_no_sellers'),
             'text_not_configured'  => $this->language->get('text_not_configured'),
             'text_env'             => $this->language->get('text_env'),
@@ -53,7 +133,10 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             'text_secret_hint'     => $this->language->get('text_secret_hint'),
             'text_redirect_hint'   => $this->language->get('text_redirect_hint'),
             'text_disconnect_note' => $this->language->get('text_disconnect_note'),
+            'text_confirm_disconnect' => $this->language->get('text_confirm_disconnect'),
+            'can_modify'           => $this->user->hasPermission('modify', 'setting/marketplace'),
             'text_flash'           => $this->flash(),
+            'csrf_token'           => \Reamur\System\Library\Security\Csrf::token($this->session),
             'entry_app_id'         => $this->language->get('entry_app_id'),
             'entry_client_secret'  => $this->language->get('entry_client_secret'),
             'entry_redirect_uri'   => $this->language->get('entry_redirect_uri'),
@@ -84,19 +167,24 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             'column_payment_status'=> $this->language->get('column_payment_status'),
             'column_pay_link'      => $this->language->get('column_pay_link'),
             'button_copy'          => $this->language->get('button_copy'),
-            'payments'             => array_map(
-                function (array $p): array {
-                    $p['pay_url'] = $this->publicPayUrl((string)$p['public_token']);
-
-                    return $p;
-                },
-                $this->model_setting_marketplace->getPayments()
-            ),
+            'payments'             => $payments,
+            'filter_action' => $this->url->link('setting/marketplace'),
+            'seller_filter_search' => $sellerFilter['search'],
+            'seller_filter_status' => $sellerFilter['status'],
+            'payment_filter_order_id' => $paymentFilter['order_id'],
+            'payment_filter_customer' => $paymentFilter['customer'],
+            'payment_filter_status' => $paymentFilter['status'],
+            'seller_total' => $sellerTotal,
+            'seller_showing' => $sellerTotal > 0 ? sprintf($this->language->get('text_showing'), (($sellerPage - 1) * $sellerLimit) + 1, min($sellerPage * $sellerLimit, $sellerTotal), $sellerTotal) : '',
+            'seller_pagination' => $sellerPagination->render(),
+            'payment_total' => $paymentTotal,
+            'payment_showing' => $paymentTotal > 0 ? sprintf($this->language->get('text_showing'), (($paymentPage - 1) * $paymentLimit) + 1, min($paymentPage * $paymentLimit, $paymentTotal), $paymentTotal) : '',
+            'payment_pagination' => $paymentPagination->render(),
             'action_save'          => $this->url->link('setting/marketplace.save'),
             'action_connect'       => $this->url->link('setting/marketplace.authorize'),
             'action_refresh'       => $this->url->link('setting/marketplace.refresh'),
             'action_delete'        => $this->url->link('setting/marketplace.delete'),
-            'sellers'              => $this->model_setting_marketplace->getSellers(),
+            'sellers'              => $this->model_setting_marketplace->getSellers($sellerFilter),
         ];
 
         $this->chrome($data);
@@ -110,7 +198,11 @@ class Marketplace extends \Reamur\System\Engine\Controller {
 
         if ($this->request->server['REQUEST_METHOD'] !== 'POST' || !$this->user->hasPermission('modify', 'setting/marketplace')) {
             $this->response->redirect($this->url->link('error/permission'));
-
+            return;
+        }
+        if (!$this->csrfValid()) {
+            $this->session->data['flash'] = ['type' => 'danger', 'text' => $this->language->get('error_csrf')];
+            $this->response->redirect($this->url->link('setting/marketplace'));
             return;
         }
 
@@ -167,9 +259,13 @@ class Marketplace extends \Reamur\System\Engine\Controller {
     public function authorize(): void {
         $this->load->language('setting/marketplace');
 
-        if (!$this->user->hasPermission('modify', 'setting/marketplace')) {
+        if ($this->request->server['REQUEST_METHOD'] !== 'POST' || !$this->user->hasPermission('modify', 'setting/marketplace')) {
             $this->response->redirect($this->url->link('error/permission'));
-
+            return;
+        }
+        if (!$this->csrfValid()) {
+            $this->session->data['flash'] = ['type' => 'danger', 'text' => $this->language->get('error_csrf')];
+            $this->response->redirect($this->url->link('setting/marketplace'));
             return;
         }
 
@@ -264,7 +360,11 @@ class Marketplace extends \Reamur\System\Engine\Controller {
 
         if ($this->request->server['REQUEST_METHOD'] !== 'POST' || !$this->user->hasPermission('modify', 'setting/marketplace')) {
             $this->response->redirect($this->url->link('error/permission'));
-
+            return;
+        }
+        if (!$this->csrfValid()) {
+            $this->session->data['flash'] = ['type' => 'danger', 'text' => $this->language->get('error_csrf')];
+            $this->response->redirect($this->url->link('setting/marketplace'));
             return;
         }
 
@@ -312,7 +412,11 @@ class Marketplace extends \Reamur\System\Engine\Controller {
 
         if ($this->request->server['REQUEST_METHOD'] !== 'POST' || !$this->user->hasPermission('modify', 'setting/marketplace')) {
             $this->response->redirect($this->url->link('error/permission'));
-
+            return;
+        }
+        if (!$this->csrfValid()) {
+            $this->session->data['flash'] = ['type' => 'danger', 'text' => $this->language->get('error_csrf')];
+            $this->response->redirect($this->url->link('setting/marketplace'));
             return;
         }
 
@@ -337,7 +441,11 @@ class Marketplace extends \Reamur\System\Engine\Controller {
 
         if ($this->request->server['REQUEST_METHOD'] !== 'POST' || !$this->user->hasPermission('modify', 'setting/marketplace')) {
             $this->response->redirect($this->url->link('error/permission'));
-
+            return;
+        }
+        if (!$this->csrfValid()) {
+            $this->session->data['flash'] = ['type' => 'danger', 'text' => $this->language->get('error_csrf')];
+            $this->response->redirect($this->url->link('setting/marketplace'));
             return;
         }
 
@@ -493,9 +601,22 @@ class Marketplace extends \Reamur\System\Engine\Controller {
         return ['type' => (string)($flash['type'] ?? ''), 'text' => (string)($flash['text'] ?? '')];
     }
 
+    /** Lê valores escalares da querystring sem converter arrays para string. */
+    private function queryValue(string $key): string {
+        $value = $this->request->get[$key] ?? '';
+        return is_scalar($value) ? trim((string)$value) : '';
+    }
+
+    private function csrfValid(): bool {
+        return \Reamur\System\Library\Security\Csrf::check(
+            $this->session,
+            (string)($this->request->post['csrf_token'] ?? '')
+        );
+    }
+
     /** Chrome compartilhado (mesmo padrão dos demais módulos admin) */
     private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $data['body_class'] = 'rms-dash';
         $data['header']     = $this->load->controller('common/header', $data);
