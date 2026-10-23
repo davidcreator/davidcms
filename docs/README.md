@@ -1,6 +1,8 @@
-# Índice da entrega F9-02
+# Índice da entrega F9-03
 
-- Desenho físico e limites: `F9-02-Desenho-Campos-Personalizados.md`
-- Contrato proposto herdado da F9-01: `F9-02-Contrato-Campos-Personalizados.json`
-- SQL: `..` em `dev/install/sql/upgrade...` e `rollback...`
-- Tool E2E estático local: `tools/e2e/e2e_f902.sh --check` (não executa banco/aplicação).
+- Auditoria narrativa e limites: `F9-03-Auditoria-Banco-DavidAlmeida.md`
+- Inventário sanitizado do dump: `F9-03-Inventario-Banco-DavidAlmeida.json`
+- Tool E2E estático local: `tools/e2e/e2e_f903.sh --check`
+- Modo real, após aplicar no repositório: `tools/e2e/e2e_f903.sh --check --sql dev/install/sql/bd-davidalmeida.sql`
+
+O pacote **não inclui o dump real** e não executa SQL. O inventário contém somente metadados, colunas e contagens; nenhum valor/credencial foi copiado.

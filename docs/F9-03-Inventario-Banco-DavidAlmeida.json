@@ -1,0 +1,738 @@
+{
+  "task": "F9-03",
+  "kind": "sanitized_sql_inventory",
+  "source": {
+    "repository": "https://github.com/davidcreator/davidcms",
+    "commit": "9b570ef4828ce128674a501cc523800b624d609e",
+    "path": "dev/install/sql/bd-davidalmeida.sql",
+    "sha256": "805d178e7b9122c332f3253042bef5b5fa9849936c76df39a23658585407e6a5",
+    "bytes": 201775,
+    "generator": "phpMyAdmin SQL Dump",
+    "server_version": "11.8.9-MariaDB-log",
+    "php_version": "7.2.34",
+    "priority_site": "davidalmeida.xyz",
+    "excluded_site": "davidcreator.com"
+  },
+  "summary": {
+    "tables": 18,
+    "tables_with_inserts": 14,
+    "insert_statements": 16,
+    "estimated_rows": 909,
+    "engines": [
+      [
+        "InnoDB",
+        18
+      ]
+    ],
+    "charsets": [
+      [
+        "utf8mb4",
+        18
+      ]
+    ],
+    "drop_table_statements": 0,
+    "truncate_statements": 0,
+    "contains_custom_field_tables": false,
+    "contains_davidcreator_references": 4,
+    "contains_cms_prefix_rms": false
+  },
+  "tables": [
+    {
+      "name": "admin_audit_logs",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "action_key",
+        "entity",
+        "summary",
+        "details_json",
+        "actor_username",
+        "ip_address",
+        "created_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "action_key": "varchar(120) NOT NULL DEFAULT ''",
+        "entity": "varchar(120) NOT NULL DEFAULT ''",
+        "summary": "varchar(500) NOT NULL DEFAULT ''",
+        "details_json": "longtext NOT NULL",
+        "actor_username": "varchar(190) NOT NULL DEFAULT ''",
+        "ip_address": "varchar(64) NOT NULL DEFAULT ''",
+        "created_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 1,
+      "estimated_rows": 1,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "details_json",
+        "actor_username",
+        "ip_address"
+      ]
+    },
+    {
+      "name": "class_attendance",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "student_id",
+        "module_id",
+        "was_present",
+        "attendance_date",
+        "notes",
+        "marked_by",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "student_id": "int(10) UNSIGNED NOT NULL",
+        "module_id": "int(10) UNSIGNED NOT NULL",
+        "was_present": "tinyint(1) NOT NULL DEFAULT 0",
+        "attendance_date": "varchar(25) NOT NULL DEFAULT ''",
+        "notes": "text NOT NULL",
+        "marked_by": "varchar(120) NOT NULL DEFAULT ''",
+        "created_at": "varchar(25) NOT NULL",
+        "updated_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 0,
+      "estimated_rows": 0,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "notes"
+      ]
+    },
+    {
+      "name": "class_students",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "class_id",
+        "student_id",
+        "enrollment_status",
+        "enrolled_at",
+        "notes",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "class_id": "int(10) UNSIGNED NOT NULL",
+        "student_id": "int(10) UNSIGNED NOT NULL",
+        "enrollment_status": "varchar(30) NOT NULL DEFAULT 'active'",
+        "enrolled_at": "varchar(25) NOT NULL DEFAULT ''",
+        "notes": "text NOT NULL",
+        "created_at": "varchar(25) NOT NULL",
+        "updated_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 0,
+      "estimated_rows": 0,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "notes"
+      ]
+    },
+    {
+      "name": "contact_messages",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "name",
+        "email",
+        "phone",
+        "subject",
+        "message",
+        "status",
+        "priority",
+        "source",
+        "ip_address",
+        "assigned_to",
+        "internal_notes",
+        "replied_at",
+        "updated_by",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "name": "varchar(160) NOT NULL",
+        "email": "varchar(190) NOT NULL",
+        "phone": "varchar(60) NOT NULL DEFAULT ''",
+        "subject": "varchar(255) NOT NULL DEFAULT ''",
+        "message": "text NOT NULL",
+        "status": "varchar(40) NOT NULL DEFAULT 'new'",
+        "priority": "varchar(40) NOT NULL DEFAULT 'normal'",
+        "source": "varchar(40) NOT NULL DEFAULT 'site'",
+        "ip_address": "varchar(64) NOT NULL DEFAULT ''",
+        "assigned_to": "varchar(120) NOT NULL DEFAULT ''",
+        "internal_notes": "text NOT NULL",
+        "replied_at": "varchar(25) NOT NULL DEFAULT ''",
+        "updated_by": "varchar(120) NOT NULL DEFAULT ''",
+        "created_at": "varchar(25) NOT NULL",
+        "updated_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 1,
+      "estimated_rows": 9,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "email",
+        "phone",
+        "message",
+        "ip_address",
+        "internal_notes"
+      ]
+    },
+    {
+      "name": "contact_message_events",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "message_id",
+        "event_type",
+        "event_body",
+        "event_meta",
+        "created_by",
+        "created_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "message_id": "int(10) UNSIGNED NOT NULL",
+        "event_type": "varchar(40) NOT NULL DEFAULT 'system'",
+        "event_body": "text NOT NULL",
+        "event_meta": "text NOT NULL",
+        "created_by": "varchar(120) NOT NULL DEFAULT ''",
+        "created_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 0,
+      "estimated_rows": 0,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "message_id",
+        "event_body",
+        "event_meta"
+      ]
+    },
+    {
+      "name": "contact_reply_templates",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "title",
+        "content",
+        "is_default",
+        "sort_order",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "title": "varchar(190) NOT NULL",
+        "content": "text NOT NULL",
+        "is_default": "tinyint(1) NOT NULL DEFAULT 0",
+        "sort_order": "int(11) NOT NULL DEFAULT 0",
+        "created_at": "varchar(25) NOT NULL",
+        "updated_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 1,
+      "estimated_rows": 4,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": []
+    },
+    {
+      "name": "course_classes",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "track_id",
+        "class_name",
+        "weekday",
+        "class_date",
+        "start_time",
+        "end_time",
+        "status",
+        "notes",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "track_id": "int(10) UNSIGNED NOT NULL",
+        "class_name": "varchar(190) NOT NULL DEFAULT ''",
+        "weekday": "varchar(30) NOT NULL DEFAULT ''",
+        "class_date": "varchar(25) NOT NULL DEFAULT ''",
+        "start_time": "varchar(10) NOT NULL DEFAULT ''",
+        "end_time": "varchar(10) NOT NULL DEFAULT ''",
+        "status": "varchar(30) NOT NULL DEFAULT 'active'",
+        "notes": "text NOT NULL",
+        "created_at": "varchar(25) NOT NULL",
+        "updated_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 1,
+      "estimated_rows": 2,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "notes"
+      ]
+    },
+    {
+      "name": "course_contents",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "module_id",
+        "content_title",
+        "content_description",
+        "resource_url",
+        "display_order",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "module_id": "int(10) UNSIGNED NOT NULL",
+        "content_title": "varchar(190) NOT NULL DEFAULT ''",
+        "content_description": "text NOT NULL",
+        "resource_url": "varchar(600) NOT NULL DEFAULT ''",
+        "display_order": "int(11) NOT NULL DEFAULT 0",
+        "created_at": "varchar(25) NOT NULL",
+        "updated_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 1,
+      "estimated_rows": 140,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "content_description"
+      ]
+    },
+    {
+      "name": "course_modules",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "track_id",
+        "module_name",
+        "module_date",
+        "module_time",
+        "description",
+        "display_order",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "track_id": "int(10) UNSIGNED NOT NULL",
+        "module_name": "varchar(190) NOT NULL DEFAULT ''",
+        "module_date": "varchar(25) NOT NULL DEFAULT ''",
+        "module_time": "varchar(25) NOT NULL DEFAULT ''",
+        "description": "text NOT NULL",
+        "display_order": "int(11) NOT NULL DEFAULT 0",
+        "created_at": "varchar(25) NOT NULL",
+        "updated_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 1,
+      "estimated_rows": 22,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "description"
+      ]
+    },
+    {
+      "name": "course_tracks",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "course_name",
+        "description",
+        "is_published",
+        "display_order",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "course_name": "varchar(190) NOT NULL DEFAULT ''",
+        "description": "text NOT NULL",
+        "is_published": "tinyint(1) NOT NULL DEFAULT 1",
+        "display_order": "int(11) NOT NULL DEFAULT 0",
+        "created_at": "varchar(25) NOT NULL",
+        "updated_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 1,
+      "estimated_rows": 2,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "description"
+      ]
+    },
+    {
+      "name": "external_resources",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "name",
+        "slug",
+        "provider",
+        "description",
+        "resource_url",
+        "embed_url",
+        "image_url",
+        "icon_text",
+        "cta_label",
+        "resource_type",
+        "show_on_home",
+        "is_published",
+        "display_order",
+        "created_at",
+        "updated_at",
+        "name_en",
+        "name_es",
+        "provider_en",
+        "provider_es",
+        "description_en",
+        "description_es",
+        "cta_label_en",
+        "cta_label_es"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "name": "varchar(190) NOT NULL",
+        "slug": "varchar(190) NOT NULL",
+        "provider": "varchar(190) NOT NULL DEFAULT ''",
+        "description": "text NOT NULL",
+        "resource_url": "varchar(500) NOT NULL",
+        "embed_url": "varchar(500) NOT NULL DEFAULT ''",
+        "image_url": "varchar(500) NOT NULL DEFAULT ''",
+        "icon_text": "varchar(20) NOT NULL DEFAULT ''",
+        "cta_label": "varchar(190) NOT NULL DEFAULT ''",
+        "resource_type": "varchar(40) NOT NULL DEFAULT 'external'",
+        "show_on_home": "tinyint(1) NOT NULL DEFAULT 1",
+        "is_published": "tinyint(1) NOT NULL DEFAULT 1",
+        "display_order": "int(11) NOT NULL DEFAULT 0",
+        "created_at": "varchar(25) NOT NULL",
+        "updated_at": "varchar(25) NOT NULL",
+        "name_en": "varchar(190) NOT NULL DEFAULT ''",
+        "name_es": "varchar(190) NOT NULL DEFAULT ''",
+        "provider_en": "varchar(190) NOT NULL DEFAULT ''",
+        "provider_es": "varchar(190) NOT NULL DEFAULT ''",
+        "description_en": "text DEFAULT NULL",
+        "description_es": "text DEFAULT NULL",
+        "cta_label_en": "varchar(190) NOT NULL DEFAULT ''",
+        "cta_label_es": "varchar(190) NOT NULL DEFAULT ''"
+      },
+      "insert_statements": 1,
+      "estimated_rows": 4,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "description",
+        "description_en",
+        "description_es"
+      ]
+    },
+    {
+      "name": "external_resource_clicks",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "resource_id",
+        "resource_slug",
+        "resource_name",
+        "source_page",
+        "action_type",
+        "ip_address",
+        "user_agent",
+        "referer",
+        "created_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "resource_id": "int(10) UNSIGNED NOT NULL",
+        "resource_slug": "varchar(190) NOT NULL DEFAULT ''",
+        "resource_name": "varchar(190) NOT NULL DEFAULT ''",
+        "source_page": "varchar(255) NOT NULL DEFAULT ''",
+        "action_type": "varchar(40) NOT NULL DEFAULT 'open'",
+        "ip_address": "varchar(64) NOT NULL DEFAULT ''",
+        "user_agent": "varchar(500) NOT NULL DEFAULT ''",
+        "referer": "varchar(500) NOT NULL DEFAULT ''",
+        "created_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 3,
+      "estimated_rows": 690,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "ip_address",
+        "user_agent",
+        "referer"
+      ]
+    },
+    {
+      "name": "portfolio_items",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "title",
+        "category",
+        "description",
+        "project_url",
+        "image_url",
+        "is_published",
+        "created_at",
+        "updated_at",
+        "title_en",
+        "title_es",
+        "description_en",
+        "description_es"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "title": "varchar(255) NOT NULL",
+        "category": "varchar(80) NOT NULL DEFAULT 'general'",
+        "description": "text NOT NULL",
+        "project_url": "varchar(500) NOT NULL DEFAULT ''",
+        "image_url": "varchar(500) NOT NULL DEFAULT ''",
+        "is_published": "tinyint(1) NOT NULL DEFAULT 1",
+        "created_at": "varchar(25) NOT NULL",
+        "updated_at": "varchar(25) NOT NULL",
+        "title_en": "varchar(255) NOT NULL DEFAULT ''",
+        "title_es": "varchar(255) NOT NULL DEFAULT ''",
+        "description_en": "text DEFAULT NULL",
+        "description_es": "text DEFAULT NULL"
+      },
+      "insert_statements": 0,
+      "estimated_rows": 0,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "description",
+        "description_en",
+        "description_es"
+      ]
+    },
+    {
+      "name": "site_settings",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "setting_key",
+        "setting_value",
+        "updated_at"
+      ],
+      "column_types": {
+        "setting_key": "varchar(191) NOT NULL",
+        "setting_value": "longtext NOT NULL",
+        "updated_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 1,
+      "estimated_rows": 1,
+      "has_primary_key": true,
+      "has_auto_increment": false,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "setting_value"
+      ]
+    },
+    {
+      "name": "student_accounts",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "full_name",
+        "username",
+        "email",
+        "password_hash",
+        "notes",
+        "can_access_excel",
+        "can_access_cursos",
+        "is_active",
+        "last_login_at",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "full_name": "varchar(190) NOT NULL DEFAULT ''",
+        "username": "varchar(190) NOT NULL",
+        "email": "varchar(190) DEFAULT NULL",
+        "password_hash": "varchar(255) NOT NULL DEFAULT ''",
+        "notes": "text NOT NULL",
+        "can_access_excel": "tinyint(1) NOT NULL DEFAULT 0",
+        "can_access_cursos": "tinyint(1) NOT NULL DEFAULT 0",
+        "is_active": "tinyint(1) NOT NULL DEFAULT 1",
+        "last_login_at": "varchar(25) NOT NULL DEFAULT ''",
+        "created_at": "varchar(25) NOT NULL",
+        "updated_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 1,
+      "estimated_rows": 10,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "full_name",
+        "username",
+        "email",
+        "password_hash",
+        "notes"
+      ]
+    },
+    {
+      "name": "student_content_progress",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "student_id",
+        "content_id",
+        "is_completed",
+        "completed_at",
+        "notes",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "student_id": "int(10) UNSIGNED NOT NULL",
+        "content_id": "int(10) UNSIGNED NOT NULL",
+        "is_completed": "tinyint(1) NOT NULL DEFAULT 0",
+        "completed_at": "varchar(25) NOT NULL DEFAULT ''",
+        "notes": "text NOT NULL",
+        "created_at": "varchar(25) NOT NULL",
+        "updated_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 1,
+      "estimated_rows": 21,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "notes"
+      ]
+    },
+    {
+      "name": "student_materials",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "area",
+        "title",
+        "description",
+        "relative_path",
+        "resource_url",
+        "is_published",
+        "display_order",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "area": "varchar(40) NOT NULL DEFAULT 'excel'",
+        "title": "varchar(190) NOT NULL DEFAULT ''",
+        "description": "text NOT NULL",
+        "relative_path": "varchar(500) NOT NULL DEFAULT ''",
+        "resource_url": "varchar(600) NOT NULL DEFAULT ''",
+        "is_published": "tinyint(1) NOT NULL DEFAULT 1",
+        "display_order": "int(11) NOT NULL DEFAULT 0",
+        "created_at": "varchar(25) NOT NULL",
+        "updated_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 1,
+      "estimated_rows": 1,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "description"
+      ]
+    },
+    {
+      "name": "student_track_enrollments",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "columns": [
+        "id",
+        "student_id",
+        "track_id",
+        "enrollment_status",
+        "enrolled_at",
+        "notes",
+        "created_at",
+        "updated_at"
+      ],
+      "column_types": {
+        "id": "int(10) UNSIGNED NOT NULL",
+        "student_id": "int(10) UNSIGNED NOT NULL",
+        "track_id": "int(10) UNSIGNED NOT NULL",
+        "enrollment_status": "varchar(40) NOT NULL DEFAULT 'active'",
+        "enrolled_at": "varchar(25) NOT NULL DEFAULT ''",
+        "notes": "text NOT NULL",
+        "created_at": "varchar(25) NOT NULL",
+        "updated_at": "varchar(25) NOT NULL"
+      },
+      "insert_statements": 1,
+      "estimated_rows": 2,
+      "has_primary_key": true,
+      "has_auto_increment": true,
+      "has_foreign_key": false,
+      "sensitive_columns": [
+        "notes"
+      ]
+    }
+  ],
+  "privacy_note": "Inventário sanitizado: contém apenas nomes/tipos de colunas, contagens e metadados. Nenhum valor de linha, senha, token, e-mail, IP ou payload foi copiado."
+}

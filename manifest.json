@@ -1,48 +1,44 @@
 {
-  "task": "F9-02",
+  "task": "F9-03",
   "phase": "Fase 9",
   "base_repository": "https://github.com/davidcreator/davidcms",
-  "base_head": "110eb513a90f6be8565a0ac92de0bf40535f2924",
+  "base_head": "9b570ef4828ce128674a501cc523800b624d609e",
+  "scope": "auditoria estática do dump davidalmeida.xyz; sem importação/execução SQL",
   "files": [
     {
-      "path": "docs/F9-02-Desenho-Campos-Personalizados.md",
-      "bytes": 3908,
-      "sha256": "f715e2639ff76e32f0bca97b32ac6bf254b111e52064aa8d0bf906b3431aa48c"
+      "path": "docs/F9-03-Auditoria-Banco-DavidAlmeida.md",
+      "bytes": 6060,
+      "sha256": "a673d35a77001d951a32de283ed60a6732a65dfa4f93e9962469aa5aa7b2895d"
     },
     {
-      "path": "docs/F9-02-Contrato-Campos-Personalizados.json",
-      "bytes": 11466,
-      "sha256": "c042ec00f5b179aff66fd794495b5b8b9c803067dba84c7eb9107d39bc6cac04"
+      "path": "docs/F9-03-Inventario-Banco-DavidAlmeida.json",
+      "bytes": 21829,
+      "sha256": "c788fc745560ca54055676915cdc407d6b5ea3e8876c81787973f4a290533451"
     },
     {
       "path": "docs/README.md",
-      "bytes": 334,
-      "sha256": "77e3dcf309a4aa29486dd9d882dfdd164f975fa5e36f8c92018f5b6e4c05813d"
+      "bytes": 513,
+      "sha256": "d284faa0b0535ef352310545c648a458fd70d04e357ec8ca5bebaa75cbacd3c9"
     },
     {
-      "path": "agents-ia/decisoes/0058-f9-02-desenho-campos-personalizados.md",
-      "bytes": 3823,
-      "sha256": "0fd1893456b32ce855eb7866ba86185c01388f8a6220dbab96928c5de45196e3"
+      "path": "agents-ia/decisoes/0059-f9-03-auditoria-banco-davidalmeida.md",
+      "bytes": 3570,
+      "sha256": "d08b9363501688cbb991c61271b7b6d53edea322bdbe437de540346173b7cc64"
     },
     {
-      "path": "tools/e2e/e2e_f902.sh",
-      "bytes": 1507,
-      "sha256": "8871b153185c43cc98d70274a718db7d0227bb1f363be950a616b45625ba520b"
+      "path": "tools/e2e/e2e_f903.sh",
+      "bytes": 648,
+      "sha256": "21d7dad41a06c3891e3cbf7259bb46d346c2fe52bca5a3d0d7d9acaa286cc985"
     },
     {
-      "path": "dev/install/sql/upgrade_f9_02_custom_fields_schema.sql",
-      "bytes": 4033,
-      "sha256": "3a5d7ffdfc22287588a1256c8245b01029f607fa6a105a872e5be61d1d48a70e"
+      "path": "tools/e2e/e2e_f903.cjs",
+      "bytes": 7182,
+      "sha256": "aca63a3f63c7f81e38ac5f606b22915f7d85394f0b967ff0b98c3f674e0be346"
     },
     {
-      "path": "dev/install/sql/rollback_f9_02_custom_fields_schema.sql",
-      "bytes": 1027,
-      "sha256": "5500a52ad7058708122d49a5ad1fd2be5593e9338ef5842876938792c4c54376"
-    },
-    {
-      "path": "sha256sum.txt",
-      "bytes": 860,
-      "sha256": "75e0aaa017189e74d1681d39ed11d349ce4935acf5ef2958451eb6c3218aef72"
+      "path": "tools/e2e/fixtures/f903_minimal.sql",
+      "bytes": 604,
+      "sha256": "c6313451cf433dfe8afad66cce94ce792f410b747a299788e133855c753d06be"
     }
   ]
 }
