@@ -1,0 +1,786 @@
+diff --git a/agents-ia/decisoes/0057-f9-01-proposta-campos-personalizados.md b/agents-ia/decisoes/0057-f9-01-proposta-campos-personalizados.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..51a13b523bac212438d8a005ee1542ef7e465290
+--- /dev/null
++++ b/agents-ia/decisoes/0057-f9-01-proposta-campos-personalizados.md
+@@ -0,0 +1,49 @@
++# ADR 0057 — F9-01: Inventário e proposta de campos personalizados
++
++**Data:** 2026-10-23 · **Agente:** orquestrador, com futuros briefings install/admin/catalog.
++**Status:** transição/planejamento autorizados; **desenho e schema ainda propostos para aprovação**.
++**Base:** `96158da5810262246aa2dd34ca900cf45c0ecbed`.
++
++## Autoridade de transição
++
++O usuário declarou a Tarefa12 concluída/GitHub atualizado. Os seis arquivos publicados conferem por blob Git com a entrega. Em pergunta explícita de transição, escolheu **“Encerrar Fase8 e iniciar F9/Tarefa01”**, confirmando o aceite consolidado como operador e autorizando somente inventário/proposta de contratos, sem runtime/tabelas/migrações.
++
++Registra-se a **Fase8 encerrada por aceite explícito do operador**, não por check/JSON publicado ou certificação independente do agente. O modelo público F8-12 pendente não é alterado para passado nem apresentado como evidência. Dívidas e histórico dos aceites continuam preservados.
++
++## Contexto verificado
++
++A ADR0047 prevê F9 custom fields tipoACF como fase própria. Foram verificados 14 arquivos atuais por Git blob/SHA256, incluindo schema-base/upgradeBlog, controllers/models/formCMS, model público real `catalog/model/catalog/page.php`, modelos projeto/Blog, idiomas e CSRF.
++
++Não foi encontrado módulo dedicado nos nomes/caminhos inspecionados ou tabela dedicada nos schemas verificados; não se afirma busca textual exaustiva de todo vendor/núcleo. CMS usa page_id/page_description e keyword no seo_url; projeto usa project_id/name/summary/tag/galeria/N:N; Blog usa post_id/title/RTE/mídia. Campos nativos e métodos atuais não são extensibilidade genérica e não devem ser substituídos.
++
++O comentário do controller público de páginas menciona HTML confiável/sanitizado, mas o payload administrativo verificado apenas trim/limita strings: não se infere sanitização implementada desse comentário. Novo campo de texto proposto é plain-text/autoescape; não se injeta em description|raw nem se resolve a dívida antiga aqui.
++
++## Proposta, não implementação aprovada
++
++1. Começar **por cms/page**, menor integração e sem upload, como MVP **a aprovar**. Projetos/Blog ficam candidatos posteriores, não habilitados por este contrato. Não expandir contatos/clientes/configurações/idiomas ou dado pessoal.
++2. Seis tipos propostos: text255, textarea5000 plain-text, number como decimal string exato precision18/scale6, boolean normalizado bool, url http(s) sem credenciais/rede e select único de opções definidas. Richtext/media/repeater/relationship/código/condicionais ficam fora.
++3. Namespace isolado **custom_fields** e chaves snake_case estáveis até64, sem campos nativos/reservados/prototype/config. Valores não reescrevem payload/schema/IDs/SEO existentes. Omitir namespace preserva legado e não aplica required novo; essa compatibilidade e seu trade-off exigem aprovação explícita de rollout.
++4. Valor compartilhado em shared; localizado em by_language por ID real instalado, resolvendo en-us pelo registry, não posição/ID1 para o sistema novo. Fallback só na ausência, não string vazia/false/zero. Canonical EN obrigatório apenas quando required e namespace presente/grupo ativo; false/zero são valores válidos. Null não significa apagar implicitamente.
++5. Patch de campo/idioma omitido preserva valores; vazio explícito limpa só opcionais. Draft/desativação esconde e preserva, sem hard-delete/backfill/coleta automática. Mudança incompatível de key/type/localização pede migração explícita; não converter dado antigo silenciosamente.
++6. Visibilidade inicial **admin_only**. Exposição pública exige opt-in por definição, grupo ativo, entidade publicada e posicionamento aprovado no Twig. Sem raw/eval/network fetch ou publicação automática dos valores privados.
++7. Modelo lógico separado: groupDefinition, fieldDefinition, fieldValue; chaves/natural keys e cardinalidades no JSON. **Sem nome físico aprovado, DDL, FK, alteração de *_description ou implementação de tabela**. Escolha de JSON/TEXT validado versus tabelas de labels normalizadas fica para revisão install/schema.
++8. Escrita futura de valores herda modify da entidade+CSRF; leitura herda access. Gestão de definições precisará de rota/permissão próprias **a aprovar** em grupo existente; não se afirma que rota/serviço/método existe. UI/erros comuns em três idiomas, labels de definição multilíngues.
++9. Salvamento atômico, exclusão do pai/valores, validação real de driver/transaction API e migração/rollback precisam de plano posterior; não prescrever um beginTransaction fictício sem verificar o driver. Admin→catalog é dividido por tarefa e mesmo contrato.
++
++## Entrega Tarefa01
++
++Somente JSON proposto, guia/inventário/roteamento, ADR, índice e Tool Node/Bash. **Zero dev/**, runtime/SQL/DDL/migração/dependência/site/idioma/default/grant/endpoint/editor alterados. Não existe feature funcional após aplicar este ZIP.
++
++Tool `tools/e2e/e2e_f901.sh --check` valida identidade/flags de proposta, oito aprovações pendentes, inventário14fontes por hash e32modelos de contrato em memória/FS privado. `--self-test` roda só proposta/modelos. Não usa PHP/Composer/npm, servidor/DB/browser ou fluxo mutável. PASS não aprova desenho, não implementa persistência nem é E2E de CMS real.
++
++## Alternativas e aprovação necessária
++
++As oito decisões pendentes no contrato: primeiro alvo/tipos; required/compatibilidade quando namespace omitido; localização/fallback; schema físico; rota/ACL de definições; exposição/posicionamento público; lifecycle/migração; estratégia de testes/rollback. O usuário pode aceitar ou pedir outra direção antes da Tarefa02. Planejamento autorizado não equivale a aceitar estas escolhas.
++
++Pré-fila proposta: Tarefa02 desenho físico/migração **após aprovação**; Tarefa03 CRUD de grupos/definições; Tarefa04 primeiro fluxo CMS; Tarefa05 leitura/apresentação pública explícita; Tarefa06 homologação/rollout. Cada uma uma entrega/ZIP, escopos finais ainda negociáveis.
++
++## Consequências
++
++A transição F8→F9 fica registrada sem reabrir aceites ou fabricar checklist real. Mantêm-se dívidas separadas CKEditor/sanitização, uploads/referências/órfãos, paginação global/confirms inline, roadmap visual próprio do catalog. Não se promete resolvê-las por campos personalizados.
++
++Guia/modelo/revisão: [F9-01 — Campos personalizados](../../docs/F9-01-Campos-Personalizados.md).
+diff --git a/docs/F9-01-Campos-Personalizados.md b/docs/F9-01-Campos-Personalizados.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b8d16a658209dc5a5cf5bcb5e4b03dcf1b98b7c6
+--- /dev/null
++++ b/docs/F9-01-Campos-Personalizados.md
+@@ -0,0 +1,199 @@
++# Fase 9 · Tarefa 01 — Inventário e proposta de campos personalizados
++
++> Objetivo: propor contratos de campos de conteúdo tipoACF com base no código real, antes de autorizar runtime, tabelas ou migrações.
++
++**Data:** 2026-10-23 · **Base:** `96158da5810262246aa2dd34ca900cf45c0ecbed`.
++**Estado:** planejamento solicitado; inventário/modelos preparados e validados. **Desenho/MVP/schema pendentes de aprovação do usuário.** Não há campos personalizados funcionando após aplicar esta entrega.
++
++## Sumário
++
++1. [Transição e limites](#1-transição-e-limites)
++2. [Inventário verificado](#2-inventário-verificado)
++3. [MVP proposto](#3-mvp-proposto)
++4. [Payload e semântica de valores](#4-payload-e-semântica-de-valores)
++5. [Modelo lógico, segurança e lifecycle](#5-modelo-lógico-segurança-e-lifecycle)
++6. [Arquivos, aplicação e Tool](#6-arquivos-aplicação-e-tool)
++7. [Aprovações e próximas tarefas](#7-aprovações-e-próximas-tarefas)
++8. [Rollback e evidências](#8-rollback-e-evidências)
++
++## 1. Transição e limites
++
++O usuário declarou Tarefa12 concluída e escolheu explicitamente **encerrar Fase8 por aceite consolidado do operador e iniciar F9/Tarefa01**, só planejamento. Seis fontes públicas da entrega F8-12 conferem com o commit-base. Isso confirma publicação/decisão humana, não um novo teste independente de produção.
++
++**Fase8 encerrada por autoridade do operador.** O arquivo público F8-12-Aceite-Painel.json continua seu modelo pendente; não foi convertido em prova de execução ou substituído por aceite sintético. Nenhum teste aceito é reaberto. Dívidas registradas na fase continuam separadas, não “resolvidas” por transição.
++
++Este ZIP é **somente docs/contrato/Tool**. Não cria controller/model/rota/tabela/coluna/grant, não muda native POST, schema/instalador/Composer/vendor/site/editor/defaults/idiomas, não migra ou preenche dado antigo, não executa PHP/SQL/HTTP/DB/browser. Não instala WordPress/ACF ou pacote externo; “tipoACF” descreve a capacidade desejada, não dependência escolhida.
++
++## 2. Inventário verificado
++
++14arquivos com Git blob/SHA256/bytes no [contrato JSON proposto](F9-01-Contrato-Campos-Personalizados.json), todos lidos na base imutável. Somente arquivos necessários, sem clone/projeto/assets/vendor inteiros.
++
++| Área | Fatos atuais que não podem ser confundidos |
++| --- | --- |
++| CMS páginas |Admin `dev/admin/controller/cms/page.php` e `dev/admin/model/cms/page.php`; ID page_id; POST page_description[N][title,description,meta_title,meta_description,keyword], status/sort_order. Tabela page_description não armazena keyword; SEO é separado. Sem capa/upload. |
++| Público CMS |Controller `dev/catalog/controller/cms/page.php` carrega **model catalog/page**, arquivo real `dev/catalog/model/catalog/page.php`; view cms/page_info. Só status1, idioma ativo/fallback EN e SEO existentes. Não assumir model público cms/page. |
++| Projetos |`dev/admin/model/catalog/project.php`: ID project_id, descrição usa **name**, summary/description/tag/meta/keyword, client/url/status/featured/sort, capa/galeria e N:N. Não trocar por title de páginas. |
++| Blog |`dev/admin/model/blog/blog.php`: ID post_id, title/description/meta/keyword, image/status/date_published e importador/mídia próprios. Não usar blog_id inventado ou migrar RTE agora. |
++| Schema |schema.sql contém page/page_description, project e filhos; Blog vem também do upgrade_f7_01_blog.sql. Nenhuma tabela dedicada custom_field/field_group encontrada nesses schemas verificados. |
++| Idiomas/CSRF |Model admin localization/language e serviço system/library/security/csrf reais. IDs das traduções devem vir do registry/tabela; não presumir que pt/es são2/3. |
++
++A busca por nomes de módulo/arquivos e os schemas selecionados não encontraram módulo dedicado. Isso **não é auditoria textual exaustiva de todo vendor/núcleo** nem afirma que nenhum array legado em biblioteca contém a expressão “custom_field”.
++
++O comentário do controller público CMS diz “sanitizado lá”; o payload admin verificado apenas trim/limita strings. **Não presumir sanitização efetiva desse comentário.** O HTML nativo antigo e CKEditor/sanitização seguem dívidas separadas; o novo campo plain-text proposto não é inserido em description|raw.
++
++## 3. MVP proposto
++
++**Tudo nesta seção é proposta, não decisão de arquitetura aprovada.** Primeiro alvo sugerido: **cms/page**, por ser menor e sem upload. Projetos/Blog só candidatos posteriores, não liberados no modelo desta Tarefa01. Não expandir para dados pessoais/contatos/clientes/configurações/idiomas.
++
++| Tipo proposto | DTO normalizado modelado | Limite/regra proposta |
++| --- | --- | --- |
++| text |string |255codepoints; plain-text. |
++| textarea |string |5000codepoints; plain-text com quebras, não rich HTML. |
++| number |decimal **string** |precision18/scale6, ponto, sem float/expoente/vírgula/leading zeros/negative zero; sem arredondar silenciosamente. |
++| boolean |bool |false é valor válido, não ausência. |
++| url |string |http(s), autoridade válida, sem credenciais, até2048codepoints; apenas parsing, sem DNS/requisição. |
++| select |string/chave |Uma opção da definição, chave até64; não multiselect/relationship. |
++
++O limite numérico do DTO é **até18 dígitos totais e no máximo6fracionais**, não uma coluna SQL DECIMAL(18,6) já escolhida. Exatidão/faixa/armazenamento físico precisam ser reconciliados no desenho posterior; o modelo usa string e não arredonda ou converte para float.
++
++Fora do MVP: richtext, imagem/arquivo/media, repeater, relationship, cálculos/código arbitrário, conditional UI e migração genérica do conteúdo existente. Não integra a biblioteca de capas do Blog ou jQuery/filemanager.
++
++Chaves snake_case estáveis até64, únicas por entity-type entre grupos. Nome/code de campos nativos e reservados/prototype/config não podem ser usados: title/name/description/keyword/status/image/... não são redefinidos. Exemplos usam prefixo **qa_** para serem claramente sintéticos.
++
++Labels da definição são dados multilíngues; proposta inicial traz en-us/pt-br/es-eu completos. Rótulos e erros comuns da futura interface continuam na camada Language do projeto. Valores começam **admin_only**. Não há exposição pública automática.
++
++## 4. Payload e semântica de valores
++
++Namespace novo **proposto** custom_fields, independente dos names existentes. Nenhum controller atual passa a aceitá-lo por aplicar este ZIP. Exemplo normalizado futuro, **não endpoint atual**:
++
++```json
++{
++  "custom_fields": {
++    "qa_subtitle": { "by_language": { "7": "Title", "12": "Título" } },
++    "qa_notes": { "by_language": { "7": "Linha 1\nLinha 2" } },
++    "qa_score": { "shared": "0" },
++    "qa_enabled": { "shared": false },
++    "qa_link": { "shared": "https://example.invalid/reference" },
++    "qa_style": { "shared": "compact" }
++  }
++}
++```
++
++IDs7/12 neste exemplo são **fixtures**, não IDs para enviar ao CMS. A tabela/registry real resolve en-us, inclusive se ele não for posição/ID1 no novo componente. Não alterar as convenções antigas do payload nativo.
++
++### Regras propostas a aprovar
++
++- Compartilhado usa shared; localizado usa by_language por ID instalado. Não misturar slots ou criar “idioma0” real; “shared” é marcador lógico, não linha de language.
++- **Namespace inteiro ausente preserva nativo/valores e não impõe required novo.** Trade-off deliberado de compatibilidade: cliente legado pode omitir campos até rollout/opt-in explícito. Não vender required como barreira de segurança absoluta; essa regra precisa de aprovação antes de integrar.
++- Com namespace presente/grupo ativo, required valida valor compartilhado ou canônico en-us após patch. Ausência de campo/idioma preserva anterior; string vazia explícita limpa só opcionais. Campos required não aceitam vazio/ausência. false e "0" são presentes/válidos. Null/undefined não significam limpar implicitamente.
++- Boolean do formulário futuro precisa de normalização explícita de "0"/"1" (hidden+checkbox) para bool; os modelos deste Tool recebem DTO **já normalizado**, não implementam o parser PHP de produção.
++- Fallback só quando tradução está **ausente**, não quando o usuário salvou string vazia. Não igualar false/zero/vazio a missing. Essa política nova não altera o COALESCE legado dos módulos existentes.
++- Grupo draft/inativo preserva armazenamento e deixa de renderizar/validar required. Não apagar valores porque o campo desapareceu da UI.
++- Patch desconhecido/nativo/prototype, idioma não instalado, slot incompatível e tipo inválido são rejeitados no modelo sem alterar o anterior.
++
++O Tool demonstra preservação/atomicidade **em objetos clonados em memória**; isso não prova transação/SQL ou compatibilidade de backend existente. Salvamento nativo+extensão atômico será desenho posterior, não inferido destes testes.
++
++## 5. Modelo lógico, segurança e lifecycle
++
++Três coleções conceituais, sem DDL/nome físico aprovado:
++
++| Coleção proposta | Identidade lógica | Propósito |
++| --- | --- | --- |
++| groupDefinition |entityType+groupKey |Um entity-type por grupo no MVP, labels, estado/ordem. |
++| fieldDefinition |entityType+fieldKey |Grupo, tipo, labels, localized/required/visibility e opções/limites. |
++| fieldValue |entityType+entityId+fieldKey+logicalLanguageSlot |Valor normalizado separado de *_description/SEO nativos. |
++
++Avaliar no desenho físico: tabelas de extensão normalizadas e metadados JSON/TEXT validados versus tabelas próprias para labels. Índices/unique keys, versionamento, charset, tamanho e consultas sem N+1 precisam de proposta do agente-install/admin/catalog. **Não há SQL CREATE/ALTER, FK, upgrade, coluna native ou migração neste pacote.**
++
++### Segurança futura — ainda não implementada
++
++- Valores herdam access/modify da entidade e CSRF do serviço existente em toda escrita.
++- Gestão de grupos/definições precisará de rota/ACL próprias **a aprovar**, em grupo existente; por exemplo arquivo em admin/cms é possibilidade, não API existente.
++- SQL só no Model com binding/escape/IDs int. Não converter chave do cliente em nome de coluna/tabela ou executar eval/expressão/código.
++- Publicação só de definição explicitamente public, grupo ativo e conteúdo publicado; valores privados não entram em dados do template/API por engano. Posicionamento e partial Twig precisam de aprovação do agente-catalog, autoescape/plain-text, sem raw.
++- Não pressupor um beginTransaction do driver: verificar biblioteca/adapters antes. Sem suporte suficiente, abrir plano do agente-system, não fingir API ou gravar metade dos dados.
++- Desativação preserva; hard-delete automático de definição/grupo/backfill está fora. Key/tipo/localização incompatíveis não mudam silenciosamente. Exclusão do conteúdo pai/valores, backups e migração de tipo exigem política explícita posterior.
++- Não criar serviço global/Registry ou framework paralelo prematuramente; plano de impacto system/admin/catalog/install se alguma extração vier a ser necessária.
++
++Dívidas carregadas da F8 (CKEditor/licença/sanitização, uploads/órfãos/referências, paginação global/confirm inline, roadmap visual catalog) continuam separadas, não são resolvidas por custom_fields.
++
++## 6. Arquivos, aplicação e Tool
++
++**Seis arquivos de projeto:** novos `tools/e2e/e2e_f901.sh`/`e2e_f901.cjs`, este guia, [contrato JSON proposto](F9-01-Contrato-Campos-Personalizados.json), [ADR0057](../agents-ia/decisoes/0057-f9-01-proposta-campos-personalizados.md) e modificação só da linha24 em docs/README.md.
++
++Acompanhantes: F9-01.patch, MANIFESTO-F9-01.json e SHA256SUMS. Sem dev/**, PHP, SQL, credenciais, dados reais, vendor ou app completo. Modelos sintéticos não são dados de produção nem relatórios nativos falsos.
++
++1. Conferir base96158da5810262246aa2dd34ca900cf45c0ecbed e mudanças posteriores nos alvos; não sobrescrever trabalho concorrente.
++2. Extrair fora do repo e `sha256sum -c SHA256SUMS` na extração; branch/PR para staging conforme projeto.
++3. Na raiz do repositório, ENTREGA é extração absoluta:
++
++```bash
++git apply --check --whitespace=error "$ENTREGA/F9-01.patch"
++git apply --whitespace=error "$ENTREGA/F9-01.patch"
++git diff --check
++bash tools/e2e/e2e_f901.sh --check
++```
++
++Alternativa: copiar apenas seis fontes do manifesto. Não copiar árvore/vendor, instalar algo, executar build/upgrade/SQL ou mudar configs de produção. Não há runtime web/cache/asset a atualizar nesta entrega.
++
++### Tool E2E de contrato, não E2E de CMS real
++
++Node20+/Bash, sem npm/PHP/Composer/DB/browser/servidor necessários:
++
++```bash
++bash tools/e2e/e2e_f901.sh --self-test
++export F901_REPORT='/tmp/novo-f901-proposta.json'  # opcional,novo/absoluto/0600
++bash tools/e2e/e2e_f901.sh --check
++```
++
++--self-test valida proposta/modelos sem exigir árvore runtime completa; --check também confere14fontes SHA256/Gitblob da referência. Se fonte mudar depois, INVENTORY_STALE bloqueia: revisar inventário em nova entrega, não editar hash para obter verde sem análise. MIRROR exportado para outro dev bloqueia em vez de misturar projetos.
++
++CLI não tem --apply/--migrate/--http/--backend. Não executa contrato como código, PHP/SQL/URL/HTTP ou migração. Arquivo de relatório novo/absoluto, sem sobrescrever. Código0 coerente,1 modelo falhou,2 bloqueio/requisito/inventário inválido. JSON: kind=contract-proposal-validation, approval pending, runtime/schema false e dbOrHttpExecuted false.
++
++**32PASS/0FAIL** nos modelos Node: chaves/reservados/prototype, seis tipos/limites, seleção/URLs parsing sem rede, decimais exatos, false/zero, registry de idiomas dinâmico, ausência/vazio/patch, required, grupo inativo, migração explícita, privacidade/publicação/autoescape modelado, guardas de modify/CSRF **simulados**, inventário stale/symlink em FS privado e proposta nunca automaticamente aprovada.
++
++**Não são32E2Es reais de custom fields funcionando**: não há feature runtime, model PHP persistente, SQL, transação, servidor, Twig novo de produção, navegador ou ACL/CSRF nativos implementados/testados. O escape/guard de bool deste Tool é modelo de intenção, não serviço de aplicação. Diretório de fixture privado é removido e nenhum dado nativo muda.
++
++Commit sugerido:
++
++```text
++docs: propor contrato de campos personalizados para a Fase 9
++```
++
++## 7. Aprovações e próximas tarefas
++
++Oito escolhas pendentes no JSON, todas **pending**; aplicar ZIP/PASS ou concluir a preparação Tarefa01 não as aprova implicitamente:
++
++1. Primeiro alvo CMS/page e seis tipos/limites do MVP, versus outro foco.
++2. Compatibilidade quando namespace ausente e aplicação de required/rollout.
++3. Política localizada/EN/fallback só ausência e explicitEmpty/null.
++4. Modelo lógico→schema físico/índices/labels/compatibilidade do DB, pelo install.
++5. Rota/ACL de gestão de definições e permissões de valores, sem novos grupos fora do mapa.
++6. Visibilidade privada inicial e opt-in/posicionamento público Twig.
++7. Lifecycle, key/type, exclusão de pai/valores, deprecação/backfill/migração.
++8. Testes, backup/atomicidade/rollback/feature rollout.
++
++Fila **proposta** (não comandos/entregas autorizados agora):
++
++- Tarefa02: revisar escolhas e preparar desenho físico/upgrade idempotente/rollback, **só após aprovação de schema**.
++- Tarefa03: admin grupos/definições, ACL/CSRF/idiomas/shell.
++- Tarefa04: primeiro fluxo CMS form/save/reopen sem reescrever campos nativos.
++- Tarefa05: leitura/apresentação pública explícita, sem vazamento de privados/raw.
++- Tarefa06: homologação integrada/rollout com fixtures descartáveis, sem reset destrutivo automático.
++
++Cada uma uma subtarefa/ZIP. Não pular do contrato diretamente para tabela/endpoint ou repetir aprovação de F8. A aprovação das escolhas deve ser declarada pelo usuário; uma entrega posterior revisará a versão/estado do contrato. Não trocar flags pending/runtime/schema manualmente só para obter PASS no Tool desta proposta. Antes da Tarefa02, o usuário pode aprovar o MVP proposto ou especificar alterações; detalhes ainda não aprovados ficam declarados, não assumidos como fatos.
++
++## 8. Rollback e evidências
++
++Com patch original, alvos sem mudanças posteriores:
++
++```bash
++git apply -R --check "$ENTREGA/F9-01.patch"
++git apply -R "$ENTREGA/F9-01.patch"
++```
++
++Restaura só índice/remove cinco novos tools/docs/ADR. Não reverte F8/aceites/runtime ou apaga dados/relatórios. Se não aplicar, parar/revisar, sem reset--hard/limpeza ampla. Não há rollback de DB porque nenhum DB foi alterado.
++
++Verificados sintaxe Node/Bash/JSON,32modelos,14fontes por blob/hash, bloqueios de modo/saída/inventário, links, patchcheck/apply/reverse/check após aplicação e hashes/CRC na embalagem. Modelos e FS temporários são evidências de contrato, não execução da aplicação. Sem schema/runtime/HTTP/DB/produção/Actions/deploy ou GitHubwrite realizados pelo agente.
++
++Referências: [ADR0057](../agents-ia/decisoes/0057-f9-01-proposta-campos-personalizados.md), [contrato](F9-01-Contrato-Campos-Personalizados.json), [mapa existente](Estrutura-de-Pastas.md), [Dicionário de Dados atual](Dicionario-de-Dados.md), [F8-12](F8-12-Consolidacao-Validacao-Painel.md), [base pública](https://github.com/davidcreator/davidcms/commit/96158da5810262246aa2dd34ca900cf45c0ecbed).
+diff --git a/docs/F9-01-Contrato-Campos-Personalizados.json b/docs/F9-01-Contrato-Campos-Personalizados.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..97d710bbd1f4ace32355a70f9bfb693b53258ffe
+--- /dev/null
++++ b/docs/F9-01-Contrato-Campos-Personalizados.json
+@@ -0,0 +1,384 @@
++{
++  "schema": "reamur-f9-01-proposal-v1",
++  "task": "Fase 9 / Tarefa 01",
++  "status": "proposed",
++  "referenceBase": "96158da5810262246aa2dd34ca900cf45c0ecbed",
++  "phase8Closure": {
++    "status": "operator-accepted",
++    "authority": "explicit-user-choice",
++    "date": "2026-10-23",
++    "independentAudit": false,
++    "templateKeptUnchanged": "docs/F8-12-Aceite-Painel.json"
++  },
++  "implementation": {
++    "runtime": false,
++    "schema": false,
++    "migrations": false,
++    "designApproved": false
++  },
++  "scope": {
++    "firstTargetProposal": "cms/page",
++    "modelAllowedTargets": [
++      "cms/page"
++    ],
++    "laterCandidates": [
++      "catalog/project",
++      "blog/blog"
++    ],
++    "types": [
++      "text",
++      "textarea",
++      "number",
++      "boolean",
++      "url",
++      "select"
++    ],
++    "excluded": [
++      "richtext",
++      "media",
++      "file",
++      "repeater",
++      "relationship",
++      "computed",
++      "arbitrary-code",
++      "user/customer/contact/settings/language data"
++    ],
++    "visibilityDefault": "admin_only",
++    "firstTargetApproved": false
++  },
++  "payload": {
++    "namespace": "custom_fields",
++    "localizedSlot": "by_language",
++    "sharedSlot": "shared",
++    "missingNamespace": "preserve-without-new-required-validation",
++    "missingFieldOrLanguage": "preserve",
++    "explicitEmpty": "clear-optional-only",
++    "null": "reject",
++    "disabledGroup": "preserve-and-hide",
++    "nativeFields": "never-shadow-or-rewrite",
++    "requiredWhen": "namespace-present-and-group-active",
++    "fallback": "missing-only-to-en-us",
++    "publicExposure": "explicit-public-only-and-published-entity"
++  },
++  "localization": {
++    "canonicalCode": "en-us",
++    "resolveIds": "installed-language-registry-not-position",
++    "sharedSlotMarker": "logical-shared-not-a-language-row",
++    "definitionLabels": [
++      "en-us",
++      "pt-br",
++      "es-eu"
++    ],
++    "emptyIsMissing": false
++  },
++  "limits": {
++    "keyChars": 64,
++    "textCodePoints": 255,
++    "textareaCodePoints": 5000,
++    "labelCodePoints": 128,
++    "numberPrecision": 18,
++    "numberScale": 6,
++    "urlCodePoints": 2048,
++    "selectChoiceKeyChars": 64
++  },
++  "lifecycle": {
++    "groupTarget": "one-entity-type-per-group",
++    "keyUniqueness": "per-entity-type-across-groups",
++    "fieldKeyMutable": false,
++    "incompatibleTypeChange": "reject-until-explicit-migration",
++    "hardDelete": "not-in-mvp",
++    "implicitBackfill": false,
++    "moduleRollout": "explicit-opt-in-future-task"
++  },
++  "security": {
++    "valuesWritePermission": "existing-entity-modify",
++    "valuesReadPermission": "existing-entity-access",
++    "definitionManagementPermission": "new-route-to-be-approved",
++    "csrf": "existing-session-service-required-on-every-write",
++    "sql": "Model-only-with-bind-or-escape-and-int-ids",
++    "render": "Twig-autoescape-plain-text-no-raw",
++    "evaluateUserCode": false,
++    "networkFetch": false,
++    "installDependencies": false
++  },
++  "logicalDataModel": {
++    "status": "proposal-not-ddl",
++    "physicalTablesApproved": false,
++    "existingTablesAltered": false,
++    "collections": [
++      {
++        "name": "groupDefinition",
++        "identity": [
++          "entityType",
++          "groupKey"
++        ],
++        "purpose": "Labels, draft/active state and display order; one entity type in MVP."
++      },
++      {
++        "name": "fieldDefinition",
++        "identity": [
++          "entityType",
++          "fieldKey"
++        ],
++        "purpose": "Type, group, labels, localized/required/public flags and constraints; immutable key."
++      },
++      {
++        "name": "fieldValue",
++        "identity": [
++          "entityType",
++          "entityId",
++          "fieldKey",
++          "logicalLanguageSlot"
++        ],
++        "purpose": "Normalized typed value, separate from native *_description/seo tables."
++      }
++    ],
++    "alternativesToDecide": [
++      "normalized extension tables with validated metadata JSON/TEXT",
++      "separate definition-label tables if normalization is preferred"
++    ],
++    "notAuthorized": [
++      "CREATE/ALTER SQL",
++      "upgrade script",
++      "runtime route/service registration",
++      "data migration/backfill",
++      "public placement"
++    ],
++    "numberStorageNote": "DTO permite até18 dígitos totais e até6fracionais, não equivale a coluna SQL DECIMAL(18,6). Armazenamento exato e faixa física precisam de decisão no schema posterior."
++  },
++  "exampleDefinition": {
++    "key": "qa_content_details",
++    "entity": "cms/page",
++    "status": "draft",
++    "labels": {
++      "en-us": "Content details",
++      "pt-br": "Detalhes de conteúdo",
++      "es-eu": "Detalles de contenido"
++    },
++    "fields": [
++      {
++        "key": "qa_subtitle",
++        "type": "text",
++        "localized": true,
++        "required": true,
++        "visibility": "admin_only",
++        "labels": {
++          "en-us": "Subtitle",
++          "pt-br": "Subtítulo",
++          "es-eu": "Subtítulo"
++        }
++      },
++      {
++        "key": "qa_notes",
++        "type": "textarea",
++        "localized": true,
++        "required": false,
++        "visibility": "admin_only",
++        "labels": {
++          "en-us": "Notes",
++          "pt-br": "Notas",
++          "es-eu": "Notas"
++        }
++      },
++      {
++        "key": "qa_score",
++        "type": "number",
++        "localized": false,
++        "required": false,
++        "visibility": "admin_only",
++        "labels": {
++          "en-us": "Score",
++          "pt-br": "Pontuação",
++          "es-eu": "Puntuación"
++        }
++      },
++      {
++        "key": "qa_enabled",
++        "type": "boolean",
++        "localized": false,
++        "required": true,
++        "visibility": "admin_only",
++        "labels": {
++          "en-us": "Enabled",
++          "pt-br": "Ativo",
++          "es-eu": "Activo"
++        }
++      },
++      {
++        "key": "qa_link",
++        "type": "url",
++        "localized": false,
++        "required": false,
++        "visibility": "admin_only",
++        "labels": {
++          "en-us": "Reference URL",
++          "pt-br": "URL de referência",
++          "es-eu": "URL de referencia"
++        }
++      },
++      {
++        "key": "qa_style",
++        "type": "select",
++        "localized": false,
++        "required": false,
++        "visibility": "admin_only",
++        "labels": {
++          "en-us": "Style",
++          "pt-br": "Estilo",
++          "es-eu": "Estilo"
++        },
++        "choices": [
++          {
++            "key": "normal",
++            "labels": {
++              "en-us": "Normal",
++              "pt-br": "Normal",
++              "es-eu": "Normal"
++            }
++          },
++          {
++            "key": "compact",
++            "labels": {
++              "en-us": "Compact",
++              "pt-br": "Compacto",
++              "es-eu": "Compacto"
++            }
++          }
++        ]
++      }
++    ]
++  },
++  "approvals": [
++    {
++      "id": "first-target-and-types",
++      "status": "pending"
++    },
++    {
++      "id": "missing-required-compatibility",
++      "status": "pending"
++    },
++    {
++      "id": "localization-fallback",
++      "status": "pending"
++    },
++    {
++      "id": "logical-to-physical-schema",
++      "status": "pending"
++    },
++    {
++      "id": "management-route-and-acl",
++      "status": "pending"
++    },
++    {
++      "id": "public-visibility-and-placement",
++      "status": "pending"
++    },
++    {
++      "id": "lifecycle-and-migration",
++      "status": "pending"
++    },
++    {
++      "id": "test-and-rollback-strategy",
++      "status": "pending"
++    }
++  ],
++  "sourceInventory": [
++    {
++      "path": "dev/admin/controller/cms/page.php",
++      "gitBlob": "73974f0fa1d9b96ba4a4a82e640afbad625a8902",
++      "sha256": "9daa5c38bc64eda657206dd025d311b0ae15c7de32bb84ee94b8731f6dc6e331",
++      "bytes": 15293
++    },
++    {
++      "path": "dev/admin/model/cms/page.php",
++      "gitBlob": "d0d051015e70f6a779e5bb1d8e4c222a93aa7282",
++      "sha256": "4a4e4a58ab287acf2b6cfd1ef210312959f13d0dcd6a5c35f61c72efd0ce1da3",
++      "bytes": 9815
++    },
++    {
++      "path": "dev/admin/view/template/cms/page_form.twig",
++      "gitBlob": "51beed94c48e941d13d07710528274455c636979",
++      "sha256": "0028785241732e633c7f32946a20b57821ee1901f0b3269c885fa18a70e51a08",
++      "bytes": 5772
++    },
++    {
++      "path": "dev/catalog/controller/cms/page.php",
++      "gitBlob": "e45a8ecdd25bdbaef53b581af2a6a6e3cae90858",
++      "sha256": "bc153c5f348f917e53610bcbb07981894850df3aefd25aa45685b79f7c3a73fd",
++      "bytes": 1911
++    },
++    {
++      "path": "dev/catalog/model/catalog/page.php",
++      "gitBlob": "6aef204d0b279e537d4e8002d324f853eddb5a8b",
++      "sha256": "4e9744367a91180a0a0367c8edd2c21c432ed532d89fd9d2a4be164096c37a9c",
++      "bytes": 3308
++    },
++    {
++      "path": "dev/catalog/view/template/cms/page_info.twig",
++      "gitBlob": "52f3adc40e334e871593c0d5ffc75f7d6d233dd2",
++      "sha256": "231ffcbe90e1e29ca85be9dff2e3f2307d90f5f9a14325c0f137f82afda45515",
++      "bytes": 399
++    },
++    {
++      "path": "dev/admin/model/catalog/project.php",
++      "gitBlob": "ab866763742586c14e320f5d1976849bfda5a555",
++      "sha256": "0a0389714d8d7efb1b28aa0b66f2e223d5b8b9468fc83c405f569c8b71b8a54c",
++      "bytes": 14069
++    },
++    {
++      "path": "dev/admin/model/blog/blog.php",
++      "gitBlob": "b4ef4397c931b48c5f8e986f82433d8ff06d2afb",
++      "sha256": "84bc1c09e2fa869258d305b1126f35ab845bfa48c61b38df82f611e1c6699875",
++      "bytes": 11073
++    },
++    {
++      "path": "dev/install/sql/schema.sql",
++      "gitBlob": "42eb7671c9d3c0ce87c9a8805915439de1f2a21c",
++      "sha256": "245fbb9374246ecc9e82325b7a88bbcd874e0c48fa483b4c6714ecf2c3d8a0ef",
++      "bytes": 18350
++    },
++    {
++      "path": "dev/install/sql/upgrade_f7_01_blog.sql",
++      "gitBlob": "246e102122dc6f28a4a67ad5bed01e793c489200",
++      "sha256": "314f8dd672f32cbb77ee1294cdf30ec91dd880613090d7118cd564602e42280d",
++      "bytes": 2557
++    },
++    {
++      "path": "dev/admin/model/localization/language.php",
++      "gitBlob": "9736a6b4bbc315677f36c8b62191ef0187117929",
++      "sha256": "88aba93305d2cfd208d9651549b0702775bd0a1db648834c4e502871bfb336b8",
++      "bytes": 4532
++    },
++    {
++      "path": "dev/system/library/security/csrf.php",
++      "gitBlob": "cd675ba513d96d33718f8acd4d034fe6346798c0",
++      "sha256": "bec85e6ef907157aca5c81fa0705cc065e0b64b06982a7ed6c2ae7ed90fda2e2",
++      "bytes": 1256
++    },
++    {
++      "path": "docs/Dicionario-de-Dados.md",
++      "gitBlob": "747e700785b25d3528acc80114de3ab925a42f31",
++      "sha256": "a96f0553a8a5de42cb32430303a538174e12b86b2fe1cda1cd30f56b4b9c53ff",
++      "bytes": 10626
++    },
++    {
++      "path": "agents-ia/decisoes/0047-f8-v-aparencia-do-painel-skins-wcag-trava-contraste-e-dupla-camada-de-persistencia.md",
++      "gitBlob": "2f108be01647929e4c5c2fdf8215f1a7c4a3f8f3",
++      "sha256": "9818710da4bc239be31d5514b166946e4114c2f076e90ee61b8d32f1c77237d8",
++      "bytes": 17645
++    }
++  ],
++  "inventoryFindings": {
++    "dedicatedModuleFoundInCheckedPaths": false,
++    "dedicatedTablesInCheckedBaseSchema": false,
++    "scopeOfAbsenceClaim": "Filename metadata plus schema.sql/blog upgrade and selected native models; not an exhaustive audit of vendor/all code.",
++    "nativeCmsPagePayload": [
++      "status",
++      "sort_order",
++      "page_description[N][title|description|meta_title|meta_description|keyword]"
++    ],
++    "nativeCmsPublicPath": "dev/catalog/model/catalog/page.php",
++    "legacyHtmlSanitizedByThisProposal": false
++  },
++  "next": "Review/approve proposal choices before F9-02. No runtime/schema/data implementation authorized by this document or Tool PASS."
++}
+diff --git a/docs/README.md b/docs/README.md
+index 97cf6e39be2dca5a27e05cdeea681b77c5b54885..94df3ab5c345919ed630d2f2c3dfcd2ccc2811a2 100644
+--- a/docs/README.md
++++ b/docs/README.md
+@@ -33,6 +33,7 @@
+ | 21 | [F8-10-Mensagens-Contato.md](F8-10-Mensagens-Contato.md) | **Fase 8 · Tarefa 10**: inbox no shell, Ler POST+ACL+CSRF, GET puro, busca/paginação, privacidade e Tool E2E. |
+ | 22 | [F8-11-Idiomas-no-Painel.md](F8-11-Idiomas-no-Painel.md) | **Fase 8 · Tarefa 11**: idiomas no shell, seletores completos, CSRF, código/padrões preservados e Tool E2E. |
+ | 23 | [F8-12-Consolidacao-Validacao-Painel.md](F8-12-Consolidacao-Validacao-Painel.md) | **Fase 8 · Tarefa 12**: consolidação local segura, evidências opcionais e checklist de aceite, sem runtime ou fechamento automático. |
++| 24 | [F9-01-Campos-Personalizados.md](F9-01-Campos-Personalizados.md) | **Fase 9 · Tarefa 01**: inventário e proposta de contratos para campos personalizados; sem runtime/schema, com Tool de validação. |
+ 
+ ---
+ 
+diff --git a/tools/e2e/e2e_f901.cjs b/tools/e2e/e2e_f901.cjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..413d086a22b6fec117765782283c235c9d5da263
+--- /dev/null
++++ b/tools/e2e/e2e_f901.cjs
+@@ -0,0 +1,101 @@
++#!/usr/bin/env node
++'use strict';
++/** F9-01 — validador de PROPOSTA e modelos em memória; não implementa CMS,
++ * ORM, SQL, rotas, segurança de produção ou renderer. Nunca executa PHP/HTTP/DB.
++ */
++const fs=require('node:fs');const os=require('node:os');const path=require('node:path');const crypto=require('node:crypto');const assert=require('node:assert/strict');
++const BASE='96158da5810262246aa2dd34ca900cf45c0ecbed';const ROOT=path.resolve(__dirname,'../..');const CONTRACT='docs/F9-01-Contrato-Campos-Personalizados.json';
++const SOURCE_PATHS=Object.freeze([
++  "dev/admin/controller/cms/page.php",
++  "dev/admin/model/cms/page.php",
++  "dev/admin/view/template/cms/page_form.twig",
++  "dev/catalog/controller/cms/page.php",
++  "dev/catalog/model/catalog/page.php",
++  "dev/catalog/view/template/cms/page_info.twig",
++  "dev/admin/model/catalog/project.php",
++  "dev/admin/model/blog/blog.php",
++  "dev/install/sql/schema.sql",
++  "dev/install/sql/upgrade_f7_01_blog.sql",
++  "dev/admin/model/localization/language.php",
++  "dev/system/library/security/csrf.php",
++  "docs/Dicionario-de-Dados.md",
++  "agents-ia/decisoes/0047-f8-v-aparencia-do-painel-skins-wcag-trava-contraste-e-dupla-camada-de-persistencia.md"
++]);
++const TYPES=Object.freeze(['text','textarea','number','boolean','url','select']);
++const RESERVED=new Set(['title','name','description','summary','tag','keyword','meta_title','meta_description','image','project_image','project_category','client','url','status','featured','sort_order','date_added','date_modified','date_published','post_id','page_id','project_id','language_id','code','locale','csrf_token','from','constructor','prototype','__proto__']);
++const APPROVALS=Object.freeze(['first-target-and-types','missing-required-compatibility','localization-fallback','logical-to-physical-schema','management-route-and-acl','public-visibility-and-placement','lifecycle-and-migration','test-and-rollback-strategy']);
++class ProposalError extends Error{constructor(code){super(code);this.code=code;}}
++function need(value,code){if(!value)throw new ProposalError(code);}
++const own=(obj,key)=>Object.hasOwn(obj,key);const clone=value=>structuredClone(value);const sha=value=>crypto.createHash('sha256').update(value).digest('hex');
++function keyValid(key){return typeof key==='string'&&/^[a-z][a-z0-9_]{0,63}$/.test(key)&&!RESERVED.has(key)&&!key.startsWith('config_')&&!key.startsWith('csrf_');}
++function labelsValid(labels,limit){need(labels&&typeof labels==='object'&&!Array.isArray(labels),'LABELS_INVALID');for(const code of['en-us','pt-br','es-eu'])need(typeof labels[code]==='string'&&labels[code].trim().length>0&&Array.from(labels[code]).length<=limit,'LABEL_REQUIRED');}
++function validateGroup(c,g){need(g&&keyValid(g.key)&&c.scope.modelAllowedTargets.includes(g.entity),'GROUP_OR_TARGET_INVALID');need(['draft','active'].includes(g.status),'GROUP_STATUS_INVALID');labelsValid(g.labels,c.limits.labelCodePoints);need(Array.isArray(g.fields)&&g.fields.length>0,'GROUP_FIELDS_REQUIRED');const keys=new Set();for(const f of g.fields){need(f&&keyValid(f.key)&&!keys.has(f.key),'FIELD_KEY_INVALID_OR_DUPLICATE');keys.add(f.key);need(TYPES.includes(f.type)&&typeof f.localized==='boolean'&&typeof f.required==='boolean'&&['admin_only','public'].includes(f.visibility),'FIELD_METADATA_INVALID');labelsValid(f.labels,c.limits.labelCodePoints);need(Object.keys(f).every(k=>['key','type','localized','required','visibility','labels','choices'].includes(k)),'FIELD_UNSUPPORTED_PROPERTY');if(f.type==='select'){need(Array.isArray(f.choices)&&f.choices.length>0,'SELECT_CHOICES_REQUIRED');const values=new Set();for(const choice of f.choices){need(typeof choice.key==='string'&&/^[a-z][a-z0-9_]{0,63}$/.test(choice.key)&&!values.has(choice.key),'SELECT_CHOICE_INVALID');values.add(choice.key);labelsValid(choice.labels,c.limits.labelCodePoints);}}else need(!own(f,'choices'),'CHOICES_ONLY_FOR_SELECT');}return true;}
++function validateGroups(c,groups){const unique=new Set();const groupKeys=new Set();for(const g of groups){validateGroup(c,g);const groupKey=g.entity+'\0'+g.key;need(!groupKeys.has(groupKey),'GROUP_COLLISION');groupKeys.add(groupKey);for(const f of g.fields){const key=g.entity+'\0'+f.key;need(!unique.has(key),'FIELD_COLLISION_ACROSS_GROUPS');unique.add(key);}}return true;}
++function validateProposal(c){need(c&&c.schema==='reamur-f9-01-proposal-v1'&&c.task==='Fase 9 / Tarefa 01'&&c.status==='proposed'&&c.referenceBase===BASE,'PROPOSAL_IDENTITY');need(c.phase8Closure&&c.phase8Closure.status==='operator-accepted'&&c.phase8Closure.authority==='explicit-user-choice'&&c.phase8Closure.independentAudit===false,'PHASE8_AUTHORITY');need(c.implementation&&Object.keys(c.implementation).length===4&&Object.values(c.implementation).every(v=>v===false),'NO_IMPLEMENTATION_ALLOWED');need(c.scope.firstTargetProposal==='cms/page'&&c.scope.firstTargetApproved===false&&JSON.stringify(c.scope.modelAllowedTargets)===JSON.stringify(['cms/page'])&&JSON.stringify(c.scope.types)===JSON.stringify(TYPES),'MVP_PROPOSAL_SCOPE');need(c.scope.visibilityDefault==='admin_only','PRIVATE_DEFAULT_REQUIRED');const p=c.payload;need(p.namespace==='custom_fields'&&p.localizedSlot==='by_language'&&p.sharedSlot==='shared'&&p.missingNamespace==='preserve-without-new-required-validation'&&p.missingFieldOrLanguage==='preserve'&&p.explicitEmpty==='clear-optional-only'&&p.null==='reject'&&p.disabledGroup==='preserve-and-hide'&&p.nativeFields==='never-shadow-or-rewrite'&&p.requiredWhen==='namespace-present-and-group-active'&&p.fallback==='missing-only-to-en-us'&&p.publicExposure==='explicit-public-only-and-published-entity','PAYLOAD_POLICY_MISMATCH');need(c.localization.canonicalCode==='en-us'&&c.localization.resolveIds==='installed-language-registry-not-position'&&c.localization.emptyIsMissing===false,'LOCALIZATION_POLICY');need(c.limits.keyChars===64&&c.limits.textCodePoints===255&&c.limits.textareaCodePoints===5000&&c.limits.labelCodePoints===128&&c.limits.numberPrecision===18&&c.limits.numberScale===6&&c.limits.urlCodePoints===2048,'LIMITS_PROPOSAL');need(c.lifecycle.fieldKeyMutable===false&&c.lifecycle.hardDelete==='not-in-mvp'&&c.lifecycle.implicitBackfill===false&&c.lifecycle.incompatibleTypeChange==='reject-until-explicit-migration','LIFECYCLE_POLICY');need(c.security.csrf==='existing-session-service-required-on-every-write'&&c.security.render==='Twig-autoescape-plain-text-no-raw'&&c.security.evaluateUserCode===false&&c.security.networkFetch===false&&c.security.installDependencies===false,'SECURITY_POLICY');need(c.logicalDataModel.status==='proposal-not-ddl'&&c.logicalDataModel.physicalTablesApproved===false&&c.logicalDataModel.existingTablesAltered===false,'NO_PHYSICAL_SCHEMA_APPROVAL');need(Array.isArray(c.approvals)&&c.approvals.length===APPROVALS.length&&new Set(c.approvals.map(a=>a.id)).size===APPROVALS.length&&APPROVALS.every(id=>c.approvals.some(a=>a.id===id&&a.status==='pending')),'APPROVALS_NOT_PENDING');need(Array.isArray(c.sourceInventory)&&c.sourceInventory.length===SOURCE_PATHS.length&&new Set(c.sourceInventory.map(s=>s.path)).size===SOURCE_PATHS.length&&SOURCE_PATHS.every(p=>c.sourceInventory.some(s=>s.path===p&&/^[a-f0-9]{64}$/.test(s.sha256)&&/^[a-f0-9]{40}$/.test(s.gitBlob))),'INVENTORY_REQUIRED');validateGroup(c,c.exampleDefinition);return true;}
++function languageRegistry(rows){need(Array.isArray(rows)&&rows.length>0,'LANGUAGE_REGISTRY_REQUIRED');const ids=new Set();let canonical=null;for(const row of rows){need(row&&Number.isSafeInteger(row.id)&&row.id>0&&!ids.has(String(row.id)),'LANGUAGE_ID_INVALID');ids.add(String(row.id));if(row.code==='en-us'){need(canonical===null,'CANONICAL_LANGUAGE_DUPLICATE');canonical=String(row.id);}}need(canonical!==null,'CANONICAL_LANGUAGE_MISSING');return{ids,canonical};}
++function valueValid(c,f,value){need(value!==null&&value!==undefined,'NULL_OR_UNDEFINED_REJECTED');if(f.type==='boolean'){need(typeof value==='boolean','BOOLEAN_NORMALIZED_REQUIRED');return value;}need(typeof value==='string','STRING_NORMALIZED_REQUIRED');if(f.type==='text'||f.type==='textarea'){need(Array.from(value).length<=(f.type==='text'?c.limits.textCodePoints:c.limits.textareaCodePoints),'TEXT_TOO_LONG');return value;}if(value==='')return value;if(f.type==='number'){need(/^-?(?:0|[1-9][0-9]*)(?:\.[0-9]{1,6})?$/.test(value)&&!(/^-0(?:\.0+)?$/.test(value)),'DECIMAL_STRING_REQUIRED');need(value.replace(/[-.]/g,'').length<=c.limits.numberPrecision,'DECIMAL_PRECISION');return value;}if(f.type==='url'){need(value===value.trim()&&Array.from(value).length<=c.limits.urlCodePoints&&/^https?:\/\//i.test(value),'URL_HTTP_REQUIRED');let url;try{url=new URL(value);}catch(e){throw new ProposalError('URL_INVALID');}need(['http:','https:'].includes(url.protocol)&&url.hostname&&!url.username&&!url.password,'URL_NO_CREDENTIALS');return value;}need(f.type==='select'&&f.choices.some(c=>c.key===value),'SELECT_VALUE_UNKNOWN');return value;}
++function present(value){return value!==undefined&&value!==null&&(typeof value!=='string'||value.trim()!=='');}
++function applyModel(c,g,native,previous,envelope,languages,auth={modify:true,csrf:true}){validateGroup(c,g);const registry=languageRegistry(languages);const result={native:clone(native),values:clone(previous)};for(const key of Object.keys(previous))need(keyValid(key),'PREVIOUS_KEY_INVALID');if(envelope===undefined)return result;need(envelope&&typeof envelope==='object'&&!Array.isArray(envelope),'ENVELOPE_INVALID');need(Object.keys(envelope).every(k=>k==='custom_fields'),'NATIVE_PATCH_REJECTED');if(!own(envelope,'custom_fields'))return result;need(auth.modify===true&&auth.csrf===true,'MODEL_WRITE_GUARD');if(g.status!=='active')return result;const patch=envelope.custom_fields;need(patch&&typeof patch==='object'&&!Array.isArray(patch),'CUSTOM_FIELDS_OBJECT_REQUIRED');for(const key of Object.keys(patch)){need(keyValid(key),'PATCH_KEY_INVALID');const f=g.fields.find(f=>f.key===key);need(f,'PATCH_FIELD_UNKNOWN');const entry=patch[key];need(entry&&typeof entry==='object'&&!Array.isArray(entry),'VALUE_SLOT_REQUIRED');if(f.localized){need(Object.keys(entry).length===1&&own(entry,'by_language')&&entry.by_language&&typeof entry.by_language==='object'&&!Array.isArray(entry.by_language),'LOCALIZED_SLOT_REQUIRED');const next=clone(result.values[key]||{by_language:{}});for(const languageId of Object.keys(entry.by_language)){need(/^[1-9][0-9]*$/.test(languageId)&&registry.ids.has(languageId),'LANGUAGE_NOT_INSTALLED');next.by_language[languageId]=valueValid(c,f,entry.by_language[languageId]);}result.values[key]=next;}else{need(Object.keys(entry).length===1&&own(entry,'shared'),'SHARED_SLOT_REQUIRED');result.values[key]={shared:valueValid(c,f,entry.shared)};}}
++ for(const f of g.fields){if(!f.required)continue;const entry=result.values[f.key];const value=f.localized?entry&&entry.by_language&&entry.by_language[registry.canonical]:entry&&entry.shared;need(present(value),'REQUIRED_CANONICAL_OR_SHARED');}return result;}
++function publicValue(c,g,key,values,requestedLanguage,languages,published){if(!published||g.status!=='active')return undefined;const f=g.fields.find(f=>f.key===key);if(!f||f.visibility!=='public')return undefined;const entry=values[key];if(!entry)return undefined;if(!f.localized)return own(entry,'shared')?entry.shared:undefined;const registry=languageRegistry(languages);const id=String(requestedLanguage);return own(entry.by_language||{},id)?entry.by_language[id]:(entry.by_language||{})[registry.canonical];}
++function escapeModel(value){return String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
++function compatibleField(old,next){need(old.key===next.key&&old.type===next.type&&old.localized===next.localized,'EXPLICIT_MIGRATION_REQUIRED');return true;}
++function sourceCheck(root,c){const results=[];for(const s of c.sourceInventory){need(SOURCE_PATHS.includes(s.path),'SOURCE_NOT_ALLOWED');const file=path.join(root,s.path);try{need(fs.lstatSync(file).isFile()&&fs.realpathSync(file)===file,'SOURCE_NOT_REGULAR');}catch(e){if(e instanceof ProposalError)throw e;throw new ProposalError('SOURCE_MISSING');}const data=fs.readFileSync(file);need(sha(data)===s.sha256,'INVENTORY_STALE');const git=crypto.createHash('sha1').update(Buffer.concat([Buffer.from('blob '+data.length+'\0'),data])).digest('hex');need(git===s.gitBlob,'INVENTORY_BLOB_MISMATCH');results.push({path:s.path,sha256:s.sha256});}return{count:results.length,fingerprint:sha(results.map(s=>s.path+'\0'+s.sha256+'\n').join(''))};}
++function readContract(root){let data;try{data=JSON.parse(fs.readFileSync(path.join(root,CONTRACT),'utf8'));}catch(e){throw new ProposalError('CONTRACT_UNREADABLE');}validateProposal(data);return data;}
++function destination(file){if(!file)return;need(path.isAbsolute(file)&&file.toLowerCase().endsWith('.json'),'REPORT_PATH');try{let exists=false;try{fs.lstatSync(file);exists=true;}catch(e){if(e.code!=='ENOENT')throw e;}need(!exists&&fs.statSync(path.dirname(file)).isDirectory(),'REPORT_NOT_NEW');}catch(e){if(e instanceof ProposalError)throw e;throw new ProposalError('REPORT_NOT_NEW');}}
++async function check(root,env){destination(env.F901_REPORT);if(env.MIRROR){let mirror;try{mirror=fs.realpathSync(env.MIRROR);}catch(e){throw new ProposalError('MIRROR_NOT_THIS_PROJECT');}need(mirror===path.join(root,'dev'),'MIRROR_NOT_THIS_PROJECT');}const c=readContract(root);const inventory=sourceCheck(root,c);const tests=await selfTest(c,false);const report={task:'Fase 9 / Tarefa 01',kind:'contract-proposal-validation',status:tests.failed?'failed':'passed',referenceBase:BASE,phase8ClosureAuthority:'explicit-operator-confirmation',proposalApproval:'pending',runtimeImplemented:false,schemaImplemented:false,migrationsExecuted:false,dbOrHttpExecuted:false,tests,sourceInventory:inventory,notice:'PASS valida coerência/inventário/modelos da PROPOSTA, não arquitetura aprovada nem custom fields funcionando no CMS.'};if(env.F901_REPORT)fs.writeFileSync(env.F901_REPORT,JSON.stringify(report,null,2)+'\n',{flag:'wx',mode:0o600});return report;}
++function parseArgs(args){if(args.length===0)return'--check';need(args.length===1&&['--check','--self-test','--help','-h'].includes(args[0]),'MODE_NOT_ALLOWED');return args[0]==='-h'?'--help':args[0];}
++async function selfTest(c,verbose=true){let passed=0,failed=0;const languages=[{id:7,code:'en-us'},{id:12,code:'pt-br'},{id:18,code:'es-eu'}];const active=()=>{const g=clone(c.exampleDefinition);g.status='active';return g;};const native={status:'1',sort_order:'2',page_description:{7:{title:'Native title',description:'<h2>Native HTML unchanged</h2>',meta_title:'Meta',keyword:'native-page'}},csrf_token:'fixture'};const previous=()=>({qa_subtitle:{by_language:{7:'Canonical',12:'Tradução'}},qa_notes:{by_language:{7:'Note',12:'Nota'}},qa_enabled:{shared:false},qa_score:{shared:'0'},qa_style:{shared:'normal'}});
++ async function t(label,fn){try{await fn();passed++;if(verbose)console.log('PASS '+label);}catch(e){failed++;if(verbose)console.error('FAIL '+label+' ['+(e.code||'MODEL_ASSERTION')+']');}}
++ await t('01 · proposta não vira runtime/schema aprovado',()=>{validateProposal(c);const bad=clone(c);bad.implementation.runtime=true;assert.throws(()=>validateProposal(bad));});
++ await t('02 · chave snake_case/reservados/prototype nativos rejeitados',()=>{for(const key of['title','description','csrf_token','constructor','__proto__','config_language_admin','Bad-Key',"x');DROP"]){assert.equal(keyValid(key),false);}assert.equal(keyValid('qa_subtitle'),true);});
++ await t('03 · alvo não aprovado fica fora do MVP modelado',()=>{const g=active();g.entity='catalog/project';assert.throws(()=>validateGroup(c,g));});
++ await t('04 · campos duplicados no grupo não são válidos',()=>{const g=active();g.fields.push(clone(g.fields[0]));assert.throws(()=>validateGroup(c,g));});
++ await t('05 · grupos/chaves colidem por entity, não sobrescrevem',()=>{const g=active();assert.throws(()=>validateGroups(c,[g,clone(g)]));const h=clone(g);h.key='qa_other';assert.throws(()=>validateGroups(c,[g,h]));});
++ await t('06 · richtext/media/repeater/código não entram silenciosamente',()=>{for(const type of['richtext','media','repeater','computed']){const g=active();g.fields[0].type=type;assert.throws(()=>validateGroup(c,g));}});
++ await t('07 · select exige opções únicas/definidas',()=>{const g=active();const f=g.fields.find(f=>f.type==='select');f.choices.push(clone(f.choices[0]));assert.throws(()=>validateGroup(c,g));});
++ await t('08 · labels dos três idiomas têm limites/não vazios',()=>{const g=active();g.fields[0].labels['en-us']='';assert.throws(()=>validateGroup(c,g));});
++ await t('09 · seis tipos normalizados funcionam só em memória',()=>{const patch={custom_fields:{qa_subtitle:{by_language:{7:'Title',12:'Título'}},qa_notes:{by_language:{7:'line\ntext'}},qa_score:{shared:'42.125'},qa_enabled:{shared:false},qa_link:{shared:'https://example.invalid/reference'},qa_style:{shared:'compact'}}};const out=applyModel(c,active(),native,{},patch,languages);assert.equal(out.values.qa_enabled.shared,false);assert.equal(out.values.qa_score.shared,'42.125');assert.deepEqual(out.native,native);assert.deepEqual(JSON.parse(JSON.stringify(out.values)),out.values);});
++ await t('10 · false e zero não são ausência nem invalidam required',()=>{const g=active();g.fields.find(f=>f.key==='qa_score').required=true;const out=applyModel(c,g,native,previous(),{custom_fields:{}},languages);assert.equal(out.values.qa_enabled.shared,false);assert.equal(out.values.qa_score.shared,'0');});
++ await t('11 · EN é resolvido por registry e não ID1/posição',()=>{assert.equal(languageRegistry(languages).canonical,'7');const patch={custom_fields:{qa_subtitle:{by_language:{12:'SóPT'}},qa_enabled:{shared:false}}};assert.throws(()=>applyModel(c,active(),native,{},patch,languages));});
++ await t('12 · language_id não instalado não aceita valor',()=>{assert.throws(()=>applyModel(c,active(),native,previous(),{custom_fields:{qa_subtitle:{by_language:{99:'Unknown'}}}},languages));});
++ await t('13 · shared e by_language não podem ser confundidos',()=>{assert.throws(()=>applyModel(c,active(),native,previous(),{custom_fields:{qa_enabled:{by_language:{7:false}}}},languages));assert.throws(()=>applyModel(c,active(),native,previous(),{custom_fields:{qa_subtitle:{shared:'Wrong'}}},languages));});
++ await t('14 · namespace omitido preserva payload nativo/valores legados',()=>{const before=previous();const out=applyModel(c,active(),native,before,undefined,languages);assert.deepEqual(out.values,before);assert.deepEqual(out.native,native);});
++ await t('15 · patch esparso preserva idioma ausente e vazio limpa só opcional',()=>{const out=applyModel(c,active(),native,previous(),{custom_fields:{qa_notes:{by_language:{7:''}}}},languages);assert.equal(out.values.qa_notes.by_language[7],'');assert.equal(out.values.qa_notes.by_language[12],'Nota');assert.equal(out.values.qa_subtitle.by_language[7],'Canonical');});
++ await t('16 · clear required falha atomicamente no modelo',()=>{const before=previous();const copy=clone(before);assert.throws(()=>applyModel(c,active(),native,before,{custom_fields:{qa_subtitle:{by_language:{7:''}}}},languages));assert.deepEqual(before,copy);});
++ await t('17 · grupo draft/desativado não apaga nem exige valor novo',()=>{const g=clone(c.exampleDefinition);const before=previous();const out=applyModel(c,g,native,before,{custom_fields:{}},languages);assert.deepEqual(out.values,before);});
++ await t('18 · patch não aceita campo desconhecido/native/prototype',()=>{for(const patch of[{custom_fields:{title:{shared:'Override'}}},{status:0,custom_fields:{}},JSON.parse('{"custom_fields":{"__proto__":{"shared":"x"}}}')])assert.throws(()=>applyModel(c,active(),native,previous(),patch,languages));});
++ await t('19 · key/tipo/localização não mudam sem migração explícita',()=>{const f=clone(active().fields[0]);for(const next of[{...f,type:'number'},{...f,key:'qa_new'},{...f,localized:false}])assert.throws(()=>compatibleField(f,next));compatibleField(f,clone(f));});
++ await t('20 · número é decimal string exato, sem float/expoente/vírgula',()=>{const f=active().fields.find(f=>f.type==='number');assert.equal(valueValid(c,f,'9007199254740993.25'),'9007199254740993.25');for(const v of[0,'1e3','1,25','01','-0','1.1234567','1234567890123456789'])assert.throws(()=>valueValid(c,f,v));});
++ await t('21 · URL é parseada sem rede e bloqueia scheme/credenciais',()=>{const f=active().fields.find(f=>f.type==='url');valueValid(c,f,'https://example.invalid/path');for(const v of['javascript:alert(1)','data:text/plain,x','http://','https://user:password@example.invalid',' https://example.invalid'])assert.throws(()=>valueValid(c,f,v));});
++ await t('22 · limites usam codepoints, não cortam UTF16 ao acaso',()=>{const f=active().fields.find(f=>f.type==='text');valueValid(c,f,'😀'.repeat(255));assert.throws(()=>valueValid(c,f,'😀'.repeat(256)));const t=active().fields.find(f=>f.type==='textarea');valueValid(c,t,'a'.repeat(5000));assert.throws(()=>valueValid(c,t,'a'.repeat(5001)));});
++ await t('23 · select não aceita opção inventada',()=>{const f=active().fields.find(f=>f.type==='select');valueValid(c,f,'normal');valueValid(c,f,'');assert.throws(()=>valueValid(c,f,'arbitrary'));});
++ await t('24 · null/undefined não viram falso/vazio implicitamente',()=>{for(const f of active().fields){assert.throws(()=>valueValid(c,f,null));assert.throws(()=>valueValid(c,f,undefined));}});
++ await t('25 · escape plain-text modelado não reescreve HTML nativo',()=>{const out=applyModel(c,active(),native,previous(),{custom_fields:{qa_notes:{by_language:{7:'<script>custom</script>'}}}},languages);assert.equal(escapeModel(out.values.qa_notes.by_language[7]),'&lt;script&gt;custom&lt;/script&gt;');assert.equal(out.native.page_description[7].description,'<h2>Native HTML unchanged</h2>');});
++ await t('26 · privado/draft/entidade não publicada não expõem valor',()=>{const g=active();assert.equal(publicValue(c,g,'qa_subtitle',previous(),12,languages,true),undefined);g.fields[0].visibility='public';assert.equal(publicValue(c,g,'qa_subtitle',previous(),12,languages,false),undefined);g.status='draft';assert.equal(publicValue(c,g,'qa_subtitle',previous(),12,languages,true),undefined);});
++ await t('27 · fallback só ausente, não vazio ou false/zero',()=>{const g=active();g.fields.forEach(f=>{f.visibility='public';});const values=previous();values.qa_subtitle.by_language[12]='';assert.equal(publicValue(c,g,'qa_subtitle',values,12,languages,true),'');assert.equal(publicValue(c,g,'qa_subtitle',values,18,languages,true),'Canonical');assert.equal(publicValue(c,g,'qa_enabled',values,18,languages,true),false);assert.equal(publicValue(c,g,'qa_score',values,18,languages,true),'0');});
++ await t('28 · CLI não implementa apply/migrate/HTTP/banco',()=>{assert.equal(parseArgs([]),'--check');for(const args of[['--apply'],['--migrate'],['--http'],['--backend'],['--check','extra']])assert.throws(()=>parseArgs(args));});
++ await t('29 · guard de modify é modelo, não bypass de aplicação',()=>{assert.throws(()=>applyModel(c,active(),native,previous(),{custom_fields:{}},languages,{modify:false,csrf:true}));});
++ await t('30 · guard de CSRF é obrigatório no modelo de escrita',()=>{assert.throws(()=>applyModel(c,active(),native,previous(),{custom_fields:{}},languages,{modify:true,csrf:false}));});
++ await t('31 · inventário stale/symlink é recusado em FS privado',()=>{const temp=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'f901-model-')));const relative=SOURCE_PATHS[0];const file=path.join(temp,relative);fs.mkdirSync(path.dirname(file),{recursive:true,mode:0o700});const bytes=Buffer.from('model-only-source');const fake={sourceInventory:[{path:relative,sha256:sha(bytes),gitBlob:crypto.createHash('sha1').update(Buffer.concat([Buffer.from('blob '+bytes.length+'\0'),bytes])).digest('hex')}]};try{fs.writeFileSync(file,bytes);sourceCheck(temp,fake);fs.writeFileSync(file,'changed');assert.throws(()=>sourceCheck(temp,fake));fs.unlinkSync(file);fs.symlinkSync('missing.php',file);assert.throws(()=>sourceCheck(temp,fake));}finally{try{fs.unlinkSync(file);}catch(e){if(e.code!=='ENOENT')throw e;}let dir=path.dirname(file);while(dir!==temp){fs.rmdirSync(dir);dir=path.dirname(dir);}fs.rmdirSync(temp);}});
++ await t('32 · PASS de modelos deixa oito aprovações pendentes',()=>{validateProposal(c);assert.equal(c.status,'proposed');assert.equal(c.implementation.designApproved,false);assert.equal(c.approvals.filter(a=>a.status==='pending').length,8);});
++ if(verbose)console.log(`F9-01 contrato/modelos: ${passed} PASS / ${failed} FAIL — simulação em memória/FS privado; nenhum custom field, SQL ou runtime implementado.`);return{passed,failed};
++}
++function help(){return`Uso: bash tools/e2e/e2e_f901.sh [--check|--self-test|--help]
++
++--check      Padrão. Valida proposta JSON, inventário SHA256/Git blob de14 fontes
++             verificadas e32 modelos de contrato em memória/FS privado.
++--self-test  Só proposta/modelos; não exige runtime completo do CMS.
++--help       Ajuda. Não existem apply/migrate/http/backend ou operações no DB.
++
++Requer Node20+/Bash. Nenhum PHP/Composer/npm/servidor/navegador/DB necessário.
++MIRROR, se exportado, deve ser o dev deste projeto; não mistura inventários.
++F901_REPORT=/tmp/novo-f901.json opcional, absoluto novo/0600, sem sobrescrever.
++PASS significa coerência da PROPOSTA, nunca design aprovado ou feature pronta.
++A Fase8 foi encerrada por escolha explícita do operador, não por este Tool.
++Guia: docs/F9-01-Campos-Personalizados.md
++Contrato: docs/F9-01-Contrato-Campos-Personalizados.json
++`;}
++async function main(args,root=ROOT,env=process.env){const mode=parseArgs(args);need(Number(process.versions.node.split('.')[0])>=20,'NODE20_REQUIRED');if(mode==='--help'){console.log(help());return 0;}if(mode==='--self-test'){const c=readContract(root);const r=await selfTest(c,true);return r.failed?1:0;}const r=await check(root,env);console.log(JSON.stringify(r,null,2));return r.status==='passed'?0:1;}
++if(require.main===module)main(process.argv.slice(2)).then(code=>{process.exitCode=code;}).catch(e=>{console.log(JSON.stringify({task:'Fase 9 / Tarefa 01',kind:'contract-proposal-validation',status:'blocked',errorCode:e instanceof ProposalError?e.code:'IO_OR_MODEL_ERROR',proposalApproval:'pending',runtimeImplemented:false,schemaImplemented:false},null,2));process.exitCode=2;});
++module.exports={BASE,SOURCE_PATHS,TYPES,RESERVED,validateProposal,validateGroup,validateGroups,languageRegistry,valueValid,applyModel,publicValue,compatibleField,escapeModel,keyValid,sourceCheck,readContract,check,selfTest,parseArgs,main};
+diff --git a/tools/e2e/e2e_f901.sh b/tools/e2e/e2e_f901.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..d72b52fd77121c0d525b08afccd03ee5595ef3e9
+--- /dev/null
++++ b/tools/e2e/e2e_f901.sh
+@@ -0,0 +1,11 @@
++#!/usr/bin/env bash
++# Fase 9 / Tarefa 01 — proposta de contrato, sem runtime/SQL/HTTP.
++set -euo pipefail
++ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++NODE_BIN="${NODE_BIN:-node}"
++command -v "$NODE_BIN" >/dev/null 2>&1 || { printf '%s\n' 'ERRO: Node20+ não encontrado.' >&2; exit 2; }
++"$NODE_BIN" -e 'if(Number(process.versions.node.split(".")[0])<20)process.exit(2);'
++RUNNER="$ROOT/tools/e2e/e2e_f901.cjs"
++[[ -f "$RUNNER" ]] || { printf '%s\n' 'ERRO: runner F9-01 ausente.' >&2; exit 2; }
++"$NODE_BIN" --check "$RUNNER"
++"$NODE_BIN" "$RUNNER" "$@"
