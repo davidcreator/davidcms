@@ -39,8 +39,10 @@ ck 1 $RC "wizard-seed-grant"
 echo '══ 2 — login ══'
 curl -s -c $JA -b $JA "$B/admin/login" -o /tmp/f213_login.html -w "%{http_code}" | grep -q 200
 TOKEN=$(grep -o 'name="user_token" value="[^"]*"' /tmp/f213_login.html | sed 's/.*value="//;s/"//')
+CSRF_LOGIN=$(grep -o 'name="csrf_token" value="[^"]*"' /tmp/f213_login.html | sed 's/.*value="//;s/"//')
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=common/login" \
   --data-urlencode "username=admin" --data-urlencode "password=SenhaForte!2026" --data-urlencode "user_token=$TOKEN" \
+  --data-urlencode "csrf_token=$CSRF_LOGIN" \
   -D /tmp/f213_al.hdr -o /dev/null
 L=$(loc /tmp/f213_al.hdr); [[ "$L" == *dashboard* ]]
 ck 2 $? "admin-login"
@@ -60,9 +62,10 @@ ck 4 $? "dashboard-card"
 
 echo '══ 5 — form: 3 idiomas (name/description), vendor/url + upload, SEM keyword ══'
 curl -s -c $JA -b $JA "$B/admin/index.php?route=tool/tool.add" -o /tmp/f213_form.html -D /tmp/f213_f.hdr
+TOOL_CSRF=$(grep -o 'name="csrf_token" value="[^"]*"' /tmp/f213_form.html | head -1 | sed 's/.*value="//;s/"//')
 H=$(hdr /tmp/f213_f.hdr)
 OK=0; [ "$H" = "200" ] || OK=1
-N=$(grep -c "<legend>" /tmp/f213_form.html); [ "$N" = "3" ] || OK=1
+N=$(grep -o 'id="tab-tool-lang-[0-9]*"' /tmp/f213_form.html | wc -l); [ "$N" = "3" ] || OK=1
 grep -q 'id="input-name-1"' /tmp/f213_form.html || OK=1
 grep -q 'name="tool_description\[1\]\[description\]"' /tmp/f213_form.html || OK=1
 grep -q 'id="input-vendor"' /tmp/f213_form.html || OK=1
@@ -72,6 +75,7 @@ ck 5 $OK "form-multilang-sem-seo"
 
 echo '══ 6 — POST inválido (nome en vazio) → erro, nada persistido ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=tool/tool.add" \
+  --data-urlencode "csrf_token=$TOOL_CSRF" \
   --data-urlencode "tool_description[1][name]=" \
   -o /tmp/f213_err.html
 grep -q "en-US name is required" /tmp/f213_err.html
@@ -81,6 +85,7 @@ ck 6 $OK "validacao-nome"
 
 echo '══ 7 — URL inválida (ftp://) → rejeitada ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=tool/tool.add" \
+  --data-urlencode "csrf_token=$TOOL_CSRF" \
   --data-urlencode "tool_description[1][name]=Three.js" --data-urlencode "url=ftp://three.test" \
   -o /tmp/f213_err2.html
 grep -q "must start with http" /tmp/f213_err2.html
@@ -89,14 +94,14 @@ C=$(q "SELECT COUNT(*) FROM reamur_test.rms_tool"); [ "$C" = "0" ] || OK=1
 ck 7 $OK "validacao-url"
 
 echo '══ 8 — upload do ícone via COMPONENTE → path do módulo; fake rejeitado; GET → JSON ══'
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=tool/tool.upload" -F "file=@/tmp/took.png;type=image/png" -o /tmp/f213_up1.json
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=tool/tool.upload" -F "csrf_token=$TOOL_CSRF" -F "file=@/tmp/took.png;type=image/png" -o /tmp/f213_up1.json
 grep -q '"success":true' /tmp/f213_up1.json
 A=$?
 IPATH=$(grep -o '"path":"[^"]*"' /tmp/f213_up1.json | sed 's/"path":"//;s/"//;s|\\/|/|g')
 [ -f "/tmp/fui/dev/catalog/$IPATH" ]
 OK=$?
 case "$IPATH" in view/image/tool/*) :;; *) OK=1;; esac
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=tool/tool.upload" -F "file=@/tmp/tofake.png;type=image/png" -o /tmp/f213_up2.json
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=tool/tool.upload" -F "csrf_token=$TOOL_CSRF" -F "file=@/tmp/tofake.png;type=image/png" -o /tmp/f213_up2.json
 grep -q '"success":false' /tmp/f213_up2.json
 B2=$?
 curl -s -c $JA -b $JA "$B/admin/index.php?route=tool/tool.upload" -o /tmp/f213_up3.json
@@ -105,6 +110,7 @@ ck 8 $(( A + OK + B2 + $? )) "upload-componente"
 
 echo '══ 9 — create multilíngue + vendor + ícone + URL ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=tool/tool.add" \
+  --data-urlencode "csrf_token=$TOOL_CSRF" \
   --data-urlencode "tool_description[1][name]=Three.js" \
   --data-urlencode "tool_description[1][description]=3D on the web" \
   --data-urlencode "tool_description[2][name]=Three.js" \
@@ -137,10 +143,11 @@ H=$(hdr /tmp/f213_e.hdr)
 OK=0; [ "$H" = "200" ] || OK=1
 grep -q 'value="Three.js"' /tmp/f213_edit.html || OK=1
 grep -q "3D on the web" /tmp/f213_edit.html || OK=1
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=tool/tool.upload" -F "file=@/tmp/took.png;type=image/png" -o /tmp/f213_up4.json
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=tool/tool.upload" -F "csrf_token=$TOOL_CSRF" -F "file=@/tmp/took.png;type=image/png" -o /tmp/f213_up4.json
 IPATH2=$(grep -o '"path":"[^"]*"' /tmp/f213_up4.json | sed 's/"path":"//;s/"//;s|\\/|/|g')
 [ -n "$IPATH2" ] && [ "$IPATH2" != "$IPATH" ] || OK=1
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=tool/tool.edit|1" \
+  --data-urlencode "csrf_token=$TOOL_CSRF" \
   --data-urlencode "tool_description[1][name]=Three.js r160" \
   --data-urlencode "tool_description[2][name]=Three.js" \
   --data-urlencode "vendor=" --data-urlencode "url=" \
@@ -160,7 +167,7 @@ L=$(loc /tmp/f213_dg.hdr); OK=0
 [[ "$L" == *error/permission* ]] || OK=1
 N=$(q "SELECT COUNT(*) FROM reamur_test.rms_tool WHERE tool_id=1"); [ "$N" = "1" ] || OK=1
 [ -f "/tmp/fui/dev/catalog/$IPATH2" ] || OK=1
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=tool/tool.delete|1" -D /tmp/f213_dp.hdr -o /dev/null
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=tool/tool.delete|1" --data-urlencode "csrf_token=$TOOL_CSRF" -D /tmp/f213_dp.hdr -o /dev/null
 N1=$(q "SELECT COUNT(*) FROM reamur_test.rms_tool")
 N2=$(q "SELECT COUNT(*) FROM reamur_test.rms_tool_description")
 [ "$N1" = "0" ] && [ "$N2" = "0" ] || OK=1

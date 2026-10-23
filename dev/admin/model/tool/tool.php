@@ -17,26 +17,55 @@ namespace Reamur\Admin\Model\Tool;
 class Tool extends \Reamur\System\Engine\Model {
 
     /**
-     * Grade: coalesce nome do idioma ativo → en-US (padrão dos CRUDs F2).
-     *
+     * Lista filtrável; sem argumentos mantém todos, COALESCE e ordem antigos.
+     * @param array{name?: string, vendor?: string, status?: string|int, start?: int, limit?: int} $filters
      * @return array<int, array<string, mixed>>
      */
-    public function getTools(): array {
-        $lang = $this->currentLanguageId();
-
-        $query = $this->db->query(
-            "SELECT t.`tool_id`, t.`image`, t.`vendor`, t.`url`, t.`status`, t.`sort_order`, t.`date_added`,
-                    COALESCE(td.`name`, td_en.`name`, '')         AS `name`,
-                    COALESCE(td.`description`, td_en.`description`, '') AS `description`
-               FROM `" . $this->t('tool') . "` t
-          LEFT JOIN `" . $this->t('tool_description') . "` td
-                 ON td.`tool_id` = t.`tool_id` AND td.`language_id` = '" . $lang . "'
-          LEFT JOIN `" . $this->t('tool_description') . "` td_en
-                 ON td_en.`tool_id` = t.`tool_id` AND td_en.`language_id` = 1
-           ORDER BY t.`sort_order` ASC, t.`tool_id` ASC"
-        );
-
+    public function getTools(array $filters = []): array {
+        $sql = "SELECT t.`tool_id`, t.`image`, t.`vendor`, t.`url`, t.`status`, t.`sort_order`, t.`date_added`,
+                       COALESCE(td.`name`, td_en.`name`, '') AS `name`,
+                       COALESCE(td.`description`, td_en.`description`, '') AS `description` "
+            . $this->toolListFrom() . $this->toolListWhere($filters)
+            . " ORDER BY t.`sort_order` ASC, t.`tool_id` ASC";
+        if (array_key_exists('limit', $filters)) {
+            $start = max(0, (int)($filters['start'] ?? 0));
+            $limit = min(100, max(1, (int)$filters['limit']));
+            $sql .= " LIMIT " . $start . ", " . $limit;
+        }
+        $query = $this->db->query($sql);
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
+    /** @param array{name?: string, vendor?: string, status?: string|int} $filters */
+    public function getTotalTools(array $filters = []): int {
+        $query = $this->db->query("SELECT COUNT(*) AS `total` " . $this->toolListFrom() . $this->toolListWhere($filters));
+        return ($query instanceof \stdClass && isset($query->row['total'])) ? (int)$query->row['total'] : 0;
+    }
+
+    private function toolListFrom(): string {
+        return "FROM `" . $this->t('tool') . "` t
+                LEFT JOIN `" . $this->t('tool_description') . "` td
+                  ON td.`tool_id` = t.`tool_id` AND td.`language_id` = '" . $this->currentLanguageId() . "'
+                LEFT JOIN `" . $this->t('tool_description') . "` td_en
+                  ON td_en.`tool_id` = t.`tool_id` AND td_en.`language_id` = 1";
+    }
+
+    /** @param array{name?: string, vendor?: string, status?: string|int} $filters */
+    private function toolListWhere(array $filters): string {
+        $where = [];
+        $name = $filters['name'] ?? '';
+        if (is_string($name) && trim($name) !== '') {
+            $where[] = "COALESCE(td.`name`, td_en.`name`, '') LIKE '%" . $this->db->escape(trim($name)) . "%'";
+        }
+        $vendor = $filters['vendor'] ?? '';
+        if (is_string($vendor) && trim($vendor) !== '') {
+            $where[] = "t.`vendor` LIKE '%" . $this->db->escape(trim($vendor)) . "%'";
+        }
+        $status = $filters['status'] ?? 'all';
+        if (in_array($status, ['0', '1', 0, 1], true)) {
+            $where[] = "t.`status` = '" . (int)$status . "'";
+        }
+        return $where ? ' WHERE ' . implode(' AND ', $where) : '';
     }
 
     /**

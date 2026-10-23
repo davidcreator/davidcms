@@ -29,6 +29,7 @@ Estes documentos foram escritos para servir como referência durante todo o cicl
 | 17 | [F8-06-Paginas-CMS.md](F8-06-Paginas-CMS.md) | **Fase 8 · Tarefa 06**: Páginas CMS no shell, filtros/paginação, CSRF, Tool E2E e homologação. |
 | 18 | [F8-07-Categorias-Portfolio.md](F8-07-Categorias-Portfolio.md) | **Fase 8 · Tarefa 07**: categorias do portfólio no shell, hierarquia/imagem preservadas, CSRF, Tool E2E e homologação. |
 | 19 | [F8-08-Projetos-Portfolio.md](F8-08-Projetos-Portfolio.md) | **Fase 8 · Tarefa 08**: projetos no shell, categorias N:N/capa/galeria/SEO preservados, filtros, CSRF e Tool E2E. |
+| 20 | [F8-09-Ferramentas-Conectadas.md](F8-09-Ferramentas-Conectadas.md) | **Fase 8 · Tarefa 09**: cadastro de ferramentas no shell, ícone/vendor/URL preservados, filtros, CSRF e Tool E2E. |
 
 ---
 
