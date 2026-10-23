@@ -74,6 +74,7 @@ ck 3 $OK "project-create-seo"
 
 echo '══ 4 — SEO GLOBAL: keyword do projeto colide em categoria e em página ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/category.add" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "category_description[1][name]=Cat X" \
   --data-urlencode "category_description[1][keyword]=reamur-site" \
   -o /tmp/regr_seo1.html
@@ -89,17 +90,20 @@ ck 4 $(( A + $? )) "seo-global-cross-entity"
 
 echo '══ 5 — category: hierarquia + anti-ciclo server-side + delete sobe filho ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/category.add" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "category_description[1][name]=Pai" -D /tmp/regr_c1.hdr -o /dev/null
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/category.add" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "category_description[1][name]=Filho" --data-urlencode "parent_id=1" -D /tmp/regr_c2.hdr -o /dev/null
 # anti-ciclo: editar Pai com parent_id=2 (seu próprio filho) via POST adulterado
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/category.edit|1" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "category_description[1][name]=Pai" --data-urlencode "parent_id=2" \
   -o /tmp/regr_cyc.html
 grep -qi "Invalid parent\|own parent" /tmp/regr_cyc.html
 A=$?
 # delete do Pai: filho sobe p/ raiz
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/category.delete|1" -o /dev/null
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/category.delete|1" --data-urlencode "csrf_token=$CSRF" -o /dev/null
 PI=$(q "SELECT parent_id FROM reamur_test.rms_category WHERE category_id=2")
 [ "$PI" = "0" ] || A=1
 ck 5 $A "category-hierarquia-anticyclo-delete"

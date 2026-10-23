@@ -16,34 +16,65 @@ namespace Reamur\Admin\Model\Catalog;
 class Category extends \Reamur\System\Engine\Model {
 
     /**
-     * Lista para a grade (nome preferindo o idioma ativo, coalesce EN, com
-     * nome do pai resolvido duas vezes — mesma coalesce).
-     *
+     * Lista filtrável (F8-07). Sem argumentos continua completa e alfabética.
+     * @param array{name?: string, status?: string|int, start?: int, limit?: int} $filters
      * @return array<int, array<string, mixed>>
      */
-    public function getCategories(): array {
+    public function getCategories(array $filters = []): array {
         $lang = $this->currentLanguageId();
+        $coalesce = $this->categoryNameSql();
+        $sql = "SELECT c.`category_id`, c.`parent_id`, c.`image`, c.`status`, c.`sort_order`, c.`date_modified`,
+                       " . $coalesce . " AS `name`,
+                       (SELECT " . str_replace('cd', 'pd', $coalesce) . "
+                        FROM `" . $this->t('category_description') . "` pd
+                        LEFT JOIN `" . $this->t('category_description') . "` pd_en
+                          ON pd_en.`category_id` = pd.`category_id` AND pd_en.`language_id` = 1
+                        WHERE pd.`category_id` = c.`parent_id` AND pd.`language_id` = '" . $lang . "'
+                        LIMIT 1) AS `parent_name` "
+            . $this->categoryListFrom() . $this->categoryListWhere($filters)
+            . " ORDER BY " . $coalesce . " ASC";
 
-        $coalesce = "COALESCE(NULLIF(cd.`name`, ''), cd_en.`name`, '')";
-
-        $query = $this->db->query(
-            "SELECT c.`category_id`, c.`parent_id`, c.`image`, c.`status`, c.`sort_order`, c.`date_modified`,
-                    " . $coalesce . " AS `name`,
-                    (SELECT " . str_replace('cd', 'pd', $coalesce) . "
-                     FROM `" . $this->t('category_description') . "` pd
-                     LEFT JOIN `" . $this->t('category_description') . "` pd_en
-                         ON pd_en.`category_id` = pd.`category_id` AND pd_en.`language_id` = 1
-                     WHERE pd.`category_id` = c.`parent_id` AND pd.`language_id` = '" . $lang . "'
-                     LIMIT 1) AS `parent_name`
-             FROM `" . $this->t('category') . "` c
-             LEFT JOIN `" . $this->t('category_description') . "` cd
-                 ON cd.`category_id` = c.`category_id` AND cd.`language_id` = '" . $lang . "'
-             LEFT JOIN `" . $this->t('category_description') . "` cd_en
-                 ON cd_en.`category_id` = c.`category_id` AND cd_en.`language_id` = 1
-             ORDER BY " . $coalesce . " ASC"
-        );
-
+        if (array_key_exists('limit', $filters)) {
+            $start = max(0, (int)($filters['start'] ?? 0));
+            $limit = min(100, max(1, (int)$filters['limit']));
+            $sql .= ", c.`category_id` ASC LIMIT " . $start . ", " . $limit;
+        }
+        $query = $this->db->query($sql);
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
+    /** @param array{name?: string, status?: string|int} $filters */
+    public function getTotalCategories(array $filters = []): int {
+        $query = $this->db->query("SELECT COUNT(*) AS `total` " . $this->categoryListFrom() . $this->categoryListWhere($filters));
+        return ($query instanceof \stdClass && isset($query->row['total'])) ? (int)$query->row['total'] : 0;
+    }
+
+    /** Nome exibido, compartilhado pela lista/contagem e pelo filtro. */
+    private function categoryNameSql(): string {
+        return "COALESCE(NULLIF(cd.`name`, ''), cd_en.`name`, '')";
+    }
+
+    private function categoryListFrom(): string {
+        $lang = $this->currentLanguageId();
+        return "FROM `" . $this->t('category') . "` c
+                LEFT JOIN `" . $this->t('category_description') . "` cd
+                  ON cd.`category_id` = c.`category_id` AND cd.`language_id` = '" . $lang . "'
+                LEFT JOIN `" . $this->t('category_description') . "` cd_en
+                  ON cd_en.`category_id` = c.`category_id` AND cd_en.`language_id` = 1";
+    }
+
+    /** @param array{name?: string, status?: string|int} $filters */
+    private function categoryListWhere(array $filters): string {
+        $where = [];
+        $name = $filters['name'] ?? '';
+        if (is_string($name) && trim($name) !== '') {
+            $where[] = $this->categoryNameSql() . " LIKE '%" . $this->db->escape(trim($name)) . "%'";
+        }
+        $status = $filters['status'] ?? 'all';
+        if (in_array($status, ['0', '1', 0, 1], true)) {
+            $where[] = "c.`status` = '" . (int)$status . "'";
+        }
+        return $where ? ' WHERE ' . implode(' AND ', $where) : '';
     }
 
     /**

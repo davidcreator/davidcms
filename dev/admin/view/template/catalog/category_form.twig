@@ -1,107 +1,99 @@
-{# dev/admin/view/template/catalog/category_form.twig — criação/edição de categoria (F2-9) #}
+{# catalog/category — Fase 8 / Tarefa 07: hierarquia/MediaUpload existentes, textarea sem RTE. #}
 {{ header|raw }}
-<main class="dash form-page">
-  <h1>{{ heading_title }}{% if category_id %} · {{ text_edit }}{% else %} · {{ text_add }}{% endif %}</h1>
+<div class="catalog-category-form">
+  <div class="page-titlebar"><div class="title-group">
+    <h1 class="page-title"><i class="bi bi-folder2 me-2" aria-hidden="true"></i>{{ heading_title }} · {{ category_id ? text_edit : text_add }}</h1>
+  </div></div>
 
-  {% if error %}
-  <div class="alert error">{{ error|nl2br }}</div>
-  {% endif %}
+  {% if error %}<div class="alert alert-danger" role="alert">{{ error|nl2br }}</div>{% endif %}
 
-  <form method="post" action="{{ action }}" class="panel form">
-
-    <h2>{{ text_general }}</h2>
-    <p class="muted">{{ text_languages_note }}</p>
-
-    {% for language in languages %}
-    <fieldset class="panel" style="margin-bottom:1rem;">
-      <legend>{{ language.name }} <span class="muted">({{ language.code }})</span></legend>
-      <div class="grid two">
-        <div class="field">
-          <label for="input-name-{{ language.language_id }}">{{ entry_name }}{% if language.language_id == 1 %} *{% endif %}</label>
-          <input type="text" name="category_description[{{ language.language_id }}][name]" id="input-name-{{ language.language_id }}" value="{{ language.fields.name }}" maxlength="255"{% if language.language_id == 1 %} required{% endif %}>
-        </div>
-        <div class="field">
-          <label for="input-keyword-{{ language.language_id }}">{{ entry_keyword }}</label>
-          <input type="text" name="category_description[{{ language.language_id }}][keyword]" id="input-keyword-{{ language.language_id }}" value="{{ language.fields.keyword }}" maxlength="64" placeholder="minha-categoria" pattern="[a-z0-9]+(-[a-z0-9]+)*">
-        </div>
-      </div>
-      <div class="field">
-        <label for="input-description-{{ language.language_id }}">{{ entry_description }}</label>
-        <textarea name="category_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="4">{{ language.fields.description }}</textarea>
-      </div>
-      <div class="grid two">
-        <div class="field">
-          <label for="input-meta-title-{{ language.language_id }}">{{ entry_meta_title }}</label>
-          <input type="text" name="category_description[{{ language.language_id }}][meta_title]" id="input-meta-title-{{ language.language_id }}" value="{{ language.fields.meta_title }}" maxlength="255">
-        </div>
-        <div class="field">
-          <label for="input-meta-description-{{ language.language_id }}">{{ entry_meta_description }}</label>
-          <input type="text" name="category_description[{{ language.language_id }}][meta_description]" id="input-meta-description-{{ language.language_id }}" value="{{ language.fields.meta_description }}" maxlength="255">
-        </div>
-      </div>
-    </fieldset>
-    {% endfor %}
-
-    <h2>{{ text_data }}</h2>
-    <div class="grid two">
-      <div class="field">
-        <label for="input-parent">{{ entry_parent }}</label>
-        <select name="parent_id" id="input-parent">
-          <option value="0">{{ text_none }}</option>
-          {% for parent in parents %}
-          <option value="{{ parent.category_id }}"{{ parent.category_id == parent_id ? ' selected' : '' }}>{{ parent.name }}</option>
+  <form method="post" action="{{ action }}" class="row g-3 form-layout" data-category-form data-category-config="{{ {upload: upload, catalog: catalog, error: text_error_upload_js, wait: text_upload_wait}|json_encode }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="col-lg-8">
+      <div class="card data-card mb-3"><div class="card-body">
+        <h2 class="card-title h6 mb-1">{{ text_general }}</h2>
+        <p class="text-body-secondary small mb-3">{{ text_languages_note }}</p>
+        <ul class="nav nav-tabs tabs-lang" id="categoryLangTabs" role="tablist">
+          {% for language in languages %}
+          <li class="nav-item" role="presentation">
+            <button class="nav-link{% if loop.first %} active{% endif %}" id="tab-category-lang-{{ language.language_id }}" data-bs-toggle="tab" data-bs-target="#pane-category-lang-{{ language.language_id }}" type="button" role="tab" aria-controls="pane-category-lang-{{ language.language_id }}" aria-selected="{{ loop.first ? 'true' : 'false' }}">
+              {{ language.name }} <span class="text-body-secondary">({{ language.code }})</span>
+            </button>
+          </li>
           {% endfor %}
-        </select>
-      </div>
-      <div class="field">
-        <label for="input-sort-order">{{ entry_sort_order }}</label>
-        <input type="number" name="sort_order" id="input-sort-order" value="{{ sort_order }}" min="0" step="1">
-      </div>
-      <div class="field check">
-        <label><input type="checkbox" name="status" value="1"{% if status == '1' %} checked{% endif %}> {{ entry_status }}</label>
-      </div>
+        </ul>
+        <div class="tab-content pt-3">
+          {% for language in languages %}
+          <div class="tab-pane fade{% if loop.first %} show active{% endif %}" id="pane-category-lang-{{ language.language_id }}" role="tabpanel" aria-labelledby="tab-category-lang-{{ language.language_id }}">
+            <div class="field mb-3">
+              <label class="form-label" for="input-name-{{ language.language_id }}">{{ entry_name }}{% if language.language_id == 1 %} <span class="text-danger">*</span>{% endif %}</label>
+              <input class="form-control" type="text" name="category_description[{{ language.language_id }}][name]" id="input-name-{{ language.language_id }}" value="{{ language.fields.name }}" maxlength="255" data-counter{% if language.language_id == 1 %} required{% endif %}>
+            </div>
+            <div class="field mb-3">
+              <label class="form-label" for="input-keyword-{{ language.language_id }}">{{ entry_keyword }}</label>
+              <input class="form-control" type="text" name="category_description[{{ language.language_id }}][keyword]" id="input-keyword-{{ language.language_id }}" value="{{ language.fields.keyword }}" maxlength="64" pattern="[a-z0-9]+(-[a-z0-9]+)*">
+            </div>
+            <div class="field mb-3">
+              <label class="form-label" for="input-description-{{ language.language_id }}">{{ entry_description }}</label>
+              <textarea class="form-control" name="category_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="4">{{ language.fields.description }}</textarea>
+            </div>
+            <h3 class="h6 text-body-secondary mt-4 mb-2">{{ text_meta_group }}</h3>
+            <div class="row g-3">
+              <div class="col-md-6 field">
+                <label class="form-label" for="input-meta-title-{{ language.language_id }}">{{ entry_meta_title }}</label>
+                <input class="form-control" type="text" name="category_description[{{ language.language_id }}][meta_title]" id="input-meta-title-{{ language.language_id }}" value="{{ language.fields.meta_title }}" maxlength="255" data-counter>
+              </div>
+              <div class="col-md-6 field">
+                <label class="form-label" for="input-meta-description-{{ language.language_id }}">{{ entry_meta_description }}</label>
+                <input class="form-control" type="text" name="category_description[{{ language.language_id }}][meta_description]" id="input-meta-description-{{ language.language_id }}" value="{{ language.fields.meta_description }}" maxlength="255" data-counter>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div></div>
     </div>
-
-    <h2>{{ text_image_cover }}</h2>
-    <div class="field">
-      <input type="hidden" name="image" id="input-image" value="{{ image }}">
-      <div id="cover-preview">
-        {% if image %}<img src="{{ catalog }}{{ image }}" alt="" width="96" style="object-fit:cover;border-radius:4px;">{% endif %}
-      </div>
-      <input type="file" id="input-cover-file" accept="image/jpeg,image/png,image/webp,image/gif">
-      <button type="button" class="btn ghost small" id="btn-upload-cover">{{ button_upload }}</button>
-      <small class="muted">{{ text_upload_hint }}</small>
-    </div>
-
-    <div class="actions right">
-      <a class="btn ghost" href="{{ cancel }}">{{ button_cancel }}</a>
-      <button type="submit" class="btn primary">{{ button_save }}</button>
+    <div class="col-lg-4">
+      <div class="card data-card mb-3 side-card"><div class="card-body">
+        <h2 class="card-title h6 mb-3">{{ text_data }}</h2>
+        <div class="field mb-3">
+          <label class="form-label" for="input-parent">{{ entry_parent }}</label>
+          <select class="form-select" name="parent_id" id="input-parent">
+            <option value="0"{% if parent_id == 0 %} selected{% endif %}>{{ text_none }}</option>
+            {% for parent in parents %}
+            <option value="{{ parent.category_id }}"{% if parent.category_id == parent_id %} selected{% endif %}>{{ parent.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" role="switch" id="input-status" name="status" value="1"{% if status == '1' %} checked{% endif %}>
+          <label class="form-check-label" for="input-status">{{ entry_status }}
+            <span class="d-block text-body-secondary small" data-status-hint data-text-published="{{ text_enabled }}" data-text-draft="{{ text_disabled }}">{{ status == '1' ? text_enabled : text_disabled }}</span>
+          </label>
+        </div>
+        <div class="field mb-0">
+          <label class="form-label" for="input-sort-order">{{ entry_sort_order }}</label>
+          <input class="form-control" type="number" name="sort_order" id="input-sort-order" value="{{ sort_order }}" min="0" step="1">
+          <p class="form-text mb-0">{{ help_sort_order }}</p>
+        </div>
+      </div></div>
+      <div class="card data-card mb-3 side-card"><div class="card-body">
+        <h2 class="card-title h6 mb-3">{{ text_image_cover }}</h2>
+        <input type="hidden" name="image" id="input-image" value="{{ image }}">
+        <div id="cover-preview" class="mb-3">
+          {% if image_preview %}<img src="{{ image_preview }}" alt="" width="96" height="96" class="rounded object-fit-cover">{% else %}<span class="text-body-secondary small">{{ text_placeholder }}</span>{% endif %}
+        </div>
+        <label class="form-label" for="input-cover-file">{{ entry_image }}</label>
+        <input class="form-control form-control-sm mb-2" type="file" id="input-cover-file" accept="image/jpeg,image/png,image/webp,image/gif"{% if not can_modify %} disabled{% endif %}>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-upload-cover"{% if not can_modify %} disabled{% endif %}><i class="bi bi-upload me-1" aria-hidden="true"></i>{{ button_upload }}</button>
+        <p class="form-text mb-0">{{ text_upload_hint }}</p>
+        <div id="category-upload-error" class="alert alert-danger small d-none mt-2 mb-0" role="alert"></div>
+      </div></div>
+      <div class="card data-card side-card"><div class="card-body d-grid gap-2">
+        {% if can_modify %}<button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ button_save }}</button>{% endif %}
+        <a class="btn btn-outline-secondary" href="{{ cancel }}">{{ button_cancel }}</a>
+      </div></div>
     </div>
   </form>
-</main>
-<script>
-(function () {
-  var uploadUrl = {{ upload|json_encode|raw }};
-  var errMsg    = {{ text_error_upload_js|json_encode|raw }};
-
-  document.getElementById('btn-upload-cover').addEventListener('click', function () {
-    var input = document.getElementById('input-cover-file');
-    if (!input.files || !input.files[0]) { return; }
-    var fd = new FormData();
-    fd.append('file', input.files[0]);
-    fetch(uploadUrl, { method: 'POST', body: fd, credentials: 'same-origin' })
-      .then(function (r) { return r.json(); })
-      .then(function (j) {
-        if (j.success) {
-          document.getElementById('input-image').value = j.path;
-          document.getElementById('cover-preview').innerHTML =
-            '<img src="' + {{ catalog|json_encode|raw }} + j.path + '" alt="" width="96" style="object-fit:cover;border-radius:4px;">';
-        } else {
-          alert(j.error || errMsg);
-        }
-      })
-      .catch(function () { alert(errMsg); });
-  });
-})();
-</script>
+</div>
 {{ footer|raw }}
