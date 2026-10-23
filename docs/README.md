@@ -23,6 +23,7 @@ Estes documentos foram escritos para servir como referência durante todo o cicl
 | 11 | [Contrato-Bootstrap.md](Contrato-Bootstrap.md) | **Contrato dos pontos de entrada**: constantes, `config.php`, ordem de boot e regras do front controller (fecha a lacuna L1). |
 | 12 | [Dicionario-de-Dados.md](Dicionario-de-Dados.md) | **Fonte da verdade do banco**: tabelas, colunas, tipos e relações das entidades núcleo (fecha a lacuna L2). |
 | 13 | [Auditoria-Fundacao.md](Auditoria-Fundacao.md) | **Auditoria de fundação**: veredito sobre a suficiência de docs + agentes e as amarrações L1–L10 (todas resolvidas pelos ADRs 0001–0004). |
+| 14 | [F8-05-A01-Inicializacao-Biblioteca-Midia.md](F8-05-A01-Inicializacao-Biblioteca-Midia.md) | **F8-05 · Ajuste 01**: correção do boot da biblioteca de mídia, aplicação incremental, Tool E2E/regressão e critérios de aceite. |
 
 ---
 

@@ -1,6 +1,12 @@
 /* F8-05 — seletor de mídia do Blog; biblioteca em filesystem restrita a view/image/blog/. */
-(function () {
+(function initBlogMedia() {
   'use strict';
+
+  // O shell carrega este arquivo no head; inicialize somente com o DOM pronto.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBlogMedia, { once: true });
+    return;
+  }
 
   var modal = document.getElementById('blogMediaModal');
   var imageInput = document.getElementById('input-image');

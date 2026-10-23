@@ -35,3 +35,32 @@
 - `dev/admin/language/{en-us,pt-br,es-eu}/blog/blog.php`.
 - `tools/e2e/e2e_f701.sh`, `tools/e2e/e2e_f805_blog_media.sh`.
 - Nenhuma alteração em schema, `dev/catalog/**`, `dev/install/**` ou `blog/import`.
+
+## Adendo — F8-05 · Ajuste 01 (2026-10-23)
+
+**Base verificada:** `722f98294beaac85a75b111075222e3187abb0e7`.
+**Escopo:** correção do boot do seletor, sem alterar as decisões acima.
+
+O shell registra `blog-media.js` no `<head>` sem `defer`. A IIFE original
+consultava o modal/campo antes do parsing do formulário e retornava sem
+registrar os eventos. O ajuste usa uma IIFE nomeada e, enquanto o documento
+está `loading`, aguarda `DOMContentLoaded` com `{ once: true }`. Nos estados
+`interactive`/`complete` continua inicializando imediatamente. Não modifica
+`header.twig`, `Document`, rotas, payloads, ACL/CSRF, banco ou idiomas.
+
+- Runtime alterado: `dev/admin/view/js/blog-media.js` (somente o boot).
+- Ferramentas adicionadas: `tools/e2e/e2e_f805_a01_blog_media.sh` e
+  `tools/e2e/e2e_f805_a01_blog_media_dom.cjs`.
+- O modo padrão é uma regressão do JS real com DOM, HTTP e Bootstrap
+  **simulados**, sem dependências externas, banco ou rede. O modo backend é
+  opt-in, bloqueado por confirmação/URL local/marcador, e reutiliza a suíte
+  HTTP/DB F8-05 existente, que é destrutiva.
+- Verificado na preparação: fonte corrigida **10 pass / 0 fail**; fonte
+  anterior **4 pass / 6 fail** no controle negativo. Nenhum E2E PHP/MariaDB
+  ou navegador real foi executado nesta entrega.
+- `ASSET_V` foi preservado; invalidar o cache deste JS e conferir a resposta
+  na Network ao aplicar em homologação.
+- Aplicação, homologação real e a validação integrada F8-05 permanecem
+  pendentes. CKEditor fica para o Ajuste 02, fora deste pacote.
+
+Guia: [F8-05-A01 — Inicialização da biblioteca de mídia](../../docs/F8-05-A01-Inicializacao-Biblioteca-Midia.md).
