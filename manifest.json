@@ -1,0 +1,48 @@
+{
+  "task": "F9-02",
+  "phase": "Fase 9",
+  "base_repository": "https://github.com/davidcreator/davidcms",
+  "base_head": "110eb513a90f6be8565a0ac92de0bf40535f2924",
+  "files": [
+    {
+      "path": "docs/F9-02-Desenho-Campos-Personalizados.md",
+      "bytes": 3908,
+      "sha256": "f715e2639ff76e32f0bca97b32ac6bf254b111e52064aa8d0bf906b3431aa48c"
+    },
+    {
+      "path": "docs/F9-02-Contrato-Campos-Personalizados.json",
+      "bytes": 11466,
+      "sha256": "c042ec00f5b179aff66fd794495b5b8b9c803067dba84c7eb9107d39bc6cac04"
+    },
+    {
+      "path": "docs/README.md",
+      "bytes": 334,
+      "sha256": "77e3dcf309a4aa29486dd9d882dfdd164f975fa5e36f8c92018f5b6e4c05813d"
+    },
+    {
+      "path": "agents-ia/decisoes/0058-f9-02-desenho-campos-personalizados.md",
+      "bytes": 3823,
+      "sha256": "0fd1893456b32ce855eb7866ba86185c01388f8a6220dbab96928c5de45196e3"
+    },
+    {
+      "path": "tools/e2e/e2e_f902.sh",
+      "bytes": 1507,
+      "sha256": "8871b153185c43cc98d70274a718db7d0227bb1f363be950a616b45625ba520b"
+    },
+    {
+      "path": "dev/install/sql/upgrade_f9_02_custom_fields_schema.sql",
+      "bytes": 4033,
+      "sha256": "3a5d7ffdfc22287588a1256c8245b01029f607fa6a105a872e5be61d1d48a70e"
+    },
+    {
+      "path": "dev/install/sql/rollback_f9_02_custom_fields_schema.sql",
+      "bytes": 1027,
+      "sha256": "5500a52ad7058708122d49a5ad1fd2be5593e9338ef5842876938792c4c54376"
+    },
+    {
+      "path": "sha256sum.txt",
+      "bytes": 860,
+      "sha256": "75e0aaa017189e74d1681d39ed11d349ce4935acf5ef2958451eb6c3218aef72"
+    }
+  ]
+}

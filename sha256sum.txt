@@ -1,0 +1,8 @@
+0fd1893456b32ce855eb7866ba86185c01388f8a6220dbab96928c5de45196e3  ./agents-ia/decisoes/0058-f9-02-desenho-campos-personalizados.md
+5500a52ad7058708122d49a5ad1fd2be5593e9338ef5842876938792c4c54376  ./dev/install/sql/rollback_f9_02_custom_fields_schema.sql
+3a5d7ffdfc22287588a1256c8245b01029f607fa6a105a872e5be61d1d48a70e  ./dev/install/sql/upgrade_f9_02_custom_fields_schema.sql
+c042ec00f5b179aff66fd794495b5b8b9c803067dba84c7eb9107d39bc6cac04  ./docs/F9-02-Contrato-Campos-Personalizados.json
+f715e2639ff76e32f0bca97b32ac6bf254b111e52064aa8d0bf906b3431aa48c  ./docs/F9-02-Desenho-Campos-Personalizados.md
+77e3dcf309a4aa29486dd9d882dfdd164f975fa5e36f8c92018f5b6e4c05813d  ./docs/README.md
+2b997e2530e0440fde1f0e8f49cd86be8f9bb0b6c56ebdbee70ee228303083b0  ./manifest.json
+8871b153185c43cc98d70274a718db7d0227bb1f363be950a616b45625ba520b  ./tools/e2e/e2e_f902.sh

@@ -1,0 +1,384 @@
+{
+  "schema": "reamur-f9-01-proposal-v1",
+  "task": "Fase 9 / Tarefa 01",
+  "status": "proposed",
+  "referenceBase": "96158da5810262246aa2dd34ca900cf45c0ecbed",
+  "phase8Closure": {
+    "status": "operator-accepted",
+    "authority": "explicit-user-choice",
+    "date": "2026-10-23",
+    "independentAudit": false,
+    "templateKeptUnchanged": "docs/F8-12-Aceite-Painel.json"
+  },
+  "implementation": {
+    "runtime": false,
+    "schema": false,
+    "migrations": false,
+    "designApproved": false
+  },
+  "scope": {
+    "firstTargetProposal": "cms/page",
+    "modelAllowedTargets": [
+      "cms/page"
+    ],
+    "laterCandidates": [
+      "catalog/project",
+      "blog/blog"
+    ],
+    "types": [
+      "text",
+      "textarea",
+      "number",
+      "boolean",
+      "url",
+      "select"
+    ],
+    "excluded": [
+      "richtext",
+      "media",
+      "file",
+      "repeater",
+      "relationship",
+      "computed",
+      "arbitrary-code",
+      "user/customer/contact/settings/language data"
+    ],
+    "visibilityDefault": "admin_only",
+    "firstTargetApproved": false
+  },
+  "payload": {
+    "namespace": "custom_fields",
+    "localizedSlot": "by_language",
+    "sharedSlot": "shared",
+    "missingNamespace": "preserve-without-new-required-validation",
+    "missingFieldOrLanguage": "preserve",
+    "explicitEmpty": "clear-optional-only",
+    "null": "reject",
+    "disabledGroup": "preserve-and-hide",
+    "nativeFields": "never-shadow-or-rewrite",
+    "requiredWhen": "namespace-present-and-group-active",
+    "fallback": "missing-only-to-en-us",
+    "publicExposure": "explicit-public-only-and-published-entity"
+  },
+  "localization": {
+    "canonicalCode": "en-us",
+    "resolveIds": "installed-language-registry-not-position",
+    "sharedSlotMarker": "logical-shared-not-a-language-row",
+    "definitionLabels": [
+      "en-us",
+      "pt-br",
+      "es-eu"
+    ],
+    "emptyIsMissing": false
+  },
+  "limits": {
+    "keyChars": 64,
+    "textCodePoints": 255,
+    "textareaCodePoints": 5000,
+    "labelCodePoints": 128,
+    "numberPrecision": 18,
+    "numberScale": 6,
+    "urlCodePoints": 2048,
+    "selectChoiceKeyChars": 64
+  },
+  "lifecycle": {
+    "groupTarget": "one-entity-type-per-group",
+    "keyUniqueness": "per-entity-type-across-groups",
+    "fieldKeyMutable": false,
+    "incompatibleTypeChange": "reject-until-explicit-migration",
+    "hardDelete": "not-in-mvp",
+    "implicitBackfill": false,
+    "moduleRollout": "explicit-opt-in-future-task"
+  },
+  "security": {
+    "valuesWritePermission": "existing-entity-modify",
+    "valuesReadPermission": "existing-entity-access",
+    "definitionManagementPermission": "new-route-to-be-approved",
+    "csrf": "existing-session-service-required-on-every-write",
+    "sql": "Model-only-with-bind-or-escape-and-int-ids",
+    "render": "Twig-autoescape-plain-text-no-raw",
+    "evaluateUserCode": false,
+    "networkFetch": false,
+    "installDependencies": false
+  },
+  "logicalDataModel": {
+    "status": "proposal-not-ddl",
+    "physicalTablesApproved": false,
+    "existingTablesAltered": false,
+    "collections": [
+      {
+        "name": "groupDefinition",
+        "identity": [
+          "entityType",
+          "groupKey"
+        ],
+        "purpose": "Labels, draft/active state and display order; one entity type in MVP."
+      },
+      {
+        "name": "fieldDefinition",
+        "identity": [
+          "entityType",
+          "fieldKey"
+        ],
+        "purpose": "Type, group, labels, localized/required/public flags and constraints; immutable key."
+      },
+      {
+        "name": "fieldValue",
+        "identity": [
+          "entityType",
+          "entityId",
+          "fieldKey",
+          "logicalLanguageSlot"
+        ],
+        "purpose": "Normalized typed value, separate from native *_description/seo tables."
+      }
+    ],
+    "alternativesToDecide": [
+      "normalized extension tables with validated metadata JSON/TEXT",
+      "separate definition-label tables if normalization is preferred"
+    ],
+    "notAuthorized": [
+      "CREATE/ALTER SQL",
+      "upgrade script",
+      "runtime route/service registration",
+      "data migration/backfill",
+      "public placement"
+    ],
+    "numberStorageNote": "DTO permite até18 dígitos totais e até6fracionais, não equivale a coluna SQL DECIMAL(18,6). Armazenamento exato e faixa física precisam de decisão no schema posterior."
+  },
+  "exampleDefinition": {
+    "key": "qa_content_details",
+    "entity": "cms/page",
+    "status": "draft",
+    "labels": {
+      "en-us": "Content details",
+      "pt-br": "Detalhes de conteúdo",
+      "es-eu": "Detalles de contenido"
+    },
+    "fields": [
+      {
+        "key": "qa_subtitle",
+        "type": "text",
+        "localized": true,
+        "required": true,
+        "visibility": "admin_only",
+        "labels": {
+          "en-us": "Subtitle",
+          "pt-br": "Subtítulo",
+          "es-eu": "Subtítulo"
+        }
+      },
+      {
+        "key": "qa_notes",
+        "type": "textarea",
+        "localized": true,
+        "required": false,
+        "visibility": "admin_only",
+        "labels": {
+          "en-us": "Notes",
+          "pt-br": "Notas",
+          "es-eu": "Notas"
+        }
+      },
+      {
+        "key": "qa_score",
+        "type": "number",
+        "localized": false,
+        "required": false,
+        "visibility": "admin_only",
+        "labels": {
+          "en-us": "Score",
+          "pt-br": "Pontuação",
+          "es-eu": "Puntuación"
+        }
+      },
+      {
+        "key": "qa_enabled",
+        "type": "boolean",
+        "localized": false,
+        "required": true,
+        "visibility": "admin_only",
+        "labels": {
+          "en-us": "Enabled",
+          "pt-br": "Ativo",
+          "es-eu": "Activo"
+        }
+      },
+      {
+        "key": "qa_link",
+        "type": "url",
+        "localized": false,
+        "required": false,
+        "visibility": "admin_only",
+        "labels": {
+          "en-us": "Reference URL",
+          "pt-br": "URL de referência",
+          "es-eu": "URL de referencia"
+        }
+      },
+      {
+        "key": "qa_style",
+        "type": "select",
+        "localized": false,
+        "required": false,
+        "visibility": "admin_only",
+        "labels": {
+          "en-us": "Style",
+          "pt-br": "Estilo",
+          "es-eu": "Estilo"
+        },
+        "choices": [
+          {
+            "key": "normal",
+            "labels": {
+              "en-us": "Normal",
+              "pt-br": "Normal",
+              "es-eu": "Normal"
+            }
+          },
+          {
+            "key": "compact",
+            "labels": {
+              "en-us": "Compact",
+              "pt-br": "Compacto",
+              "es-eu": "Compacto"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "approvals": [
+    {
+      "id": "first-target-and-types",
+      "status": "pending"
+    },
+    {
+      "id": "missing-required-compatibility",
+      "status": "pending"
+    },
+    {
+      "id": "localization-fallback",
+      "status": "pending"
+    },
+    {
+      "id": "logical-to-physical-schema",
+      "status": "pending"
+    },
+    {
+      "id": "management-route-and-acl",
+      "status": "pending"
+    },
+    {
+      "id": "public-visibility-and-placement",
+      "status": "pending"
+    },
+    {
+      "id": "lifecycle-and-migration",
+      "status": "pending"
+    },
+    {
+      "id": "test-and-rollback-strategy",
+      "status": "pending"
+    }
+  ],
+  "sourceInventory": [
+    {
+      "path": "dev/admin/controller/cms/page.php",
+      "gitBlob": "73974f0fa1d9b96ba4a4a82e640afbad625a8902",
+      "sha256": "9daa5c38bc64eda657206dd025d311b0ae15c7de32bb84ee94b8731f6dc6e331",
+      "bytes": 15293
+    },
+    {
+      "path": "dev/admin/model/cms/page.php",
+      "gitBlob": "d0d051015e70f6a779e5bb1d8e4c222a93aa7282",
+      "sha256": "4a4e4a58ab287acf2b6cfd1ef210312959f13d0dcd6a5c35f61c72efd0ce1da3",
+      "bytes": 9815
+    },
+    {
+      "path": "dev/admin/view/template/cms/page_form.twig",
+      "gitBlob": "51beed94c48e941d13d07710528274455c636979",
+      "sha256": "0028785241732e633c7f32946a20b57821ee1901f0b3269c885fa18a70e51a08",
+      "bytes": 5772
+    },
+    {
+      "path": "dev/catalog/controller/cms/page.php",
+      "gitBlob": "e45a8ecdd25bdbaef53b581af2a6a6e3cae90858",
+      "sha256": "bc153c5f348f917e53610bcbb07981894850df3aefd25aa45685b79f7c3a73fd",
+      "bytes": 1911
+    },
+    {
+      "path": "dev/catalog/model/catalog/page.php",
+      "gitBlob": "6aef204d0b279e537d4e8002d324f853eddb5a8b",
+      "sha256": "4e9744367a91180a0a0367c8edd2c21c432ed532d89fd9d2a4be164096c37a9c",
+      "bytes": 3308
+    },
+    {
+      "path": "dev/catalog/view/template/cms/page_info.twig",
+      "gitBlob": "52f3adc40e334e871593c0d5ffc75f7d6d233dd2",
+      "sha256": "231ffcbe90e1e29ca85be9dff2e3f2307d90f5f9a14325c0f137f82afda45515",
+      "bytes": 399
+    },
+    {
+      "path": "dev/admin/model/catalog/project.php",
+      "gitBlob": "ab866763742586c14e320f5d1976849bfda5a555",
+      "sha256": "0a0389714d8d7efb1b28aa0b66f2e223d5b8b9468fc83c405f569c8b71b8a54c",
+      "bytes": 14069
+    },
+    {
+      "path": "dev/admin/model/blog/blog.php",
+      "gitBlob": "b4ef4397c931b48c5f8e986f82433d8ff06d2afb",
+      "sha256": "84bc1c09e2fa869258d305b1126f35ab845bfa48c61b38df82f611e1c6699875",
+      "bytes": 11073
+    },
+    {
+      "path": "dev/install/sql/schema.sql",
+      "gitBlob": "42eb7671c9d3c0ce87c9a8805915439de1f2a21c",
+      "sha256": "245fbb9374246ecc9e82325b7a88bbcd874e0c48fa483b4c6714ecf2c3d8a0ef",
+      "bytes": 18350
+    },
+    {
+      "path": "dev/install/sql/upgrade_f7_01_blog.sql",
+      "gitBlob": "246e102122dc6f28a4a67ad5bed01e793c489200",
+      "sha256": "314f8dd672f32cbb77ee1294cdf30ec91dd880613090d7118cd564602e42280d",
+      "bytes": 2557
+    },
+    {
+      "path": "dev/admin/model/localization/language.php",
+      "gitBlob": "9736a6b4bbc315677f36c8b62191ef0187117929",
+      "sha256": "88aba93305d2cfd208d9651549b0702775bd0a1db648834c4e502871bfb336b8",
+      "bytes": 4532
+    },
+    {
+      "path": "dev/system/library/security/csrf.php",
+      "gitBlob": "cd675ba513d96d33718f8acd4d034fe6346798c0",
+      "sha256": "bec85e6ef907157aca5c81fa0705cc065e0b64b06982a7ed6c2ae7ed90fda2e2",
+      "bytes": 1256
+    },
+    {
+      "path": "docs/Dicionario-de-Dados.md",
+      "gitBlob": "747e700785b25d3528acc80114de3ab925a42f31",
+      "sha256": "a96f0553a8a5de42cb32430303a538174e12b86b2fe1cda1cd30f56b4b9c53ff",
+      "bytes": 10626
+    },
+    {
+      "path": "agents-ia/decisoes/0047-f8-v-aparencia-do-painel-skins-wcag-trava-contraste-e-dupla-camada-de-persistencia.md",
+      "gitBlob": "2f108be01647929e4c5c2fdf8215f1a7c4a3f8f3",
+      "sha256": "9818710da4bc239be31d5514b166946e4114c2f076e90ee61b8d32f1c77237d8",
+      "bytes": 17645
+    }
+  ],
+  "inventoryFindings": {
+    "dedicatedModuleFoundInCheckedPaths": false,
+    "dedicatedTablesInCheckedBaseSchema": false,
+    "scopeOfAbsenceClaim": "Filename metadata plus schema.sql/blog upgrade and selected native models; not an exhaustive audit of vendor/all code.",
+    "nativeCmsPagePayload": [
+      "status",
+      "sort_order",
+      "page_description[N][title|description|meta_title|meta_description|keyword]"
+    ],
+    "nativeCmsPublicPath": "dev/catalog/model/catalog/page.php",
+    "legacyHtmlSanitizedByThisProposal": false
+  },
+  "next": "Review/approve proposal choices before F9-02. No runtime/schema/data implementation authorized by this document or Tool PASS."
+}
