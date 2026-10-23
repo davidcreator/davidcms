@@ -43,3 +43,20 @@ $_['error_defaults_required'] = 'Elige un predeterminado para las dos aplicacion
 $_['error_default_disabled']  = 'El predeterminado debe ser un idioma ACTIVO.';
 $_['error_disable_default']   = 'No se puede desactivar el predeterminado vigente de una aplicación. Cambia el predeterminado antes.';
 $_['error_not_found']         = 'Idioma no encontrado.';
+
+// Fase 8 / Tarefa 11 — shell, busca/paginação e CSRF.
+$_['text_home'] = 'Inicio';
+$_['text_all_status'] = 'Todos los estados';
+$_['text_search_placeholder'] = 'Buscar nombre, código o locale…';
+$_['text_showing'] = 'Mostrando %d–%d de %d idiomas';
+$_['text_empty_title'] = 'No se encontraron idiomas';
+$_['text_empty_hint'] = 'Ajuste la búsqueda o el filtro de estado.';
+$_['text_readonly_notice'] = 'Puede visualizar; guardar cambios requiere permiso de modificar.';
+$_['button_filter'] = 'Filtrar';
+$_['button_reset'] = 'Limpiar';
+$_['button_close'] = 'Cerrar';
+$_['button_first_page'] = '« Primera';
+$_['button_last_page'] = 'Última »';
+$_['button_next_page'] = 'Siguiente ›';
+$_['button_previous_page'] = '‹ Anterior';
+$_['error_csrf'] = 'Token de sesión no válido. Recargue el formulario e inténtelo de nuevo.';

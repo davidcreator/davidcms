@@ -43,3 +43,20 @@ $_['error_defaults_required'] = 'Escolha um padrão para as duas aplicações.';
 $_['error_default_disabled']  = 'O padrão precisa ser um idioma ATIVO.';
 $_['error_disable_default']   = 'Não é possível desativar o padrão vigente de uma aplicação. Troque o padrão antes.';
 $_['error_not_found']         = 'Idioma não encontrado.';
+
+// Fase 8 / Tarefa 11 — shell, busca/paginação e CSRF.
+$_['text_home'] = 'Início';
+$_['text_all_status'] = 'Todos os status';
+$_['text_search_placeholder'] = 'Buscar nome, código ou locale…';
+$_['text_showing'] = 'Exibindo %d–%d de %d idiomas';
+$_['text_empty_title'] = 'Nenhum idioma encontrado';
+$_['text_empty_hint'] = 'Ajuste a busca ou o filtro de status.';
+$_['text_readonly_notice'] = 'Você pode visualizar; salvar alterações exige permissão de modificar.';
+$_['button_filter'] = 'Filtrar';
+$_['button_reset'] = 'Limpar';
+$_['button_close'] = 'Fechar';
+$_['button_first_page'] = '« Primeira';
+$_['button_last_page'] = 'Última »';
+$_['button_next_page'] = 'Próxima ›';
+$_['button_previous_page'] = '‹ Anterior';
+$_['error_csrf'] = 'Token de sessão inválido. Recarregue o formulário e tente novamente.';

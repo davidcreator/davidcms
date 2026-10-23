@@ -15,64 +15,68 @@ namespace Reamur\Admin\Controller\Localization;
 
 class Language extends \Reamur\System\Engine\Controller {
 
-    /** Lista + defaults por aplicação (catálogo/admin) */
+    /** Lista paginada; opções de defaults sempre completas e sem mutação GET. */
     public function index(): void {
         $this->load->language('localization/language');
-        $this->load->model('localization/language');
-        $this->load->model('setting/setting');
-
         if (!$this->user->hasPermission('access', 'localization/language')) {
             $this->response->redirect($this->url->link('error/permission'));
+            return;
         }
-
-        // POST: grava os defaults (catálogo/admin) em rms_setting (contrato F4-01)
+        $this->load->model('localization/language');
+        $this->load->model('setting/setting');
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
             if (!$this->user->hasPermission('modify', 'localization/language')) {
                 $this->response->redirect($this->url->link('error/permission'));
+                return;
             }
-
-            $error = $this->validateDefaults();
-
+            $error = $this->csrfValid() ? $this->validateDefaults() : $this->language->get('error_csrf');
             if ($error === '') {
                 $this->model_setting_setting->editSettings([
                     'config_language_catalog' => (string)($this->request->post['config_language_catalog'] ?? ''),
-                    'config_language_admin'   => (string)($this->request->post['config_language_admin'] ?? ''),
+                    'config_language_admin' => (string)($this->request->post['config_language_admin'] ?? ''),
                 ]);
-
                 $this->flash('success', $this->language->get('text_success_defaults'));
-                $this->response->redirect($this->url->link('localization/language'));
-            }
-
-            $this->flash('error', $error);
+            } else { $this->flash('error', $error); }
             $this->response->redirect($this->url->link('localization/language'));
+            return;
         }
-
         $data = $this->chrome();
-
         $data['text_flash'] = $this->flashReader();
-
-        $languages = [];
-
-        foreach ($this->model_localization_language->getLanguages() as $row) {
-            $code = (string)$row['code'];
-
-            $languages[] = [
-                'name'        => (string)$row['name'],
-                'code'        => $code,
-                'locale'      => (string)$row['locale'],
-                'sort_order'  => (int)$row['sort_order'],
-                'status'      => (int)$row['status'],
-                'dir_exists'  => is_dir(DIR_APPLICATION . 'language/' . $code),
-                'edit'        => $this->url->link('localization/language.edit|' . (int)$row['language_id']),
-            ];
+        $rawSearch = $this->request->get['filter_search'] ?? '';
+        $rawStatus = $this->request->get['filter_status'] ?? 'all';
+        $search = is_string($rawSearch) ? mb_substr(trim($rawSearch), 0, 255) : '';
+        $status = is_string($rawStatus) && in_array($rawStatus, ['all', '0', '1'], true) ? $rawStatus : 'all';
+        $requested = $this->request->get['page'] ?? 1;
+        $options = ['search' => $search, 'status' => $status];
+        $limit = 20; $total = $this->model_localization_language->getTotalLanguages($options);
+        $page = is_scalar($requested) ? max(1, (int)$requested) : 1;
+        $page = min($page, max(1, (int)ceil($total / $limit)));
+        $data['languages'] = [];
+        foreach ($this->model_localization_language->getLanguages($options + ['start' => ($page - 1) * $limit, 'limit' => $limit]) as $row) {
+            $data['languages'][] = $this->languageRow((array)$row);
         }
-
-        $data['languages']      = $languages;
+        $data['language_options'] = [];
+        foreach ($this->model_localization_language->getLanguages() as $row) {
+            $data['language_options'][] = $this->languageRow((array)$row);
+        }
         $data['default_catalog'] = (string)$this->config->get('config_language_catalog', 'en-us');
-        $data['default_admin']   = (string)$this->config->get('config_language_admin', 'en-us');
-
+        $data['default_admin'] = (string)$this->config->get('config_language_admin', 'en-us');
         $data['action'] = $this->url->link('localization/language');
-
+        $data['filter_action'] = $this->url->link('localization/language');
+        $data['filter_reset'] = $this->url->link('localization/language');
+        $data['filter_search'] = $search; $data['filter_status'] = $status; $data['total_languages'] = $total;
+        $data['showing'] = $total > 0 ? sprintf($this->language->get('text_showing'), ($page - 1) * $limit + 1, min($page * $limit, $total), $total) : '';
+        require_once DIR_SYSTEM . 'library/pagination.php';
+        $pagination = new \Pagination(); $pagination->total = $total; $pagination->page = $page; $pagination->limit = $limit;
+        $pagination->css_class = 'pagination pagination-sm mb-0';
+        $pagination->text_first = $this->language->get('button_first_page');
+        $pagination->text_last = $this->language->get('button_last_page');
+        $pagination->text_next = $this->language->get('button_next_page');
+        $pagination->text_prev = $this->language->get('button_previous_page');
+        $pagination->url = $this->url->link('localization/language', 'page={page}'
+            . ($search !== '' ? '&filter_search=' . rawurlencode($search) : '')
+            . ($status !== 'all' ? '&filter_status=' . $status : ''));
+        $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
         $this->response->setOutput($this->load->view('localization/language_list', $data));
     }
 
@@ -86,6 +90,7 @@ class Language extends \Reamur\System\Engine\Controller {
 
         if (!$this->user->hasPermission('access', 'localization/language')) {
             $this->response->redirect($this->url->link('error/permission'));
+            return;
         }
 
         $language = $this->model_localization_language->getLanguage($language_id);
@@ -93,16 +98,18 @@ class Language extends \Reamur\System\Engine\Controller {
         if (!$language) {
             $this->flash('error', $this->language->get('error_not_found'));
             $this->response->redirect($this->url->link('localization/language'));
+            return;
         }
 
-        $data = $this->chrome();
+        $error = '';
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
             if (!$this->user->hasPermission('modify', 'localization/language')) {
                 $this->response->redirect($this->url->link('error/permission'));
+                return;
             }
 
-            $errors = $this->validateEdit($language_id, $language);
+            $errors = $this->csrfValid() ? $this->validateEdit($language_id, $language) : ['error_csrf'];
 
             if (!$errors) {
                 $post = $this->request->post;
@@ -116,24 +123,27 @@ class Language extends \Reamur\System\Engine\Controller {
 
                 $this->flash('success', $this->language->get('text_success_edit'));
                 $this->response->redirect($this->url->link('localization/language'));
+                return;
             }
 
-            $data['error'] = implode("\n", array_map(
-                static fn(string $k): string => $this->language->get($k),
+            $error = implode("\n", array_map(
+                fn(string $k): string => $this->language->get($k),
                 $errors
             ));
         }
 
         $post = $this->request->post;
+        $data = $this->chrome();
+        $data['error'] = $error;
 
         $data['text_flash'] = ['type' => '', 'text' => ''];
 
-        $data['entry'] = $language + [
+        $data['entry'] = array_replace($language, [
             'name'       => (string)($post['name'] ?? $language['name']),
             'locale'     => (string)($post['locale'] ?? $language['locale']),
             'sort_order' => (int)($post['sort_order'] ?? $language['sort_order']),
-            'status'     => (int)($post['status'] ?? $language['status']),
-        ];
+            'status'     => $this->request->server['REQUEST_METHOD'] === 'POST' ? (!empty($post['status']) ? 1 : 0) : (int)$language['status'],
+        ]);
         $data['entry']['code']       = (string)$language['code'];
         $data['entry']['dir_exists'] = is_dir(DIR_APPLICATION . 'language/' . $data['entry']['code']);
 
@@ -215,9 +225,30 @@ class Language extends \Reamur\System\Engine\Controller {
         return $errors;
     }
 
+    /** Projeção da grade/opções sem alterar dados, diretórios ou códigos. */
+    private function languageRow(array $row): array {
+        $code = (string)$row['code'];
+        return ['language_id' => (int)$row['language_id'], 'name' => (string)$row['name'], 'code' => $code,
+            'locale' => (string)$row['locale'], 'sort_order' => (int)$row['sort_order'], 'status' => (int)$row['status'],
+            'dir_exists' => is_dir(DIR_APPLICATION . 'language/' . $code),
+            'edit' => $this->url->link('localization/language.edit|' . (int)$row['language_id'])];
+    }
+
+    private function csrfValid(): bool {
+        return \Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '');
+    }
+
     /** Chrome comum (header/footer + breadcrumbs), padrão dos CRUDs admin */
     private function chrome(): array {
         $data = [];
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+        $data['error'] = '';
+        $data['can_modify'] = $this->user->hasPermission('modify', 'localization/language');
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        foreach (['button_filter', 'button_reset', 'button_close', 'text_all_status', 'text_search_placeholder',
+            'text_empty_title', 'text_empty_hint', 'text_readonly_notice'] as $key) {
+            $data[$key] = $this->language->get($key);
+        }
 
         $data['heading_title'] = $this->language->get('heading_title');
         $this->document->setTitle($data['heading_title']);

@@ -17,17 +17,39 @@ namespace Reamur\Admin\Model\Localization;
 class Language extends \Reamur\System\Engine\Model {
 
     /**
-     * Todas as linhas da tabela, ordenadas como devem aparecer (e aparecem
-     * no switcher público).
-     *
+     * Grade filtrável F8-11. Sem argumentos continua completa, na ordem antiga.
+     * @param array{search?: string, status?: string|int, start?: int, limit?: int} $options
      * @return array<int, array<string, mixed>>
      */
-    public function getLanguages(): array {
-        $query = $this->db->query(
-            "SELECT * FROM `" . $this->t('language') . "` ORDER BY `sort_order` ASC, `language_id` ASC"
-        );
-
+    public function getLanguages(array $options = []): array {
+        $sql = "SELECT * FROM `" . $this->t('language') . "`" . $this->languageListWhere($options)
+            . " ORDER BY `sort_order` ASC, `language_id` ASC";
+        if (array_key_exists('limit', $options)) {
+            $start = max(0, (int)($options['start'] ?? 0));
+            $limit = min(100, max(1, (int)$options['limit']));
+            $sql .= " LIMIT " . $start . ", " . $limit;
+        }
+        $query = $this->db->query($sql);
         return $query->rows;
+    }
+
+    /** @param array{search?: string, status?: string|int} $options */
+    public function getTotalLanguages(array $options = []): int {
+        $query = $this->db->query("SELECT COUNT(*) AS `total` FROM `" . $this->t('language') . "`" . $this->languageListWhere($options));
+        return isset($query->row['total']) ? (int)$query->row['total'] : 0;
+    }
+
+    /** @param array{search?: string, status?: string|int} $options */
+    private function languageListWhere(array $options): string {
+        $where = [];
+        $search = $options['search'] ?? '';
+        if (is_string($search) && trim($search) !== '') {
+            $value = $this->db->escape(trim($search));
+            $where[] = "(`name` LIKE '%" . $value . "%' OR `code` LIKE '%" . $value . "%' OR `locale` LIKE '%" . $value . "%')";
+        }
+        $status = $options['status'] ?? 'all';
+        if (in_array($status, ['0', '1', 0, 1], true)) { $where[] = "`status` = '" . (int)$status . "'"; }
+        return $where ? ' WHERE ' . implode(' AND ', $where) : '';
     }
 
     /**

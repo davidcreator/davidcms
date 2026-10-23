@@ -1,0 +1,276 @@
+{
+  "package": "F8-11",
+  "task": "Fase 8 / Tarefa 11 — Idiomas no painel",
+  "date": "2026-10-23",
+  "status": "Implementação preparada; aplicação/homologação real pelo usuário pendentes. Fase8 não encerrada.",
+  "repository": "https://github.com/davidcreator/davidcms",
+  "base_commit": "b3eb7262e77ef25335e21446c0f64c7017dfe1a6",
+  "base_commit_message": "feat(admin): add contact message inbox",
+  "preceding_task": "Tarefa10 concluída conforme usuário;15fontes públicas iguais à entrega por blob Git;sem inferir backend/deploy.",
+  "human_decision": "Usuário escolheu migrar a tela de Idiomas entre opções;sem novos idiomas/schema/troca automática dos padrões.",
+  "organization": "Um módulo/ZIP,somente fases/tarefas,sem ajustes/subgrupos novos.",
+  "scope": "localization/language: lista/form, seletores de padrões completos, CSRF, busca/paginação, repovo/callback/fluxo corrigidos, CSS local/idiomas UI ×3, QA/docs e token em oito POSTs do f402.",
+  "runtime_files": 8,
+  "project_files": 15,
+  "added_files": 5,
+  "modified_files": 10,
+  "preserved": [
+    "Schema/grants/SQL de instalação/Composer/packs/diretórios reais.",
+    "system/**, catalog/**, install/** e outros CRUDs/Appearance/admin.js/ASSET_V/SMTP/Blog.",
+    "Rotas base GET/POST padrões e edit|ID; sem add/delete/upload. Nomes e IDs de campos preservados; code disabled sem name.",
+    "getLanguage/editLanguage/getEnabledCodes, payload edit, validadores e flash byte a byte. Código imutável e gate status1+diretório.",
+    "getLanguages() sem argumentos completo, sort_order ASC/language_id ASC; seletores não herdam filtro/limite da grade.",
+    "GET/patch/--check não trocam padrões; fallback en-us preexistente, sem nova seed."
+  ],
+  "intentional_changes": [
+    "CSRF em POST padrões/edit e returns explícitos após redirects.",
+    "array_replace repovoa POST/unchecked; callback de erro fn não estático usa this; error inicializado em GET.",
+    "Grade languages paginada separada de language_options completo; default checkbox disabled com hidden status1.",
+    "Rótulos UI necessários nos três idiomas e CSS local; sem JS runtime novo."
+  ],
+  "files": [
+    {
+      "path": "agents-ia/decisoes/0055-f8-11-idiomas-no-painel.md",
+      "action": "added",
+      "mode": "100644",
+      "size_bytes": 6301,
+      "sha256_before": null,
+      "sha256_after": "db7fe5921d4743ffeda046122e1e4202889d7089c1b6b2e38861e901a0d23e64"
+    },
+    {
+      "path": "dev/admin/controller/localization/language.php",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 14632,
+      "sha256_before": "135c9195b8a4011f76eb63e282b5a4be1ffe23e95b7a0abc03d4c8408ca526d0",
+      "sha256_after": "1b56a3e70583820c1948eff5b06a3829ea9cf74b195ef600099718c40796e826"
+    },
+    {
+      "path": "dev/admin/language/en-us/localization/language.php",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 2799,
+      "sha256_before": "1cbd06a60b745d5fd72d1a7153ee2fd843f041dfff97015919aa1631c5465a4f",
+      "sha256_after": "cdd3fa4185cd9d558b94e5e4846f0af240264a3a4dfccd18ebddbaa0547fcb13"
+    },
+    {
+      "path": "dev/admin/language/es-eu/localization/language.php",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 3040,
+      "sha256_before": "d4003c598c8129547333c5e99efe357b2d1fe7d2b02ecb17054fe4fd359f2552",
+      "sha256_after": "48c40d174756763d2bddeffd230905065b65ae83e5093f5ffdc63eb697335af6"
+    },
+    {
+      "path": "dev/admin/language/pt-br/localization/language.php",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 2946,
+      "sha256_before": "e148baaf6b5212ee0fb9fb8e14000dc7a01dceecbb1568f0f892d82e8fe8ed5f",
+      "sha256_after": "38e3392d21171dc2c9a02e7f40a880dfc83a6569817073a2d6cf96a613ab3ea7"
+    },
+    {
+      "path": "dev/admin/model/localization/language.php",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 4532,
+      "sha256_before": "6d7840ada27ffe56b70f99f2947da9749137278418fe5ef4513c6700eb16f6ac",
+      "sha256_after": "88aba93305d2cfd208d9651549b0702775bd0a1db648834c4e502871bfb336b8"
+    },
+    {
+      "path": "dev/admin/view/css/admin.css",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 31387,
+      "sha256_before": "8361364a45268a3c7f1e76c472b0355e9a1d3c6b1a40b83ca92ca43aba7baaf6",
+      "sha256_after": "02440d4cf0af3f536d2103a1e18ff3a3f02523b9781613ab619e037807ac63f6"
+    },
+    {
+      "path": "dev/admin/view/template/localization/language_form.twig",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 3103,
+      "sha256_before": "09064e94f62a46c9f38261acac1829ea7d481b4970711eac11dbc9863360107b",
+      "sha256_after": "5dfe2d9e20965957b6a2a5f966c0b44b83066b0a4dab26fae192d883ec8fd3dd"
+    },
+    {
+      "path": "dev/admin/view/template/localization/language_list.twig",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 5438,
+      "sha256_before": "2cf932465721818aad8204f1ff60d2933e0a6cb3b6c4e22a83956089afb4000c",
+      "sha256_after": "8e38643b4c83714a60261dde334ed59808e191e3edb7882811f9360c02567d56"
+    },
+    {
+      "path": "docs/F8-11-Idiomas-no-Painel.md",
+      "action": "added",
+      "mode": "100644",
+      "size_bytes": 16389,
+      "sha256_before": null,
+      "sha256_after": "9d916d13e5bbe6a5a32a3cb9fd2e15986380a4c400bc671e4756abab02b1a3af"
+    },
+    {
+      "path": "docs/README.md",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 6295,
+      "sha256_before": "1a442578c3913739d598b128c24d528254a8e7e90d1263a8e591c2806cb9e1fa",
+      "sha256_after": "976784efa121862052c4ab986bbd3acfa8f4d98949df6f22b52f6ef1e33e675d"
+    },
+    {
+      "path": "tools/e2e/e2e_f402.sh",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 11480,
+      "sha256_before": "a40c9c9f7e2824a4a99eac89ac3e54729e3f6330b4ceb908067e63712232a418",
+      "sha256_after": "bb7a80eba600525b04b560c576118dcdb0ee1b3cc8dead8c9406531226ae215f"
+    },
+    {
+      "path": "tools/e2e/e2e_f811.sh",
+      "action": "added",
+      "mode": "100755",
+      "size_bytes": 4306,
+      "sha256_before": null,
+      "sha256_after": "efc95c13389160a4d128d1774b42aa52770711491dd235799daf93aa7f2af4a5"
+    },
+    {
+      "path": "tools/e2e/e2e_f811_contracts.php",
+      "action": "added",
+      "mode": "100644",
+      "size_bytes": 27051,
+      "sha256_before": null,
+      "sha256_after": "54bc625184d71a8e60fd1c12bdc7f16d50bf904d942ea18c17a2328fb75cda2a"
+    },
+    {
+      "path": "tools/e2e/e2e_f811_http.cjs",
+      "action": "added",
+      "mode": "100644",
+      "size_bytes": 17510,
+      "sha256_before": null,
+      "sha256_after": "9e2b25292de83dae6ed0083717df50baccc4ba3d7e0e3411aaa345fc14c78cff"
+    }
+  ],
+  "patch": {
+    "path": "F8-11.patch",
+    "size_bytes": 113678,
+    "sha256": "6c9b7c3637329901b3d9e46312508667f0a2fdb00b259bc9bfac511d828ab793",
+    "project_files": 15
+  },
+  "tests": {
+    "environment": "PHP CLI 8.4.26/mbstring, Twig 3.30.0 (lock; autoload QA isolado), Node 20.20.2/Bash. Sem clone/instalação do CMS/DB/browser; dependências QA fora do ZIP.",
+    "php_lint": {
+      "files": 6,
+      "result": "PASS"
+    },
+    "php_twig_contracts": {
+      "pass": 40,
+      "fail": 0,
+      "php_twig_real": true,
+      "db_services_session_io": "Fixtures/SQL capturado/Session sem construtor; DIR_APPLICATION em FS temporário privado não servido, fora de MIRROR, limpo. Nenhum idioma/default real alterado."
+    },
+    "http_helpers_new": {
+      "pass": 8,
+      "fail": 0,
+      "simulation": "Parser de padrões/opções/código/ID/alvo, snapshots, payload somente sort e guardas; respostas simuladas."
+    },
+    "http_helpers_shared": {
+      "pass": 16,
+      "fail": 0,
+      "simulation": "F8-06/respostas simuladas,nãoseufluxo"
+    },
+    "negative_original_language": {
+      "pass": 4,
+      "fail": 36,
+      "exit_code": 1,
+      "expected_failure": true,
+      "note": "Não são 36 defeitos independentes: controle com as fontes anteriores."
+    },
+    "previous_task_local_regressions": {
+      "f810": {
+        "php": 40,
+        "http_new": 8,
+        "http_shared": 16,
+        "fail": 0
+      },
+      "f809": {
+        "php": 36,
+        "dom": 9,
+        "http_new": 8,
+        "http_shared": 25,
+        "fail": 0
+      },
+      "f808": {
+        "php": 45,
+        "dom": 12,
+        "http_new": 10,
+        "http_shared": 25,
+        "fail": 0
+      },
+      "f807": {
+        "php": 40,
+        "dom": 9,
+        "http_new": 9,
+        "http_shared": 16,
+        "fail": 0
+      },
+      "f806": {
+        "php": 30,
+        "dom": 6,
+        "http": 16,
+        "fail": 0
+      },
+      "f805": {
+        "guards": 32,
+        "rte": 18,
+        "media": 10,
+        "fail": 0
+      }
+    },
+    "syntax": "PASS PHP/CJS/Bash;f402destrutivo sóbash-n,nuncaexecutado.",
+    "cli_guards": "PASS help/modos/argumentos/PHP/Node/HTTPsemconfirmação/variáveis;hostexterno/en-us bloqueadosantesdeprobe/login/rede,semcredenciaisnoerro.",
+    "scope_links": "PASS: CSS anterior/localidade, model/validadores/payload/flash intactos; f402 só captura e oito tokens; índice +1 e links válidos.",
+    "patch_apply_reverse": "PASS --whitespace=error;15arquivosexatos;Toolpós-aplicação;rollbackexato/remove5novos."
+  },
+  "http_e2e": {
+    "status": "NOT_EXECUTED_BY_AGENT",
+    "mode": "bash tools/e2e/e2e_f811.sh --http",
+    "kind": "http-workflow",
+    "operation": "nondefault-sort-and-restore",
+    "steps": 10,
+    "requires": [
+      "ALLOW_F811_HTTP=YES_WRITE_REAMUR_TEST",
+      "B/FUI/MIRROR explícitos, loopback/configs literais reamur_test",
+      "Marker .f805-disposable e fontes/assets CMS/idiomas iguais MIRROR/FUI, sem symlinks",
+      "F811_USERNAME/F811_PASSWORD fictícios com access/modify localization/language",
+      "ID/code reais listados: ativo, diretório presente, não-default de ambas apps, não-en-us, sort0..99999",
+      "Helpers F8-05/F8-06 da base e laboratório isolado, sem produção/integrações/concorrência"
+    ],
+    "behavior": "Probe antes de login, cookies/tokens só em memória. GET padrões/seletores ×3 i18n; ID/code validados. Testa só sort_order+1 mantendo name/locale/status/code e restaura exatamente; CSRF negativo e GET confirmam padrões/opções intactos.",
+    "no": "Nunca POST de padrões, troca code/locale/status, cria/desativa/deleta idioma/pasta, executa SQL/reset/seed/upgrade, suíte legada ou serviço externo.",
+    "restoration": "Só restaura após revalidar todo o estado esperado. Falha preserva ordem/evidências pending, sem retry/restauração cega; operador inspeciona ID/code/ordem original.",
+    "report": "JSON stdout; F811_REPORT opcional absoluto novo0600. ID/code/ordens/status/steps/restoration/cleanup/defaultsUnchanged; sem nome/locale/HTML/credenciais/cookies/tokens.",
+    "acceptance": "passed +10etapas pass +restoration complete +cleanup complete +defaultsUnchanged true aprova só HTTP limitado, não POST de padrões/status/locale ou navegador."
+  },
+  "not_executed": [
+    "Idiomas/padrões/status/códigos/diretórios reais alterados.",
+    "HTTP/DB/persistência/navegador/Bootstrap/CSS/contraste nativos.",
+    "Outro perfil ACL real e volume21+ no servidor.",
+    "POST padrões/status/locale/code deliberadamente não automatizado no HTTP.",
+    "Servidor/PHP-FPM/Apache/MariaDB, PHPStan/PHPUnit completo/Actions/matriz PHP.",
+    "GitHub write/deploy/produção.",
+    "f402 destrutivo ou auditoria de seus agregados/SQL."
+  ],
+  "limits": [
+    "Config/nonce/hash exigem laboratório confiável, não atestam DB/PHP/proxy/diretórios; proibido produção/dados reais/túnel/proxy/concorrência.",
+    "Sem alvo não-default, não instalar idioma/trocar padrão para forçar teste; usar --check/aceite manual.",
+    "Padrões só mudam por POST explícito autorizado do operador; Tool HTTP nunca envia esse POST.",
+    "Validator de padrões mantém enabled-only, sem nova política de diretório; gate getEnabledCodes preservado.",
+    "ASSET_V inalterado: conferir cache; CSS/escape de paginação locais e aria-labels core intactos.",
+    "f402 setup/SQL/agregados legados intactos e não executados; sem declaração de dez checks reais verdes."
+  ],
+  "guide": "docs/F8-11-Idiomas-no-Painel.md",
+  "decision": "agents-ia/decisoes/0055-f8-11-idiomas-no-painel.md",
+  "apply": "git apply --check --whitespace=error <entrega>/F8-11.patch && git apply --whitespace=error <entrega>/F8-11.patch",
+  "rollback": "git apply -R --check <entrega>/F8-11.patch && git apply -R <entrega>/F8-11.patch;restaurarantesapenasordem/probepróprios;voltalimitaçõesdabase.",
+  "next": "Usuário aplicar/--check, homologar navegador e opcionalmente HTTP limitado com restauração; confirmar Tarefa11 sem fechar Fase8 automaticamente."
+}

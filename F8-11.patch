@@ -1,0 +1,1200 @@
+diff --git a/agents-ia/decisoes/0055-f8-11-idiomas-no-painel.md b/agents-ia/decisoes/0055-f8-11-idiomas-no-painel.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..f31441971fc7cecc186138b72015b6d10121377f
+--- /dev/null
++++ b/agents-ia/decisoes/0055-f8-11-idiomas-no-painel.md
+@@ -0,0 +1,48 @@
++# ADR 0055 — F8-11: Tela de Idiomas no shell
++
++**Data:** 2026-10-23 · **Agente:** admin / orquestrador.
++**Status:** inclusão escolhida explicitamente pelo usuário; implementação preparada, aplicação/homologação pendentes.
++**Base:** `b3eb7262e77ef25335e21446c0f64c7017dfe1a6`.
++
++## Contexto
++
++O usuário declarou a Tarefa10 concluída/GitHub atualizado. Seus15 arquivos conferem com a entrega por blob Git em b3eb726, sem inferir detalhes de backend/deploy. Na triagem de templates, confirmou-se que Localization/Idiomas ainda usa layout antigo; Usuários/Webhooks/Marketplace já têm componentes F8-03 e seus confirm inline não justificam reimplementar o CRUD inteiro. Dashboard/login têm classes próprias intencionais F8-01; marcadores de classe isolados não comprovam regressão.
++
++Como Idiomas fora excluído dos lotes anteriores, pediu-se escolha entre migrá-lo, consolidar validação ou planejarF9. O usuário escolheu **Fase8/Tarefa11 — Tela de Idiomas**, sem novos idiomas/schema/troca automática dos padrões.
++
++## Decisão
++
++1. Migrar lista/form de `localization/language` para titlebar/cards/tabela responsiva/feedback/readonly Bootstrap, no shell existente. Manter nomes/IDs/code imutável, metadados/status e padrões por app existentes. Sem add/delete/upload ou publicação de pacotes de idioma.
++2. `getLanguages(array $options=[])` acrescenta busca nome/code/locale, status e paginação20 solicitada pelo controller. `getTotalLanguages` usa o mesmo predicado. **Sem argumentos continua completo e na ordem sort_order ASC/language_id ASC**. `getLanguage/editLanguage/getEnabledCodes` permanecem byte a byte; gate status1+diretório de admin segue como a base.
++3. Separar dados da grade (`languages`) das opções completas (`language_options`). Filtrar/paginar ou esvaziar a grade não pode remover opções dos seletores de padrão. Não mudar defaults em GET, não semear valores novos; fallback en-us permanece apenas o existente.
++4. Exigir CSRF em POST de padrões e edit, mantendo access/modify de localization/language e validações originais (default precisa estar habilitado; não desativar default de nenhuma app; name/locale até32; code não editável).
++5. Adicionar returns explícitos após redirects. Response encerra web, mas retorna em CLI; evitar fallthrough e deixar contratos previsíveis sem alterar Response/core.
++6. Corrigir callback de erros: static arrow não pode acessar `$this`. Corrigir repopulação com array_replace (a união anterior preservava o banco à esquerda) e checkbox unchecked no POST; inicializar error no GET. Preservar payload de escrita e corpos das validações de domínio.
++7. Código permanece disabled/sem name; default ativo bloqueado na UI com status hidden1 para salvar metadados sem desativá-lo. Backend continua rejeitando POST adulterado que tente desativar default. Readonly tem fieldset disabled/sem Save.
++8. CSS só sob `.localization-language-list`; prefixo anterior intacto, paginação com normalização local de ampersand. ASSET_V inalterado/cache documentado, sem JS runtime novo. Textos necessários nos três arquivos de idioma existentes, inclusive text_home ausente localmente.
++9. f402 histórico recebe só captura CSRF da lista e token nos oito POSTs. Setup/reset/SQL/grants/agregados legados não são auditados/refatorados/executados pelo Tool novo. Não se declara a bateria real antiga aprovada.
++
++## Tool e evidências locais
++
++`tools/e2e/e2e_f811.sh --check`: PHP8.4.26/Twig3.30.0 reais, Node20.20.2.
++
++- **40 PASS/0FAIL**: controller/model/Twig reais; DB/serviços/model do controller/IO sessão em fixtures, SQL capturado, Session sem construtor. Diretórios en/pt/es somente em FS temporário privado não servido, separado de MIRROR e removido ao fim. Nenhum idioma/default real alterado.
++- **8 PASS/0FAIL** novos auxiliares HTTP +16F8-06 compartilhados com respostas simuladas.
++- Lint6PHP/sintaxe CJS/Bash aprovados. Controle negativo na tela antiga: **4PASS/36FAIL**, saída1 esperada, não uma contagem de36defeitos independentes.
++- Regressões locais F8-10/09/08/07/06/05 verdes, sem reabrir aceites nem comprovar backend/navegador real.
++- Sem servidor, DB, navegador, defaults/idiomas reais, GitHub write/deploy/Actions ou f402 destrutivo executados.
++
++`--http` é opt-in preparado em **10etapas**, ainda não executado contra backend. Requer laboratório loopback/configs literais reamur_test/marker/fontes MIRROR=FUI, conta fictícia e ID+code reais de um idioma ativo instalado **não-padrão e não en-us**. Identidade e padrões são conferidos antes de qualquer POST.
++
++O teste altera **somente sort_order**, preservando name/locale/status/code, verifica persistência e restaura exatamente. Nunca POST no formulário de padrões, cria/desativa idioma, troca locale/code/status, executa SQL/reset ou cria/remove diretório de idioma. Falha após tentativa de gravação preserva evidências/ordem pendente para inspeção, sem retry ou restauração cega. Relatório registra ID/code/ordens/estado de restauração, não nome/locale/credenciais/cookies.
++
++## Consequências/limites
++
++- Clientes mutáveis precisam de csrf_token; não há bypass. Defaults só mudam por POST explícito autorizado do operador, como função preexistente, nunca pelo pacote/GET/Tool HTTP.
++- Métodos de domínio/FS/persistência preservados; validação original de default não ganhou política nova de diretório no mesmo lote. Aviso de diretório ausente e gate getEnabledCodes permanecem como base.
++- Não há DDL/grants/install, outros CRUDs, `system/**`, `catalog/**`, `install/**`, Composer, admin.js, SMTP ou editor do Blog alterados. Nenhum pack/diretório novo de idioma é entregue.
++- Homologar campos/seletores/default-lock, mobile/temas/contraste, perfil real readonly e volume. Mudança manual de padrões/status/locale deve ser testada pelo usuário somente em laboratório, fora do HTTP automático limitado.
++- Guardas não atestam DB/PHP/proxy incorreto; proibido produção/dados reais/túnel/proxy/concorrrência. Se não há alvo não-padrão elegível, não instalar idioma nem trocar default para forçar o teste.
++- Entrega preparada ou publicada não encerra automaticamente Fase8.
++
++Guia/Tool/aceite/rollback: [F8-11 — Idiomas no painel](../../docs/F8-11-Idiomas-no-Painel.md).
+diff --git a/dev/admin/controller/localization/language.php b/dev/admin/controller/localization/language.php
+index ed4fb6da78c292ac263f5fabaf45757cf8805d5e..136a86ad47313ab3815fe3b19232751213c7d2a7 100644
+--- a/dev/admin/controller/localization/language.php
++++ b/dev/admin/controller/localization/language.php
+@@ -15,94 +15,101 @@
+ 
+ class Language extends \Reamur\System\Engine\Controller {
+ 
+-    /** Lista + defaults por aplicação (catálogo/admin) */
++    /** Lista paginada; opções de defaults sempre completas e sem mutação GET. */
+     public function index(): void {
++        $this->load->language('localization/language');
++        if (!$this->user->hasPermission('access', 'localization/language')) {
++            $this->response->redirect($this->url->link('error/permission'));
++            return;
++        }
++        $this->load->model('localization/language');
++        $this->load->model('setting/setting');
++        if ($this->request->server['REQUEST_METHOD'] === 'POST') {
++            if (!$this->user->hasPermission('modify', 'localization/language')) {
++                $this->response->redirect($this->url->link('error/permission'));
++                return;
++            }
++            $error = $this->csrfValid() ? $this->validateDefaults() : $this->language->get('error_csrf');
++            if ($error === '') {
++                $this->model_setting_setting->editSettings([
++                    'config_language_catalog' => (string)($this->request->post['config_language_catalog'] ?? ''),
++                    'config_language_admin' => (string)($this->request->post['config_language_admin'] ?? ''),
++                ]);
++                $this->flash('success', $this->language->get('text_success_defaults'));
++            } else { $this->flash('error', $error); }
++            $this->response->redirect($this->url->link('localization/language'));
++            return;
++        }
++        $data = $this->chrome();
++        $data['text_flash'] = $this->flashReader();
++        $rawSearch = $this->request->get['filter_search'] ?? '';
++        $rawStatus = $this->request->get['filter_status'] ?? 'all';
++        $search = is_string($rawSearch) ? mb_substr(trim($rawSearch), 0, 255) : '';
++        $status = is_string($rawStatus) && in_array($rawStatus, ['all', '0', '1'], true) ? $rawStatus : 'all';
++        $requested = $this->request->get['page'] ?? 1;
++        $options = ['search' => $search, 'status' => $status];
++        $limit = 20; $total = $this->model_localization_language->getTotalLanguages($options);
++        $page = is_scalar($requested) ? max(1, (int)$requested) : 1;
++        $page = min($page, max(1, (int)ceil($total / $limit)));
++        $data['languages'] = [];
++        foreach ($this->model_localization_language->getLanguages($options + ['start' => ($page - 1) * $limit, 'limit' => $limit]) as $row) {
++            $data['languages'][] = $this->languageRow((array)$row);
++        }
++        $data['language_options'] = [];
++        foreach ($this->model_localization_language->getLanguages() as $row) {
++            $data['language_options'][] = $this->languageRow((array)$row);
++        }
++        $data['default_catalog'] = (string)$this->config->get('config_language_catalog', 'en-us');
++        $data['default_admin'] = (string)$this->config->get('config_language_admin', 'en-us');
++        $data['action'] = $this->url->link('localization/language');
++        $data['filter_action'] = $this->url->link('localization/language');
++        $data['filter_reset'] = $this->url->link('localization/language');
++        $data['filter_search'] = $search; $data['filter_status'] = $status; $data['total_languages'] = $total;
++        $data['showing'] = $total > 0 ? sprintf($this->language->get('text_showing'), ($page - 1) * $limit + 1, min($page * $limit, $total), $total) : '';
++        require_once DIR_SYSTEM . 'library/pagination.php';
++        $pagination = new \Pagination(); $pagination->total = $total; $pagination->page = $page; $pagination->limit = $limit;
++        $pagination->css_class = 'pagination pagination-sm mb-0';
++        $pagination->text_first = $this->language->get('button_first_page');
++        $pagination->text_last = $this->language->get('button_last_page');
++        $pagination->text_next = $this->language->get('button_next_page');
++        $pagination->text_prev = $this->language->get('button_previous_page');
++        $pagination->url = $this->url->link('localization/language', 'page={page}'
++            . ($search !== '' ? '&filter_search=' . rawurlencode($search) : '')
++            . ($status !== 'all' ? '&filter_status=' . $status : ''));
++        $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
++        $this->response->setOutput($this->load->view('localization/language_list', $data));
++    }
++
++    /** Edita metadados + status de UM idioma (parâmetro roteado .edit|N) */
++    public function edit(string $language_id = '0'): void {
++        $language_id = (int)$language_id;
++
+         $this->load->language('localization/language');
+         $this->load->model('localization/language');
+         $this->load->model('setting/setting');
+ 
+         if (!$this->user->hasPermission('access', 'localization/language')) {
+             $this->response->redirect($this->url->link('error/permission'));
+-        }
+-
+-        // POST: grava os defaults (catálogo/admin) em rms_setting (contrato F4-01)
++            return;
++        }
++
++        $language = $this->model_localization_language->getLanguage($language_id);
++
++        if (!$language) {
++            $this->flash('error', $this->language->get('error_not_found'));
++            $this->response->redirect($this->url->link('localization/language'));
++            return;
++        }
++
++        $error = '';
++
+         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
+             if (!$this->user->hasPermission('modify', 'localization/language')) {
+                 $this->response->redirect($this->url->link('error/permission'));
+-            }
+-
+-            $error = $this->validateDefaults();
+-
+-            if ($error === '') {
+-                $this->model_setting_setting->editSettings([
+-                    'config_language_catalog' => (string)($this->request->post['config_language_catalog'] ?? ''),
+-                    'config_language_admin'   => (string)($this->request->post['config_language_admin'] ?? ''),
+-                ]);
+-
+-                $this->flash('success', $this->language->get('text_success_defaults'));
+-                $this->response->redirect($this->url->link('localization/language'));
+-            }
+-
+-            $this->flash('error', $error);
+-            $this->response->redirect($this->url->link('localization/language'));
+-        }
+-
+-        $data = $this->chrome();
+-
+-        $data['text_flash'] = $this->flashReader();
+-
+-        $languages = [];
+-
+-        foreach ($this->model_localization_language->getLanguages() as $row) {
+-            $code = (string)$row['code'];
+-
+-            $languages[] = [
+-                'name'        => (string)$row['name'],
+-                'code'        => $code,
+-                'locale'      => (string)$row['locale'],
+-                'sort_order'  => (int)$row['sort_order'],
+-                'status'      => (int)$row['status'],
+-                'dir_exists'  => is_dir(DIR_APPLICATION . 'language/' . $code),
+-                'edit'        => $this->url->link('localization/language.edit|' . (int)$row['language_id']),
+-            ];
+-        }
+-
+-        $data['languages']      = $languages;
+-        $data['default_catalog'] = (string)$this->config->get('config_language_catalog', 'en-us');
+-        $data['default_admin']   = (string)$this->config->get('config_language_admin', 'en-us');
+-
+-        $data['action'] = $this->url->link('localization/language');
+-
+-        $this->response->setOutput($this->load->view('localization/language_list', $data));
+-    }
+-
+-    /** Edita metadados + status de UM idioma (parâmetro roteado .edit|N) */
+-    public function edit(string $language_id = '0'): void {
+-        $language_id = (int)$language_id;
+-
+-        $this->load->language('localization/language');
+-        $this->load->model('localization/language');
+-        $this->load->model('setting/setting');
+-
+-        if (!$this->user->hasPermission('access', 'localization/language')) {
+-            $this->response->redirect($this->url->link('error/permission'));
+-        }
+-
+-        $language = $this->model_localization_language->getLanguage($language_id);
+-
+-        if (!$language) {
+-            $this->flash('error', $this->language->get('error_not_found'));
+-            $this->response->redirect($this->url->link('localization/language'));
+-        }
+-
+-        $data = $this->chrome();
+-
+-        if ($this->request->server['REQUEST_METHOD'] === 'POST') {
+-            if (!$this->user->hasPermission('modify', 'localization/language')) {
+-                $this->response->redirect($this->url->link('error/permission'));
+-            }
+-
+-            $errors = $this->validateEdit($language_id, $language);
++                return;
++            }
++
++            $errors = $this->csrfValid() ? $this->validateEdit($language_id, $language) : ['error_csrf'];
+ 
+             if (!$errors) {
+                 $post = $this->request->post;
+@@ -116,24 +123,27 @@
+ 
+                 $this->flash('success', $this->language->get('text_success_edit'));
+                 $this->response->redirect($this->url->link('localization/language'));
+-            }
+-
+-            $data['error'] = implode("\n", array_map(
+-                static fn(string $k): string => $this->language->get($k),
++                return;
++            }
++
++            $error = implode("\n", array_map(
++                fn(string $k): string => $this->language->get($k),
+                 $errors
+             ));
+         }
+ 
+         $post = $this->request->post;
++        $data = $this->chrome();
++        $data['error'] = $error;
+ 
+         $data['text_flash'] = ['type' => '', 'text' => ''];
+ 
+-        $data['entry'] = $language + [
++        $data['entry'] = array_replace($language, [
+             'name'       => (string)($post['name'] ?? $language['name']),
+             'locale'     => (string)($post['locale'] ?? $language['locale']),
+             'sort_order' => (int)($post['sort_order'] ?? $language['sort_order']),
+-            'status'     => (int)($post['status'] ?? $language['status']),
+-        ];
++            'status'     => $this->request->server['REQUEST_METHOD'] === 'POST' ? (!empty($post['status']) ? 1 : 0) : (int)$language['status'],
++        ]);
+         $data['entry']['code']       = (string)$language['code'];
+         $data['entry']['dir_exists'] = is_dir(DIR_APPLICATION . 'language/' . $data['entry']['code']);
+ 
+@@ -215,9 +225,30 @@
+         return $errors;
+     }
+ 
++    /** Projeção da grade/opções sem alterar dados, diretórios ou códigos. */
++    private function languageRow(array $row): array {
++        $code = (string)$row['code'];
++        return ['language_id' => (int)$row['language_id'], 'name' => (string)$row['name'], 'code' => $code,
++            'locale' => (string)$row['locale'], 'sort_order' => (int)$row['sort_order'], 'status' => (int)$row['status'],
++            'dir_exists' => is_dir(DIR_APPLICATION . 'language/' . $code),
++            'edit' => $this->url->link('localization/language.edit|' . (int)$row['language_id'])];
++    }
++
++    private function csrfValid(): bool {
++        return \Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '');
++    }
++
+     /** Chrome comum (header/footer + breadcrumbs), padrão dos CRUDs admin */
+     private function chrome(): array {
+         $data = [];
++        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
++        $data['error'] = '';
++        $data['can_modify'] = $this->user->hasPermission('modify', 'localization/language');
++        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
++        foreach (['button_filter', 'button_reset', 'button_close', 'text_all_status', 'text_search_placeholder',
++            'text_empty_title', 'text_empty_hint', 'text_readonly_notice'] as $key) {
++            $data[$key] = $this->language->get($key);
++        }
+ 
+         $data['heading_title'] = $this->language->get('heading_title');
+         $this->document->setTitle($data['heading_title']);
+diff --git a/dev/admin/language/en-us/localization/language.php b/dev/admin/language/en-us/localization/language.php
+index 5cd755c8676b50e60785da26f98ab956ffc5df4d..30ce723f4990b1530a4bce76ecb11bde3d669d8e 100644
+--- a/dev/admin/language/en-us/localization/language.php
++++ b/dev/admin/language/en-us/localization/language.php
+@@ -43,3 +43,20 @@
+ $_['error_default_disabled']  = 'The default must be an ENABLED language.';
+ $_['error_disable_default']   = 'You cannot disable the current default of an app. Move the default first.';
+ $_['error_not_found']         = 'Language not found.';
++
++// Fase 8 / Tarefa 11 — shell, busca/paginação e CSRF.
++$_['text_home'] = 'Home';
++$_['text_all_status'] = 'All statuses';
++$_['text_search_placeholder'] = 'Search name, code or locale…';
++$_['text_showing'] = 'Showing %d–%d of %d languages';
++$_['text_empty_title'] = 'No matching languages';
++$_['text_empty_hint'] = 'Adjust the search or status filter.';
++$_['text_readonly_notice'] = 'You may view languages; saving changes requires modify permission.';
++$_['button_filter'] = 'Filter';
++$_['button_reset'] = 'Reset';
++$_['button_close'] = 'Close';
++$_['button_first_page'] = '« First';
++$_['button_last_page'] = 'Last »';
++$_['button_next_page'] = 'Next ›';
++$_['button_previous_page'] = '‹ Previous';
++$_['error_csrf'] = 'Invalid session token. Reload the form and try again.';
+diff --git a/dev/admin/language/es-eu/localization/language.php b/dev/admin/language/es-eu/localization/language.php
+index bb5c6eb12676f26a3feb4ef4741fc8094229c2fc..ee34ad9f14651584259f4d9228415bdadf19eef8 100644
+--- a/dev/admin/language/es-eu/localization/language.php
++++ b/dev/admin/language/es-eu/localization/language.php
+@@ -43,3 +43,20 @@
+ $_['error_default_disabled']  = 'El predeterminado debe ser un idioma ACTIVO.';
+ $_['error_disable_default']   = 'No se puede desactivar el predeterminado vigente de una aplicación. Cambia el predeterminado antes.';
+ $_['error_not_found']         = 'Idioma no encontrado.';
++
++// Fase 8 / Tarefa 11 — shell, busca/paginação e CSRF.
++$_['text_home'] = 'Inicio';
++$_['text_all_status'] = 'Todos los estados';
++$_['text_search_placeholder'] = 'Buscar nombre, código o locale…';
++$_['text_showing'] = 'Mostrando %d–%d de %d idiomas';
++$_['text_empty_title'] = 'No se encontraron idiomas';
++$_['text_empty_hint'] = 'Ajuste la búsqueda o el filtro de estado.';
++$_['text_readonly_notice'] = 'Puede visualizar; guardar cambios requiere permiso de modificar.';
++$_['button_filter'] = 'Filtrar';
++$_['button_reset'] = 'Limpiar';
++$_['button_close'] = 'Cerrar';
++$_['button_first_page'] = '« Primera';
++$_['button_last_page'] = 'Última »';
++$_['button_next_page'] = 'Siguiente ›';
++$_['button_previous_page'] = '‹ Anterior';
++$_['error_csrf'] = 'Token de sesión no válido. Recargue el formulario e inténtelo de nuevo.';
+diff --git a/dev/admin/language/pt-br/localization/language.php b/dev/admin/language/pt-br/localization/language.php
+index 9baa65988f6f4dda016667fc28a40fd760817624..777720c99d40c8de404494eaa6989ef429e3fd8a 100644
+--- a/dev/admin/language/pt-br/localization/language.php
++++ b/dev/admin/language/pt-br/localization/language.php
+@@ -43,3 +43,20 @@
+ $_['error_default_disabled']  = 'O padrão precisa ser um idioma ATIVO.';
+ $_['error_disable_default']   = 'Não é possível desativar o padrão vigente de uma aplicação. Troque o padrão antes.';
+ $_['error_not_found']         = 'Idioma não encontrado.';
++
++// Fase 8 / Tarefa 11 — shell, busca/paginação e CSRF.
++$_['text_home'] = 'Início';
++$_['text_all_status'] = 'Todos os status';
++$_['text_search_placeholder'] = 'Buscar nome, código ou locale…';
++$_['text_showing'] = 'Exibindo %d–%d de %d idiomas';
++$_['text_empty_title'] = 'Nenhum idioma encontrado';
++$_['text_empty_hint'] = 'Ajuste a busca ou o filtro de status.';
++$_['text_readonly_notice'] = 'Você pode visualizar; salvar alterações exige permissão de modificar.';
++$_['button_filter'] = 'Filtrar';
++$_['button_reset'] = 'Limpar';
++$_['button_close'] = 'Fechar';
++$_['button_first_page'] = '« Primeira';
++$_['button_last_page'] = 'Última »';
++$_['button_next_page'] = 'Próxima ›';
++$_['button_previous_page'] = '‹ Anterior';
++$_['error_csrf'] = 'Token de sessão inválido. Recarregue o formulário e tente novamente.';
+diff --git a/dev/admin/model/localization/language.php b/dev/admin/model/localization/language.php
+index 4730acf53ccbc190b1ec22f33de4f780872b1339..9736a6b4bbc315677f36c8b62191ef0187117929 100644
+--- a/dev/admin/model/localization/language.php
++++ b/dev/admin/model/localization/language.php
+@@ -17,17 +17,39 @@
+ class Language extends \Reamur\System\Engine\Model {
+ 
+     /**
+-     * Todas as linhas da tabela, ordenadas como devem aparecer (e aparecem
+-     * no switcher público).
+-     *
++     * Grade filtrável F8-11. Sem argumentos continua completa, na ordem antiga.
++     * @param array{search?: string, status?: string|int, start?: int, limit?: int} $options
+      * @return array<int, array<string, mixed>>
+      */
+-    public function getLanguages(): array {
+-        $query = $this->db->query(
+-            "SELECT * FROM `" . $this->t('language') . "` ORDER BY `sort_order` ASC, `language_id` ASC"
+-        );
++    public function getLanguages(array $options = []): array {
++        $sql = "SELECT * FROM `" . $this->t('language') . "`" . $this->languageListWhere($options)
++            . " ORDER BY `sort_order` ASC, `language_id` ASC";
++        if (array_key_exists('limit', $options)) {
++            $start = max(0, (int)($options['start'] ?? 0));
++            $limit = min(100, max(1, (int)$options['limit']));
++            $sql .= " LIMIT " . $start . ", " . $limit;
++        }
++        $query = $this->db->query($sql);
++        return $query->rows;
++    }
+ 
+-        return $query->rows;
++    /** @param array{search?: string, status?: string|int} $options */
++    public function getTotalLanguages(array $options = []): int {
++        $query = $this->db->query("SELECT COUNT(*) AS `total` FROM `" . $this->t('language') . "`" . $this->languageListWhere($options));
++        return isset($query->row['total']) ? (int)$query->row['total'] : 0;
++    }
++
++    /** @param array{search?: string, status?: string|int} $options */
++    private function languageListWhere(array $options): string {
++        $where = [];
++        $search = $options['search'] ?? '';
++        if (is_string($search) && trim($search) !== '') {
++            $value = $this->db->escape(trim($search));
++            $where[] = "(`name` LIKE '%" . $value . "%' OR `code` LIKE '%" . $value . "%' OR `locale` LIKE '%" . $value . "%')";
++        }
++        $status = $options['status'] ?? 'all';
++        if (in_array($status, ['0', '1', 0, 1], true)) { $where[] = "`status` = '" . (int)$status . "'"; }
++        return $where ? ' WHERE ' . implode(' AND ', $where) : '';
+     }
+ 
+     /**
+diff --git a/dev/admin/view/css/admin.css b/dev/admin/view/css/admin.css
+index 4324d2f9a058c9ee222051c9be7ce208ff167fd6..d6105d95e56b2622d0d137040608b1ab0164fba1 100644
+--- a/dev/admin/view/css/admin.css
++++ b/dev/admin/view/css/admin.css
+@@ -932,3 +932,27 @@
+ 
+ .contact-message-read dd,
+ .contact-message-read h2 { overflow-wrap: anywhere; }
++
++/* F8-11 — paginação de localization/language: markup legado da library, escopo local. */
++.localization-language-list .pagination li > a,
++.localization-language-list .pagination li > span {
++  display: block;
++  font-size: var(--bs-pagination-font-size);
++  padding: var(--bs-pagination-padding-y) var(--bs-pagination-padding-x);
++  color: var(--bs-pagination-color);
++  background: var(--bs-pagination-bg);
++  border: var(--bs-pagination-border-width) solid var(--bs-pagination-border-color);
++  text-decoration: none;
++}
++.localization-language-list .pagination li + li > * { margin-left: calc(-1 * var(--bs-pagination-border-width)); }
++.localization-language-list .pagination li.active > span {
++  color: var(--bs-pagination-active-color);
++  background: var(--bs-pagination-active-bg);
++  border-color: var(--bs-pagination-active-border-color);
++}
++.localization-language-list .pagination li > a:hover {
++  color: var(--bs-pagination-hover-color);
++  background: var(--bs-pagination-hover-bg);
++}
++.localization-language-list .pagination li:first-child > * { border-radius: var(--bs-pagination-border-radius) 0 0 var(--bs-pagination-border-radius); }
++.localization-language-list .pagination li:last-child > * { border-radius: 0 var(--bs-pagination-border-radius) var(--bs-pagination-border-radius) 0; }
+diff --git a/dev/admin/view/template/localization/language_form.twig b/dev/admin/view/template/localization/language_form.twig
+index 1fd8a0d1ad3d43d28034e8b29ed3e2588e757e37..5c3eb6bfa898c45ce0536e536a795f128d6c0409 100644
+--- a/dev/admin/view/template/localization/language_form.twig
++++ b/dev/admin/view/template/localization/language_form.twig
+@@ -1,49 +1,20 @@
+-{# dev/admin/view/template/localization/language_form.twig — edição de um idioma (F4-02, ADR 0025) #}
++{# Fase 8 / Tarefa 11 — código imutável, padrões protegidos, edição com CSRF. #}
+ {{ header|raw }}
+-<main class="dash">
+-  <div class="page-head">
+-    <h1>{{ heading_title }}</h1>
+-    <a class="btn ghost" href="{{ back }}">{{ button_cancel }}</a>
+-  </div>
+-  <p class="muted">{{ text_list }}</p>
+-
+-  {% if error %}<div class="alert error">{{ error|nl2br }}</div>{% endif %}
+-  {% if text_flash.text %}<div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>{% endif %}
+-
+-  <div class="panel form">
+-    <form method="post" action="{{ action }}">
+-      <div class="grid two">
+-        <div class="field">
+-          <label for="name">{{ entry_name_label }}</label>
+-          <input type="text" id="name" name="name" value="{{ entry.name }}" maxlength="32" required>
+-        </div>
+-        <div class="field">
+-          <label for="code">{{ entry_code_label }}</label>
+-          <input type="text" id="code" value="{{ entry.code }}" disabled>
+-        </div>
+-      </div>
+-      <div class="grid two">
+-        <div class="field">
+-          <label for="locale">{{ entry_locale_label }}</label>
+-          <input type="text" id="locale" name="locale" value="{{ entry.locale }}" maxlength="32" required>
+-        </div>
+-        <div class="field">
+-          <label for="sort_order">{{ entry_sort_order_label }}</label>
+-          <input type="number" id="sort_order" name="sort_order" value="{{ entry.sort_order }}" min="0" step="1">
+-        </div>
+-      </div>
+-      <div class="field check">
+-        <label>
+-          <input type="checkbox" name="status" value="1" {{ entry.status ? 'checked' }}> {{ entry_status_label }}
+-        </label>
+-      </div>
+-      {% if is_default_catalog or is_default_admin %}
+-      <p class="muted">{{ text_default_locked }}</p>
+-      {% endif %}
+-      <div class="actions">
+-        <button type="submit" class="btn primary">{{ button_save }}</button>
+-      </div>
+-    </form>
+-  </div>
+-</main>
++<div class="localization-language-form" data-language-id="{{ entry.language_id }}" data-language-code="{{ entry.code }}" data-default-catalog="{{ is_default_catalog ? '1' : '0' }}" data-default-admin="{{ is_default_admin ? '1' : '0' }}">
++  <div class="page-titlebar"><div class="title-group"><h1 class="page-title"><i class="bi bi-translate me-2" aria-hidden="true"></i>{{ heading_title }}</h1></div><div class="titlebar-actions"><a class="btn btn-outline-secondary btn-sm" href="{{ back }}">{{ button_cancel }}</a></div></div>
++  <p class="text-body-secondary">{{ text_list }}</p>
++  {% if error %}<div class="alert alert-danger" role="alert">{{ error|nl2br }}</div>{% endif %}
++  {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }}" role="alert">{{ text_flash.text }}</div>{% endif %}
++  <div class="card data-card"><div class="card-body"><form method="post" action="{{ action }}" data-language-edit><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><fieldset{% if not can_modify %} disabled{% endif %}>
++    <div class="row g-3">
++      <div class="col-md-6 field"><label class="form-label" for="name">{{ entry_name_label }}</label><input class="form-control" type="text" id="name" name="name" value="{{ entry.name }}" maxlength="32" required data-counter></div>
++      <div class="col-md-6 field"><label class="form-label" for="code">{{ entry_code_label }}</label><input class="form-control" type="text" id="code" value="{{ entry.code }}" disabled>{% if not entry.dir_exists %}<div class="form-text text-warning-emphasis">{{ text_dir_missing }}</div>{% endif %}</div>
++      <div class="col-md-6 field"><label class="form-label" for="locale">{{ entry_locale_label }}</label><input class="form-control" type="text" id="locale" name="locale" value="{{ entry.locale }}" maxlength="32" required data-counter></div>
++      <div class="col-md-6 field"><label class="form-label" for="sort_order">{{ entry_sort_order_label }}</label><input class="form-control" type="number" id="sort_order" name="sort_order" value="{{ entry.sort_order }}" min="0" step="1"></div>
++    </div>
++    <div class="form-check form-switch mt-3"><input class="form-check-input" type="checkbox" name="status" id="language-status" value="1"{% if entry.status or is_default_catalog or is_default_admin %} checked{% endif %}{% if is_default_catalog or is_default_admin %} disabled{% endif %}><label class="form-check-label" for="language-status">{{ entry_status_label }}</label></div>
++    {% if is_default_catalog or is_default_admin %}<input type="hidden" name="status" value="1"><p class="form-text">{{ text_default_locked }}</p>{% endif %}
++    {% if can_modify %}<div class="d-flex justify-content-end mt-3"><button type="submit" class="btn btn-primary">{{ button_save }}</button></div>{% endif %}
++  </fieldset></form>{% if not can_modify %}<p class="text-body-secondary small mt-3 mb-0">{{ text_readonly_notice }}</p>{% endif %}</div></div>
++</div>
+ {{ footer|raw }}
+diff --git a/dev/admin/view/template/localization/language_list.twig b/dev/admin/view/template/localization/language_list.twig
+index 73da7439158eea8fdcca9e035005d65ec0631047..dc9110508db39e32084e8e2c1103622cbd3e77fa 100644
+--- a/dev/admin/view/template/localization/language_list.twig
++++ b/dev/admin/view/template/localization/language_list.twig
+@@ -1,72 +1,20 @@
+-{# dev/admin/view/template/localisation/language_list.twig — gestão de idiomas (F4-02, ADR 0025) #}
++{# Fase 8 / Tarefa 11 — grade paginada, opções de padrões sempre completas. #}
+ {{ header|raw }}
+-<main class="dash">
+-  <div class="page-head">
+-    <h1>{{ heading_title }}</h1>
+-  </div>
+-  <p class="muted">{{ text_list }}</p>
+-
+-  {% if text_flash.text %}
+-  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+-  {% endif %}
+-
+-  {% if languages %}
+-  <table class="table">
+-    <thead>
+-      <tr>
+-        <th>{{ column_name }}</th>
+-        <th>{{ column_code }}</th>
+-        <th>{{ column_locale }}</th>
+-        <th>{{ column_sort_order }}</th>
+-        <th>{{ column_status }}</th>
+-        <th class="right">{{ column_action }}</th>
+-      </tr>
+-    </thead>
+-    <tbody>
+-      {% for language in languages %}
+-      <tr>
+-        <td>{{ language.name }}</td>
+-        <td><code>{{ language.code }}</code>{% if not language.dir_exists %} <span class="muted" title="{{ text_dir_missing }}">⚠</span>{% endif %}</td>
+-        <td class="muted">{{ language.locale }}</td>
+-        <td>{{ language.sort_order }}</td>
+-        <td>{{ language.status ? text_enabled : text_disabled }}</td>
+-        <td class="right actions">
+-          <a class="btn ghost small" href="{{ language.edit }}">{{ button_edit }}</a>
+-        </td>
+-      </tr>
+-      {% endfor %}
+-    </tbody>
+-  </table>
+-  {% else %}
+-  <p class="muted">{{ text_no_results }}</p>
+-  {% endif %}
+-
+-  <div class="panel form">
+-    <h2>{{ text_default_catalog }} / {{ text_default_admin }}</h2>
+-    <p class="muted">{{ text_defaults_note }}</p>
+-    <form method="post" action="{{ action }}">
+-      <div class="grid two">
+-        <div class="field">
+-          <label for="config_language_catalog">{{ text_default_catalog }}</label>
+-          <select id="config_language_catalog" name="config_language_catalog">
+-            {% for language in languages %}
+-            <option value="{{ language.code }}" {{ language.code == default_catalog ? 'selected' }} {{ language.status ? '' : 'disabled' }}>{{ language.name }} ({{ language.code }})</option>
+-            {% endfor %}
+-          </select>
+-        </div>
+-        <div class="field">
+-          <label for="config_language_admin">{{ text_default_admin }}</label>
+-          <select id="config_language_admin" name="config_language_admin">
+-            {% for language in languages %}
+-            <option value="{{ language.code }}" {{ language.code == default_admin ? 'selected' }} {{ language.status ? '' : 'disabled' }}>{{ language.name }} ({{ language.code }})</option>
+-            {% endfor %}
+-          </select>
+-        </div>
+-      </div>
+-      <div class="actions">
+-        <button type="submit" class="btn primary">{{ button_save }}</button>
+-      </div>
+-    </form>
+-  </div>
+-</main>
++<div class="localization-language-list" data-default-catalog="{{ default_catalog }}" data-default-admin="{{ default_admin }}">
++  <div class="page-titlebar"><div class="title-group"><h1 class="page-title"><i class="bi bi-translate me-2" aria-hidden="true"></i>{{ heading_title }}</h1>{% if total_languages > 0 %}<span class="badge rounded-pill badge-total">{{ total_languages }}</span>{% endif %}</div></div>
++  <p class="text-body-secondary">{{ text_list }}</p>
++  {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">{{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ button_close }}"></button></div>{% endif %}
++  <form method="get" action="{{ filter_action }}" class="filter-bar" role="search" aria-label="{{ button_filter }}"><input type="hidden" name="route" value="localization/language"><div class="filter-search"><i class="bi bi-search" aria-hidden="true"></i><input type="search" name="filter_search" value="{{ filter_search }}" maxlength="255" placeholder="{{ text_search_placeholder }}" aria-label="{{ text_search_placeholder }}"></div><select class="form-select form-select-sm" name="filter_status" aria-label="{{ column_status }}"><option value="all"{% if filter_status == 'all' %} selected{% endif %}>{{ text_all_status }}</option><option value="1"{% if filter_status == '1' %} selected{% endif %}>{{ text_enabled }}</option><option value="0"{% if filter_status == '0' %} selected{% endif %}>{{ text_disabled }}</option></select><button type="submit" class="btn btn-primary btn-sm">{{ button_filter }}</button>{% if filter_search != '' or filter_status != 'all' %}<a class="btn btn-outline-secondary btn-sm" href="{{ filter_reset }}">{{ button_reset }}</a>{% endif %}</form>
++  {% if languages %}<div class="card data-card"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>{{ column_name }}</th><th>{{ column_code }}</th><th class="d-none d-lg-table-cell">{{ column_locale }}</th><th class="d-none d-md-table-cell">{{ column_sort_order }}</th><th>{{ column_status }}</th><th class="text-end">{{ column_action }}</th></tr></thead><tbody>
++    {% for language in languages %}<tr data-language-id="{{ language.language_id }}" data-language-code="{{ language.code }}" data-language-status="{{ language.status }}" data-language-dir="{{ language.dir_exists ? '1' : '0' }}"><td>{{ language.name }}</td><td><code>{{ language.code }}</code>{% if not language.dir_exists %} <span class="badge text-bg-warning" title="{{ text_dir_missing }}"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span class="visually-hidden">{{ text_dir_missing }}</span></span>{% endif %}</td><td class="d-none d-lg-table-cell text-body-secondary">{{ language.locale }}</td><td class="d-none d-md-table-cell">{{ language.sort_order }}</td><td><span class="badge {{ language.status ? 'text-bg-success' : 'text-bg-secondary' }}">{{ language.status ? text_enabled : text_disabled }}</span></td><td class="text-end"><a class="btn btn-outline-primary btn-sm" href="{{ language.edit }}">{{ button_edit }}</a></td></tr>{% endfor %}
++  </tbody></table></div></div>{% if showing or pagination %}<div class="list-footer"><span class="text-body-secondary small">{{ showing }}</span>{{ pagination|raw }}</div>{% endif %}
++  {% else %}<div class="empty-state"><i class="bi bi-translate" aria-hidden="true"></i><h2>{{ filter_search != '' or filter_status != 'all' ? text_empty_title : text_no_results }}</h2><p class="text-body-secondary">{{ text_empty_hint }}</p></div>{% endif %}
++  <section class="card data-card mt-3"><div class="card-body"><h2 class="h6">{{ text_default_catalog }} / {{ text_default_admin }}</h2><p class="text-body-secondary small">{{ text_defaults_note }}</p>
++    <form method="post" action="{{ action }}" data-language-defaults><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><fieldset{% if not can_modify %} disabled{% endif %}><div class="row g-3">
++      <div class="col-md-6 field"><label class="form-label" for="config_language_catalog">{{ text_default_catalog }}</label><select class="form-select" id="config_language_catalog" name="config_language_catalog">{% for language in language_options %}<option value="{{ language.code }}"{% if language.code == default_catalog %} selected{% endif %}{% if not language.status %} disabled{% endif %}>{{ language.name }} ({{ language.code }})</option>{% endfor %}</select></div>
++      <div class="col-md-6 field"><label class="form-label" for="config_language_admin">{{ text_default_admin }}</label><select class="form-select" id="config_language_admin" name="config_language_admin">{% for language in language_options %}<option value="{{ language.code }}"{% if language.code == default_admin %} selected{% endif %}{% if not language.status %} disabled{% endif %}>{{ language.name }} ({{ language.code }})</option>{% endfor %}</select></div>
++    </div>{% if can_modify %}<div class="d-flex justify-content-end mt-3"><button type="submit" class="btn btn-primary">{{ button_save }}</button></div>{% endif %}</fieldset></form>
++    {% if not can_modify %}<p class="text-body-secondary small mt-2 mb-0">{{ text_readonly_notice }}</p>{% endif %}
++  </div></section>
++</div>
+ {{ footer|raw }}
+diff --git a/docs/F8-11-Idiomas-no-Painel.md b/docs/F8-11-Idiomas-no-Painel.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..0667054266289b77bb6c11b047c562be9fbe6ec2
+--- /dev/null
++++ b/docs/F8-11-Idiomas-no-Painel.md
+@@ -0,0 +1,193 @@
++# Fase 8 · Tarefa 11 — Idiomas no painel
++
++> Objetivo: migrar lista/form de localization/language ao shell, preservar idiomas/padrões existentes e proteger POSTs com CSRF, sem novo idioma, schema ou troca automática de padrão.
++
++**Data:** 2026-10-23 · **Base:** `b3eb7262e77ef25335e21446c0f64c7017dfe1a6`.
++**Estado:** inclusão da tela escolhida pelo usuário; implementação preparada/testada localmente, aplicação/homologação pendentes. Tarefa10 concluída conforme informado; seus15 arquivos públicos conferem com a entrega, sem inferir backend/deploy.
++
++## Sumário
++
++1. [Escopo e contratos](#1-escopo-e-contratos)
++2. [Arquivos, aplicação e cache](#2-arquivos-aplicação-e-cache)
++3. [Tool local e evidências](#3-tool-local-e-evidências)
++4. [HTTP limitado de laboratório](#4-http-limitado-de-laboratório)
++5. [Aceite no navegador](#5-aceite-no-navegador)
++6. [Falhas, restauração e rollback](#6-falhas-restauração-e-rollback)
++7. [Limites](#7-limites)
++
++## 1. Escopo e contratos
++
++O usuário escolheu migrar **Idiomas** antes da validação final/planejamentoF9. Um módulo/ZIP, somente fase/tarefa, sem novos ajustes/subgrupos.
++
++### Entregue
++
++- Lista no shell/cards/tabela responsiva, busca por nome/código/locale, filtro status, total e paginação20; mesma ordem sort_order ASC/language_id ASC, recuo além do fim e filtros nos links.
++- Form Bootstrap para nome/locale/ordem/status, código imutável e aviso de diretório ausente. Padrão de qualquer app não pode ser desativado: UI bloqueia checkbox e inclui status hidden1; backend rejeita POST adulterado.
++- Seletores de padrões usam **todas as linhas**, separados da grade. Busca/página/empty state não limitam as opções ou alteram seleção atual.
++- CSRF em POST de padrões e edit, access/modify existentes e readonly com fieldset disabled/sem Save.
++- Repopulação de POST/unchecked após erro corrigida, callback não estático para usar `$this`, error inicializado em GET e returns explícitos após redirects.
++- Textos en-us/pt-br/es-eu completos. Sem JS runtime novo; CSS local sem alterar prefixo anterior.
++
++### Preservado
++
++Rotas `localization/language` (GET lista/POST padrões) e `.edit|ID`. Sem add/delete/upload. Names e IDs `name`, `locale`, `sort_order`, `status`, `config_language_catalog`, `config_language_admin`, código `id=code` sem name e disabled. Name/locale até32; payload de metadados mantém quatro campos, code nunca atualiza.
++
++`getLanguages()` sem argumentos continua completo na ordem original, e `getLanguage/editLanguage/getEnabledCodes` permanecem byte a byte. Gate getEnabledCodes continua status1+diretório existente no admin; nenhum diretório de idioma é criado/apagado. Validações de domínio de padrões e edit permanecem as da base: padrão precisa estar habilitado e default vigente não pode ser desativado. Não se amplia a política de diretório do validator de padrões neste lote.
++
++**Configurações atuais não mudam por GET, patch ou Tool local.** Padrões só são gravados se o operador submeter explicitamente o formulário existente com access/modify+CSRF. Fallback en-us já existente é preservado, não semeado novamente. O HTTP automático descrito abaixo **nunca faz POST de padrões**.
++
++Métodos do model e validações preservados não significam manter bugs de apresentação: a união `$language + [post]` não repovoava os campos, e `static fn` com `$this` falhava ao traduzir erros. Isso foi corrigido sem alterar regras/tabelas. Response já encerra web no redirect, mas retorna em CLI; returns explícitos deixam o fluxo previsível também nos testes.
++
++Sem schema/grants/SQL de instalação, novos códigos/packs/pastas, `system/**`, `catalog/**`, `install/**`, outros CRUDs, Appearance/admin.js/ASSET_V, Composer/SMTP/editorBlog alterados. As grafias localization do admin e localisation onde existente no catalog não são renomeadas.
++
++## 2. Arquivos, aplicação e cache
++
++**15 arquivos de projeto**: dez modificados/cinco novos.
++
++- Runtime8: `dev/admin/controller/localization/language.php`, model correspondente, templates `language_list.twig`/`language_form.twig`, três idiomas UI existentes e `dev/admin/view/css/admin.css`.
++- Novos tools3: `tools/e2e/e2e_f811.sh`, `e2e_f811_contracts.php`, `e2e_f811_http.cjs`.
++- `tools/e2e/e2e_f402.sh`: só captura CSRF da lista e token nos oito POSTs de idioma/padrões. **Permanece destrutivo**, troca padrões/status, recria DB e contém agregados legados; só bash-n aqui. Não é chamado pelo Tool novo nem sua bateria é homologada integralmente.
++- Este guia, índice docs/README.md (linha22), [ADR0055](../agents-ia/decisoes/0055-f8-11-idiomas-no-painel.md).
++
++Acompanhantes: F8-11.patch, MANIFESTO-F8-11.json, SHA256SUMS. Sem projeto inteiro/vendor/configs/dados/credenciais reais ou packs de idioma. Script antigo conserva fixtures públicas preexistentes.
++
++1. Conferir `git rev-parse HEAD`:b3eb7262e77ef25335e21446c0f64c7017dfe1a6. Se alvos mudaram, revisar hashes/diff; não sobrescrever trabalho concorrente.
++2. Branch/PR para staging, backup; não aplicar direto em produção.
++3. Extrair ZIP fora do repositório e conferir `sha256sum -c SHA256SUMS` na extração.
++4. Na raiz do repositório, ENTREGA é a extração absoluta:
++
++```bash
++git apply --check --whitespace=error "$ENTREGA/F8-11.patch"
++git apply --whitespace=error "$ENTREGA/F8-11.patch"
++git diff --check
++bash tools/e2e/e2e_f811.sh --check
++```
++
++Alternativa: copiar somente os15 alvos. Sem árvore inteira/vendor/--delete/reaplicar ZIP/upgradeSQL. Sincronizar só alvos pelo fluxo controlado e invalidar CSS/PHP/Twig na homologação. **ASSET_V não muda**, conferir cache de admin.css. Código/dev/GitHub atualizado não prova deploy.
++
++CSS extra só `.localization-language-list`; normalização de `&amp;amp;` na paginação gerada com query codificada, sem decodificar HTML arbitrário nem alterar library/aria-labels globais.
++
++Commit sugerido:
++
++```text
++feat(admin): migrar idiomas para o shell com CSRF e seletores completos
++```
++
++## 3. Tool local e evidências
++
++```bash
++bash tools/e2e/e2e_f811.sh --check
++bash tools/e2e/e2e_f811.sh --help
++```
++
++PHP CLI8.1+/mbstring/Twig3 pelo Composer do projeto, Node20+ fetch/Headers.getSetCookie e Bash. Helpers F8-05/F8-06 já na base, sem seus fluxos. Sem instalar pacotes/dependência nova do CMS ou inicializar config/framework nos testes.
++
++Twig padrão: dev/system/storage/vendor/autoload.php; TWIG_AUTOLOAD absoluto permite autoload QA local e MIRROR escolhe o dev. Apenas fontes/autoload confiáveis; não é sandbox para código desconhecido.
++
++| Grupo executado pelo agente | Resultado | Natureza |
++| --- | --- | --- |
++| PHP lint | **6/6 aprovados** | Cinco PHP de runtime+runner. |
++| Contratos PHP/Twig | **40PASS/0FAIL** | PHP8.4.26/Twig3.30.0 reais, DB/serviços/model do controller/IO sessão em fixtures. |
++| Auxiliares HTTP novos | **8PASS/0FAIL** | Parser/seletores/metadados/guardas/restore em simulação. |
++| Compartilhados F8-06 | **16PASS/0FAIL** | Fetch/respostas simulados. |
++| Controle negativo na tela antiga | **4PASS/36FAIL**, saída1 | Falha esperada com fontes anteriores; não36bugs independentes. |
++| Sintaxe CJS/Bash | Aprovada | f402 antigo só bash-n, não executado. |
++
++Regressões locais F8-10/09/08/07/06/05 verdes; não reabre seus aceites ou comprova backend/browser real.
++
++Classes reais são carregadas, controller/model/Twig strict/autoescape executados. SQL capturado, não enviado a DB; Session real sem construtor/só memória. Diretórios en/pt/es da fixture ficam **em FS temporário privado não servido**, separado de MIRROR/FUI e removido ao final; nenhum idioma/pasta/config real é criado ou alterado.
++
++**Não chamar os64 casos de E2Es reais aprovados.** Sem servidor/DB/HTTP/browser real, padrões/status/idiomas reais modificados, GitHubwrite/deploy/Actions/PHPStan/PHPUnit completo/matrizPHP nesta preparação. Sem JS runtime novo; visual/foco/default-lock precisam de navegador.
++
++## 4. HTTP limitado de laboratório
++
++O modo --http **não testa automaticamente a troca de padrões/status/locale/code**: para preservar seu limite, ele muda apenas **sort_order de um idioma ativo instalado NÃO-PADRÃO** informado pelo operador, verifica e restaura. Name/locale/status/código vão com os mesmos valores apenas por serem o payload exigido do edit; qualquer divergência faz parar, sem sobrescrever trabalho desconhecido.
++
++### Pré-requisitos
++
++Laboratório local descartável em reamur_test, conta fictícia access/modify localization/language, alvo real obtido da lista pelo ID+code, ativo/diretório presente. Alvo não pode ser default de catálogo/admin nem **en-us** canônico. Sort original0..99999, teste+1, depois restauração exata. Não presumirID2/3.
++
++Se não houver alvo elegível, usar --check/aceite manual; **não instalar idioma, mudar defaults, desativar ou renomear para forçar teste**. Não criar fixture ou alterar seed. Sem --fixture neste Tool.
++
++Guardas F8-06/F8-05: B/FUI/MIRROR explícitos loopback, configs literais do wizard com DB_DATABASE=reamur_test/hostname loopback/URL coerente, `.f805-disposable`, fontes/assets CMS/idiomas iguais MIRROR/FUI sem symlinks. Marcador é compatibilidade, não novo ajuste nem garantia de descarte.
++
++**Proibido produção/dados reais/ambiente misto/túnel/proxy produção/concorrência/integrações produtivas.** Operador confirma que PHP usa B/FUI/DB/diretórios corretos; config/nonce/hash não atesta proxy/backend mal configurado.
++
++```bash
++export B='http://127.0.0.1:8090/davidcms/dev'
++export FUI='/var/www/html/davidcms/dev'
++export MIRROR="$(pwd -P)/dev"
++# Só após conferir laboratório/DB/configs e alvo NÃO-PADRÃO:
++printf 'reamur_test\n' > "$FUI/.f805-disposable"
++export ALLOW_F811_HTTP='YES_WRITE_REAMUR_TEST'
++read -r -p 'Usuário fictício: ' F811_USERNAME
++read -r -s -p 'Senha fictícia: ' F811_PASSWORD; printf '\n'
++read -r -p 'ID REAL do idioma não-padrão: ' F811_LANGUAGE_ID
++read -r -p 'Código EXATO desse idioma: ' F811_LANGUAGE_CODE
++export F811_USERNAME F811_PASSWORD F811_LANGUAGE_ID F811_LANGUAGE_CODE
++export F811_REPORT='/tmp/novo-resultado-f811.json'  # novo/inexistente
++bash tools/e2e/e2e_f811.sh --http
++unset F811_USERNAME F811_PASSWORD ALLOW_F811_HTTP
++```
++
++Não enviar credenciais/tokens pelo chat. Report opcional absoluto novo, diretório existente,0600, sem sobrescrever anterior. Preflight bloqueado sai2 antes de workflow. Não remover guardas/desativar TLS/alterar configs reais para forçar verde; config dinâmica/DBDocker não-loopback pode exigir avaliação.
++
++### Fluxo de10etapas preparado — NÃO executado pelo agente no backend
++
++1. Probe único `FUI/admin/view/js/f811-probe-<nonce>.txt`, conferido por B antes de credenciais.
++2. Login único CSRF/cookies só em memória, sem jar/storage state.
++3. Lista GET ×3 idiomas, snapshot de padrões/opções completas e ativos; sem trocar default.
++4. Localizar ID/código real ativo, diretório presente, não default/não en-us.
++5. GETedit verifica código disabled sem name, modify, campos originais/ordem segura; captura estado sem expor name/locale no relatório.
++6. POSTedit com token errado e sort+1 deve não alterar nada; GETconfere.
++7. POSTedit válido só sort+1; reabrir e conferir todos os outros campos e padrões inalterados.
++8. Revalidar estado inteiro e POST restaurando sort original, depois GET exato.
++9. GET com/sem filtro mantém padrões/status/opções, alvo correto.
++10. Revalidar restauração exata, mesmos códigos/contagem/status/opções e padrões; nenhum idioma novo.
++
++Não há POST de padrões, troca de code/locale/status, criação/exclusão de idioma/diretório, SQL/reset/recreate/upgrade/seed, disparo de serviço externo ou suíte antiga. Redirect externo não recebe request/cookie; POST307/308/timeout não é repetido. A restauração ocorre só depois de conferir o estado esperado; em falha para e preserva evidências/ordem pendente para inspeção, sem retry/restauração cega.
++
++JSON: kind=http-workflow, operation=nondefault-sort-and-restore, ID/code/ordem original/teste, status/etapas/restoration/cleanup/defaultsUnchanged. **Aceite:** passed+10etapas pass+restoration complete+cleanup complete+defaultsUnchanged true. Aprova apenas fluxo HTTP limitado, não teste de todos os saves/defaults nem visual. Não inclui name/locale, HTML completo, credenciais/cookies/tokens.
++
++Probe só é removido se regular/conteúdo igual. Dados normais de login/sessão/rate limit ficam como operação do laboratório. Se probe não puder ser removido, status/cleanup sinalizam falha, mesmo com ordem restaurada.
++
++## 5. Aceite no navegador
++
++- [ ] Lista/form no shell, desktop/mobile/skins/claro/escuro, legibilidade/contraste e sem overflow externo.
++- [ ] Busca nome/code/locale, status0/1, reset inclusive0, total/página2/recuo. Volume21+ no servidor só com dados de teste previamente autorizados;45 foram fixture, não são novos idiomas instalados pelo pacote.
++- [ ] Seletores de padrão completos mesmo com filtro/grade vazia/página2; atuais selecionados, inativos disabled; GET não muda padrões.
++- [ ] Edit repopula nome/locale/ordem/status após erro sem fatal; name/locale até32 e campos/IDs preservados.
++- [ ] Code disabled/sem name permanece imutável mesmo POST adulterado; aviso de diretório ausente não cria pasta/pacote.
++- [ ] Default de qualquer app não pode ser desativado; UI bloqueia e backend nega adulteração. Readonly não vê Save, fieldset disabled e POSTs negados.
++- [ ] CSRF em defaults/edit e valores inválidos não persistem; teste positivo manual de padrões/status/locale somente no laboratório e restauração consciente pelo operador (fora do HTTP limitado).
++- [ ] Padrão pode ser salvo manualmente apenas se habilitado, mantém regra antiga; não há nova política de diretório no validator. Nunca usar idioma padrão real/produção em teste.
++- [ ] i18n en-us/pt-br/es-eu, contadores, gate getEnabledCodes preservado; nenhum outro módulo/site/editor/Appearance/configSMTP alterado.
++
++ConfirmarTarefa11 somente após aplicação/homologação do usuário; não encerrarFase8 automaticamente.
++
++## 6. Falhas, restauração e rollback
++
++Timeout pode ocorrer depois da escrita. Consultar JSON (ID/code/ordens/etapa), inspecionar somente o idioma de laboratório e seu estado/padrões antes de qualquer ação. Não presumir que o POST não ocorreu nem reenviar para forçar verde.
++
++Se restoration=pending/failed, restaurar **apenas a ordem original** do alvo conhecido pela UI após validar identidade/name/locale/status/code. Não trocar defaults ou outros campos/pastas. Se houve divergência inesperada, parar para diagnóstico; o Tool não faz compensação cega. Não usar SQL/reset/rm-rf/limpeza ampla.
++
++Probe alterado/processo morto pode restar; inspecionar apenas f811-probe-<nonce>.txt exato, nunca limpar view/js amplamente. Rollback de código não restaura metadados de testes ou relatórios: acertar o laboratório primeiro.
++
++Com patch original/backup e alvos sem mudanças posteriores:
++
++```bash
++git apply -R --check "$ENTREGA/F8-11.patch"
++git apply -R "$ENTREGA/F8-11.patch"
++```
++
++Parar/revisar se não aplicar; sem reset--hard. Restaura dez/remove cinco novos, sem reverter tarefas aceitas; sincronizar só alvos e invalidar cache normal. A base volta a não exigir CSRF e às limitações de repovo/callback/CLI antigas; risco conhecido, não operação recomendada.
++
++## 7. Limites
++
++Nenhum idioma/default/status/diretório real, DB/HTTP/browser/produção/deploy/GitHubwrite ouActions foi alterado/executado nesta preparação. Sem PHPStan/PHPUnit completo/matrizPHP nem prova de contraste nativo. Sem JS runtime, pack, schema, grant ou novo serviço.
++
++F402 histórico continua destrutivo e não auditado integralmente (inclusive agregados/SQL legados); só compatibilidade de token. Não se prometem10checks reais verdes nem se usa a neutralização de agregados antigos como evidência. Não chamar f402 para preparar teste novo.
++
++Publicação de código não comprova deploy. Tarefa10 concluída segundo o usuário; apenas igualdade15fontes públicas foi confirmada independentemente. Não se infere encerramento da Fase8.
++
++Referências: [ADR0055](../agents-ia/decisoes/0055-f8-11-idiomas-no-painel.md), [F8-10](F8-10-Mensagens-Contato.md), [F8-06](F8-06-Paginas-CMS.md), [base pública](https://github.com/davidcreator/davidcms/commit/b3eb7262e77ef25335e21446c0f64c7017dfe1a6).
+diff --git a/docs/README.md b/docs/README.md
+index 1178cf008190555fc383aeee417c9c71bb2d4f9f..eb02ebd24c3b16b8972c192dc6dc906eada18e71 100644
+--- a/docs/README.md
++++ b/docs/README.md
+@@ -31,6 +31,7 @@
+ | 19 | [F8-08-Projetos-Portfolio.md](F8-08-Projetos-Portfolio.md) | **Fase 8 · Tarefa 08**: projetos no shell, categorias N:N/capa/galeria/SEO preservados, filtros, CSRF e Tool E2E. |
+ | 20 | [F8-09-Ferramentas-Conectadas.md](F8-09-Ferramentas-Conectadas.md) | **Fase 8 · Tarefa 09**: cadastro de ferramentas no shell, ícone/vendor/URL preservados, filtros, CSRF e Tool E2E. |
+ | 21 | [F8-10-Mensagens-Contato.md](F8-10-Mensagens-Contato.md) | **Fase 8 · Tarefa 10**: inbox no shell, Ler POST+ACL+CSRF, GET puro, busca/paginação, privacidade e Tool E2E. |
++| 22 | [F8-11-Idiomas-no-Painel.md](F8-11-Idiomas-no-Painel.md) | **Fase 8 · Tarefa 11**: idiomas no shell, seletores completos, CSRF, código/padrões preservados e Tool E2E. |
+ 
+ ---
+ 
+diff --git a/tools/e2e/e2e_f402.sh b/tools/e2e/e2e_f402.sh
+index 479f2c2390a6a857fbf797eb3c978ede07b98b31..9221c794b25cabc095579f0857a255667ee5ff78 100644
+--- a/tools/e2e/e2e_f402.sh
++++ b/tools/e2e/e2e_f402.sh
+@@ -57,6 +57,7 @@
+ 
+ echo '══ 4 — lista GET: 200, 3 idiomas, selects default en-us/en-us ══'
+ curl -s -c $JA -b $JA "$B/admin/localization/language" -o /tmp/f402_list.html -D /tmp/f402_l.hdr
++LANG_CSRF=$(grep -o 'name="csrf_token" value="[^"]*"' /tmp/f402_list.html | head -1 | sed 's/.*value="//;s/"//')
+ H=$(hdr /tmp/f402_l.hdr); OK=0; [ "$H" = "200" ] || OK=1
+ grep -q "Languages" /tmp/f402_list.html || OK=1
+ N=$(grep -o 'route=localization/language.edit|' /tmp/f402_list.html | wc -l); [ "$N" = "3" ] || OK=1
+@@ -69,6 +70,7 @@
+ 
+ echo '══ 5 — POST salva defaults (catalog=pt-br, admin=es-eu) → banco + round-trip ══'
+ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language" \
++  --data-urlencode "csrf_token=$LANG_CSRF" \
+   --data-urlencode "config_language_catalog=pt-br" --data-urlencode "config_language_admin=es-eu" \
+   -D /tmp/f402_p05.hdr -o /dev/null
+ OK=0
+@@ -82,6 +84,7 @@
+ 
+ echo '══ 6 — aplicação REAL: desativar es-eu → switcher público some; reativar volta; default pt-br renderiza ══'
+ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language.edit|3" \
++  --data-urlencode "csrf_token=$LANG_CSRF" \
+   --data-urlencode "name=Español (ES)" --data-urlencode "locale=es_ES.UTF-8" --data-urlencode "sort_order=3" -o /dev/null -D /tmp/f402_e3.hdr
+ R6A=$(hdr /tmp/f402_e3.hdr)
+ ES_ST=$(q "SELECT status FROM reamur_test.rms_language WHERE language_id=3")
+@@ -90,6 +93,7 @@
+ grep -q 'language=pt-br' /tmp/f402_home.html; OKA=$?
+ # reativa es-eu (restaura estado p/ baterias seguintes)
+ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language.edit|3" \
++  --data-urlencode "csrf_token=$LANG_CSRF" \
+   --data-urlencode "name=Español (ES)" --data-urlencode "locale=es_ES.UTF-8" --data-urlencode "sort_order=3" --data-urlencode "status=1" -o /dev/null
+ curl -s "$B/catalog/" -o /tmp/f402_home2.html
+ grep -q 'language=es-eu' /tmp/f402_home2.html; OKB=$?
+@@ -106,12 +110,14 @@
+ ESPOS=0; OKA=0; OKB=0; OKC=0        # neutraliza acumuladores do agregado legado abaixo
+ # restaura default do catálogo para en-us (estado neutro)
+ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language" \
++  --data-urlencode "csrf_token=$LANG_CSRF" \
+   --data-urlencode "config_language_catalog=en-us" --data-urlencode "config_language_admin=en-us" -o /dev/null
+ OK=$((ESPOS + OKA + OKB + OKC))   # todos devem ser 0: hide ok, pt visível, es volta, home em pt (default)
+ ck 6 $OK "app-application"
+ 
+ echo '══ 7 — validação: idioma fora da lista enabled é rejeitado no POST ══'
+ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language" \
++  --data-urlencode "csrf_token=$LANG_CSRF" \
+   --data-urlencode "config_language_catalog=fr-fr" --data-urlencode "config_language_admin=en-us" \
+   -D /tmp/f402_p07.hdr -o /dev/null
+ OK=0
+@@ -124,8 +130,10 @@
+ echo '══ 8 — validação: não pode desativar o idioma default ══'
+ # coloca pt-br como default do catálogo, tenta desativar pt-br (edit|2 sem status)
+ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language" \
++  --data-urlencode "csrf_token=$LANG_CSRF" \
+   --data-urlencode "config_language_catalog=pt-br" --data-urlencode "config_language_admin=en-us" -o /dev/null
+ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language.edit|2" \
++  --data-urlencode "csrf_token=$LANG_CSRF" \
+   --data-urlencode "name=Português (BR)" --data-urlencode "locale=pt_BR.UTF-8" --data-urlencode "sort_order=2" \
+   -D /tmp/f402_e2.hdr -o /dev/null
+ OK=0
+@@ -135,6 +143,7 @@
+ grep -qi "alert" /tmp/f402_list4.html || OK=1
+ # desfaz: volta default p/ en-us
+ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language" \
++  --data-urlencode "csrf_token=$LANG_CSRF" \
+   --data-urlencode "config_language_catalog=en-us" --data-urlencode "config_language_admin=en-us" -o /dev/null
+ ck 8 $OK "validation-block-default"
+ 
+diff --git a/tools/e2e/e2e_f811.sh b/tools/e2e/e2e_f811.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..115f779f2abbfbda6e12192084f3ed3bcfa6e619
+--- /dev/null
++++ b/tools/e2e/e2e_f811.sh
+@@ -0,0 +1,67 @@
++#!/usr/bin/env bash
++# Fase 8 / Tarefa 11 — idiomas; padrão local, sem defaults/idiomas reais alterados.
++set -euo pipefail
++ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++MODE="${1:---check}"
++PHP_BIN="${PHP_BIN:-php}"
++NODE_BIN="${NODE_BIN:-node}"
++CHECK_MIRROR="${MIRROR:-$ROOT/dev}"
++PHP_TEST="$ROOT/tools/e2e/e2e_f811_contracts.php"
++HTTP_TEST="$ROOT/tools/e2e/e2e_f811_http.cjs"
++help() {
++  cat <<'HELP'
++Uso: bash tools/e2e/e2e_f811.sh [--check|--http|--help]
++
++--check  Padrão. Lint6PHP +40 contratos PHP/Twig reais, DB/serviços/IO sessão
++         em fixtures e diretórios privados não servidos. 8 auxiliares HTTP
++         novos+16 compartilhados em simulação. Sem idioma/default/servidor/DB
++         ou navegador reais alterados.
++--http   Após --check, somente laboratório: lê padrões/seletores/idiomas e
++         modifica SOMENTE sort_order de um idioma ativo NÃO-PADRÃO informado
++         pelo operador; revalida todos os campos e RESTAURA a ordem original.
++         Nunca POST de padrões, troca code/locale/status, cria idioma/pasta,
++         desativa idioma ou usa SQL/reset. Não é teste visual de navegador.
++--help   Ajuda. --backend/--browser/--fixture e suíte antiga não são chamados.
++
++Requer PHP8.1+/mbstring/Twig3 do projeto, Node20+ fetch/Headers.getSetCookie,
++Bash e helpers F8-05/F8-06 da base. Twig padrão em
++ dev/system/storage/vendor/autoload.php; TWIG_AUTOLOAD absoluto é alternativa
++ local explícita de QA. Não instala pacotes ou inicializa o framework.
++
++--http requer explicitamente:
++ ALLOW_F811_HTTP=YES_WRITE_REAMUR_TEST
++ B=http://127.0.0.1:8090/davidcms/dev
++ FUI=/caminho/absoluto/copia/servida/dev
++ MIRROR=/caminho/absoluto/repositorio/dev
++ F811_USERNAME/F811_PASSWORD fictícios com access/modify localization/language
++ F811_LANGUAGE_ID e F811_LANGUAGE_CODE reais obtidos da lista, NÃO defaults
++ (en-us também é recusado); alvo ativo/diretório presente, sort0..99999.
++ FUI/.f805-disposable contém reamur_test; configs literais, DB/hostname loopback,
++ URLs/fontes/assets CMS/idiomas coerentes MIRROR/FUI, sem symlinks.
++ Opcional F811_REPORT=/tmp/novo-resultado-f811.json (novo e absoluto,0600).
++
++Probe identifica FUI antes do login, cookies/tokens só em memória. Falha após
++POST pode deixar ordem pendente: não repetir/forçar restauração sem inspeção.
++Sem produção/dados reais/túnel/proxy produção/concorrência. Não altera defaults
++automaticamente. Veja docs/F8-11-Idiomas-no-Painel.md e siga antes de --http.
++HELP
++}
++fail() { printf 'ERRO: %s\n' "$*" >&2; exit 2; }
++[[ "$#" -le 1 ]] || { help >&2; exit 2; }
++case "$MODE" in --help|-h) help; exit 0;; --check|--http) ;; *) help >&2; exit 2;; esac
++command -v "$PHP_BIN" >/dev/null 2>&1 || fail 'PHP CLI não encontrado.'
++command -v "$NODE_BIN" >/dev/null 2>&1 || fail 'Node não encontrado.'
++"$PHP_BIN" -r 'if(PHP_VERSION_ID<80100||!extension_loaded("mbstring")){fwrite(STDERR,"Requer PHP8.1+/mbstring.\n");exit(2);}'
++"$NODE_BIN" -e 'if(Number(process.versions.node.split(".")[0])<20)process.exit(2);'
++if [[ "$MODE" == '--http' ]]; then
++  [[ "${ALLOW_F811_HTTP:-}" == 'YES_WRITE_REAMUR_TEST' ]] || fail 'HTTP bloqueado: confirmação explícita ausente.'
++  [[ -n "${B:-}" && -n "${FUI:-}" && -n "${MIRROR:-}" && -n "${F811_USERNAME:-}" && -n "${F811_PASSWORD:-}" && -n "${F811_LANGUAGE_ID:-}" && -n "${F811_LANGUAGE_CODE:-}" ]] || fail 'HTTP exige laboratório, credenciais e alvo não-padrão explícitos.'
++fi
++for p in "$PHP_TEST" "$HTTP_TEST" "$ROOT/tools/e2e/e2e_f806_http.cjs" "$ROOT/tools/e2e/e2e_f805.cjs" "$ROOT/tools/e2e/e2e_f805_browser.js"; do [[ -f "$p" ]] || fail "Tool/dependência ausente: $p"; done
++for p in admin/controller/localization/language.php admin/model/localization/language.php admin/language/en-us/localization/language.php admin/language/pt-br/localization/language.php admin/language/es-eu/localization/language.php; do "$PHP_BIN" -l "$CHECK_MIRROR/$p"; done
++"$PHP_BIN" -l "$PHP_TEST"
++"$NODE_BIN" --check "$HTTP_TEST"
++[[ ! -f "$ROOT/tools/e2e/e2e_f402.sh" ]] || bash -n "$ROOT/tools/e2e/e2e_f402.sh"
++"$PHP_BIN" "$PHP_TEST" "$CHECK_MIRROR"
++"$NODE_BIN" "$HTTP_TEST" --self-test
++if [[ "$MODE" == '--http' ]]; then "$NODE_BIN" "$HTTP_TEST" --http; else printf '%s\n' 'Checks locais concluídos; sem idioma/default/DB/HTTP/navegador reais alterados.'; fi
+diff --git a/tools/e2e/e2e_f811_contracts.php b/tools/e2e/e2e_f811_contracts.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..30b0e3ad3e65747291f2bf6fa1fea0d65114fee6
+--- /dev/null
++++ b/tools/e2e/e2e_f811_contracts.php
+@@ -0,0 +1,148 @@
++<?php declare(strict_types=1);
++/**
++ * @package ReamurCMS
++ * @author David L. Almeida
++ * @copyright Copyright (c) 2026, ReamurCMS
++ * @license https://opensource.org/licenses/GPL-3.0
++ * F8-11 — PHP/Twig reais; DB/serviços/IO de sessão em fixtures.
++ * Nenhum idioma/default/diretório real é alterado; DIR_APPLICATION é privado.
++ */
++namespace Reamur\Tests\F811;
++use Reamur\System\Engine\Registry;
++use Reamur\System\Library\Session;
++use Reamur\System\Library\Security\Csrf;
++use Reamur\Admin\Controller\Localization\Language as Controller;
++use Reamur\Admin\Model\Localization\Language as Model;
++final class DirsFixture {
++    private static string $root='';
++    public static function init():string{self::$root=sys_get_temp_dir().'/f811-qa-'.bin2hex(random_bytes(8));if(!mkdir(self::$root,0700))throw new \RuntimeException('Fixture privada indisponível');foreach(['admin','admin/language','admin/language/en-us','admin/language/pt-br','admin/language/es-eu']as$p)if(!mkdir(self::$root.'/'.$p,0700))throw new \RuntimeException('Fixture privada indisponível');return self::$root.'/admin/';}
++    public static function cleanup():void{foreach(['admin/language/es-eu','admin/language/pt-br','admin/language/en-us','admin/language','admin','']as$p){$d=self::$root.($p===''?'':'/'.$p);if(is_dir($d)&&!rmdir($d))throw new \RuntimeException('Fixture não vazia; não remover amplamente');}}
++}
++$mirror=realpath($argv[1]??dirname(__DIR__,2).'/dev')?:'';$autoload=getenv('TWIG_AUTOLOAD')?:$mirror.'/system/storage/vendor/autoload.php';
++if($mirror===''||!is_file($autoload)){fwrite(STDERR,"MIRROR/Twig ausentes.\n");exit(2);}require_once $autoload;
++if(!class_exists(\Twig\Environment::class)||!extension_loaded('mbstring')||defined('DIR_APPLICATION')){fwrite(STDERR,"Requer CLI isolado/Twig3/mbstring.\n");exit(2);}
++if(!defined('DB_PREFIX'))define('DB_PREFIX','f811_');if(!defined('DIR_SYSTEM'))define('DIR_SYSTEM',$mirror.'/system/');
++foreach(['engine/registry.php','engine/controller.php','engine/model.php','library/session.php','library/security/csrf.php','library/pagination.php']as$p)require_once DIR_SYSTEM.$p;
++require_once $mirror.'/admin/controller/common/header.php';require_once $mirror.'/admin/model/localization/language.php';require_once $mirror.'/admin/controller/localization/language.php';
++define('DIR_APPLICATION',DirsFixture::init());
++
++final class LanguageFixture {
++    public array $values;
++    public function __construct(string $file) { $this->values = (static function (string $file): array { $_ = []; require $file; return $_; })($file); }
++    public function get(string $key): string { if (!array_key_exists($key, $this->values)) { throw new \RuntimeException('Chave i18n ausente: ' . $key); } return (string)$this->values[$key]; }
++}
++final class ConfigFixture {
++    public array $values=['site_url'=>'http://example.test/admin/','language_directory'=>'en-us','config_language_catalog'=>'en-us','config_language_admin'=>'en-us'];
++    public function get(string $key,mixed $default=null):mixed{return$this->values[$key]??$default;}
++}
++final class UserFixture {
++    public function __construct(public bool $modify,public bool $access=true){}
++    public function hasPermission(string $kind,string $route):bool{return$kind==='access'?$this->access:$this->modify;}
++}
++final class SettingsFixture {
++    public array $writes=[];public array $values=[];
++    public function editSettings(array $data):void{$this->writes[]=$data;$this->values=array_replace($this->values,$data);}
++}
++final class DocumentFixture {
++    public array $styles = [];
++    public array $scripts = [];
++    public string $title = '';
++    public function setTitle(string $title): void { $this->title = $title; }
++    public function addStyle(string $url): void { $this->styles[] = $url; }
++    public function addScript(string $url): void { $this->scripts[] = $url; }
++}
++final class ResponseFixture {
++    public string $output = '';
++    public string $location = '';
++    public function setOutput(string $output): void { $this->output = $output; }
++    public function redirect(string $url): void { $this->location = $url; }
++}
++final class UrlFixture {
++    public function link(string $route, string|array $args = '', bool $secure = false): string {
++        return 'http://example.test/admin/index.php?route=' . $route . ($args ? '&' . (is_array($args) ? http_build_query($args) : $args) : '');
++    }
++}
++final class StoreFixture {
++    public array $records=[];public array $calls=[];public array $edits=[];public array $gets=[];
++    public function __construct(){foreach([[1,'English','en-us','en_US.UTF-8',1,1],[2,'Português (BR)','pt-br','pt_BR.UTF-8',2,1],[3,'Español (ES)','es-eu','es_ES.UTF-8',3,1]]as$r)$this->records[$r[0]]=['language_id'=>$r[0],'name'=>$r[1],'code'=>$r[2],'locale'=>$r[3],'sort_order'=>$r[4],'status'=>$r[5]];}
++    private function filtered(array $o):array{$rows=array_filter(array_values($this->records),static function(array $r)use($o):bool{$q=$o['search']??'';if($q!==''&&mb_stripos($r['name'],$q)===false&&mb_stripos($r['code'],$q)===false&&mb_stripos($r['locale'],$q)===false)return false;return!in_array($o['status']??'all',['0','1'],true)||$r['status']===(int)$o['status'];});usort($rows,static fn(array $a,array $b):int=>[$a['sort_order'],$a['language_id']]<=>[$b['sort_order'],$b['language_id']]);return array_values($rows);}
++    public function getLanguages(array $o=[]):array{$this->calls[]=$o;$rows=$this->filtered($o);return isset($o['limit'])?array_slice($rows,$o['start'],$o['limit']):$rows;}
++    public function getTotalLanguages(array $o=[]):int{return count($this->filtered($o));}
++    public function getLanguage(int $id):array{$this->gets[]=$id;return$this->records[$id]??[];}
++    public function editLanguage(int $id,array $data):void{$this->edits[]=[$id,$data];$this->records[$id]=array_replace($this->records[$id],$data);}
++}
++final class LoaderFixture {
++    public array $data=[];private \Twig\Environment $twig;
++    public function __construct(string $mirror){$this->twig=new \Twig\Environment(new \Twig\Loader\FilesystemLoader($mirror.'/admin/view/template'),['cache'=>false,'autoescape'=>'html','strict_variables'=>true]);}
++    public function language(string $route):void{if($route!=='localization/language')throw new \RuntimeException('Language inesperada');}
++    public function model(string $route):void{if(!in_array($route,['localization/language','setting/setting'],true))throw new \RuntimeException('Model inesperado');}
++    public function controller(string $route,array $data=[]):string{return'<!-- shell fixture -->';}
++    public function view(string $route,array $data):string{$this->data=$data;return$this->twig->render($route.'.twig',$data);}
++}
++final class Harness {
++    public Registry $registry;public Controller $controller;public StoreFixture $store;public SettingsFixture $settings;public ConfigFixture $config;public Session $session;public \stdClass $request;public ResponseFixture $response;public LoaderFixture $loader;public DocumentFixture $document;public LanguageFixture $language;
++    public function __construct(string $mirror,?StoreFixture $store=null,?Session $session=null,string $locale='en-us',bool $modify=true,bool $access=true,?SettingsFixture $settings=null){$this->registry=new Registry();$this->store=$store??new StoreFixture();$this->settings=$settings??new SettingsFixture();$this->config=new ConfigFixture();$this->config->values=array_replace($this->config->values,$this->settings->values);$this->session=$session??(new \ReflectionClass(Session::class))->newInstanceWithoutConstructor();$this->request=(object)['server'=>['REQUEST_METHOD'=>'GET'],'get'=>[],'post'=>[]];$this->response=new ResponseFixture();$this->loader=new LoaderFixture($mirror);$this->document=new DocumentFixture();$this->language=new LanguageFixture($mirror.'/admin/language/'.$locale.'/localization/language.php');foreach(['request'=>$this->request,'response'=>$this->response,'load'=>$this->loader,'document'=>$this->document,'language'=>$this->language,'config'=>$this->config,'user'=>new UserFixture($modify,$access),'session'=>$this->session,'url'=>new UrlFixture(),'model_localization_language'=>$this->store,'model_setting_setting'=>$this->settings]as$key=>$value)$this->registry->set($key,$value);$this->controller=new Controller($this->registry);}
++    public function post(array $data):void{$this->request->server['REQUEST_METHOD']='POST';$this->request->post=$data;}
++}
++final class DbFixture {
++    public array $queries=[];public array $rows=[];public array $row=[];
++    public function escape(string $s):string{return addslashes($s);}
++    public function query(string $sql):\stdClass{$this->queries[]=$sql;return(object)['rows'=>$this->rows,'row'=>$this->row?:['total'=>7]];}
++}
++final class Suite {
++    private static int $passed=0;private static int $failed=0;private static string $mirror;
++    private static function ok(bool $t,string $m):void{if(!$t)throw new \RuntimeException($m);}
++    private static function test(string $label,callable $fn):void{try{$fn();self::$passed++;echo'PASS '.$label.PHP_EOL;}catch(\Throwable $e){self::$failed++;fwrite(STDERR,'FAIL '.$label.': '.$e->getMessage().PHP_EOL);}}
++    private static function harness(?StoreFixture $s=null,?Session $session=null,string $locale='en-us',bool $modify=true,bool $access=true,?SettingsFixture $settings=null):Harness{return new Harness(self::$mirror,$s,$session,$locale,$modify,$access,$settings);}
++    private static function populated(int $n):StoreFixture{$s=new StoreFixture();for($i=4;$i<=$n;$i++)$s->records[$i]=['language_id'=>$i,'name'=>sprintf('QA %03d',$i),'code'=>sprintf('qa-%03d',$i),'locale'=>sprintf('qa_%03d.UTF-8',$i),'sort_order'=>$i,'status'=>$i%2];return$s;}
++    private static function model():array{$r=new Registry();$db=new DbFixture();$r->set('db',$db);return[new Model($r),$db];}
++    private static function valid(Harness $h,array $p):void{$h->post($p+['csrf_token'=>Csrf::token($h->session)]);}
++    private static function editPayload(StoreFixture $s,int $id=2):array{$row=$s->records[$id];return['name'=>$row['name'],'locale'=>$row['locale'],'sort_order'=>(string)$row['sort_order'],'status'=>(string)$row['status']];}
++    public static function run(string $mirror):int{
++        self::$mirror=$mirror;
++        self::test('01 · model sem argumentos completo/ordem original',static function():void{[$m,$db]=self::model();$m->getLanguages();$q=end($db->queries);self::ok(!str_contains($q,' WHERE ')&&!str_contains($q,' LIMIT ')&&str_ends_with($q,'ORDER BY `sort_order` ASC, `language_id` ASC'),'Contrato antigo alterado');});
++        self::test('02 · busca/status/limites escapados',static function():void{[$m,$db]=self::model();$m->getLanguages(['search'=>"O'Brien",'status'=>'0','start'=>-1,'limit'=>999]);$q=end($db->queries);self::ok(str_contains($q,"O\\'Brien")&&str_contains($q,'`name` LIKE')&&str_contains($q,'`code` LIKE')&&str_contains($q,'`locale` LIKE')&&str_contains($q,"`status` = '0'")&&str_ends_with($q,'LIMIT 0, 100'),'SQL filtros incorreto');});
++        self::test('03 · total usa predicados da lista',static function():void{[$m,$db]=self::model();$f=['search'=>'qa','status'=>'1'];self::ok($m->getTotalLanguages($f)===7,'Total incorreto');$count=end($db->queries);$m->getLanguages($f);$q=end($db->queries);$q=substr($q,strpos($q,'FROM '));$q=substr($q,0,strpos($q,' ORDER BY'));self::ok(substr($count,strpos($count,'FROM '))===$q,'Predicados divergentes');});
++        self::test('04 · getLanguage mantém ID/limit1',static function():void{[$m,$db]=self::model();$db->row=['language_id'=>12,'code'=>'pt-br'];self::ok($m->getLanguage(12)['code']==='pt-br'&&str_contains((string)end($db->queries),"WHERE `language_id` = '12' LIMIT 1"),'Get mudou');});
++        self::test('05 · editLanguage não atualiza code/schema',static function():void{[$m,$db]=self::model();$m->editLanguage(12,['name'=>"O'Brien",'locale'=>'pt_BR.UTF-8','sort_order'=>7,'status'=>1]);$q=end($db->queries);self::ok(str_contains($q,"O\\'Brien")&&str_contains($q,"`sort_order` = '7'")&&!str_contains($q,'`code` =')&&!preg_match('/ALTER|DROP|CREATE/',$q),'Código/schema alterados');});
++        self::test('06 · getEnabledCodes real respeita diretório em FS privado',static function():void{[$m,$db]=self::model();$db->rows=[['code'=>'en-us'],['code'=>'qa-missing']];self::ok($m->getEnabledCodes()===['en-us']&&str_contains((string)end($db->queries),'WHERE `status` = 1'),'Gate FS/status alterado');});
++        self::test('07 · GET lista não altera idiomas/padrões',static function():void{$h=self::harness();$before=$h->store->records;$h->controller->index();self::ok($h->store->records===$before&&$h->store->edits===[]&&$h->settings->writes===[]&&$h->loader->data['default_admin']==='en-us'&&$h->loader->data['default_catalog']==='en-us','GET mudou padrões');});
++        self::test('08 · grade45/página2 tem20 e opções completas45',static function():void{$h=self::harness(self::populated(45));$h->request->get['page']='2';$h->controller->index();self::ok(count($h->loader->data['languages'])===20&&count($h->loader->data['language_options'])===45&&$h->loader->data['total_languages']===45,'Seletores foram paginados');});
++        self::test('09 · recuo e queries arrays normalizados',static function():void{$h=self::harness(self::populated(45));$h->request->get['page']=(string)PHP_INT_MAX;$h->controller->index();self::ok(count($h->loader->data['languages'])===5,'Recuo inválido');$h=self::harness();$h->request->get=['filter_search'=>[],'filter_status'=>[],'page'=>[]];$h->controller->index();self::ok($h->loader->data['filter_search']===''&&$h->loader->data['filter_status']==='all','Query array não normalizada');});
++        self::test('10 · busca/status zero conservam reset',static function():void{foreach(['filter_search','filter_status']as$key){$h=self::harness();$h->request->get[$key]='0';$h->controller->index();self::ok(str_contains($h->response->output,'>Reset</a>'),'Filtro0 sem reset');}});
++        self::test('11 · busca nome/código/locale e status combinam',static function():void{foreach(['Português','pt-br','pt_BR']as$q){$h=self::harness();$h->request->get=['filter_search'=>$q,'filter_status'=>'1'];$h->controller->index();self::ok($h->loader->data['total_languages']===1,'Busca não localizou nome/code/locale');}});
++        self::test('12 · pager mantém busca/status sem escape duplo',static function():void{$s=self::populated(45);foreach($s->records as&$r)$r['name']="O'Brien & <tag>";unset($r);$h=self::harness($s);$h->request->get=['filter_search'=>"O'Brien & <tag>",'filter_status'=>'1'];$h->controller->index();$html=$h->loader->data['pagination'];self::ok(!str_contains($html,'&amp;amp;')&&!str_contains($h->response->output,'<tag>'),'Escape inválido');preg_match_all('/href="([^"]+)"/',$html,$m);self::ok(count($m[1])>0,'Pager ausente');foreach($m[1]as$a){parse_str((string)parse_url(html_entity_decode($a,ENT_QUOTES|ENT_HTML5,'UTF-8'),PHP_URL_QUERY),$q);self::ok(($q['filter_search']??'')==="O'Brien & <tag>"&&($q['filter_status']??'')==='1','Query perdida');}});
++        self::test('13 · readonly lista sem salvar, fieldset disabled',static function():void{$h=self::harness(null,null,'en-us',false);$h->controller->index();self::ok(str_contains($h->response->output,'<fieldset disabled>')&&str_contains($h->response->output,$h->language->get('text_readonly_notice')),'Readonly não sinalizado');self::ok(!str_contains($h->response->output,'class="btn btn-primary">Save</button>'),'Save readonly visível');});
++        self::test('14 · access negado para lista não chega à view/escrita',static function():void{$h=self::harness(null,null,'en-us',true,false);$h->controller->index();self::ok(str_contains($h->response->location,'error/permission')&&$h->response->output===''&&$h->settings->writes===[],'Access não interrompeu');});
++        self::test('15 · defaults sem CSRF não persistem',static function():void{$h=self::harness();$h->post(['config_language_catalog'=>'pt-br','config_language_admin'=>'es-eu']);$h->controller->index();self::ok($h->settings->writes===[]&&($h->session->data['flash']['text']??'')===$h->language->get('error_csrf'),'CSRF defaults falhou');});
++        self::test('16 · defaults válidos só POST explícito, duas chaves/PRG',static function():void{$h=self::harness();self::valid($h,['config_language_catalog'=>'pt-br','config_language_admin'=>'es-eu']);$h->controller->index();self::ok($h->settings->writes===[['config_language_catalog'=>'pt-br','config_language_admin'=>'es-eu']]&&$h->store->edits===[]&&$h->response->output===''&&($h->session->data['flash']['type']??'')==='success','Defaults/retorno incorretos');self::ok($h->config->get('config_language_admin')==='en-us','Mudou config do mesmo request');});
++        self::test('17 · defaults ausentes/desabilitados/desconhecidos recusados',static function():void{foreach([['','en-us'],['qa-missing','en-us'],['pt-br','en-us']]as[$catalog,$admin]){$s=new StoreFixture();$s->records[2]['status']=0;$h=self::harness($s);self::valid($h,['config_language_catalog'=>$catalog,'config_language_admin'=>$admin]);$h->controller->index();self::ok($h->settings->writes===[]&&($h->session->data['flash']['type']??'')==='error','Default inválido persistiu');}});
++        self::test('18 · defaults readonly negados com token válido',static function():void{$h=self::harness(null,null,'en-us',false);self::valid($h,['config_language_catalog'=>'pt-br','config_language_admin'=>'es-eu']);$h->controller->index();self::ok($h->settings->writes===[]&&str_contains($h->response->location,'error/permission'),'ACL defaults falhou');});
++        self::test('19 · token array/incorreto recusado nos defaults',static function():void{foreach([[],'wrong']as$t){$h=self::harness();$h->post(['config_language_catalog'=>'pt-br','config_language_admin'=>'es-eu','csrf_token'=>$t]);$h->controller->index();self::ok($h->settings->writes===[],'Token inválido aceito');}});
++        self::test('20 · filtrar grade vazia não apaga opções/padrões',static function():void{$h=self::harness(self::populated(45));$h->request->get['filter_search']='not-found';$h->controller->index();self::ok($h->loader->data['languages']===[]&&count($h->loader->data['language_options'])===45&&str_contains($h->response->output,'value="qa-045"'),'Opções herdaram filtro da grade');});
++        self::test('21 · GET edit inicializa error/IDs/limits/code readonly',static function():void{$h=self::harness();$h->controller->edit('2');$html=$h->response->output;foreach(['name','code','locale','sort_order']as$id)self::ok(str_contains($html,'id="'.$id.'"'),'ID perdido');self::ok($h->loader->data['error']===''&&str_contains($html,'id="code" value="pt-br" disabled')&&!str_contains($html,'name="code"')&&str_contains($html,'maxlength="32"'),'GET error/código incorreto');});
++        self::test('22 · edit ID inexistente interrompe após redirect',static function():void{$h=self::harness();$h->controller->edit('999');self::ok($h->response->output===''&&str_contains($h->response->location,'localization/language')&&($h->session->data['flash']['text']??'')===$h->language->get('error_not_found'),'ID ausente continuou');});
++        self::test('23 · edit sem access não lê registro/view',static function():void{$h=self::harness(null,null,'en-us',true,false);$h->controller->edit('2');self::ok($h->store->gets===[]&&$h->response->output===''&&str_contains($h->response->location,'error/permission'),'Access edit não interrompeu');});
++        self::test('24 · edit sem CSRF não grava e traduz erro',static function():void{foreach([null,[],'wrong']as$t){$h=self::harness();$p=self::editPayload($h->store);if($t!==null)$p['csrf_token']=$t;$h->post($p);$h->controller->edit('2');self::ok($h->store->edits===[]&&$h->loader->data['error']===$h->language->get('error_csrf'),'CSRF edit falhou');}});
++        self::test('25 · edit readonly negado com token válido',static function():void{$h=self::harness(null,null,'en-us',false);self::valid($h,self::editPayload($h->store));$h->controller->edit('2');self::ok($h->store->edits===[]&&$h->response->output===''&&str_contains($h->response->location,'error/permission'),'ACL edit não interrompeu');});
++        self::test('26 · edit válido mantém código e altera só metadados',static function():void{$h=self::harness();self::valid($h,['name'=>'Português QA','locale'=>'pt_BR.UTF-8','sort_order'=>'7','status'=>'1']);$h->controller->edit('2');$r=$h->store->records[2];self::ok($r['name']==='Português QA'&&$r['sort_order']===7&&$r['code']==='pt-br'&&$h->settings->writes===[],'Metadados/código/padrões misturados');});
++        self::test('27 · não desativa default de qualquer aplicação',static function():void{foreach([1,2]as$id){$h=self::harness();$h->config->values['config_language_catalog']='pt-br';$p=self::editPayload($h->store,$id);unset($p['status']);self::valid($h,$p);$h->controller->edit((string)$id);self::ok($h->store->edits===[]&&str_contains($h->loader->data['error'],$h->language->get('error_disable_default')),'Default desativado');}});
++        self::test('28 · idioma não padrão pode desativar em fixture sem trocar defaults',static function():void{$h=self::harness();$p=self::editPayload($h->store,3);unset($p['status']);self::valid($h,$p);$h->controller->edit('3');self::ok($h->store->records[3]['status']===0&&$h->settings->writes===[]&&$h->config->get('config_language_admin')==='en-us','Status/padrões mudaram indevidamente');});
++        self::test('29 · erro repovoa POST e unchecked sem static-this fatal',static function():void{$h=self::harness();self::valid($h,['name'=>'','locale'=>'pt_QA.UTF-8','sort_order'=>'9']);$h->controller->edit('2');self::ok($h->store->edits===[]&&$h->loader->data['entry']['name']===''&&$h->loader->data['entry']['locale']==='pt_QA.UTF-8'&&$h->loader->data['entry']['sort_order']===9&&$h->loader->data['entry']['status']===0&&$h->loader->data['error']===$h->language->get('error_name'),'Repovo/callback de erro inválidos');});
++        self::test('30 · POST code forjado é ignorado',static function():void{$h=self::harness();$p=self::editPayload($h->store);$p['code']='evil';self::valid($h,$p);$h->controller->edit('2');self::ok($h->store->records[2]['code']==='pt-br','Código trocado');});
++        self::test('31 · limites32 de name/locale preservados',static function():void{foreach(['name','locale']as$key){$h=self::harness();$p=self::editPayload($h->store);$p[$key]=str_repeat('ã',33);self::valid($h,$p);$h->controller->edit('2');self::ok($h->store->edits===[]&&str_contains($h->loader->data['error'],$h->language->get('error_'.$key)),'Teto32 perdido');}});
++        self::test('32 · default-lock tem checkbox disabled e status hidden1',static function():void{$h=self::harness();$h->controller->edit('1');$html=$h->response->output;self::ok(str_contains($html,'id="language-status" value="1" checked disabled')&&str_contains($html,'type="hidden" name="status" value="1"')&&str_contains($html,$h->language->get('text_default_locked')),'UI permite apagar default');});
++        self::test('33 · readonly edit disabled sem Save e código visível',static function():void{$h=self::harness(null,null,'en-us',false);$h->controller->edit('2');self::ok(str_contains($h->response->output,'<fieldset disabled>')&&!str_contains($h->response->output,'type="submit"')&&str_contains($h->response->output,'value="pt-br"'),'Readonly edit inválido');});
++        self::test('34 · i18n3 Twig strict e dados POST escapados',static function():void{$keys=null;foreach(['en-us','pt-br','es-eu']as$locale){$h=self::harness(null,null,$locale);$h->controller->index();self::ok(str_contains($h->response->output,$h->language->get('heading_title')),'Heading não traduzido');$h->controller->edit('2');$k=array_keys($h->language->values);sort($k);if($keys!==null)self::ok($keys===$k,'Chaves divergentes');$keys=$k;}$h=self::harness();self::valid($h,['name'=>'<script>x</script>','locale'=>'','sort_order'=>'2','status'=>'1']);$h->controller->edit('2');self::ok(!str_contains($h->response->output,'<script>x')&&str_contains($h->response->output,'&lt;script&gt;'),'POST não escapado');});
++        self::test('35 · falta de diretório sinaliza sem criar/alterar nada',static function():void{$h=self::harness(self::populated(4));$h->request->get['filter_search']='qa-004';$h->controller->index();self::ok(!$h->loader->data['languages'][0]['dir_exists']&&str_contains($h->response->output,$h->language->get('text_dir_missing'))&&$h->store->edits===[]&&!is_dir(DIR_APPLICATION.'language/qa-004'),'Diretório foi criado ou aviso perdido');});
++        self::test('36 · CSRF estável da lista para edit na mesma sessão',static function():void{$h=self::harness();$h->controller->index();$token=$h->loader->data['csrf_token'];$get=self::harness($h->store,$h->session);$get->controller->edit('2');self::ok(strlen($token)===64&&$get->loader->data['csrf_token']===$token,'Token de sessão mudou');});
++        self::test('37 · defaults salvos aplicam no GET seguinte da fixture',static function():void{$h=self::harness();self::valid($h,['config_language_catalog'=>'pt-br','config_language_admin'=>'es-eu']);$h->controller->index();$get=self::harness($h->store,$h->session,'en-us',true,true,$h->settings);$get->controller->index();self::ok($get->loader->data['default_catalog']==='pt-br'&&$get->loader->data['default_admin']==='es-eu','Roundtrip defaults em memória falhou');});
++        self::test('38 · sem add/delete/upload, opções continuam instaladas',static function():void{$h=self::harness();$h->controller->index();self::ok(!method_exists(Controller::class,'add')&&!method_exists(Controller::class,'delete')&&!method_exists(Controller::class,'upload')&&count($h->store->records)===3&&!str_contains($h->response->output,'language.add'),'Inventou idioma/CRUD novo');});
++        self::test('39 · assets locais versionados e sem JS runtime/inline novo',static function():void{$h=self::harness();$h->controller->index();self::ok(str_contains(implode('',$h->document->styles),'admin.css?v=')&&$h->document->scripts===[]&&!str_contains($h->response->output,'<script>'),'Assets incorretos');});
++        self::test('40 · sucesso edit interrompe PRG e deixa flash sucesso',static function():void{$h=self::harness();self::valid($h,self::editPayload($h->store));$h->controller->edit('2');self::ok(count($h->store->edits)===1&&$h->response->output===''&&($h->session->data['flash']['text']??'')===$h->language->get('text_success_edit'),'Fluxo continuou após redirect');});
++        echo"\nF8-11 contratos: ".self::$passed.' PASS / '.self::$failed.' FAIL — PHP '.PHP_VERSION.', Twig '.\Twig\Environment::VERSION."; DB/serviços/IO sessão em fixtures, diretórios privados; sem idioma/default/banco/HTTP/browser reais alterados.\n";return self::$failed?1:0;
++    }
++}
++set_error_handler(static function(int $severity,string $message,string $file,int $line):bool{if(!(error_reporting()&$severity))return false;throw new \ErrorException($message,0,$severity,$file,$line);});
++try{$code=Suite::run($mirror);}finally{DirsFixture::cleanup();}
++exit($code);
+diff --git a/tools/e2e/e2e_f811_http.cjs b/tools/e2e/e2e_f811_http.cjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..69425884c3d99709611ca2e50cfb2d826216c520
+--- /dev/null
++++ b/tools/e2e/e2e_f811_http.cjs
+@@ -0,0 +1,56 @@
++#!/usr/bin/env node
++'use strict';
++/** F8-11 — HTTP opt-in de laboratório: muda SOMENTE sort_order de um idioma
++ * ativo não-padrão explicitamente identificado e restaura. Nunca POST defaults,
++ * cria idioma, troca code/locale/status ou remove diretórios. Não é navegador.
++ */
++const fs=require('node:fs');const path=require('node:path');const crypto=require('node:crypto');const assert=require('node:assert/strict');
++const shared=require('./e2e_f806_http.cjs');const h=require('./e2e_f805_browser.js').helpers;
++const ROUTE='localization/language';const FILES=['admin/controller/localization/language.php','admin/model/localization/language.php','admin/view/template/localization/language_list.twig','admin/view/template/localization/language_form.twig','admin/view/css/admin.css',...['en-us','pt-br','es-eu'].map(c=>`admin/language/${c}/localization/language.php`)];
++function ok(condition,message){if(!condition)throw new Error(message);}
++function languageId(value){ok(typeof value==='string'&&/^[1-9][0-9]*$/.test(value)&&Number.isSafeInteger(Number(value)),'F811_LANGUAGE_ID exige ID real listado, nunca presumido.');return Number(value);}
++function codeValid(code){return typeof code==='string'&&/^[a-z][a-z0-9-]{1,31}$/.test(code);}
++function indexData(html,base){const root=[...html.matchAll(/<div\b([^>]*)>/gi)].map(m=>shared.attrs(m[1])).find(a=>(a.class||'').split(/\s+/).includes('localization-language-list'));ok(root,'Lista de idiomas esperada ausente.');const form=shared.forms(html).find(f=>f.attrs.method==='post'&&Object.hasOwn(f.attrs,'data-language-defaults')&&h.routeOf(f.attrs.action,base)===ROUTE);ok(form,'Form de padrões esperado ausente.');const selected={};const sets=[];for(const m of form.html.matchAll(/<select\b([^>]*)>([\s\S]*?)<\/select>/gi)){const a=shared.attrs(m[1]);if(!['config_language_catalog','config_language_admin'].includes(a.name))continue;const options=[...m[2].matchAll(/<option\b([^>]*)>/gi)].map(m=>shared.attrs(m[1]));ok(options.length>0,'Opções de padrões ausentes.');const current=options.find(o=>Object.hasOwn(o,'selected'));ok(current&&!Object.hasOwn(current,'disabled'),'Padrão atual ausente/inativo; parar antes de ordenar.');selected[a.name]=current.value;sets.push(options.map(o=>o.value+':'+(Object.hasOwn(o,'disabled')?'0':'1')).sort());}ok(sets.length===2&&JSON.stringify(sets[0])===JSON.stringify(sets[1]),'Seletores não têm as mesmas opções completas.');ok(selected.config_language_catalog===root['data-default-catalog']&&selected.config_language_admin===root['data-default-admin'],'Padrões do formulário divergentes.');const body=(html.match(/<tbody\b[^>]*>([\s\S]*?)<\/tbody>/i)||[])[1]||'';const rows=[];for(const m of body.matchAll(/<tr\b([^>]*)>([\s\S]*?)<\/tr>/gi)){const a=shared.attrs(m[1]);if(!a['data-language-id'])continue;const id=languageId(a['data-language-id']);let edit='';for(const link of m[2].matchAll(/<a\b([^>]*)>/gi)){const attrs=shared.attrs(link[1]);if(attrs.href&&h.routeOf(attrs.href,base)===ROUTE+'.edit|'+id)edit=h.scopedUrl(attrs.href,base).href;}ok(edit,'Link de idioma não confere com ID.');rows.push({id,code:a['data-language-code'],status:a['data-language-status'],dir:a['data-language-dir'],edit});}return{defaults:selected,options:sets[0],rows,form};}
++function editData(html,base,id){const root=[...html.matchAll(/<div\b([^>]*)>/gi)].map(m=>shared.attrs(m[1])).find(a=>(a.class||'').split(/\s+/).includes('localization-language-form'));ok(root&&languageId(root['data-language-id'])===id,'ID de detalhe não confere.');const form=shared.forms(html).find(f=>f.attrs.method==='post'&&Object.hasOwn(f.attrs,'data-language-edit')&&h.routeOf(f.attrs.action,base)===ROUTE+'.edit|'+id);ok(form,'Form edit esperado ausente.');const inputs=[...form.html.matchAll(/<input\b([^>]*)>/gi)].map(m=>shared.attrs(m[1]));const code=inputs.find(a=>a.id==='code');ok(code&&Object.hasOwn(code,'disabled')&&!code.name&&code.value===root['data-language-code'],'Código não é imutável na UI.');ok(/<button[^>]*type="submit"/.test(form.html),'Conta readonly; nenhuma gravação autorizada.');return{id,code:code.value,defaultCatalog:root['data-default-catalog']==='1',defaultAdmin:root['data-default-admin']==='1',form};}
++function targetAllowed(row,defaults,id,code){ok(row&&row.id===id&&row.code===code&&row.status==='1'&&row.dir==='1','Alvo não é idioma instalado/ativo esperado.');ok(code!=='en-us'&&code!==defaults.config_language_catalog&&code!==defaults.config_language_admin,'Não operar inglês canônico ou idioma padrão.');}
++function snapshot(edit){const f=edit.form.fields;ok(typeof f.name==='string'&&f.name.trim()&&typeof f.locale==='string'&&f.locale.trim()&&f.status==='1'&&/^(0|[1-9][0-9]{0,4})$/.test(f.sort_order||''),'Metadados não são seguros para teste limitado de ordenação.');return{id:edit.id,code:edit.code,name:f.name,locale:f.locale,status:'1',sort_order:f.sort_order};}
++function sameEntry(current,original,sort){ok(current.id===original.id&&current.code===original.code&&current.form.fields.name===original.name&&current.form.fields.locale===original.locale&&current.form.fields.status===original.status&&current.form.fields.sort_order===String(sort),'Metadados divergiram; parar sem sobrescrever.');ok(!current.defaultCatalog&&!current.defaultAdmin,'Idioma tornou-se padrão; parar.');}
++function sameDefaults(current,initial){ok(JSON.stringify(current.defaults)===JSON.stringify(initial.defaults)&&JSON.stringify(current.options)===JSON.stringify(initial.options),'Padrões/opções/status dos idiomas mudaram; parar.');}
++function sortPayload(original,sort,token){return{name:original.name,locale:original.locale,sort_order:String(sort),status:original.status,csrf_token:token};}
++function preflight(env){ok(env.ALLOW_F811_HTTP==='YES_WRITE_REAMUR_TEST','HTTP bloqueado: ALLOW_F811_HTTP=YES_WRITE_REAMUR_TEST obrigatório.');ok(env.F811_USERNAME&&env.F811_PASSWORD,'Defina credenciais fictícias F811_USERNAME/F811_PASSWORD.');languageId(env.F811_LANGUAGE_ID);ok(codeValid(env.F811_LANGUAGE_CODE)&&env.F811_LANGUAGE_CODE!=='en-us','F811_LANGUAGE_CODE exige código real não inglês canônico.');const s=shared.preflight({...env,ALLOW_F806_HTTP:env.ALLOW_F811_HTTP,F806_USERNAME:env.F811_USERNAME,F806_PASSWORD:env.F811_PASSWORD,F806_REPORT:undefined});for(const relative of FILES){for(const root of[s.mirror,s.fui]){const file=path.join(root,relative);ok(fs.lstatSync(file).isFile()&&fs.realpathSync(file)===file,'Fonte idiomas não canônica.');}ok(fs.readFileSync(path.join(s.mirror,relative)).equals(fs.readFileSync(path.join(s.fui,relative))),'Idiomas MIRROR/FUI divergentes: '+relative);}const c=fs.readFileSync(path.join(s.mirror,FILES[0]),'utf8');ok(c.includes('csrfValid()')&&c.includes('getTotalLanguages(')&&c.includes('language_options'),'Tarefa11 não aplicada.');if(env.F811_REPORT)ok(path.isAbsolute(env.F811_REPORT)&&!fs.existsSync(env.F811_REPORT)&&fs.statSync(path.dirname(env.F811_REPORT)).isDirectory(),'Relatório exige caminho absoluto novo.');return s;}
++async function live(env){const s=preflight(env);const base=s.base;const id=languageId(env.F811_LANGUAGE_ID);const code=env.F811_LANGUAGE_CODE;const nonce=crypto.randomBytes(16).toString('hex');const probe=path.join(s.fui,`admin/view/js/f811-probe-${nonce}.txt`);const client=new shared.Client(base);const uri=(params={})=>shared.uri(base,ROUTE,params);let madeProbe=false,wrote=false,initial=null,original=null,testSort=null;const report={task:'Fase 8 / Tarefa 11',kind:'http-workflow',operation:'nondefault-sort-and-restore',languageId:id,languageCode:code,status:'running',startedAt:new Date().toISOString(),steps:[],restoration:'not-needed',cleanup:'not-needed',defaultsUnchanged:false,notCovered:['POST de padrões/status/locale/code deliberadamente não executado','navegador/Bootstrap/CSS/contraste/perfil readonly real','21+ idiomas no servidor']};
++ function hide(message){let text=h.redact(message);for(const secret of[env.F811_USERNAME,env.F811_PASSWORD])if(secret)text=text.split(secret).join('[REDACTED]');return text;}
++ async function step(label,fn){try{await fn();report.steps.push({label,status:'pass'});}catch(e){report.steps.push({label,status:'fail',error:hide(e.message)});throw e;}}
++ function verifyDefaults(current){try{sameDefaults(current,initial);}catch(e){report.defaultsUnchanged=false;throw e;}}
++ async function index(params={}){const r=await client.request(uri(params));return indexData(r.html,base);}
++ async function edit(){const r=await client.request(shared.uri(base,ROUTE+'.edit|'+id));return editData(r.html,base,id);}
++ try{
++  await step('Probe identifica FUI antes das credenciais',async()=>{fs.writeFileSync(probe,nonce,{flag:'wx',mode:0o644});madeProbe=true;ok((await client.request(new URL(`admin/view/js/f811-probe-${nonce}.txt`,base).href)).html===nonce,'B não serve o FUI autorizado.');});
++  await step('Login único CSRF/cookies só em memória',async()=>{const r=await client.request(shared.uri(base,'common/login'));const f=shared.forms(r.html).find(f=>f.attrs.action&&h.routeOf(f.attrs.action,base)==='common/login');ok(f&&/^[a-f0-9]{64}$/.test(f.fields.csrf_token||''),'CSRF login ausente.');const next=await client.request(f.attrs.action,{...f.fields,username:env.F811_USERNAME,password:env.F811_PASSWORD});ok(h.routeOf(next.url,base)!=='common/login','Login recusado; não repetir.');});
++  await step('GET ×3 idiomas: padrões/opções completos e inalterados',async()=>{for(const locale of['en-us','pt-br','es-eu']){const current=await index({language:locale});if(initial)verifyDefaults(current);else initial=current;}report.defaultsUnchanged=true;});
++  await step('Localizar ID/código real ativo e não-padrão, sem criar idioma',async()=>{const current=await index({filter_search:code,filter_status:'all'});verifyDefaults(current);const row=current.rows.find(r=>r.id===id);targetAllowed(row,current.defaults,id,code);});
++  await step('Capturar metadados originais e código imutável',async()=>{const current=await edit();ok(current.code===code&&!current.defaultCatalog&&!current.defaultAdmin,'Alvo é padrão/código divergente.');original=snapshot(current);testSort=Number(original.sort_order)+1;report.originalSortOrder=Number(original.sort_order);report.testSortOrder=testSort;});
++  await step('POST edit sem CSRF não altera ordenação',async()=>{wrote=true;report.restoration='pending';report.cleanup='pending';const current=await edit();sameEntry(current,original,original.sort_order);await client.request(current.form.attrs.action,sortPayload(original,testSort,'wrong'));sameEntry(await edit(),original,original.sort_order);verifyDefaults(await index());});
++  await step('Alterar somente sort_order do não-padrão e reabrir',async()=>{const current=await edit();sameEntry(current,original,original.sort_order);await client.request(current.form.attrs.action,sortPayload(original,testSort,current.form.fields.csrf_token));sameEntry(await edit(),original,testSort);verifyDefaults(await index());});
++  await step('Restaurar sort_order original após revalidar todos os campos',async()=>{const current=await edit();sameEntry(current,original,testSort);await client.request(current.form.attrs.action,sortPayload(original,original.sort_order,current.form.fields.csrf_token));sameEntry(await edit(),original,original.sort_order);report.restoration='complete';});
++  await step('GET filtrado e sem filtro não trocam padrões/status/opções',async()=>{verifyDefaults(await index());const current=await index({filter_search:code,filter_status:'1'});verifyDefaults(current);targetAllowed(current.rows.find(r=>r.id===id),current.defaults,id,code);});
++  await step('Conferir restauração exata e nenhuma criação/troca de padrão',async()=>{sameEntry(await edit(),original,original.sort_order);verifyDefaults(await index());report.defaultsUnchanged=true;report.cleanup='complete';});
++  report.status='passed';
++ }catch(e){report.status=wrote?'failed':'blocked';report.error=hide(e.message);}
++ finally{if(madeProbe){try{ok(!fs.lstatSync(probe).isSymbolicLink()&&fs.readFileSync(probe,'utf8')===nonce,'Probe alterado; não remover.');fs.unlinkSync(probe);}catch(e){report.status='failed';report.cleanup='pending';report.probeCleanup='pending';report.probeName=path.basename(probe);report.error=hide(e.message);}}report.finishedAt=new Date().toISOString();report.summary={passed:report.steps.filter(s=>s.status==='pass').length,failed:report.steps.filter(s=>s.status==='fail').length};console.log(JSON.stringify(report,null,2));if(env.F811_REPORT)fs.writeFileSync(env.F811_REPORT,JSON.stringify(report,null,2)+'\n',{flag:'wx',mode:0o600});}return report.status==='passed'?0:1;
++}
++async function selfTest(){const inherited=await shared.selfTest();let pass=0,fail=0;async function t(label,fn){try{await fn();pass++;console.log('PASS '+label);}catch(e){fail++;console.error('FAIL '+label+': '+e.message);}}const base='http://127.0.0.1:8090/dev/';const uri=r=>shared.uri(base,r);
++ const html='<div class="localization-language-list" data-default-catalog="en-us" data-default-admin="en-us"><form method="post" action="'+uri(ROUTE)+'" data-language-defaults><input name="csrf_token" value="x"><select name="config_language_catalog"><option value="en-us" selected>EN</option><option value="pt-br">PT</option></select><select name="config_language_admin"><option value="en-us" selected>EN</option><option value="pt-br">PT</option></select></form><table><tbody><tr data-language-id="12" data-language-code="pt-br" data-language-status="1" data-language-dir="1"><td><a href="'+uri(ROUTE+'.edit|12')+'">Edit</a></td></tr></tbody></table></div>';
++ const editHtml='<div class="localization-language-form" data-language-id="12" data-language-code="pt-br" data-default-catalog="0" data-default-admin="0"><form method="post" action="'+uri(ROUTE+'.edit|12')+'" data-language-edit><input id="code" value="pt-br" disabled><input name="name" value="Português"><input name="locale" value="pt_BR.UTF-8"><input name="sort_order" value="2"><input type="checkbox" name="status" value="1" checked><input name="csrf_token" value="x"><button type="submit">Save</button></form></div>';
++ await t('01 · seletores completos/padrões e ID reais do HTML',()=>{const d=indexData(html,base);assert.equal(d.defaults.config_language_admin,'en-us');assert.equal(d.options.length,2);assert.equal(d.rows[0].id,12);targetAllowed(d.rows[0],d.defaults,12,'pt-br');});
++ await t('02 · código readonly e metadados capturados',()=>{const d=editData(editHtml,base,12);const s=snapshot(d);assert.equal(s.code,'pt-br');assert.equal(s.sort_order,'2');assert.ok(!Object.hasOwn(d.form.fields,'code'));});
++ await t('03 · nunca operar default/inglês/desativado/IDdivergente',()=>{const defaults={config_language_catalog:'en-us',config_language_admin:'en-us'};for(const row of[{id:12,code:'en-us',status:'1',dir:'1'},{id:12,code:'pt-br',status:'0',dir:'1'},{id:13,code:'pt-br',status:'1',dir:'1'}])assert.throws(()=>targetAllowed(row,defaults,12,'pt-br'));assert.throws(()=>targetAllowed({id:12,code:'pt-br',status:'1',dir:'1'},{...defaults,config_language_catalog:'pt-br'},12,'pt-br'));});
++ await t('04 · payload só mantém campos e muda sort, nunca padrões/code',()=>{const d=editData(editHtml,base,12);const p=sortPayload(snapshot(d),3,'token');assert.deepEqual(Object.keys(p).sort(),['csrf_token','locale','name','sort_order','status']);assert.equal(p.sort_order,'3');assert.ok(!Object.keys(p).some(k=>k.includes('config_language')||k==='code'));});
++ await t('05 · divergência de nome/locale/status/default interrompe restauração',()=>{const d=editData(editHtml,base,12);const s=snapshot(d);sameEntry(d,s,2);d.form.fields.locale='changed';assert.throws(()=>sameEntry(d,s,2));const a=indexData(html,base);const changed={...a,defaults:{...a.defaults,config_language_admin:'pt-br'}};assert.throws(()=>sameDefaults(changed,a));});
++ await t('06 · IDs/códigos/sort não canônicos são recusados',()=>{for(const v of['0','01','x',undefined])assert.throws(()=>languageId(v));assert.equal(codeValid('../bad'),false);const d=editData(editHtml,base,12);d.form.fields.sort_order='-1';assert.throws(()=>snapshot(d));d.form.fields.sort_order='999999999';assert.throws(()=>snapshot(d));});
++ await t('07 · flags antigas não habilitam F8-11',()=>{assert.throws(()=>preflight({ALLOW_F810_HTTP:'YES_WRITE_REAMUR_TEST'}),/bloqueado/);assert.throws(()=>preflight({ALLOW_F811_HTTP:'YES_WRITE_REAMUR_TEST'}),/credenciais/);});
++ await t('08 · opções/selection inconsistentes são bloqueadas',()=>{assert.throws(()=>indexData(html.replace('data-default-admin="en-us"','data-default-admin="pt-br"'),base));assert.throws(()=>indexData(html.replace(/value="en-us" selected/g,'value="en-us" selected disabled'),base));const d=editData(editHtml,base,12);d.defaultAdmin=true;assert.throws(()=>sameEntry(d,snapshot(d),2));});
++ console.log(`F8-11 HTTP auxiliares novos: ${pass} PASS / ${fail} FAIL — mais16 F8-06 compartilhados; respostas em simulação, sem banco/idioma/default/browser reais alterados.`);return inherited||fail?1:0;
++}
++if(require.main===module){(async()=>{ok(process.argv.length===3,'Use e2e_f811.sh --help.');if(process.argv[2]==='--self-test')return selfTest();ok(process.argv[2]==='--http','Modo inválido.');return live(process.env);})().then(code=>{process.exitCode=code;}).catch(e=>{console.error('BLOQUEADO/ERRO: '+h.redact(e.message));process.exitCode=2;});}
++module.exports={indexData,editData,targetAllowed,snapshot,sameEntry,sameDefaults,sortPayload,languageId,codeValid,preflight,live,selfTest};

@@ -1,49 +1,20 @@
-{# dev/admin/view/template/localization/language_form.twig — edição de um idioma (F4-02, ADR 0025) #}
+{# Fase 8 / Tarefa 11 — código imutável, padrões protegidos, edição com CSRF. #}
 {{ header|raw }}
-<main class="dash">
-  <div class="page-head">
-    <h1>{{ heading_title }}</h1>
-    <a class="btn ghost" href="{{ back }}">{{ button_cancel }}</a>
-  </div>
-  <p class="muted">{{ text_list }}</p>
-
-  {% if error %}<div class="alert error">{{ error|nl2br }}</div>{% endif %}
-  {% if text_flash.text %}<div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>{% endif %}
-
-  <div class="panel form">
-    <form method="post" action="{{ action }}">
-      <div class="grid two">
-        <div class="field">
-          <label for="name">{{ entry_name_label }}</label>
-          <input type="text" id="name" name="name" value="{{ entry.name }}" maxlength="32" required>
-        </div>
-        <div class="field">
-          <label for="code">{{ entry_code_label }}</label>
-          <input type="text" id="code" value="{{ entry.code }}" disabled>
-        </div>
-      </div>
-      <div class="grid two">
-        <div class="field">
-          <label for="locale">{{ entry_locale_label }}</label>
-          <input type="text" id="locale" name="locale" value="{{ entry.locale }}" maxlength="32" required>
-        </div>
-        <div class="field">
-          <label for="sort_order">{{ entry_sort_order_label }}</label>
-          <input type="number" id="sort_order" name="sort_order" value="{{ entry.sort_order }}" min="0" step="1">
-        </div>
-      </div>
-      <div class="field check">
-        <label>
-          <input type="checkbox" name="status" value="1" {{ entry.status ? 'checked' }}> {{ entry_status_label }}
-        </label>
-      </div>
-      {% if is_default_catalog or is_default_admin %}
-      <p class="muted">{{ text_default_locked }}</p>
-      {% endif %}
-      <div class="actions">
-        <button type="submit" class="btn primary">{{ button_save }}</button>
-      </div>
-    </form>
-  </div>
-</main>
+<div class="localization-language-form" data-language-id="{{ entry.language_id }}" data-language-code="{{ entry.code }}" data-default-catalog="{{ is_default_catalog ? '1' : '0' }}" data-default-admin="{{ is_default_admin ? '1' : '0' }}">
+  <div class="page-titlebar"><div class="title-group"><h1 class="page-title"><i class="bi bi-translate me-2" aria-hidden="true"></i>{{ heading_title }}</h1></div><div class="titlebar-actions"><a class="btn btn-outline-secondary btn-sm" href="{{ back }}">{{ button_cancel }}</a></div></div>
+  <p class="text-body-secondary">{{ text_list }}</p>
+  {% if error %}<div class="alert alert-danger" role="alert">{{ error|nl2br }}</div>{% endif %}
+  {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }}" role="alert">{{ text_flash.text }}</div>{% endif %}
+  <div class="card data-card"><div class="card-body"><form method="post" action="{{ action }}" data-language-edit><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><fieldset{% if not can_modify %} disabled{% endif %}>
+    <div class="row g-3">
+      <div class="col-md-6 field"><label class="form-label" for="name">{{ entry_name_label }}</label><input class="form-control" type="text" id="name" name="name" value="{{ entry.name }}" maxlength="32" required data-counter></div>
+      <div class="col-md-6 field"><label class="form-label" for="code">{{ entry_code_label }}</label><input class="form-control" type="text" id="code" value="{{ entry.code }}" disabled>{% if not entry.dir_exists %}<div class="form-text text-warning-emphasis">{{ text_dir_missing }}</div>{% endif %}</div>
+      <div class="col-md-6 field"><label class="form-label" for="locale">{{ entry_locale_label }}</label><input class="form-control" type="text" id="locale" name="locale" value="{{ entry.locale }}" maxlength="32" required data-counter></div>
+      <div class="col-md-6 field"><label class="form-label" for="sort_order">{{ entry_sort_order_label }}</label><input class="form-control" type="number" id="sort_order" name="sort_order" value="{{ entry.sort_order }}" min="0" step="1"></div>
+    </div>
+    <div class="form-check form-switch mt-3"><input class="form-check-input" type="checkbox" name="status" id="language-status" value="1"{% if entry.status or is_default_catalog or is_default_admin %} checked{% endif %}{% if is_default_catalog or is_default_admin %} disabled{% endif %}><label class="form-check-label" for="language-status">{{ entry_status_label }}</label></div>
+    {% if is_default_catalog or is_default_admin %}<input type="hidden" name="status" value="1"><p class="form-text">{{ text_default_locked }}</p>{% endif %}
+    {% if can_modify %}<div class="d-flex justify-content-end mt-3"><button type="submit" class="btn btn-primary">{{ button_save }}</button></div>{% endif %}
+  </fieldset></form>{% if not can_modify %}<p class="text-body-secondary small mt-3 mb-0">{{ text_readonly_notice }}</p>{% endif %}</div></div>
+</div>
 {{ footer|raw }}

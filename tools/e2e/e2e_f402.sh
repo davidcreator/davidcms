@@ -57,6 +57,7 @@ ck 3 $OK "wall-anon"
 
 echo '══ 4 — lista GET: 200, 3 idiomas, selects default en-us/en-us ══'
 curl -s -c $JA -b $JA "$B/admin/localization/language" -o /tmp/f402_list.html -D /tmp/f402_l.hdr
+LANG_CSRF=$(grep -o 'name="csrf_token" value="[^"]*"' /tmp/f402_list.html | head -1 | sed 's/.*value="//;s/"//')
 H=$(hdr /tmp/f402_l.hdr); OK=0; [ "$H" = "200" ] || OK=1
 grep -q "Languages" /tmp/f402_list.html || OK=1
 N=$(grep -o 'route=localization/language.edit|' /tmp/f402_list.html | wc -l); [ "$N" = "3" ] || OK=1
@@ -69,6 +70,7 @@ ck 4 $OK "lista-pronta"
 
 echo '══ 5 — POST salva defaults (catalog=pt-br, admin=es-eu) → banco + round-trip ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language" \
+  --data-urlencode "csrf_token=$LANG_CSRF" \
   --data-urlencode "config_language_catalog=pt-br" --data-urlencode "config_language_admin=es-eu" \
   -D /tmp/f402_p05.hdr -o /dev/null
 OK=0
@@ -82,6 +84,7 @@ ck 5 $OK "save-round-trip"
 
 echo '══ 6 — aplicação REAL: desativar es-eu → switcher público some; reativar volta; default pt-br renderiza ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language.edit|3" \
+  --data-urlencode "csrf_token=$LANG_CSRF" \
   --data-urlencode "name=Español (ES)" --data-urlencode "locale=es_ES.UTF-8" --data-urlencode "sort_order=3" -o /dev/null -D /tmp/f402_e3.hdr
 R6A=$(hdr /tmp/f402_e3.hdr)
 ES_ST=$(q "SELECT status FROM reamur_test.rms_language WHERE language_id=3")
@@ -90,6 +93,7 @@ grep -q 'language=es-eu' /tmp/f402_home.html && ESPOS=1 || ESPOS=0
 grep -q 'language=pt-br' /tmp/f402_home.html; OKA=$?
 # reativa es-eu (restaura estado p/ baterias seguintes)
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language.edit|3" \
+  --data-urlencode "csrf_token=$LANG_CSRF" \
   --data-urlencode "name=Español (ES)" --data-urlencode "locale=es_ES.UTF-8" --data-urlencode "sort_order=3" --data-urlencode "status=1" -o /dev/null
 curl -s "$B/catalog/" -o /tmp/f402_home2.html
 grep -q 'language=es-eu' /tmp/f402_home2.html; OKB=$?
@@ -106,12 +110,14 @@ OK=0
 ESPOS=0; OKA=0; OKB=0; OKC=0        # neutraliza acumuladores do agregado legado abaixo
 # restaura default do catálogo para en-us (estado neutro)
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language" \
+  --data-urlencode "csrf_token=$LANG_CSRF" \
   --data-urlencode "config_language_catalog=en-us" --data-urlencode "config_language_admin=en-us" -o /dev/null
 OK=$((ESPOS + OKA + OKB + OKC))   # todos devem ser 0: hide ok, pt visível, es volta, home em pt (default)
 ck 6 $OK "app-application"
 
 echo '══ 7 — validação: idioma fora da lista enabled é rejeitado no POST ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language" \
+  --data-urlencode "csrf_token=$LANG_CSRF" \
   --data-urlencode "config_language_catalog=fr-fr" --data-urlencode "config_language_admin=en-us" \
   -D /tmp/f402_p07.hdr -o /dev/null
 OK=0
@@ -124,8 +130,10 @@ ck 7 $OK "validation-default"
 echo '══ 8 — validação: não pode desativar o idioma default ══'
 # coloca pt-br como default do catálogo, tenta desativar pt-br (edit|2 sem status)
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language" \
+  --data-urlencode "csrf_token=$LANG_CSRF" \
   --data-urlencode "config_language_catalog=pt-br" --data-urlencode "config_language_admin=en-us" -o /dev/null
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language.edit|2" \
+  --data-urlencode "csrf_token=$LANG_CSRF" \
   --data-urlencode "name=Português (BR)" --data-urlencode "locale=pt_BR.UTF-8" --data-urlencode "sort_order=2" \
   -D /tmp/f402_e2.hdr -o /dev/null
 OK=0
@@ -135,6 +143,7 @@ curl -s -c $JA -b $JA "$B/admin/localization/language" -o /tmp/f402_list4.html
 grep -qi "alert" /tmp/f402_list4.html || OK=1
 # desfaz: volta default p/ en-us
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=localization/language" \
+  --data-urlencode "csrf_token=$LANG_CSRF" \
   --data-urlencode "config_language_catalog=en-us" --data-urlencode "config_language_admin=en-us" -o /dev/null
 ck 8 $OK "validation-block-default"
 

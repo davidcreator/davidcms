@@ -43,3 +43,20 @@ $_['error_defaults_required'] = 'Pick a default for both apps.';
 $_['error_default_disabled']  = 'The default must be an ENABLED language.';
 $_['error_disable_default']   = 'You cannot disable the current default of an app. Move the default first.';
 $_['error_not_found']         = 'Language not found.';
+
+// Fase 8 / Tarefa 11 — shell, busca/paginação e CSRF.
+$_['text_home'] = 'Home';
+$_['text_all_status'] = 'All statuses';
+$_['text_search_placeholder'] = 'Search name, code or locale…';
+$_['text_showing'] = 'Showing %d–%d of %d languages';
+$_['text_empty_title'] = 'No matching languages';
+$_['text_empty_hint'] = 'Adjust the search or status filter.';
+$_['text_readonly_notice'] = 'You may view languages; saving changes requires modify permission.';
+$_['button_filter'] = 'Filter';
+$_['button_reset'] = 'Reset';
+$_['button_close'] = 'Close';
+$_['button_first_page'] = '« First';
+$_['button_last_page'] = 'Last »';
+$_['button_next_page'] = 'Next ›';
+$_['button_previous_page'] = '‹ Previous';
+$_['error_csrf'] = 'Invalid session token. Reload the form and try again.';

@@ -1,72 +1,20 @@
-{# dev/admin/view/template/localisation/language_list.twig — gestão de idiomas (F4-02, ADR 0025) #}
+{# Fase 8 / Tarefa 11 — grade paginada, opções de padrões sempre completas. #}
 {{ header|raw }}
-<main class="dash">
-  <div class="page-head">
-    <h1>{{ heading_title }}</h1>
-  </div>
-  <p class="muted">{{ text_list }}</p>
-
-  {% if text_flash.text %}
-  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
-  {% endif %}
-
-  {% if languages %}
-  <table class="table">
-    <thead>
-      <tr>
-        <th>{{ column_name }}</th>
-        <th>{{ column_code }}</th>
-        <th>{{ column_locale }}</th>
-        <th>{{ column_sort_order }}</th>
-        <th>{{ column_status }}</th>
-        <th class="right">{{ column_action }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for language in languages %}
-      <tr>
-        <td>{{ language.name }}</td>
-        <td><code>{{ language.code }}</code>{% if not language.dir_exists %} <span class="muted" title="{{ text_dir_missing }}">⚠</span>{% endif %}</td>
-        <td class="muted">{{ language.locale }}</td>
-        <td>{{ language.sort_order }}</td>
-        <td>{{ language.status ? text_enabled : text_disabled }}</td>
-        <td class="right actions">
-          <a class="btn ghost small" href="{{ language.edit }}">{{ button_edit }}</a>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p class="muted">{{ text_no_results }}</p>
-  {% endif %}
-
-  <div class="panel form">
-    <h2>{{ text_default_catalog }} / {{ text_default_admin }}</h2>
-    <p class="muted">{{ text_defaults_note }}</p>
-    <form method="post" action="{{ action }}">
-      <div class="grid two">
-        <div class="field">
-          <label for="config_language_catalog">{{ text_default_catalog }}</label>
-          <select id="config_language_catalog" name="config_language_catalog">
-            {% for language in languages %}
-            <option value="{{ language.code }}" {{ language.code == default_catalog ? 'selected' }} {{ language.status ? '' : 'disabled' }}>{{ language.name }} ({{ language.code }})</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="field">
-          <label for="config_language_admin">{{ text_default_admin }}</label>
-          <select id="config_language_admin" name="config_language_admin">
-            {% for language in languages %}
-            <option value="{{ language.code }}" {{ language.code == default_admin ? 'selected' }} {{ language.status ? '' : 'disabled' }}>{{ language.name }} ({{ language.code }})</option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-      <div class="actions">
-        <button type="submit" class="btn primary">{{ button_save }}</button>
-      </div>
-    </form>
-  </div>
-</main>
+<div class="localization-language-list" data-default-catalog="{{ default_catalog }}" data-default-admin="{{ default_admin }}">
+  <div class="page-titlebar"><div class="title-group"><h1 class="page-title"><i class="bi bi-translate me-2" aria-hidden="true"></i>{{ heading_title }}</h1>{% if total_languages > 0 %}<span class="badge rounded-pill badge-total">{{ total_languages }}</span>{% endif %}</div></div>
+  <p class="text-body-secondary">{{ text_list }}</p>
+  {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">{{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ button_close }}"></button></div>{% endif %}
+  <form method="get" action="{{ filter_action }}" class="filter-bar" role="search" aria-label="{{ button_filter }}"><input type="hidden" name="route" value="localization/language"><div class="filter-search"><i class="bi bi-search" aria-hidden="true"></i><input type="search" name="filter_search" value="{{ filter_search }}" maxlength="255" placeholder="{{ text_search_placeholder }}" aria-label="{{ text_search_placeholder }}"></div><select class="form-select form-select-sm" name="filter_status" aria-label="{{ column_status }}"><option value="all"{% if filter_status == 'all' %} selected{% endif %}>{{ text_all_status }}</option><option value="1"{% if filter_status == '1' %} selected{% endif %}>{{ text_enabled }}</option><option value="0"{% if filter_status == '0' %} selected{% endif %}>{{ text_disabled }}</option></select><button type="submit" class="btn btn-primary btn-sm">{{ button_filter }}</button>{% if filter_search != '' or filter_status != 'all' %}<a class="btn btn-outline-secondary btn-sm" href="{{ filter_reset }}">{{ button_reset }}</a>{% endif %}</form>
+  {% if languages %}<div class="card data-card"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>{{ column_name }}</th><th>{{ column_code }}</th><th class="d-none d-lg-table-cell">{{ column_locale }}</th><th class="d-none d-md-table-cell">{{ column_sort_order }}</th><th>{{ column_status }}</th><th class="text-end">{{ column_action }}</th></tr></thead><tbody>
+    {% for language in languages %}<tr data-language-id="{{ language.language_id }}" data-language-code="{{ language.code }}" data-language-status="{{ language.status }}" data-language-dir="{{ language.dir_exists ? '1' : '0' }}"><td>{{ language.name }}</td><td><code>{{ language.code }}</code>{% if not language.dir_exists %} <span class="badge text-bg-warning" title="{{ text_dir_missing }}"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span class="visually-hidden">{{ text_dir_missing }}</span></span>{% endif %}</td><td class="d-none d-lg-table-cell text-body-secondary">{{ language.locale }}</td><td class="d-none d-md-table-cell">{{ language.sort_order }}</td><td><span class="badge {{ language.status ? 'text-bg-success' : 'text-bg-secondary' }}">{{ language.status ? text_enabled : text_disabled }}</span></td><td class="text-end"><a class="btn btn-outline-primary btn-sm" href="{{ language.edit }}">{{ button_edit }}</a></td></tr>{% endfor %}
+  </tbody></table></div></div>{% if showing or pagination %}<div class="list-footer"><span class="text-body-secondary small">{{ showing }}</span>{{ pagination|raw }}</div>{% endif %}
+  {% else %}<div class="empty-state"><i class="bi bi-translate" aria-hidden="true"></i><h2>{{ filter_search != '' or filter_status != 'all' ? text_empty_title : text_no_results }}</h2><p class="text-body-secondary">{{ text_empty_hint }}</p></div>{% endif %}
+  <section class="card data-card mt-3"><div class="card-body"><h2 class="h6">{{ text_default_catalog }} / {{ text_default_admin }}</h2><p class="text-body-secondary small">{{ text_defaults_note }}</p>
+    <form method="post" action="{{ action }}" data-language-defaults><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><fieldset{% if not can_modify %} disabled{% endif %}><div class="row g-3">
+      <div class="col-md-6 field"><label class="form-label" for="config_language_catalog">{{ text_default_catalog }}</label><select class="form-select" id="config_language_catalog" name="config_language_catalog">{% for language in language_options %}<option value="{{ language.code }}"{% if language.code == default_catalog %} selected{% endif %}{% if not language.status %} disabled{% endif %}>{{ language.name }} ({{ language.code }})</option>{% endfor %}</select></div>
+      <div class="col-md-6 field"><label class="form-label" for="config_language_admin">{{ text_default_admin }}</label><select class="form-select" id="config_language_admin" name="config_language_admin">{% for language in language_options %}<option value="{{ language.code }}"{% if language.code == default_admin %} selected{% endif %}{% if not language.status %} disabled{% endif %}>{{ language.name }} ({{ language.code }})</option>{% endfor %}</select></div>
+    </div>{% if can_modify %}<div class="d-flex justify-content-end mt-3"><button type="submit" class="btn btn-primary">{{ button_save }}</button></div>{% endif %}</fieldset></form>
+    {% if not can_modify %}<p class="text-body-secondary small mt-2 mb-0">{{ text_readonly_notice }}</p>{% endif %}
+  </div></section>
+</div>
 {{ footer|raw }}
