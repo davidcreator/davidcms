@@ -1,0 +1,141 @@
+{
+  "package": "F8-05",
+  "task": "Fase 8 / Tarefa 05 — validação integrada do Blog",
+  "date": "2026-10-23",
+  "status": "Ferramentas preparadas; homologação real de navegador/PHP/banco pendente. Tarefa 05/Fase 8 não encerradas.",
+  "repository": "https://github.com/davidcreator/davidcms",
+  "base_commit": "f4270d0cba86a2b9b79cbbbb9f7f37655b3d646a",
+  "base_commit_message": "fix(admin): isolate legacy CKEditor config for blog RTE fields",
+  "organization": "Somente fase/tarefa. Nomes anteriores preservados como histórico, sem novo ajuste/subgrupo.",
+  "runtime_changes": 0,
+  "scope": "Três tools QA e três arquivos de documentação; nenhum dev/**, vendor, schema, endpoint, ACL/CSRF, importador, versão/licença ou deploy alterados.",
+  "files": [
+    {
+      "path": "tools/e2e/e2e_f805.sh",
+      "action": "added",
+      "mode": "100755",
+      "size_bytes": 4282,
+      "sha256_before": null,
+      "sha256_after": "d9f0c04bd828adff21959de5c88ff6db49a40c7290e7e61f75881a32606f2e60"
+    },
+    {
+      "path": "tools/e2e/e2e_f805.cjs",
+      "action": "added",
+      "mode": "100644",
+      "size_bytes": 26042,
+      "sha256_before": null,
+      "sha256_after": "7d0bb0863deeffdefb105e15fb4a67519a923f1d5ec9e77b2c26568cb1332c44"
+    },
+    {
+      "path": "tools/e2e/e2e_f805_browser.js",
+      "action": "added",
+      "mode": "100644",
+      "size_bytes": 33423,
+      "sha256_before": null,
+      "sha256_after": "3ee825e474653bc0ddd3f0fcfb5cde66ce581142048f9bfdf5e9904a2e048ec9"
+    },
+    {
+      "path": "docs/F8-05-Validacao-Integrada-Blog.md",
+      "action": "added",
+      "mode": "100644",
+      "size_bytes": 20131,
+      "sha256_before": null,
+      "sha256_after": "3bbe2e3177324b3f2bb96731607098d3e2903fac975678a2ac2525cbcdc0e80c"
+    },
+    {
+      "path": "docs/README.md",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 5202,
+      "sha256_before": "eccf853fd0dbc633e4528da8bbc9e0bbcf4ee94be8844e0fbb0dcef7dbd299d3",
+      "sha256_after": "75a5399cf0edd2aee434ad1fa85e73280b5c9b2af1c6da84cab14b7d8631c281"
+    },
+    {
+      "path": "agents-ia/decisoes/0049-f8-05-blog-media-library.md",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 8895,
+      "sha256_before": "c1d216f57f7cf388a8c7a2d08b94d9a370139663b5f893f37302bd4a22694ae9",
+      "sha256_after": "4ebcf9fe56ce7ddb1daad511b7743647f97c69ac1936afe481d5d480f36f374f"
+    }
+  ],
+  "patch": {
+    "path": "F8-05.patch",
+    "project_files": 6,
+    "size_bytes": 91199,
+    "sha256": "f95ef1d47d456e12bf37f2526f606d51baef590225fcfdfda16f0a62c2bb5c63"
+  },
+  "tests_executed_locally": {
+    "environment": "Node.js v20.20.2 / Bash / módulos nativos; sem instalação de dependências.",
+    "syntax": "PASS novos JS/CJS/Bash.",
+    "tool_guards_models": {
+      "pass": 32,
+      "fail": 0,
+      "browser_or_core_executed": false
+    },
+    "existing_rte_simulation": {
+      "pass": 18,
+      "fail": 0,
+      "browser_or_core_executed": false
+    },
+    "existing_media_simulation": {
+      "pass": 10,
+      "fail": 0,
+      "browser_or_backend_executed": false
+    },
+    "baseline_sources": "Seis scripts/JS anteriores verificados byte a byte contra f4270d0; somente fontes pontuais usadas em árvore parcial temporária.",
+    "combined_check": "PASS guardas + inspeção de contrato + 18/10 simulações.",
+    "negative_control": "admin.js original c2df689 recusado exit 2 no contrato; esperado.",
+    "prepare_clean_cli": "PASS em filesystem fixture não servido, core apenas fixture de hash. Só dois QA temporários; preparação não executa browser/HTTP/DB; limpeza por nonce/hash.",
+    "cli_guards": "PASS help, modos inválidos/backend/browser, argumento extra, Node ausente, autorização/variáveis explícitas, host remoto, hash modificado.",
+    "png_fixture": "PASS assinatura PNG RGBA 2x2 e CRC dos chunks.",
+    "browser_source_static": "14 etapas declaradas; abertura de modal aguarda shown.bs.modal e fechamento aguarda fim da transição; carregar módulo não inicia run.",
+    "documentation_links": "PASS contra árvore-base e novos arquivos.",
+    "patch_apply_reverse": "PASS --whitespace=error; comparação byte a byte e remoção exata dos quatro arquivos novos."
+  },
+  "native_browser_workflow": {
+    "status": "NOT_EXECUTED_BY_AGENT",
+    "reason": "Sem sessão autenticada/laboratório do usuário; navegador/PHP/DB não disponíveis nesta preparação.",
+    "entry": "tools/e2e/e2e_f805.sh --prepare-browser",
+    "requirements": [
+      "Node 20+ e Bash no laboratório",
+      "conta fictícia já autenticada no navegador local moderno",
+      "B loopback e FUI/MIRROR explícitos",
+      "ALLOW_F805_BROWSER=YES_WRITE_REAMUR_TEST",
+      ".f805-disposable = reamur_test",
+      "configs admin/catalog no formato plano do wizard e banco reamur_test",
+      "popups locais, WebCrypto, DataTransfer, AbortSignal.timeout, formdata"
+    ],
+    "temporary_files": [
+      "FUI/admin/view/js/f805-<nonce>.js",
+      "FUI/admin/view/js/f805-<nonce>.json"
+    ],
+    "permission_ttl_minutes": 15,
+    "writes_only_after_separate_operator_command": "Um post rascunho, um PNG e pasta próprios; CSRF negativo e tentativas controladas de exclusão do próprio arquivo em uso.",
+    "success_cleanup": "Post próprio descoberto/validado por ID e marcador → arquivo próprio → pasta própria.",
+    "failure_policy": "Parar sem retry de POST/ID presumido/limpeza ampla; preservar para inspeção.",
+    "report": "F8-05-resultado-<identificador>.json; kind native-browser-workflow, status passed, 14 etapas pass, cleanup complete.",
+    "credentials": "Não solicita/exporta senhas, cookies, CSRF ou storage state.",
+    "dependencies": "Navegador nativo, sem npm/Composer/Playwright/CDN novos."
+  },
+  "not_executed": [
+    "browser/DOM nativo/core real do editor",
+    "PHP/HTTP/banco do projeto",
+    "upload/submit/persistência reais",
+    "papéis ACL em servidor",
+    "GitHub Actions",
+    "deploy/produção",
+    "suíte legada destrutiva"
+  ],
+  "known_limits": [
+    "Guardas locais/nonce/hashes não atestam banco remoto atrás de proxy e pressupõem laboratório confiável.",
+    "Tool nativo ainda precisa da primeira execução pelo usuário; guardas testadas não provam interação visual.",
+    "HTML allowedContent true não é sanitização.",
+    "CKEditor 4.22.1 sem atualização/supressão de aviso; segurança/licença pendentes.",
+    "A conferência visual/acessibilidade/fallback/idiomas da UI e ACL complementar permanece manual."
+  ],
+  "guide": "docs/F8-05-Validacao-Integrada-Blog.md",
+  "apply": "git apply --check --whitespace=error <entrega>/F8-05.patch && git apply --whitespace=error <entrega>/F8-05.patch",
+  "rollback": "Limpar QA temporários antes; git apply -R --check <entrega>/F8-05.patch && git apply -R <entrega>/F8-05.patch. Sem reversão de dev/**.",
+  "next": "Aplicar tools, executar --check; somente no laboratório autorizado preparar/executar fluxo nativo e enviar o JSON para registrar a homologação."
+}

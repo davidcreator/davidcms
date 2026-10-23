@@ -64,3 +64,27 @@ está `loading`, aguarda `DOMContentLoaded` com `{ once: true }`. Nos estados
   pendentes. CKEditor fica para o Ajuste 02, fora deste pacote.
 
 Guia: [F8-05-A01 — Inicialização da biblioteca de mídia](../../docs/F8-05-A01-Inicializacao-Biblioteca-Midia.md).
+
+## Fase 8 · Tarefa 05 — validação integrada (2026-10-23)
+
+**Base conferida:** `f4270d0cba86a2b9b79cbbbb9f7f37655b3d646a`. O usuário confirmou a aplicação dos passos anteriores e a consulta pública confirmou a presença de ambos na `main`, com o `admin.js` idêntico ao pacote de configuração do editor. Isso confirma fontes publicadas; não é prova de deploy/homologação de navegador ou persistência.
+
+**Organização:** a continuidade usa somente **Fase 8 / Tarefa 05**, conforme orientação do usuário. Nomes A01/A02 anteriores permanecem como histórico/compatibilidade; não são criados novos níveis de ajuste nem renomeados arquivos já aceitos.
+
+### Ferramenta de continuidade
+
+- Entrada única: `tools/e2e/e2e_f805.sh`. `--check` executa guardas/contratos locais e reutiliza as regressões já aplicadas; não roda a suíte legada destrutiva.
+- Preparação local: `tools/e2e/e2e_f805.cjs`. Sem bibliotecas externas, HTTP ou execução de PHP/SQL. Opt-in explícito, loopback, marcador de descarte, configs admin/catalog literais `reamur_test` e hashes MIRROR/FUI são obrigatórios para preparar/limpar dois QA temporários.
+- Fluxo assistido: `tools/e2e/e2e_f805_browser.js`, carregado temporariamente no navegador nativo já autenticado do laboratório. Carregar o Tool não executa o fluxo; um segundo comando explícito autoriza a gravação. A permissão dura 15 minutos e o navegador confere os hashes dos assets recebidos antes dos testes.
+- O fluxo verifica editor real/Source, três idiomas, upload/seleção/preview, submit/FormData nativo sem `updateElement()` manual, criar/editar o mesmo post, reabrir/recarregar, CSRF negativo e proteção de capa referenciada. Ao passar, remove apenas seu post/PNG/pasta, com ID descoberto e propriedade conferida. Em falha, preserva para inspeção e nunca presume ID, varre mídia, executa SQL, apaga diretórios recursivamente ou repete POST automaticamente.
+- Não requer Playwright/npm/Composer/CDN. Não modifica código da aplicação, vendor, schema, rotas, ACL/CSRF, importador ou licença/versão do editor. Os dois arquivos QA são temporários de homologação e não devem ser versionados/publicados permanentemente.
+
+### Evidência e estado
+
+Preparação local: **32 PASS / 0 FAIL** em guardas/modelos do Tool; regressões existentes **18 PASS / 0 FAIL** RTE e **10 PASS / 0 FAIL** mídia, todas com as limitações de simulação declaradas. Fontes pontuais comparadas byte a byte com a base. **Não houve navegador/DOM nativo/core real, PHP/HTTP/banco, upload/persistência ou deploy executado pelo agente nesta entrega.**
+
+A primeira execução real do Tool novo ainda depende do laboratório/sessão do usuário. O relatório `F8-05-resultado-<identificador>.json`, com `kind=native-browser-workflow`, todas as etapas aprovadas e limpeza completa, é a evidência solicitada para esse fluxo — não deve ser confundido com os testes locais. Layout/acessibilidade, idiomas da interface, fallback e papéis ACL complementares têm checklist no guia. Os configs/nonce/hashes são guardas operacionais de um laboratório confiável, não atestação do banco ativo de um proxy nem isolamento contra o administrador do servidor.
+
+**Tarefa 05 permanece em validação; Fase 8 não encerrada.** Suporte/segurança/licença do CKEditor 4.22.1 e sanitização do HTML continuam dívidas separadas, sem suprimir avisos de versão.
+
+Guia: [F8-05 — Validação integrada do Blog](../../docs/F8-05-Validacao-Integrada-Blog.md).
