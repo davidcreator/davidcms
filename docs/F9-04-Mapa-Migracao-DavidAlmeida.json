@@ -1,0 +1,139 @@
+{
+  "task": "F9-04",
+  "kind": "migration_dry_run_contract",
+  "source_contract": {
+    "expected_filename": "bd-davidalmeida.sql",
+    "repository_policy": "never_commit_sql_dump",
+    "storage_policy": "operator_local_private_path_only",
+    "last_observed_sha256": "805d178e7b9122c332f3253042bef5b5fa9849936c76df39a23658585407e6a5",
+    "last_observed_bytes": 201775,
+    "last_observed_inventory": "docs/F9-03-Inventario-Banco-DavidAlmeida.json",
+    "public_repository_absent_required": true
+  },
+  "scope": {
+    "included_site": "davidalmeida.xyz",
+    "excluded_sites": [
+      "davidcreator.com"
+    ],
+    "blog_import_forbidden": true
+  },
+  "global_rules": {
+    "no_sql_execution": true,
+    "dry_run_first": true,
+    "counts_only_logging": true,
+    "no_row_values_in_reports": true,
+    "credentials_must_be_rotated_before_import": true,
+    "backup_required_before_any_apply": true,
+    "requires_new_approval_for_new_data": true
+  },
+  "tables": [
+    {
+      "source_table": "admin_audit_logs",
+      "decision": "archive_only",
+      "action_now": "none",
+      "rationale": "preservar fora do runtime; trilha interna sem destino público"
+    },
+    {
+      "source_table": "class_attendance",
+      "decision": "out_of_scope_course_module",
+      "action_now": "none",
+      "rationale": "módulo de aulas não faz parte do alvo atual; 0 linhas observadas"
+    },
+    {
+      "source_table": "class_students",
+      "decision": "out_of_scope_course_module",
+      "action_now": "none",
+      "rationale": "módulo de alunos/turmas não faz parte do alvo atual; 0 linhas observadas"
+    },
+    {
+      "source_table": "contact_messages",
+      "decision": "excluded_prior_decision",
+      "action_now": "none",
+      "rationale": "ADR 0032: 9 mensagens observadas foram classificadas como spam; não virar pedido"
+    },
+    {
+      "source_table": "contact_message_events",
+      "decision": "excluded_prior_decision",
+      "action_now": "none",
+      "rationale": "trilha das mensagens legadas; sem destino atual e sem valor comercial confirmado"
+    },
+    {
+      "source_table": "contact_reply_templates",
+      "decision": "excluded_prior_decision",
+      "action_now": "none",
+      "rationale": "templates internos do legado; sem destino no ReamurCMS atual"
+    },
+    {
+      "source_table": "course_classes",
+      "decision": "out_of_scope_course_module",
+      "action_now": "none",
+      "rationale": "curso/aula é produto separado; requer decisão futura própria"
+    },
+    {
+      "source_table": "course_contents",
+      "decision": "out_of_scope_course_module",
+      "action_now": "none",
+      "rationale": "conteúdos de curso exigem módulo dedicado e curadoria"
+    },
+    {
+      "source_table": "course_modules",
+      "decision": "out_of_scope_course_module",
+      "action_now": "none",
+      "rationale": "módulos de curso exigem módulo dedicado e curadoria"
+    },
+    {
+      "source_table": "course_tracks",
+      "decision": "out_of_scope_course_module",
+      "action_now": "none",
+      "rationale": "trilhas de curso exigem módulo dedicado e curadoria"
+    },
+    {
+      "source_table": "external_resource_clicks",
+      "decision": "analytics_archive_only",
+      "action_now": "none",
+      "rationale": "telemetria/cliques não viram catálogo; preservar só como estatística se necessário"
+    },
+    {
+      "source_table": "external_resources",
+      "decision": "already_migrated_f3",
+      "action_now": "none",
+      "rationale": "ferramentas já migradas/curadas como rms_tool em F3; não reimportar"
+    },
+    {
+      "source_table": "portfolio_items",
+      "decision": "no_rows_already_curated_f3",
+      "action_now": "none",
+      "rationale": "tabela vazia; portfólio já tem seed curado F3 em rms_project"
+    },
+    {
+      "source_table": "site_settings",
+      "decision": "whitelist_future_review",
+      "action_now": "none",
+      "rationale": "apenas whitelist revisada poderia alimentar rms_setting; segredos nunca entram no repositório"
+    },
+    {
+      "source_table": "student_accounts",
+      "decision": "sensitive_out_of_scope",
+      "action_now": "none",
+      "rationale": "contas/hash de estudantes exigem módulo/autorização próprios; não importar"
+    },
+    {
+      "source_table": "student_content_progress",
+      "decision": "sensitive_out_of_scope",
+      "action_now": "none",
+      "rationale": "progresso individual identifica alunos; sem módulo atual"
+    },
+    {
+      "source_table": "student_materials",
+      "decision": "out_of_scope_course_module",
+      "action_now": "none",
+      "rationale": "materiais de curso exigem módulo dedicado e revisão de URLs/arquivos"
+    },
+    {
+      "source_table": "student_track_enrollments",
+      "decision": "sensitive_out_of_scope",
+      "action_now": "none",
+      "rationale": "matrículas ligam pessoas a trilhas; sem módulo atual"
+    }
+  ]
+}

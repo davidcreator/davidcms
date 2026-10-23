@@ -1,8 +1,7 @@
-d08b9363501688cbb991c61271b7b6d53edea322bdbe437de540346173b7cc64  ./agents-ia/decisoes/0059-f9-03-auditoria-banco-davidalmeida.md
-a673d35a77001d951a32de283ed60a6732a65dfa4f93e9962469aa5aa7b2895d  ./docs/F9-03-Auditoria-Banco-DavidAlmeida.md
-c788fc745560ca54055676915cdc407d6b5ea3e8876c81787973f4a290533451  ./docs/F9-03-Inventario-Banco-DavidAlmeida.json
-d284faa0b0535ef352310545c648a458fd70d04e357ec8ca5bebaa75cbacd3c9  ./docs/README.md
-758bbb47c67413db6a0e24b17084bfb3890303fa33d82683424bb3ba268301a8  ./manifest.json
-aca63a3f63c7f81e38ac5f606b22915f7d85394f0b967ff0b98c3f674e0be346  ./tools/e2e/e2e_f903.cjs
-21d7dad41a06c3891e3cbf7259bb46d346c2fe52bca5a3d0d7d9acaa286cc985  ./tools/e2e/e2e_f903.sh
-c6313451cf433dfe8afad66cce94ce792f410b747a299788e133855c753d06be  ./tools/e2e/fixtures/f903_minimal.sql
+e6667b31b6013e56f7aeb752ff36be7dbcc8412ccd11d3a89e00681693600df7  ./agents-ia/decisoes/0060-f9-04-plano-dryrun-davidalmeida.md
+252e87103602b1f5f1e320041b6d26cd5995339d970edd27e1ad461c602c0296  ./docs/F9-04-Mapa-Migracao-DavidAlmeida.json
+deec751b42a849fbd22c4c12a7a6a2db16d7904765552c26a16a0296ffcdced9  ./docs/F9-04-Plano-DryRun-DavidAlmeida.md
+f2b1725839e4aaf3ad81fddea2804b36a05c90d79b9d20452687b55e8f9218fb  ./docs/README.md
+f63f07fd1a3c07e074eda7474c6217918c2c5a6a9c6cc0185708de5becec4dfb  ./manifest.json
+0dbd1371a5b4942d4f4f3de2cd4380dc85872c9a71c9dc61b0318d6d41fe39da  ./tools/e2e/e2e_f904.cjs
+92b1149bf67913d10f68521deca1c2bba2d36eee2493e655159d37597ba8e6aa  ./tools/e2e/e2e_f904.sh
