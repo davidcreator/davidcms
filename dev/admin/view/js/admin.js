@@ -322,7 +322,8 @@
             if (empty) { empty.hidden = false; }
             return;
         }
-        var src = /^https?:\/\//i.test(v) ? v : (input.getAttribute('data-preview-base') || '') + v.replace(/^\//, '');
+        var path = v.replace(/^\/+/, '').replace(/^dev\/catalog\//i, '').replace(/^catalog\//i, '');
+        var src = /^https?:\/\//i.test(v) ? v : (input.getAttribute('data-preview-base') || '') + path;
         if (!old) {
             old = document.createElement('img');
             box.insertBefore(old, box.firstChild);

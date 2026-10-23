@@ -51,3 +51,5 @@ Copiar para o novo arquivo `NNNN-titulo-curto.md`:
 | [0002](0002-blog-hibrido.md) | Blog híbrido (externo no lançamento, interno depois) | ✅ aceita | 2026-10-15 |
 | [0003](0003-ci-e-gitignore.md) | Correção do CI e do `.gitignore` | ✅ aceita | 2026-10-15 |
 | [0004](0004-contratos-qualidade-e-modelos.md) | Contratos de fundação e infra de qualidade (L1–L10) | ✅ aceita | 2026-10-15 |
+| [0048](0048-f8-04-sale-marketing-filtros-paginacao-csrf.md) | F8-04: sale/marketing, filtros, paginação e CSRF | ✅ aceita | 2026-10-22 |
+| [0049](0049-f8-05-blog-media-library.md) | F8-05: biblioteca de mídia para capas do Blog | ✅ aceita | 2026-10-22 |

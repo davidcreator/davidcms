@@ -8,7 +8,7 @@
   </div>
   <div class="titlebar-actions">
     {% if import_href %}<a class="btn btn-outline-primary btn-sm" href="{{ import_href }}"><i class="bi bi-wordpress me-1" aria-hidden="true"></i>{{ button_import_wp }}</a>{% endif %}
-    <a class="btn btn-primary btn-sm" href="{{ add }}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ button_add }}</a>
+    {% if can_modify %}<a class="btn btn-primary btn-sm" href="{{ add }}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ button_add }}</a>{% endif %}
   </div>
 </div>
 
@@ -71,9 +71,12 @@
           <td class="text-end text-nowrap">
             {% if post.status %}<a class="icon-btn" href="{{ post.view_site }}" target="_blank" rel="noopener" title="{{ text_view_site }}" aria-label="{{ text_view_site }}"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>{% endif %}
             <a class="icon-btn" href="{{ post.edit }}" title="{{ button_edit }}" aria-label="{{ button_edit }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+            {% if can_modify %}
             <form method="post" action="{{ post.delete }}" class="d-inline" data-rms-confirm-delete="{{ text_confirm_delete }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
               <button type="submit" class="icon-btn icon-btn--danger" title="{{ button_delete }}" aria-label="{{ button_delete }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
             </form>
+            {% endif %}
           </td>
         </tr>
         {% endfor %}
@@ -94,7 +97,7 @@
   <i class="bi bi-journal-text" aria-hidden="true"></i>
   <h2>{{ text_no_results }}</h2>
   <p class="text-muted">{{ text_empty_state }}</p>
-  <a class="btn btn-primary" href="{{ add }}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ text_empty_state_cta }}</a>
+  {% if can_modify %}<a class="btn btn-primary" href="{{ add }}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ text_empty_state_cta }}</a>{% endif %}
 </div>
 {% endif %}
 

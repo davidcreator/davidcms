@@ -17,6 +17,7 @@
 {% endif %}
 
 <form method="post" action="{{ action }}" class="row g-3 form-layout">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
   <div class="col-lg-8">
     <div class="card data-card mb-3">
@@ -100,12 +101,17 @@
       <div class="card-body">
         <h2 class="card-title h6 mb-3">{{ text_cover_preview }}</h2>
         <div class="cover-preview" id="coverPreview">
-          {% if image %}<img src="{% if image matches '#^https?://#' %}{{ image }}{% else %}{{ seo_base }}{{ image }}{% endif %}" alt="" id="coverPreviewImg">{% endif %}
+          {% if image_preview %}<img src="{{ image_preview }}" alt="" id="coverPreviewImg">{% endif %}
           <span class="cover-preview--empty" id="coverPreviewEmpty"{% if image %} hidden{% endif %}><i class="bi bi-image" aria-hidden="true"></i></span>
         </div>
         <div class="field mt-3 mb-0">
           <label class="form-label" for="input-image">{{ entry_image }}</label>
-          <input type="text" class="form-control" name="image" id="input-image" value="{{ image }}" maxlength="255" placeholder="catalog/view/image/blog/capa.jpg ou https://…" data-preview-base="{{ seo_base }}">
+          <input type="text" class="form-control" name="image" id="input-image" value="{{ image }}" maxlength="255" placeholder="view/image/blog/capa.jpg ou https://…" data-preview-base="{{ catalog_base }}">
+          {% if can_modify %}
+          <button type="button" class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#blogMediaModal">
+            <i class="bi bi-images me-1" aria-hidden="true"></i>{{ button_media_library }}
+          </button>
+          {% endif %}
           <p class="text-muted small mt-1 mb-0">{{ help_image }}</p>
         </div>
       </div>
@@ -113,12 +119,77 @@
 
     <div class="card data-card side-card">
       <div class="card-body d-grid gap-2">
-        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ button_save }}</button>
+        {% if can_modify %}<button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ button_save }}</button>{% endif %}
         <a class="btn btn-outline-secondary" href="{{ cancel }}">{{ button_cancel }}</a>
       </div>
     </div>
   </div>
 
 </form>
+
+{% if can_modify %}
+<div class="modal fade" id="blogMediaModal" tabindex="-1" aria-labelledby="blogMediaModalLabel" aria-hidden="true" data-media-config="{{ media_config|json_encode }}">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="blogMediaModalLabel"><i class="bi bi-images me-2" aria-hidden="true"></i>{{ text_media_library }}</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ button_media_close }}"></button>
+      </div>
+      <div class="modal-body">
+        <div id="blogMediaAlert" class="alert d-none" role="status" aria-live="polite"></div>
+        <ul class="nav nav-tabs mb-3" id="blogMediaTabs" role="tablist">
+          <li class="nav-item" role="presentation"><button class="nav-link active" id="blogMediaBrowseTab" data-bs-toggle="tab" data-bs-target="#blogMediaBrowsePane" type="button" role="tab">{{ text_media_browse }}</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" id="blogMediaUploadTab" data-bs-toggle="tab" data-bs-target="#blogMediaUploadPane" type="button" role="tab">{{ text_media_upload }}</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" id="blogMediaFolderTab" data-bs-toggle="tab" data-bs-target="#blogMediaFolderPane" type="button" role="tab">{{ text_media_create_folder }}</button></li>
+          <li class="nav-item" role="presentation"><button class="nav-link" id="blogMediaUrlTab" data-bs-toggle="tab" data-bs-target="#blogMediaUrlPane" type="button" role="tab">{{ text_media_external_url }}</button></li>
+        </ul>
+        <div class="tab-content">
+          <section class="tab-pane fade show active" id="blogMediaBrowsePane" role="tabpanel" aria-labelledby="blogMediaBrowseTab">
+            <div class="d-flex flex-column flex-md-row gap-2 justify-content-between align-items-md-center mb-3">
+              <nav id="blogMediaBreadcrumb" aria-label="{{ text_media_library }}" class="small"></nav>
+              <div class="input-group" style="max-width: 22rem;">
+                <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+                <input type="search" class="form-control" id="blogMediaSearch" placeholder="{{ entry_media_search }}" aria-label="{{ entry_media_search }}">
+              </div>
+            </div>
+            <div id="blogMediaFolders" class="row g-2 mb-3"></div>
+            <div id="blogMediaFiles" class="row g-3"></div>
+            <div id="blogMediaEmpty" class="text-center text-body-secondary py-4 d-none"></div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+              <span id="blogMediaPageLabel" class="small text-body-secondary"></span>
+              <div class="btn-group btn-group-sm" role="group" aria-label="{{ text_media_browse }}">
+                <button type="button" class="btn btn-outline-secondary" id="blogMediaPrevious"><i class="bi bi-chevron-left" aria-hidden="true"></i><span class="visually-hidden">{{ button_media_previous }}</span></button>
+                <button type="button" class="btn btn-outline-secondary" id="blogMediaNext"><i class="bi bi-chevron-right" aria-hidden="true"></i><span class="visually-hidden">{{ button_media_next }}</span></button>
+              </div>
+            </div>
+          </section>
+          <section class="tab-pane fade" id="blogMediaUploadPane" role="tabpanel" aria-labelledby="blogMediaUploadTab">
+            <label class="form-label" for="blogMediaFile">{{ entry_image }}</label>
+            <input class="form-control" type="file" id="blogMediaFile" accept="image/jpeg,image/png,image/webp,image/gif">
+            <p class="form-text">{{ text_media_upload_hint }}</p>
+            <button type="button" class="btn btn-primary" id="blogMediaUploadButton"><i class="bi bi-upload me-1" aria-hidden="true"></i>{{ button_media_upload }}</button>
+          </section>
+          <section class="tab-pane fade" id="blogMediaFolderPane" role="tabpanel" aria-labelledby="blogMediaFolderTab">
+            <label class="form-label" for="blogMediaFolderName">{{ entry_media_folder_name }}</label>
+            <div class="input-group">
+              <input class="form-control" type="text" id="blogMediaFolderName" maxlength="64" autocomplete="off">
+              <button class="btn btn-outline-primary" type="button" id="blogMediaCreateFolder"><i class="bi bi-folder-plus me-1" aria-hidden="true"></i>{{ button_media_create_folder }}</button>
+            </div>
+          </section>
+          <section class="tab-pane fade" id="blogMediaUrlPane" role="tabpanel" aria-labelledby="blogMediaUrlTab">
+            <label class="form-label" for="blogMediaExternalUrl">{{ entry_media_external_url }}</label>
+            <input class="form-control" type="url" id="blogMediaExternalUrl" placeholder="https://example.com/image.jpg" maxlength="255" inputmode="url">
+            <p class="form-text">{{ help_image }}</p>
+            <button type="button" class="btn btn-outline-primary" id="blogMediaUseUrl"><i class="bi bi-link-45deg me-1" aria-hidden="true"></i>{{ button_media_use_url }}</button>
+          </section>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ button_media_close }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 {{ footer|raw }}

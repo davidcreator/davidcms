@@ -78,8 +78,22 @@ H=$(curl -s -c $JA -b $JA -o /tmp/f701_list0.html -w "%{http_code}" "$B/admin/in
 grep -qEi "No posts yet|Nenhum post ainda|no hay entradas" /tmp/f701_list0.html || RC=1
 ck 3 $RC "card-lista-vazia"
 
+# F8-05: o formulário expõe o token de sessão; mutations sem ele devem falhar.
+curl -s -c $JA -b $JA "$B/admin/index.php?route=blog/blog.add" -o /tmp/f701_blog_form.html
+BLOG_CSRF=$(grep -o 'name="csrf_token" value="[^"]*"' /tmp/f701_blog_form.html | sed 's/.*value="//;s/"//')
+RC=0
+[ -n "$BLOG_CSRF" ] || RC=1
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=blog/blog.add" \
+  --data-urlencode "blog_description[1][title]=CSRF sem token" \
+  --data-urlencode "blog_description[1][keyword]=csrf-sem-token" \
+  -o /tmp/f701_csrf_bad.html
+grep -qiE "security token|token de segurança|token de seguridad" /tmp/f701_csrf_bad.html || RC=1
+[ "$(q "SELECT COUNT(*) FROM reamur_test.rms_blog_post")" = "0" ] || RC=1
+ck 3a $RC "blog-add-exige-csrf"
+
 echo '══ 4 — add multilíngue completo (post + 3 descr + 3 keywords) ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=blog/blog.add" \
+  --data-urlencode "csrf_token=$BLOG_CSRF" \
   --data-urlencode "blog_description[1][title]=Meu primeiro post" \
   --data-urlencode "blog_description[1][description]=<p>Conteúdo EN.</p>" \
   --data-urlencode "blog_description[1][keyword]=meu-primeiro-post" \
@@ -104,8 +118,19 @@ q "SELECT date_published FROM reamur_test.rms_blog_post WHERE post_id=1" | grep 
 [ "$(q "SELECT image FROM reamur_test.rms_blog_post WHERE post_id=1")" = "uploads/2026/capa.jpg" ] || RC=1
 ck 4 $RC "add-multilingue-seo"
 
+echo '══ 4b — edit sem CSRF rejeitado sem UPDATE ══'
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=blog/blog.edit|1" \
+  --data-urlencode "blog_description[1][title]=Edição sem token" \
+  --data-urlencode "blog_description[1][keyword]=edicao-sem-token" \
+  -o /tmp/f701_csrf_edit.html
+RC=0
+grep -qiE "security token|token de segurança|token de seguridad" /tmp/f701_csrf_edit.html || RC=1
+[ "$(q "SELECT title FROM reamur_test.rms_blog_post_description WHERE post_id=1 AND language_id=1")" = "Meu primeiro post" ] || RC=1
+ck 4b $RC "blog-edit-exige-csrf"
+
 echo '══ 5 — keyword inválida (formato) rejeitada sem INSERT ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=blog/blog.add" \
+  --data-urlencode "csrf_token=$BLOG_CSRF" \
   --data-urlencode "blog_description[1][title]=Post ruim" \
   --data-urlencode "blog_description[1][keyword]=Meu Post!" \
   --data-urlencode "status=1" \
@@ -121,6 +146,7 @@ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=cms/page.add" \
   --data-urlencode "page_description[1][keyword]=cookies" \
   -D /tmp/f701_pg.hdr -o /dev/null
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=blog/blog.add" \
+  --data-urlencode "csrf_token=$BLOG_CSRF" \
   --data-urlencode "blog_description[1][title]=Post invadindo keyword" \
   --data-urlencode "blog_description[1][keyword]=cookies" \
   --data-urlencode "status=1" \
@@ -134,6 +160,7 @@ ck 6 $RC "keyword-cross-entidade"
 echo '══ 7 — edit: swap título/keyword, status→rascunho, resync seo ══'
 H=$(curl -s -c $JA -b $JA -o /tmp/f701_edit_form.html -w "%{http_code}" "$B/admin/index.php?route=blog/blog.edit|1")
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=blog/blog.edit|1" \
+  --data-urlencode "csrf_token=$BLOG_CSRF" \
   --data-urlencode "blog_description[1][title]=Primeiro post editado (v2)" \
   --data-urlencode "blog_description[1][description]=<p>Revisado.</p>" \
   --data-urlencode "blog_description[1][keyword]=post-editado" \
@@ -165,7 +192,8 @@ grep -qEi "Rascunho|Draft|Borrador" /tmp/f701_list1.html || RC=1
 ck 8 $RC "lista-com-post"
 
 echo '══ 9 — delete (POST) limpa tudo: main + descrições + keywords ══'
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=blog/blog.delete|1" -D /tmp/f701_pd.hdr -o /dev/null
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=blog/blog.delete|1" \
+  --data-urlencode "csrf_token=$BLOG_CSRF" -D /tmp/f701_pd.hdr -o /dev/null
 RC=0
 L=$(loc /tmp/f701_pd.hdr); [[ "$L" == *blog/blog* ]] || RC=1
 [ "$(q "SELECT COUNT(*) FROM reamur_test.rms_blog_post WHERE post_id=1")" = "0" ] || RC=1

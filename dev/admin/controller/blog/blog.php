@@ -8,12 +8,14 @@
  *
  * blog/blog — CRUD do blog interno (F7-01, ADR 0042) no molde cms/page
  * (F2-10): method-grammar, ACL base-route, multi-idioma, seo_url global.
- * Diferenças do page: ordering cronológico (date_published), imagem destaque
- * como campo texto (URL/path; upload real segue com o importador F7-03),
- * e SEM sort_order (o editorial é a data).
- * Rotas: /blog/blog · .add · .edit|N · .delete|N (POST).
+ * Diferenças do page: ordering cronológico (date_published), campo de capa
+ * preservado como texto/URL com seletor de mídia Blog-only (F8-05), e SEM
+ * sort_order (o editorial é a data). O importador F7-03 permanece independente.
+ * Rotas: /blog/blog · .add · .edit|N · .delete|N · .mediaList · .mediaUpload · .mediaFolder · .mediaDelete.
  */
 namespace Reamur\Admin\Controller\Blog;
+
+use Reamur\System\Library\MediaUpload;
 
 class Blog extends \Reamur\System\Engine\Controller {
 
@@ -40,6 +42,8 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['button_edit']          = $this->language->get('button_edit');
         $data['button_delete']        = $this->language->get('button_delete');
         $data['text_flash']           = $this->flash();
+        $data['csrf_token']           = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['can_modify']           = $this->user->hasPermission('modify', 'blog/blog');
 
         // F7-03 (ADR 0044): acesso ao importador WP somente com modify no módulo
         $data['button_import_wp'] = $this->language->get('button_import_wp');
@@ -82,9 +86,8 @@ class Blog extends \Reamur\System\Engine\Controller {
             'limit' => $limit,
         ]);
 
-        // URL pública do catalog (thumb de capa + "ver no site")
-        $catalogUrl = $this->catalogUrl();
-
+        // Imagens locais pertencem ao app Catalog; URLs externas HTTP(S) continuam válidas.
+        $catalogBase = $this->catalogAssetUrl();
         $data['posts'] = [];
 
         foreach ($rows as $post) {
@@ -98,8 +101,8 @@ class Blog extends \Reamur\System\Engine\Controller {
                 'status'         => (int)$post['status'],
                 'date_published' => (string)$post['date_published'],
                 'date_modified'  => (string)$post['date_modified'],
-                'thumb'          => $img === '' ? '' : (preg_match('#^https?://#i', $img) ? $img : $catalogUrl . ltrim($img, '/')),
-                'view_site'      => $catalogUrl . 'index.php?route=blog/blog.info|' . $pid,
+                'thumb'          => $this->catalogImageUrl($img),
+                'view_site'      => $catalogBase . 'index.php?route=blog/blog.info|' . $pid,
                 'edit'           => $this->url->link('blog/blog.edit|' . $pid),
                 'delete'         => $this->url->link('blog/blog.delete|' . $pid),
             ];
@@ -156,7 +159,9 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data = $this->formData([]);
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $errors = $this->validatePost(0);
+            $errors = $this->csrfValid()
+                ? $this->validatePost(0)
+                : [$this->language->get('error_csrf')];
 
             if ($errors === []) {
                 $post_id = $this->model_blog_blog->addPost($this->postPayload());
@@ -208,7 +213,9 @@ class Blog extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $errors = $this->validatePost($post_id);
+            $errors = $this->csrfValid()
+                ? $this->validatePost($post_id)
+                : [$this->language->get('error_csrf')];
 
             if ($errors === []) {
                 $this->model_blog_blog->editPost($post_id, $this->postPayload());
@@ -230,23 +237,197 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->response->setOutput($this->load->view('blog/blog_form', $data));
     }
 
-    /** POST exclusivo (F2-6: delete só por POST, Action args string) */
+    /** POST exclusivo: ACL + CSRF antes de excluir. */
     public function delete(string $post_id = '0'): void {
         $post_id = (int)$post_id;
 
         $this->load->language('blog/blog');
 
+        if ($this->request->server['REQUEST_METHOD'] !== 'POST' || !$this->user->hasPermission('modify', 'blog/blog')) {
+            $this->response->redirect($this->url->link('error/permission'));
+
+            return;
+        }
+
+        if (!$this->csrfValid()) {
+            $this->setFlash($this->language->get('error_csrf'), 'error');
+            $this->response->redirect($this->url->link('blog/blog'));
+
+            return;
+        }
+
         $this->load->model('blog/blog');
 
-        if ($this->request->server['REQUEST_METHOD'] === 'POST' && $this->user->hasPermission('modify', 'blog/blog')) {
-            if ($this->model_blog_blog->getPost($post_id)) {
-                $this->model_blog_blog->deletePost($post_id);
-
-                $this->setFlash($this->language->get('text_success_delete'));
-            }
+        if ($this->model_blog_blog->getPost($post_id)) {
+            $this->model_blog_blog->deletePost($post_id);
+            $this->setFlash($this->language->get('text_success_delete'));
         }
 
         $this->response->redirect($this->url->link('blog/blog'));
+    }
+
+    /** Lista imagens e pastas para o seletor (GET; leitura protegida por ACL). */
+    public function mediaList(): void {
+        $this->load->language('blog/blog');
+
+        if ($this->request->server['REQUEST_METHOD'] !== 'GET') {
+            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]);
+            return;
+        }
+
+        if (!$this->user->hasPermission('modify', 'blog/blog')) {
+            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]);
+            return;
+        }
+
+        $this->load->model('blog/media');
+
+        $result = $this->model_blog_media->getMediaPage(
+            $this->queryScalar('folder'),
+            $this->queryScalar('search'),
+            max(1, (int)$this->queryScalar('page'))
+        );
+
+        if (!$result['ok']) {
+            $this->mediaJson(['success' => false, 'error' => $this->mediaError((string)$result['error'])]);
+            return;
+        }
+
+        $catalog = $this->catalogAssetUrl();
+        $files = [];
+
+        foreach ($result['files'] as $file) {
+            $file['url'] = $catalog . ltrim((string)$file['path'], '/');
+            $files[] = $file;
+        }
+
+        $this->mediaJson([
+            'success' => true,
+            'folder' => (string)$result['folder'],
+            'folders' => $result['folders'],
+            'files' => $files,
+            'total' => (int)$result['total'],
+            'page' => (int)$result['page'],
+            'pages' => (int)$result['pages'],
+        ]);
+    }
+
+    /** Upload validado pelo componente MediaUpload para a pasta Blog escolhida. */
+    public function mediaUpload(): void {
+        $this->load->language('blog/blog');
+
+        if ($this->request->server['REQUEST_METHOD'] !== 'POST') {
+            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]);
+            return;
+        }
+
+        if (!$this->user->hasPermission('modify', 'blog/blog')) {
+            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]);
+            return;
+        }
+
+        if (!$this->csrfValid()) {
+            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_csrf')]);
+            return;
+        }
+
+        $this->load->model('blog/media');
+        $target = $this->model_blog_media->getUploadTarget($this->postScalar('folder'));
+
+        if ($target === '') {
+            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_folder_not_found')]);
+            return;
+        }
+
+        $result = $this->mediaUploader()->store((array)($this->request->files['file'] ?? []), $target);
+
+        if (!$result['ok']) {
+            $key = match ((string)$result['error']) {
+                'size' => 'error_media_upload_size',
+                'type' => 'error_media_upload_type',
+                'move' => 'error_media_upload_move',
+                'no_file' => 'error_media_upload_no_file',
+                default => 'error_media_upload',
+            };
+
+            $message = $key === 'error_media_upload_size'
+                ? sprintf($this->language->get($key), '2 MB')
+                : $this->language->get($key);
+
+            $this->mediaJson(['success' => false, 'error' => $message]);
+            return;
+        }
+
+        $this->mediaJson([
+            'success' => true,
+            'path' => (string)$result['path'],
+            'url' => $this->catalogAssetUrl() . ltrim((string)$result['path'], '/'),
+            'message' => $this->language->get('text_media_upload_success'),
+        ]);
+    }
+
+    /** Cria uma subpasta no filesystem da biblioteca, com ACL + CSRF. */
+    public function mediaFolder(): void {
+        $this->load->language('blog/blog');
+
+        if ($this->request->server['REQUEST_METHOD'] !== 'POST') {
+            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]);
+            return;
+        }
+
+        if (!$this->user->hasPermission('modify', 'blog/blog')) {
+            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]);
+            return;
+        }
+
+        if (!$this->csrfValid()) {
+            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_csrf')]);
+            return;
+        }
+
+        $this->load->model('blog/media');
+        $result = $this->model_blog_media->createFolder($this->postScalar('folder'), $this->postScalar('name'));
+
+        if ($result !== 'ok') {
+            $this->mediaJson(['success' => false, 'error' => $this->mediaError($result)]);
+            return;
+        }
+
+        $this->mediaJson(['success' => true, 'message' => $this->language->get('text_media_folder_created')]);
+    }
+
+    /** Exclui somente imagens não referenciadas ou pastas vazias (ACL + CSRF). */
+    public function mediaDelete(): void {
+        $this->load->language('blog/blog');
+
+        if ($this->request->server['REQUEST_METHOD'] !== 'POST') {
+            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]);
+            return;
+        }
+
+        if (!$this->user->hasPermission('modify', 'blog/blog')) {
+            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]);
+            return;
+        }
+
+        if (!$this->csrfValid()) {
+            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_csrf')]);
+            return;
+        }
+
+        $this->load->model('blog/media');
+        $result = $this->model_blog_media->deleteMedia($this->postScalar('type'), $this->postScalar('path'));
+
+        if ($result !== 'ok') {
+            $this->mediaJson(['success' => false, 'error' => $this->mediaError($result)]);
+            return;
+        }
+
+        $message = $this->postScalar('type') === 'folder'
+            ? $this->language->get('text_media_folder_deleted')
+            : $this->language->get('text_media_file_deleted');
+
+        $this->mediaJson(['success' => true, 'message' => $message]);
     }
 
     /**
@@ -267,14 +448,52 @@ class Blog extends \Reamur\System\Engine\Controller {
             'text_publish_card', 'text_published', 'text_draft', 'text_content_card',
             'text_meta_group', 'text_seo_url_preview', 'text_cover_preview',
             'text_status_help', 'text_chars',
+            // F8-05: biblioteca de mídia restrita às imagens do Blog
+            'text_media_library', 'text_media_browse', 'text_media_upload', 'text_media_create_folder',
+            'text_media_external_url', 'text_media_loading', 'text_media_empty', 'text_media_no_matches',
+            'text_media_page', 'text_media_confirm_delete_file', 'text_media_confirm_delete_folder', 'text_media_in_use',
+            'text_media_upload_success', 'text_media_folder_created', 'text_media_file_deleted',
+            'text_media_folder_deleted', 'text_media_upload_hint', 'text_media_no_folders',
+            'entry_media_search', 'entry_media_folder_name', 'entry_media_external_url',
+            'button_media_library', 'button_media_upload', 'button_media_create_folder',
+            'button_media_use_url', 'button_media_select', 'button_media_delete',
+            'button_media_back', 'button_media_previous', 'button_media_next', 'button_media_close',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
 
         // CKEditor 4 (assets locais, ADR 0046): init fica no admin.js (textarea[data-rte])
         $this->document->addScript($this->config->get('site_url') . 'view/js/ckeditor/ckeditor.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+        $this->document->addScript($this->config->get('site_url') . 'view/js/blog-media.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $data['seo_base'] = $this->catalogUrl();
+        $data['catalog_base'] = $this->catalogAssetUrl();
+        $data['can_modify'] = $this->user->hasPermission('modify', 'blog/blog');
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['media_config'] = [
+            'listUrl' => $this->url->link('blog/blog.mediaList'),
+            'uploadUrl' => $this->url->link('blog/blog.mediaUpload'),
+            'folderUrl' => $this->url->link('blog/blog.mediaFolder'),
+            'deleteUrl' => $this->url->link('blog/blog.mediaDelete'),
+            'csrfToken' => $data['csrf_token'],
+            'catalogBase' => $this->catalogAssetUrl(),
+            'strings' => [
+                'loading' => $this->language->get('text_media_loading'),
+                'empty' => $this->language->get('text_media_empty'),
+                'noMatches' => $this->language->get('text_media_no_matches'),
+                'page' => $this->language->get('text_media_page'),
+                'confirmFileDelete' => $this->language->get('text_media_confirm_delete_file'),
+                'confirmFolderDelete' => $this->language->get('text_media_confirm_delete_folder'),
+                'genericError' => $this->language->get('error_media_generic'),
+                'invalidUrl' => $this->language->get('error_media_url'),
+                'chooseFile' => $this->language->get('error_media_upload_no_file'),
+                'root' => $this->language->get('text_media_library'),
+                'select' => $this->language->get('button_media_select'),
+                'delete' => $this->language->get('button_media_delete'),
+                'inUse' => $this->language->get('text_media_in_use'),
+                'uploadSuccess' => $this->language->get('text_media_upload_success'),
+            ],
+        ];
 
         $data['error']      = '';
         $data['text_flash'] = '';
@@ -310,6 +529,7 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         $data['post_id']        = $pid;
         $data['image']          = (string)($posted['image'] ?? (string)($post['image'] ?? ''));
+        $data['image_preview']  = $this->catalogImageUrl($data['image']);
         $data['date_published'] = (string)($posted['date_published'] ?? (string)($post['date_published'] ?? date('Y-m-d H:i:s')));
         $data['status']         = isset($posted['status']) ? '1' : ($isPost ? '0' : (string)(int)($post['status'] ?? 0));
 
@@ -399,6 +619,59 @@ class Blog extends \Reamur\System\Engine\Controller {
         return $errors;
     }
 
+    /** Valida token em sessão em todos os POSTs mutáveis do Blog. */
+    private function csrfValid(): bool {
+        return \Reamur\System\Library\Security\Csrf::check(
+            $this->session,
+            $this->request->post['csrf_token'] ?? ''
+        );
+    }
+
+    private function mediaUploader(): MediaUpload {
+        return new MediaUpload(rtrim((string)dirname(DIR_APPLICATION), '/\\') . '/catalog/');
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function mediaJson(array $payload): void {
+        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
+        $this->response->setOutput((string)json_encode(
+            $payload,
+            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE
+        ));
+    }
+
+    private function mediaError(string $code): string {
+        $key = match ($code) {
+            'invalid_folder', 'invalid_path', 'invalid_type' => 'error_media_invalid_path',
+            'folder_not_found' => 'error_media_folder_not_found',
+            'not_found' => 'error_media_not_found',
+            'folder_unreadable' => 'error_media_folder_unreadable',
+            'invalid_name' => 'error_media_folder_name',
+            'root_unavailable' => 'error_media_root',
+            'create_failed' => 'error_media_folder_create',
+            'exists' => 'error_media_folder_exists',
+            'permission' => 'error_permission',
+            'in_use' => 'error_media_file_in_use',
+            'not_empty' => 'error_media_folder_not_empty',
+            'delete_failed' => 'error_media_delete',
+            default => 'error_media_generic',
+        };
+
+        return $this->language->get($key);
+    }
+
+    private function postScalar(string $key): string {
+        $value = $this->request->post[$key] ?? '';
+
+        return is_scalar($value) ? trim((string)$value) : '';
+    }
+
+    private function queryScalar(string $key): string {
+        $value = $this->request->get[$key] ?? '';
+
+        return is_scalar($value) ? trim((string)$value) : '';
+    }
+
     /** Leia-uma-vez (consume) do flash da sessão */
     private function flash(): array {
         $session = $this->session;
@@ -432,10 +705,49 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['footer'] = $this->load->controller('common/footer', $data);
     }
 
-    /** URL pública do catalog (deriva da base admin: …/admin/ → …/) — F8-02 */
+    /** Base pública canônica do site (admin /admin/ → raiz), usada no preview SEO. */
     private function catalogUrl(): string {
-        $siteUrl = rtrim((string)$this->config->get('site_url'), '/') . '/';
+        $siteUrl = rtrim((string)$this->config->get('site_url', ''), '/') . '/';
 
         return str_ireplace('/admin/', '/', $siteUrl);
+    }
+
+    /** URL de imagem para preview/lista; paths legados com catálogo na raiz são normalizados. */
+    private function catalogImageUrl(string $image): string {
+        $image = trim($image);
+
+        if ($image === '') {
+            return '';
+        }
+
+        if (preg_match('#^https?://#i', $image)) {
+            return $image;
+        }
+
+        $path = ltrim(str_replace(chr(92), '/', $image), '/');
+
+        foreach (['dev/catalog/', 'catalog/'] as $prefix) {
+            if (str_starts_with($path, $prefix)) {
+                $path = substr($path, strlen($prefix));
+                break;
+            }
+        }
+
+        return $this->catalogAssetUrl() . $path;
+    }
+
+    /** Base física pública do app catalog, usada em src de imagens do filesystem. */
+    private function catalogAssetUrl(): string {
+        $base = (string)$this->config->get('site_url', '');
+
+        if (str_ends_with($base, 'admin/')) {
+            return substr($base, 0, -strlen('admin/')) . 'catalog/';
+        }
+
+        if (str_ends_with($base, 'catalog/')) {
+            return $base;
+        }
+
+        return rtrim($base, '/') . '/catalog/';
     }
 }
