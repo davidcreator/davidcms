@@ -1,0 +1,257 @@
+{
+  "package": "F8-06",
+  "task": "Fase 8 / Tarefa 06 — Páginas CMS no shell",
+  "date": "2026-10-23",
+  "status": "Escopo aprovado; implementação preparada. Aplicação/homologação pelo usuário pendente; Fase 8 não encerrada.",
+  "repository": "https://github.com/davidcreator/davidcms",
+  "base_commit": "98a035f2007e627815f57993ac0125182cdaf5f8",
+  "base_commit_message": "feat(e2e,docs): add f8-05 blog validation tooling",
+  "organization": "Somente fase/tarefa; sem novos níveis de ajuste.",
+  "scope": "cms/page, CSS sob .cms-page-list, JS CMS de validação, três idiomas, QA/documentação e envio de CSRF em dois testes legados.",
+  "runtime_files": 9,
+  "project_files": 18,
+  "added_files": 7,
+  "modified_files": 11,
+  "preserved": [
+    "schema/SQL de instalação/grants",
+    "system/** e catalog/**",
+    "Blog/mídia, Appearance, Localization, admin.js e ASSET_V",
+    "rotas/names/15 ids, textarea/HTML/Unicode, status/sort_order",
+    "persistência/SEO do model e normalização/validação do payload",
+    "getPages() sem argumentos retorna tudo; ordem sort_order/page_id ASC"
+  ],
+  "intentional_security_change": "POST cms/page add/edit/delete exige csrf_token da mesma sessão; chamadas legadas afetadas atualizadas.",
+  "files": [
+    {
+      "path": "agents-ia/decisoes/0050-f8-06-paginas-cms-no-shell.md",
+      "action": "added",
+      "mode": "100644",
+      "size_bytes": 5385,
+      "sha256_before": null,
+      "sha256_after": "70af338946332b7ae30c74992e2f676c3198eae6f0884bf8289ae56eded14e47"
+    },
+    {
+      "path": "dev/admin/controller/cms/page.php",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 15293,
+      "sha256_before": "45e3c2a588b12bce5fb03d09e72e7effa9a91e017f474cfcb765ccebbc0fb263",
+      "sha256_after": "9daa5c38bc64eda657206dd025d311b0ae15c7de32bb84ee94b8731f6dc6e331"
+    },
+    {
+      "path": "dev/admin/language/en-us/cms/page.php",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 3050,
+      "sha256_before": "a315fd2f38f493317a35145f3ae3417ac511f6970d97ba39eb2bffd7386c23f8",
+      "sha256_after": "0794c59eb3c789e42dc1318c08fa7e4fab12960600eb476b4fb8575cb8611796"
+    },
+    {
+      "path": "dev/admin/language/es-eu/cms/page.php",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 3237,
+      "sha256_before": "75b758bd791fb46087fe5062ab9f95b38f3dadc010caee08f79f78286a56b4dd",
+      "sha256_after": "7973e8849a9275ba3a16be8d3ceeaa9055dccf64d76606ef4e1ac419115b504c"
+    },
+    {
+      "path": "dev/admin/language/pt-br/cms/page.php",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 3222,
+      "sha256_before": "5478a6bb86b6641a1b6f62b22095926fc400153f4a23c48e69d1645a8fc2d39d",
+      "sha256_after": "77f9f6b2cfd651dce679a835256edd602f8f59abdc7a111a45f0ad95040a36e7"
+    },
+    {
+      "path": "dev/admin/model/cms/page.php",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 9815,
+      "sha256_before": "7095ef61f3114d38e5be262a06b60e72faa1638b54c87f120457a420313ecb23",
+      "sha256_after": "4a4e4a58ab287acf2b6cfd1ef210312959f13d0dcd6a5c35f61c72efd0ce1da3"
+    },
+    {
+      "path": "dev/admin/view/css/admin.css",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 24505,
+      "sha256_before": "62b5e04c612bb57d0cfd87f73c443aee3657cd542b9be744b85b73209aa9dc21",
+      "sha256_after": "e13422fb67040a4b8284556690e0b861da58b57abbeea067922a1695b4aa7152"
+    },
+    {
+      "path": "dev/admin/view/js/cms-page.js",
+      "action": "added",
+      "mode": "100644",
+      "size_bytes": 1129,
+      "sha256_before": null,
+      "sha256_after": "9c4aa603d2189ea4cc3d76cb861acd127960148a6edc03654a3a4ef1d39bf8ba"
+    },
+    {
+      "path": "dev/admin/view/template/cms/page_form.twig",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 5772,
+      "sha256_before": "d26eb50e9149ceeaee105d2be00f7d59899bf3e70d9da3b2293118fad2ce3b71",
+      "sha256_after": "0028785241732e633c7f32946a20b57821ee1901f0b3269c885fa18a70e51a08"
+    },
+    {
+      "path": "dev/admin/view/template/cms/page_list.twig",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 4443,
+      "sha256_before": "a9218087bbd52cd15ebe70675f1a78efb17df0cef4dd9c48611acfcc15a81c37",
+      "sha256_after": "50190dd7ce64fe8574a487815cd85b934cea59ec15e148507b4ec8e4169fcd2c"
+    },
+    {
+      "path": "dev/tests/e2e/e2e_regressao.sh",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 11504,
+      "sha256_before": "5416012013226bd1305a8ab8f35f8309a528714b5061890a9381b8a19d91b972",
+      "sha256_after": "877b72fa18e7603ccdfca7c8b7ae82d39d20c8e6e9c7d8c0ca93b5c6ed384f59"
+    },
+    {
+      "path": "docs/F8-06-Paginas-CMS.md",
+      "action": "added",
+      "mode": "100644",
+      "size_bytes": 17719,
+      "sha256_before": null,
+      "sha256_after": "245a8a9530a815770db1f09e4b84d4dc28149f498a4062c7afc1ddf820dd85cf"
+    },
+    {
+      "path": "docs/README.md",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 5359,
+      "sha256_before": "75a5399cf0edd2aee434ad1fa85e73280b5c9b2af1c6da84cab14b7d8631c281",
+      "sha256_after": "dc908063c4078914fb064b2b81735fc67389c596cab26e8dbfcee2309547702b"
+    },
+    {
+      "path": "tools/e2e/e2e_f701.sh",
+      "action": "modified",
+      "mode": "100644",
+      "size_bytes": 14837,
+      "sha256_before": "c3b37e50363ae66793ce71d30517cf2458e6b5c168915333d80377f3653144b6",
+      "sha256_after": "c75a8e206d101959ed77078a25ff001cdffb8ba7869dfc55a7cd0d17ebc3bb11"
+    },
+    {
+      "path": "tools/e2e/e2e_f806.sh",
+      "action": "added",
+      "mode": "100755",
+      "size_bytes": 4192,
+      "sha256_before": null,
+      "sha256_after": "90c18a031bf01a147d2213b17fe814b9b9944434b157ecdf93f8796622733964"
+    },
+    {
+      "path": "tools/e2e/e2e_f806_contracts.php",
+      "action": "added",
+      "mode": "100644",
+      "size_bytes": 24235,
+      "sha256_before": null,
+      "sha256_after": "edce857ee87999f7e538be651e46ce8c8983f725537001cd70b9f7cff1512667"
+    },
+    {
+      "path": "tools/e2e/e2e_f806_dom.cjs",
+      "action": "added",
+      "mode": "100644",
+      "size_bytes": 3700,
+      "sha256_before": null,
+      "sha256_after": "993f979f0876ee6d5f53f193461402c4ce6ef74a6b7861d373ad78f82282733d"
+    },
+    {
+      "path": "tools/e2e/e2e_f806_http.cjs",
+      "action": "added",
+      "mode": "100644",
+      "size_bytes": 20609,
+      "sha256_before": null,
+      "sha256_after": "487b41b4003e0f7b5d0dd9a4e877b801f8cac3a4d2b39bce7a0eb9b7e7e76fdc"
+    }
+  ],
+  "patch": {
+    "path": "F8-06.patch",
+    "size_bytes": 118556,
+    "sha256": "b197a9268e7b3b04946278cc0dfd2ae0cdf04e2c5aeb576337e124b42003514f",
+    "project_files": 18
+  },
+  "tests": {
+    "environment": "PHP CLI8.4.26/mbstring, Twig3.30.0 (versão do lock; autoload QA isolado), Node20.20.2/Bash. CMS/servidor/DB não instalados; sem clone completo; dependências QA fora do ZIP.",
+    "php_lint": {
+      "files": 6,
+      "result": "PASS"
+    },
+    "php_twig_contracts": {
+      "pass": 30,
+      "fail": 0,
+      "php_twig_real": true,
+      "db_services_session_io": "fixtures; SQL capturado, Session sem construtor"
+    },
+    "cms_js_dom": {
+      "pass": 6,
+      "fail": 0,
+      "dom_bootstrap": "simulados; primeiro inválido/múltiplos campos, sem preventDefault"
+    },
+    "http_helpers": {
+      "pass": 16,
+      "fail": 0,
+      "fetch_responses": "simulados, sem servidor"
+    },
+    "negative_original_cms": {
+      "pass": 12,
+      "fail": 18,
+      "exit_code": 1,
+      "expected_failure": true
+    },
+    "f805_local_regression": {
+      "guards_models": 32,
+      "rte_simulated": 18,
+      "media_simulated": 10,
+      "fail": 0,
+      "note": "Regressão local; não reabre aceite do usuário nem comprova backend/navegador."
+    },
+    "syntax": "PASS JS/CJS/Bash. Scripts legados só bash -n, nunca executados.",
+    "cli_guards": "PASS help/modo/argumentos/PHP/Node/HTTP sem autorização/variáveis; host externo bloqueado antes de FS/probe/login/rede e sem credenciais no erro.",
+    "scope_links": "PASS CSS anterior byte a byte/novos seletores locais, persistência/payload/validação intactos, tokens legados só aditivos, índice +1, links locais válidos.",
+    "patch_apply_reverse": "PASS --whitespace=error, comparação de 18 arquivos, Tool após aplicação, reversão exata e remoção dos sete arquivos novos."
+  },
+  "http_e2e": {
+    "status": "NOT_EXECUTED_BY_AGENT",
+    "mode": "bash tools/e2e/e2e_f806.sh --http",
+    "kind": "http-workflow",
+    "steps": 10,
+    "requires": [
+      "ALLOW_F806_HTTP=YES_WRITE_REAMUR_TEST",
+      "B/FUI/MIRROR explícitos, loopback e configs reamur_test",
+      "marcador .f805-disposable por compatibilidade com guardas F8-05",
+      "fontes/arquivos CMS MIRROR=FUI",
+      "F806_USERNAME/F806_PASSWORD fictícios com modify cms/page",
+      "Tool F8-05 da base presente"
+    ],
+    "behavior": "Probe aleatório de identidade antes do login; cookies/tokens de autenticação só em memória; uma página própria criar/editar/reabrir, CSRF/filtros/delete; IDs de página e idiomas descobertos no HTML.",
+    "cleanup": "Probe próprio no finally; só página própria excluída após validação se passar. Em falha preservar para inspeção; sem retry POST/ID presumido/limpeza ampla.",
+    "report": "JSON stdout; F806_REPORT opcional absoluto novo (0600). Passed+10 passos pass+cleanup complete aprova só HTTP, não navegador/visual.",
+    "no": "Sem SQL direto/drop/recreate/upgrade/seed/upload/suítes destrutivas/credenciais públicas padrão."
+  },
+  "not_executed": [
+    "HTTP do CMS/banco real",
+    "navegador/DOM/Bootstrap nativos/foco/contraste",
+    "papéis ACL reais em outra conta",
+    "PHP-FPM/Apache/MariaDB",
+    "PHPStan/PHPUnit completo/Actions",
+    "deploy/produção",
+    "matriz PHP",
+    "suítes legadas destrutivas"
+  ],
+  "limits": [
+    "Config/nonce/hashes pressupõem laboratório confiável e não atestam DB atrás de proxy; proibido produção/túnel/proxy para produção.",
+    "HTML não sanitizado nesta tarefa.",
+    "Paginação: apenas correção local de ampersands/CSS; núcleo/aria-labels globais intactos.",
+    "CKEditor não atualizado nem ampliado; corpo permanece textarea.",
+    "Conferir cache CSS/PHP/Twig na cópia servida.",
+    "Tarefa05 concluída segundo o usuário, sem inferir detalhes de sua homologação."
+  ],
+  "guide": "docs/F8-06-Paginas-CMS.md",
+  "decision": "agents-ia/decisoes/0050-f8-06-paginas-cms-no-shell.md",
+  "apply": "git apply --check --whitespace=error <entrega>/F8-06.patch && git apply --whitespace=error <entrega>/F8-06.patch",
+  "rollback": "git apply -R --check <entrega>/F8-06.patch && git apply -R <entrega>/F8-06.patch; limpar antes só artefatos próprios.",
+  "next": "Usuário aplicar, --check, homologar UI e opcionalmente HTTP controlado; confirmar aceite da Tarefa06."
+}

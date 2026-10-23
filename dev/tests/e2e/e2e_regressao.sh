@@ -80,6 +80,7 @@ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/category.add" \
 grep -q "already in use" /tmp/regr_seo1.html
 A=$?
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=cms/page.add" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "page_description[1][title]=Pág X" \
   --data-urlencode "page_description[1][keyword]=reamur-site" \
   -o /tmp/regr_seo2.html
@@ -105,10 +106,12 @@ ck 5 $A "category-hierarquia-anticyclo-delete"
 
 echo '══ 6 — page: edição com swap de SEO (par antigo sai) ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=cms/page.add" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "page_description[1][title]=Sobre" \
   --data-urlencode "page_description[1][keyword]=sobre-nos" \
   -D /tmp/regr_pg.hdr -o /dev/null
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=cms/page.edit|1" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "page_description[1][title]=Sobre V2" \
   --data-urlencode "page_description[1][keyword]=sobre-nos-v2" \
   -D /tmp/regr_pg2.hdr -o /dev/null

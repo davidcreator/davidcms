@@ -26,6 +26,7 @@ Estes documentos foram escritos para servir como referência durante todo o cicl
 | 14 | [F8-05-A01-Inicializacao-Biblioteca-Midia.md](F8-05-A01-Inicializacao-Biblioteca-Midia.md) | **F8-05 · Ajuste 01**: correção do boot da biblioteca de mídia, aplicação incremental, Tool E2E/regressão e critérios de aceite. |
 | 15 | [F8-05-A02-Configuracao-Isolada-CKEditor.md](F8-05-A02-Configuracao-Isolada-CKEditor.md) | **F8-05 · Ajuste 02**: isolamento da configuração legada do CKEditor, Tool E2E/regressão, aplicação, cache e rollback. |
 | 16 | [F8-05-Validacao-Integrada-Blog.md](F8-05-Validacao-Integrada-Blog.md) | **Fase 8 · Tarefa 05**: entrada única de validação, Tool de navegador local, salvar/reabrir, evidências e limpeza controlada. |
+| 17 | [F8-06-Paginas-CMS.md](F8-06-Paginas-CMS.md) | **Fase 8 · Tarefa 06**: Páginas CMS no shell, filtros/paginação, CSRF, Tool E2E e homologação. |
 
 ---
 

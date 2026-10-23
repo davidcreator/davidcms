@@ -15,25 +15,54 @@ namespace Reamur\Admin\Model\Cms;
 class Page extends \Reamur\System\Engine\Model {
 
     /**
-     * Lista para a grade (título preferindo o idioma ativo, coalesce EN).
-     *
+     * Lista a grade; sem argumentos mantém a listagem completa e a ordem antiga.
+     * @param array{title?: string, status?: string|int, start?: int, limit?: int} $filters
      * @return array<int, array<string, mixed>>
      */
-    public function getPages(): array {
-        $lang = $this->currentLanguageId();
+    public function getPages(array $filters = []): array {
+        $sql = "SELECT p.`page_id`, p.`status`, p.`sort_order`, p.`date_modified`,
+                       COALESCE(NULLIF(pd.`title`, ''), pd_en.`title`, '') AS `title` "
+            . $this->pageListFrom() . $this->pageListWhere($filters)
+            . " ORDER BY p.`sort_order` ASC, p.`page_id` ASC";
 
-        $query = $this->db->query(
-            "SELECT p.`page_id`, p.`status`, p.`sort_order`, p.`date_modified`,
-                    COALESCE(NULLIF(pd.`title`, ''), pd_en.`title`, '') AS `title`
-             FROM `" . $this->t('page') . "` p
-             LEFT JOIN `" . $this->t('page_description') . "` pd
-                 ON pd.`page_id` = p.`page_id` AND pd.`language_id` = '" . $lang . "'
-             LEFT JOIN `" . $this->t('page_description') . "` pd_en
-                 ON pd_en.`page_id` = p.`page_id` AND pd_en.`language_id` = 1
-             ORDER BY p.`sort_order` ASC, p.`page_id` ASC"
-        );
+        if (array_key_exists('limit', $filters)) {
+            $start = max(0, (int)($filters['start'] ?? 0));
+            $limit = min(100, max(1, (int)$filters['limit']));
+            $sql .= " LIMIT " . $start . ", " . $limit;
+        }
 
+        $query = $this->db->query($sql);
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
+    /** @param array{title?: string, status?: string|int} $filters */
+    public function getTotalPages(array $filters = []): int {
+        $query = $this->db->query("SELECT COUNT(*) AS `total` " . $this->pageListFrom() . $this->pageListWhere($filters));
+        return ($query instanceof \stdClass && isset($query->row['total'])) ? (int)$query->row['total'] : 0;
+    }
+
+    /** Joins idênticos na lista e contagem; título ativo com fallback EN. */
+    private function pageListFrom(): string {
+        $lang = $this->currentLanguageId();
+        return "FROM `" . $this->t('page') . "` p
+                LEFT JOIN `" . $this->t('page_description') . "` pd
+                  ON pd.`page_id` = p.`page_id` AND pd.`language_id` = '" . $lang . "'
+                LEFT JOIN `" . $this->t('page_description') . "` pd_en
+                  ON pd_en.`page_id` = p.`page_id` AND pd_en.`language_id` = 1";
+    }
+
+    /** @param array{title?: string, status?: string|int} $filters */
+    private function pageListWhere(array $filters): string {
+        $where = [];
+        $title = $filters['title'] ?? '';
+        if (is_string($title) && trim($title) !== '') {
+            $where[] = "COALESCE(NULLIF(pd.`title`, ''), pd_en.`title`, '') LIKE '%" . $this->db->escape(trim($title)) . "%'";
+        }
+        $status = $filters['status'] ?? 'all';
+        if (in_array($status, ['0', '1', 0, 1], true)) {
+            $where[] = "p.`status` = '" . (int)$status . "'";
+        }
+        return $where ? ' WHERE ' . implode(' AND ', $where) : '';
     }
 
     /**

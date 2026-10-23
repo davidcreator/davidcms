@@ -142,6 +142,7 @@ ck 5 $RC "keyword-formato"
 
 echo '══ 6 — unicidade GLOBAL: keyword de cms/page rejeita no blog ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=cms/page.add" \
+  --data-urlencode "csrf_token=$BLOG_CSRF" \
   --data-urlencode "page_description[1][title]=Política de Cookies" \
   --data-urlencode "page_description[1][keyword]=cookies" \
   -D /tmp/f701_pg.hdr -o /dev/null
