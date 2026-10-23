@@ -1,0 +1,66 @@
+{
+  "task": "F9-05",
+  "base_head": "2be7cc06c982e24faca1195b6cdd126f34960322",
+  "status": "implementation_partial_backend_model_acl",
+  "route": {
+    "admin_route": "custom_field/definition",
+    "permissions": [
+      "access",
+      "modify"
+    ],
+    "controller_available": false,
+    "ui_available": false,
+    "grant_is_dormant_until": "F9-06",
+    "upgrade_sql": "dev/install/sql/upgrade_f9_05_custom_field_definition_grant.sql",
+    "rollback_sql": "dev/install/sql/rollback_f9_05_custom_field_definition_grant.sql"
+  },
+  "model": {
+    "path": "dev/admin/model/custom_field/definition.php",
+    "namespace": "Reamur\\Admin\\Model\\Custom_field",
+    "class": "Definition",
+    "proxy_property": "model_custom_field_definition",
+    "tables_read_write": [
+      "custom_field_group",
+      "custom_field_group_description",
+      "custom_field",
+      "custom_field_description"
+    ],
+    "tables_read_only": [
+      "custom_field_value"
+    ],
+    "creates_values": false,
+    "hard_deletes_values": false
+  },
+  "domain": {
+    "entity_types": [
+      "cms/page"
+    ],
+    "field_types": [
+      "text",
+      "textarea",
+      "number",
+      "boolean",
+      "url",
+      "select"
+    ],
+    "visibility": [
+      "admin_only",
+      "public"
+    ],
+    "default_visibility": "admin_only",
+    "immutable_after_create": [
+      "entity_type",
+      "key",
+      "type",
+      "localized"
+    ],
+    "delete_guards": {
+      "group_requires_zero_fields": true,
+      "field_requires_zero_values": true
+    }
+  },
+  "public_exposure": {
+    "allowed": false,
+    "requires_future_opt_in": true
+  }
+}

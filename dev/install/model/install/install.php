@@ -128,7 +128,7 @@ class Install extends \Reamur\System\Engine\Model {
      * @param array{username: string, firstname: string, lastname: string, email: string, password: string} $data
      */
     public function createAdministrator(array $data, string $prefix): void {
-        $seedRoutes = ['user/user', 'user/user_group', 'catalog/project', 'catalog/category', 'cms/page', 'marketing/testimonial', 'marketing/client_logo', 'tool/tool', 'sale/order', 'communication/contact_message', 'setting/webhook']; // F2-8..16: + ferramentas + pedidos + inbox + webhooks
+        $seedRoutes = ['user/user', 'user/user_group', 'catalog/project', 'catalog/category', 'cms/page', 'marketing/testimonial', 'marketing/client_logo', 'tool/tool', 'sale/order', 'communication/contact_message', 'setting/webhook', 'custom_field/definition']; // F2-8..16: + ferramentas + pedidos + inbox + webhooks
         // F8-01 (ADR 0045 §bugfix-escape-ACL): UNESCAPED_SLASHES impede que
         // real_escape_string dobre o '\' produzido pelo json_encode padrão —
         // combinando, os valores ficavam "user\\/user" e nenhum hasPermission
