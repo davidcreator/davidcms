@@ -1,0 +1,1755 @@
+diff --git a/agents-ia/decisoes/0052-f8-08-projetos-portfolio-no-shell.md b/agents-ia/decisoes/0052-f8-08-projetos-portfolio-no-shell.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..4ce069ab716156e2d420bb0412ce115a77edfccd
+--- /dev/null
++++ b/agents-ia/decisoes/0052-f8-08-projetos-portfolio-no-shell.md
+@@ -0,0 +1,45 @@
++# ADR 0052 — F8-08: Projetos do portfólio no shell
++
++**Data:** 2026-10-23 · **Agente:** admin / orquestrador.
++**Status:** continuidade solicitada pelo usuário; implementação preparada, aplicação/homologação pendentes.
++**Base:** `a9aa816383fc5c40ce39415fb2b9f3257ba9597c`.
++
++## Contexto
++
++O usuário declarou a Tarefa 07 realizada com sucesso. Os **17 arquivos** dessa entrega conferem com os blobs públicos em `a9aa816`; isso verifica publicação, sem inventar detalhes de backend/deploy. Prossegue-se para projetos, sequência anunciada após categorias, sem reabrir tarefas aceitas.
++
++`catalog/project` ainda usava `.dash/.panel`, idiomas empilhados, confirmação inline e JS de capa/galeria por innerHTML. O CRUD já possui sete campos multilíngues, cliente/URL, status/featured, N:N com categorias e galeria ordenada. `MediaUpload` é o componente existente para ambos os uploads.
++
++## Decisão
++
++1. Migrar somente esse CRUD ao padrão F8: titlebar/cards, tabela responsiva, badges, empty state, modal delete, tabs e sidebar. Preservar as rotas `catalog/project`, `.add`, `.edit|ID`, `.delete|ID`, `.upload`, 21 IDs multilíngues, todos os names e controles de imagem/galeria/categorias.
++2. `getProjects(array $filters = [])` recebe filtros opcionais nome/status/featured e paginação de 20 solicitada pelo controller. `getTotalProjects` usa os mesmos joins/predicados. Sem argumentos, retorna todos na **ordem antiga `sort_order ASC, project_id DESC`**. Não alterar os métodos de persistência, galeria, categorias, SEO, validação/normalização do payload ou serviço de upload.
++3. Manter todas as categorias nos checkboxes, sem LIMIT da grade. Galeria continua declarativa `project_image[N][image|alt|sort_order]`, ordenada na reabertura por `sort_order ASC, project_image_id ASC`; campos por idioma continuam name/summary/description/tag/keyword/meta_title/meta_description. Corpo permanece textarea de seis linhas, sem CKEditor/Blog media.
++4. Acrescentar CSRF estável em add/edit/delete/**upload**, além da ACL `catalog/project`. Delete inválido não chega aos unlinks. JSON de upload `{success,path,error}` preservado. Três requests de projetos na regressão legada recebem o token já obtido; a suíte destrutiva não é chamada.
++5. Externalizar JS em `admin/view/js/catalog-project.js`, DOM-ready/idempotente. Revelar só a aba do primeiro inválido sem cancelar validação. Capa/galeria usam CSRF/same-origin, não seguem redirects ou repetem POST; busy compartilhado impede salvar/remover/upload concorrente. Retorno/labels usam DOM seguro, não innerHTML. Índices crescem a partir do máximo existente e não colidem após remoções; remover linha só altera a declaração do formulário, não apaga arquivo físico novo.
++6. CSS novo apenas sob `.catalog-project-list` e `.catalog-project-form`, prefixo anterior intacto. Normalização local de `&amp;amp;` da paginação, sem mudar a library compartilhada; ASSET_V inalterado, com orientação de cache.
++7. Adicionar rótulos necessários em en-us/pt-br/es-eu. Não alterar schema, grants, PHP do núcleo/site/instalador, categorias, CMS, Blog, Appearance ou Composer da aplicação.
++
++## Tool e evidências locais
++
++`tools/e2e/e2e_f808.sh --check` é padrão. PHP **8.4.26**, Twig **3.30.0** (versão do lock), Node **20.20.2**:
++
++- **45 PASS / 0 FAIL** em controller/model/Twig reais, SQL capturado e DB/serviços/model do controller/IO sessão em fixtures. Session sem construtor; MediaUpload guard/delete só em FS privado não servido, separado do MIRROR e limpo. Não comprova banco ou upload HTTP real.
++- **12 PASS / 0 FAIL** com JS real e DOM/Bootstrap/fetch simulados: galeria/índices, alt/order existentes, readonly, primeiro inválido, CSRF, preview seguro e concorrência.
++- **10 PASS / 0 FAIL** auxiliares HTTP novos + **25 compartilhados** F8-07/F8-06, simulados/FS temporário.
++- Lint dos seis PHP e sintaxe JS/CJS/Bash aprovados. Controle negativo com projeto original: **25 PASS / 20 FAIL**, saída 1 esperada.
++- Sem servidor, MariaDB, navegador, upload/HTTP real do CMS, deploy, GitHub write ou Actions executados.
++
++O E2E HTTP opt-in preparado tem **15 etapas**: identidade FUI/login, form/i18n, categoria auxiliar fictícia própria, CSRF negativo, três PNGs exclusivos, projeto com N:N/capa/duas galerias, reabrir campos/alt/ordem, edit inválido/v2/flags, filtros, delete negativo/positivo e limpeza de projeto/PNG/categoria próprios. IDs e idiomas vêm do HTML, nunca ID1 presumido para registro.
++
++Reutiliza apenas helpers/transportes/guardas anteriores, sem executar seus fluxos. Exige flags novas, credenciais fictícias com access/modify projeto **e categoria**, loopback/configs `reamur_test`, marcador e fontes/MediaUpload MIRROR=FUI, sem symlinks. Nenhum SQL direto/reset/seed/upgrade. Falha preserva artefatos conhecidos, sem retry de mutação ou limpeza ampla. **Ainda não executado contra o backend do usuário; não é navegador.**
++
++## Consequências/limites
++
++- Clientes dos quatro POSTs precisam de csrf_token; sem bypass legado.
++- Upload imediato e comportamento de órfãos/referências são mantidos: remover/substituir linha ou cancelar não coleta arquivos antigos. O teste usa PNGs novos exclusivos; nunca imagem compartilhada real. Delete continua best-effort como a base.
++- Validação de URL permanece FILTER_VALIDATE_URL, sem política nova de esquemas. Galeria inválida continua normalizada para caminho vazio e descartada pelo model, sem inventar rejeição/limpeza nova. HTML não é sanitizado por esta tarefa.
++- Homologar navegador/foco, preview/galeria, responsividade, temas/contraste, outro perfil ACL e volume real. Guardas não atestam backend/proxy/diretórios mal configurados; proibido produção/túnel/proxy para produção.
++- Código preparado/publicado não comprova aplicação ou encerramento da Fase 8.
++
++Guia, aplicação, E2E e rollback: [F8-08 — Projetos do portfólio](../../docs/F8-08-Projetos-Portfolio.md).
+diff --git a/dev/admin/controller/catalog/project.php b/dev/admin/controller/catalog/project.php
+index 9345aa7f729fd45a99356a9a8c536d6a3133d70d..5770cdd6462605082e4c0f064f02d47639d0b3c0 100644
+--- a/dev/admin/controller/catalog/project.php
++++ b/dev/admin/controller/catalog/project.php
+@@ -25,63 +25,83 @@
+     private const UPLOAD_DIR  = 'view/image/project/';
+     /** MIMEs aceitos + teto de tamanho */
+ 
+-    /** Lista projetos (200) */
++    /** Lista projetos com filtros/paginação, preservando categorias e galeria. */
+     public function index(): void {
+         $this->load->language('catalog/project');
+-
+         $this->document->setTitle($this->language->get('heading_title'));
+-
+         $this->load->model('catalog/project');
+-
+-        $data['heading_title']       = $this->language->get('heading_title');
+-        $data['text_list']           = $this->language->get('text_list');
+-        $data['text_no_results']     = $this->language->get('text_no_results');
+-        $data['text_confirm_delete'] = $this->language->get('text_confirm_delete');
+-        $data['text_enabled']        = $this->language->get('text_enabled');
+-        $data['text_disabled']       = $this->language->get('text_disabled');
+-        $data['text_yes']            = $this->language->get('text_yes');
+-        $data['text_no']             = $this->language->get('text_no');
+-        $data['text_placeholder']    = $this->language->get('text_placeholder');
+-        $data['column_image']        = $this->language->get('column_image');
+-        $data['column_name']         = $this->language->get('column_name');
+-        $data['column_client']       = $this->language->get('column_client');
+-        $data['column_featured']     = $this->language->get('column_featured');
+-        $data['column_status']       = $this->language->get('column_status');
+-        $data['column_sort_order']   = $this->language->get('column_sort_order');
+-        $data['column_date_modified'] = $this->language->get('column_date_modified');
+-        $data['column_action']       = $this->language->get('column_action');
+-        $data['button_add']          = $this->language->get('button_add');
+-        $data['button_edit']         = $this->language->get('button_edit');
+-        $data['button_delete']       = $this->language->get('button_delete');
+-        $data['text_flash']          = $this->flash();
+-
++        foreach ([
++            'heading_title', 'text_list', 'text_no_results', 'text_confirm_delete',
++            'text_enabled', 'text_disabled', 'text_yes', 'text_no', 'text_placeholder',
++            'column_image', 'column_name', 'column_client', 'column_featured', 'column_status',
++            'column_sort_order', 'column_date_modified', 'column_action',
++            'button_add', 'button_edit', 'button_delete', 'button_close',
++            'button_filter', 'button_reset', 'text_all_status', 'text_all_featured', 'text_search_placeholder',
++            'text_empty_title', 'text_empty_hint',
++        ] as $key) {
++            $data[$key] = $this->language->get($key);
++        }
++        $data['text_flash'] = $this->flash();
++        $data['can_modify'] = $this->user->hasPermission('modify', 'catalog/project');
++        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
++        $name = $this->request->get['filter_name'] ?? '';
++        $status = $this->request->get['filter_status'] ?? 'all';
++        $featured = $this->request->get['filter_featured'] ?? 'all';
++        $requestedPage = $this->request->get['page'] ?? 1;
++        $filter_name = is_string($name) ? mb_substr(trim($name), 0, 255) : '';
++        $filter_status = is_string($status) && in_array($status, ['all', '0', '1'], true) ? $status : 'all';
++        $filter_featured = is_string($featured) && in_array($featured, ['all', '0', '1'], true) ? $featured : 'all';
++        $filters = ['name' => $filter_name, 'status' => $filter_status, 'featured' => $filter_featured];
++        $limit = 20;
++        $total = $this->model_catalog_project->getTotalProjects($filters);
++        $page = is_scalar($requestedPage) ? max(1, (int)$requestedPage) : 1;
++        $page = min($page, max(1, (int)ceil($total / $limit)));
+         $catalog = $this->catalogUrl();
+-
+         $data['projects'] = [];
+-
+-        foreach ($this->model_catalog_project->getProjects() as $project) {
+-            $project = (array)$project;
+-            $pid     = (int)$project['project_id'];
+-            $image   = (string)$project['image'];
+-
++        foreach ($this->model_catalog_project->getProjects($filters + ['start' => ($page - 1) * $limit, 'limit' => $limit]) as $row) {
++            $row = (array)$row;
++            $pid = (int)$row['project_id'];
++            $image = (string)$row['image'];
+             $data['projects'][] = [
+-                'project_id'    => $pid,
+-                'thumb'         => $image !== '' ? $catalog . $image : '',
+-                'name'          => (string)$project['name'],
+-                'client'        => (string)$project['client'],
+-                'featured'      => (int)$project['featured'],
+-                'status'        => (int)$project['status'],
+-                'sort_order'    => (int)$project['sort_order'],
+-                'date_modified' => (string)$project['date_modified'],
+-                'edit'          => $this->url->link('catalog/project.edit|' . $pid),
+-                'delete'        => $this->url->link('catalog/project.delete|' . $pid),
++                'project_id' => $pid,
++                'thumb' => $image !== '' ? $catalog . $image : '',
++                'name' => (string)$row['name'],
++                'client' => (string)$row['client'],
++                'featured' => (int)$row['featured'],
++                'status' => (int)$row['status'],
++                'sort_order' => (int)$row['sort_order'],
++                'date_modified' => (string)$row['date_modified'],
++                'edit' => $this->url->link('catalog/project.edit|' . $pid),
++                'delete' => $this->url->link('catalog/project.delete|' . $pid),
+             ];
+         }
+-
+         $data['add'] = $this->url->link('catalog/project.add');
+-
++        $data['total_projects'] = $total;
++        $data['filter_name'] = $filter_name;
++        $data['filter_status'] = $filter_status;
++        $data['filter_featured'] = $filter_featured;
++        $data['filter_action'] = $this->url->link('catalog/project');
++        $data['filter_reset'] = $this->url->link('catalog/project');
++        $data['showing'] = $total > 0
++            ? sprintf($this->language->get('text_showing'), ($page - 1) * $limit + 1, min($page * $limit, $total), $total)
++            : '';
++        require_once DIR_SYSTEM . 'library/pagination.php';
++        $pagination = new \Pagination();
++        $pagination->total = $total;
++        $pagination->page = $page;
++        $pagination->limit = $limit;
++        $pagination->css_class = 'pagination pagination-sm mb-0';
++        $pagination->text_first = $this->language->get('button_first_page');
++        $pagination->text_last = $this->language->get('button_last_page');
++        $pagination->text_next = $this->language->get('button_next_page');
++        $pagination->text_prev = $this->language->get('button_previous_page');
++        $pagination->url = $this->url->link('catalog/project', 'page={page}'
++            . ($filter_name !== '' ? '&filter_name=' . rawurlencode($filter_name) : '')
++            . ($filter_status !== 'all' ? '&filter_status=' . $filter_status : '')
++            . ($filter_featured !== 'all' ? '&filter_featured=' . $filter_featured : ''));
++        // Correção local do escape duplo da library, como no CMS (F8-06).
++        $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
+         $this->chrome($data);
+-
+         $this->response->setOutput($this->load->view('catalog/project_list', $data));
+     }
+ 
+@@ -102,7 +122,7 @@
+         $data = $this->formData([]);
+ 
+         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
+-            $errors = $this->validateProject(0);
++            $errors = $this->csrfValid() ? $this->validateProject(0) : [$this->language->get('error_csrf')];
+ 
+             if ($errors === []) {
+                 $project_id = $this->model_catalog_project->addProject($this->postPayload());
+@@ -154,7 +174,7 @@
+                 return;
+             }
+ 
+-            $errors = $this->validateProject($project_id);
++            $errors = $this->csrfValid() ? $this->validateProject($project_id) : [$this->language->get('error_csrf')];
+ 
+             if ($errors === []) {
+                 $this->model_catalog_project->editProject($project_id, $this->postPayload());
+@@ -187,6 +207,11 @@
+         }
+ 
+         $this->load->language('catalog/project');
++        if (!$this->csrfValid()) {
++            $this->setFlash($this->language->get('error_csrf'), 'error');
++            $this->response->redirect($this->url->link('catalog/project'));
++            return;
++        }
+ 
+         $this->load->model('catalog/project');
+ 
+@@ -230,6 +255,8 @@
+             $msg = $this->language->get('error_upload_method');
+         } elseif (!$this->user->hasPermission('modify', 'catalog/project')) {
+             $msg = $this->language->get('error_permission');
++        } elseif (!$this->csrfValid()) {
++            $msg = $this->language->get('error_csrf');
+         } else {
+             $result = $this->media()->store((array)($this->request->files['file'] ?? []), self::UPLOAD_DIR);
+ 
+@@ -268,12 +295,17 @@
+             'entry_featured', 'entry_status', 'entry_sort_order',
+             'entry_alt', 'button_save', 'button_cancel', 'button_upload',
+             'button_remove', 'button_add_image', 'text_placeholder',
++            'text_enabled', 'text_disabled', 'text_meta_group', 'text_upload_wait', 'text_no_categories',
+         ] as $key) {
+             $data[$key] = $this->language->get($key);
+         }
+ 
++        $this->document->addScript($this->config->get('site_url') . 'view/js/catalog-project.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
++
+         $data['error']      = '';
+         $data['text_flash'] = '';
++        $data['can_modify'] = $this->user->hasPermission('modify', 'catalog/project');
++        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+ 
+         $pid          = (int)($project['project_id'] ?? 0);
+         $isPost       = $this->request->server['REQUEST_METHOD'] === 'POST';
+@@ -354,6 +386,12 @@
+ 
+         $data['upload']     = $this->url->link('catalog/project.upload');
+         $data['catalog']    = $this->catalogUrl();
++        $cover = $this->imageGuard($data['image']);
++        $data['image_preview'] = $cover !== '' ? $data['catalog'] . $cover : '';
++        foreach ($data['images'] as $index => $row) {
++            $relative = $this->imageGuard($row['image']);
++            $data['images'][$index]['preview'] = $relative !== '' ? $data['catalog'] . $relative : '';
++        }
+         $data['cancel']     = $this->url->link('catalog/project');
+         $data['text_error_upload_js'] = $this->language->get('error_upload');
+ 
+@@ -460,6 +498,11 @@
+     }
+ 
+ 
++    /** Token estável da sessão para add/edit/delete/upload. */
++    private function csrfValid(): bool {
++        return \Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '');
++    }
++
+     /** Componente compartilhado de upload (regra dos três — ADR 0011); root = catalog/ irmão do admin */
+     private function media(): MediaUpload {
+         return new MediaUpload(rtrim((string)dirname(DIR_APPLICATION), '/') . '/catalog/');
+@@ -527,9 +570,8 @@
+ 
+     /** Chrome compartilhado + estilo do módulo */
+     private function chrome(array &$data): void {
+-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+-
+-        $data['body_class'] = 'rms-dash';
++        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
++
+         $data['header']     = $this->load->controller('common/header', $data);
+         $data['footer']     = $this->load->controller('common/footer', $data);
+     }
+diff --git a/dev/admin/language/en-us/catalog/project.php b/dev/admin/language/en-us/catalog/project.php
+index b53549d24973195976d117b3152c146868e3b009..98a994077d783bb4a8f454401ce98d761d1d9762 100644
+--- a/dev/admin/language/en-us/catalog/project.php
++++ b/dev/admin/language/en-us/catalog/project.php
+@@ -22,7 +22,7 @@
+ $_['text_edit']            = 'Edit Project';
+ $_['text_general']         = 'Content';
+ $_['text_data']            = 'Data';
+-$_['text_languages_note']  = 'One block per installed language. The en-US title is required.';
++$_['text_languages_note']  = 'Use the language tabs. The en-US title is required.';
+ $_['text_image_cover']     = 'Cover image';
+ $_['text_gallery']         = 'Gallery';
+ $_['text_upload_hint']     = 'JPG, PNG, WebP or GIF up to 2 MB. The file is stored now; save the form to bind it to the project.';
+@@ -80,3 +80,22 @@
+ $_['error_upload_type']   = 'Invalid type: only JPG, PNG, WebP or GIF.';
+ $_['error_upload_move']   = 'Could not store the uploaded file (check directory permissions).';
+ $_['error_permission']    = 'You do not have permission to modify the portfolio.';
++
++// Fase 8 / Tarefa 08 — interface, filtros/paginação e CSRF.
++$_['text_all_status'] = 'All statuses';
++$_['text_all_featured'] = 'All featured states';
++$_['text_search_placeholder'] = 'Search by name…';
++$_['text_showing'] = 'Showing %d–%d of %d projects';
++$_['text_empty_title'] = 'No matching projects';
++$_['text_empty_hint'] = 'Create a project or adjust the filters.';
++$_['text_meta_group'] = 'Search metadata';
++$_['text_upload_wait'] = 'Wait for the upload to finish before saving.';
++$_['text_no_categories'] = 'No categories available.';
++$_['button_filter'] = 'Filter';
++$_['button_reset'] = 'Reset';
++$_['button_close'] = 'Close';
++$_['button_first_page'] = '« First';
++$_['button_last_page'] = 'Last »';
++$_['button_next_page'] = 'Next ›';
++$_['button_previous_page'] = '‹ Previous';
++$_['error_csrf'] = 'Invalid session token. Reload the form and try again.';
+diff --git a/dev/admin/language/es-eu/catalog/project.php b/dev/admin/language/es-eu/catalog/project.php
+index ab89733805261f3dd7476243f4aac6fdbd663c5f..2bb122d4d4bc0c2e390eaf4a985d2b8c45515d62 100644
+--- a/dev/admin/language/es-eu/catalog/project.php
++++ b/dev/admin/language/es-eu/catalog/project.php
+@@ -22,7 +22,7 @@
+ $_['text_edit']            = 'Editar Proyecto';
+ $_['text_general']         = 'Contenido';
+ $_['text_data']            = 'Datos';
+-$_['text_languages_note']  = 'Un bloque por idioma instalado. El título en en-US es obligatorio.';
++$_['text_languages_note']  = 'Use las pestañas de idioma. El título en en-US es obligatorio.';
+ $_['text_image_cover']     = 'Imagen de portada';
+ $_['text_gallery']         = 'Galería';
+ $_['text_upload_hint']     = 'JPG, PNG, WebP o GIF hasta 2 MB. El archivo se guarda ahora; guarde el formulario para vincularlo al proyecto.';
+@@ -80,3 +80,22 @@
+ $_['error_upload_type']   = 'Tipo no válido: solo JPG, PNG, WebP o GIF.';
+ $_['error_upload_move']   = 'No se pudo guardar el archivo (revise los permisos del directorio).';
+ $_['error_permission']    = 'No tiene permiso para modificar el portafolio.';
++
++// Fase 8 / Tarefa 08 — interface, filtros/paginação e CSRF.
++$_['text_all_status'] = 'Todos los estados';
++$_['text_all_featured'] = 'Todos los destacados';
++$_['text_search_placeholder'] = 'Buscar por nombre…';
++$_['text_showing'] = 'Mostrando %d–%d de %d proyectos';
++$_['text_empty_title'] = 'No se encontraron proyectos';
++$_['text_empty_hint'] = 'Cree un proyecto o ajuste los filtros.';
++$_['text_meta_group'] = 'Metadatos de búsqueda';
++$_['text_upload_wait'] = 'Espere a que termine la subida antes de guardar.';
++$_['text_no_categories'] = 'No hay categorías disponibles.';
++$_['button_filter'] = 'Filtrar';
++$_['button_reset'] = 'Limpiar';
++$_['button_close'] = 'Cerrar';
++$_['button_first_page'] = '« Primera';
++$_['button_last_page'] = 'Última »';
++$_['button_next_page'] = 'Siguiente ›';
++$_['button_previous_page'] = '‹ Anterior';
++$_['error_csrf'] = 'Token de sesión no válido. Recargue el formulario e inténtelo de nuevo.';
+diff --git a/dev/admin/language/pt-br/catalog/project.php b/dev/admin/language/pt-br/catalog/project.php
+index 3880189c9bd61b4e14b081a365b5f1939e292e0b..05a5b545be0c60b581462f38eb91c88c0ddd86f2 100644
+--- a/dev/admin/language/pt-br/catalog/project.php
++++ b/dev/admin/language/pt-br/catalog/project.php
+@@ -22,7 +22,7 @@
+ $_['text_edit']            = 'Editar Projeto';
+ $_['text_general']         = 'Conteúdo';
+ $_['text_data']            = 'Dados';
+-$_['text_languages_note']  = 'Um bloco por idioma instalado. O título em en-US é obrigatório.';
++$_['text_languages_note']  = 'Use as abas de idioma. O título em en-US é obrigatório.';
+ $_['text_image_cover']     = 'Imagem de capa';
+ $_['text_gallery']         = 'Galeria';
+ $_['text_upload_hint']     = 'JPG, PNG, WebP ou GIF até 2 MB. O arquivo é gravado na hora; salve o formulário para vinculá-lo ao projeto.';
+@@ -80,3 +80,22 @@
+ $_['error_upload_type']   = 'Tipo inválido: apenas JPG, PNG, WebP ou GIF.';
+ $_['error_upload_move']   = 'Não foi possível gravar o arquivo (verifique permissões do diretório).';
+ $_['error_permission']    = 'Você não tem permissão para modificar o portfólio.';
++
++// Fase 8 / Tarefa 08 — interface, filtros/paginação e CSRF.
++$_['text_all_status'] = 'Todos os status';
++$_['text_all_featured'] = 'Todos os destaques';
++$_['text_search_placeholder'] = 'Buscar por nome…';
++$_['text_showing'] = 'Exibindo %d–%d de %d projetos';
++$_['text_empty_title'] = 'Nenhum projeto encontrado';
++$_['text_empty_hint'] = 'Crie um projeto ou ajuste os filtros.';
++$_['text_meta_group'] = 'Metadados de busca';
++$_['text_upload_wait'] = 'Aguarde o término do envio antes de salvar.';
++$_['text_no_categories'] = 'Nenhuma categoria disponível.';
++$_['button_filter'] = 'Filtrar';
++$_['button_reset'] = 'Limpar';
++$_['button_close'] = 'Fechar';
++$_['button_first_page'] = '« Primeira';
++$_['button_last_page'] = 'Última »';
++$_['button_next_page'] = 'Próxima ›';
++$_['button_previous_page'] = '‹ Anterior';
++$_['error_csrf'] = 'Token de sessão inválido. Recarregue o formulário e tente novamente.';
+diff --git a/dev/admin/model/catalog/project.php b/dev/admin/model/catalog/project.php
+index 9299e51011ef445e4d1e8c395ac68fd2fd15887a..ab866763742586c14e320f5d1976849bfda5a555 100644
+--- a/dev/admin/model/catalog/project.php
++++ b/dev/admin/model/catalog/project.php
+@@ -17,23 +17,52 @@
+ class Project extends \Reamur\System\Engine\Model {
+ 
+     /**
+-     * Lista para a grade (título preferindo o idioma padrão, coalesce).
+-     *
++     * Lista filtrável (F8-08). Sem argumentos mantém todos e a ordem original.
++     * @param array{name?: string, status?: string|int, featured?: string|int, start?: int, limit?: int} $filters
+      * @return array<int, array<string, mixed>>
+      */
+-    public function getProjects(): array {
+-        $query = $this->db->query(
+-            "SELECT p.`project_id`, p.`image`, p.`client`, p.`featured`, p.`status`, p.`sort_order`, p.`date_modified`,
+-                    COALESCE(NULLIF(pd.`name`, ''), pd_en.`name`, '') AS `name`
+-             FROM `" . $this->t('project') . "` p
+-             LEFT JOIN `" . $this->t('project_description') . "` pd
+-                 ON pd.`project_id` = p.`project_id` AND pd.`language_id` = '" . $this->currentLanguageId() . "'
+-             LEFT JOIN `" . $this->t('project_description') . "` pd_en
+-                 ON pd_en.`project_id` = p.`project_id` AND pd_en.`language_id` = 1
+-             ORDER BY p.`sort_order` ASC, p.`project_id` DESC"
+-        );
+-
++    public function getProjects(array $filters = []): array {
++        $sql = "SELECT p.`project_id`, p.`image`, p.`client`, p.`featured`, p.`status`, p.`sort_order`, p.`date_modified`,
++                       COALESCE(NULLIF(pd.`name`, ''), pd_en.`name`, '') AS `name` "
++            . $this->projectListFrom() . $this->projectListWhere($filters)
++            . " ORDER BY p.`sort_order` ASC, p.`project_id` DESC";
++        if (array_key_exists('limit', $filters)) {
++            $start = max(0, (int)($filters['start'] ?? 0));
++            $limit = min(100, max(1, (int)$filters['limit']));
++            $sql .= " LIMIT " . $start . ", " . $limit;
++        }
++        $query = $this->db->query($sql);
+         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
++    }
++
++    /** @param array{name?: string, status?: string|int, featured?: string|int} $filters */
++    public function getTotalProjects(array $filters = []): int {
++        $query = $this->db->query("SELECT COUNT(*) AS `total` " . $this->projectListFrom() . $this->projectListWhere($filters));
++        return ($query instanceof \stdClass && isset($query->row['total'])) ? (int)$query->row['total'] : 0;
++    }
++
++    private function projectListFrom(): string {
++        return "FROM `" . $this->t('project') . "` p
++                LEFT JOIN `" . $this->t('project_description') . "` pd
++                  ON pd.`project_id` = p.`project_id` AND pd.`language_id` = '" . $this->currentLanguageId() . "'
++                LEFT JOIN `" . $this->t('project_description') . "` pd_en
++                  ON pd_en.`project_id` = p.`project_id` AND pd_en.`language_id` = 1";
++    }
++
++    /** @param array{name?: string, status?: string|int, featured?: string|int} $filters */
++    private function projectListWhere(array $filters): string {
++        $where = [];
++        $name = $filters['name'] ?? '';
++        if (is_string($name) && trim($name) !== '') {
++            $where[] = "COALESCE(NULLIF(pd.`name`, ''), pd_en.`name`, '') LIKE '%" . $this->db->escape(trim($name)) . "%'";
++        }
++        foreach (['status', 'featured'] as $field) {
++            $value = $filters[$field] ?? 'all';
++            if (in_array($value, ['0', '1', 0, 1], true)) {
++                $where[] = "p.`" . $field . "` = '" . (int)$value . "'";
++            }
++        }
++        return $where ? ' WHERE ' . implode(' AND ', $where) : '';
+     }
+ 
+     /**
+diff --git a/dev/admin/view/css/admin.css b/dev/admin/view/css/admin.css
+index 7c426d73d36d4276b4134286d6fc2016412c16c7..f3f4c1cbe3b8a0e5f16261e6392e43ff9b4831a2 100644
+--- a/dev/admin/view/css/admin.css
++++ b/dev/admin/view/css/admin.css
+@@ -843,3 +843,30 @@
+ }
+ .catalog-category-list .pagination li:first-child > * { border-radius: var(--bs-pagination-border-radius) 0 0 var(--bs-pagination-border-radius); }
+ .catalog-category-list .pagination li:last-child > * { border-radius: 0 var(--bs-pagination-border-radius) var(--bs-pagination-border-radius) 0; }
++
++/* F8-08 — paginação de catalog/project: markup legado da library, escopo local. */
++.catalog-project-list .pagination li > a,
++.catalog-project-list .pagination li > span {
++  display: block;
++  font-size: var(--bs-pagination-font-size);
++  padding: var(--bs-pagination-padding-y) var(--bs-pagination-padding-x);
++  color: var(--bs-pagination-color);
++  background: var(--bs-pagination-bg);
++  border: var(--bs-pagination-border-width) solid var(--bs-pagination-border-color);
++  text-decoration: none;
++}
++.catalog-project-list .pagination li + li > * { margin-left: calc(-1 * var(--bs-pagination-border-width)); }
++.catalog-project-list .pagination li.active > span {
++  color: var(--bs-pagination-active-color);
++  background: var(--bs-pagination-active-bg);
++  border-color: var(--bs-pagination-active-border-color);
++}
++.catalog-project-list .pagination li > a:hover {
++  color: var(--bs-pagination-hover-color);
++  background: var(--bs-pagination-hover-bg);
++}
++.catalog-project-list .pagination li:first-child > * { border-radius: var(--bs-pagination-border-radius) 0 0 var(--bs-pagination-border-radius); }
++.catalog-project-list .pagination li:last-child > * { border-radius: 0 var(--bs-pagination-border-radius) var(--bs-pagination-border-radius) 0; }
++
++/* F8-08 — mantém todas as categorias disponíveis, com rolagem só no controle. */
++.catalog-project-form .project-category-options { max-height: 18rem; overflow-y: auto; }
+diff --git a/dev/admin/view/js/catalog-project.js b/dev/admin/view/js/catalog-project.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..947f33d3ec919e619f1d8c23c968d378d47cbbe4
+--- /dev/null
++++ b/dev/admin/view/js/catalog-project.js
+@@ -0,0 +1,118 @@
++/* Fase 8 / Tarefa 08 — tabs/validação nativa e capa/galeria MediaUpload com CSRF. */
++(function initProjectForm() {
++  'use strict';
++  if (document.readyState === 'loading') {
++    document.addEventListener('DOMContentLoaded', initProjectForm, { once: true });
++    return;
++  }
++  var form = document.querySelector('[data-project-form]');
++  if (!form || form.dataset.projectReady === '1') { return; }
++  form.dataset.projectReady = '1';
++  form.addEventListener('invalid', function (event) {
++    var first = form.querySelector('input:invalid, select:invalid, textarea:invalid');
++    if (first && first !== event.target) { return; }
++    var pane = event.target.closest('.tab-pane');
++    if (!pane || pane.classList.contains('active')) { return; }
++    var tab = form.querySelector('[data-bs-target="#' + pane.id + '"]');
++    if (tab && window.bootstrap && window.bootstrap.Tab) { tab.click(); }
++  }, true);
++  var coverButton = form.querySelector('[data-upload]');
++  if (!coverButton || coverButton.disabled) { return; }
++  var config;
++  try { config = JSON.parse(form.dataset.projectConfig); } catch (error) { return; }
++  var coverInput = form.querySelector('#input-cover-file');
++  var galleryButton = form.querySelector('#btn-add-image');
++  var galleryInput = form.querySelector('#input-gallery-file');
++  var hiddenCover = form.querySelector('#input-image');
++  var coverPreview = form.querySelector('#cover-preview');
++  var gallery = form.querySelector('#gallery');
++  var errorBox = form.querySelector('#project-upload-error');
++  var controls = [coverButton, galleryButton, coverInput, galleryInput];
++  var busy = false;
++  var nextRow = 0;
++  gallery.querySelectorAll('input[data-img]').forEach(function (input) {
++    var match = input.name.match(/^project_image\[([0-9]+)\]\[image\]$/);
++    if (match) { nextRow = Math.max(nextRow, Number(match[1]) + 1); }
++  });
++  function showError(message) {
++    errorBox.textContent = typeof message === 'string' ? message : config.error;
++    errorBox.classList.remove('d-none');
++  }
++  function clearError() { errorBox.textContent = ''; errorBox.classList.add('d-none'); }
++  function changed(input) {
++    input.dispatchEvent(new Event('input', { bubbles: true }));
++    input.dispatchEvent(new Event('change', { bubbles: true }));
++  }
++  function element(tag, className, text) {
++    var node = document.createElement(tag);
++    if (className) { node.className = className; }
++    if (text !== undefined) { node.textContent = text; }
++    return node;
++  }
++  function imageUrl(relative) {
++    if (typeof relative !== 'string' || relative.indexOf('..') >= 0 ||
++        !/^view\/image\/project\/[A-Za-z0-9][A-Za-z0-9._-]*\.(jpe?g|png|webp|gif)$/i.test(relative)) { throw new Error('path'); }
++    var catalog = new URL(config.catalog, window.location.href);
++    var image = new URL(relative, catalog.href);
++    if (catalog.origin !== window.location.origin || image.origin !== catalog.origin ||
++        image.pathname.indexOf(catalog.pathname + 'view/image/project/') !== 0) { throw new Error('origin'); }
++    return image.href;
++  }
++  function thumbnail(relative, size) {
++    var image = element('img', 'rounded object-fit-cover');
++    image.src = imageUrl(relative); image.alt = ''; image.width = size; image.height = size;
++    return image;
++  }
++  function addGallery(relative) {
++    var index = nextRow;
++    var row = element('div', 'row g-2 align-items-end border rounded p-2 mb-2 gallery-row');
++    row.setAttribute('data-row', '');
++    var hidden = element('input'); hidden.type = 'hidden'; hidden.name = 'project_image[' + index + '][image]'; hidden.value = relative; hidden.setAttribute('data-img', ''); row.appendChild(hidden);
++    var thumbColumn = element('div', 'col-sm-2');
++    var image = thumbnail(relative, 64); image.setAttribute('data-thumb', ''); thumbColumn.appendChild(image); row.appendChild(thumbColumn);
++    var altColumn = element('div', 'col-sm-6 field');
++    var altLabel = element('label', 'form-label', config.labels.alt); altLabel.htmlFor = 'input-gallery-alt-' + index;
++    var alt = element('input', 'form-control'); alt.type = 'text'; alt.name = 'project_image[' + index + '][alt]'; alt.id = altLabel.htmlFor; alt.value = ''; alt.maxLength = 255;
++    altColumn.appendChild(altLabel); altColumn.appendChild(alt); row.appendChild(altColumn);
++    var sortColumn = element('div', 'col-sm-2 field');
++    var sortLabel = element('label', 'form-label', config.labels.sort); sortLabel.htmlFor = 'input-gallery-sort-' + index;
++    var sort = element('input', 'form-control'); sort.type = 'number'; sort.name = 'project_image[' + index + '][sort_order]'; sort.id = sortLabel.htmlFor; sort.value = '0'; sort.min = '0'; sort.step = '1';
++    sortColumn.appendChild(sortLabel); sortColumn.appendChild(sort); row.appendChild(sortColumn);
++    var removeColumn = element('div', 'col-sm-2');
++    var remove = element('button', 'btn btn-outline-danger btn-sm', config.labels.remove); remove.type = 'button'; remove.setAttribute('data-remove', ''); removeColumn.appendChild(remove); row.appendChild(removeColumn);
++    gallery.appendChild(row); nextRow++; changed(hidden);
++  }
++  form.addEventListener('submit', function (event) { if (busy) { event.preventDefault(); showError(config.wait); } });
++  gallery.addEventListener('click', function (event) {
++    var button = event.target && event.target.closest ? event.target.closest('[data-remove]') : null;
++    if (!button || !gallery.contains(button)) { return; }
++    if (busy) { showError(config.wait); return; }
++    var row = button.closest('[data-row]');
++    if (row && gallery.contains(row)) { row.remove(); }
++  });
++  async function upload(fileInput, isCover) {
++    if (busy || !fileInput.files || !fileInput.files[0]) { return; }
++    busy = true; controls.forEach(function (control) { control.disabled = true; }); clearError();
++    try {
++      var url = new URL(config.upload, window.location.href);
++      var catalog = new URL(config.catalog, window.location.href);
++      if (url.origin !== window.location.origin || catalog.origin !== window.location.origin) { throw new Error('origin'); }
++      var token = form.querySelector('[name="csrf_token"]');
++      if (!token || !token.value) { throw new Error('csrf'); }
++      var data = new FormData(); data.append('csrf_token', token.value); data.append('file', fileInput.files[0]);
++      var response = await fetch(url.href, { method: 'POST', body: data, credentials: 'same-origin', redirect: 'error', signal: AbortSignal.timeout(30000) });
++      if (!response.ok) { throw new Error('http'); }
++      var result = await response.json();
++      if (result.success !== true) { showError(result.error || config.error); return; }
++      imageUrl(result.path);
++      if (isCover) {
++        var image = thumbnail(result.path, 96);
++        hiddenCover.value = result.path; changed(hiddenCover); coverPreview.textContent = ''; coverPreview.appendChild(image);
++      } else { addGallery(result.path); }
++      clearError();
++    } catch (error) { showError(config.error); }
++    finally { busy = false; controls.forEach(function (control) { control.disabled = false; }); }
++  }
++  coverButton.addEventListener('click', function () { return upload(coverInput, true); });
++  galleryButton.addEventListener('click', function () { return upload(galleryInput, false); });
++})();
+diff --git a/dev/admin/view/template/catalog/project_form.twig b/dev/admin/view/template/catalog/project_form.twig
+index 3120d0aa9b6d673b054fc3e25d843fcf49106b36..010e210eb6e19648c112ef3b123649e73058506e 100644
+--- a/dev/admin/view/template/catalog/project_form.twig
++++ b/dev/admin/view/template/catalog/project_form.twig
+@@ -1,182 +1,76 @@
+-{# dev/admin/view/template/catalog/project_form.twig — criação/edição de projeto (F2-8) #}
++{# catalog/project — Fase 8 / Tarefa 08: contratos F2-8, categorias e galeria preservados. #}
+ {{ header|raw }}
+-<main class="dash form-page">
+-  <h1>{{ heading_title }}{% if project_id %} · {{ text_edit }}{% else %} · {{ text_add }}{% endif %}</h1>
+-
+-  {% if error %}
+-  <div class="alert error">{{ error|nl2br }}</div>
+-  {% endif %}
+-
+-  <form method="post" action="{{ action }}" class="panel form">
+-
+-    <h2>{{ text_general }}</h2>
+-    <p class="muted">{{ text_languages_note }}</p>
+-
+-    {% for language in languages %}
+-    <fieldset class="panel" style="margin-bottom:1rem;">
+-      <legend>{{ language.name }} <span class="muted">({{ language.code }})</span></legend>
+-      <div class="grid two">
+-        <div class="field">
+-          <label for="input-name-{{ language.language_id }}">{{ entry_name }}{% if language.language_id == 1 %} *{% endif %}</label>
+-          <input type="text" name="project_description[{{ language.language_id }}][name]" id="input-name-{{ language.language_id }}" value="{{ language.fields.name }}" maxlength="255"{% if language.language_id == 1 %} required{% endif %}>
++<div class="catalog-project-form">
++  <div class="page-titlebar"><div class="title-group"><h1 class="page-title"><i class="bi bi-images me-2" aria-hidden="true"></i>{{ heading_title }} · {{ project_id ? text_edit : text_add }}</h1></div></div>
++  {% if error %}<div class="alert alert-danger" role="alert">{{ error|nl2br }}</div>{% endif %}
++  <form method="post" action="{{ action }}" class="row g-3 form-layout" data-project-form data-project-config="{{ {upload: upload, catalog: catalog, error: text_error_upload_js, wait: text_upload_wait, labels: {alt: entry_alt, sort: entry_sort_order, remove: button_remove}}|json_encode }}">
++    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
++    <div class="col-lg-8">
++      <div class="card data-card mb-3"><div class="card-body">
++        <h2 class="card-title h6 mb-1">{{ text_general }}</h2><p class="text-body-secondary small">{{ text_languages_note }}</p>
++        <ul class="nav nav-tabs tabs-lang" id="projectLangTabs" role="tablist">
++          {% for language in languages %}<li class="nav-item" role="presentation"><button class="nav-link{% if loop.first %} active{% endif %}" id="tab-project-lang-{{ language.language_id }}" data-bs-toggle="tab" data-bs-target="#pane-project-lang-{{ language.language_id }}" type="button" role="tab" aria-controls="pane-project-lang-{{ language.language_id }}" aria-selected="{{ loop.first ? 'true' : 'false' }}">{{ language.name }} <span class="text-body-secondary">({{ language.code }})</span></button></li>{% endfor %}
++        </ul>
++        <div class="tab-content pt-3">
++          {% for language in languages %}<div class="tab-pane fade{% if loop.first %} show active{% endif %}" id="pane-project-lang-{{ language.language_id }}" role="tabpanel" aria-labelledby="tab-project-lang-{{ language.language_id }}">
++            <div class="row g-3 mb-3">
++              <div class="col-md-6 field"><label class="form-label" for="input-name-{{ language.language_id }}">{{ entry_name }}{% if language.language_id == 1 %} <span class="text-danger">*</span>{% endif %}</label><input class="form-control" type="text" name="project_description[{{ language.language_id }}][name]" id="input-name-{{ language.language_id }}" value="{{ language.fields.name }}" maxlength="255" data-counter{% if language.language_id == 1 %} required{% endif %}></div>
++              <div class="col-md-6 field"><label class="form-label" for="input-summary-{{ language.language_id }}">{{ entry_summary }}</label><input class="form-control" type="text" name="project_description[{{ language.language_id }}][summary]" id="input-summary-{{ language.language_id }}" value="{{ language.fields.summary }}" maxlength="255" data-counter></div>
++            </div>
++            <div class="field mb-3"><label class="form-label" for="input-description-{{ language.language_id }}">{{ entry_description }}</label><textarea class="form-control" name="project_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="6">{{ language.fields.description }}</textarea></div>
++            <div class="row g-3 mb-3">
++              <div class="col-md-6 field"><label class="form-label" for="input-tag-{{ language.language_id }}">{{ entry_tag }}</label><input class="form-control" type="text" name="project_description[{{ language.language_id }}][tag]" id="input-tag-{{ language.language_id }}" value="{{ language.fields.tag }}" maxlength="255" data-counter></div>
++              <div class="col-md-6 field"><label class="form-label" for="input-keyword-{{ language.language_id }}">{{ entry_keyword }}</label><input class="form-control" type="text" name="project_description[{{ language.language_id }}][keyword]" id="input-keyword-{{ language.language_id }}" value="{{ language.fields.keyword }}" maxlength="64" pattern="[a-z0-9]+(-[a-z0-9]+)*"></div>
++            </div>
++            <h3 class="h6 text-body-secondary mt-4 mb-2">{{ text_meta_group }}</h3>
++            <div class="row g-3">
++              <div class="col-md-6 field"><label class="form-label" for="input-meta-title-{{ language.language_id }}">{{ entry_meta_title }}</label><input class="form-control" type="text" name="project_description[{{ language.language_id }}][meta_title]" id="input-meta-title-{{ language.language_id }}" value="{{ language.fields.meta_title }}" maxlength="255" data-counter></div>
++              <div class="col-md-6 field"><label class="form-label" for="input-meta-description-{{ language.language_id }}">{{ entry_meta_description }}</label><input class="form-control" type="text" name="project_description[{{ language.language_id }}][meta_description]" id="input-meta-description-{{ language.language_id }}" value="{{ language.fields.meta_description }}" maxlength="255" data-counter></div>
++            </div>
++          </div>{% endfor %}
+         </div>
+-        <div class="field">
+-          <label for="input-summary-{{ language.language_id }}">{{ entry_summary }}</label>
+-          <input type="text" name="project_description[{{ language.language_id }}][summary]" id="input-summary-{{ language.language_id }}" value="{{ language.fields.summary }}" maxlength="255">
++      </div></div>
++      <div class="card data-card"><div class="card-body">
++        <h2 class="card-title h6 mb-3">{{ text_gallery }}</h2>
++        <div id="gallery">
++          {% for img in images %}<div class="row g-2 align-items-end border rounded p-2 mb-2 gallery-row" data-row>
++            <input type="hidden" name="project_image[{{ loop.index0 }}][image]" value="{{ img.image }}" data-img>
++            <div class="col-sm-2">{% if img.preview %}<img src="{{ img.preview }}" alt="" width="64" height="64" class="rounded object-fit-cover" data-thumb>{% endif %}</div>
++            <div class="col-sm-6 field"><label class="form-label" for="input-gallery-alt-{{ loop.index0 }}">{{ entry_alt }}</label><input class="form-control" type="text" name="project_image[{{ loop.index0 }}][alt]" id="input-gallery-alt-{{ loop.index0 }}" value="{{ img.alt }}" maxlength="255"></div>
++            <div class="col-sm-2 field"><label class="form-label" for="input-gallery-sort-{{ loop.index0 }}">{{ entry_sort_order }}</label><input class="form-control" type="number" name="project_image[{{ loop.index0 }}][sort_order]" id="input-gallery-sort-{{ loop.index0 }}" value="{{ img.sort_order }}" min="0" step="1"></div>
++            <div class="col-sm-2"><button type="button" class="btn btn-outline-danger btn-sm" data-remove{% if not can_modify %} disabled{% endif %}>{{ button_remove }}</button></div>
++          </div>{% endfor %}
+         </div>
+-      </div>
+-      <div class="field">
+-        <label for="input-description-{{ language.language_id }}">{{ entry_description }}</label>
+-        <textarea name="project_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="6">{{ language.fields.description }}</textarea>
+-      </div>
+-      <div class="grid two">
+-        <div class="field">
+-          <label for="input-tag-{{ language.language_id }}">{{ entry_tag }}</label>
+-          <input type="text" name="project_description[{{ language.language_id }}][tag]" id="input-tag-{{ language.language_id }}" value="{{ language.fields.tag }}" maxlength="255">
+-        </div>
+-        <div class="field">
+-          <label for="input-keyword-{{ language.language_id }}">{{ entry_keyword }}</label>
+-          <input type="text" name="project_description[{{ language.language_id }}][keyword]" id="input-keyword-{{ language.language_id }}" value="{{ language.fields.keyword }}" maxlength="64" placeholder="meu-projeto" pattern="[a-z0-9]+(-[a-z0-9]+)*">
+-        </div>
+-        <div class="field">
+-          <label for="input-meta-title-{{ language.language_id }}">{{ entry_meta_title }}</label>
+-          <input type="text" name="project_description[{{ language.language_id }}][meta_title]" id="input-meta-title-{{ language.language_id }}" value="{{ language.fields.meta_title }}" maxlength="255">
+-        </div>
+-        <div class="field">
+-          <label for="input-meta-description-{{ language.language_id }}">{{ entry_meta_description }}</label>
+-          <input type="text" name="project_description[{{ language.language_id }}][meta_description]" id="input-meta-description-{{ language.language_id }}" value="{{ language.fields.meta_description }}" maxlength="255">
+-        </div>
+-      </div>
+-    </fieldset>
+-    {% endfor %}
+-
+-    <h2>{{ text_data }}</h2>
+-    <div class="grid two">
+-      <div class="field">
+-        <label for="input-client">{{ entry_client }}</label>
+-        <input type="text" name="client" id="input-client" value="{{ client }}" maxlength="128">
+-      </div>
+-      <div class="field">
+-        <label for="input-url">{{ entry_url }}</label>
+-        <input type="url" name="url" id="input-url" value="{{ url }}" maxlength="255" placeholder="https://">
+-      </div>
+-      <div class="field">
+-        <label for="input-sort-order">{{ entry_sort_order }}</label>
+-        <input type="number" name="sort_order" id="input-sort-order" value="{{ sort_order }}" min="0" step="1">
+-      </div>
+-      <div class="field check">
+-        <label><input type="checkbox" name="featured" value="1"{% if featured == '1' %} checked{% endif %}> {{ entry_featured }}</label>
+-        <label><input type="checkbox" name="status" value="1"{% if status == '1' %} checked{% endif %}> {{ entry_status }}</label>
+-      </div>
++        <label class="form-label" for="input-gallery-file">{{ text_gallery }}</label>
++        <div class="d-flex gap-2 flex-wrap"><input class="form-control form-control-sm" type="file" id="input-gallery-file" accept="image/jpeg,image/png,image/webp,image/gif"{% if not can_modify %} disabled{% endif %}><button type="button" class="btn btn-outline-secondary btn-sm" id="btn-add-image"{% if not can_modify %} disabled{% endif %}>{{ button_add_image }}</button></div>
++        <p class="form-text mb-0">{{ text_upload_hint }}</p>
++      </div></div>
+     </div>
+-
+-    {% if categories %}
+-    <div class="field">
+-      <label>{{ entry_category }}</label>
+-      {% for category in categories %}
+-      <label class="check"><input type="checkbox" name="project_category[]" value="{{ category.category_id }}"{% if category.checked %} checked{% endif %}> {{ category.name }}</label>
+-      {% endfor %}
+-    </div>
+-    {% endif %}
+-
+-    <h2>{{ text_image_cover }}</h2>
+-    <div class="field">
+-      <input type="hidden" name="image" id="input-image" value="{{ image }}">
+-      <div id="cover-preview">
+-        {% if image %}<img src="{{ catalog }}{{ image }}" alt="" width="96" style="object-fit:cover;border-radius:4px;">{% endif %}
+-      </div>
+-      <input type="file" id="input-cover-file" accept="image/jpeg,image/png,image/webp,image/gif">
+-      <button type="button" class="btn ghost small" data-upload data-target="input-image" data-file="input-cover-file" data-preview="cover-preview">{{ button_upload }}</button>
+-      <small class="muted">{{ text_upload_hint }}</small>
+-    </div>
+-
+-    <h2>{{ text_gallery }}</h2>
+-    <div id="gallery">
+-      {% for img in images %}
+-      <div class="grid two gallery-row" data-row>
+-        <input type="hidden" name="project_image[{{ loop.index0 }}][image]" value="{{ img.image }}" data-img>
+-        <div class="field">
+-          <label>{{ entry_alt }}</label>
+-          <input type="text" name="project_image[{{ loop.index0 }}][alt]" value="{{ img.alt }}" maxlength="255">
+-        </div>
+-        <div class="field">
+-          <label>{{ entry_sort_order }}</label>
+-          <input type="number" name="project_image[{{ loop.index0 }}][sort_order]" value="{{ img.sort_order }}" min="0" step="1">
+-        </div>
+-        <div class="field">
+-          <img src="{{ catalog }}{{ img.image }}" alt="" width="64" data-thumb style="object-fit:cover;border-radius:4px;">
+-          <button type="button" class="btn ghost small" data-remove>{{ button_remove }}</button>
+-        </div>
+-      </div>
+-      {% endfor %}
+-    </div>
+-    <div class="field">
+-      <input type="file" id="input-gallery-file" accept="image/jpeg,image/png,image/webp,image/gif">
+-      <button type="button" class="btn ghost small" id="btn-add-image">{{ button_add_image }}</button>
+-    </div>
+-
+-    <div class="actions right">
+-      <a class="btn ghost" href="{{ cancel }}">{{ button_cancel }}</a>
+-      <button type="submit" class="btn primary">{{ button_save }}</button>
++    <div class="col-lg-4">
++      <div class="card data-card mb-3 side-card"><div class="card-body">
++        <h2 class="card-title h6 mb-3">{{ text_data }}</h2>
++        <div class="field mb-3"><label class="form-label" for="input-client">{{ entry_client }}</label><input class="form-control" type="text" name="client" id="input-client" value="{{ client }}" maxlength="128"></div>
++        <div class="field mb-3"><label class="form-label" for="input-url">{{ entry_url }}</label><input class="form-control" type="url" name="url" id="input-url" value="{{ url }}" maxlength="255" placeholder="https://"></div>
++        <div class="field mb-3"><label class="form-label" for="input-sort-order">{{ entry_sort_order }}</label><input class="form-control" type="number" name="sort_order" id="input-sort-order" value="{{ sort_order }}" min="0" step="1"></div>
++        <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" role="switch" name="featured" id="input-featured" value="1"{% if featured == '1' %} checked{% endif %}><label class="form-check-label" for="input-featured">{{ entry_featured }}</label></div>
++        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" name="status" id="input-status" value="1"{% if status == '1' %} checked{% endif %}><label class="form-check-label" for="input-status">{{ entry_status }}<span class="d-block text-body-secondary small" data-status-hint data-text-published="{{ text_enabled }}" data-text-draft="{{ text_disabled }}">{{ status == '1' ? text_enabled : text_disabled }}</span></label></div>
++      </div></div>
++      <div class="card data-card mb-3 side-card"><div class="card-body">
++        <fieldset><legend class="h6">{{ entry_category }}</legend>
++          <div class="project-category-options">{% for category in categories %}<div class="form-check"><input class="form-check-input" type="checkbox" name="project_category[]" value="{{ category.category_id }}" id="input-category-{{ category.category_id }}"{% if category.checked %} checked{% endif %}><label class="form-check-label" for="input-category-{{ category.category_id }}">{{ category.name }}</label></div>{% else %}<p class="text-body-secondary small mb-0">{{ text_no_categories }}</p>{% endfor %}</div>
++        </fieldset>
++      </div></div>
++      <div class="card data-card mb-3 side-card"><div class="card-body">
++        <h2 class="card-title h6 mb-3">{{ text_image_cover }}</h2>
++        <input type="hidden" name="image" id="input-image" value="{{ image }}">
++        <div id="cover-preview" class="mb-3">{% if image_preview %}<img src="{{ image_preview }}" alt="" width="96" height="96" class="rounded object-fit-cover">{% else %}<span class="text-body-secondary small">{{ text_placeholder }}</span>{% endif %}</div>
++        <label class="form-label" for="input-cover-file">{{ entry_image }}</label><input class="form-control form-control-sm mb-2" type="file" id="input-cover-file" accept="image/jpeg,image/png,image/webp,image/gif"{% if not can_modify %} disabled{% endif %}>
++        <button type="button" class="btn btn-outline-secondary btn-sm" data-upload data-target="input-image" data-file="input-cover-file" data-preview="cover-preview"{% if not can_modify %} disabled{% endif %}>{{ button_upload }}</button>
++        <p class="form-text mb-0">{{ text_upload_hint }}</p>
++      </div></div>
++      <div id="project-upload-error" class="alert alert-danger small d-none" role="alert"></div>
++      <div class="card data-card side-card"><div class="card-body d-grid gap-2">{% if can_modify %}<button type="submit" class="btn btn-primary">{{ button_save }}</button>{% endif %}<a class="btn btn-outline-secondary" href="{{ cancel }}">{{ button_cancel }}</a></div></div>
+     </div>
+   </form>
+-</main>
+-<script>
+-(function () {
+-  var uploadUrl = {{ upload|json_encode|raw }};
+-  var errMsg    = {{ text_error_upload_js|json_encode|raw }};
+-
+-  function doUpload(fileInput, done) {
+-    var input = document.getElementById(fileInput);
+-    if (!input || !input.files || !input.files[0]) { return; }
+-    var fd = new FormData();
+-    fd.append('file', input.files[0]);
+-    fetch(uploadUrl, { method: 'POST', body: fd, credentials: 'same-origin' })
+-      .then(function (r) { return r.json(); })
+-      .then(function (j) {
+-        if (j.success) { done(j.path); } else { alert(j.error || errMsg); }
+-      })
+-      .catch(function () { alert(errMsg); });
+-  }
+-
+-  var coverBtn = document.querySelector('[data-upload]');
+-  if (coverBtn) {
+-    coverBtn.addEventListener('click', function () {
+-      doUpload(coverBtn.getAttribute('data-file'), function (path) {
+-        document.getElementById('input-image').value = path;
+-        document.getElementById('cover-preview').innerHTML =
+-          '<img src="' + {{ catalog|json_encode|raw }} + path + '" alt="" width="96" style="object-fit:cover;border-radius:4px;">';
+-      });
+-    });
+-  }
+-
+-  var rowIdx = {{ images|length }};
+-
+-  document.getElementById('btn-add-image').addEventListener('click', function () {
+-    doUpload('input-gallery-file', function (path) {
+-      var wrap = document.getElementById('gallery');
+-      var div  = document.createElement('div');
+-      div.className = 'grid two gallery-row';
+-      div.setAttribute('data-row', '');
+-      div.innerHTML =
+-        '<input type="hidden" name="project_image[' + rowIdx + '][image]" value="' + path + '" data-img>' +
+-        '<div class="field"><label>{{ entry_alt }}</label>' +
+-        '<input type="text" name="project_image[' + rowIdx + '][alt]" value="" maxlength="255"></div>' +
+-        '<div class="field"><label>{{ entry_sort_order }}</label>' +
+-        '<input type="number" name="project_image[' + rowIdx + '][sort_order]" value="0" min="0" step="1"></div>' +
+-        '<div class="field"><img src="' + {{ catalog|json_encode|raw }} + path + '" alt="" width="64" data-thumb style="object-fit:cover;border-radius:4px;"> ' +
+-        '<button type="button" class="btn ghost small" data-remove>{{ button_remove }}</button></div>';
+-      wrap.appendChild(div);
+-      rowIdx++;
+-    });
+-  });
+-
+-  document.getElementById('gallery').addEventListener('click', function (e) {
+-    if (e.target && e.target.hasAttribute('data-remove')) {
+-      var row = e.target.closest('[data-row]');
+-      if (row) { row.parentNode.removeChild(row); }
+-    }
+-  });
+-})();
+-</script>
++</div>
+ {{ footer|raw }}
+diff --git a/dev/admin/view/template/catalog/project_list.twig b/dev/admin/view/template/catalog/project_list.twig
+index f91ac349da0731c75f8c22c1596c048a94f21037..6546d4ab9e80a1b28c7429a6ae323b2cb5390cb1 100644
+--- a/dev/admin/view/template/catalog/project_list.twig
++++ b/dev/admin/view/template/catalog/project_list.twig
+@@ -1,52 +1,85 @@
+-{# dev/admin/view/template/catalog/project_list.twig — grade do portfólio (F2-8) #}
++{# catalog/project — Fase 8 / Tarefa 08: lista, capa, destaque e POST+CSRF. #}
+ {{ header|raw }}
+-<main class="dash">
+-  <div class="page-head">
+-    <h1>{{ heading_title }}</h1>
+-    <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
++<div class="catalog-project-list">
++  <div class="page-titlebar">
++    <div class="title-group">
++      <h1 class="page-title"><i class="bi bi-images me-2" aria-hidden="true"></i>{{ heading_title }}</h1>
++      {% if total_projects > 0 %}<span class="badge rounded-pill badge-total">{{ total_projects }}</span>{% endif %}
++    </div>
++    {% if can_modify %}<div class="titlebar-actions"><a class="btn btn-primary btn-sm" href="{{ add }}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ button_add }}</a></div>{% endif %}
+   </div>
+-  <p class="muted">{{ text_list }}</p>
++  <p class="text-body-secondary">{{ text_list }}</p>
+ 
+   {% if text_flash.text %}
+-  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
++  <div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">
++    {{ text_flash.text }}
++    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ button_close }}"></button>
++  </div>
+   {% endif %}
+ 
++  <form method="get" action="{{ filter_action }}" class="filter-bar" role="search" aria-label="{{ button_filter }}">
++    <input type="hidden" name="route" value="catalog/project">
++    <div class="filter-search">
++      <i class="bi bi-search" aria-hidden="true"></i>
++      <input type="search" name="filter_name" value="{{ filter_name }}" maxlength="255" placeholder="{{ text_search_placeholder }}" aria-label="{{ column_name }}">
++    </div>
++    <select name="filter_status" class="form-select form-select-sm" aria-label="{{ column_status }}">
++      <option value="all"{% if filter_status == 'all' %} selected{% endif %}>{{ text_all_status }}</option>
++      <option value="1"{% if filter_status == '1' %} selected{% endif %}>{{ text_enabled }}</option>
++      <option value="0"{% if filter_status == '0' %} selected{% endif %}>{{ text_disabled }}</option>
++    </select>
++    <select name="filter_featured" class="form-select form-select-sm" aria-label="{{ column_featured }}">
++      <option value="all"{% if filter_featured == 'all' %} selected{% endif %}>{{ text_all_featured }}</option>
++      <option value="1"{% if filter_featured == '1' %} selected{% endif %}>{{ text_yes }}</option>
++      <option value="0"{% if filter_featured == '0' %} selected{% endif %}>{{ text_no }}</option>
++    </select>
++    <button type="submit" class="btn btn-primary btn-sm">{{ button_filter }}</button>
++    {% if filter_name != '' or filter_status != 'all' or filter_featured != 'all' %}<a class="btn btn-outline-secondary btn-sm" href="{{ filter_reset }}">{{ button_reset }}</a>{% endif %}
++  </form>
++
+   {% if projects %}
+-  <table class="table">
+-    <thead>
+-      <tr>
+-        <th>{{ column_image }}</th>
+-        <th>{{ column_name }}</th>
+-        <th>{{ column_client }}</th>
+-        <th>{{ column_featured }}</th>
+-        <th>{{ column_status }}</th>
+-        <th>{{ column_sort_order }}</th>
+-        <th>{{ column_date_modified }}</th>
+-        <th class="right">{{ column_action }}</th>
+-      </tr>
+-    </thead>
+-    <tbody>
+-      {% for project in projects %}
+-      <tr>
+-        <td>{% if project.thumb %}<img src="{{ project.thumb }}" alt="" width="48" height="48" style="object-fit:cover;border-radius:4px;">{% else %}<span class="muted">{{ text_placeholder }}</span>{% endif %}</td>
+-        <td>{{ project.name }}</td>
+-        <td>{{ project.client }}</td>
+-        <td>{{ project.featured ? text_yes : text_no }}</td>
+-        <td>{{ project.status ? text_enabled : text_disabled }}</td>
+-        <td>{{ project.sort_order }}</td>
+-        <td>{{ project.date_modified }}</td>
+-        <td class="right actions">
+-          <a class="btn ghost small" href="{{ project.edit }}">{{ button_edit }}</a>
+-          <form method="post" action="{{ project.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
+-            <button type="submit" class="btn danger small">{{ button_delete }}</button>
+-          </form>
+-        </td>
+-      </tr>
+-      {% endfor %}
+-    </tbody>
+-  </table>
++  <div class="card data-card">
++    <div class="table-responsive">
++      <table class="table table-hover align-middle mb-0">
++        <thead><tr>
++          <th class="d-none d-sm-table-cell">{{ column_image }}</th><th>{{ column_name }}</th>
++          <th class="d-none d-md-table-cell">{{ column_client }}</th><th class="d-none d-lg-table-cell">{{ column_featured }}</th><th>{{ column_status }}</th>
++          <th class="d-none d-md-table-cell">{{ column_sort_order }}</th>
++          <th class="d-none d-lg-table-cell">{{ column_date_modified }}</th>
++          <th class="text-end">{{ column_action }}</th>
++        </tr></thead>
++        <tbody>
++          {% for project in projects %}
++          <tr>
++            <td class="d-none d-sm-table-cell">{% if project.thumb %}<img src="{{ project.thumb }}" alt="" width="48" height="48" class="rounded object-fit-cover">{% else %}<span class="text-body-secondary small">{{ text_placeholder }}</span>{% endif %}</td>
++            <td class="fw-semibold"><a class="link-plain" href="{{ project.edit }}">{{ project.name }}</a></td>
++            <td class="d-none d-md-table-cell">{{ project.client }}</td>
++            <td class="d-none d-lg-table-cell"><span class="badge {{ project.featured ? 'text-bg-warning' : 'text-bg-secondary' }}">{{ project.featured ? text_yes : text_no }}</span></td>
++            <td><span class="badge {{ project.status ? 'text-bg-success' : 'text-bg-secondary' }}">{{ project.status ? text_enabled : text_disabled }}</span></td>
++            <td class="d-none d-md-table-cell">{{ project.sort_order }}</td>
++            <td class="d-none d-lg-table-cell text-nowrap">{{ project.date_modified }}</td>
++            <td class="text-end text-nowrap">
++              <a class="icon-btn" href="{{ project.edit }}" title="{{ button_edit }}" aria-label="{{ button_edit }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
++              {% if can_modify %}
++              <form method="post" action="{{ project.delete }}" class="d-inline" data-rms-confirm-delete="{{ text_confirm_delete }}">
++                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
++                <button type="submit" class="icon-btn icon-btn--danger" title="{{ button_delete }}" aria-label="{{ button_delete }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
++              </form>
++              {% endif %}
++            </td>
++          </tr>
++          {% endfor %}
++        </tbody>
++      </table>
++    </div>
++  </div>
++  {% if showing or pagination %}<div class="list-footer"><span class="text-body-secondary small">{{ showing }}</span>{{ pagination|raw }}</div>{% endif %}
+   {% else %}
+-  <p class="muted">{{ text_no_results }}</p>
++  <div class="empty-state">
++    <i class="bi bi-images" aria-hidden="true"></i>
++    <h2>{{ filter_name != '' or filter_status != 'all' or filter_featured != 'all' ? text_empty_title : text_no_results }}</h2><p class="text-body-secondary">{{ text_empty_hint }}</p>
++    {% if can_modify %}<a class="btn btn-primary" href="{{ add }}">{{ button_add }}</a>{% endif %}
++  </div>
+   {% endif %}
+-</main>
++</div>
+ {{ footer|raw }}
+diff --git a/dev/tests/e2e/e2e_regressao.sh b/dev/tests/e2e/e2e_regressao.sh
+index 0b68a60f1bef63ffe00a25f6067873aedb110e33..b4bdac6b48f6aa26a3d93a1cb0deb7c439bd4af5 100644
+--- a/dev/tests/e2e/e2e_regressao.sh
++++ b/dev/tests/e2e/e2e_regressao.sh
+@@ -56,10 +56,11 @@
+ ck 2 $OK "login-dashboard-9-cards"
+ 
+ echo '══ 3 — project: create multilang + capa + SEO (base p/ testes globais) ══'
+-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/project.upload" -F "file=@/tmp/rok.png;type=image/png" -o /tmp/regr_up.json
++curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/project.upload" -F "file=@/tmp/rok.png;type=image/png" -F "csrf_token=$CSRF" -o /tmp/regr_up.json
+ PPATH=$(grep -o '"path":"[^"]*"' /tmp/regr_up.json | sed 's/"path":"//;s/"//;s|\\/|/|g')
+ case "$PPATH" in view/image/project/*) :;; *) PPATH=1;; esac
+ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/project.add" \
++  --data-urlencode "csrf_token=$CSRF" \
+   --data-urlencode "project_description[1][name]=Reamur Site" \
+   --data-urlencode "project_description[1][keyword]=reamur-site" \
+   --data-urlencode "project_description[2][name]=Site Reamur" \
+@@ -169,7 +170,7 @@
+ 
+ echo '══ 10 — delete em cascata física (project com capa) ══'
+ [ -f "/tmp/fui/dev/catalog/$PPATH" ] || OK=1
+-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/project.delete|1" -o /dev/null
++curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/project.delete|1" --data-urlencode "csrf_token=$CSRF" -o /dev/null
+ OK=0
+ N=$(q "SELECT COUNT(*) FROM reamur_test.rms_project"); [ "$N" = "0" ] || OK=1
+ N2=$(q "SELECT COUNT(*) FROM reamur_test.rms_project_description"); [ "$N2" = "0" ] || OK=1
+diff --git a/docs/F8-08-Projetos-Portfolio.md b/docs/F8-08-Projetos-Portfolio.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..68dab22024b35b7cdb149d6444c28863f1f53b1b
+--- /dev/null
++++ b/docs/F8-08-Projetos-Portfolio.md
+@@ -0,0 +1,219 @@
++# Fase 8 · Tarefa 08 — Projetos do portfólio
++
++> Objetivo: migrar o CRUD existente de projetos ao shell atual, preservando categorias N:N, capa/galeria/SEO e acrescentando filtros/paginação e CSRF, sem schema novo.
++
++**Data:** 2026-10-23 · **Base:** `a9aa816383fc5c40ce39415fb2b9f3257ba9597c`.
++**Estado:** continuidade solicitada pelo usuário; pacote preparado e testado localmente. Aplicação/homologação real pendentes. A Tarefa 07 foi informada como realizada com sucesso e não é reaberta.
++
++## Sumário
++
++1. [Escopo e contratos](#1-escopo-e-contratos)
++2. [Arquivos, aplicação e cache](#2-arquivos-aplicação-e-cache)
++3. [Tool local e evidências](#3-tool-local-e-evidências)
++4. [E2E HTTP no laboratório](#4-e2e-http-no-laboratório)
++5. [Aceite no navegador](#5-aceite-no-navegador)
++6. [Falhas, limpeza e rollback](#6-falhas-limpeza-e-rollback)
++7. [Limites](#7-limites)
++
++## 1. Escopo e contratos
++
++Um CRUD e ZIP nesta rodada: **projetos**. Não avança ferramentas/mensagens, não cria subgrupo de ajuste, não altera a categoria entregue ou o site público.
++
++### Interface
++
++- Lista com titlebar, total filtrado, capa, cliente, destaque/status, ordenação/data, tabela responsiva, empty state e confirmação no modal global.
++- Filtros por nome visível (idioma ativo/fallback EN), status e destaque; paginação server-side de **20**, preservação nos links e recuo da página além do fim.
++- Form em duas colunas: sete campos/idioma em tabs e sidebar de cliente/URL/flags/ordenação/categorias/capa; galeria com alt e sort_order.
++- Nome EN obrigatório. JS abre somente a tab do primeiro inválido, sem cancelar validação nativa.
++- Upload existente pelo `MediaUpload`, mesmo MIME/limite **2 MB**. Capa e galeria incluem CSRF; preview/labels por DOM seguro, sem innerHTML ou jQuery. Durante envio impede salvar/remover/upload concorrente; restaura controles sem retry.
++- Índices da galeria partem do máximo existente e crescem, sem reutilizar chaves removidas. Clique em botão/ícone remove a linha local, não arquivo físico.
++- Textos en-us/pt-br/es-eu completos. Corpo continua **textarea de seis linhas**, sem editor rico ou biblioteca do Blog.
++
++### Preservado
++
++Rotas `catalog/project`, `.add`, `.edit|ID`, `.delete|ID`, `.upload`. Os 21 IDs `input-{name,summary,description,tag,keyword,meta-title,meta-description}-N`; names `project_description[N][name|summary|description|tag|keyword|meta_title|meta_description]`; `client`, `url`, `image`, `status`, `featured`, `sort_order`; `project_category[]`; `project_image[N][image|alt|sort_order]`; controles `input-image`, `input-cover-file`, `cover-preview`, `[data-upload]`, `input-gallery-file`, `btn-add-image`, `gallery`, `[data-row]`, `[data-img]`, `[data-thumb]`, `[data-remove]`.
++
++`getProjects()` sem argumentos retorna todos na **ordem original `sort_order ASC, project_id DESC`**, não alfabética nem ID crescente. As categorias do form continuam completas/sem LIMIT da grade. Galeria reabre por `sort_order ASC, project_image_id ASC`. Métodos de persistência/relações/SEO do model e normalização/validação do controller são preservados byte a byte.
++
++**Mudança de segurança intencional:** add/edit/delete/**upload** passam a exigir `csrf_token` da mesma sessão, além da ACL `catalog/project`. Delete sem token não chega a remover imagens. Upload mantém JSON `{success,path,error}`. Três requests legados afetados foram atualizados; clientes externos precisam enviar token, sem bypass.
++
++Não se altera schema/grants/SQL de instalação, `MediaUpload`, `system/**`, `catalog/**`, `install/**`, categorias, CMS, Blog, Appearance/Localization, `admin.js`, ASSET_V ou Composer do projeto.
++
++## 2. Arquivos, aplicação e cache
++
++### 17 arquivos de projeto
++
++**Runtime (9):**
++
++- `dev/admin/controller/catalog/project.php` e `dev/admin/model/catalog/project.php`.
++- `dev/admin/view/template/catalog/project_list.twig` e `project_form.twig`.
++- `dev/admin/view/js/catalog-project.js` (novo).
++- `dev/admin/view/css/admin.css`: só adendos `.catalog-project-list` e `.catalog-project-form`; prefixo inteiro anterior intacto.
++- `dev/admin/language/{en-us,pt-br,es-eu}/catalog/project.php`.
++
++**QA/docs (8):**
++
++- `tools/e2e/e2e_f808.sh`, `e2e_f808_contracts.php`, `e2e_f808_dom.cjs`, `e2e_f808_http.cjs`.
++- `dev/tests/e2e/e2e_regressao.sh`: só três requests de projeto recebem o `$CSRF` já obtido. **A suíte antiga recria banco e não é executada pelo Tool novo.**
++- Este guia, índice `docs/README.md` (linha 19), [ADR 0052](../agents-ia/decisoes/0052-f8-08-projetos-portfolio-no-shell.md).
++
++Sete novos/dez modificados, mais `F8-08.patch`, `MANIFESTO-F8-08.json`, `SHA256SUMS`. Sem projeto inteiro, vendor, configs/credenciais/dados reais no ZIP; o script legado conserva suas fixtures públicas anteriores.
++
++### Aplicação
++
++1. Confira base `a9aa816383fc5c40ce39415fb2b9f3257ba9597c` com `git rev-parse HEAD`. Se alvos mudaram depois, revisar hashes/diff; não sobrescrever trabalho concorrente.
++2. Usar branch/PR para staging e backup dos alvos, conforme as convenções. Não aplicar direto em produção.
++3. Extrair ZIP fora do repositório e conferir `sha256sum -c SHA256SUMS` na extração.
++4. Na raiz do repositório, com `ENTREGA` apontando à extração absoluta:
++
++```bash
++git apply --check --whitespace=error "$ENTREGA/F8-08.patch"
++git apply --whitespace=error "$ENTREGA/F8-08.patch"
++git diff --check
++bash tools/e2e/e2e_f808.sh --check
++```
++
++Alternativa: copiar apenas os 17 alvos do manifesto. Sem árvore inteira, vendor, `--delete`, reaplicar ZIPs anteriores ou upgrades SQL.
++
++Sincronizar apenas os alvos pelo fluxo controlado, conferir novo `catalog-project.js` HTTP 200 e invalidar cache CSS/PHP/Twig na homologação. **ASSET_V não é alterado**, portanto conferir cache de `admin.css`. Alteração em dev/GitHub não comprova deploy.
++
++Paginação usa a library existente: normalização local de `&amp;amp;` no HTML gerado, com query URL-encoded, e CSS isolado. Não decodifica conteúdo arbitrário nem muda a library/núcleo. A lista de categorias ganha rolagem local, não paginação.
++
++Commit sugerido:
++
++```text
++feat(admin): migrar projetos para o shell com galeria e CSRF
++```
++
++## 3. Tool local e evidências
++
++```bash
++bash tools/e2e/e2e_f808.sh --check
++bash tools/e2e/e2e_f808.sh --help
++```
++
++Requer PHP CLI **8.1+**/mbstring, Twig 3 do Composer do projeto, Node 20+ com fetch/FormData/Blob/Headers.getSetCookie e Bash. Helpers anteriores da base são usados sem alterar seus arquivos nem executar os fluxos anteriores. Nenhuma instalação automática/dependência nova do CMS.
++
++Twig padrão: `dev/system/storage/vendor/autoload.php`. Pode usar `TWIG_AUTOLOAD=/autoload/absoluto/local/vendor/autoload.php` para QA isolada e `MIRROR` para escolher o dev testado. Somente fontes/autoload confiáveis: não é sandbox para código desconhecido.
++
++| Grupo executado pelo agente | Resultado | Natureza |
++| --- | --- | --- |
++| PHP lint | **6/6 aprovados** | Cinco PHP de runtime + runner. |
++| Contratos PHP/Twig | **45 PASS / 0 FAIL** | PHP **8.4.26**, Twig **3.30.0** reais; DB/serviços/model do controller/IO sessão em fixtures. |
++| JS/DOM/upload/galeria | **12 PASS / 0 FAIL** | Fonte real, DOM/Bootstrap/fetch simulados. |
++| Auxiliares HTTP novos | **10 PASS / 0 FAIL** | Parser N:N/galeria/IDs, PNG, flags e guardas FS em simulação/temporários. |
++| Auxiliares compartilhados F8-07/F8-06 | **25 PASS / 0 FAIL** | Fetch/respostas simulados. |
++| Controle negativo com projeto anterior | **25 PASS / 20 FAIL**, saída **1** | Falha esperada na suíte PHP/Twig. |
++| Sintaxe JS/CJS/Bash | Aprovada | Regressão legada apenas bash -n. |
++
++Regressões locais também passaram sem falhas: **F8-07 (40 PHP/Twig + 9 DOM + 25 auxiliares)**, **F8-06 (30 PHP/Twig + 6 DOM + 16 auxiliares)** e **F8-05 (32 guardas/modelos + 18 RTE + 10 mídia simulados)**. Isso não reabre o aceite anterior nem comprova backend/navegador real.
++
++Classes reais são carregadas, controller/model executados e Twig strict/autoescape compila/renderiza templates. SQL é capturado, não enviado a MariaDB; Session real é criado sem construtor, apenas dados em memória. `MediaUpload::guard/delete` roda em PNGs de **FS temporário privado não servido**, fora de MIRROR/FUI e limpo ao final; store só no-file. Não houve move_uploaded_file/upload HTTP bem-sucedido ou persistência de uma instalação real.
++
++**Não chamar esses 92 casos de E2Es reais aprovados.** PHP CLI/Twig de QA foram preparados isoladamente; sem instalar CMS/DB/servidor, baixar projeto inteiro ou alterar vendor/Composer do projeto. Não houve navegador, contraste computado, Actions/PHPStan/PHPUnit completo ou matriz PHP nesta preparação.
++
++## 4. E2E HTTP no laboratório
++
++### Segurança/pré-requisitos
++
++`--http` grava: **um projeto fictício, uma categoria auxiliar própria e três PNGs 2×2** (capa e duas galerias), além de probe temporário. A categoria auxiliar evita usar/excluir categoria alheia e permite testar N:N mesmo se o laboratório estiver vazio.
++
++Requer laboratório local descartável, `reamur_test`, idiomas en/pt-BR/es e conta fictícia com **access/modify em catalog/project E catalog/category**. Não altera ACL/grants para obter acesso. Antes de gravar verifica Save nos dois módulos; faz login uma única vez, sem retry.
++
++Herda guardas F8-07/F8-06/F8-05: B/FUI/MIRROR explícitos, loopback, configs literais wizard com DB_DATABASE=reamur_test/DB_HOSTNAME loopback e HTTP_SERVER coerente; `.f805-disposable`; fontes/assets/MediaUpload iguais MIRROR/FUI. Confere também os nove alvos de projeto e diretórios de imagem sem symlinks. O marcador mantém nome por compatibilidade, sem criar subgrupo; não torna um banco real descartável.
++
++**Não usar produção/dados ou credenciais reais, ambiente misto, proxy/túnel para produção, usuários concorrentes ou integrações produtivas.** Operador deve confirmar B/FUI, DB e diretórios reais do PHP. Config/nonce/hash não atesta backend/proxy mal configurado. Nunca vincular os dados do ensaio a conteúdo externo enquanto ele roda.
++
++### Executar
++
++Ajustar caminhos no terminal do laboratório, sem enviar senhas/tokens no chat:
++
++```bash
++export B='http://127.0.0.1:8090/davidcms/dev'
++export FUI='/var/www/html/davidcms/dev'
++export MIRROR="$(pwd -P)/dev"
++# Só depois de confirmar banco/configs/diretórios descartáveis:
++printf 'reamur_test\n' > "$FUI/.f805-disposable"
++export ALLOW_F808_HTTP='YES_WRITE_REAMUR_TEST'
++read -r -p 'Usuário fictício com modify projeto e categoria: ' F808_USERNAME
++read -r -s -p 'Senha fictícia: ' F808_PASSWORD; printf '\n'
++export F808_USERNAME F808_PASSWORD
++export F808_REPORT='/tmp/novo-resultado-f808.json'  # novo, inexistente
++bash tools/e2e/e2e_f808.sh --http
++unset F808_USERNAME F808_PASSWORD ALLOW_F808_HTTP
++```
++
++Relatório opcional, absoluto novo, 0600, sem sobrescrever anterior. Preflight bloqueado sai 2 antes de execução e não gera JSON de workflow. Não remover guardas/desativar TLS/alterar configs reais para forçar verde; Docker por hostname não loopback ou config PHP dinâmica podem ser recusados para avaliação pontual.
++
++### Fluxo de 15 etapas preparado — não executado no backend pelo agente
++
++1. Probe nonce único em `FUI/admin/view/js/f808-probe-<nonce>.txt`, conferido por B antes das credenciais.
++2. Login com CSRF e cookies/tokens só em memória, sem jar/storage state.
++3. Form de projetos ×3 idiomas, 21 campos, modify/config/upload; form de categoria confirma acesso. IDs de idiomas vêm do HTML, não pressupõem pt/es=2/3.
++4. Criar categoria auxiliar própria, marcador único e ID real descoberto pelo link de nome, nunca ID1 fixo.
++5. Add e upload de projeto sem token devem recusar sem projeto/arquivo novo.
++6. Upload válido de três PNGs novos exclusivos; nomes não preexistentes, arquivos regulares/sem symlink, checksum no FUI e bytes HTTP no catalog iguais à fixture.
++7. Criar projeto desabilitado/sem destaque com categoria própria, capa, duas galerias, alt/sort e sete campos por idioma.
++8. Descobrir ID real e reabrir 21 campos, cliente/URL, N:N, capa/alt/ordem e flags.
++9. Edit sem CSRF e URL inválida com token correto preservam os dados salvos.
++10. Editar mesmo ID v2, status/featured on e ordem de galeria invertida, reabrindo para conferir caminhos/captions/sort/N:N.
++11. Conferir filtros combinados nome/status/featured.
++12. GET delete e POST sem token mantêm projeto/arquivos. 403 do GET negativo é tratado explicitamente, sem esconder 500.
++13. Revalidar dados/ID/PNG próprios; excluir só projeto e três arquivos. Categoria deve permanecer.
++14. Revalidar/excluir somente a categoria auxiliar própria.
++15. Conferir ausência dos dois conteúdos e de arquivos novos do ensaio.
++
++Sem SQL direto, drop/reset/recreate, instalação/upgrade/seed, suíte destrutiva ou upload de arquivo do usuário. Multipart não segue redirects, POST 307/308 não é repetido, redirects externos não recebem novo request/cookie. Em falha, preservar artefatos conhecidos para inspeção, sem adivinhar ID ou repetir mutação após timeout.
++
++JSON real: `kind="http-workflow"`, `status`, marker, artifacts.projectId/categoryId/images, 15 etapas e cleanup. **Aceite do fluxo:** passed + 15 etapas pass + cleanup complete. Isso aprova só HTTP, não navegador. Sem HTML completo, credenciais, cookies ou tokens de autenticação/CSRF.
++
++Cleanup refere aos registros/PNG/probe próprios, não remove diretórios padrão criados pelo componente, dados normais de sessão/rate limit ou sequências auto-increment. Se outro arquivo concorrente aparecer, o Tool não o remove para obter verde.
++
++## 5. Aceite no navegador
++
++Navegador moderno com Bootstrap local, fetch e AbortSignal.timeout. HTTP não executa o script de galeria nem valida foco/preview/CSS.
++
++- [ ] Lista/form no shell; desktop/mobile, skins/claro/escuro sem overflow/perda de contraste.
++- [ ] Filtros nome/status/featured inclusive zero, reset, total, página 2 e recuo. Volume real 21+ requer dados fictícios próprios; 45 foram só fixture.
++- [ ] Nome EN obrigatório em outra tab: abre/foca primeiro inválido, inclusive múltiplos inválidos, sem erro de campo não focalizável.
++- [ ] 21 IDs/names, summary/tag/HTML/Unicode/metadados/SEO e cliente/URL/status/featured/sort_order preservados ao salvar/reabrir.
++- [ ] Todas as categorias disponíveis, sem limite da grade; marcar/desmarcar N:N persiste sem alterar/excluir categorias.
++- [ ] Capa e múltiplas galerias upload/preview/salvar/reabrir; MIME/2 MB e CSRF; texto alternativo e ordenação persistem. Reabertura ordena por sort ASC/image_id ASC.
++- [ ] Remover linhas intermediárias, clicar no ícone do botão e adicionar novamente não duplica names/índices; só remove associação, não arquivo físico imediatamente.
++- [ ] Upload pendente bloqueia salvar/Enter/remover/envio concorrente; erro é texto e controles retornam sem retry.
++- [ ] Delete via modal: cancelar preserva, confirmar POST+CSRF remove só projeto/capa/galeria de teste e deixa categorias existentes. Usar somente arquivos exclusivos fictícios.
++- [ ] Conta fictícia readonly sem Add/Delete/Save, uploads/remover desabilitados e quatro POSTs negados; outro perfil real não foi coberto automaticamente.
++- [ ] en-us/pt-br/es-eu, contadores/hint, sem CKEditor/Blog media/jQuery; categorias/CMS/Blog/Appearance/site público intactos.
++
++Confirmar conclusão da Tarefa 08 após aplicação/homologação do usuário; não encerra automaticamente a Fase 8.
++
++## 6. Falhas, limpeza e rollback
++
++Timeout pode vir depois de o servidor gravar. Não repetir POST às cegas. Consultar JSON e marcador `f808-…`, verificar IDs/dados e somente então remover conteúdos próprios. Se ID não foi descoberto, não presumir.
++
++Uploads sem associação podem deixar arquivos; inspeção do path exato/checksum conhecido, sem wildcard, `rm -rf`, reset SQL ou limpeza de view/image/project. Não usar imagem real/compartilhada para facilitar cleanup. O comportamento de exclusão de arquivos segue a base.
++
++Probe só é removido em finally se regular/conteúdo igual ao nonce. Processo morto/probe alterado pode deixá-lo; inspecionar somente `f808-probe-<nonce>.txt` exato, nunca limpar view/js amplamente. Falha de cleanup mantém status failed/pending.
++
++Upload continua imediato. Cancelar, substituir capa ou remover linha e salvar pode deixar arquivo órfão, como antes. Galeria inválida continua normalizada a caminho vazio/descartada pelo model, não rejeitada como capa. Não foi criada coleta automática, nova política de esquemas de URL (mantém FILTER_VALIDATE_URL), sanitização HTML ou proteção global de arquivo compartilhado/symlink do componente.
++
++Rollback de código com patch original/backup e alvos sem alterações posteriores:
++
++```bash
++git apply -R --check "$ENTREGA/F8-08.patch"
++git apply -R "$ENTREGA/F8-08.patch"
++```
++
++Se não aplicar, parar/revisar, sem reset --hard. Restaura dez arquivos/remove sete novos, sem reverter tarefas aceitas. Antes, limpar só registros/PNG/probe próprios; rollback não apaga dados/relatórios. Sincronizar só os alvos revertidos e invalidar cache normal.
++
++A base antiga volta a não exigir CSRF em projetos; limitação conhecida, não recomendação de operação.
++
++## 7. Limites
++
++Sem GitHub write/deploy/produção, servidor/DB, HTTP do CMS, upload ou navegador reais nesta preparação. Sem Actions/PHPStan/PHPUnit completo/matriz PHP. Relações/arquivos reais, foco/preview, visual/contraste, outro perfil e volume exigem laboratório.
++
++CSS e normalização de paginação locais; aria-labels internos da library como antes. Sem sanitização HTML ou atualização/licença do CKEditor; uso do editor não ampliado. MediaUpload e coleta de órfãos/referências permanecem escopos separados.
++
++A conclusão da Tarefa 07 veio do usuário; só a igualdade dos 17 arquivos públicos foi conferida independentemente. Código publicado não prova deploy/persistência.
++
++Referências: [ADR 0052](../agents-ia/decisoes/0052-f8-08-projetos-portfolio-no-shell.md), [F8-07](F8-07-Categorias-Portfolio.md), [F8-06](F8-06-Paginas-CMS.md), [base pública](https://github.com/davidcreator/davidcms/commit/a9aa816383fc5c40ce39415fb2b9f3257ba9597c).
+diff --git a/docs/README.md b/docs/README.md
+index 0a668adf9b01f23a8aedd33b48cdfd90e22d141c..9b7315d74f48afce8e0c0741e074a619828c4d09 100644
+--- a/docs/README.md
++++ b/docs/README.md
+@@ -28,6 +28,7 @@
+ | 16 | [F8-05-Validacao-Integrada-Blog.md](F8-05-Validacao-Integrada-Blog.md) | **Fase 8 · Tarefa 05**: entrada única de validação, Tool de navegador local, salvar/reabrir, evidências e limpeza controlada. |
+ | 17 | [F8-06-Paginas-CMS.md](F8-06-Paginas-CMS.md) | **Fase 8 · Tarefa 06**: Páginas CMS no shell, filtros/paginação, CSRF, Tool E2E e homologação. |
+ | 18 | [F8-07-Categorias-Portfolio.md](F8-07-Categorias-Portfolio.md) | **Fase 8 · Tarefa 07**: categorias do portfólio no shell, hierarquia/imagem preservadas, CSRF, Tool E2E e homologação. |
++| 19 | [F8-08-Projetos-Portfolio.md](F8-08-Projetos-Portfolio.md) | **Fase 8 · Tarefa 08**: projetos no shell, categorias N:N/capa/galeria/SEO preservados, filtros, CSRF e Tool E2E. |
+ 
+ ---
+ 
+diff --git a/tools/e2e/e2e_f808.sh b/tools/e2e/e2e_f808.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..bf68fdef395346822550ec33bdbb43bc053a2084
+--- /dev/null
++++ b/tools/e2e/e2e_f808.sh
+@@ -0,0 +1,72 @@
++#!/usr/bin/env bash
++# Fase 8 / Tarefa 08 — Projetos do portfólio; padrão seguro, sem servidor/banco.
++set -euo pipefail
++ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++MODE="${1:---check}"
++PHP_BIN="${PHP_BIN:-php}"
++NODE_BIN="${NODE_BIN:-node}"
++CHECK_MIRROR="${MIRROR:-$ROOT/dev}"
++PHP_TEST="$ROOT/tools/e2e/e2e_f808_contracts.php"
++DOM_TEST="$ROOT/tools/e2e/e2e_f808_dom.cjs"
++HTTP_TEST="$ROOT/tools/e2e/e2e_f808_http.cjs"
++help() {
++  cat <<'HELP'
++Uso: bash tools/e2e/e2e_f808.sh [--check|--http|--help]
++
++--check  Padrão. Lint PHP + 45 contratos PHP/Twig reais com DB/serviços/IO de
++         sessão simulados e MediaUpload em FS privado. JS/DOM:12 casos;
++         HTTP:10 novos+25 compartilhados, fetch/respostas em simulação.
++         Sem servidor/banco/navegador/upload reais.
++--http   Após --check, fluxo HTTP real opt-in: um projeto, categoria auxiliar
++         própria e três PNG2x2; criar/editar/reabrir, N:N, capa/galeria/alt/ordem,
++         flags/filtros/CSRF/delete e limpeza só de conteúdo próprio.
++         Sem SQL direto/reset/reinstalação; não é teste de navegador/preview.
++--help   Esta ajuda. --backend/--browser e suítes destrutivas não são chamados.
++
++Requisitos: PHP8.1+/mbstring/Twig3 do Composer do projeto, Node20+ com fetch,
++FormData/Blob/Headers.getSetCookie, Bash e os helpers F8-05/F8-06/F8-07 da base.
++Twig padrão: dev/system/storage/vendor/autoload.php. TWIG_AUTOLOAD pode apontar
++explicitamente a outro autoload de QA local. Nenhuma instalação automática.
++
++--http requer explicitamente:
++ ALLOW_F808_HTTP=YES_WRITE_REAMUR_TEST
++ B=http://127.0.0.1:8090/davidcms/dev
++ FUI=/caminho/absoluto/copia/servida/dev
++ MIRROR=/caminho/absoluto/repositorio/dev
++ F808_USERNAME/F808_PASSWORD fictícios, access/modify catalog/project E catalog/category
++ FUI/.f805-disposable contendo reamur_test (preflight existente reutilizado)
++ Configs literais admin/catalog, DB reamur_test/hostname loopback e URL coerente;
++ fontes CMS/categorias/projetos/assets/MediaUpload iguais MIRROR/FUI, sem symlinks.
++ Opcional: F808_REPORT=/tmp/novo-resultado-f808.json (novo e absoluto).
++
++Probe identifica FUI antes de login. Cookies/tokens apenas em memória. Só IDs
++reais descobertos por marcador/HTML. Em falha preserva artefatos; não repetir POST
++nem limpar com wildcard/reset. Proibido produção/dados reais/túnel/proxy produção.
++
++Veja docs/F8-08-Projetos-Portfolio.md.
++HELP
++}
++fail() { printf 'ERRO: %s\n' "$*" >&2; exit 2; }
++[[ "$#" -le 1 ]] || { help >&2; exit 2; }
++case "$MODE" in --help|-h) help; exit 0;; --check|--http) ;; *) help >&2; exit 2;; esac
++command -v "$PHP_BIN" >/dev/null 2>&1 || fail 'PHP CLI não encontrado.'
++command -v "$NODE_BIN" >/dev/null 2>&1 || fail 'Node não encontrado.'
++"$PHP_BIN" -r 'if (PHP_VERSION_ID < 80100 || !extension_loaded("mbstring")) { fwrite(STDERR,"Requer PHP 8.1+ e mbstring.\n"); exit(2); }'
++"$NODE_BIN" -e 'if (Number(process.versions.node.split(".")[0]) < 20) process.exit(2);'
++if [[ "$MODE" == '--http' ]]; then
++  [[ "${ALLOW_F808_HTTP:-}" == 'YES_WRITE_REAMUR_TEST' ]] || fail 'HTTP bloqueado: confirmação explícita ausente.'
++  [[ -n "${B:-}" && -n "${FUI:-}" && -n "${MIRROR:-}" && -n "${F808_USERNAME:-}" && -n "${F808_PASSWORD:-}" ]] || fail 'HTTP exige B, FUI, MIRROR e credenciais fictícias explícitas.'
++fi
++for p in "$PHP_TEST" "$DOM_TEST" "$HTTP_TEST" "$ROOT/tools/e2e/e2e_f807_http.cjs" "$ROOT/tools/e2e/e2e_f806_http.cjs" "$ROOT/tools/e2e/e2e_f805.cjs" "$ROOT/tools/e2e/e2e_f805_browser.js"; do [[ -f "$p" ]] || fail "Tool/dependência da base ausente: $p"; done
++for p in admin/controller/catalog/project.php admin/model/catalog/project.php admin/language/en-us/catalog/project.php admin/language/pt-br/catalog/project.php admin/language/es-eu/catalog/project.php; do "$PHP_BIN" -l "$CHECK_MIRROR/$p"; done
++"$PHP_BIN" -l "$PHP_TEST"
++for p in "$DOM_TEST" "$HTTP_TEST" "$CHECK_MIRROR/admin/view/js/catalog-project.js"; do "$NODE_BIN" --check "$p"; done
++for p in "$ROOT/dev/tests/e2e/e2e_regressao.sh"; do [[ ! -f "$p" ]] || bash -n "$p"; done
++"$PHP_BIN" "$PHP_TEST" "$CHECK_MIRROR"
++"$NODE_BIN" "$DOM_TEST" "$CHECK_MIRROR/admin/view/js/catalog-project.js"
++"$NODE_BIN" "$HTTP_TEST" --self-test
++if [[ "$MODE" == '--http' ]]; then
++  "$NODE_BIN" "$HTTP_TEST" --http
++else
++  printf '%s\n' 'Verificações locais concluídas. HTTP/DB, navegador e aceite visual reais NÃO executados por --check.'
++fi
+diff --git a/tools/e2e/e2e_f808_contracts.php b/tools/e2e/e2e_f808_contracts.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..816322c8a84a37f4715a2eeaa2d9ed857f379f7a
+--- /dev/null
++++ b/tools/e2e/e2e_f808_contracts.php
+@@ -0,0 +1,241 @@
++<?php declare(strict_types=1);
++/**
++ * @package ReamurCMS
++ * @author David L. Almeida
++ * @copyright Copyright (c) 2026, ReamurCMS
++ * @license https://opensource.org/licenses/GPL-3.0
++ * F8-08: PHP/Twig reais; DB/serviços/IO de sessão simulados.
++ * MediaUpload real só em FS privado não servido; não faz upload HTTP/move.
++ */
++namespace Reamur\Tests\F808;
++
++use Reamur\System\Engine\Registry;
++use Reamur\System\Library\Security\Csrf;
++use Reamur\System\Library\Session;
++use Reamur\Admin\Controller\Catalog\Project as Controller;
++use Reamur\Admin\Model\Catalog\Project as Model;
++
++final class FilesFixture {
++    private static string $root = '';
++    private static array $files = [];
++    private const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEUlEQVR4nGOQqgj4D8IMMAYAPqgHhR+OGvoAAAAASUVORK5CYII=';
++    public static function init(): string {
++        self::$root = sys_get_temp_dir() . '/f808-qa-' . bin2hex(random_bytes(8));
++        if (!mkdir(self::$root, 0700)) { throw new \RuntimeException('Não foi possível criar fixture privada.'); }
++        foreach (['admin', 'catalog', 'catalog/view', 'catalog/view/image', 'catalog/view/image/project'] as $p) {
++            if (!mkdir(self::$root . '/' . $p, 0700)) { throw new \RuntimeException('Falha na fixture privada.'); }
++        }
++        return self::$root . '/admin/';
++    }
++    public static function image(string $name): string {
++        if (!preg_match('/^[a-z0-9-]+$/', $name)) { throw new \RuntimeException('Nome da fixture inválido'); }
++        $relative = 'view/image/project/' . $name . '.png';
++        $file = self::absolute($relative); $bytes = (string)base64_decode(self::PNG, true);
++        file_put_contents($file, $bytes); chmod($file, 0600); self::$files[$file] = hash('sha256', $bytes);
++        return $relative;
++    }
++    public static function absolute(string $relative): string { return self::$root . '/catalog/' . $relative; }
++    public static function cleanup(): void {
++        foreach (self::$files as $p => $hash) {
++            if (file_exists($p)) {
++                if (is_link($p) || hash_file('sha256', $p) !== $hash) { throw new \RuntimeException('Fixture foi alterada; não remover arquivo desconhecido.'); }
++                unlink($p);
++            }
++        }
++        foreach (['catalog/view/image/project', 'catalog/view/image', 'catalog/view', 'catalog', 'admin', ''] as $p) {
++            $dir = self::$root . ($p === '' ? '' : '/' . $p);
++            if (is_dir($dir) && !rmdir($dir)) { throw new \RuntimeException('Diretório de fixture não vazio; não remover amplamente.'); }
++        }
++    }
++}
++
++$mirror = realpath($argv[1] ?? dirname(__DIR__, 2) . '/dev') ?: '';
++$autoload = getenv('TWIG_AUTOLOAD') ?: $mirror . '/system/storage/vendor/autoload.php';
++if ($mirror === '' || !is_file($autoload)) { fwrite(STDERR, "MIRROR/Twig ausentes. Use o Composer do projeto ou TWIG_AUTOLOAD explícito.\n"); exit(2); }
++require_once $autoload;
++if (!class_exists(\Twig\Environment::class) || !extension_loaded('mbstring') || defined('DIR_APPLICATION')) { fwrite(STDERR, "Requer CLI isolado, mbstring e Twig3; não bootar a aplicação.\n"); exit(2); }
++if (!defined('DB_PREFIX')) { define('DB_PREFIX', 'f808_'); }
++if (!defined('DIR_SYSTEM')) { define('DIR_SYSTEM', $mirror . '/system/'); }
++foreach (['engine/registry.php', 'engine/controller.php', 'engine/model.php', 'library/session.php', 'library/security/csrf.php', 'library/pagination.php', 'library/media_upload.php'] as $p) { require_once DIR_SYSTEM . $p; }
++require_once $mirror . '/admin/controller/common/header.php';
++require_once $mirror . '/admin/controller/catalog/project.php';
++require_once $mirror . '/admin/model/catalog/project.php';
++define('DIR_APPLICATION', FilesFixture::init());
++
++final class LanguageFixture {
++    public array $values;
++    public function __construct(string $file) { $this->values = (static function (string $file): array { $_ = []; require $file; return $_; })($file); }
++    public function get(string $key): string { if (!array_key_exists($key, $this->values)) { throw new \RuntimeException('Chave i18n ausente: ' . $key); } return (string)$this->values[$key]; }
++}
++final class ConfigFixture {
++    public function get(string $key, mixed $default = null): mixed { return ['site_url' => 'http://example.test/admin/', 'language_directory' => 'en-us'][$key] ?? $default; }
++}
++final class DocumentFixture {
++    public array $styles = [];
++    public array $scripts = [];
++    public string $title = '';
++    public function setTitle(string $title): void { $this->title = $title; }
++    public function addStyle(string $url): void { $this->styles[] = $url; }
++    public function addScript(string $url): void { $this->scripts[] = $url; }
++}
++final class ResponseFixture {
++    public string $output = '';
++    public string $location = '';
++    public array $headers = [];
++    public function addHeader(string $header): void { $this->headers[] = $header; }
++    public function setOutput(string $output): void { $this->output = $output; }
++    public function redirect(string $url): void { $this->location = $url; }
++}
++final class UrlFixture {
++    public function link(string $route, string|array $args = '', bool $secure = false): string {
++        return 'http://example.test/admin/index.php?route=' . $route . ($args ? '&' . (is_array($args) ? http_build_query($args) : $args) : '');
++    }
++}
++final class UserFixture {
++    public function __construct(public bool $modify) {}
++    public function hasPermission(string $kind, string $route): bool { return $kind === 'access' || $this->modify; }
++}
++final class StoreFixture {
++    public array $records=[]; public array $calls=[]; public array $taken=[];
++    public array $categoryOptions=[['category_id'=>5,'name'=>'Fixture category']];
++    public int $sequence=100;public int $adds=0;public int $edits=0;public int $deletes=0;
++    public function getLanguages():array{return [['language_id'=>1,'name'=>'English','code'=>'en-us'],['language_id'=>2,'name'=>'Português','code'=>'pt-br'],['language_id'=>3,'name'=>'Español','code'=>'es-eu']];}
++    public function getCategories():array{return $this->categoryOptions;}
++    private function filtered(array $f):array {
++        $rows=array_filter(array_values($this->records),static function(array $r)use($f):bool{
++            if(($f['name']??'')!==''&&mb_stripos($r['name'],$f['name'])===false)return false;
++            foreach(['status','featured']as$key)if(in_array($f[$key]??'all',['0','1'],true)&&$r[$key]!== (int)$f[$key])return false;
++            return true;
++        });
++        usort($rows,static fn(array $a,array $b):int=>[$a['sort_order'],-$a['project_id']]<=>[$b['sort_order'],-$b['project_id']]);return array_values($rows);
++    }
++    public function getTotalProjects(array $f=[]):int{return count($this->filtered($f));}
++    public function getProjects(array $f=[]):array{$this->calls[]=$f;$rows=$this->filtered($f);return isset($f['limit'])?array_slice($rows,$f['start'],$f['limit']):$rows;}
++    public function getProject(int $id):array{return $this->records[$id]??[];}
++    public function getProjectDescriptions(int $id):array{return $this->records[$id]['descriptions']??[];}
++    public function getProjectKeywords(int $id):array{return array_map(static fn(array $d):string=>$d['keyword'],$this->getProjectDescriptions($id));}
++    public function getProjectCategories(int $id):array{return $this->records[$id]['categories']??[];}
++    public function getProjectImages(int $id):array{
++        $rows=$this->records[$id]['images']??[];foreach($rows as$i=>&$row)$row['project_image_id']=$i+1;unset($row);
++        usort($rows,static fn(array $a,array $b):int=>[$a['sort_order'],$a['project_image_id']]<=>[$b['sort_order'],$b['project_image_id']]);return $rows;
++    }
++    public function keywordTaken(string $k,int $language,int $exclude):bool{return in_array($k,$this->taken,true);}
++    public function addProject(array $data):int{$this->adds++;$id=++$this->sequence;$this->save($id,$data);return $id;}
++    public function editProject(int $id,array $data):void{$this->edits++;$this->save($id,$data);}
++    private function save(int $id,array $data):void{
++        $data['images']=array_values(array_filter($data['images'],static fn(array $r):bool=>trim($r['image'])!==''));
++        $data['categories']=array_values(array_filter($data['categories'],static fn(int $id):bool=>$id>0));
++        $this->records[$id]=$data+['project_id'=>$id,'date_modified'=>'2026-10-23 12:00:00'];$this->records[$id]['name']=$data['descriptions'][1]['name'];
++    }
++    public function deleteProject(int $id):void{$this->deletes++;unset($this->records[$id]);}
++}
++final class LoaderFixture {
++    public array $data = [];
++    private \Twig\Environment $twig;
++    public function __construct(private string $mirror) {
++        $this->twig = new \Twig\Environment(new \Twig\Loader\FilesystemLoader($mirror . '/admin/view/template'), ['cache' => false, 'autoescape' => 'html', 'strict_variables' => true]);
++    }
++    public function language(string $route): void { if ($route !== 'catalog/project') { throw new \RuntimeException('Rota de language inesperada'); } }
++    public function model(string $route): void { if ($route !== 'catalog/project') { throw new \RuntimeException('Model inesperado'); } }
++    public function controller(string $route, array $data = []): string { return '<!-- shell fixture: ' . $route . ' -->'; }
++    public function view(string $route, array $data): string { $this->data = $data; return $this->twig->render($route . '.twig', $data); }
++}
++final class Harness {
++    public Registry $registry;
++    public Controller $controller;
++    public StoreFixture $store;
++    public Session $session;
++    public \stdClass $request;
++    public ResponseFixture $response;
++    public LoaderFixture $loader;
++    public DocumentFixture $document;
++    public LanguageFixture $language;
++    public function __construct(string $mirror, ?StoreFixture $store = null, ?Session $session = null, string $locale = 'en-us', bool $modify = true) {
++        $this->registry = new Registry();
++        $this->store = $store ?? new StoreFixture();
++        $this->session = $session ?? (new \ReflectionClass(Session::class))->newInstanceWithoutConstructor();
++        $this->request = (object)['server' => ['REQUEST_METHOD' => 'GET'], 'get' => [], 'post' => [], 'files' => []];
++        $this->response = new ResponseFixture(); $this->loader = new LoaderFixture($mirror); $this->document = new DocumentFixture();
++        $this->language = new LanguageFixture($mirror . '/admin/language/' . $locale . '/catalog/project.php');
++        foreach (['request' => $this->request, 'response' => $this->response, 'load' => $this->loader, 'document' => $this->document, 'language' => $this->language, 'config' => new ConfigFixture(), 'user' => new UserFixture($modify), 'session' => $this->session, 'url' => new UrlFixture(), 'model_catalog_project' => $this->store] as $key => $value) { $this->registry->set($key, $value); }
++        $this->controller = new Controller($this->registry);
++    }
++    public function post(array $data): void { $this->request->server['REQUEST_METHOD'] = 'POST'; $this->request->post = $data; }
++}
++final class DbFixture {
++    public array $queries=[]; public array $rows=[['project_id'=>77,'image'=>'','client'=>'','featured'=>0,'status'=>0,'sort_order'=>0,'name'=>'Fixture','date_modified'=>'']];
++    public function escape(string $value):string{return addslashes($value);}
++    public function query(string $sql):\stdClass{$this->queries[]=$sql;if(str_contains($sql,'SELECT `language_id`'))return(object)['row'=>['language_id'=>1]];return(object)['row'=>['total'=>7],'rows'=>$this->rows];}
++}
++final class Suite {
++    private static int $passed=0;private static int $failed=0;private static string $mirror;
++    private static function ok(bool $test,string $message):void{if(!$test)throw new \RuntimeException($message);}
++    private static function test(string $label,callable $fn):void{try{$fn();self::$passed++;echo 'PASS '.$label.PHP_EOL;}catch(\Throwable $e){self::$failed++;fwrite(STDERR,'FAIL '.$label.': '.$e->getMessage().PHP_EOL);}}
++    private static function payload(int $version=1):array{
++        $out=['client'=>'Fixture client v'.$version,'url'=>'https://example.invalid/f808/v'.$version,'image'=>'','sort_order'=>7,'project_category'=>[],'project_image'=>[],'project_description'=>[]];
++        foreach([1=>'English',2=>'Ação e edição',3=>'Español ñ']as$id=>$text){$out['project_description'][$id]=['name'=>$text.' v'.$version,'summary'=>'Resumo '.$text,'description'=>'<h2>'.$text.'</h2><p>v'.$version.' & texto</p>','tag'=>'one, dois, '.$text,'keyword'=>'f808-lang-'.$id.'-v'.$version,'meta_title'=>'Meta '.$text,'meta_description'=>'Descrição '.$text];}return $out;
++    }
++    private static function harness(?StoreFixture $store=null,?Session $session=null,string $locale='en-us',bool $modify=true):Harness{return new Harness(self::$mirror,$store,$session,$locale,$modify);}
++    private static function populated(int $count):StoreFixture{
++        $s=new StoreFixture();for($i=0;$i<$count;$i++){$p=self::payload();$p['status']=$i%2;$p['featured']=((int)floor($i/2))%2;$p['sort_order']=$i;$p['descriptions']=$p['project_description'];$p['images']=[];$p['categories']=[];$p['descriptions'][1]['name']=sprintf('Project %03d',$i+1);unset($p['project_description'],$p['project_image'],$p['project_category']);$s->addProject($p);} $s->adds=0;return $s;
++    }
++    private static function model():array{$r=new Registry();$db=new DbFixture();$r->set('db',$db);$r->set('config',new ConfigFixture());return[new Model($r),$db];}
++    private static function valid(Harness $h,array $p):void{$h->post($p+['csrf_token'=>Csrf::token($h->session)]);}
++    private static function json(Harness $h):array{return json_decode($h->response->output,true,512,JSON_THROW_ON_ERROR);}
++    private static function withImages(StoreFixture $s,string $stem):array{
++        $cover=FilesFixture::image($stem.'-cover');$a=FilesFixture::image($stem.'-a');$b=FilesFixture::image($stem.'-b');
++        $s->records[101]['image']=$cover;$s->records[101]['images']=[['image'=>$a,'alt'=>'A','sort_order'=>9],['image'=>$b,'alt'=>'B','sort_order'=>2]];return[$cover,$a,$b];
++    }
++    public static function run(string $mirror):int{
++        self::$mirror=$mirror;
++        self::test('01 · model sem argumentos: tudo, sort ASC/id DESC',static function():void{[$m,$db]=self::model();$m->getProjects();$q=end($db->queries);self::ok(str_ends_with($q,'ORDER BY p.`sort_order` ASC, p.`project_id` DESC')&&!str_contains($q,' LIMIT '),'Contrato/ordem alterados');});
++        self::test('02 · nome/status/featured escapados com recorte',static function():void{[$m,$db]=self::model();$m->getProjects(['name'=>"O'Brien",'status'=>'0','featured'=>'0','start'=>20,'limit'=>20]);$q=end($db->queries);self::ok(str_contains($q,"O\\'Brien")&&str_contains($q,"p.`status` = '0'")&&str_contains($q,"p.`featured` = '0'")&&str_ends_with($q,'LIMIT 20, 20'),'Filtros SQL incorretos');});
++        self::test('03 · count/list iguais e limites/status normalizados',static function():void{[$m,$db]=self::model();$f=['name'=>'x','status'=>'1','featured'=>'0'];self::ok($m->getTotalProjects($f)===7,'Total incorreto');$count=end($db->queries);$m->getProjects($f);$q=end($db->queries);$q=substr($q,strpos($q,'FROM '));$q=substr($q,0,strpos($q,' ORDER BY'));self::ok(substr($count,strpos($count,'FROM '))===$q,'Predicados divergentes');$m->getProjects(['status'=>'1 OR 1=1','featured'=>[],'start'=>-1,'limit'=>999]);$q=end($db->queries);self::ok(!str_contains($q,'1 OR 1=1')&&str_ends_with($q,'LIMIT 0, 100'),'Entrada malformada não normalizada');});
++        self::test('04 · model real: categorias completas sem LIMIT da grade',static function():void{[$m,$db]=self::model();$db->rows=[];for($i=1;$i<=45;$i++)$db->rows[]=['category_id'=>$i,'name'=>'C'.$i];$rows=$m->getCategories();self::ok(count($rows)===45&&!str_contains((string)end($db->queries),'LIMIT '),'Checkbox N:N ficou paginado');});
++        self::test('05 · galeria do model conserva sort/id ASC',static function():void{[$m,$db]=self::model();$m->getProjectImages(143);self::ok(str_contains((string)end($db->queries),"WHERE `project_id` = '143' ORDER BY `sort_order` ASC, `project_image_id` ASC"),'Ordem da galeria alterada');});
++        self::test('06 · model delete limpa somente filhos/relações do projeto',static function():void{[$m,$db]=self::model();$m->deleteProject(143);$sql=implode("\n",$db->queries);self::ok(str_contains($sql,"DELETE FROM `f808_project_image` WHERE `project_id` = '143'")&&str_contains($sql,"DELETE FROM `f808_project_to_category` WHERE `project_id` = '143'")&&!str_contains($sql,'DELETE FROM `f808_category`')&&!str_contains($sql,'DROP'),'Cascata afetou categorias/schema');});
++        self::test('07 · índice vazio/CSRF/empty state',static function():void{$h=self::harness();$h->controller->index();self::ok($h->loader->data['total_projects']===0&&str_contains($h->response->output,'empty-state')&&strlen($h->loader->data['csrf_token'])===64,'Índice vazio incorreto');});
++        self::test('08 · 45 projetos: página dois vinte registros',static function():void{$h=self::harness(self::populated(45));$h->request->get['page']='2';$h->controller->index();self::ok(count($h->loader->data['projects'])===20&&end($h->store->calls)['start']===20&&$h->loader->data['total_projects']===45,'Recorte incorreto');});
++        self::test('09 · página além do fim e query array não quebram',static function():void{$h=self::harness(self::populated(45));$h->request->get['page']=(string)PHP_INT_MAX;$h->controller->index();self::ok(count($h->loader->data['projects'])===5&&end($h->store->calls)['start']===40,'Recuo incorreto');$h=self::harness();$h->request->get=['filter_name'=>[],'filter_status'=>[],'filter_featured'=>[],'page'=>[]];$h->controller->index();self::ok($h->loader->data['filter_name']===''&&$h->loader->data['filter_status']==='all'&&$h->loader->data['filter_featured']==='all','Arrays não normalizados');});
++        self::test('10 · filtro nome zero conserva reset',static function():void{$h=self::harness();$h->request->get['filter_name']='0';$h->controller->index();self::ok(str_contains($h->response->output,'>Reset</a>'),'Nome zero perdeu reset');});
++        self::test('11 · status zero/featured zero combinados',static function():void{$h=self::harness(self::populated(45));$h->request->get=['filter_status'=>'0','filter_featured'=>'0'];$h->controller->index();self::ok($h->loader->data['total_projects']===12,'Total combinado incorreto');});
++        self::test('12 · pager mantém três filtros, sem amp;amp/XSS',static function():void{$s=self::populated(45);foreach($s->records as&$row){$row['name']="O'Brien & <tag>";$row['featured']=0;}unset($row);$h=self::harness($s);$h->request->get=['filter_name'=>"O'Brien & <tag>",'filter_status'=>'0','filter_featured'=>'0'];$h->controller->index();$html=$h->loader->data['pagination'];self::ok(!str_contains($html,'&amp;amp;')&&!str_contains($h->response->output,'<tag>'),'Escape incorreto');preg_match_all('/href="([^"]+)"/',$html,$matches);self::ok(count($matches[1])>0,'Links ausentes');foreach($matches[1]as$attr){parse_str((string)parse_url(html_entity_decode($attr,ENT_QUOTES|ENT_HTML5,'UTF-8'),PHP_URL_QUERY),$query);self::ok(($query['filter_name']??'')==="O'Brien & <tag>"&&($query['filter_status']??'')==='0'&&($query['filter_featured']??'')==='0','Filtro perdido');}});
++        self::test('13 · readonly esconde modify/desabilita uploads',static function():void{$h=self::harness(self::populated(1),null,'en-us',false);$h->controller->index();self::ok(!str_contains($h->response->output,'data-rms-confirm-delete')&&!str_contains($h->response->output,'route=catalog/project.add'),'Ações vazaram');$h=self::harness(null,null,'en-us',false);$h->controller->add();self::ok(!str_contains($h->response->output,'type="submit"')&&str_contains($h->response->output,'id="btn-add-image" disabled')&&str_contains($h->response->output,'data-preview="cover-preview" disabled'),'Readonly incorreto');});
++        self::test('14 · 21 IDs/names e JSON de upload/labels, sem editor/inline JS',static function():void{$h=self::harness();$h->controller->add();$html=$h->response->output;foreach([1,2,3]as$id)foreach(['name','summary','description','tag','keyword','meta-title','meta-description']as$field){self::ok(substr_count($html,'id="input-'.$field.'-'.$id.'"')===1,'ID perdido/duplicado');self::ok(str_contains($html,'name="project_description['.$id.']['.str_replace('-','_',$field).']"'),'Name incorreto');}self::ok(!str_contains($html,'<script>')&&!str_contains($html,'data-rte')&&str_contains($html,'projectLangTabs'),'Editor/inline indevido');preg_match('/data-project-config="([^"]+)"/',$html,$m);$c=json_decode(html_entity_decode($m[1]??'',ENT_QUOTES|ENT_HTML5,'UTF-8'),true,512,JSON_THROW_ON_ERROR);self::ok(str_contains($c['upload'],'route=catalog/project.upload')&&$c['labels']['alt']===$h->language->get('entry_alt')&&$c['labels']['remove']===$h->language->get('button_remove'),'Config JS não traduzido/compatível');});
++        self::test('15 · assets versionados/chrome sem rms-dash',static function():void{$h=self::harness();$h->controller->add();self::ok(str_contains(implode('',$h->document->scripts),'catalog-project.js?v=')&&str_contains(implode('',$h->document->styles),'admin.css?v=')&&!isset($h->loader->data['body_class']),'Assets/chrome incorretos');});
++        self::test('16 · en/pt-BR/es com mesmas chaves e Twig strict',static function():void{$keys=null;foreach(['en-us','pt-br','es-eu']as$locale){$h=self::harness(null,null,$locale);$h->controller->add();self::ok(str_contains($h->response->output,$h->language->get('heading_title')),'Heading não traduzido');$k=array_keys($h->language->values);sort($k);if($keys!==null)self::ok($k===$keys,'Chaves i18n divergentes');$keys=$k;$h->controller->index();}});
++        self::test('17 · add sem CSRF não muta e mantém dados',static function():void{$h=self::harness();$h->post(self::payload());$h->controller->add();self::ok($h->store->adds===0&&$h->loader->data['error']===$h->language->get('error_csrf')&&$h->loader->data['languages'][1]['fields']['summary']==='Resumo Ação e edição','CSRF add falhou');});
++        self::test('18 · token array/incorreto recusados',static function():void{foreach([[],'wrong']as$t){$h=self::harness();$h->post(self::payload()+['csrf_token'=>$t]);$h->controller->add();self::ok($h->store->adds===0,'Token inválido aceito');}});
++        self::test('19 · add válido conserva sete campos/cliente/URL/flags',static function():void{$h=self::harness();self::valid($h,self::payload());$h->controller->add();$row=$h->store->getProject(101);self::ok($row['status']===0&&$row['featured']===0&&$row['sort_order']===7&&$row['client']==='Fixture client v1'&&$row['url']==='https://example.invalid/f808/v1'&&$row['descriptions'][3]['tag']==='one, dois, Español ñ','Contrato normalizado alterado');});
++        self::test('20 · nome EN obrigatório com CSRF válido',static function():void{$h=self::harness();$p=self::payload();$p['project_description'][1]['name']='';self::valid($h,$p);$h->controller->add();self::ok($h->store->adds===0&&$h->loader->data['error']===$h->language->get('error_name'),'Required EN perdido');});
++        self::test('21 · URL inválida rejeitada sem mudar regra existente',static function():void{$h=self::harness();$p=self::payload();$p['url']='not a url';self::valid($h,$p);$h->controller->add();self::ok($h->store->adds===0&&str_contains($h->loader->data['error'],$h->language->get('error_url')),'Validação URL perdida');});
++        self::test('22 · formato/unicidade SEO preservados',static function():void{foreach(['BAD keyword!','occupied']as$word){$h=self::harness();$h->store->taken=['occupied'];$p=self::payload();$p['project_description'][1]['keyword']=$word;self::valid($h,$p);$h->controller->add();self::ok($h->store->adds===0&&$h->loader->data['error']!=='','Validação SEO perdida');}});
++        self::test('23 · capa fora do módulo/inexistente rejeitada',static function():void{foreach(['../outside.png','view/image/category/wrong.png','view/image/project/missing.png']as$image){$h=self::harness();$p=self::payload();$p['image']=$image;self::valid($h,$p);$h->controller->add();self::ok($h->store->adds===0&&str_contains($h->loader->data['error'],$h->language->get('error_image_path')),'Path de capa aceito indevidamente');}});
++        self::test('24 · capa/galeria MediaUpload guard real em FS privado',static function():void{$cover=FilesFixture::image('preview-cover');$a=FilesFixture::image('preview-a');$h=self::harness();$p=self::payload();$p['image']=$cover;$p['project_image']=[['image'=>$a,'alt'=>'Ação & <alt>','sort_order'=>3]];self::valid($h,$p);$h->controller->add();$get=self::harness($h->store,$h->session);$get->controller->edit('101');self::ok($get->loader->data['image_preview']==='http://example.test/catalog/'.$cover&&$get->loader->data['images'][0]['preview']==='http://example.test/catalog/'.$a,'Preview guard incorreto');});
++        self::test('25 · paths inválidos da galeria descartados como na base',static function():void{$h=self::harness();$p=self::payload();$p['project_image']=[['image'=>'../wrong.png','alt'=>'wrong','sort_order'=>0]];self::valid($h,$p);$h->controller->add();self::ok($h->store->adds===1&&$h->store->getProjectImages(101)===[],'Mudou a semântica original de galeria inválida');});
++        self::test('26 · limites de normalização cliente/summary/tag preservados',static function():void{$h=self::harness();$p=self::payload();$p['client']=str_repeat('ç',200);$p['project_description'][2]['summary']=str_repeat('ã',300);$p['project_description'][2]['tag']=str_repeat('ñ',300);self::valid($h,$p);$h->controller->add();$r=$h->store->getProject(101);self::ok(mb_strlen($r['client'])===128&&mb_strlen($r['descriptions'][2]['summary'])===255&&mb_strlen($r['descriptions'][2]['tag'])===255,'Truncamento alterado');});
++        self::test('27 · todas as 45 categorias nos checkboxes',static function():void{$s=new StoreFixture();$s->categoryOptions=[];for($i=1;$i<=45;$i++)$s->categoryOptions[]=['category_id'=>$i,'name'=>'C'.$i];$h=self::harness($s);$h->controller->add();self::ok(count($h->loader->data['categories'])===45&&substr_count($h->response->output,'name="project_category[]"')===45,'Categorias foram limitadas pela grade');});
++        self::test('28 · relação N:N selecionada persiste em fixture',static function():void{$s=new StoreFixture();$s->categoryOptions=[['category_id'=>5,'name'=>'A'],['category_id'=>12,'name'=>'B']];$h=self::harness($s);$p=self::payload();$p['project_category']=[5,12];self::valid($h,$p);$h->controller->add();$get=self::harness($s,$h->session);$get->controller->edit('101');self::ok($s->getProjectCategories(101)===[5,12]&&$get->loader->data['categories'][0]['checked']&&$get->loader->data['categories'][1]['checked'],'Vínculo N:N perdido');});
++        self::test('29 · edit sem token não altera imagens/dados',static function():void{$s=self::populated(1);[$cover,$a,$b]=self::withImages($s,'edit-csrf');$h=self::harness($s);$h->post(self::payload(2));$h->controller->edit('101');self::ok($s->edits===0&&$s->getProject(101)['image']===$cover&&file_exists(FilesFixture::absolute($a)),'CSRF edit alterou estado');});
++        self::test('30 · edit válido flags on/off no mesmo ID',static function():void{$s=self::populated(1);$h=self::harness($s);self::valid($h,self::payload(2)+['status'=>'1','featured'=>'1']);$h->controller->edit('101');self::ok($s->getProject(101)['status']===1&&$s->getProject(101)['featured']===1,'Flags on perdidas');$h=self::harness($s);self::valid($h,self::payload(3));$h->controller->edit('101');self::ok($s->getProject(101)['status']===0&&$s->getProject(101)['featured']===0,'Unchecked não desativou');});
++        self::test('31 · galeria preserva alt/ordem e reabre por sort',static function():void{$a=FilesFixture::image('ordered-a');$b=FilesFixture::image('ordered-b');$h=self::harness();$p=self::payload();$p['project_image']=[['image'=>$a,'alt'=>'Ação A','sort_order'=>9],['image'=>$b,'alt'=>'B & texto','sort_order'=>2]];self::valid($h,$p);$h->controller->add();$get=self::harness($h->store,$h->session);$get->controller->edit('101');$rows=$get->loader->data['images'];self::ok($rows[0]['image']===$b&&$rows[0]['alt']==='B & texto'&&$rows[1]['sort_order']==='9','Ordem/alt de galeria perdidos');});
++        self::test('32 · remover associação não apaga fisicamente órfão (contrato antigo)',static function():void{$s=self::populated(1);[$cover,$a,$b]=self::withImages($s,'removed-row');$h=self::harness($s);$p=self::payload(2);$p['image']=$cover;$p['project_image']=[['image'=>$b,'alt'=>'B','sort_order'=>0]];self::valid($h,$p);$h->controller->edit('101');self::ok(count($s->getProjectImages(101))===1&&file_exists(FilesFixture::absolute($a)),'Foi inventada limpeza física na edição');});
++        self::test('33 · GET delete não remove projeto/capa/galeria',static function():void{$s=self::populated(1);[$cover,$a,$b]=self::withImages($s,'get-delete');$h=self::harness($s);$h->controller->delete('101');self::ok($s->deletes===0&&file_exists(FilesFixture::absolute($cover))&&file_exists(FilesFixture::absolute($b))&&str_contains($h->response->location,'error/permission'),'GET delete mutou');});
++        self::test('34 · delete sem CSRF não chega ao unlink',static function():void{$s=self::populated(1);[$cover,$a,$b]=self::withImages($s,'bad-delete');$h=self::harness($s);$h->post([]);$h->controller->delete('101');self::ok($s->deletes===0&&file_exists(FilesFixture::absolute($cover))&&file_exists(FilesFixture::absolute($a))&&($h->session->data['flash']['type']??'')==='error','CSRF delete falhou');});
++        self::test('35 · delete válido só arquivos/registro próprios, categorias ficam',static function():void{$s=self::populated(2);[$cover,$a,$b]=self::withImages($s,'own-delete');$keep=FilesFixture::image('keep');$s->records[102]['image']=$keep;$h=self::harness($s);self::valid($h,[]);$h->controller->delete('101');self::ok(!$s->getProject(101)&&$s->getProject(102)!==[]&&!file_exists(FilesFixture::absolute($cover))&&!file_exists(FilesFixture::absolute($a))&&!file_exists(FilesFixture::absolute($b))&&file_exists(FilesFixture::absolute($keep))&&count($s->categoryOptions)===1,'Delete afetou dados/arquivos alheios');});
++        self::test('36 · ACL modify negada nos quatro métodos',static function():void{foreach(['add','edit','delete','upload']as$m){$h=self::harness(self::populated(1),null,'en-us',false);self::valid($h,self::payload(2));if($m==='add'||$m==='upload')$h->controller->{$m}();else $h->controller->{$m}('101');self::ok($h->store->adds+$h->store->edits+$h->store->deletes===0,'ACL mutou');if($m==='upload')self::ok(self::json($h)['error']===$h->language->get('error_permission'),'ACL upload mudou');else self::ok(str_contains($h->response->location,'error/permission'),'Redirect ACL mudou');}});
++        self::test('37 · upload sem token/array/errado recusa por CSRF',static function():void{foreach([null,[],'wrong']as$t){$h=self::harness();$h->post($t===null?[]:['csrf_token'=>$t]);$h->controller->upload();$j=self::json($h);self::ok($j['success']===false&&$j['path']===''&&$j['error']===$h->language->get('error_csrf'),'CSRF upload não conferido');}});
++        self::test('38 · upload GET/no-file mantém JSON original',static function():void{$h=self::harness();$h->controller->upload();self::ok(self::json($h)['error']===$h->language->get('error_upload_method'),'GET upload mudou');$h=self::harness();self::valid($h,[]);$h->controller->upload();$j=self::json($h);self::ok($j['success']===false&&$j['error']===$h->language->get('error_upload')&&str_contains(implode('',$h->response->headers),'application/json'),'No-file/JSON mudou');});
++        self::test('39 · edit inexistente not-found',static function():void{$h=self::harness();$h->controller->edit('999');self::ok(str_contains($h->response->location,'error/not_found')&&$h->store->edits===0,'404 mudou');});
++        self::test('40 · roundtrip sete campos por idioma escapados',static function():void{$h=self::harness();self::valid($h,self::payload());$h->controller->add();$get=self::harness($h->store,$h->session);$get->controller->edit('101');foreach($get->loader->data['languages']as$lang)foreach(self::payload()['project_description'][$lang['language_id']]as$key=>$value)self::ok(($lang['fields'][$key]??null)===$value,'Campo perdido: '.$key);self::ok(!str_contains($get->response->output,'<h2>Español'),'HTML executado no textarea');});
++        self::test('41 · nome/alt/keywords maliciosos não viram HTML',static function():void{$s=self::populated(1);$image=FilesFixture::image('escape');$s->records[101]['images']=[['image'=>$image,'alt'=>'<script>alt</script>','sort_order'=>0]];$h=self::harness($s);$h->controller->edit('101');self::ok(!str_contains($h->response->output,'<script>alt')&&str_contains($h->response->output,'&lt;script&gt;alt'),'Alt não escapado');$h=self::harness();$p=self::payload();$p['project_description'][1]['name']='<script>name</script>';$p['project_description'][1]['keyword']='BAD word';self::valid($h,$p);$h->controller->add();self::ok(!str_contains($h->response->output,'<script>name')&&str_contains($h->response->output,'&lt;script&gt;name'),'Nome não escapado');});
++        self::test('42 · nomes legados da galeria/categorias/controles preservados',static function():void{$s=self::populated(1);self::withImages($s,'legacy');$s->records[101]['categories']=[5];$h=self::harness($s);$h->controller->edit('101');$html=$h->response->output;foreach(['name="project_image[0][image]"','name="project_image[1][alt]"','name="project_image[1][sort_order]"','name="project_category[]"','id="gallery"','id="input-gallery-file"','id="btn-add-image"','data-upload','id="input-client"','id="input-url"']as$needle)self::ok(str_contains($html,$needle),'Controle perdido: '.$needle);});
++        self::test('43 · filtro featured zero sozinho conserva reset',static function():void{$h=self::harness(self::populated(1));$h->request->get['filter_featured']='0';$h->controller->index();self::ok($h->loader->data['filter_featured']==='0'&&str_contains($h->response->output,'>Reset</a>'),'Destaque zero perdeu reset');});
++        self::test('44 · token forjado sem sessão anterior não é aceito',static function():void{$h=self::harness();$h->post(self::payload()+['csrf_token'=>str_repeat('0',64)]);$h->controller->add();self::ok($h->store->adds===0&&$h->loader->data['error']===$h->language->get('error_csrf'),'Token arbitrário aceito');});
++        self::test('45 · delete por modal/data com hidden CSRF, sem confirm inline',static function():void{$h=self::harness(self::populated(1));$h->controller->index();self::ok(str_contains($h->response->output,'data-rms-confirm-delete=')&&!str_contains($h->response->output,'onsubmit=')&&substr_count($h->response->output,'name="csrf_token"')===1,'Modal/CSRF inválido');});
++        echo "\nF8-08 contratos: ".self::$passed.' PASS / '.self::$failed.' FAIL — PHP '.PHP_VERSION.', Twig '.\Twig\Environment::VERSION."; DB/serviços/IO sessão em fixtures; MediaUpload/FS privados não servidos, sem HTTP/upload/banco/navegador reais.\n";return self::$failed?1:0;
++    }
++}
++set_error_handler(static function(int $severity,string $message,string $file,int $line):bool{if(!(error_reporting()&$severity))return false;throw new \ErrorException($message,0,$severity,$file,$line);});
++try{$code=Suite::run($mirror);}finally{FilesFixture::cleanup();}
++exit($code);
+diff --git a/tools/e2e/e2e_f808_dom.cjs b/tools/e2e/e2e_f808_dom.cjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..1d60ba45cdd785f3587651132b51b121b1a93cd5
+--- /dev/null
++++ b/tools/e2e/e2e_f808_dom.cjs
+@@ -0,0 +1,62 @@
++#!/usr/bin/env node
++'use strict';
++// Fonte real; DOM/Bootstrap/fetch em modelos. Não é navegador/preview/foco real.
++const fs=require('node:fs');const path=require('node:path');const vm=require('node:vm');const assert=require('node:assert/strict');
++const source=fs.readFileSync(process.argv[2]||path.resolve(__dirname,'../../dev/admin/view/js/catalog-project.js'),'utf8');
++let pass=0,fail=0;async function test(label,fn){try{await fn();pass++;console.log('PASS '+label);}catch(e){fail++;console.error('FAIL '+label+': '+e.message);}}
++class Element {
++  constructor(tag){this.tagName=tag.toUpperCase();this.children=[];this.attributes={};this.handlers=[];this.parentElement=null;this.events=[];this.value='';this.disabled=false;this._text='';const classes=new Set();this.classList={add:c=>classes.add(c),remove:c=>classes.delete(c),contains:c=>classes.has(c)};}
++  set textContent(value){this._text=String(value);for(const c of this.children)c.parentElement=null;this.children=[];}
++  get textContent(){return this._text;}
++  set innerHTML(value){throw new Error('Não usar innerHTML com imagem/labels/retorno de upload');}
++  setAttribute(k,v){this.attributes[k]=String(v);if(['name','id','type'].includes(k))this[k]=String(v);}
++  hasAttribute(k){return Object.hasOwn(this.attributes,k);}
++  appendChild(child){child.parentElement=this;this.children.push(child);return child;}
++  addEventListener(type,fn,capture){this.handlers.push({type,fn,capture});}
++  dispatchEvent(event){this.events.push(event.type);return true;}
++  contains(node){return node===this||this.children.some(c=>c.contains(node));}
++  closest(selector){let n=this;while(n){if(selector==='[data-row]'&&n.hasAttribute('data-row'))return n;if(selector==='[data-remove]'&&n.hasAttribute('data-remove'))return n;n=n.parentElement;}return null;}
++  remove(){if(this.parentElement){const p=this.parentElement;p.children=p.children.filter(c=>c!==this);this.parentElement=null;}}
++  querySelectorAll(selector){const out=[];function visit(n){for(const c of n.children){if(selector==='input[data-img]'&&c.tagName==='INPUT'&&c.hasAttribute('data-img'))out.push(c);else if(selector==='[data-row]'&&c.hasAttribute('data-row'))out.push(c);visit(c);}}visit(this);return out;}
++}
++function descendants(root){const out=[];for(const n of root.children){out.push(n,...descendants(n));}return out;}
++function fixture(options={}){
++  const requests=[],ready=[],listeners=[];let firstTarget=null;
++  const pane={id:'pane-project-lang-1',active:false,classList:{contains:()=>pane.active}};
++  const tab={count:0,click(){this.count++;pane.active=true;}};
++  const controls=[new Element('button'),new Element('button'),new Element('input'),new Element('input')];const[coverButton,galleryButton,coverInput,galleryInput]=controls;
++  for(const c of controls)c.disabled=Boolean(options.readonly);coverInput.files=options.noFile?[]:[{name:'cover.png'}];galleryInput.files=options.noFile?[]:[{name:'gallery.png'}];
++  const hidden=new Element('input');hidden.value='view/image/project/old.png';const preview=new Element('div');const gallery=new Element('div');const errorBox=new Element('div');errorBox.classList.add('d-none');
++  const existing=[];
++  for(const index of options.indices||[]){const row=new Element('div');row.setAttribute('data-row','');const image=new Element('input');image.name=`project_image[${index}][image]`;image.value=`view/image/project/old-${index}.png`;image.setAttribute('data-img','');row.appendChild(image);const alt=new Element('input');alt.name=`project_image[${index}][alt]`;alt.value='original alt '+index;row.appendChild(alt);const sort=new Element('input');sort.name=`project_image[${index}][sort_order]`;sort.value=String(index+1);row.appendChild(sort);const remove=new Element('button');remove.setAttribute('data-remove','');remove.disabled=Boolean(options.readonly);remove.appendChild(new Element('i'));row.appendChild(remove);gallery.appendChild(row);existing.push({row,image,alt,sort,remove});}
++  const csrf={value:options.noCsrf?'':'c'.repeat(64)};
++  const config={upload:options.foreign?'https://example.com/upload':'http://127.0.0.1:8090/dev/admin/index.php?route=catalog/project.upload',catalog:'http://127.0.0.1:8090/dev/catalog/',error:'Falha no envio',wait:'Aguarde o envio',labels:{alt:'Alt ação <b>texto</b>',sort:'Ordem',remove:'Remover'}};
++  const form={dataset:{projectConfig:JSON.stringify(config)},querySelector(selector){if(selector==='input:invalid, select:invalid, textarea:invalid')return firstTarget;if(selector==='[data-bs-target="#pane-project-lang-1"]')return tab;const map={'[data-upload]':coverButton,'#btn-add-image':galleryButton,'#input-cover-file':coverInput,'#input-gallery-file':galleryInput,'#input-image':hidden,'#cover-preview':preview,'#gallery':gallery,'#project-upload-error':errorBox,'[name="csrf_token"]':csrf};assert.ok(Object.hasOwn(map,selector),'Selector inesperado: '+selector);return map[selector];},addEventListener(type,fn,capture){listeners.push({type,fn,capture});}};
++  const document={readyState:options.state||'interactive',querySelector(selector){assert.equal(selector,'[data-project-form]');return options.noForm?null:form;},addEventListener(type,fn,flags){ready.push({type,fn,flags});},createElement(tag){return new Element(tag);}};
++  class FormDataFake{constructor(){this.values=new Map();}append(k,v){this.values.set(k,v);}}
++  class EventFake{constructor(type,flags){this.type=type;this.bubbles=flags.bubbles;}}
++  const fetchFn=async(url,settings)=>{requests.push({url,settings});if(options.fetchFn)return options.fetchFn(url,settings);return{ok:true,async json(){return options.result||{success:true,path:'view/image/project/20261023170000-abcdef012345.png'};}};};
++  const context=vm.createContext({document,window:{location:{href:'http://127.0.0.1:8090/dev/admin/index.php?route=catalog/project.add',origin:'http://127.0.0.1:8090'},bootstrap:options.noBootstrap?undefined:{Tab:function(){}}},URL,FormData:FormDataFake,Event:EventFake,fetch:fetchFn,AbortSignal});
++  return{requests,ready,listeners,form,document,pane,tab,controls,coverButton,galleryButton,coverInput,galleryInput,hidden,preview,gallery,errorBox,csrf,config,existing,
++    run(){vm.runInContext(source,context,{timeout:1000});},domReady(){document.readyState='interactive';for(const e of ready.splice(0))e.fn();},
++    click(which='cover'){const button=which==='cover'?coverButton:galleryButton;const e=button.handlers.find(e=>e.type==='click');return e?e.fn():Promise.resolve();},
++    invalid(later=false){const target={closest:()=>later?{id:'pane-project-lang-2',classList:{contains:()=>false}}:pane};if(!later)firstTarget=target;for(const e of listeners.filter(e=>e.type==='invalid'))e.fn({target,preventDefault(){throw new Error('Não impedir validação nativa');}});},
++    submit(){const e={prevented:false,preventDefault(){this.prevented=true;}};for(const l of listeners.filter(l=>l.type==='submit'))l.fn(e);return e;},
++    remove(target){for(const l of gallery.handlers.filter(l=>l.type==='click'))l.fn({target});}
++  };
++}
++(async()=>{
++  await test('01 · DOM ready once e reexecução idempotente',()=>{const x=fixture({state:'loading'});x.run();assert.equal(x.listeners.length,0);assert.equal(x.ready[0].flags.once,true);x.domReady();x.run();assert.equal(x.coverButton.handlers.length,1);assert.equal(x.galleryButton.handlers.length,1);const y=fixture({noForm:true});y.run();assert.equal(y.coverButton.handlers.length,0);});
++  await test('02 · só primeiro inválido abre a tab',()=>{const x=fixture();x.run();assert.equal(x.listeners.find(e=>e.type==='invalid').capture,true);x.invalid();x.invalid(true);assert.equal(x.tab.count,1);assert.equal(x.pane.active,true);});
++  await test('03 · readonly não associa upload/remover',async()=>{const x=fixture({readonly:true,indices:[0]});x.run();await x.click();await x.click('gallery');x.remove(x.existing[0].remove);assert.equal(x.requests.length,0);assert.equal(x.gallery.children.length,1);});
++  await test('04 · sem arquivo/CSRF não envia',async()=>{const x=fixture({noFile:true});x.run();await x.click();await x.click('gallery');assert.equal(x.requests.length,0);const y=fixture({noCsrf:true});y.run();await y.click();assert.equal(y.requests.length,0);assert.equal(y.errorBox.textContent,y.config.error);});
++  await test('05 · capa: CSRF/file, eventos e preview DOM seguro',async()=>{const x=fixture();x.run();await x.click();const o=x.requests[0].settings;assert.equal(o.body.values.get('csrf_token'),'c'.repeat(64));assert.equal(o.body.values.get('file'),x.coverInput.files[0]);assert.equal(o.credentials,'same-origin');assert.equal(o.redirect,'error');assert.deepEqual(x.hidden.events,['input','change']);assert.equal(x.preview.children[0].src,'http://127.0.0.1:8090/dev/catalog/'+x.hidden.value);});
++  await test('06 · galeria cria três campos e labels como texto',async()=>{const x=fixture();x.run();await x.click('gallery');const row=x.gallery.children[0];const nodes=descendants(row);for(const name of['project_image[0][image]','project_image[0][alt]','project_image[0][sort_order]'])assert.ok(nodes.some(n=>n.name===name));assert.ok(nodes.some(n=>n.tagName==='LABEL'&&n.textContent===x.config.labels.alt));assert.ok(!nodes.some(n=>n.tagName==='B'||n.tagName==='SCRIPT'));const hidden=nodes.find(n=>n.hasAttribute('data-img'));assert.deepEqual(hidden.events,['input','change']);});
++  await test('07 · índices não colidem após remoção, inclusive via ícone',async()=>{const x=fixture({indices:[0,2]});x.run();await x.click('gallery');let fields=x.gallery.querySelectorAll('input[data-img]');assert.ok(fields.some(n=>n.name==='project_image[3][image]'));x.remove(x.existing[1].remove.children[0]);await x.click('gallery');fields=x.gallery.querySelectorAll('input[data-img]');assert.ok(fields.some(n=>n.name==='project_image[4][image]'));assert.equal(new Set(fields.map(n=>n.name)).size,fields.length);assert.ok(!fields.some(n=>n.name==='project_image[2][image]'));});
++  await test('08 · erro JSON é texto e mantém estado',async()=>{const x=fixture({indices:[0],result:{success:false,error:'<script>erro</script>',path:''}});x.run();await x.click();assert.equal(x.errorBox.textContent,'<script>erro</script>');assert.equal(x.hidden.value,'view/image/project/old.png');assert.equal(x.gallery.children.length,1);});
++  await test('09 · path/origem inválidos não alteram capa/galeria',async()=>{for(const p of['../bad.png','https://example.com/x.png','view/image/category/x.png']){const x=fixture({result:{success:true,path:p}});x.run();await x.click('gallery');assert.equal(x.gallery.children.length,0);assert.equal(x.hidden.value,'view/image/project/old.png');}const y=fixture({foreign:true});y.run();await y.click();assert.equal(y.requests.length,0);});
++  await test('10 · busy comum bloqueia submit/remover/upload concorrente',async()=>{let resolve;const pending=new Promise(r=>{resolve=r;});const x=fixture({indices:[0],fetchFn:()=>pending});x.run();const first=x.click();await x.click('gallery');assert.equal(x.requests.length,1);assert.equal(x.submit().prevented,true);x.remove(x.existing[0].remove);assert.equal(x.gallery.children.length,1);assert.ok(x.controls.every(c=>c.disabled));resolve({ok:true,async json(){return{success:true,path:'view/image/project/20261023170000-abcdef012345.png'};}});await first;assert.ok(x.controls.every(c=>!c.disabled));assert.equal(x.submit().prevented,false);assert.equal(x.errorBox.classList.contains('d-none'),true);});
++  await test('11 · timeout/falha restaura controles sem retry',async()=>{const x=fixture({fetchFn:async()=>{throw new Error('timeout fixture');}});x.run();await x.click('gallery');assert.equal(x.requests.length,1);assert.ok(x.controls.every(c=>!c.disabled));assert.equal(x.errorBox.textContent,x.config.error);});
++  await test('12 · boot não reescreve alt/ordem/paths existentes',()=>{const x=fixture({indices:[0,5]});const before=x.existing.map(e=>[e.image.name,e.image.value,e.alt.value,e.sort.value]);x.run();assert.deepEqual(x.existing.map(e=>[e.image.name,e.image.value,e.alt.value,e.sort.value]),before);const y=fixture({noBootstrap:true});y.run();y.invalid();assert.equal(y.tab.count,0);});
++  console.log(`F8-08 DOM/upload/galeria simulados: ${pass} PASS / ${fail} FAIL — sem navegador, foco, preview ou upload reais.`);process.exitCode=fail?1:0;
++})();
+diff --git a/tools/e2e/e2e_f808_http.cjs b/tools/e2e/e2e_f808_http.cjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..47077a865eb0fb9b61f820f7204af1903c464565
+--- /dev/null
++++ b/tools/e2e/e2e_f808_http.cjs
+@@ -0,0 +1,88 @@
++#!/usr/bin/env node
++'use strict';
++/** F8-08 — E2E HTTP opt-in; não é navegador. Um projeto, categoria auxiliar
++ * própria e 3 PNGs. Reutiliza transportes/guardas sem executar fluxos anteriores.
++ */
++const fs=require('node:fs');const path=require('node:path');const os=require('node:os');const crypto=require('node:crypto');const assert=require('node:assert/strict');
++const category=require('./e2e_f807_http.cjs');const shared=require('./e2e_f806_http.cjs');const h=require('./e2e_f805_browser.js').helpers;
++const PNG=category.PNG;const sha=b=>crypto.createHash('sha256').update(b).digest('hex');const IMAGE=/^view\/image\/project\/[0-9]{14}-[a-f0-9]{12}\.png$/;
++const FILES=['admin/controller/catalog/project.php','admin/model/catalog/project.php','admin/view/template/catalog/project_list.twig','admin/view/template/catalog/project_form.twig','admin/view/js/catalog-project.js','admin/view/css/admin.css',...['en-us','pt-br','es-eu'].map(c=>`admin/language/${c}/catalog/project.php`)];
++function ok(condition,message){if(!condition)throw new Error(message);}
++function formFor(html,base,route){
++ const f=shared.forms(html).find(f=>f.attrs.action&&h.routeOf(f.attrs.action,base)===route);ok(f,'Form/action esperado ausente.');f.categories=[];
++ for(const m of f.html.matchAll(/<input\b([^>]*)>/gi)){const a=shared.attrs(m[1]);if(a.name==='project_category[]'&&Object.hasOwn(a,'checked')){ok(Number.isSafeInteger(Number(a.value)),'ID de categoria inválido.');f.categories.push(Number(a.value));}}
++ delete f.fields['project_category[]'];f.gallery=[];
++ const indices=Object.keys(f.fields).map(k=>k.match(/^project_image\[([0-9]+)\]\[image\]$/)).filter(Boolean).map(m=>Number(m[1])).sort((a,b)=>a-b);
++ for(const i of indices)f.gallery.push({image:f.fields[`project_image[${i}][image]`],alt:f.fields[`project_image[${i}][alt]`],sort_order:f.fields[`project_image[${i}][sort_order]`]});
++ return f;
++}
++function languageIds(html){const ids={};for(const m of html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/gi)){const id=(shared.attrs(m[1]).id||'').match(/^tab-project-lang-([1-9][0-9]*)$/);const code=shared.decode(m[2].replace(/<[^>]*>/g,'')).match(/\((en-us|pt-br|es-eu)\)/);if(id&&code)ids[code[1]]=Number(id[1]);}ok(['en-us','pt-br','es-eu'].every(c=>Number.isSafeInteger(ids[c])),'Não encontrados os três idiomas nas tabs.');return ids;}
++function projectLinks(html,base,marker){const body=(html.match(/<tbody\b[^>]*>([\s\S]*?)<\/tbody>/i)||[])[1]||'';const result=[];for(const m of body.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)){const a=shared.attrs(m[1]);if(!a.href||!(a.class||'').split(/\s+/).includes('link-plain')||!shared.decode(m[2].replace(/<[^>]*>/g,'')).includes(marker))continue;const id=h.routeOf(a.href,base).match(/^catalog\/project\.edit\|([1-9][0-9]*)$/);if(id){ok(Number.isSafeInteger(Number(id[1])),'ID de projeto não seguro.');result.push({id:Number(id[1]),url:h.scopedUrl(a.href,base).href});}}return result;}
++function basicPayload(marker,version,ids,cover=''){
++ const out={client:`Cliente fictício ${marker} v${version}`,url:`https://example.invalid/${marker}/v${version}`,image:cover,sort_order:'7'};const words={'en-us':'English & title','pt-br':'Ação e edição ç, ã, €','es-eu':'Español ñ'};
++ for(const[code,id]of Object.entries(ids)){const p=`project_description[${id}]`;const text=words[code];out[`${p}[name]`]=`${marker}-project ${text} v${version}`;out[`${p}[summary]`]=`Resumo ${text} v${version}`;out[`${p}[description]`]=`<h2>${marker} ${id} v${version}</h2><p>${text}</p>`;out[`${p}[tag]`]=`fixture, ${text}`;out[`${p}[keyword]`]=`${marker}-project-${id}-v${version}`;out[`${p}[meta_title]`]=`Meta ${text}`;out[`${p}[meta_description]`]=`Descrição ${text}`;}return out;
++}
++function galleryExpected(images,version){const rows=[{image:images.a,alt:`Ação A v${version} & texto`,sort_order:version===1?'9':'1'},{image:images.b,alt:`Español B v${version}`,sort_order:version===1?'2':'8'}];return rows.sort((a,b)=>Number(a.sort_order)-Number(b.sort_order));}
++function galleryPayload(images,version){const rows=galleryExpected(images,version);const out={};rows.forEach((r,i)=>{out[`project_image[${i}][image]`]=r.image;out[`project_image[${i}][alt]`]=r.alt;out[`project_image[${i}][sort_order]`]=r.sort_order;});return out;}
++function compare(form,marker,version,ids,images,categoryId,flags=false){shared.compareFields(form.fields,basicPayload(marker,version,ids,images.cover));assert.deepEqual(form.gallery,galleryExpected(images,version),'Galeria/alt/ordem não persistiu.');assert.deepEqual(form.categories,[categoryId],'Vínculo N:N não persistiu.');ok(flags?(form.fields.status==='1'&&form.fields.featured==='1'):(!Object.hasOwn(form.fields,'status')&&!Object.hasOwn(form.fields,'featured')),'Status/featured divergentes.');}
++function imageDir(settings){return path.join(settings.fui,'catalog/view/image/project');}
++function checkAncestors(settings){let current=settings.fui;for(const part of['catalog','view','image','project']){current=path.join(current,part);let stat;try{stat=fs.lstatSync(current);}catch(e){if(e.code==='ENOENT')break;throw e;}ok(stat.isDirectory()&&!stat.isSymbolicLink()&&fs.realpathSync(current)===current,'Diretório de imagens de projeto não canônico/symlink.');}}
++function imageNames(settings){checkAncestors(settings);return fs.existsSync(imageDir(settings))?fs.readdirSync(imageDir(settings)).sort():[];}
++function ownedImage(settings,relative){ok(typeof relative==='string'&&IMAGE.test(relative),'PNG do ensaio fora do módulo/formato esperado.');checkAncestors(settings);const file=path.join(settings.fui,'catalog',relative);const stat=fs.lstatSync(file);ok(stat.isFile()&&!stat.isSymbolicLink()&&fs.realpathSync(file)===file&&sha(fs.readFileSync(file))===sha(PNG),'PNG não é arquivo próprio regular do FUI ou foi alterado.');return file;}
++class Client extends category.Client{
++ async projectImage(relative){ok(IMAGE.test(relative),'Imagem inesperada.');const url=h.scopedUrl(new URL('catalog/'+relative,this.base).href,this.base).href;const r=await this.fetchFn(url,{method:'GET',headers:{Accept:'image/png','Cache-Control':'no-cache'},redirect:'manual',signal:AbortSignal.timeout(15000)});ok(r.status===200&&sha(Buffer.from(await r.arrayBuffer()))===sha(PNG),'PNG HTTP não corresponde à fixture.');}
++}
++function preflight(env){
++ ok(env.ALLOW_F808_HTTP==='YES_WRITE_REAMUR_TEST','HTTP bloqueado: ALLOW_F808_HTTP=YES_WRITE_REAMUR_TEST obrigatório.');ok(env.F808_USERNAME&&env.F808_PASSWORD,'Defina credenciais fictícias F808_USERNAME/F808_PASSWORD.');
++ const s=category.preflight({...env,ALLOW_F807_HTTP:env.ALLOW_F808_HTTP,F807_USERNAME:env.F808_USERNAME,F807_PASSWORD:env.F808_PASSWORD,F807_REPORT:undefined});
++ for(const relative of FILES){for(const root of[s.mirror,s.fui]){const file=path.join(root,relative);ok(fs.lstatSync(file).isFile()&&fs.realpathSync(file)===file,'Fonte de projeto não canônica.');}ok(fs.readFileSync(path.join(s.mirror,relative)).equals(fs.readFileSync(path.join(s.fui,relative))),'Projeto MIRROR/FUI divergente: '+relative);}
++ const controller=fs.readFileSync(path.join(s.mirror,FILES[0]),'utf8');ok(controller.includes('getTotalProjects(')&&controller.includes('csrfValid()'),'Tarefa08 não aplicada.');checkAncestors(s);
++ if(env.F808_REPORT)ok(path.isAbsolute(env.F808_REPORT)&&!fs.existsSync(env.F808_REPORT)&&fs.statSync(path.dirname(env.F808_REPORT)).isDirectory(),'Relatório exige caminho absoluto novo em diretório existente.');return s;
++}
++function multipart(token,name){const fd=new FormData();if(token)fd.append('csrf_token',token);fd.append('file',new Blob([PNG],{type:'image/png'}),name);return fd;}
++async function live(env){
++ const s=preflight(env);const base=s.base;const nonce=crypto.randomBytes(16).toString('hex');const marker='f808-'+nonce.slice(0,16);const probe=path.join(s.fui,`admin/view/js/f808-probe-${nonce}.txt`);let madeProbe=false,wrote=false,ids=null,catIds=null,token='',catToken='',uploadUrl='',projectId=null,categoryId=null;const images={};const before=imageNames(s);const client=new Client(base);const uri=(r,p={})=>shared.uri(base,r,p);
++ const report={task:'Fase 8 / Tarefa 08',kind:'http-workflow',marker,status:'running',startedAt:new Date().toISOString(),steps:[],cleanup:'not-needed',artifacts:{projectId:null,categoryId:null,images},notCovered:['navegador/JS/DOM/Bootstrap/foco/preview/galeria nativos/CSS/contraste','perfil readonly real separado','paginação/21+ projetos no servidor','conteúdo/categorias reais preexistentes']};
++ function hide(message){let out=h.redact(message);for(const secret of[env.F808_USERNAME,env.F808_PASSWORD])if(secret)out=out.split(secret).join('[REDACTED]');return out.replace(/RMSSESSION=[^;\s]+/g,'RMSSESSION=[REDACTED]');}
++ async function step(label,fn){try{await fn();report.steps.push({label,status:'pass'});}catch(e){report.steps.push({label,status:'fail',error:hide(e.message)});throw e;}}
++ const listProject=()=>client.request(uri('catalog/project',{filter_name:marker,filter_status:'all',filter_featured:'all'}));const listCategory=()=>client.request(uri('catalog/category',{filter_name:marker+'-cat',filter_status:'all'}));
++ async function readProject(){const r=await client.request(uri(`catalog/project.edit|${projectId}`));return formFor(r.html,base,`catalog/project.edit|${projectId}`);}
++ try{
++  await step('Probe identifica FUI antes de enviar credenciais',async()=>{fs.writeFileSync(probe,nonce,{flag:'wx',mode:0o644});madeProbe=true;ok((await client.request(new URL(`admin/view/js/f808-probe-${nonce}.txt`,base).href)).html===nonce,'B não serve o FUI autorizado.');});
++  await step('Login único com CSRF/cookies só em memória',async()=>{const r=await client.request(uri('common/login'));const f=formFor(r.html,base,'common/login');ok(/^[a-f0-9]{64}$/.test(f.fields.csrf_token||''),'CSRF login ausente.');const result=await client.request(f.attrs.action,{...f.fields,username:env.F808_USERNAME,password:env.F808_PASSWORD});ok(h.routeOf(result.url,base)!=='common/login','Login recusado; não repetir automaticamente.');});
++  await step('Form projetos ×3 idiomas, 21 campos, modify projetos/categorias',async()=>{for(const[locale,title]of[['en-us','Portfolio'],['pt-br','Portfólio'],['es-eu','Portafolio']]){const r=await client.request(uri('catalog/project.add',{language:locale}));const f=formFor(r.html,base,'catalog/project.add');ok(r.html.includes(title)&&r.html.includes('projectLangTabs')&&/<button[^>]*type="submit"/.test(f.html),'UI/i18n/modify projeto ausentes.');const found=languageIds(f.html);if(ids)assert.deepEqual(found,ids);else ids=found;const cfg=JSON.parse(f.attrs['data-project-config']||'{}');ok(h.routeOf(cfg.upload,base)==='catalog/project.upload','Config de upload incorreta.');uploadUrl=cfg.upload;token=f.fields.csrf_token;for(const id of Object.values(ids))for(const key of['name','summary','description','tag','keyword','meta_title','meta_description'])ok(Object.hasOwn(f.fields,`project_description[${id}][${key}]`),'Campo multilíngue ausente.');}
++   const r=await client.request(uri('catalog/category.add'));const f=category.formFor(r.html,base,'catalog/category.add');ok(/<button[^>]*type="submit"/.test(f.html),'Conta precisa também de modify catalog/category para fixture própria.');catIds=category.languageIds(f.html);catToken=f.fields.csrf_token;ok(projectLinks((await listProject()).html,base,marker).length===0&&category.categoryLinks((await listCategory()).html,base,marker+'-cat').length===0,'Marcador já existente.');});
++  await step('Criar somente categoria auxiliar própria, descobrir ID',async()=>{wrote=true;report.cleanup='pending';const r=await client.request(uri('catalog/category.add'),{...category.payload(marker,'cat',1,catIds),csrf_token:catToken});ok(h.routeOf(r.url,base)==='catalog/category','Categoria auxiliar não criada.');const listing=await listCategory();const links=category.categoryLinks(listing.html,base,marker+'-cat');ok(links.length===1&&category.categoryLinks(listing.html,base,'').length===1,'Categoria auxiliar não é única.');categoryId=links[0].id;report.artifacts.categoryId=categoryId;});
++  await step('Add/upload projeto sem CSRF não gravam',async()=>{const r=await client.request(uri('catalog/project.add'),basicPayload(marker,1,ids));ok(h.routeOf(r.url,base)==='catalog/project.add'&&projectLinks((await listProject()).html,base,marker).length===0,'Add inválido gravou.');const j=await client.multipart(uploadUrl,multipart('',marker+'-negative.png'));const added=imageNames(s).filter(n=>!before.includes(n));if(j.path)report.artifacts.unexpectedUpload=j.path;if(added.length)report.artifacts.unexpectedFiles=added;ok(j.success===false&&j.path===''&&added.length===0,'Upload sem CSRF gravou.');});
++  await step('Upload capa + duas galerias, FS/HTTP com bytes PNG2x2',async()=>{for(const role of['cover','a','b']){const j=await client.multipart(uploadUrl,multipart(token,marker+'-'+role+'.png'));ok(j.success===true,'Upload válido recusado.');images[role]=j.path;ok(!before.includes(path.basename(j.path))&&new Set(Object.values(images)).size===Object.values(images).length,'Arquivo já existente/reutilizado; não remover antigo.');ownedImage(s,j.path);await client.projectImage(j.path);}});
++  await step('Criar projeto desabilitado/sem destaque, N:N e galeria',async()=>{const r=await client.request(uri('catalog/project.add'),{...basicPayload(marker,1,ids,images.cover),...galleryPayload(images,1),'project_category[]':String(categoryId),csrf_token:token});ok(h.routeOf(r.url,base)==='catalog/project','Add não voltou à lista.');const listing=await listProject();const links=projectLinks(listing.html,base,marker+'-project');ok(links.length===1&&projectLinks(listing.html,base,'').length===1,'Projeto próprio não é único.');projectId=links[0].id;report.artifacts.projectId=projectId;});
++  await step('Reabrir 21 campos/cliente/URL/N:N/capa/alt/ordem',async()=>{const f=await readProject();compare(f,marker,1,ids,images,categoryId,false);token=f.fields.csrf_token;});
++  await step('Edit sem CSRF e URL inválida preservam o salvo',async()=>{const body={...basicPayload(marker,2,ids,images.cover),...galleryPayload(images,2),'project_category[]':String(categoryId)};await client.request(uri(`catalog/project.edit|${projectId}`),{...body,csrf_token:'wrong'});compare(await readProject(),marker,1,ids,images,categoryId,false);await client.request(uri(`catalog/project.edit|${projectId}`),{...body,url:'not a url',csrf_token:token});compare(await readProject(),marker,1,ids,images,categoryId,false);});
++  await step('Editar mesmo ID v2, flags on e inverter ordem da galeria',async()=>{await client.request(uri(`catalog/project.edit|${projectId}`),{...basicPayload(marker,2,ids,images.cover),...galleryPayload(images,2),'project_category[]':String(categoryId),status:'1',featured:'1',csrf_token:token});const f=await readProject();compare(f,marker,2,ids,images,categoryId,true);token=f.fields.csrf_token;});
++  await step('Filtros nome/status/featured refletem o registro',async()=>{for(const[status,featured,expected]of[['1','1',1],['0','1',0],['1','0',0]]){const r=await client.request(uri('catalog/project',{filter_name:marker+'-project',filter_status:status,filter_featured:featured}));ok(projectLinks(r.html,base,marker).length===expected,'Filtro divergente.');}});
++  await step('GET delete e POST sem token não removem dados/arquivos',async()=>{await client.request(uri(`catalog/project.delete|${projectId}`),undefined,[403]);ok(projectLinks((await listProject()).html,base,marker).length===1,'GET delete excluiu.');await client.request(uri(`catalog/project.delete|${projectId}`),{csrf_token:'wrong'});compare(await readProject(),marker,2,ids,images,categoryId,true);for(const file of Object.values(images))ownedImage(s,file);});
++  await step('Excluir só projeto próprio e seus três PNGs; categoria permanece',async()=>{const f=await readProject();compare(f,marker,2,ids,images,categoryId,true);for(const file of Object.values(images))ownedImage(s,file);await client.request(uri(`catalog/project.delete|${projectId}`),{csrf_token:f.fields.csrf_token});ok(projectLinks((await listProject()).html,base,marker).length===0,'Projeto ainda existe.');for(const file of Object.values(images))ok(!fs.existsSync(path.join(s.fui,'catalog',file)),'PNG próprio não removido pelo fluxo existente.');ok(category.categoryLinks((await listCategory()).html,base,marker+'-cat').length===1,'Categoria foi excluída junto com projeto.');});
++  await step('Excluir somente categoria auxiliar validada',async()=>{const r=await client.request(uri(`catalog/category.edit|${categoryId}`));const f=category.formFor(r.html,base,`catalog/category.edit|${categoryId}`);shared.compareFields(f.fields,category.payload(marker,'cat',1,catIds));await client.request(uri(`catalog/category.delete|${categoryId}`),{csrf_token:f.fields.csrf_token});ok(category.categoryLinks((await listCategory()).html,base,marker+'-cat').length===0,'Categoria própria ainda existe.');});
++  await step('Conferir ausência dos conteúdos e arquivos do ensaio',async()=>{ok(projectLinks((await listProject()).html,base,marker).length===0&&category.categoryLinks((await listCategory()).html,base,marker+'-cat').length===0,'Conteúdo próprio restante.');ok(imageNames(s).filter(n=>!before.includes(n)).length===0,'Novo arquivo inesperado; não limpar amplamente.');report.cleanup='complete';});
++  report.status='passed';
++ }catch(e){report.status=wrote?'failed':'blocked';report.error=hide(e.message);}
++ finally{if(madeProbe){try{ok(!fs.lstatSync(probe).isSymbolicLink()&&fs.readFileSync(probe,'utf8')===nonce,'Probe alterado; não remover.');fs.unlinkSync(probe);}catch(e){report.status='failed';report.cleanup='pending';report.probeCleanup='pending';report.probeName=path.basename(probe);report.error=hide(e.message);}}report.finishedAt=new Date().toISOString();report.summary={passed:report.steps.filter(s=>s.status==='pass').length,failed:report.steps.filter(s=>s.status==='fail').length};console.log(JSON.stringify(report,null,2));if(env.F808_REPORT)fs.writeFileSync(env.F808_REPORT,JSON.stringify(report,null,2)+'\n',{flag:'wx',mode:0o600});}
++ return report.status==='passed'?0:1;
++}
++async function selfTest(){
++ const inherited=await category.selfTest();let pass=0,fail=0;async function t(label,fn){try{await fn();pass++;console.log('PASS '+label);}catch(e){fail++;console.error('FAIL '+label+': '+e.message);}}
++ const base='http://127.0.0.1:8090/dev/';const uri=r=>shared.uri(base,r);
++ await t('01 · parser N:N múltiplo e galeria com índices com lacunas',()=>{const html='<form action="'+uri('catalog/project.add')+'"><input type="checkbox" name="project_category[]" value="5" checked><input type="checkbox" name="project_category[]" value="12" checked><input type="checkbox" name="project_category[]" value="99"><input name="project_image[2][image]" value="a"><input name="project_image[2][alt]" value="A &amp; B"><input name="project_image[2][sort_order]" value="3"></form>';const f=formFor(html,base,'catalog/project.add');assert.deepEqual(f.categories,[5,12]);assert.deepEqual(f.gallery,[{image:'a',alt:'A & B',sort_order:'3'}]);});
++ await t('02 · language_id descoberto, sem assumir pt/es=2/3',()=>{const ids=languageIds('<button id="tab-project-lang-1">EN (en-us)</button><button id="tab-project-lang-12">PT (pt-br)</button><button id="tab-project-lang-18">ES (es-eu)</button>');assert.equal(ids['es-eu'],18);});
++ await t('03 · ID só por link de nome próprio no tbody',()=>{const html='<tbody><a class="link-plain" href="'+uri('catalog/project.edit|37')+'">f808-own-project</a><a class="icon-btn" href="'+uri('catalog/project.edit|1')+'">f808-own-project</a></tbody>';const links=projectLinks(html,base,'f808-own-project');assert.equal(links.length,1);assert.equal(links[0].id,37);});
++ await t('04 · payload tem sete campos e controles legados',()=>{const p=basicPayload('f808-own',1,{'en-us':1,'pt-br':12,'es-eu':18},'x');for(const k of['name','summary','description','tag','keyword','meta_title','meta_description'])assert.ok(Object.hasOwn(p,`project_description[12][${k}]`));assert.ok(!Object.hasOwn(p,'project_description[1][title]'));assert.equal(p.image,'x');assert.equal(p.sort_order,'7');});
++ await t('05 · galeria v1/v2 inverte ordem sem trocar caminhos',()=>{const images={a:'a',b:'b'};assert.deepEqual(galleryExpected(images,1).map(r=>r.image),['b','a']);assert.deepEqual(galleryExpected(images,2).map(r=>r.image),['a','b']);assert.equal(galleryPayload(images,2)['project_image[0][image]'],'a');});
++ await t('06 · PNG projeto HTTP como bytes sem cookie',async()=>{let options;const c=new Client(base,async(u,o)=>{options=o;return new Response(PNG);});await c.projectImage('view/image/project/20261023170000-abcdef012345.png');assert.equal(options.headers.Cookie,undefined);});
++ await t('07 · autorização antiga não habilita F8-08',()=>{assert.throws(()=>preflight({ALLOW_F807_HTTP:'YES_WRITE_REAMUR_TEST'}),/bloqueado/);assert.throws(()=>preflight({ALLOW_F808_HTTP:'YES_WRITE_REAMUR_TEST'}),/credenciais/);});
++ await t('08 · guard FS de projeto: path/hash/symlink em diretório privado',()=>{const root=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'f808-http-')));const s={fui:root};const dir=path.join(root,'catalog/view/image/project');fs.mkdirSync(dir,{recursive:true,mode:0o700});const relative='view/image/project/20261023170000-abcdef012345.png';const file=path.join(root,'catalog',relative);try{fs.writeFileSync(file,PNG);assert.equal(ownedImage(s,relative),file);assert.throws(()=>ownedImage(s,'view/image/category/x.png'));fs.writeFileSync(file,'changed');assert.throws(()=>ownedImage(s,relative));fs.unlinkSync(file);fs.symlinkSync('missing.png',file);assert.throws(()=>ownedImage(s,relative));}finally{try{fs.unlinkSync(file);}catch(e){if(e.code!=='ENOENT')throw e;}for(const p of['catalog/view/image/project','catalog/view/image','catalog/view','catalog',''])fs.rmdirSync(p?path.join(root,p):root);}});
++ await t('09 · comparador detecta alt/ordem/N:N/flags perdidos',()=>{const ids={'en-us':1,'pt-br':2,'es-eu':3};const images={cover:'c',a:'a',b:'b'};const f={fields:basicPayload('f808-own',2,ids,'c'),gallery:galleryExpected(images,2),categories:[5]};f.fields.status='1';f.fields.featured='1';compare(f,'f808-own',2,ids,images,5,true);f.gallery[0].alt='bad';assert.throws(()=>compare(f,'f808-own',2,ids,images,5,true));});
++ await t('10 · categoria auxiliar usa apenas contrato já existente',()=>{const p=category.payload('f808-own','cat',1,{'en-us':1,'pt-br':12,'es-eu':18});assert.equal(p.parent_id,'0');assert.equal(p.image,'');assert.ok(p['category_description[12][name]'].startsWith('f808-own-cat'));});
++ console.log(`F8-08 HTTP auxiliares novos: ${pass} PASS / ${fail} FAIL — mais 25 F8-07/F8-06 compartilhados; fetch/FS em simulação/temporários, sem servidor/DB/upload reais.`);return inherited||fail?1:0;
++}
++if(require.main===module){(async()=>{ok(process.argv.length===3,'Use e2e_f808.sh --help.');if(process.argv[2]==='--self-test')return selfTest();ok(process.argv[2]==='--http','Modo inválido.');return live(process.env);})().then(code=>{process.exitCode=code;}).catch(e=>{console.error('BLOQUEADO/ERRO: '+h.redact(e.message));process.exitCode=2;});}
++module.exports={Client,formFor,languageIds,projectLinks,basicPayload,galleryExpected,galleryPayload,compare,preflight,ownedImage,checkAncestors,imageNames,live,selfTest};

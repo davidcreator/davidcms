@@ -17,23 +17,52 @@ namespace Reamur\Admin\Model\Catalog;
 class Project extends \Reamur\System\Engine\Model {
 
     /**
-     * Lista para a grade (título preferindo o idioma padrão, coalesce).
-     *
+     * Lista filtrável (F8-08). Sem argumentos mantém todos e a ordem original.
+     * @param array{name?: string, status?: string|int, featured?: string|int, start?: int, limit?: int} $filters
      * @return array<int, array<string, mixed>>
      */
-    public function getProjects(): array {
-        $query = $this->db->query(
-            "SELECT p.`project_id`, p.`image`, p.`client`, p.`featured`, p.`status`, p.`sort_order`, p.`date_modified`,
-                    COALESCE(NULLIF(pd.`name`, ''), pd_en.`name`, '') AS `name`
-             FROM `" . $this->t('project') . "` p
-             LEFT JOIN `" . $this->t('project_description') . "` pd
-                 ON pd.`project_id` = p.`project_id` AND pd.`language_id` = '" . $this->currentLanguageId() . "'
-             LEFT JOIN `" . $this->t('project_description') . "` pd_en
-                 ON pd_en.`project_id` = p.`project_id` AND pd_en.`language_id` = 1
-             ORDER BY p.`sort_order` ASC, p.`project_id` DESC"
-        );
-
+    public function getProjects(array $filters = []): array {
+        $sql = "SELECT p.`project_id`, p.`image`, p.`client`, p.`featured`, p.`status`, p.`sort_order`, p.`date_modified`,
+                       COALESCE(NULLIF(pd.`name`, ''), pd_en.`name`, '') AS `name` "
+            . $this->projectListFrom() . $this->projectListWhere($filters)
+            . " ORDER BY p.`sort_order` ASC, p.`project_id` DESC";
+        if (array_key_exists('limit', $filters)) {
+            $start = max(0, (int)($filters['start'] ?? 0));
+            $limit = min(100, max(1, (int)$filters['limit']));
+            $sql .= " LIMIT " . $start . ", " . $limit;
+        }
+        $query = $this->db->query($sql);
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
+    /** @param array{name?: string, status?: string|int, featured?: string|int} $filters */
+    public function getTotalProjects(array $filters = []): int {
+        $query = $this->db->query("SELECT COUNT(*) AS `total` " . $this->projectListFrom() . $this->projectListWhere($filters));
+        return ($query instanceof \stdClass && isset($query->row['total'])) ? (int)$query->row['total'] : 0;
+    }
+
+    private function projectListFrom(): string {
+        return "FROM `" . $this->t('project') . "` p
+                LEFT JOIN `" . $this->t('project_description') . "` pd
+                  ON pd.`project_id` = p.`project_id` AND pd.`language_id` = '" . $this->currentLanguageId() . "'
+                LEFT JOIN `" . $this->t('project_description') . "` pd_en
+                  ON pd_en.`project_id` = p.`project_id` AND pd_en.`language_id` = 1";
+    }
+
+    /** @param array{name?: string, status?: string|int, featured?: string|int} $filters */
+    private function projectListWhere(array $filters): string {
+        $where = [];
+        $name = $filters['name'] ?? '';
+        if (is_string($name) && trim($name) !== '') {
+            $where[] = "COALESCE(NULLIF(pd.`name`, ''), pd_en.`name`, '') LIKE '%" . $this->db->escape(trim($name)) . "%'";
+        }
+        foreach (['status', 'featured'] as $field) {
+            $value = $filters[$field] ?? 'all';
+            if (in_array($value, ['0', '1', 0, 1], true)) {
+                $where[] = "p.`" . $field . "` = '" . (int)$value . "'";
+            }
+        }
+        return $where ? ' WHERE ' . implode(' AND ', $where) : '';
     }
 
     /**

@@ -1,52 +1,85 @@
-{# dev/admin/view/template/catalog/project_list.twig — grade do portfólio (F2-8) #}
+{# catalog/project — Fase 8 / Tarefa 08: lista, capa, destaque e POST+CSRF. #}
 {{ header|raw }}
-<main class="dash">
-  <div class="page-head">
-    <h1>{{ heading_title }}</h1>
-    <a class="btn primary" href="{{ add }}">{{ button_add }}</a>
+<div class="catalog-project-list">
+  <div class="page-titlebar">
+    <div class="title-group">
+      <h1 class="page-title"><i class="bi bi-images me-2" aria-hidden="true"></i>{{ heading_title }}</h1>
+      {% if total_projects > 0 %}<span class="badge rounded-pill badge-total">{{ total_projects }}</span>{% endif %}
+    </div>
+    {% if can_modify %}<div class="titlebar-actions"><a class="btn btn-primary btn-sm" href="{{ add }}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ button_add }}</a></div>{% endif %}
   </div>
-  <p class="muted">{{ text_list }}</p>
+  <p class="text-body-secondary">{{ text_list }}</p>
 
   {% if text_flash.text %}
-  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+  <div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">
+    {{ text_flash.text }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ button_close }}"></button>
+  </div>
   {% endif %}
 
+  <form method="get" action="{{ filter_action }}" class="filter-bar" role="search" aria-label="{{ button_filter }}">
+    <input type="hidden" name="route" value="catalog/project">
+    <div class="filter-search">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <input type="search" name="filter_name" value="{{ filter_name }}" maxlength="255" placeholder="{{ text_search_placeholder }}" aria-label="{{ column_name }}">
+    </div>
+    <select name="filter_status" class="form-select form-select-sm" aria-label="{{ column_status }}">
+      <option value="all"{% if filter_status == 'all' %} selected{% endif %}>{{ text_all_status }}</option>
+      <option value="1"{% if filter_status == '1' %} selected{% endif %}>{{ text_enabled }}</option>
+      <option value="0"{% if filter_status == '0' %} selected{% endif %}>{{ text_disabled }}</option>
+    </select>
+    <select name="filter_featured" class="form-select form-select-sm" aria-label="{{ column_featured }}">
+      <option value="all"{% if filter_featured == 'all' %} selected{% endif %}>{{ text_all_featured }}</option>
+      <option value="1"{% if filter_featured == '1' %} selected{% endif %}>{{ text_yes }}</option>
+      <option value="0"{% if filter_featured == '0' %} selected{% endif %}>{{ text_no }}</option>
+    </select>
+    <button type="submit" class="btn btn-primary btn-sm">{{ button_filter }}</button>
+    {% if filter_name != '' or filter_status != 'all' or filter_featured != 'all' %}<a class="btn btn-outline-secondary btn-sm" href="{{ filter_reset }}">{{ button_reset }}</a>{% endif %}
+  </form>
+
   {% if projects %}
-  <table class="table">
-    <thead>
-      <tr>
-        <th>{{ column_image }}</th>
-        <th>{{ column_name }}</th>
-        <th>{{ column_client }}</th>
-        <th>{{ column_featured }}</th>
-        <th>{{ column_status }}</th>
-        <th>{{ column_sort_order }}</th>
-        <th>{{ column_date_modified }}</th>
-        <th class="right">{{ column_action }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for project in projects %}
-      <tr>
-        <td>{% if project.thumb %}<img src="{{ project.thumb }}" alt="" width="48" height="48" style="object-fit:cover;border-radius:4px;">{% else %}<span class="muted">{{ text_placeholder }}</span>{% endif %}</td>
-        <td>{{ project.name }}</td>
-        <td>{{ project.client }}</td>
-        <td>{{ project.featured ? text_yes : text_no }}</td>
-        <td>{{ project.status ? text_enabled : text_disabled }}</td>
-        <td>{{ project.sort_order }}</td>
-        <td>{{ project.date_modified }}</td>
-        <td class="right actions">
-          <a class="btn ghost small" href="{{ project.edit }}">{{ button_edit }}</a>
-          <form method="post" action="{{ project.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
-            <button type="submit" class="btn danger small">{{ button_delete }}</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="card data-card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead><tr>
+          <th class="d-none d-sm-table-cell">{{ column_image }}</th><th>{{ column_name }}</th>
+          <th class="d-none d-md-table-cell">{{ column_client }}</th><th class="d-none d-lg-table-cell">{{ column_featured }}</th><th>{{ column_status }}</th>
+          <th class="d-none d-md-table-cell">{{ column_sort_order }}</th>
+          <th class="d-none d-lg-table-cell">{{ column_date_modified }}</th>
+          <th class="text-end">{{ column_action }}</th>
+        </tr></thead>
+        <tbody>
+          {% for project in projects %}
+          <tr>
+            <td class="d-none d-sm-table-cell">{% if project.thumb %}<img src="{{ project.thumb }}" alt="" width="48" height="48" class="rounded object-fit-cover">{% else %}<span class="text-body-secondary small">{{ text_placeholder }}</span>{% endif %}</td>
+            <td class="fw-semibold"><a class="link-plain" href="{{ project.edit }}">{{ project.name }}</a></td>
+            <td class="d-none d-md-table-cell">{{ project.client }}</td>
+            <td class="d-none d-lg-table-cell"><span class="badge {{ project.featured ? 'text-bg-warning' : 'text-bg-secondary' }}">{{ project.featured ? text_yes : text_no }}</span></td>
+            <td><span class="badge {{ project.status ? 'text-bg-success' : 'text-bg-secondary' }}">{{ project.status ? text_enabled : text_disabled }}</span></td>
+            <td class="d-none d-md-table-cell">{{ project.sort_order }}</td>
+            <td class="d-none d-lg-table-cell text-nowrap">{{ project.date_modified }}</td>
+            <td class="text-end text-nowrap">
+              <a class="icon-btn" href="{{ project.edit }}" title="{{ button_edit }}" aria-label="{{ button_edit }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+              {% if can_modify %}
+              <form method="post" action="{{ project.delete }}" class="d-inline" data-rms-confirm-delete="{{ text_confirm_delete }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="icon-btn icon-btn--danger" title="{{ button_delete }}" aria-label="{{ button_delete }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% if showing or pagination %}<div class="list-footer"><span class="text-body-secondary small">{{ showing }}</span>{{ pagination|raw }}</div>{% endif %}
   {% else %}
-  <p class="muted">{{ text_no_results }}</p>
+  <div class="empty-state">
+    <i class="bi bi-images" aria-hidden="true"></i>
+    <h2>{{ filter_name != '' or filter_status != 'all' or filter_featured != 'all' ? text_empty_title : text_no_results }}</h2><p class="text-body-secondary">{{ text_empty_hint }}</p>
+    {% if can_modify %}<a class="btn btn-primary" href="{{ add }}">{{ button_add }}</a>{% endif %}
+  </div>
   {% endif %}
-</main>
+</div>
 {{ footer|raw }}

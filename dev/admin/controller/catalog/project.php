@@ -25,63 +25,83 @@ class Project extends \Reamur\System\Engine\Controller {
     private const UPLOAD_DIR  = 'view/image/project/';
     /** MIMEs aceitos + teto de tamanho */
 
-    /** Lista projetos (200) */
+    /** Lista projetos com filtros/paginação, preservando categorias e galeria. */
     public function index(): void {
         $this->load->language('catalog/project');
-
         $this->document->setTitle($this->language->get('heading_title'));
-
         $this->load->model('catalog/project');
-
-        $data['heading_title']       = $this->language->get('heading_title');
-        $data['text_list']           = $this->language->get('text_list');
-        $data['text_no_results']     = $this->language->get('text_no_results');
-        $data['text_confirm_delete'] = $this->language->get('text_confirm_delete');
-        $data['text_enabled']        = $this->language->get('text_enabled');
-        $data['text_disabled']       = $this->language->get('text_disabled');
-        $data['text_yes']            = $this->language->get('text_yes');
-        $data['text_no']             = $this->language->get('text_no');
-        $data['text_placeholder']    = $this->language->get('text_placeholder');
-        $data['column_image']        = $this->language->get('column_image');
-        $data['column_name']         = $this->language->get('column_name');
-        $data['column_client']       = $this->language->get('column_client');
-        $data['column_featured']     = $this->language->get('column_featured');
-        $data['column_status']       = $this->language->get('column_status');
-        $data['column_sort_order']   = $this->language->get('column_sort_order');
-        $data['column_date_modified'] = $this->language->get('column_date_modified');
-        $data['column_action']       = $this->language->get('column_action');
-        $data['button_add']          = $this->language->get('button_add');
-        $data['button_edit']         = $this->language->get('button_edit');
-        $data['button_delete']       = $this->language->get('button_delete');
-        $data['text_flash']          = $this->flash();
-
+        foreach ([
+            'heading_title', 'text_list', 'text_no_results', 'text_confirm_delete',
+            'text_enabled', 'text_disabled', 'text_yes', 'text_no', 'text_placeholder',
+            'column_image', 'column_name', 'column_client', 'column_featured', 'column_status',
+            'column_sort_order', 'column_date_modified', 'column_action',
+            'button_add', 'button_edit', 'button_delete', 'button_close',
+            'button_filter', 'button_reset', 'text_all_status', 'text_all_featured', 'text_search_placeholder',
+            'text_empty_title', 'text_empty_hint',
+        ] as $key) {
+            $data[$key] = $this->language->get($key);
+        }
+        $data['text_flash'] = $this->flash();
+        $data['can_modify'] = $this->user->hasPermission('modify', 'catalog/project');
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $name = $this->request->get['filter_name'] ?? '';
+        $status = $this->request->get['filter_status'] ?? 'all';
+        $featured = $this->request->get['filter_featured'] ?? 'all';
+        $requestedPage = $this->request->get['page'] ?? 1;
+        $filter_name = is_string($name) ? mb_substr(trim($name), 0, 255) : '';
+        $filter_status = is_string($status) && in_array($status, ['all', '0', '1'], true) ? $status : 'all';
+        $filter_featured = is_string($featured) && in_array($featured, ['all', '0', '1'], true) ? $featured : 'all';
+        $filters = ['name' => $filter_name, 'status' => $filter_status, 'featured' => $filter_featured];
+        $limit = 20;
+        $total = $this->model_catalog_project->getTotalProjects($filters);
+        $page = is_scalar($requestedPage) ? max(1, (int)$requestedPage) : 1;
+        $page = min($page, max(1, (int)ceil($total / $limit)));
         $catalog = $this->catalogUrl();
-
         $data['projects'] = [];
-
-        foreach ($this->model_catalog_project->getProjects() as $project) {
-            $project = (array)$project;
-            $pid     = (int)$project['project_id'];
-            $image   = (string)$project['image'];
-
+        foreach ($this->model_catalog_project->getProjects($filters + ['start' => ($page - 1) * $limit, 'limit' => $limit]) as $row) {
+            $row = (array)$row;
+            $pid = (int)$row['project_id'];
+            $image = (string)$row['image'];
             $data['projects'][] = [
-                'project_id'    => $pid,
-                'thumb'         => $image !== '' ? $catalog . $image : '',
-                'name'          => (string)$project['name'],
-                'client'        => (string)$project['client'],
-                'featured'      => (int)$project['featured'],
-                'status'        => (int)$project['status'],
-                'sort_order'    => (int)$project['sort_order'],
-                'date_modified' => (string)$project['date_modified'],
-                'edit'          => $this->url->link('catalog/project.edit|' . $pid),
-                'delete'        => $this->url->link('catalog/project.delete|' . $pid),
+                'project_id' => $pid,
+                'thumb' => $image !== '' ? $catalog . $image : '',
+                'name' => (string)$row['name'],
+                'client' => (string)$row['client'],
+                'featured' => (int)$row['featured'],
+                'status' => (int)$row['status'],
+                'sort_order' => (int)$row['sort_order'],
+                'date_modified' => (string)$row['date_modified'],
+                'edit' => $this->url->link('catalog/project.edit|' . $pid),
+                'delete' => $this->url->link('catalog/project.delete|' . $pid),
             ];
         }
-
         $data['add'] = $this->url->link('catalog/project.add');
-
+        $data['total_projects'] = $total;
+        $data['filter_name'] = $filter_name;
+        $data['filter_status'] = $filter_status;
+        $data['filter_featured'] = $filter_featured;
+        $data['filter_action'] = $this->url->link('catalog/project');
+        $data['filter_reset'] = $this->url->link('catalog/project');
+        $data['showing'] = $total > 0
+            ? sprintf($this->language->get('text_showing'), ($page - 1) * $limit + 1, min($page * $limit, $total), $total)
+            : '';
+        require_once DIR_SYSTEM . 'library/pagination.php';
+        $pagination = new \Pagination();
+        $pagination->total = $total;
+        $pagination->page = $page;
+        $pagination->limit = $limit;
+        $pagination->css_class = 'pagination pagination-sm mb-0';
+        $pagination->text_first = $this->language->get('button_first_page');
+        $pagination->text_last = $this->language->get('button_last_page');
+        $pagination->text_next = $this->language->get('button_next_page');
+        $pagination->text_prev = $this->language->get('button_previous_page');
+        $pagination->url = $this->url->link('catalog/project', 'page={page}'
+            . ($filter_name !== '' ? '&filter_name=' . rawurlencode($filter_name) : '')
+            . ($filter_status !== 'all' ? '&filter_status=' . $filter_status : '')
+            . ($filter_featured !== 'all' ? '&filter_featured=' . $filter_featured : ''));
+        // Correção local do escape duplo da library, como no CMS (F8-06).
+        $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
         $this->chrome($data);
-
         $this->response->setOutput($this->load->view('catalog/project_list', $data));
     }
 
@@ -102,7 +122,7 @@ class Project extends \Reamur\System\Engine\Controller {
         $data = $this->formData([]);
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $errors = $this->validateProject(0);
+            $errors = $this->csrfValid() ? $this->validateProject(0) : [$this->language->get('error_csrf')];
 
             if ($errors === []) {
                 $project_id = $this->model_catalog_project->addProject($this->postPayload());
@@ -154,7 +174,7 @@ class Project extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $errors = $this->validateProject($project_id);
+            $errors = $this->csrfValid() ? $this->validateProject($project_id) : [$this->language->get('error_csrf')];
 
             if ($errors === []) {
                 $this->model_catalog_project->editProject($project_id, $this->postPayload());
@@ -187,6 +207,11 @@ class Project extends \Reamur\System\Engine\Controller {
         }
 
         $this->load->language('catalog/project');
+        if (!$this->csrfValid()) {
+            $this->setFlash($this->language->get('error_csrf'), 'error');
+            $this->response->redirect($this->url->link('catalog/project'));
+            return;
+        }
 
         $this->load->model('catalog/project');
 
@@ -230,6 +255,8 @@ class Project extends \Reamur\System\Engine\Controller {
             $msg = $this->language->get('error_upload_method');
         } elseif (!$this->user->hasPermission('modify', 'catalog/project')) {
             $msg = $this->language->get('error_permission');
+        } elseif (!$this->csrfValid()) {
+            $msg = $this->language->get('error_csrf');
         } else {
             $result = $this->media()->store((array)($this->request->files['file'] ?? []), self::UPLOAD_DIR);
 
@@ -268,12 +295,17 @@ class Project extends \Reamur\System\Engine\Controller {
             'entry_featured', 'entry_status', 'entry_sort_order',
             'entry_alt', 'button_save', 'button_cancel', 'button_upload',
             'button_remove', 'button_add_image', 'text_placeholder',
+            'text_enabled', 'text_disabled', 'text_meta_group', 'text_upload_wait', 'text_no_categories',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
 
+        $this->document->addScript($this->config->get('site_url') . 'view/js/catalog-project.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+
         $data['error']      = '';
         $data['text_flash'] = '';
+        $data['can_modify'] = $this->user->hasPermission('modify', 'catalog/project');
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
 
         $pid          = (int)($project['project_id'] ?? 0);
         $isPost       = $this->request->server['REQUEST_METHOD'] === 'POST';
@@ -354,6 +386,12 @@ class Project extends \Reamur\System\Engine\Controller {
 
         $data['upload']     = $this->url->link('catalog/project.upload');
         $data['catalog']    = $this->catalogUrl();
+        $cover = $this->imageGuard($data['image']);
+        $data['image_preview'] = $cover !== '' ? $data['catalog'] . $cover : '';
+        foreach ($data['images'] as $index => $row) {
+            $relative = $this->imageGuard($row['image']);
+            $data['images'][$index]['preview'] = $relative !== '' ? $data['catalog'] . $relative : '';
+        }
         $data['cancel']     = $this->url->link('catalog/project');
         $data['text_error_upload_js'] = $this->language->get('error_upload');
 
@@ -460,6 +498,11 @@ class Project extends \Reamur\System\Engine\Controller {
     }
 
 
+    /** Token estável da sessão para add/edit/delete/upload. */
+    private function csrfValid(): bool {
+        return \Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '');
+    }
+
     /** Componente compartilhado de upload (regra dos três — ADR 0011); root = catalog/ irmão do admin */
     private function media(): MediaUpload {
         return new MediaUpload(rtrim((string)dirname(DIR_APPLICATION), '/') . '/catalog/');
@@ -527,9 +570,8 @@ class Project extends \Reamur\System\Engine\Controller {
 
     /** Chrome compartilhado + estilo do módulo */
     private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
-        $data['body_class'] = 'rms-dash';
         $data['header']     = $this->load->controller('common/header', $data);
         $data['footer']     = $this->load->controller('common/footer', $data);
     }

@@ -843,3 +843,30 @@ html[data-rms-density="compact"] .admin-sidebar .nav-link { padding: 6px 12px; }
 }
 .catalog-category-list .pagination li:first-child > * { border-radius: var(--bs-pagination-border-radius) 0 0 var(--bs-pagination-border-radius); }
 .catalog-category-list .pagination li:last-child > * { border-radius: 0 var(--bs-pagination-border-radius) var(--bs-pagination-border-radius) 0; }
+
+/* F8-08 — paginação de catalog/project: markup legado da library, escopo local. */
+.catalog-project-list .pagination li > a,
+.catalog-project-list .pagination li > span {
+  display: block;
+  font-size: var(--bs-pagination-font-size);
+  padding: var(--bs-pagination-padding-y) var(--bs-pagination-padding-x);
+  color: var(--bs-pagination-color);
+  background: var(--bs-pagination-bg);
+  border: var(--bs-pagination-border-width) solid var(--bs-pagination-border-color);
+  text-decoration: none;
+}
+.catalog-project-list .pagination li + li > * { margin-left: calc(-1 * var(--bs-pagination-border-width)); }
+.catalog-project-list .pagination li.active > span {
+  color: var(--bs-pagination-active-color);
+  background: var(--bs-pagination-active-bg);
+  border-color: var(--bs-pagination-active-border-color);
+}
+.catalog-project-list .pagination li > a:hover {
+  color: var(--bs-pagination-hover-color);
+  background: var(--bs-pagination-hover-bg);
+}
+.catalog-project-list .pagination li:first-child > * { border-radius: var(--bs-pagination-border-radius) 0 0 var(--bs-pagination-border-radius); }
+.catalog-project-list .pagination li:last-child > * { border-radius: 0 var(--bs-pagination-border-radius) var(--bs-pagination-border-radius) 0; }
+
+/* F8-08 — mantém todas as categorias disponíveis, com rolagem só no controle. */
+.catalog-project-form .project-category-options { max-height: 18rem; overflow-y: auto; }

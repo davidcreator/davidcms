@@ -56,10 +56,11 @@ done
 ck 2 $OK "login-dashboard-9-cards"
 
 echo '══ 3 — project: create multilang + capa + SEO (base p/ testes globais) ══'
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/project.upload" -F "file=@/tmp/rok.png;type=image/png" -o /tmp/regr_up.json
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/project.upload" -F "file=@/tmp/rok.png;type=image/png" -F "csrf_token=$CSRF" -o /tmp/regr_up.json
 PPATH=$(grep -o '"path":"[^"]*"' /tmp/regr_up.json | sed 's/"path":"//;s/"//;s|\\/|/|g')
 case "$PPATH" in view/image/project/*) :;; *) PPATH=1;; esac
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/project.add" \
+  --data-urlencode "csrf_token=$CSRF" \
   --data-urlencode "project_description[1][name]=Reamur Site" \
   --data-urlencode "project_description[1][keyword]=reamur-site" \
   --data-urlencode "project_description[2][name]=Site Reamur" \
@@ -169,7 +170,7 @@ ck 9 $(( A + $? )) "idiomas-spot"
 
 echo '══ 10 — delete em cascata física (project com capa) ══'
 [ -f "/tmp/fui/dev/catalog/$PPATH" ] || OK=1
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/project.delete|1" -o /dev/null
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=catalog/project.delete|1" --data-urlencode "csrf_token=$CSRF" -o /dev/null
 OK=0
 N=$(q "SELECT COUNT(*) FROM reamur_test.rms_project"); [ "$N" = "0" ] || OK=1
 N2=$(q "SELECT COUNT(*) FROM reamur_test.rms_project_description"); [ "$N2" = "0" ] || OK=1
