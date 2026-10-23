@@ -36,3 +36,28 @@
 - Próximos lotes (F8-03 user/setting, F8-04 sale/marketing) seguem este padrão: filtros server na lista, form 2 colunas + sidebar, `tabs-lang` multilíngue, `data-card` para tabelas, modal de delete, `data-rte` para rich text, sem `|default()` textual no twig, ids/names imutáveis.
 - O header do shell agora honra `Document::addScript` (loop no twig) — qualquer módulo pode carregar JS local por página sem CDN.
 - Fica para F8-05+: editor de mídia real (picker de capa no lugar do campo texto), filtro por data/autor quando houver volume.
+
+## Adendo 2026-10-23 — F8-05 · Ajuste 02: configuração isolada do CKEditor
+
+**Base:** `c2df68993259e53fcc05080e6ea42971de7eebd8` (A01 incorporado). **Estado deste adendo:** implementação incremental preparada; aplicação/homologação no ambiente do usuário pendentes. Não encerra a Tarefa 05/Fase 8.
+
+### Evidência e decisão de implementação
+
+O `dev/admin/view/js/ckeditor/config.js` herdado usa `$(this).attr('data-lang')`, habilita `reamur,codemirror` e desliga a verificação de versão. O plugin `reamur` depende de jQuery/modal antigo e da rota ausente `common/filemanager`. O shell não carrega jQuery. No core local 4.22.1, o callback de configuração é executado antes dos overrides comuns de `replace()`; `customConfig`, por sua vez, é considerado antes de carregar o arquivo.
+
+Por isso, o consumidor atual em `dev/admin/view/js/admin.js` passa **`customConfig: ''`**, sem alterar vendor/config global, importar jQuery ou implementar um filemanager. Usa `extraPlugins: ''`, remove explicitamente os dois plugins legados e deixa vazias as URLs de browse/upload. O diálogo Image padrão/URL e Source continuam na toolbar; a biblioteca de capas do Blog não é integrada ao corpo do editor.
+
+O idioma da UI vem do `<html lang>` do painel: `en-us → en`, `pt-br → pt-br`, `es-eu → es`, com normalização e fallback `en`. Mantêm-se toolbar enxuta, altura 320, formatos, `allowedContent: true`, contrato HTML, ids/names e submit nativo (`autoUpdateElement: true`). Não se traduz conteúdo nem se troca o código das tabs/`language_id`.
+
+O boot aguarda o DOM se necessário, evita instância duplicada e mantém textarea quando o editor/`replace` está ausente. Em erro síncrono, tenta remover instância parcial com `destroy(true)` e restaura a visibilidade sem forçar atualização do campo. **Falhas assíncronas posteriores de skin/idioma/plugin não têm recuperação automática garantida; o marcador indica retorno de instância, não prova de `instanceReady`.**
+
+### Verificação e fronteiras
+
+- Tool: `tools/e2e/e2e_f805_a02_ckeditor.sh` (`--dom` e `--regression`); runner `tools/e2e/e2e_f805_a02_ckeditor_dom.cjs`.
+- A02: **18 PASS / 0 FAIL** no admin.js real com **DOM/CKEDITOR simulados**, incluindo configuração legada real fornecida em memória. Controle negativo no admin.js original da base: **4 PASS / 14 FAIL**, saída 1 esperada.
+- Regressão A01 DOM simulada: **10 PASS / 0 FAIL**, preservando `blog-media.js`. Não houve navegador/core CKEditor real, PHP, HTTP, banco, upload, persistência ou deploy nesta preparação. O wrapper A02 não chama backend/suítes destrutivas.
+- Os resultados F8-02/26 suítes acima são **histórico da decisão anterior**, não execução desta rodada. A suíte `e2e_f802.sh` citada historicamente não foi encontrada na árvore-base atual e não é dependência desta entrega.
+- Um único arquivo de runtime muda, somente seu bloco RTE. Tema/sidebar, delete, tabs, status, preview, biblioteca de capas A01, importador, rotas, schema e ACL/CSRF não são alterados.
+- O core **4.22.1 continua sem suporte comunitário**; versão/licença/segurança ficam como dívida separada. A02 não suprime a verificação/aviso de versão. `allowedContent: true` permanece um contrato, não sanitização.
+
+Aplicação, Tool, cache, rollback e critérios de homologação: [guia F8-05 A02](../../docs/F8-05-A02-Configuracao-Isolada-CKEditor.md). O passo seguinte, após aplicar/homologar este ajuste, é a **Validação 03** integrada (criar/editar, editor/capa, upload/seleção, salvar/reabrir).

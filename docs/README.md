@@ -24,6 +24,7 @@ Estes documentos foram escritos para servir como referência durante todo o cicl
 | 12 | [Dicionario-de-Dados.md](Dicionario-de-Dados.md) | **Fonte da verdade do banco**: tabelas, colunas, tipos e relações das entidades núcleo (fecha a lacuna L2). |
 | 13 | [Auditoria-Fundacao.md](Auditoria-Fundacao.md) | **Auditoria de fundação**: veredito sobre a suficiência de docs + agentes e as amarrações L1–L10 (todas resolvidas pelos ADRs 0001–0004). |
 | 14 | [F8-05-A01-Inicializacao-Biblioteca-Midia.md](F8-05-A01-Inicializacao-Biblioteca-Midia.md) | **F8-05 · Ajuste 01**: correção do boot da biblioteca de mídia, aplicação incremental, Tool E2E/regressão e critérios de aceite. |
+| 15 | [F8-05-A02-Configuracao-Isolada-CKEditor.md](F8-05-A02-Configuracao-Isolada-CKEditor.md) | **F8-05 · Ajuste 02**: isolamento da configuração legada do CKEditor, Tool E2E/regressão, aplicação, cache e rollback. |
 
 ---
 

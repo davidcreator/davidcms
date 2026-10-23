@@ -237,13 +237,39 @@
     }
 })();
 
-/* CKEditor 4: upgrade de textareas com data-rte (assets locais) */
-(function () {
-    if (!window.CKEDITOR) { return; }
+/* CKEditor 4: configuração isolada para data-rte (F8-05 A02, ADR 0046) */
+(function initRichText() {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initRichText, { once: true });
+        return;
+    }
+
+    var ckeditor = window.CKEDITOR;
+    if (!ckeditor || typeof ckeditor.replace !== 'function') { return; }
+
+    var locale = (document.documentElement.getAttribute('lang') || 'en-us').toLowerCase().replace(/_/g, '-');
+    var editorLanguages = { 'en-us': 'en', 'pt-br': 'pt-br', 'es-eu': 'es' };
+    var editorLanguage = Object.prototype.hasOwnProperty.call(editorLanguages, locale) ? editorLanguages[locale] : 'en';
+
     document.querySelectorAll('textarea[data-rte]').forEach(function (ta) {
-        if (ta.dataset.rteReady === '1') { return; }
+        if (ta.dataset.rteReady === '1' || (ckeditor.instances && ckeditor.instances[ta.id])) { return; }
+
+        var previousDisplay = ta.style.display;
+        var previousVisibility = ta.style.visibility;
+
         try {
-            window.CKEDITOR.replace(ta, {
+            var editor = ckeditor.replace(ta, {
+                // Não carregar config.js legado: depende de jQuery e plugins fora do contrato do Blog.
+                customConfig: '',
+                extraPlugins: '',
+                language: editorLanguage,
+                autoUpdateElement: true,
+                htmlEncodeOutput: false,
+                entities: false,
+                filebrowserBrowseUrl: '',
+                filebrowserImageBrowseUrl: '',
+                filebrowserUploadUrl: '',
+                filebrowserImageUploadUrl: '',
                 height: 320,
                 toolbar: [
                     { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'RemoveFormat'] },
@@ -255,13 +281,20 @@
                 ],
                 removeButtons: '',
                 format_tags: 'p;h2;h3;h4',
-                removePlugins: 'elementspath,exportpdf',
+                removePlugins: 'elementspath,exportpdf,reamur,codemirror',
                 resize_enabled: true,
                 allowedContent: true
             });
-            ta.dataset.rteReady = '1';
+            if (editor && typeof editor === 'object') { ta.dataset.rteReady = '1'; }
         } catch (e) {
-            /* sem editor — textarea continua funcional */
+            // Uma falha síncrona não pode deixar o textarea oculto nem apagar seu conteúdo.
+            var failedEditor = ckeditor.instances && ckeditor.instances[ta.id];
+            if (failedEditor && typeof failedEditor.destroy === 'function') {
+                try { failedEditor.destroy(true); } catch (cleanupError) { /* restaura o campo mesmo assim */ }
+            }
+            ta.style.display = previousDisplay;
+            ta.style.visibility = previousVisibility;
+            delete ta.dataset.rteReady;
         }
     });
 })();
