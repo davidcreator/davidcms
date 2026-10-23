@@ -32,6 +32,7 @@ Estes documentos foram escritos para servir como referência durante todo o cicl
 | 20 | [F8-09-Ferramentas-Conectadas.md](F8-09-Ferramentas-Conectadas.md) | **Fase 8 · Tarefa 09**: cadastro de ferramentas no shell, ícone/vendor/URL preservados, filtros, CSRF e Tool E2E. |
 | 21 | [F8-10-Mensagens-Contato.md](F8-10-Mensagens-Contato.md) | **Fase 8 · Tarefa 10**: inbox no shell, Ler POST+ACL+CSRF, GET puro, busca/paginação, privacidade e Tool E2E. |
 | 22 | [F8-11-Idiomas-no-Painel.md](F8-11-Idiomas-no-Painel.md) | **Fase 8 · Tarefa 11**: idiomas no shell, seletores completos, CSRF, código/padrões preservados e Tool E2E. |
+| 23 | [F8-12-Consolidacao-Validacao-Painel.md](F8-12-Consolidacao-Validacao-Painel.md) | **Fase 8 · Tarefa 12**: consolidação local segura, evidências opcionais e checklist de aceite, sem runtime ou fechamento automático. |
 
 ---
 

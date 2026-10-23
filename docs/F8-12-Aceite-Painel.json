@@ -1,0 +1,167 @@
+{
+  "schema": "reamur-f8-acceptance-v1",
+  "kind": "operator-checklist-template",
+  "status": "pending",
+  "task": "Fase 8 / Tarefa 12",
+  "referenceBase": "7301dc143ab5c936b44ce9efc7172b23c1472b0b",
+  "environment": {
+    "kind": null,
+    "syntheticData": null
+  },
+  "localReport": null,
+  "checks": [
+    {
+      "id": "shell-login",
+      "status": "pending",
+      "scope": "Shell, login/logout e sidebar responsivos, sem erro de navegação."
+    },
+    {
+      "id": "dashboard",
+      "status": "pending",
+      "scope": "Dashboard: contadores e quick actions coerentes com permissões."
+    },
+    {
+      "id": "blog-rte-cover",
+      "status": "pending",
+      "scope": "Blog: RTE/capa/mídia e salvar/reabrir conforme aceite, sem ampliar editor."
+    },
+    {
+      "id": "blog-import",
+      "status": "pending",
+      "scope": "Importador Blog: UI/contratos preservados; sem importação destrutiva automática."
+    },
+    {
+      "id": "portfolio",
+      "status": "pending",
+      "scope": "Categorias/projetos: hierarquia, N:N, capa/galeria/alt/ordem/SEO preservados."
+    },
+    {
+      "id": "cms",
+      "status": "pending",
+      "scope": "Páginas: idiomas/HTML/metadados/SEO/status/ordem preservados."
+    },
+    {
+      "id": "tools",
+      "status": "pending",
+      "scope": "Ferramentas: nome/descrição/vendor/URL/ícone e regras existentes preservados."
+    },
+    {
+      "id": "contact",
+      "status": "pending",
+      "scope": "Inbox: GET puro, Ler POST+ACL+CSRF, status/exclusão apenas fictícios."
+    },
+    {
+      "id": "languages",
+      "status": "pending",
+      "scope": "Idiomas: código imutável, seletores completos e padrões atuais preservados/restauração concluída."
+    },
+    {
+      "id": "users-groups",
+      "status": "pending",
+      "scope": "Usuários/grupos/perfil: UI/ACL/CSRF preservados; sem usar conta real nos testes de mutação."
+    },
+    {
+      "id": "settings-site",
+      "status": "pending",
+      "scope": "Configurações/site-info: UI/validação e dados existentes preservados."
+    },
+    {
+      "id": "marketplace-ui",
+      "status": "pending",
+      "scope": "Marketplace: UI/proteções/estado configurado ou não, sem OAuth/pagamentos/conexão real."
+    },
+    {
+      "id": "webhooks-ui",
+      "status": "pending",
+      "scope": "Webhooks: lista/form/logs/proteções, sem disparo real de webhook."
+    },
+    {
+      "id": "themes-responsive",
+      "status": "pending",
+      "scope": "Claro/escuro/skins e desktop/mobile: legibilidade, foco e contraste revisados no navegador."
+    },
+    {
+      "id": "i18n",
+      "status": "pending",
+      "scope": "en-us/pt-br/es-eu e fallback aplicável revisados."
+    },
+    {
+      "id": "acl-csrf",
+      "status": "pending",
+      "scope": "Outro perfil fictício access/modify/readonly e negativas CSRF confirmados no laboratório."
+    },
+    {
+      "id": "invariants-cleanup",
+      "status": "pending",
+      "scope": "Sem alteração inadvertida de schema/defaults/códigos/status; artefatos próprios removidos/restaurados."
+    },
+    {
+      "id": "public-read-smoke",
+      "status": "pending",
+      "scope": "Smoke de leitura do site público aplicável, sem enviar contato/e-mail ou abrir integrações externas."
+    },
+    {
+      "id": "assets-console",
+      "status": "pending",
+      "scope": "Cache/assets locais/console revisados; sem introduzir CDN/dependência nova."
+    },
+    {
+      "id": "debts-privacy",
+      "status": "pending",
+      "scope": "Pendências conhecidas e privacidade dos relatórios revistas; não declarar dívidas resolvidas sem teste."
+    }
+  ],
+  "taskEvidence": [
+    {
+      "task": "F8-05",
+      "method": "operator-confirmed",
+      "status": "accepted",
+      "reference": "Conclusão informada pelo usuário nesta conversa; sem inventar detalhes de sua execução. Não exige repetir tarefa aceita.",
+      "path": null
+    },
+    {
+      "task": "F8-06",
+      "method": "operator-confirmed",
+      "status": "accepted",
+      "reference": "Conclusão informada pelo usuário nesta conversa; sem inventar detalhes de sua execução. Não exige repetir tarefa aceita.",
+      "path": null
+    },
+    {
+      "task": "F8-07",
+      "method": "operator-confirmed",
+      "status": "accepted",
+      "reference": "Conclusão informada pelo usuário nesta conversa; sem inventar detalhes de sua execução. Não exige repetir tarefa aceita.",
+      "path": null
+    },
+    {
+      "task": "F8-08",
+      "method": "operator-confirmed",
+      "status": "accepted",
+      "reference": "Conclusão informada pelo usuário nesta conversa; sem inventar detalhes de sua execução. Não exige repetir tarefa aceita.",
+      "path": null
+    },
+    {
+      "task": "F8-09",
+      "method": "operator-confirmed",
+      "status": "accepted",
+      "reference": "Conclusão informada pelo usuário nesta conversa; sem inventar detalhes de sua execução. Não exige repetir tarefa aceita.",
+      "path": null
+    },
+    {
+      "task": "F8-10",
+      "method": "operator-confirmed",
+      "status": "accepted",
+      "reference": "Conclusão informada pelo usuário nesta conversa; sem inventar detalhes de sua execução. Não exige repetir tarefa aceita.",
+      "path": null
+    },
+    {
+      "task": "F8-11",
+      "method": "operator-confirmed",
+      "status": "accepted",
+      "reference": "Conclusão informada pelo usuário nesta conversa; sem inventar detalhes de sua execução. Não exige repetir tarefa aceita.",
+      "path": null
+    }
+  ],
+  "finalDecision": "pending",
+  "notice": "MODELO PENDENTE, não é evidência de homologação. Copiar fora do repositório e preencher só após revisão real. Sem PII, tokens ou credenciais. O review não encerra fase/deploy automaticamente."
+}
