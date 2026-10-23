@@ -1,55 +1,24 @@
-{# dev/admin/view/template/communication/contact_message_list.twig — caixa de entrada (F2-15) #}
+{# Fase 8 / Tarefa 10 — inbox assimétrico, Ler POST protegido e GET sem efeito. #}
 {{ header|raw }}
-<main class="dash">
-  <div class="page-head">
-    <h1>{{ heading_title }}</h1>
-  </div>
-  <p class="muted">{{ text_list }}</p>
-
-  {% if text_flash.text %}
-  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
-  {% endif %}
-
-  <nav class="tabbar" role="tablist" aria-label="{{ column_status }}" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px;">
-    {% for f in filters %}
-    <a href="{{ f.href }}" class="btn {{ f.active ? 'primary' : 'ghost' }} small">{{ f.label }} <span class="muted">({{ f.count }})</span></a>
-    {% endfor %}
-  </nav>
-
-  {% if messages %}
-  <table class="table">
-    <thead>
-      <tr>
-        <th>{{ column_name }}</th>
-        <th>{{ column_email }}</th>
-        <th>{{ column_subject }}</th>
-        <th>{{ column_status }}</th>
-        <th>{{ column_date_added }}</th>
-        <th class="right">{{ column_action }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for msg in messages %}
-      <tr{% if msg.is_new %} style="font-weight:600;"{% endif %} class="row-status-{{ msg.status }}">
-        <td>{{ msg.name }}</td>
-        <td>{{ msg.email }}</td>
-        <td>{{ msg.subject }}</td>
-        <td>
-          <span class="badge badge-{{ msg.status }}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:.85em;border:1px solid currentColor;color:{% if msg.status == 0 %}#2563eb{% elseif msg.status == 2 %}#15803d{% else %}#6b7280{% endif %};">{{ msg.status_label }}</span>
-        </td>
-        <td>{{ msg.date_added }}</td>
-        <td class="right actions">
-          <a class="btn ghost small" href="{{ msg.read }}">{{ button_read }}</a>
-          <form method="post" action="{{ msg.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
-            <button type="submit" class="btn danger small">{{ button_delete }}</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% else %}
-  <p class="muted">{{ text_no_results }}</p>
-  {% endif %}
-</main>
+<div class="contact-inbox-list">
+  <div class="page-titlebar"><div class="title-group"><h1 class="page-title"><i class="bi bi-chat-left-text me-2" aria-hidden="true"></i>{{ heading_title }}</h1>{% if total_messages > 0 %}<span class="badge rounded-pill badge-total">{{ total_messages }}</span>{% endif %}</div></div>
+  <p class="text-body-secondary">{{ text_list }}</p>
+  {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">{{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ button_close }}"></button></div>{% endif %}
+  <form method="get" action="{{ filter_action }}" class="filter-bar" role="search" aria-label="{{ button_filter }}">
+    <input type="hidden" name="route" value="communication/contact_message">
+    <div class="filter-search"><i class="bi bi-search" aria-hidden="true"></i><input type="search" name="filter_search" value="{{ filter_search }}" maxlength="255" placeholder="{{ text_search_placeholder }}" aria-label="{{ text_search_placeholder }}"></div>
+    <select name="filter_status" class="form-select form-select-sm" aria-label="{{ column_status }}"><option value="all"{% if filter_status == 'all' %} selected{% endif %}>{{ text_all }}</option><option value="0"{% if filter_status == '0' %} selected{% endif %}>{{ text_new }}</option><option value="1"{% if filter_status == '1' %} selected{% endif %}>{{ text_read }}</option><option value="2"{% if filter_status == '2' %} selected{% endif %}>{{ text_replied }}</option></select>
+    <button type="submit" class="btn btn-primary btn-sm">{{ button_filter }}</button>{% if filter_search != '' or filter_status != 'all' %}<a class="btn btn-outline-secondary btn-sm" href="{{ filter_reset }}">{{ button_reset }}</a>{% endif %}
+  </form>
+  <nav class="nav nav-pills gap-2 mb-3" aria-label="{{ column_status }}">{% for f in filters %}<a href="{{ f.href }}" class="nav-link{% if f.active %} active{% endif %}"{% if f.active %} aria-current="page"{% endif %}>{{ f.label }} <span class="badge text-bg-secondary">{{ f.count }}</span></a>{% endfor %}</nav>
+  {% if messages %}<div class="card data-card"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
+    <thead><tr><th>{{ column_name }}</th><th class="d-none d-lg-table-cell">{{ column_email }}</th><th>{{ column_subject }}</th><th>{{ column_status }}</th><th class="d-none d-xl-table-cell">{{ column_date_added }}</th><th class="text-end">{{ column_action }}</th></tr></thead>
+    <tbody>{% for msg in messages %}<tr class="row-status-{{ msg.status }}{% if msg.is_new %} fw-semibold{% endif %}" data-contact-message-id="{{ msg.contact_message_id }}" data-contact-status="{{ msg.status }}">
+      <td data-message-name>{{ msg.name }}</td><td class="d-none d-lg-table-cell" data-message-email>{{ msg.email }}</td><td data-message-subject>{{ msg.subject }}</td>
+      <td><span class="badge {{ msg.status == 0 ? 'text-bg-primary' : (msg.status == 2 ? 'text-bg-success' : 'text-bg-secondary') }}">{{ msg.status_label }}</span></td><td class="d-none d-xl-table-cell text-nowrap">{{ msg.date_added }}</td>
+      <td class="text-end text-nowrap">{% if can_modify %}<form method="post" action="{{ msg.read }}" class="d-inline" data-message-open><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-outline-primary btn-sm">{{ button_read }}</button></form><form method="post" action="{{ msg.delete }}" class="d-inline" data-rms-confirm-delete="{{ text_confirm_delete }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="icon-btn icon-btn--danger" title="{{ button_delete }}" aria-label="{{ button_delete }}"><i class="bi bi-trash" aria-hidden="true"></i></button></form>{% else %}<a class="btn btn-outline-primary btn-sm" href="{{ msg.read }}">{{ button_read }}</a>{% endif %}</td>
+    </tr>{% endfor %}</tbody>
+  </table></div></div>{% if showing or pagination %}<div class="list-footer"><span class="text-body-secondary small">{{ showing }}</span>{{ pagination|raw }}</div>{% endif %}
+  {% else %}<div class="empty-state"><i class="bi bi-chat-left-text" aria-hidden="true"></i><h2>{{ filter_search != '' ? text_empty_title : text_no_results }}</h2><p class="text-body-secondary">{{ text_empty_hint }}</p></div>{% endif %}
+</div>
 {{ footer|raw }}

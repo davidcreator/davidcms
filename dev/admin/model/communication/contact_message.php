@@ -26,24 +26,41 @@ class Contact_message extends \Reamur\System\Engine\Model {
     public const STATUSES = [self::STATUS_NEW, self::STATUS_READ, self::STATUS_REPLIED];
 
     /**
-     * Caixa de entrada, mais recentes primeiro. Filtro opcional por status
-     * (null = todas).
-     *
+     * Caixa, mais recentes primeiro. A chamada antiga getMessages(?int) segue
+     * completa; busca/paginação só quando solicitadas (F8-10).
+     * @param array{search?: string, start?: int, limit?: int} $options
      * @return array<int, array<string, mixed>>
      */
-    public function getMessages(?int $filter_status = null): array {
+    public function getMessages(?int $filter_status = null, array $options = []): array {
         $sql = "SELECT `contact_message_id`, `name`, `email`, `telephone`, `subject`, `status`, `date_added`
-                  FROM `" . $this->t('contact_message') . "`";
-
-        if ($filter_status !== null) {
-            $sql .= " WHERE `status` = '" . $filter_status . "'";
+                  FROM `" . $this->t('contact_message') . "`"
+            . $this->messageListWhere($filter_status, $options)
+            . " ORDER BY `date_added` DESC, `contact_message_id` DESC";
+        if (array_key_exists('limit', $options)) {
+            $start = max(0, (int)($options['start'] ?? 0));
+            $limit = min(100, max(1, (int)$options['limit']));
+            $sql .= " LIMIT " . $start . ", " . $limit;
         }
-
-        $sql .= " ORDER BY `date_added` DESC, `contact_message_id` DESC";
-
         $query = $this->db->query($sql);
-
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
+    /** @param array{search?: string} $options */
+    public function getTotalMessages(?int $filter_status = null, array $options = []): int {
+        $query = $this->db->query("SELECT COUNT(*) AS `total` FROM `" . $this->t('contact_message') . "`" . $this->messageListWhere($filter_status, $options));
+        return ($query instanceof \stdClass && isset($query->row['total'])) ? (int)$query->row['total'] : 0;
+    }
+
+    /** @param array{search?: string} $options */
+    private function messageListWhere(?int $filter_status, array $options): string {
+        $where = [];
+        if ($filter_status !== null) { $where[] = "`status` = '" . (int)$filter_status . "'"; }
+        $search = $options['search'] ?? '';
+        if (is_string($search) && trim($search) !== '') {
+            $value = $this->db->escape(trim($search));
+            $where[] = "(`name` LIKE '%" . $value . "%' OR `email` LIKE '%" . $value . "%' OR `subject` LIKE '%" . $value . "%')";
+        }
+        return $where ? ' WHERE ' . implode(' AND ', $where) : '';
     }
 
     /**
@@ -83,13 +100,14 @@ class Contact_message extends \Reamur\System\Engine\Model {
     /**
      * Contadores para as abas de filtro da grade.
      *
+     * @param array{search?: string} $options Busca opcional; sem argumentos preserva contadores globais.
      * @return array{all: int, new: int, read: int, replied: int}
      */
-    public function getCounts(): array {
+    public function getCounts(array $options = []): array {
         $counts = ['all' => 0, 'new' => 0, 'read' => 0, 'replied' => 0];
 
         $query = $this->db->query(
-            "SELECT `status`, COUNT(*) AS `total` FROM `" . $this->t('contact_message') . "` GROUP BY `status`"
+            "SELECT `status`, COUNT(*) AS `total` FROM `" . $this->t('contact_message') . "`" . $this->messageListWhere(null, $options) . " GROUP BY `status`"
         );
 
         $rows = ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];

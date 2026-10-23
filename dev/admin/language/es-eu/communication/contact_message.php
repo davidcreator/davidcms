@@ -16,7 +16,7 @@ $_['text_list']             = 'Mensajes enviados desde el formulario de contacto
 $_['text_no_results']       = 'Aún no hay mensajes.';
 $_['text_empty_filter']     = 'No hay mensajes con este estado.';
 $_['text_confirm_delete']   = '¿Eliminar este mensaje permanentemente?';
-$_['text_message_detail']   = 'Vista de solo lectura. Los mensajes nuevos se marcan como Leído al abrirlos.';
+$_['text_message_detail']   = 'Contenido de solo lectura. El botón Leer de la lista marca mensajes nuevos como Leído cuando hay permiso de modificar.';
 $_['text_actions']          = 'Acciones';
 $_['text_all']              = 'Todos';
 $_['text_new']              = 'Nuevo';
@@ -54,3 +54,18 @@ $_['button_mark_new']       = 'Marcar como Nuevo';
 
 // Errors
 $_['error_status']          = 'Estado inválido (permitidos: Nuevo, Leído, Respondido).';
+
+// Fase 8 / Tarefa 10 — caixa, busca/paginação e leitura POST+ACL+CSRF.
+$_['text_empty_title'] = 'No se encontraron mensajes';
+$_['text_empty_hint'] = 'Ajuste la búsqueda o el filtro de estado.';
+$_['text_search_placeholder'] = 'Buscar nombre, e-mail o asunto…';
+$_['text_showing'] = 'Mostrando %d–%d de %d mensajes';
+$_['text_readonly_notice'] = 'Puede visualizar; cambiar el estado o eliminar requiere permiso de modificar.';
+$_['button_filter'] = 'Filtrar';
+$_['button_reset'] = 'Limpiar';
+$_['button_close'] = 'Cerrar';
+$_['button_first_page'] = '« Primera';
+$_['button_last_page'] = 'Última »';
+$_['button_next_page'] = 'Siguiente ›';
+$_['button_previous_page'] = '‹ Anterior';
+$_['error_csrf'] = 'Token de sesión no válido. Recargue la lista e inténtelo de nuevo.';

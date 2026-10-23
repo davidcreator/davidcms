@@ -33,8 +33,10 @@ ck 1 $RC "wizard-seed-grant"
 echo '══ 2 — login ══'
 curl -s -c $JA -b $JA "$B/admin/login" -o /tmp/f215_login.html -w "%{http_code}" | grep -q 200
 TOKEN=$(grep -o 'name="user_token" value="[^"]*"' /tmp/f215_login.html | sed 's/.*value="//;s/"//')
+CSRF_LOGIN=$(grep -o 'name="csrf_token" value="[^"]*"' /tmp/f215_login.html | sed 's/.*value="//;s/"//')
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=common/login" \
   --data-urlencode "username=admin" --data-urlencode "password=SenhaForte!2026" --data-urlencode "user_token=$TOKEN" \
+  --data-urlencode "csrf_token=$CSRF_LOGIN" \
   -D /tmp/f215_al.hdr -o /dev/null
 L=$(loc /tmp/f215_al.hdr); [[ "$L" == *dashboard* ]]
 ck 2 $? "admin-login"
@@ -71,11 +73,17 @@ grep -q "No messages with this status" /tmp/f215_f1.html || OK=1
 [ "$(grep -o 'row-status' /tmp/f215_f1.html | wc -l)" = "0" ] || OK=1
 ck 6 $OK "filtro-vazio"
 
-echo '══ 7 — leitura da msg 1: render + AUTO-MARCAR lido (0→1) ══'
+echo '══ 7 — GET só lê; POST Ler protegido marca lido (0→1) ══'
 ID1=$(q "SELECT contact_message_id FROM reamur_test.rms_contact_message WHERE email='ana@test.dev'")
+curl -s -c $JA -b $JA "$B/admin/index.php?route=communication/contact_message.read|$ID1&language=en-us" -o /tmp/f215_read1.html -D /tmp/f215_r1.hdr
+MSG_CSRF=$(grep -o 'name="csrf_token" value="[^"]*"' /tmp/f215_read1.html | head -1 | sed 's/.*value="//;s/"//')
+READ_BEFORE=$(q "SELECT status FROM reamur_test.rms_contact_message WHERE contact_message_id=$ID1")
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=communication/contact_message.read|$ID1" \
+  --data-urlencode "csrf_token=$MSG_CSRF" -D /tmp/f215_read_post.hdr -o /dev/null
 curl -s -c $JA -b $JA "$B/admin/index.php?route=communication/contact_message.read|$ID1&language=en-us" -o /tmp/f215_read1.html -D /tmp/f215_r1.hdr
 H=$(hdr /tmp/f215_r1.hdr)
 OK=0; [ "$H" = "200" ] || OK=1
+[ "$READ_BEFORE" = "0" ] || OK=1
 grep -q "landing page do produto X" /tmp/f215_read1.html || OK=1
 grep -q "203.0.113.10" /tmp/f215_read1.html || OK=1
 grep -q "mailto:ana@test.dev" /tmp/f215_read1.html || OK=1
@@ -94,6 +102,7 @@ ck 8 $OK "filtros-contagem"
 
 echo '══ 9 — POST status → respondido (1→2), flash confirma ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=communication/contact_message.status|$ID1" \
+  --data-urlencode "csrf_token=$MSG_CSRF" \
   --data-urlencode "status=2" --data-urlencode "from=read" -D /tmp/f215_s9.hdr -o /dev/null
 S=$(q "SELECT status FROM reamur_test.rms_contact_message WHERE contact_message_id=$ID1")
 OK=0; [ "$S" = "2" ] || OK=1
@@ -104,6 +113,7 @@ ck 9 $OK "status-respondido"
 
 echo '══ 10 — POST adulterado status=9 → rejeitado, sem mutação ══'
 curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=communication/contact_message.status|$ID1" \
+  --data-urlencode "csrf_token=$MSG_CSRF" \
   --data-urlencode "status=9" --data-urlencode "from=read" -D /tmp/f215_s10.hdr -o /dev/null
 S=$(q "SELECT status FROM reamur_test.rms_contact_message WHERE contact_message_id=$ID1")
 OK=0; [ "$S" = "2" ] || OK=1
@@ -124,7 +134,7 @@ curl -s -c $JA -b $JA "$B/admin/index.php?route=communication/contact_message.de
 L=$(loc /tmp/f215_dg.hdr); OK=0
 [[ "$L" == *error/permission* ]] || OK=1
 N=$(q "SELECT COUNT(*) FROM reamur_test.rms_contact_message WHERE contact_message_id=$ID2"); [ "$N" = "1" ] || OK=1
-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=communication/contact_message.delete|$ID2" -D /tmp/f215_dp.hdr -o /dev/null
+curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=communication/contact_message.delete|$ID2" --data-urlencode "csrf_token=$MSG_CSRF" -D /tmp/f215_dp.hdr -o /dev/null
 N=$(q "SELECT COUNT(*) FROM reamur_test.rms_contact_message WHERE contact_message_id=$ID2"); [ "$N" = "0" ] || OK=1
 L=$(loc /tmp/f215_dp.hdr); [[ "$L" == *communication/contact_message* ]] || OK=1
 curl -s -c $JA -b $JA "$B/admin/index.php?route=communication/contact_message&language=en-us" -o /tmp/f215_lpost.html

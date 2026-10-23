@@ -16,7 +16,7 @@ $_['text_list']             = 'Messages sent through the site contact form. Repl
 $_['text_no_results']       = 'No messages yet.';
 $_['text_empty_filter']     = 'No messages with this status.';
 $_['text_confirm_delete']   = 'Delete this message permanently?';
-$_['text_message_detail']   = 'Read-only view. New messages are marked as Read when opened.';
+$_['text_message_detail']   = 'Read-only message content. The list Read button marks new messages as Read when you have modify permission.';
 $_['text_actions']          = 'Actions';
 $_['text_all']              = 'All';
 $_['text_new']              = 'New';
@@ -54,3 +54,18 @@ $_['button_mark_new']       = 'Mark as New';
 
 // Errors
 $_['error_status']          = 'Invalid status (allowed: New, Read, Replied).';
+
+// Fase 8 / Tarefa 10 — caixa, busca/paginação e leitura POST+ACL+CSRF.
+$_['text_empty_title'] = 'No matching messages';
+$_['text_empty_hint'] = 'Adjust the search or status filter.';
+$_['text_search_placeholder'] = 'Search name, e-mail or subject…';
+$_['text_showing'] = 'Showing %d–%d of %d messages';
+$_['text_readonly_notice'] = 'You may view the message; changing status or deleting requires modify permission.';
+$_['button_filter'] = 'Filter';
+$_['button_reset'] = 'Reset';
+$_['button_close'] = 'Close';
+$_['button_first_page'] = '« First';
+$_['button_last_page'] = 'Last »';
+$_['button_next_page'] = 'Next ›';
+$_['button_previous_page'] = '‹ Previous';
+$_['error_csrf'] = 'Invalid session token. Reload the list and try again.';

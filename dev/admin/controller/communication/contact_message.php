@@ -10,8 +10,8 @@
  * (F2-15, ADR 0015). PRIMEIRO CRUD ASSIMÉTRICO do molde-ouro: sem .add e
  * sem .edit — mensagens nascem no front (catálogo "Let's have a chat?"),
  * o admin apenas lê, operacionaliza status (0 novo/1 lido/2 respondido)
- * e exclui. Abrir uma mensagem nova marca-a como lida automaticamente
- * (semântica 'lido' do Dicionário §9). 'Respondido' é manual — a resposta
+ * e exclui. F8-10: o botão Ler faz POST+ACL+CSRF antes de marcar lida;
+ * GET direto apenas visualiza (decisão explícita do usuário). 'Respondido' é manual — a resposta
  * real acontece por e-mail (mailto: pré-preenchido na leitura).
  * Rotas: /communication/contact_message · .read|N · .status|N (POST)
  * · .delete|N (POST). Sem upload, sem SEO, sem tabela _description.
@@ -22,75 +22,90 @@ use Reamur\Admin\Model\Communication\Contact_message as MessageModel;
 
 class Contact_message extends \Reamur\System\Engine\Controller {
 
-    /** Grade com abas de filtro por status (Dicionário §9) */
+    /** Caixa de entrada com busca e paginação; contadores acompanham a busca. */
     public function index(): void {
         $this->load->language('communication/contact_message');
-
         $this->document->setTitle($this->language->get('heading_title'));
-
         $this->load->model('communication/contact_message');
         /** @var MessageModel $model */
         $model = $this->model_communication_contact_message;
-
-        // Filtro: valor fora da whitelist vira "todas" (POST/GET adulterado não quebra a grade)
-        $raw    = $this->request->get['filter_status'] ?? null;
-        $filter = ($raw !== null && in_array((int)$raw, MessageModel::STATUSES, true)) ? (int)$raw : null;
-
-        $data['heading_title']       = $this->language->get('heading_title');
-        $data['text_list']           = $this->language->get('text_list');
-        $data['text_no_results']     = ($filter === null) ? $this->language->get('text_no_results') : $this->language->get('text_empty_filter');
-        $data['text_confirm_delete'] = $this->language->get('text_confirm_delete');
-        $data['column_name']         = $this->language->get('column_name');
-        $data['column_email']        = $this->language->get('column_email');
-        $data['column_subject']      = $this->language->get('column_subject');
-        $data['column_status']       = $this->language->get('column_status');
-        $data['column_date_added']   = $this->language->get('column_date_added');
-        $data['column_action']       = $this->language->get('column_action');
-        $data['button_read']         = $this->language->get('button_read');
-        $data['button_delete']       = $this->language->get('button_delete');
-        $data['text_flash']          = $this->flash();
-
-        $counts = $model->getCounts();
-
-        $data['filters'] = [
-            ['label' => $this->language->get('text_all'),     'count' => $counts['all'],     'href' => $this->url->link('communication/contact_message'), 'active' => ($filter === null)],
-            ['label' => $this->language->get('text_new'),     'count' => $counts['new'],     'href' => $this->url->link('communication/contact_message') . '&filter_status=0', 'active' => ($filter === 0)],
-            ['label' => $this->language->get('text_read'),    'count' => $counts['read'],    'href' => $this->url->link('communication/contact_message') . '&filter_status=1', 'active' => ($filter === 1)],
-            ['label' => $this->language->get('text_replied'), 'count' => $counts['replied'], 'href' => $this->url->link('communication/contact_message') . '&filter_status=2', 'active' => ($filter === 2)],
-        ];
-
+        $filter = $this->statusValue($this->request->get['filter_status'] ?? null);
+        $rawSearch = $this->request->get['filter_search'] ?? '';
+        $search = is_string($rawSearch) ? mb_substr(trim($rawSearch), 0, 255) : '';
+        $requested = $this->request->get['page'] ?? 1;
+        $options = ['search' => $search];
+        $limit = 20;
+        $total = $model->getTotalMessages($filter, $options);
+        $page = is_scalar($requested) ? max(1, (int)$requested) : 1;
+        $page = min($page, max(1, (int)ceil($total / $limit)));
+        foreach ([
+            'heading_title', 'text_list', 'text_confirm_delete', 'text_all', 'text_new', 'text_read', 'text_replied',
+            'text_empty_title', 'text_empty_hint', 'text_search_placeholder',
+            'column_name', 'column_email', 'column_subject', 'column_status', 'column_date_added', 'column_action',
+            'button_read', 'button_delete', 'button_close', 'button_filter', 'button_reset',
+        ] as $key) { $data[$key] = $this->language->get($key); }
+        $data['text_no_results'] = $this->language->get($filter === null ? 'text_no_results' : 'text_empty_filter');
+        $data['can_modify'] = $this->user->hasPermission('modify', 'communication/contact_message');
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['text_flash'] = $this->flash();
+        $counts = $model->getCounts($options);
+        $data['filters'] = [];
+        foreach ([['text_all', 'all', null], ['text_new', 'new', 0], ['text_read', 'read', 1], ['text_replied', 'replied', 2]] as [$label, $key, $status]) {
+            $args = [];
+            if ($search !== '') { $args['filter_search'] = $search; }
+            if ($status !== null) { $args['filter_status'] = $status; }
+            $data['filters'][] = ['label' => $this->language->get($label), 'count' => $counts[$key],
+                'href' => $this->url->link('communication/contact_message', http_build_query($args)), 'active' => $filter === $status];
+        }
         $data['messages'] = [];
-
-        foreach ($model->getMessages($filter) as $msg) {
-            $msg           = (array)$msg;
-            $mid           = (int)$msg['contact_message_id'];
-
+        foreach ($model->getMessages($filter, $options + ['start' => ($page - 1) * $limit, 'limit' => $limit]) as $row) {
+            $row = (array)$row; $mid = (int)$row['contact_message_id'];
             $data['messages'][] = [
-                'contact_message_id' => $mid,
-                'name'               => (string)$msg['name'],
-                'email'              => (string)$msg['email'],
-                'subject'            => (string)$msg['subject'],
-                'status'             => (int)$msg['status'],
-                'status_label'       => $this->statusLabel((int)$msg['status']),
-                'is_new'             => ((int)$msg['status'] === MessageModel::STATUS_NEW),
-                'date_added'         => (string)$msg['date_added'],
-                'read'               => $this->url->link('communication/contact_message.read|' . $mid),
-                'delete'             => $this->url->link('communication/contact_message.delete|' . $mid),
+                'contact_message_id' => $mid, 'name' => (string)$row['name'], 'email' => (string)$row['email'],
+                'subject' => (string)$row['subject'], 'status' => (int)$row['status'],
+                'status_label' => $this->statusLabel((int)$row['status']),
+                'is_new' => (int)$row['status'] === MessageModel::STATUS_NEW, 'date_added' => (string)$row['date_added'],
+                'read' => $this->url->link('communication/contact_message.read|' . $mid),
+                'delete' => $this->url->link('communication/contact_message.delete|' . $mid),
             ];
         }
-
+        $data['total_messages'] = $total; $data['filter_search'] = $search;
+        $data['filter_status'] = $filter === null ? 'all' : (string)$filter;
+        $data['filter_action'] = $this->url->link('communication/contact_message');
+        $data['filter_reset'] = $this->url->link('communication/contact_message');
+        $data['showing'] = $total > 0 ? sprintf($this->language->get('text_showing'), ($page - 1) * $limit + 1, min($page * $limit, $total), $total) : '';
+        require_once DIR_SYSTEM . 'library/pagination.php';
+        $pagination = new \Pagination(); $pagination->total = $total; $pagination->page = $page; $pagination->limit = $limit;
+        $pagination->css_class = 'pagination pagination-sm mb-0';
+        $pagination->text_first = $this->language->get('button_first_page');
+        $pagination->text_last = $this->language->get('button_last_page');
+        $pagination->text_next = $this->language->get('button_next_page');
+        $pagination->text_prev = $this->language->get('button_previous_page');
+        $pagination->url = $this->url->link('communication/contact_message', 'page={page}'
+            . ($search !== '' ? '&filter_search=' . rawurlencode($search) : '')
+            . ($filter !== null ? '&filter_status=' . $filter : ''));
+        $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
         $this->chrome($data);
-
         $this->response->setOutput($this->load->view('communication/contact_message_list', $data));
     }
 
-    /** Detalhe read-only. Mensagem nova vira 'lida' ao abrir (auto-mark). */
+    /** GET só visualiza. POST Ler protegido faz auto-mark e PRG para GET. */
     public function read(string $contact_message_id = '0'): void {
         $contact_message_id = (int)$contact_message_id;
 
         $this->load->language('communication/contact_message');
 
         $this->document->setTitle($this->language->get('heading_title'));
+        $isPost = $this->request->server['REQUEST_METHOD'] === 'POST';
+        if ($isPost && !$this->user->hasPermission('modify', 'communication/contact_message')) {
+            $this->response->redirect($this->url->link('error/permission'));
+            return;
+        }
+        if ($isPost && !$this->csrfValid()) {
+            $this->setFlash($this->language->get('error_csrf'), 'danger');
+            $this->response->redirect($this->url->link('communication/contact_message'));
+            return;
+        }
 
         $this->load->model('communication/contact_message');
         /** @var MessageModel $model */
@@ -104,12 +119,17 @@ class Contact_message extends \Reamur\System\Engine\Controller {
             return;
         }
 
-        // Auto-mark: abrir mensagem 'nova' → 'lida' (uma vez; reload não repete efeito visível)
-        if ((int)$message['status'] === MessageModel::STATUS_NEW) {
-            $model->updateStatus($contact_message_id, MessageModel::STATUS_READ);
-
-            $message['status'] = MessageModel::STATUS_READ;
+        if ($isPost) {
+            if ((int)$message['status'] === MessageModel::STATUS_NEW) {
+                $model->updateStatus($contact_message_id, MessageModel::STATUS_READ);
+            }
+            $this->response->redirect($this->url->link('communication/contact_message.read|' . $contact_message_id));
+            return;
         }
+        $data['can_modify'] = $this->user->hasPermission('modify', 'communication/contact_message');
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['button_close'] = $this->language->get('button_close');
+        $data['text_readonly_notice'] = $this->language->get('text_readonly_notice');
 
         $data['heading_title']      = $this->language->get('heading_title');
         $data['text_message_detail']= $this->language->get('text_message_detail');
@@ -173,6 +193,11 @@ class Contact_message extends \Reamur\System\Engine\Controller {
         }
 
         $this->load->language('communication/contact_message');
+        if (!$this->csrfValid()) {
+            $this->setFlash($this->language->get('error_csrf'), 'danger');
+            $this->response->redirect($this->url->link('communication/contact_message'));
+            return;
+        }
 
         $this->load->model('communication/contact_message');
         /** @var MessageModel $model */
@@ -188,9 +213,9 @@ class Contact_message extends \Reamur\System\Engine\Controller {
             return;
         }
 
-        $status = (int)($this->request->post['status'] ?? -1);
+        $status = $this->statusValue($this->request->post['status'] ?? null);
 
-        if ($model->updateStatus($contact_message_id, $status)) {
+        if ($status !== null && $model->updateStatus($contact_message_id, $status)) {
             $this->setFlash($this->language->get('text_success_status'));
         } else {
             // Status adulterado (ex.: 9, -1, 'x'): sem mutação, flash de erro
@@ -211,6 +236,11 @@ class Contact_message extends \Reamur\System\Engine\Controller {
         }
 
         $this->load->language('communication/contact_message');
+        if (!$this->csrfValid()) {
+            $this->setFlash($this->language->get('error_csrf'), 'danger');
+            $this->response->redirect($this->url->link('communication/contact_message'));
+            return;
+        }
 
         $this->load->model('communication/contact_message');
         /** @var MessageModel $model */
@@ -223,6 +253,17 @@ class Contact_message extends \Reamur\System\Engine\Controller {
         }
 
         $this->response->redirect($this->url->link('communication/contact_message'));
+    }
+
+    /** Evita que 'x', arrays, floats e strings não canônicas virem status 0. */
+    private function statusValue(mixed $value): ?int {
+        if (!is_string($value) && !is_int($value)) { return null; }
+        $text = (string)$value;
+        return in_array($text, ['0', '1', '2'], true) ? (int)$text : null;
+    }
+
+    private function csrfValid(): bool {
+        return \Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '');
     }
 
     /** Voltar para o detalhe (from=read) ou para a grade (padrão) */
@@ -268,9 +309,8 @@ class Contact_message extends \Reamur\System\Engine\Controller {
 
     /** Chrome compartilhado + estilo do módulo */
     private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
-        $data['body_class'] = 'rms-dash';
         $data['header']     = $this->load->controller('common/header', $data);
         $data['footer']     = $this->load->controller('common/footer', $data);
     }

@@ -894,3 +894,41 @@ html[data-rms-density="compact"] .admin-sidebar .nav-link { padding: 6px 12px; }
 }
 .connected-tools-list .pagination li:first-child > * { border-radius: var(--bs-pagination-border-radius) 0 0 var(--bs-pagination-border-radius); }
 .connected-tools-list .pagination li:last-child > * { border-radius: 0 var(--bs-pagination-border-radius) var(--bs-pagination-border-radius) 0; }
+
+/* F8-10 — paginação de communication/contact_message: markup legado da library, escopo local. */
+.contact-inbox-list .pagination li > a,
+.contact-inbox-list .pagination li > span {
+  display: block;
+  font-size: var(--bs-pagination-font-size);
+  padding: var(--bs-pagination-padding-y) var(--bs-pagination-padding-x);
+  color: var(--bs-pagination-color);
+  background: var(--bs-pagination-bg);
+  border: var(--bs-pagination-border-width) solid var(--bs-pagination-border-color);
+  text-decoration: none;
+}
+.contact-inbox-list .pagination li + li > * { margin-left: calc(-1 * var(--bs-pagination-border-width)); }
+.contact-inbox-list .pagination li.active > span {
+  color: var(--bs-pagination-active-color);
+  background: var(--bs-pagination-active-bg);
+  border-color: var(--bs-pagination-active-border-color);
+}
+.contact-inbox-list .pagination li > a:hover {
+  color: var(--bs-pagination-hover-color);
+  background: var(--bs-pagination-hover-bg);
+}
+.contact-inbox-list .pagination li:first-child > * { border-radius: var(--bs-pagination-border-radius) 0 0 var(--bs-pagination-border-radius); }
+.contact-inbox-list .pagination li:last-child > * { border-radius: 0 var(--bs-pagination-border-radius) var(--bs-pagination-border-radius) 0; }
+
+/* F8-10 — corpo de mensagem é texto escapado, legível em qualquer tema. */
+.contact-message-read .message-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 1rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  background: var(--bs-tertiary-bg);
+  color: var(--bs-body-color);
+}
+
+.contact-message-read dd,
+.contact-message-read h2 { overflow-wrap: anywhere; }

@@ -1,61 +1,31 @@
-{# dev/admin/view/template/communication/contact_message_read.twig — leitura da mensagem (F2-15): read-only, sem formulário de edição #}
+{# Fase 8 / Tarefa 10 — conteúdo escapado somente leitura; ações POST+ACL+CSRF. #}
 {{ header|raw }}
-<main class="dash">
-  <div class="page-head">
-    <h1>{{ heading_title }}</h1>
-    <a class="btn ghost" href="{{ back }}">{{ button_back }}</a>
+<div class="contact-message-read" data-contact-message-id="{{ message.contact_message_id }}" data-contact-status="{{ message.status }}">
+  <div class="page-titlebar"><div class="title-group"><h1 class="page-title"><i class="bi bi-chat-left-text me-2" aria-hidden="true"></i>{{ heading_title }}</h1></div><div class="titlebar-actions"><a class="btn btn-outline-secondary btn-sm" href="{{ back }}">{{ button_back }}</a></div></div>
+  <p class="text-body-secondary">{{ text_message_detail }}</p>
+  {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">{{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ button_close }}"></button></div>{% endif %}
+  <div class="row g-3">
+    <div class="col-lg-8"><section class="card data-card"><div class="card-body"><h2 class="h5" data-message-subject>{{ message.subject }}</h2><h3 class="h6 text-body-secondary">{{ entry_message }}</h3><div class="message-body" data-message-body>{{ message.message }}</div></div></section></div>
+    <div class="col-lg-4">
+      <section class="card data-card mb-3 side-card"><div class="card-body"><dl class="mb-0">
+        <dt>{{ entry_name }}</dt><dd data-message-name>{{ message.name }}</dd>
+        <dt>{{ entry_email }}</dt><dd data-message-email><a href="mailto:{{ message.email }}">{{ message.email }}</a></dd>
+        <dt>{{ entry_telephone }}</dt><dd data-message-telephone>{{ message.telephone }}</dd>
+        <dt>{{ entry_status }}</dt><dd><span class="badge {{ message.status == 0 ? 'text-bg-primary' : (message.status == 2 ? 'text-bg-success' : 'text-bg-secondary') }}">{{ message.status_label }}</span></dd>
+        <dt>{{ entry_date_added }}</dt><dd>{{ message.date_added }}</dd>
+        <dt>{{ entry_ip }}</dt><dd class="mb-0"><code>{{ message.ip }}</code></dd>
+      </dl></div></section>
+      <section class="card data-card side-card"><div class="card-body"><h2 class="h6 card-title">{{ text_actions }}</h2><a class="btn btn-primary w-100 mb-2" href="{{ reply_href }}">{{ button_reply }}</a>
+        {% if can_modify %}
+        <div class="d-grid gap-2">
+          <form method="post" action="{{ status_action }}" data-message-status-form><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="from" value="read"><input type="hidden" name="status" value="2"><button type="submit" class="btn btn-outline-success w-100"{% if message.status == 2 %} disabled{% endif %}>{{ button_mark_replied }}</button></form>
+          <form method="post" action="{{ status_action }}" data-message-status-form><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="from" value="read"><input type="hidden" name="status" value="1"><button type="submit" class="btn btn-outline-secondary w-100"{% if message.status == 1 %} disabled{% endif %}>{{ button_mark_read }}</button></form>
+          <form method="post" action="{{ status_action }}" data-message-status-form><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="from" value="read"><input type="hidden" name="status" value="0"><button type="submit" class="btn btn-outline-secondary w-100"{% if message.status == 0 %} disabled{% endif %}>{{ button_mark_new }}</button></form>
+          <form method="post" action="{{ delete }}" data-rms-confirm-delete="{{ text_confirm_delete }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-outline-danger w-100">{{ button_delete }}</button></form>
+        </div>
+        {% else %}<p class="text-body-secondary small mb-0">{{ text_readonly_notice }}</p>{% endif %}
+      </div></section>
+    </div>
   </div>
-  <p class="muted">{{ text_message_detail }}</p>
-
-  {% if text_flash.text %}
-  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
-  {% endif %}
-
-  <section class="panel" style="margin-bottom:16px;">
-    <table class="table">
-      <tbody>
-        <tr><th style="width:160px;">{{ entry_name }}</th><td>{{ message.name }}</td></tr>
-        <tr><th>{{ entry_email }}</th><td><a href="mailto:{{ message.email }}">{{ message.email }}</a></td></tr>
-        <tr><th>{{ entry_telephone }}</th><td>{{ message.telephone }}</td></tr>
-        <tr><th>{{ entry_subject }}</th><td>{{ message.subject }}</td></tr>
-        <tr><th>{{ entry_status }}</th><td>
-          <span class="badge badge-{{ message.status }}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:.85em;border:1px solid currentColor;color:{% if message.status == 0 %}#2563eb{% elseif message.status == 2 %}#15803d{% else %}#6b7280{% endif %};">{{ message.status_label }}</span>
-        </td></tr>
-        <tr><th>{{ entry_date_added }}</th><td>{{ message.date_added }}</td></tr>
-        <tr><th>{{ entry_ip }}</th><td><code>{{ message.ip }}</code></td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section class="panel" style="margin-bottom:16px;">
-    <h2 style="margin-top:0;">{{ entry_message }}</h2>
-    <div class="message-body" style="white-space:pre-wrap;border:1px solid #e5e7eb;border-radius:6px;padding:12px;background:#fafafa;">{{ message.message }}</div>
-  </section>
-
-  <section class="panel actions" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-    <a class="btn primary" href="{{ reply_href }}">{{ button_reply }}</a>
-
-    <form method="post" action="{{ status_action }}">
-      <input type="hidden" name="from" value="read">
-      <input type="hidden" name="status" value="2">
-      <button type="submit" class="btn ghost"{% if message.status == 2 %} disabled style="opacity:.5;"{% endif %}>{{ button_mark_replied }}</button>
-    </form>
-
-    <form method="post" action="{{ status_action }}">
-      <input type="hidden" name="from" value="read">
-      <input type="hidden" name="status" value="1">
-      <button type="submit" class="btn ghost"{% if message.status == 1 %} disabled style="opacity:.5;"{% endif %}>{{ button_mark_read }}</button>
-    </form>
-
-    <form method="post" action="{{ status_action }}">
-      <input type="hidden" name="from" value="read">
-      <input type="hidden" name="status" value="0">
-      <button type="submit" class="btn ghost"{% if message.status == 0 %} disabled style="opacity:.5;"{% endif %}>{{ button_mark_new }}</button>
-    </form>
-
-    <form method="post" action="{{ delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
-      <button type="submit" class="btn danger">{{ button_delete }}</button>
-    </form>
-  </section>
-</main>
+</div>
 {{ footer|raw }}

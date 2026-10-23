@@ -1,0 +1,1292 @@
+diff --git a/agents-ia/decisoes/0054-f8-10-mensagens-contato-no-shell.md b/agents-ia/decisoes/0054-f8-10-mensagens-contato-no-shell.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1a56f96cf5bf1bdda6d55491d0712cbf47b4f543
+--- /dev/null
++++ b/agents-ia/decisoes/0054-f8-10-mensagens-contato-no-shell.md
+@@ -0,0 +1,43 @@
++# ADR 0054 — F8-10: Mensagens de contato no shell e Ler POST protegido
++
++**Data:** 2026-10-23 · **Agente:** admin / orquestrador.
++**Status:** comportamento escolhido explicitamente pelo usuário; implementação preparada, aplicação/homologação pendentes.
++**Base:** `653fb677b6068af28d706d766064a47ef0aefffe`.
++
++## Contexto e decisão do usuário
++
++O usuário declarou a Tarefa09 concluída/GitHub atualizado. Seus17 arquivos conferem com a entrega por blob Git em653fb677, sem inferir detalhes de backend/deploy. Prossegue-se somente com `communication/contact_message`.
++
++O CRUD é assimétrico: mensagens vêm do formulário público; admin só lê, muda status0Novo/1Lido/2Respondido ou exclui. A base fazia auto-mark em GET, sem modify/CSRF, e `(int)'x'` virava0 apesar da intenção de whitelist. Ao escolher entre marcação manual e automática protegida, o usuário escolheu **manter o automático pelo botão Ler, com POST+ACL+CSRF**.
++
++## Decisão
++
++1. GET `.read|ID` torna-se somente visualização, inclusive para readonly; nunca grava status. O botão Ler na lista faz POST na rota existente quando há modify, exige CSRF, marca Novo→Lido uma vez e redireciona para GET. Readonly recebe link GET. POST Ler não sobrescreve Lido/Respondido. Não se cria endpoint.
++2. `.status|ID` e `.delete|ID` continuam POST+modify e passam a exigir CSRF. Valores canônicos de status só0/1/2 (int ou string exata); arrays/bools/floats/x/01 não são coagidos paraNovo. `from=read` continua indo ao detalhe, agora sem desfazer “Marcar como Novo” por efeito do GET.
++3. Migrar lista/detalhe para shell/cards/tabela responsiva/badges Bootstrap temáticos e modal global delete. Corpo continua texto escapado/pre-wrap, não HTML/editor. Conteúdo recebido não é editável. Reply permanece mailto pré-preenchido, não envia e-mail nem marca Respondido automaticamente.
++4. Busca por nome/e-mail/assunto (não corpo/IP/telefone), status e paginação20. Contagem e lista compartilham predicados; contadores das abas acompanham busca e os links a preservam. A chamada antiga `getMessages(?int)` segue completa, mesma ordem date_added DESC/id DESC; `getCounts()` sem argumentos segue global. Acrescentar opções opcionais e getTotalMessages, sem schema.
++5. `getMessage`, `updateStatus`, `deleteMessage`, constantes de status e agregação de counts mantêm o comportamento do model. Alterações da leitura e validação estrita são deliberadas no controller, não bypass do model.
++6. CSS só sob `.contact-inbox-list` e `.contact-message-read`, prefixo anterior intacto; corpo com tokens do tema. Escape duplo da paginação corrigido apenas localmente, sem tocar library/core/ASSET_V. Sem JS runtime novo: forms nativos e modal global existente.
++7. Completar idiomas en-us/pt-br/es-eu e atualizar texto da semântica de leitura. Atualizar f215 legado pontualmente para CSRF login/status/delete, GET que não marca e POST Ler; setup/SQL/grants destrutivos ficam intactos e nunca são executados pelo Tool novo.
++
++## Tool e privacidade
++
++Entrada `tools/e2e/e2e_f810.sh`:
++
++- `--check`: testes locais. **40 PASS/0FAIL** com PHP8.4.26/Twig3.30.0 reais, DB/serviços/model do controller/IO sessão em fixtures; SQL capturado, Session sem construtor, sem framework/config de aplicação.
++- **8 PASS/0FAIL** auxiliares novos +16F8-06 compartilhados, respostas simuladas. Lint6PHP/JS/Bash aprovados. Negativo na caixa antiga: **16PASS/24FAIL**, saída1 esperada. Regressões locais F8-09/08/07/06/05 verdes.
++- `--fixture`: gera somente JSON com dados fictícios/marker, sem salvar, enviar, ler configs, acessar DB ou preparar registro automaticamente. Exige sóNode. O operador prepara uma mensagem correspondente no laboratório, garantindo notificação em captura/offline e integrações produtivas desligadas. Formulário público existente pode notificar o dono do site; não é invocado pelo Tool.
++- `--http`: opt-in de12etapas, preparado mas não executado no backend. Requer loopback/configs literais reamur_test/marker/fontes MIRROR=FUI, conta fictícia modify e ID real+marker da fixture. Verifica nome/e-mail/assunto/ID na lista antes do detalhe, depois corpo/telefone exatos antes de qualquer POST. Sem ID presumido ou conteúdo desconhecido. Não usa SQL, formulário público, mailto ou envio de e-mail.
++- Cookies/tokens e dados de mensagem só em memória. Relatório contém marker/ID/etapas/status, sem nome/e-mail/telefone/IP/assunto/corpo/mailto; falhas ocultam detalhes de backend/dados. Falha preserva fixture para inspeção, sem retry de mutação/limpeza ampla. Sucesso exclui somente a fixture validada e probe próprio.
++
++## Consequências
++
++- Links GET diretos deixam de marcar Lido (decisão explícita). Clientes que desejam auto-mark devem usar POST `.read|ID` com modify+CSRF. Status/delete também exigem token; sem bypass legado.
++- Marcar Novo no detalhe agora permaneceNovo após redirect; status inválido textual não viraNovo. Isso é correção intencional do contrato, documentada para operadores/clientes.
++- Sem add/edit de conteúdo, upload, SEO, nova tabela/coluna/grant, site público, SMTP, JavaScript global, outros CRUDs, Appearance, Composer ou editor do Blog alterados.
++- Conteúdo e dados de contato só são exibidos ao perfil access já existente. O pacote não cria política nova de retenção/exportação nem envia resposta: mailto continua ação manual do usuário.
++- Homologar navegador/modal/contraste/responsividade, outro perfil e volume real. Guardas não atestam DB/PHP/proxy mal configurado; proibido produção/dados reais/túnel/proxy produção.
++- Nenhum backend, mensagem real, navegador, e-mail, escrita GitHub, deploy ou Actions executados pelo agente. F215 destrutivo não homologado integralmente aqui.
++- Aplicação/publicação não é encerramento da Fase8.
++
++Guia/fixture/aceite/rollback: [F8-10 — Mensagens de contato](../../docs/F8-10-Mensagens-Contato.md).
+diff --git a/dev/admin/controller/communication/contact_message.php b/dev/admin/controller/communication/contact_message.php
+index e5c578699a933d9a0f39df79314878b6f61acb59..6f288d80e43891ffbfa1be01baa68011ffbf9b84 100644
+--- a/dev/admin/controller/communication/contact_message.php
++++ b/dev/admin/controller/communication/contact_message.php
+@@ -10,8 +10,8 @@
+  * (F2-15, ADR 0015). PRIMEIRO CRUD ASSIMÉTRICO do molde-ouro: sem .add e
+  * sem .edit — mensagens nascem no front (catálogo "Let's have a chat?"),
+  * o admin apenas lê, operacionaliza status (0 novo/1 lido/2 respondido)
+- * e exclui. Abrir uma mensagem nova marca-a como lida automaticamente
+- * (semântica 'lido' do Dicionário §9). 'Respondido' é manual — a resposta
++ * e exclui. F8-10: o botão Ler faz POST+ACL+CSRF antes de marcar lida;
++ * GET direto apenas visualiza (decisão explícita do usuário). 'Respondido' é manual — a resposta
+  * real acontece por e-mail (mailto: pré-preenchido na leitura).
+  * Rotas: /communication/contact_message · .read|N · .status|N (POST)
+  * · .delete|N (POST). Sem upload, sem SEO, sem tabela _description.
+@@ -22,75 +22,90 @@
+ 
+ class Contact_message extends \Reamur\System\Engine\Controller {
+ 
+-    /** Grade com abas de filtro por status (Dicionário §9) */
++    /** Caixa de entrada com busca e paginação; contadores acompanham a busca. */
+     public function index(): void {
+         $this->load->language('communication/contact_message');
+-
+         $this->document->setTitle($this->language->get('heading_title'));
+-
+         $this->load->model('communication/contact_message');
+         /** @var MessageModel $model */
+         $model = $this->model_communication_contact_message;
+-
+-        // Filtro: valor fora da whitelist vira "todas" (POST/GET adulterado não quebra a grade)
+-        $raw    = $this->request->get['filter_status'] ?? null;
+-        $filter = ($raw !== null && in_array((int)$raw, MessageModel::STATUSES, true)) ? (int)$raw : null;
+-
+-        $data['heading_title']       = $this->language->get('heading_title');
+-        $data['text_list']           = $this->language->get('text_list');
+-        $data['text_no_results']     = ($filter === null) ? $this->language->get('text_no_results') : $this->language->get('text_empty_filter');
+-        $data['text_confirm_delete'] = $this->language->get('text_confirm_delete');
+-        $data['column_name']         = $this->language->get('column_name');
+-        $data['column_email']        = $this->language->get('column_email');
+-        $data['column_subject']      = $this->language->get('column_subject');
+-        $data['column_status']       = $this->language->get('column_status');
+-        $data['column_date_added']   = $this->language->get('column_date_added');
+-        $data['column_action']       = $this->language->get('column_action');
+-        $data['button_read']         = $this->language->get('button_read');
+-        $data['button_delete']       = $this->language->get('button_delete');
+-        $data['text_flash']          = $this->flash();
+-
+-        $counts = $model->getCounts();
+-
+-        $data['filters'] = [
+-            ['label' => $this->language->get('text_all'),     'count' => $counts['all'],     'href' => $this->url->link('communication/contact_message'), 'active' => ($filter === null)],
+-            ['label' => $this->language->get('text_new'),     'count' => $counts['new'],     'href' => $this->url->link('communication/contact_message') . '&filter_status=0', 'active' => ($filter === 0)],
+-            ['label' => $this->language->get('text_read'),    'count' => $counts['read'],    'href' => $this->url->link('communication/contact_message') . '&filter_status=1', 'active' => ($filter === 1)],
+-            ['label' => $this->language->get('text_replied'), 'count' => $counts['replied'], 'href' => $this->url->link('communication/contact_message') . '&filter_status=2', 'active' => ($filter === 2)],
+-        ];
+-
++        $filter = $this->statusValue($this->request->get['filter_status'] ?? null);
++        $rawSearch = $this->request->get['filter_search'] ?? '';
++        $search = is_string($rawSearch) ? mb_substr(trim($rawSearch), 0, 255) : '';
++        $requested = $this->request->get['page'] ?? 1;
++        $options = ['search' => $search];
++        $limit = 20;
++        $total = $model->getTotalMessages($filter, $options);
++        $page = is_scalar($requested) ? max(1, (int)$requested) : 1;
++        $page = min($page, max(1, (int)ceil($total / $limit)));
++        foreach ([
++            'heading_title', 'text_list', 'text_confirm_delete', 'text_all', 'text_new', 'text_read', 'text_replied',
++            'text_empty_title', 'text_empty_hint', 'text_search_placeholder',
++            'column_name', 'column_email', 'column_subject', 'column_status', 'column_date_added', 'column_action',
++            'button_read', 'button_delete', 'button_close', 'button_filter', 'button_reset',
++        ] as $key) { $data[$key] = $this->language->get($key); }
++        $data['text_no_results'] = $this->language->get($filter === null ? 'text_no_results' : 'text_empty_filter');
++        $data['can_modify'] = $this->user->hasPermission('modify', 'communication/contact_message');
++        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
++        $data['text_flash'] = $this->flash();
++        $counts = $model->getCounts($options);
++        $data['filters'] = [];
++        foreach ([['text_all', 'all', null], ['text_new', 'new', 0], ['text_read', 'read', 1], ['text_replied', 'replied', 2]] as [$label, $key, $status]) {
++            $args = [];
++            if ($search !== '') { $args['filter_search'] = $search; }
++            if ($status !== null) { $args['filter_status'] = $status; }
++            $data['filters'][] = ['label' => $this->language->get($label), 'count' => $counts[$key],
++                'href' => $this->url->link('communication/contact_message', http_build_query($args)), 'active' => $filter === $status];
++        }
+         $data['messages'] = [];
+-
+-        foreach ($model->getMessages($filter) as $msg) {
+-            $msg           = (array)$msg;
+-            $mid           = (int)$msg['contact_message_id'];
+-
++        foreach ($model->getMessages($filter, $options + ['start' => ($page - 1) * $limit, 'limit' => $limit]) as $row) {
++            $row = (array)$row; $mid = (int)$row['contact_message_id'];
+             $data['messages'][] = [
+-                'contact_message_id' => $mid,
+-                'name'               => (string)$msg['name'],
+-                'email'              => (string)$msg['email'],
+-                'subject'            => (string)$msg['subject'],
+-                'status'             => (int)$msg['status'],
+-                'status_label'       => $this->statusLabel((int)$msg['status']),
+-                'is_new'             => ((int)$msg['status'] === MessageModel::STATUS_NEW),
+-                'date_added'         => (string)$msg['date_added'],
+-                'read'               => $this->url->link('communication/contact_message.read|' . $mid),
+-                'delete'             => $this->url->link('communication/contact_message.delete|' . $mid),
++                'contact_message_id' => $mid, 'name' => (string)$row['name'], 'email' => (string)$row['email'],
++                'subject' => (string)$row['subject'], 'status' => (int)$row['status'],
++                'status_label' => $this->statusLabel((int)$row['status']),
++                'is_new' => (int)$row['status'] === MessageModel::STATUS_NEW, 'date_added' => (string)$row['date_added'],
++                'read' => $this->url->link('communication/contact_message.read|' . $mid),
++                'delete' => $this->url->link('communication/contact_message.delete|' . $mid),
+             ];
+         }
+-
++        $data['total_messages'] = $total; $data['filter_search'] = $search;
++        $data['filter_status'] = $filter === null ? 'all' : (string)$filter;
++        $data['filter_action'] = $this->url->link('communication/contact_message');
++        $data['filter_reset'] = $this->url->link('communication/contact_message');
++        $data['showing'] = $total > 0 ? sprintf($this->language->get('text_showing'), ($page - 1) * $limit + 1, min($page * $limit, $total), $total) : '';
++        require_once DIR_SYSTEM . 'library/pagination.php';
++        $pagination = new \Pagination(); $pagination->total = $total; $pagination->page = $page; $pagination->limit = $limit;
++        $pagination->css_class = 'pagination pagination-sm mb-0';
++        $pagination->text_first = $this->language->get('button_first_page');
++        $pagination->text_last = $this->language->get('button_last_page');
++        $pagination->text_next = $this->language->get('button_next_page');
++        $pagination->text_prev = $this->language->get('button_previous_page');
++        $pagination->url = $this->url->link('communication/contact_message', 'page={page}'
++            . ($search !== '' ? '&filter_search=' . rawurlencode($search) : '')
++            . ($filter !== null ? '&filter_status=' . $filter : ''));
++        $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
+         $this->chrome($data);
+-
+         $this->response->setOutput($this->load->view('communication/contact_message_list', $data));
+     }
+ 
+-    /** Detalhe read-only. Mensagem nova vira 'lida' ao abrir (auto-mark). */
++    /** GET só visualiza. POST Ler protegido faz auto-mark e PRG para GET. */
+     public function read(string $contact_message_id = '0'): void {
+         $contact_message_id = (int)$contact_message_id;
+ 
+         $this->load->language('communication/contact_message');
+ 
+         $this->document->setTitle($this->language->get('heading_title'));
++        $isPost = $this->request->server['REQUEST_METHOD'] === 'POST';
++        if ($isPost && !$this->user->hasPermission('modify', 'communication/contact_message')) {
++            $this->response->redirect($this->url->link('error/permission'));
++            return;
++        }
++        if ($isPost && !$this->csrfValid()) {
++            $this->setFlash($this->language->get('error_csrf'), 'danger');
++            $this->response->redirect($this->url->link('communication/contact_message'));
++            return;
++        }
+ 
+         $this->load->model('communication/contact_message');
+         /** @var MessageModel $model */
+@@ -104,12 +119,17 @@
+             return;
+         }
+ 
+-        // Auto-mark: abrir mensagem 'nova' → 'lida' (uma vez; reload não repete efeito visível)
+-        if ((int)$message['status'] === MessageModel::STATUS_NEW) {
+-            $model->updateStatus($contact_message_id, MessageModel::STATUS_READ);
+-
+-            $message['status'] = MessageModel::STATUS_READ;
+-        }
++        if ($isPost) {
++            if ((int)$message['status'] === MessageModel::STATUS_NEW) {
++                $model->updateStatus($contact_message_id, MessageModel::STATUS_READ);
++            }
++            $this->response->redirect($this->url->link('communication/contact_message.read|' . $contact_message_id));
++            return;
++        }
++        $data['can_modify'] = $this->user->hasPermission('modify', 'communication/contact_message');
++        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
++        $data['button_close'] = $this->language->get('button_close');
++        $data['text_readonly_notice'] = $this->language->get('text_readonly_notice');
+ 
+         $data['heading_title']      = $this->language->get('heading_title');
+         $data['text_message_detail']= $this->language->get('text_message_detail');
+@@ -173,6 +193,11 @@
+         }
+ 
+         $this->load->language('communication/contact_message');
++        if (!$this->csrfValid()) {
++            $this->setFlash($this->language->get('error_csrf'), 'danger');
++            $this->response->redirect($this->url->link('communication/contact_message'));
++            return;
++        }
+ 
+         $this->load->model('communication/contact_message');
+         /** @var MessageModel $model */
+@@ -188,9 +213,9 @@
+             return;
+         }
+ 
+-        $status = (int)($this->request->post['status'] ?? -1);
+-
+-        if ($model->updateStatus($contact_message_id, $status)) {
++        $status = $this->statusValue($this->request->post['status'] ?? null);
++
++        if ($status !== null && $model->updateStatus($contact_message_id, $status)) {
+             $this->setFlash($this->language->get('text_success_status'));
+         } else {
+             // Status adulterado (ex.: 9, -1, 'x'): sem mutação, flash de erro
+@@ -211,6 +236,11 @@
+         }
+ 
+         $this->load->language('communication/contact_message');
++        if (!$this->csrfValid()) {
++            $this->setFlash($this->language->get('error_csrf'), 'danger');
++            $this->response->redirect($this->url->link('communication/contact_message'));
++            return;
++        }
+ 
+         $this->load->model('communication/contact_message');
+         /** @var MessageModel $model */
+@@ -223,6 +253,17 @@
+         }
+ 
+         $this->response->redirect($this->url->link('communication/contact_message'));
++    }
++
++    /** Evita que 'x', arrays, floats e strings não canônicas virem status 0. */
++    private function statusValue(mixed $value): ?int {
++        if (!is_string($value) && !is_int($value)) { return null; }
++        $text = (string)$value;
++        return in_array($text, ['0', '1', '2'], true) ? (int)$text : null;
++    }
++
++    private function csrfValid(): bool {
++        return \Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '');
+     }
+ 
+     /** Voltar para o detalhe (from=read) ou para a grade (padrão) */
+@@ -268,9 +309,8 @@
+ 
+     /** Chrome compartilhado + estilo do módulo */
+     private function chrome(array &$data): void {
+-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+-
+-        $data['body_class'] = 'rms-dash';
++        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
++
+         $data['header']     = $this->load->controller('common/header', $data);
+         $data['footer']     = $this->load->controller('common/footer', $data);
+     }
+diff --git a/dev/admin/language/en-us/communication/contact_message.php b/dev/admin/language/en-us/communication/contact_message.php
+index 1a6905997354829cc274ff4bbc35de816a518a1e..9868c353037e5a54f4fa0a1d533a1a0b38330e8b 100644
+--- a/dev/admin/language/en-us/communication/contact_message.php
++++ b/dev/admin/language/en-us/communication/contact_message.php
+@@ -16,7 +16,7 @@
+ $_['text_no_results']       = 'No messages yet.';
+ $_['text_empty_filter']     = 'No messages with this status.';
+ $_['text_confirm_delete']   = 'Delete this message permanently?';
+-$_['text_message_detail']   = 'Read-only view. New messages are marked as Read when opened.';
++$_['text_message_detail']   = 'Read-only message content. The list Read button marks new messages as Read when you have modify permission.';
+ $_['text_actions']          = 'Actions';
+ $_['text_all']              = 'All';
+ $_['text_new']              = 'New';
+@@ -54,3 +54,18 @@
+ 
+ // Errors
+ $_['error_status']          = 'Invalid status (allowed: New, Read, Replied).';
++
++// Fase 8 / Tarefa 10 — caixa, busca/paginação e leitura POST+ACL+CSRF.
++$_['text_empty_title'] = 'No matching messages';
++$_['text_empty_hint'] = 'Adjust the search or status filter.';
++$_['text_search_placeholder'] = 'Search name, e-mail or subject…';
++$_['text_showing'] = 'Showing %d–%d of %d messages';
++$_['text_readonly_notice'] = 'You may view the message; changing status or deleting requires modify permission.';
++$_['button_filter'] = 'Filter';
++$_['button_reset'] = 'Reset';
++$_['button_close'] = 'Close';
++$_['button_first_page'] = '« First';
++$_['button_last_page'] = 'Last »';
++$_['button_next_page'] = 'Next ›';
++$_['button_previous_page'] = '‹ Previous';
++$_['error_csrf'] = 'Invalid session token. Reload the list and try again.';
+diff --git a/dev/admin/language/es-eu/communication/contact_message.php b/dev/admin/language/es-eu/communication/contact_message.php
+index 0ce055b8e3f4b2beb2aa8d0cf53798e74ded5689..b61b78e6c00557f7372533fe92637bb560fb2a5f 100644
+--- a/dev/admin/language/es-eu/communication/contact_message.php
++++ b/dev/admin/language/es-eu/communication/contact_message.php
+@@ -16,7 +16,7 @@
+ $_['text_no_results']       = 'Aún no hay mensajes.';
+ $_['text_empty_filter']     = 'No hay mensajes con este estado.';
+ $_['text_confirm_delete']   = '¿Eliminar este mensaje permanentemente?';
+-$_['text_message_detail']   = 'Vista de solo lectura. Los mensajes nuevos se marcan como Leído al abrirlos.';
++$_['text_message_detail']   = 'Contenido de solo lectura. El botón Leer de la lista marca mensajes nuevos como Leído cuando hay permiso de modificar.';
+ $_['text_actions']          = 'Acciones';
+ $_['text_all']              = 'Todos';
+ $_['text_new']              = 'Nuevo';
+@@ -54,3 +54,18 @@
+ 
+ // Errors
+ $_['error_status']          = 'Estado inválido (permitidos: Nuevo, Leído, Respondido).';
++
++// Fase 8 / Tarefa 10 — caixa, busca/paginação e leitura POST+ACL+CSRF.
++$_['text_empty_title'] = 'No se encontraron mensajes';
++$_['text_empty_hint'] = 'Ajuste la búsqueda o el filtro de estado.';
++$_['text_search_placeholder'] = 'Buscar nombre, e-mail o asunto…';
++$_['text_showing'] = 'Mostrando %d–%d de %d mensajes';
++$_['text_readonly_notice'] = 'Puede visualizar; cambiar el estado o eliminar requiere permiso de modificar.';
++$_['button_filter'] = 'Filtrar';
++$_['button_reset'] = 'Limpiar';
++$_['button_close'] = 'Cerrar';
++$_['button_first_page'] = '« Primera';
++$_['button_last_page'] = 'Última »';
++$_['button_next_page'] = 'Siguiente ›';
++$_['button_previous_page'] = '‹ Anterior';
++$_['error_csrf'] = 'Token de sesión no válido. Recargue la lista e inténtelo de nuevo.';
+diff --git a/dev/admin/language/pt-br/communication/contact_message.php b/dev/admin/language/pt-br/communication/contact_message.php
+index a9ae2be4277d72d6f15c8c60342eecf306571c0e..49db967cbb150f7e6d23fb959769dc8e6e328083 100644
+--- a/dev/admin/language/pt-br/communication/contact_message.php
++++ b/dev/admin/language/pt-br/communication/contact_message.php
+@@ -16,7 +16,7 @@
+ $_['text_no_results']       = 'Nenhuma mensagem ainda.';
+ $_['text_empty_filter']     = 'Nenhuma mensagem com este status.';
+ $_['text_confirm_delete']   = 'Excluir esta mensagem permanentemente?';
+-$_['text_message_detail']   = 'Visualização somente leitura. Mensagens novas são marcadas como Lido ao abrir.';
++$_['text_message_detail']   = 'Conteúdo somente leitura. O botão Ler da lista marca mensagens novas como Lido quando há permissão de modificar.';
+ $_['text_actions']          = 'Ações';
+ $_['text_all']              = 'Todas';
+ $_['text_new']              = 'Novo';
+@@ -54,3 +54,18 @@
+ 
+ // Errors
+ $_['error_status']          = 'Status inválido (permitidos: Novo, Lido, Respondido).';
++
++// Fase 8 / Tarefa 10 — caixa, busca/paginação e leitura POST+ACL+CSRF.
++$_['text_empty_title'] = 'Nenhuma mensagem encontrada';
++$_['text_empty_hint'] = 'Ajuste a busca ou o filtro de status.';
++$_['text_search_placeholder'] = 'Buscar nome, e-mail ou assunto…';
++$_['text_showing'] = 'Exibindo %d–%d de %d mensagens';
++$_['text_readonly_notice'] = 'Você pode visualizar; alterar status ou excluir exige permissão de modificar.';
++$_['button_filter'] = 'Filtrar';
++$_['button_reset'] = 'Limpar';
++$_['button_close'] = 'Fechar';
++$_['button_first_page'] = '« Primeira';
++$_['button_last_page'] = 'Última »';
++$_['button_next_page'] = 'Próxima ›';
++$_['button_previous_page'] = '‹ Anterior';
++$_['error_csrf'] = 'Token de sessão inválido. Recarregue a lista e tente novamente.';
+diff --git a/dev/admin/model/communication/contact_message.php b/dev/admin/model/communication/contact_message.php
+index da4ae12654aff712a9aa5647e5c6c4ba733a30d4..874def394ab972446480040830deefcc6389f0d9 100644
+--- a/dev/admin/model/communication/contact_message.php
++++ b/dev/admin/model/communication/contact_message.php
+@@ -26,24 +26,41 @@
+     public const STATUSES = [self::STATUS_NEW, self::STATUS_READ, self::STATUS_REPLIED];
+ 
+     /**
+-     * Caixa de entrada, mais recentes primeiro. Filtro opcional por status
+-     * (null = todas).
+-     *
++     * Caixa, mais recentes primeiro. A chamada antiga getMessages(?int) segue
++     * completa; busca/paginação só quando solicitadas (F8-10).
++     * @param array{search?: string, start?: int, limit?: int} $options
+      * @return array<int, array<string, mixed>>
+      */
+-    public function getMessages(?int $filter_status = null): array {
++    public function getMessages(?int $filter_status = null, array $options = []): array {
+         $sql = "SELECT `contact_message_id`, `name`, `email`, `telephone`, `subject`, `status`, `date_added`
+-                  FROM `" . $this->t('contact_message') . "`";
++                  FROM `" . $this->t('contact_message') . "`"
++            . $this->messageListWhere($filter_status, $options)
++            . " ORDER BY `date_added` DESC, `contact_message_id` DESC";
++        if (array_key_exists('limit', $options)) {
++            $start = max(0, (int)($options['start'] ?? 0));
++            $limit = min(100, max(1, (int)$options['limit']));
++            $sql .= " LIMIT " . $start . ", " . $limit;
++        }
++        $query = $this->db->query($sql);
++        return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
++    }
+ 
+-        if ($filter_status !== null) {
+-            $sql .= " WHERE `status` = '" . $filter_status . "'";
++    /** @param array{search?: string} $options */
++    public function getTotalMessages(?int $filter_status = null, array $options = []): int {
++        $query = $this->db->query("SELECT COUNT(*) AS `total` FROM `" . $this->t('contact_message') . "`" . $this->messageListWhere($filter_status, $options));
++        return ($query instanceof \stdClass && isset($query->row['total'])) ? (int)$query->row['total'] : 0;
++    }
++
++    /** @param array{search?: string} $options */
++    private function messageListWhere(?int $filter_status, array $options): string {
++        $where = [];
++        if ($filter_status !== null) { $where[] = "`status` = '" . (int)$filter_status . "'"; }
++        $search = $options['search'] ?? '';
++        if (is_string($search) && trim($search) !== '') {
++            $value = $this->db->escape(trim($search));
++            $where[] = "(`name` LIKE '%" . $value . "%' OR `email` LIKE '%" . $value . "%' OR `subject` LIKE '%" . $value . "%')";
+         }
+-
+-        $sql .= " ORDER BY `date_added` DESC, `contact_message_id` DESC";
+-
+-        $query = $this->db->query($sql);
+-
+-        return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
++        return $where ? ' WHERE ' . implode(' AND ', $where) : '';
+     }
+ 
+     /**
+@@ -83,13 +100,14 @@
+     /**
+      * Contadores para as abas de filtro da grade.
+      *
++     * @param array{search?: string} $options Busca opcional; sem argumentos preserva contadores globais.
+      * @return array{all: int, new: int, read: int, replied: int}
+      */
+-    public function getCounts(): array {
++    public function getCounts(array $options = []): array {
+         $counts = ['all' => 0, 'new' => 0, 'read' => 0, 'replied' => 0];
+ 
+         $query = $this->db->query(
+-            "SELECT `status`, COUNT(*) AS `total` FROM `" . $this->t('contact_message') . "` GROUP BY `status`"
++            "SELECT `status`, COUNT(*) AS `total` FROM `" . $this->t('contact_message') . "`" . $this->messageListWhere(null, $options) . " GROUP BY `status`"
+         );
+ 
+         $rows = ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+diff --git a/dev/admin/view/css/admin.css b/dev/admin/view/css/admin.css
+index e3fb033c3cc1defc204108101691e45d2f273f78..4324d2f9a058c9ee222051c9be7ce208ff167fd6 100644
+--- a/dev/admin/view/css/admin.css
++++ b/dev/admin/view/css/admin.css
+@@ -894,3 +894,41 @@
+ }
+ .connected-tools-list .pagination li:first-child > * { border-radius: var(--bs-pagination-border-radius) 0 0 var(--bs-pagination-border-radius); }
+ .connected-tools-list .pagination li:last-child > * { border-radius: 0 var(--bs-pagination-border-radius) var(--bs-pagination-border-radius) 0; }
++
++/* F8-10 — paginação de communication/contact_message: markup legado da library, escopo local. */
++.contact-inbox-list .pagination li > a,
++.contact-inbox-list .pagination li > span {
++  display: block;
++  font-size: var(--bs-pagination-font-size);
++  padding: var(--bs-pagination-padding-y) var(--bs-pagination-padding-x);
++  color: var(--bs-pagination-color);
++  background: var(--bs-pagination-bg);
++  border: var(--bs-pagination-border-width) solid var(--bs-pagination-border-color);
++  text-decoration: none;
++}
++.contact-inbox-list .pagination li + li > * { margin-left: calc(-1 * var(--bs-pagination-border-width)); }
++.contact-inbox-list .pagination li.active > span {
++  color: var(--bs-pagination-active-color);
++  background: var(--bs-pagination-active-bg);
++  border-color: var(--bs-pagination-active-border-color);
++}
++.contact-inbox-list .pagination li > a:hover {
++  color: var(--bs-pagination-hover-color);
++  background: var(--bs-pagination-hover-bg);
++}
++.contact-inbox-list .pagination li:first-child > * { border-radius: var(--bs-pagination-border-radius) 0 0 var(--bs-pagination-border-radius); }
++.contact-inbox-list .pagination li:last-child > * { border-radius: 0 var(--bs-pagination-border-radius) var(--bs-pagination-border-radius) 0; }
++
++/* F8-10 — corpo de mensagem é texto escapado, legível em qualquer tema. */
++.contact-message-read .message-body {
++  white-space: pre-wrap;
++  overflow-wrap: anywhere;
++  padding: 1rem;
++  border: 1px solid var(--bs-border-color);
++  border-radius: var(--bs-border-radius);
++  background: var(--bs-tertiary-bg);
++  color: var(--bs-body-color);
++}
++
++.contact-message-read dd,
++.contact-message-read h2 { overflow-wrap: anywhere; }
+diff --git a/dev/admin/view/template/communication/contact_message_list.twig b/dev/admin/view/template/communication/contact_message_list.twig
+index d2f28ef464274e8d4ae8149397a684c00446e613..ea8a2608b94414b103c70d4589e5d46eda13763a 100644
+--- a/dev/admin/view/template/communication/contact_message_list.twig
++++ b/dev/admin/view/template/communication/contact_message_list.twig
+@@ -1,55 +1,24 @@
+-{# dev/admin/view/template/communication/contact_message_list.twig — caixa de entrada (F2-15) #}
++{# Fase 8 / Tarefa 10 — inbox assimétrico, Ler POST protegido e GET sem efeito. #}
+ {{ header|raw }}
+-<main class="dash">
+-  <div class="page-head">
+-    <h1>{{ heading_title }}</h1>
+-  </div>
+-  <p class="muted">{{ text_list }}</p>
+-
+-  {% if text_flash.text %}
+-  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+-  {% endif %}
+-
+-  <nav class="tabbar" role="tablist" aria-label="{{ column_status }}" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px;">
+-    {% for f in filters %}
+-    <a href="{{ f.href }}" class="btn {{ f.active ? 'primary' : 'ghost' }} small">{{ f.label }} <span class="muted">({{ f.count }})</span></a>
+-    {% endfor %}
+-  </nav>
+-
+-  {% if messages %}
+-  <table class="table">
+-    <thead>
+-      <tr>
+-        <th>{{ column_name }}</th>
+-        <th>{{ column_email }}</th>
+-        <th>{{ column_subject }}</th>
+-        <th>{{ column_status }}</th>
+-        <th>{{ column_date_added }}</th>
+-        <th class="right">{{ column_action }}</th>
+-      </tr>
+-    </thead>
+-    <tbody>
+-      {% for msg in messages %}
+-      <tr{% if msg.is_new %} style="font-weight:600;"{% endif %} class="row-status-{{ msg.status }}">
+-        <td>{{ msg.name }}</td>
+-        <td>{{ msg.email }}</td>
+-        <td>{{ msg.subject }}</td>
+-        <td>
+-          <span class="badge badge-{{ msg.status }}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:.85em;border:1px solid currentColor;color:{% if msg.status == 0 %}#2563eb{% elseif msg.status == 2 %}#15803d{% else %}#6b7280{% endif %};">{{ msg.status_label }}</span>
+-        </td>
+-        <td>{{ msg.date_added }}</td>
+-        <td class="right actions">
+-          <a class="btn ghost small" href="{{ msg.read }}">{{ button_read }}</a>
+-          <form method="post" action="{{ msg.delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
+-            <button type="submit" class="btn danger small">{{ button_delete }}</button>
+-          </form>
+-        </td>
+-      </tr>
+-      {% endfor %}
+-    </tbody>
+-  </table>
+-  {% else %}
+-  <p class="muted">{{ text_no_results }}</p>
+-  {% endif %}
+-</main>
++<div class="contact-inbox-list">
++  <div class="page-titlebar"><div class="title-group"><h1 class="page-title"><i class="bi bi-chat-left-text me-2" aria-hidden="true"></i>{{ heading_title }}</h1>{% if total_messages > 0 %}<span class="badge rounded-pill badge-total">{{ total_messages }}</span>{% endif %}</div></div>
++  <p class="text-body-secondary">{{ text_list }}</p>
++  {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">{{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ button_close }}"></button></div>{% endif %}
++  <form method="get" action="{{ filter_action }}" class="filter-bar" role="search" aria-label="{{ button_filter }}">
++    <input type="hidden" name="route" value="communication/contact_message">
++    <div class="filter-search"><i class="bi bi-search" aria-hidden="true"></i><input type="search" name="filter_search" value="{{ filter_search }}" maxlength="255" placeholder="{{ text_search_placeholder }}" aria-label="{{ text_search_placeholder }}"></div>
++    <select name="filter_status" class="form-select form-select-sm" aria-label="{{ column_status }}"><option value="all"{% if filter_status == 'all' %} selected{% endif %}>{{ text_all }}</option><option value="0"{% if filter_status == '0' %} selected{% endif %}>{{ text_new }}</option><option value="1"{% if filter_status == '1' %} selected{% endif %}>{{ text_read }}</option><option value="2"{% if filter_status == '2' %} selected{% endif %}>{{ text_replied }}</option></select>
++    <button type="submit" class="btn btn-primary btn-sm">{{ button_filter }}</button>{% if filter_search != '' or filter_status != 'all' %}<a class="btn btn-outline-secondary btn-sm" href="{{ filter_reset }}">{{ button_reset }}</a>{% endif %}
++  </form>
++  <nav class="nav nav-pills gap-2 mb-3" aria-label="{{ column_status }}">{% for f in filters %}<a href="{{ f.href }}" class="nav-link{% if f.active %} active{% endif %}"{% if f.active %} aria-current="page"{% endif %}>{{ f.label }} <span class="badge text-bg-secondary">{{ f.count }}</span></a>{% endfor %}</nav>
++  {% if messages %}<div class="card data-card"><div class="table-responsive"><table class="table table-hover align-middle mb-0">
++    <thead><tr><th>{{ column_name }}</th><th class="d-none d-lg-table-cell">{{ column_email }}</th><th>{{ column_subject }}</th><th>{{ column_status }}</th><th class="d-none d-xl-table-cell">{{ column_date_added }}</th><th class="text-end">{{ column_action }}</th></tr></thead>
++    <tbody>{% for msg in messages %}<tr class="row-status-{{ msg.status }}{% if msg.is_new %} fw-semibold{% endif %}" data-contact-message-id="{{ msg.contact_message_id }}" data-contact-status="{{ msg.status }}">
++      <td data-message-name>{{ msg.name }}</td><td class="d-none d-lg-table-cell" data-message-email>{{ msg.email }}</td><td data-message-subject>{{ msg.subject }}</td>
++      <td><span class="badge {{ msg.status == 0 ? 'text-bg-primary' : (msg.status == 2 ? 'text-bg-success' : 'text-bg-secondary') }}">{{ msg.status_label }}</span></td><td class="d-none d-xl-table-cell text-nowrap">{{ msg.date_added }}</td>
++      <td class="text-end text-nowrap">{% if can_modify %}<form method="post" action="{{ msg.read }}" class="d-inline" data-message-open><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-outline-primary btn-sm">{{ button_read }}</button></form><form method="post" action="{{ msg.delete }}" class="d-inline" data-rms-confirm-delete="{{ text_confirm_delete }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="icon-btn icon-btn--danger" title="{{ button_delete }}" aria-label="{{ button_delete }}"><i class="bi bi-trash" aria-hidden="true"></i></button></form>{% else %}<a class="btn btn-outline-primary btn-sm" href="{{ msg.read }}">{{ button_read }}</a>{% endif %}</td>
++    </tr>{% endfor %}</tbody>
++  </table></div></div>{% if showing or pagination %}<div class="list-footer"><span class="text-body-secondary small">{{ showing }}</span>{{ pagination|raw }}</div>{% endif %}
++  {% else %}<div class="empty-state"><i class="bi bi-chat-left-text" aria-hidden="true"></i><h2>{{ filter_search != '' ? text_empty_title : text_no_results }}</h2><p class="text-body-secondary">{{ text_empty_hint }}</p></div>{% endif %}
++</div>
+ {{ footer|raw }}
+diff --git a/dev/admin/view/template/communication/contact_message_read.twig b/dev/admin/view/template/communication/contact_message_read.twig
+index 0e00ccb6a1cdf931a0814a9fddca5febe33ac68f..ecbd986b26f5d8aa2148857782e576ac6067d18a 100644
+--- a/dev/admin/view/template/communication/contact_message_read.twig
++++ b/dev/admin/view/template/communication/contact_message_read.twig
+@@ -1,61 +1,31 @@
+-{# dev/admin/view/template/communication/contact_message_read.twig — leitura da mensagem (F2-15): read-only, sem formulário de edição #}
++{# Fase 8 / Tarefa 10 — conteúdo escapado somente leitura; ações POST+ACL+CSRF. #}
+ {{ header|raw }}
+-<main class="dash">
+-  <div class="page-head">
+-    <h1>{{ heading_title }}</h1>
+-    <a class="btn ghost" href="{{ back }}">{{ button_back }}</a>
++<div class="contact-message-read" data-contact-message-id="{{ message.contact_message_id }}" data-contact-status="{{ message.status }}">
++  <div class="page-titlebar"><div class="title-group"><h1 class="page-title"><i class="bi bi-chat-left-text me-2" aria-hidden="true"></i>{{ heading_title }}</h1></div><div class="titlebar-actions"><a class="btn btn-outline-secondary btn-sm" href="{{ back }}">{{ button_back }}</a></div></div>
++  <p class="text-body-secondary">{{ text_message_detail }}</p>
++  {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">{{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ button_close }}"></button></div>{% endif %}
++  <div class="row g-3">
++    <div class="col-lg-8"><section class="card data-card"><div class="card-body"><h2 class="h5" data-message-subject>{{ message.subject }}</h2><h3 class="h6 text-body-secondary">{{ entry_message }}</h3><div class="message-body" data-message-body>{{ message.message }}</div></div></section></div>
++    <div class="col-lg-4">
++      <section class="card data-card mb-3 side-card"><div class="card-body"><dl class="mb-0">
++        <dt>{{ entry_name }}</dt><dd data-message-name>{{ message.name }}</dd>
++        <dt>{{ entry_email }}</dt><dd data-message-email><a href="mailto:{{ message.email }}">{{ message.email }}</a></dd>
++        <dt>{{ entry_telephone }}</dt><dd data-message-telephone>{{ message.telephone }}</dd>
++        <dt>{{ entry_status }}</dt><dd><span class="badge {{ message.status == 0 ? 'text-bg-primary' : (message.status == 2 ? 'text-bg-success' : 'text-bg-secondary') }}">{{ message.status_label }}</span></dd>
++        <dt>{{ entry_date_added }}</dt><dd>{{ message.date_added }}</dd>
++        <dt>{{ entry_ip }}</dt><dd class="mb-0"><code>{{ message.ip }}</code></dd>
++      </dl></div></section>
++      <section class="card data-card side-card"><div class="card-body"><h2 class="h6 card-title">{{ text_actions }}</h2><a class="btn btn-primary w-100 mb-2" href="{{ reply_href }}">{{ button_reply }}</a>
++        {% if can_modify %}
++        <div class="d-grid gap-2">
++          <form method="post" action="{{ status_action }}" data-message-status-form><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="from" value="read"><input type="hidden" name="status" value="2"><button type="submit" class="btn btn-outline-success w-100"{% if message.status == 2 %} disabled{% endif %}>{{ button_mark_replied }}</button></form>
++          <form method="post" action="{{ status_action }}" data-message-status-form><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="from" value="read"><input type="hidden" name="status" value="1"><button type="submit" class="btn btn-outline-secondary w-100"{% if message.status == 1 %} disabled{% endif %}>{{ button_mark_read }}</button></form>
++          <form method="post" action="{{ status_action }}" data-message-status-form><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="from" value="read"><input type="hidden" name="status" value="0"><button type="submit" class="btn btn-outline-secondary w-100"{% if message.status == 0 %} disabled{% endif %}>{{ button_mark_new }}</button></form>
++          <form method="post" action="{{ delete }}" data-rms-confirm-delete="{{ text_confirm_delete }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-outline-danger w-100">{{ button_delete }}</button></form>
++        </div>
++        {% else %}<p class="text-body-secondary small mb-0">{{ text_readonly_notice }}</p>{% endif %}
++      </div></section>
++    </div>
+   </div>
+-  <p class="muted">{{ text_message_detail }}</p>
+-
+-  {% if text_flash.text %}
+-  <div class="alert {{ text_flash.type }}">{{ text_flash.text }}</div>
+-  {% endif %}
+-
+-  <section class="panel" style="margin-bottom:16px;">
+-    <table class="table">
+-      <tbody>
+-        <tr><th style="width:160px;">{{ entry_name }}</th><td>{{ message.name }}</td></tr>
+-        <tr><th>{{ entry_email }}</th><td><a href="mailto:{{ message.email }}">{{ message.email }}</a></td></tr>
+-        <tr><th>{{ entry_telephone }}</th><td>{{ message.telephone }}</td></tr>
+-        <tr><th>{{ entry_subject }}</th><td>{{ message.subject }}</td></tr>
+-        <tr><th>{{ entry_status }}</th><td>
+-          <span class="badge badge-{{ message.status }}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:.85em;border:1px solid currentColor;color:{% if message.status == 0 %}#2563eb{% elseif message.status == 2 %}#15803d{% else %}#6b7280{% endif %};">{{ message.status_label }}</span>
+-        </td></tr>
+-        <tr><th>{{ entry_date_added }}</th><td>{{ message.date_added }}</td></tr>
+-        <tr><th>{{ entry_ip }}</th><td><code>{{ message.ip }}</code></td></tr>
+-      </tbody>
+-    </table>
+-  </section>
+-
+-  <section class="panel" style="margin-bottom:16px;">
+-    <h2 style="margin-top:0;">{{ entry_message }}</h2>
+-    <div class="message-body" style="white-space:pre-wrap;border:1px solid #e5e7eb;border-radius:6px;padding:12px;background:#fafafa;">{{ message.message }}</div>
+-  </section>
+-
+-  <section class="panel actions" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+-    <a class="btn primary" href="{{ reply_href }}">{{ button_reply }}</a>
+-
+-    <form method="post" action="{{ status_action }}">
+-      <input type="hidden" name="from" value="read">
+-      <input type="hidden" name="status" value="2">
+-      <button type="submit" class="btn ghost"{% if message.status == 2 %} disabled style="opacity:.5;"{% endif %}>{{ button_mark_replied }}</button>
+-    </form>
+-
+-    <form method="post" action="{{ status_action }}">
+-      <input type="hidden" name="from" value="read">
+-      <input type="hidden" name="status" value="1">
+-      <button type="submit" class="btn ghost"{% if message.status == 1 %} disabled style="opacity:.5;"{% endif %}>{{ button_mark_read }}</button>
+-    </form>
+-
+-    <form method="post" action="{{ status_action }}">
+-      <input type="hidden" name="from" value="read">
+-      <input type="hidden" name="status" value="0">
+-      <button type="submit" class="btn ghost"{% if message.status == 0 %} disabled style="opacity:.5;"{% endif %}>{{ button_mark_new }}</button>
+-    </form>
+-
+-    <form method="post" action="{{ delete }}" onsubmit="return confirm('{{ text_confirm_delete }}');">
+-      <button type="submit" class="btn danger">{{ button_delete }}</button>
+-    </form>
+-  </section>
+-</main>
++</div>
+ {{ footer|raw }}
+diff --git a/dev/tests/e2e/e2e_f215.sh b/dev/tests/e2e/e2e_f215.sh
+index de330f45c06ae035255dea55a88ea5cdf4110731..2443d187cbbc36b62a09f72f525c77514c3cb3ef 100644
+--- a/dev/tests/e2e/e2e_f215.sh
++++ b/dev/tests/e2e/e2e_f215.sh
+@@ -33,8 +33,10 @@
+ echo '══ 2 — login ══'
+ curl -s -c $JA -b $JA "$B/admin/login" -o /tmp/f215_login.html -w "%{http_code}" | grep -q 200
+ TOKEN=$(grep -o 'name="user_token" value="[^"]*"' /tmp/f215_login.html | sed 's/.*value="//;s/"//')
++CSRF_LOGIN=$(grep -o 'name="csrf_token" value="[^"]*"' /tmp/f215_login.html | sed 's/.*value="//;s/"//')
+ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=common/login" \
+   --data-urlencode "username=admin" --data-urlencode "password=SenhaForte!2026" --data-urlencode "user_token=$TOKEN" \
++  --data-urlencode "csrf_token=$CSRF_LOGIN" \
+   -D /tmp/f215_al.hdr -o /dev/null
+ L=$(loc /tmp/f215_al.hdr); [[ "$L" == *dashboard* ]]
+ ck 2 $? "admin-login"
+@@ -71,11 +73,17 @@
+ [ "$(grep -o 'row-status' /tmp/f215_f1.html | wc -l)" = "0" ] || OK=1
+ ck 6 $OK "filtro-vazio"
+ 
+-echo '══ 7 — leitura da msg 1: render + AUTO-MARCAR lido (0→1) ══'
++echo '══ 7 — GET só lê; POST Ler protegido marca lido (0→1) ══'
+ ID1=$(q "SELECT contact_message_id FROM reamur_test.rms_contact_message WHERE email='ana@test.dev'")
++curl -s -c $JA -b $JA "$B/admin/index.php?route=communication/contact_message.read|$ID1&language=en-us" -o /tmp/f215_read1.html -D /tmp/f215_r1.hdr
++MSG_CSRF=$(grep -o 'name="csrf_token" value="[^"]*"' /tmp/f215_read1.html | head -1 | sed 's/.*value="//;s/"//')
++READ_BEFORE=$(q "SELECT status FROM reamur_test.rms_contact_message WHERE contact_message_id=$ID1")
++curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=communication/contact_message.read|$ID1" \
++  --data-urlencode "csrf_token=$MSG_CSRF" -D /tmp/f215_read_post.hdr -o /dev/null
+ curl -s -c $JA -b $JA "$B/admin/index.php?route=communication/contact_message.read|$ID1&language=en-us" -o /tmp/f215_read1.html -D /tmp/f215_r1.hdr
+ H=$(hdr /tmp/f215_r1.hdr)
+ OK=0; [ "$H" = "200" ] || OK=1
++[ "$READ_BEFORE" = "0" ] || OK=1
+ grep -q "landing page do produto X" /tmp/f215_read1.html || OK=1
+ grep -q "203.0.113.10" /tmp/f215_read1.html || OK=1
+ grep -q "mailto:ana@test.dev" /tmp/f215_read1.html || OK=1
+@@ -94,6 +102,7 @@
+ 
+ echo '══ 9 — POST status → respondido (1→2), flash confirma ══'
+ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=communication/contact_message.status|$ID1" \
++  --data-urlencode "csrf_token=$MSG_CSRF" \
+   --data-urlencode "status=2" --data-urlencode "from=read" -D /tmp/f215_s9.hdr -o /dev/null
+ S=$(q "SELECT status FROM reamur_test.rms_contact_message WHERE contact_message_id=$ID1")
+ OK=0; [ "$S" = "2" ] || OK=1
+@@ -104,6 +113,7 @@
+ 
+ echo '══ 10 — POST adulterado status=9 → rejeitado, sem mutação ══'
+ curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=communication/contact_message.status|$ID1" \
++  --data-urlencode "csrf_token=$MSG_CSRF" \
+   --data-urlencode "status=9" --data-urlencode "from=read" -D /tmp/f215_s10.hdr -o /dev/null
+ S=$(q "SELECT status FROM reamur_test.rms_contact_message WHERE contact_message_id=$ID1")
+ OK=0; [ "$S" = "2" ] || OK=1
+@@ -124,7 +134,7 @@
+ L=$(loc /tmp/f215_dg.hdr); OK=0
+ [[ "$L" == *error/permission* ]] || OK=1
+ N=$(q "SELECT COUNT(*) FROM reamur_test.rms_contact_message WHERE contact_message_id=$ID2"); [ "$N" = "1" ] || OK=1
+-curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=communication/contact_message.delete|$ID2" -D /tmp/f215_dp.hdr -o /dev/null
++curl -s -c $JA -b $JA -X POST "$B/admin/index.php?route=communication/contact_message.delete|$ID2" --data-urlencode "csrf_token=$MSG_CSRF" -D /tmp/f215_dp.hdr -o /dev/null
+ N=$(q "SELECT COUNT(*) FROM reamur_test.rms_contact_message WHERE contact_message_id=$ID2"); [ "$N" = "0" ] || OK=1
+ L=$(loc /tmp/f215_dp.hdr); [[ "$L" == *communication/contact_message* ]] || OK=1
+ curl -s -c $JA -b $JA "$B/admin/index.php?route=communication/contact_message&language=en-us" -o /tmp/f215_lpost.html
+diff --git a/docs/F8-10-Mensagens-Contato.md b/docs/F8-10-Mensagens-Contato.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..0cd45ed14ff2c78aeae3ee157906c9e2878fea26
+--- /dev/null
++++ b/docs/F8-10-Mensagens-Contato.md
+@@ -0,0 +1,208 @@
++# Fase 8 · Tarefa 10 — Mensagens de contato
++
++> Objetivo: migrar a caixa/lista/detalhe de contato ao shell e proteger leitura automática/status/delete, mantendo o CRUD assimétrico, sem editar conteúdo ou enviar e-mails.
++
++**Data:** 2026-10-23 · **Base:** `653fb677b6068af28d706d766064a47ef0aefffe`.
++**Estado:** usuário escolheu Ler automático por POST protegido; implementação preparada/testada localmente. Aplicação e homologação real pendentes. Tarefa09 concluída conforme usuário; seus17 arquivos públicos conferem com a entrega, sem inventar backend/deploy.
++
++## Sumário
++
++1. [Decisão de leitura e contratos](#1-decisão-de-leitura-e-contratos)
++2. [Arquivos, aplicação e cache](#2-arquivos-aplicação-e-cache)
++3. [Tool local e evidências](#3-tool-local-e-evidências)
++4. [Fixture fictícia: somente dados](#4-fixture-fictícia-somente-dados)
++5. [E2E HTTP controlado](#5-e2e-http-controlado)
++6. [Aceite no navegador](#6-aceite-no-navegador)
++7. [Falhas, limpeza e rollback](#7-falhas-limpeza-e-rollback)
++8. [Limites](#8-limites)
++
++## 1. Decisão de leitura e contratos
++
++Esta tarefa é só a caixa `communication/contact_message`. Sem criar mensagem no admin, editar conteúdo, upload, SEO, editor ou alteração do formulário público.
++
++**Escolha expressa do usuário:** manter “Ler” automático com POST protegido.
++
++- **GET `.read|ID` apenas visualiza**, mesmo Novo; readonly e links diretos nunca alteram status.
++- Com modify, botão **Ler da lista é POST+CSRF** na rota existente; Novo0 viraLido1 uma vez e redireciona paraGET detalhe. Lido1/Respondido2 não são regravados/alterados pelo Ler.
++- Readonly usa linkGET e não vê botões status/delete. Backend nega os três POSTs sem modify.
++- `.status|ID` e `.delete|ID` exigem POST+modify+CSRF, sem bypass.
++- Status aceita somente0/1/2 canônicos; x/arrays/01/bools/floats não viramNovo por cast.
++- `from=read` preservado. MarcarNovo agora permaneceNovo ao voltar ao detalhe; GET não desfaz a ação.
++- Resposta continua **mailto manual**, assunto Re:/corpo citado codificados; marcarRespondido não envia e-mail. O Tool nunca segue mailto.
++
++### Lista e detalhe
++
++Busca por nome/e-mail/assunto, não por corpo/telefone/IP. Filtro status, contadores das abas acompanhando busca, paginação20/total/recuo, mesma ordem **date_added DESC, contact_message_id DESC**. `getMessages(?int)` antigo sem opções segue completo; `getCounts()` segue global sem argumentos. Filtro direto inválido inteiro no model preserva sua semântica anterior, não vira “todas”.
++
++Cards/tabela responsiva/badges temáticos/modal delete, sem cores inline/confirm(). Corpo é **texto escapado** com pre-wrap/quebras preservadas, nunca HTML ou editor. Nome/e-mail/telefone/assunto/mensagem/IP/data continuam dados recebidos somente leitura. Não há política nova de retenção ou exportação.
++
++Rotas mantidas: base, `.read|ID`, `.status|ID`, `.delete|ID`. IDs reais, campos de ações status/from e rótulos0Novo/1Lido/2Respondido preservados. Sem `.add`/`.edit`/`.upload`, _description, schema/DDL/grants, `system/**`, `catalog/**`, `install/**`, SMTP, outros CRUDs, Appearance/Localization, admin.js/ASSET_V/Composer/Blog alterados. Sem JavaScript runtime novo; forms nativos e modal global existente.
++
++## 2. Arquivos, aplicação e cache
++
++**15 arquivos de projeto** (dez modificados/cinco novos):
++
++- Runtime8: `dev/admin/controller/communication/contact_message.php`, model correspondente, templates `contact_message_list.twig`/`contact_message_read.twig`, idiomas en-us/pt-br/es-eu e `dev/admin/view/css/admin.css`.
++- Tools3 novos: `tools/e2e/e2e_f810.sh`, `e2e_f810_contracts.php`, `e2e_f810_http.cjs`.
++- `dev/tests/e2e/e2e_f215.sh`: só compatibilidade CSRF login/status/delete, verificação GET puro e POSTLer. Setup/fixtures SQL/grants/reset permanecem destrutivos e **não são executados pelo Tool novo**; não se declara auditoria completa dessa bateria.
++- Este guia, índice docs/README.md (linha21), [ADR0054](../agents-ia/decisoes/0054-f8-10-mensagens-contato-no-shell.md).
++
++Acompanhantes: F8-10.patch, MANIFESTO-F8-10.json, SHA256SUMS. Sem projeto inteiro/vendor/configs/credenciais ou mensagens reais. O script antigo mantém suas fixtures públicas preexistentes.
++
++1. Conferir base com `git rev-parse HEAD`:653fb677b6068af28d706d766064a47ef0aefffe. Se alvos mudaram depois, revisar hashes/diff; não sobrescrever trabalho concorrente.
++2. Branch/PR para staging e backup, não produção direta.
++3. Extrair ZIP fora do repositório e conferir `sha256sum -c SHA256SUMS` na extração.
++4. Na raiz do repositório, `ENTREGA` é extração absoluta:
++
++```bash
++git apply --check --whitespace=error "$ENTREGA/F8-10.patch"
++git apply --whitespace=error "$ENTREGA/F8-10.patch"
++git diff --check
++bash tools/e2e/e2e_f810.sh --check
++```
++
++Alternativa: copiar só os15 alvos. Sem árvore inteira/vendor/--delete/reaplicar ZIP anterior/upgradeSQL. Sincronizar apenas alvos e invalidar CSS/PHP/Twig em homologação. **ASSET_V não muda**: conferir cache de admin.css. Código publicado/dev alterado não prova deploy.
++
++CSS novo só `.contact-inbox-list`/`.contact-message-read`, prefixo anterior completo intacto; paginação normaliza só `&amp;amp;` no HTML gerado com queryURL-encoded. Library/aria-labels globais não mudam. Corpo usa variáveis do tema, não fundo/cor fixos.
++
++Commit sugerido:
++
++```text
++feat(admin): migrar inbox com leitura POST protegida e paginação
++```
++
++## 3. Tool local e evidências
++
++```bash
++bash tools/e2e/e2e_f810.sh --check
++bash tools/e2e/e2e_f810.sh --help
++```
++
++Requer PHP CLI8.1+/mbstring/Twig3 do Composer do projeto, Node20+ com fetch/Headers.getSetCookie e Bash. Helpers F8-05/F8-06 já publicados são usados sem seus fluxos. Sem instalação automática/dependência nova da aplicação.
++
++Autoload Twig padrão: dev/system/storage/vendor/autoload.php. TWIG_AUTOLOAD absoluto permite QA isolada; MIRROR escolhe dev testado. Apenas fontes/autoload confiáveis: não é sandbox para código desconhecido. Não carrega config/framework da aplicação nos testes locais.
++
++| Grupo executado pelo agente | Resultado | Natureza |
++| --- | --- | --- |
++| PHP lint | **6/6 aprovados** | Cinco PHP runtime +runner. |
++| Contratos PHP/Twig | **40 PASS/0FAIL** | PHP8.4.26/Twig3.30.0 reais, DB/serviços/model do controller/IO sessão em fixtures. |
++| Auxiliares HTTP novos | **8 PASS/0FAIL** | Parser/marker/identidade/privacidade/formulários em simulação. |
++| Auxiliares F8-06 compartilhados | **16 PASS/0FAIL** | Respostas/fetch simulados. |
++| Negativo na caixa antiga | **16 PASS/24FAIL**, saída1 | Falha esperada em PHP/Twig. |
++| Sintaxe JS/Bash | Aprovada | f215 somente bash-n, não executado. |
++
++Regressões locais F8-09/08/07/06/05 também passaram sem falhas; não reabre seus aceites nem comprova backend/browser real.
++
++Classes reais/controller/model são executados e Twig strict/autoescape compila/renderiza templates. SQL capturado, não enviado a DB; Session real sem construtor, só dados em memória. Fixtures não contêm mensagens pessoais, nem há chamada de mailer/formulário público/SMTP.
++
++**Não chamar os64 casos de E2Es reais aprovados.** Nenhum servidor/DB/navegador, mensagem real, HTTP/e-mail real, GitHub write/deploy/Actions/PHPStan/PHPUnit completo/matrizPHP executados aqui. Sem JS runtime novo: comportamento visual/modal precisa do navegador.
++
++## 4. Fixture fictícia: somente dados
++
++Por privacidade, o Tool **não cria nem envia contato público**, não envia e-mail e não semeia DB. O endpoint público existente `dev/catalog/controller/common/contact.php` pode notificar o dono do site: e-mail@example.invalid da fixture não impede essa notificação.
++
++Primeiro, gerar somente os dados:
++
++```bash
++bash tools/e2e/e2e_f810.sh --fixture > /tmp/f810-dados-ficticios.json
++```
++
++Requer sóNode/helpers, nãoPHP, B/FUI/MIRROR ou banco. Saída kind=fixture-data-only, marker f810-<16hex>, campos name/email/telephone/subject/message e aviso de que nada foi salvo/enviado. Pode usar F810_MARKER previamente gerado para reproduzir os mesmos dados.
++
++**Preparar manualmente uma mensagem correspondente somente no laboratório isolado autorizado**, pelo procedimento local já aprovado. Se usar o formulário público local, antes confirmar notificação em **captura/offline** e integrações produtivas desligadas. Se não puder garantir isso, não submeter o formulário; o pacote não configura/verifica SMTP/captura remotamente e não autoriza envio externo. Nunca executar f215 inteiro para obter uma fixture: ele recria o banco.
++
++Copiar os cinco campos exatos do JSON, sem dados/autofill reais; telefone vazio; e-mail @example.invalid; corpo inclui texto/acentos e `<b>` literal para verificar escape. No formulário público, não preencher honeypot company; CSRF da própria UI é normal.
++
++Obter ID real pela lista/detalhe, nunca presumir1. Se clicou Ler para ver a URL/ID, marcar a fixture como **Novo** pelo botão e confirmar statusNovo antes do Tool; o novo GET não voltará a marcá-la. Não clicar Ler novamente antes do ensaio. A fixture deve começar em0Novo e não ter sido vinculada/alterada por outro operador.
++
++O Tool verifica nome/e-mail/assunto/ID na linha antes de buscar detalhe, depois telefone/corpo exatos antes de qualquer POST. Se marker/ID/dados/status/permissão não conferirem, bloqueia sem operar conteúdo desconhecido. Não substitua por mensagem real ou cópia de conteúdo pessoal.
++
++## 5. E2E HTTP controlado
++
++Laboratório com reamur_test, conta fictícia access/modify communication/contact_message, fixture exata preparada acima. Guardas herdadas F8-06/F8-05: B/FUI/MIRROR explícitos loopback, configs literais wizard com DB_DATABASE=reamur_test/hostname loopback/HTTP_SERVER coerente, `.f805-disposable`, fontes/assets CMS/inbox MIRROR=FUI sem symlinks. Marker do laboratório mantém nome por compatibilidade; não transforma DB real em descartável.
++
++**Proibido produção/dados reais/ambiente misto/túnel/proxy produção/concorrência/integrações produtivas.** Operador confirma runtime/PHP/DB reais; config/nonce/hash não atesta proxy/backend mal configurado.
++
++```bash
++export B='http://127.0.0.1:8090/davidcms/dev'
++export FUI='/var/www/html/davidcms/dev'
++export MIRROR="$(pwd -P)/dev"
++# Só depois de confirmar laboratório/DB/configs/fixture:
++printf 'reamur_test\n' > "$FUI/.f805-disposable"
++export ALLOW_F810_HTTP='YES_WRITE_REAMUR_TEST'
++read -r -p 'Usuário fictício: ' F810_USERNAME
++read -r -s -p 'Senha fictícia: ' F810_PASSWORD; printf '\n'
++read -r -p 'Marker exato do JSON: ' F810_MARKER
++read -r -p 'ID REAL da mensagem fictícia: ' F810_MESSAGE_ID
++export F810_USERNAME F810_PASSWORD F810_MARKER F810_MESSAGE_ID
++export F810_REPORT='/tmp/novo-resultado-f810.json'  # novo/inexistente
++bash tools/e2e/e2e_f810.sh --http
++unset F810_USERNAME F810_PASSWORD ALLOW_F810_HTTP
++```
++
++Não enviar senhas/tokens nem mensagens pessoais ao chat. Report opcional absoluto novo/diretório existente,0600, sem sobrescrever evidência. Preflight bloqueado sai2 sem relatório de workflow; detalhes são omitidos por privacidade. Consultar requisitos sem remover guardas/desativar TLS/alterar configs reais para forçar verde. Config dinâmica/DBDocker não-loopback pode exigir avaliação pontual.
++
++### Fluxo de12etapas preparado, NÃO executado pelo agente contra backend
++
++1. Probe nonce `FUI/admin/view/js/f810-probe-<nonce>.txt`, conferido por B antes de credenciais.
++2. Login único CSRF/cookies só em memória, sem jar/storage state.
++3. Localizar somente fixture própria: busca marker, nome/e-mail/assunto/ID exatos, statusNovo e botão Ler POST/modify.
++4. GET detalhe valida corpo/telefone exatos e permaneceNovo.
++5. GET nos três idiomas sem alterar estado.
++6. POST Ler sem token não marcaLido.
++7. POST Ler com token marcaLido, redirecionaGET e reload mantémestado.
++8. Status sem token e valores x/9/array não mutam.
++9. MarcarRespondido persiste e filtros refletem; nenhum e-mail enviado ou mailto seguido.
++10. MarcarNovo permaneceNovo apósGET; LerPOST válido volta aLido.
++11. GETstatus/delete e POSTdelete sem token não removem/mudam.
++12. Revalidar fixture inteira e excluir somente o ID próprio; conferir ausência na busca.
++
++Sem formulário público, SQL/reset/recreate/seed/upgrade, e-mail/SMTP, upload, mailto ou acesso a mensagem por ID adivinhado. POSTs não são repetidos após timeout/307/308 e redirects externos não recebem novo request/cookies. Falha após tentativa de mutação preserva a fixture para inspeção, sem reset para obter verde.
++
++JSON real: kind=http-workflow, marker/fixtureId/status/12etapas/cleanup. **Aceite:** passed +12etapas pass +cleanup complete. Aprova sóHTTP, não navegador. Não inclui corpo/nome/e-mail/telefone/IP/assunto/mailto, HTML completo, credenciais/cookies/tokens. Erros do workflow têm descrição genérica para não vazar contato/backend; veja qual etapa falhou e inspecione localmente.
++
++Cleanup corresponde somente à fixture/probe próprios; não remove mensagens alheias, dados normais de login/sessão/rate limit ou sequências auto-increment.
++
++## 6. Aceite no navegador
++
++- [ ] Lista/detalhe no shell, desktop/mobile/skins/claro/escuro legíveis, sem overflow/cor fixa inadequada; corpo preserva quebras como texto.
++- [ ] Busca nome/e-mail/assunto e status, contagem de abas coerente com busca, página2/recuo e reset inclusive0. Volume21+ no servidor exige dados fictícios próprios;45 foram só fixture.
++- [ ] GET direto de mensagemNova não grava, inclusive perfilreadonly; botãoLer do modify usaPOST+CSRF e marcaNovo→Lido uma vez/PRG.
++- [ ] POSTLer emLido/Respondido não muda estado; readonlyPOST énegado.
++- [ ] Novo/Lido/Respondido viaPOST token; marcarNovo no detalhe permaneceNovo apósredirectGET; x/arrays/9/sem token não mutam.
++- [ ] Cancelar modaldelete preserva; confirmar enviaPOST+CSRF; GET ou token inválido nunca excluem. Apenas fixture fictícia nesta homologação.
++- [ ] Conteúdo/nome/assunto potencialmente maliciosos são escapados, sem input de edição/editor/upload/SEO/add/edit no admin.
++- [ ] Reply permanece mailto manual pré-preenchido; não clicar/enviar no ensaio automático, marcarRespondido não dispara correio.
++- [ ] Três idiomas e readonly sem status/delete; outro perfil real não foi testado automaticamente.
++- [ ] Outros CRUDs/Blog/Appearance/site/e-mail/configs intactos. Não concluirFase8 automaticamente.
++
++ConfirmarTarefa10 somente após aplicação/homologação do usuário.
++
++## 7. Falhas, limpeza e rollback
++
++Timeout pode ocorrer depois da gravação. Não repetirPOST àscegas. Report omite dados pessoais; conferir fixture localmente por marker/ID/campos exatos. Fixture errada, real ou não comprovada não deve ser lida/alterada/excluída pelo Tool. Não adivinharID ou usar wildcard/limpezaSQL/reset para forçar verde.
++
++Se o fluxo falhar, status pode ter mudado: preservar para inspeção. Só nova fixture fictícia/reinício consciente após esclarecer o resultado; não pegar mensagem de cliente para substituir. Nenhuma mensagem extra é criada pelo Tool.
++
++Probe removido emfinally só se regular/conteúdo igual. Processo morto/probe alterado pode deixá-lo; inspecionar somente f810-probe-<nonce>.txt exato, não limpar view/js amplamente. Falha sinalizafailed/pending.
++
++Rollback com patch original/backup e alvos sem alterações posteriores:
++
++```bash
++git apply -R --check "$ENTREGA/F8-10.patch"
++git apply -R "$ENTREGA/F8-10.patch"
++```
++
++Parar/revisar se não aplicar; sem reset--hard. Restaura dez/remove cinco novos, sem reverter tarefas aceitas. Limpar antes somente fixture/probe próprios: rollback não desfaz dados/relatórios. Sincronizar apenas alvos revertidos/invalidação normal de cache.
++
++A base antiga volta a marcarLido emGET e sem CSRF/modify, além das limitações antigas de status; risco conhecido, não recomendação de operação.
++
++## 8. Limites
++
++Sem mensagens pessoais, backend/DB/HTTP/browser/e-mail/produção/deploy/GitHubwrite ouActions executados aqui. Sem PHPStan/PHPUnit completo/matrizPHP. Não houve runtimeJS novo nem prova de modal/contraste/foco nativos.
++
++F215 antigo permanece destrutivo/não auditado integralmente: só compatibilidade login/CSRF/contratoLer, nunca executado peloTool; não se prometem15checks reais verdes. Nenhuma configuraçãoSMTP/captura/publiccontact alterada, nem política nova de retenção/exportação.
++
++Core/aria-labels globais de paginação intactos. Sem editor/upload/HTMLativo ou bibliotecaBlog. Guardas dependem de laboratório confiável; não atestam DB/PHP/proxy incorreto. Código publicado não comprova deploy; conclusãoT09 informada pelo usuário, igualdade17fontes conferida independentemente.
++
++Referências: [ADR0054](../agents-ia/decisoes/0054-f8-10-mensagens-contato-no-shell.md), [F8-09](F8-09-Ferramentas-Conectadas.md), [F8-06](F8-06-Paginas-CMS.md), [base pública](https://github.com/davidcreator/davidcms/commit/653fb677b6068af28d706d766064a47ef0aefffe).
+diff --git a/docs/README.md b/docs/README.md
+index db9fbf345efc103f6fb85d5db36654553c2d0c58..1178cf008190555fc383aeee417c9c71bb2d4f9f 100644
+--- a/docs/README.md
++++ b/docs/README.md
+@@ -30,6 +30,7 @@
+ | 18 | [F8-07-Categorias-Portfolio.md](F8-07-Categorias-Portfolio.md) | **Fase 8 · Tarefa 07**: categorias do portfólio no shell, hierarquia/imagem preservadas, CSRF, Tool E2E e homologação. |
+ | 19 | [F8-08-Projetos-Portfolio.md](F8-08-Projetos-Portfolio.md) | **Fase 8 · Tarefa 08**: projetos no shell, categorias N:N/capa/galeria/SEO preservados, filtros, CSRF e Tool E2E. |
+ | 20 | [F8-09-Ferramentas-Conectadas.md](F8-09-Ferramentas-Conectadas.md) | **Fase 8 · Tarefa 09**: cadastro de ferramentas no shell, ícone/vendor/URL preservados, filtros, CSRF e Tool E2E. |
++| 21 | [F8-10-Mensagens-Contato.md](F8-10-Mensagens-Contato.md) | **Fase 8 · Tarefa 10**: inbox no shell, Ler POST+ACL+CSRF, GET puro, busca/paginação, privacidade e Tool E2E. |
+ 
+ ---
+ 
+diff --git a/tools/e2e/e2e_f810.sh b/tools/e2e/e2e_f810.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..7a9d08a7058de88f92138ca75a59738331e985db
+--- /dev/null
++++ b/tools/e2e/e2e_f810.sh
+@@ -0,0 +1,70 @@
++#!/usr/bin/env bash
++# Fase 8 / Tarefa 10 — inbox; padrão local seguro, sem app/DB/e-mail reais.
++set -euo pipefail
++ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++MODE="${1:---check}"
++PHP_BIN="${PHP_BIN:-php}"
++NODE_BIN="${NODE_BIN:-node}"
++CHECK_MIRROR="${MIRROR:-$ROOT/dev}"
++PHP_TEST="$ROOT/tools/e2e/e2e_f810_contracts.php"
++HTTP_TEST="$ROOT/tools/e2e/e2e_f810_http.cjs"
++help() {
++  cat <<'HELP'
++Uso: bash tools/e2e/e2e_f810.sh [--check|--fixture|--http|--help]
++
++--check    Padrão. Lint6PHP +40 contratos PHP/Twig reais, DB/serviços/IO de
++           sessão simulados; 8 auxiliares HTTP novos+16 compartilhados com
++           respostas simuladas. Sem app/banco/navegador/e-mail reais.
++--fixture  Gera SOMENTE JSON com dados fictícios/marker; nada é salvo/enviado.
++           Preparar uma mensagem no laboratório com captura/offline de e-mail
++           e sem integrações produtivas, conforme guia. Requer só Node.
++--http     Após --check, opera UMA fixture já preparada pelo operador:
++           valida marker/nome/e-mail/assunto/ID antes de ler; depois corpo
++           exato antes de POST. Ler via POST protegido, GET puro, status,
++           CSRF/filtros/delete somente dessa mensagem. Sem enviar formulário
++           público/e-mail/mailto/SQL, seed/reset ou consumir mensagens reais.
++--help     Ajuda. --backend/--browser/suítes destrutivas não são chamados.
++
++Requisitos: PHP8.1+/mbstring/Twig3 do projeto (autoload padrão em
++ dev/system/storage/vendor/autoload.php ou TWIG_AUTOLOAD explícito),
++ Node20+ com fetch/Headers.getSetCookie, Bash e helpers F8-05/F8-06 na base.
++ Não instala pacotes nem carrega config/framework do CMS nos testes locais.
++
++--http requer explicitamente:
++ ALLOW_F810_HTTP=YES_WRITE_REAMUR_TEST
++ B=http://127.0.0.1:8090/davidcms/dev
++ FUI=/caminho/absoluto/copia/servida/dev
++ MIRROR=/caminho/absoluto/repositorio/dev
++ F810_USERNAME/F810_PASSWORD fictícios com access/modify communication/contact_message
++ F810_MARKER=f810-<16hex> gerado por --fixture
++ F810_MESSAGE_ID=ID_REAL_DA_FIXTURE, obtido da lista; nunca presumir1
++ FUI/.f805-disposable contendo reamur_test; configs literais/loopback/URL coerentes,
++ fontes/assets CMS/inbox iguais MIRROR/FUI, sem symlinks.
++ Opcional: F810_REPORT=/tmp/novo-resultado-f810.json (novo e absoluto,0600).
++
++Conta/fixture reais ou sem prova de identidade bloqueiam o fluxo. Cookies/tokens
++só em memória. Relatório não contém corpo/nome/e-mail/telefone/IP/mailto. Em falha
++preserva a fixture, não repete POST/não adivinha IDs/não limpa amplamente.
++Proibido produção/dados reais/túnel/proxy produção. Leia docs/F8-10-Mensagens-Contato.md.
++HELP
++}
++fail() { printf 'ERRO: %s\n' "$*" >&2; exit 2; }
++[[ "$#" -le 1 ]] || { help >&2; exit 2; }
++case "$MODE" in --help|-h) help; exit 0;; --check|--fixture|--http) ;; *) help >&2; exit 2;; esac
++command -v "$NODE_BIN" >/dev/null 2>&1 || fail 'Node não encontrado.'
++"$NODE_BIN" -e 'if (Number(process.versions.node.split(".")[0]) < 20) process.exit(2);'
++for p in "$HTTP_TEST" "$ROOT/tools/e2e/e2e_f806_http.cjs" "$ROOT/tools/e2e/e2e_f805.cjs" "$ROOT/tools/e2e/e2e_f805_browser.js"; do [[ -f "$p" ]] || fail "Tool/dependência da base ausente: $p"; done
++if [[ "$MODE" == '--fixture' ]]; then "$NODE_BIN" "$HTTP_TEST" --fixture; exit 0; fi
++command -v "$PHP_BIN" >/dev/null 2>&1 || fail 'PHP CLI não encontrado.'
++"$PHP_BIN" -r 'if(PHP_VERSION_ID<80100||!extension_loaded("mbstring")){fwrite(STDERR,"Requer PHP8.1+/mbstring.\n");exit(2);}'
++if [[ "$MODE" == '--http' ]]; then
++  [[ "${ALLOW_F810_HTTP:-}" == 'YES_WRITE_REAMUR_TEST' ]] || fail 'HTTP bloqueado: confirmação explícita ausente.'
++  [[ -n "${B:-}" && -n "${FUI:-}" && -n "${MIRROR:-}" && -n "${F810_USERNAME:-}" && -n "${F810_PASSWORD:-}" && -n "${F810_MARKER:-}" && -n "${F810_MESSAGE_ID:-}" ]] || fail 'HTTP exige laboratório/credenciais/marker/ID próprios explícitos.'
++fi
++for p in admin/controller/communication/contact_message.php admin/model/communication/contact_message.php admin/language/en-us/communication/contact_message.php admin/language/pt-br/communication/contact_message.php admin/language/es-eu/communication/contact_message.php; do "$PHP_BIN" -l "$CHECK_MIRROR/$p"; done
++"$PHP_BIN" -l "$PHP_TEST"
++"$NODE_BIN" --check "$HTTP_TEST"
++[[ ! -f "$ROOT/dev/tests/e2e/e2e_f215.sh" ]] || bash -n "$ROOT/dev/tests/e2e/e2e_f215.sh"
++"$PHP_BIN" "$PHP_TEST" "$CHECK_MIRROR"
++"$NODE_BIN" "$HTTP_TEST" --self-test
++if [[ "$MODE" == '--http' ]]; then "$NODE_BIN" "$HTTP_TEST" --http; else printf '%s\n' 'Checks locais concluídos; não houve app/banco/navegador/mensagens/e-mails reais.'; fi
+diff --git a/tools/e2e/e2e_f810_contracts.php b/tools/e2e/e2e_f810_contracts.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..6ec604918c3fbba9b04ad2b25ce080a6a3043fc8
+--- /dev/null
++++ b/tools/e2e/e2e_f810_contracts.php
+@@ -0,0 +1,167 @@
++<?php declare(strict_types=1);
++/**
++ * @package ReamurCMS
++ * @author David L. Almeida
++ * @copyright Copyright (c) 2026, ReamurCMS
++ * @license https://opensource.org/licenses/GPL-3.0
++ * F8-10 — PHP/Twig reais; DB/serviços/IO de sessão em fixtures.
++ * Nenhuma mensagem real, banco, e-mail ou HTTP da aplicação é acessado.
++ */
++namespace Reamur\Tests\F810;
++use Reamur\System\Engine\Registry;
++use Reamur\System\Library\Session;
++use Reamur\System\Library\Security\Csrf;
++use Reamur\Admin\Controller\Communication\Contact_message as Controller;
++use Reamur\Admin\Model\Communication\Contact_message as Model;
++$mirror=realpath($argv[1]??dirname(__DIR__,2).'/dev')?:'';
++$autoload=getenv('TWIG_AUTOLOAD')?:$mirror.'/system/storage/vendor/autoload.php';
++if($mirror===''||!is_file($autoload)){fwrite(STDERR,"MIRROR/Twig ausentes.\n");exit(2);}
++require_once $autoload;
++if(!class_exists(\Twig\Environment::class)||!extension_loaded('mbstring')){fwrite(STDERR,"Requer Twig3 e mbstring.\n");exit(2);}
++if(!defined('DB_PREFIX'))define('DB_PREFIX','f810_');
++if(!defined('DIR_SYSTEM'))define('DIR_SYSTEM',$mirror.'/system/');
++foreach(['engine/registry.php','engine/controller.php','engine/model.php','library/session.php','library/security/csrf.php','library/pagination.php']as$p)require_once DIR_SYSTEM.$p;
++require_once $mirror.'/admin/controller/common/header.php';
++require_once $mirror.'/admin/model/communication/contact_message.php';
++require_once $mirror.'/admin/controller/communication/contact_message.php';
++
++final class LanguageFixture {
++    public array $values;
++    public function __construct(string $file) { $this->values = (static function (string $file): array { $_ = []; require $file; return $_; })($file); }
++    public function get(string $key): string { if (!array_key_exists($key, $this->values)) { throw new \RuntimeException('Chave i18n ausente: ' . $key); } return (string)$this->values[$key]; }
++}
++final class ConfigFixture {
++    public function get(string $key, mixed $default = null): mixed { return ['site_url' => 'http://example.test/admin/', 'language_directory' => 'en-us'][$key] ?? $default; }
++}
++final class DocumentFixture {
++    public array $styles = [];
++    public array $scripts = [];
++    public string $title = '';
++    public function setTitle(string $title): void { $this->title = $title; }
++    public function addStyle(string $url): void { $this->styles[] = $url; }
++    public function addScript(string $url): void { $this->scripts[] = $url; }
++}
++final class ResponseFixture {
++    public string $output = '';
++    public string $location = '';
++    public function setOutput(string $output): void { $this->output = $output; }
++    public function redirect(string $url): void { $this->location = $url; }
++}
++final class UrlFixture {
++    public function link(string $route, string|array $args = '', bool $secure = false): string {
++        return 'http://example.test/admin/index.php?route=' . $route . ($args ? '&' . (is_array($args) ? http_build_query($args) : $args) : '');
++    }
++}
++final class UserFixture {
++    public function __construct(public bool $modify) {}
++    public function hasPermission(string $kind, string $route): bool { return $kind === 'access' || $this->modify; }
++}
++final class StoreFixture {
++    public array $records=[];public array $calls=[];public array $updates=[];public array $deleted=[];
++    private function filtered(?int $status,array $o):array {
++        $rows=array_filter(array_values($this->records),static function(array $r)use($status,$o):bool{
++            if($status!==null&&$r['status']!==$status)return false;
++            $q=$o['search']??'';return $q===''||mb_stripos($r['name'],$q)!==false||mb_stripos($r['email'],$q)!==false||mb_stripos($r['subject'],$q)!==false;
++        });usort($rows,static fn(array $a,array $b):int=>[$b['date_added'],$b['contact_message_id']]<=>[$a['date_added'],$a['contact_message_id']]);return array_values($rows);
++    }
++    public function getMessages(?int $status=null,array $o=[]):array{$this->calls[]=[$status,$o];$rows=$this->filtered($status,$o);return isset($o['limit'])?array_slice($rows,$o['start'],$o['limit']):$rows;}
++    public function getTotalMessages(?int $status=null,array $o=[]):int{return count($this->filtered($status,$o));}
++    public function getCounts(array $o=[]):array{$c=['all'=>0,'new'=>0,'read'=>0,'replied'=>0];foreach($this->filtered(null,$o)as$r){$c['all']++;$key=match($r['status']){1=>'read',2=>'replied',default=>'new'};$c[$key]++;}return$c;}
++    public function getMessage(int $id):array{return$this->records[$id]??[];}
++    public function updateStatus(int $id,int $status):bool{if(!in_array($status,Model::STATUSES,true))return false;$this->updates[]=[$id,$status];if(isset($this->records[$id]))$this->records[$id]['status']=$status;return true;}
++    public function deleteMessage(int $id):void{$this->deleted[]=$id;unset($this->records[$id]);}
++}
++final class LoaderFixture {
++    public array $data = [];
++    private \Twig\Environment $twig;
++    public function __construct(private string $mirror) {
++        $this->twig = new \Twig\Environment(new \Twig\Loader\FilesystemLoader($mirror . '/admin/view/template'), ['cache' => false, 'autoescape' => 'html', 'strict_variables' => true]);
++    }
++    public function language(string $route): void { if ($route !== 'communication/contact_message') { throw new \RuntimeException('Rota de language inesperada'); } }
++    public function model(string $route): void { if ($route !== 'communication/contact_message') { throw new \RuntimeException('Model inesperado'); } }
++    public function controller(string $route, array $data = []): string { return '<!-- shell fixture: ' . $route . ' -->'; }
++    public function view(string $route, array $data): string { $this->data = $data; return $this->twig->render($route . '.twig', $data); }
++}
++final class Harness {
++    public Registry $registry;
++    public Controller $controller;
++    public StoreFixture $store;
++    public Session $session;
++    public \stdClass $request;
++    public ResponseFixture $response;
++    public LoaderFixture $loader;
++    public DocumentFixture $document;
++    public LanguageFixture $language;
++    public function __construct(string $mirror, ?StoreFixture $store = null, ?Session $session = null, string $locale = 'en-us', bool $modify = true) {
++        $this->registry = new Registry();
++        $this->store = $store ?? new StoreFixture();
++        $this->session = $session ?? (new \ReflectionClass(Session::class))->newInstanceWithoutConstructor();
++        $this->request = (object)['server' => ['REQUEST_METHOD' => 'GET'], 'get' => [], 'post' => []];
++        $this->response = new ResponseFixture(); $this->loader = new LoaderFixture($mirror); $this->document = new DocumentFixture();
++        $this->language = new LanguageFixture($mirror . '/admin/language/' . $locale . '/communication/contact_message.php');
++        foreach (['request' => $this->request, 'response' => $this->response, 'load' => $this->loader, 'document' => $this->document, 'language' => $this->language, 'config' => new ConfigFixture(), 'user' => new UserFixture($modify), 'session' => $this->session, 'url' => new UrlFixture(), 'model_communication_contact_message' => $this->store] as $key => $value) { $this->registry->set($key, $value); }
++        $this->controller = new Controller($this->registry);
++    }
++    public function post(array $data): void { $this->request->server['REQUEST_METHOD'] = 'POST'; $this->request->post = $data; }
++}
++final class DbFixture {
++    public array $queries=[];public array $rows=[];public array $row=[];
++    public function escape(string $s):string{return addslashes($s);}
++    public function query(string $sql):\stdClass{$this->queries[]=$sql;return(object)['rows'=>$this->rows,'row'=>$this->row?:['total'=>7]];}
++}
++final class Suite {
++    private static int $passed=0;private static int $failed=0;private static string $mirror;
++    private static function ok(bool $test,string $message):void{if(!$test)throw new \RuntimeException($message);}
++    private static function test(string $label,callable $fn):void{try{$fn();self::$passed++;echo'PASS '.$label.PHP_EOL;}catch(\Throwable $e){self::$failed++;fwrite(STDERR,'FAIL '.$label.': '.$e->getMessage().PHP_EOL);}}
++    private static function record(int $id=101,int $status=0):array{return['contact_message_id'=>$id,'name'=>'QA Message '.$id,'email'=>'fixture-'.$id.'@example.invalid','telephone'=>'','subject'=>'QA subject '.$id,'message'=>"Linha ação ñ\n<b>Texto literal</b>\nSem dados reais.",'ip'=>'203.0.113.9','status'=>$status,'date_added'=>'2026-10-23 12:00:00'];}
++    private static function populated(int $count):StoreFixture{$s=new StoreFixture();for($i=0;$i<$count;$i++)$s->records[101+$i]=self::record(101+$i,$i%3);return$s;}
++    private static function harness(?StoreFixture $s=null,?Session $session=null,string $locale='en-us',bool $modify=true):Harness{return new Harness(self::$mirror,$s,$session,$locale,$modify);}
++    private static function model():array{$r=new Registry();$db=new DbFixture();$r->set('db',$db);return[new Model($r),$db];}
++    private static function valid(Harness $h,array $p=[]):void{$h->post($p+['csrf_token'=>Csrf::token($h->session)]);}
++    public static function run(string $mirror):int{
++        self::$mirror=$mirror;
++        self::test('01 · chamada antiga getMessages completa/mais recentes primeiro',static function():void{[$m,$db]=self::model();$m->getMessages();$q=end($db->queries);self::ok(!str_contains($q,' LIMIT ')&&!str_contains($q,' WHERE ')&&str_ends_with($q,'ORDER BY `date_added` DESC, `contact_message_id` DESC'),'Contrato antigo alterado');});
++        self::test('02 · getMessages(?int) preserva filtro antigo inclusive inválido',static function():void{[$m,$db]=self::model();foreach([0,1,2,9]as$s){$m->getMessages($s);self::ok(str_contains((string)end($db->queries),"WHERE `status` = '".$s."'")&&!str_contains((string)end($db->queries),'LIMIT'),'Filtro do model mudou para todas');}});
++        self::test('03 · busca escapa e usa só nome/email/assunto com recorte',static function():void{[$m,$db]=self::model();$m->getMessages(0,['search'=>"O'Brien",'start'=>20,'limit'=>20]);$q=end($db->queries);self::ok(str_contains($q,"O\\'Brien")&&str_contains($q,'`name` LIKE')&&str_contains($q,'`email` LIKE')&&str_contains($q,'`subject` LIKE')&&!str_contains($q,'`message` LIKE')&&str_ends_with($q,'LIMIT 20, 20'),'Busca/privacidade/recorte inválidos');});
++        self::test('04 · count/list mesmos predicados, limites normalizados',static function():void{[$m,$db]=self::model();$o=['search'=>'x'];self::ok($m->getTotalMessages(1,$o)===7,'Total errado');$count=end($db->queries);$m->getMessages(1,$o);$q=end($db->queries);$q=substr($q,strpos($q,'FROM '));$q=substr($q,0,strpos($q,' ORDER BY'));self::ok(substr($count,strpos($count,'FROM '))===$q,'Predicados divergentes');$m->getMessages(null,['search'=>[],'start'=>-1,'limit'=>999]);self::ok(str_ends_with((string)end($db->queries),'LIMIT 0, 100'),'Limites inválidos');});
++        self::test('05 · counts global preservado e busca opcional nas abas',static function():void{[$m,$db]=self::model();$db->rows=[['status'=>0,'total'=>3],['status'=>1,'total'=>2],['status'=>2,'total'=>1],['status'=>9,'total'=>4]];self::ok($m->getCounts()===['all'=>10,'new'=>7,'read'=>2,'replied'=>1]&&!str_contains((string)end($db->queries),'WHERE'),'Counts antigo alterado');$m->getCounts(['search'=>'needle']);self::ok(str_contains((string)end($db->queries),'needle')&&str_ends_with((string)end($db->queries),'GROUP BY `status`'),'Counts não acompanha busca');});
++        self::test('06 · model get/update/delete mantém contrato e whitelist',static function():void{[$m,$db]=self::model();$m->getMessage(143);self::ok(str_contains((string)end($db->queries),"`contact_message_id` = '143'"),'Get ID mudou');foreach([0,1,2]as$s)self::ok($m->updateStatus(143,$s),'Status válido rejeitado');$n=count($db->queries);self::ok(!$m->updateStatus(143,9)&&!$m->updateStatus(143,-1)&&count($db->queries)===$n,'Model aceitou status inválido');$m->deleteMessage(143);self::ok(str_contains((string)end($db->queries),"DELETE FROM `f810_contact_message` WHERE `contact_message_id` = '143'"),'Delete ID mudou');});
++        self::test('07 · índice vazio honesto/sem add-edit-upload',static function():void{$h=self::harness();$h->controller->index();self::ok($h->loader->data['total_messages']===0&&str_contains($h->response->output,'No messages yet')&&!str_contains($h->response->output,'contact_message.add')&&!method_exists(Controller::class,'add')&&!method_exists(Controller::class,'edit')&&!method_exists(Controller::class,'upload'),'CRUD assimétrico alterado');});
++        self::test('08 · 45 mensagens/página dois20/ordem desc',static function():void{$h=self::harness(self::populated(45));$h->request->get['page']='2';$h->controller->index();self::ok(count($h->loader->data['messages'])===20&&$h->loader->data['total_messages']===45&&end($h->store->calls)[1]['start']===20,'Paginação inválida');});
++        self::test('09 · recuo de página e query array não quebram',static function():void{$h=self::harness(self::populated(45));$h->request->get['page']=(string)PHP_INT_MAX;$h->controller->index();self::ok(count($h->loader->data['messages'])===5&&end($h->store->calls)[1]['start']===40,'Recuo inválido');$h=self::harness();$h->request->get=['filter_search'=>[],'filter_status'=>[],'page'=>[]];$h->controller->index();self::ok($h->loader->data['filter_search']===''&&$h->loader->data['filter_status']==='all','Query array não normalizada');});
++        self::test('10 · filtro canônico0/1/2; x/all/01 não viram Novo',static function():void{foreach(['x','all','01','',[],true,0.2]as$v){$h=self::harness(self::populated(3));$h->request->get['filter_status']=$v;$h->controller->index();self::ok($h->loader->data['filter_status']==='all'&&$h->loader->data['total_messages']===3,'Filtro inválido virou status0');}foreach(['0','1','2']as$v){$h=self::harness(self::populated(3));$h->request->get['filter_status']=$v;$h->controller->index();self::ok($h->loader->data['filter_status']===$v&&$h->loader->data['total_messages']===1,'Status válido perdido');}});
++        self::test('11 · busca+status/contadores de abas/hrefs coerentes',static function():void{$s=self::populated(6);foreach([101,102,103]as$id)$s->records[$id]['subject']='needle';$h=self::harness($s);$h->request->get=['filter_search'=>'needle','filter_status'=>'1'];$h->controller->index();self::ok($h->loader->data['total_messages']===1&&array_column($h->loader->data['filters'],'count')===[3,1,1,1],'Count das abas perdeu busca');foreach($h->loader->data['filters']as$f)self::ok(str_contains($f['href'],'filter_search=needle'),'Href perdeu busca');});
++        self::test('12 · busca zero conserva reset',static function():void{$h=self::harness();$h->request->get['filter_search']='0';$h->controller->index();self::ok(str_contains($h->response->output,'>Reset</a>'),'Busca0 sem reset');});
++        self::test('13 · paginação mantém busca/status sem duplo escape/XSS',static function():void{$s=self::populated(75);foreach($s->records as&$r)$r['subject']="O'Brien & <needle>";unset($r);$h=self::harness($s);$h->request->get=['filter_search'=>"O'Brien & <needle>",'filter_status'=>'0'];$h->controller->index();$html=$h->loader->data['pagination'];self::ok(!str_contains($html,'&amp;amp;')&&!str_contains($h->response->output,'<needle>'),'Escape inválido');preg_match_all('/href="([^"]+)"/',$html,$m);self::ok(count($m[1])>0,'Pager ausente');foreach($m[1]as$a){parse_str((string)parse_url(html_entity_decode($a,ENT_QUOTES|ENT_HTML5,'UTF-8'),PHP_URL_QUERY),$q);self::ok(($q['filter_search']??'')==="O'Brien & <needle>"&&($q['filter_status']??'')==='0','Filtro perdido');}});
++        self::test('14 · readonly lista usa GET e não exibe formulários mutáveis',static function():void{$h=self::harness(self::populated(1),null,'en-us',false);$h->controller->index();self::ok(str_contains($h->response->output,'route=communication/contact_message.read|101')&&!str_contains($h->response->output,'data-message-open')&&!str_contains($h->response->output,'data-rms-confirm-delete')&&!str_contains($h->response->output,'method="post"'),'Readonly pode mutar pela UI');});
++        self::test('15 · modify lista Ler é POST com CSRF/modal',static function():void{$h=self::harness(self::populated(2));$h->controller->index();self::ok(substr_count($h->response->output,'data-message-open')===2&&substr_count($h->response->output,'name="csrf_token"')===4&&substr_count($h->response->output,'data-rms-confirm-delete=')===2&&$h->store->updates===[],'Ler não protegido ou lista marcou estado');});
++        self::test('16 · GET detalhe Novo permanece Novo, sem update',static function():void{$h=self::harness(self::populated(1));$h->controller->read('101');self::ok($h->store->updates===[]&&$h->store->getMessage(101)['status']===0&&$h->loader->data['message']['status']===0&&str_contains($h->response->output,'data-message-body'),'GET ainda muta');});
++        self::test('17 · readonly GET não grava e só mostra conteúdo/reply mailto',static function():void{$h=self::harness(self::populated(1),null,'en-us',false);$h->controller->read('101');self::ok($h->store->updates===[]&&!str_contains($h->response->output,'method="post"')&&str_contains($h->response->output,'mailto:fixture-101@example.invalid')&&str_contains($h->response->output,'changing status'),'Readonly leitura indevida');});
++        self::test('18 · POST Ler válido Novo→Lido e redireciona GET',static function():void{$h=self::harness(self::populated(1));self::valid($h);$h->controller->read('101');self::ok($h->store->updates===[[101,1]]&&$h->store->getMessage(101)['status']===1&&str_contains($h->response->location,'read|101')&&$h->response->output==='','POST Ler não usa PRG');});
++        self::test('19 · POST Ler não regrava Lido/Respondido',static function():void{foreach([1,2]as$status){$s=self::populated(1);$s->records[101]['status']=$status;$h=self::harness($s);self::valid($h);$h->controller->read('101');self::ok($s->updates===[]&&$s->getMessage(101)['status']===$status,'POST Ler sobrescreveu estado');}});
++        self::test('20 · Ler sem token/array/errado não atualiza',static function():void{foreach([null,[],'wrong']as$t){$h=self::harness(self::populated(1));$h->post($t===null?[]:['csrf_token'=>$t]);$h->controller->read('101');self::ok($h->store->updates===[]&&$h->store->getMessage(101)['status']===0&&($h->session->data['flash']['text']??'')===$h->language->get('error_csrf'),'CSRF Ler falhou');}});
++        self::test('21 · Ler POST readonly mesmo token válido negado',static function():void{$h=self::harness(self::populated(1),null,'en-us',false);self::valid($h);$h->controller->read('101');self::ok($h->store->updates===[]&&str_contains($h->response->location,'error/permission'),'Ler sem modify gravou');});
++        self::test('22 · reload GET após POST não repete marcação',static function():void{$s=self::populated(1);$h=self::harness($s);self::valid($h);$h->controller->read('101');$get=self::harness($s,$h->session);$get->controller->read('101');self::ok(count($s->updates)===1&&$get->loader->data['message']['status']===1,'GET após PRG repetiu escrita');});
++        self::test('23 · status Respondido/Novo com from=read permanece após GET',static function():void{$s=self::populated(1);foreach([2,0]as$status){$h=self::harness($s);self::valid($h,['status'=>(string)$status,'from'=>'read']);$h->controller->status('101');self::ok(str_contains($h->response->location,'read|101'),'from=read perdido');$get=self::harness($s,$h->session);$get->controller->read('101');self::ok($s->getMessage(101)['status']===$status&&$get->loader->data['message']['status']===$status,'GET desfez status explícito');}});
++        self::test('24 · status x/9/01/array/float não coage para Novo',static function():void{foreach(['x','9','01',[],false,null,0.5,-1]as$v){$s=self::populated(1);$s->records[101]['status']=1;$h=self::harness($s);self::valid($h,['status'=>$v,'from'=>'read']);$h->controller->status('101');self::ok($s->updates===[]&&$s->getMessage(101)['status']===1&&($h->session->data['flash']['text']??'')===$h->language->get('error_status'),'Status inválido mutou');}});
++        self::test('25 · status string0 é válido',static function():void{$s=self::populated(1);$s->records[101]['status']=1;$h=self::harness($s);self::valid($h,['status'=>'0']);$h->controller->status('101');self::ok($s->updates===[[101,0]]&&$s->getMessage(101)['status']===0,'Status0 rejeitado');});
++        self::test('26 · status sem CSRF não atualiza',static function():void{$h=self::harness(self::populated(1));$h->post(['status'=>'2']);$h->controller->status('101');self::ok($h->store->updates===[]&&($h->session->data['flash']['text']??'')===$h->language->get('error_csrf'),'CSRF status falhou');});
++        self::test('27 · GET status não muta',static function():void{$h=self::harness(self::populated(1));$h->request->get['status']='2';$h->controller->status('101');self::ok($h->store->updates===[]&&str_contains($h->response->location,'error/permission'),'GET status mutou');});
++        self::test('28 · status readonly negado com token',static function():void{$h=self::harness(self::populated(1),null,'en-us',false);self::valid($h,['status'=>'2']);$h->controller->status('101');self::ok($h->store->updates===[]&&str_contains($h->response->location,'error/permission'),'ACL status falhou');});
++        self::test('29 · GET delete não remove',static function():void{$h=self::harness(self::populated(1));$h->controller->delete('101');self::ok($h->store->deleted===[]&&str_contains($h->response->location,'error/permission'),'GET delete mutou');});
++        self::test('30 · delete sem token/errado não remove',static function():void{foreach([[],['csrf_token'=>'wrong']]as$p){$h=self::harness(self::populated(1));$h->post($p);$h->controller->delete('101');self::ok($h->store->deleted===[]&&($h->session->data['flash']['text']??'')===$h->language->get('error_csrf'),'CSRF delete falhou');}});
++        self::test('31 · delete válido só ID próprio',static function():void{$h=self::harness(self::populated(2));self::valid($h);$h->controller->delete('101');self::ok($h->store->deleted===[101]&&!$h->store->getMessage(101)&&$h->store->getMessage(102)!==[],'Delete atingiu outra mensagem');});
++        self::test('32 · delete readonly negado',static function():void{$h=self::harness(self::populated(1),null,'en-us',false);self::valid($h);$h->controller->delete('101');self::ok($h->store->deleted===[]&&str_contains($h->response->location,'error/permission'),'ACL delete falhou');});
++        self::test('33 · IDs inexistentes mantêm contratos sem mutar',static function():void{$h=self::harness();$h->controller->read('999');self::ok(str_contains($h->response->location,'error/not_found'),'Read 404 perdido');foreach(['status','delete']as$m){$h=self::harness();self::valid($h,['status'=>'2']);$h->controller->{$m}('999');self::ok($h->store->updates===[]&&$h->store->deleted===[]&&str_contains($h->response->location,'communication/contact_message'),'ID inexistente mutou');}});
++        self::test('34 · três idiomas com mesmas chaves e Twig strict',static function():void{$keys=null;foreach(['en-us','pt-br','es-eu']as$locale){$h=self::harness(self::populated(1),null,$locale);$h->controller->index();self::ok(str_contains($h->response->output,$h->language->get('heading_title')),'Heading não traduzido');$h->controller->read('101');$k=array_keys($h->language->values);sort($k);if($keys!==null)self::ok($k===$keys,'Chaves divergentes');$keys=$k;}});
++        self::test('35 · conteúdo de mensagem/nome/assunto é texto escapado',static function():void{$s=self::populated(1);$s->records[101]['name']='<script>name</script>';$s->records[101]['subject']='<img src=x onerror=alert(1)>';$s->records[101]['message']="<script>body</script>\n<b>literal</b>";$h=self::harness($s);$h->controller->read('101');self::ok(!str_contains($h->response->output,'<script>body')&&!str_contains($h->response->output,'<img src=x')&&str_contains($h->response->output,'&lt;script&gt;body')&&str_contains($h->response->output,'&lt;b&gt;literal'),'Mensagem executada como HTML');});
++        self::test('36 · detalhe sem edição/upload/editor/JS inline e estilo local',static function():void{$h=self::harness(self::populated(1));$h->controller->read('101');self::ok(!str_contains($h->response->output,'<textarea')&&!str_contains($h->response->output,'type="file"')&&!str_contains($h->response->output,'<script>')&&!str_contains($h->response->output,'data-rte'),'Inventou edição/upload/editor');$css=file_get_contents(self::$mirror.'/admin/view/css/admin.css');self::ok(str_contains($css,'.contact-message-read .message-body')&&str_contains($css,'white-space: pre-wrap'),'CSS local não preserva texto');});
++        self::test('37 · mailto pré-preenchido permanece só link codificado',static function():void{$s=self::populated(1);$s->records[101]['subject']='QA & teste';$h=self::harness($s);$h->controller->read('101');$link=$h->loader->data['reply_href'];self::ok(str_starts_with($link,'mailto:fixture-101@example.invalid?subject=Re%3A%20QA%20%26%20teste')&&str_contains($link,'&body=%0A%0A---%0A'),'Resposta URL/citação alterada');});
++        self::test('38 · busca não lê corpo; GET nunca altera dado de mensagem',static function():void{$s=self::populated(1);$s->records[101]['message']='needle-body-only';$h=self::harness($s);$h->request->get['filter_search']='needle-body-only';$h->controller->index();self::ok($h->loader->data['total_messages']===0&&$s->updates===[],'Busca do corpo ou efeito de leitura indevido');});
++        self::test('39 · badges temáticos/estado atual sem cor inline ou confirm',static function():void{foreach([0,1,2]as$status){$s=self::populated(1);$s->records[101]['status']=$status;$h=self::harness($s);$h->controller->read('101');self::ok(str_contains($h->response->output,'data-contact-status="'.$status.'"')&&!str_contains($h->response->output,'onsubmit=')&&!preg_match('/#[0-9a-f]{6}/i',$h->response->output),'Badge/inline legado persiste');}});
++        self::test('40 · formulários status0/1/2/from/read e CSRF corretos',static function():void{$h=self::harness(self::populated(1));$h->controller->read('101');$html=$h->response->output;self::ok(substr_count($html,'data-message-status-form')===3&&substr_count($html,'name="from" value="read"')===3&&substr_count($html,'name="csrf_token"')===4&&str_contains($html,'data-rms-confirm-delete='),'Formulários de ações incompletos');foreach(['0','1','2']as$v)self::ok(str_contains($html,'name="status" value="'.$v.'"'),'Status action perdido');});
++        echo"\nF8-10 contratos: ".self::$passed.' PASS / '.self::$failed.' FAIL — PHP '.PHP_VERSION.', Twig '.\Twig\Environment::VERSION."; DB/serviços/IO sessão em fixtures, sem mensagens/e-mails/HTTP/banco/navegador reais.\n";return self::$failed?1:0;
++    }
++}
++set_error_handler(static function(int $severity,string $message,string $file,int $line):bool{if(!(error_reporting()&$severity))return false;throw new \ErrorException($message,0,$severity,$file,$line);});
++exit(Suite::run($mirror));
+diff --git a/tools/e2e/e2e_f810_http.cjs b/tools/e2e/e2e_f810_http.cjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..dc71320eff8fabb6174c3181ba2e57848abff6ee
+--- /dev/null
++++ b/tools/e2e/e2e_f810_http.cjs
+@@ -0,0 +1,63 @@
++#!/usr/bin/env node
++'use strict';
++/** F8-10 — --fixture gera SOMENTE dados fictícios. --http usa UMA mensagem
++ * própria já preparada pelo operador. Nunca envia contato público/e-mail,
++ * segue mailto, lê dados reais por ID adivinhado ou executa SQL/reset.
++ */
++const fs=require('node:fs');const path=require('node:path');const crypto=require('node:crypto');const assert=require('node:assert/strict');
++const shared=require('./e2e_f806_http.cjs');const h=require('./e2e_f805_browser.js').helpers;
++const ROUTE='communication/contact_message';
++const FILES=['admin/controller/communication/contact_message.php','admin/model/communication/contact_message.php','admin/view/template/communication/contact_message_list.twig','admin/view/template/communication/contact_message_read.twig','admin/view/css/admin.css',...['en-us','pt-br','es-eu'].map(c=>`admin/language/${c}/communication/contact_message.php`)];
++function ok(condition,message){if(!condition)throw new Error(message);}
++function markerValid(marker){return typeof marker==='string'&&/^f810-[a-f0-9]{16}$/.test(marker);}
++function fixture(marker){ok(markerValid(marker),'Marker deve ser f810- seguido de16hex.');return{name:'QA '+marker,email:marker+'@example.invalid',telephone:'',subject:marker+' teste inbox',message:marker+'\nMensagem fictícia de laboratório: ação, ç, ã, ñ.\n<b>Texto literal; não executar HTML.</b>'};}
++function descriptor(marker){return{kind:'fixture-data-only',marker,fields:fixture(marker),notice:'Somente dados gerados: nada foi salvo/enviado. Preparar uma mensagem no laboratório isolado, com notificações em captura/offline e integrações produtivas desativadas. Não usar dados reais. O Tool --http não envia contato público, e-mail ou SQL.'};}
++function messageId(value){ok(typeof value==='string'&&/^[1-9][0-9]*$/.test(value)&&Number.isSafeInteger(Number(value)),'F810_MESSAGE_ID deve ser o ID real da fixture, nunca presumido.');return Number(value);}
++function dataText(html,key){const r=new RegExp('<([a-z][a-z0-9]*)\\b[^>]*\\bdata-message-'+key+'(?=[\\s=>])[^>]*>([\\s\\S]*?)<\\/\\1>','i');const m=html.match(r);ok(m,'Campo esperado da mensagem não encontrado.');return shared.decode(m[2].replace(/<[^>]*>/g,'')).replace(/\r\n/g,'\n').trim();}
++function rows(html,base){const body=(html.match(/<tbody\b[^>]*>([\s\S]*?)<\/tbody>/i)||[])[1]||'';const out=[];for(const m of body.matchAll(/<tr\b([^>]*)>([\s\S]*?)<\/tr>/gi)){const attrs=shared.attrs(m[1]);if(!attrs['data-contact-message-id'])continue;const id=messageId(attrs['data-contact-message-id']);const status=Number(attrs['data-contact-status']);ok([0,1,2].includes(status),'Status inesperado na fixture.');const forms=shared.forms(m[2]);const open=forms.find(f=>f.attrs.action&&h.routeOf(f.attrs.action,base)===ROUTE+'.read|'+id);const del=forms.find(f=>f.attrs.action&&h.routeOf(f.attrs.action,base)===ROUTE+'.delete|'+id);out.push({id,status,name:dataText(m[2],'name'),email:dataText(m[2],'email'),subject:dataText(m[2],'subject'),open,del});}return out;}
++function detail(html){const root=[...html.matchAll(/<div\b([^>]*)>/gi)].map(m=>shared.attrs(m[1])).find(a=>(a.class||'').split(/\s+/).includes('contact-message-read'));ok(root,'Detalhe esperado não encontrado.');const status=Number(root['data-contact-status']);ok([0,1,2].includes(status),'Status de detalhe inesperado.');return{id:messageId(root['data-contact-message-id']),status,name:dataText(html,'name'),email:dataText(html,'email'),telephone:dataText(html,'telephone'),subject:dataText(html,'subject'),message:dataText(html,'body'),forms:shared.forms(html)};}
++function ownRow(row,id,marker){const expected=fixture(marker);ok(row.id===id&&row.name===expected.name&&row.email===expected.email&&row.subject===expected.subject,'Identidade da fixture não confere; nenhum detalhe/POST autorizado.');ok(row.open&&row.open.attrs.method==='post'&&row.open.fields.csrf_token,'Conta/UI não oferece Ler POST protegido.');}
++function ownDetail(data,id,marker){const expected=fixture(marker);ok(data.id===id,'ID de detalhe não confere.');for(const key of Object.keys(expected))ok(data[key]===expected[key],'Dados da fixture não conferem; não operar conteúdo desconhecido.');}
++function formFor(data,base,verb){const f=data.forms.find(f=>f.attrs.action&&h.routeOf(f.attrs.action,base)===ROUTE+'.'+verb+'|'+data.id);ok(f&&f.fields.csrf_token,'Ação protegida esperada não disponível.');return f;}
++function preflight(env){ok(env.ALLOW_F810_HTTP==='YES_WRITE_REAMUR_TEST','HTTP bloqueado: ALLOW_F810_HTTP=YES_WRITE_REAMUR_TEST obrigatório.');ok(env.F810_USERNAME&&env.F810_PASSWORD,'Defina credenciais fictícias F810_USERNAME/F810_PASSWORD.');messageId(env.F810_MESSAGE_ID);ok(markerValid(env.F810_MARKER),'F810_MARKER obrigatório, gerado por --fixture.');
++ const s=shared.preflight({...env,ALLOW_F806_HTTP:env.ALLOW_F810_HTTP,F806_USERNAME:env.F810_USERNAME,F806_PASSWORD:env.F810_PASSWORD,F806_REPORT:undefined});
++ for(const relative of FILES){for(const root of[s.mirror,s.fui]){const file=path.join(root,relative);ok(fs.lstatSync(file).isFile()&&fs.realpathSync(file)===file,'Fonte de inbox não canônica.');}ok(fs.readFileSync(path.join(s.mirror,relative)).equals(fs.readFileSync(path.join(s.fui,relative))),'Inbox MIRROR/FUI divergente: '+relative);}
++ const source=fs.readFileSync(path.join(s.mirror,FILES[0]),'utf8');ok(source.includes('statusValue(')&&source.includes('csrfValid()')&&source.includes('getTotalMessages('),'Tarefa10 não aplicada.');if(env.F810_REPORT)ok(path.isAbsolute(env.F810_REPORT)&&!fs.existsSync(env.F810_REPORT)&&fs.statSync(path.dirname(env.F810_REPORT)).isDirectory(),'Relatório exige caminho absoluto novo em diretório existente.');return s;
++}
++async function live(env){const s=preflight(env);const base=s.base;const marker=env.F810_MARKER;const id=messageId(env.F810_MESSAGE_ID);const nonce=crypto.randomBytes(16).toString('hex');const probe=path.join(s.fui,`admin/view/js/f810-probe-${nonce}.txt`);let madeProbe=false,wrote=false;const client=new shared.Client(base);const uri=(verb,params={})=>shared.uri(base,verb?ROUTE+'.'+verb+'|'+id:ROUTE,params);const login=()=>shared.uri(base,'common/login');
++ const report={task:'Fase 8 / Tarefa 10',kind:'http-workflow',marker,fixtureId:id,status:'running',startedAt:new Date().toISOString(),steps:[],cleanup:'not-needed',privacy:'Sem conteúdo de mensagem, nome, e-mail, telefone, IP, mailto, cookies ou tokens no relatório.',notCovered:['navegador/Bootstrap/modal/CSS/contraste','perfil readonly real separado','volume21+ no servidor','geração/persistência pública da fixture e qualquer envio de e-mail']};
++ function hide(){return'Etapa bloqueada/falhou; confira os requisitos e a fixture fictícia localmente. Dados de mensagem e detalhes do backend foram omitidos por privacidade.';}
++ async function step(label,fn){try{await fn();report.steps.push({label,status:'pass'});}catch(e){report.steps.push({label,status:'fail',error:hide()});throw e;}}
++ async function list(status='all'){const r=await client.request(uri('',{filter_search:marker,filter_status:status}));return rows(r.html,base);}
++ async function read(language){const r=await client.request(uri('read',language?{language}:{}));const d=detail(r.html);ownDetail(d,id,marker);return d;}
++ async function state(expected){const found=await list();ok(found.length===1,'Fixture ausente/não única.');ownRow(found[0],id,marker);ok(found[0].status===expected,'Estado não corresponde ao esperado.');return found[0];}
++ try{
++  await step('Probe identifica FUI antes de credenciais',async()=>{fs.writeFileSync(probe,nonce,{flag:'wx',mode:0o644});madeProbe=true;ok((await client.request(new URL(`admin/view/js/f810-probe-${nonce}.txt`,base).href)).html===nonce,'FUI não confirmado.');});
++  await step('Login único, sessão somente em memória',async()=>{const r=await client.request(login());const f=shared.forms(r.html).find(f=>f.attrs.action&&h.routeOf(f.attrs.action,base)==='common/login');ok(f&&/^[a-f0-9]{64}$/.test(f.fields.csrf_token||''),'CSRF login ausente.');const next=await client.request(f.attrs.action,{...f.fields,username:env.F810_USERNAME,password:env.F810_PASSWORD});ok(h.routeOf(next.url,base)!=='common/login','Login recusado.');});
++  await step('Localizar só fixture própria por marker/nome/e-mail/assunto/ID',async()=>{await state(0);});
++  await step('GET detalhe verifica conteúdo fictício e permanece Novo',async()=>{const d=await read();ok(d.status===0,'GET marcou como lida.');formFor(d,base,'status');formFor(d,base,'delete');await state(0);});
++  await step('Leitura GET em três idiomas sem alteração de estado',async()=>{for(const locale of['en-us','pt-br','es-eu']){const d=await read(locale);ok(d.status===0,'GET i18n alterou estado.');}await state(0);});
++  await step('POST Ler sem CSRF não marca lida',async()=>{wrote=true;report.cleanup='pending';await client.request(uri('read'),{csrf_token:'wrong'});await state(0);});
++  await step('POST Ler válido marca Lido e PRG/GET não repete efeito',async()=>{const row=await state(0);const r=await client.request(row.open.attrs.action,{csrf_token:row.open.fields.csrf_token});const d=detail(r.html);ownDetail(d,id,marker);ok(d.status===1,'Ler não marcou lida.');ok((await read()).status===1,'Reload divergente.');await state(1);});
++  await step('Status sem token e valores inválidos não mutam',async()=>{await client.request(uri('status'),{status:'2',from:'read',csrf_token:'wrong'});await state(1);for(const invalid of[{status:'x'},{status:'9'},{'status[]':'1'}]){const d=await read();const f=formFor(d,base,'status');await client.request(f.attrs.action,{...invalid,from:'read',csrf_token:f.fields.csrf_token});await state(1);}});
++  await step('Marcar Respondido persiste sem enviar e-mail',async()=>{const d=await read();const f=formFor(d,base,'status');await client.request(f.attrs.action,{status:'2',from:'read',csrf_token:f.fields.csrf_token});ok((await read()).status===2,'Respondido não persistiu.');await state(2);ok((await list('0')).length===0&&(await list('2')).length===1,'Filtros divergentes.');});
++  await step('Marcar Novo permanece Novo após GET e Ler POST volta a Lido',async()=>{const d=await read();const f=formFor(d,base,'status');await client.request(f.attrs.action,{status:'0',from:'read',csrf_token:f.fields.csrf_token});ok((await read()).status===0,'GET desfez Novo.');const row=await state(0);await client.request(row.open.attrs.action,{csrf_token:row.open.fields.csrf_token});ok((await read()).status===1,'Ler novamente falhou.');await state(1);});
++  await step('GET status/delete e POST delete inválido não removem/mutam',async()=>{await client.request(uri('status',{status:'2'}),undefined,[403]);await state(1);await client.request(uri('delete'),undefined,[403]);await state(1);await client.request(uri('delete'),{csrf_token:'wrong'});await state(1);});
++  await step('Revalidar fixture completa e excluir somente ID próprio',async()=>{const d=await read();ownDetail(d,id,marker);const f=formFor(d,base,'delete');await client.request(f.attrs.action,{csrf_token:f.fields.csrf_token});ok((await list()).length===0,'Fixture ainda existe.');report.cleanup='complete';});
++  report.status='passed';
++ }catch(e){report.status=wrote?'failed':'blocked';report.error=hide();}
++ finally{if(madeProbe){try{ok(!fs.lstatSync(probe).isSymbolicLink()&&fs.readFileSync(probe,'utf8')===nonce,'Probe alterado.');fs.unlinkSync(probe);}catch(e){report.status='failed';report.cleanup='pending';report.probeCleanup='pending';report.probeName=path.basename(probe);report.error=hide();}}report.finishedAt=new Date().toISOString();report.summary={passed:report.steps.filter(s=>s.status==='pass').length,failed:report.steps.filter(s=>s.status==='fail').length};console.log(JSON.stringify(report,null,2));if(env.F810_REPORT)fs.writeFileSync(env.F810_REPORT,JSON.stringify(report,null,2)+'\n',{flag:'wx',mode:0o600});}return report.status==='passed'?0:1;
++}
++async function selfTest(){const inherited=await shared.selfTest();let pass=0,fail=0;async function t(label,fn){try{await fn();pass++;console.log('PASS '+label);}catch(e){fail++;console.error('FAIL '+label+': '+e.message);}}const marker='f810-0123456789abcdef';const fields=fixture(marker);const base='http://127.0.0.1:8090/dev/';const uri=v=>shared.uri(base,ROUTE+'.'+v+'|37');
++ await t('01 · fixture é só dado fictício determinístico e dentro dos limites',()=>{const d=descriptor(marker);assert.equal(d.kind,'fixture-data-only');assert.equal(d.fields.email,marker+'@example.invalid');assert.ok(d.fields.name.length<=128&&d.fields.subject.length<=128&&d.fields.message.length<5000);assert.throws(()=>fixture('real'));});
++ await t('02 · marker/ID estritos, nunca presumir ID1',()=>{assert.equal(messageId('37'),37);for(const v of['0','01','x','99999999999999999999',undefined])assert.throws(()=>messageId(v));assert.equal(markerValid(marker),true);});
++ await t('03 · parser só obtém ID/ações de linha renderizada',()=>{const html='<table><tbody><tr data-contact-message-id="37" data-contact-status="0"><td data-message-name>'+fields.name+'</td><td data-message-email>'+fields.email+'</td><td data-message-subject>'+fields.subject+'</td><td><form method="post" action="'+uri('read')+'"><input name="csrf_token" value="x"></form></td></tr></tbody></table>';const found=rows(html,base);ownRow(found[0],37,marker);assert.equal(found[0].status,0);});
++ await t('04 · conteúdo escapado é decodificado uma vez como texto',()=>{assert.equal(dataText('<div data-message-body>&lt;b&gt;ação&lt;/b&gt; &amp; texto</div>','body'),'<b>ação</b> & texto');});
++ await t('05 · prova de identidade rejeita valores diferentes sem expô-los',()=>{const row={id:37,status:0,...fields,open:{attrs:{method:'post'},fields:{csrf_token:'x'}}};ownRow(row,37,marker);const secret='fixture-valor-nao-logar';row.email=secret;assert.throws(()=>ownRow(row,37,marker),e=>!e.message.includes(secret));});
++ await t('06 · detalhe exige os cinco campos exatos e ID próprio',()=>{const data={id:37,status:0,...fields};ownDetail(data,37,marker);data.message='changed';assert.throws(()=>ownDetail(data,37,marker));});
++ await t('07 · autorização antiga e fixture ausente não habilitam modo HTTP',()=>{assert.throws(()=>preflight({ALLOW_F809_HTTP:'YES_WRITE_REAMUR_TEST'}),/bloqueado/);assert.throws(()=>preflight({ALLOW_F810_HTTP:'YES_WRITE_REAMUR_TEST'}),/credenciais/);assert.throws(()=>preflight({ALLOW_F810_HTTP:'YES_WRITE_REAMUR_TEST',F810_USERNAME:'fixture-user',F810_PASSWORD:'fixture-password'}),/ID real/);});
++ await t('08 · formulários de status/delete são localizados sem seguir mailto',()=>{const data={id:37,forms:[{attrs:{action:uri('status')},fields:{status:'2',csrf_token:'x'}},{attrs:{action:uri('delete')},fields:{csrf_token:'x'}}]};assert.equal(formFor(data,base,'delete').fields.csrf_token,'x');assert.throws(()=>h.scopedUrl('mailto:'+fields.email,base));});
++ console.log(`F8-10 HTTP auxiliares novos: ${pass} PASS / ${fail} FAIL — mais16 compartilhados F8-06; respostas em simulação, sem servidor/banco/mensagem/e-mail reais.`);return inherited||fail?1:0;
++}
++if(require.main===module){(async()=>{ok(process.argv.length===3,'Use e2e_f810.sh --help.');if(process.argv[2]==='--self-test')return selfTest();if(process.argv[2]==='--fixture'){const marker=process.env.F810_MARKER||'f810-'+crypto.randomBytes(8).toString('hex');console.log(JSON.stringify(descriptor(marker),null,2));return 0;}ok(process.argv[2]==='--http','Modo inválido.');return live(process.env);})().then(code=>{process.exitCode=code;}).catch(e=>{console.error('BLOQUEADO/ERRO: requisito de execução não atendido; consulte --help. Detalhes omitidos por privacidade.');process.exitCode=2;});}
++module.exports={fixture,descriptor,markerValid,messageId,dataText,rows,detail,ownRow,ownDetail,formFor,preflight,live,selfTest};
