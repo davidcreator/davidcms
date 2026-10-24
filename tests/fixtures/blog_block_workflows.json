@@ -1,0 +1,74 @@
+[
+  {
+    "id": "valid-empty-en",
+    "workflow": "F917-02",
+    "language_id": 1,
+    "mode": "blocks",
+    "ready": "1",
+    "document": {"format_version": 1, "blocks": []},
+    "expected_server_result": "accept_empty_document"
+  },
+  {
+    "id": "valid-paragraph-pt",
+    "workflow": "F917-02",
+    "language_id": 2,
+    "mode": "blocks",
+    "ready": "1",
+    "document": {"format_version": 1, "blocks": [{"id": "synthetic-p1", "type": "core/paragraph", "attributes": {}, "children": [], "content": "Texto sintético de teste."}]},
+    "expected_server_result": "accept_and_render_snapshot"
+  },
+  {
+    "id": "local-image-from-media-library",
+    "workflow": "F917-08",
+    "language_id": 1,
+    "mode": "blocks",
+    "ready": "1",
+    "document": {"format_version": 1, "blocks": [{"id": "synthetic-img1", "type": "core/image", "attributes": {"src": "view/image/blog/e2e-synthetic.jpg", "alt": "Imagem sintética"}, "children": [], "content": ""}]},
+    "expected_server_result": "accept_local_path"
+  },
+  {
+    "id": "invalid-uninitialized-editor",
+    "workflow": "F917-09",
+    "language_id": 1,
+    "mode": "blocks",
+    "ready": "",
+    "document": {"format_version": 1, "blocks": []},
+    "expected_server_result": "reject_editor_not_initialized"
+  },
+  {
+    "id": "invalid-unknown-block",
+    "workflow": "F917-09",
+    "language_id": 1,
+    "mode": "blocks",
+    "ready": "1",
+    "document": {"format_version": 1, "blocks": [{"id": "synthetic-u1", "type": "core/html", "attributes": {}, "children": [], "content": "<script>bad()</script>"}]},
+    "expected_server_result": "reject_document"
+  },
+  {
+    "id": "invalid-remote-image",
+    "workflow": "F917-09",
+    "language_id": 1,
+    "mode": "blocks",
+    "ready": "1",
+    "document": {"format_version": 1, "blocks": [{"id": "synthetic-img2", "type": "core/image", "attributes": {"src": "https://invalid.example/synthetic.jpg", "alt": "synthetic"}, "children": [], "content": ""}]},
+    "expected_server_result": "reject_unsafe_local_image"
+  },
+  {
+    "id": "legacy-needs-review",
+    "workflow": "F917-05",
+    "language_id": 1,
+    "mode": "legacy",
+    "ready": "",
+    "legacy_html": "<table><tr><td>synthetic</td></tr></table>",
+    "expected_server_result": "retain_legacy_and_require_review"
+  },
+  {
+    "id": "language-id-out-of-range",
+    "workflow": "F917-09",
+    "language_id": 99999,
+    "mode": "blocks",
+    "ready": "1",
+    "document": {"format_version": 1, "blocks": []},
+    "expected_server_result": "reject_unknown_language"
+  }
+]

@@ -1,12 +1,16 @@
-# F9-15 — Renderer público Blog em blocos
+# Fase 9 · Tarefa 17 — Preparação E2E Blog Blocks
 
-Pacote incremental: PHP renderer allowlisted, validação estendida, fallback catalog compatível, CSS responsivo, translations, fixtures e ADR.
+Esta entrega prepara a validação integrada dos fluxos F9-12 a F9-16, com matriz de casos, fixtures exclusivamente sintéticas, checklist operacional futuro e um auditor estático de contratos/fontes.
 
-- GitHub confirmado: `https://github.com/davidcreator/davidcms`, branch `main`.
-- HEAD base: `0162822d3bf98ce100780b17cf0c88ff22ee832f`.
-- F9-14 assets/contrato/ADR/gate principais conferidos contra o commit remoto.
-- Prévia de estilo responsivo: `tools/preview/f915-renderer-preview.html` (markup demonstrativo, sem chamadas externas).
-- Gate estático: `bash tools/e2e/e2e_f915.sh --check`.
-- Runner funcional PHP incluído, **não executado**.
+**Não é um E2E de runtime.** A verificação estática foi executada sobre fontes pontuais existentes no workspace (F9-16 admin/model/renderer e F9-15 catálogo público): 11 arquivos, 3 idiomas e 8 fixtures foram inspecionados com resultado PASS. Não executamos PHP, SQL, migration, browser ou aplicação; não acessamos banco nem fizemos GitHub write.
 
-Se a sidecar F9-12 ainda não existe, o catálogo segue o caminho legado atual. Com linha de blocos inválida, a publicação do conteúdo falha fechada em vez de cair silenciosamente para HTML cru. Nenhum banco, GitHub ou conteúdo foi alterado nesta entrega.
+## Uso
+
+- Ver o plano: `tools/e2e/e2e_f917.sh --plan`
+- Auditar um checkout completo apenas como texto: `tools/e2e/e2e_f917.sh --static /caminho/para/davidcms`
+
+O modo `--static` apenas lê arquivos; não inicia o sistema.
+
+## Base
+
+HEAD de `main` verificado: `1e3f15873436accbe21003c41720054eaeb0b09a` — integração F9-16. A migration F9-12 não é presumida aplicada.

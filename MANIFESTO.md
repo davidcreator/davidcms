@@ -1,13 +1,13 @@
-# Manifesto F9-16
+# Manifesto F9-17
 
-- Repositório de referência: `https://github.com/davidcreator/davidcms`
+- Repositório-base: `https://github.com/davidcreator/davidcms`
 - Branch: `main`
-- HEAD verificado nesta continuação: `a0515fe2734cd0b1851f545701b34d6f135cdbdb`
-- Escopo: integração incremental do editor administrativo de blocos no formulário Blog.
-- Alterações remotas: nenhuma.
-- Migration F9-12: não executada; presença no ambiente não presumida.
-- Testes PHP/SQL/browser/app: não executados.
-- E2E: checklist e utilitário `--plan` apenas; nenhum teste executado.
-- Dump, fixture real, credencial e log runtime: não incluídos.
+- HEAD lido antes do trabalho: `1e3f15873436accbe21003c41720054eaeb0b09a`
+- Escopo aprovado: preparar E2E integrado, sem execução de PHP/SQL/browser/app.
+- Resultado: plano/checklist, contrato JSON, fixtures sintéticas e auditor estático de fontes.
+- Auditoria estática: PASS sobre snapshot pontual local F9-15/F9-16; 11 arquivos de fonte, três localidades e oito fixtures.
+- Testes de runtime: não executados. Banco: não acessado. Migration F9-12: não presumida/aplicada.
+- GitHub write/deploy: nenhum.
+- Dumps, logs runtime, credenciais e dados reais: não incluídos.
 
-Os arquivos sob `dev/` são alterações pontuais espelhadas na raiz do repositório, não uma cópia do projeto.
+Os comandos e seus limites estão descritos em `README.md` e `docs/F9-17-Checklist-E2E-Blog-Blocos.md`.

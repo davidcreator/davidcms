@@ -1,0 +1,8 @@
+6876e0ab83b93fe09f2ca95ca31d538cce3238b7c09024f89a6136c5fbcf84ed  ./MANIFESTO.md
+896cb64a37a0f1a0a75c87c8c56f34dfb00f5857a986dc83285d35e566ff5d8e  ./README.md
+3fdd88d3d2d39dc47790358454cc05568cbaf1f3aa30168293dbef01605b43b1  ./agents-ia/README.md
+0fd2a2a55fdf55f6f232b9f9385939fd92f602c683b6eaa8c4ebc5b9390bd609  ./docs/F9-17-Checklist-E2E-Blog-Blocos.md
+a855615288c19c12f853f547d52c35d38f575184f13daee9ee48a3af309dcb25  ./docs/F9-17-Contrato-E2E-Blog-Blocos.json
+19d038f112006d35b27171cb1bbaa36f3e0d7218a36f32b0d8b9414c1a4493af  ./tests/fixtures/blog_block_workflows.json
+74056022d1cfb28dedfdd244269e0174fe9a665a52e3521d70e37725cd658e3d  ./tools/e2e/e2e_f917.cjs
+9dfa98ec99524472093b80d4701aeffffa299f5b051644a4946284cad21fd207  ./tools/e2e/e2e_f917.sh

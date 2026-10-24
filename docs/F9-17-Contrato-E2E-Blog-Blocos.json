@@ -1,0 +1,40 @@
+{
+  "task": "F9-17",
+  "title": "Preparação da validação integrada/E2E do editor de blocos Blog",
+  "base_repository": "https://github.com/davidcreator/davidcms",
+  "base_branch": "main",
+  "base_head": "1e3f15873436accbe21003c41720054eaeb0b09a",
+  "scope": {
+    "included": [
+      "Matriz de jornadas integradas para formulário administrativo, POST, persistência sidecar e exibição pública",
+      "Fixtures sintéticas e sem dados pessoais para cenários válidos, legados e fail-closed",
+      "Verificador estático de contratos/fontes, sem iniciar PHP, SQL, aplicação ou navegador",
+      "Checklist operacional E2E futuro com pré-condições explícitas e resultados esperados"
+    ],
+    "excluded": [
+      "Executar teste PHP, SQL, browser, aplicação ou migration",
+      "Conectar a qualquer banco ou usar dados reais/dump",
+      "Deploy ou escrita no GitHub"
+    ]
+  },
+  "safety": {
+    "migration_f9_12_assumed_applied": false,
+    "database_accessed": false,
+    "php_sql_browser_app_tests_executed": false,
+    "github_written": false,
+    "production_hosts_allowed": false,
+    "fixtures_are_synthetic": true
+  },
+  "workflows": [
+    {"id":"F917-01","name":"legacy_when_sidecar_missing","expected":"O formulário e catálogo permanecem no modo legado; não se assume que F9-12 foi aplicada."},
+    {"id":"F917-02","name":"create_block_post","expected":"POST válido persiste documentos por idioma e snapshots sem autosave."},
+    {"id":"F917-03","name":"edit_existing_sidecar","expected":"Documento válido existente é carregado, validado e salvo no envio normal do formulário."},
+    {"id":"F917-04","name":"safe_legacy_conversion","expected":"Conversão só é oferecida se reconhecida; HTML original e hash são preservados na primeira conversão."},
+    {"id":"F917-05","name":"unconvertible_legacy","expected":"Conteúdo fica no editor legado até revisão; nenhum conteúdo é descartado."},
+    {"id":"F917-06","name":"corrupt_sidecar_fail_closed","expected":"Sidecar presente inválido/versão incompatível não cai para vazio nem sobrescreve a fonte."},
+    {"id":"F917-07","name":"transaction_rollback","expected":"Falha em qualquer escrita reverte post, descrições, SEO e sidecar como uma unidade."},
+    {"id":"F917-08","name":"media_library_local_image","expected":"Seleção view/image/blog/... atualiza o bloco de imagem selecionado sem trocar a capa."},
+    {"id":"F917-09","name":"invalid_posted_document","expected":"JSON inválido, modo/idioma incoerente ou editor não inicializado é rejeitado no servidor."},
+    {"id":"F917-10","name":"language_and_permission","expected":"Fluxos respeitam idioma e ACL; mensagens de validação cobrem pt-br, en-us e es-eu."}
+  ]
+}
