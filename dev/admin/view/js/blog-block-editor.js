@@ -24,7 +24,7 @@
       if (url.origin !== base) return false;
       if (url.search || url.hash) return false;
       const path = url.pathname.replace(/^\//, '');
-      return path.startsWith('image/') && !path.split('/').some((part) => part === '.' || part === '..');
+      return (/^(?:image|view\/image\/blog)\//).test(path) && !path.split('/').some((part) => part === '.' || part === '..');
     } catch (_) { return false; }
   }
 
@@ -161,6 +161,7 @@
       else if (name === 'delete') this.deleteNode(button.dataset.nodeId || this.selectedId);
       else if (name === 'move-up') this.moveNode(button.dataset.nodeId || this.selectedId, -1);
       else if (name === 'move-down') this.moveNode(button.dataset.nodeId || this.selectedId, 1);
+      else if (name === 'media') { global.document.dispatchEvent(new CustomEvent('blog-block-media-open', { detail: { editor: this } })); }
       else if (name === 'preview') { this.preview = button.dataset.size; this.root.dataset.preview = this.preview; this.root.querySelectorAll('[data-action="preview"]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.size === this.preview))); }
     }
 
@@ -232,6 +233,7 @@
 
     undo() { if (!this.undoStack.length) return; this.redoStack.push(this.snapshot()); this.state = JSON.parse(this.undoStack.pop()); this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
     redo() { if (!this.redoStack.length) return; this.undoStack.push(this.snapshot()); this.state = JSON.parse(this.redoStack.pop()); this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
+    setSelectedAttribute(key, value) { if (this.locked) return false; const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null; if (!found || found.node.type !== 'core/image' || key !== 'src') return false; this.updateNode(found.node.id, (node) => { node.attributes.src = value; }); return true; }
     getDocument() { return this.locked ? null : CLONE(this.state); }
     serialize() { if (this.locked) throw new Error('document_requires_review'); const check = validateDocument(this.state); if (!check.valid) throw new Error(check.errors.join(',')); return JSON.stringify(this.state); }
 
@@ -262,7 +264,10 @@
       if (!this.state.blocks.length) canvas.append(this.el('p', 'rb-empty', 'Escolha um bloco no inserter para começar.'));
       this.state.blocks.forEach((node) => canvas.append(this.renderNode(node, true)));
       layout.append(canvas, this.renderInspector()); this.root.append(layout);
-      const foot = this.el('p', 'rb-note', 'Rascunho em memória · não salva nem publica. O salvamento será conectado numa tarefa posterior.'); this.root.append(foot);
+      const footText = this.options.connectedSave === true
+        ? 'As alterações ficam no formulário e só são persistidas ao clicar em Salvar; não há autosave.'
+        : 'Rascunho em memória · não salva nem publica. O salvamento será conectado numa tarefa posterior.';
+      const foot = this.el('p', 'rb-note', footText); this.root.append(foot);
       this.updateHistoryButtons();
     }
 
@@ -302,7 +307,7 @@
       if (n.type === 'core/heading') addField('Nível', 'level', n.attributes.level, 'number');
       if (n.type === 'core/paragraph') addField('Alinhamento', 'align', n.attributes.align || 'left', 'text', [['left','Esquerda'],['center','Centro'],['right','Direita']]);
       if (n.type === 'core/list') addField('Tipo de lista', 'ordered', n.attributes.ordered ? 'true' : 'false', 'text', [['false','Marcadores'],['true','Numerada']]);
-      if (n.type === 'core/image') { addField('Caminho local (/image/...)', 'src', n.attributes.src, 'text'); addField('Texto alternativo', 'alt', n.attributes.alt, 'text'); }
+      if (n.type === 'core/image') { addField('Caminho local da mídia (view/image/blog/...)', 'src', n.attributes.src, 'text'); aside.append(this.button('Escolher da biblioteca', 'media'));  addField('Texto alternativo', 'alt', n.attributes.alt, 'text'); }
       if (n.type === 'core/video_embed') addField('URL YouTube/Vimeo', 'url', n.attributes.url, 'url');
       if (n.type === 'core/button') addField('Destino (URL ou caminho local)', 'url', n.attributes.url, 'url');
       if (n.type === 'core/columns') aside.append(this.el('p', 'rb-muted', 'Preset fixo nesta etapa: ' + n.attributes.count + ' colunas.'));

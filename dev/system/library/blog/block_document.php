@@ -243,11 +243,11 @@ class BlockDocument {
     }
 
     private function isSafeImagePath($src): bool {
-        if (!is_string($src) || $src === '' || !preg_match('#^/?image/[A-Za-z0-9._~/-]+$#D', $src) || preg_match('/[\x00-\x20\\\\]/', $src)) return false;
+        if (!is_string($src) || $src === '' || !preg_match('#^/?(?:image|view/image/blog)/[A-Za-z0-9._~/-]+$#D', $src) || preg_match('/[\x00-\x20\\\\]/', $src)) return false;
         $parts = parse_url($src);
         if ($parts === false || isset($parts['scheme']) || isset($parts['host']) || isset($parts['query']) || isset($parts['fragment'])) return false;
         $path = ltrim((string)($parts['path'] ?? ''), '/');
-        if (strpos($path, 'image/') !== 0) return false;
+        if (strpos($path, 'image/') !== 0 && strpos($path, 'view/image/blog/') !== 0) return false;
         foreach (explode('/', $path) as $segment) if ($segment === '..' || $segment === '.' || $segment === '') return false;
         return true;
     }

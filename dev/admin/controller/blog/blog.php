@@ -162,9 +162,18 @@ class Blog extends \Reamur\System\Engine\Controller {
             $errors = $this->csrfValid()
                 ? $this->validatePost(0)
                 : [$this->language->get('error_csrf')];
+            $blockSave = ['storage_available' => false, 'documents' => [], 'snapshots' => [], 'errors' => []];
+            if ($errors === []) {
+                $blockSave = $this->prepareBlockSubmission(0);
+                $errors = array_merge($errors, $blockSave['errors']);
+            }
 
             if ($errors === []) {
-                $post_id = $this->model_blog_blog->addPost($this->postPayload());
+                $payload = $this->postPayload();
+                foreach ($blockSave['snapshots'] as $lid => $html) $payload['descriptions'][$lid]['description'] = $html;
+                $post_id = $blockSave['storage_available']
+                    ? $this->model_blog_blog->savePostWithBlocks(0, $payload, $blockSave['documents'])
+                    : $this->model_blog_blog->addPost($payload);
 
                 if ($post_id) {
                     $this->setFlash($this->language->get('text_success_add'));
@@ -216,9 +225,20 @@ class Blog extends \Reamur\System\Engine\Controller {
             $errors = $this->csrfValid()
                 ? $this->validatePost($post_id)
                 : [$this->language->get('error_csrf')];
+            $blockSave = ['storage_available' => false, 'documents' => [], 'snapshots' => [], 'errors' => []];
+            if ($errors === []) {
+                $blockSave = $this->prepareBlockSubmission($post_id);
+                $errors = array_merge($errors, $blockSave['errors']);
+            }
 
             if ($errors === []) {
-                $this->model_blog_blog->editPost($post_id, $this->postPayload());
+                $payload = $this->postPayload();
+                foreach ($blockSave['snapshots'] as $lid => $html) $payload['descriptions'][$lid]['description'] = $html;
+                if ($blockSave['storage_available']) {
+                    $this->model_blog_blog->savePostWithBlocks($post_id, $payload, $blockSave['documents']);
+                } else {
+                    $this->model_blog_blog->editPost($post_id, $payload);
+                }
 
                 $this->setFlash($this->language->get('text_success_edit'));
 
@@ -458,6 +478,8 @@ class Blog extends \Reamur\System\Engine\Controller {
             'button_media_library', 'button_media_upload', 'button_media_create_folder',
             'button_media_use_url', 'button_media_select', 'button_media_delete',
             'button_media_back', 'button_media_previous', 'button_media_next', 'button_media_close',
+            'text_block_editor_intro', 'text_block_conversion_note', 'text_block_review_required', 'text_block_invalid', 'text_block_saved',
+            'error_block_schema_unavailable', 'error_block_document_invalid', 'error_block_legacy_review', 'error_block_mode_invalid', 'error_block_editor_unavailable',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
@@ -469,6 +491,14 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['seo_base'] = $this->catalogUrl();
         $data['catalog_base'] = $this->catalogAssetUrl();
         $data['can_modify'] = $this->user->hasPermission('modify', 'blog/blog');
+        $data['block_editor_available'] = $data['can_modify'] && $this->model_blog_blog->blogBlockContentTableExists();
+        if ($data['block_editor_available']) {
+            $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V;
+            $assetBase = rtrim((string)$this->config->get('site_url'), '/') . '/view/';
+            $this->document->addStyle($assetBase . 'css/blog-block-editor.css?v=' . $assetVersion);
+            $this->document->addScript($assetBase . 'js/blog-block-editor.js?v=' . $assetVersion);
+            $this->document->addScript($assetBase . 'js/blog-block-editor-init.js?v=' . $assetVersion);
+        }
         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
         $data['media_config'] = [
             'listUrl' => $this->url->link('blog/blog.mediaList'),
@@ -505,6 +535,10 @@ class Blog extends \Reamur\System\Engine\Controller {
         $keywords     = $pid ? $this->model_blog_blog->getPostKeywords($pid) : [];
 
         $data['languages'] = [];
+        $blockRows = ($data['block_editor_available'] && $pid > 0) ? $this->model_blog_blog->getPostBlockContents($pid) : [];
+        $blockValidator = $data['block_editor_available'] ? new \Reamur\System\Library\Blog\BlockDocument() : null;
+        $postedBlockModes = (array)($posted['blog_block_mode'] ?? []);
+        $postedBlockJson = (array)($posted['blog_blocks'] ?? []);
 
         foreach ($this->model_blog_blog->getLanguages() as $language) {
             $language = (array)$language;
@@ -518,12 +552,67 @@ class Blog extends \Reamur\System\Engine\Controller {
             }
 
             $fields['keyword'] = (string)($posted['blog_description'][$lid]['keyword'] ?? ($keywords[$lid] ?? ''));
+            $blockMode = 'legacy';
+            $blockDocumentJson = '';
+            $blockStatus = '';
+            if ($data['block_editor_available'] && $blockValidator instanceof \Reamur\System\Library\Blog\BlockDocument) {
+                $row = (array)($blockRows[$lid] ?? []);
+                $postedMode = (string)($postedBlockModes[$lid] ?? '');
+                $postedJson = $postedBlockJson[$lid] ?? null;
+                if ($row !== []) {
+                    $stored = $blockValidator->deserializeDocument((string)($row['content_json'] ?? ''));
+                    $storedVersion = (int)($row['format_version'] ?? 0);
+                    if ($stored['valid'] && $storedVersion === (int)$stored['document']['format_version']) {
+                        $chosen = $stored['document'];
+                        if ($isPost && $postedMode === 'blocks' && is_string($postedJson)) {
+                            $submitted = $blockValidator->deserializeDocument($postedJson);
+                            if ($submitted['valid']) $chosen = $submitted['document'];
+                        }
+                        $blockMode = 'blocks';
+                        $blockDocumentJson = $blockValidator->serializeDocument($chosen);
+                        $blockStatus = $this->language->get('text_block_saved');
+                    } else {
+                        $blockMode = 'blocked';
+                        $blockStatus = $this->language->get('text_block_invalid');
+                        $fields['description'] = (string)($saved['description'] ?? '');
+                    }
+                } elseif ($pid < 1) {
+                    $emptyDocument = ['format_version' => 1, 'blocks' => []];
+                    $chosen = $emptyDocument;
+                    if ($isPost && $postedMode === 'blocks' && is_string($postedJson)) {
+                        $submitted = $blockValidator->deserializeDocument($postedJson);
+                        if ($submitted['valid']) $chosen = $submitted['document'];
+                    }
+                    $blockMode = 'blocks';
+                    $blockDocumentJson = $blockValidator->serializeDocument($chosen);
+                    $blockStatus = $this->language->get('text_block_conversion_note');
+                } else {
+                    $sourceHtml = (string)($saved['description'] ?? '');
+                    $conversion = $blockValidator->convertLegacy($sourceHtml);
+                    if ($conversion['status'] === 'converted' && (!$isPost || $postedMode === 'blocks')) {
+                        $chosen = $conversion['document'];
+                        if ($isPost && $postedMode === 'blocks' && is_string($postedJson)) {
+                            $submitted = $blockValidator->deserializeDocument($postedJson);
+                            if ($submitted['valid']) $chosen = $submitted['document'];
+                        }
+                        $blockMode = 'blocks';
+                        $blockDocumentJson = $blockValidator->serializeDocument($chosen);
+                        $blockStatus = $this->language->get('text_block_conversion_note');
+                    } else {
+                        $blockMode = 'legacy';
+                        if ($conversion['status'] !== 'converted') $blockStatus = $this->language->get('text_block_review_required');
+                    }
+                }
+            }
 
             $data['languages'][] = [
                 'language_id' => $lid,
                 'name'        => (string)$language['name'],
                 'code'        => (string)$language['code'],
                 'fields'      => $fields,
+                'block_mode' => $blockMode,
+                'block_document_json' => $blockDocumentJson,
+                'block_status' => $blockStatus,
             ];
         }
 
@@ -536,6 +625,97 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['cancel'] = $this->url->link('blog/blog');
 
         return $data;
+    }
+
+    /**
+     * Validate block JSON in POST; preserve per-language legacy descriptions unless a valid explicit block save is submitted.
+     * @return array{storage_available:bool,documents:array,snapshots:array,errors:array}
+     */
+    private function prepareBlockSubmission(int $post_id): array {
+        $result = ['storage_available' => false, 'documents' => [], 'snapshots' => [], 'errors' => []];
+        $storage = $this->model_blog_blog->blogBlockContentTableExists();
+        $modes = (array)($this->request->post['blog_block_mode'] ?? []);
+        $posted = (array)($this->request->post['blog_blocks'] ?? []);
+        $readyFlags = (array)($this->request->post['blog_editor_ready'] ?? []);
+        if (!$storage) {
+            if (in_array('blocks', $modes, true) || $posted !== []) $result['errors'][] = $this->language->get('error_block_schema_unavailable');
+            return $result;
+        }
+        $result['storage_available'] = true;
+        $languages = [];
+        foreach ($this->model_blog_blog->getLanguages() as $language) $languages[(int)((array)$language)['language_id']] = true;
+        foreach (array_unique(array_merge(array_keys($modes), array_keys($posted))) as $language_id) {
+            if (!isset($languages[(int)$language_id])) $result['errors'][] = $this->language->get('error_block_mode_invalid');
+        }
+        if ($result['errors']) return $result;
+
+        $rows = $post_id > 0 ? $this->model_blog_blog->getPostBlockContents($post_id) : [];
+        $savedDescriptions = $post_id > 0 ? $this->model_blog_blog->getPostDescriptions($post_id) : [];
+        $validator = new \Reamur\System\Library\Blog\BlockDocument();
+        $renderer = new \Reamur\System\Library\Blog\BlockRenderer();
+
+        foreach (array_keys($languages) as $language_id) {
+            $language_id = (int)$language_id;
+            $mode = (string)($modes[$language_id] ?? 'legacy');
+            $row = (array)($rows[$language_id] ?? []);
+            $sourceHtml = (string)($savedDescriptions[$language_id]['description'] ?? '');
+
+            if ($row !== []) {
+                $stored = $validator->deserializeDocument((string)($row['content_json'] ?? ''));
+                $storedVersion = (int)($row['format_version'] ?? 0);
+                $storedValid = $stored['valid'] && $storedVersion === (int)$stored['document']['format_version'];
+                if (!$storedValid) {
+                    if ($mode !== 'blocked') $result['errors'][] = $this->language->get('error_block_mode_invalid');
+                    else $result['snapshots'][$language_id] = $sourceHtml;
+                    continue;
+                }
+                if ($mode !== 'blocks') {
+                    $result['errors'][] = $this->language->get('error_block_mode_invalid');
+                    continue;
+                }
+            } elseif ($mode === 'blocked') {
+                $result['errors'][] = $this->language->get('error_block_mode_invalid');
+                continue;
+            } elseif ($mode !== 'blocks' && $mode !== 'legacy') {
+                $result['errors'][] = $this->language->get('error_block_mode_invalid');
+                continue;
+            }
+
+            if ($mode === 'legacy') continue;
+            if (($readyFlags[$language_id] ?? '') !== '1') {
+                $result['errors'][] = $this->language->get('error_block_editor_unavailable');
+                continue;
+            }
+            if ($row === [] && $post_id > 0 && $sourceHtml !== '') {
+                $conversion = $validator->convertLegacy($sourceHtml);
+                if ($conversion['status'] !== 'converted') {
+                    $result['errors'][] = $this->language->get('error_block_legacy_review');
+                    continue;
+                }
+            }
+
+            $json = $posted[$language_id] ?? null;
+            if (!is_string($json)) {
+                $result['errors'][] = $this->language->get('error_block_document_invalid');
+                continue;
+            }
+            $decoded = $validator->deserializeDocument($json);
+            if (!$decoded['valid']) {
+                $result['errors'][] = $this->language->get('error_block_document_invalid');
+                continue;
+            }
+            $canonical = $validator->serializeDocument($decoded['document']);
+            $rendered = $renderer->renderJson($canonical, (int)$decoded['document']['format_version']);
+            if (!$rendered['valid']) {
+                $result['errors'][] = $this->language->get('error_block_document_invalid');
+                continue;
+            }
+            $result['documents'][$language_id] = $canonical;
+            $result['snapshots'][$language_id] = (string)$rendered['html'];
+        }
+
+        $result['errors'] = array_values(array_unique($result['errors']));
+        return $result;
     }
 
     /**

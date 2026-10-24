@@ -119,6 +119,97 @@ class Blog extends \Reamur\System\Engine\Model {
     }
 
     /**
+     * Detecta a tabela aditiva F9-12 sem consultar a tabela quando a migration está ausente.
+     */
+    public function blogBlockContentTableExists(): bool {
+        static $cache = null;
+        if ($cache !== null) return $cache;
+        try {
+            $table = $this->db->escape($this->t('blog_post_content'));
+            $query = $this->db->query(
+                "SELECT `TABLE_NAME` FROM `information_schema`.`TABLES`
+                 WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = '" . $table . "' LIMIT 1"
+            );
+            if (!$query instanceof \stdClass) throw new \RuntimeException('blog_block_schema_detection_failed');
+            $cache = !empty($query->num_rows);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('blog_block_schema_detection_failed', 0, $e);
+        }
+        return $cache;
+    }
+
+    /** @return array<int, array<string, mixed>> rows sidecar indexed by language_id */
+    public function getPostBlockContents(int $post_id): array {
+        if ($post_id < 1 || !$this->blogBlockContentTableExists()) return [];
+        try {
+            $query = $this->db->query(
+                "SELECT `language_id`, `format_version`, `content_json`, `source_hash`, `legacy_html_backup`
+                   FROM `" . $this->t('blog_post_content') . "` WHERE `post_id` = '" . $post_id . "'"
+            );
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('blog_block_read_failed', 0, $e);
+        }
+        if (!$query instanceof \stdClass) throw new \RuntimeException('blog_block_read_failed');
+        $out = [];
+        if (!empty($query->rows)) {
+            foreach ((array)$query->rows as $row) $out[(int)$row['language_id']] = (array)$row;
+        }
+        return $out;
+    }
+
+    /**
+     * Persiste post/descrições/SEO e documentos sidecar numa única transação.
+     * `blocks` contém somente JSON já validado pelo Controller. A fonte HTML da
+     * primeira conversão vem do banco (não do cliente) e nunca é sobrescrita no UPSERT.
+     *
+     * @param array<int, string> $blocks JSON por language_id
+     */
+    public function savePostWithBlocks(int $post_id, array $data, array $blocks): int {
+        if (!$this->blogBlockContentTableExists()) throw new \RuntimeException('blog_block_schema_unavailable');
+        if ($this->db->query('START TRANSACTION') !== true) throw new \RuntimeException('blog_save_transaction_start_failed');
+        try {
+            $oldDescriptions = $post_id > 0 ? $this->getPostDescriptions($post_id) : [];
+            if ($post_id > 0) {
+                $this->editPost($post_id, $data);
+            } else {
+                $post_id = $this->addPost($data);
+                if ($post_id < 1) throw new \RuntimeException('blog_post_insert_failed');
+            }
+
+            $validator = new \Reamur\System\Library\Blog\BlockDocument();
+            foreach ($blocks as $language_id => $json) {
+                $language_id = (int)$language_id;
+                if ($language_id < 1 || !is_string($json)) throw new \RuntimeException('blog_block_payload_invalid');
+                $decoded = $validator->deserializeDocument($json);
+                if (!$decoded['valid']) throw new \RuntimeException('blog_block_document_invalid');
+                $version = (int)$decoded['document']['format_version'];
+                $legacy = (string)($oldDescriptions[$language_id]['description'] ?? '');
+                $backupSql = $legacy === '' ? 'NULL' : "'" . $this->db->escape($legacy) . "'";
+                $sourceHash = $legacy === '' ? '' : hash('sha256', $legacy);
+                $this->db->query(
+                    "INSERT INTO `" . $this->t('blog_post_content') . "` SET
+                        `post_id` = '" . $post_id . "',
+                        `language_id` = '" . $language_id . "',
+                        `format_version` = '" . $version . "',
+                        `content_json` = '" . $this->db->escape($json) . "',
+                        `source_hash` = '" . $this->db->escape($sourceHash) . "',
+                        `legacy_html_backup` = " . $backupSql . ",
+                        `date_added` = NOW(), `date_modified` = NOW()
+                     ON DUPLICATE KEY UPDATE
+                        `format_version` = '" . $version . "',
+                        `content_json` = '" . $this->db->escape($json) . "',
+                        `date_modified` = NOW()"
+                );
+            }
+            if ($this->db->query('COMMIT') !== true) throw new \RuntimeException('blog_save_transaction_commit_failed');
+            return $post_id;
+        } catch (\Throwable $e) {
+            try { $this->db->query('ROLLBACK'); } catch (\Throwable $rollbackError) { /* preserve original exception */ }
+            throw $e;
+        }
+    }
+
+    /**
      * keyword (seo_url.value) por idioma — key = 'blog_id=N'.
      *
      * @return array<int, string> indexado por language_id
@@ -207,6 +298,10 @@ class Blog extends \Reamur\System\Engine\Model {
     }
 
     public function deletePost(int $post_id): void {
+        if ($this->blogBlockContentTableExists()) {
+            $this->db->query("DELETE FROM `" . $this->t('blog_post_content') . "` WHERE `post_id` = '" . $post_id . "'");
+        }
+
         $this->db->query("DELETE FROM `" . $this->t('blog_post') . "` WHERE `post_id` = '" . $post_id . "'");
 
         $this->db->query("DELETE FROM `" . $this->t('blog_post_description') . "` WHERE `post_id` = '" . $post_id . "'");

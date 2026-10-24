@@ -133,3 +133,15 @@ $_['error_media_upload_move'] = 'The image could not be saved. Check the catalog
 $_['error_media_upload'] = 'The image could not be uploaded.';
 $_['error_media_generic'] = 'The media library could not complete the request. Try again.';
 $_['error_media_url'] = 'Enter a valid HTTP or HTTPS image URL.';
+
+// F9-16: block editor and safe legacy conversion
+$_['text_block_editor_intro'] = 'Edit content as blocks. Changes are saved only when you submit this form; there is no autosave.';
+$_['text_block_conversion_note'] = 'Legacy content was converted to blocks where possible. Review it before saving; the original HTML is retained as a snapshot.';
+$_['text_block_review_required'] = 'This legacy content could not be converted safely. Review it in the legacy editor before changing its format.';
+$_['text_block_invalid'] = 'The block document is invalid or incompatible. Its content will not be replaced.';
+$_['text_block_saved'] = 'This language uses the block format.';
+$_['error_block_schema_unavailable'] = 'Block storage is unavailable. Update the schema before saving block content.';
+$_['error_block_document_invalid'] = 'The submitted block document is invalid or was not prepared by the editor.';
+$_['error_block_legacy_review'] = 'Legacy content requires manual review before it can be converted into blocks.';
+$_['error_block_mode_invalid'] = 'The submitted content mode is invalid or inconsistent. Reload the form.';
+$_['error_block_editor_unavailable'] = 'The block editor did not initialize. Reload the form and try again.';

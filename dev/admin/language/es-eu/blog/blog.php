@@ -133,3 +133,15 @@ $_['error_media_upload_move'] = 'No se pudo guardar la imagen. Comprueba los per
 $_['error_media_upload'] = 'No se pudo subir la imagen.';
 $_['error_media_generic'] = 'La biblioteca de medios no pudo completar la solicitud. Inténtalo de nuevo.';
 $_['error_media_url'] = 'Introduce una URL de imagen HTTP o HTTPS válida.';
+
+// F9-16: block editor and safe legacy conversion
+$_['text_block_editor_intro'] = 'Edita el contenido en bloques. Los cambios se guardan al enviar este formulario; no hay guardado automático.';
+$_['text_block_conversion_note'] = 'El contenido heredado se convirtió en bloques cuando fue posible. Revísalo antes de guardar; el HTML original se conserva como instantánea.';
+$_['text_block_review_required'] = 'Este contenido heredado no se pudo convertir de forma segura. Revísalo en el editor heredado antes de cambiar el formato.';
+$_['text_block_invalid'] = 'El documento de bloques no es válido o no es compatible. El contenido no se reemplazará.';
+$_['text_block_saved'] = 'Este idioma utiliza el formato de bloques.';
+$_['error_block_schema_unavailable'] = 'El almacenamiento de bloques no está disponible. Actualiza el esquema antes de guardar contenido en bloques.';
+$_['error_block_document_invalid'] = 'El documento de bloques enviado no es válido o no fue preparado por el editor.';
+$_['error_block_legacy_review'] = 'El contenido heredado requiere revisión manual antes de convertirse en bloques.';
+$_['error_block_mode_invalid'] = 'El modo de contenido enviado no es válido o es incoherente. Vuelve a cargar el formulario.';
+$_['error_block_editor_unavailable'] = 'El editor de bloques no se inicializó. Vuelve a cargar el formulario e inténtalo de nuevo.';

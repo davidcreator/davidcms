@@ -53,7 +53,17 @@
     }
   }
 
+  var blockEditorMediaTarget = false;
+  modal.addEventListener('hidden.bs.modal', function () { blockEditorMediaTarget = false; });
+  document.addEventListener('blog-block-media-open', function () { blockEditorMediaTarget = true; });
+
   function chooseImage(value) {
+    if (blockEditorMediaTarget) {
+      blockEditorMediaTarget = false;
+      document.dispatchEvent(new CustomEvent('blog-block-media-selected', { detail: { path: value } }));
+      hideModal();
+      return;
+    }
     imageInput.value = value;
     imageInput.dispatchEvent(new Event('input', { bubbles: true }));
     imageInput.dispatchEvent(new Event('change', { bubbles: true }));

@@ -133,3 +133,15 @@ $_['error_media_upload_move'] = 'Não foi possível salvar a imagem. Verifique a
 $_['error_media_upload'] = 'Não foi possível enviar a imagem.';
 $_['error_media_generic'] = 'A biblioteca de mídia não conseguiu concluir a solicitação. Tente novamente.';
 $_['error_media_url'] = 'Informe uma URL de imagem HTTP ou HTTPS válida.';
+
+// F9-16: block editor and safe legacy conversion
+$_['text_block_editor_intro'] = 'Edite o conteúdo em blocos. O salvamento ocorre ao enviar este formulário; não há gravação automática.';
+$_['text_block_conversion_note'] = 'O conteúdo legado foi convertido para blocos quando possível. Revise antes de salvar; o HTML original é preservado como snapshot.';
+$_['text_block_review_required'] = 'Este conteúdo legado não pôde ser convertido com segurança. Revise-o no editor legado antes de alterar o formato.';
+$_['text_block_invalid'] = 'O documento de blocos está inválido ou incompatível. O conteúdo não será substituído.';
+$_['text_block_saved'] = 'Este idioma está no formato de blocos.';
+$_['error_block_schema_unavailable'] = 'O armazenamento de blocos não está disponível. Atualize o schema antes de salvar conteúdo em blocos.';
+$_['error_block_document_invalid'] = 'O documento de blocos enviado é inválido ou não foi preparado pelo editor.';
+$_['error_block_legacy_review'] = 'O conteúdo legado precisa de revisão manual antes de ser convertido em blocos.';
+$_['error_block_mode_invalid'] = 'O modo de conteúdo enviado é inválido ou inconsistente. Recarregue o formulário.';
+$_['error_block_editor_unavailable'] = 'O editor de blocos não foi inicializado. Recarregue o formulário e tente novamente.';

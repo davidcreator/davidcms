@@ -54,7 +54,29 @@
 
             <div class="mb-3 field">
               <label class="form-label" for="input-description-{{ language.language_id }}">{{ entry_description }}</label>
-              <textarea class="form-control" name="blog_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="12" data-rte>{{ language.fields.description }}</textarea>
+              {% if block_editor_available %}
+                <p class="text-muted small">{{ text_block_editor_intro }}</p>
+                {% if language.block_status %}<p class="alert alert-info py-2" role="status">{{ language.block_status }}</p>{% endif %}
+                {% if language.block_mode == 'blocks' %}
+                  <div class="rb-editor-host" data-blog-block-editor data-document="{{ language.block_document_json|e('html_attr') }}" data-hidden-input="blog-block-json-{{ language.language_id }}" data-ready-input="blog-block-ready-{{ language.language_id }}" tabindex="-1">
+                    <p>{{ text_block_editor_intro }}</p>
+                  </div>
+                  <input type="hidden" name="blog_block_mode[{{ language.language_id }}]" value="blocks">
+                  <input type="hidden" id="blog-block-json-{{ language.language_id }}" name="blog_blocks[{{ language.language_id }}]" value="{{ language.block_document_json|e('html_attr') }}">
+                  <input type="hidden" id="blog-block-ready-{{ language.language_id }}" name="blog_editor_ready[{{ language.language_id }}]" value="">
+                  <textarea hidden name="blog_description[{{ language.language_id }}][description]">{{ language.fields.description }}</textarea>
+                {% elseif language.block_mode == 'blocked' %}
+                  <p class="alert alert-warning" role="alert">{{ text_block_invalid }}</p>
+                  <input type="hidden" name="blog_block_mode[{{ language.language_id }}]" value="blocked">
+                  <textarea class="form-control" rows="6" readonly aria-label="{{ text_block_invalid }}">{{ language.fields.description }}</textarea>
+                  <input type="hidden" name="blog_description[{{ language.language_id }}][description]" value="{{ language.fields.description|e('html_attr') }}">
+                {% else %}
+                  <input type="hidden" name="blog_block_mode[{{ language.language_id }}]" value="legacy">
+                  <textarea class="form-control" name="blog_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="12" data-rte>{{ language.fields.description }}</textarea>
+                {% endif %}
+              {% else %}
+                <textarea class="form-control" name="blog_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="12" data-rte>{{ language.fields.description }}</textarea>
+              {% endif %}
             </div>
 
             <h3 class="h6 text-muted mt-4 mb-2">{{ text_meta_group }}</h3>
