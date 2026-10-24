@@ -53,6 +53,21 @@
           {% endfor %}
         </div>
       </div></div>
+      {% if custom_field_groups %}
+      <section class="card data-card mb-3" aria-labelledby="custom-field-heading"><div class="card-body">
+        <h2 class="card-title h6" id="custom-field-heading">{{ text_custom_fields }}</h2><p class="text-body-secondary small">{{ text_custom_fields_note }}</p>
+        {% for group in custom_field_groups %}<fieldset class="mb-4"><legend class="h6">{{ group.label }}</legend>
+          {% for field in group.fields %}<div class="mb-3"><label class="form-label" for="custom-field-{{ field.id }}-{{ field.values[0].language_id }}">{{ field.label }}{% if field.required %} <span class="text-danger">*</span>{% endif %}</label>{% if field.help %}<div class="form-text mb-1">{{ field.help }}</div>{% endif %}
+            {% for item in field.values %}<div class="mb-2">{% if field.localized %}<label class="form-text">{{ item.language_name }}</label>{% endif %}
+              {% if field.type == 'textarea' %}<textarea class="form-control" name="custom_field[{{ field.id }}][{{ item.language_id }}]" id="custom-field-{{ field.id }}-{{ item.language_id }}" rows="4">{{ item.value }}</textarea>
+              {% elseif field.type == 'select' %}<select class="form-select" name="custom_field[{{ field.id }}][{{ item.language_id }}]" id="custom-field-{{ field.id }}-{{ item.language_id }}"><option value="">{{ text_select_option }}</option>{% for option in field.options_list %}<option value="{{ option.value }}"{% if option.value == item.value %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select>
+              {% elseif field.type == 'boolean' %}<select class="form-select" name="custom_field[{{ field.id }}][{{ item.language_id }}]" id="custom-field-{{ field.id }}-{{ item.language_id }}"><option value="0"{% if item.value == '0' %} selected{% endif %}>{{ text_no }}</option><option value="1"{% if item.value == '1' %} selected{% endif %}>{{ text_yes }}</option></select>
+              {% else %}<input class="form-control" type="{{ field.type == 'number' ? 'number' : (field.type == 'url' ? 'url' : 'text') }}" name="custom_field[{{ field.id }}][{{ item.language_id }}]" id="custom-field-{{ field.id }}-{{ item.language_id }}" value="{{ item.value }}"{% if field.type == 'number' %} step="any"{% endif %}>
+              {% endif %}</div>{% endfor %}
+          </div>{% endfor %}
+        </fieldset>{% endfor %}
+      </div></section>
+      {% endif %}
     </div>
     <div class="col-lg-4">
       <div class="card data-card mb-3 side-card"><div class="card-body">

@@ -117,7 +117,8 @@ class Page extends \Reamur\System\Engine\Controller {
                 $page_id = $this->model_cms_page->addPage($this->postPayload());
 
                 if ($page_id) {
-                    $this->setFlash($this->language->get('text_success_add'));
+                    $valuesSaved = $this->model_custom_field_value->savePageValues($page_id, (array)($this->request->post['custom_field'] ?? []));
+                    $this->setFlash($this->language->get($valuesSaved ? 'text_success_add' : 'error_custom_field_save'), $valuesSaved ? 'success' : 'error');
 
                     $this->response->redirect($this->url->link('cms/page'));
 
@@ -167,8 +168,9 @@ class Page extends \Reamur\System\Engine\Controller {
 
             if ($errors === []) {
                 $this->model_cms_page->editPage($page_id, $this->postPayload());
+                $valuesSaved = $this->model_custom_field_value->savePageValues($page_id, (array)($this->request->post['custom_field'] ?? []));
 
-                $this->setFlash($this->language->get('text_success_edit'));
+                $this->setFlash($this->language->get($valuesSaved ? 'text_success_edit' : 'error_custom_field_save'), $valuesSaved ? 'success' : 'error');
 
                 $this->response->redirect($this->url->link('cms/page'));
 
@@ -203,10 +205,15 @@ class Page extends \Reamur\System\Engine\Controller {
         }
 
         $this->load->model('cms/page');
+        $this->load->model('custom_field/value');
 
         if ($this->model_cms_page->getPage($page_id)) {
+            if (!$this->model_custom_field_value->deletePageValues($page_id)) {
+                $this->setFlash($this->language->get('error_custom_field_delete'), 'error');
+                $this->response->redirect($this->url->link('cms/page'));
+                return;
+            }
             $this->model_cms_page->deletePage($page_id);
-
             $this->setFlash($this->language->get('text_success_delete'));
         }
 
@@ -228,7 +235,7 @@ class Page extends \Reamur\System\Engine\Controller {
             'entry_meta_title', 'entry_meta_description', 'entry_keyword',
             'entry_status', 'entry_sort_order',
             'button_save', 'button_cancel', 'text_enabled', 'text_disabled',
-            'text_meta_group', 'help_sort_order', 'help_description',
+            'text_meta_group', 'help_sort_order', 'help_description', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
@@ -245,6 +252,37 @@ class Page extends \Reamur\System\Engine\Controller {
         $post         = $this->request->post;
         $descriptions = $pid ? $this->model_cms_page->getPageDescriptions($pid) : [];
         $keywords     = $pid ? $this->model_cms_page->getPageKeywords($pid) : [];
+        $this->load->model('custom_field/value');
+        $customDefinitions = $this->model_custom_field_value->getPageFields();
+        $customLanguages = $this->model_custom_field_value->getActiveLanguages();
+        $customSaved = $pid ? $this->model_custom_field_value->getPageValues($pid) : [];
+        $customPosted = (array)($post['custom_field'] ?? []);
+        $customGroups = [];
+        foreach ($customDefinitions as $definition) {
+            $definition = (array)$definition;
+            $fid = (int)$definition['field_id'];
+            $localized = (int)$definition['localized'] === 1;
+            $targets = $localized ? $customLanguages : [['language_id'=>0,'name'=>'Shared','code'=>'shared']];
+            $values = [];
+            foreach ($targets as $target) {
+                $target = (array)$target; $lid=(int)$target['language_id'];
+                $values[]=['language_id'=>$lid,'language_name'=>(string)$target['name'],'value'=>(string)($customPosted[$fid][$lid] ?? ($customSaved[$fid][$lid] ?? ''))];
+            }
+            $opts = json_decode((string)($definition['options'] ?? '[]'), true);
+            $definition['options_list'] = is_array($opts) ? $opts : [];
+            $definition['values'] = $values; $definition['localized'] = $localized;
+            $definition['required'] = (int)$definition['required'] === 1;
+            $definition['id'] = $fid;
+            $groupKey = (int)$definition['group_id'];
+            if (!isset($customGroups[$groupKey])) $customGroups[$groupKey]=['label'=>(string)$definition['group_label'],'fields'=>[]];
+            $customGroups[$groupKey]['fields'][]=$definition;
+        }
+        $data['custom_field_groups'] = array_values($customGroups);
+        $data['text_custom_fields'] = $this->language->get('text_custom_fields');
+        $data['text_custom_fields_note'] = $this->language->get('text_custom_fields_note');
+        $data['text_shared_value'] = $this->language->get('text_shared_value');
+        $data['text_select_option'] = $this->language->get('text_select_option');
+        $data['text_yes'] = $this->language->get('text_yes'); $data['text_no'] = $this->language->get('text_no');
 
         $data['languages'] = [];
 
@@ -316,6 +354,13 @@ class Page extends \Reamur\System\Engine\Controller {
         $desp   = (array)($post['page_description'] ?? []);
 
         $titleEn = trim((string)($desp[1]['title'] ?? ''));
+        $customFields = $this->model_custom_field_value->getPageFields();
+        $postedFields = (array)($post['custom_field'] ?? []);
+        $activeLanguages = array_map(static fn($l)=>(int)((array)$l)['language_id'], $this->model_custom_field_value->getActiveLanguages());
+        foreach ($customFields as $field) {
+            $field=(array)$field; $fid=(int)$field['field_id']; $targets=(int)$field['localized']===1?$activeLanguages:[0];
+            foreach($targets as $lid) { $value=$postedFields[$fid][$lid] ?? ''; $problem=$this->model_custom_field_value->validateValue($field,$value); if($problem!=='') { $errors[]=$this->language->get('error_custom_field_'.$problem); } }
+        }
 
         if ($titleEn === '' || mb_strlen($titleEn) > 255) {
             $errors[] = $this->language->get('error_title');

@@ -1,11 +1,11 @@
-# Índice da entrega F9-06
+# Índice da entrega F9-07
 
-- Plano/escopo: `F9-06-UI-Admin-Campos-Personalizados.md`
-- Controller: `dev/admin/controller/custom_field/definition.php`
-- Lista: `dev/admin/view/template/custom_field/definition_list.twig`
-- Formulário: `dev/admin/view/template/custom_field/definition_form.twig`
-- Idioma fonte: `dev/admin/language/en-us/custom_field/definition.php`
-- ADR: `agents-ia/decisoes/0062-f9-06-ui-admin-campos-personalizados.md`
-- Tool: `tools/e2e/e2e_f906.sh --check`
+- Plano: `F9-07-Valores-Custom-Fields-CMS-Page.md`
+- Adapter de valores: `dev/admin/model/custom_field/value.php`
+- Controller de páginas: `dev/admin/controller/cms/page.php`
+- Formulário: `dev/admin/view/template/cms/page_form.twig`
+- Idioma fonte: `dev/admin/language/en-us/cms/page.php`
+- ADR: `agents-ia/decisoes/0063-f9-07-valores-campos-cms-page.md`
+- Tool estático: `tools/e2e/e2e_f907.sh --check`
 
-Dependências: Model/schema e ACL das F9-02/F9-05 precisam existir no ambiente de laboratório antes de testar a rota. Esta entrega não grava valores nem renderiza campos nas páginas públicas.
+**Dependência:** schema F9-02 e ACL F9-05 aplicados manualmente no laboratório antes do teste de runtime. Nenhum campo é renderizado no site público por esta entrega.

@@ -13,7 +13,7 @@
 $_['heading_title']        = 'Content Pages';
 $_['text_list']            = 'Informational pages of the site (About, Policies, Cookies). Per-language content is edited in the page form.';
 $_['text_no_results']      = 'No pages yet. Create the first one.';
-$_['text_confirm_delete']  = 'Delete this page? Its descriptions and SEO keywords are removed.';
+$_['text_confirm_delete']  = 'Delete this page? Its descriptions, SEO keywords, and custom field values are removed.';
 $_['text_enabled']         = 'Enabled';
 $_['text_disabled']        = 'Disabled';
 $_['text_add']             = 'Add Page';
@@ -71,3 +71,19 @@ $_['button_next_page'] = 'Next ›';
 $_['button_previous_page'] = '‹ Previous';
 $_['error_csrf'] = 'Invalid session token. Reload the form and try again.';
 $_['button_close'] = 'Close';
+
+// F9-07 — Custom field values on CMS pages (admin-only).
+$_['text_custom_fields'] = 'Custom fields';
+$_['text_custom_fields_note'] = 'Values are saved with this page. Public rendering is not enabled by this change.';
+$_['text_shared_value'] = 'Shared value';
+$_['text_select_option'] = '— Select —';
+$_['text_yes'] = 'Yes';
+$_['text_no'] = 'No';
+$_['error_custom_field_required'] = 'A required custom field is empty.';
+$_['error_custom_field_number'] = 'A custom field must contain a valid number.';
+$_['error_custom_field_boolean'] = 'A custom boolean field has an invalid value.';
+$_['error_custom_field_url'] = 'A custom URL must be a valid http(s) URL.';
+$_['error_custom_field_select'] = 'A custom field selection is not one of the configured options.';
+$_['error_custom_field_invalid'] = 'A custom field value is invalid.';
+$_['error_custom_field_save'] = 'The page was saved, but custom field values could not be saved. Please reopen the page and try again.';
+$_['error_custom_field_delete'] = 'Custom values could not be removed, so the page was not deleted.';
