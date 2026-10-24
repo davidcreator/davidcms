@@ -1,44 +1,39 @@
 {
-  "task": "F9-10",
+  "task": "F9-11",
   "phase": "Fase 9",
   "base_repository": "https://github.com/davidcreator/davidcms",
-  "base_head": "2c39f444a78fbc01c8586871f780a09e9be4a91f",
-  "scope": "retorno das tabelas F9 ao Dicionário canônico e preflight integrado estático",
+  "base_head": "61f75381265bb9b4f20741d266a5f8db61c8664b",
+  "scope": "requirements and architecture contract for native Gutenberg-inspired Blog block editor; no runtime/schema changes",
   "files": [
     {
-      "path": "docs/Dicionario-de-Dados.md",
-      "bytes": 13246,
-      "sha256": "9e22107b1091483cf080b1bfa345f3372c9eb04446ee81c547ef82aaee6db386"
+      "path": "docs/F9-11-Contrato-Editor-Blocos-Blog.json",
+      "bytes": 3147,
+      "sha256": "6ac1e408f5b36adfa94b4ab49bcca4bf03648a3eb5880e0b8fa79bea36a6ff15"
     },
     {
-      "path": "tools/e2e/e2e_f905.cjs",
-      "bytes": 7182,
-      "sha256": "4e42eb8cf8e82451b46fc6eedfea66ea6043f0db1b918075fe5c4d2bdd6cdb53"
-    },
-    {
-      "path": "tools/e2e/e2e_f910.sh",
-      "bytes": 1347,
-      "sha256": "dd2b3977dcb60920ddf9dfd96d6151dbacc66684e28493586c7b436ef20db4e7"
-    },
-    {
-      "path": "tools/e2e/e2e_f910.cjs",
-      "bytes": 1662,
-      "sha256": "406eb391070bc1738664c9967df4b32e0fc8732f59783b6b6e801f85172e4543"
-    },
-    {
-      "path": "docs/F9-10-Dicionario-e-Preflight-Integrado.md",
-      "bytes": 2432,
-      "sha256": "0099e196ca4546a1f9fcb5c64aecaf02928dd45e4a65dd9787e506e0c34aebd2"
+      "path": "docs/F9-11-Editor-de-Blocos-Blog.md",
+      "bytes": 7107,
+      "sha256": "25f1c7e04cc6f56b2d3925d4e3c6f5feb770481e7a4f327ac2d2bc31f107e7f6"
     },
     {
       "path": "docs/README.md",
-      "bytes": 473,
-      "sha256": "fb2f58b86c6756e96135624865c0983d42d68599f42bd2f2d8fb33e7e561bd6e"
+      "bytes": 350,
+      "sha256": "549b99943e6cd1a38b5e2726d8491d1810f493ecae4a5b7b2d2a46efdc38b420"
     },
     {
-      "path": "agents-ia/decisoes/0066-f9-10-dicionario-preflight-integrado.md",
-      "bytes": 3079,
-      "sha256": "9ceff1c39a302e7674f9e95bb5d3f9bf7afa4ac554a5c354588c8c73e8de82cd"
+      "path": "agents-ia/decisoes/0067-f9-11-editor-de-blocos-blog-contrato.md",
+      "bytes": 3563,
+      "sha256": "11b16224757f30ea248d9a08d20c2f126aeb15d93bb8ead91f3c6dad546d90b1"
+    },
+    {
+      "path": "tools/e2e/e2e_f911.sh",
+      "bytes": 473,
+      "sha256": "1800b63c9628d72c362fbaf4246be8c149c1f243401d9a828c6db2975f72f933"
+    },
+    {
+      "path": "tools/e2e/e2e_f911.cjs",
+      "bytes": 2904,
+      "sha256": "cc419209d0dd15884c2af302811bbe2ba1d1a2fa991dd70bb73454762409924d"
     }
   ]
 }

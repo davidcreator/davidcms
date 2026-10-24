@@ -1,0 +1,81 @@
+{
+  "task": "F9-11",
+  "base_head": "61f75381265bb9b4f20741d266a5f8db61c8664b",
+  "status": "requirements_and_architecture_contract_only",
+  "product": {
+    "name": "ReamurCMS Block Editor",
+    "experience_reference": "WordPress Gutenberg",
+    "implementation": "native ReamurCMS editor; no WordPress runtime or package dependency",
+    "module_scope": "blog/blog",
+    "cms_page_scope": "unchanged",
+    "runtime_dependency_policy": "no external CDN or third-party runtime dependency"
+  },
+  "editor": {
+    "per_language_content": true,
+    "block_tree": true,
+    "nested_blocks": true,
+    "inspector_panel": true,
+    "block_inserter": true,
+    "reorder": ["keyboard_up_down", "drag_drop"],
+    "undo_redo": true,
+    "preview_widths": ["desktop", "tablet", "mobile"],
+    "responsive_layout": true,
+    "autosave": "deferred_to_implementation_task"
+  },
+  "initial_blocks": [
+    "paragraph",
+    "heading",
+    "list",
+    "image",
+    "quote",
+    "video_embed",
+    "button",
+    "separator",
+    "group",
+    "columns"
+  ],
+  "layout_contract": {
+    "column_presets": [2, 3],
+    "mobile_behavior": "stack_columns",
+    "arbitrary_css": false,
+    "custom_html_block": false
+  },
+  "document_contract": {
+    "format": "versioned_json_block_tree",
+    "node_fields": ["id", "type", "attributes", "children", "content"],
+    "unknown_block_policy": "preserve_source_and_block_publication_until_review; never render raw by default",
+    "invalid_document_policy": "reject_save_without_overwriting_legacy_source"
+  },
+  "legacy_conversion": {
+    "source": "blog_post_description.description",
+    "on_edit": "auto-convert in memory and show review/preview",
+    "persist": "only after explicit successful save",
+    "unsupported_markup": "preserve in legacy fragment or stop conversion and keep original; never silently drop",
+    "original_source": "must remain recoverable until a separately approved cleanup",
+    "all_languages": true
+  },
+  "security": {
+    "block_rendering": "allowlisted server-side renderer with context-appropriate escaping",
+    "legacy_html": "isolated conversion fallback; do not expand existing raw HTML trust boundary",
+    "arbitrary_inline_script": false,
+    "arbitrary_style": false,
+    "embed_allowlist": ["youtube.com", "youtu.be", "vimeo.com"],
+    "csrf_and_acl": "reuse blog/blog existing modify + CSRF flow"
+  },
+  "migration": {
+    "schema_change_authorized": false,
+    "database_execution_authorized": false,
+    "backup_required": true,
+    "prefix_placeholder": "rms_",
+    "separate_upgrade_and_rollback_required": true
+  },
+  "acceptance": [
+    "existing blog HTML remains unchanged until user explicitly saves a conversion",
+    "each enabled language can contain a distinct versioned block document",
+    "2- and 3-column layouts stack on mobile and remain editable with keyboard",
+    "unknown/unsafe legacy markup is never silently discarded",
+    "block values cannot execute arbitrary HTML/JavaScript in public output",
+    "legacy content remains recoverable while the feature is introduced",
+    "no changes to CMS/page custom fields or other blog lifecycle behavior"
+  ]
+}

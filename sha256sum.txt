@@ -1,8 +1,7 @@
-9ceff1c39a302e7674f9e95bb5d3f9bf7afa4ac554a5c354588c8c73e8de82cd  ./agents-ia/decisoes/0066-f9-10-dicionario-preflight-integrado.md
-9e22107b1091483cf080b1bfa345f3372c9eb04446ee81c547ef82aaee6db386  ./docs/Dicionario-de-Dados.md
-0099e196ca4546a1f9fcb5c64aecaf02928dd45e4a65dd9787e506e0c34aebd2  ./docs/F9-10-Dicionario-e-Preflight-Integrado.md
-fb2f58b86c6756e96135624865c0983d42d68599f42bd2f2d8fb33e7e561bd6e  ./docs/README.md
-d8088c8ca3fc3fd2fae97013c888e0ae8c8867c85d3b3a6b63a7bd3ede535295  ./manifest.json
-4e42eb8cf8e82451b46fc6eedfea66ea6043f0db1b918075fe5c4d2bdd6cdb53  ./tools/e2e/e2e_f905.cjs
-406eb391070bc1738664c9967df4b32e0fc8732f59783b6b6e801f85172e4543  ./tools/e2e/e2e_f910.cjs
-dd2b3977dcb60920ddf9dfd96d6151dbacc66684e28493586c7b436ef20db4e7  ./tools/e2e/e2e_f910.sh
+11b16224757f30ea248d9a08d20c2f126aeb15d93bb8ead91f3c6dad546d90b1  ./agents-ia/decisoes/0067-f9-11-editor-de-blocos-blog-contrato.md
+6ac1e408f5b36adfa94b4ab49bcca4bf03648a3eb5880e0b8fa79bea36a6ff15  ./docs/F9-11-Contrato-Editor-Blocos-Blog.json
+25f1c7e04cc6f56b2d3925d4e3c6f5feb770481e7a4f327ac2d2bc31f107e7f6  ./docs/F9-11-Editor-de-Blocos-Blog.md
+549b99943e6cd1a38b5e2726d8491d1810f493ecae4a5b7b2d2a46efdc38b420  ./docs/README.md
+eb1244712ca01daef8da60d528f54515926398a016022edcd31c213fdfc34469  ./manifest.json
+cc419209d0dd15884c2af302811bbe2ba1d1a2fa991dd70bb73454762409924d  ./tools/e2e/e2e_f911.cjs
+1800b63c9628d72c362fbaf4246be8c149c1f243401d9a828c6db2975f72f933  ./tools/e2e/e2e_f911.sh

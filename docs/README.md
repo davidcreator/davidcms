@@ -1,9 +1,8 @@
-# Índice da entrega F9-10
+# Índice da entrega F9-11
 
-- Plano/escopo: `F9-10-Dicionario-e-Preflight-Integrado.md`
-- Dicionário canônico atualizado: `Dicionario-de-Dados.md`
-- Compatibilidade forward do gate F9-05: `tools/e2e/e2e_f905.cjs`
-- Preflight integrado: `tools/e2e/e2e_f910.sh --check --root /caminho/davidcms`
-- ADR: `agents-ia/decisoes/0066-f9-10-dicionario-preflight-integrado.md`
+- Contrato machine-readable: `F9-11-Contrato-Editor-Blocos-Blog.json`
+- Auditoria e arquitetura/escopo: `F9-11-Editor-de-Blocos-Blog.md`
+- ADR: `agents-ia/decisoes/0067-f9-11-editor-de-blocos-blog-contrato.md`
+- Tool de contrato: `tools/e2e/e2e_f911.sh --check`
 
-O runner valida arquivos/contratos, nunca consulta ou altera o banco. `error.log` não está incluído.
+Não há código de runtime nem migration nesta subtarefa.
