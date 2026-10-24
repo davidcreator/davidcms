@@ -1,13 +1,14 @@
-# Fase 9 · Tarefa 18 — Revisão estática e prontidão
+# Fase 9 · Tarefa 19 — Remediação estática F918-01…04
 
-A revisão consolidada de F9-12 a F9-17 identificou **2 itens P1 e 2 itens P2 abertos**. O estado atual é **não liberar ainda**. O relatório completo e recomendações estão em `docs/F9-18-Relatorio-Revisao-Estatica.md`; o registro estruturado fica em `docs/F9-18-Risk-Register.json`.
+Esta entrega contém um conjunto de arquivos pontuais para endereçar os quatro riscos registrados na F9-18:
 
-Os arquivos de código críticos listados no Source Hashes foram comparados byte a byte com o HEAD de `main`, sem clone do projeto.
+- **F918-01:** detecção/leitura do sidecar no catálogo agora distingue tabela realmente ausente de erro; erro de metadata/leitura sinaliza `query_error` e mantém o ramo público fail-closed.
+- **F918-02:** renderer recebe base de assets configurada pelo servidor e resolve paths allowlisted de imagem; sem base, emite path root-relative.
+- **F918-03:** seleção do sidecar tenta o idioma ativo primeiro; só usa idioma fallback depois da ausência confirmada da linha ativa.
+- **F918-04:** exclusão do post, sidecar, descrições e SEO usa transação/rollback.
 
-## Verificador
+O checker de fonte estática passou, com oito fixtures sintéticas. Isso não valida execução PHP/SQL, consultas reais, Twig, browser ou comportamento do app. **Nenhum teste PHP/SQL/browser/app foi executado; nenhum banco/migration/GitHub foi acessado ou alterado.**
 
-`tools/e2e/e2e_f918_preflight.cjs <checkout>` é uma inspeção estática heurística. Ele apenas lê texto de fonte e aponta os padrões dos riscos; não executa aplicação/PHP/SQL/browser nem acessa banco. O exit code 1 significa riscos estáticos detectados, não falha de teste de runtime.
+## Integração
 
-## Limites
-
-Nenhuma alteração no código de produção, migration, PHP, SQL, browser, app, banco, deploy ou GitHub write foi feita. A migration F9-12 permanece sem confirmação de aplicação. Nenhum teste funcional foi executado.
+Compare os cinco arquivos em `dev/` contra o HEAD base e aplique/revise individualmente. Este ZIP não é um commit e não contém o projeto inteiro. F9-12 não é presumida aplicada. Antes de qualquer merge/deploy, é necessária validação autorizada em staging descartável, incluindo resolução de asset-base, fallback multilíngue e rollback.

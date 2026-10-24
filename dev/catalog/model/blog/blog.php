@@ -70,6 +70,7 @@ class Blog extends \Reamur\System\Engine\Model {
                     COALESCE(NULLIF(pd.`description`, ''), pd_en.`description`, '')     AS `description`,
                     COALESCE(NULLIF(pd.`meta_title`, ''), pd_en.`meta_title`, '')       AS `meta_title`,
                     COALESCE(NULLIF(pd.`meta_description`, ''), pd_en.`meta_description`, '') AS `meta_description`,
+                    '" . $lang . "' AS `active_language_id`,
                     CASE WHEN NULLIF(pd.`description`, '') IS NOT NULL THEN pd.`language_id` ELSE pd_en.`language_id` END AS `content_language_id`
                FROM `" . $this->t('blog_post') . "` p
           LEFT JOIN `" . $this->t('blog_post_description') . "` pd
@@ -89,7 +90,13 @@ class Blog extends \Reamur\System\Engine\Model {
      */
     public function getPostBlockContent(int $post_id, int $language_id = 0): array {
         $empty = ['table_available' => false, 'row_found' => false, 'query_error' => false, 'format_version' => 0, 'content_json' => ''];
-        if ($post_id < 1 || !$this->blockContentTableExists()) return $empty;
+        if ($post_id < 1) return $empty;
+        try {
+            if (!$this->blockContentTableExists()) return $empty;
+        } catch (\Throwable $e) {
+            // A metadata error is not proof of absence; the public caller must fail closed.
+            return ['table_available' => true, 'row_found' => false, 'query_error' => true, 'format_version' => 0, 'content_json' => ''];
+        }
         $language_id = $language_id > 0 ? $language_id : $this->currentLanguageId();
         try {
             $query = $this->db->query(
@@ -101,13 +108,16 @@ class Blog extends \Reamur\System\Engine\Model {
         } catch (\Throwable $e) {
             return ['table_available' => true, 'row_found' => false, 'query_error' => true, 'format_version' => 0, 'content_json' => ''];
         }
-        if ($query instanceof \stdClass && !empty($query->row)) {
+        if (!$query instanceof \stdClass) {
+            return ['table_available' => true, 'row_found' => false, 'query_error' => true, 'format_version' => 0, 'content_json' => ''];
+        }
+        if (!empty($query->row)) {
             return ['table_available' => true, 'row_found' => true, 'query_error' => false, 'format_version' => (int)($query->row['format_version'] ?? 0), 'content_json' => (string)($query->row['content_json'] ?? '')];
         }
         return ['table_available' => true, 'row_found' => false, 'query_error' => false, 'format_version' => 0, 'content_json' => ''];
     }
 
-    /** Detect the additive F9-12 sidecar without querying it when migration is absent. */
+    /** Detect the additive F9-12 sidecar; a successful empty result alone means absent. */
     private function blockContentTableExists(): bool {
         static $cache = null;
         if ($cache !== null) return $cache;
@@ -117,9 +127,10 @@ class Blog extends \Reamur\System\Engine\Model {
                 "SELECT `TABLE_NAME` FROM `information_schema`.`TABLES`
                  WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = '" . $table . "' LIMIT 1"
             );
-            $cache = ($query instanceof \stdClass && !empty($query->num_rows));
+            if (!$query instanceof \stdClass) throw new \RuntimeException('blog_block_schema_detection_failed');
+            $cache = !empty($query->num_rows);
         } catch (\Throwable $e) {
-            $cache = false;
+            throw new \RuntimeException('blog_block_schema_detection_failed', 0, $e);
         }
         return $cache;
     }

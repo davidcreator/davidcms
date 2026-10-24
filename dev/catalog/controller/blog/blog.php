@@ -83,7 +83,16 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['button_back']        = $this->language->get('button_back');
         $data['text_content_review'] = $this->language->get('text_content_review');
 
-        $blockContent = $this->model_blog_blog->getPostBlockContent($post_id, (int)($post['content_language_id'] ?? 0));
+        $activeLanguageId = (int)($post['active_language_id'] ?? 0);
+        $fallbackLanguageId = (int)($post['content_language_id'] ?? 0);
+        $blockContent = $this->model_blog_blog->getPostBlockContent($post_id, $activeLanguageId);
+        // Prefer a sidecar in the active language even when its HTML snapshot is intentionally empty.
+        // Only a confirmed missing row may fall back to the legacy-selected language.
+        if (!empty($blockContent['table_available']) && empty($blockContent['row_found']) && empty($blockContent['query_error'])
+            && $fallbackLanguageId > 0 && $fallbackLanguageId !== $activeLanguageId) {
+            $fallbackBlocks = $this->model_blog_blog->getPostBlockContent($post_id, $fallbackLanguageId);
+            if (!empty($fallbackBlocks['row_found']) || !empty($fallbackBlocks['query_error'])) $blockContent = $fallbackBlocks;
+        }
         $contentMode = 'legacy';
         $blockHtml = '';
         $contentValid = false;
@@ -92,7 +101,8 @@ class Blog extends \Reamur\System\Engine\Controller {
             if (!empty($blockContent['row_found'])) {
                 $rendered = (new \Reamur\System\Library\Blog\BlockRenderer())->renderJson(
                     (string)$blockContent['content_json'],
-                    (int)$blockContent['format_version']
+                    (int)$blockContent['format_version'],
+                    $base
                 );
                 $contentValid = (bool)$rendered['valid'];
                 $blockHtml = $contentValid ? (string)$rendered['html'] : '';

@@ -1,13 +1,5 @@
-# F9-18 source preflight
+# F9-19 — guardrail estático de regressão
 
-`e2e_f918_preflight.cjs <checkout>` lê quatro fontes do checkout como texto e procura padrões ligados aos achados F918-01…04. Não carrega a aplicação nem inicia PHP, SQL, browser, servidor ou banco.
+Execute `tools/e2e/e2e_f919_static.sh [checkout-ou-pacote-F9-19]` para verificar os contratos de fonte e oito fixtures sintéticas. A ferramenta apenas lê texto/JSON; não executa código PHP, SQL, Twig, browser ou aplicação, não abre banco e não aplica migration.
 
-O comando termina com código 1 quando identifica riscos ainda abertos (estado esperado para a base analisada); isto não é teste E2E nem aprovação automática de release. O scanner é heurístico e complementar ao relatório, não substitui code review.
-
-Exemplo futuro, após as correções e em checkout completo:
-
-```sh
-node tools/e2e/e2e_f918_preflight.cjs /caminho/para/davidcms
-```
-
-Nesta tarefa, o scanner foi executado sobre snapshots pontuais do workspace e apontou F918-01…04, coerente com o relatório. Nenhum teste de runtime foi executado.
+PASS indica apenas a presença dos guardrails no código-fonte; não valida comportamento em runtime. A F9-12 não é presumida aplicada. E2E funcional fica para um ambiente isolado e autorização futura.

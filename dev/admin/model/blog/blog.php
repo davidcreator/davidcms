@@ -298,15 +298,20 @@ class Blog extends \Reamur\System\Engine\Model {
     }
 
     public function deletePost(int $post_id): void {
-        if ($this->blogBlockContentTableExists()) {
-            $this->db->query("DELETE FROM `" . $this->t('blog_post_content') . "` WHERE `post_id` = '" . $post_id . "'");
+        $hasBlockContent = $this->blogBlockContentTableExists();
+        if ($this->db->query('START TRANSACTION') !== true) throw new \RuntimeException('blog_delete_transaction_start_failed');
+        try {
+            if ($hasBlockContent) {
+                $this->db->query("DELETE FROM `" . $this->t('blog_post_content') . "` WHERE `post_id` = '" . $post_id . "'");
+            }
+            $this->db->query("DELETE FROM `" . $this->t('blog_post') . "` WHERE `post_id` = '" . $post_id . "'");
+            $this->db->query("DELETE FROM `" . $this->t('blog_post_description') . "` WHERE `post_id` = '" . $post_id . "'");
+            $this->db->query("DELETE FROM `" . $this->t('seo_url') . "` WHERE `key` = 'blog_id=" . $post_id . "'");
+            if ($this->db->query('COMMIT') !== true) throw new \RuntimeException('blog_delete_transaction_commit_failed');
+        } catch (\Throwable $e) {
+            try { $this->db->query('ROLLBACK'); } catch (\Throwable $rollbackError) { /* preserve original exception */ }
+            throw $e;
         }
-
-        $this->db->query("DELETE FROM `" . $this->t('blog_post') . "` WHERE `post_id` = '" . $post_id . "'");
-
-        $this->db->query("DELETE FROM `" . $this->t('blog_post_description') . "` WHERE `post_id` = '" . $post_id . "'");
-
-        $this->db->query("DELETE FROM `" . $this->t('seo_url') . "` WHERE `key` = 'blog_id=" . $post_id . "'");
     }
 
     // ─── internos ────────────────────────────────────────────────────────

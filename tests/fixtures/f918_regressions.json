@@ -1,0 +1,49 @@
+[
+  {
+    "id": "schema-absent-confirmed",
+    "scenario": "The metadata SELECT succeeds and returns zero rows.",
+    "expected": "legacy_mode_allowed"
+  },
+  {
+    "id": "schema-metadata-error",
+    "scenario": "The metadata SELECT throws or returns a non-row result while the sidecar may exist.",
+    "expected": "query_error_true_and_public_blocks_branch_fail_closed"
+  },
+  {
+    "id": "active-language-empty-sidecar",
+    "scenario": "Active locale has a valid empty block document; English sidecar has visible content.",
+    "active_language_id": 3,
+    "fallback_language_id": 1,
+    "expected": "active_locale_sidecar_selected_without_english_fallback"
+  },
+  {
+    "id": "active-missing-english-present",
+    "scenario": "Active locale has no sidecar row; fallback locale has a valid block document.",
+    "active_language_id": 3,
+    "fallback_language_id": 1,
+    "expected": "english_sidecar_selected_only_after_confirmed_active_row_absence"
+  },
+  {
+    "id": "image-root-install",
+    "src": "view/image/blog/synthetic.png",
+    "asset_base": "https://site.invalid",
+    "expected_src": "https://site.invalid/view/image/blog/synthetic.png"
+  },
+  {
+    "id": "image-subdirectory-install",
+    "src": "view/image/blog/synthetic.png",
+    "asset_base": "https://site.invalid/cms",
+    "expected_src": "https://site.invalid/cms/view/image/blog/synthetic.png"
+  },
+  {
+    "id": "image-relative-without-base",
+    "src": "view/image/blog/synthetic.png",
+    "asset_base": "",
+    "expected_src": "/view/image/blog/synthetic.png"
+  },
+  {
+    "id": "delete-rollback",
+    "scenario": "A deletion query after sidecar deletion fails.",
+    "expected": "rollback_all_post_sidecar_description_and_seo_deletes"
+  }
+]

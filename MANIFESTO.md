@@ -1,12 +1,12 @@
-# Manifesto F9-18
+# Manifesto F9-19
 
-- Repositório: `https://github.com/davidcreator/davidcms`
+- Projeto: `https://github.com/davidcreator/davidcms`
 - Branch: `main`
-- HEAD verificado: `72a8b927c0d2b96b7d3df41114969aa620bb9602`
-- Tarefa: revisão estática de prontidão F9-12–F9-17.
-- Resultado: 2 findings P1 e 2 P2 abertos; veredito `release_ready=false`.
-- Fonte: 5 arquivos críticos comparados byte a byte com `raw` no HEAD (consulte `docs/F9-18-Source-Hashes.json`).
-- Testes PHP/SQL/browser/app, migration e E2E runtime: não executados.
+- HEAD base verificado antes da alteração: `b4ef8cc2f6cc398eea6e9a80f8ea81c7d3b0f1f6`
+- Objetivo: remediação local dos achados F918-01…04.
+- Arquivos de runtime modificados no pacote: 5 (paths pontuais sob `dev/`).
+- Verificação executada: Node static source/fixture guard PASS, 8 fixtures sintéticas.
+- PHP/SQL/browser/app/migration/E2E runtime: não executados.
 - Banco acessado: não. GitHub write/deploy: não.
-- F9-12: migration não aplicada nem presumida.
-- Dados reais/dumps/logs runtime/credenciais: não incluídos.
+- F9-12: não presumida nem aplicada.
+- Dumps, dados pessoais, credenciais e logs runtime: não incluídos.

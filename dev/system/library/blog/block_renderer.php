@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 /**
- * ReamurCMS — F9-15 allowlisted public renderer for Blog block documents.
+ * ReamurCMS — F9-19 hardened allowlisted public renderer for Blog block documents.
  * Produces markup only after strict schema validation. Never accepts raw HTML.
  */
 namespace Reamur\System\Library\Blog;
@@ -11,7 +11,7 @@ final class BlockRenderer {
     /**
      * @return array{valid:bool,html:string,errors:array}
      */
-    public function renderJson(string $json, ?int $storedFormatVersion = null): array {
+    public function renderJson(string $json, ?int $storedFormatVersion = null, string $assetBase = ''): array {
         if ($json === '' || strlen($json) > self::MAX_JSON_BYTES) return ['valid' => false, 'html' => '', 'errors' => ['document_size_invalid']];
         $document = json_decode($json, true);
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($document)) return ['valid' => false, 'html' => '', 'errors' => ['invalid_json']];
@@ -21,16 +21,16 @@ final class BlockRenderer {
         $validation = $validator->validateDocument($document);
         if (!$validation['valid']) return ['valid' => false, 'html' => '', 'errors' => $validation['errors']];
 
-        return ['valid' => true, 'html' => $this->renderNodes($document['blocks'], $validator), 'errors' => []];
+        return ['valid' => true, 'html' => $this->renderNodes($document['blocks'], $validator, $assetBase), 'errors' => []];
     }
 
-    private function renderNodes(array $nodes, BlockDocument $validator): string {
+    private function renderNodes(array $nodes, BlockDocument $validator, string $assetBase): string {
         $html = '';
-        foreach ($nodes as $node) $html .= $this->renderNode($node, $validator);
+        foreach ($nodes as $node) $html .= $this->renderNode($node, $validator, $assetBase);
         return $html;
     }
 
-    private function renderNode(array $node, BlockDocument $validator): string {
+    private function renderNode(array $node, BlockDocument $validator, string $assetBase): string {
         $type = $node['type'];
         $content = $this->escapeWithBreaks($node['content']);
         $children = $node['children'];
@@ -60,7 +60,7 @@ final class BlockRenderer {
                 return '<blockquote class="rms-block rms-block-quote"><p>' . $content . '</p></blockquote>';
 
             case 'core/image':
-                $src = $this->escape((string)$attributes['src']);
+                $src = $this->escape($this->resolveLocalImageUrl((string)$attributes['src'], $assetBase));
                 $alt = $this->escape((string)$attributes['alt']);
                 $title = isset($attributes['title']) && $attributes['title'] !== '' ? ' title="' . $this->escape((string)$attributes['title']) . '"' : '';
                 return '<figure class="rms-block rms-block-image"><img src="' . $src . '" alt="' . $alt . '"' . $title . ' loading="lazy" decoding="async"></figure>';
@@ -82,12 +82,12 @@ final class BlockRenderer {
                 return '<hr class="rms-block rms-block-separator">';
 
             case 'core/group':
-                return '<div class="rms-block-group">' . $this->renderNodes($children, $validator) . '</div>';
+                return '<div class="rms-block-group">' . $this->renderNodes($children, $validator, $assetBase) . '</div>';
 
             case 'core/columns':
                 $count = (int)$attributes['count'];
                 $html = '<div class="rms-block-columns rms-block-columns--' . $count . '">';
-                foreach ($children as $column) $html .= '<div class="rms-block-column">' . $this->renderNodes($column['children'], $validator) . '</div>';
+                foreach ($children as $column) $html .= '<div class="rms-block-column">' . $this->renderNodes($column['children'], $validator, $assetBase) . '</div>';
                 return $html . '</div>';
 
             case 'core/column':
@@ -95,6 +95,19 @@ final class BlockRenderer {
                 return '';
         }
         return '';
+    }
+
+    /** Resolve an allowlisted local path against trusted catalog configuration, never document input. */
+    private function resolveLocalImageUrl(string $src, string $assetBase): string {
+        $path = '/' . ltrim($src, '/');
+        if ($assetBase === '') return $path;
+        $parts = parse_url($assetBase);
+        if (!is_array($parts) || !isset($parts['scheme'], $parts['host'])
+            || !in_array(strtolower((string)$parts['scheme']), ['http', 'https'], true)
+            || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment'])) {
+            return $path;
+        }
+        return rtrim($assetBase, '/') . $path;
     }
 
     private function escapeWithBreaks(string $value): string {

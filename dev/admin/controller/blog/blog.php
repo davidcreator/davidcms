@@ -705,7 +705,7 @@ class Blog extends \Reamur\System\Engine\Controller {
                 continue;
             }
             $canonical = $validator->serializeDocument($decoded['document']);
-            $rendered = $renderer->renderJson($canonical, (int)$decoded['document']['format_version']);
+            $rendered = $renderer->renderJson($canonical, (int)$decoded['document']['format_version'], $this->catalogUrl());
             if (!$rendered['valid']) {
                 $result['errors'][] = $this->language->get('error_block_document_invalid');
                 continue;
