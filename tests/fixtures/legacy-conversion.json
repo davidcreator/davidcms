@@ -1,0 +1,57 @@
+[
+  {
+    "id": "paragraph-entity-and-break",
+    "html": "<p>Olá &amp; mundo<br>segunda linha</p>",
+    "expected_status": "converted",
+    "expected_types": ["core/paragraph"],
+    "expected_content": ["Olá & mundo\nsegunda linha"]
+  },
+  {
+    "id": "heading-list-quote-separator",
+    "html": "<h2>Título</h2><ol><li>Um</li><li>Dois</li></ol><blockquote>Trecho<br>citado</blockquote><hr>",
+    "expected_status": "converted",
+    "expected_types": ["core/heading", "core/list", "core/quote", "core/separator"]
+  },
+  {
+    "id": "local-media-image",
+    "html": "<img src=\"/image/catalog/posts/foto.png\" alt=\"Foto\" title=\"Legenda\">",
+    "expected_status": "converted",
+    "expected_types": ["core/image"]
+  },
+  {
+    "id": "empty-description",
+    "html": "",
+    "expected_status": "converted",
+    "expected_types": []
+  },
+  {
+    "id": "inline-formatting-review",
+    "html": "<p>Texto <strong>em destaque</strong></p>",
+    "expected_status": "review_required",
+    "expected_types": []
+  },
+  {
+    "id": "event-handler-review",
+    "html": "<img src=\"/image/catalog/foto.png\" alt=\"x\" onerror=\"alert(1)\">",
+    "expected_status": "review_required",
+    "expected_types": []
+  },
+  {
+    "id": "unsafe-image-review",
+    "html": "<img src=\"https://example.invalid/foto.png\" alt=\"x\">",
+    "expected_status": "review_required",
+    "expected_types": []
+  },
+  {
+    "id": "script-review",
+    "html": "<script>alert(1)</script><p>Texto</p>",
+    "expected_status": "review_required",
+    "expected_types": []
+  },
+  {
+    "id": "unknown-structure-review",
+    "html": "<table><tr><td>Dados</td></tr></table>",
+    "expected_status": "review_required",
+    "expected_types": []
+  }
+]

@@ -1,11 +1,11 @@
-# F9-12 — Persistência de blocos do Blog
+# F9-13 — Parser, serializer e conversor do Blog
 
-Pacote de migrations preparadas, documentação, ADR e verificador estático.
+Entrega incremental do parser/conversor legado, sem tela, integração de persistência ou conversão de posts.
 
-- **Base consultada:** GitHub `main` em `d0f8706402a722d24ab76077974d765542999673`.
-- **Não executar SQL neste pacote.** Upgrade/rollback foram somente revisados estaticamente.
-- **Upgrade:** `dev/install/sql/upgrade_f9_12_blog_block_content.sql`.
-- **Rollback seguro:** `dev/install/sql/rollback_f9_12_blog_block_content.sql` (mantém sidecar/dados; downgrade de código para HTML reader).
-- **Validação sem banco:** `bash tools/e2e/e2e_f912.sh --check` (Node.js necessário).
+- HEAD base do GitHub `main`: `9cb6e196a3d8b77008961dd1736ec77f3bc01ea7` (F9-12 publicado; artefatos F9-12 conferidos por SHA-256).
+- Biblioteca isolada: `dev/system/library/blog/block_document.php`.
+- Fixtures: `tests/fixtures/legacy-conversion.json`.
+- Runner funcional PHP: `tests/run_f913_fixtures.php` — incluído, **não executado**.
+- Validação estática: `bash tools/e2e/e2e_f913.sh --check`.
 
-Estrutura espelha o projeto: `dev/install/sql`, `docs`, `agents-ia/decisoes` e `tools/e2e`.
+A conversão fail-closed conserva a fonte original e não retorna blocos parciais ao encontrar conteúdo desconhecido/perigoso. Nenhum SQL/PHP/browser/app test foi executado; nenhum banco foi acessado.

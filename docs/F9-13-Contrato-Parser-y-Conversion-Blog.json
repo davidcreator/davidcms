@@ -1,0 +1,47 @@
+{
+  "task": "F9-13",
+  "base_head": "9cb6e196a3d8b77008961dd1736ec77f3bc01ea7",
+  "status": "implementation_and_fixtures_prepared_not_runtime_tested",
+  "runtime": {
+    "file": "dev/system/library/blog/block_document.php",
+    "class": "Reamur\\System\\Library\\Blog\\BlockDocument",
+    "dependencies": ["PHP DOM extension", "libxml"],
+    "external_packages": false,
+    "database_access": false,
+    "persistence_side_effects": false
+  },
+  "document": {
+    "format_version": 1,
+    "root": ["format_version", "blocks"],
+    "node_fields": ["id", "type", "attributes", "children", "content"],
+    "id_strategy": "deterministic SHA-256 derived from original source, node path, and block type",
+    "serializer": "canonical field ordering, JSON_UNESCAPED_SLASHES + JSON_UNESCAPED_UNICODE",
+    "unknown_type_policy": "reject"
+  },
+  "legacy_conversion": {
+    "supported_tags": ["p", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "blockquote", "img", "hr", "br inside text blocks"],
+    "mapping": {
+      "p": "core/paragraph",
+      "h1-h6": "core/heading with level attribute",
+      "ul/ol": "core/list with core/list-item children",
+      "blockquote": "core/quote",
+      "img": "core/image",
+      "hr": "core/separator",
+      "br": "newline inside paragraph/heading/quote/list item"
+    },
+    "unsupported": "return review_required, document=null, exact source_html retained; never partial-convert/save",
+    "unsafe_or_unknown_markup": "same fail-closed review_required result; original is not discarded",
+    "safe_image_path": "root-relative or relative image/ path only; no scheme, host, query, fragment, dot segments, control chars, or backslash",
+    "limits": {"source_bytes": 1048576, "root_blocks": 1000, "total_nodes": 2000, "depth": 16, "block_text_bytes": 262144, "document_json_bytes": 4194304}
+  },
+  "fixtures": "tests/fixtures/legacy-conversion.json",
+  "functional_runner": "tests/run_f913_fixtures.php",
+  "static_gate": "bash tools/e2e/e2e_f913.sh --check",
+  "execution_policy": {
+    "php_tests_executed": false,
+    "browser_tests_executed": false,
+    "app_integration_executed": false,
+    "database_touched": false,
+    "sql_executed": false
+  }
+}
