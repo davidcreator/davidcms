@@ -31,6 +31,7 @@
 | `customer_group`, `customer` | `customer/` | catalog `account/`, sale |
 | `page`, `page_description` | `cms/` | catalog `information/` |
 | `custom_field_group*`, `custom_field*`, `custom_field_value` | `custom_field/definition`, F9 | CMS admin + catalog `cms/page` (somente visibility=public) |
+| `blog_post`, `blog_post_description`, `blog_post_content` | `blog/blog` | admin Blog + catalog Blog; conteúdo estruturado F9-12 |
 | `category`, `category_description` | `catalog/` | catalog `product/` (portfólio) |
 | `project`, `project_description`, `project_image`, `project_to_category` | `catalog/` | catalog (portfólio) |
 | `testimonial`, `testimonial_description` · `client_logo` | `marketing/` | home |
@@ -101,6 +102,22 @@ As cinco tabelas abaixo são criadas por `dev/install/sql/upgrade_f9_02_custom_f
 `value_id` BIGINT PK AI · `entity_type` VARCHAR(32) · `entity_id` INT · `field_id` INT · `language_id` INT (0 = compartilhado) · `value_text` TEXT · `value_number` DECIMAL(38,6) NULL · UNIQUE(`entity_type`,`entity_id`,`field_id`,`language_id`) · índices (`entity_type`,`entity_id`), (`field_id`,`language_id`) e (`language_id`).
 
 Integridade entre grupo/campo/valor é mantida pelos Models (sem FK). No frontend, só páginas publicadas, grupos ativos e campos `visibility='public'` são elegíveis; o rendering deve escapar valores como texto. `admin_only` permanece privado. A aplicação/rollback segue as notas da F9-02 e deve ser executada com backup em ambiente controlado.
+
+
+### Blog multilíngue e documento de blocos (F7-01 / F9-12)
+
+O schema base do Blog está em `upgrade_f7_01_blog.sql`. O editor legado salva HTML em `blog_post_description.description`; a tabela de F9-12 é sidecar aditivo e não troca nem remove esse campo.
+
+#### `blog_post`
+`post_id` INT PK AI · `image` VARCHAR(255) DEFAULT '' · `status` TINYINT(1) DEFAULT 0 · `date_published` DATETIME · `date_added`,`date_modified` DATETIME · índice (`status`,`date_published`).
+
+#### `blog_post_description`
+`post_id` INT · `language_id` INT · `title` VARCHAR(255) · `description` MEDIUMTEXT *(snapshot HTML compatível/legacy)* · `meta_title` VARCHAR(255) · `meta_description` VARCHAR(255) · PK (`post_id`,`language_id`) · índice (`language_id`).
+
+#### `blog_post_content` — F9-12, sidecar versionado por idioma
+`post_id` INT · `language_id` INT · `format_version` SMALLINT UNSIGNED DEFAULT 1 · `content_json` MEDIUMTEXT *(documento de blocos JSON validado pela aplicação)* · `source_hash` CHAR(64) DEFAULT '' *(SHA-256 do HTML antes da primeira conversão)* · `legacy_html_backup` MEDIUMTEXT NULL *(cópia recuperável da fonte anterior; preservada durante edições subsequentes)* · `date_added`,`date_modified` DATETIME · PK (`post_id`,`language_id`) · índice (`language_id`). Sem FK deliberadamente; integridade/cascata é mantida pelo Model Blog.
+
+Uma linha representa um documento por post e idioma. `blog_post_description.description` permanece snapshot HTML para fallback/compatibilidade pública; `content_json` é a fonte editável após conversão. A tabela é criada por migration separada `upgrade_f9_12_blog_block_content.sql`, nunca pela edição retroativa de `schema.sql`. Rollback inicial é não destrutivo: reverter a aplicação para o leitor HTML e manter sidecar até backup/retention aprovados. Não apagar blocos por script sem export/backup.
 
 ---
 

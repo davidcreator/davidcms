@@ -1,0 +1,9 @@
+e75384ee6c58cb1b1f1ed062f1843c3a0ef037cc79a84aafc614c2123b00e71e  ./README.md
+bcc17f0aeea298e5a9402c0152180d2cccda3a62ca03e3be96cef5d5477ce92e  ./agents-ia/decisoes/0068-f9-12-blog-block-content-sidecar.md
+a00b77a7ed005178e5cdbd0839d2aec846844bcf8bd565ebe358d710a08bda17  ./dev/install/sql/rollback_f9_12_blog_block_content.sql
+b0b9ecd0fe8dd453fc29d3d9ae554c418ac9909a4afc9fbb0d36ac0203d56c13  ./dev/install/sql/upgrade_f9_12_blog_block_content.sql
+7a4794138a5257850f8862987dec2f55dff4d8e813d0f24cbd38ace1bd2e38f4  ./docs/Dicionario-de-Dados.md
+19c29de10246e40638dfaead2121addd51b946da3daceb1fceb99d7a781a0e28  ./docs/F9-12-Contrato-Persistencia-Blog-Blocos.json
+cedeb85e6c8f1f48a0d0cae5c40289697f113f1b4d4447b9d0a5e6b0d5e84b74  ./docs/F9-12-Migration-e-Persistencia-Blog-Blocos.md
+1a38039352a14baa9a1aa147e72da759ec7ae74dfc42b2444632cdaa289c1b3b  ./tools/e2e/e2e_f912.cjs
+7f388b996e5994b96729d15fba4f00e00e22a668c9350e6d76d309f27f52d5b0  ./tools/e2e/e2e_f912.sh

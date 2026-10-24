@@ -1,0 +1,36 @@
+{
+  "task": "F9-12",
+  "base_head": "d0f8706402a722d24ab76077974d765542999673",
+  "status": "migration_prepared_not_executed",
+  "entity": "blog/blog",
+  "sidecar_table": "rms_blog_post_content",
+  "key": ["post_id", "language_id"],
+  "columns": {
+    "format_version": "SMALLINT UNSIGNED NOT NULL DEFAULT 1",
+    "content_json": "MEDIUMTEXT NOT NULL; strict JSON validated by application",
+    "source_hash": "CHAR(64) NOT NULL DEFAULT ''; SHA-256 of source HTML on initial conversion",
+    "legacy_html_backup": "MEDIUMTEXT NULL; immutable first-source snapshot during later edits",
+    "date_added": "DATETIME NOT NULL",
+    "date_modified": "DATETIME NOT NULL"
+  },
+  "legacy_compatibility": {
+    "description_column": "blog_post_description.description",
+    "altered": false,
+    "role": "HTML legacy/body snapshot for existing readers and list excerpts",
+    "block_saves_must_refresh_snapshot": true
+  },
+  "migration": {
+    "upgrade": "dev/install/sql/upgrade_f9_12_blog_block_content.sql",
+    "rollback": "dev/install/sql/rollback_f9_12_blog_block_content.sql",
+    "idempotent_create": true,
+    "requires_manual_prefix_substitution": true,
+    "database_execution_authorized": false,
+    "content_conversion_included": false,
+    "foreign_keys": false
+  },
+  "rollback_policy": {
+    "default": "revert application to HTML reader; retain sidecar table and block rows",
+    "physical_drop": "commented and requires independent backup/export plus explicit approval",
+    "data_loss_by_default": false
+  }
+}
