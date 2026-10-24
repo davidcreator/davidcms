@@ -1,59 +1,58 @@
 {
-  "task": "F9-05",
+  "task": "F9-06",
   "phase": "Fase 9",
   "base_repository": "https://github.com/davidcreator/davidcms",
-  "base_head": "2be7cc06c982e24faca1195b6cdd126f34960322",
-  "scope": "model de definições + ACL dormente; sem controller/UI/valores ou execução SQL",
+  "base_head": "5fbf66dc64e8001ae7bea9b95aa3455221372cbe",
+  "scope": "controller/UI para definições em cms/page; nenhum valor ou render público",
+  "dependencies": [
+    "F9-02 schema",
+    "F9-05 model and ACL"
+  ],
   "files": [
     {
-      "path": "dev/admin/model/custom_field/definition.php",
-      "bytes": 23455,
-      "sha256": "6553a06c2d89ddfea82359f147e948da9cae2d2a7f037660f3eb30d05f9fbf83"
+      "path": "dev/admin/controller/custom_field/definition.php",
+      "bytes": 14470,
+      "sha256": "e595bdd94c0f2b738b8666f5acd0cf51052fad7a326f4a0a0d2c5912e3c96860"
     },
     {
-      "path": "dev/install/model/install/install.php",
-      "bytes": 7745,
-      "sha256": "0c28f1c4a8086791ab7eed70e29d49c3c2090ffc2fa3b6026f8436bc764478d1"
+      "path": "dev/admin/view/template/custom_field/definition_list.twig",
+      "bytes": 3604,
+      "sha256": "c2f8156389e18dd01dbc4afd3762850d28d362e5edad447e8b30c2b428ec1cfb"
     },
     {
-      "path": "dev/install/sql/upgrade_f9_05_custom_field_definition_grant.sql",
-      "bytes": 1402,
-      "sha256": "28be62145f3480ecf18e3dde09cced8cf99a1c0f798000448abf9e0373392a4a"
+      "path": "dev/admin/view/template/custom_field/definition_form.twig",
+      "bytes": 6262,
+      "sha256": "1323db0c9066ad3f664d9eb594e2d9b35c4dee14244563fe640e7f0d94a3a525"
     },
     {
-      "path": "dev/install/sql/rollback_f9_05_custom_field_definition_grant.sql",
-      "bytes": 1305,
-      "sha256": "d6604daab6320af1eaa7674550f302312929a1436f6c7583e278b598a6cd6ab0"
+      "path": "dev/admin/language/en-us/custom_field/definition.php",
+      "bytes": 3298,
+      "sha256": "c9b0ca691711bddffb862c5af5b4ff9f45ea6a6815a581e306fb65bf7557c748"
     },
     {
-      "path": "docs/F9-05-Modelo-Definicoes-Campos.md",
-      "bytes": 4279,
-      "sha256": "fb49fc30d9c6070ea1df9b3a2914fc3fc4455107346fde2f9f239ec6e7530f13"
-    },
-    {
-      "path": "docs/F9-05-Contrato-Definicoes-Campos.json",
-      "bytes": 1617,
-      "sha256": "8f90ee3bbb7bb8112a84dbde796c4e3cc7f0d448700d5836601d0fd466673f78"
+      "path": "docs/F9-06-UI-Admin-Campos-Personalizados.md",
+      "bytes": 2764,
+      "sha256": "d651996a1efa0a9b35516b0420ede934e43b50663fb1ac037ef971d0c1e8e8b9"
     },
     {
       "path": "docs/README.md",
-      "bytes": 627,
-      "sha256": "e951a0a42d936f17fe200796a5c1f24d525da9c2896438efd6652a4c9389c8e8"
+      "bytes": 676,
+      "sha256": "14abac1d20f2efb12ab73c50fbf7bd44a3d335130affe9766ab782727c9f0073"
     },
     {
-      "path": "agents-ia/decisoes/0061-f9-05-modelo-definicoes-campos.md",
-      "bytes": 3212,
-      "sha256": "44caa3aa5d140b2a1928043aff06c92bba5105de6a35ef737989988d60b42066"
+      "path": "agents-ia/decisoes/0062-f9-06-ui-admin-campos-personalizados.md",
+      "bytes": 2727,
+      "sha256": "87562d173adfeb5a30e3808ecb585d87176130dc9249c032c11ee9aaa7e6a027"
     },
     {
-      "path": "tools/e2e/e2e_f905.sh",
-      "bytes": 580,
-      "sha256": "4fc5921bc8acb9094ef1f174653c572c7221ec9b8ec516d65a2e5984ecf6adb2"
+      "path": "tools/e2e/e2e_f906.sh",
+      "bytes": 483,
+      "sha256": "268b29ffc2bfa5f4292e3c00a2c4713864a45cc7f38df2182313e6330c0c337b"
     },
     {
-      "path": "tools/e2e/e2e_f905.cjs",
-      "bytes": 7137,
-      "sha256": "6556ad27bdd0136a72ec3a29a7116199f03dc69d4edcd60f7acc651a16d6ad6c"
+      "path": "tools/e2e/e2e_f906.cjs",
+      "bytes": 3713,
+      "sha256": "6d19204668c5a9d2997361a9f845eff6790e4ae98d8edb6159fa2faa04b66dff"
     }
   ]
 }
