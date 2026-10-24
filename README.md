@@ -1,11 +1,12 @@
-# F9-13 — Parser, serializer e conversor do Blog
+# F9-14 — Canvas MVP de blocos do Blog
 
-Entrega incremental do parser/conversor legado, sem tela, integração de persistência ou conversão de posts.
+Pacote incremental com componente UI standalone + prévia autocontida.
 
-- HEAD base do GitHub `main`: `9cb6e196a3d8b77008961dd1736ec77f3bc01ea7` (F9-12 publicado; artefatos F9-12 conferidos por SHA-256).
-- Biblioteca isolada: `dev/system/library/blog/block_document.php`.
-- Fixtures: `tests/fixtures/legacy-conversion.json`.
-- Runner funcional PHP: `tests/run_f913_fixtures.php` — incluído, **não executado**.
-- Validação estática: `bash tools/e2e/e2e_f913.sh --check`.
+- **GitHub revisado:** `https://github.com/davidcreator/davidcms` (`main`).
+- **HEAD confirmado:** `921ce1629ad0672627c5a1313dfa6e271c39f7dc`.
+- **F9-13:** cinco arquivos principais do manifesto confirmados idênticos ao remoto.
+- **Preview:** `tools/preview/f914-editor-mvp.html`.
+- **Assets do componente:** `dev/admin/view/js/blog-block-editor.js` + `dev/admin/view/css/blog-block-editor.css`.
+- **Gate estático:** `bash tools/e2e/e2e_f914.sh --check`.
 
-A conversão fail-closed conserva a fonte original e não retorna blocos parciais ao encontrar conteúdo desconhecido/perigoso. Nenhum SQL/PHP/browser/app test foi executado; nenhum banco foi acessado.
+A UI não está ligada ao formulário nem salva/posta dados. Não houve alteração no GitHub, app, banco ou fluxo legado.

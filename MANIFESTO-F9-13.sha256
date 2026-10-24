@@ -1,9 +1,0 @@
-a6fc17402b3b6f6d7c200fc8df690bb2157945dda1ab67e9cdff3784a41aa152  ./README.md
-8492380203d53d785a95932a3fc31ef84a9bd127c86edd9242d2e5b68a0a2bfa  ./agents-ia/decisoes/0069-f9-13-blog-conversor-legado.md
-47b209e2241565f3f1b1ed037b646fb7ee148a6e930ddf3e9e00c139c075f78b  ./dev/system/library/blog/block_document.php
-8f550e0c81bc6fca8032a356dcc563e2bdc5e963a480d1d367cddd8d55827836  ./docs/F9-13-Contrato-Parser-y-Conversion-Blog.json
-a858641e820af1873eb145ed3da06f26b4fb03b0a4af5ad01d5215fd8d1f8201  ./docs/F9-13-Parser-Serializer-Conversor-Legado.md
-ef3a5dff863397a39892069f94e6fb167bb8948eb32a7ef0cbf80cb4801936d4  ./tests/fixtures/legacy-conversion.json
-e393bf49657f0e75e950461fdeb852caf75aa29d0d5c00cfb479bc5e4f8dc0dd  ./tests/run_f913_fixtures.php
-9a42fdc92b226aa1602026292ed4829e93f1254c10cc2580a8add7ce704f8567  ./tools/e2e/e2e_f913.cjs
-b49df56818d163b197a78e9e184e0ff0e667bcbb3155b5be3fe40a390d7fee3c  ./tools/e2e/e2e_f913.sh

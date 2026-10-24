@@ -1,0 +1,42 @@
+/* ReamurCMS native Blog Block Editor — F9-14. No external fonts/assets. */
+.rb-editor{--rb-ink:#172033;--rb-muted:#5e6b7f;--rb-line:#d5dce5;--rb-accent:#215bd6;--rb-soft:#f5f7fa;color:var(--rb-ink);font:inherit;border:1px solid var(--rb-line);border-radius:.75rem;background:#fff;overflow:hidden}
+.rb-editor *{box-sizing:border-box}
+.rb-toolbar{display:flex;flex-wrap:wrap;gap:.65rem;align-items:flex-start;padding:.85rem;border-bottom:1px solid var(--rb-line);background:#f9fafc}
+.rb-inserter,.rb-history,.rb-previews{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}
+.rb-inserter{flex:1 1 30rem}
+.rb-button{font:inherit;font-size:.82rem;line-height:1.35;border:1px solid #bdc7d5;border-radius:.45rem;background:#fff;color:var(--rb-ink);padding:.42rem .58rem;cursor:pointer}
+.rb-button:hover,.rb-button:focus-visible{border-color:var(--rb-accent);outline:2px solid #215bd633;outline-offset:1px}
+.rb-button:disabled{opacity:.48;cursor:not-allowed}
+.rb-button[aria-pressed=true]{background:#eaf0ff;border-color:var(--rb-accent);color:#1649b8}
+.rb-layout{display:grid;grid-template-columns:minmax(0,1fr) 17rem;align-items:start;gap:1rem;padding:1rem;background:var(--rb-soft)}
+.rb-canvas{width:100%;max-width:100%;min-width:0;margin:0 auto;padding:1rem;background:#fff;border:1px solid var(--rb-line);border-radius:.65rem;transition:max-width .18s ease}
+.rb-editor[data-preview=tablet] .rb-canvas{max-width:768px}
+.rb-editor[data-preview=mobile] .rb-canvas{max-width:390px}
+.rb-canvas-head{font-weight:700;font-size:.9rem;margin:0 0 .75rem;color:var(--rb-muted)}
+.rb-empty,.rb-muted{color:var(--rb-muted);font-size:.9rem;padding:.5rem 0}
+.rb-block{position:relative;border:1px solid var(--rb-line);border-radius:.55rem;background:#fff;margin:.55rem 0;padding:.55rem;min-width:0}
+.rb-block.is-selected{border-color:var(--rb-accent);box-shadow:0 0 0 2px #215bd622}
+.rb-block[draggable=true]{cursor:grab}
+.rb-block-head{display:flex;align-items:center;gap:.35rem;margin-bottom:.45rem;min-height:1.8rem}
+.rb-block-title{font-size:.78rem;font-weight:700;color:#39465a;flex:1}
+.rb-block-head .rb-button{padding:.2rem .42rem;font-size:.75rem}
+.rb-content{display:block;width:100%;min-height:3.5rem;resize:vertical;border:1px solid #dfe4eb;border-radius:.35rem;padding:.6rem;font:inherit;line-height:1.55;color:var(--rb-ink)}
+.rb-content:focus,.rb-input:focus{outline:2px solid #215bd655;border-color:var(--rb-accent)}
+.rb-preview-value{font-size:.86rem;color:var(--rb-muted);overflow-wrap:anywhere;margin:.3rem 0}
+.rb-inspector{position:sticky;top:1rem;border:1px solid var(--rb-line);border-radius:.6rem;padding:.8rem;background:#fff}
+.rb-inspector-title{font-size:1rem;margin:0 0 .75rem}
+.rb-selected-type{font-size:.85rem;font-weight:700;color:var(--rb-accent)}
+.rb-field{display:grid;gap:.25rem;margin:.7rem 0;font-size:.8rem;font-weight:600}
+.rb-input{width:100%;min-height:2.2rem;border:1px solid #cbd3df;border-radius:.35rem;padding:.4rem .5rem;background:#fff;color:var(--rb-ink);font:inherit;font-weight:400}
+.rb-inspector-actions{display:flex;flex-wrap:wrap;gap:.35rem;border-top:1px solid var(--rb-line);padding-top:.65rem;margin-top:.8rem}
+.rb-note{font-size:.78rem;color:var(--rb-muted);padding:.65rem 1rem;margin:0;border-top:1px solid var(--rb-line);background:#fff}
+.rb-alert{padding:.8rem;margin:.75rem;border:1px solid #d29a27;background:#fff7de;color:#594000;border-radius:.4rem}
+.rb-type-core-columns{display:grid;gap:.45rem}
+.rb-type-core-columns > .rb-block-head{grid-column:1/-1}
+.rb-columns-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.rb-columns-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.rb-type-core-column{min-width:0;background:#f9fbff;border-style:dashed}
+.rb-type-core-group{background:#fcfcfd;border-style:dashed}
+@media(max-width:900px){.rb-layout{grid-template-columns:minmax(0,1fr)}.rb-inspector{position:static}.rb-columns-2,.rb-columns-3{grid-template-columns:1fr}}
+@media(max-width:560px){.rb-toolbar{padding:.65rem}.rb-inserter{flex-basis:100%}.rb-layout{padding:.55rem}.rb-canvas{padding:.65rem}.rb-block-head{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){.rb-canvas{transition:none}}

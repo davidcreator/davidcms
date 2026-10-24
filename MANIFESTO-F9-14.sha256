@@ -1,0 +1,9 @@
+0283bc5ccbe12ae71cf4f3f71545b17852812152c934807cef079f46149188b2  ./README.md
+9ced6b739b9a1ca17197bbcbdd6f9e266701c85c7b12001f1e7a951c920d7ccd  ./agents-ia/decisoes/0070-f9-14-editor-canvas-mvp.md
+054e8def5c4454df51c5e66fadb336db78cbb0074c925041531174f44cae7c03  ./dev/admin/view/css/blog-block-editor.css
+ea72a3fdfb01b95a7a181d57f2db52d7f24a2dfad8d0d3bf6a39af74f1baca1d  ./dev/admin/view/js/blog-block-editor.js
+c4a8b91d18ab9bad64ea9a698bca0e945c9024be477df1cbffa14b3f8288e4e7  ./docs/F9-14-Contrato-Editor-MVP.json
+bae851dc6d9d3dbb4ac82780dda5121c80f107c1466963cae085b633258740a8  ./docs/F9-14-Editor-de-Blocos-MVP.md
+6aca7841e41b2a3a8acd46c9c5a3bde47d73fef65095c8cba300f793b9d9615f  ./tools/e2e/e2e_f914.cjs
+a946af5c066d143aa9a7d295a5b27d9263caa273abb45fe4400ceff260733ab3  ./tools/e2e/e2e_f914.sh
+ff2abfa1164cda41d812d074685b51aa8b3556413d8b8e8d1a27c2f531a06bd9  ./tools/preview/f914-editor-mvp.html
