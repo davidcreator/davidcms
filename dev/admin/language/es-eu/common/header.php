@@ -46,3 +46,6 @@ $_['text_menu_users']        = 'Usuarios';
 $_['text_menu_user_groups']  = 'Grupos de Usuarios';
 $_['text_menu_appearance']   = 'Apariencia del Panel';
 $_['text_appearance']        = 'Apariencia';
+
+// F9-09 — custom field definitions menu label.
+$_['text_menu_custom_fields'] = 'Campos personalizados';

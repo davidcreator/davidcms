@@ -1,68 +1,54 @@
 {
-  "task": "F9-08",
+  "task": "F9-09",
   "phase": "Fase 9",
   "base_repository": "https://github.com/davidcreator/davidcms",
-  "base_head": "4c79b4865db2cdf05e98a2684da4f035807f89c2",
-  "scope": "exibição pública opt-in de custom fields em cms/page; escapada e filtrada",
-  "dependencies": [
-    "F9-02 schema",
-    "F9-07 admin values"
-  ],
+  "base_head": "fa40f72ac93f16840642b6dc263636c7e211bdd7",
+  "scope": "menu ACL-driven para rota existente custom_field/definition; sem grant ou banco",
   "files": [
     {
-      "path": "dev/catalog/model/custom_field/value.php",
-      "bytes": 2808,
-      "sha256": "44d5010d22671d38fe1a4061f84d06272a741a4e6b1125a64bcc30dd21d01ba4"
+      "path": "dev/admin/controller/common/header.php",
+      "bytes": 12859,
+      "sha256": "0cd02df061db70975efb0d0371d75fb6e2e1f121a13d38fe8ee9bc8989ddd869"
     },
     {
-      "path": "dev/catalog/controller/cms/page.php",
-      "bytes": 3191,
-      "sha256": "1e87a1d97cf8f01b373f99ee50182d49de3c2b208311d7fd61e23561bdb52f5e"
+      "path": "dev/admin/language/en-us/common/header.php",
+      "bytes": 1867,
+      "sha256": "0fa5534e520a65be89b0234ad18c11fcf35296a0515b1e6cb888e5685cba0302"
     },
     {
-      "path": "dev/catalog/view/template/cms/page_info.twig",
-      "bytes": 1029,
-      "sha256": "4457a45f9adfe6007149d7d29bae91964eb40b29e6fb773445915700fb5dc890"
+      "path": "dev/admin/language/pt-br/common/header.php",
+      "bytes": 1950,
+      "sha256": "35aa82db6ad4da0c6da57e0689987d7b8b154bdf89ced45721eb568391792fa2"
     },
     {
-      "path": "dev/catalog/language/en-us/cms/page.php",
-      "bytes": 571,
-      "sha256": "23436e205ef572c579cad4779594190210983ee89519d0ceb9f4ee02899b9926"
+      "path": "dev/admin/language/es-eu/common/header.php",
+      "bytes": 1968,
+      "sha256": "d16711cf22b9599540bf6236b9300c1c8fea0003f389d0b59ea93c2be97c5e3b"
     },
     {
-      "path": "dev/catalog/language/pt-br/cms/page.php",
-      "bytes": 235,
-      "sha256": "75a3c1e7ae86618631bd27cdec6e712badd4528df984168c31eed1c60e388b32"
-    },
-    {
-      "path": "dev/catalog/language/es-eu/cms/page.php",
-      "bytes": 228,
-      "sha256": "7a2acd6510b5f220b2fd32540c79277dfb9714ade596d2f631f1d0f878e155b5"
-    },
-    {
-      "path": "docs/F9-08-Exibicao-Publica-Campos-CMS-Page.md",
-      "bytes": 2820,
-      "sha256": "ac73a56bc7408be276bff100042f602d4bc5ce69694de44e14a00dacec55fba0"
+      "path": "docs/F9-09-Navegacao-Campos-Personalizados.md",
+      "bytes": 2054,
+      "sha256": "44df81994d906245924408421ccca46f18729f3f28be6e2fbaed19501ffe5611"
     },
     {
       "path": "docs/README.md",
-      "bytes": 546,
-      "sha256": "69c675d62b28c82342d383deaf072bbd53495e0dd7d3c43a80611a7a4ef3ae62"
+      "bytes": 423,
+      "sha256": "c04120712c5957f20a583f37d5120606db4dbfd775937c93540caf384864c922"
     },
     {
-      "path": "agents-ia/decisoes/0064-f9-08-exibicao-publica-campos-cms-page.md",
-      "bytes": 2731,
-      "sha256": "fb0f2f5310fb7775bad9e5921218340d6f9ed9180d278c71f773c5a3dba58b0c"
+      "path": "agents-ia/decisoes/0065-f9-09-navegacao-campos-personalizados.md",
+      "bytes": 1689,
+      "sha256": "7d83334fef53c8760fe891e5e0af9768007a1ff46f64d6645c2e7200ae430c73"
     },
     {
-      "path": "tools/e2e/e2e_f908.sh",
-      "bytes": 472,
-      "sha256": "e286a828a6d9db89f88f9640b80ed2e32928863b12da4394b7cefc3c0e3a91f3"
+      "path": "tools/e2e/e2e_f909.sh",
+      "bytes": 467,
+      "sha256": "5cf84b564679103b7e2adbc84c4991323298c5a565fb421aabd4d840e8a25cee"
     },
     {
-      "path": "tools/e2e/e2e_f908.cjs",
-      "bytes": 2722,
-      "sha256": "ed4cf7b547e0084616cbfa5e60b3dd1234b0e15cdd03bf115caed9c5b72a2d00"
+      "path": "tools/e2e/e2e_f909.cjs",
+      "bytes": 1671,
+      "sha256": "40ea63738f29a2df5f4bb246d2f2e26121741df2baa2f488d4609fe8ee33d4f2"
     }
   ]
 }
