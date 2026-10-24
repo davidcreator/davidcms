@@ -1,12 +1,12 @@
-# Manifesto F9-19
+# Manifesto F9-20
 
-- Projeto: `https://github.com/davidcreator/davidcms`
+- Repositório: `https://github.com/davidcreator/davidcms`
 - Branch: `main`
-- HEAD base verificado antes da alteração: `b4ef8cc2f6cc398eea6e9a80f8ea81c7d3b0f1f6`
-- Objetivo: remediação local dos achados F918-01…04.
-- Arquivos de runtime modificados no pacote: 5 (paths pontuais sob `dev/`).
-- Verificação executada: Node static source/fixture guard PASS, 8 fixtures sintéticas.
-- PHP/SQL/browser/app/migration/E2E runtime: não executados.
-- Banco acessado: não. GitHub write/deploy: não.
-- F9-12: não presumida nem aplicada.
-- Dumps, dados pessoais, credenciais e logs runtime: não incluídos.
+- HEAD verificado: `60ee6cc7579cfde9b372f44c92f64ba45c1a176f`
+- Objetivo: verificar estaticamente a presença dos fixes F918-01…04 da F9-19 no HEAD.
+- Sete arquivos pontuais `raw`: todos byte a byte iguais ao pacote F9-19.
+- Static checker: PASS; oito fixtures sintéticas.
+- PHP/SQL/browser/app/E2E runtime: não executados.
+- Banco acessado/migration aplicada: não/não presumida.
+- GitHub write/deploy: nenhum.
+- Dumps, dados reais, credenciais, logs runtime: não incluídos.

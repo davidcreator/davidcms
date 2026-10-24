@@ -1,14 +1,10 @@
-# Fase 9 · Tarefa 19 — Remediação estática F918-01…04
+# Fase 9 · Tarefa 20 — Verificação estática F9-19 no HEAD
 
-Esta entrega contém um conjunto de arquivos pontuais para endereçar os quatro riscos registrados na F9-18:
+A tarefa confirma que as quatro correções da F9-19 foram incorporadas ao HEAD `60ee6cc7579cfde9b372f44c92f64ba45c1a176f`. Sete arquivos pontuais foram obtidos via GitHub raw e comparados byte a byte com F9-19; todos correspondem. O checker estático executado contra essas fontes e oito fixtures sintéticas retornou **PASS**.
 
-- **F918-01:** detecção/leitura do sidecar no catálogo agora distingue tabela realmente ausente de erro; erro de metadata/leitura sinaliza `query_error` e mantém o ramo público fail-closed.
-- **F918-02:** renderer recebe base de assets configurada pelo servidor e resolve paths allowlisted de imagem; sem base, emite path root-relative.
-- **F918-03:** seleção do sidecar tenta o idioma ativo primeiro; só usa idioma fallback depois da ausência confirmada da linha ativa.
-- **F918-04:** exclusão do post, sidecar, descrições e SEO usa transação/rollback.
+Este resultado não valida PHP/SQL, templates, queries, browser, aplicação, banco nem migration. F9-12 continua sem estado operacional confirmado. Para E2E real é necessária autorização explícita e instância descartável.
 
-O checker de fonte estática passou, com oito fixtures sintéticas. Isso não valida execução PHP/SQL, consultas reais, Twig, browser ou comportamento do app. **Nenhum teste PHP/SQL/browser/app foi executado; nenhum banco/migration/GitHub foi acessado ou alterado.**
-
-## Integração
-
-Compare os cinco arquivos em `dev/` contra o HEAD base e aplique/revise individualmente. Este ZIP não é um commit e não contém o projeto inteiro. F9-12 não é presumida aplicada. Antes de qualquer merge/deploy, é necessária validação autorizada em staging descartável, incluindo resolução de asset-base, fallback multilíngue e rollback.
+- Relatório: `docs/F9-20-Verificacao-Estatica-Remediacao.md`
+- Hashes/verificação de origem: `docs/F9-20-Source-Hashes.json`
+- Ferramenta reproduzível: `tools/e2e/e2e_f920_static.sh`
+- Snapshot de referência: somente sete arquivos pontuais sob `reference/`; sem clone completo.

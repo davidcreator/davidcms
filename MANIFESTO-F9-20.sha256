@@ -1,0 +1,17 @@
+fb0787af91fdc5fccef5a11b81b2f668db5d7859b4191854179cb917693d2473  ./MANIFESTO.md
+d0808d54d4921fe2f9e55e5c124f99342e59a050cfbd8370414bb59fa7545add  ./README.md
+8e086dd3355e7b6f0b66090c1301d256d1cbfde96a5713b89c083f2dd44de012  ./agents-ia/README.md
+4a1df4c525a2068d6e237a022b033cb7d1fcf6f15610bfda588b67d111ccc828  ./docs/F9-20-Source-Hashes.json
+be36855825d4dcb8a9604ed4288e72bf33360f96c32f55e88b300113e0207502  ./docs/F9-20-Verificacao-Estatica-Remediacao.md
+38a7e2f182b4853527325c9df9d67da8fe8ead4109d6070a47f47959e0f5e05a  ./reference/dev/admin/controller/blog/blog.php
+ea14ad27ccbc127512ef8f6e4bb30d3ec02b47f8fa997d752359a578432ae295  ./reference/dev/admin/model/blog/blog.php
+8d8125c94b5e836357e56f3becc7956ee19db44e0de261317267d349734359f1  ./reference/dev/catalog/controller/blog/blog.php
+d925a6fa2b035d257ea8d6b8378463c13533d636627492355c12977265475c54  ./reference/dev/catalog/model/blog/blog.php
+07df164ee8fe8c067ef74717ddbc8930c54e344fdff6d548c76439f864af73e3  ./reference/dev/system/library/blog/block_renderer.php
+7e6719bc7e338b405400370d79585c9144fa9a1b098325586e03290c989e2a46  ./reference/tests/fixtures/f918_regressions.json
+2f602237b1d5d888eebc8d4fdc1187ffee989a2d2dfec173cb40a75a8a94a043  ./reference/tools/e2e/e2e_f919_static.cjs
+fe86fd4775550fe8ab234283711a425d92bbca692fd558ff4d3571b1d441015f  ./remote_hashes.json
+7e6719bc7e338b405400370d79585c9144fa9a1b098325586e03290c989e2a46  ./tests/fixtures/f918_regressions.json
+4ee6e9d3927b935181f2e87e56d66cbade8a1f04fc7fe597f96f789c90cd633a  ./tools/e2e/README.md
+2f602237b1d5d888eebc8d4fdc1187ffee989a2d2dfec173cb40a75a8a94a043  ./tools/e2e/e2e_f919_static.cjs
+30476b10f0442d189b81f85c5328dd8fc4482968d44bda1756d20b38d40a47d6  ./tools/e2e/e2e_f920_static.sh

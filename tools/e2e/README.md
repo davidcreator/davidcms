@@ -1,5 +1,5 @@
-# F9-19 — guardrail estático de regressão
+# F9-20 — verificação estática
 
-Execute `tools/e2e/e2e_f919_static.sh [checkout-ou-pacote-F9-19]` para verificar os contratos de fonte e oito fixtures sintéticas. A ferramenta apenas lê texto/JSON; não executa código PHP, SQL, Twig, browser ou aplicação, não abre banco e não aplica migration.
+`e2e_f920_static.sh` executa o checker estático F9-19 contra os arquivos pontuais capturados do HEAD em `reference/`. O checker só lê fontes e JSON; não inicia produto, PHP, SQL, browser, servidor ou banco.
 
-PASS indica apenas a presença dos guardrails no código-fonte; não valida comportamento em runtime. A F9-12 não é presumida aplicada. E2E funcional fica para um ambiente isolado e autorização futura.
+Resultado obtido nesta entrega: PASS para cinco arquivos de runtime e oito fixtures sintéticas. O PASS confirma somente os marcadores verificados no código; não substitui testes E2E em ambiente controlado.
