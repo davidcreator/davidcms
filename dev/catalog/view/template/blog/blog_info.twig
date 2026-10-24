@@ -1,5 +1,5 @@
 {# dev/catalog/view/template/blog/blog_info.twig — post completo do blog (F7-02, ADR 0043) #}
-{# Descrição é HTML do editor do admin (F7-01) → render raw #}
+{# Sidecar válido usa apenas saída do BlockRenderer allowlisted; legacy mantém o contrato HTML atual. #}
 {{ header|raw }}
 <main class="site-main">
   <div class="container">
@@ -13,8 +13,17 @@
       <img src="{{ post.image }}" alt="{{ post.title }}">
       {% endif %}
       {% if post.date %}<p class="news-meta">{{ text_published_on }} {{ post.date }}</p>{% endif %}
-      <div class="blog-content">
-        {{ post.description|raw }}
+      <div class="blog-content rms-blog-content">
+        {% if post.content_mode == 'blocks' %}
+          {% if post.content_valid %}
+            {{ post.block_html|raw }}
+          {% else %}
+            <p class="rms-block-unavailable" role="status">{{ text_content_review }}</p>
+          {% endif %}
+        {% else %}
+          {# Fallback legado permanece idêntico ao contrato existente; não é uma sanitização nova. #}
+          {{ post.description|raw }}
+        {% endif %}
       </div>
     </article>
   </div>

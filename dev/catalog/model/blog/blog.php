@@ -69,7 +69,8 @@ class Blog extends \Reamur\System\Engine\Model {
                     COALESCE(NULLIF(pd.`title`, ''), pd_en.`title`, '')                 AS `title`,
                     COALESCE(NULLIF(pd.`description`, ''), pd_en.`description`, '')     AS `description`,
                     COALESCE(NULLIF(pd.`meta_title`, ''), pd_en.`meta_title`, '')       AS `meta_title`,
-                    COALESCE(NULLIF(pd.`meta_description`, ''), pd_en.`meta_description`, '') AS `meta_description`
+                    COALESCE(NULLIF(pd.`meta_description`, ''), pd_en.`meta_description`, '') AS `meta_description`,
+                    CASE WHEN NULLIF(pd.`description`, '') IS NOT NULL THEN pd.`language_id` ELSE pd_en.`language_id` END AS `content_language_id`
                FROM `" . $this->t('blog_post') . "` p
           LEFT JOIN `" . $this->t('blog_post_description') . "` pd
                  ON pd.`post_id` = p.`post_id` AND pd.`language_id` = '" . $lang . "'
@@ -79,6 +80,48 @@ class Blog extends \Reamur\System\Engine\Model {
         );
 
         return ($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : [];
+    }
+
+    /**
+     * Documento estruturado do idioma já escolhido pelo SELECT do post.
+     * A ausência da migration/tabela/linha preserva exatamente o caminho legado.
+     * @return array{table_available:bool,row_found:bool,query_error:bool,format_version:int,content_json:string}
+     */
+    public function getPostBlockContent(int $post_id, int $language_id = 0): array {
+        $empty = ['table_available' => false, 'row_found' => false, 'query_error' => false, 'format_version' => 0, 'content_json' => ''];
+        if ($post_id < 1 || !$this->blockContentTableExists()) return $empty;
+        $language_id = $language_id > 0 ? $language_id : $this->currentLanguageId();
+        try {
+            $query = $this->db->query(
+                "SELECT `format_version`, `content_json`
+                   FROM `" . $this->t('blog_post_content') . "`
+                  WHERE `post_id` = '" . $post_id . "' AND `language_id` = '" . $language_id . "'
+                  LIMIT 1"
+            );
+        } catch (\Throwable $e) {
+            return ['table_available' => true, 'row_found' => false, 'query_error' => true, 'format_version' => 0, 'content_json' => ''];
+        }
+        if ($query instanceof \stdClass && !empty($query->row)) {
+            return ['table_available' => true, 'row_found' => true, 'query_error' => false, 'format_version' => (int)($query->row['format_version'] ?? 0), 'content_json' => (string)($query->row['content_json'] ?? '')];
+        }
+        return ['table_available' => true, 'row_found' => false, 'query_error' => false, 'format_version' => 0, 'content_json' => ''];
+    }
+
+    /** Detect the additive F9-12 sidecar without querying it when migration is absent. */
+    private function blockContentTableExists(): bool {
+        static $cache = null;
+        if ($cache !== null) return $cache;
+        try {
+            $table = $this->db->escape($this->t('blog_post_content'));
+            $query = $this->db->query(
+                "SELECT `TABLE_NAME` FROM `information_schema`.`TABLES`
+                 WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = '" . $table . "' LIMIT 1"
+            );
+            $cache = ($query instanceof \stdClass && !empty($query->num_rows));
+        } catch (\Throwable $e) {
+            $cache = false;
+        }
+        return $cache;
     }
 
     /**

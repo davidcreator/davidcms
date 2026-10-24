@@ -21,3 +21,4 @@ $_['text_read_more']     = 'Read more';
 // Button
 $_['button_back']        = 'Back to the blog';
 $_['button_back_home']   = 'Back to home';
+$_['text_content_review'] = 'This content is temporarily unavailable while it is reviewed.';

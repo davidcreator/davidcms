@@ -1,0 +1,49 @@
+{
+  "task": "F9-15",
+  "base_head": "0162822d3bf98ce100780b17cf0c88ff22ee832f",
+  "status": "renderer_and_catalog_fallback_prepared_not_runtime_tested",
+  "renderer": {
+    "file": "dev/system/library/blog/block_renderer.php",
+    "validator": "dev/system/library/blog/block_document.php::validateDocument",
+    "format_version": 1,
+    "input": "JSON only; strict shape/attributes/types/limits; optional stored format version must match",
+    "output": "HTML generated only by fixed renderer templates and contextual escaping",
+    "raw_html_block": false,
+    "invalid_document": "valid=false and html empty; catalog shows review message and does not fall back to legacy HTML when a sidecar row exists"
+  },
+  "allowlist": {
+    "types": ["core/paragraph", "core/heading", "core/list", "core/list-item", "core/quote", "core/image", "core/video_embed", "core/button", "core/separator", "core/group", "core/columns", "core/column"],
+    "image": "root-relative or relative image/ path with restricted ASCII segments; no scheme/host/query/fragment/dot traversal",
+    "button_url": "HTTP(S) absolute URL without user/pass or single-root-relative path; rejects protocol-relative, javascript and data",
+    "video_embed": {
+      "accepted_source_hosts": ["youtube.com", "www.youtube.com", "youtu.be", "vimeo.com", "www.vimeo.com", "player.vimeo.com"],
+      "output_hosts": ["www.youtube-nocookie.com", "player.vimeo.com"],
+      "iframe_sandbox": "allow-scripts allow-same-origin allow-presentation; no top-navigation/forms/popups"
+    },
+    "text": "escaped with ENT_QUOTES|ENT_SUBSTITUTE|ENT_HTML5; newline becomes fixed br element",
+    "columns": "only 2 or 3 columns; CSS stacks on mobile"
+  },
+  "catalog_compatibility": {
+    "sidecar": "blog_post_content",
+    "table_absent_or_no_row": "existing legacy HTML path unchanged",
+    "row_valid": "render server-side and pass trusted renderer HTML to template",
+    "row_invalid_or_query_error": "fail closed; no raw legacy HTML fallback for that row",
+    "list_excerpt": "continues using existing description HTML snapshot",
+    "new_schema_or_sql_execution": false
+  },
+  "preview": "tools/preview/f915-renderer-preview.html",
+  "assets": {
+    "controller": "dev/catalog/controller/blog/blog.php",
+    "model": "dev/catalog/model/blog/blog.php",
+    "template": "dev/catalog/view/template/blog/blog_info.twig",
+    "style": "dev/catalog/view/css/blog-blocks.css",
+    "languages": ["en-us", "es-eu", "pt-br"]
+  },
+  "tests": {
+    "fixtures": "tests/fixtures/renderer.json",
+    "functional_runner": "tests/run_f915_fixtures.php",
+    "static_gate": "bash tools/e2e/e2e_f915.sh --check",
+    "php_browser_app_sql_tests_executed": false,
+    "database_accessed": false
+  }
+}

@@ -1,0 +1,452 @@
+[
+  {
+    "id": "escaped-paragraph",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "p1",
+          "type": "core/paragraph",
+          "attributes": {},
+          "children": [],
+          "content": "<script>alert(\"x\")</script>"
+        }
+      ]
+    },
+    "stored_version": 1,
+    "valid": true,
+    "contains": "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;",
+    "not_contains": "<script>"
+  },
+  {
+    "id": "newline-preserved",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "p2",
+          "type": "core/paragraph",
+          "attributes": {},
+          "children": [],
+          "content": "primeira linha\nsegunda linha"
+        }
+      ]
+    },
+    "stored_version": 1,
+    "valid": true,
+    "contains": "primeira linha<br>segunda linha"
+  },
+  {
+    "id": "local-image-attribute-escaping",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "img1",
+          "type": "core/image",
+          "attributes": {
+            "src": "/image/catalog/teste.png",
+            "alt": "x\" onerror=\"alert(1)"
+          },
+          "children": [],
+          "content": ""
+        }
+      ]
+    },
+    "stored_version": 1,
+    "valid": true,
+    "contains": "alt=\"x&quot; onerror=&quot;alert(1)\"",
+    "not_contains": " alt=\"x\" onerror"
+  },
+  {
+    "id": "youtube-fixed-host-embed",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "v1",
+          "type": "core/video_embed",
+          "attributes": {
+            "url": "https://youtu.be/Abc_123-XY"
+          },
+          "children": [],
+          "content": ""
+        }
+      ]
+    },
+    "stored_version": 1,
+    "valid": true,
+    "contains": "https://www.youtube-nocookie.com/embed/Abc_123-XY"
+  },
+  {
+    "id": "vimeo-fixed-host-embed",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "v2",
+          "type": "core/video_embed",
+          "attributes": {
+            "url": "https://vimeo.com/123456789"
+          },
+          "children": [],
+          "content": ""
+        }
+      ]
+    },
+    "stored_version": 1,
+    "valid": true,
+    "contains": "https://player.vimeo.com/video/123456789"
+  },
+  {
+    "id": "nested-columns",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "g1",
+          "type": "core/group",
+          "attributes": {},
+          "children": [
+            {
+              "id": "cols1",
+              "type": "core/columns",
+              "attributes": {
+                "count": 2
+              },
+              "children": [
+                {
+                  "id": "col1",
+                  "type": "core/column",
+                  "attributes": {},
+                  "children": [
+                    {
+                      "id": "p3",
+                      "type": "core/paragraph",
+                      "attributes": {},
+                      "children": [],
+                      "content": "A"
+                    }
+                  ],
+                  "content": ""
+                },
+                {
+                  "id": "col2",
+                  "type": "core/column",
+                  "attributes": {},
+                  "children": [
+                    {
+                      "id": "p4",
+                      "type": "core/paragraph",
+                      "attributes": {},
+                      "children": [],
+                      "content": "B"
+                    }
+                  ],
+                  "content": ""
+                }
+              ],
+              "content": ""
+            }
+          ],
+          "content": ""
+        }
+      ]
+    },
+    "stored_version": 1,
+    "valid": true,
+    "contains": "rms-block-columns--2"
+  },
+  {
+    "id": "heading-list-quote-button-separator",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "h1",
+          "type": "core/heading",
+          "attributes": {
+            "level": 3
+          },
+          "children": [],
+          "content": "Título"
+        },
+        {
+          "id": "list1",
+          "type": "core/list",
+          "attributes": {
+            "ordered": true
+          },
+          "children": [
+            {
+              "id": "li1",
+              "type": "core/list-item",
+              "attributes": {},
+              "children": [],
+              "content": "Item 1"
+            },
+            {
+              "id": "li2",
+              "type": "core/list-item",
+              "attributes": {},
+              "children": [],
+              "content": "Item 2"
+            }
+          ],
+          "content": ""
+        },
+        {
+          "id": "q1",
+          "type": "core/quote",
+          "attributes": {},
+          "children": [],
+          "content": "Uma citação"
+        },
+        {
+          "id": "btn1",
+          "type": "core/button",
+          "attributes": {
+            "url": "/contact"
+          },
+          "children": [],
+          "content": "Contato"
+        },
+        {
+          "id": "sep1",
+          "type": "core/separator",
+          "attributes": {},
+          "children": [],
+          "content": ""
+        }
+      ]
+    },
+    "stored_version": 1,
+    "valid": true,
+    "contains_all": [
+      "<h3 class=\"rms-block rms-block-heading\">",
+      "<ol class=\"rms-block rms-block-list\"><li>Item 1</li><li>Item 2</li></ol>",
+      "<blockquote class=\"rms-block rms-block-quote\"><p>Uma citação</p></blockquote>",
+      "href=\"/contact\"",
+      "<hr class=\"rms-block rms-block-separator\">"
+    ]
+  },
+  {
+    "id": "reject-unsafe-image",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "img2",
+          "type": "core/image",
+          "attributes": {
+            "src": "https://evil.invalid/x.png",
+            "alt": "x"
+          },
+          "children": [],
+          "content": ""
+        }
+      ]
+    },
+    "stored_version": 1,
+    "valid": false
+  },
+  {
+    "id": "reject-unsafe-embed-host",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "v3",
+          "type": "core/video_embed",
+          "attributes": {
+            "url": "https://youtube.com.evil.invalid/watch?v=Abc_123-XY"
+          },
+          "children": [],
+          "content": ""
+        }
+      ]
+    },
+    "stored_version": 1,
+    "valid": false
+  },
+  {
+    "id": "reject-javascript-button",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "b1",
+          "type": "core/button",
+          "attributes": {
+            "url": "javascript:alert(1)"
+          },
+          "children": [],
+          "content": "Clique"
+        }
+      ]
+    },
+    "stored_version": 1,
+    "valid": false
+  },
+  {
+    "id": "reject-unknown-type",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "u1",
+          "type": "core/custom_html",
+          "attributes": {},
+          "children": [],
+          "content": "<b>raw</b>"
+        }
+      ]
+    },
+    "stored_version": 1,
+    "valid": false
+  },
+  {
+    "id": "reject-attribute-injection",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "p5",
+          "type": "core/paragraph",
+          "attributes": {
+            "onclick": "alert(1)"
+          },
+          "children": [],
+          "content": "x"
+        }
+      ]
+    },
+    "stored_version": 1,
+    "valid": false
+  },
+  {
+    "id": "reject-column-count-mismatch",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "cols2",
+          "type": "core/columns",
+          "attributes": {
+            "count": 3
+          },
+          "children": [
+            {
+              "id": "col3",
+              "type": "core/column",
+              "attributes": {},
+              "children": [
+                {
+                  "id": "p6",
+                  "type": "core/paragraph",
+                  "attributes": {},
+                  "children": [],
+                  "content": "x"
+                }
+              ],
+              "content": ""
+            },
+            {
+              "id": "col4",
+              "type": "core/column",
+              "attributes": {},
+              "children": [
+                {
+                  "id": "p7",
+                  "type": "core/paragraph",
+                  "attributes": {},
+                  "children": [],
+                  "content": "y"
+                }
+              ],
+              "content": ""
+            }
+          ],
+          "content": ""
+        }
+      ]
+    },
+    "stored_version": 1,
+    "valid": false
+  },
+  {
+    "id": "reject-version-mismatch",
+    "document": {
+      "format_version": 1,
+      "blocks": []
+    },
+    "stored_version": 2,
+    "valid": false
+  },
+  {
+    "id": "three-column-layout",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "cols3",
+          "type": "core/columns",
+          "attributes": {
+            "count": 3
+          },
+          "children": [
+            {
+              "id": "c31",
+              "type": "core/column",
+              "attributes": {},
+              "children": [
+                {
+                  "id": "pc31",
+                  "type": "core/paragraph",
+                  "attributes": {},
+                  "children": [],
+                  "content": "A"
+                }
+              ],
+              "content": ""
+            },
+            {
+              "id": "c32",
+              "type": "core/column",
+              "attributes": {},
+              "children": [
+                {
+                  "id": "pc32",
+                  "type": "core/paragraph",
+                  "attributes": {},
+                  "children": [],
+                  "content": "B"
+                }
+              ],
+              "content": ""
+            },
+            {
+              "id": "c33",
+              "type": "core/column",
+              "attributes": {},
+              "children": [
+                {
+                  "id": "pc33",
+                  "type": "core/paragraph",
+                  "attributes": {},
+                  "children": [],
+                  "content": "C"
+                }
+              ],
+              "content": ""
+            }
+          ],
+          "content": ""
+        }
+      ]
+    },
+    "stored_version": 1,
+    "valid": true,
+    "contains": "rms-block-columns--3"
+  }
+]

@@ -1,12 +1,12 @@
-# F9-14 — Canvas MVP de blocos do Blog
+# F9-15 — Renderer público Blog em blocos
 
-Pacote incremental com componente UI standalone + prévia autocontida.
+Pacote incremental: PHP renderer allowlisted, validação estendida, fallback catalog compatível, CSS responsivo, translations, fixtures e ADR.
 
-- **GitHub revisado:** `https://github.com/davidcreator/davidcms` (`main`).
-- **HEAD confirmado:** `921ce1629ad0672627c5a1313dfa6e271c39f7dc`.
-- **F9-13:** cinco arquivos principais do manifesto confirmados idênticos ao remoto.
-- **Preview:** `tools/preview/f914-editor-mvp.html`.
-- **Assets do componente:** `dev/admin/view/js/blog-block-editor.js` + `dev/admin/view/css/blog-block-editor.css`.
-- **Gate estático:** `bash tools/e2e/e2e_f914.sh --check`.
+- GitHub confirmado: `https://github.com/davidcreator/davidcms`, branch `main`.
+- HEAD base: `0162822d3bf98ce100780b17cf0c88ff22ee832f`.
+- F9-14 assets/contrato/ADR/gate principais conferidos contra o commit remoto.
+- Prévia de estilo responsivo: `tools/preview/f915-renderer-preview.html` (markup demonstrativo, sem chamadas externas).
+- Gate estático: `bash tools/e2e/e2e_f915.sh --check`.
+- Runner funcional PHP incluído, **não executado**.
 
-A UI não está ligada ao formulário nem salva/posta dados. Não houve alteração no GitHub, app, banco ou fluxo legado.
+Se a sidecar F9-12 ainda não existe, o catálogo segue o caminho legado atual. Com linha de blocos inválida, a publicação do conteúdo falha fechada em vez de cair silenciosamente para HTML cru. Nenhum banco, GitHub ou conteúdo foi alterado nesta entrega.

@@ -94,12 +94,14 @@ class BlockDocument {
     /** @return array{valid:bool,errors:array} */
     public function validateDocument(array $document): array {
         $errors = [];
-        if (array_keys($document) !== ['format_version', 'blocks']) $errors[] = 'root_shape_invalid';
+        $rootKeys = array_keys($document);
+        sort($rootKeys);
+        if ($rootKeys !== ['blocks', 'format_version']) $errors[] = 'root_shape_invalid';
         if (($document['format_version'] ?? null) !== self::FORMAT_VERSION) $errors[] = 'unsupported_format_version';
         if (!isset($document['blocks']) || !is_array($document['blocks']) || !$this->isSequentialList($document['blocks']) || count($document['blocks']) > self::MAX_BLOCKS) $errors[] = 'blocks_invalid';
-        $ids = [];
+        $ids = []; $count = 0;
         if (isset($document['blocks']) && is_array($document['blocks'])) {
-            foreach ($document['blocks'] as $node) $this->validateNode($node, 0, $ids, $errors);
+            foreach ($document['blocks'] as $node) $this->validateNode($node, 0, null, $ids, $errors, $count);
         }
         return ['valid' => !$errors, 'errors' => array_values(array_unique($errors))];
     }
@@ -118,35 +120,77 @@ class BlockDocument {
         return ['id' => $node['id'], 'type' => $node['type'], 'attributes' => $attributes, 'children' => $children, 'content' => $node['content']];
     }
 
-    private function validateNode($node, int $depth, array &$ids, array &$errors): void {
+    private function validateNode($node, int $depth, ?string $parentType, array &$ids, array &$errors, int &$count): void {
         if ($depth > self::MAX_DEPTH || !is_array($node)) { $errors[] = 'node_depth_or_type_invalid'; return; }
+        $count++;
+        if ($count > self::MAX_TOTAL_NODES) { $errors[] = 'too_many_nodes'; return; }
         $keys = array_keys($node); sort($keys);
         if ($keys !== ['attributes', 'children', 'content', 'id', 'type']) { $errors[] = 'node_shape_invalid'; return; }
         if (!is_string($node['id']) || !preg_match('/^[A-Za-z0-9_-]{1,96}$/D', $node['id']) || isset($ids[$node['id']])) $errors[] = 'node_id_invalid_or_duplicate';
         else $ids[$node['id']] = true;
-        if (!is_string($node['type']) || !in_array($node['type'], ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/image','core/separator'], true)) $errors[] = 'unknown_block_type';
-        if (!is_array($node['attributes']) || !is_array($node['children']) || !is_string($node['content'])) { $errors[] = 'node_value_type_invalid'; return; }
-        if (!$this->isSequentialList($node['children'])) $errors[] = 'children_not_sequential';
-        if (count($ids) > self::MAX_TOTAL_NODES) $errors[] = 'too_many_nodes';
+        $types = ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/image','core/video_embed','core/button','core/separator','core/group','core/columns','core/column'];
+        if (!is_string($node['type']) || !in_array($node['type'], $types, true)) { $errors[] = 'unknown_block_type'; return; }
+        if (!is_array($node['attributes']) || !is_array($node['children']) || !$this->isSequentialList($node['children']) || !is_string($node['content'])) { $errors[] = 'node_value_type_invalid'; return; }
         $type = $node['type']; $attrs = $node['attributes'];
         $allowedAttrs = [
             'core/paragraph' => ['align'], 'core/heading' => ['level'], 'core/list' => ['ordered'],
-            'core/list-item' => [], 'core/quote' => [], 'core/image' => ['src','alt','title'], 'core/separator' => []
+            'core/list-item' => [], 'core/quote' => [], 'core/image' => ['src','alt','title'],
+            'core/video_embed' => ['url'], 'core/button' => ['url'], 'core/separator' => [],
+            'core/group' => [], 'core/columns' => ['count'], 'core/column' => []
         ];
-        if (!isset($allowedAttrs[$type]) || array_diff(array_keys($attrs), $allowedAttrs[$type])) $errors[] = 'attributes_not_allowlisted';
-        if ($type === 'core/heading' && !array_key_exists('level', $attrs)) $errors[] = 'heading_level_required';
-        if ($type === 'core/list' && !array_key_exists('ordered', $attrs)) $errors[] = 'list_order_required';
+        if (array_diff(array_keys($attrs), $allowedAttrs[$type])) $errors[] = 'attributes_not_allowlisted';
+        if ($type === 'core/paragraph' && isset($attrs['align']) && !in_array($attrs['align'], ['left','center','right'], true)) $errors[] = 'alignment_invalid';
+        if ($type === 'core/heading' && (!isset($attrs['level']) || !is_int($attrs['level']) || $attrs['level'] < 1 || $attrs['level'] > 6)) $errors[] = 'heading_level_invalid';
+        if ($type === 'core/list' && (!isset($attrs['ordered']) || !is_bool($attrs['ordered']))) $errors[] = 'list_order_invalid';
+        if ($type === 'core/image' && (!isset($attrs['src']) || !$this->isSafeImagePath($attrs['src']) || !isset($attrs['alt']) || !is_string($attrs['alt']) || (isset($attrs['title']) && !is_string($attrs['title'])))) $errors[] = 'image_attributes_invalid';
+        if ($type === 'core/video_embed' && (!isset($attrs['url']) || !$this->isSafeEmbedUrl($attrs['url']))) $errors[] = 'embed_url_invalid';
+        if ($type === 'core/button' && (!isset($attrs['url']) || !$this->isSafeActionUrl($attrs['url']))) $errors[] = 'button_url_invalid';
+        if ($type === 'core/columns' && (!isset($attrs['count']) || !is_int($attrs['count']) || !in_array($attrs['count'], [2,3], true) || count($node['children']) !== $attrs['count'])) $errors[] = 'columns_count_invalid';
         if (strlen($node['content']) > 262144) $errors[] = 'block_content_too_large';
-        if (in_array($type, ['core/list','core/image','core/separator'], true) && $node['content'] !== '') $errors[] = 'content_not_allowed';
-        if (isset($attrs['align']) && !in_array($attrs['align'], ['left','center','right'], true)) $errors[] = 'alignment_invalid';
-        if (isset($attrs['level']) && (!is_int($attrs['level']) || $attrs['level'] < 1 || $attrs['level'] > 6)) $errors[] = 'heading_level_invalid';
-        if (isset($attrs['ordered']) && !is_bool($attrs['ordered'])) $errors[] = 'list_order_invalid';
-        if ($type === 'core/image' && (!isset($attrs['src']) || !$this->isSafeImagePath($attrs['src']) || (isset($attrs['alt']) && !is_string($attrs['alt'])) || (isset($attrs['title']) && !is_string($attrs['title'])))) $errors[] = 'image_attributes_invalid';
-        if ($type !== 'core/list' && count($node['children']) > 0) $errors[] = 'children_not_allowed';
+        if (in_array($type, ['core/list','core/image','core/video_embed','core/separator','core/group','core/columns','core/column'], true) && $node['content'] !== '') $errors[] = 'content_not_allowed';
+        if ($type === 'core/list-item' && ($parentType !== 'core/list' || count($node['children']) > 0)) $errors[] = 'list_item_parent_invalid';
+        if ($type === 'core/column' && $parentType !== 'core/columns') $errors[] = 'column_parent_invalid';
         if ($type === 'core/list') {
+            if (count($node['children']) < 1) $errors[] = 'empty_list';
             foreach ($node['children'] as $child) if (!is_array($child) || ($child['type'] ?? null) !== 'core/list-item') $errors[] = 'list_child_invalid';
+        } elseif ($type === 'core/columns') {
+            foreach ($node['children'] as $child) if (!is_array($child) || ($child['type'] ?? null) !== 'core/column') $errors[] = 'columns_child_invalid';
+        } elseif ($type === 'core/group' || $type === 'core/column') {
+            if (count($node['children']) < 1) $errors[] = 'empty_container';
+            foreach ($node['children'] as $child) if (is_array($child) && in_array(($child['type'] ?? null), ['core/list-item','core/column'], true)) $errors[] = 'internal_node_parent_invalid';
+        } elseif ($type !== 'core/list-item' && count($node['children']) > 0) {
+            $errors[] = 'children_not_allowed';
         }
-        foreach ($node['children'] as $child) $this->validateNode($child, $depth + 1, $ids, $errors);
+        foreach ($node['children'] as $child) $this->validateNode($child, $depth + 1, $type, $ids, $errors, $count);
+    }
+
+    private function isSafeActionUrl($url): bool {
+        if (!is_string($url) || $url === '' || preg_match('/[\x00-\x20\\\\]/', $url) || str_starts_with($url, '//')) return false;
+        if (str_starts_with($url, '/')) return true;
+        $parts = parse_url($url);
+        return is_array($parts) && isset($parts['scheme'], $parts['host']) && in_array(strtolower($parts['scheme']), ['http','https'], true) && !isset($parts['user']) && !isset($parts['pass']);
+    }
+
+    /** Strict provider parsing; returns provider + opaque video ID only. */
+    public function embedTarget(string $url): ?array {
+        if (preg_match('/[\x00-\x20\\\\]/', $url)) return null;
+        $parts = parse_url($url);
+        if (!is_array($parts) || strtolower((string)($parts['scheme'] ?? '')) !== 'https' || isset($parts['user']) || isset($parts['pass']) || isset($parts['port']) || isset($parts['fragment'])) return null;
+        $host = strtolower((string)($parts['host'] ?? ''));
+        $path = (string)($parts['path'] ?? '');
+        if (in_array($host, ['youtube.com','www.youtube.com'], true) && $path === '/watch') {
+            parse_str((string)($parts['query'] ?? ''), $query);
+            $id = (string)($query['v'] ?? '');
+            return preg_match('/^[A-Za-z0-9_-]{6,20}$/D', $id) ? ['provider' => 'youtube', 'id' => $id] : null;
+        }
+        if ($host === 'youtu.be' && preg_match('#^/([A-Za-z0-9_-]{6,20})/?$#D', $path, $m)) return ['provider' => 'youtube', 'id' => $m[1]];
+        if (in_array($host, ['vimeo.com','www.vimeo.com'], true) && preg_match('#^/([0-9]{1,20})/?$#D', $path, $m)) return ['provider' => 'vimeo', 'id' => $m[1]];
+        if ($host === 'player.vimeo.com' && preg_match('#^/video/([0-9]{1,20})/?$#D', $path, $m)) return ['provider' => 'vimeo', 'id' => $m[1]];
+        return null;
+    }
+
+    private function isSafeEmbedUrl($url): bool {
+        return is_string($url) && $this->embedTarget($url) !== null;
     }
 
     private function convertBlock(DOMNode $node, string $source, string $path, int $depth): array {
@@ -199,7 +243,7 @@ class BlockDocument {
     }
 
     private function isSafeImagePath($src): bool {
-        if (!is_string($src) || $src === '' || preg_match('/[\x00-\x20\\\\]/', $src)) return false;
+        if (!is_string($src) || $src === '' || !preg_match('#^/?image/[A-Za-z0-9._~/-]+$#D', $src) || preg_match('/[\x00-\x20\\\\]/', $src)) return false;
         $parts = parse_url($src);
         if ($parts === false || isset($parts['scheme']) || isset($parts['host']) || isset($parts['query']) || isset($parts['fragment'])) return false;
         $path = ltrim((string)($parts['path'] ?? ''), '/');

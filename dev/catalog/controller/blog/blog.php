@@ -78,14 +78,34 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         $base = rtrim((string)$this->config->get('site_url', ''), '/');
 
-        $data['heading_title']     = (string)$post['title'];
-        $data['text_published_on'] = $this->language->get('text_published_on');
-        $data['button_back']       = $this->language->get('button_back');
+        $data['heading_title']      = (string)$post['title'];
+        $data['text_published_on']  = $this->language->get('text_published_on');
+        $data['button_back']        = $this->language->get('button_back');
+        $data['text_content_review'] = $this->language->get('text_content_review');
+
+        $blockContent = $this->model_blog_blog->getPostBlockContent($post_id, (int)($post['content_language_id'] ?? 0));
+        $contentMode = 'legacy';
+        $blockHtml = '';
+        $contentValid = false;
+        if (!empty($blockContent['table_available']) && (!empty($blockContent['row_found']) || !empty($blockContent['query_error']))) {
+            $contentMode = 'blocks';
+            if (!empty($blockContent['row_found'])) {
+                $rendered = (new \Reamur\System\Library\Blog\BlockRenderer())->renderJson(
+                    (string)$blockContent['content_json'],
+                    (int)$blockContent['format_version']
+                );
+                $contentValid = (bool)$rendered['valid'];
+                $blockHtml = $contentValid ? (string)$rendered['html'] : '';
+            }
+        }
 
         $data['post'] = [
             'post_id'      => (int)$post['post_id'],
             'title'        => (string)$post['title'],
             'description'  => (string)$post['description'],
+            'content_mode' => $contentMode,
+            'content_valid' => $contentValid,
+            'block_html'   => $blockHtml,
             'image'        => $this->absoluteImage((string)$post['image'], $base),
             'date'         => $this->formatDate((string)$post['date_published']),
         ];
@@ -127,6 +147,7 @@ class Blog extends \Reamur\System\Engine\Controller {
     /** Chrome compartilhado (mesmo padrão F2-4/F3-01) */
     private function chrome(array &$data, string $body_class): void {
         $this->document->addStyle($this->config->get('site_url') . 'view/css/common.css');
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/blog-blocks.css');
 
         $data['body_class'] = $body_class;
         $data['header']     = $this->load->controller('common/header', $data);

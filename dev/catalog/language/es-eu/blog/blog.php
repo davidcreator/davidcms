@@ -21,3 +21,4 @@ $_['text_read_more']     = 'Leer más';
 // Button
 $_['button_back']        = 'Volver al blog';
 $_['button_back_home']   = 'Volver a la home';
+$_['text_content_review'] = 'Este contenido no está disponible temporalmente mientras se revisa.';
