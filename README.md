@@ -1,16 +1,13 @@
-# Fase 9 · Tarefa 17 — Preparação E2E Blog Blocks
+# Fase 9 · Tarefa 18 — Revisão estática e prontidão
 
-Esta entrega prepara a validação integrada dos fluxos F9-12 a F9-16, com matriz de casos, fixtures exclusivamente sintéticas, checklist operacional futuro e um auditor estático de contratos/fontes.
+A revisão consolidada de F9-12 a F9-17 identificou **2 itens P1 e 2 itens P2 abertos**. O estado atual é **não liberar ainda**. O relatório completo e recomendações estão em `docs/F9-18-Relatorio-Revisao-Estatica.md`; o registro estruturado fica em `docs/F9-18-Risk-Register.json`.
 
-**Não é um E2E de runtime.** A verificação estática foi executada sobre fontes pontuais existentes no workspace (F9-16 admin/model/renderer e F9-15 catálogo público): 11 arquivos, 3 idiomas e 8 fixtures foram inspecionados com resultado PASS. Não executamos PHP, SQL, migration, browser ou aplicação; não acessamos banco nem fizemos GitHub write.
+Os arquivos de código críticos listados no Source Hashes foram comparados byte a byte com o HEAD de `main`, sem clone do projeto.
 
-## Uso
+## Verificador
 
-- Ver o plano: `tools/e2e/e2e_f917.sh --plan`
-- Auditar um checkout completo apenas como texto: `tools/e2e/e2e_f917.sh --static /caminho/para/davidcms`
+`tools/e2e/e2e_f918_preflight.cjs <checkout>` é uma inspeção estática heurística. Ele apenas lê texto de fonte e aponta os padrões dos riscos; não executa aplicação/PHP/SQL/browser nem acessa banco. O exit code 1 significa riscos estáticos detectados, não falha de teste de runtime.
 
-O modo `--static` apenas lê arquivos; não inicia o sistema.
+## Limites
 
-## Base
-
-HEAD de `main` verificado: `1e3f15873436accbe21003c41720054eaeb0b09a` — integração F9-16. A migration F9-12 não é presumida aplicada.
+Nenhuma alteração no código de produção, migration, PHP, SQL, browser, app, banco, deploy ou GitHub write foi feita. A migration F9-12 permanece sem confirmação de aplicação. Nenhum teste funcional foi executado.

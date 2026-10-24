@@ -1,0 +1,64 @@
+{
+  "task": "F9-18",
+  "review_type": "static_source_readiness_review",
+  "repository": "https://github.com/davidcreator/davidcms",
+  "branch": "main",
+  "head": "72a8b927c0d2b96b7d3df41114969aa620bb9602",
+  "release_ready": false,
+  "execution": {
+    "php": false,
+    "sql": false,
+    "browser": false,
+    "application": false,
+    "database_accessed": false,
+    "migration_applied": false,
+    "github_write": false
+  },
+  "findings": [
+    {
+      "id": "F918-01",
+      "severity": "P1",
+      "status": "open",
+      "area": "public_catalog_sidecar_detection",
+      "path": "dev/catalog/model/blog/blog.php",
+      "lines": "110-124",
+      "summary": "Metadata lookup exceptions are cached as table absence, enabling the public legacy description|raw branch when sidecar detection actually failed.",
+      "required_action": "Use tri-state detection; only a successful lookup proving absence may select legacy fallback. Errors must fail closed."
+    },
+    {
+      "id": "F918-02",
+      "severity": "P1",
+      "status": "open",
+      "area": "public_image_url_resolution",
+      "path": "dev/system/library/blog/block_renderer.php",
+      "lines": "62-66",
+      "summary": "Allowlisted view/image/blog/... paths are emitted unchanged; relative URLs can resolve incorrectly on nested SEO routes or subdirectory installs.",
+      "required_action": "Resolve local assets against a trusted catalog base while preserving scheme/host rejection."
+    },
+    {
+      "id": "F918-03",
+      "severity": "P2",
+      "status": "open",
+      "area": "language_sidecar_selection",
+      "path": "dev/catalog/model/blog/blog.php",
+      "lines": "68-79",
+      "summary": "Public block language is selected from nonempty legacy HTML description; an intentionally empty snapshot can cause English sidecar content to replace the active-language document.",
+      "required_action": "Define sidecar-aware active-language-first selection and explicit English fallback behavior."
+    },
+    {
+      "id": "F918-04",
+      "severity": "P2",
+      "status": "open",
+      "area": "admin_post_delete_atomicity",
+      "path": "dev/admin/model/blog/blog.php",
+      "lines": "300-309",
+      "summary": "Sidecar/post/descriptions/SEO deletion is a sequence without a transaction and the migration has no foreign-key cascade.",
+      "required_action": "Wrap deletion in an InnoDB transaction with rollback or accept documented partial deletion risk."
+    }
+  ],
+  "readiness_gate": [
+    "Resolve both P1 findings before release.",
+    "Decide and cover P2 language and deletion semantics.",
+    "Run explicitly authorized E2E only in an isolated disposable environment after owner-managed F9-12 migration."
+  ]
+}

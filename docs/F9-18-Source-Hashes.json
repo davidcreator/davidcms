@@ -1,0 +1,11 @@
+{
+  "head": "72a8b927c0d2b96b7d3df41114969aa620bb9602",
+  "method": "read-only raw file fetch and byte-for-byte compare with workspace snapshots",
+  "files": [
+    {"path":"dev/catalog/model/blog/blog.php","sha256":"c55cd529fbbf31c11e10a0e077f639371cfbd4dc19127309a262627971c12691","workspace_match":true},
+    {"path":"dev/catalog/controller/blog/blog.php","sha256":"a66ba41b8abafca5801c98f1481eb5f6be36f00b8e57bdd43e5122d32e8515be","workspace_match":true},
+    {"path":"dev/system/library/blog/block_renderer.php","sha256":"572791de25276c0f4cbc229786e4f1e84c877ff6d5717475673951d8167eb9ea","workspace_match":true},
+    {"path":"dev/system/library/blog/block_document.php","sha256":"17e8f3e5c42edcda8ee54352cc25731e2df389bf2b7dc575db3351ca709162bb","workspace_match":true},
+    {"path":"dev/admin/model/blog/blog.php","sha256":"68e351a3329b3bba33b4ea3a2f12136553eac48fe9764d5fd6c0e63f77b85a07","workspace_match":true}
+  ]
+}

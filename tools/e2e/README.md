@@ -1,25 +1,13 @@
-# F9-16 — checklist E2E (não executado)
+# F9-18 source preflight
 
-> Procedimento futuro apenas. Não execute nesta entrega: o usuário restringiu testes PHP/SQL/browser/app e migrations. A existência do arquivo não implica que F9-12 esteja aplicada.
+`e2e_f918_preflight.cjs <checkout>` lê quatro fontes do checkout como texto e procura padrões ligados aos achados F918-01…04. Não carrega a aplicação nem inicia PHP, SQL, browser, servidor ou banco.
 
-## Pré-condições para execução autorizada
+O comando termina com código 1 quando identifica riscos ainda abertos (estado esperado para a base analisada); isto não é teste E2E nem aprovação automática de release. O scanner é heurístico e complementar ao relatório, não substitui code review.
 
-- Ambiente de teste isolado e descartável, nunca produção.
-- Commit/arquivos F9-16 integrados em checkout completo e revistos.
-- Migration F9-12 aplicada explicitamente pelo responsável nesse ambiente e schema conferido por procedimento autorizado.
-- Fixtures sintéticas, sem dados reais nem dump privado.
+Exemplo futuro, após as correções e em checkout completo:
 
-## Casos manuais
+```sh
+node tools/e2e/e2e_f918_preflight.cjs /caminho/para/davidcms
+```
 
-1. Sem sidecar F9-12: formulário de post usa o editor legado; nenhuma consulta de conteúdo sidecar deve converter falha de banco em tabela ausente.
-2. Com sidecar: formulário autorizado carrega editor de blocos e três idiomas; usuário sem permissão não obtém o fluxo de edição/salvamento de blocos.
-3. Criar post com blocos: inserir e reorganizar blocos, selecionar imagem da Biblioteca `view/image/blog/...`, enviar o formulário e confirmar documento e snapshot renderizado no idioma correto.
-4. Editar post em blocos: mudança só persiste no POST normal; confirmar que sidecar e descrições são gravados sob a transação prevista.
-5. Conteúdo legado conversível: revisar conversão antes de salvar e confirmar preservação do snapshot/hash do HTML legado original.
-6. Conteúdo legado não conversível: permanece no modo legado; nenhuma conversão silenciosa ou perda de conteúdo.
-7. Sidecar malformado/versão incompatível: editor bloqueado, sem fallback para conteúdo vazio e sem sobrescrita.
-8. POST adulterado: documento inválido, idioma desconhecido, modo inconsistente ou editor não inicializado deve ser rejeitado no servidor.
-9. Simular falha em cada gravação numa base descartável: rollback integral de post, descrições, SEO e sidecar.
-10. Excluir post: sidecar é removido sem tocar em imagens ou outros arquivos.
-
-Este checklist é planejamento; nenhuma ação acima foi executada.
+Nesta tarefa, o scanner foi executado sobre snapshots pontuais do workspace e apontou F918-01…04, coerente com o relatório. Nenhum teste de runtime foi executado.

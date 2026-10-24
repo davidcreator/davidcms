@@ -1,13 +1,12 @@
-# Manifesto F9-17
+# Manifesto F9-18
 
-- Repositório-base: `https://github.com/davidcreator/davidcms`
+- Repositório: `https://github.com/davidcreator/davidcms`
 - Branch: `main`
-- HEAD lido antes do trabalho: `1e3f15873436accbe21003c41720054eaeb0b09a`
-- Escopo aprovado: preparar E2E integrado, sem execução de PHP/SQL/browser/app.
-- Resultado: plano/checklist, contrato JSON, fixtures sintéticas e auditor estático de fontes.
-- Auditoria estática: PASS sobre snapshot pontual local F9-15/F9-16; 11 arquivos de fonte, três localidades e oito fixtures.
-- Testes de runtime: não executados. Banco: não acessado. Migration F9-12: não presumida/aplicada.
-- GitHub write/deploy: nenhum.
-- Dumps, logs runtime, credenciais e dados reais: não incluídos.
-
-Os comandos e seus limites estão descritos em `README.md` e `docs/F9-17-Checklist-E2E-Blog-Blocos.md`.
+- HEAD verificado: `72a8b927c0d2b96b7d3df41114969aa620bb9602`
+- Tarefa: revisão estática de prontidão F9-12–F9-17.
+- Resultado: 2 findings P1 e 2 P2 abertos; veredito `release_ready=false`.
+- Fonte: 5 arquivos críticos comparados byte a byte com `raw` no HEAD (consulte `docs/F9-18-Source-Hashes.json`).
+- Testes PHP/SQL/browser/app, migration e E2E runtime: não executados.
+- Banco acessado: não. GitHub write/deploy: não.
+- F9-12: migration não aplicada nem presumida.
+- Dados reais/dumps/logs runtime/credenciais: não incluídos.
