@@ -1,11 +1,11 @@
-# Índice da entrega F9-07
+# Índice da entrega F9-08
 
-- Plano: `F9-07-Valores-Custom-Fields-CMS-Page.md`
-- Adapter de valores: `dev/admin/model/custom_field/value.php`
-- Controller de páginas: `dev/admin/controller/cms/page.php`
-- Formulário: `dev/admin/view/template/cms/page_form.twig`
-- Idioma fonte: `dev/admin/language/en-us/cms/page.php`
-- ADR: `agents-ia/decisoes/0063-f9-07-valores-campos-cms-page.md`
-- Tool estático: `tools/e2e/e2e_f907.sh --check`
+- Plano: `F9-08-Exibicao-Publica-Campos-CMS-Page.md`
+- Leitor de valores públicos: `dev/catalog/model/custom_field/value.php`
+- Controller de página: `dev/catalog/controller/cms/page.php`
+- Template: `dev/catalog/view/template/cms/page_info.twig`
+- Idiomas: `dev/catalog/language/{en-us,pt-br,es-eu}/cms/page.php`
+- ADR: `agents-ia/decisoes/0064-f9-08-exibicao-publica-campos-cms-page.md`
+- Tool: `tools/e2e/e2e_f908.sh --check`
 
-**Dependência:** schema F9-02 e ACL F9-05 aplicados manualmente no laboratório antes do teste de runtime. Nenhum campo é renderizado no site público por esta entrega.
+Dependência: schema F9-02 e valores F9-07; testar em laboratório antes de publicar.

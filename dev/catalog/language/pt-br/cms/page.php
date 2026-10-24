@@ -1,12 +1,6 @@
 <?php
-/**
- * @package   ReamurCMS
- * @author    David L. Almeida
- * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
- * @license   https://opensource.org/licenses/GPL-3.0
- * @link      https://reamurcms.com
- *
- * Language pt-br — wrapper público de páginas CMS (cms/page, F2-17).
- */
-
-$_['heading_home'] = 'Home';
+// F9-08 — campos personalizados públicos (somente definições explicitamente públicas).
+$_['heading_home'] = 'Início';
+$_['text_custom_fields'] = 'Informações adicionais';
+$_['text_yes'] = 'Sim';
+$_['text_no'] = 'Não';

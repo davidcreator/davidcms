@@ -11,3 +11,8 @@
  */
 
 $_['heading_home'] = 'Home';
+
+// F9-08 — public custom fields (only explicitly public definitions).
+$_['text_custom_fields'] = 'Additional information';
+$_['text_yes'] = 'Yes';
+$_['text_no'] = 'No';
