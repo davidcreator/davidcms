@@ -30,6 +30,7 @@
 | `user_group`, `user` | `user/` | admin, api |
 | `customer_group`, `customer` | `customer/` | catalog `account/`, sale |
 | `page`, `page_description` | `cms/` | catalog `information/` |
+| `custom_field_group*`, `custom_field*`, `custom_field_value` | `custom_field/definition`, F9 | CMS admin + catalog `cms/page` (somente visibility=public) |
 | `category`, `category_description` | `catalog/` | catalog `product/` (portfólio) |
 | `project`, `project_description`, `project_image`, `project_to_category` | `catalog/` | catalog (portfólio) |
 | `testimonial`, `testimonial_description` · `client_logo` | `marketing/` | home |
@@ -78,6 +79,28 @@
 
 ### `page_description`
 `page_id` FK · `language_id` FK · `title` VARCHAR(255) · `description` MEDIUMTEXT *(HTML do editor)* · `meta_title` VARCHAR(255) · `meta_description` VARCHAR(255) · PK composta (`page_id`,`language_id`)
+
+
+### Campos personalizados — Fase 9 / CMS page (ADR 0058, migração F9-02)
+
+As cinco tabelas abaixo são criadas por `dev/install/sql/upgrade_f9_02_custom_fields_schema.sql`; migration separada e manual, sem FKs. O primeiro alvo implementado é `entity_type='cms/page'`. Chaves de grupo/campo são estáveis; renomear ou mudar tipo exige migração nova. Valores compartilhados usam `language_id=0`; valores localizados usam o ID real de idioma.
+
+#### `custom_field_group`
+`group_id` INT PK AI · `entity_type` VARCHAR(32) · `key` VARCHAR(64) · `name` VARCHAR(128) · `status` TINYINT(1) DEFAULT 0 · `sort_order` INT · `date_added`,`date_modified` DATETIME · UNIQUE(`entity_type`,`key`) · índice (`entity_type`,`status`,`sort_order`).
+
+#### `custom_field_group_description`
+`group_id` INT · `language_id` INT · `name` VARCHAR(128) · PK (`group_id`,`language_id`) · índice (`language_id`).
+
+#### `custom_field`
+`field_id` INT PK AI · `entity_type` VARCHAR(32) · `group_id` INT · `key` VARCHAR(64) · `type` VARCHAR(16) (`text`,`textarea`,`number`,`boolean`,`url`,`select`) · `localized` TINYINT(1) DEFAULT 0 · `required` TINYINT(1) DEFAULT 0 · `visibility` VARCHAR(16) DEFAULT `admin_only` (ou `public`) · `options` TEXT (JSON estrito para select; `[]` nos demais) · `sort_order` INT · `date_added`,`date_modified` DATETIME · UNIQUE(`entity_type`,`key`) · índices (`group_id`) e (`entity_type`,`visibility`).
+
+#### `custom_field_description`
+`field_id` INT · `language_id` INT · `label` VARCHAR(128) · `help` VARCHAR(255) DEFAULT '' · PK (`field_id`,`language_id`) · índice (`language_id`).
+
+#### `custom_field_value`
+`value_id` BIGINT PK AI · `entity_type` VARCHAR(32) · `entity_id` INT · `field_id` INT · `language_id` INT (0 = compartilhado) · `value_text` TEXT · `value_number` DECIMAL(38,6) NULL · UNIQUE(`entity_type`,`entity_id`,`field_id`,`language_id`) · índices (`entity_type`,`entity_id`), (`field_id`,`language_id`) e (`language_id`).
+
+Integridade entre grupo/campo/valor é mantida pelos Models (sem FK). No frontend, só páginas publicadas, grupos ativos e campos `visibility='public'` são elegíveis; o rendering deve escapar valores como texto. `admin_only` permanece privado. A aplicação/rollback segue as notas da F9-02 e deve ser executada com backup em ambiente controlado.
 
 ---
 
@@ -196,7 +219,8 @@ Uso: bloco INSERT do dump legado é colado pelo usuário nesta tabela; `upgrade_
 1. **Antes de escrever qualquer SQL ou Model**, conferir aqui: nome da tabela, nome exato da coluna e a `*_description` correspondente;
 2. Entidade nova/Coluna nova → **ADR + atualização deste doc + migração SQL** (fluxo do `agente-install`), nunca direto no Model;
 3. Nomes "oficiais" destacados (`image` = capa, `name` = título de projeto) existem para acabar com a divergência `name`×`title`, `image`×`cover`;
-4. Este dicionário cobre o **núcleo do lançamento**; e-commerce completo (produtos vendáveis, estoque, impostos) entra por ADR futuro, se o escopo crescer.
+4. As tabelas F9 de custom fields seguem migração/versionamento próprios; não modificar migration F9-02 já aplicada.
+5. Este dicionário cobre o **núcleo do lançamento**; e-commerce completo (produtos vendáveis, estoque, impostos) entra por ADR futuro, se o escopo crescer.
 
 ---
 

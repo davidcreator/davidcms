@@ -1,9 +1,9 @@
-# Índice da entrega F9-09
+# Índice da entrega F9-10
 
-- Plano: `F9-09-Navegacao-Campos-Personalizados.md`
-- Sidebar ACL-driven: `dev/admin/controller/common/header.php`
-- Labels: `dev/admin/language/{en-us,pt-br,es-eu}/common/header.php`
-- ADR: `agents-ia/decisoes/0065-f9-09-navegacao-campos-personalizados.md`
-- Tool estático: `tools/e2e/e2e_f909.sh --check`
+- Plano/escopo: `F9-10-Dicionario-e-Preflight-Integrado.md`
+- Dicionário canônico atualizado: `Dicionario-de-Dados.md`
+- Compatibilidade forward do gate F9-05: `tools/e2e/e2e_f905.cjs`
+- Preflight integrado: `tools/e2e/e2e_f910.sh --check --root /caminho/davidcms`
+- ADR: `agents-ia/decisoes/0066-f9-10-dicionario-preflight-integrado.md`
 
-A tarefa somente torna a rota existente descoberta no menu; não concede acesso novo.
+O runner valida arquivos/contratos, nunca consulta ou altera o banco. `error.log` não está incluído.

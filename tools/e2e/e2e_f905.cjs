@@ -102,7 +102,8 @@ assert(!/DROP\s+TABLE|TRUNCATE|CREATE\s+TABLE/i.test(rollback), 'rollback não d
 assert(installer.includes("'custom_field/definition'"), 'seed do wizard sem rota dormente');
 assert((installer.match(/custom_field\/definition/g) || []).length === 1, 'rota dormente deve aparecer uma única vez no seed');
 assert(!fs.existsSync(path.join(root, 'dev/install/sql/schema.sql')), 'F9-05 não deve entregar schema.sql');
-assert(!fs.existsSync(path.join(root, 'dev/admin/controller/custom_field')), 'controller deve ficar para a próxima subtarefa');
-assert(!fs.existsSync(path.join(root, 'dev/admin/view/template/custom_field')), 'templates devem ficar para a próxima subtarefa');
+// F9-05 was a backend-only delivery. Do not assert later F9-06 controller/UI
+// paths are absent: this same gate is also part of the integrated F9-10 suite.
+assert(contract.route.controller_available === false && contract.route.ui_available === false, 'contrato histórico F9-05 deve continuar parcial');
 
 ok('model de definições e ACL dormente aprovados; nenhum valor/público/UI executado');
