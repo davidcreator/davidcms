@@ -1,10 +1,7 @@
-# Fase 9 · Tarefa 20 — Verificação estática F9-19 no HEAD
+# Fase 9 · Tarefa 21 — Roadmap de editor de alto nível
 
-A tarefa confirma que as quatro correções da F9-19 foram incorporadas ao HEAD `60ee6cc7579cfde9b372f44c92f64ba45c1a176f`. Sete arquivos pontuais foram obtidos via GitHub raw e comparados byte a byte com F9-19; todos correspondem. O checker estático executado contra essas fontes e oito fixtures sintéticas retornou **PASS**.
+Roadmap e contrato proposto para evoluir o editor atual em direção a uma experiência Gutenberg-like, sem depender de código/asset WordPress. A primeira implementação recomendada é F9-22: rich-text inline versionado e edição visual segura.
 
-Este resultado não valida PHP/SQL, templates, queries, browser, aplicação, banco nem migration. F9-12 continua sem estado operacional confirmado. Para E2E real é necessária autorização explícita e instância descartável.
+O escopo inclui estágios F9-22 a F9-27, critérios de aceite e plano E2E futuro. **Nenhum código de produto foi alterado nesta tarefa.** Não houve PHP/SQL/browser/app tests, migration, acesso a banco, GitHub write ou deploy.
 
-- Relatório: `docs/F9-20-Verificacao-Estatica-Remediacao.md`
-- Hashes/verificação de origem: `docs/F9-20-Source-Hashes.json`
-- Ferramenta reproduzível: `tools/e2e/e2e_f920_static.sh`
-- Snapshot de referência: somente sete arquivos pontuais sob `reference/`; sem clone completo.
+Base: `main` no HEAD `81bccd80470b7f8e26eee90c43dc475fb8dafe90`. F9-12 não é presumida aplicada.

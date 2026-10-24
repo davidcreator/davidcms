@@ -1,21 +1,24 @@
-# Agentes IA — F9-20
+# Agentes IA — F9-21
 
-## Objetivo
+## Escopo
 
-Confirmar, por fonte estática, que os fixes F918-01…04 enviados na tarefa F9-19 estão no HEAD atual e que o checker estático F9-19 passa sobre cópias pontuais obtidas de `raw` no HEAD.
+F9-21 entrega roadmap e contrato proposto do editor avançado. Nenhum código de produção foi alterado. A primeira feature sugerida para F9-22 é edição inline rich-text com estrutura JSON v2, mantendo os documentos v1 compatíveis.
 
-## Referência
+## Fonte
 
-- Repositório correto: `https://github.com/davidcreator/davidcms`
-- Branch `main`, HEAD: `60ee6cc7579cfde9b372f44c92f64ba45c1a176f`.
-- Parent: `b4ef8cc2f6cc398eea6e9a80f8ea81c7d3b0f1f6`.
-- Cópias em `reference/` são sete arquivos pontuais; não são clone do projeto.
+- Repositório `https://github.com/davidcreator/davidcms`, branch `main`.
+- HEAD consultado: `81bccd80470b7f8e26eee90c43dc475fb8dafe90`.
+- O editor MVP atual usa `<textarea>` para conteúdo, tem ações básicas de bloco e já salva via fluxo F9-16.
 
-## Restrições permanentes
+## Guardrails obrigatórios
 
-- Não executar PHP, SQL, migration, browser, aplicação, query, banco ou deploy.
-- Nenhuma escrita no GitHub. Hashes e downloads `raw` somente leitura.
-- Não presumir F9-12 aplicada; não acessar dump privado, dados reais, credenciais ou logs.
-- Checker PASS é estrutural, não prova comportamento nem certifica produção.
+- Não introduzir HTML bruto ou `contenteditable.innerHTML` persistido.
+- Schema v1 preservado; v2 deve ser validado e renderizado no servidor antes de ativar UI v2.
+- Converter v1 em memória; abertura da tela não modifica o banco.
+- Marks e links têm allowlist do servidor; limites de tamanho/complexidade são obrigatórios.
+- Persistência continua no POST explícito; sem autosave nesta etapa sem política aprovada.
+- Não baixar/clonar o projeto inteiro; trabalhar somente com arquivos necessários.
+- Não executar PHP, SQL, migration, browser, app ou acessar banco. Não presumir F9-12 aplicada.
+- Sem GitHub write/deploy, dados reais, dump privado, credenciais ou logs runtime.
 
-Consulte relatório e hashes em `docs/` antes de avançar para operação. E2E real exige autorização explícita e ambiente descartável.
+Leia `docs/F9-21-Roadmap-Editor-Avancado.md`, `docs/F9-21-Contrato-Rich-Text-v2.json` e `tools/e2e/README.md` antes de iniciar F9-22.

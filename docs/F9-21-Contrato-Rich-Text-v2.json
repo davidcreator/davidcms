@@ -1,0 +1,41 @@
+{
+  "task": "F9-21",
+  "status": "roadmap_and_proposed_contract_only_not_implemented",
+  "base_head": "81bccd80470b7f8e26eee90c43dc475fb8dafe90",
+  "repository": "https://github.com/davidcreator/davidcms",
+  "document": {
+    "v1": {"format_version": 1, "content_type": "string", "compatibility": "read_and_render_unchanged"},
+    "v2": {"format_version": 2, "content_type": "array_of_inline_runs_for_text_blocks", "sql_migration_required": false}
+  },
+  "inline_run": {
+    "required_keys": ["text", "marks", "href"],
+    "types": {"text": "string", "marks": "unique allowlisted strings", "href": "null or validated HTTP(S)/root-relative path"},
+    "marks_allowlist_initial": ["bold", "italic", "underline", "strike", "code"],
+    "arbitrary_html_allowed": false,
+    "target_attribute_allowed": false,
+    "renderer_rel": "fixed by server renderer"
+  },
+  "editor_requirements": [
+    "controlled contenteditable backed by structured state",
+    "selection persists while inline toolbar actions are invoked",
+    "no execCommand or HTML string persistence",
+    "paste starts as plain text",
+    "undo/redo includes inline runs and block structure",
+    "version 1 to version 2 conversion occurs in memory; opening alone does not rewrite storage"
+  ],
+  "security": {
+    "server_validation_authoritative": true,
+    "renderer_allowlist_only": true,
+    "unsafe_links_rejected": ["javascript:", "data:", "//host", "credentials"],
+    "unknown_marks_rejected": true,
+    "length_run_count_and_depth_limits_required": true
+  },
+  "implementation_order": ["F9-22 rich text v2/server-first", "F9-23 block UX", "F9-24 content/media blocks", "F9-25 patterns/editorial workflow", "F9-26 accessibility/localization", "F9-27 authorized staging E2E"],
+  "execution": {
+    "product_code_changed": false,
+    "php_sql_browser_app_tests_executed": false,
+    "database_accessed": false,
+    "migration_applied_or_assumed": false,
+    "github_written": false
+  }
+}
