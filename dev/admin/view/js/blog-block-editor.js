@@ -17,6 +17,12 @@
   const TRANSFORMABLE_TEXT = new Set(['core/paragraph', 'core/heading', 'core/quote', 'core/button']);
   const CLONE = (value) => JSON.parse(JSON.stringify(value));
   let instanceSequence = 0;
+  function fullscreenCopy() {
+    const language = String(global.document && global.document.documentElement && global.document.documentElement.lang || 'en').toLowerCase();
+    if (language.startsWith('pt')) return { enter:'Abrir em tela cheia', exit:'Voltar ao formulário', dialog:'Editor em tela cheia' };
+    if (language.startsWith('es')) return { enter:'Abrir a pantalla completa', exit:'Volver al formulario', dialog:'Editor a pantalla completa' };
+    return { enter:'Open fullscreen editor', exit:'Back to form', dialog:'Fullscreen editor' };
+  }
   const ICON_PATHS = {
     plus:'M12 5v14M5 12h14', copy:'M8 8V4h12v12h-4M4 8h12v12H4z', undo:'M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-2', redo:'m15 14 5-5-5-5m5 5H10a6 6 0 0 0 0 12h2',
     desktop:'M3 4h18v13H3zM8 21h8M12 17v4', tablet:'M6 2h12v20H6zM11 18h2', mobile:'M8 2h8v20H8zM11 18h2',
@@ -24,9 +30,9 @@
     paragraph:'M4 6h16M4 10h16M4 14h10M4 18h10', heading:'M4 5v14M20 5v14M4 12h16', list:'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
     image:'M4 4h16v16H4zM8 14l3-3 5 5M14 9h.01', quote:'M5 6h6v6H5zM13 6h6v6h-6zM5 12c0 3-1 4-2 5m10-5c0 3-1 4-2 5', video:'m9 7 9 5-9 5zM4 5v14', button:'M4 7h16v10H4z', bold:'M7 5h6a4 4 0 0 1 0 8H7zM7 13h7a4 4 0 0 1 0 8H7z', italic:'M15 4h-5m4 16H9m5-16-4 16', underline:'M6 4v7a6 6 0 0 0 12 0V4M4 21h16', strike:'M5 12h14M7 6c1-2 3-2 5-2 3 0 5 1 5 3 0 2-2 3-5 4-3 1-5 2-5 5 0 2 2 4 5 4 2 0 4-1 5-3', link:'M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7M14 11a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 21l1.7-1.7', info:'M12 8h.01M11 12h1v5h1M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
     details:'M5 7h14M5 12h14M5 17h14M3 7h.01M3 12h.01M3 17h.01', spacer:'M12 3v18m-4-14 4-4 4 4m-8 10 4 4 4-4', code:'m8 6-6 6 6 6m8-12 6 6-6 6m-3-14-2 16', separator:'M4 12h16M12 7v10', group:'M4 4h16v16H4zM8 8h8v8H8z', columns:'M4 4h16v16H4zM12 4v16', gallery:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', cover:'M4 4h16v16H4zM4 15l5-5 4 4 3-3 4 5', table:'M4 4h16v16H4zM4 10h16M4 15h16M10 4v16M16 4v16', file:'M6 3h8l4 4v14H6zM14 3v5h5M9 13h6M9 17h6', audio:'M4 10v4m4-8v12m4-16v20m4-16v12m4-8v4', settings:'M4 7h16M4 17h16M8 7v0m8 10v0', outline:'M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h11', layers:'m12 3 9 5-9 5-9-5 9-5zm-9 9 9 5 9-5m-18 5 9 5 9-5', grip:'M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01', transform:'M4 7h14m0 0-3-3m3 3-3 3M20 17H6m0 0 3-3m-3 3 3 3',
-    check:'m5 12 4 4L19 6', search:'m20 20-4.5-4.5M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0', help:'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0'
+    check:'m5 12 4 4L19 6', search:'m20 20-4.5-4.5M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0', help:'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', expand:'M8 3H3v5m0-5 7 7m6-7h5v5m0-5-7 7M3 16v5h5m-5 0 7-7m11 2v5h-5m5 0-7-7', collapse:'M8 3v5H3m0 0 7-7m6 7V3h5m0 0-7 7M3 16h5v5m0 0 7-7m1 2h5v5m0 0-7-7'
   };
-  const ACTION_ICONS = { 'toggle-inserter':'plus','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','file-media':'file','audio-media':'audio',media:'image','insert-pattern':'layers',insert:'plus','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent' };
+  const ACTION_ICONS = { 'toggle-inserter':'plus','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','file-media':'file','audio-media':'audio',media:'image','insert-pattern':'layers',insert:'plus','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent','toggle-fullscreen':'expand' };
   const TYPE_ICONS = { 'core/paragraph':'paragraph','core/heading':'heading','core/list':'list','core/list-item':'list','core/image':'image','core/quote':'quote','core/video_embed':'video','core/button':'button','core/callout':'info','core/details':'details','core/spacer':'spacer','core/code':'code','core/separator':'separator','core/group':'group','core/columns':'columns','core/column':'columns','core/gallery':'gallery','core/cover':'cover','core/table':'table','core/table-row':'table','core/table-cell':'table','core/file':'file','core/audio':'audio' };
 
   function validLocalImage(src) {
@@ -382,6 +388,9 @@
       this.selectedId = null;
       this.blockClipboard = null;
       this.preview = 'desktop';
+      this.fullscreen = false;
+      this.fullscreenReturnFocus = null;
+      this.fullscreenPreviousAttrs = null;
       this.dragId = null;
       this.inlineBookmark = null;
       this.linkDraft = '';
@@ -392,7 +401,7 @@
       this.slashTrigger = null;
       this.inserterQuery = '';
       this.statusMessage = '';
-      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',copyBlock:'Copiar bloco',pasteBlock:'Colar bloco',statusCopied:'Bloco copiado para este editor.',statusPasted:'Bloco colado.',pasteUnavailable:'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.',navigationPath:'Caminho do bloco selecionado',navigationRow:'Linha',navigationCell:'Célula',statusFocusChanged:'Foco movido para o bloco selecionado.',statusOutlineChanged:'Bloco selecionado atualizado pela navegação da estrutura.',indentBlock:'Indentar dentro do bloco anterior',outdentBlock:'Desindentar após o bloco pai',statusIndented:'Bloco movido para dentro do bloco anterior.',statusOutdented:'Bloco movido para depois do pai.',hierarchyMoveUnavailable:'Esta movimentação não é permitida neste contexto ou ultrapassaria um limite do documento.',outlineKeyboardHint:'↑/↓ navegar · → primeiro filho · ← bloco pai · Home/End início/fim',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},callout:{tone:'Estilo do aviso',defaultText:'Adicione uma informação importante.',tones:{info:'Informação',success:'Sucesso',warning:'Atenção',danger:'Crítico'}},details:{summaryLabel:'Título da seção expansível',summaryDefault:'Mais informações',defaultText:'Adicione os detalhes aqui.'},spacer:{heightLabel:'Altura do espaçador',heights:{'16':'Muito pequeno · 16 px','32':'Pequeno · 32 px','48':'Médio · 48 px','64':'Grande · 64 px','96':'Muito grande · 96 px'}},preformatted:{label:'Código pré-formatado',defaultText:'',tooLarge:'O bloco de código excede o limite de 256 KiB.'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},typeLabels:{}}, this.options.strings || {});
+      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',copyBlock:'Copiar bloco',pasteBlock:'Colar bloco',statusCopied:'Bloco copiado para este editor.',statusPasted:'Bloco colado.',pasteUnavailable:'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.',navigationPath:'Caminho do bloco selecionado',navigationRow:'Linha',navigationCell:'Célula',statusFocusChanged:'Foco movido para o bloco selecionado.',statusOutlineChanged:'Bloco selecionado atualizado pela navegação da estrutura.',indentBlock:'Indentar dentro do bloco anterior',outdentBlock:'Desindentar após o bloco pai',statusIndented:'Bloco movido para dentro do bloco anterior.',statusOutdented:'Bloco movido para depois do pai.',hierarchyMoveUnavailable:'Esta movimentação não é permitida neste contexto ou ultrapassaria um limite do documento.',outlineKeyboardHint:'↑/↓ navegar · → primeiro filho · ← bloco pai · Home/End início/fim',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',fullscreenEnter:fullscreenCopy().enter,fullscreenExit:fullscreenCopy().exit,fullscreenDialog:fullscreenCopy().dialog,canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},callout:{tone:'Estilo do aviso',defaultText:'Adicione uma informação importante.',tones:{info:'Informação',success:'Sucesso',warning:'Atenção',danger:'Crítico'}},details:{summaryLabel:'Título da seção expansível',summaryDefault:'Mais informações',defaultText:'Adicione os detalhes aqui.'},spacer:{heightLabel:'Altura do espaçador',heights:{'16':'Muito pequeno · 16 px','32':'Pequeno · 32 px','48':'Médio · 48 px','64':'Grande · 64 px','96':'Muito grande · 96 px'}},preformatted:{label:'Código pré-formatado',defaultText:'',tooLarge:'O bloco de código excede o limite de 256 KiB.'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},typeLabels:{}}, this.options.strings || {});
       const rawInitial = this.options.document || { format_version: 1, blocks: [] };
       const initial = upgradeDocument(rawInitial);
       const validation = validateDocument(initial);
@@ -416,6 +425,16 @@
     categoryLabel(category) { return category === 'media' ? this.strings.categoryMedia : (category === 'layout' ? this.strings.categoryLayout : this.strings.categoryContent); }
 
     bind() {
+      global.document.addEventListener('keydown', (event) => {
+        if (!this.fullscreen) return;
+        if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); this.setFullscreen(false); return; }
+        if (event.key !== 'Tab') return;
+        const focusable = Array.from(this.root.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter((item) => item.getClientRects().length > 0);
+        if (!focusable.length) { event.preventDefault(); this.root.focus(); return; }
+        const first = focusable[0], last = focusable[focusable.length - 1];
+        if (event.shiftKey && (global.document.activeElement === first || !this.root.contains(global.document.activeElement))) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && (global.document.activeElement === last || !this.root.contains(global.document.activeElement))) { event.preventDefault(); first.focus(); }
+      }, true);
       global.document.addEventListener('blog-block-file-selected', (event) => { const detail = event.detail || {}; if (detail.editor !== this || !detail.nodeId || typeof detail.path !== 'string') return; this.updateNode(detail.nodeId, (node) => { if (node.type === 'core/file') node.attributes.src = detail.path; }); });
       global.document.addEventListener('blog-block-audio-selected', (event) => { const detail = event.detail || {}; if (detail.editor !== this || !detail.nodeId || typeof detail.path !== 'string') return; this.updateNode(detail.nodeId, (node) => { if (node.type === 'core/audio') node.attributes.src = detail.path; }); });
       this.root.addEventListener('mousedown', (event) => {
@@ -550,7 +569,37 @@
       else if (name.startsWith('table-')) this.updateTable(name, button.dataset.nodeId || this.selectedId);
       else if (name === 'link-apply') this.applyInlineLink(this.linkDraft);
       else if (name === 'link-remove') this.applyInlineLink(null);
+      else if (name === 'toggle-fullscreen') this.setFullscreen(!this.fullscreen);
       else if (name === 'preview') { this.preview = button.dataset.size; this.root.dataset.preview = this.preview; this.root.querySelectorAll('[data-action="preview"]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.size === this.preview))); }
+    }
+
+    setFullscreen(enabled) {
+      const next = !!enabled;
+      if (next === this.fullscreen) return;
+      if (next) {
+        this.fullscreenReturnFocus = global.document.activeElement;
+        this.fullscreenPreviousAttrs = { role:this.root.getAttribute('role'), modal:this.root.getAttribute('aria-modal'), label:this.root.getAttribute('aria-label') };
+        this.fullscreen = true;
+        this.root.classList.add('is-fullscreen');
+        this.root.setAttribute('role','dialog'); this.root.setAttribute('aria-modal','true'); this.root.setAttribute('aria-label',this.strings.fullscreenDialog);
+        global.document.body.classList.add('rb-bdre-fullscreen-open');
+        this.render();
+        const focusExit = () => { const target=this.root.querySelector('[data-action="toggle-fullscreen"]'); if (target) target.focus(); };
+        if (global.requestAnimationFrame) global.requestAnimationFrame(focusExit); else global.setTimeout(focusExit,0);
+        return;
+      }
+      this.fullscreen = false;
+      this.root.classList.remove('is-fullscreen');
+      const previous = this.fullscreenPreviousAttrs || {};
+      if (previous.role === null) this.root.removeAttribute('role'); else if (previous.role !== undefined) this.root.setAttribute('role',previous.role);
+      if (previous.modal === null) this.root.removeAttribute('aria-modal'); else if (previous.modal !== undefined) this.root.setAttribute('aria-modal',previous.modal);
+      if (previous.label === null) this.root.removeAttribute('aria-label'); else if (previous.label !== undefined) this.root.setAttribute('aria-label',previous.label);
+      if (!global.document.querySelector('.rb-editor.is-fullscreen')) global.document.body.classList.remove('rb-bdre-fullscreen-open');
+      const returnFocus = this.fullscreenReturnFocus;
+      this.fullscreenReturnFocus = null; this.fullscreenPreviousAttrs = null;
+      this.render();
+      const target = returnFocus && returnFocus.isConnected ? returnFocus : this.root.querySelector('[data-action="toggle-fullscreen"]');
+      if (target) target.focus();
     }
 
     findEditor(id) { return Array.from(this.root.querySelectorAll('[data-edit-content]')).find((node) => node.dataset.editContent === id) || null; }
@@ -1183,7 +1232,7 @@
     }
     button(label, action, extra) {
       const b = this.el('button', 'rb-button'); b.type = 'button'; b.dataset.action = action;
-      const type = extra && extra.type; let iconName = (type && TYPE_ICONS[type]) || ACTION_ICONS[action];
+      const type = extra && extra.type; let iconName = (extra && extra.icon) || (type && TYPE_ICONS[type]) || ACTION_ICONS[action];
       if (action === 'preview' && extra && extra.size) iconName = extra.size === 'mobile' ? 'mobile' : (extra.size === 'tablet' ? 'tablet' : 'desktop');
       if (action === 'format-mark' && extra && extra.mark) iconName = ({bold:'bold',italic:'italic',underline:'underline',strike:'strike',code:'code',link:'link'})[extra.mark] || 'settings';
       if (iconName) b.append(this.icon(iconName, 'rb-icon'));
@@ -1212,6 +1261,8 @@
       const previews = this.el('div', 'rb-previews rb-toolbar-group');
       [['desktop',this.strings.previewDesktop],['tablet',this.strings.previewTablet],['mobile',this.strings.previewMobile]].forEach(([size,label]) => { const b = this.button(label, 'preview', { size }); b.setAttribute('aria-pressed', String(size === this.preview)); previews.append(b); });
       toolbar.append(previews);
+      const fullscreen = this.button(this.fullscreen ? this.strings.fullscreenExit : this.strings.fullscreenEnter, 'toggle-fullscreen', { icon:this.fullscreen ? 'collapse' : 'expand' });
+      fullscreen.classList.add('rb-fullscreen-toggle'); toolbar.append(fullscreen);
       const shortcutHelp = this.el('details', 'rb-keyboard-help');
       shortcutHelp.append(this.el('summary', '', this.strings.keyboardShortcutsTitle));
       shortcutHelp.append(this.el('p', 'rb-keyboard-help-text', this.strings.keyboardShortcuts));
@@ -1227,7 +1278,9 @@
       const footText = this.options.connectedSave === true
         ? 'As alterações ficam no formulário e só são persistidas ao clicar em Salvar; não há autosave.'
         : 'Rascunho em memória · não salva nem publica. O salvamento será conectado numa tarefa posterior.';
-      const foot = this.el('p', 'rb-note', footText); this.root.append(foot);
+      const foot = this.el('p', 'rb-note', footText);
+      if (this.fullscreen) { const done = this.button(this.strings.fullscreenExit,'toggle-fullscreen',{icon:'collapse'}); done.classList.add('rb-fullscreen-done'); foot.append(done); }
+      this.root.append(foot);
       const live = this.el('span','rb-sr-only',this.statusMessage); live.setAttribute('role','status'); live.setAttribute('aria-live','polite'); live.dataset.editorStatus = '1'; this.root.append(live);
       this.updateHistoryButtons();
       this.updateClipboardButtons();

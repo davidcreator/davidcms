@@ -1,32 +1,27 @@
-# BDREditor — Interface moderna
+# BDREditor — Reabertura de Páginas + edição imersiva
 
-Incremento visual de BDREditor, baseado nos arquivos pontuais consultados na branch `main` do ReamurCMS em `598d353aabdd0cf72b3978c8257d9cea891da2b1`.
+Incremento preparado sobre o `main` consultado em `3604235c27e858d4ab97cdb71e86714fc74274aa`.
 
-## Entrega
+## Correção da reabertura (`node_fields_invalid`)
 
-Substitua os arquivos no projeto pelos de `dev/`, mantendo os caminhos:
+O serializer PHP decodificava o JSON em arrays associativos. Um objeto vazio de atributos (`{}`) virava um array PHP vazio e era serializado novamente como `[]`. O validador do navegador exige atributos como objeto, por isso o documento salvo era bloqueado ao reabrir.
 
-- `dev/admin/view/css/blog-block-editor.css`
-- `dev/admin/view/js/blog-block-editor.js`
+A correção serializa `attributes` como objeto JSON. O controller de CMS > Páginas também canonicaliza envelopes v2 existentes em memória antes de montar o editor. Assim, documentos já afetados podem ser abertos; quando salvos novamente, a forma canônica é persistida no fluxo normal da página. Não há migração nem escrita automática ao abrir.
 
-O incremento atualiza a linguagem visual e adiciona ícones SVG inline autorais, sem dependência externa, CDN ou incorporação de código/assets do Gutenberg. Mantém o modelo de documento, validação, persistência e comportamento funcional existentes.
+## Edição em tela cheia
 
-## Mudanças visuais
+O botão **Abrir em tela cheia** transforma o editor num espaço de edição que ocupa a janela. O botão **Voltar ao formulário** e `Esc` encerram o modo; o foco volta ao acionador, Tab permanece dentro do editor enquanto o diálogo está aberto e a rolagem do formulário de fundo fica bloqueada. O modo é responsivo e os rótulos usam português, espanhol ou inglês conforme `lang` no documento.
 
-- Cabeçalho de identidade BDREditor com subtítulo localizado pelo pacote de strings existente.
-- Barra de comandos agrupada, botões primários/terciários e seletores de viewport com ícones distintos.
-- Ícones SVG inline para ações, tipos de bloco, inserter, estrutura, configurações, formato inline e controles de tabela.
-- Canvas em estilo de folha, contornos e estados de foco/seleção mais claros.
-- Inserter em cartões pesquisáveis, painel de estrutura e inspetor com superfícies e hierarquia visual consistentes.
-- Responsividade, redução de movimento, modo de alto contraste/forced-colors e foco visível.
-- Labels acessíveis mantidos; SVGs são decorativos e `aria-hidden`.
+A tela cheia não salva automaticamente: é preciso voltar ao formulário e usar o botão Salvar existente. Não muda o schema ou o comportamento de persistência.
 
-## Preview
+## Aplicar
 
-`preview/index.html` é uma demonstração isolada. Sirva o diretório do pacote com um servidor estático (por exemplo, `python3 -m http.server 8000`) e abra `/preview/`. Ela usa apenas arquivos locais deste pacote.
+Copie os quatro arquivos do diretório `dev/` para os mesmos caminhos no checkout atualizado do projeto. O pacote não contém a aplicação completa; é um overlay incremental. Revise o diff antes de aplicar.
 
-## Testes e limites
+## Verificação
 
-- `tests/check_modern_ui.js`: verificações estáticas de presença de ícones, acessibilidade, responsividade e redução de movimento.
-- Os checkers estáticos existentes do editor foram executados contra o JavaScript visual atualizado: resultados registrados em `docs/BDREditor-Modern-Interface.md`.
-- Não foi executado PHP, banco, staging, produção, GitHub write ou deploy. Não há alteração funcional nem migration.
+- `tests/check_reopen_and_immersive.js`: 11 verificações PASS, incluindo reprodução da forma quebrada e validação pelo cliente.
+- 19 checkers/suítes E2E estáticas executados contra os arquivos atualizados: PASS.
+- `node --check` no editor: PASS.
+- PHP não está instalado neste ambiente: não foi possível executar `php -l`, nem uma requisição real do controller ou round-trip no banco.
+- GitHub foi consultado somente para leitura; sem commits, push, banco, migrations, staging ou produção.

@@ -250,3 +250,20 @@
 @media(max-width:560px){.rb-editor{border-radius:.75rem}.rb-editor-masthead{align-items:flex-start;padding:.8rem}.rb-brand-icon{width:2.25rem;height:2.25rem}.rb-editor-mode{font-size:.65rem}.rb-toolbar{gap:.4rem;padding:.6rem}.rb-history{margin-left:0}.rb-keyboard-help{flex-basis:100%}.rb-layout{gap:.65rem;padding:.65rem}.rb-canvas{padding:.75rem}.rb-inserter-menu{padding:.7rem}.rb-inserter-category{padding:.55rem}.rb-button{min-height:2.15rem;padding:.38rem .55rem}.rb-button-icon-only{width:2.15rem;padding:.35rem}}
 @media(prefers-reduced-motion:reduce){.rb-button,.rb-block,.rb-canvas{transition:none!important}}
 @media(forced-colors:active){.rb-button,.rb-block,.rb-outline,.rb-inspector,.rb-canvas{border:1px solid CanvasText}.rb-button:focus-visible,.rb-content:focus-visible,.rb-input:focus-visible{outline:2px solid Highlight}}
+
+/* Immersive editing mode: viewport-filling editor, explicit return to the parent form. */
+body.rb-bdre-fullscreen-open{overflow:hidden!important}
+.rb-editor.is-fullscreen{position:fixed;inset:0;z-index:12000;display:flex;flex-direction:column;width:100vw;height:100vh;height:100dvh;max-height:100dvh;margin:0;border:0;border-radius:0;overflow:hidden;background:#fff;box-shadow:none}
+.rb-editor.is-fullscreen .rb-editor-masthead{flex:0 0 auto;padding:.75rem 1.25rem}
+.rb-editor.is-fullscreen .rb-toolbar{position:relative;top:auto;flex:0 0 auto;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}
+.rb-editor.is-fullscreen .rb-fullscreen-toggle{margin-left:auto;color:#34445f;background:#f6f8fc}
+.rb-editor.is-fullscreen .rb-inserter-menu:not([hidden]){flex:0 0 auto;max-height:34vh;overflow:auto}
+.rb-editor.is-fullscreen .rb-layout{flex:1 1 auto;min-height:0;overflow:hidden;align-items:stretch;grid-template-columns:minmax(12rem,15rem) minmax(0,1fr) minmax(15rem,19rem);padding:1rem 1.25rem}
+.rb-editor.is-fullscreen .rb-outline,.rb-editor.is-fullscreen .rb-inspector{position:static;top:auto;height:100%;max-height:100%;overflow:auto;overscroll-behavior:contain}
+.rb-editor.is-fullscreen .rb-canvas{width:100%;height:100%;max-width:none;min-height:0;overflow:auto;overscroll-behavior:contain}
+.rb-editor.is-fullscreen .rb-note{flex:0 0 auto;justify-content:space-between;gap:1rem;padding:.65rem 1.25rem}
+.rb-fullscreen-done{flex:0 0 auto;white-space:nowrap}
+.rb-editor.is-fullscreen .rb-toolbar-group{flex:0 0 auto}
+@media(max-width:900px){.rb-editor.is-fullscreen .rb-layout{grid-template-columns:minmax(0,1fr);overflow:auto}.rb-editor.is-fullscreen .rb-outline,.rb-editor.is-fullscreen .rb-inspector{height:auto;max-height:32vh;position:static}.rb-editor.is-fullscreen .rb-canvas{height:auto;min-height:45vh;overflow:visible}}
+@media(max-width:560px){.rb-editor.is-fullscreen .rb-editor-masthead{padding:.55rem .7rem}.rb-editor.is-fullscreen .rb-toolbar{flex-wrap:wrap;white-space:normal}.rb-editor.is-fullscreen .rb-layout{gap:.55rem;padding:.6rem;overflow:auto}.rb-editor.is-fullscreen .rb-outline,.rb-editor.is-fullscreen .rb-inspector{max-height:none}.rb-editor.is-fullscreen .rb-note{align-items:flex-start;flex-direction:column;padding:.55rem .7rem}.rb-editor.is-fullscreen .rb-fullscreen-done{align-self:flex-end}}
+@media(prefers-reduced-motion:reduce){.rb-editor.is-fullscreen{scroll-behavior:auto}}

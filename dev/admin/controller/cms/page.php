@@ -433,6 +433,8 @@ class Page extends \Reamur\System\Engine\Controller {
                 $decoded = (new \Reamur\System\Library\Blog\BlockDocument())->deserializeDocument($blockJson);
                 if (!empty($decoded['valid']) && is_array($decoded['document']) && ($decoded['document']['format_version'] ?? null) === 2) {
                     $blockMode = 'blocks';
+                    // Canonicalize in memory on read too: older PHP JSON encoding wrote empty attributes as [] instead of {}.
+                    $blockJson = (new \Reamur\System\Library\Blog\BlockDocument())->serializeDocument($decoded['document']);
                 } else {
                     $blockMode = 'invalid';
                 }

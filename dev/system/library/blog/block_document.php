@@ -132,7 +132,7 @@ class BlockDocument {
         $children = [];
         foreach ($node['children'] as $child) $children[] = $this->canonicalNode($child, $version);
         $content = $version === self::RICH_TEXT_FORMAT_VERSION && is_array($node['content']) ? $this->canonicalRuns($node['content']) : $node['content'];
-        return ['id' => $node['id'], 'type' => $node['type'], 'attributes' => $attributes, 'children' => $children, 'content' => $content];
+        return ['id' => $node['id'], 'type' => $node['type'], 'attributes' => (object)$attributes, 'children' => $children, 'content' => $content];
     }
 
     private function validateNode($node, int $depth, ?string $parentType, array &$ids, array &$errors, int &$count, int $version): void {
