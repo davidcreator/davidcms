@@ -35,8 +35,27 @@
             </div>
             <div class="field mb-3">
               <label class="form-label" for="input-description-{{ language.language_id }}">{{ entry_description }}</label>
-              <textarea class="form-control" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="10">{{ language.fields.description }}</textarea>
-              <p class="form-text">{{ help_description }}</p>
+              {% if language.fields.block_mode == 'blocks' %}
+                <input type="hidden" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" value="{{ language.fields.block_stored_value|e('html_attr') }}">
+                <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="blocks">
+                <input type="hidden" name="page_editor_ready[{{ language.language_id }}]" id="page-editor-ready-{{ language.language_id }}" value="">
+                <div class="bdre-page-editor" data-blog-block-editor
+                     data-hidden-input="input-description-{{ language.language_id }}"
+                     data-ready-input="page-editor-ready-{{ language.language_id }}"
+                     data-document="{{ language.fields.block_document|e('html_attr') }}"
+                     data-storage-prefix="REAMURCMS_BDRE_JSON_V2:"
+                     data-media-pickers="false"
+                     data-editor-strings="{{ block_editor_strings|json_encode|e('html_attr') }}"
+                     aria-label="{{ entry_description|e('html_attr') }}"></div>
+                <p class="form-text">{{ help_description }} {{ text_block_editor_intro }}</p>
+              {% elseif language.fields.block_mode == 'invalid' %}
+                <input type="hidden" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" value="{{ language.fields.description|e('html_attr') }}">
+                <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="invalid">
+                <div class="alert alert-warning" role="status">O documento BDREditor armazenado não passou na validação. O conteúdo original será preservado; corrija ou restaure o documento antes de editar.</div>
+              {% else %}
+                <textarea class="form-control" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="10">{{ language.fields.description }}</textarea>
+                <p class="form-text">{{ help_description }}{% if language.fields.description %} O conteúdo legado não foi convertido automaticamente porque sua estrutura não pôde ser preservada com segurança; ele permanece editável como texto original.{% endif %}</p>
+              {% endif %}
             </div>
             <h3 class="h6 text-body-secondary mt-4 mb-2">{{ text_meta_group }}</h3>
             <div class="row g-3">

@@ -69,6 +69,7 @@
           document: initial,
           strings: editorStrings,
           connectedSave: true,
+          mediaPickers: root.dataset.mediaPickers !== 'false',
           onChange: function (doc, validation) {
             if (hidden && (!validation.valid || !doc)) hidden.value = '';
             root.dataset.valid = validation.valid ? 'true' : 'false';
@@ -79,7 +80,7 @@
         });
         root.__blogBlockEditorInstance = editor;
         if (hidden && editor.getDocument()) {
-          hidden.value = editor.serialize();
+          hidden.value = (root.dataset.storagePrefix || '') + editor.serialize();
           if (ready) ready.value = '1';
           root.dataset.valid = 'true';
           root.setAttribute('aria-invalid', 'false');
@@ -98,7 +99,7 @@
               var target = document.getElementById(host.dataset.hiddenInput || '');
               try {
                 if (!instance || !target) throw new Error('editor_submission_unavailable');
-                target.value = instance.serialize();
+                target.value = (host.dataset.storagePrefix || '') + instance.serialize();
                 host.dataset.valid = 'true';
                 host.setAttribute('aria-invalid', 'false');
               } catch (error) {

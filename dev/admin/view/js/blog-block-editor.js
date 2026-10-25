@@ -1370,14 +1370,14 @@
       if (n.type === 'core/list') addField('Tipo de lista', 'ordered', n.attributes.ordered ? 'true' : 'false', 'text', [['false','Marcadores'],['true','Numerada']]);
       if (n.type === 'core/file') {
         addField(this.strings.file.source, 'src', n.attributes.src, 'text');
-        aside.append(this.button(this.strings.file.choose, 'file-media', {nodeId:n.id}));
+        if (this.options.mediaPickers !== false) aside.append(this.button(this.strings.file.choose, 'file-media', {nodeId:n.id}));
       }
       if (n.type === 'core/audio') {
         addField(this.strings.audio.source, 'src', n.attributes.src, 'text');
-        aside.append(this.button(this.strings.audio.choose, 'audio-media', {nodeId:n.id}));
+        if (this.options.mediaPickers !== false) aside.append(this.button(this.strings.audio.choose, 'audio-media', {nodeId:n.id}));
       }
       if (n.type === 'core/image') {
-        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); aside.append(this.button(this.strings.media.placeholder, 'media'));
+        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); if (this.options.mediaPickers !== false) aside.append(this.button(this.strings.media.placeholder, 'media'));
         addField(this.strings.media.alt, 'alt', n.attributes.alt, 'text'); addField(this.strings.media.title, 'title', n.attributes.title || '', 'text');
         addField(this.strings.media.caption, 'caption', n.attributes.caption || '', 'textarea');
         addField(this.strings.media.alignment, 'align', n.attributes.align || 'center', 'text', [['left',this.strings.media.alignments.left],['center',this.strings.media.alignments.center],['right',this.strings.media.alignments.right],['wide',this.strings.media.alignments.wide],['full',this.strings.media.alignments.full]]);
@@ -1385,7 +1385,7 @@
         addField(this.strings.media.mobileSize, 'mobile_size', n.attributes.mobile_size || 'full', 'text', Object.entries(this.strings.media.mobileSizes));
       }
       if (n.type === 'core/cover') {
-        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); aside.append(this.button(this.strings.media.placeholder, 'media'));
+        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); if (this.options.mediaPickers !== false) aside.append(this.button(this.strings.media.placeholder, 'media'));
         addField(this.strings.media.alt, 'alt', n.attributes.alt, 'text');
         addField(this.strings.media.alignment, 'align', n.attributes.align || 'wide', 'text', [['content',this.strings.media.alignments.content],['wide',this.strings.media.alignments.wide],['full',this.strings.media.alignments.full]]);
       }

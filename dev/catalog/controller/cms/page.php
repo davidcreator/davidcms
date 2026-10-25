@@ -24,7 +24,21 @@ class Page extends \Reamur\System\Engine\Controller {
         $this->document->setTitle((string)($page['meta_title'] !== '' ? $page['meta_title'] : $page['title']));
         $this->document->setDescription((string)$page['meta_description']);
         $data['heading_title'] = (string)$page['title'];
-        $data['description'] = (string)$page['description'];
+        $storedDescription = (string)$page['description'];
+        $blockPrefix = 'REAMURCMS_BDRE_JSON_V2:';
+        if (str_starts_with($storedDescription, $blockPrefix)) {
+            $json = substr($storedDescription, strlen($blockPrefix));
+            $downloadRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/download/blog';
+            $audioRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/audio/blog';
+            $assetBase = $this->config->get('site_url', '');
+            if (str_ends_with($assetBase, 'admin/')) $assetBase = substr($assetBase, 0, -strlen('admin/'));
+            $rendered = (new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot, $audioRoot))->renderJson($json, 2, $assetBase);
+            $data['description'] = !empty($rendered['valid']) ? (string)$rendered['html'] : '';
+            if (!empty($rendered['valid'])) $this->document->addStyle($this->config->get('site_url') . 'view/css/blog-blocks.css');
+        } else {
+            // Legacy HTML remains on its existing path; the marker is never sent to Twig.
+            $data['description'] = $storedDescription;
+        }
         $data['button_back_home'] = null;
         $data['heading_home'] = $this->language->get('heading_home');
         $data['home'] = $this->config->get('site_url', '');

@@ -111,7 +111,7 @@ class Page extends \Reamur\System\Engine\Controller {
         $data = $this->formData([]);
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $errors = $this->csrfValid() ? $this->validatePage(0) : [$this->language->get('error_csrf')];
+            $errors = $this->csrfValid() ? array_merge($this->validatePage(0), $this->validateBlockSubmission(0)) : [$this->language->get('error_csrf')];
 
             if ($errors === []) {
                 $page_id = $this->model_cms_page->addPage($this->postPayload());
@@ -164,7 +164,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $errors = $this->csrfValid() ? $this->validatePage($page_id) : [$this->language->get('error_csrf')];
+            $errors = $this->csrfValid() ? array_merge($this->validatePage($page_id), $this->validateBlockSubmission($page_id)) : [$this->language->get('error_csrf')];
 
             if ($errors === []) {
                 $this->model_cms_page->editPage($page_id, $this->postPayload());
@@ -242,6 +242,131 @@ class Page extends \Reamur\System\Engine\Controller {
 
         $this->document->addScript($this->config->get('site_url') . 'view/js/cms-page.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
+        $this->load->language('blog/blog');
+        foreach ([
+            'heading_title', 'text_edit', 'text_add', 'text_general', 'text_data',
+            'text_languages_note', 'entry_title', 'entry_description',
+            'entry_meta_title', 'entry_meta_description', 'entry_keyword',
+            'entry_image', 'entry_date_published', 'entry_status', 'help_image', 'help_date_published',
+            'button_save', 'button_cancel',
+            // F8-02: publish sidebar + tabs + contadores + preview de SEO/capa
+            'text_publish_card', 'text_published', 'text_draft', 'text_content_card',
+            'text_meta_group', 'text_seo_url_preview', 'text_cover_preview',
+            'text_status_help', 'text_chars',
+            // F8-05: biblioteca de mídia restrita às imagens do Blog
+            'text_media_library', 'text_media_browse', 'text_media_upload', 'text_media_create_folder',
+            'text_media_external_url', 'text_media_loading', 'text_media_empty', 'text_media_no_matches',
+            'text_media_page', 'text_media_confirm_delete_file', 'text_media_confirm_delete_folder', 'text_media_in_use',
+            'text_media_upload_success', 'text_media_folder_created', 'text_media_file_deleted',
+            'text_media_folder_deleted', 'text_media_upload_hint', 'text_media_no_folders',
+            'text_download_library', 'text_download_empty', 'text_download_upload', 'text_download_hint', 'text_download_limit', 'button_download_select', 'button_download_upload',
+            'text_audio_library', 'text_audio_empty', 'text_audio_hint', 'button_audio_select', 'error_audio_generic',
+            'error_download_upload_no_file', 'error_download_upload_size', 'error_download_upload_type', 'error_download_upload_move', 'error_download_generic',
+            'entry_media_search', 'entry_media_folder_name', 'entry_media_external_url',
+            'button_media_library', 'button_media_upload', 'button_media_create_folder',
+            'button_media_use_url', 'button_media_select', 'button_media_delete',
+            'button_media_back', 'button_media_previous', 'button_media_next', 'button_media_close',
+            'text_block_editor_intro', 'text_block_conversion_note', 'text_block_review_required', 'text_block_invalid', 'text_block_saved',
+            'error_block_schema_unavailable', 'error_block_document_invalid', 'error_block_legacy_review', 'error_block_mode_invalid', 'error_block_editor_unavailable',
+            'text_inline_bold', 'text_inline_italic', 'text_inline_underline', 'text_inline_strike', 'text_inline_code', 'text_inline_link',
+            'text_inline_link_placeholder', 'text_inline_apply_link', 'text_inline_remove_link', 'text_inline_invalid_link',
+            'text_inline_toolbar', 'text_inline_text_label', 'text_inline_placeholder', 'text_inline_editor_label',
+            'text_block_add', 'text_block_search', 'text_block_no_results', 'text_block_category_content', 'text_block_category_media', 'text_block_category_layout',
+            'text_block_outline', 'text_block_outline_empty', 'text_block_outline_label', 'text_block_initial_invalid', 'text_block_document_too_large', 'text_block_move_up', 'text_block_move_down', 'text_block_duplicate', 'text_block_transform',
+            'text_block_remove', 'text_block_add_after', 'text_block_drag', 'text_block_type_paragraph', 'text_block_type_heading', 'text_block_type_list',
+            'text_block_type_image', 'text_block_type_file', 'text_block_file_source', 'text_block_file_choose', 'text_block_type_audio', 'text_block_audio_source', 'text_block_audio_choose', 'text_block_type_callout', 'text_block_type_details', 'text_block_type_spacer', 'text_block_type_code', 'text_block_code_label', 'text_block_code_default', 'text_block_code_too_large', 'text_block_spacer_height', 'text_block_spacer_16', 'text_block_spacer_32', 'text_block_spacer_48', 'text_block_spacer_64', 'text_block_spacer_96', 'text_block_details_summary_label', 'text_block_details_summary_default', 'text_block_details_default', 'text_block_callout_default', 'text_block_callout_tone', 'text_block_callout_tone_info', 'text_block_callout_tone_success', 'text_block_callout_tone_warning', 'text_block_callout_tone_danger', 'text_block_type_quote', 'text_block_type_video', 'text_block_type_button', 'text_block_type_separator',
+            'text_block_type_group', 'text_block_type_columns', 'text_block_type_list_item', 'text_block_type_column', 'text_block_transform_hint', 'text_block_insert_empty',
+            'text_block_status_inserted', 'text_block_status_moved', 'text_block_status_duplicated', 'text_block_status_transformed',
+            'text_block_status_removed', 'text_block_status_undo', 'text_block_status_redo',
+            'text_block_undo', 'text_block_redo', 'text_block_indent', 'text_block_outdent', 'text_block_status_indented', 'text_block_status_outdented', 'text_block_hierarchy_move_unavailable', 'text_block_copy', 'text_block_paste', 'text_block_status_copied', 'text_block_status_pasted', 'text_block_paste_unavailable', 'text_block_navigation_path', 'text_block_navigation_row', 'text_block_navigation_cell', 'text_block_status_focus_changed', 'text_block_outline_keyboard_hint', 'text_block_status_outline_changed', 'text_block_keyboard_shortcuts_title', 'text_block_keyboard_shortcuts', 'text_block_preview_desktop', 'text_block_preview_tablet', 'text_block_preview_mobile',
+            'text_block_editor_tools', 'text_block_canvas', 'text_block_canvas_empty', 'text_block_inspector', 'text_block_inspector_empty', 'text_block_column_count',
+            'text_block_type_gallery', 'text_block_type_cover', 'text_block_type_table', 'text_block_table_header', 'text_block_table_add_row', 'text_block_table_remove_row', 'text_block_table_add_column', 'text_block_table_remove_column', 'text_block_table_toggle_header', 'text_block_table_cell_label', 'text_block_caption', 'text_block_alignment', 'text_block_image_size', 'text_block_mobile_size',
+            'text_block_gallery_columns', 'text_block_media_source', 'text_block_image_alt', 'text_block_image_title',
+            'text_block_align_left', 'text_block_align_center', 'text_block_align_right', 'text_block_align_content', 'text_block_align_wide', 'text_block_align_full',
+            'text_block_size_small', 'text_block_size_medium', 'text_block_size_large', 'text_block_size_full',
+            'text_block_mobile_full', 'text_block_mobile_large', 'text_block_mobile_medium',
+            'text_block_video_preview', 'text_block_video_preview_hint', 'text_block_media_placeholder',
+            'text_block_pattern_category', 'text_block_pattern_two_columns', 'text_block_pattern_quote_cta', 'text_block_pattern_section_intro',
+            'text_block_pattern_cover_hero', 'text_block_pattern_hint', 'text_block_save_state_saved', 'text_block_save_state_unsaved', 'text_block_save_state_saving',
+        ] as $key) {
+            $data[$key] = $this->language->get($key);
+        }
+
+        $data['block_editor_strings'] = [
+            'bold' => $data['text_inline_bold'], 'italic' => $data['text_inline_italic'],
+            'underline' => $data['text_inline_underline'], 'strike' => $data['text_inline_strike'], 'code' => $data['text_inline_code'],
+            'link' => $data['text_inline_link'], 'linkPlaceholder' => $data['text_inline_link_placeholder'],
+            'applyLink' => $data['text_inline_apply_link'], 'removeLink' => $data['text_inline_remove_link'],
+            'invalidLink' => $data['text_inline_invalid_link'], 'toolbar' => $data['text_inline_toolbar'],
+            'textLabel' => $data['text_inline_text_label'], 'placeholder' => $data['text_inline_placeholder'],
+            'editorLabel' => $data['text_inline_editor_label'],
+            'saveStateSaved' => $data['text_block_save_state_saved'], 'saveStateUnsaved' => $data['text_block_save_state_unsaved'], 'saveStateSaving' => $data['text_block_save_state_saving'],
+            'addBlock' => $data['text_block_add'], 'searchBlocks' => $data['text_block_search'], 'noBlocks' => $data['text_block_no_results'],
+            'categoryContent' => $data['text_block_category_content'], 'categoryMedia' => $data['text_block_category_media'], 'categoryLayout' => $data['text_block_category_layout'],
+            'outline' => $data['text_block_outline'], 'outlineEmpty' => $data['text_block_outline_empty'], 'outlineLabel' => $data['text_block_outline_label'], 'initialInvalid' => $data['text_block_initial_invalid'], 'documentTooLarge' => $data['text_block_document_too_large'], 
+            'moveUp' => $data['text_block_move_up'], 'moveDown' => $data['text_block_move_down'], 'duplicate' => $data['text_block_duplicate'],
+            'transform' => $data['text_block_transform'], 'remove' => $data['text_block_remove'], 'addAfter' => $data['text_block_add_after'],
+            'dragHint' => $data['text_block_drag'], 'transformHint' => $data['text_block_transform_hint'], 'insertEmpty' => $data['text_block_insert_empty'],
+            'statusInserted' => $data['text_block_status_inserted'], 'statusMoved' => $data['text_block_status_moved'],
+            'statusDuplicated' => $data['text_block_status_duplicated'], 'statusTransformed' => $data['text_block_status_transformed'],
+            'statusRemoved' => $data['text_block_status_removed'], 'statusUndo' => $data['text_block_status_undo'], 'statusRedo' => $data['text_block_status_redo'],
+            'undo' => $data['text_block_undo'], 'redo' => $data['text_block_redo'],
+            'copyBlock' => $data['text_block_copy'], 'pasteBlock' => $data['text_block_paste'],
+            'indentBlock' => $data['text_block_indent'], 'outdentBlock' => $data['text_block_outdent'],
+            'statusIndented' => $data['text_block_status_indented'], 'statusOutdented' => $data['text_block_status_outdented'],
+            'hierarchyMoveUnavailable' => $data['text_block_hierarchy_move_unavailable'],
+            'statusCopied' => $data['text_block_status_copied'], 'statusPasted' => $data['text_block_status_pasted'],
+            'pasteUnavailable' => $data['text_block_paste_unavailable'],
+            'navigationPath' => $data['text_block_navigation_path'], 'navigationRow' => $data['text_block_navigation_row'], 'navigationCell' => $data['text_block_navigation_cell'],
+            'statusFocusChanged' => $data['text_block_status_focus_changed'],
+            'outlineKeyboardHint' => $data['text_block_outline_keyboard_hint'], 'statusOutlineChanged' => $data['text_block_status_outline_changed'],
+            'keyboardShortcutsTitle' => $data['text_block_keyboard_shortcuts_title'], 'keyboardShortcuts' => $data['text_block_keyboard_shortcuts'],
+            'previewDesktop' => $data['text_block_preview_desktop'], 'previewTablet' => $data['text_block_preview_tablet'], 'previewMobile' => $data['text_block_preview_mobile'],
+            'editorTools' => $data['text_block_editor_tools'], 'canvas' => $data['text_block_canvas'], 'canvasEmpty' => $data['text_block_canvas_empty'],
+            'inspector' => $data['text_block_inspector'], 'inspectorEmpty' => $data['text_block_inspector_empty'], 'columnCount' => $data['text_block_column_count'],
+            'typeLabels' => [
+                'core/paragraph' => $data['text_block_type_paragraph'], 'core/heading' => $data['text_block_type_heading'],
+                'core/list' => $data['text_block_type_list'], 'core/image' => $data['text_block_type_image'],
+                'core/quote' => $data['text_block_type_quote'], 'core/callout' => $data['text_block_type_callout'], 'core/details' => $data['text_block_type_details'], 'core/spacer' => $data['text_block_type_spacer'], 'core/code' => $data['text_block_type_code'], 'core/video_embed' => $data['text_block_type_video'],
+                'core/button' => $data['text_block_type_button'], 'core/separator' => $data['text_block_type_separator'],
+                'core/group' => $data['text_block_type_group'], 'core/columns' => $data['text_block_type_columns'],
+                'core/list-item' => $data['text_block_type_list_item'], 'core/column' => $data['text_block_type_column'],
+                'core/gallery' => $data['text_block_type_gallery'], 'core/cover' => $data['text_block_type_cover'], 'core/table' => $data['text_block_type_table'], 'core/file' => $data['text_block_type_file'], 'core/audio' => $data['text_block_type_audio'],
+            ],
+            'preformatted' => ['label' => $data['text_block_code_label'], 'defaultText' => $data['text_block_code_default'], 'tooLarge' => $data['text_block_code_too_large']],
+            'spacer' => ['heightLabel' => $data['text_block_spacer_height'], 'heights' => ['16' => $data['text_block_spacer_16'], '32' => $data['text_block_spacer_32'], '48' => $data['text_block_spacer_48'], '64' => $data['text_block_spacer_64'], '96' => $data['text_block_spacer_96']]],
+            'details' => ['summaryLabel' => $data['text_block_details_summary_label'], 'summaryDefault' => $data['text_block_details_summary_default'], 'defaultText' => $data['text_block_details_default']],
+            'callout' => ['defaultText' => $data['text_block_callout_default'], 'tone' => $data['text_block_callout_tone'],  'tones' => ['info' => $data['text_block_callout_tone_info'], 'success' => $data['text_block_callout_tone_success'], 'warning' => $data['text_block_callout_tone_warning'], 'danger' => $data['text_block_callout_tone_danger']]],
+            'file' => ['source' => $data['text_block_file_source'], 'choose' => $data['text_block_file_choose']],
+            'audio' => ['source' => $data['text_block_audio_source'], 'choose' => $data['text_block_audio_choose'], 'catalogBase' => $this->pageCatalogAssetUrl()],
+            'table' => [
+                'header' => $data['text_block_table_header'], 'addRow' => $data['text_block_table_add_row'],
+                'removeRow' => $data['text_block_table_remove_row'], 'addColumn' => $data['text_block_table_add_column'],
+                'removeColumn' => $data['text_block_table_remove_column'], 'toggleHeader' => $data['text_block_table_toggle_header'],
+                'cellLabel' => $data['text_block_table_cell_label'],
+            ],
+            'media' => [
+                'caption' => $data['text_block_caption'], 'alignment' => $data['text_block_alignment'],
+                'imageSize' => $data['text_block_image_size'], 'mobileSize' => $data['text_block_mobile_size'],
+                'galleryColumns' => $data['text_block_gallery_columns'], 'source' => $data['text_block_media_source'],
+                'alt' => $data['text_block_image_alt'], 'title' => $data['text_block_image_title'],
+                'videoPreview' => $data['text_block_video_preview'], 'videoPreviewHint' => $data['text_block_video_preview_hint'],
+                'placeholder' => $data['text_block_media_placeholder'],
+                'alignments' => ['left'=>$data['text_block_align_left'],'center'=>$data['text_block_align_center'],'right'=>$data['text_block_align_right'],'content'=>$data['text_block_align_content'],'wide'=>$data['text_block_align_wide'],'full'=>$data['text_block_align_full']],
+                'sizes' => ['small'=>$data['text_block_size_small'],'medium'=>$data['text_block_size_medium'],'large'=>$data['text_block_size_large'],'full'=>$data['text_block_size_full']],
+                'mobileSizes' => ['full'=>$data['text_block_mobile_full'],'large'=>$data['text_block_mobile_large'],'medium'=>$data['text_block_mobile_medium']],
+            ],
+            'patternsCategory' => $data['text_block_pattern_category'],
+            'patternHint' => $data['text_block_pattern_hint'],
+            'patternLabels' => ['two_columns'=>$data['text_block_pattern_two_columns'],'quote_cta'=>$data['text_block_pattern_quote_cta'],'section_intro'=>$data['text_block_pattern_section_intro'],'cover_hero'=>$data['text_block_pattern_cover_hero']],
+        ];
+
+            $site = $this->config->get('site_url');
+            $version = \Reamur\Admin\Controller\Common\Header::ASSET_V;
+            $this->document->addStyle($site . 'view/css/blog-block-editor.css?v=' . $version);
+            $this->document->addScript($site . 'view/js/blog-block-editor.js?v=' . $version);
+            $this->document->addScript($site . 'view/js/blog-block-editor-init.js?v=' . $version);
+
         $data['error']      = '';
         $data['text_flash'] = '';
         $data['can_modify'] = $this->user->hasPermission('modify', 'cms/page');
@@ -298,6 +423,35 @@ class Page extends \Reamur\System\Engine\Controller {
             }
 
             $fields['keyword'] = (string)($post['page_description'][$lid]['keyword'] ?? ($keywords[$lid] ?? ''));
+            $description = $fields['description'];
+            $blockPrefix = 'REAMURCMS_BDRE_JSON_V2:';
+            $blockMode = 'legacy';
+            $blockJson = '';
+            $storedBlockValue = $description;
+            if (str_starts_with($description, $blockPrefix)) {
+                $blockJson = substr($description, strlen($blockPrefix));
+                $decoded = (new \Reamur\System\Library\Blog\BlockDocument())->deserializeDocument($blockJson);
+                if (!empty($decoded['valid']) && is_array($decoded['document']) && ($decoded['document']['format_version'] ?? null) === 2) {
+                    $blockMode = 'blocks';
+                } else {
+                    $blockMode = 'invalid';
+                }
+            } elseif ($description === '') {
+                // Empty new descriptions can always open the editor without DOM conversion.
+                $blockMode = 'blocks';
+                $blockJson = '{"format_version":2,"blocks":[]}';
+                $storedBlockValue = $blockPrefix . $blockJson;
+            } else {
+                $conversion = (new \Reamur\System\Library\Blog\BlockDocument())->convertLegacy($description);
+                if (($conversion['status'] ?? '') === 'converted' && is_array($conversion['document'] ?? null)) {
+                    $blockMode = 'blocks';
+                    $blockJson = json_encode($conversion['document'], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                    $storedBlockValue = $blockPrefix . (is_string($blockJson) ? $blockJson : '');
+                }
+            }
+            $fields['block_mode'] = $blockMode;
+            $fields['block_document'] = $blockJson;
+            $fields['block_stored_value'] = $storedBlockValue;
 
             $data['languages'][] = [
                 'language_id' => $lid,
@@ -329,9 +483,16 @@ class Page extends \Reamur\System\Engine\Controller {
         foreach ((array)($post['page_description'] ?? []) as $lid => $d) {
             $d = (array)$d;
 
+            $description = (string)($d['description'] ?? '');
+            if (($post['page_block_mode'][$lid] ?? '') === 'blocks' && str_starts_with($description, 'REAMURCMS_BDRE_JSON_V2:')) {
+                $decoded = (new \Reamur\System\Library\Blog\BlockDocument())->deserializeDocument(substr($description, strlen('REAMURCMS_BDRE_JSON_V2:')));
+                if (!empty($decoded['valid']) && is_array($decoded['document']) && ($decoded['document']['format_version'] ?? null) === 2) {
+                    $description = 'REAMURCMS_BDRE_JSON_V2:' . (new \Reamur\System\Library\Blog\BlockDocument())->serializeDocument($decoded['document']);
+                }
+            }
             $descriptions[(int)$lid] = [
                 'title'            => mb_substr(trim((string)($d['title'] ?? '')), 0, 255),
-                'description'      => trim((string)($d['description'] ?? '')),
+                'description'      => ($post['page_block_mode'][$lid] ?? '') === 'blocks' ? $description : ((($post['page_block_mode'][$lid] ?? '') === 'invalid') ? (string)($d['description'] ?? '') : trim((string)($d['description'] ?? ''))),
                 'meta_title'       => mb_substr(trim((string)($d['meta_title'] ?? '')), 0, 255),
                 'meta_description' => mb_substr(trim((string)($d['meta_description'] ?? '')), 0, 255),
                 'keyword'          => mb_substr(trim((string)($d['keyword'] ?? '')), 0, 64),
@@ -382,6 +543,49 @@ class Page extends \Reamur\System\Engine\Controller {
         }
 
         return $errors;
+    }
+
+    /** Validate every editor payload; submission is rejected if JS did not initialize or JSON is invalid. */
+    private function validateBlockSubmission(int $pageId): array {
+        $errors = [];
+        $post = (array)$this->request->post;
+        $modes = (array)($post['page_block_mode'] ?? []);
+        $descriptions = (array)($post['page_description'] ?? []);
+        $storedDescriptions = $pageId ? $this->model_cms_page->getPageDescriptions($pageId) : [];
+        $prefix = 'REAMURCMS_BDRE_JSON_V2:';
+        $validator = new \Reamur\System\Library\Blog\BlockDocument();
+        foreach ($descriptions as $languageId => $posted) {
+            $mode = (string)($modes[$languageId] ?? '');
+            $posted = (array)$posted;
+            $description = (string)($posted['description'] ?? '');
+            $hasMarker = str_starts_with($description, $prefix);
+            if ($mode === 'invalid') {
+                $original = (string)($storedDescriptions[(int)$languageId]['description'] ?? '');
+                if (!$pageId || !$hasMarker || !hash_equals($original, $description)) {
+                    $errors[] = 'O conteúdo marcado inválido só pode ser preservado sem alteração; restaure uma versão válida antes de editá-lo.';
+                }
+                continue;
+            }
+            if ($mode !== 'blocks' && !$hasMarker) continue;
+            $ready = (string)($post['page_editor_ready'][$languageId] ?? '');
+            if ($mode !== 'blocks' || $ready !== '1' || !$hasMarker) {
+                $errors[] = 'O editor de blocos não foi inicializado corretamente. Recarregue a página antes de salvar.';
+                continue;
+            }
+            $result = $validator->deserializeDocument(substr($description, strlen($prefix)));
+            if (empty($result['valid']) || !is_array($result['document']) || ($result['document']['format_version'] ?? null) !== 2) {
+                $errors[] = 'O documento do editor é inválido ou excede o limite permitido. O conteúdo não foi salvo.';
+            }
+        }
+        return $errors;
+    }
+
+    /** Public site root used for safe media URLs in page block rendering. */
+    private function pageCatalogAssetUrl(): string {
+        $base = (string)$this->config->get('site_url', '');
+        if (str_ends_with($base, 'admin/')) return substr($base, 0, -strlen('admin/')) . 'catalog/';
+        if (str_ends_with($base, 'catalog/')) return $base;
+        return rtrim($base, '/') . '/catalog/';
     }
 
     /** Token estável da sessão em todas as mutações de cms/page. */
