@@ -1,21 +1,21 @@
-# BDREditor — espaçador vertical
+# BDREditor — código pré-formatado
 
-Incremento cumulativo sobre **BDREditor-Accessible-Details**, no editor exclusivo do ReamurCMS.
+Incremento cumulativo sobre **BDREditor-Vertical-Spacer**. Acrescenta o bloco v2 `core/code`, limitado a texto simples UTF-8 (256 KiB), sem atributos nem filhos.
 
-O novo bloco `core/spacer` oferece presets fixos de **16, 32, 48, 64 ou 96 px**. O editor usa select localizado; cliente e servidor validam o enum. A saída é decorativa (`aria-hidden="true"`) e usa apenas classes CSS fixas — sem estilo arbitrário, conteúdo ou filhos. Compatível somente com documento v2; a raiz e a persistência não mudam.
+A edição usa uma textarea monoespaçada com suporte a tabs e quebras de linha. A renderização pública escapa o texto e usa `<pre><code>`; o conteúdo não é HTML nem executável. O tipo é v2-only, sem migration ou mudança na raiz JSON. Sem syntax highlighting ou dependências externas.
 
 ## Verificações
 
 ```sh
 node --check dev/admin/view/js/blog-block-editor.js
-node tests/check_spacer.js
-node tools/e2e/e2e_bdre_spacer_static.cjs
+node tests/check_preformatted_code.js
+node tools/e2e/e2e_bdre_preformatted_code_static.cjs
 ```
 
-Checker funcional: **15 PASS**; checker estático: **36 PASS**. Suites cumulativas e fixtures JSON também são executadas antes da entrega. PHP lint/runtime não foram executados porque PHP não está instalado; não houve teste em browser real.
+Checker funcional: **11 PASS**; checker estático novo: **29 PASS**. Checkers cumulativos e fixtures JSON passaram. PHP lint/runtime e browser real não foram executados neste ambiente.
 
-- Contrato: `docs/BDREditor-Vertical-Spacer.md`
-- Fixture: `tests/fixtures/core_spacer.json`
-- Checker: `tests/check_spacer.js`
-- Checker estático: `tools/e2e/e2e_bdre_spacer_static.cjs`
-- SHA-256: `SHA256SUMS`
+- Contrato: `docs/BDREditor-Preformatted-Code.md`
+- Fixture: `tests/fixtures/core_code.json`
+- Checker funcional: `tests/check_preformatted_code.js`
+- Checker estático: `tools/e2e/e2e_bdre_preformatted_code_static.cjs`
+- Manifesto: `SHA256SUMS`

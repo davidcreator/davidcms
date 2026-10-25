@@ -78,6 +78,10 @@ final class BlockRenderer {
                 $height = (int)$attributes['height']; // closed numeric enum; styles map only to fixed CSS classes
                 return '<div class="rms-block rms-block-spacer rms-block-spacer--' . $height . '" aria-hidden="true"></div>';
 
+            case 'core/code':
+                $plainCode = $this->escape((string)$node['content']);
+                return '<pre class="rms-block rms-block-code"><code>' . $plainCode . '</code></pre>';
+
             case 'core/image':
                 return $this->renderImageFigure($attributes, $assetBase);
 

@@ -91,3 +91,7 @@
 .rms-block-spacer--48{height:48px}
 .rms-block-spacer--64{height:64px}
 .rms-block-spacer--96{height:96px}
+
+/* BDREditor preformatted code: escaped text only, preserve whitespace, no execution. */
+.rms-block-code{max-width:100%;margin-block:1.25rem;padding:1rem 1.1rem;overflow:auto;border:1px solid var(--blog-border,#d9dee7);border-radius:var(--blog-radius,8px);background:#f4f6f9;color:#192536;font: .9rem/1.55 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;white-space:pre}
+.rms-block-code code{font:inherit;white-space:inherit}

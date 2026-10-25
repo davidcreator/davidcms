@@ -160,3 +160,7 @@
 .rb-block[data-spacer-height="48"] .rb-spacer-preview{height:48px}
 .rb-block[data-spacer-height="64"] .rb-spacer-preview{height:64px}
 .rb-block[data-spacer-height="96"] .rb-spacer-preview{height:96px}
+
+/* Plain-text code editor preserves tabs, spaces, and line breaks. */
+.rb-code-editor{display:block;width:100%;min-height:10rem;max-width:100%;resize:vertical;padding:.75rem;border:1px solid #b9c5d5;border-radius:.35rem;background:#f4f6f9;color:#192536;font: .88rem/1.55 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;white-space:pre;tab-size:2;overflow:auto}
+.rb-code-editor:focus-visible{outline:3px solid #174ea6;outline-offset:2px}

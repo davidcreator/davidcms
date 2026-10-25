@@ -1,17 +1,11 @@
 # Checkers estáticos cumulativos — BDREditor
 
-A partir da raiz do pacote:
+A partir da raiz do pacote, execute todos os E2E estáticos:
 
 ```sh
-node --check dev/admin/view/js/blog-block-editor.js
-node --check tools/e2e/e2e_bdre_outline_keyboard_static.cjs
-node tools/e2e/e2e_bdre_outline_keyboard_static.cjs
-node tools/e2e/e2e_bdre_navigation_static.cjs
-node tools/e2e/e2e_bdre_block_copy_static.cjs
-node tools/e2e/e2e_bdre_keyboard_static.cjs
-node tools/e2e/e2e_bdre_audio_static.cjs
-node tools/e2e/e2e_bdre_file_static.cjs
-python3 -m json.tool tests/fixtures/outline_navigation.json >/dev/null
+for f in tools/e2e/*.cjs; do node "$f" || exit 1; done
 ```
 
-O checker novo executa `getOutlineNavigationTarget` em VM Node sem DOM/browser e inspeciona o listener/strings/estilo. Os outros checkers preservam cobertura estática cumulativa. Nenhum inicializa PHP, aplicação, banco ou servidor.
+Checkers da sequência cumulativa incluem outline por teclado, navegação hierárquica, copy/paste, atalhos, áudio, arquivo/download, reordenação hierárquica, estado de alterações não salvas, callout, detalhes expansíveis, espaçador e código pré-formatado.
+
+Os checkers de bloco verificam fixtures, contrato e integração por leitura de fontes; os checkers comportamentais usam execução isolada do JavaScript quando aplicável. Não iniciam PHP, aplicação, banco, servidor, staging ou deploy, e não substituem teste em navegador/leitor de tela.

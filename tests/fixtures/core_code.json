@@ -1,0 +1,9 @@
+{
+  "document": {
+    "format_version": 2,
+    "blocks": [
+      {"id":"code-example","type":"core/code","attributes":{},"children":[],"content":"function greet(name) {\n\treturn `Hello, ${name}`;\n}\n"},
+      {"id":"code-markup","type":"core/code","attributes":{},"children":[],"content":"<script>alert('text only')</script>\n"}
+    ]
+  }
+}

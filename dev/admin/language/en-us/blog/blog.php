@@ -345,3 +345,9 @@ $_['text_block_spacer_32'] = 'Small · 32 px';
 $_['text_block_spacer_48'] = 'Medium · 48 px';
 $_['text_block_spacer_64'] = 'Large · 64 px';
 $_['text_block_spacer_96'] = 'Extra large · 96 px';
+
+// BDREditor preformatted code block
+$_['text_block_type_code'] = 'Preformatted code';
+$_['text_block_code_label'] = 'Preformatted code';
+$_['text_block_code_default'] = '';
+$_['text_block_code_too_large'] = 'The code block exceeds the 256 KiB limit.';
