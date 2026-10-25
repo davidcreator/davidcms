@@ -292,3 +292,10 @@ $_['error_audio_generic'] = 'Não foi possível carregar a biblioteca de áudio.
 // BDREditor keyboard help
 $_['text_block_keyboard_shortcuts_title'] = 'Atalhos de teclado';
 $_['text_block_keyboard_shortcuts'] = 'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco';
+
+// BDREditor local block clipboard
+$_['text_block_copy'] = 'Copiar bloco';
+$_['text_block_paste'] = 'Colar bloco';
+$_['text_block_status_copied'] = 'Bloco copiado para este editor.';
+$_['text_block_status_pasted'] = 'Bloco colado.';
+$_['text_block_paste_unavailable'] = 'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.';

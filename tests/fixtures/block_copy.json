@@ -1,0 +1,17 @@
+{
+  "block": {
+    "id": "group-original",
+    "type": "core/group",
+    "attributes": {},
+    "children": [
+      {
+        "id": "paragraph-original",
+        "type": "core/paragraph",
+        "attributes": {},
+        "children": [],
+        "content": [{"text":"Trecho com formatação","marks":["bold"],"href":null}]
+      }
+    ],
+    "content": ""
+  }
+}

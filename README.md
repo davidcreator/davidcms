@@ -1,55 +1,37 @@
-# BDREditor — atalhos e foco de edição
+# BDREditor — copiar e colar blocos no documento
 
-Pacote cumulativo do editor de conteúdo exclusivo ReamurCMS. Acrescenta uma melhoria de edição por teclado sobre `BDREditor-Audio`, mantendo os incrementos anteriores de `core/file` e `core/audio`. Gutenberg segue apenas como referência conceitual; sem dependência, código ou assets Gutenberg/WordPress.
+Incremento cumulativo do BDREditor, editor de conteúdo exclusivo do ReamurCMS. Acrescenta copiar/colar **dentro do mesmo documento e da mesma instância do editor**, mantendo os blocos `core/file` e `core/audio` e os incrementos de edição por teclado. Gutenberg segue apenas referência conceitual; sem dependência, código ou assets Gutenberg/WordPress.
 
-## Este incremento
+## O que entra
 
-- Centraliza a classificação dos atalhos existentes: `Ctrl/⌘+B/I/U`, `Ctrl/⌘+K`, `Ctrl/⌘+Z`, `Ctrl/⌘+Shift+Z` ou `Ctrl+Y`, `Alt+↑/↓` e `/` no começo de um trecho.
-- Escopa undo/redo, marcas e movimento ao contexto adequado. `Ctrl/⌘+Z` em input/textarea/select volta a ser o undo nativo do campo; marcas não interceptam atalhos fora do texto; movimento não captura setas de campos.
-- Adiciona uma ajuda de atalhos recolhível com `<details>/<summary>`, localizada em PT-BR, EN-US e ES-EU, com foco visível e sem HTML fornecido pelo usuário.
-- Não usa `execCommand`, não muda o JSON, não altera o fluxo de salvar, não adiciona endpoints, schema, migration, autosave ou persistência.
-- Mantém os verificadores/fixtures cumulativos dos blocos de áudio e arquivo/download.
+- Botão **Copiar bloco** em cada toolbar de bloco e **Colar bloco** na toolbar superior.
+- Buffer privado em memória da instância; não é gravado no documento, no servidor ou no clipboard do sistema.
+- Colar cria IDs novos recursivamente para o bloco e seus descendentes, preservando atributos, texto/runs e referências já presentes.
+- O destino é depois do bloco selecionado; sem seleção válida, acrescenta ao fim do documento. A inserção dentro de estruturas deve satisfazer o schema completo.
+- Pré-validação do documento v2, unicidade de IDs e limite de 4 MiB antes da alteração. Uma única operação de commit/histórico por colagem; undo desfaz a cópia inteira.
+- Mensagens de cópia/colagem via região `aria-live`, botões rotulados e strings PT-BR, EN-US e ES-EU.
+- Colagem existente do clipboard do usuário continua limitada a `text/plain`; o editor não passa a interceptar Ctrl+C nem usa `navigator.clipboard` ou `execCommand`.
 
-## Matriz breve de gap e aceite
+## Limites escolhidos
 
-| Área | Estado na base conferida | Este incremento |
-|---|---|---|
-| Atalhos de marks/link | Já existentes, vinculados a conteúdo editável | Centraliza e restringe por contexto |
-| Undo/redo | Já existentes no editor | Preserva undo nativo de campos de formulário |
-| Mover bloco por teclado | `Alt+↑/↓` já anunciado | Não captura teclas de campos/selects |
-| Inserter `/` | Já existente no início/depois de espaço | Preservado, sem mudar inserção |
-| Descoberta dos atalhos | Faltava uma ajuda visível/localizada | Disclosure acessível na barra superior |
+- Um bloco por vez; não há seleção múltipla nem operações em lote.
+- Apenas dentro da instância atual. Não exporta/importa blocos entre posts/documentos, abas ou sessões.
+- Sem persistência, endpoint, schema, migration, autosave ou dado adicional no JSON.
+- Blocos estruturais que não cabem no contexto (por exemplo, coluna extra em layout fixo) falham sem alterar o documento e anunciam a razão geral de indisponibilidade.
 
-## Verificações executadas
+## Base e verificações
 
-```sh
-node --check dev/admin/view/js/blog-block-editor.js
-node --check dev/admin/view/js/blog-file-media.js
-node --check dev/admin/view/js/blog-audio-media.js
-node --check tools/e2e/e2e_bdre_keyboard_static.cjs
-node --check tools/e2e/e2e_bdre_audio_static.cjs
-node --check tools/e2e/e2e_bdre_file_static.cjs
-node tools/e2e/e2e_bdre_keyboard_static.cjs
-node tools/e2e/e2e_bdre_audio_static.cjs
-node tools/e2e/e2e_bdre_file_static.cjs
-python3 -m json.tool tests/fixtures/keyboard_shortcuts.json >/dev/null
-python3 -m json.tool tests/fixtures/core_audio.json >/dev/null
-python3 -m json.tool tests/fixtures/bdre_file.json >/dev/null
-```
+Fontes pontuais comparados com `main` em `a9333fb367e3d82e2626e3e2d5a4db56fbb07929`, commit que inclui o incremento Keyboard-Editing. Sem clone integral, sem GitHub write.
 
-Resultado observado: **25 PASS** no checker de atalhos, **49 PASS** no checker de áudio e **48 PASS** no checker de arquivo/download. As fixtures são sintéticas. O checker executa a classificação JS em VM sem DOM/browser e inspeciona contratos/strings; não comprova integração real, acessibilidade com leitor de tela ou comportamento em todos os navegadores.
+Resultado executado: **29 PASS** no checker copy/paste, **25 PASS** no checker de teclado, **49 PASS** no checker de áudio e **48 PASS** no checker de arquivo/download. `node --check` nos scripts/JS e JSON parse das quatro fixtures também passaram. As fixtures são sintéticas; os checkers executam helpers JS em VM sem DOM/browser e fazem inspeção de fonte. Isso não equivale a runtime real.
 
-## Base e limites operacionais
-
-A cópia-base foi comparada por arquivos pontuais com `main` no HEAD `8216b0c2f7ed56edd73e4c7d2ffa14bbee0f77d7`. O pacote não contém o projeto inteiro e não publicou nem alterou o GitHub. Nenhuma numeração oficial foi atribuída.
-
-Não foram executados PHP/runtime, navegador, aplicação, banco, staging, deploy ou migrations. Staging permanece pausado; sem autorização de produção ou escrita GitHub.
+Não executar nesta fase PHP/runtime, navegador real, aplicação, banco, staging, deploy, migrations ou testes destrutivos. Staging permanece pausado; nenhuma numeração oficial de tarefa foi atribuída.
 
 ## Arquivos de apoio
 
-- Escopo/decisões: `docs/BDREditor-Keyboard-Editing-Scope.md`
-- Matriz/contrato: `docs/BDREditor-Keyboard-Editing.md`
-- Fixture: `tests/fixtures/keyboard_shortcuts.json`
-- Checker novo: `tools/e2e/e2e_bdre_keyboard_static.cjs`
-- Checkers cumulativos: `tools/e2e/e2e_bdre_audio_static.cjs` e `tools/e2e/e2e_bdre_file_static.cjs`
+- Contrato: `docs/BDREditor-Block-Copy-Paste.md`
+- Escopo: `docs/BDREditor-Block-Copy-Paste-Scope.md`
+- Fixture: `tests/fixtures/block_copy.json`
+- Checker novo: `tools/e2e/e2e_bdre_block_copy_static.cjs`
+- Checkers cumulativos: `tools/e2e/e2e_bdre_keyboard_static.cjs`, `tools/e2e/e2e_bdre_audio_static.cjs`, `tools/e2e/e2e_bdre_file_static.cjs`
 - Manifesto SHA-256: `SHA256SUMS`

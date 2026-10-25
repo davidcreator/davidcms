@@ -60,6 +60,21 @@
     return null;
   }
 
+  function cloneBlockWithNewIds(source, makeId) {
+    if (!source || typeof source !== 'object' || typeof makeId !== 'function') return null;
+    let copy;
+    try { copy = CLONE(source); } catch (_) { return null; }
+    const seen = new Set();
+    function refresh(node) {
+      if (!node || typeof node !== 'object' || !Array.isArray(node.children)) return false;
+      const id = makeId();
+      if (typeof id !== 'string' || !/^[A-Za-z0-9_-]{1,96}$/.test(id) || seen.has(id)) return false;
+      seen.add(id); node.id = id;
+      return node.children.every(refresh);
+    }
+    return refresh(copy) ? copy : null;
+  }
+
   function validEmbed(url) {
     try {
       const parsed = new URL(url);
@@ -274,6 +289,7 @@
       this.textUndoPending = false;
       this.textUndoTimer = null;
       this.selectedId = null;
+      this.blockClipboard = null;
       this.preview = 'desktop';
       this.dragId = null;
       this.inlineBookmark = null;
@@ -285,7 +301,7 @@
       this.slashTrigger = null;
       this.inserterQuery = '';
       this.statusMessage = '';
-      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},typeLabels:{}}, this.options.strings || {});
+      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',copyBlock:'Copiar bloco',pasteBlock:'Colar bloco',statusCopied:'Bloco copiado para este editor.',statusPasted:'Bloco colado.',pasteUnavailable:'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},typeLabels:{}}, this.options.strings || {});
       const rawInitial = this.options.document || { format_version: 1, blocks: [] };
       const initial = upgradeDocument(rawInitial);
       const validation = validateDocument(initial);
@@ -414,6 +430,8 @@
       else if (name === 'insert-pattern') this.insertPattern(button.dataset.pattern);
       else if (name === 'toggle-inserter') this.inserterOpen ? this.closeInserter(true) : this.openInserter(button.dataset.afterId || null, false, button);
       else if (name === 'duplicate') this.duplicateNode(button.dataset.nodeId || this.selectedId);
+      else if (name === 'copy-block') this.copyBlock(button.dataset.nodeId || this.selectedId);
+      else if (name === 'paste-block') this.pasteBlock();
       else if (name === 'outline-select') { const id = button.dataset.nodeId; this.selectNode(id); const card = Array.from(this.root.querySelectorAll('.rb-block[data-node-id]')).find((item) => item.dataset.nodeId === id); if (card) card.scrollIntoView({ block:'nearest' }); }
       else if (name === 'undo') this.undo();
       else if (name === 'redo') this.redo();
@@ -456,6 +474,7 @@
       if (found && editor && BLOCK_TEXT_TYPES.has(found.node.type)) editor.before(this.renderInlineToolbar(found.node));
       const oldInspector = this.root.querySelector('.rb-inspector');
       if (oldInspector) oldInspector.replaceWith(this.renderInspector());
+      this.updateClipboardButtons();
     }
 
     renderInlineToolbar(node) {
@@ -888,14 +907,73 @@
       this.statusMessage = this.strings.statusMoved; this.commit(next, id); this.focusNode(id);
     }
 
+    announceStatus(message) {
+      this.statusMessage = message;
+      const live = this.root.querySelector('[data-editor-status]');
+      if (live) live.textContent = message;
+    }
+
+    copyBlock(id) {
+      if (this.locked) return false;
+      const found = id ? this.findPath(this.state.blocks, id) : null;
+      if (!found) return false;
+      this.blockClipboard = CLONE(found.node);
+      this.selectNode(id);
+      this.updateClipboardButtons();
+      this.announceStatus(this.strings.statusCopied);
+      return true;
+    }
+
+    pasteLocation(blocks, afterId) {
+      const found = afterId ? this.findPath(blocks, afterId) : null;
+      return found ? { target: found.nodes, index: found.index + 1 } : { target: blocks, index: blocks.length };
+    }
+
+    canPasteBlock() {
+      if (this.locked || !this.blockClipboard || !this.blockClipboard.type) return false;
+      const afterId = this.selectedId || this.insertAfterId || null;
+      const used = new Set();
+      const collect = (nodes) => (nodes || []).forEach((node) => { if (node && typeof node.id === 'string') used.add(node.id); if (node && Array.isArray(node.children)) collect(node.children); });
+      collect(this.state.blocks);
+      let sequence = 0;
+      const preview = cloneBlockWithNewIds(this.blockClipboard, () => {
+        let id; do { id = 'bdre-paste-check-' + sequence++; } while (used.has(id)); used.add(id); return id;
+      });
+      if (!preview) return false;
+      const next = CLONE(this.state);
+      const location = this.pasteLocation(next.blocks, afterId);
+      location.target.splice(location.index, 0, preview);
+      return validateDocument(next).valid && utf8Length(JSON.stringify(next)) <= 4194304;
+    }
+
+    pasteBlock() {
+      if (!this.canPasteBlock()) { this.announceStatus(this.strings.pasteUnavailable); return false; }
+      const afterId = this.selectedId || this.insertAfterId || null;
+      const next = CLONE(this.state);
+      const location = this.pasteLocation(next.blocks, afterId);
+      const copy = cloneBlockWithNewIds(this.blockClipboard, () => this.newId());
+      if (!copy) { this.announceStatus(this.strings.pasteUnavailable); return false; }
+      location.target.splice(location.index, 0, copy);
+      if (!validateDocument(next).valid || utf8Length(JSON.stringify(next)) > 4194304) { this.announceStatus(this.strings.pasteUnavailable); return false; }
+      this.statusMessage = this.strings.statusPasted;
+      this.commit(next, copy.id);
+      this.focusNode(copy.id);
+      return true;
+    }
+
+    updateClipboardButtons() {
+      const enabled = this.canPasteBlock();
+      this.root.querySelectorAll('[data-action="paste-block"]').forEach((button) => { button.disabled = !enabled; });
+    }
+
     duplicateNode(id) {
       const next = CLONE(this.state); const found = this.findPath(next.blocks, id); if (!found) return;
       if (found.parent && found.parent.type === 'core/columns' && found.node.type === 'core/column') return;
       if (found.parent && found.parent.type === 'core/gallery' && found.parent.children.length >= 20) return;
       if (found.parent && found.parent.type === 'core/cover' && found.parent.children.length >= 12) return;
-      const copy = CLONE(found.node);
-      const refreshIds = (node) => { node.id = this.newId(); node.children.forEach(refreshIds); };
-      refreshIds(copy); found.nodes.splice(found.index + 1, 0, copy); this.statusMessage = this.strings.statusDuplicated; this.commit(next, copy.id); this.focusNode(copy.id);
+      const copy = cloneBlockWithNewIds(found.node, () => this.newId());
+      if (!copy) return;
+      found.nodes.splice(found.index + 1, 0, copy); this.statusMessage = this.strings.statusDuplicated; this.commit(next, copy.id); this.focusNode(copy.id);
     }
 
     canTransformNode(node, type) {
@@ -962,6 +1040,7 @@
       const toolbar = this.el('div', 'rb-toolbar'); toolbar.setAttribute('role', 'toolbar'); toolbar.setAttribute('aria-label', this.strings.editorTools);
       const insert = this.button('+ ' + this.strings.addBlock, 'toggle-inserter', { afterId:this.selectedId || '' });
       insert.setAttribute('aria-expanded', String(this.inserterOpen)); insert.setAttribute('aria-controls', 'rb-inserter-' + this.instance); toolbar.append(insert);
+      const paste = this.button(this.strings.pasteBlock, 'paste-block'); paste.disabled = !this.canPasteBlock(); toolbar.append(paste);
       const history = this.el('div', 'rb-history');
       const undo = this.button(this.strings.undo, 'undo'); undo.dataset.history = 'undo';
       const redo = this.button(this.strings.redo, 'redo'); redo.dataset.history = 'redo';
@@ -987,6 +1066,7 @@
       const foot = this.el('p', 'rb-note', footText); this.root.append(foot);
       const live = this.el('span','rb-sr-only',this.statusMessage); live.setAttribute('role','status'); live.setAttribute('aria-live','polite'); live.dataset.editorStatus = '1'; this.root.append(live);
       this.updateHistoryButtons();
+      this.updateClipboardButtons();
       if (this.inserterOpen && this.inserterQuery) this.filterInserter();
     }
 
@@ -1000,6 +1080,7 @@
       const atParentLimit = !!(path && path.parent && ((path.parent.type === 'core/gallery' && path.parent.children.length >= 20) || (path.parent.type === 'core/cover' && path.parent.children.length >= 12)));
       const lastRequiredChild = !!(path && path.parent && ['core/gallery','core/cover'].includes(path.parent.type) && path.parent.children.length <= 1);
       const duplicate = this.button(this.strings.duplicate, 'duplicate', { nodeId:node.id }); duplicate.disabled = fixedColumn || atParentLimit; toolbar.append(duplicate);
+      const copy = this.button(this.strings.copyBlock, 'copy-block', { nodeId:node.id }); toolbar.append(copy);
       if (TRANSFORMABLE_TEXT.has(node.type)) {
         const wrap = this.el('label','rb-transform-wrap'); wrap.append(this.el('span','rb-sr-only',this.strings.transform));
         const select = this.el('select','rb-input rb-transform'); select.dataset.transformNode = node.id;
@@ -1173,6 +1254,7 @@
 
   global.ReamurBlogBlockEditor = {
     classifyKeyboardShortcut: classifyKeyboardShortcut,
+    cloneBlockWithNewIds: cloneBlockWithNewIds,
     mount: function (root, options) { if (!(root instanceof Element)) throw new TypeError('editor root must be an Element'); return new Editor(root, options || {}); },
     validateDocument: validateDocument,
     validLocalImage: validLocalImage,

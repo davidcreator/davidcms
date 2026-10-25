@@ -292,3 +292,10 @@ $_['error_audio_generic'] = 'Could not load the audio library.';
 // BDREditor keyboard help
 $_['text_block_keyboard_shortcuts_title'] = 'Keyboard shortcuts';
 $_['text_block_keyboard_shortcuts'] = 'Ctrl/⌘+B bold · Ctrl/⌘+I italic · Ctrl/⌘+U underline · Ctrl/⌘+K link · Ctrl/⌘+Z undo · Ctrl/⌘+Shift+Z or Ctrl+Y redo · Alt+↑/↓ move block · / insert block';
+
+// BDREditor local block clipboard
+$_['text_block_copy'] = 'Copy block';
+$_['text_block_paste'] = 'Paste block';
+$_['text_block_status_copied'] = 'Block copied in this editor.';
+$_['text_block_status_pasted'] = 'Block pasted.';
+$_['text_block_paste_unavailable'] = 'This block cannot be pasted here or a document limit would be exceeded.';
