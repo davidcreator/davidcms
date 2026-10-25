@@ -1,0 +1,57 @@
+[
+  {
+    "id": "v1-plain-paragraph-upgrades-in-memory",
+    "document": {"format_version": 1, "blocks": [{"id": "legacy-p1", "type": "core/paragraph", "attributes": {}, "children": [], "content": "Texto legado simples."}]},
+    "expected": "Open as v2 with one plain run; do not persist merely by opening the form."
+  },
+  {
+    "id": "v2-mixed-inline-marks",
+    "document": {"format_version": 2, "blocks": [{"id": "p2", "type": "core/paragraph", "attributes": {}, "children": [], "content": [{"text":"Leia ","marks":[],"href":null},{"text":"mais","marks":["bold","italic"],"href":null}]}]},
+    "expected": "Valid; renderer emits only fixed strong/em tags around escaped text."
+  },
+  {
+    "id": "v2-safe-local-link",
+    "document": {"format_version": 2, "blocks": [{"id": "p3", "type": "core/paragraph", "attributes": {}, "children": [], "content": [{"text":"Sobre", "marks":[],"href":"/sobre"}]}]},
+    "expected": "Valid; fixed anchor attributes, no target from document."
+  },
+  {
+    "id": "v2-text-html-is-escaped",
+    "document": {"format_version": 2, "blocks": [{"id": "p4", "type": "core/paragraph", "attributes": {}, "children": [], "content": [{"text":"<img src=x onerror=alert(1)>","marks":["code"],"href":null}]}]},
+    "expected": "Valid text; tags are escaped and never interpreted as markup."
+  },
+  {
+    "id": "v2-unsafe-javascript-link",
+    "document": {"format_version": 2, "blocks": [{"id": "p5", "type": "core/paragraph", "attributes": {}, "children": [], "content": [{"text":"bad","marks":[],"href":"javascript:alert(1)"}]}]},
+    "expected": "Reject at client and server."
+  },
+  {
+    "id": "v2-credentialed-link",
+    "document": {"format_version": 2, "blocks": [{"id": "p6", "type": "core/paragraph", "attributes": {}, "children": [], "content": [{"text":"bad","marks":[],"href":"https://user:pass@example.invalid/"}]}]},
+    "expected": "Reject at server; client validator mirrors credential rejection."
+  },
+  {
+    "id": "v2-unknown-mark",
+    "document": {"format_version": 2, "blocks": [{"id": "p7", "type": "core/paragraph", "attributes": {}, "children": [], "content": [{"text":"x","marks":["blink"],"href":null}]}]},
+    "expected": "Reject unknown marks."
+  },
+  {
+    "id": "v2-link-in-button-label",
+    "document": {"format_version": 2, "blocks": [{"id": "b1", "type": "core/button", "attributes": {"url":"/continue"}, "children": [], "content": [{"text":"Continue","marks":[],"href":"/evil"}]}]},
+    "expected": "Reject nested link in button label."
+  },
+  {
+    "id": "v2-wrong-content-type",
+    "document": {"format_version": 2, "blocks": [{"id": "p8", "type": "core/paragraph", "attributes": {}, "children": [], "content":"This must be runs in v2."}]},
+    "expected": "Reject non-run content in v2 text block."
+  },
+  {
+    "id": "v2-empty-run",
+    "document": {"format_version": 2, "blocks": [{"id": "p9", "type": "core/paragraph", "attributes": {}, "children": [], "content": [{"text":"","marks":[],"href":null}]}]},
+    "expected": "Reject empty runs; the empty block is represented by an empty run array."
+  },
+  {
+    "id": "v3-future-version",
+    "document": {"format_version": 3, "blocks": []},
+    "expected": "Reject unsupported version; preserve stored source and fail closed."
+  }
+]

@@ -40,3 +40,14 @@
 @media(max-width:900px){.rb-layout{grid-template-columns:minmax(0,1fr)}.rb-inspector{position:static}.rb-columns-2,.rb-columns-3{grid-template-columns:1fr}}
 @media(max-width:560px){.rb-toolbar{padding:.65rem}.rb-inserter{flex-basis:100%}.rb-layout{padding:.55rem}.rb-canvas{padding:.65rem}.rb-block-head{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.rb-canvas{transition:none}}
+
+/* F9-22 structured inline rich text: DOM is reconstructed from validated runs. */
+.rb-content[contenteditable="true"]{min-height:3.5rem;max-height:none;overflow:auto;resize:none;white-space:pre-wrap;overflow-wrap:anywhere;cursor:text}
+.rb-content[contenteditable="true"]:empty::before{content:attr(data-placeholder);color:#7b8798;pointer-events:none}
+.rb-inline-toolbar{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;padding:.45rem;margin:0 0 .45rem;border:1px solid #c8d5ea;border-radius:.45rem;background:#f5f8ff}
+.rb-inline-toolbar .rb-button{padding:.32rem .5rem;font-size:.78rem}
+.rb-inline-link{flex:1 1 12rem;min-width:10rem;max-width:22rem;min-height:2rem;border:1px solid #bdc7d5;border-radius:.35rem;padding:.35rem .5rem;font:inherit;font-size:.8rem;background:#fff;color:var(--rb-ink)}
+.rb-inline-link:focus-visible{outline:2px solid #215bd655;border-color:var(--rb-accent)}
+.rb-inline-status{flex:1 0 100%;min-height:1rem;color:#9b2c2c;font-size:.75rem}
+.rb-content[contenteditable="true"] a{color:#174ea6;text-decoration:underline}
+@media(max-width:560px){.rb-inline-toolbar{gap:.25rem}.rb-inline-link{flex-basis:100%;max-width:none}}

@@ -480,9 +480,22 @@ class Blog extends \Reamur\System\Engine\Controller {
             'button_media_back', 'button_media_previous', 'button_media_next', 'button_media_close',
             'text_block_editor_intro', 'text_block_conversion_note', 'text_block_review_required', 'text_block_invalid', 'text_block_saved',
             'error_block_schema_unavailable', 'error_block_document_invalid', 'error_block_legacy_review', 'error_block_mode_invalid', 'error_block_editor_unavailable',
+            'text_inline_bold', 'text_inline_italic', 'text_inline_underline', 'text_inline_strike', 'text_inline_code', 'text_inline_link',
+            'text_inline_link_placeholder', 'text_inline_apply_link', 'text_inline_remove_link', 'text_inline_invalid_link',
+            'text_inline_toolbar', 'text_inline_text_label', 'text_inline_placeholder', 'text_inline_editor_label',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
+
+        $data['block_editor_strings'] = [
+            'bold' => $data['text_inline_bold'], 'italic' => $data['text_inline_italic'],
+            'underline' => $data['text_inline_underline'], 'strike' => $data['text_inline_strike'], 'code' => $data['text_inline_code'],
+            'link' => $data['text_inline_link'], 'linkPlaceholder' => $data['text_inline_link_placeholder'],
+            'applyLink' => $data['text_inline_apply_link'], 'removeLink' => $data['text_inline_remove_link'],
+            'invalidLink' => $data['text_inline_invalid_link'], 'toolbar' => $data['text_inline_toolbar'],
+            'textLabel' => $data['text_inline_text_label'], 'placeholder' => $data['text_inline_placeholder'],
+            'editorLabel' => $data['text_inline_editor_label'],
+        ];
 
         // CKEditor 4 (assets locais, ADR 0046): init fica no admin.js (textarea[data-rte])
         $this->document->addScript($this->config->get('site_url') . 'view/js/ckeditor/ckeditor.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);

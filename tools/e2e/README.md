@@ -1,21 +1,17 @@
-# Plano de E2E — editor avançado (futuro)
+# F9-22 — verificação e plano E2E futuro
 
-Este arquivo define critérios para os recursos planejados; não é um runner e não foi executado. A F9-21 não implementa o editor. Nenhum teste PHP/SQL/browser/app é permitido/executado nesta etapa.
+## Gate estático incluído
 
-## Cenários para F9-22
+`tools/e2e/e2e_f922_static.cjs [F9-22-root]` lê os arquivos de fonte como texto e o JSON de fixtures. Não inicia PHP, SQL, Twig, browser, CMS, servidor ou banco. PASS comprova apenas marcadores/shape estáticos.
 
-1. Abrir documento v1 não o regrava; edição e envio convertem para v2 apenas após POST válido.
-2. Formatar seleção com cada mark permitido, salvar/reabrir e confirmar ordem/merge canônico de runs.
-3. Adicionar/remover link; rejeitar esquemas/hosts não permitidos no servidor e impedir fallback HTML raw.
-4. Colar texto com markup perigoso; resultado fica texto, sem tags/atributos executáveis.
-5. Desfazer/refazer operações de caracteres, marks, link e estrutura; estado e seleção coerentes.
-6. Limites de comprimento/runs/complexidade; falha bloqueia salvamento sem substituir documento original.
-7. Documento v2 inválido/desconhecido; renderer fail-closed e conteúdo legado/snapshot preservado.
-8. Teclado/foco/leitor de tela; toolbar não captura seleção/foco de forma irrecuperável.
+## E2E funcional futuro (não executado)
 
-## Pré-condições futuras
+1. Carregar documento v1: canvas exibe texto; abrir sem submit não altera storage.
+2. Selecionar trecho em texto e aplicar/remover cada mark; seleção/foco permanece utilizável.
+3. Criar, editar e remover link; unsafe scheme/credentials são bloqueados no client e servidor.
+4. Colar HTML com scripts/atributos; apenas texto puro entra e é escaped no renderer.
+5. Salvar v2, reabrir e comparar runs, links e output; incluir headings/list items/quote/button label.
+6. Undo/redo com edição inline; limites de runs, conteúdo e documento rejeitam sem sobrescrever fonte.
+7. Testar texto Unicode, links mistos, seleção reversa, IME, teclado e leitores de tela.
 
-- Aprovação do contrato v2 e implementação server-first (validador/renderer) antes da UI produzir v2.
-- Ambiente descartável e autorização expressa para PHP/SQL/browser/app.
-- F9-12 aplicada explicitamente pelo responsável ao banco de teste; nunca presumir.
-- Fixtures sintéticas somente; não capturar dados, tokens, cookies, dumps ou logs sensíveis.
+Somente executar após autorização explícita, em staging descartável, com F9-12 aplicada manualmente pelo responsável. Nunca usar dados reais/dumps ou produção. Estas verificações ainda precisam ocorrer.

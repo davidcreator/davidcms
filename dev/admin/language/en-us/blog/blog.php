@@ -145,3 +145,19 @@ $_['error_block_document_invalid'] = 'The submitted block document is invalid or
 $_['error_block_legacy_review'] = 'Legacy content requires manual review before it can be converted into blocks.';
 $_['error_block_mode_invalid'] = 'The submitted content mode is invalid or inconsistent. Reload the form.';
 $_['error_block_editor_unavailable'] = 'The block editor did not initialize. Reload the form and try again.';
+
+// F9-22: inline rich-text toolbar
+$_['text_inline_bold'] = 'Bold';
+$_['text_inline_italic'] = 'Italic';
+$_['text_inline_underline'] = 'Underline';
+$_['text_inline_strike'] = 'Strikethrough';
+$_['text_inline_code'] = 'Code';
+$_['text_inline_link'] = 'Link';
+$_['text_inline_link_placeholder'] = 'https:// or /path';
+$_['text_inline_apply_link'] = 'Apply link';
+$_['text_inline_remove_link'] = 'Remove link';
+$_['text_inline_invalid_link'] = 'Enter a valid HTTP(S) URL or local path.';
+$_['text_inline_toolbar'] = 'Text formatting';
+$_['text_inline_text_label'] = 'Block text';
+$_['text_inline_placeholder'] = 'Write text…';
+$_['text_inline_editor_label'] = 'Blog visual block editor';

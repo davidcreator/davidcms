@@ -58,7 +58,7 @@
                 <p class="text-muted small">{{ text_block_editor_intro }}</p>
                 {% if language.block_status %}<p class="alert alert-info py-2" role="status">{{ language.block_status }}</p>{% endif %}
                 {% if language.block_mode == 'blocks' %}
-                  <div class="rb-editor-host" data-blog-block-editor data-document="{{ language.block_document_json|e('html_attr') }}" data-hidden-input="blog-block-json-{{ language.language_id }}" data-ready-input="blog-block-ready-{{ language.language_id }}" tabindex="-1">
+                  <div class="rb-editor-host" data-blog-block-editor data-document="{{ language.block_document_json|e('html_attr') }}" data-hidden-input="blog-block-json-{{ language.language_id }}" data-ready-input="blog-block-ready-{{ language.language_id }}" data-editor-strings="{{ block_editor_strings|json_encode|e('html_attr') }}" tabindex="-1">
                     <p>{{ text_block_editor_intro }}</p>
                   </div>
                   <input type="hidden" name="blog_block_mode[{{ language.language_id }}]" value="blocks">

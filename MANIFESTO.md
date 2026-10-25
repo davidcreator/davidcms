@@ -1,11 +1,11 @@
-# Manifesto F9-21
+# Manifesto F9-22
 
 - Repositório-base: `https://github.com/davidcreator/davidcms`
 - Branch: `main`
-- HEAD consultado: `81bccd80470b7f8e26eee90c43dc475fb8dafe90`
-- Entrega: roadmap de editor avançado e contrato proposto para rich-text v2.
-- Código de produto alterado: não.
-- PHP/SQL/browser/app tests ou migration: não executados.
-- Banco acessado: não. F9-12: não presumida/aplicada.
+- HEAD verificado: `54748166dc5b474edac1a8e28e436bd333a926c2`
+- Escopo: rich-text inline v2 em 10 arquivos pontuais, com v1 compatível.
+- Testes realizados: parsing de JS (`node --check`), checker estático de fonte e parse JSON/fixtures.
+- Testes PHP/SQL/browser/app/E2E runtime: não executados.
+- Banco acessado: não. Migration F9-12: não aplicada nem presumida.
 - GitHub write/deploy: nenhum.
-- Dados reais, dumps, credenciais ou logs runtime: não incluídos.
+- Dumps, dados reais, credenciais e logs runtime: não incluídos.

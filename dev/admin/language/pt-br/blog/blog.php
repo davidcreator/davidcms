@@ -145,3 +145,19 @@ $_['error_block_document_invalid'] = 'O documento de blocos enviado é inválido
 $_['error_block_legacy_review'] = 'O conteúdo legado precisa de revisão manual antes de ser convertido em blocos.';
 $_['error_block_mode_invalid'] = 'O modo de conteúdo enviado é inválido ou inconsistente. Recarregue o formulário.';
 $_['error_block_editor_unavailable'] = 'O editor de blocos não foi inicializado. Recarregue o formulário e tente novamente.';
+
+// F9-22: inline rich-text toolbar
+$_['text_inline_bold'] = 'Negrito';
+$_['text_inline_italic'] = 'Itálico';
+$_['text_inline_underline'] = 'Sublinhado';
+$_['text_inline_strike'] = 'Tachado';
+$_['text_inline_code'] = 'Código';
+$_['text_inline_link'] = 'Link';
+$_['text_inline_link_placeholder'] = 'https:// ou /caminho';
+$_['text_inline_apply_link'] = 'Aplicar link';
+$_['text_inline_remove_link'] = 'Remover link';
+$_['text_inline_invalid_link'] = 'Informe uma URL HTTP(S) ou caminho local válida.';
+$_['text_inline_toolbar'] = 'Formatação do texto';
+$_['text_inline_text_label'] = 'Texto do bloco';
+$_['text_inline_placeholder'] = 'Digite o texto…';
+$_['text_inline_editor_label'] = 'Editor visual de blocos do Blog';

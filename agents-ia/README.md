@@ -1,24 +1,20 @@
-# Agentes IA — F9-21
+# Agentes IA — F9-22
 
-## Escopo
+## Objetivo
 
-F9-21 entrega roadmap e contrato proposto do editor avançado. Nenhum código de produção foi alterado. A primeira feature sugerida para F9-22 é edição inline rich-text com estrutura JSON v2, mantendo os documentos v1 compatíveis.
+Primeiro recurso de autoria rich-text do editor Blog: formato de runs JSON v2 compatível com v1, edição inline por `contenteditable`, toolbar localizada e renderer allowlisted. Base `main` HEAD `54748166dc5b474edac1a8e28e436bd333a926c2`.
 
-## Fonte
+## Regras de integração
 
-- Repositório `https://github.com/davidcreator/davidcms`, branch `main`.
-- HEAD consultado: `81bccd80470b7f8e26eee90c43dc475fb8dafe90`.
-- O editor MVP atual usa `<textarea>` para conteúdo, tem ações básicas de bloco e já salva via fluxo F9-16.
+- Rever apenas os dez arquivos pontuais do pacote contra o HEAD vigente; o pacote não é clone.
+- V1 permanece legível. A conversão v1→v2 ocorre em memória e só persiste no POST explícito.
+- Não persistir `innerHTML`; não usar `execCommand`; nunca relaxar a validação/renderer para aceitar HTML livre.
+- Renderer e validator PHP são fonte de segurança. Hrefs vêm da allowlist; `rel` fixo; sem target do cliente.
+- Mantém o workflow existente: ACL, CSRF, transação e snapshots da F9-16/F9-19. Não adicionar autosave.
+- Não alterar/aplicar migration F9-12 nem presumir que está aplicada.
+- Não executar PHP, SQL, browser, app, E2E runtime, deploy ou GitHub write.
+- Fixtures são sintéticas; sem dados reais, dump privado, credenciais ou logs runtime.
 
-## Guardrails obrigatórios
+## Verificação
 
-- Não introduzir HTML bruto ou `contenteditable.innerHTML` persistido.
-- Schema v1 preservado; v2 deve ser validado e renderizado no servidor antes de ativar UI v2.
-- Converter v1 em memória; abertura da tela não modifica o banco.
-- Marks e links têm allowlist do servidor; limites de tamanho/complexidade são obrigatórios.
-- Persistência continua no POST explícito; sem autosave nesta etapa sem política aprovada.
-- Não baixar/clonar o projeto inteiro; trabalhar somente com arquivos necessários.
-- Não executar PHP, SQL, migration, browser, app ou acessar banco. Não presumir F9-12 aplicada.
-- Sem GitHub write/deploy, dados reais, dump privado, credenciais ou logs runtime.
-
-Leia `docs/F9-21-Roadmap-Editor-Avancado.md`, `docs/F9-21-Contrato-Rich-Text-v2.json` e `tools/e2e/README.md` antes de iniciar F9-22.
+Somente parsing JS (`node --check`), leitura estática e parse de JSON foram realizados. E2E funcional segue pendente e exige autorização e staging descartável.

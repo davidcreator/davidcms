@@ -1,0 +1,16 @@
+{
+  "head": "54748166dc5b474edac1a8e28e436bd333a926c2",
+  "method": "read-only raw download of point files before edits; SHA-256 recorded for review baseline",
+  "files": [
+    {"path":"dev/system/library/blog/block_document.php","sha256":"17e8f3e5c42edcda8ee54352cc25731e2df389bf2b7dc575db3351ca709162bb"},
+    {"path":"dev/system/library/blog/block_renderer.php","sha256":"07df164ee8fe8c067ef74717ddbc8930c54e344fdff6d548c76439f864af73e3"},
+    {"path":"dev/admin/view/js/blog-block-editor.js","sha256":"31581c7e685fd975af913298d81af6c3de2dd1a2c740aed5c2abf2f793229ffd"},
+    {"path":"dev/admin/view/js/blog-block-editor-init.js","sha256":"0b009aadad010c5ebf5ce0a22a7d3afc3c15177622126b1e054485c15c246623"},
+    {"path":"dev/admin/view/css/blog-block-editor.css","sha256":"054e8def5c4454df51c5e66fadb336db78cbb0074c925041531174f44cae7c03"},
+    {"path":"dev/admin/view/template/blog/blog_form.twig","sha256":"0bcd210d2f63e881ddd015d37000104c1f63c7ae57340c8274f60e95df6d07f8"},
+    {"path":"dev/admin/controller/blog/blog.php","sha256":"38a7e2f182b4853527325c9df9d67da8fe8ead4109d6070a47f47959e0f5e05a"},
+    {"path":"dev/admin/language/pt-br/blog/blog.php","sha256":"d0f402032f548ee10f443489a29475ef760e16e4d20f149ac2b9c1ca191082a9"},
+    {"path":"dev/admin/language/en-us/blog/blog.php","sha256":"2d547fac059cb87bd1f12ac99b479e51aa1d2653f27466fc34287931c25c083e"},
+    {"path":"dev/admin/language/es-eu/blog/blog.php","sha256":"d9ab697b1f60b7ef54cb313c131711fe1e0e553a7ef5059f353a2b55bd52f479"}
+  ]
+}

@@ -1,6 +1,6 @@
 /*
- * ReamurCMS native Blog block editor — F9-14 UI component.
- * In-memory only: no form binding, network, persistence, or HTML renderer.
+ * ReamurCMS native Blog block editor — F9-14 base + F9-22 structured inline rich text.
+ * In-memory model; form submission binding stays in blog-block-editor-init.js.
  * Mount with ReamurBlogBlockEditor.mount(element, { document, onChange }).
  */
 (function (global) {
@@ -38,12 +38,60 @@
   function validActionUrl(value) {
     if (typeof value !== 'string' || !value.trim() || /[\x00-\x20\\]/.test(value)) return false;
     if (value.startsWith('/') && !value.startsWith('//')) return true;
-    try { return ['https:', 'http:'].includes(new URL(value).protocol); } catch (_) { return false; }
+    try { const parsed = new URL(value); return ['https:', 'http:'].includes(parsed.protocol) && !parsed.username && !parsed.password; } catch (_) { return false; }
+  }
+
+  const INLINE_MARKS = ['bold', 'italic', 'underline', 'strike', 'code'];
+  const BLOCK_TEXT_TYPES = new Set(['core/paragraph', 'core/heading', 'core/list-item', 'core/quote', 'core/button']);
+  const INLINE_TAG_MARK = { STRONG: 'bold', B: 'bold', EM: 'italic', I: 'italic', U: 'underline', S: 'strike', DEL: 'strike', CODE: 'code' };
+
+  function runsFromText(text) {
+    return text === '' ? [] : [{ text: String(text), marks: [], href: null }];
+  }
+
+  function canonicalRuns(runs) {
+    const markOrder = new Map(INLINE_MARKS.map((mark, index) => [mark, index]));
+    const out = [];
+    (Array.isArray(runs) ? runs : []).forEach((run) => {
+      const marks = (run.marks || []).slice().sort((a, b) => (markOrder.get(a) || 0) - (markOrder.get(b) || 0));
+      const next = { text: String(run.text || ''), marks, href: run.href == null ? null : String(run.href) };
+      const last = out[out.length - 1];
+      if (last && JSON.stringify(last.marks) === JSON.stringify(next.marks) && last.href === next.href) last.text += next.text;
+      else out.push(next);
+    });
+    return out;
+  }
+
+  function upgradeDocument(input) {
+    const doc = CLONE(input);
+    if (!doc || doc.format_version !== 1 || !Array.isArray(doc.blocks)) return doc;
+    function visit(node) {
+      if (!node || typeof node !== 'object') return;
+      if (BLOCK_TEXT_TYPES.has(node.type) && typeof node.content === 'string') node.content = runsFromText(node.content);
+      if (Array.isArray(node.children)) node.children.forEach(visit);
+    }
+    doc.blocks.forEach(visit);
+    doc.format_version = 2;
+    return doc;
+  }
+
+  function validInlineRuns(runs, type) {
+    if (!Array.isArray(runs) || runs.length > 1000) return false;
+    let chars = 0;
+    return runs.every((run) => {
+      if (!run || typeof run !== 'object' || Array.isArray(run) || Object.keys(run).sort().join(',') !== 'href,marks,text') return false;
+      if (typeof run.text !== 'string' || run.text.length === 0 || run.text.length > 262144 || !Array.isArray(run.marks) || run.marks.length > INLINE_MARKS.length) return false;
+      chars += run.text.length;
+      if (chars > 262144 || new Set(run.marks).size !== run.marks.length || run.marks.some((mark) => !INLINE_MARKS.includes(mark))) return false;
+      if (run.href !== null && (!validActionUrl(run.href) || type === 'core/button')) return false;
+      return true;
+    });
   }
 
   function validateDocument(doc) {
     const errors = [];
-    if (!doc || typeof doc !== 'object' || Array.isArray(doc) || Object.keys(doc).sort().join(',') !== 'blocks,format_version' || doc.format_version !== 1 || !Array.isArray(doc.blocks)) return { valid: false, errors: ['root_shape_invalid'] };
+    if (!doc || typeof doc !== 'object' || Array.isArray(doc) || Object.keys(doc).sort().join(',') !== 'blocks,format_version' || ![1,2].includes(doc.format_version) || !Array.isArray(doc.blocks)) return { valid: false, errors: ['root_shape_invalid'] };
+    const version = doc.format_version;
     if (doc.blocks.length > 1000) return { valid: false, errors: ['too_many_blocks'] };
     const ids = new Set(); let nodes = 0;
     function visit(node, depth, parent) {
@@ -52,8 +100,12 @@
       if (typeof node.id !== 'string' || !/^[A-Za-z0-9_-]{1,96}$/.test(node.id) || ids.has(node.id)) errors.push('node_id_invalid');
       else ids.add(node.id);
       if (typeof node.type !== 'string' || !TYPES.some(([type]) => type === node.type) && node.type !== 'core/list-item' && node.type !== 'core/column') errors.push('unknown_type');
-      if (!node.attributes || typeof node.attributes !== 'object' || Array.isArray(node.attributes) || !Array.isArray(node.children) || typeof node.content !== 'string') { errors.push('node_fields_invalid'); return; }
-      if (node.content.length > 262144) errors.push('content_too_large');
+      if (!node.attributes || typeof node.attributes !== 'object' || Array.isArray(node.attributes) || !Array.isArray(node.children)) { errors.push('node_fields_invalid'); return; }
+      const textBlock = BLOCK_TEXT_TYPES.has(node.type);
+      if (version === 1 && typeof node.content !== 'string') errors.push('legacy_content_invalid');
+      else if (version === 2 && textBlock && !validInlineRuns(node.content, node.type)) errors.push('rich_content_invalid');
+      else if ((!textBlock || version === 1) && (typeof node.content !== 'string' || (!textBlock && version === 2 && node.content !== ''))) errors.push('content_invalid');
+      if (typeof node.content === 'string' && node.content.length > 262144) errors.push('content_too_large');
       const a = node.attributes;
       const allowed = {
         'core/paragraph':['align'], 'core/heading':['level'], 'core/list':['ordered'], 'core/list-item':[],
@@ -81,6 +133,49 @@
     return { valid: errors.length === 0, errors: [...new Set(errors)] };
   }
 
+  function normalizeDomInline(root, blockType) {
+    const runs = [];
+    function append(text, marks, href) {
+      if (!text) return;
+      const safeHref = href && validActionUrl(href) && blockType !== 'core/button' ? href : null;
+      runs.push({ text, marks: [...new Set(marks)].filter((mark) => INLINE_MARKS.includes(mark)), href: safeHref });
+    }
+    function visit(node, marks, href) {
+      if (node.nodeType === 3) { append(node.nodeValue || '', marks, href); return; }
+      if (node.nodeType !== 1) return;
+      const element = node;
+      const nextMarks = marks.slice();
+      if (INLINE_TAG_MARK[element.tagName] && !nextMarks.includes(INLINE_TAG_MARK[element.tagName])) nextMarks.push(INLINE_TAG_MARK[element.tagName]);
+      const nextHref = element.tagName === 'A' ? (element.getAttribute('href') || null) : href;
+      if (element.tagName === 'BR') { append('\n', marks, href); return; }
+      visitChildren(element, nextMarks, nextHref);
+    }
+    function visitChildren(parent, marks, href) {
+      const children = Array.from(parent.childNodes);
+      children.forEach((child, index) => {
+        const blockChild = child.nodeType === 1 && ['DIV','P'].includes(child.tagName);
+        if (blockChild && index > 0) append('\n', marks, href);
+        if (blockChild) visitChildren(child, marks, href);
+        else visit(child, marks, href);
+      });
+    }
+    visitChildren(root, [], null);
+    return canonicalRuns(runs);
+  }
+
+  function buildInlineDom(root, runs) {
+    root.replaceChildren();
+    runs.forEach((run) => {
+      let parent = root;
+      if (run.href) { const link = document.createElement('a'); link.href = run.href; link.rel = 'nofollow noopener noreferrer'; parent.append(link); parent = link; }
+      run.marks.forEach((mark) => {
+        const tags = { bold:'strong', italic:'em', underline:'u', strike:'s', code:'code' };
+        const wrapper = document.createElement(tags[mark] || 'span'); parent.append(wrapper); parent = wrapper;
+      });
+      parent.append(document.createTextNode(run.text));
+    });
+  }
+
   class Editor {
     constructor(root, options) {
       this.root = root;
@@ -92,11 +187,16 @@
       this.selectedId = null;
       this.preview = 'desktop';
       this.dragId = null;
-      const initial = this.options.document || { format_version: 1, blocks: [] };
+      this.inlineBookmark = null;
+      this.linkDraft = '';
+      this.inlineNotice = '';
+      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…'}, this.options.strings || {});
+      const rawInitial = this.options.document || { format_version: 1, blocks: [] };
+      const initial = upgradeDocument(rawInitial);
       const validation = validateDocument(initial);
       this.locked = !validation.valid;
       this.originalDocument = this.locked ? initial : null;
-      this.state = validation.valid ? CLONE(initial) : { format_version: 1, blocks: [] };
+      this.state = validation.valid ? CLONE(initial) : { format_version: 2, blocks: [] };
       this.initialError = validation.valid ? '' : validation.errors.join(', ');
       this.onChange = typeof this.options.onChange === 'function' ? this.options.onChange : function () {};
       this.root.classList.add('rb-editor');
@@ -107,22 +207,43 @@
     }
 
     newId() { this.idCounter += 1; return 'rb' + this.instance + '-' + this.idCounter; }
-    node(type, attributes, content, children) { return { id: this.newId(), type, attributes: attributes || {}, children: children || [], content: content || '' }; }
+    node(type, attributes, content, children) { const value = BLOCK_TEXT_TYPES.has(type) ? (Array.isArray(content) ? canonicalRuns(content) : runsFromText(String(content || ''))) : (content || ''); return { id: this.newId(), type, attributes: attributes || {}, children: children || [], content: value }; }
     snapshot() { return JSON.stringify(this.state); }
     label(type) { const found = TYPES.find((entry) => entry[0] === type); return found ? found[1] : (type === 'core/list-item' ? 'Item de lista' : 'Coluna'); }
 
     bind() {
+      this.root.addEventListener('mousedown', (event) => {
+        const control = event.target.closest('[data-action="format-mark"],[data-action="link-apply"],[data-action="link-remove"]');
+        if (!control || !this.root.contains(control)) return;
+        this.captureInlineSelection();
+        event.preventDefault();
+      });
+      this.root.addEventListener('focusin', (event) => {
+        const editor = event.target.closest('[data-edit-content]');
+        if (editor) this.selectNode(editor.dataset.editContent);
+      });
+      this.root.addEventListener('mouseup', () => this.captureInlineSelection());
+      this.root.addEventListener('keyup', (event) => {
+        if (event.target.closest('[data-edit-content]')) this.captureInlineSelection();
+      });
+      global.document.addEventListener('selectionchange', () => this.captureInlineSelection());
       this.root.addEventListener('click', (event) => {
+        const editorLink = event.target.closest('[data-edit-content] a');
+        if (editorLink) { event.preventDefault(); return; }
         const button = event.target.closest('[data-action]');
         if (button && this.root.contains(button)) { this.action(button.dataset.action, button); return; }
-        if (event.target.closest('textarea,input,select,button')) return;
+        if (event.target.closest('textarea,input,select,button,[contenteditable="true"]')) return;
         const card = event.target.closest('[data-node-id]');
-        if (card && this.root.contains(card) && this.selectedId !== card.dataset.nodeId) { this.selectedId = card.dataset.nodeId; this.render(); }
+        if (card && this.root.contains(card)) this.selectNode(card.dataset.nodeId);
       });
       this.root.addEventListener('input', (event) => {
+        const linkInput = event.target.closest('[data-inline-link-input]');
+        if (linkInput) { this.linkDraft = linkInput.value; return; }
         const field = event.target.closest('[data-edit-content]');
         if (!field) return;
-        this.updateNode(field.dataset.editContent, (node) => { node.content = field.value; }, false);
+        const id = field.dataset.editContent;
+        this.updateNode(id, (node) => { node.content = normalizeDomInline(field, node.type); }, false);
+        this.captureInlineSelection();
       });
       this.root.addEventListener('change', (event) => {
         const field = event.target.closest('[data-attribute]');
@@ -137,17 +258,34 @@
       this.root.addEventListener('keydown', (event) => {
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); this.action(event.shiftKey ? 'redo' : 'undo'); return; }
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') { event.preventDefault(); this.action('redo'); return; }
+        if (event.ctrlKey || event.metaKey) {
+          const key = event.key.toLowerCase();
+          const marks = { b: 'bold', i: 'italic', u: 'underline' };
+          if (marks[key] && event.target.closest('[data-edit-content]')) { event.preventDefault(); this.captureInlineSelection(); this.applyInlineMark(marks[key]); return; }
+          if (key === 'k' && event.target.closest('[data-edit-content]')) { event.preventDefault(); this.captureInlineSelection(); const link = this.root.querySelector('[data-inline-link-input]'); if (link) link.focus(); return; }
+        }
+        if (event.key === 'Enter' && event.target.closest('[data-edit-content]')) { event.preventDefault(); this.insertPlainText(event.target.closest('[data-edit-content]'), '\n'); return; }
         if (!['ArrowUp','ArrowDown'].includes(event.key) || !event.altKey) return;
         const card = event.target.closest('[data-node-id]'); if (!card) return;
         event.preventDefault(); this.moveNode(card.dataset.nodeId, event.key === 'ArrowUp' ? -1 : 1);
       });
+      this.root.addEventListener('paste', (event) => {
+        const field = event.target.closest('[data-edit-content]');
+        if (!field) return;
+        event.preventDefault();
+        const text = event.clipboardData ? event.clipboardData.getData('text/plain') : '';
+        this.insertPlainText(field, text);
+      });
       this.root.addEventListener('dragstart', (event) => {
+        if (event.target.closest('button,input,select,[contenteditable="true"]')) return;
         const card = event.target.closest('[data-node-id][data-root-node="1"]');
         if (!card) return; this.dragId = card.dataset.nodeId;
         if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', this.dragId); }
       });
       this.root.addEventListener('dragover', (event) => { if (event.target.closest('[data-root-node="1"]')) event.preventDefault(); });
       this.root.addEventListener('drop', (event) => {
+        const editor = event.target.closest('[data-edit-content]');
+        if (editor) { event.preventDefault(); this.insertPlainText(editor, event.dataTransfer ? event.dataTransfer.getData('text/plain') : ''); return; }
         const target = event.target.closest('[data-node-id][data-root-node="1"]');
         if (!target || !this.dragId) return; event.preventDefault(); this.reorderRoot(this.dragId, target.dataset.nodeId); this.dragId = null;
       });
@@ -162,7 +300,153 @@
       else if (name === 'move-up') this.moveNode(button.dataset.nodeId || this.selectedId, -1);
       else if (name === 'move-down') this.moveNode(button.dataset.nodeId || this.selectedId, 1);
       else if (name === 'media') { global.document.dispatchEvent(new CustomEvent('blog-block-media-open', { detail: { editor: this } })); }
+      else if (name === 'format-mark') this.applyInlineMark(button.dataset.mark);
+      else if (name === 'link-apply') this.applyInlineLink(this.linkDraft);
+      else if (name === 'link-remove') this.applyInlineLink(null);
       else if (name === 'preview') { this.preview = button.dataset.size; this.root.dataset.preview = this.preview; this.root.querySelectorAll('[data-action="preview"]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.size === this.preview))); }
+    }
+
+    findEditor(id) { return Array.from(this.root.querySelectorAll('[data-edit-content]')).find((node) => node.dataset.editContent === id) || null; }
+
+    selectNode(id) {
+      if (!id || this.selectedId === id) return;
+      this.selectedId = id;
+      this.root.querySelectorAll('.rb-block').forEach((card) => card.classList.toggle('is-selected', card.dataset.nodeId === id));
+      this.root.querySelectorAll('.rb-inline-toolbar').forEach((toolbar) => toolbar.remove());
+      const found = this.findPath(this.state.blocks, id);
+      const editor = this.findEditor(id);
+      if (found && editor && BLOCK_TEXT_TYPES.has(found.node.type)) editor.before(this.renderInlineToolbar(found.node));
+      const oldInspector = this.root.querySelector('.rb-inspector');
+      if (oldInspector) oldInspector.replaceWith(this.renderInspector());
+    }
+
+    renderInlineToolbar(node) {
+      const toolbar = this.el('div', 'rb-inline-toolbar');
+      toolbar.setAttribute('role', 'toolbar');
+      toolbar.setAttribute('aria-label', this.strings.toolbar);
+      INLINE_MARKS.forEach((mark) => {
+        const button = this.button(this.strings[mark] || mark, 'format-mark', { mark });
+        button.setAttribute('aria-label', this.strings[mark] || mark);
+        button.setAttribute('aria-pressed', 'false');
+        toolbar.append(button);
+      });
+      if (node.type !== 'core/button') {
+        const link = this.el('input', 'rb-inline-link');
+        link.type = 'text'; link.value = this.linkDraft; link.placeholder = this.strings.linkPlaceholder;
+        link.setAttribute('aria-label', this.strings.link); link.dataset.inlineLinkInput = '1';
+        toolbar.append(link, this.button(this.strings.applyLink, 'link-apply'), this.button(this.strings.removeLink, 'link-remove'));
+      }
+      const status = this.el('span', 'rb-inline-status', this.inlineNotice);
+      status.setAttribute('role', 'status'); toolbar.append(status);
+      return toolbar;
+    }
+
+    captureInlineSelection() {
+      const selection = global.getSelection();
+      if (!selection || !selection.rangeCount || selection.isCollapsed) return;
+      const range = selection.getRangeAt(0);
+      const editor = range.commonAncestorContainer.nodeType === 1
+        ? range.commonAncestorContainer.closest && range.commonAncestorContainer.closest('[data-edit-content]')
+        : range.commonAncestorContainer.parentElement && range.commonAncestorContainer.parentElement.closest('[data-edit-content]');
+      if (!editor || !this.root.contains(editor)) return;
+      const startRange = global.document.createRange(); startRange.selectNodeContents(editor); startRange.setEnd(range.startContainer, range.startOffset);
+      const endRange = global.document.createRange(); endRange.selectNodeContents(editor); endRange.setEnd(range.endContainer, range.endOffset);
+      this.inlineBookmark = { nodeId: editor.dataset.editContent, start: startRange.toString().length, end: endRange.toString().length };
+      if (this.selectedId !== editor.dataset.editContent) this.selectNode(editor.dataset.editContent);
+      this.updateInlineToolbarState();
+    }
+
+    updateInlineToolbarState() {
+      const bookmark = this.inlineBookmark;
+      if (!bookmark || bookmark.start === bookmark.end) return;
+      const found = this.findPath(this.state.blocks, bookmark.nodeId); if (!found || !Array.isArray(found.node.content)) return;
+      let cursor = 0; const selected = [];
+      found.node.content.forEach((run) => {
+        const start = cursor, end = cursor + run.text.length; cursor = end;
+        if (start < bookmark.end && end > bookmark.start) selected.push(run);
+      });
+      INLINE_MARKS.forEach((mark) => {
+        const button = Array.from(this.root.querySelectorAll('[data-action="format-mark"]')).find((item) => item.dataset.mark === mark);
+        if (button) button.setAttribute('aria-pressed', String(selected.length > 0 && selected.every((run) => run.marks.includes(mark))));
+      });
+      const links = selected.map((run) => run.href);
+      this.linkDraft = links.length && links.every((href) => href === links[0]) ? (links[0] || '') : '';
+      const input = this.root.querySelector('[data-inline-link-input]');
+      if (input && global.document.activeElement !== input) input.value = this.linkDraft;
+    }
+
+    restoreInlineSelection(bookmark) {
+      if (!bookmark) return;
+      const editor = this.findEditor(bookmark.nodeId); if (!editor) return;
+      const walker = global.document.createTreeWalker(editor, global.NodeFilter.SHOW_TEXT);
+      const nodes = []; let current; let total = 0;
+      while ((current = walker.nextNode())) { nodes.push({ node: current, start: total, end: total + current.nodeValue.length }); total += current.nodeValue.length; }
+      if (!nodes.length) { editor.focus(); return; }
+      const locate = (offset) => {
+        const item = nodes.find((entry) => offset <= entry.end) || nodes[nodes.length - 1];
+        return [item.node, Math.max(0, Math.min(item.node.nodeValue.length, offset - item.start))];
+      };
+      const [startNode, startOffset] = locate(bookmark.start); const [endNode, endOffset] = locate(bookmark.end);
+      const range = global.document.createRange(); range.setStart(startNode, startOffset); range.setEnd(endNode, endOffset);
+      editor.focus(); const selection = global.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+    }
+
+    insertPlainText(editor, text) {
+      if (!editor || !text) return;
+      const selection = global.getSelection(); let range;
+      if (selection && selection.rangeCount && editor.contains(selection.anchorNode)) range = selection.getRangeAt(0);
+      else { range = global.document.createRange(); range.selectNodeContents(editor); range.collapse(false); }
+      range.deleteContents();
+      const node = global.document.createTextNode(String(text).replace(/\r\n?/g, '\n'));
+      range.insertNode(node); range.setStartAfter(node); range.collapse(true);
+      if (selection) { selection.removeAllRanges(); selection.addRange(range); }
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    transformRuns(runs, start, end, transform) {
+      let cursor = 0; const out = [];
+      runs.forEach((run) => {
+        const from = cursor, to = cursor + run.text.length; cursor = to;
+        if (to <= start || from >= end) { out.push(CLONE(run)); return; }
+        const left = Math.max(0, start - from), right = Math.min(run.text.length, end - from);
+        if (left > 0) out.push({ text: run.text.slice(0, left), marks: run.marks.slice(), href: run.href });
+        const selected = { text: run.text.slice(left, right), marks: run.marks.slice(), href: run.href };
+        transform(selected); out.push(selected);
+        if (right < run.text.length) out.push({ text: run.text.slice(right), marks: run.marks.slice(), href: run.href });
+      });
+      return canonicalRuns(out);
+    }
+
+    applyInlineMark(mark) {
+      const bookmark = this.inlineBookmark;
+      if (!bookmark || bookmark.start === bookmark.end || !INLINE_MARKS.includes(mark)) return;
+      const found = this.findPath(this.state.blocks, bookmark.nodeId); if (!found || !BLOCK_TEXT_TYPES.has(found.node.type)) return;
+      const overlapping = found.node.content.filter((run, index) => {
+        const start = found.node.content.slice(0, index).reduce((sum, item) => sum + item.text.length, 0);
+        return start < bookmark.end && start + run.text.length > bookmark.start;
+      });
+      const remove = overlapping.length > 0 && overlapping.every((run) => run.marks.includes(mark));
+      const next = CLONE(this.state); const node = this.findPath(next.blocks, bookmark.nodeId).node;
+      node.content = this.transformRuns(node.content, bookmark.start, bookmark.end, (run) => {
+        run.marks = remove ? run.marks.filter((item) => item !== mark) : [...new Set(run.marks.concat(mark))];
+      });
+      this.commit(next, bookmark.nodeId); this.inlineBookmark = bookmark; this.restoreInlineSelection(bookmark);
+    }
+
+    applyInlineLink(href) {
+      const bookmark = this.inlineBookmark;
+      if (!bookmark || bookmark.start === bookmark.end) return;
+      const found = this.findPath(this.state.blocks, bookmark.nodeId); if (!found || found.node.type === 'core/button') return;
+      const target = href == null ? null : String(href).trim();
+      if (target !== null && !validActionUrl(target)) {
+        this.inlineNotice = this.strings.invalidLink || 'Invalid link.';
+        const status = this.root.querySelector('.rb-inline-status'); if (status) status.textContent = this.inlineNotice;
+        return;
+      }
+      const next = CLONE(this.state); const node = this.findPath(next.blocks, bookmark.nodeId).node;
+      node.content = this.transformRuns(node.content, bookmark.start, bookmark.end, (run) => { run.href = target; });
+      this.linkDraft = target || ''; this.inlineNotice = '';
+      this.commit(next, bookmark.nodeId); this.inlineBookmark = bookmark; this.restoreInlineSelection(bookmark);
     }
 
     createDefault(type, presetCount) {
@@ -281,7 +565,11 @@
       if (isRoot) { const moveUp = this.button('↑', 'move-up', { nodeId: node.id }); moveUp.setAttribute('aria-label', 'Mover para cima'); head.append(moveUp); const moveDown = this.button('↓', 'move-down', { nodeId: node.id }); moveDown.setAttribute('aria-label', 'Mover para baixo'); head.append(moveDown); }
       const del = this.button('Remover', 'delete', { nodeId: node.id }); head.append(del); card.append(head);
       if (TEXT_TYPES.has(node.type)) {
-        const textarea = this.el('textarea', 'rb-content'); textarea.value = node.content; textarea.dataset.editContent = node.id; textarea.setAttribute('aria-label', this.label(node.type)); textarea.rows = Math.max(2, Math.min(7, Math.ceil(node.content.length / 55) || 2)); card.append(textarea);
+        if (node.id === this.selectedId) card.append(this.renderInlineToolbar(node));
+        const editor = this.el('div', 'rb-content'); editor.contentEditable = 'true'; editor.dataset.editContent = node.id;
+        editor.setAttribute('role', 'textbox'); editor.setAttribute('aria-multiline', 'true');
+        editor.setAttribute('aria-label', this.strings.textLabel + ': ' + this.label(node.type)); editor.setAttribute('data-placeholder', this.strings.placeholder || '');
+        buildInlineDom(editor, node.content); card.append(editor);
       } else if (node.type === 'core/image') {
         card.append(this.el('p', 'rb-preview-value', node.attributes.alt || 'Imagem sem texto alternativo'));
       } else if (node.type === 'core/video_embed') card.append(this.el('p', 'rb-preview-value', node.attributes.url || 'URL do vídeo será definida no inspetor'));

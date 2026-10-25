@@ -20,9 +20,11 @@
       var form = root.closest('form');
       try {
         var initial = JSON.parse(root.dataset.document || '');
-        root.setAttribute('aria-label', 'Editor visual de blocos do Blog');
+        var editorStrings = JSON.parse(root.dataset.editorStrings || '{}');
+        root.setAttribute('aria-label', editorStrings.editorLabel || 'Blog block editor');
         var editor = global.ReamurBlogBlockEditor.mount(root, {
           document: initial,
+          strings: editorStrings,
           connectedSave: true,
           onChange: function (doc, validation) {
             if (hidden) hidden.value = validation.valid && doc ? JSON.stringify(doc) : '';

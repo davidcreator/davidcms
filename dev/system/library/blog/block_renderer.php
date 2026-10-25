@@ -21,18 +21,18 @@ final class BlockRenderer {
         $validation = $validator->validateDocument($document);
         if (!$validation['valid']) return ['valid' => false, 'html' => '', 'errors' => $validation['errors']];
 
-        return ['valid' => true, 'html' => $this->renderNodes($document['blocks'], $validator, $assetBase), 'errors' => []];
+        return ['valid' => true, 'html' => $this->renderNodes($document['blocks'], $validator, $assetBase, (int)$document['format_version']), 'errors' => []];
     }
 
-    private function renderNodes(array $nodes, BlockDocument $validator, string $assetBase): string {
+    private function renderNodes(array $nodes, BlockDocument $validator, string $assetBase, int $version): string {
         $html = '';
-        foreach ($nodes as $node) $html .= $this->renderNode($node, $validator, $assetBase);
+        foreach ($nodes as $node) $html .= $this->renderNode($node, $validator, $assetBase, $version);
         return $html;
     }
 
-    private function renderNode(array $node, BlockDocument $validator, string $assetBase): string {
+    private function renderNode(array $node, BlockDocument $validator, string $assetBase, int $version): string {
         $type = $node['type'];
-        $content = $this->escapeWithBreaks($node['content']);
+        $content = is_string($node['content']) ? $this->escapeWithBreaks($node['content']) : $this->renderInlineRuns($node['content']);
         $children = $node['children'];
         $attributes = $node['attributes'];
 
@@ -49,7 +49,7 @@ final class BlockRenderer {
             case 'core/list':
                 $tag = $attributes['ordered'] ? 'ol' : 'ul';
                 $html = '<' . $tag . ' class="rms-block rms-block-list">';
-                foreach ($children as $child) $html .= '<li>' . $this->escapeWithBreaks($child['content']) . '</li>';
+                foreach ($children as $child) $html .= '<li>' . (is_array($child['content']) ? $this->renderInlineRuns($child['content']) : $this->escapeWithBreaks($child['content'])) . '</li>';
                 return $html . '</' . $tag . '>';
 
             case 'core/list-item':
@@ -82,12 +82,12 @@ final class BlockRenderer {
                 return '<hr class="rms-block rms-block-separator">';
 
             case 'core/group':
-                return '<div class="rms-block-group">' . $this->renderNodes($children, $validator, $assetBase) . '</div>';
+                return '<div class="rms-block-group">' . $this->renderNodes($children, $validator, $assetBase, $version) . '</div>';
 
             case 'core/columns':
                 $count = (int)$attributes['count'];
                 $html = '<div class="rms-block-columns rms-block-columns--' . $count . '">';
-                foreach ($children as $column) $html .= '<div class="rms-block-column">' . $this->renderNodes($column['children'], $validator, $assetBase) . '</div>';
+                foreach ($children as $column) $html .= '<div class="rms-block-column">' . $this->renderNodes($column['children'], $validator, $assetBase, $version) . '</div>';
                 return $html . '</div>';
 
             case 'core/column':
@@ -95,6 +95,23 @@ final class BlockRenderer {
                 return '';
         }
         return '';
+    }
+
+    /** Render version-2 inline runs using fixed tags and contextual escaping only. */
+    private function renderInlineRuns(array $runs): string {
+        $tags = ['bold' => 'strong', 'italic' => 'em', 'underline' => 'u', 'strike' => 's', 'code' => 'code'];
+        $html = '';
+        foreach ($runs as $run) {
+            $part = $this->escapeWithBreaks((string)$run['text']);
+            foreach (array_reverse($run['marks']) as $mark) {
+                if (isset($tags[$mark])) $part = '<' . $tags[$mark] . '>' . $part . '</' . $tags[$mark] . '>';
+            }
+            if (is_string($run['href']) && $run['href'] !== '') {
+                $part = '<a href="' . $this->escape($run['href']) . '" rel="nofollow noopener noreferrer">' . $part . '</a>';
+            }
+            $html .= $part;
+        }
+        return $html;
     }
 
     /** Resolve an allowlisted local path against trusted catalog configuration, never document input. */

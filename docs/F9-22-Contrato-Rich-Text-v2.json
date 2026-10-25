@@ -1,0 +1,45 @@
+{
+  "task": "F9-22",
+  "base_head": "54748166dc5b474edac1a8e28e436bd333a926c2",
+  "repository": "https://github.com/davidcreator/davidcms",
+  "status": "local_implementation_package_prepared_static_checks_only",
+  "document_versions": {
+    "1": {"content": "string for text blocks", "readable_and_renderable": true},
+    "2": {"content": "inline run array for paragraph, heading, list-item, quote and button", "sidecar_sql_change_required": false}
+  },
+  "v2_inline_run": {
+    "shape": {"text": "string", "marks": "sequential allowlisted string list", "href": "null or safe HTTP(S)/root-relative URL"},
+    "marks_allowlist": ["bold", "italic", "underline", "strike", "code"],
+    "limits": {"runs_per_text_block": 1000, "text_bytes_per_block": 262144, "document_json_bytes": 4194304},
+    "canonicalization": "mark order is deterministic; adjacent runs with equal marks and href merge",
+    "arbitrary_html": false,
+    "button_label_links": false
+  },
+  "editor": {
+    "text_surface": "contenteditable with controlled JSON state; DOM is reconstructed with createElement/textContent",
+    "formatting_controls": ["bold", "italic", "underline", "strike", "code", "apply_link", "remove_link"],
+    "shortcuts": {"CtrlOrMeta+B":"bold", "CtrlOrMeta+I":"italic", "CtrlOrMeta+U":"underline", "CtrlOrMeta+K":"focus_link_field", "Enter":"insert_newline_in_current_block"},
+    "clipboard": "paste and drop use text/plain only",
+    "persistence": "existing explicit form POST only; no autosave"
+  },
+  "compatibility": {
+    "v1_to_v2": "in-memory conversion of plain text to one unmarked run; opening alone does not persist",
+    "legacy_html_conversion": "continues to produce v1 plain-text documents",
+    "server_validation_authoritative": true,
+    "unknown_version_or_mark": "reject; no fallback to empty/unsafe markup"
+  },
+  "security": {
+    "renderer_tags": ["strong", "em", "u", "s", "code", "a"],
+    "all_text_and_hrefs_escaped": true,
+    "link_protocols": ["http", "https", "root-relative local paths"],
+    "credentials_and_protocol_relative_links_rejected": true,
+    "client_dom_html_string_persistence": false,
+    "execCommand": false
+  },
+  "execution_limits": {
+    "product_code_changed_in_github": false,
+    "php_sql_browser_app_tests_executed": false,
+    "database_accessed": false,
+    "migration_applied_or_assumed": false
+  }
+}
