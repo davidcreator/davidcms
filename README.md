@@ -1,28 +1,28 @@
-# BDREditor — bloco editorial de aviso/callout
+# BDREditor — detalhes/accordion acessível
 
-Incremento cumulativo sobre **BDREditor-Unsaved-Changes-Warning**, no editor exclusivo do ReamurCMS.
+Incremento cumulativo sobre **BDREditor-Editorial-Callout**, para o editor exclusivo do ReamurCMS.
 
 ## Funcionalidade
 
-- Novo bloco v2 `core/callout`, com conteúdo inline seguro e sem filhos.
-- Quatro tons fixos: `info`, `success`, `warning` e `danger`. O inspetor tem seleção nativa e localizada; conteúdo inicial também é localizado.
-- Prévia administrativa e renderer público com saída semântica `<aside role="note">`, paleta fixa de alto contraste e rich text via renderer allowlisted.
-- Validação cliente e server-side falha fechada para tom inválido, atributos desconhecidos, children ou uso em documento v1.
+- Novo bloco v2 `core/details`: título resumido e conteúdo inline em um `<details>` nativo.
+- Summary obrigatório, simples, escapado, limite 512 bytes; conteúdo por runs com a allowlist existente. Sem filhos, `open` persistido ou atributos adicionais.
+- Render público começa recolhido e pode ser aberto/fechado pelo teclado usando o comportamento nativo. Prévia do editor começa aberta para edição; o inspetor edita o título.
+- Texto de interface e conteúdo inicial localizados em PT-BR/EN-US/ES-EU.
 
-Não altera o formato raiz v2 nem adiciona migration/persistência. Sem HTML/CSS arbitrário, GitHub write, runtime, banco, staging ou deploy.
+Sem alteração de versão raiz, migration, persistência, API, HTML livre, scripts ou CSS controlado por documento.
 
-## Verificações executadas
+## Verificações
 
 ```sh
 node --check dev/admin/view/js/blog-block-editor.js
-node tests/check_callout.js
-node tools/e2e/e2e_bdre_callout_static.cjs
+node tests/check_details.js
+node tools/e2e/e2e_bdre_details_static.cjs
 ```
 
-Checker funcional: **14 PASS**. Checker estático E2E novo: **34 PASS**. Todos os checkers cumulativos `tools/e2e/*.cjs` e parsing das fixtures JSON também passaram. `php -l` e runtime PHP não foram executados porque PHP não está instalado; não houve browser real.
+Checker funcional: **12 PASS**; checker estático novo: **27 PASS**. Todos os checkers cumulativos e fixtures JSON também foram verificados. PHP lint/runtime e navegador real não foram executados no ambiente.
 
-- Contrato e limites: `docs/BDREditor-Editorial-Callout.md`
-- Fixture: `tests/fixtures/core_callout.json`
-- Checker funcional: `tests/check_callout.js`
-- Checker estático: `tools/e2e/e2e_bdre_callout_static.cjs`
-- Checksums: `SHA256SUMS`
+- Especificação: `docs/BDREditor-Accessible-Details.md`
+- Fixture: `tests/fixtures/core_details.json`
+- Checker funcional: `tests/check_details.js`
+- Checker estático: `tools/e2e/e2e_bdre_details_static.cjs`
+- Manifesto: `SHA256SUMS`

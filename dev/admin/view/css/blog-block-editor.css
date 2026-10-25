@@ -145,3 +145,10 @@
 .rb-block[data-callout-tone="success"]{background:#eaf7ee;border-inline-start-color:#27804b}
 .rb-block[data-callout-tone="warning"]{background:#fff5dd;border-inline-start-color:#9a6200}
 .rb-block[data-callout-tone="danger"]{background:#fcebec;border-inline-start-color:#ae2835}
+
+/* Native disclosure shown open in the editor preview so its rich-text body stays editable. */
+.rb-details-admin-preview{border:1px solid #c8d3e2;border-radius:.4rem;background:#fff}
+.rb-details-admin-summary{padding:.55rem .7rem;cursor:pointer;font-weight:700;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:.15em}
+.rb-details-admin-summary:hover{text-decoration-color:currentColor}
+.rb-details-admin-summary:focus-visible{outline:3px solid #174ea6;outline-offset:2px}
+.rb-details-admin-preview[open]>.rb-content{padding:.5rem .7rem .75rem}

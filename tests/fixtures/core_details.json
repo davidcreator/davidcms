@@ -1,0 +1,9 @@
+{
+  "document": {
+    "format_version": 2,
+    "blocks": [
+      {"id":"details-faq","type":"core/details","attributes":{"summary":"Quais são os horários de atendimento?"},"children":[],"content":[{"text":"O atendimento ocorre de segunda a sexta, das 9h às 17h.","marks":[],"href":null}]},
+      {"id":"details-shipping","type":"core/details","attributes":{"summary":"Entrega e retirada"},"children":[],"content":[{"text":"Consulte as opções disponíveis para a sua região.","marks":["italic"],"href":null}]}
+    ]
+  }
+}

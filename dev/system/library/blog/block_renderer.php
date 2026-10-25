@@ -70,6 +70,10 @@ final class BlockRenderer {
                 $tone = (string)$attributes['tone']; // validated enum; never interpolates arbitrary class data
                 return '<aside class="rms-block rms-block-callout rms-block-callout--' . $tone . '" role="note">' . $content . '</aside>';
 
+            case 'core/details':
+                $summary = $this->escape((string)$attributes['summary']);
+                return '<details class="rms-block rms-block-details"><summary>' . $summary . '</summary><div class="rms-block-details__content">' . $content . '</div></details>';
+
             case 'core/image':
                 return $this->renderImageFigure($attributes, $assetBase);
 

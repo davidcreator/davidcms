@@ -330,3 +330,9 @@ $_['text_block_callout_tone_success'] = 'Success';
 $_['text_block_callout_tone_warning'] = 'Warning';
 $_['text_block_callout_tone_danger'] = 'Critical';
 $_['text_block_callout_default'] = 'Add an important note for readers.';
+
+// BDREditor accessible details block
+$_['text_block_type_details'] = 'Expandable details';
+$_['text_block_details_summary_label'] = 'Expandable section title';
+$_['text_block_details_summary_default'] = 'More information';
+$_['text_block_details_default'] = 'Add the details here.';

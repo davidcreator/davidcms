@@ -330,3 +330,9 @@ $_['text_block_callout_tone_success'] = 'Éxito';
 $_['text_block_callout_tone_warning'] = 'Advertencia';
 $_['text_block_callout_tone_danger'] = 'Crítico';
 $_['text_block_callout_default'] = 'Añade una información importante.';
+
+// BDREditor accessible details block
+$_['text_block_type_details'] = 'Detalles desplegables';
+$_['text_block_details_summary_label'] = 'Título de la sección desplegable';
+$_['text_block_details_summary_default'] = 'Más información';
+$_['text_block_details_default'] = 'Añade los detalles aquí.';
