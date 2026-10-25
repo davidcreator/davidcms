@@ -336,3 +336,12 @@ $_['text_block_type_details'] = 'Expandable details';
 $_['text_block_details_summary_label'] = 'Expandable section title';
 $_['text_block_details_summary_default'] = 'More information';
 $_['text_block_details_default'] = 'Add the details here.';
+
+// BDREditor vertical spacer block
+$_['text_block_type_spacer'] = 'Vertical spacer';
+$_['text_block_spacer_height'] = 'Spacing height';
+$_['text_block_spacer_16'] = 'Extra small · 16 px';
+$_['text_block_spacer_32'] = 'Small · 32 px';
+$_['text_block_spacer_48'] = 'Medium · 48 px';
+$_['text_block_spacer_64'] = 'Large · 64 px';
+$_['text_block_spacer_96'] = 'Extra large · 96 px';

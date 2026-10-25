@@ -336,3 +336,12 @@ $_['text_block_type_details'] = 'Detalhes expansíveis';
 $_['text_block_details_summary_label'] = 'Título da seção expansível';
 $_['text_block_details_summary_default'] = 'Mais informações';
 $_['text_block_details_default'] = 'Adicione os detalhes aqui.';
+
+// BDREditor vertical spacer block
+$_['text_block_type_spacer'] = 'Espaçador vertical';
+$_['text_block_spacer_height'] = 'Altura do espaçamento';
+$_['text_block_spacer_16'] = 'Muito pequeno · 16 px';
+$_['text_block_spacer_32'] = 'Pequeno · 32 px';
+$_['text_block_spacer_48'] = 'Médio · 48 px';
+$_['text_block_spacer_64'] = 'Grande · 64 px';
+$_['text_block_spacer_96'] = 'Muito grande · 96 px';

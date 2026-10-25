@@ -1,0 +1,12 @@
+{
+  "document": {
+    "format_version": 2,
+    "blocks": [
+      {"id":"spacer-16","type":"core/spacer","attributes":{"height":16},"children":[],"content":""},
+      {"id":"spacer-32","type":"core/spacer","attributes":{"height":32},"children":[],"content":""},
+      {"id":"spacer-48","type":"core/spacer","attributes":{"height":48},"children":[],"content":""},
+      {"id":"spacer-64","type":"core/spacer","attributes":{"height":64},"children":[],"content":""},
+      {"id":"spacer-96","type":"core/spacer","attributes":{"height":96},"children":[],"content":""}
+    ]
+  }
+}

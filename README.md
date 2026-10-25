@@ -1,28 +1,21 @@
-# BDREditor — detalhes/accordion acessível
+# BDREditor — espaçador vertical
 
-Incremento cumulativo sobre **BDREditor-Editorial-Callout**, para o editor exclusivo do ReamurCMS.
+Incremento cumulativo sobre **BDREditor-Accessible-Details**, no editor exclusivo do ReamurCMS.
 
-## Funcionalidade
-
-- Novo bloco v2 `core/details`: título resumido e conteúdo inline em um `<details>` nativo.
-- Summary obrigatório, simples, escapado, limite 512 bytes; conteúdo por runs com a allowlist existente. Sem filhos, `open` persistido ou atributos adicionais.
-- Render público começa recolhido e pode ser aberto/fechado pelo teclado usando o comportamento nativo. Prévia do editor começa aberta para edição; o inspetor edita o título.
-- Texto de interface e conteúdo inicial localizados em PT-BR/EN-US/ES-EU.
-
-Sem alteração de versão raiz, migration, persistência, API, HTML livre, scripts ou CSS controlado por documento.
+O novo bloco `core/spacer` oferece presets fixos de **16, 32, 48, 64 ou 96 px**. O editor usa select localizado; cliente e servidor validam o enum. A saída é decorativa (`aria-hidden="true"`) e usa apenas classes CSS fixas — sem estilo arbitrário, conteúdo ou filhos. Compatível somente com documento v2; a raiz e a persistência não mudam.
 
 ## Verificações
 
 ```sh
 node --check dev/admin/view/js/blog-block-editor.js
-node tests/check_details.js
-node tools/e2e/e2e_bdre_details_static.cjs
+node tests/check_spacer.js
+node tools/e2e/e2e_bdre_spacer_static.cjs
 ```
 
-Checker funcional: **12 PASS**; checker estático novo: **27 PASS**. Todos os checkers cumulativos e fixtures JSON também foram verificados. PHP lint/runtime e navegador real não foram executados no ambiente.
+Checker funcional: **15 PASS**; checker estático: **36 PASS**. Suites cumulativas e fixtures JSON também são executadas antes da entrega. PHP lint/runtime não foram executados porque PHP não está instalado; não houve teste em browser real.
 
-- Especificação: `docs/BDREditor-Accessible-Details.md`
-- Fixture: `tests/fixtures/core_details.json`
-- Checker funcional: `tests/check_details.js`
-- Checker estático: `tools/e2e/e2e_bdre_details_static.cjs`
-- Manifesto: `SHA256SUMS`
+- Contrato: `docs/BDREditor-Vertical-Spacer.md`
+- Fixture: `tests/fixtures/core_spacer.json`
+- Checker: `tests/check_spacer.js`
+- Checker estático: `tools/e2e/e2e_bdre_spacer_static.cjs`
+- SHA-256: `SHA256SUMS`

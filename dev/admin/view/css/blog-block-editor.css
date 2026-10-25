@@ -152,3 +152,11 @@
 .rb-details-admin-summary:hover{text-decoration-color:currentColor}
 .rb-details-admin-summary:focus-visible{outline:3px solid #174ea6;outline-offset:2px}
 .rb-details-admin-preview[open]>.rb-content{padding:.5rem .7rem .75rem}
+
+/* Spacer preset previews mirror the fixed public CSS scale. */
+.rb-spacer-preview{margin-inline:auto;width:100%;border-top:1px dashed #7b8797}
+.rb-block[data-spacer-height="16"] .rb-spacer-preview{height:16px}
+.rb-block[data-spacer-height="32"] .rb-spacer-preview{height:32px}
+.rb-block[data-spacer-height="48"] .rb-spacer-preview{height:48px}
+.rb-block[data-spacer-height="64"] .rb-spacer-preview{height:64px}
+.rb-block[data-spacer-height="96"] .rb-spacer-preview{height:96px}

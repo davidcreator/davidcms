@@ -143,17 +143,18 @@ class BlockDocument {
         if ($keys !== ['attributes', 'children', 'content', 'id', 'type']) { $errors[] = 'node_shape_invalid'; return; }
         if (!is_string($node['id']) || !preg_match('/^[A-Za-z0-9_-]{1,96}$/D', $node['id']) || isset($ids[$node['id']])) $errors[] = 'node_id_invalid_or_duplicate';
         else $ids[$node['id']] = true;
-        $types = ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/callout','core/details','core/image','core/video_embed','core/button','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row','core/table-cell','core/file','core/audio'];
+        $types = ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/callout','core/details','core/spacer','core/image,'core/video_embed','core/button','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row','core/table-cell','core/file','core/audio'];
         if (!is_string($node['type']) || !in_array($node['type'], $types, true)) { $errors[] = 'unknown_block_type'; return; }
         if (!is_array($node['attributes']) || !is_array($node['children']) || !$this->isSequentialList($node['children'])) { $errors[] = 'node_value_type_invalid'; return; }
         $type = $node['type']; $attrs = $node['attributes'];
         if ($version === self::FORMAT_VERSION && in_array($type, ['core/gallery','core/cover'], true)) $errors[] = 'media_block_requires_v2';
         if ($version === self::FORMAT_VERSION && $type === 'core/callout') $errors[] = 'callout_requires_v2';
         if ($version === self::FORMAT_VERSION && $type === 'core/details') $errors[] = 'details_requires_v2';
+        if ($version === self::FORMAT_VERSION && $type === 'core/spacer') $errors[] = 'spacer_requires_v2';
         if ($version === self::FORMAT_VERSION && $type === 'core/table') $errors[] = 'table_requires_v2';
         $allowedAttrs = [
             'core/paragraph' => ['align'], 'core/heading' => ['level'], 'core/list' => ['ordered'],
-            'core/list-item' => [], 'core/quote' => [], 'core/callout' => ['tone'], 'core/details' => ['summary'], 'core/image' => ['src','alt','title'],
+            'core/list-item' => [], 'core/quote' => [], 'core/callout' => ['tone'], 'core/details' => ['summary'], 'core/spacer' => ['height'], 'core/image' => ['src','alt','title'],
             'core/video_embed' => ['url'], 'core/button' => ['url'], 'core/separator' => [],
             'core/group' => [], 'core/columns' => ['count'], 'core/column' => [],
             'core/gallery' => ['columns','align'], 'core/cover' => ['src','alt','align'],
@@ -188,6 +189,7 @@ class BlockDocument {
         if ($type === 'core/button' && (!isset($attrs['url']) || !$this->isSafeActionUrl($attrs['url']))) $errors[] = 'button_url_invalid';
         if ($type === 'core/callout' && (!isset($attrs['tone']) || !in_array($attrs['tone'], ['info','success','warning','danger'], true))) $errors[] = 'callout_tone_invalid';
         if ($type === 'core/details' && (!isset($attrs['summary']) || !is_string($attrs['summary']) || trim($attrs['summary']) === '' || strlen($attrs['summary']) > 512 || !preg_match('//u', $attrs['summary']))) $errors[] = 'details_summary_invalid';
+        if ($type === 'core/spacer' && (!isset($attrs['height']) || !in_array($attrs['height'], [16,32,48,64,96], true))) $errors[] = 'spacer_height_invalid';
         if ($type === 'core/table' && (!isset($attrs['header']) || !is_bool($attrs['header']) || count($node['children']) < 1 || count($node['children']) > self::MAX_TABLE_ROWS)) $errors[] = 'table_shape_invalid';
         if ($type === 'core/table-row' && (count($node['children']) < 1 || count($node['children']) > self::MAX_TABLE_COLUMNS)) $errors[] = 'table_row_shape_invalid';
         if ($type === 'core/columns' && (!isset($attrs['count']) || !is_int($attrs['count']) || !in_array($attrs['count'], [2,3], true) || count($node['children']) !== $attrs['count'])) $errors[] = 'columns_count_invalid';

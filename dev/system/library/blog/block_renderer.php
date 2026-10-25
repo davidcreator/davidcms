@@ -74,6 +74,10 @@ final class BlockRenderer {
                 $summary = $this->escape((string)$attributes['summary']);
                 return '<details class="rms-block rms-block-details"><summary>' . $summary . '</summary><div class="rms-block-details__content">' . $content . '</div></details>';
 
+            case 'core/spacer':
+                $height = (int)$attributes['height']; // closed numeric enum; styles map only to fixed CSS classes
+                return '<div class="rms-block rms-block-spacer rms-block-spacer--' . $height . '" aria-hidden="true"></div>';
+
             case 'core/image':
                 return $this->renderImageFigure($attributes, $assetBase);
 

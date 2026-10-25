@@ -83,3 +83,11 @@
 .rms-block-details__content{padding:0 1rem 1rem}
 .rms-block-details__content>:first-child{margin-top:0}
 .rms-block-details__content>:last-child{margin-bottom:0}
+
+/* BDREditor spacer: decorative fixed-size vertical gaps, no document-controlled CSS. */
+.rms-block-spacer{display:block;width:100%;min-width:0}
+.rms-block-spacer--16{height:16px}
+.rms-block-spacer--32{height:32px}
+.rms-block-spacer--48{height:48px}
+.rms-block-spacer--64{height:64px}
+.rms-block-spacer--96{height:96px}
