@@ -21,6 +21,9 @@ class BlockDocument {
     public const MAX_MEDIA_TEXT_BYTES = 4096;
     public const MAX_GALLERY_IMAGES = 20;
     public const MAX_COVER_CHILDREN = 12;
+    public const MAX_TABLE_ROWS = 20;
+    public const MAX_TABLE_COLUMNS = 12;
+    public const MAX_TABLE_TEXT_BYTES = 262144;
     public const MAX_SOURCE_BYTES = 1048576;
     public const MAX_BLOCKS = 1000;
     public const MAX_TOTAL_NODES = 2000;
@@ -140,21 +143,24 @@ class BlockDocument {
         if ($keys !== ['attributes', 'children', 'content', 'id', 'type']) { $errors[] = 'node_shape_invalid'; return; }
         if (!is_string($node['id']) || !preg_match('/^[A-Za-z0-9_-]{1,96}$/D', $node['id']) || isset($ids[$node['id']])) $errors[] = 'node_id_invalid_or_duplicate';
         else $ids[$node['id']] = true;
-        $types = ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/image','core/video_embed','core/button','core/separator','core/group','core/columns','core/column','core/gallery','core/cover'];
+        $types = ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/image','core/video_embed','core/button','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row','core/table-cell'];
         if (!is_string($node['type']) || !in_array($node['type'], $types, true)) { $errors[] = 'unknown_block_type'; return; }
         if (!is_array($node['attributes']) || !is_array($node['children']) || !$this->isSequentialList($node['children'])) { $errors[] = 'node_value_type_invalid'; return; }
         $type = $node['type']; $attrs = $node['attributes'];
         if ($version === self::FORMAT_VERSION && in_array($type, ['core/gallery','core/cover'], true)) $errors[] = 'media_block_requires_v2';
+        if ($version === self::FORMAT_VERSION && $type === 'core/table') $errors[] = 'table_requires_v2';
         $allowedAttrs = [
             'core/paragraph' => ['align'], 'core/heading' => ['level'], 'core/list' => ['ordered'],
             'core/list-item' => [], 'core/quote' => [], 'core/image' => ['src','alt','title'],
             'core/video_embed' => ['url'], 'core/button' => ['url'], 'core/separator' => [],
             'core/group' => [], 'core/columns' => ['count'], 'core/column' => [],
-            'core/gallery' => ['columns','align'], 'core/cover' => ['src','alt','align']
+            'core/gallery' => ['columns','align'], 'core/cover' => ['src','alt','align'],
+            'core/table' => ['header'], 'core/table-row' => [], 'core/table-cell' => []
         ];
         if ($version === self::RICH_TEXT_FORMAT_VERSION) {
             $allowedAttrs['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
             $allowedAttrs['core/group'] = ['outline_label'];
+            $allowedAttrs['core/table'] = ['header'];
         }
         if (array_diff(array_keys($attrs), $allowedAttrs[$type])) $errors[] = 'attributes_not_allowlisted';
         if ($type === 'core/paragraph' && isset($attrs['align']) && !in_array($attrs['align'], ['left','center','right'], true)) $errors[] = 'alignment_invalid';
@@ -174,8 +180,10 @@ class BlockDocument {
         if ($type === 'core/cover' && (!isset($attrs['src']) || !$this->isSafeImagePath($attrs['src']) || !isset($attrs['alt']) || !is_string($attrs['alt']) || strlen($attrs['alt']) > self::MAX_MEDIA_TEXT_BYTES || !preg_match('//u', (string)$attrs['alt']) || !isset($attrs['align']) || !in_array($attrs['align'], ['content','wide','full'], true) || count($node['children']) < 1 || count($node['children']) > self::MAX_COVER_CHILDREN)) $errors[] = 'cover_attributes_or_children_invalid';
         if ($type === 'core/video_embed' && (!isset($attrs['url']) || !$this->isSafeEmbedUrl($attrs['url']))) $errors[] = 'embed_url_invalid';
         if ($type === 'core/button' && (!isset($attrs['url']) || !$this->isSafeActionUrl($attrs['url']))) $errors[] = 'button_url_invalid';
+        if ($type === 'core/table' && (!isset($attrs['header']) || !is_bool($attrs['header']) || count($node['children']) < 1 || count($node['children']) > self::MAX_TABLE_ROWS)) $errors[] = 'table_shape_invalid';
+        if ($type === 'core/table-row' && (count($node['children']) < 1 || count($node['children']) > self::MAX_TABLE_COLUMNS)) $errors[] = 'table_row_shape_invalid';
         if ($type === 'core/columns' && (!isset($attrs['count']) || !is_int($attrs['count']) || !in_array($attrs['count'], [2,3], true) || count($node['children']) !== $attrs['count'])) $errors[] = 'columns_count_invalid';
-        $textTypes = ['core/paragraph','core/heading','core/list-item','core/quote','core/button'];
+        $textTypes = ['core/paragraph','core/heading','core/list-item','core/quote','core/button','core/table-cell'];
         if ($version === self::FORMAT_VERSION) {
             if (!is_string($node['content'])) $errors[] = 'legacy_content_must_be_string';
             elseif (strlen($node['content']) > self::MAX_INLINE_CONTENT_BYTES) $errors[] = 'block_content_too_large';
@@ -185,9 +193,11 @@ class BlockDocument {
         } elseif (!is_string($node['content']) || $node['content'] !== '') {
             $errors[] = 'non_text_content_invalid';
         }
-        if (in_array($type, ['core/list','core/image','core/video_embed','core/separator','core/group','core/columns','core/column','core/gallery','core/cover'], true) && $node['content'] !== '') $errors[] = 'content_not_allowed';
+        if (in_array($type, ['core/list','core/image','core/video_embed','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row'], true) && $node['content'] !== '') $errors[] = 'content_not_allowed';
         if ($type === 'core/list-item' && ($parentType !== 'core/list' || count($node['children']) > 0)) $errors[] = 'list_item_parent_invalid';
         if ($type === 'core/column' && $parentType !== 'core/columns') $errors[] = 'column_parent_invalid';
+        if ($type === 'core/table-row' && $parentType !== 'core/table') $errors[] = 'table_row_parent_invalid';
+        if ($type === 'core/table-cell' && $parentType !== 'core/table-row') $errors[] = 'table_cell_parent_invalid';
         if ($type === 'core/list') {
             if (count($node['children']) < 1) $errors[] = 'empty_list';
             foreach ($node['children'] as $child) if (!is_array($child) || ($child['type'] ?? null) !== 'core/list-item') $errors[] = 'list_child_invalid';
@@ -195,6 +205,25 @@ class BlockDocument {
             foreach ($node['children'] as $child) if (!is_array($child) || ($child['type'] ?? null) !== 'core/column') $errors[] = 'columns_child_invalid';
         } elseif ($type === 'core/gallery') {
             foreach ($node['children'] as $child) if (!is_array($child) || ($child['type'] ?? null) !== 'core/image') $errors[] = 'gallery_child_invalid';
+        } elseif ($type === 'core/table') {
+            $columnCount = null; $tableTextBytes = 0;
+            foreach ($node['children'] as $row) {
+                if (!is_array($row) || ($row['type'] ?? null) !== 'core/table-row') { $errors[] = 'table_row_invalid'; continue; }
+                $cells = $row['children'] ?? [];
+                if ($columnCount === null) $columnCount = count($cells);
+                if (count($cells) !== $columnCount) $errors[] = 'table_columns_mismatch';
+                foreach ($cells as $cell) {
+                    if (!is_array($cell) || ($cell['type'] ?? null) !== 'core/table-cell') { $errors[] = 'table_cell_invalid'; continue; }
+                    foreach (($cell['content'] ?? []) as $run) if (is_array($run) && is_string($run['text'] ?? null)) $tableTextBytes += strlen($run['text']);
+                }
+            }
+            if ($columnCount === null || $columnCount < 1 || $columnCount > self::MAX_TABLE_COLUMNS) $errors[] = 'table_column_count_invalid';
+            if ($tableTextBytes > self::MAX_TABLE_TEXT_BYTES) $errors[] = 'table_text_too_large';
+        } elseif ($type === 'core/table-row') {
+            if ($parentType !== 'core/table' || count($attrs) > 0) $errors[] = 'table_row_invalid';
+            foreach ($node['children'] as $cell) if (!is_array($cell) || ($cell['type'] ?? null) !== 'core/table-cell') $errors[] = 'table_cell_invalid';
+        } elseif ($type === 'core/table-cell') {
+            if ($parentType !== 'core/table-row' || count($attrs) > 0 || count($node['children']) > 0) $errors[] = 'table_cell_invalid';
         } elseif ($type === 'core/cover') {
             $coverChildTypes = ['core/heading','core/paragraph','core/quote','core/button'];
             foreach ($node['children'] as $child) if (!is_array($child) || !in_array(($child['type'] ?? null), $coverChildTypes, true)) $errors[] = 'cover_child_invalid';
@@ -202,7 +231,7 @@ class BlockDocument {
             if ($type === 'core/group' && array_diff(array_keys($attrs), $version === self::RICH_TEXT_FORMAT_VERSION ? ['outline_label'] : [])) $errors[] = 'group_attributes_invalid';
             if ($type === 'core/column' && count($attrs) > 0) $errors[] = 'column_attributes_invalid';
             if (count($node['children']) < 1) $errors[] = 'empty_container';
-            foreach ($node['children'] as $child) if (is_array($child) && in_array(($child['type'] ?? null), ['core/list-item','core/column'], true)) $errors[] = 'internal_node_parent_invalid';
+            foreach ($node['children'] as $child) if (is_array($child) && in_array(($child['type'] ?? null), ['core/list-item','core/column','core/table-row','core/table-cell'], true)) $errors[] = 'internal_node_parent_invalid';
         } elseif ($type !== 'core/list-item' && count($node['children']) > 0) {
             $errors[] = 'children_not_allowed';
         }

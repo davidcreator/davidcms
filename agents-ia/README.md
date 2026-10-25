@@ -1,8 +1,11 @@
-# Agentes IA — F9-27
+# Instruções para agentes — BDREditor table increment
 
-- Só executar o release gate em ambiente descartável depois de autorização explícita.
-- Confirmar F9-12 com o responsável; não presumir schema aplicado e não rodar migration automaticamente.
-- Preservar proibição de testes PHP/SQL/browser/app/E2E nesta entrega; checker atual é apenas estático.
-- Sem produção, dumps, dados pessoais, credenciais em logs ou publicação automática.
-- Se houver diferença de commit/schema, ambiente não isolado, dados inesperados ou qualquer falha, parar e registrar apenas síntese sem payload sensível.
-- A aprovação/reprovação de release é decisão humana; nenhum PASS estático libera produção.
+- O produto é ReamurCMS; o editor autoral é BDREditor.
+- Não adicionar ou depender do WordPress Gutenberg; não copiar código/assets.
+- Tratar o contrato em `docs/BDREditor-Table-Contract.json` como especificação desta entrega.
+- Server validation/renderer são autoridade; client validation é somente UX.
+- Preservar v1; tabela somente em v2. Não adicionar HTML/CSS/JS arbitrários.
+- Não alterar fluxo de persistência, não criar autosave, endpoint, SQL, migration ou banco.
+- Não enviar credenciais/dados reais em fixtures. Usar apenas material sintético.
+- Testes runtime e staging estão fora da autorização desta entrega. Não executar PHP/browser/app/DB.
+- Não escrever no GitHub nem publicar/deployar este pacote.

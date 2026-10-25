@@ -1,0 +1,16 @@
+{
+  "editor": "BDREditor",
+  "increment": "BDREditor-01-Table",
+  "status": "STATIC_CHECKS_PASS_RUNTIME_NOT_RUN",
+  "date": "2026-10-25",
+  "checks": {
+    "node_check_editor_js": "PASS",
+    "node_check_init_js": "PASS",
+    "node_check_static_checker": "PASS",
+    "json_parse_contract_fixture_manifest": "PASS",
+    "client_validator_vm_fixtures_and_limits": "PASS",
+    "static_source_schema_renderer_translation_css": "PASS"
+  },
+  "not_run": ["PHP", "SQL", "browser", "application", "E2E runtime", "staging", "deploy", "migration", "database"],
+  "interpretation": "Static checks do not prove PHP runtime behavior, real browser interaction, screen-reader accessibility or deployment readiness."
+}

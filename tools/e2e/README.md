@@ -1,9 +1,11 @@
-# F9-27 E2E release gate — preparation only
+# BDREditor table checker — static-only
 
-## Static checker (safe to run now)
+Run from the package root:
 
-`node tools/e2e/e2e_f927_static.cjs [F9-27-root]` parses local contract/fixture JSON and confirms matrix and preflight remain blocked/not-run, required gates exist and fixtures use synthetic-only identifiers. It opens no network/socket/database and does not start the app, PHP or browser. Pre-flight fields are documented in `docs/F9-27-Preflight-Execucao.md` and `.json`; do not enter secrets there.
+```sh
+node tools/e2e/e2e_bdre_table_static.cjs
+```
 
-## Functional release gate (not executed)
+The checker parses the synthetic fixture, loads the pure client validator in Node VM (without DOM/browser), checks dimensions and limits, and scans the server schema, renderer, localization and CSS for the expected table contract.
 
-Run only after all conditions in `docs/F9-27-Release-Gate.md` are met and a new explicit authorization supersedes the no-runtime constraint. Confirm disposable staging and F9-12 status with responsible owner. Use synthetic test posts and media only; never run in production.
+It does **not** execute PHP, SQL, browser, app, E2E runtime, staging, deploy, migrations or database access. A PASS is not a PHP/runtime/security/accessibility certification.

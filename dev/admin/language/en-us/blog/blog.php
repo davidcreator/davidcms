@@ -218,6 +218,16 @@ $_['text_block_column_count'] = 'columns · stack on narrow screens';
 // F9-24: media blocks, responsive controls and built-in patterns
 $_['text_block_type_gallery'] = 'Gallery';
 $_['text_block_type_cover'] = 'Cover';
+
+// BDREditor: structured table controls
+$_['text_block_type_table'] = 'Table';
+$_['text_block_table_header'] = 'First row is a header';
+$_['text_block_table_add_row'] = 'Add row';
+$_['text_block_table_remove_row'] = 'Remove last row';
+$_['text_block_table_add_column'] = 'Add column';
+$_['text_block_table_remove_column'] = 'Remove last column';
+$_['text_block_table_toggle_header'] = 'Toggle header';
+$_['text_block_table_cell_label'] = 'Cell %1$d, %2$d';
 $_['text_block_caption'] = 'Caption';
 $_['text_block_alignment'] = 'Image alignment';
 $_['text_block_image_size'] = 'Size';

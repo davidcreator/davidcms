@@ -492,7 +492,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             'text_block_status_removed', 'text_block_status_undo', 'text_block_status_redo',
             'text_block_undo', 'text_block_redo', 'text_block_preview_desktop', 'text_block_preview_tablet', 'text_block_preview_mobile',
             'text_block_editor_tools', 'text_block_canvas', 'text_block_canvas_empty', 'text_block_inspector', 'text_block_inspector_empty', 'text_block_column_count',
-            'text_block_type_gallery', 'text_block_type_cover', 'text_block_caption', 'text_block_alignment', 'text_block_image_size', 'text_block_mobile_size',
+            'text_block_type_gallery', 'text_block_type_cover', 'text_block_type_table', 'text_block_table_header', 'text_block_table_add_row', 'text_block_table_remove_row', 'text_block_table_add_column', 'text_block_table_remove_column', 'text_block_table_toggle_header', 'text_block_table_cell_label', 'text_block_caption', 'text_block_alignment', 'text_block_image_size', 'text_block_mobile_size',
             'text_block_gallery_columns', 'text_block_media_source', 'text_block_image_alt', 'text_block_image_title',
             'text_block_align_left', 'text_block_align_center', 'text_block_align_right', 'text_block_align_content', 'text_block_align_wide', 'text_block_align_full',
             'text_block_size_small', 'text_block_size_medium', 'text_block_size_large', 'text_block_size_full',
@@ -532,7 +532,13 @@ class Blog extends \Reamur\System\Engine\Controller {
                 'core/button' => $data['text_block_type_button'], 'core/separator' => $data['text_block_type_separator'],
                 'core/group' => $data['text_block_type_group'], 'core/columns' => $data['text_block_type_columns'],
                 'core/list-item' => $data['text_block_type_list_item'], 'core/column' => $data['text_block_type_column'],
-                'core/gallery' => $data['text_block_type_gallery'], 'core/cover' => $data['text_block_type_cover'],
+                'core/gallery' => $data['text_block_type_gallery'], 'core/cover' => $data['text_block_type_cover'], 'core/table' => $data['text_block_type_table'],
+            ],
+            'table' => [
+                'header' => $data['text_block_table_header'], 'addRow' => $data['text_block_table_add_row'],
+                'removeRow' => $data['text_block_table_remove_row'], 'addColumn' => $data['text_block_table_add_column'],
+                'removeColumn' => $data['text_block_table_remove_column'], 'toggleHeader' => $data['text_block_table_toggle_header'],
+                'cellLabel' => $data['text_block_table_cell_label'],
             ],
             'media' => [
                 'caption' => $data['text_block_caption'], 'alignment' => $data['text_block_alignment'],

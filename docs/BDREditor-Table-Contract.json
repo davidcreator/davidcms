@@ -1,0 +1,45 @@
+{
+  "product": "ReamurCMS",
+  "editor": "BDREditor",
+  "increment": "BDREditor-01-Table (local proposal; no official F9 task number assigned)",
+  "base_head": "ffa278226a6ffa6d11f71d95b003d3b4dac39c01",
+  "document_version": 2,
+  "block_type": "core/table",
+  "shape": {
+    "table": {"attributes": {"header": "boolean, required"}, "content": "empty string", "children": "1..20 core/table-row"},
+    "row": {"attributes": {}, "content": "empty string", "children": "1..12 core/table-cell"},
+    "cell": {"attributes": {}, "content": "v2 inline run list", "children": []}
+  },
+  "constraints": {
+    "all_rows_same_column_count": true,
+    "header": "if true, first row renders as thead/th scope=col; remaining rows render in tbody",
+    "max_rows": 20,
+    "max_columns": 12,
+    "max_total_table_text_bytes": 262144,
+    "spans": false,
+    "formulas": false,
+    "custom_styles": false,
+    "arbitrary_html": false,
+    "database_migration": false
+  },
+  "editing": {
+    "insert_default": "3 rows x 3 columns with a header row",
+    "operations": ["edit cell rich text", "toggle header", "add row", "remove last row", "add column", "remove last column"],
+    "minimum_dimensions": "1 row x 1 column",
+    "maximum_dimensions": "20 rows x 12 columns",
+    "history": "each table structure action is one editor undo/redo commit",
+    "responsive": "bounded horizontal scrolling; no document-controlled CSS"
+  },
+  "rendering": {
+    "server_authoritative": true,
+    "elements": ["div", "table", "thead", "tbody", "tr", "th", "td"],
+    "cell_text": "fixed allowlisted inline tags and contextual escaping from shared rich text renderer",
+    "styles": "fixed ReamurCMS classes only"
+  },
+  "compatibility": {
+    "v1": "preserved unchanged; table rejected unless document format_version is 2",
+    "sidecar_or_sql_change": false,
+    "save_flow": "existing explicit form POST only; no autosave"
+  },
+  "verification_scope": "static JavaScript syntax, fixture parsing and client validator checks only; no PHP/browser/app/SQL runtime"
+}

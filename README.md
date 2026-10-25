@@ -1,12 +1,38 @@
-# Fase 9 · Tarefa 27 — E2E de staging e release gate
+# BDREditor — incremento local: bloco de tabela
 
-**Status: preparação local; release gate BLOQUEADO.** Base `main` verificada: `448dd61f467e8ce2b4a0d5bce481345dace4ca77` (F9-26). A F9-27 do roadmap pede testes em servidor/browser/DB em instância descartável, mas a autorização não foi concedida e seguem vigentes as restrições de não executar PHP/SQL/browser/app/E2E runtime.
+Este pacote implementa o primeiro bloco editorial novo do BDREditor, editor próprio do ReamurCMS. O Gutenberg é somente referência de interação; não há pacote, código ou asset do Gutenberg neste incremento.
 
-Esta entrega organiza o plano, casos sintéticos, critérios de parada e verificação estática. **Nenhum teste funcional, banco, migration ou deploy foi realizado.** O estado de F9-12 segue desconhecido/não confirmado; não se presume aplicada.
+## Implementado
 
-- Plano: `docs/F9-27-Release-Gate.md`
-- Matriz de gate: `docs/F9-27-Status.json`
-- Pré-flight aguardando autorização/staging/F9-12: `docs/F9-27-Preflight-Execucao.md` e `docs/F9-27-Preflight-Status.json`
-- Dados sintéticos: `tests/fixtures/blog_editor_f927_synthetic.json`
-- Checker estático apenas: `tools/e2e/e2e_f927_static.cjs`
-- HEAD/blob hashes: `docs/F9-27-Base-Hashes.json`
+- Novo `core/table` em documento v2, com modelo JSON hierárquico table → row → cell.
+- Limites: 20 linhas, 12 colunas, linhas retangulares e 262144 bytes de texto total por tabela.
+- Cabeçalho opcional (primeira linha semântica `thead/th scope=col`), sem spans, fórmulas ou estilos livres.
+- Edição inline das células com rich-text v2; controles acessíveis para cabeçalho, adicionar/remover linha e coluna.
+- Regras de dimensão mínima 1×1; inserção inicial 3×3.
+- Validação server/client e renderer server-side determinístico com escaping do rich text.
+- Preview responsivo com overflow horizontal controlado; strings localizadas PT-BR, EN-US e ES-EU.
+- Nenhuma migration, endpoint, persistência nova ou autosave.
+
+## Base e natureza da entrega
+
+- `main` consultada: `ffa278226a6ffa6d11f71d95b003d3b4dac39c01`, commit que adicionou o backlog BDREditor.
+- A revisão F9-26 confirmou que os 11 fontes cumulativos coincidiam com `main` no pai `d9e09d8`; esse commit posterior adicionou apenas a documentação de backlog.
+- Implementação local para revisão; não enviada ao GitHub. O pacote inclui fontes pontuais, não o projeto inteiro.
+- Isto é um incremento do BDREditor, sem número oficial de tarefa atribuído.
+
+## Verificações executadas
+
+- `node --check` em JS do editor e checker.
+- Parser JSON em contrato e fixtures.
+- Checker estático: `node tools/e2e/e2e_bdre_table_static.cjs`.
+- O validador JavaScript foi invocado isoladamente em Node/VM, sem DOM/browser, sobre fixtures sintéticas e limites dimensionais.
+
+**Não executados:** PHP, SQL, browser, app, E2E runtime, staging, deploy, migrations ou banco. O checker estático não certifica o PHP runtime, interação real, acessibilidade em leitor de tela ou rendering em catálogo.
+
+## Conteúdo
+
+- Contrato: `docs/BDREditor-Table-Contract.json`
+- Detalhes e aceite: `docs/BDREditor-Table.md`
+- Base/source hashes: `docs/BDREditor-Table-Base-Hashes.json`
+- Fixture: `tests/fixtures/bdre_table.json`
+- Checker: `tools/e2e/e2e_bdre_table_static.cjs`

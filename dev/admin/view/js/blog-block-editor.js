@@ -10,10 +10,10 @@
     ['core/paragraph', 'Parágrafo'], ['core/heading', 'Título'], ['core/list', 'Lista'],
     ['core/image', 'Imagem'], ['core/quote', 'Citação'], ['core/video_embed', 'Vídeo'],
     ['core/button', 'Botão'], ['core/separator', 'Separador'], ['core/group', 'Grupo'],
-    ['core/columns', 'Colunas'], ['core/gallery', 'Galeria'], ['core/cover', 'Capa']
+    ['core/columns', 'Colunas'], ['core/gallery', 'Galeria'], ['core/cover', 'Capa'], ['core/table', 'Tabela']
   ];
   const TEXT_TYPES = new Set(['core/paragraph', 'core/heading', 'core/list-item', 'core/quote', 'core/button']);
-  const BLOCK_CATEGORIES = { 'core/paragraph':'content', 'core/heading':'content', 'core/list':'content', 'core/quote':'content', 'core/button':'content', 'core/image':'media', 'core/video_embed':'media', 'core/gallery':'media', 'core/cover':'media', 'core/separator':'layout', 'core/group':'layout', 'core/columns':'layout' };
+  const BLOCK_CATEGORIES = { 'core/paragraph':'content', 'core/heading':'content', 'core/list':'content', 'core/quote':'content', 'core/button':'content', 'core/image':'media', 'core/video_embed':'media', 'core/gallery':'media', 'core/cover':'media', 'core/separator':'layout', 'core/group':'layout', 'core/columns':'layout', 'core/table':'content' };
   const TRANSFORMABLE_TEXT = new Set(['core/paragraph', 'core/heading', 'core/quote', 'core/button']);
   const CLONE = (value) => JSON.parse(JSON.stringify(value));
   let instanceSequence = 0;
@@ -44,7 +44,7 @@
   }
 
   const INLINE_MARKS = ['bold', 'italic', 'underline', 'strike', 'code'];
-  const BLOCK_TEXT_TYPES = new Set(['core/paragraph', 'core/heading', 'core/list-item', 'core/quote', 'core/button']);
+  const BLOCK_TEXT_TYPES = new Set(['core/paragraph', 'core/heading', 'core/list-item', 'core/quote', 'core/button', 'core/table-cell']);
   const INLINE_TAG_MARK = { STRONG: 'bold', B: 'bold', EM: 'italic', I: 'italic', U: 'underline', S: 'strike', DEL: 'strike', CODE: 'code' };
 
   function runsFromText(text) {
@@ -109,7 +109,7 @@
       if (!node || typeof node !== 'object' || Array.isArray(node) || depth > 16 || nodes > 2000 || Object.keys(node).sort().join(',') !== 'attributes,children,content,id,type') { errors.push('node_shape_or_limit'); return; }
       if (typeof node.id !== 'string' || !/^[A-Za-z0-9_-]{1,96}$/.test(node.id) || ids.has(node.id)) errors.push('node_id_invalid');
       else ids.add(node.id);
-      if (typeof node.type !== 'string' || !TYPES.some(([type]) => type === node.type) && node.type !== 'core/list-item' && node.type !== 'core/column') errors.push('unknown_type');
+      if (typeof node.type !== 'string' || !TYPES.some(([type]) => type === node.type) && node.type !== 'core/list-item' && node.type !== 'core/column' && node.type !== 'core/table-row' && node.type !== 'core/table-cell') errors.push('unknown_type');
       if (!node.attributes || typeof node.attributes !== 'object' || Array.isArray(node.attributes) || !Array.isArray(node.children)) { errors.push('node_fields_invalid'); return; }
       const textBlock = BLOCK_TEXT_TYPES.has(node.type);
       if (version === 1 && typeof node.content !== 'string') errors.push('legacy_content_invalid');
@@ -121,15 +121,17 @@
         'core/paragraph':['align'], 'core/heading':['level'], 'core/list':['ordered'], 'core/list-item':[],
         'core/quote':[], 'core/image':['src','alt','title'], 'core/video_embed':['url'], 'core/button':['url'],
         'core/separator':[], 'core/group':[], 'core/columns':['count'], 'core/column':[],
-        'core/gallery':['columns','align'], 'core/cover':['src','alt','align']
+        'core/gallery':['columns','align'], 'core/cover':['src','alt','align'], 'core/table':['header'], 'core/table-row':[], 'core/table-cell':[]
       };
       if (version === 2) {
         allowedAttributes['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
         allowedAttributes['core/group'] = ['outline_label'];
+        allowedAttributes['core/table'] = ['header'];
       }
       const allowed = allowedAttributes[node.type] || [];
       if (Object.keys(a).some((key) => !allowed.includes(key))) errors.push('attributes_not_allowlisted');
       if (version === 1 && ['core/gallery','core/cover'].includes(node.type)) errors.push('media_block_requires_v2');
+      if (version === 1 && node.type === 'core/table') errors.push('table_requires_v2');
       switch (node.type) {
         case 'core/paragraph': if (!['', 'left', 'center', 'right'].includes(a.align || '')) errors.push('align_invalid'); if (node.children.length) errors.push('paragraph_children'); break;
         case 'core/heading': if (![1,2,3,4,5,6].includes(a.level) || node.children.length) errors.push('heading_invalid'); break;
@@ -156,6 +158,16 @@
           break;
         case 'core/columns': if (node.content || Object.keys(a).some((key) => key !== 'count') || ![2,3].includes(a.count) || node.children.length !== a.count || node.children.some((child) => !child || child.type !== 'core/column')) errors.push('columns_invalid'); break;
         case 'core/column': if (parent !== 'core/columns' || node.content || Object.keys(a).length || node.children.length === 0) errors.push('column_invalid'); break;
+        case 'core/table': {
+          const rows = node.children;
+          const columns = rows.length && rows[0] && Array.isArray(rows[0].children) ? rows[0].children.length : 0;
+          let tableBytes = 0;
+          rows.forEach((row) => { if (!row || !Array.isArray(row.children)) return; row.children.forEach((cell) => { if (!cell || !Array.isArray(cell.content)) return; cell.content.forEach((run) => { if (run && typeof run.text === 'string') tableBytes += utf8Length(run.text); }); }); });
+          if (version !== 2 || typeof a.header !== 'boolean' || node.content || rows.length < 1 || rows.length > 20 || columns < 1 || columns > 12 || tableBytes > 262144 || rows.some((row) => !row || row.type !== 'core/table-row' || !Array.isArray(row.children) || row.children.length !== columns)) errors.push('table_invalid');
+          break;
+        }
+        case 'core/table-row': if (parent !== 'core/table' || node.content || Object.keys(a).length || node.children.length < 1 || node.children.length > 12 || node.children.some((cell) => !cell || cell.type !== 'core/table-cell')) errors.push('table_row_invalid'); break;
+        case 'core/table-cell': if (parent !== 'core/table-row' || Object.keys(a).length || node.children.length || version !== 2 || !validInlineRuns(node.content, node.type)) errors.push('table_cell_invalid'); break;
       }
       node.children.forEach((child) => visit(child, depth + 1, node.type));
     }
@@ -230,7 +242,7 @@
       this.slashTrigger = null;
       this.inserterQuery = '';
       this.statusMessage = '';
-      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},typeLabels:{}}, this.options.strings || {});
+      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},typeLabels:{}}, this.options.strings || {});
       const rawInitial = this.options.document || { format_version: 1, blocks: [] };
       const initial = upgradeDocument(rawInitial);
       const validation = validateDocument(initial);
@@ -366,6 +378,7 @@
       else if (name === 'move-down') this.moveNode(button.dataset.nodeId || this.selectedId, 1);
       else if (name === 'media') { global.document.dispatchEvent(new CustomEvent('blog-block-media-open', { detail: { editor: this } })); }
       else if (name === 'format-mark') this.applyInlineMark(button.dataset.mark);
+      else if (name.startsWith('table-')) this.updateTable(name, button.dataset.nodeId || this.selectedId);
       else if (name === 'link-apply') this.applyInlineLink(this.linkDraft);
       else if (name === 'link-remove') this.applyInlineLink(null);
       else if (name === 'preview') { this.preview = button.dataset.size; this.root.dataset.preview = this.preview; this.root.querySelectorAll('[data-action="preview"]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.size === this.preview))); }
@@ -558,11 +571,21 @@
         return this.node(type, { count }, '', columns);
       }
       if (type === 'core/quote') return this.node(type, {}, 'Citação');
+      if (type === 'core/table') {
+        const rows = [];
+        for (let r = 0; r < 3; r += 1) {
+          const cells = [];
+          for (let c = 0; c < 3; c += 1) cells.push(this.node('core/table-cell', {}, r === 0 ? 'Cabeçalho ' + (c + 1) : 'Célula'));
+          rows.push(this.node('core/table-row', {}, '', cells));
+        }
+        return this.node(type, { header:true }, '', rows);
+      }
       return this.node('core/paragraph', {}, 'Escreva seu conteúdo…');
     }
 
     insertTypes(afterId) {
       const found = afterId ? this.findPath(this.state.blocks, afterId) : null;
+      if (found && (found.node.type === 'core/table-cell' || (found.parent && found.parent.type === 'core/table-row'))) return [];
       if (found && (found.node.type === 'core/list' || (found.parent && found.parent.type === 'core/list'))) return [{ type:'core/list-item', category:'content' }];
       if (found && found.parent && found.parent.type === 'core/gallery') return found.parent.children.length < 20 ? [{ type:'core/image', category:'media' }] : [];
       if (found && found.parent && found.parent.type === 'core/cover') return found.parent.children.length < 12 ? ['core/heading','core/paragraph','core/quote','core/button'].map((type) => ({ type, category:'content' })) : [];
@@ -696,6 +719,23 @@
       location.target.splice(location.index,0,node); this.finishInsert(next,node);
     }
 
+    updateTable(action, id) {
+      if (this.locked) return;
+      const next = CLONE(this.state), found = this.findPath(next.blocks, id);
+      if (!found || found.node.type !== 'core/table') return;
+      const table = found.node, rows = table.children;
+      const cols = rows.length ? rows[0].children.length : 0;
+      if (action === 'table-toggle-header') table.attributes.header = !table.attributes.header;
+      else if (action === 'table-add-row' && rows.length < 20) {
+        const cells = []; for (let c = 0; c < cols; c += 1) cells.push(this.node('core/table-cell', {}, ''));
+        rows.push(this.node('core/table-row', {}, '', cells));
+      } else if (action === 'table-remove-row' && rows.length > 1) rows.pop();
+      else if (action === 'table-add-column' && cols < 12) rows.forEach((row) => row.children.push(this.node('core/table-cell', {}, '')));
+      else if (action === 'table-remove-column' && cols > 1) rows.forEach((row) => row.children.pop());
+      else return;
+      this.commit(next, table.id);
+    }
+
     findPath(nodes, id, parent) {
       for (let i = 0; i < nodes.length; i += 1) {
         if (nodes[i].id === id) return { nodes, index: i, node: nodes[i], parent: parent || null };
@@ -737,8 +777,21 @@
       const runs = normalizeDomInline(editor, found.node.type);
       this.recordTextEditSnapshot();
       found.node.content = runs;
-      const valid = validInlineRuns(runs, found.node.type);
-      const result = { valid, errors: valid ? [] : ['rich_content_invalid'] };
+      let valid = validInlineRuns(runs, found.node.type);
+      let errors = valid ? [] : ['rich_content_invalid'];
+      if (valid && found.node.type === 'core/table-cell') {
+        let ancestor = found.parent;
+        while (ancestor && ancestor.type !== 'core/table') {
+          const ancestorPath = this.findPath(this.state.blocks, ancestor.id);
+          ancestor = ancestorPath ? ancestorPath.parent : null;
+        }
+        if (ancestor && ancestor.type === 'core/table') {
+          let totalBytes = 0;
+          ancestor.children.forEach((row) => row.children.forEach((cell) => cell.content.forEach((run) => { totalBytes += utf8Length(run.text); })));
+          if (totalBytes > 262144) { valid = false; errors = ['table_text_too_large']; }
+        }
+      }
+      const result = { valid, errors };
       this.root.dataset.valid = valid ? 'true' : 'false';
       this.onChange(valid ? this.state : null, result);
       this.updateHistoryButtons();
@@ -948,7 +1001,24 @@
       else if (node.type === 'core/gallery') card.append(this.el('p','rb-preview-value',this.label('core/gallery') + ' · ' + node.children.length));
       else if (node.type === 'core/cover') card.append(this.renderAdminImagePreview(node,'rb-cover-admin-preview'));
       else if (node.type === 'core/columns') card.append(this.el('p', 'rb-preview-value', node.attributes.count + ' ' + this.strings.columnCount));
-      node.children.forEach((child) => card.append(this.renderNode(child, false)));
+      else if (node.type === 'core/table') {
+        const wrap = this.el('div','rb-table-preview'); const table = this.el('table','');
+        const body = this.el('tbody','');
+        node.children.forEach((row,rowIndex) => {
+          const tr = this.el('tr','');
+          row.children.forEach((cell,colIndex) => {
+            const isHeader = !!node.attributes.header && rowIndex === 0; const td = this.el(isHeader ? 'th' : 'td','');
+            if (isHeader) td.setAttribute('scope','col');
+            const editor = this.el('div','rb-table-cell-content'); editor.contentEditable = 'true'; editor.dataset.editContent = cell.id; editor.setAttribute('role','textbox'); editor.setAttribute('aria-multiline','true');
+            editor.setAttribute('aria-label',(this.strings.table.cellLabel || 'Cell %1$d, %2$d').replace('%1$d',String(rowIndex+1)).replace('%2$d',String(colIndex+1)));
+            buildInlineDom(editor,cell.content); if (cell.id === this.selectedId) td.append(this.renderInlineToolbar(cell)); td.append(editor); tr.append(td);
+          });
+          body.append(tr);
+        });
+        if (node.attributes.header && body.firstElementChild) { const head = this.el('thead',''); head.append(body.firstElementChild); table.append(head); }
+        if (body.childNodes.length) table.append(body); wrap.append(table); card.append(wrap);
+      }
+      if (node.type !== 'core/table') node.children.forEach((child) => card.append(this.renderNode(child, false)));
       return card;
     }
 
@@ -957,6 +1027,7 @@
       if (!this.state.blocks.length) { nav.append(this.el('p','rb-muted',this.strings.outlineEmpty)); return nav; }
       const list = this.el('ol','rb-outline-list');
       const append = (nodes,parent,depth) => nodes.forEach((node) => {
+        if (['core/table-row','core/table-cell'].includes(node.type)) return;
         const item = this.el('li','rb-outline-item');
         const outlineName = node.type === 'core/group' && typeof node.attributes.outline_label === 'string' && node.attributes.outline_label.trim() ? node.attributes.outline_label.trim() : this.label(node.type);
         const button = this.button(outlineName,'outline-select',{nodeId:node.id});
@@ -1006,6 +1077,16 @@
       if (n.type === 'core/video_embed') addField('URL YouTube/Vimeo', 'url', n.attributes.url, 'url');
       if (n.type === 'core/button') addField('Destino (URL ou caminho local)', 'url', n.attributes.url, 'url');
       if (n.type === 'core/group') addField(this.strings.outlineLabel, 'outline_label', n.attributes.outline_label || '', 'text');
+      if (n.type === 'core/table') {
+        const tableActions = this.el('div','rb-table-actions');
+        const addRow = this.button(this.strings.table.addRow,'table-add-row',{nodeId:n.id}); addRow.disabled = n.children.length >= 20; tableActions.append(addRow);
+        const removeRow = this.button(this.strings.table.removeRow,'table-remove-row',{nodeId:n.id}); removeRow.disabled = n.children.length <= 1; tableActions.append(removeRow);
+        const columns = n.children[0] ? n.children[0].children.length : 0;
+        const addColumn = this.button(this.strings.table.addColumn,'table-add-column',{nodeId:n.id}); addColumn.disabled = columns >= 12; tableActions.append(addColumn);
+        const removeColumn = this.button(this.strings.table.removeColumn,'table-remove-column',{nodeId:n.id}); removeColumn.disabled = columns <= 1; tableActions.append(removeColumn);
+        const header = this.button(this.strings.table.toggleHeader,'table-toggle-header',{nodeId:n.id}); header.setAttribute('aria-pressed',String(!!n.attributes.header)); tableActions.append(header);
+        aside.append(tableActions);
+      }
       if (n.type === 'core/columns') aside.append(this.el('p', 'rb-muted', 'Preset fixo nesta etapa: ' + n.attributes.count + ' colunas.'));
       const actions = this.el('div', 'rb-inspector-actions');
       const fixedColumn = found.parent && found.parent.type === 'core/columns' && n.type === 'core/column';

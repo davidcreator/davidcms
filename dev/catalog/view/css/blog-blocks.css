@@ -49,3 +49,9 @@
 .rms-block-cover__content>:last-child{margin-bottom:0}
 @media(max-width:900px){.rms-block-gallery--columns-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.rms-block-gallery--columns-2,.rms-block-gallery--columns-3,.rms-block-gallery--columns-4{grid-template-columns:minmax(0,1fr)}.rms-block-image--mobile-full img{width:100%;max-width:100%}.rms-block-image--mobile-large img{width:100%;max-width:42rem}.rms-block-image--mobile-medium img{width:100%;max-width:28rem}.rms-block-cover{min-height:15rem}.rms-block-cover__content{padding:1.25rem}}
+
+/* BDREditor structured table: fixed semantic output, no document-controlled styles. */
+.rms-block-table-wrap{max-width:100%;overflow-x:auto;margin-block:1.25rem}
+.rms-block-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.rms-block-table th,.rms-block-table td{border:1px solid var(--blog-border,#d9dee7);padding:.65rem .8rem;text-align:start;vertical-align:top;overflow-wrap:anywhere}
+.rms-block-table th{background:#f4f6f9;font-weight:700}

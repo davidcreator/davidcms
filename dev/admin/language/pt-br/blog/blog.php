@@ -218,6 +218,16 @@ $_['text_block_column_count'] = 'colunas · empilham em telas estreitas';
 // F9-24: media blocks, responsive controls and built-in patterns
 $_['text_block_type_gallery'] = 'Galeria';
 $_['text_block_type_cover'] = 'Capa';
+
+// BDREditor: structured table controls
+$_['text_block_type_table'] = 'Tabela';
+$_['text_block_table_header'] = 'Primeira linha é cabeçalho';
+$_['text_block_table_add_row'] = 'Adicionar linha';
+$_['text_block_table_remove_row'] = 'Remover última linha';
+$_['text_block_table_add_column'] = 'Adicionar coluna';
+$_['text_block_table_remove_column'] = 'Remover última coluna';
+$_['text_block_table_toggle_header'] = 'Alternar cabeçalho';
+$_['text_block_table_cell_label'] = 'Célula %1$d, %2$d';
 $_['text_block_caption'] = 'Legenda';
 $_['text_block_alignment'] = 'Alinhamento da imagem';
 $_['text_block_image_size'] = 'Tamanho';

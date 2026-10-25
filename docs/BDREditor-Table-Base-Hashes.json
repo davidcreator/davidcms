@@ -1,0 +1,75 @@
+{
+  "repository": "https://github.com/davidcreator/davidcms",
+  "branch": "main",
+  "base_head": "ffa278226a6ffa6d11f71d95b003d3b4dac39c01",
+  "base_source_parent": "d9e09d8b707f8a4489d92e07b70cc2df70b8a5c9",
+  "method": "Git blob SHA-1 calculated locally from point-in-time F9-26 source copy and proposed files; no full clone.",
+  "files": [
+    {
+      "path": "dev/admin/controller/blog/blog.php",
+      "base_git_blob_sha1": "f7907a181ea69e154ad2f2f39d84edb97c015fcc",
+      "proposed_git_blob_sha1": "8bac825e20cf7eadadcbe0f02b5459a20a09e784",
+      "changed": true
+    },
+    {
+      "path": "dev/admin/language/en-us/blog/blog.php",
+      "base_git_blob_sha1": "98448fae9eca1a4d754ccb0146f24c5b704987a0",
+      "proposed_git_blob_sha1": "b39b61cf48b602ec59f545f1a5ecdd1d2975f5fe",
+      "changed": true
+    },
+    {
+      "path": "dev/admin/language/es-eu/blog/blog.php",
+      "base_git_blob_sha1": "bb37d570f1ed3b22c95001461aec0b3054e78b83",
+      "proposed_git_blob_sha1": "85ac1fe45df0c0602f33fa0cde59acbada061209",
+      "changed": true
+    },
+    {
+      "path": "dev/admin/language/pt-br/blog/blog.php",
+      "base_git_blob_sha1": "4c13d3ea1ac28db284bdfe53fe0727f45a16911f",
+      "proposed_git_blob_sha1": "c6cf3adc3edae8d50482bd4862a57c77ec38e3fc",
+      "changed": true
+    },
+    {
+      "path": "dev/admin/view/css/blog-block-editor.css",
+      "base_git_blob_sha1": "5ba53f8a0fd05403345eb0846cdc4f325137843f",
+      "proposed_git_blob_sha1": "510e9c7a42227b9aa40faa09ba6efe2385e75579",
+      "changed": true
+    },
+    {
+      "path": "dev/admin/view/js/blog-block-editor-init.js",
+      "base_git_blob_sha1": "3286775caa4ddcb7db6b12681e9b7c36e49e0c32",
+      "proposed_git_blob_sha1": "3286775caa4ddcb7db6b12681e9b7c36e49e0c32",
+      "changed": false
+    },
+    {
+      "path": "dev/admin/view/js/blog-block-editor.js",
+      "base_git_blob_sha1": "2a7587f46cdc92a47141a7a9808bc9a66596ac18",
+      "proposed_git_blob_sha1": "84eb431e200b0438ad7c1939fef96918eb794c24",
+      "changed": true
+    },
+    {
+      "path": "dev/admin/view/template/blog/blog_form.twig",
+      "base_git_blob_sha1": "be300ec5127c720767e565e6e3f0507b6b05a7f1",
+      "proposed_git_blob_sha1": "be300ec5127c720767e565e6e3f0507b6b05a7f1",
+      "changed": false
+    },
+    {
+      "path": "dev/catalog/view/css/blog-blocks.css",
+      "base_git_blob_sha1": "5bfd9f26b8b6b1e17f1d136bfcc3b120c9c3f405",
+      "proposed_git_blob_sha1": "6b1517c0005a73de98a0d6d72e977454d0e66204",
+      "changed": true
+    },
+    {
+      "path": "dev/system/library/blog/block_document.php",
+      "base_git_blob_sha1": "40611b4ba2db50465d880b73696d28285c694496",
+      "proposed_git_blob_sha1": "fd299ea9e62dd2f1d4c2e456b76994244b3a660e",
+      "changed": true
+    },
+    {
+      "path": "dev/system/library/blog/block_renderer.php",
+      "base_git_blob_sha1": "6e5db6ddd118707dcbac967b356772afcb87c5e1",
+      "proposed_git_blob_sha1": "e3c980987474dd4a08621209ee1d5e0c09898313",
+      "changed": true
+    }
+  ]
+}

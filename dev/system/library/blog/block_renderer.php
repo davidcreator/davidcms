@@ -67,6 +67,31 @@ final class BlockRenderer {
                 $align = (string)$attributes['align'];
                 return '<div class="rms-block rms-block-gallery rms-block-gallery--columns-' . $columns . ' rms-block-gallery--align-' . $align . '">' . $this->renderNodes($children, $validator, $assetBase, $version) . '</div>';
 
+            case 'core/table':
+                $html = '<div class="rms-block rms-block-table-wrap"><table class="rms-block-table">';
+                $rowStart = 0;
+                if (!empty($attributes['header'])) {
+                    $html .= '<thead><tr>';
+                    foreach ($children[0]['children'] as $cell) $html .= '<th scope="col">' . $this->renderInlineRuns($cell['content']) . '</th>';
+                    $html .= '</tr></thead>';
+                    $rowStart = 1;
+                }
+                if ($rowStart < count($children)) {
+                    $html .= '<tbody>';
+                    for ($rowIndex = $rowStart; $rowIndex < count($children); $rowIndex++) {
+                        $html .= '<tr>';
+                        foreach ($children[$rowIndex]['children'] as $cell) $html .= '<td>' . $this->renderInlineRuns($cell['content']) . '</td>';
+                        $html .= '</tr>';
+                    }
+                    $html .= '</tbody>';
+                }
+                return $html . '</table></div>';
+
+            case 'core/table-row':
+            case 'core/table-cell':
+                // Internal table nodes are emitted only by core/table.
+                return '';
+
             case 'core/cover':
                 $src = $this->escape($this->resolveLocalImageUrl((string)$attributes['src'], $assetBase));
                 $alt = $this->escape((string)$attributes['alt']);
