@@ -483,6 +483,15 @@ class Blog extends \Reamur\System\Engine\Controller {
             'text_inline_bold', 'text_inline_italic', 'text_inline_underline', 'text_inline_strike', 'text_inline_code', 'text_inline_link',
             'text_inline_link_placeholder', 'text_inline_apply_link', 'text_inline_remove_link', 'text_inline_invalid_link',
             'text_inline_toolbar', 'text_inline_text_label', 'text_inline_placeholder', 'text_inline_editor_label',
+            'text_block_add', 'text_block_search', 'text_block_no_results', 'text_block_category_content', 'text_block_category_media', 'text_block_category_layout',
+            'text_block_outline', 'text_block_outline_empty', 'text_block_move_up', 'text_block_move_down', 'text_block_duplicate', 'text_block_transform',
+            'text_block_remove', 'text_block_add_after', 'text_block_drag', 'text_block_type_paragraph', 'text_block_type_heading', 'text_block_type_list',
+            'text_block_type_image', 'text_block_type_quote', 'text_block_type_video', 'text_block_type_button', 'text_block_type_separator',
+            'text_block_type_group', 'text_block_type_columns', 'text_block_type_list_item', 'text_block_type_column', 'text_block_transform_hint', 'text_block_insert_empty',
+            'text_block_status_inserted', 'text_block_status_moved', 'text_block_status_duplicated', 'text_block_status_transformed',
+            'text_block_status_removed', 'text_block_status_undo', 'text_block_status_redo',
+            'text_block_undo', 'text_block_redo', 'text_block_preview_desktop', 'text_block_preview_tablet', 'text_block_preview_mobile',
+            'text_block_editor_tools', 'text_block_canvas', 'text_block_canvas_empty', 'text_block_inspector', 'text_block_inspector_empty', 'text_block_column_count',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
@@ -495,6 +504,27 @@ class Blog extends \Reamur\System\Engine\Controller {
             'invalidLink' => $data['text_inline_invalid_link'], 'toolbar' => $data['text_inline_toolbar'],
             'textLabel' => $data['text_inline_text_label'], 'placeholder' => $data['text_inline_placeholder'],
             'editorLabel' => $data['text_inline_editor_label'],
+            'addBlock' => $data['text_block_add'], 'searchBlocks' => $data['text_block_search'], 'noBlocks' => $data['text_block_no_results'],
+            'categoryContent' => $data['text_block_category_content'], 'categoryMedia' => $data['text_block_category_media'], 'categoryLayout' => $data['text_block_category_layout'],
+            'outline' => $data['text_block_outline'], 'outlineEmpty' => $data['text_block_outline_empty'],
+            'moveUp' => $data['text_block_move_up'], 'moveDown' => $data['text_block_move_down'], 'duplicate' => $data['text_block_duplicate'],
+            'transform' => $data['text_block_transform'], 'remove' => $data['text_block_remove'], 'addAfter' => $data['text_block_add_after'],
+            'dragHint' => $data['text_block_drag'], 'transformHint' => $data['text_block_transform_hint'], 'insertEmpty' => $data['text_block_insert_empty'],
+            'statusInserted' => $data['text_block_status_inserted'], 'statusMoved' => $data['text_block_status_moved'],
+            'statusDuplicated' => $data['text_block_status_duplicated'], 'statusTransformed' => $data['text_block_status_transformed'],
+            'statusRemoved' => $data['text_block_status_removed'], 'statusUndo' => $data['text_block_status_undo'], 'statusRedo' => $data['text_block_status_redo'],
+            'undo' => $data['text_block_undo'], 'redo' => $data['text_block_redo'],
+            'previewDesktop' => $data['text_block_preview_desktop'], 'previewTablet' => $data['text_block_preview_tablet'], 'previewMobile' => $data['text_block_preview_mobile'],
+            'editorTools' => $data['text_block_editor_tools'], 'canvas' => $data['text_block_canvas'], 'canvasEmpty' => $data['text_block_canvas_empty'],
+            'inspector' => $data['text_block_inspector'], 'inspectorEmpty' => $data['text_block_inspector_empty'], 'columnCount' => $data['text_block_column_count'],
+            'typeLabels' => [
+                'core/paragraph' => $data['text_block_type_paragraph'], 'core/heading' => $data['text_block_type_heading'],
+                'core/list' => $data['text_block_type_list'], 'core/image' => $data['text_block_type_image'],
+                'core/quote' => $data['text_block_type_quote'], 'core/video_embed' => $data['text_block_type_video'],
+                'core/button' => $data['text_block_type_button'], 'core/separator' => $data['text_block_type_separator'],
+                'core/group' => $data['text_block_type_group'], 'core/columns' => $data['text_block_type_columns'],
+                'core/list-item' => $data['text_block_type_list_item'], 'core/column' => $data['text_block_type_column'],
+            ],
         ];
 
         // CKEditor 4 (assets locais, ADR 0046): init fica no admin.js (textarea[data-rte])

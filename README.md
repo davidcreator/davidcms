@@ -1,10 +1,13 @@
-# Fase 9 · Tarefa 22 — Rich text inline para Blog
+# Fase 9 · Tarefa 23 — Block UX Gutenberg-like
 
-Primeiro recurso editorial substancial do roadmap de alto nível: edição visual inline dos blocos de texto, toolbar contextual, links e documento v2 com marks estruturadas. Mantém compatibilidade com documentos v1, salvar explícito via formulário e renderer server-side allowlisted.
+Implementação local de inserter pesquisável e contextual, comando `/`, toolbar de ações de bloco, duplicação com novos IDs, transformação textual compatível, outline aninhado e reordenação acessível em filhos. Continuidade da base F9-22; nenhum clone integral foi criado.
 
-**Implementação local preparada** em dez arquivos pontuais sob `dev/`; ainda não é commit nem foi enviada ao GitHub. O checker estático passou e os JS foram verificados com `node --check`; não houve PHP, SQL, browser, app, E2E runtime, migration ou banco. F9-12 não é presumida aplicada.
+**Base `main` verificada:** `184bff0c52b57bfbdbd43922093d21240f3fc836`. O pacote não foi enviado ao GitHub.
 
-- Detalhes/aceite: `docs/F9-22-Rich-Text-Inline.md`
-- Schema proposto implementado: `docs/F9-22-Contrato-Rich-Text-v2.json`
-- Base SHA-256 para revisão: `docs/F9-22-Base-Hashes.json`
-- Próxima evolução proposta: F9-23 block UX Gutenberg-like.
+- Escopo/guardrails: `docs/F9-23-Block-UX.md`
+- Hashes dos oito arquivos-base: `docs/F9-23-Base-Hashes.json`
+- Plano de E2E (pendente): `tools/e2e/README.md`
+- Fixtures sintéticas: `tests/fixtures/block_ux_f923.json`
+- Checker estático: `tools/e2e/e2e_f923_static.cjs`
+
+Não executamos PHP/SQL/browser/app/E2E runtime, nem acessamos banco ou aplicamos migration. Verificações estáticas não substituem validação em browser/staging.

@@ -1,5 +1,5 @@
 /*
- * ReamurCMS native Blog block editor — F9-14 base + F9-22 structured inline rich text.
+ * ReamurCMS native Blog block editor — F9-14 base + F9-22 inline text + F9-23 block UX.
  * In-memory model; form submission binding stays in blog-block-editor-init.js.
  * Mount with ReamurBlogBlockEditor.mount(element, { document, onChange }).
  */
@@ -13,6 +13,8 @@
     ['core/columns', 'Colunas']
   ];
   const TEXT_TYPES = new Set(['core/paragraph', 'core/heading', 'core/list-item', 'core/quote', 'core/button']);
+  const BLOCK_CATEGORIES = { 'core/paragraph':'content', 'core/heading':'content', 'core/list':'content', 'core/quote':'content', 'core/button':'content', 'core/image':'media', 'core/video_embed':'media', 'core/separator':'layout', 'core/group':'layout', 'core/columns':'layout' };
+  const TRANSFORMABLE_TEXT = new Set(['core/paragraph', 'core/heading', 'core/quote', 'core/button']);
   const CLONE = (value) => JSON.parse(JSON.stringify(value));
   let instanceSequence = 0;
 
@@ -190,7 +192,12 @@
       this.inlineBookmark = null;
       this.linkDraft = '';
       this.inlineNotice = '';
-      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…'}, this.options.strings || {});
+      this.inserterOpen = false;
+      this.insertAfterId = null;
+      this.slashTrigger = null;
+      this.inserterQuery = '';
+      this.statusMessage = '';
+      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',typeLabels:{}}, this.options.strings || {});
       const rawInitial = this.options.document || { format_version: 1, blocks: [] };
       const initial = upgradeDocument(rawInitial);
       const validation = validateDocument(initial);
@@ -206,10 +213,12 @@
       this.render();
     }
 
-    newId() { this.idCounter += 1; return 'rb' + this.instance + '-' + this.idCounter; }
+    newId() { let candidate; do { this.idCounter += 1; candidate = 'rb' + this.instance + '-' + this.idCounter; } while (this.findPath && this.findPath(this.state ? this.state.blocks : [], candidate)); return candidate; }
     node(type, attributes, content, children) { const value = BLOCK_TEXT_TYPES.has(type) ? (Array.isArray(content) ? canonicalRuns(content) : runsFromText(String(content || ''))) : (content || ''); return { id: this.newId(), type, attributes: attributes || {}, children: children || [], content: value }; }
     snapshot() { return JSON.stringify(this.state); }
-    label(type) { const found = TYPES.find((entry) => entry[0] === type); return found ? found[1] : (type === 'core/list-item' ? 'Item de lista' : 'Coluna'); }
+    label(type) { const localized = this.strings.typeLabels && this.strings.typeLabels[type]; if (localized) return localized; const found = TYPES.find((entry) => entry[0] === type); return found ? found[1] : (type === 'core/list-item' ? 'Item de lista' : 'Coluna'); }
+
+    categoryLabel(category) { return category === 'media' ? this.strings.categoryMedia : (category === 'layout' ? this.strings.categoryLayout : this.strings.categoryContent); }
 
     bind() {
       this.root.addEventListener('mousedown', (event) => {
@@ -237,6 +246,8 @@
         if (card && this.root.contains(card)) this.selectNode(card.dataset.nodeId);
       });
       this.root.addEventListener('input', (event) => {
+        const search = event.target.closest('[data-inserter-search]');
+        if (search) { this.inserterQuery = search.value; this.filterInserter(); return; }
         const linkInput = event.target.closest('[data-inline-link-input]');
         if (linkInput) { this.linkDraft = linkInput.value; return; }
         const field = event.target.closest('[data-edit-content]');
@@ -246,6 +257,8 @@
         this.captureInlineSelection();
       });
       this.root.addEventListener('change', (event) => {
+        const transform = event.target.closest('[data-transform-node]');
+        if (transform && transform.value) { this.transformNode(transform.dataset.transformNode, transform.value); return; }
         const field = event.target.closest('[data-attribute]');
         if (!field) return;
         const id = field.dataset.nodeId, key = field.dataset.attribute;
@@ -256,6 +269,19 @@
         });
       });
       this.root.addEventListener('keydown', (event) => {
+        if (event.target.closest('[data-inserter-search]')) {
+          if (event.key === 'Escape') { event.preventDefault(); this.closeInserter(true); return; }
+          if (event.key === 'Enter') { event.preventDefault(); const first = this.root.querySelector('.rb-inserter-option:not([hidden])'); if (first) this.insert(first.dataset.type, first.dataset.count); return; }
+        }
+        if (event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey && event.target.closest('[data-edit-content]')) {
+          const editor = event.target.closest('[data-edit-content]'); const offset = this.getCaretOffset(editor);
+          const text = editor.textContent || '';
+          if (offset === 0 || /\s/.test(text.charAt(offset - 1))) {
+            event.preventDefault(); this.insertPlainText(editor, '/');
+            this.slashTrigger = { nodeId: editor.dataset.editContent, offset: this.getCaretOffset(editor) };
+            this.openInserter(editor.dataset.editContent, true); return;
+          }
+        }
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); this.action(event.shiftKey ? 'redo' : 'undo'); return; }
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') { event.preventDefault(); this.action('redo'); return; }
         if (event.ctrlKey || event.metaKey) {
@@ -277,23 +303,28 @@
         this.insertPlainText(field, text);
       });
       this.root.addEventListener('dragstart', (event) => {
-        if (event.target.closest('button,input,select,[contenteditable="true"]')) return;
-        const card = event.target.closest('[data-node-id][data-root-node="1"]');
-        if (!card) return; this.dragId = card.dataset.nodeId;
+        const handle = event.target.closest('[data-drag-handle]');
+        const card = handle && handle.closest('[data-node-id]');
+        if (!card) { event.preventDefault(); return; }
+        this.dragId = card.dataset.nodeId;
         if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', this.dragId); }
       });
-      this.root.addEventListener('dragover', (event) => { if (event.target.closest('[data-root-node="1"]')) event.preventDefault(); });
+      this.root.addEventListener('dragover', (event) => { if (event.target.closest('.rb-block[data-node-id]') && this.dragId) event.preventDefault(); });
       this.root.addEventListener('drop', (event) => {
         const editor = event.target.closest('[data-edit-content]');
-        if (editor) { event.preventDefault(); this.insertPlainText(editor, event.dataTransfer ? event.dataTransfer.getData('text/plain') : ''); return; }
-        const target = event.target.closest('[data-node-id][data-root-node="1"]');
-        if (!target || !this.dragId) return; event.preventDefault(); this.reorderRoot(this.dragId, target.dataset.nodeId); this.dragId = null;
+        if (editor && !this.dragId) { event.preventDefault(); this.insertPlainText(editor, event.dataTransfer ? event.dataTransfer.getData('text/plain') : ''); return; }
+        const target = event.target.closest('.rb-block[data-node-id]');
+        if (!target || !this.dragId) return; event.preventDefault(); this.reorderSibling(this.dragId, target.dataset.nodeId); this.dragId = null;
       });
+      this.root.addEventListener('dragend', () => { this.dragId = null; });
     }
 
     action(name, button) {
       if (this.locked) return;
       if (name === 'insert') this.insert(button.dataset.type, button.dataset.count);
+      else if (name === 'toggle-inserter') this.inserterOpen ? this.closeInserter(false) : this.openInserter(button.dataset.afterId || null, false);
+      else if (name === 'duplicate') this.duplicateNode(button.dataset.nodeId || this.selectedId);
+      else if (name === 'outline-select') { const id = button.dataset.nodeId; this.selectNode(id); const card = Array.from(this.root.querySelectorAll('.rb-block[data-node-id]')).find((item) => item.dataset.nodeId === id); if (card) card.scrollIntoView({ block:'nearest' }); }
       else if (name === 'undo') this.undo();
       else if (name === 'redo') this.redo();
       else if (name === 'delete') this.deleteNode(button.dataset.nodeId || this.selectedId);
@@ -308,10 +339,24 @@
 
     findEditor(id) { return Array.from(this.root.querySelectorAll('[data-edit-content]')).find((node) => node.dataset.editContent === id) || null; }
 
+    focusNode(id) {
+      const editor = this.findEditor(id);
+      const card = Array.from(this.root.querySelectorAll('.rb-block[data-node-id]')).find((item) => item.dataset.nodeId === id);
+      const target = editor || card; if (!target) return;
+      if (!editor) target.tabIndex = -1;
+      target.focus({ preventScroll:true }); target.scrollIntoView({ block:'nearest' });
+    }
+
+    getCaretOffset(editor) {
+      const selection = global.getSelection(); if (!selection || !selection.rangeCount || !editor.contains(selection.anchorNode)) return 0;
+      const range = selection.getRangeAt(0).cloneRange(); range.selectNodeContents(editor); range.setEnd(selection.anchorNode, selection.anchorOffset); return range.toString().length;
+    }
+
     selectNode(id) {
       if (!id || this.selectedId === id) return;
       this.selectedId = id;
       this.root.querySelectorAll('.rb-block').forEach((card) => card.classList.toggle('is-selected', card.dataset.nodeId === id));
+      this.root.querySelectorAll('[data-action="outline-select"]').forEach((button) => { if (button.dataset.nodeId === id) button.setAttribute('aria-current','location'); else button.removeAttribute('aria-current'); });
       this.root.querySelectorAll('.rb-inline-toolbar').forEach((toolbar) => toolbar.remove());
       const found = this.findPath(this.state.blocks, id);
       const editor = this.findEditor(id);
@@ -403,6 +448,18 @@
       editor.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
+    removeInlineRange(runs, start, end) {
+      let cursor = 0; const out = [];
+      runs.forEach((run) => {
+        const from = cursor, to = cursor + run.text.length; cursor = to;
+        if (to <= start || from >= end) { out.push(CLONE(run)); return; }
+        const left = Math.max(0, start - from), right = Math.min(run.text.length, end - from);
+        if (left > 0) out.push({ text:run.text.slice(0,left), marks:run.marks.slice(), href:run.href });
+        if (right < run.text.length) out.push({ text:run.text.slice(right), marks:run.marks.slice(), href:run.href });
+      });
+      return canonicalRuns(out);
+    }
+
     transformRuns(runs, start, end, transform) {
       let cursor = 0; const out = [];
       runs.forEach((run) => {
@@ -452,6 +509,7 @@
     createDefault(type, presetCount) {
       if (type === 'core/heading') return this.node(type, { level: 2 }, 'Título');
       if (type === 'core/list') return this.node(type, { ordered: false }, '', [this.node('core/list-item', {}, 'Novo item'), this.node('core/list-item', {}, 'Novo item')]);
+      if (type === 'core/list-item') return this.node(type, {}, 'Novo item');
       if (type === 'core/image') return this.node(type, { src: '', alt: '' }, '');
       if (type === 'core/video_embed') return this.node(type, { url: '' }, '');
       if (type === 'core/button') return this.node(type, { url: '/' }, 'Saiba mais');
@@ -467,7 +525,73 @@
       return this.node('core/paragraph', {}, 'Escreva seu conteúdo…');
     }
 
-    insert(type, presetCount) { if (!TYPES.some((entry) => entry[0] === type)) return; const next = CLONE(this.state); const node = this.createDefault(type, presetCount); next.blocks.push(node); this.commit(next, node.id); }
+    insertTypes(afterId) {
+      const found = afterId ? this.findPath(this.state.blocks, afterId) : null;
+      if (found && (found.node.type === 'core/list' || (found.parent && found.parent.type === 'core/list'))) return [{ type:'core/list-item', category:'content' }];
+      if (found && ['core/group','core/column'].includes(found.node.type)) return TYPES.map(([type]) => ({ type, category: BLOCK_CATEGORIES[type] || 'content' }));
+      if (found && (found.node.type === 'core/columns' || (found.parent && found.parent.type === 'core/columns'))) return [];
+      return TYPES.map(([type]) => ({ type, category: BLOCK_CATEGORIES[type] || 'content' }));
+    }
+
+    renderInserter() {
+      const menu = this.el('div', 'rb-inserter-menu'); menu.hidden = !this.inserterOpen;
+      menu.setAttribute('role', 'region'); menu.setAttribute('aria-label', this.strings.addBlock);
+      const search = this.el('input', 'rb-inserter-search'); search.type = 'search'; search.placeholder = this.strings.searchBlocks;
+      search.setAttribute('aria-label', this.strings.searchBlocks); search.dataset.inserterSearch = '1'; search.value = this.inserterQuery;
+      menu.append(search);
+      const types = this.insertTypes(this.slashTrigger ? this.slashTrigger.nodeId : this.insertAfterId);
+      const list = this.el('div', 'rb-inserter-results'); list.setAttribute('role', 'list');
+      if (!types.length) menu.append(this.el('p', 'rb-inserter-empty', this.strings.insertEmpty));
+      ['content','media','layout'].forEach((category) => {
+        const group = this.el('section', 'rb-inserter-category');
+        group.append(this.el('h4', 'rb-inserter-category-title', this.categoryLabel(category)));
+        types.filter((item) => item.category === category).forEach((item) => {
+          const option = this.button(this.label(item.type), 'insert', { type:item.type });
+          option.classList.add('rb-inserter-option'); option.setAttribute('role', 'listitem');
+          option.dataset.searchText = this.label(item.type).toLocaleLowerCase(); group.append(option);
+          if (item.type === 'core/columns') { const three = this.button(this.label(item.type) + ' (3)', 'insert', { type:item.type, count:'3' }); three.classList.add('rb-inserter-option'); three.setAttribute('role','listitem'); three.dataset.searchText = (this.label(item.type) + ' 3').toLocaleLowerCase(); group.append(three); }
+        });
+        if (group.querySelector('.rb-inserter-option')) list.append(group);
+      });
+      const noResults = this.el('p', 'rb-inserter-empty rb-inserter-no-results', this.strings.noBlocks); noResults.hidden = true;
+      menu.append(list, noResults);
+      return menu;
+    }
+
+    filterInserter() {
+      const query = this.inserterQuery.trim().toLocaleLowerCase(); let visible = 0;
+      this.root.querySelectorAll('.rb-inserter-option').forEach((option) => { const show = !query || option.dataset.searchText.includes(query); option.hidden = !show; if (show) visible += 1; });
+      this.root.querySelectorAll('.rb-inserter-category').forEach((group) => { group.hidden = !group.querySelector('.rb-inserter-option:not([hidden])'); });
+      const empty = this.root.querySelector('.rb-inserter-no-results'); if (empty) empty.hidden = visible > 0;
+    }
+
+    openInserter(afterId, fromSlash) {
+      this.inserterOpen = true; this.insertAfterId = afterId || null;
+      if (!fromSlash) this.slashTrigger = null;
+      this.inserterQuery = ''; this.render();
+      const search = this.root.querySelector('[data-inserter-search]'); if (search) search.focus();
+    }
+
+    closeInserter(returnFocus) {
+      this.inserterOpen = false; this.slashTrigger = null; this.inserterQuery = ''; this.render();
+      if (returnFocus) { const button = this.root.querySelector('[data-action="toggle-inserter"]'); if (button) button.focus(); }
+    }
+
+    insert(type, presetCount) {
+      const afterId = this.slashTrigger ? this.slashTrigger.nodeId : this.insertAfterId || this.selectedId;
+      const allowed = this.insertTypes(afterId).some((item) => item.type === type);
+      if (!allowed) return;
+      const next = CLONE(this.state); const found = afterId ? this.findPath(next.blocks, afterId) : null;
+      const container = found && ['core/group','core/column','core/list'].includes(found.node.type);
+      const target = !found ? next.blocks : (container ? found.node.children : found.nodes);
+      const index = !found ? target.length : (container ? target.length : found.index + 1);
+      if (this.slashTrigger && found && TEXT_TYPES.has(found.node.type)) {
+        const at = this.slashTrigger.offset; found.node.content = this.removeInlineRange(found.node.content, at - 1, at);
+      }
+      const node = this.createDefault(type, presetCount); target.splice(index, 0, node);
+      this.inserterOpen = false; this.slashTrigger = null; this.insertAfterId = node.id; this.inserterQuery = ''; this.statusMessage = this.strings.statusInserted;
+      this.commit(next, node.id); this.focusNode(node.id);
+    }
 
     findPath(nodes, id, parent) {
       for (let i = 0; i < nodes.length; i += 1) {
@@ -485,25 +609,63 @@
 
     deleteNode(id) {
       const next = CLONE(this.state), found = this.findPath(next.blocks, id); if (!found) return;
+      if (found.parent && found.parent.type === 'core/columns' && found.node.type === 'core/column') return;
       found.nodes.splice(found.index, 1);
+      let focusId = found.nodes[Math.min(found.index, found.nodes.length - 1)] ? found.nodes[Math.min(found.index, found.nodes.length - 1)].id : null;
       if (found.parent && !found.nodes.length) {
-        if (found.parent.type === 'core/list') found.nodes.push(this.node('core/list-item', {}, 'Novo item'));
-        else if (['core/group','core/column'].includes(found.parent.type)) found.nodes.push(this.node('core/paragraph', {}, 'Escreva seu conteúdo…'));
+        if (found.parent.type === 'core/list') { const fallback = this.node('core/list-item', {}, 'Novo item'); found.nodes.push(fallback); focusId = fallback.id; }
+        else if (['core/group','core/column'].includes(found.parent.type)) { const fallback = this.node('core/paragraph', {}, 'Escreva seu conteúdo…'); found.nodes.push(fallback); focusId = fallback.id; }
+        else if (found.parent.type === 'core/columns') focusId = found.parent.id;
       }
-      this.selectedId = null; this.commit(next, null);
+      if (!focusId && next.blocks.length) focusId = next.blocks[0].id;
+      this.selectedId = focusId; this.statusMessage = this.strings.statusRemoved; this.commit(next, focusId);
+      if (focusId) this.focusNode(focusId); else { const add = this.root.querySelector('[data-action="toggle-inserter"]'); if (add) add.focus(); }
     }
 
     moveNode(id, delta) {
       const next = CLONE(this.state), found = this.findPath(next.blocks, id); if (!found) return;
       const target = found.index + delta; if (target < 0 || target >= found.nodes.length) return;
       [found.nodes[found.index], found.nodes[target]] = [found.nodes[target], found.nodes[found.index]];
-      this.commit(next, id);
+      this.statusMessage = this.strings.statusMoved; this.commit(next, id); this.focusNode(id);
     }
 
-    reorderRoot(fromId, toId) {
+    duplicateNode(id) {
+      const next = CLONE(this.state); const found = this.findPath(next.blocks, id); if (!found) return;
+      if (found.parent && found.parent.type === 'core/columns' && found.node.type === 'core/column') return;
+      const copy = CLONE(found.node);
+      const refreshIds = (node) => { node.id = this.newId(); node.children.forEach(refreshIds); };
+      refreshIds(copy); found.nodes.splice(found.index + 1, 0, copy); this.statusMessage = this.strings.statusDuplicated; this.commit(next, copy.id); this.focusNode(copy.id);
+    }
+
+    canTransformNode(node, type) {
+      if (!node || !TRANSFORMABLE_TEXT.has(node.type) || !TRANSFORMABLE_TEXT.has(type) || node.type === type) return false;
+      if (node.type === 'core/button' && !node.content.length) return false;
+      if (type === 'core/button') {
+        const hrefs = new Set(node.content.map((run) => run.href || null));
+        return hrefs.size <= 1;
+      }
+      return true;
+    }
+
+    transformNode(id, type) {
+      const next = CLONE(this.state); const found = this.findPath(next.blocks, id); if (!found || !this.canTransformNode(found.node, type)) return;
+      const node = found.node; const previous = node.type; const buttonUrl = previous === 'core/button' ? node.attributes.url : null;
+      const inlineLinks = new Set(node.content.map((run) => run.href || null));
+      const targetButtonUrl = type === 'core/button' ? (Array.from(inlineLinks)[0] || buttonUrl || '/') : null;
+      node.type = type;
+      node.attributes = type === 'core/paragraph' ? (previous === type ? node.attributes : { align:'left' })
+        : (type === 'core/heading' ? { level: previous === 'core/heading' ? node.attributes.level : 2 }
+          : (type === 'core/button' ? { url: targetButtonUrl } : {}));
+      if (previous === 'core/button' && type !== 'core/button') node.content = node.content.map((run) => Object.assign({}, run, { href:buttonUrl }));
+      if (type === 'core/button') node.content = node.content.map((run) => Object.assign({}, run, { href:null }));
+      this.statusMessage = this.strings.statusTransformed; this.commit(next, id); this.focusNode(id);
+    }
+
+    reorderSibling(fromId, toId) {
       if (fromId === toId) return;
-      const next = CLONE(this.state), from = next.blocks.findIndex((n) => n.id === fromId), to = next.blocks.findIndex((n) => n.id === toId);
-      if (from < 0 || to < 0) return; const [node] = next.blocks.splice(from, 1); next.blocks.splice(to, 0, node); this.commit(next, fromId);
+      const next = CLONE(this.state); const from = this.findPath(next.blocks, fromId); const to = this.findPath(next.blocks, toId);
+      if (!from || !to || from.nodes !== to.nodes) return;
+      const [node] = from.nodes.splice(from.index, 1); from.nodes.splice(to.index, 0, node); this.statusMessage = this.strings.statusMoved; this.commit(next, fromId); this.focusNode(fromId);
     }
 
     commit(next, focusId, rerender) {
@@ -515,8 +677,8 @@
       if (rerender !== false) this.render(); else this.updateHistoryButtons();
     }
 
-    undo() { if (!this.undoStack.length) return; this.redoStack.push(this.snapshot()); this.state = JSON.parse(this.undoStack.pop()); this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
-    redo() { if (!this.redoStack.length) return; this.undoStack.push(this.snapshot()); this.state = JSON.parse(this.redoStack.pop()); this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
+    undo() { if (!this.undoStack.length) return; this.redoStack.push(this.snapshot()); this.state = JSON.parse(this.undoStack.pop()); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusUndo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
+    redo() { if (!this.redoStack.length) return; this.undoStack.push(this.snapshot()); this.state = JSON.parse(this.redoStack.pop()); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusRedo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
     setSelectedAttribute(key, value) { if (this.locked) return false; const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null; if (!found || found.node.type !== 'core/image' || key !== 'src') return false; this.updateNode(found.node.id, (node) => { node.attributes.src = value; }); return true; }
     getDocument() { return this.locked ? null : CLONE(this.state); }
     serialize() { if (this.locked) throw new Error('document_requires_review'); const check = validateDocument(this.state); if (!check.valid) throw new Error(check.errors.join(',')); return JSON.stringify(this.state); }
@@ -527,43 +689,63 @@
     render() {
       this.root.replaceChildren();
       if (this.initialError) { const warn = this.el('p', 'rb-alert', 'Documento inicial inválido: ' + this.initialError + '. Fonte mantida em memória; edição e serialização bloqueadas para revisão.'); this.root.append(warn); return; }
-      const toolbar = this.el('div', 'rb-toolbar'); toolbar.setAttribute('role', 'toolbar'); toolbar.setAttribute('aria-label', 'Ferramentas do editor de blocos');
-      const insert = this.el('div', 'rb-inserter'); insert.setAttribute('aria-label', 'Inserir bloco');
-      TYPES.forEach(([type, label]) => {
-        insert.append(this.button('+ ' + label, 'insert', { type }));
-        if (type === 'core/columns') insert.append(this.button('+ Colunas 3', 'insert', { type, count: '3' }));
-      });
-      toolbar.append(insert);
+      const toolbar = this.el('div', 'rb-toolbar'); toolbar.setAttribute('role', 'toolbar'); toolbar.setAttribute('aria-label', this.strings.editorTools);
+      const insert = this.button('+ ' + this.strings.addBlock, 'toggle-inserter', { afterId:this.selectedId || '' });
+      insert.setAttribute('aria-expanded', String(this.inserterOpen)); insert.setAttribute('aria-controls', 'rb-inserter-' + this.instance); toolbar.append(insert);
       const history = this.el('div', 'rb-history');
-      const undo = this.button('Desfazer', 'undo'); undo.dataset.history = 'undo';
-      const redo = this.button('Refazer', 'redo'); redo.dataset.history = 'redo';
+      const undo = this.button(this.strings.undo, 'undo'); undo.dataset.history = 'undo';
+      const redo = this.button(this.strings.redo, 'redo'); redo.dataset.history = 'redo';
       history.append(undo, redo); toolbar.append(history);
       const previews = this.el('div', 'rb-previews');
-      [['desktop','Desktop'],['tablet','Tablet'],['mobile','Mobile']].forEach(([size,label]) => { const b = this.button(label, 'preview', { size }); b.setAttribute('aria-pressed', String(size === this.preview)); previews.append(b); });
+      [['desktop',this.strings.previewDesktop],['tablet',this.strings.previewTablet],['mobile',this.strings.previewMobile]].forEach(([size,label]) => { const b = this.button(label, 'preview', { size }); b.setAttribute('aria-pressed', String(size === this.preview)); previews.append(b); });
       toolbar.append(previews); this.root.append(toolbar);
+      const inserterMenu = this.renderInserter(); inserterMenu.id = 'rb-inserter-' + this.instance; this.root.append(inserterMenu);
 
       const layout = this.el('div', 'rb-layout');
-      const canvas = this.el('main', 'rb-canvas'); canvas.setAttribute('aria-label', 'Canvas de conteúdo');
-      const canvasHead = this.el('div', 'rb-canvas-head', 'Conteúdo'); canvas.append(canvasHead);
-      if (!this.state.blocks.length) canvas.append(this.el('p', 'rb-empty', 'Escolha um bloco no inserter para começar.'));
+      const canvas = this.el('main', 'rb-canvas'); canvas.setAttribute('aria-label', this.strings.canvas);
+      const canvasHead = this.el('div', 'rb-canvas-head', this.strings.canvas); canvas.append(canvasHead);
+      if (!this.state.blocks.length) canvas.append(this.el('p', 'rb-empty', this.strings.canvasEmpty));
       this.state.blocks.forEach((node) => canvas.append(this.renderNode(node, true)));
-      layout.append(canvas, this.renderInspector()); this.root.append(layout);
+      layout.append(this.renderOutline(), canvas, this.renderInspector()); this.root.append(layout);
       const footText = this.options.connectedSave === true
         ? 'As alterações ficam no formulário e só são persistidas ao clicar em Salvar; não há autosave.'
         : 'Rascunho em memória · não salva nem publica. O salvamento será conectado numa tarefa posterior.';
       const foot = this.el('p', 'rb-note', footText); this.root.append(foot);
+      const live = this.el('span','rb-sr-only',this.statusMessage); live.setAttribute('role','status'); live.setAttribute('aria-live','polite'); this.root.append(live);
       this.updateHistoryButtons();
+      if (this.inserterOpen && this.inserterQuery) this.filterInserter();
+    }
+
+    renderBlockToolbar(node) {
+      const toolbar = this.el('div', 'rb-block-toolbar'); toolbar.setAttribute('role','toolbar'); toolbar.setAttribute('aria-label', this.label(node.type) + ' · ' + this.strings.transform);
+      const path = this.findPath(this.state.blocks, node.id);
+      const drag = this.el('span','rb-drag-handle','⠿'); drag.draggable = true; drag.dataset.dragHandle = '1'; drag.title = this.strings.dragHint; drag.setAttribute('aria-hidden','true'); toolbar.append(drag);
+      const up = this.button('↑', 'move-up', { nodeId:node.id }); up.setAttribute('aria-label', this.strings.moveUp); up.disabled = !path || path.index === 0; toolbar.append(up);
+      const down = this.button('↓', 'move-down', { nodeId:node.id }); down.setAttribute('aria-label', this.strings.moveDown); down.disabled = !path || path.index === path.nodes.length - 1; toolbar.append(down);
+      const fixedColumn = !!(path && path.parent && path.parent.type === 'core/columns' && node.type === 'core/column');
+      const duplicate = this.button(this.strings.duplicate, 'duplicate', { nodeId:node.id }); duplicate.disabled = fixedColumn; toolbar.append(duplicate);
+      if (TRANSFORMABLE_TEXT.has(node.type)) {
+        const wrap = this.el('label','rb-transform-wrap'); wrap.append(this.el('span','rb-sr-only',this.strings.transform));
+        const select = this.el('select','rb-input rb-transform'); select.dataset.transformNode = node.id;
+        const empty = this.el('option','','↔'); empty.value = ''; empty.selected = true; select.append(empty);
+        [...TRANSFORMABLE_TEXT].filter((type) => this.canTransformNode(node,type)).forEach((type) => { const option = this.el('option','',this.label(type)); option.value = type; select.append(option); });
+        select.setAttribute('aria-label', this.strings.transform); select.title = this.strings.transformHint; wrap.append(select); toolbar.append(wrap);
+      } else {
+        const hint = this.el('span','rb-transform-hint',this.strings.transformHint); toolbar.append(hint);
+      }
+      const remove = this.button(this.strings.remove,'delete',{nodeId:node.id}); remove.disabled = fixedColumn; toolbar.append(remove);
+      const add = this.button('+', 'toggle-inserter', { afterId:node.id }); add.setAttribute('aria-label', this.strings.addAfter); add.setAttribute('aria-expanded', String(this.inserterOpen && this.insertAfterId === node.id)); add.setAttribute('aria-controls','rb-inserter-' + this.instance); toolbar.append(add);
+      return toolbar;
     }
 
     renderNode(node, isRoot) {
       const typeClass = node.type.replace(/[^a-z0-9-]/gi, '-');
       const card = this.el('section', 'rb-block rb-type-' + typeClass + (node.id === this.selectedId ? ' is-selected' : ''));
       if (node.type === 'core/columns') card.classList.add(node.attributes.count === 3 ? 'rb-columns-3' : 'rb-columns-2');
-      card.dataset.nodeId = node.id; if (isRoot) { card.dataset.rootNode = '1'; card.draggable = true; }
+      card.dataset.nodeId = node.id; card.tabIndex = -1; if (isRoot) card.dataset.rootNode = '1';
       const head = this.el('div', 'rb-block-head');
-      const title = this.el('span', 'rb-block-title', this.label(node.type)); head.append(title);
-      if (isRoot) { const moveUp = this.button('↑', 'move-up', { nodeId: node.id }); moveUp.setAttribute('aria-label', 'Mover para cima'); head.append(moveUp); const moveDown = this.button('↓', 'move-down', { nodeId: node.id }); moveDown.setAttribute('aria-label', 'Mover para baixo'); head.append(moveDown); }
-      const del = this.button('Remover', 'delete', { nodeId: node.id }); head.append(del); card.append(head);
+      head.append(this.el('span', 'rb-block-title', this.label(node.type)));
+      card.append(head, this.renderBlockToolbar(node));
       if (TEXT_TYPES.has(node.type)) {
         if (node.id === this.selectedId) card.append(this.renderInlineToolbar(node));
         const editor = this.el('div', 'rb-content'); editor.contentEditable = 'true'; editor.dataset.editContent = node.id;
@@ -573,16 +755,30 @@
       } else if (node.type === 'core/image') {
         card.append(this.el('p', 'rb-preview-value', node.attributes.alt || 'Imagem sem texto alternativo'));
       } else if (node.type === 'core/video_embed') card.append(this.el('p', 'rb-preview-value', node.attributes.url || 'URL do vídeo será definida no inspetor'));
-      else if (node.type === 'core/columns') card.append(this.el('p', 'rb-preview-value', node.attributes.count + ' colunas · empilham em telas estreitas'));
+      else if (node.type === 'core/columns') card.append(this.el('p', 'rb-preview-value', node.attributes.count + ' ' + this.strings.columnCount));
       node.children.forEach((child) => card.append(this.renderNode(child, false)));
       return card;
     }
 
+    renderOutline() {
+      const nav = this.el('nav','rb-outline'); nav.setAttribute('aria-label',this.strings.outline); nav.append(this.el('h3','rb-inspector-title',this.strings.outline));
+      if (!this.state.blocks.length) { nav.append(this.el('p','rb-muted',this.strings.outlineEmpty)); return nav; }
+      const list = this.el('ol','rb-outline-list');
+      const append = (nodes,parent,depth) => nodes.forEach((node) => {
+        const item = this.el('li','rb-outline-item'); const button = this.button(this.label(node.type),'outline-select',{nodeId:node.id});
+        button.classList.add('rb-outline-button'); button.style.setProperty('--rb-outline-depth', String(depth));
+        if (node.id === this.selectedId) button.setAttribute('aria-current','location'); item.append(button);
+        if (node.children && node.children.length) { const nested = this.el('ol','rb-outline-list'); append(node.children,nested,depth+1); item.append(nested); }
+        parent.append(item);
+      });
+      append(this.state.blocks,list,0); nav.append(list); return nav;
+    }
+
     renderInspector() {
-      const aside = this.el('aside', 'rb-inspector'); aside.setAttribute('aria-label', 'Inspetor de bloco');
-      const heading = this.el('h3', 'rb-inspector-title', 'Inspetor'); aside.append(heading);
+      const aside = this.el('aside', 'rb-inspector'); aside.setAttribute('aria-label', this.strings.inspector);
+      const heading = this.el('h3', 'rb-inspector-title', this.strings.inspector); aside.append(heading);
       const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null;
-      if (!found) { aside.append(this.el('p', 'rb-muted', 'Selecione um bloco para editar seus atributos.')); return aside; }
+      if (!found) { aside.append(this.el('p', 'rb-muted', this.strings.inspectorEmpty)); return aside; }
       aside.append(this.el('p', 'rb-selected-type', this.label(found.node.type)));
       const addField = (label, key, value, type, choices) => {
         const wrap = this.el('label', 'rb-field'); wrap.append(this.el('span', '', label));
@@ -600,7 +796,9 @@
       if (n.type === 'core/button') addField('Destino (URL ou caminho local)', 'url', n.attributes.url, 'url');
       if (n.type === 'core/columns') aside.append(this.el('p', 'rb-muted', 'Preset fixo nesta etapa: ' + n.attributes.count + ' colunas.'));
       const actions = this.el('div', 'rb-inspector-actions');
-      actions.append(this.button('↑ Mover', 'move-up', { nodeId: n.id }), this.button('↓ Mover', 'move-down', { nodeId: n.id }), this.button('Remover bloco', 'delete', { nodeId: n.id })); aside.append(actions);
+      const fixedColumn = found.parent && found.parent.type === 'core/columns' && n.type === 'core/column';
+      const remove = this.button(this.strings.remove, 'delete', { nodeId:n.id }); remove.disabled = !!fixedColumn;
+      actions.append(this.button(this.strings.moveUp, 'move-up', { nodeId:n.id }), this.button(this.strings.moveDown, 'move-down', { nodeId:n.id }), remove); aside.append(actions);
       return aside;
     }
 

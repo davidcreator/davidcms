@@ -1,0 +1,11 @@
+[
+  {"id":"insert-after-root-selection","expected":"Searchable categorized inserter inserts after the selected sibling or inside group/column/list containers, not at an unrelated location."},
+  {"id":"slash-after-whitespace","expected":"Typing slash at start/after whitespace in text opens inserter; selecting an item removes command slash and inserts after that text block."},
+  {"id":"slash-inside-list","expected":"Inserter only offers a sibling list item for a list-item context."},
+  {"id":"duplicate-subtree-ids","expected":"Deep duplication regenerates every descendant ID and leaves the source unchanged."},
+  {"id":"text-transform-compatible","expected":"Paragraph/heading/quote/button transforms preserve text and links; button conversion requires one common href and maps it to the button URL."},
+  {"id":"media-transform-not-silent","expected":"Incompatible media/layout nodes cannot be destructively transformed in this phase."},
+  {"id":"nested-sibling-reorder","expected":"Drag/drop and move controls reorder same-parent children; cross-parent drops are rejected."},
+  {"id":"outline-recursion","expected":"Outline exposes nested children and selects/scrolls to the corresponding node."},
+  {"id":"bounded-history-and-announcements","expected":"Undo history remains capped at 50 snapshots and structural actions expose localized live status."}
+]

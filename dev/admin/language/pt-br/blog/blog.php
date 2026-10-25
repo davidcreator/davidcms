@@ -161,3 +161,56 @@ $_['text_inline_toolbar'] = 'Formatação do texto';
 $_['text_inline_text_label'] = 'Texto do bloco';
 $_['text_inline_placeholder'] = 'Digite o texto…';
 $_['text_inline_editor_label'] = 'Editor visual de blocos do Blog';
+
+// F9-23: block UX, searchable inserter, outline and structural actions
+$_['text_block_add'] = 'Adicionar bloco';
+$_['text_block_search'] = 'Buscar blocos…';
+$_['text_block_no_results'] = 'Nenhum bloco encontrado.';
+$_['text_block_category_content'] = 'Conteúdo';
+$_['text_block_category_media'] = 'Mídia';
+$_['text_block_category_layout'] = 'Layout';
+$_['text_block_outline'] = 'Estrutura do documento';
+$_['text_block_outline_empty'] = 'O documento ainda não tem blocos.';
+$_['text_block_move_up'] = 'Mover para cima';
+$_['text_block_move_down'] = 'Mover para baixo';
+$_['text_block_duplicate'] = 'Duplicar';
+$_['text_block_transform'] = 'Transformar bloco';
+$_['text_block_remove'] = 'Remover bloco';
+$_['text_block_add_after'] = 'Inserir depois deste bloco';
+$_['text_block_drag'] = 'Arraste para reordenar; Alt+↑/↓ também move.';
+$_['text_block_type_paragraph'] = 'Parágrafo';
+$_['text_block_type_heading'] = 'Título';
+$_['text_block_type_list'] = 'Lista';
+$_['text_block_type_image'] = 'Imagem';
+$_['text_block_type_quote'] = 'Citação';
+$_['text_block_type_video'] = 'Vídeo';
+$_['text_block_type_button'] = 'Botão';
+$_['text_block_type_separator'] = 'Separador';
+$_['text_block_type_group'] = 'Grupo';
+$_['text_block_type_columns'] = 'Colunas';
+$_['text_block_type_list_item'] = 'Item de lista';
+$_['text_block_transform_hint'] = 'Transformação preserva somente conteúdo textual compatível.';
+$_['text_block_insert_empty'] = 'Nenhum tipo de bloco pode ser inserido neste ponto.';
+
+// F9-23: accessible action status
+$_['text_block_status_inserted'] = 'Bloco inserido.';
+$_['text_block_status_moved'] = 'Bloco movido.';
+$_['text_block_status_duplicated'] = 'Bloco duplicado.';
+$_['text_block_status_transformed'] = 'Bloco transformado.';
+$_['text_block_status_removed'] = 'Bloco removido.';
+$_['text_block_status_undo'] = 'Alteração desfeita.';
+$_['text_block_status_redo'] = 'Alteração refeita.';
+$_['text_block_type_column'] = 'Coluna';
+
+// F9-23: localized canvas and history controls
+$_['text_block_undo'] = 'Desfazer';
+$_['text_block_redo'] = 'Refazer';
+$_['text_block_preview_desktop'] = 'Desktop';
+$_['text_block_preview_tablet'] = 'Tablet';
+$_['text_block_preview_mobile'] = 'Celular';
+$_['text_block_editor_tools'] = 'Ferramentas do editor de blocos';
+$_['text_block_canvas'] = 'Canvas de conteúdo';
+$_['text_block_canvas_empty'] = 'Escolha um bloco no inserter para começar.';
+$_['text_block_inspector'] = 'Inspetor de bloco';
+$_['text_block_inspector_empty'] = 'Selecione um bloco para editar seus atributos.';
+$_['text_block_column_count'] = 'colunas · empilham em telas estreitas';

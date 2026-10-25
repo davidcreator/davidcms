@@ -51,3 +51,34 @@
 .rb-inline-status{flex:1 0 100%;min-height:1rem;color:#9b2c2c;font-size:.75rem}
 .rb-content[contenteditable="true"] a{color:#174ea6;text-decoration:underline}
 @media(max-width:560px){.rb-inline-toolbar{gap:.25rem}.rb-inline-link{flex-basis:100%;max-width:none}}
+
+/* F9-23 block UX: discoverable insertion, structural outline and compatible actions. */
+.rb-layout{grid-template-columns:14rem minmax(0,1fr) 17rem}
+.rb-outline{position:sticky;top:1rem;max-height:min(72vh,48rem);overflow:auto;border:1px solid var(--rb-line);border-radius:.6rem;padding:.75rem;background:#fff}
+.rb-outline-list{list-style:none;padding:0;margin:0}
+.rb-outline-item{margin:.18rem 0}
+.rb-outline-button{display:block;width:100%;text-align:left;padding:.32rem .45rem;margin-inline-start:calc(var(--rb-outline-depth,0)*.55rem);border:0;background:transparent;border-radius:.3rem;color:var(--rb-ink);font:inherit;font-size:.78rem;cursor:pointer}
+.rb-outline-button:hover,.rb-outline-button:focus-visible,.rb-outline-button[aria-current=location]{background:#eaf0ff;color:#1649b8;outline:2px solid #215bd633}
+.rb-inserter-menu{position:relative;z-index:4;display:grid;grid-template-columns:minmax(12rem,1fr);gap:.55rem;padding:.75rem;border-bottom:1px solid var(--rb-line);background:#fff;box-shadow:0 .3rem .8rem #17203318}
+.rb-inserter-menu[hidden],.rb-inserter-option[hidden],.rb-inserter-category[hidden],.rb-inserter-no-results[hidden]{display:none!important}
+.rb-inserter-search{width:100%;min-height:2.5rem;padding:.5rem .65rem;border:1px solid #bdc7d5;border-radius:.4rem;font:inherit}
+.rb-inserter-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:.6rem}
+.rb-inserter-category{display:grid;align-content:start;gap:.28rem}
+.rb-inserter-category-title{font-size:.78rem;margin:0;color:var(--rb-muted)}
+.rb-inserter-option{text-align:left}
+.rb-inserter-empty{margin:0;padding:.35rem;color:var(--rb-muted);font-size:.82rem}
+.rb-block-toolbar{display:none;flex-wrap:wrap;align-items:center;gap:.28rem;padding:.35rem;margin:0 0 .45rem;border:1px solid #d8e1f0;border-radius:.4rem;background:#f8faff}
+.rb-block.is-selected>.rb-block-toolbar{display:flex}
+.rb-block-toolbar .rb-button{padding:.26rem .42rem;font-size:.75rem}
+.rb-drag-handle{cursor:grab;touch-action:none}
+.rb-drag-handle:active{cursor:grabbing}
+.rb-transform-wrap{min-width:8rem}
+.rb-transform{min-height:1.85rem;padding:.25rem .35rem;font-size:.75rem}
+.rb-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.rb-type-core-columns>.rb-block-toolbar{grid-column:1/-1}
+.rb-type-core-columns>.rb-block{min-width:0}
+.rb-type-core-columns>.rb-block-head{grid-column:1/-1}
+@media(max-width:1100px){.rb-layout{grid-template-columns:minmax(0,1fr) 16rem}.rb-outline{grid-column:1/-1;position:static;max-height:15rem}}
+@media(max-width:900px){.rb-layout{grid-template-columns:minmax(0,1fr)}.rb-outline,.rb-inspector{position:static;grid-column:auto}.rb-columns-2,.rb-columns-3{grid-template-columns:1fr}}
+@media(max-width:560px){.rb-block-toolbar{gap:.22rem}.rb-inserter-results{grid-template-columns:1fr}.rb-outline{max-height:12rem}}
+.rb-transform-hint{font-size:.68rem;color:var(--rb-muted);max-width:12rem}

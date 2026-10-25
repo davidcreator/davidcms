@@ -1,0 +1,14 @@
+{
+  "head": "184bff0c52b57bfbdbd43922093d21240f3fc836",
+  "method": "Git object SHA-1 values for the eight point files compared to that commit's contents API before editing; no full repository downloaded",
+  "files": [
+    {"path":"dev/admin/controller/blog/blog.php","git_blob_sha1":"e0ee23ca381976762200e6554230decb17967ef0"},
+    {"path":"dev/admin/language/en-us/blog/blog.php","git_blob_sha1":"5784b69616dfa580fcbcdf46d08505d172f9a041"},
+    {"path":"dev/admin/language/es-eu/blog/blog.php","git_blob_sha1":"6d28362c59eb20f4de481f5ece932bd115a2e05b"},
+    {"path":"dev/admin/language/pt-br/blog/blog.php","git_blob_sha1":"2340c9147d0a86f1ab50c7b3d02e46b15745d660"},
+    {"path":"dev/admin/view/css/blog-block-editor.css","git_blob_sha1":"f10cabae7954782f458aef968ec9b8b4da8d688e"},
+    {"path":"dev/admin/view/js/blog-block-editor-init.js","git_blob_sha1":"eb81a22754522797c0cc42a76b5c5e722a2510c1"},
+    {"path":"dev/admin/view/js/blog-block-editor.js","git_blob_sha1":"091087bca425c53b11842776ad390cc4ac1ac405"},
+    {"path":"dev/admin/view/template/blog/blog_form.twig","git_blob_sha1":"be300ec5127c720767e565e6e3f0507b6b05a7f1"}
+  ]
+}
