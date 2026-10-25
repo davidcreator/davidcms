@@ -138,3 +138,10 @@
 .rb-save-status{margin:0 0 .75rem;padding:.55rem .8rem;border-inline-start:3px solid #287a4b;background:#eff8f1;color:#245b37;font-size:.875rem}
 .rb-save-status[data-state="unsaved"],.rb-save-status[data-state="saving"]{border-inline-start-color:#a86700;background:#fff8e8;color:#654500}
 .rb-save-status:empty{display:none}
+
+/* Admin preview for the fixed-tone editorial callout block. */
+.rb-block[data-callout-tone]{border-inline-start-width:.28rem}
+.rb-block[data-callout-tone="info"]{background:#eaf3ff;border-inline-start-color:#1464ad}
+.rb-block[data-callout-tone="success"]{background:#eaf7ee;border-inline-start-color:#27804b}
+.rb-block[data-callout-tone="warning"]{background:#fff5dd;border-inline-start-color:#9a6200}
+.rb-block[data-callout-tone="danger"]{background:#fcebec;border-inline-start-color:#ae2835}

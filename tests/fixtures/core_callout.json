@@ -1,0 +1,11 @@
+{
+  "document": {
+    "format_version": 2,
+    "blocks": [
+      {"id":"callout-info","type":"core/callout","attributes":{"tone":"info"},"children":[],"content":[{"text":"Informação de contexto.","marks":[],"href":null}]},
+      {"id":"callout-success","type":"core/callout","attributes":{"tone":"success"},"children":[],"content":[{"text":"Operação concluída.","marks":["bold"],"href":null}]},
+      {"id":"callout-warning","type":"core/callout","attributes":{"tone":"warning"},"children":[],"content":[{"text":"Confira os detalhes antes de continuar.","marks":[],"href":null}]},
+      {"id":"callout-danger","type":"core/callout","attributes":{"tone":"danger"},"children":[],"content":[{"text":"Ação irreversível.","marks":[],"href":null}]}
+    ]
+  }
+}

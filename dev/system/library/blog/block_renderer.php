@@ -66,6 +66,10 @@ final class BlockRenderer {
             case 'core/quote':
                 return '<blockquote class="rms-block rms-block-quote"><p>' . $content . '</p></blockquote>';
 
+            case 'core/callout':
+                $tone = (string)$attributes['tone']; // validated enum; never interpolates arbitrary class data
+                return '<aside class="rms-block rms-block-callout rms-block-callout--' . $tone . '" role="note">' . $content . '</aside>';
+
             case 'core/image':
                 return $this->renderImageFigure($attributes, $assetBase);
 

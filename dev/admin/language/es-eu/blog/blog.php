@@ -321,3 +321,12 @@ $_['text_block_hierarchy_move_unavailable'] = 'Este movimiento no está permitid
 $_['text_block_save_state_saved'] = 'Todos los cambios están guardados.';
 $_['text_block_save_state_unsaved'] = 'Hay cambios sin guardar.';
 $_['text_block_save_state_saving'] = 'Guardando cambios…';
+
+// BDREditor editorial callout
+$_['text_block_type_callout'] = 'Aviso';
+$_['text_block_callout_tone'] = 'Estilo del aviso';
+$_['text_block_callout_tone_info'] = 'Información';
+$_['text_block_callout_tone_success'] = 'Éxito';
+$_['text_block_callout_tone_warning'] = 'Advertencia';
+$_['text_block_callout_tone_danger'] = 'Crítico';
+$_['text_block_callout_default'] = 'Añade una información importante.';

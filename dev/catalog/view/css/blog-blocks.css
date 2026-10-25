@@ -65,3 +65,12 @@
 .rms-block-table{width:100%;border-collapse:collapse;table-layout:fixed}
 .rms-block-table th,.rms-block-table td{border:1px solid var(--blog-border,#d9dee7);padding:.65rem .8rem;text-align:start;vertical-align:top;overflow-wrap:anywhere}
 .rms-block-table th{background:#f4f6f9;font-weight:700}
+
+/* BDREditor callout: semantic note with a closed tone palette and strong readable contrast. */
+.rms-block-callout{margin-block:1.25rem;padding:1rem 1.15rem;border:1px solid;border-inline-start-width:.3rem;border-radius:var(--blog-radius,8px);color:#17324d}
+.rms-block-callout--info{background:#eaf3ff;border-color:#1464ad}
+.rms-block-callout--success{background:#eaf7ee;border-color:#27804b;color:#193d27}
+.rms-block-callout--warning{background:#fff5dd;border-color:#9a6200;color:#493100}
+.rms-block-callout--danger{background:#fcebec;border-color:#ae2835;color:#541d23}
+.rms-block-callout>:first-child{margin-top:0}
+.rms-block-callout>:last-child{margin-bottom:0}
