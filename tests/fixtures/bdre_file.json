@@ -1,0 +1,60 @@
+{
+  "valid": {
+    "format_version": 2,
+    "blocks": [
+      {
+        "id": "file1",
+        "type": "core/file",
+        "attributes": { "src": "view/download/blog/guia-bdre-a1b2c3.pdf" },
+        "children": [],
+        "content": [
+          { "text": "Baixar guia", "marks": ["bold"], "href": null }
+        ]
+      }
+    ]
+  },
+  "invalid": [
+    {
+      "name": "URL externa",
+      "document": {
+        "format_version": 2,
+        "blocks": [{ "id": "f1", "type": "core/file", "attributes": { "src": "https://example.invalid/a.pdf" }, "children": [], "content": [{ "text": "Baixar", "marks": [], "href": null }] }]
+      }
+    },
+    {
+      "name": "traversal",
+      "document": {
+        "format_version": 2,
+        "blocks": [{ "id": "f1", "type": "core/file", "attributes": { "src": "view/download/blog/../a.pdf" }, "children": [], "content": [{ "text": "Baixar", "marks": [], "href": null }] }]
+      }
+    },
+    {
+      "name": "extensão não permitida",
+      "document": {
+        "format_version": 2,
+        "blocks": [{ "id": "f1", "type": "core/file", "attributes": { "src": "view/download/blog/a.html" }, "children": [], "content": [{ "text": "Baixar", "marks": [], "href": null }] }]
+      }
+    },
+    {
+      "name": "rótulo vazio",
+      "document": {
+        "format_version": 2,
+        "blocks": [{ "id": "f1", "type": "core/file", "attributes": { "src": "view/download/blog/a.pdf" }, "children": [], "content": [{ "text": "   ", "marks": [], "href": null }] }]
+      }
+    },
+    {
+      "name": "link inline aninhável",
+      "document": {
+        "format_version": 2,
+        "blocks": [{ "id": "f1", "type": "core/file", "attributes": { "src": "view/download/blog/a.pdf" }, "children": [], "content": [{ "text": "Baixar", "marks": [], "href": "https://example.invalid" }] }]
+      }
+    },
+    {
+      "name": "formato legado v1",
+      "document": {
+        "format_version": 1,
+        "blocks": [{ "id": "f1", "type": "core/file", "attributes": { "src": "view/download/blog/a.pdf" }, "children": [], "content": "Baixar" }]
+      }
+    }
+  ]
+}

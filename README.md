@@ -1,38 +1,46 @@
-# BDREditor — incremento local: bloco de tabela
+# BDREditor — bloco arquivo/download
 
-Este pacote implementa o primeiro bloco editorial novo do BDREditor, editor próprio do ReamurCMS. O Gutenberg é somente referência de interação; não há pacote, código ou asset do Gutenberg neste incremento.
+Incremento local do editor nativo do ReamurCMS. O Gutenberg continua sendo apenas referência conceitual: não há dependência, código ou assets Gutenberg/WordPress.
 
-## Implementado
+## O que foi criado
 
-- Novo `core/table` em documento v2, com modelo JSON hierárquico table → row → cell.
-- Limites: 20 linhas, 12 colunas, linhas retangulares e 262144 bytes de texto total por tabela.
-- Cabeçalho opcional (primeira linha semântica `thead/th scope=col`), sem spans, fórmulas ou estilos livres.
-- Edição inline das células com rich-text v2; controles acessíveis para cabeçalho, adicionar/remover linha e coluna.
-- Regras de dimensão mínima 1×1; inserção inicial 3×3.
-- Validação server/client e renderer server-side determinístico com escaping do rich text.
-- Preview responsivo com overflow horizontal controlado; strings localizadas PT-BR, EN-US e ES-EU.
-- Nenhuma migration, endpoint, persistência nova ou autosave.
+- Novo bloco `core/file` no contrato v2, com referência local de arquivo e rótulo rich-text editável/acessível.
+- Seletor e upload dedicados à raiz `catalog/view/download/blog/`; não mistura documentos com a biblioteca de imagens.
+- Listagem e upload protegidos por ACL `modify` e CSRF; não há endpoint de exclusão para downloads.
+- Allowlist inicial: PDF, DOCX, XLSX, PPTX, ODT, ODS, CSV e TXT. Upload limitado a 2 MiB, MIME detectado e compatibilidade de arquivo compactado Office/ODF verificada quando necessária.
+- Nome de armazenamento criado pelo servidor com sufixo aleatório; o nome do usuário não é usado como caminho.
+- Validação client/server de caminho, extensão e rótulo. Renderer público só emite link fixo `<a download>` e não renderiza arquivo ausente, symlink ou com MIME inválido.
+- Strings PT-BR, EN-US e ES-EU; sem schema, migration, tabela ou persistência nova.
 
-## Base e natureza da entrega
+## Instalação/revisão
 
-- `main` consultada: `ffa278226a6ffa6d11f71d95b003d3b4dac39c01`, commit que adicionou o backlog BDREditor.
-- A revisão F9-26 confirmou que os 11 fontes cumulativos coincidiam com `main` no pai `d9e09d8`; esse commit posterior adicionou apenas a documentação de backlog.
-- Implementação local para revisão; não enviada ao GitHub. O pacote inclui fontes pontuais, não o projeto inteiro.
-- Isto é um incremento do BDREditor, sem número oficial de tarefa atribuído.
+Os caminhos em `dev/` espelham os do ReamurCMS. Revisar e aplicar somente os arquivos do pacote; ele não contém o projeto inteiro. O pacote foi montado a partir do estado `main` em `829ed0e7af6ff622e321c2528ff20f3ee6d34fab` e dos fontes locais da tarefa `core/table` já publicados pelo usuário. Não envia código ao GitHub.
 
 ## Verificações executadas
 
-- `node --check` em JS do editor e checker.
-- Parser JSON em contrato e fixtures.
-- Checker estático: `node tools/e2e/e2e_bdre_table_static.cjs`.
-- O validador JavaScript foi invocado isoladamente em Node/VM, sem DOM/browser, sobre fixtures sintéticas e limites dimensionais.
+```sh
+node --check dev/admin/view/js/blog-block-editor.js
+node --check dev/admin/view/js/blog-file-media.js
+node --check tools/e2e/e2e_bdre_file_static.cjs
+node tools/e2e/e2e_bdre_file_static.cjs
+python3 -m json.tool tests/fixtures/bdre_file.json >/dev/null
+```
 
-**Não executados:** PHP, SQL, browser, app, E2E runtime, staging, deploy, migrations ou banco. O checker estático não certifica o PHP runtime, interação real, acessibilidade em leitor de tela ou rendering em catálogo.
+O checker é estático: executa apenas o validador JavaScript em VM sem DOM/browser contra fixture sintética e verifica fontes/strings/endpoints por presença de contrato. Ele não prova integração PHP, comportamento do upload real, MIME no servidor, rendering, segurança de servidor web, leitor de tela nem E2E real.
 
-## Conteúdo
+**Não executados por instrução:** PHP, SQL, browser, aplicação, testes runtime, staging, deploy, migrations ou banco. Staging permanece pausado.
 
-- Contrato: `docs/BDREditor-Table-Contract.json`
-- Detalhes e aceite: `docs/BDREditor-Table.md`
-- Base/source hashes: `docs/BDREditor-Table-Base-Hashes.json`
-- Fixture: `tests/fixtures/bdre_table.json`
-- Checker: `tools/e2e/e2e_bdre_table_static.cjs`
+## Limites conhecidos antes de release
+
+- O ambiente não tem `upload_max_filesize`/`post_max_size` versionados. O limite do app foi mantido em 2 MiB (o mesmo teto do fluxo de imagens) e precisa caber nos limites PHP do servidor mais o overhead multipart.
+- Office/ODF cujo `finfo` identifica como `application/zip` exige a extensão PHP `ZipArchive`; sem ela, o upload falha fechado.
+- A pasta é pública por decisão de produto: não usar para documentos privados/sensíveis. O incremento não promete DRM, antivírus, DLP nem controle por usuário.
+- A validação MIME com `finfo` reduz extensão/conteúdo incompatíveis, mas não é antivírus nem garante ausência de conteúdo malicioso dentro de documentos complexos.
+- Nenhuma nova numeração oficial foi atribuída à tarefa.
+
+## Arquivos de apoio
+
+- Contrato e critérios: `docs/BDREditor-File-Download.md`
+- Escopo/decisões: `docs/BDREditor-File-Download-Scope.md`
+- Fixture: `tests/fixtures/bdre_file.json`
+- Checker: `tools/e2e/e2e_bdre_file_static.cjs`

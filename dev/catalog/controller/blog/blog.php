@@ -99,7 +99,8 @@ class Blog extends \Reamur\System\Engine\Controller {
         if (!empty($blockContent['table_available']) && (!empty($blockContent['row_found']) || !empty($blockContent['query_error']))) {
             $contentMode = 'blocks';
             if (!empty($blockContent['row_found'])) {
-                $rendered = (new \Reamur\System\Library\Blog\BlockRenderer())->renderJson(
+                $downloadRoot = rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog/view/download/blog';
+                $rendered = (new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot))->renderJson(
                     (string)$blockContent['content_json'],
                     (int)$blockContent['format_version'],
                     $base

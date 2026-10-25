@@ -212,6 +212,25 @@
     </div>
   </div>
 </div>
+  <div class="modal fade" id="blogDownloadModal" tabindex="-1" aria-labelledby="blogDownloadModalLabel" aria-hidden="true" data-download-config="{{ media_config|json_encode }}">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title fs-5" id="blogDownloadModalLabel">{{ text_download_library }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ button_media_close }}"></button></div>
+      <div class="modal-body">
+        <div id="blogDownloadAlert" class="alert d-none" role="status" aria-live="polite"></div>
+        <label class="form-label" for="blogDownloadSearch">{{ entry_media_search }}</label>
+        <input class="form-control mb-3" id="blogDownloadSearch" type="search" maxlength="128">
+        <div id="blogDownloadFiles" class="list-group mb-3"></div>
+        <div id="blogDownloadEmpty" class="text-body-secondary py-2"></div>
+        <div class="d-flex justify-content-between align-items-center mb-4"><button type="button" class="btn btn-outline-secondary btn-sm" id="blogDownloadPrevious">{{ button_media_previous }}</button><span id="blogDownloadPage" class="small"></span><button type="button" class="btn btn-outline-secondary btn-sm" id="blogDownloadNext">{{ button_media_next }}</button></div>
+        <hr>
+        <label class="form-label" for="blogDownloadFile">{{ text_download_upload }}</label>
+        <input class="form-control" type="file" id="blogDownloadFile" accept=".pdf,.docx,.xlsx,.pptx,.odt,.ods,.csv,.txt,application/pdf,text/plain,text/csv,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.oasis.opendocument.text,application/vnd.oasis.opendocument.spreadsheet">
+        <p class="form-text">{{ text_download_hint }}</p>
+        <button type="button" class="btn btn-primary" id="blogDownloadUploadButton">{{ button_download_upload }}</button>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ button_media_close }}</button></div>
+    </div></div>
+  </div>
 {% endif %}
 
 {{ footer|raw }}

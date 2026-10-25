@@ -10,10 +10,10 @@
     ['core/paragraph', 'Parágrafo'], ['core/heading', 'Título'], ['core/list', 'Lista'],
     ['core/image', 'Imagem'], ['core/quote', 'Citação'], ['core/video_embed', 'Vídeo'],
     ['core/button', 'Botão'], ['core/separator', 'Separador'], ['core/group', 'Grupo'],
-    ['core/columns', 'Colunas'], ['core/gallery', 'Galeria'], ['core/cover', 'Capa'], ['core/table', 'Tabela']
+    ['core/columns', 'Colunas'], ['core/gallery', 'Galeria'], ['core/cover', 'Capa'], ['core/table', 'Tabela'], ['core/file', 'Arquivo']
   ];
-  const TEXT_TYPES = new Set(['core/paragraph', 'core/heading', 'core/list-item', 'core/quote', 'core/button']);
-  const BLOCK_CATEGORIES = { 'core/paragraph':'content', 'core/heading':'content', 'core/list':'content', 'core/quote':'content', 'core/button':'content', 'core/image':'media', 'core/video_embed':'media', 'core/gallery':'media', 'core/cover':'media', 'core/separator':'layout', 'core/group':'layout', 'core/columns':'layout', 'core/table':'content' };
+  const TEXT_TYPES = new Set(['core/paragraph', 'core/heading', 'core/list-item', 'core/quote', 'core/button', 'core/file']);
+  const BLOCK_CATEGORIES = { 'core/paragraph':'content', 'core/heading':'content', 'core/list':'content', 'core/quote':'content', 'core/button':'content', 'core/image':'media', 'core/video_embed':'media', 'core/gallery':'media', 'core/cover':'media', 'core/separator':'layout', 'core/group':'layout', 'core/columns':'layout', 'core/table':'content', 'core/file':'media' };
   const TRANSFORMABLE_TEXT = new Set(['core/paragraph', 'core/heading', 'core/quote', 'core/button']);
   const CLONE = (value) => JSON.parse(JSON.stringify(value));
   let instanceSequence = 0;
@@ -30,6 +30,11 @@
     } catch (_) { return false; }
   }
 
+  function validLocalDownload(src) {
+    if (typeof src !== 'string' || !/^view\/download\/blog\/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$/.test(src) || src.includes('..') || /[\x00-\x20\x7F\\?#]/.test(src)) return false;
+    return ['pdf','docx','xlsx','pptx','odt','ods','csv','txt'].includes(src.split('.').pop().toLowerCase());
+  }
+
   function validEmbed(url) {
     try {
       const parsed = new URL(url);
@@ -44,7 +49,7 @@
   }
 
   const INLINE_MARKS = ['bold', 'italic', 'underline', 'strike', 'code'];
-  const BLOCK_TEXT_TYPES = new Set(['core/paragraph', 'core/heading', 'core/list-item', 'core/quote', 'core/button', 'core/table-cell']);
+  const BLOCK_TEXT_TYPES = new Set(['core/paragraph', 'core/heading', 'core/list-item', 'core/quote', 'core/button', 'core/table-cell', 'core/file']);
   const INLINE_TAG_MARK = { STRONG: 'bold', B: 'bold', EM: 'italic', I: 'italic', U: 'underline', S: 'strike', DEL: 'strike', CODE: 'code' };
 
   function runsFromText(text) {
@@ -93,7 +98,7 @@
       if (typeof run.text !== 'string' || run.text.length === 0 || utf8Length(run.text) > 262144 || !Array.isArray(run.marks) || run.marks.length > INLINE_MARKS.length) return false;
       chars += utf8Length(run.text);
       if (chars > 262144 || new Set(run.marks).size !== run.marks.length || run.marks.some((mark) => !INLINE_MARKS.includes(mark))) return false;
-      if (run.href !== null && (!validActionUrl(run.href) || type === 'core/button')) return false;
+      if (run.href !== null && (!validActionUrl(run.href) || ['core/button','core/file'].includes(type))) return false;
       return true;
     });
   }
@@ -121,7 +126,7 @@
         'core/paragraph':['align'], 'core/heading':['level'], 'core/list':['ordered'], 'core/list-item':[],
         'core/quote':[], 'core/image':['src','alt','title'], 'core/video_embed':['url'], 'core/button':['url'],
         'core/separator':[], 'core/group':[], 'core/columns':['count'], 'core/column':[],
-        'core/gallery':['columns','align'], 'core/cover':['src','alt','align'], 'core/table':['header'], 'core/table-row':[], 'core/table-cell':[]
+        'core/gallery':['columns','align'], 'core/cover':['src','alt','align'], 'core/table':['header'], 'core/table-row':[], 'core/table-cell':[], 'core/file':['src']
       };
       if (version === 2) {
         allowedAttributes['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
@@ -138,6 +143,11 @@
         case 'core/list': if (typeof a.ordered !== 'boolean' || node.children.length < 1 || node.children.some((child) => !child || child.type !== 'core/list-item')) errors.push('list_invalid'); break;
         case 'core/list-item': if (parent !== 'core/list' || node.children.length) errors.push('list_item_invalid'); break;
         case 'core/quote': if (node.children.length) errors.push('quote_children'); break;
+        case 'core/file': {
+          const label = Array.isArray(node.content) ? node.content.map((run) => run && typeof run.text === 'string' ? run.text : '').join('').trim() : '';
+          if (version !== 2 || !validLocalDownload(a.src) || !label || node.children.length || !validInlineRuns(node.content, node.type)) errors.push('file_invalid');
+          break;
+        }
         case 'core/image':
           if (!validLocalImage(a.src) || typeof a.alt !== 'string' || node.children.length || node.content) errors.push('image_invalid');
           ['alt','title','caption'].forEach((key) => { if (a[key] !== undefined && (typeof a[key] !== 'string' || utf8Length(a[key]) > 4096)) errors.push('image_text_invalid'); });
@@ -242,7 +252,7 @@
       this.slashTrigger = null;
       this.inserterQuery = '';
       this.statusMessage = '';
-      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},typeLabels:{}}, this.options.strings || {});
+      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},typeLabels:{}}, this.options.strings || {});
       const rawInitial = this.options.document || { format_version: 1, blocks: [] };
       const initial = upgradeDocument(rawInitial);
       const validation = validateDocument(initial);
@@ -266,6 +276,7 @@
     categoryLabel(category) { return category === 'media' ? this.strings.categoryMedia : (category === 'layout' ? this.strings.categoryLayout : this.strings.categoryContent); }
 
     bind() {
+      global.document.addEventListener('blog-block-file-selected', (event) => { const detail = event.detail || {}; if (detail.editor !== this || !detail.nodeId || typeof detail.path !== 'string') return; this.updateNode(detail.nodeId, (node) => { if (node.type === 'core/file') node.attributes.src = detail.path; }); });
       this.root.addEventListener('mousedown', (event) => {
         const control = event.target.closest('[data-action="format-mark"],[data-action="link-apply"],[data-action="link-remove"]');
         if (!control || !this.root.contains(control)) return;
@@ -377,6 +388,7 @@
       else if (name === 'move-up') this.moveNode(button.dataset.nodeId || this.selectedId, -1);
       else if (name === 'move-down') this.moveNode(button.dataset.nodeId || this.selectedId, 1);
       else if (name === 'media') { global.document.dispatchEvent(new CustomEvent('blog-block-media-open', { detail: { editor: this } })); }
+      else if (name === 'file-media') { global.document.dispatchEvent(new CustomEvent('blog-block-file-open', { detail: { editor: this, nodeId: button.dataset.nodeId || this.selectedId } })); }
       else if (name === 'format-mark') this.applyInlineMark(button.dataset.mark);
       else if (name.startsWith('table-')) this.updateTable(name, button.dataset.nodeId || this.selectedId);
       else if (name === 'link-apply') this.applyInlineLink(this.linkDraft);
@@ -422,7 +434,7 @@
         button.setAttribute('aria-pressed', 'false');
         toolbar.append(button);
       });
-      if (node.type !== 'core/button') {
+      if (!['core/button','core/file'].includes(node.type)) {
         const link = this.el('input', 'rb-inline-link');
         link.type = 'text'; link.value = this.linkDraft; link.placeholder = this.strings.linkPlaceholder;
         link.setAttribute('aria-label', this.strings.link); link.dataset.inlineLinkInput = '1';
@@ -540,7 +552,7 @@
     applyInlineLink(href) {
       const bookmark = this.inlineBookmark;
       if (!bookmark || bookmark.start === bookmark.end) return;
-      const found = this.findPath(this.state.blocks, bookmark.nodeId); if (!found || found.node.type === 'core/button') return;
+      const found = this.findPath(this.state.blocks, bookmark.nodeId); if (!found || ['core/button','core/file'].includes(found.node.type)) return;
       const target = href == null ? null : String(href).trim();
       if (target !== null && !validActionUrl(target)) {
         this.inlineNotice = this.strings.invalidLink || 'Invalid link.';
@@ -558,6 +570,7 @@
       if (type === 'core/list') return this.node(type, { ordered: false }, '', [this.node('core/list-item', {}, 'Novo item'), this.node('core/list-item', {}, 'Novo item')]);
       if (type === 'core/list-item') return this.node(type, {}, 'Novo item');
       if (type === 'core/image') return this.node(type, { src: '', alt: '' }, '');
+      if (type === 'core/file') return this.node(type, { src: '' }, 'Baixar arquivo');
       if (type === 'core/gallery') return this.node(type, { columns:2, align:'content' }, '', [this.node('core/image',{src:'',alt:''},''),this.node('core/image',{src:'',alt:''},'')]);
       if (type === 'core/cover') return this.node(type, { src:'', alt:'', align:'wide' }, '', [this.node('core/heading',{level:2},'Título da capa'),this.node('core/paragraph',{},'Adicione uma descrição.'),this.node('core/button',{url:'/'},'Saiba mais')]);
       if (type === 'core/video_embed') return this.node(type, { url: '' }, '');
@@ -893,7 +906,7 @@
 
     undo() { this.clearTextEditSnapshot(); if (!this.undoStack.length) return; this.pushHistory(this.redoStack, 'redo', this.snapshot()); this.state = JSON.parse(this.popHistory(this.undoStack, 'undo')); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusUndo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
     redo() { this.clearTextEditSnapshot(); if (!this.redoStack.length) return; this.pushHistory(this.undoStack, 'undo', this.snapshot()); this.state = JSON.parse(this.popHistory(this.redoStack, 'redo')); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusRedo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
-    setSelectedAttribute(key, value) { if (this.locked) return false; const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null; if (!found || !['core/image','core/cover'].includes(found.node.type) || key !== 'src') return false; this.updateNode(found.node.id, (node) => { node.attributes.src = value; }); return true; }
+    setSelectedAttribute(key, value) { if (this.locked) return false; const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null; if (!found || !['core/image','core/cover','core/file'].includes(found.node.type) || key !== 'src') return false; this.updateNode(found.node.id, (node) => { node.attributes.src = value; }); return true; }
     getDocument() { return this.locked ? null : CLONE(this.state); }
     serialize() {
       if (this.locked) throw new Error('document_requires_review');
@@ -997,6 +1010,8 @@
         buildInlineDom(editor, node.content); card.append(editor);
       } else if (node.type === 'core/image') {
         card.append(this.renderAdminImagePreview(node));
+      } else if (node.type === 'core/file') {
+        card.append(this.el('p', 'rb-preview-value', node.content.map((run) => run.text).join('') + (node.attributes.src ? ' · ' + node.attributes.src.split('/').pop() : '')));
       } else if (node.type === 'core/video_embed') card.append(this.renderAdminVideoPreview(node.attributes.url));
       else if (node.type === 'core/gallery') card.append(this.el('p','rb-preview-value',this.label('core/gallery') + ' · ' + node.children.length));
       else if (node.type === 'core/cover') card.append(this.renderAdminImagePreview(node,'rb-cover-admin-preview'));
@@ -1057,6 +1072,10 @@
       if (n.type === 'core/heading') addField('Nível', 'level', n.attributes.level, 'number');
       if (n.type === 'core/paragraph') addField('Alinhamento', 'align', n.attributes.align || 'left', 'text', [['left','Esquerda'],['center','Centro'],['right','Direita']]);
       if (n.type === 'core/list') addField('Tipo de lista', 'ordered', n.attributes.ordered ? 'true' : 'false', 'text', [['false','Marcadores'],['true','Numerada']]);
+      if (n.type === 'core/file') {
+        addField(this.strings.file.source, 'src', n.attributes.src, 'text');
+        aside.append(this.button(this.strings.file.choose, 'file-media', {nodeId:n.id}));
+      }
       if (n.type === 'core/image') {
         addField(this.strings.media.source, 'src', n.attributes.src, 'text'); aside.append(this.button(this.strings.media.placeholder, 'media'));
         addField(this.strings.media.alt, 'alt', n.attributes.alt, 'text'); addField(this.strings.media.title, 'title', n.attributes.title || '', 'text');
@@ -1106,6 +1125,7 @@
     mount: function (root, options) { if (!(root instanceof Element)) throw new TypeError('editor root must be an Element'); return new Editor(root, options || {}); },
     validateDocument: validateDocument,
     validLocalImage: validLocalImage,
+    validLocalDownload: validLocalDownload,
     validEmbed: validEmbed
   };
 })(window);

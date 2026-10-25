@@ -12,6 +12,18 @@ namespace Reamur\Admin\Model\Blog;
 class Media extends \Reamur\System\Engine\Model {
 
     private const ROOT_RELATIVE = 'view/image/blog/';
+    private const DOWNLOAD_ROOT_RELATIVE = 'view/download/blog/';
+    private const DOWNLOAD_MAX_BYTES = 2097152;
+    private const DOWNLOAD_MIME_BY_EXTENSION = [
+        'pdf' => ['application/pdf'],
+        'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        'xlsx' => ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+        'pptx' => ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+        'odt' => ['application/vnd.oasis.opendocument.text'],
+        'ods' => ['application/vnd.oasis.opendocument.spreadsheet'],
+        'csv' => ['text/plain', 'text/csv', 'application/csv'],
+        'txt' => ['text/plain'],
+    ];
     private const PAGE_LIMIT = 24;
     private const MAX_FOLDER_DEPTH = 8;
     private const IMAGE_MIME_BY_EXTENSION = [
@@ -21,6 +33,114 @@ class Media extends \Reamur\System\Engine\Model {
         'webp' => 'image/webp',
         'gif' => 'image/gif',
     ];
+
+    /** Confirma que a referência de um bloco resolve para arquivo regular permitido dentro da raiz. */
+    public function downloadReferenceExists(string $relative): bool {
+        if (!preg_match('#^view/download/blog/([A-Za-z0-9][A-Za-z0-9._-]{0,179})$#D', $relative) || str_contains($relative, '..')) return false;
+        $root = $this->downloadRootPath();
+        $base = rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog';
+        foreach ([$base, $base . '/view', $base . '/view/download', $root] as $path) if (is_link($path)) return false;
+        $file = $root . DIRECTORY_SEPARATOR . basename($relative);
+        return $this->isAllowedDownload($file, basename($relative));
+    }
+
+    /** Lista apenas documentos validados da raiz de downloads, sem pastas nem exclusão. */
+    public function getDownloadPage(string $search, int $page, int $limit = self::PAGE_LIMIT): array {
+        $root = $this->downloadRootPath();
+        $base = rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog';
+        foreach ([$base, $base . '/view', $base . '/view/download', $root] as $path) if (is_link($path)) return ['ok' => false, 'error' => 'download_root_unavailable'];
+        if (!is_dir($root)) return ['ok' => true, 'files' => [], 'total' => 0, 'page' => 1, 'pages' => 1];
+        $entries = scandir($root);
+        if ($entries === false) return ['ok' => false, 'error' => 'folder_unreadable'];
+        $search = trim(mb_substr($search, 0, 128));
+        $files = [];
+        foreach ($entries as $entry) {
+            if ($entry === '.' || $entry === '..' || $entry === 'index.html' || str_starts_with($entry, '.')) continue;
+            $path = $root . DIRECTORY_SEPARATOR . $entry;
+            if (is_link($path) || !is_file($path) || !$this->isSafeDownloadFilename($entry) || !$this->isAllowedDownload($path, $entry)) continue;
+            if ($search !== '' && mb_stripos($entry, $search) === false) continue;
+            $size = filesize($path); $modified = filemtime($path);
+            $files[] = ['name' => $entry, 'path' => self::DOWNLOAD_ROOT_RELATIVE . $entry, 'size' => $size === false ? 0 : (int)$size, 'modified' => $modified === false ? 0 : (int)$modified];
+        }
+        usort($files, static fn(array $a, array $b): int => strnatcasecmp($a['name'], $b['name']));
+        $total = count($files); $limit = min(48, max(1, $limit)); $pages = max(1, (int)ceil($total / $limit)); $page = min($pages, max(1, $page));
+        return ['ok' => true, 'files' => array_slice($files, ($page - 1) * $limit, $limit), 'total' => $total, 'page' => $page, 'pages' => $pages];
+    }
+
+    /** Upload restrito à raiz dedicada; nenhum nome fornecido pelo cliente é usado no destino. */
+    public function uploadDownload(array $file): array {
+        $tmp = (string)($file['tmp_name'] ?? ''); $size = (int)($file['size'] ?? 0); $error = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+        if (in_array($error, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) return ['ok' => false, 'error' => 'size'];
+        if ($tmp === '' || $error !== UPLOAD_ERR_OK || !is_uploaded_file($tmp)) return ['ok' => false, 'error' => 'no_file'];
+        $actualSize = filesize($tmp);
+        if ($size <= 0 || $actualSize === false || $actualSize !== $size || $actualSize > self::DOWNLOAD_MAX_BYTES) return ['ok' => false, 'error' => 'size'];
+        $clientName = (string)($file['name'] ?? ''); $extension = strtolower(pathinfo($clientName, PATHINFO_EXTENSION));
+        if (!$this->isSafeDownloadFilename('x.' . $extension) || !$this->isAllowedDownload($tmp, 'x.' . $extension)) return ['ok' => false, 'error' => 'type'];
+        if (!$this->ensureDownloadRoot()) return ['ok' => false, 'error' => 'move'];
+        $stem = (string)pathinfo($clientName, PATHINFO_FILENAME);
+        $stem = preg_replace('/[^A-Za-z0-9._-]+/', '-', $stem) ?? '';
+        $stem = preg_replace('/\.{2,}/', '-', $stem) ?? $stem;
+        $stem = trim(substr($stem, 0, 80), '.-_');
+        if ($stem === '') $stem = 'download';
+        $filename = $stem . '-' . bin2hex(random_bytes(8)) . '.' . $extension;
+        $target = $this->downloadRootPath() . DIRECTORY_SEPARATOR . $filename;
+        if (file_exists($target) || is_link($target) || !move_uploaded_file($tmp, $target)) return ['ok' => false, 'error' => 'move'];
+        return ['ok' => true, 'path' => self::DOWNLOAD_ROOT_RELATIVE . $filename, 'name' => $filename];
+    }
+
+    private function isSafeDownloadFilename(string $filename): bool {
+        if ($filename === '' || strlen($filename) > 180
+            || preg_match('/[\x00-\x20\x7F]/', $filename)
+            || str_contains($filename, '/') || str_contains($filename, chr(92))
+            || str_contains($filename, '..')) return false;
+        return isset(self::DOWNLOAD_MIME_BY_EXTENSION[strtolower(pathinfo($filename, PATHINFO_EXTENSION))]);
+    }
+
+    private function isAllowedDownload(string $path, string $filename): bool {
+        if (!$this->isSafeDownloadFilename($filename) || is_link($path) || !is_file($path)) return false;
+        $size = filesize($path);
+        if ($size === false || $size <= 0 || $size > self::DOWNLOAD_MAX_BYTES) return false;
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $finfo = new \finfo(FILEINFO_MIME_TYPE); $mime = (string)($finfo->file($path) ?: '');
+        $allowed = self::DOWNLOAD_MIME_BY_EXTENSION[$extension];
+        if (in_array($mime, $allowed, true)) return true;
+        if (!in_array($extension, ['docx','xlsx','pptx','odt','ods'], true) || $mime !== 'application/zip' || !class_exists(\ZipArchive::class)) return false;
+        $zip = new \ZipArchive();
+        if ($zip->open($path, \ZipArchive::CHECKCONS) !== true) return false;
+        $required = ['docx' => 'word/document.xml', 'xlsx' => 'xl/workbook.xml', 'pptx' => 'ppt/presentation.xml', 'odt' => 'mimetype', 'ods' => 'mimetype'][$extension];
+        $valid = $zip->locateName($required) !== false;
+        if (in_array($extension, ['odt','ods'], true) && $valid) {
+            $stat = $zip->statName('mimetype');
+            $expected = $extension === 'odt' ? 'application/vnd.oasis.opendocument.text' : 'application/vnd.oasis.opendocument.spreadsheet';
+            $valid = is_array($stat) && (int)($stat['size'] ?? 999) <= 128 && trim((string)$zip->getFromName('mimetype')) === $expected;
+        } elseif ($valid) {
+            $typeIndex = $zip->locateName('[Content_Types].xml');
+            $stat = $typeIndex === false ? false : $zip->statIndex($typeIndex);
+            $contentTypes = is_array($stat) && (int)($stat['size'] ?? 999999) <= 65536 ? (string)$zip->getFromIndex($typeIndex) : '';
+            $expected = ['docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml', 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml', 'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml'][$extension];
+            $valid = $contentTypes !== '' && str_contains($contentTypes, $expected);
+        }
+        $zip->close();
+        return $valid;
+    }
+
+    private function downloadRootPath(): string {
+        return rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog/view/download/blog';
+    }
+
+    private function ensureDownloadRoot(): bool {
+        $base = rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog';
+        foreach ([$base, $base . '/view', $base . '/view/download', $base . '/view/download/blog'] as $path) if (is_link($path)) return false;
+        $view = $base . '/view'; $parent = $base . '/view/download'; $root = $this->downloadRootPath();
+        if (!is_dir($view) || !is_writable($view)) return false;
+        if (!is_dir($parent) && !mkdir($parent, 0755, false) && !is_dir($parent)) return false;
+        if (!is_dir($root) && !mkdir($root, 0755, false) && !is_dir($root)) return false;
+        if (!is_writable($root)) return false;
+        $guard = $root . DIRECTORY_SEPARATOR . 'index.html';
+        if (is_link($guard) || (file_exists($guard) && !is_file($guard))) return false;
+        if (!is_file($guard) && file_put_contents($guard, '', LOCK_EX) === false) return false;
+        return true;
+    }
 
     /**
      * Lista pastas e imagens da pasta atual; busca e paginação aplicam-se aos arquivos.

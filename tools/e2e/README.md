@@ -1,11 +1,11 @@
-# BDREditor table checker — static-only
+# BDREditor file/download — checker estático
 
-Run from the package root:
+Executar da raiz do pacote:
 
 ```sh
-node tools/e2e/e2e_bdre_table_static.cjs
+node tools/e2e/e2e_bdre_file_static.cjs
 ```
 
-The checker parses the synthetic fixture, loads the pure client validator in Node VM (without DOM/browser), checks dimensions and limits, and scans the server schema, renderer, localization and CSS for the expected table contract.
+A ferramenta carrega o validador puro do editor em Node VM sem DOM/browser, verifica fixture válida/inválidas, helper de path, fontes backend, endpoints ACL/CSRF, renderer, picker e traduções.
 
-It does **not** execute PHP, SQL, browser, app, E2E runtime, staging, deploy, migrations or database access. A PASS is not a PHP/runtime/security/accessibility certification.
+Não chama PHP, SQL, servidor, banco, navegador, app, staging ou deploy. PASS significa apenas que os contratos estáticos verificados continuam presentes e que o validador cliente tratou as fixtures como esperado. Não certifica MIME em produção, permissões do filesystem, ZipArchive, renderer PHP ou fluxo HTTP real.

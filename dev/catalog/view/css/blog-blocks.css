@@ -50,6 +50,11 @@
 @media(max-width:900px){.rms-block-gallery--columns-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.rms-block-gallery--columns-2,.rms-block-gallery--columns-3,.rms-block-gallery--columns-4{grid-template-columns:minmax(0,1fr)}.rms-block-image--mobile-full img{width:100%;max-width:100%}.rms-block-image--mobile-large img{width:100%;max-width:42rem}.rms-block-image--mobile-medium img{width:100%;max-width:28rem}.rms-block-cover{min-height:15rem}.rms-block-cover__content{padding:1.25rem}}
 
+/* BDREditor file/download: semantic link with visible focus. */
+.rms-block-file{margin-block:1rem}
+.rms-block-file a{display:inline-flex;align-items:center;gap:.4rem;color:var(--blog-link,#1458a6);text-decoration:underline;text-underline-offset:.15em;font-weight:600}
+.rms-block-file a:focus-visible{outline:3px solid currentColor;outline-offset:3px;border-radius:2px}
+
 /* BDREditor structured table: fixed semantic output, no document-controlled styles. */
 .rms-block-table-wrap{max-width:100%;overflow-x:auto;margin-block:1.25rem}
 .rms-block-table{width:100%;border-collapse:collapse;table-layout:fixed}

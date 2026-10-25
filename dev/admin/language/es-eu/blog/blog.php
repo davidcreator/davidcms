@@ -261,3 +261,20 @@ $_['text_block_pattern_hint'] = 'Patrones locales listos para insertar; no se gu
 $_['text_block_outline_label'] = 'Título en la estructura';
 $_['text_block_initial_invalid'] = 'El documento inicial de bloques no es válido. Se conserva la fuente para revisión y se bloquea la edición.';
 $_['text_block_document_too_large'] = 'El documento de bloques supera el límite de 4 MiB.';
+
+// BDREditor core/file — biblioteca de descargas local.
+$_['text_block_type_file'] = 'Archivo para descargar';
+$_['text_block_file_source'] = 'Referencia local del archivo';
+$_['text_block_file_choose'] = 'Elegir archivo de la biblioteca';
+$_['text_download_library'] = 'Archivos para descargar';
+$_['text_download_empty'] = 'No hay documentos disponibles.';
+$_['text_download_upload'] = 'Subir documento';
+$_['text_download_hint'] = 'PDF, DOCX, XLSX, PPTX, ODT, ODS, CSV o TXT; máximo 2 MiB.';
+$_['text_download_limit'] = 'Hasta 2 MiB por documento.';
+$_['button_download_select'] = 'Usar este archivo';
+$_['button_download_upload'] = 'Subir y usar archivo';
+$_['error_download_upload_no_file'] = 'Elige un documento para subir.';
+$_['error_download_upload_size'] = 'El documento no puede superar %s.';
+$_['error_download_upload_type'] = 'Tipo de documento inválido o contenido incompatible.';
+$_['error_download_upload_move'] = 'No se pudo guardar el documento. Comprueba los permisos de la carpeta catalog.';
+$_['error_download_generic'] = 'No se pudo cargar la biblioteca de descargas.';

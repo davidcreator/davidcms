@@ -261,3 +261,20 @@ $_['text_block_pattern_hint'] = 'Padrões locais prontos para inserir; não são
 $_['text_block_outline_label'] = 'Título na estrutura';
 $_['text_block_initial_invalid'] = 'O documento inicial de blocos é inválido. A fonte foi preservada para revisão e a edição está bloqueada.';
 $_['text_block_document_too_large'] = 'O documento de blocos ultrapassa o limite de 4 MiB.';
+
+// BDREditor core/file — biblioteca de descargas local.
+$_['text_block_type_file'] = 'Arquivo para download';
+$_['text_block_file_source'] = 'Referência local do arquivo';
+$_['text_block_file_choose'] = 'Escolher arquivo da biblioteca';
+$_['text_download_library'] = 'Arquivos para download';
+$_['text_download_empty'] = 'Nenhum documento disponível.';
+$_['text_download_upload'] = 'Enviar documento';
+$_['text_download_hint'] = 'PDF, DOCX, XLSX, PPTX, ODT, ODS, CSV ou TXT; máximo de 2 MiB.';
+$_['text_download_limit'] = 'Até 2 MiB por documento.';
+$_['button_download_select'] = 'Usar este arquivo';
+$_['button_download_upload'] = 'Enviar e usar arquivo';
+$_['error_download_upload_no_file'] = 'Escolha um documento para enviar.';
+$_['error_download_upload_size'] = 'O documento deve ter no máximo %s.';
+$_['error_download_upload_type'] = 'Tipo de documento inválido ou conteúdo incompatível.';
+$_['error_download_upload_move'] = 'Não foi possível salvar o documento. Verifique as permissões da pasta catalog.';
+$_['error_download_generic'] = 'Não foi possível carregar a biblioteca de downloads.';

@@ -261,3 +261,20 @@ $_['text_block_pattern_hint'] = 'Built-in local patterns to insert; they are not
 $_['text_block_outline_label'] = 'Label in outline';
 $_['text_block_initial_invalid'] = 'The initial block document is invalid. Its source is preserved for review; editing is blocked.';
 $_['text_block_document_too_large'] = 'The block document exceeds the 4 MiB size limit.';
+
+// BDREditor core/file — biblioteca de descargas local.
+$_['text_block_type_file'] = 'Download file';
+$_['text_block_file_source'] = 'Local file reference';
+$_['text_block_file_choose'] = 'Choose a library file';
+$_['text_download_library'] = 'Download files';
+$_['text_download_empty'] = 'No documents available.';
+$_['text_download_upload'] = 'Upload document';
+$_['text_download_hint'] = 'PDF, DOCX, XLSX, PPTX, ODT, ODS, CSV, or TXT; maximum 2 MiB.';
+$_['text_download_limit'] = 'Up to 2 MiB per document.';
+$_['button_download_select'] = 'Use this file';
+$_['button_download_upload'] = 'Upload and use file';
+$_['error_download_upload_no_file'] = 'Choose a document to upload.';
+$_['error_download_upload_size'] = 'The document must be no larger than %s.';
+$_['error_download_upload_type'] = 'Invalid document type or mismatched content.';
+$_['error_download_upload_move'] = 'The document could not be saved. Check catalog folder permissions.';
+$_['error_download_generic'] = 'Could not load the download library.';
