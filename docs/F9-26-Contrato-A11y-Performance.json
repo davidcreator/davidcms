@@ -1,0 +1,16 @@
+{
+  "task":"F9-26",
+  "base_head":"fe7de816f6dc27658e909e33d54ad735c7cb873b",
+  "repository":"https://github.com/davidcreator/davidcms",
+  "local_scope":{
+    "keyboard":{"native_inserter_buttons":true,"enter_first_filtered_item_including_patterns":true,"escape_closes_and_restores_focus":true,"alt_arrows_move_without_drag":true},
+    "screen_reader":{"status_live_region":true,"empty_search_status":true,"invalid_document_alert":true,"invalid_submission_aria":true,"inserter_buttons_keep_native_semantics":true},
+    "focus":{"outline_color":"#174ea6","outline_width_px":3,"outline_offset_px":2},
+    "localization":{"locales":["pt-br","en-us","es-eu"],"key_sets_equal":true},
+    "long_document_editing":{"active_text_node_mutated_in_place":true,"undo_snapshots_per_typing_burst":true,"burst_idle_ms":700,"history_entries_per_stack_max":50,"history_serialized_character_budget_per_stack":8388608},
+    "serialization":{"client_max_utf8_bytes":4194304,"server_authoritative":true,"checked_at_explicit_serialize_submit_not_each_keystroke":true}
+  },
+  "synthetic_limits_fixture":"tests/fixtures/editor_limits_f926.json",
+  "verification":{"node_syntax_checks":true,"static_checker":true,"json_parse":true,"php_sql_browser_app_e2e_runtime":false,"screen_reader_or_axe":false,"measured_browser_performance":false,"wcag_conformance_claimed":false},
+  "not_in_scope":["virtualization","autosave","revisions","database changes","runtime integration tests"]
+}

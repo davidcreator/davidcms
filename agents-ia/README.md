@@ -1,14 +1,11 @@
-# Agentes IA — F9-25
+# Agentes IA — F9-26
 
-## Objetivo
+## Regras
 
-Prosseguir do F9-24 com title/outline, fluxo de alterações não salvas, avaliação de padrões próprios e preview contextual de catálogo.
-
-## Regras da implementação local
-
-- `core/group.outline_label` é metadata v2, plain UTF-8 limitado a 160 bytes; não aceitar em v1. JS e servidor precisam validar igual.
-- Outline usa APIs DOM/texto, sem `innerHTML`/HTML arbitrário; renderer público ignora o label.
-- Guard beforeunload não salva conteúdo. Submit é o fluxo explícito existente; não introduzir autosave.
-- Não inferir que `modify blog/blog` permite criar uma biblioteca compartilhada de padrões. ACL/escopo pendentes; aguardar decisão do usuário e revisão install/schema antes de storage/API.
-- Não expor rascunhos por URL pública ou token bearer. Preview precisa de ACL/CSRF/origin, renderer allowlisted e ausência de gravação.
-- Sem SQL/PHP/browser/app/E2E runtime, banco, deploy ou GitHub write.
+- Preservar o envelope do documento v1/v2 e deixar o servidor autoritativo.
+- Priorizar HTML/DOM nativo, texto com `textContent`, controles semânticos e alternativa de teclado para drag.
+- Nunca sobrescrever semântica de elementos nativos com ARIA incompatível; manter nome/estado/foco e mensagens live.
+- Toda string deve existir em PT-BR, EN-US e ES-EU e ser distribuída pelo controller.
+- Foco visível, contraste, responsividade/reduced-motion e limites de conteúdo são requisitos estáticos; sem alegar auditoria se não houver browser/leitor de tela.
+- Otimizações não podem remover undo/redo nem enfraquecer validação/escape; snapshots devem ter limites de count e agregado.
+- Proibido executar PHP, SQL, browser, app ou E2E runtime; não acessar DB/dump, não publicar GitHub ou deploy.

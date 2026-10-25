@@ -1,0 +1,13 @@
+{
+  "head": "fe7de816f6dc27658e909e33d54ad735c7cb873b",
+  "method": "Verified current main commit API; point-source Git blob SHA-1s recorded from exact F9-25 tree before local edits.",
+  "modified_sources": [
+    {"path":"dev/admin/view/js/blog-block-editor.js","git_blob_sha1":"da80fbb33a29eb6c9428cde16768835ac703f83d"},
+    {"path":"dev/admin/view/js/blog-block-editor-init.js","git_blob_sha1":"feba3558a875350248c1cd87bffc6a27707cd852"},
+    {"path":"dev/admin/view/css/blog-block-editor.css","git_blob_sha1":"1af968fdde19ca823a2ea73159d97131b4a6f570"},
+    {"path":"dev/admin/controller/blog/blog.php","git_blob_sha1":"c35d8e85bdde9ab6adc6a5b8cec9fa3592861f34"},
+    {"path":"dev/admin/language/en-us/blog/blog.php","git_blob_sha1":"97e7ad5168946fa919a1815695dbd8947ba14d20"},
+    {"path":"dev/admin/language/es-eu/blog/blog.php","git_blob_sha1":"32c21870953769b7baa89b47109e3d59e2d5617a"},
+    {"path":"dev/admin/language/pt-br/blog/blog.php","git_blob_sha1":"36a3ae3fc3a2203a70a31c6699d15c356dbca0c6"}
+  ]
+}

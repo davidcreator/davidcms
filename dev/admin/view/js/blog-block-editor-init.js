@@ -48,16 +48,19 @@
           strings: editorStrings,
           connectedSave: true,
           onChange: function (doc, validation) {
-            if (hidden) hidden.value = validation.valid && doc ? JSON.stringify(doc) : '';
+            if (hidden && (!validation.valid || !doc)) hidden.value = '';
             root.dataset.valid = validation.valid ? 'true' : 'false';
+            root.setAttribute('aria-invalid', validation.valid ? 'false' : 'true');
             root.dataset.dirty = 'true';
             if (changeState) changeState.dirty = true;
           }
         });
+        root.__blogBlockEditorInstance = editor;
         if (hidden && editor.getDocument()) {
           hidden.value = editor.serialize();
           if (ready) ready.value = '1';
           root.dataset.valid = 'true';
+          root.setAttribute('aria-invalid', 'false');
           root.dataset.dirty = 'false';
         } else {
           if (hidden) hidden.value = '';
@@ -67,6 +70,30 @@
         if (form) form.addEventListener('submit', function (event) {
           var hosts = Array.prototype.slice.call(form.querySelectorAll('[data-blog-block-editor]'));
           var allEditorsValid = hosts.every(function (host) { return host.dataset.valid === 'true'; });
+          if (allEditorsValid && !event.__blogBlockSerialized) {
+            hosts.forEach(function (host) {
+              var instance = host.__blogBlockEditorInstance;
+              var target = document.getElementById(host.dataset.hiddenInput || '');
+              try {
+                if (!instance || !target) throw new Error('editor_submission_unavailable');
+                target.value = instance.serialize();
+                host.dataset.valid = 'true';
+                host.setAttribute('aria-invalid', 'false');
+              } catch (error) {
+                host.dataset.valid = 'false';
+                host.setAttribute('aria-invalid', 'true');
+                var message = 'O documento excede o limite ou contém dados inválidos.';
+                try {
+                  var strings = JSON.parse(host.dataset.editorStrings || '{}');
+                  message = error && error.message === 'document_too_large' ? (strings.documentTooLarge || message) : (strings.initialInvalid || message);
+                } catch (_) {}
+                var live = host.querySelector('[data-editor-status]');
+                if (live) live.textContent = message;
+              }
+            });
+            allEditorsValid = hosts.every(function (host) { return host.dataset.valid === 'true'; });
+            event.__blogBlockSerialized = true;
+          }
           if (root.dataset.valid === 'false' || !hidden || !hidden.value || !allEditorsValid) {
             event.preventDefault();
             if (changeState) changeState.bypass = false;
@@ -82,7 +109,9 @@
       } catch (error) {
         root.replaceChildren();
         root.setAttribute('role', 'alert');
-        root.textContent = 'Documento indisponível para edição. Nenhum conteúdo foi alterado; revise o conteúdo legado.';
+        var invalidMessage = 'Documento indisponível para edição; a fonte original foi preservada.';
+        try { var failureStrings = JSON.parse(root.dataset.editorStrings || '{}'); if (failureStrings.initialInvalid) invalidMessage = failureStrings.initialInvalid; } catch (_) {}
+        root.textContent = invalidMessage;
         if (hidden) hidden.value = '';
         if (ready) ready.value = '';
       }

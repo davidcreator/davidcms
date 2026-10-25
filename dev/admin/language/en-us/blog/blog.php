@@ -249,3 +249,5 @@ $_['text_block_pattern_section_intro'] = 'Section introduction';
 $_['text_block_pattern_cover_hero'] = 'Hero cover';
 $_['text_block_pattern_hint'] = 'Built-in local patterns to insert; they are not saved as global templates.';
 $_['text_block_outline_label'] = 'Label in outline';
+$_['text_block_initial_invalid'] = 'The initial block document is invalid. Its source is preserved for review; editing is blocked.';
+$_['text_block_document_too_large'] = 'The block document exceeds the 4 MiB size limit.';

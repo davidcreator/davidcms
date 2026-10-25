@@ -1,12 +1,13 @@
-# Fase 9 · Tarefa 25 — Padrões, templates e fluxo editorial
+# Fase 9 · Tarefa 26 — Acessibilidade, localização e polimento
 
-**Incremento local parcial; não marcar F9-25 concluída.** Base `main` verificada: `4bb1b7c7ce8b23172f56241d5209ffdc6760c5c5` (F9-24).
+Incremento local estático sobre F9-25. Base remota verificada: `fe7de816f6dc27658e909e33d54ad735c7cb873b` (F9-25).
 
-Implementado no pacote: rótulo opcional de grupo para outline (JSON v2 e limites alinhados JS/PHP), guard de alterações não salvas e fixtures sintéticas. Padrões CMS persistentes permanecem **proposta pendente** por ACL/schema. Preview contextual do catálogo permanece **gate de segurança pendente**; nenhum URL de draft/endpoint/autosave foi adicionado.
+- Navegação por teclado e semântica acessível no inserter/outline/editor.
+- Foco mais visível e placeholder com contraste melhorado.
+- Mensagens localizadas e verificação de paridade PT-BR/EN-US/ES-EU.
+- Digitação de texto não clona/serializa o documento inteiro em cada input; snapshots de undo e limites explícitos para payload.
+- Fixtures sintéticas de limites de texto, nós, profundidade e bytes.
 
-- Contrato e decisões: `docs/F9-25-Contrato-Editor-Editorial.json`
-- Detalhes/limites: `docs/F9-25-Editor-Editorial.md`
-- Plano e checker: `tools/e2e/README.md`, `tools/e2e/e2e_f925_static.cjs`
-- Base GitHub: `docs/F9-25-Base-Hashes.json`
+Detalhes: `docs/F9-26-Acessibilidade-Localizacao-Performance.md`; contrato: `docs/F9-26-Contrato-A11y-Performance.json`; checker: `tools/e2e/e2e_f926_static.cjs`.
 
-Somente verificações estáticas; PHP, SQL, browser, app, endpoints, DB, migrations e E2E runtime não foram executados.
+**Limitação importante:** auditoria com browser/leitor de tela, Axe, benchmark e testes PHP/SQL/app/E2E runtime não foram executados e continuam pendentes/autorização-required. Checker estático não certifica WCAG nem runtime.

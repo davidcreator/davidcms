@@ -1,17 +1,17 @@
-# F9-25 — verificação estática e plano pendente
+# F9-26 — checker estático e plano de acessibilidade/runtime
 
-## Checker
+## Checker atual
 
-`node tools/e2e/e2e_f925_static.cjs [F9-25-root]` verifica marcadores de contrato no PHP/JS/controller/traduções, conteúdo do contrato JSON e fixtures sintéticas. Não executa PHP nem testa browser, editor, endpoint, preview real, SQL, app ou ACL.
+`node tools/e2e/e2e_f926_static.cjs [F9-26-root]` verifica marcadores de keyboard/ARIA/CSS/performance, igualdade dos conjuntos de chaves das 3 línguas, parsing e descritores sintéticos. Não executa os validadores JS/PHP do CMS, DOM real, browser, leitor de tela ou app.
 
-## E2E funcional (não executado)
+## Auditoria futura (não executada; requer autorização)
 
-1. Abrir documento v1 e confirmar que funciona sem `outline_label`; rejeitar o campo em v1 sem alterar/persistir ao abrir.
-2. V2: salvar/editar/limpar rótulo; conferir outline aninhado, limites 160 UTF-8 bytes, XSS literal tratado como texto; verificar acessibilidade/teclado.
-3. Editar um bloco e outros campos, navegar/fechar e conferir o aviso; submit inválido não deve desarmar a confirmação; submit válido mantém o fluxo explícito já existente.
-4. Verificar formulários com múltiplas abas de idioma/hosts, CSRF, falhas de validação do servidor e postback com dados preservados.
-5. Revisar padrão salvo privado por usuário após decisão explícita de ACL, CSRF, validação de JSON e schema aprovado; teste não deve começar até migration instalada em staging descartável.
-6. Preview autenticado de draft depois de aprovado: usuário sem acesso negado, token/CSRF/origin/expiração, renderer allowlisted, sem persistência nem URL pública para draft.
-7. Testar dispositivos/teclado/leitor de tela e locale PT-BR/EN-US/ES-EU.
+1. Teclado-only em inserter, toolbar, canvas/outline, Media Library, undo/redo, link marks, drag alternative, multi-idioma e mobile; verificar foco retornado após cada ação.
+2. NVDA + Firefox, NVDA + Chrome, VoiceOver + Safari; anunciar status, erros, nested outline e contenteditable, confirmar rotulagem e ordem.
+3. Axe/WCAG com estados focus/hover/selected/disabled/error, light/dark themes se aplicável, contraste recalculado com estilos reais.
+4. 200%, 400% zoom, reflow 320 CSS px, touch targets, landscape/tablet, reduced motion.
+5. Performance em staging/browser: 10/100/500/1000 blocos, composição contínua, undo/redo, seleção e alterações estruturais; memory profiling do histórico.
+6. Fixture bytes em PHP validator/serializer em instância descartável após autorização. Testar valores aceitos/rejeitados na fronteira sem dump/dados reais.
+7. Confirmar submit explícito, payload hidden sincronizado no submit, `document_too_large` anunciado, postback de validação e formulário com múltiplos idiomas.
 
-Browser/app/E2E runtime, PHP e SQL continuam proibidos sem autorização explícita. Nenhuma persistência ou preview de catálogo foi implementada nesta entrega.
+Nenhum passo de browser/PHP/app/SQL/runtime foi executado nesta tarefa; não declarar WCAG conformidade até auditoria real.

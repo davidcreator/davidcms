@@ -90,8 +90,8 @@
     let chars = 0;
     return runs.every((run) => {
       if (!run || typeof run !== 'object' || Array.isArray(run) || Object.keys(run).sort().join(',') !== 'href,marks,text') return false;
-      if (typeof run.text !== 'string' || run.text.length === 0 || run.text.length > 262144 || !Array.isArray(run.marks) || run.marks.length > INLINE_MARKS.length) return false;
-      chars += run.text.length;
+      if (typeof run.text !== 'string' || run.text.length === 0 || utf8Length(run.text) > 262144 || !Array.isArray(run.marks) || run.marks.length > INLINE_MARKS.length) return false;
+      chars += utf8Length(run.text);
       if (chars > 262144 || new Set(run.marks).size !== run.marks.length || run.marks.some((mark) => !INLINE_MARKS.includes(mark))) return false;
       if (run.href !== null && (!validActionUrl(run.href) || type === 'core/button')) return false;
       return true;
@@ -214,6 +214,10 @@
       this.idCounter = 0;
       this.undoStack = [];
       this.redoStack = [];
+      this.undoWeight = 0;
+      this.redoWeight = 0;
+      this.textUndoPending = false;
+      this.textUndoTimer = null;
       this.selectedId = null;
       this.preview = 'desktop';
       this.dragId = null;
@@ -221,11 +225,12 @@
       this.linkDraft = '';
       this.inlineNotice = '';
       this.inserterOpen = false;
+      this.inserterReturnFocus = null;
       this.insertAfterId = null;
       this.slashTrigger = null;
       this.inserterQuery = '';
       this.statusMessage = '';
-      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},typeLabels:{}}, this.options.strings || {});
+      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},typeLabels:{}}, this.options.strings || {});
       const rawInitial = this.options.document || { format_version: 1, blocks: [] };
       const initial = upgradeDocument(rawInitial);
       const validation = validateDocument(initial);
@@ -281,7 +286,7 @@
         const field = event.target.closest('[data-edit-content]');
         if (!field) return;
         const id = field.dataset.editContent;
-        this.updateNode(id, (node) => { node.content = normalizeDomInline(field, node.type); }, false);
+        this.updateTextNode(id, field);
         this.captureInlineSelection();
       });
       this.root.addEventListener('change', (event) => {
@@ -299,7 +304,7 @@
       this.root.addEventListener('keydown', (event) => {
         if (event.target.closest('[data-inserter-search]')) {
           if (event.key === 'Escape') { event.preventDefault(); this.closeInserter(true); return; }
-          if (event.key === 'Enter') { event.preventDefault(); const first = this.root.querySelector('.rb-inserter-option:not([hidden])'); if (first) this.insert(first.dataset.type, first.dataset.count); return; }
+          if (event.key === 'Enter') { event.preventDefault(); const first = this.root.querySelector('.rb-inserter-option:not([hidden])'); if (first) { if (first.dataset.pattern) this.insertPattern(first.dataset.pattern); else this.insert(first.dataset.type, first.dataset.count); } return; }
         }
         if (event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey && event.target.closest('[data-edit-content]')) {
           const editor = event.target.closest('[data-edit-content]'); const offset = this.getCaretOffset(editor);
@@ -307,7 +312,7 @@
           if (offset === 0 || /\s/.test(text.charAt(offset - 1))) {
             event.preventDefault(); this.insertPlainText(editor, '/');
             this.slashTrigger = { nodeId: editor.dataset.editContent, offset: this.getCaretOffset(editor) };
-            this.openInserter(editor.dataset.editContent, true); return;
+            this.openInserter(editor.dataset.editContent, true, editor); return;
           }
         }
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); this.action(event.shiftKey ? 'redo' : 'undo'); return; }
@@ -351,7 +356,7 @@
       if (this.locked) return;
       if (name === 'insert') this.insert(button.dataset.type, button.dataset.count);
       else if (name === 'insert-pattern') this.insertPattern(button.dataset.pattern);
-      else if (name === 'toggle-inserter') this.inserterOpen ? this.closeInserter(false) : this.openInserter(button.dataset.afterId || null, false);
+      else if (name === 'toggle-inserter') this.inserterOpen ? this.closeInserter(true) : this.openInserter(button.dataset.afterId || null, false, button);
       else if (name === 'duplicate') this.duplicateNode(button.dataset.nodeId || this.selectedId);
       else if (name === 'outline-select') { const id = button.dataset.nodeId; this.selectNode(id); const card = Array.from(this.root.querySelectorAll('.rb-block[data-node-id]')).find((item) => item.dataset.nodeId === id); if (card) card.scrollIntoView({ block:'nearest' }); }
       else if (name === 'undo') this.undo();
@@ -593,19 +598,19 @@
       const menu = this.el('div', 'rb-inserter-menu'); menu.hidden = !this.inserterOpen;
       menu.setAttribute('role', 'region'); menu.setAttribute('aria-label', this.strings.addBlock);
       const search = this.el('input', 'rb-inserter-search'); search.type = 'search'; search.placeholder = this.strings.searchBlocks;
-      search.setAttribute('aria-label', this.strings.searchBlocks); search.dataset.inserterSearch = '1'; search.value = this.inserterQuery;
+      search.setAttribute('aria-label', this.strings.searchBlocks); search.setAttribute('aria-controls','rb-inserter-results-' + this.instance); search.dataset.inserterSearch = '1'; search.value = this.inserterQuery;
       menu.append(search);
       const types = this.insertTypes(this.slashTrigger ? this.slashTrigger.nodeId : this.insertAfterId);
-      const list = this.el('div', 'rb-inserter-results'); list.setAttribute('role', 'list');
+      const list = this.el('div', 'rb-inserter-results'); list.id = 'rb-inserter-results-' + this.instance;
       if (!types.length) menu.append(this.el('p', 'rb-inserter-empty', this.strings.insertEmpty));
       ['content','media','layout'].forEach((category) => {
         const group = this.el('section', 'rb-inserter-category');
         group.append(this.el('h4', 'rb-inserter-category-title', this.categoryLabel(category)));
         types.filter((item) => item.category === category).forEach((item) => {
           const option = this.button(this.label(item.type), 'insert', { type:item.type });
-          option.classList.add('rb-inserter-option'); option.setAttribute('role', 'listitem');
+          option.classList.add('rb-inserter-option');
           option.dataset.searchText = this.label(item.type).toLocaleLowerCase(); group.append(option);
-          if (item.type === 'core/columns') { const three = this.button(this.label(item.type) + ' (3)', 'insert', { type:item.type, count:'3' }); three.classList.add('rb-inserter-option'); three.setAttribute('role','listitem'); three.dataset.searchText = (this.label(item.type) + ' 3').toLocaleLowerCase(); group.append(three); }
+          if (item.type === 'core/columns') { const three = this.button(this.label(item.type) + ' (3)', 'insert', { type:item.type, count:'3' }); three.classList.add('rb-inserter-option'); three.dataset.searchText = (this.label(item.type) + ' 3').toLocaleLowerCase(); group.append(three); }
         });
         if (group.querySelector('.rb-inserter-option')) list.append(group);
       });
@@ -617,7 +622,7 @@
         });
         list.append(patterns);
       }
-      const noResults = this.el('p', 'rb-inserter-empty rb-inserter-no-results', this.strings.noBlocks); noResults.hidden = true;
+      const noResults = this.el('p', 'rb-inserter-empty rb-inserter-no-results', this.strings.noBlocks); noResults.setAttribute('role','status'); noResults.setAttribute('aria-live','polite'); noResults.hidden = true;
       menu.append(list, noResults);
       return menu;
     }
@@ -629,8 +634,11 @@
       const empty = this.root.querySelector('.rb-inserter-no-results'); if (empty) empty.hidden = visible > 0;
     }
 
-    openInserter(afterId, fromSlash) {
+    openInserter(afterId, fromSlash, opener) {
       this.inserterOpen = true; this.insertAfterId = afterId || null;
+      this.inserterReturnFocus = fromSlash
+        ? { type:'editor', id:afterId }
+        : (opener && opener.closest('.rb-toolbar') ? { type:'top' } : (opener && opener.dataset.afterId ? { type:'block', id:opener.dataset.afterId } : { type:'top' }));
       if (!fromSlash) this.slashTrigger = null;
       this.inserterQuery = ''; this.render();
       const search = this.root.querySelector('[data-inserter-search]'); if (search) search.focus();
@@ -638,7 +646,16 @@
 
     closeInserter(returnFocus) {
       this.inserterOpen = false; this.slashTrigger = null; this.inserterQuery = ''; this.render();
-      if (returnFocus) { const button = this.root.querySelector('[data-action="toggle-inserter"]'); if (button) button.focus(); }
+      if (returnFocus) {
+        let target = null;
+        const restore = this.inserterReturnFocus;
+        if (restore && restore.type === 'editor') target = this.findEditor(restore.id);
+        else if (restore && restore.type === 'block') target = Array.from(this.root.querySelectorAll('[data-action="toggle-inserter"]')).find((button) => button.dataset.afterId === restore.id) || null;
+        else target = this.root.querySelector('.rb-toolbar [data-action="toggle-inserter"]');
+        if (!target) target = this.root.querySelector('[data-action="toggle-inserter"]');
+        if (target) target.focus();
+      }
+      this.inserterReturnFocus = null;
     }
 
     insertionLocation(blocks, afterId) {
@@ -657,7 +674,7 @@
     }
 
     finishInsert(next, node) {
-      this.inserterOpen = false; this.slashTrigger = null; this.insertAfterId = node.id; this.inserterQuery = ''; this.statusMessage = this.strings.statusInserted;
+      this.inserterOpen = false; this.inserterReturnFocus = null; this.slashTrigger = null; this.insertAfterId = node.id; this.inserterQuery = ''; this.statusMessage = this.strings.statusInserted;
       this.commit(next, node.id); this.focusNode(node.id);
     }
 
@@ -691,6 +708,59 @@
       if (this.locked) return;
       const next = CLONE(this.state), found = this.findPath(next.blocks, id); if (!found) return;
       mutator(found.node); this.commit(next, id, rerender !== false);
+    }
+
+    pushHistory(stack, side, snapshot) {
+      const weightKey = side + 'Weight';
+      stack.push(snapshot);
+      this[weightKey] += snapshot.length;
+      while (stack.length > 50 || (stack.length > 1 && this[weightKey] > 8388608)) {
+        this[weightKey] -= stack.shift().length;
+      }
+    }
+
+    popHistory(stack, side) {
+      const snapshot = stack.pop();
+      if (snapshot !== undefined) this[side + 'Weight'] -= snapshot.length;
+      return snapshot;
+    }
+
+    clearRedoHistory() {
+      this.redoStack = [];
+      this.redoWeight = 0;
+    }
+
+    updateTextNode(id, editor) {
+      if (this.locked) return;
+      const found = this.findPath(this.state.blocks, id);
+      if (!found || !BLOCK_TEXT_TYPES.has(found.node.type)) return;
+      const runs = normalizeDomInline(editor, found.node.type);
+      this.recordTextEditSnapshot();
+      found.node.content = runs;
+      const valid = validInlineRuns(runs, found.node.type);
+      const result = { valid, errors: valid ? [] : ['rich_content_invalid'] };
+      this.root.dataset.valid = valid ? 'true' : 'false';
+      this.onChange(valid ? this.state : null, result);
+      this.updateHistoryButtons();
+    }
+
+    recordTextEditSnapshot() {
+      if (!this.textUndoPending) {
+        this.pushHistory(this.undoStack, 'undo', this.snapshot());
+        this.clearRedoHistory();
+        this.textUndoPending = true;
+      }
+      if (this.textUndoTimer) global.clearTimeout(this.textUndoTimer);
+      this.textUndoTimer = global.setTimeout(() => {
+        this.textUndoPending = false;
+        this.textUndoTimer = null;
+      }, 700);
+    }
+
+    clearTextEditSnapshot() {
+      if (this.textUndoTimer) global.clearTimeout(this.textUndoTimer);
+      this.textUndoTimer = null;
+      this.textUndoPending = false;
     }
 
     deleteNode(id) {
@@ -759,26 +829,35 @@
     }
 
     commit(next, focusId, rerender) {
-      this.undoStack.push(this.snapshot()); if (this.undoStack.length > 50) this.undoStack.shift();
-      this.redoStack = []; this.state = next; this.selectedId = focusId || this.selectedId;
+      this.clearTextEditSnapshot();
+      this.pushHistory(this.undoStack, 'undo', this.snapshot());
+      this.clearRedoHistory(); this.state = next; this.selectedId = focusId || this.selectedId;
       const result = validateDocument(this.state);
       this.root.dataset.valid = result.valid ? 'true' : 'false';
       this.onChange(this.getDocument(), result);
       if (rerender !== false) this.render(); else this.updateHistoryButtons();
     }
 
-    undo() { if (!this.undoStack.length) return; this.redoStack.push(this.snapshot()); this.state = JSON.parse(this.undoStack.pop()); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusUndo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
-    redo() { if (!this.redoStack.length) return; this.undoStack.push(this.snapshot()); this.state = JSON.parse(this.redoStack.pop()); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusRedo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
+    undo() { this.clearTextEditSnapshot(); if (!this.undoStack.length) return; this.pushHistory(this.redoStack, 'redo', this.snapshot()); this.state = JSON.parse(this.popHistory(this.undoStack, 'undo')); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusUndo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
+    redo() { this.clearTextEditSnapshot(); if (!this.redoStack.length) return; this.pushHistory(this.undoStack, 'undo', this.snapshot()); this.state = JSON.parse(this.popHistory(this.redoStack, 'redo')); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusRedo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
     setSelectedAttribute(key, value) { if (this.locked) return false; const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null; if (!found || !['core/image','core/cover'].includes(found.node.type) || key !== 'src') return false; this.updateNode(found.node.id, (node) => { node.attributes.src = value; }); return true; }
     getDocument() { return this.locked ? null : CLONE(this.state); }
-    serialize() { if (this.locked) throw new Error('document_requires_review'); const check = validateDocument(this.state); if (!check.valid) throw new Error(check.errors.join(',')); return JSON.stringify(this.state); }
+    serialize() {
+      if (this.locked) throw new Error('document_requires_review');
+      const check = validateDocument(this.state);
+      if (!check.valid) throw new Error(check.errors.join(','));
+      const json = JSON.stringify(this.state);
+      if (utf8Length(json) > 4194304) throw new Error('document_too_large');
+      return json;
+    }
 
     el(tag, className, text) { const element = document.createElement(tag); if (className) element.className = className; if (text !== undefined) element.textContent = text; return element; }
     button(label, action, extra) { const b = this.el('button', 'rb-button', label); b.type = 'button'; b.dataset.action = action; if (extra) Object.keys(extra).forEach((key) => { b.dataset[key] = extra[key]; }); return b; }
 
     render() {
       this.root.replaceChildren();
-      if (this.initialError) { const warn = this.el('p', 'rb-alert', 'Documento inicial inválido: ' + this.initialError + '. Fonte mantida em memória; edição e serialização bloqueadas para revisão.'); this.root.append(warn); return; }
+      if (this.initialError) { const warn = this.el('p', 'rb-alert', this.strings.initialInvalid + ' (' + this.initialError + ').'); warn.setAttribute('role','alert'); this.root.setAttribute('aria-invalid','true'); this.root.append(warn); return; }
+      this.root.setAttribute('aria-invalid','false');
       const toolbar = this.el('div', 'rb-toolbar'); toolbar.setAttribute('role', 'toolbar'); toolbar.setAttribute('aria-label', this.strings.editorTools);
       const insert = this.button('+ ' + this.strings.addBlock, 'toggle-inserter', { afterId:this.selectedId || '' });
       insert.setAttribute('aria-expanded', String(this.inserterOpen)); insert.setAttribute('aria-controls', 'rb-inserter-' + this.instance); toolbar.append(insert);
@@ -792,7 +871,7 @@
       const inserterMenu = this.renderInserter(); inserterMenu.id = 'rb-inserter-' + this.instance; this.root.append(inserterMenu);
 
       const layout = this.el('div', 'rb-layout');
-      const canvas = this.el('main', 'rb-canvas'); canvas.setAttribute('aria-label', this.strings.canvas);
+      const canvas = this.el('div', 'rb-canvas'); canvas.setAttribute('role','region'); canvas.setAttribute('aria-label', this.strings.canvas);
       const canvasHead = this.el('div', 'rb-canvas-head', this.strings.canvas); canvas.append(canvasHead);
       if (!this.state.blocks.length) canvas.append(this.el('p', 'rb-empty', this.strings.canvasEmpty));
       this.state.blocks.forEach((node) => canvas.append(this.renderNode(node, true)));
@@ -801,7 +880,7 @@
         ? 'As alterações ficam no formulário e só são persistidas ao clicar em Salvar; não há autosave.'
         : 'Rascunho em memória · não salva nem publica. O salvamento será conectado numa tarefa posterior.';
       const foot = this.el('p', 'rb-note', footText); this.root.append(foot);
-      const live = this.el('span','rb-sr-only',this.statusMessage); live.setAttribute('role','status'); live.setAttribute('aria-live','polite'); this.root.append(live);
+      const live = this.el('span','rb-sr-only',this.statusMessage); live.setAttribute('role','status'); live.setAttribute('aria-live','polite'); live.dataset.editorStatus = '1'; this.root.append(live);
       this.updateHistoryButtons();
       if (this.inserterOpen && this.inserterQuery) this.filterInserter();
     }
@@ -809,7 +888,7 @@
     renderBlockToolbar(node) {
       const toolbar = this.el('div', 'rb-block-toolbar'); toolbar.setAttribute('role','toolbar'); toolbar.setAttribute('aria-label', this.label(node.type) + ' · ' + this.strings.transform);
       const path = this.findPath(this.state.blocks, node.id);
-      const drag = this.el('span','rb-drag-handle','⠿'); drag.draggable = true; drag.dataset.dragHandle = '1'; drag.title = this.strings.dragHint; drag.setAttribute('aria-hidden','true'); toolbar.append(drag);
+      const drag = this.el('span','rb-drag-handle','⠿'); drag.draggable = true; drag.dataset.dragHandle = '1'; drag.title = this.strings.dragHint; drag.setAttribute('aria-hidden','true'); toolbar.append(drag,this.el('span','rb-sr-only',this.strings.dragHint));
       const up = this.button('↑', 'move-up', { nodeId:node.id }); up.setAttribute('aria-label', this.strings.moveUp); up.disabled = !path || path.index === 0; toolbar.append(up);
       const down = this.button('↓', 'move-down', { nodeId:node.id }); down.setAttribute('aria-label', this.strings.moveDown); down.disabled = !path || path.index === path.nodes.length - 1; toolbar.append(down);
       const fixedColumn = !!(path && path.parent && path.parent.type === 'core/columns' && node.type === 'core/column');

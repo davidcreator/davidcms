@@ -1,0 +1,25 @@
+{
+  "task": "F9-26",
+  "note": "Synthetic boundary descriptors only; not run through PHP, browser or application validators.",
+  "limits": [
+    {"name":"inline_utf8_bytes","accepted":262144,"rejected":262145,"unit":"bytes"},
+    {"name":"root_blocks","accepted":1000,"rejected":1001,"unit":"nodes"},
+    {"name":"total_nodes","accepted":2000,"rejected":2001,"unit":"nodes"},
+    {"name":"depth_zero_indexed","accepted":16,"rejected":17,"unit":"levels"},
+    {"name":"document_json_utf8_bytes","accepted":4194304,"rejected":4194305,"unit":"bytes"},
+    {"name":"media_text_utf8_bytes","accepted":4096,"rejected":4097,"unit":"bytes"},
+    {"name":"outline_label_utf8_bytes","accepted":160,"rejected":161,"unit":"bytes"}
+  ],
+  "unicode_cases": [
+    {"text":"Aé😀","utf8_bytes":7,"expected":"byte length must be used, not UTF-16 code units"},
+    {"text":"<script>alert(1)</script>","expected":"treated as text; no HTML insertion"}
+  ],
+  "keyboard_cases": [
+    "Tab through native inserter buttons",
+    "Enter activates first filtered button including patterns",
+    "Escape closes inserter and restores focus",
+    "Alt+ArrowUp/Alt+ArrowDown moves a block without drag",
+    "CtrlOrMeta+Z and Shift+Z undo/redo editor operations"
+  ],
+  "locales": ["pt-br","en-us","es-eu"]
+}

@@ -249,3 +249,5 @@ $_['text_block_pattern_section_intro'] = 'Introdução de seção';
 $_['text_block_pattern_cover_hero'] = 'Capa de destaque';
 $_['text_block_pattern_hint'] = 'Padrões locais prontos para inserir; não são salvos como templates globais.';
 $_['text_block_outline_label'] = 'Título na estrutura';
+$_['text_block_initial_invalid'] = 'O documento inicial de blocos é inválido. A fonte foi preservada para revisão e a edição está bloqueada.';
+$_['text_block_document_too_large'] = 'O documento de blocos ultrapassa o limite de 4 MiB.';
