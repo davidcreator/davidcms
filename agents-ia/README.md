@@ -1,11 +1,8 @@
-# Agentes IA — F9-26
+# Agentes IA — F9-27
 
-## Regras
-
-- Preservar o envelope do documento v1/v2 e deixar o servidor autoritativo.
-- Priorizar HTML/DOM nativo, texto com `textContent`, controles semânticos e alternativa de teclado para drag.
-- Nunca sobrescrever semântica de elementos nativos com ARIA incompatível; manter nome/estado/foco e mensagens live.
-- Toda string deve existir em PT-BR, EN-US e ES-EU e ser distribuída pelo controller.
-- Foco visível, contraste, responsividade/reduced-motion e limites de conteúdo são requisitos estáticos; sem alegar auditoria se não houver browser/leitor de tela.
-- Otimizações não podem remover undo/redo nem enfraquecer validação/escape; snapshots devem ter limites de count e agregado.
-- Proibido executar PHP, SQL, browser, app ou E2E runtime; não acessar DB/dump, não publicar GitHub ou deploy.
+- Só executar o release gate em ambiente descartável depois de autorização explícita.
+- Confirmar F9-12 com o responsável; não presumir schema aplicado e não rodar migration automaticamente.
+- Preservar proibição de testes PHP/SQL/browser/app/E2E nesta entrega; checker atual é apenas estático.
+- Sem produção, dumps, dados pessoais, credenciais em logs ou publicação automática.
+- Se houver diferença de commit/schema, ambiente não isolado, dados inesperados ou qualquer falha, parar e registrar apenas síntese sem payload sensível.
+- A aprovação/reprovação de release é decisão humana; nenhum PASS estático libera produção.

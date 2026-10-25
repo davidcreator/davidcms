@@ -1,17 +1,9 @@
-# F9-26 — checker estático e plano de acessibilidade/runtime
+# F9-27 E2E release gate — preparation only
 
-## Checker atual
+## Static checker (safe to run now)
 
-`node tools/e2e/e2e_f926_static.cjs [F9-26-root]` verifica marcadores de keyboard/ARIA/CSS/performance, igualdade dos conjuntos de chaves das 3 línguas, parsing e descritores sintéticos. Não executa os validadores JS/PHP do CMS, DOM real, browser, leitor de tela ou app.
+`node tools/e2e/e2e_f927_static.cjs [F9-27-root]` parses local contract/fixture JSON and confirms matrix status is blocked/not-run, required gates exist and fixtures use synthetic-only identifiers. It opens no network/socket/database and does not start the app, PHP or browser.
 
-## Auditoria futura (não executada; requer autorização)
+## Functional release gate (not executed)
 
-1. Teclado-only em inserter, toolbar, canvas/outline, Media Library, undo/redo, link marks, drag alternative, multi-idioma e mobile; verificar foco retornado após cada ação.
-2. NVDA + Firefox, NVDA + Chrome, VoiceOver + Safari; anunciar status, erros, nested outline e contenteditable, confirmar rotulagem e ordem.
-3. Axe/WCAG com estados focus/hover/selected/disabled/error, light/dark themes se aplicável, contraste recalculado com estilos reais.
-4. 200%, 400% zoom, reflow 320 CSS px, touch targets, landscape/tablet, reduced motion.
-5. Performance em staging/browser: 10/100/500/1000 blocos, composição contínua, undo/redo, seleção e alterações estruturais; memory profiling do histórico.
-6. Fixture bytes em PHP validator/serializer em instância descartável após autorização. Testar valores aceitos/rejeitados na fronteira sem dump/dados reais.
-7. Confirmar submit explícito, payload hidden sincronizado no submit, `document_too_large` anunciado, postback de validação e formulário com múltiplos idiomas.
-
-Nenhum passo de browser/PHP/app/SQL/runtime foi executado nesta tarefa; não declarar WCAG conformidade até auditoria real.
+Run only after all conditions in `docs/F9-27-Release-Gate.md` are met and a new explicit authorization supersedes the no-runtime constraint. Confirm disposable staging and F9-12 status with responsible owner. Use synthetic test posts and media only; never run in production.

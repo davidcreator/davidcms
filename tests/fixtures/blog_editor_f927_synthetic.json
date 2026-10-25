@@ -1,0 +1,27 @@
+[
+  {
+    "id":"legacy-v1-no-rewrite",
+    "document":{"format_version":1,"blocks":[{"id":"p-v1","type":"core/paragraph","attributes":{},"children":[],"content":"Fixture F9-27 — legacy stays intact"}]},
+    "expected":"After authorized server/browser run, opening without saving must preserve original HTML/snapshot and must not rewrite v1."
+  },
+  {
+    "id":"v2-editorial-media-and-outline",
+    "document":{"format_version":2,"blocks":[{"id":"group-main","type":"core/group","attributes":{"outline_label":"Synthetic section"},"children":[{"id":"heading-main","type":"core/heading","attributes":{"level":2},"children":[],"content":[{"text":"Release gate fixture","marks":[],"href":null}]},{"id":"gallery-main","type":"core/gallery","attributes":{"columns":2,"align":"content"},"children":[{"id":"img-1","type":"core/image","attributes":{"src":"view/image/blog/f927-synthetic-1.webp","alt":"Synthetic one","caption":"Text only <caption>"},"children":[],"content":""},{"id":"img-2","type":"core/image","attributes":{"src":"view/image/blog/f927-synthetic-2.webp","alt":"Synthetic two"},"children":[],"content":""}],"content":""}],"content":""}]},
+    "expected":"Authorized E2E should validate save/deserialize/render, escaping, nested outline, local media path and responsive output without inline CSS/HTML."
+  },
+  {
+    "id":"malicious-plain-text",
+    "document":{"format_version":2,"blocks":[{"id":"group-xss","type":"core/group","attributes":{"outline_label":"<img src=x onerror=alert(1)>"},"children":[{"id":"p-xss","type":"core/paragraph","attributes":{},"children":[],"content":[{"text":"<script>alert(1)</script>","marks":[],"href":null}]}],"content":""}]},
+    "expected":"Plain text must render escaped; this is synthetic adversarial content only. No execution in the current turn."
+  },
+  {
+    "id":"unsafe-remote-media-rejected",
+    "document":{"format_version":2,"blocks":[{"id":"img-remote","type":"core/image","attributes":{"src":"https://invalid.example/synthetic.webp","alt":"Not local"},"children":[],"content":""}]},
+    "expected":"Server validator and client validator reject remote media paths."
+  },
+  {
+    "id":"oversize-payload-boundary",
+    "boundary":{"document_utf8_bytes":{"max":4194304,"reject_at":4194305},"inline_utf8_bytes":{"max":262144,"reject_at":262145}},
+    "expected":"Generate byte-exact payloads in disposable test harness; do not store huge payloads or run them until authorized."
+  }
+]

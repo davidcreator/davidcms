@@ -1,13 +1,11 @@
-# Fase 9 · Tarefa 26 — Acessibilidade, localização e polimento
+# Fase 9 · Tarefa 27 — E2E de staging e release gate
 
-Incremento local estático sobre F9-25. Base remota verificada: `fe7de816f6dc27658e909e33d54ad735c7cb873b` (F9-25).
+**Status: preparação local; release gate BLOQUEADO.** Base `main` verificada: `448dd61f467e8ce2b4a0d5bce481345dace4ca77` (F9-26). A F9-27 do roadmap pede testes em servidor/browser/DB em instância descartável, mas a autorização não foi concedida e seguem vigentes as restrições de não executar PHP/SQL/browser/app/E2E runtime.
 
-- Navegação por teclado e semântica acessível no inserter/outline/editor.
-- Foco mais visível e placeholder com contraste melhorado.
-- Mensagens localizadas e verificação de paridade PT-BR/EN-US/ES-EU.
-- Digitação de texto não clona/serializa o documento inteiro em cada input; snapshots de undo e limites explícitos para payload.
-- Fixtures sintéticas de limites de texto, nós, profundidade e bytes.
+Esta entrega organiza o plano, casos sintéticos, critérios de parada e verificação estática. **Nenhum teste funcional, banco, migration ou deploy foi realizado.** O estado de F9-12 segue desconhecido/não confirmado; não se presume aplicada.
 
-Detalhes: `docs/F9-26-Acessibilidade-Localizacao-Performance.md`; contrato: `docs/F9-26-Contrato-A11y-Performance.json`; checker: `tools/e2e/e2e_f926_static.cjs`.
-
-**Limitação importante:** auditoria com browser/leitor de tela, Axe, benchmark e testes PHP/SQL/app/E2E runtime não foram executados e continuam pendentes/autorização-required. Checker estático não certifica WCAG nem runtime.
+- Plano: `docs/F9-27-Release-Gate.md`
+- Matriz de gate: `docs/F9-27-Status.json`
+- Dados sintéticos: `tests/fixtures/blog_editor_f927_synthetic.json`
+- Checker estático apenas: `tools/e2e/e2e_f927_static.cjs`
+- HEAD/blob hashes: `docs/F9-27-Base-Hashes.json`

@@ -1,0 +1,13 @@
+{
+  "head":"448dd61f467e8ce2b4a0d5bce481345dace4ca77",
+  "method":"GitHub main commit API identified F9-26; the current F9-26 working sources below match its Git blob SHA-1s. No repository clone or product file copy is included in this runbook package.",
+  "relevant_point_sources":[
+    {"path":"dev/admin/controller/blog/blog.php","git_blob_sha1":"f7907a181ea69e154ad2f2f39d84edb97c015fcc"},
+    {"path":"dev/admin/language/en-us/blog/blog.php","git_blob_sha1":"98448fae9eca1a4d754ccb0146f24c5b704987a0"},
+    {"path":"dev/admin/language/es-eu/blog/blog.php","git_blob_sha1":"bb37d570f1ed3b22c95001461aec0b3054e78b83"},
+    {"path":"dev/admin/language/pt-br/blog/blog.php","git_blob_sha1":"4c13d3ea1ac28db284bdfe53fe0727f45a16911f"},
+    {"path":"dev/admin/view/css/blog-block-editor.css","git_blob_sha1":"5ba53f8a0fd05403345eb0846cdc4f325137843f"},
+    {"path":"dev/admin/view/js/blog-block-editor-init.js","git_blob_sha1":"3286775caa4ddcb7db6b12681e9b7c36e49e0c32"},
+    {"path":"dev/admin/view/js/blog-block-editor.js","git_blob_sha1":"2a7587f46cdc92a47141a7a9808bc9a66596ac18"}
+  ]
+}

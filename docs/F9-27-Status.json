@@ -1,0 +1,15 @@
+{
+  "task":"F9-27",
+  "base_head":"448dd61f467e8ce2b4a0d5bce481345dace4ca77",
+  "status":"BLOCKED_NOT_RUN",
+  "reason":"Existing user constraints prohibit PHP/SQL/browser/app/E2E runtime. Explicit staging authorization has not been granted.",
+  "f9_12_status":"UNKNOWN_NOT_CONFIRMED",
+  "database_accessed":false,
+  "migration_applied":false,
+  "runtime_tests_executed":false,
+  "release_approved":false,
+  "github_write_or_deploy":false,
+  "matrix":{"server_validation":"NOT_RUN","database_persistence":"BLOCKED_F9_12_UNKNOWN","browser_editor":"NOT_RUN","catalog_render":"NOT_RUN","accessibility":"NOT_RUN","performance":"NOT_RUN","security_regression":"NOT_RUN"},
+  "synthetic_fixture":"tests/fixtures/blog_editor_f927_synthetic.json",
+  "required_before_execution":["explicit authorization for runtime checks","identified disposable staging","proof of isolation from production","F9-12 confirmation by responsible owner","rollback and synthetic-only data policy"]
+}
