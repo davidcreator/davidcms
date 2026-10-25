@@ -243,7 +243,7 @@ class Page extends \Reamur\System\Engine\Controller {
             'entry_meta_title', 'entry_meta_description', 'entry_keyword',
             'entry_status', 'entry_sort_order',
             'button_save', 'button_cancel', 'text_enabled', 'text_disabled',
-            'text_meta_group', 'help_sort_order', 'help_description', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no',
+            'text_meta_group', 'help_sort_order', 'help_description', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_editor_import_file', 'text_editor_import_success', 'text_editor_preview_title', 'text_editor_preview_mode', 'text_editor_edit_mode', 'text_editor_import_hint', 'text_editor_import_unavailable', 'text_editor_import_error', 'text_editor_preview_video_link', 'text_editor_preview_video_open', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
@@ -312,7 +312,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 'ribbonHome' => $data['text_editor_home'], 'ribbonInsert' => $data['text_editor_insert'], 'ribbonView' => $data['text_editor_view'],
                 'groupClipboard' => $data['text_editor_clipboard'], 'groupTextFormat' => $data['text_editor_text_format'], 'groupParagraphAlign' => $data['text_editor_paragraph_alignment'],
                 'groupInsert' => $data['text_editor_group_insert'], 'groupPanels' => $data['text_editor_group_panels'], 'groupPreview' => $data['text_editor_group_preview'],
-                'closePanel' => $data['text_editor_close_panel'], 'alignLeft' => $data['text_editor_align_left'], 'alignCenter' => $data['text_editor_align_center'], 'alignRight' => $data['text_editor_align_right'],
+                'closePanel' => $data['text_editor_close_panel'], 'importFile' => $data['text_editor_import_file'], 'importSuccess' => $data['text_editor_import_success'], 'previewTitle' => $data['text_editor_preview_title'], 'previewMode' => $data['text_editor_preview_mode'], 'editMode' => $data['text_editor_edit_mode'], 'importHint' => $data['text_editor_import_hint'], 'importUnavailable' => $data['text_editor_import_unavailable'], 'importError' => $data['text_editor_import_error'], 'previewVideoLink' => $data['text_editor_preview_video_link'], 'previewVideoOpen' => $data['text_editor_preview_video_open'], 'alignLeft' => $data['text_editor_align_left'], 'alignCenter' => $data['text_editor_align_center'], 'alignRight' => $data['text_editor_align_right'],
                 'saveStateSaved' => $data['text_block_save_state_saved'], 'saveStateUnsaved' => $data['text_block_save_state_unsaved'], 'saveStateSaving' => $data['text_block_save_state_saving'],
                 'addBlock' => $data['text_block_add'], 'searchBlocks' => $data['text_block_search'], 'noBlocks' => $data['text_block_no_results'],
                 'categoryContent' => $data['text_block_category_content'], 'categoryMedia' => $data['text_block_category_media'], 'categoryLayout' => $data['text_block_category_layout'],
@@ -377,6 +377,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 $site = $this->config->get('site_url');
                 $version = \Reamur\Admin\Controller\Common\Header::ASSET_V;
                 $this->document->addStyle($site . 'view/css/blog-block-editor.css?v=' . $version);
+                $this->document->addScript($site . 'view/js/blog-block-import.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-block-editor.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-block-editor-init.js?v=' . $version);
 

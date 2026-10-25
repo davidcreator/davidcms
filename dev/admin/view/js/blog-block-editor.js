@@ -32,8 +32,8 @@
     details:'M5 7h14M5 12h14M5 17h14M3 7h.01M3 12h.01M3 17h.01', spacer:'M12 3v18m-4-14 4-4 4 4m-8 10 4 4 4-4', code:'m8 6-6 6 6 6m8-12 6 6-6 6m-3-14-2 16', separator:'M4 12h16M12 7v10', group:'M4 4h16v16H4zM8 8h8v8H8z', columns:'M4 4h16v16H4zM12 4v16', gallery:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', cover:'M4 4h16v16H4zM4 15l5-5 4 4 3-3 4 5', table:'M4 4h16v16H4zM4 10h16M4 15h16M10 4v16M16 4v16', file:'M6 3h8l4 4v14H6zM14 3v5h5M9 13h6M9 17h6', audio:'M4 10v4m4-8v12m4-16v20m4-16v12m4-8v4', settings:'M4 7h16M4 17h16M8 7v0m8 10v0', outline:'M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h11', layers:'m12 3 9 5-9 5-9-5 9-5zm-9 9 9 5 9-5m-18 5 9 5 9-5', grip:'M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01', transform:'M4 7h14m0 0-3-3m3 3-3 3M20 17H6m0 0 3-3m-3 3 3 3',
     check:'m5 12 4 4L19 6', search:'m20 20-4.5-4.5M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0', help:'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', expand:'M8 3H3v5m0-5 7 7m6-7h5v5m0-5-7 7M3 16v5h5m-5 0 7-7m11 2v5h-5m5 0-7-7', collapse:'M8 3v5H3m0 0 7-7m6 7V3h5m0 0-7 7M3 16h5v5m0 0 7-7m1 2h5v5m0 0-7-7'
   };
-  const ACTION_ICONS = { 'toggle-inserter':'plus','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','file-media':'file','audio-media':'audio',media:'image','insert-pattern':'layers',insert:'plus','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent','toggle-fullscreen':'expand','builder-panel':'layers','align-text':'align-left' };
-  const ICON_ONLY_ACTIONS = new Set(['align-text','toggle-inserter','paste-block','undo','redo','preview','move-up','move-down','duplicate','copy-block','delete','file-media','audio-media','media','format-mark','link-apply','link-remove','table-add-row','table-remove-row','table-add-column','table-remove-column','table-toggle-header','indent','outdent','toggle-fullscreen','builder-panel']);
+  const ACTION_ICONS = { 'toggle-inserter':'plus','import-file':'file','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','file-media':'file','audio-media':'audio',media:'image','insert-pattern':'layers',insert:'plus','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent','toggle-fullscreen':'expand','builder-panel':'layers','align-text':'align-left' };
+  const ICON_ONLY_ACTIONS = new Set(['align-text','import-file','toggle-inserter','paste-block','undo','redo','preview','move-up','move-down','duplicate','copy-block','delete','file-media','audio-media','media','format-mark','link-apply','link-remove','table-add-row','table-remove-row','table-add-column','table-remove-column','table-toggle-header','indent','outdent','toggle-fullscreen','builder-panel']);
   const TYPE_ICONS = { 'core/paragraph':'paragraph','core/heading':'heading','core/list':'list','core/list-item':'list','core/image':'image','core/quote':'quote','core/video_embed':'video','core/button':'button','core/callout':'info','core/details':'details','core/spacer':'spacer','core/code':'code','core/separator':'separator','core/group':'group','core/columns':'columns','core/column':'columns','core/gallery':'gallery','core/cover':'cover','core/table':'table','core/table-row':'table','core/table-cell':'table','core/file':'file','core/audio':'audio' };
 
   function validLocalImage(src) {
@@ -389,6 +389,8 @@
       this.selectedId = null;
       this.blockClipboard = null;
       this.preview = 'desktop';
+      this.previewMode = false;
+      this.importNotices = [];
       this.fullscreen = false;
       this.activePanel = null;
       this.activeRibbonTab = 'home';
@@ -404,7 +406,7 @@
       this.slashTrigger = null;
       this.inserterQuery = '';
       this.statusMessage = '';
-      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',copyBlock:'Copiar bloco',pasteBlock:'Colar bloco',statusCopied:'Bloco copiado para este editor.',statusPasted:'Bloco colado.',pasteUnavailable:'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.',navigationPath:'Caminho do bloco selecionado',navigationRow:'Linha',navigationCell:'Célula',statusFocusChanged:'Foco movido para o bloco selecionado.',statusOutlineChanged:'Bloco selecionado atualizado pela navegação da estrutura.',indentBlock:'Indentar dentro do bloco anterior',outdentBlock:'Desindentar após o bloco pai',statusIndented:'Bloco movido para dentro do bloco anterior.',statusOutdented:'Bloco movido para depois do pai.',hierarchyMoveUnavailable:'Esta movimentação não é permitida neste contexto ou ultrapassaria um limite do documento.',outlineKeyboardHint:'↑/↓ navegar · → primeiro filho · ← bloco pai · Home/End início/fim',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',fullscreenEnter:fullscreenCopy().enter,fullscreenExit:fullscreenCopy().exit,fullscreenDialog:fullscreenCopy().dialog,builderElements:fullscreenCopy().elements,builderStructure:fullscreenCopy().structure,builderSettings:fullscreenCopy().settings,canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},callout:{tone:'Estilo do aviso',defaultText:'Adicione uma informação importante.',tones:{info:'Informação',success:'Sucesso',warning:'Atenção',danger:'Crítico'}},details:{summaryLabel:'Título da seção expansível',summaryDefault:'Mais informações',defaultText:'Adicione os detalhes aqui.'},spacer:{heightLabel:'Altura do espaçador',heights:{'16':'Muito pequeno · 16 px','32':'Pequeno · 32 px','48':'Médio · 48 px','64':'Grande · 64 px','96':'Muito grande · 96 px'}},preformatted:{label:'Código pré-formatado',defaultText:'',tooLarge:'O bloco de código excede o limite de 256 KiB.'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},typeLabels:{}}, this.options.strings || {});
+      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',importUnavailable:'Importador indisponível.',importError:'Falha ao importar arquivo.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',copyBlock:'Copiar bloco',pasteBlock:'Colar bloco',statusCopied:'Bloco copiado para este editor.',statusPasted:'Bloco colado.',pasteUnavailable:'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.',navigationPath:'Caminho do bloco selecionado',navigationRow:'Linha',navigationCell:'Célula',statusFocusChanged:'Foco movido para o bloco selecionado.',statusOutlineChanged:'Bloco selecionado atualizado pela navegação da estrutura.',indentBlock:'Indentar dentro do bloco anterior',outdentBlock:'Desindentar após o bloco pai',statusIndented:'Bloco movido para dentro do bloco anterior.',statusOutdented:'Bloco movido para depois do pai.',hierarchyMoveUnavailable:'Esta movimentação não é permitida neste contexto ou ultrapassaria um limite do documento.',outlineKeyboardHint:'↑/↓ navegar · → primeiro filho · ← bloco pai · Home/End início/fim',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',fullscreenEnter:fullscreenCopy().enter,fullscreenExit:fullscreenCopy().exit,fullscreenDialog:fullscreenCopy().dialog,builderElements:fullscreenCopy().elements,builderStructure:fullscreenCopy().structure,builderSettings:fullscreenCopy().settings,canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},callout:{tone:'Estilo do aviso',defaultText:'Adicione uma informação importante.',tones:{info:'Informação',success:'Sucesso',warning:'Atenção',danger:'Crítico'}},details:{summaryLabel:'Título da seção expansível',summaryDefault:'Mais informações',defaultText:'Adicione os detalhes aqui.'},spacer:{heightLabel:'Altura do espaçador',heights:{'16':'Muito pequeno · 16 px','32':'Pequeno · 32 px','48':'Médio · 48 px','64':'Grande · 64 px','96':'Muito grande · 96 px'}},preformatted:{label:'Código pré-formatado',defaultText:'',tooLarge:'O bloco de código excede o limite de 256 KiB.'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},typeLabels:{}}, this.options.strings || {});
       const rawInitial = this.options.document || { format_version: 1, blocks: [] };
       const initial = upgradeDocument(rawInitial);
       const validation = validateDocument(initial);
@@ -480,6 +482,8 @@
         this.captureInlineSelection();
       });
       this.root.addEventListener('change', (event) => {
+        const importInput = event.target.closest('[data-import-file]');
+        if (importInput && importInput.files && importInput.files[0]) { const file=importInput.files[0]; importInput.value=''; this.importLocalFile(file); return; }
         const transform = event.target.closest('[data-transform-node]');
         if (transform && transform.value) { this.transformNode(transform.dataset.transformNode, transform.value); return; }
         const field = event.target.closest('[data-attribute]');
@@ -540,6 +544,15 @@
         const text = event.clipboardData ? event.clipboardData.getData('text/plain') : '';
         this.insertPlainText(field, text);
       });
+      this.root.addEventListener('dragover', (event) => {
+        if (event.dataTransfer && Array.from(event.dataTransfer.types || []).includes('Files')) { event.preventDefault(); this.root.classList.add('rb-file-drop-active'); }
+      });
+      this.root.addEventListener('dragleave', (event) => { if (!this.root.contains(event.relatedTarget)) this.root.classList.remove('rb-file-drop-active'); });
+      this.root.addEventListener('drop', (event) => {
+        this.root.classList.remove('rb-file-drop-active');
+        const files=event.dataTransfer && Array.from(event.dataTransfer.files || []);
+        if (files && files.length) { event.preventDefault(); event.stopImmediatePropagation(); this.importLocalFile(files[0]); }
+      });
       this.root.addEventListener('dragstart', (event) => {
         const handle = event.target.closest('[data-drag-handle]');
         const card = handle && handle.closest('[data-node-id]');
@@ -568,6 +581,8 @@
         if (!wasOpen) { const search=this.root.querySelector('[data-inserter-search]'); if (search) search.focus(); }
       }
       else if (name === 'ribbon-tab') { this.activeRibbonTab = button.dataset.tab; this.render(); }
+      else if (name === 'import-file') { const input=this.root.querySelector('[data-import-file]'); if (input) input.click(); }
+      else if (name === 'toggle-preview') { this.previewMode=!this.previewMode; if (this.previewMode) this.activePanel=null; this.render(); }
       else if (name === 'builder-panel') { this.activePanel = this.activePanel === button.dataset.panel ? null : button.dataset.panel; this.inserterOpen = this.activePanel === 'elements'; this.render(); }
       else if (name === 'align-text') this.alignSelectedText(button.dataset.alignment);
       else if (name === 'duplicate') this.duplicateNode(button.dataset.nodeId || this.selectedId);
@@ -1242,6 +1257,74 @@
       if (extra) Object.keys(extra).forEach((key) => { b.dataset[key] = extra[key]; }); return b;
     }
 
+    async importLocalFile(file) {
+      if (!global.ReamurPageImporter) { this.announceStatus(this.strings.importUnavailable || 'Importador indisponível.'); return; }
+      try {
+        const result=await global.ReamurPageImporter.importFile(file);
+        const next=CLONE(this.state);
+        if (next.blocks.length+result.document.blocks.length>1000) throw new Error('A importação ultrapassaria o limite de 1.000 blocos.');
+        next.blocks.push(...result.document.blocks);
+        const validation=validateDocument(next); if(!validation.valid) throw new Error('O conteúdo convertido não passou na validação BDREditor.');
+        this.importNotices=(result.warnings||[]).slice(0,6);
+        if(result.warnings&&result.warnings.length>6)this.importNotices.push('Há outros avisos omitidos.');
+        this.statusMessage=(this.strings.importSuccess||'Conteúdo importado para o rascunho local: ')+file.name;
+        this.commit(next,null);
+      } catch(error) {
+        this.importNotices=[String(error&&error.message||this.strings.importError||'Falha ao importar arquivo.')];
+        this.statusMessage=this.importNotices[0]; this.render();
+      }
+    }
+
+    renderPreviewRuns(runs, parent) {
+      (Array.isArray(runs)?runs:[]).forEach((run)=>{
+        let node=global.document.createTextNode(run.text||'');
+        (run.marks||[]).forEach((mark)=>{const tag=({bold:'strong',italic:'em',underline:'u',strike:'s',code:'code'})[mark];if(tag){const wrap=global.document.createElement(tag);wrap.append(node);node=wrap;}});
+        if(run.href){const href=safeActionUrl(run.href);if(href){const a=global.document.createElement('a');a.href=href;a.rel='noopener noreferrer';a.append(node);node=a;}}
+        parent.append(node);
+      });
+    }
+
+    renderPreviewBlock(node) {
+      const d=global.document; let out;
+      const renderChildren=(parent)=>node.children.forEach((child)=>parent.append(this.renderPreviewBlock(child)));
+      const text=(tag)=>{const el=d.createElement(tag);this.renderPreviewRuns(node.content,el);return el;};
+      switch(node.type){
+        case 'core/paragraph': out=text('p'); out.style.textAlign=node.attributes.align||'left'; break;
+        case 'core/heading': out=text('h'+Math.min(6,Math.max(1,node.attributes.level||2))); break;
+        case 'core/quote': out=text('blockquote'); break;
+        case 'core/list': out=d.createElement(node.attributes.ordered?'ol':'ul'); renderChildren(out); break;
+        case 'core/list-item': out=text('li'); break;
+        case 'core/separator': out=d.createElement('hr'); break;
+        case 'core/code': out=d.createElement('pre'); out.textContent=node.content||''; break;
+        case 'core/image': out=d.createElement('figure'); if(validLocalImage(node.attributes.src)){const img=d.createElement('img');img.src=node.attributes.src;img.alt=node.attributes.alt||'';img.loading='lazy';out.append(img);} if(node.attributes.caption)out.append(d.createElement('figcaption')).textContent=node.attributes.caption; break;
+        case 'core/audio': out=d.createElement('figure'); if(validLocalAudio(node.attributes.src)){const audio=d.createElement('audio');audio.controls=true;audio.preload='none';audio.src=node.attributes.src;out.append(audio);} const cap=d.createElement('figcaption');this.renderPreviewRuns(node.content,cap);out.append(cap);break;
+        case 'core/video_embed': out=d.createElement('div');out.className='rb-preview-video';{const label=d.createElement('span');label.textContent=this.strings.previewVideoLink||'Vídeo incorporado';out.append(label);const href=safeActionUrl(node.attributes.url);if(href){const a=d.createElement('a');a.href=href;a.target='_blank';a.rel='noopener noreferrer';a.textContent=this.strings.previewVideoOpen||'Abrir em nova aba';out.append(a);}}break;
+        case 'core/button': out=d.createElement('p');{const a=d.createElement('a');a.className='rb-preview-button';const href=safeActionUrl(node.attributes.url);if(href){a.href=href;a.rel='noopener noreferrer';}this.renderPreviewRuns(node.content,a);out.append(a);}break;
+        case 'core/file': out=d.createElement('p');{const a=d.createElement('a');const href=validLocalDownload(node.attributes.src)?node.attributes.src:null;if(href){a.href=href;a.rel='noopener noreferrer';}this.renderPreviewRuns(node.content,a);out.append(a);}break;
+        case 'core/details': out=d.createElement('details');{const summary=d.createElement('summary');summary.textContent=node.attributes.summary;out.append(summary);this.renderPreviewRuns(node.content,out);}break;
+        case 'core/callout': out=d.createElement('aside');out.className='rb-preview-callout';this.renderPreviewRuns(node.content,out);break;
+        case 'core/spacer': out=d.createElement('div');out.style.height=(node.attributes.height||32)+'px';out.setAttribute('aria-hidden','true');break;
+        case 'core/table': out=d.createElement('table');node.children.forEach((row,ri)=>{const tr=d.createElement('tr');row.children.forEach((cell)=>{const cellEl=d.createElement(node.attributes.header&&ri===0?'th':'td');this.renderPreviewRuns(cell.content,cellEl);tr.append(cellEl);});out.append(tr);});break;
+        case 'core/table-row': out=d.createElement('tr');renderChildren(out);break;
+        case 'core/table-cell': out=d.createElement('td');this.renderPreviewRuns(node.content,out);break;
+        case 'core/columns': out=d.createElement('div');out.className='rb-preview-columns';renderChildren(out);break;
+        case 'core/column': out=d.createElement('section');renderChildren(out);break;
+        case 'core/group': out=d.createElement('section');renderChildren(out);break;
+        case 'core/cover': out=d.createElement('section');out.className='rb-preview-cover';renderChildren(out);break;
+        case 'core/gallery': out=d.createElement('div');out.className='rb-preview-gallery';renderChildren(out);break;
+        default: out=d.createElement('p');out.textContent='';
+      }
+      return out;
+    }
+
+    renderPreviewDocument() {
+      const preview=global.document.createElement('article');preview.className='rb-live-preview';
+      const title=global.document.createElement('div');title.className='rb-live-preview-label';title.textContent=this.strings.previewTitle||'Prévia da página';preview.append(title);
+      if(!this.state.blocks.length){const empty=global.document.createElement('p');empty.className='rb-muted';empty.textContent=this.strings.canvasEmpty;preview.append(empty);}
+      this.state.blocks.forEach((node)=>preview.append(this.renderPreviewBlock(node)));
+      return preview;
+    }
+
     alignSelectedText(alignment) {
       const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null;
       if (!found || found.node.type !== 'core/paragraph' || !['left','center','right'].includes(alignment)) return;
@@ -1281,13 +1364,17 @@
       } else if (this.activeRibbonTab === 'insert') {
         let g=this.renderRibbonGroup(this.strings.groupInsert||'Inserir conteúdo');
         addButton(g.tools,this.strings.addBlock,'toggle-inserter');
+        addButton(g.tools,this.strings.importFile||'Importar arquivo','import-file',{icon:'file'});
+        const fileInput=this.el('input','rb-import-file-input');fileInput.type='file';fileInput.accept=(global.ReamurPageImporter&&global.ReamurPageImporter.formats||[]).join(',');fileInput.dataset.importFile='1';fileInput.classList.add('rb-sr-only');fileInput.tabIndex=-1;fileInput.setAttribute('aria-label',this.strings.importFile||'Importar arquivo');g.tools.append(fileInput);
         [['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline']].forEach(([panel,label,icon])=>addButton(g.tools,label,'builder-panel',{panel,icon}));
         panel.append(g.group);
+        if(this.strings.importHint)panel.append(this.el('p','rb-import-hint',this.strings.importHint));
       } else if (this.activeRibbonTab === 'view') {
         let g=this.renderRibbonGroup(this.strings.groupPanels||'Painéis recolhíveis');
         [['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline'],['settings',this.strings.builderSettings,'settings']].forEach(([panel,label,icon])=>{const b=this.button(label,'builder-panel',{panel,icon});b.setAttribute('aria-pressed',String(this.activePanel===panel));g.tools.append(b);}); panel.append(g.group);
         g=this.renderRibbonGroup(this.strings.groupPreview||'Pré-visualização');
         [['desktop',this.strings.previewDesktop],['tablet',this.strings.previewTablet],['mobile',this.strings.previewMobile]].forEach(([size,label])=>{const b=this.button(label,'preview',{size});b.setAttribute('aria-pressed',String(size===this.preview));g.tools.append(b);});
+        const preview=this.button(this.previewMode?(this.strings.editMode||'Voltar à edição'):(this.strings.previewMode||'Pré-visualizar'),'toggle-preview',{icon:this.previewMode?'collapse':'desktop'});preview.setAttribute('aria-pressed',String(this.previewMode));g.tools.append(preview);
         const full=this.button(this.fullscreen?this.strings.fullscreenExit:this.strings.fullscreenEnter,'toggle-fullscreen',{icon:this.fullscreen?'collapse':'expand'});g.tools.append(full);panel.append(g.group);
       }
       return panel;
@@ -1309,8 +1396,9 @@
       const layout = this.el('div', 'rb-layout' + (this.fullscreen ? ' rb-builder-layout' : '') + (this.activePanel ? ' rb-has-panel' : ''));
       const canvas = this.el('div', 'rb-canvas'); canvas.setAttribute('role','region'); canvas.setAttribute('aria-label', this.strings.canvas);
       const canvasHead = this.el('div', 'rb-canvas-head'); canvasHead.append(this.icon('layers','rb-icon'),this.el('span','',this.strings.canvas),this.el('span','rb-canvas-count',String(this.state.blocks.length))); canvas.append(canvasHead);
-      if (!this.state.blocks.length) canvas.append(this.el('p', 'rb-empty', this.strings.canvasEmpty));
-      this.state.blocks.forEach((node) => canvas.append(this.renderNode(node, true)));
+      if (this.previewMode) { canvas.classList.add('rb-preview-canvas'); canvas.append(this.renderPreviewDocument()); }
+      else { if (!this.state.blocks.length) canvas.append(this.el('p', 'rb-empty', this.strings.canvasEmpty)); this.state.blocks.forEach((node) => canvas.append(this.renderNode(node, true))); }
+      if (this.importNotices.length) { const notices=this.el('div','rb-import-notices'); notices.setAttribute('role','status'); this.importNotices.forEach((message)=>{const note=this.el('p','rb-import-notice',message);notices.append(note);}); this.root.append(notices); }
       if (this.activePanel) {
         const sidebar=this.el('aside','rb-builder-sidebar rb-collapsible-panel');
         const panelBody=this.el('div','rb-builder-panel-body'); panelBody.id='rb-builder-panel-'+this.instance; panelBody.setAttribute('role','region');

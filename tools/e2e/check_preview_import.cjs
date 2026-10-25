@@ -1,0 +1,18 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'../..');const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const c=read('dev/admin/controller/cms/page.php'),js=read('dev/admin/view/js/blog-block-editor.js'),imp=read('dev/admin/view/js/blog-block-import.js'),css=read('dev/admin/view/css/blog-block-editor.css'),html=read('preview/index.html');
+const langs=['pt-br','en-us','es-eu'].map(x=>read(`dev/admin/language/${x}/cms/page.php`));const checks=[];const t=(n,b)=>checks.push([n,!!b]);
+t('server registers importer before editor/init',/blog-block-import\.js/.test(c)&&c.indexOf('blog-block-import.js')<c.indexOf('blog-block-editor.js'));
+t('manual preview renders current in-memory state',/toggle-preview/.test(js)&&/renderPreviewDocument\(\)/.test(js)&&/this\.state\.blocks\.forEach/.test(js));
+t('preview uses DOM text nodes, not raw HTML injection',/createTextNode\(run\.text/.test(js)&&!/innerHTML\s*=/.test(js));
+t('Office/Canvas/web formats are explicitly allowlisted',/\.docx/.test(imp)&&/\.xlsx/.test(imp)&&/\.pptx/.test(imp)&&/\.imscc/.test(imp)&&/\.html/.test(imp));
+t('archive size, entry, ratio and path limits exist',/LIMIT_FILE/.test(imp)&&/LIMIT_ENTRY/.test(imp)&&/LIMIT_TOTAL/.test(imp)&&/usize\/csize>150/.test(imp)&&/Caminho inseguro/.test(imp));
+t('ZIP import decompresses locally with no network upload code',/DecompressionStream\('deflate-raw'\)/.test(imp)&&!/fetch\s*\(/.test(imp)&&!/XMLHttpRequest/.test(imp)&&!/sendBeacon/.test(imp));
+t('HTML importer removes active elements and preserves bounded tables',/script,style,noscript,form,object,embed,svg,canvas/.test(imp)&&/slice\(0,20\)/.test(imp)&&/12/.test(imp));
+t('media imports use only existing local audio/image roots and allowlisted video hosts',/view\/audio\/blog\//.test(imp)&&/view\/image\/blog\//.test(imp)&&/player\.vimeo\.com/.test(imp)&&/nenhum arquivo foi enviado/.test(imp));
+t('Excel formulas are omitted; imported table caps are documented in code',/Fórmulas do Excel foram omitidas/.test(imp)&&/limited/.test(imp)||/12 colunas/.test(imp));
+t('file picker and drag/drop converge on local import',/data-import-file/.test(js)&&/importLocalFile\(files\[0\]\)/.test(js)&&/dragover/.test(js));
+t('preview and importer controls have accessible names and translations',/aria-label/.test(js)&&langs.every(x=>/text_editor_import_file/.test(x)&&/text_editor_preview_mode/.test(x)));
+t('standalone preview loads editor and importer assets',/blog-block-import\.js/.test(html)&&/blog-block-editor\.js/.test(html));
+for(const [n,ok] of checks)console.log(`${ok?'PASS':'FAIL'} ${n}`);const fail=checks.filter(x=>!x[1]).length;console.log(`\n${checks.length-fail}/${checks.length} static checks passed`);process.exitCode=fail?1:0;

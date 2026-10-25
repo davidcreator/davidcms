@@ -1,5 +1,5 @@
-Package: BDREditor-Office-Ribbon-Single-Page-Editor
-Base: davidcreator/davidcms main @ 9fc5d3cacfe04aab4b6005b26df2cd2d7ac85ffb (read-only check, 2026-10-25)
-Purpose: single-screen CMS Pages authoring with Office-inspired ribbon and collapsible editor panels.
-Only selective project files are included; no full clone, database dump, private logs, credentials, or deploy/migration scripts.
-No GitHub writes, database writes, staging, production, migration, or deploy action performed.
+Package: BDREditor-Preview-Office-Canvas-Import-Phase-1
+Base: davidcreator/davidcms main @ 1b725e95ce204107306b1fad0d6f5acefe8925cb (read-only check, 2026-10-25)
+Purpose: in-memory live preview and local safe conversion import for OOXML, HTML/XHTML, Canvas IMSCC, plus drag/drop.
+Only selective files are included. No project clone, DB dump, credentials, migrations or deploy scripts.
+No GitHub, database, staging or production writes performed.
