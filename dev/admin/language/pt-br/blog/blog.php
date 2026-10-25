@@ -299,3 +299,9 @@ $_['text_block_paste'] = 'Colar bloco';
 $_['text_block_status_copied'] = 'Bloco copiado para este editor.';
 $_['text_block_status_pasted'] = 'Bloco colado.';
 $_['text_block_paste_unavailable'] = 'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.';
+
+// BDREditor hierarchical navigation
+$_['text_block_navigation_path'] = 'Caminho do bloco selecionado';
+$_['text_block_navigation_cell'] = 'Célula';
+$_['text_block_status_focus_changed'] = 'Foco movido para o bloco selecionado.';
+$_['text_block_navigation_row'] = 'Linha';

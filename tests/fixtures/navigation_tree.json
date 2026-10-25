@@ -1,0 +1,32 @@
+{
+  "document": {
+    "format_version": 2,
+    "blocks": [
+      {
+        "id": "group-root",
+        "type": "core/group",
+        "attributes": {"outline_label":"Seção principal"},
+        "children": [
+          {
+            "id": "group-nested",
+            "type": "core/group",
+            "attributes": {"outline_label":"Subseção"},
+            "children": [
+              {
+                "id": "paragraph-child",
+                "type": "core/paragraph",
+                "attributes": {},
+                "children": [],
+                "content": [{"text":"Conteúdo aninhado","marks":[],"href":null}]
+              }
+            ],
+            "content": ""
+          }
+        ],
+        "content": ""
+      }
+    ]
+  },
+  "target_id": "paragraph-child",
+  "expected_ids": ["group-root","group-nested","paragraph-child"]
+}

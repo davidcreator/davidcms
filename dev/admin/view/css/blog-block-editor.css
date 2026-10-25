@@ -121,3 +121,12 @@
 .rb-keyboard-help summary{cursor:pointer;width:max-content;max-width:100%}
 .rb-keyboard-help summary:focus-visible{outline:3px solid #174ea6;outline-offset:2px;border-radius:2px}
 .rb-keyboard-help-text{margin:.35rem 0 0;max-width:72rem;line-height:1.55}
+
+/* Hierarchical breadcrumbs: visible path, wrap-safe on mobile, keyboard focus preserved. */
+.rb-breadcrumbs{margin:0 0 .75rem;min-width:0}
+.rb-breadcrumb-list{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;list-style:none;margin:0;padding:0}
+.rb-breadcrumb-item{display:inline-flex;align-items:center;gap:.35rem;min-width:0}
+.rb-breadcrumb-item:not(:last-child)::after{content:"›";color:var(--rb-muted)}
+.rb-breadcrumb-button{border:0;background:transparent;color:#174ea6;text-decoration:underline;text-underline-offset:.12em;padding:.15rem .1rem;cursor:pointer;font:inherit;font-size:.82rem}
+.rb-breadcrumb-button:focus-visible{outline:3px solid #174ea6;outline-offset:2px;border-radius:2px}
+.rb-breadcrumb-current{font-size:.82rem;font-weight:700;overflow-wrap:anywhere}

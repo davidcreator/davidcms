@@ -299,3 +299,9 @@ $_['text_block_paste'] = 'Pegar bloque';
 $_['text_block_status_copied'] = 'Bloque copiado en este editor.';
 $_['text_block_status_pasted'] = 'Bloque pegado.';
 $_['text_block_paste_unavailable'] = 'No se puede pegar este bloque aquí o se superaría un límite del documento.';
+
+// BDREditor hierarchical navigation
+$_['text_block_navigation_path'] = 'Ruta del bloque seleccionado';
+$_['text_block_navigation_cell'] = 'Celda';
+$_['text_block_status_focus_changed'] = 'El foco se movió al bloque seleccionado.';
+$_['text_block_navigation_row'] = 'Fila';

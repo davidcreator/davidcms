@@ -1,11 +1,11 @@
 # Instruções para agentes — BDREditor
 
-- Editor exclusivo ReamurCMS; Gutenberg é referência apenas, sem código/assets/dependência.
-- `core/file` e `core/audio` permanecem com escopos locais e guardrails documentados.
-- Clipboard de bloco é interno, volátil e limitado à instância atual; não usar navigator clipboard, HTML ou transferência entre documentos.
-- Copiar/colar exige IDs novos e validação do documento completo antes de um único commit de histórico. Não zerar/substituir conteúdo quando falhar.
-- Colagem de texto permanece `text/plain`; não usar `execCommand`.
-- Sem schema, banco, migration, endpoint, autosave, draft, staging, deploy ou GitHub write.
-- Não atribuir numeração oficial nem inventar A03. Não clonar/baixar o projeto inteiro; usar arquivos pontuais.
-- Não executar PHP/SQL/browser/app/runtime nesta etapa; usar checkers e fixtures sintéticas.
+- Produto exclusivo ReamurCMS; Gutenberg é apenas referência, sem código/assets/dependência.
+- Preservar os escopos cumulativos `core/file`, `core/audio`, atalhos e clipboard local de blocos.
+- Navegação hierárquica é somente leitura: não alterar o JSON, criar undo de conteúdo ou persistir mudanças.
+- Rótulos de grupos/células entram por `textContent`, nunca HTML livre.
+- Preservar foco acessível e mensagens live; não inventar atalhos que capturem navegação nativa.
+- Sem schema, banco, migration, endpoint, autosave, preview draft, staging, deploy ou GitHub write.
+- Não atribuir numeração oficial nem inventar A03. Não clonar/baixar o projeto inteiro; fontes pontuais apenas.
+- Não executar PHP/SQL/browser/app/runtime nesta etapa; usar fixtures e checkers sintéticos.
 - Não incluir dumps privados, credenciais ou logs runtime; não pedir credenciais por chat.

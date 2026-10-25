@@ -75,6 +75,17 @@
     return refresh(copy) ? copy : null;
   }
 
+  function findNodeChain(nodes, targetId) {
+    if (!Array.isArray(nodes) || typeof targetId !== 'string') return [];
+    for (const node of nodes) {
+      if (!node || typeof node !== 'object') continue;
+      if (node.id === targetId) return [node];
+      const childPath = findNodeChain(node.children, targetId);
+      if (childPath.length) return [node].concat(childPath);
+    }
+    return [];
+  }
+
   function validEmbed(url) {
     try {
       const parsed = new URL(url);
@@ -301,7 +312,7 @@
       this.slashTrigger = null;
       this.inserterQuery = '';
       this.statusMessage = '';
-      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',copyBlock:'Copiar bloco',pasteBlock:'Colar bloco',statusCopied:'Bloco copiado para este editor.',statusPasted:'Bloco colado.',pasteUnavailable:'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},typeLabels:{}}, this.options.strings || {});
+      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',copyBlock:'Copiar bloco',pasteBlock:'Colar bloco',statusCopied:'Bloco copiado para este editor.',statusPasted:'Bloco colado.',pasteUnavailable:'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.',navigationPath:'Caminho do bloco selecionado',navigationRow:'Linha',navigationCell:'Célula',statusFocusChanged:'Foco movido para o bloco selecionado.',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},typeLabels:{}}, this.options.strings || {});
       const rawInitial = this.options.document || { format_version: 1, blocks: [] };
       const initial = upgradeDocument(rawInitial);
       const validation = validateDocument(initial);
@@ -432,7 +443,7 @@
       else if (name === 'duplicate') this.duplicateNode(button.dataset.nodeId || this.selectedId);
       else if (name === 'copy-block') this.copyBlock(button.dataset.nodeId || this.selectedId);
       else if (name === 'paste-block') this.pasteBlock();
-      else if (name === 'outline-select') { const id = button.dataset.nodeId; this.selectNode(id); const card = Array.from(this.root.querySelectorAll('.rb-block[data-node-id]')).find((item) => item.dataset.nodeId === id); if (card) card.scrollIntoView({ block:'nearest' }); }
+      else if (name === 'outline-select') { const id = button.dataset.nodeId; this.selectNode(id); this.focusNode(id); this.announceStatus(this.strings.statusFocusChanged); }
       else if (name === 'undo') this.undo();
       else if (name === 'redo') this.redo();
       else if (name === 'delete') this.deleteNode(button.dataset.nodeId || this.selectedId);
@@ -1164,6 +1175,32 @@
       return card;
     }
 
+    navigationLabel(node) {
+      if (node.type === 'core/group' && typeof node.attributes.outline_label === 'string' && node.attributes.outline_label.trim()) return node.attributes.outline_label.trim();
+      if (node.type === 'core/table-cell') return this.strings.navigationCell;
+      if (node.type === 'core/table-row') return this.strings.navigationRow;
+      return this.label(node.type);
+    }
+
+    renderBreadcrumbs(id) {
+      const chain = findNodeChain(this.state.blocks, id);
+      const nav = this.el('nav', 'rb-breadcrumbs'); nav.setAttribute('aria-label', this.strings.navigationPath);
+      if (!chain.length) return nav;
+      const list = this.el('ol', 'rb-breadcrumb-list');
+      chain.forEach((node, index) => {
+        const item = this.el('li', 'rb-breadcrumb-item');
+        if (index === chain.length - 1) {
+          const current = this.el('span', 'rb-breadcrumb-current', this.navigationLabel(node));
+          current.setAttribute('aria-current', 'location'); item.append(current);
+        } else {
+          const ancestor = this.button(this.navigationLabel(node), 'outline-select', { nodeId:node.id });
+          ancestor.classList.add('rb-breadcrumb-button'); item.append(ancestor);
+        }
+        list.append(item);
+      });
+      nav.append(list); return nav;
+    }
+
     renderOutline() {
       const nav = this.el('nav','rb-outline'); nav.setAttribute('aria-label',this.strings.outline); nav.append(this.el('h3','rb-inspector-title',this.strings.outline));
       if (!this.state.blocks.length) { nav.append(this.el('p','rb-muted',this.strings.outlineEmpty)); return nav; }
@@ -1171,7 +1208,7 @@
       const append = (nodes,parent,depth) => nodes.forEach((node) => {
         if (['core/table-row','core/table-cell'].includes(node.type)) return;
         const item = this.el('li','rb-outline-item');
-        const outlineName = node.type === 'core/group' && typeof node.attributes.outline_label === 'string' && node.attributes.outline_label.trim() ? node.attributes.outline_label.trim() : this.label(node.type);
+        const outlineName = this.navigationLabel(node);
         const button = this.button(outlineName,'outline-select',{nodeId:node.id});
         button.classList.add('rb-outline-button'); button.style.setProperty('--rb-outline-depth', String(depth));
         if (node.id === this.selectedId) button.setAttribute('aria-current','location'); item.append(button);
@@ -1186,6 +1223,7 @@
       const heading = this.el('h3', 'rb-inspector-title', this.strings.inspector); aside.append(heading);
       const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null;
       if (!found) { aside.append(this.el('p', 'rb-muted', this.strings.inspectorEmpty)); return aside; }
+      aside.append(this.renderBreadcrumbs(found.node.id));
       aside.append(this.el('p', 'rb-selected-type', this.label(found.node.type)));
       const addField = (label, key, value, type, choices) => {
         const wrap = this.el('label', 'rb-field'); wrap.append(this.el('span', '', label));
@@ -1254,6 +1292,7 @@
 
   global.ReamurBlogBlockEditor = {
     classifyKeyboardShortcut: classifyKeyboardShortcut,
+    findNodeChain: findNodeChain,
     cloneBlockWithNewIds: cloneBlockWithNewIds,
     mount: function (root, options) { if (!(root instanceof Element)) throw new TypeError('editor root must be an Element'); return new Editor(root, options || {}); },
     validateDocument: validateDocument,

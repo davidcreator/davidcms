@@ -299,3 +299,9 @@ $_['text_block_paste'] = 'Paste block';
 $_['text_block_status_copied'] = 'Block copied in this editor.';
 $_['text_block_status_pasted'] = 'Block pasted.';
 $_['text_block_paste_unavailable'] = 'This block cannot be pasted here or a document limit would be exceeded.';
+
+// BDREditor hierarchical navigation
+$_['text_block_navigation_path'] = 'Selected block path';
+$_['text_block_navigation_cell'] = 'Cell';
+$_['text_block_status_focus_changed'] = 'Focus moved to the selected block.';
+$_['text_block_navigation_row'] = 'Row';
