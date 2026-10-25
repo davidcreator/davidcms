@@ -309,3 +309,10 @@ $_['text_block_navigation_row'] = 'Fila';
 // BDREditor outline keyboard navigation
 $_['text_block_outline_keyboard_hint'] = '↑/↓ navegar · → primer hijo · ← bloque padre · Home/End inicio/fin';
 $_['text_block_status_outline_changed'] = 'Bloque seleccionado actualizado desde la navegación de estructura.';
+
+// BDREditor indent/outdent
+$_['text_block_indent'] = 'Sangrar dentro del bloque anterior';
+$_['text_block_outdent'] = 'Quitar sangría tras el padre';
+$_['text_block_status_indented'] = 'Bloque movido dentro del contenedor anterior.';
+$_['text_block_status_outdented'] = 'Bloque movido después del padre.';
+$_['text_block_hierarchy_move_unavailable'] = 'Este movimiento no está permitido aquí o superaría un límite del documento.';

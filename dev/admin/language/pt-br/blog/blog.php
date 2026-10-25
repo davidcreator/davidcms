@@ -309,3 +309,10 @@ $_['text_block_navigation_row'] = 'Linha';
 // BDREditor outline keyboard navigation
 $_['text_block_outline_keyboard_hint'] = '↑/↓ navegar · → primeiro filho · ← bloco pai · Home/End início/fim';
 $_['text_block_status_outline_changed'] = 'Bloco selecionado atualizado pela navegação da estrutura.';
+
+// BDREditor indent/outdent
+$_['text_block_indent'] = 'Indentar no bloco anterior';
+$_['text_block_outdent'] = 'Desindentar após o pai';
+$_['text_block_status_indented'] = 'Bloco movido para dentro do bloco anterior.';
+$_['text_block_status_outdented'] = 'Bloco movido para depois do pai.';
+$_['text_block_hierarchy_move_unavailable'] = 'Esta movimentação não é permitida neste contexto ou ultrapassaria um limite do documento.';

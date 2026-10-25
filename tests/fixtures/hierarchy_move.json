@@ -1,0 +1,36 @@
+{
+  "document": {
+    "format_version": 2,
+    "blocks": [
+      {
+        "id": "group-outer",
+        "type": "core/group",
+        "attributes": {"outline_label":"Área principal"},
+        "children": [
+          {
+            "id": "group-inner",
+            "type": "core/group",
+            "attributes": {"outline_label":"Painel"},
+            "children": [
+              {"id":"paragraph-in-inner","type":"core/paragraph","attributes":{},"children":[],"content":[{"text":"Texto A","marks":[],"href":null}]},
+              {"id":"paragraph-in-inner-2","type":"core/paragraph","attributes":{},"children":[],"content":[{"text":"Texto B","marks":[],"href":null}]}
+            ],
+            "content": ""
+          },
+          {"id":"paragraph-sibling","type":"core/paragraph","attributes":{},"children":[],"content":[{"text":"Vizinho","marks":[],"href":null}]}
+        ],
+        "content": ""
+      },
+      {"id":"paragraph-top","type":"core/paragraph","attributes":{},"children":[],"content":[{"text":"Mover para dentro","marks":[],"href":null}]},
+      {
+        "id": "group-last",
+        "type": "core/group",
+        "attributes": {},
+        "children": [{"id":"paragraph-last","type":"core/paragraph","attributes":{},"children":[],"content":[{"text":"Único filho","marks":[],"href":null}]}],
+        "content": ""
+      },
+      {"id":"paragraph-before","type":"core/paragraph","attributes":{},"children":[],"content":[{"text":"Antes","marks":[],"href":null}]},
+      {"id":"paragraph-after","type":"core/paragraph","attributes":{},"children":[],"content":[{"text":"Depois","marks":[],"href":null}]}
+    ]
+  }
+}

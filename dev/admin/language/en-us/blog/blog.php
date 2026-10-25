@@ -309,3 +309,10 @@ $_['text_block_navigation_row'] = 'Row';
 // BDREditor outline keyboard navigation
 $_['text_block_outline_keyboard_hint'] = '↑/↓ navigate · → first child · ← parent block · Home/End first/last';
 $_['text_block_status_outline_changed'] = 'Selected block updated from outline navigation.';
+
+// BDREditor indent/outdent
+$_['text_block_indent'] = 'Indent into previous block';
+$_['text_block_outdent'] = 'Outdent after parent';
+$_['text_block_status_indented'] = 'Block moved into the previous container.';
+$_['text_block_status_outdented'] = 'Block moved after its parent.';
+$_['text_block_hierarchy_move_unavailable'] = 'This move is not allowed here or would exceed a document limit.';

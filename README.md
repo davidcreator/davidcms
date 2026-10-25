@@ -1,28 +1,35 @@
-# BDREditor — navegação de outline por teclado
+# BDREditor — reordenação hierárquica acessível
 
-Incremento cumulativo do BDREditor exclusivo do ReamurCMS. Estende a outline hierárquica com navegação por teclas direcionais quando o foco está em um botão da outline. Mantém `core/file`, `core/audio`, atalhos do editor, copiar/colar local e breadcrumbs. Gutenberg é apenas referência; sem código, assets ou dependência.
+Incremento cumulativo sobre **BDREditor-Outline-Keyboard-Navigation**, para o editor exclusivo de conteúdo do ReamurCMS. Gutenberg permanece somente referência; não há dependência, código ou assets incorporados.
 
-## Teclas na outline
+## Uso
 
-- **↑ / ↓**: bloco anterior / próximo na ordem hierárquica visível.
-- **→**: primeiro filho visível.
-- **←**: bloco pai.
-- **Home / End**: primeiro / último bloco visível.
-- Em limite ou alvo inexistente, mantém foco/seleção e suprime rolagem acidental da página.
-- O foco permanece na outline; `aria-current` acompanha a seleção e uma região `aria-live` anuncia a mudança.
-- O hint localizado é exibido junto à outline.
+No inspetor do bloco selecionado, os botões **Indentar** e **Desindentar** movem a seleção entre níveis hierárquicos sem drag-and-drop:
 
-Essas teclas só são tratadas quando o foco está em `.rb-outline-button`. Setas em conteúdo editável, campos, breadcrumbs e demais controles mantêm comportamento nativo. Reordenação continua pelos controles existentes; este incremento navega, não move blocos.
+- Indentar move para dentro do contêiner compatível imediatamente anterior.
+- Desindentar move para depois do pai.
+- Ações impossíveis ficam desativadas. Em tentativa inválida, o documento não é alterado; mensagens de estado acessíveis são anunciadas.
+- IDs, atributos e conteúdo são preservados. A validação do documento v2 completo ocorre antes e depois da movimentação; commit e undo são atômicos.
+- Blocos de tabela não podem ser movidos. Não se permite esvaziar contêineres que exigem filhos.
 
 ## Verificações
 
-Foram adicionados fixture e checker estático para ordem de leitura, pais/filhos, Home/End e limites. Checkers cumulativos de breadcrumbs, copy/paste, atalhos, áudio e arquivo/download continuam no pacote. Resultado: **24 PASS** outline por teclado, **24** breadcrumbs, **29** copy/paste, **25** atalhos, **49** áudio e **48** arquivo/download. `node --check`, parsing JSON das seis fixtures, checksums e ZIP também passaram. Os helpers são testados em VM Node sem DOM/browser; não é teste de leitor de tela ou navegador real.
+Com Node.js:
 
-HEAD de base consultado por commit: `7b4ee32a3218efc418da5a3fd75634910d9f0760` (Hierarchical-Navigation). Pacote local cumulativo, sem clone integral e sem GitHub write. Não foram executados PHP/runtime, browser/app, banco, staging, deploy ou migrations. Nenhuma numeração oficial foi atribuída.
+```sh
+node --check dev/admin/view/js/blog-block-editor.js
+node tests/check_hierarchical_reordering.js
+node tools/e2e/e2e_bdre_hierarchical_reordering_static.cjs
+```
 
-- Escopo: `docs/BDREditor-Outline-Keyboard-Navigation-Scope.md`
-- Contrato: `docs/BDREditor-Outline-Keyboard-Navigation.md`
-- Fixture: `tests/fixtures/outline_navigation.json`
-- Checker: `tools/e2e/e2e_bdre_outline_keyboard_static.cjs`
-- Checkers anteriores: `tools/e2e/`
+Nesta entrega: checker funcional **23 PASS**, checker estático novo **27 PASS**; checkers cumulativos anteriores executados com sucesso: áudio 49, copy/paste 29, arquivo/download 48, atalhos 25, breadcrumbs 24 e outline por teclado 24. `php -l` não foi executado: interpretador PHP não está instalado no ambiente. Os checkers estáticos não substituem teste de browser/leitor de tela ou runtime PHP.
+
+## Escopo e segurança
+
+Sem alteração de schema ou persistência. Nenhuma escrita GitHub, execução de runtime, staging, banco, migration, teste destrutivo ou deploy. Pacote preparado com cópias pontuais de fontes; projeto completo não foi clonado.
+
+- Contrato: `docs/BDREditor-Hierarchical-Reordering.md`
+- Fixture: `tests/fixtures/hierarchy_move.json`
+- Checker comportamental: `tests/check_hierarchical_reordering.js`
+- Checker estático E2E: `tools/e2e/e2e_bdre_hierarchical_reordering_static.cjs`
 - SHA-256: `SHA256SUMS`

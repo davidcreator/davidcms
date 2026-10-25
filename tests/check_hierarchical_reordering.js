@@ -1,0 +1,44 @@
+'use strict';
+const fs = require('fs');
+const path = require('path');
+global.window = {};
+global.Element = class Element {};
+require('../dev/admin/view/js/blog-block-editor.js');
+const api = window.ReamurBlogBlockEditor;
+const fixture = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/hierarchy_move.json'), 'utf8')).document;
+let checks = 0;
+function check(condition, message) { checks++; if (!condition) throw new Error('FAIL: ' + message); }
+function move(doc, id, direction) { return api.moveBlockAcrossHierarchy(doc, id, direction); }
+function allIds(doc) { const out=[]; function visit(nodes){nodes.forEach(n=>{out.push(n.id);visit(n.children||[]);});} visit(doc.blocks); return out.sort(); }
+check(api.validateDocument(fixture).valid, 'fixture is a valid v2 document');
+const original = JSON.stringify(fixture);
+const indent = move(fixture, 'paragraph-top', 'indent');
+check(!!indent, 'indent into previous group succeeds');
+check(indent.document.blocks[0].children.some(n=>n.id==='paragraph-top'), 'indent appends block inside destination container');
+check(indent.focusId === 'paragraph-top', 'indent preserves focus ID');
+check(allIds(indent.document).join('|') === allIds(fixture).join('|'), 'indent preserves all block IDs');
+check(api.validateDocument(indent.document).valid, 'indented document passes full validation');
+check(JSON.stringify(fixture) === original, 'move helper does not mutate source document');
+const outdent = move(fixture, 'paragraph-in-inner', 'outdent');
+check(!!outdent, 'outdent from group succeeds');
+const inner = outdent.document.blocks[0].children;
+check(inner.findIndex(n=>n.id==='paragraph-in-inner') === inner.findIndex(n=>n.id==='group-inner')+1, 'outdent places block after parent');
+check(outdent.document.blocks[0].children.find(n=>n.id==='group-inner').children.length === 1, 'outdent leaves parent container non-empty');
+check(api.validateDocument(outdent.document).valid, 'outdented document passes full validation');
+const nestedIndent = move(fixture, 'paragraph-sibling', 'indent');
+check(!!nestedIndent, 'indent into immediately previous nested group succeeds');
+check(nestedIndent.document.blocks[0].children.find(n=>n.id==='group-inner').children.at(-1).id === 'paragraph-sibling', 'nested indent targets immediate prior container');
+check(api.validateDocument(nestedIndent.document).valid, 'nested indent passes validation');
+check(move(fixture, 'paragraph-last', 'outdent') === null, 'cannot empty required parent container');
+check(move(fixture, 'paragraph-after', 'indent') === null, 'cannot indent into a non-container previous block');
+check(move(fixture, 'paragraph-top', 'outdent') === null, 'root block cannot outdent');
+check(move(fixture, 'missing-id', 'indent') === null, 'unknown ID is rejected');
+check(move(fixture, 'paragraph-top', 'sideways') === null, 'unknown direction is rejected');
+check(move(fixture, 'paragraph-top', 'indent') !== null && JSON.stringify(fixture) === original, 'repeated dry-run remains non-mutating');
+const invalid = JSON.parse(original); invalid.blocks[0].children = [];
+check(move(invalid, 'paragraph-top', 'indent') === null, 'invalid original document rejected before movement');
+const tableNode = {id:'table-x',type:'core/table',attributes:{header:false},children:[{id:'row-x',type:'core/table-row',attributes:{},children:[{id:'cell-x',type:'core/table-cell',attributes:{},children:[],content:[{text:'x',marks:[],href:null}]}],content:''}],content:''};
+const tableDoc={format_version:2,blocks:[{id:'group-x',type:'core/group',attributes:{},children:[{id:'paragraph-x',type:'core/paragraph',attributes:{},children:[],content:[{text:'x',marks:[],href:null}]}],content:''},tableNode]};
+check(api.validateDocument(tableDoc).valid, 'table rejection fixture is valid');
+check(move(tableDoc, 'table-x', 'indent') === null, 'table block cannot move');
+console.log(`Hierarchical reordering checker: ${checks} PASS`);

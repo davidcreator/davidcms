@@ -269,6 +269,42 @@
     return { valid: errors.length === 0, errors: [...new Set(errors)] };
   }
 
+  function moveBlockAcrossHierarchy(document, nodeId, direction) {
+    if (!document || document.format_version !== 2 || !Array.isArray(document.blocks) || !['indent','outdent'].includes(direction) || !validateDocument(document).valid) return null;
+    const next = CLONE(document);
+    function locate(nodes, id, parent) {
+      for (let index = 0; index < nodes.length; index += 1) {
+        const node = nodes[index];
+        if (node && node.id === id) return { nodes, index, node, parent: parent || null };
+        const found = node && Array.isArray(node.children) ? locate(node.children, id, node) : null;
+        if (found) return found;
+      }
+      return null;
+    }
+    const found = locate(next.blocks, nodeId, null);
+    if (!found || ['core/table','core/table-row','core/table-cell'].includes(found.node.type)) return null;
+    const requiredParents = ['core/group','core/column','core/list','core/gallery','core/cover'];
+    if (found.parent && requiredParents.includes(found.parent.type) && found.nodes.length <= 1) return null;
+    if (direction === 'indent') {
+      if (found.index < 1) return null;
+      const destination = found.nodes[found.index - 1];
+      if (!destination || !['core/group','core/column','core/list','core/gallery','core/cover'].includes(destination.type)) return null;
+      if (destination.type === 'core/list' && found.node.type !== 'core/list-item') return null;
+      if (destination.type === 'core/gallery' && found.node.type !== 'core/image') return null;
+      if (destination.type === 'core/cover' && !['core/heading','core/paragraph','core/quote','core/button'].includes(found.node.type)) return null;
+      const [moving] = found.nodes.splice(found.index, 1);
+      destination.children.push(moving);
+    } else {
+      if (!found.parent || !requiredParents.includes(found.parent.type)) return null;
+      const parentPath = locate(next.blocks, found.parent.id, null);
+      if (!parentPath) return null;
+      const [moving] = found.nodes.splice(found.index, 1);
+      parentPath.nodes.splice(parentPath.index + 1, 0, moving);
+    }
+    if (!validateDocument(next).valid || utf8Length(JSON.stringify(next)) > 4194304) return null;
+    return { document: next, focusId: nodeId };
+  }
+
   function normalizeDomInline(root, blockType) {
     const runs = [];
     function append(text, marks, href) {
@@ -337,7 +373,7 @@
       this.slashTrigger = null;
       this.inserterQuery = '';
       this.statusMessage = '';
-      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',copyBlock:'Copiar bloco',pasteBlock:'Colar bloco',statusCopied:'Bloco copiado para este editor.',statusPasted:'Bloco colado.',pasteUnavailable:'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.',navigationPath:'Caminho do bloco selecionado',navigationRow:'Linha',navigationCell:'Célula',statusFocusChanged:'Foco movido para o bloco selecionado.',statusOutlineChanged:'Bloco selecionado atualizado pela navegação da estrutura.',outlineKeyboardHint:'↑/↓ navegar · → primeiro filho · ← bloco pai · Home/End início/fim',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},typeLabels:{}}, this.options.strings || {});
+      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',copyBlock:'Copiar bloco',pasteBlock:'Colar bloco',statusCopied:'Bloco copiado para este editor.',statusPasted:'Bloco colado.',pasteUnavailable:'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.',navigationPath:'Caminho do bloco selecionado',navigationRow:'Linha',navigationCell:'Célula',statusFocusChanged:'Foco movido para o bloco selecionado.',statusOutlineChanged:'Bloco selecionado atualizado pela navegação da estrutura.',indentBlock:'Indentar dentro do bloco anterior',outdentBlock:'Desindentar após o bloco pai',statusIndented:'Bloco movido para dentro do bloco anterior.',statusOutdented:'Bloco movido para depois do pai.',hierarchyMoveUnavailable:'Esta movimentação não é permitida neste contexto ou ultrapassaria um limite do documento.',outlineKeyboardHint:'↑/↓ navegar · → primeiro filho · ← bloco pai · Home/End início/fim',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},typeLabels:{}}, this.options.strings || {});
       const rawInitial = this.options.document || { format_version: 1, blocks: [] };
       const initial = upgradeDocument(rawInitial);
       const validation = validateDocument(initial);
@@ -482,6 +518,8 @@
       else if (name === 'delete') this.deleteNode(button.dataset.nodeId || this.selectedId);
       else if (name === 'move-up') this.moveNode(button.dataset.nodeId || this.selectedId, -1);
       else if (name === 'move-down') this.moveNode(button.dataset.nodeId || this.selectedId, 1);
+      else if (name === 'indent') this.indentNode(button.dataset.nodeId || this.selectedId);
+      else if (name === 'outdent') this.outdentNode(button.dataset.nodeId || this.selectedId);
       else if (name === 'media') { global.document.dispatchEvent(new CustomEvent('blog-block-media-open', { detail: { editor: this } })); }
       else if (name === 'file-media') { global.document.dispatchEvent(new CustomEvent('blog-block-file-open', { detail: { editor: this, nodeId: button.dataset.nodeId || this.selectedId } })); }
       else if (name === 'audio-media') { global.document.dispatchEvent(new CustomEvent('blog-block-audio-open', { detail: { editor: this, nodeId: button.dataset.nodeId || this.selectedId } })); }
@@ -1010,6 +1048,21 @@
       this.root.querySelectorAll('[data-action="paste-block"]').forEach((button) => { button.disabled = !enabled; });
     }
 
+    canIndent(id) { return !!moveBlockAcrossHierarchy(this.state, id, 'indent'); }
+    canOutdent(id) { return !!moveBlockAcrossHierarchy(this.state, id, 'outdent'); }
+
+    indentNode(id) {
+      const result = moveBlockAcrossHierarchy(this.state, id, 'indent');
+      if (!result) { this.announceStatus(this.strings.hierarchyMoveUnavailable); return false; }
+      this.statusMessage = this.strings.statusIndented; this.commit(result.document, result.focusId); this.focusNode(result.focusId); return true;
+    }
+
+    outdentNode(id) {
+      const result = moveBlockAcrossHierarchy(this.state, id, 'outdent');
+      if (!result) { this.announceStatus(this.strings.hierarchyMoveUnavailable); return false; }
+      this.statusMessage = this.strings.statusOutdented; this.commit(result.document, result.focusId); this.focusNode(result.focusId); return true;
+    }
+
     duplicateNode(id) {
       const next = CLONE(this.state); const found = this.findPath(next.blocks, id); if (!found) return;
       if (found.parent && found.parent.type === 'core/columns' && found.node.type === 'core/column') return;
@@ -1314,7 +1367,9 @@
       const fixedColumn = found.parent && found.parent.type === 'core/columns' && n.type === 'core/column';
       const lastRequiredChild = found.parent && ['core/gallery','core/cover'].includes(found.parent.type) && found.parent.children.length <= 1;
       const remove = this.button(this.strings.remove, 'delete', { nodeId:n.id }); remove.disabled = !!fixedColumn || !!lastRequiredChild;
-      actions.append(this.button(this.strings.moveUp, 'move-up', { nodeId:n.id }), this.button(this.strings.moveDown, 'move-down', { nodeId:n.id }), remove); aside.append(actions);
+      actions.append(this.button(this.strings.moveUp, 'move-up', { nodeId:n.id }), this.button(this.strings.moveDown, 'move-down', { nodeId:n.id }));
+      const indent = this.button(this.strings.indentBlock, 'indent', { nodeId:n.id }); indent.disabled = !this.canIndent(n.id); actions.append(indent);
+      const outdent = this.button(this.strings.outdentBlock, 'outdent', { nodeId:n.id }); outdent.disabled = !this.canOutdent(n.id); actions.append(outdent, remove); aside.append(actions);
       return aside;
     }
 
@@ -1328,6 +1383,7 @@
     classifyKeyboardShortcut: classifyKeyboardShortcut,
     findNodeChain: findNodeChain,
     getOutlineNavigationTarget: getOutlineNavigationTarget,
+    moveBlockAcrossHierarchy: moveBlockAcrossHierarchy,
     cloneBlockWithNewIds: cloneBlockWithNewIds,
     mount: function (root, options) { if (!(root instanceof Element)) throw new TypeError('editor root must be an Element'); return new Editor(root, options || {}); },
     validateDocument: validateDocument,
