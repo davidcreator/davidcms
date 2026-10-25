@@ -108,7 +108,7 @@ class Page extends \Reamur\System\Engine\Controller {
 
         $this->load->model('cms/page');
 
-        $data = $this->formData([]);
+        $data = $this->formData([], true);
         $data['text_flash'] = $this->flash();
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
@@ -121,7 +121,7 @@ class Page extends \Reamur\System\Engine\Controller {
                     $valuesSaved = $this->model_custom_field_value->savePageValues($page_id, (array)($this->request->post['custom_field'] ?? []));
                     $this->setFlash($this->language->get($valuesSaved ? 'text_success_add' : 'error_custom_field_save'), $valuesSaved ? 'success' : 'error');
 
-                    $this->response->redirect($this->url->link('cms/page.content|' . $page_id));
+                    $this->response->redirect($this->url->link('cms/page.edit|' . $page_id));
 
                     return;
                 }
@@ -155,7 +155,7 @@ class Page extends \Reamur\System\Engine\Controller {
             return;
         }
 
-        $data          = $this->formData($page);
+        $data          = $this->formData($page, true);
         $data['text_flash'] = $this->flash();
         $data['error'] = '';
 
@@ -174,7 +174,7 @@ class Page extends \Reamur\System\Engine\Controller {
 
                 $this->setFlash($this->language->get($valuesSaved ? 'text_success_edit' : 'error_custom_field_save'), $valuesSaved ? 'success' : 'error');
 
-                $this->response->redirect($this->url->link('cms/page'));
+                $this->response->redirect($this->url->link('cms/page.edit|' . $page_id));
 
                 return;
             }
@@ -189,45 +189,10 @@ class Page extends \Reamur\System\Engine\Controller {
         $this->response->setOutput($this->load->view('cms/page_form', $data));
     }
 
-    /** Tela exclusiva para criação/edição do conteúdo BDREditor. */
+    /** Compatibilidade com links antigos: a edição agora acontece na tela geral unificada. */
     public function content(string $page_id = '0'): void {
         $page_id = (int)$page_id;
-        $this->load->language('cms/page');
-        $this->document->setTitle($this->language->get('text_page_content_editor'));
-        $this->load->model('cms/page');
-        $page = $this->model_cms_page->getPage($page_id);
-        if (!$page) {
-            $this->response->redirect($this->url->link('error/not_found'));
-            return;
-        }
-
-        $data = $this->formData($page, true);
-        $data['text_flash'] = $this->flash();
-        $data['error'] = '';
-        $data['action'] = $this->url->link('cms/page.content|' . $page_id);
-        $data['cancel'] = $this->url->link('cms/page.edit|' . $page_id);
-        $requestedLanguage = $this->request->get['language_id'] ?? $this->request->post['active_language_id'] ?? ($data['languages'][0]['language_id'] ?? 1);
-        $data['active_language_id'] = max(1, (int)$requestedLanguage);
-
-        if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            if (!$this->user->hasPermission('modify', 'cms/page')) {
-                $this->response->redirect($this->url->link('error/permission'));
-                return;
-            }
-            $errors = $this->csrfValid()
-                ? array_merge($this->validatePage($page_id), $this->validateBlockSubmission($page_id))
-                : [$this->language->get('error_csrf')];
-            if ($errors === []) {
-                $this->model_cms_page->editPage($page_id, $this->postPayload($page_id));
-                $this->setFlash($this->language->get('text_success_edit'));
-                $this->response->redirect($this->url->link('cms/page.edit|' . $page_id));
-                return;
-            }
-            $data['error'] = implode("\n", $errors);
-        }
-
-        $this->chrome($data);
-        $this->response->setOutput($this->load->view('cms/page_content_form', $data));
+        $this->response->redirect($this->url->link('cms/page.edit|' . $page_id));
     }
 
     /** Exclui via POST (GET jamais muta) */
@@ -278,7 +243,7 @@ class Page extends \Reamur\System\Engine\Controller {
             'entry_meta_title', 'entry_meta_description', 'entry_keyword',
             'entry_status', 'entry_sort_order',
             'button_save', 'button_cancel', 'text_enabled', 'text_disabled',
-            'text_meta_group', 'help_sort_order', 'help_description', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no',
+            'text_meta_group', 'help_sort_order', 'help_description', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
@@ -344,6 +309,10 @@ class Page extends \Reamur\System\Engine\Controller {
                 'invalidLink' => $data['text_inline_invalid_link'], 'toolbar' => $data['text_inline_toolbar'],
                 'textLabel' => $data['text_inline_text_label'], 'placeholder' => $data['text_inline_placeholder'],
                 'editorLabel' => $data['text_inline_editor_label'],
+                'ribbonHome' => $data['text_editor_home'], 'ribbonInsert' => $data['text_editor_insert'], 'ribbonView' => $data['text_editor_view'],
+                'groupClipboard' => $data['text_editor_clipboard'], 'groupTextFormat' => $data['text_editor_text_format'], 'groupParagraphAlign' => $data['text_editor_paragraph_alignment'],
+                'groupInsert' => $data['text_editor_group_insert'], 'groupPanels' => $data['text_editor_group_panels'], 'groupPreview' => $data['text_editor_group_preview'],
+                'closePanel' => $data['text_editor_close_panel'], 'alignLeft' => $data['text_editor_align_left'], 'alignCenter' => $data['text_editor_align_center'], 'alignRight' => $data['text_editor_align_right'],
                 'saveStateSaved' => $data['text_block_save_state_saved'], 'saveStateUnsaved' => $data['text_block_save_state_unsaved'], 'saveStateSaving' => $data['text_block_save_state_saving'],
                 'addBlock' => $data['text_block_add'], 'searchBlocks' => $data['text_block_search'], 'noBlocks' => $data['text_block_no_results'],
                 'categoryContent' => $data['text_block_category_content'], 'categoryMedia' => $data['text_block_category_media'], 'categoryLayout' => $data['text_block_category_layout'],

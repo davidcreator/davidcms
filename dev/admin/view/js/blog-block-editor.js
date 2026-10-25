@@ -24,7 +24,7 @@
     return { enter:'Open fullscreen editor', exit:'Back to form', dialog:'Fullscreen editor', elements:'Elements', structure:'Structure', settings:'Settings' };
   }
   const ICON_PATHS = {
-    plus:'M12 5v14M5 12h14', copy:'M8 8V4h12v12h-4M4 8h12v12H4z', undo:'M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-2', redo:'m15 14 5-5-5-5m5 5H10a6 6 0 0 0 0 12h2',
+    plus:'M12 5v14M5 12h14', alignLeft:'M4 6h16M4 10h10M4 14h16M4 18h10', alignCenter:'M4 6h16M7 10h10M4 14h16M7 18h10', alignRight:'M4 6h16M10 10h10M4 14h16M10 18h10', copy:'M8 8V4h12v12h-4M4 8h12v12H4z', undo:'M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-2', redo:'m15 14 5-5-5-5m5 5H10a6 6 0 0 0 0 12h2',
     desktop:'M3 4h18v13H3zM8 21h8M12 17v4', tablet:'M6 2h12v20H6zM11 18h2', mobile:'M8 2h8v20H8zM11 18h2',
     up:'m18 15-6-6-6 6M12 9v12', down:'m6 9 6 6 6-6M12 3v12', trash:'M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3',
     paragraph:'M4 6h16M4 10h16M4 14h10M4 18h10', heading:'M4 5v14M20 5v14M4 12h16', list:'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
@@ -32,8 +32,8 @@
     details:'M5 7h14M5 12h14M5 17h14M3 7h.01M3 12h.01M3 17h.01', spacer:'M12 3v18m-4-14 4-4 4 4m-8 10 4 4 4-4', code:'m8 6-6 6 6 6m8-12 6 6-6 6m-3-14-2 16', separator:'M4 12h16M12 7v10', group:'M4 4h16v16H4zM8 8h8v8H8z', columns:'M4 4h16v16H4zM12 4v16', gallery:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', cover:'M4 4h16v16H4zM4 15l5-5 4 4 3-3 4 5', table:'M4 4h16v16H4zM4 10h16M4 15h16M10 4v16M16 4v16', file:'M6 3h8l4 4v14H6zM14 3v5h5M9 13h6M9 17h6', audio:'M4 10v4m4-8v12m4-16v20m4-16v12m4-8v4', settings:'M4 7h16M4 17h16M8 7v0m8 10v0', outline:'M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h11', layers:'m12 3 9 5-9 5-9-5 9-5zm-9 9 9 5 9-5m-18 5 9 5 9-5', grip:'M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01', transform:'M4 7h14m0 0-3-3m3 3-3 3M20 17H6m0 0 3-3m-3 3 3 3',
     check:'m5 12 4 4L19 6', search:'m20 20-4.5-4.5M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0', help:'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', expand:'M8 3H3v5m0-5 7 7m6-7h5v5m0-5-7 7M3 16v5h5m-5 0 7-7m11 2v5h-5m5 0-7-7', collapse:'M8 3v5H3m0 0 7-7m6 7V3h5m0 0-7 7M3 16h5v5m0 0 7-7m1 2h5v5m0 0-7-7'
   };
-  const ACTION_ICONS = { 'toggle-inserter':'plus','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','file-media':'file','audio-media':'audio',media:'image','insert-pattern':'layers',insert:'plus','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent','toggle-fullscreen':'expand','builder-panel':'layers' };
-  const ICON_ONLY_ACTIONS = new Set(['toggle-inserter','paste-block','undo','redo','preview','move-up','move-down','duplicate','copy-block','delete','file-media','audio-media','media','format-mark','link-apply','link-remove','table-add-row','table-remove-row','table-add-column','table-remove-column','table-toggle-header','indent','outdent','toggle-fullscreen','builder-panel']);
+  const ACTION_ICONS = { 'toggle-inserter':'plus','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','file-media':'file','audio-media':'audio',media:'image','insert-pattern':'layers',insert:'plus','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent','toggle-fullscreen':'expand','builder-panel':'layers','align-text':'align-left' };
+  const ICON_ONLY_ACTIONS = new Set(['align-text','toggle-inserter','paste-block','undo','redo','preview','move-up','move-down','duplicate','copy-block','delete','file-media','audio-media','media','format-mark','link-apply','link-remove','table-add-row','table-remove-row','table-add-column','table-remove-column','table-toggle-header','indent','outdent','toggle-fullscreen','builder-panel']);
   const TYPE_ICONS = { 'core/paragraph':'paragraph','core/heading':'heading','core/list':'list','core/list-item':'list','core/image':'image','core/quote':'quote','core/video_embed':'video','core/button':'button','core/callout':'info','core/details':'details','core/spacer':'spacer','core/code':'code','core/separator':'separator','core/group':'group','core/columns':'columns','core/column':'columns','core/gallery':'gallery','core/cover':'cover','core/table':'table','core/table-row':'table','core/table-cell':'table','core/file':'file','core/audio':'audio' };
 
   function validLocalImage(src) {
@@ -390,7 +390,8 @@
       this.blockClipboard = null;
       this.preview = 'desktop';
       this.fullscreen = false;
-      this.activePanel = 'elements';
+      this.activePanel = null;
+      this.activeRibbonTab = 'home';
       this.fullscreenReturnFocus = null;
       this.fullscreenPreviousAttrs = null;
       this.dragId = null;
@@ -491,6 +492,14 @@
         });
       });
       this.root.addEventListener('keydown', (event) => {
+        const ribbonTab = event.target.closest('[data-action="ribbon-tab"]');
+        if (ribbonTab && ['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) {
+          const tabs = Array.from(this.root.querySelectorAll('[data-action="ribbon-tab"]'));
+          const index = tabs.indexOf(ribbonTab);
+          const next = event.key === 'Home' ? tabs[0] : (event.key === 'End' ? tabs[tabs.length - 1] : tabs[(index + (event.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]);
+          if (next) { event.preventDefault(); this.activeRibbonTab = next.dataset.tab; this.render(); const focus=this.root.querySelector('[data-action="ribbon-tab"][data-tab="' + this.activeRibbonTab + '"]'); if (focus) focus.focus(); }
+          return;
+        }
         const outlineButton = event.target.closest('.rb-outline-button');
         if (outlineButton && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home','End'].includes(event.key)) {
           const targetId = getOutlineNavigationTarget(this.state.blocks, outlineButton.dataset.nodeId, event.key);
@@ -553,10 +562,14 @@
       if (name === 'insert') this.insert(button.dataset.type, button.dataset.count);
       else if (name === 'insert-pattern') this.insertPattern(button.dataset.pattern);
       else if (name === 'toggle-inserter') {
-        if (this.fullscreen) { this.activePanel = 'elements'; this.inserterOpen = false; this.render(); const search=this.root.querySelector('[data-inserter-search]'); if (search) search.focus(); }
-        else this.inserterOpen ? this.closeInserter(true) : this.openInserter(button.dataset.afterId || null, false, button);
+        const wasOpen = this.activePanel === 'elements';
+        this.activePanel = wasOpen ? null : 'elements'; this.inserterOpen = !wasOpen;
+        this.render();
+        if (!wasOpen) { const search=this.root.querySelector('[data-inserter-search]'); if (search) search.focus(); }
       }
-      else if (name === 'builder-panel') { this.activePanel = button.dataset.panel; this.render(); const active=this.root.querySelector('[data-builder-panel= + this.activePanel + ]'); if (active) active.focus(); }
+      else if (name === 'ribbon-tab') { this.activeRibbonTab = button.dataset.tab; this.render(); }
+      else if (name === 'builder-panel') { this.activePanel = this.activePanel === button.dataset.panel ? null : button.dataset.panel; this.inserterOpen = this.activePanel === 'elements'; this.render(); }
+      else if (name === 'align-text') this.alignSelectedText(button.dataset.alignment);
       else if (name === 'duplicate') this.duplicateNode(button.dataset.nodeId || this.selectedId);
       else if (name === 'copy-block') this.copyBlock(button.dataset.nodeId || this.selectedId);
       else if (name === 'paste-block') this.pasteBlock();
@@ -629,33 +642,10 @@
       this.root.querySelectorAll('.rb-block').forEach((card) => card.classList.toggle('is-selected', card.dataset.nodeId === id));
       this.root.querySelectorAll('[data-action="outline-select"]').forEach((button) => { if (button.dataset.nodeId === id) button.setAttribute('aria-current','location'); else button.removeAttribute('aria-current'); });
       this.root.querySelectorAll('.rb-inline-toolbar').forEach((toolbar) => toolbar.remove());
-      const found = this.findPath(this.state.blocks, id);
-      const editor = this.findEditor(id);
-      if (found && editor && BLOCK_TEXT_TYPES.has(found.node.type)) editor.before(this.renderInlineToolbar(found.node));
+      this.updateRibbonState();
       const oldInspector = this.root.querySelector('.rb-inspector');
       if (oldInspector) oldInspector.replaceWith(this.renderInspector());
       this.updateClipboardButtons();
-    }
-
-    renderInlineToolbar(node) {
-      const toolbar = this.el('div', 'rb-inline-toolbar');
-      toolbar.setAttribute('role', 'toolbar');
-      toolbar.setAttribute('aria-label', this.strings.toolbar);
-      INLINE_MARKS.forEach((mark) => {
-        const button = this.button(this.strings[mark] || mark, 'format-mark', { mark });
-        button.setAttribute('aria-label', this.strings[mark] || mark);
-        button.setAttribute('aria-pressed', 'false');
-        toolbar.append(button);
-      });
-      if (!['core/button','core/file','core/audio'].includes(node.type)) {
-        const link = this.el('input', 'rb-inline-link');
-        link.type = 'text'; link.value = this.linkDraft; link.placeholder = this.strings.linkPlaceholder;
-        link.setAttribute('aria-label', this.strings.link); link.dataset.inlineLinkInput = '1';
-        toolbar.append(link, this.button(this.strings.applyLink, 'link-apply'), this.button(this.strings.removeLink, 'link-remove'));
-      }
-      const status = this.el('span', 'rb-inline-status', this.inlineNotice);
-      status.setAttribute('role', 'status'); toolbar.append(status);
-      return toolbar;
     }
 
     captureInlineSelection() {
@@ -1239,6 +1229,7 @@
     button(label, action, extra) {
       const b = this.el('button', 'rb-button'); b.type = 'button'; b.dataset.action = action;
       const type = extra && extra.type; let iconName = (extra && extra.icon) || (type && TYPE_ICONS[type]) || ACTION_ICONS[action];
+      if (action === 'align-text' && extra && extra.alignment) iconName = ({left:'alignLeft',center:'alignCenter',right:'alignRight'})[extra.alignment] || 'alignLeft';
       if (action === 'preview' && extra && extra.size) iconName = extra.size === 'mobile' ? 'mobile' : (extra.size === 'tablet' ? 'tablet' : 'desktop');
       if (action === 'format-mark' && extra && extra.mark) iconName = ({bold:'bold',italic:'italic',underline:'underline',strike:'strike',code:'code',link:'link'})[extra.mark] || 'settings';
       if (iconName) b.append(this.icon(iconName, 'rb-icon'));
@@ -1251,6 +1242,57 @@
       if (extra) Object.keys(extra).forEach((key) => { b.dataset[key] = extra[key]; }); return b;
     }
 
+    alignSelectedText(alignment) {
+      const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null;
+      if (!found || found.node.type !== 'core/paragraph' || !['left','center','right'].includes(alignment)) return;
+      this.updateNode(found.node.id, (node) => { node.attributes.align = alignment; });
+      this.updateRibbonState();
+    }
+
+    updateRibbonState() {
+      const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null;
+      this.root.querySelectorAll('[data-action="align-text"]').forEach((button) => {
+        button.disabled = !found || found.node.type !== 'core/paragraph';
+        button.setAttribute('aria-pressed', String(!!found && found.node.type === 'core/paragraph' && (found.node.attributes.align || 'left') === button.dataset.alignment));
+      });
+      this.updateInlineToolbarState();
+    }
+
+    renderRibbonGroup(label, className) {
+      const group = this.el('section', 'rb-ribbon-group' + (className ? ' ' + className : ''));
+      group.setAttribute('aria-label', label);
+      group.append(this.el('span','rb-ribbon-group-title',label));
+      const tools = this.el('div','rb-ribbon-tools'); group.append(tools);
+      return { group, tools };
+    }
+
+    renderRibbonContents() {
+      const panel = this.el('div','rb-ribbon-content'); panel.id='rb-ribbon-panel-'+this.instance; panel.setAttribute('role','tabpanel'); panel.setAttribute('aria-label', this.activeRibbonTab === 'home' ? (this.strings.ribbonHome||'Home') : (this.activeRibbonTab === 'insert' ? (this.strings.ribbonInsert||'Insert') : (this.strings.ribbonView||'View')));
+      const addButton = (tools, label, action, extra) => tools.append(this.button(label, action, extra));
+      if (this.activeRibbonTab === 'home') {
+        let g=this.renderRibbonGroup(this.strings.groupClipboard||'Área de transferência');
+        addButton(g.tools,this.strings.addBlock,'toggle-inserter'); addButton(g.tools,this.strings.pasteBlock,'paste-block'); addButton(g.tools,this.strings.undo,'undo'); addButton(g.tools,this.strings.redo,'redo'); panel.append(g.group);
+        g=this.renderRibbonGroup(this.strings.groupTextFormat||'Formatação de texto');
+        INLINE_MARKS.forEach((mark)=>{ const b=this.button(this.strings[mark]||mark,'format-mark',{mark}); b.dataset.mark=mark; b.setAttribute('aria-pressed','false'); g.tools.append(b); });
+        const link=this.el('input','rb-inline-link'); link.type='text'; link.value=this.linkDraft; link.placeholder=this.strings.linkPlaceholder; link.setAttribute('aria-label',this.strings.link); link.dataset.inlineLinkInput='1'; g.tools.append(link);
+        addButton(g.tools,this.strings.applyLink,'link-apply'); addButton(g.tools,this.strings.removeLink,'link-remove'); panel.append(g.group);
+        g=this.renderRibbonGroup(this.strings.groupParagraphAlign||'Alinhamento do parágrafo');
+        [['left',this.strings.alignLeft||'Esquerda'],['center',this.strings.alignCenter||'Centralizar'],['right',this.strings.alignRight||'Direita']].forEach(([alignment,label])=>{const b=this.button(label,'align-text',{alignment}); b.dataset.alignment=alignment; g.tools.append(b);}); panel.append(g.group);
+      } else if (this.activeRibbonTab === 'insert') {
+        let g=this.renderRibbonGroup(this.strings.groupInsert||'Inserir conteúdo');
+        addButton(g.tools,this.strings.addBlock,'toggle-inserter');
+        [['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline']].forEach(([panel,label,icon])=>addButton(g.tools,label,'builder-panel',{panel,icon}));
+        panel.append(g.group);
+      } else if (this.activeRibbonTab === 'view') {
+        let g=this.renderRibbonGroup(this.strings.groupPanels||'Painéis recolhíveis');
+        [['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline'],['settings',this.strings.builderSettings,'settings']].forEach(([panel,label,icon])=>{const b=this.button(label,'builder-panel',{panel,icon});b.setAttribute('aria-pressed',String(this.activePanel===panel));g.tools.append(b);}); panel.append(g.group);
+        g=this.renderRibbonGroup(this.strings.groupPreview||'Pré-visualização');
+        [['desktop',this.strings.previewDesktop],['tablet',this.strings.previewTablet],['mobile',this.strings.previewMobile]].forEach(([size,label])=>{const b=this.button(label,'preview',{size});b.setAttribute('aria-pressed',String(size===this.preview));g.tools.append(b);});
+        const full=this.button(this.fullscreen?this.strings.fullscreenExit:this.strings.fullscreenEnter,'toggle-fullscreen',{icon:this.fullscreen?'collapse':'expand'});g.tools.append(full);panel.append(g.group);
+      }
+      return panel;
+    }
+
     render() {
       this.root.replaceChildren();
       if (this.initialError) { const warn = this.el('p', 'rb-alert', this.strings.initialInvalid + ' (' + this.initialError + ').'); warn.setAttribute('role','alert'); this.root.setAttribute('aria-invalid','true'); this.root.append(warn); return; }
@@ -1259,43 +1301,24 @@
       const identity = this.el('div','rb-editor-identity'); identity.append(this.icon('layers','rb-brand-icon'));
       const identityText = this.el('div','rb-editor-identity-copy'); identityText.append(this.el('strong','rb-editor-brand','BDREditor'),this.el('span','rb-editor-subtitle',this.strings.editorTools));
       identity.append(identityText); masthead.append(identity); this.root.append(masthead);
-      const toolbar = this.el('div', 'rb-toolbar'); toolbar.setAttribute('role', 'toolbar'); toolbar.setAttribute('aria-label', this.strings.editorTools);
-      const insert = this.button(this.strings.addBlock, 'toggle-inserter', { afterId:this.selectedId || '' }); insert.classList.add('rb-button-primary');
-      insert.setAttribute('aria-expanded', String(this.fullscreen ? this.activePanel === 'elements' : this.inserterOpen)); insert.setAttribute('aria-controls', this.fullscreen ? 'rb-builder-panel-' + this.instance : 'rb-inserter-' + this.instance); toolbar.append(insert);
-      const paste = this.button(this.strings.pasteBlock, 'paste-block'); paste.classList.add('rb-button-secondary'); paste.disabled = !this.canPasteBlock(); toolbar.append(paste);
-      const history = this.el('div', 'rb-history rb-toolbar-group');
-      const undo = this.button(this.strings.undo, 'undo'); undo.dataset.history = 'undo';
-      const redo = this.button(this.strings.redo, 'redo'); redo.dataset.history = 'redo';
-      history.append(undo, redo); toolbar.append(history);
-      const previews = this.el('div', 'rb-previews rb-toolbar-group');
-      [['desktop',this.strings.previewDesktop],['tablet',this.strings.previewTablet],['mobile',this.strings.previewMobile]].forEach(([size,label]) => { const b = this.button(label, 'preview', { size }); b.setAttribute('aria-pressed', String(size === this.preview)); previews.append(b); });
-      toolbar.append(previews);
-      const fullscreen = this.button(this.fullscreen ? this.strings.fullscreenExit : this.strings.fullscreenEnter, 'toggle-fullscreen', { icon:this.fullscreen ? 'collapse' : 'expand' });
-      fullscreen.classList.add('rb-fullscreen-toggle'); toolbar.append(fullscreen);
-      const shortcutHelp = this.el('details', 'rb-keyboard-help');
-      shortcutHelp.append(this.el('summary', '', this.strings.keyboardShortcutsTitle));
-      shortcutHelp.append(this.el('p', 'rb-keyboard-help-text', this.strings.keyboardShortcuts));
-      toolbar.append(shortcutHelp); this.root.append(toolbar);
-      const inserterMenu = this.renderInserter(this.fullscreen); inserterMenu.id = 'rb-inserter-' + this.instance;
-      if (!this.fullscreen) this.root.append(inserterMenu);
-
-      const layout = this.el('div', 'rb-layout' + (this.fullscreen ? ' rb-builder-layout' : ''));
+      const ribbon = this.el('section','rb-ribbon'); ribbon.setAttribute('aria-label',this.strings.editorTools);
+      const ribbonTabs=this.el('div','rb-ribbon-tabs'); ribbonTabs.setAttribute('role','tablist');
+      [['home',this.strings.ribbonHome||'Início'],['insert',this.strings.ribbonInsert||'Inserir'],['view',this.strings.ribbonView||'Exibir']].forEach(([tab,label])=>{const b=this.el('button','rb-ribbon-tab',label);b.type='button';b.dataset.action='ribbon-tab';b.dataset.tab=tab;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(this.activeRibbonTab===tab));b.setAttribute('aria-controls','rb-ribbon-panel-'+this.instance);b.tabIndex=this.activeRibbonTab===tab?0:-1;ribbonTabs.append(b);});
+      ribbon.append(ribbonTabs,this.renderRibbonContents()); this.root.append(ribbon);
+      const inserterMenu = this.renderInserter(this.activePanel === 'elements' && this.inserterOpen); inserterMenu.id = 'rb-inserter-' + this.instance;
+      const layout = this.el('div', 'rb-layout' + (this.fullscreen ? ' rb-builder-layout' : '') + (this.activePanel ? ' rb-has-panel' : ''));
       const canvas = this.el('div', 'rb-canvas'); canvas.setAttribute('role','region'); canvas.setAttribute('aria-label', this.strings.canvas);
       const canvasHead = this.el('div', 'rb-canvas-head'); canvasHead.append(this.icon('layers','rb-icon'),this.el('span','',this.strings.canvas),this.el('span','rb-canvas-count',String(this.state.blocks.length))); canvas.append(canvasHead);
       if (!this.state.blocks.length) canvas.append(this.el('p', 'rb-empty', this.strings.canvasEmpty));
       this.state.blocks.forEach((node) => canvas.append(this.renderNode(node, true)));
-      if (this.fullscreen) {
-        const sidebar=this.el('aside','rb-builder-sidebar');
-        const panelNav=this.el('div','rb-builder-panel-nav'); panelNav.setAttribute('role','group'); panelNav.setAttribute('aria-label',this.strings.editorTools);
-        const panelOptions=[['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline'],['settings',this.strings.builderSettings,'settings']];
-        panelOptions.forEach(([panel,label,icon])=>{const tab=this.button(label,'builder-panel',{panel,icon});tab.classList.add('rb-builder-panel-button');tab.dataset.builderPanel=panel;tab.setAttribute('aria-pressed',String(this.activePanel===panel));panelNav.append(tab);});
-        sidebar.append(panelNav);
+      if (this.activePanel) {
+        const sidebar=this.el('aside','rb-builder-sidebar rb-collapsible-panel');
         const panelBody=this.el('div','rb-builder-panel-body'); panelBody.id='rb-builder-panel-'+this.instance; panelBody.setAttribute('role','region');
         if (this.activePanel==='elements') { panelBody.setAttribute('aria-label',this.strings.builderElements); panelBody.append(inserterMenu); }
         else if (this.activePanel==='structure') { panelBody.setAttribute('aria-label',this.strings.builderStructure); panelBody.append(this.renderOutline()); }
         else { panelBody.setAttribute('aria-label',this.strings.builderSettings); panelBody.append(this.renderInspector()); }
-        sidebar.append(panelBody); layout.append(sidebar,canvas);
-      } else layout.append(this.renderOutline(), canvas, this.renderInspector());
+        const close=this.button(this.strings.closePanel || 'Fechar painel','builder-panel',{panel:this.activePanel,icon:'collapse'}); close.classList.add('rb-panel-close'); panelBody.prepend(close); sidebar.append(panelBody); layout.append(sidebar,canvas);
+      } else layout.append(canvas);
       this.root.append(layout);
       const footText = this.options.connectedSave === true
         ? 'As alterações ficam no formulário e só são persistidas ao clicar em Salvar; não há autosave.'
@@ -1306,6 +1329,7 @@
       const live = this.el('span','rb-sr-only',this.statusMessage); live.setAttribute('role','status'); live.setAttribute('aria-live','polite'); live.dataset.editorStatus = '1'; this.root.append(live);
       this.updateHistoryButtons();
       this.updateClipboardButtons();
+      this.updateRibbonState();
       if (this.inserterOpen && this.inserterQuery) this.filterInserter();
     }
 
@@ -1366,7 +1390,6 @@
       head.append(this.icon(TYPE_ICONS[node.type] || 'layers','rb-block-type-icon'),this.el('span', 'rb-block-title', this.label(node.type)));
       card.append(head, this.renderBlockToolbar(node));
       if (TEXT_TYPES.has(node.type)) {
-        if (node.id === this.selectedId) card.append(this.renderInlineToolbar(node));
         const editor = this.el('div', 'rb-content' + (node.type === 'core/button' ? ' rb-content-button-preview' : '')); editor.contentEditable = 'true'; editor.dataset.editContent = node.id;
         editor.setAttribute('role', 'textbox'); editor.setAttribute('aria-multiline', 'true');
         editor.setAttribute('aria-label', this.strings.textLabel + ': ' + this.label(node.type)); editor.setAttribute('data-placeholder', this.strings.placeholder || '');
@@ -1402,7 +1425,7 @@
             if (isHeader) td.setAttribute('scope','col');
             const editor = this.el('div','rb-table-cell-content'); editor.contentEditable = 'true'; editor.dataset.editContent = cell.id; editor.setAttribute('role','textbox'); editor.setAttribute('aria-multiline','true');
             editor.setAttribute('aria-label',(this.strings.table.cellLabel || 'Cell %1$d, %2$d').replace('%1$d',String(rowIndex+1)).replace('%2$d',String(colIndex+1)));
-            buildInlineDom(editor,cell.content); if (cell.id === this.selectedId) td.append(this.renderInlineToolbar(cell)); td.append(editor); tr.append(td);
+            buildInlineDom(editor,cell.content); td.append(editor); tr.append(td);
           });
           body.append(tr);
         });
@@ -1474,7 +1497,6 @@
       };
       const n = found.node;
       if (n.type === 'core/heading') addField('Nível', 'level', n.attributes.level, 'number');
-      if (n.type === 'core/paragraph') addField('Alinhamento', 'align', n.attributes.align || 'left', 'text', [['left','Esquerda'],['center','Centro'],['right','Direita']]);
       if (n.type === 'core/list') addField('Tipo de lista', 'ordered', n.attributes.ordered ? 'true' : 'false', 'text', [['false','Marcadores'],['true','Numerada']]);
       if (n.type === 'core/file') {
         addField(this.strings.file.source, 'src', n.attributes.src, 'text');
