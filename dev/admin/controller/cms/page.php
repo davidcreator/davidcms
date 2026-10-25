@@ -269,7 +269,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 'text_media_upload_success', 'text_media_folder_created', 'text_media_file_deleted',
                 'text_media_folder_deleted', 'text_media_upload_hint', 'text_media_no_folders',
                 'text_download_library', 'text_download_empty', 'text_download_upload', 'text_download_hint', 'text_download_limit', 'button_download_select', 'button_download_upload',
-                'text_audio_library', 'text_audio_empty', 'text_audio_hint', 'button_audio_select', 'error_audio_generic',
+                'text_audio_library', 'text_audio_empty', 'text_audio_hint', 'text_audio_drag_hint', 'button_audio_select', 'error_audio_generic',
                 'error_download_upload_no_file', 'error_download_upload_size', 'error_download_upload_type', 'error_download_upload_move', 'error_download_generic',
                 'entry_media_search', 'entry_media_folder_name', 'entry_media_external_url',
                 'button_media_library', 'button_media_upload', 'button_media_create_folder',
@@ -380,6 +380,20 @@ class Page extends \Reamur\System\Engine\Controller {
                 $this->document->addScript($site . 'view/js/blog-block-import.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-block-editor.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-block-editor-init.js?v=' . $version);
+                $this->document->addScript($site . 'view/js/blog-audio-media.js?v=' . $version);
+
+                // Existing catalog endpoint enforces modify on blog/blog; expose only when that exact ACL is granted.
+                $data['can_use_audio_catalog'] = $this->user->hasPermission('modify', 'blog/blog');
+                $data['media_config'] = [
+                    'audioListUrl' => $this->url->link('blog/blog.audioList'),
+                    'strings' => [
+                        'audioError' => $data['error_audio_generic'],
+                        'loading' => $data['text_media_loading'],
+                        'audioEmpty' => $data['text_audio_empty'],
+                        'audioDragHint' => $data['text_audio_drag_hint'],
+                        'selectAudio' => $data['button_audio_select'],
+                    ],
+                ];
 
         }
 

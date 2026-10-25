@@ -34,6 +34,14 @@
         state.page = Number(result.page) || 1; state.pages = Number(result.pages) || 1; list.replaceChildren();
         (result.files || []).forEach(function (file) {
           var row = document.createElement('div'); row.className = 'list-group-item d-flex justify-content-between align-items-center gap-3';
+          if (typeof file.path === 'string' && /^view\/audio\/blog\/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$/.test(file.path) && file.path.indexOf('..') === -1) {
+            row.draggable = true; row.setAttribute('aria-label', strings.audioDragHint || 'Drag audio into the editor');
+            row.addEventListener('dragstart', function (event) { event.dataTransfer.setData('application/x-reamurcms-audio', file.path); event.dataTransfer.effectAllowed = 'copy'; });
+          }
+          if (typeof file.path === 'string' && /^view\/audio\/blog\/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$/.test(file.path) && file.path.indexOf('..') === -1) {
+            row.draggable = true; row.setAttribute('aria-label', strings.audioDragHint || 'Drag audio into the editor');
+            row.addEventListener('dragstart', function (event) { event.dataTransfer.setData('application/x-reamurcms-audio', file.path); event.dataTransfer.effectAllowed = 'copy'; });
+          }
           var label = document.createElement('span'); label.className = 'text-break'; label.textContent = file.name + ' · ' + Math.ceil((Number(file.size) || 0) / 1024) + ' KB';
           var button = document.createElement('button'); button.type = 'button'; button.className = 'btn btn-sm btn-outline-primary flex-shrink-0'; button.textContent = strings.selectAudio || 'Use audio';
           button.setAttribute('aria-label', (strings.selectAudio || 'Use audio') + ': ' + file.name); button.addEventListener('click', function () { choose(file.path); });

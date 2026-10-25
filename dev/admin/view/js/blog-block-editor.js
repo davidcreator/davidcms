@@ -545,11 +545,15 @@
         this.insertPlainText(field, text);
       });
       this.root.addEventListener('dragover', (event) => {
-        if (event.dataTransfer && Array.from(event.dataTransfer.types || []).includes('Files')) { event.preventDefault(); this.root.classList.add('rb-file-drop-active'); }
+        if (event.dataTransfer && (Array.from(event.dataTransfer.types || []).includes('Files') || Array.from(event.dataTransfer.types || []).includes('application/x-reamurcms-audio'))) { event.preventDefault(); this.root.classList.add('rb-file-drop-active'); }
       });
       this.root.addEventListener('dragleave', (event) => { if (!this.root.contains(event.relatedTarget)) this.root.classList.remove('rb-file-drop-active'); });
       this.root.addEventListener('drop', (event) => {
         this.root.classList.remove('rb-file-drop-active');
+        const audioPath = event.dataTransfer && event.dataTransfer.getData('application/x-reamurcms-audio');
+        if (audioPath) {
+          event.preventDefault(); event.stopImmediatePropagation(); this.insertAudioReference(audioPath); return;
+        }
         const files=event.dataTransfer && Array.from(event.dataTransfer.files || []);
         if (files && files.length) { event.preventDefault(); event.stopImmediatePropagation(); this.importLocalFile(files[0]); }
       });
@@ -935,6 +939,13 @@
     finishInsert(next, node) {
       this.inserterOpen = false; this.inserterReturnFocus = null; this.slashTrigger = null; this.insertAfterId = node.id; this.inserterQuery = ''; this.statusMessage = this.strings.statusInserted;
       this.commit(next, node.id); this.focusNode(node.id);
+    }
+
+    insertAudioReference(path) {
+      if (typeof path !== 'string' || !/^view\/audio\/blog\/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$/.test(path) || path.indexOf('..') !== -1) return;
+      const previousId = this.selectedId;
+      this.insert('core/audio');
+      if (this.selectedId && this.selectedId !== previousId) this.updateNode(this.selectedId, (node) => { if (node.type === 'core/audio') node.attributes.src = path; });
     }
 
     insert(type, presetCount) {
@@ -1588,11 +1599,11 @@
       if (n.type === 'core/list') addField('Tipo de lista', 'ordered', n.attributes.ordered ? 'true' : 'false', 'text', [['false','Marcadores'],['true','Numerada']]);
       if (n.type === 'core/file') {
         addField(this.strings.file.source, 'src', n.attributes.src, 'text');
-        if (this.options.mediaPickers !== false) aside.append(this.button(this.strings.file.choose, 'file-media', {nodeId:n.id}));
+        if (this.options.filePicker === true || (this.options.filePicker !== false && this.options.mediaPickers !== false)) aside.append(this.button(this.strings.file.choose, 'file-media', {nodeId:n.id}));
       }
       if (n.type === 'core/audio') {
         addField(this.strings.audio.source, 'src', n.attributes.src, 'text');
-        if (this.options.mediaPickers !== false) aside.append(this.button(this.strings.audio.choose, 'audio-media', {nodeId:n.id}));
+        if (this.options.audioPicker === true || (this.options.audioPicker !== false && this.options.mediaPickers !== false)) aside.append(this.button(this.strings.audio.choose, 'audio-media', {nodeId:n.id}));
       }
       if (n.type === 'core/image') {
         addField(this.strings.media.source, 'src', n.attributes.src, 'text'); if (this.options.mediaPickers !== false) aside.append(this.button(this.strings.media.placeholder, 'media'));

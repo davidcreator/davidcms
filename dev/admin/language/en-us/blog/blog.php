@@ -286,6 +286,7 @@ $_['text_block_audio_choose'] = 'Choose audio from library';
 $_['text_audio_library'] = 'Audio library';
 $_['text_audio_empty'] = 'No supported audio found in catalog/view/audio/blog/.';
 $_['text_audio_hint'] = 'Local MP3, OGG, or WAV only. This increment does not add audio upload or deletion.';
+$_['text_audio_drag_hint']                 = 'Drag into the editor to insert this audio.';
 $_['button_audio_select'] = 'Use this audio';
 $_['error_audio_generic'] = 'Could not load the audio library.';
 

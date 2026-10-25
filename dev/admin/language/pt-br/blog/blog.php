@@ -286,6 +286,7 @@ $_['text_block_audio_choose'] = 'Escolher áudio da biblioteca';
 $_['text_audio_library'] = 'Biblioteca de áudio';
 $_['text_audio_empty'] = 'Nenhum áudio compatível encontrado em catalog/view/audio/blog/.';
 $_['text_audio_hint'] = 'Somente MP3, OGG ou WAV locais. Esta versão não permite envio nem exclusão de áudio.';
+$_['text_audio_drag_hint']                 = 'Arraste para o editor para inserir este áudio.';
 $_['button_audio_select'] = 'Usar este áudio';
 $_['error_audio_generic'] = 'Não foi possível carregar a biblioteca de áudio.';
 

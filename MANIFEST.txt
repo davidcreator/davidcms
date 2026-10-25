@@ -1,5 +1,30 @@
-Package: BDREditor-Office-Canvas-Fidelity-Phase-2
-Base: davidcreator/davidcms main @ 175da409c56ce65c665bc647060b581633af8caf (read-only check, 2026-10-25)
-Purpose: fidelity improvements for local DOCX/XLSX/PPTX and Canvas IMSCC conversion.
-Only selective files are included. Core editor/controller/template/language copies match the checked base and support bundled regression checks/preview.
-No clone, database dump, credentials, migrations, deployment, GitHub write, database write, staging or production action.
+BDREditor-Existing-Audio-Media-Phase-3
+Incremental source package for ReamurCMS BDREditor, Phase 3.
+Reference base: davidcreator/davidcms main fe19221806a19ba249e4eaa5725c93971bfbcf96 (read-only).
+Apply files preserving relative paths at project root. No database migration, GitHub write, staging, or production changes.
+
+Included files:
+README.md
+dev/admin/controller/cms/page.php
+dev/admin/language/en-us/blog/blog.php
+dev/admin/language/en-us/cms/page.php
+dev/admin/language/es-eu/blog/blog.php
+dev/admin/language/es-eu/cms/page.php
+dev/admin/language/pt-br/blog/blog.php
+dev/admin/language/pt-br/cms/page.php
+dev/admin/view/css/blog-block-editor.css
+dev/admin/view/js/blog-audio-media.js
+dev/admin/view/js/blog-block-editor-init.js
+dev/admin/view/js/blog-block-editor.js
+dev/admin/view/js/blog-block-import.js
+dev/admin/view/template/cms/page_content_form.twig
+dev/admin/view/template/cms/page_form.twig
+dev/system/library/blog/block_document.php
+docs/CHANGELOG.md
+docs/IMPORT_FORMATS.md
+docs/MEDIA_LIBRARY_PHASE_3.md
+preview/index.html
+tools/e2e/check_audio_catalog.cjs
+tools/e2e/check_page_content_flow.cjs
+tools/e2e/check_preview_import.cjs
+tools/e2e/check_single_page_ribbon.cjs
