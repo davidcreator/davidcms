@@ -1,46 +1,52 @@
-# BDREditor — bloco arquivo/download
+# BDREditor — incremento `core/audio`
 
-Incremento local do editor nativo do ReamurCMS. O Gutenberg continua sendo apenas referência conceitual: não há dependência, código ou assets Gutenberg/WordPress.
+Pacote cumulativo de revisão para o editor exclusivo do ReamurCMS. Acrescenta o bloco nativo `core/audio` ao pacote anterior `core/file`/download. Gutenberg permanece apenas referência conceitual: sem dependência, código ou assets Gutenberg/WordPress.
 
-## O que foi criado
+## O que entra neste incremento
 
-- Novo bloco `core/file` no contrato v2, com referência local de arquivo e rótulo rich-text editável/acessível.
-- Seletor e upload dedicados à raiz `catalog/view/download/blog/`; não mistura documentos com a biblioteca de imagens.
-- Listagem e upload protegidos por ACL `modify` e CSRF; não há endpoint de exclusão para downloads.
-- Allowlist inicial: PDF, DOCX, XLSX, PPTX, ODT, ODS, CSV e TXT. Upload limitado a 2 MiB, MIME detectado e compatibilidade de arquivo compactado Office/ODF verificada quando necessária.
-- Nome de armazenamento criado pelo servidor com sufixo aleatório; o nome do usuário não é usado como caminho.
-- Validação client/server de caminho, extensão e rótulo. Renderer público só emite link fixo `<a download>` e não renderiza arquivo ausente, symlink ou com MIME inválido.
-- Strings PT-BR, EN-US e ES-EU; sem schema, migration, tabela ou persistência nova.
+- Novo bloco `core/audio` em formato v2, com referência local e rótulo rich-text editável.
+- Player nativo `<audio controls preload="none">`, label acessível, sem autoplay, script, embed ou origem externa.
+- Biblioteca somente leitura da raiz dedicada `catalog/view/audio/blog/`; lista somente MP3, OGG e WAV cujo MIME detectado corresponda à extensão.
+- Endpoint de listagem GET protegido por ACL `modify`; ao salvar, o servidor revalida referência e arquivo real.
+- Renderer público falha fechado para arquivo ausente, symlink, caminho fora da raiz ou MIME incompatível.
+- Strings PT-BR, EN-US e ES-EU.
+- **Não** adiciona upload, exclusão, rename, URL remota, schema, migration ou tabela. A pasta pode ser criada/provisionada manualmente e os arquivos de áudio não são incluídos no pacote.
 
-## Instalação/revisão
+O pacote retém as mudanças do incremento anterior de downloads (`core/file`) para facilitar revisão cumulativa; as restrições do incremento anterior permanecem descritas em `docs/BDREditor-File-Download.md`. A cópia-base foi conferida contra os fontes pontuais de `main` no HEAD `142bc89d153f49dd7adc85adf91d2b97c75f52d8` (somente leitura); este pacote local não publica nem altera o GitHub.
 
-Os caminhos em `dev/` espelham os do ReamurCMS. Revisar e aplicar somente os arquivos do pacote; ele não contém o projeto inteiro. O pacote foi montado a partir do estado `main` em `829ed0e7af6ff622e321c2528ff20f3ee6d34fab` e dos fontes locais da tarefa `core/table` já publicados pelo usuário. Não envia código ao GitHub.
+## Raízes e provisionamento
 
-## Verificações executadas
+1. Aplicar os arquivos pontuais sob `dev/` após revisão.
+2. Provisionar MP3, OGG ou WAV aprovados por você em `catalog/view/audio/blog/` por seu fluxo de release/infra. Não coloque áudio privado ou cujo uso/licença não permita publicação.
+3. Confirmar permissões de leitura do processo PHP e do servidor web. O endpoint lê apenas nomes e metadados e não altera o conteúdo da pasta.
+4. Cache-bust dos assets deve seguir a convenção já existente do CMS. Não foi feito deploy nem alteração remota.
+
+`dev/catalog/view/audio/blog/index.html` é uma página neutra para reduzir risco de listagem de diretório; não inclui áudio fictício.
+
+## Verificações
 
 ```sh
 node --check dev/admin/view/js/blog-block-editor.js
-node --check dev/admin/view/js/blog-file-media.js
-node --check tools/e2e/e2e_bdre_file_static.cjs
-node tools/e2e/e2e_bdre_file_static.cjs
-python3 -m json.tool tests/fixtures/bdre_file.json >/dev/null
+node --check dev/admin/view/js/blog-audio-media.js
+node --check tools/e2e/e2e_bdre_audio_static.cjs
+node tools/e2e/e2e_bdre_audio_static.cjs
+python3 -m json.tool tests/fixtures/core_audio.json >/dev/null
 ```
 
-O checker é estático: executa apenas o validador JavaScript em VM sem DOM/browser contra fixture sintética e verifica fontes/strings/endpoints por presença de contrato. Ele não prova integração PHP, comportamento do upload real, MIME no servidor, rendering, segurança de servidor web, leitor de tela nem E2E real.
+Executado nesta revisão: suite áudio **49 PASS**, suite cumulativa `core/file` **48 PASS**, `node --check` nos scripts envolvidos e validação JSON das duas fixtures. O checker usa fixture sintética e executa apenas o validador JavaScript isolado em VM sem DOM/browser; além disso, procura contratos em fontes, rotas, ACL, MIME, renderer e traduções. **Não comprova** integração real no CMS, PHP, MIME do ambiente, configuração de servidor, reprodução em navegadores ou acessibilidade por leitor de tela.
 
-**Não executados por instrução:** PHP, SQL, browser, aplicação, testes runtime, staging, deploy, migrations ou banco. Staging permanece pausado.
+## Fora do escopo / segurança
 
-## Limites conhecidos antes de release
+- Nenhum upload ou exclusão: evita adicionar novos vetores de escrita e impede que o editor altere acervo existente.
+- Os arquivos são servidos publicamente pelo catálogo; não use a pasta para conteúdo confidencial ou áudio com direitos incertos.
+- MIME/extensão e existência são checados no catálogo e no renderer, mas isso não é antivírus nem análise semântica do áudio.
+- Não foram executados PHP/runtime, navegador, banco, staging, deploy, migrations, testes destrutivos ou escrita no GitHub.
+- Nenhuma numeração oficial de tarefa foi inventada ou atribuída.
 
-- O ambiente não tem `upload_max_filesize`/`post_max_size` versionados. O limite do app foi mantido em 2 MiB (o mesmo teto do fluxo de imagens) e precisa caber nos limites PHP do servidor mais o overhead multipart.
-- Office/ODF cujo `finfo` identifica como `application/zip` exige a extensão PHP `ZipArchive`; sem ela, o upload falha fechado.
-- A pasta é pública por decisão de produto: não usar para documentos privados/sensíveis. O incremento não promete DRM, antivírus, DLP nem controle por usuário.
-- A validação MIME com `finfo` reduz extensão/conteúdo incompatíveis, mas não é antivírus nem garante ausência de conteúdo malicioso dentro de documentos complexos.
-- Nenhuma nova numeração oficial foi atribuída à tarefa.
+## Pacote
 
-## Arquivos de apoio
-
-- Contrato e critérios: `docs/BDREditor-File-Download.md`
-- Escopo/decisões: `docs/BDREditor-File-Download-Scope.md`
-- Fixture: `tests/fixtures/bdre_file.json`
-- Checker: `tools/e2e/e2e_bdre_file_static.cjs`
+- Escopo/decisões: `docs/BDREditor-Audio-Scope.md`
+- Contrato e integração: `docs/BDREditor-Audio.md`
+- Fixture: `tests/fixtures/core_audio.json`
+- Checker estático: `tools/e2e/e2e_bdre_audio_static.cjs`
+- Manifesto SHA-256: `SHA256SUMS`

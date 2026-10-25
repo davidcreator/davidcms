@@ -13,6 +13,12 @@ class Media extends \Reamur\System\Engine\Model {
 
     private const ROOT_RELATIVE = 'view/image/blog/';
     private const DOWNLOAD_ROOT_RELATIVE = 'view/download/blog/';
+    private const AUDIO_ROOT_RELATIVE = 'view/audio/blog/';
+    private const AUDIO_MIME_BY_EXTENSION = [
+        'mp3' => ['audio/mpeg'],
+        'ogg' => ['audio/ogg', 'application/ogg'],
+        'wav' => ['audio/wav', 'audio/x-wav', 'audio/wave', 'audio/vnd.wave'],
+    ];
     private const DOWNLOAD_MAX_BYTES = 2097152;
     private const DOWNLOAD_MIME_BY_EXTENSION = [
         'pdf' => ['application/pdf'],
@@ -33,6 +39,53 @@ class Media extends \Reamur\System\Engine\Model {
         'webp' => 'image/webp',
         'gif' => 'image/gif',
     ];
+
+    /** Lista arquivos de áudio preexistentes da raiz dedicada; este incremento não envia nem exclui áudio. */
+    public function getAudioPage(string $search, int $page, int $limit = self::PAGE_LIMIT): array {
+        $root = $this->audioRootPath();
+        $base = rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog';
+        foreach ([$base, $base . '/view', $base . '/view/audio', $root] as $path) if (is_link($path)) return ['ok' => false, 'error' => 'audio_root_unavailable'];
+        if (!is_dir($root)) return ['ok' => true, 'files' => [], 'total' => 0, 'page' => 1, 'pages' => 1];
+        $entries = scandir($root);
+        if ($entries === false) return ['ok' => false, 'error' => 'audio_root_unreadable'];
+        $search = trim(mb_substr($search, 0, 128)); $files = [];
+        foreach ($entries as $entry) {
+            if ($entry === '.' || $entry === '..' || $entry === 'index.html' || str_starts_with($entry, '.')) continue;
+            $path = $root . DIRECTORY_SEPARATOR . $entry;
+            if (is_link($path) || !is_file($path) || !$this->isAllowedAudio($path, $entry)) continue;
+            if ($search !== '' && mb_stripos($entry, $search) === false) continue;
+            $size = filesize($path);
+            $files[] = ['name' => $entry, 'path' => self::AUDIO_ROOT_RELATIVE . $entry, 'size' => $size === false ? 0 : (int)$size];
+        }
+        usort($files, static fn(array $a, array $b): int => strnatcasecmp($a['name'], $b['name']));
+        $total = count($files); $limit = min(48, max(1, $limit)); $pages = max(1, (int)ceil($total / $limit)); $page = min($pages, max(1, $page));
+        return ['ok' => true, 'files' => array_slice($files, ($page - 1) * $limit, $limit), 'total' => $total, 'page' => $page, 'pages' => $pages];
+    }
+
+    /** Confirma referência local existente, sem upload/exclusão, symlink ou traversal. */
+    public function audioReferenceExists(string $relative): bool {
+        if (!preg_match('#^view/audio/blog/([A-Za-z0-9][A-Za-z0-9._-]{0,179})$#D', $relative) || str_contains($relative, '..')) return false;
+        $root = $this->audioRootPath(); $base = rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog';
+        foreach ([$base, $base . '/view', $base . '/view/audio', $root] as $path) if (is_link($path)) return false;
+        $file = $root . DIRECTORY_SEPARATOR . basename($relative);
+        return $this->isAllowedAudio($file, basename($relative));
+    }
+
+    private function isAllowedAudio(string $path, string $filename): bool {
+        if (!$this->isSafeAudioFilename($filename) || is_link($path) || !is_file($path)) return false;
+        $finfo = new \finfo(FILEINFO_MIME_TYPE); $mime = (string)($finfo->file($path) ?: '');
+        return in_array($mime, self::AUDIO_MIME_BY_EXTENSION[strtolower(pathinfo($filename, PATHINFO_EXTENSION))], true);
+    }
+
+    private function isSafeAudioFilename(string $filename): bool {
+        if ($filename === '' || strlen($filename) > 180 || preg_match('/[\\x00-\\x20\\x7F]/', $filename)
+            || str_contains($filename, '/') || str_contains($filename, chr(92)) || str_contains($filename, '..')) return false;
+        return isset(self::AUDIO_MIME_BY_EXTENSION[strtolower(pathinfo($filename, PATHINFO_EXTENSION))]);
+    }
+
+    private function audioRootPath(): string {
+        return rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog/view/audio/blog';
+    }
 
     /** Confirma que a referência de um bloco resolve para arquivo regular permitido dentro da raiz. */
     public function downloadReferenceExists(string $relative): bool {

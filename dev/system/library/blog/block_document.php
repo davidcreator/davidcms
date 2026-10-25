@@ -143,7 +143,7 @@ class BlockDocument {
         if ($keys !== ['attributes', 'children', 'content', 'id', 'type']) { $errors[] = 'node_shape_invalid'; return; }
         if (!is_string($node['id']) || !preg_match('/^[A-Za-z0-9_-]{1,96}$/D', $node['id']) || isset($ids[$node['id']])) $errors[] = 'node_id_invalid_or_duplicate';
         else $ids[$node['id']] = true;
-        $types = ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/image','core/video_embed','core/button','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row','core/table-cell','core/file'];
+        $types = ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/image','core/video_embed','core/button','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row','core/table-cell','core/file','core/audio'];
         if (!is_string($node['type']) || !in_array($node['type'], $types, true)) { $errors[] = 'unknown_block_type'; return; }
         if (!is_array($node['attributes']) || !is_array($node['children']) || !$this->isSequentialList($node['children'])) { $errors[] = 'node_value_type_invalid'; return; }
         $type = $node['type']; $attrs = $node['attributes'];
@@ -155,19 +155,21 @@ class BlockDocument {
             'core/video_embed' => ['url'], 'core/button' => ['url'], 'core/separator' => [],
             'core/group' => [], 'core/columns' => ['count'], 'core/column' => [],
             'core/gallery' => ['columns','align'], 'core/cover' => ['src','alt','align'],
-            'core/table' => ['header'], 'core/table-row' => [], 'core/table-cell' => [], 'core/file' => ['src']
+            'core/table' => ['header'], 'core/table-row' => [], 'core/table-cell' => [], 'core/file' => ['src'], 'core/audio' => ['src']
         ];
         if ($version === self::RICH_TEXT_FORMAT_VERSION) {
             $allowedAttrs['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
             $allowedAttrs['core/group'] = ['outline_label'];
             $allowedAttrs['core/table'] = ['header'];
             $allowedAttrs['core/file'] = ['src'];
+            $allowedAttrs['core/audio'] = ['src'];
         }
         if (array_diff(array_keys($attrs), $allowedAttrs[$type])) $errors[] = 'attributes_not_allowlisted';
         if ($type === 'core/paragraph' && isset($attrs['align']) && !in_array($attrs['align'], ['left','center','right'], true)) $errors[] = 'alignment_invalid';
         if ($type === 'core/heading' && (!isset($attrs['level']) || !is_int($attrs['level']) || $attrs['level'] < 1 || $attrs['level'] > 6)) $errors[] = 'heading_level_invalid';
         if ($type === 'core/list' && (!isset($attrs['ordered']) || !is_bool($attrs['ordered']))) $errors[] = 'list_order_invalid';
         if ($type === 'core/file' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeDownloadPath($attrs['src']) || !is_array($node['content']) || !$this->hasVisibleInlineText($node['content']))) $errors[] = 'file_attributes_invalid';
+        if ($type === 'core/audio' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeAudioPath($attrs['src']) || !is_array($node['content']) || !$this->hasVisibleInlineText($node['content']))) $errors[] = 'audio_attributes_invalid';
         if ($type === 'core/image' && (!isset($attrs['src']) || !$this->isSafeImagePath($attrs['src']) || !isset($attrs['alt']) || !is_string($attrs['alt']) || (isset($attrs['title']) && !is_string($attrs['title'])))) $errors[] = 'image_attributes_invalid';
         if ($type === 'core/group' && isset($attrs['outline_label']) && (!is_string($attrs['outline_label']) || strlen($attrs['outline_label']) > 160 || !preg_match('//u', $attrs['outline_label']))) $errors[] = 'outline_label_invalid';
         if ($type === 'core/image') {
@@ -185,7 +187,7 @@ class BlockDocument {
         if ($type === 'core/table' && (!isset($attrs['header']) || !is_bool($attrs['header']) || count($node['children']) < 1 || count($node['children']) > self::MAX_TABLE_ROWS)) $errors[] = 'table_shape_invalid';
         if ($type === 'core/table-row' && (count($node['children']) < 1 || count($node['children']) > self::MAX_TABLE_COLUMNS)) $errors[] = 'table_row_shape_invalid';
         if ($type === 'core/columns' && (!isset($attrs['count']) || !is_int($attrs['count']) || !in_array($attrs['count'], [2,3], true) || count($node['children']) !== $attrs['count'])) $errors[] = 'columns_count_invalid';
-        $textTypes = ['core/paragraph','core/heading','core/list-item','core/quote','core/button','core/table-cell','core/file'];
+        $textTypes = ['core/paragraph','core/heading','core/list-item','core/quote','core/button','core/table-cell','core/file','core/audio'];
         if ($version === self::FORMAT_VERSION) {
             if (!is_string($node['content'])) $errors[] = 'legacy_content_must_be_string';
             elseif (strlen($node['content']) > self::MAX_INLINE_CONTENT_BYTES) $errors[] = 'block_content_too_large';
@@ -259,7 +261,7 @@ class BlockDocument {
                 if (!is_string($mark) || !in_array($mark, $allowedMarks, true) || isset($seen[$mark])) $errors[] = 'inline_mark_not_allowlisted';
                 else $seen[$mark] = true;
             }
-            if ($run['href'] !== null && (!$this->isSafeActionUrl($run['href']) || in_array($blockType, ['core/button','core/file'], true))) $errors[] = 'inline_link_not_allowlisted';
+            if ($run['href'] !== null && (!$this->isSafeActionUrl($run['href']) || in_array($blockType, ['core/button','core/file','core/audio'], true))) $errors[] = 'inline_link_not_allowlisted';
         }
     }
 
@@ -360,6 +362,11 @@ class BlockDocument {
         foreach ($runs as $run) if (is_array($run) && is_string($run['text'] ?? null)) $text .= $run['text'];
         if (!preg_match('//u', $text)) return false;
         return preg_match('/^[\s\p{Z}\p{C}]*$/u', $text) !== 1;
+    }
+
+    private function isSafeAudioPath($src): bool {
+        if (!is_string($src) || !preg_match('#^view/audio/blog/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$#D', $src) || str_contains($src, '..')) return false;
+        return in_array(strtolower(pathinfo($src, PATHINFO_EXTENSION)), ['mp3','ogg','wav'], true);
     }
 
     private function isSafeDownloadPath($src): bool {

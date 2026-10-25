@@ -1,0 +1,36 @@
+{
+  "valid": {
+    "format_version": 2,
+    "blocks": [
+      {
+        "id": "audio-1",
+        "type": "core/audio",
+        "attributes": {"src": "view/audio/blog/faixa-demo.mp3"},
+        "children": [],
+        "content": [{"text": "Ouça a faixa de demonstração", "marks": [], "href": null}]
+      }
+    ]
+  },
+  "invalid": [
+    {
+      "name": "origem externa",
+      "document": {"format_version": 2, "blocks": [{"id":"audio-2","type":"core/audio","attributes":{"src":"https://example.invalid/a.mp3"},"children":[],"content":[{"text":"Faixa","marks":[],"href":null}]}]}
+    },
+    {
+      "name": "travessia de diretório",
+      "document": {"format_version": 2, "blocks": [{"id":"audio-3","type":"core/audio","attributes":{"src":"view/audio/blog/../private.mp3"},"children":[],"content":[{"text":"Faixa","marks":[],"href":null}]}]}
+    },
+    {
+      "name": "extensão não permitida",
+      "document": {"format_version": 2, "blocks": [{"id":"audio-4","type":"core/audio","attributes":{"src":"view/audio/blog/player.html"},"children":[],"content":[{"text":"Faixa","marks":[],"href":null}]}]}
+    },
+    {
+      "name": "link inline em bloco de áudio",
+      "document": {"format_version": 2, "blocks": [{"id":"audio-5","type":"core/audio","attributes":{"src":"view/audio/blog/faixa.mp3"},"children":[],"content":[{"text":"Faixa","marks":[],"href":"https://example.invalid/"}]}]}
+    },
+    {
+      "name": "core/audio incompatível com versão 1",
+      "document": {"format_version": 1, "blocks": [{"id":"audio-6","type":"core/audio","attributes":{"src":"view/audio/blog/faixa.mp3"},"children":[],"content":"Faixa"}]}
+    }
+  ]
+}

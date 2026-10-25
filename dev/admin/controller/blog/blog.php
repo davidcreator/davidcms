@@ -386,6 +386,17 @@ class Blog extends \Reamur\System\Engine\Controller {
         ]);
     }
 
+    /** Lista arquivos de áudio locais já provisionados; sem upload ou exclusão. */
+    public function audioList(): void {
+        $this->load->language('blog/blog');
+        if ($this->request->server['REQUEST_METHOD'] !== 'GET') { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
+        if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
+        $this->load->model('blog/media');
+        $result = $this->model_blog_media->getAudioPage($this->queryScalar('search'), max(1, (int)$this->queryScalar('page')));
+        if (!$result['ok']) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_audio_generic')]); return; }
+        $this->mediaJson(['success' => true, 'files' => $result['files'], 'total' => $result['total'], 'page' => $result['page'], 'pages' => $result['pages']]);
+    }
+
     /** Lista documentos da raiz dedicada de downloads; acesso protegido por ACL. */
     public function downloadList(): void {
         $this->load->language('blog/blog');
@@ -504,6 +515,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             'text_media_upload_success', 'text_media_folder_created', 'text_media_file_deleted',
             'text_media_folder_deleted', 'text_media_upload_hint', 'text_media_no_folders',
             'text_download_library', 'text_download_empty', 'text_download_upload', 'text_download_hint', 'text_download_limit', 'button_download_select', 'button_download_upload',
+            'text_audio_library', 'text_audio_empty', 'text_audio_hint', 'button_audio_select', 'error_audio_generic',
             'error_download_upload_no_file', 'error_download_upload_size', 'error_download_upload_type', 'error_download_upload_move', 'error_download_generic',
             'entry_media_search', 'entry_media_folder_name', 'entry_media_external_url',
             'button_media_library', 'button_media_upload', 'button_media_create_folder',
@@ -517,7 +529,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             'text_block_add', 'text_block_search', 'text_block_no_results', 'text_block_category_content', 'text_block_category_media', 'text_block_category_layout',
             'text_block_outline', 'text_block_outline_empty', 'text_block_outline_label', 'text_block_initial_invalid', 'text_block_document_too_large', 'text_block_move_up', 'text_block_move_down', 'text_block_duplicate', 'text_block_transform',
             'text_block_remove', 'text_block_add_after', 'text_block_drag', 'text_block_type_paragraph', 'text_block_type_heading', 'text_block_type_list',
-            'text_block_type_image', 'text_block_type_file', 'text_block_file_source', 'text_block_file_choose', 'text_block_type_quote', 'text_block_type_video', 'text_block_type_button', 'text_block_type_separator',
+            'text_block_type_image', 'text_block_type_file', 'text_block_file_source', 'text_block_file_choose', 'text_block_type_audio', 'text_block_audio_source', 'text_block_audio_choose', 'text_block_type_quote', 'text_block_type_video', 'text_block_type_button', 'text_block_type_separator',
             'text_block_type_group', 'text_block_type_columns', 'text_block_type_list_item', 'text_block_type_column', 'text_block_transform_hint', 'text_block_insert_empty',
             'text_block_status_inserted', 'text_block_status_moved', 'text_block_status_duplicated', 'text_block_status_transformed',
             'text_block_status_removed', 'text_block_status_undo', 'text_block_status_redo',
@@ -563,9 +575,10 @@ class Blog extends \Reamur\System\Engine\Controller {
                 'core/button' => $data['text_block_type_button'], 'core/separator' => $data['text_block_type_separator'],
                 'core/group' => $data['text_block_type_group'], 'core/columns' => $data['text_block_type_columns'],
                 'core/list-item' => $data['text_block_type_list_item'], 'core/column' => $data['text_block_type_column'],
-                'core/gallery' => $data['text_block_type_gallery'], 'core/cover' => $data['text_block_type_cover'], 'core/table' => $data['text_block_type_table'], 'core/file' => $data['text_block_type_file'],
+                'core/gallery' => $data['text_block_type_gallery'], 'core/cover' => $data['text_block_type_cover'], 'core/table' => $data['text_block_type_table'], 'core/file' => $data['text_block_type_file'], 'core/audio' => $data['text_block_type_audio'],
             ],
             'file' => ['source' => $data['text_block_file_source'], 'choose' => $data['text_block_file_choose']],
+            'audio' => ['source' => $data['text_block_audio_source'], 'choose' => $data['text_block_audio_choose'], 'catalogBase' => $this->catalogAssetUrl()],
             'table' => [
                 'header' => $data['text_block_table_header'], 'addRow' => $data['text_block_table_add_row'],
                 'removeRow' => $data['text_block_table_remove_row'], 'addColumn' => $data['text_block_table_add_column'],
@@ -603,11 +616,13 @@ class Blog extends \Reamur\System\Engine\Controller {
             $this->document->addScript($assetBase . 'js/blog-block-editor.js?v=' . $assetVersion);
             $this->document->addScript($assetBase . 'js/blog-block-editor-init.js?v=' . $assetVersion);
             $this->document->addScript($assetBase . 'js/blog-file-media.js?v=' . $assetVersion);
+            $this->document->addScript($assetBase . 'js/blog-audio-media.js?v=' . $assetVersion);
         }
         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
         $data['media_config'] = [
             'listUrl' => $this->url->link('blog/blog.mediaList'),
             'downloadListUrl' => $this->url->link('blog/blog.downloadList'),
+            'audioListUrl' => $this->url->link('blog/blog.audioList'),
             'downloadUploadUrl' => $this->url->link('blog/blog.downloadUpload'),
             'uploadUrl' => $this->url->link('blog/blog.mediaUpload'),
             'folderUrl' => $this->url->link('blog/blog.mediaFolder'),
@@ -636,6 +651,9 @@ class Blog extends \Reamur\System\Engine\Controller {
                 'downloadLimit' => $this->language->get('text_download_limit'),
                 'downloadUploadError' => $this->language->get('error_download_generic'),
                 'selectDownload' => $this->language->get('button_download_select'),
+                'audioEmpty' => $this->language->get('text_audio_empty'),
+                'audioError' => $this->language->get('error_audio_generic'),
+                'selectAudio' => $this->language->get('button_audio_select'),
             ],
         ];
 
@@ -768,7 +786,8 @@ class Blog extends \Reamur\System\Engine\Controller {
         $validator = new \Reamur\System\Library\Blog\BlockDocument();
         $this->load->model('blog/media');
         $downloadRoot = rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog/view/download/blog';
-        $renderer = new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot);
+        $audioRoot = rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog/view/audio/blog';
+        $renderer = new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot, $audioRoot);
 
         foreach (array_keys($languages) as $language_id) {
             $language_id = (int)$language_id;
@@ -816,7 +835,7 @@ class Blog extends \Reamur\System\Engine\Controller {
                 continue;
             }
             $decoded = $validator->deserializeDocument($json);
-            if (!$decoded['valid'] || !$this->blockDownloadsAvailable((array)$decoded['document']['blocks'])) {
+            if (!$decoded['valid'] || !$this->blockMediaAvailable((array)$decoded['document']['blocks'])) {
                 $result['errors'][] = $this->language->get('error_block_document_invalid');
                 continue;
             }
@@ -834,13 +853,13 @@ class Blog extends \Reamur\System\Engine\Controller {
         return $result;
     }
 
-    /** Recursivamente confirma no servidor que cada core/file aponta para arquivo permitido existente. */
-    private function blockDownloadsAvailable(array $nodes): bool {
+    /** Confirma recursivamente que referências core/file/core/audio apontam para assets permitidos existentes. */
+    private function blockMediaAvailable(array $nodes): bool {
         foreach ($nodes as $node) {
             if (!is_array($node)) return false;
-            if (($node['type'] ?? '') === 'core/file'
-                && !$this->model_blog_media->downloadReferenceExists((string)($node['attributes']['src'] ?? ''))) return false;
-            if (isset($node['children']) && is_array($node['children']) && !$this->blockDownloadsAvailable($node['children'])) return false;
+            if (($node['type'] ?? '') === 'core/file' && !$this->model_blog_media->downloadReferenceExists((string)($node['attributes']['src'] ?? ''))) return false;
+            if (($node['type'] ?? '') === 'core/audio' && !$this->model_blog_media->audioReferenceExists((string)($node['attributes']['src'] ?? ''))) return false;
+            if (isset($node['children']) && is_array($node['children']) && !$this->blockMediaAvailable($node['children'])) return false;
         }
         return true;
     }

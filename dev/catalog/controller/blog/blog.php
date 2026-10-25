@@ -100,7 +100,8 @@ class Blog extends \Reamur\System\Engine\Controller {
             $contentMode = 'blocks';
             if (!empty($blockContent['row_found'])) {
                 $downloadRoot = rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog/view/download/blog';
-                $rendered = (new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot))->renderJson(
+                $audioRoot = rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog/view/audio/blog';
+                $rendered = (new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot, $audioRoot))->renderJson(
                     (string)$blockContent['content_json'],
                     (int)$blockContent['format_version'],
                     $base

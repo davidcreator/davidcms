@@ -23,15 +23,15 @@ const model = read('dev/admin/model/blog/media.php');
 const admin = read('dev/admin/controller/blog/blog.php');
 const ui = read('dev/admin/view/js/blog-file-media.js');
 const template = read('dev/admin/view/template/blog/blog_form.twig');
-check(schema.includes("'core/file' => ['src']") && schema.includes('isSafeDownloadPath') && schema.includes("['core/button','core/file']"), 'schema server-side limita path e impede link inline aninhado');
+check(schema.includes("'core/file' => ['src']") && schema.includes('isSafeDownloadPath') && schema.includes("['core/button','core/file','core/audio']"), 'schema server-side limita path e impede link inline aninhado');
 check(renderer.includes("case 'core/file':") && renderer.includes('downloadFileExists') && renderer.includes(' download>'), 'renderer fail-closed gera link download com rótulo escapado');
-check(catalog.includes("BlockRenderer($downloadRoot)") && catalog.includes("'/catalog/view/download/blog'"), 'catálogo passa raiz física confiável ao renderer');
+check(catalog.includes("BlockRenderer($downloadRoot, $audioRoot)") && catalog.includes("'/catalog/view/download/blog'"), 'catálogo passa raízes físicas confiáveis ao renderer');
 check(model.includes('2097152') && model.includes('is_uploaded_file($tmp)') && model.includes('finfo(FILEINFO_MIME_TYPE)') && model.includes('move_uploaded_file($tmp, $target)'), 'upload tem limite, validação MIME e destino aleatório no modelo Blog');
 check(['pdf','docx','xlsx','pptx','odt','ods','csv','txt'].every((ext) => model.includes("'" + ext + "' =>")) && model.includes("'index.html'"), 'allowlist e guard anti-listagem presentes');
-check(admin.includes('hasPermission(\'modify\', \'blog/blog\')') && admin.includes('csrfValid()') && admin.includes('downloadList') && admin.includes('downloadUpload') && admin.includes('blockDownloadsAvailable') && admin.includes('downloadReferenceExists'), 'endpoints mantêm ACL/CSRF e salvamento verifica arquivo físico, sem exclusão de downloads');
+check(admin.includes('hasPermission(\'modify\', \'blog/blog\')') && admin.includes('csrfValid()') && admin.includes('downloadList') && admin.includes('downloadUpload') && admin.includes('blockMediaAvailable') && admin.includes('downloadReferenceExists'), 'endpoints mantêm ACL/CSRF e salvamento verifica arquivo físico, sem exclusão de downloads');
 check(ui.includes('blog-block-file-open') && ui.includes('blog-block-file-selected') && ui.includes('downloadUploadUrl'), 'picker dedicado conecta editor, listagem e upload');
 const editor = read('dev/admin/view/js/blog-block-editor.js');
-check(editor.includes("['core/button','core/file'].includes(node.type)") && editor.includes('validLocalDownload'), 'toolbar impede link aninhado e validador cliente restringe tipo/caminho');
+check(editor.includes("['core/button','core/file','core/audio'].includes(node.type)") && editor.includes('validLocalDownload'), 'toolbar impede link aninhado e validador cliente restringe tipo/caminho');
 check(template.includes('blogDownloadModal') && template.includes('blogDownloadFile'), 'modal acessível de biblioteca/upload está incluído');
 
 ['pt-br','en-us','es-eu'].forEach((locale) => {

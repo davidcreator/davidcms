@@ -278,3 +278,13 @@ $_['error_download_upload_size'] = 'The document must be no larger than %s.';
 $_['error_download_upload_type'] = 'Invalid document type or mismatched content.';
 $_['error_download_upload_move'] = 'The document could not be saved. Check catalog folder permissions.';
 $_['error_download_generic'] = 'Could not load the download library.';
+
+// BDREditor core/audio: local assets only; no upload/delete.
+$_['text_block_type_audio'] = 'Audio';
+$_['text_block_audio_source'] = 'Local audio reference';
+$_['text_block_audio_choose'] = 'Choose audio from library';
+$_['text_audio_library'] = 'Audio library';
+$_['text_audio_empty'] = 'No supported audio found in catalog/view/audio/blog/.';
+$_['text_audio_hint'] = 'Local MP3, OGG, or WAV only. This increment does not add audio upload or deletion.';
+$_['button_audio_select'] = 'Use this audio';
+$_['error_audio_generic'] = 'Could not load the audio library.';

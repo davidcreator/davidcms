@@ -278,3 +278,13 @@ $_['error_download_upload_size'] = 'O documento deve ter no máximo %s.';
 $_['error_download_upload_type'] = 'Tipo de documento inválido ou conteúdo incompatível.';
 $_['error_download_upload_move'] = 'Não foi possível salvar o documento. Verifique as permissões da pasta catalog.';
 $_['error_download_generic'] = 'Não foi possível carregar a biblioteca de downloads.';
+
+// BDREditor core/audio: local assets only; no upload/delete.
+$_['text_block_type_audio'] = 'Áudio';
+$_['text_block_audio_source'] = 'Referência local do áudio';
+$_['text_block_audio_choose'] = 'Escolher áudio da biblioteca';
+$_['text_audio_library'] = 'Biblioteca de áudio';
+$_['text_audio_empty'] = 'Nenhum áudio compatível encontrado em catalog/view/audio/blog/.';
+$_['text_audio_hint'] = 'Somente MP3, OGG ou WAV locais. Esta versão não permite envio nem exclusão de áudio.';
+$_['button_audio_select'] = 'Usar este áudio';
+$_['error_audio_generic'] = 'Não foi possível carregar a biblioteca de áudio.';

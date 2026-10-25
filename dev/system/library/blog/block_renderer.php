@@ -8,9 +8,11 @@ namespace Reamur\System\Library\Blog;
 final class BlockRenderer {
     private const MAX_JSON_BYTES = 4194304;
     private string $downloadRoot;
+    private string $audioRoot;
 
-    public function __construct(string $downloadRoot = '') {
+    public function __construct(string $downloadRoot = '', string $audioRoot = '') {
         $this->downloadRoot = $downloadRoot;
+        $this->audioRoot = $audioRoot;
     }
 
     /**
@@ -72,6 +74,15 @@ final class BlockRenderer {
                 $href = $this->escape($this->resolveLocalImageUrl((string)$attributes['src'], $assetBase));
                 $label = $this->renderInlineRuns($node['content']);
                 return '<p class="rms-block rms-block-file"><a href="' . $href . '" download>' . $label . '</a></p>';
+
+            case 'core/audio':
+                $srcPath = (string)$attributes['src'];
+                if (!$this->audioFileExists($srcPath)) return '';
+                $src = $this->escape($this->resolveLocalImageUrl($srcPath, $assetBase));
+                $labelText = $this->escape($this->inlineRunsPlainText($node['content']));
+                $labelHtml = $this->renderInlineRuns($node['content']);
+                $mime = ['mp3' => 'audio/mpeg', 'ogg' => 'audio/ogg', 'wav' => 'audio/wav'][strtolower(pathinfo($srcPath, PATHINFO_EXTENSION))];
+                return '<figure class="rms-block rms-block-audio"><audio controls preload="none" aria-label="' . $labelText . '"><source src="' . $src . '" type="' . $mime . '"></audio><figcaption>' . $labelHtml . '</figcaption></figure>';
 
             case 'core/gallery':
                 $columns = (int)$attributes['columns'];
@@ -139,6 +150,31 @@ final class BlockRenderer {
                 return '';
         }
         return '';
+    }
+
+    /** Resolves an existing local audio asset and rejects symlinks/MIME mismatches. */
+    private function audioFileExists(string $relative): bool {
+        if ($this->audioRoot === '' || !preg_match('#^view/audio/blog/([A-Za-z0-9][A-Za-z0-9._-]{0,179})$#D', $relative) || str_contains($relative, '..')) return false;
+        $extension = strtolower(pathinfo($relative, PATHINFO_EXTENSION));
+        if (!in_array($extension, ['mp3','ogg','wav'], true)) return false;
+        $cursor = $this->audioRoot;
+        for ($depth = 0; $depth < 4; $depth++) { if (is_link($cursor)) return false; $cursor = dirname($cursor); }
+        $root = realpath($this->audioRoot);
+        if ($root === false) return false;
+        $candidate = $root . DIRECTORY_SEPARATOR . basename($relative);
+        if (is_link($candidate) || !is_file($candidate)) return false;
+        $resolved = realpath($candidate);
+        if ($resolved === false || !str_starts_with($resolved, rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) return false;
+        $finfo = new \finfo(FILEINFO_MIME_TYPE); $mime = (string)($finfo->file($resolved) ?: '');
+        $allowed = ['mp3' => ['audio/mpeg'], 'ogg' => ['audio/ogg','application/ogg'], 'wav' => ['audio/wav','audio/x-wav','audio/wave','audio/vnd.wave']];
+        return in_array($mime, $allowed[$extension], true);
+    }
+
+    /** Plain-text label for accessible attributes; markup is separately rendered through the inline allowlist. */
+    private function inlineRunsPlainText(array $runs): string {
+        $text = '';
+        foreach ($runs as $run) if (is_array($run) && is_string($run['text'] ?? null)) $text .= $run['text'];
+        return trim($text);
     }
 
     /** Resolve a local download only when the physical regular file remains inside the trusted root. */
