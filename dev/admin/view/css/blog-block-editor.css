@@ -115,3 +115,9 @@
 .rb-table-cell-content{min-height:2rem;outline:none;overflow-wrap:anywhere;white-space:pre-wrap}
 .rb-table-actions{display:flex;flex-wrap:wrap;gap:.35rem}
 @media(max-width:560px){.rb-table-preview table{min-width:36rem}}
+
+/* Keyboard help: native disclosure, wraps on narrow layouts and stays keyboard operable. */
+.rb-keyboard-help{flex:1 1 100%;font-size:.82rem;color:var(--rb-muted)}
+.rb-keyboard-help summary{cursor:pointer;width:max-content;max-width:100%}
+.rb-keyboard-help summary:focus-visible{outline:3px solid #174ea6;outline-offset:2px;border-radius:2px}
+.rb-keyboard-help-text{margin:.35rem 0 0;max-width:72rem;line-height:1.55}

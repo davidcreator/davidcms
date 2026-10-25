@@ -288,3 +288,7 @@ $_['text_audio_empty'] = 'No supported audio found in catalog/view/audio/blog/.'
 $_['text_audio_hint'] = 'Local MP3, OGG, or WAV only. This increment does not add audio upload or deletion.';
 $_['button_audio_select'] = 'Use this audio';
 $_['error_audio_generic'] = 'Could not load the audio library.';
+
+// BDREditor keyboard help
+$_['text_block_keyboard_shortcuts_title'] = 'Keyboard shortcuts';
+$_['text_block_keyboard_shortcuts'] = 'Ctrl/⌘+B bold · Ctrl/⌘+I italic · Ctrl/⌘+U underline · Ctrl/⌘+K link · Ctrl/⌘+Z undo · Ctrl/⌘+Shift+Z or Ctrl+Y redo · Alt+↑/↓ move block · / insert block';

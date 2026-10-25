@@ -288,3 +288,7 @@ $_['text_audio_empty'] = 'No se encontró audio compatible en catalog/view/audio
 $_['text_audio_hint'] = 'Solo MP3, OGG o WAV locales. Este incremento no añade subida ni eliminación de audio.';
 $_['button_audio_select'] = 'Usar este audio';
 $_['error_audio_generic'] = 'No se pudo cargar la biblioteca de audio.';
+
+// BDREditor keyboard help
+$_['text_block_keyboard_shortcuts_title'] = 'Atajos de teclado';
+$_['text_block_keyboard_shortcuts'] = 'Ctrl/⌘+B negrita · Ctrl/⌘+I cursiva · Ctrl/⌘+U subrayado · Ctrl/⌘+K enlace · Ctrl/⌘+Z deshacer · Ctrl/⌘+Shift+Z o Ctrl+Y rehacer · Alt+↑/↓ mover bloque · / insertar bloque';

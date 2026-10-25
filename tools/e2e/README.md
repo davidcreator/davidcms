@@ -1,13 +1,14 @@
-# Checker estático E2E — `core/audio`
+# Checkers estáticos cumulativos — BDREditor
 
-Do diretório raiz do pacote:
+A partir da raiz do pacote:
 
 ```sh
 node --check dev/admin/view/js/blog-block-editor.js
-node --check dev/admin/view/js/blog-audio-media.js
-node --check tools/e2e/e2e_bdre_audio_static.cjs
+node --check tools/e2e/e2e_bdre_keyboard_static.cjs
+node tools/e2e/e2e_bdre_keyboard_static.cjs
 node tools/e2e/e2e_bdre_audio_static.cjs
-python3 -m json.tool tests/fixtures/core_audio.json >/dev/null
+node tools/e2e/e2e_bdre_file_static.cjs
+python3 -m json.tool tests/fixtures/keyboard_shortcuts.json >/dev/null
 ```
 
-O checker carrega o módulo do editor em uma VM Node sem DOM/browser para validar documentos sintéticos. Faz inspeção textual dos contratos no schema PHP, renderer, controllers, modelo, picker, modal, permissões e traduções. Não inicializa aplicação PHP, banco ou servidor; não testa reprodução física do áudio.
+O checker de atalhos carrega o classificador JS em VM Node sem DOM/browser e valida a fixture sintética, além de verificar UI/strings/escopo por inspeção textual. Os checkers de áudio e arquivo/download permanecem no pacote para regressão estática cumulativa. Nenhum deles inicializa PHP, aplicação, banco ou servidor.

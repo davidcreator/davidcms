@@ -1,0 +1,18 @@
+{
+  "cases": [
+    {"name":"Ctrl+B aplica negrito no texto","event":{"key":"b","ctrlKey":true},"context":{"inTextEditor":true,"inFormControl":false,"inBlock":true},"expected":"bold"},
+    {"name":"Meta+I aplica itálico no texto","event":{"key":"i","metaKey":true},"context":{"inTextEditor":true,"inFormControl":false,"inBlock":true},"expected":"italic"},
+    {"name":"Ctrl+U aplica sublinhado no texto","event":{"key":"u","ctrlKey":true},"context":{"inTextEditor":true,"inFormControl":false,"inBlock":true},"expected":"underline"},
+    {"name":"Ctrl+K abre controle de link no texto","event":{"key":"k","ctrlKey":true},"context":{"inTextEditor":true,"inFormControl":false,"inBlock":true},"expected":"link"},
+    {"name":"Ctrl+Z desfaz no editor","event":{"key":"z","ctrlKey":true},"context":{"inTextEditor":true,"inFormControl":false,"inBlock":true},"expected":"undo"},
+    {"name":"Meta+Shift+Z refaz no editor","event":{"key":"z","metaKey":true,"shiftKey":true},"context":{"inTextEditor":false,"inFormControl":false,"inBlock":true},"expected":"redo"},
+    {"name":"Ctrl+Y refaz no editor","event":{"key":"y","ctrlKey":true},"context":{"inTextEditor":false,"inFormControl":false,"inBlock":true},"expected":"redo"},
+    {"name":"Alt+ArrowUp move bloco","event":{"key":"ArrowUp","altKey":true},"context":{"inTextEditor":true,"inFormControl":false,"inBlock":true},"expected":"move-up"},
+    {"name":"Alt+ArrowDown move bloco","event":{"key":"ArrowDown","altKey":true},"context":{"inTextEditor":false,"inFormControl":false,"inBlock":true},"expected":"move-down"},
+    {"name":"Ctrl+Z em input mantém undo nativo do campo","event":{"key":"z","ctrlKey":true},"context":{"inTextEditor":false,"inFormControl":true,"inBlock":true},"expected":null},
+    {"name":"Ctrl+B fora do texto não aplica marca","event":{"key":"b","ctrlKey":true},"context":{"inTextEditor":false,"inFormControl":false,"inBlock":true},"expected":null},
+    {"name":"Alt+Arrow em select não move bloco","event":{"key":"ArrowUp","altKey":true},"context":{"inTextEditor":false,"inFormControl":true,"inBlock":true},"expected":null},
+    {"name":"Alt+Arrow fora de bloco não faz nada","event":{"key":"ArrowDown","altKey":true},"context":{"inTextEditor":false,"inFormControl":false,"inBlock":false},"expected":null},
+    {"name":"Ctrl+Alt+Z não intercepta atalho do navegador","event":{"key":"z","ctrlKey":true,"altKey":true},"context":{"inTextEditor":true,"inFormControl":false,"inBlock":true},"expected":null}
+  ]
+}
