@@ -1,5 +1,5 @@
-Package: BDREditor-Preview-Office-Canvas-Import-Phase-1
-Base: davidcreator/davidcms main @ 1b725e95ce204107306b1fad0d6f5acefe8925cb (read-only check, 2026-10-25)
-Purpose: in-memory live preview and local safe conversion import for OOXML, HTML/XHTML, Canvas IMSCC, plus drag/drop.
-Only selective files are included. No project clone, DB dump, credentials, migrations or deploy scripts.
-No GitHub, database, staging or production writes performed.
+Package: BDREditor-Office-Canvas-Fidelity-Phase-2
+Base: davidcreator/davidcms main @ 175da409c56ce65c665bc647060b581633af8caf (read-only check, 2026-10-25)
+Purpose: fidelity improvements for local DOCX/XLSX/PPTX and Canvas IMSCC conversion.
+Only selective files are included. Core editor/controller/template/language copies match the checked base and support bundled regression checks/preview.
+No clone, database dump, credentials, migrations, deployment, GitHub write, database write, staging or production action.

@@ -1,19 +1,16 @@
-# Matriz de importação BDREditor
+# Conversão Office/Canvas — limites atuais
 
-| Entrada | Conversão | Limitações relevantes |
+| Origem | Estrutura importada | Continua fora do escopo |
 |---|---|---|
-| DOCX | Parágrafos, títulos, ênfase básica, links HTTPS seguros e tabelas | Mídia incorporada não é extraída; tabelas limitadas pelo modelo atual (20 × 12). |
-| XLSX | Primeira aba em `core/table` | Até 20 × 12; fórmulas ignoradas; sem estilos, gráficos, fórmulas ou múltiplas abas. |
-| PPTX | Texto por slide e separadores | Sem layout visual, animações, gráficos ou mídia incorporada. |
-| HTML/XHTML | Elementos textuais e estruturas allowlist | Scripts, estilos, formulários, SVG, Canvas HTML, iframes arbitrários e mídia externa ignorados. |
-| Canvas LMS IMSCC | Páginas HTML encontradas em `wiki_content`/`pages` | Não reconstrói curso, módulos, quizzes, notas, permissões ou relações LMS. |
-| Áudio em HTML | Referência local existente `view/audio/blog/`, MP3/OGG/WAV | Não aceita upload; não cria arquivo. |
-| Imagem em HTML | Referência local existente `image/` ou `view/image/blog/` | URL externa ou arquivo incorporado não é copiado. |
-| Vídeo em HTML | URL HTTPS YouTube/Vimeo já permitida | Vídeo local não é persistido; não extrai mídia de pacote. |
+| DOCX | Títulos simples, parágrafos, ênfase, links HTTPS, listas simples, tabelas e indicação de cabeçalho | Listas aninhadas são achatadas; mídia interna não é extraída; layout e estilos complexos não são reproduzidos. |
+| XLSX | Até 5 abas visíveis; cada uma vira título + tabela de até 20 linhas × 12 colunas | Fórmulas, estilos, gráficos, pivots, células mescladas (achatadas), macros e abas ocultas. |
+| PPTX | Texto por slide/shape, placeholder de título, bullets simples e tabelas até 20 × 12 | Layout visual, animações, notas, transições, mídia embutida; bullets herdados do tema podem virar parágrafo simples. |
+| Canvas IMSCC | Páginas HTML da área wiki/pages, na ordem do manifesto quando presente | Módulos, quizzes, notas, permissões, relacionamentos e mídias do curso. |
+| HTML/XHTML | Texto/estrutura allowlist e referências locais de mídia permitidas | Scripts, CSS/estilo livre, formulários, SVG/Canvas HTML, iframes arbitrários e mídia remota. |
 
-## Segurança e integridade
+## Integridade
 
-- ZIP lido com limite de bytes, número de entradas, tamanho descompactado, razão de compactação e rejeição de caminhos absolutos/traversal.
-- XML/HTML nunca é injetado com `innerHTML`; textos vão para nós de texto e estrutura resulta apenas em blocos allowlist.
-- A conversão só modifica o rascunho em memória. O salvamento continua sujeito ao formulário, CSRF, validação v2 e clique manual em Salvar.
-- A importação aborta se o resultado exceder o limite de 4 MiB ou a quantidade máxima de blocos.
+- Arquivos Office/IMSCC são examinados no browser; bytes não são enviados ao servidor.
+- O descompactador rejeita entradas inseguras/traversal e aplica limites de tamanho/razão de compressão.
+- O resultado é validado contra o schema v2, limite de 4 MiB e máximos de blocos/linhas/colunas antes de inserir no rascunho.
+- Para salvar, o usuário ainda precisa enviar manualmente o formulário CMS existente.

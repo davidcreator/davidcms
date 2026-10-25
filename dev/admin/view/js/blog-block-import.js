@@ -114,7 +114,7 @@
       if(el.localName==='hyperlink'){const idv=el.getAttributeNS(r,'id');const target=idv&&rels[idv]?safeAction(rels[idv]):null;Array.from(el.children).forEach((x)=>walk(x,target));return;}
       if(el.localName==='r'){
         const prop=Array.from(el.children).find((x)=>x.localName==='rPr');const marks=[];
-        if(prop){for(const [tag,mark] of [['b','bold'],['i','italic'],['u','underline'],['strike','strike']])if(prop.getElementsByTagNameNS(w,tag).length)marks.push(mark);}
+        if(prop){for(const [tag,mark] of [['b','bold'],['i','italic'],['u','underline'],['strike','strike']]){const item=prop.getElementsByTagNameNS(w,tag)[0];if(!item)continue;const val=item.getAttributeNS(w,'val')||item.getAttribute('w:val')||item.getAttribute('val');if(!['0','false','none','noStrike'].includes(String(val).toLowerCase()))marks.push(mark);}}
         const pieces=Array.from(el.getElementsByTagNameNS(w,'t')).map((x)=>x.textContent).join('')+(el.getElementsByTagNameNS(w,'tab').length?'\t':'')+(el.getElementsByTagNameNS(w,'br').length?'\n':'');
         if(pieces)runs.push(run(pieces,marks,href));return;
       }
@@ -122,48 +122,125 @@
     };
     Array.from(p.children||[]).forEach((x)=>walk(x,null)); return runs;
   }
+  function wordNumbering(doc){
+    const fmtByAbstract={}, numToAbstract={}, result={};
+    byLocal(doc,'abstractNum').forEach(node=>{const abstractId=node.getAttribute('w:abstractNumId')||node.getAttribute('abstractNumId');const lvl=byLocal(node,'lvl')[0];const fmt=lvl&&byLocal(lvl,'numFmt')[0];if(abstractId)fmtByAbstract[abstractId]=fmt&&(fmt.getAttribute('w:val')||fmt.getAttribute('val'))||'bullet';});
+    byLocal(doc,'num').forEach(node=>{const n=node.getAttribute('w:numId')||node.getAttribute('numId');const abs=byLocal(node,'abstractNumId')[0];const aid=abs&&(abs.getAttribute('w:val')||abs.getAttribute('val'));if(n&&aid)numToAbstract[n]=aid;});
+    Object.keys(numToAbstract).forEach(n=>result[n]=fmtByAbstract[numToAbstract[n]]||'bullet');return result;
+  }
+  function docxListInfo(p,formats){
+    const pPr=Array.from(p.children).find(x=>x.localName==='pPr');if(!pPr)return null;
+    const numPr=Array.from(pPr.children).find(x=>x.localName==='numPr');if(!numPr)return null;
+    const numId=byLocal(numPr,'numId')[0], level=byLocal(numPr,'ilvl')[0];if(!numId)return null;
+    const value=numId.getAttribute('w:val')||numId.getAttribute('val')||'';if(!value)return null;
+    const fmt=formats[value]||'bullet';return {id:value,level:Number(level&&(level.getAttribute('w:val')||level.getAttribute('val'))||0),ordered:!['bullet','none'].includes(fmt)};
+  }
   async function docx(file,warnings){
     const zip=await unzip(file), docBytes=await zip.read('word/document.xml');if(!docBytes)throw new Error('Documento Word sem word/document.xml.');
     const relBytes=await zip.read('word/_rels/document.xml.rels'), rels={};
     if(relBytes){const rd=xml(relBytes);byLocal(rd,'Relationship').forEach((r)=>{if(r.getAttribute('TargetMode')==='External')rels[r.getAttribute('Id')]=r.getAttribute('Target');});}
-    const d=xml(docBytes), body=byLocal(d,'body')[0];if(!body)throw new Error('Corpo do Word não encontrado.');const blocks=[];
+    const numBytes=await zip.read('word/numbering.xml'), formats=numBytes?wordNumbering(xml(numBytes)):{};
+    const d=xml(docBytes), body=byLocal(d,'body')[0];if(!body)throw new Error('Corpo do Word não encontrado.');const blocks=[];let list=null,listNumId=null,listLevel=0;
+    const flushList=()=>{if(list&&list.children.length)blocks.push(list);list=null;listNumId=null;listLevel=0;};
     for(const el of Array.from(body.children)){
       if(el.localName==='p'){
         const runs=wordRuns(el,rels);if(!runs.length)continue;
-        const pPr=Array.from(el.children).find((x)=>x.localName==='pPr');const style=pPr&&Array.from(pPr.children).find(x=>x.localName==='pStyle');const styleId=style&&(style.getAttribute('w:val')||style.getAttribute('val'))||'';const m=styleId.match(/^Heading([1-6])$/i);
+        const info=docxListInfo(el,formats);
+        if(info){if(!list||listNumId!==info.id||list.attributes.ordered!==info.ordered){flushList();list={id:id(),type:'core/list',attributes:{ordered:info.ordered},children:[],content:''};listNumId=info.id;listLevel=info.level;}
+          list.children.push({id:id(),type:'core/list-item',attributes:{},children:[],content:runs});if(info.level>0&&warnings.indexOf('Listas aninhadas do Word foram achatadas para uma lista simples.')<0)warnings.push('Listas aninhadas do Word foram achatadas para uma lista simples.');continue;}
+        flushList();
+        const pPr=Array.from(el.children).find((x)=>x.localName==='pPr');const style=pPr&&Array.from(pPr.children).find(x=>x.localName==='pStyle');const styleId=style&&(style.getAttribute('w:val')||style.getAttribute('val'))||'';const m=styleId.match(/^(?:Heading|Title|T[ií]tulo)\s*([1-6])$/i);
         blocks.push({id:id(),type:m?'core/heading':'core/paragraph',attributes:m?{level:Number(m[1])}:{},children:[],content:runs});
       } else if(el.localName==='tbl'){
-        const trs=Array.from(el.children).filter((x)=>x.localName==='tr').slice(0,20);if(!trs.length)continue;
-        const cols=Math.min(12,Math.max(1,...trs.map((r)=>Array.from(r.children).filter((x)=>x.localName==='tc').length)));
-        const rows=trs.map((tr)=>({id:id(),type:'core/table-row',attributes:{},content:'',children:Array.from({length:cols},(_,i)=>{const cell=Array.from(tr.children).filter((x)=>x.localName==='tc')[i];const p=cell&&byLocal(cell,'p')[0];return {id:id(),type:'core/table-cell',attributes:{},children:[],content:p?wordRuns(p,rels):[run(' ')]};})}));blocks.push({id:id(),type:'core/table',attributes:{header:false},children:rows,content:''});if(Array.from(el.children).length>20)warnings.push('Tabela Word limitada a 20 linhas e 12 colunas.');
+        flushList();const allRows=Array.from(el.children).filter(x=>x.localName==='tr');const trs=allRows.slice(0,20);if(!trs.length)continue;
+        const cols=Math.min(12,Math.max(1,...trs.map(r=>Array.from(r.children).filter(x=>x.localName==='tc').length)));
+        const firstPr=Array.from(trs[0].children).find(x=>x.localName==='trPr');const header=!!(firstPr&&byLocal(firstPr,'tblHeader').length);
+        const rows=trs.map(tr=>({id:id(),type:'core/table-row',attributes:{},content:'',children:Array.from({length:cols},(_,i)=>{const cell=Array.from(tr.children).filter(x=>x.localName==='tc')[i];const ps=cell?byLocal(cell,'p'):[];const runs=[];ps.forEach((p,j)=>{if(j&&runs.length)runs.push(run('\n'));runs.push(...wordRuns(p,rels));});return {id:id(),type:'core/table-cell',attributes:{},children:[],content:runs.length?runs:[run(' ')]};})}));
+        blocks.push({id:id(),type:'core/table',attributes:{header},children:rows,content:''});if(allRows.length>20||trs.some(r=>Array.from(r.children).filter(x=>x.localName==='tc').length>12))warnings.push('Tabela Word limitada a 20 linhas e 12 colunas.');
       }
     }
-    if(Array.from(zip.entries.keys()).some((n)=>n.startsWith('word/media/')))warnings.push('Imagens e mídias incorporadas no Word não foram extraídas nem enviadas. Use referências já cadastradas na biblioteca local.');
+    flushList();
+    if(Array.from(zip.entries.keys()).some(n=>n.startsWith('word/media/')))warnings.push('Imagens e mídias incorporadas no Word não foram extraídas nem enviadas; referências locais podem ser inseridas depois.');
     return blocks;
   }
   function cellText(cell,shared){const t=cell.getAttribute('t');if(t==='s'){const v=Array.from(cell.children).find(x=>x.localName==='v');return v?shared[Number(v.textContent)]||'':'';}if(t==='inlineStr')return Array.from(cell.getElementsByTagName('*')).filter(x=>x.localName==='t').map(x=>x.textContent).join('');const v=Array.from(cell.children).find(x=>x.localName==='v');return v?v.textContent:'';}
   async function xlsx(file,warnings){
     const zip=await unzip(file);const wbBytes=await zip.read('xl/workbook.xml');if(!wbBytes)throw new Error('Arquivo Excel sem workbook.xml.');
-    const wb=xml(wbBytes), sheets=byLocal(wb,'sheet');if(!sheets.length)throw new Error('A planilha não contém abas.');
-    const relId=sheets[0].getAttribute('r:id')||sheets[0].getAttribute('id');const relBytes=await zip.read('xl/_rels/workbook.xml.rels');let sheetPath='xl/worksheets/sheet1.xml';
-    if(relBytes&&relId){const rel=xml(relBytes);const hit=byLocal(rel,'Relationship').find(x=>x.getAttribute('Id')===relId);if(hit){let target=hit.getAttribute('Target').replace(/^\//,'');const parts=(target.startsWith('xl/')?target:'xl/'+target).split('/');const normalized=[];for(const part of parts){if(part==='..')normalized.pop();else if(part!=='.'&&part)normalized.push(part);}sheetPath=normalized.join('/');}}
-    const sheetBytes=await zip.read(sheetPath);if(!sheetBytes)throw new Error('Não foi possível localizar a primeira aba do Excel.');
+    const wb=xml(wbBytes),allSheets=byLocal(wb,'sheet').filter(s=>!['hidden','veryHidden'].includes(s.getAttribute('state')));if(!allSheets.length)throw new Error('A pasta de trabalho não contém abas visíveis.');
+    const relBytes=await zip.read('xl/_rels/workbook.xml.rels'),relMap={};if(relBytes)byLocal(xml(relBytes),'Relationship').forEach(r=>relMap[r.getAttribute('Id')]=r.getAttribute('Target'));
     const sstBytes=await zip.read('xl/sharedStrings.xml'),shared=[];if(sstBytes){const ss=xml(sstBytes);byLocal(ss,'si').forEach(si=>shared.push(Array.from(si.getElementsByTagName('*')).filter(x=>x.localName==='t').map(x=>x.textContent).join('')));}
-    const sh=xml(sheetBytes), rows=byLocal(sh,'row').slice(0,20);if(!rows.length)throw new Error('A primeira aba está vazia.');
+    const selected=allSheets.slice(0,5),blocks=[];
+    if(allSheets.length>5)warnings.push('Excel limitado às primeiras 5 abas visíveis.');
     const colIndex=(ref)=>{const letters=(ref.match(/^[A-Z]+/i)||['A'])[0].toUpperCase();let n=0;for(const ch of letters)n=n*26+ch.charCodeAt(0)-64;return n-1;};
-    let maxCol=0;const matrix=rows.map((row)=>{const vals=[];byLocal(row,'c').forEach(c=>{const idx=colIndex(c.getAttribute('r')||'A1');if(idx>=12){warnings.push('Planilha limitada a 12 colunas.');return;}if(c.getElementsByTagName('*')&&Array.from(c.getElementsByTagName('*')).some(x=>x.localName==='f')){vals[idx]='';warnings.push('Fórmulas do Excel foram omitidas; valores calculados não são importados.');return;}vals[idx]=cellText(c,shared);maxCol=Math.max(maxCol,idx+1);});return vals;});
-    const cols=Math.max(1,Math.min(12,maxCol));const outRows=matrix.map(vals=>({id:id(),type:'core/table-row',attributes:{},content:'',children:Array.from({length:cols},(_,i)=>({id:id(),type:'core/table-cell',attributes:{},children:[],content:[run(String(vals[i]||' '),[],null)]}))}));
-    if(byLocal(sh,'row').length>20)warnings.push('Planilha limitada às primeiras 20 linhas.');
-    return [{id:id(),type:'core/table',attributes:{header:true},children:outRows,content:''}];
+    for(let sheetIndex=0;sheetIndex<selected.length;sheetIndex++){
+      const sheet=selected[sheetIndex],rid=sheet.getAttribute('r:id')||sheet.getAttribute('id');let target=rid&&relMap[rid]||('worksheets/sheet'+(sheetIndex+1)+'.xml');target=target.replace(/^\//,'');
+      const parts=(target.startsWith('xl/')?target:'xl/'+target).split('/'),normalized=[];for(const part of parts){if(part==='..')normalized.pop();else if(part!=='.'&&part)normalized.push(part);}const sheetPath=normalized.join('/');
+      const sheetBytes=await zip.read(sheetPath);if(!sheetBytes){warnings.push('Uma aba do Excel sem XML foi ignorada.');continue;}
+      const sh=xml(sheetBytes),allRows=byLocal(sh,'row'),rows=allRows.slice(0,20);if(!rows.length)continue;
+      let maxCol=0;const matrix=rows.map(row=>{const vals=[];byLocal(row,'c').forEach(cell=>{const idx=colIndex(cell.getAttribute('r')||'A1');if(idx>=12){if(!warnings.includes('Aba do Excel limitada a 12 colunas.'))warnings.push('Aba do Excel limitada a 12 colunas.');return;}
+        if(Array.from(cell.getElementsByTagName('*')).some(x=>x.localName==='f')){vals[idx]='';if(!warnings.includes('Fórmulas do Excel foram omitidas; valores calculados não são importados.'))warnings.push('Fórmulas do Excel foram omitidas; valores calculados não são importados.');return;}
+        vals[idx]=cellText(cell,shared);maxCol=Math.max(maxCol,idx+1);});return vals;});
+      const cols=Math.max(1,Math.min(12,maxCol)),outRows=matrix.map(vals=>({id:id(),type:'core/table-row',attributes:{},content:'',children:Array.from({length:cols},(_,i)=>({id:id(),type:'core/table-cell',attributes:{},children:[],content:[run(String(vals[i]||' '),[],null)]}))}));
+      blocks.push(textBlock('core/heading',sheet.getAttribute('name')||('Planilha '+(sheetIndex+1)),{level:2}));
+      blocks.push({id:id(),type:'core/table',attributes:{header:true},children:outRows,content:''});
+      if(allRows.length>20||matrix.some(row=>row.length>12))warnings.push('Cada aba foi limitada a 20 linhas e 12 colunas.');
+      if(Array.from(sh.getElementsByTagName('*')).some(x=>x.localName==='mergeCells'))warnings.push('Células mescladas do Excel foram achatadas na tabela.');
+    }
+    if(!blocks.length)throw new Error('As abas visíveis do Excel estão vazias ou não puderam ser lidas.');return blocks;
+  }
+  function presentationRuns(p){
+    const runs=[];
+    for(const child of Array.from(p.children||[])){
+      if(child.localName==='br'){runs.push(run('\n'));continue;}
+      if(!['r','fld'].includes(child.localName))continue;
+      const prop=Array.from(child.children||[]).find(x=>x.localName==='rPr'),marks=[];
+      if(prop){for(const [name,mark] of [['b','bold'],['i','italic'],['u','underline'],['strike','strike']]){const attr=prop.getAttribute(name);const item=Array.from(prop.children||[]).find(x=>x.localName===name);const val=attr!==null?attr:(item&&(item.getAttribute(name)||item.textContent||'1'));if(val!==null&&!['0','false','none','nostrike'].includes(String(val).toLowerCase()))marks.push(mark);}}
+      const text=Array.from(child.getElementsByTagName('*')).filter(x=>x.localName==='t').map(x=>x.textContent).join('');if(text)runs.push(run(text,marks));
+    }
+    return runs;
+  }
+  function presentationBullet(p){
+    const pPr=Array.from(p.children||[]).find(x=>x.localName==='pPr');if(!pPr)return null;
+    if(Array.from(pPr.children||[]).some(x=>x.localName==='buNone'))return null;
+    const bullet=Array.from(pPr.children||[]).find(x=>['buChar','buAutoNum'].includes(x.localName));
+    return bullet?{ordered:bullet.localName==='buAutoNum',level:Number(pPr.getAttribute('lvl')||0)}:null;
+  }
+  function pptTable(table,warnings){
+    const all=Array.from(table.children||[]).filter(x=>x.localName==='tr'),trs=all.slice(0,20);if(!trs.length)return null;
+    const cols=Math.min(12,Math.max(1,...trs.map(r=>Array.from(r.children||[]).filter(x=>x.localName==='tc').length)));
+    const rows=trs.map(tr=>({id:id(),type:'core/table-row',attributes:{},content:'',children:Array.from({length:cols},(_,i)=>{const cell=Array.from(tr.children||[]).filter(x=>x.localName==='tc')[i],ps=cell?byLocal(cell,'p'):[],runs=[];ps.forEach((p,j)=>{if(j&&runs.length)runs.push(run('\n'));runs.push(...presentationRuns(p));});return {id:id(),type:'core/table-cell',attributes:{},children:[],content:runs.length?runs:[run(' ')]};})}));
+    if(all.length>20||trs.some(r=>Array.from(r.children||[]).filter(x=>x.localName==='tc').length>12))warnings.push('Tabela PowerPoint limitada a 20 linhas e 12 colunas.');
+    const props=Array.from(table.children||[]).find(x=>x.localName==='tblPr');return {id:id(),type:'core/table',attributes:{header:props&&props.getAttribute('firstRow')==='1'},children:rows,content:''};
+  }
+  function pptShape(shape,blocks,warnings){
+    const tx=byLocal(shape,'txBody')[0];if(!tx)return false;
+    const paragraphs=byLocal(tx,'p');if(!paragraphs.length)return false;
+    const placeholder=byLocal(shape,'ph')[0],type=placeholder&&placeholder.getAttribute('type');const isTitle=['title','ctrTitle'].includes(type);let list=null,listOrdered=false,seen=false;
+    const flush=()=>{if(list&&list.children.length)blocks.push(list);list=null;};
+    for(const p of paragraphs){const runs=presentationRuns(p);if(!runs.length)continue;const bullet=presentationBullet(p);
+      if(bullet){if(!list||listOrdered!==bullet.ordered){flush();list={id:id(),type:'core/list',attributes:{ordered:bullet.ordered},children:[],content:''};listOrdered=bullet.ordered;}list.children.push({id:id(),type:'core/list-item',attributes:{},children:[],content:runs});if(bullet.level>0&&!warnings.includes('Listas aninhadas do PowerPoint foram achatadas.'))warnings.push('Listas aninhadas do PowerPoint foram achatadas.');seen=true;continue;}
+      flush();blocks.push({id:id(),type:isTitle?'core/heading':'core/paragraph',attributes:isTitle?{level:2}:{},children:[],content:runs});seen=true;
+    }
+    flush();return seen;
   }
   async function pptx(file,warnings){
     const zip=await unzip(file);const names=Array.from(zip.entries.keys()).filter(n=>/^ppt\/slides\/slide\d+\.xml$/.test(n)).sort((a,b)=>Number(a.match(/slide(\d+)/)[1])-Number(b.match(/slide(\d+)/)[1]));if(!names.length)throw new Error('A apresentação não contém slides legíveis.');
-    const blocks=[];for(let i=0;i<Math.min(names.length,100);i++){const d=xml(await zip.read(names[i]));const paragraphs=byLocal(d,'p');let slideHas=false;for(const p of paragraphs){const text=Array.from(p.getElementsByTagName('*')).filter(x=>x.localName==='t').map(x=>x.textContent).join(' ').trim();if(!text)continue;const ph=byLocal(p,'ph')[0];const isTitle=ph&&['title','ctrTitle'].includes(ph.getAttribute('type'));blocks.push(textBlock(isTitle?'core/heading':'core/paragraph',text,isTitle?{level:2}:{}));slideHas=true;}if(i<Math.min(names.length,100)-1&&slideHas)blocks.push({id:id(),type:'core/separator',attributes:{},children:[],content:''});}
-    if(names.length>100)warnings.push('Apresentação limitada aos primeiros 100 slides.');if(Array.from(zip.entries.keys()).some(n=>n.startsWith('ppt/media/')))warnings.push('Mídias incorporadas no PowerPoint não foram extraídas nem enviadas; referências locais existentes podem ser inseridas depois.');return blocks;
+    const blocks=[],count=Math.min(names.length,100);
+    for(let i=0;i<count;i++){
+      const d=xml(await zip.read(names[i])),tree=byLocal(d,'spTree')[0],slideBlocks=[];
+      if(tree){for(const shape of Array.from(tree.children||[])){if(shape.localName==='sp')pptShape(shape,slideBlocks,warnings);else if(shape.localName==='graphicFrame'){const tbl=byLocal(shape,'tbl')[0];const table=tbl&&pptTable(tbl,warnings);if(table)slideBlocks.push(table);}}}
+      if(slideBlocks.length){if(blocks.length)blocks.push({id:id(),type:'core/separator',attributes:{},children:[],content:''});blocks.push(...slideBlocks);}
+    }
+    if(names.length>100)warnings.push('Apresentação limitada aos primeiros 100 slides.');
+    if(Array.from(zip.entries.keys()).some(n=>n.startsWith('ppt/media/')))warnings.push('Imagens e mídias incorporadas no PowerPoint não foram extraídas nem enviadas.');
+    return blocks;
   }
   async function imscc(file,warnings){
-    const zip=await unzip(file), names=Array.from(zip.entries.keys()).filter(n=>/\.html?$/i.test(n)&&(/(^|\/)(wiki_content|pages)(\/|$)/i.test(n)||/wiki/i.test(n))).sort().slice(0,100);if(!names.length)throw new Error('Não encontrei páginas HTML de Canvas (wiki_content/pages) no IMSCC.');
-    const blocks=[];for(let pageIndex=0;pageIndex<names.length;pageIndex++){const name=names[pageIndex];const html=bytesToText(await zip.read(name));const doc=new DOMParser().parseFromString(html,'text/html');const title=(doc.querySelector('h1')||doc.querySelector('title'));const label=title&&title.textContent.trim()||name.split('/').pop().replace(/\.html?$/i,'').replace(/[-_]/g,' ');if(pageIndex>0)blocks.push({id:id(),type:'core/separator',attributes:{},children:[],content:''});blocks.push(textBlock('core/heading',label,{level:2}));blocks.push(...parseHtml(html,warnings));}
+    const zip=await unzip(file),manifestBytes=await zip.read('imsmanifest.xml'),available=new Set(zip.entries.keys());let ordered=[];
+    if(manifestBytes){try{const manifest=xml(manifestBytes);byLocal(manifest,'file').forEach(item=>{const href=item.getAttribute('href');if(!href||!(/\.html?$/i.test(href))||!(/(^|\/)(wiki_content|pages)(\/|$)/i.test(href)||/wiki/i.test(href)))return;let name;try{name=decodeURIComponent(href).replace(/^\.\//,'').replace(/^\//,'');}catch(_){return;}if(name.split('/').includes('..'))return;if(available.has(name)&&!ordered.includes(name))ordered.push(name);});}catch(_){warnings.push('O manifesto IMSCC não pôde ser lido; a ordem alfabética das páginas será usada.');}}
+    const fallback=Array.from(available).filter(n=>/\.html?$/i.test(n)&&(/(^|\/)(wiki_content|pages)(\/|$)/i.test(n)||/wiki/i.test(n))).sort();
+    fallback.forEach(name=>{if(!ordered.includes(name))ordered.push(name);});const names=ordered.slice(0,100);if(!names.length)throw new Error('Não encontrei páginas HTML de Canvas (wiki_content/pages) no IMSCC.');
+    const blocks=[];for(let pageIndex=0;pageIndex<names.length;pageIndex++){const name=names[pageIndex],html=bytesToText(await zip.read(name)),doc=new DOMParser().parseFromString(html,'text/html'),title=doc.querySelector('h1')||doc.querySelector('title'),label=title&&title.textContent.trim()||name.split('/').pop().replace(/\.html?$/i,'').replace(/[-_]/g,' ');if(pageIndex>0)blocks.push({id:id(),type:'core/separator',attributes:{},children:[],content:''});blocks.push(textBlock('core/heading',label,{level:2}));blocks.push(...parseHtml(html,warnings));}
     if(names.length>=100)warnings.push('Curso limitado às primeiras 100 páginas HTML.');return blocks;
   }
   async function importFile(file){

@@ -11,7 +11,12 @@ t('archive size, entry, ratio and path limits exist',/LIMIT_FILE/.test(imp)&&/LI
 t('ZIP import decompresses locally with no network upload code',/DecompressionStream\('deflate-raw'\)/.test(imp)&&!/fetch\s*\(/.test(imp)&&!/XMLHttpRequest/.test(imp)&&!/sendBeacon/.test(imp));
 t('HTML importer removes active elements and preserves bounded tables',/script,style,noscript,form,object,embed,svg,canvas/.test(imp)&&/slice\(0,20\)/.test(imp)&&/12/.test(imp));
 t('media imports use only existing local audio/image roots and allowlisted video hosts',/view\/audio\/blog\//.test(imp)&&/view\/image\/blog\//.test(imp)&&/player\.vimeo\.com/.test(imp)&&/nenhum arquivo foi enviado/.test(imp));
-t('Excel formulas are omitted; imported table caps are documented in code',/Fórmulas do Excel foram omitidas/.test(imp)&&/limited/.test(imp)||/12 colunas/.test(imp));
+t('Excel formulas are omitted and multiple visible sheets are read within limits',/Fórmulas do Excel foram omitidas/.test(imp)&&/slice\(0,5\)/.test(imp)&&/20 linhas/.test(imp));
+t('DOCX numbering and table heading metadata are preserved',/wordNumbering/.test(imp)&&/docxListInfo/.test(imp)&&/tblHeader/.test(imp));
+t('PPTX bullet paragraphs and slide tables are converted structurally',/presentationBullet/.test(imp)&&/pptTable/.test(imp)&&/graphicFrame/.test(imp));
+t('IMSCC page ordering uses the manifest before fallback sorting',/imsmanifest\.xml/.test(imp)&&/manifest/.test(imp)&&/fallback/.test(imp));
+t('Office rich text marks survive OOXML run properties',/wordRuns/.test(imp)&&/presentationRuns/.test(imp)&&/underline/.test(imp));
+t('Canvas imports manifest-referenced pages in declared order',/byLocal\(manifest,'file'\)/.test(imp)&&/ordered\.push/.test(imp));
 t('file picker and drag/drop converge on local import',/data-import-file/.test(js)&&/importLocalFile\(files\[0\]\)/.test(js)&&/dragover/.test(js));
 t('preview and importer controls have accessible names and translations',/aria-label/.test(js)&&langs.every(x=>/text_editor_import_file/.test(x)&&/text_editor_preview_mode/.test(x)));
 t('standalone preview loads editor and importer assets',/blog-block-import\.js/.test(html)&&/blog-block-editor\.js/.test(html));
