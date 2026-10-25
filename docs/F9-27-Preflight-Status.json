@@ -1,0 +1,18 @@
+{
+  "task":"F9-27",
+  "status":"BLOCKED_NOT_RUN",
+  "base_head":"2d9ab58d026ed310ab048c828fbe9da2c2083f31",
+  "explicit_runtime_authorization":"NOT_PROVIDED",
+  "authorized_test_families":[],
+  "staging_hostname":"NOT_PROVIDED",
+  "staging_isolation_confirmation":"NOT_PROVIDED",
+  "installed_commit_confirmation":"NOT_PROVIDED",
+  "f9_12_confirmation":"UNKNOWN_NOT_CONFIRMED",
+  "rollback_confirmation":"NOT_PROVIDED",
+  "secure_environment_access":"NOT_CONFIGURED",
+  "synthetic_data_cleanup_plan":"NOT_PROVIDED",
+  "secrets_or_credentials_in_document":false,
+  "runtime_tests_executed":false,
+  "release_approved":false,
+  "github_write_or_deploy":false
+}

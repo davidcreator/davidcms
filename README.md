@@ -6,6 +6,7 @@ Esta entrega organiza o plano, casos sintéticos, critérios de parada e verific
 
 - Plano: `docs/F9-27-Release-Gate.md`
 - Matriz de gate: `docs/F9-27-Status.json`
+- Pré-flight aguardando autorização/staging/F9-12: `docs/F9-27-Preflight-Execucao.md` e `docs/F9-27-Preflight-Status.json`
 - Dados sintéticos: `tests/fixtures/blog_editor_f927_synthetic.json`
 - Checker estático apenas: `tools/e2e/e2e_f927_static.cjs`
 - HEAD/blob hashes: `docs/F9-27-Base-Hashes.json`

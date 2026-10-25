@@ -5,12 +5,16 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'../..'));
 const errors=[];const need=(ok,msg)=>{if(!ok)errors.push(msg)};
 function json(rel){try{return JSON.parse(fs.readFileSync(path.join(root,rel),'utf8'));}catch(e){errors.push(`${rel}: ${e.message}`);return null;}}
 const status=json('docs/F9-27-Status.json');
+const preflight=json('docs/F9-27-Preflight-Status.json');
 const fixture=json('tests/fixtures/blog_editor_f927_synthetic.json');
 const hashes=json('docs/F9-27-Base-Hashes.json');
 need(status&&status.status==='BLOCKED_NOT_RUN','release gate must remain BLOCKED_NOT_RUN');
 need(status&&status.f9_12_status==='UNKNOWN_NOT_CONFIRMED','F9-12 must not be presumed');
 need(status&&status.runtime_tests_executed===false&&status.database_accessed===false&&status.migration_applied===false,'runtime/DB status must remain false');
 need(status&&status.release_approved===false&&status.github_write_or_deploy===false,'release cannot be approved or published by a static checker');
+need(preflight&&preflight.status==='BLOCKED_NOT_RUN'&&preflight.explicit_runtime_authorization==='NOT_PROVIDED','preflight must remain blocked until explicit authorization');
+need(preflight&&preflight.f9_12_confirmation==='UNKNOWN_NOT_CONFIRMED'&&preflight.runtime_tests_executed===false,'preflight must not assume F9-12 or runtime tests');
+need(preflight&&preflight.secrets_or_credentials_in_document===false,'preflight must never include credentials');
 need(status&&Array.isArray(status.required_before_execution)&&status.required_before_execution.length>=4,'required preconditions incomplete');
 need(Array.isArray(fixture)&&fixture.length>=5,'synthetic E2E fixture matrix incomplete');
 if(Array.isArray(fixture)){
