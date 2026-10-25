@@ -1,0 +1,37 @@
+{
+  "document": {
+    "format_version": 2,
+    "blocks": [
+      {
+        "id": "group-root",
+        "type": "core/group",
+        "attributes": {"outline_label":"Raiz"},
+        "children": [
+          {
+            "id": "group-nested",
+            "type": "core/group",
+            "attributes": {"outline_label":"Subgrupo"},
+            "children": [
+              {"id":"paragraph-child","type":"core/paragraph","attributes":{},"children":[],"content":[{"text":"Filho","marks":[],"href":null}]}
+            ],
+            "content": ""
+          }
+        ],
+        "content": ""
+      },
+      {"id":"paragraph-root","type":"core/paragraph","attributes":{},"children":[],"content":[{"text":"Irmão de raiz","marks":[],"href":null}]}
+    ]
+  },
+  "cases": [
+    {"key":"ArrowRight","current":"group-root","expected":"group-nested"},
+    {"key":"ArrowRight","current":"group-nested","expected":"paragraph-child"},
+    {"key":"ArrowLeft","current":"paragraph-child","expected":"group-nested"},
+    {"key":"ArrowUp","current":"group-nested","expected":"group-root"},
+    {"key":"ArrowDown","current":"group-nested","expected":"paragraph-child"},
+    {"key":"Home","current":"paragraph-root","expected":"group-root"},
+    {"key":"End","current":"group-root","expected":"paragraph-root"},
+    {"key":"ArrowLeft","current":"group-root","expected":null},
+    {"key":"ArrowRight","current":"paragraph-root","expected":null},
+    {"key":"Escape","current":"group-root","expected":null}
+  ]
+}

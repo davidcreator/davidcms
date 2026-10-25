@@ -305,3 +305,7 @@ $_['text_block_navigation_path'] = 'Selected block path';
 $_['text_block_navigation_cell'] = 'Cell';
 $_['text_block_status_focus_changed'] = 'Focus moved to the selected block.';
 $_['text_block_navigation_row'] = 'Row';
+
+// BDREditor outline keyboard navigation
+$_['text_block_outline_keyboard_hint'] = '↑/↓ navigate · → first child · ← parent block · Home/End first/last';
+$_['text_block_status_outline_changed'] = 'Selected block updated from outline navigation.';

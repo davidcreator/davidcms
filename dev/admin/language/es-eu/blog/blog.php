@@ -305,3 +305,7 @@ $_['text_block_navigation_path'] = 'Ruta del bloque seleccionado';
 $_['text_block_navigation_cell'] = 'Celda';
 $_['text_block_status_focus_changed'] = 'El foco se movió al bloque seleccionado.';
 $_['text_block_navigation_row'] = 'Fila';
+
+// BDREditor outline keyboard navigation
+$_['text_block_outline_keyboard_hint'] = '↑/↓ navegar · → primer hijo · ← bloque padre · Home/End inicio/fin';
+$_['text_block_status_outline_changed'] = 'Bloque seleccionado actualizado desde la navegación de estructura.';

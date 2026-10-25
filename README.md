@@ -1,32 +1,28 @@
-# BDREditor — navegação hierárquica e foco
+# BDREditor — navegação de outline por teclado
 
-Incremento cumulativo do BDREditor, editor de conteúdo exclusivo do ReamurCMS. Acrescenta breadcrumbs navegáveis e foco anunciado para blocos aninhados, mantendo os incrementos `core/file`, `core/audio`, edição por teclado e copiar/colar local. Gutenberg continua apenas referência conceitual; sem dependência, código ou assets Gutenberg/WordPress.
+Incremento cumulativo do BDREditor exclusivo do ReamurCMS. Estende a outline hierárquica com navegação por teclas direcionais quando o foco está em um botão da outline. Mantém `core/file`, `core/audio`, atalhos do editor, copiar/colar local e breadcrumbs. Gutenberg é apenas referência; sem código, assets ou dependência.
 
-## Este incremento
+## Teclas na outline
 
-- O inspetor mostra o caminho raiz → ancestrais → bloco selecionado em `nav`/lista ordenada acessível.
-- Ancestrais são botões locais que selecionam e focam o bloco; o item atual é marcado `aria-current="location"`.
-- Selecionar um item na árvore outline também move o foco para o bloco e anuncia a mudança na região `aria-live`.
-- Usa rótulos personalizados de grupos; linhas/células de tabela recebem rótulos localizados. Conteúdo é inserido como texto, sem HTML interpretado.
-- CSS responsive e estado `:focus-visible`; sem mudança no JSON ou persistência.
+- **↑ / ↓**: bloco anterior / próximo na ordem hierárquica visível.
+- **→**: primeiro filho visível.
+- **←**: bloco pai.
+- **Home / End**: primeiro / último bloco visível.
+- Em limite ou alvo inexistente, mantém foco/seleção e suprime rolagem acidental da página.
+- O foco permanece na outline; `aria-current` acompanha a seleção e uma região `aria-live` anuncia a mudança.
+- O hint localizado é exibido junto à outline.
 
-## Fora do escopo
+Essas teclas só são tratadas quando o foco está em `.rb-outline-button`. Setas em conteúdo editável, campos, breadcrumbs e demais controles mantêm comportamento nativo. Reordenação continua pelos controles existentes; este incremento navega, não move blocos.
 
-Não adiciona movimentação/reordenação entre pais, seleção múltipla, atalhos que interceptem navegação do navegador, alterações de schema, endpoint, banco, migration, autosave, preview draft ou armazenamento compartilhado. O incremento anterior de cópia permanece local à instância.
+## Verificações
 
-## Base e verificações
+Foram adicionados fixture e checker estático para ordem de leitura, pais/filhos, Home/End e limites. Checkers cumulativos de breadcrumbs, copy/paste, atalhos, áudio e arquivo/download continuam no pacote. Resultado: **24 PASS** outline por teclado, **24** breadcrumbs, **29** copy/paste, **25** atalhos, **49** áudio e **48** arquivo/download. `node --check`, parsing JSON das seis fixtures, checksums e ZIP também passaram. Os helpers são testados em VM Node sem DOM/browser; não é teste de leitor de tela ou navegador real.
 
-Fontes pontuais comparados contra o commit `eca41ed5bfb87ff9ec9e801fd9bf745978ed9bdd` no `main`, que inclui `BDREditor-Block-Copy-Paste`; sem clone integral e sem GitHub write. Nenhuma numeração oficial foi atribuída.
+HEAD de base consultado por commit: `7b4ee32a3218efc418da5a3fd75634910d9f0760` (Hierarchical-Navigation). Pacote local cumulativo, sem clone integral e sem GitHub write. Não foram executados PHP/runtime, browser/app, banco, staging, deploy ou migrations. Nenhuma numeração oficial foi atribuída.
 
-Resultados estáticos: **24 PASS** na navegação, **29** copy/paste, **25** teclado, **49** áudio e **48** arquivo/download. Também passaram `node --check` dos scripts/JS, validação JSON das fixtures, verificação SHA-256 e integridade do ZIP. Checkers usam fixtures sintéticas e VM Node sem DOM/browser; não substituem runtime real, leitor de tela ou navegador.
-
-Não foram executados PHP/runtime, navegador real, aplicação, banco, staging, deploy ou migrations. Staging permanece pausado.
-
-## Arquivos de apoio
-
-- Contrato: `docs/BDREditor-Hierarchical-Navigation.md`
-- Escopo: `docs/BDREditor-Hierarchical-Navigation-Scope.md`
-- Fixture: `tests/fixtures/navigation_tree.json`
-- Checker novo: `tools/e2e/e2e_bdre_navigation_static.cjs`
-- Checkers cumulativos: `tools/e2e/`
-- Manifesto: `SHA256SUMS`
+- Escopo: `docs/BDREditor-Outline-Keyboard-Navigation-Scope.md`
+- Contrato: `docs/BDREditor-Outline-Keyboard-Navigation.md`
+- Fixture: `tests/fixtures/outline_navigation.json`
+- Checker: `tools/e2e/e2e_bdre_outline_keyboard_static.cjs`
+- Checkers anteriores: `tools/e2e/`
+- SHA-256: `SHA256SUMS`

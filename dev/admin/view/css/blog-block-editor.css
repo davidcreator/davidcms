@@ -130,3 +130,6 @@
 .rb-breadcrumb-button{border:0;background:transparent;color:#174ea6;text-decoration:underline;text-underline-offset:.12em;padding:.15rem .1rem;cursor:pointer;font:inherit;font-size:.82rem}
 .rb-breadcrumb-button:focus-visible{outline:3px solid #174ea6;outline-offset:2px;border-radius:2px}
 .rb-breadcrumb-current{font-size:.82rem;font-weight:700;overflow-wrap:anywhere}
+
+/* Keyboard guidance for hierarchical outline navigation. */
+.rb-outline-keyboard-hint{margin:.25rem 0 .55rem;color:var(--rb-muted);font-size:.72rem;line-height:1.4}
