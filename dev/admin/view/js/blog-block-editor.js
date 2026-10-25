@@ -10,10 +10,10 @@
     ['core/paragraph', 'Parágrafo'], ['core/heading', 'Título'], ['core/list', 'Lista'],
     ['core/image', 'Imagem'], ['core/quote', 'Citação'], ['core/video_embed', 'Vídeo'],
     ['core/button', 'Botão'], ['core/separator', 'Separador'], ['core/group', 'Grupo'],
-    ['core/columns', 'Colunas']
+    ['core/columns', 'Colunas'], ['core/gallery', 'Galeria'], ['core/cover', 'Capa']
   ];
   const TEXT_TYPES = new Set(['core/paragraph', 'core/heading', 'core/list-item', 'core/quote', 'core/button']);
-  const BLOCK_CATEGORIES = { 'core/paragraph':'content', 'core/heading':'content', 'core/list':'content', 'core/quote':'content', 'core/button':'content', 'core/image':'media', 'core/video_embed':'media', 'core/separator':'layout', 'core/group':'layout', 'core/columns':'layout' };
+  const BLOCK_CATEGORIES = { 'core/paragraph':'content', 'core/heading':'content', 'core/list':'content', 'core/quote':'content', 'core/button':'content', 'core/image':'media', 'core/video_embed':'media', 'core/gallery':'media', 'core/cover':'media', 'core/separator':'layout', 'core/group':'layout', 'core/columns':'layout' };
   const TRANSFORMABLE_TEXT = new Set(['core/paragraph', 'core/heading', 'core/quote', 'core/button']);
   const CLONE = (value) => JSON.parse(JSON.stringify(value));
   let instanceSequence = 0;
@@ -77,6 +77,14 @@
     return doc;
   }
 
+  function utf8Length(value) {
+    try {
+      const text = String(value);
+      if (typeof TextEncoder !== 'undefined') return new TextEncoder().encode(text).length;
+      return encodeURIComponent(text).replace(/%[0-9A-F]{2}/gi, 'x').length;
+    } catch (_) { return Infinity; }
+  }
+
   function validInlineRuns(runs, type) {
     if (!Array.isArray(runs) || runs.length > 1000) return false;
     let chars = 0;
@@ -109,19 +117,33 @@
       else if ((!textBlock || version === 1) && (typeof node.content !== 'string' || (!textBlock && version === 2 && node.content !== ''))) errors.push('content_invalid');
       if (typeof node.content === 'string' && node.content.length > 262144) errors.push('content_too_large');
       const a = node.attributes;
-      const allowed = {
+      const allowedAttributes = {
         'core/paragraph':['align'], 'core/heading':['level'], 'core/list':['ordered'], 'core/list-item':[],
         'core/quote':[], 'core/image':['src','alt','title'], 'core/video_embed':['url'], 'core/button':['url'],
-        'core/separator':[], 'core/group':[], 'core/columns':['count'], 'core/column':[]
-      }[node.type] || [];
+        'core/separator':[], 'core/group':[], 'core/columns':['count'], 'core/column':[],
+        'core/gallery':['columns','align'], 'core/cover':['src','alt','align']
+      };
+      if (version === 2) allowedAttributes['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
+      const allowed = allowedAttributes[node.type] || [];
       if (Object.keys(a).some((key) => !allowed.includes(key))) errors.push('attributes_not_allowlisted');
+      if (version === 1 && ['core/gallery','core/cover'].includes(node.type)) errors.push('media_block_requires_v2');
       switch (node.type) {
         case 'core/paragraph': if (!['', 'left', 'center', 'right'].includes(a.align || '')) errors.push('align_invalid'); if (node.children.length) errors.push('paragraph_children'); break;
         case 'core/heading': if (![1,2,3,4,5,6].includes(a.level) || node.children.length) errors.push('heading_invalid'); break;
         case 'core/list': if (typeof a.ordered !== 'boolean' || node.children.length < 1 || node.children.some((child) => !child || child.type !== 'core/list-item')) errors.push('list_invalid'); break;
         case 'core/list-item': if (parent !== 'core/list' || node.children.length) errors.push('list_item_invalid'); break;
         case 'core/quote': if (node.children.length) errors.push('quote_children'); break;
-        case 'core/image': if (!validLocalImage(a.src) || typeof a.alt !== 'string' || node.children.length || node.content) errors.push('image_invalid'); break;
+        case 'core/image':
+          if (!validLocalImage(a.src) || typeof a.alt !== 'string' || node.children.length || node.content) errors.push('image_invalid');
+          ['alt','title','caption'].forEach((key) => { if (a[key] !== undefined && (typeof a[key] !== 'string' || utf8Length(a[key]) > 4096)) errors.push('image_text_invalid'); });
+          if (a.align !== undefined && !['left','center','right','wide','full'].includes(a.align)) errors.push('image_alignment_invalid');
+          if (a.size !== undefined && !['small','medium','large','full'].includes(a.size)) errors.push('image_size_invalid');
+          if (a.mobile_size !== undefined && !['full','large','medium'].includes(a.mobile_size)) errors.push('image_mobile_size_invalid');
+          break;
+        case 'core/gallery': if (version !== 2 || node.content || ![2,3,4].includes(a.columns) || !['content','wide','full'].includes(a.align) || node.children.length < 1 || node.children.length > 20 || node.children.some((child) => !child || child.type !== 'core/image')) errors.push('gallery_invalid'); break;
+        case 'core/cover':
+          if (version !== 2 || !validLocalImage(a.src) || typeof a.alt !== 'string' || utf8Length(a.alt) > 4096 || !['content','wide','full'].includes(a.align) || node.content || node.children.length < 1 || node.children.length > 12 || node.children.some((child) => !child || !['core/heading','core/paragraph','core/quote','core/button'].includes(child.type))) errors.push('cover_invalid');
+          break;
         case 'core/video_embed': if (!validEmbed(a.url) || node.children.length || node.content) errors.push('embed_invalid'); break;
         case 'core/button': if (!validActionUrl(a.url) || node.children.length) errors.push('button_invalid'); break;
         case 'core/separator': if (node.children.length || node.content) errors.push('separator_invalid'); break;
@@ -197,7 +219,7 @@
       this.slashTrigger = null;
       this.inserterQuery = '';
       this.statusMessage = '';
-      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',typeLabels:{}}, this.options.strings || {});
+      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},typeLabels:{}}, this.options.strings || {});
       const rawInitial = this.options.document || { format_version: 1, blocks: [] };
       const initial = upgradeDocument(rawInitial);
       const validation = validateDocument(initial);
@@ -264,7 +286,7 @@
         const id = field.dataset.nodeId, key = field.dataset.attribute;
         this.updateNode(id, (node) => {
           if (key === 'ordered') node.attributes[key] = field.value === 'true';
-          else if (key === 'level' || key === 'count') node.attributes[key] = Number(field.value);
+          else if (key === 'level' || key === 'count' || key === 'columns') node.attributes[key] = Number(field.value);
           else node.attributes[key] = field.value;
         });
       });
@@ -322,6 +344,7 @@
     action(name, button) {
       if (this.locked) return;
       if (name === 'insert') this.insert(button.dataset.type, button.dataset.count);
+      else if (name === 'insert-pattern') this.insertPattern(button.dataset.pattern);
       else if (name === 'toggle-inserter') this.inserterOpen ? this.closeInserter(false) : this.openInserter(button.dataset.afterId || null, false);
       else if (name === 'duplicate') this.duplicateNode(button.dataset.nodeId || this.selectedId);
       else if (name === 'outline-select') { const id = button.dataset.nodeId; this.selectNode(id); const card = Array.from(this.root.querySelectorAll('.rb-block[data-node-id]')).find((item) => item.dataset.nodeId === id); if (card) card.scrollIntoView({ block:'nearest' }); }
@@ -511,6 +534,8 @@
       if (type === 'core/list') return this.node(type, { ordered: false }, '', [this.node('core/list-item', {}, 'Novo item'), this.node('core/list-item', {}, 'Novo item')]);
       if (type === 'core/list-item') return this.node(type, {}, 'Novo item');
       if (type === 'core/image') return this.node(type, { src: '', alt: '' }, '');
+      if (type === 'core/gallery') return this.node(type, { columns:2, align:'content' }, '', [this.node('core/image',{src:'',alt:''},''),this.node('core/image',{src:'',alt:''},'')]);
+      if (type === 'core/cover') return this.node(type, { src:'', alt:'', align:'wide' }, '', [this.node('core/heading',{level:2},'Título da capa'),this.node('core/paragraph',{},'Adicione uma descrição.'),this.node('core/button',{url:'/'},'Saiba mais')]);
       if (type === 'core/video_embed') return this.node(type, { url: '' }, '');
       if (type === 'core/button') return this.node(type, { url: '/' }, 'Saiba mais');
       if (type === 'core/separator') return this.node(type, {}, '');
@@ -528,9 +553,34 @@
     insertTypes(afterId) {
       const found = afterId ? this.findPath(this.state.blocks, afterId) : null;
       if (found && (found.node.type === 'core/list' || (found.parent && found.parent.type === 'core/list'))) return [{ type:'core/list-item', category:'content' }];
+      if (found && found.parent && found.parent.type === 'core/gallery') return found.parent.children.length < 20 ? [{ type:'core/image', category:'media' }] : [];
+      if (found && found.parent && found.parent.type === 'core/cover') return found.parent.children.length < 12 ? ['core/heading','core/paragraph','core/quote','core/button'].map((type) => ({ type, category:'content' })) : [];
       if (found && ['core/group','core/column'].includes(found.node.type)) return TYPES.map(([type]) => ({ type, category: BLOCK_CATEGORIES[type] || 'content' }));
       if (found && (found.node.type === 'core/columns' || (found.parent && found.parent.type === 'core/columns'))) return [];
       return TYPES.map(([type]) => ({ type, category: BLOCK_CATEGORIES[type] || 'content' }));
+    }
+
+    canInsertPatterns(afterId) {
+      const found = afterId ? this.findPath(this.state.blocks, afterId) : null;
+      if (found && found.parent && ['core/cover','core/gallery'].includes(found.parent.type)) return false;
+      return this.insertTypes(afterId).some((item) => !['core/list-item','core/column'].includes(item.type));
+    }
+
+    createPattern(pattern) {
+      if (pattern === 'two_columns') return this.node('core/columns',{count:2},'',[
+        this.node('core/column',{},'', [this.node('core/heading',{level:2},'Destaque principal'),this.node('core/paragraph',{},'Descreva o primeiro benefício.')]),
+        this.node('core/column',{},'', [this.node('core/heading',{level:2},'Outro benefício'),this.node('core/paragraph',{},'Descreva o segundo benefício.')])
+      ]);
+      if (pattern === 'quote_cta') return this.node('core/group',{},'',[
+        this.node('core/quote',{},'Uma frase de destaque para seus leitores.'),this.node('core/button',{url:'/contato'},'Fale conosco')
+      ]);
+      if (pattern === 'section_intro') return this.node('core/group',{},'',[
+        this.node('core/heading',{level:2},'Título da seção'),this.node('core/paragraph',{},'Apresente o conteúdo desta seção.'),this.node('core/separator',{},'')
+      ]);
+      if (pattern === 'cover_hero') return this.node('core/cover',{src:'',alt:'',align:'wide'},'',[
+        this.node('core/heading',{level:2},'Título de destaque'),this.node('core/paragraph',{},'Uma breve introdução.'),this.node('core/button',{url:'/'},'Saiba mais')
+      ]);
+      return null;
     }
 
     renderInserter() {
@@ -553,6 +603,14 @@
         });
         if (group.querySelector('.rb-inserter-option')) list.append(group);
       });
+      if (this.canInsertPatterns(this.slashTrigger ? this.slashTrigger.nodeId : this.insertAfterId)) {
+        const patterns = this.el('section','rb-inserter-category rb-pattern-category'); patterns.append(this.el('h4','rb-inserter-category-title',this.strings.patternsCategory),this.el('p','rb-pattern-hint',this.strings.patternHint));
+        ['two_columns','quote_cta','section_intro','cover_hero'].forEach((pattern) => {
+          const label = (this.strings.patternLabels || {})[pattern] || pattern;
+          const option = this.button(label,'insert-pattern',{pattern}); option.classList.add('rb-inserter-option'); option.dataset.searchText = label.toLocaleLowerCase(); patterns.append(option);
+        });
+        list.append(patterns);
+      }
       const noResults = this.el('p', 'rb-inserter-empty rb-inserter-no-results', this.strings.noBlocks); noResults.hidden = true;
       menu.append(list, noResults);
       return menu;
@@ -577,20 +635,42 @@
       if (returnFocus) { const button = this.root.querySelector('[data-action="toggle-inserter"]'); if (button) button.focus(); }
     }
 
-    insert(type, presetCount) {
-      const afterId = this.slashTrigger ? this.slashTrigger.nodeId : this.insertAfterId || this.selectedId;
-      const allowed = this.insertTypes(afterId).some((item) => item.type === type);
-      if (!allowed) return;
-      const next = CLONE(this.state); const found = afterId ? this.findPath(next.blocks, afterId) : null;
+    insertionLocation(blocks, afterId) {
+      const found = afterId ? this.findPath(blocks, afterId) : null;
       const container = found && ['core/group','core/column','core/list'].includes(found.node.type);
-      const target = !found ? next.blocks : (container ? found.node.children : found.nodes);
-      const index = !found ? target.length : (container ? target.length : found.index + 1);
+      const target = !found ? blocks : (container ? found.node.children : found.nodes);
+      return { found, target, index: !found ? target.length : (container ? target.length : found.index + 1) };
+    }
+
+    prepareSlashTarget(next, afterId) {
+      const found = afterId ? this.findPath(next.blocks, afterId) : null;
       if (this.slashTrigger && found && TEXT_TYPES.has(found.node.type)) {
         const at = this.slashTrigger.offset; found.node.content = this.removeInlineRange(found.node.content, at - 1, at);
       }
-      const node = this.createDefault(type, presetCount); target.splice(index, 0, node);
+      return found;
+    }
+
+    finishInsert(next, node) {
       this.inserterOpen = false; this.slashTrigger = null; this.insertAfterId = node.id; this.inserterQuery = ''; this.statusMessage = this.strings.statusInserted;
       this.commit(next, node.id); this.focusNode(node.id);
+    }
+
+    insert(type, presetCount) {
+      const afterId = this.slashTrigger ? this.slashTrigger.nodeId : this.insertAfterId || this.selectedId;
+      if (!this.insertTypes(afterId).some((item) => item.type === type)) return;
+      const next = CLONE(this.state); this.prepareSlashTarget(next, afterId);
+      const location = this.insertionLocation(next.blocks, afterId);
+      const node = this.createDefault(type, presetCount); location.target.splice(location.index, 0, node);
+      this.finishInsert(next,node);
+    }
+
+    insertPattern(pattern) {
+      const afterId = this.slashTrigger ? this.slashTrigger.nodeId : this.insertAfterId || this.selectedId;
+      if (!this.canInsertPatterns(afterId)) return;
+      const next = CLONE(this.state); this.prepareSlashTarget(next, afterId);
+      const location = this.insertionLocation(next.blocks, afterId); const node = this.createPattern(pattern);
+      if (!node) return;
+      location.target.splice(location.index,0,node); this.finishInsert(next,node);
     }
 
     findPath(nodes, id, parent) {
@@ -610,6 +690,8 @@
     deleteNode(id) {
       const next = CLONE(this.state), found = this.findPath(next.blocks, id); if (!found) return;
       if (found.parent && found.parent.type === 'core/columns' && found.node.type === 'core/column') return;
+      if (found.parent && found.parent.type === 'core/gallery' && found.parent.children.length <= 1) return;
+      if (found.parent && found.parent.type === 'core/cover' && found.parent.children.length <= 1) return;
       found.nodes.splice(found.index, 1);
       let focusId = found.nodes[Math.min(found.index, found.nodes.length - 1)] ? found.nodes[Math.min(found.index, found.nodes.length - 1)].id : null;
       if (found.parent && !found.nodes.length) {
@@ -632,6 +714,8 @@
     duplicateNode(id) {
       const next = CLONE(this.state); const found = this.findPath(next.blocks, id); if (!found) return;
       if (found.parent && found.parent.type === 'core/columns' && found.node.type === 'core/column') return;
+      if (found.parent && found.parent.type === 'core/gallery' && found.parent.children.length >= 20) return;
+      if (found.parent && found.parent.type === 'core/cover' && found.parent.children.length >= 12) return;
       const copy = CLONE(found.node);
       const refreshIds = (node) => { node.id = this.newId(); node.children.forEach(refreshIds); };
       refreshIds(copy); found.nodes.splice(found.index + 1, 0, copy); this.statusMessage = this.strings.statusDuplicated; this.commit(next, copy.id); this.focusNode(copy.id);
@@ -679,7 +763,7 @@
 
     undo() { if (!this.undoStack.length) return; this.redoStack.push(this.snapshot()); this.state = JSON.parse(this.undoStack.pop()); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusUndo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
     redo() { if (!this.redoStack.length) return; this.undoStack.push(this.snapshot()); this.state = JSON.parse(this.redoStack.pop()); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusRedo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
-    setSelectedAttribute(key, value) { if (this.locked) return false; const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null; if (!found || found.node.type !== 'core/image' || key !== 'src') return false; this.updateNode(found.node.id, (node) => { node.attributes.src = value; }); return true; }
+    setSelectedAttribute(key, value) { if (this.locked) return false; const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null; if (!found || !['core/image','core/cover'].includes(found.node.type) || key !== 'src') return false; this.updateNode(found.node.id, (node) => { node.attributes.src = value; }); return true; }
     getDocument() { return this.locked ? null : CLONE(this.state); }
     serialize() { if (this.locked) throw new Error('document_requires_review'); const check = validateDocument(this.state); if (!check.valid) throw new Error(check.errors.join(',')); return JSON.stringify(this.state); }
 
@@ -723,7 +807,9 @@
       const up = this.button('↑', 'move-up', { nodeId:node.id }); up.setAttribute('aria-label', this.strings.moveUp); up.disabled = !path || path.index === 0; toolbar.append(up);
       const down = this.button('↓', 'move-down', { nodeId:node.id }); down.setAttribute('aria-label', this.strings.moveDown); down.disabled = !path || path.index === path.nodes.length - 1; toolbar.append(down);
       const fixedColumn = !!(path && path.parent && path.parent.type === 'core/columns' && node.type === 'core/column');
-      const duplicate = this.button(this.strings.duplicate, 'duplicate', { nodeId:node.id }); duplicate.disabled = fixedColumn; toolbar.append(duplicate);
+      const atParentLimit = !!(path && path.parent && ((path.parent.type === 'core/gallery' && path.parent.children.length >= 20) || (path.parent.type === 'core/cover' && path.parent.children.length >= 12)));
+      const lastRequiredChild = !!(path && path.parent && ['core/gallery','core/cover'].includes(path.parent.type) && path.parent.children.length <= 1);
+      const duplicate = this.button(this.strings.duplicate, 'duplicate', { nodeId:node.id }); duplicate.disabled = fixedColumn || atParentLimit; toolbar.append(duplicate);
       if (TRANSFORMABLE_TEXT.has(node.type)) {
         const wrap = this.el('label','rb-transform-wrap'); wrap.append(this.el('span','rb-sr-only',this.strings.transform));
         const select = this.el('select','rb-input rb-transform'); select.dataset.transformNode = node.id;
@@ -733,28 +819,49 @@
       } else {
         const hint = this.el('span','rb-transform-hint',this.strings.transformHint); toolbar.append(hint);
       }
-      const remove = this.button(this.strings.remove,'delete',{nodeId:node.id}); remove.disabled = fixedColumn; toolbar.append(remove);
+      const remove = this.button(this.strings.remove,'delete',{nodeId:node.id}); remove.disabled = fixedColumn || lastRequiredChild; toolbar.append(remove);
       const add = this.button('+', 'toggle-inserter', { afterId:node.id }); add.setAttribute('aria-label', this.strings.addAfter); add.setAttribute('aria-expanded', String(this.inserterOpen && this.insertAfterId === node.id)); add.setAttribute('aria-controls','rb-inserter-' + this.instance); toolbar.append(add);
       return toolbar;
+    }
+
+    renderAdminImagePreview(node, className) {
+      const preview = this.el('figure',className || 'rb-admin-image-preview');
+      if (validLocalImage(node.attributes.src)) {
+        const image = this.el('img',''); image.src = node.attributes.src; image.alt = node.attributes.alt || ''; preview.append(image);
+      } else preview.append(this.el('p','rb-admin-media-empty',this.strings.media.placeholder));
+      if (node.attributes.caption) preview.append(this.el('figcaption','',node.attributes.caption));
+      return preview;
+    }
+
+    renderAdminVideoPreview(url) {
+      const preview = this.el('div','rb-video-admin-preview'); preview.setAttribute('role','img'); preview.setAttribute('aria-label',this.strings.media.videoPreview);
+      preview.append(this.el('span','rb-video-admin-play','▶'));
+      let provider = this.strings.media.videoPreviewHint;
+      if (validEmbed(url)) { try { const host = new URL(url).hostname.toLowerCase(); provider = host.includes('vimeo') ? 'Vimeo' : 'YouTube'; } catch (_) {} }
+      preview.append(this.el('span','rb-video-admin-label',this.strings.media.videoPreview + ' · ' + provider));
+      return preview;
     }
 
     renderNode(node, isRoot) {
       const typeClass = node.type.replace(/[^a-z0-9-]/gi, '-');
       const card = this.el('section', 'rb-block rb-type-' + typeClass + (node.id === this.selectedId ? ' is-selected' : ''));
       if (node.type === 'core/columns') card.classList.add(node.attributes.count === 3 ? 'rb-columns-3' : 'rb-columns-2');
+      if (node.type === 'core/gallery') card.classList.add('rb-gallery-preview','rb-gallery-preview--columns-' + node.attributes.columns);
       card.dataset.nodeId = node.id; card.tabIndex = -1; if (isRoot) card.dataset.rootNode = '1';
       const head = this.el('div', 'rb-block-head');
       head.append(this.el('span', 'rb-block-title', this.label(node.type)));
       card.append(head, this.renderBlockToolbar(node));
       if (TEXT_TYPES.has(node.type)) {
         if (node.id === this.selectedId) card.append(this.renderInlineToolbar(node));
-        const editor = this.el('div', 'rb-content'); editor.contentEditable = 'true'; editor.dataset.editContent = node.id;
+        const editor = this.el('div', 'rb-content' + (node.type === 'core/button' ? ' rb-content-button-preview' : '')); editor.contentEditable = 'true'; editor.dataset.editContent = node.id;
         editor.setAttribute('role', 'textbox'); editor.setAttribute('aria-multiline', 'true');
         editor.setAttribute('aria-label', this.strings.textLabel + ': ' + this.label(node.type)); editor.setAttribute('data-placeholder', this.strings.placeholder || '');
         buildInlineDom(editor, node.content); card.append(editor);
       } else if (node.type === 'core/image') {
-        card.append(this.el('p', 'rb-preview-value', node.attributes.alt || 'Imagem sem texto alternativo'));
-      } else if (node.type === 'core/video_embed') card.append(this.el('p', 'rb-preview-value', node.attributes.url || 'URL do vídeo será definida no inspetor'));
+        card.append(this.renderAdminImagePreview(node));
+      } else if (node.type === 'core/video_embed') card.append(this.renderAdminVideoPreview(node.attributes.url));
+      else if (node.type === 'core/gallery') card.append(this.el('p','rb-preview-value',this.label('core/gallery') + ' · ' + node.children.length));
+      else if (node.type === 'core/cover') card.append(this.renderAdminImagePreview(node,'rb-cover-admin-preview'));
       else if (node.type === 'core/columns') card.append(this.el('p', 'rb-preview-value', node.attributes.count + ' ' + this.strings.columnCount));
       node.children.forEach((child) => card.append(this.renderNode(child, false)));
       return card;
@@ -784,20 +891,38 @@
         const wrap = this.el('label', 'rb-field'); wrap.append(this.el('span', '', label));
         let input;
         if (choices) { input = this.el('select', 'rb-input'); choices.forEach(([val, text]) => { const option = this.el('option', '', text); option.value = val; input.append(option); }); input.value = String(value); }
-        else { input = this.el('input', 'rb-input'); input.type = type || 'text'; input.value = value == null ? '' : String(value); }
+        else if (type === 'textarea') { input = this.el('textarea','rb-input'); input.value = value == null ? '' : String(value); input.maxLength = 4096; }
+        else { input = this.el('input', 'rb-input'); input.type = type || 'text'; input.value = value == null ? '' : String(value); if (['alt','title','caption'].includes(key)) input.maxLength = 4096; }
         input.dataset.attribute = key; input.dataset.nodeId = found.node.id; wrap.append(input); aside.append(wrap);
       };
       const n = found.node;
       if (n.type === 'core/heading') addField('Nível', 'level', n.attributes.level, 'number');
       if (n.type === 'core/paragraph') addField('Alinhamento', 'align', n.attributes.align || 'left', 'text', [['left','Esquerda'],['center','Centro'],['right','Direita']]);
       if (n.type === 'core/list') addField('Tipo de lista', 'ordered', n.attributes.ordered ? 'true' : 'false', 'text', [['false','Marcadores'],['true','Numerada']]);
-      if (n.type === 'core/image') { addField('Caminho local da mídia (view/image/blog/...)', 'src', n.attributes.src, 'text'); aside.append(this.button('Escolher da biblioteca', 'media'));  addField('Texto alternativo', 'alt', n.attributes.alt, 'text'); }
+      if (n.type === 'core/image') {
+        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); aside.append(this.button(this.strings.media.placeholder, 'media'));
+        addField(this.strings.media.alt, 'alt', n.attributes.alt, 'text'); addField(this.strings.media.title, 'title', n.attributes.title || '', 'text');
+        addField(this.strings.media.caption, 'caption', n.attributes.caption || '', 'textarea');
+        addField(this.strings.media.alignment, 'align', n.attributes.align || 'center', 'text', [['left',this.strings.media.alignments.left],['center',this.strings.media.alignments.center],['right',this.strings.media.alignments.right],['wide',this.strings.media.alignments.wide],['full',this.strings.media.alignments.full]]);
+        addField(this.strings.media.imageSize, 'size', n.attributes.size || 'large', 'text', Object.entries(this.strings.media.sizes));
+        addField(this.strings.media.mobileSize, 'mobile_size', n.attributes.mobile_size || 'full', 'text', Object.entries(this.strings.media.mobileSizes));
+      }
+      if (n.type === 'core/cover') {
+        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); aside.append(this.button(this.strings.media.placeholder, 'media'));
+        addField(this.strings.media.alt, 'alt', n.attributes.alt, 'text');
+        addField(this.strings.media.alignment, 'align', n.attributes.align || 'wide', 'text', [['content',this.strings.media.alignments.content],['wide',this.strings.media.alignments.wide],['full',this.strings.media.alignments.full]]);
+      }
+      if (n.type === 'core/gallery') {
+        addField(this.strings.media.galleryColumns, 'columns', n.attributes.columns, 'number', [[2,'2'],[3,'3'],[4,'4']]);
+        addField(this.strings.media.alignment, 'align', n.attributes.align || 'content', 'text', [['content',this.strings.media.alignments.content],['wide',this.strings.media.alignments.wide],['full',this.strings.media.alignments.full]]);
+      }
       if (n.type === 'core/video_embed') addField('URL YouTube/Vimeo', 'url', n.attributes.url, 'url');
       if (n.type === 'core/button') addField('Destino (URL ou caminho local)', 'url', n.attributes.url, 'url');
       if (n.type === 'core/columns') aside.append(this.el('p', 'rb-muted', 'Preset fixo nesta etapa: ' + n.attributes.count + ' colunas.'));
       const actions = this.el('div', 'rb-inspector-actions');
       const fixedColumn = found.parent && found.parent.type === 'core/columns' && n.type === 'core/column';
-      const remove = this.button(this.strings.remove, 'delete', { nodeId:n.id }); remove.disabled = !!fixedColumn;
+      const lastRequiredChild = found.parent && ['core/gallery','core/cover'].includes(found.parent.type) && found.parent.children.length <= 1;
+      const remove = this.button(this.strings.remove, 'delete', { nodeId:n.id }); remove.disabled = !!fixedColumn || !!lastRequiredChild;
       actions.append(this.button(this.strings.moveUp, 'move-up', { nodeId:n.id }), this.button(this.strings.moveDown, 'move-down', { nodeId:n.id }), remove); aside.append(actions);
       return aside;
     }

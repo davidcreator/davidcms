@@ -60,10 +60,18 @@ final class BlockRenderer {
                 return '<blockquote class="rms-block rms-block-quote"><p>' . $content . '</p></blockquote>';
 
             case 'core/image':
+                return $this->renderImageFigure($attributes, $assetBase);
+
+            case 'core/gallery':
+                $columns = (int)$attributes['columns'];
+                $align = (string)$attributes['align'];
+                return '<div class="rms-block rms-block-gallery rms-block-gallery--columns-' . $columns . ' rms-block-gallery--align-' . $align . '">' . $this->renderNodes($children, $validator, $assetBase, $version) . '</div>';
+
+            case 'core/cover':
                 $src = $this->escape($this->resolveLocalImageUrl((string)$attributes['src'], $assetBase));
                 $alt = $this->escape((string)$attributes['alt']);
-                $title = isset($attributes['title']) && $attributes['title'] !== '' ? ' title="' . $this->escape((string)$attributes['title']) . '"' : '';
-                return '<figure class="rms-block rms-block-image"><img src="' . $src . '" alt="' . $alt . '"' . $title . ' loading="lazy" decoding="async"></figure>';
+                $align = (string)$attributes['align'];
+                return '<section class="rms-block rms-block-cover rms-block-cover--align-' . $align . '"><img class="rms-block-cover__image" src="' . $src . '" alt="' . $alt . '" loading="lazy" decoding="async"><div class="rms-block-cover__content">' . $this->renderNodes($children, $validator, $assetBase, $version) . '</div></section>';
 
             case 'core/video_embed':
                 $target = $validator->embedTarget((string)$attributes['url']);
@@ -95,6 +103,19 @@ final class BlockRenderer {
                 return '';
         }
         return '';
+    }
+
+    /** Render a schema-validated image with only finite style tokens and escaped caption text. */
+    private function renderImageFigure(array $attributes, string $assetBase): string {
+        $src = $this->escape($this->resolveLocalImageUrl((string)$attributes['src'], $assetBase));
+        $alt = $this->escape((string)$attributes['alt']);
+        $title = isset($attributes['title']) && $attributes['title'] !== '' ? ' title="' . $this->escape((string)$attributes['title']) . '"' : '';
+        $align = (string)($attributes['align'] ?? 'center');
+        $size = (string)($attributes['size'] ?? 'large');
+        $mobileSize = (string)($attributes['mobile_size'] ?? 'full');
+        $class = 'rms-block rms-block-image rms-block-image--align-' . $align . ' rms-block-image--size-' . $size . ' rms-block-image--mobile-' . $mobileSize;
+        $caption = isset($attributes['caption']) && $attributes['caption'] !== '' ? '<figcaption class="rms-block-image__caption">' . $this->escape((string)$attributes['caption']) . '</figcaption>' : '';
+        return '<figure class="' . $class . '"><img src="' . $src . '" alt="' . $alt . '"' . $title . ' loading="lazy" decoding="async">' . $caption . '</figure>';
     }
 
     /** Render version-2 inline runs using fixed tags and contextual escaping only. */

@@ -492,6 +492,14 @@ class Blog extends \Reamur\System\Engine\Controller {
             'text_block_status_removed', 'text_block_status_undo', 'text_block_status_redo',
             'text_block_undo', 'text_block_redo', 'text_block_preview_desktop', 'text_block_preview_tablet', 'text_block_preview_mobile',
             'text_block_editor_tools', 'text_block_canvas', 'text_block_canvas_empty', 'text_block_inspector', 'text_block_inspector_empty', 'text_block_column_count',
+            'text_block_type_gallery', 'text_block_type_cover', 'text_block_caption', 'text_block_alignment', 'text_block_image_size', 'text_block_mobile_size',
+            'text_block_gallery_columns', 'text_block_media_source', 'text_block_image_alt', 'text_block_image_title',
+            'text_block_align_left', 'text_block_align_center', 'text_block_align_right', 'text_block_align_content', 'text_block_align_wide', 'text_block_align_full',
+            'text_block_size_small', 'text_block_size_medium', 'text_block_size_large', 'text_block_size_full',
+            'text_block_mobile_full', 'text_block_mobile_large', 'text_block_mobile_medium',
+            'text_block_video_preview', 'text_block_video_preview_hint', 'text_block_media_placeholder',
+            'text_block_pattern_category', 'text_block_pattern_two_columns', 'text_block_pattern_quote_cta', 'text_block_pattern_section_intro',
+            'text_block_pattern_cover_hero', 'text_block_pattern_hint',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
@@ -524,7 +532,22 @@ class Blog extends \Reamur\System\Engine\Controller {
                 'core/button' => $data['text_block_type_button'], 'core/separator' => $data['text_block_type_separator'],
                 'core/group' => $data['text_block_type_group'], 'core/columns' => $data['text_block_type_columns'],
                 'core/list-item' => $data['text_block_type_list_item'], 'core/column' => $data['text_block_type_column'],
+                'core/gallery' => $data['text_block_type_gallery'], 'core/cover' => $data['text_block_type_cover'],
             ],
+            'media' => [
+                'caption' => $data['text_block_caption'], 'alignment' => $data['text_block_alignment'],
+                'imageSize' => $data['text_block_image_size'], 'mobileSize' => $data['text_block_mobile_size'],
+                'galleryColumns' => $data['text_block_gallery_columns'], 'source' => $data['text_block_media_source'],
+                'alt' => $data['text_block_image_alt'], 'title' => $data['text_block_image_title'],
+                'videoPreview' => $data['text_block_video_preview'], 'videoPreviewHint' => $data['text_block_video_preview_hint'],
+                'placeholder' => $data['text_block_media_placeholder'],
+                'alignments' => ['left'=>$data['text_block_align_left'],'center'=>$data['text_block_align_center'],'right'=>$data['text_block_align_right'],'content'=>$data['text_block_align_content'],'wide'=>$data['text_block_align_wide'],'full'=>$data['text_block_align_full']],
+                'sizes' => ['small'=>$data['text_block_size_small'],'medium'=>$data['text_block_size_medium'],'large'=>$data['text_block_size_large'],'full'=>$data['text_block_size_full']],
+                'mobileSizes' => ['full'=>$data['text_block_mobile_full'],'large'=>$data['text_block_mobile_large'],'medium'=>$data['text_block_mobile_medium']],
+            ],
+            'patternsCategory' => $data['text_block_pattern_category'],
+            'patternHint' => $data['text_block_pattern_hint'],
+            'patternLabels' => ['two_columns'=>$data['text_block_pattern_two_columns'],'quote_cta'=>$data['text_block_pattern_quote_cta'],'section_intro'=>$data['text_block_pattern_section_intro'],'cover_hero'=>$data['text_block_pattern_cover_hero']],
         ];
 
         // CKEditor 4 (assets locais, ADR 0046): init fica no admin.js (textarea[data-rte])

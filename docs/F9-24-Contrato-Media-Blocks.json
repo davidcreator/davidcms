@@ -1,0 +1,49 @@
+{
+  "task": "F9-24",
+  "base_head": "af3421cc1b3bd4636d8bb44d6d3d4e83e0fb5eb9",
+  "repository": "https://github.com/davidcreator/davidcms",
+  "document_version": 2,
+  "v1_compatibility": "Existing v1 blocks remain valid; gallery and cover require v2. Existing v1 image attributes remain the original src/alt/title allowlist.",
+  "blocks": {
+    "core/image": {
+      "attributes_v1": {"src":"allowlisted local image path","alt":"plain escaped string","title":"optional plain escaped string"},
+      "attributes_v2_additions": {
+        "caption":"optional plain text, UTF-8, max 4096 bytes",
+        "align":["left","center","right","wide","full"],
+        "size":["small","medium","large","full"],
+        "mobile_size":["full","large","medium"]
+      },
+      "content":"empty string; no children"
+    },
+    "core/gallery": {
+      "v2_only": true,
+      "attributes": {"columns":[2,3,4],"align":["content","wide","full"]},
+      "children":"1..20 core/image nodes only",
+      "content":"empty string"
+    },
+    "core/cover": {
+      "v2_only": true,
+      "attributes": {"src":"allowlisted local image path","alt":"plain escaped string, max 4096 bytes","align":["content","wide","full"]},
+      "children":"1..12 core/heading, core/paragraph, core/quote or core/button nodes only",
+      "content":"empty string"
+    }
+  },
+  "rendering": {
+    "image_text":"Caption, alt and title are escaped as text/attributes.",
+    "responsive_styles":"Only finite allowlisted class suffixes; no document-controlled style, CSS or HTML.",
+    "gallery":"Fixed columns/alignment classes; grid collapses at tablet/mobile breakpoints.",
+    "cover":"Escaped local image plus fixed overlay/content classes; no inline background URL or style attribute.",
+    "button_preview":"Admin uses styled contenteditable only; does not navigate.",
+    "video_preview":"Admin shows a local provider placeholder, no remote iframe. Public renderer retains the existing sandboxed YouTube/Vimeo embed."
+  },
+  "patterns": {
+    "storage":"Built-in local insertion patterns only; no global pattern table or persistence.",
+    "ids":"All pattern nodes use editor-generated IDs.",
+    "items":["two_columns","quote_cta","section_intro","cover_hero"],
+    "cover_hero":"Intentionally invalid until the editor selects a local image; save stays blocked by normal validation until resolved."
+  },
+  "limits": {"gallery_images":20,"cover_children":12,"media_plain_text_bytes":4096,"document_json_bytes":4194304},
+  "migration_or_sql_change": false,
+  "github_write_or_deploy": false,
+  "runtime_tests_executed": false
+}

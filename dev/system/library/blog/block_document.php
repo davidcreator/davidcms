@@ -18,6 +18,9 @@ class BlockDocument {
     public const RICH_TEXT_FORMAT_VERSION = 2;
     public const MAX_INLINE_RUNS = 1000;
     public const MAX_INLINE_CONTENT_BYTES = 262144;
+    public const MAX_MEDIA_TEXT_BYTES = 4096;
+    public const MAX_GALLERY_IMAGES = 20;
+    public const MAX_COVER_CHILDREN = 12;
     public const MAX_SOURCE_BYTES = 1048576;
     public const MAX_BLOCKS = 1000;
     public const MAX_TOTAL_NODES = 2000;
@@ -137,21 +140,36 @@ class BlockDocument {
         if ($keys !== ['attributes', 'children', 'content', 'id', 'type']) { $errors[] = 'node_shape_invalid'; return; }
         if (!is_string($node['id']) || !preg_match('/^[A-Za-z0-9_-]{1,96}$/D', $node['id']) || isset($ids[$node['id']])) $errors[] = 'node_id_invalid_or_duplicate';
         else $ids[$node['id']] = true;
-        $types = ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/image','core/video_embed','core/button','core/separator','core/group','core/columns','core/column'];
+        $types = ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/image','core/video_embed','core/button','core/separator','core/group','core/columns','core/column','core/gallery','core/cover'];
         if (!is_string($node['type']) || !in_array($node['type'], $types, true)) { $errors[] = 'unknown_block_type'; return; }
         if (!is_array($node['attributes']) || !is_array($node['children']) || !$this->isSequentialList($node['children'])) { $errors[] = 'node_value_type_invalid'; return; }
         $type = $node['type']; $attrs = $node['attributes'];
+        if ($version === self::FORMAT_VERSION && in_array($type, ['core/gallery','core/cover'], true)) $errors[] = 'media_block_requires_v2';
         $allowedAttrs = [
             'core/paragraph' => ['align'], 'core/heading' => ['level'], 'core/list' => ['ordered'],
             'core/list-item' => [], 'core/quote' => [], 'core/image' => ['src','alt','title'],
             'core/video_embed' => ['url'], 'core/button' => ['url'], 'core/separator' => [],
-            'core/group' => [], 'core/columns' => ['count'], 'core/column' => []
+            'core/group' => [], 'core/columns' => ['count'], 'core/column' => [],
+            'core/gallery' => ['columns','align'], 'core/cover' => ['src','alt','align']
         ];
+        if ($version === self::RICH_TEXT_FORMAT_VERSION) {
+            $allowedAttrs['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
+        }
         if (array_diff(array_keys($attrs), $allowedAttrs[$type])) $errors[] = 'attributes_not_allowlisted';
         if ($type === 'core/paragraph' && isset($attrs['align']) && !in_array($attrs['align'], ['left','center','right'], true)) $errors[] = 'alignment_invalid';
         if ($type === 'core/heading' && (!isset($attrs['level']) || !is_int($attrs['level']) || $attrs['level'] < 1 || $attrs['level'] > 6)) $errors[] = 'heading_level_invalid';
         if ($type === 'core/list' && (!isset($attrs['ordered']) || !is_bool($attrs['ordered']))) $errors[] = 'list_order_invalid';
         if ($type === 'core/image' && (!isset($attrs['src']) || !$this->isSafeImagePath($attrs['src']) || !isset($attrs['alt']) || !is_string($attrs['alt']) || (isset($attrs['title']) && !is_string($attrs['title'])))) $errors[] = 'image_attributes_invalid';
+        if ($type === 'core/image') {
+            foreach (['alt','title','caption'] as $textKey) {
+                if (isset($attrs[$textKey]) && (!is_string($attrs[$textKey]) || strlen($attrs[$textKey]) > self::MAX_MEDIA_TEXT_BYTES || !preg_match('//u', $attrs[$textKey]))) $errors[] = 'image_text_attribute_invalid';
+            }
+            if (isset($attrs['align']) && !in_array($attrs['align'], ['left','center','right','wide','full'], true)) $errors[] = 'image_alignment_invalid';
+            if (isset($attrs['size']) && !in_array($attrs['size'], ['small','medium','large','full'], true)) $errors[] = 'image_size_invalid';
+            if (isset($attrs['mobile_size']) && !in_array($attrs['mobile_size'], ['full','large','medium'], true)) $errors[] = 'image_mobile_size_invalid';
+        }
+        if ($type === 'core/gallery' && (!isset($attrs['columns']) || !is_int($attrs['columns']) || !in_array($attrs['columns'], [2,3,4], true) || !isset($attrs['align']) || !in_array($attrs['align'], ['content','wide','full'], true) || count($node['children']) < 1 || count($node['children']) > self::MAX_GALLERY_IMAGES)) $errors[] = 'gallery_attributes_or_count_invalid';
+        if ($type === 'core/cover' && (!isset($attrs['src']) || !$this->isSafeImagePath($attrs['src']) || !isset($attrs['alt']) || !is_string($attrs['alt']) || strlen($attrs['alt']) > self::MAX_MEDIA_TEXT_BYTES || !preg_match('//u', (string)$attrs['alt']) || !isset($attrs['align']) || !in_array($attrs['align'], ['content','wide','full'], true) || count($node['children']) < 1 || count($node['children']) > self::MAX_COVER_CHILDREN)) $errors[] = 'cover_attributes_or_children_invalid';
         if ($type === 'core/video_embed' && (!isset($attrs['url']) || !$this->isSafeEmbedUrl($attrs['url']))) $errors[] = 'embed_url_invalid';
         if ($type === 'core/button' && (!isset($attrs['url']) || !$this->isSafeActionUrl($attrs['url']))) $errors[] = 'button_url_invalid';
         if ($type === 'core/columns' && (!isset($attrs['count']) || !is_int($attrs['count']) || !in_array($attrs['count'], [2,3], true) || count($node['children']) !== $attrs['count'])) $errors[] = 'columns_count_invalid';
@@ -165,7 +183,7 @@ class BlockDocument {
         } elseif (!is_string($node['content']) || $node['content'] !== '') {
             $errors[] = 'non_text_content_invalid';
         }
-        if (in_array($type, ['core/list','core/image','core/video_embed','core/separator','core/group','core/columns','core/column'], true) && $node['content'] !== '') $errors[] = 'content_not_allowed';
+        if (in_array($type, ['core/list','core/image','core/video_embed','core/separator','core/group','core/columns','core/column','core/gallery','core/cover'], true) && $node['content'] !== '') $errors[] = 'content_not_allowed';
         if ($type === 'core/list-item' && ($parentType !== 'core/list' || count($node['children']) > 0)) $errors[] = 'list_item_parent_invalid';
         if ($type === 'core/column' && $parentType !== 'core/columns') $errors[] = 'column_parent_invalid';
         if ($type === 'core/list') {
@@ -173,6 +191,11 @@ class BlockDocument {
             foreach ($node['children'] as $child) if (!is_array($child) || ($child['type'] ?? null) !== 'core/list-item') $errors[] = 'list_child_invalid';
         } elseif ($type === 'core/columns') {
             foreach ($node['children'] as $child) if (!is_array($child) || ($child['type'] ?? null) !== 'core/column') $errors[] = 'columns_child_invalid';
+        } elseif ($type === 'core/gallery') {
+            foreach ($node['children'] as $child) if (!is_array($child) || ($child['type'] ?? null) !== 'core/image') $errors[] = 'gallery_child_invalid';
+        } elseif ($type === 'core/cover') {
+            $coverChildTypes = ['core/heading','core/paragraph','core/quote','core/button'];
+            foreach ($node['children'] as $child) if (!is_array($child) || !in_array(($child['type'] ?? null), $coverChildTypes, true)) $errors[] = 'cover_child_invalid';
         } elseif ($type === 'core/group' || $type === 'core/column') {
             if (count($node['children']) < 1) $errors[] = 'empty_container';
             foreach ($node['children'] as $child) if (is_array($child) && in_array(($child['type'] ?? null), ['core/list-item','core/column'], true)) $errors[] = 'internal_node_parent_invalid';

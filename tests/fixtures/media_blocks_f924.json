@@ -1,0 +1,493 @@
+[
+  {
+    "id": "v1-image-still-valid",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "img-old",
+          "type": "core/image",
+          "attributes": {
+            "src": "view/image/blog/synthetic.webp",
+            "alt": "Synthetic image"
+          },
+          "children": [],
+          "content": ""
+        }
+      ]
+    },
+    "expected": "Legacy v1 image remains valid with only its original attributes."
+  },
+  {
+    "id": "v2-image-caption-responsive",
+    "document": {
+      "format_version": 2,
+      "blocks": [
+        {
+          "id": "img-new",
+          "type": "core/image",
+          "attributes": {
+            "src": "view/image/blog/synthetic.webp",
+            "alt": "Synthetic image",
+            "caption": "A <safe> caption",
+            "align": "wide",
+            "size": "medium",
+            "mobile_size": "full"
+          },
+          "children": [],
+          "content": ""
+        }
+      ]
+    },
+    "expected": "Valid v2 image; caption escaped; alignment/size/mobile classes come only from finite enums."
+  },
+  {
+    "id": "v2-gallery-two-images",
+    "document": {
+      "format_version": 2,
+      "blocks": [
+        {
+          "id": "gallery-a",
+          "type": "core/gallery",
+          "attributes": {
+            "columns": 2,
+            "align": "content"
+          },
+          "children": [
+            {
+              "id": "img-a",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/a.webp",
+                "alt": "A"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "img-b",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/b.webp",
+                "alt": "B",
+                "caption": "Second"
+              },
+              "children": [],
+              "content": ""
+            }
+          ],
+          "content": ""
+        }
+      ]
+    },
+    "expected": "Valid; renderer emits fixed gallery classes and only validated image children."
+  },
+  {
+    "id": "v2-gallery-invalid-child",
+    "document": {
+      "format_version": 2,
+      "blocks": [
+        {
+          "id": "gallery-b",
+          "type": "core/gallery",
+          "attributes": {
+            "columns": 2,
+            "align": "content"
+          },
+          "children": [
+            {
+              "id": "p1",
+              "type": "core/paragraph",
+              "attributes": {},
+              "children": [],
+              "content": [
+                {
+                  "text": "No",
+                  "marks": [],
+                  "href": null
+                }
+              ]
+            }
+          ],
+          "content": ""
+        }
+      ]
+    },
+    "expected": "Reject non-image gallery child."
+  },
+  {
+    "id": "v2-cover-with-text-children",
+    "document": {
+      "format_version": 2,
+      "blocks": [
+        {
+          "id": "cover-a",
+          "type": "core/cover",
+          "attributes": {
+            "src": "image/cover/synthetic.webp",
+            "alt": "Synthetic cover",
+            "align": "wide"
+          },
+          "children": [
+            {
+              "id": "cover-h",
+              "type": "core/heading",
+              "attributes": {
+                "level": 2
+              },
+              "children": [],
+              "content": [
+                {
+                  "text": "Welcome",
+                  "marks": [],
+                  "href": null
+                }
+              ]
+            },
+            {
+              "id": "cover-p",
+              "type": "core/paragraph",
+              "attributes": {},
+              "children": [],
+              "content": [
+                {
+                  "text": "Intro copy",
+                  "marks": [],
+                  "href": null
+                }
+              ]
+            },
+            {
+              "id": "cover-b",
+              "type": "core/button",
+              "attributes": {
+                "url": "/contact"
+              },
+              "children": [],
+              "content": [
+                {
+                  "text": "Contact",
+                  "marks": [],
+                  "href": null
+                }
+              ]
+            }
+          ],
+          "content": ""
+        }
+      ]
+    },
+    "expected": "Valid; image URL/alt escaped and cover children rendered from text-safe nodes."
+  },
+  {
+    "id": "v2-cover-remote-image-rejected",
+    "document": {
+      "format_version": 2,
+      "blocks": [
+        {
+          "id": "cover-bad",
+          "type": "core/cover",
+          "attributes": {
+            "src": "https://example.invalid/cover.webp",
+            "alt": "x",
+            "align": "full"
+          },
+          "children": [
+            {
+              "id": "cover-t",
+              "type": "core/paragraph",
+              "attributes": {},
+              "children": [],
+              "content": [
+                {
+                  "text": "Text",
+                  "marks": [],
+                  "href": null
+                }
+              ]
+            }
+          ],
+          "content": ""
+        }
+      ]
+    },
+    "expected": "Reject remote/unallowlisted media path."
+  },
+  {
+    "id": "v1-gallery-rejected",
+    "document": {
+      "format_version": 1,
+      "blocks": [
+        {
+          "id": "gallery-v1",
+          "type": "core/gallery",
+          "attributes": {
+            "columns": 2,
+            "align": "content"
+          },
+          "children": [],
+          "content": ""
+        }
+      ]
+    },
+    "expected": "New media layout types require format v2; old v1 documents remain readable."
+  },
+  {
+    "id": "v2-image-untrusted-style-token",
+    "document": {
+      "format_version": 2,
+      "blocks": [
+        {
+          "id": "img-style",
+          "type": "core/image",
+          "attributes": {
+            "src": "view/image/blog/synthetic.webp",
+            "alt": "x",
+            "align": "wide;position:fixed"
+          },
+          "children": [],
+          "content": ""
+        }
+      ]
+    },
+    "expected": "Reject style injection; renderer never receives arbitrary class/style tokens."
+  },
+  {
+    "id": "v2-gallery-over-limit",
+    "document": {
+      "format_version": 2,
+      "blocks": [
+        {
+          "id": "gallery-limit",
+          "type": "core/gallery",
+          "attributes": {
+            "columns": 4,
+            "align": "full"
+          },
+          "children": [
+            {
+              "id": "limit-0",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/0.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-1",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/1.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-2",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/2.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-3",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/3.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-4",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/4.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-5",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/5.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-6",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/6.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-7",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/7.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-8",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/8.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-9",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/9.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-10",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/10.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-11",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/11.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-12",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/12.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-13",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/13.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-14",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/14.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-15",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/15.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-16",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/16.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-17",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/17.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-18",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/18.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-19",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/19.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            },
+            {
+              "id": "limit-20",
+              "type": "core/image",
+              "attributes": {
+                "src": "view/image/blog/20.webp",
+                "alt": "x"
+              },
+              "children": [],
+              "content": ""
+            }
+          ],
+          "content": ""
+        }
+      ]
+    },
+    "expected": "Reject empty gallery; server caps gallery images at 20."
+  },
+  {
+    "id": "pattern-cover-placeholder",
+    "expected": "Built-in hero-cover pattern is intentionally unsaveable until a local image is selected; no remote placeholder is persisted."
+  },
+  {
+    "id": "admin-video-preview-safe",
+    "expected": "Admin displays a local provider placeholder without creating an external iframe; public renderer retains its existing sandboxed embed."
+  }
+]

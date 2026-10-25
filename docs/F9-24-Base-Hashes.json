@@ -1,0 +1,17 @@
+{
+  "head": "af3421cc1b3bd4636d8bb44d6d3d4e83e0fb5eb9",
+  "method": "git blob SHA-1 recorded from the exact upstream HEAD before local edits; only point files downloaded",
+  "files": [
+    {"path":"dev/system/library/blog/block_document.php","git_blob_sha1":"93ef03718c34824c5060db76620a64bfb189b407"},
+    {"path":"dev/system/library/blog/block_renderer.php","git_blob_sha1":"e711ae8cdc821c10d43277c1e389236457a8a101"},
+    {"path":"dev/catalog/view/css/blog-blocks.css","git_blob_sha1":"3238e3540a2bff0c16f4846dac7ca676e4bafa48"},
+    {"path":"dev/admin/controller/blog/blog.php","git_blob_sha1":"de6cc3150fb7467dead6f7b3c25663397f354ad6"},
+    {"path":"dev/admin/language/en-us/blog/blog.php","git_blob_sha1":"44a68acb70dc8274c0d0cf88b1a4bd9d8c1a620a"},
+    {"path":"dev/admin/language/es-eu/blog/blog.php","git_blob_sha1":"e4bb6fa561c4bf342cf7531c3f7a1c60cf63dc4b"},
+    {"path":"dev/admin/language/pt-br/blog/blog.php","git_blob_sha1":"89b6a3056fb79e2d6e08a207ea61aa5ca7989265"},
+    {"path":"dev/admin/view/css/blog-block-editor.css","git_blob_sha1":"60c19829484bd33c9f56badc6c137d636fb89564"},
+    {"path":"dev/admin/view/js/blog-block-editor-init.js","git_blob_sha1":"eb81a22754522797c0cc42a76b5c5e722a2510c1"},
+    {"path":"dev/admin/view/js/blog-block-editor.js","git_blob_sha1":"90a1ca1d33270f0fcad2d52d47a279253e6bd208"},
+    {"path":"dev/admin/view/template/blog/blog_form.twig","git_blob_sha1":"be300ec5127c720767e565e6e3f0507b6b05a7f1"}
+  ]
+}

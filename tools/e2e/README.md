@@ -1,17 +1,19 @@
-# F9-23 — checker estático e plano de E2E
+# F9-24 — checker estático e plano futuro
 
-## Checker disponível
+## Checker atual
 
-Execute `node tools/e2e/e2e_f923_static.cjs [F9-23-root]`. Ele só lê JavaScript/CSS/PHP como texto, traduções e fixtures JSON. Não carrega o CMS nem executa PHP, SQL, browser, app ou banco. PASS é uma checagem estática, não prova interação/integração runtime.
+`node tools/e2e/e2e_f924_static.cjs [F9-24-root]` verifica marcadores textuais em PHP/JS/CSS/controller/traduções e parseia fixtures sintéticas. Não executa nenhum arquivo PHP nem navegador, SQL, CMS, renderer real ou banco. PASS é evidência somente estática.
 
-## Plano funcional futuro (não executado)
+## E2E funcional futuro (não executado)
 
-1. Inserter pesquisável por categoria; adicionar no root, após seleção e dentro de group/column; confirmar restrições em list e columns.
-2. Slash no início/após espaço, pesquisa pelo teclado, Enter seleciona, Escape preserva o caractere literal.
-3. Toolbar contextual; mover/duplicar/remover; transformar parágrafo/título/citação/botão mantendo apenas estado compatível.
-4. Duplicação de árvore profunda com IDs únicos; undo/redo (capacidade 50), foco e status ARIA em cada ação.
-5. Outline aninhado seleciona o bloco correspondente; testar documento vazio/longo e nomes de tipos.
-6. Drag/drop de irmãos no root e em níveis nested; rejeitar cross-parent e garantir alternativas de teclado.
-7. Acessibilidade com teclado/leitor de tela, mobile, reduced motion, seleção de rich text e idioma PT-BR/EN-US/ES-EU.
+1. Validar/serializar/deserializar v1 (incluindo imagem antiga) e v2 com gallery, cover e image metadata.
+2. POST e render de captions com HTML adversarial; confirmar escape sem tags/atributos no output.
+3. Gallery com 1/20/21 imagens, colunas 2/3/4 e alinhamentos; rejeitar filho não-image, path remoto e campos não allowlisted.
+4. Cover com imagem local e filhos permitidos; rejeitar filhos estruturais, URL externa, campo extra e v1.
+5. Usar Media Library para capa e cada imagem de galeria; confirmar que fonte inválida/ausente bloqueia save sem apagar legado.
+6. Ajustar size/alignment/mobile_size; testar CSS desktop/tablet/mobile, alt/caption e layout de galeria.
+7. Admin previews: button sem navegar e embed sem iframe externo; verificar playback sandboxed somente no catálogo sob política aprovada.
+8. Inserir cada pattern dentro de root/group/column, verificar IDs únicos, constraints e estado; confirmar cover pattern precisa de imagem antes de salvar.
+9. Teclado, leitores de tela, foco, reduced motion, mobile e idiomas PT-BR/EN-US/ES-EU.
 
-Executar somente com autorização explícita em staging descartável. Nunca usar produção, dump privado ou dados reais. F9-12 continua não presumida/aplicada.
+Executar apenas após autorização explícita em staging descartável, com F9-12 verificada/aplicada pelo responsável. Nunca usar produção, dump privado ou dados reais. Nenhuma dessas verificações de runtime foi feita nesta tarefa.
