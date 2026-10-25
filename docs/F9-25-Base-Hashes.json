@@ -1,0 +1,13 @@
+{
+  "head": "4bb1b7c7ce8b23172f56241d5209ffdc6760c5c5",
+  "method": "Compare Git blob SHA-1 for each point source against the exact F9-24 main commit; no full repository clone.",
+  "modified_sources": [
+    {"path":"dev/system/library/blog/block_document.php","git_blob_sha1":"f0a8cd276fae0aea7d4ead0b46d5b0aed698a79a"},
+    {"path":"dev/admin/view/js/blog-block-editor.js","git_blob_sha1":"2b0d7a52ea462136f6418553fb89629a4139f0b0"},
+    {"path":"dev/admin/view/js/blog-block-editor-init.js","git_blob_sha1":"eb81a22754522797c0cc42a76b5c5e722a2510c1"},
+    {"path":"dev/admin/controller/blog/blog.php","git_blob_sha1":"244055eed662da34aa6cf9eb02a2362933b8b13c"},
+    {"path":"dev/admin/language/en-us/blog/blog.php","git_blob_sha1":"dd16f0dd4b688c67357c2cf80bd11f75694d054c"},
+    {"path":"dev/admin/language/es-eu/blog/blog.php","git_blob_sha1":"f2606b8c573fb044d7754d4b95cbc025db226d56"},
+    {"path":"dev/admin/language/pt-br/blog/blog.php","git_blob_sha1":"ccbb6ee87840ff60d978240a178ef0dcfb0dd99a"}
+  ]
+}

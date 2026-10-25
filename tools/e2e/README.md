@@ -1,19 +1,17 @@
-# F9-24 — checker estático e plano futuro
+# F9-25 — verificação estática e plano pendente
 
-## Checker atual
+## Checker
 
-`node tools/e2e/e2e_f924_static.cjs [F9-24-root]` verifica marcadores textuais em PHP/JS/CSS/controller/traduções e parseia fixtures sintéticas. Não executa nenhum arquivo PHP nem navegador, SQL, CMS, renderer real ou banco. PASS é evidência somente estática.
+`node tools/e2e/e2e_f925_static.cjs [F9-25-root]` verifica marcadores de contrato no PHP/JS/controller/traduções, conteúdo do contrato JSON e fixtures sintéticas. Não executa PHP nem testa browser, editor, endpoint, preview real, SQL, app ou ACL.
 
-## E2E funcional futuro (não executado)
+## E2E funcional (não executado)
 
-1. Validar/serializar/deserializar v1 (incluindo imagem antiga) e v2 com gallery, cover e image metadata.
-2. POST e render de captions com HTML adversarial; confirmar escape sem tags/atributos no output.
-3. Gallery com 1/20/21 imagens, colunas 2/3/4 e alinhamentos; rejeitar filho não-image, path remoto e campos não allowlisted.
-4. Cover com imagem local e filhos permitidos; rejeitar filhos estruturais, URL externa, campo extra e v1.
-5. Usar Media Library para capa e cada imagem de galeria; confirmar que fonte inválida/ausente bloqueia save sem apagar legado.
-6. Ajustar size/alignment/mobile_size; testar CSS desktop/tablet/mobile, alt/caption e layout de galeria.
-7. Admin previews: button sem navegar e embed sem iframe externo; verificar playback sandboxed somente no catálogo sob política aprovada.
-8. Inserir cada pattern dentro de root/group/column, verificar IDs únicos, constraints e estado; confirmar cover pattern precisa de imagem antes de salvar.
-9. Teclado, leitores de tela, foco, reduced motion, mobile e idiomas PT-BR/EN-US/ES-EU.
+1. Abrir documento v1 e confirmar que funciona sem `outline_label`; rejeitar o campo em v1 sem alterar/persistir ao abrir.
+2. V2: salvar/editar/limpar rótulo; conferir outline aninhado, limites 160 UTF-8 bytes, XSS literal tratado como texto; verificar acessibilidade/teclado.
+3. Editar um bloco e outros campos, navegar/fechar e conferir o aviso; submit inválido não deve desarmar a confirmação; submit válido mantém o fluxo explícito já existente.
+4. Verificar formulários com múltiplas abas de idioma/hosts, CSRF, falhas de validação do servidor e postback com dados preservados.
+5. Revisar padrão salvo privado por usuário após decisão explícita de ACL, CSRF, validação de JSON e schema aprovado; teste não deve começar até migration instalada em staging descartável.
+6. Preview autenticado de draft depois de aprovado: usuário sem acesso negado, token/CSRF/origin/expiração, renderer allowlisted, sem persistência nem URL pública para draft.
+7. Testar dispositivos/teclado/leitor de tela e locale PT-BR/EN-US/ES-EU.
 
-Executar apenas após autorização explícita em staging descartável, com F9-12 verificada/aplicada pelo responsável. Nunca usar produção, dump privado ou dados reais. Nenhuma dessas verificações de runtime foi feita nesta tarefa.
+Browser/app/E2E runtime, PHP e SQL continuam proibidos sem autorização explícita. Nenhuma persistência ou preview de catálogo foi implementada nesta entrega.

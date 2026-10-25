@@ -123,7 +123,10 @@
         'core/separator':[], 'core/group':[], 'core/columns':['count'], 'core/column':[],
         'core/gallery':['columns','align'], 'core/cover':['src','alt','align']
       };
-      if (version === 2) allowedAttributes['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
+      if (version === 2) {
+        allowedAttributes['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
+        allowedAttributes['core/group'] = ['outline_label'];
+      }
       const allowed = allowedAttributes[node.type] || [];
       if (Object.keys(a).some((key) => !allowed.includes(key))) errors.push('attributes_not_allowlisted');
       if (version === 1 && ['core/gallery','core/cover'].includes(node.type)) errors.push('media_block_requires_v2');
@@ -147,7 +150,10 @@
         case 'core/video_embed': if (!validEmbed(a.url) || node.children.length || node.content) errors.push('embed_invalid'); break;
         case 'core/button': if (!validActionUrl(a.url) || node.children.length) errors.push('button_invalid'); break;
         case 'core/separator': if (node.children.length || node.content) errors.push('separator_invalid'); break;
-        case 'core/group': if (node.content || Object.keys(a).length || node.children.length === 0) errors.push('group_invalid'); break;
+        case 'core/group':
+          if (node.content || Object.keys(a).some((key) => key !== 'outline_label') || node.children.length === 0) errors.push('group_invalid');
+          if (a.outline_label !== undefined && (typeof a.outline_label !== 'string' || utf8Length(a.outline_label) > 160)) errors.push('outline_label_invalid');
+          break;
         case 'core/columns': if (node.content || Object.keys(a).some((key) => key !== 'count') || ![2,3].includes(a.count) || node.children.length !== a.count || node.children.some((child) => !child || child.type !== 'core/column')) errors.push('columns_invalid'); break;
         case 'core/column': if (parent !== 'core/columns' || node.content || Object.keys(a).length || node.children.length === 0) errors.push('column_invalid'); break;
       }
@@ -219,7 +225,7 @@
       this.slashTrigger = null;
       this.inserterQuery = '';
       this.statusMessage = '';
-      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},typeLabels:{}}, this.options.strings || {});
+      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},typeLabels:{}}, this.options.strings || {});
       const rawInitial = this.options.document || { format_version: 1, blocks: [] };
       const initial = upgradeDocument(rawInitial);
       const validation = validateDocument(initial);
@@ -872,7 +878,9 @@
       if (!this.state.blocks.length) { nav.append(this.el('p','rb-muted',this.strings.outlineEmpty)); return nav; }
       const list = this.el('ol','rb-outline-list');
       const append = (nodes,parent,depth) => nodes.forEach((node) => {
-        const item = this.el('li','rb-outline-item'); const button = this.button(this.label(node.type),'outline-select',{nodeId:node.id});
+        const item = this.el('li','rb-outline-item');
+        const outlineName = node.type === 'core/group' && typeof node.attributes.outline_label === 'string' && node.attributes.outline_label.trim() ? node.attributes.outline_label.trim() : this.label(node.type);
+        const button = this.button(outlineName,'outline-select',{nodeId:node.id});
         button.classList.add('rb-outline-button'); button.style.setProperty('--rb-outline-depth', String(depth));
         if (node.id === this.selectedId) button.setAttribute('aria-current','location'); item.append(button);
         if (node.children && node.children.length) { const nested = this.el('ol','rb-outline-list'); append(node.children,nested,depth+1); item.append(nested); }
@@ -892,7 +900,7 @@
         let input;
         if (choices) { input = this.el('select', 'rb-input'); choices.forEach(([val, text]) => { const option = this.el('option', '', text); option.value = val; input.append(option); }); input.value = String(value); }
         else if (type === 'textarea') { input = this.el('textarea','rb-input'); input.value = value == null ? '' : String(value); input.maxLength = 4096; }
-        else { input = this.el('input', 'rb-input'); input.type = type || 'text'; input.value = value == null ? '' : String(value); if (['alt','title','caption'].includes(key)) input.maxLength = 4096; }
+        else { input = this.el('input', 'rb-input'); input.type = type || 'text'; input.value = value == null ? '' : String(value); if (['alt','title','caption'].includes(key)) input.maxLength = 4096; if (key === 'outline_label') input.maxLength = 160; }
         input.dataset.attribute = key; input.dataset.nodeId = found.node.id; wrap.append(input); aside.append(wrap);
       };
       const n = found.node;
@@ -918,6 +926,7 @@
       }
       if (n.type === 'core/video_embed') addField('URL YouTube/Vimeo', 'url', n.attributes.url, 'url');
       if (n.type === 'core/button') addField('Destino (URL ou caminho local)', 'url', n.attributes.url, 'url');
+      if (n.type === 'core/group') addField(this.strings.outlineLabel, 'outline_label', n.attributes.outline_label || '', 'text');
       if (n.type === 'core/columns') aside.append(this.el('p', 'rb-muted', 'Preset fixo nesta etapa: ' + n.attributes.count + ' colunas.'));
       const actions = this.el('div', 'rb-inspector-actions');
       const fixedColumn = found.parent && found.parent.type === 'core/columns' && n.type === 'core/column';

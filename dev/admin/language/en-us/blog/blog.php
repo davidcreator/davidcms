@@ -248,3 +248,4 @@ $_['text_block_pattern_quote_cta'] = 'Quote and call to action';
 $_['text_block_pattern_section_intro'] = 'Section introduction';
 $_['text_block_pattern_cover_hero'] = 'Hero cover';
 $_['text_block_pattern_hint'] = 'Built-in local patterns to insert; they are not saved as global templates.';
+$_['text_block_outline_label'] = 'Label in outline';

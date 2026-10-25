@@ -1,0 +1,39 @@
+{
+  "task": "F9-25",
+  "base_head": "4bb1b7c7ce8b23172f56241d5209ffdc6760c5c5",
+  "repository": "https://github.com/davidcreator/davidcms",
+  "editor_document_version": 2,
+  "implemented_local": {
+    "group_outline_label": {
+      "attribute": "outline_label",
+      "block": "core/group",
+      "version": 2,
+      "type": "plain UTF-8 string",
+      "max_utf8_bytes": 160,
+      "admin_behavior": "Shows in the nested document outline; empty or absent uses the localized block type.",
+      "catalog_behavior": "Editor metadata only; public renderer intentionally ignores this attribute.",
+      "v1": "Not accepted."
+    },
+    "unsaved_changes": {
+      "scope": "Form fields and valid block editor changes in the current page instance.",
+      "signal": "Browser beforeunload confirmation; no custom text and no autosave.",
+      "submit": "Guard is bypassed only for a normal form submit when all block editor hosts validate. Invalid editor submission remains guarded.",
+      "persistence": "The existing explicit Blog form save remains authoritative."
+    }
+  },
+  "patterns_persistence": {
+    "status": "PROPOSAL_PENDING",
+    "user_choice": "Prepare design proposal; do not implement persistent storage in this increment.",
+    "scope_recommended": "Private per-admin-user patterns, not global/shared by default.",
+    "authorization": "Do not infer write permission from the Blog post modify ACL. Request a dedicated ACL decision or explicit mapping from the owner before endpoints/storage.",
+    "schema": "Not included; obtain install-agent review and migration/schema approval before any persistence implementation.",
+    "storage_or_endpoint": "None implemented. Built-in patterns remain local insertion patterns from F9-24."
+  },
+  "catalog_context_preview": {
+    "status": "DESIGN_GATE_PENDING",
+    "constraint": "No public preview endpoint, share token, draft URL, or network request added.",
+    "next_design": "Review a same-origin, authenticated, CSRF-protected preview path that invokes the server allowlisted renderer on validated draft JSON without writing a post or exposing a public bearer URL. Confirm ACL, origin and expiration rules first."
+  },
+  "not_in_scope": ["autosave","revisions","database migration","shared pattern API","GitHub write","deploy","database access"],
+  "runtime_tests_executed": false
+}

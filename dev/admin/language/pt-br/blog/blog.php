@@ -248,3 +248,4 @@ $_['text_block_pattern_quote_cta'] = 'Citação e chamada';
 $_['text_block_pattern_section_intro'] = 'Introdução de seção';
 $_['text_block_pattern_cover_hero'] = 'Capa de destaque';
 $_['text_block_pattern_hint'] = 'Padrões locais prontos para inserir; não são salvos como templates globais.';
+$_['text_block_outline_label'] = 'Título na estrutura';

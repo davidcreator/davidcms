@@ -1,12 +1,12 @@
-# Fase 9 · Tarefa 24 — Blocos de conteúdo e mídia
+# Fase 9 · Tarefa 25 — Padrões, templates e fluxo editorial
 
-Pacote local para gallery, cover, image caption/alignment/responsive size, previews administrativos e quatro padrões embutidos de layout. A validação PHP e renderer vêm antes das ações de UI. Mantém v1 legível e acrescenta tipos em v2, sem migration.
+**Incremento local parcial; não marcar F9-25 concluída.** Base `main` verificada: `4bb1b7c7ce8b23172f56241d5209ffdc6760c5c5` (F9-24).
 
-**Base `main` verificada:** `af3421cc1b3bd4636d8bb44d6d3d4e83e0fb5eb9`. Trabalho local; sem GitHub write/deploy.
+Implementado no pacote: rótulo opcional de grupo para outline (JSON v2 e limites alinhados JS/PHP), guard de alterações não salvas e fixtures sintéticas. Padrões CMS persistentes permanecem **proposta pendente** por ACL/schema. Preview contextual do catálogo permanece **gate de segurança pendente**; nenhum URL de draft/endpoint/autosave foi adicionado.
 
-- Detalhes/aceite: `docs/F9-24-Media-Blocks.md`
-- Contrato JSON: `docs/F9-24-Contrato-Media-Blocks.json`
-- Hashes da base: `docs/F9-24-Base-Hashes.json`
-- E2E funcional planejado: `tools/e2e/README.md`
+- Contrato e decisões: `docs/F9-25-Contrato-Editor-Editorial.json`
+- Detalhes/limites: `docs/F9-25-Editor-Editorial.md`
+- Plano e checker: `tools/e2e/README.md`, `tools/e2e/e2e_f925_static.cjs`
+- Base GitHub: `docs/F9-25-Base-Hashes.json`
 
-Somente verificações estáticas foram executadas; runtime PHP/SQL/browser/app/E2E não rodou. F9-12 e banco não foram presumidos/acessados.
+Somente verificações estáticas; PHP, SQL, browser, app, endpoints, DB, migrations e E2E runtime não foram executados.

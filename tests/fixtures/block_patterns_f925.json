@@ -1,0 +1,22 @@
+[
+  {
+    "id": "v2-group-outline-label",
+    "document": {"format_version":2,"blocks":[{"id":"group-a","type":"core/group","attributes":{"outline_label":"Benefícios"},"children":[{"id":"paragraph-a","type":"core/paragraph","attributes":{},"children":[],"content":[{"text":"Conteúdo de exemplo","marks":[],"href":null}]}],"content":""}]},
+    "expected": "Valid v2 group; admin outline displays its plain-text label; public renderer ignores metadata."
+  },
+  {
+    "id": "v1-group-outline-label-rejected",
+    "document": {"format_version":1,"blocks":[{"id":"group-v1","type":"core/group","attributes":{"outline_label":"Not supported in v1"},"children":[{"id":"paragraph-v1","type":"core/paragraph","attributes":{},"children":[],"content":"Legacy text"}],"content":""}]},
+    "expected": "Reject attribute in v1; opening a legacy document does not silently broaden its schema."
+  },
+  {
+    "id": "outline-label-too-long-rejected",
+    "document": {"format_version":2,"blocks":[{"id":"group-long","type":"core/group","attributes":{"outline_label":"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"},"children":[{"id":"p-long","type":"core/paragraph","attributes":{},"children":[],"content":[{"text":"x","marks":[],"href":null}]}],"content":""}]},
+    "expected": "Reject outline label beyond 160 UTF-8 bytes."
+  },
+  {
+    "id": "outline-label-script-is-text-only",
+    "document": {"format_version":2,"blocks":[{"id":"group-script","type":"core/group","attributes":{"outline_label":"<img src=x onerror=alert(1)>"},"children":[{"id":"p-script","type":"core/paragraph","attributes":{},"children":[],"content":[{"text":"safe","marks":[],"href":null}]}],"content":""}]},
+    "expected": "Allow harmless plain-text characters; UI creates the outline name with textContent, never HTML."
+  }
+]
