@@ -1,31 +1,32 @@
-# BDREditor — Integração em CMS > Páginas
+# BDREditor — Interface moderna
 
-Pacote incremental baseado no `main` do ReamurCMS no commit `5ced14b6c1ca412a7a39f6b3ee73bf22c8b9b1f5`.
+Incremento visual de BDREditor, baseado nos arquivos pontuais consultados na branch `main` do ReamurCMS em `598d353aabdd0cf72b3978c8257d9cea891da2b1`.
 
-## O que muda
+## Entrega
 
-- Monta o BDREditor no campo Descrição de cada idioma em CMS > Páginas e carrega os assets do editor.
-- Armazena documentos **v2** no campo existente `page_description.description`, identificados pelo prefixo `REAMURCMS_BDRE_JSON_V2:`. Não cria coluna, tabela ou migration.
-- Valida o prefixo, a inicialização do editor, o JSON e o schema v2 no servidor; canoniza o documento validado antes de salvá-lo.
-- No catálogo, valida/renderiza o envelope via `BlockRenderer` seguro antes de passá-lo ao Twig. Envelopes inválidos falham fechados; o marcador/JSON não é enviado como HTML.
-- Mantém o caminho legado: conteúdo HTML legado que o conversor suporta só é convertido no editor e persistido depois de um salvamento explícito; conteúdo que não pode ser convertido com segurança continua no textarea original. Envelopes marcados inválidos são preservados byte a byte ao salvar outros campos.
-- Usa as ferramentas e blocos já existentes no BDREditor. Na tela CMS > Páginas, os seletores da biblioteca de mídia do Blog não são carregados; os campos de caminho local continuam editáveis manualmente. Não há upload nem exclusão de mídia nesta integração.
+Substitua os arquivos no projeto pelos de `dev/`, mantendo os caminhos:
 
-## Aplicação
+- `dev/admin/view/css/blog-block-editor.css`
+- `dev/admin/view/js/blog-block-editor.js`
 
-Copie os arquivos do diretório `dev/` para a mesma raiz `dev/` do projeto, preservando os caminhos. O ZIP inclui os arquivos do editor já entregues anteriormente e os pontos de integração de Páginas. Revise o diff no seu checkout antes de qualquer instalação. Não contém alterações de banco, GitHub, staging, produção ou deploy.
+O incremento atualiza a linguagem visual e adiciona ícones SVG inline autorais, sem dependência externa, CDN ou incorporação de código/assets do Gutenberg. Mantém o modelo de documento, validação, persistência e comportamento funcional existentes.
 
-## Validação executada
+## Mudanças visuais
 
-- `tests/check_cms_page_integration.js`: 8 verificações estáticas PASS.
-- Checkers anteriores do editor: 11 (code), 14 (callout), 12 (details), 15 (spacer), 23 (reordenação hierárquica) PASS.
-- Suítes E2E estáticas anteriores executadas; sem browser real, PHP runtime, banco ou app conectado.
-- PHP não estava instalado neste ambiente; `php -l`, teste server-side e a confirmação de aparecer/salvar/reabrir numa instância real não foram executados. Portanto, este pacote não representa comprovação de integração runtime.
+- Cabeçalho de identidade BDREditor com subtítulo localizado pelo pacote de strings existente.
+- Barra de comandos agrupada, botões primários/terciários e seletores de viewport com ícones distintos.
+- Ícones SVG inline para ações, tipos de bloco, inserter, estrutura, configurações, formato inline e controles de tabela.
+- Canvas em estilo de folha, contornos e estados de foco/seleção mais claros.
+- Inserter em cartões pesquisáveis, painel de estrutura e inspetor com superfícies e hierarquia visual consistentes.
+- Responsividade, redução de movimento, modo de alto contraste/forced-colors e foco visível.
+- Labels acessíveis mantidos; SVGs são decorativos e `aria-hidden`.
 
-## Limitações / próximos testes autorizados
+## Preview
 
-1. Em ambiente local autorizado, abrir CMS > Páginas, confirmar a presença da barra/inserter, salvar e reabrir uma página de teste.
-2. Validar renderização pública de documento v2 e fallback de HTML legado.
-3. Avaliar integração de seletores de mídia para Páginas separadamente, respeitando permissões e bibliotecas já existentes.
+`preview/index.html` é uma demonstração isolada. Sirva o diretório do pacote com um servidor estático (por exemplo, `python3 -m http.server 8000`) e abra `/preview/`. Ela usa apenas arquivos locais deste pacote.
 
-Não execute testes em staging ou produção sem nova autorização explícita.
+## Testes e limites
+
+- `tests/check_modern_ui.js`: verificações estáticas de presença de ícones, acessibilidade, responsividade e redução de movimento.
+- Os checkers estáticos existentes do editor foram executados contra o JavaScript visual atualizado: resultados registrados em `docs/BDREditor-Modern-Interface.md`.
+- Não foi executado PHP, banco, staging, produção, GitHub write ou deploy. Não há alteração funcional nem migration.

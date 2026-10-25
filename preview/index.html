@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BDREditor · Preview da interface</title>
+<link rel="stylesheet" href="assets/blog-block-editor.css">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef2f8;color:#17243a;font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}.preview-shell{max-width:1480px;margin:0 auto;padding:2rem 1.25rem 4rem}.preview-top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.4rem}.preview-top h1{margin:0;font-size:1.35rem;letter-spacing:-.03em}.preview-top p{margin:.25rem 0 0;color:#64748b;font-size:.88rem}.preview-badge{padding:.38rem .7rem;border:1px solid #d7e0ec;border-radius:99px;background:#fff;color:#52627a;font-size:.75rem;font-weight:700}.preview-note{margin:1rem 0;padding:.8rem 1rem;border:1px solid #dce5f1;border-radius:.75rem;background:#fff;color:#5f6e84;font-size:.82rem}.preview-note strong{color:#24334a}
+@media(max-width:600px){.preview-shell{padding:1rem .65rem 2rem}.preview-top{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<main class="preview-shell">
+  <header class="preview-top"><div><h1>BDREditor — interface visual</h1><p>Demonstração local dos controles, do canvas, da estrutura e do inspetor.</p></div><span class="preview-badge">Somente preview · sem salvar</span></header>
+  <div id="editor" aria-label="Demonstração do editor"></div>
+  <p class="preview-note"><strong>Observação:</strong> esta demonstração roda só no navegador e não grava nada. No CMS, o mesmo editor permanece conectado ao fluxo explícito de salvar do formulário.</p>
+</main>
+<script src="assets/blog-block-editor.js"></script>
+<script>
+const run=(text,marks=[])=>[{text,marks,href:null}];
+const sample={format_version:2,blocks:[
+  {id:'intro-title',type:'core/heading',attributes:{level:2},children:[],content:run('Uma história bem contada começa aqui')},
+  {id:'intro-copy',type:'core/paragraph',attributes:{},children:[],content:run('Organize ideias em blocos, ajuste a hierarquia visual e acompanhe a estrutura do documento sem perder o foco na leitura.')},
+  {id:'callout-info',type:'core/callout',attributes:{tone:'info'},children:[],content:run('Destaque uma informação importante com um aviso visual claro.')},
+  {id:'quote-voice',type:'core/quote',attributes:{},children:[],content:run('Um conteúdo editorial elegante deve ser fácil de construir e confortável de ler.')}
+]};
+ReamurBlogBlockEditor.mount(document.getElementById('editor'),{document:sample,connectedSave:false});
+</script>
+</body>
+</html>

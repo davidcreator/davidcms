@@ -17,6 +17,17 @@
   const TRANSFORMABLE_TEXT = new Set(['core/paragraph', 'core/heading', 'core/quote', 'core/button']);
   const CLONE = (value) => JSON.parse(JSON.stringify(value));
   let instanceSequence = 0;
+  const ICON_PATHS = {
+    plus:'M12 5v14M5 12h14', copy:'M8 8V4h12v12h-4M4 8h12v12H4z', undo:'M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-2', redo:'m15 14 5-5-5-5m5 5H10a6 6 0 0 0 0 12h2',
+    desktop:'M3 4h18v13H3zM8 21h8M12 17v4', tablet:'M6 2h12v20H6zM11 18h2', mobile:'M8 2h8v20H8zM11 18h2',
+    up:'m18 15-6-6-6 6M12 9v12', down:'m6 9 6 6 6-6M12 3v12', trash:'M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3',
+    paragraph:'M4 6h16M4 10h16M4 14h10M4 18h10', heading:'M4 5v14M20 5v14M4 12h16', list:'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
+    image:'M4 4h16v16H4zM8 14l3-3 5 5M14 9h.01', quote:'M5 6h6v6H5zM13 6h6v6h-6zM5 12c0 3-1 4-2 5m10-5c0 3-1 4-2 5', video:'m9 7 9 5-9 5zM4 5v14', button:'M4 7h16v10H4z', bold:'M7 5h6a4 4 0 0 1 0 8H7zM7 13h7a4 4 0 0 1 0 8H7z', italic:'M15 4h-5m4 16H9m5-16-4 16', underline:'M6 4v7a6 6 0 0 0 12 0V4M4 21h16', strike:'M5 12h14M7 6c1-2 3-2 5-2 3 0 5 1 5 3 0 2-2 3-5 4-3 1-5 2-5 5 0 2 2 4 5 4 2 0 4-1 5-3', link:'M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7M14 11a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 21l1.7-1.7', info:'M12 8h.01M11 12h1v5h1M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
+    details:'M5 7h14M5 12h14M5 17h14M3 7h.01M3 12h.01M3 17h.01', spacer:'M12 3v18m-4-14 4-4 4 4m-8 10 4 4 4-4', code:'m8 6-6 6 6 6m8-12 6 6-6 6m-3-14-2 16', separator:'M4 12h16M12 7v10', group:'M4 4h16v16H4zM8 8h8v8H8z', columns:'M4 4h16v16H4zM12 4v16', gallery:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', cover:'M4 4h16v16H4zM4 15l5-5 4 4 3-3 4 5', table:'M4 4h16v16H4zM4 10h16M4 15h16M10 4v16M16 4v16', file:'M6 3h8l4 4v14H6zM14 3v5h5M9 13h6M9 17h6', audio:'M4 10v4m4-8v12m4-16v20m4-16v12m4-8v4', settings:'M4 7h16M4 17h16M8 7v0m8 10v0', outline:'M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h11', layers:'m12 3 9 5-9 5-9-5 9-5zm-9 9 9 5 9-5m-18 5 9 5 9-5', grip:'M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01', transform:'M4 7h14m0 0-3-3m3 3-3 3M20 17H6m0 0 3-3m-3 3 3 3',
+    check:'m5 12 4 4L19 6', search:'m20 20-4.5-4.5M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0', help:'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0'
+  };
+  const ACTION_ICONS = { 'toggle-inserter':'plus','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','file-media':'file','audio-media':'audio',media:'image','insert-pattern':'layers',insert:'plus','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent' };
+  const TYPE_ICONS = { 'core/paragraph':'paragraph','core/heading':'heading','core/list':'list','core/list-item':'list','core/image':'image','core/quote':'quote','core/video_embed':'video','core/button':'button','core/callout':'info','core/details':'details','core/spacer':'spacer','core/code':'code','core/separator':'separator','core/group':'group','core/columns':'columns','core/column':'columns','core/gallery':'gallery','core/cover':'cover','core/table':'table','core/table-row':'table','core/table-cell':'table','core/file':'file','core/audio':'audio' };
 
   function validLocalImage(src) {
     if (typeof src !== 'string' || !src || /[\x00-\x20\\]/.test(src)) return false;
@@ -1162,21 +1173,43 @@
     }
 
     el(tag, className, text) { const element = document.createElement(tag); if (className) element.className = className; if (text !== undefined) element.textContent = text; return element; }
-    button(label, action, extra) { const b = this.el('button', 'rb-button', label); b.type = 'button'; b.dataset.action = action; if (extra) Object.keys(extra).forEach((key) => { b.dataset[key] = extra[key]; }); return b; }
+    icon(name, className) {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('width', '18'); svg.setAttribute('height', '18');
+      svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); svg.setAttribute('stroke-width', '1.8');
+      svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round'); svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('focusable', 'false');
+      if (className) svg.setAttribute('class', className);
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); path.setAttribute('d', ICON_PATHS[name] || ICON_PATHS.layers); svg.appendChild(path); return svg;
+    }
+    button(label, action, extra) {
+      const b = this.el('button', 'rb-button'); b.type = 'button'; b.dataset.action = action;
+      const type = extra && extra.type; let iconName = (type && TYPE_ICONS[type]) || ACTION_ICONS[action];
+      if (action === 'preview' && extra && extra.size) iconName = extra.size === 'mobile' ? 'mobile' : (extra.size === 'tablet' ? 'tablet' : 'desktop');
+      if (action === 'format-mark' && extra && extra.mark) iconName = ({bold:'bold',italic:'italic',underline:'underline',strike:'strike',code:'code',link:'link'})[extra.mark] || 'settings';
+      if (iconName) b.append(this.icon(iconName, 'rb-icon'));
+      const text = this.el('span', 'rb-button-label', label);
+      if (['↑','↓','+','↔'].includes(String(label).trim())) { text.classList.add('rb-sr-only'); b.classList.add('rb-button-icon-only'); }
+      b.append(text);
+      if (extra) Object.keys(extra).forEach((key) => { b.dataset[key] = extra[key]; }); return b;
+    }
 
     render() {
       this.root.replaceChildren();
       if (this.initialError) { const warn = this.el('p', 'rb-alert', this.strings.initialInvalid + ' (' + this.initialError + ').'); warn.setAttribute('role','alert'); this.root.setAttribute('aria-invalid','true'); this.root.append(warn); return; }
       this.root.setAttribute('aria-invalid','false');
+      const masthead = this.el('div','rb-editor-masthead');
+      const identity = this.el('div','rb-editor-identity'); identity.append(this.icon('layers','rb-brand-icon'));
+      const identityText = this.el('div','rb-editor-identity-copy'); identityText.append(this.el('strong','rb-editor-brand','BDREditor'),this.el('span','rb-editor-subtitle',this.strings.editorTools));
+      identity.append(identityText); masthead.append(identity); this.root.append(masthead);
       const toolbar = this.el('div', 'rb-toolbar'); toolbar.setAttribute('role', 'toolbar'); toolbar.setAttribute('aria-label', this.strings.editorTools);
-      const insert = this.button('+ ' + this.strings.addBlock, 'toggle-inserter', { afterId:this.selectedId || '' });
+      const insert = this.button(this.strings.addBlock, 'toggle-inserter', { afterId:this.selectedId || '' }); insert.classList.add('rb-button-primary');
       insert.setAttribute('aria-expanded', String(this.inserterOpen)); insert.setAttribute('aria-controls', 'rb-inserter-' + this.instance); toolbar.append(insert);
-      const paste = this.button(this.strings.pasteBlock, 'paste-block'); paste.disabled = !this.canPasteBlock(); toolbar.append(paste);
-      const history = this.el('div', 'rb-history');
+      const paste = this.button(this.strings.pasteBlock, 'paste-block'); paste.classList.add('rb-button-secondary'); paste.disabled = !this.canPasteBlock(); toolbar.append(paste);
+      const history = this.el('div', 'rb-history rb-toolbar-group');
       const undo = this.button(this.strings.undo, 'undo'); undo.dataset.history = 'undo';
       const redo = this.button(this.strings.redo, 'redo'); redo.dataset.history = 'redo';
       history.append(undo, redo); toolbar.append(history);
-      const previews = this.el('div', 'rb-previews');
+      const previews = this.el('div', 'rb-previews rb-toolbar-group');
       [['desktop',this.strings.previewDesktop],['tablet',this.strings.previewTablet],['mobile',this.strings.previewMobile]].forEach(([size,label]) => { const b = this.button(label, 'preview', { size }); b.setAttribute('aria-pressed', String(size === this.preview)); previews.append(b); });
       toolbar.append(previews);
       const shortcutHelp = this.el('details', 'rb-keyboard-help');
@@ -1187,7 +1220,7 @@
 
       const layout = this.el('div', 'rb-layout');
       const canvas = this.el('div', 'rb-canvas'); canvas.setAttribute('role','region'); canvas.setAttribute('aria-label', this.strings.canvas);
-      const canvasHead = this.el('div', 'rb-canvas-head', this.strings.canvas); canvas.append(canvasHead);
+      const canvasHead = this.el('div', 'rb-canvas-head'); canvasHead.append(this.icon('layers','rb-icon'),this.el('span','',this.strings.canvas),this.el('span','rb-canvas-count',String(this.state.blocks.length))); canvas.append(canvasHead);
       if (!this.state.blocks.length) canvas.append(this.el('p', 'rb-empty', this.strings.canvasEmpty));
       this.state.blocks.forEach((node) => canvas.append(this.renderNode(node, true)));
       layout.append(this.renderOutline(), canvas, this.renderInspector()); this.root.append(layout);
@@ -1204,7 +1237,7 @@
     renderBlockToolbar(node) {
       const toolbar = this.el('div', 'rb-block-toolbar'); toolbar.setAttribute('role','toolbar'); toolbar.setAttribute('aria-label', this.label(node.type) + ' · ' + this.strings.transform);
       const path = this.findPath(this.state.blocks, node.id);
-      const drag = this.el('span','rb-drag-handle','⠿'); drag.draggable = true; drag.dataset.dragHandle = '1'; drag.title = this.strings.dragHint; drag.setAttribute('aria-hidden','true'); toolbar.append(drag,this.el('span','rb-sr-only',this.strings.dragHint));
+      const drag = this.el('span','rb-drag-handle'); drag.append(this.icon('grip','rb-icon')); drag.draggable = true; drag.dataset.dragHandle = '1'; drag.title = this.strings.dragHint; drag.setAttribute('aria-hidden','true'); toolbar.append(drag,this.el('span','rb-sr-only',this.strings.dragHint));
       const up = this.button('↑', 'move-up', { nodeId:node.id }); up.setAttribute('aria-label', this.strings.moveUp); up.disabled = !path || path.index === 0; toolbar.append(up);
       const down = this.button('↓', 'move-down', { nodeId:node.id }); down.setAttribute('aria-label', this.strings.moveDown); down.disabled = !path || path.index === path.nodes.length - 1; toolbar.append(down);
       const fixedColumn = !!(path && path.parent && path.parent.type === 'core/columns' && node.type === 'core/column');
@@ -1213,7 +1246,7 @@
       const duplicate = this.button(this.strings.duplicate, 'duplicate', { nodeId:node.id }); duplicate.disabled = fixedColumn || atParentLimit; toolbar.append(duplicate);
       const copy = this.button(this.strings.copyBlock, 'copy-block', { nodeId:node.id }); toolbar.append(copy);
       if (TRANSFORMABLE_TEXT.has(node.type)) {
-        const wrap = this.el('label','rb-transform-wrap'); wrap.append(this.el('span','rb-sr-only',this.strings.transform));
+        const wrap = this.el('label','rb-transform-wrap'); wrap.append(this.icon('transform','rb-transform-icon'),this.el('span','rb-sr-only',this.strings.transform));
         const select = this.el('select','rb-input rb-transform'); select.dataset.transformNode = node.id;
         const empty = this.el('option','','↔'); empty.value = ''; empty.selected = true; select.append(empty);
         [...TRANSFORMABLE_TEXT].filter((type) => this.canTransformNode(node,type)).forEach((type) => { const option = this.el('option','',this.label(type)); option.value = type; select.append(option); });
@@ -1222,7 +1255,7 @@
         const hint = this.el('span','rb-transform-hint',this.strings.transformHint); toolbar.append(hint);
       }
       const remove = this.button(this.strings.remove,'delete',{nodeId:node.id}); remove.disabled = fixedColumn || lastRequiredChild; toolbar.append(remove);
-      const add = this.button('+', 'toggle-inserter', { afterId:node.id }); add.setAttribute('aria-label', this.strings.addAfter); add.setAttribute('aria-expanded', String(this.inserterOpen && this.insertAfterId === node.id)); add.setAttribute('aria-controls','rb-inserter-' + this.instance); toolbar.append(add);
+      const add = this.button('Adicionar', 'toggle-inserter', { afterId:node.id }); add.classList.add('rb-button-icon-only'); add.querySelector('.rb-button-label').classList.add('rb-sr-only'); add.setAttribute('aria-label', this.strings.addAfter); add.setAttribute('aria-expanded', String(this.inserterOpen && this.insertAfterId === node.id)); add.setAttribute('aria-controls','rb-inserter-' + this.instance); toolbar.append(add);
       return toolbar;
     }
 
@@ -1255,7 +1288,7 @@
       if (node.type === 'core/gallery') card.classList.add('rb-gallery-preview','rb-gallery-preview--columns-' + node.attributes.columns);
       card.dataset.nodeId = node.id; card.tabIndex = -1; if (isRoot) card.dataset.rootNode = '1';
       const head = this.el('div', 'rb-block-head');
-      head.append(this.el('span', 'rb-block-title', this.label(node.type)));
+      head.append(this.icon(TYPE_ICONS[node.type] || 'layers','rb-block-type-icon'),this.el('span', 'rb-block-title', this.label(node.type)));
       card.append(head, this.renderBlockToolbar(node));
       if (TEXT_TYPES.has(node.type)) {
         if (node.id === this.selectedId) card.append(this.renderInlineToolbar(node));
@@ -1332,7 +1365,7 @@
     }
 
     renderOutline() {
-      const nav = this.el('nav','rb-outline'); nav.setAttribute('aria-label',this.strings.outline); nav.append(this.el('h3','rb-inspector-title',this.strings.outline));
+      const nav = this.el('nav','rb-outline'); nav.setAttribute('aria-label',this.strings.outline); const outlineTitle=this.el('h3','rb-inspector-title'); outlineTitle.append(this.icon('outline','rb-icon'),this.el('span','',this.strings.outline)); nav.append(outlineTitle);
       nav.append(this.el('p','rb-outline-keyboard-hint',this.strings.outlineKeyboardHint));
       if (!this.state.blocks.length) { nav.append(this.el('p','rb-muted',this.strings.outlineEmpty)); return nav; }
       const list = this.el('ol','rb-outline-list');
@@ -1351,7 +1384,7 @@
 
     renderInspector() {
       const aside = this.el('aside', 'rb-inspector'); aside.setAttribute('aria-label', this.strings.inspector);
-      const heading = this.el('h3', 'rb-inspector-title', this.strings.inspector); aside.append(heading);
+      const heading = this.el('h3', 'rb-inspector-title'); heading.append(this.icon('settings','rb-icon'),this.el('span','',this.strings.inspector)); aside.append(heading);
       const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null;
       if (!found) { aside.append(this.el('p', 'rb-muted', this.strings.inspectorEmpty)); return aside; }
       aside.append(this.renderBreadcrumbs(found.node.id));
