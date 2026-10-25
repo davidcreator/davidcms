@@ -71,3 +71,14 @@ $_['button_next_page'] = 'Próxima ›';
 $_['button_previous_page'] = '‹ Anterior';
 $_['error_csrf'] = 'Token de sessão inválido. Recarregue o formulário e tente novamente.';
 $_['button_close'] = 'Fechar';
+
+// Fluxo de edição em página exclusiva para conteúdo BDREditor.
+$_['text_content_summary_note'] = 'Resumo do conteúdo. Para editar texto e blocos, abra o editor dedicado.';
+$_['text_content_empty'] = 'Ainda não há conteúdo nesta página.';
+$_['text_content_save_first'] = 'Salve os dados gerais para liberar o editor.';
+$_['text_content_block_count'] = '%d blocos de conteúdo';
+$_['text_page_content_editor'] = 'Editor de conteúdo da página';
+$_['text_content_editor_help'] = 'Edite o conteúdo por idioma. Os dados gerais, SEO e status permanecem no formulário da página.';
+$_['button_edit_content'] = 'Editar conteúdo';
+$_['button_save_content'] = 'Salvar conteúdo';
+$_['text_content_invalid'] = 'O conteúdo armazenado precisa ser restaurado antes de editar.';

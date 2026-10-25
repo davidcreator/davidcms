@@ -1,0 +1,27 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.resolve(__dirname, '../..');
+const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
+const controller = read('dev/admin/controller/cms/page.php');
+const general = read('dev/admin/view/template/cms/page_form.twig');
+const content = read('dev/admin/view/template/cms/page_content_form.twig');
+const editor = read('dev/admin/view/js/blog-block-editor.js');
+const langs = ['pt-br','en-us','es-eu'].map((locale) => read(`dev/admin/language/${locale}/cms/page.php`));
+const tests = [];
+function check(name, condition) { tests.push({name, ok: !!condition}); }
+check('dedicated CMS Page content action exists', /public function content\(/.test(controller) && /cms\/page\.content\|/.test(controller));
+check('new general-page save redirects into content editor', /redirect\(\$this->url->link\('cms\/page\.content\|' \. \$page_id\)\)/.test(controller));
+check('content save returns to general page form', /cms\/page\.edit\|' \. \$page_id/.test(controller));
+check('content save retains metadata/status payload', /postPayload\(\$page_id\)/.test(controller) && /'status'\s*=>/.test(controller));
+check('general form has concise summary and no mounted editor', /content_summary/.test(general) && !/data-blog-block-editor/.test(general));
+check('general form posts original content unchanged', /content_saved_value/.test(general) && /content_form_mode/.test(general));
+check('dedicated page mounts BDREditor and carries v2 prefix', /data-blog-block-editor/.test(content) && /REAMURCMS_BDRE_JSON_V2:/.test(content));
+check('dedicated page carries hidden metadata fields', ['title','keyword','meta_title','meta_description'].every((key) => content.includes(`[${key}]`)));
+check('icon-only controls keep accessible names', /aria-label=\"\{\{ button_save_content \}\}\"/.test(content) && /b\.setAttribute\('aria-label', String\(label\)\)/.test(editor));
+check('three admin locales include content flow labels', langs.every((text) => /text_content_summary_note/.test(text) && /text_page_content_editor/.test(text) && /button_save_content/.test(text)));
+check('existing v2 validator remains in the save flow', /validateBlockSubmission\(\$page_id\)/.test(controller) && /deserializeDocument/.test(controller));
+for (const test of tests) console.log(`${test.ok ? 'PASS' : 'FAIL'} ${test.name}`);
+const failed = tests.filter((test) => !test.ok).length;
+console.log(`\n${tests.length - failed}/${tests.length} static contract checks passed`);
+process.exitCode = failed ? 1 : 0;

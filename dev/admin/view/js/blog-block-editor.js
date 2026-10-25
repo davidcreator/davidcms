@@ -33,6 +33,7 @@
     check:'m5 12 4 4L19 6', search:'m20 20-4.5-4.5M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0', help:'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', expand:'M8 3H3v5m0-5 7 7m6-7h5v5m0-5-7 7M3 16v5h5m-5 0 7-7m11 2v5h-5m5 0-7-7', collapse:'M8 3v5H3m0 0 7-7m6 7V3h5m0 0-7 7M3 16h5v5m0 0 7-7m1 2h5v5m0 0-7-7'
   };
   const ACTION_ICONS = { 'toggle-inserter':'plus','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','file-media':'file','audio-media':'audio',media:'image','insert-pattern':'layers',insert:'plus','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent','toggle-fullscreen':'expand','builder-panel':'layers' };
+  const ICON_ONLY_ACTIONS = new Set(['toggle-inserter','paste-block','undo','redo','preview','move-up','move-down','duplicate','copy-block','delete','file-media','audio-media','media','format-mark','link-apply','link-remove','table-add-row','table-remove-row','table-add-column','table-remove-column','table-toggle-header','indent','outdent','toggle-fullscreen','builder-panel']);
   const TYPE_ICONS = { 'core/paragraph':'paragraph','core/heading':'heading','core/list':'list','core/list-item':'list','core/image':'image','core/quote':'quote','core/video_embed':'video','core/button':'button','core/callout':'info','core/details':'details','core/spacer':'spacer','core/code':'code','core/separator':'separator','core/group':'group','core/columns':'columns','core/column':'columns','core/gallery':'gallery','core/cover':'cover','core/table':'table','core/table-row':'table','core/table-cell':'table','core/file':'file','core/audio':'audio' };
 
   function validLocalImage(src) {
@@ -1242,7 +1243,10 @@
       if (action === 'format-mark' && extra && extra.mark) iconName = ({bold:'bold',italic:'italic',underline:'underline',strike:'strike',code:'code',link:'link'})[extra.mark] || 'settings';
       if (iconName) b.append(this.icon(iconName, 'rb-icon'));
       const text = this.el('span', 'rb-button-label', label);
-      if (['↑','↓','+','↔'].includes(String(label).trim())) { text.classList.add('rb-sr-only'); b.classList.add('rb-button-icon-only'); }
+      if (ICON_ONLY_ACTIONS.has(action) || ['↑','↓','+','↔'].includes(String(label).trim())) {
+        text.classList.add('rb-sr-only'); b.classList.add('rb-button-icon-only');
+        b.setAttribute('aria-label', String(label)); b.setAttribute('title', String(label));
+      }
       b.append(text);
       if (extra) Object.keys(extra).forEach((key) => { b.dataset[key] = extra[key]; }); return b;
     }

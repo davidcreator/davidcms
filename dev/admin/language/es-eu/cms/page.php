@@ -71,3 +71,14 @@ $_['button_next_page'] = 'Siguiente ›';
 $_['button_previous_page'] = '‹ Anterior';
 $_['error_csrf'] = 'Token de sesión no válido. Recargue el formulario e inténtelo de nuevo.';
 $_['button_close'] = 'Cerrar';
+
+// Flujo de edición del contenido en una página exclusiva.
+$_['text_content_summary_note'] = 'Resumen del contenido. Abra el editor dedicado para modificar texto y bloques.';
+$_['text_content_empty'] = 'Esta página todavía no tiene contenido.';
+$_['text_content_save_first'] = 'Guarde los datos generales para abrir el editor.';
+$_['text_content_block_count'] = '%d bloques de contenido';
+$_['text_page_content_editor'] = 'Editor de contenido de la página';
+$_['text_content_editor_help'] = 'Edite el contenido por idioma. Los datos generales, SEO y estado permanecen en el formulario.';
+$_['button_edit_content'] = 'Editar contenido';
+$_['button_save_content'] = 'Guardar contenido';
+$_['text_content_invalid'] = 'El contenido almacenado debe restaurarse antes de editarlo.';

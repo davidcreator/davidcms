@@ -87,3 +87,14 @@ $_['error_custom_field_select'] = 'A custom field selection is not one of the co
 $_['error_custom_field_invalid'] = 'A custom field value is invalid.';
 $_['error_custom_field_save'] = 'The page was saved, but custom field values could not be saved. Please reopen the page and try again.';
 $_['error_custom_field_delete'] = 'Custom values could not be removed, so the page was not deleted.';
+
+// Dedicated page content editing flow.
+$_['text_content_summary_note'] = 'Content summary. Open the dedicated editor to edit text and blocks.';
+$_['text_content_empty'] = 'This page has no content yet.';
+$_['text_content_save_first'] = 'Save the general details to open the editor.';
+$_['text_content_block_count'] = '%d content blocks';
+$_['text_page_content_editor'] = 'Page content editor';
+$_['text_content_editor_help'] = 'Edit content by language. General details, SEO, and status stay on the page form.';
+$_['button_edit_content'] = 'Edit content';
+$_['button_save_content'] = 'Save content';
+$_['text_content_invalid'] = 'The stored content must be restored before editing.';

@@ -1,23 +1,34 @@
-# BDREditor — Workbench visual inspirado no Elementor
+# BDREditor — fluxo de conteúdo separado para CMS > Páginas
 
-Incremento visual baseado no `main` consultado em `4c71c46656bd7c4dd47d7c20d0d027bce53eb41c`.
+Pacote incremental preparado sobre o HEAD de `main` verificado em 25/10/2026: `09210ae7913a60b87bcaf81dac9906c0b7fcb05d`.
 
-A atualização muda a experiência **em tela cheia** para uma bancada familiar a editores visuais de páginas: barra superior escura, painel lateral de Elementos/Estrutura/Configurações e canvas de edição amplo à direita. O painel Elementos mostra busca e blocos em cartões; os blocos continuam inseridos e validados pelo BDREditor.
+## O que muda
 
-É uma referência visual/interacional, não uma cópia: sem código, assets, ícones, fontes, pacotes ou dependência do Elementor/WordPress. Os ícones SVG são inline e mantêm os nomes acessíveis.
+- O formulário geral de CMS > Páginas passa a exibir um resumo textual curto por idioma, com acesso icon-only ao editor de conteúdo.
+- Ao criar uma página, salvar os dados gerais abre o editor dedicado. Salvar o conteúdo retorna ao formulário geral.
+- Os dados gerais, SEO, campos customizados, status e ordem continuam pertencendo ao formulário geral; o editor dedicado os envia como valores ocultos para preservá-los.
+- O editor continua em salvamento manual, mantém o campo `description` existente e o envelope `REAMURCMS_BDRE_JSON_V2:`. Nenhuma migration ou novo campo de banco é incluído.
+- Ações do editor ficam icon-only onde a ação é inequívoca; rótulos acessíveis continuam via `aria-label`, `title` e texto para leitores de tela.
+- Conteúdo legado que não pode ser convertido permanece preservável/editável; documentos v2 inválidos não são sobrescritos silenciosamente.
 
-## Aplicação
+## Arquivos
 
-Copie os dois arquivos de `dev/` para os mesmos caminhos no checkout atualizado e revise o diff:
+Copie os arquivos sob `dev/` para os mesmos caminhos no projeto. O pacote não contém o projeto inteiro.
 
-- `dev/admin/view/js/blog-block-editor.js`
-- `dev/admin/view/css/blog-block-editor.css`
+## Verificação
 
-O modo inline e o modelo de dados permanecem disponíveis; no modo tela cheia, o canvas passa a ser o foco e as ferramentas ficam numa barra lateral. O botão **Elementos** leva ao inserter; **Estrutura** abre o navegador do documento; **Configurações** abre o inspetor do bloco selecionado. O botão de tela cheia continua com `Esc` e **Voltar ao formulário**. Salvamento continua explícito no formulário, sem autosave.
+```sh
+node tools/e2e/check_page_content_flow.cjs
+node --check dev/admin/view/js/blog-block-editor.js
+node --check dev/admin/view/js/blog-block-editor-init.js
+```
 
-## Preview e verificações
+O checker é estático/contratual, não um navegador real. PHP não está instalado neste ambiente; a instalação CMS, renderização Twig e round-trip real em banco precisam ser verificados em ambiente de desenvolvimento autorizado. Não execute em produção. Sem escrita GitHub, banco, migrations, staging ou deploy.
 
-- `preview/index.html` mostra a interface interativa; sirva a pasta com um servidor HTTP estático para testar o modo fullscreen.
-- `tests/check_elementor_workbench.js`: verificações estáticas do layout e acessibilidade.
-- 19 checkers/suítes E2E estáticas do editor passaram contra os arquivos alterados.
-- Não foi executado PHP, banco, GitHub write, staging ou produção. A prévia isolada não substitui uma verificação dentro do CMS.
+## Smoke test manual recomendado
+
+1. Em CMS > Páginas, criar página: confirmar que a tela geral só mostra resumo e que Salvar abre o editor dedicado.
+2. Criar/alterar conteúdo em cada idioma, salvar, confirmar retorno ao formulário geral e resumo atualizado.
+3. Verificar que título, SEO, campos customizados, status e ordem permanecem iguais após o retorno.
+4. Editar uma página legada e uma página com envelope v2; confirmar que o conteúdo permanece no campo de descrição existente.
+5. Conferir navegação por teclado e nomes acessíveis dos botões icon-only.

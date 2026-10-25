@@ -5,6 +5,7 @@
     <h1 class="page-title"><i class="bi bi-file-earmark-text me-2" aria-hidden="true"></i>{{ heading_title }} · {{ page_id ? text_edit : text_add }}</h1>
   </div></div>
 
+  {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }}" role="status">{{ text_flash.text }}</div>{% endif %}
   {% if error %}<div class="alert alert-danger" role="alert">{{ error|nl2br }}</div>{% endif %}
 
   <form method="post" action="{{ action }}" class="row g-3 form-layout" data-cms-page-form>
@@ -33,30 +34,21 @@
               <label class="form-label" for="input-keyword-{{ language.language_id }}">{{ entry_keyword }}</label>
               <input class="form-control" type="text" name="page_description[{{ language.language_id }}][keyword]" id="input-keyword-{{ language.language_id }}" value="{{ language.fields.keyword }}" maxlength="64" pattern="[a-z0-9]+(-[a-z0-9]+)*">
             </div>
-            <div class="field mb-3">
-              <label class="form-label" for="input-description-{{ language.language_id }}">{{ entry_description }}</label>
-              {% if language.fields.block_mode == 'blocks' %}
-                <input type="hidden" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" value="{{ language.fields.block_stored_value|e('html_attr') }}">
-                <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="blocks">
-                <input type="hidden" name="page_editor_ready[{{ language.language_id }}]" id="page-editor-ready-{{ language.language_id }}" value="">
-                <div class="bdre-page-editor" data-blog-block-editor
-                     data-hidden-input="input-description-{{ language.language_id }}"
-                     data-ready-input="page-editor-ready-{{ language.language_id }}"
-                     data-document="{{ language.fields.block_document|e('html_attr') }}"
-                     data-storage-prefix="REAMURCMS_BDRE_JSON_V2:"
-                     data-media-pickers="false"
-                     data-editor-strings="{{ block_editor_strings|json_encode|e('html_attr') }}"
-                     aria-label="{{ entry_description|e('html_attr') }}"></div>
-                <p class="form-text">{{ help_description }} {{ text_block_editor_intro }}</p>
-              {% elseif language.fields.block_mode == 'invalid' %}
-                <input type="hidden" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" value="{{ language.fields.description|e('html_attr') }}">
-                <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="invalid">
-                <div class="alert alert-warning" role="status">O documento BDREditor armazenado não passou na validação. O conteúdo original será preservado; corrija ou restaure o documento antes de editar.</div>
-              {% else %}
-                <textarea class="form-control" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="10">{{ language.fields.description }}</textarea>
-                <p class="form-text">{{ help_description }}{% if language.fields.description %} O conteúdo legado não foi convertido automaticamente porque sua estrutura não pôde ser preservada com segurança; ele permanece editável como texto original.{% endif %}</p>
-              {% endif %}
-            </div>
+            <input type="hidden" name="page_description[{{ language.language_id }}][description]" value="{{ language.fields.content_saved_value|e('html_attr') }}">
+            <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="{{ language.fields.content_form_mode }}">
+            {% if language.fields.content_form_mode == 'blocks' %}<input type="hidden" name="page_editor_ready[{{ language.language_id }}]" value="1">{% endif %}
+            <section class="card bg-body-tertiary border-0 mb-4" aria-label="{{ text_content_summary_note }}">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                  <div class="min-w-0">
+                    <h3 class="h6 mb-1">{{ entry_description }}</h3>
+                    {% if language.fields.content_summary %}<p class="small text-body-secondary mb-0">{{ language.fields.content_summary }}</p>{% else %}<p class="small text-body-secondary mb-0">{{ text_content_empty }}</p>{% endif %}
+                  </div>
+                  {% if page_id %}<a class="btn btn-outline-primary btn-sm flex-shrink-0" href="{{ language.content_editor_url }}" aria-label="{{ button_edit_content }}" title="{{ button_edit_content }}"><i class="bi bi-pencil-square" aria-hidden="true"></i><span class="visually-hidden">{{ button_edit_content }}</span></a>{% else %}<span class="small text-body-secondary">{{ text_content_save_first }}</span>{% endif %}
+                </div>
+                <p class="form-text mt-2 mb-0">{{ text_content_summary_note }}</p>
+              </div>
+            </section>
             <h3 class="h6 text-body-secondary mt-4 mb-2">{{ text_meta_group }}</h3>
             <div class="row g-3">
               <div class="col-md-6 field">
@@ -104,8 +96,8 @@
         </div>
       </div></div>
       <div class="card data-card side-card"><div class="card-body d-grid gap-2">
-        {% if can_modify %}<button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1" aria-hidden="true"></i>{{ button_save }}</button>{% endif %}
-        <a class="btn btn-outline-secondary" href="{{ cancel }}">{{ button_cancel }}</a>
+        {% if can_modify %}<button type="submit" class="btn btn-primary" aria-label="{{ button_save }}" title="{{ button_save }}"><i class="bi bi-check-lg" aria-hidden="true"></i><span class="visually-hidden">{{ button_save }}</span></button>{% endif %}
+        <a class="btn btn-outline-secondary" href="{{ cancel }}" aria-label="{{ button_cancel }}" title="{{ button_cancel }}"><i class="bi bi-x-lg" aria-hidden="true"></i><span class="visually-hidden">{{ button_cancel }}</span></a>
       </div></div>
     </div>
   </form>
