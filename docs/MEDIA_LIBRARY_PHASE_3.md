@@ -10,6 +10,7 @@
 - O modal e o botão só aparecem quando a pessoa tem simultaneamente `modify` em `cms/page` e `modify` em `blog/blog`. A rota existente exige a permissão de Blog; nenhuma ACL foi alterada nem contornada.
 - O seletor de documentos/arquivos e upload permanecem desabilitados na página. Não há upload nem exclusão de áudio.
 - Vídeo continua por URL HTTPS dos hosts já permitidos pelo editor; não foi encontrada biblioteca de vídeo local confirmada, portanto não foi criado picker de vídeo.
+- Se MP3/OGG/WAV forem escolhidos no comando genérico **Importar arquivo**, a mensagem agora explica que áudio não é formato de importação documental e encaminha ao bloco Áudio e à biblioteca existente. Isso não envia nem cadastra o arquivo local.
 - Mantidos o formulário CMS, o campo oculto/envelope v2, a importação local, o salvamento manual e os limites da Fase 2.
 
 ## Instalação

@@ -102,6 +102,7 @@ $_['text_editor_preview_mode'] = 'Pré-visualizar';
 $_['text_editor_edit_mode'] = 'Voltar à edição';
 $_['text_editor_import_hint'] = 'Importação local; nenhum arquivo é enviado ao servidor. Mídias só são referenciadas se já estiverem na biblioteca permitida.';
 $_['text_editor_import_unavailable'] = 'Importador indisponível.';
+$_['text_editor_import_audio_library'] = 'MP3, OGG e WAV não são importados como documentos. Para usar áudio já cadastrado, insira um bloco Áudio e selecione-o na biblioteca do Blog. O seletor não envia arquivos.';
 $_['text_editor_import_error'] = 'Falha ao importar arquivo.';
 $_['text_editor_preview_video_link'] = 'Vídeo incorporado';
 $_['text_editor_preview_video_open'] = 'Abrir em nova aba';

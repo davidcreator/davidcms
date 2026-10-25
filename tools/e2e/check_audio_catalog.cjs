@@ -19,6 +19,7 @@ test('existing audio paths are constrained to local Blog audio and validated twi
 test('audio catalog supports selection and drag/drop onto the canvas', /blog-block-audio-selected/.test(picker) && /application\/x-reamurcms-audio/.test(picker) && /insertAudioReference/.test(editor));
 test('the modal is read-only with search and pagination controls', /blogAudioSearch/.test(template) && /blogAudioPrevious/.test(template) && /blogAudioNext/.test(template) && !/upload|delete/i.test(template));
 test('audio picker has translated drag guidance in all shipped locales', langs.every(x => /text_audio_drag_hint/.test(x)) && /audioDragHint/.test(controller));
+test('MP3/OGG/WAV import failures direct users to the existing audio-library picker', /audioFormats = \['mp3', 'ogg', 'wav'\]/.test(editor) && /importAudioLibrary/.test(editor) && ['pt-br','en-us','es-eu'].every(x => /text_editor_import_audio_library/.test(read(`dev/admin/language/${x}/cms/page.php`))));
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`);
 const failed = checks.filter(x => !x[1]).length;
 console.log(`\n${checks.length - failed}/${checks.length} static checks passed`);

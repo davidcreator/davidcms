@@ -1281,7 +1281,10 @@
         this.statusMessage=(this.strings.importSuccess||'Conteúdo importado para o rascunho local: ')+file.name;
         this.commit(next,null);
       } catch(error) {
-        this.importNotices=[String(error&&error.message||this.strings.importError||'Falha ao importar arquivo.')];
+        const extension = String(file && file.name || '').split('.').pop().toLowerCase();
+        const audioFormats = ['mp3', 'ogg', 'wav'];
+        const message = audioFormats.includes(extension) ? (this.strings.importAudioLibrary || 'Use the existing audio library for MP3, OGG, or WAV.') : String(error&&error.message||this.strings.importError||'Falha ao importar arquivo.');
+        this.importNotices=[message];
         this.statusMessage=this.importNotices[0]; this.render();
       }
     }

@@ -1,7 +1,7 @@
 BDREditor-Existing-Audio-Media-Phase-3
 Incremental source package for ReamurCMS BDREditor, Phase 3.
 Reference base: davidcreator/davidcms main fe19221806a19ba249e4eaa5725c93971bfbcf96 (read-only).
-Apply files preserving relative paths at project root. No database migration, GitHub write, staging, or production changes.
+Applied workspace changes are local only; no GitHub write, DB migration, staging, or production changes.
 
 Included files:
 README.md

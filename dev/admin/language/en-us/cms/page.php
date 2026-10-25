@@ -118,6 +118,7 @@ $_['text_editor_preview_mode'] = 'Preview';
 $_['text_editor_edit_mode'] = 'Back to editing';
 $_['text_editor_import_hint'] = 'Local conversion only; no file is uploaded. Media is referenced only when already in an approved library.';
 $_['text_editor_import_unavailable'] = 'Importer unavailable.';
+$_['text_editor_import_audio_library'] = 'MP3, OGG, and WAV are not document imports. To use existing audio, insert an Audio block and choose it from the Blog library. The picker does not upload files.';
 $_['text_editor_import_error'] = 'Could not import the file.';
 $_['text_editor_preview_video_link'] = 'Embedded video';
 $_['text_editor_preview_video_open'] = 'Open in new tab';
