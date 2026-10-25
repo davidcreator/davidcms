@@ -316,3 +316,8 @@ $_['text_block_outdent'] = 'Outdent after parent';
 $_['text_block_status_indented'] = 'Block moved into the previous container.';
 $_['text_block_status_outdented'] = 'Block moved after its parent.';
 $_['text_block_hierarchy_move_unavailable'] = 'This move is not allowed here or would exceed a document limit.';
+
+// BDREditor save-state feedback
+$_['text_block_save_state_saved'] = 'All changes are saved.';
+$_['text_block_save_state_unsaved'] = 'You have unsaved changes.';
+$_['text_block_save_state_saving'] = 'Saving changes…';

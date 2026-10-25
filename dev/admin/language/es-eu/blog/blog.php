@@ -316,3 +316,8 @@ $_['text_block_outdent'] = 'Quitar sangría tras el padre';
 $_['text_block_status_indented'] = 'Bloque movido dentro del contenedor anterior.';
 $_['text_block_status_outdented'] = 'Bloque movido después del padre.';
 $_['text_block_hierarchy_move_unavailable'] = 'Este movimiento no está permitido aquí o superaría un límite del documento.';
+
+// BDREditor save-state feedback
+$_['text_block_save_state_saved'] = 'Todos los cambios están guardados.';
+$_['text_block_save_state_unsaved'] = 'Hay cambios sin guardar.';
+$_['text_block_save_state_saving'] = 'Guardando cambios…';

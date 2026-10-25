@@ -316,3 +316,8 @@ $_['text_block_outdent'] = 'Desindentar após o pai';
 $_['text_block_status_indented'] = 'Bloco movido para dentro do bloco anterior.';
 $_['text_block_status_outdented'] = 'Bloco movido para depois do pai.';
 $_['text_block_hierarchy_move_unavailable'] = 'Esta movimentação não é permitida neste contexto ou ultrapassaria um limite do documento.';
+
+// BDREditor save-state feedback
+$_['text_block_save_state_saved'] = 'Todas as alterações estão salvas.';
+$_['text_block_save_state_unsaved'] = 'Há alterações não salvas.';
+$_['text_block_save_state_saving'] = 'Salvando alterações…';

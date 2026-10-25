@@ -1,23 +1,44 @@
-/* F9-16 safe form binding: serialize only to the same POST form; no autosave/network. */
+/* F9-16 form binding with localized unsaved-state feedback; same POST only, no autosave/network. */
 (function (global, document) {
   'use strict';
   var pendingMediaEditor = null;
 
-  function unsavedState(form) {
+  function unsavedState(form, strings) {
     if (!form.__blogBlockUnsavedState) {
-      var state = { dirty: !!form.querySelector('.alert-danger'), bypass: false };
+      var status = document.createElement('p');
+      status.className = 'rb-save-status';
+      status.setAttribute('role', 'status');
+      status.setAttribute('aria-live', 'polite');
+      status.setAttribute('aria-atomic', 'true');
+      status.dataset.saveStatus = '1';
+      form.insertBefore(status, form.firstChild);
+      var state = { dirty: !!form.querySelector('.alert-danger'), bypass: false, status: status, strings: strings || {} };
+      state.render = function (mode) {
+        var key = mode === 'saving' ? 'saveStateSaving' : (state.dirty ? 'saveStateUnsaved' : 'saveStateSaved');
+        status.textContent = state.strings[key] || (mode === 'saving' ? 'Saving…' : (state.dirty ? 'Changes not saved' : 'All changes saved'));
+        status.dataset.state = mode || (state.dirty ? 'unsaved' : 'saved');
+      };
+      state.markDirty = function () { state.dirty = true; state.render(); };
+      state.render();
       form.__blogBlockUnsavedState = state;
       form.addEventListener('input', function (event) {
-        if (event.target && !event.target.matches('[name^="blog_blocks["],[name^="blog_editor_ready["],[name="csrf_token"]')) state.dirty = true;
+        if (event.target && !event.target.matches('[name^="blog_blocks["],[name^="blog_editor_ready["],[name="csrf_token"]')) state.markDirty();
       });
       form.addEventListener('change', function (event) {
-        if (event.target && !event.target.matches('[name^="blog_blocks["],[name^="blog_editor_ready["],[name="csrf_token"]')) state.dirty = true;
+        if (event.target && !event.target.matches('[name^="blog_blocks["],[name^="blog_editor_ready["],[name="csrf_token"]')) state.markDirty();
       });
       global.addEventListener('beforeunload', function (event) {
         if (!state.dirty || state.bypass) return;
         event.preventDefault();
         event.returnValue = '';
       });
+      global.addEventListener('pageshow', function () {
+        state.bypass = false;
+        state.render();
+      });
+    } else if (strings) {
+      form.__blogBlockUnsavedState.strings = strings;
+      form.__blogBlockUnsavedState.render();
     }
     return form.__blogBlockUnsavedState;
   }
@@ -38,10 +59,11 @@
       var hidden = document.getElementById(root.dataset.hiddenInput || '');
       var ready = document.getElementById(root.dataset.readyInput || '');
       var form = root.closest('form');
-      var changeState = form ? unsavedState(form) : null;
+      var editorStrings = {};
+      try { editorStrings = JSON.parse(root.dataset.editorStrings || '{}'); } catch (_) {}
+      var changeState = form ? unsavedState(form, editorStrings) : null;
       try {
         var initial = JSON.parse(root.dataset.document || '');
-        var editorStrings = JSON.parse(root.dataset.editorStrings || '{}');
         root.setAttribute('aria-label', editorStrings.editorLabel || 'Blog block editor');
         var editor = global.ReamurBlogBlockEditor.mount(root, {
           document: initial,
@@ -52,7 +74,7 @@
             root.dataset.valid = validation.valid ? 'true' : 'false';
             root.setAttribute('aria-invalid', validation.valid ? 'false' : 'true');
             root.dataset.dirty = 'true';
-            if (changeState) changeState.dirty = true;
+            if (changeState) changeState.markDirty();
           }
         });
         root.__blogBlockEditorInstance = editor;
@@ -94,16 +116,17 @@
             allEditorsValid = hosts.every(function (host) { return host.dataset.valid === 'true'; });
             event.__blogBlockSerialized = true;
           }
-          if (root.dataset.valid === 'false' || !hidden || !hidden.value || !allEditorsValid) {
+          if (!allEditorsValid || !hidden || !hidden.value || hosts.some(function (host) { return host.dataset.valid === 'false'; })) {
             event.preventDefault();
-            if (changeState) changeState.bypass = false;
+            if (changeState) { changeState.bypass = false; changeState.markDirty(); }
             root.focus();
             root.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
           }
           if (changeState) {
             changeState.bypass = true;
-            changeState.dirty = false;
+            changeState.status.textContent = changeState.strings.saveStateSaving || 'Saving…';
+            changeState.status.dataset.state = 'saving';
           }
         });
       } catch (error) {

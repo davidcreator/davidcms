@@ -1,35 +1,28 @@
-# BDREditor — reordenação hierárquica acessível
+# BDREditor — aviso de alterações não salvas
 
-Incremento cumulativo sobre **BDREditor-Outline-Keyboard-Navigation**, para o editor exclusivo de conteúdo do ReamurCMS. Gutenberg permanece somente referência; não há dependência, código ou assets incorporados.
+Incremento cumulativo sobre **BDREditor-Hierarchical-Reordering**, para o editor exclusivo de conteúdo do ReamurCMS.
 
-## Uso
+## O que mudou
 
-No inspetor do bloco selecionado, os botões **Indentar** e **Desindentar** movem a seleção entre níveis hierárquicos sem drag-and-drop:
+- Estado visível e acessível **salvo / alterações não salvas / salvando** no formulário atual.
+- Edições nos campos e no BDREditor marcam o formulário como não salvo; inputs hidden de serialização e CSRF são ignorados.
+- O aviso nativo de saída permanece ativo apenas enquanto há alterações pendentes. Submissão válida ao POST existente mostra **salvando** sem declarar sucesso prematuramente; o flash/redirect do servidor segue como confirmação de persistência.
+- Mensagens localizadas PT-BR, EN-US e ES-EU.
 
-- Indentar move para dentro do contêiner compatível imediatamente anterior.
-- Desindentar move para depois do pai.
-- Ações impossíveis ficam desativadas. Em tentativa inválida, o documento não é alterado; mensagens de estado acessíveis são anunciadas.
-- IDs, atributos e conteúdo são preservados. A validação do documento v2 completo ocorre antes e depois da movimentação; commit e undo são atômicos.
-- Blocos de tabela não podem ser movidos. Não se permite esvaziar contêineres que exigem filhos.
+Não inclui autosave, API/endpoint, armazenamento novo, mudança de schema, banco, staging, migrations, deploy ou GitHub write.
 
 ## Verificações
 
-Com Node.js:
-
 ```sh
 node --check dev/admin/view/js/blog-block-editor.js
+node --check dev/admin/view/js/blog-block-editor-init.js
 node tests/check_hierarchical_reordering.js
 node tools/e2e/e2e_bdre_hierarchical_reordering_static.cjs
+node tools/e2e/e2e_bdre_unsaved_changes_static.cjs
 ```
 
-Nesta entrega: checker funcional **23 PASS**, checker estático novo **27 PASS**; checkers cumulativos anteriores executados com sucesso: áudio 49, copy/paste 29, arquivo/download 48, atalhos 25, breadcrumbs 24 e outline por teclado 24. `php -l` não foi executado: interpretador PHP não está instalado no ambiente. Os checkers estáticos não substituem teste de browser/leitor de tela ou runtime PHP.
+Os checkers cumulativos anteriores também foram executados. O checker novo reporta **22 PASS** estáticos. `php -l` não pôde ser executado porque PHP não está instalado; não houve validação real em navegador/leitor de tela.
 
-## Escopo e segurança
-
-Sem alteração de schema ou persistência. Nenhuma escrita GitHub, execução de runtime, staging, banco, migration, teste destrutivo ou deploy. Pacote preparado com cópias pontuais de fontes; projeto completo não foi clonado.
-
-- Contrato: `docs/BDREditor-Hierarchical-Reordering.md`
-- Fixture: `tests/fixtures/hierarchy_move.json`
-- Checker comportamental: `tests/check_hierarchical_reordering.js`
-- Checker estático E2E: `tools/e2e/e2e_bdre_hierarchical_reordering_static.cjs`
-- SHA-256: `SHA256SUMS`
+- Especificação: `docs/BDREditor-Unsaved-Changes-Warning.md`
+- Checker: `tools/e2e/e2e_bdre_unsaved_changes_static.cjs`
+- Manifesto: `SHA256SUMS`

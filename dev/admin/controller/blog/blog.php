@@ -542,7 +542,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             'text_block_mobile_full', 'text_block_mobile_large', 'text_block_mobile_medium',
             'text_block_video_preview', 'text_block_video_preview_hint', 'text_block_media_placeholder',
             'text_block_pattern_category', 'text_block_pattern_two_columns', 'text_block_pattern_quote_cta', 'text_block_pattern_section_intro',
-            'text_block_pattern_cover_hero', 'text_block_pattern_hint',
+            'text_block_pattern_cover_hero', 'text_block_pattern_hint', 'text_block_save_state_saved', 'text_block_save_state_unsaved', 'text_block_save_state_saving',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
@@ -555,6 +555,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             'invalidLink' => $data['text_inline_invalid_link'], 'toolbar' => $data['text_inline_toolbar'],
             'textLabel' => $data['text_inline_text_label'], 'placeholder' => $data['text_inline_placeholder'],
             'editorLabel' => $data['text_inline_editor_label'],
+            'saveStateSaved' => $data['text_block_save_state_saved'], 'saveStateUnsaved' => $data['text_block_save_state_unsaved'], 'saveStateSaving' => $data['text_block_save_state_saving'],
             'addBlock' => $data['text_block_add'], 'searchBlocks' => $data['text_block_search'], 'noBlocks' => $data['text_block_no_results'],
             'categoryContent' => $data['text_block_category_content'], 'categoryMedia' => $data['text_block_category_media'], 'categoryLayout' => $data['text_block_category_layout'],
             'outline' => $data['text_block_outline'], 'outlineEmpty' => $data['text_block_outline_empty'], 'outlineLabel' => $data['text_block_outline_label'], 'initialInvalid' => $data['text_block_initial_invalid'], 'documentTooLarge' => $data['text_block_document_too_large'], 
