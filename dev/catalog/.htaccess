@@ -41,7 +41,9 @@ RewriteRule ^portfolio/([a-z0-9-]+)/?$ %{ENV:CMSBASE}catalog/$1 [R=301,L]
 
 # Runtime Three.js armazenado em system/ (protegido por system/.htaccess).
 # Somente arquivos JS dentro da allowlist do manifesto chegam ao controller.
-RewriteRule ^three-runtime/([A-Za-z0-9_/-]+\.js)$ index.php?route=common/three.asset&asset=$1 [QSA,L]
+# O ponto faz parte da classe: sem ele 'three.module.js' e 'three.core.js'
+# não casavam, caíam na F6-06 (404 binário) e o import map quebrava a cena.
+RewriteRule ^three-runtime/([A-Za-z0-9_/.-]+\.js)$ index.php?route=common/three.asset&asset=$1 [QSA,L]
 
 # ═══ F6-06 (ADR 0041) — assets estáticos inexistentes = 404 NATIVO ══════
 # Sem arquivo físico, uma URL de asset caía no front controller, o router
