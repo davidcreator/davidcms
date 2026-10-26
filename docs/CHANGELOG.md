@@ -1,9 +1,10 @@
 # Changelog
 
 ## Correção — thumb renderizada na prévia do post (2026-10-26)
-- O modo **Prévia** do editor Blog/CMS agora cria o stage com configuração de cena e inicia o runtime Three.js local, em vez de mostrar apenas o rótulo estático.
-- Script personalizado continua executando somente no iframe sandbox isolado; CSS/JS carregados localmente e apenas nas telas com editor de blocos.
-- Atualizado o versionamento dos assets administrativos e o checker estático correspondente.
+- O cartão do bloco no canvas e o modo **Prévia** do editor Blog/CMS agora criam o stage com a configuração da cena e iniciam o runtime Three.js local, em vez de mostrar apenas um rótulo estático.
+- A prévia administrativa renderiza somente a cena declarativa; `custom_js` não é executado no editor e permanece exclusivo da thumb pública em iframe sandbox.
+- Textareas e editor de código podem ser redimensionados na largura e altura, limitados ao espaço disponível do formulário.
+- Atualizados os textos nos três idiomas, versionamento dos assets administrativos e checkers estáticos.
 
 ## Office/Canvas fidelity phase 2 — 2026-10-25
 

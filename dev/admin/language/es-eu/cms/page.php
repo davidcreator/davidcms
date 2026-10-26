@@ -123,7 +123,7 @@ $_['text_block_threejs_scene_config'] = 'Configuración de escena (JSON)';
 
 $_['text_block_threejs_config_hint'] = 'Escena JSON declarativa con límites estrictos. El JavaScript personalizado opcional va en un campo separado y se ejecuta en un sandbox aislado. No uses URL, texturas ni recursos externos; Three.js es local.';
 
-$_['text_block_threejs_preview_hint'] = 'La vista previa del editor es indicativa; los scripts personalizados solo se ejecutan en la miniatura pública, dentro de un iframe aislado.';
+$_['text_block_threejs_preview_hint'] = 'La escena se renderiza en el editor; los scripts personalizados solo se ejecutan en la miniatura pública, dentro de un iframe aislado.';
 
 $_['text_block_threejs_objects'] = 'Formas de la escena';
 

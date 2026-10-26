@@ -139,7 +139,7 @@ $_['text_block_threejs_scene_config'] = 'Scene configuration (JSON)';
 
 $_['text_block_threejs_config_hint'] = 'Declarative JSON scene with strict bounds. Optional custom JavaScript is in a separate field and runs in an isolated sandbox. Do not use URLs, textures, or external resources; Three.js is self-hosted.';
 
-$_['text_block_threejs_preview_hint'] = 'The editor preview is illustrative; custom scripts run only in the public thumbnail inside a sandboxed iframe.';
+$_['text_block_threejs_preview_hint'] = 'The scene renders in the editor; custom scripts run only in the public thumbnail inside a sandboxed iframe.';
 
 $_['text_block_threejs_objects'] = 'Scene objects';
 

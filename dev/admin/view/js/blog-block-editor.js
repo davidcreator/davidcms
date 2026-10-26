@@ -1357,8 +1357,6 @@
           const scene=String(node.attributes.scene_json||'');
           try { JSON.parse(scene); stage.setAttribute('data-scene',scene); } catch (_) { stage.setAttribute('aria-label',this.strings.threejs.invalidScene||'Cena 3D inválida'); }
           const label=String(node.attributes.label||this.label(node.type)); stage.setAttribute('role','img'); stage.setAttribute('aria-label',label);
-          const script=String(node.attributes.custom_js||'');
-          if(script){try{stage.setAttribute('data-custom-js',global.btoa(unescape(encodeURIComponent(script))));}catch(_){stage.setAttribute('data-custom-js','');}}
           const fallback=d.createElement('span'); fallback.className='rms-block-threejs-thumb__fallback'; fallback.textContent=label; stage.append(fallback); out.append(stage);
           const hint=d.createElement('small'); hint.textContent=this.strings.threejs.previewHint||''; if(hint.textContent)out.append(hint);
           break;
@@ -1581,8 +1579,15 @@
         }
         card.append(audio, this.el('p', 'rb-preview-value', label + (node.attributes.src ? ' · ' + node.attributes.src.split('/').pop() : '')));
       } else if (node.type === 'core/threejs_thumb') {
-        const preview = this.el('div','rb-threejs-admin-preview'); preview.setAttribute('role','img'); preview.setAttribute('aria-label',node.attributes.label || this.label(node.type));
-        preview.append(this.icon('threejs','rb-threejs-admin-icon'), this.el('span','',node.attributes.label || this.label(node.type)), this.el('small','',this.strings.threejs.previewHint)); card.append(preview,this.renderThreeJsInlineEditor(node));
+        const preview = this.el('div','rb-threejs-admin-preview');
+        const stage = this.el('div','rms-block-threejs-thumb__stage'); stage.setAttribute('data-threejs-thumb','');
+        const label = String(node.attributes.label || this.label(node.type));
+        stage.setAttribute('role','img'); stage.setAttribute('aria-label',label);
+        try { JSON.parse(String(node.attributes.scene_json || '')); stage.setAttribute('data-scene',String(node.attributes.scene_json)); }
+        catch (_) { stage.setAttribute('aria-label',this.strings.threejs.invalidScene || label); }
+        const fallback=this.el('span','rms-block-threejs-thumb__fallback',label); stage.append(fallback); preview.append(stage);
+        const hint=this.el('small','',this.strings.threejs.previewHint); if(hint.textContent)preview.append(hint);
+        card.append(preview,this.renderThreeJsInlineEditor(node));
       } else if (node.type === 'core/video_file') {
         const video = this.el('video','rb-video-file-admin-preview'); video.controls = true; video.preload = 'none'; video.playsInline = true;
         if (validLocalVideo(node.attributes.src) && this.strings.videoFile.catalogBase) { try { const base = new URL(String(this.strings.videoFile.catalogBase), global.location.href); if (base.origin === global.location.origin) video.src = new URL(node.attributes.src, base).href; } catch (_) {} }
