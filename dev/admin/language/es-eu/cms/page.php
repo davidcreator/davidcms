@@ -114,3 +114,13 @@ $_['text_block_video_file_source'] = 'Ruta local del vídeo';
 $_['text_block_video_file_choose'] = 'Seleccionar o subir vídeo';
 
 $_['text_editor_import_video_library'] = 'MP4, WebM y OGV no se importan como documentos. Inserta un bloque Vídeo local y selecciona o sube el vídeo mediante la biblioteca del Blog.';
+
+$_['text_block_type_threejs_thumb'] = 'Miniatura 3D (Three.js)';
+
+$_['text_block_threejs_label'] = 'Etiqueta accesible';
+
+$_['text_block_threejs_scene_config'] = 'Configuración de escena (JSON)';
+
+$_['text_block_threejs_config_hint'] = 'Escena declarativa, sin JavaScript: hasta 12 formas (box, sphere, torus, cone, cylinder, icosahedron, torusKnot), 4 luces y animaciones limitadas. Three.js es local; no uses scripts, URL, texturas ni recursos externos.';
+
+$_['text_block_threejs_preview_hint'] = 'Vista WebGL pública; el editor muestra la configuración y no ejecuta código del usuario.';

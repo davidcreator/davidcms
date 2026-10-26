@@ -349,3 +349,10 @@ body.rb-bdre-fullscreen-open{overflow:hidden!important}
 .rb-preview-canvas{max-width:none!important}
 @media(max-width:650px){.rb-live-preview .rb-preview-columns{grid-template-columns:1fr}.rb-import-hint{max-width:18rem}}
 .rb-video-file-admin-preview{display:block;width:min(100%,32rem);max-height:18rem;margin:.5rem 0;background:#111;border-radius:.5rem}
+
+/* Declarative Three.js thumbnail block */
+.rb-preview-threejs{min-height:5.5rem;padding:.85rem;display:flex;align-items:center;gap:.65rem;flex-wrap:wrap;border:1px solid var(--rb-border,#d9e0e8);border-radius:.5rem;background:radial-gradient(circle at 50% 35%,#293750,#101722 80%);color:#f4f7fb}
+.rb-preview-threejs .rb-threejs-admin-icon{width:1.5rem;height:1.5rem;flex:0 0 auto}
+.rb-preview-threejs small{flex-basis:100%;color:#c5cedb;font-size:.75rem}
+.rb-threejs-admin-preview{min-height:5rem;padding:.8rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;border:1px solid var(--rb-border,#d9e0e8);border-radius:.5rem;background:radial-gradient(circle at 50% 35%,#293750,#101722 80%);color:#f4f7fb}
+.rb-threejs-admin-preview small{flex-basis:100%;color:#c5cedb;font-size:.75rem}

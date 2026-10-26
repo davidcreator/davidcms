@@ -18,7 +18,7 @@ final class BlockRenderer {
     }
 
     /**
-     * @return array{valid:bool,html:string,errors:array}
+     * @return array{valid:bool,html:string,errors:array,requires_threejs?:bool}
      */
     public function renderJson(string $json, ?int $storedFormatVersion = null, string $assetBase = ''): array {
         if ($json === '' || strlen($json) > self::MAX_JSON_BYTES) return ['valid' => false, 'html' => '', 'errors' => ['document_size_invalid']];
@@ -30,7 +30,12 @@ final class BlockRenderer {
         $validation = $validator->validateDocument($document);
         if (!$validation['valid']) return ['valid' => false, 'html' => '', 'errors' => $validation['errors']];
 
-        return ['valid' => true, 'html' => $this->renderNodes($document['blocks'], $validator, $assetBase, (int)$document['format_version']), 'errors' => []];
+        return ['valid' => true, 'html' => $this->renderNodes($document['blocks'], $validator, $assetBase, (int)$document['format_version']), 'errors' => [], 'requires_threejs' => $this->containsThreeJsBlock($document['blocks'])];
+    }
+
+    private function containsThreeJsBlock(array $nodes): bool {
+        foreach ($nodes as $node) if (($node['type'] ?? '') === 'core/threejs_thumb' || $this->containsThreeJsBlock($node['children'] ?? [])) return true;
+        return false;
     }
 
     private function renderNodes(array $nodes, BlockDocument $validator, string $assetBase, int $version): string {
@@ -101,6 +106,14 @@ final class BlockRenderer {
                 $labelHtml = $this->renderInlineRuns($node['content']);
                 $mime = ['mp3' => 'audio/mpeg', 'ogg' => 'audio/ogg', 'wav' => 'audio/wav'][strtolower(pathinfo($srcPath, PATHINFO_EXTENSION))];
                 return '<figure class="rms-block rms-block-audio"><audio controls preload="none" aria-label="' . $labelText . '"><source src="' . $src . '" type="' . $mime . '"></audio><figcaption>' . $labelHtml . '</figcaption></figure>';
+
+            case 'core/threejs_thumb':
+                $label = $this->escape((string)$attributes['label']);
+                $scene = json_decode((string)$attributes['scene_json'], true);
+                $sceneJson = json_encode($scene, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                if (!is_string($sceneJson)) return '';
+                $sceneAttr = $this->escape($sceneJson);
+                return '<figure class="rms-block rms-block-threejs-thumb"><div class="rms-block-threejs-thumb__stage" data-threejs-thumb data-scene="' . $sceneAttr . '" role="img" aria-label="' . $label . '"><span class="rms-block-threejs-thumb__fallback">' . $label . '</span></div></figure>';
 
             case 'core/video_file':
                 $srcPath = (string)$attributes['src'];

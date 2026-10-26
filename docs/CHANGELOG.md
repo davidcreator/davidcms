@@ -22,3 +22,9 @@
 - Adiciona bloco v2 `core/video_file` e saída pública HTML5 `<video controls>` para ativos na raiz local de vídeo; incorpora a raiz ao renderer de Blog e CMS.
 - Importador de documentos continua separado e encaminha tentativas de importar áudio/vídeo aos blocos correspondentes.
 - Sem migration, alteração de ACL, configuração de servidor, GitHub write, staging ou deploy.
+
+## Ampliação — thumbs 3D declarativas (2026-10-26)
+- Adicionado `core/threejs_thumb` ao BDREditor de CMS > Páginas e Blog, com configuração de cena JSON e rótulo acessível no inspetor.
+- Incluído runtime Three.js local/self-hosted (0.186.1), renderer público condicional e validação estrita de cena; sem código arbitrário, CDN, modelos ou assets externos.
+- Incluídos textos PT-BR, EN-US e ES-EU, CSS administrativo/público e checker estático específico.
+- Ver `docs/THREEJS_THUMB.md` para esquema, limites e verificações.

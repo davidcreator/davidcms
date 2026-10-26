@@ -376,3 +376,13 @@ $_['text_block_type_video_file'] = 'Local video';
 $_['text_block_video_file_source'] = 'Local video path';
 
 $_['text_block_video_file_choose'] = 'Select or upload video';
+
+$_['text_block_type_threejs_thumb'] = '3D thumbnail (Three.js)';
+
+$_['text_block_threejs_label'] = 'Accessible label';
+
+$_['text_block_threejs_scene_config'] = 'Scene configuration (JSON)';
+
+$_['text_block_threejs_config_hint'] = 'Declarative scene, no JavaScript: up to 12 shapes (box, sphere, torus, cone, cylinder, icosahedron, torusKnot), 4 lights, and bounded animations. Three.js is self-hosted; do not use scripts, URLs, textures, or external resources.';
+
+$_['text_block_threejs_preview_hint'] = 'Public WebGL preview; the editor shows this configuration and never executes user code.';

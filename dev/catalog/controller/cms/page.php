@@ -36,6 +36,10 @@ class Page extends \Reamur\System\Engine\Controller {
             $rendered = (new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot, $audioRoot, $videoRoot))->renderJson($json, 2, $assetBase);
             $data['description'] = !empty($rendered['valid']) ? (string)$rendered['html'] : '';
             if (!empty($rendered['valid'])) $this->document->addStyle($this->config->get('site_url') . 'view/css/blog-blocks.css');
+            if (!empty($rendered['requires_threejs'])) {
+                $this->document->addStyle($this->config->get('site_url') . 'view/css/threejs-thumb.css');
+                $this->document->addScript($this->config->get('site_url') . 'view/js/threejs-thumb.js');
+            }
         } else {
             // Legacy HTML remains on its existing path; the marker is never sent to Twig.
             $data['description'] = $storedDescription;

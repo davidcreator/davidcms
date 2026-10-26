@@ -143,11 +143,11 @@ class BlockDocument {
         if ($keys !== ['attributes', 'children', 'content', 'id', 'type']) { $errors[] = 'node_shape_invalid'; return; }
         if (!is_string($node['id']) || !preg_match('/^[A-Za-z0-9_-]{1,96}$/D', $node['id']) || isset($ids[$node['id']])) $errors[] = 'node_id_invalid_or_duplicate';
         else $ids[$node['id']] = true;
-        $types = ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/callout','core/details','core/spacer','core/code','core/image','core/video_embed','core/button','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row','core/table-cell','core/file','core/audio','core/video_file'];
+        $types = ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/callout','core/details','core/spacer','core/code','core/image','core/video_embed','core/button','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row','core/table-cell','core/file','core/audio','core/video_file','core/threejs_thumb'];
         if (!is_string($node['type']) || !in_array($node['type'], $types, true)) { $errors[] = 'unknown_block_type'; return; }
         if (!is_array($node['attributes']) || !is_array($node['children']) || !$this->isSequentialList($node['children'])) { $errors[] = 'node_value_type_invalid'; return; }
         $type = $node['type']; $attrs = $node['attributes'];
-        if ($version === self::FORMAT_VERSION && in_array($type, ['core/gallery','core/cover','core/audio','core/video_file','core/file'], true)) $errors[] = 'media_block_requires_v2';
+        if ($version === self::FORMAT_VERSION && in_array($type, ['core/gallery','core/cover','core/audio','core/video_file','core/file','core/threejs_thumb'], true)) $errors[] = 'media_block_requires_v2';
         if ($version === self::FORMAT_VERSION && $type === 'core/callout') $errors[] = 'callout_requires_v2';
         if ($version === self::FORMAT_VERSION && $type === 'core/details') $errors[] = 'details_requires_v2';
         if ($version === self::FORMAT_VERSION && $type === 'core/spacer') $errors[] = 'spacer_requires_v2';
@@ -159,7 +159,7 @@ class BlockDocument {
             'core/video_embed' => ['url'], 'core/button' => ['url'], 'core/separator' => [],
             'core/group' => [], 'core/columns' => ['count'], 'core/column' => [],
             'core/gallery' => ['columns','align'], 'core/cover' => ['src','alt','align'],
-            'core/table' => ['header'], 'core/table-row' => [], 'core/table-cell' => [], 'core/file' => ['src'], 'core/audio' => ['src'], 'core/video_file' => ['src']
+            'core/table' => ['header'], 'core/table-row' => [], 'core/table-cell' => [], 'core/file' => ['src'], 'core/audio' => ['src'], 'core/video_file' => ['src'], 'core/threejs_thumb' => ['scene_json','label']
         ];
         if ($version === self::RICH_TEXT_FORMAT_VERSION) {
             $allowedAttrs['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
@@ -168,6 +168,7 @@ class BlockDocument {
             $allowedAttrs['core/file'] = ['src'];
             $allowedAttrs['core/audio'] = ['src'];
             $allowedAttrs['core/video_file'] = ['src'];
+            $allowedAttrs['core/threejs_thumb'] = ['scene_json','label'];
         }
         if (array_diff(array_keys($attrs), $allowedAttrs[$type])) $errors[] = 'attributes_not_allowlisted';
         if ($type === 'core/paragraph' && isset($attrs['align']) && !in_array($attrs['align'], ['left','center','right'], true)) $errors[] = 'alignment_invalid';
@@ -176,6 +177,7 @@ class BlockDocument {
         if ($type === 'core/file' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeDownloadPath($attrs['src']) || !is_array($node['content']) || !$this->hasVisibleInlineText($node['content']))) $errors[] = 'file_attributes_invalid';
         if ($type === 'core/audio' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeAudioPath($attrs['src']) || !is_array($node['content']) || !$this->hasVisibleInlineText($node['content']))) $errors[] = 'audio_attributes_invalid';
         if ($type === 'core/video_file' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeVideoPath($attrs['src']) || $node['children'] || $node['content'] !== '')) $errors[] = 'video_file_attributes_invalid';
+        if ($type === 'core/threejs_thumb' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['scene_json'], $attrs['label']) || !is_string($attrs['scene_json']) || !$this->isValidThreeJsScene($attrs['scene_json']) || !is_string($attrs['label']) || trim($attrs['label']) === '' || strlen($attrs['label']) > 160 || $node['children'] || $node['content'] !== '')) $errors[] = 'threejs_thumb_attributes_invalid';
         if ($type === 'core/image' && (!isset($attrs['src']) || !$this->isSafeImagePath($attrs['src']) || !isset($attrs['alt']) || !is_string($attrs['alt']) || (isset($attrs['title']) && !is_string($attrs['title'])))) $errors[] = 'image_attributes_invalid';
         if ($type === 'core/group' && isset($attrs['outline_label']) && (!is_string($attrs['outline_label']) || strlen($attrs['outline_label']) > 160 || !preg_match('//u', $attrs['outline_label']))) $errors[] = 'outline_label_invalid';
         if ($type === 'core/image') {
@@ -209,7 +211,7 @@ class BlockDocument {
         } elseif (!is_string($node['content']) || $node['content'] !== '') {
             $errors[] = 'non_text_content_invalid';
         }
-        if (in_array($type, ['core/list','core/image','core/video_embed','core/video_file','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row'], true) && $node['content'] !== '') $errors[] = 'content_not_allowed';
+        if (in_array($type, ['core/list','core/image','core/video_embed','core/video_file','core/threejs_thumb','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row'], true) && $node['content'] !== '') $errors[] = 'content_not_allowed';
         if ($type === 'core/list-item' && ($parentType !== 'core/list' || count($node['children']) > 0)) $errors[] = 'list_item_parent_invalid';
         if ($type === 'core/column' && $parentType !== 'core/columns') $errors[] = 'column_parent_invalid';
         if ($type === 'core/table-row' && $parentType !== 'core/table') $errors[] = 'table_row_parent_invalid';
@@ -379,6 +381,58 @@ class BlockDocument {
     private function isSafeAudioPath($src): bool {
         if (!is_string($src) || !preg_match('#^view/audio/blog/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$#D', $src) || str_contains($src, '..')) return false;
         return in_array(strtolower(pathinfo($src, PATHINFO_EXTENSION)), ['mp3','ogg','wav'], true);
+    }
+
+    /** Strict declarative Three.js scene format; never accepts executable JS or external resources. */
+    private function isValidThreeJsScene(string $json): bool {
+        if ($json === '' || strlen($json) > 16384) return false;
+        $scene = json_decode($json, true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($scene)) return false;
+        $allowed = ['version','background','camera','objects','lights','auto_rotate','fog'];
+        if (array_diff(array_keys($scene), $allowed) || !isset($scene['version'],$scene['background'],$scene['camera'],$scene['objects'],$scene['lights'],$scene['auto_rotate'])
+            || $scene['version'] !== 1 || !$this->isThreeColor($scene['background']) || !is_bool($scene['auto_rotate'])
+            || !is_array($scene['camera']) || !is_array($scene['objects']) || !$this->isSequentialList($scene['objects']) || count($scene['objects']) < 1 || count($scene['objects']) > 12
+            || !is_array($scene['lights']) || !$this->isSequentialList($scene['lights']) || count($scene['lights']) < 1 || count($scene['lights']) > 4) return false;
+        $camera = $scene['camera'];
+        if (array_diff(array_keys($camera), ['fov','position']) || !isset($camera['fov'],$camera['position']) || !$this->isFiniteBetween($camera['fov'],20,80) || !$this->isThreeVector($camera['position'], -20,20)) return false;
+        foreach ($scene['objects'] as $object) {
+            if (!is_array($object) || $this->isSequentialList($object)) return false;
+            $keys = ['type','color','position','rotation','scale','animation','roughness','metalness','wireframe'];
+            if (array_diff(array_keys($object), $keys) || !isset($object['type'],$object['color'],$object['position'],$object['rotation'],$object['scale'],$object['animation'])
+                || !in_array($object['type'], ['box','sphere','torus','cone','cylinder','icosahedron','torusKnot'], true)
+                || !$this->isThreeColor($object['color']) || !$this->isThreeVector($object['position'], -20,20) || !$this->isThreeVector($object['rotation'], -6.3,6.3)
+                || !$this->isFiniteBetween($object['scale'],0.1,5) || !in_array($object['animation'], ['none','spin','bob','pulse'], true)) return false;
+            if (isset($object['roughness']) && !$this->isFiniteBetween($object['roughness'],0,1)) return false;
+            if (isset($object['metalness']) && !$this->isFiniteBetween($object['metalness'],0,1)) return false;
+            if (isset($object['wireframe']) && !is_bool($object['wireframe'])) return false;
+        }
+        foreach ($scene['lights'] as $light) {
+            if (!is_array($light) || $this->isSequentialList($light) || array_diff(array_keys($light), ['type','color','intensity','position'])
+                || !isset($light['type'],$light['color'],$light['intensity']) || !in_array($light['type'], ['ambient','directional','point'], true)
+                || !$this->isThreeColor($light['color']) || !$this->isFiniteBetween($light['intensity'],0,5)) return false;
+            if ($light['type'] !== 'ambient' && (!isset($light['position']) || !$this->isThreeVector($light['position'],-20,20))) return false;
+            if ($light['type'] === 'ambient' && isset($light['position'])) return false;
+        }
+        if (isset($scene['fog'])) {
+            $fog = $scene['fog'];
+            if (!is_array($fog) || array_diff(array_keys($fog), ['color','near','far']) || !isset($fog['color'],$fog['near'],$fog['far'])
+                || !$this->isThreeColor($fog['color']) || !$this->isFiniteBetween($fog['near'],0.1,50) || !$this->isFiniteBetween($fog['far'],$fog['near']+0.1,150)) return false;
+        }
+        return true;
+    }
+
+    private function isThreeColor($value): bool {
+        return is_string($value) && preg_match('/^#[A-Fa-f0-9]{6}$/D', $value) === 1;
+    }
+
+    private function isThreeVector($value, float $min, float $max): bool {
+        if (!is_array($value) || !$this->isSequentialList($value) || count($value) !== 3) return false;
+        foreach ($value as $coordinate) if (!$this->isFiniteBetween($coordinate,$min,$max)) return false;
+        return true;
+    }
+
+    private function isFiniteBetween($value, float $min, float $max): bool {
+        return (is_int($value) || is_float($value)) && is_finite((float)$value) && $value >= $min && $value <= $max;
     }
 
     private function isSafeVideoPath($src): bool {

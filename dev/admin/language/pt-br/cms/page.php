@@ -114,3 +114,13 @@ $_['text_block_video_file_source'] = 'Caminho local do vídeo';
 $_['text_block_video_file_choose'] = 'Selecionar ou enviar vídeo';
 
 $_['text_editor_import_video_library'] = 'MP4, WebM e OGV não são importados como documentos. Insira um bloco Vídeo local e selecione ou envie o vídeo pela biblioteca do Blog.';
+
+$_['text_block_type_threejs_thumb'] = 'Thumb 3D (Three.js)';
+
+$_['text_block_threejs_label'] = 'Rótulo acessível';
+
+$_['text_block_threejs_scene_config'] = 'Configuração da cena (JSON)';
+
+$_['text_block_threejs_config_hint'] = 'Cena declarativa sem JavaScript: até 12 formas (box, sphere, torus, cone, cylinder, icosahedron, torusKnot), 4 luzes e animações limitadas. A biblioteca Three.js é local; não use scripts, URLs, texturas ou recursos externos.';
+
+$_['text_block_threejs_preview_hint'] = 'Prévia WebGL pública; o editor mostra esta configuração e não executa código fornecido.';

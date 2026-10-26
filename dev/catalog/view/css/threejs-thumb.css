@@ -1,0 +1,7 @@
+/* ReamurCMS declarative Three.js thumbnails */
+.rms-block-threejs-thumb{margin:1.25rem 0;max-width:100%}
+.rms-block-threejs-thumb__stage{position:relative;display:grid;width:100%;aspect-ratio:16/9;min-height:180px;max-height:640px;overflow:hidden;place-items:center;border-radius:var(--blog-radius,8px);background:radial-gradient(circle at 50% 40%,#26334b,#0c111b 78%);color:#e5eaf3}
+.rms-block-threejs-thumb__canvas{position:absolute;inset:0;display:block;width:100%;height:100%;outline:none}
+.rms-block-threejs-thumb__fallback{position:relative;z-index:1;max-width:90%;padding:.5rem 1rem;text-align:center;font:600 .95rem/1.4 system-ui,sans-serif}
+.rms-block-threejs-thumb__fallback[hidden]{display:none}
+@media(prefers-reduced-motion:reduce){.rms-block-threejs-thumb__stage{scroll-behavior:auto}}

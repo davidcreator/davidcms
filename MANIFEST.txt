@@ -1,10 +1,4 @@
-BDREditor-Blog-Audio-Video-Upload
-Incremental implementation package for ReamurCMS.
-Reference base: davidcreator/davidcms main d94b46e82502dd75e5c6da43b7fcca3c47b0db8d (read-only).
-Apply files preserving project-relative paths from repository root.
-No database migration, GitHub write, staging, production change, or delete endpoint.
-
-Included files:
+MANIFEST.txt
 README.md
 dev/admin/controller/blog/blog.php
 dev/admin/controller/cms/page.php
@@ -26,14 +20,20 @@ dev/admin/view/template/cms/page_form.twig
 dev/catalog/controller/blog/blog.php
 dev/catalog/controller/cms/page.php
 dev/catalog/view/css/blog-blocks.css
+dev/catalog/view/css/threejs-thumb.css
+dev/catalog/view/js/THREE-LICENSE.txt
+dev/catalog/view/js/three.module.js
+dev/catalog/view/js/threejs-thumb.js
 dev/system/library/blog/block_document.php
 dev/system/library/blog/block_renderer.php
 docs/BLOG_MEDIA_UPLOAD.md
 docs/CHANGELOG.md
 docs/IMPORT_FORMATS.md
 docs/MEDIA_LIBRARY_PHASE_3.md
+docs/THREEJS_THUMB.md
 preview/index.html
 tools/e2e/check_audio_catalog.cjs
 tools/e2e/check_page_content_flow.cjs
 tools/e2e/check_preview_import.cjs
 tools/e2e/check_single_page_ribbon.cjs
+tools/e2e/check_threejs_thumb.cjs

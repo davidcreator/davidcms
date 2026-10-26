@@ -8,12 +8,12 @@
 
   const TYPES = [
     ['core/paragraph', 'Parágrafo'], ['core/heading', 'Título'], ['core/list', 'Lista'],
-    ['core/image', 'Imagem'], ['core/quote', 'Citação'], ['core/video_embed', 'Vídeo'], ['core/video_file', 'Vídeo local'],
+    ['core/image', 'Imagem'], ['core/quote', 'Citação'], ['core/video_embed', 'Vídeo'], ['core/video_file', 'Vídeo local'], ['core/threejs_thumb', 'Thumb 3D (Three.js)'],
     ['core/button', 'Botão'], ['core/callout', 'Aviso'], ['core/details', 'Detalhes'], ['core/spacer', 'Espaçador'], ['core/code', 'Código pré-formatado'], ['core/separator', 'Separador'], ['core/group', 'Grupo'],
     ['core/columns', 'Colunas'], ['core/gallery', 'Galeria'], ['core/cover', 'Capa'], ['core/table', 'Tabela'], ['core/file', 'Arquivo'], ['core/audio', 'Áudio']
   ];
   const TEXT_TYPES = new Set(['core/paragraph', 'core/heading', 'core/list-item', 'core/quote', 'core/button', 'core/callout', 'core/details', 'core/file', 'core/audio']);
-  const BLOCK_CATEGORIES = { 'core/paragraph':'content', 'core/heading':'content', 'core/list':'content', 'core/quote':'content', 'core/button':'content', 'core/callout':'content', 'core/details':'content', 'core/spacer':'layout', 'core/code':'content', 'core/image':'media', 'core/video_embed':'media', 'core/gallery':'media', 'core/cover':'media', 'core/separator':'layout', 'core/group':'layout', 'core/columns':'layout', 'core/table':'content', 'core/file':'media', 'core/audio':'media', 'core/video_file':'media' };
+  const BLOCK_CATEGORIES = { 'core/paragraph':'content', 'core/heading':'content', 'core/list':'content', 'core/quote':'content', 'core/button':'content', 'core/callout':'content', 'core/details':'content', 'core/spacer':'layout', 'core/code':'content', 'core/image':'media', 'core/video_embed':'media', 'core/gallery':'media', 'core/cover':'media', 'core/separator':'layout', 'core/group':'layout', 'core/columns':'layout', 'core/table':'content', 'core/file':'media', 'core/audio':'media', 'core/video_file':'media', 'core/threejs_thumb':'media' };
   const TRANSFORMABLE_TEXT = new Set(['core/paragraph', 'core/heading', 'core/quote', 'core/button']);
   const CLONE = (value) => JSON.parse(JSON.stringify(value));
   let instanceSequence = 0;
@@ -34,7 +34,7 @@
   };
   const ACTION_ICONS = { 'toggle-inserter':'plus','import-file':'file','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','file-media':'file','audio-media':'audio','video-media':'video',media:'image','insert-pattern':'layers',insert:'plus','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent','toggle-fullscreen':'expand','builder-panel':'layers','align-text':'align-left' };
   const ICON_ONLY_ACTIONS = new Set(['align-text','import-file','toggle-inserter','paste-block','undo','redo','preview','move-up','move-down','duplicate','copy-block','delete','file-media','audio-media','video-media','media','format-mark','link-apply','link-remove','table-add-row','table-remove-row','table-add-column','table-remove-column','table-toggle-header','indent','outdent','toggle-fullscreen','builder-panel']);
-  const TYPE_ICONS = { 'core/paragraph':'paragraph','core/heading':'heading','core/list':'list','core/list-item':'list','core/image':'image','core/quote':'quote','core/video_embed':'video','core/video_file':'video','core/button':'button','core/callout':'info','core/details':'details','core/spacer':'spacer','core/code':'code','core/separator':'separator','core/group':'group','core/columns':'columns','core/column':'columns','core/gallery':'gallery','core/cover':'cover','core/table':'table','core/table-row':'table','core/table-cell':'table','core/file':'file','core/audio':'audio' };
+  const TYPE_ICONS = { 'core/paragraph':'paragraph','core/heading':'heading','core/list':'list','core/list-item':'list','core/image':'image','core/quote':'quote','core/video_embed':'video','core/video_file':'video','core/threejs_thumb':'threejs','core/button':'button','core/callout':'info','core/details':'details','core/spacer':'spacer','core/code':'code','core/separator':'separator','core/group':'group','core/columns':'columns','core/column':'columns','core/gallery':'gallery','core/cover':'cover','core/table':'table','core/table-row':'table','core/table-cell':'table','core/file':'file','core/audio':'audio' };
 
   function validLocalImage(src) {
     if (typeof src !== 'string' || !src || /[\x00-\x20\\]/.test(src)) return false;
@@ -61,6 +61,24 @@
   function validLocalVideo(src) {
     if (typeof src !== 'string' || !/^view\/video\/blog\/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$/.test(src) || src.includes('..') || /[\x00-\x20\x7F\\?#]/.test(src)) return false;
     return ['mp4','webm','ogv'].includes(src.split('.').pop().toLowerCase());
+  }
+
+  function validThreeJsSceneJson(raw) {
+    if (typeof raw !== 'string' || raw.length > 16384) return false;
+    let s; try { s = JSON.parse(raw); } catch (_) { return false; }
+    const color = (v) => typeof v === 'string' && /^#[A-Fa-f0-9]{6}$/.test(v);
+    const between = (v, min, max) => typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
+    const vector = (v, min, max) => Array.isArray(v) && v.length === 3 && v.every((x) => between(x,min,max));
+    const only = (obj, keys) => obj && typeof obj === 'object' && !Array.isArray(obj) && Object.keys(obj).every((k) => keys.includes(k));
+    if (!only(s,['version','background','camera','objects','lights','auto_rotate','fog']) || s.version !== 1 || !color(s.background) || typeof s.auto_rotate !== 'boolean' ||
+        !only(s.camera,['fov','position']) || !between(s.camera.fov,20,80) || !vector(s.camera.position,-20,20) || !Array.isArray(s.objects) || s.objects.length < 1 || s.objects.length > 12 || !Array.isArray(s.lights) || s.lights.length < 1 || s.lights.length > 4) return false;
+    if (!s.objects.every((o) => only(o,['type','color','position','rotation','scale','animation','roughness','metalness','wireframe']) &&
+        ['box','sphere','torus','cone','cylinder','icosahedron','torusKnot'].includes(o.type) && color(o.color) && vector(o.position,-20,20) && vector(o.rotation,-6.3,6.3) && between(o.scale,0.1,5) && ['none','spin','bob','pulse'].includes(o.animation) &&
+        (o.roughness === undefined || between(o.roughness,0,1)) && (o.metalness === undefined || between(o.metalness,0,1)) && (o.wireframe === undefined || typeof o.wireframe === 'boolean'))) return false;
+    if (!s.lights.every((l) => only(l,['type','color','intensity','position']) && ['ambient','directional','point'].includes(l.type) && color(l.color) && between(l.intensity,0,5) &&
+        (l.type === 'ambient' ? l.position === undefined : vector(l.position,-20,20)))) return false;
+    if (s.fog !== undefined && (!only(s.fog,['color','near','far']) || !color(s.fog.color) || !between(s.fog.near,0.1,50) || !between(s.fog.far,s.fog.near+0.1,150))) return false;
+    return true;
   }
 
   function classifyKeyboardShortcut(event, context) {
@@ -227,7 +245,7 @@
         'core/paragraph':['align'], 'core/heading':['level'], 'core/list':['ordered'], 'core/list-item':[],
         'core/quote':[], 'core/callout':['tone'], 'core/details':['summary'], 'core/spacer':['height'], 'core/code':[], 'core/image':['src','alt','title'], 'core/video_embed':['url'], 'core/button':['url'],
         'core/separator':[], 'core/group':[], 'core/columns':['count'], 'core/column':[],
-        'core/gallery':['columns','align'], 'core/cover':['src','alt','align'], 'core/table':['header'], 'core/table-row':[], 'core/table-cell':[], 'core/file':['src'], 'core/audio':['src'], 'core/video_file':['src']
+        'core/gallery':['columns','align'], 'core/cover':['src','alt','align'], 'core/table':['header'], 'core/table-row':[], 'core/table-cell':[], 'core/file':['src'], 'core/audio':['src'], 'core/video_file':['src'], 'core/threejs_thumb':['scene_json','label']
       };
       if (version === 2) {
         allowedAttributes['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
@@ -242,7 +260,7 @@
       if (version === 1 && node.type === 'core/spacer') errors.push('spacer_requires_v2');
       if (version === 1 && node.type === 'core/code') errors.push('code_requires_v2');
       if (version === 1 && node.type === 'core/table') errors.push('table_requires_v2');
-      if (version === 1 && (node.type === 'core/audio' || node.type === 'core/video_file')) errors.push('media_requires_v2');
+      if (version === 1 && (node.type === 'core/audio' || node.type === 'core/video_file' || node.type === 'core/threejs_thumb')) errors.push('media_requires_v2');
       switch (node.type) {
         case 'core/paragraph': if (!['', 'left', 'center', 'right'].includes(a.align || '')) errors.push('align_invalid'); if (node.children.length) errors.push('paragraph_children'); break;
         case 'core/heading': if (![1,2,3,4,5,6].includes(a.level) || node.children.length) errors.push('heading_invalid'); break;
@@ -259,6 +277,7 @@
           break;
         }
         case 'core/video_file': if (version !== 2 || !validLocalVideo(a.src) || node.children.length || node.content) errors.push('video_file_invalid'); break;
+        case 'core/threejs_thumb': if (version !== 2 || !validThreeJsSceneJson(a.scene_json) || typeof a.label !== 'string' || !a.label.trim() || utf8Length(a.label) > 160 || node.children.length || node.content) errors.push('threejs_thumb_invalid'); break;
         case 'core/audio': {
           const label = Array.isArray(node.content) ? node.content.map((run) => run && typeof run.text === 'string' ? run.text : '').join('').trim() : '';
           if (version !== 2 || !validLocalAudio(a.src) || !label || node.children.length || !validInlineRuns(node.content, node.type)) errors.push('audio_invalid');
@@ -807,6 +826,7 @@
       if (type === 'core/cover') return this.node(type, { src:'', alt:'', align:'wide' }, '', [this.node('core/heading',{level:2},'Título da capa'),this.node('core/paragraph',{},'Adicione uma descrição.'),this.node('core/button',{url:'/'},'Saiba mais')]);
       if (type === 'core/video_embed') return this.node(type, { url: '' }, '');
       if (type === 'core/video_file') return this.node(type, { src: '' }, '');
+      if (type === 'core/threejs_thumb') return this.node(type, { scene_json: JSON.stringify({version:1,background:'#101827',camera:{fov:42,position:[3,2.4,4.5]},objects:[{type:'torusKnot',color:'#77aaff',position:[0,0,0],rotation:[0,0,0],scale:1,animation:'spin',roughness:0.3,metalness:0.55,wireframe:false}],lights:[{type:'ambient',color:'#ffffff',intensity:1.4},{type:'directional',color:'#ffffff',intensity:2.4,position:[4,5,3]}],auto_rotate:true}), label:'Thumb 3D' }, '');
       if (type === 'core/button') return this.node(type, { url: '/' }, 'Saiba mais');
       if (type === 'core/separator') return this.node(type, {}, '');
       if (type === 'core/group') return this.node(type, {}, '', [this.node('core/paragraph', {}, 'Bloco do grupo')]);
@@ -1323,6 +1343,7 @@
         case 'core/code': out=d.createElement('pre'); out.textContent=node.content||''; break;
         case 'core/image': out=d.createElement('figure'); if(validLocalImage(node.attributes.src)){const img=d.createElement('img');img.src=node.attributes.src;img.alt=node.attributes.alt||'';img.loading='lazy';out.append(img);} if(node.attributes.caption)out.append(d.createElement('figcaption')).textContent=node.attributes.caption; break;
         case 'core/audio': out=d.createElement('figure'); if(validLocalAudio(node.attributes.src)){const audio=d.createElement('audio');audio.controls=true;audio.preload='none';audio.src=node.attributes.src;out.append(audio);} const cap=d.createElement('figcaption');this.renderPreviewRuns(node.content,cap);out.append(cap);break;
+        case 'core/threejs_thumb': out=d.createElement('figure'); out.className='rb-preview-threejs'; out.textContent=node.attributes.label||this.label(node.type); break;
         case 'core/video_file': out=d.createElement('figure'); if(validLocalVideo(node.attributes.src)){const video=d.createElement('video');video.controls=true;video.preload='none';video.playsInline=true;try{const base=new URL(String(this.strings.videoFile.catalogBase||''),global.location.href);if(base.origin===global.location.origin)video.src=new URL(node.attributes.src,base).href;}catch(_){} out.append(video);} break;
         case 'core/video_embed': out=d.createElement('div');out.className='rb-preview-video';{const label=d.createElement('span');label.textContent=this.strings.previewVideoLink||'Vídeo incorporado';out.append(label);const href=safeActionUrl(node.attributes.url);if(href){const a=d.createElement('a');a.href=href;a.target='_blank';a.rel='noopener noreferrer';a.textContent=this.strings.previewVideoOpen||'Abrir em nova aba';out.append(a);}}break;
         case 'core/button': out=d.createElement('p');{const a=d.createElement('a');a.className='rb-preview-button';const href=safeActionUrl(node.attributes.url);if(href){a.href=href;a.rel='noopener noreferrer';}this.renderPreviewRuns(node.content,a);out.append(a);}break;
@@ -1525,6 +1546,9 @@
           try { const base = String(this.strings.audio.catalogBase); const baseUrl = new URL(base.endsWith('/') ? base : base + '/', global.location.href); if (baseUrl.origin !== global.location.origin) throw new Error('audio_preview_origin_invalid'); audio.src = new URL(node.attributes.src, baseUrl).href; } catch (_) {}
         }
         card.append(audio, this.el('p', 'rb-preview-value', label + (node.attributes.src ? ' · ' + node.attributes.src.split('/').pop() : '')));
+      } else if (node.type === 'core/threejs_thumb') {
+        const preview = this.el('div','rb-threejs-admin-preview'); preview.setAttribute('role','img'); preview.setAttribute('aria-label',node.attributes.label || this.label(node.type));
+        preview.append(this.icon('threejs','rb-threejs-admin-icon'), this.el('span','',node.attributes.label || this.label(node.type)), this.el('small','',this.strings.threejs.previewHint)); card.append(preview);
       } else if (node.type === 'core/video_file') {
         const video = this.el('video','rb-video-file-admin-preview'); video.controls = true; video.preload = 'none'; video.playsInline = true;
         if (validLocalVideo(node.attributes.src) && this.strings.videoFile.catalogBase) { try { const base = new URL(String(this.strings.videoFile.catalogBase), global.location.href); if (base.origin === global.location.origin) video.src = new URL(node.attributes.src, base).href; } catch (_) {} }
@@ -1627,6 +1651,11 @@
       if (n.type === 'core/video_file') {
         addField(this.strings.videoFile.source, 'src', n.attributes.src, 'text');
         if (this.options.videoPicker === true || (this.options.videoPicker !== false && this.options.mediaPickers !== false)) aside.append(this.button(this.strings.videoFile.choose, 'video-media', {nodeId:n.id}));
+      }
+      if (n.type === 'core/threejs_thumb') {
+        addField(this.strings.threejs.label, 'label', n.attributes.label, 'text');
+        addField(this.strings.threejs.sceneConfig, 'scene_json', n.attributes.scene_json, 'textarea');
+        const hint = this.el('p','rb-help-text',this.strings.threejs.configHint); aside.append(hint);
       }
       if (n.type === 'core/image') {
         addField(this.strings.media.source, 'src', n.attributes.src, 'text'); if (this.options.mediaPickers !== false) aside.append(this.button(this.strings.media.placeholder, 'media'));

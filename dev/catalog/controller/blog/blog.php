@@ -96,6 +96,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         $contentMode = 'legacy';
         $blockHtml = '';
         $contentValid = false;
+        $requiresThreeJs = false;
         if (!empty($blockContent['table_available']) && (!empty($blockContent['row_found']) || !empty($blockContent['query_error']))) {
             $contentMode = 'blocks';
             if (!empty($blockContent['row_found'])) {
@@ -108,10 +109,12 @@ class Blog extends \Reamur\System\Engine\Controller {
                     $base
                 );
                 $contentValid = (bool)$rendered['valid'];
+                $requiresThreeJs = !empty($rendered['requires_threejs']);
                 $blockHtml = $contentValid ? (string)$rendered['html'] : '';
             }
         }
 
+        $data['requires_threejs'] = $requiresThreeJs;
         $data['post'] = [
             'post_id'      => (int)$post['post_id'],
             'title'        => (string)$post['title'],
@@ -161,6 +164,10 @@ class Blog extends \Reamur\System\Engine\Controller {
     private function chrome(array &$data, string $body_class): void {
         $this->document->addStyle($this->config->get('site_url') . 'view/css/common.css');
         $this->document->addStyle($this->config->get('site_url') . 'view/css/blog-blocks.css');
+        if (!empty($data['requires_threejs'])) {
+            $this->document->addStyle($this->config->get('site_url') . 'view/css/threejs-thumb.css');
+            $this->document->addScript($this->config->get('site_url') . 'view/js/threejs-thumb.js');
+        }
 
         $data['body_class'] = $body_class;
         $data['header']     = $this->load->controller('common/header', $data);
