@@ -1,5 +1,4 @@
-09b11a4d8a1dd22d6ac56b4da9787effe21e074592e585a1604c577deab0ef29  ./README.md
-a9b544b621bc8a5c0a80deda1e670248e60b1fd0976399f6b7bb518a8dd72208  ./docs/CHANGELOG.md
-1cc91201969650fedc61ea691304baa5995b80280c8719cdb646305446c4b918  ./docs/THREEJS_NATIVE_SYSTEM.md
-01906506d77a788da831ab5a63595846069448af43636ec5774831a380d66966  ./tools/e2e/check_threejs_native_admin.cjs
-7732df010742701c297b5c724e8b065c3a12cb4e5553f77ac6f688c1c6f5fbc0  ./tools/e2e/threejs_native_readonly_playwright.cjs
+06fcfc96a3eb0874e5db320682ce237caf3cad35f14c7fa3da0dd0440b8523f6  ./README.md
+87825e64d9c52defb7726841c02b55a4f1f61e81c5b04d6bbc609dc6fe59fb58  ./dev/admin/view/js/blog-block-editor.js
+d67316a0105cfc5b716a8680d6acab3d215bf2e988f12ade700b9f11ebd81409  ./docs/THREEJS_ADMIN_PREVIEW.md
+acf9831912167680067c2f08acbb29ec52cfdf8cbf63c1daffd4ce77c7ec3e46  ./tools/e2e/check_threejs_thumb.cjs

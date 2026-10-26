@@ -63,6 +63,18 @@
     return ['mp4','webm','ogv'].includes(src.split('.').pop().toLowerCase());
   }
 
+  function encodeBase64Utf8(value) {
+    if (!global.TextEncoder || !global.btoa) return '';
+    const bytes = new global.TextEncoder().encode(String(value));
+    let binary = '';
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+      binary += String.fromCharCode.apply(null, chunk);
+    }
+    return global.btoa(binary);
+  }
+
   function validThreeJsSceneJson(raw) {
     if (typeof raw !== 'string' || raw.length > 16384) return false;
     let s; try { s = JSON.parse(raw); } catch (_) { return false; }
@@ -1356,6 +1368,8 @@
           const stage=d.createElement('div'); stage.className='rms-block-threejs-thumb__stage'; stage.setAttribute('data-threejs-thumb','');
           const scene=String(node.attributes.scene_json||'');
           try { JSON.parse(scene); stage.setAttribute('data-scene',scene); } catch (_) { stage.setAttribute('aria-label',this.strings.threejs.invalidScene||'Cena 3D inválida'); }
+          const customScript=String(node.attributes.custom_js||'');
+          if(customScript.trim()){try{const encoded=encodeBase64Utf8(customScript);if(encoded)stage.setAttribute('data-custom-js',encoded);}catch(_){}}
           const label=String(node.attributes.label||this.label(node.type)); stage.setAttribute('role','img'); stage.setAttribute('aria-label',label);
           const fallback=d.createElement('span'); fallback.className='rms-block-threejs-thumb__fallback'; fallback.textContent=label; stage.append(fallback); out.append(stage);
           const hint=d.createElement('small'); hint.textContent=this.strings.threejs.previewHint||''; if(hint.textContent)out.append(hint);
