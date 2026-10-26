@@ -55,3 +55,4 @@ Copiar para o novo arquivo `NNNN-titulo-curto.md`:
 | [0049](0049-f8-05-blog-media-library.md) | F8-05: biblioteca de mídia para capas do Blog | ✅ aceita | 2026-10-22 |
 | [0072](0072-threejs-scenes-admin-system.md) | Configuração declarativa das cenas Three.js nativas via System e Admin | ✅ aceita | 2026-10-26 |
 | [0073](0073-threejs-runtime-system-asset-gateway.md) | Runtime Three.js canônico no System com entrega allowlisted pelo Catalog | 🟡 aprovada para implementação incremental | 2026-10-26 |
+| [0074](0074-threejs-shared-scene-runner.md) | Ciclo de vida compartilhado para cenas Three.js e thumbs declarativas | 🟡 aceita para implementação incremental | 2026-10-26 |

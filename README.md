@@ -1,28 +1,26 @@
-# ReamurCMS — engine Three.js centralizada no System
+# ReamurCMS — Three.js System Engine (atualizado)
 
-Patch incremental para o HEAD consultado `5a4a11fae4e2ed79422f18c4455cbf7b486c0697`.
+Patch incremental consolidado com a centralização anterior e o ciclo de vida compartilhado entre cenas nativas e thumbs declarativas. Base consultada: HEAD `11447edc9e09cfdf1c46c43cacafad34a140cdf6`.
 
-## O que muda
+## O que contém
 
-- O vendor, o runtime de cenas e o runtime de thumbs passam a ter uma única fonte em `dev/system/library/three/runtime/`.
-- System registra `AssetManifest`; Catalog expõe apenas nomes allowlisted por `/catalog/three-runtime/...`. `dev/system/.htaccess` continua negando acesso direto ao núcleo.
-- O endpoint inclui cache/ETag e MIME JavaScript; imports relativos dos módulos ESM continuam resolvendo na rota pública.
-- Home/404, Blog/CMS e Admin usam a mesma engine/runtime. CSS de apresentação da thumb permanece no Catalog.
-- Sem CDN, cópia paralela, migration ou alteração de conteúdo/settings.
+- Runtime/vendor centralizados em `dev/system/library/three/runtime/`, expostos somente pela allowlist System e rota Catalog existente.
+- `three/core/scene-runner.js` como única camada confiável de renderer, resize, lazy-init, visibilidade, reduced-motion e descarte para Hero/404 e thumbs declarativas.
+- `three/thumbnail-runner.js` como adapter das thumbs declarativas sobre `mountScene()`.
+- `custom_js` permanece fora do engine confiável e executa somente em iframe sandbox opaco.
+- Documentação e ADR 0074 atualizadas. Sem migration, deploy ou alteração de conteúdo/settings.
 
-## Aplicação do patch
+## Aplicação
 
-1. Faça backup da instalação/branch.
-2. Copie o conteúdo preservando os caminhos relativos para a raiz do DavidCMS.
-3. Remova os arquivos listados em `DELETE_FILES.txt` após confirmar que as novas versões em System estão presentes. A lista elimina a cópia anterior no Catalog.
-4. Não edite a pasta `system` para torná-la publicamente acessível; o acesso web deve continuar exclusivamente pela rota allowlisted do Catalog.
+1. Faça backup da branch/instalação.
+2. Copie os arquivos preservando os caminhos relativos para a raiz do DavidCMS.
+3. Revise `DELETE_FILES.txt` antes de remover cópias antigas da fonte Catalog; não remova sem confirmar a presença dos novos módulos em System.
+4. Preserve a negação de acesso HTTP direto a `system/`; use apenas a rota allowlisted do Catalog.
 
-A rota depende de mod_rewrite, já usado pelo `.htaccess` do Catalog. O caminho permitido é fixo; o controller não aceita caminhos arbitrários.
+## Verificações desta atualização
 
-## Validação desta etapa
+- `node --check` passou nos cinco módulos JavaScript alterados.
+- `tools/e2e/check_threejs_thumb.cjs`: 22/22 verificações estáticas.
+- Não houve teste funcional/browser, PHP lint (CLI indisponível), push, deploy ou migration.
 
-- `node --check` passou para os módulos JS do runtime.
-- Dois checkers estáticos existentes passaram: `check_threejs_thumb.cjs` (22/22) e `check_threejs_native_admin.cjs` (9/9).
-- PHP CLI não está disponível nesta sessão; portanto não pude executar `php -l` nos arquivos PHP. Nenhum E2E contra a instalação foi feito.
-
-Esta entrega é um patch para revisão/aplicação, não foi enviada ao GitHub nem aplicada ao ambiente compartilhado.
+Não aplicado ao ambiente compartilhado e não enviado ao GitHub por esta sessão.

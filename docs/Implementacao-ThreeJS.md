@@ -59,10 +59,12 @@ dev/system/library/three/
 └── runtime/
     ├── three.module.js         # módulo oficial self-hosted
     ├── three.core.js           # dependência do módulo oficial
-    ├── threejs-thumb.js        # runtime de thumbs; scripts opcionais só no sandbox
+    ├── threejs-thumb.js        # wrapper; custom_js isolado no iframe
     └── three/
         ├── main.js             # entrypoint das cenas nativas
-        ├── core/               # ciclo de vida e helpers
+        ├── thumbnail-runner.js # adapter de thumbs sobre o SceneRunner
+        ├── core/scene-runner.js # única camada WebGL/lifecycle
+        ├── core/dom.js         # parse de atributos
         ├── components/         # componentes reutilizáveis
         └── scenes/             # Hero e 404
 
@@ -90,98 +92,43 @@ O import map do `common/header.twig` só é emitido quando `has_3d` está ativo 
 
 ## 4. Padrão de módulo de cena (SceneModule)
 
-Contrato que **toda** cena implementa — é o que o `main.js` orquestra:
+`dev/system/library/three/runtime/three/core/scene-runner.js` é a única camada WebGL para Hero, 404 e thumbs declarativas. Ela cria o `WebGLRenderer`, câmera e cena; controla lazy-init, resize, `prefers-reduced-motion`, visibilidade, pausa e descarte. As cenas só constroem objetos e implementam `update()`/`dispose()`.
 
 ```js
-// js/three/core/scene-runner.js
-export const SCENES = {}; // registry: { 'hero-particles': factoryFn }
+import { registerScene } from '../core/scene-runner.js';
+import { createParticleField } from '../components/particle-field.js';
+import { intAttr, floatAttr } from '../core/dom.js';
 
-export function registerScene(name, factory) {
-  SCENES[name] = factory;
-}
-
-/**
- * Inicializa as cenas declaradas na página (data-scene="nome")
- * com lazy-init, pausa fora da viewport e limpeza.
- */
-export function boot() {
-  document.querySelectorAll('[data-scene]').forEach((container) => {
-    const name = container.dataset.scene;
-    const factory = SCENES[name];
-
-    if (!factory) {
-      console.warn(`[three] cena não registrada: ${name}`);
-      return;
-    }
-
-    // Respeita prefers-reduced-motion: mantém o fallback do HTML
-    if (!window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
-      return;
-    }
-
-    const io = new IntersectionObserver(async ([entry]) => {
-      if (!entry.isIntersecting) return;
-      io.disconnect();
-
-      const scene = await factory(container, readConfig(container));
-      if (!scene) return; // WebGL indisponível → fallback permanece
-
-      watchVisibility(container, scene);
-    }, { rootMargin: '200px' }); // pré-carrega 200px antes de aparecer
-
-    io.observe(container);
+registerScene('hero-particles', ({ scene, camera, container, config }) => {
+  const field = createParticleField({
+    count: intAttr(container, 'count', 400),
+    color: config.color ?? '#8a4fff',
+    spread: floatAttr(container, 'spread', 12),
   });
-}
-
-function readConfig(container) {
-  return {
-    ...container.dataset,
-    ...(window[`${container.dataset.scene}Config`] ?? {}),
+  scene.add(field.points);
+  const speed = floatAttr(container, 'speed', 0.05);
+  const target = { x: 0, y: 0 };
+  const onPointer = (event) => {
+    target.x = (event.clientX / innerWidth - 0.5) * 0.6;
+    target.y = (event.clientY / innerHeight - 0.5) * 0.6;
   };
-}
-
-function watchVisibility(container, scene) {
-  new IntersectionObserver(([e]) => {
-    e.isIntersecting ? scene.play() : scene.pause();
-  }).observe(container);
-
-  document.addEventListener('visibilitychange', () => {
-    document.hidden ? scene.pause() : scene.play();
-  });
-}
+  addEventListener('pointermove', onPointer, { passive: true });
+  return {
+    animated: true,
+    update({ time }) {
+      field.points.rotation.y = time * speed;
+      camera.position.x += (target.x - camera.position.x) * 0.05;
+      camera.position.y += (-target.y - camera.position.y) * 0.05;
+      camera.lookAt(scene.position);
+    },
+    dispose() { removeEventListener('pointermove', onPointer); },
+  };
+});
 ```
 
-```js
-// js/three/core/webgl-support.js
-export function createRenderer(container) {
-  try {
-    const { WebGLRenderer } = await import('three');
-    // ...
-  } catch {
-    return null;
-  }
-}
-```
+A SceneModule **não** cria renderer, não inicia `requestAnimationFrame` e não instala `ResizeObserver` próprio. Isso evita gerenciadores paralelos e centraliza o ciclo de vida. `three/main.js` registra os módulos e chama `boot()`.
 
-```js
-// js/three/core/dom.js
-export function clearFallback(container) { container.innerHTML = ''; }
-export function intAttr(container, attr, fallback) {
-  const v = parseInt(container.dataset[attr], 10);
-  return Number.isFinite(v) ? v : fallback;
-}
-```
-
-Cada SceneModule retorna a interface:
-
-```ts
-interface SceneHandle {
-  play(): void;     // inicia/retoma o rAF
-  pause(): void;    // pausa o rAF (fora da viewport/aba oculta)
-  resize(): void;   // recalcula aspect + setSize
-  dispose(): void;  // libera geometrias, materiais, renderer
-}
-```
+O adapter `three/thumbnail-runner.js` monta a cena declarativa usando o mesmo `mountScene()`. O wrapper `threejs-thumb.js` apenas detecta blocos e delega ao adapter. Para `custom_js`, permanece o adaptador especializado no iframe de origem opaca: a fronteira de segurança não é compartilhada com o documento Admin.
 
 ---
 
@@ -191,115 +138,21 @@ interface SceneHandle {
 
 | Item | Valor |
 | --- | --- |
-| Arquivo | `js/three/scenes/hero-particles.js` |
-| Container | `#hero-3d` com `data-scene="hero-particles"` no `partial/hero-3d.twig` |
-| Conteúdo | Campo de partículas (padrão 400) + parallax suave de câmera |
-| Config via `data-*` | `data-count` (partículas), `data-color` (hex), `data-speed` |
-| Fallback | `<img src="hero-fallback.webp">` dentro do container |
+| Arquivo canônico | `system/library/three/runtime/three/scenes/hero-particles.js` |
+| Container | `data-scene="hero-particles"`, gerado pelo template do Hero |
+| Conteúdo | Campo de partículas + parallax suave de câmera |
+| Config via `data-*` | `data-count`, `data-color`, `data-speed`, `data-spread` |
+| Renderização | Criada e descartada exclusivamente pelo `SceneRunner` compartilhado |
 
-### Implementação (esqueleto de referência)
-
-```js
-// js/three/scenes/hero-particles.js
-import * as THREE from 'three';
-import { registerScene } from '../core/scene-runner.js';
-import { createParticleField } from '../components/particle-field.js';
-import { clearFallback, intAttr } from '../core/dom.js';
-
-export default registerScene('hero-particles', (container, cfg) => {
-  const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
-  camera.position.z = 4;
-
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(container.clientWidth, container.clientHeight);
-
-  clearFallback(container);
-  container.appendChild(renderer.domElement);
-
-  const scene = new THREE.Scene();
-  const field = createParticleField({
-    count: intAttr(container, 'count', 400),
-    color: cfg.color ?? '#8a4fff',
-    spread: 12,
-  });
-  scene.add(field.points);
-
-  const target = { x: 0, y: 0 };
-  const onPointer = (e) => {
-    target.x = (e.clientX / window.innerWidth  - 0.5) * 0.6;
-    target.y = (e.clientY / window.innerHeight - 0.5) * 0.6;
-  };
-  window.addEventListener('pointermove', onPointer, { passive: true });
-
-  let rafId = null;
-  const clock = new THREE.Clock();
-
-  function frame() {
-    const t = clock.getElapsedTime();
-    field.points.rotation.y = t * 0.05;
-    camera.position.x += (target.x - camera.position.x) * 0.05;
-    camera.position.y += (-target.y - camera.position.y) * 0.05;
-    camera.lookAt(scene.position);
-    renderer.render(scene, camera);
-    rafId = requestAnimationFrame(frame);
-  }
-
-  const handle = {
-    play()  { if (!rafId) rafId = requestAnimationFrame(frame); },
-    pause() { cancelAnimationFrame(rafId); rafId = null; },
-    resize() {
-      camera.aspect = container.clientWidth / container.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    },
-    dispose() {
-      handle.pause();
-      window.removeEventListener('pointermove', onPointer);
-      field.dispose();
-      renderer.dispose();
-      renderer.domElement.remove();
-    },
-  };
-
-  window.addEventListener('resize', handle.resize);
-  return handle;
-});
-```
-
-```js
-// js/three/components/particle-field.js
-import * as THREE from 'three';
-
-export function createParticleField({ count = 400, color = '#8a4fff', spread = 12 } = {}) {
-  const positions = new Float32Array(count * 3);
-  for (let i = 0; i < count * 3; i++) positions[i] = (Math.random() - 0.5) * spread;
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-  const material = new THREE.PointsMaterial({ color, size: 0.035, transparent: true, opacity: 0.8 });
-  const points = new THREE.Points(geometry, material);
-
-  return { points, dispose: () => { geometry.dispose(); material.dispose(); } };
-}
-```
-
-```js
-// js/three/main.js
-import { boot } from './core/scene-runner.js';
-import './scenes/hero-particles.js';   // auto-registro via registerScene()
-
-boot();
-```
+O módulo Hero cria apenas o campo de partículas e sua atualização. O engine controla lazy-init, render loop, redução de movimento, pausa ao sair da viewport, resize e limpeza de geometria/material. A cena 404 segue o mesmo contrato; a thumb declarativa chama `mountScene()` através de `thumbnail-runner.js`.
 
 ### Acceptance criteria (Cena 1)
 
-- [ ] Sem WebGL / com `prefers-reduced-motion`: só aparece a imagem fallback;
-- [ ] Canvas nasce só quando o hero entra a 200px da viewport;
-- [ ] Pausa ao rolar para fora e ao trocar de aba;
-- [ ] `devicePixelRatio` limitado a 2;
-- [ ] LCP do hero ≤ 2,5s na página publicada (medir com Lighthouse mobile).
+- [ ] Sem WebGL ou com `prefers-reduced-motion`: fallback preservado;
+- [ ] Canvas nasce somente quando o container entra na margem de viewport;
+- [ ] Engine pausa ao sair da viewport/aba e libera recursos ao desmontar;
+- [ ] DPR permanece limitado pelo perfil da cena;
+- [ ] LCP do Hero continua dentro do orçamento da página publicada.
 
 ---
 
@@ -488,7 +341,7 @@ $_['hero_subtitle']  = 'Transformo ideias em realidade com criatividade e respon
 | `Unexpected token` no addon | addon importando `three` sem import map | import map precisa cobrir `three/addons/` |
 | Zoom/mobile com FPS baixo | DPR 3–4 | `min(devicePixelRatio, 2)` |
 | Modelo GLB não carrega | MIME/CORS ou Draco ausente | servir `.glb` como `model/gltf-binary`; conferir `libs/draco/` |
-| Memória subindo a cada visita | falta `dispose()` | revisar `SceneHandle.dispose` e remoção de listeners |
+| Memória subindo a cada visita | falta limpeza de recursos/listeners | revisar `sceneHandle.dispose()` e o descarte central do SceneRunner |
 | Cena "pisca" no carregamento | fallback removido tarde | só chamar `clearFallback()` após 1º frame renderizado |
 | Lighthouse INP alto | rAF durante scroll pesado | verificar pausa fora da viewport; reduzir partículas |
 
@@ -498,7 +351,7 @@ $_['hero_subtitle']  = 'Transformo ideias em realidade com criatividade e respon
 
 Uma cena só está pronta quando:
 
-1. ✅ Está no padrão SceneModule (`play/pause/resize/dispose`) registrada em `main.js`;
+1. ✅ Factory registrada em `main.js` e executada pelo SceneRunner; renderer, ciclo de vida e descarte pertencem à engine;
 2. ✅ Lazy-init + pausa fora da viewport + `prefers-reduced-motion` + fallback verificados;
 3. ✅ Dados vindos do controller via Language/`json_encode` (nada hardcoded);
 4. ✅ Budgets de performance medidos e dentro da tabela (§10);

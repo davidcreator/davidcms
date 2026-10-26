@@ -1,5 +1,12 @@
 # Changelog
 
+## SceneRunner compartilhado para Three.js e thumbs declarativas (2026-10-26)
+- Unifica renderer, resize, lazy-init, visibilidade, reduced-motion, render loop e descarte no `scene-runner.js` do System.
+- Adapta thumbs declarativas por `thumbnail-runner.js`; mantém `custom_js` no iframe sandbox isolado.
+- Converte Hero/404 para factories do engine compartilhado, preservando configuração e fallback sem WebGL.
+- Registra ADR 0074 e atualiza documentação do runtime e a descrição correta da Prévia Admin.
+- Sem migration, deploy, escrita GitHub ou execução de testes mutáveis.
+
 ## Engine Three.js centralizada no System (2026-10-26)
 - Move vendor, cenas nativas e runtime de thumbs para a fonte única `dev/system/library/three/runtime/`.
 - Adiciona `AssetManifest` no System e rota pública Catalog allowlisted `/catalog/three-runtime/`; o diretório `system/` continua negado por HTTP.

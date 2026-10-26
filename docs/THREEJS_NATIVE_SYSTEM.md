@@ -1,15 +1,16 @@
 # Three.js — engine única no System, Admin e Catalog
 
-**Base de referência:** `davidcreator/davidcms` `main`, HEAD `5a4a11fae4e2ed79422f18c4455cbf7b486c0697`.
+**Base de referência:** `davidcreator/davidcms` `main`, HEAD `11447edc9e09cfdf1c46c43cacafad34a140cdf6`.
 
 ## Arquitetura
 
 - `dev/system/library/three/scene_config.php` é a fonte única dos limites/defaults das cenas nativas; `framework.php` registra os serviços Three.js no Registry.
 - `dev/system/library/three/asset_manifest.php` mantém a allowlist de módulos e o prefixo público comum.
-- O único vendor e runtime de navegador Three.js ficam em `dev/system/library/three/runtime/`, com imports relativos preservados.
+- O único vendor/runtime de navegador fica em `dev/system/library/three/runtime/`. `three/core/scene-runner.js` é a única camada de criação WebGL, animação, visibilidade, resize e descarte para Hero/404 e thumbs declarativas.
+- `three/thumbnail-runner.js` traduz cenas de thumb para a mesma API do SceneRunner. `threejs-thumb.js` é apenas wrapper de descoberta; `custom_js` permanece em adapter separado no iframe sandbox opaco por fronteira de segurança.
 - `system/.htaccess` continua negando acesso direto. `catalog/.htaccess` redireciona somente `/three-runtime/*.js` ao adaptador `catalog/controller/common/three.php`; o controller serve apenas nomes resolvidos pelo manifesto, com MIME JS, `nosniff`, ETag e cache HTTP.
-- Home/404 e thumbs Blog/CMS usam essa mesma origem. Os estilos visuais da thumb permanecem em Catalog; não são outro motor.
-- As cenas mantêm fallback e carregamento condicional. Script de autor só executa no iframe sandbox de origem opaca existente; não é executado no documento Admin.
+- Home/404, Blog/CMS e Admin usam essa mesma origem. Os estilos da thumb permanecem no Catalog, sem renderer concorrente.
+- As cenas mantêm fallback e carregamento condicional. Script personalizado não é executado no documento Admin.
 
 ## Persistência e segurança
 

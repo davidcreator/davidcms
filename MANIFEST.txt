@@ -1,5 +1,7 @@
-Source HEAD: 5a4a11fae4e2ed79422f18c4455cbf7b486c0697
-New canonical engine source: dev/system/library/three/runtime/
-Public adapter: dev/catalog/controller/common/three.php
-Public route: /catalog/three-runtime/{manifest-approved-js}
-No DB schema/migration changes.
+Base HEAD: 11447edc9e09cfdf1c46c43cacafad34a140cdf6
+Canonical runtime: dev/system/library/three/runtime/
+Shared lifecycle: dev/system/library/three/runtime/three/core/scene-runner.js
+Declarative thumbnail adapter: dev/system/library/three/runtime/three/thumbnail-runner.js
+Public adapter/route: dev/catalog/controller/common/three.php -> /catalog/three-runtime/{manifest-approved-js}
+custom_js: isolated opaque sandbox iframe; not part of the trusted shared engine
+No database/schema/migration changes.

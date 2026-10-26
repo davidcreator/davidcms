@@ -49,7 +49,8 @@ Você constrói a **vitrine** do ReamurCMS (`dev/catalog/`): o novo davidalmeida
 
 ### 4.2 Three.js (resumo — contrato completo em Implementacao-ThreeJS.md)
 
-- Cenas seguem o padrão **SceneModule** (`play/pause/resize/dispose`) registradas no `main.js`;
+- Cenas nativas e thumbs declarativas usam o `SceneRunner` canônico em `system/library/three/runtime/three/core/scene-runner.js`; só cenas nativas são registradas no `main.js`;
+- Factories retornam atualização/limpeza de cena; não criam renderer, RAF nem observadores próprios. `custom_js` permanece isolado no iframe sandbox;
 - Container com `data-scene="..."`; config via `data-*` + `json_encode`; **fallback estático sempre**;
 - Lazy-init (IntersectionObserver), pausa fora da viewport, DPR ≤ 2, `prefers-reduced-motion`;
 - Budgets: GLB ≤ 150 KB, LCP ≤ 2,5s, draw calls ≤ 10.

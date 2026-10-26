@@ -20,6 +20,7 @@ final class AssetManifest {
         'three/main.js' => 'runtime/three/main.js',
         'three/core/scene-runner.js' => 'runtime/three/core/scene-runner.js',
         'three/core/dom.js' => 'runtime/three/core/dom.js',
+        'three/thumbnail-runner.js' => 'runtime/three/thumbnail-runner.js',
         'three/components/particle-field.js' => 'runtime/three/components/particle-field.js',
         'three/scenes/hero-particles.js' => 'runtime/three/scenes/hero-particles.js',
         'three/scenes/not-found.js' => 'runtime/three/scenes/not-found.js',

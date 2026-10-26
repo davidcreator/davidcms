@@ -63,7 +63,7 @@ public function getProject(int $project_id): array {
 
 ## 5. JavaScript / Three.js
 
-- A engine/runtime Three.js é canônica em `system/library/three/runtime/`; publicação web só via allowlist `catalog/controller/common/three.php` + `system/library/three/asset_manifest.php`. Cenas/markup específicos continuam no domínio Catalog. Seguir **SceneModule** (`play/pause/resize/dispose`) e [`docs/Implementacao-ThreeJS.md`](../../docs/Implementacao-ThreeJS.md); não duplicar vendor/runtime em `catalog/view/js/`.
+- A engine/runtime Three.js é canônica em `system/library/three/runtime/`; publicação web só via allowlist `catalog/controller/common/three.php` + `system/library/three/asset_manifest.php`. `three/core/scene-runner.js` é a única camada WebGL/lifecycle para cenas nativas e thumbs declarativas; `custom_js` mantém iframe sandbox isolado. Cenas/markup específicos continuam no domínio Catalog. Seguir [`docs/Implementacao-ThreeJS.md`](../../docs/Implementacao-ThreeJS.md); não duplicar vendor, renderer ou loop em `catalog/view/js/`.
 - `defer`/module; listeners com `{ passive: true }` quando possível; cleanup em `dispose()`;
 - Respeitar budgets: DPR ≤ 2, `prefers-reduced-motion`, lazy-init.
 
