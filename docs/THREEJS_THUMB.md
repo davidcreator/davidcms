@@ -1,6 +1,6 @@
 # Thumbs 3D declarativas no BDREditor
 
-O bloco `core/threejs_thumb` pode ser inserido em Páginas CMS e posts do Blog. O BDREditor armazena a configuração declarativa em `scene_json` dentro do envelope v2 existente; não requer migration nem gravação paralela. A área Inspetor permite alterar o rótulo acessível e a configuração. Os controles **Adicionar forma** e **Adicionar luz** inserem elementos na cena; cada item permite editar tipo/cor/animação ou tipo/cor/intensidade, e pode ser removido respeitando os limites mínimos. O campo JSON permanece disponível para ajustes avançados.
+O bloco `core/threejs_thumb` pode ser inserido em Páginas CMS e posts do Blog. O BDREditor armazena a configuração declarativa em `scene_json` dentro do envelope v2 existente; não requer migration nem gravação paralela. O cartão do bloco agora tem um botão **Editar thumb e script** que abre os controles no próprio canvas — não depende do Inspetor lateral estar aberto. O Inspetor também oferece os mesmos controles. É possível alterar o rótulo, adicionar/remover formas e luzes, editar seus atributos e usar o campo JSON avançado. O campo de JavaScript opcional tem ações explícitas para adicionar/editar ou excluir o script.
 
 ## Segurança e runtime
 

@@ -365,3 +365,8 @@ body.rb-bdre-fullscreen-open{overflow:hidden!important}
 @media(max-width:640px){.rb-threejs-entry{grid-template-columns:minmax(6rem,1fr) 2.5rem minmax(5rem,1fr)}.rb-threejs-entry .rb-button{grid-column:1/-1;justify-self:end}}
 
 .rb-threejs-script-input{min-height:14rem;resize:vertical;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2}
+.rb-threejs-inline-wrap{margin:.55rem 0}
+.rb-threejs-inline-toggle{min-height:2.4rem;border-color:#8aa6ff;background:#f4f7ff;color:#173a82;font-weight:650}
+.rb-threejs-inline-editor{display:grid;gap:.6rem;margin-top:.65rem;padding:.75rem;border:1px solid var(--rb-border,#cbd5e1);border-radius:.55rem;background:var(--rb-surface-muted,#f7f9fc)}
+.rb-threejs-inline-editor .rb-threejs-scene-controls{margin:0}
+.rb-threejs-inline-editor .rb-threejs-script-input{min-height:12rem}

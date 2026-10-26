@@ -164,3 +164,15 @@ $_['text_block_threejs_sceneConfig'] = 'Scene JSON (advanced)';
 $_['text_block_threejs_scriptLabel'] = 'Custom JavaScript (sandbox)';
 
 $_['text_block_threejs_scriptHint'] = 'Runs only in an isolated iframe, without access to the CMS DOM/cookies; CSP blocks network/external resources. API: THREE, scene, camera, renderer, canvas, and onFrame(fn). 8 KiB limit. Code can hang this thumbnail; use trusted scripts only. Example: const mesh = new THREE.Mesh(new THREE.TorusGeometry(.8,.2,16,48), new THREE.MeshStandardMaterial({color:0xff66aa})); scene.add(mesh); onFrame(({delta}) => { mesh.rotation.y += delta; });';
+
+$_['text_block_threejs_editInline'] = 'Edit thumbnail and script';
+
+$_['text_block_threejs_closeInline'] = 'Close editor';
+
+$_['text_block_threejs_deleteScript'] = 'Delete script';
+
+$_['text_block_threejs_scriptDeleted'] = 'Thumbnail script deleted. Use Undo to restore it.';
+
+$_['text_block_threejs_scriptPlaceholder'] = 'Add JavaScript to customize the Three.js scene…';
+
+$_['text_block_threejs_addScript'] = 'Edit thumbnail / add script';

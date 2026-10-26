@@ -410,3 +410,15 @@ $_['text_block_threejs_sceneConfig'] = 'JSON da cena (avançado)';
 $_['text_block_threejs_scriptLabel'] = 'JavaScript personalizado (sandbox)';
 
 $_['text_block_threejs_scriptHint'] = 'Executado apenas numa iframe isolada; sem acesso ao DOM/cookies do CMS e com CSP bloqueando rede/recursos externos. API: THREE, scene, camera, renderer, canvas e onFrame(fn). Limite: 8 KiB. Código pode travar esta thumb; use apenas scripts confiáveis. Exemplo: const mesh = new THREE.Mesh(new THREE.TorusGeometry(.8,.2,16,48), new THREE.MeshStandardMaterial({color:0xff66aa})); scene.add(mesh); onFrame(({delta}) => { mesh.rotation.y += delta; });';
+
+$_['text_block_threejs_editInline'] = 'Editar thumb e script';
+
+$_['text_block_threejs_closeInline'] = 'Fechar edição';
+
+$_['text_block_threejs_deleteScript'] = 'Excluir script';
+
+$_['text_block_threejs_scriptDeleted'] = 'Script da thumb excluído. Use Desfazer para restaurá-lo.';
+
+$_['text_block_threejs_scriptPlaceholder'] = 'Adicione JavaScript para modificar a cena Three.js…';
+
+$_['text_block_threejs_addScript'] = 'Editar thumb / adicionar script';

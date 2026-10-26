@@ -148,3 +148,15 @@ $_['text_block_threejs_sceneConfig'] = 'JSON de escena (avanzado)';
 $_['text_block_threejs_scriptLabel'] = 'JavaScript personalizado (sandbox)';
 
 $_['text_block_threejs_scriptHint'] = 'Solo se ejecuta en un iframe aislado, sin acceso al DOM/cookies del CMS; CSP bloquea la red y recursos externos. API: THREE, scene, camera, renderer, canvas y onFrame(fn). Límite: 8 KiB. El código puede bloquear esta miniatura; usa solo scripts de confianza. Ejemplo: const mesh = new THREE.Mesh(new THREE.TorusGeometry(.8,.2,16,48), new THREE.MeshStandardMaterial({color:0xff66aa})); scene.add(mesh); onFrame(({delta}) => { mesh.rotation.y += delta; });';
+
+$_['text_block_threejs_editInline'] = 'Editar miniatura y script';
+
+$_['text_block_threejs_closeInline'] = 'Cerrar editor';
+
+$_['text_block_threejs_deleteScript'] = 'Eliminar script';
+
+$_['text_block_threejs_scriptDeleted'] = 'Script de miniatura eliminado. Usa Deshacer para restaurarlo.';
+
+$_['text_block_threejs_scriptPlaceholder'] = 'Añade JavaScript para personalizar la escena Three.js…';
+
+$_['text_block_threejs_addScript'] = 'Editar miniatura / añadir script';

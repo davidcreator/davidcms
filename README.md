@@ -1,6 +1,6 @@
 # BDREditor — mídia Blog e thumbs Three.js
 
-Pacote incremental verificado contra `davidcreator/davidcms`, branch `main`, HEAD `875a08ce5e0484537a517c7435b5b610987450dd` (consulta somente leitura; sem clone completo ou escrita GitHub).
+Pacote incremental verificado contra `davidcreator/davidcms`, branch `main`, HEAD `eececca48ee636d00ad4083967e6302adeafb7e3` (consulta somente leitura; sem clone completo ou escrita GitHub).
 
 Inclui upload seguro de MP3/OGG/WAV (20 MiB) e MP4/WebM/OGV (100 MiB), seleção e drag/drop na biblioteca Blog, blocos locais de áudio/vídeo e integração no BDREditor de Blog e CMS > Páginas. O bloco `core/threejs_thumb` oferece controles no Inspetor para formas, luzes e atributos de cena, além de campo JavaScript opcional por thumb.
 

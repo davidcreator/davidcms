@@ -31,6 +31,7 @@ docs/BLOG_MEDIA_UPLOAD.md
 docs/CHANGELOG.md
 docs/IMPORT_FORMATS.md
 docs/MEDIA_LIBRARY_PHASE_3.md
+docs/THREEJS_CMS_E2E.md
 docs/THREEJS_THUMB.md
 preview/index.html
 tools/e2e/check_audio_catalog.cjs

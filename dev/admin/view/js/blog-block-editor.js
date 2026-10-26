@@ -517,6 +517,7 @@
         const field = event.target.closest('[data-attribute]');
         if (!field) return;
         const id = field.dataset.nodeId, key = field.dataset.attribute;
+        if (key === 'custom_js') { this.updateNode(id, (node) => { node.attributes.custom_js = field.value; }, false); return; }
         this.updateNode(id, (node) => {
           if (key === 'ordered') node.attributes[key] = field.value === 'true';
           else if (key === 'level' || key === 'count' || key === 'columns' || key === 'height') node.attributes[key] = Number(field.value);
@@ -634,6 +635,8 @@
       else if (name === 'audio-media') { global.document.dispatchEvent(new CustomEvent('blog-block-audio-open', { detail: { editor: this, nodeId: button.dataset.nodeId || this.selectedId } })); }
       else if (name === 'video-media') { global.document.dispatchEvent(new CustomEvent('blog-block-video-open', { detail: { editor: this, nodeId: button.dataset.nodeId || this.selectedId } })); }
       else if (name === 'format-mark') this.applyInlineMark(button.dataset.mark);
+      else if (name === 'threejs-toggle-editor') { const id=button.dataset.nodeId||this.selectedId; this.selectedId=id; this.openThreeJsEditor=this.openThreeJsEditor===id?null:id; this.render(); }
+      else if (name === 'threejs-delete-script') { const id=button.dataset.nodeId||this.selectedId; this.statusMessage=this.strings.threejs.scriptDeleted; this.updateNode(id,(node)=>{node.attributes.custom_js='';}); }
       else if (name === 'threejs-add-object') this.updateThreeJsEntry(button.dataset.nodeId || this.selectedId, 'add-object');
       else if (name === 'threejs-add-light') this.updateThreeJsEntry(button.dataset.nodeId || this.selectedId, 'add-light');
       else if (name === 'threejs-remove-object' || name === 'threejs-remove-light') this.updateThreeJsEntry(button.dataset.nodeId || this.selectedId, name.endsWith('object') ? 'remove-object' : 'remove-light', Number(button.dataset.index));
@@ -1498,6 +1501,21 @@
       return toolbar;
     }
 
+    renderThreeJsInlineEditor(node) {
+      const expanded=this.openThreeJsEditor===node.id;
+      const wrap=this.el('section','rb-threejs-inline-wrap');
+      const hasScript=!!String(node.attributes.custom_js||'').trim();
+      const toggle=this.button(expanded?this.strings.threejs.closeInline:(hasScript?this.strings.threejs.editInline:this.strings.threejs.addScript),'threejs-toggle-editor',{nodeId:node.id});
+      toggle.setAttribute('aria-expanded',String(expanded)); toggle.setAttribute('aria-controls','rb-threejs-inline-'+this.instance+'-'+node.id); toggle.classList.add('rb-threejs-inline-toggle'); wrap.append(toggle);
+      if (!expanded) return wrap;
+      const panel=this.el('div','rb-threejs-inline-editor'); panel.id='rb-threejs-inline-'+this.instance+'-'+node.id; panel.setAttribute('role','region'); panel.setAttribute('aria-label',this.strings.threejs.editInline);
+      panel.append(this.renderThreeJsControls(node));
+      const label=this.el('label','rb-field'); label.append(this.el('span','',this.strings.threejs.scriptLabel));
+      const code=this.el('textarea','rb-input rb-threejs-script-input'); code.value=node.attributes.custom_js||''; code.maxLength=8192; code.spellcheck=false; code.autocomplete='off'; code.dataset.attribute='custom_js'; code.dataset.nodeId=node.id; code.setAttribute('aria-label',this.strings.threejs.scriptLabel); code.placeholder=this.strings.threejs.scriptPlaceholder; label.append(code); panel.append(label);
+      const remove=this.button(this.strings.threejs.deleteScript,'threejs-delete-script',{nodeId:node.id}); remove.disabled=!(node.attributes.custom_js||'').length; panel.append(remove);
+      panel.append(this.el('p','rb-help-text',this.strings.threejs.scriptHint)); wrap.append(panel); return wrap;
+    }
+
     renderAdminImagePreview(node, className) {
       const preview = this.el('figure',className || 'rb-admin-image-preview');
       if (validLocalImage(node.attributes.src)) {
@@ -1553,7 +1571,7 @@
         card.append(audio, this.el('p', 'rb-preview-value', label + (node.attributes.src ? ' · ' + node.attributes.src.split('/').pop() : '')));
       } else if (node.type === 'core/threejs_thumb') {
         const preview = this.el('div','rb-threejs-admin-preview'); preview.setAttribute('role','img'); preview.setAttribute('aria-label',node.attributes.label || this.label(node.type));
-        preview.append(this.icon('threejs','rb-threejs-admin-icon'), this.el('span','',node.attributes.label || this.label(node.type)), this.el('small','',this.strings.threejs.previewHint)); card.append(preview);
+        preview.append(this.icon('threejs','rb-threejs-admin-icon'), this.el('span','',node.attributes.label || this.label(node.type)), this.el('small','',this.strings.threejs.previewHint)); card.append(preview,this.renderThreeJsInlineEditor(node));
       } else if (node.type === 'core/video_file') {
         const video = this.el('video','rb-video-file-admin-preview'); video.controls = true; video.preload = 'none'; video.playsInline = true;
         if (validLocalVideo(node.attributes.src) && this.strings.videoFile.catalogBase) { try { const base = new URL(String(this.strings.videoFile.catalogBase), global.location.href); if (base.origin === global.location.origin) video.src = new URL(node.attributes.src, base).href; } catch (_) {} }

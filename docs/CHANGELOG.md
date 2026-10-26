@@ -41,3 +41,8 @@
 
 - Corrigida a distribuição do runtime: Three.js 0.186.1 importa também `three.core.js`; os dois módulos locais agora acompanham o ZIP.
 - URLs dos assets do editor/runtime recebem versionamento específico para evitar que cache mantenha a interface anterior.
+
+## Correção de usabilidade — edição direta do bloco Three.js (2026-10-26)
+- Adicionado botão visível **Editar thumb e script** no próprio cartão do canvas; abrir o Inspetor lateral deixa de ser pré-requisito.
+- Painel inline reúne formas/luzes e textarea JS com ação **Excluir script** (desfazível), mantendo a edição no envelope v2 e o salvamento do formulário.
+- O campo JS usa commit sem re-render ao perder foco para que os controles próximos continuem acionáveis.
