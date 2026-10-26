@@ -40,3 +40,4 @@
 2026-10-26 18:42:44 - Route not found: 404.index — request: /davidcms/dev/catalog/404
 Route not found: paginaquenaoexistee2e.index — request: /davidcms/dev/catalog/pagina-que-nao-existe-e2e2026-10-26 19:25:05 - Route not found: paginaquenaoexistee2e.index — request: /davidcms/dev/catalog/pagina-que-nao-existe-e2e
 2026-10-26 19:25:05 - Route not found: 404testee2e.index — request: /davidcms/dev/catalog/404-teste-e2e
+2026-10-26 20:24:54 - Route not found: threejsee2notfound.index — request: /davidcms/dev/catalog/threejsee2notfound
