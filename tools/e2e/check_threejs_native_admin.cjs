@@ -14,6 +14,7 @@ const header = read('dev/catalog/view/template/common/header.twig');
 const blogAdmin = read('dev/admin/controller/blog/blog.php');
 const cmsAdmin = read('dev/admin/controller/cms/page.php');
 const nativeRunner = read('tools/e2e/threejs_native_admin_playwright.cjs');
+const readOnlyRunner = read('tools/e2e/threejs_native_readonly_playwright.cjs');
 const langs = ['pt-br','en-us','es-eu'].map(x => read(`dev/admin/language/${x}/setting/setting.php`));
 const checks = [];
 const test = (name, ok) => checks.push([name, !!ok]);
@@ -25,6 +26,7 @@ test('home and 404 consume only normalized system scene settings', /\$this->thre
 test('native Catalog import map uses the same local Three module as thumbnail runtime', /catalog\/view\/js\/three\.module\.js/.test(header) && !/three\/addons\//.test(header) && !/https:\/\/cdn\./.test(header));
 test('Blog and CMS admin point runtime assets at Catalog, where files are installed', /catalogAssetBase\s*=\s*\$this->catalogAssetUrl\(\)\s*\.\s*'view\/'/.test(blogAdmin) && /catalogAssetBase\s*=\s*\$this->pageCatalogAssetUrl\(\)\s*\.\s*'view\/'/.test(cmsAdmin) && /catalogAssetBase\s*\.\s*'js\/threejs-thumb\.js/.test(blogAdmin));
 test('native settings Playwright runner requires a disposable site, verifies fallbacks/assets, and restores settings', /E2E_CONFIRM_DISPOSABLE/.test(nativeRunner) && /ADMIN_SETTINGS_URL/.test(nativeRunner) && /PUBLIC_HOME_URL/.test(nativeRunner) && /PUBLIC_404_URL/.test(nativeRunner) && /threeAssetFailures/.test(nativeRunner) && /original Three\.js settings restored/.test(nativeRunner));
+test('read-only native E2E inspects saved Admin and Catalog state without form mutations', /READ-ONLY/.test(readOnlyRunner) && /inputValue\(\)/.test(readOnlyRunner) && /PUBLIC_404_URL/.test(readOnlyRunner) && !/\.(?:click|fill|selectOption)\(/.test(readOnlyRunner) && !/E2E_CONFIRM_DISPOSABLE/.test(readOnlyRunner));
 for (const [name, ok] of checks) console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`);
 const failed = checks.filter(x => !x[1]).length;
 console.log(`\n${checks.length - failed}/${checks.length} native Three.js admin/catalog checks passed`);

@@ -25,8 +25,12 @@ Não há JavaScript arbitrário para as cenas nativas do site. As formas e movim
 
 ## Verificação
 
-Execute `node tools/e2e/check_threejs_native_admin.cjs` e os checkers de BDREditor/Three.js em `tools/e2e/`. O runner `threejs_native_admin_playwright.cjs` valida o formulário/settings persistidos, enable/disable da home e 404, import map self-hosted e ausência de 4xx/5xx nos assets; ele restaura os valores iniciais no `finally`.
+Execute `node tools/e2e/check_threejs_native_admin.cjs` e os checkers de BDREditor/Three.js em `tools/e2e/`.
 
-Uso apenas em uma instalação descartável: instale Playwright fora das dependências do produto (`npm install --no-save playwright`, `npx playwright install chromium`), faça login manual e mantenha um storage state local privado. Exporte `ADMIN_SETTINGS_URL`, `PUBLIC_HOME_URL`, `PUBLIC_404_URL`, `PLAYWRIGHT_STORAGE_STATE` e `E2E_CONFIRM_DISPOSABLE=1`; depois rode `node tools/e2e/threejs_native_admin_playwright.cjs`. O runner exige que home e 404 compartilhem a origem pública e confirmação da instalação descartável; o Admin pode estar em uma origem própria se o storage state local tiver a sessão necessária. Se a restauração reportar falha, restaure manualmente os valores originais do bloco Three.js.
+Para instalações compartilhadas, persistentes ou com qualquer dado importante, use somente o runner **read-only** `node tools/e2e/threejs_native_readonly_playwright.cjs`. Ele faz GET das três telas, lê os valores do formulário e verifica import map/fallback/assets; não submete formulários, não clica em salvar e não exige `E2E_CONFIRM_DISPOSABLE`.
 
-Os checkers são contratos estáticos; não substituem o E2E/browser autenticado. Nesta sessão não há PHP CLI nem uma instância CMS autenticada, então o lint PHP e a execução funcional precisam ocorrer no ambiente de teste do projeto.
+O runner mutável `threejs_native_admin_playwright.cjs` altera configurações globais e só é permitido numa instalação de teste verdadeiramente descartável. **Não rode esse runner em um ambiente que seja simultaneamente desenvolvimento, produção, testes e documentação.** Não basta a aplicação ser local ou executar em localhost.
+
+Ambos os runners precisam de Playwright instalado somente no ambiente de QA, URLs locais/públicas e storage state local privado. `ADMIN_SETTINGS_URL`, `PUBLIC_HOME_URL`, `PUBLIC_404_URL` e `PLAYWRIGHT_STORAGE_STATE` devem estar definidos no processo; home e 404 compartilham a origem pública, e Admin pode usar origem própria.
+
+Os checkers são contratos estáticos e não substituem o E2E/browser autenticado. PHP CLI não estava disponível nesta sessão para executar lint.

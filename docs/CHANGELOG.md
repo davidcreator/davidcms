@@ -1,5 +1,9 @@
 # Changelog
 
+## Runner read-only para ambientes persistentes (2026-10-26)
+- Incluído Playwright E2E somente GET para validar settings persistidos, toggles renderizados, fallback, import map e carregamento de assets sem salvar ou modificar estado.
+- Documentado que o runner mutável é proibido em instalações compartilhadas/persistentes (incluindo ambiente local que reúna produção, desenvolvimento, testes e documentação).
+
 ## QA funcional das configurações nativas Three.js (2026-10-26)
 - Adicionado runner Playwright opcional para testar UI/salvamento do Admin, enable/disable do Hero e 404, fallback HTML e carregamento do import map self-hosted.
 - Runner aplica a configuração de teste apenas em instalação descartável, guarda os valores originais e tenta restaurá-los sempre no `finally`; não aceita credenciais via CLI.
