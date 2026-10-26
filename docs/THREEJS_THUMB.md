@@ -8,7 +8,7 @@ O bloco `core/threejs_thumb` pode ser inserido em Páginas CMS e posts do Blog. 
 - O renderizador público só inclui JS/CSS do runtime quando o documento validado contém uma thumb.
 - O backend valida a allowlist e limites da cena JSON antes da renderização. JavaScript opcional tem campo separado e executa somente no iframe isolado descrito abaixo; URLs e recursos externos continuam bloqueados.
 - O runtime desenha WebGL ao entrar na área visível, pausa fora dela, reage a redimensionamento e respeita `prefers-reduced-motion`. Sem suporte a WebGL ou APIs de observação, o rótulo permanece como fallback.
-- Os controles de cena atualizam o mesmo JSON validado; a edição manual do campo avançado não executa código nem carrega prévia WebGL administrativa.
+- Os controles de cena atualizam o mesmo JSON validado. O modo **Prévia** do editor de Blog/CMS agora renderiza a cena com o runtime local; a edição manual do JSON não executa código por si só. O JavaScript personalizado, quando informado, continua restrito ao iframe sandbox opaco também nessa prévia.
 
 ## Formato v1 da cena
 

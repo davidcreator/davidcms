@@ -7,6 +7,7 @@ const schema=read('dev/system/library/blog/block_document.php');
 const renderer=read('dev/system/library/blog/block_renderer.php');
 const runtime=read('dev/catalog/view/js/threejs-thumb.js');
 const editor=read('dev/admin/view/js/blog-block-editor.js');
+const cmsRunner=read('tools/e2e/threejs_cms_playwright.cjs');
 const moduleSrc=read('dev/catalog/view/js/three.module.js');
 const core=read('dev/catalog/view/js/three.core.js');
 const tests=[];const test=(name,ok)=>tests.push([name,!!ok]);
@@ -18,7 +19,8 @@ test('custom code is string-escaped, runs only in the sandbox, and onFrame start
 test('Three.js local module dependency is complete and rewritten to self-contained data URLs for opaque frame',/from '\.\/three\.core\.js'/.test(moduleSrc)&&core.length>1000000&&/coreUrl = new URL\('\.\/three\.core\.js'/.test(runtime)&&/replacements < 2/.test(runtime)&&/from ' \+ JSON\.stringify\(coreData\)/.test(runtime)&&!/type=\\\"importmap/.test(runtime));
 test('editor exposes isolated JS field with supported scene API in help text',/scriptLabel/.test(editor)&&/scriptHint/.test(editor)&&/onFrame/.test(read('dev/admin/language/pt-br/cms/page.php'))&&/sem as tags <script>/.test(read('dev/admin/language/pt-br/cms/page.php')));
 test('script add/edit/delete controls are directly visible in canvas and delete is undoable',/editInline/.test(editor)&&/deleteScript/.test(editor)&&/threejs-delete-script/.test(editor)&&/Use Desfazer/.test(read('dev/admin/language/pt-br/cms/page.php'))&&/key === 'custom_js'.*false/.test(editor));
-test('cache-busted admin editor and public runtime URLs prevent stale script UI/runtime',/threejs-2/.test(read('dev/admin/controller/cms/page.php'))&&/threejs-2/.test(read('dev/admin/controller/blog/blog.php'))&&/threejs-thumb\.js\?v=20261026c/.test(read('dev/catalog/controller/cms/page.php'))&&/threejs-thumb\.js\?v=20261026c/.test(read('dev/catalog/controller/blog/blog.php')));
+test('Playwright CMS E2E runner requires a disposable page, local session-state file, and verifies save/reopen/onFrame',/E2E_CONFIRM_DISPOSABLE/.test(cmsRunner)&&/PLAYWRIGHT_STORAGE_STATE/.test(cmsRunner)&&/CMS_EDIT_URL/.test(cmsRunner)&&/PUBLIC_PAGE_URL/.test(cmsRunner)&&/threejs-add-object/.test(cmsRunner)&&/threejs-add-light/.test(cmsRunner)&&/postResponse/.test(cmsRunner)&&/e2eFrame/.test(cmsRunner));
+test('cache-busted admin editor and public runtime URLs prevent stale script UI/runtime',/threejs-3/.test(read('dev/admin/controller/cms/page.php'))&&/threejs-3/.test(read('dev/admin/controller/blog/blog.php'))&&/threejs-thumb\.js\?v=20261026c/.test(read('dev/catalog/controller/cms/page.php'))&&/threejs-thumb\.js\?v=20261026c/.test(read('dev/catalog/controller/blog/blog.php')));
 test('custom runtime reports loading/success/failure without hiding fallback on error',/rms-block-threejs-thumb__status/.test(runtime)&&/state===\'ready\'/.test(runtime)&&/state===\'error\'/.test(runtime)&&/securitypolicyviolation/.test(runtime)&&/20261026c/.test(read('dev/catalog/controller/cms/page.php')));
 for(const [n,ok] of tests)console.log(`${ok?'PASS':'FAIL'} ${n}`);
 const bad=tests.filter(x=>!x[1]).length;console.log(`\n${tests.length-bad}/${tests.length} sandbox checks passed`);process.exitCode=bad?1:0;

@@ -377,8 +377,10 @@ class Page extends \Reamur\System\Engine\Controller {
             ];
 
                 $site = $this->config->get('site_url');
-                $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-2';
+                $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-3';
                 $this->document->addStyle($site . 'view/css/blog-block-editor.css?v=' . $version);
+                $this->document->addStyle($site . 'view/css/threejs-thumb.css?v=' . $version);
+                $this->document->addScript($site . 'view/js/threejs-thumb.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-block-import.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-block-editor.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-block-editor-init.js?v=' . $version);

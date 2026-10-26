@@ -1,5 +1,10 @@
 # Changelog
 
+## Correção — thumb renderizada na prévia do post (2026-10-26)
+- O modo **Prévia** do editor Blog/CMS agora cria o stage com configuração de cena e inicia o runtime Three.js local, em vez de mostrar apenas o rótulo estático.
+- Script personalizado continua executando somente no iframe sandbox isolado; CSS/JS carregados localmente e apenas nas telas com editor de blocos.
+- Atualizado o versionamento dos assets administrativos e o checker estático correspondente.
+
 ## Office/Canvas fidelity phase 2 — 2026-10-25
 
 - DOCX: listas simples, estilos de título, cabeçalho de tabela e múltiplos parágrafos por célula.
@@ -51,3 +56,6 @@
 - O módulo Three.js da iframe passa a importar diretamente os módulos locais por data URL, sem depender de import map no frame opaco. Testado por importação ESM do pacote local em Node.
 - A thumb pública agora reporta carregamento, inicialização e erros de módulo/CSP/código com texto seguro; mantém o fallback acessível até sucesso.
 - A ajuda especifica JavaScript puro (sem tags `<script>`) e o runtime público ganhou novo cache-buster.
+
+## Ferramenta E2E CMS opcional (2026-10-26)
+- Incluído runner Playwright com sessão local, edição/salvamento/reabertura e verificação da execução de `onFrame` no iframe público; exige confirmação explícita de página descartável e não registra credenciais.

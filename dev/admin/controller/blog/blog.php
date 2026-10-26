@@ -684,9 +684,11 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['can_modify'] = $this->user->hasPermission('modify', 'blog/blog');
         $data['block_editor_available'] = $data['can_modify'] && $this->model_blog_blog->blogBlockContentTableExists();
         if ($data['block_editor_available']) {
-            $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-2';
+            $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-3';
             $assetBase = rtrim((string)$this->config->get('site_url'), '/') . '/view/';
             $this->document->addStyle($assetBase . 'css/blog-block-editor.css?v=' . $assetVersion);
+            $this->document->addStyle($assetBase . 'css/threejs-thumb.css?v=' . $assetVersion);
+            $this->document->addScript($assetBase . 'js/threejs-thumb.js?v=' . $assetVersion);
             $this->document->addScript($assetBase . 'js/blog-block-editor.js?v=' . $assetVersion);
             $this->document->addScript($assetBase . 'js/blog-block-editor-init.js?v=' . $assetVersion);
             $this->document->addScript($assetBase . 'js/blog-file-media.js?v=' . $assetVersion);

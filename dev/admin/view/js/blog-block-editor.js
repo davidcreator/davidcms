@@ -1351,7 +1351,18 @@
         case 'core/code': out=d.createElement('pre'); out.textContent=node.content||''; break;
         case 'core/image': out=d.createElement('figure'); if(validLocalImage(node.attributes.src)){const img=d.createElement('img');img.src=node.attributes.src;img.alt=node.attributes.alt||'';img.loading='lazy';out.append(img);} if(node.attributes.caption)out.append(d.createElement('figcaption')).textContent=node.attributes.caption; break;
         case 'core/audio': out=d.createElement('figure'); if(validLocalAudio(node.attributes.src)){const audio=d.createElement('audio');audio.controls=true;audio.preload='none';audio.src=node.attributes.src;out.append(audio);} const cap=d.createElement('figcaption');this.renderPreviewRuns(node.content,cap);out.append(cap);break;
-        case 'core/threejs_thumb': out=d.createElement('figure'); out.className='rb-preview-threejs'; out.textContent=node.attributes.label||this.label(node.type); break;
+        case 'core/threejs_thumb': {
+          out=d.createElement('figure'); out.className='rb-preview-threejs';
+          const stage=d.createElement('div'); stage.className='rms-block-threejs-thumb__stage'; stage.setAttribute('data-threejs-thumb','');
+          const scene=String(node.attributes.scene_json||'');
+          try { JSON.parse(scene); stage.setAttribute('data-scene',scene); } catch (_) { stage.setAttribute('aria-label',this.strings.threejs.invalidScene||'Cena 3D inválida'); }
+          const label=String(node.attributes.label||this.label(node.type)); stage.setAttribute('role','img'); stage.setAttribute('aria-label',label);
+          const script=String(node.attributes.custom_js||'');
+          if(script){try{stage.setAttribute('data-custom-js',global.btoa(unescape(encodeURIComponent(script))));}catch(_){stage.setAttribute('data-custom-js','');}}
+          const fallback=d.createElement('span'); fallback.className='rms-block-threejs-thumb__fallback'; fallback.textContent=label; stage.append(fallback); out.append(stage);
+          const hint=d.createElement('small'); hint.textContent=this.strings.threejs.previewHint||''; if(hint.textContent)out.append(hint);
+          break;
+        }
         case 'core/video_file': out=d.createElement('figure'); if(validLocalVideo(node.attributes.src)){const video=d.createElement('video');video.controls=true;video.preload='none';video.playsInline=true;try{const base=new URL(String(this.strings.videoFile.catalogBase||''),global.location.href);if(base.origin===global.location.origin)video.src=new URL(node.attributes.src,base).href;}catch(_){} out.append(video);} break;
         case 'core/video_embed': out=d.createElement('div');out.className='rb-preview-video';{const label=d.createElement('span');label.textContent=this.strings.previewVideoLink||'Vídeo incorporado';out.append(label);const href=safeActionUrl(node.attributes.url);if(href){const a=d.createElement('a');a.href=href;a.target='_blank';a.rel='noopener noreferrer';a.textContent=this.strings.previewVideoOpen||'Abrir em nova aba';out.append(a);}}break;
         case 'core/button': out=d.createElement('p');{const a=d.createElement('a');a.className='rb-preview-button';const href=safeActionUrl(node.attributes.url);if(href){a.href=href;a.rel='noopener noreferrer';}this.renderPreviewRuns(node.content,a);out.append(a);}break;
