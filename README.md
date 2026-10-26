@@ -1,29 +1,28 @@
-# Three.js — E2E isolado do sandbox de custom_js
+# ReamurCMS — engine Three.js centralizada no System
 
-Runner de navegador para testar o mecanismo já existente de execução isolada sem abrir o Admin/Catalog e sem tocar na instalação compartilhada.
+Patch incremental para o HEAD consultado `5a4a11fae4e2ed79422f18c4455cbf7b486c0697`.
 
-**Base consultada antes da preparação:** `davidcreator/davidcms` `main`, HEAD `5a4a11fae4e2ed79422f18c4455cbf7b486c0697`.
+## O que muda
 
-## O que o teste faz
+- O vendor, o runtime de cenas e o runtime de thumbs passam a ter uma única fonte em `dev/system/library/three/runtime/`.
+- System registra `AssetManifest`; Catalog expõe apenas nomes allowlisted por `/catalog/three-runtime/...`. `dev/system/.htaccess` continua negando acesso direto ao núcleo.
+- O endpoint inclui cache/ETag e MIME JavaScript; imports relativos dos módulos ESM continuam resolvendo na rota pública.
+- Home/404, Blog/CMS e Admin usam a mesma engine/runtime. CSS de apresentação da thumb permanece no Catalog.
+- Sem CDN, cópia paralela, migration ou alteração de conteúdo/settings.
 
-- Sobe um servidor HTTP temporário em `127.0.0.1` numa porta aleatória.
-- Serve apenas uma fixture em memória e os arquivos locais `threejs-thumb.js`, `three.module.js` e `three.core.js` do checkout.
-- Usa Chromium via Playwright com WebGL/SwiftShader, instala um `custom_js` UTF-8 de teste e bloqueia requisições a outras origens.
-- Verifica que o script sinaliza a execução com origem opaca `null`, que o iframe tem somente `sandbox="allow-scripts"` e que não houve requisições não locais.
+## Aplicação do patch
 
-Não visita URLs do DavidCMS, não recebe cookies/storage state, não usa credenciais e não escreve no banco, arquivos de conteúdo ou settings. Pode ser rodado sem ambiente descartável porque seu fixture e servidor são isolados do app.
+1. Faça backup da instalação/branch.
+2. Copie o conteúdo preservando os caminhos relativos para a raiz do DavidCMS.
+3. Remova os arquivos listados em `DELETE_FILES.txt` após confirmar que as novas versões em System estão presentes. A lista elimina a cópia anterior no Catalog.
+4. Não edite a pasta `system` para torná-la publicamente acessível; o acesso web deve continuar exclusivamente pela rota allowlisted do Catalog.
 
-## Execução
+A rota depende de mod_rewrite, já usado pelo `.htaccess` do Catalog. O caminho permitido é fixo; o controller não aceita caminhos arbitrários.
 
-No checkout do DavidCMS, instale/tenha Playwright disponível **somente no ambiente local de QA** e copie o script preservando o caminho abaixo. Execute na raiz do projeto:
+## Validação desta etapa
 
-```sh
-node --check tools/e2e/threejs_admin_preview_sandbox_isolated.cjs
-node tools/e2e/threejs_admin_preview_sandbox_isolated.cjs
-```
+- `node --check` passou para os módulos JS do runtime.
+- Dois checkers estáticos existentes passaram: `check_threejs_thumb.cjs` (22/22) e `check_threejs_native_admin.cjs` (9/9).
+- PHP CLI não está disponível nesta sessão; portanto não pude executar `php -l` nos arquivos PHP. Nenhum E2E contra a instalação foi feito.
 
-Dependendo do setup do Chromium, o suporte WebGL/SwiftShader pode não estar disponível. Nessa situação o runner falha sem afetar o projeto; não interprete falha de inicialização de WebGL como comprovação de quebra do sandbox.
-
-## Validação desta sessão
-
-`node --check` passou. Playwright não está instalado nesta sessão, então o browser test não foi executado. O checker do projeto para a integração Three.js passou **22/22** no snapshot consultado. Nenhuma escrita foi feita ao GitHub ou à instalação compartilhada.
+Esta entrega é um patch para revisão/aplicação, não foi enviada ao GitHub nem aplicada ao ambiente compartilhado.

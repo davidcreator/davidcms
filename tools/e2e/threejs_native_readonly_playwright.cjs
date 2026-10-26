@@ -74,7 +74,7 @@ function safeError(error) {
       if (enabled) {
         assert(moduleCount === 1 && mapCount === 1, `${sceneName} is enabled but the conditional module/import map is missing.`);
         const map = await page.locator('script[type="importmap"]').textContent();
-        assert(map.includes('/catalog/view/js/three.module.js'), `${sceneName} import map does not reference the local Three.js module.`);
+        assert(map.includes('/catalog/three-runtime/three.module.js'), `${sceneName} import map does not reference the local Three.js module.`);
       } else {
         assert(moduleCount === 0 && mapCount === 0, `${sceneName} is disabled but still enqueues the WebGL module.`);
       }

@@ -1,0 +1,11 @@
+Remover estes arquivos antigos do Catalog depois de copiar e verificar as fontes novas em System:
+dev/catalog/view/js/three.module.js
+dev/catalog/view/js/three.core.js
+dev/catalog/view/js/THREE-LICENSE.txt
+dev/catalog/view/js/threejs-thumb.js
+dev/catalog/view/js/three/main.js
+dev/catalog/view/js/three/core/scene-runner.js
+dev/catalog/view/js/three/core/dom.js
+dev/catalog/view/js/three/components/particle-field.js
+dev/catalog/view/js/three/scenes/hero-particles.js
+dev/catalog/view/js/three/scenes/not-found.js

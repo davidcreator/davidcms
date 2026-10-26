@@ -26,11 +26,11 @@
   <script type="importmap">
   {
     "imports": {
-      "three": "{{ asset_base }}catalog/view/js/three.module.js"
+      "three": "{{ three_runtime_base }}three.module.js"
     }
   }
   </script>
-  <script type="module" src="{{ asset_base }}catalog/view/js/three/main.js" defer></script>
+  <script type="module" src="{{ three_runtime_base }}three/main.js" defer></script>
   {% endif %}
 </head>
 <body class="{{ body_class }}">

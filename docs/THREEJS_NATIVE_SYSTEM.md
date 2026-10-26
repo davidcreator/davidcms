@@ -1,34 +1,28 @@
-# Three.js nativo — verificação read-only Admin/Catalog
+# Three.js — engine única no System, Admin e Catalog
 
-**Snapshot de referência consultado:** `davidcreator/davidcms` `main`, commit `c1e2b3d52525513c08628fa2d972dbf408be897b`.
+**Base de referência:** `davidcreator/davidcms` `main`, HEAD `5a4a11fae4e2ed79422f18c4455cbf7b486c0697`.
 
-Este pacote recompõe e atualiza o pacote `ThreeJS-Native-ReadOnly-E2E.zip`. Contém o runner read-only, checker estático e esta documentação; **não é um clone do DavidCMS nem contém uma cópia integral dos arquivos do projeto**. Os caminhos `dev/...` mencionados são relativos à raiz real do DavidCMS.
+## Arquitetura
 
-## Escopo e segurança
+- `dev/system/library/three/scene_config.php` é a fonte única dos limites/defaults das cenas nativas; `framework.php` registra os serviços Three.js no Registry.
+- `dev/system/library/three/asset_manifest.php` mantém a allowlist de módulos e o prefixo público comum.
+- O único vendor e runtime de navegador Three.js ficam em `dev/system/library/three/runtime/`, com imports relativos preservados.
+- `system/.htaccess` continua negando acesso direto. `catalog/.htaccess` redireciona somente `/three-runtime/*.js` ao adaptador `catalog/controller/common/three.php`; o controller serve apenas nomes resolvidos pelo manifesto, com MIME JS, `nosniff`, ETag e cache HTTP.
+- Home/404 e thumbs Blog/CMS usam essa mesma origem. Os estilos visuais da thumb permanecem em Catalog; não são outro motor.
+- As cenas mantêm fallback e carregamento condicional. Script de autor só executa no iframe sandbox de origem opaca existente; não é executado no documento Admin.
 
-- O runner Playwright consulta por GET as páginas configuradas, lê os valores e verifica os assets/fallbacks, sem submeter formulários nem salvar configurações.
-- Não requer a confirmação usada pelo runner mutável. Ainda assim, confira as URLs antes de executar e forneça somente um storage state local privado já existente; não compartilhe cookies ou credenciais.
-- Não execute o runner mutável em `localhost/davidcms` ou em qualquer ambiente persistente/compartilhado.
-- O checker estático verifica os contratos locais do snapshot; não substitui teste de navegador nem prova que uma instalação foi atualizada.
+## Persistência e segurança
 
-## Execução
+As configurações Hero/404 usam settings existentes e ACL/CSRF já existentes. Sem tabela ou migration. O manifesto aceita nomes fixos e nunca recebe caminho de filesystem arbitrário. Não usar CDN ou duplicar `three.module.js`/runtime sob Catalog.
 
-Na raiz do DavidCMS, coloque os dois arquivos `.cjs` nos caminhos `tools/e2e/` indicados e execute:
+## Operação
 
-```sh
-node tools/e2e/check_threejs_native_admin.cjs
-node tools/e2e/threejs_native_readonly_playwright.cjs
-```
+As URLs públicas de módulos usam `/catalog/three-runtime/` para que imports ESM relativos (`three.core.js`, cenas e helpers) continuem resolvendo no mesmo diretório lógico. O `asset_manifest.php` é a única lista de arquivos servidos. Para adicionar módulo Three.js, registrar no manifesto e colocar no caminho `system/library/three/runtime/` correspondente; não criar outra cópia no Catalog.
 
-O runner de navegador depende de Playwright no ambiente de QA e das variáveis `ADMIN_SETTINGS_URL`, `PUBLIC_HOME_URL`, `PUBLIC_404_URL` e `PLAYWRIGHT_STORAGE_STATE`. O estado autenticado deve permanecer privado. Não use dados de autenticação enviados por terceiros.
+## Verificação mínima
 
-## Resultados registrados
+- `node --check` nos módulos JavaScript tocados.
+- `php -l` nas classes/controladores PHP tocados, quando PHP CLI estiver disponível.
+- Nenhum teste mutável em instalação persistente/compartilhada. E2E completo é opcional, fora desta mudança de arquitetura.
 
-- Checker nativo executado nesta sessão contra o snapshot seletivo: **9/9 PASS**.
-- O usuário informou que a execução anterior do runner read-only retornou **PASS**. Esse PASS é do Admin/Catalog nativo; não valida página pública de Blog/CMS.
-- Não há atualmente posts de Blog nem páginas CMS publicados para validar as thumbs públicas. A ausência de conteúdo elegível não representa, por si só, uma falha do runtime.
-- PHP CLI não estava disponível nesta sessão; `php -l` não foi executado.
-
-## Limite desta entrega
-
-Nenhuma alteração foi enviada ao GitHub, aplicada ao ambiente compartilhado ou implantada. A edição experimental do atributo de preview (`data-custom-js`) está fora deste pacote: não foi integrada à instalação nem validada como execução sandbox no editor.
+Esta atualização não foi publicada automaticamente ao GitHub nem aplicada à instalação compartilhada.

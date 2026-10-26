@@ -378,10 +378,10 @@ class Page extends \Reamur\System\Engine\Controller {
 
                 $site = $this->config->get('site_url');
                 $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-5';
-                $catalogAssetBase = $this->pageCatalogAssetUrl() . 'view/';
+                $catalogAssetBase = $this->pageCatalogAssetUrl();
                 $this->document->addStyle($site . 'view/css/blog-block-editor.css?v=' . $version);
-                $this->document->addStyle($catalogAssetBase . 'css/threejs-thumb.css?v=' . $version);
-                $this->document->addScript($catalogAssetBase . 'js/threejs-thumb.js?v=' . $version);
+                $this->document->addStyle($catalogAssetBase . 'view/css/threejs-thumb.css?v=' . $version);
+                $this->document->addScript($catalogAssetBase . $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-block-import.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-block-editor.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-block-editor-init.js?v=' . $version);

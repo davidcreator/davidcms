@@ -52,8 +52,8 @@ class Home extends \Reamur\System\Engine\Controller {
             // Configuração allowlisted do system/library/three/scene_config.php.
             // Sem script arbitrário; o header só carrega WebGL quando habilitado.
             'has_3d'     => $threeJs['hero_enabled'],
-            'asset_base' => $base,
-            'hero3d'     => $threeJs['hero'],
+            'three_runtime_base' => $base . $this->three_asset_manifest->publicBasePath(),
+            'hero3d'     => $threeJs['hero'], 
 
             'heading_title'     => $this->language->get('heading_title'),
             'text_tagline'      => $this->language->get('text_tagline'),

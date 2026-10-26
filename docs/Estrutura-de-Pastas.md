@@ -162,7 +162,10 @@ system/
 │   ├── cart/{cart, currency, customer, user, tax, length, weight}.php
 │   ├── googleshopping/ openbay/ squareup/   # integrações legadas portadas
 │   ├── security/upload_security.php
-│   ├── three/scene_config.php # policy allowlisted para cenas Three.js
+│   ├── three/                  # serviço/config + runtime Three.js canônico self-hosted
+│   │   ├── scene_config.php    # política declarativa allowlisted
+│   │   ├── asset_manifest.php  # allowlist de módulos servidos pelo Catalog
+│   │   └── runtime/            # vendor Three + runner/cenas/thumbs (não exposto direto)
 │   ├── ai.php                 # integração com IA (geração de conteúdo)
 │   ├── mercadopago_marketplace.php
 │   └── encryption, image, language, log, pagination,
@@ -266,7 +269,8 @@ Chaves mais importantes (de `default.php`):
 | Novo idioma | pasta `language/xx-xx/` espelhada nos 3 apps + registro em `admin/controller/localization/` |
 | Schema de banco | `install/sql/` (migrações versionadas) |
 | Assets do front | `catalog/view/{css,js}/` e tema em `catalog/view/theme/` |
-| Script 3D | `catalog/view/js/` — ver [Guia Three.js](Guia-ThreeJS.md) |
+| Engine/runtime Three.js compartilhado | `system/library/three/runtime/`; acesso web só pela allowlist `catalog/controller/common/three.php` |
+| Cena e markup específicos do site | `catalog/view/` — ver [Guia Three.js](Guia-ThreeJS.md) |
 | Config nova | chave em `system/config/default.php` + override por app se necessário |
 | Documentação nova | `docs/` (pt-BR, kebab-case) + entrada no [índice](README.md) |
 

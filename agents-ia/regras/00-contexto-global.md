@@ -44,7 +44,7 @@ Cada aplicação segue **MVCL**: `controller/`, `model/`, `view/`, `language/` +
 ## 3. Núcleo — fatos verificados
 
 - `system/engine/`: `autoloader`, `registry`, `config`, `loader`, `router`, `action`, `actionhook`, `controller`, `model`, `proxy`, `event`, `webhook`.
-- `system/library/`: `db` (mysqli, mariadb, pdo, pgsql, nosql), `cache` (apcu, file, mem, memcached, redis), `session` (db, file, redis), `template` (**twig** padrão + mustache, latte, blade, hbs, tpl, php, phtml), `mail` (mail, smtp, capture), `cart`, `language`, `image`, `log`, `request`, `response`, `document`, `pagination`, `url`, `encryption`, `security/upload_security`, `ai`, `mercadopago_marketplace`, `googleshopping`, `openbay`, `squareup`.
+- `system/library/`: `db` (mysqli, mariadb, pdo, pgsql, nosql), `cache` (apcu, file, mem, memcached, redis), `session` (db, file, redis), `template` (**twig** padrão + mustache, latte, blade, hbs, tpl, php, phtml), `mail` (mail, smtp, capture), `cart`, `language`, `image`, `log`, `request`, `response`, `document`, `pagination`, `url`, `encryption`, `security/upload_security`, `ai`, `mercadopago_marketplace`, `googleshopping`, `openbay`, `squareup`; `three/` é a fonte única de configuração, allowlist e runtime Three.js, publicada apenas pelo gateway Catalog.
 - `system/helper/`: `utf8`, `general`, `db_schema`, `seo`, `slug`, `bbcode`, `admin_appearance`, `config_loader`.
 - `system/config/`: `default.php` (sempre) + `{catalog|admin|install|api}.php` (override) + `api/schemas/*` + `api/settings/ip_blocked.php` + `googleshopping/`.
 - Bootstrap: `startup.php` → `framework.php` (monta o Registry) + `vendor.php` (autoload do Composer).

@@ -36,14 +36,14 @@ O posicionamento do site é **"Creative Developer"** — design + código. Um he
 <script type="importmap">
 {
   "imports": {
-    "three": "{{ asset_base }}catalog/view/js/three.module.js"
+    "three": "{{ three_runtime_base }}three.module.js"
   }
 }
 </script>
-<script type="module" src="{{ asset_base }}catalog/view/js/three/main.js" defer></script>
+<script type="module" src="{{ three_runtime_base }}three/main.js" defer></script>
 ```
 
-Os módulos de cena importam `three` pelo alias local. A versão vendorizada e a licença vivem no próprio repositório. Não coloque URLs CDN em templates ou módulos de runtime. O campo de script da thumb BDREditor é outro ambiente: não aceita `import`, DOM, `window` nem rede; use a API limitada documentada em `docs/THREEJS_THUMB.md`.
+Os módulos importam `three` pelo alias local. Vendor, runtime e licença têm uma única fonte em `dev/system/library/three/runtime/`; `AssetManifest` permite expor apenas os módulos cadastrados por `/catalog/three-runtime/`, pois `system/` é negado para acesso HTTP direto. Não mantenha cópias no Catalog nem URLs CDN. O campo de script da thumb BDREditor executa apenas no iframe sandbox opaco, sem DOM/cookies do CMS e com rede bloqueada; use a API limitada documentada em `docs/THREEJS_THUMB.md`.
 
 > A cena só é carregada em rotas que declaram `has_3d`; WebGL permanece aprimoramento progressivo e o HTML/CSS/fallback funciona sem ele.
 
@@ -127,11 +127,11 @@ window.addEventListener('resize', () => {
 </section>
 
 {% block scripts %}
-  <script type="module" src="catalog/view/js/hero-3d.js"></script>
+  <script type="module" src="catalog/three-runtime/three/scenes/hero-particles.js"></script>
 {% endblock %}
 ```
 
-### 4.2 `catalog/view/js/hero-3d.js`
+### 4.2 `system/library/three/runtime/three/scenes/hero-particles.js`
 
 ```js
 import * as THREE from 'three';
@@ -212,7 +212,7 @@ Preferência por **GLB** (binário, um arquivo só, texturas embutidas). Otimize
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
-const draco = new DRACOLoader().setDecoderPath('catalog/view/js/vendor/draco/');
+const draco = new DRACOLoader().setDecoderPath('catalog/three-runtime/three/addons/libs/draco/'); // futuros arquivos precisam entrar na allowlist System
 const loader = new GLTFLoader().setDRACOLoader(draco);
 
 loader.load(

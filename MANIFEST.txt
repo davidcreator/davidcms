@@ -1,42 +1,5 @@
-MANIFEST.txt
-README.md
-dev/admin/controller/blog/blog.php
-dev/admin/controller/cms/page.php
-dev/admin/language/en-us/blog/blog.php
-dev/admin/language/en-us/cms/page.php
-dev/admin/language/es-eu/blog/blog.php
-dev/admin/language/es-eu/cms/page.php
-dev/admin/language/pt-br/blog/blog.php
-dev/admin/language/pt-br/cms/page.php
-dev/admin/model/blog/media.php
-dev/admin/view/css/blog-block-editor.css
-dev/admin/view/js/blog-audio-media.js
-dev/admin/view/js/blog-block-editor-init.js
-dev/admin/view/js/blog-block-editor.js
-dev/admin/view/js/blog-block-import.js
-dev/admin/view/template/blog/blog_form.twig
-dev/admin/view/template/cms/page_content_form.twig
-dev/admin/view/template/cms/page_form.twig
-dev/catalog/controller/blog/blog.php
-dev/catalog/controller/cms/page.php
-dev/catalog/view/css/blog-blocks.css
-dev/catalog/view/css/threejs-thumb.css
-dev/catalog/view/js/THREE-LICENSE.txt
-dev/catalog/view/js/three.core.js
-dev/catalog/view/js/three.module.js
-dev/catalog/view/js/threejs-thumb.js
-dev/system/library/blog/block_document.php
-dev/system/library/blog/block_renderer.php
-docs/BLOG_MEDIA_UPLOAD.md
-docs/CHANGELOG.md
-docs/IMPORT_FORMATS.md
-docs/MEDIA_LIBRARY_PHASE_3.md
-docs/THREEJS_CMS_E2E.md
-docs/THREEJS_THUMB.md
-preview/index.html
-tools/e2e/check_audio_catalog.cjs
-tools/e2e/check_page_content_flow.cjs
-tools/e2e/check_preview_import.cjs
-tools/e2e/check_single_page_ribbon.cjs
-tools/e2e/check_threejs_sandbox.cjs
-tools/e2e/check_threejs_thumb.cjs
+Source HEAD: 5a4a11fae4e2ed79422f18c4455cbf7b486c0697
+New canonical engine source: dev/system/library/three/runtime/
+Public adapter: dev/catalog/controller/common/three.php
+Public route: /catalog/three-runtime/{manifest-approved-js}
+No DB schema/migration changes.

@@ -166,7 +166,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->document->addStyle($this->config->get('site_url') . 'view/css/blog-blocks.css');
         if (!empty($data['requires_threejs'])) {
             $this->document->addStyle($this->config->get('site_url') . 'view/css/threejs-thumb.css?v=20261026c');
-            $this->document->addScript($this->config->get('site_url') . 'view/js/threejs-thumb.js?v=20261026c');
+            $this->document->addScript($this->config->get('site_url') . $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=20261026c');
         }
 
         $data['body_class'] = $body_class;

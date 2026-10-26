@@ -686,10 +686,11 @@ class Blog extends \Reamur\System\Engine\Controller {
         if ($data['block_editor_available']) {
             $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-5';
             $assetBase = rtrim((string)$this->config->get('site_url'), '/') . '/view/';
-            $catalogAssetBase = $this->catalogAssetUrl() . 'view/';
+            $catalogAssetBase = $this->catalogAssetUrl();
+            $catalogViewBase = $catalogAssetBase . 'view/';
             $this->document->addStyle($assetBase . 'css/blog-block-editor.css?v=' . $assetVersion);
-            $this->document->addStyle($catalogAssetBase . 'css/threejs-thumb.css?v=' . $assetVersion);
-            $this->document->addScript($catalogAssetBase . 'js/threejs-thumb.js?v=' . $assetVersion);
+            $this->document->addStyle($catalogViewBase . 'css/threejs-thumb.css?v=' . $assetVersion);
+            $this->document->addScript($catalogAssetBase . $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=' . $assetVersion);
             $this->document->addScript($assetBase . 'js/blog-block-editor.js?v=' . $assetVersion);
             $this->document->addScript($assetBase . 'js/blog-block-editor-init.js?v=' . $assetVersion);
             $this->document->addScript($assetBase . 'js/blog-file-media.js?v=' . $assetVersion);

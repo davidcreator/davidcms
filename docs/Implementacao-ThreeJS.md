@@ -4,9 +4,9 @@
 
 | | |
 | --- | --- |
-| **Escopo** | `dev/catalog` (view/js + templates) |
-| **Depende de** | [Guia-ThreeJS.md](Guia-ThreeJS.md) · [Guia-Twig.md](Guia-Twig.md) · Fase 3 do [roadmap](Analise-DavidAlmeida.md#8-plano-de-migração) |
-| **Status** | ✅ Implementado parcialmente no Catalog; configurações declarativas do Hero/404 no Admin em `setting/setting`; ver [`THREEJS_NATIVE_SYSTEM.md`](THREEJS_NATIVE_SYSTEM.md) para o contrato atual |
+| **Escopo** | Engine/runtime canônico em `dev/system/library/three/`; cenas/template e adaptador público em `dev/catalog/`; Admin reutiliza a rota de assets do Catalog |
+| **Depende de** | [Guia-ThreeJS.md](Guia-ThreeJS.md) · [Guia-Twig.md](Guia-Twig.md) · ADR 0073 · [roadmap](Analise-DavidAlmeida.md#8-plano-de-migração) |
+| **Status** | ✅ Configuração declarativa System/Admin e runtime self-hosted centralizado no System; Catalog serve somente a allowlist por rota pública cacheável. Ver [`THREEJS_NATIVE_SYSTEM.md`](THREEJS_NATIVE_SYSTEM.md). |
 
 ---
 
@@ -49,86 +49,42 @@
 
 ## 2. Estrutura de arquivos de front-end
 
-Criar dentro do tema do catalog:
+A implementação mantém a engine e suas dependências em uma única origem protegida do núcleo. O Catalog só expõe arquivos nominalmente allowlisted pelo manifesto System; Admin e Catalog usam o mesmo endpoint e runtime.
 
 ```text
-dev/catalog/view/
-├── assets/
-│   ├── 3d/
-│   │   ├── logo-da.glb            # modelo do logotipo (≤150 KB, Draco)
-│   │   └── hero-fallback.webp     # imagem estática do hero (fallback)
-│   └── textures/                  # KTX2/WEBP se necessário
-├── js/
-│   ├── vendor/
-│   │   ├── three.module.js        # build oficial (versão pinada)
-│   │   └── three-addons/          # loaders/controls usados (GLTFLoader, DRACOLoader)
-│   │       ├── loaders/GLTFLoader.js
-│   │       ├── loaders/DRACOLoader.js
-│   │       └── libs/draco/        # decodificador Draco (.wasm/.js)
-│   └── three/                     # ⭐ código-fonte das cenas (nosso)
-│       ├── core/
-│       │   ├── scene-runner.js    # ciclo de vida: init/loop/resize/pause/dispose
-│       │   ├── webgl-support.js   # detecção de WebGL + fallback
-│       │   └── dom.js             # helpers (data-*, visibility)
-│       ├── scenes/
-│       │   ├── hero-particles.js  # Cena 1
-│       │   ├── hero-logo.js       # Cena 2
-│       │   ├── portfolio-3d.js    # Cena 3 (futura)
-│       │   └── not-found.js       # Cena 4
-│       ├── components/
-│       │   ├── particle-field.js  # campo de partículas reutilizável
-│       │   └── studio-lighting.js # rig de luz ambiente+direcional+rim
-│       └── main.js                # entrypoint: registra e inicializa cenas por data-scene
-└── template/partial/
-    ├── hero-3d.twig               # container do hero + fallback
-    └── canvas-scene.twig          # partial genérico p/ cenas futuras
+dev/system/library/three/
+├── scene_config.php            # política/configuração declarativa das cenas
+├── asset_manifest.php          # allowlist, caminho público e arquivos do runtime
+├── THREE-LICENSE.txt           # licença da distribuição oficial Three.js
+└── runtime/
+    ├── three.module.js         # módulo oficial self-hosted
+    ├── three.core.js           # dependência do módulo oficial
+    ├── threejs-thumb.js        # runtime de thumbs; scripts opcionais só no sandbox
+    └── three/
+        ├── main.js             # entrypoint das cenas nativas
+        ├── core/               # ciclo de vida e helpers
+        ├── components/         # componentes reutilizáveis
+        └── scenes/             # Hero e 404
+
+dev/catalog/
+├── .htaccess                   # rota limitada /three-runtime/*.js → adaptador Catalog
+├── controller/common/three.php # serve somente assets resolvidos pelo manifesto
+└── view/
+    ├── css/threejs-thumb.css   # apresentação pública das thumbs
+    └── template/common/header.twig # carrega módulos somente quando há cena
 ```
 
-**Convenções:**
-- Todo módulo exporta uma classe/função `createScene(container, config)`;
-- Containers declarados no HTML com `data-scene="nome-da-cena"` e configs em `data-*` ou `window.*` via `json_encode`;
-- Nada de código JS inline nos templates — sempre arquivos em `view/js/three/`.
+O caminho `system/` permanece negado para acesso HTTP direto. O endpoint Catalog nunca recebe caminho de filesystem livre: o manifesto System aceita nomes fixos e o adaptador aplica `Content-Type`, `nosniff`, `ETag` e cache. Módulos ESM conservam caminhos relativos sob `/catalog/three-runtime/`, evitando duplicação de arquivos ou reescrita do vendor.
 
 ---
 
 ## 3. Setup self-hosted + import map
 
-**Passo 1 — baixar e pinar os arquivos (uma vez, commitar como vendor de front):**
+Os módulos Three.js atuais são self-hosted em `dev/system/library/three/runtime/`; não baixe assets no deploy nem carregue CDN. `dev/system/library/three/asset_manifest.php` lista cada arquivo permitido e o Catalog os entrega na rota pública `/catalog/three-runtime/{asset}`. O rewrite dessa rota precede o 404 estático; a extensão `system/` continua inacessível diretamente.
 
-```bash
-THREE_VERSION=0.169.0
-BASE="https://cdn.jsdelivr.net/npm/three@$THREE_VERSION"
+O import map do `common/header.twig` só é emitido quando `has_3d` está ativo e aponta para `three_runtime_base`, calculado pelo controller usando o manifesto System. A mesma base atende o entrypoint de cenas e o runtime de thumbs no Admin/Catalog. Os imports relativos ESM permanecem dentro de `/catalog/three-runtime/`, sem cópia do vendor e sem URL externa.
 
-mkdir -p dev/catalog/view/js/vendor/three-addons/{loaders,libs/draco}
-curl -L "$BASE/build/three.module.js" \
-  -o dev/catalog/view/js/vendor/three.module.js
-curl -L "$BASE/examples/jsm/loaders/GLTFLoader.js" \
-  -o dev/catalog/view/js/vendor/three-addons/loaders/GLTFLoader.js
-curl -L "$BASE/examples/jsm/loaders/DRACOLoader.js" \
-  -o dev/catalog/view/js/vendor/three-addons/loaders/DRACOLoader.js
-# copiar também examples/jsm/libs/draco/gltf/ (draco_decoder.wasm + draco_wasm_wrapper.js)
-```
-
-**Passo 2 — import map no layout base (somente páginas com cena):**
-
-```twig
-{# layout/base.twig — bloco head_extra #}
-{% if has_3d %}
-<script type="importmap">
-{
-  "imports": {
-    "three": "{{ base }}catalog/view/js/vendor/three.module.js",
-    "three/addons/": "{{ base }}catalog/view/js/vendor/three-addons/"
-  }
-}
-</script>
-<script type="module" src="{{ base }}catalog/view/js/three/main.js" defer></script>
-{% endif %}
-```
-
-> `has_3d` vem do controller — só as páginas que declaram uma cena carregam ~600 KB de Three.js. O import map precisa vir **antes** do módulo.
-
-**CSP:** se `Content-Security-Policy` for ativada, liberar `script-src 'self'` (arquivos locais dispensam exceções) e `worker-src blob:` (Draco usa workers).
+> WebGL é carregado apenas nas páginas com cena. Fallback HTML/CSS continua disponível quando desativado ou sem suporte do navegador.
 
 ---
 
@@ -357,7 +313,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { createStudioLighting } from '../components/studio-lighting.js';
 
-const draco = new DRACOLoader().setDecoderPath(`${window.ASSET_BASE}catalog/view/js/vendor/three-addons/libs/draco/`);
+const draco = new DRACOLoader().setDecoderPath(`${window.THREE_RUNTIME_BASE}three/addons/libs/draco/`); // futuro: registrar os arquivos no AssetManifest System
 new GLTFLoader().setDRACOLoader(draco).load(cfg.model, (gltf) => {
   const model = gltf.scene;
   normalizeToViewport(model, camera);  // util: centraliza e escala pelo bounding box
@@ -408,7 +364,8 @@ Partículas com deriva aleatória ("fog") + texto HTML por cima. Arquivo própri
 
 ```php
 // catalog/controller/common/home.php (trecho)
-$this->document->addScript('catalog/view/js/three/main.js', 'module'); // via library/document.php
+$threeRuntimeBase = $this->three_asset_manifest->publicBasePath();
+// O template usa a URL Catalog base + $threeRuntimeBase; nunca aponta para System direto.
 
 $data['has_3d'] = true;   // ativa o import map no base.twig apenas nesta rota
 $data['asset_base'] = $this->config->get('site_url');

@@ -98,7 +98,7 @@ const fieldNames = ['three_hero_enabled','three_not_found_enabled','three_hero_p
       assert(await page.locator(`[data-scene="${sceneName}"]`).count() > 0, `${sceneName} container is missing while enabled.`);
       assert(await page.locator('script[type="importmap"]').count() === 1, `${sceneName} route did not emit the conditional import map.`);
       const importMap = await page.locator('script[type="importmap"]').textContent();
-      assert(importMap.includes('/catalog/view/js/three.module.js'), `${sceneName} import map is not self-hosted at the shared local module.`);
+      assert(importMap.includes('/catalog/three-runtime/three.module.js'), `${sceneName} import map is not self-hosted through the System runtime route.`);
       assert(await page.locator('script[type="module"][src*="/three/main.js"]').count() === 1, `${sceneName} route did not load the native scene runner.`);
     }
     assert(threeAssetFailures.length === 0, `Three.js asset requests returned HTTP errors: ${threeAssetFailures.join(', ')}`);

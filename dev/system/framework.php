@@ -30,8 +30,9 @@ require_once(DIR_SYSTEM . 'vendor.php');
 
 // 3. Registry
 $registry = new Registry();
-// Política declarativa de cenas Three.js compartilhada por admin/catalog/install.
+// API compartilhada de configuração e manifesto allowlisted do Three.js.
 $registry->set('three_scene_config', new \Reamur\System\Library\Three\SceneConfig());
+$registry->set('three_asset_manifest', new \Reamur\System\Library\Three\AssetManifest());
 
 // 4. Config: default + aplicação (Contrato §4)
 $config = new Config();

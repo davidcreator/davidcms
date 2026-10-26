@@ -39,6 +39,10 @@ RewriteRule ^portfolio/([a-z0-9-]+)/?$ %{ENV:CMSBASE}catalog/$1 [R=301,L]
 # Âncora /#profile etc.: fragmento não chega ao servidor; o browser reaplica
 # o #fragment após qualquer 301 — tratamento client-side (Análise §9).
 
+# Runtime Three.js armazenado em system/ (protegido por system/.htaccess).
+# Somente arquivos JS dentro da allowlist do manifesto chegam ao controller.
+RewriteRule ^three-runtime/([A-Za-z0-9_/-]+\.js)$ index.php?route=common/three.asset&asset=$1 [QSA,L]
+
 # ═══ F6-06 (ADR 0041) — assets estáticos inexistentes = 404 NATIVO ══════
 # Sem arquivo físico, uma URL de asset caía no front controller, o router
 # sanitizava o path (removendo '.') e o dispatcher logava "Route not found:

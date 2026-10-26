@@ -1,5 +1,12 @@
 # Changelog
 
+## Engine Three.js centralizada no System (2026-10-26)
+- Move vendor, cenas nativas e runtime de thumbs para a fonte única `dev/system/library/three/runtime/`.
+- Adiciona `AssetManifest` no System e rota pública Catalog allowlisted `/catalog/three-runtime/`; o diretório `system/` continua negado por HTTP.
+- Home/404, Blog/CMS e Admin usam a base do manifesto; imports ESM relativos preservam o mesmo caminho público e os módulos deixam de ser duplicados em Catalog.
+- Mantém CSS de apresentação no Catalog, fallback e sandbox; sem CDN, migration ou escrita de conteúdo/settings.
+- Registrada a decisão na ADR 0073.
+
 ## Runner read-only para ambientes persistentes (2026-10-26)
 - Incluído Playwright E2E somente GET para validar settings persistidos, toggles renderizados, fallback, import map e carregamento de assets sem salvar ou modificar estado.
 - Documentado que o runner mutável é proibido em instalações compartilhadas/persistentes (incluindo ambiente local que reúna produção, desenvolvimento, testes e documentação).

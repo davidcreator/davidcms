@@ -36,7 +36,7 @@ class Not_found extends \Reamur\System\Engine\Controller {
         $base = rtrim((string)$this->config->get('site_url', ''), '/') . '/';
 
         $data['has_3d']     = $threeJs['not_found_enabled'];
-        $data['asset_base'] = $base;
+        $data['three_runtime_base'] = $base . $this->three_asset_manifest->publicBasePath();
         $data['nf3d']       = $threeJs['not_found'];
 
         // Chrome compartilhado (F2-4)
