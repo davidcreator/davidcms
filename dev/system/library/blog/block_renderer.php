@@ -9,10 +9,12 @@ final class BlockRenderer {
     private const MAX_JSON_BYTES = 4194304;
     private string $downloadRoot;
     private string $audioRoot;
+    private string $videoRoot;
 
-    public function __construct(string $downloadRoot = '', string $audioRoot = '') {
+    public function __construct(string $downloadRoot = '', string $audioRoot = '', string $videoRoot = '') {
         $this->downloadRoot = $downloadRoot;
         $this->audioRoot = $audioRoot;
+        $this->videoRoot = $videoRoot;
     }
 
     /**
@@ -100,6 +102,13 @@ final class BlockRenderer {
                 $mime = ['mp3' => 'audio/mpeg', 'ogg' => 'audio/ogg', 'wav' => 'audio/wav'][strtolower(pathinfo($srcPath, PATHINFO_EXTENSION))];
                 return '<figure class="rms-block rms-block-audio"><audio controls preload="none" aria-label="' . $labelText . '"><source src="' . $src . '" type="' . $mime . '"></audio><figcaption>' . $labelHtml . '</figcaption></figure>';
 
+            case 'core/video_file':
+                $srcPath = (string)$attributes['src'];
+                if (!$this->videoFileExists($srcPath)) return '';
+                $src = $this->escape($this->resolveLocalImageUrl($srcPath, $assetBase));
+                $mime = ['mp4' => 'video/mp4', 'webm' => 'video/webm', 'ogv' => 'video/ogg'][strtolower(pathinfo($srcPath, PATHINFO_EXTENSION))];
+                return '<figure class="rms-block rms-block-video"><video class="rms-block-video__file" controls preload="none" playsinline><source src="' . $src . '" type="' . $mime . '"></video></figure>';
+
             case 'core/gallery':
                 $columns = (int)$attributes['columns'];
                 $align = (string)$attributes['align'];
@@ -183,6 +192,23 @@ final class BlockRenderer {
         if ($resolved === false || !str_starts_with($resolved, rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) return false;
         $finfo = new \finfo(FILEINFO_MIME_TYPE); $mime = (string)($finfo->file($resolved) ?: '');
         $allowed = ['mp3' => ['audio/mpeg'], 'ogg' => ['audio/ogg','application/ogg'], 'wav' => ['audio/wav','audio/x-wav','audio/wave','audio/vnd.wave']];
+        return in_array($mime, $allowed[$extension], true);
+    }
+
+    private function videoFileExists(string $relative): bool {
+        if ($this->videoRoot === '' || !preg_match('#^view/video/blog/([A-Za-z0-9][A-Za-z0-9._-]{0,179})$#D', $relative) || str_contains($relative, '..')) return false;
+        $extension = strtolower(pathinfo($relative, PATHINFO_EXTENSION));
+        $allowed = ['mp4' => ['video/mp4'], 'webm' => ['video/webm'], 'ogv' => ['video/ogg']];
+        if (!isset($allowed[$extension])) return false;
+        $cursor = $this->videoRoot;
+        for ($depth = 0; $depth < 5; $depth++) { if (is_link($cursor)) return false; $cursor = dirname($cursor); }
+        $root = realpath($this->videoRoot); if ($root === false) return false;
+        $candidate = $root . DIRECTORY_SEPARATOR . basename($relative);
+        if (is_link($candidate) || !is_file($candidate)) return false;
+        $size = filesize($candidate); if ($size === false || $size <= 0 || $size > 104857600) return false;
+        $resolved = realpath($candidate);
+        if ($resolved === false || !str_starts_with($resolved, rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) return false;
+        $finfo = new \finfo(FILEINFO_MIME_TYPE); $mime = (string)($finfo->file($resolved) ?: '');
         return in_array($mime, $allowed[$extension], true);
     }
 

@@ -1,11 +1,9 @@
-# BDREditor — pacote incremental Fase 3
+# BDREditor — upload seguro de áudio e vídeo
 
-Integração do editor de conteúdo de CMS > Páginas com áudios locais já cadastrados na biblioteca Blog. Esta entrega estende a Fase 2 sem alterações ao GitHub, banco, staging ou produção.
+Pacote incremental sobre `davidcreator/davidcms` `main` em `d94b46e82502dd75e5c6da43b7fcca3c47b0db8d` (consulta somente leitura).
 
-- Picker somente leitura da rota preexistente `blog/blog.audioList`.
-- Seleção ou arrastar item de áudio para o canvas; referências locais limitadas a `view/audio/blog/...`.
-- Visibilidade condicionada às permissões existentes `modify cms/page` e `modify blog/blog`; sem bypass ou mudança de ACL.
-- Sem upload/exclusão, sem habilitar o seletor de arquivos. Vídeo segue URLs HTTPS permitidas; não existe picker local de vídeo confirmado.
-- Envelope v2 e campo oculto do formulário preservados; gravação continua manual pelo botão Salvar.
+Inclui upload de MP3/OGG/WAV (20 MiB) e MP4/WebM/OGV (100 MiB) para a biblioteca Blog, seleção e arrastar/soltar, além de um bloco `core/video_file` com renderização local. Aplicado à interface de Blog e CMS > Páginas.
 
-Veja `docs/MEDIA_LIBRARY_PHASE_3.md` para escopo/instalação/validação. Base de referência consultada somente leitura: `main` em `fe19221806a19ba249e4eaa5725c93971bfbcf96`.
+Segurança: allowlist de extensão e MIME detectado, nome aleatório, pastas dedicadas, POST+CSRF+ACL `modify blog/blog`; CMS também exige `modify cms/page`. Sem exclusão, migrations, escrita GitHub, staging ou deploy. A configuração de limites do PHP/webserver e a pasta gravável precisam ser conferidas no ambiente de destino.
+
+Ver `docs/BLOG_MEDIA_UPLOAD.md` para regras operacionais e roteiro de validação. Os testes desta entrega são estáticos; upload e reprodução ainda precisam de validação em CMS local com arquivos reais.

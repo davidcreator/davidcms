@@ -231,7 +231,7 @@
       <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ button_media_close }}</button></div>
     </div></div>
   </div>
-  <div class="modal fade" id="blogAudioModal" tabindex="-1" aria-labelledby="blogAudioModalLabel" aria-hidden="true" data-audio-config="{{ media_config|json_encode }}">
+  <div class="modal fade" id="blogAudioModal" tabindex="-1" aria-labelledby="blogAudioModalLabel" aria-hidden="true" data-media-config="{{ media_config|json_encode|e('html_attr') }}" data-media-kind="audio">
     <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
       <div class="modal-header"><h2 class="modal-title fs-5" id="blogAudioModalLabel">{{ text_audio_library }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ button_media_close }}"></button></div>
       <div class="modal-body">
@@ -241,7 +241,26 @@
         <input class="form-control mb-3" id="blogAudioSearch" type="search" maxlength="128">
         <div id="blogAudioFiles" class="list-group mb-3"></div>
         <div id="blogAudioEmpty" class="text-body-secondary py-2" aria-live="polite"></div>
-        <div class="d-flex justify-content-between align-items-center"><button type="button" class="btn btn-outline-secondary btn-sm" id="blogAudioPrevious">{{ button_media_previous }}</button><span id="blogAudioPage" class="small"></span><button type="button" class="btn btn-outline-secondary btn-sm" id="blogAudioNext">{{ button_media_next }}</button></div>
+        <div class="d-flex justify-content-between align-items-center mb-3"><button type="button" class="btn btn-outline-secondary btn-sm" id="blogAudioPrevious">{{ button_media_previous }}</button><span id="blogAudioPage" class="small"></span><button type="button" class="btn btn-outline-secondary btn-sm" id="blogAudioNext">{{ button_media_next }}</button></div>
+        <hr><label class="form-label" for="blogAudioUploadFile">{{ text_audio_upload_hint }}</label>
+        <div class="input-group"><input class="form-control" id="blogAudioUploadFile" type="file" accept=".mp3,.ogg,.wav,audio/mpeg,audio/ogg,audio/wav"><button class="btn btn-primary" type="button" id="blogAudioUploadButton">{{ button_audio_upload }}</button></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ button_media_close }}</button></div>
+    </div></div>
+  </div>
+  <div class="modal fade" id="blogVideoModal" tabindex="-1" aria-labelledby="blogVideoModalLabel" aria-hidden="true" data-media-config="{{ media_config|json_encode|e('html_attr') }}" data-media-kind="video">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title fs-5" id="blogVideoModalLabel">{{ text_video_library }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ button_media_close }}"></button></div>
+      <div class="modal-body">
+        <div id="blogVideoAlert" class="alert d-none" role="status" aria-live="polite"></div>
+        <p class="form-text">{{ text_video_hint }}</p>
+        <label class="form-label" for="blogVideoSearch">{{ entry_media_search }}</label>
+        <input class="form-control mb-3" id="blogVideoSearch" type="search" maxlength="128">
+        <div id="blogVideoFiles" class="list-group mb-3"></div>
+        <div id="blogVideoEmpty" class="text-body-secondary py-2" aria-live="polite"></div>
+        <div class="d-flex justify-content-between align-items-center mb-3"><button type="button" class="btn btn-outline-secondary btn-sm" id="blogVideoPrevious">{{ button_media_previous }}</button><span id="blogVideoPage" class="small"></span><button type="button" class="btn btn-outline-secondary btn-sm" id="blogVideoNext">{{ button_media_next }}</button></div>
+        <hr><label class="form-label" for="blogVideoUploadFile">{{ text_video_upload_hint }}</label>
+        <div class="input-group"><input class="form-control" id="blogVideoUploadFile" type="file" accept=".mp4,.webm,.ogv,video/mp4,video/webm,video/ogg"><button class="btn btn-primary" type="button" id="blogVideoUploadButton">{{ button_video_upload }}</button></div>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ button_media_close }}</button></div>
     </div></div>

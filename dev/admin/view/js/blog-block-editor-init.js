@@ -72,6 +72,7 @@
           mediaPickers: root.dataset.mediaPickers !== 'false',
           filePicker: root.dataset.filePicker === 'false' ? false : (root.dataset.mediaPickers !== 'false'),
           audioPicker: root.dataset.audioPicker === 'true' || root.dataset.mediaPickers !== 'false',
+          videoPicker: root.dataset.videoPicker === 'true' || root.dataset.mediaPickers !== 'false',
           onChange: function (doc, validation) {
             if (hidden && (!validation.valid || !doc)) hidden.value = '';
             root.dataset.valid = validation.valid ? 'true' : 'false';

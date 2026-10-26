@@ -386,7 +386,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         ]);
     }
 
-    /** Lista arquivos de áudio locais já provisionados; sem upload ou exclusão. */
+    /** Lista arquivos de áudio locais validados; upload tem rota POST separada e não há exclusão. */
     public function audioList(): void {
         $this->load->language('blog/blog');
         if ($this->request->server['REQUEST_METHOD'] !== 'GET') { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
@@ -395,6 +395,63 @@ class Blog extends \Reamur\System\Engine\Controller {
         $result = $this->model_blog_media->getAudioPage($this->queryScalar('search'), max(1, (int)$this->queryScalar('page')));
         if (!$result['ok']) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_audio_generic')]); return; }
         $this->mediaJson(['success' => true, 'files' => $result['files'], 'total' => $result['total'], 'page' => $result['page'], 'pages' => $result['pages']]);
+    }
+
+    /** Upload de áudio local com allowlist estrita, ACL do Blog e CSRF; sem exclusão. */
+    public function audioUpload(): void {
+        $this->uploadBlogMedia('audio');
+    }
+
+    /** Lista vídeos locais validados da raiz dedicada do Blog. */
+    public function videoList(): void {
+        $this->load->language('blog/blog');
+        if ($this->request->server['REQUEST_METHOD'] !== 'GET') { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
+        if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
+        $this->load->model('blog/media');
+        $result = $this->model_blog_media->getVideoPage($this->queryScalar('search'), max(1, (int)$this->queryScalar('page')));
+        if (!$result['ok']) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_video_generic')]); return; }
+        $this->mediaJson(['success' => true, 'files' => $result['files'], 'total' => $result['total'], 'page' => $result['page'], 'pages' => $result['pages']]);
+    }
+
+    /** Upload de vídeo local com allowlist estrita, ACL do Blog e CSRF; sem exclusão. */
+    public function videoUpload(): void {
+        $this->uploadBlogMedia('video');
+    }
+
+    private function uploadBlogMedia(string $kind): void {
+        $this->load->language('blog/blog');
+        if ($this->request->server['REQUEST_METHOD'] !== 'POST') { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
+        if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
+        if ($this->requestExceedsPostMaxSize()) {
+            $limit = $kind === 'audio' ? '20 MiB' : '100 MiB';
+            $this->mediaJson(['success' => false, 'error' => sprintf($this->language->get('error_audio_video_upload_size'), $limit)]); return;
+        }
+        if (!$this->csrfValid()) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_csrf')]); return; }
+        $this->load->model('blog/media');
+        $result = $this->model_blog_media->uploadLocalBlogMedia((array)($this->request->files['file'] ?? []), $kind);
+        if (!$result['ok']) {
+            $key = match ((string)$result['error']) {
+                'size' => 'error_audio_video_upload_size',
+                'type' => $kind === 'audio' ? 'error_audio_upload_type' : 'error_video_upload_type',
+                'no_file' => 'error_media_upload_no_file',
+                'root' => 'error_audio_video_root',
+                default => 'error_audio_video_upload',
+            };
+            $limit = $kind === 'audio' ? '20 MiB' : '100 MiB';
+            $message = $key === 'error_audio_video_upload_size' ? sprintf($this->language->get($key), $limit) : $this->language->get($key);
+            $this->mediaJson(['success' => false, 'error' => $message]); return;
+        }
+        $this->mediaJson(['success' => true, 'path' => (string)$result['path'], 'name' => (string)$result['name'], 'size' => (int)$result['size']]);
+    }
+
+    private function requestExceedsPostMaxSize(): bool {
+        $raw = trim((string)ini_get('post_max_size'));
+        if ($raw === '' || $raw === '0') return false;
+        $unit = strtolower(substr($raw, -1)); $number = (float)$raw;
+        $multiplier = match ($unit) { 'k' => 1024, 'm' => 1048576, 'g' => 1073741824, default => 1 };
+        $limit = (int)($number * $multiplier);
+        $length = (int)($this->request->server['CONTENT_LENGTH'] ?? 0);
+        return $limit > 0 && $length > $limit;
     }
 
     /** Lista documentos da raiz dedicada de downloads; acesso protegido por ACL. */
@@ -529,7 +586,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             'text_block_add', 'text_block_search', 'text_block_no_results', 'text_block_category_content', 'text_block_category_media', 'text_block_category_layout',
             'text_block_outline', 'text_block_outline_empty', 'text_block_outline_label', 'text_block_initial_invalid', 'text_block_document_too_large', 'text_block_move_up', 'text_block_move_down', 'text_block_duplicate', 'text_block_transform',
             'text_block_remove', 'text_block_add_after', 'text_block_drag', 'text_block_type_paragraph', 'text_block_type_heading', 'text_block_type_list',
-            'text_block_type_image', 'text_block_type_file', 'text_block_file_source', 'text_block_file_choose', 'text_block_type_audio', 'text_block_audio_source', 'text_block_audio_choose', 'text_block_type_callout', 'text_block_type_details', 'text_block_type_spacer', 'text_block_type_code', 'text_block_code_label', 'text_block_code_default', 'text_block_code_too_large', 'text_block_spacer_height', 'text_block_spacer_16', 'text_block_spacer_32', 'text_block_spacer_48', 'text_block_spacer_64', 'text_block_spacer_96', 'text_block_details_summary_label', 'text_block_details_summary_default', 'text_block_details_default', 'text_block_callout_default', 'text_block_callout_tone', 'text_block_callout_tone_info', 'text_block_callout_tone_success', 'text_block_callout_tone_warning', 'text_block_callout_tone_danger', 'text_block_type_quote', 'text_block_type_video', 'text_block_type_button', 'text_block_type_separator',
+            'text_block_type_image', 'text_block_type_file', 'text_block_file_source', 'text_block_file_choose', 'text_block_type_audio', 'text_block_audio_source', 'text_block_audio_choose', 'text_block_type_video_file', 'text_block_video_file_source', 'text_block_video_file_choose', 'text_block_type_callout', 'text_block_type_details', 'text_block_type_spacer', 'text_block_type_code', 'text_block_code_label', 'text_block_code_default', 'text_block_code_too_large', 'text_block_spacer_height', 'text_block_spacer_16', 'text_block_spacer_32', 'text_block_spacer_48', 'text_block_spacer_64', 'text_block_spacer_96', 'text_block_details_summary_label', 'text_block_details_summary_default', 'text_block_details_default', 'text_block_callout_default', 'text_block_callout_tone', 'text_block_callout_tone_info', 'text_block_callout_tone_success', 'text_block_callout_tone_warning', 'text_block_callout_tone_danger', 'text_block_type_quote', 'text_block_type_video', 'text_block_type_button', 'text_block_type_separator',
             'text_block_type_group', 'text_block_type_columns', 'text_block_type_list_item', 'text_block_type_column', 'text_block_transform_hint', 'text_block_insert_empty',
             'text_block_status_inserted', 'text_block_status_moved', 'text_block_status_duplicated', 'text_block_status_transformed',
             'text_block_status_removed', 'text_block_status_undo', 'text_block_status_redo',
@@ -586,7 +643,7 @@ class Blog extends \Reamur\System\Engine\Controller {
                 'core/button' => $data['text_block_type_button'], 'core/separator' => $data['text_block_type_separator'],
                 'core/group' => $data['text_block_type_group'], 'core/columns' => $data['text_block_type_columns'],
                 'core/list-item' => $data['text_block_type_list_item'], 'core/column' => $data['text_block_type_column'],
-                'core/gallery' => $data['text_block_type_gallery'], 'core/cover' => $data['text_block_type_cover'], 'core/table' => $data['text_block_type_table'], 'core/file' => $data['text_block_type_file'], 'core/audio' => $data['text_block_type_audio'],
+                'core/gallery' => $data['text_block_type_gallery'], 'core/cover' => $data['text_block_type_cover'], 'core/table' => $data['text_block_type_table'], 'core/file' => $data['text_block_type_file'], 'core/audio' => $data['text_block_type_audio'], 'core/video_file' => $data['text_block_type_video_file'],
             ],
             'preformatted' => ['label' => $data['text_block_code_label'], 'defaultText' => $data['text_block_code_default'], 'tooLarge' => $data['text_block_code_too_large']],
             'spacer' => ['heightLabel' => $data['text_block_spacer_height'], 'heights' => ['16' => $data['text_block_spacer_16'], '32' => $data['text_block_spacer_32'], '48' => $data['text_block_spacer_48'], '64' => $data['text_block_spacer_64'], '96' => $data['text_block_spacer_96']]],
@@ -594,6 +651,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             'callout' => ['defaultText' => $data['text_block_callout_default'], 'tone' => $data['text_block_callout_tone'],  'tones' => ['info' => $data['text_block_callout_tone_info'], 'success' => $data['text_block_callout_tone_success'], 'warning' => $data['text_block_callout_tone_warning'], 'danger' => $data['text_block_callout_tone_danger']]],
             'file' => ['source' => $data['text_block_file_source'], 'choose' => $data['text_block_file_choose']],
             'audio' => ['source' => $data['text_block_audio_source'], 'choose' => $data['text_block_audio_choose'], 'catalogBase' => $this->catalogAssetUrl()],
+            'videoFile' => ['source' => $data['text_block_video_file_source'], 'choose' => $data['text_block_video_file_choose'], 'catalogBase' => $this->catalogAssetUrl()],
             'table' => [
                 'header' => $data['text_block_table_header'], 'addRow' => $data['text_block_table_add_row'],
                 'removeRow' => $data['text_block_table_remove_row'], 'addColumn' => $data['text_block_table_add_column'],
@@ -638,6 +696,9 @@ class Blog extends \Reamur\System\Engine\Controller {
             'listUrl' => $this->url->link('blog/blog.mediaList'),
             'downloadListUrl' => $this->url->link('blog/blog.downloadList'),
             'audioListUrl' => $this->url->link('blog/blog.audioList'),
+            'audioUploadUrl' => $this->url->link('blog/blog.audioUpload'),
+            'videoListUrl' => $this->url->link('blog/blog.videoList'),
+            'videoUploadUrl' => $this->url->link('blog/blog.videoUpload'),
             'downloadUploadUrl' => $this->url->link('blog/blog.downloadUpload'),
             'uploadUrl' => $this->url->link('blog/blog.mediaUpload'),
             'folderUrl' => $this->url->link('blog/blog.mediaFolder'),
@@ -669,6 +730,19 @@ class Blog extends \Reamur\System\Engine\Controller {
                 'audioEmpty' => $this->language->get('text_audio_empty'),
                 'audioError' => $this->language->get('error_audio_generic'),
                 'selectAudio' => $this->language->get('button_audio_select'),
+                'audioUploadHint' => $this->language->get('text_audio_upload_hint'),
+                'audioDragHint' => $this->language->get('text_audio_drag_hint'),
+                'videoLibrary' => $this->language->get('text_video_library'),
+                'videoEmpty' => $this->language->get('text_video_empty'),
+                'videoHint' => $this->language->get('text_video_hint'),
+                'videoUploadHint' => $this->language->get('text_video_upload_hint'),
+                'videoDragHint' => $this->language->get('text_video_drag_hint'),
+                'selectVideo' => $this->language->get('button_video_select'),
+                'audioUpload' => $this->language->get('button_audio_upload'),
+                'videoUpload' => $this->language->get('button_video_upload'),
+                'videoError' => $this->language->get('error_video_generic'),
+                'audioUploadError' => $this->language->get('error_audio_video_upload'),
+                'videoUploadError' => $this->language->get('error_audio_video_upload'),
             ],
         ];
 

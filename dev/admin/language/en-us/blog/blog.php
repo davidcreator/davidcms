@@ -279,13 +279,13 @@ $_['error_download_upload_type'] = 'Invalid document type or mismatched content.
 $_['error_download_upload_move'] = 'The document could not be saved. Check catalog folder permissions.';
 $_['error_download_generic'] = 'Could not load the download library.';
 
-// BDREditor core/audio: local assets only; no upload/delete.
+// BDREditor media: allowlisted audio/video uploads; no deletion.
 $_['text_block_type_audio'] = 'Audio';
 $_['text_block_audio_source'] = 'Local audio reference';
 $_['text_block_audio_choose'] = 'Choose audio from library';
 $_['text_audio_library'] = 'Audio library';
 $_['text_audio_empty'] = 'No supported audio found in catalog/view/audio/blog/.';
-$_['text_audio_hint'] = 'Local MP3, OGG, or WAV only. This increment does not add audio upload or deletion.';
+$_['text_audio_hint'] = 'Local MP3, OGG, or WAV. Uploads up to 20 MiB; the picker does not delete files.';
 $_['text_audio_drag_hint']                 = 'Drag into the editor to insert this audio.';
 $_['button_audio_select'] = 'Use this audio';
 $_['error_audio_generic'] = 'Could not load the audio library.';
@@ -352,3 +352,27 @@ $_['text_block_type_code'] = 'Preformatted code';
 $_['text_block_code_label'] = 'Preformatted code';
 $_['text_block_code_default'] = '';
 $_['text_block_code_too_large'] = 'The code block exceeds the 256 KiB limit.';
+
+// BDREditor: secure uploads to dedicated local audio/video roots; no deletion.
+$_['text_audio_upload_hint'] = 'Upload MP3, OGG, or WAV · up to 20 MiB. The file will be stored in the local Blog library.';
+$_['text_video_library'] = 'Blog video library';
+$_['text_video_empty'] = 'No local videos are registered.';
+$_['text_video_hint'] = 'Local MP4, WebM, or OGV only.';
+$_['text_video_upload_hint'] = 'Upload MP4, WebM, or OGV · up to 100 MiB. The file will be stored in the local Blog library.';
+$_['text_video_drag_hint'] = 'Drag into the editor to insert this video.';
+$_['button_audio_upload'] = 'Upload audio';
+$_['button_video_select'] = 'Use this video';
+$_['button_video_upload'] = 'Upload video';
+$_['error_audio_upload_type'] = 'Invalid audio type. Accepted: MP3, OGG, or WAV with matching content.';
+$_['error_video_upload_type'] = 'Invalid video type. Accepted: MP4, WebM, or OGV with matching content.';
+$_['error_video_generic'] = 'Could not load the video library.';
+$_['error_audio_video_upload'] = 'Could not store the media. Try again or contact an administrator.';
+$_['error_audio_video_root'] = 'The dedicated media folder is unavailable.';
+
+$_['error_audio_video_upload_size'] = 'The media exceeds the allowed limit: %s.';
+
+$_['text_block_type_video_file'] = 'Local video';
+
+$_['text_block_video_file_source'] = 'Local video path';
+
+$_['text_block_video_file_choose'] = 'Select or upload video';

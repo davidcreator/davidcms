@@ -30,9 +30,10 @@ class Page extends \Reamur\System\Engine\Controller {
             $json = substr($storedDescription, strlen($blockPrefix));
             $downloadRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/download/blog';
             $audioRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/audio/blog';
+            $videoRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/video/blog';
             $assetBase = $this->config->get('site_url', '');
             if (str_ends_with($assetBase, 'admin/')) $assetBase = substr($assetBase, 0, -strlen('admin/'));
-            $rendered = (new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot, $audioRoot))->renderJson($json, 2, $assetBase);
+            $rendered = (new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot, $audioRoot, $videoRoot))->renderJson($json, 2, $assetBase);
             $data['description'] = !empty($rendered['valid']) ? (string)$rendered['html'] : '';
             if (!empty($rendered['valid'])) $this->document->addStyle($this->config->get('site_url') . 'view/css/blog-blocks.css');
         } else {

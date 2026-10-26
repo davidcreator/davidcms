@@ -14,10 +14,18 @@ class Media extends \Reamur\System\Engine\Model {
     private const ROOT_RELATIVE = 'view/image/blog/';
     private const DOWNLOAD_ROOT_RELATIVE = 'view/download/blog/';
     private const AUDIO_ROOT_RELATIVE = 'view/audio/blog/';
+    private const VIDEO_ROOT_RELATIVE = 'view/video/blog/';
+    private const AUDIO_UPLOAD_MAX_BYTES = 20971520;
+    private const VIDEO_UPLOAD_MAX_BYTES = 104857600;
     private const AUDIO_MIME_BY_EXTENSION = [
         'mp3' => ['audio/mpeg'],
         'ogg' => ['audio/ogg', 'application/ogg'],
         'wav' => ['audio/wav', 'audio/x-wav', 'audio/wave', 'audio/vnd.wave'],
+    ];
+    private const VIDEO_MIME_BY_EXTENSION = [
+        'mp4' => ['video/mp4'],
+        'webm' => ['video/webm'],
+        'ogv' => ['video/ogg'],
     ];
     private const DOWNLOAD_MAX_BYTES = 2097152;
     private const DOWNLOAD_MIME_BY_EXTENSION = [
@@ -60,6 +68,85 @@ class Media extends \Reamur\System\Engine\Model {
         usort($files, static fn(array $a, array $b): int => strnatcasecmp($a['name'], $b['name']));
         $total = count($files); $limit = min(48, max(1, $limit)); $pages = max(1, (int)ceil($total / $limit)); $page = min($pages, max(1, $page));
         return ['ok' => true, 'files' => array_slice($files, ($page - 1) * $limit, $limit), 'total' => $total, 'page' => $page, 'pages' => $pages];
+    }
+
+    /** Lista arquivos locais de vídeo já cadastrados na raiz dedicada. */
+    public function getVideoPage(string $search, int $page, int $limit = self::PAGE_LIMIT): array {
+        $root = $this->videoRootPath();
+        $base = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog';
+        foreach ([$base, $base . '/view', $base . '/view/video', $root] as $path) if (is_link($path)) return ['ok' => false, 'error' => 'video_root_unavailable'];
+        if (!is_dir($root)) return ['ok' => true, 'files' => [], 'total' => 0, 'page' => 1, 'pages' => 1];
+        $entries = scandir($root);
+        if ($entries === false) return ['ok' => false, 'error' => 'video_root_unreadable'];
+        $search = trim(mb_substr($search, 0, 128)); $files = [];
+        foreach ($entries as $entry) {
+            if ($entry === '.' || $entry === '..' || $entry === 'index.html' || str_starts_with($entry, '.')) continue;
+            $path = $root . DIRECTORY_SEPARATOR . $entry;
+            if (is_link($path) || !is_file($path) || !$this->isAllowedVideo($path, $entry)) continue;
+            if ($search !== '' && mb_stripos($entry, $search) === false) continue;
+            $size = filesize($path);
+            $files[] = ['name' => $entry, 'path' => self::VIDEO_ROOT_RELATIVE . $entry, 'size' => $size === false ? 0 : (int)$size];
+        }
+        usort($files, static fn(array $a, array $b): int => strnatcasecmp($a['name'], $b['name']));
+        $total = count($files); $limit = min(48, max(1, $limit)); $pages = max(1, (int)ceil($total / $limit)); $page = min($pages, max(1, $page));
+        return ['ok' => true, 'files' => array_slice($files, ($page - 1) * $limit, $limit), 'total' => $total, 'page' => $page, 'pages' => $pages];
+    }
+
+    /** Upload de áudio/vídeo limitado por allowlist de extensão + MIME real e raiz dedicada. */
+    public function uploadLocalBlogMedia(array $file, string $kind): array {
+        if (!in_array($kind, ['audio', 'video'], true)) return ['ok' => false, 'error' => 'type'];
+        $error = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE); $tmp = (string)($file['tmp_name'] ?? '');
+        if (in_array($error, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) return ['ok' => false, 'error' => 'size'];
+        if ($tmp === '' || $error !== UPLOAD_ERR_OK || !is_uploaded_file($tmp)) return ['ok' => false, 'error' => 'no_file'];
+        $limit = $kind === 'audio' ? self::AUDIO_UPLOAD_MAX_BYTES : self::VIDEO_UPLOAD_MAX_BYTES;
+        $actualSize = filesize($tmp); $declaredSize = (int)($file['size'] ?? 0);
+        if ($actualSize === false || $declaredSize <= 0 || $actualSize !== $declaredSize || $actualSize > $limit) return ['ok' => false, 'error' => 'size'];
+        $types = $kind === 'audio' ? self::AUDIO_MIME_BY_EXTENSION : self::VIDEO_MIME_BY_EXTENSION;
+        $extension = strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
+        if (!isset($types[$extension])) return ['ok' => false, 'error' => 'type'];
+        $finfo = new \finfo(FILEINFO_MIME_TYPE); $mime = (string)($finfo->file($tmp) ?: '');
+        if (!in_array($mime, $types[$extension], true)) return ['ok' => false, 'error' => 'type'];
+        $catalog = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog';
+        $view = $catalog . '/view'; $kindParent = $view . '/' . $kind; $root = $kindParent . '/blog';
+        foreach ([$catalog, $view, $kindParent, $root] as $path) if (is_link($path)) return ['ok' => false, 'error' => 'root'];
+        if (!is_dir($catalog) || !is_dir($view)) return ['ok' => false, 'error' => 'root'];
+        if (!is_dir($kindParent) && !@mkdir($kindParent, 0755, true) && !is_dir($kindParent)) return ['ok' => false, 'error' => 'root'];
+        if (!is_dir($root) && !@mkdir($root, 0755, true) && !is_dir($root)) return ['ok' => false, 'error' => 'root'];
+        foreach ([$catalog, $view, $kindParent, $root] as $path) if (is_link($path)) return ['ok' => false, 'error' => 'root'];
+        $indexFile = $root . DIRECTORY_SEPARATOR . 'index.html';
+        if (is_link($indexFile)) return ['ok' => false, 'error' => 'root'];
+        if (!is_file($indexFile) && @file_put_contents($indexFile, '', LOCK_EX) === false) return ['ok' => false, 'error' => 'root'];
+        $realCatalog = realpath($catalog); $realRoot = realpath($root);
+        if ($realCatalog === false || $realRoot === false || !str_starts_with($realRoot, rtrim($realCatalog, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) return ['ok' => false, 'error' => 'root'];
+        try { $filename = bin2hex(random_bytes(16)) . '.' . $extension; } catch (\Throwable $e) { return ['ok' => false, 'error' => 'move']; }
+        $destination = $realRoot . DIRECTORY_SEPARATOR . $filename;
+        if (file_exists($destination) || is_link($destination) || !move_uploaded_file($tmp, $destination)) return ['ok' => false, 'error' => 'move'];
+        @chmod($destination, 0644);
+        return ['ok' => true, 'name' => $filename, 'path' => ($kind === 'audio' ? self::AUDIO_ROOT_RELATIVE : self::VIDEO_ROOT_RELATIVE) . $filename, 'size' => $actualSize];
+    }
+
+    /** Confirma que referência local de vídeo fica na raiz dedicada e tem MIME válido. */
+    public function videoReferenceExists(string $relative): bool {
+        if (!preg_match('#^view/video/blog/([A-Za-z0-9][A-Za-z0-9._-]{0,179})$#D', $relative) || str_contains($relative, '..')) return false;
+        $root = $this->videoRootPath(); $base = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog';
+        foreach ([$base, $base . '/view', $base . '/view/video', $root] as $path) if (is_link($path)) return false;
+        return $this->isAllowedVideo($root . DIRECTORY_SEPARATOR . basename($relative), basename($relative));
+    }
+
+    private function isAllowedVideo(string $path, string $filename): bool {
+        if ($filename === '' || strlen($filename) > 180 || preg_match('/[\\x00-\\x20\\x7F]/', $filename)
+            || str_contains($filename, '/') || str_contains($filename, chr(92)) || str_contains($filename, '..')
+            || is_link($path) || !is_file($path)) return false;
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        if (!isset(self::VIDEO_MIME_BY_EXTENSION[$extension])) return false;
+        $size = filesize($path);
+        if ($size === false || $size <= 0 || $size > self::VIDEO_UPLOAD_MAX_BYTES) return false;
+        $finfo = new \finfo(FILEINFO_MIME_TYPE); $mime = (string)($finfo->file($path) ?: '');
+        return in_array($mime, self::VIDEO_MIME_BY_EXTENSION[$extension], true);
+    }
+
+    private function videoRootPath(): string {
+        return rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/video/blog';
     }
 
     /** Confirma referência local existente, sem upload/exclusão, symlink ou traversal. */

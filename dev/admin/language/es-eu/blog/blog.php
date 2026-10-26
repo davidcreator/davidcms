@@ -279,13 +279,13 @@ $_['error_download_upload_type'] = 'Tipo de documento inválido o contenido inco
 $_['error_download_upload_move'] = 'No se pudo guardar el documento. Comprueba los permisos de la carpeta catalog.';
 $_['error_download_generic'] = 'No se pudo cargar la biblioteca de descargas.';
 
-// BDREditor core/audio: local assets only; no upload/delete.
+// BDREditor media: allowlisted audio/video uploads; no deletion.
 $_['text_block_type_audio'] = 'Audio';
 $_['text_block_audio_source'] = 'Referencia local del audio';
 $_['text_block_audio_choose'] = 'Elegir audio de la biblioteca';
 $_['text_audio_library'] = 'Biblioteca de audio';
 $_['text_audio_empty'] = 'No se encontró audio compatible en catalog/view/audio/blog/.';
-$_['text_audio_hint'] = 'Solo MP3, OGG o WAV locales. Este incremento no añade subida ni eliminación de audio.';
+$_['text_audio_hint'] = 'Audio MP3, OGG o WAV local. Subidas hasta 20 MiB; el selector no elimina archivos.';
 $_['text_audio_drag_hint']                 = 'Arrastra al editor para insertar este audio.';
 $_['button_audio_select'] = 'Usar este audio';
 $_['error_audio_generic'] = 'No se pudo cargar la biblioteca de audio.';
@@ -352,3 +352,27 @@ $_['text_block_type_code'] = 'Código preformateado';
 $_['text_block_code_label'] = 'Código preformateado';
 $_['text_block_code_default'] = '';
 $_['text_block_code_too_large'] = 'El bloque de código supera el límite de 256 KiB.';
+
+// BDREditor: secure uploads to dedicated local audio/video roots; no deletion.
+$_['text_audio_upload_hint'] = 'Subir MP3, OGG o WAV · hasta 20 MiB. El archivo se guardará en la biblioteca local del Blog.';
+$_['text_video_library'] = 'Biblioteca de vídeos del Blog';
+$_['text_video_empty'] = 'No hay vídeos locales registrados.';
+$_['text_video_hint'] = 'Solo MP4, WebM u OGV locales.';
+$_['text_video_upload_hint'] = 'Subir MP4, WebM u OGV · hasta 100 MiB. El archivo se guardará en la biblioteca local del Blog.';
+$_['text_video_drag_hint'] = 'Arrastra al editor para insertar este vídeo.';
+$_['button_audio_upload'] = 'Subir audio';
+$_['button_video_select'] = 'Usar este vídeo';
+$_['button_video_upload'] = 'Subir vídeo';
+$_['error_audio_upload_type'] = 'Tipo de audio no válido. Se aceptan MP3, OGG o WAV con contenido coincidente.';
+$_['error_video_upload_type'] = 'Tipo de vídeo no válido. Se aceptan MP4, WebM u OGV con contenido coincidente.';
+$_['error_video_generic'] = 'No se pudo cargar la biblioteca de vídeo.';
+$_['error_audio_video_upload'] = 'No se pudo guardar el archivo multimedia. Inténtalo de nuevo o contacta con administración.';
+$_['error_audio_video_root'] = 'La carpeta multimedia dedicada no está disponible.';
+
+$_['error_audio_video_upload_size'] = 'El archivo multimedia supera el límite permitido: %s.';
+
+$_['text_block_type_video_file'] = 'Vídeo local';
+
+$_['text_block_video_file_source'] = 'Ruta local del vídeo';
+
+$_['text_block_video_file_choose'] = 'Seleccionar o subir vídeo';

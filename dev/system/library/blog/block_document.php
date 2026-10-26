@@ -143,11 +143,11 @@ class BlockDocument {
         if ($keys !== ['attributes', 'children', 'content', 'id', 'type']) { $errors[] = 'node_shape_invalid'; return; }
         if (!is_string($node['id']) || !preg_match('/^[A-Za-z0-9_-]{1,96}$/D', $node['id']) || isset($ids[$node['id']])) $errors[] = 'node_id_invalid_or_duplicate';
         else $ids[$node['id']] = true;
-        $types = ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/callout','core/details','core/spacer','core/code','core/image','core/video_embed','core/button','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row','core/table-cell','core/file','core/audio'];
+        $types = ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/callout','core/details','core/spacer','core/code','core/image','core/video_embed','core/button','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row','core/table-cell','core/file','core/audio','core/video_file'];
         if (!is_string($node['type']) || !in_array($node['type'], $types, true)) { $errors[] = 'unknown_block_type'; return; }
         if (!is_array($node['attributes']) || !is_array($node['children']) || !$this->isSequentialList($node['children'])) { $errors[] = 'node_value_type_invalid'; return; }
         $type = $node['type']; $attrs = $node['attributes'];
-        if ($version === self::FORMAT_VERSION && in_array($type, ['core/gallery','core/cover'], true)) $errors[] = 'media_block_requires_v2';
+        if ($version === self::FORMAT_VERSION && in_array($type, ['core/gallery','core/cover','core/audio','core/video_file','core/file'], true)) $errors[] = 'media_block_requires_v2';
         if ($version === self::FORMAT_VERSION && $type === 'core/callout') $errors[] = 'callout_requires_v2';
         if ($version === self::FORMAT_VERSION && $type === 'core/details') $errors[] = 'details_requires_v2';
         if ($version === self::FORMAT_VERSION && $type === 'core/spacer') $errors[] = 'spacer_requires_v2';
@@ -159,7 +159,7 @@ class BlockDocument {
             'core/video_embed' => ['url'], 'core/button' => ['url'], 'core/separator' => [],
             'core/group' => [], 'core/columns' => ['count'], 'core/column' => [],
             'core/gallery' => ['columns','align'], 'core/cover' => ['src','alt','align'],
-            'core/table' => ['header'], 'core/table-row' => [], 'core/table-cell' => [], 'core/file' => ['src'], 'core/audio' => ['src']
+            'core/table' => ['header'], 'core/table-row' => [], 'core/table-cell' => [], 'core/file' => ['src'], 'core/audio' => ['src'], 'core/video_file' => ['src']
         ];
         if ($version === self::RICH_TEXT_FORMAT_VERSION) {
             $allowedAttrs['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
@@ -167,6 +167,7 @@ class BlockDocument {
             $allowedAttrs['core/table'] = ['header'];
             $allowedAttrs['core/file'] = ['src'];
             $allowedAttrs['core/audio'] = ['src'];
+            $allowedAttrs['core/video_file'] = ['src'];
         }
         if (array_diff(array_keys($attrs), $allowedAttrs[$type])) $errors[] = 'attributes_not_allowlisted';
         if ($type === 'core/paragraph' && isset($attrs['align']) && !in_array($attrs['align'], ['left','center','right'], true)) $errors[] = 'alignment_invalid';
@@ -174,6 +175,7 @@ class BlockDocument {
         if ($type === 'core/list' && (!isset($attrs['ordered']) || !is_bool($attrs['ordered']))) $errors[] = 'list_order_invalid';
         if ($type === 'core/file' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeDownloadPath($attrs['src']) || !is_array($node['content']) || !$this->hasVisibleInlineText($node['content']))) $errors[] = 'file_attributes_invalid';
         if ($type === 'core/audio' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeAudioPath($attrs['src']) || !is_array($node['content']) || !$this->hasVisibleInlineText($node['content']))) $errors[] = 'audio_attributes_invalid';
+        if ($type === 'core/video_file' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeVideoPath($attrs['src']) || $node['children'] || $node['content'] !== '')) $errors[] = 'video_file_attributes_invalid';
         if ($type === 'core/image' && (!isset($attrs['src']) || !$this->isSafeImagePath($attrs['src']) || !isset($attrs['alt']) || !is_string($attrs['alt']) || (isset($attrs['title']) && !is_string($attrs['title'])))) $errors[] = 'image_attributes_invalid';
         if ($type === 'core/group' && isset($attrs['outline_label']) && (!is_string($attrs['outline_label']) || strlen($attrs['outline_label']) > 160 || !preg_match('//u', $attrs['outline_label']))) $errors[] = 'outline_label_invalid';
         if ($type === 'core/image') {
@@ -207,7 +209,7 @@ class BlockDocument {
         } elseif (!is_string($node['content']) || $node['content'] !== '') {
             $errors[] = 'non_text_content_invalid';
         }
-        if (in_array($type, ['core/list','core/image','core/video_embed','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row'], true) && $node['content'] !== '') $errors[] = 'content_not_allowed';
+        if (in_array($type, ['core/list','core/image','core/video_embed','core/video_file','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row'], true) && $node['content'] !== '') $errors[] = 'content_not_allowed';
         if ($type === 'core/list-item' && ($parentType !== 'core/list' || count($node['children']) > 0)) $errors[] = 'list_item_parent_invalid';
         if ($type === 'core/column' && $parentType !== 'core/columns') $errors[] = 'column_parent_invalid';
         if ($type === 'core/table-row' && $parentType !== 'core/table') $errors[] = 'table_row_parent_invalid';
@@ -377,6 +379,11 @@ class BlockDocument {
     private function isSafeAudioPath($src): bool {
         if (!is_string($src) || !preg_match('#^view/audio/blog/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$#D', $src) || str_contains($src, '..')) return false;
         return in_array(strtolower(pathinfo($src, PATHINFO_EXTENSION)), ['mp3','ogg','wav'], true);
+    }
+
+    private function isSafeVideoPath($src): bool {
+        if (!is_string($src) || !preg_match('#^view/video/blog/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$#D', $src) || str_contains($src, '..')) return false;
+        return in_array(strtolower(pathinfo($src, PATHINFO_EXTENSION)), ['mp4','webm','ogv'], true);
     }
 
     private function isSafeDownloadPath($src): bool {

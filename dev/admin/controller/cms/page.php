@@ -243,7 +243,7 @@ class Page extends \Reamur\System\Engine\Controller {
             'entry_meta_title', 'entry_meta_description', 'entry_keyword',
             'entry_status', 'entry_sort_order',
             'button_save', 'button_cancel', 'text_enabled', 'text_disabled',
-            'text_meta_group', 'help_sort_order', 'help_description', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_editor_import_file', 'text_editor_import_success', 'text_editor_preview_title', 'text_editor_preview_mode', 'text_editor_edit_mode', 'text_editor_import_hint', 'text_editor_import_unavailable', 'text_editor_import_error', 'text_editor_import_audio_library', 'text_editor_preview_video_link', 'text_editor_preview_video_open', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no',
+            'text_meta_group', 'help_sort_order', 'help_description', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_editor_import_file', 'text_editor_import_success', 'text_editor_preview_title', 'text_editor_preview_mode', 'text_editor_edit_mode', 'text_editor_import_hint', 'text_editor_import_unavailable', 'text_editor_import_error', 'text_editor_import_audio_library', 'text_editor_import_video_library', 'text_editor_preview_video_link', 'text_editor_preview_video_open', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
@@ -269,7 +269,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 'text_media_upload_success', 'text_media_folder_created', 'text_media_file_deleted',
                 'text_media_folder_deleted', 'text_media_upload_hint', 'text_media_no_folders',
                 'text_download_library', 'text_download_empty', 'text_download_upload', 'text_download_hint', 'text_download_limit', 'button_download_select', 'button_download_upload',
-                'text_audio_library', 'text_audio_empty', 'text_audio_hint', 'text_audio_drag_hint', 'button_audio_select', 'error_audio_generic',
+                'text_audio_library', 'text_audio_empty', 'text_audio_hint', 'text_audio_drag_hint', 'text_audio_upload_hint', 'button_audio_select', 'button_audio_upload', 'error_audio_generic', 'error_audio_upload_type', 'text_video_library', 'text_video_empty', 'text_video_hint', 'text_video_upload_hint', 'text_video_drag_hint', 'button_video_select', 'button_video_upload', 'error_video_generic', 'error_video_upload_type', 'error_audio_video_upload', 'error_audio_video_root', 'error_media_upload_no_file',
                 'error_download_upload_no_file', 'error_download_upload_size', 'error_download_upload_type', 'error_download_upload_move', 'error_download_generic',
                 'entry_media_search', 'entry_media_folder_name', 'entry_media_external_url',
                 'button_media_library', 'button_media_upload', 'button_media_create_folder',
@@ -283,7 +283,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 'text_block_add', 'text_block_search', 'text_block_no_results', 'text_block_category_content', 'text_block_category_media', 'text_block_category_layout',
                 'text_block_outline', 'text_block_outline_empty', 'text_block_outline_label', 'text_block_initial_invalid', 'text_block_document_too_large', 'text_block_move_up', 'text_block_move_down', 'text_block_duplicate', 'text_block_transform',
                 'text_block_remove', 'text_block_add_after', 'text_block_drag', 'text_block_type_paragraph', 'text_block_type_heading', 'text_block_type_list',
-                'text_block_type_image', 'text_block_type_file', 'text_block_file_source', 'text_block_file_choose', 'text_block_type_audio', 'text_block_audio_source', 'text_block_audio_choose', 'text_block_type_callout', 'text_block_type_details', 'text_block_type_spacer', 'text_block_type_code', 'text_block_code_label', 'text_block_code_default', 'text_block_code_too_large', 'text_block_spacer_height', 'text_block_spacer_16', 'text_block_spacer_32', 'text_block_spacer_48', 'text_block_spacer_64', 'text_block_spacer_96', 'text_block_details_summary_label', 'text_block_details_summary_default', 'text_block_details_default', 'text_block_callout_default', 'text_block_callout_tone', 'text_block_callout_tone_info', 'text_block_callout_tone_success', 'text_block_callout_tone_warning', 'text_block_callout_tone_danger', 'text_block_type_quote', 'text_block_type_video', 'text_block_type_button', 'text_block_type_separator',
+                'text_block_type_image', 'text_block_type_file', 'text_block_file_source', 'text_block_file_choose', 'text_block_type_audio', 'text_block_audio_source', 'text_block_audio_choose', 'text_block_type_video_file', 'text_block_video_file_source', 'text_block_video_file_choose', 'text_block_type_callout', 'text_block_type_details', 'text_block_type_spacer', 'text_block_type_code', 'text_block_code_label', 'text_block_code_default', 'text_block_code_too_large', 'text_block_spacer_height', 'text_block_spacer_16', 'text_block_spacer_32', 'text_block_spacer_48', 'text_block_spacer_64', 'text_block_spacer_96', 'text_block_details_summary_label', 'text_block_details_summary_default', 'text_block_details_default', 'text_block_callout_default', 'text_block_callout_tone', 'text_block_callout_tone_info', 'text_block_callout_tone_success', 'text_block_callout_tone_warning', 'text_block_callout_tone_danger', 'text_block_type_quote', 'text_block_type_video', 'text_block_type_button', 'text_block_type_separator',
                 'text_block_type_group', 'text_block_type_columns', 'text_block_type_list_item', 'text_block_type_column', 'text_block_transform_hint', 'text_block_insert_empty',
                 'text_block_status_inserted', 'text_block_status_moved', 'text_block_status_duplicated', 'text_block_status_transformed',
                 'text_block_status_removed', 'text_block_status_undo', 'text_block_status_redo',
@@ -312,7 +312,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 'ribbonHome' => $data['text_editor_home'], 'ribbonInsert' => $data['text_editor_insert'], 'ribbonView' => $data['text_editor_view'],
                 'groupClipboard' => $data['text_editor_clipboard'], 'groupTextFormat' => $data['text_editor_text_format'], 'groupParagraphAlign' => $data['text_editor_paragraph_alignment'],
                 'groupInsert' => $data['text_editor_group_insert'], 'groupPanels' => $data['text_editor_group_panels'], 'groupPreview' => $data['text_editor_group_preview'],
-                'closePanel' => $data['text_editor_close_panel'], 'importFile' => $data['text_editor_import_file'], 'importSuccess' => $data['text_editor_import_success'], 'previewTitle' => $data['text_editor_preview_title'], 'previewMode' => $data['text_editor_preview_mode'], 'editMode' => $data['text_editor_edit_mode'], 'importHint' => $data['text_editor_import_hint'], 'importUnavailable' => $data['text_editor_import_unavailable'], 'importError' => $data['text_editor_import_error'], 'importAudioLibrary' => $data['text_editor_import_audio_library'], 'previewVideoLink' => $data['text_editor_preview_video_link'], 'previewVideoOpen' => $data['text_editor_preview_video_open'], 'alignLeft' => $data['text_editor_align_left'], 'alignCenter' => $data['text_editor_align_center'], 'alignRight' => $data['text_editor_align_right'],
+                'closePanel' => $data['text_editor_close_panel'], 'importFile' => $data['text_editor_import_file'], 'importSuccess' => $data['text_editor_import_success'], 'previewTitle' => $data['text_editor_preview_title'], 'previewMode' => $data['text_editor_preview_mode'], 'editMode' => $data['text_editor_edit_mode'], 'importHint' => $data['text_editor_import_hint'], 'importUnavailable' => $data['text_editor_import_unavailable'], 'importError' => $data['text_editor_import_error'], 'importAudioLibrary' => $data['text_editor_import_audio_library'], 'importVideoLibrary' => $data['text_editor_import_video_library'], 'previewVideoLink' => $data['text_editor_preview_video_link'], 'previewVideoOpen' => $data['text_editor_preview_video_open'], 'alignLeft' => $data['text_editor_align_left'], 'alignCenter' => $data['text_editor_align_center'], 'alignRight' => $data['text_editor_align_right'],
                 'saveStateSaved' => $data['text_block_save_state_saved'], 'saveStateUnsaved' => $data['text_block_save_state_unsaved'], 'saveStateSaving' => $data['text_block_save_state_saving'],
                 'addBlock' => $data['text_block_add'], 'searchBlocks' => $data['text_block_search'], 'noBlocks' => $data['text_block_no_results'],
                 'categoryContent' => $data['text_block_category_content'], 'categoryMedia' => $data['text_block_category_media'], 'categoryLayout' => $data['text_block_category_layout'],
@@ -344,7 +344,7 @@ class Page extends \Reamur\System\Engine\Controller {
                     'core/button' => $data['text_block_type_button'], 'core/separator' => $data['text_block_type_separator'],
                     'core/group' => $data['text_block_type_group'], 'core/columns' => $data['text_block_type_columns'],
                     'core/list-item' => $data['text_block_type_list_item'], 'core/column' => $data['text_block_type_column'],
-                    'core/gallery' => $data['text_block_type_gallery'], 'core/cover' => $data['text_block_type_cover'], 'core/table' => $data['text_block_type_table'], 'core/file' => $data['text_block_type_file'], 'core/audio' => $data['text_block_type_audio'],
+                    'core/gallery' => $data['text_block_type_gallery'], 'core/cover' => $data['text_block_type_cover'], 'core/table' => $data['text_block_type_table'], 'core/file' => $data['text_block_type_file'], 'core/audio' => $data['text_block_type_audio'], 'core/video_file' => $data['text_block_type_video_file'],
                 ],
                 'preformatted' => ['label' => $data['text_block_code_label'], 'defaultText' => $data['text_block_code_default'], 'tooLarge' => $data['text_block_code_too_large']],
                 'spacer' => ['heightLabel' => $data['text_block_spacer_height'], 'heights' => ['16' => $data['text_block_spacer_16'], '32' => $data['text_block_spacer_32'], '48' => $data['text_block_spacer_48'], '64' => $data['text_block_spacer_64'], '96' => $data['text_block_spacer_96']]],
@@ -352,6 +352,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 'callout' => ['defaultText' => $data['text_block_callout_default'], 'tone' => $data['text_block_callout_tone'],  'tones' => ['info' => $data['text_block_callout_tone_info'], 'success' => $data['text_block_callout_tone_success'], 'warning' => $data['text_block_callout_tone_warning'], 'danger' => $data['text_block_callout_tone_danger']]],
                 'file' => ['source' => $data['text_block_file_source'], 'choose' => $data['text_block_file_choose']],
                 'audio' => ['source' => $data['text_block_audio_source'], 'choose' => $data['text_block_audio_choose'], 'catalogBase' => $this->pageCatalogAssetUrl()],
+                'videoFile' => ['source' => $data['text_block_video_file_source'], 'choose' => $data['text_block_video_file_choose'], 'catalogBase' => $this->pageCatalogAssetUrl()],
                 'table' => [
                     'header' => $data['text_block_table_header'], 'addRow' => $data['text_block_table_add_row'],
                     'removeRow' => $data['text_block_table_remove_row'], 'addColumn' => $data['text_block_table_add_column'],
@@ -386,12 +387,23 @@ class Page extends \Reamur\System\Engine\Controller {
                 $data['can_use_audio_catalog'] = $this->user->hasPermission('modify', 'blog/blog');
                 $data['media_config'] = [
                     'audioListUrl' => $this->url->link('blog/blog.audioList'),
+                    'audioUploadUrl' => $this->url->link('blog/blog.audioUpload'),
+                    'videoListUrl' => $this->url->link('blog/blog.videoList'),
+                    'videoUploadUrl' => $this->url->link('blog/blog.videoUpload'),
+                    'csrfToken' => \Reamur\System\Library\Security\Csrf::token($this->session),
                     'strings' => [
-                        'audioError' => $data['error_audio_generic'],
+                        'audioError' => $data['error_audio_generic'], 'chooseFile' => $data['error_media_upload_no_file'], 'audioUploadError' => $data['error_audio_video_upload'],
                         'loading' => $data['text_media_loading'],
                         'audioEmpty' => $data['text_audio_empty'],
                         'audioDragHint' => $data['text_audio_drag_hint'],
                         'selectAudio' => $data['button_audio_select'],
+                        'audioUploadHint' => $data['text_audio_upload_hint'],
+                        'videoLibrary' => $data['text_video_library'], 'videoEmpty' => $data['text_video_empty'],
+                        'videoHint' => $data['text_video_hint'], 'videoUploadHint' => $data['text_video_upload_hint'],
+                        'videoDragHint' => $data['text_video_drag_hint'], 'selectVideo' => $data['button_video_select'],
+                        'audioUpload' => $data['button_audio_upload'], 'videoUpload' => $data['button_video_upload'],
+                        'audioUploadError' => $data['error_audio_video_upload'], 'videoUploadError' => $data['error_audio_video_upload'],
+                        'videoError' => $data['error_video_generic'],
                     ],
                 ];
 
