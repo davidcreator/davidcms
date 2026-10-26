@@ -51,10 +51,21 @@
 3. Opcional: use um script sintaticamente inválido em um bloco descartável. Salvar deve continuar possível; no público, a falha deve permanecer contida no frame e o resto da página deve continuar operável.
 4. Opcional: tente inserir mais de 12 formas ou mais de 4 luzes. O Inspetor deve desabilitar a inclusão no limite; deve manter pelo menos uma forma e uma luz.
 
+## Automação Playwright opcional
+
+`tools/e2e/threejs_cms_playwright.cjs` automatiza os casos de inserção, salvamento, reabertura e execução de `onFrame` na thumb pública. Ele grava conteúdo na página selecionada; execute somente em uma página **descartável** num ambiente de teste isolado.
+
+1. Instale Playwright apenas no clone/ambiente de teste, sem alterar dependências do produto: `npm install --no-save playwright` e `npx playwright install chromium`.
+2. Faça login manualmente e salve o estado local do navegador: `npx playwright codegen --save-storage="$HOME/.cache/reamur-cms-test-state.json" "$CMS_EDIT_URL"`. Mantenha o arquivo fora do repositório; nunca o compartilhe nem commite.
+3. Defina `CMS_EDIT_URL`, `PUBLIC_PAGE_URL`, `PLAYWRIGHT_STORAGE_STATE` e `E2E_CONFIRM_DISPOSABLE=1`. O editor e a URL pública devem apontar para a mesma página de teste.
+4. Execute `node tools/e2e/threejs_cms_playwright.cjs`. Use `HEADLESS=0` para observar o navegador. O runner não lê nem imprime senhas/tokens.
+
+A automação **não** testa as novas configurações administrativas do Hero/404: valide essas telas manualmente em ambiente de teste, alternando os controles, salvando, recarregando e confirmando que home/404 mantêm o fallback quando desativadas.
+
 ## Resultado a registrar
 
 Devolva somente uma tabela curta com `PASS`/`FAIL` para A, B e C, navegador/versão e mensagens de erro sanitizadas (sem tokens, credenciais, URLs privadas ou dados de usuários). Em caso de falha, informe o passo, o que era esperado e o que ocorreu; não envie cookies, credenciais, dumps ou logs runtime completos.
 
-## O que esta sessão confirmou
+## O que esta auditoria confirmou
 
-A branch `main` (`bf38248a69bb3561d022b151197a5a262cb5131d`) foi consultada somente para leitura. Os 21 arquivos de código, idioma, documentação e testes alterados desde o pacote anterior coincidiram byte a byte com a entrega. Checkers estáticos e a importação local do Three.js foram executados; isso **não substitui** os casos acima em um runtime CMS autenticado.
+A branch `main` foi verificada em `df624f746b5cbcbd009cd01a38aa76c9a6dea1b9`. Os 22 arquivos do pacote `ThreeJS-Native-System-Admin-Catalog` coincidem byte a byte com esse HEAD. O checker estático detectou dois itens de QA ausentes/desatualizados no HEAD: o runner Playwright referido pelo checker não estava no tree e o checker de cache esperava `threejs-4`, enquanto os controllers já servem `threejs-5`. Esta correção inclui o runner e atualiza a expectativa. A execução funcional ainda requer um runtime CMS autenticado; não executar em produção.
