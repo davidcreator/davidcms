@@ -140,3 +140,23 @@ $_['text_block_threejs_scene_config'] = 'Scene configuration (JSON)';
 $_['text_block_threejs_config_hint'] = 'Declarative scene, no JavaScript: up to 12 shapes (box, sphere, torus, cone, cylinder, icosahedron, torusKnot), 4 lights, and bounded animations. Three.js is self-hosted; do not use scripts, URLs, textures, or external resources.';
 
 $_['text_block_threejs_preview_hint'] = 'Public WebGL preview; the editor shows this configuration and never executes user code.';
+
+$_['text_block_threejs_objects'] = 'Scene objects';
+
+$_['text_block_threejs_lights'] = 'Lighting';
+
+$_['text_block_threejs_addShape'] = 'Add shape';
+
+$_['text_block_threejs_addLight'] = 'Add light';
+
+$_['text_block_threejs_remove'] = 'Remove';
+
+$_['text_block_threejs_color'] = 'Color';
+
+$_['text_block_threejs_animation'] = 'Animation';
+
+$_['text_block_threejs_intensity'] = 'Intensity';
+
+$_['text_block_threejs_invalidScene'] = 'Scene JSON is invalid or out of bounds. Correct the configuration to edit this scene.';
+
+$_['text_block_threejs_sceneConfig'] = 'Scene JSON (advanced)';

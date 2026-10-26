@@ -1,6 +1,6 @@
 # Thumbs 3D declarativas no BDREditor
 
-O bloco `core/threejs_thumb` pode ser inserido em Páginas CMS e posts do Blog. O BDREditor armazena a configuração declarativa em `scene_json` dentro do envelope v2 existente; não requer migration nem gravação paralela. A área Inspetor permite alterar um rótulo acessível e a configuração JSON.
+O bloco `core/threejs_thumb` pode ser inserido em Páginas CMS e posts do Blog. O BDREditor armazena a configuração declarativa em `scene_json` dentro do envelope v2 existente; não requer migration nem gravação paralela. A área Inspetor permite alterar o rótulo acessível e a configuração. Os controles **Adicionar forma** e **Adicionar luz** inserem elementos na cena; cada item permite editar tipo/cor/animação ou tipo/cor/intensidade, e pode ser removido respeitando os limites mínimos. O campo JSON permanece disponível para ajustes avançados.
 
 ## Segurança e runtime
 
@@ -8,7 +8,7 @@ O bloco `core/threejs_thumb` pode ser inserido em Páginas CMS e posts do Blog. 
 - O renderizador público só inclui JS/CSS do runtime quando o documento validado contém uma thumb.
 - O backend valida a allowlist e limites de cena antes da renderização. Não são aceitos scripts, URLs, texturas, modelos externos ou JavaScript arbitrário.
 - O runtime desenha WebGL ao entrar na área visível, pausa fora dela, reage a redimensionamento e respeita `prefers-reduced-motion`. Sem suporte a WebGL ou APIs de observação, o rótulo permanece como fallback.
-- A edição do JSON no inspetor não executa código nem tenta carregar uma prévia WebGL administrativa.
+- Os controles de cena atualizam o mesmo JSON validado; a edição manual do campo avançado não executa código nem carrega prévia WebGL administrativa.
 
 ## Formato v1 da cena
 

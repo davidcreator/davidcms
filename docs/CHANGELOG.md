@@ -28,3 +28,8 @@
 - Incluído runtime Three.js local/self-hosted (0.186.1), renderer público condicional e validação estrita de cena; sem código arbitrário, CDN, modelos ou assets externos.
 - Incluídos textos PT-BR, EN-US e ES-EU, CSS administrativo/público e checker estático específico.
 - Ver `docs/THREEJS_THUMB.md` para esquema, limites e verificações.
+
+## Correção — inserir formas dentro da cena Three.js (2026-10-26)
+- O Inspetor do bloco agora tem ações dedicadas para adicionar/remover formas e luzes e editar tipo, cor, animação e intensidade.
+- Inclusão respeita o máximo de 12 formas/4 luzes e preserva pelo menos uma de cada; novas formas recebem posições distintas para ficarem visíveis.
+- Mantido o JSON avançado, com validação antes de gravar cada alteração, undo/redo e traduções PT-BR/EN-US/ES-EU.

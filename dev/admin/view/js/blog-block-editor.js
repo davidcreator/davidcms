@@ -512,6 +512,8 @@
         if (importInput && importInput.files && importInput.files[0]) { const file=importInput.files[0]; importInput.value=''; this.importLocalFile(file); return; }
         const transform = event.target.closest('[data-transform-node]');
         if (transform && transform.value) { this.transformNode(transform.dataset.transformNode, transform.value); return; }
+        const sceneField = event.target.closest('[data-threejs-kind]');
+        if (sceneField) { this.updateThreeJsEntry(sceneField.dataset.nodeId, sceneField.dataset.threejsKind, Number(sceneField.dataset.index), sceneField.dataset.key, sceneField.value); return; }
         const field = event.target.closest('[data-attribute]');
         if (!field) return;
         const id = field.dataset.nodeId, key = field.dataset.attribute;
@@ -632,6 +634,9 @@
       else if (name === 'audio-media') { global.document.dispatchEvent(new CustomEvent('blog-block-audio-open', { detail: { editor: this, nodeId: button.dataset.nodeId || this.selectedId } })); }
       else if (name === 'video-media') { global.document.dispatchEvent(new CustomEvent('blog-block-video-open', { detail: { editor: this, nodeId: button.dataset.nodeId || this.selectedId } })); }
       else if (name === 'format-mark') this.applyInlineMark(button.dataset.mark);
+      else if (name === 'threejs-add-object') this.updateThreeJsEntry(button.dataset.nodeId || this.selectedId, 'add-object');
+      else if (name === 'threejs-add-light') this.updateThreeJsEntry(button.dataset.nodeId || this.selectedId, 'add-light');
+      else if (name === 'threejs-remove-object' || name === 'threejs-remove-light') this.updateThreeJsEntry(button.dataset.nodeId || this.selectedId, name.endsWith('object') ? 'remove-object' : 'remove-light', Number(button.dataset.index));
       else if (name.startsWith('table-')) this.updateTable(name, button.dataset.nodeId || this.selectedId);
       else if (name === 'link-apply') this.applyInlineLink(this.linkDraft);
       else if (name === 'link-remove') this.applyInlineLink(null);
@@ -1622,6 +1627,55 @@
       append(this.state.blocks,list,0); nav.append(list); return nav;
     }
 
+    updateThreeJsEntry(id, operation, index, key, value) {
+      this.updateNode(id, (node) => {
+        if (node.type !== 'core/threejs_thumb') return;
+        let scene; try { scene = JSON.parse(node.attributes.scene_json); } catch (_) { return; }
+        if (!validThreeJsSceneJson(node.attributes.scene_json)) return;
+        if (operation === 'add-object' && scene.objects.length < 12) { const count=scene.objects.length; scene.objects.push({type:'box',color:'#7dd3fc',position:[((count%3)-1)*1.05,(count%2)*0.28,(Math.floor(count/3)-0.5)*1.05],rotation:[0,0,0],scale:0.8,animation:'none',roughness:0.45,metalness:0.1,wireframe:false}); }
+        else if (operation === 'add-light' && scene.lights.length < 4) scene.lights.push({type:'point',color:'#ffffff',intensity:1.5,position:[2,3,4]});
+        else if (operation === 'remove-object' && scene.objects.length > 1 && Number.isInteger(index) && index >= 0 && index < scene.objects.length) scene.objects.splice(index,1);
+        else if (operation === 'remove-light' && scene.lights.length > 1 && Number.isInteger(index) && index >= 0 && index < scene.lights.length) scene.lights.splice(index,1);
+        else if (operation === 'object' && scene.objects[index] && ['type','color','animation'].includes(key)) scene.objects[index][key] = value;
+        else if (operation === 'light' && scene.lights[index] && ['type','color','intensity'].includes(key)) {
+          const light = scene.lights[index];
+          if (key === 'intensity') light.intensity = Number(value);
+          else light[key] = value;
+          if (key === 'type') { if (value === 'ambient') delete light.position; else if (!light.position) light.position = [2,3,4]; }
+        } else return;
+        const json = JSON.stringify(scene);
+        if (validThreeJsSceneJson(json)) node.attributes.scene_json = json;
+      });
+    }
+
+    renderThreeJsControls(node) {
+      const scene = JSON.parse(node.attributes.scene_json);
+      const panel = this.el('section','rb-threejs-scene-controls');
+      const heading = this.el('h4','',this.strings.threejs.objects); panel.append(heading);
+      const addObject = this.button(this.strings.threejs.addShape,'threejs-add-object'); addObject.dataset.nodeId=node.id; addObject.disabled=scene.objects.length>=12; panel.append(addObject);
+      scene.objects.forEach((object,index) => {
+        const row=this.el('div','rb-threejs-entry');
+        const type=this.el('select','rb-input'); type.setAttribute('aria-label',this.strings.threejs.objects+' '+(index+1));
+        [['box','Box'],['sphere','Sphere'],['torus','Torus'],['cone','Cone'],['cylinder','Cylinder'],['icosahedron','Icosahedron'],['torusKnot','Torus knot']].forEach(([value,label])=>{const option=this.el('option','',label);option.value=value;type.append(option);});
+        type.value=object.type; type.dataset.threejsKind='object'; type.dataset.nodeId=node.id; type.dataset.index=String(index); type.dataset.key='type'; row.append(type);
+        const color=this.el('input','rb-threejs-color'); color.type='color'; color.value=object.color; color.setAttribute('aria-label',this.strings.threejs.color); color.dataset.threejsKind='object'; color.dataset.nodeId=node.id; color.dataset.index=String(index); color.dataset.key='color'; row.append(color);
+        const animation=this.el('select','rb-input'); animation.setAttribute('aria-label',this.strings.threejs.animation); [['none','None'],['spin','Spin'],['bob','Bob'],['pulse','Pulse']].forEach(([value,label])=>{const option=this.el('option','',label);option.value=value;animation.append(option);});
+        animation.value=object.animation; animation.dataset.threejsKind='object'; animation.dataset.nodeId=node.id; animation.dataset.index=String(index); animation.dataset.key='animation'; row.append(animation);
+        const remove=this.button(this.strings.threejs.remove,'threejs-remove-object'); remove.dataset.nodeId=node.id; remove.dataset.index=String(index); remove.disabled=scene.objects.length<=1; row.append(remove); panel.append(row);
+      });
+      const lightHeading=this.el('h4','',this.strings.threejs.lights); panel.append(lightHeading);
+      const addLight=this.button(this.strings.threejs.addLight,'threejs-add-light'); addLight.dataset.nodeId=node.id; addLight.disabled=scene.lights.length>=4; panel.append(addLight);
+      scene.lights.forEach((light,index)=>{
+        const row=this.el('div','rb-threejs-entry'); const type=this.el('select','rb-input'); type.setAttribute('aria-label',this.strings.threejs.lights+' '+(index+1));
+        [['ambient','Ambient'],['directional','Directional'],['point','Point']].forEach(([value,label])=>{const option=this.el('option','',label);option.value=value;type.append(option);});
+        type.value=light.type; type.dataset.threejsKind='light'; type.dataset.nodeId=node.id; type.dataset.index=String(index); type.dataset.key='type'; row.append(type);
+        const color=this.el('input','rb-threejs-color'); color.type='color'; color.value=light.color; color.setAttribute('aria-label',this.strings.threejs.color); color.dataset.threejsKind='light'; color.dataset.nodeId=node.id; color.dataset.index=String(index); color.dataset.key='color'; row.append(color);
+        const intensity=this.el('input','rb-input'); intensity.type='number'; intensity.min='0'; intensity.max='5'; intensity.step='0.1'; intensity.value=String(light.intensity); intensity.setAttribute('aria-label',this.strings.threejs.intensity); intensity.dataset.threejsKind='light'; intensity.dataset.nodeId=node.id; intensity.dataset.index=String(index); intensity.dataset.key='intensity'; row.append(intensity);
+        const remove=this.button(this.strings.threejs.remove,'threejs-remove-light'); remove.dataset.nodeId=node.id; remove.dataset.index=String(index); remove.disabled=scene.lights.length<=1; row.append(remove); panel.append(row);
+      });
+      return panel;
+    }
+
     renderInspector() {
       const aside = this.el('aside', 'rb-inspector'); aside.setAttribute('aria-label', this.strings.inspector);
       const heading = this.el('h3', 'rb-inspector-title'); heading.append(this.icon('settings','rb-icon'),this.el('span','',this.strings.inspector)); aside.append(heading);
@@ -1654,6 +1708,7 @@
       }
       if (n.type === 'core/threejs_thumb') {
         addField(this.strings.threejs.label, 'label', n.attributes.label, 'text');
+        try { aside.append(this.renderThreeJsControls(n)); } catch (_) { aside.append(this.el('p','rb-help-text',this.strings.threejs.invalidScene)); }
         addField(this.strings.threejs.sceneConfig, 'scene_json', n.attributes.scene_json, 'textarea');
         const hint = this.el('p','rb-help-text',this.strings.threejs.configHint); aside.append(hint);
       }
