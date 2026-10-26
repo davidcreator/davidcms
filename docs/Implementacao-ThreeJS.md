@@ -65,18 +65,20 @@ dev/system/library/three/
         ├── thumbnail-runner.js # adapter de thumbs sobre o SceneRunner
         ├── core/scene-runner.js # única camada WebGL/lifecycle
         ├── core/dom.js         # parse de atributos
-        ├── components/         # componentes reutilizáveis
+        ├── addons/             # loaders do pacote oficial (GLTFLoader + utils)
+        ├── components/         # componentes reutilizáveis (particle-field, studio-lighting)
+        ├── models/             # assets 3D (logo-da.glb — Cena 2)
         └── scenes/             # Hero e 404
 
 dev/catalog/
-├── .htaccess                   # rota limitada /three-runtime/*.js → adaptador Catalog
+├── .htaccess                   # rota limitada /three-runtime/*.{js,glb} → adaptador Catalog
 ├── controller/common/three.php # serve somente assets resolvidos pelo manifesto
 └── view/
     ├── css/threejs-thumb.css   # apresentação pública das thumbs
     └── template/common/header.twig # carrega módulos somente quando há cena
 ```
 
-O caminho `system/` permanece negado para acesso HTTP direto. O endpoint Catalog nunca recebe caminho de filesystem livre: o manifesto System aceita nomes fixos e o adaptador aplica `Content-Type`, `nosniff`, `ETag` e cache. Módulos ESM conservam caminhos relativos sob `/catalog/three-runtime/`, evitando duplicação de arquivos ou reescrita do vendor.
+O caminho `system/` permanece negado para acesso HTTP direto. O endpoint Catalog nunca recebe caminho de filesystem livre: o manifesto System aceita nomes fixos e o adaptador aplica `Content-Type`, `nosniff`, `ETag` e cache. Módulos ESM conservam caminhos relativos sob `/catalog/three-runtime/`, evitando duplicação de arquivos ou reescrita do vendor. O `Content-Type` é derivado da extensão registrada no manifesto — `js` vira `application/javascript; charset=utf-8` e `glb` vira `model/gltf-binary`.
 
 ---
 
@@ -84,7 +86,7 @@ O caminho `system/` permanece negado para acesso HTTP direto. O endpoint Catalog
 
 Os módulos Three.js atuais são self-hosted em `dev/system/library/three/runtime/`; não baixe assets no deploy nem carregue CDN. `dev/system/library/three/asset_manifest.php` lista cada arquivo permitido e o Catalog os entrega na rota pública `/catalog/three-runtime/{asset}`. O rewrite dessa rota precede o 404 estático; a extensão `system/` continua inacessível diretamente.
 
-O import map do `common/header.twig` só é emitido quando `has_3d` está ativo e aponta para `three_runtime_base`, calculado pelo controller usando o manifesto System. A mesma base atende o entrypoint de cenas e o runtime de thumbs no Admin/Catalog. Os imports relativos ESM permanecem dentro de `/catalog/three-runtime/`, sem cópia do vendor e sem URL externa.
+O import map do `common/header.twig` só é emitido quando `has_3d` está ativo e aponta para `three_runtime_base`, calculado pelo controller usando o manifesto System. Ele declara duas entradas: `"three"` (o módulo oficial) e `"three/addons/"` (prefixo dos loaders da allowlist), sem as quais o `GLTFLoader` da Cena 2 não resolveria seus imports. A mesma base atende o entrypoint de cenas e o runtime de thumbs no Admin/Catalog. Os imports relativos ESM permanecem dentro de `/catalog/three-runtime/`, sem cópia do vendor e sem URL externa.
 
 > WebGL é carregado apenas nas páginas com cena. Fallback HTML/CSS continua disponível quando desativado ou sem suporte do navegador.
 
@@ -158,28 +160,42 @@ O módulo Hero cria apenas o campo de partículas e sua atualização. O engine 
 
 ## 6. Cena 2 — Logo GLB
 
-Evolui a Cena 1 no mesmo container: adiciona o modelo `logo-da.glb` com rig de luz de estúdio.
+Evolui a Cena 1 no mesmo container. O módulo continua sendo `hero-particles.js`; o modelo é **opcional por construção** — sem `data-model`, ou em falha de rede/parse/WebGL, a cena permanece sendo só o campo de partículas (degradação silenciosa, ADR 0023).
 
 ```js
-// js/three/scenes/hero-logo.js — diferenças em relação à cena 1
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { createStudioLighting } from '../components/studio-lighting.js';
-
-const draco = new DRACOLoader().setDecoderPath(`${window.THREE_RUNTIME_BASE}three/addons/libs/draco/`); // futuro: registrar os arquivos no AssetManifest System
-new GLTFLoader().setDRACOLoader(draco).load(cfg.model, (gltf) => {
-  const model = gltf.scene;
-  normalizeToViewport(model, camera);  // util: centraliza e escala pelo bounding box
-  scene.add(model);
-});
+// system/library/three/runtime/three/scenes/hero-particles.js — só o bloco da Cena 2
+if (config.model) {
+  import('three/addons/loaders/GLTFLoader.js')   // dinâmico: só baixa quando há modelo
+    .then(({ GLTFLoader }) => {
+      new GLTFLoader().load(
+        config.model,
+        (gltf) => {
+          lighting = createStudioLighting({ color: config.color ?? '#8a4fff' });
+          scene.add(lighting.group);              // material Standard só é visível com luz
+          model = gltf.scene;
+          fitToViewport(model, camera, 0.5);      // centraliza e escala pelo bounding box
+          scene.add(model);
+        },
+        undefined,
+        () => { lighting = null; }                // partículas seguem como única cena
+      );
+    })
+    .catch(() => {});
+}
 ```
 
 | Item | Valor |
 | --- | --- |
-| Asset | `catalog/view/assets/3d/logo-da.glb` (≤ 150 KB, Draco + texturas KTX2) |
-| Preparo do modelo | exportar do Blender → otimizar com `npx @gltf-transform/cli optimize in.glb logo-da.glb --compress draco` |
-| Config | `data-model` no container (caminho vindo do controller/Twig) |
+| Asset | `dev/system/library/three/runtime/three/models/logo-da.glb` (publicado em `/catalog/three-runtime/three/models/logo-da.glb`) |
+| Estado atual | **placeholder procedural** (monograma "DA", 84 triângulos, `MeshStandardMaterial`); substituir pelo export real do Blender |
+| Preparo do modelo | exportar do Blender → otimizar com `npx @gltf-transform/cli optimize in.glb logo-da.glb --compress draco` (Draco/KTX2 ficam para o asset final) |
+| Config | `data-model` no container, vindo do controller via `AssetManifest::heroModelUrl()` |
+| Loader | `three/addons/loaders/GLTFLoader.js` (r186) + `BufferGeometryUtils.js` e `SkeletonUtils.js`, todos na allowlist |
+| Import map | exige `"three/addons/": "{{ three_runtime_base }}three/addons/"` no `common/header.twig` |
+| MIME | derivado por extensão no manifesto (`glb` → `model/gltf-binary`); o controller não muda |
 | Degradação | se o modelo falhar (onError), mantém partículas |
+
+Sem tabela, sem migration e sem setting novo: o asset passa pelo mesmo gateway allowlisted da Cena 1 (ADRs 0073/0075).
 
 ---
 

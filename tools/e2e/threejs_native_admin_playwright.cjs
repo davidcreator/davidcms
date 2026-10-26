@@ -52,7 +52,7 @@ const fieldNames = ['three_hero_enabled','three_not_found_enabled','three_hero_p
     page.on('response', response => {
       try {
         const pathname = new URL(response.url()).pathname;
-        if (/\/(?:three\.module\.js|three\.core\.js|main\.js|scene-runner\.js|hero-particles\.js|not-found\.js|threejs-thumb\.(?:js|css))$/.test(pathname) && response.status() >= 400) threeAssetFailures.push(pathname);
+        if (/\/(?:three\.module\.js|three\.core\.js|main\.js|scene-runner\.js|hero-particles\.js|not-found\.js|GLTFLoader\.js|logo-da\.glb|threejs-thumb\.(?:js|css))$/.test(pathname) && response.status() >= 400) threeAssetFailures.push(pathname);
       } catch (_) {}
     });
     page.setDefaultTimeout(15000);

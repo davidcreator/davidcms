@@ -8,7 +8,8 @@
 - `dev/system/library/three/asset_manifest.php` mantém a allowlist de módulos e o prefixo público comum.
 - O único vendor/runtime de navegador fica em `dev/system/library/three/runtime/`. `three/core/scene-runner.js` é a única camada de criação WebGL, animação, visibilidade, resize e descarte para Hero/404 e thumbs declarativas.
 - `three/thumbnail-runner.js` traduz cenas de thumb para a mesma API do SceneRunner. `threejs-thumb.js` é apenas wrapper de descoberta; `custom_js` permanece em adapter separado no iframe sandbox opaco por fronteira de segurança.
-- `system/.htaccess` continua negando acesso direto. `catalog/.htaccess` redireciona somente `/three-runtime/*.js` ao adaptador `catalog/controller/common/three.php`; o controller serve apenas nomes resolvidos pelo manifesto, com MIME JS, `nosniff`, ETag e cache HTTP.
+- `system/.htaccess` continua negando acesso direto. `catalog/.htaccess` redireciona somente `/three-runtime/*.{js,glb}` ao adaptador `catalog/controller/common/three.php`; o controller serve apenas nomes resolvidos pelo manifesto, com MIME derivado da extensão (`application/javascript` para `js`, `model/gltf-binary` para `glb`), `nosniff`, ETag e cache HTTP.
+- Cena 2 do Hero (ADR 0075): `logo-da.glb` vive em `runtime/three/models/` e é publicado pelo mesmo gateway. `three/addons/loaders/GLTFLoader.js` e seus utilitários estão na allowlist; o import map inclui `three/addons/`. O modelo é carregado por `import()` dinâmico em `hero-particles.js` — sem `data-model` ou em falha de rede/parse/WebGL, a cena permanece só com partículas. O GLB versionado é um placeholder procedural até o export real do Blender ser entregue.
 - Home/404, Blog/CMS e Admin usam essa mesma origem. Os estilos da thumb permanecem no Catalog, sem renderer concorrente.
 - As cenas mantêm fallback e carregamento condicional. Script personalizado não é executado no documento Admin.
 
@@ -18,7 +19,7 @@ As configurações Hero/404 usam settings existentes e ACL/CSRF já existentes. 
 
 ## Operação
 
-As URLs públicas de módulos usam `/catalog/three-runtime/` para que imports ESM relativos (`three.core.js`, cenas e helpers) continuem resolvendo no mesmo diretório lógico. O `asset_manifest.php` é a única lista de arquivos servidos. Para adicionar módulo Three.js, registrar no manifesto e colocar no caminho `system/library/three/runtime/` correspondente; não criar outra cópia no Catalog.
+As URLs públicas de módulos usam `/catalog/three-runtime/` para que imports ESM relativos (`three.core.js`, `three/addons/*`, cenas e helpers) continuem resolvendo no mesmo diretório lógico. O `asset_manifest.php` é a única lista de arquivos servidos. Para adicionar módulo Three.js (ou um asset 3D como o `logo-da.glb`), registrar no manifesto e colocar no caminho `system/library/three/runtime/` correspondente; não criar outra cópia no Catalog.
 
 ## Verificação mínima
 

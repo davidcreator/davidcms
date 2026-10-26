@@ -1,7 +1,24 @@
-/** Cena Hero — conteúdo de cena; renderer e ciclo de vida pertencem ao SceneRunner. */
-import { registerScene } from '../core/scene-runner.js';
+/**
+ * Cena Hero — partículas com parallax e, quando o controller publica um
+ * `data-model`, o logo GLB da Cena 2 (Guia §6). O renderer e o ciclo de vida
+ * continuam no SceneRunner; aqui só há conteúdo de cena.
+ */
+import { registerScene, THREE } from '../core/scene-runner.js';
 import { createParticleField } from '../components/particle-field.js';
+import { createStudioLighting } from '../components/studio-lighting.js';
 import { intAttr, floatAttr } from '../core/dom.js';
+
+/** Centraliza o modelo na origem e o ajusta a uma fração do viewport menor. */
+function fitToViewport(object, camera, ratio) {
+  const box = new THREE.Box3().setFromObject(object);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const visibleHeight = 2 * Math.tan((camera.fov * Math.PI) / 360) * camera.position.length();
+  const available = Math.min(visibleHeight, visibleHeight * camera.aspect) * ratio;
+  const scale = available / Math.max(size.x, size.y, size.z, 0.0001);
+  object.scale.setScalar(scale);
+  object.position.copy(center.multiplyScalar(-scale));
+}
 
 registerScene('hero-particles', ({ scene, camera, container, config }) => {
   const field = createParticleField({
@@ -18,6 +35,36 @@ registerScene('hero-particles', ({ scene, camera, container, config }) => {
   };
   window.addEventListener('pointermove', onPointer, { passive: true });
 
+  let disposed = false;
+  let model = null;
+  let lighting = null;
+
+  // Cena 2 — opcional por construção: sem data-model (ou em falha de rede,
+  // parse ou WebGL) a cena continua sendo só o campo de partículas.
+  if (config.model) {
+    import('three/addons/loaders/GLTFLoader.js')
+      .then(({ GLTFLoader }) => {
+        if (disposed) return;
+        new GLTFLoader().load(
+          config.model,
+          (gltf) => {
+            if (disposed) return;
+            lighting = createStudioLighting({ color: config.color ?? '#8a4fff' });
+            scene.add(lighting.group);
+            model = gltf.scene;
+            fitToViewport(model, camera, 0.5);
+            scene.add(model);
+          },
+          undefined,
+          () => {
+            // Degradação silenciosa: as partículas permanecem como única cena.
+            lighting = null;
+          }
+        );
+      })
+      .catch(() => {});
+  }
+
   return {
     animated: true,
     update({ time }) {
@@ -27,7 +74,9 @@ registerScene('hero-particles', ({ scene, camera, container, config }) => {
       camera.lookAt(scene.position);
     },
     dispose() {
+      disposed = true;
       window.removeEventListener('pointermove', onPointer);
+      if (lighting) lighting.dispose();
     },
   };
 });

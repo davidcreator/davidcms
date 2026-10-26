@@ -48,12 +48,16 @@ class Home extends \Reamur\System\Engine\Controller {
 
         $threeJs = $this->three_scene_config->runtime($siteInfo);
 
+        // Cena 2: o modelo do Hero é um asset da allowlist do runtime. Quando
+        // não está publicada, a cena segue sendo apenas o campo de partículas.
+        $heroModel = $this->three_asset_manifest->heroModelUrl();
+
         $data = [
             // Configuração allowlisted do system/library/three/scene_config.php.
             // Sem script arbitrário; o header só carrega WebGL quando habilitado.
             'has_3d'     => $threeJs['hero_enabled'],
             'three_runtime_base' => $base . $this->three_asset_manifest->publicBasePath(),
-            'hero3d'     => $threeJs['hero'], 
+            'hero3d'     => $threeJs['hero'] + ['model' => $heroModel !== null ? $base . $heroModel : ''],
 
             'heading_title'     => $this->language->get('heading_title'),
             'text_tagline'      => $this->language->get('text_tagline'),
