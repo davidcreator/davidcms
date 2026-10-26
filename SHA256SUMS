@@ -1,6 +1,3 @@
-a61c533d4697353a4ea00b075a042be03038fec642f4ce453ebd74ace6f95c37  ./README.md
-f50277b52db499e35c82671ef60d7d7b7b353c988eb8e49916927e290c1d14a6  ./dev/admin/language/en-us/cms/page.php
-7d637caf01a17cfb5d2743669cff2e6d033e6a3ac04c3f8eea90ba13f661be7e  ./dev/admin/language/es-eu/cms/page.php
-db35f3d7ec810dd31a90dc650e267025f50a883694a0b5662c8b6e6a0340eb3a  ./dev/admin/language/pt-br/cms/page.php
-15e13f18735514688c5c9bb4fd490af5476b04c83a25b9a6dabc1ef71e20c6ba  ./docs/THREEJS_ADMIN_PREVIEW_HELP.md
-104458c0f8d8767a64ad12b8eb5c4263c3e8029311e1bb3d32b05fb65a39607b  ./tools/e2e/check_threejs_thumb.cjs
+0de9371a2c45d31e7535b3f6c276dc6a5a2eb68d725fce01307b3a5a8fcf7379  ./README.md
+28933c88e12875f3c828c76e3f24ddad4d226595cb325e58635fa2021e820df4  ./docs/THREEJS_SANDBOX_ISOLATED_E2E.md
+4c60c97bace44fff0fe21a6e417f785229cd261fe9e3f8f68cddaeceb687b7ce  ./tools/e2e/threejs_admin_preview_sandbox_isolated.cjs
