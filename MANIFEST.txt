@@ -22,6 +22,7 @@ dev/catalog/controller/cms/page.php
 dev/catalog/view/css/blog-blocks.css
 dev/catalog/view/css/threejs-thumb.css
 dev/catalog/view/js/THREE-LICENSE.txt
+dev/catalog/view/js/three.core.js
 dev/catalog/view/js/three.module.js
 dev/catalog/view/js/threejs-thumb.js
 dev/system/library/blog/block_document.php
@@ -36,4 +37,5 @@ tools/e2e/check_audio_catalog.cjs
 tools/e2e/check_page_content_flow.cjs
 tools/e2e/check_preview_import.cjs
 tools/e2e/check_single_page_ribbon.cjs
+tools/e2e/check_threejs_sandbox.cjs
 tools/e2e/check_threejs_thumb.cjs

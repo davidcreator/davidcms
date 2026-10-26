@@ -37,8 +37,8 @@ class Page extends \Reamur\System\Engine\Controller {
             $data['description'] = !empty($rendered['valid']) ? (string)$rendered['html'] : '';
             if (!empty($rendered['valid'])) $this->document->addStyle($this->config->get('site_url') . 'view/css/blog-blocks.css');
             if (!empty($rendered['requires_threejs'])) {
-                $this->document->addStyle($this->config->get('site_url') . 'view/css/threejs-thumb.css');
-                $this->document->addScript($this->config->get('site_url') . 'view/js/threejs-thumb.js');
+                $this->document->addStyle($this->config->get('site_url') . 'view/css/threejs-thumb.css?v=20261026a');
+                $this->document->addScript($this->config->get('site_url') . 'view/js/threejs-thumb.js?v=20261026a');
             }
         } else {
             // Legacy HTML remains on its existing path; the marker is never sent to Twig.

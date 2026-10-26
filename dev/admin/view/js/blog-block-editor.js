@@ -245,7 +245,7 @@
         'core/paragraph':['align'], 'core/heading':['level'], 'core/list':['ordered'], 'core/list-item':[],
         'core/quote':[], 'core/callout':['tone'], 'core/details':['summary'], 'core/spacer':['height'], 'core/code':[], 'core/image':['src','alt','title'], 'core/video_embed':['url'], 'core/button':['url'],
         'core/separator':[], 'core/group':[], 'core/columns':['count'], 'core/column':[],
-        'core/gallery':['columns','align'], 'core/cover':['src','alt','align'], 'core/table':['header'], 'core/table-row':[], 'core/table-cell':[], 'core/file':['src'], 'core/audio':['src'], 'core/video_file':['src'], 'core/threejs_thumb':['scene_json','label']
+        'core/gallery':['columns','align'], 'core/cover':['src','alt','align'], 'core/table':['header'], 'core/table-row':[], 'core/table-cell':[], 'core/file':['src'], 'core/audio':['src'], 'core/video_file':['src'], 'core/threejs_thumb':['scene_json','label','custom_js']
       };
       if (version === 2) {
         allowedAttributes['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
@@ -277,7 +277,7 @@
           break;
         }
         case 'core/video_file': if (version !== 2 || !validLocalVideo(a.src) || node.children.length || node.content) errors.push('video_file_invalid'); break;
-        case 'core/threejs_thumb': if (version !== 2 || !validThreeJsSceneJson(a.scene_json) || typeof a.label !== 'string' || !a.label.trim() || utf8Length(a.label) > 160 || node.children.length || node.content) errors.push('threejs_thumb_invalid'); break;
+        case 'core/threejs_thumb': if (version !== 2 || !validThreeJsSceneJson(a.scene_json) || typeof a.label !== 'string' || !a.label.trim() || utf8Length(a.label) > 160 || (a.custom_js !== undefined && (typeof a.custom_js !== 'string' || utf8Length(a.custom_js) > 8192)) || node.children.length || node.content) errors.push('threejs_thumb_invalid'); break;
         case 'core/audio': {
           const label = Array.isArray(node.content) ? node.content.map((run) => run && typeof run.text === 'string' ? run.text : '').join('').trim() : '';
           if (version !== 2 || !validLocalAudio(a.src) || !label || node.children.length || !validInlineRuns(node.content, node.type)) errors.push('audio_invalid');
@@ -831,7 +831,7 @@
       if (type === 'core/cover') return this.node(type, { src:'', alt:'', align:'wide' }, '', [this.node('core/heading',{level:2},'Título da capa'),this.node('core/paragraph',{},'Adicione uma descrição.'),this.node('core/button',{url:'/'},'Saiba mais')]);
       if (type === 'core/video_embed') return this.node(type, { url: '' }, '');
       if (type === 'core/video_file') return this.node(type, { src: '' }, '');
-      if (type === 'core/threejs_thumb') return this.node(type, { scene_json: JSON.stringify({version:1,background:'#101827',camera:{fov:42,position:[3,2.4,4.5]},objects:[{type:'torusKnot',color:'#77aaff',position:[0,0,0],rotation:[0,0,0],scale:1,animation:'spin',roughness:0.3,metalness:0.55,wireframe:false}],lights:[{type:'ambient',color:'#ffffff',intensity:1.4},{type:'directional',color:'#ffffff',intensity:2.4,position:[4,5,3]}],auto_rotate:true}), label:'Thumb 3D' }, '');
+      if (type === 'core/threejs_thumb') return this.node(type, { scene_json: JSON.stringify({version:1,background:'#101827',camera:{fov:42,position:[3,2.4,4.5]},objects:[{type:'torusKnot',color:'#77aaff',position:[0,0,0],rotation:[0,0,0],scale:1,animation:'spin',roughness:0.3,metalness:0.55,wireframe:false}],lights:[{type:'ambient',color:'#ffffff',intensity:1.4},{type:'directional',color:'#ffffff',intensity:2.4,position:[4,5,3]}],auto_rotate:true}), label:'Thumb 3D', custom_js:'' }, '');
       if (type === 'core/button') return this.node(type, { url: '/' }, 'Saiba mais');
       if (type === 'core/separator') return this.node(type, {}, '');
       if (type === 'core/group') return this.node(type, {}, '', [this.node('core/paragraph', {}, 'Bloco do grupo')]);
@@ -1687,7 +1687,7 @@
         const wrap = this.el('label', 'rb-field'); wrap.append(this.el('span', '', label));
         let input;
         if (choices) { input = this.el('select', 'rb-input'); choices.forEach(([val, text]) => { const option = this.el('option', '', text); option.value = val; input.append(option); }); input.value = String(value); }
-        else if (type === 'textarea') { input = this.el('textarea','rb-input'); input.value = value == null ? '' : String(value); input.maxLength = 4096; }
+        else if (type === 'textarea') { input = this.el('textarea','rb-input'); input.value = value == null ? '' : String(value); input.maxLength = key === 'custom_js' ? 8192 : (key === 'scene_json' ? 16384 : 4096); if (key === 'custom_js') { input.classList.add('rb-threejs-script-input'); input.spellcheck = false; input.autocomplete = 'off'; } }
         else { input = this.el('input', 'rb-input'); input.type = type || 'text'; input.value = value == null ? '' : String(value); if (['alt','title','caption'].includes(key)) input.maxLength = 4096; if (key === 'outline_label') input.maxLength = 160; if (key === 'summary') input.maxLength = 512; }
         input.dataset.attribute = key; input.dataset.nodeId = found.node.id; wrap.append(input); aside.append(wrap);
       };
@@ -1710,6 +1710,8 @@
         addField(this.strings.threejs.label, 'label', n.attributes.label, 'text');
         try { aside.append(this.renderThreeJsControls(n)); } catch (_) { aside.append(this.el('p','rb-help-text',this.strings.threejs.invalidScene)); }
         addField(this.strings.threejs.sceneConfig, 'scene_json', n.attributes.scene_json, 'textarea');
+        addField(this.strings.threejs.scriptLabel, 'custom_js', n.attributes.custom_js || '', 'textarea');
+        const scriptHint = this.el('p','rb-help-text',this.strings.threejs.scriptHint); aside.append(scriptHint);
         const hint = this.el('p','rb-help-text',this.strings.threejs.configHint); aside.append(hint);
       }
       if (n.type === 'core/image') {

@@ -137,9 +137,9 @@ $_['text_block_threejs_label'] = 'Accessible label';
 
 $_['text_block_threejs_scene_config'] = 'Scene configuration (JSON)';
 
-$_['text_block_threejs_config_hint'] = 'Declarative scene, no JavaScript: up to 12 shapes (box, sphere, torus, cone, cylinder, icosahedron, torusKnot), 4 lights, and bounded animations. Three.js is self-hosted; do not use scripts, URLs, textures, or external resources.';
+$_['text_block_threejs_config_hint'] = 'Declarative JSON scene with strict bounds. Optional custom JavaScript is in a separate field and runs in an isolated sandbox. Do not use URLs, textures, or external resources; Three.js is self-hosted.';
 
-$_['text_block_threejs_preview_hint'] = 'Public WebGL preview; the editor shows this configuration and never executes user code.';
+$_['text_block_threejs_preview_hint'] = 'The editor preview is illustrative; custom scripts run only in the public thumbnail inside a sandboxed iframe.';
 
 $_['text_block_threejs_objects'] = 'Scene objects';
 
@@ -160,3 +160,7 @@ $_['text_block_threejs_intensity'] = 'Intensity';
 $_['text_block_threejs_invalidScene'] = 'Scene JSON is invalid or out of bounds. Correct the configuration to edit this scene.';
 
 $_['text_block_threejs_sceneConfig'] = 'Scene JSON (advanced)';
+
+$_['text_block_threejs_scriptLabel'] = 'Custom JavaScript (sandbox)';
+
+$_['text_block_threejs_scriptHint'] = 'Runs only in an isolated iframe, without access to the CMS DOM/cookies; CSP blocks network/external resources. API: THREE, scene, camera, renderer, canvas, and onFrame(fn). 8 KiB limit. Code can hang this thumbnail; use trusted scripts only. Example: const mesh = new THREE.Mesh(new THREE.TorusGeometry(.8,.2,16,48), new THREE.MeshStandardMaterial({color:0xff66aa})); scene.add(mesh); onFrame(({delta}) => { mesh.rotation.y += delta; });';

@@ -113,7 +113,8 @@ final class BlockRenderer {
                 $sceneJson = json_encode($scene, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
                 if (!is_string($sceneJson)) return '';
                 $sceneAttr = $this->escape($sceneJson);
-                return '<figure class="rms-block rms-block-threejs-thumb"><div class="rms-block-threejs-thumb__stage" data-threejs-thumb data-scene="' . $sceneAttr . '" role="img" aria-label="' . $label . '"><span class="rms-block-threejs-thumb__fallback">' . $label . '</span></div></figure>';
+                $customScript = base64_encode((string)($attributes['custom_js'] ?? ''));
+                return '<figure class="rms-block rms-block-threejs-thumb"><div class="rms-block-threejs-thumb__stage" data-threejs-thumb data-scene="' . $sceneAttr . '" data-custom-js="' . $customScript . '" role="img" aria-label="' . $label . '"><span class="rms-block-threejs-thumb__fallback">' . $label . '</span></div></figure>';
 
             case 'core/video_file':
                 $srcPath = (string)$attributes['src'];

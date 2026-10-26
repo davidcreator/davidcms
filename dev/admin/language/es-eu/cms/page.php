@@ -121,9 +121,9 @@ $_['text_block_threejs_label'] = 'Etiqueta accesible';
 
 $_['text_block_threejs_scene_config'] = 'Configuración de escena (JSON)';
 
-$_['text_block_threejs_config_hint'] = 'Escena declarativa, sin JavaScript: hasta 12 formas (box, sphere, torus, cone, cylinder, icosahedron, torusKnot), 4 luces y animaciones limitadas. Three.js es local; no uses scripts, URL, texturas ni recursos externos.';
+$_['text_block_threejs_config_hint'] = 'Escena JSON declarativa con límites estrictos. El JavaScript personalizado opcional va en un campo separado y se ejecuta en un sandbox aislado. No uses URL, texturas ni recursos externos; Three.js es local.';
 
-$_['text_block_threejs_preview_hint'] = 'Vista WebGL pública; el editor muestra la configuración y no ejecuta código del usuario.';
+$_['text_block_threejs_preview_hint'] = 'La vista previa del editor es indicativa; los scripts personalizados solo se ejecutan en la miniatura pública, dentro de un iframe aislado.';
 
 $_['text_block_threejs_objects'] = 'Formas de la escena';
 
@@ -144,3 +144,7 @@ $_['text_block_threejs_intensity'] = 'Intensidad';
 $_['text_block_threejs_invalidScene'] = 'El JSON no es válido o supera los límites. Corrige la configuración para editar la escena.';
 
 $_['text_block_threejs_sceneConfig'] = 'JSON de escena (avanzado)';
+
+$_['text_block_threejs_scriptLabel'] = 'JavaScript personalizado (sandbox)';
+
+$_['text_block_threejs_scriptHint'] = 'Solo se ejecuta en un iframe aislado, sin acceso al DOM/cookies del CMS; CSP bloquea la red y recursos externos. API: THREE, scene, camera, renderer, canvas y onFrame(fn). Límite: 8 KiB. El código puede bloquear esta miniatura; usa solo scripts de confianza. Ejemplo: const mesh = new THREE.Mesh(new THREE.TorusGeometry(.8,.2,16,48), new THREE.MeshStandardMaterial({color:0xff66aa})); scene.add(mesh); onFrame(({delta}) => { mesh.rotation.y += delta; });';

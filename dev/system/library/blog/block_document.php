@@ -159,7 +159,7 @@ class BlockDocument {
             'core/video_embed' => ['url'], 'core/button' => ['url'], 'core/separator' => [],
             'core/group' => [], 'core/columns' => ['count'], 'core/column' => [],
             'core/gallery' => ['columns','align'], 'core/cover' => ['src','alt','align'],
-            'core/table' => ['header'], 'core/table-row' => [], 'core/table-cell' => [], 'core/file' => ['src'], 'core/audio' => ['src'], 'core/video_file' => ['src'], 'core/threejs_thumb' => ['scene_json','label']
+            'core/table' => ['header'], 'core/table-row' => [], 'core/table-cell' => [], 'core/file' => ['src'], 'core/audio' => ['src'], 'core/video_file' => ['src'], 'core/threejs_thumb' => ['scene_json','label','custom_js']
         ];
         if ($version === self::RICH_TEXT_FORMAT_VERSION) {
             $allowedAttrs['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
@@ -168,7 +168,7 @@ class BlockDocument {
             $allowedAttrs['core/file'] = ['src'];
             $allowedAttrs['core/audio'] = ['src'];
             $allowedAttrs['core/video_file'] = ['src'];
-            $allowedAttrs['core/threejs_thumb'] = ['scene_json','label'];
+            $allowedAttrs['core/threejs_thumb'] = ['scene_json','label','custom_js'];
         }
         if (array_diff(array_keys($attrs), $allowedAttrs[$type])) $errors[] = 'attributes_not_allowlisted';
         if ($type === 'core/paragraph' && isset($attrs['align']) && !in_array($attrs['align'], ['left','center','right'], true)) $errors[] = 'alignment_invalid';
@@ -177,7 +177,7 @@ class BlockDocument {
         if ($type === 'core/file' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeDownloadPath($attrs['src']) || !is_array($node['content']) || !$this->hasVisibleInlineText($node['content']))) $errors[] = 'file_attributes_invalid';
         if ($type === 'core/audio' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeAudioPath($attrs['src']) || !is_array($node['content']) || !$this->hasVisibleInlineText($node['content']))) $errors[] = 'audio_attributes_invalid';
         if ($type === 'core/video_file' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeVideoPath($attrs['src']) || $node['children'] || $node['content'] !== '')) $errors[] = 'video_file_attributes_invalid';
-        if ($type === 'core/threejs_thumb' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['scene_json'], $attrs['label']) || !is_string($attrs['scene_json']) || !$this->isValidThreeJsScene($attrs['scene_json']) || !is_string($attrs['label']) || trim($attrs['label']) === '' || strlen($attrs['label']) > 160 || $node['children'] || $node['content'] !== '')) $errors[] = 'threejs_thumb_attributes_invalid';
+        if ($type === 'core/threejs_thumb' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['scene_json'], $attrs['label']) || !is_string($attrs['scene_json']) || !$this->isValidThreeJsScene($attrs['scene_json']) || !is_string($attrs['label']) || trim($attrs['label']) === '' || strlen($attrs['label']) > 160 || (array_key_exists('custom_js', $attrs) && (!is_string($attrs['custom_js']) || strlen($attrs['custom_js']) > 8192 || !preg_match('//u', $attrs['custom_js']))) || $node['children'] || $node['content'] !== '')) $errors[] = 'threejs_thumb_attributes_invalid';
         if ($type === 'core/image' && (!isset($attrs['src']) || !$this->isSafeImagePath($attrs['src']) || !isset($attrs['alt']) || !is_string($attrs['alt']) || (isset($attrs['title']) && !is_string($attrs['title'])))) $errors[] = 'image_attributes_invalid';
         if ($type === 'core/group' && isset($attrs['outline_label']) && (!is_string($attrs['outline_label']) || strlen($attrs['outline_label']) > 160 || !preg_match('//u', $attrs['outline_label']))) $errors[] = 'outline_label_invalid';
         if ($type === 'core/image') {

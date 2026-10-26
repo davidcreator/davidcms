@@ -4,9 +4,9 @@ O bloco `core/threejs_thumb` pode ser inserido em Páginas CMS e posts do Blog. 
 
 ## Segurança e runtime
 
-- Three.js 0.186.1 é servido de `dev/catalog/view/js/three.module.js`, com licença incluída; não há dependência de CDN.
+- Three.js 0.186.1 é servido localmente em `three.module.js` com a dependência obrigatória `three.core.js`; licença incluída e sem CDN.
 - O renderizador público só inclui JS/CSS do runtime quando o documento validado contém uma thumb.
-- O backend valida a allowlist e limites de cena antes da renderização. Não são aceitos scripts, URLs, texturas, modelos externos ou JavaScript arbitrário.
+- O backend valida a allowlist e limites da cena JSON antes da renderização. JavaScript opcional tem campo separado e executa somente no iframe isolado descrito abaixo; URLs e recursos externos continuam bloqueados.
 - O runtime desenha WebGL ao entrar na área visível, pausa fora dela, reage a redimensionamento e respeita `prefers-reduced-motion`. Sem suporte a WebGL ou APIs de observação, o rótulo permanece como fallback.
 - Os controles de cena atualizam o mesmo JSON validado; a edição manual do campo avançado não executa código nem carrega prévia WebGL administrativa.
 
@@ -25,3 +25,20 @@ Exemplo inicial (também usado ao inserir o bloco):
 ## Verificações
 
 `node tools/e2e/check_threejs_thumb.cjs` valida contratos estáticos do bloco, allowlist, integração pública/admin, textos de idioma e presença do runtime local. Os fluxos funcionais no CMS devem ainda ser confirmados em ambiente ReamurCMS com permissões adequadas; não foram executados nesta entrega local.
+
+## JavaScript opcional isolado
+
+O campo **JavaScript personalizado (sandbox)** aceita até 8 KiB por thumb. O script só é executado dentro de um `iframe sandbox="allow-scripts"` com origem opaca; a CSP do frame bloqueia rede e recursos externos, e o script não pode acessar o DOM, cookies ou armazenamento da página CMS. A cena é montada antes de executar o script. API disponível: `THREE`, `scene`, `camera`, `renderer`, `canvas` e `onFrame(fn)`. `onFrame` recebe `{time, delta, THREE, scene, camera, renderer, canvas}`.
+
+Exemplo:
+
+```js
+const mesh = new THREE.Mesh(
+  new THREE.TorusGeometry(0.8, 0.2, 16, 48),
+  new THREE.MeshStandardMaterial({ color: 0xff66aa })
+);
+scene.add(mesh);
+onFrame(({ delta }) => { mesh.rotation.y += delta; });
+```
+
+A permissão de edição da página continua sendo o gate de autoria. O sandbox reduz o impacto de acesso ao contexto hospedeiro e de rede, mas não torna scripts arbitrários inofensivos: um loop infinito ainda pode travar a thumb/aba. Use código confiável; falhas mantêm a etiqueta acessível.

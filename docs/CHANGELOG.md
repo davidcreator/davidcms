@@ -33,3 +33,11 @@
 - O Inspetor do bloco agora tem ações dedicadas para adicionar/remover formas e luzes e editar tipo, cor, animação e intensidade.
 - Inclusão respeita o máximo de 12 formas/4 luzes e preserva pelo menos uma de cada; novas formas recebem posições distintas para ficarem visíveis.
 - Mantido o JSON avançado, com validação antes de gravar cada alteração, undo/redo e traduções PT-BR/EN-US/ES-EU.
+
+## Ampliação — JavaScript opcional para thumbs (2026-10-26)
+- Adicionado campo `custom_js` opcional no envelope v2 (máx. 8 KiB), com compatibilidade para thumbs anteriores.
+- Scripts isolados em iframe sandbox de origem opaca e CSP sem rede/recursos externos; interface fornece THREE, scene, camera, renderer, canvas e callback onFrame.
+- Atenção: código confiável somente; loop infinito ainda pode travar a thumb/aba. Sem acesso ao DOM/cookies do CMS.
+
+- Corrigida a distribuição do runtime: Three.js 0.186.1 importa também `three.core.js`; os dois módulos locais agora acompanham o ZIP.
+- URLs dos assets do editor/runtime recebem versionamento específico para evitar que cache mantenha a interface anterior.
