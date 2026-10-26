@@ -123,7 +123,7 @@ $_['text_block_threejs_scene_config'] = 'Configuração da cena (JSON)';
 
 $_['text_block_threejs_config_hint'] = 'Cena em JSON declarativo, com limites rígidos. JavaScript personalizado opcional fica no campo separado e roda em sandbox isolado. Não use URLs, texturas ou recursos externos; Three.js é local.';
 
-$_['text_block_threejs_preview_hint'] = 'A cena é renderizada no editor; scripts personalizados só executam na thumb pública, dentro de iframe sandbox.';
+$_['text_block_threejs_preview_hint'] = 'Na Prévia completa do editor e na thumb pública, scripts personalizados rodam somente em iframe sandbox opaco e isolado. O cartão do bloco não os executa.';
 
 $_['text_block_threejs_objects'] = 'Formas na cena';
 

@@ -1,24 +1,25 @@
-# Three.js — execução sandbox do script na Prévia completa Blog/CMS
+# Three.js Admin Preview — correção da ajuda traduzida
 
-Patch incremental para o snapshot upstream consultado em `e7c0b314278f1de178a9f2eb1530c5fe5ee8d6cf`.
+Patch incremental para `davidcreator/davidcms` no HEAD consultado `d1c8fcba10c593142d8dfc9a495273805bf6787e`.
 
-O arquivo principal substitui `dev/admin/view/js/blog-block-editor.js`; o checker substitui `tools/e2e/check_threejs_thumb.cjs`. Os caminhos do ZIP são relativos à raiz do DavidCMS, não caminhos absolutos do computador.
+Este pacote corrige a dica exibida no Admin para refletir o fluxo já integrado: tanto a Prévia completa quanto a thumb pública podem executar `custom_js`, mas somente dentro do iframe sandbox opaco; o cartão de edição não executa o script.
 
-Na Prévia completa, o bloco `core/threejs_thumb` serializa `custom_js` como UTF-8/Base64 no atributo `data-custom-js`. O runtime self-hosted já carregado pelos controllers Blog/CMS observa esse atributo e executa o script apenas no iframe sandbox opaco existente (`sandbox="allow-scripts"`, CSP com `connect-src 'none'`). O código personalizado não é avaliado no contexto da página Admin. O cartão inline do bloco não recebe o atributo e permanece declarativo.
+## Arquivos e aplicação
 
-## Aplicação e teste
+Copie os arquivos preservando os caminhos a partir da raiz do projeto:
+- `dev/admin/language/pt-br/cms/page.php`
+- `dev/admin/language/en-us/cms/page.php`
+- `dev/admin/language/es-eu/cms/page.php`
+- `tools/e2e/check_threejs_thumb.cjs`
 
-1. Faça backup dos dois arquivos existentes.
-2. Copie os dois arquivos deste pacote preservando os caminhos relativos.
-3. Na raiz do projeto, execute:
+Os arquivos de idioma são completos, não snippets. Faça backup antes de substituir.
+
+## Verificação
+
+O checker atualizado passou **22/22** verificações estáticas contra o snapshot seletivo do HEAD consultado. Rode na raiz do projeto:
 
 ```sh
-node --check dev/admin/view/js/blog-block-editor.js
 node tools/e2e/check_threejs_thumb.cjs
 ```
 
-O checker necessita do restante da árvore-fonte do DavidCMS; não roda isoladamente a partir deste pacote. Este pacote não publica nem altera GitHub, não faz deploy, não executa migrations e não modifica configurações ou conteúdo.
-
-## Limites da validação
-
-Validação feita contra snapshot seletivo do HEAD acima: sintaxe JS aprovada e **21/21 verificações estáticas** aprovadas. Não houve teste de browser do preview nesta sessão. Conteúdo Blog/CMS público continua sem posts/páginas publicados disponíveis para teste; esta mudança permite exercitar o script pelo Preview do Admin, mas a confirmação visual do WebGL depende de executar o fluxo no seu ambiente.
+Esse resultado não é um teste visual de browser. Posts de Blog e páginas CMS publicados continuam indisponíveis, portanto a thumb pública não foi validada com conteúdo real. Nenhum deploy, migration, alteração de instalação compartilhada ou escrita no GitHub foi feita por este pacote.

@@ -1,4 +1,6 @@
-06fcfc96a3eb0874e5db320682ce237caf3cad35f14c7fa3da0dd0440b8523f6  ./README.md
-87825e64d9c52defb7726841c02b55a4f1f61e81c5b04d6bbc609dc6fe59fb58  ./dev/admin/view/js/blog-block-editor.js
-d67316a0105cfc5b716a8680d6acab3d215bf2e988f12ade700b9f11ebd81409  ./docs/THREEJS_ADMIN_PREVIEW.md
-acf9831912167680067c2f08acbb29ec52cfdf8cbf63c1daffd4ce77c7ec3e46  ./tools/e2e/check_threejs_thumb.cjs
+a61c533d4697353a4ea00b075a042be03038fec642f4ce453ebd74ace6f95c37  ./README.md
+f50277b52db499e35c82671ef60d7d7b7b353c988eb8e49916927e290c1d14a6  ./dev/admin/language/en-us/cms/page.php
+7d637caf01a17cfb5d2743669cff2e6d033e6a3ac04c3f8eea90ba13f661be7e  ./dev/admin/language/es-eu/cms/page.php
+db35f3d7ec810dd31a90dc650e267025f50a883694a0b5662c8b6e6a0340eb3a  ./dev/admin/language/pt-br/cms/page.php
+15e13f18735514688c5c9bb4fd490af5476b04c83a25b9a6dabc1ef71e20c6ba  ./docs/THREEJS_ADMIN_PREVIEW_HELP.md
+104458c0f8d8767a64ad12b8eb5c4263c3e8029311e1bb3d32b05fb65a39607b  ./tools/e2e/check_threejs_thumb.cjs
