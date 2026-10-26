@@ -46,17 +46,14 @@ class Home extends \Reamur\System\Engine\Controller {
         $siteWhatsDigits  = (string)($siteInfo['config_contact_whatsapp_href'] ?? '');
         $siteWhatsappHref = $siteWhatsDigits !== '' ? 'https://wa.me/' . $siteWhatsDigits : '';
 
+        $threeJs = $this->three_scene_config->runtime($siteInfo);
+
         $data = [
-            // Hero 3D (F3-02, ADR 0020): has_3d liga o slot WebGL no header.
-            // Configs numéricas/visuais da cena moram aqui (não são texto de
-            // UI); os textos continuam 100% na Language. Cena decorativa.
-            'has_3d'     => true,
+            // Configuração allowlisted do system/library/three/scene_config.php.
+            // Sem script arbitrário; o header só carrega WebGL quando habilitado.
+            'has_3d'     => $threeJs['hero_enabled'],
             'asset_base' => $base,
-            'hero3d'     => [
-                'count' => 400,       // partículas (budget §10 do guia)
-                'color' => '#8a4fff', // roxo da marca (contrata o --accent)
-                'speed' => 0.05,      // rad/s de rotação do campo
-            ],
+            'hero3d'     => $threeJs['hero'],
 
             'heading_title'     => $this->language->get('heading_title'),
             'text_tagline'      => $this->language->get('text_tagline'),

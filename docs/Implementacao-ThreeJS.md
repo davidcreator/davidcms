@@ -6,7 +6,7 @@
 | --- | --- |
 | **Escopo** | `dev/catalog` (view/js + templates) |
 | **Depende de** | [Guia-ThreeJS.md](Guia-ThreeJS.md) · [Guia-Twig.md](Guia-Twig.md) · Fase 3 do [roadmap](Analise-DavidAlmeida.md#8-plano-de-migração) |
-| **Status** | 📋 Planejado |
+| **Status** | ✅ Implementado parcialmente no Catalog; configurações declarativas do Hero/404 no Admin em `setting/setting`; ver [`THREEJS_NATIVE_SYSTEM.md`](THREEJS_NATIVE_SYSTEM.md) para o contrato atual |
 
 ---
 

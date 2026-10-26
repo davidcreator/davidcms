@@ -77,6 +77,10 @@ class Setting extends \Reamur\System\Engine\Model {
             'config_admin_skin', 'config_admin_accent', 'config_admin_accent_dark',
             'config_admin_sidebar_variant', 'config_admin_density',
             'config_admin_font_scale', 'config_admin_theme_mode',
+
+            // Three.js (ADR 0072): configuração declarativa allowlisted de Hero/404
+            'three_hero_enabled', 'three_hero_particle_count', 'three_hero_color', 'three_hero_speed',
+            'three_not_found_enabled',
         ];
 
         foreach ($data as $key => $value) {

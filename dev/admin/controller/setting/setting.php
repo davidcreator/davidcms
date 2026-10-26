@@ -89,6 +89,13 @@ class Setting extends \Reamur\System\Engine\Controller {
         $data['fieldset_store']    = $this->language->get('fieldset_store');
         $data['fieldset_mail']     = $this->language->get('fieldset_mail');
         $data['fieldset_cache']    = $this->language->get('fieldset_cache');
+        $data['fieldset_threejs']  = $this->language->get('fieldset_threejs');
+        $data['threejs_toggle_options'] = ['1' => $this->language->get('text_enabled'), '0' => $this->language->get('text_disabled')];
+        foreach (['three_hero_enabled', 'three_hero_particle_count', 'three_hero_color', 'three_hero_speed', 'three_not_found_enabled'] as $field) {
+            $data['entry_' . $field] = $this->language->get('entry_' . $field);
+            $data['help_' . $field] = $this->language->get('help_' . $field);
+            $data['error_' . $field] = (string)($errors[$field] ?? '');
+        }
 
         // Campos
         foreach ([
@@ -244,6 +251,7 @@ class Setting extends \Reamur\System\Engine\Controller {
         $out['mail_smtp_password'] = '';
         $out['mail_smtp_password_set'] = $this->storedSmtpPassword() !== '';
         $out['mail_smtp_password_clear'] = false;
+        $out = array_merge($out, $this->three_scene_config->normalizeSettings($settings));
 
         return [$out, []];
     }
@@ -273,6 +281,11 @@ class Setting extends \Reamur\System\Engine\Controller {
             'mail_reply_to'           => $str('mail_reply_to', 96),
             'cache_engine'            => $str('cache_engine', 16),
             'cache_expire'            => $str('cache_expire', 10),
+            'three_hero_enabled' => $str('three_hero_enabled', 1),
+            'three_hero_particle_count' => $str('three_hero_particle_count', 4),
+            'three_hero_color' => $str('three_hero_color', 7),
+            'three_hero_speed' => $str('three_hero_speed', 4),
+            'three_not_found_enabled' => $str('three_not_found_enabled', 1),
         ];
     }
 
@@ -330,6 +343,10 @@ class Setting extends \Reamur\System\Engine\Controller {
 
         if ((int)$post['cache_expire'] < 60 || (int)$post['cache_expire'] > 86400 * 30) {
             $errors['cache_expire'] = $this->language->get('error_cache_expire');
+        }
+
+        foreach ($this->three_scene_config->validateSettings($post) as $field => $_code) {
+            $errors[$field] = $this->language->get('error_' . $field);
         }
 
         return $errors;

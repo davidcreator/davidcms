@@ -684,7 +684,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['can_modify'] = $this->user->hasPermission('modify', 'blog/blog');
         $data['block_editor_available'] = $data['can_modify'] && $this->model_blog_blog->blogBlockContentTableExists();
         if ($data['block_editor_available']) {
-            $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-4';
+            $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-5';
             $assetBase = rtrim((string)$this->config->get('site_url'), '/') . '/view/';
             $catalogAssetBase = $this->catalogAssetUrl() . 'view/';
             $this->document->addStyle($assetBase . 'css/blog-block-editor.css?v=' . $assetVersion);

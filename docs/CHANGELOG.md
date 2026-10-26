@@ -1,9 +1,11 @@
 # Changelog
 
-## Correção — caminhos 404 dos assets Three.js no admin (2026-10-26)
-- O editor administrativo agora busca `threejs-thumb.js` e `threejs-thumb.css` na raiz pública `/catalog/view/`, onde esses assets realmente são instalados, em vez de procurar em `/admin/view/`.
-- Mantido o BDREditor no caminho administrativo atual; a correção afeta somente os assets do runtime Three.js.
-- Adicionado checker para impedir regressão de base URL.
+## Three.js nativo gerenciado pelo System/Admin/Catalog (2026-10-26)
+- Centraliza limites/defaults de Hero/404 em `system/library/three/scene_config.php`, registrado pelo framework e consumido pelas aplicações sem instanciar serviço em controller.
+- Adiciona controles na tela `setting/setting` para habilitar cenas e ajustar partículas/cor/velocidade, usando a tabela de settings existente, ACL/CSRF existentes e sem migration.
+- Catalog aplica configurações validadas em home/404 e mantém fallback quando a cena está desativada.
+- Import map do site e thumb usa Three.js local; Admin Blog/CMS busca assets de thumb de `/catalog/view/`, corrigindo os 404.
+- Documentação do status e checker estático adicionados; E2E autenticado continua pendente.
 
 ## Correção — thumb renderizada na prévia do post (2026-10-26)
 - O cartão do bloco no canvas e o modo **Prévia** do editor Blog/CMS agora criam o stage com a configuração da cena e iniciam o runtime Three.js local, em vez de mostrar apenas um rótulo estático.

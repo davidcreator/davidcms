@@ -29,37 +29,23 @@ O posicionamento do site é **"Creative Developer"** — design + código. Um he
 
 ## 2. Instalação
 
-**Opção A — módulos via CDN com import map** (recomendada: zero build, casa com o PHP):
+**Padrão obrigatório — módulo local self-hosted** (sem import remoto/CDN em runtime):
 
 ```html
-<!-- no layout/base.twig, bloco head_extra da página que usa 3D -->
+<!-- common/header.twig emite isto apenas em rotas has_3d. -->
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    "three": "{{ asset_base }}catalog/view/js/three.module.js"
   }
 }
 </script>
-<script type="module" src="catalog/view/js/hero-3d.js"></script>
+<script type="module" src="{{ asset_base }}catalog/view/js/three/main.js" defer></script>
 ```
 
-**Opção B — self-hosted** (melhor para Core Web Vitals e offline):
+Os módulos de cena importam `three` pelo alias local. A versão vendorizada e a licença vivem no próprio repositório. Não coloque URLs CDN em templates ou módulos de runtime. O campo de script da thumb BDREditor é outro ambiente: não aceita `import`, DOM, `window` nem rede; use a API limitada documentada em `docs/THREEJS_THUMB.md`.
 
-```bash
-# baixar a build para os assets do tema
-curl -L https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js \
-  -o dev/catalog/view/js/vendor/three.module.js
-```
-
-```html
-<script type="importmap">
-{ "imports": { "three": "catalog/view/js/vendor/three.module.js",
-               "three/addons/": "catalog/view/js/vendor/three-addons/" } }
-</script>
-```
-
-> Em produção prefira **B** (self-hosted): sem dependência de CDN e com cache-control próprio.
+> A cena só é carregada em rotas que declaram `has_3d`; WebGL permanece aprimoramento progressivo e o HTML/CSS/fallback funciona sem ele.
 
 ---
 

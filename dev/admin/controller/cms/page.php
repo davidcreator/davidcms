@@ -377,7 +377,7 @@ class Page extends \Reamur\System\Engine\Controller {
             ];
 
                 $site = $this->config->get('site_url');
-                $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-4';
+                $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-5';
                 $catalogAssetBase = $this->pageCatalogAssetUrl() . 'view/';
                 $this->document->addStyle($site . 'view/css/blog-block-editor.css?v=' . $version);
                 $this->document->addStyle($catalogAssetBase . 'css/threejs-thumb.css?v=' . $version);

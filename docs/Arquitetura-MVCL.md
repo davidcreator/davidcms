@@ -188,6 +188,8 @@ class Registry {
 ```
 
 > **Princípio:** nunca instancie serviços com `new` dentro de controllers (`new Db()`, `new Twig()`...). Sempre use o Registry/`$this->load` — é o que torna o sistema testável e permite trocar drivers (ex.: cache `file` → `redis`) pelo painel de configurações (`setting/setting`, efetivo desde a F4-06/ADR 0030 — antes era só o `default.php`).
+>
+> O serviço `three_scene_config` é registrado pelo `system/framework.php` e compartilhado entre aplicações. Ele centraliza apenas normalização/validação allowlisted de cenas; o estado persistente continua no model de settings, sem SQL em controller e sem schema novo.
 
 ---
 

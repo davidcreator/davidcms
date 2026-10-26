@@ -53,3 +53,4 @@ Copiar para o novo arquivo `NNNN-titulo-curto.md`:
 | [0004](0004-contratos-qualidade-e-modelos.md) | Contratos de fundação e infra de qualidade (L1–L10) | ✅ aceita | 2026-10-15 |
 | [0048](0048-f8-04-sale-marketing-filtros-paginacao-csrf.md) | F8-04: sale/marketing, filtros, paginação e CSRF | ✅ aceita | 2026-10-22 |
 | [0049](0049-f8-05-blog-media-library.md) | F8-05: biblioteca de mídia para capas do Blog | ✅ aceita | 2026-10-22 |
+| [0072](0072-threejs-scenes-admin-system.md) | Configuração declarativa das cenas Three.js nativas via System e Admin | ✅ aceita | 2026-10-26 |

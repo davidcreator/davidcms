@@ -30,18 +30,14 @@ class Not_found extends \Reamur\System\Engine\Controller {
 
         $data['home'] = $this->config->get('site_url');
 
-        // Cena 4 (F3-03, ADR 0021): fog de partículas na 404 — mesmo slot
-        // WebGL do chrome (has_3d) usado pelo hero. Números não são texto de UI.
+        // Cena Three.js configurável pelo painel; o fallback permanece se desativada.
+        $this->load->model('setting/setting');
+        $threeJs = $this->three_scene_config->runtime($this->model_setting_setting->getSettings());
         $base = rtrim((string)$this->config->get('site_url', ''), '/') . '/';
 
-        $data['has_3d']     = true;
+        $data['has_3d']     = $threeJs['not_found_enabled'];
         $data['asset_base'] = $base;
-        $data['nf3d']       = [
-            'count' => 120,
-            'color' => '#8a4fff',
-            'speed' => 0.05,
-            'drift' => 0.4,
-        ];
+        $data['nf3d']       = $threeJs['not_found'];
 
         // Chrome compartilhado (F2-4)
         $this->document->addStyle($this->config->get('site_url') . 'view/css/common.css');

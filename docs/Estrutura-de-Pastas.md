@@ -162,6 +162,7 @@ system/
 │   ├── cart/{cart, currency, customer, user, tax, length, weight}.php
 │   ├── googleshopping/ openbay/ squareup/   # integrações legadas portadas
 │   ├── security/upload_security.php
+│   ├── three/scene_config.php # policy allowlisted para cenas Three.js
 │   ├── ai.php                 # integração com IA (geração de conteúdo)
 │   ├── mercadopago_marketplace.php
 │   └── encryption, image, language, log, pagination,

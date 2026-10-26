@@ -20,6 +20,18 @@
           </section>
 
           <hr class="my-4">
+          <section class="mb-4" aria-labelledby="threejs-settings-title">
+            <h2 class="h5 mb-3" id="threejs-settings-title"><i class="bi bi-boxes me-2" aria-hidden="true"></i>{{ fieldset_threejs }}</h2>
+            <div class="row g-3">
+              <div class="col-12 col-md-6"><label class="form-label" for="three-hero-enabled">{{ entry_three_hero_enabled }}</label><select class="form-select" name="three_hero_enabled" id="three-hero-enabled">{% for val, lab in threejs_toggle_options %}<option value="{{ val }}"{{ three_hero_enabled == val ? ' selected' : '' }}>{{ lab }}</option>{% endfor %}</select><div class="form-text">{{ help_three_hero_enabled }}</div>{% if error_three_hero_enabled %}<div class="invalid-feedback d-block">{{ error_three_hero_enabled }}</div>{% endif %}</div>
+              <div class="col-12 col-md-6"><label class="form-label" for="three-not-found-enabled">{{ entry_three_not_found_enabled }}</label><select class="form-select" name="three_not_found_enabled" id="three-not-found-enabled">{% for val, lab in threejs_toggle_options %}<option value="{{ val }}"{{ three_not_found_enabled == val ? ' selected' : '' }}>{{ lab }}</option>{% endfor %}</select><div class="form-text">{{ help_three_not_found_enabled }}</div>{% if error_three_not_found_enabled %}<div class="invalid-feedback d-block">{{ error_three_not_found_enabled }}</div>{% endif %}</div>
+              <div class="col-12 col-md-4"><label class="form-label" for="three-hero-count">{{ entry_three_hero_particle_count }}</label><input class="form-control" type="number" name="three_hero_particle_count" id="three-hero-count" value="{{ three_hero_particle_count }}" min="50" max="800" step="1" required><div class="form-text">{{ help_three_hero_particle_count }}</div>{% if error_three_hero_particle_count %}<div class="invalid-feedback d-block">{{ error_three_hero_particle_count }}</div>{% endif %}</div>
+              <div class="col-12 col-md-4"><label class="form-label" for="three-hero-color">{{ entry_three_hero_color }}</label><input class="form-control form-control-color" type="color" name="three_hero_color" id="three-hero-color" value="{{ three_hero_color }}" required><div class="form-text">{{ help_three_hero_color }}</div>{% if error_three_hero_color %}<div class="invalid-feedback d-block">{{ error_three_hero_color }}</div>{% endif %}</div>
+              <div class="col-12 col-md-4"><label class="form-label" for="three-hero-speed">{{ entry_three_hero_speed }}</label><input class="form-control" type="number" name="three_hero_speed" id="three-hero-speed" value="{{ three_hero_speed }}" min="0.01" max="0.20" step="0.01" required><div class="form-text">{{ help_three_hero_speed }}</div>{% if error_three_hero_speed %}<div class="invalid-feedback d-block">{{ error_three_hero_speed }}</div>{% endif %}</div>
+            </div>
+          </section>
+
+          <hr class="my-4">
           <section class="mb-4" aria-labelledby="mail-settings-title">
             <h2 class="h5 mb-3" id="mail-settings-title"><i class="bi bi-envelope me-2" aria-hidden="true"></i>{{ fieldset_mail }}</h2>
             <div class="row g-3">
