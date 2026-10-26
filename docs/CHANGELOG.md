@@ -1,5 +1,15 @@
 # Changelog
 
+## QA funcional das configurações nativas Three.js (2026-10-26)
+- Adicionado runner Playwright opcional para testar UI/salvamento do Admin, enable/disable do Hero e 404, fallback HTML e carregamento do import map self-hosted.
+- Runner aplica a configuração de teste apenas em instalação descartável, guarda os valores originais e tenta restaurá-los sempre no `finally`; não aceita credenciais via CLI.
+- Adicionado contrato estático para o runner; execução autenticada não é possível sem ambiente local autorizado.
+
+## E2E autenticado das cenas nativas (2026-10-26)
+- Incluído runner Playwright opcional para validar settings Admin, persistência, toggles das cenas home/404 e import map/assets locais.
+- O runner exige `E2E_CONFIRM_DISPOSABLE=1`, storage state local, origens iguais e restaura as configurações originais em `finally`.
+- Atualizado o contrato estático do runner; execução funcional permanece dependente de ambiente CMS descartável autenticado.
+
 ## Three.js nativo gerenciado pelo System/Admin/Catalog (2026-10-26)
 - Centraliza limites/defaults de Hero/404 em `system/library/three/scene_config.php`, registrado pelo framework e consumido pelas aplicações sem instanciar serviço em controller.
 - Adiciona controles na tela `setting/setting` para habilitar cenas e ajustar partículas/cor/velocidade, usando a tabela de settings existente, ACL/CSRF existentes e sem migration.

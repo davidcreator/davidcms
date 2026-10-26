@@ -25,4 +25,8 @@ Não há JavaScript arbitrário para as cenas nativas do site. As formas e movim
 
 ## Verificação
 
-Execute `node tools/e2e/check_threejs_native_admin.cjs` e os checkers de BDREditor/Three.js em `tools/e2e/`. Eles são contratos estáticos; não substituem a validação visual da home, da 404 e do Admin num runtime CMS autenticado. Nesta sessão o PHP CLI e uma instância CMS não estão disponíveis, portanto o lint PHP e o E2E real precisam ser executados no ambiente do projeto.
+Execute `node tools/e2e/check_threejs_native_admin.cjs` e os checkers de BDREditor/Three.js em `tools/e2e/`. O runner `threejs_native_admin_playwright.cjs` valida o formulário/settings persistidos, enable/disable da home e 404, import map self-hosted e ausência de 4xx/5xx nos assets; ele restaura os valores iniciais no `finally`.
+
+Uso apenas em uma instalação descartável: instale Playwright fora das dependências do produto (`npm install --no-save playwright`, `npx playwright install chromium`), faça login manual e mantenha um storage state local privado. Exporte `ADMIN_SETTINGS_URL`, `PUBLIC_HOME_URL`, `PUBLIC_404_URL`, `PLAYWRIGHT_STORAGE_STATE` e `E2E_CONFIRM_DISPOSABLE=1`; depois rode `node tools/e2e/threejs_native_admin_playwright.cjs`. O runner exige que home e 404 compartilhem a origem pública e confirmação da instalação descartável; o Admin pode estar em uma origem própria se o storage state local tiver a sessão necessária. Se a restauração reportar falha, restaure manualmente os valores originais do bloco Three.js.
+
+Os checkers são contratos estáticos; não substituem o E2E/browser autenticado. Nesta sessão não há PHP CLI nem uma instância CMS autenticada, então o lint PHP e a execução funcional precisam ocorrer no ambiente de teste do projeto.
