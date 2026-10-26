@@ -28,7 +28,7 @@ Exemplo inicial (também usado ao inserir o bloco):
 
 ## JavaScript opcional isolado
 
-O campo **JavaScript personalizado (sandbox)** aceita até 8 KiB por thumb. O script só é executado dentro de um `iframe sandbox="allow-scripts"` com origem opaca; a CSP do frame bloqueia rede e recursos externos, e o script não pode acessar o DOM, cookies ou armazenamento da página CMS. A cena é montada antes de executar o script. API disponível: `THREE`, `scene`, `camera`, `renderer`, `canvas` e `onFrame(fn)`. `onFrame` recebe `{time, delta, THREE, scene, camera, renderer, canvas}`.
+O campo **JavaScript personalizado (sandbox)** aceita até 8 KiB por thumb. Cole JavaScript puro, sem envolver em tags `<script>...</script>`. O runtime informa na própria thumb quando está carregando, pronto ou com erro de inicialização/execução. O script só é executado dentro de um `iframe sandbox="allow-scripts"` com origem opaca; a CSP do frame bloqueia rede e recursos externos, e o script não pode acessar o DOM, cookies ou armazenamento da página CMS. A cena é montada antes de executar o script. A própria thumb mostra estado de carregamento/erro caso a dependência local ou o código não inicialize. API disponível: `THREE`, `scene`, `camera`, `renderer`, `canvas` e `onFrame(fn)`. `onFrame` recebe `{time, delta, THREE, scene, camera, renderer, canvas}`.
 
 Exemplo:
 

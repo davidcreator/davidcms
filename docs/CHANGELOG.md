@@ -46,3 +46,8 @@
 - Adicionado botão visível **Editar thumb e script** no próprio cartão do canvas; abrir o Inspetor lateral deixa de ser pré-requisito.
 - Painel inline reúne formas/luzes e textarea JS com ação **Excluir script** (desfazível), mantendo a edição no envelope v2 e o salvamento do formulário.
 - O campo JS usa commit sem re-render ao perder foco para que os controles próximos continuem acionáveis.
+
+## Correção — execução e diagnóstico do script público (2026-10-26)
+- O módulo Three.js da iframe passa a importar diretamente os módulos locais por data URL, sem depender de import map no frame opaco. Testado por importação ESM do pacote local em Node.
+- A thumb pública agora reporta carregamento, inicialização e erros de módulo/CSP/código com texto seguro; mantém o fallback acessível até sucesso.
+- A ajuda especifica JavaScript puro (sem tags `<script>`) e o runtime público ganhou novo cache-buster.

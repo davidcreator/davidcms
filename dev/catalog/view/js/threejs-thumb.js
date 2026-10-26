@@ -34,26 +34,30 @@
         return Promise.all([responses[0].text(), responses[1].text()]);
       }).then(function (sources) {
         var coreData = 'data:text/javascript;base64,' + encodeBase64(sources[1]);
-        var moduleSource = sources[0].replace(/from ['\"]\.\/three\.core\.js['\"]/g, 'from \"three-core\"');
-        if (moduleSource === sources[0]) throw new Error('three_core_import_not_found');
-        return { core:coreData, module:'data:text/javascript;base64,' + encodeBase64(moduleSource) };
+        var replacements = 0;
+        var moduleSource = sources[0].replace(/from ['\"]\.\/three\.core\.js['\"]/g, function () { replacements += 1; return 'from ' + JSON.stringify(coreData); });
+        if (replacements < 2) throw new Error('three_core_import_not_found');
+        return 'data:text/javascript;base64,' + encodeBase64(moduleSource);
       });
     }
     return moduleDataUrlPromise;
   }
   function safeScriptLiteral(value) { return JSON.stringify(value).replace(/</g, '\\u003c'); }
   function sandboxDocument(sceneData, userScript, moduleData) {
-    var sceneLiteral = safeScriptLiteral(sceneData), scriptLiteral = safeScriptLiteral(userScript), moduleLiteral = safeScriptLiteral(moduleData.module), coreLiteral = safeScriptLiteral(moduleData.core);
+    var sceneLiteral = safeScriptLiteral(sceneData), scriptLiteral = safeScriptLiteral(userScript), moduleLiteral = safeScriptLiteral(moduleData);
     var policy = "default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' data:; style-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; form-action 'none'; base-uri 'none'";
-    return '<!doctype html><html><head><meta charset=\"utf-8\"><meta http-equiv=\"Content-Security-Policy\" content=\"' + policy + '\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101827}canvas{display:block;width:100%;height:100%}#error{position:absolute;inset:auto 0 0;padding:6px;background:#5a1010;color:#fff;font:12px/1.4 sans-serif;white-space:pre-wrap}</style></head><body><canvas id=\"stage\"></canvas><div id=\"error\" hidden></div><script type=\"importmap\">{\"imports\":{\"three-core\":' + coreLiteral + '}}</script><script type=\"module\">import * as THREE from ' + moduleLiteral + ';const config=' + sceneLiteral + ';const source=' + scriptLiteral + ';const canvas=document.getElementById(\'stage\');const error=document.getElementById(\'error\');let active=true,frame=0,userFrame=null,last=0;function fail(e){error.hidden=false;error.textContent=String(e&&e.message||e).slice(0,500)}try{const scene=new THREE.Scene();scene.background=new THREE.Color(config.background);if(config.fog)scene.fog=new THREE.Fog(config.fog.color,config.fog.near,config.fog.far);const camera=new THREE.PerspectiveCamera(config.camera.fov,1,0.1,100);camera.position.set(...config.camera.position);camera.lookAt(0,0,0);const renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:false,antialias:false,powerPreference:\'low-power\',stencil:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;function resize(){const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false)}resize();addEventListener(\'resize\',resize);config.lights.forEach(l=>{let x=l.type===\'ambient\'?new THREE.AmbientLight(l.color,l.intensity):l.type===\'point\'?new THREE.PointLight(l.color,l.intensity,0,2):new THREE.DirectionalLight(l.color,l.intensity);if(l.position)x.position.set(...l.position);scene.add(x)});const meshes=[];config.objects.forEach(o=>{const g={box:()=>new THREE.BoxGeometry(1,1,1),sphere:()=>new THREE.SphereGeometry(.68,24,16),torus:()=>new THREE.TorusGeometry(.62,.22,12,36),cone:()=>new THREE.ConeGeometry(.62,1.15,24),cylinder:()=>new THREE.CylinderGeometry(.5,.5,1,24),icosahedron:()=>new THREE.IcosahedronGeometry(.68,1),torusKnot:()=>new THREE.TorusKnotGeometry(.48,.16,72,8)}[o.type]();const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:o.color,roughness:o.roughness===undefined?.45:o.roughness,metalness:o.metalness===undefined?.1:o.metalness,wireframe:!!o.wireframe}));m.position.set(...o.position);m.rotation.set(...o.rotation);m.scale.setScalar(o.scale);m.userData.thumbAnimation=o.animation;m.userData.baseY=o.position[1];m.userData.baseScale=o.scale;scene.add(m);meshes.push(m)});const onFrame=fn=>{if(typeof fn===\'function\')userFrame=fn};new Function(\'THREE\',\'scene\',\'camera\',\'renderer\',\'canvas\',\'onFrame\',source)(THREE,scene,camera,renderer,canvas,onFrame);function draw(t){if(!active)return;const sec=t*.001,delta=last?Math.min((t-last)*.001,.05):0;last=t;if(userFrame)userFrame({time:sec,delta:delta,THREE:THREE,scene:scene,camera:camera,renderer:renderer,canvas:canvas});else{if(config.auto_rotate)scene.rotation.y+=delta*.22;meshes.forEach(m=>{if(m.userData.thumbAnimation===\'spin\')m.rotation.y+=delta*.48;else if(m.userData.thumbAnimation===\'bob\')m.position.y=m.userData.baseY+Math.sin(sec*1.5)*.12;else if(m.userData.thumbAnimation===\'pulse\')m.scale.setScalar(m.userData.baseScale*(1+Math.sin(sec*1.8)*.08))})}renderer.render(scene,camera);if(userFrame||config.auto_rotate||meshes.some(m=>m.userData.thumbAnimation!==\'none\'))frame=requestAnimationFrame(draw)}renderer.render(scene,camera);if(userFrame||config.auto_rotate||meshes.some(m=>m.userData.thumbAnimation!==\'none\'))frame=requestAnimationFrame(draw);addEventListener(\'message\',e=>{if(e.source!==parent)return;if(e.data===\'pause\'){active=false;if(frame)cancelAnimationFrame(frame);frame=0;last=0}else if(e.data===\'resume\'&&!active){active=true;if(frame)cancelAnimationFrame(frame);frame=requestAnimationFrame(draw)}})}catch(e){fail(e)}</script></body></html>';
+    return '<!doctype html><html><head><meta charset=\"utf-8\"><meta http-equiv=\"Content-Security-Policy\" content=\"' + policy + '\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101827}canvas{display:block;width:100%;height:100%}#error{position:absolute;inset:auto 0 0;padding:6px;background:#5a1010;color:#fff;font:12px/1.4 sans-serif;white-space:pre-wrap}</style></head><body><canvas id=\"stage\"></canvas><div id=\"error\" hidden></div><script>window.addEventListener(\"error\",e=>parent.postMessage({type:\"reamur-threejs-thumb\",state:\"error\",message:String(e.message||e).slice(0,300)},\"*\"));window.addEventListener(\"unhandledrejection\",e=>parent.postMessage({type:\"reamur-threejs-thumb\",state:\"error\",message:String(e.reason||e).slice(0,300)},\"*\"));document.addEventListener(\"securitypolicyviolation\",e=>parent.postMessage({type:\"reamur-threejs-thumb\",state:\"error\",message:\"CSP blocked \"+e.violatedDirective},\"*\"))</script><script type=\"module\">import * as THREE from ' + moduleLiteral + ';const config=' + sceneLiteral + ';const source=' + scriptLiteral + ';const canvas=document.getElementById(\'stage\');const error=document.getElementById(\'error\');let active=true,frame=0,userFrame=null,last=0;function fail(e){error.hidden=false;error.textContent=String(e&&e.message||e).slice(0,300);parent.postMessage({type:\"reamur-threejs-thumb\",state:\"error\",message:error.textContent},\"*\")}try{const scene=new THREE.Scene();scene.background=new THREE.Color(config.background);if(config.fog)scene.fog=new THREE.Fog(config.fog.color,config.fog.near,config.fog.far);const camera=new THREE.PerspectiveCamera(config.camera.fov,1,0.1,100);camera.position.set(...config.camera.position);camera.lookAt(0,0,0);const renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:false,antialias:false,powerPreference:\'low-power\',stencil:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;function resize(){const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false)}resize();addEventListener(\'resize\',resize);config.lights.forEach(l=>{let x=l.type===\'ambient\'?new THREE.AmbientLight(l.color,l.intensity):l.type===\'point\'?new THREE.PointLight(l.color,l.intensity,0,2):new THREE.DirectionalLight(l.color,l.intensity);if(l.position)x.position.set(...l.position);scene.add(x)});const meshes=[];config.objects.forEach(o=>{const g={box:()=>new THREE.BoxGeometry(1,1,1),sphere:()=>new THREE.SphereGeometry(.68,24,16),torus:()=>new THREE.TorusGeometry(.62,.22,12,36),cone:()=>new THREE.ConeGeometry(.62,1.15,24),cylinder:()=>new THREE.CylinderGeometry(.5,.5,1,24),icosahedron:()=>new THREE.IcosahedronGeometry(.68,1),torusKnot:()=>new THREE.TorusKnotGeometry(.48,.16,72,8)}[o.type]();const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:o.color,roughness:o.roughness===undefined?.45:o.roughness,metalness:o.metalness===undefined?.1:o.metalness,wireframe:!!o.wireframe}));m.position.set(...o.position);m.rotation.set(...o.rotation);m.scale.setScalar(o.scale);m.userData.thumbAnimation=o.animation;m.userData.baseY=o.position[1];m.userData.baseScale=o.scale;scene.add(m);meshes.push(m)});const onFrame=fn=>{if(typeof fn===\'function\')userFrame=fn};new Function(\'THREE\',\'scene\',\'camera\',\'renderer\',\'canvas\',\'onFrame\',source)(THREE,scene,camera,renderer,canvas,onFrame);function draw(t){if(!active)return;const sec=t*.001,delta=last?Math.min((t-last)*.001,.05):0;last=t;if(userFrame)userFrame({time:sec,delta:delta,THREE:THREE,scene:scene,camera:camera,renderer:renderer,canvas:canvas});else{if(config.auto_rotate)scene.rotation.y+=delta*.22;meshes.forEach(m=>{if(m.userData.thumbAnimation===\'spin\')m.rotation.y+=delta*.48;else if(m.userData.thumbAnimation===\'bob\')m.position.y=m.userData.baseY+Math.sin(sec*1.5)*.12;else if(m.userData.thumbAnimation===\'pulse\')m.scale.setScalar(m.userData.baseScale*(1+Math.sin(sec*1.8)*.08))})}renderer.render(scene,camera);if(userFrame||config.auto_rotate||meshes.some(m=>m.userData.thumbAnimation!==\'none\'))frame=requestAnimationFrame(draw)}renderer.render(scene,camera);parent.postMessage({type:\"reamur-threejs-thumb\",state:\"ready\"},\"*\");if(userFrame||config.auto_rotate||meshes.some(m=>m.userData.thumbAnimation!==\'none\'))frame=requestAnimationFrame(draw);addEventListener(\'message\',e=>{if(e.source!==parent)return;if(e.data===\'pause\'){active=false;if(frame)cancelAnimationFrame(frame);frame=0;last=0}else if(e.data===\'resume\'&&!active){active=true;if(frame)cancelAnimationFrame(frame);frame=requestAnimationFrame(draw)}})}catch(e){fail(e)}</script></body></html>';
   }
   function mountSandbox(element, sceneData, userScript) {
     var fallback = element.querySelector('.rms-block-threejs-thumb__fallback');
+    var status = document.createElement('span'); status.className='rms-block-threejs-thumb__status'; status.setAttribute('role','status'); status.setAttribute('aria-live','polite'); status.textContent='Carregando JavaScript da thumb…'; element.appendChild(status);
     var frame = document.createElement('iframe'); frame.className='rms-block-threejs-thumb__sandbox';
     frame.setAttribute('sandbox','allow-scripts'); frame.setAttribute('referrerpolicy','no-referrer');
     frame.setAttribute('title',element.getAttribute('aria-label')||'Interactive 3D scene'); frame.setAttribute('aria-label',element.getAttribute('aria-label')||'Interactive 3D scene');
     element.appendChild(frame);
-    var instance={frameElement:frame,frame:0,active:false,resize:null,intersection:null}; instances.set(element,instance);
+    var onMessage=function(event){if(event.source!==frame.contentWindow||event.origin!=='null'||!event.data||event.data.type!=='reamur-threejs-thumb')return;if(event.data.state==='ready'){status.hidden=true;if(fallback)fallback.hidden=true;element.dataset.threejsReady='custom-script';}else if(event.data.state==='error'){status.hidden=false;status.textContent='Falha na thumb: '+String(event.data.message||'erro de execução').slice(0,240);if(fallback)fallback.hidden=false;element.dataset.threejsReady='error';}};
+    window.addEventListener('message',onMessage);
+    var instance={frameElement:frame,frame:0,active:false,resize:null,intersection:null,statusElement:status,onMessage:onMessage}; instances.set(element,instance);
     instance.intersection=new IntersectionObserver(function(entries){entries.forEach(function(entry){
       if(!entry.isIntersecting){instance.active=false;if(frame.contentWindow)frame.contentWindow.postMessage('pause','*');return;}
       instance.active=true;
@@ -62,8 +66,8 @@
       moduleDataUrl().then(function(moduleData){
         if(!frame.isConnected)return;
         frame.srcdoc=sandboxDocument(sceneData,userScript,moduleData);
-        frame.addEventListener('load',function(){if(frame.contentWindow)frame.contentWindow.postMessage(instance.active?'resume':'pause','*');if(fallback)fallback.hidden=true},{once:true});
-      }).catch(function(){frame.remove();if(fallback)fallback.hidden=false;});
+        frame.addEventListener('load',function(){if(frame.contentWindow)frame.contentWindow.postMessage(instance.active?'resume':'pause','*');},{once:true});
+      }).catch(function(error){frame.remove();status.hidden=false;status.textContent='Não foi possível carregar o runtime local Three.js: '+String(error&&error.message||error).slice(0,160);if(fallback)fallback.hidden=false;element.dataset.threejsReady='error';});
     })},{rootMargin:'100px'});
     instance.intersection.observe(element); element.dataset.threejsReady='sandbox';
   }
@@ -77,7 +81,7 @@
     if (instance.frame) cancelAnimationFrame(instance.frame);
     if (instance.resize) instance.resize.disconnect();
     if (instance.intersection) instance.intersection.disconnect();
-    if (instance.frameElement) { if (instance.frameElement.contentWindow) instance.frameElement.contentWindow.postMessage('pause','*'); instance.frameElement.remove(); return; }
+    if (instance.frameElement) { if (instance.onMessage) window.removeEventListener('message',instance.onMessage); if (instance.frameElement.contentWindow) instance.frameElement.contentWindow.postMessage('pause','*'); instance.frameElement.remove(); return; }
     instance.scene.traverse(function (item) {
       if (item.geometry) item.geometry.dispose();
       if (item.material) (Array.isArray(item.material) ? item.material : [item.material]).forEach(function (material) { material.dispose(); });
@@ -172,11 +176,16 @@
     if (root.nodeType === 1 && root.matches && root.matches('[data-threejs-thumb]')) mount(root, T);
     if (root.querySelectorAll) root.querySelectorAll('[data-threejs-thumb]').forEach(function (element) { mount(element, T); });
   }
-  enginePromise.then(function (THREE) {
-    scan(document, THREE);
+  function scanCustom(root) {
+    if (root.nodeType === 1 && root.matches && root.matches('[data-threejs-thumb][data-custom-js]') && root.getAttribute('data-custom-js')) mount(root, null);
+    if (root.querySelectorAll) root.querySelectorAll('[data-threejs-thumb][data-custom-js]').forEach(function (element) { if (element.getAttribute('data-custom-js')) mount(element, null); });
+  }
+  function observeDom(THREE, customOnly) {
+    var scanRoot = customOnly ? scanCustom : function (root) { scan(root, THREE); };
+    scanRoot(document);
     var observer = new MutationObserver(function (records) {
       records.forEach(function (record) {
-        record.addedNodes.forEach(function (node) { if (node.nodeType === 1) scan(node, THREE); });
+        record.addedNodes.forEach(function (node) { if (node.nodeType === 1) scanRoot(node); });
         record.removedNodes.forEach(function (node) {
           if (node.nodeType === 1) {
             if (instances.has(node)) { dispose(instances.get(node)); instances.delete(node); }
@@ -186,5 +195,8 @@
       });
     });
     if (document.documentElement) observer.observe(document.documentElement, { childList: true, subtree: true });
-  }).catch(function () { /* Keep accessible text fallback when WebGL or the local module is unavailable. */ });
+  }
+  enginePromise.then(function (THREE) { observeDom(THREE, false); })
+    .catch(function () { observeDom(null, true); });
+
 })();

@@ -6,3 +6,5 @@
 .rms-block-threejs-thumb__fallback[hidden]{display:none}
 @media(prefers-reduced-motion:reduce){.rms-block-threejs-thumb__stage{scroll-behavior:auto}}
 .rms-block-threejs-thumb__sandbox{position:absolute;inset:0;display:block;width:100%;height:100%;border:0;background:#101827}
+.rms-block-threejs-thumb__status{position:absolute;z-index:3;inset:auto .5rem .5rem;padding:.45rem .65rem;border:1px solid rgba(255,255,255,.24);border-radius:.4rem;background:rgba(18,24,36,.94);color:#fff;font:500 .8rem/1.35 system-ui,sans-serif;overflow-wrap:anywhere}
+.rms-block-threejs-thumb__status[hidden]{display:none!important}
