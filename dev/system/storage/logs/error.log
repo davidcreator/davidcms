@@ -41,3 +41,6 @@
 Route not found: paginaquenaoexistee2e.index — request: /davidcms/dev/catalog/pagina-que-nao-existe-e2e2026-10-26 19:25:05 - Route not found: paginaquenaoexistee2e.index — request: /davidcms/dev/catalog/pagina-que-nao-existe-e2e
 2026-10-26 19:25:05 - Route not found: 404testee2e.index — request: /davidcms/dev/catalog/404-teste-e2e
 2026-10-26 20:24:54 - Route not found: threejsee2notfound.index — request: /davidcms/dev/catalog/threejsee2notfound
+2026-10-27 18:40:52 - ErrorException: file_get_contents(): Read of 8192 bytes failed with errno=13 Permission denied em E:\wamp64\www\davidcms\dev\system\library\session\file.php:27
+2026-10-27 18:41:57 - ErrorException: file_get_contents(): Read of 8213 bytes failed with errno=13 Permission denied em E:\wamp64\www\davidcms\dev\system\library\session\file.php:27
+2026-10-27 19:29:07 - ErrorException: filemtime(): stat failed for E:\wamp64\www\davidcms/dev/system/storage/session/sess_1remiisrcd1jo8jp6bm1k1dr0f em E:\wamp64\www\davidcms\dev\system\library\session\file.php:44

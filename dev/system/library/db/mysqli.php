@@ -22,6 +22,11 @@ final class Mysqli {
         }
 
         $this->connection->set_charset('utf8mb4');
+
+        // Alinha a sessão do MySQL ao fuso do PHP (mesmo contrato do driver mariadb):
+        // sem isto, NOW() segue o fuso do servidor (SYSTEM) e diverge de date() do PHP,
+        // fazendo registros recém-criados parecerem futuros (ex.: blog filter date_published <= NOW()).
+        $this->connection->query("SET time_zone = '" . date('P') . "'");
     }
 
     public function query(string $sql): \stdClass|bool {
