@@ -1,5 +1,11 @@
 # Changelog
 
+## Cena 3 — galeria 3D opcional no Portfólio (2026-10-27)
+- Implementa ADR 0076 antecipada por autorização: overlay decorativo no SceneRunner; grade, anchors e tilt CSS permanecem como fallback acessível.
+- Adiciona toggle desligado por padrão e limite 1–12 (default 12) no formulário existente, com validação/allowlist e textos nos três idiomas.
+- Carrega apenas capas same-origin ao aproximar da viewport; compõe atlas/mesh único e preserva fallback CSS em falha/reduced-motion/WebGL indisponível.
+- Registra `portfolio-3d.js` no `main.js` e no AssetManifest; sem migration.
+
 ## Cena 2 — logo GLB opcional do Hero (2026-10-26)
 - Publica `logo-da.glb` pelo manifesto do System e gateway Catalog, com MIME `model/gltf-binary`; o caminho é fixo e allowlisted.
 - Adiciona `GLTFLoader` r186 e dependências à allowlist, importadas dinamicamente somente quando o modelo está configurado.

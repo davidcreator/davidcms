@@ -28,6 +28,7 @@ final class AssetManifest {
         'three/components/studio-lighting.js' => 'runtime/three/components/studio-lighting.js',
         'three/scenes/hero-particles.js' => 'runtime/three/scenes/hero-particles.js',
         'three/scenes/not-found.js' => 'runtime/three/scenes/not-found.js',
+        'three/scenes/portfolio-3d.js' => 'runtime/three/scenes/portfolio-3d.js',
         'three/addons/loaders/GLTFLoader.js' => 'runtime/three/addons/loaders/GLTFLoader.js',
         'three/addons/utils/BufferGeometryUtils.js' => 'runtime/three/addons/utils/BufferGeometryUtils.js',
         'three/addons/utils/SkeletonUtils.js' => 'runtime/three/addons/utils/SkeletonUtils.js',

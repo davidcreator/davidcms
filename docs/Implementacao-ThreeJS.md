@@ -6,7 +6,7 @@
 | --- | --- |
 | **Escopo** | Engine/runtime canônico em `dev/system/library/three/`; cenas/template e adaptador público em `dev/catalog/`; Admin reutiliza a rota de assets do Catalog |
 | **Depende de** | [Guia-ThreeJS.md](Guia-ThreeJS.md) · [Guia-Twig.md](Guia-Twig.md) · ADR 0073 · [roadmap](Analise-DavidAlmeida.md#8-plano-de-migração) |
-| **Status** | ✅ Configuração declarativa System/Admin e runtime self-hosted centralizado no System; Catalog serve somente a allowlist por rota pública cacheável. Ver [`THREEJS_NATIVE_SYSTEM.md`](THREEJS_NATIVE_SYSTEM.md). |
+| **Status** | ✅ Engine compartilhada, Cena 2 GLB e Cena 3 etapa 2 implementadas como opt-in; runtime e modelos passam pela allowlist do System/Catalog. QA visual/performance em browser permanece pendente. Ver [`THREEJS_NATIVE_SYSTEM.md`](THREEJS_NATIVE_SYSTEM.md) e ADR 0076. |
 
 ---
 
@@ -68,7 +68,7 @@ dev/system/library/three/
         ├── addons/             # loaders do pacote oficial (GLTFLoader + utils)
         ├── components/         # componentes reutilizáveis (particle-field, studio-lighting)
         ├── models/             # assets 3D (logo-da.glb — Cena 2)
-        └── scenes/             # Hero e 404
+        └── scenes/             # Hero, 404 e galeria decorativa do Portfólio
 
 dev/catalog/
 ├── .htaccess                   # rota limitada /three-runtime/*.{js,glb} → adaptador Catalog
@@ -94,7 +94,7 @@ O import map do `common/header.twig` só é emitido quando `has_3d` está ativo 
 
 ## 4. Padrão de módulo de cena (SceneModule)
 
-`dev/system/library/three/runtime/three/core/scene-runner.js` é a única camada WebGL para Hero, 404 e thumbs declarativas. Ela cria o `WebGLRenderer`, câmera e cena; controla lazy-init, resize, `prefers-reduced-motion`, visibilidade, pausa e descarte. As cenas só constroem objetos e implementam `update()`/`dispose()`.
+`dev/system/library/three/runtime/three/core/scene-runner.js` é a única camada WebGL para Hero, 404, Portfólio e thumbs declarativas. Ela cria o `WebGLRenderer`, câmera e cena; controla lazy-init, resize, `prefers-reduced-motion`, visibilidade, pausa e descarte. As cenas só constroem objetos e implementam `update()`/`dispose()`. Hoje, `portfolio-3d.js` combina até 12 faces texturizadas num único atlas/mesh; os anchors HTML continuam sendo a navegação real.
 
 ```js
 import { registerScene } from '../core/scene-runner.js';
@@ -201,16 +201,21 @@ Sem tabela, sem migration e sem setting novo: o asset passa pelo mesmo gateway a
 
 ## 7. Cena 3 — Portfólio
 
-**Etapa 1 (Fase 3, sem WebGL):** tilt 3D por CSS nos cards — efeito barato e acessível:
+### Etapa 1 — tilt CSS
 
-```css
-/* catalog/view/css/theme.css */
-.pcard { transform-style: preserve-3d; transition: transform .25s ease; }
-.pcard:hover { transform: perspective(800px) rotateX(4deg) rotateY(-4deg) translateY(-4px); }
-@media (prefers-reduced-motion: reduce) { .pcard:hover { transform: none; } }
-```
+A grade em `dev/catalog/view/template/partial/portfolio.twig` continua sendo conteúdo e navegação HTML. `dev/catalog/view/css/theme.css` aplica `perspective/rotateX/rotateY` nos `.pcard` com transição curta e zera a transformação em `prefers-reduced-motion`.
 
-**Etapa 2 (pós-lançamento):** `scenes/portfolio-3d.js` — galeria navegável (quadros 3D com as capas dos projetos como texturas). Fora do escopo do lançamento; especificação fechada na ADR 0076 (camada decorativa sobre a grade, `TextureLoader` do módulo oficial, navegação nos anchors HTML).
+### Etapa 2 — galeria 3D opcional (ADR 0076)
+
+A galeria é uma camada decorativa sobre a grade; não troca cards, links, SEO ou texto acessível. O canvas recebe `aria-hidden="true"`, fica sem interação própria e reage a `pointermove`, `mouseenter` e `focusin` nos próprios `.pcard`. Quando desativada, sem projetos, sem WebGL ou com movimento reduzido, a grade HTML e o tilt CSS continuam sendo a experiência completa.
+
+- Módulo: `dev/system/library/three/runtime/three/scenes/portfolio-3d.js`, registrado em `three/main.js` e `AssetManifest`.
+- Dados: URLs das capas já publicadas no controller, serializadas como atributo de dados escapado; o módulo rejeita origens diferentes da origem da página.
+- Rede: o SceneRunner só instancia a cena perto da viewport. `TextureLoader` monta um atlas com até 12 capas; capas ausentes/falhas deixam tiles de cor. Um mesh combinado mantém um draw call de geometria.
+- Controles: `three_portfolio_enabled` (default `0`) e `three_portfolio_frame_limit` (default `12`, faixa `1–12`) na tela existente `admin/setting/setting`; persistência por `rms_setting`, sem migration.
+- Fallback visual: gradiente CSS atrás da seção; canvas `pointer-events:none`; os anchors continuam à frente e podem receber teclado/foco.
+
+A etapa foi autorizada para implementação antes do cutover em 2026-10-27. A validação visual, de redução de movimento e de performance em browser/staging ainda precisa ser feita antes da ativação em produção.
 
 ---
 
@@ -338,7 +343,7 @@ $_['hero_subtitle']  = 'Transformo ideias em realidade com criatividade e respon
 | S1 | Setup self-hosted + `scene-runner` + Cena 1 (partículas) em staging |
 | S2 | Integração controller/Twig + idiomas + QA matriz de dispositivos |
 | S3 | Cena 2 (logo GLB) — depende do asset 3D pronto |
-| S4 | Portfólio etapa 1 (tilt CSS) + 404 + budgets validados no Lighthouse |
+| S4 | Portfólio etapa 1 (tilt CSS) + 404; etapa 2 de galeria 3D autorizada antecipadamente pela ADR 0076 |
 
 ---
 

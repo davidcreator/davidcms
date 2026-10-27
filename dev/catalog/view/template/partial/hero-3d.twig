@@ -6,11 +6,11 @@
    data-model (Cena 2, vazio quando não publicado) acrescenta o logo GLB. #}
 <section class="hero hero--3d" id="top">
   <div class="hero-3d__canvas" aria-hidden="true"
-       data-scene="hero-particles"
+       {% if hero3d.enabled %}data-scene="hero-particles"
        data-count="{{ hero3d.count }}"
        data-color="{{ hero3d.color }}"
        data-speed="{{ hero3d.speed }}"
-       data-model="{{ hero3d.model }}">
+       data-model="{{ hero3d.model }}"{% endif %}>
     <div class="hero-3d__fallback" data-fallback></div>
   </div>
   <div class="container hero-3d__content">

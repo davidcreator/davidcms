@@ -91,7 +91,7 @@ class Setting extends \Reamur\System\Engine\Controller {
         $data['fieldset_cache']    = $this->language->get('fieldset_cache');
         $data['fieldset_threejs']  = $this->language->get('fieldset_threejs');
         $data['threejs_toggle_options'] = ['1' => $this->language->get('text_enabled'), '0' => $this->language->get('text_disabled')];
-        foreach (['three_hero_enabled', 'three_hero_particle_count', 'three_hero_color', 'three_hero_speed', 'three_not_found_enabled'] as $field) {
+        foreach (['three_hero_enabled', 'three_hero_particle_count', 'three_hero_color', 'three_hero_speed', 'three_not_found_enabled', 'three_portfolio_enabled', 'three_portfolio_frame_limit'] as $field) {
             $data['entry_' . $field] = $this->language->get('entry_' . $field);
             $data['help_' . $field] = $this->language->get('help_' . $field);
             $data['error_' . $field] = (string)($errors[$field] ?? '');
@@ -286,6 +286,8 @@ class Setting extends \Reamur\System\Engine\Controller {
             'three_hero_color' => $str('three_hero_color', 7),
             'three_hero_speed' => $str('three_hero_speed', 4),
             'three_not_found_enabled' => $str('three_not_found_enabled', 1),
+            'three_portfolio_enabled' => $str('three_portfolio_enabled', 1),
+            'three_portfolio_frame_limit' => $str('three_portfolio_frame_limit', 16),
         ];
     }
 

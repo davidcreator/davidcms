@@ -80,7 +80,7 @@ class Setting extends \Reamur\System\Engine\Model {
 
             // Three.js (ADR 0072): configuração declarativa allowlisted de Hero/404
             'three_hero_enabled', 'three_hero_particle_count', 'three_hero_color', 'three_hero_speed',
-            'three_not_found_enabled',
+            'three_not_found_enabled', 'three_portfolio_enabled', 'three_portfolio_frame_limit',
         ];
 
         foreach ($data as $key => $value) {

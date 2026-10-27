@@ -57,7 +57,7 @@ class Home extends \Reamur\System\Engine\Controller {
             // Sem script arbitrário; o header só carrega WebGL quando habilitado.
             'has_3d'     => $threeJs['hero_enabled'],
             'three_runtime_base' => $base . $this->three_asset_manifest->publicBasePath(),
-            'hero3d'     => $threeJs['hero'] + ['model' => $heroModel !== null ? $base . $heroModel : ''],
+            'hero3d'     => $threeJs['hero'] + ['enabled' => $threeJs['hero_enabled'], 'model' => $heroModel !== null ? $base . $heroModel : ''],
 
             'heading_title'     => $this->language->get('heading_title'),
             'text_tagline'      => $this->language->get('text_tagline'),
@@ -168,6 +168,21 @@ class Home extends \Reamur\System\Engine\Controller {
                 'external' => ((string)$p['url'] !== '') ? 1 : 0,
             ];
         }
+
+        $portfolioEnabled = $threeJs['portfolio_enabled'] && !empty($data['projects']);
+        $portfolioFrameLimit = $threeJs['portfolio']['frame_limit'];
+        $portfolioImages = $portfolioEnabled
+            ? array_map(
+                static fn(array $project): string => $project['image'],
+                array_slice($data['projects'], 0, $portfolioFrameLimit)
+            )
+            : [];
+        $data['portfolio3d'] = [
+            'enabled' => $portfolioEnabled,
+            'frame_limit' => $portfolioFrameLimit,
+            'images' => $portfolioImages,
+        ];
+        $data['has_3d'] = $threeJs['hero_enabled'] || $portfolioEnabled;
 
         $data['testimonials'] = [];
 

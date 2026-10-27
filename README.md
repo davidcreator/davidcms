@@ -1,28 +1,20 @@
-# ReamurCMS — Three.js System Engine (Cena 2 GLB)
+# Three.js — ADR 0076: galeria 3D decorativa do Portfólio
 
-Patch consolidado do runtime compartilhado e da Cena 2 do Hero, baseado no HEAD `3f161857c45be2f599b5dad8ea1d4fc40d014581` do `main`.
+Pacote de overlay com as alterações da ADR 0076, preparado sobre o HEAD consultado `7e598559fafd4ba1a7c8f28aa5df266654fff52d`.
 
-## Conteúdo desta atualização
-
-- Modelo `logo-da.glb` armazenado em System e servido somente pela allowlist do AssetManifest no gateway Catalog (`model/gltf-binary`).
-- GLTFLoader r186 e utilitários oficiais self-hosted no runtime System; download dinâmico apenas se a cena receber `data-model`.
-- Cena Hero mantém partículas quando o modelo falta ou falha; loader, luz de estúdio, normalização visual e fallback estão integrados ao SceneRunner.
-- Import map resolve `three/addons/`; `.htaccess` reconhece `.glb`; URL do modelo é derivada do manifesto, sem caminho fornecido pelo usuário.
-- ADR 0075 registra que o GLB presente é um placeholder procedural válido a ser substituído pelo export final do Blender.
-- Nenhuma tabela, setting novo ou migration.
+## Escopo
+- Toggle `three_portfolio_enabled` desligado por padrão e `three_portfolio_frame_limit` default 12, validado de 1 a 12, no formulário Admin já existente e nos idiomas `pt-br`, `en-us` e `es-eu`.
+- Galeria decorativa com capas same-origin (máximo 12), registrada no AssetManifest allowlisted e montada pelo SceneRunner central.
+- Anchors/cards HTML permanecem como navegação/SEO; fallback CSS preservado para WebGL indisponível, falha de imagem e movimento reduzido.
+- `has_3d` carrega o runtime com Hero **ou** Portfólio ativo; o container Hero respeita o toggle próprio.
+- Sem migration, push ou deploy.
 
 ## Aplicação
+Extraia o conteúdo na raiz do repositório que esteja no HEAD de referência. O pacote contém somente arquivos do overlay e não é uma cópia integral do repositório; não exclua arquivos não listados.
 
-1. Faça backup e aplique os arquivos preservando os caminhos relativos.
-2. Revise `DELETE_FILES.txt` antes de qualquer remoção; confirme as fontes System e allowlist primeiro.
-3. Não exponha `system/` diretamente: use a rota allowlisted do Catalog.
+## Verificações realizadas
+- `node --check` no novo módulo, `main.js` e checker Admin.
+- `node tools/e2e/check_threejs_native_admin.cjs`: 11/11.
+- `node tools/e2e/check_threejs_thumb.cjs`: 22/22.
 
-## Verificações desta etapa
-
-- `node --check` passou para Hero, studio lighting, GLTFLoader e utilitários.
-- `tools/e2e/check_threejs_native_admin.cjs`: 10/10 verificações estáticas.
-- `tools/e2e/check_threejs_thumb.cjs`: 22/22 verificações estáticas.
-- GLB: cabeçalho glTF 2.0 e comprimento/chunks consistentes.
-- Não foi executado browser E2E nem `php -l` (PHP CLI indisponível).
-
-Nenhum push, deploy, teste mutável ou migration foi feito por esta sessão.
+PHP lint não foi executado (PHP CLI indisponível); não houve QA visual em browser/staging. A opção permanece desligada por padrão até esse QA.

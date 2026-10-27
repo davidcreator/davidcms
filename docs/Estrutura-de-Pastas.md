@@ -165,7 +165,7 @@ system/
 │   ├── three/                  # serviço/config + runtime Three.js canônico self-hosted
 │   │   ├── scene_config.php    # política declarativa allowlisted
 │   │   ├── asset_manifest.php  # allowlist de módulos servidos pelo Catalog
-│   │   └── runtime/            # vendor Three + runner/cenas/thumbs (não exposto direto)
+│   │   └── runtime/            # vendor Three + runner/cenas/thumbs (não exposto direto; inclui portfolio-3d.js)
 │   ├── ai.php                 # integração com IA (geração de conteúdo)
 │   ├── mercadopago_marketplace.php
 │   └── encryption, image, language, log, pagination,

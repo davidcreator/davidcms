@@ -1,5 +1,10 @@
 {# dev/catalog/view/template/partial/portfolio.twig — grid + filtro por categoria #}
-<section class="section" id="portfolio">
+<section class="section{{ portfolio3d.enabled ? ' portfolio-3d-active' : '' }}" id="portfolio">
+  {% if portfolio3d.enabled and projects %}
+  <div class="portfolio-3d__canvas" aria-hidden="true" data-scene="portfolio-3d" data-frame-limit="{{ portfolio3d.frame_limit }}" data-images="{{ portfolio3d.images|json_encode }}">
+    <div class="portfolio-3d__fallback" data-fallback></div>
+  </div>
+  {% endif %}
   <div class="container">
     <span class="kicker">{{ text_portfolio_kicker }}</span>
     <h2>{{ text_portfolio_title }}</h2>

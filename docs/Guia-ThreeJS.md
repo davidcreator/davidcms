@@ -309,12 +309,12 @@ new IntersectionObserver(([e]) => {
 | **Hero** | Partículas formando o logotipo "DA" + parallax de mouse | ⭐ Baixa |
 | **Hero (fase 2)** | Modelo GLB do logotipo girando suave com iluminação de estúdio | ⭐⭐ Média |
 | **Portfólio** | Cards com leve tilt 3D (CSS/`transform`) — *sem* WebGL | ⭐ Baixa |
-| **Portfólio (fase 2)** | Cena de galeria: projetos como "quadros" em ambiente 3D navegável | ⭐⭐⭐ Alta |
+| **Portfólio (fase 2)** | Camada 3D decorativa e opcional com capas em quadros; navegação continua nos anchors HTML (ADR 0076) | ⭐⭐⭐ Alta |
 | **Ferramentas** | Ícones (Fluxa, Quotia, Vertex, Solis) flutuando com física sutil | ⭐⭐ Média |
 | **404** | Cena 3D lúdica ("página perdida no espaço") | ⭐ Baixa |
 | **Transições** | Scroll-driven: câmera acompanha a rolagem entre seções | ⭐⭐⭐ Alta (avaliar INP) |
 
-Ordem sugerida: **hero com partículas (Fase 3 do roadmap)** → logo GLB → restante pós-lançamento.
+Ordem executada: **Hero com partículas → logo GLB opcional → tilt CSS do Portfólio → galeria 3D opcional (ADR 0076, antecipada para implementação)**. A ativação em produção depende de QA visual/performance e permanece desligada por padrão.
 
 ---
 

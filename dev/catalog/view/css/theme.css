@@ -125,6 +125,15 @@ h2 { font-size: 1.75em; }
 .skill-groups ul { margin: 0; padding-left: 18px; color: var(--muted); }
 
 /* ── Portfolio grid ───────────────────────────────────── */
+#portfolio { position: relative; isolation: isolate; }
+#portfolio.portfolio-3d-active > .container { position: relative; z-index: 1; }
+.portfolio-3d__canvas { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.portfolio-3d__canvas canvas { display: block; width: 100%; height: 100%; opacity: .32; }
+.portfolio-3d__fallback { position: absolute; inset: 0; opacity: .26;
+    background: radial-gradient(900px 520px at 50% 45%, #c4b5fd 0%, #ede9fe 48%, transparent 82%); }
+#portfolio.portfolio-3d-active .pcard { background: rgba(255,255,255,.82); }
+#portfolio.portfolio-3d-active .pcard .body { background: rgba(255,255,255,.88); }
+@media (prefers-reduced-motion: reduce) { .portfolio-3d__canvas canvas { display: none; } }
 .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
 .pcard { display: block; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; text-decoration: none; color: inherit; background: #fff; transition: transform .25s ease, box-shadow .25s ease; transform-style: preserve-3d; }
 /* Cena 3 etapa 1 (F3-03, Guia §7): tilt 3D por CSS — barato e acessível */
