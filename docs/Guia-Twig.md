@@ -371,3 +371,8 @@ Erros comuns e mensagens-chave:
 - [Arquitetura MVCL §8](Arquitetura-MVCL.md#8-views-e-template-engines) — adaptadores de template
 - [Guia Three.js](Guia-ThreeJS.md) — integração do canvas 3D com templates
 - [Guia CMS §4](Guia-CMS.md#4-gestão-de-conteúdo) — conteúdo que alimenta os templates
+
+
+## F10-03 — Templates de tema
+
+O Admin pode propor fontes somente para as chaves fixas enumeradas em `design/theme`; os rascunhos ficam em `draft_config` e o Catalog lê somente `published_config`. `Twig::setThemeTemplates()` é opt-in no pré-action Catalog e adiciona um `ArrayLoader` antes do `FilesystemLoader` existente, mantendo fallback. A prévia usa `SandboxExtension`, contexto de amostra escalar, CSP restritiva e iframe sandboxado. Nenhum caminho de arquivo, PHP ou JavaScript Three.js é editável.

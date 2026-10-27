@@ -247,3 +247,10 @@ Uso: bloco INSERT do dump legado é colado pelo usuário nesta tabela; `upgrade_
 - [Guia-CMS.md](Guia-CMS.md) — módulos que consomem estas tabelas
 - [Contrato-Bootstrap.md](Contrato-Bootstrap.md) — `DB_PREFIX` e constantes de banco
 - `agents-ia/agentes/agente-install.md` — protocolo de migrações
+
+
+## F10-03 — Design Themes
+
+- `rms_design_theme`: catálogo de temas; `config`/`draft_config` contém o rascunho e `published_config` preserva a última publicação consumida pelo Catalog.
+- `rms_design_theme_revision`: snapshots para auditoria e restauração sob ACL/CSRF.
+- Templates são armazenados nos payloads versionados e aceitam apenas chaves fixas; não há caminhos arbitrários nem arquivos editáveis.

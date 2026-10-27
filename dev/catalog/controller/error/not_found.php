@@ -32,7 +32,9 @@ class Not_found extends \Reamur\System\Engine\Controller {
 
         // Cena Three.js configurável pelo painel; o fallback permanece se desativada.
         $this->load->model('setting/setting');
-        $threeJs = $this->three_scene_config->runtime($this->model_setting_setting->getSettings());
+        $threeSettings = $this->model_setting_setting->getSettings();
+        if ((string)$this->config->get('catalog_theme_scene', '') === 'not-found') $threeSettings['three_not_found_enabled'] = '1';
+        $threeJs = $this->three_scene_config->runtime($threeSettings);
         $base = rtrim((string)$this->config->get('site_url', ''), '/') . '/';
 
         $data['has_3d']     = $threeJs['not_found_enabled'];

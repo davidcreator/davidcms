@@ -243,3 +243,8 @@ Rotinas:
 ### 4.1.2 Temas do Catalog (F10-02)
 
 A rota Admin `design/theme` é separada de Pages e Blog e controla tokens visuais e um identificador de cena selecionado de uma allowlist. Não aceita JS nem caminhos de arquivo enviados pelo usuário. As tabelas `design_theme` e `design_theme_revision` mantêm configuração e snapshots. O estado desta fatia ainda não conecta tema ativo ao renderer Catalog e não disponibiliza edição de Twig, prévia sandboxada nem restauração pela interface; esses requisitos seguem abertos para conclusão antes de aceite final.
+
+
+### 4.1.3 F10-03 — Publicação versionada de Temas
+
+O tema agora mantém `draft_config` separado de `published_config`. A prévia não publica; o ato de publicar é explícito e registra revisão. Rollback exige ACL/CSRF e restaura snapshot. O loader Catalog só substitui templates de uma lista fixa, mantendo os templates originais como fallback; Admin e Install não ativam o loader de tema.

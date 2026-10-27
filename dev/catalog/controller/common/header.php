@@ -42,6 +42,8 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['home']           = (string)$this->config->get('site_url');
         $data['text_languages'] = $this->language->get('text_languages');
         $data['body_class']     = (string)($data['body_class'] ?? '');
+        $data['theme_primary'] = (string)$this->config->get('catalog_theme_primary', '#6d28d9');
+        $data['theme_surface'] = (string)$this->config->get('catalog_theme_surface', '#ffffff');
 
         // F4-07 (ADR 0031): canonical + Open Graph/Twitter + descoberta do sitemap.
         // Regra honesta: canonical/og:url SÓ quando a requisição chegou por caminho

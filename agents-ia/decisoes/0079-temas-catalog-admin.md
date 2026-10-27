@@ -14,4 +14,4 @@ Pages administra conteúdo editorial e Blog administra posts. Aparência do Cata
 5. Three.js continua sob ADRs 0072–0074: cenas e componentes aprovados, sem JavaScript livre.
 
 ## Consequências
-Migrations são arquivos locais e não foram executadas. O primeiro incremento entrega gestão de tokens/cenas e revisão básica. A seleção de tema ainda não integra os templates públicos ativos; a ativação no Admin é persistida e versionada, mas o runtime/preview/fonte Twig ainda precisam ser concluídos antes de declarar F10-02 plenamente aceito.
+Migrations são arquivos locais e não foram executadas. A continuação F10-03 separa rascunhos de publicação, conecta somente templates allowlisted ao Catalog, adiciona prévia sandboxada e restauração por snapshot conforme ADR 0080.

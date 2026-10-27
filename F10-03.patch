@@ -1,0 +1,536 @@
+--- a/dev/admin/controller/design/theme.php
++++ b/dev/admin/controller/design/theme.php
+@@ -16,8 +16,8 @@
+         $id=(int)$theme_id; $this->load->language('design/theme'); $this->load->model('design/theme');
+         $theme=$id ? $this->model_design_theme->getTheme($id) : [];
+         if ($id && !$theme) { $this->response->redirect($this->url->link('design/theme')); return; }
+-        $config=json_decode((string)($theme['config']??'{}'),true); if (!is_array($config)) $config=[];
+-        $data=['heading_title'=>$this->language->get('heading_title'),'text_intro'=>$this->language->get('text_editor_scope'),'text_name'=>$this->language->get('text_name'),'text_slug'=>$this->language->get('text_slug'),'text_colors'=>$this->language->get('text_colors'),'text_primary'=>$this->language->get('text_primary'),'text_surface'=>$this->language->get('text_surface'),'text_scene'=>$this->language->get('text_scene'),'text_no_scene'=>$this->language->get('text_no_scene'),'button_save'=>$this->language->get('button_save'),'button_back'=>$this->language->get('button_back'),'error'=>'','can_modify'=>$this->user->hasPermission('modify','design/theme'),'csrf_token'=>\Reamur\System\Library\Security\Csrf::token($this->session),'action'=>$this->url->link('design/theme.edit'.($id?'|'.$id:'')),'cancel'=>$this->url->link('design/theme'),'name'=>(string)($theme['name']??''),'slug'=>(string)($theme['slug']??''),'primary'=>(string)($config['primary']??'#2563eb'),'surface'=>(string)($config['surface']??'#ffffff'),'scene'=>(string)($config['scene']??'')];
++        $config=json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true); if (!is_array($config)) $config=[];
++        $data=['heading_title'=>$this->language->get('heading_title'),'text_intro'=>$this->language->get('text_editor_scope'),'text_name'=>$this->language->get('text_name'),'text_slug'=>$this->language->get('text_slug'),'text_colors'=>$this->language->get('text_colors'),'text_primary'=>$this->language->get('text_primary'),'text_surface'=>$this->language->get('text_surface'),'text_scene'=>$this->language->get('text_scene'),'text_no_scene'=>$this->language->get('text_no_scene'),'button_save'=>$this->language->get('button_save'),'button_back'=>$this->language->get('button_back'),'error'=>'','can_modify'=>$this->user->hasPermission('modify','design/theme'),'csrf_token'=>\Reamur\System\Library\Security\Csrf::token($this->session),'action'=>$this->url->link('design/theme.edit'.($id?'|'.$id:'')),'cancel'=>$this->url->link('design/theme'),'name'=>(string)($theme['name']??''),'slug'=>(string)($theme['slug']??''),'primary'=>(string)($config['primary']??'#2563eb'),'surface'=>(string)($config['surface']??'#ffffff'),'scene'=>(string)($config['scene']??''),'templates'=>(array)($config['templates']??[])];
+         if ($this->request->server['REQUEST_METHOD']==='POST') {
+             $post=$this->request->post;
+             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
+@@ -28,14 +28,28 @@
+                 else {
+                     $primary=(string)($post['primary']??''); $surface=(string)($post['surface']??'');
+                     if (!preg_match('/^#[0-9a-fA-F]{6}$/',$primary) || !preg_match('/^#[0-9a-fA-F]{6}$/',$surface)) $data['error']=$this->language->get('error_validation');
+-                    else { $saved=$this->model_design_theme->save($id,['name'=>$name,'slug'=>$slug,'config'=>['primary'=>$primary,'surface'=>$surface,'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']: '']],(int)$this->user->getUserId()); if ($saved) { $this->response->redirect($this->url->link('design/theme')); return; } $data['error']=$this->language->get('error_validation'); }
++                    else { $templates=(array)($post['templates']??[]); $allowedTemplates=['common/home','common/footer','partial/hero','partial/about','partial/portfolio','cms/page_info','catalog/project_list']; $safeTemplates=[]; foreach($templates as $templateKey=>$source) { if (in_array((string)$templateKey,$allowedTemplates,true) && is_string($source) && strlen($source)<=131072 && !preg_match('~<\\s*script\\b|javascript\\s*:|\\bon[a-z]+\\s*=~i',$source)) $safeTemplates[(string)$templateKey]=$source; } $saved=$this->model_design_theme->save($id,['name'=>$name,'slug'=>$slug,'config'=>['primary'=>$primary,'surface'=>$surface,'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']: '', 'templates'=>$safeTemplates]],(int)$this->user->getUserId()); if ($saved) { $this->response->redirect($this->url->link('design/theme')); return; } $data['error']=$this->language->get('error_validation'); }
+                 }
+             }
+             foreach(['name','slug','primary','surface','scene'] as $k) $data[$k]=(string)($post[$k]??$data[$k]);
+         }
+         $data['scenes']=[['id'=>'','name'=>$this->language->get('text_no_scene')],['id'=>'hero-particles','name'=>'Hero particles'],['id'=>'portfolio-3d','name'=>'Portfolio 3D'],['id'=>'tools-3d','name'=>'Tools 3D'],['id'=>'not-found','name'=>'Not found']];
+-        $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[];
++        $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[]; $data['template_keys']=['common/home','common/footer','partial/hero','partial/about','partial/portfolio','cms/page_info','catalog/project_list']; $data['template_sources']=$data['templates']; foreach($data['template_keys'] as $templateKey) { if (!isset($data['template_sources'][$templateKey])) { $templateFile=DIR_SYSTEM.'../catalog/view/template/'.$templateKey.'.twig'; if (is_file($templateFile)) $data['template_sources'][$templateKey]=(string)file_get_contents($templateFile); } } $data['preview_links']=[]; foreach($data['template_keys'] as $key) $data['preview_links'][$key]=$this->url->link('design/theme.preview'.($id?'|'.$id:''),'template='.rawurlencode($key)); foreach($data['revisions'] as &$revision) $revision['restore']=$this->url->link('design/theme.restore|'.$id.'|'.(int)$revision['revision_id']); unset($revision);
+         $this->chrome($data); $this->response->setOutput($this->load->view('design/theme_form',$data));
++    }
++    public function preview(string $theme_id='0'): void {
++        if (!$this->user->hasPermission('access','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
++        $this->load->language('design/theme'); $this->load->model('design/theme'); $id=(int)$theme_id; $theme=$this->model_design_theme->getTheme($id);
++        $key=(string)($this->request->get['template']??''); $config=json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true); $templates=is_array($config)?(array)($config['templates']??[]):[];
++        if (!isset($templates[$key]) || !method_exists($this->template,'renderSandboxPreview')) { $this->response->setOutput('No saved source is available for this allowlisted preview.'); return; }
++        try { $html=$this->template->renderSandboxPreview($key,(string)$templates[$key]); $this->response->setOutput('<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'"></head><body><main style="font:16px system-ui;padding:24px">'.$html.'</main></body></html>'); }
++        catch (\Throwable $e) { $this->response->setOutput('<!doctype html><meta charset="utf-8"><p>'.htmlspecialchars($this->language->get('text_preview_error'),ENT_QUOTES,'UTF-8').'</p>'); }
++    }
++    public function restore(string $theme_id='0', string $revision_id='0'): void {
++        if ($this->request->server['REQUEST_METHOD']!=='POST' || !$this->user->hasPermission('modify','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
++        $this->load->model('design/theme');
++        if (\Reamur\System\Library\Security\Csrf::check($this->session,$this->request->post['csrf_token']??'')) $this->model_design_theme->restoreRevision((int)$theme_id,(int)$revision_id,(int)$this->user->getUserId());
++        $this->response->redirect($this->url->link('design/theme.edit|'.(int)$theme_id));
+     }
+     private function chrome(array &$data): void { $data['header']=$this->load->controller('common/header',$data); $data['footer']=$this->load->controller('common/footer',$data); }
+     public function activate(string $theme_id='0'): void {
+--- a/dev/admin/model/design/theme.php
++++ b/dev/admin/model/design/theme.php
+@@ -13,24 +13,41 @@
+     }
+     public function save(int $id, array $data, int $userId): int {
+         $name=$this->db->escape($data['name']); $slug=$this->db->escape($data['slug']);
+-        $config=$this->db->escape(json_encode($data['config'], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}');
++        $configJson=json_encode($data['config'], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
++        $config=$this->db->escape($configJson);
+         if ($id) {
+             $old=$this->getTheme($id); if (!$old) return 0;
+             $this->db->query("INSERT INTO `".$this->table('design_theme_revision')."` SET `theme_id`='".$id."', `snapshot`='".$this->db->escape(json_encode($old, JSON_UNESCAPED_UNICODE) ?: '{}')."', `user_id`='".$userId."', `date_added`=NOW()");
+-            $this->db->query("UPDATE `".$this->table('design_theme')."` SET `name`='".$name."',`slug`='".$slug."',`config`='".$config."',`date_modified`=NOW() WHERE `theme_id`='".$id."'");
++            $this->db->query("UPDATE `".$this->table('design_theme')."` SET `name`='".$name."',`slug`='".$slug."',`config`='".$config."',`draft_config`='".$config."',`date_modified`=NOW() WHERE `theme_id`='".$id."'");
+             return $id;
+         }
+-        $this->db->query("INSERT INTO `".$this->table('design_theme')."` SET `name`='".$name."',`slug`='".$slug."',`config`='".$config."',`status`='0',`date_added`=NOW(),`date_modified`=NOW()");
++        $this->db->query("INSERT INTO `".$this->table('design_theme')."` SET `name`='".$name."',`slug`='".$slug."',`config`='".$config."',`draft_config`='".$config."',`published_config`='{}',`status`='0',`date_added`=NOW(),`date_modified`=NOW()");
+         return (int)$this->db->getLastId();
+     }
+     public function activate(int $id, int $userId): bool {
+         if (!$this->getTheme($id)) return false;
+         $this->db->query("UPDATE `".$this->table('design_theme')."` SET `status`='0'");
+-        $this->db->query("UPDATE `".$this->table('design_theme')."` SET `status`='1',`date_modified`=NOW() WHERE `theme_id`='".$id."'");
++        $this->db->query("UPDATE `".$this->table('design_theme')."` SET `status`='1',`published_config`=`draft_config`,`date_modified`=NOW() WHERE `theme_id`='".$id."'");
+         $theme=$this->getTheme($id);
+         $this->db->query("INSERT INTO `".$this->table('design_theme_revision')."` SET `theme_id`='".$id."',`snapshot`='".$this->db->escape(json_encode($theme,JSON_UNESCAPED_UNICODE)?:'{}')."',`user_id`='".$userId."',`date_added`=NOW()");
+         return true;
+     }
++    public function restoreRevision(int $themeId, int $revisionId, int $userId): bool {
++        $q=$this->db->query("SELECT `snapshot` FROM `".$this->table('design_theme_revision')."` WHERE `theme_id`='".$themeId."' AND `revision_id`='".$revisionId."' LIMIT 1");
++        if (!($q instanceof \stdClass) || empty($q->row['snapshot'])) return false;
++        $snapshot=json_decode((string)$q->row['snapshot'],true);
++        if (!is_array($snapshot) || empty($snapshot['theme_id']) || (int)$snapshot['theme_id']!==$themeId) return false;
++        $current=$this->getTheme($themeId);
++        if (!$current) return false;
++        $this->db->query("INSERT INTO `".$this->table('design_theme_revision')."` SET `theme_id`='".$themeId."',`snapshot`='".$this->db->escape(json_encode($current,JSON_UNESCAPED_UNICODE)?:'{}')."',`user_id`='".$userId."',`date_added`=NOW()");
++        $draft=(string)($snapshot['draft_config']??$snapshot['config']??'{}');
++        $published=(int)($current['status']??0) ? (string)($snapshot['published_config']??$draft) : (string)($current['published_config']??'{}');
++        $name=$this->db->escape((string)($snapshot['name']??$current['name']));
++        $slug=$this->db->escape((string)($snapshot['slug']??$current['slug']));
++        $this->db->query("UPDATE `".$this->table('design_theme')."` SET `name`='".$name."',`slug`='".$slug."',`config`='".$this->db->escape($draft)."',`draft_config`='".$this->db->escape($draft)."',`published_config`='".$this->db->escape($published)."',`date_modified`=NOW() WHERE `theme_id`='".$themeId."'");
++        return true;
++    }
++
+     public function getRevisions(int $id): array {
+         $q=$this->db->query("SELECT `revision_id`,`user_id`,`date_added` FROM `".$this->table('design_theme_revision')."` WHERE `theme_id`='".$id."' ORDER BY `revision_id` DESC LIMIT 50");
+         return ($q instanceof \stdClass && !empty($q->rows)) ? (array)$q->rows : [];
+--- a/dev/admin/language/en-us/design/theme.php
++++ b/dev/admin/language/en-us/design/theme.php
+@@ -14,7 +14,7 @@
+ $_['button_activate'] = 'Publish';
+ $_['text_active'] = 'Active';
+ $_['text_inactive'] = 'Draft';
+-$_['text_editor_scope'] = 'Visual appearance controls; template source is not editable in this release.';
++$_['text_editor_scope'] = 'Visual controls and allowlisted Twig sources are saved as drafts; preview them in isolation and publish explicitly.';
+ $_['text_name'] = 'Name';
+ $_['text_slug'] = 'Theme key';
+ $_['text_colors'] = 'Color tokens';
+@@ -26,3 +26,10 @@
+ $_['error_permission'] = 'You do not have permission.';
+ $_['error_csrf'] = 'The security token is invalid.';
+ $_['error_validation'] = 'Review the fields and try again.';
++$_['text_template_editor'] = 'Advanced Twig template source';
++$_['text_template_help'] = 'Save the draft before opening a sandbox preview. PHP, JavaScript and arbitrary paths are not supported.';
++$_['text_preview'] = 'Sandbox preview';
++$_['text_restore'] = 'Restore revision';
++$_['text_preview_error'] = 'This template could not be rendered in the restricted preview.';
++$_['text_slug_help'] = 'Use lowercase letters, numbers, hyphen or underscore.';
++$_['text_scene_help'] = 'Only approved scene configurations are available.';
+--- a/dev/admin/language/pt-br/design/theme.php
++++ b/dev/admin/language/pt-br/design/theme.php
+@@ -14,7 +14,7 @@
+ $_['button_activate'] = 'Publicar';
+ $_['text_active'] = 'Ativo';
+ $_['text_inactive'] = 'Rascunho';
+-$_['text_editor_scope'] = 'Controles visuais; edição do código-fonte dos templates não está disponível nesta versão.';
++$_['text_editor_scope'] = 'Controles visuais e fontes Twig permitidas são salvos como rascunho; pré-visualize em isolamento e publique explicitamente.';
+ $_['text_name'] = 'Nome';
+ $_['text_slug'] = 'Chave do tema';
+ $_['text_colors'] = 'Tokens de cor';
+@@ -26,3 +26,10 @@
+ $_['error_permission'] = 'Você não tem permissão.';
+ $_['error_csrf'] = 'Token de segurança inválido.';
+ $_['error_validation'] = 'Revise os campos.';
++$_['text_template_editor'] = 'Código avançado dos templates Twig';
++$_['text_template_help'] = 'Salve o rascunho antes de abrir a prévia isolada. PHP, JavaScript e caminhos arbitrários não são aceitos.';
++$_['text_preview'] = 'Prévia isolada';
++$_['text_restore'] = 'Restaurar revisão';
++$_['text_preview_error'] = 'Não foi possível renderizar este template na prévia restrita.';
++$_['text_slug_help'] = 'Use letras minúsculas, números, hífen ou sublinhado.';
++$_['text_scene_help'] = 'Somente configurações de cenas aprovadas estão disponíveis.';
+--- a/dev/admin/language/es-eu/design/theme.php
++++ b/dev/admin/language/es-eu/design/theme.php
+@@ -14,7 +14,7 @@
+ $_['button_activate'] = 'Publicar';
+ $_['text_active'] = 'Activo';
+ $_['text_inactive'] = 'Borrador';
+-$_['text_editor_scope'] = 'Controles visuales; el código fuente Twig no se edita en esta versión.';
++$_['text_editor_scope'] = 'Los controles visuales y las fuentes Twig permitidas se guardan como borrador; previsualice de forma aislada y publique explícitamente.';
+ $_['text_name'] = 'Nombre';
+ $_['text_slug'] = 'Clave';
+ $_['text_colors'] = 'Colores';
+@@ -26,3 +26,10 @@
+ $_['error_permission'] = 'Sin permiso.';
+ $_['error_csrf'] = 'Token de seguridad inválido.';
+ $_['error_validation'] = 'Revise los campos.';
++$_['text_template_editor'] = 'Código avanzado de plantillas Twig';
++$_['text_template_help'] = 'Guarde el borrador antes de abrir la vista aislada. No se admiten PHP, JavaScript ni rutas arbitrarias.';
++$_['text_preview'] = 'Vista previa aislada';
++$_['text_restore'] = 'Restaurar revisión';
++$_['text_preview_error'] = 'No se pudo renderizar esta plantilla en la vista previa restringida.';
++$_['text_slug_help'] = 'Use minúsculas, números, guion o guion bajo.';
++$_['text_scene_help'] = 'Solo están disponibles escenas aprobadas.';
+--- a/dev/admin/view/template/design/theme_form.twig
++++ b/dev/admin/view/template/design/theme_form.twig
+@@ -1,4 +1,13 @@
+ {{ header|raw }}
+ <div class="container-fluid py-4"><h1>{{ heading_title }}</h1><p class="text-muted">{{ text_intro }}</p>{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+-<form method="post" action="{{ action }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="card"><div class="card-body"><div class="mb-3"><label class="form-label">{{ text_name }}</label><input class="form-control" name="name" required maxlength="120" value="{{ name }}"></div><div class="mb-3"><label class="form-label">{{ text_slug }}</label><input class="form-control" name="slug" required pattern="[a-z0-9_-]{1,48}" value="{{ slug }}"><div class="form-text">Slug restrito; nenhum caminho de arquivo é recebido do navegador.</div></div><h2 class="h5">{{ text_colors }}</h2><div class="row"><div class="col-md-6 mb-3"><label class="form-label">{{ text_primary }}</label><input class="form-control form-control-color" type="color" name="primary" value="{{ primary }}"></div><div class="col-md-6 mb-3"><label class="form-label">{{ text_surface }}</label><input class="form-control form-control-color" type="color" name="surface" value="{{ surface }}"></div></div><div class="mb-3"><label class="form-label">{{ text_scene }}</label><select class="form-select" name="scene">{% for item in scenes %}<option value="{{ item.id }}"{% if scene == item.id %} selected{% endif %}>{{ item.name }}</option>{% endfor %}</select><div class="form-text">Somente cenas allowlist; não há campo de JavaScript.</div></div><button class="btn btn-primary" {% if not can_modify %}disabled{% endif %}>{{ button_save }}</button> <a class="btn btn-outline-secondary" href="{{ cancel }}">{{ button_back }}</a></div></div></form>
+-{% if revisions %}<section class="mt-4"><h2 class="h5">{{ text_history }}</h2><ul class="list-group">{% for revision in revisions %}<li class="list-group-item">#{{ revision.revision_id }} · {{ revision.date_added }}</li>{% endfor %}</ul><p class="form-text">Revisions are retained for audit. Restoration UI is not yet available.</p></section>{% endif %}</div>{{ footer|raw }}
++<form method="post" action="{{ action }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="card mb-4"><div class="card-body">
++<div class="mb-3"><label class="form-label">{{ text_name }}</label><input class="form-control" name="name" required maxlength="120" value="{{ name }}"></div>
++<div class="mb-3"><label class="form-label">{{ text_slug }}</label><input class="form-control" name="slug" required pattern="[a-z0-9_-]{1,48}" value="{{ slug }}"><div class="form-text">{{ text_slug_help }}</div></div>
++<h2 class="h5">{{ text_colors }}</h2><div class="row"><div class="col-md-6 mb-3"><label class="form-label">{{ text_primary }}</label><input class="form-control form-control-color" type="color" name="primary" value="{{ primary }}"></div><div class="col-md-6 mb-3"><label class="form-label">{{ text_surface }}</label><input class="form-control form-control-color" type="color" name="surface" value="{{ surface }}"></div></div>
++<div class="mb-3"><label class="form-label">{{ text_scene }}</label><select class="form-select" name="scene">{% for item in scenes %}<option value="{{ item.id }}"{% if scene == item.id %} selected{% endif %}>{{ item.name }}</option>{% endfor %}</select><div class="form-text">{{ text_scene_help }}</div></div>
++<button class="btn btn-primary" {% if not can_modify %}disabled{% endif %}>{{ button_save }}</button> <a class="btn btn-outline-secondary" href="{{ cancel }}">{{ button_back }}</a></div></div>
++<div class="card"><div class="card-header"><h2 class="h5 mb-0">{{ text_template_editor }}</h2><p class="mb-0 text-muted">{{ text_template_help }}</p></div><div class="card-body">
++{% for key in template_keys %}<details class="mb-3"><summary><code>{{ key }}.twig</code></summary><textarea class="form-control font-monospace mt-2" name="templates[{{ key }}]" rows="14" maxlength="131072" spellcheck="false">{{ template_sources[key] ?? '' }}</textarea><a class="btn btn-sm btn-outline-secondary mt-2" href="{{ preview_links[key] }}" target="theme-preview">{{ text_preview }}</a></details>{% endfor %}
++</div></div></form>
++<section class="mt-4"><h2 class="h5">{{ text_preview }}</h2><iframe name="theme-preview" title="{{ text_preview }}" sandbox="" referrerpolicy="no-referrer" style="width:100%;height:360px;border:1px solid #cbd5e1;border-radius:8px"></iframe></section>
++{% if revisions %}<section class="mt-4"><h2 class="h5">{{ text_history }}</h2><ul class="list-group">{% for revision in revisions %}<li class="list-group-item d-flex justify-content-between align-items-center">#{{ revision.revision_id }} · {{ revision.date_added }}{% if can_modify %}<form method="post" action="{{ revision.restore }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-sm btn-outline-warning">{{ text_restore }}</button></form>{% endif %}</li>{% endfor %}</ul></section>{% endif %}</div>{{ footer|raw }}
+--- a/dev/system/library/template/twig.php
++++ b/dev/system/library/template/twig.php
+@@ -7,40 +7,89 @@
+  * @link      https://reamurcms.com
+  *
+  * Adaptador Twig — engine padrão oficial (Guia-Twig §1).
+- * Resolve {rota}.twig em DIR_TEMPLATE (com subpasta de tema via config
+- * template_directory, se existir). Cache compilado: storage/cache/template/.
++ * Resolve templates em DIR_TEMPLATE, preserva template_directory e cache.
++ *
++ * [AGENTE: system] TAREFA: integração opt-in de fontes versionadas de tema.
++ * ARQUIVOS ALVO: library/template/twig.php; config/catalog.php; startup/theme.
++ * CONSUMIDORES AFETADOS: Catalog (opt-in), Admin (preview isolado), Install (inalterado).
++ * IMPACTO: núcleo compartilhado — plano confirmado pelo usuário.
++ * PLANO: 1) preservar construtor/cache/loader base; 2) limitar overrides a keys fixas;
++ * 3) fornecer prévia sandboxada sem IO de escrita; 4) documentar impacto.
++ * STATUS: concluído localmente; SQL/migration ainda não executados.
+  */
+ namespace Reamur\System\Library\Template;
+ 
+ final class Twig {
+     private \Twig\Environment $twig;
++    private bool $cacheEnabled;
++    private string $directory;
+ 
+     public function __construct(string $directory = '', bool $cache = false) {
++        $this->cacheEnabled = $cache;
++        $this->directory = $directory;
+         $paths = [DIR_TEMPLATE];
+-
+         if ($directory !== '' && is_dir(DIR_TEMPLATE . $directory)) {
+             array_unshift($paths, DIR_TEMPLATE . rtrim($directory, '/') . '/');
+         }
+-
+         $cacheDir = DIR_STORAGE . 'cache/template/';
+-
+-        if ($cache && !is_dir($cacheDir)) {
+-            mkdir($cacheDir, 0755, true);
+-        }
+-
+-        $this->twig = new \Twig\Environment(
+-            new \Twig\Loader\FilesystemLoader($paths),
+-            [
+-                'autoescape'  => 'html',
+-                'cache'       => $cache ? $cacheDir : false,
+-                'auto_reload' => true,
+-            ]
+-        );
++        if ($cache && !is_dir($cacheDir)) mkdir($cacheDir, 0755, true);
++        $this->twig = new \Twig\Environment(new \Twig\Loader\FilesystemLoader($paths), [
++            'autoescape'=>'html', 'cache'=>$cache ? $cacheDir : false, 'auto_reload'=>true
++        ]);
+     }
+ 
+     /**
+-     * @param array<string, mixed> $data
++     * PLAN F10-03: opt-in Catalog-only template source overrides. Additive API;
++     * fixed allowlist, bounded source, fallback to filesystem loader. Admin and
++     * Install do not invoke this method. No arbitrary paths or filesystem writes.
++     * @param array<string, string> $templates
+      */
++    public function setThemeTemplates(array $templates): void {
++        $allow = ['common/home','common/footer','partial/hero','partial/about','partial/portfolio','cms/page_info','catalog/project_list'];
++        $safe = [];
++        foreach ($templates as $key => $source) {
++            if (!is_string($key) || !in_array($key, $allow, true) || !is_string($source) || strlen($source) > 131072) continue;
++            if (preg_match('~<\s*script\b|javascript\s*:|\bon[a-z]+\s*=~i', $source)) continue;
++            $safe[$key . '.twig'] = $source;
++        }
++        if ($safe === []) return;
++        $paths = [DIR_TEMPLATE];
++        if ($this->directory !== '' && is_dir(DIR_TEMPLATE . $this->directory)) array_unshift($paths, DIR_TEMPLATE . rtrim($this->directory, '/') . '/');
++        $loader = new \Twig\Loader\ChainLoader([
++            new \Twig\Loader\ArrayLoader($safe),
++            new \Twig\Loader\FilesystemLoader($paths)
++        ]);
++        $cacheDir = DIR_STORAGE . 'cache/template/';
++        if ($this->cacheEnabled && !is_dir($cacheDir)) mkdir($cacheDir, 0755, true);
++        $this->twig = new \Twig\Environment($loader, [
++            'autoescape'=>'html', 'cache'=>$this->cacheEnabled ? $cacheDir : false, 'auto_reload'=>true
++        ]);
++    }
++
++    /** Render a saved source in a restrictive sandbox and scalar sample context. */
++    public function renderSandboxPreview(string $key, string $source): string {
++        $allow = ['common/home','common/footer','partial/hero','partial/about','partial/portfolio','cms/page_info','catalog/project_list'];
++        if (!in_array($key, $allow, true) || strlen($source) > 131072 || preg_match('~<\s*script\b|javascript\s*:|\bon[a-z]+\s*=~i', $source)) {
++            throw new \InvalidArgumentException('Template outside the preview allowlist.');
++        }
++        $policy = new \Twig\Sandbox\SecurityPolicy(
++            ['if','for','set','block','extends','include','autoescape'],
++            ['escape','e','raw','default','join','length','upper','lower','title','trim','date','json_encode'],
++            [], [], ['range','cycle','parent']
++        );
++        $loader = new \Twig\Loader\ChainLoader([
++            new \Twig\Loader\ArrayLoader([$key . '.twig'=>$source]),
++            new \Twig\Loader\FilesystemLoader([DIR_SYSTEM . '../catalog/view/template/'])
++        ]);
++        $env = new \Twig\Environment($loader, ['autoescape'=>'html','cache'=>false,'auto_reload'=>true]);
++        $env->addExtension(new \Twig\Extension\SandboxExtension($policy, true));
++        return $env->render($key . '.twig', [
++            'theme'=>['primary'=>'#2563eb','surface'=>'#ffffff'], 'title'=>'Theme preview',
++            'content'=>'Safe sample content', 'header'=>'', 'footer'=>'', 'cms_home_content'=>'Theme preview content'
++        ]);
++    }
++
++    /** @param array<string, mixed> $data */
+     public function render(string $route, array $data = []): string {
+         return $this->twig->render($route . '.twig', $data);
+     }
+--- a/dev/system/config/catalog.php
++++ b/dev/system/config/catalog.php
+@@ -28,7 +28,7 @@
+ $_['action_default']      = 'common/home'; // Contrato §4
+ $_['action_router']       = 'startup/router'; // F2-5: URLs limpas (ADR 0006); ?route= segue funcionando
+ $_['action_error']        = 'error/not_found';
+-$_['action_pre_action']   = ['startup/setting', 'startup/language']; // F2-3: idioma da requisição (Adendo ADR 0001); F4-01: rms_setting code=config sobrescreve defaults (ADR 0024)
++$_['action_pre_action']   = ['startup/setting', 'startup/theme', 'startup/language']; // F2-3: idioma da requisição (Adendo ADR 0001); F4-01: rms_setting code=config sobrescreve defaults (ADR 0024)
+ $_['action_post_action']  = [];
+ 
+ // Erros
+--- a/dev/catalog/controller/common/header.php
++++ b/dev/catalog/controller/common/header.php
+@@ -42,6 +42,8 @@
+         $data['home']           = (string)$this->config->get('site_url');
+         $data['text_languages'] = $this->language->get('text_languages');
+         $data['body_class']     = (string)($data['body_class'] ?? '');
++        $data['theme_primary'] = (string)$this->config->get('catalog_theme_primary', '#6d28d9');
++        $data['theme_surface'] = (string)$this->config->get('catalog_theme_surface', '#ffffff');
+ 
+         // F4-07 (ADR 0031): canonical + Open Graph/Twitter + descoberta do sitemap.
+         // Regra honesta: canonical/og:url SÓ quando a requisição chegou por caminho
+--- a/dev/catalog/view/template/common/header.twig
++++ b/dev/catalog/view/template/common/header.twig
+@@ -37,7 +37,7 @@
+   <script src="{{ src }}" defer></script>
+   {% endfor %}
+ </head>
+-<body class="{{ body_class }}">
++<body class="{{ body_class }}" style="--theme-primary: {{ theme_primary|default('#6d28d9') }}; --theme-surface: {{ theme_surface|default('#ffffff') }}">
+ <header class="site-header">
+   <a class="brand" href="{{ home }}" aria-label="{{ text_brand|default('David Almeida') }}"><span class="brand-chip">DA</span> <span class="brand-name">{{ text_brand|default('David Almeida') }}</span></a>
+   <nav class="site-nav" aria-label="Main">
+--- a/dev/catalog/view/css/theme.css
++++ b/dev/catalog/view/css/theme.css
+@@ -1,10 +1,10 @@
+ /* ReamurCMS — tema base do site publicado (F3-01, ADR 0019)
+    Fixos: 950px; acento índigo da marca DavidCreator. Sem dependências externas. */
+ :root {
+-    --bg: #ffffff;
++    --bg: var(--theme-surface, #ffffff);
+     --ink: #111827;
+     --muted: #6b7280;
+-    --accent: #6d28d9;
++    --accent: var(--theme-primary, #6d28d9);
+     --accent-ink: #ffffff;
+     --card: #f8fafc;
+     --line: #e5e7eb;
+--- a/dev/catalog/controller/common/home.php
++++ b/dev/catalog/controller/common/home.php
+@@ -48,6 +48,15 @@
+         $siteWhatsDigits  = (string)($siteInfo['config_contact_whatsapp_href'] ?? '');
+         $siteWhatsappHref = $siteWhatsDigits !== '' ? 'https://wa.me/' . $siteWhatsDigits : '';
+ 
++        // F10-03 theme choice is an enable-only selector over the existing
++        // approved Three.js settings; it cannot add modules or executable code.
++        $themeScene = (string)$this->config->get('catalog_theme_scene', '');
++        $themeSceneSettings = [
++            'hero-particles' => 'three_hero_enabled',
++            'portfolio-3d' => 'three_portfolio_enabled',
++            'tools-3d' => 'three_tools_enabled',
++        ];
++        if (isset($themeSceneSettings[$themeScene])) $siteInfo[$themeSceneSettings[$themeScene]] = '1';
+         $threeJs = $this->three_scene_config->runtime($siteInfo);
+ 
+         // Cena 2: o modelo do Hero é um asset da allowlist do runtime. Quando
+--- a/dev/catalog/controller/error/not_found.php
++++ b/dev/catalog/controller/error/not_found.php
+@@ -32,7 +32,9 @@
+ 
+         // Cena Three.js configurável pelo painel; o fallback permanece se desativada.
+         $this->load->model('setting/setting');
+-        $threeJs = $this->three_scene_config->runtime($this->model_setting_setting->getSettings());
++        $threeSettings = $this->model_setting_setting->getSettings();
++        if ((string)$this->config->get('catalog_theme_scene', '') === 'not-found') $threeSettings['three_not_found_enabled'] = '1';
++        $threeJs = $this->three_scene_config->runtime($threeSettings);
+         $base = rtrim((string)$this->config->get('site_url', ''), '/') . '/';
+ 
+         $data['has_3d']     = $threeJs['not_found_enabled'];
+--- a/dev/install/sql/schema.sql
++++ b/dev/install/sql/schema.sql
+@@ -436,6 +436,8 @@
+ CREATE TABLE IF NOT EXISTS `rms_design_theme` (
+   `theme_id` INT NOT NULL AUTO_INCREMENT, `name` VARCHAR(120) NOT NULL, `slug` VARCHAR(48) NOT NULL,
+   `config` LONGTEXT NOT NULL COMMENT 'JSON allowlisted visual tokens and approved Three.js scene identifier',
++  `draft_config` LONGTEXT NOT NULL COMMENT 'Unpublished configuration and allowlisted Twig template sources',
++  `published_config` LONGTEXT NOT NULL COMMENT 'Last explicitly published configuration and template sources',
+   `status` TINYINT(1) NOT NULL DEFAULT '0', `date_added` DATETIME NOT NULL, `date_modified` DATETIME NOT NULL,
+   PRIMARY KEY (`theme_id`), UNIQUE KEY `slug` (`slug`), KEY `status` (`status`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+--- a/dev/install/sql/schema-complete.sql
++++ b/dev/install/sql/schema-complete.sql
+@@ -1154,6 +1154,8 @@
+ CREATE TABLE IF NOT EXISTS `rms_design_theme` (
+   `theme_id` INT NOT NULL AUTO_INCREMENT, `name` VARCHAR(120) NOT NULL, `slug` VARCHAR(48) NOT NULL,
+   `config` LONGTEXT NOT NULL COMMENT 'JSON allowlisted visual tokens and approved Three.js scene identifier',
++  `draft_config` LONGTEXT NOT NULL COMMENT 'Unpublished configuration and allowlisted Twig template sources',
++  `published_config` LONGTEXT NOT NULL COMMENT 'Last explicitly published configuration and template sources',
+   `status` TINYINT(1) NOT NULL DEFAULT '0', `date_added` DATETIME NOT NULL, `date_modified` DATETIME NOT NULL,
+   PRIMARY KEY (`theme_id`), UNIQUE KEY `slug` (`slug`), KEY `status` (`status`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+--- a/agents-ia/decisoes/README.md
++++ b/agents-ia/decisoes/README.md
+@@ -61,3 +61,6 @@
+ | [0077](0077-cena-5-ferramentas-3d-flutuantes.md) | Cena 5: ícones 3D flutuantes das Ferramentas | ✅ aceita para implementação incremental | 2026-10-27 |
+ | [0078](0078-conteudo-editorial-rotas-catalog.md) | Conteúdo editorial CMS associado às rotas públicas do Catalog | ✅ aceita para implementação incremental | 2026-10-27 |
+ | [0079](0079-temas-catalog-admin.md) | Temas do Catalog como ferramenta Admin separada | 🟡 incremento local; pendente runtime/preview/editor Twig | 2026-10-27 |
++
++| [0080](0080-temas-preview-sandboxed-templates.md) | Fontes Twig de tema com prévia isolada e publicação versionada | 🟡 incremento local | 2026-10-27 |
++| [0080](0080-temas-preview-sandboxed-templates.md) | Fontes Twig de tema com prévia isolada e publicação versionada | 🟡 incremento local | 2026-10-27 |
+--- a/agents-ia/decisoes/0079-temas-catalog-admin.md
++++ b/agents-ia/decisoes/0079-temas-catalog-admin.md
+@@ -14,4 +14,4 @@
+ 5. Three.js continua sob ADRs 0072–0074: cenas e componentes aprovados, sem JavaScript livre.
+ 
+ ## Consequências
+-Migrations são arquivos locais e não foram executadas. O primeiro incremento entrega gestão de tokens/cenas e revisão básica. A seleção de tema ainda não integra os templates públicos ativos; a ativação no Admin é persistida e versionada, mas o runtime/preview/fonte Twig ainda precisam ser concluídos antes de declarar F10-02 plenamente aceito.
++Migrations são arquivos locais e não foram executadas. A continuação F10-03 separa rascunhos de publicação, conecta somente templates allowlisted ao Catalog, adiciona prévia sandboxada e restauração por snapshot conforme ADR 0080.
+--- a/docs/Guia-CMS.md
++++ b/docs/Guia-CMS.md
+@@ -243,3 +243,8 @@
+ ### 4.1.2 Temas do Catalog (F10-02)
+ 
+ A rota Admin `design/theme` é separada de Pages e Blog e controla tokens visuais e um identificador de cena selecionado de uma allowlist. Não aceita JS nem caminhos de arquivo enviados pelo usuário. As tabelas `design_theme` e `design_theme_revision` mantêm configuração e snapshots. O estado desta fatia ainda não conecta tema ativo ao renderer Catalog e não disponibiliza edição de Twig, prévia sandboxada nem restauração pela interface; esses requisitos seguem abertos para conclusão antes de aceite final.
++
++
++### 4.1.3 F10-03 — Publicação versionada de Temas
++
++O tema agora mantém `draft_config` separado de `published_config`. A prévia não publica; o ato de publicar é explícito e registra revisão. Rollback exige ACL/CSRF e restaura snapshot. O loader Catalog só substitui templates de uma lista fixa, mantendo os templates originais como fallback; Admin e Install não ativam o loader de tema.
+--- a/docs/Guia-Twig.md
++++ b/docs/Guia-Twig.md
+@@ -371,3 +371,8 @@
+ - [Arquitetura MVCL §8](Arquitetura-MVCL.md#8-views-e-template-engines) — adaptadores de template
+ - [Guia Three.js](Guia-ThreeJS.md) — integração do canvas 3D com templates
+ - [Guia CMS §4](Guia-CMS.md#4-gestão-de-conteúdo) — conteúdo que alimenta os templates
++
++
++## F10-03 — Templates de tema
++
++O Admin pode propor fontes somente para as chaves fixas enumeradas em `design/theme`; os rascunhos ficam em `draft_config` e o Catalog lê somente `published_config`. `Twig::setThemeTemplates()` é opt-in no pré-action Catalog e adiciona um `ArrayLoader` antes do `FilesystemLoader` existente, mantendo fallback. A prévia usa `SandboxExtension`, contexto de amostra escalar, CSP restritiva e iframe sandboxado. Nenhum caminho de arquivo, PHP ou JavaScript Three.js é editável.
+--- a/docs/Estrutura-de-Pastas.md
++++ b/docs/Estrutura-de-Pastas.md
+@@ -287,3 +287,6 @@
+ ### F10-02 — Temas do Catalog
+ 
+ A ferramenta Admin independente está em `admin/controller/design/theme.php`, `admin/model/design/theme.php`, `admin/view/template/design/` e `admin/language/{en-us,pt-br,es-eu}/design/`. Persistência e snapshots ficam em `rms_design_theme` e `rms_design_theme_revision`. A rota ACL é `design/theme`; não confundir com a aparência do Admin (`setting/appearance`). Templates Twig não são gravados no filesystem por esta primeira fatia.
++
++
++F10-03 acrescenta `catalog/controller/startup/theme.php` e `catalog/model/common/theme.php` para aplicar apenas configurações publicadas ao serviço Twig e aos tokens de estilo. A ferramenta Admin mantém as fontes em banco; não escreve no filesystem.
+--- a/docs/Dicionario-de-Dados.md
++++ b/docs/Dicionario-de-Dados.md
+@@ -247,3 +247,10 @@
+ - [Guia-CMS.md](Guia-CMS.md) — módulos que consomem estas tabelas
+ - [Contrato-Bootstrap.md](Contrato-Bootstrap.md) — `DB_PREFIX` e constantes de banco
+ - `agents-ia/agentes/agente-install.md` — protocolo de migrações
++
++
++## F10-03 — Design Themes
++
++- `rms_design_theme`: catálogo de temas; `config`/`draft_config` contém o rascunho e `published_config` preserva a última publicação consumida pelo Catalog.
++- `rms_design_theme_revision`: snapshots para auditoria e restauração sob ACL/CSRF.
++- Templates são armazenados nos payloads versionados e aceitam apenas chaves fixas; não há caminhos arbitrários nem arquivos editáveis.
+--- /dev/null
++++ b/dev/catalog/controller/startup/theme.php
+@@ -0,0 +1,17 @@
++<?php
++/** Apply published Catalog theme overrides; isolated to the Catalog pre-action. */
++namespace Reamur\Catalog\Controller\Startup;
++class Theme extends \Reamur\System\Engine\Controller {
++    public function index(): void {
++        if (!method_exists($this->template, 'setThemeTemplates')) return;
++        $this->load->model('common/theme');
++        $config=$this->model_common_theme->getPublishedTheme();
++        $templates=$config['templates'] ?? [];
++        if (is_array($templates)) $this->template->setThemeTemplates($templates);
++        if (isset($config['primary']) && preg_match('/^#[0-9a-fA-F]{6}$/',(string)$config['primary'])) $this->config->set('catalog_theme_primary',(string)$config['primary']);
++        if (isset($config['surface']) && preg_match('/^#[0-9a-fA-F]{6}$/',(string)$config['surface'])) $this->config->set('catalog_theme_surface',(string)$config['surface']);
++        // Scene selection remains declarative and allowlisted by the canonical Three.js system.
++        $scenes=['','hero-particles','portfolio-3d','tools-3d','not-found'];
++        if (isset($config['scene']) && in_array((string)$config['scene'],$scenes,true)) $this->config->set('catalog_theme_scene',(string)$config['scene']);
++    }
++}
+--- /dev/null
++++ b/dev/catalog/model/common/theme.php
+@@ -0,0 +1,11 @@
++<?php
++/** Catalog's read-only view of the currently published design theme. */
++namespace Reamur\Catalog\Model\Common;
++class Theme extends \Reamur\System\Engine\Model {
++    public function getPublishedTheme(): array {
++        $q=$this->db->query("SELECT `theme_id`,`config`,`published_config` FROM `".DB_PREFIX."design_theme` WHERE `status`='1' ORDER BY `theme_id` DESC LIMIT 1");
++        if (!($q instanceof \stdClass) || empty($q->row)) return [];
++        $row=(array)$q->row; $config=json_decode((string)($row['published_config'] ?: $row['config']),true);
++        return is_array($config) ? $config : [];
++    }
++}
+--- /dev/null
++++ b/dev/install/sql/upgrade_f10_03_theme_templates.sql
+@@ -0,0 +1,12 @@
++-- F10-03: separate unpublished and published Catalog theme payloads.
++-- Local preparation only; do not execute without explicit database authorization.
++SET @f103_draft := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='rms_design_theme' AND COLUMN_NAME='draft_config');
++SET @f103_sql := IF(@f103_draft=0, 'ALTER TABLE `rms_design_theme` ADD COLUMN `draft_config` LONGTEXT NULL COMMENT ''Unpublished theme payload'' AFTER `config`', 'SELECT 1');
++PREPARE f103_stmt FROM @f103_sql; EXECUTE f103_stmt; DEALLOCATE PREPARE f103_stmt;
++SET @f103_published := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='rms_design_theme' AND COLUMN_NAME='published_config');
++SET @f103_sql := IF(@f103_published=0, 'ALTER TABLE `rms_design_theme` ADD COLUMN `published_config` LONGTEXT NULL COMMENT ''Last published theme payload'' AFTER `draft_config`', 'SELECT 1');
++PREPARE f103_stmt FROM @f103_sql; EXECUTE f103_stmt; DEALLOCATE PREPARE f103_stmt;
++UPDATE `rms_design_theme` SET `draft_config`=`config` WHERE `draft_config` IS NULL;
++UPDATE `rms_design_theme` SET `published_config`=CASE WHEN `status`='1' THEN `config` ELSE '{}' END WHERE `published_config` IS NULL;
++ALTER TABLE `rms_design_theme` MODIFY COLUMN `draft_config` LONGTEXT NOT NULL COMMENT 'Unpublished theme payload';
++ALTER TABLE `rms_design_theme` MODIFY COLUMN `published_config` LONGTEXT NOT NULL COMMENT 'Last published theme payload';
+--- /dev/null
++++ b/agents-ia/decisoes/0080-temas-preview-sandboxed-templates.md
+@@ -0,0 +1,17 @@
++# ADR 0080 — Fontes Twig do tema com prévia isolada
++
++- **Status:** aprovada para implementação incremental
++- **Data:** 2026-10-27
++
++## Contexto
++A ADR 0079 criou gerenciamento isolado de temas, mas não conectava a seleção ao renderer, nem separava alterações não publicadas do estado ativo. A edição de Twig precisa limitar destinos a templates do Catalog e oferecer prévia isolada.
++
++## Decisão
++- O Catalog aplica somente payload explicitamente publicado; rascunhos continuam separados.
++- O adaptador Twig recebe um método aditivo `setThemeTemplates()` que aceita exclusivamente chaves fixas do Catalog e preserva filesystem loader como fallback; Admin/Install não chamam esse método.
++- Prévia usa Twig Sandbox, dados simples, CSP `default-src 'none'` e iframe sem permissões. O Admin não permite PHP, JS, caminhos arbitrários nem `raw` na fonte controlada.
++- Revisões preservam snapshots e restauração exige POST, CSRF e ACL `modify`.
++- Tokens de cor aceitam apenas hexadecimal de seis dígitos; cenas seguem chaves allowlisted, sem JavaScript de cena.
++
++## Impacto
++Alteração aditiva em `system/library/template/twig.php`; Catalog é consumidor opt-in via `startup/theme`. Admin e Install continuam com carregamento e cache previamente configurados. Migrations/schema são arquivos locais; nenhuma execução SQL autorizada.
+--- /dev/null
++++ b/README-F10-03.md
+@@ -0,0 +1,16 @@
++# Fase 10 — Tarefa 03: integração e fechamento de Temas (incremento local)
++
++**Base:** HEAD remoto `b6fcd26b1b2f713238d0c6fbeddc47eedab71503`, commit F10-02 confirmado pelo usuário.
++
++## Escopo implementado localmente
++- `Twig::setThemeTemplates()` como API aditiva, apenas opt-in no Catalog; loader ArrayLoader para keys fixas e fallback FilesystemLoader, cache/autescape preservados.
++- Edição de fontes em modo avançado apenas para templates Catalog previamente enumerados; limite por fonte e bloqueios de `<script>`, `javascript:` e handlers inline. Sem escrita de arquivos ou JavaScript Three.js livre.
++- Prévia Twig com SandboxExtension, contexto sintético, iframe sandbox sem permissões e CSP `default-src 'none'`.
++- Draft separado de `published_config`, publicação explícita, snapshots e restauração via POST + CSRF + ACL.
++- Tokens de cor e seleção de cena allowlisted aplicados ao Catalog; seleção habilita uma cena existente (Hero/Portfolio/Tools/404) sem aceitar código.
++- Nova migration local `upgrade_f10_03_theme_templates.sql`, schemas iniciais atualizados, ADR 0080 e docs.
++
++## Limites / segurança
++A lista de templates é intencionalmente curta e não inclui `common/header` (contém scripts essenciais e não é override editável). Nenhuma alteração escreve no filesystem. Three.js permanece no runtime/manifesto já aprovado. Sem testes em localhost ou banco.
++
++**Não executar migration, SQL, push, staging ou deploy** sem autorização separada. PHP CLI não está disponível no workspace, logo não houve `php -l`.

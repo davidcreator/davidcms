@@ -436,6 +436,8 @@ CREATE TABLE IF NOT EXISTS `rms_rate_limit` (
 CREATE TABLE IF NOT EXISTS `rms_design_theme` (
   `theme_id` INT NOT NULL AUTO_INCREMENT, `name` VARCHAR(120) NOT NULL, `slug` VARCHAR(48) NOT NULL,
   `config` LONGTEXT NOT NULL COMMENT 'JSON allowlisted visual tokens and approved Three.js scene identifier',
+  `draft_config` LONGTEXT NOT NULL COMMENT 'Unpublished configuration and allowlisted Twig template sources',
+  `published_config` LONGTEXT NOT NULL COMMENT 'Last explicitly published configuration and template sources',
   `status` TINYINT(1) NOT NULL DEFAULT '0', `date_added` DATETIME NOT NULL, `date_modified` DATETIME NOT NULL,
   PRIMARY KEY (`theme_id`), UNIQUE KEY `slug` (`slug`), KEY `status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

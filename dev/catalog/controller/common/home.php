@@ -48,6 +48,15 @@ class Home extends \Reamur\System\Engine\Controller {
         $siteWhatsDigits  = (string)($siteInfo['config_contact_whatsapp_href'] ?? '');
         $siteWhatsappHref = $siteWhatsDigits !== '' ? 'https://wa.me/' . $siteWhatsDigits : '';
 
+        // F10-03 theme choice is an enable-only selector over the existing
+        // approved Three.js settings; it cannot add modules or executable code.
+        $themeScene = (string)$this->config->get('catalog_theme_scene', '');
+        $themeSceneSettings = [
+            'hero-particles' => 'three_hero_enabled',
+            'portfolio-3d' => 'three_portfolio_enabled',
+            'tools-3d' => 'three_tools_enabled',
+        ];
+        if (isset($themeSceneSettings[$themeScene])) $siteInfo[$themeSceneSettings[$themeScene]] = '1';
         $threeJs = $this->three_scene_config->runtime($siteInfo);
 
         // Cena 2: o modelo do Hero é um asset da allowlist do runtime. Quando

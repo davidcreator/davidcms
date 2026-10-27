@@ -1,10 +1,10 @@
 /* ReamurCMS — tema base do site publicado (F3-01, ADR 0019)
    Fixos: 950px; acento índigo da marca DavidCreator. Sem dependências externas. */
 :root {
-    --bg: #ffffff;
+    --bg: var(--theme-surface, #ffffff);
     --ink: #111827;
     --muted: #6b7280;
-    --accent: #6d28d9;
+    --accent: var(--theme-primary, #6d28d9);
     --accent-ink: #ffffff;
     --card: #f8fafc;
     --line: #e5e7eb;

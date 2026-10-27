@@ -37,7 +37,7 @@
   <script src="{{ src }}" defer></script>
   {% endfor %}
 </head>
-<body class="{{ body_class }}">
+<body class="{{ body_class }}" style="--theme-primary: {{ theme_primary|default('#6d28d9') }}; --theme-surface: {{ theme_surface|default('#ffffff') }}">
 <header class="site-header">
   <a class="brand" href="{{ home }}" aria-label="{{ text_brand|default('David Almeida') }}"><span class="brand-chip">DA</span> <span class="brand-name">{{ text_brand|default('David Almeida') }}</span></a>
   <nav class="site-nav" aria-label="Main">

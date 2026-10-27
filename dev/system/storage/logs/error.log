@@ -44,3 +44,5 @@ Route not found: paginaquenaoexistee2e.index — request: /davidcms/dev/catalog/
 2026-10-27 18:40:52 - ErrorException: file_get_contents(): Read of 8192 bytes failed with errno=13 Permission denied em E:\wamp64\www\davidcms\dev\system\library\session\file.php:27
 2026-10-27 18:41:57 - ErrorException: file_get_contents(): Read of 8213 bytes failed with errno=13 Permission denied em E:\wamp64\www\davidcms\dev\system\library\session\file.php:27
 2026-10-27 19:29:07 - ErrorException: filemtime(): stat failed for E:\wamp64\www\davidcms/dev/system/storage/session/sess_1remiisrcd1jo8jp6bm1k1dr0f em E:\wamp64\www\davidcms\dev\system\library\session\file.php:44
+2026-10-27 21:22:23 - Exception: MySQLi: Unknown column 'published_config' in 'field list' | SQL: SELECT `theme_id`,`config`,`published_config` FROM `rms_design_theme` WHERE `status`='1' ORDER BY `theme_id` DESC LIMIT 1 em E:\wamp64\www\davidcms\dev\system\library\db\mysqli.php:36
+2026-10-27 21:23:38 - Route not found: naoexistexyz.index — request: /davidcms/dev/catalog/index.php?route=nao-existe-xyz

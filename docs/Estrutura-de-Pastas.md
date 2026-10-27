@@ -287,3 +287,6 @@ Chaves mais importantes (de `default.php`):
 ### F10-02 — Temas do Catalog
 
 A ferramenta Admin independente está em `admin/controller/design/theme.php`, `admin/model/design/theme.php`, `admin/view/template/design/` e `admin/language/{en-us,pt-br,es-eu}/design/`. Persistência e snapshots ficam em `rms_design_theme` e `rms_design_theme_revision`. A rota ACL é `design/theme`; não confundir com a aparência do Admin (`setting/appearance`). Templates Twig não são gravados no filesystem por esta primeira fatia.
+
+
+F10-03 acrescenta `catalog/controller/startup/theme.php` e `catalog/model/common/theme.php` para aplicar apenas configurações publicadas ao serviço Twig e aos tokens de estilo. A ferramenta Admin mantém as fontes em banco; não escreve no filesystem.
