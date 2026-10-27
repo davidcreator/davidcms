@@ -137,12 +137,22 @@ class Header extends \Reamur\System\Engine\Controller {
                 ],
             ],
             [
+                'title' => $this->language->get('text_group_pages'),
+                'items' => [
+                    ['route' => 'cms/page', 'icon' => 'bi bi-file-earmark-text', 'key' => 'text_menu_pages'],
+                ],
+            ],
+            [
+                'title' => $this->language->get('text_group_blog'),
+                'items' => [
+                    ['route' => 'blog/blog', 'icon' => 'bi bi-journal-text', 'key' => 'text_menu_posts'],
+                ],
+            ],
+            [
                 'title' => $this->language->get('text_group_content'),
                 'items' => [
-                    ['route' => 'cms/page',          'icon' => 'bi bi-file-earmark-text', 'key' => 'text_menu_pages'],
                     ['route' => 'custom_field/definition', 'icon' => 'bi bi-ui-checks-grid', 'key' => 'text_menu_custom_fields'],
-                    ['route' => 'blog/blog',          'icon' => 'bi bi-journal-text',      'key' => 'text_menu_blog'],
-                    ['route' => 'tool/tool',          'icon' => 'bi bi-tools',             'key' => 'text_menu_tools'],
+                    ['route' => 'tool/tool', 'icon' => 'bi bi-tools', 'key' => 'text_menu_tools'],
                 ],
             ],
             [

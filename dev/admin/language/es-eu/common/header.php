@@ -18,6 +18,8 @@ $_['text_version_label'] = 'ReamurCMS v%s';
 
 // Títulos de grupo
 $_['text_group_main']          = 'Principal';
+$_['text_group_pages']         = 'Páginas (CMS)';
+$_['text_group_blog']          = 'Blog';
 $_['text_group_content']       = 'Contenido';
 $_['text_group_catalog']       = 'Catálogo';
 $_['text_group_sales']         = 'Ventas';
@@ -28,8 +30,8 @@ $_['text_group_system']        = 'Sistema';
 
 // Ítems del menú
 $_['text_menu_dashboard']    = 'Panel';
-$_['text_menu_pages']        = 'Páginas (CMS)';
-$_['text_menu_blog']         = 'Blog';
+$_['text_menu_pages']        = 'Páginas';
+$_['text_menu_posts']        = 'Publicaciones';
 $_['text_menu_tools']        = 'Herramientas';
 $_['text_menu_projects']     = 'Proyectos';
 $_['text_menu_categories']   = 'Categorías';

@@ -84,7 +84,8 @@ Derivados diretamente do inventário do site atual (ver [Análise](Analise-David
 
 | Tipo | Exemplos | Módulo gestor |
 | --- | --- | --- |
-| Página de informação | Cookies, Políticas Internas, Sobre | `admin/controller/cms/` → `catalog/controller/information/` |
+| Página institucional/informativa | Cookies, Políticas Internas, Sobre | `admin/controller/cms/page.php` → `catalog/controller/cms/page.php` |
+| Postagem de blog | Artigos e novidades publicados | `admin/controller/blog/blog.php` → `catalog/controller/blog/blog.php` |
 | Projeto de portfólio | JWA, Selva Dev, Steel of Death | `admin/controller/catalog/` → exibição em `catalog/` |
 | Categoria de portfólio | Visual Identity, Brand, Illustration | `admin/controller/catalog/` |
 | Depoimento | Silvio Robson, Bruno Reis | `admin/controller/marketing/` |
@@ -92,6 +93,8 @@ Derivados diretamente do inventário do site atual (ver [Análise](Analise-David
 | Serviço | Graphic Design, Web Design, SEO | `admin/controller/cms/` |
 | Ferramenta conectada | Fluxa, Quotia, Vertex, Solis | `admin/controller/tool/` |
 | Pedido / orçamento | solicitações de clientes | `admin/controller/sale/` |
+
+**Páginas (CMS) e Blog são módulos independentes:** `cms/page` administra páginas institucionais/informativas; `blog/blog` administra postagens, publicação agendada e respectivos detalhes públicos. Uma página CMS não cria nem substitui uma postagem. No menu do Admin, cada módulo tem seu próprio grupo e permanece sujeito à ACL da respectiva rota.
 
 ### 4.2 Ciclo de vida do conteúdo
 
