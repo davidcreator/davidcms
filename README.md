@@ -1,26 +1,28 @@
-# ReamurCMS — Three.js System Engine (atualizado)
+# ReamurCMS — Three.js System Engine (Cena 2 GLB)
 
-Patch incremental consolidado com a centralização anterior e o ciclo de vida compartilhado entre cenas nativas e thumbs declarativas. Base consultada: HEAD `11447edc9e09cfdf1c46c43cacafad34a140cdf6`.
+Patch consolidado do runtime compartilhado e da Cena 2 do Hero, baseado no HEAD `3f161857c45be2f599b5dad8ea1d4fc40d014581` do `main`.
 
-## O que contém
+## Conteúdo desta atualização
 
-- Runtime/vendor centralizados em `dev/system/library/three/runtime/`, expostos somente pela allowlist System e rota Catalog existente.
-- `three/core/scene-runner.js` como única camada confiável de renderer, resize, lazy-init, visibilidade, reduced-motion e descarte para Hero/404 e thumbs declarativas.
-- `three/thumbnail-runner.js` como adapter das thumbs declarativas sobre `mountScene()`.
-- `custom_js` permanece fora do engine confiável e executa somente em iframe sandbox opaco.
-- Documentação e ADR 0074 atualizadas. Sem migration, deploy ou alteração de conteúdo/settings.
+- Modelo `logo-da.glb` armazenado em System e servido somente pela allowlist do AssetManifest no gateway Catalog (`model/gltf-binary`).
+- GLTFLoader r186 e utilitários oficiais self-hosted no runtime System; download dinâmico apenas se a cena receber `data-model`.
+- Cena Hero mantém partículas quando o modelo falta ou falha; loader, luz de estúdio, normalização visual e fallback estão integrados ao SceneRunner.
+- Import map resolve `three/addons/`; `.htaccess` reconhece `.glb`; URL do modelo é derivada do manifesto, sem caminho fornecido pelo usuário.
+- ADR 0075 registra que o GLB presente é um placeholder procedural válido a ser substituído pelo export final do Blender.
+- Nenhuma tabela, setting novo ou migration.
 
 ## Aplicação
 
-1. Faça backup da branch/instalação.
-2. Copie os arquivos preservando os caminhos relativos para a raiz do DavidCMS.
-3. Revise `DELETE_FILES.txt` antes de remover cópias antigas da fonte Catalog; não remova sem confirmar a presença dos novos módulos em System.
-4. Preserve a negação de acesso HTTP direto a `system/`; use apenas a rota allowlisted do Catalog.
+1. Faça backup e aplique os arquivos preservando os caminhos relativos.
+2. Revise `DELETE_FILES.txt` antes de qualquer remoção; confirme as fontes System e allowlist primeiro.
+3. Não exponha `system/` diretamente: use a rota allowlisted do Catalog.
 
-## Verificações desta atualização
+## Verificações desta etapa
 
-- `node --check` passou nos cinco módulos JavaScript alterados.
+- `node --check` passou para Hero, studio lighting, GLTFLoader e utilitários.
+- `tools/e2e/check_threejs_native_admin.cjs`: 10/10 verificações estáticas.
 - `tools/e2e/check_threejs_thumb.cjs`: 22/22 verificações estáticas.
-- Não houve teste funcional/browser, PHP lint (CLI indisponível), push, deploy ou migration.
+- GLB: cabeçalho glTF 2.0 e comprimento/chunks consistentes.
+- Não foi executado browser E2E nem `php -l` (PHP CLI indisponível).
 
-Não aplicado ao ambiente compartilhado e não enviado ao GitHub por esta sessão.
+Nenhum push, deploy, teste mutável ou migration foi feito por esta sessão.

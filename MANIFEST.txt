@@ -1,7 +1,8 @@
-Base HEAD: 11447edc9e09cfdf1c46c43cacafad34a140cdf6
-Canonical runtime: dev/system/library/three/runtime/
-Shared lifecycle: dev/system/library/three/runtime/three/core/scene-runner.js
-Declarative thumbnail adapter: dev/system/library/three/runtime/three/thumbnail-runner.js
-Public adapter/route: dev/catalog/controller/common/three.php -> /catalog/three-runtime/{manifest-approved-js}
-custom_js: isolated opaque sandbox iframe; not part of the trusted shared engine
-No database/schema/migration changes.
+Base HEAD: 3f161857c45be2f599b5dad8ea1d4fc40d014581
+Canonical engine: dev/system/library/three/runtime/
+Cena 2 model: dev/system/library/three/runtime/three/models/logo-da.glb
+Loader: dev/system/library/three/runtime/three/addons/loaders/GLTFLoader.js (r186)
+Public route: /catalog/three-runtime/{manifest-approved-js-or-glb}
+GLB MIME: model/gltf-binary
+custom_js: remains isolated in opaque sandbox iframe
+No schema/settings/migration changes.

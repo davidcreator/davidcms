@@ -1,5 +1,12 @@
 # Changelog
 
+## Cena 2 — logo GLB opcional do Hero (2026-10-26)
+- Publica `logo-da.glb` pelo manifesto do System e gateway Catalog, com MIME `model/gltf-binary`; o caminho é fixo e allowlisted.
+- Adiciona `GLTFLoader` r186 e dependências à allowlist, importadas dinamicamente somente quando o modelo está configurado.
+- Integra rig de luz e ajuste do modelo ao Hero, mantendo partículas em falha/ausência do modelo.
+- Registra ADR 0075; o asset atual é placeholder procedural e será trocado pelo export final do Blender.
+- Sem setting novo, alteração de schema ou migration.
+
 ## SceneRunner compartilhado para Three.js e thumbs declarativas (2026-10-26)
 - Unifica renderer, resize, lazy-init, visibilidade, reduced-motion, render loop e descarte no `scene-runner.js` do System.
 - Adapta thumbs declarativas por `thumbnail-runner.js`; mantém `custom_js` no iframe sandbox isolado.

@@ -1,6 +1,6 @@
 # Three.js — engine única no System, Admin e Catalog
 
-**Base de referência:** `davidcreator/davidcms` `main`, HEAD `11447edc9e09cfdf1c46c43cacafad34a140cdf6`.
+**Base de referência:** `davidcreator/davidcms` `main`, HEAD `3f161857c45be2f599b5dad8ea1d4fc40d014581`.
 
 ## Arquitetura
 
