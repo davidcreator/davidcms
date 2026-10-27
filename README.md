@@ -1,16 +1,32 @@
-# Fase 10 — Tarefa 03: integração e fechamento de Temas (incremento local)
+# Fase 10 — Pages: conteúdo editorial nas rotas públicas
 
-**Base:** HEAD remoto `b6fcd26b1b2f713238d0c6fbeddc47eedab71503`, commit F10-02 confirmado pelo usuário.
+**Base remota consultada:** `ac03b9687b8762ee919fe8d9bef48807989bf817` (`feat(theme): implement F10-03 Catalog theme integration`).
 
-## Escopo implementado localmente
-- `Twig::setThemeTemplates()` como API aditiva, apenas opt-in no Catalog; loader ArrayLoader para keys fixas e fallback FilesystemLoader, cache/autescape preservados.
-- Edição de fontes em modo avançado apenas para templates Catalog previamente enumerados; limite por fonte e bloqueios de `<script>`, `javascript:` e handlers inline. Sem escrita de arquivos ou JavaScript Three.js livre.
-- Prévia Twig com SandboxExtension, contexto sintético, iframe sandbox sem permissões e CSP `default-src 'none'`.
-- Draft separado de `published_config`, publicação explícita, snapshots e restauração via POST + CSRF + ACL.
-- Tokens de cor e seleção de cena allowlisted aplicados ao Catalog; seleção habilita uma cena existente (Hero/Portfolio/Tools/404) sem aceitar código.
-- Nova migration local `upgrade_f10_03_theme_templates.sql`, schemas iniciais atualizados, ADR 0080 e docs.
+## Gap audit
+O CMS já guardava conteúdo por `system_key` e o renderer `cms/slot` existia, mas fora da Home o `common/header` consultava slots para metadados e o conteúdo não era incluído no corpo das páginas. Isso deixava a edição de Portfolio, Blog landing, Tools, Contact, Quote e 404 invisível na publicação.
 
-## Limites / segurança
-A lista de templates é intencionalmente curta e não inclui `common/header` (contém scripts essenciais e não é override editável). Nenhuma alteração escreve no filesystem. Three.js permanece no runtime/manifesto já aprovado. Sem testes em localhost ou banco.
+## Incremento proposto (sem nova numeração formal)
+- Exibir slots existentes em Portfolio (grade e detalhe), Blog (apenas landing/listagem), Tools (grade e detalhe), Contact, Quote e 404.
+- Memoizar dados e HTML do slot por request, evitando query/render duplicados entre página e header.
+- Não alterar CRUD/fluxos de Portfolio, posts do Blog, registros de ferramentas, formulários, checkout, ou 404 técnico.
+- Blog post individual permanece sem conteúdo CMS; a landing do Blog é a única superfície editorial nesse módulo.
+- Sem nova migration/schema, sem alterar núcleo compartilhado.
 
-**Não executar migration, SQL, push, staging ou deploy** sem autorização separada. PHP CLI não está disponível no workspace, logo não houve `php -l`.
+## Validação e limites
+Patch validado localmente com `git apply --check` sobre arquivos seletivos do HEAD. Não foram executados PHP CLI, browser, banco, migration, localhost, push, staging ou deploy.
+
+## Aplicação local do patch
+
+Extraia os arquivos do pacote. A partir do diretório raiz do clone Git que deve receber a alteração, execute:
+
+```bash
+bash /caminho/para/apply-patch.sh /caminho/para/F10-Pages-Routes.patch ac03b9687b8762ee919fe8d9bef48807989bf817
+```
+
+Se o script e o patch forem extraídos na raiz do clone, use:
+
+```bash
+bash apply-patch.sh F10-Pages-Routes.patch ac03b9687b8762ee919fe8d9bef48807989bf817
+```
+
+O script exige o HEAD esperado, roda `git apply --check` e só então aplica o patch. Ele não cria commit nem faz push/deploy/SQL.

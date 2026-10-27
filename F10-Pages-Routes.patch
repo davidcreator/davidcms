@@ -1,0 +1,283 @@
+--- a/dev/catalog/controller/cms/slot.php
++++ b/dev/catalog/controller/cms/slot.php
+@@ -14,8 +14,19 @@
+ 
+     /** Renderiza conteúdo público validado de uma chave de rota fixa. */
+     public function render(string $system_key = ''): string {
+-        $this->load->model('catalog/page');
+-        $page = $this->model_catalog_page->getSystemPage($system_key);
++        $system_key = strtolower(trim($system_key));
++        $allowed = ['home','portfolio','portfolio_detail','blog','blog_post','tools','tool_detail','contact','quote','not_found'];
++        if (!in_array($system_key, $allowed, true)) return '';
++
++        $cache = (array)$this->config->get('_cms_system_page_cache', []);
++        if (array_key_exists($system_key, $cache)) {
++            $page = (array)$cache[$system_key];
++        } else {
++            $this->load->model('catalog/page');
++            $page = $this->model_catalog_page->getSystemPage($system_key);
++            $cache[$system_key] = $page;
++            $this->config->set('_cms_system_page_cache', $cache);
++        }
+         if (!$page) {
+             return '';
+         }
+@@ -27,15 +38,14 @@
+             $this->document->setDescription((string)$page['meta_description']);
+         }
+ 
++        $htmlCache = (array)$this->config->get('_cms_system_page_html_cache', []);
++        if (array_key_exists($system_key, $htmlCache)) return (string)$htmlCache[$system_key];
++
+         $content = (string)($page['description'] ?? '');
+-        if ($content === '') {
+-            return '';
+-        }
++        if ($content === '') return $this->cacheHtml($system_key, '');
+ 
+         $prefix = 'REAMURCMS_BDRE_JSON_V2:';
+-        if (!str_starts_with($content, $prefix)) {
+-            return $content;
+-        }
++        if (!str_starts_with($content, $prefix)) return $this->cacheHtml($system_key, $content);
+ 
+         $downloadRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/download/blog';
+         $audioRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/audio/blog';
+@@ -44,9 +54,7 @@
+         $rendered = (new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot, $audioRoot, $videoRoot))
+             ->renderJson(substr($content, strlen($prefix)), 2, $assetBase);
+ 
+-        if (empty($rendered['valid'])) {
+-            return '';
+-        }
++        if (empty($rendered['valid'])) return $this->cacheHtml($system_key, '');
+ 
+         $this->document->addStyle($assetBase . 'view/css/blog-blocks.css');
+         if (!empty($rendered['requires_threejs'])) {
+@@ -54,6 +62,13 @@
+             $this->document->addScript($assetBase . $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=20261026c');
+         }
+ 
+-        return (string)$rendered['html'];
++        return $this->cacheHtml($system_key, (string)$rendered['html']);
++    }
++
++    private function cacheHtml(string $system_key, string $html): string {
++        $cache = (array)$this->config->get('_cms_system_page_html_cache', []);
++        $cache[$system_key] = $html;
++        $this->config->set('_cms_system_page_html_cache', $cache);
++        return $html;
+     }
+ }
+--- a/dev/catalog/controller/catalog/project.php
++++ b/dev/catalog/controller/catalog/project.php
+@@ -71,6 +71,8 @@
+         }
+ 
+         $data['home'] = $base;
++
++        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'portfolio');
+ 
+         $this->chrome($data, 'rms-portfolio');
+ 
+@@ -147,6 +149,8 @@
+ 
+         $data['back_portfolio'] = $this->url->link('catalog/project');
+ 
++        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'portfolio_detail');
++
+         $this->chrome($data, 'rms-project');
+ 
+         $this->response->setOutput($this->load->view('catalog/project_info', $data));
+--- a/dev/catalog/controller/blog/blog.php
++++ b/dev/catalog/controller/blog/blog.php
+@@ -49,6 +49,8 @@
+         }
+ 
+         $data['home'] = $base . '/';
++
++        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'blog');
+ 
+         $this->chrome($data, 'rms-blog');
+ 
+--- a/dev/catalog/controller/tool/tool.php
++++ b/dev/catalog/controller/tool/tool.php
+@@ -45,6 +45,8 @@
+ 
+         $data['home'] = $base . '/';
+ 
++        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'tools');
++
+         $this->chrome($data, 'rms-tools');
+ 
+         $this->response->setOutput($this->load->view('tool/tool_list', $data));
+@@ -89,6 +91,8 @@
+         $data['back_tools'] = $this->url->link('tool/tool');
+         $data['contact']    = $this->url->link('common/contact');
+ 
++        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'tool_detail');
++
+         $this->chrome($data, 'rms-tool');
+ 
+         $this->response->setOutput($this->load->view('tool/tool_info', $data));
+--- a/dev/catalog/controller/common/contact.php
++++ b/dev/catalog/controller/common/contact.php
+@@ -82,6 +82,7 @@
+ 
+         $this->chrome($data);
+ 
++        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'contact');
+         $this->response->setOutput($this->load->view('common/contact', $data));
+     }
+ 
+--- a/dev/catalog/controller/checkout/quote.php
++++ b/dev/catalog/controller/checkout/quote.php
+@@ -90,6 +90,7 @@
+ 
+         $this->chrome($data);
+ 
++        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'quote');
+         $this->response->setOutput($this->load->view('checkout/quote', $data));
+     }
+ 
+--- a/dev/catalog/controller/error/not_found.php
++++ b/dev/catalog/controller/error/not_found.php
+@@ -45,6 +45,7 @@
+         $this->document->addStyle($this->config->get('site_url') . 'view/css/common.css');
+ 
+         $data['body_class'] = 'rms-404';
++        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'not_found');
+         $data['header']     = $this->load->controller('common/header', $data);
+         $data['footer']     = $this->load->controller('common/footer', $data);
+ 
+--- a/dev/catalog/controller/common/header.php
++++ b/dev/catalog/controller/common/header.php
+@@ -126,7 +126,6 @@
+             'catalog/project' => 'portfolio',
+             'catalog/project.info' => 'portfolio_detail',
+             'blog/blog' => 'blog',
+-            'blog/blog.info' => 'blog_post',
+             'tool/tool' => 'tools',
+             'tool/tool.info' => 'tool_detail',
+             'common/contact' => 'contact',
+--- a/dev/catalog/view/template/catalog/project_list.twig
++++ b/dev/catalog/view/template/catalog/project_list.twig
+@@ -7,6 +7,7 @@
+       <a class="back-link" href="{{ home }}">{{ button_back_home }}</a>
+     </div>
+     <p class="lead">{{ text_lead }}</p>
++    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
+ 
+     <nav class="filter-chips" aria-label="{{ text_filter }}">
+       <a class="chip{{ filter_all.active ? ' active' : '' }}" href="{{ filter_all.href }}">{{ text_all }}</a>
+--- a/dev/catalog/view/template/catalog/project_info.twig
++++ b/dev/catalog/view/template/catalog/project_info.twig
+@@ -2,6 +2,7 @@
+ {{ header|raw }}
+ <main class="site-main">
+   <div class="container">
++    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
+     <div class="page-head">
+       <h1>{{ heading_title }}</h1>
+       <a class="back-link" href="{{ back_portfolio }}">{{ button_back }}</a>
+--- a/dev/catalog/view/template/blog/blog_list.twig
++++ b/dev/catalog/view/template/blog/blog_list.twig
+@@ -8,6 +8,7 @@
+       <a class="back-link" href="{{ home }}">{{ button_back_home }}</a>
+     </div>
+     <p class="lead">{{ text_lead }}</p>
++    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
+ 
+     {% if posts %}
+     <div class="grid-3">
+--- a/dev/catalog/view/template/tool/tool_list.twig
++++ b/dev/catalog/view/template/tool/tool_list.twig
+@@ -7,6 +7,7 @@
+       <a class="back-link" href="{{ home }}">{{ button_back_home }}</a>
+     </div>
+     <p class="lead">{{ text_lead }}</p>
++    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
+ 
+     {% if tools %}
+     <div class="grid-3">
+--- a/dev/catalog/view/template/tool/tool_info.twig
++++ b/dev/catalog/view/template/tool/tool_info.twig
+@@ -7,6 +7,7 @@
+       <a class="back-link" href="{{ back_tools }}">{{ button_back }}</a>
+     </div>
+ 
++    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
+     {% if text_lead %}<p class="lead">{{ text_lead }}</p>{% endif %}
+ 
+     <table class="fact-table">
+--- a/dev/catalog/view/template/common/contact.twig
++++ b/dev/catalog/view/template/common/contact.twig
+@@ -6,6 +6,7 @@
+     <a href="{{ home }}" style="text-decoration:none;">{{ button_back_home }}</a>
+   </div>
+   <p class="lead">{{ text_lead }}</p>
++  {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
+ 
+   {% if text_flash.text %}
+   <div class="alert {{ text_flash.type }}" style="padding:12px;border-radius:6px;margin:12px 0;background:#ecfdf5;border:1px solid #10b981;">{{ text_flash.text }}</div>
+--- a/dev/catalog/view/template/checkout/quote.twig
++++ b/dev/catalog/view/template/checkout/quote.twig
+@@ -6,6 +6,7 @@
+     <a href="{{ home }}" style="text-decoration:none;">{{ button_back_home }}</a>
+   </div>
+   <p class="lead">{{ text_lead }}</p>
++  {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
+ 
+   {% if text_flash.text %}
+   <div class="alert {{ text_flash.type }}" style="padding:12px;border-radius:6px;margin:12px 0;background:#ecfdf5;border:1px solid #10b981;">{{ text_flash.text }}</div>
+--- a/dev/catalog/view/template/error/not_found.twig
++++ b/dev/catalog/view/template/error/not_found.twig
+@@ -14,6 +14,7 @@
+     <h1>{{ heading_title }}</h1>
+     <p>{{ text_error }}</p>
+     <p class="muted">{{ text_suggestion }}</p>
++    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
+     <a class="btn primary" href="{{ home }}">{{ button_continue }}</a>
+   </div>
+ </main>
+--- a/docs/Guia-CMS.md
++++ b/docs/Guia-CMS.md
+@@ -248,3 +248,10 @@
+ ### 4.1.3 F10-03 — Publicação versionada de Temas
+ 
+ O tema agora mantém `draft_config` separado de `published_config`. A prévia não publica; o ato de publicar é explícito e registra revisão. Rollback exige ACL/CSRF e restaura snapshot. O loader Catalog só substitui templates de uma lista fixa, mantendo os templates originais como fallback; Admin e Install não ativam o loader de tema.
++
++
++### 4.1.4 Fase 10 — renderização dos slots editoriais das rotas
++
++F10-01 já armazenava páginas especiais sob `system_key`, mas o conteúdo público era consumido diretamente apenas pela Home; o header consultava os demais slots para SEO, sem exibi-los no corpo da página. F10-04 liga slots editoriais aos templates públicos de Portfolio (grade e página de detalhe), Blog (somente landing/listagem), Ferramentas (grade e detalhe), Contato, Orçamento e 404. A página Blog/post individual continua fora do CMS; posts permanecem no módulo Blog.
++
++Cada controller fornece o slot como variável de apresentação, enquanto listas e entidades continuam carregadas pelos modelos próprios e formulários mantêm seus POST/CSRF/validação. O controller `cms/slot` memoiza a página e HTML na requisição para compartilhar consulta, renderização e metadados entre o corpo e o header.
+--- a/docs/Estrutura-de-Pastas.md
++++ b/docs/Estrutura-de-Pastas.md
+@@ -290,3 +290,6 @@
+ 
+ 
+ F10-03 acrescenta `catalog/controller/startup/theme.php` e `catalog/model/common/theme.php` para aplicar apenas configurações publicadas ao serviço Twig e aos tokens de estilo. A ferramenta Admin mantém as fontes em banco; não escreve no filesystem.
++
++
++A integração Pages não cria novo módulo ou tabela: controllers de `catalog`, `blog`, `tool`, `common`, `checkout` e `error` passam a enviar conteúdo editorial já existente de `cms/slot` aos templates da rota; os templates exibem uma área editorial condicional e preservam os dados/fluxos dos módulos proprietários.
+--- /dev/null
++++ b/README-F10-Pages-Routes.md
+@@ -0,0 +1,16 @@
++# Fase 10 — Pages: conteúdo editorial nas rotas públicas
++
++**Base remota consultada:** `ac03b9687b8762ee919fe8d9bef48807989bf817` (`feat(theme): implement F10-03 Catalog theme integration`).
++
++## Gap audit
++O CMS já guardava conteúdo por `system_key` e o renderer `cms/slot` existia, mas fora da Home o `common/header` consultava slots para metadados e o conteúdo não era incluído no corpo das páginas. Isso deixava a edição de Portfolio, Blog landing, Tools, Contact, Quote e 404 invisível na publicação.
++
++## Incremento proposto (sem nova numeração formal)
++- Exibir slots existentes em Portfolio (grade e detalhe), Blog (apenas landing/listagem), Tools (grade e detalhe), Contact, Quote e 404.
++- Memoizar dados e HTML do slot por request, evitando query/render duplicados entre página e header.
++- Não alterar CRUD/fluxos de Portfolio, posts do Blog, registros de ferramentas, formulários, checkout, ou 404 técnico.
++- Blog post individual permanece sem conteúdo CMS; a landing do Blog é a única superfície editorial nesse módulo.
++- Sem nova migration/schema, sem alterar núcleo compartilhado.
++
++## Validação e limites
++Patch validado localmente com `git apply --check` sobre arquivos seletivos do HEAD. Não foram executados PHP CLI, browser, banco, migration, localhost, push, staging ou deploy.
