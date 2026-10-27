@@ -75,11 +75,11 @@
 
 ## 4. Conteúdo (CMS)
 
-### `page` — páginas de informação (Cookies, Políticas, Sobre)
-`page_id` PK · `status` · `sort_order` · `date_added` · `date_modified`
+### `page` — páginas de informação e conteúdo editorial de rotas do Catalog (F10-01)
+`page_id` PK · `system_key` VARCHAR(64) NULL UNIQUE *(chave estável da rota pública; NULL nas páginas CMS livres)* · `status` · `sort_order` · `date_added` · `date_modified`. A migration `upgrade_f10_01_cms_catalog_routes.sql` cria a coluna e semeia as rotas de conteúdo sem alterar páginas existentes.
 
 ### `page_description`
-`page_id` FK · `language_id` FK · `title` VARCHAR(255) · `description` MEDIUMTEXT *(HTML do editor)* · `meta_title` VARCHAR(255) · `meta_description` VARCHAR(255) · PK composta (`page_id`,`language_id`)
+`page_id` FK · `language_id` FK · `title` VARCHAR(255) · `description` MEDIUMTEXT *(HTML ou documento de blocos do editor)* · `meta_title` VARCHAR(255) · `meta_description` VARCHAR(255) · PK composta (`page_id`,`language_id`). Para páginas com `system_key`, o conteúdo é mostrado na rota pública correspondente; o conteúdo de negócio continua nos módulos especializados.
 
 
 ### Campos personalizados — Fase 9 / CMS page (ADR 0058, migração F9-02)

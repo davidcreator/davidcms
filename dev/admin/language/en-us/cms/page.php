@@ -176,3 +176,8 @@ $_['text_block_threejs_scriptDeleted'] = 'Thumbnail script deleted. Use Undo to 
 $_['text_block_threejs_scriptPlaceholder'] = 'Add JavaScript to customize the Three.js scene…';
 
 $_['text_block_threejs_addScript'] = 'Edit thumbnail / add script';
+
+// F10-01 — páginas públicas do Catalog vinculadas ao CMS.
+$_['text_system_page'] = 'Catalog page';
+$_['text_system_page_help'] = 'This page is linked to a public Catalog route. Its route key is fixed; edit the content and metadata here.';
+$_['error_system_page_delete'] = 'This system page cannot be deleted. You can disable or edit its content.';

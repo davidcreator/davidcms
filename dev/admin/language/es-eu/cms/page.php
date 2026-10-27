@@ -160,3 +160,8 @@ $_['text_block_threejs_scriptDeleted'] = 'Script de miniatura eliminado. Usa Des
 $_['text_block_threejs_scriptPlaceholder'] = 'Añade JavaScript para personalizar la escena Three.js…';
 
 $_['text_block_threejs_addScript'] = 'Editar miniatura / añadir script';
+
+// F10-01 — páginas públicas do Catalog vinculadas ao CMS.
+$_['text_system_page'] = 'Página del Catalog';
+$_['text_system_page_help'] = 'Esta página está vinculada a una ruta pública del Catalog. La clave de ruta es fija; edita aquí el contenido y los metadatos.';
+$_['error_system_page_delete'] = 'Esta página del sistema no se puede eliminar. Puedes desactivarla o editar su contenido.';

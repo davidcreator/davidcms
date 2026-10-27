@@ -15,6 +15,7 @@
       <a class="btn btn-outline-secondary" href="{{ cancel }}" aria-label="{{ button_cancel }}" title="{{ button_cancel }}"><i class="bi bi-x-lg" aria-hidden="true"></i><span class="visually-hidden">{{ button_cancel }}</span></a>
       <span class="text-body-secondary small ms-auto">{{ page_id ? text_edit : text_add }}</span>
     </div>
+    {% if is_system_page %}<div class="col-12"><div class="alert alert-info mb-0"><strong>{{ text_system_page }}:</strong> <code>{{ system_key }}</code> — {{ text_system_page_help }}</div></div>{% endif %}
     <div class="col-lg-8">
       <div class="card data-card mb-3"><div class="card-body">
         <h2 class="card-title h6 mb-1">{{ text_general }}</h2>
@@ -35,10 +36,12 @@
               <label class="form-label" for="input-title-{{ language.language_id }}">{{ entry_title }}{% if language.language_id == 1 %} <span class="text-danger">*</span>{% endif %}</label>
               <input class="form-control" type="text" name="page_description[{{ language.language_id }}][title]" id="input-title-{{ language.language_id }}" value="{{ language.fields.title }}" maxlength="255" data-counter{% if language.language_id == 1 %} required{% endif %}>
             </div>
+            {% if not is_system_page %}
             <div class="field mb-3">
               <label class="form-label" for="input-keyword-{{ language.language_id }}">{{ entry_keyword }}</label>
               <input class="form-control" type="text" name="page_description[{{ language.language_id }}][keyword]" id="input-keyword-{{ language.language_id }}" value="{{ language.fields.keyword }}" maxlength="64" pattern="[a-z0-9]+(-[a-z0-9]+)*">
             </div>
+            {% endif %}
             <div class="field mb-3">
               <label class="form-label" for="input-description-{{ language.language_id }}">{{ entry_description }}</label>
               {% if language.fields.block_mode == 'blocks' %}

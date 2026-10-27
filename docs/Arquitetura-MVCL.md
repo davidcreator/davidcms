@@ -160,6 +160,8 @@ Event 'controller/*/after' ──► Response->setOutput() ──► HTTP Respon
 
 **Pré/post ações:** o config permite definir `action_pre_action` (ex.: `startup/seo_url`, `startup/language`, `startup/session`) que rodam antes de qualquer rota — é assim que idioma, sessão e URLs amigáveis se inicializam.
 
+**Conteúdo editorial por rota (F10-01):** no Catalog, `common/header` resolve a rota corrente para uma chave `system_key` allowlisted e consulta `catalog/page::getSystemPage()`. A view compartilhada recebe apenas conteúdo de uma página ativa; documentos BDRE são renderizados pelo `BlockRenderer` validado. Dados de domínio continuam sendo carregados pelos controllers/models originais.
+
 ---
 
 ## 5. Registry e acesso a serviços

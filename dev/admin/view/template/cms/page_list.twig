@@ -45,13 +45,13 @@
         <tbody>
           {% for page in pages %}
           <tr>
-            <td class="fw-semibold"><a class="link-plain" href="{{ page.edit }}">{{ page.title }}</a></td>
+            <td class="fw-semibold"><a class="link-plain" href="{{ page.edit }}">{{ page.title }}</a>{% if page.is_system_page %}<span class="badge text-bg-info ms-2" title="{{ page.system_key }}">{{ text_system_page }}</span>{% endif %}</td>
             <td><span class="badge {{ page.status ? 'text-bg-success' : 'text-bg-secondary' }}">{{ page.status ? text_enabled : text_disabled }}</span></td>
             <td class="d-none d-md-table-cell">{{ page.sort_order }}</td>
             <td class="d-none d-lg-table-cell text-nowrap">{{ page.date_modified }}</td>
             <td class="text-end text-nowrap">
               <a class="icon-btn" href="{{ page.edit }}" title="{{ button_edit }}" aria-label="{{ button_edit }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
-              {% if can_modify %}
+              {% if can_modify and not page.is_system_page %}
               <form method="post" action="{{ page.delete }}" class="d-inline" data-rms-confirm-delete="{{ text_confirm_delete }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <button type="submit" class="icon-btn icon-btn--danger" title="{{ button_delete }}" aria-label="{{ button_delete }}"><i class="bi bi-trash" aria-hidden="true"></i></button>

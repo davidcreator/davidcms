@@ -17,6 +17,7 @@
 --   • upgrade_f8_01       (normalização canônica de ACL + session_expire)
 --   • upgrade_f8_05       (aparência do painel — ADR 0047)
 --   • upgrade_f9_02/f9_05/f9_12 (campos personalizados + sidecar de blocos)
+--   • upgrade_f10_01 (conteúdo editorial vinculado a rotas Catalog)
 --
 -- COMO LER ESTE ARQUIVO
 --   1. O prefixo `rms_` é o placeholder padrão — o wizard substitui pelo
@@ -127,11 +128,13 @@ CREATE TABLE IF NOT EXISTS `rms_customer` (
 
 CREATE TABLE IF NOT EXISTS `rms_page` (
   `page_id`       INT      NOT NULL AUTO_INCREMENT,
+  `system_key`    VARCHAR(64) NULL DEFAULT NULL COMMENT 'route key estável para conteúdo editorial do Catalog',
   `status`        TINYINT(1) NOT NULL DEFAULT '0',
   `sort_order`    INT      NOT NULL DEFAULT '0',
   `date_added`    DATETIME NOT NULL,
   `date_modified` DATETIME NOT NULL,
-  PRIMARY KEY (`page_id`)
+  PRIMARY KEY (`page_id`),
+  UNIQUE KEY `system_key` (`system_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `rms_page_description` (
@@ -898,6 +901,36 @@ INSERT INTO `rms_page_description` (`page_id`,`language_id`,`title`,`description
 INSERT INTO `rms_seo_url` (`key`,`value`,`language_id`,`sort_order`) VALUES
  ('page_id=1','cookies',1,0),
  ('page_id=2','politicas-internas',1,0);
+
+-- Rotas públicas do Catalog que recebem conteúdo editorial administrável.
+-- O conteúdo de negócio continua nos módulos Blog, Portfolio, Ferramentas e Formulários.
+CREATE TEMPORARY TABLE `tmp_f10_catalog_page` (
+  `system_key` VARCHAR(64) NOT NULL PRIMARY KEY,
+  `title_en` VARCHAR(255) NOT NULL,
+  `title_pt` VARCHAR(255) NOT NULL,
+  `title_es` VARCHAR(255) NOT NULL,
+  `sort_order` INT NOT NULL
+) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4;
+INSERT INTO `tmp_f10_catalog_page` VALUES
+('home','Home','Início','Inicio',10),
+('portfolio','Portfolio','Portfólio','Portafolio',20),
+('portfolio_detail','Project detail','Detalhe do projeto','Detalle del proyecto',30),
+('blog','Blog','Blog','Blog',40),
+('blog_post','Blog post','Post do Blog','Artículo del Blog',50),
+('tools','Tools','Ferramentas','Herramientas',60),
+('tool_detail','Tool detail','Detalhe da ferramenta','Detalle de herramienta',70),
+('contact','Contact','Contato','Contacto',80),
+('quote','Quote request','Pedido de orçamento','Solicitud de presupuesto',90),
+('not_found','Not found','Não encontrado','No encontrado',100);
+INSERT IGNORE INTO `rms_page` (`system_key`,`status`,`sort_order`,`date_added`,`date_modified`)
+SELECT `system_key`,1,`sort_order`,NOW(),NOW() FROM `tmp_f10_catalog_page`;
+INSERT IGNORE INTO `rms_page_description` (`page_id`,`language_id`,`title`,`description`,`meta_title`,`meta_description`)
+SELECT p.`page_id`,l.`language_id`,
+       CASE l.`code` WHEN 'pt-br' THEN s.`title_pt` WHEN 'es-eu' THEN s.`title_es` ELSE s.`title_en` END,
+       '', '', ''
+  FROM `rms_page` p JOIN `tmp_f10_catalog_page` s ON s.`system_key`=p.`system_key`
+ CROSS JOIN `rms_language` l WHERE l.`code` IN ('en-us','pt-br','es-eu');
+DROP TEMPORARY TABLE `tmp_f10_catalog_page`;
 
 
 -- ============================================================================

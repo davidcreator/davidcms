@@ -1,12 +1,17 @@
 {# dev/catalog/view/template/common/home.twig — home composta de partials (F3-01; hero 3D na F3-02) #}
 {{ header|raw }}
 <main>
+{% if cms_home_content %}
+<section id="about" class="cms-home-content">{{ cms_home_content|raw }}</section>
+{% else %}
 {% include 'partial/hero-3d.twig' %}
 {% include 'partial/about.twig' %}
 {% include 'partial/methodology.twig' %}
-{% include 'partial/testimonials.twig' %}
 {% include 'partial/skills.twig' %}
 {% include 'partial/services.twig' %}
+{% endif %}
+{# Conteúdo de domínio continua vindo dos módulos próprios, independente do CMS. #}
+{% include 'partial/testimonials.twig' %}
 {% include 'partial/portfolio.twig' %}
 {% include 'partial/tools.twig' %}
 {% include 'partial/news.twig' %}

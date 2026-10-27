@@ -96,6 +96,12 @@ Derivados diretamente do inventário do site atual (ver [Análise](Analise-David
 
 **Páginas (CMS) e Blog são módulos independentes:** `cms/page` administra páginas institucionais/informativas; `blog/blog` administra postagens, publicação agendada e respectivos detalhes públicos. Uma página CMS não cria nem substitui uma postagem. No menu do Admin, cada módulo tem seu próprio grupo e permanece sujeito à ACL da respectiva rota. No Catalog, a página pública de listagem é a rota `/blog`, ligada também na navegação principal; as postagens são alimentadas apenas pelo módulo Blog.
 
+### 4.1.1 Conteúdo editorial das rotas públicas (F10-01)
+
+A migration `dev/install/sql/upgrade_f10_01_cms_catalog_routes.sql` liga páginas especiais de `rms_page` a chaves estáveis em `system_key`. O Admin continua usando `cms/page` e a ACL existente; páginas especiais são identificadas e protegidas contra exclusão. O Catalog lê o conteúdo publicado no idioma ativo (fallback en-US) e o renderiza na área editorial compartilhada do site.
+
+Chaves atuais: `home`, `portfolio`, `portfolio_detail`, `blog`, `blog_post`, `tools`, `tool_detail`, `contact`, `quote` e `not_found`. A Home inclui seções editoriais como About; não existe rota pública separada `/about` no mapa atual. XML do sitemap, callbacks de pagamento, listagens de dados e formulários não viram conteúdo CMS: seus fluxos permanecem técnicos/dinâmicos. O CMS pode editar o conteúdo editorial de uma página, mas não duplica projetos, posts, ferramentas ou registros de orçamento.
+
 ### 4.2 Ciclo de vida do conteúdo
 
 ```

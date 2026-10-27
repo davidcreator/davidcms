@@ -160,3 +160,8 @@ $_['text_block_threejs_scriptDeleted'] = 'Script da thumb excluído. Use Desfaze
 $_['text_block_threejs_scriptPlaceholder'] = 'Adicione JavaScript para modificar a cena Three.js…';
 
 $_['text_block_threejs_addScript'] = 'Editar thumb / adicionar script';
+
+// F10-01 — páginas públicas do Catalog vinculadas ao CMS.
+$_['text_system_page'] = 'Página do Catalog';
+$_['text_system_page_help'] = 'Esta página está vinculada a uma rota pública do Catalog. A chave da rota é fixa; edite o conteúdo e os metadados aqui.';
+$_['error_system_page_delete'] = 'Esta página do sistema não pode ser excluída. Você pode desativá-la ou editar seu conteúdo.';

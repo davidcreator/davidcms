@@ -29,7 +29,7 @@ class Page extends \Reamur\System\Engine\Controller {
             'column_sort_order', 'column_date_modified', 'column_action',
             'button_add', 'button_edit', 'button_delete', 'button_filter', 'button_reset', 'button_close',
             'text_all_status', 'text_search_placeholder', 'text_showing',
-            'text_empty_title', 'text_empty_hint',
+            'text_empty_title', 'text_empty_hint', 'text_system_page',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
@@ -57,6 +57,8 @@ class Page extends \Reamur\System\Engine\Controller {
                 'page_id' => $pid,
                 'title' => (string)$row['title'],
                 'status' => (int)$row['status'],
+                'system_key' => (string)($row['system_key'] ?? ''),
+                'is_system_page' => !empty($row['system_key']),
                 'sort_order' => (int)$row['sort_order'],
                 'date_modified' => (string)$row['date_modified'],
                 'edit' => $this->url->link('cms/page.edit|' . $pid),
@@ -215,6 +217,12 @@ class Page extends \Reamur\System\Engine\Controller {
         $this->load->model('cms/page');
         $this->load->model('custom_field/value');
 
+        if ($this->model_cms_page->isSystemPage($page_id)) {
+            $this->setFlash($this->language->get('error_system_page_delete'), 'error');
+            $this->response->redirect($this->url->link('cms/page'));
+            return;
+        }
+
         if ($this->model_cms_page->getPage($page_id)) {
             if (!$this->model_custom_field_value->deletePageValues($page_id)) {
                 $this->setFlash($this->language->get('error_custom_field_delete'), 'error');
@@ -239,7 +247,7 @@ class Page extends \Reamur\System\Engine\Controller {
 
         foreach ([
             'heading_title', 'text_edit', 'text_add', 'text_general', 'text_data',
-            'text_languages_note', 'entry_title', 'entry_description',
+            'text_languages_note', 'text_system_page', 'text_system_page_help', 'entry_title', 'entry_description',
             'entry_meta_title', 'entry_meta_description', 'entry_keyword',
             'entry_status', 'entry_sort_order',
             'button_save', 'button_cancel', 'text_enabled', 'text_disabled',
@@ -526,6 +534,8 @@ class Page extends \Reamur\System\Engine\Controller {
         }
 
         $data['page_id']    = $pid;
+        $data['system_key'] = (string)($page['system_key'] ?? '');
+        $data['is_system_page'] = $data['system_key'] !== '';
         $data['sort_order'] = (string)($post['sort_order'] ?? (string)($page['sort_order'] ?? '0'));
         $data['status']     = $isPost ? ((string)($post['status'] ?? '0') === '1' ? '1' : '0') : (string)(int)($page['status'] ?? 0);
 

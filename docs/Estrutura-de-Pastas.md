@@ -45,10 +45,10 @@ Tudo que é gestão fica aqui. Grupos de controllers/models:
 | --- | --- |
 | `api/` | Endpoints internos consumidos pelo próprio painel |
 | `catalog/` | Produtos, categorias, fabricantes → **usado como Portfólio** no novo site |
-| `cms/` | Páginas de conteúdo (information), blocos, posts do blog |
+| `cms/` | Páginas de conteúdo e áreas editoriais do Catalog (Blog continua em ferramenta/controller próprio) |
 | `communication/` | Mensagens, contato recebido, notificações |
 | `customer/` | Clientes e grupos de clientes |
-| `design/` | Temas, layouts, banners, SEO URLs |
+| `design/` | Temas e layouts do Catalog (ferramenta Temas em implementação nesta fase) |
 | `error/` | Páginas de erro do admin (404/permissão) |
 | `event/` | Gestão de eventos do sistema (listar/remover listeners) |
 | `extension/` | Instalar/configurar extensões |
@@ -110,6 +110,8 @@ catalog/
 ├── language/{en-us, es-eu, pt-br}/{grupos}
 └── index.html                 # → será index.php (front controller público)
 ```
+
+Conteúdo editorial das rotas públicas é resolvido pelo `catalog/controller/common/header.php` e `catalog/model/catalog/page.php`; a chave da rota vive em `rms_page.system_key` (migration F10-01). A futura ferramenta Temas permanece no grupo `admin/controller/design/` e não altera os temas do painel.
 
 ---
 

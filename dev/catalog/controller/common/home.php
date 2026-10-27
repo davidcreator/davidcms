@@ -344,6 +344,13 @@ class Home extends \Reamur\System\Engine\Controller {
             }
         }
 
+        // Conteúdo Home do CMS substitui apenas seções editoriais estáticas;
+        // grades/listas dinâmicas continuam nos módulos especializados.
+        $data['cms_home_content'] = (string)$this->load->controller('cms/slot.render', 'home');
+        if ($data['cms_home_content'] !== '') {
+            $data['has_3d'] = $portfolioEnabled || $tools3dEnabled;
+        }
+
         // Chrome compartilhado (header + rodapé) — template agora é o tema
         // da home composta (F3-01), o que permite os partials do guia.
         $data['header'] = $this->load->controller('common/header', $data);

@@ -54,3 +54,8 @@
     {% endfor %}
   </nav>
 </header>
+{% if cms_route_content|default('') %}
+<section class="cms-route-content" data-cms-route="{{ cms_route_key|e('html_attr') }}">
+  {{ cms_route_content|raw }}
+</section>
+{% endif %}

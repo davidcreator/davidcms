@@ -23,6 +23,11 @@ class Header extends \Reamur\System\Engine\Controller {
     public function index(array $data = []): string {
         $this->load->language('common/header');
 
+        $data['cms_route_key'] = $this->routeContentKey((string)$this->config->get('_route', ''));
+        $data['cms_route_content'] = $data['cms_route_key'] !== '' && $data['cms_route_key'] !== 'home'
+            ? (string)$this->load->controller('cms/slot.render', $data['cms_route_key'])
+            : '';
+
         $data['locale'] = (string)$this->config->get('language_directory', 'en-us');
         // F4-01 (ADR 0024): sem título/descrição explícita da página,
         // o fallback é o que o admin gravou em setting/setting (rms_setting).
@@ -109,6 +114,24 @@ class Header extends \Reamur\System\Engine\Controller {
         }
 
         return $this->load->view('common/header', $data);
+    }
+
+    /** Mapeia rotas públicas para as chaves de conteúdo fixas do CMS. */
+    private function routeContentKey(string $route): string {
+        $baseRoute = explode('|', trim($route), 2)[0];
+        return match ($baseRoute) {
+            'common/home' => 'home',
+            'catalog/project' => 'portfolio',
+            'catalog/project.info' => 'portfolio_detail',
+            'blog/blog' => 'blog',
+            'blog/blog.info' => 'blog_post',
+            'tool/tool' => 'tools',
+            'tool/tool.info' => 'tool_detail',
+            'common/contact' => 'contact',
+            'checkout/quote' => 'quote',
+            'error/not_found' => 'not_found',
+            default => '',
+        };
     }
 
     /**

@@ -1,7 +1,0 @@
-11b16224757f30ea248d9a08d20c2f126aeb15d93bb8ead91f3c6dad546d90b1  ./agents-ia/decisoes/0067-f9-11-editor-de-blocos-blog-contrato.md
-6ac1e408f5b36adfa94b4ab49bcca4bf03648a3eb5880e0b8fa79bea36a6ff15  ./docs/F9-11-Contrato-Editor-Blocos-Blog.json
-25f1c7e04cc6f56b2d3925d4e3c6f5feb770481e7a4f327ac2d2bc31f107e7f6  ./docs/F9-11-Editor-de-Blocos-Blog.md
-549b99943e6cd1a38b5e2726d8491d1810f493ecae4a5b7b2d2a46efdc38b420  ./docs/README.md
-eb1244712ca01daef8da60d528f54515926398a016022edcd31c213fdfc34469  ./manifest.json
-cc419209d0dd15884c2af302811bbe2ba1d1a2fa991dd70bb73454762409924d  ./tools/e2e/e2e_f911.cjs
-1800b63c9628d72c362fbaf4246be8c149c1f243401d9a828c6db2975f72f933  ./tools/e2e/e2e_f911.sh

@@ -20,7 +20,8 @@ class Page extends \Reamur\System\Engine\Model {
      * @return array<int, array<string, mixed>>
      */
     public function getPages(array $filters = []): array {
-        $sql = "SELECT p.`page_id`, p.`status`, p.`sort_order`, p.`date_modified`,
+        $systemKeySelect = $this->hasSystemKeyColumn() ? "p.`system_key`" : "'' AS `system_key`";
+        $sql = "SELECT p.`page_id`, p.`status`, p.`sort_order`, p.`date_modified`, " . $systemKeySelect . ",
                        COALESCE(NULLIF(pd.`title`, ''), pd_en.`title`, '') AS `title` "
             . $this->pageListFrom() . $this->pageListWhere($filters)
             . " ORDER BY p.`sort_order` ASC, p.`page_id` ASC";
@@ -180,7 +181,23 @@ class Page extends \Reamur\System\Engine\Model {
         $this->syncDescriptions($page_id, (array)$data['descriptions']);
     }
 
+    public function isSystemPage(int $page_id): bool {
+        if (!$this->hasSystemKeyColumn()) {
+            return false;
+        }
+
+        $query = $this->db->query(
+            "SELECT `system_key` FROM `" . $this->t('page') . "` WHERE `page_id` = '" . (int)$page_id . "' LIMIT 1"
+        );
+
+        return $query instanceof \stdClass && !empty($query->row['system_key']);
+    }
+
     public function deletePage(int $page_id): void {
+        if ($this->isSystemPage($page_id)) {
+            return;
+        }
+
         $this->db->query("DELETE FROM `" . $this->t('page') . "` WHERE `page_id` = '" . $page_id . "'");
 
         $this->db->query("DELETE FROM `" . $this->t('page_description') . "` WHERE `page_id` = '" . $page_id . "'");
@@ -221,6 +238,19 @@ class Page extends \Reamur\System\Engine\Model {
                 );
             }
         }
+    }
+
+    private function hasSystemKeyColumn(): bool {
+        static $available = null;
+
+        if ($available !== null) {
+            return $available;
+        }
+
+        $query = $this->db->query("SHOW COLUMNS FROM `" . $this->t('page') . "` LIKE 'system_key'");
+        $available = $query instanceof \stdClass && !empty($query->row);
+
+        return $available;
     }
 
     private function t(string $table): string {
