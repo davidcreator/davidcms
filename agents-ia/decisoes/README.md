@@ -60,3 +60,4 @@ Copiar para o novo arquivo `NNNN-titulo-curto.md`:
 | [0076](0076-cena-3-etapa-2-galeria-3d-do-portfolio.md) | Cena 3 etapa 2 do Portfólio: galeria 3D opcional sobre a grade | 🟡 aceita para implementação incremental | 2026-10-27 |
 | [0077](0077-cena-5-ferramentas-3d-flutuantes.md) | Cena 5: ícones 3D flutuantes das Ferramentas | ✅ aceita para implementação incremental | 2026-10-27 |
 | [0078](0078-conteudo-editorial-rotas-catalog.md) | Conteúdo editorial CMS associado às rotas públicas do Catalog | ✅ aceita para implementação incremental | 2026-10-27 |
+| [0079](0079-temas-catalog-admin.md) | Temas do Catalog como ferramenta Admin separada | 🟡 incremento local; pendente runtime/preview/editor Twig | 2026-10-27 |

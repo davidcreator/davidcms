@@ -283,3 +283,7 @@ Chaves mais importantes (de `default.php`):
 - [Arquitetura MVCL](Arquitetura-MVCL.md) — como essas pastas interagem em runtime
 - [Análise §8](Analise-DavidAlmeida.md#8-plano-de-migração) — ordem de preenchimento (Fases 1–6)
 - [Guia CMS §3](Guia-CMS.md#3-módulos-essenciais-de-um-cms--reamurcms) — módulos em visão de produto
+
+### F10-02 — Temas do Catalog
+
+A ferramenta Admin independente está em `admin/controller/design/theme.php`, `admin/model/design/theme.php`, `admin/view/template/design/` e `admin/language/{en-us,pt-br,es-eu}/design/`. Persistência e snapshots ficam em `rms_design_theme` e `rms_design_theme_revision`. A rota ACL é `design/theme`; não confundir com a aparência do Admin (`setting/appearance`). Templates Twig não são gravados no filesystem por esta primeira fatia.

@@ -1,0 +1,28 @@
+<?php
+// F10-02 Design / Theme language.
+$_['heading_title'] = 'Temas del Catalog';
+$_['text_intro'] = 'Administre la apariencia del Catalog independientemente de Pages y Blog.';
+$_['text_empty'] = 'No hay temas configurados.';
+$_['column_name'] = 'Nombre';
+$_['column_slug'] = 'Clave';
+$_['column_status'] = 'Estado';
+$_['column_modified'] = 'Modificado';
+$_['button_edit'] = 'Editar';
+$_['button_add'] = 'Nuevo tema';
+$_['button_save'] = 'Guardar borrador';
+$_['button_back'] = 'Volver';
+$_['button_activate'] = 'Publicar';
+$_['text_active'] = 'Activo';
+$_['text_inactive'] = 'Borrador';
+$_['text_editor_scope'] = 'Controles visuales; el código fuente Twig no se edita en esta versión.';
+$_['text_name'] = 'Nombre';
+$_['text_slug'] = 'Clave';
+$_['text_colors'] = 'Colores';
+$_['text_primary'] = 'Principal';
+$_['text_surface'] = 'Superficie';
+$_['text_scene'] = 'Escena Three.js aprobada';
+$_['text_no_scene'] = 'Sin escena';
+$_['text_history'] = 'Historial';
+$_['error_permission'] = 'Sin permiso.';
+$_['error_csrf'] = 'Token de seguridad inválido.';
+$_['error_validation'] = 'Revise los campos.';

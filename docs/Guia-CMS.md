@@ -239,3 +239,7 @@ Rotinas:
 - [Análise do site atual](Analise-DavidAlmeida.md) — de onde viemos
 - [Arquitetura MVCL](Arquitetura-MVCL.md) — como o CMS está montado por dentro
 - [Guia PHP 8+](Guia-PHP8.md) · [Guia Twig](Guia-Twig.md) · [Webhooks](Webhooks.md)
+
+### 4.1.2 Temas do Catalog (F10-02)
+
+A rota Admin `design/theme` é separada de Pages e Blog e controla tokens visuais e um identificador de cena selecionado de uma allowlist. Não aceita JS nem caminhos de arquivo enviados pelo usuário. As tabelas `design_theme` e `design_theme_revision` mantêm configuração e snapshots. O estado desta fatia ainda não conecta tema ativo ao renderer Catalog e não disponibiliza edição de Twig, prévia sandboxada nem restauração pela interface; esses requisitos seguem abertos para conclusão antes de aceite final.

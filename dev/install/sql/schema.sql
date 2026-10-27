@@ -431,3 +431,16 @@ CREATE TABLE IF NOT EXISTS `rms_rate_limit` (
   `window_start` DATETIME     NOT NULL,
   PRIMARY KEY (`scope`, `ip`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- F10-02 — Catalog Themes (canonical install schema).
+CREATE TABLE IF NOT EXISTS `rms_design_theme` (
+  `theme_id` INT NOT NULL AUTO_INCREMENT, `name` VARCHAR(120) NOT NULL, `slug` VARCHAR(48) NOT NULL,
+  `config` LONGTEXT NOT NULL COMMENT 'JSON allowlisted visual tokens and approved Three.js scene identifier',
+  `status` TINYINT(1) NOT NULL DEFAULT '0', `date_added` DATETIME NOT NULL, `date_modified` DATETIME NOT NULL,
+  PRIMARY KEY (`theme_id`), UNIQUE KEY `slug` (`slug`), KEY `status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `rms_design_theme_revision` (
+  `revision_id` BIGINT NOT NULL AUTO_INCREMENT, `theme_id` INT NOT NULL, `snapshot` LONGTEXT NOT NULL,
+  `user_id` INT NOT NULL, `date_added` DATETIME NOT NULL,
+  PRIMARY KEY (`revision_id`), KEY `theme_date` (`theme_id`,`revision_id`), KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

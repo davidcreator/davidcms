@@ -140,6 +140,7 @@ class Header extends \Reamur\System\Engine\Controller {
                 'title' => $this->language->get('text_group_pages'),
                 'items' => [
                     ['route' => 'cms/page', 'icon' => 'bi bi-file-earmark-text', 'key' => 'text_menu_pages'],
+                    ['route' => 'design/theme', 'icon' => 'bi bi-palette', 'key' => 'text_menu_themes'],
                 ],
             ],
             [

@@ -51,3 +51,5 @@ $_['text_appearance']        = 'Apariencia';
 
 // F9-09 — custom field definitions menu label.
 $_['text_menu_custom_fields'] = 'Campos personalizados';
+
+$_['text_menu_themes'] = 'Temas';
