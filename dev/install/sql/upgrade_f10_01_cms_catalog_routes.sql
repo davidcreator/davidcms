@@ -35,7 +35,7 @@ CREATE TEMPORARY TABLE IF NOT EXISTS `tmp_f10_catalog_page` (
   `title_pt` VARCHAR(255) NOT NULL,
   `title_es` VARCHAR(255) NOT NULL,
   `sort_order` INT NOT NULL
-) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4;
+) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO `tmp_f10_catalog_page` (`system_key`,`title_en`,`title_pt`,`title_es`,`sort_order`) VALUES
 ('home','Home','Início','Inicio',10),

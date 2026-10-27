@@ -90,6 +90,7 @@ class Quote extends \Reamur\System\Engine\Controller {
 
         $this->chrome($data);
 
+        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'quote');
         $this->response->setOutput($this->load->view('checkout/quote', $data));
     }
 

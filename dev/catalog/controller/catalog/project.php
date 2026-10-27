@@ -72,6 +72,8 @@ class Project extends \Reamur\System\Engine\Controller {
 
         $data['home'] = $base;
 
+        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'portfolio');
+
         $this->chrome($data, 'rms-portfolio');
 
         $this->response->setOutput($this->load->view('catalog/project_list', $data));
@@ -146,6 +148,8 @@ class Project extends \Reamur\System\Engine\Controller {
         }
 
         $data['back_portfolio'] = $this->url->link('catalog/project');
+
+        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'portfolio_detail');
 
         $this->chrome($data, 'rms-project');
 

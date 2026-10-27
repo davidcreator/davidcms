@@ -50,6 +50,8 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         $data['home'] = $base . '/';
 
+        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'blog');
+
         $this->chrome($data, 'rms-blog');
 
         $this->response->setOutput($this->load->view('blog/blog_list', $data));

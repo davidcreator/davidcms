@@ -8,6 +8,7 @@
       <a class="back-link" href="{{ home }}">{{ button_back_home }}</a>
     </div>
     <p class="lead">{{ text_lead }}</p>
+    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
 
     {% if posts %}
     <div class="grid-3">

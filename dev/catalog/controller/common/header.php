@@ -126,7 +126,6 @@ class Header extends \Reamur\System\Engine\Controller {
             'catalog/project' => 'portfolio',
             'catalog/project.info' => 'portfolio_detail',
             'blog/blog' => 'blog',
-            'blog/blog.info' => 'blog_post',
             'tool/tool' => 'tools',
             'tool/tool.info' => 'tool_detail',
             'common/contact' => 'contact',

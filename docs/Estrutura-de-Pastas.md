@@ -290,3 +290,6 @@ A ferramenta Admin independente está em `admin/controller/design/theme.php`, `a
 
 
 F10-03 acrescenta `catalog/controller/startup/theme.php` e `catalog/model/common/theme.php` para aplicar apenas configurações publicadas ao serviço Twig e aos tokens de estilo. A ferramenta Admin mantém as fontes em banco; não escreve no filesystem.
+
+
+A integração Pages não cria novo módulo ou tabela: controllers de `catalog`, `blog`, `tool`, `common`, `checkout` e `error` passam a enviar conteúdo editorial já existente de `cms/slot` aos templates da rota; os templates exibem uma área editorial condicional e preservam os dados/fluxos dos módulos proprietários.

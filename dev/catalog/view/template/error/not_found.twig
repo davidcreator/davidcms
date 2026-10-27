@@ -14,6 +14,7 @@
     <h1>{{ heading_title }}</h1>
     <p>{{ text_error }}</p>
     <p class="muted">{{ text_suggestion }}</p>
+    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
     <a class="btn primary" href="{{ home }}">{{ button_continue }}</a>
   </div>
 </main>

@@ -45,6 +45,8 @@ class Tool extends \Reamur\System\Engine\Controller {
 
         $data['home'] = $base . '/';
 
+        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'tools');
+
         $this->chrome($data, 'rms-tools');
 
         $this->response->setOutput($this->load->view('tool/tool_list', $data));
@@ -88,6 +90,8 @@ class Tool extends \Reamur\System\Engine\Controller {
 
         $data['back_tools'] = $this->url->link('tool/tool');
         $data['contact']    = $this->url->link('common/contact');
+
+        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'tool_detail');
 
         $this->chrome($data, 'rms-tool');
 

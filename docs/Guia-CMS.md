@@ -248,3 +248,10 @@ A rota Admin `design/theme` é separada de Pages e Blog e controla tokens visuai
 ### 4.1.3 F10-03 — Publicação versionada de Temas
 
 O tema agora mantém `draft_config` separado de `published_config`. A prévia não publica; o ato de publicar é explícito e registra revisão. Rollback exige ACL/CSRF e restaura snapshot. O loader Catalog só substitui templates de uma lista fixa, mantendo os templates originais como fallback; Admin e Install não ativam o loader de tema.
+
+
+### 4.1.4 Fase 10 — renderização dos slots editoriais das rotas
+
+F10-01 já armazenava páginas especiais sob `system_key`, mas o conteúdo público era consumido diretamente apenas pela Home; o header consultava os demais slots para SEO, sem exibi-los no corpo da página. F10-04 liga slots editoriais aos templates públicos de Portfolio (grade e página de detalhe), Blog (somente landing/listagem), Ferramentas (grade e detalhe), Contato, Orçamento e 404. A página Blog/post individual continua fora do CMS; posts permanecem no módulo Blog.
+
+Cada controller fornece o slot como variável de apresentação, enquanto listas e entidades continuam carregadas pelos modelos próprios e formulários mantêm seus POST/CSRF/validação. O controller `cms/slot` memoiza a página e HTML na requisição para compartilhar consulta, renderização e metadados entre o corpo e o header.

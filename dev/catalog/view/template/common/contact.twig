@@ -6,6 +6,7 @@
     <a href="{{ home }}" style="text-decoration:none;">{{ button_back_home }}</a>
   </div>
   <p class="lead">{{ text_lead }}</p>
+  {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
 
   {% if text_flash.text %}
   <div class="alert {{ text_flash.type }}" style="padding:12px;border-radius:6px;margin:12px 0;background:#ecfdf5;border:1px solid #10b981;">{{ text_flash.text }}</div>
