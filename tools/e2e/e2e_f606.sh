@@ -59,7 +59,7 @@ ck 1 $RC "wizard-htaccess-f606"
 
 echo '══ 2 — asset EXISTENTE continua sendo servido ══'
 RC=0
-R=$(curl -s -o /tmp/f606_main.js -w "%{http_code} %{content_type}" "$C/view/js/three/main.js")
+R=$(curl -s -o /tmp/f606_main.js -w "%{http_code} %{content_type}" "$C/three-runtime/three/main.js")
 echo "$R" | grep -q "^200 " || { RC=1; echo "   ↳ $R"; }
 case "$R" in *javascript*|*text/plain*) ;; *) RC=1;; esac
 [ -s /tmp/f606_main.js ] || RC=1
@@ -68,15 +68,15 @@ ck 2 $RC "asset-real-servido"
 
 echo '══ 3 — asset faltante no catalog → 404 NATIVO (sem página da app) ══'
 RC=0
-[ "$(code "$C/view/js/three/nope-f606.js")" = "404" ] || RC=1
-curl -s "$C/view/js/three/nope-f606.js" -o /tmp/f606_nope.html
+[ "$(code "$C/view/js/nope-f606.js")" = "404" ] || RC=1
+curl -s "$C/view/js/nope-f606.js" -o /tmp/f606_nope.html
 grep -q "ReamurCMS" /tmp/f606_nope.html && RC=1   # se renderizou a 404 da app, caiu no PHP
 [ -s /tmp/f606_nope.html ] && grep -qE "Not Found|404" /tmp/f606_nope.html || [ ! -s /tmp/f606_nope.html ] || RC=1   # 404 enxuto do Apache
 ck 3 $RC "asset-404-nativo"
 
 echo '══ 4 — log NÃO registra "Route not found" para asset faltante ══'
 RC=0
-! sudo grep -q "catalog/view/js/three/nope-f606" $FUI/system/storage/logs/error.log 2>/dev/null || RC=1
+! sudo grep -q "catalog/view/js/nope-f606" $FUI/system/storage/logs/error.log 2>/dev/null || RC=1
 ! sudo grep -q "nopef606" $FUI/system/storage/logs/error.log 2>/dev/null || RC=1   # nem mesmo a rota sanitizada
 ck 4 $RC "log-sem-ruido-asset"
 
@@ -86,9 +86,9 @@ echo "══ 5 — caso mascarado real: asset SEM extensão vira diagnóstico ga
 # que mascarou as 27 entradas deixa de cegar o diagnóstico. É o que permite
 # identificar o emissor real se o padrão voltar ao log algum dia.
 RC=0
-[ "$(code "$C/view/js/three/main-js")" = "404" ] || RC=1
+[ "$(code "$C/view/js/main-js")" = "404" ] || RC=1
 sleep 1
-sudo grep -q "request: /davidcms/dev/catalog/view/js/three/main-js" $FUI/system/storage/logs/error.log 2>/dev/null || RC=1
+sudo grep -q "request: /davidcms/dev/catalog/view/js/main-js" $FUI/system/storage/logs/error.log 2>/dev/null || RC=1
 ck 5 $RC "mascara-revelada"
 
 echo '══ 6 — sitemap.xml: rota dinâmica COM ponto não foi capturada ══'

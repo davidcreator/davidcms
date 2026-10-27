@@ -13,7 +13,7 @@
 #   4 /jwa: title/meta do projeto (meta_title do seed) + chips de categoria
 #   5 /jwa: classes do tema (page-head, fact-table) — sem style= inline de layout
 #   6 404: status 404 + data-scene="not-found" + data-count/drift + fallback
-#   7 scenes/not-found.js servido e é SceneModule completo (drift+wrap)
+#   7 scenes/not-found.js servido como factory da cena (drift+wrap)
 #   8 main.js importa not-found.js (cena registrada no entrypoint)
 #   9 404 em pt/es: textos traduzidos + cena presente
 #  10 escopo: /portfolio 200 sem wrapper de erro; jwa mantém sem import map
@@ -79,17 +79,17 @@ grep -q 'nf-3d__fallback' /tmp/f303_404.html || OK=1
 grep -q '"three"' /tmp/f303_404.html || OK=1     # has_3d liga o import map
 ck 6 $OK "404-fog"
 
-echo '══ 7 — scenes/not-found.js: SceneModule + drift + wrap ══'
-curl -s -D /tmp/f303_nf.hdr -o /tmp/f303_nf.js "$C/view/js/three/scenes/not-found.js"
+echo '══ 7 — scenes/not-found.js: factory do SceneModule + drift + wrap ══'
+curl -s -D /tmp/f303_nf.hdr -o /tmp/f303_nf.js "$C/three-runtime/three/scenes/not-found.js"
 OK=0
 [ "$(hdr /tmp/f303_nf.hdr)" = "200" ] || OK=1
-for t in "registerScene('not-found'" "play()" "pause()" "resize()" "dispose()" "velocities\[" "needsUpdate" "drift" "devicePixelRatio, 2"; do
+for t in "registerScene('not-found'" "animated: true" "update(" "dispose()" "velocities\[" "needsUpdate" "drift"; do
   grep -q "$t" /tmp/f303_nf.js || OK=1
 done
 ck 7 $OK "nf-scene-module"
 
 echo '══ 8 — main.js importa not-found.js ══'
-curl -s "$C/view/js/three/main.js" -o /tmp/f303_main.js
+curl -s "$C/three-runtime/three/main.js" -o /tmp/f303_main.js
 OK=0
 grep -q "hero-particles.js" /tmp/f303_main.js || OK=1
 grep -q "not-found.js" /tmp/f303_main.js || OK=1

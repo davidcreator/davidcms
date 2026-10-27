@@ -8,10 +8,10 @@
 # Checks:
 #   1 home tem data-scene="hero-particles" + data-* da cena
 #   2 import map "three" ANTES de main.js; ambos presentes
-#   3 main.js 200 + registrando boot()
-#   4 hero-particles.js registra SceneModule (play/pause/resize/dispose)
-#   5 scene-runner honra prefers-reduced-motion + lazy-init (IntersectionObserver)
-#   6 vendor three.module.js 200 + budget ≤ 700 KB (§10 do guia)
+#   3 main.js 200 + registrando boot() (rota three-runtime/ do System)
+#   4 hero-particles.js registra a factory da cena (update/dispose)
+#   5 scene-runner do System: renderer + reduced-motion + lazy-init + pausa
+#   6 three.module.js da rota three-runtime/ 200 + budget ≤ 700 KB + revisão r186
 #   7 header.twig emite slot SÓ na home (has_3d): projeto /jwa sem import map
 #   8 texto via Language em pt/es (hero traduzido sobre o mesmo DOM 3D)
 #   9 fallback gradiente no DOM (sem binário; sem 404 de hero-fallback.webp)
@@ -36,7 +36,7 @@ ck 1 $OK "hero-data-scene"
 echo '══ 2 — import map ANTES do módulo (ordem no <head>) ══'
 OK=0
 POS_MAP=$(grep -n '"three"' /tmp/f302_home.html | head -1 | cut -d: -f1)
-POS_MOD=$(grep -n 'js/three/main.js' /tmp/f302_home.html | head -1 | cut -d: -f1)
+POS_MOD=$(grep -n 'three-runtime/three/main.js' /tmp/f302_home.html | head -1 | cut -d: -f1)
 [ -n "$POS_MAP" ] && [ -n "$POS_MOD" ] || OK=1
 [ "$OK" -eq 0 ] && [ "$POS_MAP" -lt "$POS_MOD" ] || [ "$OK" -ne 0 ] || OK=1
 grep -q 'three.module.js' /tmp/f302_home.html || OK=1
@@ -44,38 +44,39 @@ grep -q 'type="module"' /tmp/f302_home.html || OK=1
 ck 2 $OK "importmap-ordem"
 
 echo '══ 3 — main.js servido e chama boot() ══'
-curl -s -D /tmp/f302_m.hdr -o /tmp/f302_main.js "$C/view/js/three/main.js"
+curl -s -D /tmp/f302_m.hdr -o /tmp/f302_main.js "$C/three-runtime/three/main.js"
 OK=0
 [ "$(hdr /tmp/f302_m.hdr)" = "200" ] || OK=1
 grep -q "boot()" /tmp/f302_main.js || OK=1
 grep -q "hero-particles.js" /tmp/f302_main.js || OK=1
 ck 3 $OK "main-js"
 
-echo '══ 4 — hero-particles.js: SceneModule completo ══'
-curl -s "$C/view/js/three/scenes/hero-particles.js" -o /tmp/f302_scene.js
+echo '══ 4 — hero-particles.js: factory do SceneModule ══'
+curl -s "$C/three-runtime/three/scenes/hero-particles.js" -o /tmp/f302_scene.js
 OK=0
-for t in "registerScene('hero-particles'" "play()" "pause()" "resize()" "dispose()" "WebGLRenderer" "devicePixelRatio, 2" "pointermove"; do
+for t in "registerScene('hero-particles'" "animated: true" "update(" "dispose()" "createParticleField" "pointermove" "fitToViewport"; do
   grep -q "$t" /tmp/f302_scene.js || OK=1
 done
 ck 4 $OK "scene-module"
 
-echo '══ 5 — scene-runner: reduced-motion + lazy-init + pausa ══'
-curl -s "$C/view/js/three/core/scene-runner.js" -o /tmp/f302_runner.js
+echo '══ 5 — scene-runner: renderer + reduced-motion + lazy-init + pausa ══'
+curl -s "$C/three-runtime/three/core/scene-runner.js" -o /tmp/f302_runner.js
 OK=0
-for t in "prefers-reduced-motion: no-preference" "IntersectionObserver" "rootMargin: '200px'" "visibilitychange" "pagehide"; do
+for t in "prefers-reduced-motion: reduce" "IntersectionObserver" "ResizeObserver" "rootMargin" "visibilitychange" "pagehide" "WebGLRenderer"; do
   grep -q "$t" /tmp/f302_runner.js || OK=1
 done
 ck 5 $OK "scene-runner"
 
-echo '══ 6 — vendor three.js servido dentro do budget (≤ 700 KB) ══'
-curl -s -D /tmp/f302_v.hdr -o /tmp/f302_three.js "$C/view/js/vendor/three.module.js"
+echo '══ 6 — three.js servido pela rota do System dentro do budget (≤ 700 KB) ══'
+curl -s -D /tmp/f302_v.hdr -o /tmp/f302_three.js "$C/three-runtime/three.module.js"
 OK=0
 [ "$(hdr /tmp/f302_v.hdr)" = "200" ] || OK=1
 SIZE=$(stat -c%s /tmp/f302_three.js)
 [ "$SIZE" -gt 100000 ] || OK=1        # arquivo real, não shell de erro
-[ "$SIZE" -le 750000 ] || OK=1        # budget §10 (687 KB esperado p/ r169 min)
-grep -q '169' <(head -c 20000 /tmp/f302_three.js) || OK=1
-ck 6 $OK "three-vendor-budget"
+[ "$SIZE" -le 750000 ] || OK=1        # budget §10 (r186 self-hosted)
+curl -s "$C/three-runtime/three.core.js" -o /tmp/f302_core.js
+grep -q "REVISION = '186'" /tmp/f302_core.js || OK=1
+ck 6 $OK "three-budget-revisao"
 
 echo '══ 7 — slot WebGL SÓ na home (escopo cirúrgico): /jwa sem import map ══'
 curl -s "$C/jwa" -o /tmp/f302_jwa.html -D /tmp/f302_jwa.hdr

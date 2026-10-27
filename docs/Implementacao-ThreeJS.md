@@ -204,13 +204,13 @@ Sem tabela, sem migration e sem setting novo: o asset passa pelo mesmo gateway a
 **Etapa 1 (Fase 3, sem WebGL):** tilt 3D por CSS nos cards — efeito barato e acessível:
 
 ```css
-/* view/css/portfolio.css */
-.card-project { transform-style: preserve-3d; transition: transform .25s ease; }
-.card-project:hover { transform: perspective(800px) rotateX(4deg) rotateY(-4deg) translateY(-4px); }
-@media (prefers-reduced-motion: reduce) { .card-project:hover { transform: none; } }
+/* catalog/view/css/theme.css */
+.pcard { transform-style: preserve-3d; transition: transform .25s ease; }
+.pcard:hover { transform: perspective(800px) rotateX(4deg) rotateY(-4deg) translateY(-4px); }
+@media (prefers-reduced-motion: reduce) { .pcard:hover { transform: none; } }
 ```
 
-**Etapa 2 (pós-lançamento):** `scenes/portfolio-3d.js` — galeria navegável (quadros 3D com as capas dos projetos como texturas). Fora do escopo do lançamento; backlog registrado na [Análise](Analise-DavidAlmeida.md).
+**Etapa 2 (pós-lançamento):** `scenes/portfolio-3d.js` — galeria navegável (quadros 3D com as capas dos projetos como texturas). Fora do escopo do lançamento; especificação fechada na ADR 0076 (camada decorativa sobre a grade, `TextureLoader` do módulo oficial, navegação nos anchors HTML).
 
 ---
 
@@ -218,8 +218,9 @@ Sem tabela, sem migration e sem setting novo: o asset passa pelo mesmo gateway a
 
 ```twig
 {# error/not_found.twig #}
-<div data-scene="not-found" data-count="120">
-  <img src="{{ base }}catalog/view/assets/3d/lost.webp" alt="">
+<div class="nf-3d__canvas" aria-hidden="true"
+     data-scene="not-found" data-count="120" data-drift="0.4">
+  <div class="nf-3d__fallback" data-fallback></div>
 </div>
 ```
 
@@ -233,21 +234,13 @@ Partículas com deriva aleatória ("fog") + texto HTML por cima. Arquivo própri
 
 ```php
 // catalog/controller/common/home.php (trecho)
-$threeRuntimeBase = $this->three_asset_manifest->publicBasePath();
-// O template usa a URL Catalog base + $threeRuntimeBase; nunca aponta para System direto.
+// O template usa a URL Catalog base + a rota pública do manifesto; nunca aponta para System direto.
+$data['has_3d'] = $threeJs['hero_enabled'];   // ativa o import map no header.twig apenas nesta rota
+$data['three_runtime_base'] = $base . $this->three_asset_manifest->publicBasePath();
 
-$data['has_3d'] = true;   // ativa o import map no base.twig apenas nesta rota
-$data['asset_base'] = $this->config->get('site_url');
-
-$data['hero'] = [
-    'kicker'    => $this->language->get('hero_kicker'),
-    'title'     => 'David L. Almeida',
-    'highlight' => $this->language->get('hero_role'),
-    'subtitle'  => $this->language->get('hero_subtitle'),
-    'particles' => 400,
-    'model'     => 'catalog/view/assets/3d/logo-da.glb',
-    'fallback'  => 'catalog/view/assets/3d/hero-fallback.webp',
-];
+// Cena 2: o modelo é um asset allowlisted; '' quando não publicado (só partículas).
+$heroModel = $this->three_asset_manifest->heroModelUrl();
+$data['hero3d'] = $threeJs['hero'] + ['model' => $heroModel !== null ? $base . $heroModel : ''];
 ```
 
 ```php
@@ -330,11 +323,11 @@ $_['hero_subtitle']  = 'Transformo ideias em realidade com criatividade e respon
 
 ## 12. Deploy e cache de assets
 
-1. **Versionamento de assets** por query string no controller: `main.js?v={{ asset_version }}` (valor de config, bump a cada release);
-2. **Headers** no servidor para `catalog/view/assets/` e `js/vendor/`: `Cache-Control: public, max-age=31536000, immutable` (só com versionamento!);
+1. **Versionamento de assets** por query string no controller (ex.: `threejs-thumb.js?v={{ asset_version }}`), valor de config, bump a cada release;
+2. **Headers** no servidor para a rota `/catalog/three-runtime/`: `Cache-Control: public, max-age=31536000, immutable` (só com versionamento!). O runtime vive em `system/library/three/runtime/` e é publicado apenas pelo gateway allowlisted;
 3. **Compressão:** brotli/gzip para `.js`, `.wasm`, `.glb` (mime `model/gltf-binary`);
-4. **Precarregar o hero:** `<link rel="preload" as="image" href="hero-fallback.webp">` no `head` da home;
-5. Commitar `js/vendor/three*` **uma vez por upgrade** de versão, com a versão anotada no PR.
+4. **Precarregar o hero:** `<link rel="modulepreload" href="{{ three_runtime_base }}three/main.js">` no `head` da home; o fallback é o gradiente CSS (`.hero-3d__fallback`), sem binário;
+5. Commitar novos assets do runtime **uma vez por upgrade** de versão, anotando a versão (ex.: `r186`) no PR.
 
 ---
 

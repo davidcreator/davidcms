@@ -242,9 +242,8 @@ $data['hero'] = [
     'title'          => 'David L. Almeida',
     'highlight'      => $this->language->get('hero_role'),     // "Creative Developer"
     'subtitle'       => $this->language->get('hero_subtitle'),
-    'model_url'      => 'catalog/view/assets/3d/logo-da.glb',
-    'fallback_image' => 'catalog/view/assets/3d/hero-fallback.webp',
-    'particles'      => 400,
+    'model_url'      => $this->three_asset_manifest->heroModelUrl(),  // Cena 2: asset allowlisted (ADR 0075)
+    'particles'      => 400,                                          // fallback = gradiente CSS no tema
 ];
 ```
 

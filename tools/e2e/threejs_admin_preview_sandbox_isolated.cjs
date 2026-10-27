@@ -22,9 +22,9 @@ function safeError(error) { return String(error && error.message || error).repla
 
     const root = process.cwd();
     const assets = new Map([
-      ['/threejs-thumb.js', 'dev/catalog/view/js/threejs-thumb.js'],
-      ['/three.module.js', 'dev/catalog/view/js/three.module.js'],
-      ['/three.core.js', 'dev/catalog/view/js/three.core.js']
+      ['/threejs-thumb.js', 'dev/system/library/three/runtime/threejs-thumb.js'],
+      ['/three.module.js', 'dev/system/library/three/runtime/three.module.js'],
+      ['/three.core.js', 'dev/system/library/three/runtime/three.core.js']
     ]);
     for (const relative of assets.values()) {
       assert(fs.existsSync(path.join(root, relative)), `Missing local runtime asset: ${relative}`);
