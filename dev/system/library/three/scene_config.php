@@ -21,6 +21,7 @@ final class SceneConfig {
         'three_not_found_enabled' => '1',
         'three_portfolio_enabled' => '0',
         'three_portfolio_frame_limit' => '12',
+        'three_tools_enabled' => '0',
     ];
 
     /**
@@ -34,7 +35,7 @@ final class SceneConfig {
         foreach (array_keys(self::DEFAULTS) as $key) {
             if (array_key_exists($key, $settings)) $out[$key] = trim((string)$settings[$key]);
         }
-        foreach (['three_hero_enabled', 'three_not_found_enabled', 'three_portfolio_enabled'] as $key) {
+        foreach (['three_hero_enabled', 'three_not_found_enabled', 'three_portfolio_enabled', 'three_tools_enabled'] as $key) {
             if (!in_array($out[$key], ['0', '1'], true)) $out[$key] = self::DEFAULTS[$key];
         }
         $count = filter_var($out['three_hero_particle_count'], FILTER_VALIDATE_INT);
@@ -58,7 +59,7 @@ final class SceneConfig {
      */
     public function validateSettings(array $input): array {
         $errors = [];
-        foreach (['three_hero_enabled', 'three_not_found_enabled', 'three_portfolio_enabled'] as $key) {
+        foreach (['three_hero_enabled', 'three_not_found_enabled', 'three_portfolio_enabled', 'three_tools_enabled'] as $key) {
             if (!in_array((string)($input[$key] ?? ''), ['0', '1'], true)) $errors[$key] = 'toggle_invalid';
         }
         $count = filter_var($input['three_hero_particle_count'] ?? null, FILTER_VALIDATE_INT);
@@ -77,7 +78,7 @@ final class SceneConfig {
      * Build typed, bounded configuration for the public scene controllers.
      *
      * @param array<string, mixed> $settings Persisted settings map.
-     * @return array{hero_enabled:bool,hero:array{count:int,color:string,speed:float},not_found_enabled:bool,not_found:array{count:int,color:string,speed:float,drift:float},portfolio_enabled:bool,portfolio:array{frame_limit:int}}
+     * @return array{hero_enabled:bool,hero:array{count:int,color:string,speed:float},not_found_enabled:bool,not_found:array{count:int,color:string,speed:float,drift:float},portfolio_enabled:bool,portfolio:array{frame_limit:int},tools_enabled:bool}
      */
     public function runtime(array $settings): array {
         $values = self::normalizeSettings($settings);
@@ -99,6 +100,7 @@ final class SceneConfig {
             'portfolio' => [
                 'frame_limit' => (int)$values['three_portfolio_frame_limit'],
             ],
+            'tools_enabled' => $values['three_tools_enabled'] === '1',
         ];
     }
 }

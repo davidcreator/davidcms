@@ -104,4 +104,7 @@ $_['help_three_portfolio_enabled'] = 'Exibe uma camada 3D decorativa atrás dos 
 $_['entry_three_portfolio_frame_limit'] = 'Máximo de quadros do portfólio';
 $_['help_three_portfolio_frame_limit'] = 'De 1 a 12. As capas dos projetos são carregadas sob demanda quando a cena se aproxima da viewport.';
 $_['error_three_portfolio_enabled'] = 'Seleção inválida para ativar a cena do portfólio.';
+$_['entry_three_tools_enabled'] = 'Ícones 3D das ferramentas';
+$_['help_three_tools_enabled'] = 'Adiciona movimento 3D sutil a até quatro cards ativos. Desativado por padrão; rótulos e links HTML continuam disponíveis.';
+$_['error_three_tools_enabled'] = 'Seleção inválida para a cena de ferramentas.';
 $_['error_three_portfolio_frame_limit'] = 'O limite de quadros deve ser um inteiro entre 1 e 12.';

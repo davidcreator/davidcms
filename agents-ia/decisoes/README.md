@@ -56,5 +56,6 @@ Copiar para o novo arquivo `NNNN-titulo-curto.md`:
 | [0072](0072-threejs-scenes-admin-system.md) | Configuração declarativa das cenas Three.js nativas via System e Admin | ✅ aceita | 2026-10-26 |
 | [0073](0073-threejs-runtime-system-asset-gateway.md) | Runtime Three.js canônico no System com entrega allowlisted pelo Catalog | 🟡 aprovada para implementação incremental | 2026-10-26 |
 | [0074](0074-threejs-shared-scene-runner.md) | Ciclo de vida compartilhado para cenas Three.js e thumbs declarativas | 🟡 aceita para implementação incremental | 2026-10-26 |
-| [0075](0075-cena-2-hero-logo-glb-placeholder-procedural.md) | Cena 2 do Hero: logo GLB servido pela allowlist do runtime | 🟡 aceita para implementação incremental | 2026-10-26 |
+| [0075](0075-cena-2-hero-logo-glb-placeholder-procedural.md) | Cena 2 do Hero: logo GLB servido pela allowlist do runtime | ✅ implementada; GLB atual autorizado para continuidade | 2026-10-26 |
 | [0076](0076-cena-3-etapa-2-galeria-3d-do-portfolio.md) | Cena 3 etapa 2 do Portfólio: galeria 3D opcional sobre a grade | 🟡 aceita para implementação incremental | 2026-10-27 |
+| [0077](0077-cena-5-ferramentas-3d-flutuantes.md) | Cena 5: ícones 3D flutuantes das Ferramentas | ✅ aceita para implementação incremental | 2026-10-27 |

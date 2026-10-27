@@ -104,4 +104,7 @@ $_['help_three_portfolio_enabled'] = 'Muestra una capa 3D decorativa detrás de 
 $_['entry_three_portfolio_frame_limit'] = 'Máximo de paneles del portafolio';
 $_['help_three_portfolio_frame_limit'] = 'De 1 a 12. Las portadas de proyectos se cargan de forma diferida cuando la escena se acerca al viewport.';
 $_['error_three_portfolio_enabled'] = 'Selección no válida para activar la escena del portafolio.';
+$_['entry_three_tools_enabled'] = 'Iconos 3D de herramientas';
+$_['help_three_tools_enabled'] = 'Añade un movimiento 3D sutil a hasta cuatro tarjetas activas. Desactivado por defecto; las etiquetas y los enlaces HTML siguen disponibles.';
+$_['error_three_tools_enabled'] = 'Selección no válida para la escena de herramientas.';
 $_['error_three_portfolio_frame_limit'] = 'El límite de paneles debe ser un entero entre 1 y 12.';

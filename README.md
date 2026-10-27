@@ -1,20 +1,17 @@
-# Three.js — ADR 0076: galeria 3D decorativa do Portfólio
+# Cena 5 — ícones 3D de Ferramentas (ADR 0077)
 
-Pacote de overlay com as alterações da ADR 0076, preparado sobre o HEAD consultado `7e598559fafd4ba1a7c8f28aa5df266654fff52d`.
+Overlay de implementação sobre o HEAD `22240e45711125722f5c11921ac602a19ea203cf` do `main`.
 
-## Escopo
-- Toggle `three_portfolio_enabled` desligado por padrão e `three_portfolio_frame_limit` default 12, validado de 1 a 12, no formulário Admin já existente e nos idiomas `pt-br`, `en-us` e `es-eu`.
-- Galeria decorativa com capas same-origin (máximo 12), registrada no AssetManifest allowlisted e montada pelo SceneRunner central.
-- Anchors/cards HTML permanecem como navegação/SEO; fallback CSS preservado para WebGL indisponível, falha de imagem e movimento reduzido.
-- `has_3d` carrega o runtime com Hero **ou** Portfólio ativo; o container Hero respeita o toggle próprio.
-- Sem migration, push ou deploy.
+## O que entra
+- Cena decorativa opcional no bloco `#tools`, com até quatro ícones flutuantes e reação a foco/ponteiro nos cards existentes.
+- Toggle Admin `three_tools_enabled`, default `0`, com validação central e rótulos/ajuda nos idiomas `en-us`, `pt-br` e `es-eu`; sem migration.
+- Imagens same-origin dos registros são usadas quando disponíveis; quando ausentes/falham, o canvas mostra uma inicial. Não há logos ou binários inventados.
+- SceneRunner e rota allowlisted existentes; cards, texto e links HTML permanecem como conteúdo e fallback.
+- O `logo-da.glb` atual não é alterado: a Cena 2 continua usando o asset já presente no HEAD.
 
 ## Aplicação
-Extraia o conteúdo na raiz do repositório que esteja no HEAD de referência. O pacote contém somente arquivos do overlay e não é uma cópia integral do repositório; não exclua arquivos não listados.
+Extraia os arquivos na raiz do repositório no HEAD indicado. Este ZIP é um overlay, não uma cópia integral; não exclua arquivos não listados.
 
-## Verificações realizadas
-- `node --check` no novo módulo, `main.js` e checker Admin.
-- `node tools/e2e/check_threejs_native_admin.cjs`: 11/11.
-- `node tools/e2e/check_threejs_thumb.cjs`: 22/22.
-
-PHP lint não foi executado (PHP CLI indisponível); não houve QA visual em browser/staging. A opção permanece desligada por padrão até esse QA.
+## Verificação realizada
+- `node --check` no novo módulo `tools-3d.js` e no entrypoint `main.js`.
+- Sem QA visual/browser, suíte de testes, PHP lint ou alteração GitHub/deploy. A cena fica desligada por padrão.

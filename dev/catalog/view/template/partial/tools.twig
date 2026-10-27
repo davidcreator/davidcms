@@ -1,6 +1,11 @@
 {# dev/catalog/view/template/partial/tools.twig — ferramentas conectadas #}
 {% if tools %}
 <section class="section section-alt" id="tools">
+  {% if tools3d.enabled %}
+  <div class="tools-3d__canvas" aria-hidden="true" data-scene="tools-3d" data-items="{{ tools3d.items|json_encode }}">
+    <div class="tools-3d__fallback" data-fallback></div>
+  </div>
+  {% endif %}
   <div class="container">
     <span class="kicker">{{ text_tools_kicker }}</span>
     <h2>{{ text_tools_title }}</h2>

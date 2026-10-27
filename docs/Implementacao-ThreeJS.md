@@ -6,7 +6,7 @@
 | --- | --- |
 | **Escopo** | Engine/runtime canônico em `dev/system/library/three/`; cenas/template e adaptador público em `dev/catalog/`; Admin reutiliza a rota de assets do Catalog |
 | **Depende de** | [Guia-ThreeJS.md](Guia-ThreeJS.md) · [Guia-Twig.md](Guia-Twig.md) · ADR 0073 · [roadmap](Analise-DavidAlmeida.md#8-plano-de-migração) |
-| **Status** | ✅ Engine compartilhada, Cena 2 GLB e Cena 3 etapa 2 implementadas como opt-in; runtime e modelos passam pela allowlist do System/Catalog. QA visual/performance em browser permanece pendente. Ver [`THREEJS_NATIVE_SYSTEM.md`](THREEJS_NATIVE_SYSTEM.md) e ADR 0076. |
+| **Status** | ✅ Engine compartilhada, Cena 2 com o GLB vigente, Cena 3 etapa 2 e Cena 5 Ferramentas implementadas como opt-in; runtime e cenas passam pela allowlist System/Catalog. QA visual pode ficar para depois e não bloqueia a sequência; os novos toggles seguem desligados por padrão. Ver [`THREEJS_NATIVE_SYSTEM.md`](THREEJS_NATIVE_SYSTEM.md), ADRs 0076 e 0077. |
 
 ---
 
@@ -36,7 +36,8 @@
 | --- | --- | --- | --- | --- |
 | **Hero** | Home (`common/home`) | Partículas WebGL + parallax de mouse | 🔴 1ª | Fase 3 |
 | **Logo GLB** | Hero (evolução) | GLTFLoader + Draco, luz de estúdio | 🟡 2ª | Fase 3 |
-| **Portfólio** | `cms/portfolio` | Tilt 3D em CSS (sem WebGL) → galeria 3D futura | 🟢 3ª | Fase 3 / Pós |
+| **Portfólio** | Home (`#portfolio`) | Tilt CSS + galeria 3D decorativa opt-in | 🟢 3ª | Fase 3 / Pós |
+| **Ferramentas** | Home (`#tools`) | Até quatro ícones flutuantes, cena opt-in sobre cards HTML | 🟢 5ª | Fase 3 / Pós |
 | **404** | `error/not_found` | Cena lúdica leve | ⚪ 4ª | Fase 6 |
 
 **Estratégia:**
@@ -68,7 +69,7 @@ dev/system/library/three/
         ├── addons/             # loaders do pacote oficial (GLTFLoader + utils)
         ├── components/         # componentes reutilizáveis (particle-field, studio-lighting)
         ├── models/             # assets 3D (logo-da.glb — Cena 2)
-        └── scenes/             # Hero, 404 e galeria decorativa do Portfólio
+        └── scenes/             # Hero, 404, Portfólio e Ferramentas
 
 dev/catalog/
 ├── .htaccess                   # rota limitada /three-runtime/*.{js,glb} → adaptador Catalog
@@ -94,7 +95,7 @@ O import map do `common/header.twig` só é emitido quando `has_3d` está ativo 
 
 ## 4. Padrão de módulo de cena (SceneModule)
 
-`dev/system/library/three/runtime/three/core/scene-runner.js` é a única camada WebGL para Hero, 404, Portfólio e thumbs declarativas. Ela cria o `WebGLRenderer`, câmera e cena; controla lazy-init, resize, `prefers-reduced-motion`, visibilidade, pausa e descarte. As cenas só constroem objetos e implementam `update()`/`dispose()`. Hoje, `portfolio-3d.js` combina até 12 faces texturizadas num único atlas/mesh; os anchors HTML continuam sendo a navegação real.
+`dev/system/library/three/runtime/three/core/scene-runner.js` é a única camada WebGL para Hero, 404, Portfólio, Ferramentas e thumbs declarativas. Ela cria o `WebGLRenderer`, câmera e cena; controla lazy-init, resize, `prefers-reduced-motion`, visibilidade, pausa e descarte. As cenas só constroem objetos e implementam `update()`/`dispose()`. O Portfólio mantém até 12 capas em atlas/mesh; Ferramentas usa até quatro ícones/monogramas. Os cards e anchors HTML continuam sendo conteúdo e navegação reais.
 
 ```js
 import { registerScene } from '../core/scene-runner.js';
@@ -187,8 +188,8 @@ if (config.model) {
 | Item | Valor |
 | --- | --- |
 | Asset | `dev/system/library/three/runtime/three/models/logo-da.glb` (publicado em `/catalog/three-runtime/three/models/logo-da.glb`) |
-| Estado atual | **placeholder procedural** (monograma "DA", 84 triângulos, `MeshStandardMaterial`); substituir pelo export real do Blender |
-| Preparo do modelo | exportar do Blender → otimizar com `npx @gltf-transform/cli optimize in.glb logo-da.glb --compress draco` (Draco/KTX2 ficam para o asset final) |
+| Estado atual | GLB procedural vigente (monograma "DA", 84 triângulos, `MeshStandardMaterial`), aceito pelo mantenedor para continuidade da Cena 2 |
+| Preparo do modelo | O asset atual é usado sem compressão adicional; export Blender/Draco/KTX2 pode ser avaliado como melhoria futura, sem bloquear implementação |
 | Config | `data-model` no container, vindo do controller via `AssetManifest::heroModelUrl()` |
 | Loader | `three/addons/loaders/GLTFLoader.js` (r186) + `BufferGeometryUtils.js` e `SkeletonUtils.js`, todos na allowlist |
 | Import map | exige `"three/addons/": "{{ three_runtime_base }}three/addons/"` no `common/header.twig` |
@@ -215,7 +216,16 @@ A galeria é uma camada decorativa sobre a grade; não troca cards, links, SEO o
 - Controles: `three_portfolio_enabled` (default `0`) e `three_portfolio_frame_limit` (default `12`, faixa `1–12`) na tela existente `admin/setting/setting`; persistência por `rms_setting`, sem migration.
 - Fallback visual: gradiente CSS atrás da seção; canvas `pointer-events:none`; os anchors continuam à frente e podem receber teclado/foco.
 
-A etapa foi autorizada para implementação antes do cutover em 2026-10-27. A validação visual, de redução de movimento e de performance em browser/staging ainda precisa ser feita antes da ativação em produção.
+A etapa foi autorizada para implementação antes do cutover em 2026-10-27. Validação visual/performance fica pendente para ativação administrativa em produção, sem bloquear outras implementações.
+
+### Cena 5 — Ferramentas conectadas (ADR 0077)
+
+A seção `#tools` ganha uma camada 3D opt-in com até quatro planos texturizados, alinhados aos ícones dos cards. Movimento flutuante sutil e destaque ao passar o ponteiro ou focar os links não simulam física real nem alteram a navegação HTML.
+
+- Módulo `dev/system/library/three/runtime/three/scenes/tools-3d.js`, importado por `three/main.js` e publicado pelo AssetManifest.
+- O controller entrega nome e imagem dos quatro primeiros registros ativos. Imagem same-origin é usada quando disponível; sem imagem ou em falha, a textura mostra uma inicial do nome.
+- `three_tools_enabled` (default `0`) usa o formulário e a persistência `rms_setting` existentes; sem migration.
+- Sem WebGL/reduced-motion/desativada, os ícones HTML continuam visíveis. O canvas é decorativo, `aria-hidden` e não bloqueia foco, links ou ponteiro.
 
 ---
 
@@ -240,7 +250,7 @@ Partículas com deriva aleatória ("fog") + texto HTML por cima. Arquivo própri
 ```php
 // catalog/controller/common/home.php (trecho)
 // O template usa a URL Catalog base + a rota pública do manifesto; nunca aponta para System direto.
-$data['has_3d'] = $threeJs['hero_enabled'];   // ativa o import map no header.twig apenas nesta rota
+$data['has_3d'] = $threeJs['hero_enabled'] || $portfolioEnabled || $tools3dEnabled; // união independente das cenas da Home
 $data['three_runtime_base'] = $base . $this->three_asset_manifest->publicBasePath();
 
 // Cena 2: o modelo é um asset allowlisted; '' quando não publicado (só partículas).
@@ -343,7 +353,8 @@ $_['hero_subtitle']  = 'Transformo ideias em realidade com criatividade e respon
 | S1 | Setup self-hosted + `scene-runner` + Cena 1 (partículas) em staging |
 | S2 | Integração controller/Twig + idiomas + QA matriz de dispositivos |
 | S3 | Cena 2 (logo GLB) — depende do asset 3D pronto |
-| S4 | Portfólio etapa 1 (tilt CSS) + 404; etapa 2 de galeria 3D autorizada antecipadamente pela ADR 0076 |
+| S4 | Portfólio: tilt CSS + galeria 3D opcional (ADR 0076) |
+| S5 | Ferramentas: ícones 3D opcionais sobre cards HTML (ADR 0077) |
 
 ---
 

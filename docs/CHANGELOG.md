@@ -1,5 +1,11 @@
 # Changelog
 
+## Cena 5 — ícones 3D opcionais de Ferramentas (2026-10-27)
+- Implementa ADR 0077 como camada decorativa para até quatro cards, com movimento leve e resposta a foco/ponteiro.
+- Reutiliza o SceneRunner e o gateway allowlisted; usa imagens same-origin existentes ou monogramas quando não há capa.
+- Adiciona o toggle `three_tools_enabled` desligado por padrão no Admin e em três idiomas; sem assets binários ou migration.
+- Mantém cards, texto e links HTML como conteúdo e fallback.
+
 ## Cena 3 — galeria 3D opcional no Portfólio (2026-10-27)
 - Implementa ADR 0076 antecipada por autorização: overlay decorativo no SceneRunner; grade, anchors e tilt CSS permanecem como fallback acessível.
 - Adiciona toggle desligado por padrão e limite 1–12 (default 12) no formulário existente, com validação/allowlist e textos nos três idiomas.
@@ -10,7 +16,7 @@
 - Publica `logo-da.glb` pelo manifesto do System e gateway Catalog, com MIME `model/gltf-binary`; o caminho é fixo e allowlisted.
 - Adiciona `GLTFLoader` r186 e dependências à allowlist, importadas dinamicamente somente quando o modelo está configurado.
 - Integra rig de luz e ajuste do modelo ao Hero, mantendo partículas em falha/ausência do modelo.
-- Registra ADR 0075; o asset atual é placeholder procedural e será trocado pelo export final do Blender.
+- Registra ADR 0075; o GLB procedural atual foi autorizado como asset vigente da Cena 2. Um export futuro do Blender é melhoria opcional, sem bloquear o andamento.
 - Sem setting novo, alteração de schema ou migration.
 
 ## SceneRunner compartilhado para Three.js e thumbs declarativas (2026-10-26)

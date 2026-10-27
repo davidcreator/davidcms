@@ -104,4 +104,7 @@ $_['help_three_portfolio_enabled'] = 'Shows a decorative 3D layer behind the exi
 $_['entry_three_portfolio_frame_limit'] = 'Maximum portfolio panels';
 $_['help_three_portfolio_frame_limit'] = 'From 1 to 12. Project cover images load lazily when the portfolio scene approaches the viewport.';
 $_['error_three_portfolio_enabled'] = 'Invalid portfolio scene toggle.';
+$_['entry_three_tools_enabled'] = '3D tools icons';
+$_['help_three_tools_enabled'] = 'Adds a subtle floating 3D treatment to up to four active tool cards. Disabled by default; HTML labels and links remain available.';
+$_['error_three_tools_enabled'] = 'Invalid tools scene toggle.';
 $_['error_three_portfolio_frame_limit'] = 'The panel limit must be an integer from 1 to 12.';

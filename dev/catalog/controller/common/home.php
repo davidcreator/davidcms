@@ -15,6 +15,8 @@ namespace Reamur\Catalog\Controller\Common;
 
 class Home extends \Reamur\System\Engine\Controller {
 
+    private const THREE_TOOLS_LIMIT = 4;
+
     /** Renderiza a one-page pública (200) */
     public function index(): void {
         $this->load->language('common/home');
@@ -223,6 +225,20 @@ class Home extends \Reamur\System\Engine\Controller {
                 'href'        => $this->url->link('tool/tool.info|' . (int)$tool['tool_id']), // página dedicada (F3-04)
             ];
         }
+
+        $tools3dItems = array_map(
+            static fn(array $tool): array => [
+                'name' => $tool['name'],
+                'image' => $tool['image'],
+            ],
+            array_slice($data['tools'], 0, self::THREE_TOOLS_LIMIT)
+        );
+        $tools3dEnabled = $threeJs['tools_enabled'] && !empty($tools3dItems);
+        $data['tools3d'] = [
+            'enabled' => $tools3dEnabled,
+            'items' => $tools3dEnabled ? $tools3dItems : [],
+        ];
+        $data['has_3d'] = $threeJs['hero_enabled'] || $portfolioEnabled || $tools3dEnabled;
 
         // ── Latest News: blog INTERNO (F7-02, ADR 0043 — feed WP externo aposentado) ──
         $this->load->model('blog/blog');

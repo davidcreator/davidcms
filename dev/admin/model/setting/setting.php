@@ -78,9 +78,9 @@ class Setting extends \Reamur\System\Engine\Model {
             'config_admin_sidebar_variant', 'config_admin_density',
             'config_admin_font_scale', 'config_admin_theme_mode',
 
-            // Three.js (ADR 0072): configuração declarativa allowlisted de Hero/404
+            // Three.js (ADRs 0072+): configuração declarativa allowlisted das cenas nativas
             'three_hero_enabled', 'three_hero_particle_count', 'three_hero_color', 'three_hero_speed',
-            'three_not_found_enabled', 'three_portfolio_enabled', 'three_portfolio_frame_limit',
+            'three_not_found_enabled', 'three_portfolio_enabled', 'three_portfolio_frame_limit', 'three_tools_enabled',
         ];
 
         foreach ($data as $key => $value) {

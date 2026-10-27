@@ -310,11 +310,11 @@ new IntersectionObserver(([e]) => {
 | **Hero (fase 2)** | Modelo GLB do logotipo girando suave com iluminação de estúdio | ⭐⭐ Média |
 | **Portfólio** | Cards com leve tilt 3D (CSS/`transform`) — *sem* WebGL | ⭐ Baixa |
 | **Portfólio (fase 2)** | Camada 3D decorativa e opcional com capas em quadros; navegação continua nos anchors HTML (ADR 0076) | ⭐⭐⭐ Alta |
-| **Ferramentas** | Ícones (Fluxa, Quotia, Vertex, Solis) flutuando com física sutil | ⭐⭐ Média |
+| **Ferramentas** | Cena 3D opcional: até quatro ícones flutuantes com movimento sutil, sobre cards HTML reais (ADR 0077) | ⭐⭐ Média |
 | **404** | Cena 3D lúdica ("página perdida no espaço") | ⭐ Baixa |
 | **Transições** | Scroll-driven: câmera acompanha a rolagem entre seções | ⭐⭐⭐ Alta (avaliar INP) |
 
-Ordem executada: **Hero com partículas → logo GLB opcional → tilt CSS do Portfólio → galeria 3D opcional (ADR 0076, antecipada para implementação)**. A ativação em produção depende de QA visual/performance e permanece desligada por padrão.
+Ordem executada: **Hero com partículas → logo GLB atual → tilt CSS do Portfólio → galeria 3D opcional (ADR 0076) → ícones 3D opcionais de Ferramentas (ADR 0077)**. Os novos toggles permanecem desligados por padrão; QA visual pode ser feito depois e não bloqueia as próximas implementações.
 
 ---
 

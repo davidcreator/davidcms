@@ -1,9 +1,10 @@
-Three.js — ADR 0076: galeria 3D decorativa do Portfólio
+Cena 5 — ícones 3D de Ferramentas (ADR 0077)
 
-Overlay de alterações para o HEAD 7e598559fafd4ba1a7c8f28aa5df266654fff52d.
-Conteúdo relativo à raiz do repositório; sem exclusões/deleções implícitas.
+Overlay para HEAD 22240e45711125722f5c11921ac602a19ea203cf.
+Caminhos relativos à raiz do repositório; nenhum arquivo não listado deve ser removido.
 
-agents-ia/decisoes/0076-cena-3-etapa-2-galeria-3d-do-portfolio.md
+agents-ia/decisoes/0075-cena-2-hero-logo-glb-placeholder-procedural.md
+agents-ia/decisoes/0077-cena-5-ferramentas-3d-flutuantes.md
 agents-ia/decisoes/README.md
 docs/CHANGELOG.md
 docs/Estrutura-de-Pastas.md
@@ -13,7 +14,7 @@ docs/THREEJS_NATIVE_SYSTEM.md
 dev/system/library/three/scene_config.php
 dev/system/library/three/asset_manifest.php
 dev/system/library/three/runtime/three/main.js
-dev/system/library/three/runtime/three/scenes/portfolio-3d.js
+dev/system/library/three/runtime/three/scenes/tools-3d.js
 dev/admin/controller/setting/setting.php
 dev/admin/model/setting/setting.php
 dev/admin/view/template/setting/setting.twig
@@ -21,7 +22,5 @@ dev/admin/language/en-us/setting/setting.php
 dev/admin/language/pt-br/setting/setting.php
 dev/admin/language/es-eu/setting/setting.php
 dev/catalog/controller/common/home.php
-dev/catalog/view/template/partial/portfolio.twig
-dev/catalog/view/template/partial/hero-3d.twig
+dev/catalog/view/template/partial/tools.twig
 dev/catalog/view/css/theme.css
-tools/e2e/check_threejs_native_admin.cjs
