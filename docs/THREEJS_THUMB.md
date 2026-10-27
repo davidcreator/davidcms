@@ -5,7 +5,7 @@ O bloco `core/threejs_thumb` pode ser inserido em Páginas CMS e posts do Blog. 
 ## Segurança e runtime
 
 - Three.js 0.186.1 é servido localmente em `three.module.js` com a dependência obrigatória `three.core.js`; licença incluída e sem CDN.
-- O renderizador público só inclui JS/CSS do runtime quando o documento validado contém uma thumb.
+- O renderizador público só registra JS/CSS do runtime quando o documento validado contém uma thumb. No Catalog, `common/header` transfere `Document::getScripts()` para o Twig e emite os scripts registrados com `defer`; os controllers de CMS/Blog só registram o runtime quando o renderer validado encontra uma thumb. O `.htaccess` encaminha `/three-runtime/*` ao controller comum, que entrega apenas assets da allowlist System.
 - O backend valida a allowlist e limites da cena JSON antes da renderização. JavaScript opcional tem campo separado e executa somente no iframe isolado descrito abaixo; URLs e recursos externos continuam bloqueados.
 - O runtime desenha WebGL ao entrar na área visível, pausa fora dela, reage a redimensionamento e respeita `prefers-reduced-motion`. Sem suporte a WebGL ou APIs de observação, o rótulo permanece como fallback.
 - Os controles de cena atualizam o mesmo JSON validado. O cartão do bloco e o modo **Prévia** do editor Blog/CMS usam o runtime compartilhado para cenas declarativas. `custom_js` é executado apenas no iframe sandbox opaco, tanto na Prévia completa quanto na thumb pública; nunca no documento Admin/cartão do bloco.

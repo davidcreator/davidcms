@@ -32,6 +32,7 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['title']       = $title       !== '' ? $title       : (string)$this->config->get('config_meta_title', '');
         $data['description'] = $description !== '' ? $description : (string)$this->config->get('config_meta_description', '');
         $data['styles']      = $this->document->getStyles();
+        $data['scripts']     = $this->document->getScripts();
 
         $data['home']           = (string)$this->config->get('site_url');
         $data['text_languages'] = $this->language->get('text_languages');
@@ -65,6 +66,7 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['text_brand']        = $this->language->get('text_brand');
         $data['text_nav_home']     = $this->language->get('text_nav_home');
         $data['text_nav_about']    = $this->language->get('text_nav_about');
+        $data['text_nav_blog']     = $this->language->get('text_nav_blog');
         $data['text_nav_portfolio']= $this->language->get('text_nav_portfolio');
         $data['text_nav_contact']  = $this->language->get('text_nav_contact');
         $data['text_nav_quote']    = $this->language->get('text_nav_quote');
@@ -72,6 +74,7 @@ class Header extends \Reamur\System\Engine\Controller {
         $base = rtrim($data['home'], '/');
 
         $data['nav_about']    = $base . '/#about';
+        $data['nav_blog']     = $this->url->link('blog/blog');
         $data['nav_portfolio']= $this->url->link('catalog/project');
         $data['nav_contact']  = $this->url->link('common/contact');
         $data['nav_quote']    = $this->url->link('checkout/quote');

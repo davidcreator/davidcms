@@ -33,6 +33,9 @@
   </script>
   <script type="module" src="{{ three_runtime_base }}three/main.js" defer></script>
   {% endif %}
+  {% for src in scripts %}
+  <script src="{{ src }}" defer></script>
+  {% endfor %}
 </head>
 <body class="{{ body_class }}">
 <header class="site-header">
@@ -40,6 +43,7 @@
   <nav class="site-nav" aria-label="Main">
     <a href="{{ home }}">{{ text_nav_home }}</a>
     <a href="{{ nav_about }}">{{ text_nav_about }}</a>
+    <a href="{{ nav_blog }}">{{ text_nav_blog }}</a>
     <a href="{{ nav_portfolio }}">{{ text_nav_portfolio }}</a>
     <a href="{{ nav_contact }}">{{ text_nav_contact }}</a>
     <a href="{{ nav_quote }}" class="cta">{{ text_nav_quote }}</a>

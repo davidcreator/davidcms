@@ -94,7 +94,7 @@ Derivados diretamente do inventário do site atual (ver [Análise](Analise-David
 | Ferramenta conectada | Fluxa, Quotia, Vertex, Solis | `admin/controller/tool/` |
 | Pedido / orçamento | solicitações de clientes | `admin/controller/sale/` |
 
-**Páginas (CMS) e Blog são módulos independentes:** `cms/page` administra páginas institucionais/informativas; `blog/blog` administra postagens, publicação agendada e respectivos detalhes públicos. Uma página CMS não cria nem substitui uma postagem. No menu do Admin, cada módulo tem seu próprio grupo e permanece sujeito à ACL da respectiva rota.
+**Páginas (CMS) e Blog são módulos independentes:** `cms/page` administra páginas institucionais/informativas; `blog/blog` administra postagens, publicação agendada e respectivos detalhes públicos. Uma página CMS não cria nem substitui uma postagem. No menu do Admin, cada módulo tem seu próprio grupo e permanece sujeito à ACL da respectiva rota. No Catalog, a página pública de listagem é a rota `/blog`, ligada também na navegação principal; as postagens são alimentadas apenas pelo módulo Blog.
 
 ### 4.2 Ciclo de vida do conteúdo
 

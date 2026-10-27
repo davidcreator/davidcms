@@ -18,6 +18,7 @@ $_['text_lang_pt_br'] = 'Português';
 $_['text_lang_es_eu'] = 'Español';
 $_['text_nav_home']    = 'Home';
 $_['text_nav_about']   = 'Sobre';
+$_['text_nav_blog']    = 'Blog';
 $_['text_nav_portfolio'] = 'Portfólio';
 $_['text_nav_contact']  = 'Contato';
 $_['text_nav_quote']    = 'Pedir orçamento';

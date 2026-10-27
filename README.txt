@@ -1,8 +1,9 @@
-ReamurCMS — separação do menu Páginas (CMS) e Blog
+ReamurCMS — Blog público e execução de thumbs Three.js
 
-Base: HEAD 933d03020f7c251b5dc3d6881c2f384570d2ec5f
-Mudança: dois grupos independentes no menu lateral do Admin; CMS Pages continua na rota cms/page, Blog/Postagens continua na rota blog/blog. ACL por rota preservada. Guia CMS atualizado.
+Base exata: HEAD 2bbac1ad532a010e78e85d3aa61129258994ddc7
 
-Não inclui mudanças de banco, migration, deploy nem GitHub write.
+Este overlay adiciona o link Blog à navegação Catalog, faz o shell Catalog renderizar os scripts registrados via Document como deferidos, e atualiza documentação. O acesso Admin ao item Blog continua protegido por ACL; a migration existente upgrade_f7_01_blog.sql concede blog/blog ao grupo Administrator. Nenhuma migration foi executada e nenhum SQL está incluído neste patch.
 
-Aplicação: revisar a base e os arquivos atuais; a partir da raiz do repositório, executar git apply --check e depois git apply neste patch.
+Aplique somente após conferir que a árvore está exatamente na base indicada e revisar os arquivos: git apply --check CMS-Blog-Catalog-2bbac.patch; depois git apply CMS-Blog-Catalog-2bbac.patch.
+
+O relatório DB-Readiness.md descreve o schema verificado e as pendências de confirmação no banco real.

@@ -89,6 +89,8 @@ Os módulos Three.js atuais são self-hosted em `dev/system/library/three/runtim
 
 O import map do `common/header.twig` só é emitido quando `has_3d` está ativo e aponta para `three_runtime_base`, calculado pelo controller usando o manifesto System. Ele declara duas entradas: `"three"` (o módulo oficial) e `"three/addons/"` (prefixo dos loaders da allowlist), sem as quais o `GLTFLoader` da Cena 2 não resolveria seus imports. A mesma base atende o entrypoint de cenas e o runtime de thumbs no Admin/Catalog. Os imports relativos ESM permanecem dentro de `/catalog/three-runtime/`, sem cópia do vendor e sem URL externa.
 
+Nas páginas públicas de CMS e Blog, o controller registra `threejs-thumb.js` via `Document::addScript()` apenas quando um documento validado contém o bloco 3D. `catalog/controller/common/header.php` passa `Document::getScripts()` ao Twig e `common/header.twig` os emite como scripts externos adiados (`defer`), depois do import map. Assim o wrapper inicia após o HTML estar disponível; o endpoint `/three-runtime/` continua limitado pelo rewrite Catalog e pelo manifesto.
+
 > WebGL é carregado apenas nas páginas com cena. Fallback HTML/CSS continua disponível quando desativado ou sem suporte do navegador.
 
 ---
