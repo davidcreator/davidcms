@@ -84,3 +84,9 @@ Rodar, com autorização, testes de servidor/browser/DB em instância descartáv
 ## Decisão recomendada
 
 Começar F9-22 por rich text v2 e edição inline, porque é o maior gap entre um CRUD de blocos e um editor de alto nível, e porque deixa a arquitetura versionada pronta para toolbar contextual, links e padrões sem expor HTML raw.
+
+## Refinamento do espaço de trabalho (implementação posterior à roadmap)
+
+No BDREditor atual, a opção **tela cheia** organiza o trabalho como um espaço de três áreas: navegador do documento (Estrutura ou Elementos) à esquerda, canvas editável no centro e inspetor contextual à direita. Elementos substitui Estrutura somente na navegação esquerda; o inspetor permanece disponível. A opção Configurações recolhe/mostra o inspetor sem trocar a navegação. Fora da tela cheia, o painel compacto continua com o comportamento anterior. Na pré-visualização, o inspetor fica oculto e retorna ao voltar à edição.
+
+**Aceite funcional:** a edição e seleção continuam vinculadas ao documento JSON existente; Estrutura e Elementos não duplicam dados nem alteram persistência; o inspetor continua dependente do bloco selecionado; a interface empilha as áreas em telas menores; salvamento explícito, validação e renderer allowlist não mudam. Nenhuma dependência nova, autosave ou edição de lógica de módulos dinâmicos foi introduzida.

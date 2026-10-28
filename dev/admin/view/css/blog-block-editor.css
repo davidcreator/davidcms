@@ -370,3 +370,18 @@ body.rb-bdre-fullscreen-open{overflow:hidden!important}
 .rb-threejs-inline-editor{display:grid;gap:.6rem;margin-top:.65rem;padding:.75rem;border:1px solid var(--rb-border,#cbd5e1);border-radius:.55rem;background:var(--rb-surface-muted,#f7f9fc)}
 .rb-threejs-inline-editor .rb-threejs-scene-controls{margin:0}
 .rb-threejs-inline-editor .rb-threejs-script-input{min-height:12rem}
+
+
+/* Fullscreen workspace: document navigation, canvas and contextual inspector stay visible together. */
+.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel{grid-template-columns:minmax(13rem,17rem) minmax(0,1fr) minmax(16rem,20rem)!important}
+.rb-editor.is-fullscreen .rb-layout.rb-builder-layout:not(.rb-has-panel){grid-template-columns:minmax(13rem,17rem) minmax(0,1fr)!important}
+.rb-editor.is-fullscreen .rb-builder-inspector-sidebar{display:flex;flex-direction:column;min-width:0;min-height:0;height:100%;overflow:auto;overscroll-behavior:contain;border-left:1px solid #d8dbe2;background:#fff}
+.rb-editor.is-fullscreen .rb-builder-inspector-sidebar>.rb-inspector{position:static;width:100%;height:auto;max-height:none;margin:0;padding:1rem;border:0;border-radius:0;overflow:visible;box-shadow:none}
+@media(max-width:1100px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel{grid-template-columns:minmax(11rem,14rem) minmax(0,1fr) minmax(14rem,17rem)!important}.rb-editor.is-fullscreen .rb-layout.rb-builder-layout:not(.rb-has-panel){grid-template-columns:minmax(11rem,14rem) minmax(0,1fr)!important}}
+@media(max-width:900px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel,.rb-editor.is-fullscreen .rb-layout.rb-builder-layout:not(.rb-has-panel){grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(9rem,25vh) minmax(50vh,1fr) minmax(10rem,30vh);overflow:auto}.rb-editor.is-fullscreen .rb-builder-sidebar{height:auto;max-height:25vh;border-right:0;border-bottom:1px solid #d8dbe2}.rb-editor.is-fullscreen .rb-builder-inspector-sidebar{height:auto;max-height:30vh;border-left:0;border-top:1px solid #d8dbe2}.rb-editor.is-fullscreen .rb-builder-layout>.rb-canvas{height:auto;min-height:50vh;grid-row:2}}
+@media(max-width:680px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel,.rb-editor.is-fullscreen .rb-layout.rb-builder-layout:not(.rb-has-panel){grid-template-rows:minmax(8rem,22vh) minmax(45vh,1fr) minmax(9rem,28vh)}.rb-editor.is-fullscreen .rb-builder-sidebar{max-height:22vh}.rb-editor.is-fullscreen .rb-builder-inspector-sidebar{max-height:28vh}.rb-editor.is-fullscreen .rb-builder-layout>.rb-canvas{min-height:45vh}}
+
+.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel:not(.rb-has-inspector){grid-template-columns:minmax(13rem,17rem) minmax(0,1fr)!important}
+@media(max-width:1100px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel:not(.rb-has-inspector){grid-template-columns:minmax(11rem,14rem) minmax(0,1fr)!important}}
+@media(max-width:900px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel:not(.rb-has-inspector){grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(9rem,25vh) minmax(50vh,1fr);overflow:auto}}
+@media(max-width:680px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel:not(.rb-has-inspector){grid-template-rows:minmax(8rem,22vh) minmax(45vh,1fr)}}

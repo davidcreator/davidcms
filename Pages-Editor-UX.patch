@@ -1,0 +1,133 @@
+--- a/dev/admin/view/js/blog-block-editor.js
++++ b/dev/admin/view/js/blog-block-editor.js
+@@ -430,9 +430,11 @@
+       this.importNotices = [];
+       this.fullscreen = false;
+       this.activePanel = null;
++      this.inspectorOpen = true;
+       this.activeRibbonTab = 'home';
+       this.fullscreenReturnFocus = null;
+       this.fullscreenPreviousAttrs = null;
++      this.fullscreenPreviousPanel = null;
+       this.dragId = null;
+       this.inlineBookmark = null;
+       this.linkDraft = '';
+@@ -622,14 +624,20 @@
+       else if (name === 'insert-pattern') this.insertPattern(button.dataset.pattern);
+       else if (name === 'toggle-inserter') {
+         const wasOpen = this.activePanel === 'elements';
+-        this.activePanel = wasOpen ? null : 'elements'; this.inserterOpen = !wasOpen;
++        this.activePanel = wasOpen ? (this.fullscreen ? 'structure' : null) : 'elements'; this.inserterOpen = !wasOpen;
+         this.render();
+         if (!wasOpen) { const search=this.root.querySelector('[data-inserter-search]'); if (search) search.focus(); }
+       }
+       else if (name === 'ribbon-tab') { this.activeRibbonTab = button.dataset.tab; this.render(); }
+       else if (name === 'import-file') { const input=this.root.querySelector('[data-import-file]'); if (input) input.click(); }
+       else if (name === 'toggle-preview') { this.previewMode=!this.previewMode; if (this.previewMode) this.activePanel=null; this.render(); }
+-      else if (name === 'builder-panel') { this.activePanel = this.activePanel === button.dataset.panel ? null : button.dataset.panel; this.inserterOpen = this.activePanel === 'elements'; this.render(); }
++      else if (name === 'builder-panel') {
++        const panel = button.dataset.panel;
++        if (this.fullscreen && panel === 'settings') this.inspectorOpen = !this.inspectorOpen;
++        else if (this.fullscreen) { this.activePanel = panel; this.inserterOpen = panel === 'elements'; }
++        else { this.activePanel = this.activePanel === panel ? null : panel; this.inserterOpen = this.activePanel === 'elements'; }
++        this.render();
++      }
+       else if (name === 'align-text') this.alignSelectedText(button.dataset.alignment);
+       else if (name === 'duplicate') this.duplicateNode(button.dataset.nodeId || this.selectedId);
+       else if (name === 'copy-block') this.copyBlock(button.dataset.nodeId || this.selectedId);
+@@ -664,8 +672,11 @@
+       if (next === this.fullscreen) return;
+       if (next) {
+         this.fullscreenReturnFocus = global.document.activeElement;
++        this.fullscreenPreviousPanel = this.activePanel;
+         this.fullscreenPreviousAttrs = { role:this.root.getAttribute('role'), modal:this.root.getAttribute('aria-modal'), label:this.root.getAttribute('aria-label') };
+         this.fullscreen = true;
++        if (!this.activePanel || this.activePanel === 'settings') this.activePanel = 'structure';
++        this.inspectorOpen = true;
+         this.root.classList.add('is-fullscreen');
+         this.root.setAttribute('role','dialog'); this.root.setAttribute('aria-modal','true'); this.root.setAttribute('aria-label',this.strings.fullscreenDialog);
+         global.document.body.classList.add('rb-bdre-fullscreen-open');
+@@ -675,6 +686,7 @@
+         return;
+       }
+       this.fullscreen = false;
++      this.activePanel = this.fullscreenPreviousPanel;
+       this.root.classList.remove('is-fullscreen');
+       const previous = this.fullscreenPreviousAttrs || {};
+       if (previous.role === null) this.root.removeAttribute('role'); else if (previous.role !== undefined) this.root.setAttribute('role',previous.role);
+@@ -682,7 +694,7 @@
+       if (previous.label === null) this.root.removeAttribute('aria-label'); else if (previous.label !== undefined) this.root.setAttribute('aria-label',previous.label);
+       if (!global.document.querySelector('.rb-editor.is-fullscreen')) global.document.body.classList.remove('rb-bdre-fullscreen-open');
+       const returnFocus = this.fullscreenReturnFocus;
+-      this.fullscreenReturnFocus = null; this.fullscreenPreviousAttrs = null;
++      this.fullscreenReturnFocus = null; this.fullscreenPreviousAttrs = null; this.fullscreenPreviousPanel = null;
+       this.render();
+       const target = returnFocus && returnFocus.isConnected ? returnFocus : this.root.querySelector('[data-action="toggle-fullscreen"]');
+       if (target) target.focus();
+@@ -1449,7 +1461,7 @@
+         if(this.strings.importHint)panel.append(this.el('p','rb-import-hint',this.strings.importHint));
+       } else if (this.activeRibbonTab === 'view') {
+         let g=this.renderRibbonGroup(this.strings.groupPanels||'Painéis recolhíveis');
+-        [['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline'],['settings',this.strings.builderSettings,'settings']].forEach(([panel,label,icon])=>{const b=this.button(label,'builder-panel',{panel,icon});b.setAttribute('aria-pressed',String(this.activePanel===panel));g.tools.append(b);}); panel.append(g.group);
++        [['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline'],['settings',this.strings.builderSettings,'settings']].forEach(([panel,label,icon])=>{const b=this.button(label,'builder-panel',{panel,icon});b.setAttribute('aria-pressed',String(this.fullscreen ? (panel==='settings' ? (this.inspectorOpen && !this.previewMode) : this.activePanel===panel) : this.activePanel===panel));if(this.fullscreen && this.previewMode && panel==='settings')b.disabled=true;g.tools.append(b);}); panel.append(g.group);
+         g=this.renderRibbonGroup(this.strings.groupPreview||'Pré-visualização');
+         [['desktop',this.strings.previewDesktop],['tablet',this.strings.previewTablet],['mobile',this.strings.previewMobile]].forEach(([size,label])=>{const b=this.button(label,'preview',{size});b.setAttribute('aria-pressed',String(size===this.preview));g.tools.append(b);});
+         const preview=this.button(this.previewMode?(this.strings.editMode||'Voltar à edição'):(this.strings.previewMode||'Pré-visualizar'),'toggle-preview',{icon:this.previewMode?'collapse':'desktop'});preview.setAttribute('aria-pressed',String(this.previewMode));g.tools.append(preview);
+@@ -1471,13 +1483,22 @@
+       [['home',this.strings.ribbonHome||'Início'],['insert',this.strings.ribbonInsert||'Inserir'],['view',this.strings.ribbonView||'Exibir']].forEach(([tab,label])=>{const b=this.el('button','rb-ribbon-tab',label);b.type='button';b.dataset.action='ribbon-tab';b.dataset.tab=tab;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(this.activeRibbonTab===tab));b.setAttribute('aria-controls','rb-ribbon-panel-'+this.instance);b.tabIndex=this.activeRibbonTab===tab?0:-1;ribbonTabs.append(b);});
+       ribbon.append(ribbonTabs,this.renderRibbonContents()); this.root.append(ribbon);
+       const inserterMenu = this.renderInserter(this.activePanel === 'elements' && this.inserterOpen); inserterMenu.id = 'rb-inserter-' + this.instance;
+-      const layout = this.el('div', 'rb-layout' + (this.fullscreen ? ' rb-builder-layout' : '') + (this.activePanel ? ' rb-has-panel' : ''));
++      const layout = this.el('div', 'rb-layout' + (this.fullscreen ? ' rb-builder-layout' : '') + ((this.activePanel || (this.fullscreen && this.inspectorOpen && !this.previewMode)) ? ' rb-has-panel' : '') + (this.fullscreen && this.inspectorOpen && !this.previewMode ? ' rb-has-inspector' : ''));
+       const canvas = this.el('div', 'rb-canvas'); canvas.setAttribute('role','region'); canvas.setAttribute('aria-label', this.strings.canvas);
+       const canvasHead = this.el('div', 'rb-canvas-head'); canvasHead.append(this.icon('layers','rb-icon'),this.el('span','',this.strings.canvas),this.el('span','rb-canvas-count',String(this.state.blocks.length))); canvas.append(canvasHead);
+       if (this.previewMode) { canvas.classList.add('rb-preview-canvas'); canvas.append(this.renderPreviewDocument()); }
+       else { if (!this.state.blocks.length) canvas.append(this.el('p', 'rb-empty', this.strings.canvasEmpty)); this.state.blocks.forEach((node) => canvas.append(this.renderNode(node, true))); }
+       if (this.importNotices.length) { const notices=this.el('div','rb-import-notices'); notices.setAttribute('role','status'); this.importNotices.forEach((message)=>{const note=this.el('p','rb-import-notice',message);notices.append(note);}); this.root.append(notices); }
+-      if (this.activePanel) {
++      if (this.fullscreen) {
++        const sidebar=this.el('aside','rb-builder-sidebar rb-collapsible-panel');
++        const panelBody=this.el('div','rb-builder-panel-body'); panelBody.id='rb-builder-panel-'+this.instance; panelBody.setAttribute('role','region');
++        if (this.activePanel==='elements') { panelBody.setAttribute('aria-label',this.strings.builderElements); panelBody.append(inserterMenu); }
++        else { panelBody.setAttribute('aria-label',this.strings.builderStructure); panelBody.append(this.renderOutline()); }
++        sidebar.append(panelBody); layout.append(sidebar,canvas);
++        if (this.inspectorOpen && !this.previewMode) {
++          const inspectorSidebar=this.el('aside','rb-builder-inspector-sidebar'); inspectorSidebar.setAttribute('role','region'); inspectorSidebar.setAttribute('aria-label',this.strings.builderSettings); inspectorSidebar.append(this.renderInspector()); layout.append(inspectorSidebar);
++        }
++      } else if (this.activePanel) {
+         const sidebar=this.el('aside','rb-builder-sidebar rb-collapsible-panel');
+         const panelBody=this.el('div','rb-builder-panel-body'); panelBody.id='rb-builder-panel-'+this.instance; panelBody.setAttribute('role','region');
+         if (this.activePanel==='elements') { panelBody.setAttribute('aria-label',this.strings.builderElements); panelBody.append(inserterMenu); }
+--- a/dev/admin/view/css/blog-block-editor.css
++++ b/dev/admin/view/css/blog-block-editor.css
+@@ -370,3 +370,18 @@
+ .rb-threejs-inline-editor{display:grid;gap:.6rem;margin-top:.65rem;padding:.75rem;border:1px solid var(--rb-border,#cbd5e1);border-radius:.55rem;background:var(--rb-surface-muted,#f7f9fc)}
+ .rb-threejs-inline-editor .rb-threejs-scene-controls{margin:0}
+ .rb-threejs-inline-editor .rb-threejs-script-input{min-height:12rem}
++
++
++/* Fullscreen workspace: document navigation, canvas and contextual inspector stay visible together. */
++.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel{grid-template-columns:minmax(13rem,17rem) minmax(0,1fr) minmax(16rem,20rem)!important}
++.rb-editor.is-fullscreen .rb-layout.rb-builder-layout:not(.rb-has-panel){grid-template-columns:minmax(13rem,17rem) minmax(0,1fr)!important}
++.rb-editor.is-fullscreen .rb-builder-inspector-sidebar{display:flex;flex-direction:column;min-width:0;min-height:0;height:100%;overflow:auto;overscroll-behavior:contain;border-left:1px solid #d8dbe2;background:#fff}
++.rb-editor.is-fullscreen .rb-builder-inspector-sidebar>.rb-inspector{position:static;width:100%;height:auto;max-height:none;margin:0;padding:1rem;border:0;border-radius:0;overflow:visible;box-shadow:none}
++@media(max-width:1100px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel{grid-template-columns:minmax(11rem,14rem) minmax(0,1fr) minmax(14rem,17rem)!important}.rb-editor.is-fullscreen .rb-layout.rb-builder-layout:not(.rb-has-panel){grid-template-columns:minmax(11rem,14rem) minmax(0,1fr)!important}}
++@media(max-width:900px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel,.rb-editor.is-fullscreen .rb-layout.rb-builder-layout:not(.rb-has-panel){grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(9rem,25vh) minmax(50vh,1fr) minmax(10rem,30vh);overflow:auto}.rb-editor.is-fullscreen .rb-builder-sidebar{height:auto;max-height:25vh;border-right:0;border-bottom:1px solid #d8dbe2}.rb-editor.is-fullscreen .rb-builder-inspector-sidebar{height:auto;max-height:30vh;border-left:0;border-top:1px solid #d8dbe2}.rb-editor.is-fullscreen .rb-builder-layout>.rb-canvas{height:auto;min-height:50vh;grid-row:2}}
++@media(max-width:680px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel,.rb-editor.is-fullscreen .rb-layout.rb-builder-layout:not(.rb-has-panel){grid-template-rows:minmax(8rem,22vh) minmax(45vh,1fr) minmax(9rem,28vh)}.rb-editor.is-fullscreen .rb-builder-sidebar{max-height:22vh}.rb-editor.is-fullscreen .rb-builder-inspector-sidebar{max-height:28vh}.rb-editor.is-fullscreen .rb-builder-layout>.rb-canvas{min-height:45vh}}
++
++.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel:not(.rb-has-inspector){grid-template-columns:minmax(13rem,17rem) minmax(0,1fr)!important}
++@media(max-width:1100px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel:not(.rb-has-inspector){grid-template-columns:minmax(11rem,14rem) minmax(0,1fr)!important}}
++@media(max-width:900px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel:not(.rb-has-inspector){grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(9rem,25vh) minmax(50vh,1fr);overflow:auto}}
++@media(max-width:680px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel:not(.rb-has-inspector){grid-template-rows:minmax(8rem,22vh) minmax(45vh,1fr)}}
+--- a/docs/F9-21-Roadmap-Editor-Avancado.md
++++ b/docs/F9-21-Roadmap-Editor-Avancado.md
+@@ -84,3 +84,9 @@
+ ## Decisão recomendada
+ 
+ Começar F9-22 por rich text v2 e edição inline, porque é o maior gap entre um CRUD de blocos e um editor de alto nível, e porque deixa a arquitetura versionada pronta para toolbar contextual, links e padrões sem expor HTML raw.
++
++## Refinamento do espaço de trabalho (implementação posterior à roadmap)
++
++No BDREditor atual, a opção **tela cheia** organiza o trabalho como um espaço de três áreas: navegador do documento (Estrutura ou Elementos) à esquerda, canvas editável no centro e inspetor contextual à direita. Elementos substitui Estrutura somente na navegação esquerda; o inspetor permanece disponível. A opção Configurações recolhe/mostra o inspetor sem trocar a navegação. Fora da tela cheia, o painel compacto continua com o comportamento anterior. Na pré-visualização, o inspetor fica oculto e retorna ao voltar à edição.
++
++**Aceite funcional:** a edição e seleção continuam vinculadas ao documento JSON existente; Estrutura e Elementos não duplicam dados nem alteram persistência; o inspetor continua dependente do bloco selecionado; a interface empilha as áreas em telas menores; salvamento explícito, validação e renderer allowlist não mudam. Nenhuma dependência nova, autosave ou edição de lógica de módulos dinâmicos foi introduzida.
