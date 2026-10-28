@@ -1,9 +1,9 @@
-# CMS Pages — layouts públicos via Themes
+# Inventário local de scripts e componentes aprovados
 
-Pacote local para aplicar à árvore do repositório DavidCMS. Baseline remoto consultado antes das edições: `2fb77d3dcf661d4561b5672ef29050edc3560fe6`.
+Baseline HEAD consultado antes desta etapa: `a4e3043a6920f83733cf130912bf8ea37459538f`.
 
-Conteúdo: allowlist ampliada de views públicas no Themes, link contextual de Pages, separação da barra visual do header, fontes de template sem `raw`, campos HTML confiáveis marcados explicitamente pelo adaptador, bloqueios para script/handlers/frames/autoescape override e documentação/ADR atualizadas. Sem alterações de schema/migration, sem publicação, deploy, staging ou GitHub write.
+Mudanças somente documentais: `Guia-CMS.md` lista os pontos de entrada ativos, controles Admin e propriedade por módulo; `Guia-ThreeJS.md` atualiza exemplos para o runtime/SceneRunner compartilhado e remove recomendação de `json_encode|raw` e script inline em templates Themes.
 
-Aplicar `CMS-Pages-All-Pages.patch` na raiz do repositório (`patch -p1`), ou copiar as pastas do ZIP para a árvore correspondente.
+Não houve alteração de código, schema, migration, deploy ou GitHub write. A revisão das rotas encontrou os quatro módulos de cena nativos allowlisted (Hero, 404, Portfolio, Tools), configurados por Settings/SceneConfig; a seleção Themes só escolhe uma cena allowlisted. O runner `threejs-thumb.js` continua acionado por conteúdo Blog e isolado, fora dos fluxos Pages/Themes. Nas views/controllers Catalog, o único `Document::addScript()` encontrado é o runner de thumb do Blog; `common/header.twig` carrega o runtime Three condicionalmente.
 
-Validação local: allowlists do Admin e Twig conferidas idênticas (25 chaves), todos os arquivos existem, as 10 rotas `system_key` mapeadas apontam para templates allowlisted existentes, fontes editáveis sem `raw`/script/event handler, sem caminhos ausentes; padrão de bloqueio verificado por amostras e patch aplicado com `--dry-run`. PHP CLI indisponível; lint/runtime Twig não executados. Revisão visual/runtime ainda pendente.
+Patch criado contra os arquivos do HEAD consultado.

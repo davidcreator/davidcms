@@ -270,3 +270,15 @@ O registro `cms/page` de cada rota do sistema mantém o atalho **Editar template
 | `not_found` | `error/not_found` |
 
 `common/header.twig` mantém o bootstrap/importmap de scripts sob controle do sistema; sua barra visual é customizável por `partial/site_header`. A allowlist do tema também inclui o footer e os partials públicos usados pela Home. A edição de fonte permite Twig/HTML de apresentação, não PHP nem JavaScript inline: interações devem usar somente componentes/cenas aprovados e configuráveis. JavaScript personalizado do componente Three.js continua isolado no sandbox existente. API, sitemap XML, callbacks e fluxos internos não entram no editor de páginas.
+
+### 4.1.6 Inventário de scripts e componentes aprovados
+
+A configuração disponível é intencionalmente declarativa; não existe campo para cadastrar URL de script, editar JavaScript ou publicar paths. Os pontos de entrada e a propriedade por módulo são:
+
+| Componente/script | Uso e controle permitido | Dono |
+| --- | --- | --- |
+| `three/main.js` e cenas `hero-particles`, `not-found`, `portfolio-3d`, `tools-3d` | Só carregam pelo header confiável quando a rota informa `has_3d`. Os toggles e limites ficam em Admin → Settings (`setting/setting`); `SceneConfig` valida valores. `design/theme` pode selecionar/ativar apenas uma chave de cena fixa; não adiciona código ou módulos. Os assets servidos passam pelo `AssetManifest` e gateway Catalog. | System/Three + Catalog |
+| `threejs-thumb.js` | Carregado em posts quando o renderer de blocos declara que a thumb precisa do runtime. `custom_js` continua isolado no iframe sandbox de origem opaca; não é levado ao fluxo de Pages nem ao editor Themes. | Blog |
+| Scripts normais de rota | `common/header.twig` emite somente a lista que os controllers colocam em `Document`; não há registro de URL via CMS/Theme. No HEAD atual, a chamada Catalog `addScript()` encontrada é a do runner de thumb do Blog. | Controller que possui a rota |
+
+Os arquivos JavaScript presentes em `catalog/view/js/` não se tornam automaticamente scripts ativos nem opções configuráveis. Não os adicionar a Themes por inferência; qualquer novo comportamento precisa de caso de uso, dono, entrada allowlisted, validação/configuração limitada e fallback documentados. Páginas públicas podem mudar a apresentação pelos templates, mas scripts continuam no shell/runtimes aprovados e nos módulos que os possuem.

@@ -24,6 +24,8 @@
 O posicionamento do site é **"Creative Developer"** — design + código. Um hero com uma cena 3D sutil (logo/modelo reagindo ao mouse/scroll) comunica essa identidade no primeiro olhar, sem depender de vídeo pesado. O Three.js é a biblioteca WebGL mais madura para isso: API de alto nível, loaders prontos e ótima documentação.
 
 > **Princípio do projeto:** 3D como *tempero*, não como prato principal. O site deve funcionar 100% sem WebGL (fallback estático) e carregar a cena **depois** do conteúdo.
+>
+> **Configuração atual:** o runtime de produção só registra `hero-particles`, `not-found`, `portfolio-3d` e `tools-3d` no SceneRunner compartilhado. Toggles/limites ficam em Admin → Settings; o Themes selector só escolhe uma chave allowlisted. Não adicionar código Three.js livre nem `<script>` a templates Themes. Blog thumbnails são um fluxo separado do módulo Blog, ainda isolado pelo sandbox próprio.
 
 ---
 
@@ -110,25 +112,25 @@ window.addEventListener('resize', () => {
 ### 4.1 Template Twig
 
 ```twig
-{# partial/hero-3d.twig #}
-<section class="hero">
-  <div id="hero-3d" class="hero__canvas" aria-hidden="true"
-       data-model="{{ hero.model_url }}"
-       data-intensity="{{ hero.particles ?? 350 }}">
-    {# fallback estático se WebGL falhar #}
-    <img src="{{ hero.fallback_image }}" alt="" loading="eager">
+{# partial/hero-3d.twig — dados normalizados; sem script inline #}
+<section class="hero hero--3d" id="top">
+  <div class="hero-3d__canvas" aria-hidden="true"
+       {% if hero3d.enabled %}data-scene="hero-particles"
+       data-count="{{ hero3d.count }}"
+       data-color="{{ hero3d.color }}"
+       data-speed="{{ hero3d.speed }}"
+       data-model="{{ hero3d.model }}"{% endif %}>
+    <div class="hero-3d__fallback" data-fallback></div>
   </div>
-
-  <div class="hero__content">
-    <p class="hero__hello">{{ hero.kicker }}</p>
-    <h1>{{ hero.title }} <span>{{ hero.highlight }}</span></h1>
-    <p class="hero__subtitle">{{ hero.subtitle }}</p>
+  <div class="container hero-3d__content">
+    <span class="kicker">{{ text_hero_kicker }}</span>
+    <h1>{{ heading_title }}</h1>
+    <p class="tagline">{{ text_tagline }}</p>
+    <p class="hero-lead">{{ text_hero_lead }}</p>
   </div>
 </section>
 
-{% block scripts %}
-  <script type="module" src="catalog/three-runtime/three/scenes/hero-particles.js"></script>
-{% endblock %}
+{# common/header.twig carrega three/main.js apenas se has_3d=true. #}
 ```
 
 ### 4.2 `system/library/three/runtime/three/scenes/hero-particles.js`
@@ -233,7 +235,7 @@ loader.load(
 
 ## 6. Integração com Twig/PHP
 
-O controller alimenta a cena via `$data` → Twig → `data-*`/`json_encode` → JS:
+O controller alimenta a cena por `$data` → Twig com atributos `data-*` escapados → módulo aprovado. Código inline e `|raw` não são usados nos templates editáveis pelo Themes.
 
 ```php
 // catalog/controller/common/home.php (trecho)
@@ -247,18 +249,7 @@ $data['hero'] = [
 ];
 ```
 
-```twig
-{# injetar config completa como JSON, quando necessário #}
-<script>
-  window.hero3dConfig = {{ hero|json_encode|raw }};
-</script>
-```
-
-```js
-const cfg = window.hero3dConfig ?? {};
-```
-
-**Regra:** nunca escrever JS "solto" com PHP interpolado dentro de template — sempre `json_encode` ou `data-*`.
+A implementação atual passa somente valores normalizados e limitados em atributos `data-*` de `partial/hero-3d.twig`; o `SceneRunner` entrega a configuração à cena aprovada. Não use `json_encode|raw`, `<script>` inline ou valores de configuração arbitrários em templates Themes.
 
 ---
 
