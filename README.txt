@@ -1,10 +1,10 @@
-ReamurCMS — título da página na prévia local BDREditor
+ReamurCMS — salvar no modo imersivo de CMS > Páginas
 
-HEAD esperado: def12fc2925120ab7eeaa19e20d20ffe2e92225a
+HEAD esperado: 622ac269063498abb4540ea275df396b73bfecb6
 
-A pré-visualização responsiva da instância CMS > Páginas mostra o título da página ativa (ou o rótulo localizado de página sem título) antes dos blocos. O título é lido do campo existente, sem duplicação. Não altera o renderer público, JSON, salvamento ou comportamento do Blog.
+A faixa de contexto do BDREditor mostra um botão Salvar apenas para usuários com can_modify em cms/page. O botão é submit dentro do formulário existente e usa seus handlers de serialização, CSRF e validação. Sem permissão, não é exibido e a faixa informa o modo de consulta. Não cria endpoint, AJAX, autosave, persistência paralela ou mudança no contrato do Blog.
 
 Aplicação local opcional dentro do checkout:
-  bash apply-patch.sh Pages-Editor-Preview.patch def12fc2925120ab7eeaa19e20d20ffe2e92225a
+  bash apply-patch.sh Pages-Editor-Save.patch 622ac269063498abb4540ea275df396b73bfecb6
 
 O script valida HEAD e roda git apply --check antes de aplicar. Não faz commit/push, deploy, SQL nem migrations.

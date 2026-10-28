@@ -29,6 +29,12 @@ Na instância de CMS > Páginas, a pré-visualização responsiva inclui o títu
 
 A prévia continua local ao navegador e limitada aos elementos da prévia segura existente; não chama a rota pública, não altera o renderer do catálogo e não salva o título ou o documento. O Blog não recebe o contexto de página e mantém a prévia atual.
 
+## Salvar no modo imersivo
+
+Para quem tem permissão `modify` em `cms/page`, a faixa de contexto mostra um botão **Salvar** cujo tipo é `submit` dentro do formulário de página já existente. O envio passa pelos mesmos handlers de serialização e validação de todos os editores/idiomas, CSRF, validação do controller e POST normal. Sem permissão de modificação, não há botão e a faixa informa que o modo é somente consulta.
+
+Não há endpoint, AJAX, autosave ou persistência paralela. Se a validação impedir o envio, o formulário e o estado não salvo continuam sob o fluxo existente; se passar, o backend mantém seu comportamento normal de resposta/redirect.
+
 ## Estado da verificação
 
 A verificação é estática. Requer validação posterior num ambiente de desenvolvimento autorizado: editor visível, criar/editar, salvar, reabrir e confirmar renderização. Staging segue pausado; não foram executados acesso ao banco, migrations, GitHub write, deploy ou produção.

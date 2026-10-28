@@ -1490,11 +1490,16 @@
         const pageInfo=this.el('div','rb-page-context-item'); const currentTitle=context.pageTitleInput && typeof context.pageTitleInput.value === 'string' ? context.pageTitleInput.value : context.pageTitle; pageInfo.append(this.el('span','rb-page-context-label',context.pageLabel || 'Page'),this.el('strong','rb-page-context-value',currentTitle || context.untitledPage || 'Untitled page'));
         const languageInfo=this.el('div','rb-page-context-item'); languageInfo.append(this.el('span','rb-page-context-label',context.languageLabel || 'Language'),this.el('strong','rb-page-context-value',(context.languageName || '') + (context.languageCode ? ' · ' + context.languageCode : '')));
         contextDetails.append(pageInfo,languageInfo);
+        const contextActions=this.el('div','rb-page-context-actions');
         const contextStatus=this.el('div','rb-page-context-status');
         const statusValue=context.saveStatus;
         const status=this.el('span','rb-page-context-save-state',statusValue ? statusValue.textContent : ''); status.dataset.pageContextSaveState='1'; status.dataset.state=statusValue ? (statusValue.dataset.state || 'saved') : 'saved';
-        contextStatus.append(status,this.el('span','rb-page-context-save-hint',context.saveHint || 'Return to the form to save changes.'));
-        contextBar.append(contextDetails,contextStatus); this.root.append(contextBar);
+        contextStatus.append(status,this.el('span','rb-page-context-save-hint',context.saveHint || 'Save using the existing page form.')); contextActions.append(contextStatus);
+        if (context.canSave === true) {
+          const save=this.el('button','rb-page-context-save'); save.type='submit'; save.setAttribute('aria-label',context.saveLabel || 'Save page');
+          save.append(this.icon('check','rb-icon'),this.el('span','',context.saveLabel || 'Save')); contextActions.append(save);
+        }
+        contextBar.append(contextDetails,contextActions); this.root.append(contextBar);
       }
       const ribbon = this.el('section','rb-ribbon'); ribbon.setAttribute('aria-label',this.strings.editorTools);
       const ribbonTabs=this.el('div','rb-ribbon-tabs'); ribbonTabs.setAttribute('role','tablist');
