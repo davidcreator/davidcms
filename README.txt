@@ -1,9 +1,10 @@
-ReamurCMS BDREditor — refinamento de workspace
+ReamurCMS — contexto de CMS > Páginas no BDREditor
 
-Alvo esperado: main HEAD 36fb7cb1de469ac1f6b10922f88a9e29f4da6797
-Conteúdo: layout em tela cheia com Estrutura/Elementos à esquerda, canvas ao centro e inspetor à direita; painel compacto preservado; documentação do fluxo.
+HEAD esperado: cfc5d694139fe3f26b1791b7aeb4ccd1bf46b5eb
 
-Aplicação local opcional (dentro do repositório alvo):
-  bash apply-patch.sh Pages-Editor-UX.patch 36fb7cb1de469ac1f6b10922f88a9e29f4da6797
+No modo tela cheia do editor de blocos de Páginas, apresenta título, idioma ativo e indicador sincronizado de alterações salvas/não salvas; informa explicitamente que salvar continua no formulário. É apenas contexto visual: não duplica campos do formulário, não muda o JSON, não cria autosave e não altera os fluxos de validação ou persistência. Textos adicionados em pt-br, en-us e es-eu. A opção é fornecida apenas às instâncias CMS Page, não às do Blog.
 
-O script verifica o HEAD e executa git apply --check antes de aplicar. Não faz commit, push, deploy, SQL ou migrations. Aplicar somente após confirmar que o checkout está no HEAD indicado.
+Aplicação local opcional dentro do checkout:
+  bash apply-patch.sh Pages-Editor-Context.patch cfc5d694139fe3f26b1791b7aeb4ccd1bf46b5eb
+
+O script valida HEAD e roda git apply --check antes de aplicar. Não faz commit/push, deploy, SQL nem migrations.

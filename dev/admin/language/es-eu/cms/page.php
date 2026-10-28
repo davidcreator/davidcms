@@ -73,6 +73,10 @@ $_['error_csrf'] = 'Token de sesión no válido. Recargue el formulario e intén
 $_['button_close'] = 'Cerrar';
 
 // Flujo de edición del contenido en una página exclusiva.
+$_['text_page_context_page'] = 'Página';
+$_['text_page_context_language'] = 'Idioma';
+$_['text_page_context_untitled'] = 'Página sin título';
+$_['text_page_context_save_hint'] = 'Los cambios se guardan al volver al formulario y seleccionar Guardar.';
 $_['text_content_summary_note'] = 'Resumen del contenido. Abra el editor dedicado para modificar texto y bloques.';
 $_['text_content_empty'] = 'Esta página todavía no tiene contenido.';
 $_['text_content_save_first'] = 'Guarde los datos generales para abrir el editor.';

@@ -17,6 +17,12 @@ A camada administrativa não confia no cliente: exige que o editor tenha inicial
 
 O editor reutilizado preserva os blocos e os campos locais de imagem/arquivo/áudio, sujeitos ao schema e às raízes já implementadas pelo renderer. Os botões dos seletores Blog ficam desativados nesta tela porque os diálogos/rotas têm ACL e contexto próprios do Blog; duplicar esses endpoints seria uma mudança de escopo. Não há upload, exclusão ou escrita de arquivos por esta integração.
 
+## Contexto da página no modo imersivo
+
+Quando o editor de blocos é usado em CMS > Páginas, a tela cheia exibe uma faixa de contexto com o título da página e o idioma da instância aberta. A faixa espelha o indicador de alterações não salvas do formulário e informa que a persistência ocorre ao voltar e usar **Salvar**. Os rótulos vêm das traduções do módulo `cms/page`; título/idioma são dados de apresentação já presentes no formulário.
+
+Esse contexto é somente informativo: não cria campos de edição duplicados, não altera o JSON do BDREditor e não oferece autosave. O fluxo POST existente continua responsável por validar e salvar a página. O contexto é opcional no BDREditor e não é fornecido às instâncias do módulo Blog.
+
 ## Estado da verificação
 
 A verificação é estática. Requer validação posterior num ambiente de desenvolvimento autorizado: editor visível, criar/editar, salvar, reabrir e confirmar renderização. Staging segue pausado; não foram executados acesso ao banco, migrations, GitHub write, deploy ou produção.

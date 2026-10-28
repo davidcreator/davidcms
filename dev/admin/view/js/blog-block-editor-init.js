@@ -17,6 +17,10 @@
         var key = mode === 'saving' ? 'saveStateSaving' : (state.dirty ? 'saveStateUnsaved' : 'saveStateSaved');
         status.textContent = state.strings[key] || (mode === 'saving' ? 'Saving…' : (state.dirty ? 'Changes not saved' : 'All changes saved'));
         status.dataset.state = mode || (state.dirty ? 'unsaved' : 'saved');
+        Array.prototype.forEach.call(form.querySelectorAll('[data-page-context-save-state]'), function (mirror) {
+          mirror.textContent = status.textContent;
+          mirror.dataset.state = status.dataset.state;
+        });
       };
       state.markDirty = function () { state.dirty = true; state.render(); };
       state.render();
@@ -61,13 +65,25 @@
       var form = root.closest('form');
       var editorStrings = {};
       try { editorStrings = JSON.parse(root.dataset.editorStrings || '{}'); } catch (_) {}
+      var pageContext = null;
+      try {
+        var contextLabels = JSON.parse(root.dataset.pageContext || '');
+        pageContext = Object.assign({}, contextLabels, {
+          pageTitle: root.dataset.pageTitle || '',
+          pageTitleInput: document.getElementById(root.dataset.pageTitleInput || ''),
+          languageName: root.dataset.pageLanguage || '',
+          languageCode: root.dataset.pageLanguageCode || ''
+        });
+      } catch (_) {}
       var changeState = form ? unsavedState(form, editorStrings) : null;
+      if (pageContext) pageContext.saveStatus = changeState ? changeState.status : null;
       try {
         var initial = JSON.parse(root.dataset.document || '');
         root.setAttribute('aria-label', editorStrings.editorLabel || 'Blog block editor');
         var editor = global.ReamurBlogBlockEditor.mount(root, {
           document: initial,
           strings: editorStrings,
+          workspaceContext: pageContext,
           connectedSave: true,
           mediaPickers: root.dataset.mediaPickers !== 'false',
           filePicker: root.dataset.filePicker === 'false' ? false : (root.dataset.mediaPickers !== 'false'),

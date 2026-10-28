@@ -1478,6 +1478,19 @@
       const identity = this.el('div','rb-editor-identity'); identity.append(this.icon('layers','rb-brand-icon'));
       const identityText = this.el('div','rb-editor-identity-copy'); identityText.append(this.el('strong','rb-editor-brand','BDREditor'),this.el('span','rb-editor-subtitle',this.strings.editorTools));
       identity.append(identityText); masthead.append(identity); this.root.append(masthead);
+      if (this.fullscreen && this.options.workspaceContext) {
+        const context=this.options.workspaceContext;
+        const contextBar=this.el('section','rb-page-context'); contextBar.setAttribute('role','group'); contextBar.setAttribute('aria-label',context.pageLabel || 'Page context');
+        const contextDetails=this.el('div','rb-page-context-details');
+        const pageInfo=this.el('div','rb-page-context-item'); const currentTitle=context.pageTitleInput && typeof context.pageTitleInput.value === 'string' ? context.pageTitleInput.value : context.pageTitle; pageInfo.append(this.el('span','rb-page-context-label',context.pageLabel || 'Page'),this.el('strong','rb-page-context-value',currentTitle || context.untitledPage || 'Untitled page'));
+        const languageInfo=this.el('div','rb-page-context-item'); languageInfo.append(this.el('span','rb-page-context-label',context.languageLabel || 'Language'),this.el('strong','rb-page-context-value',(context.languageName || '') + (context.languageCode ? ' · ' + context.languageCode : '')));
+        contextDetails.append(pageInfo,languageInfo);
+        const contextStatus=this.el('div','rb-page-context-status');
+        const statusValue=context.saveStatus;
+        const status=this.el('span','rb-page-context-save-state',statusValue ? statusValue.textContent : ''); status.dataset.pageContextSaveState='1'; status.dataset.state=statusValue ? (statusValue.dataset.state || 'saved') : 'saved';
+        contextStatus.append(status,this.el('span','rb-page-context-save-hint',context.saveHint || 'Return to the form to save changes.'));
+        contextBar.append(contextDetails,contextStatus); this.root.append(contextBar);
+      }
       const ribbon = this.el('section','rb-ribbon'); ribbon.setAttribute('aria-label',this.strings.editorTools);
       const ribbonTabs=this.el('div','rb-ribbon-tabs'); ribbonTabs.setAttribute('role','tablist');
       [['home',this.strings.ribbonHome||'Início'],['insert',this.strings.ribbonInsert||'Inserir'],['view',this.strings.ribbonView||'Exibir']].forEach(([tab,label])=>{const b=this.el('button','rb-ribbon-tab',label);b.type='button';b.dataset.action='ribbon-tab';b.dataset.tab=tab;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(this.activeRibbonTab===tab));b.setAttribute('aria-controls','rb-ribbon-panel-'+this.instance);b.tabIndex=this.activeRibbonTab===tab?0:-1;ribbonTabs.append(b);});

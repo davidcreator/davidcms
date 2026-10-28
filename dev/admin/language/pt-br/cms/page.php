@@ -73,6 +73,10 @@ $_['error_csrf'] = 'Token de sessão inválido. Recarregue o formulário e tente
 $_['button_close'] = 'Fechar';
 
 // Fluxo de edição em página exclusiva para conteúdo BDREditor.
+$_['text_page_context_page'] = 'Página';
+$_['text_page_context_language'] = 'Idioma';
+$_['text_page_context_untitled'] = 'Página sem título';
+$_['text_page_context_save_hint'] = 'As alterações são salvas ao voltar ao formulário e clicar em Salvar.';
 $_['text_content_summary_note'] = 'Resumo do conteúdo. Para editar texto e blocos, abra o editor dedicado.';
 $_['text_content_empty'] = 'Ainda não há conteúdo nesta página.';
 $_['text_content_save_first'] = 'Salve os dados gerais para liberar o editor.';

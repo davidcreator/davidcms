@@ -385,3 +385,16 @@ body.rb-bdre-fullscreen-open{overflow:hidden!important}
 @media(max-width:1100px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel:not(.rb-has-inspector){grid-template-columns:minmax(11rem,14rem) minmax(0,1fr)!important}}
 @media(max-width:900px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel:not(.rb-has-inspector){grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(9rem,25vh) minmax(50vh,1fr);overflow:auto}}
 @media(max-width:680px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel:not(.rb-has-inspector){grid-template-rows:minmax(8rem,22vh) minmax(45vh,1fr)}}
+
+.rb-editor.is-fullscreen .rb-page-context{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.65rem clamp(1rem,2vw,1.5rem);border:1px solid #d9e0ee;border-radius:.55rem;background:#fff;color:#27334b;box-shadow:0 2px 8px rgb(30 45 75 / 5%);margin:0 0 .7rem}
+.rb-page-context-details{display:flex;align-items:center;gap:clamp(1rem,3vw,2.5rem);min-width:0}
+.rb-page-context-item{display:flex;flex-direction:column;gap:.12rem;min-width:0}
+.rb-page-context-label{color:#69758a;font-size:.65rem;font-weight:700;letter-spacing:.045em;text-transform:uppercase}
+.rb-page-context-value{max-width:min(42vw,34rem);overflow:hidden;color:#25324b;font-size:.82rem;text-overflow:ellipsis;white-space:nowrap}
+.rb-page-context-status{display:flex;flex-direction:column;align-items:flex-end;gap:.2rem;min-width:0;text-align:right}
+.rb-page-context-save-state{color:#267449;font-size:.72rem;font-weight:700}
+.rb-page-context-save-state[data-state="unsaved"]{color:#986517}
+.rb-page-context-save-state[data-state="saving"]{color:#3557c7}
+.rb-page-context-save-hint{color:#69758a;font-size:.68rem}
+@media(max-width:700px){.rb-editor.is-fullscreen .rb-page-context{align-items:flex-start;flex-direction:column;gap:.55rem}.rb-page-context-details{width:100%;gap:1.25rem}.rb-page-context-status{align-items:flex-start;text-align:left}.rb-page-context-value{max-width:78vw}}
+

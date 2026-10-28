@@ -89,6 +89,10 @@ $_['error_custom_field_save'] = 'The page was saved, but custom field values cou
 $_['error_custom_field_delete'] = 'Custom values could not be removed, so the page was not deleted.';
 
 // Dedicated page content editing flow.
+$_['text_page_context_page'] = 'Page';
+$_['text_page_context_language'] = 'Language';
+$_['text_page_context_untitled'] = 'Untitled page';
+$_['text_page_context_save_hint'] = 'Changes are saved after returning to the form and selecting Save.';
 $_['text_content_summary_note'] = 'Content summary. Open the dedicated editor to edit text and blocks.';
 $_['text_content_empty'] = 'This page has no content yet.';
 $_['text_content_save_first'] = 'Save the general details to open the editor.';
