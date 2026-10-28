@@ -284,8 +284,15 @@ class Page extends \Reamur\System\Engine\Controller {
         }
 
         $assetBase = $this->pageCatalogAssetUrl();
-        // Empty file roots intentionally prevent this route from reading Blog download/audio/video directories.
-        $renderer = new \Reamur\System\Library\Blog\BlockRenderer('', '', '');
+        // Resolve only the renderer's allowlisted local files. New Page media stays under cms/page;
+        // the existing validator permits Blog paths solely for read-only legacy references.
+        $catalogViewRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view';
+        $renderer = new \Reamur\System\Library\Blog\BlockRenderer(
+            $catalogViewRoot . '/download',
+            $catalogViewRoot . '/audio',
+            $catalogViewRoot . '/video',
+            true
+        );
         $rendered = $renderer->renderJson($safeJson, 2, $assetBase);
         if (empty($rendered['valid'])) {
             $this->renderPagePreviewError($this->language->get('error_page_preview_document'));

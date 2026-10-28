@@ -1,28 +1,23 @@
-# CMS > Páginas — biblioteca de áudio, vídeo e downloads
+# CMS > Páginas — mídia na prévia privada
 
-**Status:** patch local, sem aplicação ao repositório, sem GitHub write, deploy, banco de dados ou migration executada.
+**Base:** `main` at `91d91dfd2bf65b891afa6572eefbbd6334152246` (`feat(cms/pages): add audio/video/download support to page media`).
 
-## Base
+## O que muda
 
-Preparado contra o `main` em `a1e82d4e0ed8621b096e59387db2bdae85371de8` (`chore: clean up obsolete project and temporary files`). Confirme o HEAD novamente antes de aplicar; não aplique sobre uma base diferente sem revisar o diff.
+A rota de prévia não persistente `cms/page.preview` passa a configurar o `BlockRenderer` com as raízes de áudio, vídeo e downloads do Catalog e o modo de validação Pages. O renderer continua sendo a autoridade: só resolve referências locais allowlisted, verifica arquivo/MIME/limites e bloqueia symlinks. O validador Pages aceita os roots próprios e os paths Blog já salvos, apenas para compatibilidade de leitura; novos seletores e uploads não são afetados.
+
+## Proteções mantidas
+
+- ACL `modify cms/page`, POST e CSRF.
+- Cache privado/no-store, `X-Frame-Options: DENY`, CSP e remoção de `custom_js` antes da renderização.
+- Nenhum endpoint/modelo de mídia do Blog; sem alteração no Blog.
+- Sem schema, migration, banco de dados, deploy, staging ou GitHub write.
 
 ## Arquivos
 
-- `CMS-Pages-Media-Separation.patch` — patch unificado pronto para revisão/aplicação local.
-- `tree/dev/...` — cópias completas dos arquivos finais alterados.
+- `CMS-Pages-Preview-Media-Integration.patch` — patch unificado sobre o HEAD indicado.
+- `tree/dev/admin/controller/cms/page.php` — versão final do único arquivo alterado.
 
-## Incluído
+## Verificações
 
-- Roots dedicados: `catalog/view/audio/cms/page/`, `catalog/view/video/cms/page/`, `catalog/view/download/cms/page/`. A biblioteca de imagens existente em `catalog/view/image/cms/page/` passa a usar o fluxo genérico.
-- Áudio: MP3, OGG, WAV, até 20 MiB.
-- Vídeo: MP4, WebM, OGV, até 100 MiB.
-- Downloads: PDF, DOCX, XLSX, PPTX, ODT, ODS, CSV e TXT, até 2 MiB.
-- ACL `modify cms/page`, GET para listagem, POST com CSRF para upload, validação por extensão + MIME detectado, nome aleatório, guardas de symlink/raiz. Sem pastas ou exclusão.
-- Compatibilidade de leitura/renderização para paths legados `view/audio/blog/`, `view/video/blog/` e `view/download/blog/` já presentes em documentos de Pages. O validador é contextual: o modo Blog continua aceitando somente roots Blog; Pages aceita roots próprios e legado.
-- Seletor e uploads Pages usam somente rotas/modelo/roots próprios; o controller não chama os endpoints de mídia do Blog.
-- Nenhuma mudança de schema, migration ou conteúdo salvo.
-
-## Verificação realizada
-
-- `node --check` passou para `cms-page-media.js` e `blog-block-editor.js`.
-- PHP CLI não está disponível nesta sessão; portanto, não foi possível executar lint/runtime PHP nem testes de integração. Não foram acessados dados de produção ou staging.
+O patch foi aplicado em uma cópia isolada da fonte-base e comparado com a árvore final; `git apply --check` passou. PHP CLI não está disponível nesta sessão, então PHP lint/runtime não foi executado. Nenhum teste de browser ou banco foi executado.
