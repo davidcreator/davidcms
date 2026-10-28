@@ -1,5 +1,5 @@
 {# dev/catalog/view/template/tool/tool_info.twig — página dedicada da ferramenta (F3-04, SEO) #}
-{{ header|raw }}
+{{ header }}
 <main class="site-main">
   <div class="container">
     <div class="page-head">
@@ -7,7 +7,7 @@
       <a class="back-link" href="{{ back_tools }}">{{ button_back }}</a>
     </div>
 
-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
+    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
     {% if text_lead %}<p class="lead">{{ text_lead }}</p>{% endif %}
 
     <table class="fact-table">
@@ -23,4 +23,4 @@
     {% endif %}
   </div>
 </main>
-{{ footer|raw }}
+{{ footer }}

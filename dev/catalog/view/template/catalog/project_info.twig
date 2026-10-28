@@ -1,8 +1,8 @@
 {# dev/catalog/view/template/catalog/project_info.twig — página dedicada do projeto (F2-17 SEO; F3-03 classes do tema) #}
-{{ header|raw }}
+{{ header }}
 <main class="site-main">
   <div class="container">
-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
+    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
     <div class="page-head">
       <h1>{{ heading_title }}</h1>
       <a class="back-link" href="{{ back_portfolio }}">{{ button_back }}</a>
@@ -42,4 +42,4 @@
     {% endif %}
   </div>
 </main>
-{{ footer|raw }}
+{{ footer }}

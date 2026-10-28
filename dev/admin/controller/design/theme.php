@@ -2,6 +2,16 @@
 /** Admin theme manager (F10-02); access and modify are separately ACL-gated. */
 namespace Reamur\Admin\Controller\Design;
 class Theme extends \Reamur\System\Engine\Controller {
+    /** Catalog templates the theme code editor may change; scripts stay in fixed runtime slots. */
+    private const TEMPLATE_KEYS = [
+        'common/home', 'common/footer', 'common/contact',
+        'partial/site_header', 'partial/hero', 'partial/hero-3d', 'partial/about',
+        'partial/methodology', 'partial/skills', 'partial/services', 'partial/testimonials',
+        'partial/portfolio', 'partial/tools', 'partial/news', 'partial/clients', 'partial/contact',
+        'cms/page_info', 'catalog/project_list', 'catalog/project_info',
+        'blog/blog_list', 'blog/blog_info', 'tool/tool_list', 'tool/tool_info',
+        'checkout/quote', 'error/not_found',
+    ];
     public function index(): void {
         if (!$this->user->hasPermission('access','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
         $this->load->language('design/theme'); $this->load->model('design/theme');
@@ -28,13 +38,25 @@ class Theme extends \Reamur\System\Engine\Controller {
                 else {
                     $primary=(string)($post['primary']??''); $surface=(string)($post['surface']??'');
                     if (!preg_match('/^#[0-9a-fA-F]{6}$/',$primary) || !preg_match('/^#[0-9a-fA-F]{6}$/',$surface)) $data['error']=$this->language->get('error_validation');
-                    else { $templates=(array)($post['templates']??[]); $allowedTemplates=['common/home','common/footer','partial/hero','partial/about','partial/portfolio','cms/page_info','catalog/project_list']; $safeTemplates=[]; foreach($templates as $templateKey=>$source) { if (in_array((string)$templateKey,$allowedTemplates,true) && is_string($source) && strlen($source)<=131072 && !preg_match('~<\\s*script\\b|javascript\\s*:|\\bon[a-z]+\\s*=~i',$source)) $safeTemplates[(string)$templateKey]=$source; } $saved=$this->model_design_theme->save($id,['name'=>$name,'slug'=>$slug,'config'=>['primary'=>$primary,'surface'=>$surface,'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']: '', 'templates'=>$safeTemplates]],(int)$this->user->getUserId()); if ($saved) { $this->response->redirect($this->url->link('design/theme')); return; } $data['error']=$this->language->get('error_validation'); }
+                    else {
+                        $templates=(array)($post['templates']??[]); $allowedTemplates=self::TEMPLATE_KEYS; $safeTemplates=[]; $invalidTemplateSource=false;
+                        foreach($templates as $templateKey=>$source) {
+                            if (!in_array((string)$templateKey,$allowedTemplates,true) || !is_string($source) || strlen($source)>131072 || preg_match('~<\\s*(script|iframe|object|embed)\\b|javascript\\s*:|\\bon[a-z]+\\s*=|\\|\\s*raw\\b|\\{%\\s*autoescape\\b|\\b(srcdoc|formaction)\\s*=~i',(string)$source)) { $invalidTemplateSource=true; continue; }
+                            $safeTemplates[(string)$templateKey]=$source;
+                        }
+                        if ($invalidTemplateSource) { $data['error']=$this->language->get('error_template_source'); }
+                        else {
+                            $saved=$this->model_design_theme->save($id,['name'=>$name,'slug'=>$slug,'config'=>['primary'=>$primary,'surface'=>$surface,'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']: '', 'templates'=>$safeTemplates]],(int)$this->user->getUserId());
+                            if ($saved) { $this->response->redirect($this->url->link('design/theme')); return; }
+                            $data['error']=$this->language->get('error_validation');
+                        }
+                    }
                 }
             }
             foreach(['name','slug','primary','surface','scene'] as $k) $data[$k]=(string)($post[$k]??$data[$k]);
         }
         $data['scenes']=[['id'=>'','name'=>$this->language->get('text_no_scene')],['id'=>'hero-particles','name'=>'Hero particles'],['id'=>'portfolio-3d','name'=>'Portfolio 3D'],['id'=>'tools-3d','name'=>'Tools 3D'],['id'=>'not-found','name'=>'Not found']];
-        $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[]; $data['template_keys']=['common/home','common/footer','partial/hero','partial/about','partial/portfolio','cms/page_info','catalog/project_list']; $data['template_sources']=$data['templates']; foreach($data['template_keys'] as $templateKey) { if (!isset($data['template_sources'][$templateKey])) { $templateFile=DIR_SYSTEM.'../catalog/view/template/'.$templateKey.'.twig'; if (is_file($templateFile)) $data['template_sources'][$templateKey]=(string)file_get_contents($templateFile); } } $data['preview_links']=[]; foreach($data['template_keys'] as $key) $data['preview_links'][$key]=$this->url->link('design/theme.preview'.($id?'|'.$id:''),'template='.rawurlencode($key)); foreach($data['revisions'] as &$revision) $revision['restore']=$this->url->link('design/theme.restore|'.$id.'|'.(int)$revision['revision_id']); unset($revision);
+        $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[]; $data['template_keys'] = self::TEMPLATE_KEYS; $focusTemplate=$this->request->get['focus_template']??''; $data['focus_template']=is_string($focusTemplate)&&in_array($focusTemplate,self::TEMPLATE_KEYS,true)?$focusTemplate:''; $data['template_sources']=$data['templates']; foreach($data['template_keys'] as $templateKey) { if (!isset($data['template_sources'][$templateKey])) { $templateFile=DIR_SYSTEM.'../catalog/view/template/'.$templateKey.'.twig'; if (is_file($templateFile)) $data['template_sources'][$templateKey]=(string)file_get_contents($templateFile); } } $data['preview_links']=[]; foreach($data['template_keys'] as $key) $data['preview_links'][$key]=$this->url->link('design/theme.preview'.($id?'|'.$id:''),'template='.rawurlencode($key)); foreach($data['revisions'] as &$revision) $revision['restore']=$this->url->link('design/theme.restore|'.$id.'|'.(int)$revision['revision_id']); unset($revision);
         $this->chrome($data); $this->response->setOutput($this->load->view('design/theme_form',$data));
     }
     public function preview(string $theme_id='0'): void {

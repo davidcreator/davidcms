@@ -1,6 +1,6 @@
 {# dev/catalog/view/template/blog/blog_info.twig — post completo do blog (F7-02, ADR 0043) #}
 {# Sidecar válido usa apenas saída do BlockRenderer allowlisted; legacy mantém o contrato HTML atual. #}
-{{ header|raw }}
+{{ header }}
 <main class="site-main">
   <div class="container">
     <div class="page-head">
@@ -16,16 +16,16 @@
       <div class="blog-content rms-blog-content">
         {% if post.content_mode == 'blocks' %}
           {% if post.content_valid %}
-            {{ post.block_html|raw }}
+            {{ post.block_html }}
           {% else %}
             <p class="rms-block-unavailable" role="status">{{ text_content_review }}</p>
           {% endif %}
         {% else %}
           {# Fallback legado permanece idêntico ao contrato existente; não é uma sanitização nova. #}
-          {{ post.description|raw }}
+          {{ post.description }}
         {% endif %}
       </div>
     </article>
   </div>
 </main>
-{{ footer|raw }}
+{{ footer }}

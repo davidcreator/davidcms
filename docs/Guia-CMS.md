@@ -242,7 +242,7 @@ Rotinas:
 
 ### 4.1.2 Temas do Catalog (F10-02)
 
-A rota Admin `design/theme` é separada de Pages e Blog e controla tokens visuais e um identificador de cena selecionado de uma allowlist. Não aceita JS nem caminhos de arquivo enviados pelo usuário. As tabelas `design_theme` e `design_theme_revision` mantêm configuração e snapshots. O estado desta fatia ainda não conecta tema ativo ao renderer Catalog e não disponibiliza edição de Twig, prévia sandboxada nem restauração pela interface; esses requisitos seguem abertos para conclusão antes de aceite final.
+A rota Admin `design/theme` é separada de Pages e Blog e controla tokens visuais e um identificador de cena selecionado de uma allowlist. Não aceita JS nem caminhos de arquivo enviados pelo usuário. As tabelas `design_theme` e `design_theme_revision` mantêm configuração e snapshots. A publicação versionada, o loader Catalog, a edição Twig allowlisted, a prévia sandboxada e a restauração pela interface são descritos nas seções seguintes.
 
 
 ### 4.1.3 F10-03 — Publicação versionada de Temas
@@ -255,3 +255,18 @@ O tema agora mantém `draft_config` separado de `published_config`. A prévia n�
 F10-01 já armazenava páginas especiais sob `system_key`, mas o conteúdo público era consumido diretamente apenas pela Home; o header consultava os demais slots para SEO, sem exibi-los no corpo da página. F10-04 liga slots editoriais aos templates públicos de Portfolio (grade e página de detalhe), Blog (somente landing/listagem), Ferramentas (grade e detalhe), Contato, Orçamento e 404. A página Blog/post individual continua fora do CMS; posts permanecem no módulo Blog.
 
 Cada controller fornece o slot como variável de apresentação, enquanto listas e entidades continuam carregadas pelos modelos próprios e formulários mantêm seus POST/CSRF/validação. O controller `cms/slot` memoiza a página e HTML na requisição para compartilhar consulta, renderização e metadados entre o corpo e o header.
+
+### 4.1.5 Layouts públicos e código aprovado
+
+O registro `cms/page` de cada rota do sistema mantém o atalho **Editar template** para o template correspondente no Admin `design/theme`; o editor abre o item correspondente focado. Páginas CMS comuns usam `cms/page_info`. Os templates de rota ficam no rascunho do tema, com ACL própria, prévia sandboxada, publicação explícita e histórico/reversão — o conteúdo de página continua separado.
+
+| `system_key` | Template de apresentação |
+| --- | --- |
+| `home` | `common/home` + partials públicos |
+| `portfolio` · `portfolio_detail` | `catalog/project_list` · `catalog/project_info` |
+| `blog` · `blog_post` | `blog/blog_list` · `blog/blog_info` (somente apresentação; posts seguem no Blog) |
+| `tools` · `tool_detail` | `tool/tool_list` · `tool/tool_info` |
+| `contact` · `quote` | `common/contact` · `checkout/quote` (POST, CSRF e validação permanecem nos controllers) |
+| `not_found` | `error/not_found` |
+
+`common/header.twig` mantém o bootstrap/importmap de scripts sob controle do sistema; sua barra visual é customizável por `partial/site_header`. A allowlist do tema também inclui o footer e os partials públicos usados pela Home. A edição de fonte permite Twig/HTML de apresentação, não PHP nem JavaScript inline: interações devem usar somente componentes/cenas aprovados e configuráveis. JavaScript personalizado do componente Three.js continua isolado no sandbox existente. API, sitemap XML, callbacks e fluxos internos não entram no editor de páginas.

@@ -1,5 +1,5 @@
 {# dev/catalog/view/template/catalog/project_list.twig — grade pública do portfólio (F3-03: classes do tema + tilt) #}
-{{ header|raw }}
+{{ header }}
 <main class="site-main">
   <div class="container">
     <div class="page-head">
@@ -7,7 +7,7 @@
       <a class="back-link" href="{{ home }}">{{ button_back_home }}</a>
     </div>
     <p class="lead">{{ text_lead }}</p>
-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
+    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
 
     <nav class="filter-chips" aria-label="{{ text_filter }}">
       <a class="chip{{ filter_all.active ? ' active' : '' }}" href="{{ filter_all.href }}">{{ text_all }}</a>
@@ -41,4 +41,4 @@
     {% endif %}
   </div>
 </main>
-{{ footer|raw }}
+{{ footer }}

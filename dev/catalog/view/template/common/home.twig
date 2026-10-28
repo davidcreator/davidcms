@@ -1,8 +1,8 @@
 {# dev/catalog/view/template/common/home.twig — home composta de partials (F3-01; hero 3D na F3-02) #}
-{{ header|raw }}
+{{ header }}
 <main>
 {% if cms_home_content %}
-<section id="about" class="cms-home-content">{{ cms_home_content|raw }}</section>
+<section id="about" class="cms-home-content">{{ cms_home_content }}</section>
 {% else %}
 {% include 'partial/hero-3d.twig' %}
 {% include 'partial/about.twig' %}
@@ -18,4 +18,4 @@
 {% include 'partial/clients.twig' %}
 {% include 'partial/contact.twig' %}
 </main>
-{{ footer|raw }}
+{{ footer }}

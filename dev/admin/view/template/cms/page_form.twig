@@ -16,6 +16,7 @@
       <span class="text-body-secondary small ms-auto">{{ page_id ? text_edit : text_add }}</span>
     </div>
     {% if is_system_page %}<div class="col-12"><div class="alert alert-info mb-0"><strong>{{ text_system_page }}:</strong> <code>{{ system_key }}</code> — {{ text_system_page_help }}</div></div>{% endif %}
+    {% if theme_editor_url %}<div class="col-12"><div class="alert alert-secondary mb-0"><strong>{{ text_template_editor }}:</strong> <code>{{ theme_template_key }}.twig</code><p class="mb-2 mt-1">{{ text_template_help }}</p><a class="btn btn-sm btn-outline-primary" href="{{ theme_editor_url|e('html_attr') }}">{{ button_edit_theme }}</a></div></div>{% endif %}
     <div class="col-lg-8">
       <div class="card data-card mb-3"><div class="card-body">
         <h2 class="card-title h6 mb-1">{{ text_general }}</h2>

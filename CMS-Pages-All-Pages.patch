@@ -1,0 +1,647 @@
+--- a/agents-ia/decisoes/0080-temas-preview-sandboxed-templates.md
++++ b/agents-ia/decisoes/0080-temas-preview-sandboxed-templates.md
+@@ -9,7 +9,7 @@
+ ## Decisão
+ - O Catalog aplica somente payload explicitamente publicado; rascunhos continuam separados.
+ - O adaptador Twig recebe um método aditivo `setThemeTemplates()` que aceita exclusivamente chaves fixas do Catalog e preserva filesystem loader como fallback; Admin/Install não chamam esse método.
+-- Prévia usa Twig Sandbox, dados simples, CSP `default-src 'none'` e iframe sem permissões. O Admin não permite PHP, JS, caminhos arbitrários nem `raw` na fonte controlada.
++- Prévia usa Twig Sandbox, dados de amostra, CSP `default-src 'none'` e iframe sem permissões. O Admin não permite PHP, JS, caminhos arbitrários nem `raw` na fonte controlada. Fragmentos HTML gerados por renderizadores/sanitizadores confiáveis são entregues como `Twig\Markup` apenas nos campos/rotas existentes que já exigem HTML; o filtro `raw` não fica disponível na prévia nem em fontes editáveis.
+ - Revisões preservam snapshots e restauração exige POST, CSRF e ACL `modify`.
+ - Tokens de cor aceitam apenas hexadecimal de seis dígitos; cenas seguem chaves allowlisted, sem JavaScript de cena.
+ 
+--- a/dev/admin/controller/cms/page.php
++++ b/dev/admin/controller/cms/page.php
+@@ -942,6 +942,28 @@
+         $data['page_id']    = $pid;
+         $data['system_key'] = (string)($page['system_key'] ?? '');
+         $data['is_system_page'] = $data['system_key'] !== '';
++        $layoutBySystemKey = [
++            'home'=>'common/home', 'portfolio'=>'catalog/project_list', 'portfolio_detail'=>'catalog/project_info',
++            'blog'=>'blog/blog_list', 'blog_post'=>'blog/blog_info', 'tools'=>'tool/tool_list',
++            'tool_detail'=>'tool/tool_info', 'contact'=>'common/contact', 'quote'=>'checkout/quote', 'not_found'=>'error/not_found',
++        ];
++        $data['theme_template_key'] = $layoutBySystemKey[$data['system_key']] ?? 'cms/page_info';
++        $data['theme_editor_url'] = '';
++        if ($this->user->hasPermission('access', 'design/theme')) {
++            $this->load->language('design/theme');
++            $data['text_template_editor'] = $this->language->get('text_template_editor');
++            $data['text_template_help'] = $this->language->get('text_template_help');
++            $data['button_edit_theme'] = $this->language->get('button_edit');
++            $this->load->model('design/theme');
++            $activeThemeId = 0;
++            foreach ($this->model_design_theme->getThemes() as $themeRow) {
++                $themeRow = (array)$themeRow;
++                if ((int)($themeRow['status'] ?? 0) === 1) { $activeThemeId = (int)($themeRow['theme_id'] ?? 0); break; }
++            }
++            $data['theme_editor_url'] = $activeThemeId > 0
++                ? $this->url->link('design/theme.edit|' . $activeThemeId, 'focus_template=' . rawurlencode($data['theme_template_key']))
++                : $this->url->link('design/theme');
++        }
+         $data['sort_order'] = (string)($post['sort_order'] ?? (string)($page['sort_order'] ?? '0'));
+         $data['status']     = $isPost ? ((string)($post['status'] ?? '0') === '1' ? '1' : '0') : (string)(int)($page['status'] ?? 0);
+ 
+--- a/dev/admin/controller/design/theme.php
++++ b/dev/admin/controller/design/theme.php
+@@ -2,6 +2,16 @@
+ /** Admin theme manager (F10-02); access and modify are separately ACL-gated. */
+ namespace Reamur\Admin\Controller\Design;
+ class Theme extends \Reamur\System\Engine\Controller {
++    /** Catalog templates the theme code editor may change; scripts stay in fixed runtime slots. */
++    private const TEMPLATE_KEYS = [
++        'common/home', 'common/footer', 'common/contact',
++        'partial/site_header', 'partial/hero', 'partial/hero-3d', 'partial/about',
++        'partial/methodology', 'partial/skills', 'partial/services', 'partial/testimonials',
++        'partial/portfolio', 'partial/tools', 'partial/news', 'partial/clients', 'partial/contact',
++        'cms/page_info', 'catalog/project_list', 'catalog/project_info',
++        'blog/blog_list', 'blog/blog_info', 'tool/tool_list', 'tool/tool_info',
++        'checkout/quote', 'error/not_found',
++    ];
+     public function index(): void {
+         if (!$this->user->hasPermission('access','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
+         $this->load->language('design/theme'); $this->load->model('design/theme');
+@@ -28,13 +38,25 @@
+                 else {
+                     $primary=(string)($post['primary']??''); $surface=(string)($post['surface']??'');
+                     if (!preg_match('/^#[0-9a-fA-F]{6}$/',$primary) || !preg_match('/^#[0-9a-fA-F]{6}$/',$surface)) $data['error']=$this->language->get('error_validation');
+-                    else { $templates=(array)($post['templates']??[]); $allowedTemplates=['common/home','common/footer','partial/hero','partial/about','partial/portfolio','cms/page_info','catalog/project_list']; $safeTemplates=[]; foreach($templates as $templateKey=>$source) { if (in_array((string)$templateKey,$allowedTemplates,true) && is_string($source) && strlen($source)<=131072 && !preg_match('~<\\s*script\\b|javascript\\s*:|\\bon[a-z]+\\s*=~i',$source)) $safeTemplates[(string)$templateKey]=$source; } $saved=$this->model_design_theme->save($id,['name'=>$name,'slug'=>$slug,'config'=>['primary'=>$primary,'surface'=>$surface,'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']: '', 'templates'=>$safeTemplates]],(int)$this->user->getUserId()); if ($saved) { $this->response->redirect($this->url->link('design/theme')); return; } $data['error']=$this->language->get('error_validation'); }
++                    else {
++                        $templates=(array)($post['templates']??[]); $allowedTemplates=self::TEMPLATE_KEYS; $safeTemplates=[]; $invalidTemplateSource=false;
++                        foreach($templates as $templateKey=>$source) {
++                            if (!in_array((string)$templateKey,$allowedTemplates,true) || !is_string($source) || strlen($source)>131072 || preg_match('~<\\s*(script|iframe|object|embed)\\b|javascript\\s*:|\\bon[a-z]+\\s*=|\\|\\s*raw\\b|\\{%\\s*autoescape\\b|\\b(srcdoc|formaction)\\s*=~i',(string)$source)) { $invalidTemplateSource=true; continue; }
++                            $safeTemplates[(string)$templateKey]=$source;
++                        }
++                        if ($invalidTemplateSource) { $data['error']=$this->language->get('error_template_source'); }
++                        else {
++                            $saved=$this->model_design_theme->save($id,['name'=>$name,'slug'=>$slug,'config'=>['primary'=>$primary,'surface'=>$surface,'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']: '', 'templates'=>$safeTemplates]],(int)$this->user->getUserId());
++                            if ($saved) { $this->response->redirect($this->url->link('design/theme')); return; }
++                            $data['error']=$this->language->get('error_validation');
++                        }
++                    }
+                 }
+             }
+             foreach(['name','slug','primary','surface','scene'] as $k) $data[$k]=(string)($post[$k]??$data[$k]);
+         }
+         $data['scenes']=[['id'=>'','name'=>$this->language->get('text_no_scene')],['id'=>'hero-particles','name'=>'Hero particles'],['id'=>'portfolio-3d','name'=>'Portfolio 3D'],['id'=>'tools-3d','name'=>'Tools 3D'],['id'=>'not-found','name'=>'Not found']];
+-        $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[]; $data['template_keys']=['common/home','common/footer','partial/hero','partial/about','partial/portfolio','cms/page_info','catalog/project_list']; $data['template_sources']=$data['templates']; foreach($data['template_keys'] as $templateKey) { if (!isset($data['template_sources'][$templateKey])) { $templateFile=DIR_SYSTEM.'../catalog/view/template/'.$templateKey.'.twig'; if (is_file($templateFile)) $data['template_sources'][$templateKey]=(string)file_get_contents($templateFile); } } $data['preview_links']=[]; foreach($data['template_keys'] as $key) $data['preview_links'][$key]=$this->url->link('design/theme.preview'.($id?'|'.$id:''),'template='.rawurlencode($key)); foreach($data['revisions'] as &$revision) $revision['restore']=$this->url->link('design/theme.restore|'.$id.'|'.(int)$revision['revision_id']); unset($revision);
++        $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[]; $data['template_keys'] = self::TEMPLATE_KEYS; $focusTemplate=$this->request->get['focus_template']??''; $data['focus_template']=is_string($focusTemplate)&&in_array($focusTemplate,self::TEMPLATE_KEYS,true)?$focusTemplate:''; $data['template_sources']=$data['templates']; foreach($data['template_keys'] as $templateKey) { if (!isset($data['template_sources'][$templateKey])) { $templateFile=DIR_SYSTEM.'../catalog/view/template/'.$templateKey.'.twig'; if (is_file($templateFile)) $data['template_sources'][$templateKey]=(string)file_get_contents($templateFile); } } $data['preview_links']=[]; foreach($data['template_keys'] as $key) $data['preview_links'][$key]=$this->url->link('design/theme.preview'.($id?'|'.$id:''),'template='.rawurlencode($key)); foreach($data['revisions'] as &$revision) $revision['restore']=$this->url->link('design/theme.restore|'.$id.'|'.(int)$revision['revision_id']); unset($revision);
+         $this->chrome($data); $this->response->setOutput($this->load->view('design/theme_form',$data));
+     }
+     public function preview(string $theme_id='0'): void {
+--- a/dev/admin/language/en-us/design/theme.php
++++ b/dev/admin/language/en-us/design/theme.php
+@@ -26,8 +26,9 @@
+ $_['error_permission'] = 'You do not have permission.';
+ $_['error_csrf'] = 'The security token is invalid.';
+ $_['error_validation'] = 'Review the fields and try again.';
++$_['error_template_source'] = 'A source contains a blocked construct, invalid path, or exceeds the allowed size. No changes were saved.';
+ $_['text_template_editor'] = 'Advanced Twig template source';
+-$_['text_template_help'] = 'Save the draft before opening a sandbox preview. PHP, JavaScript and arbitrary paths are not supported.';
++$_['text_template_help'] = 'Save the draft before opening a sandbox preview. PHP, scripts, event handlers, embedded frames, arbitrary paths, the raw filter and autoescape overrides are blocked; use approved, configurable components and scenes.';
+ $_['text_preview'] = 'Sandbox preview';
+ $_['text_restore'] = 'Restore revision';
+ $_['text_preview_error'] = 'This template could not be rendered in the restricted preview.';
+--- a/dev/admin/language/es-eu/design/theme.php
++++ b/dev/admin/language/es-eu/design/theme.php
+@@ -26,8 +26,9 @@
+ $_['error_permission'] = 'Sin permiso.';
+ $_['error_csrf'] = 'Token de seguridad inválido.';
+ $_['error_validation'] = 'Revise los campos.';
++$_['error_template_source'] = 'Una fuente contiene una construcción bloqueada, una ruta no permitida o supera el tamaño máximo. No se guardaron los cambios.';
+ $_['text_template_editor'] = 'Código avanzado de plantillas Twig';
+-$_['text_template_help'] = 'Guarde el borrador antes de abrir la vista aislada. No se admiten PHP, JavaScript ni rutas arbitrarias.';
++$_['text_template_help'] = 'Guarde el borrador antes de abrir la vista aislada. Se bloquean PHP, scripts, atributos de evento, marcos incrustados, rutas arbitrarias, el filtro raw y la desactivación del escape automático; use componentes y escenas aprobados y configurables.';
+ $_['text_preview'] = 'Vista previa aislada';
+ $_['text_restore'] = 'Restaurar revisión';
+ $_['text_preview_error'] = 'No se pudo renderizar esta plantilla en la vista previa restringida.';
+--- a/dev/admin/language/pt-br/design/theme.php
++++ b/dev/admin/language/pt-br/design/theme.php
+@@ -26,8 +26,9 @@
+ $_['error_permission'] = 'Você não tem permissão.';
+ $_['error_csrf'] = 'Token de segurança inválido.';
+ $_['error_validation'] = 'Revise os campos.';
++$_['error_template_source'] = 'Uma fonte contém uma construção bloqueada, caminho inválido ou excede o limite permitido. Nenhuma alteração foi salva.';
+ $_['text_template_editor'] = 'Código avançado dos templates Twig';
+-$_['text_template_help'] = 'Salve o rascunho antes de abrir a prévia isolada. PHP, JavaScript e caminhos arbitrários não são aceitos.';
++$_['text_template_help'] = 'Salve o rascunho antes da prévia isolada. PHP, scripts, atributos de evento, frames embutidos, caminhos arbitrários, o filtro raw e a desativação do autoescape são bloqueados; use componentes e cenas aprovados e configuráveis.';
+ $_['text_preview'] = 'Prévia isolada';
+ $_['text_restore'] = 'Restaurar revisão';
+ $_['text_preview_error'] = 'Não foi possível renderizar este template na prévia restrita.';
+--- a/dev/admin/view/template/cms/page_form.twig
++++ b/dev/admin/view/template/cms/page_form.twig
+@@ -16,6 +16,7 @@
+       <span class="text-body-secondary small ms-auto">{{ page_id ? text_edit : text_add }}</span>
+     </div>
+     {% if is_system_page %}<div class="col-12"><div class="alert alert-info mb-0"><strong>{{ text_system_page }}:</strong> <code>{{ system_key }}</code> — {{ text_system_page_help }}</div></div>{% endif %}
++    {% if theme_editor_url %}<div class="col-12"><div class="alert alert-secondary mb-0"><strong>{{ text_template_editor }}:</strong> <code>{{ theme_template_key }}.twig</code><p class="mb-2 mt-1">{{ text_template_help }}</p><a class="btn btn-sm btn-outline-primary" href="{{ theme_editor_url|e('html_attr') }}">{{ button_edit_theme }}</a></div></div>{% endif %}
+     <div class="col-lg-8">
+       <div class="card data-card mb-3"><div class="card-body">
+         <h2 class="card-title h6 mb-1">{{ text_general }}</h2>
+--- a/dev/admin/view/template/design/theme_form.twig
++++ b/dev/admin/view/template/design/theme_form.twig
+@@ -7,7 +7,7 @@
+ <div class="mb-3"><label class="form-label">{{ text_scene }}</label><select class="form-select" name="scene">{% for item in scenes %}<option value="{{ item.id }}"{% if scene == item.id %} selected{% endif %}>{{ item.name }}</option>{% endfor %}</select><div class="form-text">{{ text_scene_help }}</div></div>
+ <button class="btn btn-primary" {% if not can_modify %}disabled{% endif %}>{{ button_save }}</button> <a class="btn btn-outline-secondary" href="{{ cancel }}">{{ button_back }}</a></div></div>
+ <div class="card"><div class="card-header"><h2 class="h5 mb-0">{{ text_template_editor }}</h2><p class="mb-0 text-muted">{{ text_template_help }}</p></div><div class="card-body">
+-{% for key in template_keys %}<details class="mb-3"><summary><code>{{ key }}.twig</code></summary><textarea class="form-control font-monospace mt-2" name="templates[{{ key }}]" rows="14" maxlength="131072" spellcheck="false">{{ template_sources[key] ?? '' }}</textarea><a class="btn btn-sm btn-outline-secondary mt-2" href="{{ preview_links[key] }}" target="theme-preview">{{ text_preview }}</a></details>{% endfor %}
++{% for key in template_keys %}<details class="mb-3"{% if key == focus_template %} open{% endif %}><summary><code>{{ key }}.twig</code></summary><textarea class="form-control font-monospace mt-2" name="templates[{{ key }}]" rows="14" maxlength="131072" spellcheck="false">{{ template_sources[key] ?? '' }}</textarea><a class="btn btn-sm btn-outline-secondary mt-2" href="{{ preview_links[key] }}" target="theme-preview">{{ text_preview }}</a></details>{% endfor %}
+ </div></div></form>
+ <section class="mt-4"><h2 class="h5">{{ text_preview }}</h2><iframe name="theme-preview" title="{{ text_preview }}" sandbox="" referrerpolicy="no-referrer" style="width:100%;height:360px;border:1px solid #cbd5e1;border-radius:8px"></iframe></section>
+ {% if revisions %}<section class="mt-4"><h2 class="h5">{{ text_history }}</h2><ul class="list-group">{% for revision in revisions %}<li class="list-group-item d-flex justify-content-between align-items-center">#{{ revision.revision_id }} · {{ revision.date_added }}{% if can_modify %}<form method="post" action="{{ revision.restore }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-sm btn-outline-warning">{{ text_restore }}</button></form>{% endif %}</li>{% endfor %}</ul></section>{% endif %}</div>{{ footer|raw }}
+--- a/dev/catalog/view/template/blog/blog_info.twig
++++ b/dev/catalog/view/template/blog/blog_info.twig
+@@ -1,6 +1,6 @@
+ {# dev/catalog/view/template/blog/blog_info.twig — post completo do blog (F7-02, ADR 0043) #}
+ {# Sidecar válido usa apenas saída do BlockRenderer allowlisted; legacy mantém o contrato HTML atual. #}
+-{{ header|raw }}
++{{ header }}
+ <main class="site-main">
+   <div class="container">
+     <div class="page-head">
+@@ -16,16 +16,16 @@
+       <div class="blog-content rms-blog-content">
+         {% if post.content_mode == 'blocks' %}
+           {% if post.content_valid %}
+-            {{ post.block_html|raw }}
++            {{ post.block_html }}
+           {% else %}
+             <p class="rms-block-unavailable" role="status">{{ text_content_review }}</p>
+           {% endif %}
+         {% else %}
+           {# Fallback legado permanece idêntico ao contrato existente; não é uma sanitização nova. #}
+-          {{ post.description|raw }}
++          {{ post.description }}
+         {% endif %}
+       </div>
+     </article>
+   </div>
+ </main>
+-{{ footer|raw }}
++{{ footer }}
+--- a/dev/catalog/view/template/blog/blog_list.twig
++++ b/dev/catalog/view/template/blog/blog_list.twig
+@@ -1,6 +1,6 @@
+ {# dev/catalog/view/template/blog/blog_list.twig — lista pública do blog (F7-02, ADR 0043) #}
+ {# Reaproveita as classes news-card/news-meta/news-cta do CSS existente (zero CSS novo) #}
+-{{ header|raw }}
++{{ header }}
+ <main class="site-main">
+   <div class="container">
+     <div class="page-head">
+@@ -8,7 +8,7 @@
+       <a class="back-link" href="{{ home }}">{{ button_back_home }}</a>
+     </div>
+     <p class="lead">{{ text_lead }}</p>
+-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
++    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+ 
+     {% if posts %}
+     <div class="grid-3">
+@@ -29,4 +29,4 @@
+     {% endif %}
+   </div>
+ </main>
+-{{ footer|raw }}
++{{ footer }}
+--- a/dev/catalog/view/template/catalog/project_info.twig
++++ b/dev/catalog/view/template/catalog/project_info.twig
+@@ -1,8 +1,8 @@
+ {# dev/catalog/view/template/catalog/project_info.twig — página dedicada do projeto (F2-17 SEO; F3-03 classes do tema) #}
+-{{ header|raw }}
++{{ header }}
+ <main class="site-main">
+   <div class="container">
+-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
++    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+     <div class="page-head">
+       <h1>{{ heading_title }}</h1>
+       <a class="back-link" href="{{ back_portfolio }}">{{ button_back }}</a>
+@@ -42,4 +42,4 @@
+     {% endif %}
+   </div>
+ </main>
+-{{ footer|raw }}
++{{ footer }}
+--- a/dev/catalog/view/template/catalog/project_list.twig
++++ b/dev/catalog/view/template/catalog/project_list.twig
+@@ -1,5 +1,5 @@
+ {# dev/catalog/view/template/catalog/project_list.twig — grade pública do portfólio (F3-03: classes do tema + tilt) #}
+-{{ header|raw }}
++{{ header }}
+ <main class="site-main">
+   <div class="container">
+     <div class="page-head">
+@@ -7,7 +7,7 @@
+       <a class="back-link" href="{{ home }}">{{ button_back_home }}</a>
+     </div>
+     <p class="lead">{{ text_lead }}</p>
+-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
++    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+ 
+     <nav class="filter-chips" aria-label="{{ text_filter }}">
+       <a class="chip{{ filter_all.active ? ' active' : '' }}" href="{{ filter_all.href }}">{{ text_all }}</a>
+@@ -41,4 +41,4 @@
+     {% endif %}
+   </div>
+ </main>
+-{{ footer|raw }}
++{{ footer }}
+--- a/dev/catalog/view/template/checkout/quote.twig
++++ b/dev/catalog/view/template/checkout/quote.twig
+@@ -1,12 +1,12 @@
+ {# dev/catalog/view/template/checkout/quote.twig — pedido de orçamento público (F2-17) #}
+-{{ header|raw }}
++{{ header }}
+ <main class="site-main" style="padding:40px 24px;max-width:760px;margin:0 auto;">
+   <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;">
+     <h1 style="margin:0;">{{ heading_title }}</h1>
+     <a href="{{ home }}" style="text-decoration:none;">{{ button_back_home }}</a>
+   </div>
+   <p class="lead">{{ text_lead }}</p>
+-  {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
++  {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+ 
+   {% if text_flash.text %}
+   <div class="alert {{ text_flash.type }}" style="padding:12px;border-radius:6px;margin:12px 0;background:#ecfdf5;border:1px solid #10b981;">{{ text_flash.text }}</div>
+@@ -67,4 +67,4 @@
+     </div>
+   </form>
+ </main>
+-{{ footer|raw }}
++{{ footer }}
+--- a/dev/catalog/view/template/cms/page_info.twig
++++ b/dev/catalog/view/template/cms/page_info.twig
+@@ -1,8 +1,8 @@
+ {# dev/catalog/view/template/cms/page_info.twig — página CMS pública (F2-17, SEO) #}
+-{{ header|raw }}
++{{ header }}
+ <main class="site-main" style="padding:40px 24px;max-width:860px;margin:0 auto;">
+   <h1>{{ heading_title }}</h1>
+-  <div class="page-content">{{ description|raw }}</div>
++  <div class="page-content">{{ description }}</div>
+   {% if public_custom_field_groups %}
+   <section class="page-custom-fields" aria-labelledby="custom-fields-heading" style="margin-top:2rem;">
+     <h2 id="custom-fields-heading">{{ text_custom_fields }}</h2>
+@@ -14,4 +14,4 @@
+   {% endif %}
+   <p><a href="{{ home }}" style="text-decoration:none;">← {{ heading_home|default('') }}</a></p>
+ </main>
+-{{ footer|raw }}
++{{ footer }}
+--- a/dev/catalog/view/template/common/contact.twig
++++ b/dev/catalog/view/template/common/contact.twig
+@@ -1,12 +1,12 @@
+ {# dev/catalog/view/template/common/contact.twig — formulário de contato público (F2-17) #}
+-{{ header|raw }}
++{{ header }}
+ <main class="site-main" style="padding:40px 24px;max-width:720px;margin:0 auto;">
+   <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;">
+     <h1 style="margin:0;">{{ heading_title }}</h1>
+     <a href="{{ home }}" style="text-decoration:none;">{{ button_back_home }}</a>
+   </div>
+   <p class="lead">{{ text_lead }}</p>
+-  {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
++  {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+ 
+   {% if text_flash.text %}
+   <div class="alert {{ text_flash.type }}" style="padding:12px;border-radius:6px;margin:12px 0;background:#ecfdf5;border:1px solid #10b981;">{{ text_flash.text }}</div>
+@@ -53,4 +53,4 @@
+     </div>
+   </form>
+ </main>
+-{{ footer|raw }}
++{{ footer }}
+--- a/dev/catalog/view/template/common/header.twig
++++ b/dev/catalog/view/template/common/header.twig
+@@ -39,22 +39,15 @@
+   {% endfor %}
+ </head>
+ <body class="{{ body_class }}" style="--theme-primary: {{ theme_primary|default('#6d28d9') }}; --theme-surface: {{ theme_surface|default('#ffffff') }}">
+-<header class="site-header">
+-  <a class="brand" href="{{ home }}" aria-label="{{ text_brand|default('David Almeida') }}"><span class="brand-chip">DA</span> <span class="brand-name">{{ text_brand|default('David Almeida') }}</span></a>
+-  <nav class="site-nav" aria-label="Main">
+-    <a href="{{ home }}">{{ text_nav_home }}</a>
+-    <a href="{{ nav_about }}">{{ text_nav_about }}</a>
+-    <a href="{{ nav_blog }}">{{ text_nav_blog }}</a>
+-    <a href="{{ nav_portfolio }}">{{ text_nav_portfolio }}</a>
+-    <a href="{{ nav_contact }}">{{ text_nav_contact }}</a>
+-    <a href="{{ nav_quote }}" class="cta">{{ text_nav_quote }}</a>
+-  </nav>
+-  <nav class="lang-switcher" aria-label="{{ text_languages }}">
+-    {% for lang in languages %}
+-    <a class="lang{{ lang.active ? ' active' : '' }}" href="{{ lang.href }}" hreflang="{{ lang.code }}">{{ lang.name }}</a>
+-    {% endfor %}
+-  </nav>
+-</header>
++{# A barra visual é customizável; importmap/scripts permanecem neste shell confiável. #}
++{% include 'partial/site_header.twig' with {
++  home: home, text_brand: text_brand, text_nav_home: text_nav_home,
++  text_nav_about: text_nav_about, text_nav_blog: text_nav_blog,
++  text_nav_portfolio: text_nav_portfolio, text_nav_contact: text_nav_contact,
++  text_nav_quote: text_nav_quote, nav_about: nav_about, nav_blog: nav_blog,
++  nav_portfolio: nav_portfolio, nav_contact: nav_contact, nav_quote: nav_quote,
++  text_languages: text_languages, languages: languages
++} only %}
+ {% if cms_route_content|default('') %}
+ <section class="cms-route-content" data-cms-route="{{ cms_route_key|e('html_attr') }}">
+   {{ cms_route_content|raw }}
+--- a/dev/catalog/view/template/common/home.twig
++++ b/dev/catalog/view/template/common/home.twig
+@@ -1,8 +1,8 @@
+ {# dev/catalog/view/template/common/home.twig — home composta de partials (F3-01; hero 3D na F3-02) #}
+-{{ header|raw }}
++{{ header }}
+ <main>
+ {% if cms_home_content %}
+-<section id="about" class="cms-home-content">{{ cms_home_content|raw }}</section>
++<section id="about" class="cms-home-content">{{ cms_home_content }}</section>
+ {% else %}
+ {% include 'partial/hero-3d.twig' %}
+ {% include 'partial/about.twig' %}
+@@ -18,4 +18,4 @@
+ {% include 'partial/clients.twig' %}
+ {% include 'partial/contact.twig' %}
+ </main>
+-{{ footer|raw }}
++{{ footer }}
+--- a/dev/catalog/view/template/error/not_found.twig
++++ b/dev/catalog/view/template/error/not_found.twig
+@@ -1,5 +1,5 @@
+ {# dev/catalog/view/template/error/not_found.twig — 404 com Cena 4 (fog, F3-03) #}
+-{{ header|raw }}
++{{ header }}
+ <main class="card-404 card-404--3d">
+   <div class="nf-3d__canvas" aria-hidden="true"
+        data-scene="not-found"
+@@ -14,8 +14,8 @@
+     <h1>{{ heading_title }}</h1>
+     <p>{{ text_error }}</p>
+     <p class="muted">{{ text_suggestion }}</p>
+-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
++    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+     <a class="btn primary" href="{{ home }}">{{ button_continue }}</a>
+   </div>
+ </main>
+-{{ footer|raw }}
++{{ footer }}
+--- a/dev/catalog/view/template/partial/site_header.twig
++++ b/dev/catalog/view/template/partial/site_header.twig
+@@ -0,0 +1,17 @@
++{# Barra visual pública; o bootstrap de scripts/importmap fica em common/header.twig. #}
++<header class="site-header">
++  <a class="brand" href="{{ home }}" aria-label="{{ text_brand|default('David Almeida') }}"><span class="brand-chip">DA</span> <span class="brand-name">{{ text_brand|default('David Almeida') }}</span></a>
++  <nav class="site-nav" aria-label="Main">
++    <a href="{{ home }}">{{ text_nav_home }}</a>
++    <a href="{{ nav_about }}">{{ text_nav_about }}</a>
++    <a href="{{ nav_blog }}">{{ text_nav_blog }}</a>
++    <a href="{{ nav_portfolio }}">{{ text_nav_portfolio }}</a>
++    <a href="{{ nav_contact }}">{{ text_nav_contact }}</a>
++    <a href="{{ nav_quote }}" class="cta">{{ text_nav_quote }}</a>
++  </nav>
++  <nav class="lang-switcher" aria-label="{{ text_languages }}">
++    {% for lang in languages %}
++    <a class="lang{{ lang.active ? ' active' : '' }}" href="{{ lang.href }}" hreflang="{{ lang.code }}">{{ lang.name }}</a>
++    {% endfor %}
++  </nav>
++</header>
+--- a/dev/catalog/view/template/tool/tool_info.twig
++++ b/dev/catalog/view/template/tool/tool_info.twig
+@@ -1,5 +1,5 @@
+ {# dev/catalog/view/template/tool/tool_info.twig — página dedicada da ferramenta (F3-04, SEO) #}
+-{{ header|raw }}
++{{ header }}
+ <main class="site-main">
+   <div class="container">
+     <div class="page-head">
+@@ -7,7 +7,7 @@
+       <a class="back-link" href="{{ back_tools }}">{{ button_back }}</a>
+     </div>
+ 
+-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
++    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+     {% if text_lead %}<p class="lead">{{ text_lead }}</p>{% endif %}
+ 
+     <table class="fact-table">
+@@ -23,4 +23,4 @@
+     {% endif %}
+   </div>
+ </main>
+-{{ footer|raw }}
++{{ footer }}
+--- a/dev/catalog/view/template/tool/tool_list.twig
++++ b/dev/catalog/view/template/tool/tool_list.twig
+@@ -1,5 +1,5 @@
+ {# dev/catalog/view/template/tool/tool_list.twig — grade pública das ferramentas (F3-04) #}
+-{{ header|raw }}
++{{ header }}
+ <main class="site-main">
+   <div class="container">
+     <div class="page-head">
+@@ -7,7 +7,7 @@
+       <a class="back-link" href="{{ home }}">{{ button_back_home }}</a>
+     </div>
+     <p class="lead">{{ text_lead }}</p>
+-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
++    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+ 
+     {% if tools %}
+     <div class="grid-3">
+@@ -32,4 +32,4 @@
+     {% endif %}
+   </div>
+ </main>
+-{{ footer|raw }}
++{{ footer }}
+--- a/dev/system/library/template/twig.php
++++ b/dev/system/library/template/twig.php
+@@ -20,6 +20,16 @@
+ namespace Reamur\System\Library\Template;
+ 
+ final class Twig {
++    /** Fixed Catalog source keys editable through Themes; arbitrary paths, script tags and raw filters are rejected. */
++    private const THEME_TEMPLATE_KEYS = [
++        'common/home', 'common/footer', 'common/contact',
++        'partial/site_header', 'partial/hero', 'partial/hero-3d', 'partial/about',
++        'partial/methodology', 'partial/skills', 'partial/services', 'partial/testimonials',
++        'partial/portfolio', 'partial/tools', 'partial/news', 'partial/clients', 'partial/contact',
++        'cms/page_info', 'catalog/project_list', 'catalog/project_info',
++        'blog/blog_list', 'blog/blog_info', 'tool/tool_list', 'tool/tool_info',
++        'checkout/quote', 'error/not_found',
++    ];
+     private \Twig\Environment $twig;
+     private bool $cacheEnabled;
+     private string $directory;
+@@ -40,16 +50,16 @@
+ 
+     /**
+      * PLAN F10-03: opt-in Catalog-only template source overrides. Additive API;
+-     * fixed allowlist, bounded source, fallback to filesystem loader. Admin and
+-     * Install do not invoke this method. No arbitrary paths or filesystem writes.
++     * fixed allowlist, bounded source, no raw/script/event-handler syntax, and
++     * filesystem fallback. Admin and Install do not invoke it; no filesystem writes.
+      * @param array<string, string> $templates
+      */
+     public function setThemeTemplates(array $templates): void {
+-        $allow = ['common/home','common/footer','partial/hero','partial/about','partial/portfolio','cms/page_info','catalog/project_list'];
++        $allow = self::THEME_TEMPLATE_KEYS;
+         $safe = [];
+         foreach ($templates as $key => $source) {
+             if (!is_string($key) || !in_array($key, $allow, true) || !is_string($source) || strlen($source) > 131072) continue;
+-            if (preg_match('~<\s*script\b|javascript\s*:|\bon[a-z]+\s*=~i', $source)) continue;
++            if (preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i', $source)) continue;
+             $safe[$key . '.twig'] = $source;
+         }
+         if ($safe === []) return;
+@@ -76,11 +86,11 @@
+      * @param array<string,string> $templates
+      */
+     public function renderCatalogPagePreview(array $pageData, array $headerData, array $footerData, array $templates = []): string {
+-        $allow = ['common/home','common/footer','partial/hero','partial/about','partial/portfolio','cms/page_info','catalog/project_list'];
++        $allow = self::THEME_TEMPLATE_KEYS;
+         $safe = [];
+         foreach ($templates as $key => $source) {
+             if (!is_string($key) || !in_array($key, $allow, true) || !is_string($source) || strlen($source) > 131072) continue;
+-            if (preg_match('~<\s*script\b|javascript\s*:|\bon[a-z]+\s*=~i', $source)) continue;
++            if (preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i', $source)) continue;
+             $safe[$key . '.twig'] = $source;
+         }
+         $loader = new \Twig\Loader\ChainLoader([
+@@ -88,20 +98,21 @@
+             new \Twig\Loader\FilesystemLoader([DIR_SYSTEM . '../catalog/view/template/'])
+         ]);
+         $env = new \Twig\Environment($loader, ['autoescape'=>'html','cache'=>false,'auto_reload'=>true]);
+-        $pageData['header'] = $env->render('common/header.twig', $headerData);
+-        $pageData['footer'] = $env->render('common/footer.twig', $footerData);
++        $pageData['header'] = new \Twig\Markup($env->render('common/header.twig', $headerData), 'UTF-8');
++        $pageData['footer'] = new \Twig\Markup($env->render('common/footer.twig', $footerData), 'UTF-8');
++        $pageData = $this->markTrustedHtml($pageData, ['description','cms_home_content','cms_page_content']);
+         return $env->render('cms/page_info.twig', $pageData);
+     }
+ 
+-    /** Render a saved source in a restrictive sandbox and scalar sample context. */
++    /** Render a saved source in a restrictive sandbox with fixed, nonpersistent sample data. */
+     public function renderSandboxPreview(string $key, string $source): string {
+-        $allow = ['common/home','common/footer','partial/hero','partial/about','partial/portfolio','cms/page_info','catalog/project_list'];
+-        if (!in_array($key, $allow, true) || strlen($source) > 131072 || preg_match('~<\s*script\b|javascript\s*:|\bon[a-z]+\s*=~i', $source)) {
++        $allow = self::THEME_TEMPLATE_KEYS;
++        if (!in_array($key, $allow, true) || strlen($source) > 131072 || preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i', $source)) {
+             throw new \InvalidArgumentException('Template outside the preview allowlist.');
+         }
+         $policy = new \Twig\Sandbox\SecurityPolicy(
+-            ['if','for','set','block','extends','include','autoescape'],
+-            ['escape','e','raw','default','join','length','upper','lower','title','trim','date','json_encode'],
++            ['if','for','set','block','extends','include'],
++            ['escape','e','default','join','length','upper','lower','title','trim','date','json_encode'],
+             [], [], ['range','cycle','parent']
+         );
+         $loader = new \Twig\Loader\ChainLoader([
+@@ -112,12 +123,49 @@
+         $env->addExtension(new \Twig\Extension\SandboxExtension($policy, true));
+         return $env->render($key . '.twig', [
+             'theme'=>['primary'=>'#2563eb','surface'=>'#ffffff'], 'title'=>'Theme preview',
+-            'content'=>'Safe sample content', 'header'=>'', 'footer'=>'', 'cms_home_content'=>'Theme preview content'
++            'heading_title'=>'Theme preview', 'content'=>'Safe sample content', 'description'=>'Safe sample content',
++            'header'=>'', 'footer'=>'', 'cms_home_content'=>'', 'home'=>'#home', 'button_back_home'=>'Home',
++            'text_brand'=>'Theme preview', 'text_languages'=>'Languages', 'text_nav_home'=>'Home',
++            'text_nav_about'=>'About', 'text_nav_blog'=>'Blog', 'text_nav_portfolio'=>'Portfolio',
++            'text_nav_contact'=>'Contact', 'text_nav_quote'=>'Request a quote', 'nav_about'=>'#about',
++            'nav_blog'=>'#blog', 'nav_portfolio'=>'#portfolio', 'nav_contact'=>'#contact', 'nav_quote'=>'#quote',
++            'languages'=>[['code'=>'en-us','name'=>'English','active'=>true,'href'=>'#language']],
++            'text_lead'=>'Safe sample content', 'text_all'=>'All', 'text_filter'=>'Filter',
++            'filter_all'=>['active'=>true,'href'=>'#all'], 'posts'=>[], 'projects'=>[], 'tools'=>[],
++            'categories'=>[], 'images'=>[], 'services'=>[], 'testimonials'=>[], 'client_logos'=>[], 'news_items'=>[],
++            'project'=>['name'=>'Sample project','image'=>'','description'=>'','client'=>'','url'=>''],
++            'tool'=>['vendor'=>'','external'=>false,'url'=>''],
++            'post'=>['title'=>'Sample post','image'=>'','date'=>'','content_mode'=>'blocks','content_valid'=>true,'block_html'=>'','description'=>''],
++            'text_flash'=>['text'=>'','type'=>'success'], 'error'=>'', 'action'=>'#form',
++            'nf3d'=>['count'=>120,'color'=>'#8a4fff','speed'=>0.05,'drift'=>0.4],
++            'text_code'=>'404', 'text_error'=>'Not found', 'text_suggestion'=>'Return to the site home.',
++            'button_continue'=>'Home', 'button_send'=>'Send',
+         ]);
++    }
++
++    /** Mark only HTML fragments produced by trusted renderers/sanitizers; raw filter stays unavailable to theme source.
++     * @param array<string,mixed> $data @param list<string> $keys @return array<string,mixed>
++     */
++    private function markTrustedHtml(array $data, array $keys): array {
++        foreach ($keys as $key) {
++            if (isset($data[$key]) && is_string($data[$key])) $data[$key] = new \Twig\Markup($data[$key], 'UTF-8');
++        }
++        if (isset($data['header']) && is_string($data['header'])) $data['header'] = new \Twig\Markup($data['header'], 'UTF-8');
++        if (isset($data['footer']) && is_string($data['footer'])) $data['footer'] = new \Twig\Markup($data['footer'], 'UTF-8');
++        return $data;
+     }
+ 
+     /** @param array<string, mixed> $data */
+     public function render(string $route, array $data = []): string {
++        $data = $this->markTrustedHtml($data, ['cms_home_content','cms_page_content']);
++        if ($route === 'cms/page_info' && isset($data['description']) && is_string($data['description'])) {
++            $data['description'] = new \Twig\Markup($data['description'], 'UTF-8');
++        }
++        if ($route === 'blog/blog_info' && isset($data['post']) && is_array($data['post'])) {
++            foreach (['block_html','description'] as $key) {
++                if (isset($data['post'][$key]) && is_string($data['post'][$key])) $data['post'][$key] = new \Twig\Markup($data['post'][$key], 'UTF-8');
++            }
++        }
+         return $this->twig->render($route . '.twig', $data);
+     }
+ }
+--- a/docs/Arquitetura-MVCL.md
++++ b/docs/Arquitetura-MVCL.md
+@@ -280,6 +280,8 @@
+ 
+ Detalhes de sintaxe e do adaptador Twig estão no [Guia Twig](Guia-Twig.md).
+ 
++No Catalog, `startup/theme` entrega ao adaptador apenas fontes do tema explicitamente publicadas e cujas chaves constam na allowlist fixa. O `FilesystemLoader` continua como fallback; Admin e Install não ativam overrides. A prévia do editor roda em ambiente Twig sandboxado com dados de amostra, CSP e iframe isolado; fontes persistidas rejeitam o filtro `raw`, `<script>`, atributos de evento e referências a paths arbitrários. Fragmentos HTML gerados por renderizadores/sanitizadores confiáveis são marcados como `Twig\Markup` apenas nos campos fixos que já precisam de HTML; o restante mantém autoescape. As páginas CMS vinculam conteúdo editorial a rotas públicas sem assumir modelos ou fluxos dinâmicos dos módulos.
++
+ ---
+ 
+ ## 9. Languages
+--- a/docs/Guia-CMS.md
++++ b/docs/Guia-CMS.md
+@@ -242,7 +242,7 @@
+ 
+ ### 4.1.2 Temas do Catalog (F10-02)
+ 
+-A rota Admin `design/theme` é separada de Pages e Blog e controla tokens visuais e um identificador de cena selecionado de uma allowlist. Não aceita JS nem caminhos de arquivo enviados pelo usuário. As tabelas `design_theme` e `design_theme_revision` mantêm configuração e snapshots. O estado desta fatia ainda não conecta tema ativo ao renderer Catalog e não disponibiliza edição de Twig, prévia sandboxada nem restauração pela interface; esses requisitos seguem abertos para conclusão antes de aceite final.
++A rota Admin `design/theme` é separada de Pages e Blog e controla tokens visuais e um identificador de cena selecionado de uma allowlist. Não aceita JS nem caminhos de arquivo enviados pelo usuário. As tabelas `design_theme` e `design_theme_revision` mantêm configuração e snapshots. A publicação versionada, o loader Catalog, a edição Twig allowlisted, a prévia sandboxada e a restauração pela interface são descritos nas seções seguintes.
+ 
+ 
+ ### 4.1.3 F10-03 — Publicação versionada de Temas
+@@ -255,3 +255,18 @@
+ F10-01 já armazenava páginas especiais sob `system_key`, mas o conteúdo público era consumido diretamente apenas pela Home; o header consultava os demais slots para SEO, sem exibi-los no corpo da página. F10-04 liga slots editoriais aos templates públicos de Portfolio (grade e página de detalhe), Blog (somente landing/listagem), Ferramentas (grade e detalhe), Contato, Orçamento e 404. A página Blog/post individual continua fora do CMS; posts permanecem no módulo Blog.
+ 
+ Cada controller fornece o slot como variável de apresentação, enquanto listas e entidades continuam carregadas pelos modelos próprios e formulários mantêm seus POST/CSRF/validação. O controller `cms/slot` memoiza a página e HTML na requisição para compartilhar consulta, renderização e metadados entre o corpo e o header.
++
++### 4.1.5 Layouts públicos e código aprovado
++
++O registro `cms/page` de cada rota do sistema mantém o atalho **Editar template** para o template correspondente no Admin `design/theme`; o editor abre o item correspondente focado. Páginas CMS comuns usam `cms/page_info`. Os templates de rota ficam no rascunho do tema, com ACL própria, prévia sandboxada, publicação explícita e histórico/reversão — o conteúdo de página continua separado.
++
++| `system_key` | Template de apresentação |
++| --- | --- |
++| `home` | `common/home` + partials públicos |
++| `portfolio` · `portfolio_detail` | `catalog/project_list` · `catalog/project_info` |
++| `blog` · `blog_post` | `blog/blog_list` · `blog/blog_info` (somente apresentação; posts seguem no Blog) |
++| `tools` · `tool_detail` | `tool/tool_list` · `tool/tool_info` |
++| `contact` · `quote` | `common/contact` · `checkout/quote` (POST, CSRF e validação permanecem nos controllers) |
++| `not_found` | `error/not_found` |
++
++`common/header.twig` mantém o bootstrap/importmap de scripts sob controle do sistema; sua barra visual é customizável por `partial/site_header`. A allowlist do tema também inclui o footer e os partials públicos usados pela Home. A edição de fonte permite Twig/HTML de apresentação, não PHP nem JavaScript inline: interações devem usar somente componentes/cenas aprovados e configuráveis. JavaScript personalizado do componente Three.js continua isolado no sandbox existente. API, sitemap XML, callbacks e fluxos internos não entram no editor de páginas.
+--- a/docs/Guia-Twig.md
++++ b/docs/Guia-Twig.md
+@@ -353,7 +353,7 @@
+ ✅ **Fazer**
+ - Layout único + partials pequenos e especializados
+ - Todo texto de interface via variável vinda da camada **Language**
+-- `|json_encode|raw` para dados → JS
++- Para dados de interação, usar scripts fixos do sistema e atributos/dados escapados; fontes de tema não usam `raw` nem JavaScript inline.
+ - `{% ... %}` multilinha com indentação, como em HTML
+ - Cache ligado em produção
+ 
+@@ -375,4 +375,6 @@
+ 
+ ## F10-03 — Templates de tema
+ 
+-O Admin pode propor fontes somente para as chaves fixas enumeradas em `design/theme`; os rascunhos ficam em `draft_config` e o Catalog lê somente `published_config`. `Twig::setThemeTemplates()` é opt-in no pré-action Catalog e adiciona um `ArrayLoader` antes do `FilesystemLoader` existente, mantendo fallback. A prévia usa `SandboxExtension`, contexto de amostra escalar, CSP restritiva e iframe sandboxado. Nenhum caminho de arquivo, PHP ou JavaScript Three.js é editável.
++O Admin pode propor fontes somente para chaves fixas allowlisted em `design/theme`, incluindo as views públicas de Home, Portfolio, Blog, Ferramentas, Contato, Orçamento, 404, CMS e seus partials. Os rascunhos ficam em `draft_config`; o Catalog lê somente `published_config`. `Twig::setThemeTemplates()` é opt-in no pré-action Catalog e adiciona um `ArrayLoader` antes do `FilesystemLoader` existente, mantendo fallback. A prévia usa `SandboxExtension`, contexto de amostra não persistente, CSP restritiva e iframe sandboxado.
++
++A barra visual do cabeçalho é o partial `partial/site_header`; `common/header.twig` mantém o bootstrap/importmap e inclusão dos scripts controlados pelo sistema. Templates de tema não aceitam PHP, `<script>`, atributos de evento, caminhos arbitrários ou o filtro `raw`. Fragmentos HTML já produzidos por renderizadores/sanitizadores confiáveis só são marcados como `Twig\Markup` nos campos e rotas fixos que já exigem HTML; outros valores continuam autoescapados. Comportamentos interativos ficam limitados a componentes e cenas aprovados/configuráveis; código Three.js livre não é executado.

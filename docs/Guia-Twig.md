@@ -353,7 +353,7 @@ Erros comuns e mensagens-chave:
 ✅ **Fazer**
 - Layout único + partials pequenos e especializados
 - Todo texto de interface via variável vinda da camada **Language**
-- `|json_encode|raw` para dados → JS
+- Para dados de interação, usar scripts fixos do sistema e atributos/dados escapados; fontes de tema não usam `raw` nem JavaScript inline.
 - `{% ... %}` multilinha com indentação, como em HTML
 - Cache ligado em produção
 
@@ -375,4 +375,6 @@ Erros comuns e mensagens-chave:
 
 ## F10-03 — Templates de tema
 
-O Admin pode propor fontes somente para as chaves fixas enumeradas em `design/theme`; os rascunhos ficam em `draft_config` e o Catalog lê somente `published_config`. `Twig::setThemeTemplates()` é opt-in no pré-action Catalog e adiciona um `ArrayLoader` antes do `FilesystemLoader` existente, mantendo fallback. A prévia usa `SandboxExtension`, contexto de amostra escalar, CSP restritiva e iframe sandboxado. Nenhum caminho de arquivo, PHP ou JavaScript Three.js é editável.
+O Admin pode propor fontes somente para chaves fixas allowlisted em `design/theme`, incluindo as views públicas de Home, Portfolio, Blog, Ferramentas, Contato, Orçamento, 404, CMS e seus partials. Os rascunhos ficam em `draft_config`; o Catalog lê somente `published_config`. `Twig::setThemeTemplates()` é opt-in no pré-action Catalog e adiciona um `ArrayLoader` antes do `FilesystemLoader` existente, mantendo fallback. A prévia usa `SandboxExtension`, contexto de amostra não persistente, CSP restritiva e iframe sandboxado.
+
+A barra visual do cabeçalho é o partial `partial/site_header`; `common/header.twig` mantém o bootstrap/importmap e inclusão dos scripts controlados pelo sistema. Templates de tema não aceitam PHP, `<script>`, atributos de evento, caminhos arbitrários ou o filtro `raw`. Fragmentos HTML já produzidos por renderizadores/sanitizadores confiáveis só são marcados como `Twig\Markup` nos campos e rotas fixos que já exigem HTML; outros valores continuam autoescapados. Comportamentos interativos ficam limitados a componentes e cenas aprovados/configuráveis; código Three.js livre não é executado.

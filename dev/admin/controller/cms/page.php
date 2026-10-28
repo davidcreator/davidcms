@@ -942,6 +942,28 @@ class Page extends \Reamur\System\Engine\Controller {
         $data['page_id']    = $pid;
         $data['system_key'] = (string)($page['system_key'] ?? '');
         $data['is_system_page'] = $data['system_key'] !== '';
+        $layoutBySystemKey = [
+            'home'=>'common/home', 'portfolio'=>'catalog/project_list', 'portfolio_detail'=>'catalog/project_info',
+            'blog'=>'blog/blog_list', 'blog_post'=>'blog/blog_info', 'tools'=>'tool/tool_list',
+            'tool_detail'=>'tool/tool_info', 'contact'=>'common/contact', 'quote'=>'checkout/quote', 'not_found'=>'error/not_found',
+        ];
+        $data['theme_template_key'] = $layoutBySystemKey[$data['system_key']] ?? 'cms/page_info';
+        $data['theme_editor_url'] = '';
+        if ($this->user->hasPermission('access', 'design/theme')) {
+            $this->load->language('design/theme');
+            $data['text_template_editor'] = $this->language->get('text_template_editor');
+            $data['text_template_help'] = $this->language->get('text_template_help');
+            $data['button_edit_theme'] = $this->language->get('button_edit');
+            $this->load->model('design/theme');
+            $activeThemeId = 0;
+            foreach ($this->model_design_theme->getThemes() as $themeRow) {
+                $themeRow = (array)$themeRow;
+                if ((int)($themeRow['status'] ?? 0) === 1) { $activeThemeId = (int)($themeRow['theme_id'] ?? 0); break; }
+            }
+            $data['theme_editor_url'] = $activeThemeId > 0
+                ? $this->url->link('design/theme.edit|' . $activeThemeId, 'focus_template=' . rawurlencode($data['theme_template_key']))
+                : $this->url->link('design/theme');
+        }
         $data['sort_order'] = (string)($post['sort_order'] ?? (string)($page['sort_order'] ?? '0'));
         $data['status']     = $isPost ? ((string)($post['status'] ?? '0') === '1' ? '1' : '0') : (string)(int)($page['status'] ?? 0);
 

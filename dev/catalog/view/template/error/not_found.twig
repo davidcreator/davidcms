@@ -1,5 +1,5 @@
 {# dev/catalog/view/template/error/not_found.twig — 404 com Cena 4 (fog, F3-03) #}
-{{ header|raw }}
+{{ header }}
 <main class="card-404 card-404--3d">
   <div class="nf-3d__canvas" aria-hidden="true"
        data-scene="not-found"
@@ -14,8 +14,8 @@
     <h1>{{ heading_title }}</h1>
     <p>{{ text_error }}</p>
     <p class="muted">{{ text_suggestion }}</p>
-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content|raw }}</div>{% endif %}
+    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
     <a class="btn primary" href="{{ home }}">{{ button_continue }}</a>
   </div>
 </main>
-{{ footer|raw }}
+{{ footer }}

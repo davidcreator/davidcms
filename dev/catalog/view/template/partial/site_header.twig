@@ -1,0 +1,17 @@
+{# Barra visual pública; o bootstrap de scripts/importmap fica em common/header.twig. #}
+<header class="site-header">
+  <a class="brand" href="{{ home }}" aria-label="{{ text_brand|default('David Almeida') }}"><span class="brand-chip">DA</span> <span class="brand-name">{{ text_brand|default('David Almeida') }}</span></a>
+  <nav class="site-nav" aria-label="Main">
+    <a href="{{ home }}">{{ text_nav_home }}</a>
+    <a href="{{ nav_about }}">{{ text_nav_about }}</a>
+    <a href="{{ nav_blog }}">{{ text_nav_blog }}</a>
+    <a href="{{ nav_portfolio }}">{{ text_nav_portfolio }}</a>
+    <a href="{{ nav_contact }}">{{ text_nav_contact }}</a>
+    <a href="{{ nav_quote }}" class="cta">{{ text_nav_quote }}</a>
+  </nav>
+  <nav class="lang-switcher" aria-label="{{ text_languages }}">
+    {% for lang in languages %}
+    <a class="lang{{ lang.active ? ' active' : '' }}" href="{{ lang.href }}" hreflang="{{ lang.code }}">{{ lang.name }}</a>
+    {% endfor %}
+  </nav>
+</header>

@@ -280,6 +280,8 @@ $this->response->setOutput(
 
 Detalhes de sintaxe e do adaptador Twig estão no [Guia Twig](Guia-Twig.md).
 
+No Catalog, `startup/theme` entrega ao adaptador apenas fontes do tema explicitamente publicadas e cujas chaves constam na allowlist fixa. O `FilesystemLoader` continua como fallback; Admin e Install não ativam overrides. A prévia do editor roda em ambiente Twig sandboxado com dados de amostra, CSP e iframe isolado; fontes persistidas rejeitam o filtro `raw`, `<script>`, atributos de evento e referências a paths arbitrários. Fragmentos HTML gerados por renderizadores/sanitizadores confiáveis são marcados como `Twig\Markup` apenas nos campos fixos que já precisam de HTML; o restante mantém autoescape. As páginas CMS vinculam conteúdo editorial a rotas públicas sem assumir modelos ou fluxos dinâmicos dos módulos.
+
 ---
 
 ## 9. Languages

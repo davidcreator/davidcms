@@ -9,7 +9,7 @@ A ADR 0079 criou gerenciamento isolado de temas, mas não conectava a seleção 
 ## Decisão
 - O Catalog aplica somente payload explicitamente publicado; rascunhos continuam separados.
 - O adaptador Twig recebe um método aditivo `setThemeTemplates()` que aceita exclusivamente chaves fixas do Catalog e preserva filesystem loader como fallback; Admin/Install não chamam esse método.
-- Prévia usa Twig Sandbox, dados simples, CSP `default-src 'none'` e iframe sem permissões. O Admin não permite PHP, JS, caminhos arbitrários nem `raw` na fonte controlada.
+- Prévia usa Twig Sandbox, dados de amostra, CSP `default-src 'none'` e iframe sem permissões. O Admin não permite PHP, JS, caminhos arbitrários nem `raw` na fonte controlada. Fragmentos HTML gerados por renderizadores/sanitizadores confiáveis são entregues como `Twig\Markup` apenas nos campos/rotas existentes que já exigem HTML; o filtro `raw` não fica disponível na prévia nem em fontes editáveis.
 - Revisões preservam snapshots e restauração exige POST, CSRF e ACL `modify`.
 - Tokens de cor aceitam apenas hexadecimal de seis dígitos; cenas seguem chaves allowlisted, sem JavaScript de cena.
 
