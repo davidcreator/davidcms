@@ -1,0 +1,16 @@
+{# dev/catalog/view/template/common/footer.twig — assinatura + legais/sociais (F3-01) #}
+<footer class="site-footer">
+  <div class="container">
+    <small>{{ text_powered }} · {{ text_copyright }}</small>
+    <nav aria-label="{{ text_legal }}">
+      {% for l in legal %}
+      <a href="{{ l.href }}">{{ l.name }}</a>
+      {% endfor %}
+      {% for s in socials %}
+      <a href="{{ s.href }}" target="_blank" rel="noopener me">{{ s.name }}</a>
+      {% endfor %}
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

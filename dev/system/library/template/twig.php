@@ -66,6 +66,33 @@ final class Twig {
         ]);
     }
 
+    /**
+     * Render an authenticated CMS Page preview with Catalog's actual shell and
+     * templates. Catalog roots are fixed at DIR_SYSTEM; only published theme
+     * templates from the existing allowlist are considered, and cache is off.
+     * @param array<string,mixed> $pageData
+     * @param array<string,mixed> $headerData
+     * @param array<string,mixed> $footerData
+     * @param array<string,string> $templates
+     */
+    public function renderCatalogPagePreview(array $pageData, array $headerData, array $footerData, array $templates = []): string {
+        $allow = ['common/home','common/footer','partial/hero','partial/about','partial/portfolio','cms/page_info','catalog/project_list'];
+        $safe = [];
+        foreach ($templates as $key => $source) {
+            if (!is_string($key) || !in_array($key, $allow, true) || !is_string($source) || strlen($source) > 131072) continue;
+            if (preg_match('~<\s*script\b|javascript\s*:|\bon[a-z]+\s*=~i', $source)) continue;
+            $safe[$key . '.twig'] = $source;
+        }
+        $loader = new \Twig\Loader\ChainLoader([
+            new \Twig\Loader\ArrayLoader($safe),
+            new \Twig\Loader\FilesystemLoader([DIR_SYSTEM . '../catalog/view/template/'])
+        ]);
+        $env = new \Twig\Environment($loader, ['autoescape'=>'html','cache'=>false,'auto_reload'=>true]);
+        $pageData['header'] = $env->render('common/header.twig', $headerData);
+        $pageData['footer'] = $env->render('common/footer.twig', $footerData);
+        return $env->render('cms/page_info.twig', $pageData);
+    }
+
     /** Render a saved source in a restrictive sandbox and scalar sample context. */
     public function renderSandboxPreview(string $key, string $source): string {
         $allow = ['common/home','common/footer','partial/hero','partial/about','partial/portfolio','cms/page_info','catalog/project_list'];

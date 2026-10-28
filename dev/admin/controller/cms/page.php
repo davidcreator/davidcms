@@ -246,6 +246,10 @@ class Page extends \Reamur\System\Engine\Controller {
         $this->response->addHeader('X-Content-Type-Options: nosniff');
         $this->response->addHeader('X-Frame-Options: DENY');
         $this->response->addHeader('Referrer-Policy: no-referrer');
+        $assetBase = $this->pageCatalogAssetUrl();
+        $assetOrigin = $this->pageCatalogAssetOrigin($assetBase);
+        $originSource = $assetOrigin !== '' ? ' ' . $assetOrigin : '';
+        $this->response->addHeader("Content-Security-Policy: default-src 'none'; img-src 'self' data:" . $originSource . "; style-src 'self' 'unsafe-inline'" . $originSource . "; script-src 'self'" . $originSource . "; font-src 'self' data:" . $originSource . "; media-src 'self'" . $originSource . "; frame-src https://www.youtube-nocookie.com https://player.vimeo.com; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'none'");
 
         if (!$this->user->hasPermission('modify', 'cms/page')) {
             $this->renderPagePreviewError($this->language->get('error_page_preview_permission'));
@@ -299,32 +303,227 @@ class Page extends \Reamur\System\Engine\Controller {
             return;
         }
 
-        $title = $this->request->post['preview_title'] ?? '';
-        $title = is_string($title) ? trim($title) : '';
-        if (preg_match('//u', $title) !== 1) $title = '';
-        $title = mb_substr($title, 0, 255, 'UTF-8');
-        if ($title === '') $title = $this->language->get('text_page_preview_untitled');
+        $title = $this->previewText($this->request->post['preview_title'] ?? '', 255);
         $language = $this->request->post['preview_language'] ?? 'en-us';
         $language = is_string($language) && preg_match('/^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/iD', $language) ? strtolower($language) : 'en-us';
 
-        $assetOrigin = $this->pageCatalogAssetOrigin($assetBase);
-        $originSource = $assetOrigin !== '' ? ' ' . $assetOrigin : '';
-        $this->response->addHeader("Content-Security-Policy: default-src 'none'; img-src 'self' data:" . $originSource . "; style-src 'self' 'unsafe-inline'" . $originSource . "; script-src 'self'" . $originSource . "; font-src 'self' data:" . $originSource . "; media-src 'self'" . $originSource . "; frame-src https://www.youtube-nocookie.com https://player.vimeo.com; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'none'");
+        $this->load->model('cms/page');
+        $availableLanguages = $this->model_cms_page->getLanguages();
+        $languageIds = [];
+        foreach ($availableLanguages as $row) {
+            $row = (array)$row;
+            $code = strtolower((string)($row['code'] ?? ''));
+            if ($code !== '') $languageIds[$code] = (int)($row['language_id'] ?? 0);
+        }
+        if (!isset($languageIds[$language])) $language = isset($languageIds['en-us']) ? 'en-us' : (string)(array_key_first($languageIds) ?? 'en-us');
+        $languageId = max(1, (int)($languageIds[$language] ?? 1));
+        $englishId = max(1, (int)($languageIds['en-us'] ?? 1));
+        $this->load->model('localization/language');
+        $publicLanguages = [];
+        foreach ($this->model_localization_language->getLanguages(['status' => 1]) as $row) {
+            $row = (array)$row;
+            $code = strtolower((string)($row['code'] ?? ''));
+            if ($code !== '' && is_dir(rtrim(DIR_SYSTEM, '/\\') . '/../catalog/language/' . $code)) $publicLanguages[] = $row;
+        }
 
-        $data = [
-            'heading_title' => $title,
-            'preview_language' => $language,
-            'text_page_preview_title' => $this->language->get('text_page_preview_title'),
-            'text_page_preview_notice' => $this->language->get('text_page_preview_notice'),
-            'description' => (string)$rendered['html'],
-            'preview_error' => '',
-            'common_css_url' => $assetBase . 'view/css/common.css',
-            'blocks_css_url' => $assetBase . 'view/css/blog-blocks.css',
-            'requires_threejs' => !empty($rendered['requires_threejs']),
-            'threejs_css_url' => $assetBase . 'view/css/threejs-thumb.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-5',
-            'threejs_script_url' => $assetBase . $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-5',
+        $pageIdRaw = $this->request->post['preview_page_id'] ?? '0';
+        $pageId = is_scalar($pageIdRaw) && ctype_digit((string)$pageIdRaw) ? (int)$pageIdRaw : 0;
+        if ($pageId > 0 && !$this->model_cms_page->getPage($pageId)) {
+            $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
+            return;
+        }
+        $customRaw = $this->request->post['preview_custom_fields'] ?? '{}';
+        if (!is_string($customRaw) || strlen($customRaw) > 262144) {
+            $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
+            return;
+        }
+        $customPosted = json_decode($customRaw, true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($customPosted)) {
+            $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
+            return;
+        }
+        $this->load->language('cms/page', $language);
+        $this->load->language('common/header', $language);
+        $this->load->language('common/footer', $language);
+        $this->load->language('common/home', $language);
+        $this->load->model('custom_field/value');
+        $publicFields = $this->buildPreviewPublicCustomFields($customPosted, $pageId, $languageId, $englishId, array_values($languageIds));
+        if ($publicFields === false) {
+            $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
+            return;
+        }
+
+        $texts = $this->language->all();
+        if ($title === '') $title = $this->language->get('text_page_preview_untitled');
+        $metaTitle = $this->previewText($this->request->post['preview_meta_title'] ?? '', 255);
+        $metaDescription = $this->previewText($this->request->post['preview_meta_description'] ?? '', 255);
+
+        $this->load->model('setting/setting');
+        $settings = $this->model_setting_setting->getSettings();
+        $this->load->model('design/theme');
+        $publishedTheme = [];
+        $themeRows = $this->model_design_theme->getThemes();
+        usort($themeRows, static fn(array $left, array $right): int => (int)($right['theme_id'] ?? 0) <=> (int)($left['theme_id'] ?? 0));
+        foreach ($themeRows as $themeRow) {
+            $themeRow = (array)$themeRow;
+            if ((int)($themeRow['status'] ?? 0) !== 1) continue;
+            $rawTheme = (string)($themeRow['published_config'] ?? '');
+            if ($rawTheme === '') $rawTheme = (string)($themeRow['config'] ?? '{}');
+            $decodedTheme = json_decode($rawTheme, true);
+            if (is_array($decodedTheme)) $publishedTheme = $decodedTheme;
+            break;
+        }
+        $primary = (string)($publishedTheme['primary'] ?? '#6d28d9');
+        $surface = (string)($publishedTheme['surface'] ?? '#ffffff');
+        if (!preg_match('/^#[a-fA-F0-9]{6}$/D', $primary)) $primary = '#6d28d9';
+        if (!preg_match('/^#[a-fA-F0-9]{6}$/D', $surface)) $surface = '#ffffff';
+        $themeTemplates = is_array($publishedTheme['templates'] ?? null) ? $publishedTheme['templates'] : [];
+
+        $assetBase = $this->pageCatalogAssetUrl();
+        $catalogUrl = new \Reamur\System\Library\Url($assetBase);
+        $homeUrl = $assetBase;
+        $languageLinks = [];
+        foreach ($publicLanguages as $row) {
+            $row = (array)$row;
+            $code = strtolower((string)($row['code'] ?? ''));
+            if ($code === '') continue;
+            $langKey = 'text_lang_' . str_replace('-', '_', $code);
+            $languageLinks[] = [
+                'code' => $code,
+                'name' => (string)($texts[$langKey] ?? $row['name'] ?? $code),
+                'active' => $code === $language,
+                'href' => $catalogUrl->link('common/home', ['language' => $code]),
+            ];
+        }
+        $publicTitle = $metaTitle !== '' ? $metaTitle : $title;
+        $publicDescription = $metaDescription !== '' ? $metaDescription : (string)($settings['config_meta_description'] ?? '');
+        $styles = [$assetBase . 'view/css/blog-blocks.css' => 'stylesheet'];
+        $scripts = [];
+        $requiresThreeJs = !empty($rendered['requires_threejs']);
+        $assetVersion = '20261026c';
+        if ($requiresThreeJs) {
+            $styles[$assetBase . 'view/css/threejs-thumb.css?v=' . $assetVersion] = 'stylesheet';
+            $scriptUrl = $assetBase . $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=' . $assetVersion;
+            $scripts[$scriptUrl] = $scriptUrl;
+        }
+        $styles[$assetBase . 'view/css/common.css'] = 'stylesheet';
+        $styles[$assetBase . 'view/css/theme.css'] = 'stylesheet';
+        $headerData = [
+            'locale' => $language, 'title' => $publicTitle, 'description' => $publicDescription,
+            'canonical' => '', 'sitemap_href' => $catalogUrl->link('common/sitemap'),
+            'og' => ['type'=>'website','site_name'=>(string)($settings['config_name'] ?? ''),'title'=>$publicTitle,'description'=>$publicDescription,'url'=>'','locale'=>str_replace('-', '_', $language)],
+            'styles' => $styles, 'scripts' => $scripts, 'has_3d' => false, 'three_runtime_base' => '',
+            'home' => $homeUrl, 'body_class' => 'rms-page', 'theme_primary' => $primary, 'theme_surface' => $surface,
+            'text_languages' => (string)($texts['text_languages'] ?? ''), 'text_brand' => (string)($texts['text_brand'] ?? ''),
+            'text_nav_home' => (string)($texts['text_nav_home'] ?? ''), 'text_nav_about' => (string)($texts['text_nav_about'] ?? ''),
+            'text_nav_blog' => (string)($texts['text_nav_blog'] ?? ''), 'text_nav_portfolio' => (string)($texts['text_nav_portfolio'] ?? ''),
+            'text_nav_contact' => (string)($texts['text_nav_contact'] ?? ''), 'text_nav_quote' => (string)($texts['text_nav_quote'] ?? ''),
+            'nav_about' => $homeUrl . '#about', 'nav_blog' => $catalogUrl->link('blog/blog'),
+            'nav_portfolio' => $catalogUrl->link('catalog/project'), 'nav_contact' => $catalogUrl->link('common/contact'),
+            'nav_quote' => $catalogUrl->link('checkout/quote'), 'languages' => $languageLinks,
+            'cms_route_key' => '', 'cms_route_content' => '', 'private_preview' => true,
         ];
-        $this->response->setOutput($this->load->view('cms/page_preview', $data));
+
+        $legalPages = $this->model_cms_page->getPublicLegalPages($languageId);
+        $legal = []; $seenLegal = [];
+        foreach ($legalPages as $legalPage) {
+            $legalPage = (array)$legalPage;
+            $keyword = (string)($legalPage['keyword'] ?? '');
+            $legalId = (int)($legalPage['page_id'] ?? 0);
+            if ($legalId < 1 || isset($seenLegal[$keyword])) continue;
+            $seenLegal[$keyword] = true;
+            $legal[] = ['name'=>(string)($legalPage['title'] ?? ''),'href'=>$catalogUrl->link('cms/page.info|' . $legalId, ['language'=>$language])];
+        }
+        $copyrightKey = 'config_copyright_' . $language;
+        $copyright = array_key_exists($copyrightKey, $settings) ? (string)$settings[$copyrightKey] : (string)($texts['text_copyright'] ?? '');
+        $socials = [];
+        foreach (['facebook','instagram','pinterest','x','google_business','redbubble'] as $network) {
+            $key = 'config_social_' . $network . '_href';
+            $href = array_key_exists($key, $settings) ? (string)$settings[$key] : (string)($texts['text_social_' . $network . '_href'] ?? '');
+            if ($href !== '') $socials[] = ['name'=>(string)($texts['text_social_' . $network] ?? $network),'href'=>$href];
+        }
+        $footerData = [
+            'text_powered' => sprintf((string)($texts['text_powered'] ?? ''), REAMUR_VERSION),
+            'text_copyright' => sprintf($copyright, date('Y')),
+            'text_legal' => (string)($texts['text_legal'] ?? ''), 'legal' => $legal, 'socials' => $socials,
+        ];
+        $notice = '<aside class="cms-page-preview-notice" role="note" style="padding:12px 16px;margin-bottom:20px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;color:#334155;font-size:.875rem">' . htmlspecialchars((string)$this->language->get('text_page_preview_notice'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</aside>';
+        $pageData = [
+            'heading_title' => $title, 'description' => $notice . (string)$rendered['html'], 'button_back_home' => null,
+            'public_custom_field_groups' => $publicFields, 'text_custom_fields' => (string)$this->language->get('text_custom_fields'),
+            'text_yes' => (string)$this->language->get('text_yes'), 'text_no' => (string)$this->language->get('text_no'),
+            'home' => $homeUrl, 'heading_home' => (string)($texts['heading_home'] ?? ''),
+        ];
+
+        try {
+            $html = $this->template->renderCatalogPagePreview($pageData, $headerData, $footerData, $themeTemplates);
+        } catch (\Throwable $exception) {
+            $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
+            return;
+        }
+        $this->response->setOutput($html);
+    }
+
+    private function previewText(mixed $value, int $limit): string {
+        if (!is_string($value) || preg_match('//u', $value) !== 1) return '';
+        return mb_substr(trim($value), 0, max(0, $limit), 'UTF-8');
+    }
+
+    /**
+     * Build exactly the public custom-field view from submitted unsaved values,
+     * validated against current public definitions. No values are persisted.
+     * @return array<int,array<string,mixed>>|false
+     */
+    private function buildPreviewPublicCustomFields(array $submitted, int $pageId, int $languageId, int $englishId, array $allowedLanguageIds): array|false {
+        if (count($submitted) > 500) return false;
+        $definitions = $this->model_custom_field_value->getPageFields($languageId);
+        $saved = $pageId > 0 ? $this->model_custom_field_value->getPageValues($pageId) : [];
+        $allowedTypes = ['text','textarea','number','boolean','url','select'];
+        $groups = [];
+        foreach ($definitions as $definition) {
+            $definition = (array)$definition;
+            if (($definition['visibility'] ?? '') !== 'public' || !in_array((string)($definition['type'] ?? ''), $allowedTypes, true)) continue;
+            $fieldId = (int)($definition['field_id'] ?? 0);
+            if ($fieldId < 1) continue;
+            $localized = (int)($definition['localized'] ?? 0) === 1;
+            $posted = $submitted[(string)$fieldId] ?? $submitted[$fieldId] ?? [];
+            if (!is_array($posted) || count($posted) > 10) return false;
+            foreach ($posted as $postedLang => $postedValue) {
+                if (!ctype_digit((string)$postedLang) || !is_scalar($postedValue)) return false;
+                $postedLangId = (int)$postedLang;
+                if (($localized && !in_array($postedLangId, $allowedLanguageIds, true)) || (!$localized && $postedLangId !== 0)) return false;
+                $postedValue = trim((string)$postedValue);
+                if (mb_strlen($postedValue, 'UTF-8') > 5000) return false;
+                if ($postedValue !== '' && $this->model_custom_field_value->validateValue($definition, $postedValue) !== '') return false;
+            }
+            $pick = static function (int $langId) use ($posted, $saved, $fieldId): string {
+                if (array_key_exists((string)$langId, $posted)) return (string)$posted[(string)$langId];
+                if (array_key_exists($langId, $posted)) return (string)$posted[$langId];
+                return (string)($saved[$fieldId][$langId] ?? '');
+            };
+            $value = $pick($localized ? $languageId : 0);
+            // Catalog's public reader falls back from an empty localized value to en-US.
+            if ($localized && trim($value) === '' && $languageId !== $englishId) $value = $pick($englishId);
+            $value = trim($value);
+            if ($value === '') continue;
+            if (mb_strlen($value, 'UTF-8') > 5000 || $this->model_custom_field_value->validateValue($definition, $value) !== '') return false;
+            if ((string)$definition['type'] === 'select') {
+                $options = json_decode((string)($definition['options'] ?? '[]'), true); $display = null;
+                foreach (is_array($options) ? $options : [] as $option) {
+                    $option = (array)$option;
+                    if ((string)($option['value'] ?? '') === $value) { $display = (string)($option['label'] ?? ''); break; }
+                }
+                if ($display === null || $display === '') return false;
+                $value = $display;
+            } elseif ((string)$definition['type'] === 'boolean') {
+                if (!in_array($value, ['0','1'], true)) return false;
+                $value = $value === '1' ? $this->language->get('text_yes') : $this->language->get('text_no');
+            }
+            $groupId = (int)($definition['group_id'] ?? 0);
+            if (!isset($groups[$groupId])) $groups[$groupId] = ['label'=>(string)($definition['group_label'] ?? ''),'fields'=>[]];
+            $groups[$groupId]['fields'][] = ['label'=>(string)($definition['label'] ?? ''),'value'=>mb_substr($value,0,5000,'UTF-8'),'type'=>(string)$definition['type']];
+        }
+        return array_values($groups);
     }
 
     /** @param array<int, array<string, mixed>> $nodes */

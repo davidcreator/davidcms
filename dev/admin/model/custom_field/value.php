@@ -9,8 +9,8 @@ class Value extends \Reamur\System\Engine\Model {
     private const ENTITY = 'cms/page';
 
     /** Definições cujo grupo está ativo, com labels/options para o formulário. */
-    public function getPageFields(): array {
-        $languageId=$this->currentLanguageId();
+    public function getPageFields(?int $languageId = null): array {
+        $languageId=$languageId ?? $this->currentLanguageId();
         $q=$this->db->query("SELECT f.`field_id`, f.`entity_type`, f.`group_id`, f.`key`, f.`type`, f.`localized`, f.`required`, f.`visibility`, f.`options`, f.`sort_order`, g.`key` AS `group_key`, g.`name` AS `group_name`, COALESCE(fd.`label`, fd_en.`label`, f.`key`) AS `label`, COALESCE(fd.`help`, fd_en.`help`, '') AS `help`, COALESCE(gd.`name`, gd_en.`name`, g.`name`) AS `group_label` FROM `".$this->t('custom_field')."` f INNER JOIN `".$this->t('custom_field_group')."` g ON g.`group_id`=f.`group_id` AND g.`entity_type`='".self::ENTITY."' AND g.`status`='1' LEFT JOIN `".$this->t('custom_field_description')."` fd ON fd.`field_id`=f.`field_id` AND fd.`language_id`='".$languageId."' LEFT JOIN `".$this->t('custom_field_description')."` fd_en ON fd_en.`field_id`=f.`field_id` AND fd_en.`language_id`=1 LEFT JOIN `".$this->t('custom_field_group_description')."` gd ON gd.`group_id`=g.`group_id` AND gd.`language_id`='".$languageId."' LEFT JOIN `".$this->t('custom_field_group_description')."` gd_en ON gd_en.`group_id`=g.`group_id` AND gd_en.`language_id`=1 WHERE f.`entity_type`='".self::ENTITY."' ORDER BY g.`sort_order`,g.`group_id`,f.`sort_order`,f.`field_id`");
         return ($q instanceof \stdClass && !empty($q->rows))?(array)$q->rows:[];
     }

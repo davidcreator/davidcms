@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if private_preview|default(false) %}<meta name="robots" content="noindex,nofollow,noarchive">{% endif %}
   <title>{{ title ?: 'ReamurCMS' }}</title>
   {% if description %}<meta name="description" content="{{ description }}">{% endif %}
   {# F4-07 (ADR 0031): canonical honesto (só URL limpa), sitemap discovery, OG/Twitter #}

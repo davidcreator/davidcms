@@ -1,0 +1,17 @@
+{# dev/catalog/view/template/cms/page_info.twig — página CMS pública (F2-17, SEO) #}
+{{ header|raw }}
+<main class="site-main" style="padding:40px 24px;max-width:860px;margin:0 auto;">
+  <h1>{{ heading_title }}</h1>
+  <div class="page-content">{{ description|raw }}</div>
+  {% if public_custom_field_groups %}
+  <section class="page-custom-fields" aria-labelledby="custom-fields-heading" style="margin-top:2rem;">
+    <h2 id="custom-fields-heading">{{ text_custom_fields }}</h2>
+    {% for group in public_custom_field_groups %}<section class="page-custom-field-group" style="margin:1.5rem 0;">
+      <h3>{{ group.label }}</h3>
+      <dl>{% for field in group.fields %}<div style="margin:.75rem 0;"><dt style="font-weight:600;">{{ field.label }}</dt><dd style="margin:.25rem 0 0;white-space:pre-wrap;">{{ field.value }}</dd></div>{% endfor %}</dl>
+    </section>{% endfor %}
+  </section>
+  {% endif %}
+  <p><a href="{{ home }}" style="text-decoration:none;">← {{ heading_home|default('') }}</a></p>
+</main>
+{{ footer|raw }}

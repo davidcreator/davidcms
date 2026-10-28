@@ -66,6 +66,21 @@ class Page extends \Reamur\System\Engine\Model {
         return $where ? ' WHERE ' . implode(' AND ', $where) : '';
     }
 
+    /** Read-only legal footer links used by the private public-theme preview. */
+    public function getPublicLegalPages(int $language_id): array {
+        $language_id = max(1, $language_id);
+        $query = $this->db->query(
+            "SELECT DISTINCT p.`page_id`, s.`value` AS `keyword`, COALESCE(NULLIF(pd.`title`, ''), pd_en.`title`, '') AS `title`, FIELD(s.`value`,'cookies','politicas-internas') AS `sort_order`
+               FROM `" . $this->t('page') . "` p
+               INNER JOIN `" . $this->t('seo_url') . "` s ON s.`key` = CONCAT('page_id=', p.`page_id`)
+               LEFT JOIN `" . $this->t('page_description') . "` pd ON pd.`page_id`=p.`page_id` AND pd.`language_id`='" . $language_id . "'
+               LEFT JOIN `" . $this->t('page_description') . "` pd_en ON pd_en.`page_id`=p.`page_id` AND pd_en.`language_id`=1
+              WHERE p.`status`='1' AND s.`value` IN ('cookies','politicas-internas')
+              ORDER BY `sort_order`, p.`page_id`"
+        );
+        return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+    }
+
     /**
      * @return array<string, mixed> Linha principal (vazio = inexistente)
      */

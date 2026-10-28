@@ -1,0 +1,62 @@
+{# dev/catalog/view/template/common/header.twig — <head> + barra de marca/switcher (F2-4) #}
+<!DOCTYPE html>
+<html lang="{{ locale }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if private_preview|default(false) %}<meta name="robots" content="noindex,nofollow,noarchive">{% endif %}
+  <title>{{ title ?: 'ReamurCMS' }}</title>
+  {% if description %}<meta name="description" content="{{ description }}">{% endif %}
+  {# F4-07 (ADR 0031): canonical honesto (só URL limpa), sitemap discovery, OG/Twitter #}
+  {% if canonical %}<link rel="canonical" href="{{ canonical }}">{% endif %}
+  <link rel="sitemap" type="application/xml" href="{{ sitemap_href }}">
+  <meta property="og:type" content="{{ og.type }}">
+  <meta property="og:site_name" content="{{ og.site_name }}">
+  <meta property="og:title" content="{{ og.title }}">
+  {% if og.description %}<meta property="og:description" content="{{ og.description }}">{% endif %}
+  {% if og.url %}<meta property="og:url" content="{{ og.url }}">{% endif %}
+  <meta property="og:locale" content="{{ og.locale }}">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{{ og.title }}">
+  {% if og.description %}<meta name="twitter:description" content="{{ og.description }}">{% endif %}
+  {% for href, rel in styles %}
+  <link rel="{{ rel }}" href="{{ href }}">
+  {% endfor %}
+  {% if has_3d|default(false) %}
+  {# Slot WebGL (F3-02, ADR 0020): import map ANTES do módulo; apenas em rotas com has_3d #}
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "{{ three_runtime_base }}three.module.js",
+      "three/addons/": "{{ three_runtime_base }}three/addons/"
+    }
+  }
+  </script>
+  <script type="module" src="{{ three_runtime_base }}three/main.js" defer></script>
+  {% endif %}
+  {% for src in scripts %}
+  <script src="{{ src }}" defer></script>
+  {% endfor %}
+</head>
+<body class="{{ body_class }}" style="--theme-primary: {{ theme_primary|default('#6d28d9') }}; --theme-surface: {{ theme_surface|default('#ffffff') }}">
+<header class="site-header">
+  <a class="brand" href="{{ home }}" aria-label="{{ text_brand|default('David Almeida') }}"><span class="brand-chip">DA</span> <span class="brand-name">{{ text_brand|default('David Almeida') }}</span></a>
+  <nav class="site-nav" aria-label="Main">
+    <a href="{{ home }}">{{ text_nav_home }}</a>
+    <a href="{{ nav_about }}">{{ text_nav_about }}</a>
+    <a href="{{ nav_blog }}">{{ text_nav_blog }}</a>
+    <a href="{{ nav_portfolio }}">{{ text_nav_portfolio }}</a>
+    <a href="{{ nav_contact }}">{{ text_nav_contact }}</a>
+    <a href="{{ nav_quote }}" class="cta">{{ text_nav_quote }}</a>
+  </nav>
+  <nav class="lang-switcher" aria-label="{{ text_languages }}">
+    {% for lang in languages %}
+    <a class="lang{{ lang.active ? ' active' : '' }}" href="{{ lang.href }}" hreflang="{{ lang.code }}">{{ lang.name }}</a>
+    {% endfor %}
+  </nav>
+</header>
+{% if cms_route_content|default('') %}
+<section class="cms-route-content" data-cms-route="{{ cms_route_key|e('html_attr') }}">
+  {{ cms_route_content|raw }}
+</section>
+{% endif %}
