@@ -35,6 +35,8 @@ Para quem tem permissão `modify` em `cms/page`, a faixa de contexto mostra um b
 
 Não há endpoint, AJAX, autosave ou persistência paralela. Se a validação impedir o envio, o formulário e o estado não salvo continuam sob o fluxo existente; se passar, o backend mantém seu comportamento normal de resposta/redirect.
 
+Se a validação HTML nativa bloquear o envio antes do evento `submit` (por exemplo, o título obrigatório de en-US estiver vazio), o handler específico de CMS > Páginas fecha a tela cheia, ativa a aba de idioma que contém o primeiro campo inválido e devolve o foco ao campo. O comportamento só atua quando há um BDREditor imersivo aberto; sem isso, a validação nativa segue sem interferência.
+
 ## Estado da verificação
 
 A verificação é estática. Requer validação posterior num ambiente de desenvolvimento autorizado: editor visível, criar/editar, salvar, reabrir e confirmar renderização. Staging segue pausado; não foram executados acesso ao banco, migrations, GitHub write, deploy ou produção.

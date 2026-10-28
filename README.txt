@@ -1,10 +1,10 @@
-ReamurCMS — foco programático no diálogo imersivo BDREditor
+ReamurCMS — retorno ao campo inválido ao salvar CMS > Páginas
 
-HEAD esperado: 95418caecd139f27fe3487f6a9ef7528f23cea4a
+HEAD esperado: 3e79ba078c09356c7a728589ffcc1a25ca934796
 
-Ao entrar em tela cheia, o host do editor recebe tabindex="-1", permitindo que fluxos existentes de validação bloqueada devolvam o foco ao diálogo. Ao sair, role/aria e o valor original de tabindex são restaurados. Não altera a validação, POST, estado salvo, contrato de documento nem comportamento de layout.
+Quando a validação HTML nativa interromper o submit e houver um editor de Página em tela cheia, o fluxo fecha a tela cheia, ativa a aba que contém o primeiro campo inválido e foca esse campo. Fora desse caso, a validação nativa permanece intocada. Escopo exclusivo do formulário `data-cms-page-form`; sem alterações em Blog, controller, POST, ACL, CSRF ou persistência.
 
 Aplicação local opcional dentro do checkout:
-  bash apply-patch.sh Pages-Editor-Focus.patch 95418caecd139f27fe3487f6a9ef7528f23cea4a
+  bash apply-patch.sh Pages-Editor-Next.patch 3e79ba078c09356c7a728589ffcc1a25ca934796
 
-O script valida HEAD e roda git apply --check antes de aplicar. Não faz commit/push, deploy, SQL ou migrations.
+O script valida HEAD e roda git apply --check antes de aplicar. Não faz commit/push, deploy, SQL nem migrations.

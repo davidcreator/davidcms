@@ -12,7 +12,7 @@
       status.setAttribute('aria-atomic', 'true');
       status.dataset.saveStatus = '1';
       form.insertBefore(status, form.firstChild);
-      var state = { dirty: !!form.querySelector('.alert-danger'), bypass: false, status: status, strings: strings || {} };
+      var state = { dirty: !!form.querySelector('.alert-danger'), bypass: false, status: status, strings: strings || {}, invalidRecoveryScheduled: false };
       state.render = function (mode) {
         var key = mode === 'saving' ? 'saveStateSaving' : (state.dirty ? 'saveStateUnsaved' : 'saveStateSaved');
         status.textContent = state.strings[key] || (mode === 'saving' ? 'Saving…' : (state.dirty ? 'Changes not saved' : 'All changes saved'));
@@ -31,6 +31,24 @@
       form.addEventListener('change', function (event) {
         if (event.target && !event.target.matches('[name^="blog_blocks["],[name^="blog_editor_ready["],[name="csrf_token"]')) state.markDirty();
       });
+      if (form.matches('[data-cms-page-form]')) form.addEventListener('invalid', function (event) {
+        var field = event.target;
+        if (!field || state.invalidRecoveryScheduled) return;
+        var fullscreenRoot = form.querySelector('.rb-editor.is-fullscreen');
+        if (!fullscreenRoot) return;
+        state.invalidRecoveryScheduled = true;
+        var instance = fullscreenRoot.__blogBlockEditorInstance;
+        if (instance && typeof instance.setFullscreen === 'function') instance.setFullscreen(false);
+        var pane = field.closest && field.closest('.tab-pane');
+        var tab = pane && pane.getAttribute('aria-labelledby') ? document.getElementById(pane.getAttribute('aria-labelledby')) : null;
+        if (tab && !pane.classList.contains('active')) tab.click();
+        global.setTimeout(function () {
+          state.invalidRecoveryScheduled = false;
+          if (!field.isConnected) return;
+          field.focus();
+          if (field.scrollIntoView) field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 0);
+      }, true);
       global.addEventListener('beforeunload', function (event) {
         if (!state.dirty || state.bypass) return;
         event.preventDefault();
