@@ -1,10 +1,10 @@
-ReamurCMS — contexto de CMS > Páginas no BDREditor
+ReamurCMS — título da página na prévia local BDREditor
 
-HEAD esperado: cfc5d694139fe3f26b1791b7aeb4ccd1bf46b5eb
+HEAD esperado: def12fc2925120ab7eeaa19e20d20ffe2e92225a
 
-No modo tela cheia do editor de blocos de Páginas, apresenta título, idioma ativo e indicador sincronizado de alterações salvas/não salvas; informa explicitamente que salvar continua no formulário. É apenas contexto visual: não duplica campos do formulário, não muda o JSON, não cria autosave e não altera os fluxos de validação ou persistência. Textos adicionados em pt-br, en-us e es-eu. A opção é fornecida apenas às instâncias CMS Page, não às do Blog.
+A pré-visualização responsiva da instância CMS > Páginas mostra o título da página ativa (ou o rótulo localizado de página sem título) antes dos blocos. O título é lido do campo existente, sem duplicação. Não altera o renderer público, JSON, salvamento ou comportamento do Blog.
 
 Aplicação local opcional dentro do checkout:
-  bash apply-patch.sh Pages-Editor-Context.patch cfc5d694139fe3f26b1791b7aeb4ccd1bf46b5eb
+  bash apply-patch.sh Pages-Editor-Preview.patch def12fc2925120ab7eeaa19e20d20ffe2e92225a
 
 O script valida HEAD e roda git apply --check antes de aplicar. Não faz commit/push, deploy, SQL nem migrations.

@@ -23,6 +23,12 @@ Quando o editor de blocos é usado em CMS > Páginas, a tela cheia exibe uma fai
 
 Esse contexto é somente informativo: não cria campos de edição duplicados, não altera o JSON do BDREditor e não oferece autosave. O fluxo POST existente continua responsável por validar e salvar a página. O contexto é opcional no BDREditor e não é fornecido às instâncias do módulo Blog.
 
+## Título da página na pré-visualização local
+
+Na instância de CMS > Páginas, a pré-visualização responsiva inclui o título da página ativa antes dos blocos, acompanhando o campo de título já existente no formulário. Se estiver vazio, apresenta o rótulo localizado de página sem título. Isso aproxima a composição da estrutura pública, cujo template começa com um `h1` seguido do conteúdo.
+
+A prévia continua local ao navegador e limitada aos elementos da prévia segura existente; não chama a rota pública, não altera o renderer do catálogo e não salva o título ou o documento. O Blog não recebe o contexto de página e mantém a prévia atual.
+
 ## Estado da verificação
 
 A verificação é estática. Requer validação posterior num ambiente de desenvolvimento autorizado: editor visível, criar/editar, salvar, reabrir e confirmar renderização. Staging segue pausado; não foram executados acesso ao banco, migrations, GitHub write, deploy ou produção.

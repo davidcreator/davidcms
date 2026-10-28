@@ -1410,6 +1410,11 @@
     renderPreviewDocument() {
       const preview=global.document.createElement('article');preview.className='rb-live-preview';
       const title=global.document.createElement('div');title.className='rb-live-preview-label';title.textContent=this.strings.previewTitle||'Prévia da página';preview.append(title);
+      if(this.options.workspaceContext){
+        const context=this.options.workspaceContext;
+        const currentTitle=context.pageTitleInput&&typeof context.pageTitleInput.value==='string'?context.pageTitleInput.value:context.pageTitle;
+        if(currentTitle||context.untitledPage){const pageTitle=global.document.createElement('h1');pageTitle.className='rb-live-preview-page-title';pageTitle.textContent=currentTitle||context.untitledPage;preview.append(pageTitle);}
+      }
       if(!this.state.blocks.length){const empty=global.document.createElement('p');empty.className='rb-muted';empty.textContent=this.strings.canvasEmpty;preview.append(empty);}
       this.state.blocks.forEach((node)=>preview.append(this.renderPreviewBlock(node)));
       return preview;
