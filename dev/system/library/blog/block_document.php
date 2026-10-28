@@ -14,6 +14,10 @@ use DOMComment;
 use RuntimeException;
 
 class BlockDocument {
+    private bool $allowPageMedia;
+
+    public function __construct(bool $allowPageMedia = false) { $this->allowPageMedia = $allowPageMedia; }
+
     public const FORMAT_VERSION = 1;
     public const RICH_TEXT_FORMAT_VERSION = 2;
     public const MAX_INLINE_RUNS = 1000;
@@ -379,7 +383,7 @@ class BlockDocument {
     }
 
     private function isSafeAudioPath($src): bool {
-        if (!is_string($src) || !preg_match('#^view/audio/blog/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$#D', $src) || str_contains($src, '..')) return false;
+        if (!is_string($src) || !preg_match($this->allowPageMedia ? '#^view/audio/(?:blog|cms/page)/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$#D' : '#^view/audio/blog/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$#D', $src) || str_contains($src, '..')) return false;
         return in_array(strtolower(pathinfo($src, PATHINFO_EXTENSION)), ['mp3','ogg','wav'], true);
     }
 
@@ -436,12 +440,12 @@ class BlockDocument {
     }
 
     private function isSafeVideoPath($src): bool {
-        if (!is_string($src) || !preg_match('#^view/video/blog/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$#D', $src) || str_contains($src, '..')) return false;
+        if (!is_string($src) || !preg_match($this->allowPageMedia ? '#^view/video/(?:blog|cms/page)/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$#D' : '#^view/video/blog/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$#D', $src) || str_contains($src, '..')) return false;
         return in_array(strtolower(pathinfo($src, PATHINFO_EXTENSION)), ['mp4','webm','ogv'], true);
     }
 
     private function isSafeDownloadPath($src): bool {
-        if (!is_string($src) || !preg_match('#^view/download/blog/(?:[A-Za-z0-9][A-Za-z0-9._-]{0,179})$#D', $src) || str_contains($src, '..') || preg_match('/[\x00-\x20\x7F]/', $src) || strpbrk($src, '?#') !== false) return false;
+        if (!is_string($src) || !preg_match($this->allowPageMedia ? '#^view/download/(?:blog|cms/page)/(?:[A-Za-z0-9][A-Za-z0-9._-]{0,179})$#D' : '#^view/download/blog/(?:[A-Za-z0-9][A-Za-z0-9._-]{0,179})$#D', $src) || str_contains($src, '..') || preg_match('/[\x00-\x20\x7F]/', $src) || strpbrk($src, '?#') !== false) return false;
         $extension = strtolower(pathinfo($src, PATHINFO_EXTENSION));
         return in_array($extension, ['pdf','docx','xlsx','pptx','odt','ods','csv','txt'], true);
     }

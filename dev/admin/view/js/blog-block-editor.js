@@ -48,18 +48,21 @@
     } catch (_) { return false; }
   }
 
-  function validLocalDownload(src) {
-    if (typeof src !== 'string' || !/^view\/download\/blog\/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$/.test(src) || src.includes('..') || /[\x00-\x20\x7F\\?#]/.test(src)) return false;
+  function validLocalDownload(src, allowPageMedia) {
+    const scope = allowPageMedia ? '(?:blog|cms\\/page)' : 'blog';
+    if (typeof src !== 'string' || !new RegExp('^view\\/download\\/' + scope + '\\/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$').test(src) || src.includes('..') || /[\x00-\x20\x7F\\?#]/.test(src)) return false;
     return ['pdf','docx','xlsx','pptx','odt','ods','csv','txt'].includes(src.split('.').pop().toLowerCase());
   }
 
-  function validLocalAudio(src) {
-    if (typeof src !== 'string' || !/^view\/audio\/blog\/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$/.test(src) || src.includes('..') || /[\x00-\x20\x7F\\?#]/.test(src)) return false;
+  function validLocalAudio(src, allowPageMedia) {
+    const scope = allowPageMedia ? '(?:blog|cms\\/page)' : 'blog';
+    if (typeof src !== 'string' || !new RegExp('^view\\/audio\\/' + scope + '\\/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$').test(src) || src.includes('..') || /[\x00-\x20\x7F\\?#]/.test(src)) return false;
     return ['mp3','ogg','wav'].includes(src.split('.').pop().toLowerCase());
   }
 
-  function validLocalVideo(src) {
-    if (typeof src !== 'string' || !/^view\/video\/blog\/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$/.test(src) || src.includes('..') || /[\x00-\x20\x7F\\?#]/.test(src)) return false;
+  function validLocalVideo(src, allowPageMedia) {
+    const scope = allowPageMedia ? '(?:blog|cms\\/page)' : 'blog';
+    if (typeof src !== 'string' || !new RegExp('^view\\/video\\/' + scope + '\\/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$').test(src) || src.includes('..') || /[\x00-\x20\x7F\\?#]/.test(src)) return false;
     return ['mp4','webm','ogv'].includes(src.split('.').pop().toLowerCase());
   }
 
@@ -234,7 +237,7 @@
     });
   }
 
-  function validateDocument(doc) {
+  function validateDocument(doc, allowPageMedia) {
     const errors = [];
     if (!doc || typeof doc !== 'object' || Array.isArray(doc) || Object.keys(doc).sort().join(',') !== 'blocks,format_version' || ![1,2].includes(doc.format_version) || !Array.isArray(doc.blocks)) return { valid: false, errors: ['root_shape_invalid'] };
     const version = doc.format_version;
@@ -285,14 +288,14 @@
         case 'core/code': if (node.children.length || typeof node.content !== 'string' || utf8Length(node.content) > 262144) errors.push('code_invalid'); break;
         case 'core/file': {
           const label = Array.isArray(node.content) ? node.content.map((run) => run && typeof run.text === 'string' ? run.text : '').join('').trim() : '';
-          if (version !== 2 || !validLocalDownload(a.src) || !label || node.children.length || !validInlineRuns(node.content, node.type)) errors.push('file_invalid');
+          if (version !== 2 || !validLocalDownload(a.src, allowPageMedia) || !label || node.children.length || !validInlineRuns(node.content, node.type)) errors.push('file_invalid');
           break;
         }
-        case 'core/video_file': if (version !== 2 || !validLocalVideo(a.src) || node.children.length || node.content) errors.push('video_file_invalid'); break;
+        case 'core/video_file': if (version !== 2 || !validLocalVideo(a.src, allowPageMedia) || node.children.length || node.content) errors.push('video_file_invalid'); break;
         case 'core/threejs_thumb': if (version !== 2 || !validThreeJsSceneJson(a.scene_json) || typeof a.label !== 'string' || !a.label.trim() || utf8Length(a.label) > 160 || (a.custom_js !== undefined && (typeof a.custom_js !== 'string' || utf8Length(a.custom_js) > 8192)) || node.children.length || node.content) errors.push('threejs_thumb_invalid'); break;
         case 'core/audio': {
           const label = Array.isArray(node.content) ? node.content.map((run) => run && typeof run.text === 'string' ? run.text : '').join('').trim() : '';
-          if (version !== 2 || !validLocalAudio(a.src) || !label || node.children.length || !validInlineRuns(node.content, node.type)) errors.push('audio_invalid');
+          if (version !== 2 || !validLocalAudio(a.src, allowPageMedia) || !label || node.children.length || !validInlineRuns(node.content, node.type)) errors.push('audio_invalid');
           break;
         }
         case 'core/image':
@@ -332,8 +335,8 @@
     return { valid: errors.length === 0, errors: [...new Set(errors)] };
   }
 
-  function moveBlockAcrossHierarchy(document, nodeId, direction) {
-    if (!document || document.format_version !== 2 || !Array.isArray(document.blocks) || !['indent','outdent'].includes(direction) || !validateDocument(document).valid) return null;
+  function moveBlockAcrossHierarchy(document, nodeId, direction, allowPageMedia) {
+    if (!document || document.format_version !== 2 || !Array.isArray(document.blocks) || !['indent','outdent'].includes(direction) || !validateDocument(document, allowPageMedia).valid) return null;
     const next = CLONE(document);
     function locate(nodes, id, parent) {
       for (let index = 0; index < nodes.length; index += 1) {
@@ -364,7 +367,7 @@
       const [moving] = found.nodes.splice(found.index, 1);
       parentPath.nodes.splice(parentPath.index + 1, 0, moving);
     }
-    if (!validateDocument(next).valid || utf8Length(JSON.stringify(next)) > 4194304) return null;
+    if (!validateDocument(next, allowPageMedia).valid || utf8Length(JSON.stringify(next)) > 4194304) return null;
     return { document: next, focusId: nodeId };
   }
 
@@ -415,6 +418,7 @@
     constructor(root, options) {
       this.root = root;
       this.options = options || {};
+      this.allowPageMedia = !!(root.dataset && root.dataset.pageContext);
       this.instance = ++instanceSequence;
       this.idCounter = 0;
       this.undoStack = [];
@@ -448,7 +452,7 @@
       this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',importUnavailable:'Importador indisponível.',importError:'Falha ao importar arquivo.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',copyBlock:'Copiar bloco',pasteBlock:'Colar bloco',statusCopied:'Bloco copiado para este editor.',statusPasted:'Bloco colado.',pasteUnavailable:'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.',navigationPath:'Caminho do bloco selecionado',navigationRow:'Linha',navigationCell:'Célula',statusFocusChanged:'Foco movido para o bloco selecionado.',statusOutlineChanged:'Bloco selecionado atualizado pela navegação da estrutura.',indentBlock:'Indentar dentro do bloco anterior',outdentBlock:'Desindentar após o bloco pai',statusIndented:'Bloco movido para dentro do bloco anterior.',statusOutdented:'Bloco movido para depois do pai.',hierarchyMoveUnavailable:'Esta movimentação não é permitida neste contexto ou ultrapassaria um limite do documento.',outlineKeyboardHint:'↑/↓ navegar · → primeiro filho · ← bloco pai · Home/End início/fim',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',fullscreenEnter:fullscreenCopy().enter,fullscreenExit:fullscreenCopy().exit,fullscreenDialog:fullscreenCopy().dialog,builderElements:fullscreenCopy().elements,builderStructure:fullscreenCopy().structure,builderSettings:fullscreenCopy().settings,canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},callout:{tone:'Estilo do aviso',defaultText:'Adicione uma informação importante.',tones:{info:'Informação',success:'Sucesso',warning:'Atenção',danger:'Crítico'}},details:{summaryLabel:'Título da seção expansível',summaryDefault:'Mais informações',defaultText:'Adicione os detalhes aqui.'},spacer:{heightLabel:'Altura do espaçador',heights:{'16':'Muito pequeno · 16 px','32':'Pequeno · 32 px','48':'Médio · 48 px','64':'Grande · 64 px','96':'Muito grande · 96 px'}},preformatted:{label:'Código pré-formatado',defaultText:'',tooLarge:'O bloco de código excede o limite de 256 KiB.'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},typeLabels:{}}, this.options.strings || {});
       const rawInitial = this.options.document || { format_version: 1, blocks: [] };
       const initial = upgradeDocument(rawInitial);
-      const validation = validateDocument(initial);
+      const validation = validateDocument(initial, this.allowPageMedia);
       this.locked = !validation.valid;
       this.originalDocument = this.locked ? initial : null;
       this.state = validation.valid ? CLONE(initial) : { format_version: 2, blocks: [] };
@@ -1006,7 +1010,7 @@
 
     insertMediaReference(kind, path) {
       const type = kind === 'video' ? 'core/video_file' : 'core/audio';
-      const valid = kind === 'video' ? validLocalVideo(path) : validLocalAudio(path);
+      const valid = kind === 'video' ? validLocalVideo(path, this.allowPageMedia) : validLocalAudio(path, this.allowPageMedia);
       if (!valid) return;
       const previousId = this.selectedId; this.insert(type);
       if (this.selectedId && this.selectedId !== previousId) this.updateNode(this.selectedId, (node) => { if (node.type === type) node.attributes.src = path; });
@@ -1093,7 +1097,7 @@
       editor.setCustomValidity(''); editor.setAttribute('aria-invalid','false');
       this.recordTextEditSnapshot();
       found.node.content = editor.value;
-      const result = validateDocument(this.state);
+      const result = validateDocument(this.state, this.allowPageMedia);
       this.root.dataset.valid = result.valid ? 'true' : 'false';
       this.onChange(result.valid ? this.getDocument() : null, result);
       this.updateHistoryButtons();
@@ -1205,7 +1209,7 @@
       const next = CLONE(this.state);
       const location = this.pasteLocation(next.blocks, afterId);
       location.target.splice(location.index, 0, preview);
-      return validateDocument(next).valid && utf8Length(JSON.stringify(next)) <= 4194304;
+      return validateDocument(next, this.allowPageMedia).valid && utf8Length(JSON.stringify(next)) <= 4194304;
     }
 
     pasteBlock() {
@@ -1216,7 +1220,7 @@
       const copy = cloneBlockWithNewIds(this.blockClipboard, () => this.newId());
       if (!copy) { this.announceStatus(this.strings.pasteUnavailable); return false; }
       location.target.splice(location.index, 0, copy);
-      if (!validateDocument(next).valid || utf8Length(JSON.stringify(next)) > 4194304) { this.announceStatus(this.strings.pasteUnavailable); return false; }
+      if (!validateDocument(next, this.allowPageMedia).valid || utf8Length(JSON.stringify(next)) > 4194304) { this.announceStatus(this.strings.pasteUnavailable); return false; }
       this.statusMessage = this.strings.statusPasted;
       this.commit(next, copy.id);
       this.focusNode(copy.id);
@@ -1228,17 +1232,17 @@
       this.root.querySelectorAll('[data-action="paste-block"]').forEach((button) => { button.disabled = !enabled; });
     }
 
-    canIndent(id) { return !!moveBlockAcrossHierarchy(this.state, id, 'indent'); }
-    canOutdent(id) { return !!moveBlockAcrossHierarchy(this.state, id, 'outdent'); }
+    canIndent(id) { return !!moveBlockAcrossHierarchy(this.state, id, 'indent', this.allowPageMedia); }
+    canOutdent(id) { return !!moveBlockAcrossHierarchy(this.state, id, 'outdent', this.allowPageMedia); }
 
     indentNode(id) {
-      const result = moveBlockAcrossHierarchy(this.state, id, 'indent');
+      const result = moveBlockAcrossHierarchy(this.state, id, 'indent', this.allowPageMedia);
       if (!result) { this.announceStatus(this.strings.hierarchyMoveUnavailable); return false; }
       this.statusMessage = this.strings.statusIndented; this.commit(result.document, result.focusId); this.focusNode(result.focusId); return true;
     }
 
     outdentNode(id) {
-      const result = moveBlockAcrossHierarchy(this.state, id, 'outdent');
+      const result = moveBlockAcrossHierarchy(this.state, id, 'outdent', this.allowPageMedia);
       if (!result) { this.announceStatus(this.strings.hierarchyMoveUnavailable); return false; }
       this.statusMessage = this.strings.statusOutdented; this.commit(result.document, result.focusId); this.focusNode(result.focusId); return true;
     }
@@ -1288,19 +1292,19 @@
       this.clearTextEditSnapshot();
       this.pushHistory(this.undoStack, 'undo', this.snapshot());
       this.clearRedoHistory(); this.state = next; this.selectedId = focusId || this.selectedId;
-      const result = validateDocument(this.state);
+      const result = validateDocument(this.state, this.allowPageMedia);
       this.root.dataset.valid = result.valid ? 'true' : 'false';
       this.onChange(this.getDocument(), result);
       if (rerender !== false) this.render(); else this.updateHistoryButtons();
     }
 
-    undo() { this.clearTextEditSnapshot(); if (!this.undoStack.length) return; this.pushHistory(this.redoStack, 'redo', this.snapshot()); this.state = JSON.parse(this.popHistory(this.undoStack, 'undo')); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusUndo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
-    redo() { this.clearTextEditSnapshot(); if (!this.redoStack.length) return; this.pushHistory(this.undoStack, 'undo', this.snapshot()); this.state = JSON.parse(this.popHistory(this.redoStack, 'redo')); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusRedo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state)); }
+    undo() { this.clearTextEditSnapshot(); if (!this.undoStack.length) return; this.pushHistory(this.redoStack, 'redo', this.snapshot()); this.state = JSON.parse(this.popHistory(this.undoStack, 'undo')); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusUndo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state, this.allowPageMedia)); }
+    redo() { this.clearTextEditSnapshot(); if (!this.redoStack.length) return; this.pushHistory(this.undoStack, 'undo', this.snapshot()); this.state = JSON.parse(this.popHistory(this.redoStack, 'redo')); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusRedo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state, this.allowPageMedia)); }
     setSelectedAttribute(key, value) { if (this.locked) return false; const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null; if (!found || !['core/image','core/cover','core/file','core/audio','core/video_file'].includes(found.node.type) || key !== 'src') return false; this.updateNode(found.node.id, (node) => { node.attributes.src = value; }); return true; }
     getDocument() { return this.locked ? null : CLONE(this.state); }
     serialize() {
       if (this.locked) throw new Error('document_requires_review');
-      const check = validateDocument(this.state);
+      const check = validateDocument(this.state, this.allowPageMedia);
       if (!check.valid) throw new Error(check.errors.join(','));
       const json = JSON.stringify(this.state);
       if (utf8Length(json) > 4194304) throw new Error('document_too_large');
@@ -1339,7 +1343,7 @@
         const next=CLONE(this.state);
         if (next.blocks.length+result.document.blocks.length>1000) throw new Error('A importação ultrapassaria o limite de 1.000 blocos.');
         next.blocks.push(...result.document.blocks);
-        const validation=validateDocument(next); if(!validation.valid) throw new Error('O conteúdo convertido não passou na validação BDREditor.');
+        const validation=validateDocument(next, this.allowPageMedia); if(!validation.valid) throw new Error('O conteúdo convertido não passou na validação BDREditor.');
         this.importNotices=(result.warnings||[]).slice(0,6);
         if(result.warnings&&result.warnings.length>6)this.importNotices.push('Há outros avisos omitidos.');
         this.statusMessage=(this.strings.importSuccess||'Conteúdo importado para o rascunho local: ')+file.name;
@@ -1375,7 +1379,7 @@
         case 'core/separator': out=d.createElement('hr'); break;
         case 'core/code': out=d.createElement('pre'); out.textContent=node.content||''; break;
         case 'core/image': out=d.createElement('figure'); if(validLocalImage(node.attributes.src)){const img=d.createElement('img');img.src=node.attributes.src;img.alt=node.attributes.alt||'';img.loading='lazy';out.append(img);} if(node.attributes.caption)out.append(d.createElement('figcaption')).textContent=node.attributes.caption; break;
-        case 'core/audio': out=d.createElement('figure'); if(validLocalAudio(node.attributes.src)){const audio=d.createElement('audio');audio.controls=true;audio.preload='none';audio.src=node.attributes.src;out.append(audio);} const cap=d.createElement('figcaption');this.renderPreviewRuns(node.content,cap);out.append(cap);break;
+        case 'core/audio': out=d.createElement('figure'); if(validLocalAudio(node.attributes.src, this.allowPageMedia)){const audio=d.createElement('audio');audio.controls=true;audio.preload='none';audio.src=node.attributes.src;out.append(audio);} const cap=d.createElement('figcaption');this.renderPreviewRuns(node.content,cap);out.append(cap);break;
         case 'core/threejs_thumb': {
           out=d.createElement('figure'); out.className='rb-preview-threejs';
           const stage=d.createElement('div'); stage.className='rms-block-threejs-thumb__stage'; stage.setAttribute('data-threejs-thumb','');
@@ -1388,10 +1392,10 @@
           const hint=d.createElement('small'); hint.textContent=this.strings.threejs.previewHint||''; if(hint.textContent)out.append(hint);
           break;
         }
-        case 'core/video_file': out=d.createElement('figure'); if(validLocalVideo(node.attributes.src)){const video=d.createElement('video');video.controls=true;video.preload='none';video.playsInline=true;try{const base=new URL(String(this.strings.videoFile.catalogBase||''),global.location.href);if(base.origin===global.location.origin)video.src=new URL(node.attributes.src,base).href;}catch(_){} out.append(video);} break;
+        case 'core/video_file': out=d.createElement('figure'); if(validLocalVideo(node.attributes.src, this.allowPageMedia)){const video=d.createElement('video');video.controls=true;video.preload='none';video.playsInline=true;try{const base=new URL(String(this.strings.videoFile.catalogBase||''),global.location.href);if(base.origin===global.location.origin)video.src=new URL(node.attributes.src,base).href;}catch(_){} out.append(video);} break;
         case 'core/video_embed': out=d.createElement('div');out.className='rb-preview-video';{const label=d.createElement('span');label.textContent=this.strings.previewVideoLink||'Vídeo incorporado';out.append(label);const href=safeActionUrl(node.attributes.url);if(href){const a=d.createElement('a');a.href=href;a.target='_blank';a.rel='noopener noreferrer';a.textContent=this.strings.previewVideoOpen||'Abrir em nova aba';out.append(a);}}break;
         case 'core/button': out=d.createElement('p');{const a=d.createElement('a');a.className='rb-preview-button';const href=safeActionUrl(node.attributes.url);if(href){a.href=href;a.rel='noopener noreferrer';}this.renderPreviewRuns(node.content,a);out.append(a);}break;
-        case 'core/file': out=d.createElement('p');{const a=d.createElement('a');const href=validLocalDownload(node.attributes.src)?node.attributes.src:null;if(href){a.href=href;a.rel='noopener noreferrer';}this.renderPreviewRuns(node.content,a);out.append(a);}break;
+        case 'core/file': out=d.createElement('p');{const a=d.createElement('a');const href=validLocalDownload(node.attributes.src, this.allowPageMedia)?node.attributes.src:null;if(href){a.href=href;a.rel='noopener noreferrer';}this.renderPreviewRuns(node.content,a);out.append(a);}break;
         case 'core/details': out=d.createElement('details');{const summary=d.createElement('summary');summary.textContent=node.attributes.summary;out.append(summary);this.renderPreviewRuns(node.content,out);}break;
         case 'core/callout': out=d.createElement('aside');out.className='rb-preview-callout';this.renderPreviewRuns(node.content,out);break;
         case 'core/spacer': out=d.createElement('div');out.style.height=(node.attributes.height||32)+'px';out.setAttribute('aria-hidden','true');break;
@@ -1633,7 +1637,7 @@
       } else if (node.type === 'core/audio') {
         const audio = this.el('audio','rb-audio-admin-preview'); audio.controls = true; audio.preload = 'none';
         const label = node.content.map((run) => run.text).join('').trim(); audio.setAttribute('aria-label', label || this.label('core/audio'));
-        if (validLocalAudio(node.attributes.src) && this.strings.audio.catalogBase) {
+        if (validLocalAudio(node.attributes.src, this.allowPageMedia) && this.strings.audio.catalogBase) {
           try { const base = String(this.strings.audio.catalogBase); const baseUrl = new URL(base.endsWith('/') ? base : base + '/', global.location.href); if (baseUrl.origin !== global.location.origin) throw new Error('audio_preview_origin_invalid'); audio.src = new URL(node.attributes.src, baseUrl).href; } catch (_) {}
         }
         card.append(audio, this.el('p', 'rb-preview-value', label + (node.attributes.src ? ' · ' + node.attributes.src.split('/').pop() : '')));
@@ -1649,7 +1653,7 @@
         card.append(preview,this.renderThreeJsInlineEditor(node));
       } else if (node.type === 'core/video_file') {
         const video = this.el('video','rb-video-file-admin-preview'); video.controls = true; video.preload = 'none'; video.playsInline = true;
-        if (validLocalVideo(node.attributes.src) && this.strings.videoFile.catalogBase) { try { const base = new URL(String(this.strings.videoFile.catalogBase), global.location.href); if (base.origin === global.location.origin) video.src = new URL(node.attributes.src, base).href; } catch (_) {} }
+        if (validLocalVideo(node.attributes.src, this.allowPageMedia) && this.strings.videoFile.catalogBase) { try { const base = new URL(String(this.strings.videoFile.catalogBase), global.location.href); if (base.origin === global.location.origin) video.src = new URL(node.attributes.src, base).href; } catch (_) {} }
         card.append(video, this.el('p','rb-preview-value',node.attributes.src ? node.attributes.src.split('/').pop() : ''));
       } else if (node.type === 'core/video_embed') card.append(this.renderAdminVideoPreview(node.attributes.url));
       else if (node.type === 'core/gallery') card.append(this.el('p','rb-preview-value',this.label('core/gallery') + ' · ' + node.children.length));

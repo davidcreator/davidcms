@@ -10,11 +10,13 @@ final class BlockRenderer {
     private string $downloadRoot;
     private string $audioRoot;
     private string $videoRoot;
+    private bool $allowPageMedia;
 
-    public function __construct(string $downloadRoot = '', string $audioRoot = '', string $videoRoot = '') {
+    public function __construct(string $downloadRoot = '', string $audioRoot = '', string $videoRoot = '', bool $allowPageMedia = false) {
         $this->downloadRoot = $downloadRoot;
         $this->audioRoot = $audioRoot;
         $this->videoRoot = $videoRoot;
+        $this->allowPageMedia = $allowPageMedia;
     }
 
     /**
@@ -26,7 +28,7 @@ final class BlockRenderer {
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($document)) return ['valid' => false, 'html' => '', 'errors' => ['invalid_json']];
         if ($storedFormatVersion !== null && $storedFormatVersion !== ($document['format_version'] ?? null)) return ['valid' => false, 'html' => '', 'errors' => ['stored_version_mismatch']];
 
-        $validator = new BlockDocument();
+        $validator = new BlockDocument($this->allowPageMedia);
         $validation = $validator->validateDocument($document);
         if (!$validation['valid']) return ['valid' => false, 'html' => '', 'errors' => $validation['errors']];
 
@@ -191,39 +193,13 @@ final class BlockRenderer {
         return '';
     }
 
-    /** Resolves an existing local audio asset and rejects symlinks/MIME mismatches. */
+    /** Resolve Blog legacy or CMS Pages media beneath their explicitly configured media roots. */
     private function audioFileExists(string $relative): bool {
-        if ($this->audioRoot === '' || !preg_match('#^view/audio/blog/([A-Za-z0-9][A-Za-z0-9._-]{0,179})$#D', $relative) || str_contains($relative, '..')) return false;
-        $extension = strtolower(pathinfo($relative, PATHINFO_EXTENSION));
-        if (!in_array($extension, ['mp3','ogg','wav'], true)) return false;
-        $cursor = $this->audioRoot;
-        for ($depth = 0; $depth < 4; $depth++) { if (is_link($cursor)) return false; $cursor = dirname($cursor); }
-        $root = realpath($this->audioRoot);
-        if ($root === false) return false;
-        $candidate = $root . DIRECTORY_SEPARATOR . basename($relative);
-        if (is_link($candidate) || !is_file($candidate)) return false;
-        $resolved = realpath($candidate);
-        if ($resolved === false || !str_starts_with($resolved, rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) return false;
-        $finfo = new \finfo(FILEINFO_MIME_TYPE); $mime = (string)($finfo->file($resolved) ?: '');
-        $allowed = ['mp3' => ['audio/mpeg'], 'ogg' => ['audio/ogg','application/ogg'], 'wav' => ['audio/wav','audio/x-wav','audio/wave','audio/vnd.wave']];
-        return in_array($mime, $allowed[$extension], true);
+        return $this->mediaFileExists($this->audioRoot, 'audio', $relative, ['mp3'=>['audio/mpeg'], 'ogg'=>['audio/ogg','application/ogg'], 'wav'=>['audio/wav','audio/x-wav','audio/wave','audio/vnd.wave']], 0);
     }
 
     private function videoFileExists(string $relative): bool {
-        if ($this->videoRoot === '' || !preg_match('#^view/video/blog/([A-Za-z0-9][A-Za-z0-9._-]{0,179})$#D', $relative) || str_contains($relative, '..')) return false;
-        $extension = strtolower(pathinfo($relative, PATHINFO_EXTENSION));
-        $allowed = ['mp4' => ['video/mp4'], 'webm' => ['video/webm'], 'ogv' => ['video/ogg']];
-        if (!isset($allowed[$extension])) return false;
-        $cursor = $this->videoRoot;
-        for ($depth = 0; $depth < 5; $depth++) { if (is_link($cursor)) return false; $cursor = dirname($cursor); }
-        $root = realpath($this->videoRoot); if ($root === false) return false;
-        $candidate = $root . DIRECTORY_SEPARATOR . basename($relative);
-        if (is_link($candidate) || !is_file($candidate)) return false;
-        $size = filesize($candidate); if ($size === false || $size <= 0 || $size > 104857600) return false;
-        $resolved = realpath($candidate);
-        if ($resolved === false || !str_starts_with($resolved, rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) return false;
-        $finfo = new \finfo(FILEINFO_MIME_TYPE); $mime = (string)($finfo->file($resolved) ?: '');
-        return in_array($mime, $allowed[$extension], true);
+        return $this->mediaFileExists($this->videoRoot, 'video', $relative, ['mp4'=>['video/mp4'], 'webm'=>['video/webm'], 'ogv'=>['video/ogg']], 104857600);
     }
 
     /** Plain-text label for accessible attributes; markup is separately rendered through the inline allowlist. */
@@ -233,55 +209,40 @@ final class BlockRenderer {
         return trim($text);
     }
 
-    /** Resolve a local download only when the physical regular file remains inside the trusted root. */
+    /** Resolve Blog legacy or CMS Pages downloads within a trusted directory, validating MIME and size. */
     private function downloadFileExists(string $relative): bool {
-        if ($this->downloadRoot === '' || !preg_match('#^view/download/blog/([A-Za-z0-9][A-Za-z0-9._-]{0,179})$#D', $relative) || str_contains($relative, '..')) return false;
-        $extension = strtolower(pathinfo($relative, PATHINFO_EXTENSION));
-        if (!in_array($extension, ['pdf','docx','xlsx','pptx','odt','ods','csv','txt'], true)) return false;
-        $cursor = $this->downloadRoot;
-        for ($depth = 0; $depth < 4; $depth++) {
-            if (is_link($cursor)) return false;
-            $cursor = dirname($cursor);
-        }
-        $root = realpath($this->downloadRoot);
-        if ($root === false) return false;
-        $candidate = $root . DIRECTORY_SEPARATOR . basename($relative);
-        if (is_link($candidate) || !is_file($candidate)) return false;
-        $size = filesize($candidate);
-        if ($size === false || $size <= 0 || $size > 2097152) return false;
-        $resolved = realpath($candidate);
-        if ($resolved === false || !str_starts_with($resolved, rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR)) return false;
-        $extension = strtolower(pathinfo($resolved, PATHINFO_EXTENSION));
-        $mimeByExtension = [
-            'pdf' => ['application/pdf'],
-            'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-            'xlsx' => ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
-            'pptx' => ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
-            'odt' => ['application/vnd.oasis.opendocument.text'],
-            'ods' => ['application/vnd.oasis.opendocument.spreadsheet'],
-            'csv' => ['text/plain', 'text/csv', 'application/csv'],
-            'txt' => ['text/plain'],
+        $mime = [
+            'pdf'=>['application/pdf'], 'docx'=>['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+            'xlsx'=>['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'], 'pptx'=>['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+            'odt'=>['application/vnd.oasis.opendocument.text'], 'ods'=>['application/vnd.oasis.opendocument.spreadsheet'],
+            'csv'=>['text/plain','text/csv','application/csv'], 'txt'=>['text/plain'],
         ];
-        $finfo = new \finfo(FILEINFO_MIME_TYPE); $mime = (string)($finfo->file($resolved) ?: '');
-        if (in_array($mime, $mimeByExtension[$extension] ?? [], true)) return true;
-        if (!in_array($extension, ['docx','xlsx','pptx','odt','ods'], true) || $mime !== 'application/zip' || !class_exists(\ZipArchive::class)) return false;
-        $zip = new \ZipArchive();
-        if ($zip->open($resolved, \ZipArchive::CHECKCONS) !== true) return false;
-        $required = ['docx' => 'word/document.xml', 'xlsx' => 'xl/workbook.xml', 'pptx' => 'ppt/presentation.xml', 'odt' => 'mimetype', 'ods' => 'mimetype'][$extension];
-        $valid = $zip->locateName($required) !== false;
-        if (in_array($extension, ['odt','ods'], true) && $valid) {
-            $stat = $zip->statName('mimetype');
-            $expected = $extension === 'odt' ? 'application/vnd.oasis.opendocument.text' : 'application/vnd.oasis.opendocument.spreadsheet';
-            $valid = is_array($stat) && (int)($stat['size'] ?? 999) <= 128 && trim((string)$zip->getFromName('mimetype')) === $expected;
-        } elseif ($valid) {
-            $typeIndex = $zip->locateName('[Content_Types].xml');
-            $stat = $typeIndex === false ? false : $zip->statIndex($typeIndex);
-            $contentTypes = is_array($stat) && (int)($stat['size'] ?? 999999) <= 65536 ? (string)$zip->getFromIndex($typeIndex) : '';
-            $expected = ['docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml', 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml', 'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml'][$extension];
-            $valid = $contentTypes !== '' && str_contains($contentTypes, $expected);
+        return $this->mediaFileExists($this->downloadRoot, 'download', $relative, $mime, 2097152);
+    }
+
+    /** @param array<string,list<string>> $mimeByExtension */
+    private function mediaFileExists(string $configuredRoot, string $type, string $relative, array $mimeByExtension, int $maxBytes): bool {
+        if ($configuredRoot === '' || str_contains($relative, '..') || !preg_match('#^view/' . preg_quote($type, '#') . '/(blog|cms/page)/([A-Za-z0-9][A-Za-z0-9._-]{0,179})$#D', $relative, $match)) return false;
+        $extension = strtolower(pathinfo($match[2], PATHINFO_EXTENSION));
+        if (!isset($mimeByExtension[$extension])) return false;
+        if (basename(rtrim($configuredRoot, DIRECTORY_SEPARATOR)) === $type) $rootPath = rtrim($configuredRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $match[1]);
+        elseif ($match[1] === 'blog' && basename(rtrim($configuredRoot, DIRECTORY_SEPARATOR)) === 'blog') $rootPath = rtrim($configuredRoot, DIRECTORY_SEPARATOR);
+        else return false;
+        $foundCatalog = false;
+        for ($cursor = $rootPath; ; $cursor = dirname($cursor)) {
+            if (is_link($cursor)) return false;
+            if (basename($cursor) === 'catalog') { $foundCatalog = true; break; }
+            if (dirname($cursor) === $cursor) break;
         }
-        $zip->close();
-        return $valid;
+        if (!$foundCatalog) return false;
+        $root = realpath($rootPath); if ($root === false) return false;
+        $candidate = $root . DIRECTORY_SEPARATOR . $match[2];
+        if (is_link($candidate) || !is_file($candidate)) return false;
+        $size = @filesize($candidate); if (!is_int($size) || $size < 1 || ($maxBytes > 0 && $size > $maxBytes)) return false;
+        $resolved = realpath($candidate);
+        if ($resolved === false || dirname($resolved) !== $root) return false;
+        $finfo = new \finfo(FILEINFO_MIME_TYPE); $actual = (string)($finfo->file($resolved) ?: '');
+        return in_array($actual, $mimeByExtension[$extension], true);
     }
 
     /** Render a schema-validated image with only finite style tokens and escaped caption text. */

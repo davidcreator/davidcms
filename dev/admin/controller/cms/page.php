@@ -266,7 +266,7 @@ class Page extends \Reamur\System\Engine\Controller {
             return;
         }
 
-        $validator = new \Reamur\System\Library\Blog\BlockDocument();
+        $validator = new \Reamur\System\Library\Blog\BlockDocument(true);
         $decoded = $validator->deserializeDocument($raw);
         if (empty($decoded['valid']) || !is_array($decoded['document']) || ($decoded['document']['format_version'] ?? null) !== 2) {
             $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
@@ -356,7 +356,7 @@ class Page extends \Reamur\System\Engine\Controller {
         ]));
     }
 
-    /** GET: imagens próprias de CMS Pages (somente modify cms/page). */
+    /** GET: listagem da biblioteca independente de mídia de CMS Pages. */
     public function mediaList(): void {
         $this->load->language('cms/page');
         if (!$this->user->hasPermission('modify', 'cms/page')) {
@@ -370,7 +370,9 @@ class Page extends \Reamur\System\Engine\Controller {
         $search = $this->request->get['search'] ?? '';
         $page = $this->request->get['page'] ?? 1;
         $this->load->model('cms/page_media');
-        $result = $this->model_cms_page_media->listImages(is_string($search) ? trim($search) : '', is_scalar($page) ? max(1, (int)$page) : 1);
+        $kind = $this->request->get['kind'] ?? 'image';
+        $kind = is_string($kind) ? $kind : '';
+        $result = $this->model_cms_page_media->listPageMedia($kind, is_string($search) ? trim($search) : '', is_scalar($page) ? max(1, (int)$page) : 1);
         if (empty($result['success'])) {
             $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_list')]);
             return;
@@ -381,7 +383,7 @@ class Page extends \Reamur\System\Engine\Controller {
         $this->pageMediaJson($result);
     }
 
-    /** POST: upload image-only, 2 MiB, CSRF + ACL. */
+    /** POST: upload allowlisted Page media with CSRF + ACL enforcement. */
     public function mediaUpload(): void {
         $this->load->language('cms/page');
         if (!$this->user->hasPermission('modify', 'cms/page')) {
@@ -392,12 +394,18 @@ class Page extends \Reamur\System\Engine\Controller {
             $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_method')]);
             return;
         }
+        if ($this->pageMediaRequestExceedsPostLimit()) {
+            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_size')]);
+            return;
+        }
         if (!$this->csrfValid()) {
             $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_csrf')]);
             return;
         }
         $this->load->model('cms/page_media');
-        $result = $this->model_cms_page_media->storeImage((array)($this->request->files['file'] ?? []));
+        $kind = $this->request->post['kind'] ?? '';
+        $kind = is_string($kind) ? $kind : '';
+        $result = $this->model_cms_page_media->storePageMedia($kind, (array)($this->request->files['file'] ?? []));
         if (empty($result['success'])) {
             $key = match ($result['error'] ?? '') {
                 'no_file' => 'error_page_media_no_file',
@@ -411,6 +419,18 @@ class Page extends \Reamur\System\Engine\Controller {
         }
         $result['url'] = $this->pageCatalogAssetUrl() . $result['path'];
         $this->pageMediaJson($result);
+    }
+
+    private function pageMediaRequestExceedsPostLimit(): bool {
+        $contentLength = (int)($this->request->server['CONTENT_LENGTH'] ?? 0);
+        $setting = trim((string)ini_get('post_max_size'));
+        if ($contentLength < 1 || $setting === '' || $setting === '0') return false;
+        $unit = strtolower(substr($setting, -1));
+        $limit = (int)$setting;
+        if ($unit === 'g') $limit *= 1024 * 1024 * 1024;
+        elseif ($unit === 'm') $limit *= 1024 * 1024;
+        elseif ($unit === 'k') $limit *= 1024;
+        return $limit > 0 && $contentLength > $limit;
     }
 
     /** @param array<string, mixed> $payload */
@@ -436,7 +456,7 @@ class Page extends \Reamur\System\Engine\Controller {
             'entry_meta_title', 'entry_meta_description', 'entry_keyword',
             'entry_status', 'entry_sort_order',
             'button_save', 'button_cancel', 'text_enabled', 'text_disabled',
-            'text_meta_group', 'help_sort_order', 'help_description', 'text_page_preview_button', 'error_page_preview_unavailable', 'text_page_media_library', 'text_page_media_empty', 'text_page_media_loading', 'text_page_media_search', 'text_page_media_upload_hint', 'text_page_media_uploading', 'text_page_media_select', 'text_page_media_page', 'text_page_media_upload', 'text_page_media_error', 'error_page_media_permission', 'error_page_media_method', 'error_page_media_csrf', 'error_page_media_list', 'error_page_media_no_file', 'error_page_media_size', 'error_page_media_type', 'error_page_media_root', 'error_page_media_upload', 'text_page_context_page', 'text_page_context_language', 'text_page_context_untitled', 'text_page_context_save_hint', 'text_page_context_readonly_hint', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_editor_import_file', 'text_editor_import_success', 'text_editor_preview_title', 'text_editor_preview_mode', 'text_editor_edit_mode', 'text_editor_import_hint', 'text_editor_import_unavailable', 'text_editor_import_error', 'text_editor_import_audio_library', 'text_editor_import_video_library', 'text_editor_preview_video_link', 'text_editor_preview_video_open', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no',
+            'text_meta_group', 'help_sort_order', 'help_description', 'text_page_preview_button', 'error_page_preview_unavailable', 'text_page_media_library', 'text_page_media_empty', 'text_page_media_empty_audio', 'text_page_media_empty_video', 'text_page_media_empty_download', 'text_page_media_tab_image', 'text_page_media_tab_audio', 'text_page_media_tab_video', 'text_page_media_tab_download', 'text_page_media_loading', 'text_page_media_search', 'text_page_media_upload_hint', 'text_page_media_upload_hint_audio', 'text_page_media_upload_hint_video', 'text_page_media_upload_hint_download', 'text_page_media_uploading', 'text_page_media_select', 'text_page_media_page', 'text_page_media_upload', 'text_page_media_error', 'error_page_media_permission', 'error_page_media_method', 'error_page_media_csrf', 'error_page_media_list', 'error_page_media_no_file', 'error_page_media_size', 'error_page_media_type', 'error_page_media_root', 'error_page_media_upload', 'text_page_context_page', 'text_page_context_language', 'text_page_context_untitled', 'text_page_context_save_hint', 'text_page_context_readonly_hint', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_editor_import_file', 'text_editor_import_success', 'text_editor_preview_title', 'text_editor_preview_mode', 'text_editor_edit_mode', 'text_editor_import_hint', 'text_editor_import_unavailable', 'text_editor_import_error', 'text_editor_import_audio_library', 'text_editor_import_video_library', 'text_editor_preview_video_link', 'text_editor_preview_video_open', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
@@ -578,7 +598,6 @@ class Page extends \Reamur\System\Engine\Controller {
                 $this->document->addScript($site . 'view/js/blog-block-import.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-block-editor.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-block-editor-init.js?v=' . $version);
-                $this->document->addScript($site . 'view/js/blog-audio-media.js?v=' . $version);
                 if (!empty($data['can_modify'])) {
                     $this->document->addScript($site . 'view/js/cms-page-preview.js?v=' . $version);
                     $data['page_preview_url'] = $this->url->link('cms/page.preview');
@@ -589,37 +608,17 @@ class Page extends \Reamur\System\Engine\Controller {
                         'csrfToken' => \Reamur\System\Library\Security\Csrf::token($this->session),
                         'strings' => [
                             'loading' => $data['text_page_media_loading'], 'empty' => $data['text_page_media_empty'],
-                            'search' => $data['text_page_media_search'], 'uploadHint' => $data['text_page_media_upload_hint'],
-                            'uploading' => $data['text_page_media_uploading'], 'select' => $data['text_page_media_select'],
-                            'page' => $data['text_page_media_page'], 'upload' => $data['text_page_media_upload'],
-                            'error' => $data['text_page_media_error'],
+                            'search' => $data['text_page_media_search'], 'uploading' => $data['text_page_media_uploading'],
+                            'select' => $data['text_page_media_select'], 'page' => $data['text_page_media_page'],
+                            'upload' => $data['text_page_media_upload'], 'error' => $data['text_page_media_error'],
+                            'uploadHint' => ['image'=>$data['text_page_media_upload_hint'], 'audio'=>$data['text_page_media_upload_hint_audio'], 'video'=>$data['text_page_media_upload_hint_video'], 'download'=>$data['text_page_media_upload_hint_download']],
+                            'emptyKind' => ['image'=>$data['text_page_media_empty'], 'audio'=>$data['text_page_media_empty_audio'], 'video'=>$data['text_page_media_empty_video'], 'download'=>$data['text_page_media_empty_download']],
+                            'tabs' => ['image'=>$data['text_page_media_tab_image'], 'audio'=>$data['text_page_media_tab_audio'], 'video'=>$data['text_page_media_tab_video'], 'download'=>$data['text_page_media_tab_download']],
                         ],
                     ];
                 }
 
-                // Existing catalog endpoint enforces modify on blog/blog; expose only when that exact ACL is granted.
-                $data['can_use_audio_catalog'] = $this->user->hasPermission('modify', 'blog/blog');
-                $data['media_config'] = [
-                    'audioListUrl' => $this->url->link('blog/blog.audioList'),
-                    'audioUploadUrl' => $this->url->link('blog/blog.audioUpload'),
-                    'videoListUrl' => $this->url->link('blog/blog.videoList'),
-                    'videoUploadUrl' => $this->url->link('blog/blog.videoUpload'),
-                    'csrfToken' => \Reamur\System\Library\Security\Csrf::token($this->session),
-                    'strings' => [
-                        'audioError' => $data['error_audio_generic'], 'chooseFile' => $data['error_media_upload_no_file'], 'audioUploadError' => $data['error_audio_video_upload'],
-                        'loading' => $data['text_media_loading'],
-                        'audioEmpty' => $data['text_audio_empty'],
-                        'audioDragHint' => $data['text_audio_drag_hint'],
-                        'selectAudio' => $data['button_audio_select'],
-                        'audioUploadHint' => $data['text_audio_upload_hint'],
-                        'videoLibrary' => $data['text_video_library'], 'videoEmpty' => $data['text_video_empty'],
-                        'videoHint' => $data['text_video_hint'], 'videoUploadHint' => $data['text_video_upload_hint'],
-                        'videoDragHint' => $data['text_video_drag_hint'], 'selectVideo' => $data['button_video_select'],
-                        'audioUpload' => $data['button_audio_upload'], 'videoUpload' => $data['button_video_upload'],
-                        'audioUploadError' => $data['error_audio_video_upload'], 'videoUploadError' => $data['error_audio_video_upload'],
-                        'videoError' => $data['error_video_generic'],
-                    ],
-                ];
+
 
         }
 
@@ -688,12 +687,12 @@ class Page extends \Reamur\System\Engine\Controller {
             $storedBlockValue = $description;
             if (str_starts_with($description, $blockPrefix)) {
                 $blockJson = substr($description, strlen($blockPrefix));
-                $decoded = (new \Reamur\System\Library\Blog\BlockDocument())->deserializeDocument($blockJson);
+                $decoded = (new \Reamur\System\Library\Blog\BlockDocument(true))->deserializeDocument($blockJson);
                 if (!empty($decoded['valid']) && is_array($decoded['document']) && ($decoded['document']['format_version'] ?? null) === 2) {
                     $blockMode = 'blocks';
                     $blockSummaryDocument = $decoded['document'];
                     // Canonicalize in memory on read too: older PHP JSON encoding wrote empty attributes as [] instead of {}.
-                    $blockJson = (new \Reamur\System\Library\Blog\BlockDocument())->serializeDocument($decoded['document']);
+                    $blockJson = (new \Reamur\System\Library\Blog\BlockDocument(true))->serializeDocument($decoded['document']);
                 } else {
                     $blockMode = 'invalid';
                     $summary = $data['text_content_invalid'];
@@ -704,7 +703,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 $blockJson = '{"format_version":2,"blocks":[]}';
                 $storedBlockValue = $blockPrefix . $blockJson;
             } else {
-                $conversion = (new \Reamur\System\Library\Blog\BlockDocument())->convertLegacy($description);
+                $conversion = (new \Reamur\System\Library\Blog\BlockDocument(true))->convertLegacy($description);
                 if (($conversion['status'] ?? '') === 'converted' && is_array($conversion['document'] ?? null)) {
                     $blockMode = 'blocks';
                     $blockSummaryDocument = $conversion['document'];
@@ -763,9 +762,9 @@ class Page extends \Reamur\System\Engine\Controller {
                 ? (string)$d['description']
                 : (string)($savedDescriptions[(int)$lid]['description'] ?? '');
             if (($post['page_block_mode'][$lid] ?? '') === 'blocks' && str_starts_with($description, 'REAMURCMS_BDRE_JSON_V2:')) {
-                $decoded = (new \Reamur\System\Library\Blog\BlockDocument())->deserializeDocument(substr($description, strlen('REAMURCMS_BDRE_JSON_V2:')));
+                $decoded = (new \Reamur\System\Library\Blog\BlockDocument(true))->deserializeDocument(substr($description, strlen('REAMURCMS_BDRE_JSON_V2:')));
                 if (!empty($decoded['valid']) && is_array($decoded['document']) && ($decoded['document']['format_version'] ?? null) === 2) {
-                    $description = 'REAMURCMS_BDRE_JSON_V2:' . (new \Reamur\System\Library\Blog\BlockDocument())->serializeDocument($decoded['document']);
+                    $description = 'REAMURCMS_BDRE_JSON_V2:' . (new \Reamur\System\Library\Blog\BlockDocument(true))->serializeDocument($decoded['document']);
                 }
             }
             $descriptions[(int)$lid] = [
@@ -849,7 +848,7 @@ class Page extends \Reamur\System\Engine\Controller {
         $descriptions = (array)($post['page_description'] ?? []);
         $storedDescriptions = $pageId ? $this->model_cms_page->getPageDescriptions($pageId) : [];
         $prefix = 'REAMURCMS_BDRE_JSON_V2:';
-        $validator = new \Reamur\System\Library\Blog\BlockDocument();
+        $validator = new \Reamur\System\Library\Blog\BlockDocument(true);
         foreach ($descriptions as $languageId => $posted) {
             $mode = (string)($modes[$languageId] ?? '');
             $posted = (array)$posted;

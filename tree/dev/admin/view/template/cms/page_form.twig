@@ -1,0 +1,136 @@
+{# cms/page — Fase 8 / Tarefa 06: contratos F2-10 preservados; textarea sem RTE. #}
+{{ header|raw }}
+<div class="cms-page-form">
+  <div class="page-titlebar"><div class="title-group">
+    <h1 class="page-title"><i class="bi bi-file-earmark-text me-2" aria-hidden="true"></i>{{ heading_title }} · {{ page_id ? text_edit : text_add }}</h1>
+  </div></div>
+
+  {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }}" role="status">{{ text_flash.text }}</div>{% endif %}
+  {% if error %}<div class="alert alert-danger" role="alert">{{ error|nl2br }}</div>{% endif %}
+
+  <form method="post" action="{{ action }}" class="row g-3 form-layout" data-cms-page-form>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="col-12 cms-page-commandbar position-sticky top-0 bg-body py-2 border-bottom" style="z-index:1020" role="toolbar" aria-label="{{ heading_title }}">
+      {% if can_modify %}<button type="submit" class="btn btn-primary" aria-label="{{ button_save }}" title="{{ button_save }}"><i class="bi bi-check-lg" aria-hidden="true"></i><span class="visually-hidden">{{ button_save }}</span></button>{% endif %}
+      <a class="btn btn-outline-secondary" href="{{ cancel }}" aria-label="{{ button_cancel }}" title="{{ button_cancel }}"><i class="bi bi-x-lg" aria-hidden="true"></i><span class="visually-hidden">{{ button_cancel }}</span></a>
+      <span class="text-body-secondary small ms-auto">{{ page_id ? text_edit : text_add }}</span>
+    </div>
+    {% if is_system_page %}<div class="col-12"><div class="alert alert-info mb-0"><strong>{{ text_system_page }}:</strong> <code>{{ system_key }}</code> — {{ text_system_page_help }}</div></div>{% endif %}
+    <div class="col-lg-8">
+      <div class="card data-card mb-3"><div class="card-body">
+        <h2 class="card-title h6 mb-1">{{ text_general }}</h2>
+        <p class="text-body-secondary small mb-3">{{ text_languages_note }}</p>
+        <ul class="nav nav-tabs tabs-lang" id="cmsPageLangTabs" role="tablist">
+          {% for language in languages %}
+          <li class="nav-item" role="presentation">
+            <button class="nav-link{% if loop.first %} active{% endif %}" id="tab-page-lang-{{ language.language_id }}" data-bs-toggle="tab" data-bs-target="#pane-page-lang-{{ language.language_id }}" type="button" role="tab" aria-controls="pane-page-lang-{{ language.language_id }}" aria-selected="{{ loop.first ? 'true' : 'false' }}">
+              {{ language.name }} <span class="text-body-secondary">({{ language.code }})</span>
+            </button>
+          </li>
+          {% endfor %}
+        </ul>
+        <div class="tab-content pt-3">
+          {% for language in languages %}
+          <div class="tab-pane fade{% if loop.first %} show active{% endif %}" id="pane-page-lang-{{ language.language_id }}" role="tabpanel" aria-labelledby="tab-page-lang-{{ language.language_id }}">
+            <div class="field mb-3">
+              <label class="form-label" for="input-title-{{ language.language_id }}">{{ entry_title }}{% if language.language_id == 1 %} <span class="text-danger">*</span>{% endif %}</label>
+              <input class="form-control" type="text" name="page_description[{{ language.language_id }}][title]" id="input-title-{{ language.language_id }}" value="{{ language.fields.title }}" maxlength="255" data-counter{% if language.language_id == 1 %} required{% endif %}>
+            </div>
+            {% if not is_system_page %}
+            <div class="field mb-3">
+              <label class="form-label" for="input-keyword-{{ language.language_id }}">{{ entry_keyword }}</label>
+              <input class="form-control" type="text" name="page_description[{{ language.language_id }}][keyword]" id="input-keyword-{{ language.language_id }}" value="{{ language.fields.keyword }}" maxlength="64" pattern="[a-z0-9]+(-[a-z0-9]+)*">
+            </div>
+            {% endif %}
+            <div class="field mb-3">
+              <label class="form-label" for="input-description-{{ language.language_id }}">{{ entry_description }}</label>
+              {% if language.fields.block_mode == 'blocks' %}
+                <input type="hidden" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" value="{{ language.fields.block_stored_value|e('html_attr') }}">
+                <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="blocks">
+                <input type="hidden" name="page_editor_ready[{{ language.language_id }}]" id="page-editor-ready-{{ language.language_id }}" value="">
+                <div id="page-block-editor-{{ language.language_id }}" class="bdre-page-editor" data-blog-block-editor data-hidden-input="input-description-{{ language.language_id }}" data-ready-input="page-editor-ready-{{ language.language_id }}" data-document="{{ language.fields.block_document|e('html_attr') }}" data-storage-prefix="REAMURCMS_BDRE_JSON_V2:" data-media-pickers="false" data-file-picker="{{ can_modify ? 'true' : 'false' }}" data-audio-picker="{{ can_modify ? 'true' : 'false' }}" data-video-picker="{{ can_modify ? 'true' : 'false' }}" data-editor-strings="{{ block_editor_strings|json_encode|e('html_attr') }}" data-page-context="{{ {'pageLabel': text_page_context_page, 'languageLabel': text_page_context_language, 'untitledPage': text_page_context_untitled, 'saveHint': can_modify ? text_page_context_save_hint : text_page_context_readonly_hint, 'canSave': can_modify, 'saveLabel': button_save}|json_encode|e('html_attr') }}" data-page-title="{{ language.fields.title|e('html_attr') }}" data-page-title-input="input-title-{{ language.language_id }}" data-page-language="{{ language.name|e('html_attr') }}" data-page-language-code="{{ language.code|e('html_attr') }}" aria-label="{{ entry_description|e('html_attr') }} — {{ language.name|e('html_attr') }}"></div>
+                {% if can_modify %}<div class="mt-2"><button type="button" class="btn btn-outline-primary" data-cms-page-preview data-preview-url="{{ page_preview_url|e('html_attr') }}" data-editor-id="page-block-editor-{{ language.language_id }}" data-title-id="input-title-{{ language.language_id }}" data-language="{{ language.code|e('html_attr') }}" data-preview-error="{{ error_page_preview_unavailable|e('html_attr') }}">{{ text_page_preview_button }}</button><span class="form-text" data-page-preview-status aria-live="polite"></span></div>{% endif %}
+              {% elseif language.fields.block_mode == 'invalid' %}
+                <input type="hidden" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" value="{{ language.fields.description|e('html_attr') }}">
+                <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="invalid">
+                <div class="alert alert-warning" role="status">O documento BDREditor armazenado não passou na validação. O original será preservado sem alterações; restaure uma versão válida antes de editar.</div>
+              {% else %}
+                <textarea class="form-control" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="10">{{ language.fields.description }}</textarea>
+                <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="preserve">
+                <p class="form-text">O conteúdo legado não pôde ser convertido com segurança; ele permanece editável sem reformatar.</p>
+              {% endif %}
+            </div>
+            <h3 class="h6 text-body-secondary mt-4 mb-2">{{ text_meta_group }}</h3>
+            <div class="row g-3">
+              <div class="col-md-6 field">
+                <label class="form-label" for="input-meta-title-{{ language.language_id }}">{{ entry_meta_title }}</label>
+                <input class="form-control" type="text" name="page_description[{{ language.language_id }}][meta_title]" id="input-meta-title-{{ language.language_id }}" value="{{ language.fields.meta_title }}" maxlength="255" data-counter>
+              </div>
+              <div class="col-md-6 field">
+                <label class="form-label" for="input-meta-description-{{ language.language_id }}">{{ entry_meta_description }}</label>
+                <input class="form-control" type="text" name="page_description[{{ language.language_id }}][meta_description]" id="input-meta-description-{{ language.language_id }}" value="{{ language.fields.meta_description }}" maxlength="255" data-counter>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div></div>
+      {% if custom_field_groups %}
+      <section class="card data-card mb-3" aria-labelledby="custom-field-heading"><div class="card-body">
+        <h2 class="card-title h6" id="custom-field-heading">{{ text_custom_fields }}</h2><p class="text-body-secondary small">{{ text_custom_fields_note }}</p>
+        {% for group in custom_field_groups %}<fieldset class="mb-4"><legend class="h6">{{ group.label }}</legend>
+          {% for field in group.fields %}<div class="mb-3"><label class="form-label" for="custom-field-{{ field.id }}-{{ field.values[0].language_id }}">{{ field.label }}{% if field.required %} <span class="text-danger">*</span>{% endif %}</label>{% if field.help %}<div class="form-text mb-1">{{ field.help }}</div>{% endif %}
+            {% for item in field.values %}<div class="mb-2">{% if field.localized %}<label class="form-text">{{ item.language_name }}</label>{% endif %}
+              {% if field.type == 'textarea' %}<textarea class="form-control" name="custom_field[{{ field.id }}][{{ item.language_id }}]" id="custom-field-{{ field.id }}-{{ item.language_id }}" rows="4">{{ item.value }}</textarea>
+              {% elseif field.type == 'select' %}<select class="form-select" name="custom_field[{{ field.id }}][{{ item.language_id }}]" id="custom-field-{{ field.id }}-{{ item.language_id }}"><option value="">{{ text_select_option }}</option>{% for option in field.options_list %}<option value="{{ option.value }}"{% if option.value == item.value %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select>
+              {% elseif field.type == 'boolean' %}<select class="form-select" name="custom_field[{{ field.id }}][{{ item.language_id }}]" id="custom-field-{{ field.id }}-{{ item.language_id }}"><option value="0"{% if item.value == '0' %} selected{% endif %}>{{ text_no }}</option><option value="1"{% if item.value == '1' %} selected{% endif %}>{{ text_yes }}</option></select>
+              {% else %}<input class="form-control" type="{{ field.type == 'number' ? 'number' : (field.type == 'url' ? 'url' : 'text') }}" name="custom_field[{{ field.id }}][{{ item.language_id }}]" id="custom-field-{{ field.id }}-{{ item.language_id }}" value="{{ item.value }}"{% if field.type == 'number' %} step="any"{% endif %}>
+              {% endif %}</div>{% endfor %}
+          </div>{% endfor %}
+        </fieldset>{% endfor %}
+      </div></section>
+      {% endif %}
+    </div>
+    <div class="col-lg-4">
+      <div class="card data-card mb-3 side-card"><div class="card-body">
+        <h2 class="card-title h6 mb-3">{{ text_data }}</h2>
+        <div class="field form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" role="switch" id="input-status" name="status" value="1"{% if status == '1' %} checked{% endif %}>
+          <label class="form-check-label" for="input-status">{{ entry_status }}
+            <span class="d-block text-body-secondary small" data-status-hint data-text-published="{{ text_enabled }}" data-text-draft="{{ text_disabled }}">{{ status == '1' ? text_enabled : text_disabled }}</span>
+          </label>
+        </div>
+        <div class="field mb-0">
+          <label class="form-label" for="input-sort-order">{{ entry_sort_order }}</label>
+          <input class="form-control" type="number" name="sort_order" id="input-sort-order" value="{{ sort_order }}" min="0" step="1">
+          <p class="form-text mb-0">{{ help_sort_order }}</p>
+        </div>
+      </div></div>
+    </div>
+  </form>
+  {% if can_modify %}
+  <div class="modal fade" id="cmsPageMediaModal" tabindex="-1" aria-labelledby="cmsPageMediaModalLabel" aria-hidden="true" data-page-media-config="{{ page_image_media_config|json_encode|e('html_attr') }}">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title fs-5" id="cmsPageMediaModalLabel">{{ text_page_media_library }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ button_media_close }}"></button></div>
+      <div class="modal-body">
+        <div id="cmsPageMediaAlert" class="alert d-none" role="status" aria-live="polite"></div>
+        <div class="nav nav-tabs mb-3" id="cmsPageMediaTabs" role="tablist">
+          <button class="nav-link active" type="button" data-media-kind="image">{{ text_page_media_tab_image }}</button>
+          <button class="nav-link" type="button" data-media-kind="audio">{{ text_page_media_tab_audio }}</button>
+          <button class="nav-link" type="button" data-media-kind="video">{{ text_page_media_tab_video }}</button>
+          <button class="nav-link" type="button" data-media-kind="download">{{ text_page_media_tab_download }}</button>
+        </div>
+        <label class="form-label" for="cmsPageMediaSearch">{{ text_page_media_search }}</label>
+        <input class="form-control mb-3" id="cmsPageMediaSearch" type="search" maxlength="128">
+        <div id="cmsPageMediaFiles" class="list-group mb-3"></div>
+        <div id="cmsPageMediaEmpty" class="text-body-secondary py-2" aria-live="polite"></div>
+        <div class="d-flex justify-content-between align-items-center mb-3"><button type="button" class="btn btn-outline-secondary btn-sm" id="cmsPageMediaPrevious">{{ button_media_previous }}</button><span id="cmsPageMediaPage" class="small"></span><button type="button" class="btn btn-outline-secondary btn-sm" id="cmsPageMediaNext">{{ button_media_next }}</button></div>
+        <hr><p class="form-text" id="cmsPageMediaUploadHint"></p>
+        <div class="input-group"><input class="form-control" id="cmsPageMediaUploadFile" type="file"><button class="btn btn-primary" type="button" id="cmsPageMediaUploadButton">{{ text_page_media_upload }}</button></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ button_media_close }}</button></div>
+    </div></div>
+  </div>
+  {% endif %}
+</div>
+{{ footer|raw }}

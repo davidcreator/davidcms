@@ -1,27 +1,28 @@
-# CMS > Páginas — prévia privada de rascunho (V1)
+# CMS > Páginas — biblioteca de áudio, vídeo e downloads
 
-Patch local preparado sobre o HEAD remoto `c3efce52edb5a25df10d211309bb4d1ef4c6a34a` (`feat(cms/pages): add dedicated page image library for block media`). Não publicado no GitHub.
+**Status:** patch local, sem aplicação ao repositório, sem GitHub write, deploy, banco de dados ou migration executada.
 
-## Escopo confirmado
+## Base
 
-- Botão por idioma, somente para conteúdo no modo de blocos e usuários com `modify cms/page`.
-- Abre uma nova aba por POST para a rota própria `cms/page.preview`; a rota exige ACL e CSRF, limita e valida o documento v2 com `BlockDocument` e renderiza com `BlockRenderer`.
-- Nenhum save, SQL, gravação em sessão, migration ou exposição de rascunho no Catalog. Resposta com `no-store`, `noindex` e cabeçalhos de segurança.
-- A prévia mostra título e blocos num layout isolado. Não reproduz o cabeçalho/rodapé completos nem campos personalizados do Catalog.
-- Os diretórios de download/áudio/vídeo do Blog são passados vazios ao renderer; blocos que dependam deles podem não aparecer. O JavaScript customizado de Three.js é removido da cópia temporária antes da renderização; as cenas aprovadas/configuráveis permanecem.
-- Pequeno ajuste de ordem em `formData`: calcula `can_modify` antes da configuração condicional dos recursos próprios de Pages, mantendo a mesma ACL. Isso é necessário para que os controles autorizados sejam preparados no formulário.
+Preparado contra o `main` em `a1e82d4e0ed8621b096e59387db2bdae85371de8` (`chore: clean up obsolete project and temporary files`). Confirme o HEAD novamente antes de aplicar; não aplique sobre uma base diferente sem revisar o diff.
 
-## Conteúdo do pacote
+## Arquivos
 
-- `CMS-Pages-Safe-Draft-Preview.patch` — patch para aplicar na raiz do repositório sobre o HEAD acima.
-- `implementation/` — cópia dos sete arquivos adicionados/modificados, nos caminhos `dev/...`.
+- `CMS-Pages-Media-Separation.patch` — patch unificado pronto para revisão/aplicação local.
+- `tree/dev/...` — cópias completas dos arquivos finais alterados.
 
-Aplicação local: `git apply CMS-Pages-Safe-Draft-Preview.patch`.
+## Incluído
 
-## Validações
+- Roots dedicados: `catalog/view/audio/cms/page/`, `catalog/view/video/cms/page/`, `catalog/view/download/cms/page/`. A biblioteca de imagens existente em `catalog/view/image/cms/page/` passa a usar o fluxo genérico.
+- Áudio: MP3, OGG, WAV, até 20 MiB.
+- Vídeo: MP4, WebM, OGV, até 100 MiB.
+- Downloads: PDF, DOCX, XLSX, PPTX, ODT, ODS, CSV e TXT, até 2 MiB.
+- ACL `modify cms/page`, GET para listagem, POST com CSRF para upload, validação por extensão + MIME detectado, nome aleatório, guardas de symlink/raiz. Sem pastas ou exclusão.
+- Compatibilidade de leitura/renderização para paths legados `view/audio/blog/`, `view/video/blog/` e `view/download/blog/` já presentes em documentos de Pages. O validador é contextual: o modo Blog continua aceitando somente roots Blog; Pages aceita roots próprios e legado.
+- Seletor e uploads Pages usam somente rotas/modelo/roots próprios; o controller não chama os endpoints de mídia do Blog.
+- Nenhuma mudança de schema, migration ou conteúdo salvo.
 
-- `git apply --check`: passou contra as fontes seletivas do HEAD indicado.
-- `git diff --check`: passou.
-- `node --check` no novo script: passou.
-- Checagens estáticas de ACL, CSRF, limite, validação de documento, ausência de chamadas a model/SQL no preview, ausência de persistência, tradução nos três idiomas e remoção de custom JS Three.js: passaram.
-- `php -l` não está disponível (PHP CLI ausente). Não houve execução do CMS, teste visual/browser, escrita no GitHub, migration, staging ou deploy.
+## Verificação realizada
+
+- `node --check` passou para `cms-page-media.js` e `blog-block-editor.js`.
+- PHP CLI não está disponível nesta sessão; portanto, não foi possível executar lint/runtime PHP nem testes de integração. Não foram acessados dados de produção ou staging.

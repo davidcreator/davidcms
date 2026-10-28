@@ -48,7 +48,7 @@
                 <input type="hidden" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" value="{{ language.fields.block_stored_value|e('html_attr') }}">
                 <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="blocks">
                 <input type="hidden" name="page_editor_ready[{{ language.language_id }}]" id="page-editor-ready-{{ language.language_id }}" value="">
-                <div id="page-block-editor-{{ language.language_id }}" class="bdre-page-editor" data-blog-block-editor data-hidden-input="input-description-{{ language.language_id }}" data-ready-input="page-editor-ready-{{ language.language_id }}" data-document="{{ language.fields.block_document|e('html_attr') }}" data-storage-prefix="REAMURCMS_BDRE_JSON_V2:" data-media-pickers="false" data-file-picker="false" data-audio-picker="{{ can_use_audio_catalog ? 'true' : 'false' }}" data-video-picker="{{ can_use_audio_catalog ? 'true' : 'false' }}" data-editor-strings="{{ block_editor_strings|json_encode|e('html_attr') }}" data-page-context="{{ {'pageLabel': text_page_context_page, 'languageLabel': text_page_context_language, 'untitledPage': text_page_context_untitled, 'saveHint': can_modify ? text_page_context_save_hint : text_page_context_readonly_hint, 'canSave': can_modify, 'saveLabel': button_save}|json_encode|e('html_attr') }}" data-page-title="{{ language.fields.title|e('html_attr') }}" data-page-title-input="input-title-{{ language.language_id }}" data-page-language="{{ language.name|e('html_attr') }}" data-page-language-code="{{ language.code|e('html_attr') }}" aria-label="{{ entry_description|e('html_attr') }} — {{ language.name|e('html_attr') }}"></div>
+                <div id="page-block-editor-{{ language.language_id }}" class="bdre-page-editor" data-blog-block-editor data-hidden-input="input-description-{{ language.language_id }}" data-ready-input="page-editor-ready-{{ language.language_id }}" data-document="{{ language.fields.block_document|e('html_attr') }}" data-storage-prefix="REAMURCMS_BDRE_JSON_V2:" data-media-pickers="false" data-file-picker="{{ can_modify ? 'true' : 'false' }}" data-audio-picker="{{ can_modify ? 'true' : 'false' }}" data-video-picker="{{ can_modify ? 'true' : 'false' }}" data-editor-strings="{{ block_editor_strings|json_encode|e('html_attr') }}" data-page-context="{{ {'pageLabel': text_page_context_page, 'languageLabel': text_page_context_language, 'untitledPage': text_page_context_untitled, 'saveHint': can_modify ? text_page_context_save_hint : text_page_context_readonly_hint, 'canSave': can_modify, 'saveLabel': button_save}|json_encode|e('html_attr') }}" data-page-title="{{ language.fields.title|e('html_attr') }}" data-page-title-input="input-title-{{ language.language_id }}" data-page-language="{{ language.name|e('html_attr') }}" data-page-language-code="{{ language.code|e('html_attr') }}" aria-label="{{ entry_description|e('html_attr') }} — {{ language.name|e('html_attr') }}"></div>
                 {% if can_modify %}<div class="mt-2"><button type="button" class="btn btn-outline-primary" data-cms-page-preview data-preview-url="{{ page_preview_url|e('html_attr') }}" data-editor-id="page-block-editor-{{ language.language_id }}" data-title-id="input-title-{{ language.language_id }}" data-language="{{ language.code|e('html_attr') }}" data-preview-error="{{ error_page_preview_unavailable|e('html_attr') }}">{{ text_page_preview_button }}</button><span class="form-text" data-page-preview-status aria-live="polite"></span></div>{% endif %}
               {% elseif language.fields.block_mode == 'invalid' %}
                 <input type="hidden" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" value="{{ language.fields.description|e('html_attr') }}">
@@ -109,54 +109,24 @@
     </div>
   </form>
   {% if can_modify %}
-  <div class="modal fade" id="cmsPageImageModal" tabindex="-1" aria-labelledby="cmsPageImageModalLabel" aria-hidden="true" data-page-media-config="{{ page_image_media_config|json_encode|e('html_attr') }}">
+  <div class="modal fade" id="cmsPageMediaModal" tabindex="-1" aria-labelledby="cmsPageMediaModalLabel" aria-hidden="true" data-page-media-config="{{ page_image_media_config|json_encode|e('html_attr') }}">
     <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
-      <div class="modal-header"><h2 class="modal-title fs-5" id="cmsPageImageModalLabel">{{ text_page_media_library }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ button_media_close }}"></button></div>
+      <div class="modal-header"><h2 class="modal-title fs-5" id="cmsPageMediaModalLabel">{{ text_page_media_library }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ button_media_close }}"></button></div>
       <div class="modal-body">
-        <div id="cmsPageImageAlert" class="alert d-none" role="status" aria-live="polite"></div>
-        <label class="form-label" for="cmsPageImageSearch">{{ text_page_media_search }}</label>
-        <input class="form-control mb-3" id="cmsPageImageSearch" type="search" maxlength="128">
-        <div id="cmsPageImageFiles" class="list-group mb-3"></div>
-        <div id="cmsPageImageEmpty" class="text-body-secondary py-2" aria-live="polite"></div>
-        <div class="d-flex justify-content-between align-items-center mb-3"><button type="button" class="btn btn-outline-secondary btn-sm" id="cmsPageImagePrevious">{{ button_media_previous }}</button><span id="cmsPageImagePage" class="small"></span><button type="button" class="btn btn-outline-secondary btn-sm" id="cmsPageImageNext">{{ button_media_next }}</button></div>
-        <hr><p class="form-text">{{ text_page_media_upload_hint }}</p>
-        <div class="input-group"><input class="form-control" id="cmsPageImageUploadFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"><button class="btn btn-primary" type="button" id="cmsPageImageUploadButton">{{ text_page_media_upload }}</button></div>
-      </div>
-      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ button_media_close }}</button></div>
-    </div></div>
-  </div>
-  {% endif %}
-  {% if can_modify and can_use_audio_catalog %}
-  <div class="modal fade" id="blogAudioModal" tabindex="-1" aria-labelledby="blogAudioModalLabel" aria-hidden="true" data-media-config="{{ media_config|json_encode|e('html_attr') }}" data-media-kind="audio">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
-      <div class="modal-header"><h2 class="modal-title fs-5" id="blogAudioModalLabel">{{ text_audio_library }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ button_media_close }}"></button></div>
-      <div class="modal-body">
-        <div id="blogAudioAlert" class="alert d-none" role="status" aria-live="polite"></div>
-        <p class="form-text">{{ text_audio_hint }}</p>
-        <label class="form-label" for="blogAudioSearch">{{ entry_media_search }}</label>
-        <input class="form-control mb-3" id="blogAudioSearch" type="search" maxlength="128">
-        <div id="blogAudioFiles" class="list-group mb-3"></div>
-        <div id="blogAudioEmpty" class="text-body-secondary py-2" aria-live="polite"></div>
-        <div class="d-flex justify-content-between align-items-center mb-3"><button type="button" class="btn btn-outline-secondary btn-sm" id="blogAudioPrevious">{{ button_media_previous }}</button><span id="blogAudioPage" class="small"></span><button type="button" class="btn btn-outline-secondary btn-sm" id="blogAudioNext">{{ button_media_next }}</button></div>
-        <hr><label class="form-label" for="blogAudioUploadFile">{{ text_audio_upload_hint }}</label>
-        <div class="input-group"><input class="form-control" id="blogAudioUploadFile" type="file" accept=".mp3,.ogg,.wav,audio/mpeg,audio/ogg,audio/wav"><button class="btn btn-primary" type="button" id="blogAudioUploadButton">{{ button_audio_upload }}</button></div>
-      </div>
-      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ button_media_close }}</button></div>
-    </div></div>
-  </div>
-  <div class="modal fade" id="blogVideoModal" tabindex="-1" aria-labelledby="blogVideoModalLabel" aria-hidden="true" data-media-config="{{ media_config|json_encode|e('html_attr') }}" data-media-kind="video">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
-      <div class="modal-header"><h2 class="modal-title fs-5" id="blogVideoModalLabel">{{ text_video_library }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ button_media_close }}"></button></div>
-      <div class="modal-body">
-        <div id="blogVideoAlert" class="alert d-none" role="status" aria-live="polite"></div>
-        <p class="form-text">{{ text_video_hint }}</p>
-        <label class="form-label" for="blogVideoSearch">{{ entry_media_search }}</label>
-        <input class="form-control mb-3" id="blogVideoSearch" type="search" maxlength="128">
-        <div id="blogVideoFiles" class="list-group mb-3"></div>
-        <div id="blogVideoEmpty" class="text-body-secondary py-2" aria-live="polite"></div>
-        <div class="d-flex justify-content-between align-items-center mb-3"><button type="button" class="btn btn-outline-secondary btn-sm" id="blogVideoPrevious">{{ button_media_previous }}</button><span id="blogVideoPage" class="small"></span><button type="button" class="btn btn-outline-secondary btn-sm" id="blogVideoNext">{{ button_media_next }}</button></div>
-        <hr><label class="form-label" for="blogVideoUploadFile">{{ text_video_upload_hint }}</label>
-        <div class="input-group"><input class="form-control" id="blogVideoUploadFile" type="file" accept=".mp4,.webm,.ogv,video/mp4,video/webm,video/ogg"><button class="btn btn-primary" type="button" id="blogVideoUploadButton">{{ button_video_upload }}</button></div>
+        <div id="cmsPageMediaAlert" class="alert d-none" role="status" aria-live="polite"></div>
+        <div class="nav nav-tabs mb-3" id="cmsPageMediaTabs" role="tablist">
+          <button class="nav-link active" type="button" data-media-kind="image">{{ text_page_media_tab_image }}</button>
+          <button class="nav-link" type="button" data-media-kind="audio">{{ text_page_media_tab_audio }}</button>
+          <button class="nav-link" type="button" data-media-kind="video">{{ text_page_media_tab_video }}</button>
+          <button class="nav-link" type="button" data-media-kind="download">{{ text_page_media_tab_download }}</button>
+        </div>
+        <label class="form-label" for="cmsPageMediaSearch">{{ text_page_media_search }}</label>
+        <input class="form-control mb-3" id="cmsPageMediaSearch" type="search" maxlength="128">
+        <div id="cmsPageMediaFiles" class="list-group mb-3"></div>
+        <div id="cmsPageMediaEmpty" class="text-body-secondary py-2" aria-live="polite"></div>
+        <div class="d-flex justify-content-between align-items-center mb-3"><button type="button" class="btn btn-outline-secondary btn-sm" id="cmsPageMediaPrevious">{{ button_media_previous }}</button><span id="cmsPageMediaPage" class="small"></span><button type="button" class="btn btn-outline-secondary btn-sm" id="cmsPageMediaNext">{{ button_media_next }}</button></div>
+        <hr><p class="form-text" id="cmsPageMediaUploadHint"></p>
+        <div class="input-group"><input class="form-control" id="cmsPageMediaUploadFile" type="file"><button class="btn btn-primary" type="button" id="cmsPageMediaUploadButton">{{ text_page_media_upload }}</button></div>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ button_media_close }}</button></div>
     </div></div>
