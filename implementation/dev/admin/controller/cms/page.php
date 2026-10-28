@@ -17,6 +17,8 @@ namespace Reamur\Admin\Controller\Cms;
 
 class Page extends \Reamur\System\Engine\Controller {
 
+    private const PAGE_PREVIEW_MAX_BYTES = 4194304;
+
     /** Lista páginas com filtros e paginação server-side (F8-06). */
     public function index(): void {
         $this->load->language('cms/page');
@@ -236,6 +238,124 @@ class Page extends \Reamur\System\Engine\Controller {
         $this->response->redirect($this->url->link('cms/page'));
     }
 
+    /** POST-only, non-persistent preview for the unsaved CMS Page block document. */
+    public function preview(): void {
+        $this->load->language('cms/page');
+        $this->response->addHeader('Cache-Control: private, no-store, no-cache, max-age=0');
+        $this->response->addHeader('Pragma: no-cache');
+        $this->response->addHeader('X-Content-Type-Options: nosniff');
+        $this->response->addHeader('X-Frame-Options: DENY');
+        $this->response->addHeader('Referrer-Policy: no-referrer');
+
+        if (!$this->user->hasPermission('modify', 'cms/page')) {
+            $this->renderPagePreviewError($this->language->get('error_page_preview_permission'));
+            return;
+        }
+        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->renderPagePreviewError($this->language->get('error_page_preview_method'));
+            return;
+        }
+        if (!$this->csrfValid()) {
+            $this->renderPagePreviewError($this->language->get('error_page_preview_csrf'));
+            return;
+        }
+
+        $raw = $this->request->post['preview_document'] ?? null;
+        if (!is_string($raw) || $raw === '' || strlen($raw) > self::PAGE_PREVIEW_MAX_BYTES) {
+            $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
+            return;
+        }
+
+        $validator = new \Reamur\System\Library\Blog\BlockDocument();
+        $decoded = $validator->deserializeDocument($raw);
+        if (empty($decoded['valid']) || !is_array($decoded['document']) || ($decoded['document']['format_version'] ?? null) !== 2) {
+            $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
+            return;
+        }
+
+        // Preview is deliberately stricter than the persisted page: never execute custom Three.js JavaScript.
+        $document = $decoded['document'];
+        $this->stripPagePreviewScripts($document['blocks']);
+        try {
+            $safeJson = $validator->serializeDocument($document);
+        } catch (\Throwable $exception) {
+            $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
+            return;
+        }
+
+        $assetBase = $this->pageCatalogAssetUrl();
+        // Empty file roots intentionally prevent this route from reading Blog download/audio/video directories.
+        $renderer = new \Reamur\System\Library\Blog\BlockRenderer('', '', '');
+        $rendered = $renderer->renderJson($safeJson, 2, $assetBase);
+        if (empty($rendered['valid'])) {
+            $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
+            return;
+        }
+
+        $title = $this->request->post['preview_title'] ?? '';
+        $title = is_string($title) ? trim($title) : '';
+        if (preg_match('//u', $title) !== 1) $title = '';
+        $title = mb_substr($title, 0, 255, 'UTF-8');
+        if ($title === '') $title = $this->language->get('text_page_preview_untitled');
+        $language = $this->request->post['preview_language'] ?? 'en-us';
+        $language = is_string($language) && preg_match('/^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/iD', $language) ? strtolower($language) : 'en-us';
+
+        $assetOrigin = $this->pageCatalogAssetOrigin($assetBase);
+        $originSource = $assetOrigin !== '' ? ' ' . $assetOrigin : '';
+        $this->response->addHeader("Content-Security-Policy: default-src 'none'; img-src 'self' data:" . $originSource . "; style-src 'self' 'unsafe-inline'" . $originSource . "; script-src 'self'" . $originSource . "; font-src 'self' data:" . $originSource . "; media-src 'self'" . $originSource . "; frame-src https://www.youtube-nocookie.com https://player.vimeo.com; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'none'");
+
+        $data = [
+            'heading_title' => $title,
+            'preview_language' => $language,
+            'text_page_preview_title' => $this->language->get('text_page_preview_title'),
+            'text_page_preview_notice' => $this->language->get('text_page_preview_notice'),
+            'description' => (string)$rendered['html'],
+            'preview_error' => '',
+            'common_css_url' => $assetBase . 'view/css/common.css',
+            'blocks_css_url' => $assetBase . 'view/css/blog-blocks.css',
+            'requires_threejs' => !empty($rendered['requires_threejs']),
+            'threejs_css_url' => $assetBase . 'view/css/threejs-thumb.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-5',
+            'threejs_script_url' => $assetBase . $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-5',
+        ];
+        $this->response->setOutput($this->load->view('cms/page_preview', $data));
+    }
+
+    /** @param array<int, array<string, mixed>> $nodes */
+    private function stripPagePreviewScripts(array &$nodes): void {
+        foreach ($nodes as &$node) {
+            if (!is_array($node)) continue;
+            if (($node['type'] ?? '') === 'core/threejs_thumb' && is_array($node['attributes'] ?? null)) {
+                $node['attributes']['custom_js'] = '';
+            }
+            if (is_array($node['children'] ?? null)) $this->stripPagePreviewScripts($node['children']);
+        }
+        unset($node);
+    }
+
+    private function pageCatalogAssetOrigin(string $assetBase): string {
+        $parts = parse_url($assetBase);
+        if (!is_array($parts) || !in_array(strtolower((string)($parts['scheme'] ?? '')), ['http', 'https'], true) || empty($parts['host'])) return '';
+        $origin = strtolower((string)$parts['scheme']) . '://' . $parts['host'];
+        if (isset($parts['port'])) $origin .= ':' . (int)$parts['port'];
+        return $origin;
+    }
+
+    private function renderPagePreviewError(string $message): void {
+        $this->response->setOutput($this->load->view('cms/page_preview', [
+            'heading_title' => '',
+            'preview_language' => 'en-us',
+            'text_page_preview_title' => $this->language->get('text_page_preview_title'),
+            'text_page_preview_notice' => '',
+            'description' => '',
+            'preview_error' => $message,
+            'common_css_url' => $this->pageCatalogAssetUrl() . 'view/css/common.css',
+            'blocks_css_url' => $this->pageCatalogAssetUrl() . 'view/css/blog-blocks.css',
+            'requires_threejs' => false,
+            'threejs_css_url' => '',
+            'threejs_script_url' => '',
+        ]));
+    }
+
     /** GET: imagens próprias de CMS Pages (somente modify cms/page). */
     public function mediaList(): void {
         $this->load->language('cms/page');
@@ -308,6 +428,7 @@ class Page extends \Reamur\System\Engine\Controller {
      */
     private function formData(array $page, bool $includeEditor = false): array {
         $this->load->language('cms/page');
+        $data['can_modify'] = $this->user->hasPermission('modify', 'cms/page');
 
         foreach ([
             'heading_title', 'text_edit', 'text_add', 'text_general', 'text_data',
@@ -315,7 +436,7 @@ class Page extends \Reamur\System\Engine\Controller {
             'entry_meta_title', 'entry_meta_description', 'entry_keyword',
             'entry_status', 'entry_sort_order',
             'button_save', 'button_cancel', 'text_enabled', 'text_disabled',
-            'text_meta_group', 'help_sort_order', 'help_description', 'text_page_media_library', 'text_page_media_empty', 'text_page_media_loading', 'text_page_media_search', 'text_page_media_upload_hint', 'text_page_media_uploading', 'text_page_media_select', 'text_page_media_page', 'text_page_media_upload', 'text_page_media_error', 'error_page_media_permission', 'error_page_media_method', 'error_page_media_csrf', 'error_page_media_list', 'error_page_media_no_file', 'error_page_media_size', 'error_page_media_type', 'error_page_media_root', 'error_page_media_upload', 'text_page_context_page', 'text_page_context_language', 'text_page_context_untitled', 'text_page_context_save_hint', 'text_page_context_readonly_hint', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_editor_import_file', 'text_editor_import_success', 'text_editor_preview_title', 'text_editor_preview_mode', 'text_editor_edit_mode', 'text_editor_import_hint', 'text_editor_import_unavailable', 'text_editor_import_error', 'text_editor_import_audio_library', 'text_editor_import_video_library', 'text_editor_preview_video_link', 'text_editor_preview_video_open', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no',
+            'text_meta_group', 'help_sort_order', 'help_description', 'text_page_preview_button', 'error_page_preview_unavailable', 'text_page_media_library', 'text_page_media_empty', 'text_page_media_loading', 'text_page_media_search', 'text_page_media_upload_hint', 'text_page_media_uploading', 'text_page_media_select', 'text_page_media_page', 'text_page_media_upload', 'text_page_media_error', 'error_page_media_permission', 'error_page_media_method', 'error_page_media_csrf', 'error_page_media_list', 'error_page_media_no_file', 'error_page_media_size', 'error_page_media_type', 'error_page_media_root', 'error_page_media_upload', 'text_page_context_page', 'text_page_context_language', 'text_page_context_untitled', 'text_page_context_save_hint', 'text_page_context_readonly_hint', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_editor_import_file', 'text_editor_import_success', 'text_editor_preview_title', 'text_editor_preview_mode', 'text_editor_edit_mode', 'text_editor_import_hint', 'text_editor_import_unavailable', 'text_editor_import_error', 'text_editor_import_audio_library', 'text_editor_import_video_library', 'text_editor_preview_video_link', 'text_editor_preview_video_open', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
@@ -459,6 +580,8 @@ class Page extends \Reamur\System\Engine\Controller {
                 $this->document->addScript($site . 'view/js/blog-block-editor-init.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-audio-media.js?v=' . $version);
                 if (!empty($data['can_modify'])) {
+                    $this->document->addScript($site . 'view/js/cms-page-preview.js?v=' . $version);
+                    $data['page_preview_url'] = $this->url->link('cms/page.preview');
                     $this->document->addScript($site . 'view/js/cms-page-media.js?v=' . $version);
                     $data['page_image_media_config'] = [
                         'listUrl' => $this->url->link('cms/page.mediaList'),
@@ -502,7 +625,6 @@ class Page extends \Reamur\System\Engine\Controller {
 
         $data['error']      = '';
         $data['text_flash'] = '';
-        $data['can_modify'] = $this->user->hasPermission('modify', 'cms/page');
         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
 
         $pid          = (int)($page['page_id'] ?? 0);

@@ -182,6 +182,16 @@ $_['text_block_threejs_scriptPlaceholder'] = 'Add JavaScript to customize the Th
 
 $_['text_block_threejs_addScript'] = 'Edit thumbnail / add script';
 
+// CMS Pages private draft preview.
+$_['text_page_preview_button'] = 'Open preview';
+$_['text_page_preview_title'] = 'Private page preview';
+$_['text_page_preview_notice'] = 'Private preview of unsaved page content. This isolated view does not include the full Catalog header, footer, or custom fields.';
+$_['text_page_preview_untitled'] = 'Untitled page';
+$_['error_page_preview_permission'] = 'You do not have permission to preview CMS Pages.';
+$_['error_page_preview_method'] = 'Preview requires a POST request.';
+$_['error_page_preview_csrf'] = 'Invalid or expired CSRF token.';
+$_['error_page_preview_document'] = 'The block document is invalid or exceeds the allowed size.';
+$_['error_page_preview_unavailable'] = 'Preview is unavailable.';
 // CMS Pages image library (block media only; no Page entity image field).
 $_['text_page_media_library'] = 'Pages image library';
 $_['text_page_media_empty'] = 'No images found.';

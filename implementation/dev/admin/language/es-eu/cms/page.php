@@ -166,6 +166,16 @@ $_['text_block_threejs_scriptPlaceholder'] = 'Añade JavaScript para personaliza
 
 $_['text_block_threejs_addScript'] = 'Editar miniatura / añadir script';
 
+// CMS Pages private draft preview.
+$_['text_page_preview_button'] = 'Abrir vista previa';
+$_['text_page_preview_title'] = 'Vista previa privada de la página';
+$_['text_page_preview_notice'] = 'Vista previa privada del contenido de la página sin guardar. Esta vista aislada no incluye el encabezado, pie de página ni campos personalizados completos del Catalog.';
+$_['text_page_preview_untitled'] = 'Página sin título';
+$_['error_page_preview_permission'] = 'No tienes permiso para previsualizar páginas del CMS.';
+$_['error_page_preview_method'] = 'La vista previa requiere una solicitud POST.';
+$_['error_page_preview_csrf'] = 'Token CSRF no válido o caducado.';
+$_['error_page_preview_document'] = 'El documento de bloques no es válido o supera el tamaño permitido.';
+$_['error_page_preview_unavailable'] = 'La vista previa no está disponible.';
 // CMS Pages image library (block media only; no Page entity image field).
 $_['text_page_media_library'] = 'Biblioteca de imágenes de Pages';
 $_['text_page_media_empty'] = 'No se encontraron imágenes.';
