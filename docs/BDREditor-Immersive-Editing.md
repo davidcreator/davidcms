@@ -8,4 +8,4 @@ A canonicalização agora emite `"attributes":{}` usando `(object)$attributes`. 
 
 ## Modo imersivo
 
-O modo é uma camada modal acessível no próprio DOM do editor, sem popup externo e sem tirar o campo hidden do formulário. `role=dialog`, `aria-modal`, foco preso, restauração de foco e Escape tornam a transição reversível. Em viewport estreita, navegação e canvas passam a uma coluna rolável. O editor não dispara autosave e o botão de saída volta à tela CMS para salvar.
+O modo é uma camada modal acessível no próprio DOM do editor, sem popup externo e sem tirar o campo hidden do formulário. `role=dialog`, `aria-modal`, foco preso, restauração de foco e Escape tornam a transição reversível. Durante o modo imersivo, o host recebe `tabindex="-1"` para permitir foco programático quando o envio do formulário é bloqueado pela validação; o valor anterior é restaurado ao sair. Em viewport estreita, navegação e canvas passam a uma coluna rolável. O editor não dispara autosave e o botão de saída volta à tela CMS para salvar.

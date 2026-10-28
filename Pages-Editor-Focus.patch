@@ -1,0 +1,33 @@
+--- a/dev/admin/view/js/blog-block-editor.js
++++ b/dev/admin/view/js/blog-block-editor.js
+@@ -673,12 +673,12 @@
+       if (next) {
+         this.fullscreenReturnFocus = global.document.activeElement;
+         this.fullscreenPreviousPanel = this.activePanel;
+-        this.fullscreenPreviousAttrs = { role:this.root.getAttribute('role'), modal:this.root.getAttribute('aria-modal'), label:this.root.getAttribute('aria-label') };
++        this.fullscreenPreviousAttrs = { role:this.root.getAttribute('role'), modal:this.root.getAttribute('aria-modal'), label:this.root.getAttribute('aria-label'), tabindex:this.root.getAttribute('tabindex') };
+         this.fullscreen = true;
+         if (!this.activePanel || this.activePanel === 'settings') this.activePanel = 'structure';
+         this.inspectorOpen = true;
+         this.root.classList.add('is-fullscreen');
+-        this.root.setAttribute('role','dialog'); this.root.setAttribute('aria-modal','true'); this.root.setAttribute('aria-label',this.strings.fullscreenDialog);
++        this.root.setAttribute('role','dialog'); this.root.setAttribute('aria-modal','true'); this.root.setAttribute('aria-label',this.strings.fullscreenDialog); this.root.setAttribute('tabindex','-1');
+         global.document.body.classList.add('rb-bdre-fullscreen-open');
+         this.render();
+         const focusExit = () => { const target=this.root.querySelector('[data-action="toggle-fullscreen"]'); if (target) target.focus(); };
+@@ -692,6 +692,7 @@
+       if (previous.role === null) this.root.removeAttribute('role'); else if (previous.role !== undefined) this.root.setAttribute('role',previous.role);
+       if (previous.modal === null) this.root.removeAttribute('aria-modal'); else if (previous.modal !== undefined) this.root.setAttribute('aria-modal',previous.modal);
+       if (previous.label === null) this.root.removeAttribute('aria-label'); else if (previous.label !== undefined) this.root.setAttribute('aria-label',previous.label);
++      if (previous.tabindex === null) this.root.removeAttribute('tabindex'); else if (previous.tabindex !== undefined) this.root.setAttribute('tabindex',previous.tabindex);
+       if (!global.document.querySelector('.rb-editor.is-fullscreen')) global.document.body.classList.remove('rb-bdre-fullscreen-open');
+       const returnFocus = this.fullscreenReturnFocus;
+       this.fullscreenReturnFocus = null; this.fullscreenPreviousAttrs = null; this.fullscreenPreviousPanel = null;
+--- a/docs/BDREditor-Immersive-Editing.md
++++ b/docs/BDREditor-Immersive-Editing.md
+@@ -8,4 +8,4 @@
+ 
+ ## Modo imersivo
+ 
+-O modo é uma camada modal acessível no próprio DOM do editor, sem popup externo e sem tirar o campo hidden do formulário. `role=dialog`, `aria-modal`, foco preso, restauração de foco e Escape tornam a transição reversível. Em viewport estreita, navegação e canvas passam a uma coluna rolável. O editor não dispara autosave e o botão de saída volta à tela CMS para salvar.
++O modo é uma camada modal acessível no próprio DOM do editor, sem popup externo e sem tirar o campo hidden do formulário. `role=dialog`, `aria-modal`, foco preso, restauração de foco e Escape tornam a transição reversível. Durante o modo imersivo, o host recebe `tabindex="-1"` para permitir foco programático quando o envio do formulário é bloqueado pela validação; o valor anterior é restaurado ao sair. Em viewport estreita, navegação e canvas passam a uma coluna rolável. O editor não dispara autosave e o botão de saída volta à tela CMS para salvar.

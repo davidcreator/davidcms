@@ -1,10 +1,10 @@
-ReamurCMS — salvar no modo imersivo de CMS > Páginas
+ReamurCMS — foco programático no diálogo imersivo BDREditor
 
-HEAD esperado: 622ac269063498abb4540ea275df396b73bfecb6
+HEAD esperado: 95418caecd139f27fe3487f6a9ef7528f23cea4a
 
-A faixa de contexto do BDREditor mostra um botão Salvar apenas para usuários com can_modify em cms/page. O botão é submit dentro do formulário existente e usa seus handlers de serialização, CSRF e validação. Sem permissão, não é exibido e a faixa informa o modo de consulta. Não cria endpoint, AJAX, autosave, persistência paralela ou mudança no contrato do Blog.
+Ao entrar em tela cheia, o host do editor recebe tabindex="-1", permitindo que fluxos existentes de validação bloqueada devolvam o foco ao diálogo. Ao sair, role/aria e o valor original de tabindex são restaurados. Não altera a validação, POST, estado salvo, contrato de documento nem comportamento de layout.
 
 Aplicação local opcional dentro do checkout:
-  bash apply-patch.sh Pages-Editor-Save.patch 622ac269063498abb4540ea275df396b73bfecb6
+  bash apply-patch.sh Pages-Editor-Focus.patch 95418caecd139f27fe3487f6a9ef7528f23cea4a
 
-O script valida HEAD e roda git apply --check antes de aplicar. Não faz commit/push, deploy, SQL nem migrations.
+O script valida HEAD e roda git apply --check antes de aplicar. Não faz commit/push, deploy, SQL ou migrations.

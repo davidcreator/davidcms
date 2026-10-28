@@ -673,12 +673,12 @@
       if (next) {
         this.fullscreenReturnFocus = global.document.activeElement;
         this.fullscreenPreviousPanel = this.activePanel;
-        this.fullscreenPreviousAttrs = { role:this.root.getAttribute('role'), modal:this.root.getAttribute('aria-modal'), label:this.root.getAttribute('aria-label') };
+        this.fullscreenPreviousAttrs = { role:this.root.getAttribute('role'), modal:this.root.getAttribute('aria-modal'), label:this.root.getAttribute('aria-label'), tabindex:this.root.getAttribute('tabindex') };
         this.fullscreen = true;
         if (!this.activePanel || this.activePanel === 'settings') this.activePanel = 'structure';
         this.inspectorOpen = true;
         this.root.classList.add('is-fullscreen');
-        this.root.setAttribute('role','dialog'); this.root.setAttribute('aria-modal','true'); this.root.setAttribute('aria-label',this.strings.fullscreenDialog);
+        this.root.setAttribute('role','dialog'); this.root.setAttribute('aria-modal','true'); this.root.setAttribute('aria-label',this.strings.fullscreenDialog); this.root.setAttribute('tabindex','-1');
         global.document.body.classList.add('rb-bdre-fullscreen-open');
         this.render();
         const focusExit = () => { const target=this.root.querySelector('[data-action="toggle-fullscreen"]'); if (target) target.focus(); };
@@ -692,6 +692,7 @@
       if (previous.role === null) this.root.removeAttribute('role'); else if (previous.role !== undefined) this.root.setAttribute('role',previous.role);
       if (previous.modal === null) this.root.removeAttribute('aria-modal'); else if (previous.modal !== undefined) this.root.setAttribute('aria-modal',previous.modal);
       if (previous.label === null) this.root.removeAttribute('aria-label'); else if (previous.label !== undefined) this.root.setAttribute('aria-label',previous.label);
+      if (previous.tabindex === null) this.root.removeAttribute('tabindex'); else if (previous.tabindex !== undefined) this.root.setAttribute('tabindex',previous.tabindex);
       if (!global.document.querySelector('.rb-editor.is-fullscreen')) global.document.body.classList.remove('rb-bdre-fullscreen-open');
       const returnFocus = this.fullscreenReturnFocus;
       this.fullscreenReturnFocus = null; this.fullscreenPreviousAttrs = null; this.fullscreenPreviousPanel = null;
