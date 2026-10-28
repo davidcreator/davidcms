@@ -44,7 +44,7 @@
       if (url.origin !== base) return false;
       if (url.search || url.hash) return false;
       const path = url.pathname.replace(/^\//, '');
-      return (/^(?:image|view\/image\/blog)\//).test(path) && !path.split('/').some((part) => part === '.' || part === '..');
+      return (/^(?:image|view\/image\/blog|view\/image\/cms\/page)\//).test(path) && !path.split('/').some((part) => part === '.' || part === '..');
     } catch (_) { return false; }
   }
 
@@ -650,7 +650,7 @@
       else if (name === 'move-down') this.moveNode(button.dataset.nodeId || this.selectedId, 1);
       else if (name === 'indent') this.indentNode(button.dataset.nodeId || this.selectedId);
       else if (name === 'outdent') this.outdentNode(button.dataset.nodeId || this.selectedId);
-      else if (name === 'media') { global.document.dispatchEvent(new CustomEvent('blog-block-media-open', { detail: { editor: this } })); }
+      else if (name === 'media') { const eventName = this.options.pageImagePicker === true ? 'cms-page-media-open' : 'blog-block-media-open'; global.document.dispatchEvent(new CustomEvent(eventName, { detail: { editor: this } })); }
       else if (name === 'file-media') { global.document.dispatchEvent(new CustomEvent('blog-block-file-open', { detail: { editor: this, nodeId: button.dataset.nodeId || this.selectedId } })); }
       else if (name === 'audio-media') { global.document.dispatchEvent(new CustomEvent('blog-block-audio-open', { detail: { editor: this, nodeId: button.dataset.nodeId || this.selectedId } })); }
       else if (name === 'video-media') { global.document.dispatchEvent(new CustomEvent('blog-block-video-open', { detail: { editor: this, nodeId: button.dataset.nodeId || this.selectedId } })); }
@@ -1808,7 +1808,7 @@
         const hint = this.el('p','rb-help-text',this.strings.threejs.configHint); aside.append(hint);
       }
       if (n.type === 'core/image') {
-        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); if (this.options.mediaPickers !== false) aside.append(this.button(this.strings.media.placeholder, 'media'));
+        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); if (this.options.mediaPickers !== false || this.options.pageImagePicker === true) aside.append(this.button(this.strings.media.placeholder, 'media'));
         addField(this.strings.media.alt, 'alt', n.attributes.alt, 'text'); addField(this.strings.media.title, 'title', n.attributes.title || '', 'text');
         addField(this.strings.media.caption, 'caption', n.attributes.caption || '', 'textarea');
         addField(this.strings.media.alignment, 'align', n.attributes.align || 'center', 'text', [['left',this.strings.media.alignments.left],['center',this.strings.media.alignments.center],['right',this.strings.media.alignments.right],['wide',this.strings.media.alignments.wide],['full',this.strings.media.alignments.full]]);
@@ -1816,7 +1816,7 @@
         addField(this.strings.media.mobileSize, 'mobile_size', n.attributes.mobile_size || 'full', 'text', Object.entries(this.strings.media.mobileSizes));
       }
       if (n.type === 'core/cover') {
-        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); if (this.options.mediaPickers !== false) aside.append(this.button(this.strings.media.placeholder, 'media'));
+        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); if (this.options.mediaPickers !== false || this.options.pageImagePicker === true) aside.append(this.button(this.strings.media.placeholder, 'media'));
         addField(this.strings.media.alt, 'alt', n.attributes.alt, 'text');
         addField(this.strings.media.alignment, 'align', n.attributes.align || 'wide', 'text', [['content',this.strings.media.alignments.content],['wide',this.strings.media.alignments.wide],['full',this.strings.media.alignments.full]]);
       }

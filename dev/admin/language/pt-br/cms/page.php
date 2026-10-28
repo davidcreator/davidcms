@@ -166,6 +166,27 @@ $_['text_block_threejs_scriptPlaceholder'] = 'Adicione JavaScript para modificar
 
 $_['text_block_threejs_addScript'] = 'Editar thumb / adicionar script';
 
+// CMS Pages image library (block media only; no Page entity image field).
+$_['text_page_media_library'] = 'Biblioteca de imagens das Páginas';
+$_['text_page_media_empty'] = 'Nenhuma imagem encontrada.';
+$_['text_page_media_loading'] = 'Carregando imagens…';
+$_['text_page_media_search'] = 'Buscar por nome';
+$_['text_page_media_upload_hint'] = 'JPEG, PNG, WebP ou GIF; máximo 2 MiB. Biblioteca exclusiva de Páginas.';
+$_['text_page_media_uploading'] = 'Enviando imagem…';
+$_['text_page_media_select'] = 'Selecionar';
+$_['text_page_media_page'] = 'Página %1 de %2';
+$_['text_page_media_upload'] = 'Enviar imagem';
+$_['text_page_media_error'] = 'Não foi possível concluir a operação de imagem.';
+$_['error_page_media_permission'] = 'Você não tem permissão para acessar a biblioteca de imagens de Páginas.';
+$_['error_page_media_method'] = 'Método HTTP inválido.';
+$_['error_page_media_csrf'] = 'Token CSRF inválido ou expirado.';
+$_['error_page_media_list'] = 'Não foi possível listar as imagens.';
+$_['error_page_media_no_file'] = 'Selecione uma imagem para enviar.';
+$_['error_page_media_size'] = 'A imagem deve ter no máximo 2 MiB.';
+$_['error_page_media_type'] = 'Formato inválido. Use JPEG, PNG, WebP ou GIF.';
+$_['error_page_media_root'] = 'A pasta exclusiva de imagens de Páginas não está disponível.';
+$_['error_page_media_upload'] = 'Falha ao enviar a imagem.';
+
 // F10-01 — páginas públicas do Catalog vinculadas ao CMS.
 $_['text_system_page'] = 'Página do Catalog';
 $_['text_system_page_help'] = 'Esta página está vinculada a uma rota pública do Catalog. A chave da rota é fixa; edite o conteúdo e os metadados aqui.';

@@ -236,6 +236,70 @@ class Page extends \Reamur\System\Engine\Controller {
         $this->response->redirect($this->url->link('cms/page'));
     }
 
+    /** GET: imagens próprias de CMS Pages (somente modify cms/page). */
+    public function mediaList(): void {
+        $this->load->language('cms/page');
+        if (!$this->user->hasPermission('modify', 'cms/page')) {
+            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_permission')]);
+            return;
+        }
+        if (($this->request->server['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_method')]);
+            return;
+        }
+        $search = $this->request->get['search'] ?? '';
+        $page = $this->request->get['page'] ?? 1;
+        $this->load->model('cms/page_media');
+        $result = $this->model_cms_page_media->listImages(is_string($search) ? trim($search) : '', is_scalar($page) ? max(1, (int)$page) : 1);
+        if (empty($result['success'])) {
+            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_list')]);
+            return;
+        }
+        $base = $this->pageCatalogAssetUrl();
+        foreach ($result['files'] as &$file) $file['url'] = $base . $file['path'];
+        unset($file);
+        $this->pageMediaJson($result);
+    }
+
+    /** POST: upload image-only, 2 MiB, CSRF + ACL. */
+    public function mediaUpload(): void {
+        $this->load->language('cms/page');
+        if (!$this->user->hasPermission('modify', 'cms/page')) {
+            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_permission')]);
+            return;
+        }
+        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_method')]);
+            return;
+        }
+        if (!$this->csrfValid()) {
+            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_csrf')]);
+            return;
+        }
+        $this->load->model('cms/page_media');
+        $result = $this->model_cms_page_media->storeImage((array)($this->request->files['file'] ?? []));
+        if (empty($result['success'])) {
+            $key = match ($result['error'] ?? '') {
+                'no_file' => 'error_page_media_no_file',
+                'size' => 'error_page_media_size',
+                'type' => 'error_page_media_type',
+                'root' => 'error_page_media_root',
+                default => 'error_page_media_upload',
+            };
+            $this->pageMediaJson(['success' => false, 'error' => $this->language->get($key)]);
+            return;
+        }
+        $result['url'] = $this->pageCatalogAssetUrl() . $result['path'];
+        $this->pageMediaJson($result);
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function pageMediaJson(array $payload): void {
+        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
+        $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        $this->response->setOutput($json === false ? '{"success":false}' : $json);
+    }
+
     // ─── internos ────────────────────────────────────────────────────────
 
     /**
@@ -251,7 +315,7 @@ class Page extends \Reamur\System\Engine\Controller {
             'entry_meta_title', 'entry_meta_description', 'entry_keyword',
             'entry_status', 'entry_sort_order',
             'button_save', 'button_cancel', 'text_enabled', 'text_disabled',
-            'text_meta_group', 'help_sort_order', 'help_description', 'text_page_context_page', 'text_page_context_language', 'text_page_context_untitled', 'text_page_context_save_hint', 'text_page_context_readonly_hint', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_editor_import_file', 'text_editor_import_success', 'text_editor_preview_title', 'text_editor_preview_mode', 'text_editor_edit_mode', 'text_editor_import_hint', 'text_editor_import_unavailable', 'text_editor_import_error', 'text_editor_import_audio_library', 'text_editor_import_video_library', 'text_editor_preview_video_link', 'text_editor_preview_video_open', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no',
+            'text_meta_group', 'help_sort_order', 'help_description', 'text_page_media_library', 'text_page_media_empty', 'text_page_media_loading', 'text_page_media_search', 'text_page_media_upload_hint', 'text_page_media_uploading', 'text_page_media_select', 'text_page_media_page', 'text_page_media_upload', 'text_page_media_error', 'error_page_media_permission', 'error_page_media_method', 'error_page_media_csrf', 'error_page_media_list', 'error_page_media_no_file', 'error_page_media_size', 'error_page_media_type', 'error_page_media_root', 'error_page_media_upload', 'text_page_context_page', 'text_page_context_language', 'text_page_context_untitled', 'text_page_context_save_hint', 'text_page_context_readonly_hint', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_editor_import_file', 'text_editor_import_success', 'text_editor_preview_title', 'text_editor_preview_mode', 'text_editor_edit_mode', 'text_editor_import_hint', 'text_editor_import_unavailable', 'text_editor_import_error', 'text_editor_import_audio_library', 'text_editor_import_video_library', 'text_editor_preview_video_link', 'text_editor_preview_video_open', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
@@ -394,6 +458,21 @@ class Page extends \Reamur\System\Engine\Controller {
                 $this->document->addScript($site . 'view/js/blog-block-editor.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-block-editor-init.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-audio-media.js?v=' . $version);
+                if (!empty($data['can_modify'])) {
+                    $this->document->addScript($site . 'view/js/cms-page-media.js?v=' . $version);
+                    $data['page_image_media_config'] = [
+                        'listUrl' => $this->url->link('cms/page.mediaList'),
+                        'uploadUrl' => $this->url->link('cms/page.mediaUpload'),
+                        'csrfToken' => \Reamur\System\Library\Security\Csrf::token($this->session),
+                        'strings' => [
+                            'loading' => $data['text_page_media_loading'], 'empty' => $data['text_page_media_empty'],
+                            'search' => $data['text_page_media_search'], 'uploadHint' => $data['text_page_media_upload_hint'],
+                            'uploading' => $data['text_page_media_uploading'], 'select' => $data['text_page_media_select'],
+                            'page' => $data['text_page_media_page'], 'upload' => $data['text_page_media_upload'],
+                            'error' => $data['text_page_media_error'],
+                        ],
+                    ];
+                }
 
                 // Existing catalog endpoint enforces modify on blog/blog; expose only when that exact ACL is granted.
                 $data['can_use_audio_catalog'] = $this->user->hasPermission('modify', 'blog/blog');

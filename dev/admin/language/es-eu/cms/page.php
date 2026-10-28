@@ -166,6 +166,27 @@ $_['text_block_threejs_scriptPlaceholder'] = 'Añade JavaScript para personaliza
 
 $_['text_block_threejs_addScript'] = 'Editar miniatura / añadir script';
 
+// CMS Pages image library (block media only; no Page entity image field).
+$_['text_page_media_library'] = 'Biblioteca de imágenes de Pages';
+$_['text_page_media_empty'] = 'No se encontraron imágenes.';
+$_['text_page_media_loading'] = 'Cargando imágenes…';
+$_['text_page_media_search'] = 'Buscar por nombre';
+$_['text_page_media_upload_hint'] = 'JPEG, PNG, WebP o GIF; máximo 2 MiB. Biblioteca exclusiva de Pages.';
+$_['text_page_media_uploading'] = 'Subiendo imagen…';
+$_['text_page_media_select'] = 'Seleccionar';
+$_['text_page_media_page'] = 'Página %1 de %2';
+$_['text_page_media_upload'] = 'Subir imagen';
+$_['text_page_media_error'] = 'No se pudo completar la operación de imagen.';
+$_['error_page_media_permission'] = 'No tienes permiso para acceder a la biblioteca de imágenes de Pages.';
+$_['error_page_media_method'] = 'Método HTTP no válido.';
+$_['error_page_media_csrf'] = 'Token CSRF no válido o caducado.';
+$_['error_page_media_list'] = 'No se pudieron listar las imágenes.';
+$_['error_page_media_no_file'] = 'Selecciona una imagen para subir.';
+$_['error_page_media_size'] = 'La imagen debe tener un máximo de 2 MiB.';
+$_['error_page_media_type'] = 'Formato no válido. Usa JPEG, PNG, WebP o GIF.';
+$_['error_page_media_root'] = 'La carpeta exclusiva de imágenes de Pages no está disponible.';
+$_['error_page_media_upload'] = 'Error al subir la imagen.';
+
 // F10-01 — páginas públicas do Catalog vinculadas ao CMS.
 $_['text_system_page'] = 'Página del Catalog';
 $_['text_system_page_help'] = 'Esta página está vinculada a una ruta pública del Catalog. La clave de ruta es fija; edita aquí el contenido y los metadatos.';

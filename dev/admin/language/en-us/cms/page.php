@@ -182,6 +182,27 @@ $_['text_block_threejs_scriptPlaceholder'] = 'Add JavaScript to customize the Th
 
 $_['text_block_threejs_addScript'] = 'Edit thumbnail / add script';
 
+// CMS Pages image library (block media only; no Page entity image field).
+$_['text_page_media_library'] = 'Pages image library';
+$_['text_page_media_empty'] = 'No images found.';
+$_['text_page_media_loading'] = 'Loading images…';
+$_['text_page_media_search'] = 'Search by filename';
+$_['text_page_media_upload_hint'] = 'JPEG, PNG, WebP, or GIF; maximum 2 MiB. Pages-only image library.';
+$_['text_page_media_uploading'] = 'Uploading image…';
+$_['text_page_media_select'] = 'Select';
+$_['text_page_media_page'] = 'Page %1 of %2';
+$_['text_page_media_upload'] = 'Upload image';
+$_['text_page_media_error'] = 'The image operation could not be completed.';
+$_['error_page_media_permission'] = 'You do not have permission to access the Pages image library.';
+$_['error_page_media_method'] = 'Invalid HTTP method.';
+$_['error_page_media_csrf'] = 'Invalid or expired CSRF token.';
+$_['error_page_media_list'] = 'Could not list images.';
+$_['error_page_media_no_file'] = 'Choose an image to upload.';
+$_['error_page_media_size'] = 'The image must be no larger than 2 MiB.';
+$_['error_page_media_type'] = 'Invalid format. Use JPEG, PNG, WebP, or GIF.';
+$_['error_page_media_root'] = 'The Pages-only image directory is unavailable.';
+$_['error_page_media_upload'] = 'Image upload failed.';
+
 // F10-01 — páginas públicas do Catalog vinculadas ao CMS.
 $_['text_system_page'] = 'Catalog page';
 $_['text_system_page_help'] = 'This page is linked to a public Catalog route. Its route key is fixed; edit the content and metadata here.';

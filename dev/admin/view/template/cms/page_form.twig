@@ -107,6 +107,24 @@
       </div></div>
     </div>
   </form>
+  {% if can_modify %}
+  <div class="modal fade" id="cmsPageImageModal" tabindex="-1" aria-labelledby="cmsPageImageModalLabel" aria-hidden="true" data-page-media-config="{{ page_image_media_config|json_encode|e('html_attr') }}">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title fs-5" id="cmsPageImageModalLabel">{{ text_page_media_library }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ button_media_close }}"></button></div>
+      <div class="modal-body">
+        <div id="cmsPageImageAlert" class="alert d-none" role="status" aria-live="polite"></div>
+        <label class="form-label" for="cmsPageImageSearch">{{ text_page_media_search }}</label>
+        <input class="form-control mb-3" id="cmsPageImageSearch" type="search" maxlength="128">
+        <div id="cmsPageImageFiles" class="list-group mb-3"></div>
+        <div id="cmsPageImageEmpty" class="text-body-secondary py-2" aria-live="polite"></div>
+        <div class="d-flex justify-content-between align-items-center mb-3"><button type="button" class="btn btn-outline-secondary btn-sm" id="cmsPageImagePrevious">{{ button_media_previous }}</button><span id="cmsPageImagePage" class="small"></span><button type="button" class="btn btn-outline-secondary btn-sm" id="cmsPageImageNext">{{ button_media_next }}</button></div>
+        <hr><p class="form-text">{{ text_page_media_upload_hint }}</p>
+        <div class="input-group"><input class="form-control" id="cmsPageImageUploadFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"><button class="btn btn-primary" type="button" id="cmsPageImageUploadButton">{{ text_page_media_upload }}</button></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ button_media_close }}</button></div>
+    </div></div>
+  </div>
+  {% endif %}
   {% if can_modify and can_use_audio_catalog %}
   <div class="modal fade" id="blogAudioModal" tabindex="-1" aria-labelledby="blogAudioModalLabel" aria-hidden="true" data-media-config="{{ media_config|json_encode|e('html_attr') }}" data-media-kind="audio">
     <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
