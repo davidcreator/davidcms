@@ -51,7 +51,11 @@ class Theme extends \Reamur\System\Engine\Controller {
         if (\Reamur\System\Library\Security\Csrf::check($this->session,$this->request->post['csrf_token']??'')) $this->model_design_theme->restoreRevision((int)$theme_id,(int)$revision_id,(int)$this->user->getUserId());
         $this->response->redirect($this->url->link('design/theme.edit|'.(int)$theme_id));
     }
-    private function chrome(array &$data): void { $data['header']=$this->load->controller('common/header',$data); $data['footer']=$this->load->controller('common/footer',$data); }
+    private function chrome(array &$data): void {
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+        $data['header']=$this->load->controller('common/header',$data);
+        $data['footer']=$this->load->controller('common/footer',$data);
+    }
     public function activate(string $theme_id='0'): void {
         if ($this->request->server['REQUEST_METHOD']!=='POST' || !$this->user->hasPermission('modify','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
         $this->load->model('design/theme'); $token=(string)($this->request->post['csrf_token']??'');
