@@ -1,21 +1,11 @@
-{# dev/catalog/view/template/error/not_found.twig — 404 com Cena 4 (fog, F3-03) #}
 {{ header }}
 <main class="card-404 card-404--3d">
-  <div class="nf-3d__canvas" aria-hidden="true"
-       data-scene="not-found"
-       data-count="{{ nf3d.count }}"
-       data-color="{{ nf3d.color }}"
-       data-speed="{{ nf3d.speed }}"
-       data-drift="{{ nf3d.drift }}">
-    <div class="nf-3d__fallback" data-fallback></div>
-  </div>
+  <div class="nf-3d__canvas" aria-hidden="true" data-scene="not-found" data-count="{{ nf3d.count }}" data-color="{{ nf3d.color }}" data-speed="{{ nf3d.speed }}" data-drift="{{ nf3d.drift }}"><div class="nf-3d__fallback" data-fallback></div></div>
   <div class="nf-3d__content">
-    <p class="code">{{ text_code }}</p>
-    <h1>{{ heading_title }}</h1>
-    <p>{{ text_error }}</p>
-    <p class="muted">{{ text_suggestion }}</p>
-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
-    <a class="btn primary" href="{{ home }}">{{ button_continue }}</a>
+  {% for section in cms_page_sections %}
+    {% if section == 'not_found_content' %}<p class="code">{{ text_code }}</p><h1>{{ heading_title }}</h1><p>{{ text_error }}</p><p class="muted">{{ text_suggestion }}</p><a class="btn primary" href="{{ home }}">{{ button_continue }}</a>
+    {% elseif section == 'editorial' and cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+  {% endfor %}
   </div>
 </main>
 {{ footer }}

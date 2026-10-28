@@ -1,21 +1,19 @@
-{# dev/catalog/view/template/common/home.twig — home composta de partials (F3-01; hero 3D na F3-02) #}
+{# Estrutura permitida vem do contrato CMS PageLayout; includes de domínio permanecem fixos. #}
 {{ header }}
 <main>
-{% if cms_home_content %}
-<section id="about" class="cms-home-content">{{ cms_home_content }}</section>
-{% else %}
-{% include 'partial/hero-3d.twig' %}
-{% include 'partial/about.twig' %}
-{% include 'partial/methodology.twig' %}
-{% include 'partial/skills.twig' %}
-{% include 'partial/services.twig' %}
-{% endif %}
-{# Conteúdo de domínio continua vindo dos módulos próprios, independente do CMS. #}
-{% include 'partial/testimonials.twig' %}
-{% include 'partial/portfolio.twig' %}
-{% include 'partial/tools.twig' %}
-{% include 'partial/news.twig' %}
-{% include 'partial/clients.twig' %}
-{% include 'partial/contact.twig' %}
+{% for section in cms_home_sections %}
+  {% if section == 'hero' %}{% include 'partial/hero-3d.twig' %}
+  {% elseif section == 'about' %}{% include 'partial/about.twig' %}
+  {% elseif section == 'methodology' %}{% include 'partial/methodology.twig' %}
+  {% elseif section == 'skills' %}{% include 'partial/skills.twig' %}
+  {% elseif section == 'services' %}{% include 'partial/services.twig' %}
+  {% elseif section == 'editorial' and cms_home_content %}<section id="about" class="cms-home-content">{{ cms_home_content }}</section>
+  {% elseif section == 'testimonials' %}{% include 'partial/testimonials.twig' %}
+  {% elseif section == 'portfolio' %}{% include 'partial/portfolio.twig' %}
+  {% elseif section == 'tools' %}{% include 'partial/tools.twig' %}
+  {% elseif section == 'news' %}{% include 'partial/news.twig' %}
+  {% elseif section == 'clients' %}{% include 'partial/clients.twig' %}
+  {% elseif section == 'contact' %}{% include 'partial/contact.twig' %}{% endif %}
+{% endfor %}
 </main>
 {{ footer }}

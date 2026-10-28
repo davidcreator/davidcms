@@ -1,26 +1,10 @@
-{# dev/catalog/view/template/tool/tool_info.twig — página dedicada da ferramenta (F3-04, SEO) #}
 {{ header }}
-<main class="site-main">
-  <div class="container">
-    <div class="page-head">
-      <h1>{{ heading_title }}</h1>
-      <a class="back-link" href="{{ back_tools }}">{{ button_back }}</a>
-    </div>
-
-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
-    {% if text_lead %}<p class="lead">{{ text_lead }}</p>{% endif %}
-
-    <table class="fact-table">
-      {% if tool.vendor %}<tr><th>{{ entry_vendor }}</th><td>{{ tool.vendor }}</td></tr>{% endif %}
-      {% if tool.external %}<tr><th>{{ entry_external_url }}</th><td><a href="{{ tool.url }}" target="_blank" rel="noopener">{{ text_open }} ↗</a></td></tr>{% endif %}
-    </table>
-
-    {% if tool.external %}
-    <p><a class="btn primary" href="{{ tool.url }}" target="_blank" rel="noopener">{{ text_open }} ↗</a></p>
-    {% else %}
-    <p class="muted">{{ text_open_hint }}</p>
-    <p><a class="btn" href="{{ contact }}">{{ button_contact }}</a></p>
-    {% endif %}
-  </div>
-</main>
+<main class="site-main"><div class="container">
+{% for section in cms_page_sections %}
+  {% if section == 'tool_header' %}<div class="page-head"><h1>{{ heading_title }}</h1><a class="back-link" href="{{ back_tools }}">{{ button_back }}</a></div>
+  {% elseif section == 'editorial' and cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>
+  {% elseif section == 'tool_description' %}{% if text_lead %}<p class="lead">{{ text_lead }}</p>{% endif %}<table class="fact-table">{% if tool.vendor %}<tr><th>{{ entry_vendor }}</th><td>{{ tool.vendor }}</td></tr>{% endif %}{% if tool.external %}<tr><th>{{ entry_external_url }}</th><td><a href="{{ tool.url }}" target="_blank" rel="noopener">{{ text_open }} ↗</a></td></tr>{% endif %}</table>{% if tool.external %}<p><a class="btn primary" href="{{ tool.url }}" target="_blank" rel="noopener">{{ text_open }} ↗</a></p>{% else %}<p class="muted">{{ text_open_hint }}</p>{% endif %}
+  {% elseif section == 'contact_link' and not tool.external %}<p><a class="btn" href="{{ contact }}">{{ button_contact }}</a></p>{% endif %}
+{% endfor %}
+</div></main>
 {{ footer }}

@@ -77,7 +77,17 @@
   document.addEventListener('hidden.bs.modal', function (event) { if (event.target && event.target.id === 'blogMediaModal') pendingMediaEditor = null; });
   function init() {
     if (!global.ReamurBlogBlockEditor) return;
-    document.querySelectorAll('[data-blog-block-editor]').forEach(function (root) {
+    document.addEventListener('click', function (event) {
+    var button = event.target.closest('[data-page-layout-move]');
+    if (!button) return;
+    var item = button.closest('[data-page-layout-item]');
+    var list = item && item.parentElement;
+    if (!item || !list) return;
+    if (button.dataset.pageLayoutMove === 'up' && item.previousElementSibling) list.insertBefore(item, item.previousElementSibling);
+    if (button.dataset.pageLayoutMove === 'down' && item.nextElementSibling) list.insertBefore(item.nextElementSibling, item);
+  });
+
+  document.querySelectorAll('[data-blog-block-editor]').forEach(function (root) {
       var hidden = document.getElementById(root.dataset.hiddenInput || '');
       var ready = document.getElementById(root.dataset.readyInput || '');
       var form = root.closest('form');

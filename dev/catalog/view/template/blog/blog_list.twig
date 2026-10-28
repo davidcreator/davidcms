@@ -1,32 +1,10 @@
-{# dev/catalog/view/template/blog/blog_list.twig — lista pública do blog (F7-02, ADR 0043) #}
-{# Reaproveita as classes news-card/news-meta/news-cta do CSS existente (zero CSS novo) #}
+{# Estrutura usa somente seções allowlisted; posts e gestão continuam no módulo Blog. #}
 {{ header }}
-<main class="site-main">
-  <div class="container">
-    <div class="page-head">
-      <h1>{{ heading_title }}</h1>
-      <a class="back-link" href="{{ home }}">{{ button_back_home }}</a>
-    </div>
-    <p class="lead">{{ text_lead }}</p>
-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
-
-    {% if posts %}
-    <div class="grid-3">
-      {% for p in posts %}
-      <article class="news-card">
-        {% if p.image %}
-        <img src="{{ p.image }}" alt="{{ p.title }}" loading="lazy">
-        {% endif %}
-        {% if p.date %}<p class="news-meta">{{ p.date }}</p>{% endif %}
-        <h3>{{ p.title }}</h3>
-        {% if p.excerpt %}<p>{{ p.excerpt }}</p>{% endif %}
-        <p><a class="news-cta" href="{{ p.href }}">{{ text_read_more }} →</a></p>
-      </article>
-      {% endfor %}
-    </div>
-    {% else %}
-    <p class="lead">{{ text_no_results }}</p>
-    {% endif %}
-  </div>
-</main>
+<main class="site-main"><div class="container">
+{% for section in cms_page_sections %}
+  {% if section == 'intro' %}<div class="page-head"><h1>{{ heading_title }}</h1><a class="back-link" href="{{ home }}">{{ button_back_home }}</a></div><p class="lead">{{ text_lead }}</p>
+  {% elseif section == 'editorial' and cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>
+  {% elseif section == 'posts_grid' %}{% if posts %}<div class="grid-3">{% for p in posts %}<article class="news-card">{% if p.image %}<img src="{{ p.image }}" alt="{{ p.title }}" loading="lazy">{% endif %}{% if p.date %}<p class="news-meta">{{ p.date }}</p>{% endif %}<h3>{{ p.title }}</h3>{% if p.excerpt %}<p>{{ p.excerpt }}</p>{% endif %}<p><a class="news-cta" href="{{ p.href }}">{{ text_read_more }} →</a></p></article>{% endfor %}</div>{% else %}<p class="lead">{{ text_no_results }}</p>{% endif %}{% endif %}
+{% endfor %}
+</div></main>
 {{ footer }}

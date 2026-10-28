@@ -1,44 +1,11 @@
-{# dev/catalog/view/template/catalog/project_list.twig — grade pública do portfólio (F3-03: classes do tema + tilt) #}
+{# Estrutura editorial/configurável; a grade e filtros continuam no módulo Portfolio. #}
 {{ header }}
-<main class="site-main">
-  <div class="container">
-    <div class="page-head">
-      <h1>{{ heading_title }}</h1>
-      <a class="back-link" href="{{ home }}">{{ button_back_home }}</a>
-    </div>
-    <p class="lead">{{ text_lead }}</p>
-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
-
-    <nav class="filter-chips" aria-label="{{ text_filter }}">
-      <a class="chip{{ filter_all.active ? ' active' : '' }}" href="{{ filter_all.href }}">{{ text_all }}</a>
-      {% for cat in categories %}
-      <a class="chip{{ cat.active ? ' active' : '' }}" href="{{ cat.href }}">{{ cat.name }}</a>
-      {% endfor %}
-    </nav>
-
-    {% if projects %}
-    <div class="pgrid">
-      {% for p in projects %}
-      <a class="pcard" href="{{ p.href }}">
-        <span class="thumb">
-          {% if p.image %}
-          <img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy">
-          {% else %}
-          {{ p.name[:1] }}
-          {% endif %}
-        </span>
-        <span class="body">
-          <strong>{{ p.name }}</strong>
-          {% if p.summary %}<small>{{ p.summary }}</small>{% endif %}
-          {% if p.client %}<small>{{ p.client }}</small>{% endif %}
-          {% if p.featured %}<span class="badge">{{ text_featured }}</span>{% endif %}
-        </span>
-      </a>
-      {% endfor %}
-    </div>
-    {% else %}
-    <p class="lead">{{ text_no_results }}</p>
-    {% endif %}
-  </div>
-</main>
+<main class="site-main"><div class="container">
+{% for section in cms_page_sections %}
+  {% if section == 'intro' %}<div class="page-head"><h1>{{ heading_title }}</h1><a class="back-link" href="{{ home }}">{{ button_back_home }}</a></div><p class="lead">{{ text_lead }}</p>
+  {% elseif section == 'editorial' and cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>
+  {% elseif section == 'filters' %}<nav class="filter-chips" aria-label="{{ text_filter }}"><a class="chip{{ filter_all.active ? ' active' : '' }}" href="{{ filter_all.href }}">{{ text_all }}</a>{% for cat in categories %}<a class="chip{{ cat.active ? ' active' : '' }}" href="{{ cat.href }}">{{ cat.name }}</a>{% endfor %}</nav>
+  {% elseif section == 'portfolio_grid' %}{% if projects %}<div class="pgrid">{% for p in projects %}<a class="pcard" href="{{ p.href }}"><span class="thumb">{% if p.image %}<img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy">{% else %}{{ p.name[:1] }}{% endif %}</span><span class="body"><strong>{{ p.name }}</strong>{% if p.summary %}<small>{{ p.summary }}</small>{% endif %}{% if p.client %}<small>{{ p.client }}</small>{% endif %}{% if p.featured %}<span class="badge">{{ text_featured }}</span>{% endif %}</span></a>{% endfor %}</div>{% else %}<p class="lead">{{ text_no_results }}</p>{% endif %}{% endif %}
+{% endfor %}
+</div></main>
 {{ footer }}

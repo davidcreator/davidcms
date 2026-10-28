@@ -83,6 +83,7 @@ class Contact extends \Reamur\System\Engine\Controller {
         $this->chrome($data);
 
         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'contact');
+        $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'contact');
         $this->response->setOutput($this->load->view('common/contact', $data));
     }
 

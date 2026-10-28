@@ -51,6 +51,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['home'] = $base . '/';
 
         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'blog');
+        $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'blog');
 
         $this->chrome($data, 'rms-blog');
 
@@ -129,6 +130,10 @@ class Blog extends \Reamur\System\Engine\Controller {
         ];
 
         $data['back_blog'] = $this->url->link('blog/blog');
+        // Only the CMS system-page layout/editorial slot is shared here;
+        // posts, their content and Blog management remain in the Blog module.
+        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'blog_post', 0);
+        $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'blog_post');
 
         $this->chrome($data, 'rms-blog-post');
 

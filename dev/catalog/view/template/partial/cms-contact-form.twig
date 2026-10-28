@@ -1,0 +1,44 @@
+  {% if text_flash.text %}
+  <div class="alert {{ text_flash.type }}" style="padding:12px;border-radius:6px;margin:12px 0;background:#ecfdf5;border:1px solid #10b981;">{{ text_flash.text }}</div>
+  {% endif %}
+
+  {% if error %}
+  <div class="alert danger" style="white-space:pre-line;padding:12px;border-radius:6px;margin:12px 0;background:#fef2f2;border:1px solid #ef4444;">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ action }}" style="display:grid;gap:16px;margin-top:16px;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {# honeypot invisível para bots #}
+    <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+      <label>{{ text_honeypot_label|default('Company') }} <input type="text" name="company" value="" tabindex="-1" autocomplete="off"></label>
+    </div>
+
+    <div>
+      <label for="cf-name">{{ entry_name }}</label>
+      <input type="text" name="name" id="cf-name" value="{{ value_name }}" maxlength="128" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+    </div>
+
+    <div>
+      <label for="cf-email">{{ entry_email }}</label>
+      <input type="email" name="email" id="cf-email" value="{{ value_email }}" maxlength="96" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+    </div>
+
+    <div>
+      <label for="cf-tel">{{ entry_telephone }}</label>
+      <input type="tel" name="telephone" id="cf-tel" value="{{ value_telephone }}" maxlength="32" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+    </div>
+
+    <div>
+      <label for="cf-subject">{{ entry_subject }}</label>
+      <input type="text" name="subject" id="cf-subject" value="{{ value_subject }}" maxlength="128" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+    </div>
+
+    <div>
+      <label for="cf-message">{{ entry_message }}</label>
+      <textarea name="message" id="cf-message" rows="6" maxlength="5000" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">{{ value_message }}</textarea>
+    </div>
+
+    <div>
+      <button type="submit" class="btn primary" style="padding:12px 24px;border-radius:6px;">{{ button_send }}</button>
+    </div>
+  </form>

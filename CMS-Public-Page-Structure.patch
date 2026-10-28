@@ -1,0 +1,1099 @@
+--- a/dev/system/framework.php
++++ b/dev/system/framework.php
+@@ -30,9 +30,12 @@
+ 
+ // 3. Registry
+ $registry = new Registry();
++// Plano aprovado (CMS Page Structure): registrar contrato puro de layouts
++// allowlisted; Admin valida e Catalog consome. Sem SQL, IO ou efeito no Blog.
+ // API compartilhada de configuração e manifesto allowlisted do Three.js.
+ $registry->set('three_scene_config', new \Reamur\System\Library\Three\SceneConfig());
+ $registry->set('three_asset_manifest', new \Reamur\System\Library\Three\AssetManifest());
++$registry->set('cms_page_layout', new \Reamur\System\Library\Cms\PageLayout());
+ 
+ // 4. Config: default + aplicação (Contrato §4)
+ $config = new Config();
+--- /dev/null
++++ b/dev/system/library/cms/page_layout.php
+@@ -0,0 +1,79 @@
++<?php declare(strict_types=1);
++/**
++ * @package   ReamurCMS
++ * @author    David L. Almeida
++ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
++ * @license   https://opensource.org/licenses/GPL-3.0
++ * @link      https://reamurcms.com
++ *
++ * Contrato declarativo de estrutura para Pages. Não contém Twig, HTML, PHP de
++ * template ou JavaScript. Dados de Blog/Portfolio/Tools continuam nos módulos.
++ */
++namespace Reamur\System\Library\Cms;
++
++final class PageLayout {
++    public const PREFIX = 'REAMURCMS_PAGE_LAYOUT_V1:';
++    private const SECTIONS = [
++        'home' => ['hero','about','methodology','skills','services','editorial','testimonials','portfolio','tools','news','clients','contact'],
++        'blog' => ['intro','editorial','posts_grid'],
++        'blog_post' => ['post_header','editorial','post_content'],
++        'portfolio' => ['intro','editorial','filters','portfolio_grid'],
++        'portfolio_detail' => ['editorial','project_header','categories','cover','description','facts','gallery'],
++        'tools' => ['intro','editorial','tools_grid'],
++        'tool_detail' => ['editorial','tool_header','tool_description','contact_link'],
++        'contact' => ['intro','editorial','contact_form'],
++        'quote' => ['intro','editorial','quote_form'],
++        'not_found' => ['not_found_content','editorial'],
++    ];
++
++    /** @return list<string> */
++    public function options(string $systemKey): array {
++        return self::SECTIONS[$systemKey] ?? [];
++    }
++
++    /** @return list<string> */
++    public function defaults(string $systemKey, bool $hasEditorial = false): array {
++        $sections = $this->options($systemKey);
++        if ($sections === []) return [];
++        if ($systemKey === 'home' && $hasEditorial) {
++            // Preserva o comportamento legado: conteúdo Home substituía os
++            // cinco primeiros partials; as seções dinâmicas permanecem visíveis.
++            return ['editorial','testimonials','portfolio','tools','news','clients','contact'];
++        }
++        return $sections;
++    }
++
++    /** Validate a section order against the fixed route-specific registry. @return list<string>|null */
++    public function normalizeSections(string $systemKey, mixed $sections): ?array {
++        $allowed = $this->options($systemKey);
++        if ($allowed === [] || !is_array($sections) || count($sections) > count($allowed)) return null;
++        $safe = [];
++        foreach ($sections as $section) {
++            if (!is_string($section) || !in_array($section, $allowed, true) || in_array($section, $safe, true)) return null;
++            $safe[] = $section;
++        }
++        return $safe;
++    }
++
++    /** @param array<string,mixed> $content @param list<string> $sections */
++    public function encode(string $systemKey, array $content, array $sections): string {
++        $safeSections = $this->normalizeSections($systemKey, $sections);
++        if ($safeSections === null || ($content['format_version'] ?? null) !== 2 || !is_array($content['blocks'] ?? null)) {
++            throw new \InvalidArgumentException('Invalid CMS page structure document.');
++        }
++        $document = ['format_version'=>1,'system_key'=>$systemKey,'sections'=>$safeSections,'content'=>$content];
++        return self::PREFIX . (json_encode($document, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '{}');
++    }
++
++    /** Decode the Pages-only envelope; the nested block document is validated by BlockDocument. @return array{system_key:string,sections:list<string>,content:array<string,mixed>}|null */
++    public function decode(string $serialized, string $expectedSystemKey): ?array {
++        if (!str_starts_with($serialized, self::PREFIX)) return null;
++        $document = json_decode(substr($serialized, strlen(self::PREFIX)), true);
++        if (!is_array($document) || ($document['format_version'] ?? null) !== 1 || ($document['system_key'] ?? null) !== $expectedSystemKey ||
++            array_diff(array_keys($document), ['format_version','system_key','sections','content'])) return null;
++        $sections = $this->normalizeSections($expectedSystemKey, $document['sections'] ?? null);
++        $content = $document['content'] ?? null;
++        if ($sections === null || !is_array($content) || ($content['format_version'] ?? null) !== 2 || !is_array($content['blocks'] ?? null)) return null;
++        return ['system_key'=>$expectedSystemKey,'sections'=>$sections,'content'=>$content];
++    }
++}
+--- a/dev/admin/controller/cms/page.php
++++ b/dev/admin/controller/cms/page.php
+@@ -833,6 +833,8 @@
+         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+ 
+         $pid          = (int)($page['page_id'] ?? 0);
++        $systemKey    = (string)($page['system_key'] ?? '');
++        $pageLayout   = $this->cms_page_layout;
+         $isPost       = $this->request->server['REQUEST_METHOD'] === 'POST';
+         $post         = $this->request->post;
+         $descriptions = $pid ? $this->model_cms_page->getPageDescriptions($pid) : [];
+@@ -884,14 +886,37 @@
+ 
+             $fields['keyword'] = (string)($post['page_description'][$lid]['keyword'] ?? ($keywords[$lid] ?? ''));
+             $description = $fields['description'];
++            $layoutSections = [];
++            $layoutOptions = $pageLayout->options($systemKey);
++            if ($layoutOptions !== []) {
++                $submittedSections = $post['page_layout_sections'][$lid] ?? null;
++                if ($submittedSections === null && isset($post['page_layout_sections_present'][$lid])) $submittedSections = [];
++                $hasEditorial = trim($description) !== '';
++                if (str_starts_with($description, 'REAMURCMS_BDRE_JSON_V2:')) {
++                    $existingContent = (new \Reamur\System\Library\Blog\BlockDocument(true))->deserializeDocument(substr($description, strlen('REAMURCMS_BDRE_JSON_V2:')));
++                    $hasEditorial = !empty($existingContent['valid']) && !empty($existingContent['document']['blocks']);
++                }
++                $layoutSections = is_array($submittedSections) ? $submittedSections : $pageLayout->defaults($systemKey, $hasEditorial);
++                $savedLayout = $pageLayout->decode($description, $systemKey);
++                if ($savedLayout !== null) {
++                    $layoutSections = is_array($submittedSections) ? $submittedSections : $savedLayout['sections'];
++                    $description = 'REAMURCMS_BDRE_JSON_V2:' . (new \Reamur\System\Library\Blog\BlockDocument(true))->serializeDocument($savedLayout['content']);
++                    $fields['description'] = $description;
++                }
++            }
+             $summary = '';
++            $prefixForEditor = 'REAMURCMS_BDRE_JSON_V2:';
+             $contentSavedValue = $description;
+             $blockSummaryDocument = null;
+             $blockPrefix = 'REAMURCMS_BDRE_JSON_V2:';
+             $blockMode = 'legacy';
+             $blockJson = '';
+             $storedBlockValue = $description;
+-            if (str_starts_with($description, $blockPrefix)) {
++            $invalidLayoutEnvelope = $layoutOptions !== [] && str_starts_with($description, \Reamur\System\Library\Cms\PageLayout::PREFIX);
++            if ($invalidLayoutEnvelope) {
++                $blockMode = 'invalid';
++                $summary = $data['text_content_invalid'];
++            } elseif (str_starts_with($description, $blockPrefix)) {
+                 $blockJson = substr($description, strlen($blockPrefix));
+                 $decoded = (new \Reamur\System\Library\Blog\BlockDocument(true))->deserializeDocument($blockJson);
+                 if (!empty($decoded['valid']) && is_array($decoded['document']) && ($decoded['document']['format_version'] ?? null) === 2) {
+@@ -929,6 +954,9 @@
+             $fields['block_mode'] = $blockMode;
+             $fields['block_document'] = $blockJson;
+             $fields['block_stored_value'] = $storedBlockValue;
++            $fields['page_layout_sections'] = $layoutSections;
++            $fields['page_layout_options'] = $layoutOptions;
++            $fields['page_layout_system_key'] = $systemKey;
+ 
+             $data['languages'][] = [
+                 'language_id' => $lid,
+@@ -940,7 +968,7 @@
+         }
+ 
+         $data['page_id']    = $pid;
+-        $data['system_key'] = (string)($page['system_key'] ?? '');
++        $data['system_key'] = $systemKey;
+         $data['is_system_page'] = $data['system_key'] !== '';
+         $layoutBySystemKey = [
+             'home'=>'common/home', 'portfolio'=>'catalog/project_list', 'portfolio_detail'=>'catalog/project_info',
+@@ -992,7 +1020,15 @@
+             if (($post['page_block_mode'][$lid] ?? '') === 'blocks' && str_starts_with($description, 'REAMURCMS_BDRE_JSON_V2:')) {
+                 $decoded = (new \Reamur\System\Library\Blog\BlockDocument(true))->deserializeDocument(substr($description, strlen('REAMURCMS_BDRE_JSON_V2:')));
+                 if (!empty($decoded['valid']) && is_array($decoded['document']) && ($decoded['document']['format_version'] ?? null) === 2) {
+-                    $description = 'REAMURCMS_BDRE_JSON_V2:' . (new \Reamur\System\Library\Blog\BlockDocument(true))->serializeDocument($decoded['document']);
++                    $content = $decoded['document'];
++                    $description = 'REAMURCMS_BDRE_JSON_V2:' . (new \Reamur\System\Library\Blog\BlockDocument(true))->serializeDocument($content);
++                    if ($pageId > 0) {
++                        $page = $this->model_cms_page->getPage($pageId);
++                        $systemKey = (string)($page['system_key'] ?? '');
++                        $postedSections = $post['page_layout_sections'][$lid] ?? (isset($post['page_layout_sections_present'][$lid]) ? [] : null);
++                        $sections = $this->cms_page_layout->normalizeSections($systemKey, $postedSections);
++                        if ($sections !== null) $description = $this->cms_page_layout->encode($systemKey, $content, $sections);
++                    }
+                 }
+             }
+             $descriptions[(int)$lid] = [
+@@ -1075,6 +1111,9 @@
+         $modes = (array)($post['page_block_mode'] ?? []);
+         $descriptions = (array)($post['page_description'] ?? []);
+         $storedDescriptions = $pageId ? $this->model_cms_page->getPageDescriptions($pageId) : [];
++        $page = $pageId ? $this->model_cms_page->getPage($pageId) : [];
++        $systemKey = (string)($page['system_key'] ?? '');
++        $layoutOptions = $this->cms_page_layout->options($systemKey);
+         $prefix = 'REAMURCMS_BDRE_JSON_V2:';
+         $validator = new \Reamur\System\Library\Blog\BlockDocument(true);
+         foreach ($descriptions as $languageId => $posted) {
+@@ -1084,7 +1123,7 @@
+             $hasMarker = str_starts_with($description, $prefix);
+             if ($mode === 'invalid') {
+                 $original = (string)($storedDescriptions[(int)$languageId]['description'] ?? '');
+-                if (!$pageId || !$hasMarker || !hash_equals($original, $description)) {
++                if (!$pageId || $original === '' || !hash_equals($original, $description)) {
+                     $errors[] = 'O conteúdo marcado inválido só pode ser preservado sem alteração; restaure uma versão válida antes de editá-lo.';
+                 }
+                 continue;
+@@ -1098,6 +1137,11 @@
+             $result = $validator->deserializeDocument(substr($description, strlen($prefix)));
+             if (empty($result['valid']) || !is_array($result['document']) || ($result['document']['format_version'] ?? null) !== 2) {
+                 $errors[] = 'O documento do editor é inválido ou excede o limite permitido. O conteúdo não foi salvo.';
++                continue;
++            }
++            $postedSections = $post['page_layout_sections'][$languageId] ?? (isset($post['page_layout_sections_present'][$languageId]) ? [] : null);
++            if ($layoutOptions !== [] && $this->cms_page_layout->normalizeSections($systemKey, $postedSections) === null) {
++                $errors[] = 'A ordem das seções da página é inválida. Recarregue a página e tente novamente.';
+             }
+         }
+         return $errors;
+--- a/dev/admin/view/template/cms/page_form.twig
++++ b/dev/admin/view/template/cms/page_form.twig
+@@ -50,6 +50,19 @@
+                 <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="blocks">
+                 <input type="hidden" name="page_editor_ready[{{ language.language_id }}]" id="page-editor-ready-{{ language.language_id }}" value="">
+                 <div id="page-block-editor-{{ language.language_id }}" class="bdre-page-editor" data-blog-block-editor data-hidden-input="input-description-{{ language.language_id }}" data-ready-input="page-editor-ready-{{ language.language_id }}" data-document="{{ language.fields.block_document|e('html_attr') }}" data-storage-prefix="REAMURCMS_BDRE_JSON_V2:" data-media-pickers="false" data-file-picker="{{ can_modify ? 'true' : 'false' }}" data-audio-picker="{{ can_modify ? 'true' : 'false' }}" data-video-picker="{{ can_modify ? 'true' : 'false' }}" data-editor-strings="{{ block_editor_strings|json_encode|e('html_attr') }}" data-page-context="{{ {'pageLabel': text_page_context_page, 'languageLabel': text_page_context_language, 'untitledPage': text_page_context_untitled, 'saveHint': can_modify ? text_page_context_save_hint : text_page_context_readonly_hint, 'canSave': can_modify, 'saveLabel': button_save}|json_encode|e('html_attr') }}" data-page-title="{{ language.fields.title|e('html_attr') }}" data-page-title-input="input-title-{{ language.language_id }}" data-page-language="{{ language.name|e('html_attr') }}" data-page-language-code="{{ language.code|e('html_attr') }}" aria-label="{{ entry_description|e('html_attr') }} — {{ language.name|e('html_attr') }}"></div>
++                {% if language.fields.page_layout_options %}
++                <input type="hidden" name="page_layout_sections_present[{{ language.language_id }}]" value="1">
++                <fieldset class="card mt-3" data-page-layout-editor><legend class="card-header h6 mb-0">Estrutura visual da página</legend><div class="card-body"><p class="form-text">Ative, desative e reordene seções. Os dados dinâmicos continuam sob controle dos módulos próprios; aqui não é permitido inserir código.</p>
++                  <ol class="list-group" data-page-layout-list>
++                    {% for section in language.fields.page_layout_options %}<li class="list-group-item d-flex align-items-center gap-2" data-page-layout-item>
++                      <input class="form-check-input mt-0" type="checkbox" name="page_layout_sections[{{ language.language_id }}][]" value="{{ section }}" id="page-section-{{ language.language_id }}-{{ section }}"{% if section in language.fields.page_layout_sections %} checked{% endif %}{% if not can_modify %} disabled{% endif %}>
++                      <label class="form-check-label flex-grow-1" for="page-section-{{ language.language_id }}-{{ section }}">{{ section|replace({'_':' '})|title }}</label>
++                      <button type="button" class="btn btn-sm btn-outline-secondary" data-page-layout-move="up" aria-label="Mover {{ section }} para cima"{% if not can_modify %} disabled{% endif %}>↑</button>
++                      <button type="button" class="btn btn-sm btn-outline-secondary" data-page-layout-move="down" aria-label="Mover {{ section }} para baixo"{% if not can_modify %} disabled{% endif %}>↓</button>
++                    </li>{% endfor %}
++                  </ol>
++                </div></fieldset>
++                {% endif %}
+                 {% if can_modify %}<div class="mt-2"><button type="button" class="btn btn-outline-primary" data-cms-page-preview data-preview-url="{{ page_preview_url|e('html_attr') }}" data-editor-id="page-block-editor-{{ language.language_id }}" data-title-id="input-title-{{ language.language_id }}" data-meta-title-id="input-meta-title-{{ language.language_id }}" data-meta-description-id="input-meta-description-{{ language.language_id }}" data-language="{{ language.code|e('html_attr') }}" data-language-id="{{ language.language_id }}" data-page-id="{{ page_id }}" data-preview-error="{{ error_page_preview_unavailable|e('html_attr') }}">{{ text_page_preview_button }}</button><span class="form-text" data-page-preview-status aria-live="polite"></span></div>{% endif %}
+               {% elseif language.fields.block_mode == 'invalid' %}
+                 <input type="hidden" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" value="{{ language.fields.description|e('html_attr') }}">
+--- a/dev/admin/view/js/blog-block-editor-init.js
++++ b/dev/admin/view/js/blog-block-editor-init.js
+@@ -77,7 +77,17 @@
+   document.addEventListener('hidden.bs.modal', function (event) { if (event.target && event.target.id === 'blogMediaModal') pendingMediaEditor = null; });
+   function init() {
+     if (!global.ReamurBlogBlockEditor) return;
+-    document.querySelectorAll('[data-blog-block-editor]').forEach(function (root) {
++    document.addEventListener('click', function (event) {
++    var button = event.target.closest('[data-page-layout-move]');
++    if (!button) return;
++    var item = button.closest('[data-page-layout-item]');
++    var list = item && item.parentElement;
++    if (!item || !list) return;
++    if (button.dataset.pageLayoutMove === 'up' && item.previousElementSibling) list.insertBefore(item, item.previousElementSibling);
++    if (button.dataset.pageLayoutMove === 'down' && item.nextElementSibling) list.insertBefore(item.nextElementSibling, item);
++  });
++
++  document.querySelectorAll('[data-blog-block-editor]').forEach(function (root) {
+       var hidden = document.getElementById(root.dataset.hiddenInput || '');
+       var ready = document.getElementById(root.dataset.readyInput || '');
+       var form = root.closest('form');
+--- a/dev/catalog/controller/cms/slot.php
++++ b/dev/catalog/controller/cms/slot.php
+@@ -13,7 +13,7 @@
+ class Slot extends \Reamur\System\Engine\Controller {
+ 
+     /** Renderiza conteúdo público validado de uma chave de rota fixa. */
+-    public function render(string $system_key = ''): string {
++    public function render(string $system_key = '', int $apply_meta = 1): string {
+         $system_key = strtolower(trim($system_key));
+         $allowed = ['home','portfolio','portfolio_detail','blog','blog_post','tools','tool_detail','contact','quote','not_found'];
+         if (!in_array($system_key, $allowed, true)) return '';
+@@ -28,20 +28,46 @@
+             $this->config->set('_cms_system_page_cache', $cache);
+         }
+         if (!$page) {
++            $layoutCache = (array)$this->config->get('_cms_system_page_layout_cache', []);
++            $layoutCache[$system_key] = $this->cms_page_layout->defaults($system_key, false);
++            $this->config->set('_cms_system_page_layout_cache', $layoutCache);
+             return '';
+         }
+ 
+-        if ((string)($page['meta_title'] ?? '') !== '') {
+-            $this->document->setTitle((string)$page['meta_title']);
+-        }
+-        if ((string)($page['meta_description'] ?? '') !== '') {
+-            $this->document->setDescription((string)$page['meta_description']);
++        if ($apply_meta === 1) {
++            if ((string)($page['meta_title'] ?? '') !== '') {
++                $this->document->setTitle((string)$page['meta_title']);
++            }
++            if ((string)($page['meta_description'] ?? '') !== '') {
++                $this->document->setDescription((string)$page['meta_description']);
++            }
+         }
+ 
++        $content = (string)($page['description'] ?? '');
++        $layoutCache = (array)$this->config->get('_cms_system_page_layout_cache', []);
++        $layout = $this->cms_page_layout->decode($content, $system_key);
++        $hasEditorial = trim($content) !== '';
++        $invalidLayoutEnvelope = str_starts_with($content, \\Reamur\\System\\Library\\Cms\\PageLayout::PREFIX) && $layout === null;
++        if ($invalidLayoutEnvelope) {
++            // Nunca tratar um envelope estrutural inválido como HTML legado.
++            $content = '';
++            $hasEditorial = false;
++        }
++        if ($layout !== null) {
++            $layoutCache[$system_key] = $layout['sections'];
++            $hasEditorial = !empty($layout['content']['blocks']);
++            $content = 'REAMURCMS_BDRE_JSON_V2:' . (new \Reamur\System\Library\Blog\BlockDocument(true))->serializeDocument($layout['content']);
++        } elseif (str_starts_with($content, 'REAMURCMS_BDRE_JSON_V2:')) {
++            $decoded = (new \Reamur\System\Library\Blog\BlockDocument(true))->deserializeDocument(substr($content, strlen('REAMURCMS_BDRE_JSON_V2:')));
++            $hasEditorial = !empty($decoded['document']['blocks']) && !empty($decoded['valid']);
++        }
++        if (!array_key_exists($system_key, $layoutCache)) {
++            $layoutCache[$system_key] = $this->cms_page_layout->defaults($system_key, $hasEditorial);
++        }
++        $this->config->set('_cms_system_page_layout_cache', $layoutCache);
+         $htmlCache = (array)$this->config->get('_cms_system_page_html_cache', []);
+         if (array_key_exists($system_key, $htmlCache)) return (string)$htmlCache[$system_key];
+ 
+-        $content = (string)($page['description'] ?? '');
+         if ($content === '') return $this->cacheHtml($system_key, '');
+ 
+         $prefix = 'REAMURCMS_BDRE_JSON_V2:';
+@@ -65,6 +91,13 @@
+         return $this->cacheHtml($system_key, (string)$rendered['html']);
+     }
+ 
++    /** Layout is a validated list of fixed section identifiers, never template code. */
++    public function sections(string $system_key = ''): array {
++        $system_key = strtolower(trim($system_key));
++        $cache = (array)$this->config->get('_cms_system_page_layout_cache', []);
++        return is_array($cache[$system_key] ?? null) ? $cache[$system_key] : [];
++    }
++
+     private function cacheHtml(string $system_key, string $html): string {
+         $cache = (array)$this->config->get('_cms_system_page_html_cache', []);
+         $cache[$system_key] = $html;
+--- a/dev/catalog/controller/common/home.php
++++ b/dev/catalog/controller/common/home.php
+@@ -356,9 +356,11 @@
+         // Conteúdo Home do CMS substitui apenas seções editoriais estáticas;
+         // grades/listas dinâmicas continuam nos módulos especializados.
+         $data['cms_home_content'] = (string)$this->load->controller('cms/slot.render', 'home');
+-        if ($data['cms_home_content'] !== '') {
+-            $data['has_3d'] = $portfolioEnabled || $tools3dEnabled;
+-        }
++        $data['cms_home_sections'] = (array)$this->load->controller('cms/slot.sections', 'home');
++        $activeHomeSections = (array)$data['cms_home_sections'];
++        $data['has_3d'] = (in_array('hero', $activeHomeSections, true) && $threeJs['hero_enabled'])
++            || (in_array('portfolio', $activeHomeSections, true) && $portfolioEnabled)
++            || (in_array('tools', $activeHomeSections, true) && $tools3dEnabled);
+ 
+         // Chrome compartilhado (header + rodapé) — template agora é o tema
+         // da home composta (F3-01), o que permite os partials do guia.
+--- a/dev/catalog/controller/catalog/project.php
++++ b/dev/catalog/controller/catalog/project.php
+@@ -73,6 +73,7 @@
+         $data['home'] = $base;
+ 
+         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'portfolio');
++        $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'portfolio');
+ 
+         $this->chrome($data, 'rms-portfolio');
+ 
+@@ -150,6 +151,7 @@
+         $data['back_portfolio'] = $this->url->link('catalog/project');
+ 
+         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'portfolio_detail');
++        $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'portfolio_detail');
+ 
+         $this->chrome($data, 'rms-project');
+ 
+--- a/dev/catalog/controller/tool/tool.php
++++ b/dev/catalog/controller/tool/tool.php
+@@ -46,6 +46,7 @@
+         $data['home'] = $base . '/';
+ 
+         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'tools');
++        $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'tools');
+ 
+         $this->chrome($data, 'rms-tools');
+ 
+@@ -92,6 +93,7 @@
+         $data['contact']    = $this->url->link('common/contact');
+ 
+         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'tool_detail');
++        $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'tool_detail');
+ 
+         $this->chrome($data, 'rms-tool');
+ 
+--- a/dev/catalog/controller/common/contact.php
++++ b/dev/catalog/controller/common/contact.php
+@@ -83,6 +83,7 @@
+         $this->chrome($data);
+ 
+         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'contact');
++        $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'contact');
+         $this->response->setOutput($this->load->view('common/contact', $data));
+     }
+ 
+--- a/dev/catalog/controller/checkout/quote.php
++++ b/dev/catalog/controller/checkout/quote.php
+@@ -91,6 +91,7 @@
+         $this->chrome($data);
+ 
+         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'quote');
++        $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'quote');
+         $this->response->setOutput($this->load->view('checkout/quote', $data));
+     }
+ 
+--- a/dev/catalog/controller/error/not_found.php
++++ b/dev/catalog/controller/error/not_found.php
+@@ -46,6 +46,7 @@
+ 
+         $data['body_class'] = 'rms-404';
+         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'not_found');
++        $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'not_found');
+         $data['header']     = $this->load->controller('common/header', $data);
+         $data['footer']     = $this->load->controller('common/footer', $data);
+ 
+--- a/dev/catalog/controller/blog/blog.php
++++ b/dev/catalog/controller/blog/blog.php
+@@ -51,6 +51,7 @@
+         $data['home'] = $base . '/';
+ 
+         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'blog');
++        $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'blog');
+ 
+         $this->chrome($data, 'rms-blog');
+ 
+@@ -129,6 +130,10 @@
+         ];
+ 
+         $data['back_blog'] = $this->url->link('blog/blog');
++        // Only the CMS system-page layout/editorial slot is shared here;
++        // posts, their content and Blog management remain in the Blog module.
++        $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'blog_post', 0);
++        $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'blog_post');
+ 
+         $this->chrome($data, 'rms-blog-post');
+ 
+--- a/dev/catalog/view/template/common/home.twig
++++ b/dev/catalog/view/template/common/home.twig
+@@ -1,21 +1,19 @@
+-{# dev/catalog/view/template/common/home.twig — home composta de partials (F3-01; hero 3D na F3-02) #}
++{# Estrutura permitida vem do contrato CMS PageLayout; includes de domínio permanecem fixos. #}
+ {{ header }}
+ <main>
+-{% if cms_home_content %}
+-<section id="about" class="cms-home-content">{{ cms_home_content }}</section>
+-{% else %}
+-{% include 'partial/hero-3d.twig' %}
+-{% include 'partial/about.twig' %}
+-{% include 'partial/methodology.twig' %}
+-{% include 'partial/skills.twig' %}
+-{% include 'partial/services.twig' %}
+-{% endif %}
+-{# Conteúdo de domínio continua vindo dos módulos próprios, independente do CMS. #}
+-{% include 'partial/testimonials.twig' %}
+-{% include 'partial/portfolio.twig' %}
+-{% include 'partial/tools.twig' %}
+-{% include 'partial/news.twig' %}
+-{% include 'partial/clients.twig' %}
+-{% include 'partial/contact.twig' %}
++{% for section in cms_home_sections %}
++  {% if section == 'hero' %}{% include 'partial/hero-3d.twig' %}
++  {% elseif section == 'about' %}{% include 'partial/about.twig' %}
++  {% elseif section == 'methodology' %}{% include 'partial/methodology.twig' %}
++  {% elseif section == 'skills' %}{% include 'partial/skills.twig' %}
++  {% elseif section == 'services' %}{% include 'partial/services.twig' %}
++  {% elseif section == 'editorial' and cms_home_content %}<section id="about" class="cms-home-content">{{ cms_home_content }}</section>
++  {% elseif section == 'testimonials' %}{% include 'partial/testimonials.twig' %}
++  {% elseif section == 'portfolio' %}{% include 'partial/portfolio.twig' %}
++  {% elseif section == 'tools' %}{% include 'partial/tools.twig' %}
++  {% elseif section == 'news' %}{% include 'partial/news.twig' %}
++  {% elseif section == 'clients' %}{% include 'partial/clients.twig' %}
++  {% elseif section == 'contact' %}{% include 'partial/contact.twig' %}{% endif %}
++{% endfor %}
+ </main>
+ {{ footer }}
+--- a/dev/catalog/view/template/catalog/project_list.twig
++++ b/dev/catalog/view/template/catalog/project_list.twig
+@@ -1,44 +1,11 @@
+-{# dev/catalog/view/template/catalog/project_list.twig — grade pública do portfólio (F3-03: classes do tema + tilt) #}
++{# Estrutura editorial/configurável; a grade e filtros continuam no módulo Portfolio. #}
+ {{ header }}
+-<main class="site-main">
+-  <div class="container">
+-    <div class="page-head">
+-      <h1>{{ heading_title }}</h1>
+-      <a class="back-link" href="{{ home }}">{{ button_back_home }}</a>
+-    </div>
+-    <p class="lead">{{ text_lead }}</p>
+-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+-
+-    <nav class="filter-chips" aria-label="{{ text_filter }}">
+-      <a class="chip{{ filter_all.active ? ' active' : '' }}" href="{{ filter_all.href }}">{{ text_all }}</a>
+-      {% for cat in categories %}
+-      <a class="chip{{ cat.active ? ' active' : '' }}" href="{{ cat.href }}">{{ cat.name }}</a>
+-      {% endfor %}
+-    </nav>
+-
+-    {% if projects %}
+-    <div class="pgrid">
+-      {% for p in projects %}
+-      <a class="pcard" href="{{ p.href }}">
+-        <span class="thumb">
+-          {% if p.image %}
+-          <img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy">
+-          {% else %}
+-          {{ p.name[:1] }}
+-          {% endif %}
+-        </span>
+-        <span class="body">
+-          <strong>{{ p.name }}</strong>
+-          {% if p.summary %}<small>{{ p.summary }}</small>{% endif %}
+-          {% if p.client %}<small>{{ p.client }}</small>{% endif %}
+-          {% if p.featured %}<span class="badge">{{ text_featured }}</span>{% endif %}
+-        </span>
+-      </a>
+-      {% endfor %}
+-    </div>
+-    {% else %}
+-    <p class="lead">{{ text_no_results }}</p>
+-    {% endif %}
+-  </div>
+-</main>
++<main class="site-main"><div class="container">
++{% for section in cms_page_sections %}
++  {% if section == 'intro' %}<div class="page-head"><h1>{{ heading_title }}</h1><a class="back-link" href="{{ home }}">{{ button_back_home }}</a></div><p class="lead">{{ text_lead }}</p>
++  {% elseif section == 'editorial' and cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>
++  {% elseif section == 'filters' %}<nav class="filter-chips" aria-label="{{ text_filter }}"><a class="chip{{ filter_all.active ? ' active' : '' }}" href="{{ filter_all.href }}">{{ text_all }}</a>{% for cat in categories %}<a class="chip{{ cat.active ? ' active' : '' }}" href="{{ cat.href }}">{{ cat.name }}</a>{% endfor %}</nav>
++  {% elseif section == 'portfolio_grid' %}{% if projects %}<div class="pgrid">{% for p in projects %}<a class="pcard" href="{{ p.href }}"><span class="thumb">{% if p.image %}<img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy">{% else %}{{ p.name[:1] }}{% endif %}</span><span class="body"><strong>{{ p.name }}</strong>{% if p.summary %}<small>{{ p.summary }}</small>{% endif %}{% if p.client %}<small>{{ p.client }}</small>{% endif %}{% if p.featured %}<span class="badge">{{ text_featured }}</span>{% endif %}</span></a>{% endfor %}</div>{% else %}<p class="lead">{{ text_no_results }}</p>{% endif %}{% endif %}
++{% endfor %}
++</div></main>
+ {{ footer }}
+--- a/dev/catalog/view/template/catalog/project_info.twig
++++ b/dev/catalog/view/template/catalog/project_info.twig
+@@ -1,45 +1,14 @@
+-{# dev/catalog/view/template/catalog/project_info.twig — página dedicada do projeto (F2-17 SEO; F3-03 classes do tema) #}
++{# Dados do projeto e renderização permanecem propriedade do módulo Portfolio. #}
+ {{ header }}
+-<main class="site-main">
+-  <div class="container">
+-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+-    <div class="page-head">
+-      <h1>{{ heading_title }}</h1>
+-      <a class="back-link" href="{{ back_portfolio }}">{{ button_back }}</a>
+-    </div>
+-
+-    {% if text_summary %}<p class="lead">{{ text_summary }}</p>{% endif %}
+-
+-    {% if categories %}
+-    <p class="chip-row">
+-      {% for cat in categories %}
+-      <a class="chip" href="{{ cat.href }}">{{ cat.name }}</a>
+-      {% endfor %}
+-    </p>
+-    {% endif %}
+-
+-    {% if project.image %}
+-    <p><img src="{{ project.image }}" alt="{{ project.name }}" class="project-cover"></p>
+-    {% endif %}
+-
+-    {% if project.description %}
+-    <div class="description prose">{{ project.description }}</div>
+-    {% endif %}
+-
+-    <table class="fact-table">
+-      {% if project.client %}<tr><th>{{ entry_client }}</th><td>{{ project.client }}</td></tr>{% endif %}
+-      {% if project.url %}<tr><th>{{ entry_url }}</th><td><a href="{{ project.url }}" target="_blank" rel="noopener">{{ project.url }}</a></td></tr>{% endif %}
+-      {% if text_tag %}<tr><th>{{ entry_tags }}</th><td><code>{{ text_tag }}</code></td></tr>{% endif %}
+-    </table>
+-
+-    {% if images %}
+-    <h2>{{ entry_gallery }}</h2>
+-    <ul class="gallery-grid">
+-      {% for img in images %}
+-      <li><img src="{{ img.src }}" alt="{{ img.alt }}" loading="lazy"></li>
+-      {% endfor %}
+-    </ul>
+-    {% endif %}
+-  </div>
+-</main>
++<main class="site-main"><div class="container">
++{% for section in cms_page_sections %}
++  {% if section == 'editorial' and cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>
++  {% elseif section == 'project_header' %}<div class="page-head"><h1>{{ heading_title }}</h1><a class="back-link" href="{{ back_portfolio }}">{{ button_back }}</a></div>{% if text_summary %}<p class="lead">{{ text_summary }}</p>{% endif %}
++  {% elseif section == 'categories' and categories %}<p class="chip-row">{% for cat in categories %}<a class="chip" href="{{ cat.href }}">{{ cat.name }}</a>{% endfor %}</p>
++  {% elseif section == 'cover' and project.image %}<p><img src="{{ project.image }}" alt="{{ project.name }}" class="project-cover"></p>
++  {% elseif section == 'description' and project.description %}<div class="description prose">{{ project.description }}</div>
++  {% elseif section == 'facts' %}<table class="fact-table">{% if project.client %}<tr><th>{{ entry_client }}</th><td>{{ project.client }}</td></tr>{% endif %}{% if project.url %}<tr><th>{{ entry_url }}</th><td><a href="{{ project.url }}" target="_blank" rel="noopener">{{ project.url }}</a></td></tr>{% endif %}{% if text_tag %}<tr><th>{{ entry_tags }}</th><td><code>{{ text_tag }}</code></td></tr>{% endif %}</table>
++  {% elseif section == 'gallery' and images %}<h2>{{ entry_gallery }}</h2><ul class="gallery-grid">{% for img in images %}<li><img src="{{ img.src }}" alt="{{ img.alt }}" loading="lazy"></li>{% endfor %}</ul>{% endif %}
++{% endfor %}
++</div></main>
+ {{ footer }}
+--- a/dev/catalog/view/template/tool/tool_list.twig
++++ b/dev/catalog/view/template/tool/tool_list.twig
+@@ -1,35 +1,10 @@
+-{# dev/catalog/view/template/tool/tool_list.twig — grade pública das ferramentas (F3-04) #}
++{# Conteúdo/dados são fornecidos exclusivamente pelo módulo Tools. #}
+ {{ header }}
+-<main class="site-main">
+-  <div class="container">
+-    <div class="page-head">
+-      <h1>{{ heading_title }}</h1>
+-      <a class="back-link" href="{{ home }}">{{ button_back_home }}</a>
+-    </div>
+-    <p class="lead">{{ text_lead }}</p>
+-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+-
+-    {% if tools %}
+-    <div class="grid-3">
+-      {% for t in tools %}
+-      <div class="tool-card">
+-        {% if t.image %}
+-        <img class="tool-icon" src="{{ t.image }}" alt="" loading="lazy">
+-        {% else %}
+-        <span class="tool-icon">{{ t.name[:1] }}</span>
+-        {% endif %}
+-        <strong>{{ t.name }}</strong>{% if t.vendor %} <small class="muted"> · {{ t.vendor }}</small>{% endif %}
+-        {% if t.description %}<p>{{ t.description }}</p>{% endif %}
+-        <p class="tool-actions">
+-          <a href="{{ t.href }}">{{ button_view }} →</a>
+-          {% if t.external %} · <a href="{{ t.url }}" target="_blank" rel="noopener">{{ text_open }} ↗</a>{% endif %}
+-        </p>
+-      </div>
+-      {% endfor %}
+-    </div>
+-    {% else %}
+-    <p class="lead">{{ text_no_results }}</p>
+-    {% endif %}
+-  </div>
+-</main>
++<main class="site-main"><div class="container">
++{% for section in cms_page_sections %}
++  {% if section == 'intro' %}<div class="page-head"><h1>{{ heading_title }}</h1><a class="back-link" href="{{ home }}">{{ button_back_home }}</a></div><p class="lead">{{ text_lead }}</p>
++  {% elseif section == 'editorial' and cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>
++  {% elseif section == 'tools_grid' %}{% if tools %}<div class="grid-3">{% for t in tools %}<div class="tool-card">{% if t.image %}<img class="tool-icon" src="{{ t.image }}" alt="" loading="lazy">{% else %}<span class="tool-icon">{{ t.name[:1] }}</span>{% endif %}<strong>{{ t.name }}</strong>{% if t.vendor %} <small class="muted"> · {{ t.vendor }}</small>{% endif %}{% if t.description %}<p>{{ t.description }}</p>{% endif %}<p class="tool-actions"><a href="{{ t.href }}">{{ button_view }} →</a>{% if t.external %} · <a href="{{ t.url }}" target="_blank" rel="noopener">{{ text_open }} ↗</a>{% endif %}</p></div>{% endfor %}</div>{% else %}<p class="lead">{{ text_no_results }}</p>{% endif %}{% endif %}
++{% endfor %}
++</div></main>
+ {{ footer }}
+--- a/dev/catalog/view/template/tool/tool_info.twig
++++ b/dev/catalog/view/template/tool/tool_info.twig
+@@ -1,26 +1,10 @@
+-{# dev/catalog/view/template/tool/tool_info.twig — página dedicada da ferramenta (F3-04, SEO) #}
+ {{ header }}
+-<main class="site-main">
+-  <div class="container">
+-    <div class="page-head">
+-      <h1>{{ heading_title }}</h1>
+-      <a class="back-link" href="{{ back_tools }}">{{ button_back }}</a>
+-    </div>
+-
+-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+-    {% if text_lead %}<p class="lead">{{ text_lead }}</p>{% endif %}
+-
+-    <table class="fact-table">
+-      {% if tool.vendor %}<tr><th>{{ entry_vendor }}</th><td>{{ tool.vendor }}</td></tr>{% endif %}
+-      {% if tool.external %}<tr><th>{{ entry_external_url }}</th><td><a href="{{ tool.url }}" target="_blank" rel="noopener">{{ text_open }} ↗</a></td></tr>{% endif %}
+-    </table>
+-
+-    {% if tool.external %}
+-    <p><a class="btn primary" href="{{ tool.url }}" target="_blank" rel="noopener">{{ text_open }} ↗</a></p>
+-    {% else %}
+-    <p class="muted">{{ text_open_hint }}</p>
+-    <p><a class="btn" href="{{ contact }}">{{ button_contact }}</a></p>
+-    {% endif %}
+-  </div>
+-</main>
++<main class="site-main"><div class="container">
++{% for section in cms_page_sections %}
++  {% if section == 'tool_header' %}<div class="page-head"><h1>{{ heading_title }}</h1><a class="back-link" href="{{ back_tools }}">{{ button_back }}</a></div>
++  {% elseif section == 'editorial' and cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>
++  {% elseif section == 'tool_description' %}{% if text_lead %}<p class="lead">{{ text_lead }}</p>{% endif %}<table class="fact-table">{% if tool.vendor %}<tr><th>{{ entry_vendor }}</th><td>{{ tool.vendor }}</td></tr>{% endif %}{% if tool.external %}<tr><th>{{ entry_external_url }}</th><td><a href="{{ tool.url }}" target="_blank" rel="noopener">{{ text_open }} ↗</a></td></tr>{% endif %}</table>{% if tool.external %}<p><a class="btn primary" href="{{ tool.url }}" target="_blank" rel="noopener">{{ text_open }} ↗</a></p>{% else %}<p class="muted">{{ text_open_hint }}</p>{% endif %}
++  {% elseif section == 'contact_link' and not tool.external %}<p><a class="btn" href="{{ contact }}">{{ button_contact }}</a></p>{% endif %}
++{% endfor %}
++</div></main>
+ {{ footer }}
+--- a/dev/catalog/view/template/common/contact.twig
++++ b/dev/catalog/view/template/common/contact.twig
+@@ -1,56 +1,9 @@
+-{# dev/catalog/view/template/common/contact.twig — formulário de contato público (F2-17) #}
+ {{ header }}
+ <main class="site-main" style="padding:40px 24px;max-width:720px;margin:0 auto;">
+-  <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;">
+-    <h1 style="margin:0;">{{ heading_title }}</h1>
+-    <a href="{{ home }}" style="text-decoration:none;">{{ button_back_home }}</a>
+-  </div>
+-  <p class="lead">{{ text_lead }}</p>
+-  {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+-
+-  {% if text_flash.text %}
+-  <div class="alert {{ text_flash.type }}" style="padding:12px;border-radius:6px;margin:12px 0;background:#ecfdf5;border:1px solid #10b981;">{{ text_flash.text }}</div>
+-  {% endif %}
+-
+-  {% if error %}
+-  <div class="alert danger" style="white-space:pre-line;padding:12px;border-radius:6px;margin:12px 0;background:#fef2f2;border:1px solid #ef4444;">{{ error }}</div>
+-  {% endif %}
+-
+-  <form method="post" action="{{ action }}" style="display:grid;gap:16px;margin-top:16px;">
+-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+-    {# honeypot invisível para bots #}
+-    <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+-      <label>{{ text_honeypot_label|default('Company') }} <input type="text" name="company" value="" tabindex="-1" autocomplete="off"></label>
+-    </div>
+-
+-    <div>
+-      <label for="cf-name">{{ entry_name }}</label>
+-      <input type="text" name="name" id="cf-name" value="{{ value_name }}" maxlength="128" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+-    </div>
+-
+-    <div>
+-      <label for="cf-email">{{ entry_email }}</label>
+-      <input type="email" name="email" id="cf-email" value="{{ value_email }}" maxlength="96" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+-    </div>
+-
+-    <div>
+-      <label for="cf-tel">{{ entry_telephone }}</label>
+-      <input type="tel" name="telephone" id="cf-tel" value="{{ value_telephone }}" maxlength="32" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+-    </div>
+-
+-    <div>
+-      <label for="cf-subject">{{ entry_subject }}</label>
+-      <input type="text" name="subject" id="cf-subject" value="{{ value_subject }}" maxlength="128" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+-    </div>
+-
+-    <div>
+-      <label for="cf-message">{{ entry_message }}</label>
+-      <textarea name="message" id="cf-message" rows="6" maxlength="5000" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">{{ value_message }}</textarea>
+-    </div>
+-
+-    <div>
+-      <button type="submit" class="btn primary" style="padding:12px 24px;border-radius:6px;">{{ button_send }}</button>
+-    </div>
+-  </form>
++{% for section in cms_page_sections %}
++  {% if section == 'intro' %}<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;"><h1 style="margin:0;">{{ heading_title }}</h1><a href="{{ home }}" style="text-decoration:none;">{{ button_back_home }}</a></div><p class="lead">{{ text_lead }}</p>
++  {% elseif section == 'editorial' and cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>
++  {% elseif section == 'contact_form' %}{% include 'partial/cms-contact-form.twig' %}{% endif %}
++{% endfor %}
+ </main>
+ {{ footer }}
+--- a/dev/catalog/view/template/checkout/quote.twig
++++ b/dev/catalog/view/template/checkout/quote.twig
+@@ -1,70 +1,9 @@
+-{# dev/catalog/view/template/checkout/quote.twig — pedido de orçamento público (F2-17) #}
+ {{ header }}
+ <main class="site-main" style="padding:40px 24px;max-width:760px;margin:0 auto;">
+-  <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;">
+-    <h1 style="margin:0;">{{ heading_title }}</h1>
+-    <a href="{{ home }}" style="text-decoration:none;">{{ button_back_home }}</a>
+-  </div>
+-  <p class="lead">{{ text_lead }}</p>
+-  {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+-
+-  {% if text_flash.text %}
+-  <div class="alert {{ text_flash.type }}" style="padding:12px;border-radius:6px;margin:12px 0;background:#ecfdf5;border:1px solid #10b981;">{{ text_flash.text }}</div>
+-  {% endif %}
+-
+-  {% if error %}
+-  <div class="alert danger" style="white-space:pre-line;padding:12px;border-radius:6px;margin:12px 0;background:#fef2f2;border:1px solid #ef4444;">{{ error }}</div>
+-  {% endif %}
+-
+-  <form method="post" action="{{ action }}" style="display:grid;gap:18px;margin-top:16px;">
+-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+-    {# honeypot #}
+-    <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+-      <label>{{ text_honeypot_label|default('Company') }} <input type="text" name="company" value="" tabindex="-1" autocomplete="off"></label>
+-    </div>
+-
+-    <fieldset style="border:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+-      <div>
+-        <label for="q-firstname">{{ entry_firstname }}</label>
+-        <input type="text" name="firstname" id="q-firstname" value="{{ value_firstname }}" maxlength="32" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+-      </div>
+-      <div>
+-        <label for="q-lastname">{{ entry_lastname }}</label>
+-        <input type="text" name="lastname" id="q-lastname" value="{{ value_lastname }}" maxlength="32" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+-      </div>
+-      <div>
+-        <label for="q-email">{{ entry_email }}</label>
+-        <input type="email" name="email" id="q-email" value="{{ value_email }}" maxlength="96" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+-      </div>
+-      <div>
+-        <label for="q-tel">{{ entry_telephone }}</label>
+-        <input type="tel" name="telephone" id="q-tel" value="{{ value_telephone }}" maxlength="32" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
+-      </div>
+-    </fieldset>
+-
+-    <fieldset style="border:1px solid #e5e7eb;border-radius:8px;padding:16px;">
+-      <legend style="padding:0 8px;font-weight:600;">{{ entry_services }}</legend>
+-      <p class="lead" style="margin-top:0;">{{ text_services }}</p>
+-      <ul style="columns:2;gap:24px;list-style:none;padding:0;margin:0;">
+-        {% for s in services %}
+-        <li style="break-inside:avoid;margin:6px 0;">
+-          <label style="display:flex;gap:8px;align-items:center;cursor:pointer;">
+-            <input type="checkbox" name="services[]" value="{{ s.key }}"{% if s.checked %} checked{% endif %}> {{ s.label }}
+-          </label>
+-        </li>
+-        {% endfor %}
+-      </ul>
+-    </fieldset>
+-
+-    <fieldset style="border:none;padding:0;">
+-      <label for="q-comment" style="display:block;margin-bottom:6px;">{{ entry_comment }}</label>
+-      <p class="lead" style="margin:0 0 6px;">{{ text_briefing }}</p>
+-      <textarea name="comment" id="q-comment" rows="5" maxlength="5000" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">{{ value_comment }}</textarea>
+-    </fieldset>
+-
+-    <div>
+-      <button type="submit" class="btn primary" style="padding:12px 24px;border-radius:6px;">{{ button_send }}</button>
+-    </div>
+-  </form>
++{% for section in cms_page_sections %}
++  {% if section == 'intro' %}<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;"><h1 style="margin:0;">{{ heading_title }}</h1><a href="{{ home }}" style="text-decoration:none;">{{ button_back_home }}</a></div><p class="lead">{{ text_lead }}</p>
++  {% elseif section == 'editorial' and cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>
++  {% elseif section == 'quote_form' %}{% include 'partial/cms-quote-form.twig' %}{% endif %}
++{% endfor %}
+ </main>
+ {{ footer }}
+--- a/dev/catalog/view/template/error/not_found.twig
++++ b/dev/catalog/view/template/error/not_found.twig
+@@ -1,21 +1,11 @@
+-{# dev/catalog/view/template/error/not_found.twig — 404 com Cena 4 (fog, F3-03) #}
+ {{ header }}
+ <main class="card-404 card-404--3d">
+-  <div class="nf-3d__canvas" aria-hidden="true"
+-       data-scene="not-found"
+-       data-count="{{ nf3d.count }}"
+-       data-color="{{ nf3d.color }}"
+-       data-speed="{{ nf3d.speed }}"
+-       data-drift="{{ nf3d.drift }}">
+-    <div class="nf-3d__fallback" data-fallback></div>
+-  </div>
++  <div class="nf-3d__canvas" aria-hidden="true" data-scene="not-found" data-count="{{ nf3d.count }}" data-color="{{ nf3d.color }}" data-speed="{{ nf3d.speed }}" data-drift="{{ nf3d.drift }}"><div class="nf-3d__fallback" data-fallback></div></div>
+   <div class="nf-3d__content">
+-    <p class="code">{{ text_code }}</p>
+-    <h1>{{ heading_title }}</h1>
+-    <p>{{ text_error }}</p>
+-    <p class="muted">{{ text_suggestion }}</p>
+-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+-    <a class="btn primary" href="{{ home }}">{{ button_continue }}</a>
++  {% for section in cms_page_sections %}
++    {% if section == 'not_found_content' %}<p class="code">{{ text_code }}</p><h1>{{ heading_title }}</h1><p>{{ text_error }}</p><p class="muted">{{ text_suggestion }}</p><a class="btn primary" href="{{ home }}">{{ button_continue }}</a>
++    {% elseif section == 'editorial' and cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
++  {% endfor %}
+   </div>
+ </main>
+ {{ footer }}
+--- a/dev/catalog/view/template/blog/blog_list.twig
++++ b/dev/catalog/view/template/blog/blog_list.twig
+@@ -1,32 +1,10 @@
+-{# dev/catalog/view/template/blog/blog_list.twig — lista pública do blog (F7-02, ADR 0043) #}
+-{# Reaproveita as classes news-card/news-meta/news-cta do CSS existente (zero CSS novo) #}
++{# Estrutura usa somente seções allowlisted; posts e gestão continuam no módulo Blog. #}
+ {{ header }}
+-<main class="site-main">
+-  <div class="container">
+-    <div class="page-head">
+-      <h1>{{ heading_title }}</h1>
+-      <a class="back-link" href="{{ home }}">{{ button_back_home }}</a>
+-    </div>
+-    <p class="lead">{{ text_lead }}</p>
+-    {% if cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>{% endif %}
+-
+-    {% if posts %}
+-    <div class="grid-3">
+-      {% for p in posts %}
+-      <article class="news-card">
+-        {% if p.image %}
+-        <img src="{{ p.image }}" alt="{{ p.title }}" loading="lazy">
+-        {% endif %}
+-        {% if p.date %}<p class="news-meta">{{ p.date }}</p>{% endif %}
+-        <h3>{{ p.title }}</h3>
+-        {% if p.excerpt %}<p>{{ p.excerpt }}</p>{% endif %}
+-        <p><a class="news-cta" href="{{ p.href }}">{{ text_read_more }} →</a></p>
+-      </article>
+-      {% endfor %}
+-    </div>
+-    {% else %}
+-    <p class="lead">{{ text_no_results }}</p>
+-    {% endif %}
+-  </div>
+-</main>
++<main class="site-main"><div class="container">
++{% for section in cms_page_sections %}
++  {% if section == 'intro' %}<div class="page-head"><h1>{{ heading_title }}</h1><a class="back-link" href="{{ home }}">{{ button_back_home }}</a></div><p class="lead">{{ text_lead }}</p>
++  {% elseif section == 'editorial' and cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>
++  {% elseif section == 'posts_grid' %}{% if posts %}<div class="grid-3">{% for p in posts %}<article class="news-card">{% if p.image %}<img src="{{ p.image }}" alt="{{ p.title }}" loading="lazy">{% endif %}{% if p.date %}<p class="news-meta">{{ p.date }}</p>{% endif %}<h3>{{ p.title }}</h3>{% if p.excerpt %}<p>{{ p.excerpt }}</p>{% endif %}<p><a class="news-cta" href="{{ p.href }}">{{ text_read_more }} →</a></p></article>{% endfor %}</div>{% else %}<p class="lead">{{ text_no_results }}</p>{% endif %}{% endif %}
++{% endfor %}
++</div></main>
+ {{ footer }}
+--- a/dev/catalog/view/template/blog/blog_info.twig
++++ b/dev/catalog/view/template/blog/blog_info.twig
+@@ -1,31 +1,10 @@
+-{# dev/catalog/view/template/blog/blog_info.twig — post completo do blog (F7-02, ADR 0043) #}
+-{# Sidecar válido usa apenas saída do BlockRenderer allowlisted; legacy mantém o contrato HTML atual. #}
++{# O conteúdo do artigo permanece no fluxo Blog; apenas a posição dos blocos da página muda. #}
+ {{ header }}
+-<main class="site-main">
+-  <div class="container">
+-    <div class="page-head">
+-      <h1>{{ heading_title }}</h1>
+-      <a class="back-link" href="{{ back_blog }}">{{ button_back }}</a>
+-    </div>
+-
+-    <article class="blog-post">
+-      {% if post.image %}
+-      <img src="{{ post.image }}" alt="{{ post.title }}">
+-      {% endif %}
+-      {% if post.date %}<p class="news-meta">{{ text_published_on }} {{ post.date }}</p>{% endif %}
+-      <div class="blog-content rms-blog-content">
+-        {% if post.content_mode == 'blocks' %}
+-          {% if post.content_valid %}
+-            {{ post.block_html }}
+-          {% else %}
+-            <p class="rms-block-unavailable" role="status">{{ text_content_review }}</p>
+-          {% endif %}
+-        {% else %}
+-          {# Fallback legado permanece idêntico ao contrato existente; não é uma sanitização nova. #}
+-          {{ post.description }}
+-        {% endif %}
+-      </div>
+-    </article>
+-  </div>
+-</main>
++<main class="site-main"><div class="container">
++{% for section in cms_page_sections %}
++  {% if section == 'post_header' %}<div class="page-head"><h1>{{ heading_title }}</h1><a class="back-link" href="{{ back_blog }}">{{ button_back }}</a></div>
++  {% elseif section == 'editorial' and cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>
++  {% elseif section == 'post_content' %}<article class="blog-post">{% if post.image %}<img src="{{ post.image }}" alt="{{ post.title }}">{% endif %}{% if post.date %}<p class="news-meta">{{ text_published_on }} {{ post.date }}</p>{% endif %}<div class="blog-content rms-blog-content">{% if post.content_mode == 'blocks' %}{% if post.content_valid %}{{ post.block_html }}{% else %}<p class="rms-block-unavailable" role="status">{{ text_content_review }}</p>{% endif %}{% else %}{{ post.description }}{% endif %}</div></article>{% endif %}
++{% endfor %}
++</div></main>
+ {{ footer }}
+--- /dev/null
++++ b/dev/catalog/view/template/partial/cms-contact-form.twig
+@@ -0,0 +1,44 @@
++  {% if text_flash.text %}
++  <div class="alert {{ text_flash.type }}" style="padding:12px;border-radius:6px;margin:12px 0;background:#ecfdf5;border:1px solid #10b981;">{{ text_flash.text }}</div>
++  {% endif %}
++
++  {% if error %}
++  <div class="alert danger" style="white-space:pre-line;padding:12px;border-radius:6px;margin:12px 0;background:#fef2f2;border:1px solid #ef4444;">{{ error }}</div>
++  {% endif %}
++
++  <form method="post" action="{{ action }}" style="display:grid;gap:16px;margin-top:16px;">
++    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
++    {# honeypot invisível para bots #}
++    <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
++      <label>{{ text_honeypot_label|default('Company') }} <input type="text" name="company" value="" tabindex="-1" autocomplete="off"></label>
++    </div>
++
++    <div>
++      <label for="cf-name">{{ entry_name }}</label>
++      <input type="text" name="name" id="cf-name" value="{{ value_name }}" maxlength="128" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
++    </div>
++
++    <div>
++      <label for="cf-email">{{ entry_email }}</label>
++      <input type="email" name="email" id="cf-email" value="{{ value_email }}" maxlength="96" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
++    </div>
++
++    <div>
++      <label for="cf-tel">{{ entry_telephone }}</label>
++      <input type="tel" name="telephone" id="cf-tel" value="{{ value_telephone }}" maxlength="32" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
++    </div>
++
++    <div>
++      <label for="cf-subject">{{ entry_subject }}</label>
++      <input type="text" name="subject" id="cf-subject" value="{{ value_subject }}" maxlength="128" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
++    </div>
++
++    <div>
++      <label for="cf-message">{{ entry_message }}</label>
++      <textarea name="message" id="cf-message" rows="6" maxlength="5000" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">{{ value_message }}</textarea>
++    </div>
++
++    <div>
++      <button type="submit" class="btn primary" style="padding:12px 24px;border-radius:6px;">{{ button_send }}</button>
++    </div>
++  </form>
+--- /dev/null
++++ b/dev/catalog/view/template/partial/cms-quote-form.twig
+@@ -0,0 +1,58 @@
++  {% if text_flash.text %}
++  <div class="alert {{ text_flash.type }}" style="padding:12px;border-radius:6px;margin:12px 0;background:#ecfdf5;border:1px solid #10b981;">{{ text_flash.text }}</div>
++  {% endif %}
++
++  {% if error %}
++  <div class="alert danger" style="white-space:pre-line;padding:12px;border-radius:6px;margin:12px 0;background:#fef2f2;border:1px solid #ef4444;">{{ error }}</div>
++  {% endif %}
++
++  <form method="post" action="{{ action }}" style="display:grid;gap:18px;margin-top:16px;">
++    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
++    {# honeypot #}
++    <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
++      <label>{{ text_honeypot_label|default('Company') }} <input type="text" name="company" value="" tabindex="-1" autocomplete="off"></label>
++    </div>
++
++    <fieldset style="border:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
++      <div>
++        <label for="q-firstname">{{ entry_firstname }}</label>
++        <input type="text" name="firstname" id="q-firstname" value="{{ value_firstname }}" maxlength="32" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
++      </div>
++      <div>
++        <label for="q-lastname">{{ entry_lastname }}</label>
++        <input type="text" name="lastname" id="q-lastname" value="{{ value_lastname }}" maxlength="32" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
++      </div>
++      <div>
++        <label for="q-email">{{ entry_email }}</label>
++        <input type="email" name="email" id="q-email" value="{{ value_email }}" maxlength="96" required style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
++      </div>
++      <div>
++        <label for="q-tel">{{ entry_telephone }}</label>
++        <input type="tel" name="telephone" id="q-tel" value="{{ value_telephone }}" maxlength="32" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">
++      </div>
++    </fieldset>
++
++    <fieldset style="border:1px solid #e5e7eb;border-radius:8px;padding:16px;">
++      <legend style="padding:0 8px;font-weight:600;">{{ entry_services }}</legend>
++      <p class="lead" style="margin-top:0;">{{ text_services }}</p>
++      <ul style="columns:2;gap:24px;list-style:none;padding:0;margin:0;">
++        {% for s in services %}
++        <li style="break-inside:avoid;margin:6px 0;">
++          <label style="display:flex;gap:8px;align-items:center;cursor:pointer;">
++            <input type="checkbox" name="services[]" value="{{ s.key }}"{% if s.checked %} checked{% endif %}> {{ s.label }}
++          </label>
++        </li>
++        {% endfor %}
++      </ul>
++    </fieldset>
++
++    <fieldset style="border:none;padding:0;">
++      <label for="q-comment" style="display:block;margin-bottom:6px;">{{ entry_comment }}</label>
++      <p class="lead" style="margin:0 0 6px;">{{ text_briefing }}</p>
++      <textarea name="comment" id="q-comment" rows="5" maxlength="5000" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;">{{ value_comment }}</textarea>
++    </fieldset>
++
++    <div>
++      <button type="submit" class="btn primary" style="padding:12px 24px;border-radius:6px;">{{ button_send }}</button>
++    </div>
++  </form>
+--- a/docs/Guia-CMS.md
++++ b/docs/Guia-CMS.md
+@@ -271,14 +271,10 @@
+ 
+ `common/header.twig` mantém o bootstrap/importmap de scripts sob controle do sistema; sua barra visual é customizável por `partial/site_header`. A allowlist do tema também inclui o footer e os partials públicos usados pela Home. A edição de fonte permite Twig/HTML de apresentação, não PHP nem JavaScript inline: interações devem usar somente componentes/cenas aprovados e configuráveis. JavaScript personalizado do componente Three.js continua isolado no sandbox existente. API, sitemap XML, callbacks e fluxos internos não entram no editor de páginas.
+ 
+-### 4.1.6 Inventário de scripts e componentes aprovados
+-
+-A configuração disponível é intencionalmente declarativa; não existe campo para cadastrar URL de script, editar JavaScript ou publicar paths. Os pontos de entrada e a propriedade por módulo são:
+-
+-| Componente/script | Uso e controle permitido | Dono |
+-| --- | --- | --- |
+-| `three/main.js` e cenas `hero-particles`, `not-found`, `portfolio-3d`, `tools-3d` | Só carregam pelo header confiável quando a rota informa `has_3d`. Os toggles e limites ficam em Admin → Settings (`setting/setting`); `SceneConfig` valida valores. `design/theme` pode selecionar/ativar apenas uma chave de cena fixa; não adiciona código ou módulos. Os assets servidos passam pelo `AssetManifest` e gateway Catalog. | System/Three + Catalog |
+-| `threejs-thumb.js` | Carregado em posts quando o renderer de blocos declara que a thumb precisa do runtime. `custom_js` continua isolado no iframe sandbox de origem opaca; não é levado ao fluxo de Pages nem ao editor Themes. | Blog |
+-| Scripts normais de rota | `common/header.twig` emite somente a lista que os controllers colocam em `Document`; não há registro de URL via CMS/Theme. No HEAD atual, a chamada Catalog `addScript()` encontrada é a do runner de thumb do Blog. | Controller que possui a rota |
+-
+-Os arquivos JavaScript presentes em `catalog/view/js/` não se tornam automaticamente scripts ativos nem opções configuráveis. Não os adicionar a Themes por inferência; qualquer novo comportamento precisa de caso de uso, dono, entrada allowlisted, validação/configuração limitada e fallback documentados. Páginas públicas podem mudar a apresentação pelos templates, mas scripts continuam no shell/runtimes aprovados e nos módulos que os possuem.
++## Estrutura visual das páginas públicas
++
++As Pages de sistema compatíveis expõem no BDREditor uma lista ordenável de seções públicas. O contrato allowlisted `system/library/cms/page_layout.php` reconhece somente os identificadores fixos por rota; o editor não recebe campos para Twig, PHP, JavaScript, paths ou HTML de template. A descrição continua armazenando o documento BDRE v2, envelopado com a chave da rota e a ordem de seções no marcador `REAMURCMS_PAGE_LAYOUT_V1:`. O modelo de dados não exige migration.
++
++A integração abrange Home, Portfolio (lista e detalhe), Tools (lista e detalhe), Contact, Quote, 404, Blog (lista) e Blog Post (composição da página). Home inclui Hero/About/Methodology/Skills/Services e as áreas dinâmicas existentes. A seção editorial não substitui os dados de Portfolio, Tools ou Posts: esses dados continuam a ser carregados e editados pelos módulos donos. Blog e Pages seguem rotas, conteúdo e fluxos separados; apenas o contrato visual allowlisted e o BDREditor são compartilhados.
++
++Na apresentação pública, o Catalog valida o envelope e renderiza apenas o conteúdo BDRE aprovado; cada seção de domínio permanece vinculada a um include/código fixo. Um envelope inválido não executa conteúdo estrutural, e documentos legados continuam compatíveis com os defaults da rota. A autorização de edição permanece a ACL `modify cms/page`, com POST e CSRF já usados pelo formulário.
+--- /dev/null
++++ b/CMS-Public-Page-Structure-README.md
+@@ -0,0 +1,31 @@
++# CMS Public Page Structure — local patch
++
++This patch adds a fixed, allowlisted visual section-order contract to the existing BDREditor for CMS system pages. It preserves Pages and Blog as separate tools and content stores; Blog posts remain managed by Blog. The shared behavior is limited to the editor framework and safe visual composition.
++
++## Included
++
++- An allowlisted `PageLayout` contract with route-specific section IDs and a versioned serialized envelope; no database migration.
++- Admin integration: existing BDRE v2 content stays nested in the envelope, while editors can enable/disable and reorder sections. Existing ACL and CSRF controls remain authoritative.
++- Catalog integration for Home, Portfolio list/detail, Tools list/detail, Contact, Quote, 404, Blog list, and Blog post page composition.
++- Public templates render fixed Twig includes and module-owned dynamic data only. The editor does not accept Twig, PHP, JavaScript, arbitrary paths, or free-form template code.
++- Legacy descriptions retain route defaults. Invalid layout envelopes are not emitted as HTML.
++
++## Apply from the repository root
++
++First verify the patch against the current checkout:
++
++```sh
++patch --dry-run -p1 < CMS-Public-Page-Structure.patch
++```
++
++If the dry run succeeds, apply it:
++
++```sh
++patch -p1 < CMS-Public-Page-Structure.patch
++```
++
++Do not run migrations: this change has no schema changes. This is a local patch only; it does not push to GitHub or deploy.
++
++## QA notes
++
++The JavaScript syntax check passed with `node --check`. PHP CLI was not available in the build environment, so PHP lint/runtime and Twig rendering were not executed. Review the diff and run the project's normal PHP/Twig checks after applying it in your development environment.

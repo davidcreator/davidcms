@@ -46,6 +46,7 @@ class Not_found extends \Reamur\System\Engine\Controller {
 
         $data['body_class'] = 'rms-404';
         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'not_found');
+        $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'not_found');
         $data['header']     = $this->load->controller('common/header', $data);
         $data['footer']     = $this->load->controller('common/footer', $data);
 

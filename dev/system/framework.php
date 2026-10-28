@@ -30,9 +30,12 @@ require_once(DIR_SYSTEM . 'vendor.php');
 
 // 3. Registry
 $registry = new Registry();
+// Plano aprovado (CMS Page Structure): registrar contrato puro de layouts
+// allowlisted; Admin valida e Catalog consome. Sem SQL, IO ou efeito no Blog.
 // API compartilhada de configuração e manifesto allowlisted do Three.js.
 $registry->set('three_scene_config', new \Reamur\System\Library\Three\SceneConfig());
 $registry->set('three_asset_manifest', new \Reamur\System\Library\Three\AssetManifest());
+$registry->set('cms_page_layout', new \Reamur\System\Library\Cms\PageLayout());
 
 // 4. Config: default + aplicação (Contrato §4)
 $config = new Config();

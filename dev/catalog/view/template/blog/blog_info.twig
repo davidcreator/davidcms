@@ -1,31 +1,10 @@
-{# dev/catalog/view/template/blog/blog_info.twig — post completo do blog (F7-02, ADR 0043) #}
-{# Sidecar válido usa apenas saída do BlockRenderer allowlisted; legacy mantém o contrato HTML atual. #}
+{# O conteúdo do artigo permanece no fluxo Blog; apenas a posição dos blocos da página muda. #}
 {{ header }}
-<main class="site-main">
-  <div class="container">
-    <div class="page-head">
-      <h1>{{ heading_title }}</h1>
-      <a class="back-link" href="{{ back_blog }}">{{ button_back }}</a>
-    </div>
-
-    <article class="blog-post">
-      {% if post.image %}
-      <img src="{{ post.image }}" alt="{{ post.title }}">
-      {% endif %}
-      {% if post.date %}<p class="news-meta">{{ text_published_on }} {{ post.date }}</p>{% endif %}
-      <div class="blog-content rms-blog-content">
-        {% if post.content_mode == 'blocks' %}
-          {% if post.content_valid %}
-            {{ post.block_html }}
-          {% else %}
-            <p class="rms-block-unavailable" role="status">{{ text_content_review }}</p>
-          {% endif %}
-        {% else %}
-          {# Fallback legado permanece idêntico ao contrato existente; não é uma sanitização nova. #}
-          {{ post.description }}
-        {% endif %}
-      </div>
-    </article>
-  </div>
-</main>
+<main class="site-main"><div class="container">
+{% for section in cms_page_sections %}
+  {% if section == 'post_header' %}<div class="page-head"><h1>{{ heading_title }}</h1><a class="back-link" href="{{ back_blog }}">{{ button_back }}</a></div>
+  {% elseif section == 'editorial' and cms_page_content %}<div class="cms-editorial-slot prose">{{ cms_page_content }}</div>
+  {% elseif section == 'post_content' %}<article class="blog-post">{% if post.image %}<img src="{{ post.image }}" alt="{{ post.title }}">{% endif %}{% if post.date %}<p class="news-meta">{{ text_published_on }} {{ post.date }}</p>{% endif %}<div class="blog-content rms-blog-content">{% if post.content_mode == 'blocks' %}{% if post.content_valid %}{{ post.block_html }}{% else %}<p class="rms-block-unavailable" role="status">{{ text_content_review }}</p>{% endif %}{% else %}{{ post.description }}{% endif %}</div></article>{% endif %}
+{% endfor %}
+</div></main>
 {{ footer }}

@@ -833,6 +833,8 @@ class Page extends \Reamur\System\Engine\Controller {
         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
 
         $pid          = (int)($page['page_id'] ?? 0);
+        $systemKey    = (string)($page['system_key'] ?? '');
+        $pageLayout   = $this->cms_page_layout;
         $isPost       = $this->request->server['REQUEST_METHOD'] === 'POST';
         $post         = $this->request->post;
         $descriptions = $pid ? $this->model_cms_page->getPageDescriptions($pid) : [];
@@ -884,14 +886,37 @@ class Page extends \Reamur\System\Engine\Controller {
 
             $fields['keyword'] = (string)($post['page_description'][$lid]['keyword'] ?? ($keywords[$lid] ?? ''));
             $description = $fields['description'];
+            $layoutSections = [];
+            $layoutOptions = $pageLayout->options($systemKey);
+            if ($layoutOptions !== []) {
+                $submittedSections = $post['page_layout_sections'][$lid] ?? null;
+                if ($submittedSections === null && isset($post['page_layout_sections_present'][$lid])) $submittedSections = [];
+                $hasEditorial = trim($description) !== '';
+                if (str_starts_with($description, 'REAMURCMS_BDRE_JSON_V2:')) {
+                    $existingContent = (new \Reamur\System\Library\Blog\BlockDocument(true))->deserializeDocument(substr($description, strlen('REAMURCMS_BDRE_JSON_V2:')));
+                    $hasEditorial = !empty($existingContent['valid']) && !empty($existingContent['document']['blocks']);
+                }
+                $layoutSections = is_array($submittedSections) ? $submittedSections : $pageLayout->defaults($systemKey, $hasEditorial);
+                $savedLayout = $pageLayout->decode($description, $systemKey);
+                if ($savedLayout !== null) {
+                    $layoutSections = is_array($submittedSections) ? $submittedSections : $savedLayout['sections'];
+                    $description = 'REAMURCMS_BDRE_JSON_V2:' . (new \Reamur\System\Library\Blog\BlockDocument(true))->serializeDocument($savedLayout['content']);
+                    $fields['description'] = $description;
+                }
+            }
             $summary = '';
+            $prefixForEditor = 'REAMURCMS_BDRE_JSON_V2:';
             $contentSavedValue = $description;
             $blockSummaryDocument = null;
             $blockPrefix = 'REAMURCMS_BDRE_JSON_V2:';
             $blockMode = 'legacy';
             $blockJson = '';
             $storedBlockValue = $description;
-            if (str_starts_with($description, $blockPrefix)) {
+            $invalidLayoutEnvelope = $layoutOptions !== [] && str_starts_with($description, \Reamur\System\Library\Cms\PageLayout::PREFIX);
+            if ($invalidLayoutEnvelope) {
+                $blockMode = 'invalid';
+                $summary = $data['text_content_invalid'];
+            } elseif (str_starts_with($description, $blockPrefix)) {
                 $blockJson = substr($description, strlen($blockPrefix));
                 $decoded = (new \Reamur\System\Library\Blog\BlockDocument(true))->deserializeDocument($blockJson);
                 if (!empty($decoded['valid']) && is_array($decoded['document']) && ($decoded['document']['format_version'] ?? null) === 2) {
@@ -929,6 +954,9 @@ class Page extends \Reamur\System\Engine\Controller {
             $fields['block_mode'] = $blockMode;
             $fields['block_document'] = $blockJson;
             $fields['block_stored_value'] = $storedBlockValue;
+            $fields['page_layout_sections'] = $layoutSections;
+            $fields['page_layout_options'] = $layoutOptions;
+            $fields['page_layout_system_key'] = $systemKey;
 
             $data['languages'][] = [
                 'language_id' => $lid,
@@ -940,7 +968,7 @@ class Page extends \Reamur\System\Engine\Controller {
         }
 
         $data['page_id']    = $pid;
-        $data['system_key'] = (string)($page['system_key'] ?? '');
+        $data['system_key'] = $systemKey;
         $data['is_system_page'] = $data['system_key'] !== '';
         $layoutBySystemKey = [
             'home'=>'common/home', 'portfolio'=>'catalog/project_list', 'portfolio_detail'=>'catalog/project_info',
@@ -992,7 +1020,15 @@ class Page extends \Reamur\System\Engine\Controller {
             if (($post['page_block_mode'][$lid] ?? '') === 'blocks' && str_starts_with($description, 'REAMURCMS_BDRE_JSON_V2:')) {
                 $decoded = (new \Reamur\System\Library\Blog\BlockDocument(true))->deserializeDocument(substr($description, strlen('REAMURCMS_BDRE_JSON_V2:')));
                 if (!empty($decoded['valid']) && is_array($decoded['document']) && ($decoded['document']['format_version'] ?? null) === 2) {
-                    $description = 'REAMURCMS_BDRE_JSON_V2:' . (new \Reamur\System\Library\Blog\BlockDocument(true))->serializeDocument($decoded['document']);
+                    $content = $decoded['document'];
+                    $description = 'REAMURCMS_BDRE_JSON_V2:' . (new \Reamur\System\Library\Blog\BlockDocument(true))->serializeDocument($content);
+                    if ($pageId > 0) {
+                        $page = $this->model_cms_page->getPage($pageId);
+                        $systemKey = (string)($page['system_key'] ?? '');
+                        $postedSections = $post['page_layout_sections'][$lid] ?? (isset($post['page_layout_sections_present'][$lid]) ? [] : null);
+                        $sections = $this->cms_page_layout->normalizeSections($systemKey, $postedSections);
+                        if ($sections !== null) $description = $this->cms_page_layout->encode($systemKey, $content, $sections);
+                    }
                 }
             }
             $descriptions[(int)$lid] = [
@@ -1075,6 +1111,9 @@ class Page extends \Reamur\System\Engine\Controller {
         $modes = (array)($post['page_block_mode'] ?? []);
         $descriptions = (array)($post['page_description'] ?? []);
         $storedDescriptions = $pageId ? $this->model_cms_page->getPageDescriptions($pageId) : [];
+        $page = $pageId ? $this->model_cms_page->getPage($pageId) : [];
+        $systemKey = (string)($page['system_key'] ?? '');
+        $layoutOptions = $this->cms_page_layout->options($systemKey);
         $prefix = 'REAMURCMS_BDRE_JSON_V2:';
         $validator = new \Reamur\System\Library\Blog\BlockDocument(true);
         foreach ($descriptions as $languageId => $posted) {
@@ -1084,7 +1123,7 @@ class Page extends \Reamur\System\Engine\Controller {
             $hasMarker = str_starts_with($description, $prefix);
             if ($mode === 'invalid') {
                 $original = (string)($storedDescriptions[(int)$languageId]['description'] ?? '');
-                if (!$pageId || !$hasMarker || !hash_equals($original, $description)) {
+                if (!$pageId || $original === '' || !hash_equals($original, $description)) {
                     $errors[] = 'O conteúdo marcado inválido só pode ser preservado sem alteração; restaure uma versão válida antes de editá-lo.';
                 }
                 continue;
@@ -1098,6 +1137,11 @@ class Page extends \Reamur\System\Engine\Controller {
             $result = $validator->deserializeDocument(substr($description, strlen($prefix)));
             if (empty($result['valid']) || !is_array($result['document']) || ($result['document']['format_version'] ?? null) !== 2) {
                 $errors[] = 'O documento do editor é inválido ou excede o limite permitido. O conteúdo não foi salvo.';
+                continue;
+            }
+            $postedSections = $post['page_layout_sections'][$languageId] ?? (isset($post['page_layout_sections_present'][$languageId]) ? [] : null);
+            if ($layoutOptions !== [] && $this->cms_page_layout->normalizeSections($systemKey, $postedSections) === null) {
+                $errors[] = 'A ordem das seções da página é inválida. Recarregue a página e tente novamente.';
             }
         }
         return $errors;
