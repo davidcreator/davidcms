@@ -464,3 +464,12 @@ $_['text_block_history_empty'] = 'No hay borradores temporales anteriores en est
 $_['text_block_history_restore'] = 'Recuperar';
 $_['text_block_history_restore_confirm'] = '¿Recuperar esta versión temporal en el editor?';
 $_['text_block_history_restored'] = 'Versión temporal recuperada como borrador sin guardar.';
+// F9-32 — optimistic edit conflict protection
+$_['error_edit_conflict'] = 'Esta entrada se modificó y guardó en otra sesión desde que la abriste. No se guardaron tus cambios. Recarga la versión actual antes de continuar.';
+$_['button_reload_current'] = 'Recargar versión actual';
+// F9-33 — compare persisted revisions safely before restore
+$_['text_revision_compare'] = 'Comparar con el formulario';
+$_['text_revision_version'] = 'Versión seleccionada';
+$_['text_revision_current'] = 'Formulario actual (incluye cambios sin guardar)';
+$_['text_revision_body'] = 'Contenido (documentos BDRE; el HTML heredado se muestra como texto)';
+$_['text_revision_meta'] = 'Metadatos editoriales';$_['text_revision_error'] = 'No se pudo cargar la comparación de esta versión.';

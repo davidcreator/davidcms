@@ -464,3 +464,12 @@ $_['text_block_history_empty'] = 'Não há rascunhos temporários anteriores nes
 $_['text_block_history_restore'] = 'Recuperar';
 $_['text_block_history_restore_confirm'] = 'Recuperar esta versão temporária no editor?';
 $_['text_block_history_restored'] = 'Versão temporária recuperada como rascunho não salvo.';
+// F9-32 — optimistic edit conflict protection
+$_['error_edit_conflict'] = 'Este post foi alterado e salvo em outra sessão desde que você o abriu. Suas mudanças não foram salvas. Recarregue a versão atual antes de continuar.';
+$_['button_reload_current'] = 'Recarregar versão atual';
+// F9-33 — compare persisted revisions safely before restore
+$_['text_revision_compare'] = 'Comparar com o formulário';
+$_['text_revision_version'] = 'Versão selecionada';
+$_['text_revision_current'] = 'Formulário atual (inclui alterações não salvas)';
+$_['text_revision_body'] = 'Conteúdo (documentos BDRE; HTML legado é exibido como texto)';
+$_['text_revision_meta'] = 'Metadados editoriais';$_['text_revision_error'] = 'Não foi possível carregar a comparação desta versão.';

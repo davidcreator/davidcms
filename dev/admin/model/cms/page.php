@@ -180,21 +180,30 @@ class Page extends \Reamur\System\Engine\Model {
     /**
      * @param array<string, mixed> $data Payload normalizado do controller
      */
-    public function editPage(int $page_id, array $data): void {
-        if ($this->pageContentChanged($page_id, $data)) $this->captureBdreRevisions('page', $page_id);
-        $this->db->query(
-            "UPDATE `" . $this->t('page') . "` SET
-                `status`     = '" . (int)(!empty($data['status']) ? 1 : 0) . "',
-                `sort_order` = '" . (int)$data['sort_order'] . "',
-                `date_modified` = NOW()
-             WHERE `page_id` = '" . $page_id . "'"
-        );
-
-        $this->db->query("DELETE FROM `" . $this->t('page_description') . "` WHERE `page_id` = '" . $page_id . "'");
-
-        $this->db->query("DELETE FROM `" . $this->t('seo_url') . "` WHERE `key` = 'page_id=" . $page_id . "'");
-
-        $this->syncDescriptions($page_id, (array)$data['descriptions']);
+    public function editPage(int $page_id, array $data, ?string $expectedFingerprint = null): void {
+        $transaction = $expectedFingerprint !== null;
+        if ($transaction && $this->db->query('START TRANSACTION') !== true) throw new \RuntimeException('page_edit_transaction_start_failed');
+        try {
+            if ($transaction) {
+                $lock = $this->db->query("SELECT `page_id` FROM `" . $this->t('page') . "` WHERE `page_id`='" . $page_id . "' FOR UPDATE");
+                if (!($lock instanceof \stdClass) || empty($lock->row) || !hash_equals($expectedFingerprint, $this->getPageEditFingerprint($page_id))) throw new \RuntimeException('edit_conflict');
+            }
+            if ($this->pageContentChanged($page_id, $data)) $this->captureBdreRevisions('page', $page_id);
+            $this->db->query(
+                "UPDATE `" . $this->t('page') . "` SET
+                    `status`     = '" . (int)(!empty($data['status']) ? 1 : 0) . "',
+                    `sort_order` = '" . (int)$data['sort_order'] . "',
+                    `date_modified` = NOW()
+                 WHERE `page_id` = '" . $page_id . "'"
+            );
+            $this->db->query("DELETE FROM `" . $this->t('page_description') . "` WHERE `page_id` = '" . $page_id . "'");
+            $this->db->query("DELETE FROM `" . $this->t('seo_url') . "` WHERE `key` = 'page_id=" . $page_id . "'");
+            $this->syncDescriptions($page_id, (array)$data['descriptions']);
+            if ($transaction && $this->db->query('COMMIT') !== true) throw new \RuntimeException('page_edit_transaction_commit_failed');
+        } catch (\Throwable $e) {
+            if ($transaction) { try { $this->db->query('ROLLBACK'); } catch (\Throwable $rollbackError) { /* preserve original */ } }
+            throw $e;
+        }
     }
 
     public function isSystemPage(int $page_id): bool {
@@ -259,6 +268,16 @@ class Page extends \Reamur\System\Engine\Model {
             elseif ($raw !== '') { $converted=(new \Reamur\System\Library\Blog\BlockDocument(true))->convertLegacy($raw); if (($converted['status'] ?? '') === 'converted' && is_array($converted['document'] ?? null)) $snapshot['block_document']=$converted['document']; }
             $this->storeBdreRevision($type, $entityId, (int)$languageId, $snapshot);
         }
+    }
+
+    /** Stable server fingerprint for optimistic edit conflict detection (custom fields are added by the controller). */
+    public function getPageEditFingerprint(int $pageId): string {
+        $page=$this->getPage($pageId); if (!$page) return '';
+        $descriptions=$this->getPageDescriptions($pageId); $keywords=$this->getPageKeywords($pageId); $safe=[];
+        foreach ($descriptions as $languageId=>$row) { $row=(array)$row; $safe[(int)$languageId]=['title'=>(string)($row['title']??''),'description'=>(string)($row['description']??''),'meta_title'=>(string)($row['meta_title']??''),'meta_description'=>(string)($row['meta_description']??''),'keyword'=>(string)($keywords[$languageId]??'')]; }
+        ksort($safe);
+        $json=json_encode(['status'=>(int)($page['status']??0),'sort_order'=>(int)($page['sort_order']??0),'descriptions'=>$safe],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+        return is_string($json) ? hash('sha256',$json) : '';
     }
 
     /** @return array<int, array<string, mixed>> newest first; snapshot is decoded server-side */

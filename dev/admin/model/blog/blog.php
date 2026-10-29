@@ -164,10 +164,14 @@ class Blog extends \Reamur\System\Engine\Model {
      *
      * @param array<int, string> $blocks JSON por language_id
      */
-    public function savePostWithBlocks(int $post_id, array $data, array $blocks): int {
+    public function savePostWithBlocks(int $post_id, array $data, array $blocks, ?string $expectedFingerprint = null): int {
         if (!$this->blogBlockContentTableExists()) throw new \RuntimeException('blog_block_schema_unavailable');
         if ($this->db->query('START TRANSACTION') !== true) throw new \RuntimeException('blog_save_transaction_start_failed');
         try {
+            if ($post_id > 0 && $expectedFingerprint !== null) {
+                $lock = $this->db->query("SELECT `post_id` FROM `" . $this->t('blog_post') . "` WHERE `post_id`='" . $post_id . "' FOR UPDATE");
+                if (!($lock instanceof \stdClass) || empty($lock->row) || !hash_equals($expectedFingerprint, $this->getPostEditFingerprint($post_id))) throw new \RuntimeException('edit_conflict');
+            }
             $oldDescriptions = $post_id > 0 ? $this->getPostDescriptions($post_id) : [];
             if ($post_id > 0) {
                 $currentBlocks = $this->getPostBlockContents($post_id);
@@ -284,7 +288,17 @@ class Blog extends \Reamur\System\Engine\Model {
     /**
      * @param array<string, mixed> $data Payload normalizado do controller
      */
-    public function editPost(int $post_id, array $data, bool $captureRevisions = true): void {
+    public function editPost(int $post_id, array $data, bool $captureRevisions = true, ?string $expectedFingerprint = null): void {
+        if ($expectedFingerprint !== null) {
+            if ($this->db->query('START TRANSACTION') !== true) throw new \RuntimeException('blog_edit_transaction_start_failed');
+            try {
+                $lock=$this->db->query("SELECT `post_id` FROM `" . $this->t('blog_post') . "` WHERE `post_id`='" . $post_id . "' FOR UPDATE");
+                if (!($lock instanceof \stdClass) || empty($lock->row) || !hash_equals($expectedFingerprint,$this->getPostEditFingerprint($post_id))) throw new \RuntimeException('edit_conflict');
+                $this->editPost($post_id,$data,$captureRevisions,null);
+                if ($this->db->query('COMMIT') !== true) throw new \RuntimeException('blog_edit_transaction_commit_failed');
+            } catch (\Throwable $e) { try { $this->db->query('ROLLBACK'); } catch (\Throwable $rollbackError) { /* preserve original */ } throw $e; }
+            return;
+        }
         if ($captureRevisions && $this->postContentChanged($post_id, $data)) $this->captureBdreRevisions($post_id);
         $this->db->query(
             "UPDATE `" . $this->t('blog_post') . "` SET
@@ -360,6 +374,18 @@ class Blog extends \Reamur\System\Engine\Model {
             $this->db->query("INSERT INTO `" . $table . "` SET `entity_type`='blog', `entity_id`='" . $post_id . "', `language_id`='" . (int)$languageId . "', `content_hash`='" . $hash . "', `snapshot_json`='" . $this->db->escape($json) . "', `date_added`=NOW()");
             $this->db->query("DELETE FROM `" . $table . "` WHERE `entity_type`='blog' AND `entity_id`='" . $post_id . "' AND `language_id`='" . (int)$languageId . "' AND `revision_id` NOT IN (SELECT `revision_id` FROM (SELECT `revision_id` FROM `" . $table . "` WHERE `entity_type`='blog' AND `entity_id`='" . $post_id . "' AND `language_id`='" . (int)$languageId . "' ORDER BY `revision_id` DESC LIMIT 20) AS retained)");
         }
+    }
+
+    /** Stable server fingerprint for optimistic edit conflict detection. */
+    public function getPostEditFingerprint(int $postId): string {
+        $post=$this->getPost($postId); if (!$post) return '';
+        $descriptions=$this->getPostDescriptions($postId); $keywords=$this->getPostKeywords($postId); $safe=[];
+        foreach ($descriptions as $languageId=>$row) { $row=(array)$row; $safe[(int)$languageId]=['title'=>(string)($row['title']??''),'description'=>(string)($row['description']??''),'meta_title'=>(string)($row['meta_title']??''),'meta_description'=>(string)($row['meta_description']??''),'keyword'=>(string)($keywords[$languageId]??'')]; }
+        ksort($safe); $blocks=[];
+        foreach ($this->getPostBlockContents($postId) as $languageId=>$row) $blocks[(int)$languageId]=['format_version'=>(int)($row['format_version']??0),'content_json'=>(string)($row['content_json']??'')];
+        ksort($blocks);
+        $json=json_encode(['status'=>(int)($post['status']??0),'image'=>(string)($post['image']??''),'date_published'=>(string)($post['date_published']??''),'descriptions'=>$safe,'blocks'=>$blocks],JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+        return is_string($json) ? hash('sha256',$json) : '';
     }
 
     /** @return array<int, array<string, mixed>> newest first; snapshot is decoded server-side */

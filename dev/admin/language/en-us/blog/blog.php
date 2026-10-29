@@ -464,3 +464,12 @@ $_['text_block_history_empty'] = 'No previous temporary drafts in this tab.';
 $_['text_block_history_restore'] = 'Restore';
 $_['text_block_history_restore_confirm'] = 'Restore this temporary revision into the editor?';
 $_['text_block_history_restored'] = 'Temporary revision restored as an unsaved draft.';
+// F9-32 — optimistic edit conflict protection
+$_['error_edit_conflict'] = 'This post was changed and saved in another session after you opened it. Your changes were not saved. Reload the current version before continuing.';
+$_['button_reload_current'] = 'Reload current version';
+// F9-33 — compare persisted revisions safely before restore
+$_['text_revision_compare'] = 'Compare with form';
+$_['text_revision_version'] = 'Selected revision';
+$_['text_revision_current'] = 'Current form (includes unsaved changes)';
+$_['text_revision_body'] = 'Content (BDRE documents; legacy HTML is shown as text)';
+$_['text_revision_meta'] = 'Editorial metadata';$_['text_revision_error'] = 'Could not load this revision comparison.';

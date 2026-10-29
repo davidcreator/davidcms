@@ -222,29 +222,35 @@ class Blog extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $errors = $this->csrfValid()
-                ? $this->validatePost($post_id)
-                : [$this->language->get('error_csrf')];
+            $submittedFingerprint = (string)($this->request->post['edit_fingerprint'] ?? '');
+            $data['edit_fingerprint'] = $submittedFingerprint;
+            $currentFingerprint = $this->model_blog_blog->getPostEditFingerprint($post_id);
+            $fingerprintMatches = $submittedFingerprint !== '' && $currentFingerprint !== '' && hash_equals($currentFingerprint, $submittedFingerprint);
+            $errors = !$this->csrfValid() ? [$this->language->get('error_csrf')] : (!$fingerprintMatches ? [$this->language->get('error_edit_conflict')] : $this->validatePost($post_id));
+            if (!$fingerprintMatches && $this->csrfValid()) { $data['revision_conflict'] = true; $data['edit_fingerprint'] = $submittedFingerprint; }
             $blockSave = ['storage_available' => false, 'documents' => [], 'snapshots' => [], 'errors' => []];
             if ($errors === []) {
                 $blockSave = $this->prepareBlockSubmission($post_id);
                 $errors = array_merge($errors, $blockSave['errors']);
             }
+            if ($errors === [] && !hash_equals($submittedFingerprint, $this->model_blog_blog->getPostEditFingerprint($post_id))) { $data['revision_conflict'] = true; $errors = [$this->language->get('error_edit_conflict')]; }
 
             if ($errors === []) {
                 $payload = $this->postPayload();
                 foreach ($blockSave['snapshots'] as $lid => $html) $payload['descriptions'][$lid]['description'] = $html;
-                if ($blockSave['storage_available']) {
-                    $this->model_blog_blog->savePostWithBlocks($post_id, $payload, $blockSave['documents']);
-                } else {
-                    $this->model_blog_blog->editPost($post_id, $payload);
+                try {
+                    if ($blockSave['storage_available']) $this->model_blog_blog->savePostWithBlocks($post_id, $payload, $blockSave['documents'], $submittedFingerprint);
+                    else $this->model_blog_blog->editPost($post_id, $payload, true, $submittedFingerprint);
+                } catch (\RuntimeException $exception) {
+                    if ($exception->getMessage() !== 'edit_conflict') throw $exception;
+                    $data['revision_conflict'] = true; $errors = [$this->language->get('error_edit_conflict')];
                 }
-
-                $this->setFlash($this->language->get('text_success_edit'));
-
-                $this->response->redirect($this->url->link('blog/blog'));
-
-                return;
+                if ($errors === []) {
+                    $this->setFlash($this->language->get('text_success_edit'));
+                    $this->response->redirect($this->url->link('blog/blog'));
+                    return;
+                }
+                $data['error'] = implode("\n", $errors);
             }
 
             $data['error'] = implode("\n", $errors);
@@ -869,7 +875,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             'entry_media_search', 'entry_media_folder_name', 'entry_media_external_url',
             'button_media_library', 'button_media_upload', 'button_media_create_folder',
             'button_media_use_url', 'button_media_select', 'button_media_delete',
-            'button_media_back', 'button_media_previous', 'button_media_next', 'button_media_close',
+            'button_media_back', 'button_media_previous', 'button_media_next', 'button_media_close', 'error_edit_conflict', 'button_reload_current', 'text_revision_compare', 'text_revision_version', 'text_revision_current', 'text_revision_body', 'text_revision_meta', 'text_revision_error',
             'text_catalog_preview_notice', 'text_published_on', 'button_back', 'text_content_review',
             'text_block_editor_intro', 'text_block_conversion_note', 'text_block_review_required', 'text_block_invalid', 'text_block_saved',
             'error_block_schema_unavailable', 'error_block_document_invalid', 'error_block_legacy_review', 'error_block_mode_invalid', 'error_block_editor_unavailable',
@@ -997,6 +1003,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         // CKEditor 4 (assets locais, ADR 0046): init fica no admin.js (textarea[data-rte])
         $this->document->addScript($this->config->get('site_url') . 'view/js/ckeditor/ckeditor.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->document->addScript($this->config->get('site_url') . 'view/js/blog-media.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+        $this->document->addScript($this->config->get('site_url') . 'view/js/bdre-concurrency.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $data['seo_base'] = $this->catalogUrl();
         $data['catalog_base'] = $this->catalogAssetUrl();
@@ -1164,6 +1171,8 @@ class Blog extends \Reamur\System\Engine\Controller {
         }
 
         $data['post_id']        = $pid;
+        $data['edit_fingerprint'] = $pid > 0 ? $this->model_blog_blog->getPostEditFingerprint($pid) : '';
+        $data['revision_conflict'] = false;
         $data['post_revisions_url'] = $pid > 0 ? $this->url->link('blog/blog.revisions|' . $pid) : '';
         $data['post_revision_url'] = $pid > 0 ? $this->url->link('blog/blog.revision|' . $pid) : '';
         $data['image']          = (string)($posted['image'] ?? (string)($post['image'] ?? ''));

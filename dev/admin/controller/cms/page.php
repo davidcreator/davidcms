@@ -170,17 +170,28 @@ class Page extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $errors = $this->csrfValid() ? array_merge($this->validatePage($page_id), $this->validateBlockSubmission($page_id)) : [$this->language->get('error_csrf')];
+            $submittedFingerprint = (string)($this->request->post['edit_fingerprint'] ?? '');
+            $data['edit_fingerprint'] = $submittedFingerprint;
+            $data['edit_core_fingerprint'] = (string)($this->request->post['edit_core_fingerprint'] ?? '');
+            $currentFingerprint = $this->pageEditFingerprint($page_id);
+            $fingerprintMatches = $submittedFingerprint !== '' && $currentFingerprint !== '' && hash_equals($currentFingerprint, $submittedFingerprint);
+            $errors = !$this->csrfValid() ? [$this->language->get('error_csrf')] : (!$fingerprintMatches ? [$this->language->get('error_edit_conflict')] : array_merge($this->validatePage($page_id), $this->validateBlockSubmission($page_id)));
+            if (!$fingerprintMatches && $this->csrfValid()) { $data['revision_conflict'] = true; }
+            if ($errors === [] && !hash_equals($submittedFingerprint, $this->pageEditFingerprint($page_id))) { $data['revision_conflict'] = true; $errors = [$this->language->get('error_edit_conflict')]; }
 
             if ($errors === []) {
-                $this->model_cms_page->editPage($page_id, $this->postPayload($page_id));
-                $valuesSaved = $this->model_custom_field_value->savePageValues($page_id, (array)($this->request->post['custom_field'] ?? []));
-
-                $this->setFlash($this->language->get($valuesSaved ? 'text_success_edit' : 'error_custom_field_save'), $valuesSaved ? 'success' : 'error');
-
-                $this->response->redirect($this->url->link('cms/page.edit|' . $page_id));
-
-                return;
+                try {
+                    $this->model_cms_page->editPage($page_id, $this->postPayload($page_id), (string)($this->request->post['edit_core_fingerprint'] ?? ''));
+                } catch (\RuntimeException $exception) {
+                    if ($exception->getMessage() !== 'edit_conflict') throw $exception;
+                    $data['revision_conflict'] = true; $errors = [$this->language->get('error_edit_conflict')];
+                }
+                if ($errors === []) {
+                    $valuesSaved = $this->model_custom_field_value->savePageValues($page_id, (array)($this->request->post['custom_field'] ?? []));
+                    $this->setFlash($this->language->get($valuesSaved ? 'text_success_edit' : 'error_custom_field_save'), $valuesSaved ? 'success' : 'error');
+                    $this->response->redirect($this->url->link('cms/page.edit|' . $page_id));
+                    return;
+                }
             }
 
             $data['error'] = implode("\n", $errors);
@@ -819,12 +830,13 @@ class Page extends \Reamur\System\Engine\Controller {
             'entry_meta_title', 'entry_meta_description', 'entry_keyword',
             'entry_status', 'entry_sort_order',
             'button_save', 'button_cancel', 'text_enabled', 'text_disabled',
-            'text_meta_group', 'help_sort_order', 'help_description', 'text_page_preview_button', 'error_page_preview_unavailable', 'text_page_media_library', 'text_page_media_empty', 'text_page_media_empty_audio', 'text_page_media_empty_video', 'text_page_media_empty_download', 'text_page_media_tab_image', 'text_page_media_tab_audio', 'text_page_media_tab_video', 'text_page_media_tab_download', 'text_page_media_loading', 'text_page_media_search', 'text_page_media_upload_hint', 'text_page_media_upload_hint_audio', 'text_page_media_upload_hint_video', 'text_page_media_upload_hint_download', 'text_page_media_uploading', 'text_page_media_select', 'text_page_media_page', 'text_page_media_upload', 'text_page_media_error', 'error_page_media_permission', 'error_page_media_method', 'error_page_media_csrf', 'error_page_media_list', 'error_page_media_no_file', 'error_page_media_size', 'error_page_media_type', 'error_page_media_root', 'error_page_media_upload', 'text_page_context_page', 'text_page_context_language', 'text_page_context_untitled', 'text_page_context_save_hint', 'text_page_context_readonly_hint', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_editor_import_file', 'text_editor_import_success', 'text_editor_preview_title', 'text_editor_preview_mode', 'text_editor_edit_mode', 'text_editor_import_hint', 'text_editor_import_unavailable', 'text_editor_import_error', 'text_editor_import_audio_library', 'text_editor_import_video_library', 'text_editor_preview_video_link', 'text_editor_preview_video_open', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no',
+            'text_meta_group', 'help_sort_order', 'help_description', 'text_page_preview_button', 'error_page_preview_unavailable', 'text_page_media_library', 'text_page_media_empty', 'text_page_media_empty_audio', 'text_page_media_empty_video', 'text_page_media_empty_download', 'text_page_media_tab_image', 'text_page_media_tab_audio', 'text_page_media_tab_video', 'text_page_media_tab_download', 'text_page_media_loading', 'text_page_media_search', 'text_page_media_upload_hint', 'text_page_media_upload_hint_audio', 'text_page_media_upload_hint_video', 'text_page_media_upload_hint_download', 'text_page_media_uploading', 'text_page_media_select', 'text_page_media_page', 'text_page_media_upload', 'text_page_media_error', 'error_page_media_permission', 'error_page_media_method', 'error_page_media_csrf', 'error_page_media_list', 'error_page_media_no_file', 'error_page_media_size', 'error_page_media_type', 'error_page_media_root', 'error_page_media_upload', 'text_page_context_page', 'text_page_context_language', 'text_page_context_untitled', 'text_page_context_save_hint', 'text_page_context_readonly_hint', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_editor_import_file', 'text_editor_import_success', 'text_editor_preview_title', 'text_editor_preview_mode', 'text_editor_edit_mode', 'text_editor_import_hint', 'text_editor_import_unavailable', 'text_editor_import_error', 'text_editor_import_audio_library', 'text_editor_import_video_library', 'text_editor_preview_video_link', 'text_editor_preview_video_open', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no', 'error_edit_conflict', 'button_reload_current', 'text_revision_compare', 'text_revision_version', 'text_revision_current', 'text_revision_body', 'text_revision_meta', 'text_revision_error',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
 
         $this->document->addScript($this->config->get('site_url') . 'view/js/cms-page.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+        $this->document->addScript($this->config->get('site_url') . 'view/js/bdre-concurrency.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         if ($includeEditor) {
             $this->load->language('blog/blog');
@@ -1151,6 +1163,9 @@ class Page extends \Reamur\System\Engine\Controller {
         }
 
         $data['page_id']    = $pid;
+        $data['edit_core_fingerprint'] = $pid > 0 ? $this->model_cms_page->getPageEditFingerprint($pid) : '';
+        $data['edit_fingerprint'] = $pid > 0 ? $this->pageEditFingerprint($pid) : '';
+        $data['revision_conflict'] = false;
         $data['page_revisions_url'] = $pid > 0 ? $this->url->link('cms/page.revisions|' . $pid) : '';
         $data['page_revision_url'] = $pid > 0 ? $this->url->link('cms/page.revision|' . $pid) : '';
         $data['system_key'] = $systemKey;
@@ -1183,6 +1198,21 @@ class Page extends \Reamur\System\Engine\Controller {
         $data['cancel'] = $this->url->link('cms/page');
 
         return $data;
+    }
+
+    /** Add custom-field values to the CMS Page document fingerprint for stale-form detection. */
+    private function pageEditFingerprint(int $pageId): string {
+        $core = $this->model_cms_page->getPageEditFingerprint($pageId);
+        if ($core === '' || !isset($this->model_custom_field_value)) return '';
+        $custom = $this->model_custom_field_value->getPageValues($pageId);
+        $sort = function (&$value) use (&$sort): void {
+            if (!is_array($value)) return;
+            foreach ($value as &$child) $sort($child); unset($child);
+            if (array_keys($value) !== range(0, count($value) - 1)) ksort($value);
+        };
+        $sort($custom);
+        $json = json_encode($custom, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        return is_string($json) ? hash('sha256', $core . "\\0" . $json) : '';
     }
 
     /**

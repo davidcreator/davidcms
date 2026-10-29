@@ -146,12 +146,65 @@
     }
   }
 
+  function revisionDocumentText(doc) {
+    var parts = [];
+    function inline(value) {
+      if (typeof value === 'string') { parts.push(value); return; }
+      if (Array.isArray(value)) { value.forEach(inline); return; }
+      if (!value || typeof value !== 'object') return;
+      if (typeof value.text === 'string') parts.push(value.text);
+      else if (Array.isArray(value.content)) inline(value.content);
+    }
+    function blocks(nodes) {
+      if (!Array.isArray(nodes)) return;
+      nodes.forEach(function (node) {
+        if (!node || typeof node !== 'object') return;
+        if (typeof node.content === 'string' || Array.isArray(node.content)) inline(node.content);
+        if (Array.isArray(node.children)) blocks(node.children);
+      });
+    }
+    if (doc && Array.isArray(doc.blocks)) blocks(doc.blocks);
+    return parts.join('\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, 30000);
+  }
+
+  function revisionSnapshotText(snapshot) {
+    var doc = snapshot && snapshot.block_document || null;
+    if (!doc && snapshot && snapshot.block_content && snapshot.block_content.content_json) {
+      try { doc = JSON.parse(snapshot.block_content.content_json); } catch (_) {}
+    }
+    var raw = String(snapshot && snapshot.description && snapshot.description.description || '');
+    if (!doc && raw.indexOf('REAMURCMS_BDRE_JSON_V2:') === 0) { try { doc = JSON.parse(raw.slice('REAMURCMS_BDRE_JSON_V2:'.length)); } catch (_) {} }
+    return doc ? revisionDocumentText(doc) : raw.slice(0, 30000);
+  }
+
+  function currentEditorText(panel, form) {
+    var root = document.getElementById(panel.dataset.editorId || '');
+    var editor = root && root.__blogBlockEditorInstance;
+    if (editor && typeof editor.getDocument === 'function') return revisionDocumentText(editor.getDocument());
+    var field = form.querySelector('[name="' + panel.dataset.kind + '_description[' + panel.dataset.languageId + '][description]"]') || document.getElementById(panel.dataset.descriptionId || '');
+    var raw = field && typeof field.value === 'string' ? field.value : '';
+    if (raw.indexOf('REAMURCMS_BDRE_JSON_V2:') === 0) { try { return revisionDocumentText(JSON.parse(raw.slice('REAMURCMS_BDRE_JSON_V2:'.length))); } catch (_) {} }
+    return raw.slice(0, 30000);
+  }
+
+  function appendCompareColumn(container, heading, metadata, body, panel) {
+    var column=document.createElement('div'); column.className='col-12 col-lg-6';
+    var card=document.createElement('section'); card.className='border rounded p-3 h-100';
+    var title=document.createElement('h5'); title.className='h6'; title.textContent=heading; card.appendChild(title);
+    var metaTitle=document.createElement('h6'); metaTitle.className='small fw-semibold mt-3'; metaTitle.textContent=panel.dataset.historyMetaLabel || 'Editorial metadata'; card.appendChild(metaTitle);
+    var meta=document.createElement('pre'); meta.className='small text-wrap'; meta.textContent=JSON.stringify(metadata,null,2); card.appendChild(meta);
+    var bodyTitle=document.createElement('h6'); bodyTitle.className='small fw-semibold mt-3'; bodyTitle.textContent=panel.dataset.historyBodyLabel || 'Content'; card.appendChild(bodyTitle);
+    var content=document.createElement('pre'); content.className='small text-wrap mb-0'; content.style.maxHeight='24rem'; content.style.overflow='auto'; content.textContent=body || '—'; card.appendChild(content);
+    column.appendChild(card); container.appendChild(column);
+  }
+
   function bindServerRevisionHistory() {
     document.addEventListener('click', function (event) {
       var loadButton = event.target.closest && event.target.closest('[data-bdre-history-load]');
       var restoreButton = event.target.closest && event.target.closest('[data-bdre-history-restore]');
-      if (!loadButton && !restoreButton) return;
-      var panel = (loadButton || restoreButton).closest('[data-bdre-history]');
+      var compareButton = event.target.closest && event.target.closest('[data-bdre-history-compare]');
+      if (!loadButton && !restoreButton && !compareButton) return;
+      var panel = (loadButton || restoreButton || compareButton).closest('[data-bdre-history]');
       var form = panel && panel.closest('form');
       var list = panel && panel.querySelector('[data-bdre-history-items]');
       var token = form && form.querySelector('[name="csrf_token"]');
@@ -171,10 +224,32 @@
           data.items.forEach(function (item) {
             var row = document.createElement('div'); row.className = 'd-flex align-items-center gap-2 mb-1';
             var label = document.createElement('span'); label.className = 'small text-body-secondary'; label.textContent = item.date_added || ('#' + item.revision_id);
+            var compare = document.createElement('button'); compare.type = 'button'; compare.className = 'btn btn-sm btn-outline-secondary'; compare.textContent = panel.dataset.historyCompareLabel || 'Compare'; compare.dataset.bdreHistoryCompare = '1'; compare.dataset.revisionId = String(item.revision_id);
             var restore = document.createElement('button'); restore.type = 'button'; restore.className = 'btn btn-sm btn-outline-primary'; restore.textContent = panel.dataset.historyRestoreLabel || 'Restore'; restore.dataset.bdreHistoryRestore = '1'; restore.dataset.revisionId = String(item.revision_id);
-            row.append(label, restore); list.appendChild(row);
+            row.append(label, compare, restore); list.appendChild(row);
+            var preview=document.createElement('div'); preview.className='row g-2 my-2 d-none'; preview.dataset.bdreHistoryCompareResult=String(item.revision_id); list.appendChild(preview);
           });
         }).catch(function () { list.textContent = 'Não foi possível carregar o histórico.'; }).finally(function () { loadButton.disabled = false; });
+        return;
+      }
+      if (compareButton) {
+        compareButton.disabled=true;
+        var compareResult=list.querySelector('[data-bdre-history-compare-result="' + compareButton.dataset.revisionId + '"]');
+        post(panel.dataset.itemUrl,{revision_id:compareButton.dataset.revisionId}).then(function(data){
+          if(!data||!data.success||!data.snapshot) throw new Error('revision_unavailable');
+          if(!compareResult) throw new Error('comparison_unavailable');
+          compareResult.replaceChildren(); compareResult.classList.remove('d-none');
+          var fields=data.snapshot.description||{}, lid=panel.dataset.languageId, kind=panel.dataset.kind;
+          var oldMeta={title:fields.title||'',meta_title:fields.meta_title||'',meta_description:fields.meta_description||'',keyword:fields.keyword||''};
+          if(data.snapshot.entity) oldMeta.entity=data.snapshot.entity;
+          var currentMeta={};
+          ['title','meta_title','meta_description','keyword'].forEach(function(key){var input=form.querySelector('[name="'+kind+'_description['+lid+']['+key+']"]');currentMeta[key]=input?input.value:'';});
+          var currentStatus=form.querySelector('[name="status"]'); currentMeta.entity={status:currentStatus&&currentStatus.checked?1:0};
+          if(kind==='blog'){var currentImage=form.querySelector('[name="image"]'),currentDate=form.querySelector('[name="date_published"]');currentMeta.entity.image=currentImage?currentImage.value:'';currentMeta.entity.date_published=currentDate?currentDate.value:'';}
+          else {var currentSort=form.querySelector('[name="sort_order"]');currentMeta.entity.sort_order=currentSort?currentSort.value:'';}
+          appendCompareColumn(compareResult,(panel.dataset.historyVersionLabel||'Selected revision')+' · '+String(compareButton.previousElementSibling && compareButton.previousElementSibling.textContent||''),oldMeta,revisionSnapshotText(data.snapshot),panel);
+          appendCompareColumn(compareResult,panel.dataset.historyCurrentLabel||'Current form',currentMeta,currentEditorText(panel,form),panel);
+        }).catch(function(){ if(compareResult){compareResult.classList.remove('d-none');compareResult.textContent=panel.dataset.historyError||'Could not load the revision comparison.';} }).finally(function(){compareButton.disabled=false;});
         return;
       }
       if (!global.confirm(panel.dataset.historyConfirm || 'Load this revision as unsaved changes? Save to apply it.')) return;

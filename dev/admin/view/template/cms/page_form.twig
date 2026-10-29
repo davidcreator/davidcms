@@ -6,10 +6,12 @@
   </div></div>
 
   {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }}" role="status">{{ text_flash.text }}</div>{% endif %}
-  {% if error %}<div class="alert alert-danger" role="alert">{{ error|nl2br }}</div>{% endif %}
+  {% if error %}<div class="alert alert-danger" role="alert">{{ error|nl2br }}{% if revision_conflict %}<div class="mt-2"><button type="button" class="btn btn-outline-danger btn-sm" data-bdre-concurrency-reload>{{ button_reload_current }}</button></div>{% endif %}</div>{% endif %}
 
   <form method="post" action="{{ action }}" class="row g-3 form-layout" data-cms-page-form>
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="edit_fingerprint" value="{{ edit_fingerprint }}">
+    <input type="hidden" name="edit_core_fingerprint" value="{{ edit_core_fingerprint }}">
     <div class="col-12 cms-page-commandbar position-sticky top-0 bg-body py-2 border-bottom" style="z-index:1020" role="toolbar" aria-label="{{ heading_title }}">
       {% if can_modify %}<button type="submit" class="btn btn-primary" aria-label="{{ button_save }}" title="{{ button_save }}"><i class="bi bi-check-lg" aria-hidden="true"></i><span class="visually-hidden">{{ button_save }}</span></button>{% endif %}
       <a class="btn btn-outline-secondary" href="{{ cancel }}" aria-label="{{ button_cancel }}" title="{{ button_cancel }}"><i class="bi bi-x-lg" aria-hidden="true"></i><span class="visually-hidden">{{ button_cancel }}</span></a>
@@ -74,7 +76,7 @@
                 <p class="form-text">O conteúdo legado não pôde ser convertido com segurança; ele permanece editável sem reformatar.</p>
               {% endif %}
             </div>
-            {% if can_modify and page_id %}<div class="bdre-server-history mb-3" data-bdre-history data-kind="page" data-language-id="{{ language.language_id }}" data-list-url="{{ page_revisions_url|e('html_attr') }}" data-item-url="{{ page_revision_url|e('html_attr') }}" data-editor-id="page-block-editor-{{ language.language_id }}" data-description-id="input-description-{{ language.language_id }}" data-history-restore-label="{{ text_block_history_restore|e('html_attr') }}" data-history-empty="{{ text_block_history_empty|e('html_attr') }}" data-history-confirm="{{ text_block_history_restore_confirm|e('html_attr') }}" data-history-restored="{{ text_block_history_restored|e('html_attr') }}"><button type="button" class="btn btn-sm btn-outline-secondary" data-bdre-history-load>{{ text_block_history_button }}</button><div class="mt-2" data-bdre-history-items aria-live="polite"></div></div>{% endif %}
+            {% if can_modify and page_id %}<div class="bdre-server-history mb-3" data-bdre-history data-kind="page" data-language-id="{{ language.language_id }}" data-list-url="{{ page_revisions_url|e('html_attr') }}" data-item-url="{{ page_revision_url|e('html_attr') }}" data-editor-id="page-block-editor-{{ language.language_id }}" data-description-id="input-description-{{ language.language_id }}" data-history-restore-label="{{ text_block_history_restore|e('html_attr') }}" data-history-empty="{{ text_block_history_empty|e('html_attr') }}" data-history-confirm="{{ text_block_history_restore_confirm|e('html_attr') }}" data-history-restored="{{ text_block_history_restored|e('html_attr') }}" data-history-compare-label="{{ text_revision_compare|e('html_attr') }}" data-history-version-label="{{ text_revision_version|e('html_attr') }}" data-history-current-label="{{ text_revision_current|e('html_attr') }}" data-history-body-label="{{ text_revision_body|e('html_attr') }}" data-history-meta-label="{{ text_revision_meta|e('html_attr') }}" data-history-error="{{ text_revision_error|e('html_attr') }}"><button type="button" class="btn btn-sm btn-outline-secondary" data-bdre-history-load>{{ text_block_history_button }}</button><div class="mt-2" data-bdre-history-items aria-live="polite"></div></div>{% endif %}
             <h3 class="h6 text-body-secondary mt-4 mb-2">{{ text_meta_group }}</h3>
             <div class="row g-3">
               <div class="col-md-6 field">
