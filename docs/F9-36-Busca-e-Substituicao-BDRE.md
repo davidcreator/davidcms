@@ -6,7 +6,7 @@ A busca e substituição está disponível como botão com ícone de lupa na fai
 
 - Campo **Localizar**, campo **Substituir por**, opção de diferenciar maiúsculas/minúsculas, navegação para ocorrência anterior/próxima, substituição única e substituição total.
 - Contagem/estado acessível com `role="status"` e `aria-live="polite"`; entradas têm rótulos e o botão da lupa expõe `aria-expanded`.
-- Pesquisa exclusivamente o texto dos blocos BDREditor (incluindo filhos, como células); não varre metadados, atributos, HTML legado ou conteúdo fora do documento estruturado. A busca não atravessa limites entre trechos com formatação diferente; a limitação é exibida junto dos controles.
+- Pesquisa exclusivamente o texto dos blocos BDREditor (incluindo filhos, como células); não varre metadados, atributos, HTML legado ou conteúdo fora do documento estruturado. A extensão F9-38 permite que o termo atravesse trechos com formatações diferentes dentro do mesmo bloco; a busca não cruza limites entre blocos. A limitação é exibida junto dos controles.
 - O texto substituído herda marcas e link do trecho original; os demais trechos formatados permanecem inalterados. Substituição única ou total é uma única operação do histórico, permitindo desfazer/refazer pela pilha normal do editor.
 - Substituir tudo é limitado a 1.000 ocorrências por ação. Se exceder, nada é modificado e a interface informa que a busca deve ser refinada.
 - Strings adicionadas em PT-BR, EN-US e ES-EU para Pages e Blog. Nenhuma ação de busca salva automaticamente: a semântica explícita de Salvar permanece inalterada.

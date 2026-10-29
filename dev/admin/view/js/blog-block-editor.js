@@ -202,6 +202,31 @@
     return out;
   }
 
+  function findTextMatchesInRuns(runs, query, caseSensitive) {
+    if(!Array.isArray(runs)||!query)return [];
+    const parts=runs.map((run)=>String(run && run.text || '')), text=parts.join(''), matches=[];
+    const locate=(absolute,isEnd)=>{let cursor=0;for(let i=0;i<parts.length;i++){const next=cursor+parts[i].length;if(isEnd ? (absolute>cursor&&absolute<=next) : (absolute>=cursor&&absolute<next))return {runIndex:i,offset:absolute-cursor};cursor=next;}return null;};
+    const add=(at,length)=>{const a=locate(at,false),b=locate(at+length,true);if(a&&b)matches.push({runIndex:a.runIndex,start:a.offset,endRunIndex:b.runIndex,endOffset:b.offset,length,absoluteStart:at});};
+    if(caseSensitive){let from=0,at;while((at=text.indexOf(query,from))!==-1&&matches.length<=1000){add(at,query.length);from=at+Math.max(1,query.length);}}
+    else {const escaped=query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');let re;try{re=new RegExp(escaped,'giu');}catch(_){return [];}let found;while((found=re.exec(text))!==null&&matches.length<=1000){add(found.index,found[0].length);if(!found[0].length)re.lastIndex+=1;}}
+    return matches;
+  }
+
+  function replaceTextMatchInRuns(runs, match, replacement) {
+    const content=CLONE(runs); const first=content[match.runIndex],last=content[match.endRunIndex];
+    if(!first||!last||!Number.isInteger(match.start)||!Number.isInteger(match.endOffset)||match.start<0||match.endOffset<0) return content;
+    const firstText=String(first.text||''),lastText=String(last.text||'');
+    if(match.runIndex===match.endRunIndex){
+      content[match.runIndex]={text:firstText.slice(0,match.start)+String(replacement)+firstText.slice(match.endOffset),marks:Array.isArray(first.marks)?first.marks.slice():[],href:first.href==null?null:first.href};
+    } else {
+      if(match.endRunIndex<match.runIndex||match.endRunIndex>=content.length)return content;
+      content[match.runIndex]={text:firstText.slice(0,match.start)+String(replacement),marks:Array.isArray(first.marks)?first.marks.slice():[],href:first.href==null?null:first.href};
+      content[match.endRunIndex]={text:lastText.slice(match.endOffset),marks:Array.isArray(last.marks)?last.marks.slice():[],href:last.href==null?null:last.href};
+      content.splice(match.runIndex+1,match.endRunIndex-match.runIndex-1);
+    }
+    return canonicalRuns(content);
+  }
+
   function upgradeDocument(input) {
     const doc = CLONE(input);
     if (!doc || doc.format_version !== 1 || !Array.isArray(doc.blocks)) return doc;
@@ -1656,21 +1681,17 @@
       const actions=this.el('div','rb-find-actions');
       actions.append(this.button(this.strings.findPrevious||'Previous match','find-previous'),this.button(this.strings.findNext||'Next match','find-next'),this.button(this.strings.replaceOne||'Replace','replace-one'),this.button(this.strings.replaceAll||'Replace all','replace-all'));
       const status=this.el('p','rb-find-status'); status.dataset.findStatus='1'; status.setAttribute('role','status'); status.setAttribute('aria-live','polite');
-      panel.append(form,actions,this.el('p','rb-find-hint',this.strings.findCrossRunHint||'Search matches within each formatted text segment; matches spanning formatting boundaries are not included.'),status);
+      panel.append(form,actions,this.el('p','rb-find-hint',this.strings.findCrossRunHint||'Search spans differently formatted text runs within a block, but does not cross block boundaries.'),status);
       this.updateFindStatus(status); return panel;
     }
 
     findMatches() {
-      const query=this.findQuery; if(!query) return [];
-      const needle=this.findCaseSensitive?query:query.toLocaleLowerCase(); const matches=[];
+      if(!this.findQuery)return [];
+      const matches=[];
       const visit=(nodes)=>{ (nodes||[]).forEach((node)=>{
-        if(matches.length>1000) return;
-        if(node && BLOCK_TEXT_TYPES.has(node.type) && Array.isArray(node.content)) node.content.forEach((run,runIndex)=>{
-          const text=String(run.text||'');
-          if(this.findCaseSensitive){let from=0,at;while((at=text.indexOf(query,from))!==-1){matches.push({nodeId:node.id,runIndex,start:at,length:query.length});from=at+Math.max(1,query.length);if(matches.length>1000)return;}}
-          else {const escaped=query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');let re;try{re=new RegExp(escaped,'giu');}catch(_){return;}let found;while((found=re.exec(text))!==null){matches.push({nodeId:node.id,runIndex,start:found.index,length:found[0].length});if(matches.length>1000)return;if(!found[0].length)re.lastIndex+=1;}}
-        });
-        if(node && Array.isArray(node.children)) visit(node.children);
+        if(matches.length>1000)return;
+        if(node && BLOCK_TEXT_TYPES.has(node.type) && Array.isArray(node.content)) findTextMatchesInRuns(node.content,this.findQuery,this.findCaseSensitive).forEach((match)=>matches.push(Object.assign({nodeId:node.id},match)));
+        if(node && Array.isArray(node.children))visit(node.children);
       }); };
       visit(this.state.blocks); return matches;
     }
@@ -1710,11 +1731,9 @@
       const next=CLONE(this.state); let replaced=0;
       const byNode=new Map(); matches.forEach((m)=>{if(!byNode.has(m.nodeId))byNode.set(m.nodeId,[]);byNode.get(m.nodeId).push(m);});
       byNode.forEach((nodeMatches,nodeId)=>{const found=this.findPath(next.blocks,nodeId);if(!found)return;const node=found.node;
-        const byRun=new Map();nodeMatches.forEach((m)=>{if(!byRun.has(m.runIndex))byRun.set(m.runIndex,[]);byRun.get(m.runIndex).push(m);});
-        byRun.forEach((items,runIndex)=>{const original=node.content[runIndex];if(!original)return;const txt=String(original.text||'');const ordered=all?items.slice().reverse():items;
-          let value=txt; ordered.forEach((m)=>{const start=m.start,end=start+m.length;value=value.slice(0,start)+this.replaceQuery+value.slice(end);replaced++;});
-          if(value!==txt)node.content[runIndex]={text:value,marks:Array.isArray(original.marks)?original.marks.slice():[],href:original.href==null?null:original.href};
-        }); node.content=canonicalRuns(node.content);
+        nodeMatches.sort((a,b)=>b.absoluteStart-a.absoluteStart).forEach((m)=>{
+          node.content=replaceTextMatchInRuns(node.content,m,this.replaceQuery); replaced++;
+        });
       });
       if(!replaced){this.updateFindStatus();return;}
       this.clearTextEditSnapshot(); this.commit(next,this.selectedId); this.activeFindIndex=-1;
@@ -2150,6 +2169,8 @@
 
   global.ReamurBlogBlockEditor = {
     classifyKeyboardShortcut: classifyKeyboardShortcut,
+    replaceTextMatchInRuns: replaceTextMatchInRuns,
+    findTextMatchesInRuns: findTextMatchesInRuns,
     findNodeChain: findNodeChain,
     getOutlineNavigationTarget: getOutlineNavigationTarget,
     moveBlockAcrossHierarchy: moveBlockAcrossHierarchy,
