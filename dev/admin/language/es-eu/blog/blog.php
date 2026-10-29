@@ -477,3 +477,18 @@ $_['text_revision_meta'] = 'Metadatos editoriales';$_['text_revision_error'] = '
 $_['text_revision_diff'] = 'Diferencias de contenido';
 $_['text_revision_unchanged'] = 'No hay diferencias de texto.';
 $_['text_revision_diff_limit'] = 'El documento es demasiado largo para comparar palabra por palabra; usa las columnas anteriores.';
+// F9-36 — document-wide plain-text find and replace
+$_['text_block_find_replace'] = 'Buscar y reemplazar';
+$_['text_block_find_label'] = 'Buscar texto';
+$_['text_block_replace_label'] = 'Reemplazar por';
+$_['text_block_find_next'] = 'Siguiente coincidencia';
+$_['text_block_replace_one'] = 'Reemplazar';
+$_['text_block_replace_all'] = 'Reemplazar todo';
+$_['text_block_find_case_sensitive'] = 'Distinguir mayúsculas y minúsculas';
+$_['text_block_find_cross_run_hint'] = 'La búsqueda no cruza límites entre fragmentos con formato diferente.';
+$_['text_block_find_none'] = 'No se encontraron coincidencias.';
+$_['text_block_find_count'] = 'Coincidencia %1 de %2';
+$_['text_block_replace_done'] = 'Reemplazos realizados: %1.';
+$_['text_block_replace_limit'] = 'El reemplazo supera el límite de 1.000 coincidencias; no se modificó nada.';
+$_['text_block_find_empty'] = 'Escribe el texto que quieres buscar.';
+$_['text_block_find_previous'] = 'Coincidencia anterior';

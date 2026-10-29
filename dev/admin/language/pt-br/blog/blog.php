@@ -477,3 +477,18 @@ $_['text_revision_meta'] = 'Metadados editoriais';$_['text_revision_error'] = 'N
 $_['text_revision_diff'] = 'Diferenças no conteúdo';
 $_['text_revision_unchanged'] = 'Nenhuma diferença textual.';
 $_['text_revision_diff_limit'] = 'Documento longo demais para comparar palavra por palavra; use as colunas acima.';
+// F9-36 — document-wide plain-text find and replace
+$_['text_block_find_replace'] = 'Localizar e substituir';
+$_['text_block_find_label'] = 'Localizar texto';
+$_['text_block_replace_label'] = 'Substituir por';
+$_['text_block_find_next'] = 'Próxima ocorrência';
+$_['text_block_replace_one'] = 'Substituir';
+$_['text_block_replace_all'] = 'Substituir tudo';
+$_['text_block_find_case_sensitive'] = 'Diferenciar maiúsculas e minúsculas';
+$_['text_block_find_cross_run_hint'] = 'A busca não atravessa limites entre trechos com formatação diferente.';
+$_['text_block_find_none'] = 'Nenhuma ocorrência encontrada.';
+$_['text_block_find_count'] = 'Ocorrência %1 de %2';
+$_['text_block_replace_done'] = 'Substituições realizadas: %1.';
+$_['text_block_replace_limit'] = 'A substituição excede o limite de 1.000 ocorrências; nada foi alterado.';
+$_['text_block_find_empty'] = 'Digite um termo para localizar.';
+$_['text_block_find_previous'] = 'Ocorrência anterior';

@@ -277,3 +277,18 @@ $_['text_revision_meta'] = 'Editorial metadata';$_['text_revision_error'] = 'Cou
 $_['text_revision_diff'] = 'Text differences';
 $_['text_revision_unchanged'] = 'No textual differences.';
 $_['text_revision_diff_limit'] = 'Document is too large for word-level comparison; use the columns above.';
+// F9-36 — document-wide plain-text find and replace
+$_['text_block_find_replace'] = 'Find and replace';
+$_['text_block_find_label'] = 'Find text';
+$_['text_block_replace_label'] = 'Replace with';
+$_['text_block_find_next'] = 'Next match';
+$_['text_block_replace_one'] = 'Replace';
+$_['text_block_replace_all'] = 'Replace all';
+$_['text_block_find_case_sensitive'] = 'Case-sensitive';
+$_['text_block_find_cross_run_hint'] = 'Search does not cross boundaries between differently formatted text runs.';
+$_['text_block_find_none'] = 'No matches found.';
+$_['text_block_find_count'] = 'Match %1 of %2';
+$_['text_block_replace_done'] = 'Replacements made: %1.';
+$_['text_block_replace_limit'] = 'Replacement exceeds the 1,000-match limit; nothing was changed.';
+$_['text_block_find_empty'] = 'Enter text to find.';
+$_['text_block_find_previous'] = 'Previous match';

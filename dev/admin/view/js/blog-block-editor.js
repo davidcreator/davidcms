@@ -440,6 +440,7 @@
       this.activePanel = null;
       this.inspectorOpen = true;
       this.activeRibbonTab = 'home';
+      this.findReplaceOpen = false; this.findQuery = ''; this.replaceQuery = ''; this.findCaseSensitive = false; this.activeFindIndex = -1;
       this.fullscreenReturnFocus = null;
       this.fullscreenPreviousAttrs = null;
       this.fullscreenPreviousPanel = null;
@@ -522,6 +523,10 @@
         if (codeEditor) { this.updateCodeNode(codeEditor.dataset.editCode, codeEditor); return; }
         const search = event.target.closest('[data-inserter-search]');
         if (search) { this.inserterQuery = search.value; this.filterInserter(); return; }
+        const findInput = event.target.closest('[data-find-query]');
+        if (findInput) { this.findQuery = findInput.value; this.activeFindIndex = -1; this.updateFindStatus(); return; }
+        const replaceInput = event.target.closest('[data-replace-query]');
+        if (replaceInput) { this.replaceQuery = replaceInput.value; return; }
         const linkInput = event.target.closest('[data-inline-link-input]');
         if (linkInput) { this.linkDraft = linkInput.value; return; }
         const field = event.target.closest('[data-edit-content]');
@@ -531,6 +536,8 @@
         this.captureInlineSelection();
       });
       this.root.addEventListener('change', (event) => {
+        const caseInput = event.target.closest('[data-find-case]');
+        if (caseInput) { this.findCaseSensitive = caseInput.checked; this.activeFindIndex = -1; this.updateFindStatus(); return; }
         const importInput = event.target.closest('[data-import-file]');
         if (importInput && importInput.files && importInput.files[0]) { const file=importInput.files[0]; importInput.value=''; this.importLocalFile(file); return; }
         const transform = event.target.closest('[data-transform-node]');
@@ -645,6 +652,11 @@
       else if (name === 'import-file') { const input=this.root.querySelector('[data-import-file]'); if (input) input.click(); }
       else if (name === 'export-document') this.exportDocumentFile();
       else if (name === 'toggle-revision-history') { this.historyOpen = !this.historyOpen; this.render(); }
+      else if (name === 'toggle-find-replace') { this.findReplaceOpen = !this.findReplaceOpen; this.render(); if (this.findReplaceOpen) { const input=this.root.querySelector('[data-find-query]'); if(input) input.focus(); } }
+      else if (name === 'find-next') this.moveFindMatch(1);
+      else if (name === 'find-previous') this.moveFindMatch(-1);
+      else if (name === 'replace-one') this.replaceFoundMatch(false);
+      else if (name === 'replace-all') this.replaceFoundMatch(true);
       else if (name === 'restore-draft-revision') this.restoreDraftRevision(Number(button.dataset.revisionIndex));
       else if (name === 'toggle-preview') { this.previewMode=!this.previewMode; if (this.previewMode) this.activePanel=null; this.render(); }
       else if (name === 'builder-panel') {
@@ -1622,6 +1634,81 @@
       this.updateInlineToolbarState();
     }
 
+    renderFindReplacePanel() {
+      const panel=this.el('section','rb-find-replace'); panel.setAttribute('aria-label',this.strings.findReplaceButton||'Find and replace');
+      const form=this.el('div','rb-find-fields');
+      const findLabel=this.el('label','',this.strings.findLabel||'Find'); const find=this.el('input',''); find.type='search'; find.value=this.findQuery; find.dataset.findQuery='1'; findLabel.append(find);
+      const replaceLabel=this.el('label','',this.strings.replaceLabel||'Replace with'); const replace=this.el('input',''); replace.type='text'; replace.value=this.replaceQuery; replace.dataset.replaceQuery='1'; replaceLabel.append(replace);
+      const caseLabel=this.el('label','rb-find-case'); const check=this.el('input',''); check.type='checkbox'; check.checked=this.findCaseSensitive; check.dataset.findCase='1'; caseLabel.append(check,document.createTextNode(this.strings.findCaseSensitive||'Case sensitive'));
+      form.append(findLabel,replaceLabel,caseLabel);
+      const actions=this.el('div','rb-find-actions');
+      actions.append(this.button(this.strings.findPrevious||'Previous match','find-previous'),this.button(this.strings.findNext||'Next match','find-next'),this.button(this.strings.replaceOne||'Replace','replace-one'),this.button(this.strings.replaceAll||'Replace all','replace-all'));
+      const status=this.el('p','rb-find-status'); status.dataset.findStatus='1'; status.setAttribute('role','status'); status.setAttribute('aria-live','polite');
+      panel.append(form,actions,this.el('p','rb-find-hint',this.strings.findCrossRunHint||'Search matches within each formatted text segment; matches spanning formatting boundaries are not included.'),status);
+      this.updateFindStatus(status); return panel;
+    }
+
+    findMatches() {
+      const query=this.findQuery; if(!query) return [];
+      const needle=this.findCaseSensitive?query:query.toLocaleLowerCase(); const matches=[];
+      const visit=(nodes)=>{ (nodes||[]).forEach((node)=>{
+        if(matches.length>1000) return;
+        if(node && BLOCK_TEXT_TYPES.has(node.type) && Array.isArray(node.content)) node.content.forEach((run,runIndex)=>{
+          const text=String(run.text||'');
+          if(this.findCaseSensitive){let from=0,at;while((at=text.indexOf(query,from))!==-1){matches.push({nodeId:node.id,runIndex,start:at,length:query.length});from=at+Math.max(1,query.length);if(matches.length>1000)return;}}
+          else {const escaped=query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');let re;try{re=new RegExp(escaped,'giu');}catch(_){return;}let found;while((found=re.exec(text))!==null){matches.push({nodeId:node.id,runIndex,start:found.index,length:found[0].length});if(matches.length>1000)return;if(!found[0].length)re.lastIndex+=1;}}
+        });
+        if(node && Array.isArray(node.children)) visit(node.children);
+      }); };
+      visit(this.state.blocks); return matches;
+    }
+
+    updateFindStatus(target) {
+      const status=target || this.root.querySelector('[data-find-status]'); if(!status) return;
+      if(!this.findQuery){status.textContent=this.strings.findEmpty||'Enter text to find.';return;}
+      const matches=this.findMatches();
+      if(!matches.length){status.textContent=this.strings.findNoMatches||'No matches found.';return;}
+      const pos=this.activeFindIndex<0?1:Math.min(this.activeFindIndex+1,matches.length); status.textContent=(this.strings.findMatchCount||'%1 of %2 matches').replace('%1',String(pos)).replace('%2',matches.length>1000?'1000+':String(matches.length));
+    }
+
+    moveFindMatch(direction) {
+      const matches=this.findMatches(); if(!matches.length){this.updateFindStatus();return;}
+      this.activeFindIndex=this.activeFindIndex<0?(direction>0?0:matches.length-1):(this.activeFindIndex+direction+matches.length)%matches.length;
+      const match=matches[this.activeFindIndex]; this.focusFindMatch(match); this.updateFindStatus();
+    }
+
+    focusFindMatch(match) {
+      const field=Array.from(this.root.querySelectorAll('[data-edit-content]')).find((item)=>item.dataset.editContent===match.nodeId); if(!field) return;
+      const found=this.findPath(this.state.blocks,match.nodeId); if(!found) return;
+      let offset=0; for(let i=0;i<match.runIndex;i++) offset+=String(found.node.content[i].text||'').length; offset+=match.start;
+      const walker=document.createTreeWalker(field,NodeFilter.SHOW_TEXT), nodes=[]; let textNode;
+      while((textNode=walker.nextNode())) nodes.push(textNode);
+      const locate=(position)=>{let remain=position;for(const n of nodes){if(remain<=n.nodeValue.length)return {node:n,offset:remain};remain-=n.nodeValue.length;}return null;};
+      const a=locate(offset),b=locate(offset+match.length); if(!a||!b)return;
+      const range=document.createRange();range.setStart(a.node,a.offset);range.setEnd(b.node,b.offset);
+      const selection=global.getSelection(); if(selection){selection.removeAllRanges();selection.addRange(range);} field.focus();
+      const parent=a.node.parentElement; if(parent&&parent.scrollIntoView)parent.scrollIntoView({block:'nearest'});
+    }
+
+    replaceFoundMatch(all) {
+      if(this.locked) return;
+      let matches=this.findMatches(); if(!matches.length){this.updateFindStatus();return;}
+      if(all && matches.length>1000){this.statusMessage=this.strings.replaceLimit||'More than 1,000 matches; narrow the search before replacing.';this.render();return;}
+      if(!all){ if(this.activeFindIndex<0)this.activeFindIndex=0; matches=[matches[Math.min(this.activeFindIndex,matches.length-1)]]; }
+      const next=CLONE(this.state); let replaced=0;
+      const byNode=new Map(); matches.forEach((m)=>{if(!byNode.has(m.nodeId))byNode.set(m.nodeId,[]);byNode.get(m.nodeId).push(m);});
+      byNode.forEach((nodeMatches,nodeId)=>{const found=this.findPath(next.blocks,nodeId);if(!found)return;const node=found.node;
+        const byRun=new Map();nodeMatches.forEach((m)=>{if(!byRun.has(m.runIndex))byRun.set(m.runIndex,[]);byRun.get(m.runIndex).push(m);});
+        byRun.forEach((items,runIndex)=>{const original=node.content[runIndex];if(!original)return;const txt=String(original.text||'');const ordered=all?items.slice().reverse():items;
+          let value=txt; ordered.forEach((m)=>{const start=m.start,end=start+m.length;value=value.slice(0,start)+this.replaceQuery+value.slice(end);replaced++;});
+          if(value!==txt)node.content[runIndex]={text:value,marks:Array.isArray(original.marks)?original.marks.slice():[],href:original.href==null?null:original.href};
+        }); node.content=canonicalRuns(node.content);
+      });
+      if(!replaced){this.updateFindStatus();return;}
+      this.clearTextEditSnapshot(); this.commit(next,this.selectedId); this.activeFindIndex=-1;
+      this.statusMessage=(this.strings.replaceDone||'Replaced %1 occurrence(s).').replace('%1',String(replaced)); this.render();
+    }
+
     renderRibbonGroup(label, className) {
       const group = this.el('section', 'rb-ribbon-group' + (className ? ' ' + className : ''));
       group.setAttribute('aria-label', label);
@@ -1638,6 +1725,7 @@
         addButton(g.tools,this.strings.exportDocument||'Exportar BDRE','export-document',{icon:'file'});
         addButton(g.tools,this.strings.addBlock,'toggle-inserter'); addButton(g.tools,this.strings.pasteBlock,'paste-block'); addButton(g.tools,this.strings.undo,'undo'); addButton(g.tools,this.strings.redo,'redo');
         const historyButton=this.button(this.strings.historyButton||'Draft history','toggle-revision-history',{icon:'history'}); historyButton.disabled=!this.getDraftHistory().length; g.tools.append(historyButton); panel.append(g.group);
+        const findButton=this.button(this.strings.findReplaceButton||'Find and replace','toggle-find-replace',{icon:'search'}); findButton.setAttribute('aria-expanded',String(this.findReplaceOpen)); g.tools.append(findButton);
         g=this.renderRibbonGroup(this.strings.groupTextFormat||'Formatação de texto');
         INLINE_MARKS.forEach((mark)=>{ const b=this.button(this.strings[mark]||mark,'format-mark',{mark}); b.dataset.mark=mark; b.setAttribute('aria-pressed','false'); g.tools.append(b); });
         const link=this.el('input','rb-inline-link'); link.type='text'; link.value=this.linkDraft; link.placeholder=this.strings.linkPlaceholder; link.setAttribute('aria-label',this.strings.link); link.dataset.inlineLinkInput='1'; g.tools.append(link);
@@ -1693,6 +1781,7 @@
       const ribbonTabs=this.el('div','rb-ribbon-tabs'); ribbonTabs.setAttribute('role','tablist');
       [['home',this.strings.ribbonHome||'Início'],['insert',this.strings.ribbonInsert||'Inserir'],['view',this.strings.ribbonView||'Exibir']].forEach(([tab,label])=>{const b=this.el('button','rb-ribbon-tab',label);b.type='button';b.dataset.action='ribbon-tab';b.dataset.tab=tab;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(this.activeRibbonTab===tab));b.setAttribute('aria-controls','rb-ribbon-panel-'+this.instance);b.tabIndex=this.activeRibbonTab===tab?0:-1;ribbonTabs.append(b);});
       ribbon.append(ribbonTabs,this.renderRibbonContents()); this.root.append(ribbon);
+      if (this.findReplaceOpen) this.root.append(this.renderFindReplacePanel());
       const inserterMenu = this.renderInserter(this.activePanel === 'elements' && this.inserterOpen); inserterMenu.id = 'rb-inserter-' + this.instance;
       const layout = this.el('div', 'rb-layout' + (this.fullscreen ? ' rb-builder-layout' : '') + ((this.activePanel || (this.fullscreen && this.inspectorOpen && !this.previewMode)) ? ' rb-has-panel' : '') + (this.fullscreen && this.inspectorOpen && !this.previewMode ? ' rb-has-inspector' : ''));
       const canvas = this.el('div', 'rb-canvas'); canvas.setAttribute('role','region'); canvas.setAttribute('aria-label', this.strings.canvas);

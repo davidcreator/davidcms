@@ -415,3 +415,14 @@ body.rb-bdre-fullscreen-open{overflow:hidden!important}
 .rb-draft-history h3{margin:0 0 .75rem;font-size:1rem}
 .rb-draft-history-row{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.55rem 0;border-top:1px solid #e2e8f0}
 .rb-draft-history-row span{font-size:.875rem;color:#334155}
+
+/* F9-36 document find and replace */
+.rb-find-replace{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.65rem 1rem;align-items:end;padding:.75rem 1rem;background:#f8f9fc;border:1px solid #d9deea;border-radius:.55rem;margin:.55rem 0}
+.rb-find-fields{display:grid;grid-template-columns:repeat(2,minmax(10rem,1fr));gap:.45rem .75rem}
+.rb-find-fields>label{display:grid;gap:.25rem;font-size:.78rem;font-weight:600;color:#344054}
+.rb-find-fields input:not([type=checkbox]){min-width:0;padding:.45rem .55rem;border:1px solid #c8ceda;border-radius:.35rem;background:#fff;font:inherit}
+.rb-find-fields .rb-find-case{display:flex;align-items:center;gap:.4rem;grid-column:1/-1;font-weight:400}
+.rb-find-actions{display:flex;gap:.35rem;flex-wrap:wrap}
+.rb-find-hint,.rb-find-status{grid-column:1/-1;margin:0;color:#667085;font-size:.75rem}
+.rb-find-status{font-weight:600;color:#344054}
+@media(max-width:700px){.rb-find-replace{grid-template-columns:1fr}.rb-find-fields{grid-template-columns:1fr}.rb-find-actions .rb-button{flex:1}}
