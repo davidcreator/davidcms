@@ -1,0 +1,9 @@
+BDREditor — F9-28 Recuperação de rascunhos
+
+Pacote com todos os arquivos completos atualizados neste incremento.
+
+Conteúdo: snapshots BDRE temporários em sessionStorage, recuperação assistida após reabertura, chaves isoladas por administrador/contexto/registro/idioma, expiração de 24h, prompt localizado PT-BR/EN-US/ES-EU e nota na interface. O salvamento no servidor continua explícito.
+
+Aplicação: extraia o conteúdo deste ZIP na raiz do repositório DavidCMS, preservando a estrutura `dev/...` e `docs/...`. Não há patch neste pacote, migration ou alterações de banco.
+
+A bateria ampla de testes permanece adiada até o marco final da ferramenta, conforme o escopo atualizado. Nenhum teste runtime foi executado neste incremento.

@@ -447,3 +447,6 @@ $_['text_block_pattern_error'] = 'Não foi possível atualizar o padrão.';
 $_['text_block_pattern_incompatible'] = 'Este padrão não é compatível com este ponto do editor.';
 $_['text_block_pattern_invalid'] = 'Este bloco não pode ser salvo como padrão independente.';
 $_['text_block_pattern_custom_js_rejected'] = 'Padrões não podem conter JavaScript.';
+
+$_['text_block_draft_recovery_prompt'] = 'Foi encontrado um rascunho BDRE não salvo nesta aba. Deseja recuperá-lo? O rascunho temporário fica apenas nesta aba até ser salvo ou descartado.';
+$_['text_block_draft_recovery_hint'] = 'Uma cópia temporária de recuperação fica nesta aba. O conteúdo do site só é salvo quando você clica em Salvar.';

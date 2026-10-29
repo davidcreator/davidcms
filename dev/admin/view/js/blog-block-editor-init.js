@@ -1,4 +1,4 @@
-/* F9-16 form binding with localized unsaved-state feedback; same POST only, no autosave/network. */
+/* BDRE form binding with explicit server save and tab-scoped recovery of interrupted editor drafts. */
 (function (global, document) {
   'use strict';
   var pendingMediaEditor = null;
@@ -75,6 +75,61 @@
     pendingMediaEditor = null;
   });
   document.addEventListener('hidden.bs.modal', function (event) { if (event.target && event.target.id === 'blogMediaModal') pendingMediaEditor = null; });
+  function byteLength(value) {
+    try { return new Blob([value]).size; }
+    catch (_) { try { return unescape(encodeURIComponent(value)).length; } catch (error) { return Infinity; } }
+  }
+
+  function draftStorage(config) {
+    if (!config || typeof config.draftKey !== 'string' || !config.draftKey) return null;
+    try { return { storage: global.sessionStorage, key: config.draftKey }; }
+    catch (_) { return null; }
+  }
+
+  function recoverDraft(root, config, initial, strings) {
+    var slot = draftStorage(config);
+    if (!slot) return { document: initial, recovered: false };
+    try {
+      var initialValidation = global.ReamurBlogBlockEditor.validateDocument(initial, !!root.dataset.pageContext);
+      if (!initialValidation.valid) return { document: initial, recovered: false };
+    } catch (_) { return { document: initial, recovered: false }; }
+    try {
+      var raw = slot.storage.getItem(slot.key);
+      if (!raw) return { document: initial, recovered: false };
+      var saved = JSON.parse(raw);
+      if (!saved || saved.version !== 1 || !saved.document || !saved.savedAt || Date.now() - saved.savedAt > 86400000) {
+        slot.storage.removeItem(slot.key);
+        return { document: initial, recovered: false };
+      }
+      var allowPageMedia = !!root.dataset.pageContext;
+      var validation = global.ReamurBlogBlockEditor.validateDocument(saved.document, allowPageMedia);
+      if (!validation.valid || byteLength(JSON.stringify(saved.document)) > 4194304) {
+        slot.storage.removeItem(slot.key);
+        return { document: initial, recovered: false };
+      }
+      if (JSON.stringify(saved.document) === JSON.stringify(initial)) {
+        slot.storage.removeItem(slot.key);
+        return { document: initial, recovered: false };
+      }
+      var promptText = strings.draftRecoveryPrompt || 'An unsaved draft was found in this browser tab. Restore it?';
+      if (global.confirm(promptText)) return { document: saved.document, recovered: true };
+      slot.storage.removeItem(slot.key);
+    } catch (_) {}
+    return { document: initial, recovered: false };
+  }
+
+  function storeDraft(config, doc, validation) {
+    var slot = draftStorage(config);
+    if (!slot || !doc || !validation || !validation.valid) return;
+    try {
+      var encoded = JSON.stringify(doc);
+      if (byteLength(encoded) > 4194304) return;
+      slot.storage.setItem(slot.key, JSON.stringify({ version:1, savedAt:Date.now(), document:doc }));
+    } catch (_) {
+      // Storage may be disabled/full; ordinary explicit saving remains available.
+    }
+  }
+
   function init() {
     if (!global.ReamurBlogBlockEditor) return;
     document.addEventListener('click', function (event) {
@@ -109,6 +164,8 @@
       if (pageContext) pageContext.saveStatus = changeState ? changeState.status : null;
       try {
         var initial = JSON.parse(root.dataset.document || '');
+        var recovery = recoverDraft(root, patternConfig, initial, editorStrings);
+        initial = recovery.document;
         root.setAttribute('aria-label', editorStrings.editorLabel || 'Blog block editor');
         var editor = global.ReamurBlogBlockEditor.mount(root, {
           document: initial,
@@ -122,6 +179,7 @@
           audioPicker: root.dataset.audioPicker === 'true' || root.dataset.mediaPickers !== 'false',
           videoPicker: root.dataset.videoPicker === 'true' || root.dataset.mediaPickers !== 'false',
           onChange: function (doc, validation) {
+            storeDraft(patternConfig, doc, validation);
             if (hidden && (!validation.valid || !doc)) hidden.value = '';
             root.dataset.valid = validation.valid ? 'true' : 'false';
             root.setAttribute('aria-invalid', validation.valid ? 'false' : 'true');
@@ -130,12 +188,16 @@
           }
         });
         root.__blogBlockEditorInstance = editor;
+        if (recovery.recovered) {
+          root.dataset.dirty = 'true';
+          if (changeState) changeState.markDirty();
+        }
         if (hidden && editor.getDocument()) {
           hidden.value = (root.dataset.storagePrefix || '') + editor.serialize();
           if (ready) ready.value = '1';
           root.dataset.valid = 'true';
           root.setAttribute('aria-invalid', 'false');
-          root.dataset.dirty = 'false';
+          root.dataset.dirty = recovery.recovered ? 'true' : 'false';
         } else {
           if (hidden) hidden.value = '';
           if (ready) ready.value = '';

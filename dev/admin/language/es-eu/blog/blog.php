@@ -447,3 +447,6 @@ $_['text_block_pattern_error'] = 'No se pudo actualizar el patrón.';
 $_['text_block_pattern_incompatible'] = 'Este patrón no es compatible con este punto del editor.';
 $_['text_block_pattern_invalid'] = 'Este bloque no puede guardarse como patrón independiente.';
 $_['text_block_pattern_custom_js_rejected'] = 'Los patrones no pueden contener JavaScript.';
+
+$_['text_block_draft_recovery_prompt'] = 'Se encontró un borrador BDRE sin guardar en esta pestaña. ¿Quieres recuperarlo? El borrador temporal solo se conserva en esta pestaña hasta guardarlo o descartarlo.';
+$_['text_block_draft_recovery_hint'] = 'Se conserva una copia temporal de recuperación en esta pestaña. El contenido del sitio solo se guarda al pulsar Guardar.';

@@ -247,3 +247,6 @@ $_['text_block_pattern_error'] = 'Could not update the pattern.';
 $_['text_block_pattern_incompatible'] = 'This pattern is not compatible with this editor location.';
 $_['text_block_pattern_invalid'] = 'This block cannot be saved as a standalone pattern.';
 $_['text_block_pattern_custom_js_rejected'] = 'Patterns cannot contain JavaScript.';
+
+$_['text_block_draft_recovery_prompt'] = 'An unsaved BDRE draft from this browser tab was found. Restore it? The temporary draft is stored only in this tab until saved or discarded.';
+$_['text_block_draft_recovery_hint'] = 'A temporary recovery copy is kept in this browser tab. The site content is saved only when you click Save.';

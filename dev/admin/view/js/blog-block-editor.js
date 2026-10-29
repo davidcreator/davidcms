@@ -1629,7 +1629,7 @@
       } else layout.append(canvas);
       this.root.append(layout);
       const footText = this.options.connectedSave === true
-        ? 'As alterações ficam no formulário e só são persistidas ao clicar em Salvar; não há autosave.'
+        ? (this.strings.draftRecoveryHint || 'Uma cópia temporária fica nesta aba; o conteúdo do site só é salvo ao clicar em Salvar.')
         : 'Rascunho em memória · não salva nem publica. O salvamento será conectado numa tarefa posterior.';
       const foot = this.el('p', 'rb-note', footText);
       if (this.fullscreen) { const done = this.button(this.strings.fullscreenExit,'toggle-fullscreen',{icon:'collapse'}); done.classList.add('rb-fullscreen-done'); foot.append(done); }
