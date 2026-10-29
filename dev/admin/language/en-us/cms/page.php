@@ -273,3 +273,7 @@ $_['text_revision_version'] = 'Selected revision';
 $_['text_revision_current'] = 'Current form (includes unsaved changes)';
 $_['text_revision_body'] = 'Content (BDRE documents; legacy HTML is shown as text)';
 $_['text_revision_meta'] = 'Editorial metadata';$_['text_revision_error'] = 'Could not load this revision comparison.';
+// F9-34 — bounded, safe textual revision diff
+$_['text_revision_diff'] = 'Text differences';
+$_['text_revision_unchanged'] = 'No textual differences.';
+$_['text_revision_diff_limit'] = 'Document is too large for word-level comparison; use the columns above.';

@@ -875,7 +875,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             'entry_media_search', 'entry_media_folder_name', 'entry_media_external_url',
             'button_media_library', 'button_media_upload', 'button_media_create_folder',
             'button_media_use_url', 'button_media_select', 'button_media_delete',
-            'button_media_back', 'button_media_previous', 'button_media_next', 'button_media_close', 'error_edit_conflict', 'button_reload_current', 'text_revision_compare', 'text_revision_version', 'text_revision_current', 'text_revision_body', 'text_revision_meta', 'text_revision_error',
+            'button_media_back', 'button_media_previous', 'button_media_next', 'button_media_close', 'error_edit_conflict', 'button_reload_current', 'text_revision_compare', 'text_revision_version', 'text_revision_current', 'text_revision_body', 'text_revision_meta', 'text_revision_error', 'text_revision_diff', 'text_revision_unchanged', 'text_revision_diff_limit',
             'text_catalog_preview_notice', 'text_published_on', 'button_back', 'text_content_review',
             'text_block_editor_intro', 'text_block_conversion_note', 'text_block_review_required', 'text_block_invalid', 'text_block_saved',
             'error_block_schema_unavailable', 'error_block_document_invalid', 'error_block_legacy_review', 'error_block_mode_invalid', 'error_block_editor_unavailable',

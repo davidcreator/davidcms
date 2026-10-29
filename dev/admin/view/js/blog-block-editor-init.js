@@ -198,6 +198,23 @@
     column.appendChild(card); container.appendChild(column);
   }
 
+  function appendRevisionDiff(container, oldText, newText, panel) {
+    var section=document.createElement('section'); section.className='border rounded p-3 mt-3'; section.setAttribute('aria-label',panel.dataset.historyDiffLabel||'Text differences');
+    var heading=document.createElement('h5'); heading.className='h6'; heading.textContent=panel.dataset.historyDiffLabel||'Text differences'; section.appendChild(heading);
+    var oldTokens=String(oldText||'').match(/\\s+|[^\\s]+/g)||[], newTokens=String(newText||'').match(/\\s+|[^\\s]+/g)||[];
+    if(oldTokens.length>450||newTokens.length>450){var limited=document.createElement('p');limited.className='small mb-0';limited.textContent=panel.dataset.historyDiffLimit||'Document too large for word-level comparison.';section.appendChild(limited);container.appendChild(section);return;}
+    var rows=oldTokens.length+1,cols=newTokens.length+1,dp=Array.from({length:rows},function(){return new Uint16Array(cols);});
+    for(var i=oldTokens.length-1;i>=0;i--) for(var j=newTokens.length-1;j>=0;j--) dp[i][j]=oldTokens[i]===newTokens[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+    var ops=[],a=0,b=0;
+    function push(kind,text){if(!text)return;var last=ops[ops.length-1];if(last&&last.kind===kind)last.text+=text;else ops.push({kind:kind,text:text});}
+    while(a<oldTokens.length&&b<newTokens.length){if(oldTokens[a]===newTokens[b]){push('same',oldTokens[a]);a++;b++;}else if(dp[a+1][b]>=dp[a][b+1]){push('del',oldTokens[a++]);}else{push('ins',newTokens[b++]);}}
+    while(a<oldTokens.length)push('del',oldTokens[a++]); while(b<newTokens.length)push('ins',newTokens[b++]);
+    if(!ops.some(function(op){return op.kind!=='same';})){var unchanged=document.createElement('p');unchanged.className='small mb-0';unchanged.textContent=panel.dataset.historyUnchanged||'No textual differences.';section.appendChild(unchanged);container.appendChild(section);return;}
+    var pre=document.createElement('pre');pre.className='small text-wrap mb-0';pre.style.whiteSpace='pre-wrap';pre.style.maxHeight='20rem';pre.style.overflow='auto';
+    ops.forEach(function(op){if(op.kind==='same'){pre.appendChild(document.createTextNode(op.text));return;}var mark=document.createElement(op.kind==='del'?'del':'ins');mark.className=op.kind==='del'?'text-danger':'text-success';mark.textContent=op.text;pre.appendChild(mark);});
+    section.appendChild(pre);container.appendChild(section);
+  }
+
   function bindServerRevisionHistory() {
     document.addEventListener('click', function (event) {
       var loadButton = event.target.closest && event.target.closest('[data-bdre-history-load]');
@@ -247,8 +264,10 @@
           var currentStatus=form.querySelector('[name="status"]'); currentMeta.entity={status:currentStatus&&currentStatus.checked?1:0};
           if(kind==='blog'){var currentImage=form.querySelector('[name="image"]'),currentDate=form.querySelector('[name="date_published"]');currentMeta.entity.image=currentImage?currentImage.value:'';currentMeta.entity.date_published=currentDate?currentDate.value:'';}
           else {var currentSort=form.querySelector('[name="sort_order"]');currentMeta.entity.sort_order=currentSort?currentSort.value:'';}
-          appendCompareColumn(compareResult,(panel.dataset.historyVersionLabel||'Selected revision')+' · '+String(compareButton.previousElementSibling && compareButton.previousElementSibling.textContent||''),oldMeta,revisionSnapshotText(data.snapshot),panel);
-          appendCompareColumn(compareResult,panel.dataset.historyCurrentLabel||'Current form',currentMeta,currentEditorText(panel,form),panel);
+          var oldText=revisionSnapshotText(data.snapshot), currentText=currentEditorText(panel,form);
+          appendCompareColumn(compareResult,(panel.dataset.historyVersionLabel||'Selected revision')+' · '+String(compareButton.previousElementSibling && compareButton.previousElementSibling.textContent||''),oldMeta,oldText,panel);
+          appendCompareColumn(compareResult,panel.dataset.historyCurrentLabel||'Current form',currentMeta,currentText,panel);
+          appendRevisionDiff(compareResult,oldText,currentText,panel);
         }).catch(function(){ if(compareResult){compareResult.classList.remove('d-none');compareResult.textContent=panel.dataset.historyError||'Could not load the revision comparison.';} }).finally(function(){compareButton.disabled=false;});
         return;
       }

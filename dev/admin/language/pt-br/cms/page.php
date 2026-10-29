@@ -257,3 +257,7 @@ $_['text_revision_version'] = 'Versão selecionada';
 $_['text_revision_current'] = 'Formulário atual (inclui alterações não salvas)';
 $_['text_revision_body'] = 'Conteúdo (documentos BDRE; HTML legado é exibido como texto)';
 $_['text_revision_meta'] = 'Metadados editoriais';$_['text_revision_error'] = 'Não foi possível carregar a comparação desta versão.';
+// F9-34 — bounded, safe textual revision diff
+$_['text_revision_diff'] = 'Diferenças no conteúdo';
+$_['text_revision_unchanged'] = 'Nenhuma diferença textual.';
+$_['text_revision_diff_limit'] = 'Documento longo demais para comparar palavra por palavra; use as colunas acima.';
