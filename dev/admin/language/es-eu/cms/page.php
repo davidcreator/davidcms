@@ -169,7 +169,9 @@ $_['text_block_threejs_addScript'] = 'Editar miniatura / añadir script';
 // CMS Pages private draft preview.
 $_['text_page_preview_button'] = 'Abrir vista previa';
 $_['text_page_preview_title'] = 'Vista previa privada de la página';
-$_['text_page_preview_notice'] = 'Vista previa privada del contenido de la página sin guardar. Esta vista aislada no incluye el encabezado, pie de página ni campos personalizados completos del Catalog.';
+$_['text_page_preview_notice'] = 'Vista previa privada con el shell y la plantilla actuales del Catalog. Las áreas de Blog, Portfolio, Tools y otros módulos muestran registros de ejemplo identificados; no se publica ni se guarda nada.';
+$_['text_page_preview_sample_content'] = 'Contenido de ejemplo solo para la vista previa';
+$_['text_page_preview_sample_item'] = 'Elemento de ejemplo';
 $_['text_page_preview_untitled'] = 'Página sin título';
 $_['error_page_preview_permission'] = 'No tienes permiso para previsualizar páginas del CMS.';
 $_['error_page_preview_method'] = 'La vista previa requiere una solicitud POST.';

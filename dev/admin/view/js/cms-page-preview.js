@@ -49,6 +49,11 @@
     hidden(form, 'preview_language', button.dataset.language || 'en-us');
     hidden(form, 'preview_language_id', button.dataset.languageId || '1');
     hidden(form, 'preview_page_id', button.dataset.pageId || '0');
+    var languageId = String(button.dataset.languageId || '1');
+    var layoutList = formElement && formElement.querySelector('[data-page-layout-list][data-page-layout-language="' + languageId + '"]');
+    var sections = [];
+    if (layoutList) Array.prototype.forEach.call(layoutList.querySelectorAll('input[type=checkbox][name^="page_layout_sections["]:checked'), function (input) { sections.push(input.value); });
+    hidden(form, 'preview_layout_sections', JSON.stringify(sections));
     hidden(form, 'preview_custom_fields', fieldsJson);
     document.body.appendChild(form);
     form.submit();

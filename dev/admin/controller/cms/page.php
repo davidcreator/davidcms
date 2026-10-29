@@ -238,7 +238,7 @@ class Page extends \Reamur\System\Engine\Controller {
         $this->response->redirect($this->url->link('cms/page'));
     }
 
-    /** POST-only, non-persistent preview for the unsaved CMS Page block document. */
+    /** POST-only private preview of an unsaved CMS Page document and its allowlisted system-page layout. */
     public function preview(): void {
         $this->load->language('cms/page');
         $this->response->addHeader('Cache-Control: private, no-store, no-cache, max-age=0');
@@ -328,9 +328,42 @@ class Page extends \Reamur\System\Engine\Controller {
 
         $pageIdRaw = $this->request->post['preview_page_id'] ?? '0';
         $pageId = is_scalar($pageIdRaw) && ctype_digit((string)$pageIdRaw) ? (int)$pageIdRaw : 0;
-        if ($pageId > 0 && !$this->model_cms_page->getPage($pageId)) {
+        $previewPage = $pageId > 0 ? $this->model_cms_page->getPage($pageId) : [];
+        if ($pageId > 0 && !$previewPage) {
             $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
             return;
+        }
+        $systemKey = (string)($previewPage['system_key'] ?? '');
+        $catalogRoute = $this->previewCatalogRoute($systemKey);
+        $previewSections = [];
+        $layoutOptions = $this->cms_page_layout->options($systemKey);
+        if ($catalogRoute !== '' && $layoutOptions !== []) {
+            $sectionsRaw = $this->request->post['preview_layout_sections'] ?? null;
+            if ($sectionsRaw !== null) {
+                if (!is_string($sectionsRaw) || strlen($sectionsRaw) > 16384) {
+                    $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
+                    return;
+                }
+                $submittedSections = json_decode($sectionsRaw, true);
+                if (json_last_error() !== JSON_ERROR_NONE || !is_array($submittedSections) ||
+                    ($submittedSections !== [] && array_keys($submittedSections) !== range(0, count($submittedSections) - 1))) {
+                    $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
+                    return;
+                }
+                $normalized = $this->cms_page_layout->normalizeSections($systemKey, $submittedSections);
+                if ($normalized === null) {
+                    $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
+                    return;
+                }
+                $previewSections = $normalized;
+            } else {
+                $savedDescriptions = $this->model_cms_page->getPageDescriptions($pageId);
+                $savedDescription = (string)($savedDescriptions[$languageId]['description'] ?? '');
+                $savedLayout = $this->cms_page_layout->decode($savedDescription, $systemKey);
+                $previewSections = $savedLayout !== null
+                    ? $savedLayout['sections']
+                    : $this->cms_page_layout->defaults($systemKey, !empty($document['blocks']));
+            }
         }
         $customRaw = $this->request->post['preview_custom_fields'] ?? '{}';
         if (!is_string($customRaw) || strlen($customRaw) > 262144) {
@@ -380,8 +413,6 @@ class Page extends \Reamur\System\Engine\Controller {
         $themeTemplates = is_array($publishedTheme['templates'] ?? null) ? $publishedTheme['templates'] : [];
 
         $assetBase = $this->pageCatalogAssetUrl();
-        $catalogUrl = new \Reamur\System\Library\Url($assetBase);
-        $homeUrl = $assetBase;
         $languageLinks = [];
         foreach ($publicLanguages as $row) {
             $row = (array)$row;
@@ -392,7 +423,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 'code' => $code,
                 'name' => (string)($texts[$langKey] ?? $row['name'] ?? $code),
                 'active' => $code === $language,
-                'href' => $catalogUrl->link('common/home', ['language' => $code]),
+                'href' => '#preview-language',
             ];
         }
         $publicTitle = $metaTitle !== '' ? $metaTitle : $title;
@@ -410,17 +441,17 @@ class Page extends \Reamur\System\Engine\Controller {
         $styles[$assetBase . 'view/css/theme.css'] = 'stylesheet';
         $headerData = [
             'locale' => $language, 'title' => $publicTitle, 'description' => $publicDescription,
-            'canonical' => '', 'sitemap_href' => $catalogUrl->link('common/sitemap'),
+            'canonical' => '', 'sitemap_href' => '#preview-sitemap',
             'og' => ['type'=>'website','site_name'=>(string)($settings['config_name'] ?? ''),'title'=>$publicTitle,'description'=>$publicDescription,'url'=>'','locale'=>str_replace('-', '_', $language)],
             'styles' => $styles, 'scripts' => $scripts, 'has_3d' => false, 'three_runtime_base' => '',
-            'home' => $homeUrl, 'body_class' => 'rms-page', 'theme_primary' => $primary, 'theme_surface' => $surface,
+            'home' => '#preview-home', 'body_class' => 'rms-page', 'theme_primary' => $primary, 'theme_surface' => $surface,
             'text_languages' => (string)($texts['text_languages'] ?? ''), 'text_brand' => (string)($texts['text_brand'] ?? ''),
             'text_nav_home' => (string)($texts['text_nav_home'] ?? ''), 'text_nav_about' => (string)($texts['text_nav_about'] ?? ''),
             'text_nav_blog' => (string)($texts['text_nav_blog'] ?? ''), 'text_nav_portfolio' => (string)($texts['text_nav_portfolio'] ?? ''),
             'text_nav_contact' => (string)($texts['text_nav_contact'] ?? ''), 'text_nav_quote' => (string)($texts['text_nav_quote'] ?? ''),
-            'nav_about' => $homeUrl . '#about', 'nav_blog' => $catalogUrl->link('blog/blog'),
-            'nav_portfolio' => $catalogUrl->link('catalog/project'), 'nav_contact' => $catalogUrl->link('common/contact'),
-            'nav_quote' => $catalogUrl->link('checkout/quote'), 'languages' => $languageLinks,
+            'nav_about' => '#preview-about', 'nav_blog' => '#preview-blog',
+            'nav_portfolio' => '#preview-portfolio', 'nav_contact' => '#preview-contact',
+            'nav_quote' => '#preview-quote', 'languages' => $languageLinks,
             'cms_route_key' => '', 'cms_route_content' => '', 'private_preview' => true,
         ];
 
@@ -432,7 +463,7 @@ class Page extends \Reamur\System\Engine\Controller {
             $legalId = (int)($legalPage['page_id'] ?? 0);
             if ($legalId < 1 || isset($seenLegal[$keyword])) continue;
             $seenLegal[$keyword] = true;
-            $legal[] = ['name'=>(string)($legalPage['title'] ?? ''),'href'=>$catalogUrl->link('cms/page.info|' . $legalId, ['language'=>$language])];
+            $legal[] = ['name'=>(string)($legalPage['title'] ?? ''),'href'=>'#preview-legal'];
         }
         $copyrightKey = 'config_copyright_' . $language;
         $copyright = array_key_exists($copyrightKey, $settings) ? (string)$settings[$copyrightKey] : (string)($texts['text_copyright'] ?? '');
@@ -440,7 +471,7 @@ class Page extends \Reamur\System\Engine\Controller {
         foreach (['facebook','instagram','pinterest','x','google_business','redbubble'] as $network) {
             $key = 'config_social_' . $network . '_href';
             $href = array_key_exists($key, $settings) ? (string)$settings[$key] : (string)($texts['text_social_' . $network . '_href'] ?? '');
-            if ($href !== '') $socials[] = ['name'=>(string)($texts['text_social_' . $network] ?? $network),'href'=>$href];
+            if ($href !== '') $socials[] = ['name'=>(string)($texts['text_social_' . $network] ?? $network),'href'=>'#preview-social'];
         }
         $footerData = [
             'text_powered' => sprintf((string)($texts['text_powered'] ?? ''), REAMUR_VERSION),
@@ -452,16 +483,117 @@ class Page extends \Reamur\System\Engine\Controller {
             'heading_title' => $title, 'description' => $notice . (string)$rendered['html'], 'button_back_home' => null,
             'public_custom_field_groups' => $publicFields, 'text_custom_fields' => (string)$this->language->get('text_custom_fields'),
             'text_yes' => (string)$this->language->get('text_yes'), 'text_no' => (string)$this->language->get('text_no'),
-            'home' => $homeUrl, 'heading_home' => (string)($texts['heading_home'] ?? ''),
+            'home' => '#preview-home', 'heading_home' => (string)($texts['heading_home'] ?? ''),
         ];
 
+        $routeData = $catalogRoute !== ''
+            ? $this->buildCatalogRoutePreviewData($systemKey, $title, (string)$rendered['html'], $previewSections)
+            : [];
+        $pageData['preview_notice'] = (string)$this->language->get('text_page_preview_notice');
         try {
-            $html = $this->template->renderCatalogPagePreview($pageData, $headerData, $footerData, $themeTemplates);
+            $html = $this->template->renderCatalogPagePreview($pageData, $headerData, $footerData, $themeTemplates, $catalogRoute !== '' ? $catalogRoute : 'cms/page_info', $routeData);
         } catch (\Throwable $exception) {
             $this->renderPagePreviewError($this->language->get('error_page_preview_document'));
             return;
         }
         $this->response->setOutput($html);
+    }
+
+    /** Map only fixed public system pages to their allowlisted Catalog templates. */
+    private function previewCatalogRoute(string $systemKey): string {
+        return match ($systemKey) {
+            'home' => 'common/home',
+            'portfolio' => 'catalog/project_list',
+            'portfolio_detail' => 'catalog/project_info',
+            'blog' => 'blog/blog_list',
+            'blog_post' => 'blog/blog_info',
+            'tools' => 'tool/tool_list',
+            'tool_detail' => 'tool/tool_info',
+            'contact' => 'common/contact',
+            'quote' => 'checkout/quote',
+            'not_found' => 'error/not_found',
+            default => '',
+        };
+    }
+
+    /** Build clearly synthetic, non-persistent module data for private Catalog-template previews. */
+    private function buildCatalogRoutePreviewData(string $systemKey, string $title, string $contentHtml, array $sections): array {
+        $sample = (string)$this->language->get('text_page_preview_sample_content');
+        $sampleItem = (string)$this->language->get('text_page_preview_sample_item');
+        $sampleHtml = '<p>' . htmlspecialchars($sample, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</p>';
+        $project = ['name'=>$sampleItem, 'image'=>'', 'description'=>$sample, 'client'=>'', 'url'=>''];
+        $tool = ['name'=>$sampleItem, 'image'=>'', 'vendor'=>$sampleItem, 'description'=>$sample, 'external'=>false, 'url'=>'', 'href'=>'#preview-item'];
+        $shared = [
+            'heading_title'=>$title, 'home'=>'#preview-home', 'contact'=>'#preview-contact', 'quote'=>'#preview-quote',
+            'button_back_home'=>$sampleItem, 'button_back'=>$sampleItem,
+            'button_contact'=>$sampleItem, 'button_quote'=>$sampleItem,
+            'text_lead'=>$sample, 'text_no_results'=>$sample, 'cms_page_content'=>$contentHtml,
+            'cms_page_sections'=>$sections, 'cms_home_content'=>$contentHtml, 'cms_home_sections'=>$sections,
+            'text_filter'=>$sample, 'text_all'=>$sample, 'text_featured'=>$sample, 'text_open'=>$sample,
+            'button_view'=>$sample, 'entry_client'=>$sample, 'entry_url'=>$sample, 'entry_tags'=>$sample,
+            'entry_gallery'=>$sample, 'entry_vendor'=>$sample, 'entry_external_url'=>$sample,
+            'text_open_hint'=>$sample, 'text_read_more'=>$sample, 'text_published_on'=>$sample,
+            'text_content_review'=>$sample, 'text_code'=>'404', 'text_error'=>$sample, 'text_suggestion'=>$sample,
+            'button_continue'=>$sample, 'text_flash'=>['text'=>'','type'=>'success'], 'error'=>'',
+            'action'=>'#preview-form', 'csrf_token'=>'', 'value_name'=>'', 'value_email'=>'',
+            'value_telephone'=>'', 'value_subject'=>'', 'value_message'=>'', 'value_firstname'=>'',
+            'value_lastname'=>'', 'value_comment'=>'', 'entry_name'=>$sample, 'entry_email'=>$sample,
+            'entry_telephone'=>$sample, 'entry_subject'=>$sample, 'entry_message'=>$sample,
+            'entry_firstname'=>$sample, 'entry_lastname'=>$sample, 'entry_services'=>$sample,
+            'entry_comment'=>$sample, 'text_services'=>$sample, 'text_briefing'=>$sample,
+            'text_honeypot_label'=>$sample, 'button_send'=>$sample,
+        ];
+        return match ($systemKey) {
+            'home' => $shared + [
+                'hero3d'=>['enabled'=>false,'count'=>0,'color'=>'#6d28d9','speed'=>0,'model'=>''],
+                'text_hero_kicker'=>$sampleItem,'text_tagline'=>$sample,'text_hero_lead'=>$sample,
+                'button_portfolio'=>$sample,'socials'=>[],
+                'text_about_kicker'=>$sample,'text_about_title'=>$sampleItem,'text_about_lead'=>$sample,
+                'about_paragraphs'=>[$sample], 'text_about_focus'=>$sampleItem,'text_about_focus_body'=>$sample,
+                'text_method_kicker'=>$sample,'text_method_title'=>$sampleItem,'text_method_lead'=>$sample,
+                'method_steps'=>[['n'=>'1','title'=>$sampleItem,'text'=>$sample]], 'identity_reasons'=>[], 'text_identity_title'=>$sample,
+                'text_skills_kicker'=>$sample,'text_skills_title'=>$sampleItem,'text_skills_lead'=>$sample,
+                'skill_chips'=>[$sampleItem], 'skill_groups'=>[['title'=>$sampleItem,'items'=>[$sample]]],
+                'text_services_kicker'=>$sample,'text_services_title'=>$sampleItem,'text_services_lead'=>$sample,
+                'text_services_cta'=>$sample,'service_groups'=>[['title'=>$sampleItem,'items'=>[$sample]]],
+                'testimonials'=>[['text'=>$sample,'author'=>$sampleItem,'company'=>'']],
+                'text_testimonials_kicker'=>$sample,'text_testimonials_title'=>$sampleItem,
+                'portfolio3d'=>['enabled'=>false,'frame_limit'=>0,'images'=>[]],
+                'projects'=>[['name'=>$sampleItem,'href'=>'#preview-project','image'=>'','client'=>'','featured'=>false]],
+                'categories'=>[], 'active_category'=>null, 'portfolio'=>'#preview-portfolio',
+                'text_portfolio_kicker'=>$sample,'text_portfolio_title'=>$sampleItem,'text_portfolio_lead'=>$sample,
+                'tools3d'=>['enabled'=>false,'items'=>[]], 'tools'=>[$tool], 'text_tools_kicker'=>$sample,
+                'text_tools_title'=>$sampleItem,'text_tools_lead'=>$sample,'text_tool_open'=>$sample,
+                'news_items'=>[['date'=>'','source'=>$sampleItem,'title'=>$sampleItem,'excerpt'=>$sample,'url'=>'#preview-news']],
+                'text_news_kicker'=>$sample,'text_news_title'=>$sampleItem,'text_news_read_more'=>$sample,
+                'text_news_source'=>$sample,'text_news_visit_blog'=>$sample,'news_blog_href'=>'#preview-blog',
+                'client_logos'=>[['name'=>$sampleItem,'image'=>'','url'=>'']],
+                'text_clients_kicker'=>$sample,'text_clients_title'=>$sampleItem,
+                'text_contact_kicker'=>$sample,'text_contact_title'=>$sampleItem,'text_contact_lead'=>$sample,
+                'text_contact_address'=>$sample,'text_contact_email'=>'preview@example.invalid','text_contact_whatsapp'=>'',
+                'contact_whatsapp_href'=>'',
+            ],
+            'portfolio' => $shared + [
+                'filter_all'=>['active'=>true,'href'=>'#preview-all'], 'categories'=>[],
+                'projects'=>[['name'=>$sampleItem,'href'=>'#preview-project','image'=>'','summary'=>$sample,'client'=>'','featured'=>false]],
+            ],
+            'portfolio_detail' => $shared + [
+                'back_portfolio'=>'#preview-portfolio','text_summary'=>$sample,'categories'=>[],
+                'project'=>$project,'text_tag'=>'','images'=>[],
+            ],
+            'blog' => $shared + [
+                'posts'=>[['title'=>$sampleItem,'image'=>'','date'=>'','excerpt'=>$sample,'href'=>'#preview-post']],
+            ],
+            'blog_post' => $shared + [
+                'back_blog'=>'#preview-blog', 'post'=>['title'=>$sampleItem,'image'=>'','date'=>'','content_mode'=>'blocks','content_valid'=>true,'block_html'=>$sampleHtml,'description'=>''],
+            ],
+            'tools' => $shared + ['tools'=>[$tool]],
+            'tool_detail' => $shared + ['back_tools'=>'#preview-tools','tool'=>$tool],
+            'contact' => $shared,
+            'quote' => $shared + ['services'=>[['key'=>'preview-sample','label'=>$sampleItem,'checked'=>false]]],
+            'not_found' => $shared + ['nf3d'=>['count'=>0,'color'=>'#6d28d9','speed'=>0,'drift'=>0]],
+            default => [],
+        };
     }
 
     private function previewText(mixed $value, int $limit): string {

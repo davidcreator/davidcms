@@ -84,8 +84,15 @@ final class Twig {
      * @param array<string,mixed> $headerData
      * @param array<string,mixed> $footerData
      * @param array<string,string> $templates
+     * @param array<string,mixed> $routeData Fixed, synthetic data for one allowlisted system-page template.
      */
-    public function renderCatalogPagePreview(array $pageData, array $headerData, array $footerData, array $templates = []): string {
+    public function renderCatalogPagePreview(array $pageData, array $headerData, array $footerData, array $templates = [], string $routeKey = 'cms/page_info', array $routeData = []): string {
+        $routes = [
+            'cms/page_info', 'common/home', 'catalog/project_list', 'catalog/project_info',
+            'tool/tool_list', 'tool/tool_info', 'blog/blog_list', 'blog/blog_info',
+            'common/contact', 'checkout/quote', 'error/not_found',
+        ];
+        if (!in_array($routeKey, $routes, true)) throw new \InvalidArgumentException('Catalog preview route is not allowed.');
         $allow = self::THEME_TEMPLATE_KEYS;
         $safe = [];
         foreach ($templates as $key => $source) {
@@ -98,10 +105,22 @@ final class Twig {
             new \Twig\Loader\FilesystemLoader([DIR_SYSTEM . '../catalog/view/template/'])
         ]);
         $env = new \Twig\Environment($loader, ['autoescape'=>'html','cache'=>false,'auto_reload'=>true]);
-        $pageData['header'] = new \Twig\Markup($env->render('common/header.twig', $headerData), 'UTF-8');
-        $pageData['footer'] = new \Twig\Markup($env->render('common/footer.twig', $footerData), 'UTF-8');
-        $pageData = $this->markTrustedHtml($pageData, ['description','cms_home_content','cms_page_content']);
-        return $env->render('cms/page_info.twig', $pageData);
+        $headerHtml = $env->render('common/header.twig', $headerData);
+        $footerHtml = $env->render('common/footer.twig', $footerData);
+        $viewData = array_replace($pageData, $routeData);
+        if ($routeKey !== 'cms/page_info') {
+            $notice = trim((string)($pageData['preview_notice'] ?? ''));
+            if ($notice !== '') {
+                $headerHtml .= '<aside class="cms-page-preview-notice" role="note" style="padding:12px 16px;margin:12px auto;max-width:1200px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;color:#334155;font-size:.875rem">' . htmlspecialchars($notice, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</aside>';
+            }
+        }
+        $viewData['header'] = new \Twig\Markup($headerHtml, 'UTF-8');
+        $viewData['footer'] = new \Twig\Markup($footerHtml, 'UTF-8');
+        $viewData = $this->markTrustedHtml($viewData, ['description','cms_home_content','cms_page_content']);
+        if (isset($viewData['post']) && is_array($viewData['post']) && is_string($viewData['post']['block_html'] ?? null)) {
+            $viewData['post']['block_html'] = new \Twig\Markup($viewData['post']['block_html'], 'UTF-8');
+        }
+        return $env->render($routeKey . '.twig', $viewData);
     }
 
     /** Render a saved source in a restrictive sandbox with fixed, nonpersistent sample data. */

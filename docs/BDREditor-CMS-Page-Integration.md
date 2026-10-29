@@ -23,11 +23,13 @@ Quando o editor de blocos é usado em CMS > Páginas, a tela cheia exibe uma fai
 
 Esse contexto é somente informativo: não cria campos de edição duplicados, não altera o JSON do BDREditor e não oferece autosave. O fluxo POST existente continua responsável por validar e salvar a página. O contexto é opcional no BDREditor e não é fornecido às instâncias do módulo Blog.
 
-## Título da página na pré-visualização local
+## Prévia privada no contexto público
 
-Na instância de CMS > Páginas, a pré-visualização responsiva inclui o título da página ativa antes dos blocos, acompanhando o campo de título já existente no formulário. Se estiver vazio, apresenta o rótulo localizado de página sem título. Isso aproxima a composição da estrutura pública, cujo template começa com um `h1` seguido do conteúdo.
+CMS > Páginas envia o documento BDRE v2 e a ordem ainda não salva das seções por POST ao endpoint same-origin protegido por `modify cms/page` e CSRF. O servidor valida o documento, remove `custom_js` dos componentes Three.js de prévia e renderiza o template Catalog allowlisted da rota de sistema, com o shell atual de header/footer e a configuração publicada do tema. Pages comuns continuam usando `cms/page_info.twig`.
 
-A prévia continua local ao navegador e limitada aos elementos da prévia segura existente; não chama a rota pública, não altera o renderer do catálogo e não salva o título ou o documento. O Blog não recebe o contexto de página e mantém a prévia atual.
+Os registros de Blog, Portfolio, Tools e demais módulos aparecem como amostras sintéticas claramente indicadas; a prévia não consulta nem copia dados desses módulos. Links e formulários ficam inertes. Nenhum draft é publicado, nenhum documento é salvo e não há token bearer, endpoint Catalog público ou migration.
+
+A lista de seções usa somente a allowlist associada à `system_key` recuperada no servidor; a chave da rota não é confiada ao POST. Seleção vazia é válida, se o usuário desativar todas as seções. Os blocos editoriais continuam renderizados pelo `BlockRenderer` allowlisted, nunca pelo HTML arbitrário do cliente.
 
 ## Salvar no modo imersivo
 

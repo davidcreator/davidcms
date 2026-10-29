@@ -185,7 +185,9 @@ $_['text_block_threejs_addScript'] = 'Edit thumbnail / add script';
 // CMS Pages private draft preview.
 $_['text_page_preview_button'] = 'Open preview';
 $_['text_page_preview_title'] = 'Private page preview';
-$_['text_page_preview_notice'] = 'Private preview of unsaved page content. This isolated view does not include the full Catalog header, footer, or custom fields.';
+$_['text_page_preview_notice'] = 'Private preview using the current Catalog shell and page template. Blog, Portfolio, Tools, and other module-owned areas show clearly labeled sample records; nothing is published or saved.';
+$_['text_page_preview_sample_content'] = 'Sample content for preview only';
+$_['text_page_preview_sample_item'] = 'Example item';
 $_['text_page_preview_untitled'] = 'Untitled page';
 $_['error_page_preview_permission'] = 'You do not have permission to preview CMS Pages.';
 $_['error_page_preview_method'] = 'Preview requires a POST request.';

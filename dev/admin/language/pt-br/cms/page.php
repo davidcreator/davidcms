@@ -169,7 +169,9 @@ $_['text_block_threejs_addScript'] = 'Editar thumb / adicionar script';
 // CMS Pages private draft preview.
 $_['text_page_preview_button'] = 'Abrir prévia';
 $_['text_page_preview_title'] = 'Prévia privada da página';
-$_['text_page_preview_notice'] = 'Prévia privada do conteúdo ainda não salvo. Esta visualização isolada não inclui o cabeçalho, rodapé ou campos personalizados completos do Catalog.';
+$_['text_page_preview_notice'] = 'Prévia privada com o shell e o template atuais do Catalog. Áreas pertencentes ao Blog, Portfolio, Tools e outros módulos exibem registros de exemplo identificados; nada é publicado ou salvo.';
+$_['text_page_preview_sample_content'] = 'Conteúdo de exemplo apenas para a prévia';
+$_['text_page_preview_sample_item'] = 'Item de exemplo';
 $_['text_page_preview_untitled'] = 'Página sem título';
 $_['error_page_preview_permission'] = 'Você não tem permissão para visualizar Páginas do CMS.';
 $_['error_page_preview_method'] = 'A prévia exige uma requisição POST.';
