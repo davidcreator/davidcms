@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="{{ preview_language|e('html_attr') }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>{{ heading_title|e }} — {{ text_catalog_preview_button|e }}</title>
+  <link rel="stylesheet" href="{{ common_css_url|e('html_attr') }}">
+  <link rel="stylesheet" href="{{ blocks_css_url|e('html_attr') }}">
+</head>
+<body class="rms-blog-post">
+  <main class="site-main" style="padding:40px 24px;max-width:860px;margin:0 auto;">
+    <p>{{ text_catalog_preview_notice }}</p>
+    <div class="alert alert-danger" role="alert">{{ preview_error }}</div>
+  </main>
+</body>
+</html>

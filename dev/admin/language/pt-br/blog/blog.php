@@ -51,6 +51,15 @@ $_['button_save']             = 'Salvar';
 $_['button_cancel']           = 'Cancelar';
 $_['button_import_wp']        = 'Importar do WordPress'; // F7-03 (ADR 0044)
 
+// Private Catalog preview for Blog block drafts.
+$_['text_catalog_preview_untitled'] = 'Post sem título';
+$_['text_catalog_preview_button'] = 'Pré-visualizar no Catalog';
+$_['text_catalog_preview_error'] = 'O editor não está pronto ou o documento é inválido. Revise o conteúdo e tente novamente.';
+$_['text_catalog_preview_notice'] = 'Prévia privada deste post não salvo do Blog. Nada foi salvo ou publicado.';
+$_['text_published_on'] = 'Publicado em';
+$_['button_back'] = 'Voltar ao Blog';
+$_['text_content_review'] = 'Este conteúdo está em revisão editorial.';
+
 // Error
 $_['error_title']             = 'Título (en-us) é obrigatório e deve ter até 255 caracteres.';
 $_['error_date_published']    = 'Data de publicação: formato esperado AAAA-MM-DD HH:MM (opcional).';

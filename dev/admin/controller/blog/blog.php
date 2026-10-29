@@ -257,6 +257,278 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->response->setOutput($this->load->view('blog/blog_form', $data));
     }
 
+    /** Preview the unsaved Blog BDRE document in the Catalog post template. */
+    public function preview(): void {
+        $this->load->language('blog/blog');
+        $this->blogPreviewHeaders();
+        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST') {
+            $this->blogPreviewError($this->language->get('error_media_method'));
+            return;
+        }
+        if (!$this->user->hasPermission('modify', 'blog/blog')) {
+            $this->blogPreviewError($this->language->get('error_permission'));
+            return;
+        }
+        if (!$this->csrfValid()) {
+            $this->blogPreviewError($this->language->get('error_csrf'));
+            return;
+        }
+
+        $this->load->model('blog/blog');
+        $this->load->model('blog/media');
+        if (!$this->model_blog_blog->blogBlockContentTableExists()) {
+            $this->blogPreviewError($this->language->get('error_block_schema_unavailable'));
+            return;
+        }
+        $postId = filter_var($this->request->post['preview_post_id'] ?? '0', FILTER_VALIDATE_INT);
+        $languageId = filter_var($this->request->post['preview_language_id'] ?? '0', FILTER_VALIDATE_INT);
+        if ($postId === false || $postId < 0 || $languageId === false || $languageId < 1 ||
+            ($postId > 0 && !$this->model_blog_blog->getPost((int)$postId))) {
+            $this->blogPreviewError($this->language->get('error_block_document_invalid'));
+            return;
+        }
+        $languages = [];
+        foreach ($this->model_blog_blog->getLanguages() as $row) {
+            $row = (array)$row;
+            $languages[(int)($row['language_id'] ?? 0)] = $row;
+        }
+        if (!isset($languages[(int)$languageId])) {
+            $this->blogPreviewError($this->language->get('error_block_document_invalid'));
+            return;
+        }
+        $languageCode = (string)($languages[(int)$languageId]['code'] ?? 'en-us');
+        if (!preg_match('/^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/i', $languageCode)) $languageCode = 'en-us';
+        foreach (['blog/blog','common/header','common/footer','common/home'] as $route) $this->load->language($route, $languageCode);
+        $texts = $this->language->all();
+
+        $json = $this->request->post['preview_document'] ?? null;
+        if (($this->request->post['preview_editor_ready'] ?? '') !== '1' || !is_string($json) || strlen($json) > 4194304) {
+            $this->blogPreviewError($this->language->get('error_block_document_invalid'));
+            return;
+        }
+        $validator = new \Reamur\System\Library\Blog\BlockDocument();
+        $decoded = $validator->deserializeDocument($json);
+        if (empty($decoded['valid']) || !$this->blockMediaAvailable((array)$decoded['document']['blocks'])) {
+            $this->blogPreviewError($this->language->get('error_block_document_invalid'));
+            return;
+        }
+        $document = (array)$decoded['document'];
+        $document['blocks'] = $this->stripBlogPreviewScripts((array)$document['blocks']);
+        $canonical = $validator->serializeDocument($document);
+        $downloadRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/download/blog';
+        $audioRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/audio/blog';
+        $videoRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/video/blog';
+        $base = $this->catalogUrl();
+        $assetBase = $this->catalogAssetUrl();
+        $renderer = new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot, $audioRoot, $videoRoot);
+        $rendered = $renderer->renderJson($canonical, (int)$document['format_version'], $assetBase);
+        if (empty($rendered['valid'])) {
+            $this->blogPreviewError($this->language->get('error_block_document_invalid'));
+            return;
+        }
+        $cmsSlot = $this->blogPreviewCmsSlot((int)$languageId, $assetBase, $downloadRoot, $audioRoot, $videoRoot);
+
+        $title = mb_substr($this->postScalar('preview_title'), 0, 255);
+        if ($title === '') $title = $this->language->get('text_catalog_preview_untitled');
+        $metaTitle = mb_substr($this->postScalar('preview_meta_title'), 0, 255);
+        $metaDescription = mb_substr($this->postScalar('preview_meta_description'), 0, 255);
+        $image = $this->catalogImageUrl($this->postScalar('preview_image'));
+        $timestamp = strtotime($this->postScalar('preview_date_published'));
+        $date = $timestamp !== false ? date('Y-m-d', $timestamp) : '';
+
+        $this->load->model('setting/setting');
+        $settings = $this->model_setting_setting->getSettings();
+        $this->load->model('design/theme');
+        $publishedTheme = [];
+        $themeRows = $this->model_design_theme->getThemes();
+        usort($themeRows, static fn(array $a, array $b): int => (int)($b['theme_id'] ?? 0) <=> (int)($a['theme_id'] ?? 0));
+        foreach ($themeRows as $row) {
+            $row = (array)$row;
+            if ((int)($row['status'] ?? 0) !== 1) continue;
+            $config = (string)($row['published_config'] ?? '');
+            if ($config === '') $config = (string)($row['config'] ?? '{}');
+            $parsed = json_decode($config, true);
+            if (is_array($parsed)) $publishedTheme = $parsed;
+            break;
+        }
+        $primary = (string)($publishedTheme['primary'] ?? '#6d28d9');
+        $surface = (string)($publishedTheme['surface'] ?? '#ffffff');
+        if (!preg_match('/^#[a-fA-F0-9]{6}$/D', $primary)) $primary = '#6d28d9';
+        if (!preg_match('/^#[a-fA-F0-9]{6}$/D', $surface)) $surface = '#ffffff';
+        $themeTemplates = is_array($publishedTheme['templates'] ?? null) ? $publishedTheme['templates'] : [];
+        $requiresThreeJs = !empty($rendered['requires_threejs']) || !empty($cmsSlot['requires_threejs']);
+        $styles = [
+            $assetBase . 'view/css/blog-blocks.css'=>'stylesheet',
+            $assetBase . 'view/css/common.css'=>'stylesheet',
+            $assetBase . 'view/css/theme.css'=>'stylesheet',
+        ];
+        $scripts = [];
+        if ($requiresThreeJs) {
+            $styles[$assetBase . 'view/css/threejs-thumb.css?v=20261026c']='stylesheet';
+            $src = $assetBase . $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=20261026c';
+            $scripts[$src] = $src;
+        }
+        $languageLinks = [];
+        foreach ($languages as $row) {
+            $code = strtolower((string)($row['code'] ?? ''));
+            if ($code === '') continue;
+            $key = 'text_lang_' . str_replace('-', '_', $code);
+            $languageLinks[] = ['code'=>$code,'name'=>(string)($texts[$key] ?? $row['name'] ?? $code),'active'=>$code === $languageCode,'href'=>'#preview-language'];
+        }
+        $publicTitle = $metaTitle !== '' ? $metaTitle : $title;
+        $publicDescription = $metaDescription !== '' ? $metaDescription : (string)($settings['config_meta_description'] ?? '');
+        $text = static fn(string $key, string $fallback = ''): string => (string)($texts[$key] ?? $fallback);
+        $header = [
+            'locale'=>$languageCode, 'title'=>$publicTitle, 'description'=>$publicDescription, 'canonical'=>'',
+            'sitemap_href'=>'#preview-sitemap',
+            'og'=>['type'=>'article','site_name'=>(string)($settings['config_name'] ?? ''),'title'=>$publicTitle,'description'=>$publicDescription,'url'=>'','locale'=>str_replace('-', '_', $languageCode)],
+            'styles'=>$styles,'scripts'=>$scripts,'has_3d'=>false,'three_runtime_base'=>'',
+            'home'=>'#preview-home','body_class'=>'rms-blog-post','theme_primary'=>$primary,'theme_surface'=>$surface,'private_preview'=>true,
+            'text_brand'=>(string)($texts['text_brand'] ?? $settings['config_name'] ?? ''),
+            'text_nav_home'=>$text('text_nav_home','Home'),'text_nav_about'=>$text('text_nav_about','About'),
+            'text_nav_blog'=>$text('text_nav_blog','Blog'),'text_nav_portfolio'=>$text('text_nav_portfolio','Portfolio'),
+            'text_nav_contact'=>$text('text_nav_contact','Contact'),'text_nav_quote'=>$text('text_nav_quote','Request a quote'),
+            'nav_about'=>'#preview-about','nav_blog'=>'#preview-blog','nav_portfolio'=>'#preview-portfolio','nav_contact'=>'#preview-contact','nav_quote'=>'#preview-quote',
+            'text_languages'=>$text('text_languages','Languages'),'languages'=>$languageLinks,
+        ];
+        $copyrightKey = 'config_copyright_' . $languageCode;
+        $copyright = array_key_exists($copyrightKey, $settings) ? (string)$settings[$copyrightKey] : (string)($texts['text_copyright'] ?? '');
+        $socials = [];
+        foreach (['facebook','instagram','pinterest','x','google_business','redbubble'] as $network) {
+            if (($settings['config_social_' . $network . '_href'] ?? $texts['text_social_' . $network . '_href'] ?? '') !== '') {
+                $socials[] = ['name'=>(string)($texts['text_social_' . $network] ?? $network),'href'=>'#preview-social'];
+            }
+        }
+        $legal = [];
+        try {
+            $this->load->model('cms/page');
+            foreach ($this->model_cms_page->getPublicLegalPages((int)$languageId) as $legalPage) {
+                $legalPage = (array)$legalPage;
+                if ((int)($legalPage['page_id'] ?? 0) > 0) $legal[] = ['name'=>(string)($legalPage['title'] ?? ''),'href'=>'#preview-legal'];
+            }
+        } catch (\Throwable $exception) { $legal = []; }
+        $footer = [
+            'text_powered'=>sprintf($text('text_powered',''), defined('REAMUR_VERSION') ? REAMUR_VERSION : ''),
+            'text_copyright'=>sprintf($copyright, date('Y')),'text_legal'=>$text('text_legal',''),'legal'=>$legal,'socials'=>$socials,
+        ];
+        $pageData = ['heading_title'=>$title,'preview_notice'=>$this->language->get('text_catalog_preview_notice')];
+        $routeData = [
+            'heading_title'=>$title,'back_blog'=>'#preview-blog','button_back'=>$this->language->get('button_back'),
+            'text_published_on'=>$this->language->get('text_published_on'),'text_content_review'=>$this->language->get('text_content_review'),
+            'cms_page_sections'=>$cmsSlot['sections'],'cms_page_content'=>$cmsSlot['html'],
+            'post'=>['post_id'=>(int)$postId,'title'=>$title,'description'=>'','content_mode'=>'blocks','content_valid'=>true,
+                'block_html'=>(string)$rendered['html'],'image'=>$image,'date'=>$date],
+        ];
+        try {
+            $html = $this->template->renderCatalogPagePreview($pageData, $header, $footer, $themeTemplates, 'blog/blog_info', $routeData);
+        } catch (\Throwable $exception) {
+            $this->blogPreviewError($this->language->get('error_block_document_invalid'));
+            return;
+        }
+        $this->response->setOutput($html);
+    }
+
+    /** Reads the active Blog-post system-page layout only to reproduce the public Catalog shell. */
+    private function blogPreviewCmsSlot(int $languageId, string $assetBase, string $downloadRoot, string $audioRoot, string $videoRoot): array {
+        $defaults = $this->cms_page_layout->defaults('blog_post', false);
+        $result = ['sections'=>$defaults,'html'=>'','requires_threejs'=>false];
+        try {
+            $this->load->model('cms/page');
+            $pageId = 0;
+            foreach ($this->model_cms_page->getPages() as $row) {
+                $row = (array)$row;
+                if ((string)($row['system_key'] ?? '') === 'blog_post' && (int)($row['status'] ?? 0) === 1) {
+                    $pageId = (int)($row['page_id'] ?? 0); break;
+                }
+            }
+            if ($pageId < 1) return $result;
+            $descriptions = $this->model_cms_page->getPageDescriptions($pageId);
+            $description = trim((string)($descriptions[$languageId]['description'] ?? ''));
+            if ($description === '') $description = trim((string)($descriptions[1]['description'] ?? ''));
+            if ($description === '') return $result;
+            $layout = $this->cms_page_layout->decode($description, 'blog_post');
+            if ($layout !== null) {
+                $result['sections'] = $layout['sections'];
+                $validator = new \Reamur\System\Library\Blog\BlockDocument(true);
+                $decoded = $validator->deserializeDocument($validator->serializeDocument((array)$layout['content']));
+                if (empty($decoded['valid'])) return $result;
+                $doc = (array)$decoded['document'];
+                $doc['blocks'] = $this->stripBlogPreviewScripts((array)$doc['blocks']);
+                $html = (new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot,$audioRoot,$videoRoot))
+                    ->renderJson($validator->serializeDocument($doc), 2, $assetBase);
+                if (!empty($html['valid'])) {
+                    $result['html'] = (string)$html['html'];
+                    $result['requires_threejs'] = !empty($html['requires_threejs']);
+                }
+                return $result;
+            }
+            if (str_starts_with($description, \Reamur\System\Library\Cms\PageLayout::PREFIX)) return $result;
+            $prefix = 'REAMURCMS_BDRE_JSON_V2:';
+            if (str_starts_with($description, $prefix)) {
+                $validator = new \Reamur\System\Library\Blog\BlockDocument(true);
+                $decoded = $validator->deserializeDocument(substr($description, strlen($prefix)));
+                if (empty($decoded['valid'])) return $result;
+                $doc = (array)$decoded['document'];
+                $doc['blocks'] = $this->stripBlogPreviewScripts((array)$doc['blocks']);
+                $html = (new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot,$audioRoot,$videoRoot))
+                    ->renderJson($validator->serializeDocument($doc), (int)$doc['format_version'], $assetBase);
+                if (!empty($html['valid'])) {
+                    $result['sections'] = $this->cms_page_layout->defaults('blog_post', !empty($doc['blocks']));
+                    $result['html'] = (string)$html['html'];
+                    $result['requires_threejs'] = !empty($html['requires_threejs']);
+                }
+                return $result;
+            }
+            // The active legacy HTML slot is already public; this is read-only reuse, not Blog storage.
+            $result['sections'] = $this->cms_page_layout->defaults('blog_post', true);
+            $result['html'] = $description;
+        } catch (\Throwable $exception) {
+            return $result;
+        }
+        return $result;
+    }
+
+    /** Private previews use the approved configurable scene but never execute arbitrary scene JavaScript. */
+    private function stripBlogPreviewScripts(array $nodes): array {
+        foreach ($nodes as &$node) {
+            if (!is_array($node)) continue;
+            if (($node['type'] ?? '') === 'core/threejs_thumb' && is_array($node['attributes'] ?? null)) $node['attributes']['custom_js'] = '';
+            if (is_array($node['children'] ?? null)) $node['children'] = $this->stripBlogPreviewScripts($node['children']);
+        }
+        unset($node);
+        return $nodes;
+    }
+
+    private function blogPreviewHeaders(): void {
+        $origin = $this->blogPreviewAssetOrigin($this->catalogAssetUrl());
+        $this->response->addHeader('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
+        $this->response->addHeader('Pragma: no-cache');
+        $this->response->addHeader('X-Robots-Tag: noindex, nofollow, noarchive');
+        $this->response->addHeader('X-Content-Type-Options: nosniff');
+        $this->response->addHeader('X-Frame-Options: DENY');
+        $this->response->addHeader('Referrer-Policy: no-referrer');
+        $this->response->addHeader("Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; img-src 'self' data: https: {$origin}; style-src 'self' 'unsafe-inline' {$origin}; script-src 'self' {$origin}; font-src 'self' data: {$origin}; media-src 'self' data: {$origin}; connect-src 'self' {$origin}; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com");
+    }
+
+    private function blogPreviewAssetOrigin(string $assetBase): string {
+        $parts = parse_url($assetBase);
+        if (!is_array($parts) || !in_array(strtolower((string)($parts['scheme'] ?? '')), ['http','https'], true) || empty($parts['host'])) return "'self'";
+        return strtolower((string)$parts['scheme']) . '://' . strtolower((string)$parts['host']) . (isset($parts['port']) ? ':' . (int)$parts['port'] : '');
+    }
+
+    private function blogPreviewError(string $message): void {
+        $assetBase = $this->catalogAssetUrl();
+        $language = $this->postScalar('preview_language') ?: 'en-us';
+        if (!preg_match('/^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/i', $language)) $language = 'en-us';
+        $this->response->setOutput($this->load->view('blog/blog_preview_error', [
+            'preview_language'=>$language,'heading_title'=>$this->language->get('heading_title'),
+            'text_catalog_preview_button'=>$this->language->get('text_catalog_preview_button'),
+            'text_catalog_preview_notice'=>$this->language->get('text_catalog_preview_notice'),
+            'common_css_url'=>$assetBase . 'view/css/common.css','blocks_css_url'=>$assetBase . 'view/css/blog-blocks.css',
+            'preview_error'=>$message,
+        ]));
+    }
+
     /** POST exclusivo: ACL + CSRF antes de excluir. */
     public function delete(string $post_id = '0'): void {
         $post_id = (int)$post_id;
@@ -560,7 +832,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             'text_languages_note', 'entry_title', 'entry_description',
             'entry_meta_title', 'entry_meta_description', 'entry_keyword',
             'entry_image', 'entry_date_published', 'entry_status', 'help_image', 'help_date_published',
-            'button_save', 'button_cancel',
+            'button_save', 'button_cancel', 'text_catalog_preview_button', 'text_catalog_preview_error',
             // F8-02: publish sidebar + tabs + contadores + preview de SEO/capa
             'text_publish_card', 'text_published', 'text_draft', 'text_content_card',
             'text_meta_group', 'text_seo_url_preview', 'text_cover_preview',
@@ -578,6 +850,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             'button_media_library', 'button_media_upload', 'button_media_create_folder',
             'button_media_use_url', 'button_media_select', 'button_media_delete',
             'button_media_back', 'button_media_previous', 'button_media_next', 'button_media_close',
+            'text_catalog_preview_notice', 'text_published_on', 'button_back', 'text_content_review',
             'text_block_editor_intro', 'text_block_conversion_note', 'text_block_review_required', 'text_block_invalid', 'text_block_saved',
             'error_block_schema_unavailable', 'error_block_document_invalid', 'error_block_legacy_review', 'error_block_mode_invalid', 'error_block_editor_unavailable',
             'text_inline_bold', 'text_inline_italic', 'text_inline_underline', 'text_inline_strike', 'text_inline_code', 'text_inline_link',
@@ -683,6 +956,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['catalog_base'] = $this->catalogAssetUrl();
         $data['can_modify'] = $this->user->hasPermission('modify', 'blog/blog');
         $data['block_editor_available'] = $data['can_modify'] && $this->model_blog_blog->blogBlockContentTableExists();
+        $data['preview_url'] = $data['block_editor_available'] ? $this->url->link('blog/blog.preview') : '';
         if ($data['block_editor_available']) {
             $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-5';
             $assetBase = rtrim((string)$this->config->get('site_url'), '/') . '/view/';
@@ -695,6 +969,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             $this->document->addScript($assetBase . 'js/blog-block-editor-init.js?v=' . $assetVersion);
             $this->document->addScript($assetBase . 'js/blog-file-media.js?v=' . $assetVersion);
             $this->document->addScript($assetBase . 'js/blog-audio-media.js?v=' . $assetVersion);
+            $this->document->addScript($assetBase . 'js/blog-catalog-preview.js?v=' . $assetVersion);
         }
         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
         $data['media_config'] = [

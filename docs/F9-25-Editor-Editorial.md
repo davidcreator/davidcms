@@ -31,3 +31,9 @@ O binding de formulário mantém estado local dirty ao editar campos/blocks e re
 ## Verificações e limites
 
 Apenas parsing de JavaScript e JSON/checker estático podem ser realizados. PHP/SQL/browser/app/E2E runtime são proibidos nesta etapa. Os fixtures são sintéticos e não demonstram a validação real do renderer. O trabalho de acessibilidade e QA browser fica pendente para a fase F9-26/F9-27 sob autorização.
+
+## Addendum 2026-10-29 — prévia privada do Blog
+
+A seção histórica acima que marcava a prévia autenticada como não implementada é supersedida para o fluxo de Blog por `BDREditor-Blog-Catalog-Preview.md`, preparado localmente contra a HEAD `5838685e4a96d6089d27c0d7e024b7c11b13c434` após aprovação explícita do escopo. O preview usa POST, ACL/CSRF de `blog/blog`, validação/renderização sem persistência e leitura somente da estrutura pública ativa `blog_post`; Pages e Blog continuam com CRUD, modelos e permissões separados. O `custom_js` de miniaturas Three.js não é executado na prévia.
+
+Isso não declara a F9-25 concluída: persistência e CRUD de padrões próprios continuam fora deste incremento. Não houve migration, commit, push, deploy ou execução PHP/runtime.

@@ -51,6 +51,15 @@ $_['button_save']             = 'Save';
 $_['button_cancel']           = 'Cancel';
 $_['button_import_wp']        = 'Import from WordPress'; // F7-03 (ADR 0044)
 
+// Private Catalog preview for Blog block drafts.
+$_['text_catalog_preview_untitled'] = 'Untitled post';
+$_['text_catalog_preview_button'] = 'Preview in Catalog';
+$_['text_catalog_preview_error'] = 'The editor is not ready or the document is invalid. Check the content and try again.';
+$_['text_catalog_preview_notice'] = 'Private preview of this unsaved Blog post. Nothing has been saved or published.';
+$_['text_published_on'] = 'Published on';
+$_['button_back'] = 'Back to Blog';
+$_['text_content_review'] = 'This content is under editorial review.';
+
 // Error
 $_['error_title']             = 'Title (en-us) is required and must be up to 255 characters.';
 $_['error_date_published']    = 'Publish date: expected format YYYY-MM-DD HH:MM (optional).';
