@@ -29,7 +29,7 @@
 | `language` | `localization/` | catalog/admin/install |
 | `user_group`, `user` | `user/` | admin, api |
 | `customer_group`, `customer` | `customer/` | catalog `account/`, sale |
-| `page`, `page_description` | `cms/` | catalog `information/` |
+| `page`, `page_description`, `cms_block_pattern` | `cms/` | catalog `information/`; biblioteca BDRE privada por administrador |
 | `custom_field_group*`, `custom_field*`, `custom_field_value` | `custom_field/definition`, F9 | CMS admin + catalog `cms/page` (somente visibility=public) |
 | `blog_post`, `blog_post_description`, `blog_post_content` | `blog/blog` | admin Blog + catalog Blog; conteúdo estruturado F9-12 |
 | `category`, `category_description` | `catalog/` | catalog `product/` (portfólio) |
@@ -254,3 +254,21 @@ Uso: bloco INSERT do dump legado é colado pelo usuário nesta tabela; `upgrade_
 - `rms_design_theme`: catálogo de temas; `config`/`draft_config` contém o rascunho e `published_config` preserva a última publicação consumida pelo Catalog.
 - `rms_design_theme_revision`: snapshots para auditoria e restauração sob ACL/CSRF.
 - Templates são armazenados nos payloads versionados e aceitam apenas chaves fixas; não há caminhos arbitrários nem arquivos editáveis.
+
+
+### `cms_block_pattern` (F9-25 — padrões pessoais BDRE)
+
+Uma linha representa um padrão reutilizável pertencente a exatamente um administrador. Pages e Blog usam a mesma biblioteca privada e endpoints compartilhados, mas cada operação exige a permissão de edição do contexto ativo; conteúdo, CRUD e ACL de Pages/Blog não são mesclados. O idioma de origem é metadata, sem tradução automática.
+
+| Coluna | Tipo | Regra |
+| --- | --- | --- |
+| `pattern_id` | `BIGINT AUTO_INCREMENT` | PK |
+| `owner_user_id` | `INT` | Dono; obtido exclusivamente da sessão autenticada, sem FK |
+| `name` | `VARCHAR(80)` | Obrigatório; único por proprietário |
+| `source_language` | `VARCHAR(8)` | Código do idioma de origem, sem alterar conteúdo |
+| `root_type` | `VARCHAR(64)` | Tipo validado da raiz; auxilia listagem e filtragem estrutural |
+| `format_version` | `SMALLINT` | Versão BDRE validada |
+| `content_json` | `MEDIUMTEXT` | Documento BDRE canônico, máximo 4 MiB; rejeita `custom_js` |
+| `date_added`, `date_modified` | `DATETIME` | Datas de auditoria |
+
+**Índices:** `PRIMARY(pattern_id)`, `UNIQUE(owner_user_id,name)`, `KEY(owner_user_id,date_modified)`, `KEY(owner_user_id,root_type)`. Limite de aplicação: 50 padrões por administrador. Exclusão de usuário remove linhas pertencentes na camada Model, com verificação protegida quando a tabela ainda não existe. Não declarar foreign keys; respeitar o padrão global de integridade manual.

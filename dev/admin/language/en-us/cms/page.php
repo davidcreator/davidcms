@@ -231,3 +231,19 @@ $_['text_page_media_empty_download'] = 'No downloadable files found.';
 $_['text_page_media_upload_hint_audio'] = 'MP3, OGG, WAV · up to 20 MiB';
 $_['text_page_media_upload_hint_video'] = 'MP4, WebM, OGV · up to 100 MiB';
 $_['text_page_media_upload_hint_download'] = 'PDF, DOCX, XLSX, PPTX, ODT, ODS, CSV, TXT · up to 2 MiB';
+
+// F9-25 — BDRE personal pattern library
+$_['text_block_saved_patterns'] = 'Saved patterns';
+$_['text_block_save_pattern'] = 'Save as pattern';
+$_['text_block_rename_pattern'] = 'Rename';
+$_['text_block_delete_pattern'] = 'Delete';
+$_['text_block_pattern_name_prompt'] = 'Pattern name';
+$_['text_block_pattern_rename_prompt'] = 'New pattern name';
+$_['text_block_pattern_delete_confirm'] = 'Delete pattern';
+$_['text_block_pattern_saved'] = 'Pattern saved.';
+$_['text_block_pattern_renamed'] = 'Pattern renamed.';
+$_['text_block_pattern_deleted'] = 'Pattern deleted.';
+$_['text_block_pattern_error'] = 'Could not update the pattern.';
+$_['text_block_pattern_incompatible'] = 'This pattern is not compatible with this editor location.';
+$_['text_block_pattern_invalid'] = 'This block cannot be saved as a standalone pattern.';
+$_['text_block_pattern_custom_js_rejected'] = 'Patterns cannot contain JavaScript.';

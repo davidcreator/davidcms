@@ -418,6 +418,9 @@
     constructor(root, options) {
       this.root = root;
       this.options = options || {};
+      this.patternConfig = this.options.patternConfig || {};
+      this.savedPatterns = [];
+      this.patternLoadError = false;
       this.allowPageMedia = !!(root.dataset && root.dataset.pageContext);
       this.instance = ++instanceSequence;
       this.idCounter = 0;
@@ -463,6 +466,7 @@
       this.root.setAttribute('data-preview', this.preview);
       this.bind();
       this.render();
+      this.loadSavedPatterns();
     }
 
     newId() { let candidate; do { this.idCounter += 1; candidate = 'rb' + this.instance + '-' + this.idCounter; } while (this.findPath && this.findPath(this.state ? this.state.blocks : [], candidate)); return candidate; }
@@ -626,6 +630,10 @@
       if (this.locked) return;
       if (name === 'insert') this.insert(button.dataset.type, button.dataset.count);
       else if (name === 'insert-pattern') this.insertPattern(button.dataset.pattern);
+      else if (name === 'insert-saved-pattern') this.insertSavedPattern(button.dataset.patternId);
+      else if (name === 'save-selected-pattern') this.saveSelectedPattern(button.dataset.nodeId);
+      else if (name === 'rename-saved-pattern') this.renameSavedPattern(button.dataset.patternId);
+      else if (name === 'delete-saved-pattern') this.deleteSavedPattern(button.dataset.patternId);
       else if (name === 'toggle-inserter') {
         const wasOpen = this.activePanel === 'elements';
         this.activePanel = wasOpen ? (this.fullscreen ? 'structure' : null) : 'elements'; this.inserterOpen = !wasOpen;
@@ -952,6 +960,23 @@
         });
         list.append(patterns);
       }
+      const allowedTypes = new Set(types.map((item) => item.type));
+      const saved = this.savedPatterns;
+      if (saved.length) {
+        const section = this.el('section','rb-inserter-category rb-saved-pattern-category');
+        section.append(this.el('h4','rb-inserter-category-title',this.strings.savedPatternsCategory || 'Padrões salvos'));
+        saved.forEach((item) => {
+          const row = this.el('div','rb-saved-pattern-row');
+          const insert = this.button(item.name,'insert-saved-pattern',{patternId:String(item.pattern_id)});
+          insert.classList.add('rb-inserter-option'); insert.dataset.searchText = item.name.toLocaleLowerCase(); insert.disabled = !allowedTypes.has(item.root_type); row.append(insert);
+          if (this.patternConfig.canModify) {
+            row.append(this.button(this.strings.renamePattern || 'Renomear','rename-saved-pattern',{patternId:String(item.pattern_id)}));
+            row.append(this.button(this.strings.deletePattern || 'Excluir','delete-saved-pattern',{patternId:String(item.pattern_id)}));
+          }
+          section.append(row);
+        });
+        list.append(section);
+      }
       const noResults = this.el('p', 'rb-inserter-empty rb-inserter-no-results', this.strings.noBlocks); noResults.setAttribute('role','status'); noResults.setAttribute('aria-live','polite'); noResults.hidden = true;
       menu.append(list, noResults);
       return menu;
@@ -1023,6 +1048,74 @@
       const location = this.insertionLocation(next.blocks, afterId);
       const node = this.createDefault(type, presetCount); location.target.splice(location.index, 0, node);
       this.finishInsert(next,node);
+    }
+
+    async patternRequest(url, values, method) {
+      if (!url) throw new Error('pattern_endpoint_missing');
+      const options = { method: method || (values ? 'POST' : 'GET'), credentials: 'same-origin', headers: { 'Accept':'application/json' } };
+      if (values) { options.headers['Content-Type'] = 'application/json'; options.body = JSON.stringify(values); }
+      const response = await fetch(url, options); const payload = await response.json();
+      if (!payload || payload.success !== true) throw new Error(payload && payload.error ? payload.error : 'pattern_request_failed');
+      return payload;
+    }
+
+    async loadSavedPatterns() {
+      if (!this.patternConfig.listUrl || !this.patternConfig.canRead) return;
+      try { const result = await this.patternRequest(this.patternConfig.listUrl); this.savedPatterns = Array.isArray(result.patterns) ? result.patterns : []; }
+      catch (_) { this.patternLoadError = true; }
+      if (this.root && this.root.isConnected) this.render();
+    }
+
+    containsCustomJs(node) {
+      if (node && node.attributes && Object.prototype.hasOwnProperty.call(node.attributes,'custom_js')) return true;
+      return !!(node && Array.isArray(node.children) && node.children.some((child) => this.containsCustomJs(child)));
+    }
+
+    async saveSelectedPattern(nodeId) {
+      const targetId = nodeId || this.selectedId;
+      const found = targetId && this.findPath(this.state.blocks, targetId);
+      if (!found || !this.patternConfig.saveUrl || !this.patternConfig.canModify) return;
+      if (this.containsCustomJs(found.node)) { this.announceStatus(this.strings.patternCustomJsRejected || 'Padrões não podem conter JavaScript.'); return; }
+      const name = global.prompt(this.strings.patternNamePrompt || 'Nome do padrão');
+      if (name === null || !name.trim()) return;
+      const document = { format_version:this.state.format_version, blocks:[CLONE(found.node)] };
+      const validation = validateDocument(document, this.allowPageMedia);
+      if (!validation.valid || utf8Length(JSON.stringify(document)) > 4194304) { this.announceStatus(this.strings.patternInvalid || this.strings.initialInvalid); return; }
+      try {
+        await this.patternRequest(this.patternConfig.saveUrl, {csrf_token:this.patternConfig.csrfToken || '', name:name.trim(), source_language:this.patternConfig.sourceLanguage || '', document_json:JSON.stringify(document)});
+        this.announceStatus(this.strings.patternSaved || 'Padrão salvo.'); await this.loadSavedPatterns();
+      } catch (error) { this.announceStatus(this.strings.patternError || 'Não foi possível salvar o padrão.'); }
+    }
+
+    async insertSavedPattern(patternId) {
+      const afterId = this.slashTrigger ? this.slashTrigger.nodeId : this.insertAfterId || this.selectedId;
+      const allowed = this.insertTypes(afterId).map((item) => item.type);
+      const url = this.patternConfig.getUrl + (this.patternConfig.getUrl && this.patternConfig.getUrl.includes('?') ? '&' : '?') + 'pattern_id=' + encodeURIComponent(patternId);
+      try {
+        const result = await this.patternRequest(url);
+        const document = JSON.parse(result.pattern.document_json);
+        const validation = validateDocument(document, this.allowPageMedia);
+        if (!validation.valid || !document.blocks || document.blocks.length !== 1 || !allowed.includes(document.blocks[0].type) || this.containsCustomJs(document.blocks[0])) throw new Error('pattern_incompatible');
+        const next = CLONE(this.state); this.prepareSlashTarget(next, afterId); const location = this.insertionLocation(next.blocks, afterId);
+        const node = cloneBlockWithNewIds(document.blocks[0], () => this.newId()); location.target.splice(location.index,0,node); this.finishInsert(next,node);
+      } catch (_) { this.announceStatus(this.strings.patternIncompatible || 'Este padrão não é compatível com este ponto do editor.'); }
+    }
+
+    async renameSavedPattern(patternId) {
+      const item = this.savedPatterns.find((pattern) => String(pattern.pattern_id) === String(patternId));
+      if (!item || !this.patternConfig.renameUrl) return;
+      const name = global.prompt(this.strings.patternRenamePrompt || 'Novo nome do padrão', item.name);
+      if (name === null || !name.trim()) return;
+      try { await this.patternRequest(this.patternConfig.renameUrl,{csrf_token:this.patternConfig.csrfToken || '',pattern_id:String(patternId),name:name.trim()}); this.announceStatus(this.strings.patternRenamed || 'Padrão renomeado.'); await this.loadSavedPatterns(); }
+      catch (_) { this.announceStatus(this.strings.patternError || 'Não foi possível atualizar o padrão.'); }
+    }
+
+    async deleteSavedPattern(patternId) {
+      const item = this.savedPatterns.find((pattern) => String(pattern.pattern_id) === String(patternId));
+      if (!item || !this.patternConfig.deleteUrl) return;
+      if (!global.confirm((this.strings.patternDeleteConfirm || 'Excluir o padrão') + ' “' + item.name + '”?')) return;
+      try { await this.patternRequest(this.patternConfig.deleteUrl,{csrf_token:this.patternConfig.csrfToken || '',pattern_id:String(patternId)}); this.announceStatus(this.strings.patternDeleted || 'Padrão excluído.'); await this.loadSavedPatterns(); }
+      catch (_) { this.announceStatus(this.strings.patternError || 'Não foi possível atualizar o padrão.'); }
     }
 
     insertPattern(pattern) {
@@ -1568,6 +1661,7 @@
       } else {
         const hint = this.el('span','rb-transform-hint',this.strings.transformHint); toolbar.append(hint);
       }
+      if (this.patternConfig.canModify) { const savePattern = this.button(this.strings.saveAsPattern || 'Salvar como padrão','save-selected-pattern',{nodeId:node.id}); savePattern.disabled = this.containsCustomJs(node); toolbar.append(savePattern); }
       const remove = this.button(this.strings.remove,'delete',{nodeId:node.id}); remove.disabled = fixedColumn || lastRequiredChild; toolbar.append(remove);
       const add = this.button('Adicionar', 'toggle-inserter', { afterId:node.id }); add.classList.add('rb-button-icon-only'); add.querySelector('.rb-button-label').classList.add('rb-sr-only'); add.setAttribute('aria-label', this.strings.addAfter); add.setAttribute('aria-expanded', String(this.inserterOpen && this.insertAfterId === node.id)); add.setAttribute('aria-controls','rb-inserter-' + this.instance); toolbar.append(add);
       return toolbar;

@@ -446,3 +446,20 @@ CREATE TABLE IF NOT EXISTS `rms_design_theme_revision` (
   `user_id` INT NOT NULL, `date_added` DATETIME NOT NULL,
   PRIMARY KEY (`revision_id`), KEY `theme_date` (`theme_id`,`revision_id`), KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- F9-25 — Biblioteca pessoal de padrões BDRE. Sem FKs: User::deleteUser faz a cascata manual.
+CREATE TABLE IF NOT EXISTS `rms_cms_block_pattern` (
+  `pattern_id` BIGINT NOT NULL AUTO_INCREMENT,
+  `owner_user_id` INT NOT NULL COMMENT 'Administrador proprietário; sempre obtido da sessão autenticada',
+  `name` VARCHAR(80) NOT NULL,
+  `source_language` VARCHAR(8) NOT NULL DEFAULT '' COMMENT 'Idioma de origem, somente metadado; não traduz automaticamente',
+  `root_type` VARCHAR(64) NOT NULL COMMENT 'Tipo do bloco raiz validado; ajuda a limitar listagem sem carregar JSON',
+  `format_version` SMALLINT NOT NULL,
+  `content_json` MEDIUMTEXT NOT NULL COMMENT 'Documento BDRE canônico, até 4 MiB; sem custom_js',
+  `date_added` DATETIME NOT NULL,
+  `date_modified` DATETIME NOT NULL,
+  PRIMARY KEY (`pattern_id`),
+  UNIQUE KEY `owner_name` (`owner_user_id`,`name`),
+  KEY `owner_modified` (`owner_user_id`,`date_modified`),
+  KEY `owner_root` (`owner_user_id`,`root_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

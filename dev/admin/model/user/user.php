@@ -80,6 +80,23 @@ class User extends \Reamur\System\Engine\Model {
     }
 
     public function deleteUser(int $user_id): void {
+        // F9-25: manual cascade (the schema intentionally has no foreign keys).
+        // Older installations may not have run the patterns migration yet.
+        if ($user_id > 0) {
+            $patternTable = $this->t('cms_block_pattern');
+            $exists = null;
+            try {
+                $exists = $this->db->query(
+                    "SELECT `TABLE_NAME` FROM `information_schema`.`TABLES` WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = '" . $this->db->escape($patternTable) . "' LIMIT 1"
+                );
+            } catch (\Throwable $exception) {
+                // Older DB users may not be able to inspect information_schema.
+            }
+            if ($exists instanceof \stdClass && !empty($exists->num_rows)) {
+                // If this delete fails, let the error propagate; do not remove the owner row first.
+                $this->db->query("DELETE FROM `" . $patternTable . "` WHERE `owner_user_id` = '" . $user_id . "'");
+            }
+        }
         $this->db->query("DELETE FROM `" . $this->t('user') . "` WHERE `user_id` = '" . $user_id . "'");
     }
 

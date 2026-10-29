@@ -215,3 +215,19 @@ $_['text_page_media_empty_download'] = 'No se encontraron archivos para descarga
 $_['text_page_media_upload_hint_audio'] = 'MP3, OGG, WAV · hasta 20 MiB';
 $_['text_page_media_upload_hint_video'] = 'MP4, WebM, OGV · hasta 100 MiB';
 $_['text_page_media_upload_hint_download'] = 'PDF, DOCX, XLSX, PPTX, ODT, ODS, CSV, TXT · hasta 2 MiB';
+
+// F9-25 — BDRE personal pattern library
+$_['text_block_saved_patterns'] = 'Patrones guardados';
+$_['text_block_save_pattern'] = 'Guardar como patrón';
+$_['text_block_rename_pattern'] = 'Renombrar';
+$_['text_block_delete_pattern'] = 'Eliminar';
+$_['text_block_pattern_name_prompt'] = 'Nombre del patrón';
+$_['text_block_pattern_rename_prompt'] = 'Nuevo nombre del patrón';
+$_['text_block_pattern_delete_confirm'] = 'Eliminar el patrón';
+$_['text_block_pattern_saved'] = 'Patrón guardado.';
+$_['text_block_pattern_renamed'] = 'Patrón renombrado.';
+$_['text_block_pattern_deleted'] = 'Patrón eliminado.';
+$_['text_block_pattern_error'] = 'No se pudo actualizar el patrón.';
+$_['text_block_pattern_incompatible'] = 'Este patrón no es compatible con este punto del editor.';
+$_['text_block_pattern_invalid'] = 'Este bloque no puede guardarse como patrón independiente.';
+$_['text_block_pattern_custom_js_rejected'] = 'Los patrones no pueden contener JavaScript.';

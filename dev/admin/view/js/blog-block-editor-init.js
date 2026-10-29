@@ -93,6 +93,8 @@
       var form = root.closest('form');
       var editorStrings = {};
       try { editorStrings = JSON.parse(root.dataset.editorStrings || '{}'); } catch (_) {}
+      var patternConfig = {};
+      try { patternConfig = JSON.parse(root.dataset.patternConfig || '{}'); } catch (_) {}
       var pageContext = null;
       try {
         var contextLabels = JSON.parse(root.dataset.pageContext || '');
@@ -111,6 +113,7 @@
         var editor = global.ReamurBlogBlockEditor.mount(root, {
           document: initial,
           strings: editorStrings,
+          patternConfig: patternConfig,
           workspaceContext: pageContext,
           connectedSave: true,
           mediaPickers: root.dataset.mediaPickers !== 'false',

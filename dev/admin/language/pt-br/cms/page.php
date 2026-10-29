@@ -215,3 +215,19 @@ $_['text_page_media_empty_download'] = 'Nenhum arquivo para download encontrado.
 $_['text_page_media_upload_hint_audio'] = 'MP3, OGG, WAV · até 20 MiB';
 $_['text_page_media_upload_hint_video'] = 'MP4, WebM, OGV · até 100 MiB';
 $_['text_page_media_upload_hint_download'] = 'PDF, DOCX, XLSX, PPTX, ODT, ODS, CSV, TXT · até 2 MiB';
+
+// F9-25 — BDRE personal pattern library
+$_['text_block_saved_patterns'] = 'Padrões salvos';
+$_['text_block_save_pattern'] = 'Salvar como padrão';
+$_['text_block_rename_pattern'] = 'Renomear';
+$_['text_block_delete_pattern'] = 'Excluir';
+$_['text_block_pattern_name_prompt'] = 'Nome do padrão';
+$_['text_block_pattern_rename_prompt'] = 'Novo nome do padrão';
+$_['text_block_pattern_delete_confirm'] = 'Excluir o padrão';
+$_['text_block_pattern_saved'] = 'Padrão salvo.';
+$_['text_block_pattern_renamed'] = 'Padrão renomeado.';
+$_['text_block_pattern_deleted'] = 'Padrão excluído.';
+$_['text_block_pattern_error'] = 'Não foi possível atualizar o padrão.';
+$_['text_block_pattern_incompatible'] = 'Este padrão não é compatível com este ponto do editor.';
+$_['text_block_pattern_invalid'] = 'Este bloco não pode ser salvo como padrão independente.';
+$_['text_block_pattern_custom_js_rejected'] = 'Padrões não podem conter JavaScript.';

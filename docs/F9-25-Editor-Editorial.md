@@ -1,8 +1,8 @@
 # Fase 9 · Tarefa 25 — Padrões, templates e fluxo editorial
 
-**Status do pacote:** incremento local parcial, com proposta pendente para persistência/preview autenticado. Não declarar a F9-25 completa. Nenhuma alteração remota ou de banco.
+**Status deste pacote:** incremento parcial de implementação local, sujeito a revisão/integração e validação no ambiente do projeto; não declara a F9-25 completa. Nenhuma alteração remota, migration executada ou escrita em banco.
 
-**HEAD `main` verificado:** `4bb1b7c7ce8b23172f56241d5209ffdc6760c5c5` (commit F9-24 de 2026-10-25, filho de `af3421cc1b3bd4636d8bb44d6d3d4e83e0fb5eb9`). Os arquivos pontuais copiados para revisão foram comparados por Git blob SHA com a árvore desse commit; sem clone integral.
+**HEAD de base verificada:** `a6cb064b04aa1d0ece686168cef50a49e99b49a9` (commit confirmado em 2026-10-29). Fontes pontuais foram consultadas para esta alteração; sem clone integral.
 
 ## Escopo oficial F9-25
 
@@ -37,3 +37,14 @@ Apenas parsing de JavaScript e JSON/checker estático podem ser realizados. PHP/
 A seção histórica acima que marcava a prévia autenticada como não implementada é supersedida para o fluxo de Blog por `BDREditor-Blog-Catalog-Preview.md`, preparado localmente contra a HEAD `5838685e4a96d6089d27c0d7e024b7c11b13c434` após aprovação explícita do escopo. O preview usa POST, ACL/CSRF de `blog/blog`, validação/renderização sem persistência e leitura somente da estrutura pública ativa `blog_post`; Pages e Blog continuam com CRUD, modelos e permissões separados. O `custom_js` de miniaturas Three.js não é executado na prévia.
 
 Isso não declara a F9-25 concluída: persistência e CRUD de padrões próprios continuam fora deste incremento. Não houve migration, commit, push, deploy ou execução PHP/runtime.
+
+
+## Addendum 2026-10-29 — persistência privada de padrões BDRE (implementação local)
+
+O plano de persistência foi aprovado pelo usuário. Esta entrega local implementa a biblioteca pessoal no controller/model `cms/block_pattern`, aplicável separadamente aos editores de Pages e Blog. Os fluxos de conteúdo e seus CRUDs continuam independentes. A lista retorna metadados; o JSON só é carregado sob demanda. Cada endpoint contextualizado (`*Pages`/`*Blog`) exige `access cms/block_pattern` e `modify cms/page` ou `modify blog/blog`, respectivamente; mutações exigem adicionalmente `modify cms/block_pattern`. O dono nunca vem do cliente.
+
+A validação usa `BlockDocument` no contexto de destino e exige subárvore única independente, permite uso em qualquer idioma e registra o idioma de origem sem tradução. IDs são regenerados ao inserir. `custom_js` é rejeitado; nenhum HTML/Twig/JS livre é persistido. Limites: 50 por administrador e 4 MiB por documento. Migration idempotente, rollback não destrutivo, ambos schemas, seed Administrator, cascade manual de usuário e dicionário de dados foram atualizados. Grupos personalizados não recebem grant automaticamente.
+
+**Estado de operação:** migration criada em `dev/install/sql/upgrade_f9_25_bdreditor_patterns.sql`, mas não executada. Nenhuma escrita em GitHub, push, deploy ou staging. A prévia privada do Blog e a prévia de Pages publicadas anteriormente não foram refeitas.
+
+**Plano/validação documentados para mudança multi-arquivo:** alteração limitada a API/model, JS compartilhado do BDRE, init, templates/config dos dois contextos, strings, schemas/seed/migration/rollback e documentação. Revisão manual de ACL/owner/context, validação canônica, limite/tamanho, cascata sem FK, e paths por contexto. Não há teste PHP/runtime disponível nesta etapa; `php -l` não foi executado se PHP continuar ausente. Não houve bateria de checker/testes nem chamadas à aplicação/banco.

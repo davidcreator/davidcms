@@ -404,3 +404,8 @@ body.rb-bdre-fullscreen-open{overflow:hidden!important}
 .rb-page-context-save-hint{color:#69758a;font-size:.68rem}
 @media(max-width:700px){.rb-editor.is-fullscreen .rb-page-context{align-items:flex-start;flex-direction:column;gap:.55rem}.rb-page-context-details{width:100%;gap:1.25rem}.rb-page-context-actions{width:100%;justify-content:space-between;align-items:flex-end}.rb-page-context-status{align-items:flex-start;text-align:left}.rb-page-context-value{max-width:78vw}}
 
+
+/* F9-25 personal saved patterns */
+.rb-saved-pattern-row{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:.35rem 0}
+.rb-saved-pattern-row .rb-inserter-option{flex:1 1 12rem;text-align:left}
+.rb-saved-pattern-row button:not(.rb-inserter-option){font-size:.8em;padding:.35rem .55rem}

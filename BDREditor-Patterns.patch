@@ -1,0 +1,961 @@
+--- a/dev/admin/controller/blog/blog.php
++++ b/dev/admin/controller/blog/blog.php
+@@ -872,10 +872,21 @@
+             'text_block_mobile_full', 'text_block_mobile_large', 'text_block_mobile_medium',
+             'text_block_video_preview', 'text_block_video_preview_hint', 'text_block_media_placeholder',
+             'text_block_pattern_category', 'text_block_pattern_two_columns', 'text_block_pattern_quote_cta', 'text_block_pattern_section_intro',
+-            'text_block_pattern_cover_hero', 'text_block_pattern_hint', 'text_block_save_state_saved', 'text_block_save_state_unsaved', 'text_block_save_state_saving',
++            'text_block_pattern_cover_hero', 'text_block_pattern_hint', 'text_block_saved_patterns', 'text_block_save_pattern', 'text_block_rename_pattern', 'text_block_delete_pattern', 'text_block_pattern_name_prompt', 'text_block_pattern_rename_prompt', 'text_block_pattern_delete_confirm', 'text_block_pattern_saved', 'text_block_pattern_renamed', 'text_block_pattern_deleted', 'text_block_pattern_error', 'text_block_pattern_incompatible', 'text_block_pattern_invalid', 'text_block_pattern_custom_js_rejected', 'text_block_save_state_saved', 'text_block_save_state_unsaved', 'text_block_save_state_saving',
+         ] as $key) {
+             $data[$key] = $this->language->get($key);
+         }
++
++        $data['block_pattern_config'] = [
++            'listUrl' => $this->url->link('cms/block_pattern.listBlog'),
++            'getUrl' => $this->url->link('cms/block_pattern.getBlog'),
++            'saveUrl' => $this->url->link('cms/block_pattern.saveBlog'),
++            'renameUrl' => $this->url->link('cms/block_pattern.renameBlog'),
++            'deleteUrl' => $this->url->link('cms/block_pattern.deleteBlog'),
++            'csrfToken' => \Reamur\System\Library\Security\Csrf::token($this->session),
++            'canRead' => $this->user->hasPermission('access', 'cms/block_pattern') && $this->user->hasPermission('modify', 'blog/blog'),
++            'canModify' => $this->user->hasPermission('modify', 'cms/block_pattern') && $this->user->hasPermission('modify', 'blog/blog'),
++        ];
+ 
+         $data['block_editor_strings'] = [
+             'bold' => $data['text_inline_bold'], 'italic' => $data['text_inline_italic'],
+@@ -946,6 +957,13 @@
+             'patternsCategory' => $data['text_block_pattern_category'],
+             'patternHint' => $data['text_block_pattern_hint'],
+             'patternLabels' => ['two_columns'=>$data['text_block_pattern_two_columns'],'quote_cta'=>$data['text_block_pattern_quote_cta'],'section_intro'=>$data['text_block_pattern_section_intro'],'cover_hero'=>$data['text_block_pattern_cover_hero']],
++            'savedPatternsCategory' => $data['text_block_saved_patterns'], 'saveAsPattern' => $data['text_block_save_pattern'],
++            'renamePattern' => $data['text_block_rename_pattern'], 'deletePattern' => $data['text_block_delete_pattern'],
++            'patternNamePrompt' => $data['text_block_pattern_name_prompt'], 'patternRenamePrompt' => $data['text_block_pattern_rename_prompt'],
++            'patternDeleteConfirm' => $data['text_block_pattern_delete_confirm'], 'patternSaved' => $data['text_block_pattern_saved'],
++            'patternRenamed' => $data['text_block_pattern_renamed'], 'patternDeleted' => $data['text_block_pattern_deleted'],
++            'patternError' => $data['text_block_pattern_error'], 'patternIncompatible' => $data['text_block_pattern_incompatible'],
++            'patternInvalid' => $data['text_block_pattern_invalid'], 'patternCustomJsRejected' => $data['text_block_pattern_custom_js_rejected'],
+         ];
+ 
+         // CKEditor 4 (assets locais, ADR 0046): init fica no admin.js (textarea[data-rte])
+@@ -958,7 +976,7 @@
+         $data['block_editor_available'] = $data['can_modify'] && $this->model_blog_blog->blogBlockContentTableExists();
+         $data['preview_url'] = $data['block_editor_available'] ? $this->url->link('blog/blog.preview') : '';
+         if ($data['block_editor_available']) {
+-            $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-5';
++            $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-6';
+             $assetBase = rtrim((string)$this->config->get('site_url'), '/') . '/view/';
+             $catalogAssetBase = $this->catalogAssetUrl();
+             $catalogViewBase = $catalogAssetBase . 'view/';
+
+--- /dev/null
++++ b/dev/admin/controller/cms/block_pattern.php
+@@ -0,0 +1,189 @@
++<?php
++/**
++ * @package ReamurCMS
++ * @license https://opensource.org/licenses/GPL-3.0
++ * Biblioteca privada BDRE por administrador (F9-25). Nunca aceita owner ID do cliente.
++ */
++namespace Reamur\Admin\Controller\Cms;
++
++class Block_pattern extends \Reamur\System\Engine\Controller {
++    private ?array $jsonPost = null;
++    private const MAX_DOCUMENT_BYTES = 4194304;
++    private const MAX_NAME_CHARS = 80;
++    private const ALLOWED_ROOT_TYPES = [
++        'core/paragraph','core/heading','core/list','core/quote','core/callout','core/details','core/spacer','core/code',
++        'core/image','core/video_embed','core/button','core/separator','core/group','core/columns','core/gallery',
++        'core/cover','core/table','core/file','core/audio','core/video_file','core/threejs_thumb'
++    ];
++
++    public function listPages(): void { $this->listPatternsFor('pages'); }
++    public function listBlog(): void { $this->listPatternsFor('blog'); }
++    public function getPages(): void { $this->getPatternFor('pages'); }
++    public function getBlog(): void { $this->getPatternFor('blog'); }
++    public function savePages(): void { $this->savePatternFor('pages'); }
++    public function saveBlog(): void { $this->savePatternFor('blog'); }
++    public function renamePages(): void { $this->renamePatternFor('pages'); }
++    public function renameBlog(): void { $this->renamePatternFor('blog'); }
++    public function deletePages(): void { $this->deletePatternFor('pages'); }
++    public function deleteBlog(): void { $this->deletePatternFor('blog'); }
++
++    private function listPatternsFor(string $context): void {
++        if (!$this->authorize('read', $context)) return;
++        $this->load->model('cms/block_pattern');
++        if (!$this->model_cms_block_pattern->tableExists()) { $this->json(['success' => true, 'patterns' => [], 'storage_available' => false]); return; }
++        $owner = $this->user->getUserId();
++        $patterns = [];
++        foreach ($this->model_cms_block_pattern->getPatterns($owner) as $row) {
++            $row = (array)$row;
++            $patterns[] = [
++                'pattern_id' => (int)$row['pattern_id'], 'name' => (string)$row['name'],
++                'source_language' => (string)$row['source_language'], 'root_type' => (string)$row['root_type'],
++                'date_modified' => (string)$row['date_modified']
++            ];
++        }
++        $this->json(['success' => true, 'patterns' => $patterns, 'storage_available' => true]);
++    }
++
++    private function getPatternFor(string $context): void {
++        if (!$this->authorize('read', $context)) return;
++        $patternId = $this->inputId('pattern_id');
++        $this->load->model('cms/block_pattern');
++        $row = $this->model_cms_block_pattern->getPattern($patternId, $this->user->getUserId());
++        if (!$row) { $this->json(['success' => false, 'error' => 'pattern_not_found'], 404); return; }
++        $json = (string)$row['content_json'];
++        $validation = $this->validator($context)->deserializeDocument($json);
++        if (!$validation['valid'] || !$this->validStandaloneDocument($validation['document']) || $this->containsCustomJs($validation['document']['blocks'][0])) {
++            $this->json(['success' => false, 'error' => 'pattern_incompatible_or_invalid'], 422); return;
++        }
++        if ((int)$row['format_version'] !== (int)$validation['document']['format_version'] || (string)$row['root_type'] !== (string)$validation['document']['blocks'][0]['type']) {
++            $this->json(['success' => false, 'error' => 'pattern_version_mismatch'], 422); return;
++        }
++        $canonical = $this->validator($context)->serializeDocument($validation['document']);
++        $this->json(['success' => true, 'pattern' => [
++            'pattern_id' => (int)$row['pattern_id'], 'name' => (string)$row['name'],
++            'source_language' => (string)$row['source_language'], 'root_type' => (string)$row['root_type'],
++            'document_json' => $canonical
++        ]]);
++    }
++
++    private function savePatternFor(string $context): void {
++        if (!$this->authorize('write', $context)) return;
++        if (!$this->csrfValid()) { $this->json(['success' => false, 'error' => 'invalid_csrf'], 403); return; }
++        $name = $this->cleanName($this->postValue('name'));
++        $documentJson = $this->postValue('document_json');
++        $sourceLanguage = $this->postValue('source_language') ?? '';
++        if ($name === null) { $this->json(['success' => false, 'error' => 'invalid_name'], 422); return; }
++        if (!is_string($documentJson) || strlen($documentJson) > self::MAX_DOCUMENT_BYTES) { $this->json(['success' => false, 'error' => 'document_too_large_or_invalid'], 413); return; }
++        if (!is_string($sourceLanguage) || strlen($sourceLanguage) > 8 || !preg_match('/^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/iD', $sourceLanguage)) { $sourceLanguage = ''; }
++        $validator = $this->validator($context);
++        $decoded = $validator->deserializeDocument($documentJson);
++        if (!$decoded['valid'] || !$this->validStandaloneDocument($decoded['document'])) {
++            $this->json(['success' => false, 'error' => 'invalid_or_non_standalone_document'], 422); return;
++        }
++        $node = $decoded['document']['blocks'][0];
++        if ($this->containsCustomJs($node)) { $this->json(['success' => false, 'error' => 'custom_js_not_allowed'], 422); return; }
++        $rootType = (string)$node['type'];
++        if (!in_array($rootType, self::ALLOWED_ROOT_TYPES, true)) { $this->json(['success' => false, 'error' => 'unsupported_pattern_root'], 422); return; }
++        try { $canonicalJson = $validator->serializeDocument($decoded['document']); }
++        catch (\Throwable $exception) { $this->json(['success' => false, 'error' => 'invalid_or_non_standalone_document'], 422); return; }
++        if (strlen($canonicalJson) > self::MAX_DOCUMENT_BYTES) { $this->json(['success' => false, 'error' => 'document_too_large_or_invalid'], 413); return; }
++        $this->load->model('cms/block_pattern');
++        if (!$this->model_cms_block_pattern->tableExists()) { $this->json(['success' => false, 'error' => 'storage_unavailable'], 503); return; }
++        $owner = $this->user->getUserId();
++        if ($this->model_cms_block_pattern->getTotalPatterns($owner) >= \Reamur\Admin\Model\Cms\Block_pattern::MAX_PATTERNS_PER_USER) {
++            $this->json(['success' => false, 'error' => 'pattern_limit_reached'], 409); return;
++        }
++        if ($this->model_cms_block_pattern->nameTaken($owner, $name)) { $this->json(['success' => false, 'error' => 'name_already_used'], 409); return; }
++        try {
++            $id = $this->model_cms_block_pattern->addPattern($owner, $name, strtolower($sourceLanguage), $rootType, (int)$decoded['document']['format_version'], $canonicalJson);
++        } catch (\Throwable $exception) { $id = 0; }
++        if ($id < 1) { $this->json(['success' => false, 'error' => 'save_failed_or_name_taken'], 409); return; }
++        $this->json(['success' => true, 'pattern_id' => $id]);
++    }
++
++    private function renamePatternFor(string $context): void {
++        if (!$this->authorize('write', $context)) return;
++        if (!$this->csrfValid()) { $this->json(['success' => false, 'error' => 'invalid_csrf'], 403); return; }
++        $name = $this->cleanName($this->postValue('name'));
++        $patternId = $this->inputId('pattern_id', true);
++        if ($name === null || $patternId < 1) { $this->json(['success' => false, 'error' => 'invalid_request'], 422); return; }
++        $this->load->model('cms/block_pattern');
++        $owner = $this->user->getUserId();
++        if (!$this->model_cms_block_pattern->getPattern($patternId, $owner)) { $this->json(['success' => false, 'error' => 'pattern_not_found'], 404); return; }
++        if ($this->model_cms_block_pattern->nameTaken($owner, $name, $patternId)) { $this->json(['success' => false, 'error' => 'name_already_used'], 409); return; }
++        try { $ok = $this->model_cms_block_pattern->renamePattern($patternId, $owner, $name); }
++        catch (\Throwable $exception) { $ok = false; }
++        $this->json(['success' => $ok, 'error' => $ok ? '' : 'rename_failed']);
++    }
++
++    private function deletePatternFor(string $context): void {
++        if (!$this->authorize('write', $context)) return;
++        if (!$this->csrfValid()) { $this->json(['success' => false, 'error' => 'invalid_csrf'], 403); return; }
++        $patternId = $this->inputId('pattern_id', true);
++        if ($patternId < 1) { $this->json(['success' => false, 'error' => 'invalid_request'], 422); return; }
++        $this->load->model('cms/block_pattern');
++        $owner = $this->user->getUserId();
++        if (!$this->model_cms_block_pattern->getPattern($patternId, $owner)) { $this->json(['success' => false, 'error' => 'pattern_not_found'], 404); return; }
++        try { $ok = $this->model_cms_block_pattern->deletePattern($patternId, $owner); }
++        catch (\Throwable $exception) { $ok = false; }
++        $this->json(['success' => $ok, 'error' => $ok ? '' : 'delete_failed']);
++    }
++
++    private function authorize(string $operation, string $context): bool {
++        $contextRoute = $context === 'blog' ? 'blog/blog' : 'cms/page';
++        $allowed = $this->user->hasPermission('access', 'cms/block_pattern')
++            && $this->user->hasPermission('modify', $contextRoute);
++        if ($operation === 'write') $allowed = $allowed && $this->user->hasPermission('modify', 'cms/block_pattern');
++        if (!$allowed) { $this->json(['success' => false, 'error' => 'permission_denied'], 403); return false; }
++        return true;
++    }
++
++    private function inputId(string $key, bool $postOnly = false): int {
++        $source = $postOnly ? ['value' => $this->postValue($key)] : ($this->request->get ?? []);
++        $value = $postOnly ? ($source['value'] ?? 0) : ($source[$key] ?? 0);
++        return is_scalar($value) && ctype_digit((string)$value) ? (int)$value : 0;
++    }
++
++    private function cleanName($value): ?string {
++        if (!is_string($value) || !preg_match('//u', $value)) return null;
++        $name = trim(preg_replace('/\s+/u', ' ', $value) ?? '');
++        if ($name === '' || mb_strlen($name, 'UTF-8') > self::MAX_NAME_CHARS || preg_match('/[\x00-\x1F\x7F]/u', $name)) return null;
++        return $name;
++    }
++
++    private function validator(string $context): \Reamur\System\Library\Blog\BlockDocument {
++        return new \Reamur\System\Library\Blog\BlockDocument($context === 'pages');
++    }
++
++    private function validStandaloneDocument($document): bool {
++        if (!is_array($document) || !isset($document['blocks']) || count($document['blocks']) !== 1 || !is_array($document['blocks'][0])) return false;
++        return in_array((string)($document['blocks'][0]['type'] ?? ''), self::ALLOWED_ROOT_TYPES, true);
++    }
++
++    private function containsCustomJs(array $node): bool {
++        if (isset($node['attributes']) && is_array($node['attributes']) && array_key_exists('custom_js', $node['attributes'])) return true;
++        foreach (($node['children'] ?? []) as $child) if (is_array($child) && $this->containsCustomJs($child)) return true;
++        return false;
++    }
++
++    private function postValue(string $key) {
++        if (isset($this->request->post[$key])) return $this->request->post[$key];
++        if ($this->jsonPost === null) {
++            $raw = file_get_contents('php://input');
++            $decoded = is_string($raw) ? json_decode($raw, true) : null;
++            $this->jsonPost = is_array($decoded) ? $decoded : [];
++        }
++        return $this->jsonPost[$key] ?? null;
++    }
++
++    private function csrfValid(): bool {
++        $token = $this->postValue('csrf_token');
++        return \Reamur\System\Library\Security\Csrf::check($this->session, is_string($token) ? $token : '');
++    }
++
++    private function json(array $payload, int $status = 200): void {
++        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
++        $this->response->addHeader('Cache-Control: no-store, private');
++        $this->response->setOutput(json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '{}');
++    }
++}
+
+--- a/dev/admin/controller/cms/page.php
++++ b/dev/admin/controller/cms/page.php
+@@ -847,10 +847,21 @@
+                 'text_block_mobile_full', 'text_block_mobile_large', 'text_block_mobile_medium',
+                 'text_block_video_preview', 'text_block_video_preview_hint', 'text_block_media_placeholder',
+                 'text_block_pattern_category', 'text_block_pattern_two_columns', 'text_block_pattern_quote_cta', 'text_block_pattern_section_intro',
+-                'text_block_pattern_cover_hero', 'text_block_pattern_hint', 'text_block_save_state_saved', 'text_block_save_state_unsaved', 'text_block_save_state_saving',
++                'text_block_pattern_cover_hero', 'text_block_pattern_hint', 'text_block_saved_patterns', 'text_block_save_pattern', 'text_block_rename_pattern', 'text_block_delete_pattern', 'text_block_pattern_name_prompt', 'text_block_pattern_rename_prompt', 'text_block_pattern_delete_confirm', 'text_block_pattern_saved', 'text_block_pattern_renamed', 'text_block_pattern_deleted', 'text_block_pattern_error', 'text_block_pattern_incompatible', 'text_block_pattern_invalid', 'text_block_pattern_custom_js_rejected', 'text_block_save_state_saved', 'text_block_save_state_unsaved', 'text_block_save_state_saving',
+             ] as $key) {
+                 $data[$key] = $this->language->get($key);
+             }
++
++            $data['block_pattern_config'] = [
++                'listUrl' => $this->url->link('cms/block_pattern.listPages'),
++                'getUrl' => $this->url->link('cms/block_pattern.getPages'),
++                'saveUrl' => $this->url->link('cms/block_pattern.savePages'),
++                'renameUrl' => $this->url->link('cms/block_pattern.renamePages'),
++                'deleteUrl' => $this->url->link('cms/block_pattern.deletePages'),
++                'csrfToken' => \Reamur\System\Library\Security\Csrf::token($this->session),
++                'canRead' => $this->user->hasPermission('access', 'cms/block_pattern') && $this->user->hasPermission('modify', 'cms/page'),
++                'canModify' => $this->user->hasPermission('modify', 'cms/block_pattern') && $this->user->hasPermission('modify', 'cms/page'),
++            ];
+ 
+             $data['block_editor_strings'] = [
+                 'bold' => $data['text_inline_bold'], 'italic' => $data['text_inline_italic'],
+@@ -925,10 +936,17 @@
+                 'patternsCategory' => $data['text_block_pattern_category'],
+                 'patternHint' => $data['text_block_pattern_hint'],
+                 'patternLabels' => ['two_columns'=>$data['text_block_pattern_two_columns'],'quote_cta'=>$data['text_block_pattern_quote_cta'],'section_intro'=>$data['text_block_pattern_section_intro'],'cover_hero'=>$data['text_block_pattern_cover_hero']],
++            'savedPatternsCategory' => $data['text_block_saved_patterns'], 'saveAsPattern' => $data['text_block_save_pattern'],
++            'renamePattern' => $data['text_block_rename_pattern'], 'deletePattern' => $data['text_block_delete_pattern'],
++            'patternNamePrompt' => $data['text_block_pattern_name_prompt'], 'patternRenamePrompt' => $data['text_block_pattern_rename_prompt'],
++            'patternDeleteConfirm' => $data['text_block_pattern_delete_confirm'], 'patternSaved' => $data['text_block_pattern_saved'],
++            'patternRenamed' => $data['text_block_pattern_renamed'], 'patternDeleted' => $data['text_block_pattern_deleted'],
++            'patternError' => $data['text_block_pattern_error'], 'patternIncompatible' => $data['text_block_pattern_incompatible'],
++            'patternInvalid' => $data['text_block_pattern_invalid'], 'patternCustomJsRejected' => $data['text_block_pattern_custom_js_rejected'],
+             ];
+ 
+                 $site = $this->config->get('site_url');
+-                $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-5';
++                $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-6';
+                 $catalogAssetBase = $this->pageCatalogAssetUrl();
+                 $this->document->addStyle($site . 'view/css/blog-block-editor.css?v=' . $version);
+                 $this->document->addStyle($catalogAssetBase . 'view/css/threejs-thumb.css?v=' . $version);
+
+--- a/dev/admin/language/en-us/blog/blog.php
++++ b/dev/admin/language/en-us/blog/blog.php
+@@ -431,3 +431,19 @@
+ $_['text_block_threejs_scriptPlaceholder'] = 'Add JavaScript to customize the Three.js scene…';
+ 
+ $_['text_block_threejs_addScript'] = 'Edit thumbnail / add script';
++
++// F9-25 — BDRE personal pattern library
++$_['text_block_saved_patterns'] = 'Saved patterns';
++$_['text_block_save_pattern'] = 'Save as pattern';
++$_['text_block_rename_pattern'] = 'Rename';
++$_['text_block_delete_pattern'] = 'Delete';
++$_['text_block_pattern_name_prompt'] = 'Pattern name';
++$_['text_block_pattern_rename_prompt'] = 'New pattern name';
++$_['text_block_pattern_delete_confirm'] = 'Delete pattern';
++$_['text_block_pattern_saved'] = 'Pattern saved.';
++$_['text_block_pattern_renamed'] = 'Pattern renamed.';
++$_['text_block_pattern_deleted'] = 'Pattern deleted.';
++$_['text_block_pattern_error'] = 'Could not update the pattern.';
++$_['text_block_pattern_incompatible'] = 'This pattern is not compatible with this editor location.';
++$_['text_block_pattern_invalid'] = 'This block cannot be saved as a standalone pattern.';
++$_['text_block_pattern_custom_js_rejected'] = 'Patterns cannot contain JavaScript.';
+
+--- a/dev/admin/language/en-us/cms/page.php
++++ b/dev/admin/language/en-us/cms/page.php
+@@ -231,3 +231,19 @@
+ $_['text_page_media_upload_hint_audio'] = 'MP3, OGG, WAV · up to 20 MiB';
+ $_['text_page_media_upload_hint_video'] = 'MP4, WebM, OGV · up to 100 MiB';
+ $_['text_page_media_upload_hint_download'] = 'PDF, DOCX, XLSX, PPTX, ODT, ODS, CSV, TXT · up to 2 MiB';
++
++// F9-25 — BDRE personal pattern library
++$_['text_block_saved_patterns'] = 'Saved patterns';
++$_['text_block_save_pattern'] = 'Save as pattern';
++$_['text_block_rename_pattern'] = 'Rename';
++$_['text_block_delete_pattern'] = 'Delete';
++$_['text_block_pattern_name_prompt'] = 'Pattern name';
++$_['text_block_pattern_rename_prompt'] = 'New pattern name';
++$_['text_block_pattern_delete_confirm'] = 'Delete pattern';
++$_['text_block_pattern_saved'] = 'Pattern saved.';
++$_['text_block_pattern_renamed'] = 'Pattern renamed.';
++$_['text_block_pattern_deleted'] = 'Pattern deleted.';
++$_['text_block_pattern_error'] = 'Could not update the pattern.';
++$_['text_block_pattern_incompatible'] = 'This pattern is not compatible with this editor location.';
++$_['text_block_pattern_invalid'] = 'This block cannot be saved as a standalone pattern.';
++$_['text_block_pattern_custom_js_rejected'] = 'Patterns cannot contain JavaScript.';
+
+--- a/dev/admin/language/es-eu/blog/blog.php
++++ b/dev/admin/language/es-eu/blog/blog.php
+@@ -431,3 +431,19 @@
+ $_['text_block_threejs_scriptPlaceholder'] = 'Añade JavaScript para personalizar la escena Three.js…';
+ 
+ $_['text_block_threejs_addScript'] = 'Editar miniatura / añadir script';
++
++// F9-25 — BDRE personal pattern library
++$_['text_block_saved_patterns'] = 'Patrones guardados';
++$_['text_block_save_pattern'] = 'Guardar como patrón';
++$_['text_block_rename_pattern'] = 'Renombrar';
++$_['text_block_delete_pattern'] = 'Eliminar';
++$_['text_block_pattern_name_prompt'] = 'Nombre del patrón';
++$_['text_block_pattern_rename_prompt'] = 'Nuevo nombre del patrón';
++$_['text_block_pattern_delete_confirm'] = 'Eliminar el patrón';
++$_['text_block_pattern_saved'] = 'Patrón guardado.';
++$_['text_block_pattern_renamed'] = 'Patrón renombrado.';
++$_['text_block_pattern_deleted'] = 'Patrón eliminado.';
++$_['text_block_pattern_error'] = 'No se pudo actualizar el patrón.';
++$_['text_block_pattern_incompatible'] = 'Este patrón no es compatible con este punto del editor.';
++$_['text_block_pattern_invalid'] = 'Este bloque no puede guardarse como patrón independiente.';
++$_['text_block_pattern_custom_js_rejected'] = 'Los patrones no pueden contener JavaScript.';
+
+--- a/dev/admin/language/es-eu/cms/page.php
++++ b/dev/admin/language/es-eu/cms/page.php
+@@ -215,3 +215,19 @@
+ $_['text_page_media_upload_hint_audio'] = 'MP3, OGG, WAV · hasta 20 MiB';
+ $_['text_page_media_upload_hint_video'] = 'MP4, WebM, OGV · hasta 100 MiB';
+ $_['text_page_media_upload_hint_download'] = 'PDF, DOCX, XLSX, PPTX, ODT, ODS, CSV, TXT · hasta 2 MiB';
++
++// F9-25 — BDRE personal pattern library
++$_['text_block_saved_patterns'] = 'Patrones guardados';
++$_['text_block_save_pattern'] = 'Guardar como patrón';
++$_['text_block_rename_pattern'] = 'Renombrar';
++$_['text_block_delete_pattern'] = 'Eliminar';
++$_['text_block_pattern_name_prompt'] = 'Nombre del patrón';
++$_['text_block_pattern_rename_prompt'] = 'Nuevo nombre del patrón';
++$_['text_block_pattern_delete_confirm'] = 'Eliminar el patrón';
++$_['text_block_pattern_saved'] = 'Patrón guardado.';
++$_['text_block_pattern_renamed'] = 'Patrón renombrado.';
++$_['text_block_pattern_deleted'] = 'Patrón eliminado.';
++$_['text_block_pattern_error'] = 'No se pudo actualizar el patrón.';
++$_['text_block_pattern_incompatible'] = 'Este patrón no es compatible con este punto del editor.';
++$_['text_block_pattern_invalid'] = 'Este bloque no puede guardarse como patrón independiente.';
++$_['text_block_pattern_custom_js_rejected'] = 'Los patrones no pueden contener JavaScript.';
+
+--- a/dev/admin/language/pt-br/blog/blog.php
++++ b/dev/admin/language/pt-br/blog/blog.php
+@@ -431,3 +431,19 @@
+ $_['text_block_threejs_scriptPlaceholder'] = 'Adicione JavaScript para modificar a cena Three.js…';
+ 
+ $_['text_block_threejs_addScript'] = 'Editar thumb / adicionar script';
++
++// F9-25 — BDRE personal pattern library
++$_['text_block_saved_patterns'] = 'Padrões salvos';
++$_['text_block_save_pattern'] = 'Salvar como padrão';
++$_['text_block_rename_pattern'] = 'Renomear';
++$_['text_block_delete_pattern'] = 'Excluir';
++$_['text_block_pattern_name_prompt'] = 'Nome do padrão';
++$_['text_block_pattern_rename_prompt'] = 'Novo nome do padrão';
++$_['text_block_pattern_delete_confirm'] = 'Excluir o padrão';
++$_['text_block_pattern_saved'] = 'Padrão salvo.';
++$_['text_block_pattern_renamed'] = 'Padrão renomeado.';
++$_['text_block_pattern_deleted'] = 'Padrão excluído.';
++$_['text_block_pattern_error'] = 'Não foi possível atualizar o padrão.';
++$_['text_block_pattern_incompatible'] = 'Este padrão não é compatível com este ponto do editor.';
++$_['text_block_pattern_invalid'] = 'Este bloco não pode ser salvo como padrão independente.';
++$_['text_block_pattern_custom_js_rejected'] = 'Padrões não podem conter JavaScript.';
+
+--- a/dev/admin/language/pt-br/cms/page.php
++++ b/dev/admin/language/pt-br/cms/page.php
+@@ -215,3 +215,19 @@
+ $_['text_page_media_upload_hint_audio'] = 'MP3, OGG, WAV · até 20 MiB';
+ $_['text_page_media_upload_hint_video'] = 'MP4, WebM, OGV · até 100 MiB';
+ $_['text_page_media_upload_hint_download'] = 'PDF, DOCX, XLSX, PPTX, ODT, ODS, CSV, TXT · até 2 MiB';
++
++// F9-25 — BDRE personal pattern library
++$_['text_block_saved_patterns'] = 'Padrões salvos';
++$_['text_block_save_pattern'] = 'Salvar como padrão';
++$_['text_block_rename_pattern'] = 'Renomear';
++$_['text_block_delete_pattern'] = 'Excluir';
++$_['text_block_pattern_name_prompt'] = 'Nome do padrão';
++$_['text_block_pattern_rename_prompt'] = 'Novo nome do padrão';
++$_['text_block_pattern_delete_confirm'] = 'Excluir o padrão';
++$_['text_block_pattern_saved'] = 'Padrão salvo.';
++$_['text_block_pattern_renamed'] = 'Padrão renomeado.';
++$_['text_block_pattern_deleted'] = 'Padrão excluído.';
++$_['text_block_pattern_error'] = 'Não foi possível atualizar o padrão.';
++$_['text_block_pattern_incompatible'] = 'Este padrão não é compatível com este ponto do editor.';
++$_['text_block_pattern_invalid'] = 'Este bloco não pode ser salvo como padrão independente.';
++$_['text_block_pattern_custom_js_rejected'] = 'Padrões não podem conter JavaScript.';
+
+--- /dev/null
++++ b/dev/admin/model/cms/block_pattern.php
+@@ -0,0 +1,120 @@
++<?php
++/**
++ * @package   ReamurCMS
++ * @author    David L. Almeida
++ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
++ * @license   https://opensource.org/licenses/GPL-3.0
++ * @link      https://reamurcms.com
++ *
++ * Model cms/block_pattern — biblioteca pessoal de padrões BDRE (F9-25).
++ */
++namespace Reamur\Admin\Model\Cms;
++
++class Block_pattern extends \Reamur\System\Engine\Model {
++    public const MAX_PATTERNS_PER_USER = 50;
++
++    /** @return array<int, array<string, mixed>> */
++    public function getPatterns(int $owner_user_id): array {
++        if ($owner_user_id < 1 || !$this->tableExists()) return [];
++        $query = $this->db->query(
++            "SELECT `pattern_id`, `name`, `source_language`, `root_type`, `date_modified`
++               FROM `" . $this->t('cms_block_pattern') . "`
++              WHERE `owner_user_id` = '" . $owner_user_id . "'
++              ORDER BY `name` ASC, `pattern_id` ASC
++              LIMIT " . self::MAX_PATTERNS_PER_USER
++        );
++        return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
++    }
++
++    /** @return array<string, mixed> */
++    public function getPattern(int $pattern_id, int $owner_user_id): array {
++        if ($pattern_id < 1 || $owner_user_id < 1 || !$this->tableExists()) return [];
++        $query = $this->db->query(
++            "SELECT `pattern_id`, `name`, `source_language`, `root_type`, `format_version`, `content_json`
++               FROM `" . $this->t('cms_block_pattern') . "`
++              WHERE `pattern_id` = '" . $pattern_id . "' AND `owner_user_id` = '" . $owner_user_id . "'
++              LIMIT 1"
++        );
++        return ($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : [];
++    }
++
++    public function getTotalPatterns(int $owner_user_id): int {
++        if ($owner_user_id < 1 || !$this->tableExists()) return 0;
++        $query = $this->db->query(
++            "SELECT COUNT(*) AS `total` FROM `" . $this->t('cms_block_pattern') . "` WHERE `owner_user_id` = '" . $owner_user_id . "'"
++        );
++        return ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['total'] : 0;
++    }
++
++    public function nameTaken(int $owner_user_id, string $name, int $exclude_pattern_id = 0): bool {
++        if ($owner_user_id < 1 || !$this->tableExists()) return false;
++        $query = $this->db->query(
++            "SELECT `pattern_id` FROM `" . $this->t('cms_block_pattern') . "`
++              WHERE `owner_user_id` = '" . $owner_user_id . "'
++                AND `name` = '" . $this->db->escape($name) . "'
++                AND `pattern_id` <> '" . max(0, $exclude_pattern_id) . "'
++              LIMIT 1"
++        );
++        return $query instanceof \stdClass && !empty($query->row);
++    }
++
++    public function addPattern(int $owner_user_id, string $name, string $source_language, string $root_type, int $format_version, string $content_json): int {
++        if ($owner_user_id < 1 || !$this->tableExists()) return 0;
++        $this->db->query(
++            "INSERT INTO `" . $this->t('cms_block_pattern') . "` SET
++                `owner_user_id` = '" . $owner_user_id . "',
++                `name` = '" . $this->db->escape($name) . "',
++                `source_language` = '" . $this->db->escape($source_language) . "',
++                `root_type` = '" . $this->db->escape($root_type) . "',
++                `format_version` = '" . $format_version . "',
++                `content_json` = '" . $this->db->escape($content_json) . "',
++                `date_added` = NOW(), `date_modified` = NOW()"
++        );
++        return (int)$this->db->getLastId();
++    }
++
++    public function renamePattern(int $pattern_id, int $owner_user_id, string $name): bool {
++        if ($pattern_id < 1 || $owner_user_id < 1 || !$this->tableExists()) return false;
++        $this->db->query(
++            "UPDATE `" . $this->t('cms_block_pattern') . "` SET
++                `name` = '" . $this->db->escape($name) . "', `date_modified` = NOW()
++              WHERE `pattern_id` = '" . $pattern_id . "' AND `owner_user_id` = '" . $owner_user_id . "'"
++        );
++        return true;
++    }
++
++    public function deletePattern(int $pattern_id, int $owner_user_id): bool {
++        if ($pattern_id < 1 || $owner_user_id < 1 || !$this->tableExists()) return false;
++        $this->db->query(
++            "DELETE FROM `" . $this->t('cms_block_pattern') . "`
++              WHERE `pattern_id` = '" . $pattern_id . "' AND `owner_user_id` = '" . $owner_user_id . "'"
++        );
++        return true;
++    }
++
++    /** Manual cascade required by schema policy (no foreign keys). */
++    public function deleteByOwner(int $owner_user_id): void {
++        if ($owner_user_id < 1 || !$this->tableExists()) return;
++        $this->db->query("DELETE FROM `" . $this->t('cms_block_pattern') . "` WHERE `owner_user_id` = '" . $owner_user_id . "'");
++    }
++
++    public function tableExists(): bool {
++        static $cache = null;
++        if ($cache !== null) return $cache;
++        try {
++            $table = $this->db->escape($this->t('cms_block_pattern'));
++            $query = $this->db->query(
++                "SELECT `TABLE_NAME` FROM `information_schema`.`TABLES`
++                  WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = '" . $table . "' LIMIT 1"
++            );
++            $cache = $query instanceof \stdClass && !empty($query->num_rows);
++        } catch (\Throwable $exception) {
++            $cache = false;
++        }
++        return $cache;
++    }
++
++    private function t(string $table): string {
++        return (defined('DB_PREFIX') ? DB_PREFIX : 'rms_') . $table;
++    }
++}
+
+--- a/dev/admin/model/user/user.php
++++ b/dev/admin/model/user/user.php
+@@ -80,6 +80,23 @@
+     }
+ 
+     public function deleteUser(int $user_id): void {
++        // F9-25: manual cascade (the schema intentionally has no foreign keys).
++        // Older installations may not have run the patterns migration yet.
++        if ($user_id > 0) {
++            $patternTable = $this->t('cms_block_pattern');
++            $exists = null;
++            try {
++                $exists = $this->db->query(
++                    "SELECT `TABLE_NAME` FROM `information_schema`.`TABLES` WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = '" . $this->db->escape($patternTable) . "' LIMIT 1"
++                );
++            } catch (\Throwable $exception) {
++                // Older DB users may not be able to inspect information_schema.
++            }
++            if ($exists instanceof \stdClass && !empty($exists->num_rows)) {
++                // If this delete fails, let the error propagate; do not remove the owner row first.
++                $this->db->query("DELETE FROM `" . $patternTable . "` WHERE `owner_user_id` = '" . $user_id . "'");
++            }
++        }
+         $this->db->query("DELETE FROM `" . $this->t('user') . "` WHERE `user_id` = '" . $user_id . "'");
+     }
+ 
+
+--- a/dev/admin/view/css/blog-block-editor.css
++++ b/dev/admin/view/css/blog-block-editor.css
+@@ -404,3 +404,8 @@
+ .rb-page-context-save-hint{color:#69758a;font-size:.68rem}
+ @media(max-width:700px){.rb-editor.is-fullscreen .rb-page-context{align-items:flex-start;flex-direction:column;gap:.55rem}.rb-page-context-details{width:100%;gap:1.25rem}.rb-page-context-actions{width:100%;justify-content:space-between;align-items:flex-end}.rb-page-context-status{align-items:flex-start;text-align:left}.rb-page-context-value{max-width:78vw}}
+ 
++
++/* F9-25 personal saved patterns */
++.rb-saved-pattern-row{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:.35rem 0}
++.rb-saved-pattern-row .rb-inserter-option{flex:1 1 12rem;text-align:left}
++.rb-saved-pattern-row button:not(.rb-inserter-option){font-size:.8em;padding:.35rem .55rem}
+
+--- a/dev/admin/view/js/blog-block-editor-init.js
++++ b/dev/admin/view/js/blog-block-editor-init.js
+@@ -93,6 +93,8 @@
+       var form = root.closest('form');
+       var editorStrings = {};
+       try { editorStrings = JSON.parse(root.dataset.editorStrings || '{}'); } catch (_) {}
++      var patternConfig = {};
++      try { patternConfig = JSON.parse(root.dataset.patternConfig || '{}'); } catch (_) {}
+       var pageContext = null;
+       try {
+         var contextLabels = JSON.parse(root.dataset.pageContext || '');
+@@ -111,6 +113,7 @@
+         var editor = global.ReamurBlogBlockEditor.mount(root, {
+           document: initial,
+           strings: editorStrings,
++          patternConfig: patternConfig,
+           workspaceContext: pageContext,
+           connectedSave: true,
+           mediaPickers: root.dataset.mediaPickers !== 'false',
+
+--- a/dev/admin/view/js/blog-block-editor.js
++++ b/dev/admin/view/js/blog-block-editor.js
+@@ -418,6 +418,9 @@
+     constructor(root, options) {
+       this.root = root;
+       this.options = options || {};
++      this.patternConfig = this.options.patternConfig || {};
++      this.savedPatterns = [];
++      this.patternLoadError = false;
+       this.allowPageMedia = !!(root.dataset && root.dataset.pageContext);
+       this.instance = ++instanceSequence;
+       this.idCounter = 0;
+@@ -463,6 +466,7 @@
+       this.root.setAttribute('data-preview', this.preview);
+       this.bind();
+       this.render();
++      this.loadSavedPatterns();
+     }
+ 
+     newId() { let candidate; do { this.idCounter += 1; candidate = 'rb' + this.instance + '-' + this.idCounter; } while (this.findPath && this.findPath(this.state ? this.state.blocks : [], candidate)); return candidate; }
+@@ -626,6 +630,10 @@
+       if (this.locked) return;
+       if (name === 'insert') this.insert(button.dataset.type, button.dataset.count);
+       else if (name === 'insert-pattern') this.insertPattern(button.dataset.pattern);
++      else if (name === 'insert-saved-pattern') this.insertSavedPattern(button.dataset.patternId);
++      else if (name === 'save-selected-pattern') this.saveSelectedPattern(button.dataset.nodeId);
++      else if (name === 'rename-saved-pattern') this.renameSavedPattern(button.dataset.patternId);
++      else if (name === 'delete-saved-pattern') this.deleteSavedPattern(button.dataset.patternId);
+       else if (name === 'toggle-inserter') {
+         const wasOpen = this.activePanel === 'elements';
+         this.activePanel = wasOpen ? (this.fullscreen ? 'structure' : null) : 'elements'; this.inserterOpen = !wasOpen;
+@@ -952,6 +960,23 @@
+         });
+         list.append(patterns);
+       }
++      const allowedTypes = new Set(types.map((item) => item.type));
++      const saved = this.savedPatterns;
++      if (saved.length) {
++        const section = this.el('section','rb-inserter-category rb-saved-pattern-category');
++        section.append(this.el('h4','rb-inserter-category-title',this.strings.savedPatternsCategory || 'Padrões salvos'));
++        saved.forEach((item) => {
++          const row = this.el('div','rb-saved-pattern-row');
++          const insert = this.button(item.name,'insert-saved-pattern',{patternId:String(item.pattern_id)});
++          insert.classList.add('rb-inserter-option'); insert.dataset.searchText = item.name.toLocaleLowerCase(); insert.disabled = !allowedTypes.has(item.root_type); row.append(insert);
++          if (this.patternConfig.canModify) {
++            row.append(this.button(this.strings.renamePattern || 'Renomear','rename-saved-pattern',{patternId:String(item.pattern_id)}));
++            row.append(this.button(this.strings.deletePattern || 'Excluir','delete-saved-pattern',{patternId:String(item.pattern_id)}));
++          }
++          section.append(row);
++        });
++        list.append(section);
++      }
+       const noResults = this.el('p', 'rb-inserter-empty rb-inserter-no-results', this.strings.noBlocks); noResults.setAttribute('role','status'); noResults.setAttribute('aria-live','polite'); noResults.hidden = true;
+       menu.append(list, noResults);
+       return menu;
+@@ -1023,6 +1048,74 @@
+       const location = this.insertionLocation(next.blocks, afterId);
+       const node = this.createDefault(type, presetCount); location.target.splice(location.index, 0, node);
+       this.finishInsert(next,node);
++    }
++
++    async patternRequest(url, values, method) {
++      if (!url) throw new Error('pattern_endpoint_missing');
++      const options = { method: method || (values ? 'POST' : 'GET'), credentials: 'same-origin', headers: { 'Accept':'application/json' } };
++      if (values) { options.headers['Content-Type'] = 'application/json'; options.body = JSON.stringify(values); }
++      const response = await fetch(url, options); const payload = await response.json();
++      if (!payload || payload.success !== true) throw new Error(payload && payload.error ? payload.error : 'pattern_request_failed');
++      return payload;
++    }
++
++    async loadSavedPatterns() {
++      if (!this.patternConfig.listUrl || !this.patternConfig.canRead) return;
++      try { const result = await this.patternRequest(this.patternConfig.listUrl); this.savedPatterns = Array.isArray(result.patterns) ? result.patterns : []; }
++      catch (_) { this.patternLoadError = true; }
++      if (this.root && this.root.isConnected) this.render();
++    }
++
++    containsCustomJs(node) {
++      if (node && node.attributes && Object.prototype.hasOwnProperty.call(node.attributes,'custom_js')) return true;
++      return !!(node && Array.isArray(node.children) && node.children.some((child) => this.containsCustomJs(child)));
++    }
++
++    async saveSelectedPattern(nodeId) {
++      const targetId = nodeId || this.selectedId;
++      const found = targetId && this.findPath(this.state.blocks, targetId);
++      if (!found || !this.patternConfig.saveUrl || !this.patternConfig.canModify) return;
++      if (this.containsCustomJs(found.node)) { this.announceStatus(this.strings.patternCustomJsRejected || 'Padrões não podem conter JavaScript.'); return; }
++      const name = global.prompt(this.strings.patternNamePrompt || 'Nome do padrão');
++      if (name === null || !name.trim()) return;
++      const document = { format_version:this.state.format_version, blocks:[CLONE(found.node)] };
++      const validation = validateDocument(document, this.allowPageMedia);
++      if (!validation.valid || utf8Length(JSON.stringify(document)) > 4194304) { this.announceStatus(this.strings.patternInvalid || this.strings.initialInvalid); return; }
++      try {
++        await this.patternRequest(this.patternConfig.saveUrl, {csrf_token:this.patternConfig.csrfToken || '', name:name.trim(), source_language:this.patternConfig.sourceLanguage || '', document_json:JSON.stringify(document)});
++        this.announceStatus(this.strings.patternSaved || 'Padrão salvo.'); await this.loadSavedPatterns();
++      } catch (error) { this.announceStatus(this.strings.patternError || 'Não foi possível salvar o padrão.'); }
++    }
++
++    async insertSavedPattern(patternId) {
++      const afterId = this.slashTrigger ? this.slashTrigger.nodeId : this.insertAfterId || this.selectedId;
++      const allowed = this.insertTypes(afterId).map((item) => item.type);
++      const url = this.patternConfig.getUrl + (this.patternConfig.getUrl && this.patternConfig.getUrl.includes('?') ? '&' : '?') + 'pattern_id=' + encodeURIComponent(patternId);
++      try {
++        const result = await this.patternRequest(url);
++        const document = JSON.parse(result.pattern.document_json);
++        const validation = validateDocument(document, this.allowPageMedia);
++        if (!validation.valid || !document.blocks || document.blocks.length !== 1 || !allowed.includes(document.blocks[0].type) || this.containsCustomJs(document.blocks[0])) throw new Error('pattern_incompatible');
++        const next = CLONE(this.state); this.prepareSlashTarget(next, afterId); const location = this.insertionLocation(next.blocks, afterId);
++        const node = cloneBlockWithNewIds(document.blocks[0], () => this.newId()); location.target.splice(location.index,0,node); this.finishInsert(next,node);
++      } catch (_) { this.announceStatus(this.strings.patternIncompatible || 'Este padrão não é compatível com este ponto do editor.'); }
++    }
++
++    async renameSavedPattern(patternId) {
++      const item = this.savedPatterns.find((pattern) => String(pattern.pattern_id) === String(patternId));
++      if (!item || !this.patternConfig.renameUrl) return;
++      const name = global.prompt(this.strings.patternRenamePrompt || 'Novo nome do padrão', item.name);
++      if (name === null || !name.trim()) return;
++      try { await this.patternRequest(this.patternConfig.renameUrl,{csrf_token:this.patternConfig.csrfToken || '',pattern_id:String(patternId),name:name.trim()}); this.announceStatus(this.strings.patternRenamed || 'Padrão renomeado.'); await this.loadSavedPatterns(); }
++      catch (_) { this.announceStatus(this.strings.patternError || 'Não foi possível atualizar o padrão.'); }
++    }
++
++    async deleteSavedPattern(patternId) {
++      const item = this.savedPatterns.find((pattern) => String(pattern.pattern_id) === String(patternId));
++      if (!item || !this.patternConfig.deleteUrl) return;
++      if (!global.confirm((this.strings.patternDeleteConfirm || 'Excluir o padrão') + ' “' + item.name + '”?')) return;
++      try { await this.patternRequest(this.patternConfig.deleteUrl,{csrf_token:this.patternConfig.csrfToken || '',pattern_id:String(patternId)}); this.announceStatus(this.strings.patternDeleted || 'Padrão excluído.'); await this.loadSavedPatterns(); }
++      catch (_) { this.announceStatus(this.strings.patternError || 'Não foi possível atualizar o padrão.'); }
+     }
+ 
+     insertPattern(pattern) {
+@@ -1568,6 +1661,7 @@
+       } else {
+         const hint = this.el('span','rb-transform-hint',this.strings.transformHint); toolbar.append(hint);
+       }
++      if (this.patternConfig.canModify) { const savePattern = this.button(this.strings.saveAsPattern || 'Salvar como padrão','save-selected-pattern',{nodeId:node.id}); savePattern.disabled = this.containsCustomJs(node); toolbar.append(savePattern); }
+       const remove = this.button(this.strings.remove,'delete',{nodeId:node.id}); remove.disabled = fixedColumn || lastRequiredChild; toolbar.append(remove);
+       const add = this.button('Adicionar', 'toggle-inserter', { afterId:node.id }); add.classList.add('rb-button-icon-only'); add.querySelector('.rb-button-label').classList.add('rb-sr-only'); add.setAttribute('aria-label', this.strings.addAfter); add.setAttribute('aria-expanded', String(this.inserterOpen && this.insertAfterId === node.id)); add.setAttribute('aria-controls','rb-inserter-' + this.instance); toolbar.append(add);
+       return toolbar;
+
+--- a/dev/admin/view/template/blog/blog_form.twig
++++ b/dev/admin/view/template/blog/blog_form.twig
+@@ -58,7 +58,7 @@
+                 <p class="text-muted small">{{ text_block_editor_intro }}</p>
+                 {% if language.block_status %}<p class="alert alert-info py-2" role="status">{{ language.block_status }}</p>{% endif %}
+                 {% if language.block_mode == 'blocks' %}
+-                  <div id="blog-block-editor-{{ language.language_id }}" class="rb-editor-host" data-blog-block-editor data-document="{{ language.block_document_json|e('html_attr') }}" data-hidden-input="blog-block-json-{{ language.language_id }}" data-ready-input="blog-block-ready-{{ language.language_id }}" data-editor-strings="{{ block_editor_strings|json_encode|e('html_attr') }}" tabindex="-1">
++                  <div id="blog-block-editor-{{ language.language_id }}" class="rb-editor-host" data-blog-block-editor data-document="{{ language.block_document_json|e('html_attr') }}" data-hidden-input="blog-block-json-{{ language.language_id }}" data-ready-input="blog-block-ready-{{ language.language_id }}" data-editor-strings="{{ block_editor_strings|json_encode|e('html_attr') }}" data-pattern-config="{{ block_pattern_config|merge({'sourceLanguage': language.code})|json_encode|e('html_attr') }}" tabindex="-1">
+                     <p>{{ text_block_editor_intro }}</p>
+                   </div>
+                   <input type="hidden" name="blog_block_mode[{{ language.language_id }}]" value="blocks">
+
+--- a/dev/admin/view/template/cms/page_form.twig
++++ b/dev/admin/view/template/cms/page_form.twig
+@@ -49,7 +49,7 @@
+                 <input type="hidden" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" value="{{ language.fields.block_stored_value|e('html_attr') }}">
+                 <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="blocks">
+                 <input type="hidden" name="page_editor_ready[{{ language.language_id }}]" id="page-editor-ready-{{ language.language_id }}" value="">
+-                <div id="page-block-editor-{{ language.language_id }}" class="bdre-page-editor" data-blog-block-editor data-hidden-input="input-description-{{ language.language_id }}" data-ready-input="page-editor-ready-{{ language.language_id }}" data-document="{{ language.fields.block_document|e('html_attr') }}" data-storage-prefix="REAMURCMS_BDRE_JSON_V2:" data-media-pickers="false" data-file-picker="{{ can_modify ? 'true' : 'false' }}" data-audio-picker="{{ can_modify ? 'true' : 'false' }}" data-video-picker="{{ can_modify ? 'true' : 'false' }}" data-editor-strings="{{ block_editor_strings|json_encode|e('html_attr') }}" data-page-context="{{ {'pageLabel': text_page_context_page, 'languageLabel': text_page_context_language, 'untitledPage': text_page_context_untitled, 'saveHint': can_modify ? text_page_context_save_hint : text_page_context_readonly_hint, 'canSave': can_modify, 'saveLabel': button_save}|json_encode|e('html_attr') }}" data-page-title="{{ language.fields.title|e('html_attr') }}" data-page-title-input="input-title-{{ language.language_id }}" data-page-language="{{ language.name|e('html_attr') }}" data-page-language-code="{{ language.code|e('html_attr') }}" aria-label="{{ entry_description|e('html_attr') }} — {{ language.name|e('html_attr') }}"></div>
++                <div id="page-block-editor-{{ language.language_id }}" class="bdre-page-editor" data-blog-block-editor data-hidden-input="input-description-{{ language.language_id }}" data-ready-input="page-editor-ready-{{ language.language_id }}" data-document="{{ language.fields.block_document|e('html_attr') }}" data-storage-prefix="REAMURCMS_BDRE_JSON_V2:" data-media-pickers="false" data-file-picker="{{ can_modify ? 'true' : 'false' }}" data-audio-picker="{{ can_modify ? 'true' : 'false' }}" data-video-picker="{{ can_modify ? 'true' : 'false' }}" data-editor-strings="{{ block_editor_strings|json_encode|e('html_attr') }}" data-pattern-config="{{ block_pattern_config|merge({'sourceLanguage': language.code})|json_encode|e('html_attr') }}" data-page-context="{{ {'pageLabel': text_page_context_page, 'languageLabel': text_page_context_language, 'untitledPage': text_page_context_untitled, 'saveHint': can_modify ? text_page_context_save_hint : text_page_context_readonly_hint, 'canSave': can_modify, 'saveLabel': button_save}|json_encode|e('html_attr') }}" data-page-title="{{ language.fields.title|e('html_attr') }}" data-page-title-input="input-title-{{ language.language_id }}" data-page-language="{{ language.name|e('html_attr') }}" data-page-language-code="{{ language.code|e('html_attr') }}" aria-label="{{ entry_description|e('html_attr') }} — {{ language.name|e('html_attr') }}"></div>
+                 {% if language.fields.page_layout_options %}
+                 <input type="hidden" name="page_layout_sections_present[{{ language.language_id }}]" value="1">
+                 <fieldset class="card mt-3" data-page-layout-editor><legend class="card-header h6 mb-0">Estrutura visual da página</legend><div class="card-body"><p class="form-text">Ative, desative e reordene seções. Os dados dinâmicos continuam sob controle dos módulos próprios; aqui não é permitido inserir código.</p>
+
+--- a/dev/install/model/install/install.php
++++ b/dev/install/model/install/install.php
+@@ -128,7 +128,7 @@
+      * @param array{username: string, firstname: string, lastname: string, email: string, password: string} $data
+      */
+     public function createAdministrator(array $data, string $prefix): void {
+-        $seedRoutes = ['user/user', 'user/user_group', 'catalog/project', 'catalog/category', 'cms/page', 'marketing/testimonial', 'marketing/client_logo', 'tool/tool', 'sale/order', 'communication/contact_message', 'setting/webhook', 'custom_field/definition']; // F2-8..16: + ferramentas + pedidos + inbox + webhooks
++        $seedRoutes = ['user/user', 'user/user_group', 'catalog/project', 'catalog/category', 'cms/page', 'marketing/testimonial', 'marketing/client_logo', 'tool/tool', 'sale/order', 'communication/contact_message', 'setting/webhook', 'custom_field/definition', 'cms/block_pattern']; // F2-8..16 + F9-25 padrões BDRE privados
+         // F8-01 (ADR 0045 §bugfix-escape-ACL): UNESCAPED_SLASHES impede que
+         // real_escape_string dobre o '\' produzido pelo json_encode padrão —
+         // combinando, os valores ficavam "user\\/user" e nenhum hasPermission
+
+--- /dev/null
++++ b/dev/install/sql/rollback_f9_25_bdreditor_patterns.sql
+@@ -0,0 +1,22 @@
++-- F9-25 rollback seguro: remove somente o grant da rota e mantém a tabela/dados.
++-- Não há DROP: padrões pessoais são dados de usuários. Excluir esses dados requer
++-- backup e autorização explícita em operação separada.
++UPDATE `rms_user_group`
++SET `permission` = JSON_SET(
++  `permission`, '$.access',
++  JSON_REMOVE(
++    JSON_EXTRACT(`permission`, '$.access'),
++    JSON_UNQUOTE(JSON_SEARCH(JSON_EXTRACT(`permission`, '$.access'), 'one', 'cms/block_pattern'))
++  )
++)
++WHERE JSON_SEARCH(JSON_EXTRACT(`permission`, '$.access'), 'one', 'cms/block_pattern') IS NOT NULL;
++
++UPDATE `rms_user_group`
++SET `permission` = JSON_SET(
++  `permission`, '$.modify',
++  JSON_REMOVE(
++    JSON_EXTRACT(`permission`, '$.modify'),
++    JSON_UNQUOTE(JSON_SEARCH(JSON_EXTRACT(`permission`, '$.modify'), 'one', 'cms/block_pattern'))
++  )
++)
++WHERE JSON_SEARCH(JSON_EXTRACT(`permission`, '$.modify'), 'one', 'cms/block_pattern') IS NOT NULL;
+
+--- a/dev/install/sql/schema-complete.sql
++++ b/dev/install/sql/schema-complete.sql
+@@ -1164,3 +1164,30 @@
+   `user_id` INT NOT NULL, `date_added` DATETIME NOT NULL,
+   PRIMARY KEY (`revision_id`), KEY `theme_date` (`theme_id`,`revision_id`), KEY `user_id` (`user_id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
++
++-- F9-25 — Biblioteca pessoal de padrões BDRE. Sem FKs: User::deleteUser faz a cascata manual.
++CREATE TABLE IF NOT EXISTS `rms_cms_block_pattern` (
++  `pattern_id` BIGINT NOT NULL AUTO_INCREMENT,
++  `owner_user_id` INT NOT NULL COMMENT 'Administrador proprietário; sempre obtido da sessão autenticada',
++  `name` VARCHAR(80) NOT NULL,
++  `source_language` VARCHAR(8) NOT NULL DEFAULT '' COMMENT 'Idioma de origem, somente metadado; não traduz automaticamente',
++  `root_type` VARCHAR(64) NOT NULL COMMENT 'Tipo do bloco raiz validado; ajuda a limitar listagem sem carregar JSON',
++  `format_version` SMALLINT NOT NULL,
++  `content_json` MEDIUMTEXT NOT NULL COMMENT 'Documento BDRE canônico, até 4 MiB; sem custom_js',
++  `date_added` DATETIME NOT NULL,
++  `date_modified` DATETIME NOT NULL,
++  PRIMARY KEY (`pattern_id`),
++  UNIQUE KEY `owner_name` (`owner_user_id`,`name`),
++  KEY `owner_modified` (`owner_user_id`,`date_modified`),
++  KEY `owner_root` (`owner_user_id`,`root_type`)
++) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
++
++-- F9-25 — grant default only to the built-in Administrator group.
++UPDATE `rms_user_group`
++SET `permission` = JSON_ARRAY_APPEND(`permission`, '$.access', 'cms/block_pattern')
++WHERE (`name` = 'Administrator' OR `user_group_id` = 1)
++  AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.access'), 'one', 'cms/block_pattern') IS NULL;
++UPDATE `rms_user_group`
++SET `permission` = JSON_ARRAY_APPEND(`permission`, '$.modify', 'cms/block_pattern')
++WHERE (`name` = 'Administrator' OR `user_group_id` = 1)
++  AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.modify'), 'one', 'cms/block_pattern') IS NULL;
+
+--- a/dev/install/sql/schema.sql
++++ b/dev/install/sql/schema.sql
+@@ -446,3 +446,20 @@
+   `user_id` INT NOT NULL, `date_added` DATETIME NOT NULL,
+   PRIMARY KEY (`revision_id`), KEY `theme_date` (`theme_id`,`revision_id`), KEY `user_id` (`user_id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
++
++-- F9-25 — Biblioteca pessoal de padrões BDRE. Sem FKs: User::deleteUser faz a cascata manual.
++CREATE TABLE IF NOT EXISTS `rms_cms_block_pattern` (
++  `pattern_id` BIGINT NOT NULL AUTO_INCREMENT,
++  `owner_user_id` INT NOT NULL COMMENT 'Administrador proprietário; sempre obtido da sessão autenticada',
++  `name` VARCHAR(80) NOT NULL,
++  `source_language` VARCHAR(8) NOT NULL DEFAULT '' COMMENT 'Idioma de origem, somente metadado; não traduz automaticamente',
++  `root_type` VARCHAR(64) NOT NULL COMMENT 'Tipo do bloco raiz validado; ajuda a limitar listagem sem carregar JSON',
++  `format_version` SMALLINT NOT NULL,
++  `content_json` MEDIUMTEXT NOT NULL COMMENT 'Documento BDRE canônico, até 4 MiB; sem custom_js',
++  `date_added` DATETIME NOT NULL,
++  `date_modified` DATETIME NOT NULL,
++  PRIMARY KEY (`pattern_id`),
++  UNIQUE KEY `owner_name` (`owner_user_id`,`name`),
++  KEY `owner_modified` (`owner_user_id`,`date_modified`),
++  KEY `owner_root` (`owner_user_id`,`root_type`)
++) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--- /dev/null
++++ b/dev/install/sql/upgrade_f9_25_bdreditor_patterns.sql
+@@ -0,0 +1,28 @@
++-- F9-25 — Biblioteca de padrões BDRE privados por administrador.
++-- Idempotente; NÃO executar automaticamente sem o fluxo de upgrade aprovado.
++-- Schema deliberately uses no foreign keys; user deletion cascades in User model.
++
++CREATE TABLE IF NOT EXISTS `rms_cms_block_pattern` (
++  `pattern_id` BIGINT NOT NULL AUTO_INCREMENT,
++  `owner_user_id` INT NOT NULL COMMENT 'Administrador proprietário; derivado da sessão, não do cliente',
++  `name` VARCHAR(80) NOT NULL,
++  `source_language` VARCHAR(8) NOT NULL DEFAULT '' COMMENT 'Idioma de origem; sem tradução automática',
++  `root_type` VARCHAR(64) NOT NULL,
++  `format_version` SMALLINT NOT NULL,
++  `content_json` MEDIUMTEXT NOT NULL COMMENT 'Documento BDRE canônico, máximo 4 MiB, sem custom_js',
++  `date_added` DATETIME NOT NULL,
++  `date_modified` DATETIME NOT NULL,
++  PRIMARY KEY (`pattern_id`),
++  UNIQUE KEY `owner_name` (`owner_user_id`,`name`),
++  KEY `owner_modified` (`owner_user_id`,`date_modified`),
++  KEY `owner_root` (`owner_user_id`,`root_type`)
++) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
++
++UPDATE `rms_user_group`
++SET `permission` = JSON_ARRAY_APPEND(`permission`, '$.access', 'cms/block_pattern')
++WHERE (`name` = 'Administrator' OR `user_group_id` = 1)
++  AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.access'), 'one', 'cms/block_pattern') IS NULL;
++UPDATE `rms_user_group`
++SET `permission` = JSON_ARRAY_APPEND(`permission`, '$.modify', 'cms/block_pattern')
++WHERE (`name` = 'Administrator' OR `user_group_id` = 1)
++  AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.modify'), 'one', 'cms/block_pattern') IS NULL;
+
+--- a/docs/Dicionario-de-Dados.md
++++ b/docs/Dicionario-de-Dados.md
+@@ -29,7 +29,7 @@
+ | `language` | `localization/` | catalog/admin/install |
+ | `user_group`, `user` | `user/` | admin, api |
+ | `customer_group`, `customer` | `customer/` | catalog `account/`, sale |
+-| `page`, `page_description` | `cms/` | catalog `information/` |
++| `page`, `page_description`, `cms_block_pattern` | `cms/` | catalog `information/`; biblioteca BDRE privada por administrador |
+ | `custom_field_group*`, `custom_field*`, `custom_field_value` | `custom_field/definition`, F9 | CMS admin + catalog `cms/page` (somente visibility=public) |
+ | `blog_post`, `blog_post_description`, `blog_post_content` | `blog/blog` | admin Blog + catalog Blog; conteúdo estruturado F9-12 |
+ | `category`, `category_description` | `catalog/` | catalog `product/` (portfólio) |
+@@ -254,3 +254,21 @@
+ - `rms_design_theme`: catálogo de temas; `config`/`draft_config` contém o rascunho e `published_config` preserva a última publicação consumida pelo Catalog.
+ - `rms_design_theme_revision`: snapshots para auditoria e restauração sob ACL/CSRF.
+ - Templates são armazenados nos payloads versionados e aceitam apenas chaves fixas; não há caminhos arbitrários nem arquivos editáveis.
++
++
++### `cms_block_pattern` (F9-25 — padrões pessoais BDRE)
++
++Uma linha representa um padrão reutilizável pertencente a exatamente um administrador. Pages e Blog usam a mesma biblioteca privada e endpoints compartilhados, mas cada operação exige a permissão de edição do contexto ativo; conteúdo, CRUD e ACL de Pages/Blog não são mesclados. O idioma de origem é metadata, sem tradução automática.
++
++| Coluna | Tipo | Regra |
++| --- | --- | --- |
++| `pattern_id` | `BIGINT AUTO_INCREMENT` | PK |
++| `owner_user_id` | `INT` | Dono; obtido exclusivamente da sessão autenticada, sem FK |
++| `name` | `VARCHAR(80)` | Obrigatório; único por proprietário |
++| `source_language` | `VARCHAR(8)` | Código do idioma de origem, sem alterar conteúdo |
++| `root_type` | `VARCHAR(64)` | Tipo validado da raiz; auxilia listagem e filtragem estrutural |
++| `format_version` | `SMALLINT` | Versão BDRE validada |
++| `content_json` | `MEDIUMTEXT` | Documento BDRE canônico, máximo 4 MiB; rejeita `custom_js` |
++| `date_added`, `date_modified` | `DATETIME` | Datas de auditoria |
++
++**Índices:** `PRIMARY(pattern_id)`, `UNIQUE(owner_user_id,name)`, `KEY(owner_user_id,date_modified)`, `KEY(owner_user_id,root_type)`. Limite de aplicação: 50 padrões por administrador. Exclusão de usuário remove linhas pertencentes na camada Model, com verificação protegida quando a tabela ainda não existe. Não declarar foreign keys; respeitar o padrão global de integridade manual.
+
+--- a/docs/F9-25-Editor-Editorial.md
++++ b/docs/F9-25-Editor-Editorial.md
+@@ -1,8 +1,8 @@
+ # Fase 9 · Tarefa 25 — Padrões, templates e fluxo editorial
+ 
+-**Status do pacote:** incremento local parcial, com proposta pendente para persistência/preview autenticado. Não declarar a F9-25 completa. Nenhuma alteração remota ou de banco.
++**Status deste pacote:** incremento parcial de implementação local, sujeito a revisão/integração e validação no ambiente do projeto; não declara a F9-25 completa. Nenhuma alteração remota, migration executada ou escrita em banco.
+ 
+-**HEAD `main` verificado:** `4bb1b7c7ce8b23172f56241d5209ffdc6760c5c5` (commit F9-24 de 2026-10-25, filho de `af3421cc1b3bd4636d8bb44d6d3d4e83e0fb5eb9`). Os arquivos pontuais copiados para revisão foram comparados por Git blob SHA com a árvore desse commit; sem clone integral.
++**HEAD de base verificada:** `a6cb064b04aa1d0ece686168cef50a49e99b49a9` (commit confirmado em 2026-10-29). Fontes pontuais foram consultadas para esta alteração; sem clone integral.
+ 
+ ## Escopo oficial F9-25
+ 
+@@ -37,3 +37,14 @@
+ A seção histórica acima que marcava a prévia autenticada como não implementada é supersedida para o fluxo de Blog por `BDREditor-Blog-Catalog-Preview.md`, preparado localmente contra a HEAD `5838685e4a96d6089d27c0d7e024b7c11b13c434` após aprovação explícita do escopo. O preview usa POST, ACL/CSRF de `blog/blog`, validação/renderização sem persistência e leitura somente da estrutura pública ativa `blog_post`; Pages e Blog continuam com CRUD, modelos e permissões separados. O `custom_js` de miniaturas Three.js não é executado na prévia.
+ 
+ Isso não declara a F9-25 concluída: persistência e CRUD de padrões próprios continuam fora deste incremento. Não houve migration, commit, push, deploy ou execução PHP/runtime.
++
++
++## Addendum 2026-10-29 — persistência privada de padrões BDRE (implementação local)
++
++O plano de persistência foi aprovado pelo usuário. Esta entrega local implementa a biblioteca pessoal no controller/model `cms/block_pattern`, aplicável separadamente aos editores de Pages e Blog. Os fluxos de conteúdo e seus CRUDs continuam independentes. A lista retorna metadados; o JSON só é carregado sob demanda. Cada endpoint contextualizado (`*Pages`/`*Blog`) exige `access cms/block_pattern` e `modify cms/page` ou `modify blog/blog`, respectivamente; mutações exigem adicionalmente `modify cms/block_pattern`. O dono nunca vem do cliente.
++
++A validação usa `BlockDocument` no contexto de destino e exige subárvore única independente, permite uso em qualquer idioma e registra o idioma de origem sem tradução. IDs são regenerados ao inserir. `custom_js` é rejeitado; nenhum HTML/Twig/JS livre é persistido. Limites: 50 por administrador e 4 MiB por documento. Migration idempotente, rollback não destrutivo, ambos schemas, seed Administrator, cascade manual de usuário e dicionário de dados foram atualizados. Grupos personalizados não recebem grant automaticamente.
++
++**Estado de operação:** migration criada em `dev/install/sql/upgrade_f9_25_bdreditor_patterns.sql`, mas não executada. Nenhuma escrita em GitHub, push, deploy ou staging. A prévia privada do Blog e a prévia de Pages publicadas anteriormente não foram refeitas.
++
++**Plano/validação documentados para mudança multi-arquivo:** alteração limitada a API/model, JS compartilhado do BDRE, init, templates/config dos dois contextos, strings, schemas/seed/migration/rollback e documentação. Revisão manual de ACL/owner/context, validação canônica, limite/tamanho, cascata sem FK, e paths por contexto. Não há teste PHP/runtime disponível nesta etapa; `php -l` não foi executado se PHP continuar ausente. Não houve bateria de checker/testes nem chamadas à aplicação/banco.
