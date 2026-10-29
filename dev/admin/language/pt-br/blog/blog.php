@@ -450,3 +450,9 @@ $_['text_block_pattern_custom_js_rejected'] = 'Padrões não podem conter JavaSc
 
 $_['text_block_draft_recovery_prompt'] = 'Foi encontrado um rascunho BDRE não salvo nesta aba. Deseja recuperá-lo? O rascunho temporário fica apenas nesta aba até ser salvo ou descartado.';
 $_['text_block_draft_recovery_hint'] = 'Uma cópia temporária de recuperação fica nesta aba. O conteúdo do site só é salvo quando você clica em Salvar.';
+
+// F9-29 — portable BDRE document files
+$_['text_block_export_document'] = 'Exportar documento BDRE';
+$_['text_block_export_success'] = 'Documento BDRE exportado.';
+$_['text_block_export_error'] = 'Não foi possível exportar o documento BDRE.';
+$_['text_block_import_replace_confirm'] = 'Substituir todo o documento atual pelo arquivo BDRE?';

@@ -847,7 +847,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 'text_block_mobile_full', 'text_block_mobile_large', 'text_block_mobile_medium',
                 'text_block_video_preview', 'text_block_video_preview_hint', 'text_block_media_placeholder',
                 'text_block_pattern_category', 'text_block_pattern_two_columns', 'text_block_pattern_quote_cta', 'text_block_pattern_section_intro',
-                'text_block_pattern_cover_hero', 'text_block_pattern_hint', 'text_block_saved_patterns', 'text_block_save_pattern', 'text_block_rename_pattern', 'text_block_delete_pattern', 'text_block_pattern_name_prompt', 'text_block_pattern_rename_prompt', 'text_block_pattern_delete_confirm', 'text_block_pattern_saved', 'text_block_pattern_renamed', 'text_block_pattern_deleted', 'text_block_pattern_error', 'text_block_pattern_incompatible', 'text_block_pattern_invalid', 'text_block_pattern_custom_js_rejected', 'text_block_draft_recovery_prompt', 'text_block_draft_recovery_hint', 'text_block_save_state_saved', 'text_block_save_state_unsaved', 'text_block_save_state_saving',
+                'text_block_pattern_cover_hero', 'text_block_pattern_hint', 'text_block_saved_patterns', 'text_block_save_pattern', 'text_block_rename_pattern', 'text_block_delete_pattern', 'text_block_pattern_name_prompt', 'text_block_pattern_rename_prompt', 'text_block_pattern_delete_confirm', 'text_block_pattern_saved', 'text_block_pattern_renamed', 'text_block_pattern_deleted', 'text_block_pattern_error', 'text_block_pattern_incompatible', 'text_block_pattern_invalid', 'text_block_pattern_custom_js_rejected', 'text_block_draft_recovery_prompt', 'text_block_draft_recovery_hint', 'text_block_export_document', 'text_block_export_success', 'text_block_export_error', 'text_block_import_replace_confirm', 'text_block_save_state_saved', 'text_block_save_state_unsaved', 'text_block_save_state_saving',
             ] as $key) {
                 $data[$key] = $this->language->get($key);
             }
@@ -946,10 +946,12 @@ class Page extends \Reamur\System\Engine\Controller {
             'patternInvalid' => $data['text_block_pattern_invalid'], 'patternCustomJsRejected' => $data['text_block_pattern_custom_js_rejected'],
             'draftRecoveryPrompt' => $data['text_block_draft_recovery_prompt'],
             'draftRecoveryHint' => $data['text_block_draft_recovery_hint'],
+            'exportDocument' => $data['text_block_export_document'], 'exportSuccess' => $data['text_block_export_success'],
+            'exportError' => $data['text_block_export_error'], 'importReplaceConfirm' => $data['text_block_import_replace_confirm'],
             ];
 
                 $site = $this->config->get('site_url');
-                $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-7';
+                $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-8';
                 $catalogAssetBase = $this->pageCatalogAssetUrl();
                 $this->document->addStyle($site . 'view/css/blog-block-editor.css?v=' . $version);
                 $this->document->addStyle($catalogAssetBase . 'view/css/threejs-thumb.css?v=' . $version);

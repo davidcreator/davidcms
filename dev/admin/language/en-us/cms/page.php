@@ -250,3 +250,9 @@ $_['text_block_pattern_custom_js_rejected'] = 'Patterns cannot contain JavaScrip
 
 $_['text_block_draft_recovery_prompt'] = 'An unsaved BDRE draft from this browser tab was found. Restore it? The temporary draft is stored only in this tab until saved or discarded.';
 $_['text_block_draft_recovery_hint'] = 'A temporary recovery copy is kept in this browser tab. The site content is saved only when you click Save.';
+
+// F9-29 — portable BDRE document files
+$_['text_block_export_document'] = 'Export BDRE document';
+$_['text_block_export_success'] = 'BDRE document exported.';
+$_['text_block_export_error'] = 'Could not export the BDRE document.';
+$_['text_block_import_replace_confirm'] = 'Replace the entire current document with this BDRE file?';

@@ -245,6 +245,14 @@
   }
   async function importFile(file){
     const warnings=[];const ext=(file.name.split('.').pop()||'').toLowerCase();let blocks;
+    if(ext==='json') {
+      if(!/\.bdre\.json$/i.test(file.name)) throw new Error('Selecione um arquivo .bdre.json exportado pelo editor.');
+      if(file.size>4*1024*1024) throw new Error('O documento BDRE excede o limite de 4 MiB.');
+      let document;
+      try { document=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(new Uint8Array(await file.arrayBuffer()))); }
+      catch (_) { throw new Error('O arquivo BDRE não contém JSON UTF-8 válido.'); }
+      return {document,warnings,replaceDocument:true};
+    }
     if(['html','htm','xhtml'].includes(ext)) blocks=parseHtml(bytesToText(new Uint8Array(await file.arrayBuffer())),warnings);
     else if(ext==='docx') blocks=await docx(file,warnings);
     else if(ext==='xlsx') blocks=await xlsx(file,warnings);
@@ -256,5 +264,5 @@
     if(new TextEncoder().encode(JSON.stringify(document)).length>4*1024*1024)throw new Error('O resultado convertido supera o limite v2 de 4 MiB.');
     return {document,warnings};
   }
-  global.ReamurPageImporter={importFile,formats:['.docx','.xlsx','.pptx','.html','.htm','.xhtml','.imscc'],maxFileBytes:LIMIT_FILE};
+  global.ReamurPageImporter={importFile,formats:['.bdre.json','.docx','.xlsx','.pptx','.html','.htm','.xhtml','.imscc'],maxFileBytes:LIMIT_FILE};
 })(window);

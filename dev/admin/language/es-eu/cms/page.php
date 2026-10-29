@@ -234,3 +234,9 @@ $_['text_block_pattern_custom_js_rejected'] = 'Los patrones no pueden contener J
 
 $_['text_block_draft_recovery_prompt'] = 'Se encontró un borrador BDRE sin guardar en esta pestaña. ¿Quieres recuperarlo? El borrador temporal solo se conserva en esta pestaña hasta guardarlo o descartarlo.';
 $_['text_block_draft_recovery_hint'] = 'Se conserva una copia temporal de recuperación en esta pestaña. El contenido del sitio solo se guarda al pulsar Guardar.';
+
+// F9-29 — portable BDRE document files
+$_['text_block_export_document'] = 'Exportar documento BDRE';
+$_['text_block_export_success'] = 'Documento BDRE exportado.';
+$_['text_block_export_error'] = 'No se pudo exportar el documento BDRE.';
+$_['text_block_import_replace_confirm'] = '¿Sustituir todo el documento actual por este archivo BDRE?';

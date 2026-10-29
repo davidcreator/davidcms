@@ -32,7 +32,7 @@
     details:'M5 7h14M5 12h14M5 17h14M3 7h.01M3 12h.01M3 17h.01', spacer:'M12 3v18m-4-14 4-4 4 4m-8 10 4 4 4-4', code:'m8 6-6 6 6 6m8-12 6 6-6 6m-3-14-2 16', separator:'M4 12h16M12 7v10', group:'M4 4h16v16H4zM8 8h8v8H8z', columns:'M4 4h16v16H4zM12 4v16', gallery:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', cover:'M4 4h16v16H4zM4 15l5-5 4 4 3-3 4 5', table:'M4 4h16v16H4zM4 10h16M4 15h16M10 4v16M16 4v16', file:'M6 3h8l4 4v14H6zM14 3v5h5M9 13h6M9 17h6', audio:'M4 10v4m4-8v12m4-16v20m4-16v12m4-8v4', settings:'M4 7h16M4 17h16M8 7v0m8 10v0', outline:'M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h11', layers:'m12 3 9 5-9 5-9-5 9-5zm-9 9 9 5 9-5m-18 5 9 5 9-5', grip:'M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01', transform:'M4 7h14m0 0-3-3m3 3-3 3M20 17H6m0 0 3-3m-3 3 3 3',
     check:'m5 12 4 4L19 6', search:'m20 20-4.5-4.5M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0', help:'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', expand:'M8 3H3v5m0-5 7 7m6-7h5v5m0-5-7 7M3 16v5h5m-5 0 7-7m11 2v5h-5m5 0-7-7', collapse:'M8 3v5H3m0 0 7-7m6 7V3h5m0 0-7 7M3 16h5v5m0 0 7-7m1 2h5v5m0 0-7-7'
   };
-  const ACTION_ICONS = { 'toggle-inserter':'plus','import-file':'file','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','file-media':'file','audio-media':'audio','video-media':'video',media:'image','insert-pattern':'layers',insert:'plus','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent','toggle-fullscreen':'expand','builder-panel':'layers','align-text':'align-left' };
+  const ACTION_ICONS = { 'toggle-inserter':'plus','import-file':'file','export-document':'file','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','file-media':'file','audio-media':'audio','video-media':'video',media:'image','insert-pattern':'layers',insert:'plus','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent','toggle-fullscreen':'expand','builder-panel':'layers','align-text':'align-left' };
   const ICON_ONLY_ACTIONS = new Set(['align-text','import-file','toggle-inserter','paste-block','undo','redo','preview','move-up','move-down','duplicate','copy-block','delete','file-media','audio-media','video-media','media','format-mark','link-apply','link-remove','table-add-row','table-remove-row','table-add-column','table-remove-column','table-toggle-header','indent','outdent','toggle-fullscreen','builder-panel']);
   const TYPE_ICONS = { 'core/paragraph':'paragraph','core/heading':'heading','core/list':'list','core/list-item':'list','core/image':'image','core/quote':'quote','core/video_embed':'video','core/video_file':'video','core/threejs_thumb':'threejs','core/button':'button','core/callout':'info','core/details':'details','core/spacer':'spacer','core/code':'code','core/separator':'separator','core/group':'group','core/columns':'columns','core/column':'columns','core/gallery':'gallery','core/cover':'cover','core/table':'table','core/table-row':'table','core/table-cell':'table','core/file':'file','core/audio':'audio' };
 
@@ -642,6 +642,7 @@
       }
       else if (name === 'ribbon-tab') { this.activeRibbonTab = button.dataset.tab; this.render(); }
       else if (name === 'import-file') { const input=this.root.querySelector('[data-import-file]'); if (input) input.click(); }
+      else if (name === 'export-document') this.exportDocumentFile();
       else if (name === 'toggle-preview') { this.previewMode=!this.previewMode; if (this.previewMode) this.activePanel=null; this.render(); }
       else if (name === 'builder-panel') {
         const panel = button.dataset.panel;
@@ -1429,13 +1430,36 @@
       if (extra) Object.keys(extra).forEach((key) => { b.dataset[key] = extra[key]; }); return b;
     }
 
+    exportDocumentFile() {
+      try {
+        const json = this.serialize();
+        const blob = new Blob([json], { type:'application/json;charset=utf-8' });
+        const url = global.URL.createObjectURL(blob);
+        const link = global.document.createElement('a');
+        link.href = url; link.download = 'bdre-document-' + new Date().toISOString().slice(0,10) + '.bdre.json';
+        link.hidden = true; global.document.body.appendChild(link); link.click(); link.remove();
+        global.setTimeout(() => global.URL.revokeObjectURL(url), 1000);
+        this.announceStatus(this.strings.exportSuccess || 'Documento BDRE exportado.');
+      } catch (_) { this.announceStatus(this.strings.exportError || 'Não foi possível exportar o documento BDRE.'); }
+    }
+
     async importLocalFile(file) {
       if (!global.ReamurPageImporter) { this.announceStatus(this.strings.importUnavailable || 'Importador indisponível.'); return; }
       try {
         const result=await global.ReamurPageImporter.importFile(file);
-        const next=CLONE(this.state);
-        if (next.blocks.length+result.document.blocks.length>1000) throw new Error('A importação ultrapassaria o limite de 1.000 blocos.');
-        next.blocks.push(...result.document.blocks);
+        const imported = upgradeDocument(result.document);
+        const importedValidation = validateDocument(imported, this.allowPageMedia);
+        if (!importedValidation.valid) throw new Error('O arquivo não contém um documento BDRE válido para este editor.');
+        if (result.replaceDocument && !global.confirm(this.strings.importReplaceConfirm || 'Substituir todo o documento atual pelo arquivo BDRE?')) return;
+        const next = result.replaceDocument ? CLONE(imported) : CLONE(this.state);
+        const importedBlocks = imported.blocks.map((block) => cloneBlockWithNewIds(block, () => this.newId()));
+        const resultingBlockCount = result.replaceDocument ? importedBlocks.length : next.blocks.length + importedBlocks.length;
+        if (resultingBlockCount > 1000) throw new Error('A importação ultrapassaria o limite de 1.000 blocos.');
+        if (result.replaceDocument) {
+          next.blocks = importedBlocks;
+          this.selectedId = importedBlocks[0] ? importedBlocks[0].id : null;
+          this.insertAfterId = null; this.slashTrigger = null;
+        } else next.blocks.push(...importedBlocks);
         const validation=validateDocument(next, this.allowPageMedia); if(!validation.valid) throw new Error('O conteúdo convertido não passou na validação BDREditor.');
         this.importNotices=(result.warnings||[]).slice(0,6);
         if(result.warnings&&result.warnings.length>6)this.importNotices.push('Há outros avisos omitidos.');
@@ -1547,6 +1571,7 @@
       const addButton = (tools, label, action, extra) => tools.append(this.button(label, action, extra));
       if (this.activeRibbonTab === 'home') {
         let g=this.renderRibbonGroup(this.strings.groupClipboard||'Área de transferência');
+        addButton(g.tools,this.strings.exportDocument||'Exportar BDRE','export-document',{icon:'file'});
         addButton(g.tools,this.strings.addBlock,'toggle-inserter'); addButton(g.tools,this.strings.pasteBlock,'paste-block'); addButton(g.tools,this.strings.undo,'undo'); addButton(g.tools,this.strings.redo,'redo'); panel.append(g.group);
         g=this.renderRibbonGroup(this.strings.groupTextFormat||'Formatação de texto');
         INLINE_MARKS.forEach((mark)=>{ const b=this.button(this.strings[mark]||mark,'format-mark',{mark}); b.dataset.mark=mark; b.setAttribute('aria-pressed','false'); g.tools.append(b); });
