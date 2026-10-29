@@ -301,7 +301,7 @@ $_['error_audio_generic'] = 'No se pudo cargar la biblioteca de audio.';
 
 // BDREditor keyboard help
 $_['text_block_keyboard_shortcuts_title'] = 'Atajos de teclado';
-$_['text_block_keyboard_shortcuts'] = 'Ctrl/⌘+B negrita · Ctrl/⌘+I cursiva · Ctrl/⌘+U subrayado · Ctrl/⌘+K enlace · Ctrl/⌘+Z deshacer · Ctrl/⌘+Shift+Z o Ctrl+Y rehacer · Alt+↑/↓ mover bloque · / insertar bloque';
+$_['text_block_keyboard_shortcuts'] = 'Ctrl/⌘+F buscar · Ctrl/⌘+B negrita · Ctrl/⌘+I cursiva · Ctrl/⌘+U subrayado · Ctrl/⌘+K enlace · Ctrl/⌘+Z deshacer · Ctrl/⌘+Shift+Z o Ctrl+Y rehacer · Alt+↑/↓ mover bloque · / insertar bloque';
 
 // BDREditor local block clipboard
 $_['text_block_copy'] = 'Copiar bloque';

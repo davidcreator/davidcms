@@ -276,3 +276,5 @@ $_['text_block_replace_done'] = 'Substituições realizadas: %1.';
 $_['text_block_replace_limit'] = 'A substituição excede o limite de 1.000 ocorrências; nada foi alterado.';
 $_['text_block_find_empty'] = 'Digite um termo para localizar.';
 $_['text_block_find_previous'] = 'Ocorrência anterior';
+$_['text_block_keyboard_shortcuts_title'] = 'Atalhos de teclado';
+$_['text_block_keyboard_shortcuts'] = 'Ctrl/⌘+F localizar · Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco';

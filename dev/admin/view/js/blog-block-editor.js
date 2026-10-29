@@ -103,6 +103,7 @@
     if (modifier && !context.inFormControl) {
       if (key === 'z') return event.shiftKey ? 'redo' : 'undo';
       if (key === 'y') return 'redo';
+      if (key === 'f' && (context.inTextEditor || context.inBlock)) return 'find';
     }
     if (modifier && context.inTextEditor && !context.inFormControl) {
       const marks = { b: 'bold', i: 'italic', u: 'underline' };
@@ -589,6 +590,7 @@
         const inBlock = !!event.target.closest('.rb-block[data-node-id]');
         const command = classifyKeyboardShortcut(event, { inTextEditor, inFormControl, inBlock });
         if (command === 'undo' || command === 'redo') { event.preventDefault(); this.action(command); return; }
+        if (command === 'find') { event.preventDefault(); this.findReplaceOpen=true; this.render(); const find=this.root.querySelector('[data-find-query]'); if(find)find.focus(); return; }
         if (['bold','italic','underline'].includes(command)) { event.preventDefault(); this.captureInlineSelection(); this.applyInlineMark(command); return; }
         if (command === 'link') { event.preventDefault(); this.captureInlineSelection(); const link = this.root.querySelector('[data-inline-link-input]'); if (link) link.focus(); return; }
         if (event.key === 'Enter' && event.target.closest('[data-edit-content]')) { event.preventDefault(); this.insertPlainText(event.target.closest('[data-edit-content]'), '\n'); return; }
@@ -1457,6 +1459,16 @@
         b.setAttribute('aria-label', String(label)); b.setAttribute('title', String(label));
       }
       b.append(text);
+      let shortcut = '';
+      if (action === 'undo') shortcut = 'Control+Z Meta+Z';
+      else if (action === 'redo') shortcut = 'Control+Shift+Z Meta+Shift+Z Control+Y';
+      else if (action === 'toggle-find-replace') shortcut = 'Control+F Meta+F';
+      else if (action === 'move-up') shortcut = 'Alt+ArrowUp';
+      else if (action === 'move-down') shortcut = 'Alt+ArrowDown';
+      else if (action === 'format-mark' && extra && extra.mark === 'bold') shortcut = 'Control+B Meta+B';
+      else if (action === 'format-mark' && extra && extra.mark === 'italic') shortcut = 'Control+I Meta+I';
+      else if (action === 'format-mark' && extra && extra.mark === 'underline') shortcut = 'Control+U Meta+U';
+      if (shortcut) b.setAttribute('aria-keyshortcuts',shortcut);
       if (extra) Object.keys(extra).forEach((key) => { b.dataset[key] = extra[key]; }); return b;
     }
 
@@ -1808,6 +1820,7 @@
       } else layout.append(canvas);
       this.root.append(layout);
       if (this.historyOpen) this.root.append(this.renderDraftHistory());
+      const shortcutHelp=this.el('details','rb-keyboard-help'); shortcutHelp.append(this.el('summary','',this.strings.keyboardShortcutsTitle||'Keyboard shortcuts'),this.el('p','',this.strings.keyboardShortcuts||'')); this.root.append(shortcutHelp);
       const footText = this.options.connectedSave === true
         ? (this.strings.draftRecoveryHint || 'Uma cópia temporária fica nesta aba; o conteúdo do site só é salvo ao clicar em Salvar.')
         : 'Rascunho em memória · não salva nem publica. O salvamento será conectado numa tarefa posterior.';

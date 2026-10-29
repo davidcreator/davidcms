@@ -426,3 +426,9 @@ body.rb-bdre-fullscreen-open{overflow:hidden!important}
 .rb-find-hint,.rb-find-status{grid-column:1/-1;margin:0;color:#667085;font-size:.75rem}
 .rb-find-status{font-weight:600;color:#344054}
 @media(max-width:700px){.rb-find-replace{grid-template-columns:1fr}.rb-find-fields{grid-template-columns:1fr}.rb-find-actions .rb-button{flex:1}}
+
+/* F9-37 keyboard-accessible help and focusable disclosure */
+.rb-keyboard-help{margin:.55rem 0;padding:.55rem .75rem;border:1px solid #d9deea;border-radius:.45rem;background:#fff;color:#344054;font-size:.78rem}
+.rb-keyboard-help summary{cursor:pointer;font-weight:650}
+.rb-keyboard-help summary:focus-visible{outline:3px solid #174ea6;outline-offset:3px;border-radius:2px}
+.rb-keyboard-help p{margin:.5rem 0 0;line-height:1.55}
