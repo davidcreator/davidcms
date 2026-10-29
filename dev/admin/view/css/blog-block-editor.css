@@ -409,3 +409,9 @@ body.rb-bdre-fullscreen-open{overflow:hidden!important}
 .rb-saved-pattern-row{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:.35rem 0}
 .rb-saved-pattern-row .rb-inserter-option{flex:1 1 12rem;text-align:left}
 .rb-saved-pattern-row button:not(.rb-inserter-option){font-size:.8em;padding:.35rem .55rem}
+
+/* F9-30 temporary revision history, scoped to this browser tab */
+.rb-draft-history{border:1px solid #cbd5e1;border-radius:.65rem;background:#fff;padding:1rem;margin:.75rem 0;max-width:42rem}
+.rb-draft-history h3{margin:0 0 .75rem;font-size:1rem}
+.rb-draft-history-row{display:flex;align-items:center;justify-content:space-between;gap:.75rem;padding:.55rem 0;border-top:1px solid #e2e8f0}
+.rb-draft-history-row span{font-size:.875rem;color:#334155}

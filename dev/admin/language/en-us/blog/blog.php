@@ -456,3 +456,11 @@ $_['text_block_export_document'] = 'Export BDRE document';
 $_['text_block_export_success'] = 'BDRE document exported.';
 $_['text_block_export_error'] = 'Could not export the BDRE document.';
 $_['text_block_import_replace_confirm'] = 'Replace the entire current document with this BDRE file?';
+
+// F9-30 — temporary draft history
+$_['text_block_history_button'] = 'Draft history';
+$_['text_block_history_title'] = 'Temporary draft history';
+$_['text_block_history_empty'] = 'No previous temporary drafts in this tab.';
+$_['text_block_history_restore'] = 'Restore';
+$_['text_block_history_restore_confirm'] = 'Restore this temporary revision into the editor?';
+$_['text_block_history_restored'] = 'Temporary revision restored as an unsaved draft.';

@@ -30,7 +30,7 @@
     paragraph:'M4 6h16M4 10h16M4 14h10M4 18h10', heading:'M4 5v14M20 5v14M4 12h16', list:'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
     image:'M4 4h16v16H4zM8 14l3-3 5 5M14 9h.01', quote:'M5 6h6v6H5zM13 6h6v6h-6zM5 12c0 3-1 4-2 5m10-5c0 3-1 4-2 5', video:'m9 7 9 5-9 5zM4 5v14', button:'M4 7h16v10H4z', bold:'M7 5h6a4 4 0 0 1 0 8H7zM7 13h7a4 4 0 0 1 0 8H7z', italic:'M15 4h-5m4 16H9m5-16-4 16', underline:'M6 4v7a6 6 0 0 0 12 0V4M4 21h16', strike:'M5 12h14M7 6c1-2 3-2 5-2 3 0 5 1 5 3 0 2-2 3-5 4-3 1-5 2-5 5 0 2 2 4 5 4 2 0 4-1 5-3', link:'M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7M14 11a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 21l1.7-1.7', info:'M12 8h.01M11 12h1v5h1M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
     details:'M5 7h14M5 12h14M5 17h14M3 7h.01M3 12h.01M3 17h.01', spacer:'M12 3v18m-4-14 4-4 4 4m-8 10 4 4 4-4', code:'m8 6-6 6 6 6m8-12 6 6-6 6m-3-14-2 16', separator:'M4 12h16M12 7v10', group:'M4 4h16v16H4zM8 8h8v8H8z', columns:'M4 4h16v16H4zM12 4v16', gallery:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', cover:'M4 4h16v16H4zM4 15l5-5 4 4 3-3 4 5', table:'M4 4h16v16H4zM4 10h16M4 15h16M10 4v16M16 4v16', file:'M6 3h8l4 4v14H6zM14 3v5h5M9 13h6M9 17h6', audio:'M4 10v4m4-8v12m4-16v20m4-16v12m4-8v4', settings:'M4 7h16M4 17h16M8 7v0m8 10v0', outline:'M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h11', layers:'m12 3 9 5-9 5-9-5 9-5zm-9 9 9 5 9-5m-18 5 9 5 9-5', grip:'M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01', transform:'M4 7h14m0 0-3-3m3 3-3 3M20 17H6m0 0 3-3m-3 3 3 3',
-    check:'m5 12 4 4L19 6', search:'m20 20-4.5-4.5M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0', help:'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', expand:'M8 3H3v5m0-5 7 7m6-7h5v5m0-5-7 7M3 16v5h5m-5 0 7-7m11 2v5h-5m5 0-7-7', collapse:'M8 3v5H3m0 0 7-7m6 7V3h5m0 0-7 7M3 16h5v5m0 0 7-7m1 2h5v5m0 0-7-7'
+    check:'m5 12 4 4L19 6', search:'m20 20-4.5-4.5M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0', help:'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', expand:'M8 3H3v5m0-5 7 7m6-7h5v5m0-5-7 7M3 16v5h5m-5 0 7-7m11 2v5h-5m5 0-7-7', collapse:'M8 3v5H3m0 0 7-7m6 7V3h5m0 0-7 7M3 16h5v5m0 0 7-7m1 2h5v5m0 0-7-7', history:'M3 12a9 9 0 1 0 2.6-6.4L3 9m0-6v6h6m3-3v6l4 2'
   };
   const ACTION_ICONS = { 'toggle-inserter':'plus','import-file':'file','export-document':'file','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','file-media':'file','audio-media':'audio','video-media':'video',media:'image','insert-pattern':'layers',insert:'plus','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent','toggle-fullscreen':'expand','builder-panel':'layers','align-text':'align-left' };
   const ICON_ONLY_ACTIONS = new Set(['align-text','import-file','toggle-inserter','paste-block','undo','redo','preview','move-up','move-down','duplicate','copy-block','delete','file-media','audio-media','video-media','media','format-mark','link-apply','link-remove','table-add-row','table-remove-row','table-add-column','table-remove-column','table-toggle-header','indent','outdent','toggle-fullscreen','builder-panel']);
@@ -419,6 +419,7 @@
       this.root = root;
       this.options = options || {};
       this.patternConfig = this.options.patternConfig || {};
+      this.historyOpen = false;
       this.savedPatterns = [];
       this.patternLoadError = false;
       this.allowPageMedia = !!(root.dataset && root.dataset.pageContext);
@@ -643,6 +644,8 @@
       else if (name === 'ribbon-tab') { this.activeRibbonTab = button.dataset.tab; this.render(); }
       else if (name === 'import-file') { const input=this.root.querySelector('[data-import-file]'); if (input) input.click(); }
       else if (name === 'export-document') this.exportDocumentFile();
+      else if (name === 'toggle-revision-history') { this.historyOpen = !this.historyOpen; this.render(); }
+      else if (name === 'restore-draft-revision') this.restoreDraftRevision(Number(button.dataset.revisionIndex));
       else if (name === 'toggle-preview') { this.previewMode=!this.previewMode; if (this.previewMode) this.activePanel=null; this.render(); }
       else if (name === 'builder-panel') {
         const panel = button.dataset.panel;
@@ -1430,6 +1433,52 @@
       if (extra) Object.keys(extra).forEach((key) => { b.dataset[key] = extra[key]; }); return b;
     }
 
+    getDraftHistory() {
+      const key = this.patternConfig && this.patternConfig.draftKey;
+      if (!key) return [];
+      try {
+        const stored = JSON.parse(global.sessionStorage.getItem(key) || 'null');
+        return stored && Array.isArray(stored.history) ? stored.history.filter((item) => item && item.savedAt && Date.now() - item.savedAt <= 86400000).slice().reverse() : [];
+      } catch (_) { return []; }
+    }
+
+    restoreDraftRevision(index) {
+      const revisions = this.getDraftHistory();
+      const revision = Number.isInteger(index) ? revisions[index] : null;
+      if (!revision || !revision.document) return;
+      if (!global.confirm(this.strings.historyRestoreConfirm || 'Restore this temporary revision into the editor?')) return;
+      const restored = upgradeDocument(revision.document);
+      const validation = validateDocument(restored, this.allowPageMedia);
+      if (!validation.valid || utf8Length(JSON.stringify(restored)) > 4194304) {
+        this.announceStatus(this.strings.patternInvalid || this.strings.initialInvalid); return;
+      }
+      this.state = CLONE(restored);
+      this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null;
+      this.insertAfterId = null; this.slashTrigger = null; this.historyOpen = false;
+      this.undoStack = []; this.redoStack = [];
+      this.statusMessage = this.strings.historyRestored || 'Temporary revision restored as an unsaved draft.';
+      this.render(); this.onChange(this.getDocument(), validateDocument(this.state, this.allowPageMedia));
+    }
+
+    renderDraftHistory() {
+      const panel = this.el('section','rb-draft-history');
+      panel.setAttribute('role','region'); panel.setAttribute('aria-label',this.strings.historyTitle || 'Draft history');
+      const heading = this.el('h3','',this.strings.historyTitle || 'Draft history');
+      const close = this.button(this.strings.closePanel || 'Close','toggle-revision-history',{icon:'collapse'});
+      panel.append(heading,close);
+      const revisions = this.getDraftHistory();
+      if (!revisions.length) panel.append(this.el('p','rb-note',this.strings.historyEmpty || 'No previous temporary drafts in this tab.'));
+      revisions.forEach((item,index) => {
+        const row = this.el('div','rb-draft-history-row');
+        const when = new Date(Number(item.savedAt) || 0);
+        const count = item.document && Array.isArray(item.document.blocks) ? item.document.blocks.length : 0;
+        row.append(this.el('span','',when.toLocaleString() + ' · ' + count + ' blocks'));
+        row.append(this.button(this.strings.historyRestore || 'Restore','restore-draft-revision',{revisionIndex:String(index)}));
+        panel.append(row);
+      });
+      return panel;
+    }
+
     exportDocumentFile() {
       try {
         const json = this.serialize();
@@ -1572,7 +1621,8 @@
       if (this.activeRibbonTab === 'home') {
         let g=this.renderRibbonGroup(this.strings.groupClipboard||'Área de transferência');
         addButton(g.tools,this.strings.exportDocument||'Exportar BDRE','export-document',{icon:'file'});
-        addButton(g.tools,this.strings.addBlock,'toggle-inserter'); addButton(g.tools,this.strings.pasteBlock,'paste-block'); addButton(g.tools,this.strings.undo,'undo'); addButton(g.tools,this.strings.redo,'redo'); panel.append(g.group);
+        addButton(g.tools,this.strings.addBlock,'toggle-inserter'); addButton(g.tools,this.strings.pasteBlock,'paste-block'); addButton(g.tools,this.strings.undo,'undo'); addButton(g.tools,this.strings.redo,'redo');
+        const historyButton=this.button(this.strings.historyButton||'Draft history','toggle-revision-history',{icon:'history'}); historyButton.disabled=!this.getDraftHistory().length; g.tools.append(historyButton); panel.append(g.group);
         g=this.renderRibbonGroup(this.strings.groupTextFormat||'Formatação de texto');
         INLINE_MARKS.forEach((mark)=>{ const b=this.button(this.strings[mark]||mark,'format-mark',{mark}); b.dataset.mark=mark; b.setAttribute('aria-pressed','false'); g.tools.append(b); });
         const link=this.el('input','rb-inline-link'); link.type='text'; link.value=this.linkDraft; link.placeholder=this.strings.linkPlaceholder; link.setAttribute('aria-label',this.strings.link); link.dataset.inlineLinkInput='1'; g.tools.append(link);
@@ -1653,6 +1703,7 @@
         const close=this.button(this.strings.closePanel || 'Fechar painel','builder-panel',{panel:this.activePanel,icon:'collapse'}); close.classList.add('rb-panel-close'); panelBody.prepend(close); sidebar.append(panelBody); layout.append(sidebar,canvas);
       } else layout.append(canvas);
       this.root.append(layout);
+      if (this.historyOpen) this.root.append(this.renderDraftHistory());
       const footText = this.options.connectedSave === true
         ? (this.strings.draftRecoveryHint || 'Uma cópia temporária fica nesta aba; o conteúdo do site só é salvo ao clicar em Salvar.')
         : 'Rascunho em memória · não salva nem publica. O salvamento será conectado numa tarefa posterior.';

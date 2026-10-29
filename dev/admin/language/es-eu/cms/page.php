@@ -240,3 +240,11 @@ $_['text_block_export_document'] = 'Exportar documento BDRE';
 $_['text_block_export_success'] = 'Documento BDRE exportado.';
 $_['text_block_export_error'] = 'No se pudo exportar el documento BDRE.';
 $_['text_block_import_replace_confirm'] = '¿Sustituir todo el documento actual por este archivo BDRE?';
+
+// F9-30 — temporary draft history
+$_['text_block_history_button'] = 'Historial de borradores';
+$_['text_block_history_title'] = 'Historial temporal de borradores';
+$_['text_block_history_empty'] = 'No hay borradores temporales anteriores en esta pestaña.';
+$_['text_block_history_restore'] = 'Recuperar';
+$_['text_block_history_restore_confirm'] = '¿Recuperar esta versión temporal en el editor?';
+$_['text_block_history_restored'] = 'Versión temporal recuperada como borrador sin guardar.';

@@ -1,0 +1,5 @@
+BDREditor — F9-30 Histórico local de rascunhos
+
+Pacote com os arquivos completos atualizados para preservar até cinco snapshots temporários anteriores por editor/registro/idioma, com orçamento total de 512 KiB para o histórico, expiração de 24h e painel de recuperação. Restaurar uma versão altera apenas o documento em memória; o salvamento no site continua explícito.
+
+O histórico é local à aba (`sessionStorage`), sem tabela, migration ou endpoint. Extraia na raiz do repositório, preservando `dev/...` e `docs/...`. A bateria ampla permanece adiada para o marco de conclusão do BDREditor.

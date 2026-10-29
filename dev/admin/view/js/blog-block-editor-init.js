@@ -97,7 +97,7 @@
       var raw = slot.storage.getItem(slot.key);
       if (!raw) return { document: initial, recovered: false };
       var saved = JSON.parse(raw);
-      if (!saved || saved.version !== 1 || !saved.document || !saved.savedAt || Date.now() - saved.savedAt > 86400000) {
+      if (!saved || ![1,2].includes(saved.version) || !saved.document || !saved.savedAt || Date.now() - saved.savedAt > 86400000) {
         slot.storage.removeItem(slot.key);
         return { document: initial, recovered: false };
       }
@@ -124,7 +124,23 @@
     try {
       var encoded = JSON.stringify(doc);
       if (byteLength(encoded) > 4194304) return;
-      slot.storage.setItem(slot.key, JSON.stringify({ version:1, savedAt:Date.now(), document:doc }));
+      var previous = null;
+      try { previous = JSON.parse(slot.storage.getItem(slot.key) || 'null'); } catch (_) {}
+      var history = previous && Array.isArray(previous.history) ? previous.history.slice(-5) : [];
+      if (previous && previous.document && JSON.stringify(previous.document) !== encoded) {
+        var previousBytes = byteLength(JSON.stringify(previous.document));
+        if (previousBytes <= 524288) history.push({ savedAt:previous.savedAt || Date.now(), document:previous.document });
+      }
+      history = history.filter(function (item) { return item && item.document && item.savedAt && Date.now() - item.savedAt <= 86400000 && byteLength(JSON.stringify(item.document)) <= 524288; }).slice(-5);
+      var total = function () { return history.reduce(function (sum, item) { return sum + byteLength(JSON.stringify(item.document)); }, 0); };
+      while (history.length && total() > 524288) history.shift();
+      var record = { version:2, savedAt:Date.now(), document:doc, history:history };
+      while (true) {
+        try { slot.storage.setItem(slot.key, JSON.stringify(record)); return; }
+        catch (_) { if (!history.length) break; history.shift(); }
+      }
+      // Keep recovery even if quota forces revision-history eviction.
+      slot.storage.setItem(slot.key, JSON.stringify({ version:1, savedAt:record.savedAt, document:doc }));
     } catch (_) {
       // Storage may be disabled/full; ordinary explicit saving remains available.
     }
