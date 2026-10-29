@@ -181,6 +181,7 @@ class Page extends \Reamur\System\Engine\Model {
      * @param array<string, mixed> $data Payload normalizado do controller
      */
     public function editPage(int $page_id, array $data): void {
+        if ($this->pageContentChanged($page_id, $data)) $this->captureBdreRevisions('page', $page_id);
         $this->db->query(
             "UPDATE `" . $this->t('page') . "` SET
                 `status`     = '" . (int)(!empty($data['status']) ? 1 : 0) . "',
@@ -218,6 +219,7 @@ class Page extends \Reamur\System\Engine\Model {
         $this->db->query("DELETE FROM `" . $this->t('page_description') . "` WHERE `page_id` = '" . $page_id . "'");
 
         $this->db->query("DELETE FROM `" . $this->t('seo_url') . "` WHERE `key` = 'page_id=" . $page_id . "'");
+        if ($this->bdreRevisionTableExists()) $this->db->query("DELETE FROM `" . $this->t('bdre_revision') . "` WHERE `entity_type`='page' AND `entity_id`='" . $page_id . "'");
     }
 
     // ─── internos ────────────────────────────────────────────────────────
@@ -227,6 +229,70 @@ class Page extends \Reamur\System\Engine\Model {
      *
      * @param array<int, array<string, string>> $descriptions
      */
+    private function pageContentChanged(int $pageId, array $data): bool {
+        $page = $this->getPage($pageId);
+        if (!$page || (int)($page['status'] ?? 0) !== (int)($data['status'] ?? 0) || (int)($page['sort_order'] ?? 0) !== (int)($data['sort_order'] ?? 0)) return true;
+        $current = $this->getPageDescriptions($pageId); $keywords = $this->getPageKeywords($pageId);
+        foreach ((array)($data['descriptions'] ?? []) as $languageId => $next) {
+            $old = (array)($current[(int)$languageId] ?? []); $next = (array)$next;
+            foreach (['title','description','meta_title','meta_description'] as $field) if ((string)($old[$field] ?? '') !== (string)($next[$field] ?? '')) return true;
+            if ((string)($keywords[(int)$languageId] ?? '') !== (string)($next['keyword'] ?? '')) return true;
+        }
+        return false;
+    }
+
+    /** Capture persisted per-language content before an explicit edit; duplicates are skipped. */
+    private function captureBdreRevisions(string $type, int $entityId): void {
+        if (!$this->bdreRevisionTableExists()) return;
+        $page = $this->getPage($entityId);
+        if (!$page) return;
+        $descriptions = $this->getPageDescriptions($entityId);
+        $keywords = $this->getPageKeywords($entityId);
+        foreach ($descriptions as $languageId => &$description) $description['keyword'] = $keywords[$languageId] ?? '';
+        unset($description);
+        foreach ($descriptions as $languageId => $description) {
+            $snapshot = ['entity' => ['status' => (int)($page['status'] ?? 0), 'sort_order' => (int)($page['sort_order'] ?? 0)], 'description' => $description];
+            $raw = (string)($description['description'] ?? '');
+            $layout = (new \Reamur\System\Library\Cms\PageLayout())->decode($raw, (string)($page['system_key'] ?? ''));
+            if ($layout !== null) { $snapshot['page_layout_sections'] = $layout['sections']; $snapshot['block_document'] = $layout['content']; }
+            elseif (str_starts_with($raw, 'REAMURCMS_BDRE_JSON_V2:')) { $decoded = (new \Reamur\System\Library\Blog\BlockDocument(true))->deserializeDocument(substr($raw, strlen('REAMURCMS_BDRE_JSON_V2:'))); if (!empty($decoded['valid'])) $snapshot['block_document'] = $decoded['document']; }
+            elseif ($raw !== '') { $converted=(new \Reamur\System\Library\Blog\BlockDocument(true))->convertLegacy($raw); if (($converted['status'] ?? '') === 'converted' && is_array($converted['document'] ?? null)) $snapshot['block_document']=$converted['document']; }
+            $this->storeBdreRevision($type, $entityId, (int)$languageId, $snapshot);
+        }
+    }
+
+    /** @return array<int, array<string, mixed>> newest first; snapshot is decoded server-side */
+    public function getPageRevisions(int $entityId, int $languageId): array {
+        if ($entityId < 1 || $languageId < 1 || !$this->bdreRevisionTableExists()) return [];
+        $q = $this->db->query("SELECT `revision_id`, `snapshot_json`, `date_added` FROM `" . $this->t('bdre_revision') . "` WHERE `entity_type`='page' AND `entity_id`='" . $entityId . "' AND `language_id`='" . $languageId . "' ORDER BY `revision_id` DESC LIMIT 20");
+        $out = [];
+        if ($q instanceof \stdClass && !empty($q->rows)) foreach ((array)$q->rows as $row) {
+            $snapshot = json_decode((string)$row['snapshot_json'], true);
+            if (!is_array($snapshot)) continue;
+            $out[] = ['revision_id' => (int)$row['revision_id'], 'date_added' => (string)$row['date_added'], 'snapshot' => $snapshot];
+        }
+        return $out;
+    }
+
+    private function bdreRevisionTableExists(): bool {
+        static $exists = null;
+        if ($exists !== null) return $exists;
+        try { $q = $this->db->query("SELECT 1 FROM `information_schema`.`TABLES` WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = '" . $this->db->escape($this->t('bdre_revision')) . "' LIMIT 1"); $exists = $q instanceof \stdClass && !empty($q->row); }
+        catch (\Throwable $e) { $exists = false; }
+        return $exists;
+    }
+
+    private function storeBdreRevision(string $type, int $entityId, int $languageId, array $snapshot): void {
+        $json = json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if (!is_string($json) || strlen($json) > 4194304) return;
+        $hash = hash('sha256', $json);
+        $table = $this->t('bdre_revision');
+        $latest = $this->db->query("SELECT `content_hash` FROM `" . $table . "` WHERE `entity_type`='" . $this->db->escape($type) . "' AND `entity_id`='" . $entityId . "' AND `language_id`='" . $languageId . "' ORDER BY `revision_id` DESC LIMIT 1");
+        if ($latest instanceof \stdClass && !empty($latest->row) && hash_equals((string)$latest->row['content_hash'], $hash)) return;
+        $this->db->query("INSERT INTO `" . $table . "` SET `entity_type`='" . $this->db->escape($type) . "', `entity_id`='" . $entityId . "', `language_id`='" . $languageId . "', `content_hash`='" . $hash . "', `snapshot_json`='" . $this->db->escape($json) . "', `date_added`=NOW()");
+        $this->db->query("DELETE FROM `" . $table . "` WHERE `entity_type`='" . $this->db->escape($type) . "' AND `entity_id`='" . $entityId . "' AND `language_id`='" . $languageId . "' AND `revision_id` NOT IN (SELECT `revision_id` FROM (SELECT `revision_id` FROM `" . $table . "` WHERE `entity_type`='" . $this->db->escape($type) . "' AND `entity_id`='" . $entityId . "' AND `language_id`='" . $languageId . "' ORDER BY `revision_id` DESC LIMIT 20) AS retained)");
+    }
+
     private function syncDescriptions(int $page_id, array $descriptions): void {
         foreach ($descriptions as $language_id => $d) {
             $d = (array)$d;

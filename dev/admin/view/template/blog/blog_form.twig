@@ -79,6 +79,7 @@
                 <textarea class="form-control" name="blog_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="12" data-rte>{{ language.fields.description }}</textarea>
               {% endif %}
             </div>
+            {% if can_modify and post_id %}<div class="bdre-server-history mb-3" data-bdre-history data-kind="blog" data-language-id="{{ language.language_id }}" data-list-url="{{ post_revisions_url|e('html_attr') }}" data-item-url="{{ post_revision_url|e('html_attr') }}" data-editor-id="blog-block-editor-{{ language.language_id }}" data-description-id="input-description-{{ language.language_id }}" data-history-restore-label="{{ text_block_history_restore|e('html_attr') }}" data-history-empty="{{ text_block_history_empty|e('html_attr') }}" data-history-confirm="{{ text_block_history_restore_confirm|e('html_attr') }}" data-history-restored="{{ text_block_history_restored|e('html_attr') }}"><button type="button" class="btn btn-sm btn-outline-secondary" data-bdre-history-load>{{ text_block_history_button }}</button><div class="mt-2" data-bdre-history-items aria-live="polite"></div></div>{% endif %}
 
             <h3 class="h6 text-muted mt-4 mb-2">{{ text_meta_group }}</h3>
             <div class="row g-3">

@@ -257,6 +257,26 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->response->setOutput($this->load->view('blog/blog_form', $data));
     }
 
+    /** POST-only list of saved revisions for the current Blog post/language. */
+    public function revisions(string $post_id = '0'): void {
+        $this->load->language('blog/blog'); $this->load->model('blog/blog');
+        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST' || !$this->csrfValid() || !$this->user->hasPermission('modify', 'blog/blog')) { $this->mediaJson(['success'=>false,'error'=>'forbidden']); return; }
+        $postId=(int)$post_id; $languageId=(int)($this->request->post['language_id'] ?? 0); $knownLanguages=array_map(static fn($l)=>(int)((array)$l)['language_id'],$this->model_blog_blog->getLanguages());
+        if ($postId < 1 || !$this->model_blog_blog->getPost($postId) || !in_array($languageId,$knownLanguages,true)) { $this->mediaJson(['success'=>false,'error'=>'invalid_target']); return; }
+        $items=$this->model_blog_blog->getPostRevisions($postId,$languageId);
+        $this->mediaJson(['success'=>true,'items'=>array_map(static fn($r)=>['revision_id'=>$r['revision_id'],'date_added'=>$r['date_added']],$items)]);
+    }
+
+    /** POST-only fetch; restored content stays in memory until explicit Save. */
+    public function revision(string $post_id = '0'): void {
+        $this->load->language('blog/blog'); $this->load->model('blog/blog');
+        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST' || !$this->csrfValid() || !$this->user->hasPermission('modify', 'blog/blog')) { $this->mediaJson(['success'=>false,'error'=>'forbidden']); return; }
+        $postId=(int)$post_id; $languageId=(int)($this->request->post['language_id'] ?? 0); $revisionId=(int)($this->request->post['revision_id'] ?? 0); $knownLanguages=array_map(static fn($l)=>(int)((array)$l)['language_id'],$this->model_blog_blog->getLanguages());
+        if ($postId < 1 || !$this->model_blog_blog->getPost($postId) || !in_array($languageId,$knownLanguages,true) || $revisionId < 1) { $this->mediaJson(['success'=>false,'error'=>'invalid_target']); return; }
+        foreach ($this->model_blog_blog->getPostRevisions($postId,$languageId) as $revision) if ((int)$revision['revision_id']===$revisionId) { $this->mediaJson(['success'=>true,'snapshot'=>$revision['snapshot']]); return; }
+        $this->mediaJson(['success'=>false,'error'=>'not_found']);
+    }
+
     /** Preview the unsaved Blog BDRE document in the Catalog post template. */
     public function preview(): void {
         $this->load->language('blog/blog');
@@ -1144,6 +1164,8 @@ class Blog extends \Reamur\System\Engine\Controller {
         }
 
         $data['post_id']        = $pid;
+        $data['post_revisions_url'] = $pid > 0 ? $this->url->link('blog/blog.revisions|' . $pid) : '';
+        $data['post_revision_url'] = $pid > 0 ? $this->url->link('blog/blog.revision|' . $pid) : '';
         $data['image']          = (string)($posted['image'] ?? (string)($post['image'] ?? ''));
         $data['image_preview']  = $this->catalogImageUrl($data['image']);
         $data['date_published'] = (string)($posted['date_published'] ?? (string)($post['date_published'] ?? date('Y-m-d H:i:s')));

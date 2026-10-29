@@ -1,6 +1,6 @@
 # F9-31 — Histórico persistente de versões BDRE
 
-**Status:** especificação de implementação; ainda não integrado ao código.
+**Status:** integração implementada em Pages e Blog (captura, listagem protegida e restauração em memória); depende da migration F9-31 aplicada no ambiente para persistir histórico.
 
 ## Objetivo
 
@@ -30,6 +30,16 @@ Adicionar histórico durável às versões salvas do BDRE, complementando o hist
 
 Entregar arquivos completos alterados, migration, rollback, documentação e ZIP em `entregas`. Fazer verificações estáticas direcionadas após a integração, sem acesso a staging, banco, GitHub write ou deployment. Baterias abrangentes ficam para a fase final do produto.
 
-## Próxima implementação
+## Comportamento integrado
 
-Implementar primeiro o armazenamento/snapshot transacional nos models e a leitura/listagem segura; depois integrar controles de histórico e restauração em cada formulário preservando o Save explícito. Este documento não representa uma implementação funcional nem autoriza execução de migration.
+- Os models Page e Blog capturam snapshots do estado persistido antes de cada edição explícita, por idioma; a criação inicial não gera uma revisão anterior.
+- Captura ignora hash igual ao snapshot mais recente e mantém no máximo 20 snapshots por entidade/idioma.
+- Blog inclui o sidecar BDRE quando disponível e tenta converter legado com segurança; Pages preserva a descrição e decodifica o envelope de layout permitido para restaurar documento e ordem/seleção de seções.
+- Endpoints de listagem/detalhe são POST-only, verificam permissão `modify`, CSRF e existência do registro. A listagem devolve metadados; detalhes retornam somente a revisão pertencente ao registro e idioma solicitados.
+- Os formulários oferecem carregamento do histórico por idioma. Restaurar aplica campos editoriais e documento ao editor em memória; não executa Save. A confirmação e o estado não salvo deixam claro que é preciso clicar em Salvar para persistir.
+- A captura é fail-soft enquanto a tabela de revisão não existir; exclusão de página/post remove suas revisões.
+- Revisões não incluem custom fields de Pages, nem têm comparador visual; conteúdo legado que não converte com segurança pode ser restaurado nos campos legados quando editáveis.
+
+## Validação e implantação
+
+Migration e rollback são aditivos e permanecem não executados. Não foram feitos testes mutativos, acesso a banco/staging ou push. Executada apenas validação de sintaxe JavaScript; PHP não está instalado neste ambiente, portanto o lint PHP fica pendente. Aplicar a migration pelo fluxo autorizado antes de esperar histórico persistente. Esta documentação não autoriza execução da migration.

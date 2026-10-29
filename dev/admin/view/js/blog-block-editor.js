@@ -1398,6 +1398,21 @@
     undo() { this.clearTextEditSnapshot(); if (!this.undoStack.length) return; this.pushHistory(this.redoStack, 'redo', this.snapshot()); this.state = JSON.parse(this.popHistory(this.undoStack, 'undo')); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusUndo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state, this.allowPageMedia)); }
     redo() { this.clearTextEditSnapshot(); if (!this.redoStack.length) return; this.pushHistory(this.undoStack, 'undo', this.snapshot()); this.state = JSON.parse(this.popHistory(this.redoStack, 'redo')); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusRedo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state, this.allowPageMedia)); }
     setSelectedAttribute(key, value) { if (this.locked) return false; const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null; if (!found || !['core/image','core/cover','core/file','core/audio','core/video_file'].includes(found.node.type) || key !== 'src') return false; this.updateNode(found.node.id, (node) => { node.attributes.src = value; }); return true; }
+    replaceDocument(documentValue) {
+      if (this.locked || !documentValue || typeof documentValue !== 'object') return false;
+      const next = CLONE(documentValue);
+      const check = validateDocument(next, this.allowPageMedia);
+      if (!check.valid) return false;
+      this.clearTextEditSnapshot();
+      this.pushHistory(this.undoStack, 'undo', this.snapshot());
+      this.clearRedoHistory();
+      this.state = next;
+      this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null;
+      this.statusMessage = this.strings.historyRestored || 'Revision restored; save to keep it.';
+      this.render();
+      this.onChange(this.getDocument(), check);
+      return true;
+    }
     getDocument() { return this.locked ? null : CLONE(this.state); }
     serialize() {
       if (this.locked) throw new Error('document_requires_review');

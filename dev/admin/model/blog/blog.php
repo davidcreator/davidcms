@@ -170,7 +170,11 @@ class Blog extends \Reamur\System\Engine\Model {
         try {
             $oldDescriptions = $post_id > 0 ? $this->getPostDescriptions($post_id) : [];
             if ($post_id > 0) {
-                $this->editPost($post_id, $data);
+                $currentBlocks = $this->getPostBlockContents($post_id);
+                $blockChanged = false;
+                foreach ($blocks as $languageId => $json) if ((string)($currentBlocks[(int)$languageId]['content_json'] ?? '') !== (string)$json) { $blockChanged = true; break; }
+                if ($blockChanged || $this->postContentChanged($post_id, $data)) $this->captureBdreRevisions($post_id);
+                $this->editPost($post_id, $data, false);
             } else {
                 $post_id = $this->addPost($data);
                 if ($post_id < 1) throw new \RuntimeException('blog_post_insert_failed');
@@ -280,7 +284,8 @@ class Blog extends \Reamur\System\Engine\Model {
     /**
      * @param array<string, mixed> $data Payload normalizado do controller
      */
-    public function editPost(int $post_id, array $data): void {
+    public function editPost(int $post_id, array $data, bool $captureRevisions = true): void {
+        if ($captureRevisions && $this->postContentChanged($post_id, $data)) $this->captureBdreRevisions($post_id);
         $this->db->query(
             "UPDATE `" . $this->t('blog_post') . "` SET
                 `image`          = '" . $this->db->escape((string)$data['image']) . "',
@@ -312,6 +317,7 @@ class Blog extends \Reamur\System\Engine\Model {
             try { $this->db->query('ROLLBACK'); } catch (\Throwable $rollbackError) { /* preserve original exception */ }
             throw $e;
         }
+        if ($this->bdreRevisionTableExists()) $this->db->query("DELETE FROM `" . $this->t('bdre_revision') . "` WHERE `entity_type`='blog' AND `entity_id`='" . $post_id . "'");
     }
 
     // ─── internos ────────────────────────────────────────────────────────
@@ -321,6 +327,62 @@ class Blog extends \Reamur\System\Engine\Model {
      *
      * @param array<int, array<string, string>> $descriptions
      */
+    private function postContentChanged(int $postId, array $data): bool {
+        $post=$this->getPost($postId);
+        if (!$post || (int)($post['status'] ?? 0)!==(int)($data['status'] ?? 0) || (string)($post['image'] ?? '')!==(string)($data['image'] ?? '') || (string)($post['date_published'] ?? '')!==(string)($data['date_published'] ?? '')) return true;
+        $current=$this->getPostDescriptions($postId); $keywords=$this->getPostKeywords($postId);
+        foreach ((array)($data['descriptions'] ?? []) as $languageId=>$next) {
+            $old=(array)($current[(int)$languageId] ?? []); $next=(array)$next;
+            foreach (['title','description','meta_title','meta_description'] as $field) if ((string)($old[$field] ?? '')!==(string)($next[$field] ?? '')) return true;
+            if ((string)($keywords[(int)$languageId] ?? '')!==(string)($next['keyword'] ?? '')) return true;
+        }
+        return false;
+    }
+
+    /** Snapshot each persisted language before the administrator explicitly saves an edit. */
+    private function captureBdreRevisions(int $post_id): void {
+        if (!$this->bdreRevisionTableExists()) return;
+        $post = $this->getPost($post_id);
+        if (!$post) return;
+        $descriptions = $this->getPostDescriptions($post_id);
+        $keywords = $this->getPostKeywords($post_id);
+        $blocks = $this->getPostBlockContents($post_id);
+        foreach ($descriptions as $languageId => $description) {
+            $description['keyword'] = $keywords[$languageId] ?? '';
+            $snapshot = ['entity' => ['status' => (int)($post['status'] ?? 0), 'image' => (string)($post['image'] ?? ''), 'date_published' => (string)($post['date_published'] ?? '')], 'description' => $description];
+            if (isset($blocks[$languageId])) $snapshot['block_content'] = $blocks[$languageId];
+            elseif ((string)($description['description'] ?? '') !== '') { $converted=(new \Reamur\System\Library\Blog\BlockDocument())->convertLegacy((string)$description['description']); if (($converted['status'] ?? '') === 'converted' && is_array($converted['document'] ?? null)) $snapshot['block_document']=$converted['document']; }
+            $json = json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            if (!is_string($json) || strlen($json) > 4194304) continue;
+            $hash = hash('sha256', $json); $table = $this->t('bdre_revision');
+            $latest = $this->db->query("SELECT `content_hash` FROM `" . $table . "` WHERE `entity_type`='blog' AND `entity_id`='" . $post_id . "' AND `language_id`='" . (int)$languageId . "' ORDER BY `revision_id` DESC LIMIT 1");
+            if ($latest instanceof \stdClass && !empty($latest->row) && hash_equals((string)$latest->row['content_hash'], $hash)) continue;
+            $this->db->query("INSERT INTO `" . $table . "` SET `entity_type`='blog', `entity_id`='" . $post_id . "', `language_id`='" . (int)$languageId . "', `content_hash`='" . $hash . "', `snapshot_json`='" . $this->db->escape($json) . "', `date_added`=NOW()");
+            $this->db->query("DELETE FROM `" . $table . "` WHERE `entity_type`='blog' AND `entity_id`='" . $post_id . "' AND `language_id`='" . (int)$languageId . "' AND `revision_id` NOT IN (SELECT `revision_id` FROM (SELECT `revision_id` FROM `" . $table . "` WHERE `entity_type`='blog' AND `entity_id`='" . $post_id . "' AND `language_id`='" . (int)$languageId . "' ORDER BY `revision_id` DESC LIMIT 20) AS retained)");
+        }
+    }
+
+    /** @return array<int, array<string, mixed>> newest first; snapshot is decoded server-side */
+    public function getPostRevisions(int $entityId, int $languageId): array {
+        if ($entityId < 1 || $languageId < 1 || !$this->bdreRevisionTableExists()) return [];
+        $q = $this->db->query("SELECT `revision_id`, `snapshot_json`, `date_added` FROM `" . $this->t('bdre_revision') . "` WHERE `entity_type`='blog' AND `entity_id`='" . $entityId . "' AND `language_id`='" . $languageId . "' ORDER BY `revision_id` DESC LIMIT 20");
+        $out = [];
+        if ($q instanceof \stdClass && !empty($q->rows)) foreach ((array)$q->rows as $row) {
+            $snapshot = json_decode((string)$row['snapshot_json'], true);
+            if (!is_array($snapshot)) continue;
+            $out[] = ['revision_id' => (int)$row['revision_id'], 'date_added' => (string)$row['date_added'], 'snapshot' => $snapshot];
+        }
+        return $out;
+    }
+
+    private function bdreRevisionTableExists(): bool {
+        static $exists = null;
+        if ($exists !== null) return $exists;
+        try { $q = $this->db->query("SELECT 1 FROM `information_schema`.`TABLES` WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = '" . $this->db->escape($this->t('bdre_revision')) . "' LIMIT 1"); $exists = $q instanceof \stdClass && !empty($q->row); }
+        catch (\Throwable $e) { $exists = false; }
+        return $exists;
+    }
+
     private function syncDescriptions(int $post_id, array $descriptions): void {
         foreach ($descriptions as $language_id => $d) {
             $d = (array)$d;

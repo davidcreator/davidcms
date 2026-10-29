@@ -146,6 +146,93 @@
     }
   }
 
+  function bindServerRevisionHistory() {
+    document.addEventListener('click', function (event) {
+      var loadButton = event.target.closest && event.target.closest('[data-bdre-history-load]');
+      var restoreButton = event.target.closest && event.target.closest('[data-bdre-history-restore]');
+      if (!loadButton && !restoreButton) return;
+      var panel = (loadButton || restoreButton).closest('[data-bdre-history]');
+      var form = panel && panel.closest('form');
+      var list = panel && panel.querySelector('[data-bdre-history-items]');
+      var token = form && form.querySelector('[name="csrf_token"]');
+      if (!panel || !form || !list || !token) return;
+      event.preventDefault();
+      var languageId = panel.dataset.languageId || '';
+      var post = function (url, values) {
+        var body = new URLSearchParams(Object.assign({csrf_token: token.value, language_id: languageId}, values || {}));
+        return fetch(url, {method: 'POST', credentials: 'same-origin', headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', 'X-Requested-With': 'XMLHttpRequest'}, body: body.toString()}).then(function (response) { if (!response.ok) throw new Error('request_failed'); return response.json(); });
+      };
+      if (loadButton) {
+        loadButton.disabled = true; list.textContent = 'Carregando…';
+        post(panel.dataset.listUrl).then(function (data) {
+          list.replaceChildren();
+          if (!data || !data.success || !Array.isArray(data.items)) throw new Error('history_unavailable');
+          if (!data.items.length) { list.textContent = panel.dataset.historyEmpty || 'No saved revisions available.'; return; }
+          data.items.forEach(function (item) {
+            var row = document.createElement('div'); row.className = 'd-flex align-items-center gap-2 mb-1';
+            var label = document.createElement('span'); label.className = 'small text-body-secondary'; label.textContent = item.date_added || ('#' + item.revision_id);
+            var restore = document.createElement('button'); restore.type = 'button'; restore.className = 'btn btn-sm btn-outline-primary'; restore.textContent = panel.dataset.historyRestoreLabel || 'Restore'; restore.dataset.bdreHistoryRestore = '1'; restore.dataset.revisionId = String(item.revision_id);
+            row.append(label, restore); list.appendChild(row);
+          });
+        }).catch(function () { list.textContent = 'Não foi possível carregar o histórico.'; }).finally(function () { loadButton.disabled = false; });
+        return;
+      }
+      if (!global.confirm(panel.dataset.historyConfirm || 'Load this revision as unsaved changes? Save to apply it.')) return;
+      restoreButton.disabled = true;
+      post(panel.dataset.itemUrl, {revision_id: restoreButton.dataset.revisionId}).then(function (data) {
+        if (!data || !data.success || !data.snapshot) throw new Error('revision_unavailable');
+        var snapshot = data.snapshot, fields = snapshot.description || {}, lid = languageId;
+        var kind = panel.dataset.kind;
+        ['title','meta_title','meta_description','keyword'].forEach(function (key) {
+          var input = form.querySelector('[name="' + kind + '_description[' + lid + '][' + key + ']"]');
+          if (input && fields[key] !== undefined) { input.value = fields[key] || ''; input.dispatchEvent(new Event('input', {bubbles:true})); input.dispatchEvent(new Event('change', {bubbles:true})); }
+        });
+        var rawDescription = String(fields.description || '');
+        var descriptionField = form.querySelector('[name="' + kind + '_description[' + lid + '][description]"]') || document.getElementById(panel.dataset.descriptionId || '');
+        var doc = snapshot.block_document || null;
+        if (!doc && kind === 'blog' && snapshot.block_content && snapshot.block_content.content_json) { try { doc = JSON.parse(snapshot.block_content.content_json); } catch (_) {} }
+        if (!doc && rawDescription.indexOf('REAMURCMS_BDRE_JSON_V2:') === 0) { try { doc = JSON.parse(rawDescription.slice('REAMURCMS_BDRE_JSON_V2:'.length)); } catch (_) {} }
+        var editorRoot = document.getElementById(panel.dataset.editorId || '');
+        var editor = editorRoot && editorRoot.__blogBlockEditorInstance;
+        if (doc && editor && typeof editor.replaceDocument === 'function') {
+          if (!editor.replaceDocument(doc)) throw new Error('revision_invalid');
+          if (descriptionField && descriptionField.type !== 'hidden') descriptionField.value = rawDescription;
+        } else if (descriptionField && descriptionField.tagName === 'TEXTAREA' && !descriptionField.hidden) {
+          descriptionField.value = rawDescription;
+          descriptionField.dispatchEvent(new Event('input', {bubbles:true}));
+        } else if (rawDescription.indexOf('REAMURCMS_PAGE_LAYOUT_V1:') === 0) {
+          throw new Error('layout_revision_requires_review');
+        } else if (doc && !editor) {
+          throw new Error('editor_not_ready');
+        } else if (descriptionField && descriptionField.hidden) {
+          throw new Error('revision_conversion_unavailable');
+        }
+        if (kind === 'page' && Array.isArray(snapshot.page_layout_sections)) {
+          var layoutList = form.querySelector('[data-page-layout-list][data-page-layout-language="' + lid + '"]');
+          if (layoutList) {
+            var layoutItems = Array.prototype.slice.call(layoutList.querySelectorAll('[data-page-layout-item]'));
+            var bySection = {};
+            layoutItems.forEach(function (item) { var input=item.querySelector('input[type="checkbox"]'); if(input) { bySection[input.value]=item; input.checked=snapshot.page_layout_sections.indexOf(input.value)!==-1; } });
+            var ordered = snapshot.page_layout_sections.map(function (section) { return bySection[section]; }).filter(Boolean);
+            layoutItems.forEach(function (item) { if (ordered.indexOf(item) === -1) ordered.push(item); });
+            ordered.forEach(function (item) { layoutList.appendChild(item); });
+          }
+        }
+        if (snapshot.entity) {
+          var status=form.querySelector('[name="status"]'); if (status && snapshot.entity.status !== undefined) { status.checked=!!Number(snapshot.entity.status); status.dispatchEvent(new Event('change',{bubbles:true})); }
+          if (kind === 'blog') {
+            var image=form.querySelector('[name="image"]'); if(image && snapshot.entity.image !== undefined) { image.value=snapshot.entity.image; image.dispatchEvent(new Event('input',{bubbles:true})); }
+            var date=form.querySelector('[name="date_published"]'); if(date && snapshot.entity.date_published !== undefined) { date.value=snapshot.entity.date_published.replace(' ','T'); date.dispatchEvent(new Event('change',{bubbles:true})); }
+          } else {
+            var sort=form.querySelector('[name="sort_order"]'); if(sort && snapshot.entity.sort_order !== undefined) { sort.value=String(snapshot.entity.sort_order); sort.dispatchEvent(new Event('input',{bubbles:true})); }
+          }
+        }
+        var state=form.__blogBlockUnsavedState; if(state) state.markDirty();
+        var statusMsg=list; statusMsg.textContent=panel.dataset.historyRestored || 'Revision loaded as unsaved changes. Save to apply it.';
+      }).catch(function (error) { list.textContent = error && error.message === 'layout_revision_requires_review' ? 'Esta versão contém layout especial; restaure-a pelo fluxo de revisão assistida.' : 'Não foi possível restaurar esta versão.'; }).finally(function () { restoreButton.disabled = false; });
+    });
+  }
+
   function init() {
     if (!global.ReamurBlogBlockEditor) return;
     document.addEventListener('click', function (event) {
@@ -270,6 +357,7 @@
       }
     });
   }
+  bindServerRevisionHistory();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
 })(window, document);

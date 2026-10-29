@@ -74,6 +74,7 @@
                 <p class="form-text">O conteúdo legado não pôde ser convertido com segurança; ele permanece editável sem reformatar.</p>
               {% endif %}
             </div>
+            {% if can_modify and page_id %}<div class="bdre-server-history mb-3" data-bdre-history data-kind="page" data-language-id="{{ language.language_id }}" data-list-url="{{ page_revisions_url|e('html_attr') }}" data-item-url="{{ page_revision_url|e('html_attr') }}" data-editor-id="page-block-editor-{{ language.language_id }}" data-description-id="input-description-{{ language.language_id }}" data-history-restore-label="{{ text_block_history_restore|e('html_attr') }}" data-history-empty="{{ text_block_history_empty|e('html_attr') }}" data-history-confirm="{{ text_block_history_restore_confirm|e('html_attr') }}" data-history-restored="{{ text_block_history_restored|e('html_attr') }}"><button type="button" class="btn btn-sm btn-outline-secondary" data-bdre-history-load>{{ text_block_history_button }}</button><div class="mt-2" data-bdre-history-items aria-live="polite"></div></div>{% endif %}
             <h3 class="h6 text-body-secondary mt-4 mb-2">{{ text_meta_group }}</h3>
             <div class="row g-3">
               <div class="col-md-6 field">

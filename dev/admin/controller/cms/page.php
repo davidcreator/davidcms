@@ -238,6 +238,31 @@ class Page extends \Reamur\System\Engine\Controller {
         $this->response->redirect($this->url->link('cms/page'));
     }
 
+    /** POST-only list of saved revisions for the current Page/language. */
+    public function revisions(string $page_id = '0'): void {
+        $this->load->language('cms/page'); $this->load->model('cms/page');
+        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST' || !$this->csrfValid() || !$this->user->hasPermission('modify', 'cms/page')) { $this->pageMediaJson(['success'=>false,'error'=>'forbidden']); return; }
+        $pageId=(int)$page_id; $languageId=(int)($this->request->post['language_id'] ?? 0); $knownLanguages=array_map(static fn($l)=>(int)((array)$l)['language_id'],$this->model_cms_page->getLanguages());
+        if ($pageId < 1 || !$this->model_cms_page->getPage($pageId) || !in_array($languageId,$knownLanguages,true)) { $this->pageMediaJson(['success'=>false,'error'=>'invalid_target']); return; }
+        $items=$this->model_cms_page->getPageRevisions($pageId,$languageId);
+        $this->pageMediaJson(['success'=>true,'items'=>array_map(static fn($r)=>['revision_id'=>$r['revision_id'],'date_added'=>$r['date_added']],$items)]);
+    }
+
+    /** POST-only fetch of one revision; the client restores it in memory and must still Save. */
+    public function revision(string $page_id = '0'): void {
+        $this->load->language('cms/page'); $this->load->model('cms/page');
+        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST' || !$this->csrfValid() || !$this->user->hasPermission('modify', 'cms/page')) { $this->pageMediaJson(['success'=>false,'error'=>'forbidden']); return; }
+        $pageId=(int)$page_id; $languageId=(int)($this->request->post['language_id'] ?? 0); $revisionId=(int)($this->request->post['revision_id'] ?? 0); $knownLanguages=array_map(static fn($l)=>(int)((array)$l)['language_id'],$this->model_cms_page->getLanguages());
+        if ($pageId < 1 || !$this->model_cms_page->getPage($pageId) || !in_array($languageId,$knownLanguages,true) || $revisionId < 1) { $this->pageMediaJson(['success'=>false,'error'=>'invalid_target']); return; }
+        foreach ($this->model_cms_page->getPageRevisions($pageId,$languageId) as $revision) if ((int)$revision['revision_id']===$revisionId) {
+            $snapshot=$revision['snapshot']; $raw=(string)($snapshot['description']['description'] ?? ''); $page=$this->model_cms_page->getPage($pageId);
+            $layout=(new \Reamur\System\Library\Cms\PageLayout())->decode($raw,(string)($page['system_key'] ?? ''));
+            if ($layout !== null) { $snapshot['page_layout_sections']=$layout['sections']; $snapshot['block_document']=$layout['content']; }
+            $this->pageMediaJson(['success'=>true,'snapshot'=>$snapshot]); return;
+        }
+        $this->pageMediaJson(['success'=>false,'error'=>'not_found']);
+    }
+
     /** POST-only private preview of an unsaved CMS Page document and its allowlisted system-page layout. */
     public function preview(): void {
         $this->load->language('cms/page');
@@ -1126,6 +1151,8 @@ class Page extends \Reamur\System\Engine\Controller {
         }
 
         $data['page_id']    = $pid;
+        $data['page_revisions_url'] = $pid > 0 ? $this->url->link('cms/page.revisions|' . $pid) : '';
+        $data['page_revision_url'] = $pid > 0 ? $this->url->link('cms/page.revision|' . $pid) : '';
         $data['system_key'] = $systemKey;
         $data['is_system_page'] = $data['system_key'] !== '';
         $layoutBySystemKey = [
