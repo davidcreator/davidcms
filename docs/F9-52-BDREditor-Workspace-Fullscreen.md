@@ -1,5 +1,7 @@
 # F9-52 — Abrir BDREditor como workspace fullscreen nos formulários
 
+> **Complementado pela F9-53:** o workspace fullscreen permanece; as melhorias específicas do inspetor e da toolbar do bloco Parágrafo estão documentadas em [F9-53](F9-53-Bloco-Paragrafo-Inspector-e-Acoes.md).
+
 ## Correção
 
 A F9-51 aumentou a largura do editor, mas o BDREditor ainda era apresentado como um campo dentro do formulário e dependia de o usuário acionar a tela cheia. Isso não correspondia à referência mais recente, que mostra o workspace como a superfície principal de edição.

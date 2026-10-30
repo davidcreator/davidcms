@@ -16,6 +16,13 @@
   const BLOCK_CATEGORIES = { 'core/paragraph':'content', 'core/heading':'content', 'core/list':'content', 'core/quote':'content', 'core/button':'content', 'core/callout':'content', 'core/details':'content', 'core/spacer':'layout', 'core/code':'content', 'core/image':'media', 'core/video_embed':'media', 'core/gallery':'media', 'core/cover':'media', 'core/separator':'layout', 'core/group':'layout', 'core/columns':'layout', 'core/table':'content', 'core/file':'media', 'core/audio':'media', 'core/video_file':'media', 'core/threejs_thumb':'media' };
   const RIBBON_BLOCK_TYPES = { insert:['core/paragraph','core/heading','core/list','core/quote','core/button','core/callout','core/details','core/code'], media:['core/image','core/video_embed','core/video_file','core/threejs_thumb','core/gallery','core/file','core/audio'], layout:['core/spacer','core/separator','core/group','core/columns','core/cover','core/table'] };
   const PATTERN_TOOL_DESCRIPTIONS = {pt:{two_columns:'Insere uma seção com duas colunas de conteúdo.',quote_cta:'Insere citação acompanhada de botão de chamada.',section_intro:'Insere título, introdução e separador.',cover_hero:'Insere capa com título, descrição e botão.'},en:{two_columns:'Insert a two-column content section.',quote_cta:'Insert a quote with a call-to-action button.',section_intro:'Insert a heading, introduction and divider.',cover_hero:'Insert a cover with heading, description and button.'},es:{two_columns:'Inserta una sección de contenido en dos columnas.',quote_cta:'Inserta una cita con un botón de llamada a la acción.',section_intro:'Inserta título, introducción y separador.',cover_hero:'Inserta una portada con título, descripción y botón.'}};
+  function paragraphInspectorCopy() {
+    const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
+    if(language.startsWith('es'))return {paragraphTextTitle:'Texto del párrafo',paragraphTextHint:'Edita aquí o directamente en el lienzo. Conserva los formatos en línea existentes.',paragraphAlignment:'Alineación del párrafo',paragraphStyleHeading:'Estilo del párrafo',paragraphActions:'Acciones del bloque'};
+    if(language.startsWith('en'))return {paragraphTextTitle:'Paragraph text',paragraphTextHint:'Edit here or directly on the canvas. Existing inline formatting is preserved.',paragraphAlignment:'Paragraph alignment',paragraphStyleHeading:'Paragraph style',paragraphActions:'Block actions'};
+    return {paragraphTextTitle:'Texto do parágrafo',paragraphTextHint:'Edite aqui ou diretamente no canvas. As formatações inline existentes serão preservadas.',paragraphAlignment:'Alinhamento do parágrafo',paragraphStyleHeading:'Estilo do parágrafo',paragraphActions:'Ações do bloco'};
+  }
+
   const TRANSFORMABLE_TEXT = new Set(['core/paragraph', 'core/heading', 'core/quote', 'core/button']);
   const CLONE = (value) => JSON.parse(JSON.stringify(value));
   let instanceSequence = 0;
@@ -643,7 +650,7 @@
       this.slashTrigger = null;
       this.inserterQuery = '';
       this.statusMessage = '';
-      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',importUnavailable:'Importador indisponível.',importError:'Falha ao importar arquivo.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',copyBlock:'Copiar bloco',pasteBlock:'Colar bloco',statusCopied:'Bloco copiado para este editor.',statusPasted:'Bloco colado.',pasteUnavailable:'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.',navigationPath:'Caminho do bloco selecionado',navigationRow:'Linha',navigationCell:'Célula',statusFocusChanged:'Foco movido para o bloco selecionado.',statusOutlineChanged:'Bloco selecionado atualizado pela navegação da estrutura.',indentBlock:'Indentar dentro do bloco anterior',outdentBlock:'Desindentar após o bloco pai',statusIndented:'Bloco movido para dentro do bloco anterior.',statusOutdented:'Bloco movido para depois do pai.',hierarchyMoveUnavailable:'Esta movimentação não é permitida neste contexto ou ultrapassaria um limite do documento.',outlineKeyboardHint:'↑/↓ navegar · → primeiro filho · ← bloco pai · Home/End início/fim',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',fullscreenEnter:fullscreenCopy().enter,fullscreenExit:fullscreenCopy().exit,fullscreenDialog:fullscreenCopy().dialog,builderElements:fullscreenCopy().elements,builderStructure:fullscreenCopy().structure,builderSettings:fullscreenCopy().settings,workspaceRailLabel:"Ferramentas do espaço de trabalho",workspaceToolText:"Texto",workspaceToolAppearance:"Aparência",workspaceToolPatterns:"Padrões",canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},callout:{tone:'Estilo do aviso',defaultText:'Adicione uma informação importante.',tones:{info:'Informação',success:'Sucesso',warning:'Atenção',danger:'Crítico'}},details:{summaryLabel:'Título da seção expansível',summaryDefault:'Mais informações',defaultText:'Adicione os detalhes aqui.'},spacer:{heightLabel:'Altura do espaçador',heights:{'16':'Muito pequeno · 16 px','32':'Pequeno · 32 px','48':'Médio · 48 px','64':'Grande · 64 px','96':'Muito grande · 96 px'}},preformatted:{label:'Código pré-formatado',defaultText:'',tooLarge:'O bloco de código excede o limite de 256 KiB.'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},columnsAdd:'Adicionar coluna',columnsRemove:'Remover última coluna',columnsLimit:'As colunas disponíveis são 2 ou 3. Remover a última coluna pode ser desfeito com Desfazer.',columnDefault:'Coluna',typeLabels:{}}, this.options.strings || {});
+      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',importUnavailable:'Importador indisponível.',importError:'Falha ao importar arquivo.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',copyBlock:'Copiar bloco',pasteBlock:'Colar bloco',statusCopied:'Bloco copiado para este editor.',statusPasted:'Bloco colado.',pasteUnavailable:'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.',navigationPath:'Caminho do bloco selecionado',navigationRow:'Linha',navigationCell:'Célula',statusFocusChanged:'Foco movido para o bloco selecionado.',statusOutlineChanged:'Bloco selecionado atualizado pela navegação da estrutura.',indentBlock:'Indentar dentro do bloco anterior',outdentBlock:'Desindentar após o bloco pai',statusIndented:'Bloco movido para dentro do bloco anterior.',statusOutdented:'Bloco movido para depois do pai.',hierarchyMoveUnavailable:'Esta movimentação não é permitida neste contexto ou ultrapassaria um limite do documento.',outlineKeyboardHint:'↑/↓ navegar · → primeiro filho · ← bloco pai · Home/End início/fim',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',fullscreenEnter:fullscreenCopy().enter,fullscreenExit:fullscreenCopy().exit,fullscreenDialog:fullscreenCopy().dialog,builderElements:fullscreenCopy().elements,builderStructure:fullscreenCopy().structure,builderSettings:fullscreenCopy().settings,workspaceRailLabel:"Ferramentas do espaço de trabalho",workspaceToolText:"Texto",workspaceToolAppearance:"Aparência",workspaceToolPatterns:"Padrões",canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},callout:{tone:'Estilo do aviso',defaultText:'Adicione uma informação importante.',tones:{info:'Informação',success:'Sucesso',warning:'Atenção',danger:'Crítico'}},details:{summaryLabel:'Título da seção expansível',summaryDefault:'Mais informações',defaultText:'Adicione os detalhes aqui.'},spacer:{heightLabel:'Altura do espaçador',heights:{'16':'Muito pequeno · 16 px','32':'Pequeno · 32 px','48':'Médio · 48 px','64':'Grande · 64 px','96':'Muito grande · 96 px'}},preformatted:{label:'Código pré-formatado',defaultText:'',tooLarge:'O bloco de código excede o limite de 256 KiB.'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},columnsAdd:'Adicionar coluna',columnsRemove:'Remover última coluna',columnsLimit:'As colunas disponíveis são 2 ou 3. Remover a última coluna pode ser desfeito com Desfazer.',columnDefault:'Coluna',typeLabels:{}}, paragraphInspectorCopy(), this.options.strings || {});
       const rawInitial = this.options.document || { format_version: 1, blocks: [] };
       const initial = upgradeDocument(rawInitial);
       const validation = validateDocument(initial, this.allowPageMedia);
@@ -760,6 +767,7 @@
           if (key === 'ordered') node.attributes[key] = field.value === 'true';
           else if (key === 'level' || key === 'count' || key === 'columns' || key === 'height') node.attributes[key] = Number(field.value);
           else node.attributes[key] = field.value;
+          if(key==='align'&&node.type==='core/paragraph'&&node.attributes.appearance){delete node.attributes.appearance.text_align;if(!Object.keys(node.attributes.appearance).length)delete node.attributes.appearance;}
         });
       });
       this.root.addEventListener('keydown', (event) => {
@@ -1612,6 +1620,7 @@
       const runs = normalizeDomInline(editor, found.node.type);
       this.recordTextEditSnapshot();
       found.node.content = runs;
+      this.root.querySelectorAll('[data-edit-content]').forEach((peer)=>{if(peer!==editor&&peer.dataset.editContent===id)buildInlineDom(peer,runs);});
       let valid = validInlineRuns(runs, found.node.type);
       let errors = valid ? [] : ['rich_content_invalid'];
       if (valid && found.node.type === 'core/table-cell') {
@@ -1845,12 +1854,14 @@
       if (action === 'format-mark' && extra && extra.mark) iconName = ({bold:'bold',italic:'italic',underline:'underline',strike:'strike',code:'code',link:'link'})[extra.mark] || 'settings';
       if (iconName) b.append(this.icon(iconName, 'rb-icon'));
       const text = this.el('span', 'rb-button-label', label);
-      const iconOnly=ICON_ONLY_ACTIONS.has(action)||(extra&&extra.iconOnly===true)||['↑','↓','+','↔'].includes(String(label).trim());
+      const iconOnly=!(extra&&extra.showLabel===true)&&(ICON_ONLY_ACTIONS.has(action)||(extra&&extra.iconOnly===true)||['↑','↓','+','↔'].includes(String(label).trim()));
       let tooltipDescription='';
       if (iconOnly) {
         text.classList.add('rb-sr-only'); b.classList.add('rb-button-icon-only','rb-has-tooltip');
         const name=String(label);tooltipDescription=(extra&&extra.tooltipDescription)||getToolDescription(action,type,global.document&&global.document.documentElement&&global.document.documentElement.lang);
         b.setAttribute('aria-label', String(label));b.dataset.tooltipTitle=name;b.dataset.tooltipDescription=tooltipDescription;b.setAttribute('title',name+'\n'+tooltipDescription);
+      } else if(extra&&extra.showLabel===true) {
+        b.title=String(label)+' — '+((extra.tooltipDescription)||getToolDescription(action,type,global.document&&global.document.documentElement&&global.document.documentElement.lang));
       }
       b.append(text);
       if(iconOnly){const description=this.el('span','rb-sr-only',tooltipDescription);description.id='rb-tool-description-'+(++toolDescriptionSequence);b.setAttribute('aria-describedby',description.id);b.append(description);}
@@ -2035,7 +2046,7 @@
     alignSelectedText(alignment) {
       const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null;
       if (!found || found.node.type !== 'core/paragraph' || !['left','center','right'].includes(alignment)) return;
-      this.updateNode(found.node.id, (node) => { node.attributes.align = alignment; });
+      this.updateNode(found.node.id, (node) => { node.attributes.align = alignment;if(node.attributes.appearance){delete node.attributes.appearance.text_align;if(!Object.keys(node.attributes.appearance).length)delete node.attributes.appearance;} });
       this.updateRibbonState();
     }
 
@@ -2043,7 +2054,7 @@
       const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null;
       this.root.querySelectorAll('[data-action="align-text"]').forEach((button) => {
         button.disabled = !found || found.node.type !== 'core/paragraph';
-        button.setAttribute('aria-pressed', String(!!found && found.node.type === 'core/paragraph' && (found.node.attributes.align || 'left') === button.dataset.alignment));
+        button.setAttribute('aria-pressed', String(!!found && found.node.type === 'core/paragraph' && ((found.node.attributes.appearance&&found.node.attributes.appearance.text_align)||found.node.attributes.align||'left') === button.dataset.alignment));
       });
       const insertionPoint=this.slashTrigger?this.slashTrigger.nodeId:(this.insertAfterId||this.selectedId);
       const availableTypes=new Set(this.insertTypes(insertionPoint).map((item)=>item.type));
@@ -2183,7 +2194,7 @@
         const link=this.el('input','rb-inline-link');link.type='text';link.value=this.linkDraft;link.placeholder=this.strings.linkPlaceholder;link.setAttribute('aria-label',this.strings.link);link.dataset.inlineLinkInput='1';g.tools.append(link);
         addButton(g.tools,this.strings.applyLink,'link-apply');addButton(g.tools,this.strings.removeLink,'link-remove');panel.append(g.group);
         g=this.renderRibbonGroup(this.strings.groupParagraphAlign||'Alinhamento do parágrafo');
-        [['left',this.strings.alignLeft||'Esquerda'],['center',this.strings.alignCenter||'Centralizar'],['right',this.strings.alignRight||'Direita']].forEach(([alignment,label])=>{const b=this.button(label,'align-text',{alignment});b.dataset.alignment=alignment;g.tools.append(b);});panel.append(g.group);
+        [['left',this.strings.alignLeft||this.strings.media.alignments.left],['center',this.strings.alignCenter||this.strings.media.alignments.center],['right',this.strings.alignRight||this.strings.media.alignments.right]].forEach(([alignment,label])=>{const b=this.button(label,'align-text',{alignment});b.dataset.alignment=alignment;g.tools.append(b);});panel.append(g.group);
       }else if(this.activeRibbonTab==='insert'){
         appendBlockTools('insert',this.strings.categoryContent||'Conteúdo');
         const g=this.renderRibbonGroup(this.strings.groupInsert||'Explorar e importar');
@@ -2406,27 +2417,29 @@
     renderBlockToolbar(node) {
       const toolbar = this.el('div', 'rb-block-toolbar'); toolbar.setAttribute('role','toolbar'); toolbar.setAttribute('aria-label', this.label(node.type) + ' · ' + this.strings.transform);
       const path = this.findPath(this.state.blocks, node.id);
+      const paragraphToolbar=node.type==='core/paragraph';
+      if(paragraphToolbar)toolbar.classList.add('rb-paragraph-toolbar');
       const drag = this.el('span','rb-drag-handle'); drag.append(this.icon('grip','rb-icon')); drag.draggable = true; drag.dataset.dragHandle = '1'; drag.title = this.strings.dragHint; drag.setAttribute('aria-hidden','true'); toolbar.append(drag,this.el('span','rb-sr-only',this.strings.dragHint));
-      const up = this.button('↑', 'move-up', { nodeId:node.id }); up.setAttribute('aria-label', this.strings.moveUp); up.disabled = !path || path.index === 0; toolbar.append(up);
-      const down = this.button('↓', 'move-down', { nodeId:node.id }); down.setAttribute('aria-label', this.strings.moveDown); down.disabled = !path || path.index === path.nodes.length - 1; toolbar.append(down);
+      const up = this.button(this.strings.moveUp, 'move-up', { nodeId:node.id, showLabel:paragraphToolbar }); up.setAttribute('aria-label', this.strings.moveUp); up.disabled = !path || path.index === 0; toolbar.append(up);
+      const down = this.button(this.strings.moveDown, 'move-down', { nodeId:node.id, showLabel:paragraphToolbar }); down.setAttribute('aria-label', this.strings.moveDown); down.disabled = !path || path.index === path.nodes.length - 1; toolbar.append(down);
       const fixedColumn = !!(path && path.parent && path.parent.type === 'core/columns' && node.type === 'core/column');
       const atParentLimit = !!(path && path.parent && ((path.parent.type === 'core/gallery' && path.parent.children.length >= 20) || (path.parent.type === 'core/cover' && path.parent.children.length >= 12)));
       const lastRequiredChild = !!(path && path.parent && ['core/gallery','core/cover'].includes(path.parent.type) && path.parent.children.length <= 1);
-      const duplicate = this.button(this.strings.duplicate, 'duplicate', { nodeId:node.id }); duplicate.disabled = fixedColumn || atParentLimit; toolbar.append(duplicate);
-      const copy = this.button(this.strings.copyBlock, 'copy-block', { nodeId:node.id }); toolbar.append(copy);
-      const customize=this.button(this.strings.customizeTab||'Personalizar','customize-block',{nodeId:node.id,icon:'settings'});toolbar.append(customize);
+      const duplicate = this.button(this.strings.duplicate, 'duplicate', { nodeId:node.id, showLabel:paragraphToolbar }); duplicate.disabled = fixedColumn || atParentLimit; toolbar.append(duplicate);
+      const copy = this.button(this.strings.copyBlock, 'copy-block', { nodeId:node.id, showLabel:paragraphToolbar }); toolbar.append(copy);
+      const customize=this.button(this.strings.customizeTab||'Personalizar','customize-block',{nodeId:node.id,icon:'settings',showLabel:paragraphToolbar});toolbar.append(customize);
       if (TRANSFORMABLE_TEXT.has(node.type)) {
-        const wrap = this.el('label','rb-transform-wrap'); wrap.append(this.icon('transform','rb-transform-icon'),this.el('span','rb-sr-only',this.strings.transform));
+        const wrap = this.el('label','rb-transform-wrap'); wrap.append(this.icon('transform','rb-transform-icon'),this.el('span',paragraphToolbar?'rb-transform-visible-label':'rb-sr-only',this.strings.transform));
         const select = this.el('select','rb-input rb-transform'); select.dataset.transformNode = node.id;
-        const empty = this.el('option','','↔'); empty.value = ''; empty.selected = true; select.append(empty);
+        const empty = this.el('option','',this.strings.transform); empty.value = ''; empty.selected = true; select.append(empty);
         [...TRANSFORMABLE_TEXT].filter((type) => this.canTransformNode(node,type)).forEach((type) => { const option = this.el('option','',this.label(type)); option.value = type; select.append(option); });
         select.setAttribute('aria-label', this.strings.transform); select.title = this.strings.transformHint; wrap.append(select); toolbar.append(wrap);
       } else {
         const hint = this.el('span','rb-transform-hint',this.strings.transformHint); toolbar.append(hint);
       }
-      if (this.patternConfig.canModify) { const savePattern = this.button(this.strings.saveAsPattern || 'Salvar como padrão','save-selected-pattern',{nodeId:node.id}); savePattern.disabled = this.containsCustomJs(node); toolbar.append(savePattern); }
-      const remove = this.button(this.strings.remove,'delete',{nodeId:node.id}); remove.disabled = fixedColumn || lastRequiredChild; toolbar.append(remove);
-      const add = this.button('Adicionar', 'toggle-inserter', { afterId:node.id }); add.classList.add('rb-button-icon-only'); add.querySelector('.rb-button-label').classList.add('rb-sr-only'); add.setAttribute('aria-label', this.strings.addAfter); add.setAttribute('aria-expanded', String(this.inserterOpen && this.insertAfterId === node.id)); add.setAttribute('aria-controls','rb-inserter-' + this.instance); toolbar.append(add);
+      if (this.patternConfig.canModify) { const savePattern = this.button(this.strings.saveAsPattern || 'Salvar como padrão','save-selected-pattern',{nodeId:node.id,showLabel:paragraphToolbar}); savePattern.disabled = this.containsCustomJs(node); toolbar.append(savePattern); }
+      const remove = this.button(this.strings.remove,'delete',{nodeId:node.id,showLabel:paragraphToolbar}); remove.disabled = fixedColumn || lastRequiredChild; toolbar.append(remove);
+      const add = this.button(this.strings.addAfter, 'toggle-inserter', { afterId:node.id, showLabel:paragraphToolbar }); if(!paragraphToolbar){add.classList.add('rb-button-icon-only');add.querySelector('.rb-button-label').classList.add('rb-sr-only');} add.setAttribute('aria-label', this.strings.addAfter); add.setAttribute('aria-expanded', String(this.inserterOpen && this.insertAfterId === node.id)); add.setAttribute('aria-controls','rb-inserter-' + this.instance); toolbar.append(add);
       return toolbar;
     }
 
@@ -2486,7 +2499,7 @@
         const editor = this.el('div', 'rb-content' + (node.type === 'core/button' ? ' rb-content-button-preview' : '')); editor.contentEditable = 'true'; editor.dataset.editContent = node.id;
         editor.setAttribute('role', 'textbox'); editor.setAttribute('aria-multiline', 'true');
         editor.setAttribute('aria-label', this.strings.textLabel + ': ' + this.label(node.type)); editor.setAttribute('data-placeholder', this.strings.placeholder || '');
-        buildInlineDom(editor, node.content); textPreview.append(editor); appearanceTarget=editor;
+        buildInlineDom(editor, node.content);if(node.type==='core/paragraph')editor.style.textAlign=(node.attributes.appearance&&node.attributes.appearance.text_align)||node.attributes.align||'left';textPreview.append(editor); appearanceTarget=editor;
       } else if (node.type === 'core/code') {
         const code = this.el('textarea','rb-code-editor'); code.value = node.content; code.maxLength = 131072;
         code.dataset.editCode = node.id; code.setAttribute('aria-label',this.strings.preformatted.label);
@@ -2640,6 +2653,7 @@
     renderAppearancePanel(node) {
       const panel=this.el('div','rb-appearance-panel');panel.setAttribute('role','tabpanel');
       const current=node.attributes.appearance||{};
+      if(node.type==='core/paragraph')panel.append(this.el('h4','rb-paragraph-inspector-heading',this.strings.paragraphStyleHeading));
       const addColor=(label,key,fallback)=>{const wrap=this.el('label','rb-field rb-appearance-field');wrap.append(this.el('span','',label));const input=this.el('input','rb-input rb-appearance-color');input.type='color';input.value=current[key]||fallback;input.dataset.appearance=key;input.dataset.nodeId=node.id;wrap.append(input);panel.append(wrap);};
       const addNumber=(label,key,min,max,fallback)=>{const wrap=this.el('label','rb-field rb-appearance-field');wrap.append(this.el('span','',label));const input=this.el('input','rb-input');input.type='number';input.min=String(min);input.max=String(max);input.step='1';input.value=String(current[key]===undefined?fallback:current[key]);input.dataset.appearance=key;input.dataset.nodeId=node.id;wrap.append(input);panel.append(wrap);};
       addColor(this.strings.customTextColor||'Text color','text_color','#202124');
@@ -2652,8 +2666,10 @@
       addNumber(this.strings.customPadding||'Inner spacing (px)','padding',0,64,0);
       addNumber(this.strings.customMargin||'Outer spacing (px)','margin',0,48,0);
       addNumber(this.strings.customFontSize||'Font size (px)','font_size',12,48,16);
-      const alignWrap=this.el('label','rb-field rb-appearance-field');alignWrap.append(this.el('span','',this.strings.customTextAlign||'Text alignment'));
-      const align=this.el('select','rb-input');[['',this.strings.customInherit||'Theme default'],['left',this.strings.alignLeft||'Left'],['center',this.strings.alignCenter||'Center'],['right',this.strings.alignRight||'Right']].forEach(([value,label])=>{const option=this.el('option','',label);option.value=value;align.append(option);});align.value=current.text_align||'';align.dataset.appearance='text_align';align.dataset.nodeId=node.id;alignWrap.append(align);panel.append(alignWrap);
+      if(node.type!=='core/paragraph'){
+        const alignWrap=this.el('label','rb-field rb-appearance-field');alignWrap.append(this.el('span','',this.strings.customTextAlign||'Text alignment'));
+        const align=this.el('select','rb-input');[['',this.strings.customInherit||'Theme default'],['left',this.strings.alignLeft||this.strings.media.alignments.left],['center',this.strings.alignCenter||this.strings.media.alignments.center],['right',this.strings.alignRight||this.strings.media.alignments.right]].forEach(([value,label])=>{const option=this.el('option','',label);option.value=value;align.append(option);});align.value=current.text_align||'';align.dataset.appearance='text_align';align.dataset.nodeId=node.id;alignWrap.append(align);panel.append(alignWrap);
+      }
       panel.append(this.el('p','rb-help-text',this.strings.customAppearanceHint||'These safe style controls apply to the selected block and are included in the saved document.'));
       const reset=this.button(this.strings.customReset||'Reset customization','reset-appearance',{nodeId:node.id});reset.disabled=!Object.keys(current).length;panel.append(reset);
       return panel;
@@ -2665,7 +2681,6 @@
       const found = this.selectedId ? this.findPath(this.state.blocks, this.selectedId) : null;
       if (!found) { aside.append(this.el('p', 'rb-muted', this.strings.inspectorEmpty)); return aside; }
       aside.append(this.renderBreadcrumbs(found.node.id));
-      aside.append(this.el('p', 'rb-selected-type', this.label(found.node.type)));
       const tabList=this.el('div','rb-inspector-tabs');tabList.setAttribute('role','tablist');tabList.setAttribute('aria-label',this.strings.inspectorTabs||'Block settings');
       const panelPrefix='rb-inspector-'+this.instance+'-'+found.node.id;
       [['content',this.strings.customContentTab||'Content'],['customize',this.strings.customizeTab||'Personalizar']].forEach(([tab,label])=>{const button=this.el('button','rb-inspector-tab',label);button.type='button';button.dataset.action='inspector-tab';button.dataset.inspectorTab=tab;button.setAttribute('role','tab');button.setAttribute('aria-selected',String(this.inspectorTab===tab));button.setAttribute('aria-controls',panelPrefix+'-'+tab);button.tabIndex=this.inspectorTab===tab?0:-1;tabList.append(button);});
@@ -2681,6 +2696,13 @@
         input.dataset.attribute = key; input.dataset.nodeId = found.node.id; wrap.append(input); contentPanel.append(wrap);
       };
       const n = found.node;
+      if(n.type==='core/paragraph'){
+        const textSection=this.el('section','rb-paragraph-inspector-section');
+        textSection.append(this.el('h4','rb-paragraph-inspector-heading',this.strings.paragraphTextTitle));
+        const textEditor=this.el('div','rb-content rb-inspector-paragraph-content');textEditor.contentEditable='true';textEditor.dataset.editContent=n.id;textEditor.dataset.inspectorContent='1';textEditor.setAttribute('role','textbox');textEditor.setAttribute('aria-multiline','true');textEditor.setAttribute('aria-label',this.strings.paragraphTextTitle);textEditor.setAttribute('data-placeholder',this.strings.placeholder||'');buildInlineDom(textEditor,n.content);
+        textSection.append(textEditor,this.el('p','rb-help-text',this.strings.paragraphTextHint));contentPanel.append(textSection);
+        addField(this.strings.paragraphAlignment,'align',n.attributes.align||(n.attributes.appearance&&n.attributes.appearance.text_align)||'left','text',[['left',this.strings.media.alignments.left],['center',this.strings.media.alignments.center],['right',this.strings.media.alignments.right]]);
+      }
       if (n.type === 'core/heading') addField('Nível', 'level', n.attributes.level, 'number');
       if (n.type === 'core/list') addField('Tipo de lista', 'ordered', n.attributes.ordered ? 'true' : 'false', 'text', [['false','Marcadores'],['true','Numerada']]);
       if (n.type === 'core/file') {
@@ -2742,13 +2764,15 @@
         const removeColumn=this.button(this.strings.columnsRemove||'Remover última coluna','columns-remove',{nodeId:n.id});removeColumn.disabled=n.children.length<=2;columnActions.append(removeColumn);
         contentPanel.append(columnActions,this.el('p','rb-help-text',this.strings.columnsLimit||'As colunas disponíveis são 2 ou 3. Remover a última coluna pode ser desfeito com Desfazer.'));
       }
-      const actions = this.el('div', 'rb-inspector-actions');
+      const paragraphActions=n.type==='core/paragraph';
+      const actions = this.el('div', 'rb-inspector-actions'+(paragraphActions?' rb-paragraph-inspector-actions':''));
+      if(paragraphActions)actions.append(this.el('h4','rb-paragraph-inspector-heading',this.strings.paragraphActions));
       const fixedColumn = found.parent && found.parent.type === 'core/columns' && n.type === 'core/column';
       const lastRequiredChild = found.parent && ['core/gallery','core/cover'].includes(found.parent.type) && found.parent.children.length <= 1;
-      const remove = this.button(this.strings.remove, 'delete', { nodeId:n.id }); remove.disabled = !!fixedColumn || !!lastRequiredChild;
-      actions.append(this.button(this.strings.moveUp, 'move-up', { nodeId:n.id }), this.button(this.strings.moveDown, 'move-down', { nodeId:n.id }));
-      const indent = this.button(this.strings.indentBlock, 'indent', { nodeId:n.id }); indent.disabled = !this.canIndent(n.id); actions.append(indent);
-      const outdent = this.button(this.strings.outdentBlock, 'outdent', { nodeId:n.id }); outdent.disabled = !this.canOutdent(n.id); actions.append(outdent, remove); contentPanel.append(actions);
+      const remove = this.button(this.strings.remove, 'delete', { nodeId:n.id, showLabel:paragraphActions }); remove.disabled = !!fixedColumn || !!lastRequiredChild;
+      actions.append(this.button(this.strings.moveUp, 'move-up', { nodeId:n.id, showLabel:paragraphActions }), this.button(this.strings.moveDown, 'move-down', { nodeId:n.id, showLabel:paragraphActions }));
+      const indent = this.button(this.strings.indentBlock, 'indent', { nodeId:n.id, showLabel:paragraphActions }); indent.disabled = !this.canIndent(n.id); actions.append(indent);
+      const outdent = this.button(this.strings.outdentBlock, 'outdent', { nodeId:n.id, showLabel:paragraphActions }); outdent.disabled = !this.canOutdent(n.id); actions.append(outdent, remove); contentPanel.append(actions);
       aside.append(contentPanel,appearancePanel);
       return aside;
     }
