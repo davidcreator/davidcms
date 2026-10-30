@@ -208,13 +208,33 @@
   function charBefore(text, index) { if (index <= 0) return ''; const low=text.charCodeAt(index-1); if (low>=0xDC00&&low<=0xDFFF&&index>1) { const high=text.charCodeAt(index-2); if(high>=0xD800&&high<=0xDBFF)return text.slice(index-2,index); } return text.slice(index-1,index); }
   function charAfter(text, index) { if(index>=text.length)return ''; const point=text.codePointAt(index); return String.fromCodePoint(point); }
 
+  function normalizeSearchText(text) {
+    const normalizedParts=[],sourceStarts=[],sourceEnds=[];
+    const append=(segment,start,end)=>{const value=segment.normalize('NFC');normalizedParts.push(value);for(let i=0;i<value.length;i++){sourceStarts.push(start);sourceEnds.push(end);}};
+    if(typeof Intl!=='undefined'&&typeof Intl.Segmenter==='function'){
+      const segmenter=new Intl.Segmenter(undefined,{granularity:'grapheme'});
+      for(const item of segmenter.segment(text))append(item.segment,item.index,item.index+item.segment.length);
+    } else {
+      let cursor=0,cluster='',clusterStart=0,marks=null;
+      try { marks=new RegExp('^\\p{M}$','u'); } catch (_) { marks=null; }
+      for(const character of text){
+        const width=character.length, code=character.codePointAt(0), isMark=marks ? marks.test(character) : (code>=0x300&&code<=0x36F || code>=0x1AB0&&code<=0x1AFF || code>=0x1DC0&&code<=0x1DFF || code>=0x20D0&&code<=0x20FF || code>=0xFE20&&code<=0xFE2F);
+        if(!cluster||isMark){if(!cluster)clusterStart=cursor;cluster+=character;}
+        else {append(cluster,clusterStart,cursor);cluster=character;clusterStart=cursor;}
+        cursor+=width;
+      }
+      if(cluster)append(cluster,clusterStart,cursor);
+    }
+    return {text:normalizedParts.join(''),starts:sourceStarts,ends:sourceEnds};
+  }
+
   function findTextMatchesInRuns(runs, query, caseSensitive, wholeWord) {
     if(!Array.isArray(runs)||!query)return [];
-    const parts=runs.map((run)=>String(run && run.text || '')), text=parts.join(''), matches=[];
+    const parts=runs.map((run)=>String(run && run.text || '')), sourceText=parts.join(''), normalized=normalizeSearchText(sourceText), text=normalized.text, normalizedQuery=query.normalize('NFC'), matches=[];
     const locate=(absolute,isEnd)=>{let cursor=0;for(let i=0;i<parts.length;i++){const next=cursor+parts[i].length;if(isEnd ? (absolute>cursor&&absolute<=next) : (absolute>=cursor&&absolute<next))return {runIndex:i,offset:absolute-cursor};cursor=next;}return null;};
-    const add=(at,length)=>{if(wholeWord){const starts=isWordCharacter(charAfter(query,0)),ends=isWordCharacter(charBefore(query,query.length));if((starts&&isWordCharacter(charBefore(text,at)))||(ends&&isWordCharacter(charAfter(text,at+length))))return;}const a=locate(at,false),b=locate(at+length,true);if(a&&b)matches.push({runIndex:a.runIndex,start:a.offset,endRunIndex:b.runIndex,endOffset:b.offset,length,absoluteStart:at});};
-    if(caseSensitive){let from=0,at;while((at=text.indexOf(query,from))!==-1&&matches.length<=1000){add(at,query.length);from=at+Math.max(1,query.length);}}
-    else {const escaped=query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');let re;try{re=new RegExp(escaped,'giu');}catch(_){return [];}let found;while((found=re.exec(text))!==null&&matches.length<=1000){add(found.index,found[0].length);if(!found[0].length)re.lastIndex+=1;}}
+    const add=(at,normalizedLength)=>{const normalizedEnd=at+normalizedLength;if((at>0&&normalized.starts[at]===normalized.starts[at-1])||(normalizedEnd<normalized.ends.length&&normalized.ends[normalizedEnd-1]===normalized.ends[normalizedEnd]))return;const start=normalized.starts[at],end=normalized.ends[normalizedEnd-1],length=end-start;if(!Number.isInteger(start)||!Number.isInteger(end)||end<=start)return;if(wholeWord){const starts=isWordCharacter(charAfter(normalizedQuery,0)),ends=isWordCharacter(charBefore(normalizedQuery,normalizedQuery.length));if((starts&&isWordCharacter(charBefore(sourceText,start)))||(ends&&isWordCharacter(charAfter(sourceText,end))))return;}const a=locate(start,false),b=locate(end,true);if(a&&b)matches.push({runIndex:a.runIndex,start:a.offset,endRunIndex:b.runIndex,endOffset:b.offset,length,absoluteStart:start});};
+    if(caseSensitive){let from=0,at;while((at=text.indexOf(normalizedQuery,from))!==-1&&matches.length<=1000){add(at,normalizedQuery.length);from=at+Math.max(1,normalizedQuery.length);}}
+    else {const escaped=normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');let re;try{re=new RegExp(escaped,'giu');}catch(_){return [];}let found;while((found=re.exec(text))!==null&&matches.length<=1000){add(found.index,found[0].length);if(!found[0].length)re.lastIndex+=1;}}
     return matches;
   }
 
@@ -2180,6 +2200,7 @@
     classifyKeyboardShortcut: classifyKeyboardShortcut,
     replaceTextMatchInRuns: replaceTextMatchInRuns,
     findTextMatchesInRuns: findTextMatchesInRuns,
+    normalizeSearchText: normalizeSearchText,
     findNodeChain: findNodeChain,
     getOutlineNavigationTarget: getOutlineNavigationTarget,
     moveBlockAcrossHierarchy: moveBlockAcrossHierarchy,

@@ -12,4 +12,4 @@ A regra é aplicada ao texto agregado do bloco, portanto funciona também para t
 - Sete casos unitários isolados: correspondência parcial com/sem a opção, palavras adjacentes em caixa mista, acentos e marca combinante, underscore, pontuação/hífen, sensibilidade a caixa e termo inteiro atravessando runs formatadas.
 - Verificações estáticas do mapeamento nos controladores/idiomas e integridade do ZIP.
 
-Não foram executados testes de navegador, leitor de tela, PHP runtime, banco de dados, staging ou E2E. A comparação é literal em relação aos acentos: a busca não transforma formas Unicode compostas e decompostas em equivalentes, mas trata marcas combinantes como parte de palavra ao determinar limites.
+Não foram executados testes de navegador, leitor de tela, PHP runtime, banco de dados, staging ou E2E. A normalização de formas Unicode compostas e decompostas foi adicionada posteriormente no F9-40; a busca agora compara texto e consulta em NFC e mapeia os resultados aos offsets originais.
