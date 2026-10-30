@@ -609,6 +609,12 @@
         });
       });
       this.root.addEventListener('keydown', (event) => {
+        const findPanel=event.target.closest('.rb-find-replace');
+        if(findPanel && event.key==='Escape'){event.preventDefault();this.closeFindReplace();return;}
+        const findField=event.target.closest('[data-find-query]');
+        if(findField && event.key==='Enter'){event.preventDefault();this.moveFindMatch(event.shiftKey?-1:1);findField.focus();return;}
+        const replaceField=event.target.closest('[data-replace-query]');
+        if(replaceField && event.key==='Enter'){event.preventDefault();this.replaceFoundMatch(false);return;}
         const ribbonTab = event.target.closest('[data-action="ribbon-tab"]');
         if (ribbonTab && ['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) {
           const tabs = Array.from(this.root.querySelectorAll('[data-action="ribbon-tab"]'));
@@ -707,7 +713,7 @@
       else if (name === 'import-file') { const input=this.root.querySelector('[data-import-file]'); if (input) input.click(); }
       else if (name === 'export-document') this.exportDocumentFile();
       else if (name === 'toggle-revision-history') { this.historyOpen = !this.historyOpen; this.render(); }
-      else if (name === 'toggle-find-replace') { this.findReplaceOpen = !this.findReplaceOpen; this.render(); if (this.findReplaceOpen) { const input=this.root.querySelector('[data-find-query]'); if(input) input.focus(); } }
+      else if (name === 'toggle-find-replace') { if(this.findReplaceOpen){this.closeFindReplace();}else{this.findReplaceOpen=true;this.render();const input=this.root.querySelector('[data-find-query]');if(input)input.focus();} }
       else if (name === 'find-next') this.moveFindMatch(1);
       else if (name === 'find-previous') this.moveFindMatch(-1);
       else if (name === 'replace-one') this.replaceFoundMatch(false);
@@ -1699,6 +1705,11 @@
       this.updateInlineToolbarState();
     }
 
+    closeFindReplace() {
+      this.findReplaceOpen=false; this.activeRibbonTab='home'; this.render();
+      const trigger=this.root.querySelector('[data-action="toggle-find-replace"]'); if(trigger)trigger.focus();
+    }
+
     renderFindReplacePanel() {
       const panel=this.el('section','rb-find-replace'); panel.setAttribute('aria-label',this.strings.findReplaceButton||'Find and replace');
       const form=this.el('div','rb-find-fields');
@@ -1710,7 +1721,7 @@
       const actions=this.el('div','rb-find-actions');
       actions.append(this.button(this.strings.findPrevious||'Previous match','find-previous'),this.button(this.strings.findNext||'Next match','find-next'),this.button(this.strings.replaceOne||'Replace','replace-one'),this.button(this.strings.replaceAll||'Replace all','replace-all'));
       const status=this.el('p','rb-find-status'); status.dataset.findStatus='1'; status.setAttribute('role','status'); status.setAttribute('aria-live','polite');
-      panel.append(form,actions,this.el('p','rb-find-hint',this.strings.findCrossRunHint||'Search spans differently formatted text runs within a block, but does not cross block boundaries.'),status);
+      panel.append(form,actions,this.el('p','rb-find-keyboard-hint',this.strings.findKeyboardHint||'Enter next · Shift+Enter previous · Esc close'),this.el('p','rb-find-hint',this.strings.findCrossRunHint||'Search spans differently formatted text runs within a block, but does not cross block boundaries.'),status);
       this.updateFindStatus(status); return panel;
     }
 
@@ -1766,7 +1777,7 @@
       });
       if(!replaced){this.updateFindStatus();return;}
       this.clearTextEditSnapshot(); this.commit(next,this.selectedId); this.activeFindIndex=-1;
-      this.statusMessage=(this.strings.replaceDone||'Replaced %1 occurrence(s).').replace('%1',String(replaced)); this.render();
+      this.statusMessage=(this.strings.replaceDone||'Replaced %1 occurrence(s).').replace('%1',String(replaced)); this.render(); const findInput=this.root.querySelector('[data-find-query]'); if(findInput)findInput.focus();
     }
 
     renderRibbonGroup(label, className) {

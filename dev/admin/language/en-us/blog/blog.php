@@ -493,3 +493,4 @@ $_['text_block_replace_limit'] = 'Replacement exceeds the 1,000-match limit; not
 $_['text_block_find_empty'] = 'Enter text to find.';
 $_['text_block_find_previous'] = 'Previous match';
 $_['text_block_find_whole_word'] = 'Whole words only';
+$_['text_block_find_keyboard_hint'] = 'Enter next · Shift+Enter previous · Esc close';

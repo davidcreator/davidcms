@@ -432,3 +432,5 @@ body.rb-bdre-fullscreen-open{overflow:hidden!important}
 .rb-keyboard-help summary{cursor:pointer;font-weight:650}
 .rb-keyboard-help summary:focus-visible{outline:3px solid #174ea6;outline-offset:3px;border-radius:2px}
 .rb-keyboard-help p{margin:.5rem 0 0;line-height:1.55}
+
+.rb-find-keyboard-hint{grid-column:1/-1;margin:0;color:#475467;font-size:.75rem}
