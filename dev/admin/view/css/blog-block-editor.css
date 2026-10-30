@@ -583,3 +583,21 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-paragraph-inspector-actions .rb-button .rb-icon{width:.95rem;height:.95rem;flex:0 0 auto}
 .rb-paragraph-inspector-actions .rb-button[disabled]{opacity:.45}
 @media(max-width:620px){.rb-paragraph-toolbar .rb-button{font-size:.69rem;padding:.34rem .4rem}.rb-paragraph-toolbar .rb-transform-wrap{flex:1 1 100%;max-width:none}.rb-paragraph-inspector-actions{grid-template-columns:minmax(0,1fr)}}
+
+/* F9-54: the same guided inspector treatment applies to headings. */
+.rb-text-block-inspector-section{display:grid;gap:.35rem;padding:.25rem 0 .7rem}
+.rb-text-block-inspector-heading{margin:.25rem 0;color:#394861;font-size:.78rem;font-weight:750;letter-spacing:.01em}
+.rb-inspector-text-block-content{min-height:7rem;max-height:20rem;overflow:auto;padding:.65rem .7rem;border:1px solid #cbd5e1;border-radius:.5rem;background:#fff;line-height:1.6}
+.rb-inspector-text-block-content:focus-visible{outline:3px solid #174ea6;outline-offset:2px;border-color:#174ea6}
+.rb-text-block-inspector-section .rb-help-text{margin:0;color:#687890;font-size:.69rem;line-height:1.45}
+.rb-labeled-text-toolbar{gap:.42rem;padding:.55rem;background:#f5f8ff;border-color:#cbd8ec}
+.rb-labeled-text-toolbar .rb-button{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;min-height:2.15rem;padding:.38rem .55rem;font-size:.74rem;white-space:normal}
+.rb-labeled-text-toolbar .rb-button .rb-icon{width:1rem;height:1rem;flex:0 0 auto}
+.rb-labeled-text-toolbar .rb-transform-wrap{display:inline-flex;flex-wrap:wrap;align-items:center;gap:.25rem;min-width:10rem;max-width:16rem}
+.rb-labeled-text-toolbar .rb-transform-visible-label{flex:1 0 100%;color:#596a83;font-size:.66rem;font-weight:700}
+.rb-labeled-text-toolbar .rb-transform{width:100%;min-height:2rem}
+.rb-text-block-inspector-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.4rem}
+.rb-text-block-inspector-actions>.rb-text-block-inspector-heading{grid-column:1/-1;margin-top:.15rem}
+.rb-text-block-inspector-actions .rb-button{display:inline-flex;align-items:center;justify-content:center;gap:.3rem;min-height:2.2rem;padding:.38rem .42rem;font-size:.7rem;line-height:1.2;white-space:normal}
+.rb-text-block-inspector-actions .rb-button .rb-icon{width:.95rem;height:.95rem;flex:0 0 auto}
+@media(max-width:620px){.rb-labeled-text-toolbar .rb-button{font-size:.69rem;padding:.34rem .4rem}.rb-labeled-text-toolbar .rb-transform-wrap{flex:1 1 100%;max-width:none}.rb-text-block-inspector-actions{grid-template-columns:minmax(0,1fr)}}

@@ -1,5 +1,7 @@
 # F9-53 — Bloco Parágrafo: conteúdo, personalização e ações claras
 
+> **Complementado pela F9-54:** o mesmo padrão de inspector e ações foi estendido ao bloco Heading; veja [F9-54](F9-54-Bloco-Heading-Inspetor-e-Acoes.md).
+
 ## Alterações
 
 - A aba **Conteúdo** do inspetor agora inclui uma área de texto rich-text ligada ao mesmo conteúdo do canvas; as marcas inline existentes são mantidas ao editar pelos dois pontos.
