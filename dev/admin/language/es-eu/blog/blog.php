@@ -521,3 +521,9 @@ $_['text_block_columns_add'] = 'Añadir columna';
 $_['text_block_columns_remove'] = 'Quitar la última columna';
 $_['text_block_columns_limit'] = 'Usa 2 o 3 columnas. Puedes deshacer la eliminación de la última columna.';
 $_['text_block_column_default'] = 'Columna';
+
+$_['text_block_ribbon_review'] = 'Revisar';
+
+$_['text_block_ribbon_home'] = 'Inicio';
+$_['text_block_ribbon_insert'] = 'Insertar';
+$_['text_block_ribbon_view'] = 'Ver';

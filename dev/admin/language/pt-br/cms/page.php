@@ -307,3 +307,9 @@ $_['text_block_columns_add'] = 'Adicionar coluna';
 $_['text_block_columns_remove'] = 'Remover última coluna';
 $_['text_block_columns_limit'] = 'Use 2 ou 3 colunas. Remover a última coluna pode ser desfeito com Desfazer.';
 $_['text_block_column_default'] = 'Coluna';
+
+$_['text_block_ribbon_review'] = 'Revisar';
+
+$_['text_block_ribbon_home'] = 'Início';
+$_['text_block_ribbon_insert'] = 'Inserir';
+$_['text_block_ribbon_view'] = 'Exibir';

@@ -14,6 +14,8 @@
   ];
   const TEXT_TYPES = new Set(['core/paragraph', 'core/heading', 'core/list-item', 'core/quote', 'core/button', 'core/callout', 'core/details', 'core/file', 'core/audio']);
   const BLOCK_CATEGORIES = { 'core/paragraph':'content', 'core/heading':'content', 'core/list':'content', 'core/quote':'content', 'core/button':'content', 'core/callout':'content', 'core/details':'content', 'core/spacer':'layout', 'core/code':'content', 'core/image':'media', 'core/video_embed':'media', 'core/gallery':'media', 'core/cover':'media', 'core/separator':'layout', 'core/group':'layout', 'core/columns':'layout', 'core/table':'content', 'core/file':'media', 'core/audio':'media', 'core/video_file':'media', 'core/threejs_thumb':'media' };
+  const RIBBON_BLOCK_TYPES = { insert:['core/paragraph','core/heading','core/list','core/quote','core/button','core/callout','core/details','core/code'], media:['core/image','core/video_embed','core/video_file','core/threejs_thumb','core/gallery','core/file','core/audio'], layout:['core/spacer','core/separator','core/group','core/columns','core/cover','core/table'] };
+  const PATTERN_TOOL_DESCRIPTIONS = {pt:{two_columns:'Insere uma seção com duas colunas de conteúdo.',quote_cta:'Insere citação acompanhada de botão de chamada.',section_intro:'Insere título, introdução e separador.',cover_hero:'Insere capa com título, descrição e botão.'},en:{two_columns:'Insert a two-column content section.',quote_cta:'Insert a quote with a call-to-action button.',section_intro:'Insert a heading, introduction and divider.',cover_hero:'Insert a cover with heading, description and button.'},es:{two_columns:'Inserta una sección de contenido en dos columnas.',quote_cta:'Inserta una cita con un botón de llamada a la acción.',section_intro:'Inserta título, introducción y separador.',cover_hero:'Inserta una portada con título, descripción y botón.'}};
   const TRANSFORMABLE_TEXT = new Set(['core/paragraph', 'core/heading', 'core/quote', 'core/button']);
   const CLONE = (value) => JSON.parse(JSON.stringify(value));
   let instanceSequence = 0;
@@ -748,7 +750,7 @@
         const inBlock = !!event.target.closest('.rb-block[data-node-id]');
         const command = classifyKeyboardShortcut(event, { inTextEditor, inFormControl, inBlock });
         if (command === 'undo' || command === 'redo') { event.preventDefault(); this.action(command); return; }
-        if (command === 'find') { event.preventDefault(); this.findReplaceOpen=true; this.render(); const find=this.root.querySelector('[data-find-query]'); if(find)find.focus(); return; }
+        if (command === 'find') { event.preventDefault(); this.activeRibbonTab='review'; this.findReplaceOpen=true; this.render(); const find=this.root.querySelector('[data-find-query]'); if(find)find.focus(); return; }
         if (['bold','italic','underline'].includes(command)) { event.preventDefault(); this.captureInlineSelection(); this.applyInlineMark(command); return; }
         if (command === 'link') { event.preventDefault(); this.captureInlineSelection(); const link = this.root.querySelector('[data-inline-link-input]'); if (link) link.focus(); return; }
         if (event.key === 'Enter' && event.target.closest('[data-edit-content]')) { event.preventDefault(); this.insertPlainText(event.target.closest('[data-edit-content]'), '\n'); return; }
@@ -815,7 +817,7 @@
       else if (name === 'inspector-tab') { this.inspectorTab=button.dataset.inspectorTab==='customize'?'customize':'content'; this.render(); const active=Array.from(this.root.querySelectorAll('[data-action="inspector-tab"]')).find((item)=>item.dataset.inspectorTab===this.inspectorTab); if(active)active.focus(); }
       else if (name === 'reset-appearance') this.updateNode(button.dataset.nodeId || this.selectedId,(node)=>{delete node.attributes.appearance;});
       else if (name === 'customize-block') { this.selectedId=button.dataset.nodeId||this.selectedId;this.inspectorTab='customize';this.previewMode=false;if(this.fullscreen){this.inspectorOpen=true;this.activePanel='settings';}else this.activePanel='settings';this.render();const tab=Array.from(this.root.querySelectorAll('[data-action="inspector-tab"]')).find((item)=>item.dataset.inspectorTab==='customize');if(tab)tab.focus(); }
-      else if (name === 'toggle-find-replace') { if(this.findReplaceOpen){this.closeFindReplace();}else{this.findReplaceOpen=true;this.render();const input=this.root.querySelector('[data-find-query]');if(input)input.focus();} }
+      else if (name === 'toggle-find-replace') { if(this.findReplaceOpen){this.closeFindReplace();}else{this.activeRibbonTab='review';this.findReplaceOpen=true;this.render();const input=this.root.querySelector('[data-find-query]');if(input)input.focus();} }
       else if (name === 'find-next') this.moveFindMatch(1);
       else if (name === 'find-previous') this.moveFindMatch(-1);
       else if (name === 'replace-one') this.replaceFoundMatch(false);
@@ -1831,6 +1833,8 @@
       const insertionPoint=this.slashTrigger?this.slashTrigger.nodeId:(this.insertAfterId||this.selectedId);
       const availableTypes=new Set(this.insertTypes(insertionPoint).map((item)=>item.type));
       this.root.querySelectorAll('[data-ribbon-insert]').forEach((button)=>{button.disabled=this.locked||!availableTypes.has(button.dataset.type);button.setAttribute('aria-disabled',String(button.disabled));});
+      const patternsAvailable=this.canInsertPatterns(insertionPoint);
+      this.root.querySelectorAll('[data-ribbon-pattern]').forEach((button)=>{button.disabled=this.locked||!patternsAvailable;button.setAttribute('aria-disabled',String(button.disabled));});
       this.updateInlineToolbarState();
     }
 
@@ -1855,7 +1859,7 @@
     }
 
     closeFindReplace() {
-      this.findReplaceOpen=false; this.activeRibbonTab='home'; this.render();
+      this.findReplaceOpen=false; this.activeRibbonTab='review'; this.render();
       const trigger=this.root.querySelector('[data-action="toggle-find-replace"]'); if(trigger)trigger.focus();
     }
 
@@ -1938,40 +1942,59 @@
     }
 
     renderRibbonContents() {
-      const panel = this.el('div','rb-ribbon-content'); panel.id='rb-ribbon-panel-'+this.instance; panel.setAttribute('role','tabpanel'); panel.setAttribute('aria-label', this.activeRibbonTab === 'home' ? (this.strings.ribbonHome||'Home') : (this.activeRibbonTab === 'insert' ? (this.strings.ribbonInsert||'Insert') : (this.strings.ribbonView||'View')));
-      const addButton = (tools, label, action, extra) => tools.append(this.button(label, action, extra));
-      if (this.activeRibbonTab === 'home') {
+      const panel = this.el('div','rb-ribbon-content'); panel.id='rb-ribbon-panel-'+this.instance;
+      const labels={home:this.strings.ribbonHome||'Início',insert:this.strings.ribbonInsert||'Inserir',media:this.strings.categoryMedia||'Mídia',layout:this.strings.categoryLayout||'Layout',review:this.strings.ribbonReview||'Revisar',view:this.strings.ribbonView||'Exibir'};
+      panel.setAttribute('role','tabpanel');panel.setAttribute('aria-label',labels[this.activeRibbonTab]||labels.home);
+      const addButton=(tools,label,action,extra)=>tools.append(this.button(label,action,extra));
+      const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'').toLowerCase();
+      const patternLanguage=language.startsWith('es')?'es':(language.startsWith('en')?'en':'pt');
+      const appendBlockTools=(tab,label)=>{
+        const group=this.renderRibbonGroup(label);
+        (RIBBON_BLOCK_TYPES[tab]||[]).forEach((type)=>{
+          const tool=this.button(this.label(type),'insert',{type,icon:TYPE_ICONS[type],iconOnly:true,tooltipDescription:getToolDescription('insert',type,language),ribbonInsert:true});
+          tool.classList.add('rb-ribbon-block-tool');group.tools.append(tool);
+        });
+        panel.append(group.group);
+      };
+      if(this.activeRibbonTab==='home'){
         let g=this.renderRibbonGroup(this.strings.groupClipboard||'Área de transferência');
         addButton(g.tools,this.strings.exportDocument||'Exportar BDRE','export-document',{icon:'file'});
-        addButton(g.tools,this.strings.addBlock,'toggle-inserter'); addButton(g.tools,this.strings.pasteBlock,'paste-block');
+        addButton(g.tools,this.strings.addBlock,'toggle-inserter',{icon:'plus'});addButton(g.tools,this.strings.pasteBlock,'paste-block',{icon:'copy'});
         const undo=this.button(this.strings.undo,'undo');undo.dataset.history='undo';g.tools.append(undo);
-        const redo=this.button(this.strings.redo,'redo');redo.dataset.history='redo';g.tools.append(redo);
-        const historyButton=this.button(this.strings.historyButton||'Draft history','toggle-revision-history',{icon:'history'}); historyButton.disabled=!this.getDraftHistory().length; g.tools.append(historyButton); panel.append(g.group);
-        const findButton=this.button(this.strings.findReplaceButton||'Find and replace','toggle-find-replace',{icon:'search'}); findButton.setAttribute('aria-expanded',String(this.findReplaceOpen)); g.tools.append(findButton);
+        const redo=this.button(this.strings.redo,'redo');redo.dataset.history='redo';g.tools.append(redo);panel.append(g.group);
         g=this.renderRibbonGroup(this.strings.groupTextFormat||'Formatação de texto');
-        INLINE_MARKS.forEach((mark)=>{ const b=this.button(this.strings[mark]||mark,'format-mark',{mark}); b.dataset.mark=mark; b.setAttribute('aria-pressed','false'); g.tools.append(b); });
-        const link=this.el('input','rb-inline-link'); link.type='text'; link.value=this.linkDraft; link.placeholder=this.strings.linkPlaceholder; link.setAttribute('aria-label',this.strings.link); link.dataset.inlineLinkInput='1'; g.tools.append(link);
-        addButton(g.tools,this.strings.applyLink,'link-apply'); addButton(g.tools,this.strings.removeLink,'link-remove'); panel.append(g.group);
+        INLINE_MARKS.forEach((mark)=>{const b=this.button(this.strings[mark]||mark,'format-mark',{mark});b.dataset.mark=mark;b.setAttribute('aria-pressed','false');g.tools.append(b);});
+        const link=this.el('input','rb-inline-link');link.type='text';link.value=this.linkDraft;link.placeholder=this.strings.linkPlaceholder;link.setAttribute('aria-label',this.strings.link);link.dataset.inlineLinkInput='1';g.tools.append(link);
+        addButton(g.tools,this.strings.applyLink,'link-apply');addButton(g.tools,this.strings.removeLink,'link-remove');panel.append(g.group);
         g=this.renderRibbonGroup(this.strings.groupParagraphAlign||'Alinhamento do parágrafo');
-        [['left',this.strings.alignLeft||'Esquerda'],['center',this.strings.alignCenter||'Centralizar'],['right',this.strings.alignRight||'Direita']].forEach(([alignment,label])=>{const b=this.button(label,'align-text',{alignment}); b.dataset.alignment=alignment; g.tools.append(b);}); panel.append(g.group);
-      } else if (this.activeRibbonTab === 'insert') {
-        ['content','media','layout'].forEach((category)=>{
-          const group=this.renderRibbonGroup(this.categoryLabel(category));
-          TYPES.filter(([type])=>BLOCK_CATEGORIES[type]===category).forEach(([type])=>{
-            const tool=this.button(this.label(type),'insert',{type,icon:TYPE_ICONS[type],iconOnly:true,tooltipDescription:getToolDescription('insert',type,global.document&&global.document.documentElement&&global.document.documentElement.lang),ribbonInsert:true});
-            tool.classList.add('rb-ribbon-block-tool');group.tools.append(tool);
-          });
-          if(group.tools.childNodes.length)panel.append(group.group);
-        });
-        const g=this.renderRibbonGroup(this.strings.groupInsert||'Mais ferramentas');
-        const inserter=this.button(this.strings.addBlock,'toggle-inserter',{icon:'plus'});g.tools.append(inserter);
-        const importer=this.button(this.strings.importFile||'Importar arquivo','import-file',{icon:'file'});g.tools.append(importer);
-        const fileInput=this.el('input','rb-import-file-input');fileInput.type='file';fileInput.accept=(global.ReamurPageImporter&&global.ReamurPageImporter.formats||[]).join(',');fileInput.dataset.importFile='1';fileInput.classList.add('rb-sr-only');fileInput.tabIndex=-1;fileInput.setAttribute('aria-label',this.strings.importFile||'Importar arquivo');g.tools.append(fileInput);
-        panel.append(g.group);
+        [['left',this.strings.alignLeft||'Esquerda'],['center',this.strings.alignCenter||'Centralizar'],['right',this.strings.alignRight||'Direita']].forEach(([alignment,label])=>{const b=this.button(label,'align-text',{alignment});b.dataset.alignment=alignment;g.tools.append(b);});panel.append(g.group);
+      }else if(this.activeRibbonTab==='insert'){
+        appendBlockTools('insert',this.strings.categoryContent||'Conteúdo');
+        const g=this.renderRibbonGroup(this.strings.groupInsert||'Explorar e importar');
+        addButton(g.tools,this.strings.addBlock||'Todos os blocos','toggle-inserter',{icon:'plus'});
+        addButton(g.tools,this.strings.importFile||'Importar arquivo','import-file',{icon:'file'});
+        const fileInput=this.el('input','rb-import-file-input');fileInput.type='file';fileInput.accept=(global.ReamurPageImporter&&global.ReamurPageImporter.formats||[]).join(',');fileInput.dataset.importFile='1';fileInput.classList.add('rb-sr-only');fileInput.tabIndex=-1;fileInput.setAttribute('aria-label',this.strings.importFile||'Importar arquivo');g.tools.append(fileInput);panel.append(g.group);
         if(this.strings.importHint)panel.append(this.el('p','rb-import-hint',this.strings.importHint));
-      } else if (this.activeRibbonTab === 'view') {
+      }else if(this.activeRibbonTab==='media'){
+        appendBlockTools('media',this.strings.categoryMedia||'Mídia');
+      }else if(this.activeRibbonTab==='layout'){
+        appendBlockTools('layout',this.strings.categoryLayout||'Layout');
+        const g=this.renderRibbonGroup(this.strings.patternsCategory||'Padrões');
+        const patternIcons={two_columns:'columns',quote_cta:'quote',section_intro:'group',cover_hero:'cover'};
+        ['two_columns','quote_cta','section_intro','cover_hero'].forEach((pattern)=>{
+          const label=(this.strings.patternLabels||{})[pattern]||pattern;
+          const description=PATTERN_TOOL_DESCRIPTIONS[patternLanguage][pattern];
+          const tool=this.button(label,'insert-pattern',{pattern,icon:patternIcons[pattern],iconOnly:true,tooltipDescription:description,ribbonPattern:true});
+          tool.classList.add('rb-ribbon-pattern-tool');g.tools.append(tool);
+        });panel.append(g.group);
+      }else if(this.activeRibbonTab==='review'){
+        let g=this.renderRibbonGroup(this.strings.historyTitle||'Histórico de revisões');
+        const history=this.button(this.strings.historyButton||'Histórico','toggle-revision-history',{icon:'history'});history.disabled=!this.getDraftHistory().length;history.setAttribute('aria-expanded',String(this.historyOpen));g.tools.append(history);panel.append(g.group);
+        g=this.renderRibbonGroup(this.strings.findReplaceButton||'Localizar e substituir');
+        const find=this.button(this.strings.findReplaceButton||'Localizar e substituir','toggle-find-replace',{icon:'search'});find.setAttribute('aria-expanded',String(this.findReplaceOpen));g.tools.append(find);panel.append(g.group);
+      }else if(this.activeRibbonTab==='view'){
         let g=this.renderRibbonGroup(this.strings.groupPanels||'Painéis recolhíveis');
-        [['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline'],['settings',this.strings.builderSettings,'settings']].forEach(([panel,label,icon])=>{const b=this.button(label,'builder-panel',{panel,icon});b.setAttribute('aria-pressed',String(this.fullscreen ? (panel==='settings' ? (this.inspectorOpen && !this.previewMode) : this.activePanel===panel) : this.activePanel===panel));if(this.fullscreen && this.previewMode && panel==='settings')b.disabled=true;g.tools.append(b);}); panel.append(g.group);
+        [['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline'],['settings',this.strings.builderSettings,'settings']].forEach(([panelName,label,icon])=>{const b=this.button(label,'builder-panel',{panel:panelName,icon});b.setAttribute('aria-pressed',String(this.fullscreen?(panelName==='settings'?(this.inspectorOpen&&!this.previewMode):this.activePanel===panelName):this.activePanel===panelName));if(this.fullscreen&&this.previewMode&&panelName==='settings')b.disabled=true;g.tools.append(b);});panel.append(g.group);
         g=this.renderRibbonGroup(this.strings.groupPreview||'Pré-visualização');
         [['desktop',this.strings.previewDesktop],['tablet',this.strings.previewTablet],['mobile',this.strings.previewMobile]].forEach(([size,label])=>{const b=this.button(label,'preview',{size});b.setAttribute('aria-pressed',String(size===this.preview));g.tools.append(b);});
         const preview=this.button(this.previewMode?(this.strings.editMode||'Voltar à edição'):(this.strings.previewMode||'Pré-visualizar'),'toggle-preview',{icon:this.previewMode?'collapse':'desktop'});preview.setAttribute('aria-pressed',String(this.previewMode));g.tools.append(preview);
@@ -2008,7 +2031,7 @@
       }
       const ribbon = this.el('section','rb-ribbon'); ribbon.setAttribute('aria-label',this.strings.editorTools);
       const ribbonTabs=this.el('div','rb-ribbon-tabs'); ribbonTabs.setAttribute('role','tablist');
-      [['home',this.strings.ribbonHome||'Início'],['insert',this.strings.ribbonInsert||'Inserir'],['view',this.strings.ribbonView||'Exibir']].forEach(([tab,label])=>{const b=this.el('button','rb-ribbon-tab',label);b.type='button';b.dataset.action='ribbon-tab';b.dataset.tab=tab;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(this.activeRibbonTab===tab));b.setAttribute('aria-controls','rb-ribbon-panel-'+this.instance);b.tabIndex=this.activeRibbonTab===tab?0:-1;ribbonTabs.append(b);});
+      [['home',this.strings.ribbonHome||'Início'],['insert',this.strings.ribbonInsert||'Inserir'],['media',this.strings.categoryMedia||'Mídia'],['layout',this.strings.categoryLayout||'Layout'],['review',this.strings.ribbonReview||'Revisar'],['view',this.strings.ribbonView||'Exibir']].forEach(([tab,label])=>{const b=this.el('button','rb-ribbon-tab',label);b.type='button';b.dataset.action='ribbon-tab';b.dataset.tab=tab;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(this.activeRibbonTab===tab));b.setAttribute('aria-controls','rb-ribbon-panel-'+this.instance);b.tabIndex=this.activeRibbonTab===tab?0:-1;ribbonTabs.append(b);});
       ribbon.append(ribbonTabs,this.renderRibbonContents()); this.root.append(ribbon);
       if (this.findReplaceOpen) this.root.append(this.renderFindReplacePanel());
       const inserterMenu = this.renderInserter(this.activePanel === 'elements' && this.inserterOpen); inserterMenu.id = 'rb-inserter-' + this.instance;

@@ -323,3 +323,9 @@ $_['text_block_columns_add'] = 'Add column';
 $_['text_block_columns_remove'] = 'Remove last column';
 $_['text_block_columns_limit'] = 'Use 2 or 3 columns. Removing the last column can be undone.';
 $_['text_block_column_default'] = 'Column';
+
+$_['text_block_ribbon_review'] = 'Review';
+
+$_['text_block_ribbon_home'] = 'Home';
+$_['text_block_ribbon_insert'] = 'Insert';
+$_['text_block_ribbon_view'] = 'View';
