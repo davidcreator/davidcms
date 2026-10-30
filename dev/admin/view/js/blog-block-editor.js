@@ -658,6 +658,7 @@
       this.bind();
       this.render();
       this.loadSavedPatterns();
+      if(this.options.startFullscreen===true)this.setFullscreen(true,true);
     }
 
     newId() { let candidate; do { this.idCounter += 1; candidate = 'rb' + this.instance + '-' + this.idCounter; } while (this.findPath && this.findPath(this.state ? this.state.blocks : [], candidate)); return candidate; }
@@ -1015,11 +1016,11 @@
       else if (name === 'preview') { this.preview = button.dataset.size; this.root.dataset.preview = this.preview; this.root.querySelectorAll('[data-action="preview"]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.size === this.preview))); }
     }
 
-    setFullscreen(enabled) {
+    setFullscreen(enabled, startup) {
       const next = !!enabled;
       if (next === this.fullscreen) return;
       if (next) {
-        this.fullscreenReturnFocus = global.document.activeElement;
+        this.fullscreenReturnFocus = startup ? null : global.document.activeElement;
         this.fullscreenPreviousPanel = this.activePanel;
         this.fullscreenPreviousAttrs = { role:this.root.getAttribute('role'), modal:this.root.getAttribute('aria-modal'), label:this.root.getAttribute('aria-label'), tabindex:this.root.getAttribute('tabindex') };
         this.fullscreen = true;

@@ -21,7 +21,7 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   <input type="hidden" name="edit_fingerprint" value="{{ edit_fingerprint }}">
 
-  <div class="col-lg-8">
+  <div class="col-12 bdre-form-content-column">
     <div class="card data-card mb-3">
       <div class="card-body">
         <h2 class="card-title h6 mb-1">{{ text_content_card }}</h2>
@@ -60,7 +60,7 @@
                 <p class="text-muted small">{{ text_block_editor_intro }}</p>
                 {% if language.block_status %}<p class="alert alert-info py-2" role="status">{{ language.block_status }}</p>{% endif %}
                 {% if language.block_mode == 'blocks' %}
-                  <div id="blog-block-editor-{{ language.language_id }}" class="rb-editor-host" data-blog-block-editor data-document="{{ language.block_document_json|e('html_attr') }}" data-hidden-input="blog-block-json-{{ language.language_id }}" data-ready-input="blog-block-ready-{{ language.language_id }}" data-editor-strings="{{ block_editor_strings|json_encode|e('html_attr') }}" data-pattern-config="{{ block_pattern_config|merge({'sourceLanguage': language.code, 'draftKey': block_pattern_config.draftKey ~ ':l' ~ language.language_id})|json_encode|e('html_attr') }}" tabindex="-1">
+                  <div id="blog-block-editor-{{ language.language_id }}" class="rb-editor-host" data-blog-block-editor data-fullscreen-start="{{ loop.first ? 'true' : 'false' }}" data-workspace-context="{{ {'pageLabel': text_content_card, 'languageLabel': text_languages_note, 'untitledPage': entry_title, 'saveHint': text_block_editor_intro, 'canSave': can_modify, 'saveLabel': button_save}|json_encode|e('html_attr') }}" data-page-title-input="input-title-{{ language.language_id }}" data-page-language="{{ language.name|e('html_attr') }}" data-page-language-code="{{ language.code|e('html_attr') }}" data-document="{{ language.block_document_json|e('html_attr') }}" data-hidden-input="blog-block-json-{{ language.language_id }}" data-ready-input="blog-block-ready-{{ language.language_id }}" data-editor-strings="{{ block_editor_strings|json_encode|e('html_attr') }}" data-pattern-config="{{ block_pattern_config|merge({'sourceLanguage': language.code, 'draftKey': block_pattern_config.draftKey ~ ':l' ~ language.language_id})|json_encode|e('html_attr') }}" tabindex="-1">
                     <p>{{ text_block_editor_intro }}</p>
                   </div>
                   <input type="hidden" name="blog_block_mode[{{ language.language_id }}]" value="blocks">
@@ -102,7 +102,7 @@
     </div>
   </div>
 
-  <div class="col-lg-4">
+  <div class="col-12 bdre-form-support-column">
     <div class="card data-card mb-3 side-card">
       <div class="card-body">
         <h2 class="card-title h6 mb-3">{{ text_publish_card }}</h2>

@@ -31,7 +31,7 @@
       form.addEventListener('change', function (event) {
         if (event.target && !event.target.matches('[name^="blog_blocks["],[name^="blog_editor_ready["],[name="csrf_token"]')) state.markDirty();
       });
-      if (form.matches('[data-cms-page-form]')) form.addEventListener('invalid', function (event) {
+      if (form.matches('[data-cms-page-form],[data-blog-post-form]')) form.addEventListener('invalid', function (event) {
         var field = event.target;
         if (!field || state.invalidRecoveryScheduled) return;
         var fullscreenRoot = form.querySelector('.rb-editor.is-fullscreen');
@@ -359,6 +359,22 @@
       } catch (_) {}
       var changeState = form ? unsavedState(form, editorStrings) : null;
       if (pageContext) pageContext.saveStatus = changeState ? changeState.status : null;
+      var workspaceContext = pageContext;
+      if (!workspaceContext) {
+        try {
+          var workspaceLabels = JSON.parse(root.dataset.workspaceContext || '');
+          workspaceContext = Object.assign({}, workspaceLabels, {
+            pageTitleInput: document.getElementById(root.dataset.pageTitleInput || ''),
+            pageTitle: (document.getElementById(root.dataset.pageTitleInput || '') || {}).value || '',
+            languageName: root.dataset.pageLanguage || '',
+            languageCode: root.dataset.pageLanguageCode || '',
+            saveStatus: changeState ? changeState.status : null
+          });
+        } catch (_) {}
+      }
+      var tabPane = root.closest('.tab-pane');
+      var workspaceForm = form && form.matches('[data-cms-page-form],[data-blog-post-form]');
+      var startFullscreen = !!workspaceForm && root.dataset.fullscreenStart !== 'false' && (!tabPane || tabPane.classList.contains('active'));
       try {
         var initial = JSON.parse(root.dataset.document || '');
         var recovery = recoverDraft(root, patternConfig, initial, editorStrings);
@@ -368,7 +384,8 @@
           document: initial,
           strings: editorStrings,
           patternConfig: patternConfig,
-          workspaceContext: pageContext,
+          workspaceContext: workspaceContext,
+          startFullscreen: startFullscreen,
           connectedSave: true,
           mediaPickers: root.dataset.mediaPickers !== 'false',
           pageImagePicker: !!(pageContext && pageContext.canSave),

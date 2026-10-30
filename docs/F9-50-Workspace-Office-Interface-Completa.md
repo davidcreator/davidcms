@@ -1,5 +1,7 @@
 # F9-50 — Reconstrução do workspace Office do BDREditor
 
+> **Complementado pelas F9-51 e F9-52:** a navegação/workspace permanece válida; a área do formulário foi reorganizada em [F9-51](F9-51-BDREditor-Area-de-Edicao-em-Largura-Total.md) e o modo fullscreen automático foi incluído em [F9-52](F9-52-BDREditor-Workspace-Fullscreen.md).
+
 ## Objetivo
 
 Substituir a entrega F9-49, que acrescentava sobretudo a galeria de padrões e ações rápidas, por uma interface de workspace mais próxima do protótipo aprovado. A navegação é apresentada em uma faixa superior de menus Office e em uma barra vertical responsiva; cada área ocupa a superfície principal do editor, em vez de ser apenas um controle pontual.

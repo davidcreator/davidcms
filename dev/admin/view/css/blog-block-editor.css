@@ -555,3 +555,12 @@ body.rb-bdre-fullscreen-open{overflow:hidden!important}
 .rb-editor.is-fullscreen .rb-workspace-card .rb-button,.rb-editor.is-fullscreen .rb-pattern-library-filters .rb-button{background:#fff;border-color:#cdd5e2;color:#354258}
 .rb-editor.is-fullscreen .rb-pattern-library-filters .rb-button[aria-pressed=true]{background:#e9effb;border-color:#a9bae8;color:#204a95}
 .rb-editor.is-fullscreen .rb-pattern-library-page .rb-pattern-library-insert{background:transparent;border-color:transparent;color:#283449}
+
+/* F9-51: embedded BDRE editors use the full admin workspace width; form metadata stacks before/after. */
+.rb-editor-host.rb-editor,.bdre-page-editor.rb-editor{display:flex;flex-direction:column;width:100%;max-width:none;min-width:0;min-height:max(38rem,calc(100vh - 15rem));}
+.rb-editor-host.rb-editor>.rb-layout,.bdre-page-editor.rb-editor>.rb-layout{flex:1 1 auto;min-height:clamp(30rem,58vh,52rem);}
+.rb-editor-host.rb-editor .rb-canvas,.bdre-page-editor.rb-editor .rb-canvas{width:100%;max-width:none;min-height:clamp(26rem,50vh,46rem);}
+.bdre-form-content-column,.bdre-form-support-column{min-width:0;width:100%;}
+@media(max-width:700px){.rb-editor-host.rb-editor,.bdre-page-editor.rb-editor{min-height:36rem}.rb-editor-host.rb-editor>.rb-layout,.bdre-page-editor.rb-editor>.rb-layout{min-height:30rem}.rb-editor-host.rb-editor .rb-canvas,.bdre-page-editor.rb-editor .rb-canvas{min-height:26rem}}
+/* Apply full-width ordering even if the host theme still emits legacy Bootstrap 8/4 columns. */
+form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-layout>.col-lg-4,form[data-cms-page-form].form-layout>.col-lg-8,form[data-cms-page-form].form-layout>.col-lg-4{flex:0 0 100%!important;width:100%!important;max-width:100%!important}
