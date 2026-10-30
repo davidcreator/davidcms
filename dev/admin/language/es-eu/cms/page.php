@@ -278,3 +278,4 @@ $_['text_block_find_empty'] = 'Escribe el texto que quieres buscar.';
 $_['text_block_find_previous'] = 'Coincidencia anterior';
 $_['text_block_keyboard_shortcuts_title'] = 'Atajos de teclado';
 $_['text_block_keyboard_shortcuts'] = 'Ctrl/⌘+F buscar · Ctrl/⌘+B negrita · Ctrl/⌘+I cursiva · Ctrl/⌘+U subrayado · Ctrl/⌘+K enlace · Ctrl/⌘+Z deshacer · Ctrl/⌘+Shift+Z o Ctrl+Y rehacer · Alt+↑/↓ mover bloque · / insertar bloque';
+$_['text_block_find_whole_word'] = 'Solo palabras completas';

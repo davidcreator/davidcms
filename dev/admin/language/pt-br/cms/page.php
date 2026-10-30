@@ -278,3 +278,4 @@ $_['text_block_find_empty'] = 'Digite um termo para localizar.';
 $_['text_block_find_previous'] = 'Ocorrência anterior';
 $_['text_block_keyboard_shortcuts_title'] = 'Atalhos de teclado';
 $_['text_block_keyboard_shortcuts'] = 'Ctrl/⌘+F localizar · Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco';
+$_['text_block_find_whole_word'] = 'Somente palavras inteiras';

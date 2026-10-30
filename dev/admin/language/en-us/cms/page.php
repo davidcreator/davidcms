@@ -294,3 +294,4 @@ $_['text_block_find_empty'] = 'Enter text to find.';
 $_['text_block_find_previous'] = 'Previous match';
 $_['text_block_keyboard_shortcuts_title'] = 'Keyboard shortcuts';
 $_['text_block_keyboard_shortcuts'] = 'Ctrl/⌘+F find · Ctrl/⌘+B bold · Ctrl/⌘+I italic · Ctrl/⌘+U underline · Ctrl/⌘+K link · Ctrl/⌘+Z undo · Ctrl/⌘+Shift+Z or Ctrl+Y redo · Alt+↑/↓ move block · / insert block';
+$_['text_block_find_whole_word'] = 'Whole words only';

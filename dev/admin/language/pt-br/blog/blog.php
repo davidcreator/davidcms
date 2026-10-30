@@ -492,3 +492,4 @@ $_['text_block_replace_done'] = 'Substituições realizadas: %1.';
 $_['text_block_replace_limit'] = 'A substituição excede o limite de 1.000 ocorrências; nada foi alterado.';
 $_['text_block_find_empty'] = 'Digite um termo para localizar.';
 $_['text_block_find_previous'] = 'Ocorrência anterior';
+$_['text_block_find_whole_word'] = 'Somente palavras inteiras';

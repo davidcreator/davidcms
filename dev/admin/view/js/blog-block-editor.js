@@ -202,11 +202,17 @@
     return out;
   }
 
-  function findTextMatchesInRuns(runs, query, caseSensitive) {
+  let unicodeWordCharacter;
+  try { unicodeWordCharacter = new RegExp('^[\\p{L}\\p{N}\\p{M}_]$', 'u'); } catch (_) { unicodeWordCharacter = null; }
+  function isWordCharacter(character) { return !!character && (unicodeWordCharacter ? unicodeWordCharacter.test(character) : (/[A-Za-z0-9_]/.test(character) || character.codePointAt(0) > 127)); }
+  function charBefore(text, index) { if (index <= 0) return ''; const low=text.charCodeAt(index-1); if (low>=0xDC00&&low<=0xDFFF&&index>1) { const high=text.charCodeAt(index-2); if(high>=0xD800&&high<=0xDBFF)return text.slice(index-2,index); } return text.slice(index-1,index); }
+  function charAfter(text, index) { if(index>=text.length)return ''; const point=text.codePointAt(index); return String.fromCodePoint(point); }
+
+  function findTextMatchesInRuns(runs, query, caseSensitive, wholeWord) {
     if(!Array.isArray(runs)||!query)return [];
     const parts=runs.map((run)=>String(run && run.text || '')), text=parts.join(''), matches=[];
     const locate=(absolute,isEnd)=>{let cursor=0;for(let i=0;i<parts.length;i++){const next=cursor+parts[i].length;if(isEnd ? (absolute>cursor&&absolute<=next) : (absolute>=cursor&&absolute<next))return {runIndex:i,offset:absolute-cursor};cursor=next;}return null;};
-    const add=(at,length)=>{const a=locate(at,false),b=locate(at+length,true);if(a&&b)matches.push({runIndex:a.runIndex,start:a.offset,endRunIndex:b.runIndex,endOffset:b.offset,length,absoluteStart:at});};
+    const add=(at,length)=>{if(wholeWord){const starts=isWordCharacter(charAfter(query,0)),ends=isWordCharacter(charBefore(query,query.length));if((starts&&isWordCharacter(charBefore(text,at)))||(ends&&isWordCharacter(charAfter(text,at+length))))return;}const a=locate(at,false),b=locate(at+length,true);if(a&&b)matches.push({runIndex:a.runIndex,start:a.offset,endRunIndex:b.runIndex,endOffset:b.offset,length,absoluteStart:at});};
     if(caseSensitive){let from=0,at;while((at=text.indexOf(query,from))!==-1&&matches.length<=1000){add(at,query.length);from=at+Math.max(1,query.length);}}
     else {const escaped=query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');let re;try{re=new RegExp(escaped,'giu');}catch(_){return [];}let found;while((found=re.exec(text))!==null&&matches.length<=1000){add(found.index,found[0].length);if(!found[0].length)re.lastIndex+=1;}}
     return matches;
@@ -466,7 +472,7 @@
       this.activePanel = null;
       this.inspectorOpen = true;
       this.activeRibbonTab = 'home';
-      this.findReplaceOpen = false; this.findQuery = ''; this.replaceQuery = ''; this.findCaseSensitive = false; this.activeFindIndex = -1;
+      this.findReplaceOpen = false; this.findQuery = ''; this.replaceQuery = ''; this.findCaseSensitive = false; this.findWholeWord = false; this.activeFindIndex = -1;
       this.fullscreenReturnFocus = null;
       this.fullscreenPreviousAttrs = null;
       this.fullscreenPreviousPanel = null;
@@ -564,6 +570,8 @@
       this.root.addEventListener('change', (event) => {
         const caseInput = event.target.closest('[data-find-case]');
         if (caseInput) { this.findCaseSensitive = caseInput.checked; this.activeFindIndex = -1; this.updateFindStatus(); return; }
+        const wholeWordInput = event.target.closest('[data-find-whole-word]');
+        if (wholeWordInput) { this.findWholeWord = wholeWordInput.checked; this.activeFindIndex = -1; this.updateFindStatus(); return; }
         const importInput = event.target.closest('[data-import-file]');
         if (importInput && importInput.files && importInput.files[0]) { const file=importInput.files[0]; importInput.value=''; this.importLocalFile(file); return; }
         const transform = event.target.closest('[data-transform-node]');
@@ -1677,7 +1685,8 @@
       const findLabel=this.el('label','',this.strings.findLabel||'Find'); const find=this.el('input',''); find.type='search'; find.value=this.findQuery; find.dataset.findQuery='1'; findLabel.append(find);
       const replaceLabel=this.el('label','',this.strings.replaceLabel||'Replace with'); const replace=this.el('input',''); replace.type='text'; replace.value=this.replaceQuery; replace.dataset.replaceQuery='1'; replaceLabel.append(replace);
       const caseLabel=this.el('label','rb-find-case'); const check=this.el('input',''); check.type='checkbox'; check.checked=this.findCaseSensitive; check.dataset.findCase='1'; caseLabel.append(check,document.createTextNode(this.strings.findCaseSensitive||'Case sensitive'));
-      form.append(findLabel,replaceLabel,caseLabel);
+      const wholeLabel=this.el('label','rb-find-case'); const whole=this.el('input',''); whole.type='checkbox'; whole.checked=this.findWholeWord; whole.dataset.findWholeWord='1'; wholeLabel.append(whole,document.createTextNode(this.strings.findWholeWord||'Whole words only'));
+      form.append(findLabel,replaceLabel,caseLabel,wholeLabel);
       const actions=this.el('div','rb-find-actions');
       actions.append(this.button(this.strings.findPrevious||'Previous match','find-previous'),this.button(this.strings.findNext||'Next match','find-next'),this.button(this.strings.replaceOne||'Replace','replace-one'),this.button(this.strings.replaceAll||'Replace all','replace-all'));
       const status=this.el('p','rb-find-status'); status.dataset.findStatus='1'; status.setAttribute('role','status'); status.setAttribute('aria-live','polite');
@@ -1690,7 +1699,7 @@
       const matches=[];
       const visit=(nodes)=>{ (nodes||[]).forEach((node)=>{
         if(matches.length>1000)return;
-        if(node && BLOCK_TEXT_TYPES.has(node.type) && Array.isArray(node.content)) findTextMatchesInRuns(node.content,this.findQuery,this.findCaseSensitive).forEach((match)=>matches.push(Object.assign({nodeId:node.id},match)));
+        if(node && BLOCK_TEXT_TYPES.has(node.type) && Array.isArray(node.content)) findTextMatchesInRuns(node.content,this.findQuery,this.findCaseSensitive,this.findWholeWord).forEach((match)=>matches.push(Object.assign({nodeId:node.id},match)));
         if(node && Array.isArray(node.children))visit(node.children);
       }); };
       visit(this.state.blocks); return matches;

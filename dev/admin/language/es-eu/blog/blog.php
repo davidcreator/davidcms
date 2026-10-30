@@ -492,3 +492,4 @@ $_['text_block_replace_done'] = 'Reemplazos realizados: %1.';
 $_['text_block_replace_limit'] = 'El reemplazo supera el límite de 1.000 coincidencias; no se modificó nada.';
 $_['text_block_find_empty'] = 'Escribe el texto que quieres buscar.';
 $_['text_block_find_previous'] = 'Coincidencia anterior';
+$_['text_block_find_whole_word'] = 'Solo palabras completas';
