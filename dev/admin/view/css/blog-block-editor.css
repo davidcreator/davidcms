@@ -348,7 +348,7 @@ body.rb-bdre-fullscreen-open{overflow:hidden!important}
 .rb-live-preview-label{margin:0 0 1.2rem;padding-bottom:.7rem;border-bottom:1px solid #e6eaf1;color:#718097;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
 .rb-live-preview-page-title{margin:0 0 1.25rem;color:#263349;font-size:clamp(1.65rem,3vw,2.3rem);line-height:1.2}
 .rb-live-preview img{display:block;max-width:100%;height:auto;margin:.8rem auto}.rb-live-preview figure{margin:1rem 0}.rb-live-preview figcaption{font-size:.8rem;color:#667085}.rb-live-preview table{width:100%;border-collapse:collapse;margin:1rem 0}.rb-live-preview th,.rb-live-preview td{border:1px solid #ccd4e1;padding:.5rem;text-align:left}.rb-live-preview blockquote{margin:1rem 0;padding:.5rem 1rem;border-left:4px solid #637ed3;color:#53627c}.rb-live-preview pre{padding:1rem;overflow:auto;background:#f2f4f8;border-radius:.4rem}.rb-live-preview .rb-preview-button{display:inline-block;padding:.55rem 1rem;border-radius:.4rem;background:#4266dc;color:#fff;text-decoration:none}.rb-live-preview .rb-preview-callout{padding:.75rem 1rem;border-left:4px solid #4b72d5;background:#eef3ff}.rb-live-preview .rb-preview-video{display:flex;flex-direction:column;gap:.35rem;padding:1.5rem;border:1px solid #d8e0ec;border-radius:.6rem;background:#f6f8fc}.rb-live-preview .rb-preview-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
-.rb-preview-canvas{max-width:none!important}
+.rb-preview-canvas{max-width:100%}
 @media(max-width:650px){.rb-live-preview .rb-preview-columns{grid-template-columns:1fr}.rb-import-hint{max-width:18rem}}
 .rb-video-file-admin-preview{display:block;width:min(100%,32rem);max-height:18rem;margin:.5rem 0;background:#111;border-radius:.5rem}
 
@@ -604,7 +604,7 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-quote-inspector-section{display:grid;gap:.35rem;padding:.25rem 0 .7rem}
 
 .rb-button-inspector-section{display:grid;gap:.35rem;padding:.25rem 0 .7rem}
-.rb-callout-inspector-section{display:grid;gap:.35rem;padding:.25rem 0 .7rem}
+.rb-callout-inspector-section,.rb-details-inspector-section{display:grid;gap:.35rem;padding:.25rem 0 .7rem}
 .rb-quote-inspector-section .rb-help-text,.rb-button-inspector-section .rb-help-text,.rb-callout-inspector-section .rb-help-text{margin:0;color:#687890;font-size:.69rem;line-height:1.45}
 .rb-list-inspector-section{display:grid;gap:.45rem;padding:.35rem 0 .7rem}
 .rb-list-inspector-items{display:grid;gap:.55rem;margin:.1rem 0;padding-left:1.35rem}
@@ -614,3 +614,9 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-list-item-inspector-actions{display:flex;gap:.4rem;padding:.25rem 0}
 .rb-list-inspector-section>.rb-button{width:100%;justify-content:center}
 @media(max-width:620px){.rb-labeled-text-toolbar .rb-button{font-size:.69rem;padding:.34rem .4rem}.rb-labeled-text-toolbar .rb-transform-wrap{flex:1 1 100%;max-width:none}.rb-text-block-inspector-actions{grid-template-columns:minmax(0,1fr)}}
+
+/* F9-60: preview breakpoints must win over host canvas width rules, in editor and live preview. */
+.rb-editor[data-preview="tablet"] .rb-canvas,.rb-editor-host.rb-editor[data-preview="tablet"] .rb-canvas,.bdre-page-editor.rb-editor[data-preview="tablet"] .rb-canvas{max-width:768px}
+.rb-editor[data-preview="mobile"] .rb-canvas,.rb-editor-host.rb-editor[data-preview="mobile"] .rb-canvas,.bdre-page-editor.rb-editor[data-preview="mobile"] .rb-canvas{max-width:390px}
+.rb-editor.is-fullscreen[data-preview="tablet"] .rb-builder-layout>.rb-canvas,.rb-editor-host.rb-editor.is-fullscreen[data-preview="tablet"] .rb-builder-layout>.rb-canvas,.bdre-page-editor.rb-editor.is-fullscreen[data-preview="tablet"] .rb-builder-layout>.rb-canvas{max-width:768px;width:100%;margin-inline:auto}
+.rb-editor.is-fullscreen[data-preview="mobile"] .rb-builder-layout>.rb-canvas,.rb-editor-host.rb-editor.is-fullscreen[data-preview="mobile"] .rb-builder-layout>.rb-canvas,.bdre-page-editor.rb-editor.is-fullscreen[data-preview="mobile"] .rb-builder-layout>.rb-canvas{max-width:390px;width:100%;margin-inline:auto}

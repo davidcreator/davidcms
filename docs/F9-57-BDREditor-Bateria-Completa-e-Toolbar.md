@@ -8,7 +8,7 @@
 
 ## Bateria de cobertura estática
 
-Executado `tools/f9-57-static-battery.py`: a bateria original passou 124 verificações, cobrindo os 21 tipos do catálogo principal e os quatro tipos estruturais aninhados. Na F9-58, o mesmo script foi ampliado com verificações específicas para Button (128 verificações). Na F9-59, foram adicionadas verificações do Callout; a execução atual passou **131 verificações**. Cada tipo foi conferido quanto à validação do schema, renderização de preview e ícone; os blocos principais também foram conferidos quanto à categoria e caminho de criação. A bateria ainda verifica modos de edição, ações de tabela/lista e apresentação acessível de rótulos/tooltips.
+Executado `tools/f9-57-static-battery.py`: a bateria original passou 124 verificações, cobrindo os 21 tipos do catálogo principal e os quatro tipos estruturais aninhados. Na F9-58, o mesmo script foi ampliado com verificações específicas para Button (128 verificações). Na F9-59, foram adicionadas verificações do Callout (131 verificações). Na F9-60, foram adicionados testes de More Informations e dos tamanhos Desktop/Tablet/Mobile; a execução atual passou **139 verificações**. Cada tipo foi conferido quanto à validação do schema, renderização de preview e ícone; os blocos principais também foram conferidos quanto à categoria e caminho de criação. A bateria ainda verifica modos de edição, ações de tabela/lista e apresentação acessível de rótulos/tooltips.
 
 **Catálogo principal (21):** Parágrafo, Heading/Título, List, Image, Quote, Video Embed, Video File, Thumb 3D, Button, Callout, Details, Spacer, Code, Separator, Group, Columns, Gallery, Cover, Table, File e Audio.
 
