@@ -1219,7 +1219,8 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->load->model('blog/media');
         $downloadRoot = rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog/view/download/blog';
         $audioRoot = rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog/view/audio/blog';
-        $renderer = new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot, $audioRoot);
+        $videoRoot = rtrim(dirname(DIR_APPLICATION), '/\\\\') . '/catalog/view/video/blog';
+        $renderer = new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot, $audioRoot, $videoRoot);
 
         foreach (array_keys($languages) as $language_id) {
             $language_id = (int)$language_id;
@@ -1285,12 +1286,13 @@ class Blog extends \Reamur\System\Engine\Controller {
         return $result;
     }
 
-    /** Confirma recursivamente que referências core/file/core/audio apontam para assets permitidos existentes. */
+    /** Confirma recursivamente que referências de mídia apontam para assets permitidos existentes. */
     private function blockMediaAvailable(array $nodes): bool {
         foreach ($nodes as $node) {
             if (!is_array($node)) return false;
             if (($node['type'] ?? '') === 'core/file' && !$this->model_blog_media->downloadReferenceExists((string)($node['attributes']['src'] ?? ''))) return false;
             if (($node['type'] ?? '') === 'core/audio' && !$this->model_blog_media->audioReferenceExists((string)($node['attributes']['src'] ?? ''))) return false;
+            if (($node['type'] ?? '') === 'core/video_file' && !$this->model_blog_media->videoReferenceExists((string)($node['attributes']['src'] ?? ''))) return false;
             if (isset($node['children']) && is_array($node['children']) && !$this->blockMediaAvailable($node['children'])) return false;
         }
         return true;

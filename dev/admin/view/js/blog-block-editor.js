@@ -582,6 +582,7 @@
       this.linkDraft = '';
       this.inlineNotice = '';
       this.inserterOpen = false;
+      this.inserterPreviousPanel = null; this.inserterHasPreviousPanel = false;
       this.inserterReturnFocus = null;
       this.insertAfterId = null;
       this.slashTrigger = null;
@@ -805,10 +806,9 @@
       else if (name === 'rename-saved-pattern') this.renameSavedPattern(button.dataset.patternId);
       else if (name === 'delete-saved-pattern') this.deleteSavedPattern(button.dataset.patternId);
       else if (name === 'toggle-inserter') {
-        const wasOpen = this.activePanel === 'elements';
-        this.activePanel = wasOpen ? (this.fullscreen ? 'structure' : null) : 'elements'; this.inserterOpen = !wasOpen;
-        this.render();
-        if (!wasOpen) { const search=this.root.querySelector('[data-inserter-search]'); if (search) search.focus(); }
+        const afterId=button.dataset.afterId||null;
+        if(afterId||!(this.activePanel==='elements'&&this.inserterOpen))this.openInserter(afterId||this.selectedId,false,button);
+        else{this.closeInserter(false);const trigger=this.root.querySelector('.rb-ribbon [data-action="toggle-inserter"]')||this.root.querySelector('[data-action="toggle-inserter"]');if(trigger)trigger.focus();}
       }
       else if (name === 'ribbon-tab') { this.activeRibbonTab = button.dataset.tab; this.render(); }
       else if (name === 'import-file') { const input=this.root.querySelector('[data-import-file]'); if (input) input.click(); }
@@ -823,12 +823,20 @@
       else if (name === 'replace-one') this.replaceFoundMatch(false);
       else if (name === 'replace-all') this.replaceFoundMatch(true);
       else if (name === 'restore-draft-revision') this.restoreDraftRevision(Number(button.dataset.revisionIndex));
-      else if (name === 'toggle-preview') { this.previewMode=!this.previewMode; if (this.previewMode) this.activePanel=null; this.render(); }
+      else if(name==='toggle-preview'){
+        this.previewMode=!this.previewMode;
+        if(this.previewMode){this.activePanel=null;this.inserterOpen=false;this.inserterReturnFocus=null;this.inserterPreviousPanel=null;this.inserterHasPreviousPanel=false;}
+        this.render();
+      }
       else if (name === 'builder-panel') {
-        const panel = button.dataset.panel;
-        if (this.fullscreen && panel === 'settings') this.inspectorOpen = !this.inspectorOpen;
-        else if (this.fullscreen) { this.activePanel = panel; this.inserterOpen = panel === 'elements'; }
-        else { this.activePanel = this.activePanel === panel ? null : panel; this.inserterOpen = this.activePanel === 'elements'; }
+        const panel=button.dataset.panel;
+        if(this.fullscreen&&panel==='settings')this.inspectorOpen=!this.inspectorOpen;
+        else if(panel==='elements'){
+          if(this.activePanel==='elements'&&this.inserterOpen)this.closeInserter(false);
+          else this.openInserter(this.selectedId,false,button);
+          return;
+        }else if(this.fullscreen){this.activePanel=panel;this.inserterOpen=false;this.inserterPreviousPanel=null;this.inserterHasPreviousPanel=false;}
+        else{this.activePanel=this.activePanel===panel?null:panel;this.inserterOpen=false;this.inserterPreviousPanel=null;this.inserterHasPreviousPanel=false;}
         this.render();
       }
       else if (name === 'align-text') this.alignSelectedText(button.dataset.alignment);
@@ -1029,15 +1037,16 @@
     applyInlineLink(href) {
       const bookmark = this.inlineBookmark;
       if (!bookmark || bookmark.start === bookmark.end) return;
-      const found = this.findPath(this.state.blocks, bookmark.nodeId); if (!found || ['core/button','core/file'].includes(found.node.type)) return;
+      const found=this.findPath(this.state.blocks,bookmark.nodeId);if(!found)return;
+      const node=found.node;if(['core/button','core/file','core/audio'].includes(node.type))return;
       const target = href == null ? null : String(href).trim();
       if (target !== null && !validActionUrl(target)) {
         this.inlineNotice = this.strings.invalidLink || 'Invalid link.';
         const status = this.root.querySelector('.rb-inline-status'); if (status) status.textContent = this.inlineNotice;
         return;
       }
-      const next = CLONE(this.state); const node = this.findPath(next.blocks, bookmark.nodeId).node;
-      node.content = this.transformRuns(node.content, bookmark.start, bookmark.end, (run) => { run.href = target; });
+      const next = CLONE(this.state); const nextNode = this.findPath(next.blocks, bookmark.nodeId).node;
+      nextNode.content = this.transformRuns(nextNode.content, bookmark.start, bookmark.end, (run) => { run.href = target; });
       this.linkDraft = target || ''; this.inlineNotice = '';
       this.commit(next, bookmark.nodeId); this.inlineBookmark = bookmark; this.restoreInlineSelection(bookmark);
     }
@@ -1172,23 +1181,28 @@
     }
 
     openInserter(afterId, fromSlash, opener) {
-      this.inserterOpen = true; this.insertAfterId = afterId || null;
+      if(!this.inserterHasPreviousPanel){this.inserterPreviousPanel=this.activePanel;this.inserterHasPreviousPanel=true;}
+      if(afterId)this.selectedId=afterId;
+      this.activePanel='elements';this.inserterOpen=true;this.insertAfterId=afterId||null;
       this.inserterReturnFocus = fromSlash
         ? { type:'editor', id:afterId }
-        : (opener && opener.closest('.rb-toolbar') ? { type:'top' } : (opener && opener.dataset.afterId ? { type:'block', id:opener.dataset.afterId } : { type:'top' }));
+        : (opener && opener.dataset.afterId ? { type:'block', id:opener.dataset.afterId } : (opener && opener.dataset.panel ? { type:'panel', panel:opener.dataset.panel } : { type:'top' }));
       if (!fromSlash) this.slashTrigger = null;
       this.inserterQuery = ''; this.render();
       const search = this.root.querySelector('[data-inserter-search]'); if (search) search.focus();
     }
 
     closeInserter(returnFocus) {
-      this.inserterOpen = false; this.slashTrigger = null; this.inserterQuery = ''; this.render();
+      this.inserterOpen=false;this.slashTrigger=null;this.inserterQuery='';
+      if(this.inserterHasPreviousPanel){this.activePanel=this.inserterPreviousPanel;this.inserterPreviousPanel=null;this.inserterHasPreviousPanel=false;}
+      this.render();
       if (returnFocus) {
         let target = null;
         const restore = this.inserterReturnFocus;
         if (restore && restore.type === 'editor') target = this.findEditor(restore.id);
         else if (restore && restore.type === 'block') target = Array.from(this.root.querySelectorAll('[data-action="toggle-inserter"]')).find((button) => button.dataset.afterId === restore.id) || null;
-        else target = this.root.querySelector('.rb-toolbar [data-action="toggle-inserter"]');
+        else if (restore && restore.type === 'panel') target = Array.from(this.root.querySelectorAll('[data-action="builder-panel"]')).find((button)=>button.dataset.panel===restore.panel)||null;
+        else target = this.root.querySelector('.rb-ribbon [data-action="toggle-inserter"]')||this.root.querySelector('.rb-toolbar [data-action="toggle-inserter"]');
         if (!target) target = this.root.querySelector('[data-action="toggle-inserter"]');
         if (target) target.focus();
       }
@@ -1210,9 +1224,10 @@
       return found;
     }
 
-    finishInsert(next, node) {
-      this.inserterOpen = false; this.inserterReturnFocus = null; this.slashTrigger = null; this.insertAfterId = node.id; this.inserterQuery = ''; this.statusMessage = this.strings.statusInserted;
-      this.commit(next, node.id); this.focusNode(node.id);
+    finishInsert(next,node) {
+      this.inserterOpen=false;this.inserterReturnFocus=null;this.slashTrigger=null;this.insertAfterId=node.id;this.inserterQuery='';this.statusMessage=this.strings.statusInserted;
+      if(this.inserterHasPreviousPanel){this.activePanel=this.inserterPreviousPanel;this.inserterPreviousPanel=null;this.inserterHasPreviousPanel=false;}
+      this.commit(next,node.id);this.focusNode(node.id);
     }
 
     insertMediaReference(kind, path) {
@@ -1635,7 +1650,7 @@
       if (iconOnly) {
         text.classList.add('rb-sr-only'); b.classList.add('rb-button-icon-only','rb-has-tooltip');
         const name=String(label);tooltipDescription=(extra&&extra.tooltipDescription)||getToolDescription(action,type,global.document&&global.document.documentElement&&global.document.documentElement.lang);
-        b.setAttribute('aria-label',name);b.dataset.tooltipTitle=name;b.dataset.tooltipDescription=tooltipDescription;b.setAttribute('title',name+'\n'+tooltipDescription);
+        b.setAttribute('aria-label', String(label));b.dataset.tooltipTitle=name;b.dataset.tooltipDescription=tooltipDescription;b.setAttribute('title',name+'\n'+tooltipDescription);
       }
       b.append(text);
       if(iconOnly){const description=this.el('span','rb-sr-only',tooltipDescription);description.id='rb-tool-description-'+(++toolDescriptionSequence);b.setAttribute('aria-describedby',description.id);b.append(description);}
@@ -1959,7 +1974,8 @@
       if(this.activeRibbonTab==='home'){
         let g=this.renderRibbonGroup(this.strings.groupClipboard||'Área de transferência');
         addButton(g.tools,this.strings.exportDocument||'Exportar BDRE','export-document',{icon:'file'});
-        addButton(g.tools,this.strings.addBlock,'toggle-inserter',{icon:'plus'});addButton(g.tools,this.strings.pasteBlock,'paste-block',{icon:'copy'});
+        const addBlocks=this.button(this.strings.addBlock,'toggle-inserter',{icon:'plus'});addBlocks.setAttribute('aria-expanded', String(this.inserterOpen));addBlocks.setAttribute('aria-controls','rb-inserter-'+this.instance);g.tools.append(addBlocks);
+        addButton(g.tools,this.strings.pasteBlock,'paste-block',{icon:'copy'});
         const undo=this.button(this.strings.undo,'undo');undo.dataset.history='undo';g.tools.append(undo);
         const redo=this.button(this.strings.redo,'redo');redo.dataset.history='redo';g.tools.append(redo);panel.append(g.group);
         g=this.renderRibbonGroup(this.strings.groupTextFormat||'Formatação de texto');
@@ -1971,7 +1987,7 @@
       }else if(this.activeRibbonTab==='insert'){
         appendBlockTools('insert',this.strings.categoryContent||'Conteúdo');
         const g=this.renderRibbonGroup(this.strings.groupInsert||'Explorar e importar');
-        addButton(g.tools,this.strings.addBlock||'Todos os blocos','toggle-inserter',{icon:'plus'});
+        const inserter=this.button(this.strings.addBlock||'Todos os blocos','toggle-inserter',{icon:'plus'});inserter.setAttribute('aria-expanded', String(this.inserterOpen));inserter.setAttribute('aria-controls','rb-inserter-'+this.instance);g.tools.append(inserter);
         addButton(g.tools,this.strings.importFile||'Importar arquivo','import-file',{icon:'file'});
         const fileInput=this.el('input','rb-import-file-input');fileInput.type='file';fileInput.accept=(global.ReamurPageImporter&&global.ReamurPageImporter.formats||[]).join(',');fileInput.dataset.importFile='1';fileInput.classList.add('rb-sr-only');fileInput.tabIndex=-1;fileInput.setAttribute('aria-label',this.strings.importFile||'Importar arquivo');g.tools.append(fileInput);panel.append(g.group);
         if(this.strings.importHint)panel.append(this.el('p','rb-import-hint',this.strings.importHint));
@@ -2035,6 +2051,7 @@
       ribbon.append(ribbonTabs,this.renderRibbonContents()); this.root.append(ribbon);
       if (this.findReplaceOpen) this.root.append(this.renderFindReplacePanel());
       const inserterMenu = this.renderInserter(this.activePanel === 'elements' && this.inserterOpen); inserterMenu.id = 'rb-inserter-' + this.instance;
+      if(this.activePanel!=='elements'){inserterMenu.hidden=true;this.root.append(inserterMenu);}
       const layout = this.el('div', 'rb-layout' + (this.fullscreen ? ' rb-builder-layout' : '') + ((this.activePanel || (this.fullscreen && this.inspectorOpen && !this.previewMode)) ? ' rb-has-panel' : '') + (this.fullscreen && this.inspectorOpen && !this.previewMode ? ' rb-has-inspector' : ''));
       const canvas = this.el('div', 'rb-canvas'); canvas.setAttribute('role','region'); canvas.setAttribute('aria-label', this.strings.canvas);
       const canvasHead = this.el('div', 'rb-canvas-head'); canvasHead.append(this.icon('layers','rb-icon'),this.el('span','',this.strings.canvas),this.el('span','rb-canvas-count',String(this.state.blocks.length))); canvas.append(canvasHead);
@@ -2060,7 +2077,9 @@
       } else layout.append(canvas);
       this.root.append(layout);
       if (this.historyOpen) this.root.append(this.renderDraftHistory());
-      const shortcutHelp=this.el('details','rb-keyboard-help'); shortcutHelp.append(this.el('summary','',this.strings.keyboardShortcutsTitle||'Keyboard shortcuts'),this.el('p','',this.strings.keyboardShortcuts||'')); this.root.append(shortcutHelp);
+      const shortcutHelp=this.el('details', 'rb-keyboard-help');
+      shortcutHelp.append(this.el('summary', '', this.strings.keyboardShortcutsTitle),this.el('p', 'rb-keyboard-help-text', this.strings.keyboardShortcuts));
+      this.root.append(shortcutHelp);
       const footText = this.options.connectedSave === true
         ? (this.strings.draftRecoveryHint || 'Uma cópia temporária fica nesta aba; o conteúdo do site só é salvo ao clicar em Salvar.')
         : 'Rascunho em memória · não salva nem publica. O salvamento será conectado numa tarefa posterior.';
