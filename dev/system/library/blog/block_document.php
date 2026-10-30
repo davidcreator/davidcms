@@ -132,6 +132,7 @@ class BlockDocument {
 
     private function canonicalNode(array $node, int $version): array {
         $attributes = $node['attributes'];
+        if ($version === self::RICH_TEXT_FORMAT_VERSION && isset($attributes['appearance']) && is_array($attributes['appearance'])) ksort($attributes['appearance'], SORT_STRING);
         ksort($attributes, SORT_STRING);
         $children = [];
         foreach ($node['children'] as $child) $children[] = $this->canonicalNode($child, $version);
@@ -173,8 +174,11 @@ class BlockDocument {
             $allowedAttrs['core/audio'] = ['src'];
             $allowedAttrs['core/video_file'] = ['src'];
             $allowedAttrs['core/threejs_thumb'] = ['scene_json','label','custom_js'];
+            foreach ($allowedAttrs as &$keys) $keys[] = 'appearance';
+            unset($keys);
         }
         if (array_diff(array_keys($attrs), $allowedAttrs[$type])) $errors[] = 'attributes_not_allowlisted';
+        if ($version === self::RICH_TEXT_FORMAT_VERSION && array_key_exists('appearance', $attrs) && !$this->isValidAppearance($attrs['appearance'])) $errors[] = 'appearance_invalid';
         if ($type === 'core/paragraph' && isset($attrs['align']) && !in_array($attrs['align'], ['left','center','right'], true)) $errors[] = 'alignment_invalid';
         if ($type === 'core/heading' && (!isset($attrs['level']) || !is_int($attrs['level']) || $attrs['level'] < 1 || $attrs['level'] > 6)) $errors[] = 'heading_level_invalid';
         if ($type === 'core/list' && (!isset($attrs['ordered']) || !is_bool($attrs['ordered']))) $errors[] = 'list_order_invalid';
@@ -258,6 +262,21 @@ class BlockDocument {
             $errors[] = 'children_not_allowed';
         }
         foreach ($node['children'] as $child) $this->validateNode($child, $depth + 1, $type, $ids, $errors, $count, $version);
+    }
+
+    private function isValidAppearance($appearance): bool {
+        if (!is_array($appearance) || !$appearance) return false;
+        $allowed = ['text_color','background_color','border_color','border_width','border_style','border_radius','padding','margin','font_size','text_align'];
+        if (array_diff(array_keys($appearance), $allowed)) return false;
+        foreach (['text_color','background_color','border_color'] as $key) {
+            if (array_key_exists($key, $appearance) && (!is_string($appearance[$key]) || !preg_match('/^#[0-9A-Fa-f]{6}$/D', $appearance[$key]))) return false;
+        }
+        foreach (['border_width'=>[0,8], 'border_radius'=>[0,32], 'padding'=>[0,64], 'margin'=>[0,48], 'font_size'=>[12,48]] as $key=>$range) {
+            if (array_key_exists($key, $appearance) && (!is_int($appearance[$key]) || $appearance[$key] < $range[0] || $appearance[$key] > $range[1])) return false;
+        }
+        if (array_key_exists('border_style', $appearance) && (!is_string($appearance['border_style']) || !in_array($appearance['border_style'], ['solid','dashed','dotted'], true))) return false;
+        if (array_key_exists('text_align', $appearance) && (!is_string($appearance['text_align']) || !in_array($appearance['text_align'], ['left','center','right'], true))) return false;
+        return true;
     }
 
     private function validateRuns(array $runs, string $blockType, array &$errors): void {

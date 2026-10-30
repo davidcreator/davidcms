@@ -438,3 +438,19 @@ body.rb-bdre-fullscreen-open{overflow:hidden!important}
 /* F9-42 live document statistics */
 .rb-document-stats{display:flex;flex-wrap:wrap;gap:.45rem 1rem;align-items:center;padding:.5rem .75rem;margin:.45rem 0;border:1px solid #e1e5ed;border-radius:.45rem;background:#f8f9fc;color:#475467;font-size:.76rem}
 .rb-document-stats span{white-space:nowrap}
+
+/* F9 block-specific content/customization tabs */
+.rb-inspector-tabs{display:flex;gap:.25rem;margin:.55rem 0 .8rem;border-bottom:1px solid #d8deea}
+.rb-inspector-tab{flex:1;padding:.5rem .35rem;border:1px solid transparent;border-bottom:2px solid transparent;border-radius:.35rem .35rem 0 0;background:transparent;color:#475467;font:inherit;font-size:.8rem;font-weight:650;cursor:pointer}
+.rb-inspector-tab[aria-selected=true]{background:#fff;color:#2448c4;border-color:#d8deea;border-bottom-color:#4566d8}
+.rb-inspector-tab:focus-visible{outline:3px solid #174ea6;outline-offset:2px}
+.rb-inspector-tabpanel[hidden]{display:none!important}
+.rb-appearance-panel{display:grid;gap:.45rem}
+.rb-appearance-field .rb-appearance-color{width:100%;min-height:2.35rem;padding:.2rem;cursor:pointer}
+.rb-appearance-panel .rb-help-text{margin:.25rem 0;color:#667085;font-size:.75rem;line-height:1.4}
+.rb-admin-gallery-preview{display:grid;gap:.35rem;margin:.35rem 0;padding:.4rem;border:1px solid #e0e5ed;border-radius:.45rem;background:#f9fafb}
+.rb-admin-gallery-item{margin:0;min-width:0;overflow:hidden}
+.rb-admin-gallery-item img{display:block;width:100%;height:5.5rem;object-fit:cover;border-radius:.25rem}
+.rb-admin-gallery-item .rb-admin-media-empty{font-size:.68rem;min-height:3rem;display:grid;place-items:center}
+.rb-audio-edit-preview,.rb-video-edit-preview{margin:.35rem 0;padding:.5rem;border:1px solid #e1e5ed;border-radius:.4rem}
+.rb-audio-edit-preview figcaption,.rb-video-edit-preview figcaption{font-size:.72rem;overflow-wrap:anywhere}

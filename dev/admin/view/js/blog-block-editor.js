@@ -315,6 +315,36 @@
     });
   }
 
+  const APPEARANCE_KEYS = new Set(['text_color','background_color','border_color','border_width','border_style','border_radius','padding','margin','font_size','text_align']);
+  function validBlockAppearance(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value) || !Object.keys(value).length || Object.keys(value).some((key) => !APPEARANCE_KEYS.has(key))) return false;
+    const color = (item) => typeof item === 'string' && /^#[0-9a-fA-F]{6}$/.test(item);
+    if (value.text_color !== undefined && !color(value.text_color)) return false;
+    if (value.background_color !== undefined && !color(value.background_color)) return false;
+    if (value.border_color !== undefined && !color(value.border_color)) return false;
+    if (value.border_width !== undefined && (!Number.isInteger(value.border_width) || value.border_width < 0 || value.border_width > 8)) return false;
+    if (value.border_style !== undefined && !['solid','dashed','dotted'].includes(value.border_style)) return false;
+    if (value.border_radius !== undefined && (!Number.isInteger(value.border_radius) || value.border_radius < 0 || value.border_radius > 32)) return false;
+    if (value.padding !== undefined && (!Number.isInteger(value.padding) || value.padding < 0 || value.padding > 64)) return false;
+    if (value.margin !== undefined && (!Number.isInteger(value.margin) || value.margin < 0 || value.margin > 48)) return false;
+    if (value.font_size !== undefined && (!Number.isInteger(value.font_size) || value.font_size < 12 || value.font_size > 48)) return false;
+    if (value.text_align !== undefined && !['left','center','right'].includes(value.text_align)) return false;
+    return true;
+  }
+
+  function appearanceStyleMap(appearance) {
+    const value=validBlockAppearance(appearance)?appearance:{}; const style={};
+    if(value.text_color)style.color=value.text_color;
+    if(value.background_color)style.backgroundColor=value.background_color;
+    if(value.border_width>0||(value.border_width===undefined&&value.border_color)){style.borderColor=value.border_color||'#d0d5dd';style.borderStyle=value.border_style||'solid';style.borderWidth=(value.border_width>0?value.border_width:1)+'px';}
+    if(value.border_radius>0)style.borderRadius=value.border_radius+'px';
+    if(value.padding>0)style.padding=value.padding+'px';
+    if(value.margin>0)style.margin=value.margin+'px';
+    if(value.font_size)style.fontSize=value.font_size+'px';
+    if(value.text_align)style.textAlign=value.text_align;
+    return style;
+  }
+
   function validateDocument(doc, allowPageMedia) {
     const errors = [];
     if (!doc || typeof doc !== 'object' || Array.isArray(doc) || Object.keys(doc).sort().join(',') !== 'blocks,format_version' || ![1,2].includes(doc.format_version) || !Array.isArray(doc.blocks)) return { valid: false, errors: ['root_shape_invalid'] };
@@ -344,9 +374,11 @@
         allowedAttributes['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
         allowedAttributes['core/group'] = ['outline_label'];
         allowedAttributes['core/table'] = ['header'];
+        Object.keys(allowedAttributes).forEach((type) => { allowedAttributes[type] = allowedAttributes[type].concat('appearance'); });
       }
       const allowed = allowedAttributes[node.type] || [];
       if (Object.keys(a).some((key) => !allowed.includes(key))) errors.push('attributes_not_allowlisted');
+      if (version === 2 && a.appearance !== undefined && !validBlockAppearance(a.appearance)) errors.push('appearance_invalid');
       if (version === 1 && ['core/gallery','core/cover'].includes(node.type)) errors.push('media_block_requires_v2');
       if (version === 1 && node.type === 'core/callout') errors.push('callout_requires_v2');
       if (version === 1 && node.type === 'core/details') errors.push('details_requires_v2');
@@ -517,6 +549,7 @@
       this.fullscreen = false;
       this.activePanel = null;
       this.inspectorOpen = true;
+      this.inspectorTab = 'content';
       this.activeRibbonTab = 'home';
       this.findReplaceOpen = false; this.findQuery = ''; this.replaceQuery = ''; this.findCaseSensitive = false; this.findWholeWord = false; this.activeFindIndex = -1;
       this.documentStatsTimer = null;
@@ -626,6 +659,19 @@
         if (transform && transform.value) { this.transformNode(transform.dataset.transformNode, transform.value); return; }
         const sceneField = event.target.closest('[data-threejs-kind]');
         if (sceneField) { this.updateThreeJsEntry(sceneField.dataset.nodeId, sceneField.dataset.threejsKind, Number(sceneField.dataset.index), sceneField.dataset.key, sceneField.value); return; }
+        const appearanceField=event.target.closest('[data-appearance]');
+        if(appearanceField){
+          const id=appearanceField.dataset.nodeId,key=appearanceField.dataset.appearance;
+          this.updateNode(id,(node)=>{
+            const appearance=Object.assign({},node.attributes.appearance||{});
+            if(appearanceField.value==='')delete appearance[key];
+            else if(appearanceField.type==='number'){const ranges={border_width:[0,8,0],border_radius:[0,32,0],padding:[0,64,0],margin:[0,48,0],font_size:[12,48,16]};const range=ranges[key];const parsed=Number.parseInt(appearanceField.value,10);appearance[key]=Number.isFinite(parsed)?Math.min(range[1],Math.max(range[0],parsed)):range[2];}
+            else appearance[key]=appearanceField.value;
+            if((key==='border_color'||key==='border_style')&&appearance.border_width===undefined)appearance.border_width=1;
+            if(Object.keys(appearance).length){const sorted={};Object.keys(appearance).sort().forEach((name)=>{sorted[name]=appearance[name];});node.attributes.appearance=sorted;}
+            else delete node.attributes.appearance;
+          });return;
+        }
         const field = event.target.closest('[data-attribute]');
         if (!field) return;
         const id = field.dataset.nodeId, key = field.dataset.attribute;
@@ -643,6 +689,12 @@
         if(findField && event.key==='Enter'){event.preventDefault();this.moveFindMatch(event.shiftKey?-1:1);findField.focus();return;}
         const replaceField=event.target.closest('[data-replace-query]');
         if(replaceField && event.key==='Enter'){event.preventDefault();this.replaceFoundMatch(false);return;}
+        const inspectorTab=event.target.closest('[data-action="inspector-tab"]');
+        if(inspectorTab&&['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){
+          const tabs=Array.from(this.root.querySelectorAll('[data-action="inspector-tab"]')),index=tabs.indexOf(inspectorTab);
+          const next=event.key==='Home'?tabs[0]:(event.key==='End'?tabs[tabs.length-1]:tabs[(index+(event.key==='ArrowRight'?1:tabs.length-1))%tabs.length]);
+          if(next){event.preventDefault();this.inspectorTab=next.dataset.inspectorTab;this.render();const active=Array.from(this.root.querySelectorAll('[data-action="inspector-tab"]')).find((item)=>item.dataset.inspectorTab===this.inspectorTab);if(active)active.focus();}return;
+        }
         const ribbonTab = event.target.closest('[data-action="ribbon-tab"]');
         if (ribbonTab && ['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) {
           const tabs = Array.from(this.root.querySelectorAll('[data-action="ribbon-tab"]'));
@@ -741,6 +793,9 @@
       else if (name === 'import-file') { const input=this.root.querySelector('[data-import-file]'); if (input) input.click(); }
       else if (name === 'export-document') this.exportDocumentFile();
       else if (name === 'toggle-revision-history') { this.historyOpen = !this.historyOpen; this.render(); }
+      else if (name === 'inspector-tab') { this.inspectorTab=button.dataset.inspectorTab==='customize'?'customize':'content'; this.render(); const active=Array.from(this.root.querySelectorAll('[data-action="inspector-tab"]')).find((item)=>item.dataset.inspectorTab===this.inspectorTab); if(active)active.focus(); }
+      else if (name === 'reset-appearance') this.updateNode(button.dataset.nodeId || this.selectedId,(node)=>{delete node.attributes.appearance;});
+      else if (name === 'customize-block') { this.selectedId=button.dataset.nodeId||this.selectedId;this.inspectorTab='customize';this.previewMode=false;if(this.fullscreen){this.inspectorOpen=true;this.activePanel='settings';}else this.activePanel='settings';this.render();const tab=Array.from(this.root.querySelectorAll('[data-action="inspector-tab"]')).find((item)=>item.dataset.inspectorTab==='customize');if(tab)tab.focus(); }
       else if (name === 'toggle-find-replace') { if(this.findReplaceOpen){this.closeFindReplace();}else{this.findReplaceOpen=true;this.render();const input=this.root.querySelector('[data-find-query]');if(input)input.focus();} }
       else if (name === 'find-next') this.moveFindMatch(1);
       else if (name === 'find-previous') this.moveFindMatch(-1);
@@ -1658,6 +1713,13 @@
       });
     }
 
+    applyPreviewAppearance(element, node) {
+      const style=appearanceStyleMap(node && node.attributes && node.attributes.appearance);
+      const target=node && node.type==='core/button' ? (element.querySelector('.rb-preview-button')||element) : element;
+      Object.keys(style).forEach((key)=>{target.style[key]=style[key];});
+      return element;
+    }
+
     renderPreviewBlock(node) {
       const d=global.document; let out;
       const renderChildren=(parent)=>node.children.forEach((child)=>parent.append(this.renderPreviewBlock(child)));
@@ -1691,7 +1753,7 @@
         case 'core/details': out=d.createElement('details');{const summary=d.createElement('summary');summary.textContent=node.attributes.summary;out.append(summary);this.renderPreviewRuns(node.content,out);}break;
         case 'core/callout': out=d.createElement('aside');out.className='rb-preview-callout';this.renderPreviewRuns(node.content,out);break;
         case 'core/spacer': out=d.createElement('div');out.style.height=(node.attributes.height||32)+'px';out.setAttribute('aria-hidden','true');break;
-        case 'core/table': out=d.createElement('table');node.children.forEach((row,ri)=>{const tr=d.createElement('tr');row.children.forEach((cell)=>{const cellEl=d.createElement(node.attributes.header&&ri===0?'th':'td');this.renderPreviewRuns(cell.content,cellEl);tr.append(cellEl);});out.append(tr);});break;
+        case 'core/table': out=d.createElement('table');node.children.forEach((row,ri)=>{const tr=d.createElement('tr');this.applyPreviewAppearance(tr,row);row.children.forEach((cell)=>{const cellEl=d.createElement(node.attributes.header&&ri===0?'th':'td');this.renderPreviewRuns(cell.content,cellEl);this.applyPreviewAppearance(cellEl,cell);tr.append(cellEl);});out.append(tr);});break;
         case 'core/table-row': out=d.createElement('tr');renderChildren(out);break;
         case 'core/table-cell': out=d.createElement('td');this.renderPreviewRuns(node.content,out);break;
         case 'core/columns': out=d.createElement('div');out.className='rb-preview-columns';renderChildren(out);break;
@@ -1701,7 +1763,7 @@
         case 'core/gallery': out=d.createElement('div');out.className='rb-preview-gallery';renderChildren(out);break;
         default: out=d.createElement('p');out.textContent='';
       }
-      return out;
+      return this.applyPreviewAppearance(out,node);
     }
 
     renderPreviewDocument() {
@@ -1952,6 +2014,7 @@
       const lastRequiredChild = !!(path && path.parent && ['core/gallery','core/cover'].includes(path.parent.type) && path.parent.children.length <= 1);
       const duplicate = this.button(this.strings.duplicate, 'duplicate', { nodeId:node.id }); duplicate.disabled = fixedColumn || atParentLimit; toolbar.append(duplicate);
       const copy = this.button(this.strings.copyBlock, 'copy-block', { nodeId:node.id }); toolbar.append(copy);
+      const customize=this.button(this.strings.customizeTab||'Personalizar','customize-block',{nodeId:node.id,icon:'settings'});toolbar.append(customize);
       if (TRANSFORMABLE_TEXT.has(node.type)) {
         const wrap = this.el('label','rb-transform-wrap'); wrap.append(this.icon('transform','rb-transform-icon'),this.el('span','rb-sr-only',this.strings.transform));
         const select = this.el('select','rb-input rb-transform'); select.dataset.transformNode = node.id;
@@ -1991,6 +2054,12 @@
       return preview;
     }
 
+    renderAdminGalleryPreview(node) {
+      const gallery=this.el('div','rb-admin-gallery-preview');gallery.style.gridTemplateColumns='repeat('+Math.max(2,Math.min(4,Number(node.attributes.columns)||2))+',minmax(0,1fr))';
+      (node.children||[]).forEach((image)=>gallery.append(this.applyPreviewAppearance(this.renderAdminImagePreview(image,'rb-admin-gallery-item'),image)));
+      return gallery;
+    }
+
     renderAdminVideoPreview(url) {
       const preview = this.el('div','rb-video-admin-preview'); preview.setAttribute('role','img'); preview.setAttribute('aria-label',this.strings.media.videoPreview);
       preview.append(this.el('span','rb-video-admin-play','▶'));
@@ -2005,8 +2074,8 @@
       const card = this.el('section', 'rb-block rb-type-' + typeClass + (node.id === this.selectedId ? ' is-selected' : ''));
       if (node.type === 'core/columns') card.classList.add(node.attributes.count === 3 ? 'rb-columns-3' : 'rb-columns-2');
       if (node.type === 'core/callout') { card.dataset.calloutTone = node.attributes.tone; card.setAttribute('role','group'); card.setAttribute('aria-label',this.label(node.type)); }
-      let textPreview = card;
-      if (node.type === 'core/details') { const details = this.el('details','rb-details-admin-preview'); details.open = true; details.append(this.el('summary','rb-details-admin-summary',node.attributes.summary)); card.append(details); textPreview = details; }
+      let textPreview = card, appearanceTarget=null;
+      if (node.type === 'core/details') { const details = this.el('details','rb-details-admin-preview'); details.open = true; details.append(this.el('summary','rb-details-admin-summary',node.attributes.summary)); card.append(details); textPreview = details; appearanceTarget=details; }
       if (node.type === 'core/spacer') card.dataset.spacerHeight = String(node.attributes.height);
       if (node.type === 'core/gallery') card.classList.add('rb-gallery-preview','rb-gallery-preview--columns-' + node.attributes.columns);
       card.dataset.nodeId = node.id; card.tabIndex = -1; if (isRoot) card.dataset.rootNode = '1';
@@ -2017,24 +2086,24 @@
         const editor = this.el('div', 'rb-content' + (node.type === 'core/button' ? ' rb-content-button-preview' : '')); editor.contentEditable = 'true'; editor.dataset.editContent = node.id;
         editor.setAttribute('role', 'textbox'); editor.setAttribute('aria-multiline', 'true');
         editor.setAttribute('aria-label', this.strings.textLabel + ': ' + this.label(node.type)); editor.setAttribute('data-placeholder', this.strings.placeholder || '');
-        buildInlineDom(editor, node.content); textPreview.append(editor);
+        buildInlineDom(editor, node.content); textPreview.append(editor); appearanceTarget=editor;
       } else if (node.type === 'core/code') {
         const code = this.el('textarea','rb-code-editor'); code.value = node.content; code.maxLength = 131072;
         code.dataset.editCode = node.id; code.setAttribute('aria-label',this.strings.preformatted.label);
-        card.append(code);
+        card.append(code); appearanceTarget=code;
       } else if (node.type === 'core/spacer') {
-        card.append(this.el('div','rb-spacer-preview'));
+        appearanceTarget=this.el('div','rb-spacer-preview'); card.append(appearanceTarget);
       } else if (node.type === 'core/image') {
-        card.append(this.renderAdminImagePreview(node));
+        appearanceTarget=this.renderAdminImagePreview(node); card.append(appearanceTarget);
       } else if (node.type === 'core/file') {
-        card.append(this.el('p', 'rb-preview-value', node.content.map((run) => run.text).join('') + (node.attributes.src ? ' · ' + node.attributes.src.split('/').pop() : '')));
+        appearanceTarget=this.el('p', 'rb-preview-value', node.content.map((run) => run.text).join('') + (node.attributes.src ? ' · ' + node.attributes.src.split('/').pop() : '')); card.append(appearanceTarget);
       } else if (node.type === 'core/audio') {
         const audio = this.el('audio','rb-audio-admin-preview'); audio.controls = true; audio.preload = 'none';
         const label = node.content.map((run) => run.text).join('').trim(); audio.setAttribute('aria-label', label || this.label('core/audio'));
         if (validLocalAudio(node.attributes.src, this.allowPageMedia) && this.strings.audio.catalogBase) {
           try { const base = String(this.strings.audio.catalogBase); const baseUrl = new URL(base.endsWith('/') ? base : base + '/', global.location.href); if (baseUrl.origin !== global.location.origin) throw new Error('audio_preview_origin_invalid'); audio.src = new URL(node.attributes.src, baseUrl).href; } catch (_) {}
         }
-        card.append(audio, this.el('p', 'rb-preview-value', label + (node.attributes.src ? ' · ' + node.attributes.src.split('/').pop() : '')));
+        const audioFigure=this.el('figure','rb-audio-edit-preview');audioFigure.append(audio,this.el('figcaption','',label+(node.attributes.src?' · '+node.attributes.src.split('/').pop():'')));card.append(audioFigure);appearanceTarget=audioFigure;
       } else if (node.type === 'core/threejs_thumb') {
         const preview = this.el('div','rb-threejs-admin-preview');
         const stage = this.el('div','rms-block-threejs-thumb__stage'); stage.setAttribute('data-threejs-thumb','');
@@ -2044,23 +2113,23 @@
         catch (_) { stage.setAttribute('aria-label',this.strings.threejs.invalidScene || label); }
         const fallback=this.el('span','rms-block-threejs-thumb__fallback',label); stage.append(fallback); preview.append(stage);
         const hint=this.el('small','',this.strings.threejs.previewHint); if(hint.textContent)preview.append(hint);
-        card.append(preview,this.renderThreeJsInlineEditor(node));
+        card.append(preview,this.renderThreeJsInlineEditor(node)); appearanceTarget=preview;
       } else if (node.type === 'core/video_file') {
         const video = this.el('video','rb-video-file-admin-preview'); video.controls = true; video.preload = 'none'; video.playsInline = true;
         if (validLocalVideo(node.attributes.src, this.allowPageMedia) && this.strings.videoFile.catalogBase) { try { const base = new URL(String(this.strings.videoFile.catalogBase), global.location.href); if (base.origin === global.location.origin) video.src = new URL(node.attributes.src, base).href; } catch (_) {} }
-        card.append(video, this.el('p','rb-preview-value',node.attributes.src ? node.attributes.src.split('/').pop() : ''));
-      } else if (node.type === 'core/video_embed') card.append(this.renderAdminVideoPreview(node.attributes.url));
-      else if (node.type === 'core/gallery') card.append(this.el('p','rb-preview-value',this.label('core/gallery') + ' · ' + node.children.length));
-      else if (node.type === 'core/cover') card.append(this.renderAdminImagePreview(node,'rb-cover-admin-preview'));
-      else if (node.type === 'core/columns') card.append(this.el('p', 'rb-preview-value', node.attributes.count + ' ' + this.strings.columnCount));
+        const videoFigure=this.el('figure','rb-video-edit-preview');videoFigure.append(video,this.el('figcaption','',node.attributes.src?node.attributes.src.split('/').pop():''));card.append(videoFigure);appearanceTarget=videoFigure;
+      } else if (node.type === 'core/video_embed') { appearanceTarget=this.renderAdminVideoPreview(node.attributes.url); card.append(appearanceTarget); }
+      else if (node.type === 'core/gallery') { appearanceTarget=this.renderAdminGalleryPreview(node); card.append(appearanceTarget); card.append(this.el('p','rb-preview-value',this.label('core/gallery') + ' · ' + node.children.length)); }
+      else if (node.type === 'core/cover') { appearanceTarget=this.renderAdminImagePreview(node,'rb-cover-admin-preview'); card.append(appearanceTarget); }
+      else if (node.type === 'core/columns') { appearanceTarget=this.el('p', 'rb-preview-value', node.attributes.count + ' ' + this.strings.columnCount); card.append(appearanceTarget); }
       else if (node.type === 'core/table') {
-        const wrap = this.el('div','rb-table-preview'); const table = this.el('table','');
+        const wrap = this.el('div','rb-table-preview'); const table = this.el('table',''); appearanceTarget=wrap;
         const body = this.el('tbody','');
         node.children.forEach((row,rowIndex) => {
-          const tr = this.el('tr','');
+          const tr = this.el('tr','');this.applyPreviewAppearance(tr,row);
           row.children.forEach((cell,colIndex) => {
             const isHeader = !!node.attributes.header && rowIndex === 0; const td = this.el(isHeader ? 'th' : 'td','');
-            if (isHeader) td.setAttribute('scope','col');
+            if (isHeader) td.setAttribute('scope','col');this.applyPreviewAppearance(td,cell);
             const editor = this.el('div','rb-table-cell-content'); editor.contentEditable = 'true'; editor.dataset.editContent = cell.id; editor.setAttribute('role','textbox'); editor.setAttribute('aria-multiline','true');
             editor.setAttribute('aria-label',(this.strings.table.cellLabel || 'Cell %1$d, %2$d').replace('%1$d',String(rowIndex+1)).replace('%2$d',String(colIndex+1)));
             buildInlineDom(editor,cell.content); td.append(editor); tr.append(td);
@@ -2070,6 +2139,7 @@
         if (node.attributes.header && body.firstElementChild) { const head = this.el('thead',''); head.append(body.firstElementChild); table.append(head); }
         if (body.childNodes.length) table.append(body); wrap.append(table); card.append(wrap);
       }
+      if (appearanceTarget) this.applyPreviewAppearance(appearanceTarget,node);
       if (node.type !== 'core/table') node.children.forEach((child) => card.append(this.renderNode(child, false)));
       return card;
     }
@@ -2167,6 +2237,28 @@
       return panel;
     }
 
+    renderAppearancePanel(node) {
+      const panel=this.el('div','rb-appearance-panel');panel.setAttribute('role','tabpanel');
+      const current=node.attributes.appearance||{};
+      const addColor=(label,key,fallback)=>{const wrap=this.el('label','rb-field rb-appearance-field');wrap.append(this.el('span','',label));const input=this.el('input','rb-input rb-appearance-color');input.type='color';input.value=current[key]||fallback;input.dataset.appearance=key;input.dataset.nodeId=node.id;wrap.append(input);panel.append(wrap);};
+      const addNumber=(label,key,min,max,fallback)=>{const wrap=this.el('label','rb-field rb-appearance-field');wrap.append(this.el('span','',label));const input=this.el('input','rb-input');input.type='number';input.min=String(min);input.max=String(max);input.step='1';input.value=String(current[key]===undefined?fallback:current[key]);input.dataset.appearance=key;input.dataset.nodeId=node.id;wrap.append(input);panel.append(wrap);};
+      addColor(this.strings.customTextColor||'Text color','text_color','#202124');
+      addColor(this.strings.customBackground||'Background color','background_color','#ffffff');
+      addColor(this.strings.customBorderColor||'Border color','border_color','#d0d5dd');
+      const borderWrap=this.el('label','rb-field rb-appearance-field');borderWrap.append(this.el('span','',this.strings.customBorderStyle||'Border style'));
+      const borderStyle=this.el('select','rb-input');[["solid",this.strings.customBorderSolid||'Solid'],["dashed",this.strings.customBorderDashed||'Dashed'],["dotted",this.strings.customBorderDotted||'Dotted']].forEach(([value,label])=>{const option=this.el('option','',label);option.value=value;borderStyle.append(option);});borderStyle.value=current.border_style||'solid';borderStyle.dataset.appearance='border_style';borderStyle.dataset.nodeId=node.id;borderWrap.append(borderStyle);panel.append(borderWrap);
+      addNumber(this.strings.customBorderWidth||'Border width (px)','border_width',0,8,0);
+      addNumber(this.strings.customCornerRadius||'Corner radius (px)','border_radius',0,32,0);
+      addNumber(this.strings.customPadding||'Inner spacing (px)','padding',0,64,0);
+      addNumber(this.strings.customMargin||'Outer spacing (px)','margin',0,48,0);
+      addNumber(this.strings.customFontSize||'Font size (px)','font_size',12,48,16);
+      const alignWrap=this.el('label','rb-field rb-appearance-field');alignWrap.append(this.el('span','',this.strings.customTextAlign||'Text alignment'));
+      const align=this.el('select','rb-input');[['',this.strings.customInherit||'Theme default'],['left',this.strings.alignLeft||'Left'],['center',this.strings.alignCenter||'Center'],['right',this.strings.alignRight||'Right']].forEach(([value,label])=>{const option=this.el('option','',label);option.value=value;align.append(option);});align.value=current.text_align||'';align.dataset.appearance='text_align';align.dataset.nodeId=node.id;alignWrap.append(align);panel.append(alignWrap);
+      panel.append(this.el('p','rb-help-text',this.strings.customAppearanceHint||'These safe style controls apply to the selected block and are included in the saved document.'));
+      const reset=this.button(this.strings.customReset||'Reset customization','reset-appearance',{nodeId:node.id});reset.disabled=!Object.keys(current).length;panel.append(reset);
+      return panel;
+    }
+
     renderInspector() {
       const aside = this.el('aside', 'rb-inspector'); aside.setAttribute('aria-label', this.strings.inspector);
       const heading = this.el('h3', 'rb-inspector-title'); heading.append(this.icon('settings','rb-icon'),this.el('span','',this.strings.inspector)); aside.append(heading);
@@ -2174,39 +2266,45 @@
       if (!found) { aside.append(this.el('p', 'rb-muted', this.strings.inspectorEmpty)); return aside; }
       aside.append(this.renderBreadcrumbs(found.node.id));
       aside.append(this.el('p', 'rb-selected-type', this.label(found.node.type)));
+      const tabList=this.el('div','rb-inspector-tabs');tabList.setAttribute('role','tablist');tabList.setAttribute('aria-label',this.strings.inspectorTabs||'Block settings');
+      const panelPrefix='rb-inspector-'+this.instance+'-'+found.node.id;
+      [['content',this.strings.customContentTab||'Content'],['customize',this.strings.customizeTab||'Personalizar']].forEach(([tab,label])=>{const button=this.el('button','rb-inspector-tab',label);button.type='button';button.dataset.action='inspector-tab';button.dataset.inspectorTab=tab;button.setAttribute('role','tab');button.setAttribute('aria-selected',String(this.inspectorTab===tab));button.setAttribute('aria-controls',panelPrefix+'-'+tab);button.tabIndex=this.inspectorTab===tab?0:-1;tabList.append(button);});
+      aside.append(tabList);
+      const contentPanel=this.el('div','rb-inspector-tabpanel');contentPanel.id=panelPrefix+'-content';contentPanel.setAttribute('role','tabpanel');contentPanel.setAttribute('aria-label',this.strings.customContentTab||'Content');contentPanel.hidden=this.inspectorTab!=='content';
+      const appearancePanel=this.renderAppearancePanel(found.node);appearancePanel.id=panelPrefix+'-customize';appearancePanel.setAttribute('aria-label',this.strings.customizeTab||'Personalizar');appearancePanel.hidden=this.inspectorTab!=='customize';
       const addField = (label, key, value, type, choices) => {
         const wrap = this.el('label', 'rb-field'); wrap.append(this.el('span', '', label));
         let input;
         if (choices) { input = this.el('select', 'rb-input'); choices.forEach(([val, text]) => { const option = this.el('option', '', text); option.value = val; input.append(option); }); input.value = String(value); }
         else if (type === 'textarea') { input = this.el('textarea','rb-input'); input.value = value == null ? '' : String(value); input.maxLength = key === 'custom_js' ? 8192 : (key === 'scene_json' ? 16384 : 4096); if (key === 'custom_js') { input.classList.add('rb-threejs-script-input'); input.spellcheck = false; input.autocomplete = 'off'; } }
         else { input = this.el('input', 'rb-input'); input.type = type || 'text'; input.value = value == null ? '' : String(value); if (['alt','title','caption'].includes(key)) input.maxLength = 4096; if (key === 'outline_label') input.maxLength = 160; if (key === 'summary') input.maxLength = 512; }
-        input.dataset.attribute = key; input.dataset.nodeId = found.node.id; wrap.append(input); aside.append(wrap);
+        input.dataset.attribute = key; input.dataset.nodeId = found.node.id; wrap.append(input); contentPanel.append(wrap);
       };
       const n = found.node;
       if (n.type === 'core/heading') addField('Nível', 'level', n.attributes.level, 'number');
       if (n.type === 'core/list') addField('Tipo de lista', 'ordered', n.attributes.ordered ? 'true' : 'false', 'text', [['false','Marcadores'],['true','Numerada']]);
       if (n.type === 'core/file') {
         addField(this.strings.file.source, 'src', n.attributes.src, 'text');
-        if (this.options.filePicker === true || (this.options.filePicker !== false && this.options.mediaPickers !== false)) aside.append(this.button(this.strings.file.choose, 'file-media', {nodeId:n.id}));
+        if (this.options.filePicker === true || (this.options.filePicker !== false && this.options.mediaPickers !== false)) contentPanel.append(this.button(this.strings.file.choose, 'file-media', {nodeId:n.id}));
       }
       if (n.type === 'core/audio') {
         addField(this.strings.audio.source, 'src', n.attributes.src, 'text');
-        if (this.options.audioPicker === true || (this.options.audioPicker !== false && this.options.mediaPickers !== false)) aside.append(this.button(this.strings.audio.choose, 'audio-media', {nodeId:n.id}));
+        if (this.options.audioPicker === true || (this.options.audioPicker !== false && this.options.mediaPickers !== false)) contentPanel.append(this.button(this.strings.audio.choose, 'audio-media', {nodeId:n.id}));
       }
       if (n.type === 'core/video_file') {
         addField(this.strings.videoFile.source, 'src', n.attributes.src, 'text');
-        if (this.options.videoPicker === true || (this.options.videoPicker !== false && this.options.mediaPickers !== false)) aside.append(this.button(this.strings.videoFile.choose, 'video-media', {nodeId:n.id}));
+        if (this.options.videoPicker === true || (this.options.videoPicker !== false && this.options.mediaPickers !== false)) contentPanel.append(this.button(this.strings.videoFile.choose, 'video-media', {nodeId:n.id}));
       }
       if (n.type === 'core/threejs_thumb') {
         addField(this.strings.threejs.label, 'label', n.attributes.label, 'text');
-        try { aside.append(this.renderThreeJsControls(n)); } catch (_) { aside.append(this.el('p','rb-help-text',this.strings.threejs.invalidScene)); }
+        try { contentPanel.append(this.renderThreeJsControls(n)); } catch (_) { contentPanel.append(this.el('p','rb-help-text',this.strings.threejs.invalidScene)); }
         addField(this.strings.threejs.sceneConfig, 'scene_json', n.attributes.scene_json, 'textarea');
         addField(this.strings.threejs.scriptLabel, 'custom_js', n.attributes.custom_js || '', 'textarea');
-        const scriptHint = this.el('p','rb-help-text',this.strings.threejs.scriptHint); aside.append(scriptHint);
-        const hint = this.el('p','rb-help-text',this.strings.threejs.configHint); aside.append(hint);
+        const scriptHint = this.el('p','rb-help-text',this.strings.threejs.scriptHint); contentPanel.append(scriptHint);
+        const hint = this.el('p','rb-help-text',this.strings.threejs.configHint); contentPanel.append(hint);
       }
       if (n.type === 'core/image') {
-        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); if (this.options.mediaPickers !== false || this.options.pageImagePicker === true) aside.append(this.button(this.strings.media.placeholder, 'media'));
+        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); if (this.options.mediaPickers !== false || this.options.pageImagePicker === true) contentPanel.append(this.button(this.strings.media.placeholder, 'media'));
         addField(this.strings.media.alt, 'alt', n.attributes.alt, 'text'); addField(this.strings.media.title, 'title', n.attributes.title || '', 'text');
         addField(this.strings.media.caption, 'caption', n.attributes.caption || '', 'textarea');
         addField(this.strings.media.alignment, 'align', n.attributes.align || 'center', 'text', [['left',this.strings.media.alignments.left],['center',this.strings.media.alignments.center],['right',this.strings.media.alignments.right],['wide',this.strings.media.alignments.wide],['full',this.strings.media.alignments.full]]);
@@ -2214,7 +2312,7 @@
         addField(this.strings.media.mobileSize, 'mobile_size', n.attributes.mobile_size || 'full', 'text', Object.entries(this.strings.media.mobileSizes));
       }
       if (n.type === 'core/cover') {
-        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); if (this.options.mediaPickers !== false || this.options.pageImagePicker === true) aside.append(this.button(this.strings.media.placeholder, 'media'));
+        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); if (this.options.mediaPickers !== false || this.options.pageImagePicker === true) contentPanel.append(this.button(this.strings.media.placeholder, 'media'));
         addField(this.strings.media.alt, 'alt', n.attributes.alt, 'text');
         addField(this.strings.media.alignment, 'align', n.attributes.align || 'wide', 'text', [['content',this.strings.media.alignments.content],['wide',this.strings.media.alignments.wide],['full',this.strings.media.alignments.full]]);
       }
@@ -2236,16 +2334,17 @@
         const addColumn = this.button(this.strings.table.addColumn,'table-add-column',{nodeId:n.id}); addColumn.disabled = columns >= 12; tableActions.append(addColumn);
         const removeColumn = this.button(this.strings.table.removeColumn,'table-remove-column',{nodeId:n.id}); removeColumn.disabled = columns <= 1; tableActions.append(removeColumn);
         const header = this.button(this.strings.table.toggleHeader,'table-toggle-header',{nodeId:n.id}); header.setAttribute('aria-pressed',String(!!n.attributes.header)); tableActions.append(header);
-        aside.append(tableActions);
+        contentPanel.append(tableActions);
       }
-      if (n.type === 'core/columns') aside.append(this.el('p', 'rb-muted', 'Preset fixo nesta etapa: ' + n.attributes.count + ' colunas.'));
+      if (n.type === 'core/columns') contentPanel.append(this.el('p', 'rb-muted', 'Preset fixo nesta etapa: ' + n.attributes.count + ' colunas.'));
       const actions = this.el('div', 'rb-inspector-actions');
       const fixedColumn = found.parent && found.parent.type === 'core/columns' && n.type === 'core/column';
       const lastRequiredChild = found.parent && ['core/gallery','core/cover'].includes(found.parent.type) && found.parent.children.length <= 1;
       const remove = this.button(this.strings.remove, 'delete', { nodeId:n.id }); remove.disabled = !!fixedColumn || !!lastRequiredChild;
       actions.append(this.button(this.strings.moveUp, 'move-up', { nodeId:n.id }), this.button(this.strings.moveDown, 'move-down', { nodeId:n.id }));
       const indent = this.button(this.strings.indentBlock, 'indent', { nodeId:n.id }); indent.disabled = !this.canIndent(n.id); actions.append(indent);
-      const outdent = this.button(this.strings.outdentBlock, 'outdent', { nodeId:n.id }); outdent.disabled = !this.canOutdent(n.id); actions.append(outdent, remove); aside.append(actions);
+      const outdent = this.button(this.strings.outdentBlock, 'outdent', { nodeId:n.id }); outdent.disabled = !this.canOutdent(n.id); actions.append(outdent, remove); contentPanel.append(actions);
+      aside.append(contentPanel,appearancePanel);
       return aside;
     }
 

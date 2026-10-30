@@ -47,6 +47,45 @@ final class BlockRenderer {
     }
 
     private function renderNode(array $node, BlockDocument $validator, string $assetBase, int $version): string {
+        $html = $this->renderNodeMarkup($node, $validator, $assetBase, $version);
+        $appearance = $node['attributes']['appearance'] ?? null;
+        if ($html === '' || !is_array($appearance)) return $html;
+        $style = $this->appearanceStyle($appearance);
+        if ($style === '') return $html;
+        return $this->injectAppearanceStyle($html, $style, ($node['type'] ?? '') === 'core/button');
+    }
+
+    private function appearanceStyle(array $appearance): string {
+        $rules = [];
+        foreach (['text_color'=>'color','background_color'=>'background-color'] as $key=>$property) {
+            if (isset($appearance[$key])) $rules[] = $property . ':' . $appearance[$key];
+        }
+        $borderWidth = (int)($appearance['border_width'] ?? (isset($appearance['border_color']) ? 1 : 0));
+        if ($borderWidth > 0) $rules[] = 'border:' . $borderWidth . 'px ' . (string)($appearance['border_style'] ?? 'solid') . ' ' . (string)($appearance['border_color'] ?? '#d0d5dd');
+        if (!empty($appearance['border_radius'])) $rules[] = 'border-radius:' . (int)$appearance['border_radius'] . 'px';
+        if (!empty($appearance['padding'])) $rules[] = 'padding:' . (int)$appearance['padding'] . 'px';
+        if (!empty($appearance['margin'])) $rules[] = 'margin:' . (int)$appearance['margin'] . 'px';
+        if (!empty($appearance['font_size'])) $rules[] = 'font-size:' . (int)$appearance['font_size'] . 'px';
+        if (isset($appearance['text_align'])) $rules[] = 'text-align:' . $appearance['text_align'];
+        return implode(';', $rules);
+    }
+
+    private function appearanceAttribute($appearance): string {
+        if (!is_array($appearance) || !$appearance) return '';
+        $style = $this->appearanceStyle($appearance);
+        return $style === '' ? '' : ' style="' . $this->escape($style) . '"';
+    }
+
+    private function injectAppearanceStyle(string $html, string $style, bool $button): string {
+        $pattern = $button ? '~<a(?=[^>]*class="[^"]*rms-block-button")[^>]*>~' : '~^<[A-Za-z][A-Za-z0-9:-]*[^>]*>~';
+        $escaped = $this->escape($style);
+        $updated = preg_replace_callback($pattern, static function (array $match) use ($escaped): string {
+            return substr($match[0], 0, -1) . ' style="' . $escaped . '">';
+        }, $html, 1);
+        return is_string($updated) ? $updated : $html;
+    }
+
+    private function renderNodeMarkup(array $node, BlockDocument $validator, string $assetBase, int $version): string {
         $type = $node['type'];
         $content = is_string($node['content']) ? $this->escapeWithBreaks($node['content']) : $this->renderInlineRuns($node['content']);
         $children = $node['children'];
@@ -65,7 +104,7 @@ final class BlockRenderer {
             case 'core/list':
                 $tag = $attributes['ordered'] ? 'ol' : 'ul';
                 $html = '<' . $tag . ' class="rms-block rms-block-list">';
-                foreach ($children as $child) $html .= '<li>' . (is_array($child['content']) ? $this->renderInlineRuns($child['content']) : $this->escapeWithBreaks($child['content'])) . '</li>';
+                foreach ($children as $child) $html .= '<li' . $this->appearanceAttribute($child['attributes']['appearance'] ?? null) . '>' . (is_array($child['content']) ? $this->renderInlineRuns($child['content']) : $this->escapeWithBreaks($child['content'])) . '</li>';
                 return $html . '</' . $tag . '>';
 
             case 'core/list-item':
@@ -135,15 +174,16 @@ final class BlockRenderer {
                 $rowStart = 0;
                 if (!empty($attributes['header'])) {
                     $html .= '<thead><tr>';
-                    foreach ($children[0]['children'] as $cell) $html .= '<th scope="col">' . $this->renderInlineRuns($cell['content']) . '</th>';
+                    foreach ($children[0]['children'] as $cell) $html .= '<th scope="col"' . $this->appearanceAttribute($cell['attributes']['appearance'] ?? null) . '>' . $this->renderInlineRuns($cell['content']) . '</th>';
                     $html .= '</tr></thead>';
                     $rowStart = 1;
                 }
                 if ($rowStart < count($children)) {
                     $html .= '<tbody>';
                     for ($rowIndex = $rowStart; $rowIndex < count($children); $rowIndex++) {
-                        $html .= '<tr>';
-                        foreach ($children[$rowIndex]['children'] as $cell) $html .= '<td>' . $this->renderInlineRuns($cell['content']) . '</td>';
+                        $row = $children[$rowIndex];
+                        $html .= '<tr' . $this->appearanceAttribute($row['attributes']['appearance'] ?? null) . '>';
+                        foreach ($row['children'] as $cell) $html .= '<td' . $this->appearanceAttribute($cell['attributes']['appearance'] ?? null) . '>' . $this->renderInlineRuns($cell['content']) . '</td>';
                         $html .= '</tr>';
                     }
                     $html .= '</tbody>';
@@ -183,7 +223,7 @@ final class BlockRenderer {
             case 'core/columns':
                 $count = (int)$attributes['count'];
                 $html = '<div class="rms-block-columns rms-block-columns--' . $count . '">';
-                foreach ($children as $column) $html .= '<div class="rms-block-column">' . $this->renderNodes($column['children'], $validator, $assetBase, $version) . '</div>';
+                foreach ($children as $column) $html .= '<div class="rms-block-column"' . $this->appearanceAttribute($column['attributes']['appearance'] ?? null) . '>' . $this->renderNodes($column['children'], $validator, $assetBase, $version) . '</div>';
                 return $html . '</div>';
 
             case 'core/column':
