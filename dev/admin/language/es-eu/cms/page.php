@@ -311,5 +311,9 @@ $_['text_block_column_default'] = 'Columna';
 $_['text_block_ribbon_review'] = 'Revisar';
 
 $_['text_block_ribbon_home'] = 'Inicio';
+$_['text_block_workspace_rail_label'] = 'Herramientas del espacio de trabajo';
+$_['text_block_workspace_tool_text'] = 'Texto';
+$_['text_block_workspace_tool_appearance'] = 'Apariencia';
+$_['text_block_workspace_tool_patterns'] = 'Patrones';
 $_['text_block_ribbon_insert'] = 'Insertar';
 $_['text_block_ribbon_view'] = 'Ver';

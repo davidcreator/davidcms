@@ -327,5 +327,9 @@ $_['text_block_column_default'] = 'Column';
 $_['text_block_ribbon_review'] = 'Review';
 
 $_['text_block_ribbon_home'] = 'Home';
+$_['text_block_workspace_rail_label'] = 'Workspace tools';
+$_['text_block_workspace_tool_text'] = 'Text';
+$_['text_block_workspace_tool_appearance'] = 'Appearance';
+$_['text_block_workspace_tool_patterns'] = 'Patterns';
 $_['text_block_ribbon_insert'] = 'Insert';
 $_['text_block_ribbon_view'] = 'View';

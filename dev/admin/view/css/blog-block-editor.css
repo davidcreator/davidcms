@@ -454,3 +454,20 @@ body.rb-bdre-fullscreen-open{overflow:hidden!important}
 .rb-admin-gallery-item .rb-admin-media-empty{font-size:.68rem;min-height:3rem;display:grid;place-items:center}
 .rb-audio-edit-preview,.rb-video-edit-preview{margin:.35rem 0;padding:.5rem;border:1px solid #e1e5ed;border-radius:.4rem}
 .rb-audio-edit-preview figcaption,.rb-video-edit-preview figcaption{font-size:.72rem;overflow-wrap:anywhere}
+
+/* F9-48: compact Office task rail; it complements rather than replaces the ribbon. */
+.rb-editor.is-fullscreen .rb-builder-sidebar{display:grid;grid-template-columns:4.35rem minmax(0,1fr);min-width:0}
+.rb-editor.is-fullscreen .rb-workspace-rail{display:flex;flex:0 0 4.35rem;flex-direction:column;align-items:stretch;gap:.22rem;min-width:0;padding:.45rem .32rem;overflow-x:hidden;overflow-y:auto;border-right:1px solid #e0e5ec;background:#f8f9fb}
+.rb-editor.is-fullscreen .rb-workspace-tool{display:flex;flex:0 0 auto;flex-direction:column;align-items:center;justify-content:center;gap:.28rem;width:100%;min-height:3.55rem;padding:.38rem .18rem;border:1px solid transparent;border-radius:.35rem;background:transparent;color:#4c5667;font:inherit;font-size:.63rem;font-weight:600;line-height:1.12;text-align:center;cursor:pointer}
+.rb-editor.is-fullscreen .rb-workspace-tool:hover{border-color:#d4dcea;background:#edf2fa;color:#163e75}
+.rb-editor.is-fullscreen .rb-workspace-tool[aria-pressed=true]{border-color:#bfd0eb;background:#e6eef9;color:#174ea6}
+.rb-editor.is-fullscreen .rb-workspace-tool:focus-visible{position:relative;z-index:1;outline:3px solid #174ea6;outline-offset:1px}
+.rb-editor.is-fullscreen .rb-workspace-tool .rb-icon{width:1.2rem;height:1.2rem;flex:0 0 auto}
+.rb-editor.is-fullscreen .rb-workspace-tool-label{display:block;max-width:100%;overflow-wrap:anywhere}
+.rb-workspace-rail-divider{display:block;flex:0 0 1px;width:68%;height:1px;margin:.25rem auto;background:#d9dee7}
+.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel{grid-template-columns:minmax(18rem,21rem) minmax(0,1fr) minmax(16rem,20rem)!important}
+.rb-editor.is-fullscreen .rb-layout.rb-builder-layout:not(.rb-has-panel){grid-template-columns:minmax(18rem,21rem) minmax(0,1fr)!important}
+.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel:not(.rb-has-inspector){grid-template-columns:minmax(18rem,21rem) minmax(0,1fr)!important}
+@media(max-width:1100px){.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel{grid-template-columns:minmax(17rem,19rem) minmax(0,1fr) minmax(14rem,17rem)!important}.rb-editor.is-fullscreen .rb-layout.rb-builder-layout:not(.rb-has-panel),.rb-editor.is-fullscreen .rb-layout.rb-builder-layout.rb-has-panel:not(.rb-has-inspector){grid-template-columns:minmax(17rem,19rem) minmax(0,1fr)!important}}
+@media(max-width:900px){.rb-editor.is-fullscreen .rb-builder-sidebar{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}.rb-editor.is-fullscreen .rb-workspace-rail{flex-direction:row;align-items:stretch;gap:.2rem;max-height:4.7rem;padding:.3rem .4rem;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid #e0e5ec}.rb-editor.is-fullscreen .rb-workspace-tool{flex:0 0 4.25rem;min-height:3.8rem}.rb-workspace-rail-divider{flex:0 0 1px;width:1px;height:2.6rem;margin:auto .2rem}}
+@media(max-width:680px){.rb-editor.is-fullscreen .rb-workspace-rail{max-height:4.4rem}.rb-editor.is-fullscreen .rb-workspace-tool{flex-basis:3.8rem;min-height:3.6rem;padding-inline:.1rem;font-size:.59rem}}
