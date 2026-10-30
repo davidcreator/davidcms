@@ -26,6 +26,57 @@
     if (language.startsWith('es')) return { enter:'Abrir a pantalla completa', exit:'Volver al formulario', dialog:'Editor a pantalla completa', elements:'Elementos', structure:'Estructura', settings:'Ajustes' };
     return { enter:'Open fullscreen editor', exit:'Back to form', dialog:'Fullscreen editor', elements:'Elements', structure:'Structure', settings:'Settings' };
   }
+  function workspaceCopy() {
+    const language = String(global.document && global.document.documentElement && global.document.documentElement.lang || 'en').toLowerCase();
+    if (language.startsWith('pt')) return {
+      home:'Início', models:'Modelos', library:'Biblioteca', assistant:'Assistente IA', export:'Exportar', share:'Compartilhar',
+      file:'Arquivo', edit:'Editar', insert:'Inserir', format:'Formatar', tools:'Ferramentas', help:'Ajuda',
+      modelsTitle:'Modelos e padrões', modelsHint:'Explore padrões de blocos disponíveis para este documento.',
+      libraryTitle:'Biblioteca de mídia', libraryHint:'A biblioteca oficial abre pelo seletor do bloco selecionado. Escolha o tipo correspondente abaixo.',
+      selectBlock:'Selecione primeiro um bloco compatível no documento para associar mídia.', noPicker:'O seletor de mídia não está habilitado nesta tela.',
+      assistantTitle:'Assistente de IA', assistantHint:'A integração de IA não está configurada nesta instalação. Nenhum conteúdo será enviado.', assistantPrompt:'Digite sua solicitação…',
+      assistantActions:['Resumir documento','Reescrever seleção','Traduzir conteúdo','Gerar ideias','Criar imagem'],
+      exportTitle:'Exportar e compartilhar', exportHint:'O salvamento do site continua no formulário existente. A única exportação disponível aqui é uma cópia JSON do BDRE.',
+      jsonTitle:'Documento BDRE · JSON', jsonHint:'Baixa uma cópia estrutural para backup ou transferência.', unavailable:'Não disponível nesta integração',
+      pdf:'PDF', docx:'Word (.docx)', pptx:'PowerPoint (.pptx)', imageFormat:'Imagem (PNG/JPG)', html:'HTML',
+      shareTitle:'Compartilhamento', shareHint:'Links, permissões e colaboração precisam de um serviço próprio. Nenhum link será criado por este editor.',
+      shareDisabled:'Compartilhamento não configurado', patternsSearch:'Buscar padrões…', patternAll:'Todos', patternQuick:'Rápidos', patternSaved:'Salvos',
+      noPatternMatches:'Nenhum padrão corresponde à busca.', helpTitle:'Ajuda e atalhos', helpHint:'Atalhos disponíveis neste editor', imageType:'Imagem', fileType:'Arquivo', audioType:'Áudio', videoType:'Vídeo',
+      insertMedia:'Abrir biblioteca', documentStats:'%1 palavras · %2 caracteres · %3 blocos'
+    };
+    if (language.startsWith('es')) return {
+      home:'Inicio', models:'Modelos', library:'Biblioteca', assistant:'Asistente IA', export:'Exportar', share:'Compartir',
+      file:'Archivo', edit:'Editar', insert:'Insertar', format:'Formato', tools:'Herramientas', help:'Ayuda',
+      modelsTitle:'Modelos y patrones', modelsHint:'Explora patrones de bloques disponibles para este documento.',
+      libraryTitle:'Biblioteca multimedia', libraryHint:'La biblioteca oficial se abre desde el selector del bloque seleccionado. Elige el tipo correspondiente.',
+      selectBlock:'Selecciona primero un bloque compatible en el documento para asociar medios.', noPicker:'El selector multimedia no está habilitado en esta pantalla.',
+      assistantTitle:'Asistente de IA', assistantHint:'La integración de IA no está configurada en esta instalación. No se enviará contenido.', assistantPrompt:'Escribe tu solicitud…',
+      assistantActions:['Resumir documento','Reescribir selección','Traducir contenido','Generar ideas','Crear imagen'],
+      exportTitle:'Exportar y compartir', exportHint:'El guardado del sitio continúa en el formulario existente. La única exportación disponible aquí es una copia JSON del BDRE.',
+      jsonTitle:'Documento BDRE · JSON', jsonHint:'Descarga una copia estructural para respaldo o transferencia.', unavailable:'No disponible en esta integración',
+      pdf:'PDF', docx:'Word (.docx)', pptx:'PowerPoint (.pptx)', imageFormat:'Imagen (PNG/JPG)', html:'HTML',
+      shareTitle:'Compartir', shareHint:'Los enlaces, permisos y colaboración requieren un servicio propio. Este editor no creará ningún enlace.',
+      shareDisabled:'Compartir no está configurado', patternsSearch:'Buscar patrones…', patternAll:'Todos', patternQuick:'Rápidos', patternSaved:'Guardados',
+      noPatternMatches:'Ningún patrón coincide con la búsqueda.', helpTitle:'Ayuda y atajos', helpHint:'Atajos disponibles en este editor', imageType:'Imagen', fileType:'Archivo', audioType:'Audio', videoType:'Vídeo',
+      insertMedia:'Abrir biblioteca', documentStats:'%1 palabras · %2 caracteres · %3 bloques'
+    };
+    return {
+      home:'Home', models:'Patterns', library:'Media library', assistant:'AI assistant', export:'Export', share:'Share',
+      file:'File', edit:'Edit', insert:'Insert', format:'Format', tools:'Tools', help:'Help',
+      modelsTitle:'Patterns and models', modelsHint:'Browse reusable block patterns available to this document.',
+      libraryTitle:'Media library', libraryHint:'The CMS library opens through the selected block’s picker. Choose the matching media type below.',
+      selectBlock:'Select a compatible block in the document first to attach media.', noPicker:'The media picker is not enabled on this screen.',
+      assistantTitle:'AI assistant', assistantHint:'AI is not configured for this installation. No document content will be sent.', assistantPrompt:'Type a request…',
+      assistantActions:['Summarize document','Rewrite selection','Translate content','Generate ideas','Create image'],
+      exportTitle:'Export and share', exportHint:'Site saving remains in the existing form. The only available export here is a BDRE JSON copy.',
+      jsonTitle:'BDRE document · JSON', jsonHint:'Download a structural copy for backup or transfer.', unavailable:'Unavailable in this integration',
+      pdf:'PDF', docx:'Word (.docx)', pptx:'PowerPoint (.pptx)', imageFormat:'Image (PNG/JPG)', html:'HTML',
+      shareTitle:'Sharing', shareHint:'Links, permissions and collaboration require a dedicated service. This editor will not create a link.',
+      shareDisabled:'Sharing is not configured', patternsSearch:'Search patterns…', patternAll:'All', patternQuick:'Quick', patternSaved:'Saved',
+      noPatternMatches:'No patterns match this search.', helpTitle:'Help and shortcuts', helpHint:'Shortcuts available in this editor', imageType:'Image', fileType:'File', audioType:'Audio', videoType:'Video',
+      insertMedia:'Open library', documentStats:'%1 words · %2 characters · %3 blocks'
+    };
+  }
   const ICON_PATHS = {
     plus:'M12 5v14M5 12h14', alignLeft:'M4 6h16M4 10h10M4 14h16M4 18h10', alignCenter:'M4 6h16M7 10h10M4 14h16M7 18h10', alignRight:'M4 6h16M10 10h10M4 14h16M10 18h10', copy:'M8 8V4h12v12h-4M4 8h12v12H4z', undo:'M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-2', redo:'m15 14 5-5-5-5m5 5H10a6 6 0 0 0 0 12h2',
     desktop:'M3 4h18v13H3zM8 21h8M12 17v4', tablet:'M6 2h12v20H6zM11 18h2', mobile:'M8 2h8v20H8zM11 18h2',
@@ -33,7 +84,7 @@
     paragraph:'M4 6h16M4 10h16M4 14h10M4 18h10', heading:'M4 5v14M20 5v14M4 12h16', list:'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
     image:'M4 4h16v16H4zM8 14l3-3 5 5M14 9h.01', quote:'M5 6h6v6H5zM13 6h6v6h-6zM5 12c0 3-1 4-2 5m10-5c0 3-1 4-2 5', video:'m9 7 9 5-9 5zM4 5v14', threejs:'m12 3 8 4v10l-8 4-8-4V7l8-4zm-8 4 8 4 8-4m-8 4v10', button:'M4 7h16v10H4z', bold:'M7 5h6a4 4 0 0 1 0 8H7zM7 13h7a4 4 0 0 1 0 8H7z', italic:'M15 4h-5m4 16H9m5-16-4 16', underline:'M6 4v7a6 6 0 0 0 12 0V4M4 21h16', strike:'M5 12h14M7 6c1-2 3-2 5-2 3 0 5 1 5 3 0 2-2 3-5 4-3 1-5 2-5 5 0 2 2 4 5 4 2 0 4-1 5-3', link:'M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7M14 11a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 21l1.7-1.7', info:'M12 8h.01M11 12h1v5h1M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
     details:'M5 7h14M5 12h14M5 17h14M3 7h.01M3 12h.01M3 17h.01', spacer:'M12 3v18m-4-14 4-4 4 4m-8 10 4 4 4-4', code:'m8 6-6 6 6 6m8-12 6 6-6 6m-3-14-2 16', separator:'M4 12h16M12 7v10', group:'M4 4h16v16H4zM8 8h8v8H8z', columns:'M4 4h16v16H4zM12 4v16', gallery:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', cover:'M4 4h16v16H4zM4 15l5-5 4 4 3-3 4 5', table:'M4 4h16v16H4zM4 10h16M4 15h16M10 4v16M16 4v16', file:'M6 3h8l4 4v14H6zM14 3v5h5M9 13h6M9 17h6', audio:'M4 10v4m4-8v12m4-16v20m4-16v12m4-8v4', settings:'M4 7h16M4 17h16M8 7v0m8 10v0', indent:'M4 6h3m3 0h10M4 12h3m3 0h10M4 18h3m3 0h10M4 12l3-3m-3 3 3 3', outdent:'M4 6h16M4 12h10M4 18h16m3-6-3-3m3 3-3 3', outline:'M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h11', layers:'m12 3 9 5-9 5-9-5 9-5zm-9 9 9 5 9-5m-18 5 9 5 9-5', grip:'M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01', transform:'M4 7h14m0 0-3-3m3 3-3 3M20 17H6m0 0 3-3m-3 3 3 3',
-    check:'m5 12 4 4L19 6', search:'m20 20-4.5-4.5M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0', help:'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', expand:'M8 3H3v5m0-5 7 7m6-7h5v5m0-5-7 7M3 16v5h5m-5 0 7-7m11 2v5h-5m5 0-7-7', collapse:'M8 3v5H3m0 0 7-7m6 7V3h5m0 0-7 7M3 16h5v5m0 0 7-7m1 2h5v5m0 0-7-7', history:'M3 12a9 9 0 1 0 2.6-6.4L3 9m0-6v6h6m3-3v6l4 2'
+    check:'m5 12 4 4L19 6', search:'m20 20-4.5-4.5M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0', help:'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', home:'m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z', spark:'m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l1 2.5 2.5 1-2.5 1L19 22l-1-2.5-2.5-1 2.5-1z', share:'M8 12 16 7m-8 5 8 5M6 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm12-5a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', expand:'M8 3H3v5m0-5 7 7m6-7h5v5m0-5-7 7M3 16v5h5m-5 0 7-7m11 2v5h-5m5 0-7-7', collapse:'M8 3v5H3m0 0 7-7m6 7V3h5m0 0-7 7M3 16h5v5m0 0 7-7m1 2h5v5m0 0-7-7', history:'M3 12a9 9 0 1 0 2.6-6.4L3 9m0-6v6h6m3-3v6l4 2'
   };
   const ACTION_ICONS = { 'toggle-inserter':'plus','import-file':'file','export-document':'file','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','file-media':'file','audio-media':'audio','video-media':'video',media:'image','insert-pattern':'layers',insert:'plus','save-selected-pattern':'layers','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent','toggle-fullscreen':'expand','builder-panel':'layers','align-text':'align-left' };
   const ICON_ONLY_ACTIONS = new Set(['align-text','import-file','export-document','toggle-inserter','paste-block','undo','redo','preview','toggle-preview','move-up','move-down','duplicate','copy-block','delete','file-media','audio-media','video-media','media','format-mark','link-apply','link-remove','table-add-row','table-remove-row','table-add-column','table-remove-column','table-toggle-header','indent','outdent','toggle-fullscreen','builder-panel','customize-block','save-selected-pattern','toggle-revision-history','toggle-find-replace']);
@@ -572,6 +623,10 @@
       this.inspectorOpen = true;
       this.inspectorTab = 'content';
       this.activeRibbonTab = 'home';
+      this.workspaceView = 'editor';
+      this.patternFilter = 'all';
+      this.patternQuery = '';
+      this.ui = workspaceCopy();
       this.findReplaceOpen = false; this.findQuery = ''; this.replaceQuery = ''; this.findCaseSensitive = false; this.findWholeWord = false; this.activeFindIndex = -1;
       this.documentStatsTimer = null;
       this.fullscreenReturnFocus = null;
@@ -657,6 +712,8 @@
         if (codeEditor) { this.updateCodeNode(codeEditor.dataset.editCode, codeEditor); this.scheduleDocumentStatistics(); return; }
         const search = event.target.closest('[data-inserter-search]');
         if (search) { this.inserterQuery = search.value; this.filterInserter(); return; }
+        const patternSearch = event.target.closest('[data-pattern-search]');
+        if (patternSearch) { this.patternQuery = patternSearch.value; this.filterWorkspacePatterns(); return; }
         const findInput = event.target.closest('[data-find-query]');
         if (findInput) { this.findQuery = findInput.value; this.activeFindIndex = -1; this.updateFindStatus(); return; }
         const replaceInput = event.target.closest('[data-replace-query]');
@@ -676,7 +733,7 @@
         const wholeWordInput = event.target.closest('[data-find-whole-word]');
         if (wholeWordInput) { this.findWholeWord = wholeWordInput.checked; this.activeFindIndex = -1; this.updateFindStatus(); return; }
         const importInput = event.target.closest('[data-import-file]');
-        if (importInput && importInput.files && importInput.files[0]) { const file=importInput.files[0]; importInput.value=''; this.importLocalFile(file); return; }
+        if (importInput && importInput.files && importInput.files[0]) { const file=importInput.files[0]; importInput.value=''; this.workspaceView='editor';this.previewMode=false;this.activePanel='structure';this.importLocalFile(file); return; }
         const transform = event.target.closest('[data-transform-node]');
         if (transform && transform.value) { this.transformNode(transform.dataset.transformNode, transform.value); return; }
         const sceneField = event.target.closest('[data-threejs-kind]');
@@ -809,34 +866,80 @@
     }
 
     activateWorkspaceTool(button) {
-      const tool = button.dataset.tool;
-      if (tool === 'elements') {
-        if (this.activePanel === 'elements' && this.inserterOpen) { this.closeInserter(false); const target=Array.from(this.root.querySelectorAll('[data-action="workspace-tool"]')).find((item)=>item.dataset.tool==='elements'); if(target)target.focus(); }
-        else { this.previewMode = false; this.openInserter(this.selectedId, false, button); }
+      const tool=button.dataset.tool;
+      if(tool==='elements'){
+        this.workspaceView='editor';
+        if(this.activePanel==='elements'&&this.inserterOpen){this.closeInserter(false);const target=Array.from(this.root.querySelectorAll('[data-action="workspace-tool"]')).find((item)=>item.dataset.tool==='elements');if(target)target.focus();}
+        else{this.previewMode=false;this.openInserter(this.selectedId,false,button);}
         return;
       }
-      const wasPreview = this.previewMode;
-      if (tool !== 'view') this.previewMode = false;
-      if (this.inserterOpen) this.restoreWorkspacePanelAfterInserter();
-      if (tool === 'structure') {
-        this.activePanel = 'structure';
-      } else if (tool === 'patterns') {
-        this.activePanel = 'patterns';
-        this.activeRibbonTab = 'layout';
-      } else if (tool === 'appearance') {
-        this.inspectorOpen = wasPreview ? true : !this.inspectorOpen;
-      } else {
-        const tabs = { text:'home', media:'media', review:'review', view:'view' };
-        if (!tabs[tool]) return;
-        this.activeRibbonTab = tabs[tool];
+      const wasPreview=this.previewMode;
+      if(tool==='home'){this.workspaceView='editor';this.activeRibbonTab='home';this.previewMode=false;}
+      else if(tool==='models'){this.workspaceView='models';this.previewMode=false;}
+      else if(tool==='library'){this.workspaceView='library';this.previewMode=false;}
+      else if(tool==='assistant'){this.workspaceView='assistant';this.previewMode=false;}
+      else if(tool==='export'){this.workspaceView='export';this.previewMode=false;}
+      else if(tool==='share'){this.workspaceView='share';this.previewMode=false;}
+      else if(tool==='help'){this.workspaceView='help';this.previewMode=false;}
+      else{
+        this.workspaceView='editor';
+        if(tool!=='view')this.previewMode=false;
       }
+      if(this.inserterOpen)this.restoreWorkspacePanelAfterInserter();
+      if(tool==='structure')this.activePanel='structure';
+      else if(tool==='appearance')this.inspectorOpen=wasPreview?true:!this.inspectorOpen;
+      else{
+        const tabs={text:'home',media:'media',review:'review',view:'view'};
+        if(tabs[tool])this.activeRibbonTab=tabs[tool];
+      }
+      if(['models','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
+      this.findReplaceOpen=false;
       this.render();
-      const focusTarget = Array.from(this.root.querySelectorAll('[data-action="workspace-tool"]')).find((item) => item.dataset.tool === tool);
-      if (focusTarget) focusTarget.focus();
+      const focusTarget=Array.from(this.root.querySelectorAll('[data-action="workspace-tool"]')).find((item)=>item.dataset.tool===tool);
+      if(focusTarget)focusTarget.focus();
+    }
+
+    activateOfficeMenu(button) {
+      const item=button.dataset.menu;
+      if(this.inserterOpen)this.restoreWorkspacePanelAfterInserter();
+      if(item==='file'){this.workspaceView='export';this.activePanel='structure';}
+      else if(item==='help'){this.workspaceView='help';this.activePanel='structure';}
+      else{
+        this.workspaceView='editor';this.previewMode=false;
+        this.activeRibbonTab={insert:'insert',tools:'layout',format:'layout',edit:'home'}[item]||'home';
+      }
+      this.findReplaceOpen=false;this.render();
+      const focusTarget=Array.from(this.root.querySelectorAll('[data-action="office-menu"]')).find((entry)=>entry.dataset.menu===item);
+      if(focusTarget)focusTarget.focus();
+    }
+
+    openWorkspaceMedia(kind) {
+      const found=this.selectedId?this.findPath(this.state.blocks,this.selectedId):null;
+      const expected={image:'core/image',file:'core/file',audio:'core/audio',video:'core/video_file'};
+      if(!found||found.node.type!==expected[kind]){this.announceStatus(this.ui.selectBlock);return;}
+      if(this.options.mediaPickers===false&&!(kind==='image'&&this.options.pageImagePicker===true)){this.announceStatus(this.ui.noPicker);return;}
+      if(kind==='image'){
+        const eventName=this.options.pageImagePicker===true?'cms-page-media-open':'blog-block-media-open';
+        global.document.dispatchEvent(new CustomEvent(eventName,{detail:{editor:this}}));
+      }else{
+        const eventName=kind==='file'?'blog-block-file-open':kind==='audio'?'blog-block-audio-open':'blog-block-video-open';
+        global.document.dispatchEvent(new CustomEvent(eventName,{detail:{editor:this,nodeId:this.selectedId}}));
+      }
+    }
+
+    filterWorkspacePatterns() {
+      const query=String(this.patternQuery||'').trim().toLocaleLowerCase();
+      const category=this.patternFilter||'all';let count=0;
+      this.root.querySelectorAll('[data-pattern-kind]').forEach((card)=>{
+        const text=String(card.dataset.patternSearch||'').toLocaleLowerCase();
+        const visible=(!query||text.includes(query))&&(category==='all'||card.dataset.patternKind===category);
+        card.hidden=!visible;if(visible)count++;
+      });
+      const empty=this.root.querySelector('[data-pattern-empty]');if(empty)empty.hidden=count>0;
     }
 
     action(name, button) {
-      if (this.locked) return;
+      if (this.locked&&!['workspace-tool','office-menu','toggle-fullscreen'].includes(name)) return;
       if (name === 'insert') this.insert(button.dataset.type, button.dataset.count);
       else if (name === 'insert-pattern') this.insertPattern(button.dataset.pattern);
       else if (name === 'insert-saved-pattern') this.insertSavedPattern(button.dataset.patternId);
@@ -848,8 +951,11 @@
         if(afterId||!(this.activePanel==='elements'&&this.inserterOpen))this.openInserter(afterId||this.selectedId,false,button);
         else{this.closeInserter(false);const trigger=this.root.querySelector('.rb-ribbon [data-action="toggle-inserter"]')||this.root.querySelector('[data-action="toggle-inserter"]');if(trigger)trigger.focus();}
       }
-      else if (name === 'ribbon-tab') { this.activeRibbonTab = button.dataset.tab; this.render(); }
+      else if (name === 'ribbon-tab') { this.workspaceView='editor'; this.activeRibbonTab = button.dataset.tab; this.render(); }
       else if (name === 'workspace-tool') { this.activateWorkspaceTool(button); }
+      else if (name === 'office-menu') { this.activateOfficeMenu(button); }
+      else if (name === 'workspace-media-open') { this.openWorkspaceMedia(button.dataset.kind); }
+      else if (name === 'workspace-pattern-filter') { this.patternFilter=button.dataset.filter||'all'; this.render(); const active=Array.from(this.root.querySelectorAll('[data-action="workspace-pattern-filter"]')).find((item)=>item.dataset.filter===this.patternFilter); if(active)active.focus(); }
       else if (name === 'import-file') { const input=this.root.querySelector('[data-import-file]'); if (input) input.click(); }
       else if (name === 'export-document') this.exportDocumentFile();
       else if (name === 'toggle-revision-history') { this.historyOpen = !this.historyOpen; this.render(); }
@@ -863,6 +969,7 @@
       else if (name === 'replace-all') this.replaceFoundMatch(true);
       else if (name === 'restore-draft-revision') this.restoreDraftRevision(Number(button.dataset.revisionIndex));
       else if(name==='toggle-preview'){
+        this.workspaceView='editor';
         this.previewMode=!this.previewMode;
         if(this.previewMode){this.activePanel=null;this.inserterOpen=false;this.inserterReturnFocus=null;this.inserterPreviousPanel=null;this.inserterHasPreviousPanel=false;}
         this.render();
@@ -927,6 +1034,7 @@
         return;
       }
       this.fullscreen = false;
+      this.workspaceView = 'editor';
       this.activePanel = this.fullscreenPreviousPanel;
       this.root.classList.remove('is-fullscreen');
       const previous = this.fullscreenPreviousAttrs || {};
@@ -1163,9 +1271,14 @@
     }
 
     renderPatternLibrary() {
-      const panel=this.el('section','rb-pattern-library');
-      const heading=this.el('h3','rb-pattern-library-title',this.strings.workspaceToolPatterns||this.strings.patternsCategory||'Padrões');
-      panel.append(heading,this.el('p','rb-pattern-library-hint',this.strings.patternHint||'Padrões reutilizáveis de blocos; não são documentos completos.'));
+      const panel=this.el('section','rb-pattern-library rb-pattern-library-page');
+      const heading=this.el('h1','rb-pattern-library-title',this.ui.modelsTitle);
+      panel.append(heading,this.el('p','rb-pattern-library-hint',this.ui.modelsHint+' '+(this.strings.patternHint||'Padrões reutilizáveis de blocos; não são documentos completos.')));
+      const controls=this.el('div','rb-pattern-library-controls');
+      const search=this.el('input','rb-pattern-library-search');search.type='search';search.placeholder=this.ui.patternsSearch;search.value=this.patternQuery;search.dataset.patternSearch='1';search.setAttribute('aria-label',this.ui.patternsSearch);controls.append(search);
+      const filters=this.el('div','rb-pattern-library-filters');
+      [[this.ui.patternAll,'all'],[this.ui.patternQuick,'quick'],[this.ui.patternSaved,'saved']].forEach(([label,filter])=>{const button=this.button(label,'workspace-pattern-filter',{filter});button.setAttribute('aria-pressed',String(this.patternFilter===filter));filters.append(button);});
+      controls.append(filters);panel.append(controls);
       if (this.patternLoadError) panel.append(this.el('p','rb-pattern-library-warning',this.strings.patternError||'Não foi possível carregar padrões salvos.'));
       const afterId=this.selectedId||null;
       const allowed=this.canInsertPatterns(afterId);
@@ -1178,8 +1291,8 @@
       ['two_columns','quote_cta','section_intro','cover_hero'].forEach((pattern)=>{
         const label=labels[pattern]||pattern;
         const card=this.button(label,'insert-pattern',{pattern,icon:icons[pattern]||'layers'});
-        card.classList.add('rb-pattern-library-card');
-        const description=descriptions[pattern]||'';
+        card.classList.add('rb-pattern-library-card');card.dataset.patternKind='quick';
+        const description=descriptions[pattern]||'';card.dataset.patternSearch=(label+' '+description).toLocaleLowerCase();
         if(description)card.append(this.el('span','rb-pattern-library-description',description));
         card.disabled=!allowed;
         quick.append(card);
@@ -1189,18 +1302,21 @@
       savedTitle.append(this.el('strong','',this.strings.savedPatternsCategory||'Padrões salvos'));
       if(this.patternConfig.canModify&&this.selectedId)savedTitle.append(this.button(this.strings.saveAsPattern||'Salvar seleção','save-selected-pattern',{nodeId:this.selectedId,icon:'plus'}));
       panel.append(savedTitle);
-      if(!this.patternConfig.canRead){panel.append(this.el('p','rb-muted',this.strings.patternReadUnavailable||'A biblioteca de padrões não está habilitada para este usuário.'));return panel;}
-      if(!this.savedPatterns.length){panel.append(this.el('p','rb-muted',this.strings.savedPatternsEmpty||'Ainda não há padrões salvos.'));return panel;}
-      const savedGrid=this.el('div','rb-pattern-library-grid rb-pattern-library-saved');
-      const allowedTypes=new Set(this.insertTypes(afterId).map((item)=>item.type));
-      this.savedPatterns.forEach((item)=>{
-        const card=this.el('div','rb-pattern-library-card rb-pattern-library-saved-card');
-        const insert=this.button(item.name,'insert-saved-pattern',{patternId:String(item.pattern_id),icon:'layers'});
-        insert.classList.add('rb-pattern-library-insert');insert.disabled=!allowedTypes.has(item.root_type);card.append(insert);
-        if(this.patternConfig.canModify){const actions=this.el('div','rb-pattern-card-actions');actions.append(this.button(this.strings.renamePattern||'Renomear','rename-saved-pattern',{patternId:String(item.pattern_id)}),this.button(this.strings.deletePattern||'Excluir','delete-saved-pattern',{patternId:String(item.pattern_id)}));card.append(actions);}
-        savedGrid.append(card);
-      });
-      panel.append(savedGrid);
+      if(!this.patternConfig.canRead)panel.append(this.el('p','rb-muted',this.strings.patternReadUnavailable||'A biblioteca de padrões não está habilitada para este usuário.'));
+      else if(!this.savedPatterns.length)panel.append(this.el('p','rb-muted',this.strings.savedPatternsEmpty||'Ainda não há padrões salvos.'));
+      else {
+        const savedGrid=this.el('div','rb-pattern-library-grid rb-pattern-library-saved');
+        const allowedTypes=new Set(this.insertTypes(afterId).map((item)=>item.type));
+        this.savedPatterns.forEach((item)=>{
+          const card=this.el('div','rb-pattern-library-card rb-pattern-library-saved-card');card.dataset.patternKind='saved';card.dataset.patternSearch=String(item.name||'').toLocaleLowerCase();
+          const insert=this.button(item.name,'insert-saved-pattern',{patternId:String(item.pattern_id),icon:'layers'});
+          insert.classList.add('rb-pattern-library-insert');insert.disabled=!allowedTypes.has(item.root_type);card.append(insert);
+          if(this.patternConfig.canModify){const actions=this.el('div','rb-pattern-card-actions');actions.append(this.button(this.strings.renamePattern||'Renomear','rename-saved-pattern',{patternId:String(item.pattern_id)}),this.button(this.strings.deletePattern||'Excluir','delete-saved-pattern',{patternId:String(item.pattern_id)}));card.append(actions);}
+          savedGrid.append(card);
+        });
+        panel.append(savedGrid);
+      }
+      const empty=this.el('p','rb-muted rb-pattern-library-empty',this.ui.noPatternMatches);empty.dataset.patternEmpty='1';empty.hidden=true;panel.append(empty);
       return panel;
     }
 
@@ -1307,6 +1423,7 @@
     }
 
     finishInsert(next,node) {
+      this.workspaceView='editor';
       this.inserterOpen=false;this.inserterReturnFocus=null;this.slashTrigger=null;this.insertAfterId=node.id;this.inserterQuery='';this.statusMessage=this.strings.statusInserted;
       if(this.inserterHasPreviousPanel){this.activePanel=this.inserterPreviousPanel;this.inserterPreviousPanel=null;this.inserterHasPreviousPanel=false;}
       this.commit(next,node.id);this.focusNode(node.id);
@@ -2101,21 +2218,89 @@
       return panel;
     }
 
+    renderOfficeMenu() {
+      const nav=this.el('nav','rb-office-menu');nav.setAttribute('aria-label',this.strings.editorTools||'Editor navigation');
+      const menus=[[this.ui.file,'file'],[this.ui.edit,'edit'],[this.ui.insert,'insert'],[this.ui.format,'format'],[this.ui.tools,'tools'],[this.ui.help,'help']];
+      menus.forEach(([label,key])=>{
+        const button=this.el('button','rb-office-menu-item',label);button.type='button';button.dataset.action='office-menu';button.dataset.menu=key;
+        const current=key==='file'?(this.workspaceView==='export'||this.workspaceView==='share'):key==='help'?this.workspaceView==='help':this.workspaceView==='editor'&&(key==='edit'?this.activeRibbonTab==='home':key==='format'?this.activeRibbonTab==='layout':key==='insert'?this.activeRibbonTab==='insert':key==='tools'?['media','review','view'].includes(this.activeRibbonTab):false);
+        if(current)button.setAttribute('aria-current','page');nav.append(button);
+      });
+      return nav;
+    }
+
+    renderCanvas() {
+      const canvas=this.el('div','rb-canvas');canvas.setAttribute('role','region');canvas.setAttribute('aria-label',this.strings.canvas);
+      const canvasHead=this.el('div','rb-canvas-head');canvasHead.append(this.icon('layers','rb-icon'),this.el('span','',this.strings.canvas),this.el('span','rb-canvas-count',String(this.state.blocks.length)));canvas.append(canvasHead);
+      if(this.previewMode){canvas.classList.add('rb-preview-canvas');canvas.append(this.renderPreviewDocument());}
+      else{if(!this.state.blocks.length)canvas.append(this.el('p','rb-empty',this.strings.canvasEmpty));this.state.blocks.forEach((node)=>canvas.append(this.renderNode(node,true)));}
+      return canvas;
+    }
+
+    renderWorkspaceScreen() {
+      const surface=this.el('section','rb-canvas rb-workspace-screen');surface.id='rb-workspace-surface-'+this.instance;surface.setAttribute('role','region');
+      if(this.workspaceView==='models'){
+        surface.setAttribute('aria-label',this.ui.modelsTitle);surface.append(this.renderPatternLibrary());
+      }else if(this.workspaceView==='library'){
+        surface.setAttribute('aria-label',this.ui.libraryTitle);
+        const wrap=this.el('div','rb-workspace-screen-content');wrap.append(this.el('h1','rb-workspace-screen-title',this.ui.libraryTitle),this.el('p','rb-workspace-screen-lead',this.ui.libraryHint));
+        const found=this.selectedId?this.findPath(this.state.blocks,this.selectedId):null;
+        wrap.append(this.el('p','rb-library-selection',found?(this.strings.inspector||'Bloco selecionado')+': '+this.label(found.node.type):this.ui.selectBlock));
+        const actions=this.el('div','rb-workspace-card-grid');
+        [['image',this.ui.imageType,'image','core/image'],['file',this.ui.fileType,'file','core/file'],['audio',this.ui.audioType,'audio','core/audio'],['video',this.ui.videoType,'video','core/video_file']].forEach(([kind,label,icon,type])=>{
+          const action=this.button(label,'workspace-media-open',{kind,icon});action.classList.add('rb-workspace-action-card');action.dataset.mediaKind=kind;
+          const enabled=!!found&&found.node.type===type&&(kind==='image'?this.options.mediaPickers!==false||this.options.pageImagePicker===true:this.options.mediaPickers!==false&&this.options[kind+'Picker']!==false);
+          action.disabled=!enabled;action.append(this.el('span','rb-workspace-action-description',enabled?this.ui.insertMedia:this.ui.selectBlock));actions.append(action);
+        });
+        wrap.append(actions);surface.append(wrap);
+      }else if(this.workspaceView==='assistant'){
+        surface.setAttribute('aria-label',this.ui.assistantTitle);
+        const frame=this.el('div','rb-assistant-workspace');
+        const rail=this.el('aside','rb-assistant-task-list');rail.append(this.el('h2','',this.ui.assistantTitle));
+        this.ui.assistantActions.forEach((label,index)=>{const item=this.el('button','rb-assistant-task',label);item.type='button';item.disabled=true;item.append(this.el('span','rb-workspace-action-description',this.ui.unavailable));rail.append(item);});
+        const main=this.el('div','rb-assistant-main');
+        const badge=this.el('p','rb-workspace-warning',this.ui.assistantHint);badge.setAttribute('role','status');main.append(badge,this.icon('spark','rb-assistant-spark'),this.el('h1','rb-workspace-screen-title',this.ui.assistantTitle),this.el('p','rb-workspace-screen-lead',this.ui.assistantHint));
+        const prompt=this.el('textarea','rb-assistant-prompt');prompt.placeholder=this.ui.assistantPrompt;prompt.disabled=true;prompt.setAttribute('aria-label',this.ui.assistantPrompt);main.append(prompt);
+        const send=this.button(this.ui.assistant,'assistant-send',{icon:'spark'});send.disabled=true;main.append(send);frame.append(rail,main);surface.append(frame);
+      }else if(this.workspaceView==='export'){
+        surface.setAttribute('aria-label',this.ui.exportTitle);const wrap=this.el('div','rb-workspace-screen-content');wrap.append(this.el('h1','rb-workspace-screen-title',this.ui.exportTitle),this.el('p','rb-workspace-screen-lead',this.ui.exportHint));
+        const grid=this.el('div','rb-workspace-export-grid');const available=this.el('section','rb-workspace-card rb-workspace-json-card');available.append(this.el('h2','',this.ui.jsonTitle),this.el('p','',this.ui.jsonHint),this.button(this.strings.exportDocument||'Exportar BDRE','export-document',{icon:'file'}));
+        const input=this.el('input','rb-import-file-input');input.type='file';input.accept=(global.ReamurPageImporter&&global.ReamurPageImporter.formats||[]).join(',');input.dataset.importFile='1';input.classList.add('rb-sr-only');input.tabIndex=-1;input.setAttribute('aria-label',this.strings.importFile||'Importar arquivo');
+        available.append(this.button(this.strings.importFile||'Importar documento','import-file',{icon:'file'}),input);grid.append(available);
+        const formats=this.el('section','rb-workspace-card');formats.append(this.el('h2','',this.ui.unavailable));
+        [[this.ui.pdf,'PDF'],[this.ui.docx,'Word'],[this.ui.pptx,'PowerPoint'],[this.ui.imageFormat,'Image'],[this.ui.html,'HTML']].forEach(([label,kind])=>{const row=this.el('div','rb-workspace-format-row');row.append(this.el('span','',label),this.el('span','rb-workspace-format-disabled',this.ui.unavailable));formats.append(row);});grid.append(formats);wrap.append(grid);surface.append(wrap);
+      }else if(this.workspaceView==='share'){
+        surface.setAttribute('aria-label',this.ui.shareTitle);const wrap=this.el('div','rb-workspace-screen-content rb-share-workspace');wrap.append(this.el('h1','rb-workspace-screen-title',this.ui.shareTitle),this.el('p','rb-workspace-screen-lead',this.ui.shareHint));
+        const card=this.el('section','rb-workspace-card');card.append(this.el('h2','',this.ui.shareDisabled));
+        const email=this.el('input','rb-input');email.type='email';email.disabled=true;email.placeholder=this.ui.shareDisabled;email.setAttribute('aria-label',this.ui.shareDisabled);card.append(email);
+        const share=this.button(this.ui.share,'share-link',{icon:'share'});share.disabled=true;card.append(share);wrap.append(card);surface.append(wrap);
+      }else{
+        surface.setAttribute('aria-label',this.ui.helpTitle);const wrap=this.el('div','rb-workspace-screen-content');wrap.append(this.el('h1','rb-workspace-screen-title',this.ui.helpTitle),this.el('p','rb-workspace-screen-lead',this.ui.helpHint));
+        const card=this.el('section','rb-workspace-card');card.append(this.el('h2','',this.strings.keyboardShortcutsTitle),this.el('p','rb-workspace-shortcuts',this.strings.keyboardShortcuts),this.el('p','rb-workspace-screen-lead',this.strings.draftRecoveryHint||''));wrap.append(card);surface.append(wrap);
+      }
+      return surface;
+    }
+
     render() {
       this.root.replaceChildren();
       if (this.initialError) { const warn = this.el('p', 'rb-alert', this.strings.initialInvalid + ' (' + this.initialError + ').'); warn.setAttribute('role','alert'); this.root.setAttribute('aria-invalid','true'); this.root.append(warn); return; }
       this.root.setAttribute('aria-invalid','false');
+      this.root.dataset.workspaceView=this.workspaceView;
       const masthead = this.el('div','rb-editor-masthead');
       const identity = this.el('div','rb-editor-identity'); identity.append(this.icon('layers','rb-brand-icon'));
       const identityText = this.el('div','rb-editor-identity-copy'); identityText.append(this.el('strong','rb-editor-brand','BDREditor'),this.el('span','rb-editor-subtitle',this.strings.editorTools));
       identity.append(identityText);
       const quickActions=this.el('div','rb-editor-quick-actions');
-      const quickFind=this.button(this.strings.findReplaceButton||'Localizar e substituir','toggle-find-replace',{icon:'search'}); quickActions.append(quickFind);
-      const quickUndo=this.button(this.strings.undo,'undo'); quickUndo.dataset.history='undo'; quickActions.append(quickUndo);
-      const quickRedo=this.button(this.strings.redo,'redo'); quickRedo.dataset.history='redo'; quickActions.append(quickRedo);
-      quickActions.append(this.button(this.strings.exportDocument||'Exportar BDRE','export-document',{icon:'file'}));
+      if(this.workspaceView==='editor'){
+        const quickFind=this.button(this.strings.findReplaceButton||'Localizar e substituir','toggle-find-replace',{icon:'search'}); quickActions.append(quickFind);
+        const quickUndo=this.button(this.strings.undo,'undo'); quickUndo.dataset.history='undo'; quickActions.append(quickUndo);
+        const quickRedo=this.button(this.strings.redo,'redo'); quickRedo.dataset.history='redo'; quickActions.append(quickRedo);
+        if(this.fullscreen)quickActions.append(this.button(this.ui.share,'workspace-tool',{tool:'share',icon:'share'}));
+        quickActions.append(this.button(this.strings.exportDocument||'Exportar BDRE','export-document',{icon:'file'}));
+      }
       masthead.append(identity,quickActions); this.root.append(masthead);
-      if (this.fullscreen && this.options.workspaceContext) {
+      if (this.fullscreen) this.root.append(this.renderOfficeMenu());
+      if (this.fullscreen && this.workspaceView==='editor' && this.options.workspaceContext) {
         const context=this.options.workspaceContext;
         const contextBar=this.el('section','rb-page-context'); contextBar.setAttribute('role','group'); contextBar.setAttribute('aria-label',context.pageLabel || 'Page context');
         const contextDetails=this.el('div','rb-page-context-details');
@@ -2133,20 +2318,22 @@
         }
         contextBar.append(contextDetails,contextActions); this.root.append(contextBar);
       }
+      let inserterMenu=null;
+      if(this.workspaceView==='editor'){
       const ribbon = this.el('section','rb-ribbon'); ribbon.setAttribute('aria-label',this.strings.editorTools);
       const ribbonTabs=this.el('div','rb-ribbon-tabs'); ribbonTabs.setAttribute('role','tablist');
       [['home',this.strings.ribbonHome||'Início'],['insert',this.strings.ribbonInsert||'Inserir'],['media',this.strings.categoryMedia||'Mídia'],['layout',this.strings.categoryLayout||'Layout'],['review',this.strings.ribbonReview||'Revisar'],['view',this.strings.ribbonView||'Exibir']].forEach(([tab,label])=>{const b=this.el('button','rb-ribbon-tab',label);b.type='button';b.dataset.action='ribbon-tab';b.dataset.tab=tab;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(this.activeRibbonTab===tab));b.setAttribute('aria-controls','rb-ribbon-panel-'+this.instance);b.tabIndex=this.activeRibbonTab===tab?0:-1;ribbonTabs.append(b);});
       ribbon.append(ribbonTabs,this.renderRibbonContents()); this.root.append(ribbon);
       if (this.findReplaceOpen) this.root.append(this.renderFindReplacePanel());
-      const inserterMenu = this.renderInserter(this.activePanel === 'elements' && this.inserterOpen); inserterMenu.id = 'rb-inserter-' + this.instance;
+      inserterMenu = this.renderInserter(this.activePanel === 'elements' && this.inserterOpen); inserterMenu.id = 'rb-inserter-' + this.instance;
       if(this.activePanel!=='elements'){inserterMenu.hidden=true;this.root.append(inserterMenu);}
-      const layout = this.el('div', 'rb-layout' + (this.fullscreen ? ' rb-builder-layout' : '') + ((this.activePanel || (this.fullscreen && this.inspectorOpen && !this.previewMode)) ? ' rb-has-panel' : '') + (this.fullscreen && this.inspectorOpen && !this.previewMode ? ' rb-has-inspector' : ''));
-      const canvas = this.el('div', 'rb-canvas'); canvas.setAttribute('role','region'); canvas.setAttribute('aria-label', this.strings.canvas);
-      const canvasHead = this.el('div', 'rb-canvas-head'); canvasHead.append(this.icon('layers','rb-icon'),this.el('span','',this.strings.canvas),this.el('span','rb-canvas-count',String(this.state.blocks.length))); canvas.append(canvasHead);
-      if (this.previewMode) { canvas.classList.add('rb-preview-canvas'); canvas.append(this.renderPreviewDocument()); }
-      else { if (!this.state.blocks.length) canvas.append(this.el('p', 'rb-empty', this.strings.canvasEmpty)); this.state.blocks.forEach((node) => canvas.append(this.renderNode(node, true))); }
+      }
+      const editingWorkspace=this.workspaceView==='editor';
+      const layout = this.el('div', 'rb-layout' + (this.fullscreen&&editingWorkspace ? ' rb-builder-layout' : '') + (editingWorkspace&&(this.activePanel || (this.fullscreen && this.inspectorOpen && !this.previewMode)) ? ' rb-has-panel' : '') + (editingWorkspace&&this.fullscreen&&this.inspectorOpen&&!this.previewMode ? ' rb-has-inspector' : ''));
+      const canvas = this.workspaceView==='editor' ? this.renderCanvas() : this.renderWorkspaceScreen();
+      if(this.workspaceView==='editor')canvas.id='rb-workspace-surface-'+this.instance;
       if (this.importNotices.length) { const notices=this.el('div','rb-import-notices'); notices.setAttribute('role','status'); this.importNotices.forEach((message)=>{const note=this.el('p','rb-import-notice',message);notices.append(note);}); this.root.append(notices); }
-      if (this.fullscreen) {
+      if (this.fullscreen && this.workspaceView==='editor') {
         const sidebar=this.el('aside','rb-builder-sidebar rb-collapsible-panel');
         const workspaceRail=this.el('nav','rb-workspace-rail'); workspaceRail.setAttribute('aria-label',this.strings.workspaceRailLabel);
         const workspaceTools=[
@@ -2155,19 +2342,28 @@
           ['appearance',this.strings.workspaceToolAppearance,'settings'],
           ['text',this.strings.workspaceToolText,'paragraph'],
           ['media',this.strings.categoryMedia,'image'],
-          ['patterns',this.strings.workspaceToolPatterns,'layers'],
+          ['models',this.ui.models,'layers'], 
           ['review',this.strings.ribbonReview,'search'],
-          ['view',this.strings.ribbonView,'desktop']
+          ['view',this.strings.ribbonView,'desktop'],
+          ['home',this.ui.home,'layers'],
+          ['models',this.ui.models,'layers'],
+          ['library',this.ui.library,'image'],
+          ['assistant',this.ui.assistant,'spark'],
+          ['export',this.ui.export,'file'],
+          ['share',this.ui.share,'share'],
+          ['help',this.ui.help,'help']
         ];
         workspaceTools.forEach(([tool,label,icon])=>{
-          if(tool==='text'){const divider=this.el('span','rb-workspace-rail-divider');divider.setAttribute('aria-hidden','true');workspaceRail.append(divider);}
+          if(tool==='text'||tool==='home'){const divider=this.el('span','rb-workspace-rail-divider');divider.setAttribute('aria-hidden','true');workspaceRail.append(divider);}
           const control=this.el('button','rb-workspace-tool'); control.type='button'; control.dataset.action='workspace-tool'; control.dataset.tool=tool;
-          const pressed=tool==='elements'?(this.activePanel==='elements'&&this.inserterOpen):tool==='structure'?this.activePanel==='structure':tool==='appearance'?(this.inspectorOpen&&!this.previewMode):tool==='text'?this.activeRibbonTab==='home':tool==='media'?this.activeRibbonTab==='media':tool==='patterns'?this.activePanel==='patterns':tool==='review'?this.activeRibbonTab==='review':this.activeRibbonTab==='view';
+          const workspaceViews={models:'models',library:'library',assistant:'assistant',export:'export',share:'share',help:'help'};
+          const pressed=tool==='home'?this.workspaceView==='editor'&&this.activeRibbonTab==='home':Object.prototype.hasOwnProperty.call(workspaceViews,tool)?this.workspaceView===workspaceViews[tool]:tool==='elements'?(this.activePanel==='elements'&&this.inserterOpen):tool==='structure'?this.activePanel==='structure':tool==='appearance'?(this.inspectorOpen&&!this.previewMode):tool==='text'?this.activeRibbonTab==='home':tool==='media'?this.activeRibbonTab==='media':tool==='review'?this.activeRibbonTab==='review':tool==='view'?this.activeRibbonTab==='view':false;
           control.setAttribute('aria-label',label); control.setAttribute('aria-pressed',String(pressed));
           if(tool==='elements'||tool==='appearance')control.setAttribute('aria-expanded',String(pressed));
           if(tool==='elements'||tool==='structure')control.setAttribute('aria-controls','rb-builder-panel-'+this.instance);
           else if(tool==='appearance'&&this.inspectorOpen&&!this.previewMode)control.setAttribute('aria-controls','rb-builder-inspector-'+this.instance);
-          else if(['text','media','patterns','review','view'].includes(tool))control.setAttribute('aria-controls','rb-ribbon-panel-'+this.instance);
+          else if(['text','media','review','view'].includes(tool))control.setAttribute('aria-controls','rb-ribbon-panel-'+this.instance);
+          else if(Object.prototype.hasOwnProperty.call(workspaceViews,tool)||tool==='home')control.setAttribute('aria-controls','rb-workspace-surface-'+this.instance);
           control.append(this.icon(icon,'rb-icon'),this.el('span','rb-workspace-tool-label',label)); workspaceRail.append(control);
         });
         const panelBody=this.el('div','rb-builder-panel-body'); panelBody.id='rb-builder-panel-'+this.instance; panelBody.setAttribute('role','region');
@@ -2178,7 +2374,7 @@
         if (this.inspectorOpen && !this.previewMode) {
           const inspectorSidebar=this.el('aside','rb-builder-inspector-sidebar'); inspectorSidebar.id='rb-builder-inspector-'+this.instance; inspectorSidebar.setAttribute('role','region'); inspectorSidebar.setAttribute('aria-label',this.strings.builderSettings); inspectorSidebar.append(this.renderInspector()); layout.append(inspectorSidebar);
         }
-      } else if (this.activePanel) {
+      } else if (this.workspaceView==='editor' && this.activePanel) {
         const sidebar=this.el('aside','rb-builder-sidebar rb-collapsible-panel');
         const panelBody=this.el('div','rb-builder-panel-body'); panelBody.id='rb-builder-panel-'+this.instance; panelBody.setAttribute('role','region');
         if (this.activePanel==='elements') { panelBody.setAttribute('aria-label',this.strings.builderElements); panelBody.append(inserterMenu); }
@@ -2191,7 +2387,7 @@
       if (this.historyOpen) this.root.append(this.renderDraftHistory());
       const shortcutHelp=this.el('details', 'rb-keyboard-help');
       shortcutHelp.append(this.el('summary', '', this.strings.keyboardShortcutsTitle),this.el('p', 'rb-keyboard-help-text', this.strings.keyboardShortcuts));
-      this.root.append(shortcutHelp);
+      if(this.workspaceView==='editor')this.root.append(shortcutHelp);
       const footText = this.options.connectedSave === true
         ? (this.strings.draftRecoveryHint || 'Uma cópia temporária fica nesta aba; o conteúdo do site só é salvo ao clicar em Salvar.')
         : 'Rascunho em memória · não salva nem publica. O salvamento será conectado numa tarefa posterior.';
@@ -2203,6 +2399,7 @@
       this.updateClipboardButtons();
       this.updateRibbonState();
       if (this.inserterOpen && this.inserterQuery) this.filterInserter();
+      if (this.workspaceView==='models') this.filterWorkspacePatterns();
     }
 
     renderBlockToolbar(node) {

@@ -1,5 +1,7 @@
 # F9-49 — Workspace Office: acesso rápido e galeria de padrões
 
+> **Registro histórico supersedido:** esta descrição corresponde à primeira proposta F9-49, que o usuário considerou insuficiente. A reconstrução posterior está em [F9-50](F9-50-Workspace-Office-Interface-Completa.md); use F9-50 e seu ZIP como referência atual.
+
 **Escopo desta etapa:** aproximar a interface real do BDREditor do protótipo sem simular recursos de servidor ainda inexistentes.
 
 ## Implementado no editor
