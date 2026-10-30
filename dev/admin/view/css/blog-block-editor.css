@@ -606,6 +606,9 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-button-inspector-section{display:grid;gap:.35rem;padding:.25rem 0 .7rem}
 .rb-callout-inspector-section,.rb-details-inspector-section{display:grid;gap:.35rem;padding:.25rem 0 .7rem}
 .rb-quote-inspector-section .rb-help-text,.rb-button-inspector-section .rb-help-text,.rb-callout-inspector-section .rb-help-text{margin:0;color:#687890;font-size:.69rem;line-height:1.45}
+.rb-code-inspector-section{display:grid;gap:.35rem;padding:.25rem 0 .7rem}
+.rb-code-inspector-section .rb-help-text{margin:0;color:#687890;font-size:.69rem;line-height:1.45}
+.rb-inspector-code-editor{min-height:14rem;max-height:40rem;resize:vertical}
 .rb-list-inspector-section{display:grid;gap:.45rem;padding:.35rem 0 .7rem}
 .rb-list-inspector-items{display:grid;gap:.55rem;margin:.1rem 0;padding-left:1.35rem}
 .rb-list-inspector-item{padding-left:.2rem}
