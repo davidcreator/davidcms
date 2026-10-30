@@ -8,6 +8,7 @@
 - A remoção de itens pelo inspetor da lista fica desabilitada quando resta apenas um. O comportamento estrutural existente de `deleteNode()` — criar item fallback ao remover o último item por outras vias — permanece intacto.
 - A toolbar contextual e as ações do inspetor de `core/list` e `core/list-item` recebem rótulos visíveis, no mesmo padrão aplicado a Parágrafo e Heading. O painel de aparência identifica separadamente a lista e o item.
 - Os textos novos estão localizados em português, inglês e espanhol. A implementação permanece no editor compartilhado, sem alterar os fluxos independentes de Pages e Blog.
+- Complemento posterior: F9-56 aplica o mesmo padrão ao bloco `core/quote`.
 
 ## Arquivos completos no pacote
 
