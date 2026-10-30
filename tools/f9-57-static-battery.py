@@ -63,6 +63,8 @@ for name, ok in [
     ('Tablet/Mobile breakpoints override host canvas widths', 'rb-editor-host.rb-editor[data-preview="tablet"] .rb-canvas' in CSS and 'bdre-page-editor.rb-editor[data-preview="mobile"] .rb-canvas' in CSS and 'max-width:768px' in CSS and 'max-width:390px' in CSS),
     ('responsive selectors cover fullscreen viewport modes', 'rb-editor.is-fullscreen[data-preview="tablet"] .rb-builder-layout>.rb-canvas' in CSS and 'rb-editor.is-fullscreen[data-preview="mobile"] .rb-builder-layout>.rb-canvas' in CSS),
     ('preview canvas no longer forces max-width:none with !important', '.rb-preview-canvas{max-width:100%}' in CSS and '.rb-preview-canvas{max-width:none!important}' not in CSS),
+    ('safeActionUrl helper is defined using the URL validator', 'function safeActionUrl(value)' in JS and 'return validActionUrl(value) ? value : null;' in JS),
+    ('all preview URL paths call the defined helper', JS.count('safeActionUrl(') >= 4),
     ('toolbar visible labels stack under icon', 'flex-direction:column' in CSS and '.rb-block-toolbar .rb-button .rb-button-label:not(.rb-sr-only)' in CSS),
     ('icon-only tools receive native hover title and description', "b.setAttribute('title',name+'\\n'+tooltipDescription)" in JS),
 ]:

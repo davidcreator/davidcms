@@ -260,6 +260,10 @@
     try { const parsed = new URL(value); return ['https:', 'http:'].includes(parsed.protocol) && !parsed.username && !parsed.password; } catch (_) { return false; }
   }
 
+  function safeActionUrl(value) {
+    return validActionUrl(value) ? value : null;
+  }
+
   const INLINE_MARKS = ['bold', 'italic', 'underline', 'strike', 'code'];
   const BLOCK_TEXT_TYPES = new Set(['core/paragraph', 'core/heading', 'core/list-item', 'core/quote', 'core/button', 'core/callout', 'core/details', 'core/table-cell', 'core/file', 'core/audio']);
   const INLINE_TAG_MARK = { STRONG: 'bold', B: 'bold', EM: 'italic', I: 'italic', U: 'underline', S: 'strike', DEL: 'strike', CODE: 'code' };
