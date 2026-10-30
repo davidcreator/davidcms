@@ -18,9 +18,9 @@
   const PATTERN_TOOL_DESCRIPTIONS = {pt:{two_columns:'Insere uma seção com duas colunas de conteúdo.',quote_cta:'Insere citação acompanhada de botão de chamada.',section_intro:'Insere título, introdução e separador.',cover_hero:'Insere capa com título, descrição e botão.'},en:{two_columns:'Insert a two-column content section.',quote_cta:'Insert a quote with a call-to-action button.',section_intro:'Insert a heading, introduction and divider.',cover_hero:'Insert a cover with heading, description and button.'},es:{two_columns:'Inserta una sección de contenido en dos columnas.',quote_cta:'Inserta una cita con un botón de llamada a la acción.',section_intro:'Inserta título, introducción y separador.',cover_hero:'Inserta una portada con título, descripción y botón.'}};
   function paragraphInspectorCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
-    if(language.startsWith('es'))return {paragraphTextTitle:'Texto del párrafo',paragraphTextHint:'Edita aquí o directamente en el lienzo. Conserva los formatos en línea existentes.',paragraphAlignment:'Alineación del párrafo',paragraphStyleHeading:'Estilo del párrafo',headingTextTitle:'Texto del encabezado',headingTextHint:'Edita el texto aquí o directamente en el lienzo.',headingStyleHeading:'Estilo del encabezado',headingLevelLabel:'Nivel del encabezado',headingLevels:[['1','H1 · Encabezado 1'],['2','H2 · Encabezado 2'],['3','H3 · Encabezado 3'],['4','H4 · Encabezado 4'],['5','H5 · Encabezado 5'],['6','H6 · Encabezado 6']],paragraphActions:'Acciones del bloque'};
-    if(language.startsWith('en'))return {paragraphTextTitle:'Paragraph text',paragraphTextHint:'Edit here or directly on the canvas. Existing inline formatting is preserved.',paragraphAlignment:'Paragraph alignment',paragraphStyleHeading:'Paragraph style',headingTextTitle:'Heading text',headingTextHint:'Edit the text here or directly on the canvas.',headingStyleHeading:'Heading style',headingLevelLabel:'Heading level',headingLevels:[['1','H1 · Heading 1'],['2','H2 · Heading 2'],['3','H3 · Heading 3'],['4','H4 · Heading 4'],['5','H5 · Heading 5'],['6','H6 · Heading 6']],paragraphActions:'Block actions'};
-    return {paragraphTextTitle:'Texto do parágrafo',paragraphTextHint:'Edite aqui ou diretamente no canvas. As formatações inline existentes serão preservadas.',paragraphAlignment:'Alinhamento do parágrafo',paragraphStyleHeading:'Estilo do parágrafo',headingTextTitle:'Texto do título',headingTextHint:'Edite o texto aqui ou diretamente no canvas.',headingStyleHeading:'Estilo do título',headingLevelLabel:'Nível do título',headingLevels:[['1','H1 · Título 1'],['2','H2 · Título 2'],['3','H3 · Título 3'],['4','H4 · Título 4'],['5','H5 · Título 5'],['6','H6 · Título 6']],paragraphActions:'Ações do bloco'};
+    if(language.startsWith('es'))return {paragraphTextTitle:'Texto del párrafo',paragraphTextHint:'Edita aquí o directamente en el lienzo. Conserva los formatos en línea existentes.',paragraphAlignment:'Alineación del párrafo',paragraphStyleHeading:'Estilo del párrafo',headingTextTitle:'Texto del encabezado',headingTextHint:'Edita el texto aquí o directamente en el lienzo.',headingStyleHeading:'Estilo del encabezado',headingLevelLabel:'Nivel del encabezado',headingLevels:[['1','H1 · Encabezado 1'],['2','H2 · Encabezado 2'],['3','H3 · Encabezado 3'],['4','H4 · Encabezado 4'],['5','H5 · Encabezado 5'],['6','H6 · Encabezado 6']],listItemsTitle:'Elementos de la lista',listItemTextTitle:'Texto del elemento',listItemTextHint:'Edita aquí o directamente en el lienzo.',listItemSingular:'Elemento %1',listType:'Tipo de lista',listUnordered:'Viñetas',listOrdered:'Numerada',listAddItem:'Añadir elemento',listRemoveItem:'Quitar elemento',listActions:'Acciones de la lista',listStyleHeading:'Estilo de la lista',listItemStyleHeading:'Estilo del elemento',paragraphActions:'Acciones del bloque'};
+    if(language.startsWith('en'))return {paragraphTextTitle:'Paragraph text',paragraphTextHint:'Edit here or directly on the canvas. Existing inline formatting is preserved.',paragraphAlignment:'Paragraph alignment',paragraphStyleHeading:'Paragraph style',headingTextTitle:'Heading text',headingTextHint:'Edit the text here or directly on the canvas.',headingStyleHeading:'Heading style',headingLevelLabel:'Heading level',headingLevels:[['1','H1 · Heading 1'],['2','H2 · Heading 2'],['3','H3 · Heading 3'],['4','H4 · Heading 4'],['5','H5 · Heading 5'],['6','H6 · Heading 6']],listItemsTitle:'List items',listItemTextTitle:'List item text',listItemTextHint:'Edit here or directly on the canvas.',listItemSingular:'Item %1',listType:'List type',listUnordered:'Bulleted',listOrdered:'Numbered',listAddItem:'Add item',listRemoveItem:'Remove item',listActions:'List actions',listStyleHeading:'List style',listItemStyleHeading:'List item style',paragraphActions:'Block actions'};
+    return {paragraphTextTitle:'Texto do parágrafo',paragraphTextHint:'Edite aqui ou diretamente no canvas. As formatações inline existentes serão preservadas.',paragraphAlignment:'Alinhamento do parágrafo',paragraphStyleHeading:'Estilo do parágrafo',headingTextTitle:'Texto do título',headingTextHint:'Edite o texto aqui ou diretamente no canvas.',headingStyleHeading:'Estilo do título',headingLevelLabel:'Nível do título',headingLevels:[['1','H1 · Título 1'],['2','H2 · Título 2'],['3','H3 · Título 3'],['4','H4 · Título 4'],['5','H5 · Título 5'],['6','H6 · Título 6']],listItemsTitle:'Itens da lista',listItemTextTitle:'Texto do item',listItemTextHint:'Edite aqui ou diretamente no canvas.',listItemSingular:'Item %1',listType:'Tipo de lista',listUnordered:'Marcadores',listOrdered:'Numerada',listAddItem:'Adicionar item',listRemoveItem:'Remover item',listActions:'Ações da lista',listStyleHeading:'Estilo da lista',listItemStyleHeading:'Estilo do item',paragraphActions:'Ações do bloco'};
   }
 
   const TRANSFORMABLE_TEXT = new Set(['core/paragraph', 'core/heading', 'core/quote', 'core/button']);
@@ -2417,7 +2417,7 @@
     renderBlockToolbar(node) {
       const toolbar = this.el('div', 'rb-block-toolbar'); toolbar.setAttribute('role','toolbar'); toolbar.setAttribute('aria-label', this.label(node.type) + ' · ' + this.strings.transform);
       const path = this.findPath(this.state.blocks, node.id);
-      const labelledTextToolbar=['core/paragraph','core/heading'].includes(node.type);
+      const labelledTextToolbar=['core/paragraph','core/heading','core/list','core/list-item'].includes(node.type);
       if(labelledTextToolbar)toolbar.classList.add('rb-labeled-text-toolbar');
       const drag = this.el('span','rb-drag-handle'); drag.append(this.icon('grip','rb-icon')); drag.draggable = true; drag.dataset.dragHandle = '1'; drag.title = this.strings.dragHint; drag.setAttribute('aria-hidden','true'); toolbar.append(drag,this.el('span','rb-sr-only',this.strings.dragHint));
       const up = this.button(this.strings.moveUp, 'move-up', { nodeId:node.id, showLabel:labelledTextToolbar }); up.setAttribute('aria-label', this.strings.moveUp); up.disabled = !path || path.index === 0; toolbar.append(up);
@@ -2655,6 +2655,8 @@
       const current=node.attributes.appearance||{};
       if(node.type==='core/paragraph')panel.append(this.el('h4','rb-text-block-inspector-heading',this.strings.paragraphStyleHeading));
       else if(node.type==='core/heading')panel.append(this.el('h4','rb-text-block-inspector-heading',this.strings.headingStyleHeading));
+      else if(node.type==='core/list')panel.append(this.el('h4','rb-text-block-inspector-heading',this.strings.listStyleHeading));
+      else if(node.type==='core/list-item')panel.append(this.el('h4','rb-text-block-inspector-heading',this.strings.listItemStyleHeading));
       const addColor=(label,key,fallback)=>{const wrap=this.el('label','rb-field rb-appearance-field');wrap.append(this.el('span','',label));const input=this.el('input','rb-input rb-appearance-color');input.type='color';input.value=current[key]||fallback;input.dataset.appearance=key;input.dataset.nodeId=node.id;wrap.append(input);panel.append(wrap);};
       const addNumber=(label,key,min,max,fallback)=>{const wrap=this.el('label','rb-field rb-appearance-field');wrap.append(this.el('span','',label));const input=this.el('input','rb-input');input.type='number';input.min=String(min);input.max=String(max);input.step='1';input.value=String(current[key]===undefined?fallback:current[key]);input.dataset.appearance=key;input.dataset.nodeId=node.id;wrap.append(input);panel.append(wrap);};
       addColor(this.strings.customTextColor||'Text color','text_color','#202124');
@@ -2697,18 +2699,29 @@
         input.dataset.attribute = key; input.dataset.nodeId = found.node.id; wrap.append(input); contentPanel.append(wrap);
       };
       const n = found.node;
-      if(['core/paragraph','core/heading'].includes(n.type)){
-        const isParagraph=n.type==='core/paragraph';
-        const title=isParagraph?this.strings.paragraphTextTitle:this.strings.headingTextTitle;
-        const hint=isParagraph?this.strings.paragraphTextHint:this.strings.headingTextHint;
-        const textSection=this.el('section','rb-text-block-inspector-section '+(isParagraph?'rb-paragraph-inspector-section':'rb-heading-inspector-section'));
+      if(['core/paragraph','core/heading','core/list-item'].includes(n.type)){
+        const isParagraph=n.type==='core/paragraph', isHeading=n.type==='core/heading';
+        const title=isParagraph?this.strings.paragraphTextTitle:(isHeading?this.strings.headingTextTitle:this.strings.listItemTextTitle);
+        const hint=isParagraph?this.strings.paragraphTextHint:(isHeading?this.strings.headingTextHint:this.strings.listItemTextHint);
+        const sectionClass=isParagraph?'rb-paragraph-inspector-section':(isHeading?'rb-heading-inspector-section':'rb-list-item-inspector-section');
+        const textSection=this.el('section','rb-text-block-inspector-section '+sectionClass);
         textSection.append(this.el('h4','rb-text-block-inspector-heading',title));
         const textEditor=this.el('div','rb-content rb-inspector-text-block-content');textEditor.contentEditable='true';textEditor.dataset.editContent=n.id;textEditor.dataset.inspectorContent='1';textEditor.setAttribute('role','textbox');textEditor.setAttribute('aria-multiline','true');textEditor.setAttribute('aria-label',title);textEditor.setAttribute('data-placeholder',this.strings.placeholder||'');buildInlineDom(textEditor,n.content);
         textSection.append(textEditor,this.el('p','rb-help-text',hint));contentPanel.append(textSection);
         if(isParagraph)addField(this.strings.paragraphAlignment,'align',n.attributes.align||(n.attributes.appearance&&n.attributes.appearance.text_align)||'left','text',[['left',this.strings.media.alignments.left],['center',this.strings.media.alignments.center],['right',this.strings.media.alignments.right]]);
-        else addField(this.strings.headingLevelLabel,'level',n.attributes.level,'text',this.strings.headingLevels);
+        else if(isHeading)addField(this.strings.headingLevelLabel,'level',n.attributes.level,'text',this.strings.headingLevels);
+        else if(found.parent&&found.parent.type==='core/list'){const itemActions=this.el('div','rb-list-item-inspector-actions');const removeItem=this.button(this.strings.listRemoveItem,'delete',{nodeId:n.id,showLabel:true});removeItem.disabled=found.parent.children.length<=1;itemActions.append(removeItem);contentPanel.append(itemActions);}
       }
-      if (n.type === 'core/list') addField('Tipo de lista', 'ordered', n.attributes.ordered ? 'true' : 'false', 'text', [['false','Marcadores'],['true','Numerada']]);
+      if (n.type === 'core/list') {
+        addField(this.strings.listType, 'ordered', n.attributes.ordered ? 'true' : 'false', 'text', [['false',this.strings.listUnordered],['true',this.strings.listOrdered]]);
+        const items=this.el('section','rb-list-inspector-section');items.append(this.el('h4','rb-text-block-inspector-heading',this.strings.listItemsTitle));
+        const itemList=this.el(n.attributes.ordered?'ol':'ul','rb-list-inspector-items');
+        n.children.filter((child)=>child.type==='core/list-item').forEach((child,index)=>{
+          const row=this.el('li','rb-list-inspector-item');const editor=this.el('div','rb-content rb-inspector-text-block-content');editor.contentEditable='true';editor.dataset.editContent=child.id;editor.dataset.inspectorContent='1';editor.setAttribute('role','textbox');editor.setAttribute('aria-multiline','true');const itemTitle=this.strings.listItemSingular.replace('%1',String(index+1));editor.setAttribute('aria-label',itemTitle);editor.setAttribute('data-placeholder',this.strings.placeholder||'');buildInlineDom(editor,child.content);
+          const removeItem=this.button(this.strings.listRemoveItem,'delete',{nodeId:child.id,showLabel:true});removeItem.disabled=n.children.length<=1;row.append(editor,removeItem);itemList.append(row);
+        });
+        items.append(itemList);const addItem=this.button(this.strings.listAddItem,'insert',{type:'core/list-item',afterId:n.id,showLabel:true});items.append(addItem);contentPanel.append(items);
+      }
       if (n.type === 'core/file') {
         addField(this.strings.file.source, 'src', n.attributes.src, 'text');
         if (this.options.filePicker === true || (this.options.filePicker !== false && this.options.mediaPickers !== false)) contentPanel.append(this.button(this.strings.file.choose, 'file-media', {nodeId:n.id}));
@@ -2768,9 +2781,9 @@
         const removeColumn=this.button(this.strings.columnsRemove||'Remover última coluna','columns-remove',{nodeId:n.id});removeColumn.disabled=n.children.length<=2;columnActions.append(removeColumn);
         contentPanel.append(columnActions,this.el('p','rb-help-text',this.strings.columnsLimit||'As colunas disponíveis são 2 ou 3. Remover a última coluna pode ser desfeito com Desfazer.'));
       }
-      const labelledTextActions=['core/paragraph','core/heading'].includes(n.type);
+      const labelledTextActions=['core/paragraph','core/heading','core/list','core/list-item'].includes(n.type);
       const actions = this.el('div', 'rb-inspector-actions'+(labelledTextActions?' rb-text-block-inspector-actions':''));
-      if(labelledTextActions)actions.append(this.el('h4','rb-text-block-inspector-heading',this.strings.paragraphActions));
+      if(labelledTextActions)actions.append(this.el('h4','rb-text-block-inspector-heading',n.type==='core/list'?this.strings.listActions:this.strings.paragraphActions));
       const fixedColumn = found.parent && found.parent.type === 'core/columns' && n.type === 'core/column';
       const lastRequiredChild = found.parent && ['core/gallery','core/cover'].includes(found.parent.type) && found.parent.children.length <= 1;
       const remove = this.button(this.strings.remove, 'delete', { nodeId:n.id, showLabel:labelledTextActions }); remove.disabled = !!fixedColumn || !!lastRequiredChild;

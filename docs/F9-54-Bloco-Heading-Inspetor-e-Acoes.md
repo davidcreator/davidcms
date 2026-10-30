@@ -7,6 +7,7 @@
 - A aba **Personalizar** identifica os controles de estilo do Heading; alinhamento permanece disponível como propriedade visual do bloco.
 - A toolbar contextual do Heading agora apresenta rótulos visíveis para mover, duplicar, copiar, personalizar, transformar, remover e inserir. O inspetor também nomeia as ações estruturais.
 - O bloco Parágrafo mantém os recursos da F9-53. O editor compartilhado continua usando os próprios documentos/configurações de Pages e Blog.
+- Complemento posterior: F9-55 aplica o mesmo padrão ao contêiner `core/list` e aos itens `core/list-item`.
 
 ## Arquivos completos no pacote
 
