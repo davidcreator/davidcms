@@ -588,7 +588,7 @@
       this.slashTrigger = null;
       this.inserterQuery = '';
       this.statusMessage = '';
-      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',importUnavailable:'Importador indisponível.',importError:'Falha ao importar arquivo.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',copyBlock:'Copiar bloco',pasteBlock:'Colar bloco',statusCopied:'Bloco copiado para este editor.',statusPasted:'Bloco colado.',pasteUnavailable:'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.',navigationPath:'Caminho do bloco selecionado',navigationRow:'Linha',navigationCell:'Célula',statusFocusChanged:'Foco movido para o bloco selecionado.',statusOutlineChanged:'Bloco selecionado atualizado pela navegação da estrutura.',indentBlock:'Indentar dentro do bloco anterior',outdentBlock:'Desindentar após o bloco pai',statusIndented:'Bloco movido para dentro do bloco anterior.',statusOutdented:'Bloco movido para depois do pai.',hierarchyMoveUnavailable:'Esta movimentação não é permitida neste contexto ou ultrapassaria um limite do documento.',outlineKeyboardHint:'↑/↓ navegar · → primeiro filho · ← bloco pai · Home/End início/fim',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',fullscreenEnter:fullscreenCopy().enter,fullscreenExit:fullscreenCopy().exit,fullscreenDialog:fullscreenCopy().dialog,builderElements:fullscreenCopy().elements,builderStructure:fullscreenCopy().structure,builderSettings:fullscreenCopy().settings,canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},callout:{tone:'Estilo do aviso',defaultText:'Adicione uma informação importante.',tones:{info:'Informação',success:'Sucesso',warning:'Atenção',danger:'Crítico'}},details:{summaryLabel:'Título da seção expansível',summaryDefault:'Mais informações',defaultText:'Adicione os detalhes aqui.'},spacer:{heightLabel:'Altura do espaçador',heights:{'16':'Muito pequeno · 16 px','32':'Pequeno · 32 px','48':'Médio · 48 px','64':'Grande · 64 px','96':'Muito grande · 96 px'}},preformatted:{label:'Código pré-formatado',defaultText:'',tooLarge:'O bloco de código excede o limite de 256 KiB.'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},columnsAdd:'Adicionar coluna',columnsRemove:'Remover última coluna',columnsLimit:'As colunas disponíveis são 2 ou 3. Remover a última coluna pode ser desfeito com Desfazer.',columnDefault:'Coluna',typeLabels:{}}, this.options.strings || {});
+      this.strings = Object.assign({bold:'Negrito',italic:'Itálico',underline:'Sublinhado',strike:'Tachado',code:'Código',link:'Link',linkPlaceholder:'https:// ou /caminho',applyLink:'Aplicar link',removeLink:'Remover link',invalidLink:'URL de link inválida.',toolbar:'Formatação inline',textLabel:'Texto do bloco',placeholder:'Digite o texto…',addBlock:'Adicionar bloco',searchBlocks:'Buscar blocos…',noBlocks:'Nenhum bloco encontrado.',categoryContent:'Conteúdo',categoryMedia:'Mídia',categoryLayout:'Layout',outline:'Estrutura do documento',outlineLabel:'Título na estrutura',initialInvalid:'Documento inicial inválido; a fonte foi preservada para revisão e a edição está bloqueada',documentTooLarge:'Documento maior que o limite de 4 MiB.',importUnavailable:'Importador indisponível.',importError:'Falha ao importar arquivo.',outlineEmpty:'O documento ainda não tem blocos.',moveUp:'Mover para cima',moveDown:'Mover para baixo',duplicate:'Duplicar',transform:'Transformar bloco',remove:'Remover bloco',addAfter:'Inserir depois deste bloco',dragHint:'Arraste para reordenar; Alt+↑/↓ também move.',transformHint:'Transformação preserva somente conteúdo textual compatível.',insertEmpty:'Nenhum tipo de bloco pode ser inserido neste ponto.',statusInserted:'Bloco inserido.',statusMoved:'Bloco movido.',statusDuplicated:'Bloco duplicado.',statusTransformed:'Bloco transformado.',statusRemoved:'Bloco removido.',statusUndo:'Alteração desfeita.',statusRedo:'Alteração refeita.',undo:'Desfazer',redo:'Refazer',copyBlock:'Copiar bloco',pasteBlock:'Colar bloco',statusCopied:'Bloco copiado para este editor.',statusPasted:'Bloco colado.',pasteUnavailable:'Não é possível colar este bloco neste ponto ou o limite do documento foi atingido.',navigationPath:'Caminho do bloco selecionado',navigationRow:'Linha',navigationCell:'Célula',statusFocusChanged:'Foco movido para o bloco selecionado.',statusOutlineChanged:'Bloco selecionado atualizado pela navegação da estrutura.',indentBlock:'Indentar dentro do bloco anterior',outdentBlock:'Desindentar após o bloco pai',statusIndented:'Bloco movido para dentro do bloco anterior.',statusOutdented:'Bloco movido para depois do pai.',hierarchyMoveUnavailable:'Esta movimentação não é permitida neste contexto ou ultrapassaria um limite do documento.',outlineKeyboardHint:'↑/↓ navegar · → primeiro filho · ← bloco pai · Home/End início/fim',keyboardShortcutsTitle:'Atalhos de teclado',keyboardShortcuts:'Ctrl/⌘+B negrito · Ctrl/⌘+I itálico · Ctrl/⌘+U sublinhado · Ctrl/⌘+K link · Ctrl/⌘+Z desfazer · Ctrl/⌘+Shift+Z ou Ctrl+Y refazer · Alt+↑/↓ mover bloco · / inserir bloco',previewDesktop:'Desktop',previewTablet:'Tablet',previewMobile:'Celular',editorTools:'Ferramentas do editor de blocos',fullscreenEnter:fullscreenCopy().enter,fullscreenExit:fullscreenCopy().exit,fullscreenDialog:fullscreenCopy().dialog,builderElements:fullscreenCopy().elements,builderStructure:fullscreenCopy().structure,builderSettings:fullscreenCopy().settings,workspaceRailLabel:"Ferramentas do espaço de trabalho",workspaceToolText:"Texto",workspaceToolAppearance:"Aparência",workspaceToolPatterns:"Padrões",canvas:'Canvas de conteúdo',canvasEmpty:'Escolha um bloco no inserter para começar.',inspector:'Inspetor de bloco',inspectorEmpty:'Selecione um bloco para editar seus atributos.',columnCount:'colunas · empilham em telas estreitas',media:{caption:'Legenda',alignment:'Alinhamento da imagem',imageSize:'Tamanho',mobileSize:'Tamanho no celular',galleryColumns:'Colunas da galeria',source:'Caminho local da imagem',alt:'Texto alternativo',title:'Título da imagem',videoPreview:'Prévia do vídeo',videoPreviewHint:'Prévia administrativa segura; a reprodução ocorre na página pública.',placeholder:'Selecione uma imagem na biblioteca.',alignments:{left:'Esquerda',center:'Centro',right:'Direita',content:'Conteúdo',wide:'Largo',full:'Largura total'},sizes:{small:'Pequeno',medium:'Médio',large:'Grande',full:'Largura total'},mobileSizes:{full:'Largura total',large:'Grande',medium:'Médio'}},patternsCategory:'Padrões de layout',patternHint:'Padrões locais prontos para inserir; não são salvos como templates globais.',patternLabels:{two_columns:'Destaque em duas colunas',quote_cta:'Citação e chamada',section_intro:'Introdução de seção',cover_hero:'Capa de destaque'},file:{source:'Caminho local do arquivo',choose:'Selecionar arquivo'},audio:{source:'Caminho local do áudio',choose:'Selecionar áudio'},callout:{tone:'Estilo do aviso',defaultText:'Adicione uma informação importante.',tones:{info:'Informação',success:'Sucesso',warning:'Atenção',danger:'Crítico'}},details:{summaryLabel:'Título da seção expansível',summaryDefault:'Mais informações',defaultText:'Adicione os detalhes aqui.'},spacer:{heightLabel:'Altura do espaçador',heights:{'16':'Muito pequeno · 16 px','32':'Pequeno · 32 px','48':'Médio · 48 px','64':'Grande · 64 px','96':'Muito grande · 96 px'}},preformatted:{label:'Código pré-formatado',defaultText:'',tooLarge:'O bloco de código excede o limite de 256 KiB.'},table:{header:'Primeira linha é cabeçalho',addRow:'Adicionar linha',removeRow:'Remover última linha',addColumn:'Adicionar coluna',removeColumn:'Remover última coluna',toggleHeader:'Alternar cabeçalho',cellLabel:'Célula %1$d, %2$d'},columnsAdd:'Adicionar coluna',columnsRemove:'Remover última coluna',columnsLimit:'As colunas disponíveis são 2 ou 3. Remover a última coluna pode ser desfeito com Desfazer.',columnDefault:'Coluna',typeLabels:{}}, this.options.strings || {});
       const rawInitial = this.options.document || { format_version: 1, blocks: [] };
       const initial = upgradeDocument(rawInitial);
       const validation = validateDocument(initial, this.allowPageMedia);
@@ -797,6 +797,44 @@
       this.root.addEventListener('dragend', () => { this.dragId = null; });
     }
 
+    restoreWorkspacePanelAfterInserter() {
+      if (this.inserterHasPreviousPanel) this.activePanel = this.inserterPreviousPanel;
+      this.inserterOpen = false;
+      this.inserterPreviousPanel = null;
+      this.inserterHasPreviousPanel = false;
+      this.inserterReturnFocus = null;
+      this.insertAfterId = null;
+      this.slashTrigger = null;
+      this.inserterQuery = '';
+    }
+
+    activateWorkspaceTool(button) {
+      const tool = button.dataset.tool;
+      if (tool === 'elements') {
+        if (this.activePanel === 'elements' && this.inserterOpen) { this.closeInserter(false); const target=Array.from(this.root.querySelectorAll('[data-action="workspace-tool"]')).find((item)=>item.dataset.tool==='elements'); if(target)target.focus(); }
+        else { this.previewMode = false; this.openInserter(this.selectedId, false, button); }
+        return;
+      }
+      const wasPreview = this.previewMode;
+      if (tool !== 'view') this.previewMode = false;
+      if (this.inserterOpen) this.restoreWorkspacePanelAfterInserter();
+      if (tool === 'structure') {
+        this.activePanel = 'structure';
+      } else if (tool === 'patterns') {
+        this.activePanel = 'patterns';
+        this.activeRibbonTab = 'layout';
+      } else if (tool === 'appearance') {
+        this.inspectorOpen = wasPreview ? true : !this.inspectorOpen;
+      } else {
+        const tabs = { text:'home', media:'media', review:'review', view:'view' };
+        if (!tabs[tool]) return;
+        this.activeRibbonTab = tabs[tool];
+      }
+      this.render();
+      const focusTarget = Array.from(this.root.querySelectorAll('[data-action="workspace-tool"]')).find((item) => item.dataset.tool === tool);
+      if (focusTarget) focusTarget.focus();
+    }
+
     action(name, button) {
       if (this.locked) return;
       if (name === 'insert') this.insert(button.dataset.type, button.dataset.count);
@@ -811,6 +849,7 @@
         else{this.closeInserter(false);const trigger=this.root.querySelector('.rb-ribbon [data-action="toggle-inserter"]')||this.root.querySelector('[data-action="toggle-inserter"]');if(trigger)trigger.focus();}
       }
       else if (name === 'ribbon-tab') { this.activeRibbonTab = button.dataset.tab; this.render(); }
+      else if (name === 'workspace-tool') { this.activateWorkspaceTool(button); }
       else if (name === 'import-file') { const input=this.root.querySelector('[data-import-file]'); if (input) input.click(); }
       else if (name === 'export-document') this.exportDocumentFile();
       else if (name === 'toggle-revision-history') { this.historyOpen = !this.historyOpen; this.render(); }
@@ -1123,6 +1162,48 @@
       return null;
     }
 
+    renderPatternLibrary() {
+      const panel=this.el('section','rb-pattern-library');
+      const heading=this.el('h3','rb-pattern-library-title',this.strings.workspaceToolPatterns||this.strings.patternsCategory||'Padrões');
+      panel.append(heading,this.el('p','rb-pattern-library-hint',this.strings.patternHint||'Padrões reutilizáveis de blocos; não são documentos completos.'));
+      if (this.patternLoadError) panel.append(this.el('p','rb-pattern-library-warning',this.strings.patternError||'Não foi possível carregar padrões salvos.'));
+      const afterId=this.selectedId||null;
+      const allowed=this.canInsertPatterns(afterId);
+      const quick=this.el('div','rb-pattern-library-grid');
+      const labels=this.strings.patternLabels||{};
+      const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'').toLowerCase();
+      const patternLanguage=language.startsWith('es')?'es':(language.startsWith('en')?'en':'pt');
+      const descriptions=PATTERN_TOOL_DESCRIPTIONS[patternLanguage];
+      const icons={two_columns:'columns',quote_cta:'quote',section_intro:'group',cover_hero:'cover'};
+      ['two_columns','quote_cta','section_intro','cover_hero'].forEach((pattern)=>{
+        const label=labels[pattern]||pattern;
+        const card=this.button(label,'insert-pattern',{pattern,icon:icons[pattern]||'layers'});
+        card.classList.add('rb-pattern-library-card');
+        const description=descriptions[pattern]||'';
+        if(description)card.append(this.el('span','rb-pattern-library-description',description));
+        card.disabled=!allowed;
+        quick.append(card);
+      });
+      panel.append(quick);
+      const savedTitle=this.el('div','rb-pattern-library-section-title');
+      savedTitle.append(this.el('strong','',this.strings.savedPatternsCategory||'Padrões salvos'));
+      if(this.patternConfig.canModify&&this.selectedId)savedTitle.append(this.button(this.strings.saveAsPattern||'Salvar seleção','save-selected-pattern',{nodeId:this.selectedId,icon:'plus'}));
+      panel.append(savedTitle);
+      if(!this.patternConfig.canRead){panel.append(this.el('p','rb-muted',this.strings.patternReadUnavailable||'A biblioteca de padrões não está habilitada para este usuário.'));return panel;}
+      if(!this.savedPatterns.length){panel.append(this.el('p','rb-muted',this.strings.savedPatternsEmpty||'Ainda não há padrões salvos.'));return panel;}
+      const savedGrid=this.el('div','rb-pattern-library-grid rb-pattern-library-saved');
+      const allowedTypes=new Set(this.insertTypes(afterId).map((item)=>item.type));
+      this.savedPatterns.forEach((item)=>{
+        const card=this.el('div','rb-pattern-library-card rb-pattern-library-saved-card');
+        const insert=this.button(item.name,'insert-saved-pattern',{patternId:String(item.pattern_id),icon:'layers'});
+        insert.classList.add('rb-pattern-library-insert');insert.disabled=!allowedTypes.has(item.root_type);card.append(insert);
+        if(this.patternConfig.canModify){const actions=this.el('div','rb-pattern-card-actions');actions.append(this.button(this.strings.renamePattern||'Renomear','rename-saved-pattern',{patternId:String(item.pattern_id)}),this.button(this.strings.deletePattern||'Excluir','delete-saved-pattern',{patternId:String(item.pattern_id)}));card.append(actions);}
+        savedGrid.append(card);
+      });
+      panel.append(savedGrid);
+      return panel;
+    }
+
     renderInserter(forceOpen) {
       const menu = this.el('div', 'rb-inserter-menu'); menu.hidden = !(forceOpen || this.inserterOpen);
       menu.setAttribute('role', 'region'); menu.setAttribute('aria-label', this.strings.addBlock);
@@ -1186,7 +1267,7 @@
       this.activePanel='elements';this.inserterOpen=true;this.insertAfterId=afterId||null;
       this.inserterReturnFocus = fromSlash
         ? { type:'editor', id:afterId }
-        : (opener && opener.dataset.afterId ? { type:'block', id:opener.dataset.afterId } : (opener && opener.dataset.panel ? { type:'panel', panel:opener.dataset.panel } : { type:'top' }));
+        : (opener && opener.dataset.afterId ? { type:'block', id:opener.dataset.afterId } : (opener && opener.dataset.workspaceTool ? { type:'workspace', tool:opener.dataset.workspaceTool } : (opener && opener.dataset.panel ? { type:'panel', panel:opener.dataset.panel } : { type:'top' })));
       if (!fromSlash) this.slashTrigger = null;
       this.inserterQuery = ''; this.render();
       const search = this.root.querySelector('[data-inserter-search]'); if (search) search.focus();
@@ -1202,6 +1283,7 @@
         if (restore && restore.type === 'editor') target = this.findEditor(restore.id);
         else if (restore && restore.type === 'block') target = Array.from(this.root.querySelectorAll('[data-action="toggle-inserter"]')).find((button) => button.dataset.afterId === restore.id) || null;
         else if (restore && restore.type === 'panel') target = Array.from(this.root.querySelectorAll('[data-action="builder-panel"]')).find((button)=>button.dataset.panel===restore.panel)||null;
+        else if (restore && restore.type === 'workspace') target = Array.from(this.root.querySelectorAll('[data-action="workspace-tool"]')).find((button)=>button.dataset.tool===restore.tool)||null;
         else target = this.root.querySelector('.rb-ribbon [data-action="toggle-inserter"]')||this.root.querySelector('.rb-toolbar [data-action="toggle-inserter"]');
         if (!target) target = this.root.querySelector('[data-action="toggle-inserter"]');
         if (target) target.focus();
@@ -2026,7 +2108,13 @@
       const masthead = this.el('div','rb-editor-masthead');
       const identity = this.el('div','rb-editor-identity'); identity.append(this.icon('layers','rb-brand-icon'));
       const identityText = this.el('div','rb-editor-identity-copy'); identityText.append(this.el('strong','rb-editor-brand','BDREditor'),this.el('span','rb-editor-subtitle',this.strings.editorTools));
-      identity.append(identityText); masthead.append(identity); this.root.append(masthead);
+      identity.append(identityText);
+      const quickActions=this.el('div','rb-editor-quick-actions');
+      const quickFind=this.button(this.strings.findReplaceButton||'Localizar e substituir','toggle-find-replace',{icon:'search'}); quickActions.append(quickFind);
+      const quickUndo=this.button(this.strings.undo,'undo'); quickUndo.dataset.history='undo'; quickActions.append(quickUndo);
+      const quickRedo=this.button(this.strings.redo,'redo'); quickRedo.dataset.history='redo'; quickActions.append(quickRedo);
+      quickActions.append(this.button(this.strings.exportDocument||'Exportar BDRE','export-document',{icon:'file'}));
+      masthead.append(identity,quickActions); this.root.append(masthead);
       if (this.fullscreen && this.options.workspaceContext) {
         const context=this.options.workspaceContext;
         const contextBar=this.el('section','rb-page-context'); contextBar.setAttribute('role','group'); contextBar.setAttribute('aria-label',context.pageLabel || 'Page context');
@@ -2060,17 +2148,41 @@
       if (this.importNotices.length) { const notices=this.el('div','rb-import-notices'); notices.setAttribute('role','status'); this.importNotices.forEach((message)=>{const note=this.el('p','rb-import-notice',message);notices.append(note);}); this.root.append(notices); }
       if (this.fullscreen) {
         const sidebar=this.el('aside','rb-builder-sidebar rb-collapsible-panel');
+        const workspaceRail=this.el('nav','rb-workspace-rail'); workspaceRail.setAttribute('aria-label',this.strings.workspaceRailLabel);
+        const workspaceTools=[
+          ['elements',this.strings.builderElements,'layers'],
+          ['structure',this.strings.builderStructure,'outline'],
+          ['appearance',this.strings.workspaceToolAppearance,'settings'],
+          ['text',this.strings.workspaceToolText,'paragraph'],
+          ['media',this.strings.categoryMedia,'image'],
+          ['patterns',this.strings.workspaceToolPatterns,'layers'],
+          ['review',this.strings.ribbonReview,'search'],
+          ['view',this.strings.ribbonView,'desktop']
+        ];
+        workspaceTools.forEach(([tool,label,icon])=>{
+          if(tool==='text'){const divider=this.el('span','rb-workspace-rail-divider');divider.setAttribute('aria-hidden','true');workspaceRail.append(divider);}
+          const control=this.el('button','rb-workspace-tool'); control.type='button'; control.dataset.action='workspace-tool'; control.dataset.tool=tool;
+          const pressed=tool==='elements'?(this.activePanel==='elements'&&this.inserterOpen):tool==='structure'?this.activePanel==='structure':tool==='appearance'?(this.inspectorOpen&&!this.previewMode):tool==='text'?this.activeRibbonTab==='home':tool==='media'?this.activeRibbonTab==='media':tool==='patterns'?this.activePanel==='patterns':tool==='review'?this.activeRibbonTab==='review':this.activeRibbonTab==='view';
+          control.setAttribute('aria-label',label); control.setAttribute('aria-pressed',String(pressed));
+          if(tool==='elements'||tool==='appearance')control.setAttribute('aria-expanded',String(pressed));
+          if(tool==='elements'||tool==='structure')control.setAttribute('aria-controls','rb-builder-panel-'+this.instance);
+          else if(tool==='appearance'&&this.inspectorOpen&&!this.previewMode)control.setAttribute('aria-controls','rb-builder-inspector-'+this.instance);
+          else if(['text','media','patterns','review','view'].includes(tool))control.setAttribute('aria-controls','rb-ribbon-panel-'+this.instance);
+          control.append(this.icon(icon,'rb-icon'),this.el('span','rb-workspace-tool-label',label)); workspaceRail.append(control);
+        });
         const panelBody=this.el('div','rb-builder-panel-body'); panelBody.id='rb-builder-panel-'+this.instance; panelBody.setAttribute('role','region');
         if (this.activePanel==='elements') { panelBody.setAttribute('aria-label',this.strings.builderElements); panelBody.append(inserterMenu); }
+        else if (this.activePanel==='patterns') { panelBody.setAttribute('aria-label',this.strings.workspaceToolPatterns||this.strings.patternsCategory); panelBody.append(this.renderPatternLibrary()); }
         else { panelBody.setAttribute('aria-label',this.strings.builderStructure); panelBody.append(this.renderOutline()); }
-        sidebar.append(panelBody); layout.append(sidebar,canvas);
+        sidebar.append(workspaceRail,panelBody); layout.append(sidebar,canvas);
         if (this.inspectorOpen && !this.previewMode) {
-          const inspectorSidebar=this.el('aside','rb-builder-inspector-sidebar'); inspectorSidebar.setAttribute('role','region'); inspectorSidebar.setAttribute('aria-label',this.strings.builderSettings); inspectorSidebar.append(this.renderInspector()); layout.append(inspectorSidebar);
+          const inspectorSidebar=this.el('aside','rb-builder-inspector-sidebar'); inspectorSidebar.id='rb-builder-inspector-'+this.instance; inspectorSidebar.setAttribute('role','region'); inspectorSidebar.setAttribute('aria-label',this.strings.builderSettings); inspectorSidebar.append(this.renderInspector()); layout.append(inspectorSidebar);
         }
       } else if (this.activePanel) {
         const sidebar=this.el('aside','rb-builder-sidebar rb-collapsible-panel');
         const panelBody=this.el('div','rb-builder-panel-body'); panelBody.id='rb-builder-panel-'+this.instance; panelBody.setAttribute('role','region');
         if (this.activePanel==='elements') { panelBody.setAttribute('aria-label',this.strings.builderElements); panelBody.append(inserterMenu); }
+        else if (this.activePanel==='patterns') { panelBody.setAttribute('aria-label',this.strings.workspaceToolPatterns||this.strings.patternsCategory); panelBody.append(this.renderPatternLibrary()); }
         else if (this.activePanel==='structure') { panelBody.setAttribute('aria-label',this.strings.builderStructure); panelBody.append(this.renderOutline()); }
         else { panelBody.setAttribute('aria-label',this.strings.builderSettings); panelBody.append(this.renderInspector()); }
         const close=this.button(this.strings.closePanel || 'Fechar painel','builder-panel',{panel:this.activePanel,icon:'collapse'}); close.classList.add('rb-panel-close'); panelBody.prepend(close); sidebar.append(panelBody); layout.append(sidebar,canvas);
