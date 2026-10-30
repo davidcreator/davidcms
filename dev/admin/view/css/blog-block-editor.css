@@ -69,7 +69,8 @@
 .rb-inserter-empty{margin:0;padding:.35rem;color:var(--rb-muted);font-size:.82rem}
 .rb-block-toolbar{display:none;flex-wrap:wrap;align-items:center;gap:.28rem;padding:.35rem;margin:0 0 .45rem;border:1px solid #d8e1f0;border-radius:.4rem;background:#f8faff}
 .rb-block.is-selected>.rb-block-toolbar{display:flex}
-.rb-block-toolbar .rb-button{padding:.26rem .42rem;font-size:.75rem}
+.rb-block-toolbar .rb-button{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:.14rem;padding:.28rem .42rem;font-size:.75rem;line-height:1.1;text-align:center}
+.rb-block-toolbar .rb-button .rb-button-label:not(.rb-sr-only){display:block;max-width:6.5rem;font-size:.61rem;line-height:1.1;text-align:center;white-space:normal}
 .rb-drag-handle{cursor:grab;touch-action:none}
 .rb-drag-handle:active{cursor:grabbing}
 .rb-transform-wrap{min-width:8rem}
@@ -600,7 +601,9 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-text-block-inspector-actions>.rb-text-block-inspector-heading{grid-column:1/-1;margin-top:.15rem}
 .rb-text-block-inspector-actions .rb-button{display:inline-flex;align-items:center;justify-content:center;gap:.3rem;min-height:2.2rem;padding:.38rem .42rem;font-size:.7rem;line-height:1.2;white-space:normal}
 .rb-text-block-inspector-actions .rb-button .rb-icon{width:.95rem;height:.95rem;flex:0 0 auto}
-.rb-quote-inspector-section{display:grid;gap:.35rem;padding:.25rem 0 .7rem}\n.rb-quote-inspector-section .rb-help-text{margin:0;color:#687890;font-size:.69rem;line-height:1.45}\n.rb-list-inspector-section{display:grid;gap:.45rem;padding:.35rem 0 .7rem}
+.rb-quote-inspector-section{display:grid;gap:.35rem;padding:.25rem 0 .7rem}
+.rb-quote-inspector-section .rb-help-text{margin:0;color:#687890;font-size:.69rem;line-height:1.45}
+.rb-list-inspector-section{display:grid;gap:.45rem;padding:.35rem 0 .7rem}
 .rb-list-inspector-items{display:grid;gap:.55rem;margin:.1rem 0;padding-left:1.35rem}
 .rb-list-inspector-item{padding-left:.2rem}
 .rb-list-inspector-item .rb-inspector-text-block-content{min-height:2.5rem;padding:.5rem;border:1px solid #d6deea;border-radius:.45rem;background:#fff}
