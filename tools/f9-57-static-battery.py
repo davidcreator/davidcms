@@ -60,6 +60,7 @@ for name, ok in [
     ('More Informations appearance and actions have labels', "node.type==='core/details')panel.append" in JS and 'detailsActions:' in JS),
     ('More Informations uses the labeled toolbar', "'core/callout','core/details','core/code'].includes(node.type)" in JS),
     ('Preformatted Code has a literal textarea in the inspector', 'rb-inspector-code-editor' in JS and 'codeEditor.dataset.editCode=n.id' in JS),
+    ('string-valued core/code is excluded from buildInlineDom rich-text route', "if(['core/paragraph','core/heading','core/list-item','core/quote','core/button','core/callout','core/details'].includes(n.type))" in JS),
     ('Preformatted Code inspector/canvas editors synchronize without repaint', "peer.dataset.editCode===id&&peer.value!==editor.value" in JS),
     ('Preformatted Code remains literal and non-executable', 'preformattedTextHint:' in JS and 'never executed' in JS and 'não é executado' in JS),
     ('Preformatted Code has labeled style/actions and toolbar', 'preformattedStyleHeading:' in JS and 'preformattedActions:' in JS and "'core/details','core/code'].includes(node.type)" in JS),

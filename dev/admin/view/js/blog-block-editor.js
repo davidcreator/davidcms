@@ -2709,7 +2709,7 @@
         input.dataset.attribute = key; input.dataset.nodeId = found.node.id; wrap.append(input); contentPanel.append(wrap);
       };
       const n = found.node;
-      if(['core/paragraph','core/heading','core/list-item','core/quote','core/button','core/callout','core/details','core/code'].includes(n.type)){
+      if(['core/paragraph','core/heading','core/list-item','core/quote','core/button','core/callout','core/details'].includes(n.type)){
         const isParagraph=n.type==='core/paragraph', isHeading=n.type==='core/heading', isQuote=n.type==='core/quote', isButton=n.type==='core/button', isCallout=n.type==='core/callout', isDetails=n.type==='core/details';
         const title=isParagraph?this.strings.paragraphTextTitle:(isHeading?this.strings.headingTextTitle:(isQuote?this.strings.quoteTextTitle:(isButton?this.strings.buttonTextTitle:(isCallout?this.strings.calloutTextTitle:(isDetails?this.strings.detailsTextTitle:this.strings.listItemTextTitle)))));
         const hint=isParagraph?this.strings.paragraphTextHint:(isHeading?this.strings.headingTextHint:(isQuote?this.strings.quoteTextHint:(isButton?this.strings.buttonTextHint:(isCallout?this.strings.calloutTextHint:(isDetails?this.strings.detailsTextHint:this.strings.listItemTextHint)))));
