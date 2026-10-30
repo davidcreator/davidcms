@@ -30,5 +30,11 @@ Thumbs.db
 # Build de produção (ADR 0039): artefato derivado — a fonte é dev/ + tools/build_prod.sh
 /prod/
 
+# Ambiente de testes descartável (tools/staging) — clone derivado de dev/, com
+# config.php próprio (credenciais) e reports/. Nunca versionar.
+/staging/
+
 # Zips de build/deploy (gerados por build_prod.sh ou à mão — nunca versionar)
 /build-prod-*.zip
+/build-staging-*.zip
+/build-dev-*.zip
