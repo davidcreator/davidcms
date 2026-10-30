@@ -517,3 +517,7 @@ $_['text_block_custom_inherit'] = 'Theme default';
 $_['text_block_custom_hint'] = 'Safe custom styles apply to this block and are included in the saved document.';
 $_['text_block_custom_reset'] = 'Reset customization';
 $_['text_block_gallery_preview'] = 'Gallery preview';
+$_['text_block_columns_add'] = 'Add column';
+$_['text_block_columns_remove'] = 'Remove last column';
+$_['text_block_columns_limit'] = 'Use 2 or 3 columns. Removing the last column can be undone.';
+$_['text_block_column_default'] = 'Column';

@@ -303,3 +303,7 @@ $_['text_block_custom_inherit'] = 'Predeterminado del tema';
 $_['text_block_custom_hint'] = 'Los estilos seguros se aplican a este bloque y se guardan en el documento.';
 $_['text_block_custom_reset'] = 'Restablecer personalización';
 $_['text_block_gallery_preview'] = 'Vista previa de la galería';
+$_['text_block_columns_add'] = 'Añadir columna';
+$_['text_block_columns_remove'] = 'Quitar la última columna';
+$_['text_block_columns_limit'] = 'Usa 2 o 3 columnas. Puedes deshacer la eliminación de la última columna.';
+$_['text_block_column_default'] = 'Columna';
