@@ -494,3 +494,6 @@ $_['text_block_find_empty'] = 'Digite um termo para localizar.';
 $_['text_block_find_previous'] = 'Ocorrência anterior';
 $_['text_block_find_whole_word'] = 'Somente palavras inteiras';
 $_['text_block_find_keyboard_hint'] = 'Enter próxima · Shift+Enter anterior · Esc fechar';
+$_['text_block_document_statistics'] = 'Estatísticas do documento';
+$_['text_block_document_words'] = 'Palavras';
+$_['text_block_document_characters'] = 'Caracteres (incluindo espaços)';

@@ -280,3 +280,6 @@ $_['text_block_keyboard_shortcuts_title'] = 'Atajos de teclado';
 $_['text_block_keyboard_shortcuts'] = 'Ctrl/⌘+F buscar · Ctrl/⌘+B negrita · Ctrl/⌘+I cursiva · Ctrl/⌘+U subrayado · Ctrl/⌘+K enlace · Ctrl/⌘+Z deshacer · Ctrl/⌘+Shift+Z o Ctrl+Y rehacer · Alt+↑/↓ mover bloque · / insertar bloque';
 $_['text_block_find_whole_word'] = 'Solo palabras completas';
 $_['text_block_find_keyboard_hint'] = 'Enter siguiente · Shift+Enter anterior · Esc cerrar';
+$_['text_block_document_statistics'] = 'Estadísticas del documento';
+$_['text_block_document_words'] = 'Palabras';
+$_['text_block_document_characters'] = 'Caracteres (incluidos los espacios)';

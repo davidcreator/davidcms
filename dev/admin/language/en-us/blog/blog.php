@@ -494,3 +494,6 @@ $_['text_block_find_empty'] = 'Enter text to find.';
 $_['text_block_find_previous'] = 'Previous match';
 $_['text_block_find_whole_word'] = 'Whole words only';
 $_['text_block_find_keyboard_hint'] = 'Enter next · Shift+Enter previous · Esc close';
+$_['text_block_document_statistics'] = 'Document statistics';
+$_['text_block_document_words'] = 'Words';
+$_['text_block_document_characters'] = 'Characters (including spaces)';

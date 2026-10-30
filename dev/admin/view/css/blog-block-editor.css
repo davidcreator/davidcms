@@ -434,3 +434,7 @@ body.rb-bdre-fullscreen-open{overflow:hidden!important}
 .rb-keyboard-help p{margin:.5rem 0 0;line-height:1.55}
 
 .rb-find-keyboard-hint{grid-column:1/-1;margin:0;color:#475467;font-size:.75rem}
+
+/* F9-42 live document statistics */
+.rb-document-stats{display:flex;flex-wrap:wrap;gap:.45rem 1rem;align-items:center;padding:.5rem .75rem;margin:.45rem 0;border:1px solid #e1e5ed;border-radius:.45rem;background:#f8f9fc;color:#475467;font-size:.76rem}
+.rb-document-stats span{white-space:nowrap}
