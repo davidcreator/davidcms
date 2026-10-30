@@ -48,6 +48,13 @@ for name, ok in [
     ('code editor control exists', "node.type === 'core/code'" in JS and 'data-edit-code' in JS),
     ('table controls exist', all(x in JS for x in ['table-add-row','table-remove-row','table-add-column','table-toggle-header'])),
     ('list editing safeguards preserve minimum item in inspector', 'removeItem.disabled=n.children.length<=1' in JS),
+    ('button label has rich-text inspector editor', "'core/quote','core/button','core/callout'].includes(n.type)" in JS and 'buttonTextTitle:' in JS),
+    ('button destination remains editable as local path or URL', "this.strings.buttonDestination, 'url', n.attributes.url, 'text'" in JS and "if (key === 'url') input.maxLength = 2048" in JS),
+    ('button style and contextual actions are identified', 'buttonStyleHeading:' in JS and 'buttonActions:' in JS),
+    ('button joins labeled toolbar and inspector actions', "'core/quote','core/button','core/callout'].includes(node.type)" in JS and "'core/quote','core/button','core/callout'].includes(n.type)" in JS),
+    ('callout text has a rich-text inspector editor', "'core/button','core/callout'].includes(n.type)" in JS and 'calloutTextTitle:' in JS),
+    ('callout style heading and tone field both remain', "node.type==='core/callout')panel.append" in JS and "n.type === 'core/callout') addField(this.strings.callout.tone" in JS),
+    ('callout joins labeled toolbar and inspector actions', "'core/button','core/callout'].includes(node.type)" in JS and "'core/button','core/callout'].includes(n.type)" in JS and 'calloutActions:' in JS),
     ('toolbar visible labels stack under icon', 'flex-direction:column' in CSS and '.rb-block-toolbar .rb-button .rb-button-label:not(.rb-sr-only)' in CSS),
     ('icon-only tools receive native hover title and description', "b.setAttribute('title',name+'\\n'+tooltipDescription)" in JS),
 ]:
