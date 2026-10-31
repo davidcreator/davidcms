@@ -78,7 +78,7 @@
     filesEl.replaceChildren();
     (Array.isArray(files) ? files : []).forEach((file) => {
       if (!file || typeof file.path !== 'string' || typeof file.name !== 'string') return;
-      const managedMediaRow = ['video','image','download'].includes(kind);
+      const managedMediaRow = ['video','image','audio','download'].includes(kind);
       const row = document.createElement(managedMediaRow ? 'div' : 'button');
       if (!managedMediaRow) row.type = 'button';
       row.className = 'list-group-item' + (managedMediaRow ? ' d-flex align-items-center justify-content-between gap-2' : ' list-group-item-action d-flex align-items-center gap-3');
@@ -103,7 +103,7 @@
         remove.type = 'button'; remove.className = 'btn btn-outline-danger btn-sm flex-shrink-0';
         remove.dataset.mediaDelete = file.name;
         remove.dataset.mediaDeleteKind = kind;
-        const deleteLabel = kind==='image' ? (strings.deleteImage||'Delete image') : (kind==='download' ? (strings.deleteDownload||'Delete file') : (strings.deleteVideo||strings.delete||'Delete video'));
+        const deleteLabel = kind==='image' ? (strings.deleteImage||'Delete image') : (kind==='audio' ? (strings.deleteAudio||'Delete audio') : (kind==='download' ? (strings.deleteDownload||'Delete file') : (strings.deleteVideo||strings.delete||'Delete video')));
         remove.setAttribute('aria-label', deleteLabel + ': ' + file.name);
         remove.textContent = deleteLabel;
         row.append(remove);
@@ -137,7 +137,7 @@
   }
   async function deleteMedia(kind, name, button) {
     if (!name || busy) return;
-    if (typeof global.confirm === 'function' && !global.confirm((kind === 'image' ? strings.confirmDeleteImage : (kind === 'download' ? strings.confirmDeleteDownload : strings.confirmDeleteVideo)) || 'Permanently delete this media file? Blocks using it will no longer display it.')) return;
+    if (typeof global.confirm === 'function' && !global.confirm((kind === 'image' ? strings.confirmDeleteImage : (kind === 'audio' ? strings.confirmDeleteAudio : (kind === 'download' ? strings.confirmDeleteDownload : strings.confirmDeleteVideo))) || 'Permanently delete this media file? Blocks using it will no longer display it.')) return;
     const body = new FormData();
     body.append('kind', kind);
     body.append('name', name);
@@ -161,7 +161,7 @@
     }
     if (deleted) {
       await loadFiles();
-      setAlert((kind==='image'?strings.deletedImage:(kind==='download'?strings.deletedDownload:strings.deletedVideo))||strings.deleted||'Media removed from the Pages library.', false);
+      setAlert((kind==='image'?strings.deletedImage:(kind==='audio'?strings.deletedAudio:(kind==='download'?strings.deletedDownload:strings.deletedVideo)))||strings.deleted||'Media removed from the Pages library.', false);
     }
   }
 
