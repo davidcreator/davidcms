@@ -1,0 +1,12 @@
+# ReamurCMS — robots.txt do produto (F4-07, ADR 0031).
+# Crawlers só leem /robots.txt na RAIZ do domínio — por isso este arquivo é
+# ESTÁTICO em dev/ (o deploy publica dev/ como raiz). Um endpoint dinâmico
+# sob /catalog/ ficaria invisível para os bots.
+User-agent: *
+Disallow: /admin/
+Disallow: /install/
+Disallow: /system/
+
+# O sitemap é DINÂMICO e mora no catalog (catalog/sitemap.xml). Como a URL
+# absoluta muda conforme o deploy, ele é anunciado via <link rel="sitemap">
+# no <head> das páginas — sem hardcode de domínio aqui.
