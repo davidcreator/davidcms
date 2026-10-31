@@ -89,9 +89,9 @@
   function workspaceCopy() {
     const language = String(global.document && global.document.documentElement && global.document.documentElement.lang || 'en').toLowerCase();
     if (language.startsWith('pt')) return {
-      home:'Início', models:'Modelos', library:'Biblioteca', assistant:'Assistente IA', export:'Exportar', share:'Compartilhar',
+      home:'Início', models:'Modelos', modelsBack:'Voltar ao editor', library:'Biblioteca', assistant:'Assistente IA', export:'Exportar', share:'Compartilhar',
       file:'Arquivo', edit:'Editar', insert:'Inserir', format:'Formatar', tools:'Ferramentas', help:'Ajuda',
-      modelsTitle:'Modelos e padrões', modelsHint:'Explore padrões de blocos disponíveis para este documento.',
+      modelsTitle:'Modelos de conteúdo e padrões', modelsHint:'Insira composições editáveis em blocos nativos sem substituir o conteúdo existente.', patternModels:'Modelos',
       libraryTitle:'Biblioteca de mídia', libraryHint:'A biblioteca oficial abre pelo seletor do bloco selecionado. Escolha o tipo correspondente abaixo.',
       selectBlock:'Selecione primeiro um bloco compatível no documento para associar mídia.', noPicker:'O seletor de mídia não está habilitado nesta tela.',
       assistantTitle:'Assistente de IA', assistantHint:'A integração de IA não está configurada nesta instalação. Nenhum conteúdo será enviado.', assistantPrompt:'Digite sua solicitação…',
@@ -100,14 +100,14 @@
       jsonTitle:'Documento BDRE · JSON', jsonHint:'Baixa uma cópia estrutural para backup ou transferência.', unavailable:'Não disponível nesta integração',
       pdf:'PDF', docx:'Word (.docx)', pptx:'PowerPoint (.pptx)', imageFormat:'Imagem (PNG/JPG)', html:'HTML',
       shareTitle:'Compartilhamento', shareHint:'Links, permissões e colaboração precisam de um serviço próprio. Nenhum link será criado por este editor.',
-      shareDisabled:'Compartilhamento não configurado', patternsSearch:'Buscar padrões…', patternAll:'Todos', patternQuick:'Rápidos', patternSaved:'Salvos',
-      noPatternMatches:'Nenhum padrão corresponde à busca.', helpTitle:'Ajuda e atalhos', helpHint:'Atalhos disponíveis neste editor', imageType:'Imagem', fileType:'Arquivo', audioType:'Áudio', videoType:'Vídeo',
+      shareDisabled:'Compartilhamento não configurado', patternsSearch:'Buscar modelos e padrões…', patternAll:'Todos', patternQuick:'Rápidos', patternSaved:'Salvos',
+      noPatternMatches:'Nenhum modelo ou padrão corresponde à busca.', helpTitle:'Ajuda e atalhos', helpHint:'Atalhos disponíveis neste editor', imageType:'Imagem', fileType:'Arquivo', audioType:'Áudio', videoType:'Vídeo',
       insertMedia:'Abrir biblioteca', documentStats:'%1 palavras · %2 caracteres · %3 blocos'
     };
     if (language.startsWith('es')) return {
-      home:'Inicio', models:'Modelos', library:'Biblioteca', assistant:'Asistente IA', export:'Exportar', share:'Compartir',
+      home:'Inicio', models:'Modelos', modelsBack:'Volver al editor', library:'Biblioteca', assistant:'Asistente IA', export:'Exportar', share:'Compartir',
       file:'Archivo', edit:'Editar', insert:'Insertar', format:'Formato', tools:'Herramientas', help:'Ayuda',
-      modelsTitle:'Modelos y patrones', modelsHint:'Explora patrones de bloques disponibles para este documento.',
+      modelsTitle:'Modelos de contenido y patrones', modelsHint:'Inserta composiciones editables en bloques nativos sin reemplazar el contenido existente.', patternModels:'Modelos',
       libraryTitle:'Biblioteca multimedia', libraryHint:'La biblioteca oficial se abre desde el selector del bloque seleccionado. Elige el tipo correspondiente.',
       selectBlock:'Selecciona primero un bloque compatible en el documento para asociar medios.', noPicker:'El selector multimedia no está habilitado en esta pantalla.',
       assistantTitle:'Asistente de IA', assistantHint:'La integración de IA no está configurada en esta instalación. No se enviará contenido.', assistantPrompt:'Escribe tu solicitud…',
@@ -116,14 +116,14 @@
       jsonTitle:'Documento BDRE · JSON', jsonHint:'Descarga una copia estructural para respaldo o transferencia.', unavailable:'No disponible en esta integración',
       pdf:'PDF', docx:'Word (.docx)', pptx:'PowerPoint (.pptx)', imageFormat:'Imagen (PNG/JPG)', html:'HTML',
       shareTitle:'Compartir', shareHint:'Los enlaces, permisos y colaboración requieren un servicio propio. Este editor no creará ningún enlace.',
-      shareDisabled:'Compartir no está configurado', patternsSearch:'Buscar patrones…', patternAll:'Todos', patternQuick:'Rápidos', patternSaved:'Guardados',
-      noPatternMatches:'Ningún patrón coincide con la búsqueda.', helpTitle:'Ayuda y atajos', helpHint:'Atajos disponibles en este editor', imageType:'Imagen', fileType:'Archivo', audioType:'Audio', videoType:'Vídeo',
+      shareDisabled:'Compartir no está configurado', patternsSearch:'Buscar modelos y patrones…', patternAll:'Todos', patternQuick:'Rápidos', patternSaved:'Guardados',
+      noPatternMatches:'Ningún modelo o patrón coincide con la búsqueda.', helpTitle:'Ayuda y atajos', helpHint:'Atajos disponibles en este editor', imageType:'Imagen', fileType:'Archivo', audioType:'Audio', videoType:'Vídeo',
       insertMedia:'Abrir biblioteca', documentStats:'%1 palabras · %2 caracteres · %3 bloques'
     };
     return {
-      home:'Home', models:'Patterns', library:'Media library', assistant:'AI assistant', export:'Export', share:'Share',
+      home:'Home', models:'Models', modelsBack:'Back to editor', library:'Media library', assistant:'AI assistant', export:'Export', share:'Share',
       file:'File', edit:'Edit', insert:'Insert', format:'Format', tools:'Tools', help:'Help',
-      modelsTitle:'Patterns and models', modelsHint:'Browse reusable block patterns available to this document.',
+      modelsTitle:'Content models and patterns', modelsHint:'Insert editable native-block compositions without replacing existing content.', patternModels:'Models',
       libraryTitle:'Media library', libraryHint:'The CMS library opens through the selected block’s picker. Choose the matching media type below.',
       selectBlock:'Select a compatible block in the document first to attach media.', noPicker:'The media picker is not enabled on this screen.',
       assistantTitle:'AI assistant', assistantHint:'AI is not configured for this installation. No document content will be sent.', assistantPrompt:'Type a request…',
@@ -132,11 +132,49 @@
       jsonTitle:'BDRE document · JSON', jsonHint:'Download a structural copy for backup or transfer.', unavailable:'Unavailable in this integration',
       pdf:'PDF', docx:'Word (.docx)', pptx:'PowerPoint (.pptx)', imageFormat:'Image (PNG/JPG)', html:'HTML',
       shareTitle:'Sharing', shareHint:'Links, permissions and collaboration require a dedicated service. This editor will not create a link.',
-      shareDisabled:'Sharing is not configured', patternsSearch:'Search patterns…', patternAll:'All', patternQuick:'Quick', patternSaved:'Saved',
-      noPatternMatches:'No patterns match this search.', helpTitle:'Help and shortcuts', helpHint:'Shortcuts available in this editor', imageType:'Image', fileType:'File', audioType:'Audio', videoType:'Video',
+      shareDisabled:'Sharing is not configured', patternsSearch:'Search models and patterns…', patternAll:'All', patternQuick:'Quick', patternSaved:'Saved',
+      noPatternMatches:'No models or patterns match this search.', helpTitle:'Help and shortcuts', helpHint:'Shortcuts available in this editor', imageType:'Image', fileType:'File', audioType:'Audio', videoType:'Video',
       insertMedia:'Open library', documentStats:'%1 words · %2 characters · %3 blocks'
     };
   }
+  function contentModelCopy() {
+    const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
+    const n=(type,content,attributes,children)=>({type,content:content||'',attributes:attributes||{},children:children||[]});
+    if(language.startsWith('es'))return {
+      title:'Plantillas de contenido',hint:'Inserta un grupo editable en el punto seleccionado (dentro de un contenedor cuando corresponda); sin selección, al final. Nunca reemplaza el documento.',insert:'Insertar plantilla',unavailable:'No se pudo insertar esta plantilla en este punto. El documento no se modificó.',
+      templates:[
+        {id:'page_intro',name:'Presentación institucional',description:'Título, introducción y sección “Quiénes somos”.',outline:'Presentación institucional',blocks:[n('core/heading','Título de la página',{level:1}),n('core/paragraph','Resume aquí la propuesta y el propósito de esta página.'),n('core/separator',''),n('core/heading','Quiénes somos',{level:2}),n('core/paragraph','Presenta brevemente a tu organización, su historia o misión.')]},
+        {id:'article',name:'Artículo o publicación',description:'Título, entradilla, secciones, cita y nota expandible.',outline:'Artículo',blocks:[n('core/heading','Título del artículo',{level:1}),n('core/paragraph','Escribe una entradilla breve que resuma el tema.'),n('core/separator',''),n('core/heading','Introducción',{level:2}),n('core/paragraph','Presenta el tema y el contexto para el lector.'),n('core/quote','Añade aquí una cita o idea destacada.'),n('core/heading','Desarrollo',{level:2}),n('core/paragraph','Desarrolla el contenido en este párrafo.'),n('core/details','Amplía la información complementaria.',{summary:'Más información'})]},
+        {id:'services',name:'Servicios en tres columnas',description:'Presentación y tres tarjetas editables de servicios.',outline:'Servicios',blocks:[n('core/heading','Nuestros servicios',{level:2}),n('core/paragraph','Describe brevemente las soluciones que ofreces.'),n('core/columns','',{count:3},[n('core/column','',{},[n('core/heading','Servicio uno',{level:3}),n('core/paragraph','Describe el primer servicio.')]),n('core/column','',{},[n('core/heading','Servicio dos',{level:3}),n('core/paragraph','Describe el segundo servicio.')]),n('core/column','',{},[n('core/heading','Servicio tres',{level:3}),n('core/paragraph','Describe el tercer servicio.')])])]},
+        {id:'faq',name:'Preguntas frecuentes',description:'Introducción y tres respuestas expandibles.',outline:'Preguntas frecuentes',blocks:[n('core/heading','Preguntas frecuentes',{level:2}),n('core/paragraph','Responde aquí las dudas más comunes.'),n('core/details','Escribe la primera respuesta.',{summary:'¿Cuál es la primera pregunta?'}),n('core/details','Escribe la segunda respuesta.',{summary:'¿Cuál es la segunda pregunta?'}),n('core/details','Escribe la tercera respuesta.',{summary:'¿Cuál es la tercera pregunta?'})]},
+        {id:'contact',name:'Llamada a la acción',description:'Mensaje breve, aviso destacado y botón de contacto.',outline:'Llamada a la acción',blocks:[n('core/heading','¿Hablamos?',{level:2}),n('core/paragraph','Invita a tus visitantes a dar el siguiente paso.'),n('core/callout','Estamos disponibles para ayudarte.',{tone:'info'}),n('core/button','Contactar',{url:'/contacto'})]},
+        {id:'steps',name:'Guía paso a paso',description:'Introducción y lista numerada de tres pasos.',outline:'Guía paso a paso',blocks:[n('core/heading','Cómo funciona',{level:2}),n('core/paragraph','Explica el proceso de forma clara y sencilla.'),n('core/list','',{ordered:true},[n('core/list-item','Primer paso: explica qué debe hacer el usuario.'),n('core/list-item','Segundo paso: describe qué sucede a continuación.'),n('core/list-item','Tercer paso: indica cómo finalizar.')]) ]}
+      ]
+    };
+    if(language.startsWith('en'))return {
+      title:'Content templates',hint:'Insert an editable group at the selected insertion point (inside a selected container where allowed); otherwise after the selection or at the end. Existing content is never replaced.',insert:'Insert template',unavailable:'This template cannot be inserted here. The document was not changed.',
+      templates:[
+        {id:'page_intro',name:'Organization introduction',description:'Title, introduction and an About section.',outline:'Organization introduction',blocks:[n('core/heading','Page title',{level:1}),n('core/paragraph','Summarize the purpose and value of this page.'),n('core/separator',''),n('core/heading','About us',{level:2}),n('core/paragraph','Introduce your organization, its story or mission.')]},
+        {id:'article',name:'Article or post',description:'Title, lead, sections, quote and expandable note.',outline:'Article',blocks:[n('core/heading','Article title',{level:1}),n('core/paragraph','Write a concise lead that summarizes the topic.'),n('core/separator',''),n('core/heading','Introduction',{level:2}),n('core/paragraph','Introduce the subject and give readers context.'),n('core/quote','Add a highlighted quotation or key idea.'),n('core/heading','Main section',{level:2}),n('core/paragraph','Develop the article in this paragraph.'),n('core/details','Add supplementary information.',{summary:'More information'})]},
+        {id:'services',name:'Three-column services',description:'Introduction and three editable service cards.',outline:'Services',blocks:[n('core/heading','Our services',{level:2}),n('core/paragraph','Briefly describe the solutions you offer.'),n('core/columns','',{count:3},[n('core/column','',{},[n('core/heading','Service one',{level:3}),n('core/paragraph','Describe the first service.')]),n('core/column','',{},[n('core/heading','Service two',{level:3}),n('core/paragraph','Describe the second service.')]),n('core/column','',{},[n('core/heading','Service three',{level:3}),n('core/paragraph','Describe the third service.')])])]},
+        {id:'faq',name:'Frequently asked questions',description:'Introduction and three expandable answers.',outline:'Frequently asked questions',blocks:[n('core/heading','Frequently asked questions',{level:2}),n('core/paragraph','Answer the questions your visitors ask most.'),n('core/details','Write the first answer.',{summary:'What is the first question?'}),n('core/details','Write the second answer.',{summary:'What is the second question?'}),n('core/details','Write the third answer.',{summary:'What is the third question?'})]},
+        {id:'contact',name:'Call to action',description:'Short message, highlighted note and contact button.',outline:'Call to action',blocks:[n('core/heading','Let’s talk',{level:2}),n('core/paragraph','Invite visitors to take the next step.'),n('core/callout','We are ready to help.',{tone:'info'}),n('core/button','Contact us',{url:'/contact'})]},
+        {id:'steps',name:'Step-by-step guide',description:'Introduction and an ordered list of three steps.',outline:'Step-by-step guide',blocks:[n('core/heading','How it works',{level:2}),n('core/paragraph','Explain the process in a clear, simple way.'),n('core/list','',{ordered:true},[n('core/list-item','Step one: explain what the reader should do.'),n('core/list-item','Step two: describe what happens next.'),n('core/list-item','Step three: explain how to finish.')]) ]}
+      ]
+    };
+    return {
+      title:'Modelos de conteúdo',hint:'Insere um grupo editável no ponto selecionado (dentro de contêiner quando permitido); sem seleção, após a seleção ou no fim. O conteúdo existente nunca é substituído.',insert:'Inserir modelo',unavailable:'Não foi possível inserir este modelo neste ponto. O documento não foi alterado.',
+      templates:[
+        {id:'page_intro',name:'Apresentação institucional',description:'Título, introdução e seção “Quem somos”.',outline:'Apresentação institucional',blocks:[n('core/heading','Título da página',{level:1}),n('core/paragraph','Resuma aqui a proposta e o propósito desta página.'),n('core/separator',''),n('core/heading','Quem somos',{level:2}),n('core/paragraph','Apresente brevemente sua organização, história ou missão.')]},
+        {id:'article',name:'Artigo ou publicação',description:'Título, linha fina, seções, citação e nota expansível.',outline:'Artigo',blocks:[n('core/heading','Título do artigo',{level:1}),n('core/paragraph','Escreva uma introdução breve que resuma o tema.'),n('core/separator',''),n('core/heading','Introdução',{level:2}),n('core/paragraph','Apresente o tema e dê contexto ao leitor.'),n('core/quote','Inclua aqui uma citação ou ideia em destaque.'),n('core/heading','Desenvolvimento',{level:2}),n('core/paragraph','Desenvolva o conteúdo neste parágrafo.'),n('core/details','Adicione informações complementares.',{summary:'Mais informações'})]},
+        {id:'services',name:'Serviços em três colunas',description:'Apresentação e três cartões editáveis de serviços.',outline:'Serviços',blocks:[n('core/heading','Nossos serviços',{level:2}),n('core/paragraph','Descreva brevemente as soluções que você oferece.'),n('core/columns','',{count:3},[n('core/column','',{},[n('core/heading','Serviço um',{level:3}),n('core/paragraph','Descreva o primeiro serviço.')]),n('core/column','',{},[n('core/heading','Serviço dois',{level:3}),n('core/paragraph','Descreva o segundo serviço.')]),n('core/column','',{},[n('core/heading','Serviço três',{level:3}),n('core/paragraph','Descreva o terceiro serviço.')])])]},
+        {id:'faq',name:'Perguntas frequentes',description:'Introdução e três respostas expansíveis.',outline:'Perguntas frequentes',blocks:[n('core/heading','Perguntas frequentes',{level:2}),n('core/paragraph','Responda às dúvidas mais comuns dos visitantes.'),n('core/details','Escreva a primeira resposta.',{summary:'Qual é a primeira pergunta?'}),n('core/details','Escreva a segunda resposta.',{summary:'Qual é a segunda pergunta?'}),n('core/details','Escreva a terceira resposta.',{summary:'Qual é a terceira pergunta?'})]},
+        {id:'contact',name:'Chamada para contato',description:'Mensagem curta, aviso destacado e botão de contato.',outline:'Chamada para contato',blocks:[n('core/heading','Vamos conversar?',{level:2}),n('core/paragraph','Convide seus visitantes a dar o próximo passo.'),n('core/callout','Estamos à disposição para ajudar.',{tone:'info'}),n('core/button','Fale conosco',{url:'/contato'})]},
+        {id:'steps',name:'Guia passo a passo',description:'Introdução e lista numerada com três etapas.',outline:'Guia passo a passo',blocks:[n('core/heading','Como funciona',{level:2}),n('core/paragraph','Explique o processo de forma clara e simples.'),n('core/list','',{ordered:true},[n('core/list-item','Etapa um: explique o que a pessoa deve fazer.'),n('core/list-item','Etapa dois: descreva o que acontece em seguida.'),n('core/list-item','Etapa três: indique como concluir.')]) ]}
+      ]
+    };
+  }
+
   const ICON_PATHS = {
     plus:'M12 5v14M5 12h14', alignLeft:'M4 6h16M4 10h10M4 14h16M4 18h10', alignCenter:'M4 6h16M7 10h10M4 14h16M7 18h10', alignRight:'M4 6h16M10 10h10M4 14h16M10 18h10', copy:'M8 8V4h12v12h-4M4 8h12v12H4z', undo:'M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-2', redo:'m15 14 5-5-5-5m5 5H10a6 6 0 0 0 0 12h2',
     desktop:'M3 4h18v13H3zM8 21h8M12 17v4', tablet:'M6 2h12v20H6zM11 18h2', mobile:'M8 2h8v20H8zM11 18h2',
@@ -760,6 +798,7 @@
       this.patternFilter = 'all';
       this.patternQuery = '';
       this.ui = workspaceCopy();
+      this.contentModels = contentModelCopy();
       this.findReplaceOpen = false; this.findQuery = ''; this.replaceQuery = ''; this.findCaseSensitive = false; this.findWholeWord = false; this.activeFindIndex = -1;
       this.documentStatsTimer = null;
       this.fullscreenReturnFocus = null;
@@ -1088,6 +1127,7 @@
       if (this.locked&&!['workspace-tool','office-menu','toggle-fullscreen'].includes(name)) return;
       if (name === 'insert') this.insert(button.dataset.type, button.dataset.count);
       else if (name === 'insert-pattern') this.insertPattern(button.dataset.pattern);
+      else if (name === 'insert-content-model') this.insertContentModel(button.dataset.modelId);
       else if (name === 'insert-saved-pattern') this.insertSavedPattern(button.dataset.patternId);
       else if (name === 'save-selected-pattern') this.saveSelectedPattern(button.dataset.nodeId);
       else if (name === 'rename-saved-pattern') this.renameSavedPattern(button.dataset.patternId);
@@ -1422,18 +1462,52 @@
       return null;
     }
 
+    createContentModelNode(spec) {
+      return this.node(spec.type,spec.attributes||{},spec.content||'',(spec.children||[]).map((child)=>this.createContentModelNode(child)));
+    }
+
+    createContentModel(modelId) {
+      const model=this.contentModels.templates.find((item)=>item.id===modelId);
+      if(!model)return null;
+      const children=model.blocks.map((spec)=>this.createContentModelNode(spec));
+      return this.node('core/group',{outline_label:model.outline},'',children);
+    }
+
+    insertContentModel(modelId) {
+      if(this.locked)return false;
+      const afterId=this.selectedId||null;
+      const allowedTypes=this.insertTypes(afterId).map((item)=>item.type);
+      if(!this.canInsertPatterns(afterId)||!allowedTypes.includes('core/group')){this.announceStatus(this.contentModels.unavailable);return false;}
+      const node=this.createContentModel(modelId);if(!node)return false;
+      const next=CLONE(this.state);this.prepareSlashTarget(next,afterId);
+      const location=this.insertionLocation(next.blocks,afterId);location.target.splice(location.index,0,node);
+      const validation=validateDocument(next,this.allowPageMedia);
+      if(!validation.valid||utf8Length(JSON.stringify(next))>4194304){this.announceStatus(this.contentModels.unavailable);return false;}
+      this.finishInsert(next,node);return true;
+    }
+
     renderPatternLibrary() {
       const panel=this.el('section','rb-pattern-library rb-pattern-library-page');
       const heading=this.el('h1','rb-pattern-library-title',this.ui.modelsTitle);
-      panel.append(heading,this.el('p','rb-pattern-library-hint',this.ui.modelsHint+' '+(this.strings.patternHint||'Padrões reutilizáveis de blocos; não são documentos completos.')));
+      const header=this.el('div','rb-model-library-header');header.append(heading,this.button(this.ui.modelsBack||this.ui.home,'workspace-tool',{tool:'home',icon:'collapse',showLabel:true}));
+      panel.append(header,this.el('p','rb-pattern-library-hint',this.ui.modelsHint));
       const controls=this.el('div','rb-pattern-library-controls');
       const search=this.el('input','rb-pattern-library-search');search.type='search';search.placeholder=this.ui.patternsSearch;search.value=this.patternQuery;search.dataset.patternSearch='1';search.setAttribute('aria-label',this.ui.patternsSearch);controls.append(search);
       const filters=this.el('div','rb-pattern-library-filters');
-      [[this.ui.patternAll,'all'],[this.ui.patternQuick,'quick'],[this.ui.patternSaved,'saved']].forEach(([label,filter])=>{const button=this.button(label,'workspace-pattern-filter',{filter});button.setAttribute('aria-pressed',String(this.patternFilter===filter));filters.append(button);});
+      [[this.ui.patternAll,'all'],[this.ui.patternModels||this.contentModels.title,'models'],[this.ui.patternQuick,'quick'],[this.ui.patternSaved,'saved']].forEach(([label,filter])=>{const button=this.button(label,'workspace-pattern-filter',{filter});button.setAttribute('aria-pressed',String(this.patternFilter===filter));filters.append(button);});
       controls.append(filters);panel.append(controls);
       if (this.patternLoadError) panel.append(this.el('p','rb-pattern-library-warning',this.strings.patternError||'Não foi possível carregar padrões salvos.'));
       const afterId=this.selectedId||null;
-      const allowed=this.canInsertPatterns(afterId);
+      const allowed=this.canInsertPatterns(afterId)&&this.insertTypes(afterId).some((item)=>item.type==='core/group');
+      const modelsTitle=this.el('div','rb-pattern-library-section-title');modelsTitle.append(this.el('strong','',this.contentModels.title));panel.append(modelsTitle);
+      const modelsGrid=this.el('div','rb-pattern-library-grid rb-content-models-grid');
+      this.contentModels.templates.forEach((model)=>{
+        const card=this.button(model.name,'insert-content-model',{modelId:model.id,icon:'layers',showLabel:true});
+        card.classList.add('rb-pattern-library-card','rb-content-model-card');card.dataset.patternKind='models';card.dataset.patternSearch=(model.name+' '+model.description).toLocaleLowerCase();
+        card.append(this.el('span','rb-pattern-library-description',model.description));card.disabled=!allowed;modelsGrid.append(card);
+      });
+      panel.append(modelsGrid);
+      const quickTitle=this.el('div','rb-pattern-library-section-title');quickTitle.append(this.el('strong','',this.ui.patternQuick));panel.append(quickTitle,this.el('p','rb-pattern-library-hint',this.strings.patternHint||'Padrões reutilizáveis de blocos; não são documentos completos.'));
       const quick=this.el('div','rb-pattern-library-grid');
       const labels=this.strings.patternLabels||{};
       const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'').toLowerCase();
@@ -2417,6 +2491,7 @@
       }else if(this.activeRibbonTab==='view'){
         let g=this.renderRibbonGroup(this.strings.groupPanels||'Painéis recolhíveis');
         [['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline'],['settings',this.strings.builderSettings,'settings']].forEach(([panelName,label,icon])=>{const b=this.button(label,'builder-panel',{panel:panelName,icon});b.setAttribute('aria-pressed',String(this.fullscreen?(panelName==='settings'?(this.inspectorOpen&&!this.previewMode):this.activePanel===panelName):this.activePanel===panelName));if(this.fullscreen&&this.previewMode&&panelName==='settings')b.disabled=true;g.tools.append(b);});panel.append(g.group);
+        const modelsTool=this.button(this.ui.models,'workspace-tool',{tool:'models',icon:'layers',showLabel:true});modelsTool.dataset.workspaceTool='models';g.tools.append(modelsTool);
         g=this.renderRibbonGroup(this.strings.groupPreview||'Pré-visualização');
         [['desktop',this.strings.previewDesktop],['tablet',this.strings.previewTablet],['mobile',this.strings.previewMobile]].forEach(([size,label])=>{const b=this.button(label,'preview',{size});b.setAttribute('aria-pressed',String(size===this.preview));g.tools.append(b);});
         const preview=this.button(this.previewMode?(this.strings.editMode||'Voltar à edição'):(this.strings.previewMode||'Pré-visualizar'),'toggle-preview',{icon:this.previewMode?'collapse':'desktop'});preview.setAttribute('aria-pressed',String(this.previewMode));g.tools.append(preview);

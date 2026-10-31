@@ -860,3 +860,15 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 }
 @media(prefers-reduced-motion:reduce){.rb-editor *{scroll-behavior:auto!important;transition:none!important}}
 @media(forced-colors:active){.rb-editor .rb-button,.rb-editor .rb-block,.rb-editor .rb-outline,.rb-editor .rb-inspector,.rb-editor .rb-canvas{border:1px solid CanvasText}.rb-editor .rb-button:focus-visible,.rb-editor .rb-content:focus-visible,.rb-editor .rb-input:focus-visible{outline:2px solid Highlight}}
+
+
+/* F9-76 content models share the native pattern library without replacing saved patterns. */
+.rb-model-library-header{display:flex;align-items:center;justify-content:space-between;gap:.75rem;min-width:0}
+.rb-model-library-header>.rb-pattern-library-title{min-width:0}
+.rb-model-library-header>.rb-button{flex:0 0 auto}
+.rb-content-models-grid{margin:0 0 1.1rem}
+.rb-content-model-card{min-height:7.2rem;border-color:#d7e2fb;background:linear-gradient(145deg,#fff 0%,#f8faff 100%)}
+.rb-content-model-card>.rb-icon{color:#315ee8}
+.rb-content-model-card:hover:not(:disabled){border-color:#9db5f5;background:#f1f5ff}
+.rb-content-model-card .rb-pattern-library-description{margin-top:.1rem}
+@media(max-width:560px){.rb-model-library-header{align-items:flex-start;flex-direction:column}.rb-content-models-grid{grid-template-columns:minmax(0,1fr)}}

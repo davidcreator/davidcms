@@ -19,7 +19,7 @@
 
 - Auditar e padronizar a aparência, tamanho, espaçamento, alinhamento, tipografia e estados de botões e ícones do editor.
 - Corrigir quebra, sobreposição, rolagem e desalinhamento de controles em tela cheia e dentro dos formulários de Pages e Blog.
-- Fazer alterações mínimas no markup/JavaScript do editor somente quando necessárias para corrigir ou tornar acessível a apresentação dos controles.
+- Fazer alterações mínimas no markup/JavaScript do editor quando necessárias para a interface ou para um recurso de edição expressamente solicitado, como modelos de conteúdo nativos, sempre reutilizando os tipos de bloco, validação e salvamento já existentes.
 - Consolidar regras CSS repetidas ou conflitantes após rastrear a cascata existente; não empilhar sobrescritas sem entender qual regra vence.
 - Preservar comportamento, rótulos, ícones funcionais e a independência entre Pages e Blog.
 
