@@ -124,9 +124,9 @@
       setAlert(error && error.message ? error.message : (strings.error || 'Erro ao carregar a biblioteca.'), true);
     } finally { busy = false; }
   }
-  function openLibrary(editor) {
+  function openLibrary(editor, requestedKind) {
     activeEditor = editor || null;
-    kind = 'image';
+    kind = ['image','audio','video','download'].includes(requestedKind) ? requestedKind : 'image';
     page = 1;
     searchEl.value = '';
     updateKindControls();
@@ -153,7 +153,7 @@
   document.addEventListener('cms-page-media-open', (event) => {
     if (!event.detail || !event.detail.editor) return;
     event.preventDefault();
-    try { openLibrary(event.detail.editor); }
+    try { openLibrary(event.detail.editor,event.detail.kind); }
     catch (error) { setAlert(strings.error || 'Não foi possível abrir a biblioteca de mídia.', true); }
   });
   modal.addEventListener('click', (event) => {

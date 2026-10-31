@@ -162,7 +162,18 @@ final class BlockRenderer {
                 if (!$this->videoFileExists($srcPath)) return '';
                 $src = $this->escape($this->resolveLocalImageUrl($srcPath, $assetBase));
                 $mime = ['mp4' => 'video/mp4', 'webm' => 'video/webm', 'ogv' => 'video/ogg'][strtolower(pathinfo($srcPath, PATHINFO_EXTENSION))];
-                return '<figure class="rms-block rms-block-video"><video class="rms-block-video__file" controls preload="none" playsinline><source src="' . $src . '" type="' . $mime . '"></video></figure>';
+                $alignment = (string)($attributes['align'] ?? 'center');
+                $size = (string)($attributes['size'] ?? 'large');
+                $mobileSize = (string)($attributes['mobile_size'] ?? 'full');
+                $figureClass = 'rms-block rms-block-video rms-block-video--align-' . $alignment . ' rms-block-video--size-' . $size . ' rms-block-video--mobile-' . $mobileSize;
+                $title = isset($attributes['title']) && $attributes['title'] !== '' ? ' title="' . $this->escape((string)$attributes['title']) . '"' : '';
+                $controls = !array_key_exists('controls', $attributes) || $attributes['controls'] ? ' controls' : '';
+                $loop = !empty($attributes['loop']) ? ' loop' : '';
+                $muted = !empty($attributes['muted']) ? ' muted' : '';
+                $autoplay = !empty($attributes['autoplay']) ? ' autoplay' : '';
+                if ($autoplay !== '' && $muted === '') $muted = ' muted'; // autoplay is muted to comply with browser playback policies.
+                $caption = isset($attributes['caption']) && $attributes['caption'] !== '' ? '<figcaption>' . $this->escape((string)$attributes['caption']) . '</figcaption>' : '';
+                return '<figure class="' . $figureClass . '"><video class="rms-block-video__file"' . $title . $controls . ' preload="none" playsinline' . $loop . $muted . $autoplay . '><source src="' . $src . '" type="' . $mime . '"></video>' . $caption . '</figure>';
 
             case 'core/gallery':
                 $columns = (int)$attributes['columns'];

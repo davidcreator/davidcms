@@ -14,6 +14,8 @@ function inferCatalogBase(href){const current=new URL(href);const adminIndex=cur
 const fallbackBase=inferCatalogBase('http://localhost/davidcms/dev/admin/index.php?route=cms%2Fpage.edit');
 assert.equal(fallbackBase,'http://localhost/davidcms/dev/catalog/');
 assert.equal(new URL('view/image/cms/page/87277837630b175256e02fc96a03ad9c.jpg',fallbackBase).href,assetUrl.href);
+const videoUrl=new URL('view/video/cms/page/59a2c01f3a1b7f1eaa43.mp4',fallbackBase);
+assert.equal(videoUrl.href,'http://localhost/davidcms/dev/catalog/view/video/cms/page/59a2c01f3a1b7f1eaa43.mp4');
 assert.equal(assetUrl.href,'http://localhost/davidcms/dev/catalog/view/image/cms/page/87277837630b175256e02fc96a03ad9c.jpg');
 console.log('PASS CMS Pages media URL: HTML ampersands normalized; route, session token and query parameters preserved.');
-console.log('PASS CMS Pages image preview URL resolves against catalog/, not the admin directory, using config or admin-path fallback.');
+console.log('PASS CMS Pages image/video preview URLs resolve against catalog/, not the admin directory, using config or admin-path fallback.');

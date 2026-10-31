@@ -636,3 +636,17 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-editor[data-preview="mobile"] .rb-canvas,.rb-editor-host.rb-editor[data-preview="mobile"] .rb-canvas,.bdre-page-editor.rb-editor[data-preview="mobile"] .rb-canvas{max-width:390px}
 .rb-editor.is-fullscreen[data-preview="tablet"] .rb-builder-layout>.rb-canvas,.rb-editor-host.rb-editor.is-fullscreen[data-preview="tablet"] .rb-builder-layout>.rb-canvas,.bdre-page-editor.rb-editor.is-fullscreen[data-preview="tablet"] .rb-builder-layout>.rb-canvas{max-width:768px;width:100%;margin-inline:auto}
 .rb-editor.is-fullscreen[data-preview="mobile"] .rb-builder-layout>.rb-canvas,.rb-editor-host.rb-editor.is-fullscreen[data-preview="mobile"] .rb-builder-layout>.rb-canvas,.bdre-page-editor.rb-editor.is-fullscreen[data-preview="mobile"] .rb-builder-layout>.rb-canvas{max-width:390px;width:100%;margin-inline:auto}
+/* Video block editing controls and responsive presentation options */
+.rb-video-edit-preview{width:100%;margin:.35rem auto;padding:.5rem;border:1px solid #e1e5ed;border-radius:.4rem;box-sizing:border-box}
+.rb-video-edit-preview[data-video-align="left"]{margin-left:0;margin-right:auto}
+.rb-video-edit-preview[data-video-align="right"]{margin-left:auto;margin-right:0}
+.rb-video-edit-preview[data-video-align="center"]{margin-left:auto;margin-right:auto}
+.rb-video-edit-preview[data-video-align="wide"]{width:min(100%,72rem)}
+.rb-video-edit-preview[data-video-align="full"]{width:100%}
+.rb-video-edit-preview[data-video-size="small"]{max-width:24rem}
+.rb-video-edit-preview[data-video-size="medium"]{max-width:40rem}
+.rb-video-edit-preview[data-video-size="large"]{max-width:56rem}
+.rb-video-edit-preview[data-video-size="full"]{max-width:none}
+.rb-video-edit-preview .rb-video-file-admin-preview{display:block;width:100%;max-width:100%;height:auto;aspect-ratio:16/9;background:#111;border-radius:.25rem}
+.rb-video-edit-preview figcaption{margin-top:.4rem;font-size:.82rem;color:#596579;overflow-wrap:anywhere}
+@media(max-width:560px){.rb-video-edit-preview[data-video-mobile-size="full"]{width:100%}.rb-video-edit-preview[data-video-mobile-size="large"]{width:90%}.rb-video-edit-preview[data-video-mobile-size="medium"]{width:75%}}

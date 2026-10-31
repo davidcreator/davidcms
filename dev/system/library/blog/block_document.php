@@ -173,7 +173,7 @@ class BlockDocument {
             $allowedAttrs['core/table-cell'] = ['header','rowspan','colspan'];
             $allowedAttrs['core/file'] = ['src'];
             $allowedAttrs['core/audio'] = ['src'];
-            $allowedAttrs['core/video_file'] = ['src'];
+            $allowedAttrs['core/video_file'] = ['src','title','caption','align','size','mobile_size','controls','loop','muted','autoplay'];
             $allowedAttrs['core/threejs_thumb'] = ['scene_json','label','custom_js'];
             foreach ($allowedAttrs as &$keys) $keys[] = 'appearance';
             unset($keys);
@@ -186,6 +186,14 @@ class BlockDocument {
         if ($type === 'core/file' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeDownloadPath($attrs['src']) || !is_array($node['content']) || !$this->hasVisibleInlineText($node['content']))) $errors[] = 'file_attributes_invalid';
         if ($type === 'core/audio' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeAudioPath($attrs['src']) || !is_array($node['content']) || !$this->hasVisibleInlineText($node['content']))) $errors[] = 'audio_attributes_invalid';
         if ($type === 'core/video_file' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeVideoPath($attrs['src']) || $node['children'] || $node['content'] !== '')) $errors[] = 'video_file_attributes_invalid';
+        if ($type === 'core/video_file') {
+            if (array_key_exists('title', $attrs) && (!is_string($attrs['title']) || strlen($attrs['title']) > self::MAX_MEDIA_TEXT_BYTES || !preg_match('//u', $attrs['title']))) $errors[] = 'video_title_invalid';
+            if (array_key_exists('caption', $attrs) && (!is_string($attrs['caption']) || strlen($attrs['caption']) > self::MAX_MEDIA_TEXT_BYTES || !preg_match('//u', $attrs['caption']))) $errors[] = 'video_caption_invalid';
+            if (isset($attrs['align']) && !in_array($attrs['align'], ['left','center','right','wide','full'], true)) $errors[] = 'video_alignment_invalid';
+            if (isset($attrs['size']) && !in_array($attrs['size'], ['small','medium','large','full'], true)) $errors[] = 'video_size_invalid';
+            if (isset($attrs['mobile_size']) && !in_array($attrs['mobile_size'], ['full','large','medium'], true)) $errors[] = 'video_mobile_size_invalid';
+            foreach (['controls','loop','muted','autoplay'] as $flag) if (array_key_exists($flag, $attrs) && !is_bool($attrs[$flag])) $errors[] = 'video_playback_option_invalid';
+        }
         if ($type === 'core/threejs_thumb' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['scene_json'], $attrs['label']) || !is_string($attrs['scene_json']) || !$this->isValidThreeJsScene($attrs['scene_json']) || !is_string($attrs['label']) || trim($attrs['label']) === '' || strlen($attrs['label']) > 160 || (array_key_exists('custom_js', $attrs) && (!is_string($attrs['custom_js']) || strlen($attrs['custom_js']) > 8192 || !preg_match('//u', $attrs['custom_js']))) || $node['children'] || $node['content'] !== '')) $errors[] = 'threejs_thumb_attributes_invalid';
         if ($type === 'core/image' && (!isset($attrs['src']) || !$this->isSafeImagePath($attrs['src']) || !isset($attrs['alt']) || !is_string($attrs['alt']) || (isset($attrs['title']) && !is_string($attrs['title'])))) $errors[] = 'image_attributes_invalid';
         if ($type === 'core/group' && isset($attrs['outline_label']) && (!is_string($attrs['outline_label']) || strlen($attrs['outline_label']) > 160 || !preg_match('//u', $attrs['outline_label']))) $errors[] = 'outline_label_invalid';

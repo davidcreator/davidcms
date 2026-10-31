@@ -7,22 +7,26 @@
 - O editor fullscreen usa `z-index:12000`, acima do z-index padrão do modal Bootstrap, por isso a biblioteca podia ficar aberta atrás do canvas e não receber cliques. O hotfix eleva especificamente o modal de Pages e seu backdrop quando a biblioteca está aberta durante o fullscreen.
 - O preview administrativo de imagem usava caminhos relativos a partir de `/admin/`, causando a URL `/dev/admin/view/image/...` observada após upload. Agora a prévia resolve o caminho relativo a partir de `catalog/`, por exemplo `/dev/catalog/view/image/cms/page/...`.
 - Corrigido um erro de sintaxe introduzido na inclusão de `catalogBase`: as chaves `alignments` em `cms/page.php` e `blog/blog.php` estão restauradas com a sintaxe correta.
-- O stack trace posterior mostrou que `strings.media.catalogBase` ainda chegava vazio e o navegador continuava com asset `threejs-9`. O preview agora infere `/catalog/` a partir da URL `/admin/` como fallback e os controllers usam versão de asset `threejs-10-media-base` para invalidar o JS/CSS em cache.
-- Ao selecionar uma imagem, o foco retorna ao bloco do editor antes de o modal fechar, evitando o aviso `aria-hidden` no botão que estava focado.
+- O stack trace posterior mostrou que `strings.media.catalogBase` ainda chegava vazio e o navegador continuava com asset `threejs-9`. Os previews de imagem e vídeo agora inferem `/catalog/` a partir da URL `/admin/` como fallback; os controllers usam versão `threejs-11-video-library` para invalidar JS/CSS em cache.
+- `core/video_file` em Pages agora abre a biblioteca Pages já na aba Vídeo e seleciona/upload aplica o arquivo ao bloco. O fluxo de seleção de vídeo do Blog continua separado.
+- Ao selecionar uma imagem ou vídeo, o foco retorna ao bloco do editor antes de o modal fechar, evitando o aviso `aria-hidden` no botão focado.
 - A URL do erro traz `&amp;` nos parâmetros. O script novo normaliza esse escape antes de criar a URL e usa `URL.searchParams`, preservando parâmetros de sessão existentes.
 
 ## Hotfix
 
 - Inclui o model `Page_media`, separado do Blog e sem banco de dados: lista e grava mídia em diretórios `catalog/view/*/cms/page/`; valida extensão, MIME real, origem de upload, tamanho e caminho; usa nomes aleatórios e recusa symlinks.
-- Inclui o cliente da biblioteca Pages: carrega arquivos, pesquisa/pagina, alterna tipo de mídia, envia com credenciais same-origin e token CSRF, e aplica a imagem enviada/selecionada ao bloco ativo.
+- Inclui o cliente da biblioteca Pages: carrega arquivos, pesquisa/pagina, alterna tipo de mídia, envia com credenciais same-origin e token CSRF, e aplica a mídia selecionada ao bloco ativo.
+- Os controles de `core/video_file` em Pages usam a biblioteca Pages separada e abrem diretamente na aba Vídeo. O bloco agora tem interações de edição próprias, em paralelo ao bloco Image: selecionar/trocar arquivo, editar título e legenda, alinhamento e largura responsiva, alternar controles, repetição, início sem áudio e reprodução automática. A barra de ações contextual também oferece seleção/troca de vídeo com rótulo abaixo do ícone.
+- A prévia do editor reflete as opções de reprodução e de apresentação. O renderer público aplica somente valores validados, escapa título/legenda e força início silenciado quando reprodução automática estiver ligada. O schema legado `core/video_file` permanece compatível; os novos atributos são permitidos no formato atual.
+- Os controllers usam a versão de assets `threejs-12-video-block-controls` para invalidar o cache das interações novas.
 - O evento de abertura agora tem confirmação: se o cliente/modal Pages não estiver carregado, o editor anuncia a falha em vez de ignorar o clique; erros ao abrir ou carregar são mostrados no modal.
 - O ZIP inclui também o controller e template CMS Pages completos, para que as rotas, configuração e modal correspondam ao cliente/model entregues.
-- Não altera banco, migrações, armazenamento do Blog, controller de Blog, `custom_js` ou fluxo independente do Blog.
+- Não altera banco, migrações, armazenamento nem fluxo de seleção de mídia do Blog, e não habilita `custom_js` ou HTML arbitrário. O controller do Blog só recebe a invalidação de cache necessária para o editor compartilhado atualizado.
 
 ## Verificações
 
 - `node --check` para `cms-page-media.js` e `blog-block-editor.js` passou.
-- Bateria estática: **174 verificações aprovadas**; smoke de URLs do editor: **9 aprovados**; smoke adicional confirmou a normalização de `&amp;` e a preservação de rota, token e parâmetros de mídia.
+- Bateria estática: **181 verificações aprovadas**; smoke de URLs do editor: **9 aprovados**; smoke adicional confirmou a normalização de `&amp;` e a preservação de rota, token e parâmetros de mídia.
 - Não foi possível executar PHP CLI, nem navegador ou staging. A resposta HTTP 404 não foi reproduzida localmente; o pacote precisa ser aplicado no ambiente autorizado para confirmar o endpoint.
 
 ## Arquivos completos

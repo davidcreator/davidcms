@@ -389,6 +389,7 @@
           connectedSave: true,
           mediaPickers: root.dataset.mediaPickers !== 'false',
           pageImagePicker: !!(pageContext && pageContext.canSave),
+          pageMediaPicker: !!(pageContext && pageContext.canSave),
           filePicker: root.dataset.filePicker === 'false' ? false : (root.dataset.mediaPickers !== 'false'),
           audioPicker: root.dataset.audioPicker === 'true' || root.dataset.mediaPickers !== 'false',
           videoPicker: root.dataset.videoPicker === 'true' || root.dataset.mediaPickers !== 'false',
