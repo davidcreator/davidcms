@@ -522,8 +522,8 @@ $_['text_block_custom_hint'] = 'Los estilos seguros se aplican a este bloque y s
 $_['text_block_custom_reset'] = 'Restablecer personalización';
 $_['text_block_gallery_preview'] = 'Vista previa de la galería';
 $_['text_block_columns_add'] = 'Añadir columna';
-$_['text_block_columns_remove'] = 'Quitar la última columna';
-$_['text_block_columns_limit'] = 'Usa 2 o 3 columnas. Puedes deshacer la eliminación de la última columna.';
+$_['text_block_columns_remove'] = 'Quitar la última columna (mover contenido a la anterior)';
+$_['text_block_columns_limit'] = 'Usa 2 o 3 columnas. Al quitar la última, sus bloques se mueven a la columna anterior; puedes deshacer el cambio.';
 $_['text_block_column_default'] = 'Columna';
 
 $_['text_block_ribbon_review'] = 'Revisar';
