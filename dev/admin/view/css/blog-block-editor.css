@@ -919,3 +919,22 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 @media(max-width:760px){.rb-preflight-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:420px){.rb-preflight-metrics{grid-template-columns:minmax(0,1fr)}}
 @media(forced-colors:active){.rb-preflight-metric,.rb-preflight-category-empty{border:1px solid CanvasText}.rb-preflight-category-heading{border-color:CanvasText}}
+
+/* F9-81 local revision comparison: side-by-side text previews and clear change states. */
+.rb-revision-history-list{margin:1rem 0 1.5rem;padding:1rem;border:1px solid #d5dce8;border-radius:.8rem;background:#f8fafc}
+.rb-revision-history-list>.rb-preflight-category-title{margin-bottom:.7rem}
+.rb-revision-history-item{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.65rem 0;border-top:1px solid #e2e8f0}
+.rb-revision-history-item:first-of-type{border-top:0}
+.rb-revision-history-label{color:#334155;line-height:1.45}
+.rb-revision-history-item .rb-button{flex:0 0 auto}
+.rb-revision-history-empty{margin:1rem 0;padding:1rem;border:1px dashed #94a3b8;border-radius:.7rem;color:#475569}
+.rb-revision-diff{margin-top:1.5rem}
+.rb-revision-diff>.rb-preflight-category-title{margin-bottom:.35rem}
+.rb-revision-diff-fields{margin:0;color:#475569;font-size:.88rem}
+.rb-revision-diff-previews{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem;width:100%}
+.rb-revision-diff-preview{min-width:0;padding:.65rem;border:1px solid #d5dce8;border-radius:.55rem;background:#f8fafc}
+.rb-revision-diff-preview strong{display:block;margin-bottom:.3rem;color:#475569;font-size:.78rem}
+.rb-revision-diff-preview p{margin:0;color:#26364b;line-height:1.45;overflow-wrap:anywhere}
+.rb-revision-diff-removed-hint{margin:0;color:#7c2d12;font-size:.88rem}
+@media(max-width:640px){.rb-revision-history-item{align-items:flex-start;flex-direction:column}.rb-revision-diff-previews{grid-template-columns:minmax(0,1fr)}}
+@media(forced-colors:active){.rb-revision-history-list,.rb-revision-history-empty,.rb-revision-diff-preview{border:1px solid CanvasText}.rb-revision-history-item{border-color:CanvasText}}
