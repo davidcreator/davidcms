@@ -251,7 +251,14 @@ final class BlockRenderer {
                 return '<p class="rms-block rms-block-button-wrap"><a class="rms-block-button" href="' . $this->escape($url) . '" rel="nofollow noopener noreferrer">' . $content . '</a></p>';
 
             case 'core/separator':
-                return '<hr class="rms-block rms-block-separator">';
+                $lineStyle = (string)($attributes['style'] ?? 'solid');
+                $width = (int)($attributes['width'] ?? 100);
+                $thickness = (int)($attributes['thickness'] ?? 1);
+                $align = (string)($attributes['align'] ?? 'center');
+                $marginLeft = $align === 'right' ? 'auto' : ($align === 'center' ? 'auto' : '0');
+                $marginRight = $align === 'left' ? 'auto' : ($align === 'center' ? 'auto' : '0');
+                $separatorStyle = 'width:' . $width . '%;border:0;border-top:' . $thickness . 'px ' . $lineStyle . ' currentColor;margin-left:' . $marginLeft . ';margin-right:' . $marginRight . ';';
+                return '<hr class="rms-block rms-block-separator rms-block-separator--' . $lineStyle . ' rms-block-separator--width-' . $width . ' rms-block-separator--thickness-' . $thickness . ' rms-block-separator--align-' . $align . '" style="' . $separatorStyle . '">';
 
             case 'core/group':
                 return '<div class="rms-block-group">' . $this->renderNodes($children, $validator, $assetBase, $version) . '</div>';
