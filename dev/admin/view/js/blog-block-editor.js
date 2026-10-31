@@ -96,7 +96,7 @@
       selectBlock:'Selecione primeiro um bloco compatível no documento para associar mídia.', noPicker:'O seletor de mídia não está habilitado nesta tela.',
       assistantTitle:'Assistente de IA', assistantHint:'A integração de IA não está configurada nesta instalação. Nenhum conteúdo será enviado.', assistantPrompt:'Digite sua solicitação…',
       assistantActions:['Resumir documento','Reescrever seleção','Traduzir conteúdo','Gerar ideias','Criar imagem'],
-      exportTitle:'Exportar e compartilhar', exportHint:'O salvamento do site continua no formulário existente. A única exportação disponível aqui é uma cópia JSON do BDRE.',
+      exportTitle:'Exportar e compartilhar', exportHint:'O salvamento do site continua no formulário existente. Exporte uma cópia estrutural BDRE em JSON ou uma versão textual em Markdown; nada será salvo no site.',
       jsonTitle:'Documento BDRE · JSON', jsonHint:'Baixa uma cópia estrutural para backup ou transferência.', unavailable:'Não disponível nesta integração',
       pdf:'PDF', docx:'Word (.docx)', pptx:'PowerPoint (.pptx)', imageFormat:'Imagem (PNG/JPG)', html:'HTML',
       shareTitle:'Compartilhamento', shareHint:'Links, permissões e colaboração precisam de um serviço próprio. Nenhum link será criado por este editor.',
@@ -112,7 +112,7 @@
       selectBlock:'Selecciona primero un bloque compatible en el documento para asociar medios.', noPicker:'El selector multimedia no está habilitado en esta pantalla.',
       assistantTitle:'Asistente de IA', assistantHint:'La integración de IA no está configurada en esta instalación. No se enviará contenido.', assistantPrompt:'Escribe tu solicitud…',
       assistantActions:['Resumir documento','Reescribir selección','Traducir contenido','Generar ideas','Crear imagen'],
-      exportTitle:'Exportar y compartir', exportHint:'El guardado del sitio continúa en el formulario existente. La única exportación disponible aquí es una copia JSON del BDRE.',
+      exportTitle:'Exportar y compartir', exportHint:'El guardado del sitio continúa en el formulario existente. Exporta una copia estructural BDRE en JSON o una versión textual en Markdown; no se guardará en el sitio.',
       jsonTitle:'Documento BDRE · JSON', jsonHint:'Descarga una copia estructural para respaldo o transferencia.', unavailable:'No disponible en esta integración',
       pdf:'PDF', docx:'Word (.docx)', pptx:'PowerPoint (.pptx)', imageFormat:'Imagen (PNG/JPG)', html:'HTML',
       shareTitle:'Compartir', shareHint:'Los enlaces, permisos y colaboración requieren un servicio propio. Este editor no creará ningún enlace.',
@@ -128,7 +128,7 @@
       selectBlock:'Select a compatible block in the document first to attach media.', noPicker:'The media picker is not enabled on this screen.',
       assistantTitle:'AI assistant', assistantHint:'AI is not configured for this installation. No document content will be sent.', assistantPrompt:'Type a request…',
       assistantActions:['Summarize document','Rewrite selection','Translate content','Generate ideas','Create image'],
-      exportTitle:'Export and share', exportHint:'Site saving remains in the existing form. The only available export here is a BDRE JSON copy.',
+      exportTitle:'Export and share', exportHint:'Site saving remains in the existing form. Export a structural BDRE JSON copy or a text-focused Markdown version; nothing is saved to the site.',
       jsonTitle:'BDRE document · JSON', jsonHint:'Download a structural copy for backup or transfer.', unavailable:'Unavailable in this integration',
       pdf:'PDF', docx:'Word (.docx)', pptx:'PowerPoint (.pptx)', imageFormat:'Image (PNG/JPG)', html:'HTML',
       shareTitle:'Sharing', shareHint:'Links, permissions and collaboration require a dedicated service. This editor will not create a link.',
@@ -218,6 +218,29 @@
     };
   }
 
+
+  function markdownExportCopy() {
+    const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
+    if(language.startsWith('es'))return {
+      tool:'Markdown',group:'Exportar Markdown',open:'Markdown (.md)',title:'Vista previa de Markdown',previewLabel:'Contenido Markdown generado',hint:'Previsualiza una conversión textual del documento BDRE antes de descargarla.',back:'Volver a exportaciones',download:'Descargar Markdown',preview:'Previsualizar Markdown',warningCount:'Elementos no representados: %1',warningsTitle:'Notas de conversión',noWarnings:'Todos los bloques se representaron en Markdown según las reglas disponibles.',previewTruncated:'La vista previa se limita a 200 000 caracteres; el archivo descargado incluye todo el contenido.',invalid:'No se puede exportar un documento que no supera la validación BDRE.',tooLarge:'El archivo Markdown supera el límite seguro de exportación.',downloadSuccess:'Archivo Markdown descargado.',downloadError:'No se pudo crear la descarga Markdown.',emptyMarkdown:'Este documento no contiene bloques con texto Markdown.',downloadWithWarnings:'Archivo Markdown descargado con %1 notas sobre elementos no representados.',
+      warnings:{underline:'Markdown no representa el subrayado; se conservó el texto sin ese estilo.',appearance:'El estilo visual del bloque no se representa.',layout:'La disposición visual se simplificó al orden de lectura.',spacer:'El bloque Espaciador se omitió en la exportación textual.',callout_style:'El tono visual del aviso no se conserva.',details_behavior:'El contenido expandible se convirtió en texto abierto.',table_header:'La primera fila se usó como encabezado Markdown.',table_span:'Las celdas combinadas no se conservan en la tabla Markdown.',video_embed:'El vídeo incrustado se convirtió en un enlace.',media_link:'El archivo multimedia se convirtió en un enlace; no se conserva la reproducción integrada.',interactive_3d:'La escena 3D no se incluyó; custom_js no se ejecutó.',cover_layout:'La presentación visual de la portada no se conserva.',gallery_layout:'La galería se convirtió en una secuencia lineal de imágenes.'},
+      calloutTones:{info:'Nota',success:'Éxito',warning:'Atención',danger:'Importante'},labels:{video:'Vídeo',audio:'Audio',file:'Archivo',caption:'Leyenda',scene3D:'Escena 3D'},
+      unsupportedBlock:'Elemento BDRE sin representación Markdown directa: %1',warningBlock:'%1 · %2',
+    };
+    if(language.startsWith('pt'))return {
+      tool:'Markdown',group:'Exportar Markdown',open:'Markdown (.md)',title:'Prévia do Markdown',previewLabel:'Código Markdown gerado',hint:'Confira a conversão textual do documento BDRE antes de baixar o arquivo.',back:'Voltar às exportações',download:'Baixar Markdown',preview:'Pré-visualizar Markdown',warningCount:'Itens não representados: %1',warningsTitle:'Notas da conversão',noWarnings:'Todos os blocos foram representados em Markdown conforme as regras disponíveis.',previewTruncated:'A prévia está limitada a 200.000 caracteres; o arquivo baixado contém todo o conteúdo.',invalid:'Não é possível exportar um documento que não passou na validação BDRE.',tooLarge:'O arquivo Markdown ultrapassa o limite seguro de exportação.',downloadSuccess:'Arquivo Markdown baixado.',downloadError:'Não foi possível criar o download Markdown.',emptyMarkdown:'Este documento não contém blocos com texto Markdown.',downloadWithWarnings:'Arquivo Markdown baixado com %1 notas sobre itens não representados.',
+      warnings:{underline:'Markdown não representa sublinhado; o texto foi mantido sem esse estilo.',appearance:'O estilo visual do bloco não é representado.',layout:'A disposição visual foi simplificada para a ordem de leitura.',spacer:'O bloco Espaçador foi omitido na exportação textual.',callout_style:'O tom visual do aviso não é preservado.',details_behavior:'O conteúdo expansível foi convertido em texto aberto.',table_header:'A primeira linha foi usada como cabeçalho Markdown.',table_span:'Mesclas de células não são preservadas na tabela Markdown.',video_embed:'O vídeo incorporado foi convertido em link.',media_link:'A mídia foi convertida em link; a reprodução incorporada não é preservada.',interactive_3d:'A cena 3D não foi incluída; custom_js não foi executado.',cover_layout:'A apresentação visual da capa não é preservada.',gallery_layout:'A galeria foi convertida em uma sequência linear de imagens.'},
+      calloutTones:{info:'Nota',success:'Sucesso',warning:'Atenção',danger:'Importante'},labels:{video:'Vídeo',audio:'Áudio',file:'Arquivo',caption:'Legenda',scene3D:'Cena 3D'},
+      unsupportedBlock:'Elemento BDRE sem representação direta em Markdown: %1',warningBlock:'%1 · %2'
+    };
+    return {
+      tool:'Markdown',group:'Markdown export',open:'Markdown (.md)',title:'Markdown preview',previewLabel:'Generated Markdown source',hint:'Review a text-focused conversion of the BDRE document before downloading it.',back:'Back to exports',download:'Download Markdown',preview:'Preview Markdown',warningCount:'Items not represented: %1',warningsTitle:'Conversion notes',noWarnings:'All blocks are represented in Markdown according to the available conversion rules.',previewTruncated:'Preview is limited to 200,000 characters; the downloaded file contains the full content.',invalid:'A document that fails BDRE validation cannot be exported.',tooLarge:'The Markdown file exceeds the safe export size limit.',downloadSuccess:'Markdown file downloaded.',downloadError:'The Markdown download could not be created.',emptyMarkdown:'This document has no blocks with Markdown text.',downloadWithWarnings:'Markdown file downloaded with %1 notes about items not represented.',
+      warnings:{underline:'Markdown has no standard underline syntax; text is preserved without that styling.',appearance:'Block visual styling is not represented.',layout:'Visual arrangement was flattened to reading order.',spacer:'Spacer block was omitted from the text export.',callout_style:'Callout visual tone is not preserved.',details_behavior:'Expandable content was exported as open text.',table_header:'First table row was used as the Markdown header.',table_span:'Merged cells are not preserved in the Markdown table.',video_embed:'Embedded video was converted to a link.',media_link:'Media was converted to a link; embedded playback is not preserved.',interactive_3d:'3D scene was not included; custom_js was not executed.',cover_layout:'Cover visual presentation is not preserved.',gallery_layout:'Gallery layout was converted to a linear sequence of images.'},
+      calloutTones:{info:'Note',success:'Success',warning:'Warning',danger:'Important'},labels:{video:'Video',audio:'Audio',file:'File',caption:'Caption',scene3D:'3D scene'},
+      unsupportedBlock:'BDRE item without a direct Markdown representation: %1',warningBlock:'%1 · %2'
+    };
+  }
+
   function contentModelCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
     const n=(type,content,attributes,children)=>({type,content:content||'',attributes:attributes||{},children:children||[]});
@@ -260,7 +283,7 @@
     plus:'M12 5v14M5 12h14', alignLeft:'M4 6h16M4 10h10M4 14h16M4 18h10', alignCenter:'M4 6h16M7 10h10M4 14h16M7 18h10', alignRight:'M4 6h16M10 10h10M4 14h16M10 18h10', copy:'M8 8V4h12v12h-4M4 8h12v12H4z', undo:'M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-2', redo:'m15 14 5-5-5-5m5 5H10a6 6 0 0 0 0 12h2',
     desktop:'M3 4h18v13H3zM8 21h8M12 17v4', tablet:'M6 2h12v20H6zM11 18h2', mobile:'M8 2h8v20H8zM11 18h2',
     up:'m18 15-6-6-6 6M12 9v12', down:'m6 9 6 6 6-6M12 3v12', trash:'M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3',
-    checklist:'M9 6h12M9 12h12M9 18h12M3 6l1.5 1.5L7 5m-4 7 1.5 1.5L7 11m-4 7 1.5 1.5L7 17', compare:'M4 5h6v14H4zM14 5h6v14h-6zM6 8h2m-2 4h2m8-4h2m-2 4h2M10 12h4',
+    checklist:'M9 6h12M9 12h12M9 18h12M3 6l1.5 1.5L7 5m-4 7 1.5 1.5L7 11m-4 7 1.5 1.5L7 17', markdown:'M5 3h10l4 4v14H5zM15 3v5h5M8 13h2l1 4 1-4h2v5m2-5v5m0 0 2-2m-2 2-2-2', compare:'M4 5h6v14H4zM14 5h6v14h-6zM6 8h2m-2 4h2m8-4h2m-2 4h2M10 12h4',
     bookOpen:'M12 7v14M4 5.5c3-1 5.7-.2 8 1.5 2.3-1.7 5-2.5 8-1.5v13c-3-1-5.7-.2-8 1.5-2.3-1.7-5-2.5-8-1.5zM7 9h2M15 9h2M7 12h2M15 12h2', clock:'M12 8v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
     paragraph:'M4 6h16M4 10h16M4 14h10M4 18h10', heading:'M4 5v14M20 5v14M4 12h16', list:'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
     image:'M4 4h16v16H4zM8 14l3-3 5 5M14 9h.01', quote:'M5 6h6v6H5zM13 6h6v6h-6zM5 12c0 3-1 4-2 5m10-5c0 3-1 4-2 5', video:'m9 7 9 5-9 5zM4 5v14', threejs:'m12 3 8 4v10l-8 4-8-4V7l8-4zm-8 4 8 4 8-4m-8 4v10', button:'M4 7h16v10H4z', bold:'M7 5h6a4 4 0 0 1 0 8H7zM7 13h7a4 4 0 0 1 0 8H7z', italic:'M15 4h-5m4 16H9m5-16-4 16', underline:'M6 4v7a6 6 0 0 0 12 0V4M4 21h16', strike:'M5 12h14M7 6c1-2 3-2 5-2 3 0 5 1 5 3 0 2-2 3-5 4-3 1-5 2-5 5 0 2 2 4 5 4 2 0 4-1 5-3', link:'M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7M14 11a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 21l1.7-1.7', info:'M12 8h.01M11 12h1v5h1M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
@@ -963,6 +986,89 @@
     return {valid:true,items,added:items.filter((item)=>item.kind==='added').length,removed:items.filter((item)=>item.kind==='removed').length,changed:items.filter((item)=>item.kind==='changed').length};
   }
 
+
+  function convertDocumentToMarkdown(document, allowPageMedia) {
+    const validation=validateDocument(document,allowPageMedia);
+    if(!validation.valid)return {valid:false,errors:validation.errors,markdown:'',warnings:[]};
+    const warnings=[],seenWarnings=new Set(),copy=markdownExportCopy();
+    const warn=(code,node)=>{const key=code+':'+node.id;if(seenWarnings.has(key))return;seenWarnings.add(key);warnings.push({code,nodeId:node.id,type:node.type});};
+    const escapeText=(value)=>String(value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/([\\`*_{}\[\]()#+.!|>~-])/g,'\\$1');
+    const safeDestination=(value)=>String(value||'').replace(/</g,'%3C').replace(/>/g,'%3E').replace(/\\/g,'%5C');
+    const inline=(runs,node)=>{
+      if(!Array.isArray(runs))return '';
+      return runs.map((run)=>{
+        const marks=Array.isArray(run.marks)?run.marks:[];let text;
+        if(marks.includes('code')){
+          const ticks=(String(run.text).match(/`+/g)||[]).reduce((max,item)=>Math.max(max,item.length),0)+1;const fence='`'.repeat(Math.max(1,ticks));const pad=/^\s|\s$/.test(String(run.text))||String(run.text).startsWith('`')||String(run.text).endsWith('`')?' ':'';text=fence+pad+String(run.text)+pad+fence;
+        }else{
+          text=escapeText(run.text);
+          if(marks.includes('underline'))warn('underline',node);
+          if(marks.includes('strike'))text='~~'+text+'~~';
+          if(marks.includes('italic'))text='*'+text+'*';
+          if(marks.includes('bold'))text='**'+text+'**';
+        }
+        if(run.href)text='['+text+'](<'+safeDestination(run.href)+'>)';
+        return text;
+      }).join('');
+    };
+    const plain=(node)=>Array.isArray(node.content)?node.content.map((run)=>run&&typeof run.text==='string'?run.text:'').join(''):String(node.content||'');
+    const quote=(text)=>String(text||'').split('\n').map((line)=>line?'> '+line:'>').join('\n');
+    const codeFence=(text)=>'`'.repeat(Math.max(3,((String(text).match(/`+/g)||[]).reduce((max,item)=>Math.max(max,item.length),0)+1)));
+    const imageMarkdown=(node)=>{
+      const title=node.attributes.title?(' "'+String(node.attributes.title).replace(/[\r\n]+/g,' ').replace(/"/g,'\\"')+'"'):'';
+      return '!['+escapeText(node.attributes.alt||'')+'](<'+safeDestination(node.attributes.src)+'>'+title+')';
+    };
+    const renderNodes=(nodes)=>nodes.map((node)=>renderNode(node)).filter((text)=>text!==null&&text!=='').join('\n\n');
+    const renderNode=(node)=>{
+      const a=node.attributes||{};if(a.appearance)warn('appearance',node);
+      switch(node.type){
+        case 'core/paragraph':return inline(node.content,node);
+        case 'core/heading':return '#'.repeat(Number(a.level)||2)+' '+inline(node.content,node);
+        case 'core/list':{
+          const marker=a.ordered?'ordered':'unordered';return node.children.map((item,index)=>{
+            const prefix=marker==='ordered'?(index+1)+'. ':'- ';return prefix+inline(item.content,item).replace(/\n/g,'\n  ');
+          }).join('\n');
+        }
+        case 'core/list-item':return inline(node.content,node);
+        case 'core/quote':return quote(inline(node.content,node));
+        case 'core/callout':warn('callout_style',node);return quote('**'+(copy.calloutTones[a.tone]||'Note')+':** '+inline(node.content,node));
+        case 'core/details':warn('details_behavior',node);return '**'+escapeText(a.summary||'')+'**'+(plain(node)?'\n\n'+inline(node.content,node):'');
+        case 'core/code':{const fence=codeFence(node.content);return fence+'\n'+String(node.content||'')+'\n'+fence;}
+        case 'core/separator':return '***';
+        case 'core/spacer':warn('spacer',node);return '';
+        case 'core/image':return imageMarkdown(node)+(a.caption?'\n\n*'+escapeText(a.caption)+'*':'');
+        case 'core/cover':if(a.align&&a.align!=='content')warn('cover_layout',node);return imageMarkdown(node)+'\n\n'+renderNodes(node.children);
+        case 'core/gallery':warn('gallery_layout',node);return node.children.map(imageMarkdown).join('  \n');
+        case 'core/group':warn('layout',node);return renderNodes(node.children);
+        case 'core/columns':warn('layout',node);return node.children.map((column)=>renderNodes(column.children)).filter(Boolean).join('\n\n');
+        case 'core/column':return renderNodes(node.children);
+        case 'core/button':return '['+inline(node.content,node)+'](<'+safeDestination(a.url)+'>)';
+        case 'core/file':return '['+inline(node.content,node)+'](<'+safeDestination(a.src)+'>)';
+        case 'core/audio':warn('media_link',node);return '['+(inline(node.content,node)||copy.labels.audio)+'](<'+safeDestination(a.src)+'>)';
+        case 'core/video_file':warn('media_link',node);return '['+escapeText(a.title||copy.labels.video)+'](<'+safeDestination(a.src)+'>)'+(a.caption?'\n\n*'+escapeText(a.caption)+'*':'');
+        case 'core/video_embed':warn('video_embed',node);{const href=a.url||a.src;return '['+copy.labels.video+'](<'+safeDestination(href)+'>)';}
+        case 'core/table':{
+          const rows=node.children.map((row,rowIndex)=>row.children.map((cell)=>{
+            if((cell.attributes.rowspan||1)>1||(cell.attributes.colspan||1)>1)warn('table_span',node);
+            return inline(cell.content,cell).replace(/\n/g,' ');
+          }));
+          if(!rows.length)return '';
+          const hasHeader=!!a.header||node.children[0].children.some((cell)=>tableCellIsHeader(node,0,cell));
+          const fullFirstHeader=node.children[0].children.every((cell)=>tableCellIsHeader(node,0,cell));
+          if(!hasHeader||!fullFirstHeader)warn('table_header',node);
+          const width=Math.max(1,...rows.map((row)=>row.length));const normalizeRow=(row)=>Array.from({length:width},(_,index)=>row[index]||'');
+          const header=normalizeRow(rows[0]),separator=Array(width).fill('---');
+          const body=rows.slice(1).map(normalizeRow);
+          return [header,separator,...body].map((row)=>'| '+row.join(' | ')+' |').join('\n');
+        }
+        case 'core/threejs_thumb':warn('interactive_3d',node);return '**'+escapeText(copy.unsupportedBlock.replace('%1',copy.labels.scene3D))+'**'+(a.label?'\n\n'+escapeText(a.label):'');
+        default:warn('appearance',node);return '';
+      }
+    };
+    const markdown=renderNodes(document.blocks).replace(/\n{3,}/g,'\n\n').trim();
+    return {valid:true,markdown,warnings};
+  }
+
   function moveBlockAcrossHierarchy(document, nodeId, direction, allowPageMedia) {
     if (!document || document.format_version !== 2 || !Array.isArray(document.blocks) || !['indent','outdent'].includes(direction) || !validateDocument(document, allowPageMedia).valid) return null;
     const next = CLONE(document);
@@ -1081,6 +1187,7 @@
       this.preflight = preflightReviewCopy();
       this.revisionCompare = revisionCompareCopy();
       this.revisionCompareIndex = null;
+      this.markdownExport = markdownExportCopy();
       this.findReplaceOpen = false; this.findQuery = ''; this.replaceQuery = ''; this.findCaseSensitive = false; this.findWholeWord = false; this.activeFindIndex = -1;
       this.documentStatsTimer = null;
       this.fullscreenReturnFocus = null;
@@ -1436,6 +1543,10 @@
       else if (name === 'workspace-pattern-filter') { this.patternFilter=button.dataset.filter||'all'; this.render(); const active=Array.from(this.root.querySelectorAll('[data-action="workspace-pattern-filter"]')).find((item)=>item.dataset.filter===this.patternFilter); if(active)active.focus(); }
       else if (name === 'import-file') { const input=this.root.querySelector('[data-import-file]'); if (input) input.click(); }
       else if (name === 'export-document') this.exportDocumentFile();
+      else if (name === 'download-markdown') this.exportMarkdownFile();
+      else if (name === 'preview-markdown') { this.workspaceView='markdown-preview';this.previewMode=false;this.render();const title=this.root.querySelector('[data-markdown-preview-title]');if(title)title.focus(); }
+      else if (name === 'markdown-preview-back') { this.workspaceView='export';this.render();const target=this.root.querySelector('[data-action="preview-markdown"]');if(target)target.focus(); }
+      else if (name === 'markdown-warning-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'toggle-revision-history') { this.historyOpen = !this.historyOpen; this.render(); }
       else if (name === 'inspector-tab') { this.inspectorTab=button.dataset.inspectorTab==='customize'?'customize':'content'; this.render(); const active=Array.from(this.root.querySelectorAll('[data-action="inspector-tab"]')).find((item)=>item.dataset.inspectorTab===this.inspectorTab); if(active)active.focus(); }
       else if (name === 'reset-appearance') this.updateNode(button.dataset.nodeId || this.selectedId,(node)=>{delete node.attributes.appearance;});
@@ -2499,6 +2610,19 @@
       } catch (_) { this.announceStatus(this.strings.exportError || 'Não foi possível exportar o documento BDRE.'); }
     }
 
+    exportMarkdownFile() {
+      const result=convertDocumentToMarkdown(this.state,this.allowPageMedia);
+      if(!result.valid){this.announceStatus(this.markdownExport.invalid);return false;}
+      if(utf8Length(result.markdown)>8388608){this.announceStatus(this.markdownExport.tooLarge);return false;}
+      try{
+        const blob=new Blob([result.markdown],{type:'text/markdown;charset=utf-8'});
+        const url=global.URL.createObjectURL(blob),link=global.document.createElement('a');
+        link.href=url;link.download='bdre-document-'+new Date().toISOString().slice(0,10)+'.md';link.hidden=true;global.document.body.appendChild(link);link.click();link.remove();
+        global.setTimeout(()=>global.URL.revokeObjectURL(url),1000);
+        this.announceStatus(result.warnings.length?this.markdownExport.downloadWithWarnings.replace('%1',String(result.warnings.length)):this.markdownExport.downloadSuccess);return true;
+      }catch(_){this.announceStatus(this.markdownExport.downloadError);return false;}
+    }
+
     async importLocalFile(file) {
       if (!global.ReamurPageImporter) { this.announceStatus(this.strings.importUnavailable || 'Importador indisponível.'); return; }
       try {
@@ -2790,6 +2914,7 @@
         let g=this.renderRibbonGroup(this.strings.groupPanels||'Painéis recolhíveis');
         [['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline'],['settings',this.strings.builderSettings,'settings']].forEach(([panelName,label,icon])=>{const b=this.button(label,'builder-panel',{panel:panelName,icon});b.setAttribute('aria-pressed',String(this.fullscreen?(panelName==='settings'?(this.inspectorOpen&&!this.previewMode):this.activePanel===panelName):this.activePanel===panelName));if(this.fullscreen&&this.previewMode&&panelName==='settings')b.disabled=true;g.tools.append(b);});panel.append(g.group);
         const modelsTool=this.button(this.ui.models,'workspace-tool',{tool:'models',icon:'layers',showLabel:true});modelsTool.dataset.workspaceTool='models';g.tools.append(modelsTool);
+        g=this.renderRibbonGroup(this.markdownExport.group);const markdownTool=this.button(this.markdownExport.open,'workspace-tool',{tool:'export',icon:'markdown',showLabel:true});markdownTool.dataset.workspaceTool='export';g.tools.append(markdownTool);panel.append(g.group);
         g=this.renderRibbonGroup(this.strings.groupPreview||'Pré-visualização');
         [['desktop',this.strings.previewDesktop],['tablet',this.strings.previewTablet],['mobile',this.strings.previewMobile]].forEach(([size,label])=>{const b=this.button(label,'preview',{size});b.setAttribute('aria-pressed',String(size===this.preview));g.tools.append(b);});
         const preview=this.button(this.previewMode?(this.strings.editMode||'Voltar à edição'):(this.strings.previewMode||'Pré-visualizar'),'toggle-preview',{icon:this.previewMode?'collapse':'desktop'});preview.setAttribute('aria-pressed',String(this.previewMode));g.tools.append(preview);
@@ -2953,6 +3078,27 @@
       panel.append(cards);wrap.append(panel);return wrap;
     }
 
+    renderMarkdownPreview() {
+      const copy=this.markdownExport,wrap=this.el('div','rb-workspace-screen-content rb-markdown-preview-workspace');
+      const header=this.el('div','rb-accessibility-header'),title=this.el('h1','rb-workspace-screen-title',copy.title);title.dataset.markdownPreviewTitle='1';title.tabIndex=-1;
+      header.append(title,this.button(copy.back,'markdown-preview-back',{icon:'collapse',showLabel:true}));
+      wrap.append(header,this.el('p','rb-workspace-screen-lead',copy.hint));
+      const result=convertDocumentToMarkdown(this.state,this.allowPageMedia);
+      if(!result.valid){const error=this.el('p','rb-workspace-warning',copy.invalid);error.setAttribute('role','alert');wrap.append(error);return wrap;}
+      if(utf8Length(result.markdown)>8388608){const error=this.el('p','rb-workspace-warning',copy.tooLarge);error.setAttribute('role','alert');wrap.append(error);return wrap;}
+      const actions=this.el('div','rb-markdown-preview-actions');actions.append(this.button(copy.download,'download-markdown',{icon:'file',showLabel:true}),this.el('p','rb-markdown-warning-count',copy.warningCount.replace('%1',String(result.warnings.length))));wrap.append(actions);
+      if(result.warnings.length){
+        const section=this.el('section','rb-markdown-warnings');section.setAttribute('aria-label',copy.warningsTitle);section.append(this.el('h2','rb-preflight-category-title',copy.warningsTitle));
+        const list=this.el('div','rb-markdown-warning-list');list.setAttribute('role','list');
+        result.warnings.forEach((warning)=>{const item=this.el('article','rb-markdown-warning-item');item.setAttribute('role','listitem');item.append(this.icon('info','rb-icon'),this.el('span','',copy.warningBlock.replace('%1',this.label(warning.type)).replace('%2',copy.warnings[warning.code]||copy.unsupportedBlock.replace('%1',this.label(warning.type)))));item.append(this.button(copy.openBlock,'markdown-warning-focus',{nodeId:warning.nodeId,icon:'outline',showLabel:true}));list.append(item);});
+        section.append(list);wrap.append(section);
+      }else wrap.append(this.el('p','rb-markdown-no-warnings',copy.noWarnings));
+      if(!result.markdown)wrap.append(this.el('p','rb-markdown-no-warnings',copy.emptyMarkdown));
+      const preview= this.el('pre','rb-markdown-preview-code');preview.tabIndex=0;preview.setAttribute('aria-label',copy.previewLabel);const maxPreview=200000;preview.textContent=result.markdown.length>maxPreview?result.markdown.slice(0,maxPreview):result.markdown;wrap.append(preview);
+      if(result.markdown.length>maxPreview)wrap.append(this.el('p','rb-markdown-preview-truncated',copy.previewTruncated));
+      return wrap;
+    }
+
     renderWorkspaceScreen() {
       const surface=this.el('section','rb-canvas rb-workspace-screen');surface.id='rb-workspace-surface-'+this.instance;surface.setAttribute('role','region');
       if(this.workspaceView==='models'){
@@ -2988,11 +3134,14 @@
         const badge=this.el('p','rb-workspace-warning',this.ui.assistantHint);badge.setAttribute('role','status');main.append(badge,this.icon('spark','rb-assistant-spark'),this.el('h1','rb-workspace-screen-title',this.ui.assistantTitle),this.el('p','rb-workspace-screen-lead',this.ui.assistantHint));
         const prompt=this.el('textarea','rb-assistant-prompt');prompt.placeholder=this.ui.assistantPrompt;prompt.disabled=true;prompt.setAttribute('aria-label',this.ui.assistantPrompt);main.append(prompt);
         const send=this.button(this.ui.assistant,'assistant-send',{icon:'spark'});send.disabled=true;main.append(send);frame.append(rail,main);surface.append(frame);
+      }else if(this.workspaceView==='markdown-preview'){
+        surface.setAttribute('aria-label',this.markdownExport.title);surface.append(this.renderMarkdownPreview());
       }else if(this.workspaceView==='export'){
         surface.setAttribute('aria-label',this.ui.exportTitle);const wrap=this.el('div','rb-workspace-screen-content');wrap.append(this.el('h1','rb-workspace-screen-title',this.ui.exportTitle),this.el('p','rb-workspace-screen-lead',this.ui.exportHint));
         const grid=this.el('div','rb-workspace-export-grid');const available=this.el('section','rb-workspace-card rb-workspace-json-card');available.append(this.el('h2','',this.ui.jsonTitle),this.el('p','',this.ui.jsonHint),this.button(this.strings.exportDocument||'Exportar BDRE','export-document',{icon:'file'}));
         const input=this.el('input','rb-import-file-input');input.type='file';input.accept=(global.ReamurPageImporter&&global.ReamurPageImporter.formats||[]).join(',');input.dataset.importFile='1';input.classList.add('rb-sr-only');input.tabIndex=-1;input.setAttribute('aria-label',this.strings.importFile||'Importar arquivo');
         available.append(this.button(this.strings.importFile||'Importar documento','import-file',{icon:'file'}),input);grid.append(available);
+        const markdownCard=this.el('section','rb-workspace-card rb-markdown-export-card');markdownCard.append(this.icon('markdown','rb-markdown-export-icon'),this.el('h2','',this.markdownExport.open),this.el('p','',this.markdownExport.hint),this.button(this.markdownExport.preview,'preview-markdown',{icon:'desktop',showLabel:true}),this.button(this.markdownExport.download,'download-markdown',{icon:'file',showLabel:true}));grid.append(markdownCard);
         const formats=this.el('section','rb-workspace-card');formats.append(this.el('h2','',this.ui.unavailable));
         [[this.ui.pdf,'PDF'],[this.ui.docx,'Word'],[this.ui.pptx,'PowerPoint'],[this.ui.imageFormat,'Image'],[this.ui.html,'HTML']].forEach(([label,kind])=>{const row=this.el('div','rb-workspace-format-row');row.append(this.el('span','',label),this.el('span','rb-workspace-format-disabled',this.ui.unavailable));formats.append(row);});grid.append(formats);wrap.append(grid);surface.append(wrap);
       }else if(this.workspaceView==='share'){
@@ -3664,6 +3813,7 @@
     analyzeDocumentReadability: analyzeDocumentReadability,
     analyzeDocumentPreflight: analyzeDocumentPreflight,
     compareBDREDocuments: compareBDREDocuments,
+    convertDocumentToMarkdown: convertDocumentToMarkdown,
     validLocalImage: validLocalImage,
     validLocalDownload: validLocalDownload,
     validLocalAudio: validLocalAudio,

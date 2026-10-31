@@ -938,3 +938,21 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-revision-diff-removed-hint{margin:0;color:#7c2d12;font-size:.88rem}
 @media(max-width:640px){.rb-revision-history-item{align-items:flex-start;flex-direction:column}.rb-revision-diff-previews{grid-template-columns:minmax(0,1fr)}}
 @media(forced-colors:active){.rb-revision-history-list,.rb-revision-history-empty,.rb-revision-diff-preview{border:1px solid CanvasText}.rb-revision-history-item{border-color:CanvasText}}
+
+/* F9-82 safe Markdown export card and literal, scrollable source preview. */
+.rb-markdown-export-card{display:flex;flex-direction:column;align-items:flex-start;gap:.55rem;border-color:#cbd5e1;background:linear-gradient(145deg,#fff 0%,#f8fafc 100%)}
+.rb-markdown-export-card .rb-markdown-export-icon{width:1.6rem;height:1.6rem;color:#315ee8}
+.rb-markdown-export-card .rb-button{max-width:100%}
+.rb-markdown-preview-workspace{padding:clamp(1rem,3vw,2.25rem)}
+.rb-markdown-preview-actions{display:flex;align-items:center;flex-wrap:wrap;gap:.75rem;margin:1rem 0}
+.rb-markdown-warning-count{margin:0;color:#475569;font-weight:650}
+.rb-markdown-warnings{margin:1rem 0;padding:1rem;border:1px solid #d5dce8;border-radius:.75rem;background:#f8fafc}
+.rb-markdown-warning-list{display:grid;gap:.5rem}
+.rb-markdown-warning-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:.6rem;padding:.55rem 0;border-top:1px solid #e2e8f0}
+.rb-markdown-warning-item:first-child{border-top:0}
+.rb-markdown-warning-item>.rb-icon{color:#9a3412}
+.rb-markdown-preview-code{max-height:min(70vh,48rem);overflow:auto;margin:1rem 0;padding:1rem;border:1px solid #cbd5e1;border-radius:.75rem;background:#f8fafc;color:#172033;font: .84rem/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;tab-size:2}
+.rb-markdown-preview-truncated{color:#7c2d12;font-size:.9rem}
+.rb-markdown-no-warnings{padding:.75rem 1rem;border:1px solid #86efac;border-radius:.65rem;background:#f0fdf4;color:#14532d}
+@media(max-width:620px){.rb-markdown-warning-item{grid-template-columns:auto minmax(0,1fr)}.rb-markdown-warning-item .rb-button{grid-column:2;justify-self:start}}
+@media(forced-colors:active){.rb-markdown-export-card,.rb-markdown-warnings,.rb-markdown-preview-code,.rb-markdown-no-warnings{border:1px solid CanvasText}}
