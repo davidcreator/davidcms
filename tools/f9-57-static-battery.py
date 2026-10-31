@@ -74,7 +74,7 @@ for name, ok in [
     ('Admin image previews resolve relative media paths from catalog base', 'resolveAdminMediaUrl(src)' in JS and 'this.resolveAdminMediaUrl(node.attributes.src)' in JS and "'catalogBase' => $this->pageCatalogAssetUrl()" in PAGE_CONTROLLER and "'catalogBase' => $this->catalogAssetUrl()" in BLOG_CONTROLLER),
     ('Admin media path has a catalog fallback when server strings omit catalogBase', "current.pathname.indexOf('/admin/')" in JS and "current.pathname.slice(0,adminIndex+1)+'catalog/'" in JS),
     ('Selecting media returns focus to the editor before hiding the modal', "activeEditor.focusNode(activeEditor.selectedId)" in PAGE_MEDIA_JS),
-    ('Page and Blog asset versions bust cached media preview code', "'-threejs-21-columns-controls'" in PAGE_CONTROLLER and "'-threejs-21-columns-controls'" in BLOG_CONTROLLER),
+    ('Page and Blog asset versions bust cached media preview code', "'-threejs-22-bdre-ui-system'" in PAGE_CONTROLLER and "'-threejs-22-bdre-ui-system'" in BLOG_CONTROLLER),
     ('Page and Blog inspector string arrays keep valid alignment keys after catalog base addition', "'alignments' => ['left'" in PAGE_CONTROLLER and "'alignments' => ['left'" in BLOG_CONTROLLER and "'alignments => ['left'" not in PAGE_CONTROLLER+BLOG_CONTROLLER),
     ('CMS Pages media open event is acknowledged and missing listener is announced accessibly', 'cancelable:true' in JS and 'if(!event.defaultPrevented)' in JS and 'event.preventDefault()' in PAGE_MEDIA_JS and 'pageMediaUnavailable:' in JS),
     ('CMS Pages media modal and backdrop stack above the fullscreen editor', 'body.rb-bdre-fullscreen-open.rb-page-media-open #cmsPageMediaModal{z-index:12050}' in CSS and 'body.rb-bdre-fullscreen-open.rb-page-media-open .modal-backdrop{z-index:12040}' in CSS and 'z-index:12000' in CSS and "classList.add('rb-page-media-open')" in PAGE_MEDIA_JS),
@@ -141,6 +141,10 @@ for name, ok in [
     ('safeActionUrl helper is defined using the URL validator', 'function safeActionUrl(value)' in JS and 'return validActionUrl(value) ? value : null;' in JS),
     ('all preview URL paths call the defined helper', JS.count('safeActionUrl(') >= 4),
     ('toolbar visible labels stack under icon', 'flex-direction:column' in CSS and '.rb-block-toolbar .rb-button .rb-button-label:not(.rb-sr-only)' in CSS),
+    ('F9-75 shows icon-only action labels visually while keeping assistive descriptions hidden', '.rb-editor .rb-button-icon-only>.rb-button-label.rb-sr-only' in CSS and '.rb-editor .rb-button-icon-only>.rb-sr-only:not(.rb-button-label)' in CSS),
+    ('F9-75 uses one light palette in fullscreen and embedded modes', '.rb-editor.is-fullscreen .rb-office-menu{background:#f8f9fb' in CSS and '.rb-editor.is-fullscreen .rb-toolbar{background:#f9fafb' in CSS and '.rb-editor.is-fullscreen .rb-editor-brand{color:#1f2b3b}' in CSS),
+    ('F9-75 scopes the responsive interface to the editor and handles narrow widths', '--rb-ink:#182230' in CSS and '@media(max-width:900px){' in CSS and '@media(max-width:640px){' in CSS and '.rb-layout>*{min-width:0}' in CSS),
+    ('F9-75 preserves native editor actions without introducing external UI assets', 'Presentation-only' in CSS and 'No external fonts/assets' in CSS and 'https://' not in CSS),
     ('icon-only tools receive native hover title and description', "b.setAttribute('title',name+'\\n'+tooltipDescription)" in JS),
 ]:
     results.append(('editor-wide', name, ok))
