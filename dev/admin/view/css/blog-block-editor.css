@@ -113,6 +113,14 @@
 .rb-table-preview table{width:100%;min-width:28rem;border-collapse:collapse;table-layout:fixed}
 .rb-table-preview th,.rb-table-preview td{border:1px solid #c8d3e2;padding:.4rem;vertical-align:top;min-width:6rem}
 .rb-table-preview th{background:#eef2f8}
+.rb-table-inspector-section{display:grid;gap:.4rem;padding:.25rem 0 .75rem}
+.rb-table-inspector-section .rb-help-text{margin:0;color:#687890;font-size:.69rem;line-height:1.45}
+.rb-table-inspector-wrap{max-width:100%;overflow:auto;border:1px solid #dce4ef;border-radius:.45rem}
+.rb-table-inspector-grid{width:100%;min-width:26rem;border-collapse:collapse;table-layout:fixed}
+.rb-table-inspector-grid th,.rb-table-inspector-grid td{min-width:5rem;padding:.25rem;border:1px solid #dce4ef;vertical-align:top}
+.rb-table-inspector-grid th{background:#f1f4fa}
+.rb-table-inspector-cell-editor{min-height:2.5rem;padding:.3rem;overflow-wrap:anywhere;white-space:pre-wrap;font-size:.72rem;line-height:1.35}
+.rb-table-inspector-cell-editor:focus-visible{outline:2px solid #174ea6;outline-offset:-2px}
 .rb-table-cell-content{min-height:2rem;outline:none;overflow-wrap:anywhere;white-space:pre-wrap}
 .rb-table-actions{display:flex;flex-wrap:wrap;gap:.35rem}
 @media(max-width:560px){.rb-table-preview table{min-width:36rem}}
