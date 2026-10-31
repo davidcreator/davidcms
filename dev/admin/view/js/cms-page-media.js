@@ -71,6 +71,7 @@
       return;
     }
     setAlert('', false);
+    if (activeEditor.selectedId && typeof activeEditor.focusNode === 'function') activeEditor.focusNode(activeEditor.selectedId);
     if (modalInstance) modalInstance.hide();
   }
   function renderFiles(files) {

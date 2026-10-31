@@ -10,6 +10,10 @@ assert.equal(url.searchParams.get('kind'),'image');
 assert.equal(url.searchParams.get('search'),'foto & capa');
 assert.equal(url.searchParams.get('page'),'1');
 const assetUrl=new URL('view/image/cms/page/87277837630b175256e02fc96a03ad9c.jpg','http://localhost/davidcms/dev/catalog/');
+function inferCatalogBase(href){const current=new URL(href);const adminIndex=current.pathname.indexOf('/admin/');if(adminIndex>=0){current.pathname=current.pathname.slice(0,adminIndex+1)+'catalog/';current.search='';current.hash='';return current.href;}return '';}
+const fallbackBase=inferCatalogBase('http://localhost/davidcms/dev/admin/index.php?route=cms%2Fpage.edit');
+assert.equal(fallbackBase,'http://localhost/davidcms/dev/catalog/');
+assert.equal(new URL('view/image/cms/page/87277837630b175256e02fc96a03ad9c.jpg',fallbackBase).href,assetUrl.href);
 assert.equal(assetUrl.href,'http://localhost/davidcms/dev/catalog/view/image/cms/page/87277837630b175256e02fc96a03ad9c.jpg');
 console.log('PASS CMS Pages media URL: HTML ampersands normalized; route, session token and query parameters preserved.');
-console.log('PASS CMS Pages image preview URL resolves against catalog/, not the admin directory.');
+console.log('PASS CMS Pages image preview URL resolves against catalog/, not the admin directory, using config or admin-path fallback.');

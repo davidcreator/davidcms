@@ -977,7 +977,7 @@ class Blog extends \Reamur\System\Engine\Controller {
                 'alt' => $data['text_block_image_alt'], 'title' => $data['text_block_image_title'],
                 'videoPreview' => $data['text_block_video_preview'], 'videoPreviewHint' => $data['text_block_video_preview_hint'],
                 'placeholder' => $data['text_block_media_placeholder'], 'catalogBase' => $this->catalogAssetUrl(),
-                'alignments => ['left'=>$data['text_block_align_left'],'center'=>$data['text_block_align_center'],'right'=>$data['text_block_align_right'],'content'=>$data['text_block_align_content'],'wide'=>$data['text_block_align_wide'],'full'=>$data['text_block_align_full']],
+                'alignments' => ['left'=>$data['text_block_align_left'],'center'=>$data['text_block_align_center'],'right'=>$data['text_block_align_right'],'content'=>$data['text_block_align_content'],'wide'=>$data['text_block_align_wide'],'full'=>$data['text_block_align_full']],
                 'sizes' => ['small'=>$data['text_block_size_small'],'medium'=>$data['text_block_size_medium'],'large'=>$data['text_block_size_large'],'full'=>$data['text_block_size_full']],
                 'mobileSizes' => ['full'=>$data['text_block_mobile_full'],'large'=>$data['text_block_mobile_large'],'medium'=>$data['text_block_mobile_medium']],
             ],
@@ -1017,7 +1017,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['block_editor_available'] = $data['can_modify'] && $this->model_blog_blog->blogBlockContentTableExists();
         $data['preview_url'] = $data['block_editor_available'] ? $this->url->link('blog/blog.preview') : '';
         if ($data['block_editor_available']) {
-            $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-9';
+            $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-10-media-base';
             $assetBase = rtrim((string)$this->config->get('site_url'), '/') . '/view/';
             $catalogAssetBase = $this->catalogAssetUrl();
             $catalogViewBase = $catalogAssetBase . 'view/';

@@ -967,7 +967,7 @@ class Page extends \Reamur\System\Engine\Controller {
                     'alt' => $data['text_block_image_alt'], 'title' => $data['text_block_image_title'],
                     'videoPreview' => $data['text_block_video_preview'], 'videoPreviewHint' => $data['text_block_video_preview_hint'],
                     'placeholder' => $data['text_block_media_placeholder'], 'catalogBase' => $this->pageCatalogAssetUrl(),
-                    'alignments => ['left'=>$data['text_block_align_left'],'center'=>$data['text_block_align_center'],'right'=>$data['text_block_align_right'],'content'=>$data['text_block_align_content'],'wide'=>$data['text_block_align_wide'],'full'=>$data['text_block_align_full']],
+                    'alignments' => ['left'=>$data['text_block_align_left'],'center'=>$data['text_block_align_center'],'right'=>$data['text_block_align_right'],'content'=>$data['text_block_align_content'],'wide'=>$data['text_block_align_wide'],'full'=>$data['text_block_align_full']],
                     'sizes' => ['small'=>$data['text_block_size_small'],'medium'=>$data['text_block_size_medium'],'large'=>$data['text_block_size_large'],'full'=>$data['text_block_size_full']],
                     'mobileSizes' => ['full'=>$data['text_block_mobile_full'],'large'=>$data['text_block_mobile_large'],'medium'=>$data['text_block_mobile_medium']],
                 ],
@@ -997,7 +997,7 @@ class Page extends \Reamur\System\Engine\Controller {
             ];
 
                 $site = $this->config->get('site_url');
-                $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-9';
+                $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-10-media-base';
                 $catalogAssetBase = $this->pageCatalogAssetUrl();
                 $this->document->addStyle($site . 'view/css/blog-block-editor.css?v=' . $version);
                 $this->document->addStyle($catalogAssetBase . 'view/css/threejs-thumb.css?v=' . $version);

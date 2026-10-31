@@ -2582,7 +2582,13 @@
 
     resolveAdminMediaUrl(src) {
       if(typeof src!=='string')return '';
-      const baseValue=this.strings.media&&this.strings.media.catalogBase;
+      let baseValue=this.strings.media&&this.strings.media.catalogBase;
+      if(typeof baseValue!=='string'||!baseValue){
+        try{
+          const current=new URL(global.location.href);const adminIndex=current.pathname.indexOf('/admin/');
+          if(adminIndex>=0){current.pathname=current.pathname.slice(0,adminIndex+1)+'catalog/';current.search='';current.hash='';baseValue=current.href;}
+        }catch(_){}
+      }
       if(typeof baseValue!=='string'||!baseValue)return src;
       try{
         const base=new URL(baseValue,global.location.href);
