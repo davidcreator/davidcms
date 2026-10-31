@@ -25,9 +25,9 @@
 
   function imageInspectorCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
-    if(language.startsWith('es'))return {imageContentTitle:'Contenido de la imagen',imageContentHint:'Describe la imagen para lectores de pantalla; si es decorativa, deja vacío el texto alternativo. También puedes añadir título y leyenda.',imageStyleHeading:'Estilo de imagen',imageReplace:'Seleccionar o cambiar imagen'};
-    if(language.startsWith('en'))return {imageContentTitle:'Image content',imageContentHint:'Describe the image for screen readers; leave alt text empty if it is decorative. You can also add a title and caption.',imageStyleHeading:'Image style',imageReplace:'Choose or replace image'};
-    return {imageContentTitle:'Conteúdo da imagem',imageContentHint:'Descreva a imagem para leitores de tela; deixe o texto alternativo vazio se ela for decorativa. Você também pode incluir título e legenda.',imageStyleHeading:'Estilo da imagem',imageReplace:'Selecionar ou trocar imagem'};
+    if(language.startsWith('es'))return {imageContentTitle:'Contenido de la imagen',imageContentHint:'Describe la imagen para lectores de pantalla; si es decorativa, deja vacío el texto alternativo. También puedes añadir título y leyenda.',imageStyleHeading:'Estilo de imagen',imageReplace:'Seleccionar o cambiar imagen',pageMediaUnavailable:'La biblioteca de medios de Pages no se cargó. Recarga la página o contacta al administrador.'};
+    if(language.startsWith('en'))return {imageContentTitle:'Image content',imageContentHint:'Describe the image for screen readers; leave alt text empty if it is decorative. You can also add a title and caption.',imageStyleHeading:'Image style',imageReplace:'Choose or replace image',pageMediaUnavailable:'The Pages media library did not load. Reload the page or contact an administrator.'};
+    return {imageContentTitle:'Conteúdo da imagem',imageContentHint:'Descreva a imagem para leitores de tela; deixe o texto alternativo vazio se ela for decorativa. Você também pode incluir título e legenda.',imageStyleHeading:'Estilo da imagem',imageReplace:'Selecionar ou trocar imagem',pageMediaUnavailable:'A biblioteca de mídia do Pages não carregou. Recarregue a página ou contate o administrador.'};
   }
 
   const TRANSFORMABLE_TEXT = new Set(['core/paragraph', 'core/heading', 'core/quote', 'core/button']);
@@ -1007,8 +1007,8 @@
       if(!found||found.node.type!==expected[kind]){this.announceStatus(this.ui.selectBlock);return;}
       if(this.options.mediaPickers===false&&!(kind==='image'&&this.options.pageImagePicker===true)){this.announceStatus(this.ui.noPicker);return;}
       if(kind==='image'){
-        const eventName=this.options.pageImagePicker===true?'cms-page-media-open':'blog-block-media-open';
-        global.document.dispatchEvent(new CustomEvent(eventName,{detail:{editor:this}}));
+        if(this.options.pageImagePicker===true){const event=new CustomEvent('cms-page-media-open',{detail:{editor:this,nodeId:this.selectedId},cancelable:true});global.document.dispatchEvent(event);if(!event.defaultPrevented)this.announceStatus(this.strings.pageMediaUnavailable||'A biblioteca de mídia do Pages não carregou.');}
+        else global.document.dispatchEvent(new CustomEvent('blog-block-media-open',{detail:{editor:this,nodeId:this.selectedId}}));
       }else{
         const eventName=kind==='file'?'blog-block-file-open':kind==='audio'?'blog-block-audio-open':'blog-block-video-open';
         global.document.dispatchEvent(new CustomEvent(eventName,{detail:{editor:this,nodeId:this.selectedId}}));
@@ -1085,7 +1085,7 @@
       else if (name === 'move-down') this.moveNode(button.dataset.nodeId || this.selectedId, 1);
       else if (name === 'indent') this.indentNode(button.dataset.nodeId || this.selectedId);
       else if (name === 'outdent') this.outdentNode(button.dataset.nodeId || this.selectedId);
-      else if (name === 'media') { const nodeId=button.dataset.nodeId||this.selectedId;if(nodeId)this.selectedId=nodeId;const eventName = this.options.pageImagePicker === true ? 'cms-page-media-open' : 'blog-block-media-open'; global.document.dispatchEvent(new CustomEvent(eventName, { detail: { editor: this, nodeId } })); }
+      else if (name === 'media') { const nodeId=button.dataset.nodeId||this.selectedId;if(nodeId)this.selectedId=nodeId;if(this.options.pageImagePicker===true){const event=new CustomEvent('cms-page-media-open',{detail:{editor:this,nodeId},cancelable:true});global.document.dispatchEvent(event);if(!event.defaultPrevented)this.announceStatus(this.strings.pageMediaUnavailable||'A biblioteca de mídia do Pages não carregou.');}else global.document.dispatchEvent(new CustomEvent('blog-block-media-open',{detail:{editor:this,nodeId}})); }
       else if (name === 'file-media') { global.document.dispatchEvent(new CustomEvent('blog-block-file-open', { detail: { editor: this, nodeId: button.dataset.nodeId || this.selectedId } })); }
       else if (name === 'audio-media') { global.document.dispatchEvent(new CustomEvent('blog-block-audio-open', { detail: { editor: this, nodeId: button.dataset.nodeId || this.selectedId } })); }
       else if (name === 'video-media') { global.document.dispatchEvent(new CustomEvent('blog-block-video-open', { detail: { editor: this, nodeId: button.dataset.nodeId || this.selectedId } })); }

@@ -10,6 +10,7 @@
 
 - Inclui o model `Page_media`, separado do Blog e sem banco de dados: lista e grava mídia em diretórios `catalog/view/*/cms/page/`; valida extensão, MIME real, origem de upload, tamanho e caminho; usa nomes aleatórios e recusa symlinks.
 - Inclui o cliente da biblioteca Pages: carrega arquivos, pesquisa/pagina, alterna tipo de mídia, envia com credenciais same-origin e token CSRF, e aplica a imagem enviada/selecionada ao bloco ativo.
+- O evento de abertura agora tem confirmação: se o cliente/modal Pages não estiver carregado, o editor anuncia a falha em vez de ignorar o clique; erros ao abrir ou carregar são mostrados no modal.
 - O ZIP inclui também o controller e template CMS Pages completos, para que as rotas, configuração e modal correspondam ao cliente/model entregues.
 - Não altera banco, migrações, armazenamento do Blog, controller de Blog, `custom_js` ou fluxo independente do Blog.
 

@@ -129,18 +129,31 @@
     page = 1;
     searchEl.value = '';
     updateKindControls();
-    if (global.bootstrap && global.bootstrap.Modal) {
-      modalInstance = global.bootstrap.Modal.getOrCreateInstance(modal);
-      modalInstance.show();
-    } else {
+    try {
+      if (global.bootstrap && global.bootstrap.Modal) {
+        modalInstance = global.bootstrap.Modal.getOrCreateInstance(modal);
+        modalInstance.show();
+      } else {
+        modal.classList.add('show');
+        modal.style.display = 'block';
+        modal.removeAttribute('aria-hidden');
+      }
+    } catch (error) {
+      modalInstance = null;
       modal.classList.add('show');
       modal.style.display = 'block';
       modal.removeAttribute('aria-hidden');
+      setAlert(strings.error || 'A biblioteca abriu sem o componente visual do modal.', true);
     }
     loadFiles();
   }
 
-  document.addEventListener('cms-page-media-open', (event) => openLibrary(event.detail && event.detail.editor));
+  document.addEventListener('cms-page-media-open', (event) => {
+    if (!event.detail || !event.detail.editor) return;
+    event.preventDefault();
+    try { openLibrary(event.detail.editor); }
+    catch (error) { setAlert(strings.error || 'Não foi possível abrir a biblioteca de mídia.', true); }
+  });
   modal.addEventListener('click', (event) => {
     const tab = event.target.closest('[data-media-kind]');
     if (tab && modal.contains(tab)) {
