@@ -872,3 +872,24 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-content-model-card:hover:not(:disabled){border-color:#9db5f5;background:#f1f5ff}
 .rb-content-model-card .rb-pattern-library-description{margin-top:.1rem}
 @media(max-width:560px){.rb-model-library-header{align-items:flex-start;flex-direction:column}.rb-content-models-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* F9-77 advisory accessibility review: readable findings, no automatic document edits. */
+.rb-accessibility-workspace{padding:clamp(1rem,3vw,2.25rem)}
+.rb-accessibility-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.35rem}
+.rb-accessibility-header .rb-workspace-screen-title{margin:0}
+.rb-accessibility-note{max-width:72ch;padding:.8rem 1rem;border-inline-start:3px solid #64748b;border-radius:.35rem;background:#f1f5f9;color:#334155;line-height:1.55}
+.rb-accessibility-summary{margin:1.25rem 0 .8rem;font-weight:700;color:#202735}
+.rb-accessibility-findings{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr));gap:.85rem}
+.rb-accessibility-issue{display:flex;flex-direction:column;align-items:flex-start;gap:.45rem;padding:1rem;border:1px solid #d5dce8;border-radius:.75rem;background:#fff;box-shadow:0 2px 8px rgba(20,35,60,.05)}
+.rb-accessibility-issue--warning{border-inline-start:4px solid #b45309}
+.rb-accessibility-issue--info{border-inline-start:4px solid #2563eb}
+.rb-accessibility-issue-top{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.rb-accessibility-severity,.rb-accessibility-block-type{display:inline-flex;align-items:center;min-height:1.6rem;padding:.15rem .55rem;border-radius:999px;background:#f1f5f9;color:#334155;font-size:.76rem;font-weight:700}
+.rb-accessibility-issue--warning .rb-accessibility-severity{background:#ffedd5;color:#7c2d12}
+.rb-accessibility-issue--info .rb-accessibility-severity{background:#dbeafe;color:#1e3a8a}
+.rb-accessibility-issue-title{margin:.1rem 0;color:#172033;font-size:1.05rem}
+.rb-accessibility-issue-detail,.rb-accessibility-issue-suggestion{margin:0;color:#334155;line-height:1.5}
+.rb-accessibility-issue-suggestion{font-size:.92rem}
+.rb-accessibility-issue .rb-button{margin-top:.35rem}
+.rb-accessibility-empty{display:flex;align-items:center;gap:.65rem;padding:1rem;border:1px solid #86efac;border-radius:.75rem;background:#f0fdf4;color:#14532d}
+@media(forced-colors:active){.rb-accessibility-issue,.rb-accessibility-note,.rb-accessibility-empty{border:1px solid CanvasText}}

@@ -137,6 +137,22 @@
       insertMedia:'Open library', documentStats:'%1 words · %2 characters · %3 blocks'
     };
   }
+  function accessibilityAuditCopy() {
+    const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
+    if(language.startsWith('es'))return {
+      tool:'Accesibilidad',title:'Revisión de accesibilidad',hint:'Revisa el contenido del documento. Los resultados son orientativos y no modifican ningún bloque.',note:'Esta revisión automática no es una certificación WCAG. Comprueba el contexto y decide si aplicar cambios.',back:'Volver al editor',noIssues:'No se encontraron alertas en las comprobaciones disponibles.',count:'Hallazgos: %1',invalid:'No se puede revisar un documento que no supera la validación BDRE.',openBlock:'Localizar bloque',warning:'Revisar',info:'Sugerencia',
+      issues:{empty_heading:{severity:'warning',title:'Encabezado sin texto',detail:'El encabezado no tiene texto visible.',suggestion:'Añade un título o elimina el bloque vacío.'},heading_order:{severity:'warning',title:'Salto en la jerarquía de encabezados',detail:'El nivel cambia de H%1 a H%2.',suggestion:'Considera usar niveles consecutivos para mantener una estructura clara.'},empty_paragraph:{severity:'info',title:'Párrafo vacío',detail:'Este párrafo no contiene texto visible.',suggestion:'Si solo necesitas espacio visual, considera usar el bloque Espaciador.'},image_alt:{severity:'info',title:'Texto alternativo vacío',detail:'El texto alternativo está vacío; puede ser intencional si la imagen es decorativa.',suggestion:'Confirma si la imagen es decorativa; si aporta significado, describe su propósito.'},button_empty:{severity:'warning',title:'Botón sin etiqueta',detail:'El botón no tiene un nombre visible.',suggestion:'Añade un texto que describa el destino o la acción.'},button_generic:{severity:'info',title:'Etiqueta de botón poco específica',detail:'La etiqueta “%1” puede no explicar el destino fuera de contexto.',suggestion:'Considera un texto más descriptivo si corresponde.'},table_headers:{severity:'info',title:'Tabla sin encabezados marcados',detail:'No hay celdas identificadas como encabezados.',suggestion:'Marca como encabezado las celdas que describan filas o columnas, si corresponde.'}}
+    };
+    if(language.startsWith('pt'))return {
+      tool:'Acessibilidade',title:'Revisão de acessibilidade',hint:'Revise o conteúdo do documento. Os apontamentos são orientativos e não modificam nenhum bloco.',note:'Esta revisão automática não é uma certificação WCAG. Confira o contexto e decida se deseja fazer alterações.',back:'Voltar ao editor',noIssues:'Nenhum alerta foi encontrado nas verificações disponíveis.',count:'Apontamentos: %1',invalid:'Não é possível revisar um documento que não passou na validação BDRE.',openBlock:'Localizar bloco',warning:'Revisar',info:'Sugestão',
+      issues:{empty_heading:{severity:'warning',title:'Título sem texto',detail:'Este título não tem texto visível.',suggestion:'Adicione um título ou remova o bloco vazio.'},heading_order:{severity:'warning',title:'Salto na hierarquia de títulos',detail:'O nível muda de H%1 para H%2.',suggestion:'Considere usar níveis consecutivos para manter uma estrutura clara.'},empty_paragraph:{severity:'info',title:'Parágrafo vazio',detail:'Este parágrafo não contém texto visível.',suggestion:'Se precisa apenas de espaço visual, considere usar o bloco Espaçador.'},image_alt:{severity:'info',title:'Texto alternativo vazio',detail:'O texto alternativo está vazio; isso pode ser intencional se a imagem for decorativa.',suggestion:'Confirme se a imagem é decorativa; se transmite significado, descreva sua finalidade.'},button_empty:{severity:'warning',title:'Botão sem rótulo',detail:'O botão não tem um nome visível.',suggestion:'Adicione um texto que descreva o destino ou a ação.'},button_generic:{severity:'info',title:'Rótulo de botão pouco específico',detail:'O rótulo “%1” talvez não explique o destino fora de contexto.',suggestion:'Considere um texto mais descritivo, se for adequado.'},table_headers:{severity:'info',title:'Tabela sem cabeçalhos marcados',detail:'Não há células identificadas como cabeçalhos.',suggestion:'Marque como cabeçalho as células que descrevem linhas ou colunas, se aplicável.'}}
+    };
+    return {
+      tool:'Accessibility',title:'Accessibility review',hint:'Review document content. Findings are advisory and do not modify any blocks.',note:'This automated review is not WCAG certification. Check the context and decide whether to make changes.',back:'Back to editor',noIssues:'No findings in the available checks.',count:'Findings: %1',invalid:'A document that fails BDRE validation cannot be reviewed.',openBlock:'Locate block',warning:'Review',info:'Suggestion',
+      issues:{empty_heading:{severity:'warning',title:'Heading has no text',detail:'This heading has no visible text.',suggestion:'Add a heading or remove the empty block.'},heading_order:{severity:'warning',title:'Heading hierarchy skip',detail:'The level changes from H%1 to H%2.',suggestion:'Consider using consecutive levels for a clearer structure.'},empty_paragraph:{severity:'info',title:'Empty paragraph',detail:'This paragraph contains no visible text.',suggestion:'If you only need visual space, consider using the Spacer block.'},image_alt:{severity:'info',title:'Empty alternative text',detail:'Alternative text is empty; this may be intentional for a decorative image.',suggestion:'Confirm whether the image is decorative; if meaningful, describe its purpose.'},button_empty:{severity:'warning',title:'Button has no label',detail:'The button has no visible name.',suggestion:'Add text describing its destination or action.'},button_generic:{severity:'info',title:'Button label may be vague',detail:'The label “%1” may not explain the destination out of context.',suggestion:'Consider more descriptive wording where appropriate.'},table_headers:{severity:'info',title:'No table headers marked',detail:'No cells are identified as headers.',suggestion:'Mark cells that label rows or columns as headers when appropriate.'}}
+    };
+  }
+
   function contentModelCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
     const n=(type,content,attributes,children)=>({type,content:content||'',attributes:attributes||{},children:children||[]});
@@ -687,6 +703,43 @@
     return { valid: errors.length === 0, errors: [...new Set(errors)] };
   }
 
+  function analyzeDocumentAccessibility(document, allowPageMedia) {
+    const validation=validateDocument(document,allowPageMedia);
+    if(!validation.valid)return {valid:false,issues:[],errors:validation.errors};
+    const copy=accessibilityAuditCopy(),issues=[];
+    const textOf=(node)=>typeof node.content==='string'?node.content:(Array.isArray(node.content)?node.content.map((run)=>run&&typeof run.text==='string'?run.text:'').join(''):'');
+    const normalized=(value)=>String(value||'').trim().toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[.!?,;:]+$/,'').trim();
+    const vagueLabels=new Set(['here','click here','read more','learn more','more','click','saiba mais','leia mais','clique aqui','aqui','mais','mais informacoes','ver mais','haz clic aqui','haga clic aqui','leer mas','mas informacion','ver mas']);
+    let previousHeading=0;
+    const add=(code,node,values)=>{
+      const message=copy.issues[code];if(!message)return;
+      let detail=message.detail;
+      Object.keys(values||{}).forEach((key)=>{detail=detail.replace('%'+key,String(values[key]));});
+      issues.push({code,severity:message.severity,title:message.title,detail,suggestion:message.suggestion,nodeId:node.id,type:node.type});
+    };
+    const visit=(nodes)=>nodes.forEach((node)=>{
+      if(node.type==='core/heading'){
+        const level=Number(node.attributes.level)||2;const label=textOf(node).trim();
+        if(!label)add('empty_heading',node);
+        if(previousHeading&&level>previousHeading+1)add('heading_order',node,{1:previousHeading,2:level});
+        previousHeading=level;
+      }else if(node.type==='core/paragraph'&&!textOf(node).trim())add('empty_paragraph',node);
+      if((node.type==='core/image'||node.type==='core/cover')&&(typeof node.attributes.alt!=='string'||!node.attributes.alt.trim()))add('image_alt',node);
+      if(node.type==='core/button'){
+        const label=normalized(textOf(node));
+        if(!label)add('button_empty',node);
+        else if(vagueLabels.has(label))add('button_generic',node,{1:textOf(node).trim()});
+      }
+      if(node.type==='core/table'){
+        const hasHeader=node.children.some((row,rowIndex)=>row.children.some((cell)=>tableCellIsHeader(node,rowIndex,cell)));
+        if(!hasHeader)add('table_headers',node);
+      }
+      if(Array.isArray(node.children)&&node.children.length)visit(node.children);
+    });
+    visit(document.blocks);
+    return {valid:true,issues};
+  }
+
   function moveBlockAcrossHierarchy(document, nodeId, direction, allowPageMedia) {
     if (!document || document.format_version !== 2 || !Array.isArray(document.blocks) || !['indent','outdent'].includes(direction) || !validateDocument(document, allowPageMedia).valid) return null;
     const next = CLONE(document);
@@ -799,6 +852,7 @@
       this.patternQuery = '';
       this.ui = workspaceCopy();
       this.contentModels = contentModelCopy();
+      this.accessibility = accessibilityAuditCopy();
       this.findReplaceOpen = false; this.findQuery = ''; this.replaceQuery = ''; this.findCaseSensitive = false; this.findWholeWord = false; this.activeFindIndex = -1;
       this.documentStatsTimer = null;
       this.fullscreenReturnFocus = null;
@@ -1055,6 +1109,7 @@
       const wasPreview=this.previewMode;
       if(tool==='home'){this.workspaceView='editor';this.activeRibbonTab='home';this.previewMode=false;}
       else if(tool==='models'){this.workspaceView='models';this.previewMode=false;}
+      else if(tool==='accessibility'){this.workspaceView='accessibility';this.previewMode=false;}
       else if(tool==='library'){this.workspaceView='library';this.previewMode=false;}
       else if(tool==='assistant'){this.workspaceView='assistant';this.previewMode=false;}
       else if(tool==='export'){this.workspaceView='export';this.previewMode=false;}
@@ -1071,7 +1126,7 @@
         const tabs={text:'home',media:'media',review:'review',view:'view'};
         if(tabs[tool])this.activeRibbonTab=tabs[tool];
       }
-      if(['models','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
+      if(['models','accessibility','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
       this.findReplaceOpen=false;
       this.render();
       const focusTarget=Array.from(this.root.querySelectorAll('[data-action="workspace-tool"]')).find((item)=>item.dataset.tool===tool);
@@ -1128,6 +1183,7 @@
       if (name === 'insert') this.insert(button.dataset.type, button.dataset.count);
       else if (name === 'insert-pattern') this.insertPattern(button.dataset.pattern);
       else if (name === 'insert-content-model') this.insertContentModel(button.dataset.modelId);
+      else if (name === 'accessibility-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'insert-saved-pattern') this.insertSavedPattern(button.dataset.patternId);
       else if (name === 'save-selected-pattern') this.saveSelectedPattern(button.dataset.nodeId);
       else if (name === 'rename-saved-pattern') this.renameSavedPattern(button.dataset.patternId);
@@ -2488,6 +2544,7 @@
         const history=this.button(this.strings.historyButton||'Histórico','toggle-revision-history',{icon:'history'});history.disabled=!this.getDraftHistory().length;history.setAttribute('aria-expanded',String(this.historyOpen));g.tools.append(history);panel.append(g.group);
         g=this.renderRibbonGroup(this.strings.findReplaceButton||'Localizar e substituir');
         const find=this.button(this.strings.findReplaceButton||'Localizar e substituir','toggle-find-replace',{icon:'search'});find.setAttribute('aria-expanded',String(this.findReplaceOpen));g.tools.append(find);panel.append(g.group);
+        g=this.renderRibbonGroup(this.accessibility.tool);const audit=this.button(this.accessibility.tool,'workspace-tool',{tool:'accessibility',icon:'check',showLabel:true});audit.dataset.workspaceTool='accessibility';g.tools.append(audit);panel.append(g.group);
       }else if(this.activeRibbonTab==='view'){
         let g=this.renderRibbonGroup(this.strings.groupPanels||'Painéis recolhíveis');
         [['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline'],['settings',this.strings.builderSettings,'settings']].forEach(([panelName,label,icon])=>{const b=this.button(label,'builder-panel',{panel:panelName,icon});b.setAttribute('aria-pressed',String(this.fullscreen?(panelName==='settings'?(this.inspectorOpen&&!this.previewMode):this.activePanel===panelName):this.activePanel===panelName));if(this.fullscreen&&this.previewMode&&panelName==='settings')b.disabled=true;g.tools.append(b);});panel.append(g.group);
@@ -2519,10 +2576,33 @@
       return canvas;
     }
 
+    renderAccessibilityAudit() {
+      const copy=this.accessibility;
+      const wrap=this.el('div','rb-workspace-screen-content rb-accessibility-workspace');
+      const header=this.el('div','rb-accessibility-header');
+      const titleGroup=this.el('div','');titleGroup.append(this.el('h1','rb-workspace-screen-title',copy.title));header.append(titleGroup,this.button(this.ui.modelsBack||this.ui.home,'workspace-tool',{tool:'home',icon:'collapse',showLabel:true}));
+      wrap.append(header,this.el('p','rb-workspace-screen-lead',copy.hint),this.el('p','rb-accessibility-note',copy.note));
+      const result=analyzeDocumentAccessibility(this.state,this.allowPageMedia);
+      if(!result.valid){const warning=this.el('p','rb-workspace-warning',copy.invalid);warning.setAttribute('role','alert');wrap.append(warning);return wrap;}
+      const summary=this.el('p','rb-accessibility-summary',(copy.count||'Findings: %1').replace('%1',String(result.issues.length)));
+      summary.setAttribute('role','status');summary.setAttribute('aria-live','polite');wrap.append(summary);
+      if(!result.issues.length){const success=this.el('section','rb-accessibility-empty');success.append(this.icon('check','rb-icon'),this.el('strong','',copy.noIssues));wrap.append(success);return wrap;}
+      const list=this.el('div','rb-accessibility-findings');list.setAttribute('role','list');
+      result.issues.forEach((issue)=>{
+        const item=this.el('article','rb-accessibility-issue rb-accessibility-issue--'+issue.severity);item.setAttribute('role','listitem');
+        const top=this.el('div','rb-accessibility-issue-top');top.append(this.el('span','rb-accessibility-severity',issue.severity==='warning'?copy.warning:copy.info),this.el('span','rb-accessibility-block-type',this.label(issue.type)));item.append(top);
+        item.append(this.el('h2','rb-accessibility-issue-title',issue.title),this.el('p','rb-accessibility-issue-detail',issue.detail),this.el('p','rb-accessibility-issue-suggestion',issue.suggestion));
+        const open=this.button(copy.openBlock,'accessibility-focus',{nodeId:issue.nodeId,icon:'outline',showLabel:true});item.append(open);list.append(item);
+      });
+      wrap.append(list);return wrap;
+    }
+
     renderWorkspaceScreen() {
       const surface=this.el('section','rb-canvas rb-workspace-screen');surface.id='rb-workspace-surface-'+this.instance;surface.setAttribute('role','region');
       if(this.workspaceView==='models'){
         surface.setAttribute('aria-label',this.ui.modelsTitle);surface.append(this.renderPatternLibrary());
+      }else if(this.workspaceView==='accessibility'){
+        surface.setAttribute('aria-label',this.accessibility.title);surface.append(this.renderAccessibilityAudit());
       }else if(this.workspaceView==='library'){
         surface.setAttribute('aria-label',this.ui.libraryTitle);
         const wrap=this.el('div','rb-workspace-screen-content');wrap.append(this.el('h1','rb-workspace-screen-title',this.ui.libraryTitle),this.el('p','rb-workspace-screen-lead',this.ui.libraryHint));
@@ -2624,8 +2704,8 @@
           ['appearance',this.strings.workspaceToolAppearance,'settings'],
           ['text',this.strings.workspaceToolText,'paragraph'],
           ['media',this.strings.categoryMedia,'image'],
-          ['models',this.ui.models,'layers'], 
           ['review',this.strings.ribbonReview,'search'],
+          ['accessibility',this.accessibility.tool,'check'],
           ['view',this.strings.ribbonView,'desktop'],
           ['home',this.ui.home,'layers'],
           ['models',this.ui.models,'layers'],
@@ -2638,7 +2718,7 @@
         workspaceTools.forEach(([tool,label,icon])=>{
           if(tool==='text'||tool==='home'){const divider=this.el('span','rb-workspace-rail-divider');divider.setAttribute('aria-hidden','true');workspaceRail.append(divider);}
           const control=this.el('button','rb-workspace-tool'); control.type='button'; control.dataset.action='workspace-tool'; control.dataset.tool=tool;
-          const workspaceViews={models:'models',library:'library',assistant:'assistant',export:'export',share:'share',help:'help'};
+          const workspaceViews={models:'models',accessibility:'accessibility',library:'library',assistant:'assistant',export:'export',share:'share',help:'help'};
           const pressed=tool==='home'?this.workspaceView==='editor'&&this.activeRibbonTab==='home':Object.prototype.hasOwnProperty.call(workspaceViews,tool)?this.workspaceView===workspaceViews[tool]:tool==='elements'?(this.activePanel==='elements'&&this.inserterOpen):tool==='structure'?this.activePanel==='structure':tool==='appearance'?(this.inspectorOpen&&!this.previewMode):tool==='text'?this.activeRibbonTab==='home':tool==='media'?this.activeRibbonTab==='media':tool==='review'?this.activeRibbonTab==='review':tool==='view'?this.activeRibbonTab==='view':false;
           control.setAttribute('aria-label',label); control.setAttribute('aria-pressed',String(pressed));
           if(tool==='elements'||tool==='appearance')control.setAttribute('aria-expanded',String(pressed));
@@ -3211,6 +3291,7 @@
     cloneBlockWithNewIds: cloneBlockWithNewIds,
     mount: function (root, options) { if (!(root instanceof Element)) throw new TypeError('editor root must be an Element'); return new Editor(root, options || {}); },
     validateDocument: validateDocument,
+    analyzeDocumentAccessibility: analyzeDocumentAccessibility,
     validLocalImage: validLocalImage,
     validLocalDownload: validLocalDownload,
     validLocalAudio: validLocalAudio,
