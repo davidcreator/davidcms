@@ -1,71 +1,198 @@
-/* CMS Pages-only image, audio, video, and download library. */
 (function (global, document) {
   'use strict';
-  function init() {
-    var modal = document.getElementById('cmsPageMediaModal');
-    if (!modal || !global.bootstrap || !global.bootstrap.Modal) return;
-    var config; try { config = JSON.parse(modal.dataset.pageMediaConfig || '{}'); } catch (_) { return; }
-    var strings = config.strings || {}, files = document.getElementById('cmsPageMediaFiles');
-    var search = document.getElementById('cmsPageMediaSearch'), empty = document.getElementById('cmsPageMediaEmpty');
-    var alertBox = document.getElementById('cmsPageMediaAlert'), pageLabel = document.getElementById('cmsPageMediaPage');
-    var previous = document.getElementById('cmsPageMediaPrevious'), next = document.getElementById('cmsPageMediaNext');
-    var uploadInput = document.getElementById('cmsPageMediaUploadFile'), uploadButton = document.getElementById('cmsPageMediaUploadButton');
-    var hint = document.getElementById('cmsPageMediaUploadHint'), tabs = Array.prototype.slice.call(document.querySelectorAll('#cmsPageMediaTabs [data-media-kind]'));
-    var accepts = { image: 'image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif', audio: 'audio/mpeg,audio/ogg,audio/wav,.mp3,.ogg,.wav', video: 'video/mp4,video/webm,video/ogg,.mp4,.webm,.ogv', download: '.pdf,.docx,.xlsx,.pptx,.odt,.ods,.csv,.txt' };
-    var roots = { image: 'view/image/cms/page/', audio: 'view/audio/cms/page/', video: 'view/video/cms/page/', download: 'view/download/cms/page/' };
-    var currentEditor = null, currentNodeId = '', kind = 'image', lockedKind = 'image', currentPage = 1, totalPages = 1, debounce = 0;
-    var instance = global.bootstrap.Modal.getOrCreateInstance(modal);
-    function showAlert(text, danger) { alertBox.textContent = text || ''; alertBox.className = 'alert' + (text ? (danger ? ' alert-danger' : ' alert-info') : ' d-none'); }
-    function safeUrl(value) { try { var u = new URL(value, global.location.href); return u.origin === global.location.origin ? u.href : ''; } catch (_) { return ''; } }
-    function setKind(value) {
-      if (!roots[value] || (lockedKind && value !== lockedKind)) return; kind = value;
-      tabs.forEach(function (tab) { tab.classList.toggle('active', tab.dataset.mediaKind === kind); tab.disabled = !!lockedKind && tab.dataset.mediaKind !== lockedKind; tab.setAttribute('aria-selected', tab.dataset.mediaKind === kind ? 'true' : 'false'); });
-      uploadInput.accept = accepts[kind]; hint.textContent = (strings.uploadHint || {})[kind] || '';
-      currentPage = 1; load();
-    }
-    function apply(path) {
-      if (!currentEditor || !roots[kind] || typeof path !== 'string' || path.indexOf('..') >= 0 || path.indexOf(roots[kind]) !== 0 || !/^view\/(?:image|audio|video|download)\/cms\/page\/[A-Za-z0-9][A-Za-z0-9._-]{0,179}$/.test(path)) return;
-      if (kind === 'image') currentEditor.setSelectedAttribute('src', path);
-      else {
-        var eventKind = kind === 'download' ? 'file' : kind;
-        document.dispatchEvent(new CustomEvent('blog-block-' + eventKind + '-selected', { detail: { editor: currentEditor, nodeId: currentNodeId || currentEditor.selectedId, path: path } }));
-      }
-      instance.hide(); currentEditor = null; currentNodeId = '';
-    }
-    function load() {
-      var url; try { url = new URL(config.listUrl, global.location.href); } catch (_) { showAlert(strings.error, true); return; }
-      if (url.origin !== global.location.origin) { showAlert(strings.error, true); return; }
-      url.searchParams.set('kind', kind); url.searchParams.set('search', search.value || ''); url.searchParams.set('page', String(currentPage));
-      files.replaceChildren(); empty.textContent = strings.loading || '';
-      fetch(url.href, { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (r) { return r.json(); }).then(function (data) {
-        if (!data || !data.success) throw new Error(data && data.error || strings.error);
-        currentPage = data.page || 1; totalPages = data.pages || 1;
-        pageLabel.textContent = (strings.page || 'Page %1 of %2').replace('%1', currentPage).replace('%2', totalPages);
-        previous.disabled = currentPage <= 1; next.disabled = currentPage >= totalPages; files.replaceChildren();
-        (data.files || []).forEach(function (item) {
-          var button = document.createElement('button'); button.type = 'button'; button.className = 'list-group-item list-group-item-action d-flex align-items-center gap-3';
-          if (kind === 'image') { var img = document.createElement('img'); img.src = safeUrl(item.url); img.alt = ''; img.loading = 'lazy'; img.style.cssText = 'width:64px;height:64px;object-fit:cover'; button.appendChild(img); }
-          var name = document.createElement('span'); name.textContent = item.name || ''; var select = document.createElement('span'); select.className = 'ms-auto btn btn-sm btn-outline-primary'; select.textContent = strings.select || '';
-          button.append(name, select); button.addEventListener('click', function () { apply(item.path); }); files.appendChild(button);
-        });
-        empty.textContent = files.children.length ? '' : ((strings.emptyKind || {})[kind] || strings.empty || '');
-      }).catch(function (e) { files.replaceChildren(); empty.textContent = ''; showAlert(e.message || strings.error, true); });
-    }
-    document.addEventListener('cms-page-media-open', function (e) { var d = e.detail || {}; currentEditor = d.editor; currentNodeId = d.nodeId || (currentEditor && currentEditor.selectedId) || ''; if (!currentEditor) return; lockedKind = 'image'; showAlert('', false); setKind('image'); instance.show(); });
-    ['audio','video','file'].forEach(function (eventKind) { document.addEventListener('blog-block-' + eventKind + '-open', function (e) { var d = e.detail || {}; currentEditor = d.editor; currentNodeId = d.nodeId || ''; if (!currentEditor) return; lockedKind = eventKind === 'file' ? 'download' : eventKind; showAlert('', false); setKind(lockedKind); instance.show(); }); });
-    tabs.forEach(function (tab) { tab.addEventListener('click', function () { setKind(tab.dataset.mediaKind); }); });
-    modal.addEventListener('shown.bs.modal', function () { search.focus(); });
-    modal.addEventListener('hidden.bs.modal', function () { currentEditor = null; currentNodeId = ''; lockedKind = 'image'; tabs.forEach(function (tab) { tab.disabled = false; }); });
-    search.addEventListener('input', function () { global.clearTimeout(debounce); debounce = global.setTimeout(function () { currentPage = 1; load(); }, 180); });
-    previous.addEventListener('click', function () { if (currentPage > 1) { currentPage--; load(); } });
-    next.addEventListener('click', function () { if (currentPage < totalPages) { currentPage++; load(); } });
-    uploadButton.addEventListener('click', function () {
-      var file = uploadInput.files && uploadInput.files[0]; if (!file) { showAlert(strings.error, true); return; }
-      var form = new FormData(); form.append('csrf_token', config.csrfToken || ''); form.append('kind', kind); form.append('file', file, file.name);
-      uploadButton.disabled = true; showAlert(strings.uploading || '', false); var url = safeUrl(config.uploadUrl);
-      if (!url) { uploadButton.disabled = false; showAlert(strings.error, true); return; }
-      fetch(url, { method: 'POST', credentials: 'same-origin', body: form, headers: { Accept: 'application/json' } }).then(function (r) { return r.json(); }).then(function (data) { if (!data || !data.success) throw new Error(data && data.error || strings.error); apply(data.path); }).catch(function (e) { showAlert(e.message || strings.error, true); }).finally(function () { uploadButton.disabled = false; uploadInput.value = ''; });
-    });
+
+  function initialize() {
+  const modal = document.getElementById('cmsPageMediaModal');
+  if (!modal) return;
+  let config = {};
+  try { config = JSON.parse(modal.getAttribute('data-page-media-config') || '{}'); } catch (_) { return; }
+  const strings = config.strings || {};
+  const filesEl = document.getElementById('cmsPageMediaFiles');
+  const emptyEl = document.getElementById('cmsPageMediaEmpty');
+  const alertEl = document.getElementById('cmsPageMediaAlert');
+  const searchEl = document.getElementById('cmsPageMediaSearch');
+  const pageEl = document.getElementById('cmsPageMediaPage');
+  const prevEl = document.getElementById('cmsPageMediaPrevious');
+  const nextEl = document.getElementById('cmsPageMediaNext');
+  const uploadInput = document.getElementById('cmsPageMediaUploadFile');
+  const uploadButton = document.getElementById('cmsPageMediaUploadButton');
+  const uploadHint = document.getElementById('cmsPageMediaUploadHint');
+  if (!filesEl || !emptyEl || !searchEl || !pageEl || !prevEl || !nextEl || !uploadInput || !uploadButton) return;
+
+  let activeEditor = null;
+  let kind = 'image';
+  let page = 1;
+  let pages = 1;
+  let searchTimer = null;
+  let busy = false;
+  let modalInstance = null;
+  const accepted = {
+    image: ['.jpg','.jpeg','.png','.gif','.webp'],
+    audio: ['.mp3','.ogg','.wav'],
+    video: ['.mp4','.webm','.ogv'],
+    download: ['.pdf','.docx','.xlsx','.pptx','.odt','.ods','.csv','.txt']
+  };
+
+  function cleanUrl(value) {
+    return String(value || '').replace(/&amp;/g, '&');
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  function endpoint(base, params) {
+    const url = new URL(cleanUrl(base), global.location.href);
+    Object.keys(params || {}).forEach((key) => url.searchParams.set(key, String(params[key])));
+    return url.href;
+  }
+  function setAlert(message, isError) {
+    alertEl.textContent = message || '';
+    alertEl.classList.toggle('d-none', !message);
+    alertEl.classList.toggle('alert-danger', !!isError);
+    alertEl.classList.toggle('alert-info', !isError);
+  }
+  async function readJson(response) {
+    let data;
+    try { data = await response.json(); } catch (_) { throw new Error(strings.error || 'Resposta inválida do servidor.'); }
+    if (!response.ok || !data || data.success !== true) throw new Error(data && data.error ? data.error : (strings.error || 'Não foi possível acessar a biblioteca.'));
+    return data;
+  }
+  function updateKindControls() {
+    modal.querySelectorAll('[data-media-kind]').forEach((button) => {
+      const selected = button.dataset.mediaKind === kind;
+      button.classList.toggle('active', selected);
+      button.setAttribute('aria-selected', String(selected));
+    });
+    const suffixes = accepted[kind] || accepted.image;
+    uploadInput.accept = suffixes.join(',');
+    uploadInput.setAttribute('aria-label', (strings.upload || 'Enviar arquivo') + ' · ' + ((strings.tabs || {})[kind] || kind));
+    uploadHint.textContent = (strings.uploadHint || {})[kind] || '';
+  }
+  function chooseMedia(path) {
+    if (!activeEditor || typeof path !== 'string') return;
+    if (typeof activeEditor.setSelectedAttribute !== 'function' || !activeEditor.setSelectedAttribute('src', path)) {
+      setAlert(strings.error || 'Não foi possível aplicar o arquivo ao bloco selecionado.', true);
+      return;
+    }
+    setAlert('', false);
+    if (modalInstance) modalInstance.hide();
+  }
+  function renderFiles(files) {
+    filesEl.replaceChildren();
+    (Array.isArray(files) ? files : []).forEach((file) => {
+      if (!file || typeof file.path !== 'string' || typeof file.name !== 'string') return;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'list-group-item list-group-item-action d-flex align-items-center gap-3';
+      button.dataset.mediaPath = file.path;
+      if (kind === 'image' && typeof file.url === 'string') {
+        const image = document.createElement('img');
+        image.src = file.url;
+        image.alt = '';
+        image.loading = 'lazy';
+        image.width = 64;
+        image.height = 48;
+        image.style.objectFit = 'cover';
+        image.style.flex = '0 0 64px';
+        button.append(image);
+      }
+      const details = document.createElement('span');
+      details.className = 'text-break';
+      details.textContent = file.name + (Number.isFinite(Number(file.size)) ? ' · ' + Math.ceil(Number(file.size) / 1024) + ' KB' : '');
+      button.append(details);
+      filesEl.append(button);
+    });
+    emptyEl.textContent = filesEl.children.length ? '' : ((strings.emptyKind || {})[kind] || strings.empty || 'Nenhum arquivo encontrado.');
+  }
+  async function loadFiles() {
+    if (busy) return;
+    busy = true;
+    filesEl.replaceChildren();
+    emptyEl.textContent = strings.loading || 'Carregando…';
+    setAlert('', false);
+    try {
+      const response = await fetch(endpoint(config.listUrl, {kind, search: searchEl.value.trim(), page}), {
+        method: 'GET', credentials: 'same-origin', cache: 'no-store', headers: {'X-Requested-With':'XMLHttpRequest','Accept':'application/json'}
+      });
+      const data = await readJson(response);
+      page = Math.max(1, Number(data.page) || 1);
+      pages = Math.max(1, Number(data.pages) || 1);
+      pageEl.textContent = (strings.page || 'Página %1$d de %2$d').replace('%1$d', String(page)).replace('%2$d', String(pages));
+      prevEl.disabled = page <= 1;
+      nextEl.disabled = page >= pages;
+      renderFiles(data.files);
+    } catch (error) {
+      filesEl.replaceChildren();
+      emptyEl.textContent = '';
+      setAlert(error && error.message ? error.message : (strings.error || 'Erro ao carregar a biblioteca.'), true);
+    } finally { busy = false; }
+  }
+  function openLibrary(editor) {
+    activeEditor = editor || null;
+    kind = 'image';
+    page = 1;
+    searchEl.value = '';
+    updateKindControls();
+    if (global.bootstrap && global.bootstrap.Modal) {
+      modalInstance = global.bootstrap.Modal.getOrCreateInstance(modal);
+      modalInstance.show();
+    } else {
+      modal.classList.add('show');
+      modal.style.display = 'block';
+      modal.removeAttribute('aria-hidden');
+    }
+    loadFiles();
+  }
+
+  document.addEventListener('cms-page-media-open', (event) => openLibrary(event.detail && event.detail.editor));
+  modal.addEventListener('click', (event) => {
+    const tab = event.target.closest('[data-media-kind]');
+    if (tab && modal.contains(tab)) {
+      kind = ['image','audio','video','download'].includes(tab.dataset.mediaKind) ? tab.dataset.mediaKind : 'image';
+      page = 1;
+      updateKindControls();
+      loadFiles();
+      return;
+    }
+    const file = event.target.closest('[data-media-path]');
+    if (file && modal.contains(file)) chooseMedia(file.dataset.mediaPath);
+  });
+  searchEl.addEventListener('input', () => {
+    global.clearTimeout(searchTimer);
+    searchTimer = global.setTimeout(() => { page = 1; loadFiles(); }, 250);
+  });
+  prevEl.addEventListener('click', () => { if (page > 1) { page -= 1; loadFiles(); } });
+  nextEl.addEventListener('click', () => { if (page < pages) { page += 1; loadFiles(); } });
+  uploadButton.addEventListener('click', async () => {
+    const file = uploadInput.files && uploadInput.files[0];
+    if (!file || busy) { if (!file) setAlert(strings.error || 'Selecione um arquivo para enviar.', true); return; }
+    const body = new FormData();
+    body.append('kind', kind);
+    body.append('file', file);
+    body.append('csrf_token', String(config.csrfToken || ''));
+    busy = true;
+    uploadButton.disabled = true;
+    uploadInput.disabled = true;
+    uploadButton.textContent = strings.uploading || 'Enviando…';
+    setAlert(strings.uploading || 'Enviando…', false);
+    try {
+      const response = await fetch(endpoint(config.uploadUrl, {}), {
+        method: 'POST', credentials: 'same-origin', cache: 'no-store', body,
+        headers: {'X-Requested-With':'XMLHttpRequest','Accept':'application/json'}
+      });
+      const data = await readJson(response);
+      if (typeof data.path !== 'string') throw new Error(strings.error || 'O servidor não retornou o caminho do arquivo.');
+      chooseMedia(data.path);
+    } catch (error) {
+      setAlert(error && error.message ? error.message : (strings.error || 'Falha ao enviar o arquivo.'), true);
+    } finally {
+      busy = false;
+      uploadButton.disabled = false;
+      uploadInput.disabled = false;
+      uploadButton.textContent = strings.upload || 'Enviar arquivo';
+      uploadInput.value = '';
+    }
+  });
+  modal.addEventListener('hidden.bs.modal', () => { activeEditor = null; });
+  updateKindControls();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initialize, {once:true});
+  else initialize();
 })(window, document);

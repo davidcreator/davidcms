@@ -9,6 +9,9 @@ JS = (ROOT / 'dev/admin/view/js/blog-block-editor.js').read_text(encoding='utf-8
 CSS = (ROOT / 'dev/admin/view/css/blog-block-editor.css').read_text(encoding='utf-8')
 PHP = (ROOT / 'dev/system/library/blog/block_document.php').read_text(encoding='utf-8')
 RENDERER = (ROOT / 'dev/system/library/blog/block_renderer.php').read_text(encoding='utf-8')
+PAGE_MEDIA_MODEL = (ROOT / 'dev/admin/model/cms/page_media.php').read_text(encoding='utf-8') if (ROOT / 'dev/admin/model/cms/page_media.php').exists() else ''
+PAGE_MEDIA_JS = (ROOT / 'dev/admin/view/js/cms-page-media.js').read_text(encoding='utf-8') if (ROOT / 'dev/admin/view/js/cms-page-media.js').exists() else ''
+PAGE_CONTROLLER = (ROOT / 'dev/admin/controller/cms/page.php').read_text(encoding='utf-8') if (ROOT / 'dev/admin/controller/cms/page.php').exists() else ''
 
 m = re.search(r'const TYPES = \[(.*?)\n  \];', JS, re.S)
 assert m, 'Block catalog not found'
@@ -66,6 +69,12 @@ for name, ok in [
     ('Preformatted Code inspector/canvas editors synchronize without repaint', "peer.dataset.editCode===id&&peer.value!==editor.value" in JS),
     ('Preformatted Code remains literal and non-executable', 'preformattedTextHint:' in JS and 'never executed' in JS and 'não é executado' in JS),
     ('Preformatted Code has labeled style/actions and toolbar', 'preformattedStyleHeading:' in JS and 'preformattedActions:' in JS and "'core/details','core/code','core/image','core/table'].includes(node.type)" in JS),
+    ('CMS Pages media browser script exists and listens to the independent page-media event', "document.addEventListener('cms-page-media-open'" in PAGE_MEDIA_JS and 'cmsPageMediaModal' in PAGE_MEDIA_JS),
+    ('CMS Pages media API builds query parameters safely and normalizes escaped ampersands', 'url.searchParams.set(key' in PAGE_MEDIA_JS and "replace(/&amp;/g, '&')" in PAGE_MEDIA_JS),
+    ('CMS Pages upload request sends same-origin credentials and CSRF token', "body.append('csrf_token'" in PAGE_MEDIA_JS and "credentials: 'same-origin'" in PAGE_MEDIA_JS and "method: 'POST'" in PAGE_MEDIA_JS),
+    ('CMS Pages media endpoint model lists and stores per-kind media in separate filesystem paths', 'class Page_media' in PAGE_MEDIA_MODEL and 'listPageMedia' in PAGE_MEDIA_MODEL and 'storePageMedia' in PAGE_MEDIA_MODEL and 'view/image/cms/page/' in PAGE_MEDIA_MODEL),
+    ('CMS Pages upload model validates size, extension, MIME and upload provenance', 'is_uploaded_file($tmp)' in PAGE_MEDIA_MODEL and 'detectedMime' in PAGE_MEDIA_MODEL and 'MAX_IMAGE_BYTES' in PAGE_MEDIA_MODEL),
+    ('CMS Pages controller routes use the separate media model and load its modal script', "public function mediaList(): void" in PAGE_CONTROLLER and "load->model('cms/page_media')" in PAGE_CONTROLLER and "view/js/cms-page-media.js" in PAGE_CONTROLLER),
     ('Image inspector labels content, alt-text guidance and image styling in pt/en/es', 'function imageInspectorCopy()' in JS and 'imageContentTitle:' in JS and 'imageContentHint:' in JS and 'imageStyleHeading:' in JS),
     ('Image inspector keeps source, alt text, title, caption, alignment and responsive size fields', "if (n.type === 'core/image')" in JS and all(x in JS for x in ["this.strings.media.source, 'src'", "this.strings.media.alt, 'alt'", "this.strings.media.title, 'title'", "this.strings.media.caption, 'caption'", "this.strings.media.alignment, 'align'", "this.strings.media.imageSize, 'size'", "this.strings.media.mobileSize, 'mobile_size'"])),
     ('Image block toolbar shows labels and offers direct replace-image picker', "'core/code','core/image','core/table'].includes(node.type)" in JS and "node.type==='core/image'" in JS and 'this.strings.imageReplace' in JS),
