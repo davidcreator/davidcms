@@ -78,26 +78,35 @@
     filesEl.replaceChildren();
     (Array.isArray(files) ? files : []).forEach((file) => {
       if (!file || typeof file.path !== 'string' || typeof file.name !== 'string') return;
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'list-group-item list-group-item-action d-flex align-items-center gap-3';
-      button.dataset.mediaPath = file.path;
+      const videoRow = kind === 'video';
+      const row = document.createElement(videoRow ? 'div' : 'button');
+      if (!videoRow) row.type = 'button';
+      row.className = 'list-group-item' + (videoRow ? ' d-flex align-items-center justify-content-between gap-2' : ' list-group-item-action d-flex align-items-center gap-3');
+      const choose = videoRow ? document.createElement('button') : row;
+      if (videoRow) {
+        choose.type = 'button';
+        choose.className = 'btn btn-link text-start text-decoration-none p-0 flex-grow-1 text-break';
+      }
+      choose.dataset.mediaPath = file.path;
       if (kind === 'image' && typeof file.url === 'string') {
         const image = document.createElement('img');
-        image.src = file.url;
-        image.alt = '';
-        image.loading = 'lazy';
-        image.width = 64;
-        image.height = 48;
-        image.style.objectFit = 'cover';
-        image.style.flex = '0 0 64px';
-        button.append(image);
+        image.src = file.url; image.alt = ''; image.loading = 'lazy'; image.width = 64; image.height = 48;
+        image.style.objectFit = 'cover'; image.style.flex = '0 0 64px'; choose.append(image);
       }
       const details = document.createElement('span');
       details.className = 'text-break';
       details.textContent = file.name + (Number.isFinite(Number(file.size)) ? ' · ' + Math.ceil(Number(file.size) / 1024) + ' KB' : '');
-      button.append(details);
-      filesEl.append(button);
+      choose.append(details);
+      row.append(choose);
+      if (videoRow) {
+        const remove = document.createElement('button');
+        remove.type = 'button'; remove.className = 'btn btn-outline-danger btn-sm flex-shrink-0';
+        remove.dataset.mediaDelete = file.name;
+        remove.setAttribute('aria-label', (strings.delete || 'Delete video') + ': ' + file.name);
+        remove.textContent = strings.delete || 'Delete video';
+        row.append(remove);
+      }
+      filesEl.append(row);
     });
     emptyEl.textContent = filesEl.children.length ? '' : ((strings.emptyKind || {})[kind] || strings.empty || 'Nenhum arquivo encontrado.');
   }
@@ -124,6 +133,35 @@
       setAlert(error && error.message ? error.message : (strings.error || 'Erro ao carregar a biblioteca.'), true);
     } finally { busy = false; }
   }
+  async function deleteVideo(name, button) {
+    if (!name || busy) return;
+    if (typeof global.confirm === 'function' && !global.confirm(strings.confirmDeleteVideo || 'Permanently delete this video? Blocks using it will no longer play it.')) return;
+    const body = new FormData();
+    body.append('name', name);
+    body.append('csrf_token', String(config.csrfToken || ''));
+    busy = true;
+    button.disabled = true;
+    setAlert(strings.deleting || strings.delete || 'Deleting video…', false);
+    let deleted = false;
+    try {
+      const response = await fetch(endpoint(config.deleteUrl, {}), {
+        method: 'POST', credentials: 'same-origin', cache: 'no-store', body,
+        headers: {'X-Requested-With':'XMLHttpRequest','Accept':'application/json'}
+      });
+      await readJson(response);
+      deleted = true;
+    } catch (error) {
+      setAlert(error && error.message ? error.message : (strings.error || 'Could not delete the video.'), true);
+    } finally {
+      busy = false;
+      if (button.isConnected) button.disabled = false;
+    }
+    if (deleted) {
+      await loadFiles();
+      setAlert(strings.deleted || 'Video removed from the Pages library.', false);
+    }
+  }
+
   function openLibrary(editor, requestedKind) {
     activeEditor = editor || null;
     kind = ['image','audio','video','download'].includes(requestedKind) ? requestedKind : 'image';
@@ -165,6 +203,8 @@
       loadFiles();
       return;
     }
+    const remove = event.target.closest('[data-media-delete]');
+    if (remove && modal.contains(remove)) { deleteVideo(remove.dataset.mediaDelete, remove); return; }
     const file = event.target.closest('[data-media-path]');
     if (file && modal.contains(file)) chooseMedia(file.dataset.mediaPath);
   });

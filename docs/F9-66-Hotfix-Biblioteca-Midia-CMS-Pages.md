@@ -16,9 +16,9 @@
 
 - Inclui o model `Page_media`, separado do Blog e sem banco de dados: lista e grava mídia em diretórios `catalog/view/*/cms/page/`; valida extensão, MIME real, origem de upload, tamanho e caminho; usa nomes aleatórios e recusa symlinks.
 - Inclui o cliente da biblioteca Pages: carrega arquivos, pesquisa/pagina, alterna tipo de mídia, envia com credenciais same-origin e token CSRF, e aplica a mídia selecionada ao bloco ativo.
-- Os controles de `core/video_file` em Pages usam a biblioteca Pages separada e abrem diretamente na aba Vídeo. O bloco agora tem interações de edição próprias, em paralelo ao bloco Image: selecionar/trocar arquivo, editar título e legenda, alinhamento e largura responsiva, alternar controles, repetição, início sem áudio e reprodução automática. A barra de ações contextual também oferece seleção/troca de vídeo com rótulo abaixo do ícone.
+- Os controles de `core/video_file` em Pages usam a biblioteca Pages separada e abrem diretamente na aba Vídeo. O fluxo do bloco agora permite enviar e selecionar um vídeo, substituir o vídeo do bloco e editar título, legenda, alinhamento, largura responsiva, controles, repetição, início sem áudio e reprodução automática. A lista da biblioteca inclui exclusão individual de vídeos com confirmação e aviso de que blocos que apontem para o arquivo deixarão de reproduzi-lo. A barra de ações contextual também oferece seleção/troca de vídeo com rótulo abaixo do ícone.
 - A prévia do editor reflete as opções de reprodução e de apresentação. O renderer público aplica somente valores validados, escapa título/legenda e força início silenciado quando reprodução automática estiver ligada. O schema legado `core/video_file` permanece compatível; os novos atributos são permitidos no formato atual.
-- Os controllers usam a versão de assets `threejs-12-video-block-controls` para invalidar o cache das interações novas.
+- A exclusão é exclusiva da biblioteca CMS Pages, exige ACL `modify` e CSRF, aceita somente nome de arquivo seguro e recusa links simbólicos; não apaga mídias de Blog. Os controllers usam a versão de assets `threejs-13-video-media-actions` para invalidar o cache.
 - O evento de abertura agora tem confirmação: se o cliente/modal Pages não estiver carregado, o editor anuncia a falha em vez de ignorar o clique; erros ao abrir ou carregar são mostrados no modal.
 - O ZIP inclui também o controller e template CMS Pages completos, para que as rotas, configuração e modal correspondam ao cliente/model entregues.
 - Não altera banco, migrações, armazenamento nem fluxo de seleção de mídia do Blog, e não habilita `custom_js` ou HTML arbitrário. O controller do Blog só recebe a invalidação de cache necessária para o editor compartilhado atualizado.
@@ -26,7 +26,7 @@
 ## Verificações
 
 - `node --check` para `cms-page-media.js` e `blog-block-editor.js` passou.
-- Bateria estática: **181 verificações aprovadas**; smoke de URLs do editor: **9 aprovados**; smoke adicional confirmou a normalização de `&amp;` e a preservação de rota, token e parâmetros de mídia.
+- Bateria estática: **184 verificações aprovadas**; smoke de URLs do editor: **9 aprovados**; smoke adicional confirmou a normalização de `&amp;` e a preservação de rota, token e parâmetros de mídia.
 - Não foi possível executar PHP CLI, nem navegador ou staging. A resposta HTTP 404 não foi reproduzida localmente; o pacote precisa ser aplicado no ambiente autorizado para confirmar o endpoint.
 
 ## Arquivos completos

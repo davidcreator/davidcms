@@ -173,6 +173,7 @@ class BlockDocument {
             $allowedAttrs['core/table-cell'] = ['header','rowspan','colspan'];
             $allowedAttrs['core/file'] = ['src'];
             $allowedAttrs['core/audio'] = ['src'];
+            $allowedAttrs['core/video_embed'] = ['url','src'];
             $allowedAttrs['core/video_file'] = ['src','title','caption','align','size','mobile_size','controls','loop','muted','autoplay'];
             $allowedAttrs['core/threejs_thumb'] = ['scene_json','label','custom_js'];
             foreach ($allowedAttrs as &$keys) $keys[] = 'appearance';
@@ -207,7 +208,11 @@ class BlockDocument {
         }
         if ($type === 'core/gallery' && (!isset($attrs['columns']) || !is_int($attrs['columns']) || !in_array($attrs['columns'], [2,3,4], true) || !isset($attrs['align']) || !in_array($attrs['align'], ['content','wide','full'], true) || count($node['children']) < 1 || count($node['children']) > self::MAX_GALLERY_IMAGES)) $errors[] = 'gallery_attributes_or_count_invalid';
         if ($type === 'core/cover' && (!isset($attrs['src']) || !$this->isSafeImagePath($attrs['src']) || !isset($attrs['alt']) || !is_string($attrs['alt']) || strlen($attrs['alt']) > self::MAX_MEDIA_TEXT_BYTES || !preg_match('//u', (string)$attrs['alt']) || !isset($attrs['align']) || !in_array($attrs['align'], ['content','wide','full'], true) || count($node['children']) < 1 || count($node['children']) > self::MAX_COVER_CHILDREN)) $errors[] = 'cover_attributes_or_children_invalid';
-        if ($type === 'core/video_embed' && (!isset($attrs['url']) || !$this->isSafeEmbedUrl($attrs['url']))) $errors[] = 'embed_url_invalid';
+        if ($type === 'core/video_embed') {
+            $localVideo = $version === self::RICH_TEXT_FORMAT_VERSION && isset($attrs['src']) && $this->isSafeVideoPath($attrs['src']) && (!isset($attrs['url']) || $attrs['url'] === '');
+            $externalVideo = isset($attrs['url']) && $this->isSafeEmbedUrl($attrs['url']) && (!isset($attrs['src']) || $attrs['src'] === '');
+            if (!$localVideo && !$externalVideo) $errors[] = 'embed_url_invalid';
+        }
         if ($type === 'core/button' && (!isset($attrs['url']) || !$this->isSafeActionUrl($attrs['url']))) $errors[] = 'button_url_invalid';
         if ($type === 'core/callout' && (!isset($attrs['tone']) || !in_array($attrs['tone'], ['info','success','warning','danger'], true))) $errors[] = 'callout_tone_invalid';
         if ($type === 'core/details' && (!isset($attrs['summary']) || !is_string($attrs['summary']) || trim($attrs['summary']) === '' || strlen($attrs['summary']) > 512 || !preg_match('//u', $attrs['summary']))) $errors[] = 'details_summary_invalid';

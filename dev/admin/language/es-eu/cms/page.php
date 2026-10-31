@@ -207,6 +207,11 @@ $_['error_system_page_delete'] = 'Esta página del sistema no se puede eliminar.
 // Biblioteca independiente de medios de CMS > Páginas.
 $_['text_page_media_tab_image'] = 'Imágenes';
 $_['text_page_media_tab_audio'] = 'Audio';
+$_['text_page_media_delete'] = 'Eliminar vídeo';
+$_['text_page_media_deleted'] = 'Vídeo eliminado de la biblioteca de Pages.';
+$_['text_page_media_confirm_delete_video'] = '¿Eliminar permanentemente este vídeo? Los bloques que lo usan dejarán de reproducirlo.';
+$_['error_page_media_not_found'] = 'No se encontró el vídeo en la biblioteca de Pages.';
+$_['error_page_media_delete'] = 'No se pudo eliminar el vídeo.';
 $_['text_page_media_tab_video'] = 'Vídeo';
 $_['text_page_media_tab_download'] = 'Descargas';
 $_['text_page_media_empty_audio'] = 'No se encontraron archivos de audio.';

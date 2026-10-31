@@ -231,6 +231,13 @@ final class BlockRenderer {
                 return '<section class="rms-block rms-block-cover rms-block-cover--align-' . $align . '"><img class="rms-block-cover__image" src="' . $src . '" alt="' . $alt . '" loading="lazy" decoding="async"><div class="rms-block-cover__content">' . $this->renderNodes($children, $validator, $assetBase, $version) . '</div></section>';
 
             case 'core/video_embed':
+                if (isset($attributes['src']) && $attributes['src'] !== '') {
+                    $srcPath=(string)$attributes['src'];
+                    if(!$this->videoFileExists($srcPath))return '';
+                    $src=$this->escape($this->resolveLocalImageUrl($srcPath,$assetBase));
+                    $mime=['mp4'=>'video/mp4','webm'=>'video/webm','ogv'=>'video/ogg'][strtolower(pathinfo($srcPath,PATHINFO_EXTENSION))];
+                    return '<figure class="rms-block rms-block-video"><video class="rms-block-video__file" controls preload="none" playsinline><source src="'.$src.'" type="'.$mime.'"></video></figure>';
+                }
                 $target = $validator->embedTarget((string)$attributes['url']);
                 if ($target === null) return '';
                 $src = $target['provider'] === 'youtube'

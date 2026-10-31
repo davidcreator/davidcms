@@ -69,6 +69,18 @@ class Page_media extends \Reamur\System\Engine\Model {
         return ['success'=>true,'path'=>$types[$kind]['path'].$filename,'name'=>$filename,'size'=>$size,'mime'=>$mime];
     }
 
+    /** Delete one uploaded Pages video by filename only; never follows links or accepts a path. */
+    public function deletePageVideo(string $name): array {
+        $name=trim($name);
+        if($name===''||basename($name)!==$name||!preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]{0,179}\.(?:mp4|webm|ogv)$/iD',$name))return ['success'=>false,'error'=>'name'];
+        $directory=$this->mediaDirectory('video',false);
+        if($directory===null)return ['success'=>false,'error'=>'root'];
+        $path=$directory.DIRECTORY_SEPARATOR.$name;
+        if(is_link($path)||!is_file($path))return ['success'=>false,'error'=>'not_found'];
+        if(!@unlink($path))return ['success'=>false,'error'=>'delete'];
+        return ['success'=>true,'name'=>$name];
+    }
+
     /** @return array<string, array<string, mixed>> */
     private function allowedTypes(): array {
         return [
