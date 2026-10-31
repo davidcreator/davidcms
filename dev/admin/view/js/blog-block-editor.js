@@ -187,6 +187,23 @@
     };
   }
 
+
+  function preflightReviewCopy() {
+    const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
+    if(language.startsWith('es'))return {
+      tool:'Checklist',title:'Lista previa a la publicación',hint:'Reúne las comprobaciones BDRE disponibles en una sola vista para revisar el documento antes de publicarlo.',note:'Los resultados son orientativos. Esta lista no publica, guarda ni modifica contenido y no comprueba sitios externos.',back:'Volver al editor',invalid:'El documento no supera la validación BDRE y no puede revisarse.',clean:'No se encontraron alertas en las comprobaciones disponibles.',total:'%1 hallazgos',warnings:'%1 por revisar',suggestions:'%1 sugerencias',words:'%1 palabras · lectura estimada: %2 min',categoryCount:'%1 hallazgos',categoryEmpty:'Sin hallazgos en esta área.',warning:'Revisar',info:'Sugerencia',openBlock:'Localizar bloque',
+      categories:{accessibility:'Accesibilidad',links:'Enlaces y destinos',readability:'Legibilidad'}
+    };
+    if(language.startsWith('pt'))return {
+      tool:'Checklist',title:'Checklist pré-publicação',hint:'Reúne as verificações BDRE disponíveis em uma única tela para revisar o documento antes da publicação.',note:'Os resultados são orientativos. Esta lista não publica, salva nem altera conteúdo e não verifica sites externos.',back:'Voltar ao editor',invalid:'O documento não passou na validação BDRE e não pode ser revisado.',clean:'Nenhum alerta foi encontrado nas verificações disponíveis.',total:'%1 apontamentos',warnings:'%1 para revisar',suggestions:'%1 sugestões',words:'%1 palavras · leitura estimada: %2 min',categoryCount:'%1 apontamentos',categoryEmpty:'Nenhum apontamento nesta área.',warning:'Revisar',info:'Sugestão',openBlock:'Localizar bloco',
+      categories:{accessibility:'Acessibilidade',links:'Links e destinos',readability:'Legibilidade'}
+    };
+    return {
+      tool:'Checklist',title:'Pre-publication checklist',hint:'Brings the available BDRE checks together in one view for a final content review.',note:'Findings are advisory. This checklist does not publish, save or change content, and does not check external websites.',back:'Back to editor',invalid:'The document fails BDRE validation and cannot be reviewed.',clean:'No findings in the available checks.',total:'%1 findings',warnings:'%1 to review',suggestions:'%1 suggestions',words:'%1 words · estimated reading time: %2 min',categoryCount:'%1 findings',categoryEmpty:'No findings in this area.',warning:'Review',info:'Suggestion',openBlock:'Locate block',
+      categories:{accessibility:'Accessibility',links:'Links and destinations',readability:'Readability'}
+    };
+  }
+
   function contentModelCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
     const n=(type,content,attributes,children)=>({type,content:content||'',attributes:attributes||{},children:children||[]});
@@ -229,6 +246,7 @@
     plus:'M12 5v14M5 12h14', alignLeft:'M4 6h16M4 10h10M4 14h16M4 18h10', alignCenter:'M4 6h16M7 10h10M4 14h16M7 18h10', alignRight:'M4 6h16M10 10h10M4 14h16M10 18h10', copy:'M8 8V4h12v12h-4M4 8h12v12H4z', undo:'M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-2', redo:'m15 14 5-5-5-5m5 5H10a6 6 0 0 0 0 12h2',
     desktop:'M3 4h18v13H3zM8 21h8M12 17v4', tablet:'M6 2h12v20H6zM11 18h2', mobile:'M8 2h8v20H8zM11 18h2',
     up:'m18 15-6-6-6 6M12 9v12', down:'m6 9 6 6 6-6M12 3v12', trash:'M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3',
+    checklist:'M9 6h12M9 12h12M9 18h12M3 6l1.5 1.5L7 5m-4 7 1.5 1.5L7 11m-4 7 1.5 1.5L7 17',
     bookOpen:'M12 7v14M4 5.5c3-1 5.7-.2 8 1.5 2.3-1.7 5-2.5 8-1.5v13c-3-1-5.7-.2-8 1.5-2.3-1.7-5-2.5-8-1.5zM7 9h2M15 9h2M7 12h2M15 12h2', clock:'M12 8v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
     paragraph:'M4 6h16M4 10h16M4 14h10M4 18h10', heading:'M4 5v14M20 5v14M4 12h16', list:'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
     image:'M4 4h16v16H4zM8 14l3-3 5 5M14 9h.01', quote:'M5 6h6v6H5zM13 6h6v6h-6zM5 12c0 3-1 4-2 5m10-5c0 3-1 4-2 5', video:'m9 7 9 5-9 5zM4 5v14', threejs:'m12 3 8 4v10l-8 4-8-4V7l8-4zm-8 4 8 4 8-4m-8 4v10', button:'M4 7h16v10H4z', bold:'M7 5h6a4 4 0 0 1 0 8H7zM7 13h7a4 4 0 0 1 0 8H7z', italic:'M15 4h-5m4 16H9m5-16-4 16', underline:'M6 4v7a6 6 0 0 0 12 0V4M4 21h16', strike:'M5 12h14M7 6c1-2 3-2 5-2 3 0 5 1 5 3 0 2-2 3-5 4-3 1-5 2-5 5 0 2 2 4 5 4 2 0 4-1 5-3', link:'M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7M14 11a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 21l1.7-1.7', info:'M12 8h.01M11 12h1v5h1M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
@@ -864,6 +882,20 @@
     return {valid:true,issues,wordCount:totalWords,readingMinutes:totalWords?Math.max(1,Math.ceil(totalWords/wordsPerMinute)):0,wordsPerMinute};
   }
 
+
+  function analyzeDocumentPreflight(document, allowPageMedia) {
+    const validation=validateDocument(document,allowPageMedia);
+    if(!validation.valid)return {valid:false,errors:validation.errors,categories:[],total:0,warnings:0,suggestions:0,wordCount:0,readingMinutes:0};
+    const copy=preflightReviewCopy();
+    const accessibility=analyzeDocumentAccessibility(document,allowPageMedia);
+    const links=analyzeDocumentLinks(document,allowPageMedia);
+    const readability=analyzeDocumentReadability(document,allowPageMedia);
+    const audits=[{id:'accessibility',issues:accessibility.issues},{id:'links',issues:links.issues},{id:'readability',issues:readability.issues}];
+    const categories=audits.map((audit)=>({id:audit.id,title:copy.categories[audit.id],issues:audit.issues.map((issue)=>Object.assign({category:audit.id},issue))}));
+    const all=categories.reduce((items,category)=>items.concat(category.issues),[]);
+    return {valid:true,categories,total:all.length,warnings:all.filter((issue)=>issue.severity==='warning').length,suggestions:all.filter((issue)=>issue.severity!=='warning').length,wordCount:readability.wordCount,readingMinutes:readability.readingMinutes};
+  }
+
   function moveBlockAcrossHierarchy(document, nodeId, direction, allowPageMedia) {
     if (!document || document.format_version !== 2 || !Array.isArray(document.blocks) || !['indent','outdent'].includes(direction) || !validateDocument(document, allowPageMedia).valid) return null;
     const next = CLONE(document);
@@ -979,6 +1011,7 @@
       this.accessibility = accessibilityAuditCopy();
       this.linkReview = linkReviewCopy();
       this.readability = readabilityReviewCopy();
+      this.preflight = preflightReviewCopy();
       this.findReplaceOpen = false; this.findQuery = ''; this.replaceQuery = ''; this.findCaseSensitive = false; this.findWholeWord = false; this.activeFindIndex = -1;
       this.documentStatsTimer = null;
       this.fullscreenReturnFocus = null;
@@ -1238,6 +1271,7 @@
       else if(tool==='accessibility'){this.workspaceView='accessibility';this.previewMode=false;}
       else if(tool==='links'){this.workspaceView='links';this.previewMode=false;}
       else if(tool==='readability'){this.workspaceView='readability';this.previewMode=false;}
+      else if(tool==='preflight'){this.workspaceView='preflight';this.previewMode=false;}
       else if(tool==='library'){this.workspaceView='library';this.previewMode=false;}
       else if(tool==='assistant'){this.workspaceView='assistant';this.previewMode=false;}
       else if(tool==='export'){this.workspaceView='export';this.previewMode=false;}
@@ -1254,7 +1288,7 @@
         const tabs={text:'home',media:'media',review:'review',view:'view'};
         if(tabs[tool])this.activeRibbonTab=tabs[tool];
       }
-      if(['models','accessibility','links','readability','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
+      if(['models','accessibility','links','readability','preflight','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
       this.findReplaceOpen=false;
       this.render();
       const focusTarget=Array.from(this.root.querySelectorAll('[data-action="workspace-tool"]')).find((item)=>item.dataset.tool===tool);
@@ -1314,6 +1348,7 @@
       else if (name === 'accessibility-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'link-review-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'readability-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
+      else if (name === 'preflight-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'insert-saved-pattern') this.insertSavedPattern(button.dataset.patternId);
       else if (name === 'save-selected-pattern') this.saveSelectedPattern(button.dataset.nodeId);
       else if (name === 'rename-saved-pattern') this.renameSavedPattern(button.dataset.patternId);
@@ -2677,6 +2712,7 @@
         g=this.renderRibbonGroup(this.accessibility.tool);const audit=this.button(this.accessibility.tool,'workspace-tool',{tool:'accessibility',icon:'check',showLabel:true});audit.dataset.workspaceTool='accessibility';g.tools.append(audit);panel.append(g.group);
         g=this.renderRibbonGroup(this.linkReview.tool);const linkAudit=this.button(this.linkReview.tool,'workspace-tool',{tool:'links',icon:'link',showLabel:true});linkAudit.dataset.workspaceTool='links';g.tools.append(linkAudit);panel.append(g.group);
         g=this.renderRibbonGroup(this.readability.tool);const readabilityAudit=this.button(this.readability.tool,'workspace-tool',{tool:'readability',icon:'bookOpen',showLabel:true});readabilityAudit.dataset.workspaceTool='readability';g.tools.append(readabilityAudit);panel.append(g.group);
+        g=this.renderRibbonGroup(this.preflight.tool);const preflightAudit=this.button(this.preflight.tool,'workspace-tool',{tool:'preflight',icon:'checklist',showLabel:true});preflightAudit.dataset.workspaceTool='preflight';g.tools.append(preflightAudit);panel.append(g.group);
       }else if(this.activeRibbonTab==='view'){
         let g=this.renderRibbonGroup(this.strings.groupPanels||'Painéis recolhíveis');
         [['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline'],['settings',this.strings.builderSettings,'settings']].forEach(([panelName,label,icon])=>{const b=this.button(label,'builder-panel',{panel:panelName,icon});b.setAttribute('aria-pressed',String(this.fullscreen?(panelName==='settings'?(this.inspectorOpen&&!this.previewMode):this.activePanel===panelName):this.activePanel===panelName));if(this.fullscreen&&this.previewMode&&panelName==='settings')b.disabled=true;g.tools.append(b);});panel.append(g.group);
@@ -2769,6 +2805,39 @@
       wrap.append(list);return wrap;
     }
 
+    renderPreflightReview() {
+      const copy=this.preflight,wrap=this.el('div','rb-workspace-screen-content rb-accessibility-workspace rb-preflight-workspace');
+      const header=this.el('div','rb-accessibility-header'),titleGroup=this.el('div','');titleGroup.append(this.el('h1','rb-workspace-screen-title',copy.title));
+      header.append(titleGroup,this.button(copy.back,'workspace-tool',{tool:'home',icon:'collapse',showLabel:true}));
+      wrap.append(header,this.el('p','rb-workspace-screen-lead',copy.hint),this.el('p','rb-accessibility-note',copy.note));
+      const result=analyzeDocumentPreflight(this.state,this.allowPageMedia);
+      if(!result.valid){const warning=this.el('p','rb-workspace-warning',copy.invalid);warning.setAttribute('role','alert');wrap.append(warning);return wrap;}
+      const metrics=this.el('div','rb-preflight-metrics');metrics.setAttribute('role','group');metrics.setAttribute('aria-label',copy.title);
+      const metric=(icon,label,className)=>{const card=this.el('div','rb-preflight-metric '+className);card.append(this.icon(icon,'rb-preflight-metric-icon'),this.el('span','',label));metrics.append(card);};
+      metric('checklist',copy.total.replace('%1',String(result.total)),'rb-preflight-metric--total');
+      metric('check',copy.warnings.replace('%1',String(result.warnings)),'rb-preflight-metric--warning');
+      metric('info',copy.suggestions.replace('%1',String(result.suggestions)),'rb-preflight-metric--suggestion');
+      metric('clock',copy.words.replace('%1',String(result.wordCount)).replace('%2',String(result.readingMinutes)),'rb-preflight-metric--reading');
+      wrap.append(metrics);
+      const status=this.el('p','rb-accessibility-summary',result.total?copy.total.replace('%1',String(result.total)):copy.clean);status.setAttribute('role','status');status.setAttribute('aria-live','polite');wrap.append(status);
+      result.categories.forEach((category)=>{
+        const section=this.el('section','rb-preflight-category');const headingId='rb-preflight-'+this.instance+'-'+category.id;section.setAttribute('aria-labelledby',headingId);
+        const title=this.el('div','rb-preflight-category-heading'),icon=category.id==='accessibility'?'check':category.id==='links'?'link':'bookOpen';
+        const heading=this.el('h2','rb-preflight-category-title',category.title);heading.id=headingId;
+        title.append(this.icon(icon,'rb-preflight-category-icon'),heading,this.el('span','rb-preflight-category-count',copy.categoryCount.replace('%1',String(category.issues.length))));section.append(title);
+        if(!category.issues.length){section.append(this.el('p','rb-preflight-category-empty',copy.categoryEmpty));wrap.append(section);return;}
+        const list=this.el('div','rb-accessibility-findings');list.setAttribute('role','list');
+        category.issues.forEach((issue)=>{
+          const item=this.el('article','rb-accessibility-issue rb-accessibility-issue--'+issue.severity);item.setAttribute('role','listitem');
+          const top=this.el('div','rb-accessibility-issue-top');top.append(this.el('span','rb-accessibility-severity',issue.severity==='warning'?copy.warning:copy.info),this.el('span','rb-accessibility-block-type',this.label(issue.type)));item.append(top);
+          item.append(this.el('h3','rb-accessibility-issue-title',issue.title),this.el('p','rb-accessibility-issue-detail',issue.detail),this.el('p','rb-accessibility-issue-suggestion',issue.suggestion));
+          item.append(this.button(copy.openBlock,'preflight-focus',{nodeId:issue.nodeId,icon:'outline',showLabel:true}));list.append(item);
+        });
+        section.append(list);wrap.append(section);
+      });
+      return wrap;
+    }
+
     renderWorkspaceScreen() {
       const surface=this.el('section','rb-canvas rb-workspace-screen');surface.id='rb-workspace-surface-'+this.instance;surface.setAttribute('role','region');
       if(this.workspaceView==='models'){
@@ -2779,6 +2848,8 @@
         surface.setAttribute('aria-label',this.linkReview.title);surface.append(this.renderLinkReview());
       }else if(this.workspaceView==='readability'){
         surface.setAttribute('aria-label',this.readability.title);surface.append(this.renderReadabilityReview());
+      }else if(this.workspaceView==='preflight'){
+        surface.setAttribute('aria-label',this.preflight.title);surface.append(this.renderPreflightReview());
       }else if(this.workspaceView==='library'){
         surface.setAttribute('aria-label',this.ui.libraryTitle);
         const wrap=this.el('div','rb-workspace-screen-content');wrap.append(this.el('h1','rb-workspace-screen-title',this.ui.libraryTitle),this.el('p','rb-workspace-screen-lead',this.ui.libraryHint));
@@ -2884,6 +2955,7 @@
           ['accessibility',this.accessibility.tool,'check'],
           ['links',this.linkReview.tool,'link'],
           ['readability',this.readability.tool,'bookOpen'],
+          ['preflight',this.preflight.tool,'checklist'],
           ['view',this.strings.ribbonView,'desktop'],
           ['home',this.ui.home,'layers'],
           ['models',this.ui.models,'layers'],
@@ -2896,7 +2968,7 @@
         workspaceTools.forEach(([tool,label,icon])=>{
           if(tool==='text'||tool==='home'){const divider=this.el('span','rb-workspace-rail-divider');divider.setAttribute('aria-hidden','true');workspaceRail.append(divider);}
           const control=this.el('button','rb-workspace-tool'); control.type='button'; control.dataset.action='workspace-tool'; control.dataset.tool=tool;
-          const workspaceViews={models:'models',accessibility:'accessibility',links:'links',readability:'readability',library:'library',assistant:'assistant',export:'export',share:'share',help:'help'};
+          const workspaceViews={models:'models',accessibility:'accessibility',links:'links',readability:'readability',preflight:'preflight',library:'library',assistant:'assistant',export:'export',share:'share',help:'help'};
           const pressed=tool==='home'?this.workspaceView==='editor'&&this.activeRibbonTab==='home':Object.prototype.hasOwnProperty.call(workspaceViews,tool)?this.workspaceView===workspaceViews[tool]:tool==='elements'?(this.activePanel==='elements'&&this.inserterOpen):tool==='structure'?this.activePanel==='structure':tool==='appearance'?(this.inspectorOpen&&!this.previewMode):tool==='text'?this.activeRibbonTab==='home':tool==='media'?this.activeRibbonTab==='media':tool==='review'?this.activeRibbonTab==='review':tool==='view'?this.activeRibbonTab==='view':false;
           control.setAttribute('aria-label',label); control.setAttribute('aria-pressed',String(pressed));
           if(tool==='elements'||tool==='appearance')control.setAttribute('aria-expanded',String(pressed));
@@ -3472,6 +3544,7 @@
     analyzeDocumentAccessibility: analyzeDocumentAccessibility,
     analyzeDocumentLinks: analyzeDocumentLinks,
     analyzeDocumentReadability: analyzeDocumentReadability,
+    analyzeDocumentPreflight: analyzeDocumentPreflight,
     validLocalImage: validLocalImage,
     validLocalDownload: validLocalDownload,
     validLocalAudio: validLocalAudio,
