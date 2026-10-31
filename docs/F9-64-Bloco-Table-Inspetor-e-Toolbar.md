@@ -1,24 +1,31 @@
-# F9-64 — Bloco Table: inspetor e toolbar
+# F9-64 — Bloco Table: operações estruturais e formato de célula
 
-## Alterações
+## Entrega
 
-- O inspetor de `core/table` apresenta uma grade editável, célula a célula, para todos os `core/table-row` e `core/table-cell`; a formatação inline é preservada.
-- Os editores das células no canvas e no inspetor usam o mesmo identificador e fluxo de atualização, mantendo o conteúdo sincronizado sem reconstruir a grade durante a digitação.
-- Mantidos os controles existentes para adicionar/remover linhas e colunas e alternar o cabeçalho; limites e validação estrutural da tabela permanecem inalterados.
-- A aba **Personalizar** identifica os estilos da tabela; toolbar contextual e ações do inspetor recebem rótulos, com texto abaixo dos ícones e tooltips para ferramentas icon-only.
-- Os novos títulos e instruções do inspetor estão localizados em português, inglês e espanhol.
+- O inspetor de `core/table` exibe uma grade editável célula a célula. O conteúdo usa os mesmos IDs e o mesmo fluxo de sincronização do canvas, preservando as formatações inline existentes.
+- Permite adicionar e remover linhas e colunas, respeitando os limites existentes de 20 linhas e 12 colunas. A remoção de linha/coluna final ajusta spans que atravessam a borda para manter a grade válida.
+- Permite selecionar células e mesclar apenas seleções retangulares completas. O conteúdo das células é reunido na célula âncora; a operação inversa desmescla e recria células vazias editáveis.
+- Permite definir as células selecionadas individualmente como cabeçalho ou conteúdo normal. Em células sem a nova configuração explícita, o comportamento anterior baseado em `table.header` e na primeira linha continua valendo.
+- O schema JS e a validação PHP aceitam `header`, `rowspan` e `colspan` opcionais em `core/table-cell`, verificam os limites, sobreposição e cobertura completa da grade; o limite agregado existente de 262144 bytes de texto da tabela permanece.
+- O renderer de prévia e o renderer PHP emitem `th`/`td` por célula e `rowspan`/`colspan`. Tabelas legadas sem atributos individuais mantêm o mesmo fallback visual.
+- Toolbar e ações mantêm rótulos visíveis abaixo dos ícones, e ferramentas icon-only continuam com descrição no hover. Rótulos e instruções de seleção/mesclagem estão em português, inglês e espanhol.
 
-## Validação
+## Verificações executadas
 
-- `node --check` passou.
-- Bateria estática completa: **150 verificações aprovadas**, incluindo render/validação/criação de todos os tipos do catálogo e testes específicos para a matriz de células, sincronização e controles da tabela.
-- Os 9 testes URL do hotfix F9-61 passaram; análise profunda do CSS sem erros; ZIP validado com `unzip -t`.
-- Sem navegador/runtime PHP disponível: edição interativa e responsividade visual devem ser confirmadas no ambiente da aplicação. Nenhum controller, banco, migração, rota, GitHub ou deploy foi alterado.
+- `node --check dev/admin/view/js/blog-block-editor.js` passou.
+- Probe Node da validação de schema aceitou uma grade válida com `rowspan` e rejeitou uma grade incompleta.
+- `python3 tools/f9-57-static-battery.py`: **157 verificações estáticas aprovadas**.
+- `node tools/f9-61-preview-url-smoke.js`: **9 verificações de URL aprovadas**.
+- Parser CSS `tinycss2` e validação estrutural do ZIP executados na preparação da entrega.
+- Não houve teste de navegador nem teste de runtime PHP (indisponíveis nesta execução). A bateria é estática e não substitui a validação interativa/visual na aplicação.
+- Nenhum controller, banco, migração, rota, GitHub ou deploy foi alterado.
 
-## Arquivos completos no pacote
+## Arquivos completos incluídos no pacote
 
 - `dev/admin/view/js/blog-block-editor.js`
 - `dev/admin/view/css/blog-block-editor.css`
+- `dev/system/library/blog/block_document.php`
+- `dev/system/library/blog/block_renderer.php`
 - `tools/f9-57-static-battery.py`
 - `tools/f9-61-preview-url-smoke.js`
 - Esta documentação e referências F9-52 a F9-63.

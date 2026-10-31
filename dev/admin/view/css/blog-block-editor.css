@@ -121,6 +121,9 @@
 .rb-table-inspector-grid th{background:#f1f4fa}
 .rb-table-inspector-cell-editor{min-height:2.5rem;padding:.3rem;overflow-wrap:anywhere;white-space:pre-wrap;font-size:.72rem;line-height:1.35}
 .rb-table-inspector-cell-editor:focus-visible{outline:2px solid #174ea6;outline-offset:-2px}
+.rb-table-cell-selector{display:flex;align-items:center;gap:.2rem;margin:0 0 .25rem;color:#687890;font-size:.58rem;line-height:1.1;white-space:nowrap}
+.rb-table-cell-selector input{width:.85rem;height:.85rem;margin:0;accent-color:#3153d2}
+.rb-table-selection-actions>.rb-button{flex:1 1 8rem;justify-content:center}
 .rb-table-cell-content{min-height:2rem;outline:none;overflow-wrap:anywhere;white-space:pre-wrap}
 .rb-table-actions{display:flex;flex-wrap:wrap;gap:.35rem}
 @media(max-width:560px){.rb-table-preview table{min-width:36rem}}

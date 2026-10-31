@@ -18,9 +18,9 @@
   const PATTERN_TOOL_DESCRIPTIONS = {pt:{two_columns:'Insere uma seção com duas colunas de conteúdo.',quote_cta:'Insere citação acompanhada de botão de chamada.',section_intro:'Insere título, introdução e separador.',cover_hero:'Insere capa com título, descrição e botão.'},en:{two_columns:'Insert a two-column content section.',quote_cta:'Insert a quote with a call-to-action button.',section_intro:'Insert a heading, introduction and divider.',cover_hero:'Insert a cover with heading, description and button.'},es:{two_columns:'Inserta una sección de contenido en dos columnas.',quote_cta:'Inserta una cita con un botón de llamada a la acción.',section_intro:'Inserta título, introducción y separador.',cover_hero:'Inserta una portada con título, descripción y botón.'}};
   function paragraphInspectorCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
-    if(language.startsWith('es'))return {paragraphTextTitle:'Texto del párrafo',paragraphTextHint:'Edita aquí o directamente en el lienzo. Conserva los formatos en línea existentes.',paragraphAlignment:'Alineación del párrafo',paragraphStyleHeading:'Estilo del párrafo',headingTextTitle:'Texto del encabezado',headingTextHint:'Edita el texto aquí o directamente en el lienzo.',headingStyleHeading:'Estilo del encabezado',headingLevelLabel:'Nivel del encabezado',headingLevels:[['1','H1 · Encabezado 1'],['2','H2 · Encabezado 2'],['3','H3 · Encabezado 3'],['4','H4 · Encabezado 4'],['5','H5 · Encabezado 5'],['6','H6 · Encabezado 6']],listItemsTitle:'Elementos de la lista',listItemTextTitle:'Texto del elemento',listItemTextHint:'Edita aquí o directamente en el lienzo.',listItemSingular:'Elemento %1',listType:'Tipo de lista',listUnordered:'Viñetas',listOrdered:'Numerada',listAddItem:'Añadir elemento',listRemoveItem:'Quitar elemento',listActions:'Acciones de la lista',listStyleHeading:'Estilo de la lista',listItemStyleHeading:'Estilo del elemento',quoteTextTitle:'Texto de la cita',quoteTextHint:'Edita aquí o directamente en el lienzo. Se conserva el formato en línea.',quoteStyleHeading:'Estilo de la cita',quoteActions:'Acciones de la cita',buttonTextTitle:'Texto del botón',buttonTextHint:'Edita la etiqueta aquí o directamente en el lienzo. Se conserva el formato en línea.',buttonDestination:'Destino del botón (URL o ruta local)',buttonStyleHeading:'Estilo del botón',buttonActions:'Acciones del botón',calloutTextTitle:'Texto del aviso',calloutTextHint:'Edita el contenido aquí o directamente en el lienzo. Se conserva el formato en línea.',calloutStyleHeading:'Estilo del aviso',calloutActions:'Acciones del aviso',detailsTextTitle:'Contenido desplegable',detailsTextHint:'Edita el contenido que se muestra al expandir la sección, aquí o directamente en el lienzo.',detailsStyleHeading:'Estilo de la sección informativa',detailsActions:'Acciones de la sección informativa',preformattedTextTitle:'Código preformateado',preformattedTextHint:'El contenido se trata como texto literal; no se ejecuta.',preformattedStyleHeading:'Estilo del código preformateado',preformattedActions:'Acciones del código preformateado',tableContentTitle:'Contenido de la tabla',tableContentHint:'Edita cada celda aquí o directamente en el canvas; los cambios se sincronizan.',tableStyleHeading:'Estilo de la tabla',tableActions:'Acciones de la tabla',paragraphActions:'Acciones del bloque'};
-    if(language.startsWith('en'))return {paragraphTextTitle:'Paragraph text',paragraphTextHint:'Edit here or directly on the canvas. Existing inline formatting is preserved.',paragraphAlignment:'Paragraph alignment',paragraphStyleHeading:'Paragraph style',headingTextTitle:'Heading text',headingTextHint:'Edit the text here or directly on the canvas.',headingStyleHeading:'Heading style',headingLevelLabel:'Heading level',headingLevels:[['1','H1 · Heading 1'],['2','H2 · Heading 2'],['3','H3 · Heading 3'],['4','H4 · Heading 4'],['5','H5 · Heading 5'],['6','H6 · Heading 6']],listItemsTitle:'List items',listItemTextTitle:'List item text',listItemTextHint:'Edit here or directly on the canvas.',listItemSingular:'Item %1',listType:'List type',listUnordered:'Bulleted',listOrdered:'Numbered',listAddItem:'Add item',listRemoveItem:'Remove item',listActions:'List actions',listStyleHeading:'List style',listItemStyleHeading:'List item style',quoteTextTitle:'Quote text',quoteTextHint:'Edit here or directly on the canvas. Inline formatting is preserved.',quoteStyleHeading:'Quote style',quoteActions:'Quote actions',buttonTextTitle:'Button text',buttonTextHint:'Edit the label here or directly on the canvas. Inline formatting is preserved.',buttonDestination:'Button destination (URL or local path)',buttonStyleHeading:'Button style',buttonActions:'Button actions',calloutTextTitle:'Notice text',calloutTextHint:'Edit the content here or directly on the canvas. Inline formatting is preserved.',calloutStyleHeading:'Notice style',calloutActions:'Notice actions',detailsTextTitle:'Expandable content',detailsTextHint:'Edit the content shown when the section is expanded, here or directly on the canvas.',detailsStyleHeading:'Information section style',detailsActions:'Information section actions',preformattedTextTitle:'Preformatted code',preformattedTextHint:'Content is treated as literal text and is never executed.',preformattedStyleHeading:'Preformatted code style',preformattedActions:'Preformatted code actions',tableContentTitle:'Table content',tableContentHint:'Edit each cell here or directly on the canvas; changes stay synchronized.',tableStyleHeading:'Table style',tableActions:'Table actions',paragraphActions:'Block actions'};
-    return {paragraphTextTitle:'Texto do parágrafo',paragraphTextHint:'Edite aqui ou diretamente no canvas. As formatações inline existentes serão preservadas.',paragraphAlignment:'Alinhamento do parágrafo',paragraphStyleHeading:'Estilo do parágrafo',headingTextTitle:'Texto do título',headingTextHint:'Edite o texto aqui ou diretamente no canvas.',headingStyleHeading:'Estilo do título',headingLevelLabel:'Nível do título',headingLevels:[['1','H1 · Título 1'],['2','H2 · Título 2'],['3','H3 · Título 3'],['4','H4 · Título 4'],['5','H5 · Título 5'],['6','H6 · Título 6']],listItemsTitle:'Itens da lista',listItemTextTitle:'Texto do item',listItemTextHint:'Edite aqui ou diretamente no canvas.',listItemSingular:'Item %1',listType:'Tipo de lista',listUnordered:'Marcadores',listOrdered:'Numerada',listAddItem:'Adicionar item',listRemoveItem:'Remover item',listActions:'Ações da lista',listStyleHeading:'Estilo da lista',listItemStyleHeading:'Estilo do item',quoteTextTitle:'Texto da citação',quoteTextHint:'Edite aqui ou diretamente no canvas. A formatação inline será preservada.',quoteStyleHeading:'Estilo da citação',quoteActions:'Ações da citação',buttonTextTitle:'Texto do botão',buttonTextHint:'Edite o rótulo aqui ou diretamente no canvas. A formatação inline será preservada.',buttonDestination:'Destino do botão (URL ou caminho local)',buttonStyleHeading:'Estilo do botão',buttonActions:'Ações do botão',calloutTextTitle:'Texto do aviso',calloutTextHint:'Edite o conteúdo aqui ou diretamente no canvas. A formatação inline será preservada.',calloutStyleHeading:'Estilo do aviso',calloutActions:'Ações do aviso',detailsTextTitle:'Conteúdo expansível',detailsTextHint:'Edite o conteúdo exibido ao expandir a seção, aqui ou diretamente no canvas.',detailsStyleHeading:'Estilo das informações',detailsActions:'Ações das informações',preformattedTextTitle:'Código pré-formatado',preformattedTextHint:'O conteúdo é tratado como texto literal e não é executado.',preformattedStyleHeading:'Estilo do código pré-formatado',preformattedActions:'Ações do código pré-formatado',tableContentTitle:'Conteúdo da tabela',tableContentHint:'Edite cada célula aqui ou diretamente no canvas; as alterações são sincronizadas.',tableStyleHeading:'Estilo da tabela',tableActions:'Ações da tabela',paragraphActions:'Ações do bloco'};
+    if(language.startsWith('es'))return {paragraphTextTitle:'Texto del párrafo',paragraphTextHint:'Edita aquí o directamente en el lienzo. Conserva los formatos en línea existentes.',paragraphAlignment:'Alineación del párrafo',paragraphStyleHeading:'Estilo del párrafo',headingTextTitle:'Texto del encabezado',headingTextHint:'Edita el texto aquí o directamente en el lienzo.',headingStyleHeading:'Estilo del encabezado',headingLevelLabel:'Nivel del encabezado',headingLevels:[['1','H1 · Encabezado 1'],['2','H2 · Encabezado 2'],['3','H3 · Encabezado 3'],['4','H4 · Encabezado 4'],['5','H5 · Encabezado 5'],['6','H6 · Encabezado 6']],listItemsTitle:'Elementos de la lista',listItemTextTitle:'Texto del elemento',listItemTextHint:'Edita aquí o directamente en el lienzo.',listItemSingular:'Elemento %1',listType:'Tipo de lista',listUnordered:'Viñetas',listOrdered:'Numerada',listAddItem:'Añadir elemento',listRemoveItem:'Quitar elemento',listActions:'Acciones de la lista',listStyleHeading:'Estilo de la lista',listItemStyleHeading:'Estilo del elemento',quoteTextTitle:'Texto de la cita',quoteTextHint:'Edita aquí o directamente en el lienzo. Se conserva el formato en línea.',quoteStyleHeading:'Estilo de la cita',quoteActions:'Acciones de la cita',buttonTextTitle:'Texto del botón',buttonTextHint:'Edita la etiqueta aquí o directamente en el lienzo. Se conserva el formato en línea.',buttonDestination:'Destino del botón (URL o ruta local)',buttonStyleHeading:'Estilo del botón',buttonActions:'Acciones del botón',calloutTextTitle:'Texto del aviso',calloutTextHint:'Edita el contenido aquí o directamente en el lienzo. Se conserva el formato en línea.',calloutStyleHeading:'Estilo del aviso',calloutActions:'Acciones del aviso',detailsTextTitle:'Contenido desplegable',detailsTextHint:'Edita el contenido que se muestra al expandir la sección, aquí o directamente en el lienzo.',detailsStyleHeading:'Estilo de la sección informativa',detailsActions:'Acciones de la sección informativa',preformattedTextTitle:'Código preformateado',preformattedTextHint:'El contenido se trata como texto literal; no se ejecuta.',preformattedStyleHeading:'Estilo del código preformateado',preformattedActions:'Acciones del código preformateado',tableContentTitle:'Contenido de la tabla',tableContentHint:'Edita cada celda aquí o directamente en el canvas; los cambios se sincronizan.',tableStyleHeading:'Estilo de la tabla',tableActions:'Acciones de la tabla',tableMergeCells:'Combinar celdas seleccionadas',tableUnmergeCells:'Separar celdas combinadas',tableMarkHeader:'Definir como encabezado',tableMarkNormal:'Definir como contenido normal',tableSelectCell:'Seleccionar celda',tableSelectionHint:'Selecciona un grupo rectangular de celdas para combinarlas o elegir el formato de encabezado.',paragraphActions:'Acciones del bloque'};
+    if(language.startsWith('en'))return {paragraphTextTitle:'Paragraph text',paragraphTextHint:'Edit here or directly on the canvas. Existing inline formatting is preserved.',paragraphAlignment:'Paragraph alignment',paragraphStyleHeading:'Paragraph style',headingTextTitle:'Heading text',headingTextHint:'Edit the text here or directly on the canvas.',headingStyleHeading:'Heading style',headingLevelLabel:'Heading level',headingLevels:[['1','H1 · Heading 1'],['2','H2 · Heading 2'],['3','H3 · Heading 3'],['4','H4 · Heading 4'],['5','H5 · Heading 5'],['6','H6 · Heading 6']],listItemsTitle:'List items',listItemTextTitle:'List item text',listItemTextHint:'Edit here or directly on the canvas.',listItemSingular:'Item %1',listType:'List type',listUnordered:'Bulleted',listOrdered:'Numbered',listAddItem:'Add item',listRemoveItem:'Remove item',listActions:'List actions',listStyleHeading:'List style',listItemStyleHeading:'List item style',quoteTextTitle:'Quote text',quoteTextHint:'Edit here or directly on the canvas. Inline formatting is preserved.',quoteStyleHeading:'Quote style',quoteActions:'Quote actions',buttonTextTitle:'Button text',buttonTextHint:'Edit the label here or directly on the canvas. Inline formatting is preserved.',buttonDestination:'Button destination (URL or local path)',buttonStyleHeading:'Button style',buttonActions:'Button actions',calloutTextTitle:'Notice text',calloutTextHint:'Edit the content here or directly on the canvas. Inline formatting is preserved.',calloutStyleHeading:'Notice style',calloutActions:'Notice actions',detailsTextTitle:'Expandable content',detailsTextHint:'Edit the content shown when the section is expanded, here or directly on the canvas.',detailsStyleHeading:'Information section style',detailsActions:'Information section actions',preformattedTextTitle:'Preformatted code',preformattedTextHint:'Content is treated as literal text and is never executed.',preformattedStyleHeading:'Preformatted code style',preformattedActions:'Preformatted code actions',tableContentTitle:'Table content',tableContentHint:'Edit each cell here or directly on the canvas; changes stay synchronized.',tableStyleHeading:'Table style',tableActions:'Table actions',tableMergeCells:'Merge selected cells',tableUnmergeCells:'Unmerge cells',tableMarkHeader:'Set as header',tableMarkNormal:'Set as normal content',tableSelectCell:'Select cell',tableSelectionHint:'Select a rectangular group of cells to merge or set their header format.',paragraphActions:'Block actions'};
+    return {paragraphTextTitle:'Texto do parágrafo',paragraphTextHint:'Edite aqui ou diretamente no canvas. As formatações inline existentes serão preservadas.',paragraphAlignment:'Alinhamento do parágrafo',paragraphStyleHeading:'Estilo do parágrafo',headingTextTitle:'Texto do título',headingTextHint:'Edite o texto aqui ou diretamente no canvas.',headingStyleHeading:'Estilo do título',headingLevelLabel:'Nível do título',headingLevels:[['1','H1 · Título 1'],['2','H2 · Título 2'],['3','H3 · Título 3'],['4','H4 · Título 4'],['5','H5 · Título 5'],['6','H6 · Título 6']],listItemsTitle:'Itens da lista',listItemTextTitle:'Texto do item',listItemTextHint:'Edite aqui ou diretamente no canvas.',listItemSingular:'Item %1',listType:'Tipo de lista',listUnordered:'Marcadores',listOrdered:'Numerada',listAddItem:'Adicionar item',listRemoveItem:'Remover item',listActions:'Ações da lista',listStyleHeading:'Estilo da lista',listItemStyleHeading:'Estilo do item',quoteTextTitle:'Texto da citação',quoteTextHint:'Edite aqui ou diretamente no canvas. A formatação inline será preservada.',quoteStyleHeading:'Estilo da citação',quoteActions:'Ações da citação',buttonTextTitle:'Texto do botão',buttonTextHint:'Edite o rótulo aqui ou diretamente no canvas. A formatação inline será preservada.',buttonDestination:'Destino do botão (URL ou caminho local)',buttonStyleHeading:'Estilo do botão',buttonActions:'Ações do botão',calloutTextTitle:'Texto do aviso',calloutTextHint:'Edite o conteúdo aqui ou diretamente no canvas. A formatação inline será preservada.',calloutStyleHeading:'Estilo do aviso',calloutActions:'Ações do aviso',detailsTextTitle:'Conteúdo expansível',detailsTextHint:'Edite o conteúdo exibido ao expandir a seção, aqui ou diretamente no canvas.',detailsStyleHeading:'Estilo das informações',detailsActions:'Ações das informações',preformattedTextTitle:'Código pré-formatado',preformattedTextHint:'O conteúdo é tratado como texto literal e não é executado.',preformattedStyleHeading:'Estilo do código pré-formatado',preformattedActions:'Ações do código pré-formatado',tableContentTitle:'Conteúdo da tabela',tableContentHint:'Edite cada célula aqui ou diretamente no canvas; as alterações são sincronizadas.',tableStyleHeading:'Estilo da tabela',tableActions:'Ações da tabela',tableMergeCells:'Mesclar células selecionadas',tableUnmergeCells:'Desmesclar células',tableMarkHeader:'Definir como cabeçalho',tableMarkNormal:'Definir como conteúdo normal',tableSelectCell:'Selecionar célula',tableSelectionHint:'Selecione células em retângulo para mesclar ou definir o formato do cabeçalho.',paragraphActions:'Ações do bloco'};
   }
 
   const TRANSFORMABLE_TEXT = new Set(['core/paragraph', 'core/heading', 'core/quote', 'core/button']);
@@ -428,6 +428,72 @@
     return style;
   }
 
+  function tableGridInfo(table) {
+    const rows=table&&Array.isArray(table.children)?table.children:[];
+    if(!rows.length||rows.length>20)return null;
+    const grid=Array.from({length:rows.length},()=>Array(12).fill(null));
+    const origins=[];let width=0;
+    for(let rowIndex=0;rowIndex<rows.length;rowIndex+=1){
+      const row=rows[rowIndex];if(!row||row.type!=='core/table-row'||!Array.isArray(row.children)||row.children.length>12)return null;
+      let col=0;
+      for(const cell of row.children){
+        if(!cell||cell.type!=='core/table-cell'||!cell.attributes||typeof cell.attributes!=='object'||Array.isArray(cell.attributes))return null;
+        const attrs=cell.attributes;
+        const rowspan=attrs.rowspan===undefined?1:attrs.rowspan;
+        const colspan=attrs.colspan===undefined?1:attrs.colspan;
+        if(!Number.isInteger(rowspan)||rowspan<1||rowspan>rows.length||!Number.isInteger(colspan)||colspan<1||colspan>12||rowIndex+rowspan>rows.length)return null;
+        while(col<12&&grid[rowIndex][col]!==null)col+=1;
+        if(col+colspan>12)return null;
+        let overlap=false;
+        for(let r=rowIndex;r<rowIndex+rowspan;r+=1)for(let c=col;c<col+colspan;c+=1)if(grid[r][c]!==null)overlap=true;
+        if(overlap)return null;
+        for(let r=rowIndex;r<rowIndex+rowspan;r+=1)for(let c=col;c<col+colspan;c+=1)grid[r][c]=cell;
+        origins.push({cell,row:rowIndex,col,rowspan,colspan});width=Math.max(width,col+colspan);col+=colspan;
+      }
+    }
+    if(width<1||width>12)return null;
+    for(let r=0;r<rows.length;r+=1)for(let c=0;c<width;c+=1)if(!grid[r][c])return null;
+    return {grid,origins,width,height:rows.length};
+  }
+
+  function tableMergeSelection(table, selectedIds) {
+    const info=tableGridInfo(table),selected=new Set(Array.from(selectedIds||[]));
+    if(!info||selected.size<2)return null;
+    const cells=info.origins.filter((origin)=>selected.has(origin.cell.id));
+    if(cells.length!==selected.size)return null;
+    const top=Math.min(...cells.map((item)=>item.row)),left=Math.min(...cells.map((item)=>item.col));
+    const bottom=Math.max(...cells.map((item)=>item.row+item.rowspan-1)),right=Math.max(...cells.map((item)=>item.col+item.colspan-1));
+    if(cells.some((item)=>item.row<top||item.col<left||item.row+item.rowspan-1>bottom||item.col+item.colspan-1>right))return null;
+    for(let r=top;r<=bottom;r+=1)for(let c=left;c<=right;c+=1){const cell=info.grid[r][c];if(!cell||!selected.has(cell.id))return null;}
+    cells.sort((a,b)=>a.row-b.row||a.col-b.col);
+    const anchor=cells.find((item)=>item.row===top&&item.col===left);
+    if(!anchor)return null;
+    return {info,cells,anchor,top,left,bottom,right,rowspan:bottom-top+1,colspan:right-left+1};
+  }
+
+  function tableCellIsHeader(table,rowIndex,cell) {
+    if(cell&&cell.attributes&&typeof cell.attributes.header==='boolean')return cell.attributes.header;
+    return !!(table&&table.attributes&&table.attributes.header&&rowIndex===0);
+  }
+
+  function splitTableCells(table,selectedIds,createCell) {
+    const info=tableGridInfo(table),selected=new Set(Array.from(selectedIds||[]));
+    if(!info)return false;
+    const entries=info.origins.map((origin)=>({cell:origin.cell,row:origin.row,col:origin.col,rowspan:origin.rowspan,colspan:origin.colspan}));
+    const toSplit=entries.filter((entry)=>selected.has(entry.cell.id)&&(entry.rowspan>1||entry.colspan>1));
+    if(!toSplit.length)return false;
+    toSplit.forEach((entry)=>{entry.rowspan=1;entry.colspan=1;delete entry.cell.attributes.rowspan;delete entry.cell.attributes.colspan;});
+    const occupied=Array.from({length:info.height},()=>Array(info.width).fill(false));
+    for(const entry of entries){
+      for(let r=entry.row;r<entry.row+entry.rowspan;r+=1)for(let c=entry.col;c<entry.col+entry.colspan;c+=1){if(r>=info.height||c>=info.width||occupied[r][c])return false;occupied[r][c]=true;}
+    }
+    for(let r=0;r<info.height;r+=1)for(let c=0;c<info.width;c+=1)if(!occupied[r][c]){
+      const previous=info.grid[r][c];const cell=createCell(tableCellIsHeader(table,r,previous));entries.push({cell,row:r,col:c,rowspan:1,colspan:1});occupied[r][c]=true;
+    }
+    table.children.forEach((row,rowIndex)=>{row.children=entries.filter((entry)=>entry.row===rowIndex).sort((a,b)=>a.col-b.col).map((entry)=>entry.cell);});
+    return !!tableGridInfo(table);
+  }
+
   function validateDocument(doc, allowPageMedia) {
     const errors = [];
     if (!doc || typeof doc !== 'object' || Array.isArray(doc) || Object.keys(doc).sort().join(',') !== 'blocks,format_version' || ![1,2].includes(doc.format_version) || !Array.isArray(doc.blocks)) return { valid: false, errors: ['root_shape_invalid'] };
@@ -457,6 +523,7 @@
         allowedAttributes['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
         allowedAttributes['core/group'] = ['outline_label'];
         allowedAttributes['core/table'] = ['header'];
+        allowedAttributes['core/table-cell'] = ['header','rowspan','colspan'];
         Object.keys(allowedAttributes).forEach((type) => { allowedAttributes[type] = allowedAttributes[type].concat('appearance'); });
       }
       const allowed = allowedAttributes[node.type] || [];
@@ -512,15 +579,13 @@
         case 'core/columns': if (node.content || Object.keys(a).some((key) => key !== 'count') || ![2,3].includes(a.count) || node.children.length !== a.count || node.children.some((child) => !child || child.type !== 'core/column')) errors.push('columns_invalid'); break;
         case 'core/column': if (parent !== 'core/columns' || node.content || Object.keys(a).length || node.children.length === 0) errors.push('column_invalid'); break;
         case 'core/table': {
-          const rows = node.children;
-          const columns = rows.length && rows[0] && Array.isArray(rows[0].children) ? rows[0].children.length : 0;
           let tableBytes = 0;
-          rows.forEach((row) => { if (!row || !Array.isArray(row.children)) return; row.children.forEach((cell) => { if (!cell || !Array.isArray(cell.content)) return; cell.content.forEach((run) => { if (run && typeof run.text === 'string') tableBytes += utf8Length(run.text); }); }); });
-          if (version !== 2 || typeof a.header !== 'boolean' || node.content || rows.length < 1 || rows.length > 20 || columns < 1 || columns > 12 || tableBytes > 262144 || rows.some((row) => !row || row.type !== 'core/table-row' || !Array.isArray(row.children) || row.children.length !== columns)) errors.push('table_invalid');
+          node.children.forEach((row) => { if (!row || !Array.isArray(row.children)) return; row.children.forEach((cell) => { if (!cell || !Array.isArray(cell.content)) return; cell.content.forEach((run) => { if (run && typeof run.text === 'string') tableBytes += utf8Length(run.text); }); }); });
+          if (version !== 2 || typeof a.header !== 'boolean' || node.content || node.children.length < 1 || node.children.length > 20 || tableBytes > 262144 || !tableGridInfo(node)) errors.push('table_invalid');
           break;
         }
-        case 'core/table-row': if (parent !== 'core/table' || node.content || Object.keys(a).length || node.children.length < 1 || node.children.length > 12 || node.children.some((cell) => !cell || cell.type !== 'core/table-cell')) errors.push('table_row_invalid'); break;
-        case 'core/table-cell': if (parent !== 'core/table-row' || Object.keys(a).length || node.children.length || version !== 2 || !validInlineRuns(node.content, node.type)) errors.push('table_cell_invalid'); break;
+        case 'core/table-row': if (parent !== 'core/table' || node.content || Object.keys(a).length || node.children.length > 12 || node.children.some((cell) => !cell || cell.type !== 'core/table-cell')) errors.push('table_row_invalid'); break;
+        case 'core/table-cell': if (parent !== 'core/table-row' || node.children.length || version !== 2 || !validInlineRuns(node.content, node.type) || (a.header !== undefined && typeof a.header !== 'boolean') || (a.rowspan !== undefined && (!Number.isInteger(a.rowspan)||a.rowspan<1||a.rowspan>20)) || (a.colspan !== undefined && (!Number.isInteger(a.colspan)||a.colspan<1||a.colspan>12))) errors.push('table_cell_invalid'); break;
       }
       node.children.forEach((child) => visit(child, depth + 1, node.type));
     }
@@ -626,6 +691,7 @@
       this.textUndoTimer = null;
       this.selectedId = null;
       this.blockClipboard = null;
+      this.tableSelection = new Map();
       this.preview = 'desktop';
       this.previewMode = false;
       this.importNotices = [];
@@ -740,6 +806,8 @@
         this.captureInlineSelection();
       });
       this.root.addEventListener('change', (event) => {
+        const tableCellSelect=event.target.closest('[data-table-cell-select]');
+        if(tableCellSelect){const tableId=tableCellSelect.dataset.tableId,cellId=tableCellSelect.dataset.tableCellSelect;let selected=this.tableSelection.get(tableId);if(!selected){selected=new Set();this.tableSelection.set(tableId,selected);}if(tableCellSelect.checked)selected.add(cellId);else selected.delete(cellId);this.updateTableSelectionControls(tableId);return;}
         const caseInput = event.target.closest('[data-find-case]');
         if (caseInput) { this.findCaseSensitive = caseInput.checked; this.activeFindIndex = -1; this.updateFindStatus(); return; }
         const wholeWordInput = event.target.closest('[data-find-whole-word]');
@@ -1020,7 +1088,7 @@
       else if (name === 'threejs-add-object') this.updateThreeJsEntry(button.dataset.nodeId || this.selectedId, 'add-object');
       else if (name === 'threejs-add-light') this.updateThreeJsEntry(button.dataset.nodeId || this.selectedId, 'add-light');
       else if (name === 'threejs-remove-object' || name === 'threejs-remove-light') this.updateThreeJsEntry(button.dataset.nodeId || this.selectedId, name.endsWith('object') ? 'remove-object' : 'remove-light', Number(button.dataset.index));
-      else if (name.startsWith('table-')) this.updateTable(name, button.dataset.nodeId || this.selectedId);
+      else if (name.startsWith('table-')) this.updateTable(name, button.dataset.nodeId || this.selectedId, button.dataset.tableHeader);
       else if (name.startsWith('columns-')) this.updateColumns(name, button.dataset.nodeId || this.selectedId);
       else if (name === 'link-apply') this.applyInlineLink(this.linkDraft);
       else if (name === 'link-remove') this.applyInlineLink(null);
@@ -1536,20 +1604,61 @@
       location.target.splice(location.index,0,node); this.finishInsert(next,node);
     }
 
-    updateTable(action, id) {
+    updateTableSelectionControls(tableId) {
+      const found=this.findPath(this.state.blocks,tableId),selected=this.tableSelection.get(tableId)||new Set();
+      const table=found&&found.node.type==='core/table'?found.node:null;
+      const canMerge=!!(table&&tableMergeSelection(table,selected));const canUnmerge=!!(table&&tableGridInfo(table)&&tableGridInfo(table).origins.some((origin)=>selected.has(origin.cell.id)&&(origin.rowspan>1||origin.colspan>1)));
+      this.root.querySelectorAll('[data-table-selection-action]').forEach((button)=>{
+        if(button.dataset.nodeId!==tableId)return;
+        const kind=button.dataset.tableSelectionAction;
+        button.disabled=kind==='merge'?!canMerge:(kind==='unmerge'?!canUnmerge:selected.size===0);
+        button.setAttribute('aria-disabled',String(button.disabled));
+      });
+    }
+
+    updateTable(action, id, headerValue) {
       if (this.locked) return;
       const next = CLONE(this.state), found = this.findPath(next.blocks, id);
       if (!found || found.node.type !== 'core/table') return;
       const table = found.node, rows = table.children;
-      const cols = rows.length ? rows[0].children.length : 0;
+      const info=tableGridInfo(table);if(!info)return;
+      const selected=this.tableSelection.get(table.id)||new Set();
       if (action === 'table-toggle-header') table.attributes.header = !table.attributes.header;
-      else if (action === 'table-add-row' && rows.length < 20) {
-        const cells = []; for (let c = 0; c < cols; c += 1) cells.push(this.node('core/table-cell', {}, ''));
+      else if(action==='table-mark-header'||action==='table-mark-normal'){
+        if(!selected.size)return;
+        const value=action==='table-mark-header';
+        info.origins.forEach(({cell})=>{if(!selected.has(cell.id))return;cell.attributes.header=value;});
+      } else if(action==='table-unmerge-cells') {
+        if(!splitTableCells(table,selected,(header)=>this.node('core/table-cell',{header},'')))return;this.tableSelection.delete(table.id);
+      } else if(action==='table-merge-cells'){
+        const merge=tableMergeSelection(table,selected);if(!merge)return;
+        const keep=merge.anchor.cell;
+        const ordered=merge.cells.map((origin)=>origin.cell);
+        const merged=[];
+        ordered.forEach((cell,index)=>{if(index)merged.push({text:'\n',marks:[],href:null});merged.push(...cell.content);});
+        keep.content=canonicalRuns(merged);
+        if(merge.rowspan>1)keep.attributes.rowspan=merge.rowspan;else delete keep.attributes.rowspan;
+        if(merge.colspan>1)keep.attributes.colspan=merge.colspan;else delete keep.attributes.colspan;
+        const removeIds=new Set(ordered.slice(1).map((cell)=>cell.id));
+        rows.forEach((row)=>{row.children=row.children.filter((cell)=>!removeIds.has(cell.id));});
+        this.tableSelection.delete(table.id);
+      } else if (action === 'table-add-row' && rows.length < 20) {
+        const cells = []; for (let c = 0; c < info.width; c += 1) cells.push(this.node('core/table-cell', {}, ''));
         rows.push(this.node('core/table-row', {}, '', cells));
-      } else if (action === 'table-remove-row' && rows.length > 1) rows.pop();
-      else if (action === 'table-add-column' && cols < 12) rows.forEach((row) => row.children.push(this.node('core/table-cell', {}, '')));
-      else if (action === 'table-remove-column' && cols > 1) rows.forEach((row) => row.children.pop());
-      else return;
+        this.tableSelection.delete(table.id);
+      } else if (action === 'table-remove-row' && rows.length > 1) {
+        const last=rows.length-1;
+        info.origins.forEach(({cell,row,rowspan})=>{if(row<last&&row+rowspan===rows.length){const nextSpan=rowspan-1;if(nextSpan>1)cell.attributes.rowspan=nextSpan;else delete cell.attributes.rowspan;}});
+        rows.pop();this.tableSelection.delete(table.id);
+      } else if (action === 'table-add-column' && info.width < 12) {
+        rows.forEach((row) => row.children.push(this.node('core/table-cell', {}, '')));
+        this.tableSelection.delete(table.id);
+      } else if (action === 'table-remove-column' && info.width > 1) {
+        const last=info.width-1;
+        info.origins.forEach(({cell,row,col,colspan})=>{if(col<=last&&col+colspan>last){if(colspan>1){const nextSpan=colspan-1;if(nextSpan>1)cell.attributes.colspan=nextSpan;else delete cell.attributes.colspan;}else rows[row].children=rows[row].children.filter((item)=>item.id!==cell.id);}});
+        this.tableSelection.delete(table.id);
+      } else return;
+      const validation=validateDocument(next,this.allowPageMedia);if(!validation.valid)return;
       this.commit(next, table.id);
     }
 
@@ -2022,7 +2131,7 @@
         case 'core/details': out=d.createElement('details');{const summary=d.createElement('summary');summary.textContent=node.attributes.summary;out.append(summary);this.renderPreviewRuns(node.content,out);}break;
         case 'core/callout': out=d.createElement('aside');out.className='rb-preview-callout';this.renderPreviewRuns(node.content,out);break;
         case 'core/spacer': out=d.createElement('div');out.style.height=(node.attributes.height||32)+'px';out.setAttribute('aria-hidden','true');break;
-        case 'core/table': out=d.createElement('table');node.children.forEach((row,ri)=>{const tr=d.createElement('tr');this.applyPreviewAppearance(tr,row);row.children.forEach((cell)=>{const cellEl=d.createElement(node.attributes.header&&ri===0?'th':'td');this.renderPreviewRuns(cell.content,cellEl);this.applyPreviewAppearance(cellEl,cell);tr.append(cellEl);});out.append(tr);});break;
+        case 'core/table': out=d.createElement('table');node.children.forEach((row,ri)=>{const tr=d.createElement('tr');this.applyPreviewAppearance(tr,row);row.children.forEach((cell)=>{const cellEl=d.createElement(tableCellIsHeader(node,ri,cell)?'th':'td');cellEl.rowSpan=cell.attributes.rowspan||1;cellEl.colSpan=cell.attributes.colspan||1;this.renderPreviewRuns(cell.content,cellEl);this.applyPreviewAppearance(cellEl,cell);tr.append(cellEl);});out.append(tr);});break;
         case 'core/table-row': out=d.createElement('tr');renderChildren(out);break;
         case 'core/table-cell': out=d.createElement('td');this.renderPreviewRuns(node.content,out);break;
         case 'core/columns': out=d.createElement('div');out.className='rb-preview-columns';renderChildren(out);break;
@@ -2546,8 +2655,8 @@
         node.children.forEach((row,rowIndex) => {
           const tr = this.el('tr','');this.applyPreviewAppearance(tr,row);
           row.children.forEach((cell,colIndex) => {
-            const isHeader = !!node.attributes.header && rowIndex === 0; const td = this.el(isHeader ? 'th' : 'td','');
-            if (isHeader) td.setAttribute('scope','col');this.applyPreviewAppearance(td,cell);
+            const isHeader=tableCellIsHeader(node,rowIndex,cell);const td=this.el(isHeader?'th':'td','');
+            if(isHeader)td.setAttribute('scope','col');td.rowSpan=cell.attributes.rowspan||1;td.colSpan=cell.attributes.colspan||1;this.applyPreviewAppearance(td,cell);
             const editor = this.el('div','rb-table-cell-content'); editor.contentEditable = 'true'; editor.dataset.editContent = cell.id; editor.setAttribute('role','textbox'); editor.setAttribute('aria-multiline','true');
             editor.setAttribute('aria-label',(this.strings.table.cellLabel || 'Cell %1$d, %2$d').replace('%1$d',String(rowIndex+1)).replace('%2$d',String(colIndex+1)));
             buildInlineDom(editor,cell.content); td.append(editor); tr.append(td);
@@ -2787,20 +2896,27 @@
         const cellsSection=this.el('section','rb-table-inspector-section');
         cellsSection.append(this.el('h4','rb-text-block-inspector-heading',this.strings.tableContentTitle));
         const tableWrap=this.el('div','rb-table-inspector-wrap');const inspectorTable=this.el('table','rb-table-inspector-grid');const tableBody=this.el('tbody','');
+        const selectedCells=this.tableSelection.get(n.id)||new Set();
         n.children.forEach((row,rowIndex)=>{const tr=this.el('tr','');row.children.forEach((cell,colIndex)=>{
-          const isHeader=!!n.attributes.header&&rowIndex===0;const cellElement=this.el(isHeader?'th':'td','');
+          const isHeader=tableCellIsHeader(n,rowIndex,cell);const cellElement=this.el(isHeader?'th':'td','');cellElement.rowSpan=cell.attributes.rowspan||1;cellElement.colSpan=cell.attributes.colspan||1;
+          const selector=this.el('label','rb-table-cell-selector');const checkbox=this.el('input','');checkbox.type='checkbox';checkbox.dataset.tableCellSelect=cell.id;checkbox.dataset.tableId=n.id;checkbox.checked=selectedCells.has(cell.id);checkbox.setAttribute('aria-label',(this.strings.table.cellLabel||'Cell %1$d, %2$d').replace('%1$d',String(rowIndex+1)).replace('%2$d',String(colIndex+1))+' · '+this.strings.tableSelectCell);selector.append(checkbox,this.el('span','',this.strings.tableSelectCell));
           const editor=this.el('div','rb-table-cell-content rb-table-inspector-cell-editor');editor.contentEditable='true';editor.dataset.editContent=cell.id;editor.dataset.inspectorContent='1';editor.setAttribute('role','textbox');editor.setAttribute('aria-multiline','true');
           editor.setAttribute('aria-label',(this.strings.table.cellLabel||'Cell %1$d, %2$d').replace('%1$d',String(rowIndex+1)).replace('%2$d',String(colIndex+1)));editor.setAttribute('data-placeholder',this.strings.placeholder||'');buildInlineDom(editor,cell.content);
-          cellElement.append(editor);tr.append(cellElement);
+          cellElement.append(selector,editor);tr.append(cellElement);
         });tableBody.append(tr);});
         inspectorTable.append(tableBody);tableWrap.append(inspectorTable);cellsSection.append(tableWrap,this.el('p','rb-help-text',this.strings.tableContentHint));contentPanel.append(cellsSection);
-        const tableActions = this.el('div','rb-table-actions');
-        const addRow = this.button(this.strings.table.addRow,'table-add-row',{nodeId:n.id}); addRow.disabled = n.children.length >= 20; tableActions.append(addRow);
-        const removeRow = this.button(this.strings.table.removeRow,'table-remove-row',{nodeId:n.id}); removeRow.disabled = n.children.length <= 1; tableActions.append(removeRow);
-        const columns = n.children[0] ? n.children[0].children.length : 0;
-        const addColumn = this.button(this.strings.table.addColumn,'table-add-column',{nodeId:n.id}); addColumn.disabled = columns >= 12; tableActions.append(addColumn);
-        const removeColumn = this.button(this.strings.table.removeColumn,'table-remove-column',{nodeId:n.id}); removeColumn.disabled = columns <= 1; tableActions.append(removeColumn);
-        const header = this.button(this.strings.table.toggleHeader,'table-toggle-header',{nodeId:n.id}); header.setAttribute('aria-pressed',String(!!n.attributes.header)); tableActions.append(header);
+        const selectionActions=this.el('div','rb-table-actions rb-table-selection-actions');
+        const mergeCells=this.button(this.strings.tableMergeCells,'table-merge-cells',{nodeId:n.id,icon:'table',showLabel:true});mergeCells.dataset.tableSelectionAction='merge';mergeCells.disabled=!tableMergeSelection(n,selectedCells);selectionActions.append(mergeCells);
+        const unmergeCells=this.button(this.strings.tableUnmergeCells,'table-unmerge-cells',{nodeId:n.id,icon:'table',showLabel:true});unmergeCells.dataset.tableSelectionAction='unmerge';unmergeCells.disabled=!tableGridInfo(n).origins.some((origin)=>selectedCells.has(origin.cell.id)&&(origin.rowspan>1||origin.colspan>1));selectionActions.append(unmergeCells);
+        const markHeader=this.button(this.strings.tableMarkHeader,'table-mark-header',{nodeId:n.id,icon:'heading',showLabel:true});markHeader.dataset.tableSelectionAction='header';markHeader.dataset.tableHeader='true';markHeader.disabled=selectedCells.size===0;selectionActions.append(markHeader);
+        const markNormal=this.button(this.strings.tableMarkNormal,'table-mark-normal',{nodeId:n.id,icon:'paragraph',showLabel:true});markNormal.dataset.tableSelectionAction='header';markNormal.dataset.tableHeader='false';markNormal.disabled=selectedCells.size===0;selectionActions.append(markNormal);
+        contentPanel.append(selectionActions,this.el('p','rb-help-text',this.strings.tableSelectionHint));
+        const tableActions = this.el('div','rb-table-actions');const gridInfo=tableGridInfo(n);const columns=gridInfo?gridInfo.width:0;
+        const addRow = this.button(this.strings.table.addRow,'table-add-row',{nodeId:n.id,showLabel:true}); addRow.disabled = n.children.length >= 20; tableActions.append(addRow);
+        const removeRow = this.button(this.strings.table.removeRow,'table-remove-row',{nodeId:n.id,showLabel:true}); removeRow.disabled = n.children.length <= 1; tableActions.append(removeRow);
+        const addColumn = this.button(this.strings.table.addColumn,'table-add-column',{nodeId:n.id,showLabel:true}); addColumn.disabled = columns >= 12; tableActions.append(addColumn);
+        const removeColumn = this.button(this.strings.table.removeColumn,'table-remove-column',{nodeId:n.id,showLabel:true}); removeColumn.disabled = columns <= 1; tableActions.append(removeColumn);
+        const header = this.button(this.strings.table.toggleHeader,'table-toggle-header',{nodeId:n.id,showLabel:true}); header.setAttribute('aria-pressed',String(!!n.attributes.header)); tableActions.append(header);
         contentPanel.append(tableActions);
       }
       if (n.type === 'core/columns') {

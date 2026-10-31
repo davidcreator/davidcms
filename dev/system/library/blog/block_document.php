@@ -170,6 +170,7 @@ class BlockDocument {
             $allowedAttrs['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
             $allowedAttrs['core/group'] = ['outline_label'];
             $allowedAttrs['core/table'] = ['header'];
+            $allowedAttrs['core/table-cell'] = ['header','rowspan','colspan'];
             $allowedAttrs['core/file'] = ['src'];
             $allowedAttrs['core/audio'] = ['src'];
             $allowedAttrs['core/video_file'] = ['src'];
@@ -205,7 +206,7 @@ class BlockDocument {
         if ($type === 'core/spacer' && (!isset($attrs['height']) || !in_array($attrs['height'], [16,32,48,64,96], true))) $errors[] = 'spacer_height_invalid';
         if ($type === 'core/code' && (!is_string($node['content']) || strlen($node['content']) > self::MAX_INLINE_CONTENT_BYTES || !preg_match('//u', $node['content']))) $errors[] = 'code_content_invalid';
         if ($type === 'core/table' && (!isset($attrs['header']) || !is_bool($attrs['header']) || count($node['children']) < 1 || count($node['children']) > self::MAX_TABLE_ROWS)) $errors[] = 'table_shape_invalid';
-        if ($type === 'core/table-row' && (count($node['children']) < 1 || count($node['children']) > self::MAX_TABLE_COLUMNS)) $errors[] = 'table_row_shape_invalid';
+        if ($type === 'core/table-row' && count($node['children']) > self::MAX_TABLE_COLUMNS) $errors[] = 'table_row_shape_invalid';
         if ($type === 'core/columns' && (!isset($attrs['count']) || !is_int($attrs['count']) || !in_array($attrs['count'], [2,3], true) || count($node['children']) !== $attrs['count'])) $errors[] = 'columns_count_invalid';
         $textTypes = ['core/paragraph','core/heading','core/list-item','core/quote','core/button','core/callout','core/details','core/table-cell','core/file','core/audio'];
         if ($version === self::FORMAT_VERSION) {
@@ -232,24 +233,34 @@ class BlockDocument {
         } elseif ($type === 'core/gallery') {
             foreach ($node['children'] as $child) if (!is_array($child) || ($child['type'] ?? null) !== 'core/image') $errors[] = 'gallery_child_invalid';
         } elseif ($type === 'core/table') {
-            $columnCount = null; $tableTextBytes = 0;
-            foreach ($node['children'] as $row) {
-                if (!is_array($row) || ($row['type'] ?? null) !== 'core/table-row') { $errors[] = 'table_row_invalid'; continue; }
-                $cells = $row['children'] ?? [];
-                if ($columnCount === null) $columnCount = count($cells);
-                if (count($cells) !== $columnCount) $errors[] = 'table_columns_mismatch';
-                foreach ($cells as $cell) {
-                    if (!is_array($cell) || ($cell['type'] ?? null) !== 'core/table-cell') { $errors[] = 'table_cell_invalid'; continue; }
-                    foreach (($cell['content'] ?? []) as $run) if (is_array($run) && is_string($run['text'] ?? null)) $tableTextBytes += strlen($run['text']);
+            $tableRows=$node['children'];$tableRowCount=count($tableRows);$tableTextBytes=0;$columnCount=0;$grid=array_fill(0,$tableRowCount,[]);
+            foreach($tableRows as $rowIndex=>$row){
+                if(!is_array($row)||($row['type']??null)!=='core/table-row'){$errors[]='table_row_invalid';continue;}
+                $cells=$row['children']??[];$column=0;
+                foreach($cells as $cell){
+                    if(!is_array($cell)||($cell['type']??null)!=='core/table-cell'){$errors[]='table_cell_invalid';continue;}
+                    $cellAttrs=is_array($cell['attributes']??null)?$cell['attributes']:[];
+                    if(array_key_exists('header',$cellAttrs)&&!is_bool($cellAttrs['header']))$errors[]='table_cell_header_invalid';
+                    $rowspan=$cellAttrs['rowspan']??1;$colspan=$cellAttrs['colspan']??1;
+                    if(!is_int($rowspan)||$rowspan<1||$rowspan>$tableRowCount||!is_int($colspan)||$colspan<1||$colspan>self::MAX_TABLE_COLUMNS||$rowIndex+$rowspan>$tableRowCount){$errors[]='table_cell_span_invalid';continue;}
+                    while(isset($grid[$rowIndex][$column]))$column++;
+                    if($column+$colspan>self::MAX_TABLE_COLUMNS){$errors[]='table_column_count_invalid';continue;}
+                    $overlap=false;
+                    for($r=$rowIndex;$r<$rowIndex+$rowspan;$r++)for($c=$column;$c<$column+$colspan;$c++)if(isset($grid[$r][$c]))$overlap=true;
+                    if($overlap){$errors[]='table_cell_overlap';continue;}
+                    for($r=$rowIndex;$r<$rowIndex+$rowspan;$r++)for($c=$column;$c<$column+$colspan;$c++)$grid[$r][$c]=true;
+                    $columnCount=max($columnCount,$column+$colspan);$column+=$colspan;
+                    foreach(($cell['content']??[]) as $run)if(is_array($run)&&is_string($run['text']??null))$tableTextBytes+=strlen($run['text']);
                 }
             }
-            if ($columnCount === null || $columnCount < 1 || $columnCount > self::MAX_TABLE_COLUMNS) $errors[] = 'table_column_count_invalid';
-            if ($tableTextBytes > self::MAX_TABLE_TEXT_BYTES) $errors[] = 'table_text_too_large';
+            if($columnCount<1||$columnCount>self::MAX_TABLE_COLUMNS)$errors[]='table_column_count_invalid';
+            else for($r=0;$r<$tableRowCount;$r++)for($c=0;$c<$columnCount;$c++)if(!isset($grid[$r][$c]))$errors[]='table_grid_hole';
+            if($tableTextBytes>self::MAX_TABLE_TEXT_BYTES)$errors[]='table_text_too_large';
         } elseif ($type === 'core/table-row') {
             if ($parentType !== 'core/table' || count($attrs) > 0) $errors[] = 'table_row_invalid';
             foreach ($node['children'] as $cell) if (!is_array($cell) || ($cell['type'] ?? null) !== 'core/table-cell') $errors[] = 'table_cell_invalid';
         } elseif ($type === 'core/table-cell') {
-            if ($parentType !== 'core/table-row' || count($attrs) > 0 || count($node['children']) > 0) $errors[] = 'table_cell_invalid';
+            if ($parentType !== 'core/table-row' || (isset($attrs['header'])&&!is_bool($attrs['header'])) || (isset($attrs['rowspan'])&&(!is_int($attrs['rowspan'])||$attrs['rowspan']<1||$attrs['rowspan']>self::MAX_TABLE_ROWS)) || (isset($attrs['colspan'])&&(!is_int($attrs['colspan'])||$attrs['colspan']<1||$attrs['colspan']>self::MAX_TABLE_COLUMNS)) || count($node['children']) > 0) $errors[] = 'table_cell_invalid';
         } elseif ($type === 'core/cover') {
             $coverChildTypes = ['core/heading','core/paragraph','core/quote','core/button'];
             foreach ($node['children'] as $child) if (!is_array($child) || !in_array(($child['type'] ?? null), $coverChildTypes, true)) $errors[] = 'cover_child_invalid';

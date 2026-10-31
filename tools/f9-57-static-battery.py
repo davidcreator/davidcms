@@ -7,6 +7,8 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 JS = (ROOT / 'dev/admin/view/js/blog-block-editor.js').read_text(encoding='utf-8')
 CSS = (ROOT / 'dev/admin/view/css/blog-block-editor.css').read_text(encoding='utf-8')
+PHP = (ROOT / 'dev/system/library/blog/block_document.php').read_text(encoding='utf-8')
+RENDERER = (ROOT / 'dev/system/library/blog/block_renderer.php').read_text(encoding='utf-8')
 
 m = re.search(r'const TYPES = \[(.*?)\n  \];', JS, re.S)
 assert m, 'Block catalog not found'
@@ -64,6 +66,13 @@ for name, ok in [
     ('Preformatted Code inspector/canvas editors synchronize without repaint', "peer.dataset.editCode===id&&peer.value!==editor.value" in JS),
     ('Preformatted Code remains literal and non-executable', 'preformattedTextHint:' in JS and 'never executed' in JS and 'não é executado' in JS),
     ('Preformatted Code has labeled style/actions and toolbar', 'preformattedStyleHeading:' in JS and 'preformattedActions:' in JS and "'core/details','core/code','core/table'].includes(node.type)" in JS),
+    ('Table cells allow optional independent header format and rowspan/colspan in the JS schema', "allowedAttributes['core/table-cell'] = ['header','rowspan','colspan'];" in JS and 'tableCellIsHeader' in JS),
+    ('Table span grid validates bounds, overlap and complete rectangular coverage', 'function tableGridInfo(table)' in JS and 'if(overlap)return null' in JS and 'if(!grid[r][c])return null' in JS),
+    ('Table merge is restricted to a complete rectangle and preserves cell content', 'function tableMergeSelection(table, selectedIds)' in JS and "action==='table-merge-cells'" in JS and 'canonicalRuns(merged)' in JS),
+    ('Merged cells can be split back into editable cells', 'function splitTableCells(table,selectedIds,createCell)' in JS and "action==='table-unmerge-cells'" in JS),
+    ('Table inspector exposes selection, merge, unmerge and individual header/content actions', 'data-table-cell-select' in JS and 'table-merge-cells' in JS and 'table-unmerge-cells' in JS and 'table-mark-header' in JS and 'table-mark-normal' in JS),
+    ('PHP document validator supports cell spans and rejects table-grid holes or overlaps', "'core/table-cell'] = ['header','rowspan','colspan']" in PHP and 'table_grid_hole' in PHP and 'table_cell_overlap' in PHP),
+    ('PHP table renderer emits rowspan/colspan and cell-specific th/td with legacy header fallback', "' rowspan=\"'" in RENDERER and "' colspan=\"'" in RENDERER and "array_key_exists('header', $cellAttrs)" in RENDERER and "!empty($attributes['header']) && $rowIndex === 0" in RENDERER),
     ('Table inspector builds editable cell matrix for every row/cell', 'rb-table-inspector-grid' in JS and 'editor.dataset.editContent=cell.id' in JS and 'buildInlineDom(editor,cell.content)' in JS),
     ('Table inspector cells reuse canvas synchronization path', "this.root.querySelectorAll('[data-edit-content]').forEach((peer)=>{if(peer!==editor&&peer.dataset.editContent===id)buildInlineDom(peer,runs);});" in JS),
     ('Table summary/header and structural controls remain', 'this.strings.tableContentTitle' in JS and 'table-toggle-header' in JS and 'table-add-row' in JS and 'table-remove-column' in JS),

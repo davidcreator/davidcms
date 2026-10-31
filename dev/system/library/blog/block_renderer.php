@@ -170,22 +170,40 @@ final class BlockRenderer {
                 return '<div class="rms-block rms-block-gallery rms-block-gallery--columns-' . $columns . ' rms-block-gallery--align-' . $align . '">' . $this->renderNodes($children, $validator, $assetBase, $version) . '</div>';
 
             case 'core/table':
+                $rows = $children;
+                $hasHeader = !empty($attributes['header']);
+                $headerRowCrossesGroup = false;
+                if ($hasHeader && isset($rows[0]['children']) && is_array($rows[0]['children'])) {
+                    foreach ($rows[0]['children'] as $headerCell) {
+                        $span = (int)($headerCell['attributes']['rowspan'] ?? 1);
+                        if ($span > 1) { $headerRowCrossesGroup = true; break; }
+                    }
+                }
+                $useThead = $hasHeader && !$headerRowCrossesGroup;
+                $renderRow = function (array $row, int $rowIndex) use ($attributes): string {
+                    $html = '<tr' . $this->appearanceAttribute($row['attributes']['appearance'] ?? null) . '>';
+                    foreach (($row['children'] ?? []) as $cell) {
+                        $cellAttrs = $cell['attributes'] ?? [];
+                        $isHeader = array_key_exists('header', $cellAttrs) ? (bool)$cellAttrs['header'] : (!empty($attributes['header']) && $rowIndex === 0);
+                        $tag = $isHeader ? 'th' : 'td';
+                        $html .= '<' . $tag . ($isHeader ? ' scope="col"' : '');
+                        $rowspan = (int)($cellAttrs['rowspan'] ?? 1);
+                        $colspan = (int)($cellAttrs['colspan'] ?? 1);
+                        if ($rowspan > 1) $html .= ' rowspan="' . $rowspan . '"';
+                        if ($colspan > 1) $html .= ' colspan="' . $colspan . '"';
+                        $html .= $this->appearanceAttribute($cellAttrs['appearance'] ?? null) . '>' . $this->renderInlineRuns($cell['content']) . '</' . $tag . '>';
+                    }
+                    return $html . '</tr>';
+                };
                 $html = '<div class="rms-block rms-block-table-wrap"><table class="rms-block-table">';
                 $rowStart = 0;
-                if (!empty($attributes['header'])) {
-                    $html .= '<thead><tr>';
-                    foreach ($children[0]['children'] as $cell) $html .= '<th scope="col"' . $this->appearanceAttribute($cell['attributes']['appearance'] ?? null) . '>' . $this->renderInlineRuns($cell['content']) . '</th>';
-                    $html .= '</tr></thead>';
+                if ($useThead && isset($rows[0])) {
+                    $html .= '<thead>' . $renderRow($rows[0], 0) . '</thead>';
                     $rowStart = 1;
                 }
-                if ($rowStart < count($children)) {
+                if ($rowStart < count($rows)) {
                     $html .= '<tbody>';
-                    for ($rowIndex = $rowStart; $rowIndex < count($children); $rowIndex++) {
-                        $row = $children[$rowIndex];
-                        $html .= '<tr' . $this->appearanceAttribute($row['attributes']['appearance'] ?? null) . '>';
-                        foreach ($row['children'] as $cell) $html .= '<td' . $this->appearanceAttribute($cell['attributes']['appearance'] ?? null) . '>' . $this->renderInlineRuns($cell['content']) . '</td>';
-                        $html .= '</tr>';
-                    }
+                    for ($rowIndex = $rowStart; $rowIndex < count($rows); $rowIndex++) $html .= $renderRow($rows[$rowIndex], $rowIndex);
                     $html .= '</tbody>';
                 }
                 return $html . '</table></div>';
