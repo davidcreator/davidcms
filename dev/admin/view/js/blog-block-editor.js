@@ -241,6 +241,26 @@
     };
   }
 
+
+  function markdownImportCopy() {
+    const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
+    if(language.startsWith('es'))return {
+      tool:'Importar Markdown',title:'Vista previa de importación Markdown',hint:'Revisa la conversión a bloques BDRE nativos. Nada cambia hasta confirmar la inserción.',additive:'Al confirmar, los bloques se añadirán como un grupo; el contenido existente no se reemplaza.',open:'Elegir archivo Markdown',insert:'Insertar como grupo',cancel:'Volver a exportaciones',file:'Archivo: %1',blockCount:'Bloques que se añadirán: %1',warningCount:'Notas de importación: %1',warningsTitle:'Notas y límites',previewTitle:'Vista previa de bloques convertidos',sourceTitle:'Markdown original',empty:'El archivo no contiene bloques compatibles para insertar.',invalid:'No se puede importar este archivo Markdown.',tooLarge:'El archivo Markdown supera el límite de 256 KiB.',wrongExtension:'Selecciona un archivo .md o .markdown.',parseFailed:'No se pudo leer el archivo Markdown.',insertUnavailable:'No se puede insertar un grupo en el punto seleccionado. El documento no se modificó.',insertFailed:'El resultado excede un límite BDRE o no es válido. El documento no se modificó.',inserted:'El contenido Markdown se insertó en un grupo editable; el contenido existente se conservó.',back:'Volver',
+      warnings:{unsafe_link:'El destino no está permitido como enlace y se conservó como texto.',inline_media_link:'El enlace a un archivo multimedia en línea se conservó como texto; los enlaces multimedia independientes se convierten en bloques.',remote_image:'La imagen no es local o pertenece a otra integración; no se descargó y se conservó una referencia textual.',inline_image:'La imagen en línea se mantuvo como texto; solo imágenes en una línea independiente se convierten en bloque.',html_literal:'El HTML parecido a etiquetas se conservó como texto y no se ejecutó.',link_title:'El título adicional del enlace no se conserva como atributo.',nested_list:'La lista anidada se aplanó al nivel actual.',unclosed_fence:'El bloque de código no tenía una cerca de cierre y se extendió hasta el final del archivo.',table_overflow:'La tabla excede los límites BDRE y sus filas se conservaron como párrafos.',list_start:'La numeración personalizada de la lista se normalizó al inicio estándar.'},
+      warningLine:'Línea %1',warningBlock:'Bloque %1'
+    };
+    if(language.startsWith('pt'))return {
+      tool:'Importar Markdown',title:'Prévia da importação Markdown',hint:'Confira a conversão em blocos BDRE nativos. Nada muda até confirmar a inserção.',additive:'Ao confirmar, os blocos serão adicionados como um grupo; o conteúdo existente não será substituído.',open:'Escolher arquivo Markdown',insert:'Inserir como grupo',cancel:'Voltar às exportações',file:'Arquivo: %1',blockCount:'Blocos que serão adicionados: %1',warningCount:'Notas da importação: %1',warningsTitle:'Notas e limitações',previewTitle:'Prévia dos blocos convertidos',sourceTitle:'Markdown original',empty:'O arquivo não contém blocos compatíveis para inserir.',invalid:'Não foi possível importar este arquivo Markdown.',tooLarge:'O arquivo Markdown ultrapassa o limite de 256 KiB.',wrongExtension:'Selecione um arquivo .md ou .markdown.',parseFailed:'Não foi possível ler o arquivo Markdown.',insertUnavailable:'Não é possível inserir um grupo no ponto selecionado. O documento não foi alterado.',insertFailed:'O resultado ultrapassa um limite BDRE ou é inválido. O documento não foi alterado.',inserted:'O conteúdo Markdown foi inserido em um grupo editável; o conteúdo existente foi preservado.',back:'Voltar',
+      warnings:{unsafe_link:'O destino não é permitido como link e foi mantido como texto.',inline_media_link:'O link de mídia em linha foi mantido como texto; links de mídia independentes viram blocos.',remote_image:'A imagem não é local ou pertence a outra integração; ela não foi baixada e uma referência textual foi mantida.',inline_image:'A imagem em linha foi mantida como texto; somente imagens em linha independente viram bloco.',html_literal:'O texto parecido com tags HTML foi mantido como texto e não foi executado.',link_title:'O título adicional do link não é preservado como atributo.',nested_list:'A lista aninhada foi achatada no nível atual.',unclosed_fence:'O bloco de código não tinha uma cerca de fechamento e foi até o final do arquivo.',table_overflow:'A tabela excede os limites BDRE e suas linhas foram preservadas como parágrafos.',list_start:'A numeração personalizada da lista foi normalizada para o início padrão.'},
+      warningLine:'Linha %1',warningBlock:'Bloco %1'
+    };
+    return {
+      tool:'Import Markdown',title:'Markdown import preview',hint:'Review the conversion to native BDRE blocks. Nothing changes until you confirm insertion.',additive:'Confirming adds the blocks as a group; existing content is not replaced.',open:'Choose Markdown file',insert:'Insert as a group',cancel:'Back to exports',file:'File: %1',blockCount:'Blocks to add: %1',warningCount:'Import notes: %1',warningsTitle:'Notes and limitations',previewTitle:'Preview of converted blocks',sourceTitle:'Original Markdown',empty:'The file has no compatible blocks to insert.',invalid:'This Markdown file could not be imported.',tooLarge:'Markdown file exceeds the 256 KiB limit.',wrongExtension:'Choose a .md or .markdown file.',parseFailed:'Could not read the Markdown file.',insertUnavailable:'A group cannot be inserted at the selected point. The document was not changed.',insertFailed:'The result exceeds a BDRE limit or is invalid. The document was not changed.',inserted:'Markdown content was inserted as an editable group; existing content was preserved.',back:'Back',
+      warnings:{unsafe_link:'Destination is not allowed as a link and was preserved as text.',inline_media_link:'Inline media link was preserved as text; standalone media links become blocks.',remote_image:'Image is not local or belongs to another integration; it was not downloaded and a text reference was kept.',inline_image:'Inline image was preserved as text; only a standalone image line becomes an image block.',html_literal:'HTML-like text was preserved as text and was not executed.',link_title:'Additional link title is not preserved as a block attribute.',nested_list:'Nested list was flattened to the current level.',unclosed_fence:'Code block had no closing fence and continued to the end of the file.',table_overflow:'Table exceeds BDRE limits; its rows were preserved as paragraphs.',list_start:'Custom list numbering was normalized to the standard start.'},
+      warningLine:'Line %1',warningBlock:'Block %1'
+    };
+  }
+
   function contentModelCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
     const n=(type,content,attributes,children)=>({type,content:content||'',attributes:attributes||{},children:children||[]});
@@ -1069,6 +1089,176 @@
     return {valid:true,markdown,warnings};
   }
 
+
+  function parseMarkdownToBDRE(source, allowPageMedia) {
+    const text=String(source==null?'':source).replace(/^\uFEFF/,'');
+    if(utf8Length(text)>262144)return {valid:false,errors:['markdown_too_large'],blocks:[],warnings:[]};
+    const blocks=[],warnings=[],warned=new Set();let sequence=0;
+    const make=(type,attributes,content,children)=>({id:'md-'+(++sequence),type,attributes:attributes||{},content,children:children||[]});
+    const warn=(code,nodeId,line)=>{const key=code+':'+String(nodeId||line||'');if(warned.has(key))return;warned.add(key);warnings.push({code,nodeId:nodeId||null,line:Number.isInteger(line)?line:null});};
+    const decodeEntities=(value)=>String(value||'').replace(/&(amp|lt|gt|quot|#39|#x27);/gi,(entity,name)=>({amp:'&',lt:'<',gt:'>',quot:'"','#39':"'",'#x27':"'"})[name.toLowerCase()]||entity);
+    const unescapeText=(value)=>decodeEntities(String(value||'').replace(/\\([\\`*_{}\[\]()#+.!|>~-])/g,'$1'));
+    const appendRun=(runs,value,marks,href)=>{
+      if(!value)return;
+      const normalized={text:String(value),marks:(marks||[]).slice(),href:href||null},last=runs[runs.length-1];
+      if(last&&last.href===normalized.href&&JSON.stringify(last.marks)===JSON.stringify(normalized.marks))last.text+=normalized.text;else runs.push(normalized);
+    };
+    const parseLink=(value,start)=>{
+      const image=value.startsWith('![',start),labelStart=start+(image?2:1);if(value[start+(image?1:0)]!=='[')return null;
+      const closeLabel=value.indexOf(']',labelStart);if(closeLabel<0||value[closeLabel+1]!=='(')return null;
+      let cursor=closeLabel+2;while(/\s/.test(value[cursor]||''))cursor++;
+      let destination='',endDestination=cursor;
+      if(value[cursor]==='<'){
+        const closeAngle=value.indexOf('>',cursor+1);if(closeAngle<0)return null;destination=value.slice(cursor+1,closeAngle);endDestination=closeAngle+1;cursor=endDestination;
+      }else{
+        const startDestination=cursor;let depth=0;
+        while(cursor<value.length){
+          if(value[cursor]==='\\'&&cursor+1<value.length){cursor+=2;continue;}
+          if(value[cursor]==='('){depth++;cursor++;continue;}
+          if(value[cursor]===')'){if(depth===0)break;depth--;cursor++;continue;}
+          if(/\s/.test(value[cursor])&&depth===0)break;cursor++;
+        }
+        destination=value.slice(startDestination,cursor);endDestination=cursor;
+      }
+      while(/\s/.test(value[cursor]||''))cursor++;
+      let hasTitle=false;
+      if(cursor<value.length&&value[cursor]!==')'){
+        hasTitle=true;const quote=value[cursor]==='"'||value[cursor]==="'"?value[cursor]:'';
+        if(quote){cursor++;while(cursor<value.length&&value[cursor]!==quote){if(value[cursor]==='\\')cursor++;cursor++;}if(value[cursor]===quote)cursor++;}
+        else while(cursor<value.length&&value[cursor]!==')')cursor++;
+        while(/\s/.test(value[cursor]||''))cursor++;
+      }
+      if(value[cursor]!==')')return null;
+      return {image,label:unescapeText(value.slice(labelStart,closeLabel)),destination:unescapeText(destination.replace(/\\([()])/g,'$1')),title:hasTitle,end:cursor+1};
+    };
+    const parseInline=(value,nodeId,marks,depth)=>{
+      const input=String(value||''),runs=[],active=marks||[],level=depth||0;let plain='';
+      const flush=()=>{if(plain){appendRun(runs,decodeEntities(plain),active,null);plain='';}};
+      if(level>6){appendRun(runs,unescapeText(input),active,null);return runs;}
+      for(let i=0;i<input.length;){
+        if(input[i]==='\\'&&i+1<input.length&&/[\\`*_{}\[\]()#+.!|>~-]/.test(input[i+1])){plain+=input[i+1];i+=2;continue;}
+        if(input[i]==='!'&&input[i+1]==='['||input[i]==='['){
+          const link=parseLink(input,i);
+          if(link){flush();
+            if(link.image){warn('inline_image',nodeId);appendRun(runs,'[Image: '+link.label+'] ('+link.destination+')',active,null);}
+            else{
+              if(link.title)warn('link_title',nodeId);
+              const destination=link.destination;
+              const localFile=(validLocalDownload(destination,allowPageMedia)&&safeMediaScope(destination,'download'))||(validLocalAudio(destination,allowPageMedia)&&safeMediaScope(destination,'audio'))||(validLocalVideo(destination,allowPageMedia)&&safeMediaScope(destination,'video'));
+              if(validActionUrl(destination)&&!localFile){const linked=parseInline(input.slice(i+(link.image?2:1),input.indexOf(']',i+(link.image?2:1))),nodeId,active,level+1);linked.forEach((run)=>{run.href=destination;runs.push(run);});}
+              else{if(localFile)warn('inline_media_link',nodeId);else warn('unsafe_link',nodeId);appendRun(runs,link.label+' ('+destination+')',active,null);}
+            }
+            i=link.end;continue;
+          }
+        }
+        if(input[i]==='`'){
+          let end=i;while(input[end]==='`')end++;const fence=input.slice(i,end),close=input.indexOf(fence,end);
+          if(close>=0){flush();appendRun(runs,input.slice(end,close),active.concat('code'),null);i=close+fence.length;continue;}
+        }
+        const marker=['**','__','~~','*','_'].find((candidate)=>input.startsWith(candidate,i));
+        if(marker){const close=input.indexOf(marker,i+marker.length);if(close>i+marker.length){flush();const mark=marker==='**'||marker==='__'?'bold':marker==='~~'?'strike':'italic';parseInline(input.slice(i+marker.length,close),nodeId,active.concat(mark),level+1).forEach((run)=>runs.push(run));i=close+marker.length;continue;}}
+        plain+=input[i];i++;
+      }
+      flush();
+      if(/<\/?[A-Za-z][^>]*>/.test(input))warn('html_literal',nodeId);
+      return canonicalRuns(runs);
+    };
+    const safeMediaScope=(path,kind)=>{
+      const expected='view/'+kind+'/'+(allowPageMedia?'cms/page/':'blog/');
+      return typeof path==='string'&&path.startsWith(expected);
+    };
+    const safeImagePath=(path)=>{
+      if(!validLocalImage(path))return false;
+      try{const parsed=new URL(path,global.location&&global.location.origin||'https://bdre.local');
+        if(parsed.pathname.startsWith('/view/image/cms/page/'))return !!allowPageMedia;
+        if(parsed.pathname.startsWith('/view/image/blog/'))return !allowPageMedia;
+        return true;
+      }catch(_){return false;}
+    };
+    const lines=text.replace(/\r\n?/g,'\n').split('\n');
+    const headingMatch=(line)=>/^ {0,3}(#{1,6})(?:\s+|$)(.*?)\s*#*\s*$/.exec(line);
+    const fenceMatch=(line)=>/^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+    const listMatch=(line)=>/^( *)([-+*]|(\d+)[.)])\s+(.*)$/.exec(line);
+    const splitCells=(line)=>{
+      let value=line.trim();if(value.startsWith('|'))value=value.slice(1);if(value.endsWith('|')&&!value.endsWith('\\|'))value=value.slice(0,-1);
+      const cells=[];let current='',escaped=false;
+      for(const character of value){if(escaped){current+='\\'+character;escaped=false;}else if(character==='\\')escaped=true;else if(character==='|'){cells.push(current.trim());current='';}else current+=character;}
+      if(escaped)current+='\\';cells.push(current.trim());return cells;
+    };
+    const isTableSeparator=(line)=>{const cells=splitCells(line);return cells.length>0&&cells.every((cell)=>/^:?-{3,}:?$/.test(cell));};
+    const isRule=(line)=>/^ {0,3}(?:(?:\*\s*){3,}|(?:-\s*){3,}|(?:_\s*){3,})$/.test(line);
+    const isImageLine=(line)=>{const value=line.trim(),image=parseLink(value,0);return image&&image.image&&image.end===value.length?image:null;};
+    const isBlockStart=(index)=>{
+      const line=lines[index]||'';return !!(headingMatch(line)||fenceMatch(line)||isRule(line)||/^ {0,3}>/.test(line)||listMatch(line)||isImageLine(line)||(index+1<lines.length&&line.includes('|')&&isTableSeparator(lines[index+1])));
+    };
+    const addParagraph=(value,line)=>{
+      const block=make('core/paragraph',{},[],[]);block.content=parseInline(value,block.id,[],0);if(block.content.length)blocks.push(block);
+      if(/<\/?[A-Za-z][^>]*>/.test(value))warn('html_literal',block.id,line);
+      return block;
+    };
+    for(let i=0;i<lines.length;){
+      const raw=lines[i],lineNumber=i+1;
+      if(!raw.trim()){i++;continue;}
+      const fence=fenceMatch(raw);
+      if(fence){const marker=fence[1],body=[];i++;let closed=false;
+        while(i<lines.length){const close=new RegExp('^ {0,3}'+(marker[0]==='`'?'`':'~')+'{'+marker.length+',}\\s*$');if(close.test(lines[i])){closed=true;i++;break;}body.push(lines[i++]);}
+        const node=make('core/code',{},body.join('\n'),[]);blocks.push(node);if(!closed)warn('unclosed_fence',node.id,lineNumber);continue;
+      }
+      const heading=headingMatch(raw);
+      if(heading){const node=make('core/heading',{level:heading[1].length},[],[]);node.content=parseInline(heading[2],node.id,[],0);blocks.push(node);i++;continue;}
+      if(isRule(raw)){blocks.push(make('core/separator',{},'',[]));i++;continue;}
+      const image=isImageLine(raw);
+      if(image){const imagePath=image.destination,title=image.title?(/\s+["']([^"']*)["']\s*$/.exec(raw)||[])[1]||'':'';
+        if(safeImagePath(imagePath))blocks.push(make('core/image',{src:imagePath,alt:image.label,...(title?{title:unescapeText(title)}:{})},'',[]));
+        else{const block=addParagraph('[Image: '+image.label+'] ('+imagePath+')',lineNumber);warn('remote_image',block.id,lineNumber);}
+        i++;continue;
+      }
+      if(i+1<lines.length&&raw.includes('|')&&isTableSeparator(lines[i+1])){
+        const sourceRows=[splitCells(raw)];let j=i+2;while(j<lines.length&&lines[j].trim()&&lines[j].includes('|'))sourceRows.push(splitCells(lines[j++]));
+        const width=Math.max(...sourceRows.map((row)=>row.length));
+        if(width>12||sourceRows.length>=20){warn('table_overflow',null,lineNumber);sourceRows.forEach((row,rowIndex)=>addParagraph(row.join(' | '),lineNumber+rowIndex));i=j;continue;}
+        const rows=sourceRows.map((cells,rowIndex)=>make('core/table-row',{},'',cells.map((cell,colIndex)=>{const tableCell=make('core/table-cell',rowIndex===0?{header:true}:{},[],[]);tableCell.content=parseInline(cell,tableCell.id,[],0);return tableCell;})));
+        blocks.push(make('core/table',{header:true},'',rows));i=j;continue;
+      }
+      if(/^ {0,3}>/.test(raw)){
+        const quoteLines=[];while(i<lines.length&&/^ {0,3}>/.test(lines[i]))quoteLines.push(lines[i++].replace(/^ {0,3}> ?/,''));
+        const node=make('core/quote',{},[],[]);node.content=parseInline(quoteLines.join('\n'),node.id,[],0);blocks.push(node);continue;
+      }
+      const firstList=listMatch(raw);
+      if(firstList){const ordered=!!firstList[3],baseIndent=firstList[1].length,items=[];let nested=false,initialNumber=Number(firstList[3]||1);
+        while(i<lines.length){const item=listMatch(lines[i]);if(!item)break;const indent=item[1].length,itemOrdered=!!item[3];if(indent<baseIndent||itemOrdered!==ordered)break;if(indent>baseIndent)nested=true;
+          const node=make('core/list-item',{},[],[]);node.content=parseInline(item[4],node.id,[],0);items.push(node);i++;
+        }
+        const list=make('core/list',{ordered},'',items);blocks.push(list);if(nested)warn('nested_list',list.id,lineNumber);if(ordered&&initialNumber!==1)warn('list_start',list.id,lineNumber);continue;
+      }
+      const link=parseLink(raw.trim(),0);
+      if(link&&!link.image&&link.end===raw.trim().length){
+        const destination=link.destination,label=link.label;
+        if(link.title)warn('link_title',null,lineNumber);
+        if(validLocalDownload(destination,allowPageMedia)&&safeMediaScope(destination,'download')){blocks.push(make('core/file',{src:destination},[{text:label||'File',marks:[],href:null}],[]));i++;continue;}
+        if(validLocalAudio(destination,allowPageMedia)&&safeMediaScope(destination,'audio')){blocks.push(make('core/audio',{src:destination},[{text:label||'Audio',marks:[],href:null}],[]));i++;continue;}
+        if(validLocalVideo(destination,allowPageMedia)&&safeMediaScope(destination,'video')){blocks.push(make('core/video_file',{src:destination,title:label||'Video'},'',[]));i++;continue;}
+        if(validEmbed(destination)&&['Video','Vídeo'].includes(label.trim())){blocks.push(make('core/video_embed',{url:destination},'',[]));i++;continue;}
+      }
+      const paragraphLines=[];let current=i;
+      while(current<lines.length&&lines[current].trim()&&!isBlockStart(current)){
+        if(current!==i&&isBlockStart(current))break;
+        paragraphLines.push(lines[current]);current++;
+      }
+      if(!paragraphLines.length){paragraphLines.push(lines[i]);current=i+1;}
+      const joined=paragraphLines.map((part,index)=>{
+        if(index===paragraphLines.length-1)return part.trim();
+        return / {2,}$|\\$/.test(part)?part.replace(/ {2,}$|\\$/,'')+'\n':part.trim()+' ';
+      }).join('');
+      addParagraph(joined,lineNumber);i=current;
+    }
+    const document={format_version:2,blocks};
+    const validation=validateDocument(document,allowPageMedia);
+    if(!validation.valid)return {valid:false,errors:validation.errors,blocks:[],warnings};
+    if(utf8Length(JSON.stringify(document))>4194304)return {valid:false,errors:['document_too_large'],blocks:[],warnings};
+    return {valid:true,blocks,warnings};
+  }
+
   function moveBlockAcrossHierarchy(document, nodeId, direction, allowPageMedia) {
     if (!document || document.format_version !== 2 || !Array.isArray(document.blocks) || !['indent','outdent'].includes(direction) || !validateDocument(document, allowPageMedia).valid) return null;
     const next = CLONE(document);
@@ -1188,6 +1378,8 @@
       this.revisionCompare = revisionCompareCopy();
       this.revisionCompareIndex = null;
       this.markdownExport = markdownExportCopy();
+      this.markdownImport = markdownImportCopy();
+      this.pendingMarkdownImport = null;
       this.findReplaceOpen = false; this.findQuery = ''; this.replaceQuery = ''; this.findCaseSensitive = false; this.findWholeWord = false; this.activeFindIndex = -1;
       this.documentStatsTimer = null;
       this.fullscreenReturnFocus = null;
@@ -1298,6 +1490,8 @@
         if (caseInput) { this.findCaseSensitive = caseInput.checked; this.activeFindIndex = -1; this.updateFindStatus(); return; }
         const wholeWordInput = event.target.closest('[data-find-whole-word]');
         if (wholeWordInput) { this.findWholeWord = wholeWordInput.checked; this.activeFindIndex = -1; this.updateFindStatus(); return; }
+        const markdownInput=event.target.closest('[data-markdown-import-file]');
+        if(markdownInput&&markdownInput.files&&markdownInput.files[0]){const file=markdownInput.files[0];markdownInput.value='';this.readMarkdownImport(file);return;}
         const importInput = event.target.closest('[data-import-file]');
         if (importInput && importInput.files && importInput.files[0]) { const file=importInput.files[0]; importInput.value=''; this.workspaceView='editor';this.previewMode=false;this.activePanel='structure';this.importLocalFile(file); return; }
         const transform = event.target.closest('[data-transform-node]');
@@ -1546,6 +1740,9 @@
       else if (name === 'download-markdown') this.exportMarkdownFile();
       else if (name === 'preview-markdown') { this.workspaceView='markdown-preview';this.previewMode=false;this.render();const title=this.root.querySelector('[data-markdown-preview-title]');if(title)title.focus(); }
       else if (name === 'markdown-preview-back') { this.workspaceView='export';this.render();const target=this.root.querySelector('[data-action="preview-markdown"]');if(target)target.focus(); }
+      else if(name==='markdown-import-open'){const input=this.root.querySelector('[data-markdown-import-file]');if(input)input.click();}
+      else if(name==='markdown-import-back'){this.workspaceView='export';this.render();const target=this.root.querySelector('[data-action="markdown-import-open"]');if(target)target.focus();}
+      else if(name==='markdown-import-confirm')this.confirmMarkdownImport();
       else if (name === 'markdown-warning-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'toggle-revision-history') { this.historyOpen = !this.historyOpen; this.render(); }
       else if (name === 'inspector-tab') { this.inspectorTab=button.dataset.inspectorTab==='customize'?'customize':'content'; this.render(); const active=Array.from(this.root.querySelectorAll('[data-action="inspector-tab"]')).find((item)=>item.dataset.inspectorTab===this.inspectorTab); if(active)active.focus(); }
@@ -2623,6 +2820,40 @@
       }catch(_){this.announceStatus(this.markdownExport.downloadError);return false;}
     }
 
+
+    async readMarkdownImport(file) {
+      const copy=this.markdownImport;
+      const name=String(file&&file.name||'');
+      const extension=name.split('.').pop().toLowerCase();
+      let source='',result;
+      if(!/\.(md|markdown)$/i.test(name))result={valid:false,errors:['wrong_extension'],blocks:[],warnings:[]};
+      else if(!file||Number(file.size)>262144)result={valid:false,errors:['markdown_too_large'],blocks:[],warnings:[]};
+      else{
+        try{source=await file.text();result=parseMarkdownToBDRE(source,this.allowPageMedia);}
+        catch(_){result={valid:false,errors:['read_failed'],blocks:[],warnings:[]};}
+      }
+      this.pendingMarkdownImport={name:name||'markdown.md',source,result};
+      this.workspaceView='markdown-import-preview';this.previewMode=false;this.render();
+      const title=this.root.querySelector('[data-markdown-import-title]');if(title)title.focus();
+    }
+
+    confirmMarkdownImport() {
+      const pending=this.pendingMarkdownImport,copy=this.markdownImport;
+      if(!pending||!pending.result||!pending.result.valid||!pending.result.blocks.length)return false;
+      if(this.locked){this.announceStatus(copy.insertUnavailable);return false;}
+      const afterId=this.selectedId||null,allowedTypes=this.insertTypes(afterId).map((item)=>item.type);
+      if(!this.canInsertPatterns(afterId)||!allowedTypes.includes('core/group')){this.announceStatus(copy.insertUnavailable);return false;}
+      const next=CLONE(this.state);this.prepareSlashTarget(next,afterId);
+      const location=this.insertionLocation(next.blocks,afterId);
+      const children=pending.result.blocks.map((block)=>cloneBlockWithNewIds(block,()=>this.newId()));
+      const group=this.node('core/group',{},'',children);location.target.splice(location.index,0,group);
+      const validation=validateDocument(next,this.allowPageMedia);
+      if(!validation.valid||utf8Length(JSON.stringify(next))>4194304){this.announceStatus(copy.insertFailed);return false;}
+      this.pendingMarkdownImport=null;this.finishInsert(next,group);
+      this.statusMessage=copy.inserted;this.announceStatus(copy.inserted);this.render();this.focusNode(group.id);
+      return true;
+    }
+
     async importLocalFile(file) {
       if (!global.ReamurPageImporter) { this.announceStatus(this.strings.importUnavailable || 'Importador indisponível.'); return; }
       try {
@@ -3099,6 +3330,58 @@
       return wrap;
     }
 
+
+    renderMarkdownImportPreview() {
+      const copy=this.markdownImport,pending=this.pendingMarkdownImport,wrap=this.el('div','rb-workspace-screen-content rb-markdown-import-workspace');
+      const header=this.el('div','rb-accessibility-header'),title=this.el('h1','rb-workspace-screen-title',copy.title);title.dataset.markdownImportTitle='1';title.tabIndex=-1;
+      header.append(title,this.button(copy.cancel,'markdown-import-back',{icon:'collapse',showLabel:true}));
+      wrap.append(header,this.el('p','rb-workspace-screen-lead',copy.hint));
+      if(!pending){const error=this.el('p','rb-workspace-warning',copy.invalid);error.setAttribute('role','alert');wrap.append(error);return wrap;}
+      const fileLabel=this.el('p','rb-markdown-import-file',copy.file.replace('%1',pending.name));wrap.append(fileLabel);
+      const result=pending.result||{valid:false,errors:[],blocks:[],warnings:[]};
+      if(!result.valid){
+        const error=this.el('p','rb-workspace-warning',result.errors.includes('wrong_extension')?copy.wrongExtension:result.errors.includes('markdown_too_large')?copy.tooLarge:result.errors.includes('read_failed')?copy.parseFailed:copy.invalid);error.setAttribute('role','alert');wrap.append(error);
+      }else{
+        const blockCount=(nodes)=>nodes.reduce((count,node)=>count+1+blockCount(node.children||[]),0),count=blockCount(result.blocks);
+        const summary=this.el('div','rb-markdown-import-summary');summary.append(this.el('p','',copy.blockCount.replace('%1',String(count))),this.el('p','',copy.warningCount.replace('%1',String(result.warnings.length))),this.el('p','rb-markdown-import-additive',copy.additive));
+        wrap.append(summary);
+        if(result.blocks.length){
+          const section=this.el('section','rb-markdown-import-outline');section.append(this.el('h2','',copy.previewTitle));
+          const list=this.el('ol','rb-markdown-import-blocks');
+          const describe=(node)=>{
+            const textOf=(runs)=>Array.isArray(runs)?runs.map((run)=>run.text||'').join(''):String(runs||'');
+            let detail=textOf(node.content);
+            if(node.type==='core/image')detail=node.attributes.alt||node.attributes.src||'';
+            else if(node.type==='core/file'||node.type==='core/audio'||node.type==='core/video_file')detail=node.attributes.src||detail;
+            else if(node.type==='core/code')detail=String(node.content||'');
+            return detail.replace(/\s+/g,' ').trim().slice(0,150);
+          };
+          const visit=(nodes,depth)=>nodes.forEach((node)=>{
+            const row=this.el('li','rb-markdown-import-block');row.style.setProperty('padding-inline-start','calc(.7rem + '+(Math.min(5,depth)*1.1)+'rem)');
+            row.append(this.el('span','rb-markdown-import-type',this.label(node.type)));
+            const detail=describe(node);if(detail)row.append(this.el('span','rb-markdown-import-detail',detail));
+            list.append(row);if(node.children&&node.children.length)visit(node.children,depth+1);
+          });
+          visit(result.blocks,0);section.append(list);wrap.append(section);
+        }else wrap.append(this.el('p','rb-markdown-import-empty',copy.empty));
+        if(result.warnings.length){
+          const section=this.el('section','rb-markdown-import-warnings');section.append(this.el('h2','',copy.warningsTitle));
+          const list=this.el('ul','rb-markdown-import-warning-list');
+          result.warnings.forEach((warning)=>{
+            const item=this.el('li','',copy.warnings[warning.code]||copy.invalid);
+            if(warning.line)item.append(this.el('span','rb-markdown-import-warning-location',copy.warningLine.replace('%1',String(warning.line))));
+            else if(warning.nodeId)item.append(this.el('span','rb-markdown-import-warning-location',copy.warningBlock.replace('%1',warning.nodeId)));
+            list.append(item);
+          });section.append(list);wrap.append(section);
+        }
+        const canInsert=!!result.blocks.length&&!this.locked&&this.canInsertPatterns(this.selectedId||null)&&this.insertTypes(this.selectedId||null).some((item)=>item.type==='core/group');
+        const actions=this.el('div','rb-markdown-import-actions');const confirm=this.button(copy.insert,'markdown-import-confirm',{icon:'plus',showLabel:true});confirm.disabled=!canInsert;actions.append(confirm);
+        if(!canInsert&&result.blocks.length)actions.append(this.el('p','rb-markdown-import-unavailable',copy.insertUnavailable));wrap.append(actions);
+      }
+      if(pending.source){const details=this.el('details','rb-markdown-import-source');details.append(this.el('summary','',copy.sourceTitle));const pre=this.el('pre','rb-markdown-import-source-text');pre.textContent=pending.source;details.append(pre);wrap.append(details);}
+      return wrap;
+    }
+
     renderWorkspaceScreen() {
       const surface=this.el('section','rb-canvas rb-workspace-screen');surface.id='rb-workspace-surface-'+this.instance;surface.setAttribute('role','region');
       if(this.workspaceView==='models'){
@@ -3136,12 +3419,17 @@
         const send=this.button(this.ui.assistant,'assistant-send',{icon:'spark'});send.disabled=true;main.append(send);frame.append(rail,main);surface.append(frame);
       }else if(this.workspaceView==='markdown-preview'){
         surface.setAttribute('aria-label',this.markdownExport.title);surface.append(this.renderMarkdownPreview());
+      }else if(this.workspaceView==='markdown-import-preview'){
+        surface.setAttribute('aria-label',this.markdownImport.title);surface.append(this.renderMarkdownImportPreview());
       }else if(this.workspaceView==='export'){
         surface.setAttribute('aria-label',this.ui.exportTitle);const wrap=this.el('div','rb-workspace-screen-content');wrap.append(this.el('h1','rb-workspace-screen-title',this.ui.exportTitle),this.el('p','rb-workspace-screen-lead',this.ui.exportHint));
         const grid=this.el('div','rb-workspace-export-grid');const available=this.el('section','rb-workspace-card rb-workspace-json-card');available.append(this.el('h2','',this.ui.jsonTitle),this.el('p','',this.ui.jsonHint),this.button(this.strings.exportDocument||'Exportar BDRE','export-document',{icon:'file'}));
         const input=this.el('input','rb-import-file-input');input.type='file';input.accept=(global.ReamurPageImporter&&global.ReamurPageImporter.formats||[]).join(',');input.dataset.importFile='1';input.classList.add('rb-sr-only');input.tabIndex=-1;input.setAttribute('aria-label',this.strings.importFile||'Importar arquivo');
         available.append(this.button(this.strings.importFile||'Importar documento','import-file',{icon:'file'}),input);grid.append(available);
         const markdownCard=this.el('section','rb-workspace-card rb-markdown-export-card');markdownCard.append(this.icon('markdown','rb-markdown-export-icon'),this.el('h2','',this.markdownExport.open),this.el('p','',this.markdownExport.hint),this.button(this.markdownExport.preview,'preview-markdown',{icon:'desktop',showLabel:true}),this.button(this.markdownExport.download,'download-markdown',{icon:'file',showLabel:true}));grid.append(markdownCard);
+        const markdownImportCard=this.el('section','rb-workspace-card rb-markdown-import-card');markdownImportCard.append(this.icon('markdown','rb-markdown-import-icon'),this.el('h2','',this.markdownImport.tool),this.el('p','',this.markdownImport.hint));
+        const markdownInput=this.el('input','rb-import-file-input');markdownInput.type='file';markdownInput.accept='.md,.markdown,text/markdown,text/plain';markdownInput.dataset.markdownImportFile='1';markdownInput.classList.add('rb-sr-only');markdownInput.tabIndex=-1;markdownInput.setAttribute('aria-label',this.markdownImport.open);
+        markdownImportCard.append(this.button(this.markdownImport.open,'markdown-import-open',{icon:'file',showLabel:true}),markdownInput);grid.append(markdownImportCard);
         const formats=this.el('section','rb-workspace-card');formats.append(this.el('h2','',this.ui.unavailable));
         [[this.ui.pdf,'PDF'],[this.ui.docx,'Word'],[this.ui.pptx,'PowerPoint'],[this.ui.imageFormat,'Image'],[this.ui.html,'HTML']].forEach(([label,kind])=>{const row=this.el('div','rb-workspace-format-row');row.append(this.el('span','',label),this.el('span','rb-workspace-format-disabled',this.ui.unavailable));formats.append(row);});grid.append(formats);wrap.append(grid);surface.append(wrap);
       }else if(this.workspaceView==='share'){
@@ -3814,6 +4102,7 @@
     analyzeDocumentPreflight: analyzeDocumentPreflight,
     compareBDREDocuments: compareBDREDocuments,
     convertDocumentToMarkdown: convertDocumentToMarkdown,
+    parseMarkdownToBDRE: parseMarkdownToBDRE,
     validLocalImage: validLocalImage,
     validLocalDownload: validLocalDownload,
     validLocalAudio: validLocalAudio,

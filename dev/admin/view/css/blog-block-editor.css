@@ -956,3 +956,30 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-markdown-no-warnings{padding:.75rem 1rem;border:1px solid #86efac;border-radius:.65rem;background:#f0fdf4;color:#14532d}
 @media(max-width:620px){.rb-markdown-warning-item{grid-template-columns:auto minmax(0,1fr)}.rb-markdown-warning-item .rb-button{grid-column:2;justify-self:start}}
 @media(forced-colors:active){.rb-markdown-export-card,.rb-markdown-warnings,.rb-markdown-preview-code,.rb-markdown-no-warnings{border:1px solid CanvasText}}
+
+/* F9-83 safe Markdown import: local file selection, literal source, additive preview. */
+.rb-markdown-import-card{display:flex;flex-direction:column;align-items:flex-start;gap:.55rem;border-color:#cbd5e1;background:linear-gradient(145deg,#fff 0%,#f8fafc 100%)}
+.rb-markdown-import-card .rb-markdown-import-icon{width:1.6rem;height:1.6rem;color:#315ee8}
+.rb-markdown-import-card .rb-button{max-width:100%}
+.rb-markdown-import-workspace{padding:clamp(1rem,3vw,2.25rem)}
+.rb-markdown-import-file{margin:.5rem 0;color:#334155;font-weight:650;overflow-wrap:anywhere}
+.rb-markdown-import-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:.65rem;margin:1rem 0}
+.rb-markdown-import-summary p{margin:0;padding:.8rem 1rem;border:1px solid #d5dce8;border-radius:.65rem;background:#f8fafc;color:#26364b;line-height:1.5}
+.rb-markdown-import-summary .rb-markdown-import-additive{grid-column:1/-1;border-inline-start:3px solid #315ee8}
+.rb-markdown-import-outline,.rb-markdown-import-warnings{margin:1rem 0;padding:1rem;border:1px solid #d5dce8;border-radius:.75rem;background:#fff}
+.rb-markdown-import-outline h2,.rb-markdown-import-warnings h2{margin:.1rem 0 .7rem;color:#172033;font-size:1.1rem}
+.rb-markdown-import-blocks{display:grid;gap:.4rem;margin:0;padding:0;list-style:none;counter-reset:md-block}
+.rb-markdown-import-block{display:flex;align-items:flex-start;gap:.65rem;min-width:0;padding:.55rem .7rem;padding-inline-start:.7rem;border:1px solid #e2e8f0;border-radius:.55rem;background:#f8fafc;overflow-wrap:anywhere}
+.rb-markdown-import-type{flex:0 0 auto;padding:.12rem .5rem;border-radius:999px;background:#e2e8f0;color:#334155;font-size:.78rem;font-weight:700}
+.rb-markdown-import-detail{min-width:0;color:#334155;line-height:1.45;overflow-wrap:anywhere}
+.rb-markdown-import-empty,.rb-markdown-import-unavailable{margin:.75rem 0;padding:.75rem 1rem;border:1px solid #fbbf24;border-radius:.65rem;background:#fffbeb;color:#78350f;line-height:1.5}
+.rb-markdown-import-warning-list{display:grid;gap:.7rem;margin:0;padding-inline-start:1.25rem;color:#334155;line-height:1.5}
+.rb-markdown-import-warning-list li{padding-inline-start:.15rem}
+.rb-markdown-import-warning-location{display:block;margin-top:.15rem;color:#64748b;font-size:.82rem}
+.rb-markdown-import-actions{display:flex;align-items:center;flex-wrap:wrap;gap:.8rem;margin:1.2rem 0}
+.rb-markdown-import-actions .rb-button{min-height:2.8rem}
+.rb-markdown-import-source{margin:1rem 0;border:1px solid #cbd5e1;border-radius:.7rem;background:#f8fafc}
+.rb-markdown-import-source summary{padding:.75rem 1rem;color:#334155;font-weight:650;cursor:pointer}
+.rb-markdown-import-source-text{max-height:min(45vh,28rem);overflow:auto;margin:0;padding:1rem;border-top:1px solid #cbd5e1;color:#172033;font:.84rem/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;tab-size:2}
+@media(max-width:560px){.rb-markdown-import-block{flex-direction:column;gap:.4rem}.rb-markdown-import-summary{grid-template-columns:minmax(0,1fr)}}
+@media(forced-colors:active){.rb-markdown-import-card,.rb-markdown-import-summary p,.rb-markdown-import-outline,.rb-markdown-import-warnings,.rb-markdown-import-block,.rb-markdown-import-empty,.rb-markdown-import-unavailable,.rb-markdown-import-source{border:1px solid CanvasText}.rb-markdown-import-source-text{border-color:CanvasText}}
