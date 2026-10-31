@@ -2117,7 +2117,7 @@
         case 'core/list-item': out=text('li'); break;
         case 'core/separator': out=d.createElement('hr'); break;
         case 'core/code': out=d.createElement('pre'); out.textContent=node.content||''; break;
-        case 'core/image': out=d.createElement('figure'); if(validLocalImage(node.attributes.src)){const img=d.createElement('img');img.src=node.attributes.src;img.alt=node.attributes.alt||'';img.loading='lazy';out.append(img);} if(node.attributes.caption)out.append(d.createElement('figcaption')).textContent=node.attributes.caption; break;
+        case 'core/image': out=d.createElement('figure'); if(validLocalImage(node.attributes.src)){const img=d.createElement('img');img.src=this.resolveAdminMediaUrl(node.attributes.src);img.alt=node.attributes.alt||'';img.loading='lazy';out.append(img);} if(node.attributes.caption)out.append(d.createElement('figcaption')).textContent=node.attributes.caption; break;
         case 'core/audio': out=d.createElement('figure'); if(validLocalAudio(node.attributes.src, this.allowPageMedia)){const audio=d.createElement('audio');audio.controls=true;audio.preload='none';audio.src=node.attributes.src;out.append(audio);} const cap=d.createElement('figcaption');this.renderPreviewRuns(node.content,cap);out.append(cap);break;
         case 'core/threejs_thumb': {
           out=d.createElement('figure'); out.className='rb-preview-threejs';
@@ -2580,10 +2580,24 @@
       panel.append(this.el('p','rb-help-text',this.strings.threejs.scriptHint)); wrap.append(panel); return wrap;
     }
 
+    resolveAdminMediaUrl(src) {
+      if(typeof src!=='string')return '';
+      const baseValue=this.strings.media&&this.strings.media.catalogBase;
+      if(typeof baseValue!=='string'||!baseValue)return src;
+      try{
+        const base=new URL(baseValue,global.location.href);
+        if(base.origin!==global.location.origin)return src;
+        if(!base.pathname.endsWith('/'))base.pathname+='/';base.search='';base.hash='';
+        const normalizedSrc=src.startsWith('/')?src.slice(1):src;
+        const resolved=new URL(normalizedSrc,base);
+        return resolved.origin===base.origin?resolved.href:src;
+      }catch(_){return src;}
+    }
+
     renderAdminImagePreview(node, className) {
       const preview = this.el('figure',className || 'rb-admin-image-preview');
       if (validLocalImage(node.attributes.src)) {
-        const image = this.el('img',''); image.src = node.attributes.src; image.alt = node.attributes.alt || ''; preview.append(image);
+        const image = this.el('img',''); image.src = this.resolveAdminMediaUrl(node.attributes.src); image.alt = node.attributes.alt || ''; preview.append(image);
       } else preview.append(this.el('p','rb-admin-media-empty',this.strings.media.placeholder));
       if (node.attributes.caption) preview.append(this.el('figcaption','',node.attributes.caption));
       return preview;

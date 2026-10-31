@@ -12,6 +12,7 @@ RENDERER = (ROOT / 'dev/system/library/blog/block_renderer.php').read_text(encod
 PAGE_MEDIA_MODEL = (ROOT / 'dev/admin/model/cms/page_media.php').read_text(encoding='utf-8') if (ROOT / 'dev/admin/model/cms/page_media.php').exists() else ''
 PAGE_MEDIA_JS = (ROOT / 'dev/admin/view/js/cms-page-media.js').read_text(encoding='utf-8') if (ROOT / 'dev/admin/view/js/cms-page-media.js').exists() else ''
 PAGE_CONTROLLER = (ROOT / 'dev/admin/controller/cms/page.php').read_text(encoding='utf-8') if (ROOT / 'dev/admin/controller/cms/page.php').exists() else ''
+BLOG_CONTROLLER = (ROOT / 'dev/admin/controller/blog/blog.php').read_text(encoding='utf-8') if (ROOT / 'dev/admin/controller/blog/blog.php').exists() else ''
 
 m = re.search(r'const TYPES = \[(.*?)\n  \];', JS, re.S)
 assert m, 'Block catalog not found'
@@ -70,7 +71,9 @@ for name, ok in [
     ('Preformatted Code remains literal and non-executable', 'preformattedTextHint:' in JS and 'never executed' in JS and 'não é executado' in JS),
     ('Preformatted Code has labeled style/actions and toolbar', 'preformattedStyleHeading:' in JS and 'preformattedActions:' in JS and "'core/details','core/code','core/image','core/table'].includes(node.type)" in JS),
     ('CMS Pages media browser script exists and listens to the independent page-media event', "document.addEventListener('cms-page-media-open'" in PAGE_MEDIA_JS and 'cmsPageMediaModal' in PAGE_MEDIA_JS),
+    ('Admin image previews resolve relative media paths from catalog base', 'resolveAdminMediaUrl(src)' in JS and 'this.resolveAdminMediaUrl(node.attributes.src)' in JS and "'catalogBase' => $this->pageCatalogAssetUrl()" in PAGE_CONTROLLER and "'catalogBase' => $this->catalogAssetUrl()" in BLOG_CONTROLLER),
     ('CMS Pages media open event is acknowledged and missing listener is announced accessibly', 'cancelable:true' in JS and 'if(!event.defaultPrevented)' in JS and 'event.preventDefault()' in PAGE_MEDIA_JS and 'pageMediaUnavailable:' in JS),
+    ('CMS Pages media modal and backdrop stack above the fullscreen editor', 'body.rb-bdre-fullscreen-open.rb-page-media-open #cmsPageMediaModal{z-index:12050}' in CSS and 'body.rb-bdre-fullscreen-open.rb-page-media-open .modal-backdrop{z-index:12040}' in CSS and 'z-index:12000' in CSS and "classList.add('rb-page-media-open')" in PAGE_MEDIA_JS),
     ('CMS Pages media API builds query parameters safely and normalizes escaped ampersands', 'url.searchParams.set(key' in PAGE_MEDIA_JS and "replace(/&amp;/g, '&')" in PAGE_MEDIA_JS),
     ('CMS Pages upload request sends same-origin credentials and CSRF token', "body.append('csrf_token'" in PAGE_MEDIA_JS and "credentials: 'same-origin'" in PAGE_MEDIA_JS and "method: 'POST'" in PAGE_MEDIA_JS),
     ('CMS Pages media endpoint model lists and stores per-kind media in separate filesystem paths', 'class Page_media' in PAGE_MEDIA_MODEL and 'listPageMedia' in PAGE_MEDIA_MODEL and 'storePageMedia' in PAGE_MEDIA_MODEL and 'view/image/cms/page/' in PAGE_MEDIA_MODEL),

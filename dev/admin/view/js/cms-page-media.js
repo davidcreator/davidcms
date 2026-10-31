@@ -129,6 +129,7 @@
     page = 1;
     searchEl.value = '';
     updateKindControls();
+    if (document.body) document.body.classList.add('rb-page-media-open');
     try {
       if (global.bootstrap && global.bootstrap.Modal) {
         modalInstance = global.bootstrap.Modal.getOrCreateInstance(modal);
@@ -202,7 +203,7 @@
       uploadInput.value = '';
     }
   });
-  modal.addEventListener('hidden.bs.modal', () => { activeEditor = null; });
+  modal.addEventListener('hidden.bs.modal', () => { activeEditor = null; if (document.body) document.body.classList.remove('rb-page-media-open'); });
   updateKindControls();
   }
 
