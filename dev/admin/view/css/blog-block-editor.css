@@ -650,3 +650,8 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-video-edit-preview .rb-video-file-admin-preview{display:block;width:100%;max-width:100%;height:auto;aspect-ratio:16/9;background:#111;border-radius:.25rem}
 .rb-video-edit-preview figcaption{margin-top:.4rem;font-size:.82rem;color:#596579;overflow-wrap:anywhere}
 @media(max-width:560px){.rb-video-edit-preview[data-video-mobile-size="full"]{width:100%}.rb-video-edit-preview[data-video-mobile-size="large"]{width:90%}.rb-video-edit-preview[data-video-mobile-size="medium"]{width:75%}}
+/* F9-71: direct, accessible Vertical spacer controls */
+.rb-spacer-height-range{width:100%;accent-color:#3157c8}
+.rb-spacer-height-value{display:block;margin-top:.25rem;font-size:.78rem;font-weight:600;color:#44516a}
+.rb-spacer-preview{position:relative;display:flex;align-items:center;justify-content:center}
+.rb-spacer-preview::after{content:attr(data-height-label);padding:.12rem .4rem;border-radius:999px;background:#fff;color:#526078;font-size:.7rem;line-height:1.2}
