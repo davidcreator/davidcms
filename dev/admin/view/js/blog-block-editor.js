@@ -170,6 +170,23 @@
     };
   }
 
+
+  function readabilityReviewCopy() {
+    const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
+    if(language.startsWith('es'))return {
+      tool:'Legibilidad',title:'Revisión de legibilidad',hint:'Observa la longitud de los párrafos, las frases y las secciones del documento.',note:'Los resultados son heurísticos y orientativos; no representan una puntuación definitiva de calidad ni reescriben el contenido.',back:'Volver al editor',noIssues:'No se encontraron alertas en las comprobaciones disponibles.',count:'Hallazgos: %1',invalid:'No se puede revisar un documento que no supera la validación BDRE.',openBlock:'Localizar bloque',warning:'Revisar',info:'Sugerencia',words:'%1 palabras',readingTime:'Lectura estimada: %1 min',
+      issues:{long_paragraph:{severity:'warning',title:'Párrafo extenso',detail:'Este bloque contiene %1 palabras.',suggestion:'Considera dividirlo en párrafos más breves para facilitar la lectura.'},long_sentence:{severity:'info',title:'Frase extensa',detail:'La frase más larga de este bloque contiene aproximadamente %1 palabras.',suggestion:'Considera separar la idea en frases más cortas.'},long_section:{severity:'warning',title:'Sección extensa sin subtítulo',detail:'Esta sección contiene aproximadamente %1 palabras antes del siguiente encabezado del mismo nivel.',suggestion:'Considera agregar subtítulos que ayuden a recorrer el contenido.'}}
+    };
+    if(language.startsWith('pt'))return {
+      tool:'Legibilidade',title:'Revisão de legibilidade',hint:'Observe o tamanho dos parágrafos, das frases e das seções do documento.',note:'Os resultados são heurísticos e orientativos; não representam uma nota definitiva de qualidade nem reescrevem o conteúdo.',back:'Voltar ao editor',noIssues:'Nenhum alerta foi encontrado nas verificações disponíveis.',count:'Apontamentos: %1',invalid:'Não é possível revisar um documento que não passou na validação BDRE.',openBlock:'Localizar bloco',warning:'Revisar',info:'Sugestão',words:'%1 palavras',readingTime:'Leitura estimada: %1 min',
+      issues:{long_paragraph:{severity:'warning',title:'Parágrafo extenso',detail:'Este bloco contém %1 palavras.',suggestion:'Considere dividi-lo em parágrafos menores para facilitar a leitura.'},long_sentence:{severity:'info',title:'Frase extensa',detail:'A frase mais longa deste bloco contém aproximadamente %1 palavras.',suggestion:'Considere dividir a ideia em frases mais curtas.'},long_section:{severity:'warning',title:'Seção extensa sem subtítulo',detail:'Esta seção contém aproximadamente %1 palavras antes do próximo título do mesmo nível.',suggestion:'Considere adicionar subtítulos para ajudar a percorrer o conteúdo.'}}
+    };
+    return {
+      tool:'Readability',title:'Readability review',hint:'Review the length of paragraphs, sentences and sections in this document.',note:'Findings are heuristic and advisory; they are not a definitive quality score and never rewrite content.',back:'Back to editor',noIssues:'No findings in the available checks.',count:'Findings: %1',invalid:'A document that fails BDRE validation cannot be reviewed.',openBlock:'Locate block',warning:'Review',info:'Suggestion',words:'%1 words',readingTime:'Estimated reading time: %1 min',
+      issues:{long_paragraph:{severity:'warning',title:'Long paragraph',detail:'This block contains %1 words.',suggestion:'Consider splitting it into shorter paragraphs to make it easier to read.'},long_sentence:{severity:'info',title:'Long sentence',detail:'The longest sentence in this block contains about %1 words.',suggestion:'Consider splitting the idea into shorter sentences.'},long_section:{severity:'warning',title:'Long section without a subheading',detail:'This section contains about %1 words before the next heading at the same level.',suggestion:'Consider adding subheadings to help readers navigate the content.'}}
+    };
+  }
+
   function contentModelCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
     const n=(type,content,attributes,children)=>({type,content:content||'',attributes:attributes||{},children:children||[]});
@@ -212,6 +229,7 @@
     plus:'M12 5v14M5 12h14', alignLeft:'M4 6h16M4 10h10M4 14h16M4 18h10', alignCenter:'M4 6h16M7 10h10M4 14h16M7 18h10', alignRight:'M4 6h16M10 10h10M4 14h16M10 18h10', copy:'M8 8V4h12v12h-4M4 8h12v12H4z', undo:'M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-2', redo:'m15 14 5-5-5-5m5 5H10a6 6 0 0 0 0 12h2',
     desktop:'M3 4h18v13H3zM8 21h8M12 17v4', tablet:'M6 2h12v20H6zM11 18h2', mobile:'M8 2h8v20H8zM11 18h2',
     up:'m18 15-6-6-6 6M12 9v12', down:'m6 9 6 6 6-6M12 3v12', trash:'M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3',
+    bookOpen:'M12 7v14M4 5.5c3-1 5.7-.2 8 1.5 2.3-1.7 5-2.5 8-1.5v13c-3-1-5.7-.2-8 1.5-2.3-1.7-5-2.5-8-1.5zM7 9h2M15 9h2M7 12h2M15 12h2', clock:'M12 8v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
     paragraph:'M4 6h16M4 10h16M4 14h10M4 18h10', heading:'M4 5v14M20 5v14M4 12h16', list:'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
     image:'M4 4h16v16H4zM8 14l3-3 5 5M14 9h.01', quote:'M5 6h6v6H5zM13 6h6v6h-6zM5 12c0 3-1 4-2 5m10-5c0 3-1 4-2 5', video:'m9 7 9 5-9 5zM4 5v14', threejs:'m12 3 8 4v10l-8 4-8-4V7l8-4zm-8 4 8 4 8-4m-8 4v10', button:'M4 7h16v10H4z', bold:'M7 5h6a4 4 0 0 1 0 8H7zM7 13h7a4 4 0 0 1 0 8H7z', italic:'M15 4h-5m4 16H9m5-16-4 16', underline:'M6 4v7a6 6 0 0 0 12 0V4M4 21h16', strike:'M5 12h14M7 6c1-2 3-2 5-2 3 0 5 1 5 3 0 2-2 3-5 4-3 1-5 2-5 5 0 2 2 4 5 4 2 0 4-1 5-3', link:'M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7M14 11a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 21l1.7-1.7', info:'M12 8h.01M11 12h1v5h1M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
     details:'M5 7h14M5 12h14M5 17h14M3 7h.01M3 12h.01M3 17h.01', spacer:'M12 3v18m-4-14 4-4 4 4m-8 10 4 4 4-4', code:'m8 6-6 6 6 6m8-12 6 6-6 6m-3-14-2 16', separator:'M4 12h16M12 7v10', group:'M4 4h16v16H4zM8 8h8v8H8z', columns:'M4 4h16v16H4zM12 4v16', gallery:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', cover:'M4 4h16v16H4zM4 15l5-5 4 4 3-3 4 5', table:'M4 4h16v16H4zM4 10h16M4 15h16M10 4v16M16 4v16', file:'M6 3h8l4 4v14H6zM14 3v5h5M9 13h6M9 17h6', audio:'M4 10v4m4-8v12m4-16v20m4-16v12m4-8v4', settings:'M4 7h16M4 17h16M8 7v0m8 10v0', indent:'M4 6h3m3 0h10M4 12h3m3 0h10M4 18h3m3 0h10M4 12l3-3m-3 3 3 3', outdent:'M4 6h16M4 12h10M4 18h16m3-6-3-3m3 3-3 3', outline:'M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h11', layers:'m12 3 9 5-9 5-9-5 9-5zm-9 9 9 5 9-5m-18 5 9 5 9-5', grip:'M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01', transform:'M4 7h14m0 0-3-3m3 3-3 3M20 17H6m0 0 3-3m-3 3 3 3',
@@ -806,6 +824,46 @@
     return {valid:true,issues};
   }
 
+
+  function analyzeDocumentReadability(document, allowPageMedia) {
+    const validation=validateDocument(document,allowPageMedia);
+    if(!validation.valid)return {valid:false,issues:[],errors:validation.errors,wordCount:0,readingMinutes:0};
+    const copy=readabilityReviewCopy(),issues=[],entries=[];
+    const proseTypes=new Set(['core/paragraph','core/list-item','core/quote','core/callout','core/details','core/table-cell']);
+    const textOf=(node)=>typeof node.content==='string'?node.content:(Array.isArray(node.content)?node.content.map((run)=>run&&typeof run.text==='string'?run.text:'').join(''):'');
+    const words=(text)=>String(text||'').match(/[A-Za-zÀ-ÖØ-öø-ÿ0-9]+(?:['’][A-Za-zÀ-ÖØ-öø-ÿ0-9]+)*/g)||[];
+    const wordCount=(text)=>words(text).length;
+    const add=(code,node,count)=>{const message=copy.issues[code];issues.push({code,severity:message.severity,title:message.title,detail:message.detail.replace('%1',String(count)),suggestion:message.suggestion,nodeId:node.id,type:node.type});};
+    const visit=(nodes)=>nodes.forEach((node)=>{
+      if(node.type==='core/heading')entries.push({kind:'heading',node,level:Number(node.attributes.level)||2});
+      else if(proseTypes.has(node.type)){
+        const text=textOf(node),count=wordCount(text);entries.push({kind:'prose',node,text,count});
+        if(count>120)add('long_paragraph',node,count);
+        const sentences=text.match(/[^.!?]+(?:[.!?]+(?=\s|$)|$)/g)||[];
+        const longest=sentences.reduce((max,sentence)=>Math.max(max,wordCount(sentence)),0);
+        if(longest>35)add('long_sentence',node,longest);
+      }
+      if(Array.isArray(node.children)&&node.children.length)visit(node.children);
+    });
+    visit(document.blocks);
+    entries.forEach((entry,index)=>{
+      if(entry.kind!=='heading')return;
+      let count=0,hasSubheading=false;
+      for(let i=index+1;i<entries.length;i+=1){
+        const next=entries[i];
+        if(next.kind==='heading'){
+          if(next.level<=entry.level)break;
+          hasSubheading=true;
+        }else count+=next.count;
+      }
+      if(count>500&&!hasSubheading)add('long_section',entry.node,count);
+    });
+    const totalWords=entries.reduce((sum,entry)=>sum+(entry.kind==='prose'?entry.count:0),0);
+    const locale=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
+    const wordsPerMinute=locale.startsWith('en')?225:200;
+    return {valid:true,issues,wordCount:totalWords,readingMinutes:totalWords?Math.max(1,Math.ceil(totalWords/wordsPerMinute)):0,wordsPerMinute};
+  }
+
   function moveBlockAcrossHierarchy(document, nodeId, direction, allowPageMedia) {
     if (!document || document.format_version !== 2 || !Array.isArray(document.blocks) || !['indent','outdent'].includes(direction) || !validateDocument(document, allowPageMedia).valid) return null;
     const next = CLONE(document);
@@ -920,6 +978,7 @@
       this.contentModels = contentModelCopy();
       this.accessibility = accessibilityAuditCopy();
       this.linkReview = linkReviewCopy();
+      this.readability = readabilityReviewCopy();
       this.findReplaceOpen = false; this.findQuery = ''; this.replaceQuery = ''; this.findCaseSensitive = false; this.findWholeWord = false; this.activeFindIndex = -1;
       this.documentStatsTimer = null;
       this.fullscreenReturnFocus = null;
@@ -1178,6 +1237,7 @@
       else if(tool==='models'){this.workspaceView='models';this.previewMode=false;}
       else if(tool==='accessibility'){this.workspaceView='accessibility';this.previewMode=false;}
       else if(tool==='links'){this.workspaceView='links';this.previewMode=false;}
+      else if(tool==='readability'){this.workspaceView='readability';this.previewMode=false;}
       else if(tool==='library'){this.workspaceView='library';this.previewMode=false;}
       else if(tool==='assistant'){this.workspaceView='assistant';this.previewMode=false;}
       else if(tool==='export'){this.workspaceView='export';this.previewMode=false;}
@@ -1194,7 +1254,7 @@
         const tabs={text:'home',media:'media',review:'review',view:'view'};
         if(tabs[tool])this.activeRibbonTab=tabs[tool];
       }
-      if(['models','accessibility','links','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
+      if(['models','accessibility','links','readability','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
       this.findReplaceOpen=false;
       this.render();
       const focusTarget=Array.from(this.root.querySelectorAll('[data-action="workspace-tool"]')).find((item)=>item.dataset.tool===tool);
@@ -1253,6 +1313,7 @@
       else if (name === 'insert-content-model') this.insertContentModel(button.dataset.modelId);
       else if (name === 'accessibility-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'link-review-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
+      else if (name === 'readability-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'insert-saved-pattern') this.insertSavedPattern(button.dataset.patternId);
       else if (name === 'save-selected-pattern') this.saveSelectedPattern(button.dataset.nodeId);
       else if (name === 'rename-saved-pattern') this.renameSavedPattern(button.dataset.patternId);
@@ -2615,6 +2676,7 @@
         const find=this.button(this.strings.findReplaceButton||'Localizar e substituir','toggle-find-replace',{icon:'search'});find.setAttribute('aria-expanded',String(this.findReplaceOpen));g.tools.append(find);panel.append(g.group);
         g=this.renderRibbonGroup(this.accessibility.tool);const audit=this.button(this.accessibility.tool,'workspace-tool',{tool:'accessibility',icon:'check',showLabel:true});audit.dataset.workspaceTool='accessibility';g.tools.append(audit);panel.append(g.group);
         g=this.renderRibbonGroup(this.linkReview.tool);const linkAudit=this.button(this.linkReview.tool,'workspace-tool',{tool:'links',icon:'link',showLabel:true});linkAudit.dataset.workspaceTool='links';g.tools.append(linkAudit);panel.append(g.group);
+        g=this.renderRibbonGroup(this.readability.tool);const readabilityAudit=this.button(this.readability.tool,'workspace-tool',{tool:'readability',icon:'bookOpen',showLabel:true});readabilityAudit.dataset.workspaceTool='readability';g.tools.append(readabilityAudit);panel.append(g.group);
       }else if(this.activeRibbonTab==='view'){
         let g=this.renderRibbonGroup(this.strings.groupPanels||'Painéis recolhíveis');
         [['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline'],['settings',this.strings.builderSettings,'settings']].forEach(([panelName,label,icon])=>{const b=this.button(label,'builder-panel',{panel:panelName,icon});b.setAttribute('aria-pressed',String(this.fullscreen?(panelName==='settings'?(this.inspectorOpen&&!this.previewMode):this.activePanel===panelName):this.activePanel===panelName));if(this.fullscreen&&this.previewMode&&panelName==='settings')b.disabled=true;g.tools.append(b);});panel.append(g.group);
@@ -2686,6 +2748,27 @@
       wrap.append(list);return wrap;
     }
 
+    renderReadabilityReview() {
+      const copy=this.readability,wrap=this.el('div','rb-workspace-screen-content rb-accessibility-workspace rb-readability-workspace');
+      const header=this.el('div','rb-accessibility-header'),titleGroup=this.el('div','');titleGroup.append(this.el('h1','rb-workspace-screen-title',copy.title));
+      header.append(titleGroup,this.button(copy.back,'workspace-tool',{tool:'home',icon:'collapse',showLabel:true}));
+      wrap.append(header,this.el('p','rb-workspace-screen-lead',copy.hint),this.el('p','rb-accessibility-note',copy.note));
+      const result=analyzeDocumentReadability(this.state,this.allowPageMedia);
+      if(!result.valid){const warning=this.el('p','rb-workspace-warning',copy.invalid);warning.setAttribute('role','alert');wrap.append(warning);return wrap;}
+      const metrics=this.el('div','rb-readability-metrics');
+      metrics.append(this.icon('paragraph','rb-readability-metric-icon'),this.el('span','',copy.words.replace('%1',String(result.wordCount))),this.icon('clock','rb-readability-metric-icon'),this.el('span','',copy.readingTime.replace('%1',String(result.readingMinutes))));wrap.append(metrics);
+      const summary=this.el('p','rb-accessibility-summary',copy.count.replace('%1',String(result.issues.length)));summary.setAttribute('role','status');summary.setAttribute('aria-live','polite');wrap.append(summary);
+      if(!result.issues.length){const success=this.el('section','rb-accessibility-empty');success.append(this.icon('check','rb-icon'),this.el('strong','',copy.noIssues));wrap.append(success);return wrap;}
+      const list=this.el('div','rb-accessibility-findings');list.setAttribute('role','list');
+      result.issues.forEach((issue)=>{
+        const item=this.el('article','rb-accessibility-issue rb-accessibility-issue--'+issue.severity);item.setAttribute('role','listitem');
+        const top=this.el('div','rb-accessibility-issue-top'),issueIcon=issue.code==='long_section'?'heading':'paragraph';top.append(this.icon(issueIcon,'rb-readability-finding-icon'),this.el('span','rb-accessibility-severity',issue.severity==='warning'?copy.warning:copy.info),this.el('span','rb-accessibility-block-type',this.label(issue.type)));item.append(top);
+        item.append(this.el('h2','rb-accessibility-issue-title',issue.title),this.el('p','rb-accessibility-issue-detail',issue.detail),this.el('p','rb-accessibility-issue-suggestion',issue.suggestion));
+        item.append(this.button(copy.openBlock,'readability-focus',{nodeId:issue.nodeId,icon:'outline',showLabel:true}));list.append(item);
+      });
+      wrap.append(list);return wrap;
+    }
+
     renderWorkspaceScreen() {
       const surface=this.el('section','rb-canvas rb-workspace-screen');surface.id='rb-workspace-surface-'+this.instance;surface.setAttribute('role','region');
       if(this.workspaceView==='models'){
@@ -2694,6 +2777,8 @@
         surface.setAttribute('aria-label',this.accessibility.title);surface.append(this.renderAccessibilityAudit());
       }else if(this.workspaceView==='links'){
         surface.setAttribute('aria-label',this.linkReview.title);surface.append(this.renderLinkReview());
+      }else if(this.workspaceView==='readability'){
+        surface.setAttribute('aria-label',this.readability.title);surface.append(this.renderReadabilityReview());
       }else if(this.workspaceView==='library'){
         surface.setAttribute('aria-label',this.ui.libraryTitle);
         const wrap=this.el('div','rb-workspace-screen-content');wrap.append(this.el('h1','rb-workspace-screen-title',this.ui.libraryTitle),this.el('p','rb-workspace-screen-lead',this.ui.libraryHint));
@@ -2798,6 +2883,7 @@
           ['review',this.strings.ribbonReview,'search'],
           ['accessibility',this.accessibility.tool,'check'],
           ['links',this.linkReview.tool,'link'],
+          ['readability',this.readability.tool,'bookOpen'],
           ['view',this.strings.ribbonView,'desktop'],
           ['home',this.ui.home,'layers'],
           ['models',this.ui.models,'layers'],
@@ -2810,7 +2896,7 @@
         workspaceTools.forEach(([tool,label,icon])=>{
           if(tool==='text'||tool==='home'){const divider=this.el('span','rb-workspace-rail-divider');divider.setAttribute('aria-hidden','true');workspaceRail.append(divider);}
           const control=this.el('button','rb-workspace-tool'); control.type='button'; control.dataset.action='workspace-tool'; control.dataset.tool=tool;
-          const workspaceViews={models:'models',accessibility:'accessibility',links:'links',library:'library',assistant:'assistant',export:'export',share:'share',help:'help'};
+          const workspaceViews={models:'models',accessibility:'accessibility',links:'links',readability:'readability',library:'library',assistant:'assistant',export:'export',share:'share',help:'help'};
           const pressed=tool==='home'?this.workspaceView==='editor'&&this.activeRibbonTab==='home':Object.prototype.hasOwnProperty.call(workspaceViews,tool)?this.workspaceView===workspaceViews[tool]:tool==='elements'?(this.activePanel==='elements'&&this.inserterOpen):tool==='structure'?this.activePanel==='structure':tool==='appearance'?(this.inspectorOpen&&!this.previewMode):tool==='text'?this.activeRibbonTab==='home':tool==='media'?this.activeRibbonTab==='media':tool==='review'?this.activeRibbonTab==='review':tool==='view'?this.activeRibbonTab==='view':false;
           control.setAttribute('aria-label',label); control.setAttribute('aria-pressed',String(pressed));
           if(tool==='elements'||tool==='appearance')control.setAttribute('aria-expanded',String(pressed));
@@ -3385,6 +3471,7 @@
     validateDocument: validateDocument,
     analyzeDocumentAccessibility: analyzeDocumentAccessibility,
     analyzeDocumentLinks: analyzeDocumentLinks,
+    analyzeDocumentReadability: analyzeDocumentReadability,
     validLocalImage: validLocalImage,
     validLocalDownload: validLocalDownload,
     validLocalAudio: validLocalAudio,

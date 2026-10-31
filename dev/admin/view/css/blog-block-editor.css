@@ -893,3 +893,13 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-accessibility-issue .rb-button{margin-top:.35rem}
 .rb-accessibility-empty{display:flex;align-items:center;gap:.65rem;padding:1rem;border:1px solid #86efac;border-radius:.75rem;background:#f0fdf4;color:#14532d}
 @media(forced-colors:active){.rb-accessibility-issue,.rb-accessibility-note,.rb-accessibility-empty{border:1px solid CanvasText}}
+
+/* F9-79 readability review: topic-matched book, paragraph and reading-time icons. */
+.rb-readability-metrics{display:flex;align-items:center;flex-wrap:wrap;gap:.55rem;padding:.8rem 1rem;border:1px solid #d5dce8;border-radius:.7rem;background:#f8fafc;color:#26364b;font-weight:650}
+.rb-readability-metric-icon{width:1.1rem;height:1.1rem;color:#315ee8}
+.rb-readability-metrics .rb-readability-metric-icon:nth-of-type(2){margin-inline-start:.8rem;color:#64748b}
+.rb-readability-finding-icon{width:1.1rem;height:1.1rem;color:#475569}
+.rb-readability-issue--warning .rb-readability-finding-icon{color:#9a3412}
+.rb-readability-issue--info .rb-readability-finding-icon{color:#1d4ed8}
+@media(max-width:560px){.rb-readability-metrics{gap:.4rem;padding:.7rem;font-size:.9rem}.rb-readability-metrics .rb-readability-metric-icon:nth-of-type(2){margin-inline-start:.35rem}}
+@media(forced-colors:active){.rb-readability-metrics{border:1px solid CanvasText}}
