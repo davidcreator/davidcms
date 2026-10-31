@@ -153,6 +153,23 @@
     };
   }
 
+
+  function linkReviewCopy() {
+    const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
+    if(language.startsWith('es'))return {
+      tool:'Enlaces',title:'Revisión de enlaces y destinos',hint:'Comprueba los destinos de enlaces del documento sin cambiar el contenido.',note:'Esta revisión no visita sitios web ni comprueba si una dirección responde. Los resultados son orientativos y no modifican bloques.',back:'Volver al editor',noIssues:'No se encontraron alertas en las comprobaciones disponibles.',count:'Hallazgos: %1',invalid:'No se puede revisar un documento que no supera la validación BDRE.',openBlock:'Localizar bloque',warning:'Revisar',info:'Sugerencia',
+      issues:{http_external:{severity:'warning',title:'Enlace externo usa HTTP',detail:'El destino externo usa una conexión HTTP sin cifrar: %1',suggestion:'Si el sitio admite HTTPS, considera actualizar el destino después de comprobarlo.'},raw_url_label:{severity:'info',title:'El texto del enlace es una URL',detail:'El texto visible repite la dirección: %1',suggestion:'Considera un texto breve que describa el destino, si encaja con el contexto.'},repeated_destination:{severity:'info',title:'Destino repetido',detail:'Este mismo destino aparece %1 veces en el documento.',suggestion:'Confirma que las repeticiones sean intencionales.'}}
+    };
+    if(language.startsWith('pt'))return {
+      tool:'Links',title:'Revisão de links e destinos',hint:'Confira os destinos dos links no documento sem alterar o conteúdo.',note:'Esta revisão não acessa sites nem verifica se um endereço responde. Os resultados são orientativos e não modificam blocos.',back:'Voltar ao editor',noIssues:'Nenhum alerta foi encontrado nas verificações disponíveis.',count:'Apontamentos: %1',invalid:'Não é possível revisar um documento que não passou na validação BDRE.',openBlock:'Localizar bloco',warning:'Revisar',info:'Sugestão',
+      issues:{http_external:{severity:'warning',title:'Link externo usa HTTP',detail:'O destino externo usa uma conexão HTTP sem criptografia: %1',suggestion:'Se o site oferecer HTTPS, considere atualizar o destino depois de conferi-lo.'},raw_url_label:{severity:'info',title:'O texto do link é uma URL',detail:'O texto visível repete o endereço: %1',suggestion:'Considere um texto curto que descreva o destino, se fizer sentido no contexto.'},repeated_destination:{severity:'info',title:'Destino repetido',detail:'Este mesmo destino aparece %1 vezes no documento.',suggestion:'Confirme se as repetições são intencionais.'}}
+    };
+    return {
+      tool:'Links',title:'Link and destination review',hint:'Review link destinations in this document without changing its content.',note:'This review does not visit websites or check whether an address responds. Findings are advisory and never modify blocks.',back:'Back to editor',noIssues:'No findings in the available checks.',count:'Findings: %1',invalid:'A document that fails BDRE validation cannot be reviewed.',openBlock:'Locate block',warning:'Review',info:'Suggestion',
+      issues:{http_external:{severity:'warning',title:'External link uses HTTP',detail:'This external destination uses an unencrypted HTTP connection: %1',suggestion:'If the site supports HTTPS, consider updating the destination after checking it.'},raw_url_label:{severity:'info',title:'Link text is a URL',detail:'The visible text repeats the address: %1',suggestion:'Consider concise text that describes the destination, if it fits the context.'},repeated_destination:{severity:'info',title:'Repeated destination',detail:'This same destination appears %1 times in the document.',suggestion:'Confirm the repetitions are intentional.'}}
+    };
+  }
+
   function contentModelCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
     const n=(type,content,attributes,children)=>({type,content:content||'',attributes:attributes||{},children:children||[]});
@@ -740,6 +757,55 @@
     return {valid:true,issues};
   }
 
+
+  function analyzeDocumentLinks(document, allowPageMedia) {
+    const validation=validateDocument(document,allowPageMedia);
+    if(!validation.valid)return {valid:false,issues:[],errors:validation.errors};
+    const copy=linkReviewCopy(),occurrences=[],issues=[];
+    const currentOrigin=(()=>{try{return global.location&&global.location.origin?new URL(global.location.origin).origin:'';}catch(_){return '';}})();
+    const normalize=(value)=>{
+      try{const parsed=new URL(value,currentOrigin||'https://bdre.local');if(!['http:','https:'].includes(parsed.protocol))return null;const path=parsed.pathname.replace(/\/+$/,'')||'/';return parsed.origin.toLowerCase()+path+parsed.search+parsed.hash;}catch(_){return null;}
+    };
+    const addLink=(node,destination,label)=>{
+      if(typeof destination!=='string'||!destination.trim())return;
+      let parsed;try{parsed=new URL(destination,currentOrigin||'https://bdre.local');}catch(_){return;}
+      const normalized=normalize(destination);if(!normalized)return;
+      const external=!!currentOrigin&&parsed.origin!==currentOrigin;
+      occurrences.push({nodeId:node.id,type:node.type,destination,normalized,label:String(label||'').trim(),external,httpExternal:external&&parsed.protocol==='http:'});
+    };
+    const plainText=(content)=>Array.isArray(content)?content.map((run)=>run&&typeof run.text==='string'?run.text:'').join(''):'';
+    const visit=(nodes)=>nodes.forEach((node)=>{
+      if(node.type==='core/button')addLink(node,node.attributes.url,plainText(node.content));
+      else if(Array.isArray(node.content)){
+        let current=null;
+        const flush=()=>{if(current){addLink(node,current.href,current.text);current=null;}};
+        node.content.forEach((run)=>{
+          const href=run&&typeof run.href==='string'&&run.href.trim()?run.href.trim():'';
+          if(!href){flush();return;}
+          if(current&&current.href===href)current.text+=(run&&typeof run.text==='string'?run.text:'');
+          else{flush();current={href,text:run&&typeof run.text==='string'?run.text:''};}
+        });flush();
+      }
+      if(Array.isArray(node.children)&&node.children.length)visit(node.children);
+    });
+    visit(document.blocks);
+    const duplicateCounts=new Map();occurrences.forEach((item)=>duplicateCounts.set(item.normalized,(duplicateCounts.get(item.normalized)||0)+1));
+    const addIssue=(code,item,value)=>{
+      const message=copy.issues[code];let detail=message.detail.replace('%1',String(value));
+      issues.push({code,severity:message.severity,title:message.title,detail,suggestion:message.suggestion,nodeId:item.nodeId,type:item.type});
+    };
+    occurrences.forEach((item)=>{
+      if(item.httpExternal)addIssue('http_external',item,item.destination);
+      const visible=item.label.trim();
+      if(/^(?:https?:\/\/|www\.)/i.test(visible)){
+        const shown=visible.startsWith('www.')?'https://'+visible:visible;
+        if(normalize(shown)===item.normalized)addIssue('raw_url_label',item,item.destination);
+      }
+      const count=duplicateCounts.get(item.normalized)||0;if(count>1)addIssue('repeated_destination',item,count);
+    });
+    return {valid:true,issues};
+  }
+
   function moveBlockAcrossHierarchy(document, nodeId, direction, allowPageMedia) {
     if (!document || document.format_version !== 2 || !Array.isArray(document.blocks) || !['indent','outdent'].includes(direction) || !validateDocument(document, allowPageMedia).valid) return null;
     const next = CLONE(document);
@@ -853,6 +919,7 @@
       this.ui = workspaceCopy();
       this.contentModels = contentModelCopy();
       this.accessibility = accessibilityAuditCopy();
+      this.linkReview = linkReviewCopy();
       this.findReplaceOpen = false; this.findQuery = ''; this.replaceQuery = ''; this.findCaseSensitive = false; this.findWholeWord = false; this.activeFindIndex = -1;
       this.documentStatsTimer = null;
       this.fullscreenReturnFocus = null;
@@ -1110,6 +1177,7 @@
       if(tool==='home'){this.workspaceView='editor';this.activeRibbonTab='home';this.previewMode=false;}
       else if(tool==='models'){this.workspaceView='models';this.previewMode=false;}
       else if(tool==='accessibility'){this.workspaceView='accessibility';this.previewMode=false;}
+      else if(tool==='links'){this.workspaceView='links';this.previewMode=false;}
       else if(tool==='library'){this.workspaceView='library';this.previewMode=false;}
       else if(tool==='assistant'){this.workspaceView='assistant';this.previewMode=false;}
       else if(tool==='export'){this.workspaceView='export';this.previewMode=false;}
@@ -1126,7 +1194,7 @@
         const tabs={text:'home',media:'media',review:'review',view:'view'};
         if(tabs[tool])this.activeRibbonTab=tabs[tool];
       }
-      if(['models','accessibility','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
+      if(['models','accessibility','links','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
       this.findReplaceOpen=false;
       this.render();
       const focusTarget=Array.from(this.root.querySelectorAll('[data-action="workspace-tool"]')).find((item)=>item.dataset.tool===tool);
@@ -1184,6 +1252,7 @@
       else if (name === 'insert-pattern') this.insertPattern(button.dataset.pattern);
       else if (name === 'insert-content-model') this.insertContentModel(button.dataset.modelId);
       else if (name === 'accessibility-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
+      else if (name === 'link-review-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'insert-saved-pattern') this.insertSavedPattern(button.dataset.patternId);
       else if (name === 'save-selected-pattern') this.saveSelectedPattern(button.dataset.nodeId);
       else if (name === 'rename-saved-pattern') this.renameSavedPattern(button.dataset.patternId);
@@ -2545,6 +2614,7 @@
         g=this.renderRibbonGroup(this.strings.findReplaceButton||'Localizar e substituir');
         const find=this.button(this.strings.findReplaceButton||'Localizar e substituir','toggle-find-replace',{icon:'search'});find.setAttribute('aria-expanded',String(this.findReplaceOpen));g.tools.append(find);panel.append(g.group);
         g=this.renderRibbonGroup(this.accessibility.tool);const audit=this.button(this.accessibility.tool,'workspace-tool',{tool:'accessibility',icon:'check',showLabel:true});audit.dataset.workspaceTool='accessibility';g.tools.append(audit);panel.append(g.group);
+        g=this.renderRibbonGroup(this.linkReview.tool);const linkAudit=this.button(this.linkReview.tool,'workspace-tool',{tool:'links',icon:'link',showLabel:true});linkAudit.dataset.workspaceTool='links';g.tools.append(linkAudit);panel.append(g.group);
       }else if(this.activeRibbonTab==='view'){
         let g=this.renderRibbonGroup(this.strings.groupPanels||'Painéis recolhíveis');
         [['elements',this.strings.builderElements,'layers'],['structure',this.strings.builderStructure,'outline'],['settings',this.strings.builderSettings,'settings']].forEach(([panelName,label,icon])=>{const b=this.button(label,'builder-panel',{panel:panelName,icon});b.setAttribute('aria-pressed',String(this.fullscreen?(panelName==='settings'?(this.inspectorOpen&&!this.previewMode):this.activePanel===panelName):this.activePanel===panelName));if(this.fullscreen&&this.previewMode&&panelName==='settings')b.disabled=true;g.tools.append(b);});panel.append(g.group);
@@ -2597,12 +2667,33 @@
       wrap.append(list);return wrap;
     }
 
+    renderLinkReview() {
+      const copy=this.linkReview,wrap=this.el('div','rb-workspace-screen-content rb-accessibility-workspace rb-link-review-workspace');
+      const header=this.el('div','rb-accessibility-header'),titleGroup=this.el('div','');titleGroup.append(this.el('h1','rb-workspace-screen-title',copy.title));
+      header.append(titleGroup,this.button(copy.back,'workspace-tool',{tool:'home',icon:'collapse',showLabel:true}));
+      wrap.append(header,this.el('p','rb-workspace-screen-lead',copy.hint),this.el('p','rb-accessibility-note',copy.note));
+      const result=analyzeDocumentLinks(this.state,this.allowPageMedia);
+      if(!result.valid){const warning=this.el('p','rb-workspace-warning',copy.invalid);warning.setAttribute('role','alert');wrap.append(warning);return wrap;}
+      const summary=this.el('p','rb-accessibility-summary',copy.count.replace('%1',String(result.issues.length)));summary.setAttribute('role','status');summary.setAttribute('aria-live','polite');wrap.append(summary);
+      if(!result.issues.length){const success=this.el('section','rb-accessibility-empty');success.append(this.icon('check','rb-icon'),this.el('strong','',copy.noIssues));wrap.append(success);return wrap;}
+      const list=this.el('div','rb-accessibility-findings');list.setAttribute('role','list');
+      result.issues.forEach((issue)=>{
+        const item=this.el('article','rb-accessibility-issue rb-accessibility-issue--'+issue.severity);item.setAttribute('role','listitem');
+        const top=this.el('div','rb-accessibility-issue-top');top.append(this.el('span','rb-accessibility-severity',issue.severity==='warning'?copy.warning:copy.info),this.el('span','rb-accessibility-block-type',this.label(issue.type)));item.append(top);
+        item.append(this.el('h2','rb-accessibility-issue-title',issue.title),this.el('p','rb-accessibility-issue-detail',issue.detail),this.el('p','rb-accessibility-issue-suggestion',issue.suggestion));
+        item.append(this.button(copy.openBlock,'link-review-focus',{nodeId:issue.nodeId,icon:'outline',showLabel:true}));list.append(item);
+      });
+      wrap.append(list);return wrap;
+    }
+
     renderWorkspaceScreen() {
       const surface=this.el('section','rb-canvas rb-workspace-screen');surface.id='rb-workspace-surface-'+this.instance;surface.setAttribute('role','region');
       if(this.workspaceView==='models'){
         surface.setAttribute('aria-label',this.ui.modelsTitle);surface.append(this.renderPatternLibrary());
       }else if(this.workspaceView==='accessibility'){
         surface.setAttribute('aria-label',this.accessibility.title);surface.append(this.renderAccessibilityAudit());
+      }else if(this.workspaceView==='links'){
+        surface.setAttribute('aria-label',this.linkReview.title);surface.append(this.renderLinkReview());
       }else if(this.workspaceView==='library'){
         surface.setAttribute('aria-label',this.ui.libraryTitle);
         const wrap=this.el('div','rb-workspace-screen-content');wrap.append(this.el('h1','rb-workspace-screen-title',this.ui.libraryTitle),this.el('p','rb-workspace-screen-lead',this.ui.libraryHint));
@@ -2706,6 +2797,7 @@
           ['media',this.strings.categoryMedia,'image'],
           ['review',this.strings.ribbonReview,'search'],
           ['accessibility',this.accessibility.tool,'check'],
+          ['links',this.linkReview.tool,'link'],
           ['view',this.strings.ribbonView,'desktop'],
           ['home',this.ui.home,'layers'],
           ['models',this.ui.models,'layers'],
@@ -2718,7 +2810,7 @@
         workspaceTools.forEach(([tool,label,icon])=>{
           if(tool==='text'||tool==='home'){const divider=this.el('span','rb-workspace-rail-divider');divider.setAttribute('aria-hidden','true');workspaceRail.append(divider);}
           const control=this.el('button','rb-workspace-tool'); control.type='button'; control.dataset.action='workspace-tool'; control.dataset.tool=tool;
-          const workspaceViews={models:'models',accessibility:'accessibility',library:'library',assistant:'assistant',export:'export',share:'share',help:'help'};
+          const workspaceViews={models:'models',accessibility:'accessibility',links:'links',library:'library',assistant:'assistant',export:'export',share:'share',help:'help'};
           const pressed=tool==='home'?this.workspaceView==='editor'&&this.activeRibbonTab==='home':Object.prototype.hasOwnProperty.call(workspaceViews,tool)?this.workspaceView===workspaceViews[tool]:tool==='elements'?(this.activePanel==='elements'&&this.inserterOpen):tool==='structure'?this.activePanel==='structure':tool==='appearance'?(this.inspectorOpen&&!this.previewMode):tool==='text'?this.activeRibbonTab==='home':tool==='media'?this.activeRibbonTab==='media':tool==='review'?this.activeRibbonTab==='review':tool==='view'?this.activeRibbonTab==='view':false;
           control.setAttribute('aria-label',label); control.setAttribute('aria-pressed',String(pressed));
           if(tool==='elements'||tool==='appearance')control.setAttribute('aria-expanded',String(pressed));
@@ -3292,6 +3384,7 @@
     mount: function (root, options) { if (!(root instanceof Element)) throw new TypeError('editor root must be an Element'); return new Editor(root, options || {}); },
     validateDocument: validateDocument,
     analyzeDocumentAccessibility: analyzeDocumentAccessibility,
+    analyzeDocumentLinks: analyzeDocumentLinks,
     validLocalImage: validLocalImage,
     validLocalDownload: validLocalDownload,
     validLocalAudio: validLocalAudio,
