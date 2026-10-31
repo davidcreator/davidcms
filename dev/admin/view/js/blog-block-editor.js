@@ -2554,7 +2554,7 @@
     renderBlockToolbar(node) {
       const toolbar = this.el('div', 'rb-block-toolbar'); toolbar.setAttribute('role','toolbar'); toolbar.setAttribute('aria-label', this.label(node.type) + ' · ' + this.strings.transform);
       const path = this.findPath(this.state.blocks, node.id);
-      const labelledTextToolbar=['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/button','core/callout','core/details','core/code','core/image','core/video_embed','core/video_file','core/cover','core/table'].includes(node.type);
+      const labelledTextToolbar=['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/button','core/callout','core/details','core/code','core/image','core/video_embed','core/video_file','core/cover','core/file','core/table'].includes(node.type);
       if(labelledTextToolbar)toolbar.classList.add('rb-labeled-text-toolbar');
       const drag = this.el('span','rb-drag-handle'); drag.append(this.icon('grip','rb-icon')); drag.draggable = true; drag.dataset.dragHandle = '1'; drag.title = this.strings.dragHint; drag.setAttribute('aria-hidden','true'); toolbar.append(drag,this.el('span','rb-sr-only',this.strings.dragHint));
       const up = this.button(this.strings.moveUp, 'move-up', { nodeId:node.id, showLabel:labelledTextToolbar }); up.setAttribute('aria-label', this.strings.moveUp); up.disabled = !path || path.index === 0; toolbar.append(up);
@@ -2566,6 +2566,7 @@
       const copy = this.button(this.strings.copyBlock, 'copy-block', { nodeId:node.id, showLabel:labelledTextToolbar }); toolbar.append(copy);
       if(node.type==='core/image'&&(this.options.mediaPickers!==false||this.options.pageImagePicker===true))toolbar.append(this.button(this.strings.imageReplace,'media',{nodeId:node.id,icon:'image',showLabel:true}));
       if(node.type==='core/cover'&&(this.options.mediaPickers!==false||this.options.pageImagePicker===true))toolbar.append(this.button(this.strings.imageReplace,'media',{nodeId:node.id,icon:'image',showLabel:true}));
+      if(node.type==='core/file'&&(this.options.mediaPickers!==false||this.options.filePicker===true||this.options.pageMediaPicker===true))toolbar.append(this.button(this.strings.file.choose,'file-media',{nodeId:node.id,icon:'file',showLabel:true}));
       if(node.type==='core/video_file'&&(this.options.mediaPickers!==false||this.options.pageMediaPicker===true))toolbar.append(this.button(this.strings.videoFile.choose,'video-media',{nodeId:node.id,icon:'video',showLabel:true}));
       if(node.type==='core/video_embed'&&(this.options.mediaPickers!==false||this.options.pageMediaPicker===true))toolbar.append(this.button(this.strings.videoFile.choose,'video-media',{nodeId:node.id,icon:'video',showLabel:true}));
       const customize=this.button(this.strings.customizeTab||'Personalizar','customize-block',{nodeId:node.id,icon:'settings',showLabel:labelledTextToolbar});toolbar.append(customize);
@@ -2906,7 +2907,7 @@
       }
       if (n.type === 'core/file') {
         addField(this.strings.file.source, 'src', n.attributes.src, 'text');
-        if (this.options.filePicker === true || (this.options.filePicker !== false && this.options.mediaPickers !== false)) contentPanel.append(this.button(this.strings.file.choose, 'file-media', {nodeId:n.id}));
+        if (this.options.pageMediaPicker===true||this.options.filePicker===true||(this.options.filePicker!==false&&this.options.mediaPickers!==false)) contentPanel.append(this.button(this.strings.file.choose,'file-media',{nodeId:n.id,icon:'file',showLabel:true}));
       }
       if (n.type === 'core/audio') {
         addField(this.strings.audio.source, 'src', n.attributes.src, 'text');

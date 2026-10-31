@@ -69,10 +69,10 @@ class Page_media extends \Reamur\System\Engine\Model {
         return ['success'=>true,'path'=>$types[$kind]['path'].$filename,'name'=>$filename,'size'=>$size,'mime'=>$mime];
     }
 
-    /** Delete one uploaded CMS Pages image/video by filename only; never accepts paths or follows symlinks. */
+    /** Delete one uploaded CMS Pages image/video/download by filename only; never accepts paths or follows symlinks. */
     public function deletePageMedia(string $kind,string $name): array {
         $types=$this->allowedTypes();
-        if(!in_array($kind,['image','video'],true)||!isset($types[$kind]))return ['success'=>false,'error'=>'type'];
+        if(!in_array($kind,['image','video','download'],true)||!isset($types[$kind]))return ['success'=>false,'error'=>'type'];
         $name=trim($name);
         $extensions=array_keys($types[$kind]['mimes']);
         $extensionPattern=implode('|',array_map(static fn(string $ext):string=>preg_quote($ext,'/'),$extensions));

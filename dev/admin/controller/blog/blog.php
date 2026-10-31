@@ -1017,7 +1017,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['block_editor_available'] = $data['can_modify'] && $this->model_blog_blog->blogBlockContentTableExists();
         $data['preview_url'] = $data['block_editor_available'] ? $this->url->link('blog/blog.preview') : '';
         if ($data['block_editor_available']) {
-            $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-15-cover-media-actions';
+            $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-16-download-media-actions';
             $assetBase = rtrim((string)$this->config->get('site_url'), '/') . '/view/';
             $catalogAssetBase = $this->catalogAssetUrl();
             $catalogViewBase = $catalogAssetBase . 'view/';
