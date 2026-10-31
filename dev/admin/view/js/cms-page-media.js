@@ -78,12 +78,12 @@
     filesEl.replaceChildren();
     (Array.isArray(files) ? files : []).forEach((file) => {
       if (!file || typeof file.path !== 'string' || typeof file.name !== 'string') return;
-      const videoRow = kind === 'video';
-      const row = document.createElement(videoRow ? 'div' : 'button');
-      if (!videoRow) row.type = 'button';
-      row.className = 'list-group-item' + (videoRow ? ' d-flex align-items-center justify-content-between gap-2' : ' list-group-item-action d-flex align-items-center gap-3');
-      const choose = videoRow ? document.createElement('button') : row;
-      if (videoRow) {
+      const managedMediaRow = kind === 'video' || kind === 'image';
+      const row = document.createElement(managedMediaRow ? 'div' : 'button');
+      if (!managedMediaRow) row.type = 'button';
+      row.className = 'list-group-item' + (managedMediaRow ? ' d-flex align-items-center justify-content-between gap-2' : ' list-group-item-action d-flex align-items-center gap-3');
+      const choose = managedMediaRow ? document.createElement('button') : row;
+      if (managedMediaRow) {
         choose.type = 'button';
         choose.className = 'btn btn-link text-start text-decoration-none p-0 flex-grow-1 text-break';
       }
@@ -98,12 +98,14 @@
       details.textContent = file.name + (Number.isFinite(Number(file.size)) ? ' · ' + Math.ceil(Number(file.size) / 1024) + ' KB' : '');
       choose.append(details);
       row.append(choose);
-      if (videoRow) {
+      if (managedMediaRow) {
         const remove = document.createElement('button');
         remove.type = 'button'; remove.className = 'btn btn-outline-danger btn-sm flex-shrink-0';
         remove.dataset.mediaDelete = file.name;
-        remove.setAttribute('aria-label', (strings.delete || 'Delete video') + ': ' + file.name);
-        remove.textContent = strings.delete || 'Delete video';
+        remove.dataset.mediaDeleteKind = kind;
+        const deleteLabel = kind==='image' ? (strings.deleteImage||'Delete image') : (strings.deleteVideo||strings.delete||'Delete video');
+        remove.setAttribute('aria-label', deleteLabel + ': ' + file.name);
+        remove.textContent = deleteLabel;
         row.append(remove);
       }
       filesEl.append(row);
@@ -133,10 +135,11 @@
       setAlert(error && error.message ? error.message : (strings.error || 'Erro ao carregar a biblioteca.'), true);
     } finally { busy = false; }
   }
-  async function deleteVideo(name, button) {
+  async function deleteMedia(kind, name, button) {
     if (!name || busy) return;
-    if (typeof global.confirm === 'function' && !global.confirm(strings.confirmDeleteVideo || 'Permanently delete this video? Blocks using it will no longer play it.')) return;
+    if (typeof global.confirm === 'function' && !global.confirm((kind === 'image' ? strings.confirmDeleteImage : strings.confirmDeleteVideo) || 'Permanently delete this media file? Blocks using it will no longer display it.')) return;
     const body = new FormData();
+    body.append('kind', kind);
     body.append('name', name);
     body.append('csrf_token', String(config.csrfToken || ''));
     busy = true;
@@ -158,7 +161,7 @@
     }
     if (deleted) {
       await loadFiles();
-      setAlert(strings.deleted || 'Video removed from the Pages library.', false);
+      setAlert((kind==='image'?strings.deletedImage:strings.deletedVideo)||strings.deleted||'Media removed from the Pages library.', false);
     }
   }
 
@@ -204,7 +207,7 @@
       return;
     }
     const remove = event.target.closest('[data-media-delete]');
-    if (remove && modal.contains(remove)) { deleteVideo(remove.dataset.mediaDelete, remove); return; }
+    if (remove && modal.contains(remove)) { deleteMedia(remove.dataset.mediaDeleteKind,remove.dataset.mediaDelete,remove); return; }
     const file = event.target.closest('[data-media-path]');
     if (file && modal.contains(file)) chooseMedia(file.dataset.mediaPath);
   });

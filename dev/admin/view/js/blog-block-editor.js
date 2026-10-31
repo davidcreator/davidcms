@@ -25,9 +25,9 @@
 
   function imageInspectorCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
-    if(language.startsWith('es'))return {imageContentTitle:'Contenido de la imagen',imageContentHint:'Describe la imagen para lectores de pantalla; si es decorativa, deja vacío el texto alternativo. También puedes añadir título y leyenda.',imageStyleHeading:'Estilo de imagen',imageReplace:'Seleccionar o cambiar imagen',pageMediaUnavailable:'La biblioteca de medios de Pages no se cargó. Recarga la página o contacta al administrador.'};
-    if(language.startsWith('en'))return {imageContentTitle:'Image content',imageContentHint:'Describe the image for screen readers; leave alt text empty if it is decorative. You can also add a title and caption.',imageStyleHeading:'Image style',imageReplace:'Choose or replace image',pageMediaUnavailable:'The Pages media library did not load. Reload the page or contact an administrator.'};
-    return {imageContentTitle:'Conteúdo da imagem',imageContentHint:'Descreva a imagem para leitores de tela; deixe o texto alternativo vazio se ela for decorativa. Você também pode incluir título e legenda.',imageStyleHeading:'Estilo da imagem',imageReplace:'Selecionar ou trocar imagem',pageMediaUnavailable:'A biblioteca de mídia do Pages não carregou. Recarregue a página ou contate o administrador.'};
+    if(language.startsWith('es'))return {imageContentTitle:'Contenido de la imagen',imageContentHint:'Describe la imagen para lectores de pantalla; si es decorativa, deja vacío el texto alternativo. También puedes añadir título y leyenda.',imageStyleHeading:'Estilo de imagen',imageReplace:'Seleccionar o cambiar imagen',coverImageTitle:'Imagen de portada',coverImageHint:'Elige una imagen de la biblioteca Pages; edita el contenido en los bloques internos.',pageMediaUnavailable:'La biblioteca de medios de Pages no se cargó. Recarga la página o contacta al administrador.'};
+    if(language.startsWith('en'))return {imageContentTitle:'Image content',imageContentHint:'Describe the image for screen readers; leave alt text empty if it is decorative. You can also add a title and caption.',imageStyleHeading:'Image style',imageReplace:'Choose or replace image',coverImageTitle:'Cover image',coverImageHint:'Choose an image from the Pages library; edit cover content in its inner blocks.',pageMediaUnavailable:'The Pages media library did not load. Reload the page or contact an administrator.'};
+    return {imageContentTitle:'Conteúdo da imagem',imageContentHint:'Descreva a imagem para leitores de tela; deixe o texto alternativo vazio se ela for decorativa. Você também pode incluir título e legenda.',imageStyleHeading:'Estilo da imagem',imageReplace:'Selecionar ou trocar imagem',coverImageTitle:'Imagem de capa',coverImageHint:'Escolha uma imagem na biblioteca Pages; edite o conteúdo da capa nos blocos internos.',pageMediaUnavailable:'A biblioteca de mídia do Pages não carregou. Recarregue a página ou contate o administrador.'};
   }
 
   function videoInspectorCopy() {
@@ -1021,8 +1021,8 @@
 
     openWorkspaceMedia(kind) {
       const found=this.selectedId?this.findPath(this.state.blocks,this.selectedId):null;
-      const expected={image:'core/image',file:'core/file',audio:'core/audio',video:'core/video_file'};
-      if(!found||found.node.type!==expected[kind]){this.announceStatus(this.ui.selectBlock);return;}
+      const expected={image:['core/image','core/cover'],file:['core/file'],audio:['core/audio'],video:['core/video_file','core/video_embed']};
+      if(!found||!expected[kind]||!expected[kind].includes(found.node.type)){this.announceStatus(this.ui.selectBlock);return;}
       if(this.options.mediaPickers===false&&this.options.pageMediaPicker!==true&&!(kind==='image'&&this.options.pageImagePicker===true)){this.announceStatus(this.ui.noPicker);return;}
       const pageKind={image:'image',file:'download',audio:'audio',video:'video'}[kind];
       if(this.options.pageMediaPicker===true){this.openPageMediaPicker(pageKind,this.selectedId);return;}
@@ -2554,7 +2554,7 @@
     renderBlockToolbar(node) {
       const toolbar = this.el('div', 'rb-block-toolbar'); toolbar.setAttribute('role','toolbar'); toolbar.setAttribute('aria-label', this.label(node.type) + ' · ' + this.strings.transform);
       const path = this.findPath(this.state.blocks, node.id);
-      const labelledTextToolbar=['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/button','core/callout','core/details','core/code','core/image','core/video_embed','core/video_file','core/table'].includes(node.type);
+      const labelledTextToolbar=['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/button','core/callout','core/details','core/code','core/image','core/video_embed','core/video_file','core/cover','core/table'].includes(node.type);
       if(labelledTextToolbar)toolbar.classList.add('rb-labeled-text-toolbar');
       const drag = this.el('span','rb-drag-handle'); drag.append(this.icon('grip','rb-icon')); drag.draggable = true; drag.dataset.dragHandle = '1'; drag.title = this.strings.dragHint; drag.setAttribute('aria-hidden','true'); toolbar.append(drag,this.el('span','rb-sr-only',this.strings.dragHint));
       const up = this.button(this.strings.moveUp, 'move-up', { nodeId:node.id, showLabel:labelledTextToolbar }); up.setAttribute('aria-label', this.strings.moveUp); up.disabled = !path || path.index === 0; toolbar.append(up);
@@ -2565,6 +2565,7 @@
       const duplicate = this.button(this.strings.duplicate, 'duplicate', { nodeId:node.id, showLabel:labelledTextToolbar }); duplicate.disabled = fixedColumn || atParentLimit; toolbar.append(duplicate);
       const copy = this.button(this.strings.copyBlock, 'copy-block', { nodeId:node.id, showLabel:labelledTextToolbar }); toolbar.append(copy);
       if(node.type==='core/image'&&(this.options.mediaPickers!==false||this.options.pageImagePicker===true))toolbar.append(this.button(this.strings.imageReplace,'media',{nodeId:node.id,icon:'image',showLabel:true}));
+      if(node.type==='core/cover'&&(this.options.mediaPickers!==false||this.options.pageImagePicker===true))toolbar.append(this.button(this.strings.imageReplace,'media',{nodeId:node.id,icon:'image',showLabel:true}));
       if(node.type==='core/video_file'&&(this.options.mediaPickers!==false||this.options.pageMediaPicker===true))toolbar.append(this.button(this.strings.videoFile.choose,'video-media',{nodeId:node.id,icon:'video',showLabel:true}));
       if(node.type==='core/video_embed'&&(this.options.mediaPickers!==false||this.options.pageMediaPicker===true))toolbar.append(this.button(this.strings.videoFile.choose,'video-media',{nodeId:node.id,icon:'video',showLabel:true}));
       const customize=this.button(this.strings.customizeTab||'Personalizar','customize-block',{nodeId:node.id,icon:'settings',showLabel:labelledTextToolbar});toolbar.append(customize);
@@ -2941,7 +2942,9 @@
         addField(this.strings.media.mobileSize, 'mobile_size', n.attributes.mobile_size || 'full', 'text', Object.entries(this.strings.media.mobileSizes));
       }
       if (n.type === 'core/cover') {
-        addField(this.strings.media.source, 'src', n.attributes.src, 'text'); if (this.options.mediaPickers !== false || this.options.pageImagePicker === true) contentPanel.append(this.button(this.strings.media.placeholder, 'media'));
+        contentPanel.append(this.el('h4','rb-text-block-inspector-heading',this.strings.coverImageTitle||'Imagem de capa'),this.el('p','rb-help-text',this.strings.coverImageHint||'Escolha uma imagem na biblioteca Pages; o conteúdo da capa é editável nos blocos internos.'));
+        addField(this.strings.media.source, 'src', n.attributes.src, 'text');
+        if (this.options.mediaPickers !== false || this.options.pageImagePicker === true) contentPanel.append(this.button(this.strings.imageReplace||this.strings.media.placeholder, 'media',{nodeId:n.id,icon:'image',showLabel:true}));
         addField(this.strings.media.alt, 'alt', n.attributes.alt, 'text');
         addField(this.strings.media.alignment, 'align', n.attributes.align || 'wide', 'text', [['content',this.strings.media.alignments.content],['wide',this.strings.media.alignments.wide],['full',this.strings.media.alignments.full]]);
       }

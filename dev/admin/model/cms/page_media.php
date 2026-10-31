@@ -69,17 +69,24 @@ class Page_media extends \Reamur\System\Engine\Model {
         return ['success'=>true,'path'=>$types[$kind]['path'].$filename,'name'=>$filename,'size'=>$size,'mime'=>$mime];
     }
 
-    /** Delete one uploaded Pages video by filename only; never follows links or accepts a path. */
-    public function deletePageVideo(string $name): array {
+    /** Delete one uploaded CMS Pages image/video by filename only; never accepts paths or follows symlinks. */
+    public function deletePageMedia(string $kind,string $name): array {
+        $types=$this->allowedTypes();
+        if(!in_array($kind,['image','video'],true)||!isset($types[$kind]))return ['success'=>false,'error'=>'type'];
         $name=trim($name);
-        if($name===''||basename($name)!==$name||!preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]{0,179}\.(?:mp4|webm|ogv)$/iD',$name))return ['success'=>false,'error'=>'name'];
-        $directory=$this->mediaDirectory('video',false);
+        $extensions=array_keys($types[$kind]['mimes']);
+        $extensionPattern=implode('|',array_map(static fn(string $ext):string=>preg_quote($ext,'/'),$extensions));
+        if($name===''||basename($name)!==$name||!preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]{0,179}\.(?:'.$extensionPattern.')$/iD',$name))return ['success'=>false,'error'=>'name'];
+        $directory=$this->mediaDirectory($kind,false);
         if($directory===null)return ['success'=>false,'error'=>'root'];
         $path=$directory.DIRECTORY_SEPARATOR.$name;
         if(is_link($path)||!is_file($path))return ['success'=>false,'error'=>'not_found'];
         if(!@unlink($path))return ['success'=>false,'error'=>'delete'];
         return ['success'=>true,'name'=>$name];
     }
+
+    /** Backward-compatible wrapper for the F9-67 video-only operation. */
+    public function deletePageVideo(string $name): array { return $this->deletePageMedia('video',$name); }
 
     /** @return array<string, array<string, mixed>> */
     private function allowedTypes(): array {
