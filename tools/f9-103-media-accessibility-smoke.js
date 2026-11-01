@@ -1,0 +1,21 @@
+'use strict';
+const fs=require('fs'),vm=require('vm'),path=require('path');
+const rootDir=path.join(__dirname,'..'),source=fs.readFileSync(path.join(rootDir,'dev/admin/view/js/blog-block-editor.js'),'utf8');
+const root={document:{documentElement:{lang:'pt-br'}},location:{origin:'https://cms.example'},setTimeout,clearTimeout,setInterval,clearInterval,URL,TextEncoder,Uint8Array,console};
+const context={window:root,globalThis:root,URL,TextEncoder,Uint8Array,Intl,Map,Set,WeakMap,WeakSet,Date,Math,JSON,RegExp,Array,Object,String,Number,Boolean,Error,TypeError,Promise,console,setTimeout,clearTimeout};
+vm.runInNewContext(source,context,{filename:'blog-block-editor.js'});
+const api=root.ReamurBlogBlockEditor,run=text=>({text,marks:[],href:null}),node=(id,type,attributes={},content='',children=[])=>({id,type,attributes,content,children});
+const doc={format_version:2,blocks:[node('video-local','core/video_file',{src:'view/video/blog/clip.mp4',caption:'Visible figure caption'}),node('video-embed','core/video_embed',{url:'https://www.youtube.com/watch?v=abcdefghijk'}),node('audio','core/audio',{src:'view/audio/blog/sample.mp3'},[run('Listen to this audio')])]};
+const snapshot=JSON.stringify(doc),result=api.analyzeDocumentMediaAccessibility(doc,false);
+if(!result.valid||result.issues.length!==3)throw new Error('Expected review finding for each video/audio block: '+JSON.stringify(result));
+const byId=Object.fromEntries(result.issues.map(issue=>[issue.nodeId,issue]));
+if(byId['video-local'].code!=='video_caption_track_review'||byId['video-embed'].severity!=='warning'||byId.audio.code!=='audio_transcript_review'||byId.audio.severity!=='info')throw new Error('Video caption and audio transcript findings should have clear, appropriately advisory categories');
+if(!byId['video-local'].detail.includes('não comprova')||!byId.audio.detail.includes('não substitui'))throw new Error('Audit must distinguish visible captions/audio labels from synchronized captions/transcripts');
+if(JSON.stringify(doc)!==snapshot)throw new Error('Media accessibility audit mutated the document');
+const clean=api.analyzeDocumentMediaAccessibility({format_version:2,blocks:[node('image','core/image',{src:'image/pic.png',alt:'A useful description'})]},false);
+if(!clean.valid||clean.issues.length)throw new Error('Non-audio/video content should not generate media caption/transcript findings');
+const preflight=api.analyzeDocumentPreflight(doc,false),media=preflight.categories.find(category=>category.id==='media');
+if(!preflight.valid||!media||media.issues.length!==3||preflight.total!==3)throw new Error('Preflight must aggregate the media accessibility findings');
+for(const locale of ['pt-br','es-eu','en-us']){root.document.documentElement.lang=locale;const localized=api.analyzeDocumentMediaAccessibility(doc,false);if(localized.issues.some(issue=>!issue.title||!issue.suggestion))throw new Error('Missing localized media guidance for '+locale);}
+for(const fragment of ["tool:'media-accessibility'",'renderMediaAccessibilityAudit()','this.mediaAccessibility.tool',"icon:'video'",'categories:{accessibility'])if(!source.includes(fragment))throw new Error('Media accessibility UI/preflight integration missing: '+fragment);
+console.log('PASS: media audit flags video-caption and audio-transcript review without claiming missing resources, handles embedded/local media, preserves input, localizes guidance and feeds the preflight checklist.');

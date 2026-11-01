@@ -31,7 +31,7 @@ const serialized=JSON.stringify(issueDoc);deepFreeze(issueDoc);
 const result=api.analyzeDocumentPreflight(issueDoc,false);
 if(!result.valid)throw new Error(`Expected valid BDRE document, got ${result.errors.join(',')}`);
 const categories=Object.fromEntries(result.categories.map(c=>[c.id,c]));
-if(result.categories.length!==3)throw new Error('Expected three consolidated review areas');
+if(result.categories.length!==4)throw new Error('Expected four consolidated review areas including media accessibility');
 if(categories.accessibility.issues.length!==6)throw new Error(`Expected six accessibility findings, got ${categories.accessibility.issues.length}`);
 if(categories.links.issues.length!==4)throw new Error(`Expected four link findings, got ${categories.links.issues.length}`);
 if(categories.readability.issues.length!==3)throw new Error(`Expected three readability findings, got ${categories.readability.issues.length}`);
@@ -53,4 +53,4 @@ for(const locale of ['pt-br','es-eu','en-us']){
  const localized=api.analyzeDocumentPreflight(clean,false);
  if(localized.categories.some(c=>!c.title)||localized.categories.map(c=>c.title).join('|')===['Acessibilidade','Links e destinos','Legibilidade'].join('|')&&locale!=='pt-br')throw new Error(`Missing localized categories for ${locale}`);
 }
-console.log('PASS: preflight aggregates all three existing audits, counts warning/suggestion totals and reading metrics, preserves input, localizes categories, and handles clean/invalid BDRE documents.');
+console.log('PASS: preflight aggregates existing audits, including media accessibility, counts warning/suggestion totals and reading metrics, preserves input, localizes categories, and handles clean/invalid BDRE documents.');
