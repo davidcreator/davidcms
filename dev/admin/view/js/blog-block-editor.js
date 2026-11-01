@@ -171,6 +171,14 @@
   }
 
 
+  function internalAnchorReviewCopy() {
+    const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
+    if(language.startsWith('es'))return {tool:'Anclas internas',title:'Revisión de anclas y enlaces internos',hint:'Comprueba los enlaces de fragmento (#id) frente a los identificadores de encabezados del documento.',note:'Solo lectura y local: no visita sitios, no comprueba enlaces externos y no cambia el contenido. Los enlaces externos con fragmento no se consideran enlaces internos de esta página.',back:'Volver al editor',summary:'Enlaces internos comprobados: %1 · destinos ausentes: %2',clean:'Todos los enlaces internos comprobados apuntan a un encabezado con esa ancla.',invalid:'No se puede analizar un documento que no supera la validación BDRE.',warning:'Destino ausente',openBlock:'Localizar enlace',suggestion:'Añade una ancla al encabezado correcto o revisa el destino del enlace; esta herramienta no aplica correcciones.',detail:'El destino #%1 no coincide con ninguna ancla de encabezado del documento.',destination:'Destino: #%1'};
+    if(language.startsWith('pt'))return {tool:'Âncoras internas',title:'Revisão de âncoras e links internos',hint:'Confira os links de fragmento (#id) em relação aos identificadores dos títulos do documento.',note:'Somente leitura e local: não visita sites, não verifica links externos e não altera conteúdo. Links externos com fragmento não são tratados como links internos desta página.',back:'Voltar ao editor',summary:'Links internos verificados: %1 · destinos ausentes: %2',clean:'Todos os links internos verificados apontam para um título com essa âncora.',invalid:'Não é possível analisar um documento que não passou na validação BDRE.',warning:'Destino ausente',openBlock:'Localizar link',suggestion:'Adicione uma âncora ao título correto ou revise o destino do link; esta ferramenta não aplica correções.',detail:'O destino #%1 não corresponde a nenhuma âncora de título no documento.',destination:'Destino: #%1'};
+    return {tool:'Internal anchors',title:'Internal anchor and link review',hint:'Check fragment links (#id) against heading IDs in this document.',note:'Read-only and local: this tool does not visit websites, check external links or change content. External URLs with fragments are not treated as links within this page.',back:'Back to editor',summary:'Internal links checked: %1 · missing targets: %2',clean:'All checked internal links point to a heading with a matching anchor.',invalid:'A document that fails BDRE validation cannot be analyzed.',warning:'Missing target',openBlock:'Locate link',suggestion:'Add an anchor to the intended heading or review the link destination; this tool does not apply fixes.',detail:'Destination #%1 does not match a heading anchor in this document.',destination:'Destination: #%1'};
+  }
+
+
   function readabilityReviewCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
     if(language.startsWith('es'))return {
@@ -938,6 +946,31 @@
   }
 
 
+  function analyzeInternalAnchors(document, allowPageMedia) {
+    const validation=validateDocument(document,allowPageMedia);
+    if(!validation.valid)return {valid:false,errors:validation.errors,checked:0,issues:[]};
+    const copy=internalAnchorReviewCopy(),headings=new Map(),links=[],issues=[],seen=new Set();
+    const textOf=(node)=>Array.isArray(node.content)?node.content.map((run)=>run&&typeof run.text==='string'?run.text:'').join(''):'';
+    const visit=(nodes)=>nodes.forEach((node)=>{
+      if(node.type==='core/heading'&&typeof node.attributes.anchor==='string')headings.set(node.attributes.anchor,{nodeId:node.id,text:textOf(node).trim(),level:Number(node.attributes.level)||2});
+      const add=(destination,label)=>{
+        if(typeof destination!=='string'||!/^#[a-z][a-z0-9-]{0,79}$/.test(destination))return;
+        links.push({nodeId:node.id,type:node.type,destination:destination.slice(1),label:String(label||'').trim()});
+      };
+      if(node.type==='core/button')add(node.attributes.url,textOf(node));
+      if(Array.isArray(node.content))node.content.forEach((run)=>{if(run&&typeof run.href==='string')add(run.href,run.text);});
+      if(Array.isArray(node.children)&&node.children.length)visit(node.children);
+    });
+    visit(document.blocks);
+    links.forEach((link)=>{
+      if(headings.has(link.destination))return;
+      const key=link.nodeId+'|'+link.destination;if(seen.has(key))return;seen.add(key);
+      issues.push({code:'missing_target',severity:'warning',title:copy.warning,detail:copy.detail.replace('%1',link.destination),suggestion:copy.suggestion,nodeId:link.nodeId,type:link.type,destination:link.destination,label:link.label});
+    });
+    return {valid:true,checked:links.length,issues};
+  }
+
+
   function analyzeDocumentReadability(document, allowPageMedia) {
     const validation=validateDocument(document,allowPageMedia);
     if(!validation.valid)return {valid:false,issues:[],errors:validation.errors,wordCount:0,readingMinutes:0};
@@ -1411,6 +1444,7 @@
       this.contentModels = contentModelCopy();
       this.accessibility = accessibilityAuditCopy();
       this.linkReview = linkReviewCopy();
+      this.internalAnchorReview = internalAnchorReviewCopy();
       this.readability = readabilityReviewCopy();
       this.preflight = preflightReviewCopy();
       this.revisionCompare = revisionCompareCopy();
@@ -1682,6 +1716,7 @@
       else if(tool==='models'){this.workspaceView='models';this.previewMode=false;}
       else if(tool==='accessibility'){this.workspaceView='accessibility';this.previewMode=false;}
       else if(tool==='links'){this.workspaceView='links';this.previewMode=false;}
+      else if(tool==='internal-anchors'){this.workspaceView='internal-anchors';this.previewMode=false;}
       else if(tool==='readability'){this.workspaceView='readability';this.previewMode=false;}
       else if(tool==='preflight'){this.workspaceView='preflight';this.previewMode=false;}
       else if(tool==='revision-compare'){this.workspaceView='revision-compare';this.previewMode=false;this.revisionCompareIndex=null;}
@@ -1702,7 +1737,7 @@
         const tabs={text:'home',media:'media',review:'review',view:'view'};
         if(tabs[tool])this.activeRibbonTab=tabs[tool];
       }
-      if(['models','accessibility','links','readability','preflight','revision-compare','table-of-contents','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
+      if(['models','accessibility','links','internal-anchors','readability','preflight','revision-compare','table-of-contents','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
       this.findReplaceOpen=false;
       this.render();
       const focusTarget=Array.from(this.root.querySelectorAll('[data-action="workspace-tool"]')).find((item)=>item.dataset.tool===tool);
@@ -1761,6 +1796,7 @@
       else if (name === 'insert-content-model') this.insertContentModel(button.dataset.modelId);
       else if (name === 'accessibility-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'link-review-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
+      else if (name === 'internal-anchor-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'readability-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'preflight-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'revision-compare-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
@@ -3202,6 +3238,7 @@
         const find=this.button(this.strings.findReplaceButton||'Localizar e substituir','toggle-find-replace',{icon:'search'});find.setAttribute('aria-expanded',String(this.findReplaceOpen));g.tools.append(find);panel.append(g.group);
         g=this.renderRibbonGroup(this.accessibility.tool);const audit=this.button(this.accessibility.tool,'workspace-tool',{tool:'accessibility',icon:'check',showLabel:true});audit.dataset.workspaceTool='accessibility';g.tools.append(audit);panel.append(g.group);
         g=this.renderRibbonGroup(this.linkReview.tool);const linkAudit=this.button(this.linkReview.tool,'workspace-tool',{tool:'links',icon:'link',showLabel:true});linkAudit.dataset.workspaceTool='links';g.tools.append(linkAudit);panel.append(g.group);
+        g=this.renderRibbonGroup(this.internalAnchorReview.tool);const anchorAudit=this.button(this.internalAnchorReview.tool,'workspace-tool',{tool:'internal-anchors',icon:'link',showLabel:true});anchorAudit.dataset.workspaceTool='internal-anchors';g.tools.append(anchorAudit);panel.append(g.group);
         g=this.renderRibbonGroup(this.readability.tool);const readabilityAudit=this.button(this.readability.tool,'workspace-tool',{tool:'readability',icon:'bookOpen',showLabel:true});readabilityAudit.dataset.workspaceTool='readability';g.tools.append(readabilityAudit);panel.append(g.group);
         g=this.renderRibbonGroup(this.preflight.tool);const preflightAudit=this.button(this.preflight.tool,'workspace-tool',{tool:'preflight',icon:'checklist',showLabel:true});preflightAudit.dataset.workspaceTool='preflight';g.tools.append(preflightAudit);panel.append(g.group);
         g=this.renderRibbonGroup(this.revisionCompare.tool);const compareAudit=this.button(this.revisionCompare.tool,'workspace-tool',{tool:'revision-compare',icon:'compare',showLabel:true});compareAudit.dataset.workspaceTool='revision-compare';g.tools.append(compareAudit);panel.append(g.group);
@@ -3274,6 +3311,26 @@
         const top=this.el('div','rb-accessibility-issue-top');top.append(this.el('span','rb-accessibility-severity',issue.severity==='warning'?copy.warning:copy.info),this.el('span','rb-accessibility-block-type',this.label(issue.type)));item.append(top);
         item.append(this.el('h2','rb-accessibility-issue-title',issue.title),this.el('p','rb-accessibility-issue-detail',issue.detail),this.el('p','rb-accessibility-issue-suggestion',issue.suggestion));
         item.append(this.button(copy.openBlock,'link-review-focus',{nodeId:issue.nodeId,icon:'outline',showLabel:true}));list.append(item);
+      });
+      wrap.append(list);return wrap;
+    }
+
+
+    renderInternalAnchorReview() {
+      const copy=this.internalAnchorReview,wrap=this.el('div','rb-workspace-screen-content rb-accessibility-workspace rb-internal-anchor-review');
+      const header=this.el('div','rb-accessibility-header'),titleGroup=this.el('div','');titleGroup.append(this.el('h1','rb-workspace-screen-title',copy.title));
+      header.append(titleGroup,this.button(copy.back,'workspace-tool',{tool:'home',icon:'collapse',showLabel:true}));
+      wrap.append(header,this.el('p','rb-workspace-screen-lead',copy.hint),this.el('p','rb-accessibility-note',copy.note));
+      const result=analyzeInternalAnchors(this.state,this.allowPageMedia);
+      if(!result.valid){const warning=this.el('p','rb-workspace-warning',copy.invalid);warning.setAttribute('role','alert');wrap.append(warning);return wrap;}
+      const summary=this.el('p','rb-accessibility-summary',copy.summary.replace('%1',String(result.checked)).replace('%2',String(result.issues.length)));summary.setAttribute('role','status');summary.setAttribute('aria-live','polite');wrap.append(summary);
+      if(!result.issues.length){const success=this.el('section','rb-accessibility-empty');success.append(this.icon('check','rb-icon'),this.el('strong','',copy.clean));wrap.append(success);return wrap;}
+      const list=this.el('div','rb-accessibility-findings');list.setAttribute('role','list');
+      result.issues.forEach((issue)=>{
+        const item=this.el('article','rb-accessibility-issue rb-accessibility-issue--warning');item.setAttribute('role','listitem');
+        const top=this.el('div','rb-accessibility-issue-top');top.append(this.el('span','rb-accessibility-severity',copy.warning),this.el('span','rb-accessibility-block-type',this.label(issue.type)));item.append(top);
+        item.append(this.el('h2','rb-accessibility-issue-title',issue.detail),this.el('p','rb-accessibility-issue-detail',copy.destination.replace('%1',issue.destination)),this.el('p','rb-accessibility-issue-suggestion',issue.suggestion));
+        item.append(this.button(copy.openBlock,'internal-anchor-focus',{nodeId:issue.nodeId,icon:'outline',showLabel:true}));list.append(item);
       });
       wrap.append(list);return wrap;
     }
@@ -3484,6 +3541,8 @@
         surface.setAttribute('aria-label',this.accessibility.title);surface.append(this.renderAccessibilityAudit());
       }else if(this.workspaceView==='links'){
         surface.setAttribute('aria-label',this.linkReview.title);surface.append(this.renderLinkReview());
+      }else if(this.workspaceView==='internal-anchors'){
+        surface.setAttribute('aria-label',this.internalAnchorReview.title);surface.append(this.renderInternalAnchorReview());
       }else if(this.workspaceView==='readability'){
         surface.setAttribute('aria-label',this.readability.title);surface.append(this.renderReadabilityReview());
       }else if(this.workspaceView==='preflight'){
@@ -3604,6 +3663,7 @@
           ['review',this.strings.ribbonReview,'search'],
           ['accessibility',this.accessibility.tool,'check'],
           ['links',this.linkReview.tool,'link'],
+          ['internal-anchors',this.internalAnchorReview.tool,'link'],
           ['readability',this.readability.tool,'bookOpen'],
           ['preflight',this.preflight.tool,'checklist'],
           ['revision-compare',this.revisionCompare.tool,'compare'],
@@ -3620,7 +3680,7 @@
         workspaceTools.forEach(([tool,label,icon])=>{
           if(tool==='text'||tool==='home'){const divider=this.el('span','rb-workspace-rail-divider');divider.setAttribute('aria-hidden','true');workspaceRail.append(divider);}
           const control=this.el('button','rb-workspace-tool'); control.type='button'; control.dataset.action='workspace-tool'; control.dataset.tool=tool;
-          const workspaceViews={models:'models',accessibility:'accessibility',links:'links',readability:'readability',preflight:'preflight','revision-compare':'revision-compare','table-of-contents':'table-of-contents',library:'library',assistant:'assistant',export:'export',share:'share',help:'help'};
+          const workspaceViews={models:'models',accessibility:'accessibility',links:'links','internal-anchors':'internal-anchors',readability:'readability',preflight:'preflight','revision-compare':'revision-compare','table-of-contents':'table-of-contents',library:'library',assistant:'assistant',export:'export',share:'share',help:'help'};
           const pressed=tool==='home'?this.workspaceView==='editor'&&this.activeRibbonTab==='home':Object.prototype.hasOwnProperty.call(workspaceViews,tool)?this.workspaceView===workspaceViews[tool]:tool==='elements'?(this.activePanel==='elements'&&this.inserterOpen):tool==='structure'?this.activePanel==='structure':tool==='appearance'?(this.inspectorOpen&&!this.previewMode):tool==='text'?this.activeRibbonTab==='home':tool==='media'?this.activeRibbonTab==='media':tool==='review'?this.activeRibbonTab==='review':tool==='view'?this.activeRibbonTab==='view':false;
           control.setAttribute('aria-label',label); control.setAttribute('aria-pressed',String(pressed));
           if(tool==='elements'||tool==='appearance')control.setAttribute('aria-expanded',String(pressed));
@@ -4195,6 +4255,7 @@
     validateDocument: validateDocument,
     analyzeDocumentAccessibility: analyzeDocumentAccessibility,
     analyzeDocumentLinks: analyzeDocumentLinks,
+    analyzeInternalAnchors: analyzeInternalAnchors,
     analyzeDocumentReadability: analyzeDocumentReadability,
     analyzeDocumentPreflight: analyzeDocumentPreflight,
     compareBDREDocuments: compareBDREDocuments,
