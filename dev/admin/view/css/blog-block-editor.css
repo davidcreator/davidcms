@@ -1019,3 +1019,30 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 
 /* F9-90: crisp, heavier fullscreen glyphs matching the requested expand/collapse arrows. */
 .rb-button[data-action="toggle-fullscreen"] .rb-icon,.rb-fullscreen-done .rb-icon{stroke-width:2.5}
+
+/* F9-91 command palette: local, searchable, keyboard-first access to existing tools. */
+.rb-ribbon-head{display:flex;align-items:stretch;min-width:0;border-bottom:1px solid #dce2ed;background:#f7f8fb;border-radius:.65rem .65rem 0 0}
+.rb-ribbon-head .rb-ribbon-tabs{flex:1;min-width:0;border-bottom:0;background:transparent}
+.rb-command-palette-trigger{align-self:center;flex:0 0 auto;margin:0 .6rem;white-space:nowrap}
+.rb-command-overlay{position:fixed;inset:0;z-index:1000;display:grid;place-items:start center;overflow:auto;padding:clamp(2rem,12vh,7rem) 1rem 2rem;background:rgb(15 23 42 / 48%)}
+.rb-command-dialog{display:flex;width:min(640px,100%);max-height:min(78vh,46rem);flex-direction:column;overflow:hidden;border:1px solid #d6deeb;border-radius:.8rem;background:#fff;box-shadow:0 24px 72px rgb(15 23 42 / 28%);color:#172033}
+.rb-command-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.1rem .7rem}
+.rb-command-title{margin:0;color:#182230;font-size:1.08rem;font-weight:750}
+.rb-command-close{display:grid;width:2.2rem;height:2.2rem;place-items:center;border:1px solid #d7deea;border-radius:.45rem;background:#fff;color:#344054;font:inherit;font-size:1.35rem;line-height:1;cursor:pointer}
+.rb-command-search-wrap{display:flex;align-items:center;gap:.65rem;margin:0 1rem .75rem;padding:.72rem .8rem;border:1px solid #9aabd0;border-radius:.55rem;background:#fff;color:#4260a9}
+.rb-command-search{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#182230;font:inherit;font-size:.96rem}
+.rb-command-search:focus-visible{outline:0}
+.rb-command-results{display:flex;min-height:4rem;flex-direction:column;gap:.2rem;overflow:auto;padding:.25rem .65rem .7rem}
+.rb-command-option{display:flex;align-items:center;gap:.75rem;width:100%;min-height:3.1rem;padding:.5rem .65rem;border:1px solid transparent;border-radius:.48rem;background:#fff;color:#263244;text-align:left;font:inherit;cursor:pointer}
+.rb-command-option:hover,.rb-command-option.is-active{border-color:#c8d7f6;background:#eef3ff;color:#183d94}
+.rb-command-option:focus-visible,.rb-command-close:focus-visible{outline:3px solid #315ee8;outline-offset:2px}
+.rb-command-option>.rb-icon{width:1.12rem;height:1.12rem;color:#4967b3}
+.rb-command-option-copy{display:flex;min-width:0;flex:1;flex-direction:column;gap:.15rem}
+.rb-command-option-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.88rem;font-weight:650}
+.rb-command-option-group{color:#69768a;font-size:.72rem}
+.rb-command-option-enter{color:#77839a;font-size:.9rem}
+.rb-command-empty{margin:.8rem;padding:.9rem;color:#5b6678;text-align:center}
+.rb-command-footer{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.65rem 1rem;border-top:1px solid #e6eaf0;color:#667085;font-size:.72rem}
+.rb-command-footer kbd{padding:.2rem .45rem;border:1px solid #d5dce7;border-radius:.3rem;background:#f7f8fb;color:#39465b;font:inherit;white-space:nowrap}
+@media(max-width:560px){.rb-ribbon-head{align-items:center}.rb-command-palette-trigger{margin-inline:.3rem;padding:.38rem}.rb-command-palette-trigger .rb-button-label{max-width:5.2rem;overflow:hidden;text-overflow:ellipsis}.rb-command-dialog{max-height:84vh}.rb-command-footer{align-items:flex-start;flex-direction:column;gap:.35rem}}
+@media(forced-colors:active){.rb-command-dialog,.rb-command-close,.rb-command-search-wrap,.rb-command-option{border:1px solid CanvasText}.rb-command-option.is-active,.rb-command-option:hover{outline:2px solid Highlight}.rb-command-overlay{background:Canvas}}

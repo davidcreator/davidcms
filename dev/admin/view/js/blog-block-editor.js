@@ -137,6 +137,12 @@
       insertMedia:'Open library', documentStats:'%1 words · %2 characters · %3 blocks'
     };
   }
+  function commandPaletteCopy() {
+    const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
+    if(language.startsWith('pt'))return {title:'Paleta de comandos',open:'Comandos',placeholder:'Buscar ferramentas, ações ou blocos…',hint:'Use ↑/↓ para navegar e Enter para executar. Esc fecha.',close:'Fechar paleta de comandos',empty:'Nenhum resultado encontrado.',shortcut:'Ctrl/⌘ + Shift + P',groups:{tabs:'Abas',tools:'Ferramentas',actions:'Ações',blocks:'Inserir bloco'},find:'Localizar e substituir',undo:'Desfazer',redo:'Refazer',insert:'Inserir bloco',exportJson:'Exportar documento BDRE',preview:'Alternar pré-visualização',fullscreen:'Alternar tela cheia'};
+    if(language.startsWith('es'))return {title:'Paleta de comandos',open:'Comandos',placeholder:'Buscar herramientas, acciones o bloques…',hint:'Usa ↑/↓ para navegar y Enter para ejecutar. Esc cierra.',close:'Cerrar paleta de comandos',empty:'No se encontraron resultados.',shortcut:'Ctrl/⌘ + Shift + P',groups:{tabs:'Pestañas',tools:'Herramientas',actions:'Acciones',blocks:'Insertar bloque'},find:'Buscar y reemplazar',undo:'Deshacer',redo:'Rehacer',insert:'Insertar bloque',exportJson:'Exportar documento BDRE',preview:'Alternar vista previa',fullscreen:'Alternar pantalla completa'};
+    return {title:'Command palette',open:'Commands',placeholder:'Search tools, actions, or blocks…',hint:'Use ↑/↓ to navigate and Enter to run. Esc closes.',close:'Close command palette',empty:'No matching commands.',shortcut:'Ctrl/⌘ + Shift + P',groups:{tabs:'Ribbon tabs',tools:'Tools',actions:'Actions',blocks:'Insert block'},find:'Find and replace',undo:'Undo',redo:'Redo',insert:'Insert block',exportJson:'Export BDRE document',preview:'Toggle preview',fullscreen:'Toggle fullscreen'};
+  }
   function accessibilityAuditCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
     if(language.startsWith('es'))return {
@@ -1473,6 +1479,8 @@
       this.inspectorTab = 'content';
       this.activeRibbonTab = 'home';
       this.workspaceView = 'editor';
+      this.commandPalette = commandPaletteCopy();
+      this.commandPaletteOpen = false; this.commandPaletteQuery = ''; this.commandPaletteActiveIndex = 0;
       this.patternFilter = 'all';
       this.patternQuery = '';
       this.ui = workspaceCopy();
@@ -1535,7 +1543,7 @@
     bind() {
       global.document.addEventListener('keydown', (event) => {
         if (!this.fullscreen) return;
-        if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); this.setFullscreen(false); return; }
+        if (event.key === 'Escape') { if(this.commandPaletteOpen)return; event.preventDefault(); event.stopPropagation(); this.setFullscreen(false); return; }
         if (event.key !== 'Tab') return;
         const focusable = Array.from(this.root.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter((item) => item.getClientRects().length > 0);
         if (!focusable.length) { event.preventDefault(); this.root.focus(); return; }
@@ -1564,6 +1572,7 @@
       });
       global.document.addEventListener('selectionchange', () => this.captureInlineSelection());
       this.root.addEventListener('click', (event) => {
+        if(event.target.classList&&event.target.classList.contains('rb-command-overlay')){this.closeCommandPalette(true);return;}
         const editorLink = event.target.closest('[data-edit-content] a');
         if (editorLink) { event.preventDefault(); return; }
         const button = event.target.closest('[data-action]');
@@ -1573,6 +1582,8 @@
         if (card && this.root.contains(card)) this.selectNode(card.dataset.nodeId);
       });
       this.root.addEventListener('input', (event) => {
+        const commandSearch=event.target.closest('[data-command-palette-query]');
+        if(commandSearch){this.commandPaletteQuery=commandSearch.value;this.commandPaletteActiveIndex=0;this.updateCommandPaletteResults();return;}
         const pageContextTitle=event.target.closest('[data-page-context-title-input]');
         if(pageContextTitle){const context=this.options.workspaceContext||{},field=context.pageTitleInput;if(field){field.value=pageContextTitle.value;field.dispatchEvent(new global.Event('input',{bubbles:true}));}return;}
         const codeEditor = event.target.closest('[data-edit-code]');
@@ -1641,6 +1652,21 @@
         });
       });
       this.root.addEventListener('keydown', (event) => {
+        if((event.ctrlKey||event.metaKey)&&event.shiftKey&&!event.altKey&&String(event.key).toLowerCase()==='p'){
+          event.preventDefault();event.stopPropagation();if(this.commandPaletteOpen)this.closeCommandPalette(true);else this.openCommandPalette();return;
+        }
+        if(this.commandPaletteOpen){
+          if(event.key==='Escape'){event.preventDefault();event.stopPropagation();this.closeCommandPalette(true);return;}
+          const inCommandPicker=!!event.target.closest('[data-command-palette-query],.rb-command-option');
+          if(inCommandPicker&&(event.key==='ArrowDown'||event.key==='ArrowUp')){
+            const items=this.getFilteredCommandPaletteItems();if(items.length){event.preventDefault();this.commandPaletteActiveIndex=(this.commandPaletteActiveIndex+(event.key==='ArrowDown'?1:items.length-1))%items.length;this.updateCommandPaletteActiveItem();}return;
+          }
+          if(inCommandPicker&&event.key==='Enter'){event.preventDefault();const items=this.getFilteredCommandPaletteItems();if(items[this.commandPaletteActiveIndex])this.runCommandPaletteItem(items[this.commandPaletteActiveIndex].id);return;}
+          if(event.key==='Tab'){
+            const dialog=this.root.querySelector('.rb-command-dialog');const focusable=dialog?Array.from(dialog.querySelectorAll('input:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter((item)=>item.getClientRects().length>0):[];
+            if(focusable.length){const first=focusable[0],last=focusable[focusable.length-1];if(event.shiftKey&&(global.document.activeElement===first||!dialog.contains(global.document.activeElement))){event.preventDefault();last.focus();}else if(!event.shiftKey&&(global.document.activeElement===last||!dialog.contains(global.document.activeElement))){event.preventDefault();first.focus();}}return;
+          }
+        }
         const findPanel=event.target.closest('.rb-find-replace');
         if(findPanel && event.key==='Escape'){event.preventDefault();this.closeFindReplace();return;}
         const findField=event.target.closest('[data-find-query]');
@@ -1807,6 +1833,91 @@
       else{const eventName=kind==='file'?'blog-block-file-open':kind==='audio'?'blog-block-audio-open':'blog-block-video-open';global.document.dispatchEvent(new CustomEvent(eventName,{detail:{editor:this,nodeId:this.selectedId}}));}
     }
 
+    getCommandPaletteItems() {
+      const p=this.commandPalette,items=[];
+      const tabs=[['home',this.strings.ribbonHome||'Home'],['insert',this.strings.ribbonInsert||'Insert'],['media',this.strings.categoryMedia||'Media'],['layout',this.strings.categoryLayout||'Layout'],['review',this.strings.ribbonReview||'Review'],['view',this.strings.ribbonView||'View']];
+      tabs.forEach(([tab,label])=>items.push({id:'tab-'+tab,kind:'tab',tab,label,group:p.groups.tabs,keywords:tab+' ribbon'}));
+      const tools=[['models',this.ui.models],['accessibility',this.accessibility.tool],['links',this.linkReview.tool],['internal-anchors',this.internalAnchorReview.tool],['internal-anchor-repair',this.internalAnchorRepair.tool],['readability',this.readability.tool],['preflight',this.preflight.tool],['revision-compare',this.revisionCompare.tool],['table-of-contents',this.tableOfContents.tool],['export',this.ui.export],['help',this.ui.help]];
+      tools.forEach(([tool,label])=>items.push({id:'tool-'+tool,kind:'tool',tool,label,group:p.groups.tools,keywords:tool.replace(/-/g,' ')}));
+      items.push({id:'action-find',kind:'action',action:'toggle-find-replace',label:p.find,group:p.groups.actions,keywords:'search localizar buscar find'});
+      if(!this.locked){items.push({id:'action-undo',kind:'action',action:'undo',label:this.strings.undo,group:p.groups.actions,keywords:'desfazer undo'}, {id:'action-redo',kind:'action',action:'redo',label:this.strings.redo,group:p.groups.actions,keywords:'refazer redo'}, {id:'action-inserter',kind:'action',action:'toggle-inserter',label:this.strings.addBlock||p.insert,group:p.groups.actions,keywords:'catalog inserter blocks blocos'}, {id:'action-export',kind:'action',action:'export-document',label:p.exportJson,group:p.groups.actions,keywords:'json download backup baixar exportar'});}
+      items.push({id:'action-preview',kind:'action',action:'toggle-preview',label:p.preview,group:p.groups.actions,keywords:'preview prévia vista previa'}, {id:'action-fullscreen',kind:'action',action:'toggle-fullscreen',label:p.fullscreen,group:p.groups.actions,keywords:'fullscreen tela cheia pantalla completa'});
+      if(!this.locked){
+        const available=this.insertTypes(this.selectedId||null);
+        available.forEach((entry)=>items.push({id:'insert-'+entry.type,kind:'insert',type:entry.type,label:this.label(entry.type),group:p.groups.blocks,keywords:entry.type+' '+entry.category+' insert adicionar insertar'}));
+      }
+      return items;
+    }
+
+    getFilteredCommandPaletteItems() {
+      const query=String(this.commandPaletteQuery||'').trim().toLocaleLowerCase();
+      return this.getCommandPaletteItems().filter((item)=>!query||[item.label,item.group,item.keywords||''].join(' ').toLocaleLowerCase().includes(query));
+    }
+
+    renderCommandPaletteList() {
+      const copy=this.commandPalette,list=this.el('div','rb-command-results');list.id='rb-command-results-'+this.instance;list.setAttribute('role','listbox');list.setAttribute('aria-label',copy.title);
+      const items=this.getFilteredCommandPaletteItems();
+      if(!items.length){list.append(this.el('p','rb-command-empty',copy.empty));return list;}
+      this.commandPaletteActiveIndex=Math.max(0,Math.min(this.commandPaletteActiveIndex,items.length-1));
+      items.forEach((item,index)=>{
+        const option=this.el('button','rb-command-option'+(index===this.commandPaletteActiveIndex?' is-active':''));option.type='button';option.tabIndex=-1;option.setAttribute('role','option');option.setAttribute('aria-selected',String(index===this.commandPaletteActiveIndex));option.id='rb-command-option-'+this.instance+'-'+index;option.dataset.action='command-palette-select';option.dataset.commandId=item.id;
+        const icon=item.kind==='insert'?'plus':item.kind==='tool'?'layers':item.kind==='tab'?'outline':(ACTION_ICONS[item.action]||'spark');
+        const content=this.el('span','rb-command-option-copy');content.append(this.el('strong','rb-command-option-title',item.label),this.el('span','rb-command-option-group',item.group));
+        option.append(this.icon(icon,'rb-icon'),content,this.el('span','rb-command-option-enter','↵'));list.append(option);
+      });
+      return list;
+    }
+
+    updateCommandPaletteActiveItem() {
+      const options=Array.from(this.root.querySelectorAll('.rb-command-option'));
+      options.forEach((option,index)=>{const active=index===this.commandPaletteActiveIndex;option.classList.toggle('is-active',active);option.setAttribute('aria-selected',String(active));});
+      const input=this.root.querySelector('[data-command-palette-query]'),active=options[this.commandPaletteActiveIndex];
+      if(input){if(active)input.setAttribute('aria-activedescendant',active.id);else input.removeAttribute('aria-activedescendant');}
+      if(active&&typeof active.scrollIntoView==='function')active.scrollIntoView({block:'nearest'});
+    }
+
+    updateCommandPaletteResults() {
+      const old=this.root.querySelector('.rb-command-results');if(!old)return;
+      old.replaceWith(this.renderCommandPaletteList());this.updateCommandPaletteActiveItem();
+    }
+
+    openCommandPalette() {
+      if(this.locked&&this.initialError)return;
+      this.commandPaletteOpen=true;this.commandPaletteQuery='';this.commandPaletteActiveIndex=0;this.render();
+      const input=this.root.querySelector('[data-command-palette-query]');if(input)input.focus();
+    }
+
+    closeCommandPalette(restoreFocus) {
+      if(!this.commandPaletteOpen)return;
+      this.commandPaletteOpen=false;this.commandPaletteQuery='';this.commandPaletteActiveIndex=0;this.render();
+      if(restoreFocus!==false){const trigger=this.root.querySelector('[data-action="command-palette-open"]')||this.root.querySelector('[data-action="workspace-tool"][data-tool="home"]')||this.root.querySelector('button:not([disabled])');if(trigger)trigger.focus();else{this.root.setAttribute('tabindex','-1');this.root.focus();}}
+    }
+
+    runCommandPaletteItem(id) {
+      const item=this.getCommandPaletteItems().find((entry)=>entry.id===id);if(!item)return;
+      this.commandPaletteOpen=false;this.commandPaletteQuery='';this.commandPaletteActiveIndex=0;
+      if(item.kind==='tab'){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab=item.tab;this.findReplaceOpen=false;this.render();const tab=this.root.querySelector('[data-action="ribbon-tab"][data-tab="'+item.tab+'"]');if(tab)tab.focus();return;}
+      if(item.kind==='tool'){this.activateWorkspaceTool({dataset:{tool:item.tool}});return;}
+      this.render();
+      const button=this.el('button','');
+      if(item.kind==='insert'){this.insertAfterId=null;this.slashTrigger=null;button.dataset.type=item.type;this.action('insert',button);return;}
+      this.action(item.action,button);
+    }
+
+    renderCommandPalette() {
+      const copy=this.commandPalette,overlay=this.el('div','rb-command-overlay');overlay.setAttribute('data-command-palette-overlay','1');
+      const dialog=this.el('section','rb-command-dialog');dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','rb-command-title-'+this.instance);dialog.classList.add('rb-command-dialog');
+      const header=this.el('div','rb-command-header'),title=this.el('h2','rb-command-title',copy.title);title.id='rb-command-title-'+this.instance;
+      const close=this.el('button','rb-command-close','×');close.type='button';close.dataset.action='command-palette-close';close.setAttribute('aria-label',copy.close);close.title=copy.close;
+      header.append(title,close);
+      const searchWrap=this.el('label','rb-command-search-wrap');searchWrap.append(this.icon('search','rb-icon'));
+      const input=this.el('input','rb-command-search');input.type='search';input.value=this.commandPaletteQuery;input.placeholder=copy.placeholder;input.dataset.commandPaletteQuery='1';input.setAttribute('role','combobox');input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-expanded','true');input.setAttribute('aria-controls','rb-command-results-'+this.instance);input.setAttribute('aria-label',copy.placeholder);
+      searchWrap.append(input);
+      const list=this.renderCommandPaletteList(),active=list.querySelector('.rb-command-option');if(active)input.setAttribute('aria-activedescendant',active.id);
+      const footer=this.el('div','rb-command-footer');footer.append(this.el('span','',copy.hint),this.el('kbd','',copy.shortcut));
+      dialog.append(header,searchWrap,list,footer);overlay.append(dialog);return overlay;
+    }
+
     filterWorkspacePatterns() {
       const query=String(this.patternQuery||'').trim().toLocaleLowerCase();
       const category=this.patternFilter||'all';let count=0;
@@ -1819,7 +1930,10 @@
     }
 
     action(name, button) {
-      if (this.locked&&!['workspace-tool','toggle-fullscreen','compare-draft-revision'].includes(name)) return;
+      if (this.locked&&!['workspace-tool','toggle-fullscreen','toggle-find-replace','toggle-preview','compare-draft-revision','command-palette-open','command-palette-close','command-palette-select'].includes(name)) return;
+      if(name==='command-palette-open'){this.openCommandPalette();return;}
+      if(name==='command-palette-close'){this.closeCommandPalette(true);return;}
+      if(name==='command-palette-select'){this.runCommandPaletteItem(button.dataset.commandId);return;}
       if (name === 'insert') this.insert(button.dataset.type, button.dataset.count);
       else if (name === 'insert-pattern') this.insertPattern(button.dataset.pattern);
       else if (name === 'insert-content-model') this.insertContentModel(button.dataset.modelId);
@@ -3709,9 +3823,11 @@
       let inserterMenu=null;
       if(this.workspaceView==='editor'){
       const ribbon = this.el('section','rb-ribbon'); ribbon.setAttribute('aria-label',this.strings.editorTools);
+      const ribbonHead=this.el('div','rb-ribbon-head');
       const ribbonTabs=this.el('div','rb-ribbon-tabs'); ribbonTabs.setAttribute('role','tablist');
       [['home',this.strings.ribbonHome||'Início'],['insert',this.strings.ribbonInsert||'Inserir'],['media',this.strings.categoryMedia||'Mídia'],['layout',this.strings.categoryLayout||'Layout'],['review',this.strings.ribbonReview||'Revisar'],['view',this.strings.ribbonView||'Exibir']].forEach(([tab,label])=>{const b=this.el('button','rb-ribbon-tab',label);b.type='button';b.dataset.action='ribbon-tab';b.dataset.tab=tab;b.setAttribute('role','tab');b.setAttribute('aria-selected',String(this.activeRibbonTab===tab));b.setAttribute('aria-controls','rb-ribbon-panel-'+this.instance);b.tabIndex=this.activeRibbonTab===tab?0:-1;ribbonTabs.append(b);});
-      ribbon.append(ribbonTabs,this.renderRibbonContents()); this.root.append(ribbon);
+      const paletteTrigger=this.button(this.commandPalette.open,'command-palette-open',{icon:'search',showLabel:true});paletteTrigger.classList.add('rb-command-palette-trigger');paletteTrigger.setAttribute('aria-haspopup','dialog');paletteTrigger.setAttribute('aria-expanded',String(this.commandPaletteOpen));paletteTrigger.setAttribute('aria-keyshortcuts','Control+Shift+P Meta+Shift+P');
+      ribbonHead.append(ribbonTabs,paletteTrigger);ribbon.append(ribbonHead,this.renderRibbonContents()); this.root.append(ribbon);
       if (this.findReplaceOpen) this.root.append(this.renderFindReplacePanel());
       inserterMenu = this.renderInserter(this.activePanel === 'elements' && this.inserterOpen); inserterMenu.id = 'rb-inserter-' + this.instance;
       if(this.activePanel!=='elements'){inserterMenu.hidden=true;this.root.append(inserterMenu);}
@@ -3790,6 +3906,7 @@
       if (this.fullscreen) { const done = this.button(this.strings.fullscreenExit,'toggle-fullscreen',{icon:'collapse'}); done.classList.add('rb-fullscreen-done'); foot.append(done); }
       this.root.append(foot);
       const live = this.el('span','rb-sr-only',this.statusMessage); live.setAttribute('role','status'); live.setAttribute('aria-live','polite'); live.dataset.editorStatus = '1'; this.root.append(live);
+      if(this.commandPaletteOpen){const palette=this.renderCommandPalette();this.root.append(palette);Array.from(this.root.children).forEach((child)=>{if(child!==palette)child.setAttribute('inert','');});}
       this.updateHistoryButtons();
       this.updateClipboardButtons();
       this.updateRibbonState();
