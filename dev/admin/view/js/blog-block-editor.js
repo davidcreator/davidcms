@@ -175,6 +175,47 @@
     (BLOCK_STYLE_ATTRIBUTES[node.type]||[]).forEach((key)=>{native[key]=Object.prototype.hasOwnProperty.call(node.attributes,key)?CLONE(node.attributes[key]):null;});
     return {sourceType:node.type,appearance,native};
   }
+  function validStyleDescriptor(style) {
+    if(!style||typeof style!=='object'||Array.isArray(style)||Object.keys(style).sort().join(',')!=='appearance,native,sourceType'||typeof style.sourceType!=='string')return false;
+    const known=TYPES.some(([type])=>type===style.sourceType)||['core/list-item','core/column','core/table-row','core/table-cell'].includes(style.sourceType),allowed=BLOCK_STYLE_ATTRIBUTES[style.sourceType]||[];
+    if(!known||(style.appearance!==null&&!validBlockAppearance(style.appearance))||!style.native||typeof style.native!=='object'||Array.isArray(style.native)||Object.keys(style.native).some((key)=>!allowed.includes(key)))return false;
+    const enums={'core/paragraph':{align:['left','center','right']},'core/image':{align:['left','center','right','wide','full'],size:['small','medium','large','full'],mobile_size:['full','large','medium']},'core/video_file':{align:['left','center','right','wide','full'],size:['small','medium','large','full'],mobile_size:['full','large','medium']},'core/separator':{style:['solid','dashed','dotted'],width:[25,50,75,100],thickness:[1,2,3,4],align:['left','center','right']},'core/gallery':{columns:[2,3,4],align:['content','wide','full']},'core/cover':{align:['content','wide','full']},'core/callout':{tone:['info','success','warning','danger']},'core/spacer':{height:[16,32,48,64,96]}}[style.sourceType]||{};
+    return Object.entries(style.native).every(([key,value])=>value===null||typeof value==='string'&&value.length<=256&&(!enums[key]||enums[key].includes(value))||typeof value==='number'&&Number.isFinite(value)&&(!enums[key]||enums[key].includes(value)));
+  }
+  function serializeStylePresetExport(presets) {
+    if(!Array.isArray(presets)||presets.length>50||presets.some((item)=>!item||typeof item.name!=='string'||!item.name.trim()||item.name.length>80||/[\x00-\x1f\x7f]/.test(item.name)||!validStyleDescriptor(item.style)))return null;
+    const json=JSON.stringify({format:'bdre-style-presets',version:1,presets:presets.map((item)=>({name:item.name.trim(),style:CLONE(item.style)}))},null,2);return utf8Length(json)<=524288?json:null;
+  }
+  function parseStylePresetImport(source,existingNames) {
+    if(typeof source!=='string'||utf8Length(source)>524288)return {valid:false,errors:['style_import_too_large']};
+    let data;try{data=JSON.parse(source);}catch(_){return {valid:false,errors:['style_import_json_invalid']};}
+    if(!data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).sort().join(',')!=='format,presets,version'||data.format!=='bdre-style-presets'||data.version!==1||!Array.isArray(data.presets)||data.presets.length>100)return {valid:false,errors:['style_import_format_invalid']};
+    const names=new Set((Array.isArray(existingNames)?existingNames:[]).filter((name)=>typeof name==='string').map((name)=>name.trim().toLowerCase())),entries=[];
+    data.presets.forEach((item)=>{
+      if(!item||typeof item!=='object'||Array.isArray(item)||Object.keys(item).sort().join(',')!=='name,style'||typeof item.name!=='string'||!item.name.trim()||item.name.trim().length>80||/[\x00-\x1f\x7f]/.test(item.name)||!validStyleDescriptor(item.style)){entries.push({name:item&&typeof item.name==='string'?item.name.slice(0,80):'',style:null,status:'invalid'});return;}
+      const name=item.name.trim(),normalized=name.toLowerCase();if(names.has(normalized)){entries.push({name,style:null,status:'duplicate'});return;}names.add(normalized);entries.push({name,style:CLONE(item.style),status:'ready'});
+    });
+    return {valid:true,entries,readyCount:entries.filter((item)=>item.status==='ready').length,duplicateCount:entries.filter((item)=>item.status==='duplicate').length,invalidCount:entries.filter((item)=>item.status==='invalid').length};
+  }
+  function planStylePresetImport(parsed,currentCount) {
+    if(!parsed||!parsed.valid||!Array.isArray(parsed.entries))return {valid:false,entries:[],readyCount:0,duplicateCount:0,invalidCount:0,limitCount:0};
+    let available=Math.max(0,50-Math.max(0,Number(currentCount)||0));const entries=parsed.entries.map((item)=>{if(item.status!=='ready')return item;if(available>0){available--;return item;}return Object.assign({},item,{status:'limit'});});
+    return {valid:true,entries,readyCount:entries.filter((item)=>item.status==='ready').length,duplicateCount:entries.filter((item)=>item.status==='duplicate').length,invalidCount:entries.filter((item)=>item.status==='invalid').length,limitCount:entries.filter((item)=>item.status==='limit').length};
+  }
+  function stableStyleJson(value) {
+    if(Array.isArray(value))return '['+value.map(stableStyleJson).join(',')+']';
+    if(value&&typeof value==='object')return '{'+Object.keys(value).sort().map((key)=>JSON.stringify(key)+':'+stableStyleJson(value[key])).join(',')+'}';
+    return JSON.stringify(value);
+  }
+  function analyzeVisualConsistency(document,allowPageMedia) {
+    const validation=validateDocument(document,!!allowPageMedia);if(!validation.valid)return {valid:false,errors:validation.errors,clusters:[],variationTypes:0};
+    const types=new Map();
+    const visit=(nodes)=>nodes.forEach((node)=>{const style=captureBlockStyle(node),signature=stableStyleJson(style);if(!types.has(node.type))types.set(node.type,new Map());const variants=types.get(node.type);if(!variants.has(signature))variants.set(signature,{style,ids:[]});variants.get(signature).ids.push(node.id);visit(node.children||[]);});visit(document.blocks);
+    const clusters=[];let variationTypes=0;
+    types.forEach((variants,type)=>{if(variants.size<2)return;variationTypes++;variants.forEach((variant)=>{const keys=[...(variant.style.appearance?['appearance']:[]),...Object.keys(variant.style.native||{}).filter((key)=>variant.style.native[key]!==null)];clusters.push({type,style:variant.style,ids:variant.ids.slice(),count:variant.ids.length,styleKeys:keys});});});
+    clusters.sort((a,b)=>a.type.localeCompare(b.type)||b.count-a.count||a.ids[0].localeCompare(b.ids[0]));
+    return {valid:true,clusters,variationTypes,blockTypes:types.size};
+  }
   function applyBlockStyle(document, targetIds, style, allowPageMedia) {
     const sourceValidation=validateDocument(document,!!allowPageMedia);
     if(!sourceValidation.valid||!style||typeof style.sourceType!=='string'||!Array.isArray(targetIds)||!targetIds.length||new Set(targetIds).size!==targetIds.length)return {valid:false,errors:sourceValidation.valid?['style_targets_invalid']:sourceValidation.errors};
@@ -199,9 +240,15 @@
   }
   function blockStyleCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
-    if(language.startsWith('pt'))return {copy:'Copiar estilo',apply:'Aplicar estilo',savePreset:'Salvar como estilo',presets:'Biblioteca de estilos',presetTitle:'Estilos salvos',presetHint:'Os estilos são armazenados localmente neste navegador e separados entre Pages e Blog.',presetName:'Nome do estilo',presetPlaceholder:'Ex.: Destaque editorial',presetSave:'Salvar estilo',presetSearch:'Buscar estilos salvos',presetEmpty:'Nenhum estilo salvo ainda.',presetNoMatch:'Nenhum estilo corresponde à busca.',presetApply:'Aplicar',presetDelete:'Excluir',presetDeleteConfirm:'Excluir este estilo salvo?',presetSaved:'Estilo salvo neste navegador.',presetDeleted:'Estilo removido.',presetNameInvalid:'Informe um nome único de até 80 caracteres.',presetStorageError:'O armazenamento local não está disponível neste navegador.',title:'Prévia da aplicação de estilo',hint:'Somente atributos visuais permitidos serão aplicados. Texto, links, mídia, conteúdo, IDs e bloqueios serão preservados.',confirm:'Confirmar aplicação',cancel:'Cancelar',copied:'Estilo copiado. Selecione um ou mais blocos compatíveis para pré-visualizar a aplicação.',done:'Estilo aplicado a %1 bloco(s). A operação pode ser desfeita.',invalid:'Não foi possível aplicar este estilo; o documento não foi alterado.',incompatible:'Selecione blocos compatíveis e desbloqueados.',empty:'Sem atributos visuais para transferir.',fields:{appearance:'aparência',align:'alinhamento',size:'tamanho',mobile_size:'tamanho móvel',style:'estilo',width:'largura',thickness:'espessura',columns:'colunas',tone:'tom',height:'altura'}};
-    if(language.startsWith('es'))return {copy:'Copiar estilo',apply:'Aplicar estilo',savePreset:'Guardar como estilo',presets:'Biblioteca de estilos',presetTitle:'Estilos guardados',presetHint:'Los estilos se guardan localmente en este navegador y se separan entre Pages y Blog.',presetName:'Nombre del estilo',presetPlaceholder:'Ej.: Destacado editorial',presetSave:'Guardar estilo',presetSearch:'Buscar estilos guardados',presetEmpty:'Aún no hay estilos guardados.',presetNoMatch:'No hay estilos que coincidan con la búsqueda.',presetApply:'Aplicar',presetDelete:'Eliminar',presetDeleteConfirm:'¿Eliminar este estilo guardado?',presetSaved:'Estilo guardado en este navegador.',presetDeleted:'Estilo eliminado.',presetNameInvalid:'Escribe un nombre único de hasta 80 caracteres.',presetStorageError:'El almacenamiento local no está disponible en este navegador.',title:'Vista previa de aplicación de estilo',hint:'Solo se aplicarán atributos visuales permitidos. Se conservarán el texto, enlaces, medios, contenido, ID y bloqueos.',confirm:'Confirmar aplicación',cancel:'Cancelar',copied:'Estilo copiado. Selecciona uno o varios bloques compatibles para previsualizar la aplicación.',done:'Estilo aplicado a %1 bloque(s). La operación se puede deshacer.',invalid:'No se pudo aplicar este estilo; no se modificó el documento.',incompatible:'Selecciona bloques compatibles y desbloqueados.',empty:'No hay atributos visuales para transferir.',fields:{appearance:'apariencia',align:'alineación',size:'tamaño',mobile_size:'tamaño móvil',style:'estilo',width:'ancho',thickness:'grosor',columns:'columnas',tone:'tono',height:'altura'}};
-    return {copy:'Copy style',apply:'Apply style',savePreset:'Save as style preset',presets:'Style library',presetTitle:'Saved styles',presetHint:'Styles are stored locally in this browser and kept separate for Pages and Blog.',presetName:'Style name',presetPlaceholder:'e.g. Editorial highlight',presetSave:'Save style',presetSearch:'Search saved styles',presetEmpty:'No saved styles yet.',presetNoMatch:'No saved styles match your search.',presetApply:'Apply',presetDelete:'Delete',presetDeleteConfirm:'Delete this saved style?',presetSaved:'Style saved in this browser.',presetDeleted:'Style deleted.',presetNameInvalid:'Enter a unique name up to 80 characters.',presetStorageError:'Local storage is unavailable in this browser.',title:'Style application preview',hint:'Only permitted visual attributes will be applied. Text, links, media, content, IDs, and lock states stay unchanged.',confirm:'Confirm apply',cancel:'Cancel',copied:'Style copied. Select one or more compatible blocks to preview the application.',done:'Style applied to %1 block(s). This can be undone.',invalid:'Could not apply this style; the document was not changed.',incompatible:'Select compatible, unlocked blocks.',empty:'No visual attributes to transfer.',fields:{appearance:'appearance',align:'alignment',size:'size',mobile_size:'mobile size',style:'style',width:'width',thickness:'thickness',columns:'columns',tone:'tone',height:'height'}};
+    if(language.startsWith('pt'))return {copy:'Copiar estilo',apply:'Aplicar estilo',savePreset:'Salvar como estilo',presets:'Biblioteca de estilos',presetTitle:'Estilos salvos',presetHint:'Os estilos são armazenados localmente neste navegador e separados entre Pages e Blog.',presetName:'Nome do estilo',presetPlaceholder:'Ex.: Destaque editorial',presetSave:'Salvar estilo',presetSearch:'Buscar estilos salvos',presetEmpty:'Nenhum estilo salvo ainda.',presetNoMatch:'Nenhum estilo corresponde à busca.',presetApply:'Aplicar',presetDelete:'Excluir',presetDeleteConfirm:'Excluir este estilo salvo?',presetExport:'Exportar JSON',presetImport:'Importar JSON',importTitle:'Prévia da importação de estilos',importHint:'Somente presets válidos e não repetidos serão adicionados a esta biblioteca local.',importSummary:'Prontos: %1 · repetidos: %2 · inválidos: %3 · fora do limite: %4',importReady:'Pronto para importar',importDuplicate:'Nome repetido; será ignorado',importInvalid:'Formato ou atributos inválidos; será ignorado',importLimit:'Limite de 50 presets; será ignorado',importConfirm:'Importar estilos',importCancel:'Cancelar',importInvalidFile:'Arquivo JSON de estilos inválido ou incompatível.',importDone:'%1 estilo(s) importado(s).',exportDone:'Arquivo JSON dos estilos baixado.',presetSaved:'Estilo salvo neste navegador.',presetDeleted:'Estilo removido.',presetNameInvalid:'Informe um nome único de até 80 caracteres.',presetStorageError:'O armazenamento local não está disponível neste navegador.',title:'Prévia da aplicação de estilo',hint:'Somente atributos visuais permitidos serão aplicados. Texto, links, mídia, conteúdo, IDs e bloqueios serão preservados.',confirm:'Confirmar aplicação',cancel:'Cancelar',copied:'Estilo copiado. Selecione um ou mais blocos compatíveis para pré-visualizar a aplicação.',done:'Estilo aplicado a %1 bloco(s). A operação pode ser desfeita.',invalid:'Não foi possível aplicar este estilo; o documento não foi alterado.',incompatible:'Selecione blocos compatíveis e desbloqueados.',empty:'Sem atributos visuais para transferir.',fields:{appearance:'aparência',align:'alinhamento',size:'tamanho',mobile_size:'tamanho móvel',style:'estilo',width:'largura',thickness:'espessura',columns:'colunas',tone:'tom',height:'altura'}};
+    if(language.startsWith('es'))return {copy:'Copiar estilo',apply:'Aplicar estilo',savePreset:'Guardar como estilo',presets:'Biblioteca de estilos',presetTitle:'Estilos guardados',presetHint:'Los estilos se guardan localmente en este navegador y se separan entre Pages y Blog.',presetName:'Nombre del estilo',presetPlaceholder:'Ej.: Destacado editorial',presetSave:'Guardar estilo',presetSearch:'Buscar estilos guardados',presetEmpty:'Aún no hay estilos guardados.',presetNoMatch:'No hay estilos que coincidan con la búsqueda.',presetApply:'Aplicar',presetDelete:'Eliminar',presetDeleteConfirm:'¿Eliminar este estilo guardado?',presetExport:'Exportar JSON',presetImport:'Importar JSON',importTitle:'Vista previa de importación de estilos',importHint:'Solo se añadirán a esta biblioteca local los presets válidos y no duplicados.',importSummary:'Listos: %1 · repetidos: %2 · inválidos: %3 · fuera del límite: %4',importReady:'Listo para importar',importDuplicate:'Nombre repetido; se omitirá',importInvalid:'Formato o atributos inválidos; se omitirá',importLimit:'Límite de 50 presets; se omitirá',importConfirm:'Importar estilos',importCancel:'Cancelar',importInvalidFile:'El archivo JSON de estilos no es válido o compatible.',importDone:'%1 estilo(s) importado(s).',exportDone:'Archivo JSON de estilos descargado.',presetSaved:'Estilo guardado en este navegador.',presetDeleted:'Estilo eliminado.',presetNameInvalid:'Escribe un nombre único de hasta 80 caracteres.',presetStorageError:'El almacenamiento local no está disponible en este navegador.',title:'Vista previa de aplicación de estilo',hint:'Solo se aplicarán atributos visuales permitidos. Se conservarán el texto, enlaces, medios, contenido, ID y bloqueos.',confirm:'Confirmar aplicación',cancel:'Cancelar',copied:'Estilo copiado. Selecciona uno o varios bloques compatibles para previsualizar la aplicación.',done:'Estilo aplicado a %1 bloque(s). La operación se puede deshacer.',invalid:'No se pudo aplicar este estilo; no se modificó el documento.',incompatible:'Selecciona bloques compatibles y desbloqueados.',empty:'No hay atributos visuales para transferir.',fields:{appearance:'apariencia',align:'alineación',size:'tamaño',mobile_size:'tamaño móvil',style:'estilo',width:'ancho',thickness:'grosor',columns:'columnas',tone:'tono',height:'altura'}};
+    return {copy:'Copy style',apply:'Apply style',savePreset:'Save as style preset',presets:'Style library',presetTitle:'Saved styles',presetHint:'Styles are stored locally in this browser and kept separate for Pages and Blog.',presetName:'Style name',presetPlaceholder:'e.g. Editorial highlight',presetSave:'Save style',presetSearch:'Search saved styles',presetEmpty:'No saved styles yet.',presetNoMatch:'No saved styles match your search.',presetApply:'Apply',presetDelete:'Delete',presetDeleteConfirm:'Delete this saved style?',presetExport:'Export JSON',presetImport:'Import JSON',importTitle:'Style import preview',importHint:'Only valid, non-duplicate presets will be added to this local library.',importSummary:'Ready: %1 · duplicates: %2 · invalid: %3 · over limit: %4',importReady:'Ready to import',importDuplicate:'Duplicate name; will be skipped',importInvalid:'Invalid format or attributes; will be skipped',importLimit:'50-preset limit; will be skipped',importConfirm:'Import styles',importCancel:'Cancel',importInvalidFile:'The style JSON file is invalid or incompatible.',importDone:'%1 style(s) imported.',exportDone:'Style JSON file downloaded.',presetSaved:'Style saved in this browser.',presetDeleted:'Style deleted.',presetNameInvalid:'Enter a unique name up to 80 characters.',presetStorageError:'Local storage is unavailable in this browser.',title:'Style application preview',hint:'Only permitted visual attributes will be applied. Text, links, media, content, IDs, and lock states stay unchanged.',confirm:'Confirm apply',cancel:'Cancel',copied:'Style copied. Select one or more compatible blocks to preview the application.',done:'Style applied to %1 block(s). This can be undone.',invalid:'Could not apply this style; the document was not changed.',incompatible:'Select compatible, unlocked blocks.',empty:'No visual attributes to transfer.',fields:{appearance:'appearance',align:'alignment',size:'size',mobile_size:'mobile size',style:'style',width:'width',thickness:'thickness',columns:'columns',tone:'tone',height:'height'}};
+  }
+  function visualConsistencyCopy() {
+    const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
+    if(language.startsWith('pt'))return {tool:'Consistência visual',title:'Auditoria de consistência visual',hint:'Compara atributos visuais permitidos entre blocos do mesmo tipo. A análise é somente leitura e não altera o documento.',summary:'Tipos com variações: %1 · grupos de estilo: %2',empty:'Nenhuma variação visual foi encontrada entre blocos do mesmo tipo.',invalid:'O documento precisa passar na validação BDRE antes da auditoria.',variant:'Variação',count:'%1 bloco(s)',fields:'Atributos visuais',preset:'Comparar com estilo salvo',locked:'Desbloqueie todos os blocos deste grupo antes de aplicar um preset.',home:'Voltar ao editor',locate:'Localizar primeiro bloco',lockedCount:'%1 bloco(s) bloqueado(s)'};
+    if(language.startsWith('es'))return {tool:'Coherencia visual',title:'Auditoría de coherencia visual',hint:'Compara atributos visuales permitidos entre bloques del mismo tipo. El análisis es de solo lectura y no modifica el documento.',summary:'Tipos con variaciones: %1 · grupos de estilo: %2',empty:'No se encontraron variaciones visuales entre bloques del mismo tipo.',invalid:'El documento debe superar la validación BDRE antes de la auditoría.',variant:'Variación',count:'%1 bloque(s)',fields:'Atributos visuales',preset:'Comparar con un estilo guardado',locked:'Desbloquea todos los bloques de este grupo antes de aplicar un preset.',home:'Volver al editor',locate:'Localizar primer bloque',lockedCount:'%1 bloque(s) bloqueado(s)'};
+    return {tool:'Visual consistency',title:'Visual consistency audit',hint:'Compares permitted visual attributes across blocks of the same type. This is read-only and never changes the document.',summary:'Types with variations: %1 · style groups: %2',empty:'No visual variations were found among blocks of the same type.',invalid:'The document must pass BDRE validation before this audit.',variant:'Style variation',count:'%1 block(s)',fields:'Visual attributes',preset:'Compare with saved style',locked:'Unlock every block in this group before applying a preset.',home:'Back to editor',locate:'Locate first block',lockedCount:'%1 locked block(s)'}
   }
   function blockLockCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
@@ -1647,12 +1694,12 @@
       this.commandPalette = commandPaletteCopy();
       this.commandPaletteOpen = false; this.commandPaletteQuery = ''; this.commandPaletteActiveIndex = 0;
       this.groupSelection = groupSelectionCopy(); this.groupSelectionIds = []; this.groupSelectionConfirmOpen = false; this.groupSelectionMode = 'group'; this.groupSelectionLabel = '';
-      this.ungroupCopy=ungroupCopy();this.blockLockCopy=blockLockCopy();this.blockStyleCopy=blockStyleCopy();this.styleClipboard=null;this.styleConfirmOpen=false;this.styleTargetIds=[];this.styleReturnTargetId=null;this.stylePresetLibraryOpen=false;this.stylePresetSaveOpen=false;this.stylePresetQuery='';this.stylePresetTargetIds=[];this.stylePresetReturnTargetId=null;this.stylePresetDraft=null;this.stylePresetStorageError=false;this.lockTransitionId=null;this.blockClipboardSourceId=null;this.ungroupConfirmOpen=false;this.ungroupNodeId=null;
+      this.ungroupCopy=ungroupCopy();this.blockLockCopy=blockLockCopy();this.blockStyleCopy=blockStyleCopy();this.styleClipboard=null;this.styleConfirmOpen=false;this.styleTargetIds=[];this.styleReturnTargetId=null;this.stylePresetLibraryOpen=false;this.stylePresetSaveOpen=false;this.stylePresetQuery='';this.stylePresetTargetIds=[];this.stylePresetReturnTargetId=null;this.stylePresetReturnWorkspaceView=null;this.stylePresetReturnClusterIndex=null;this.stylePresetDraft=null;this.stylePresetStorageError=false;this.stylePresetImportOpen=false;this.stylePresetImportSource='';this.stylePresetImportPreview=null;this.lockTransitionId=null;this.blockClipboardSourceId=null;this.ungroupConfirmOpen=false;this.ungroupNodeId=null;
       this.patternFilter = 'all';
       this.patternQuery = '';
       this.ui = workspaceCopy();
       this.contentModels = contentModelCopy();
-      this.accessibility = accessibilityAuditCopy();
+      this.accessibility = accessibilityAuditCopy();this.visualConsistency=visualConsistencyCopy();this.visualConsistencyClusters=[];
       this.linkReview = linkReviewCopy();
       this.internalAnchorReview = internalAnchorReviewCopy();
       this.internalAnchorRepair = internalAnchorRepairCopy();
@@ -1710,7 +1757,7 @@
     bind() {
       global.document.addEventListener('keydown', (event) => {
         if (!this.fullscreen) return;
-        if (event.key === 'Escape') { if(this.commandPaletteOpen||this.groupSelectionConfirmOpen||this.ungroupConfirmOpen||this.styleConfirmOpen||this.stylePresetLibraryOpen||this.stylePresetSaveOpen)return; event.preventDefault(); event.stopPropagation(); this.setFullscreen(false); return; }
+        if (event.key === 'Escape') { if(this.commandPaletteOpen||this.groupSelectionConfirmOpen||this.ungroupConfirmOpen||this.styleConfirmOpen||this.stylePresetLibraryOpen||this.stylePresetSaveOpen||this.stylePresetImportOpen)return; event.preventDefault(); event.stopPropagation(); this.setFullscreen(false); return; }
         if (event.key !== 'Tab') return;
         const focusable = Array.from(this.root.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter((item) => item.getClientRects().length > 0);
         if (!focusable.length) { event.preventDefault(); this.root.focus(); return; }
@@ -1739,6 +1786,7 @@
       });
       global.document.addEventListener('selectionchange', () => this.captureInlineSelection());
       this.root.addEventListener('click', (event) => {
+        if(event.target.classList&&event.target.classList.contains('rb-style-preset-import-overlay')){this.closeStylePresetImport();return;}
         if(event.target.classList&&event.target.classList.contains('rb-style-presets-overlay')){if(this.stylePresetLibraryOpen)this.closeStylePresetLibrary();else this.closeStylePresetSave();return;}
         if(event.target.classList&&event.target.classList.contains('rb-style-confirm-overlay')){this.closeStylePreview();return;}
         if(event.target.classList&&event.target.classList.contains('rb-ungroup-confirm-overlay')){this.closeUngroupPreview();return;}
@@ -1779,6 +1827,7 @@
         this.captureInlineSelection();
       });
       this.root.addEventListener('change', (event) => {
+        const stylePresetFile=event.target.closest('[data-style-preset-import-file]');if(stylePresetFile){const file=stylePresetFile.files&&stylePresetFile.files[0];stylePresetFile.value='';if(file)this.readStylePresetImport(file);return;}
         const repairTarget=event.target.closest('[data-anchor-repair-target]');
         if(repairTarget){this.anchorRepairSelections[repairTarget.dataset.repairKey]=repairTarget.value;this.render();const focus=Array.from(this.root.querySelectorAll('[data-anchor-repair-target]')).find((input)=>input.dataset.repairKey===repairTarget.dataset.repairKey);if(focus)focus.focus();return;}
         const tocLevel=event.target.closest('[data-toc-level]');
@@ -1825,6 +1874,11 @@
         });
       });
       this.root.addEventListener('keydown', (event) => {
+        if(this.stylePresetImportOpen){
+          if(event.key==='Escape'){event.preventDefault();event.stopPropagation();this.closeStylePresetImport();return;}
+          if(event.key==='Tab'){const dialog=this.root.querySelector('.rb-style-preset-import-dialog'),focusable=dialog?Array.from(dialog.querySelectorAll('button:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter((item)=>item.getClientRects().length>0):[];if(focusable.length){const first=focusable[0],last=focusable[focusable.length-1];if(event.shiftKey&&(global.document.activeElement===first||!dialog.contains(global.document.activeElement))){event.preventDefault();last.focus();}else if(!event.shiftKey&&(global.document.activeElement===last||!dialog.contains(global.document.activeElement))){event.preventDefault();first.focus();}}return;}
+          return;
+        }
         if(this.stylePresetLibraryOpen||this.stylePresetSaveOpen){
           if(event.key==='Escape'){event.preventDefault();event.stopPropagation();if(this.stylePresetLibraryOpen)this.closeStylePresetLibrary();else this.closeStylePresetSave();return;}
           if(event.key==='Tab'){const dialog=this.root.querySelector('.rb-style-presets-dialog,.rb-style-preset-save-dialog'),focusable=dialog?Array.from(dialog.querySelectorAll('input:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter((item)=>item.getClientRects().length>0):[];if(focusable.length){const first=focusable[0],last=focusable[focusable.length-1];if(event.shiftKey&&(global.document.activeElement===first||!dialog.contains(global.document.activeElement))){event.preventDefault();last.focus();}else if(!event.shiftKey&&(global.document.activeElement===last||!dialog.contains(global.document.activeElement))){event.preventDefault();first.focus();}}return;}
@@ -1975,6 +2029,7 @@
       if(tool==='home'){this.workspaceView='editor';this.activeRibbonTab='home';this.previewMode=false;}
       else if(tool==='models'){this.workspaceView='models';this.previewMode=false;}
       else if(tool==='accessibility'){this.workspaceView='accessibility';this.previewMode=false;}
+      else if(tool==='visual-consistency'){this.workspaceView='visual-consistency';this.previewMode=false;}
       else if(tool==='links'){this.workspaceView='links';this.previewMode=false;}
       else if(tool==='internal-anchors'){this.workspaceView='internal-anchors';this.previewMode=false;}
       else if(tool==='internal-anchor-repair'){this.workspaceView='internal-anchor-repair';this.previewMode=false;}
@@ -1998,7 +2053,7 @@
         const tabs={text:'home',media:'media',review:'review',view:'view'};
         if(tabs[tool])this.activeRibbonTab=tabs[tool];
       }
-      if(['models','accessibility','links','internal-anchors','internal-anchor-repair','readability','preflight','revision-compare','table-of-contents','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
+      if(['models','accessibility','visual-consistency','links','internal-anchors','internal-anchor-repair','readability','preflight','revision-compare','table-of-contents','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
       this.findReplaceOpen=false;
       this.render();
       const focusTarget=Array.from(this.root.querySelectorAll('[data-action="workspace-tool"]')).find((item)=>item.dataset.tool===tool);
@@ -2166,11 +2221,7 @@
 
     isValidStoredStylePreset(item) {
       if(!item||typeof item!=='object'||typeof item.id!=='string'||!/^style-[A-Za-z0-9_-]{1,80}$/.test(item.id)||typeof item.name!=='string'||!item.name.trim()||item.name.length>80||!item.style||typeof item.style!=='object')return false;
-      const known=TYPES.some(([type])=>type===item.style.sourceType)||['core/list-item','core/column','core/table-row','core/table-cell'].includes(item.style.sourceType);if(!known)return false;
-      const style=item.style,allowed=BLOCK_STYLE_ATTRIBUTES[style.sourceType]||[];
-      if(style.appearance!==null&&style.appearance!==undefined&&!validBlockAppearance(style.appearance))return false;
-      if(!style.native||typeof style.native!=='object'||Array.isArray(style.native)||Object.keys(style.native).some((key)=>!allowed.includes(key)))return false;
-      return Object.values(style.native).every((value)=>value===null||['string','number','boolean'].includes(typeof value));
+      return validStyleDescriptor(item.style);
     }
 
     readStylePresets() {
@@ -2219,21 +2270,21 @@
       return changed;
     }
 
-    openStylePresetLibrary(nodeId,useSelection) {
-      const ids=useSelection&&this.groupSelectionIds.length?this.groupSelectionIds.slice():[nodeId||this.selectedId];
+    openStylePresetLibrary(nodeId,useSelection,idsOverride,returnView,returnClusterIndex) {
+      const ids=Array.isArray(idsOverride)?idsOverride.slice():(useSelection&&this.groupSelectionIds.length?this.groupSelectionIds.slice():[nodeId||this.selectedId]);
       if(!this.stylePresetStorageKey()){this.announceStatus(this.blockStyleCopy.presetStorageError);return;}
       if(!ids.length||ids.some((id)=>this.isNodeEffectivelyLocked(id))){this.announceStatus(this.blockLockCopy.denied);return;}
       this.readStylePresets();if(this.stylePresetStorageError){this.announceStatus(this.blockStyleCopy.presetStorageError);return;}
-      this.stylePresetTargetIds=ids;this.stylePresetReturnTargetId=ids[0];this.stylePresetQuery='';this.stylePresetLibraryOpen=true;this.render();const search=this.root.querySelector('[data-style-preset-query]');if(search)search.focus();
+      this.stylePresetTargetIds=ids;this.stylePresetReturnTargetId=ids[0];this.stylePresetReturnWorkspaceView=returnView||null;this.stylePresetReturnClusterIndex=returnClusterIndex===undefined?null:String(returnClusterIndex);this.stylePresetQuery='';this.stylePresetLibraryOpen=true;this.render();const search=this.root.querySelector('[data-style-preset-query]');if(search)search.focus();
     }
 
     closeStylePresetLibrary() {
-      if(!this.stylePresetLibraryOpen)return;const id=this.stylePresetReturnTargetId;this.stylePresetLibraryOpen=false;this.stylePresetTargetIds=[];this.stylePresetReturnTargetId=null;this.stylePresetQuery='';this.render();const trigger=Array.from(this.root.querySelectorAll('[data-action="open-style-presets"]')).find((item)=>item.dataset.nodeId===id)||this.root.querySelector('[data-action="workspace-tool"][data-tool="structure"]');if(trigger)trigger.focus();
+      if(!this.stylePresetLibraryOpen)return;const id=this.stylePresetReturnTargetId,returnView=this.stylePresetReturnWorkspaceView,clusterIndex=this.stylePresetReturnClusterIndex;this.stylePresetLibraryOpen=false;this.stylePresetTargetIds=[];this.stylePresetReturnTargetId=null;this.stylePresetReturnWorkspaceView=null;this.stylePresetReturnClusterIndex=null;this.stylePresetQuery='';if(returnView)this.workspaceView=returnView;this.render();const trigger=clusterIndex!==null?this.root.querySelector('[data-action="visual-consistency-presets"][data-cluster-index="'+clusterIndex+'"]'):(Array.from(this.root.querySelectorAll('[data-action="open-style-presets"]')).find((item)=>item.dataset.nodeId===id)||this.root.querySelector('[data-action="workspace-tool"][data-tool="structure"]'));if(trigger)trigger.focus();
     }
 
     applySavedStylePreset(presetId) {
       const preset=this.readStylePresets().find((item)=>item.id===presetId);if(!preset||!this.canApplyStyleToIds(this.stylePresetTargetIds,preset.style)){this.announceStatus(this.blockStyleCopy.incompatible);return;}
-      const targets=this.stylePresetTargetIds.slice();this.styleClipboard=CLONE(preset.style);this.stylePresetLibraryOpen=false;this.stylePresetTargetIds=[];this.stylePresetReturnTargetId=null;this.stylePresetQuery='';this.openBlockStylePreview(null,false,targets);
+      const targets=this.stylePresetTargetIds.slice();this.styleClipboard=CLONE(preset.style);this.stylePresetLibraryOpen=false;this.stylePresetTargetIds=[];this.stylePresetReturnTargetId=null;this.stylePresetReturnWorkspaceView=null;this.stylePresetReturnClusterIndex=null;this.stylePresetQuery='';this.workspaceView='editor';this.openBlockStylePreview(null,false,targets);
     }
 
     deleteSavedStylePreset(presetId) {
@@ -2267,7 +2318,44 @@
         const actions=this.el('div','rb-style-preset-actions'),apply=this.button(copy.presetApply,'apply-saved-style-preset',{presetId:preset.id,icon:'check',showLabel:true});apply.disabled=!this.canApplyStyleToIds(this.stylePresetTargetIds,preset.style);actions.append(apply,this.button(copy.presetDelete,'delete-saved-style-preset',{presetId:preset.id,icon:'trash',showLabel:true}));card.append(actions);list.append(card);
       });
       const noMatch=this.el('p','rb-muted',copy.presetNoMatch||copy.presetEmpty);noMatch.dataset.stylePresetNoMatch='1';noMatch.hidden=true;list.append(noMatch);dialog.append(list);
-      const actions=this.el('div','rb-group-confirm-actions');actions.append(this.button(copy.cancel,'style-preset-library-close',{icon:'close',showLabel:true}));dialog.append(actions);overlay.append(dialog);return overlay;
+      const actions=this.el('div','rb-group-confirm-actions');actions.append(this.button(copy.presetExport,'export-style-presets',{icon:'file',showLabel:true}),this.button(copy.presetImport,'choose-style-preset-import',{icon:'plus',showLabel:true}),this.button(copy.cancel,'style-preset-library-close',{icon:'close',showLabel:true}));
+      const file=this.el('input','');file.type='file';file.accept='.json,application/json';file.dataset.stylePresetImportFile='1';file.setAttribute('aria-label',copy.presetImport);file.hidden=true;file.tabIndex=-1;dialog.append(actions,file);overlay.append(dialog);return overlay;
+    }
+
+    exportStylePresets() {
+      const presets=this.readStylePresets();if(this.stylePresetStorageError){this.announceStatus(this.blockStyleCopy.presetStorageError);return false;}
+      const json=serializeStylePresetExport(presets);if(!json||!global.Blob||!global.URL||typeof global.URL.createObjectURL!=='function'){this.announceStatus(this.blockStyleCopy.presetStorageError);return false;}
+      try{const blob=new global.Blob([json],{type:'application/json;charset=utf-8'}),url=global.URL.createObjectURL(blob),link=global.document.createElement('a');link.href=url;link.download='bdre-style-presets-'+new Date().toISOString().slice(0,10)+'.json';link.hidden=true;global.document.body.appendChild(link);link.click();link.remove();global.setTimeout(()=>global.URL.revokeObjectURL(url),1000);this.announceStatus(this.blockStyleCopy.exportDone);return true;}catch(_){this.announceStatus(this.blockStyleCopy.presetStorageError);return false;}
+    }
+
+    async readStylePresetImport(file) {
+      const copy=this.blockStyleCopy,name=String(file&&file.name||'');if(!file||! /\.json$/i.test(name)||Number(file.size)>524288){this.announceStatus(copy.importInvalidFile);return false;}
+      let source='';try{source=await file.text();}catch(_){this.announceStatus(copy.importInvalidFile);return false;}
+      const existing=this.readStylePresets();if(this.stylePresetStorageError){this.announceStatus(copy.presetStorageError);return false;}
+      const parsed=parseStylePresetImport(source,existing.map((item)=>item.name));if(!parsed.valid){this.announceStatus(copy.importInvalidFile);return false;}
+      this.stylePresetImportSource=source;this.stylePresetImportPreview=planStylePresetImport(parsed,existing.length);this.stylePresetLibraryOpen=false;this.stylePresetImportOpen=true;this.render();const cancel=this.root.querySelector('[data-action="style-preset-import-cancel"]');if(cancel)cancel.focus();return true;
+    }
+
+    closeStylePresetImport() {
+      if(!this.stylePresetImportOpen)return;this.stylePresetImportOpen=false;this.stylePresetImportSource='';this.stylePresetImportPreview=null;this.stylePresetLibraryOpen=true;this.render();const input=this.root.querySelector('[data-style-preset-query]');if(input)input.focus();
+    }
+
+    confirmStylePresetImport() {
+      if(!this.stylePresetImportOpen||!this.stylePresetImportSource)return;
+      const existing=this.readStylePresets();if(this.stylePresetStorageError){this.announceStatus(this.blockStyleCopy.presetStorageError);return;}
+      const parsed=parseStylePresetImport(this.stylePresetImportSource,existing.map((item)=>item.name)),plan=planStylePresetImport(parsed,existing.length);
+      if(!plan.valid||!plan.readyCount){this.announceStatus(this.blockStyleCopy.importInvalidFile);return;}
+      const merged=existing.slice();plan.entries.filter((item)=>item.status==='ready').forEach((item)=>{let id;do{id='style-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);}while(merged.some((preset)=>preset.id===id));merged.push({id,name:item.name,style:CLONE(item.style),createdAt:Date.now()});});
+      if(!this.writeStylePresets(merged)){this.announceStatus(this.blockStyleCopy.presetStorageError);return;}
+      const count=plan.readyCount;this.stylePresetImportOpen=false;this.stylePresetImportSource='';this.stylePresetImportPreview=null;this.stylePresetLibraryOpen=true;this.render();const search=this.root.querySelector('[data-style-preset-query]');if(search)search.focus();this.announceStatus(this.blockStyleCopy.importDone.replace('%1',String(count)));
+    }
+
+    renderStylePresetImportPreview() {
+      const copy=this.blockStyleCopy,plan=this.stylePresetImportPreview,overlay=this.el('div','rb-group-confirm-overlay rb-style-preset-import-overlay'),dialog=this.el('section','rb-group-confirm-dialog rb-style-preset-import-dialog');dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','rb-style-preset-import-title-'+this.instance);
+      const title=this.el('h2','rb-group-confirm-title',copy.importTitle);title.id='rb-style-preset-import-title-'+this.instance;dialog.append(title,this.el('p','rb-group-confirm-lead',copy.importHint));
+      const summary=plan?copy.importSummary.replace('%1',String(plan.readyCount)).replace('%2',String(plan.duplicateCount)).replace('%3',String(plan.invalidCount)).replace('%4',String(plan.limitCount)):copy.importInvalidFile;dialog.append(this.el('p','rb-group-confirm-lead rb-style-preset-import-summary',summary));
+      const list=this.el('ul','rb-group-confirm-list');if(plan)plan.entries.forEach((item)=>{const row=this.el('li','rb-group-confirm-item'),status=item.status==='ready'?copy.importReady:(item.status==='duplicate'?copy.importDuplicate:(item.status==='limit'?copy.importLimit:copy.importInvalid));row.append(this.el('strong','',item.name||copy.importInvalid),this.el('span','',status));list.append(row);});dialog.append(list);
+      const actions=this.el('div','rb-group-confirm-actions'),cancel=this.button(copy.importCancel,'style-preset-import-cancel',{icon:'close',showLabel:true}),confirm=this.button(copy.importConfirm,'style-preset-import-confirm',{icon:'check',showLabel:true});confirm.disabled=!plan||plan.readyCount<1;actions.append(cancel,confirm);dialog.append(actions);overlay.append(dialog);return overlay;
     }
 
     openUngroupPreview(nodeId) {
@@ -2302,7 +2390,7 @@
       const p=this.commandPalette,items=[];
       const tabs=[['home',this.strings.ribbonHome||'Home'],['insert',this.strings.ribbonInsert||'Insert'],['media',this.strings.categoryMedia||'Media'],['layout',this.strings.categoryLayout||'Layout'],['review',this.strings.ribbonReview||'Review'],['view',this.strings.ribbonView||'View']];
       tabs.forEach(([tab,label])=>items.push({id:'tab-'+tab,kind:'tab',tab,label,group:p.groups.tabs,keywords:tab+' ribbon'}));
-      const tools=[['models',this.ui.models],['accessibility',this.accessibility.tool],['links',this.linkReview.tool],['internal-anchors',this.internalAnchorReview.tool],['internal-anchor-repair',this.internalAnchorRepair.tool],['readability',this.readability.tool],['preflight',this.preflight.tool],['revision-compare',this.revisionCompare.tool],['table-of-contents',this.tableOfContents.tool],['export',this.ui.export],['help',this.ui.help]];
+      const tools=[['models',this.ui.models],['accessibility',this.accessibility.tool],['visual-consistency',this.visualConsistency.tool],['links',this.linkReview.tool],['internal-anchors',this.internalAnchorReview.tool],['internal-anchor-repair',this.internalAnchorRepair.tool],['readability',this.readability.tool],['preflight',this.preflight.tool],['revision-compare',this.revisionCompare.tool],['table-of-contents',this.tableOfContents.tool],['export',this.ui.export],['help',this.ui.help]];
       tools.forEach(([tool,label])=>items.push({id:'tool-'+tool,kind:'tool',tool,label,group:p.groups.tools,keywords:tool.replace(/-/g,' ')}));
       items.push({id:'action-find',kind:'action',action:'toggle-find-replace',label:p.find,group:p.groups.actions,keywords:'search localizar buscar find'});
       if(!this.locked){items.push({id:'action-undo',kind:'action',action:'undo',label:this.strings.undo,group:p.groups.actions,keywords:'desfazer undo'}, {id:'action-redo',kind:'action',action:'redo',label:this.strings.redo,group:p.groups.actions,keywords:'refazer redo'}, {id:'action-inserter',kind:'action',action:'toggle-inserter',label:this.strings.addBlock||p.insert,group:p.groups.actions,keywords:'catalog inserter blocks blocos'}, {id:'action-export',kind:'action',action:'export-document',label:p.exportJson,group:p.groups.actions,keywords:'json download backup baixar exportar'});}
@@ -2403,6 +2491,12 @@
       if(name==='style-preset-save-confirm'){this.confirmSaveStylePreset();return;}
       if(name==='style-preset-save-cancel'){this.closeStylePresetSave();return;}
       if(name==='style-preset-library-close'){this.closeStylePresetLibrary();return;}
+      if(name==='visual-consistency-locate'){this.locateVisualConsistencyBlock(button.dataset.nodeId);return;}
+      if(name==='visual-consistency-presets'){this.openVisualConsistencyPresets(button.dataset.clusterIndex);return;}
+      if(name==='export-style-presets'){this.exportStylePresets();return;}
+      if(name==='choose-style-preset-import'){const input=this.root.querySelector('[data-style-preset-import-file]');if(input){input.value='';input.click();}return;}
+      if(name==='style-preset-import-cancel'){this.closeStylePresetImport();return;}
+      if(name==='style-preset-import-confirm'){this.confirmStylePresetImport();return;}
       if(name==='apply-saved-style-preset'){this.applySavedStylePreset(button.dataset.presetId);return;}
       if(name==='delete-saved-style-preset'){this.deleteSavedStylePreset(button.dataset.presetId);return;}
       if(name==='apply-block-style-preview'||name==='apply-group-style-preview'){this.openBlockStylePreview(button.dataset.nodeId,name==='apply-group-style-preview');return;}
@@ -3916,6 +4010,7 @@
         g=this.renderRibbonGroup(this.strings.findReplaceButton||'Localizar e substituir');
         const find=this.button(this.strings.findReplaceButton||'Localizar e substituir','toggle-find-replace',{icon:'search'});find.setAttribute('aria-expanded',String(this.findReplaceOpen));g.tools.append(find);panel.append(g.group);
         g=this.renderRibbonGroup(this.accessibility.tool);const audit=this.button(this.accessibility.tool,'workspace-tool',{tool:'accessibility',icon:'check',showLabel:true});audit.dataset.workspaceTool='accessibility';g.tools.append(audit);panel.append(g.group);
+        g=this.renderRibbonGroup(this.visualConsistency.tool);const visualAudit=this.button(this.visualConsistency.tool,'workspace-tool',{tool:'visual-consistency',icon:'settings',showLabel:true});visualAudit.dataset.workspaceTool='visual-consistency';g.tools.append(visualAudit);panel.append(g.group);
         g=this.renderRibbonGroup(this.linkReview.tool);const linkAudit=this.button(this.linkReview.tool,'workspace-tool',{tool:'links',icon:'link',showLabel:true});linkAudit.dataset.workspaceTool='links';g.tools.append(linkAudit);panel.append(g.group);
         g=this.renderRibbonGroup(this.internalAnchorReview.tool);const anchorAudit=this.button(this.internalAnchorReview.tool,'workspace-tool',{tool:'internal-anchors',icon:'link',showLabel:true});anchorAudit.dataset.workspaceTool='internal-anchors';g.tools.append(anchorAudit);panel.append(g.group);
         g=this.renderRibbonGroup(this.internalAnchorRepair.tool);const anchorRepair=this.button(this.internalAnchorRepair.tool,'workspace-tool',{tool:'internal-anchor-repair',icon:'link',showLabel:true});anchorRepair.dataset.workspaceTool='internal-anchor-repair';g.tools.append(anchorRepair);panel.append(g.group);
@@ -3963,6 +4058,40 @@
         const open=this.button(copy.openBlock,'accessibility-focus',{nodeId:issue.nodeId,icon:'outline',showLabel:true});item.append(open);list.append(item);
       });
       wrap.append(list);return wrap;
+    }
+
+    renderVisualConsistencyAudit() {
+      const copy=this.visualConsistency,wrap=this.el('div','rb-workspace-screen-content rb-accessibility-workspace rb-visual-consistency-workspace'),header=this.el('div','rb-accessibility-header'),titleGroup=this.el('div','');
+      titleGroup.append(this.el('h1','rb-workspace-screen-title',copy.title));header.append(titleGroup,this.button(copy.home,'workspace-tool',{tool:'home',icon:'collapse',showLabel:true}));wrap.append(header,this.el('p','rb-workspace-screen-lead',copy.hint));
+      const result=analyzeVisualConsistency(this.state,this.allowPageMedia);this.visualConsistencyClusters=result.valid?result.clusters:[];
+      if(!result.valid){const warning=this.el('p','rb-workspace-warning',copy.invalid);warning.setAttribute('role','alert');wrap.append(warning);return wrap;}
+      const summary=this.el('p','rb-accessibility-summary',copy.summary.replace('%1',String(result.variationTypes)).replace('%2',String(result.clusters.length)));summary.setAttribute('role','status');summary.setAttribute('aria-live','polite');wrap.append(summary);
+      if(!result.clusters.length){const empty=this.el('section','rb-accessibility-empty');empty.append(this.icon('check','rb-icon'),this.el('strong','',copy.empty));wrap.append(empty);return wrap;}
+      const list=this.el('div','rb-accessibility-findings');list.setAttribute('role','list');
+      result.clusters.forEach((cluster,index)=>{
+        const item=this.el('article','rb-accessibility-issue rb-visual-consistency-cluster');item.setAttribute('role','listitem');
+        const top=this.el('div','rb-accessibility-issue-top');top.append(this.el('span','rb-accessibility-severity',copy.variant),this.el('span','rb-accessibility-block-type',this.label(cluster.type)));item.append(top);
+        item.append(this.el('h2','rb-accessibility-issue-title',copy.count.replace('%1',String(cluster.count))));
+        const values=cluster.styleKeys.map((key)=>{const value=key==='appearance'?cluster.style.appearance:cluster.style.native[key];return (this.blockStyleCopy.fields[key]||key)+': '+(value===null||value===undefined?'—':typeof value==='object'?JSON.stringify(value):String(value));}).join(' · ');
+        item.append(this.el('p','rb-accessibility-issue-detail',values||this.blockStyleCopy.empty));
+        const lockedCount=cluster.ids.filter((id)=>this.isNodeEffectivelyLocked(id)).length;
+        if(lockedCount)item.append(this.el('p','rb-accessibility-issue-suggestion',copy.lockedCount.replace('%1',String(lockedCount))));
+        const actions=this.el('div','rb-visual-consistency-actions'),locate=this.button(copy.locate,'visual-consistency-locate',{nodeId:cluster.ids[0],icon:'outline',showLabel:true});locate.disabled=this.locked;actions.append(locate);
+        const usePreset=this.button(copy.preset,'visual-consistency-presets',{clusterIndex:String(index),icon:'layers',showLabel:true});usePreset.disabled=this.locked||lockedCount>0||!this.stylePresetStorageKey();actions.append(usePreset);item.append(actions);
+        list.append(item);
+      });
+      wrap.append(list);return wrap;
+    }
+
+    openVisualConsistencyPresets(clusterIndex) {
+      const index=Number(clusterIndex),cluster=Number.isInteger(index)?this.visualConsistencyClusters[index]:null;if(!cluster)return;
+      if(cluster.ids.some((id)=>this.isNodeEffectivelyLocked(id))){this.announceStatus(this.visualConsistency.locked);return;}
+      this.openStylePresetLibrary(null,false,cluster.ids,'visual-consistency',String(index));
+    }
+
+    locateVisualConsistencyBlock(nodeId) {
+      const path=nodeId?this.findPath(this.state.blocks,nodeId):null;if(!path)return;
+      this.workspaceView='editor';this.previewMode=false;this.selectedId=nodeId;this.activePanel='structure';this.groupSelectionIds=[];this.render();this.focusNode(nodeId);
     }
 
     renderLinkReview() {
@@ -4243,6 +4372,8 @@
         surface.setAttribute('aria-label',this.ui.modelsTitle);surface.append(this.renderPatternLibrary());
       }else if(this.workspaceView==='accessibility'){
         surface.setAttribute('aria-label',this.accessibility.title);surface.append(this.renderAccessibilityAudit());
+      }else if(this.workspaceView==='visual-consistency'){
+        surface.setAttribute('aria-label',this.visualConsistency.title);surface.append(this.renderVisualConsistencyAudit());
       }else if(this.workspaceView==='links'){
         surface.setAttribute('aria-label',this.linkReview.title);surface.append(this.renderLinkReview());
       }else if(this.workspaceView==='internal-anchors'){
@@ -4438,6 +4569,7 @@
       if(this.styleConfirmOpen){const dialog=this.renderBlockStyleConfirm();this.root.append(dialog);Array.from(this.root.children).forEach((child)=>{if(child!==dialog)child.setAttribute('inert','');});}
       else if(this.stylePresetLibraryOpen){const dialog=this.renderStylePresetLibrary();this.root.append(dialog);Array.from(this.root.children).forEach((child)=>{if(child!==dialog)child.setAttribute('inert','');});}
       else if(this.stylePresetSaveOpen){const dialog=this.renderStylePresetSaveDialog();this.root.append(dialog);Array.from(this.root.children).forEach((child)=>{if(child!==dialog)child.setAttribute('inert','');});}
+      else if(this.stylePresetImportOpen){const dialog=this.renderStylePresetImportPreview();this.root.append(dialog);Array.from(this.root.children).forEach((child)=>{if(child!==dialog)child.setAttribute('inert','');});}
       else if(this.ungroupConfirmOpen){const dialog=this.renderUngroupConfirm();this.root.append(dialog);Array.from(this.root.children).forEach((child)=>{if(child!==dialog)child.setAttribute('inert','');});}
       else if(this.groupSelectionConfirmOpen){const dialog=this.renderGroupSelectionConfirm();this.root.append(dialog);Array.from(this.root.children).forEach((child)=>{if(child!==dialog)child.setAttribute('inert','');});}
       else if(this.commandPaletteOpen){const palette=this.renderCommandPalette();this.root.append(palette);Array.from(this.root.children).forEach((child)=>{if(child!==palette)child.setAttribute('inert','');});}
@@ -4987,12 +5119,17 @@
     documentChangeRespectsLocks: documentChangeRespectsLocks,
     captureBlockStyle: captureBlockStyle,
     applyBlockStyle: applyBlockStyle,
+    validStyleDescriptor: validStyleDescriptor,
+    serializeStylePresetExport: serializeStylePresetExport,
+    parseStylePresetImport: parseStylePresetImport,
+    planStylePresetImport: planStylePresetImport,
     moveSiblingSelection: moveSiblingSelection,
     moveBlockAcrossHierarchy: moveBlockAcrossHierarchy,
     cloneBlockWithNewIds: cloneBlockWithNewIds,
     mount: function (root, options) { if (!(root instanceof Element)) throw new TypeError('editor root must be an Element'); return new Editor(root, options || {}); },
     validateDocument: validateDocument,
     analyzeDocumentAccessibility: analyzeDocumentAccessibility,
+    analyzeVisualConsistency: analyzeVisualConsistency,
     analyzeDocumentLinks: analyzeDocumentLinks,
     analyzeInternalAnchors: analyzeInternalAnchors,
     repairInternalAnchorLinks: repairInternalAnchorLinks,

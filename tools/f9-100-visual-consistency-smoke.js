@@ -1,0 +1,18 @@
+'use strict';
+const fs=require('fs'),vm=require('vm'),path=require('path');
+const source=fs.readFileSync(path.join(__dirname,'../dev/admin/view/js/blog-block-editor.js'),'utf8');
+const root={document:{documentElement:{lang:'pt-br'}},location:{origin:'https://admin.example'},setTimeout,clearTimeout,setInterval,clearInterval,URL,TextEncoder,Uint8Array,console};
+const context={window:root,globalThis:root,URL,TextEncoder,Uint8Array,Intl,Map,Set,WeakMap,WeakSet,Date,Math,JSON,RegExp,Array,Object,String,Number,Boolean,Error,TypeError,Promise,console,setTimeout,clearTimeout};
+vm.runInNewContext(source,context,{filename:'blog-block-editor.js'});
+const api=root.ReamurBlogBlockEditor,run=text=>({text,marks:[],href:null});
+const p=(id,align,locked)=>({id,type:'core/paragraph',attributes:Object.assign({align},locked?{locked:true}:{}),children:[],content:[run(id)]});
+const doc={format_version:2,blocks:[p('p-left','left'),p('p-right-a','right'),p('p-right-b','right',true),{id:'h1',type:'core/heading',attributes:{level:2,appearance:{text_color:'#123456'}},children:[],content:[run('Title')]}]};
+const original=JSON.stringify(doc),result=api.analyzeVisualConsistency(doc,false);
+if(!result.valid||result.variationTypes!==1||result.clusters.length!==2)throw new Error('Audit should report two paragraph style variants only: '+JSON.stringify(result));
+const left=result.clusters.find(x=>x.style.native.align==='left'),right=result.clusters.find(x=>x.style.native.align==='right');
+if(!left||left.count!==1||!right||right.count!==2||!right.ids.includes('p-right-b'))throw new Error('Audit must group identical style variants and include locked blocks as read-only findings');
+if(JSON.stringify(doc)!==original)throw new Error('Visual consistency analysis modified the document');
+const same={format_version:2,blocks:[p('a','center'),p('b','center')]};if(api.analyzeVisualConsistency(same,false).clusters.length)throw new Error('Consistent blocks should not generate findings');
+const invalid={format_version:2,blocks:[p('duplicate','left'),p('duplicate','right')]};if(api.analyzeVisualConsistency(invalid,false).valid)throw new Error('Invalid BDRE documents must not be audited');
+for(const fragment of ['analyzeVisualConsistency: analyzeVisualConsistency','workspaceView===\'visual-consistency\'','visual-consistency-presets','this.openStylePresetLibrary(null,false,cluster.ids','usePreset.disabled=this.locked||lockedCount>0'])if(!source.includes(fragment))throw new Error('Visual audit UI integration missing: '+fragment);
+console.log('PASS: read-only audit groups same-type blocks by whitelisted visual style, ignores lock metadata, preserves source, omits consistent/invalid false positives and offers lock-aware preset preview for a cluster.');
