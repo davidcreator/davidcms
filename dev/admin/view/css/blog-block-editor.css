@@ -1016,3 +1016,6 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-page-context-brand-icon{width:1.8rem;height:1.8rem;padding:.34rem;border-radius:.5rem;background:linear-gradient(145deg,#4779ff,#3154d9);color:#fff}
 .rb-page-context-brand-name{color:#1f2b3b;font-size:.92rem;font-weight:800;letter-spacing:-.025em;white-space:nowrap}
 @media(max-width:700px){.rb-page-context-brand{padding-right:.6rem}.rb-page-context-brand-icon{width:1.6rem;height:1.6rem}}
+
+/* F9-90: crisp, heavier fullscreen glyphs matching the requested expand/collapse arrows. */
+.rb-button[data-action="toggle-fullscreen"] .rb-icon,.rb-fullscreen-done .rb-icon{stroke-width:2.5}
