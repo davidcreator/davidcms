@@ -24,12 +24,13 @@ class Page extends \Reamur\System\Engine\Controller {
         $this->load->language('cms/page');
         $this->document->setTitle($this->language->get('heading_title'));
         $this->load->model('cms/page');
+        $this->document->addScript($this->config->get('site_url') . 'view/js/cms-page-quick-edit.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-f9-88-page-quick-edit');
 
         foreach ([
             'heading_title', 'text_list', 'text_no_results', 'text_confirm_delete',
             'text_enabled', 'text_disabled', 'column_title', 'column_status',
             'column_sort_order', 'column_date_modified', 'column_action',
-            'button_add', 'button_edit', 'button_delete', 'button_filter', 'button_reset', 'button_close',
+            'button_add', 'button_edit', 'button_delete', 'button_filter', 'button_reset', 'button_close', 'button_quick_edit', 'button_quick_update', 'text_quick_edit', 'text_quick_edit_hint', 'entry_title', 'entry_keyword', 'entry_status', 'entry_sort_order', 'text_system_page_help',
             'text_all_status', 'text_search_placeholder', 'text_showing',
             'text_empty_title', 'text_empty_hint', 'text_system_page',
         ] as $key) {
@@ -51,6 +52,10 @@ class Page extends \Reamur\System\Engine\Controller {
         $page = is_scalar($requestedPage) ? max(1, (int)$requestedPage) : 1;
         $page = min($page, max(1, (int)ceil($total / $limit)));
 
+        $quickLanguageId = 1; $activeLanguageCode = strtolower((string)$this->config->get('language_directory', 'en-us'));
+        foreach ($this->model_cms_page->getLanguages() as $languageRow) { $languageRow=(array)$languageRow; if (strtolower((string)($languageRow['code'] ?? '')) === $activeLanguageCode) { $quickLanguageId=(int)$languageRow['language_id']; break; } }
+        $data['quick_language_id'] = $quickLanguageId;
+        $data['current_page'] = $page;
         $data['pages'] = [];
         foreach ($this->model_cms_page->getPages($filters + ['start' => ($page - 1) * $limit, 'limit' => $limit]) as $row) {
             $row = (array)$row;
@@ -64,6 +69,12 @@ class Page extends \Reamur\System\Engine\Controller {
                 'sort_order' => (int)$row['sort_order'],
                 'date_modified' => (string)$row['date_modified'],
                 'edit' => $this->url->link('cms/page.edit|' . $pid),
+                'quick_edit' => $this->url->link('cms/page.quickEdit|' . $pid),
+                'quick_title' => (string)($row['quick_title'] ?? $row['title']),
+                'quick_keyword' => (string)($row['keyword'] ?? ''),
+                'quick_status' => (int)$row['status'],
+                'quick_sort_order' => (int)$row['sort_order'],
+                'quick_language_id' => $quickLanguageId,
                 'delete' => $this->url->link('cms/page.delete|' . $pid),
             ];
         }
@@ -214,6 +225,83 @@ class Page extends \Reamur\System\Engine\Controller {
         $this->chrome($data);
 
         $this->response->setOutput($this->load->view('cms/page_form', $data));
+    }
+
+    /** POST-only quick edit from the Pages list; never accepts or rewrites BDRE content. */
+    public function quickEdit(string $page_id = '0'): void {
+        $pageId = (int)$page_id;
+        $this->load->language('cms/page');
+        $this->load->model('cms/page');
+        $requestMethod = (string)($this->request->server['REQUEST_METHOD'] ?? '');
+        $returnPageRaw = $this->request->post['return_page'] ?? '1';
+        $returnPage = is_scalar($returnPageRaw) ? max(1, (int)$returnPageRaw) : 1;
+        $returnTitleRaw = $this->request->post['return_filter_title'] ?? '';
+        $returnTitle = is_string($returnTitleRaw) ? mb_substr(trim($returnTitleRaw), 0, 255) : '';
+        $returnStatusRaw = $this->request->post['return_filter_status'] ?? 'all';
+        $returnStatus = is_string($returnStatusRaw) && in_array($returnStatusRaw, ['all','0','1'], true) ? $returnStatusRaw : 'all';
+        $redirect = function() use ($returnPage, $returnTitle, $returnStatus): void {
+            $query = 'page=' . $returnPage;
+            if ($returnTitle !== '') $query .= '&filter_title=' . rawurlencode($returnTitle);
+            if ($returnStatus !== 'all') $query .= '&filter_status=' . $returnStatus;
+            $this->response->redirect($this->url->link('cms/page', $query));
+        };
+        if ($requestMethod !== 'POST' || !$this->user->hasPermission('modify', 'cms/page')) {
+            $this->setFlash($this->language->get('error_permission'), 'error'); $redirect(); return;
+        }
+        if (!$this->csrfValid()) {
+            $this->setFlash($this->language->get('error_csrf'), 'error'); $redirect(); return;
+        }
+        $page = $pageId > 0 ? $this->model_cms_page->getPage($pageId) : [];
+        if (!$page) {
+            $this->setFlash($this->language->get('error_quick_page_not_found'), 'error'); $redirect(); return;
+        }
+        $statusRaw = $this->request->post['quick_status'] ?? '';
+        $statusValue = is_scalar($statusRaw) ? (string)$statusRaw : '';
+        $sortRaw = $this->request->post['quick_sort_order'] ?? '';
+        $titleRaw = $this->request->post['quick_title'] ?? '';
+        $keywordRaw = $this->request->post['quick_keyword'] ?? '';
+        $postedLanguageRaw = $this->request->post['quick_language_id'] ?? 0;
+        $postedLanguageId = is_scalar($postedLanguageRaw) ? (int)$postedLanguageRaw : 0;
+        $errors = [];
+        if (!in_array($statusValue, ['0','1'], true)) $errors[] = $this->language->get('error_quick_status');
+        $sortOrder = is_scalar($sortRaw) && preg_match('/^\\d{1,9}$/D', (string)$sortRaw) ? (int)$sortRaw : -1;
+        if ($sortOrder < 0) $errors[] = $this->language->get('error_quick_sort_order');
+        $systemPage = $this->model_cms_page->isSystemPage($pageId);
+        $keyword = is_string($keywordRaw) ? trim($keywordRaw) : '';
+        $knownLanguages = $this->model_cms_page->getLanguages();
+        $activeCode = strtolower((string)$this->config->get('language_directory', 'en-us'));
+        $languageId = 1;
+        foreach ($knownLanguages as $knownLanguage) { $knownLanguage=(array)$knownLanguage; if (strtolower((string)($knownLanguage['code'] ?? '')) === $activeCode) { $languageId=(int)$knownLanguage['language_id']; break; } }
+        if ($postedLanguageId !== $languageId) $errors[] = $this->language->get('error_quick_language');
+        if (!is_string($titleRaw) || mb_strlen(trim($titleRaw)) > 255 || ($languageId === 1 && trim($titleRaw) === '')) $errors[] = $this->language->get('error_title');
+        if (!$systemPage && !is_string($keywordRaw)) $errors[] = $this->language->get('error_keyword_format');
+        if (!$systemPage && $keyword !== '') {
+            if (mb_strlen($keyword) > 64 || !preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $keyword)) $errors[] = sprintf($this->language->get('error_keyword_format'), $languageId);
+            elseif ($this->model_cms_page->keywordTaken($keyword, $languageId, $pageId)) $errors[] = sprintf($this->language->get('error_keyword_taken'), $keyword);
+        }
+        if ($errors) { $this->setFlash(implode(' ', array_unique($errors)), 'error'); $redirect(); return; }
+
+        $descriptions = $this->model_cms_page->getPageDescriptions($pageId);
+        $keywords = $this->model_cms_page->getPageKeywords($pageId);
+        $descriptions[$languageId]['title'] = trim($titleRaw);
+        if (!$systemPage) $keywords[$languageId] = $keyword;
+        $allLanguageIds = array_unique(array_merge(array_map('intval', array_keys($descriptions)), array_map('intval', array_keys($keywords)), array_map(static fn($row)=>(int)((array)$row)['language_id'], $knownLanguages)));
+        $descriptionPayload = [];
+        foreach ($allLanguageIds as $lid) {
+            $existing = (array)($descriptions[$lid] ?? []);
+            $descriptionPayload[$lid] = [
+                'title'=>(string)($existing['title'] ?? ''), 'description'=>(string)($existing['description'] ?? ''),
+                'meta_title'=>(string)($existing['meta_title'] ?? ''), 'meta_description'=>(string)($existing['meta_description'] ?? ''),
+                'keyword'=>(string)($keywords[$lid] ?? '')
+            ];
+        }
+        try {
+            $this->model_cms_page->editPage($pageId, ['status'=>(int)$statusRaw,'sort_order'=>$sortOrder,'descriptions'=>$descriptionPayload], $this->model_cms_page->getPageEditFingerprint($pageId));
+        } catch (\RuntimeException $exception) {
+            if ($exception->getMessage() !== 'edit_conflict') throw $exception;
+            $this->setFlash($this->language->get('error_edit_conflict'), 'error'); $redirect(); return;
+        }
+        $this->setFlash($this->language->get('text_success_edit')); $redirect();
     }
 
     /** Compatibilidade com links antigos: a edição agora acontece na tela geral unificada. */

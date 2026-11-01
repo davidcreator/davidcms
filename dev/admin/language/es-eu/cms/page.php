@@ -11,7 +11,7 @@
 
 // Headings & texts
 $_['heading_title']        = 'Páginas de Contenido';
-$_['text_list']            = 'Páginas informativas del sitio (Acerca, Políticas, Cookies). El contenido por idioma se edita en el formulario de la página.';
+$_['text_list']            = 'Gestione las páginas informativas. Use Edición rápida para título, slug, estado y orden; elija Editar para trabajar el contenido en BDREditor a pantalla completa.';
 $_['text_no_results']      = 'Aún no hay páginas. Cree la primera.';
 $_['text_confirm_delete']  = '¿Eliminar esta página? Se quitarán sus descripciones y keywords SEO.';
 $_['text_enabled']         = 'Habilitado';
@@ -338,3 +338,14 @@ $_['text_block_ribbon_view'] = 'Ver';
 $_['text_page_create_intro'] = 'Cree el contenido en BDREditor. La página se guarda solo al confirmar; cancelar vuelve a la lista sin crear un borrador.';
 $_['text_page_create_title_help'] = 'Obligatorio. También puede editar el título directamente en la barra de BDREditor.';
 $_['text_page_create_keyword_help'] = 'URL amigable opcional; puede completarla al salir del editor inmersivo.';
+
+// F9-88 — Edição rápida das propriedades já suportadas pelo Pages.
+$_['button_quick_edit'] = 'Edición rápida';
+$_['button_quick_update'] = 'Actualizar';
+$_['text_quick_edit'] = 'Edición rápida';
+$_['text_quick_edit_hint'] = 'Solo cambia título, slug, estado y orden. El contenido BDRE y los demás campos permanecen intactos.';
+$_['error_quick_status'] = 'Seleccione un estado válido.';
+$_['error_quick_sort_order'] = 'El orden debe ser un entero de 0 a 999999999.';
+$_['error_quick_language'] = 'El idioma del formulario no es válido.';
+$_['error_quick_page_not_found'] = 'No se encontró la página.';
+$_['error_quick_update'] = 'No se pudieron actualizar los campos rápidos.';

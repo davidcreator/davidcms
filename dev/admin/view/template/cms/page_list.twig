@@ -45,20 +45,31 @@
         <tbody>
           {% for page in pages %}
           <tr>
-            <td class="fw-semibold"><a class="link-plain" href="{{ page.edit }}">{{ page.title }}</a>{% if page.is_system_page %}<span class="badge text-bg-info ms-2" title="{{ page.system_key }}">{{ text_system_page }}</span>{% endif %}</td>
+            <td class="fw-semibold"><a class="link-plain" href="{{ page.edit|e('html_attr') }}">{{ page.title }}</a>{% if page.is_system_page %}<span class="badge text-bg-info ms-2" title="{{ page.system_key|e('html_attr') }}">{{ text_system_page }}</span>{% endif %}
+              {% if can_modify %}<div class="small mt-1 d-flex flex-wrap gap-2"><a href="{{ page.edit|e('html_attr') }}">{{ button_edit }}</a><button type="button" class="btn btn-link btn-sm p-0" data-page-quick-edit-toggle data-target="quick-edit-row-{{ page.page_id }}" aria-controls="quick-edit-row-{{ page.page_id }}" aria-expanded="false">{{ button_quick_edit }}</button></div>{% endif %}
+            </td>
             <td><span class="badge {{ page.status ? 'text-bg-success' : 'text-bg-secondary' }}">{{ page.status ? text_enabled : text_disabled }}</span></td>
             <td class="d-none d-md-table-cell">{{ page.sort_order }}</td>
             <td class="d-none d-lg-table-cell text-nowrap">{{ page.date_modified }}</td>
             <td class="text-end text-nowrap">
-              <a class="icon-btn" href="{{ page.edit }}" title="{{ button_edit }}" aria-label="{{ button_edit }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+              <a class="icon-btn" href="{{ page.edit|e('html_attr') }}" title="{{ button_edit|e('html_attr') }}" aria-label="{{ button_edit|e('html_attr') }}"><i class="bi bi-pencil" aria-hidden="true"></i></a>
               {% if can_modify and not page.is_system_page %}
-              <form method="post" action="{{ page.delete }}" class="d-inline" data-rms-confirm-delete="{{ text_confirm_delete }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <button type="submit" class="icon-btn icon-btn--danger" title="{{ button_delete }}" aria-label="{{ button_delete }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+              <form method="post" action="{{ page.delete|e('html_attr') }}" class="d-inline" data-rms-confirm-delete="{{ text_confirm_delete|e('html_attr') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token|e('html_attr') }}">
+                <button type="submit" class="icon-btn icon-btn--danger" title="{{ button_delete|e('html_attr') }}" aria-label="{{ button_delete|e('html_attr') }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
               </form>
               {% endif %}
             </td>
           </tr>
+          {% if can_modify %}<tr id="quick-edit-row-{{ page.page_id }}" class="page-quick-edit-row" hidden><td colspan="5"><form method="post" action="{{ page.quick_edit|e('html_attr') }}" class="card card-body bg-light m-2" data-page-quick-edit>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token|e('html_attr') }}"><input type="hidden" name="quick_language_id" value="{{ page.quick_language_id }}"><input type="hidden" name="return_page" value="{{ current_page }}"><input type="hidden" name="return_filter_title" value="{{ filter_title|e('html_attr') }}"><input type="hidden" name="return_filter_status" value="{{ filter_status|e('html_attr') }}">
+            <strong class="small text-uppercase mb-1">{{ text_quick_edit }}</strong><p class="small text-body-secondary mb-3">{{ text_quick_edit_hint }}</p>
+            <div class="row g-3"><div class="col-md-6"><label class="form-label" for="quick-title-{{ page.page_id }}">{{ entry_title }}</label><input class="form-control" type="text" maxlength="255"{% if page.quick_language_id == 1 %} required{% endif %} name="quick_title" id="quick-title-{{ page.page_id }}" value="{{ page.quick_title|e('html_attr') }}"></div>
+              {% if not page.is_system_page %}<div class="col-md-6"><label class="form-label" for="quick-keyword-{{ page.page_id }}">{{ entry_keyword }}</label><input class="form-control" type="text" maxlength="64" pattern="[a-z0-9]+(-[a-z0-9]+)*" name="quick_keyword" id="quick-keyword-{{ page.page_id }}" value="{{ page.quick_keyword|e('html_attr') }}"></div>{% endif %}
+              <div class="col-md-6"><label class="form-label" for="quick-status-{{ page.page_id }}">{{ entry_status }}</label><select class="form-select" name="quick_status" id="quick-status-{{ page.page_id }}"><option value="1"{% if page.quick_status == 1 %} selected{% endif %}>{{ text_enabled }}</option><option value="0"{% if page.quick_status == 0 %} selected{% endif %}>{{ text_disabled }}</option></select></div>
+              <div class="col-md-6"><label class="form-label" for="quick-sort-{{ page.page_id }}">{{ entry_sort_order }}</label><input class="form-control" type="number" name="quick_sort_order" id="quick-sort-{{ page.page_id }}" min="0" max="999999999" step="1" value="{{ page.quick_sort_order }}"></div>
+            </div><div class="d-flex gap-2 mt-3"><button type="submit" class="btn btn-primary btn-sm">{{ button_quick_update }}</button><button type="button" class="btn btn-outline-secondary btn-sm" data-page-quick-edit-cancel data-target="quick-edit-row-{{ page.page_id }}">{{ button_cancel }}</button></div>
+          </form></td></tr>{% endif %}
           {% endfor %}
         </tbody>
       </table>

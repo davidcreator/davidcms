@@ -21,8 +21,10 @@ class Page extends \Reamur\System\Engine\Model {
      */
     public function getPages(array $filters = []): array {
         $systemKeySelect = $this->hasSystemKeyColumn() ? "p.`system_key`" : "'' AS `system_key`";
+        $languageId = $this->currentLanguageId();
         $sql = "SELECT p.`page_id`, p.`status`, p.`sort_order`, p.`date_modified`, " . $systemKeySelect . ",
-                       COALESCE(NULLIF(pd.`title`, ''), pd_en.`title`, '') AS `title` "
+                       COALESCE(NULLIF(pd.`title`, ''), pd_en.`title`, '') AS `title`, COALESCE(pd.`title`, '') AS `quick_title`,
+                       COALESCE((SELECT psu.`value` FROM `" . $this->t('seo_url') . "` psu WHERE psu.`key` = CONCAT('page_id=', p.`page_id`) AND psu.`language_id` = '" . $languageId . "' LIMIT 1), '') AS `keyword` "
             . $this->pageListFrom() . $this->pageListWhere($filters)
             . " ORDER BY p.`sort_order` ASC, p.`page_id` ASC";
 

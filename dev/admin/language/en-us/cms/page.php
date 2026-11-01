@@ -11,7 +11,7 @@
 
 // Headings & texts
 $_['heading_title']        = 'Content Pages';
-$_['text_list']            = 'Informational pages of the site (About, Policies, Cookies). Per-language content is edited in the page form.';
+$_['text_list']            = 'Manage informational pages. Use Quick Edit for title, slug, status and order; choose Edit to work on content in the full-screen BDREditor.';
 $_['text_no_results']      = 'No pages yet. Create the first one.';
 $_['text_confirm_delete']  = 'Delete this page? Its descriptions, SEO keywords, and custom field values are removed.';
 $_['text_enabled']         = 'Enabled';
@@ -354,3 +354,14 @@ $_['text_block_ribbon_view'] = 'View';
 $_['text_page_create_intro'] = 'Create your content in BDREditor. The page is stored only when you save; cancel returns to the list without creating a draft.';
 $_['text_page_create_title_help'] = 'Required. You can also edit the title directly in the BDREditor toolbar.';
 $_['text_page_create_keyword_help'] = 'Optional friendly URL. You can fill it in after leaving the immersive editor.';
+
+// F9-88 — Edição rápida das propriedades já suportadas pelo Pages.
+$_['button_quick_edit'] = 'Quick Edit';
+$_['button_quick_update'] = 'Update';
+$_['text_quick_edit'] = 'Quick Edit';
+$_['text_quick_edit_hint'] = 'Changes only title, slug, status and order. BDRE content and all other fields remain untouched.';
+$_['error_quick_status'] = 'Select a valid status.';
+$_['error_quick_sort_order'] = 'Order must be an integer from 0 to 999999999.';
+$_['error_quick_language'] = 'The form language is not valid.';
+$_['error_quick_page_not_found'] = 'The page was not found.';
+$_['error_quick_update'] = 'Could not update the quick-edit fields.';
