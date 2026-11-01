@@ -1786,19 +1786,6 @@
       if(focusTarget)focusTarget.focus();
     }
 
-    activateOfficeMenu(button) {
-      const item=button.dataset.menu;
-      if(this.inserterOpen)this.restoreWorkspacePanelAfterInserter();
-      if(item==='file'){this.workspaceView='export';this.activePanel='structure';}
-      else if(item==='help'){this.workspaceView='help';this.activePanel='structure';}
-      else{
-        this.workspaceView='editor';this.previewMode=false;
-        this.activeRibbonTab={insert:'insert',tools:'layout',format:'layout',edit:'home'}[item]||'home';
-      }
-      this.findReplaceOpen=false;this.render();
-      const focusTarget=Array.from(this.root.querySelectorAll('[data-action="office-menu"]')).find((entry)=>entry.dataset.menu===item);
-      if(focusTarget)focusTarget.focus();
-    }
 
     openPageMediaPicker(kind,nodeId) {
       if(nodeId)this.selectedId=nodeId;
@@ -1832,7 +1819,7 @@
     }
 
     action(name, button) {
-      if (this.locked&&!['workspace-tool','office-menu','toggle-fullscreen','compare-draft-revision'].includes(name)) return;
+      if (this.locked&&!['workspace-tool','toggle-fullscreen','compare-draft-revision'].includes(name)) return;
       if (name === 'insert') this.insert(button.dataset.type, button.dataset.count);
       else if (name === 'insert-pattern') this.insertPattern(button.dataset.pattern);
       else if (name === 'insert-content-model') this.insertContentModel(button.dataset.modelId);
@@ -1855,7 +1842,6 @@
       }
       else if (name === 'ribbon-tab') { this.workspaceView='editor'; this.activeRibbonTab = button.dataset.tab; this.render(); }
       else if (name === 'workspace-tool') { this.activateWorkspaceTool(button); }
-      else if (name === 'office-menu') { this.activateOfficeMenu(button); }
       else if (name === 'workspace-media-open') { this.openWorkspaceMedia(button.dataset.kind); }
       else if (name === 'workspace-pattern-filter') { this.patternFilter=button.dataset.filter||'all'; this.render(); const active=Array.from(this.root.querySelectorAll('[data-action="workspace-pattern-filter"]')).find((item)=>item.dataset.filter===this.patternFilter); if(active)active.focus(); }
       else if (name === 'import-file') { const input=this.root.querySelector('[data-import-file]'); if (input) input.click(); }
@@ -3309,17 +3295,6 @@
       return panel;
     }
 
-    renderOfficeMenu() {
-      const nav=this.el('nav','rb-office-menu');nav.setAttribute('aria-label',this.strings.editorTools||'Editor navigation');
-      const menus=[[this.ui.file,'file'],[this.ui.edit,'edit'],[this.ui.insert,'insert'],[this.ui.format,'format'],[this.ui.tools,'tools'],[this.ui.help,'help']];
-      menus.forEach(([label,key])=>{
-        const button=this.el('button','rb-office-menu-item',label);button.type='button';button.dataset.action='office-menu';button.dataset.menu=key;
-        const current=key==='file'?(this.workspaceView==='export'||this.workspaceView==='share'):key==='help'?this.workspaceView==='help':this.workspaceView==='editor'&&(key==='edit'?this.activeRibbonTab==='home':key==='format'?this.activeRibbonTab==='layout':key==='insert'?this.activeRibbonTab==='insert':key==='tools'?['media','review','view'].includes(this.activeRibbonTab):false);
-        if(current)button.setAttribute('aria-current','page');nav.append(button);
-      });
-      return nav;
-    }
-
     renderCanvas() {
       const canvas=this.el('div','rb-canvas');canvas.setAttribute('role','region');canvas.setAttribute('aria-label',this.strings.canvas);
       const canvasHead=this.el('div','rb-canvas-head');canvasHead.append(this.icon('layers','rb-icon'),this.el('span','',this.strings.canvas),this.el('span','rb-canvas-count',String(this.state.blocks.length)));canvas.append(canvasHead);
@@ -3706,11 +3681,13 @@
         if(this.fullscreen)quickActions.append(this.button(this.ui.share,'workspace-tool',{tool:'share',icon:'share'}));
         quickActions.append(this.button(this.strings.exportDocument||'Exportar BDRE','export-document',{icon:'file'}));
       }
-      masthead.append(identity,quickActions); this.root.append(masthead);
-      if (this.fullscreen) this.root.append(this.renderOfficeMenu());
-      if (this.fullscreen && this.workspaceView==='editor' && this.options.workspaceContext) {
+      masthead.append(identity,quickActions);
+      const hasFullscreenContext=this.fullscreen&&this.workspaceView==='editor'&&!!this.options.workspaceContext;
+      if(!hasFullscreenContext)this.root.append(masthead);
+      if (hasFullscreenContext) {
         const context=this.options.workspaceContext;
         const contextBar=this.el('section','rb-page-context'); contextBar.setAttribute('role','group'); contextBar.setAttribute('aria-label',context.pageLabel || 'Page context');
+        const brand=this.el('div','rb-page-context-brand');brand.setAttribute('aria-label','BDREditor');brand.append(this.icon('layers','rb-page-context-brand-icon'),this.el('strong','rb-page-context-brand-name','BDREditor'));
         const contextDetails=this.el('div','rb-page-context-details'); const currentTitle=context.pageTitleInput && typeof context.pageTitleInput.value === 'string' ? context.pageTitleInput.value : context.pageTitle;
         const pageInfo=this.el(context.allowTitleEdit?'label':'div','rb-page-context-item'+(context.allowTitleEdit?' rb-page-context-title-editor':''));
         pageInfo.append(this.el('span','rb-page-context-label',context.allowTitleEdit?(context.titleInputLabel||context.pageLabel||'Page title'):(context.pageLabel||'Page')));
@@ -3727,7 +3704,7 @@
           const save=this.el('button','rb-page-context-save'); save.type='submit'; save.setAttribute('aria-label',context.saveLabel || 'Save page');
           save.append(this.icon('check','rb-icon'),this.el('span','',context.saveLabel || 'Save')); contextActions.append(save);
         }
-        contextBar.append(contextDetails,contextActions); this.root.append(contextBar);
+        contextBar.append(brand,contextDetails,contextActions); this.root.append(contextBar);
       }
       let inserterMenu=null;
       if(this.workspaceView==='editor'){
