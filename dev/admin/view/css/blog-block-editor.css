@@ -1069,5 +1069,14 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-group-confirm-item span{min-width:0;overflow-wrap:anywhere;color:#5f6e86;font-size:.8rem}
 .rb-group-outline-label{margin:0 0 1rem}
 .rb-group-confirm-actions{display:flex;justify-content:flex-end;gap:.55rem;flex-wrap:wrap}
-@media(max-width:620px){.rb-group-selection-bar{align-items:flex-start;flex-direction:column}.rb-group-selection-actions{width:100%;flex-wrap:wrap}.rb-group-confirm-item{flex-direction:column;gap:.2rem}.rb-group-confirm-item strong{flex:auto}}
-@media(forced-colors:active){.rb-block.rb-group-selected{outline:2px solid Highlight}.rb-group-selection-bar,.rb-group-confirm-dialog,.rb-group-confirm-item{border:1px solid CanvasText}.rb-group-confirm-overlay{background:Canvas}}
+.rb-style-presets-dialog{width:min(720px,100%)}
+.rb-style-preset-search{margin:0 0 .85rem}
+.rb-style-preset-list{display:grid;max-height:min(52vh,28rem);gap:.55rem;overflow:auto;margin:0 0 1rem;padding:.1rem}
+.rb-style-preset-card{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:.25rem .75rem;padding:.7rem;border:1px solid #dce3ee;border-radius:.55rem;background:#fafbfc}
+.rb-style-preset-card>strong{min-width:0;overflow-wrap:anywhere;color:#26364e}
+.rb-style-preset-type,.rb-style-preset-summary{grid-column:1/-1;color:#64748b;font-size:.78rem}
+.rb-style-preset-summary{margin:.1rem 0}
+.rb-style-preset-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:.4rem;flex-wrap:wrap}
+.rb-style-preset-card[hidden], [data-style-preset-no-match][hidden]{display:none!important}
+@media(max-width:620px){.rb-group-selection-bar{align-items:flex-start;flex-direction:column}.rb-group-selection-actions{width:100%;flex-wrap:wrap}.rb-group-confirm-item{flex-direction:column;gap:.2rem}.rb-group-confirm-item strong{flex:auto}.rb-style-preset-card{grid-template-columns:1fr}.rb-style-preset-actions{justify-content:flex-start}}
+@media(forced-colors:active){.rb-block.rb-group-selected{outline:2px solid Highlight}.rb-group-selection-bar,.rb-group-confirm-dialog,.rb-group-confirm-item,.rb-style-preset-card{border:1px solid CanvasText}.rb-group-confirm-overlay{background:Canvas}}

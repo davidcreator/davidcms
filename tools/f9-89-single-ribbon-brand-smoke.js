@@ -10,7 +10,7 @@ const checks = [
   ['ribbon remains the sole editor menu and tabs still render', js.includes("this.el('div','rb-ribbon-tabs')") && js.includes('this.renderRibbonContents()')],
   ['fullscreen Page context contains BDREditor brand and does not duplicate masthead', js.includes("this.el('div','rb-page-context-brand')") && js.includes('contextBar.append(brand,contextDetails,contextActions)') && js.includes('if(!hasFullscreenContext)this.root.append(masthead)')],
   ['brand styling exists and all unused classic-menu styles are gone', css.includes('.rb-page-context-brand{') && !css.includes('rb-office-menu')],
-  ['Page and Blog use the matching new cache key', page.includes('threejs-42-block-lock') && blog.includes('threejs-42-block-lock')],
+  ['Page and Blog use the matching new cache key', page.includes('threejs-44-style-presets') && blog.includes('threejs-44-style-presets')],
 ];
 let failures = 0;
 for (const [label, ok] of checks) {

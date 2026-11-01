@@ -199,9 +199,9 @@
   }
   function blockStyleCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
-    if(language.startsWith('pt'))return {copy:'Copiar estilo',apply:'Aplicar estilo',title:'Prévia da aplicação de estilo',hint:'Somente atributos visuais permitidos serão aplicados. Texto, links, mídia, conteúdo, IDs e bloqueios serão preservados.',confirm:'Confirmar aplicação',cancel:'Cancelar',copied:'Estilo copiado. Selecione um ou mais blocos compatíveis para pré-visualizar a aplicação.',done:'Estilo aplicado a %1 bloco(s). A operação pode ser desfeita.',invalid:'Não foi possível aplicar este estilo; o documento não foi alterado.',incompatible:'Selecione blocos compatíveis e desbloqueados.',empty:'Sem atributos visuais para transferir.',fields:{appearance:'aparência',align:'alinhamento',size:'tamanho',mobile_size:'tamanho móvel',style:'estilo',width:'largura',thickness:'espessura',columns:'colunas',tone:'tom',height:'altura'}};
-    if(language.startsWith('es'))return {copy:'Copiar estilo',apply:'Aplicar estilo',title:'Vista previa de aplicación de estilo',hint:'Solo se aplicarán atributos visuales permitidos. Se conservarán el texto, enlaces, medios, contenido, ID y bloqueos.',confirm:'Confirmar aplicación',cancel:'Cancelar',copied:'Estilo copiado. Selecciona uno o varios bloques compatibles para previsualizar la aplicación.',done:'Estilo aplicado a %1 bloque(s). La operación se puede deshacer.',invalid:'No se pudo aplicar este estilo; no se modificó el documento.',incompatible:'Selecciona bloques compatibles y desbloqueados.',empty:'No hay atributos visuales para transferir.',fields:{appearance:'apariencia',align:'alineación',size:'tamaño',mobile_size:'tamaño móvil',style:'estilo',width:'ancho',thickness:'grosor',columns:'columnas',tone:'tono',height:'altura'}};
-    return {copy:'Copy style',apply:'Apply style',title:'Style application preview',hint:'Only permitted visual attributes will be applied. Text, links, media, content, IDs, and lock states stay unchanged.',confirm:'Confirm apply',cancel:'Cancel',copied:'Style copied. Select one or more compatible blocks to preview the application.',done:'Style applied to %1 block(s). This can be undone.',invalid:'Could not apply this style; the document was not changed.',incompatible:'Select compatible, unlocked blocks.',empty:'No visual attributes to transfer.',fields:{appearance:'appearance',align:'alignment',size:'size',mobile_size:'mobile size',style:'style',width:'width',thickness:'thickness',columns:'columns',tone:'tone',height:'height'}};
+    if(language.startsWith('pt'))return {copy:'Copiar estilo',apply:'Aplicar estilo',savePreset:'Salvar como estilo',presets:'Biblioteca de estilos',presetTitle:'Estilos salvos',presetHint:'Os estilos são armazenados localmente neste navegador e separados entre Pages e Blog.',presetName:'Nome do estilo',presetPlaceholder:'Ex.: Destaque editorial',presetSave:'Salvar estilo',presetSearch:'Buscar estilos salvos',presetEmpty:'Nenhum estilo salvo ainda.',presetNoMatch:'Nenhum estilo corresponde à busca.',presetApply:'Aplicar',presetDelete:'Excluir',presetDeleteConfirm:'Excluir este estilo salvo?',presetSaved:'Estilo salvo neste navegador.',presetDeleted:'Estilo removido.',presetNameInvalid:'Informe um nome único de até 80 caracteres.',presetStorageError:'O armazenamento local não está disponível neste navegador.',title:'Prévia da aplicação de estilo',hint:'Somente atributos visuais permitidos serão aplicados. Texto, links, mídia, conteúdo, IDs e bloqueios serão preservados.',confirm:'Confirmar aplicação',cancel:'Cancelar',copied:'Estilo copiado. Selecione um ou mais blocos compatíveis para pré-visualizar a aplicação.',done:'Estilo aplicado a %1 bloco(s). A operação pode ser desfeita.',invalid:'Não foi possível aplicar este estilo; o documento não foi alterado.',incompatible:'Selecione blocos compatíveis e desbloqueados.',empty:'Sem atributos visuais para transferir.',fields:{appearance:'aparência',align:'alinhamento',size:'tamanho',mobile_size:'tamanho móvel',style:'estilo',width:'largura',thickness:'espessura',columns:'colunas',tone:'tom',height:'altura'}};
+    if(language.startsWith('es'))return {copy:'Copiar estilo',apply:'Aplicar estilo',savePreset:'Guardar como estilo',presets:'Biblioteca de estilos',presetTitle:'Estilos guardados',presetHint:'Los estilos se guardan localmente en este navegador y se separan entre Pages y Blog.',presetName:'Nombre del estilo',presetPlaceholder:'Ej.: Destacado editorial',presetSave:'Guardar estilo',presetSearch:'Buscar estilos guardados',presetEmpty:'Aún no hay estilos guardados.',presetNoMatch:'No hay estilos que coincidan con la búsqueda.',presetApply:'Aplicar',presetDelete:'Eliminar',presetDeleteConfirm:'¿Eliminar este estilo guardado?',presetSaved:'Estilo guardado en este navegador.',presetDeleted:'Estilo eliminado.',presetNameInvalid:'Escribe un nombre único de hasta 80 caracteres.',presetStorageError:'El almacenamiento local no está disponible en este navegador.',title:'Vista previa de aplicación de estilo',hint:'Solo se aplicarán atributos visuales permitidos. Se conservarán el texto, enlaces, medios, contenido, ID y bloqueos.',confirm:'Confirmar aplicación',cancel:'Cancelar',copied:'Estilo copiado. Selecciona uno o varios bloques compatibles para previsualizar la aplicación.',done:'Estilo aplicado a %1 bloque(s). La operación se puede deshacer.',invalid:'No se pudo aplicar este estilo; no se modificó el documento.',incompatible:'Selecciona bloques compatibles y desbloqueados.',empty:'No hay atributos visuales para transferir.',fields:{appearance:'apariencia',align:'alineación',size:'tamaño',mobile_size:'tamaño móvil',style:'estilo',width:'ancho',thickness:'grosor',columns:'columnas',tone:'tono',height:'altura'}};
+    return {copy:'Copy style',apply:'Apply style',savePreset:'Save as style preset',presets:'Style library',presetTitle:'Saved styles',presetHint:'Styles are stored locally in this browser and kept separate for Pages and Blog.',presetName:'Style name',presetPlaceholder:'e.g. Editorial highlight',presetSave:'Save style',presetSearch:'Search saved styles',presetEmpty:'No saved styles yet.',presetNoMatch:'No saved styles match your search.',presetApply:'Apply',presetDelete:'Delete',presetDeleteConfirm:'Delete this saved style?',presetSaved:'Style saved in this browser.',presetDeleted:'Style deleted.',presetNameInvalid:'Enter a unique name up to 80 characters.',presetStorageError:'Local storage is unavailable in this browser.',title:'Style application preview',hint:'Only permitted visual attributes will be applied. Text, links, media, content, IDs, and lock states stay unchanged.',confirm:'Confirm apply',cancel:'Cancel',copied:'Style copied. Select one or more compatible blocks to preview the application.',done:'Style applied to %1 block(s). This can be undone.',invalid:'Could not apply this style; the document was not changed.',incompatible:'Select compatible, unlocked blocks.',empty:'No visual attributes to transfer.',fields:{appearance:'appearance',align:'alignment',size:'size',mobile_size:'mobile size',style:'style',width:'width',thickness:'thickness',columns:'columns',tone:'tone',height:'height'}};
   }
   function blockLockCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
@@ -1647,7 +1647,7 @@
       this.commandPalette = commandPaletteCopy();
       this.commandPaletteOpen = false; this.commandPaletteQuery = ''; this.commandPaletteActiveIndex = 0;
       this.groupSelection = groupSelectionCopy(); this.groupSelectionIds = []; this.groupSelectionConfirmOpen = false; this.groupSelectionMode = 'group'; this.groupSelectionLabel = '';
-      this.ungroupCopy=ungroupCopy();this.blockLockCopy=blockLockCopy();this.blockStyleCopy=blockStyleCopy();this.styleClipboard=null;this.styleConfirmOpen=false;this.styleTargetIds=[];this.styleReturnTargetId=null;this.lockTransitionId=null;this.blockClipboardSourceId=null;this.ungroupConfirmOpen=false;this.ungroupNodeId=null;
+      this.ungroupCopy=ungroupCopy();this.blockLockCopy=blockLockCopy();this.blockStyleCopy=blockStyleCopy();this.styleClipboard=null;this.styleConfirmOpen=false;this.styleTargetIds=[];this.styleReturnTargetId=null;this.stylePresetLibraryOpen=false;this.stylePresetSaveOpen=false;this.stylePresetQuery='';this.stylePresetTargetIds=[];this.stylePresetReturnTargetId=null;this.stylePresetDraft=null;this.stylePresetStorageError=false;this.lockTransitionId=null;this.blockClipboardSourceId=null;this.ungroupConfirmOpen=false;this.ungroupNodeId=null;
       this.patternFilter = 'all';
       this.patternQuery = '';
       this.ui = workspaceCopy();
@@ -1710,7 +1710,7 @@
     bind() {
       global.document.addEventListener('keydown', (event) => {
         if (!this.fullscreen) return;
-        if (event.key === 'Escape') { if(this.commandPaletteOpen||this.groupSelectionConfirmOpen||this.ungroupConfirmOpen||this.styleConfirmOpen)return; event.preventDefault(); event.stopPropagation(); this.setFullscreen(false); return; }
+        if (event.key === 'Escape') { if(this.commandPaletteOpen||this.groupSelectionConfirmOpen||this.ungroupConfirmOpen||this.styleConfirmOpen||this.stylePresetLibraryOpen||this.stylePresetSaveOpen)return; event.preventDefault(); event.stopPropagation(); this.setFullscreen(false); return; }
         if (event.key !== 'Tab') return;
         const focusable = Array.from(this.root.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter((item) => item.getClientRects().length > 0);
         if (!focusable.length) { event.preventDefault(); this.root.focus(); return; }
@@ -1739,6 +1739,7 @@
       });
       global.document.addEventListener('selectionchange', () => this.captureInlineSelection());
       this.root.addEventListener('click', (event) => {
+        if(event.target.classList&&event.target.classList.contains('rb-style-presets-overlay')){if(this.stylePresetLibraryOpen)this.closeStylePresetLibrary();else this.closeStylePresetSave();return;}
         if(event.target.classList&&event.target.classList.contains('rb-style-confirm-overlay')){this.closeStylePreview();return;}
         if(event.target.classList&&event.target.classList.contains('rb-ungroup-confirm-overlay')){this.closeUngroupPreview();return;}
         if(event.target.classList&&event.target.classList.contains('rb-group-confirm-overlay')){this.closeGroupSelectionPreview();return;}
@@ -1752,6 +1753,7 @@
         if (card && this.root.contains(card)) this.selectNode(card.dataset.nodeId);
       });
       this.root.addEventListener('input', (event) => {
+        const stylePresetSearch=event.target.closest('[data-style-preset-query]');if(stylePresetSearch){this.stylePresetQuery=stylePresetSearch.value;this.filterStylePresetList();return;}
         const groupLabel=event.target.closest('[data-group-selection-label]');if(groupLabel){this.groupSelectionLabel=groupLabel.value;return;}
         const commandSearch=event.target.closest('[data-command-palette-query]');
         if(commandSearch){this.commandPaletteQuery=commandSearch.value;this.commandPaletteActiveIndex=0;this.updateCommandPaletteResults();return;}
@@ -1823,6 +1825,11 @@
         });
       });
       this.root.addEventListener('keydown', (event) => {
+        if(this.stylePresetLibraryOpen||this.stylePresetSaveOpen){
+          if(event.key==='Escape'){event.preventDefault();event.stopPropagation();if(this.stylePresetLibraryOpen)this.closeStylePresetLibrary();else this.closeStylePresetSave();return;}
+          if(event.key==='Tab'){const dialog=this.root.querySelector('.rb-style-presets-dialog,.rb-style-preset-save-dialog'),focusable=dialog?Array.from(dialog.querySelectorAll('input:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter((item)=>item.getClientRects().length>0):[];if(focusable.length){const first=focusable[0],last=focusable[focusable.length-1];if(event.shiftKey&&(global.document.activeElement===first||!dialog.contains(global.document.activeElement))){event.preventDefault();last.focus();}else if(!event.shiftKey&&(global.document.activeElement===last||!dialog.contains(global.document.activeElement))){event.preventDefault();first.focus();}}return;}
+          return;
+        }
         if(this.styleConfirmOpen){
           if(event.key==='Escape'){event.preventDefault();event.stopPropagation();this.closeStylePreview();return;}
           if(event.key==='Tab'){const dialog=this.root.querySelector('.rb-style-confirm-dialog'),focusable=dialog?Array.from(dialog.querySelectorAll('button:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter((item)=>item.getClientRects().length>0):[];if(focusable.length){const first=focusable[0],last=focusable[focusable.length-1];if(event.shiftKey&&(global.document.activeElement===first||!dialog.contains(global.document.activeElement))){event.preventDefault();last.focus();}else if(!event.shiftKey&&(global.document.activeElement===last||!dialog.contains(global.document.activeElement))){event.preventDefault();first.focus();}}return;}
@@ -2101,7 +2108,7 @@
     renderGroupSelectionBar() {
       const copy=this.groupSelection,bar=this.el('section','rb-group-selection-bar');bar.setAttribute('role','group');bar.setAttribute('aria-label',copy.title);
       const message=this.el('div','rb-group-selection-message');message.append(this.el('strong','',copy.count.replace('%1',String(this.groupSelectionIds.length))),this.el('span','',copy.hint));
-      const actions=this.el('div','rb-group-selection-actions'),moveUp=this.button(this.strings.moveUp,'move-group-selection',{direction:'up',icon:'up',showLabel:true}),moveDown=this.button(this.strings.moveDown,'move-group-selection',{direction:'down',icon:'down',showLabel:true});moveUp.disabled=!this.canMoveGroupSelection(-1);moveDown.disabled=!this.canMoveGroupSelection(1);const canGroup=this.canGroupSelection(),group=this.button(copy.group,'group-selection-preview',{icon:'group',showLabel:true});group.disabled=!canGroup;const duplicate=this.button(copy.duplicate,'group-selection-duplicate-preview',{icon:'copy',showLabel:true});duplicate.disabled=!canGroup;const applyStyle=this.button(this.blockStyleCopy.apply,'apply-group-style-preview',{icon:'settings',showLabel:true});applyStyle.disabled=!this.canApplyBlockStyle(this.groupSelectionIds);actions.append(moveUp,moveDown,group,duplicate,applyStyle,this.button(copy.clear,'clear-group-selection',{icon:'close',showLabel:true}));bar.append(message,actions);return bar;
+      const actions=this.el('div','rb-group-selection-actions'),moveUp=this.button(this.strings.moveUp,'move-group-selection',{direction:'up',icon:'up',showLabel:true}),moveDown=this.button(this.strings.moveDown,'move-group-selection',{direction:'down',icon:'down',showLabel:true});moveUp.disabled=!this.canMoveGroupSelection(-1);moveDown.disabled=!this.canMoveGroupSelection(1);const canGroup=this.canGroupSelection(),group=this.button(copy.group,'group-selection-preview',{icon:'group',showLabel:true});group.disabled=!canGroup;const duplicate=this.button(copy.duplicate,'group-selection-duplicate-preview',{icon:'copy',showLabel:true});duplicate.disabled=!canGroup;const applyStyle=this.button(this.blockStyleCopy.apply,'apply-group-style-preview',{icon:'settings',showLabel:true});applyStyle.disabled=!this.canApplyBlockStyle(this.groupSelectionIds);const openPresets=this.button(this.blockStyleCopy.presets,'open-style-presets',{selection:'true',icon:'layers',showLabel:true});openPresets.disabled=!this.stylePresetStorageKey()||this.groupSelectionIds.some((id)=>this.isNodeEffectivelyLocked(id));actions.append(moveUp,moveDown,group,duplicate,applyStyle,openPresets,this.button(copy.clear,'clear-group-selection',{icon:'close',showLabel:true}));bar.append(message,actions);return bar;
     }
 
     renderGroupSelectionConfirm() {
@@ -2122,19 +2129,7 @@
       this.render();const button=Array.from(this.root.querySelectorAll('[data-action="copy-block-style"]')).find((item)=>item.dataset.nodeId===id);if(button)button.focus();this.announceStatus(this.blockStyleCopy.copied);return true;
     }
 
-    canApplyStyleToNode(node,effectivelyLocked) {
-      const style=this.styleClipboard;if(!node||!style||effectivelyLocked)return false;
-      const appearanceCompatible=!!(style.appearance&&Object.keys(style.appearance).length),sameType=node.type===style.sourceType;
-      if(!sameType&&!appearanceCompatible)return false;
-      if(JSON.stringify(node.attributes.appearance)!==JSON.stringify(style.appearance||undefined))return true;
-      if(sameType&&Object.keys(style.native||{}).some((key)=>JSON.stringify(node.attributes[key])!==JSON.stringify(style.native[key]===null?undefined:style.native[key])))return true;
-      return false;
-    }
-
-    canApplyBlockStyle(ids) {
-      if(!this.styleClipboard||!Array.isArray(ids)||!ids.length)return false;
-      const result=applyBlockStyle(this.getDocument(),ids,this.styleClipboard,this.allowPageMedia);return !!result.valid;
-    }
+    canApplyBlockStyle(ids) { return this.canApplyStyleToIds(ids,this.styleClipboard); }
 
     openBlockStylePreview(nodeId,useSelection) {
       const ids=useSelection&&this.groupSelectionIds.length?this.groupSelectionIds.slice():[nodeId||this.selectedId];
@@ -2162,6 +2157,117 @@
       const list=this.el('ol','rb-group-confirm-list');
       if(result.valid){result.appliedIds.forEach((id)=>{const path=this.findPath(this.state.blocks,id),nextPath=this.findPath(result.document.blocks,id);if(!path||!nextPath)return;const item=this.el('li','rb-group-confirm-item'),details=(result.styleChanges[id]||[]).map((key)=>{const before=key==='appearance'?path.node.attributes.appearance:path.node.attributes[key],after=key==='appearance'?nextPath.node.attributes.appearance:nextPath.node.attributes[key],value=(item)=>item===undefined?'—':typeof item==='object'?JSON.stringify(item):String(item);return (copy.fields[key]||key)+': '+value(before)+' → '+value(after);}).join(' · ');item.append(this.el('strong','',this.label(path.node.type)),this.el('span','',details||copy.empty));list.append(item);});}
       dialog.append(list);const actions=this.el('div','rb-group-confirm-actions');actions.append(this.button(copy.cancel,'block-style-cancel',{icon:'close',showLabel:true}),this.button(copy.confirm,'block-style-confirm',{icon:'check',showLabel:true}));dialog.append(actions);overlay.append(dialog);return overlay;
+    }
+
+    stylePresetStorageKey() {
+      const config=this.patternConfig||{};if(typeof config.stylePresetKey==='string'&&config.stylePresetKey)return config.stylePresetKey;
+      const draft=typeof config.draftKey==='string'?config.draftKey:'';return draft?draft.replace(':draft:v1:',':style-presets:v1:').split(':').slice(0,-1).join(':'):'';
+    }
+
+    isValidStoredStylePreset(item) {
+      if(!item||typeof item!=='object'||typeof item.id!=='string'||!/^style-[A-Za-z0-9_-]{1,80}$/.test(item.id)||typeof item.name!=='string'||!item.name.trim()||item.name.length>80||!item.style||typeof item.style!=='object')return false;
+      const known=TYPES.some(([type])=>type===item.style.sourceType)||['core/list-item','core/column','core/table-row','core/table-cell'].includes(item.style.sourceType);if(!known)return false;
+      const style=item.style,allowed=BLOCK_STYLE_ATTRIBUTES[style.sourceType]||[];
+      if(style.appearance!==null&&style.appearance!==undefined&&!validBlockAppearance(style.appearance))return false;
+      if(!style.native||typeof style.native!=='object'||Array.isArray(style.native)||Object.keys(style.native).some((key)=>!allowed.includes(key)))return false;
+      return Object.values(style.native).every((value)=>value===null||['string','number','boolean'].includes(typeof value));
+    }
+
+    readStylePresets() {
+      const key=this.stylePresetStorageKey();this.stylePresetStorageError=false;if(!key){this.stylePresetStorageError=true;return [];}
+      try{const raw=global.localStorage.getItem(key);if(!raw)return [];if(raw.length>524288){this.stylePresetStorageError=true;return [];}const values=JSON.parse(raw);return Array.isArray(values)?values.filter((item)=>this.isValidStoredStylePreset(item)).slice(0,50):[];}catch(_){this.stylePresetStorageError=true;return [];}
+    }
+
+    writeStylePresets(presets) {
+      const key=this.stylePresetStorageKey();if(!key){this.stylePresetStorageError=true;return false;}
+      try{const value=JSON.stringify(presets.slice(0,50));if(value.length>524288){this.stylePresetStorageError=true;return false;}global.localStorage.setItem(key,value);this.stylePresetStorageError=false;return true;}catch(_){this.stylePresetStorageError=true;return false;}
+    }
+
+    addStylePresetFromBlock(nodeId) {
+      const path=nodeId?this.findPath(this.state.blocks,nodeId):null;if(!path||this.isNodeEffectivelyLocked(nodeId)){this.announceStatus(this.blockLockCopy.denied);return;}
+      this.stylePresetDraft={sourceId:nodeId,style:captureBlockStyle(path.node)};this.stylePresetSaveOpen=true;this.render();const input=this.root.querySelector('[data-style-preset-name]');if(input)input.focus();
+    }
+
+    confirmSaveStylePreset() {
+      if(!this.stylePresetSaveOpen||!this.stylePresetDraft)return;
+      const input=this.root.querySelector('[data-style-preset-name]'),name=String(input&&input.value||'').trim(),presets=this.readStylePresets();
+      if(this.stylePresetStorageError){this.announceStatus(this.blockStyleCopy.presetStorageError);return;}
+      if(!name||name.length>80||presets.some((item)=>item.name.toLowerCase()===name.toLowerCase())){this.announceStatus(this.blockStyleCopy.presetNameInvalid);if(input)input.focus();return;}
+      if(presets.length>=50){this.announceStatus(this.blockStyleCopy.presetStorageError);return;}
+      let id;do{id='style-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);}while(presets.some((item)=>item.id===id));
+      presets.push({id,name,style:CLONE(this.stylePresetDraft.style),createdAt:Date.now()});
+      if(!this.writeStylePresets(presets)){this.announceStatus(this.blockStyleCopy.presetStorageError);return;}
+      const sourceId=this.stylePresetDraft.sourceId;this.stylePresetSaveOpen=false;this.stylePresetDraft=null;this.render();const button=Array.from(this.root.querySelectorAll('[data-action="save-style-preset"]')).find((item)=>item.dataset.nodeId===sourceId);if(button)button.focus();this.announceStatus(this.blockStyleCopy.presetSaved);
+    }
+
+    closeStylePresetSave() {
+      if(!this.stylePresetSaveOpen)return;const sourceId=this.stylePresetDraft&&this.stylePresetDraft.sourceId;this.stylePresetSaveOpen=false;this.stylePresetDraft=null;this.render();const button=Array.from(this.root.querySelectorAll('[data-action="save-style-preset"]')).find((item)=>item.dataset.nodeId===sourceId);if(button)button.focus();
+    }
+
+    canApplyStyleToNode(node,effectivelyLocked,styleOverride) {
+      const style=styleOverride||this.styleClipboard;if(!node||!style||effectivelyLocked)return false;
+      const appearanceCompatible=!!(style.appearance&&Object.keys(style.appearance).length),sameType=node.type===style.sourceType;
+      if(!sameType&&!appearanceCompatible)return false;
+      if(JSON.stringify(node.attributes.appearance)!==JSON.stringify(style.appearance||undefined))return true;
+      if(sameType&&Object.keys(style.native||{}).some((key)=>JSON.stringify(node.attributes[key])!==JSON.stringify(style.native[key]===null?undefined:style.native[key])))return true;
+      return false;
+    }
+
+    canApplyStyleToIds(ids,style) {
+      if(!Array.isArray(ids)||!ids.length||!style)return false;let changed=false;
+      for(const id of ids){const path=this.findPath(this.state.blocks,id);if(!path||!this.canApplyStyleToNode(path.node,this.isNodeEffectivelyLocked(id),style))return false;changed=true;}
+      return changed;
+    }
+
+    openStylePresetLibrary(nodeId,useSelection) {
+      const ids=useSelection&&this.groupSelectionIds.length?this.groupSelectionIds.slice():[nodeId||this.selectedId];
+      if(!this.stylePresetStorageKey()){this.announceStatus(this.blockStyleCopy.presetStorageError);return;}
+      if(!ids.length||ids.some((id)=>this.isNodeEffectivelyLocked(id))){this.announceStatus(this.blockLockCopy.denied);return;}
+      this.readStylePresets();if(this.stylePresetStorageError){this.announceStatus(this.blockStyleCopy.presetStorageError);return;}
+      this.stylePresetTargetIds=ids;this.stylePresetReturnTargetId=ids[0];this.stylePresetQuery='';this.stylePresetLibraryOpen=true;this.render();const search=this.root.querySelector('[data-style-preset-query]');if(search)search.focus();
+    }
+
+    closeStylePresetLibrary() {
+      if(!this.stylePresetLibraryOpen)return;const id=this.stylePresetReturnTargetId;this.stylePresetLibraryOpen=false;this.stylePresetTargetIds=[];this.stylePresetReturnTargetId=null;this.stylePresetQuery='';this.render();const trigger=Array.from(this.root.querySelectorAll('[data-action="open-style-presets"]')).find((item)=>item.dataset.nodeId===id)||this.root.querySelector('[data-action="workspace-tool"][data-tool="structure"]');if(trigger)trigger.focus();
+    }
+
+    applySavedStylePreset(presetId) {
+      const preset=this.readStylePresets().find((item)=>item.id===presetId);if(!preset||!this.canApplyStyleToIds(this.stylePresetTargetIds,preset.style)){this.announceStatus(this.blockStyleCopy.incompatible);return;}
+      const targets=this.stylePresetTargetIds.slice();this.styleClipboard=CLONE(preset.style);this.stylePresetLibraryOpen=false;this.stylePresetTargetIds=[];this.stylePresetReturnTargetId=null;this.stylePresetQuery='';this.openBlockStylePreview(null,false,targets);
+    }
+
+    deleteSavedStylePreset(presetId) {
+      if(typeof global.confirm==='function'&&!global.confirm(this.blockStyleCopy.presetDeleteConfirm))return;
+      const presets=this.readStylePresets();if(this.stylePresetStorageError){this.announceStatus(this.blockStyleCopy.presetStorageError);return;}const next=presets.filter((item)=>item.id!==presetId);if(next.length===presets.length)return;
+      if(!this.writeStylePresets(next)){this.announceStatus(this.blockStyleCopy.presetStorageError);return;}
+      this.announceStatus(this.blockStyleCopy.presetDeleted);this.render();const search=this.root.querySelector('[data-style-preset-query]');if(search){search.focus();search.value=this.stylePresetQuery;}
+    }
+
+    filterStylePresetList() {
+      const query=this.stylePresetQuery.trim().toLowerCase(),cards=Array.from(this.root.querySelectorAll('.rb-style-preset-card'));let visible=0;
+      cards.forEach((card)=>{const show=!query||card.textContent.toLowerCase().includes(query);card.hidden=!show;if(show)visible++;});
+      const empty=this.root.querySelector('[data-style-preset-no-match]');if(empty)empty.hidden=visible>0||!query||!cards.length;
+    }
+
+    renderStylePresetSaveDialog() {
+      const copy=this.blockStyleCopy,overlay=this.el('div','rb-group-confirm-overlay rb-style-presets-overlay'),dialog=this.el('section','rb-group-confirm-dialog rb-style-preset-save-dialog');dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','rb-style-preset-save-title-'+this.instance);
+      const title=this.el('h2','rb-group-confirm-title',copy.savePreset);title.id='rb-style-preset-save-title-'+this.instance;dialog.append(title,this.el('p','rb-group-confirm-lead',copy.presetHint));
+      const label=this.el('label','rb-field');label.append(this.el('span','',copy.presetName));const input=this.el('input','rb-input');input.type='text';input.maxLength=80;input.placeholder=copy.presetPlaceholder;input.dataset.stylePresetName='1';label.append(input);dialog.append(label);
+      const actions=this.el('div','rb-group-confirm-actions');actions.append(this.button(copy.cancel,'style-preset-save-cancel',{icon:'close',showLabel:true}),this.button(copy.presetSave,'style-preset-save-confirm',{icon:'check',showLabel:true}));dialog.append(actions);overlay.append(dialog);return overlay;
+    }
+
+    renderStylePresetLibrary() {
+      const copy=this.blockStyleCopy,presets=this.readStylePresets(),overlay=this.el('div','rb-group-confirm-overlay rb-style-presets-overlay'),dialog=this.el('section','rb-group-confirm-dialog rb-style-presets-dialog');dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','rb-style-presets-title-'+this.instance);
+      const title=this.el('h2','rb-group-confirm-title',copy.presetTitle);title.id='rb-style-presets-title-'+this.instance;dialog.append(title,this.el('p','rb-group-confirm-lead',copy.presetHint));
+      const searchLabel=this.el('label','rb-field rb-style-preset-search');searchLabel.append(this.el('span','',copy.presetSearch));const search=this.el('input','rb-input');search.type='search';search.value=this.stylePresetQuery;search.dataset.stylePresetQuery='1';searchLabel.append(search);dialog.append(searchLabel);
+      const list=this.el('div','rb-style-preset-list');
+      if(!presets.length)list.append(this.el('p','rb-muted',copy.presetEmpty));
+      presets.forEach((preset)=>{const card=this.el('article','rb-style-preset-card'),name=this.el('strong','',preset.name),type=this.el('span','rb-style-preset-type',this.label(preset.style.sourceType));card.append(name,type);
+        const keys=[...(preset.style.appearance?['appearance']:[]),...Object.keys(preset.style.native||{})];const summary=this.el('p','rb-style-preset-summary',keys.map((key)=>copy.fields[key]||key).join(', ')||copy.empty);card.append(summary);
+        const actions=this.el('div','rb-style-preset-actions'),apply=this.button(copy.presetApply,'apply-saved-style-preset',{presetId:preset.id,icon:'check',showLabel:true});apply.disabled=!this.canApplyStyleToIds(this.stylePresetTargetIds,preset.style);actions.append(apply,this.button(copy.presetDelete,'delete-saved-style-preset',{presetId:preset.id,icon:'trash',showLabel:true}));card.append(actions);list.append(card);
+      });
+      const noMatch=this.el('p','rb-muted',copy.presetNoMatch||copy.presetEmpty);noMatch.dataset.stylePresetNoMatch='1';noMatch.hidden=true;list.append(noMatch);dialog.append(list);
+      const actions=this.el('div','rb-group-confirm-actions');actions.append(this.button(copy.cancel,'style-preset-library-close',{icon:'close',showLabel:true}));dialog.append(actions);overlay.append(dialog);return overlay;
     }
 
     openUngroupPreview(nodeId) {
@@ -2292,6 +2398,13 @@
       if (this.locked&&!['workspace-tool','toggle-fullscreen','toggle-find-replace','toggle-preview','compare-draft-revision','command-palette-open','command-palette-close','command-palette-select'].includes(name)) return;
       if(name==='block-lock-toggle'){this.toggleBlockLock(button.dataset.nodeId);return;}
       if(name==='copy-block-style'){this.copyBlockStyle(button.dataset.nodeId);return;}
+      if(name==='save-style-preset'){this.addStylePresetFromBlock(button.dataset.nodeId);return;}
+      if(name==='open-style-presets'){this.openStylePresetLibrary(button.dataset.nodeId,button.dataset.selection==='true');return;}
+      if(name==='style-preset-save-confirm'){this.confirmSaveStylePreset();return;}
+      if(name==='style-preset-save-cancel'){this.closeStylePresetSave();return;}
+      if(name==='style-preset-library-close'){this.closeStylePresetLibrary();return;}
+      if(name==='apply-saved-style-preset'){this.applySavedStylePreset(button.dataset.presetId);return;}
+      if(name==='delete-saved-style-preset'){this.deleteSavedStylePreset(button.dataset.presetId);return;}
       if(name==='apply-block-style-preview'||name==='apply-group-style-preview'){this.openBlockStylePreview(button.dataset.nodeId,name==='apply-group-style-preview');return;}
       if(name==='block-style-cancel'){this.closeStylePreview();return;}
       if(name==='block-style-confirm'){this.confirmBlockStyle();return;}
@@ -4323,6 +4436,8 @@
       this.root.append(foot);
       const live = this.el('span','rb-sr-only',this.statusMessage); live.setAttribute('role','status'); live.setAttribute('aria-live','polite'); live.dataset.editorStatus = '1'; this.root.append(live);
       if(this.styleConfirmOpen){const dialog=this.renderBlockStyleConfirm();this.root.append(dialog);Array.from(this.root.children).forEach((child)=>{if(child!==dialog)child.setAttribute('inert','');});}
+      else if(this.stylePresetLibraryOpen){const dialog=this.renderStylePresetLibrary();this.root.append(dialog);Array.from(this.root.children).forEach((child)=>{if(child!==dialog)child.setAttribute('inert','');});}
+      else if(this.stylePresetSaveOpen){const dialog=this.renderStylePresetSaveDialog();this.root.append(dialog);Array.from(this.root.children).forEach((child)=>{if(child!==dialog)child.setAttribute('inert','');});}
       else if(this.ungroupConfirmOpen){const dialog=this.renderUngroupConfirm();this.root.append(dialog);Array.from(this.root.children).forEach((child)=>{if(child!==dialog)child.setAttribute('inert','');});}
       else if(this.groupSelectionConfirmOpen){const dialog=this.renderGroupSelectionConfirm();this.root.append(dialog);Array.from(this.root.children).forEach((child)=>{if(child!==dialog)child.setAttribute('inert','');});}
       else if(this.commandPaletteOpen){const palette=this.renderCommandPalette();this.root.append(palette);Array.from(this.root.children).forEach((child)=>{if(child!==palette)child.setAttribute('inert','');});}
@@ -4339,6 +4454,8 @@
       const lockButton=this.button(node.attributes.locked===true?this.blockLockCopy.unlock:this.blockLockCopy.lock,'block-lock-toggle',{nodeId:node.id,icon:node.attributes.locked===true?'unlock':'lock',showLabel:true});lockButton.disabled=this.locked||this.isNodeLockedByAncestor(node.id);toolbar.append(lockButton);
       const copyStyle=this.button(this.blockStyleCopy.copy,'copy-block-style',{nodeId:node.id,icon:'copy',showLabel:true});copyStyle.disabled=this.locked||effectivelyLocked;toolbar.append(copyStyle);
       const applyStyle=this.button(this.blockStyleCopy.apply,'apply-block-style-preview',{nodeId:node.id,icon:'settings',showLabel:true});applyStyle.disabled=this.locked||!this.canApplyStyleToNode(node,effectivelyLocked);toolbar.append(applyStyle);
+      const saveStylePreset=this.button(this.blockStyleCopy.savePreset,'save-style-preset',{nodeId:node.id,icon:'file',showLabel:true});saveStylePreset.disabled=this.locked||effectivelyLocked;toolbar.append(saveStylePreset);
+      const openStylePresets=this.button(this.blockStyleCopy.presets,'open-style-presets',{nodeId:node.id,icon:'layers',showLabel:true});openStylePresets.disabled=this.locked||effectivelyLocked||!this.stylePresetStorageKey();toolbar.append(openStylePresets);
       const labelledTextToolbar=['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/button','core/callout','core/details','core/code','core/spacer','core/separator','core/image','core/video_embed','core/video_file','core/cover','core/file','core/audio','core/group','core/table'].includes(node.type);
       if(labelledTextToolbar)toolbar.classList.add('rb-labeled-text-toolbar');
       const drag = this.el('span','rb-drag-handle'); drag.append(this.icon('grip','rb-icon')); drag.draggable = true; drag.dataset.dragHandle = '1'; drag.title = this.strings.dragHint; drag.setAttribute('aria-hidden','true'); toolbar.append(drag,this.el('span','rb-sr-only',this.strings.dragHint));

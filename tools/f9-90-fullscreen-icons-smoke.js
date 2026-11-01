@@ -11,7 +11,7 @@ const checks = [
   ['fullscreen ribbon control swaps expand and collapse according to mode', js.includes("this.fullscreen?'collapse':'expand'")],
   ['Back to form button uses the collapse glyph', js.includes("this.button(this.strings.fullscreenExit,'toggle-fullscreen',{icon:'collapse'})")],
   ['fullscreen controls use a stronger stroke without changing other editor icons', css.includes('.rb-button[data-action="toggle-fullscreen"] .rb-icon,.rb-fullscreen-done .rb-icon{stroke-width:2.5}')],
-  ['Page and Blog share the updated icon asset cache key', page.includes('threejs-42-block-lock') && blog.includes('threejs-42-block-lock')],
+  ['Page and Blog share the updated icon asset cache key', page.includes('threejs-44-style-presets') && blog.includes('threejs-44-style-presets')],
 ];
 let failures = 0;
 for (const [label, ok] of checks) {
