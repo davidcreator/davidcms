@@ -15,6 +15,7 @@ PAGE_CONTROLLER = (ROOT / 'dev/admin/controller/cms/page.php').read_text(encodin
 BLOG_CONTROLLER = (ROOT / 'dev/admin/controller/blog/blog.php').read_text(encoding='utf-8') if (ROOT / 'dev/admin/controller/blog/blog.php').exists() else ''
 F9_93_SMOKE = (ROOT / 'tools/f9-93-duplicate-selection-smoke.js').read_text(encoding='utf-8') if (ROOT / 'tools/f9-93-duplicate-selection-smoke.js').exists() else ''
 F9_94_SMOKE = (ROOT / 'tools/f9-94-move-selection-smoke.js').read_text(encoding='utf-8') if (ROOT / 'tools/f9-94-move-selection-smoke.js').exists() else ''
+F9_95_SMOKE = (ROOT / 'tools/f9-95-ungroup-smoke.js').read_text(encoding='utf-8') if (ROOT / 'tools/f9-95-ungroup-smoke.js').exists() else ''
 
 m = re.search(r'const TYPES = \[(.*?)\n  \];', JS, re.S)
 assert m, 'Block catalog not found'
@@ -76,7 +77,7 @@ for name, ok in [
     ('Admin image previews resolve relative media paths from catalog base', 'resolveAdminMediaUrl(src)' in JS and 'this.resolveAdminMediaUrl(node.attributes.src)' in JS and "'catalogBase' => $this->pageCatalogAssetUrl()" in PAGE_CONTROLLER and "'catalogBase' => $this->catalogAssetUrl()" in BLOG_CONTROLLER),
     ('Admin media path has a catalog fallback when server strings omit catalogBase', "current.pathname.indexOf('/admin/')" in JS and "current.pathname.slice(0,adminIndex+1)+'catalog/'" in JS),
     ('Selecting media returns focus to the editor before hiding the modal', "activeEditor.focusNode(activeEditor.selectedId)" in PAGE_MEDIA_JS),
-    ('Page and Blog asset versions bust cached media preview code', "'-threejs-40-move-selection'" in PAGE_CONTROLLER and "'-threejs-40-move-selection'" in BLOG_CONTROLLER),
+    ('Page and Blog asset versions bust cached media preview code', "'-threejs-41-ungroup'" in PAGE_CONTROLLER and "'-threejs-41-ungroup'" in BLOG_CONTROLLER),
     ('Page and Blog inspector string arrays keep valid alignment keys after catalog base addition', "'alignments' => ['left'" in PAGE_CONTROLLER and "'alignments' => ['left'" in BLOG_CONTROLLER and "'alignments => ['left'" not in PAGE_CONTROLLER+BLOG_CONTROLLER),
     ('CMS Pages media open event is acknowledged and missing listener is announced accessibly', 'cancelable:true' in JS and 'if(!event.defaultPrevented)' in JS and 'event.preventDefault()' in PAGE_MEDIA_JS and 'pageMediaUnavailable:' in JS),
     ('CMS Pages media modal and backdrop stack above the fullscreen editor', 'body.rb-bdre-fullscreen-open.rb-page-media-open #cmsPageMediaModal{z-index:12050}' in CSS and 'body.rb-bdre-fullscreen-open.rb-page-media-open .modal-backdrop{z-index:12040}' in CSS and 'z-index:12000' in CSS and "classList.add('rb-page-media-open')" in PAGE_MEDIA_JS),
@@ -178,6 +179,11 @@ for name, ok in [
     ('F9-94 validates source/output, rejects parent/range/boundary violations and preserves original input', 'group_selection_boundary' in JS and 'group_selection_not_contiguous' in JS and 'group_selection_not_siblings' in JS and 'validateDocument(next,!!allowPageMedia)' in JS and 'JSON.stringify(doc)!==original' in F9_94_SMOKE),
     ('F9-94 records movement as one undoable editor commit and keeps localized status feedback', 'this.commit(result.document,focusId)' in JS and 'this.groupSelection.movedUp' in JS and 'this.groupSelection.movedDown' in JS and "moveBoundary:'" in JS),
     ('F9-94 regression smoke verifies order, boundaries, nested-parent rejection and immutability', all(x in F9_94_SMOKE for x in ['movedUp','movedDown','boundaries/noncontiguous/cross-parent','Move helper mutated the source document'])),
+    ('F9-95 exposes Ungroup from the Group block toolbar and inspector', "this.button(this.ungroupCopy.open,'ungroup-block-preview'" in JS and "ungroup.disabled=this.locked" in JS and 'renderBlockToolbar(node)' in JS),
+    ('F9-95 requires a preview and explicit confirmation, discloses outline-label removal and offers cancel', 'renderUngroupConfirm()' in JS and 'copy.labelWarning' in JS and "'ungroup-confirm'" in JS and "'ungroup-cancel'" in JS and "copy.confirm" in JS),
+    ('F9-95 pure helper removes only a Group wrapper, splices ordered children in place and validates the result', 'function ungroupBlock(document, groupId, allowPageMedia)' in JS and "location.siblings.splice(location.index,1,...children)" in JS and 'validateDocument(next,!!allowPageMedia)' in JS and 'ungroupBlock: ungroupBlock' in JS),
+    ('F9-95 confirmation commits one undoable document change and focuses the first preserved child', 'this.commit(result.document,focusId)' in JS and 'result.unwrappedIds[0]' in JS and 'this.ungroupCopy.done' in JS),
+    ('F9-95 modal handles Escape/Tab, protects fullscreen Escape and smoke verifies nested groups/source immutability', 'this.ungroupConfirmOpen)return; event.preventDefault();' in JS and 'this.closeUngroupPreview()' in JS and all(x in F9_95_SMOKE for x in ['Nested Group should unwrap','source document','children and IDs remain','rejects invalid targets'])),
     ('F9-75 scopes the responsive interface to the editor and handles narrow widths', '--rb-ink:#182230' in CSS and '@media(max-width:900px){' in CSS and '@media(max-width:640px){' in CSS and '.rb-layout>*{min-width:0}' in CSS),
     ('F9-75 preserves native editor actions without introducing external UI assets', 'Presentation-only' in CSS and 'No external fonts/assets' in CSS and 'https://' not in CSS),
     ('F9-77 accessibility audit is connected to the independent workspace rail and localized ribbon', "else if(tool==='accessibility'){this.workspaceView='accessibility'" in JS and "['accessibility',this.accessibility.tool,'check']" in JS and "tool:'accessibility'" in JS and 'function accessibilityAuditCopy()' in JS),
@@ -234,7 +240,7 @@ for name, ok in [
     ('F9-88 quick edit is POST-only, permission/CSRF protected, validates localized slug and commits with an optimistic fingerprint', 'public function quickEdit(string $page_id' in PAGE_CONTROLLER and "$requestMethod !== 'POST'" in PAGE_CONTROLLER and 'csrfValid()' in PAGE_CONTROLLER and 'keywordTaken(' in PAGE_CONTROLLER and 'getPageEditFingerprint($pageId)' in PAGE_CONTROLLER),
     ('F9-88 preserves saved BDRE content and SEO metadata by basing its payload on persisted Page descriptions', "getPageDescriptions($pageId)" in PAGE_CONTROLLER and "'description'=>(string)($existing['description'] ?? '')" in PAGE_CONTROLLER and "'meta_title'=>(string)($existing['meta_title'] ?? '')" in PAGE_CONTROLLER and "'meta_description'=>(string)($existing['meta_description'] ?? '')" in PAGE_CONTROLLER),
     ('F9-88 list fetches current-language keyword in its shared query and loads the keyboard-accessible row controller', "AS `quick_title`" in (ROOT/'dev/admin/model/cms/page.php').read_text() and "AS `keyword`" in (ROOT/'dev/admin/model/cms/page.php').read_text() and 'cms-page-quick-edit.js' in PAGE_CONTROLLER and (ROOT/'tools/f9-88-pages-quick-edit-smoke.js').exists() and (ROOT/'docs/F9-88-Pages-Quick-Edit-and-Fullscreen-Editor.md').exists()),
-    ('F9-94 Page and Blog controllers use matching new asset cache keys', 'threejs-40-move-selection' in PAGE_CONTROLLER and 'threejs-40-move-selection' in BLOG_CONTROLLER),
+    ('F9-95 Page and Blog controllers use matching new asset cache keys', 'threejs-41-ungroup' in PAGE_CONTROLLER and 'threejs-41-ungroup' in BLOG_CONTROLLER),
     ('icon-only tools receive native hover title and description', "b.setAttribute('title',name+'\\n'+tooltipDescription)" in JS),
 ]:
     results.append(('editor-wide', name, ok))
