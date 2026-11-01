@@ -1015,3 +1015,10 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-anchor-repair-arrow{color:#315ee8;font-weight:800}
 .rb-anchor-repair-generated-note,.rb-anchor-repair-empty-targets{margin:.6rem 0;padding:.7rem .85rem;border-inline-start:3px solid #315ee8;border-radius:.5rem;background:#eff6ff;color:#1e3a8a;line-height:1.5}
 @media(forced-colors:active){.rb-anchor-repair-preview,.rb-anchor-repair-generated-note,.rb-anchor-repair-empty-targets{border:1px solid CanvasText}}
+
+/* F9-87: page creation has its own full-screen editor route; quick title control lives in the editor context bar. */
+.rb-page-context-title-editor{min-width:min(18rem,34vw)}
+.rb-page-context-title-input{width:min(34rem,48vw);min-height:2.35rem;padding:.35rem .55rem;border:1px solid #bdc8da;border-radius:.4rem;background:#fff;color:#25324b;font:600 .9rem/1.3 system-ui,sans-serif}
+.rb-page-context-title-input:focus{outline:2px solid #3557c7;outline-offset:1px;border-color:#3557c7}
+.cms-page-create-editor .form-layout{align-items:start}
+@media(max-width:700px){.rb-page-context-title-editor,.rb-page-context-title-input{width:100%;max-width:100%}}

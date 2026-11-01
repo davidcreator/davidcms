@@ -1573,6 +1573,8 @@
         if (card && this.root.contains(card)) this.selectNode(card.dataset.nodeId);
       });
       this.root.addEventListener('input', (event) => {
+        const pageContextTitle=event.target.closest('[data-page-context-title-input]');
+        if(pageContextTitle){const context=this.options.workspaceContext||{},field=context.pageTitleInput;if(field){field.value=pageContextTitle.value;field.dispatchEvent(new global.Event('input',{bubbles:true}));}return;}
         const codeEditor = event.target.closest('[data-edit-code]');
         if (codeEditor) { this.updateCodeNode(codeEditor.dataset.editCode, codeEditor); this.scheduleDocumentStatistics(); return; }
         const search = event.target.closest('[data-inserter-search]');
@@ -3709,9 +3711,12 @@
       if (this.fullscreen && this.workspaceView==='editor' && this.options.workspaceContext) {
         const context=this.options.workspaceContext;
         const contextBar=this.el('section','rb-page-context'); contextBar.setAttribute('role','group'); contextBar.setAttribute('aria-label',context.pageLabel || 'Page context');
-        const contextDetails=this.el('div','rb-page-context-details');
-        const pageInfo=this.el('div','rb-page-context-item'); const currentTitle=context.pageTitleInput && typeof context.pageTitleInput.value === 'string' ? context.pageTitleInput.value : context.pageTitle; pageInfo.append(this.el('span','rb-page-context-label',context.pageLabel || 'Page'),this.el('strong','rb-page-context-value',currentTitle || context.untitledPage || 'Untitled page'));
-        const languageInfo=this.el('div','rb-page-context-item'); languageInfo.append(this.el('span','rb-page-context-label',context.languageLabel || 'Language'),this.el('strong','rb-page-context-value',(context.languageName || '') + (context.languageCode ? ' · ' + context.languageCode : '')));
+        const contextDetails=this.el('div','rb-page-context-details'); const currentTitle=context.pageTitleInput && typeof context.pageTitleInput.value === 'string' ? context.pageTitleInput.value : context.pageTitle;
+        const pageInfo=this.el(context.allowTitleEdit?'label':'div','rb-page-context-item'+(context.allowTitleEdit?' rb-page-context-title-editor':''));
+        pageInfo.append(this.el('span','rb-page-context-label',context.allowTitleEdit?(context.titleInputLabel||context.pageLabel||'Page title'):(context.pageLabel||'Page')));
+        if(context.allowTitleEdit){const titleInput=this.el('input','rb-page-context-title-input');titleInput.type='text';titleInput.maxLength=255;titleInput.value=currentTitle||'';titleInput.dataset.pageContextTitleInput='1';titleInput.setAttribute('aria-label',context.titleInputLabel||context.pageLabel||'Page title');titleInput.placeholder=context.untitledPage||'Untitled page';pageInfo.append(titleInput);}
+        else pageInfo.append(this.el('strong','rb-page-context-value',currentTitle||context.untitledPage||'Untitled page'));
+        const languageInfo=this.el('div','rb-page-context-item'); languageInfo.append(this.el('span','rb-page-context-label',context.languageLabel||'Language'),this.el('strong','rb-page-context-value',(context.languageName||'')+(context.languageCode?' · '+context.languageCode:'')));
         contextDetails.append(pageInfo,languageInfo);
         const contextActions=this.el('div','rb-page-context-actions');
         const contextStatus=this.el('div','rb-page-context-status');

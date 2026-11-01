@@ -112,8 +112,20 @@ class Page extends \Reamur\System\Engine\Controller {
 
         $this->load->model('cms/page');
 
+        $method = $this->request->server['REQUEST_METHOD'] ?? 'GET';
+        $draftCandidate = $method === 'POST'
+            ? ($this->request->post['page_create_draft_id'] ?? '')
+            : ($this->request->get['create_draft_id'] ?? '');
+        $draftIdValid = is_string($draftCandidate) && preg_match('/^[a-f0-9]{24}$/D', $draftCandidate);
+        if ($method !== 'POST' && !$draftIdValid) {
+            $draftCandidate = bin2hex(random_bytes(12));
+            $this->response->redirect($this->url->link('cms/page.add', 'create_draft_id=' . $draftCandidate));
+            return;
+        }
+
         $data = $this->formData([], true);
         $data['text_flash'] = $this->flash();
+        $data['page_create_draft_id'] = $draftIdValid ? $draftCandidate : bin2hex(random_bytes(12));
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
             $errors = $this->csrfValid() ? array_merge($this->validatePage(0), $this->validateBlockSubmission(0)) : [$this->language->get('error_csrf')];
@@ -125,7 +137,7 @@ class Page extends \Reamur\System\Engine\Controller {
                     $valuesSaved = $this->model_custom_field_value->savePageValues($page_id, (array)($this->request->post['custom_field'] ?? []));
                     $this->setFlash($this->language->get($valuesSaved ? 'text_success_add' : 'error_custom_field_save'), $valuesSaved ? 'success' : 'error');
 
-                    $this->response->redirect($this->url->link('cms/page.edit|' . $page_id));
+                    $this->response->redirect($this->url->link('cms/page'));
 
                     return;
                 }
@@ -134,11 +146,11 @@ class Page extends \Reamur\System\Engine\Controller {
             $data['error'] = implode("\n", $errors);
         }
 
-        $data['action'] = $this->url->link('cms/page.add');
+        $data['action'] = $this->url->link('cms/page.add', 'create_draft_id=' . $data['page_create_draft_id']);
 
         $this->chrome($data);
 
-        $this->response->setOutput($this->load->view('cms/page_form', $data));
+        $this->response->setOutput($this->load->view('cms/page_create_editor', $data));
     }
 
     /** GET: formulário de edição · POST: valida e persiste (args do Action são strings) */
@@ -863,7 +875,7 @@ class Page extends \Reamur\System\Engine\Controller {
             'entry_meta_title', 'entry_meta_description', 'entry_keyword',
             'entry_status', 'entry_sort_order',
             'button_save', 'button_cancel', 'text_enabled', 'text_disabled',
-            'text_meta_group', 'help_sort_order', 'help_description', 'text_page_preview_button', 'error_page_preview_unavailable', 'text_page_media_library', 'text_page_media_empty', 'text_page_media_empty_audio', 'text_page_media_empty_video', 'text_page_media_empty_download', 'text_page_media_tab_image', 'text_page_media_tab_audio', 'text_page_media_tab_video', 'text_page_media_tab_download', 'text_page_media_loading', 'text_page_media_search', 'text_page_media_upload_hint', 'text_page_media_upload_hint_audio', 'text_page_media_upload_hint_video', 'text_page_media_upload_hint_download', 'text_page_media_uploading', 'text_page_media_select', 'text_page_media_page', 'text_page_media_upload', 'text_page_media_error', 'text_page_media_delete', 'text_page_media_delete_image', 'text_page_media_delete_video', 'text_page_media_deleted', 'text_page_media_deleted_image', 'text_page_media_deleted_video', 'text_page_media_confirm_delete_video', 'text_page_media_confirm_delete_image', 'text_page_media_delete_download', 'text_page_media_deleted_download', 'text_page_media_confirm_delete_download', 'text_page_media_delete_audio', 'text_page_media_deleted_audio', 'text_page_media_confirm_delete_audio', 'error_page_media_not_found', 'error_page_media_delete', 'error_page_media_permission', 'error_page_media_method', 'error_page_media_csrf', 'error_page_media_list', 'error_page_media_no_file', 'error_page_media_size', 'error_page_media_type', 'error_page_media_root', 'error_page_media_upload', 'text_page_context_page', 'text_page_context_language', 'text_page_context_untitled', 'text_page_context_save_hint', 'text_page_context_readonly_hint', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_editor_import_file', 'text_editor_import_success', 'text_editor_preview_title', 'text_editor_preview_mode', 'text_editor_edit_mode', 'text_editor_import_hint', 'text_editor_import_unavailable', 'text_editor_import_error', 'text_editor_import_audio_library', 'text_editor_import_video_library', 'text_editor_preview_video_link', 'text_editor_preview_video_open', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no', 'error_edit_conflict', 'button_reload_current', 'text_revision_compare', 'text_revision_version', 'text_revision_current', 'text_revision_body', 'text_revision_meta', 'text_revision_error', 'text_revision_diff', 'text_revision_unchanged', 'text_revision_diff_limit',
+            'text_meta_group', 'help_sort_order', 'help_description', 'text_page_preview_button', 'error_page_preview_unavailable', 'text_page_media_library', 'text_page_media_empty', 'text_page_media_empty_audio', 'text_page_media_empty_video', 'text_page_media_empty_download', 'text_page_media_tab_image', 'text_page_media_tab_audio', 'text_page_media_tab_video', 'text_page_media_tab_download', 'text_page_media_loading', 'text_page_media_search', 'text_page_media_upload_hint', 'text_page_media_upload_hint_audio', 'text_page_media_upload_hint_video', 'text_page_media_upload_hint_download', 'text_page_media_uploading', 'text_page_media_select', 'text_page_media_page', 'text_page_media_upload', 'text_page_media_error', 'text_page_media_delete', 'text_page_media_delete_image', 'text_page_media_delete_video', 'text_page_media_deleted', 'text_page_media_deleted_image', 'text_page_media_deleted_video', 'text_page_media_confirm_delete_video', 'text_page_media_confirm_delete_image', 'text_page_media_delete_download', 'text_page_media_deleted_download', 'text_page_media_confirm_delete_download', 'text_page_media_delete_audio', 'text_page_media_deleted_audio', 'text_page_media_confirm_delete_audio', 'error_page_media_not_found', 'error_page_media_delete', 'error_page_media_permission', 'error_page_media_method', 'error_page_media_csrf', 'error_page_media_list', 'error_page_media_no_file', 'error_page_media_size', 'error_page_media_type', 'error_page_media_root', 'error_page_media_upload', 'text_page_context_page', 'text_page_context_language', 'text_page_context_untitled', 'text_page_context_save_hint', 'text_page_context_readonly_hint', 'text_page_create_intro', 'text_page_create_title_help', 'text_page_create_keyword_help', 'text_content_summary_note', 'text_content_empty', 'text_content_save_first', 'text_content_block_count', 'text_content_invalid', 'text_page_content_editor', 'text_content_editor_help', 'button_edit_content', 'button_save_content', 'text_editor_home', 'text_editor_insert', 'text_editor_view', 'text_editor_clipboard', 'text_editor_text_format', 'text_editor_paragraph_alignment', 'text_editor_group_insert', 'text_editor_group_panels', 'text_editor_group_preview', 'text_editor_close_panel', 'text_editor_align_left', 'text_editor_align_center', 'text_editor_align_right', 'text_editor_import_file', 'text_editor_import_success', 'text_editor_preview_title', 'text_editor_preview_mode', 'text_editor_edit_mode', 'text_editor_import_hint', 'text_editor_import_unavailable', 'text_editor_import_error', 'text_editor_import_audio_library', 'text_editor_import_video_library', 'text_editor_preview_video_link', 'text_editor_preview_video_open', 'text_custom_fields', 'text_custom_fields_note', 'text_shared_value', 'text_select_option', 'text_yes', 'text_no', 'error_edit_conflict', 'button_reload_current', 'text_revision_compare', 'text_revision_version', 'text_revision_current', 'text_revision_body', 'text_revision_meta', 'text_revision_error', 'text_revision_diff', 'text_revision_unchanged', 'text_revision_diff_limit',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
@@ -1030,7 +1042,7 @@ class Page extends \Reamur\System\Engine\Controller {
             ];
 
                 $site = $this->config->get('site_url');
-                $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-33-internal-anchor-repair';
+                $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-34-page-create-workflow';
                 $catalogAssetBase = $this->pageCatalogAssetUrl();
                 $this->document->addStyle($site . 'view/css/blog-block-editor.css?v=' . $version);
                 $this->document->addStyle($catalogAssetBase . 'view/css/threejs-thumb.css?v=' . $version);

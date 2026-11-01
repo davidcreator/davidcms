@@ -42,7 +42,7 @@ $_['entry_status']           = 'Status';
 $_['entry_sort_order']       = 'Sort Order';
 
 // Buttons
-$_['button_add']        = 'Add New';
+$_['button_add']        = 'Create page';
 $_['button_edit']       = 'Edit';
 $_['button_delete']     = 'Delete';
 $_['button_save']       = 'Save';
@@ -349,3 +349,8 @@ $_['text_block_workspace_tool_appearance'] = 'Appearance';
 $_['text_block_workspace_tool_patterns'] = 'Patterns';
 $_['text_block_ribbon_insert'] = 'Insert';
 $_['text_block_ribbon_view'] = 'View';
+
+// F9-87 — Fluxo independente de criação de páginas no BDREditor.
+$_['text_page_create_intro'] = 'Create your content in BDREditor. The page is stored only when you save; cancel returns to the list without creating a draft.';
+$_['text_page_create_title_help'] = 'Required. You can also edit the title directly in the BDREditor toolbar.';
+$_['text_page_create_keyword_help'] = 'Optional friendly URL. You can fill it in after leaving the immersive editor.';
