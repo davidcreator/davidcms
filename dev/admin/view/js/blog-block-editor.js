@@ -149,6 +149,27 @@
     if(language.startsWith('es'))return {select:'Seleccionar para agrupar',deselect:'Quitar de la selección',title:'Organizar bloques',hint:'Selecciona bloques contiguos para reunirlos en un Grupo nativo.',count:'%1 bloques seleccionados',needMore:'Selecciona al menos dos bloques contiguos.',group:'Agrupar selección',duplicate:'Duplicar como Grupo',clear:'Limpiar selección',previewTitle:'Vista previa del grupo',previewHint:'Estos bloques se reunirán en un Grupo. Se conservarán el contenido y los ID actuales.',duplicatePreviewTitle:'Vista previa de duplicación',duplicatePreviewHint:'Los originales permanecerán intactos. Se insertará después una copia en un Grupo nuevo y con ID nuevos.',confirm:'Confirmar agrupación',duplicateConfirm:'Confirmar duplicación',back:'Volver',outlineLabel:'Nombre en el navegador de estructura (opcional)',labelPlaceholder:'Ej.: Introducción',labelTooLong:'La etiqueta supera el límite seguro de 160 bytes. Acorta el texto para continuar.',groupDefault:'Grupo',invalid:'No se pudo agrupar en este contenedor; no se modificó el contenido.',notAdjacent:'Selecciona bloques contiguos del mismo contenedor.',cannotContain:'Este contenedor no permite insertar un Grupo.',moveBoundary:'No hay espacio en esa dirección para mover la selección.',movedUp:'Selección movida una posición hacia arriba.',movedDown:'Selección movida una posición hacia abajo.',selected:'Bloque añadido a la selección.',deselected:'Bloque quitado de la selección.',done:'Bloques agrupados. La operación se puede deshacer.',duplicated:'Copia creada como Grupo. Los originales permanecen intactos.',emptyPreview:'Sin texto de vista previa'};
     return {select:'Select for grouping',deselect:'Remove from selection',title:'Organize blocks',hint:'Select adjacent blocks to combine them into a native Group.',count:'%1 blocks selected',needMore:'Select at least two adjacent blocks.',group:'Group selection',duplicate:'Duplicate as Group',clear:'Clear selection',previewTitle:'Group preview',previewHint:'These blocks will be wrapped in a native Group. Their content and existing IDs will be preserved.',duplicatePreviewTitle:'Duplicate preview',duplicatePreviewHint:'The originals will remain unchanged. A copy will be inserted after them inside a new Group with fresh IDs.',confirm:'Confirm grouping',duplicateConfirm:'Confirm duplication',back:'Back',outlineLabel:'Name in document outline (optional)',labelPlaceholder:'e.g. Introduction',labelTooLong:'The outline label exceeds the safe 160-byte limit. Shorten it to continue.',groupDefault:'Group',invalid:'These blocks cannot be grouped in this container; no content was changed.',notAdjacent:'Select adjacent blocks in the same container.',cannotContain:'This container does not allow a Group block.',moveBoundary:'There is no room to move the selection farther in that direction.',movedUp:'Selection moved up one position.',movedDown:'Selection moved down one position.',selected:'Block added to selection.',deselected:'Block removed from selection.',done:'Blocks grouped. The operation can be undone.',duplicated:'Copy created as a Group. The originals remain unchanged.',emptyPreview:'No text preview'};
   }
+  function documentChangeRespectsLocks(current,next,transitionId) {
+    const collect=(blocks)=>{const map=new Map();const visit=(siblings,parentId,inherited)=>siblings.forEach((node)=>{const effective=inherited||!!(node.attributes&&node.attributes.locked===true);map.set(node.id,{node,parentId,siblings:siblings.map((item)=>item.id),locked:effective});visit(node.children||[],node.id,effective);});visit(blocks,null,false);return map;};
+    if(!current||!next||!Array.isArray(current.blocks)||!Array.isArray(next.blocks))return false;
+    const before=collect(current.blocks),after=collect(next.blocks);
+    for(const [id,entry] of before){if(!entry.locked)continue;const candidate=after.get(id);if(!candidate||candidate.parentId!==entry.parentId)return false;
+      let oldNode=entry.node,newNode=candidate.node;
+      if(id===transitionId){oldNode=CLONE(oldNode);newNode=CLONE(newNode);delete oldNode.attributes.locked;delete newNode.attributes.locked;if(candidate.node.attributes.locked===true)return false;}
+      if(JSON.stringify(oldNode)!==JSON.stringify(newNode))return false;
+      const oldSiblings=entry.siblings,newSiblings=candidate.siblings;
+      for(const siblingId of oldSiblings){if(siblingId===id||!after.has(siblingId)||!before.has(siblingId))continue;const newSibling=after.get(siblingId);if(newSibling.parentId!==entry.parentId)continue;
+        if((oldSiblings.indexOf(siblingId)<oldSiblings.indexOf(id))!==(newSiblings.indexOf(siblingId)<newSiblings.indexOf(id)))return false;
+      }
+    }
+    return true;
+  }
+  function blockLockCopy() {
+    const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
+    if(language.startsWith('pt'))return {lock:'Bloquear bloco',unlock:'Desbloquear bloco',lockedBadge:'Bloqueado',inheritedBadge:'Bloqueado pelo Grupo',locked:'Bloco bloqueado. Edição, exclusão, movimentação e duplicação estão impedidas.',unlocked:'Bloco desbloqueado.',denied:'Esta alteração afetaria um bloco bloqueado. Desbloqueie-o primeiro.',invalid:'O estado de bloqueio é inválido.'};
+    if(language.startsWith('es'))return {lock:'Bloquear bloque',unlock:'Desbloquear bloque',lockedBadge:'Bloqueado',inheritedBadge:'Bloqueado por el Grupo',locked:'Bloque bloqueado. Se impiden la edición, eliminación, movimiento y duplicación.',unlocked:'Bloque desbloqueado.',denied:'Este cambio afectaría a un bloque bloqueado. Desbloquéalo primero.',invalid:'El estado de bloqueo no es válido.'};
+    return {lock:'Lock block',unlock:'Unlock block',lockedBadge:'Locked',inheritedBadge:'Locked by Group',locked:'Block locked. Editing, deletion, moving, and duplication are prevented.',unlocked:'Block unlocked.',denied:'This change would affect a locked block. Unlock it first.',invalid:'The lock state is invalid.'};
+  }
   function ungroupCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
     if(language.startsWith('pt'))return {open:'Desagrupar Grupo',title:'Prévia para desagrupar',hint:'Os blocos internos serão movidos para a posição atual do Grupo, mantendo a ordem e os IDs. O contêiner Grupo será removido.',labelWarning:'O rótulo opcional do Grupo também será removido.',confirm:'Confirmar desagrupamento',cancel:'Cancelar',done:'Grupo desfeito. Os blocos internos e seus IDs foram preservados.',invalid:'O contêiner pai não permite esta estrutura; nada foi alterado.',notGroup:'Este bloco não é um Grupo válido.',empty:'Sem texto de prévia'};
@@ -368,9 +389,9 @@
     paragraph:'M4 6h16M4 10h16M4 14h10M4 18h10', heading:'M4 5v14M20 5v14M4 12h16', list:'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
     image:'M4 4h16v16H4zM8 14l3-3 5 5M14 9h.01', quote:'M5 6h6v6H5zM13 6h6v6h-6zM5 12c0 3-1 4-2 5m10-5c0 3-1 4-2 5', video:'m9 7 9 5-9 5zM4 5v14', threejs:'m12 3 8 4v10l-8 4-8-4V7l8-4zm-8 4 8 4 8-4m-8 4v10', button:'M4 7h16v10H4z', bold:'M7 5h6a4 4 0 0 1 0 8H7zM7 13h7a4 4 0 0 1 0 8H7z', italic:'M15 4h-5m4 16H9m5-16-4 16', underline:'M6 4v7a6 6 0 0 0 12 0V4M4 21h16', strike:'M5 12h14M7 6c1-2 3-2 5-2 3 0 5 1 5 3 0 2-2 3-5 4-3 1-5 2-5 5 0 2 2 4 5 4 2 0 4-1 5-3', link:'M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7M14 11a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 21l1.7-1.7', info:'M12 8h.01M11 12h1v5h1M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
     details:'M5 7h14M5 12h14M5 17h14M3 7h.01M3 12h.01M3 17h.01', spacer:'M12 3v18m-4-14 4-4 4 4m-8 10 4 4 4-4', code:'m8 6-6 6 6 6m8-12 6 6-6 6m-3-14-2 16', separator:'M4 12h16M12 7v10', group:'M4 4h16v16H4zM8 8h8v8H8z', columns:'M4 4h16v16H4zM12 4v16', gallery:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z', cover:'M4 4h16v16H4zM4 15l5-5 4 4 3-3 4 5', table:'M4 4h16v16H4zM4 10h16M4 15h16M10 4v16M16 4v16', file:'M6 3h8l4 4v14H6zM14 3v5h5M9 13h6M9 17h6', audio:'M4 10v4m4-8v12m4-16v20m4-16v12m4-8v4', settings:'M4 7h16M4 17h16M8 7v0m8 10v0', indent:'M4 6h3m3 0h10M4 12h3m3 0h10M4 18h3m3 0h10M4 12l3-3m-3 3 3 3', outdent:'M4 6h16M4 12h10M4 18h16m3-6-3-3m3 3-3 3', outline:'M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h11', layers:'m12 3 9 5-9 5-9-5 9-5zm-9 9 9 5 9-5m-18 5 9 5 9-5', grip:'M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01', transform:'M4 7h14m0 0-3-3m3 3-3 3M20 17H6m0 0 3-3m-3 3 3 3',
-    check:'m5 12 4 4L19 6', close:'M6 6l12 12M18 6 6 18', search:'m20 20-4.5-4.5M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0', help:'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', home:'m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z', spark:'m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l1 2.5 2.5 1-2.5 1L19 22l-1-2.5-2.5-1 2.5-1z', share:'M8 12 16 7m-8 5 8 5M6 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm12-5a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', expand:'M8 3H3v5M3 3l7 7M16 3h5v5M21 3l-7 7M3 16v5h5M3 21l7-7M16 21h5v-5m0 5-7-7', collapse:'M3 3l7 7M3 10h7V3M21 3l-7 7M21 10h-7V3M3 21l7-7M3 14h7v7M21 21l-7-7M21 14h-7v7', history:'M3 12a9 9 0 1 0 2.6-6.4L3 9m0-6v6h6m3-3v6l4 2'
+    lock:'M6 10h12v10H6zM8 10V7a4 4 0 1 1 8 0v3', unlock:'M6 10h12v10H6zM8 10V7a4 4 0 0 1 7-2', check:'m5 12 4 4L19 6', close:'M6 6l12 12M18 6 6 18', search:'m20 20-4.5-4.5M18 10.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0', help:'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3m.1 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0', home:'m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z', spark:'m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l1 2.5 2.5 1-2.5 1L19 22l-1-2.5-2.5-1 2.5-1z', share:'M8 12 16 7m-8 5 8 5M6 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm12-5a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', expand:'M8 3H3v5M3 3l7 7M16 3h5v5M21 3l-7 7M3 16v5h5M3 21l7-7M16 21h5v-5m0 5-7-7', collapse:'M3 3l7 7M3 10h7V3M21 3l-7 7M21 10h-7V3M3 21l7-7M3 14h7v7M21 21l-7-7M21 14h-7v7', history:'M3 12a9 9 0 1 0 2.6-6.4L3 9m0-6v6h6m3-3v6l4 2'
   };
-  const ACTION_ICONS = { 'toggle-inserter':'plus','import-file':'file','export-document':'file','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','file-media':'file','audio-media':'audio','video-media':'video','spacer-decrease':'up','spacer-increase':'down','separator-width-less':'alignLeft','separator-width-more':'alignRight',media:'image','insert-pattern':'layers',insert:'plus','save-selected-pattern':'layers','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent','toggle-fullscreen':'expand','builder-panel':'layers','align-text':'align-left' };
+  const ACTION_ICONS = { 'toggle-inserter':'plus','import-file':'file','export-document':'file','paste-block':'copy',undo:'undo',redo:'redo',preview:'desktop','move-up':'up','move-down':'down',duplicate:'copy','copy-block':'copy',delete:'trash','lock-toggle':'lock','file-media':'file','audio-media':'audio','video-media':'video','spacer-decrease':'up','spacer-increase':'down','separator-width-less':'alignLeft','separator-width-more':'alignRight',media:'image','insert-pattern':'layers',insert:'plus','save-selected-pattern':'layers','outline-select':'outline','format-mark':'bold','link-apply':'check','link-remove':'link','table-add-row':'plus','table-remove-row':'trash','table-add-column':'plus','table-remove-column':'trash','table-toggle-header':'table','indent':'indent','outdent':'outdent','toggle-fullscreen':'expand','builder-panel':'layers','align-text':'align-left' };
   const ICON_ONLY_ACTIONS = new Set(['align-text','import-file','export-document','toggle-inserter','paste-block','undo','redo','preview','toggle-preview','move-up','move-down','duplicate','copy-block','delete','file-media','audio-media','video-media','media','format-mark','link-apply','link-remove','table-add-row','table-remove-row','table-add-column','table-remove-column','table-toggle-header','indent','outdent','toggle-fullscreen','builder-panel','customize-block','save-selected-pattern','toggle-revision-history','toggle-find-replace']);
   const TYPE_ICONS = { 'core/paragraph':'paragraph','core/heading':'heading','core/list':'list','core/list-item':'list','core/image':'image','core/quote':'quote','core/video_embed':'video','core/video_file':'video','core/threejs_thumb':'threejs','core/button':'button','core/callout':'info','core/details':'details','core/spacer':'spacer','core/code':'code','core/separator':'separator','core/group':'group','core/columns':'columns','core/column':'columns','core/gallery':'gallery','core/cover':'cover','core/table':'table','core/table-row':'table','core/table-cell':'table','core/file':'file','core/audio':'audio' };
   const BLOCK_TOOL_DESCRIPTIONS = {
@@ -882,7 +903,8 @@
       else if (version === 2 && textBlock && !validInlineRuns(node.content, node.type)) errors.push('rich_content_invalid');
       else if ((!textBlock || version === 1) && (typeof node.content !== 'string' || (!textBlock && version === 2 && node.type !== 'core/code' && node.content !== ''))) errors.push('content_invalid');
       if (typeof node.content === 'string' && node.content.length > 262144) errors.push('content_too_large');
-      const a = node.attributes;
+      const a = node.attributes, schemaAttributes={...node.attributes};delete schemaAttributes.locked;
+      if(a.locked!==undefined&&typeof a.locked!=='boolean')errors.push('block_lock_invalid');
       const allowedAttributes = {
         'core/paragraph':['align'], 'core/heading':['level'], 'core/list':['ordered'], 'core/list-item':[],
         'core/quote':[], 'core/callout':['tone'], 'core/details':['summary'], 'core/spacer':['height'], 'core/code':[], 'core/image':['src','alt','title'], 'core/video_embed':['url'], 'core/button':['url'],
@@ -901,7 +923,7 @@
         Object.keys(allowedAttributes).forEach((type) => { allowedAttributes[type] = allowedAttributes[type].concat('appearance'); });
       }
       const allowed = allowedAttributes[node.type] || [];
-      if (Object.keys(a).some((key) => !allowed.includes(key))) errors.push('attributes_not_allowlisted');
+      if (Object.keys(schemaAttributes).some((key) => !allowed.includes(key))) errors.push('attributes_not_allowlisted');
       if (version === 2 && a.appearance !== undefined && !validBlockAppearance(a.appearance)) errors.push('appearance_invalid');
       if(node.type==='core/heading'&&a.anchor!==undefined){if(version!==2||typeof a.anchor!=='string'||!/^[a-z][a-z0-9-]{0,79}$/.test(a.anchor))errors.push('heading_anchor_invalid');else if(headingAnchors.has(a.anchor))errors.push('heading_anchor_duplicate');else headingAnchors.add(a.anchor);}
       if(node.type==='core/group'&&a.toc_generated!==undefined&&typeof a.toc_generated!=='boolean')errors.push('toc_marker_invalid');
@@ -949,18 +971,18 @@
         case 'core/button': if (!validActionUrl(a.url) || node.children.length) errors.push('button_invalid'); break;
         case 'core/separator': if (node.children.length || node.content || (a.style!==undefined&&!SEPARATOR_STYLES.includes(a.style)) || (a.width!==undefined&&(!Number.isInteger(a.width)||!SEPARATOR_WIDTHS.includes(a.width))) || (a.thickness!==undefined&&(!Number.isInteger(a.thickness)||!SEPARATOR_THICKNESSES.includes(a.thickness))) || (a.align!==undefined&&!['left','center','right'].includes(a.align))) errors.push('separator_invalid'); break;
         case 'core/group':
-          if (node.content || Object.keys(a).some((key) => !['outline_label','toc_generated'].includes(key)) || node.children.length === 0) errors.push('group_invalid');
+          if (node.content || Object.keys(schemaAttributes).some((key) => !['outline_label','toc_generated'].includes(key)) || node.children.length === 0) errors.push('group_invalid');
           if (a.outline_label !== undefined && (typeof a.outline_label !== 'string' || utf8Length(a.outline_label) > 160)) errors.push('outline_label_invalid');
           break;
-        case 'core/columns': if (node.content || Object.keys(a).some((key) => key !== 'count') || ![2,3].includes(a.count) || node.children.length !== a.count || node.children.some((child) => !child || child.type !== 'core/column')) errors.push('columns_invalid'); break;
-        case 'core/column': if (parent !== 'core/columns' || node.content || Object.keys(a).length || node.children.length === 0) errors.push('column_invalid'); break;
+        case 'core/columns': if (node.content || Object.keys(schemaAttributes).some((key) => key !== 'count') || ![2,3].includes(a.count) || node.children.length !== a.count || node.children.some((child) => !child || child.type !== 'core/column')) errors.push('columns_invalid'); break;
+        case 'core/column': if (parent !== 'core/columns' || node.content || Object.keys(schemaAttributes).length || node.children.length === 0) errors.push('column_invalid'); break;
         case 'core/table': {
           let tableBytes = 0;
           node.children.forEach((row) => { if (!row || !Array.isArray(row.children)) return; row.children.forEach((cell) => { if (!cell || !Array.isArray(cell.content)) return; cell.content.forEach((run) => { if (run && typeof run.text === 'string') tableBytes += utf8Length(run.text); }); }); });
           if (version !== 2 || typeof a.header !== 'boolean' || node.content || node.children.length < 1 || node.children.length > 20 || tableBytes > 262144 || !tableGridInfo(node)) errors.push('table_invalid');
           break;
         }
-        case 'core/table-row': if (parent !== 'core/table' || node.content || Object.keys(a).length || node.children.length > 12 || node.children.some((cell) => !cell || cell.type !== 'core/table-cell')) errors.push('table_row_invalid'); break;
+        case 'core/table-row': if (parent !== 'core/table' || node.content || Object.keys(schemaAttributes).length || node.children.length > 12 || node.children.some((cell) => !cell || cell.type !== 'core/table-cell')) errors.push('table_row_invalid'); break;
         case 'core/table-cell': if (parent !== 'core/table-row' || node.children.length || version !== 2 || !validInlineRuns(node.content, node.type) || (a.header !== undefined && typeof a.header !== 'boolean') || (a.rowspan !== undefined && (!Number.isInteger(a.rowspan)||a.rowspan<1||a.rowspan>20)) || (a.colspan !== undefined && (!Number.isInteger(a.colspan)||a.colspan<1||a.colspan>12))) errors.push('table_cell_invalid'); break;
       }
       node.children.forEach((child) => visit(child, depth + 1, node.type));
@@ -1586,7 +1608,7 @@
       this.commandPalette = commandPaletteCopy();
       this.commandPaletteOpen = false; this.commandPaletteQuery = ''; this.commandPaletteActiveIndex = 0;
       this.groupSelection = groupSelectionCopy(); this.groupSelectionIds = []; this.groupSelectionConfirmOpen = false; this.groupSelectionMode = 'group'; this.groupSelectionLabel = '';
-      this.ungroupCopy=ungroupCopy();this.ungroupConfirmOpen=false;this.ungroupNodeId=null;
+      this.ungroupCopy=ungroupCopy();this.blockLockCopy=blockLockCopy();this.lockTransitionId=null;this.blockClipboardSourceId=null;this.ungroupConfirmOpen=false;this.ungroupNodeId=null;
       this.patternFilter = 'all';
       this.patternQuery = '';
       this.ui = workspaceCopy();
@@ -1995,6 +2017,7 @@
     toggleGroupSelection(id) {
       if(this.locked)return;
       const path=this.findPath(this.state.blocks,id);if(!path)return;
+      if(this.isNodeEffectivelyLocked(id)||this.containsLockedNode(path.node)){this.announceStatus(this.blockLockCopy.denied);return;}
       const at=this.groupSelectionIds.indexOf(id);
       if(at>=0){const remaining=this.groupSelectionIds.filter((selectedId)=>selectedId!==id),paths=remaining.map((selectedId)=>this.findPath(this.state.blocks,selectedId));let contiguous=paths.length<2||paths.every((item)=>item&&item.nodes===paths[0].nodes);if(contiguous&&paths.length>1){const indices=paths.map((item)=>item.index).sort((a,b)=>a-b);for(let i=1;i<indices.length;i++)if(indices[i]!==indices[i-1]+1)contiguous=false;}if(!contiguous){this.groupSelectionIds=[];this.groupSelectionLabel='';this.statusMessage=this.groupSelection.notAdjacent;}else{this.groupSelectionIds=remaining;this.statusMessage=this.groupSelection.deselected;}}
       else{
@@ -2049,6 +2072,7 @@
 
     openUngroupPreview(nodeId) {
       const path=this.findPath(this.state.blocks,nodeId);if(!path||path.node.type!=='core/group'){this.announceStatus(this.ungroupCopy.notGroup);return;}
+      if(this.isNodeEffectivelyLocked(nodeId)){this.announceStatus(this.blockLockCopy.denied);return;}
       const preview=ungroupBlock(this.getDocument(),nodeId,this.allowPageMedia);if(!preview.valid){this.announceStatus(this.ungroupCopy.invalid);return;}
       this.ungroupNodeId=nodeId;this.ungroupConfirmOpen=true;this.render();const cancel=this.root.querySelector('[data-action="ungroup-cancel"]');if(cancel)cancel.focus();
     }
@@ -2172,6 +2196,7 @@
 
     action(name, button) {
       if (this.locked&&!['workspace-tool','toggle-fullscreen','toggle-find-replace','toggle-preview','compare-draft-revision','command-palette-open','command-palette-close','command-palette-select'].includes(name)) return;
+      if(name==='block-lock-toggle'){this.toggleBlockLock(button.dataset.nodeId);return;}
       if(name==='ungroup-block-preview'){this.openUngroupPreview(button.dataset.nodeId);return;}
       if(name==='ungroup-cancel'){this.closeUngroupPreview();return;}
       if(name==='ungroup-confirm'){this.confirmUngroup();return;}
@@ -2933,6 +2958,7 @@
 
     updateNode(id, mutator, rerender) {
       if (this.locked) return;
+      if(this.isNodeEffectivelyLocked(id)){this.announceStatus(this.blockLockCopy.denied);return;}
       const next = CLONE(this.state), found = this.findPath(next.blocks, id); if (!found) return;
       mutator(found.node); this.commit(next, id, rerender !== false);
     }
@@ -2961,6 +2987,7 @@
       if (this.locked) return;
       const found = this.findPath(this.state.blocks, id);
       if (!found || found.node.type !== 'core/code') return;
+      if(this.isNodeEffectivelyLocked(id)){editor.disabled=true;this.announceStatus(this.blockLockCopy.denied);return;}
       if (utf8Length(editor.value) > 262144) {
         editor.setCustomValidity(this.strings.preformatted.tooLarge);
         editor.setAttribute('aria-invalid','true');
@@ -2980,6 +3007,7 @@
       if (this.locked) return;
       const found = this.findPath(this.state.blocks, id);
       if (!found || !BLOCK_TEXT_TYPES.has(found.node.type)) return;
+      if(this.isNodeEffectivelyLocked(id)){this.announceStatus(this.blockLockCopy.denied);return;}
       const runs = normalizeDomInline(editor, found.node.type);
       this.recordTextEditSnapshot();
       found.node.content = runs;
@@ -3024,6 +3052,7 @@
     }
 
     deleteNode(id) {
+      if(this.isNodeEffectivelyLocked(id)){this.announceStatus(this.blockLockCopy.denied);return;}
       const next = CLONE(this.state), found = this.findPath(next.blocks, id); if (!found) return;
       if (found.parent && found.parent.type === 'core/columns' && found.node.type === 'core/column') return;
       if (found.parent && found.parent.type === 'core/gallery' && found.parent.children.length <= 1) return;
@@ -3041,6 +3070,7 @@
     }
 
     moveNode(id, delta) {
+      if(this.isNodeEffectivelyLocked(id)){this.announceStatus(this.blockLockCopy.denied);return;}
       const next = CLONE(this.state), found = this.findPath(next.blocks, id); if (!found) return;
       const target = found.index + delta; if (target < 0 || target >= found.nodes.length) return;
       [found.nodes[found.index], found.nodes[target]] = [found.nodes[target], found.nodes[found.index]];
@@ -3056,8 +3086,8 @@
     copyBlock(id) {
       if (this.locked) return false;
       const found = id ? this.findPath(this.state.blocks, id) : null;
-      if (!found) return false;
-      this.blockClipboard = CLONE(found.node);
+      if (!found||this.isNodeEffectivelyLocked(id)||this.containsLockedNode(found.node)){this.announceStatus(this.blockLockCopy.denied);return false;}
+      this.blockClipboard = CLONE(found.node);this.blockClipboardSourceId=id;
       this.selectNode(id);
       this.updateClipboardButtons();
       this.announceStatus(this.strings.statusCopied);
@@ -3122,7 +3152,8 @@
     }
 
     duplicateNode(id) {
-      const next = CLONE(this.state); const found = this.findPath(next.blocks, id); if (!found) return;
+      if(this.isNodeEffectivelyLocked(id)){this.announceStatus(this.blockLockCopy.denied);return;}
+      const next = CLONE(this.state); const found = this.findPath(next.blocks, id); if (!found||this.containsLockedNode(found.node)){this.announceStatus(this.blockLockCopy.denied);return;}
       if (found.parent && found.parent.type === 'core/columns' && found.node.type === 'core/column') return;
       if (found.parent && found.parent.type === 'core/gallery' && found.parent.children.length >= 20) return;
       if (found.parent && found.parent.type === 'core/cover' && found.parent.children.length >= 12) return;
@@ -3162,7 +3193,39 @@
       const [node] = from.nodes.splice(from.index, 1); from.nodes.splice(to.index, 0, node); this.statusMessage = this.strings.statusMoved; this.commit(next, fromId); this.focusNode(fromId);
     }
 
+    isNodeEffectivelyLocked(id) {
+      let path=id?this.findPath(this.state.blocks,id):null;if(!path)return false;
+      while(path){if(path.node.attributes&&path.node.attributes.locked===true)return true;path=path.parent?this.findPath(this.state.blocks,path.parent.id):null;}
+      return false;
+    }
+
+    containsLockedNode(node) {
+      if(!node)return false;if(node.attributes&&node.attributes.locked===true)return true;return Array.isArray(node.children)&&node.children.some((child)=>this.containsLockedNode(child));
+    }
+
+    isNodeWithin(id,ancestorId) {
+      let path=id?this.findPath(this.state.blocks,id):null;while(path){if(path.node.id===ancestorId)return true;path=path.parent?this.findPath(this.state.blocks,path.parent.id):null;}return false;
+    }
+
+    isNodeLockedByAncestor(id) {
+      const path=id?this.findPath(this.state.blocks,id):null;let parent=path&&path.parent;
+      while(parent){if(parent.attributes&&parent.attributes.locked===true)return true;const ancestor=this.findPath(this.state.blocks,parent.id);parent=ancestor?ancestor.parent:null;}
+      return false;
+    }
+
+    documentChangeRespectsLocks(next) { return documentChangeRespectsLocks(this.state,next,this.lockTransitionId); }
+
+    toggleBlockLock(id) {
+      if(this.locked)return;const path=id?this.findPath(this.state.blocks,id):null;if(!path)return;
+      if(this.isNodeLockedByAncestor(id)){this.announceStatus(this.blockLockCopy.denied);return;}
+      const next=CLONE(this.state),target=this.findPath(next.blocks,id);const unlocking=target.node.attributes.locked===true;
+      if(unlocking)delete target.node.attributes.locked;else{target.node.attributes.locked=true;if(this.blockClipboardSourceId&&(this.isNodeWithin(this.blockClipboardSourceId,id)||this.isNodeWithin(id,this.blockClipboardSourceId))){this.blockClipboard=null;this.blockClipboardSourceId=null;this.updateClipboardButtons();}}
+      this.lockTransitionId=unlocking?id:null;this.statusMessage=unlocking?this.blockLockCopy.unlocked:this.blockLockCopy.locked;
+      try{if(this.commit(next,id))this.announceStatus(this.statusMessage);}finally{this.lockTransitionId=null;}
+    }
+
     commit(next, focusId, rerender) {
+      if(!next||!this.documentChangeRespectsLocks(next)){this.announceStatus(this.blockLockCopy.denied);this.render();return false;}
       this.clearTextEditSnapshot();
       this.pushHistory(this.undoStack, 'undo', this.snapshot());
       this.clearRedoHistory(); this.state = next; this.selectedId = focusId || this.selectedId;
@@ -3170,6 +3233,7 @@
       this.root.dataset.valid = result.valid ? 'true' : 'false';
       this.onChange(this.getDocument(), result);
       if (rerender !== false) this.render(); else this.updateHistoryButtons();
+      return true;
     }
 
     undo() { this.clearTextEditSnapshot(); if (!this.undoStack.length) return; this.pushHistory(this.redoStack, 'redo', this.snapshot()); this.state = JSON.parse(this.popHistory(this.undoStack, 'undo')); if (this.selectedId && !this.findPath(this.state.blocks, this.selectedId)) this.selectedId = this.state.blocks[0] ? this.state.blocks[0].id : null; this.statusMessage = this.strings.statusUndo; this.render(); this.onChange(this.getDocument(), validateDocument(this.state, this.allowPageMedia)); }
@@ -3190,6 +3254,7 @@
       const next = CLONE(documentValue);
       const check = validateDocument(next, this.allowPageMedia);
       if (!check.valid) return false;
+      if(!this.documentChangeRespectsLocks(next)){this.announceStatus(this.blockLockCopy.denied);return false;}
       this.clearTextEditSnapshot();
       this.pushHistory(this.undoStack, 'undo', this.snapshot());
       this.clearRedoHistory();
@@ -4171,7 +4236,8 @@
 
     renderBlockToolbar(node) {
       const toolbar = this.el('div', 'rb-block-toolbar'); toolbar.setAttribute('role','toolbar'); toolbar.setAttribute('aria-label', this.label(node.type) + ' · ' + this.strings.transform);
-      const path = this.findPath(this.state.blocks, node.id);
+      const path = this.findPath(this.state.blocks, node.id),effectivelyLocked=this.isNodeEffectivelyLocked(node.id);
+      const lockButton=this.button(node.attributes.locked===true?this.blockLockCopy.unlock:this.blockLockCopy.lock,'block-lock-toggle',{nodeId:node.id,icon:node.attributes.locked===true?'unlock':'lock',showLabel:true});lockButton.disabled=this.locked||this.isNodeLockedByAncestor(node.id);toolbar.append(lockButton);
       const labelledTextToolbar=['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/button','core/callout','core/details','core/code','core/spacer','core/separator','core/image','core/video_embed','core/video_file','core/cover','core/file','core/audio','core/group','core/table'].includes(node.type);
       if(labelledTextToolbar)toolbar.classList.add('rb-labeled-text-toolbar');
       const drag = this.el('span','rb-drag-handle'); drag.append(this.icon('grip','rb-icon')); drag.draggable = true; drag.dataset.dragHandle = '1'; drag.title = this.strings.dragHint; drag.setAttribute('aria-hidden','true'); toolbar.append(drag,this.el('span','rb-sr-only',this.strings.dragHint));
@@ -4207,6 +4273,7 @@
       if (this.patternConfig.canModify) { const savePattern = this.button(this.strings.saveAsPattern || 'Salvar como padrão','save-selected-pattern',{nodeId:node.id,showLabel:labelledTextToolbar}); savePattern.disabled = this.containsCustomJs(node); toolbar.append(savePattern); }
       const remove = this.button(this.strings.remove,'delete',{nodeId:node.id,showLabel:labelledTextToolbar}); remove.disabled = fixedColumn || lastRequiredChild; toolbar.append(remove);
       const add = this.button(this.strings.addAfter, 'toggle-inserter', { afterId:node.id, showLabel:labelledTextToolbar }); if(!labelledTextToolbar){add.classList.add('rb-button-icon-only');add.querySelector('.rb-button-label').classList.add('rb-sr-only');} add.setAttribute('aria-label', this.strings.addAfter); add.setAttribute('aria-expanded', String(this.inserterOpen && this.insertAfterId === node.id)); add.setAttribute('aria-controls','rb-inserter-' + this.instance); toolbar.append(add);
+      if(effectivelyLocked){toolbar.querySelectorAll('button,select').forEach((control)=>{if(control.dataset.action!=='block-lock-toggle'&&control.dataset.action!=='customize-block')control.disabled=true;});drag.draggable=false;drag.title=this.blockLockCopy.denied;}
       return toolbar;
     }
 
@@ -4280,8 +4347,8 @@
     }
 
     renderNode(node, isRoot) {
-      const typeClass = node.type.replace(/[^a-z0-9-]/gi, '-');
-      const card = this.el('section', 'rb-block rb-type-' + typeClass + (node.id === this.selectedId ? ' is-selected' : '') + (this.groupSelectionIds.includes(node.id) ? ' rb-group-selected' : ''));
+      const typeClass = node.type.replace(/[^a-z0-9-]/gi, '-'),effectivelyLocked=this.isNodeEffectivelyLocked(node.id);
+      const card = this.el('section', 'rb-block rb-type-' + typeClass + (node.id === this.selectedId ? ' is-selected' : '') + (this.groupSelectionIds.includes(node.id) ? ' rb-group-selected' : '') + (effectivelyLocked?' rb-block-locked':''));
       if (node.type === 'core/columns') card.classList.add(node.attributes.count === 3 ? 'rb-columns-3' : 'rb-columns-2');
       if (node.type === 'core/callout') { card.dataset.calloutTone = node.attributes.tone; card.setAttribute('role','group'); card.setAttribute('aria-label',this.label(node.type)); }
       let textPreview = card, appearanceTarget=null;
@@ -4291,14 +4358,15 @@
       card.dataset.nodeId = node.id; card.tabIndex = -1; if (isRoot) card.dataset.rootNode = '1';
       const head = this.el('div', 'rb-block-head');
       head.append(this.icon(TYPE_ICONS[node.type] || 'layers','rb-block-type-icon'),this.el('span', 'rb-block-title', this.label(node.type)));
+      if(effectivelyLocked){const badge=this.el('span','rb-lock-status',node.attributes.locked===true?this.blockLockCopy.lockedBadge:this.blockLockCopy.inheritedBadge);badge.setAttribute('aria-label',badge.textContent);head.append(badge);}
       card.append(head, this.renderBlockToolbar(node));
       if (TEXT_TYPES.has(node.type)) {
-        const editor = this.el('div', 'rb-content' + (node.type === 'core/button' ? ' rb-content-button-preview' : '')); editor.contentEditable = 'true'; editor.dataset.editContent = node.id;
+        const editor = this.el('div', 'rb-content' + (node.type === 'core/button' ? ' rb-content-button-preview' : '')); editor.contentEditable = effectivelyLocked?'false':'true'; editor.dataset.editContent = node.id;
         editor.setAttribute('role', 'textbox'); editor.setAttribute('aria-multiline', 'true');
         editor.setAttribute('aria-label', this.strings.textLabel + ': ' + this.label(node.type)); editor.setAttribute('data-placeholder', this.strings.placeholder || '');
         buildInlineDom(editor, node.content);if(node.type==='core/paragraph')editor.style.textAlign=(node.attributes.appearance&&node.attributes.appearance.text_align)||node.attributes.align||'left';textPreview.append(editor); appearanceTarget=editor;
       } else if (node.type === 'core/code') {
-        const code = this.el('textarea','rb-code-editor'); code.value = node.content; code.maxLength = 131072;
+        const code = this.el('textarea','rb-code-editor'); code.value = node.content; code.maxLength = 131072;code.disabled=effectivelyLocked;
         code.dataset.editCode = node.id; code.setAttribute('aria-label',this.strings.preformatted.label);
         card.append(code); appearanceTarget=code;
       } else if (node.type === 'core/spacer') {
@@ -4349,7 +4417,7 @@
           row.children.forEach((cell,colIndex) => {
             const isHeader=tableCellIsHeader(node,rowIndex,cell);const td=this.el(isHeader?'th':'td','');
             if(isHeader)td.setAttribute('scope','col');td.rowSpan=cell.attributes.rowspan||1;td.colSpan=cell.attributes.colspan||1;this.applyPreviewAppearance(td,cell);
-            const editor = this.el('div','rb-table-cell-content'); editor.contentEditable = 'true'; editor.dataset.editContent = cell.id; editor.setAttribute('role','textbox'); editor.setAttribute('aria-multiline','true');
+            const editor = this.el('div','rb-table-cell-content'); editor.contentEditable = this.isNodeEffectivelyLocked(cell.id)?'false':'true'; editor.dataset.editContent = cell.id; editor.setAttribute('role','textbox'); editor.setAttribute('aria-multiline','true');
             editor.setAttribute('aria-label',(this.strings.table.cellLabel || 'Cell %1$d, %2$d').replace('%1$d',String(rowIndex+1)).replace('%2$d',String(colIndex+1)));
             buildInlineDom(editor,cell.content); td.append(editor); tr.append(td);
           });
@@ -4360,6 +4428,7 @@
       }
       if (appearanceTarget) this.applyPreviewAppearance(appearanceTarget,node);
       if (node.type !== 'core/table') node.children.forEach((child) => card.append(this.renderNode(child, false)));
+      if(effectivelyLocked)card.querySelectorAll('input,textarea,select,[contenteditable="true"]').forEach((control)=>{if('disabled'in control)control.disabled=true;if(control.isContentEditable)control.contentEditable='false';});
       return card;
     }
 
@@ -4697,6 +4766,7 @@
     groupSiblingBlocks: groupSiblingBlocks,
     duplicateSiblingBlocksAsGroup: duplicateSiblingBlocksAsGroup,
     ungroupBlock: ungroupBlock,
+    documentChangeRespectsLocks: documentChangeRespectsLocks,
     moveSiblingSelection: moveSiblingSelection,
     moveBlockAcrossHierarchy: moveBlockAcrossHierarchy,
     cloneBlockWithNewIds: cloneBlockWithNewIds,

@@ -69,6 +69,10 @@
 .rb-inserter-empty{margin:0;padding:.35rem;color:var(--rb-muted);font-size:.82rem}
 .rb-block-toolbar{display:none;flex-wrap:wrap;align-items:center;gap:.28rem;padding:.35rem;margin:0 0 .45rem;border:1px solid #d8e1f0;border-radius:.4rem;background:#f8faff}
 .rb-block.is-selected>.rb-block-toolbar{display:flex}
+.rb-block.rb-block-locked{border-color:#8a6d3b;background-image:linear-gradient(0deg,rgba(138,109,59,.035),rgba(138,109,59,.035))}
+.rb-lock-status{display:inline-flex;align-items:center;gap:.25rem;margin-inline-start:auto;padding:.15rem .45rem;border:1px solid #d8bd78;border-radius:999px;background:#fff8dc;color:#5b4618;font-size:.72rem;font-weight:700;line-height:1.35}
+.rb-block-locked [contenteditable="true"]{cursor:not-allowed}
+.rb-block-locked>.rb-block-toolbar .rb-drag-handle{cursor:not-allowed;opacity:.45}
 .rb-block-toolbar .rb-button{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:.14rem;padding:.28rem .42rem;font-size:.75rem;line-height:1.1;text-align:center}
 .rb-block-toolbar .rb-button .rb-button-label:not(.rb-sr-only){display:block;max-width:6.5rem;font-size:.61rem;line-height:1.1;text-align:center;white-space:normal}
 .rb-drag-handle{cursor:grab;touch-action:none}

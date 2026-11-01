@@ -151,7 +151,8 @@ class BlockDocument {
         $types = ['core/paragraph','core/heading','core/list','core/list-item','core/quote','core/callout','core/details','core/spacer','core/code','core/image','core/video_embed','core/button','core/separator','core/group','core/columns','core/column','core/gallery','core/cover','core/table','core/table-row','core/table-cell','core/file','core/audio','core/video_file','core/threejs_thumb'];
         if (!is_string($node['type']) || !in_array($node['type'], $types, true)) { $errors[] = 'unknown_block_type'; return; }
         if (!is_array($node['attributes']) || !is_array($node['children']) || !$this->isSequentialList($node['children'])) { $errors[] = 'node_value_type_invalid'; return; }
-        $type = $node['type']; $attrs = $node['attributes'];
+        $type = $node['type']; $attrs = $node['attributes']; $schemaAttrs = $attrs; unset($schemaAttrs['locked']);
+        if (array_key_exists('locked', $attrs) && !is_bool($attrs['locked'])) $errors[] = 'block_lock_invalid';
         if ($version === self::FORMAT_VERSION && in_array($type, ['core/gallery','core/cover','core/audio','core/video_file','core/file','core/threejs_thumb'], true)) $errors[] = 'media_block_requires_v2';
         if ($version === self::FORMAT_VERSION && $type === 'core/callout') $errors[] = 'callout_requires_v2';
         if ($version === self::FORMAT_VERSION && $type === 'core/details') $errors[] = 'details_requires_v2';
@@ -181,7 +182,7 @@ class BlockDocument {
             foreach ($allowedAttrs as &$keys) $keys[] = 'appearance';
             unset($keys);
         }
-        if (array_diff(array_keys($attrs), $allowedAttrs[$type])) $errors[] = 'attributes_not_allowlisted';
+        if (array_diff(array_keys($schemaAttrs), $allowedAttrs[$type])) $errors[] = 'attributes_not_allowlisted';
         if ($version === self::RICH_TEXT_FORMAT_VERSION && array_key_exists('appearance', $attrs) && !$this->isValidAppearance($attrs['appearance'])) $errors[] = 'appearance_invalid';
         if ($type === 'core/paragraph' && isset($attrs['align']) && !in_array($attrs['align'], ['left','center','right'], true)) $errors[] = 'alignment_invalid';
         if ($type === 'core/heading' && (!isset($attrs['level']) || !is_int($attrs['level']) || $attrs['level'] < 1 || $attrs['level'] > 6)) $errors[] = 'heading_level_invalid';
@@ -284,7 +285,7 @@ class BlockDocument {
             else for($r=0;$r<$tableRowCount;$r++)for($c=0;$c<$columnCount;$c++)if(!isset($grid[$r][$c]))$errors[]='table_grid_hole';
             if($tableTextBytes>self::MAX_TABLE_TEXT_BYTES)$errors[]='table_text_too_large';
         } elseif ($type === 'core/table-row') {
-            if ($parentType !== 'core/table' || count($attrs) > 0) $errors[] = 'table_row_invalid';
+            if ($parentType !== 'core/table' || count($schemaAttrs) > 0) $errors[] = 'table_row_invalid';
             foreach ($node['children'] as $cell) if (!is_array($cell) || ($cell['type'] ?? null) !== 'core/table-cell') $errors[] = 'table_cell_invalid';
         } elseif ($type === 'core/table-cell') {
             if ($parentType !== 'core/table-row' || (isset($attrs['header'])&&!is_bool($attrs['header'])) || (isset($attrs['rowspan'])&&(!is_int($attrs['rowspan'])||$attrs['rowspan']<1||$attrs['rowspan']>self::MAX_TABLE_ROWS)) || (isset($attrs['colspan'])&&(!is_int($attrs['colspan'])||$attrs['colspan']<1||$attrs['colspan']>self::MAX_TABLE_COLUMNS)) || count($node['children']) > 0) $errors[] = 'table_cell_invalid';
@@ -292,8 +293,8 @@ class BlockDocument {
             $coverChildTypes = ['core/heading','core/paragraph','core/quote','core/button'];
             foreach ($node['children'] as $child) if (!is_array($child) || !in_array(($child['type'] ?? null), $coverChildTypes, true)) $errors[] = 'cover_child_invalid';
         } elseif ($type === 'core/group' || $type === 'core/column') {
-            if ($type === 'core/group' && array_diff(array_keys($attrs), $version === self::RICH_TEXT_FORMAT_VERSION ? ['outline_label','toc_generated'] : [])) $errors[] = 'group_attributes_invalid';
-            if ($type === 'core/column' && count($attrs) > 0) $errors[] = 'column_attributes_invalid';
+            if ($type === 'core/group' && array_diff(array_keys($schemaAttrs), $version === self::RICH_TEXT_FORMAT_VERSION ? ['outline_label','toc_generated'] : [])) $errors[] = 'group_attributes_invalid';
+            if ($type === 'core/column' && count($schemaAttrs) > 0) $errors[] = 'column_attributes_invalid';
             if (count($node['children']) < 1) $errors[] = 'empty_container';
             foreach ($node['children'] as $child) if (is_array($child) && in_array(($child['type'] ?? null), ['core/list-item','core/column','core/table-row','core/table-cell'], true)) $errors[] = 'internal_node_parent_invalid';
         } elseif ($type !== 'core/list-item' && count($node['children']) > 0) {
