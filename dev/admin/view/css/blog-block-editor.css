@@ -1046,3 +1046,24 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-command-footer kbd{padding:.2rem .45rem;border:1px solid #d5dce7;border-radius:.3rem;background:#f7f8fb;color:#39465b;font:inherit;white-space:nowrap}
 @media(max-width:560px){.rb-ribbon-head{align-items:center}.rb-command-palette-trigger{margin-inline:.3rem;padding:.38rem}.rb-command-palette-trigger .rb-button-label{max-width:5.2rem;overflow:hidden;text-overflow:ellipsis}.rb-command-dialog{max-height:84vh}.rb-command-footer{align-items:flex-start;flex-direction:column;gap:.35rem}}
 @media(forced-colors:active){.rb-command-dialog,.rb-command-close,.rb-command-search-wrap,.rb-command-option{border:1px solid CanvasText}.rb-command-option.is-active,.rb-command-option:hover{outline:2px solid Highlight}.rb-command-overlay{background:Canvas}}
+
+/* F9-92 multi-select and confirmed native Group operation. */
+.rb-block.rb-group-selected{outline:2px solid #5b72d6;outline-offset:2px;border-radius:.4rem;background-color:rgb(238 243 255 / 32%)}
+.rb-group-select-active{border-color:#a8b9f0!important;background:#e9efff!important;color:#2547ad!important}
+.rb-group-selection-bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:0 0 .7rem;padding:.7rem .85rem;border:1px solid #c8d5f0;border-radius:.6rem;background:#f5f7ff;color:#263451}
+.rb-group-selection-message{display:flex;min-width:0;flex-direction:column;gap:.15rem}
+.rb-group-selection-message strong{font-size:.85rem}
+.rb-group-selection-message span{color:#5f6e86;font-size:.76rem}
+.rb-group-selection-actions{display:flex;flex:0 0 auto;align-items:center;gap:.4rem}
+.rb-group-confirm-overlay{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;overflow:auto;padding:1rem;background:rgb(15 23 42 / 48%)}
+.rb-group-confirm-dialog{width:min(560px,100%);max-height:min(82vh,44rem);overflow:auto;padding:1.15rem;border:1px solid #d6deeb;border-radius:.8rem;background:#fff;box-shadow:0 24px 72px rgb(15 23 42 / 28%);color:#172033}
+.rb-group-confirm-title{margin:0 0 .5rem;color:#182230;font-size:1.1rem}
+.rb-group-confirm-lead{margin:.35rem 0 .9rem;color:#526075;font-size:.88rem;line-height:1.5}
+.rb-group-confirm-list{display:flex;max-height:16rem;flex-direction:column;gap:.35rem;overflow:auto;margin:0 0 1rem;padding:0;list-style:none;counter-reset:group-preview}
+.rb-group-confirm-item{display:flex;align-items:flex-start;gap:.6rem;padding:.55rem .65rem;border:1px solid #e2e7ef;border-radius:.45rem;background:#fafbfc}
+.rb-group-confirm-item strong{flex:0 0 7.8rem;color:#384763;font-size:.8rem}
+.rb-group-confirm-item span{min-width:0;overflow-wrap:anywhere;color:#5f6e86;font-size:.8rem}
+.rb-group-outline-label{margin:0 0 1rem}
+.rb-group-confirm-actions{display:flex;justify-content:flex-end;gap:.55rem;flex-wrap:wrap}
+@media(max-width:620px){.rb-group-selection-bar{align-items:flex-start;flex-direction:column}.rb-group-selection-actions{width:100%;flex-wrap:wrap}.rb-group-confirm-item{flex-direction:column;gap:.2rem}.rb-group-confirm-item strong{flex:auto}}
+@media(forced-colors:active){.rb-block.rb-group-selected{outline:2px solid Highlight}.rb-group-selection-bar,.rb-group-confirm-dialog,.rb-group-confirm-item{border:1px solid CanvasText}.rb-group-confirm-overlay{background:Canvas}}
