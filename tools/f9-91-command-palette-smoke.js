@@ -16,7 +16,7 @@ const checks = [
   ['block insert commands derive from safe insertion context and stay hidden when locked', js.includes('const available=this.insertTypes(this.selectedId||null)') && js.includes("if(!this.locked){\n        const available=this.insertTypes") && js.includes("this.action('insert',button)")],
   ['commands call existing navigation/actions and never inject HTML or fetch remote services', js.includes('this.activateWorkspaceTool({dataset:{tool:item.tool}})') && js.includes('this.action(item.action,button)') && !paletteMethods.includes('insertAdjacentHTML') && !paletteMethods.includes('fetch(')],
   ['dismissal returns focus to the palette launcher and styles adapt to mobile/forced colors', js.includes("this.root.querySelector('[data-action=\"command-palette-open\"]')") && css.includes('.rb-command-overlay{') && css.includes('@media(max-width:560px){.rb-ribbon-head') && css.includes('@media(forced-colors:active){.rb-command-dialog')],
-  ['Page and Blog use the same updated cache key and static battery includes F9-91 coverage', page.includes('threejs-47-find-replace-preview') && blog.includes('threejs-47-find-replace-preview') && battery.includes('F9-91 command palette')],
+  ['Page and Blog use the same updated cache key and static battery includes F9-91 coverage', page.includes('threejs-48-editor-notes') && blog.includes('threejs-48-editor-notes') && battery.includes('F9-91 command palette')],
 ];
 let failures = 0;
 for (const [label, ok] of checks) {

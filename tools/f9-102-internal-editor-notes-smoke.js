@@ -1,0 +1,18 @@
+'use strict';
+const fs=require('fs'),vm=require('vm'),path=require('path');
+const rootDir=path.join(__dirname,'..'),source=fs.readFileSync(path.join(rootDir,'dev/admin/view/js/blog-block-editor.js'),'utf8');
+const root={document:{documentElement:{lang:'pt-br'}},location:{origin:'https://admin.example'},setTimeout,clearTimeout,setInterval,clearInterval,URL,TextEncoder,Uint8Array,console};
+const context={window:root,globalThis:root,URL,TextEncoder,Uint8Array,Intl,Map,Set,WeakMap,WeakSet,Date,Math,JSON,RegExp,Array,Object,String,Number,Boolean,Error,TypeError,Promise,console,setTimeout,clearTimeout};
+vm.runInNewContext(source,context,{filename:'blog-block-editor.js'});
+const api=root.ReamurBlogBlockEditor,notes=[{id:'note-abc-123',blockId:'paragraph-1',text:'Revisar a referência antes da publicação.',updatedAt:1790000000000}];
+const serialized=api.serializeEditorNotes(notes),parsed=api.parseEditorNotes(serialized);
+if(!serialized||!parsed.valid||JSON.stringify(parsed.notes)!==JSON.stringify(notes))throw new Error('Valid notes must round-trip in the bounded local envelope');
+if(serialized.includes('document')||serialized.includes('content')||serialized.includes('blocks'))throw new Error('Notes envelope must not contain document content or block data');
+for(const source of ['{bad json','{"format":"bdre-document","version":1,"notes":[]}','{"format":"bdre-editor-notes","version":1,"notes":[{}]}'])if(api.parseEditorNotes(source).valid)throw new Error('Malformed note storage must be rejected');
+const duplicate=api.serializeEditorNotes([notes[0],notes[0]]);if(duplicate!==null)throw new Error('Duplicate note identifiers must be rejected');
+const oversized=api.serializeEditorNotes(Array.from({length:201},(_,i)=>({id:'note-'+i,blockId:'b'+i,text:'note',updatedAt:1})));if(oversized!==null)throw new Error('Note count must remain capped at 200');
+const tooLong=api.serializeEditorNotes([{id:'note-long',blockId:'b',text:'x'.repeat(1001),updatedAt:1}]);if(tooLong!==null)throw new Error('Note length must remain capped at 1,000 characters');
+const page=fs.readFileSync(path.join(rootDir,'dev/admin/controller/cms/page.php'),'utf8'),blog=fs.readFileSync(path.join(rootDir,'dev/admin/controller/blog/blog.php'),'utf8');
+for(const fragment of ["tool:'editor-notes'","renderEditorNotes()","localStorage.setItem(key,serialized)","const found=this.findPath(this.state.blocks,note.blockId)","copy.orphan","editor-note-delete-confirm","editor-note-locate","serializeEditorNotes: serializeEditorNotes","parseEditorNotes: parseEditorNotes"])if(!source.includes(fragment))throw new Error('Internal note UI/storage safeguard missing: '+fragment);
+if(!page.includes("'editorNotesKey' => !empty($page['page_id'])")||!page.includes(":pages:' . (int)$page['page_id']")||!blog.includes("'editorNotesKey' => !empty($post['post_id'])")||!blog.includes(":blog:' . (int)$post['post_id']"))throw new Error('Pages and Blog need isolated per-user, per-document local keys');
+console.log('PASS: internal notes use a bounded strict local-only envelope, separate per-user Pages/Blog document keys, orphan reporting and explicit edit/delete/locate actions without entering BDRE document content.');

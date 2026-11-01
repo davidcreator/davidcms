@@ -1031,6 +1031,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 'csrfToken' => \Reamur\System\Library\Security\Csrf::token($this->session),
                 'draftKey' => 'reamur:bdre:draft:v1:u' . (int)$this->user->getUserId() . ':pages:' . (int)($page['page_id'] ?? 0),
                 'stylePresetKey' => 'reamur:bdre:style-presets:v1:u' . (int)$this->user->getUserId() . ':pages',
+                'editorNotesKey' => !empty($page['page_id']) ? 'reamur:bdre:editor-notes:v1:u' . (int)$this->user->getUserId() . ':pages:' . (int)$page['page_id'] : '',
                 'canRead' => $this->user->hasPermission('access', 'cms/block_pattern') && $this->user->hasPermission('modify', 'cms/page'),
                 'canModify' => $this->user->hasPermission('modify', 'cms/block_pattern') && $this->user->hasPermission('modify', 'cms/page'),
             ];
@@ -1131,7 +1132,7 @@ class Page extends \Reamur\System\Engine\Controller {
             ];
 
                 $site = $this->config->get('site_url');
-                $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-47-find-replace-preview';
+                $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-48-editor-notes';
                 $catalogAssetBase = $this->pageCatalogAssetUrl();
                 $this->document->addStyle($site . 'view/css/blog-block-editor.css?v=' . $version);
                 $this->document->addStyle($catalogAssetBase . 'view/css/threejs-thumb.css?v=' . $version);

@@ -912,6 +912,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             'csrfToken' => \Reamur\System\Library\Security\Csrf::token($this->session),
             'draftKey' => 'reamur:bdre:draft:v1:u' . (int)$this->user->getUserId() . ':blog:' . (int)($post['post_id'] ?? 0),
             'stylePresetKey' => 'reamur:bdre:style-presets:v1:u' . (int)$this->user->getUserId() . ':blog',
+            'editorNotesKey' => !empty($post['post_id']) ? 'reamur:bdre:editor-notes:v1:u' . (int)$this->user->getUserId() . ':blog:' . (int)$post['post_id'] : '',
             'canRead' => $this->user->hasPermission('access', 'cms/block_pattern') && $this->user->hasPermission('modify', 'blog/blog'),
             'canModify' => $this->user->hasPermission('modify', 'cms/block_pattern') && $this->user->hasPermission('modify', 'blog/blog'),
         ];
@@ -1018,7 +1019,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['block_editor_available'] = $data['can_modify'] && $this->model_blog_blog->blogBlockContentTableExists();
         $data['preview_url'] = $data['block_editor_available'] ? $this->url->link('blog/blog.preview') : '';
         if ($data['block_editor_available']) {
-            $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-47-find-replace-preview';
+            $assetVersion = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-48-editor-notes';
             $assetBase = rtrim((string)$this->config->get('site_url'), '/') . '/view/';
             $catalogAssetBase = $this->catalogAssetUrl();
             $catalogViewBase = $catalogAssetBase . 'view/';
