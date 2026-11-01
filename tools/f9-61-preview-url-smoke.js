@@ -14,6 +14,8 @@ const cases = [
   ['https://example.com/path', true, 'https://example.com/path'],
   ['http://example.com', true, 'http://example.com'],
   ['/pages/contact', true, '/pages/contact'],
+  ['#section-one', true, '#section-one'],
+  ['#javascript:alert(1)', false, null],
   ['javascript:alert(1)', false, null],
   ['//attacker.example/path', false, null],
   ['ftp://example.com/file', false, null],

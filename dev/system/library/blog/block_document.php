@@ -117,9 +117,9 @@ class BlockDocument {
             $version = 0;
         }
         if (!isset($document['blocks']) || !is_array($document['blocks']) || !$this->isSequentialList($document['blocks']) || count($document['blocks']) > self::MAX_BLOCKS) $errors[] = 'blocks_invalid';
-        $ids = []; $count = 0;
+        $ids = []; $count = 0; $anchors = [];
         if (isset($document['blocks']) && is_array($document['blocks'])) {
-            foreach ($document['blocks'] as $node) $this->validateNode($node, 0, null, $ids, $errors, $count, $version ?? 0);
+            foreach ($document['blocks'] as $node) $this->validateNode($node, 0, null, $ids, $errors, $count, $version ?? 0, $anchors);
         }
         return ['valid' => !$errors, 'errors' => array_values(array_unique($errors))];
     }
@@ -140,7 +140,7 @@ class BlockDocument {
         return ['id' => $node['id'], 'type' => $node['type'], 'attributes' => (object)$attributes, 'children' => $children, 'content' => $content];
     }
 
-    private function validateNode($node, int $depth, ?string $parentType, array &$ids, array &$errors, int &$count, int $version): void {
+    private function validateNode($node, int $depth, ?string $parentType, array &$ids, array &$errors, int &$count, int $version, array &$anchors): void {
         if ($depth > self::MAX_DEPTH || !is_array($node)) { $errors[] = 'node_depth_or_type_invalid'; return; }
         $count++;
         if ($count > self::MAX_TOTAL_NODES) { $errors[] = 'too_many_nodes'; return; }
@@ -167,8 +167,9 @@ class BlockDocument {
             'core/table' => ['header'], 'core/table-row' => [], 'core/table-cell' => [], 'core/file' => ['src'], 'core/audio' => ['src'], 'core/video_file' => ['src'], 'core/threejs_thumb' => ['scene_json','label','custom_js']
         ];
         if ($version === self::RICH_TEXT_FORMAT_VERSION) {
+            $allowedAttrs['core/heading'] = ['level','anchor'];
             $allowedAttrs['core/image'] = ['src','alt','title','caption','align','size','mobile_size'];
-            $allowedAttrs['core/group'] = ['outline_label'];
+            $allowedAttrs['core/group'] = ['outline_label','toc_generated'];
             $allowedAttrs['core/table'] = ['header'];
             $allowedAttrs['core/table-cell'] = ['header','rowspan','colspan'];
             $allowedAttrs['core/file'] = ['src'];
@@ -184,6 +185,12 @@ class BlockDocument {
         if ($version === self::RICH_TEXT_FORMAT_VERSION && array_key_exists('appearance', $attrs) && !$this->isValidAppearance($attrs['appearance'])) $errors[] = 'appearance_invalid';
         if ($type === 'core/paragraph' && isset($attrs['align']) && !in_array($attrs['align'], ['left','center','right'], true)) $errors[] = 'alignment_invalid';
         if ($type === 'core/heading' && (!isset($attrs['level']) || !is_int($attrs['level']) || $attrs['level'] < 1 || $attrs['level'] > 6)) $errors[] = 'heading_level_invalid';
+        if ($type === 'core/heading' && array_key_exists('anchor', $attrs)) {
+            if ($version !== self::RICH_TEXT_FORMAT_VERSION || !is_string($attrs['anchor']) || !preg_match('/^[a-z][a-z0-9-]{0,79}$/D', $attrs['anchor'])) $errors[] = 'heading_anchor_invalid';
+            elseif (isset($anchors[$attrs['anchor']])) $errors[] = 'heading_anchor_duplicate';
+            else $anchors[$attrs['anchor']] = true;
+        }
+        if ($type === 'core/group' && array_key_exists('toc_generated', $attrs) && !is_bool($attrs['toc_generated'])) $errors[] = 'toc_marker_invalid';
         if ($type === 'core/list' && (!isset($attrs['ordered']) || !is_bool($attrs['ordered']))) $errors[] = 'list_order_invalid';
         if ($type === 'core/file' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeDownloadPath($attrs['src']) || !is_array($node['content']) || !$this->hasVisibleInlineText($node['content']))) $errors[] = 'file_attributes_invalid';
         if ($type === 'core/audio' && ($version !== self::RICH_TEXT_FORMAT_VERSION || !isset($attrs['src']) || !$this->isSafeAudioPath($attrs['src']) || !is_array($node['content']) || !$this->hasVisibleInlineText($node['content']))) $errors[] = 'audio_attributes_invalid';
@@ -285,14 +292,14 @@ class BlockDocument {
             $coverChildTypes = ['core/heading','core/paragraph','core/quote','core/button'];
             foreach ($node['children'] as $child) if (!is_array($child) || !in_array(($child['type'] ?? null), $coverChildTypes, true)) $errors[] = 'cover_child_invalid';
         } elseif ($type === 'core/group' || $type === 'core/column') {
-            if ($type === 'core/group' && array_diff(array_keys($attrs), $version === self::RICH_TEXT_FORMAT_VERSION ? ['outline_label'] : [])) $errors[] = 'group_attributes_invalid';
+            if ($type === 'core/group' && array_diff(array_keys($attrs), $version === self::RICH_TEXT_FORMAT_VERSION ? ['outline_label','toc_generated'] : [])) $errors[] = 'group_attributes_invalid';
             if ($type === 'core/column' && count($attrs) > 0) $errors[] = 'column_attributes_invalid';
             if (count($node['children']) < 1) $errors[] = 'empty_container';
             foreach ($node['children'] as $child) if (is_array($child) && in_array(($child['type'] ?? null), ['core/list-item','core/column','core/table-row','core/table-cell'], true)) $errors[] = 'internal_node_parent_invalid';
         } elseif ($type !== 'core/list-item' && count($node['children']) > 0) {
             $errors[] = 'children_not_allowed';
         }
-        foreach ($node['children'] as $child) $this->validateNode($child, $depth + 1, $type, $ids, $errors, $count, $version);
+        foreach ($node['children'] as $child) $this->validateNode($child, $depth + 1, $type, $ids, $errors, $count, $version, $anchors);
     }
 
     private function isValidAppearance($appearance): bool {
@@ -349,6 +356,7 @@ class BlockDocument {
 
     private function isSafeActionUrl($url): bool {
         if (!is_string($url) || $url === '' || preg_match('/[\x00-\x20\\\\]/', $url) || str_starts_with($url, '//')) return false;
+        if (preg_match('/^#[a-z][a-z0-9-]{0,79}$/D', $url)) return true;
         if (str_starts_with($url, '/')) return true;
         $parts = parse_url($url);
         return is_array($parts) && isset($parts['scheme'], $parts['host']) && in_array(strtolower($parts['scheme']), ['http','https'], true) && !isset($parts['user']) && !isset($parts['pass']);

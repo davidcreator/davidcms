@@ -99,7 +99,8 @@ final class BlockRenderer {
 
             case 'core/heading':
                 $level = (int)$attributes['level'];
-                return '<h' . $level . ' class="rms-block rms-block-heading">' . $content . '</h' . $level . '>';
+                $anchor = isset($attributes['anchor']) ? ' id="' . $this->escape((string)$attributes['anchor']) . '"' : '';
+                return '<h' . $level . ' class="rms-block rms-block-heading"' . $anchor . '>' . $content . '</h' . $level . '>';
 
             case 'core/list':
                 $tag = $attributes['ordered'] ? 'ol' : 'ul';
@@ -261,6 +262,10 @@ final class BlockRenderer {
                 return '<hr class="rms-block rms-block-separator rms-block-separator--' . $lineStyle . ' rms-block-separator--width-' . $width . ' rms-block-separator--thickness-' . $thickness . ' rms-block-separator--align-' . $align . '" style="' . $separatorStyle . '">';
 
             case 'core/group':
+                if (!empty($attributes['toc_generated'])) {
+                    $label = $this->escape((string)($attributes['outline_label'] ?? 'Table of contents'));
+                    return '<nav class="rms-block-group rms-block-toc" aria-label="' . $label . '">' . $this->renderNodes($children, $validator, $assetBase, $version) . '</nav>';
+                }
                 return '<div class="rms-block-group">' . $this->renderNodes($children, $validator, $assetBase, $version) . '</div>';
 
             case 'core/columns':
