@@ -1006,3 +1006,12 @@ form[data-blog-post-form].form-layout>.col-lg-8,form[data-blog-post-form].form-l
 .rb-preview-table-of-contents{margin:1rem 0;padding:.8rem 1rem;border-inline-start:3px solid #315ee8;border-radius:.55rem;background:#f8fafc}
 .rb-preview-table-of-contents>p:first-child{font-weight:700}
 @media(forced-colors:active){.rb-preview-table-of-contents{border:1px solid CanvasText}}
+
+/* F9-86 assisted, per-target repair workflow for local fragment links. */
+.rb-anchor-repair-card{min-width:0}
+.rb-anchor-repair-select{display:grid;gap:.4rem;margin:.8rem 0}
+.rb-anchor-repair-select select{max-width:100%;min-height:2.5rem}
+.rb-anchor-repair-preview{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem;margin:.75rem 0;padding:.7rem .85rem;border:1px solid #cbd5e1;border-radius:.6rem;background:#f8fafc;color:#26364b;overflow-wrap:anywhere}
+.rb-anchor-repair-arrow{color:#315ee8;font-weight:800}
+.rb-anchor-repair-generated-note,.rb-anchor-repair-empty-targets{margin:.6rem 0;padding:.7rem .85rem;border-inline-start:3px solid #315ee8;border-radius:.5rem;background:#eff6ff;color:#1e3a8a;line-height:1.5}
+@media(forced-colors:active){.rb-anchor-repair-preview,.rb-anchor-repair-generated-note,.rb-anchor-repair-empty-targets{border:1px solid CanvasText}}

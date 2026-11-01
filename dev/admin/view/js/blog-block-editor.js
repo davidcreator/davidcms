@@ -173,9 +173,9 @@
 
   function internalAnchorReviewCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
-    if(language.startsWith('es'))return {tool:'Anclas internas',title:'Revisión de anclas y enlaces internos',hint:'Comprueba los enlaces de fragmento (#id) frente a los identificadores de encabezados del documento.',note:'Solo lectura y local: no visita sitios, no comprueba enlaces externos y no cambia el contenido. Los enlaces externos con fragmento no se consideran enlaces internos de esta página.',back:'Volver al editor',summary:'Enlaces internos comprobados: %1 · destinos ausentes: %2',clean:'Todos los enlaces internos comprobados apuntan a un encabezado con esa ancla.',invalid:'No se puede analizar un documento que no supera la validación BDRE.',warning:'Destino ausente',openBlock:'Localizar enlace',suggestion:'Añade una ancla al encabezado correcto o revisa el destino del enlace; esta herramienta no aplica correcciones.',detail:'El destino #%1 no coincide con ninguna ancla de encabezado del documento.',destination:'Destino: #%1'};
-    if(language.startsWith('pt'))return {tool:'Âncoras internas',title:'Revisão de âncoras e links internos',hint:'Confira os links de fragmento (#id) em relação aos identificadores dos títulos do documento.',note:'Somente leitura e local: não visita sites, não verifica links externos e não altera conteúdo. Links externos com fragmento não são tratados como links internos desta página.',back:'Voltar ao editor',summary:'Links internos verificados: %1 · destinos ausentes: %2',clean:'Todos os links internos verificados apontam para um título com essa âncora.',invalid:'Não é possível analisar um documento que não passou na validação BDRE.',warning:'Destino ausente',openBlock:'Localizar link',suggestion:'Adicione uma âncora ao título correto ou revise o destino do link; esta ferramenta não aplica correções.',detail:'O destino #%1 não corresponde a nenhuma âncora de título no documento.',destination:'Destino: #%1'};
-    return {tool:'Internal anchors',title:'Internal anchor and link review',hint:'Check fragment links (#id) against heading IDs in this document.',note:'Read-only and local: this tool does not visit websites, check external links or change content. External URLs with fragments are not treated as links within this page.',back:'Back to editor',summary:'Internal links checked: %1 · missing targets: %2',clean:'All checked internal links point to a heading with a matching anchor.',invalid:'A document that fails BDRE validation cannot be analyzed.',warning:'Missing target',openBlock:'Locate link',suggestion:'Add an anchor to the intended heading or review the link destination; this tool does not apply fixes.',detail:'Destination #%1 does not match a heading anchor in this document.',destination:'Destination: #%1'};
+    if(language.startsWith('es'))return {tool:'Anclas internas',title:'Revisión de anclas y enlaces internos',hint:'Comprueba los enlaces de fragmento (#id) frente a los identificadores de encabezados del documento.',note:'Solo lectura y local: no visita sitios, no comprueba enlaces externos y no cambia el contenido. Los enlaces externos con fragmento no se consideran enlaces internos de esta página.',back:'Volver al editor',repair:'Reparar enlaces',summary:'Enlaces internos comprobados: %1 · destinos ausentes: %2',clean:'Todos los enlaces internos comprobados apuntan a un encabezado con esa ancla.',invalid:'No se puede analizar un documento que no supera la validación BDRE.',warning:'Destino ausente',openBlock:'Localizar enlace',suggestion:'Añade una ancla al encabezado correcto o revisa el destino del enlace; esta herramienta no aplica correcciones.',detail:'El destino #%1 no coincide con ninguna ancla de encabezado del documento.',destination:'Destino: #%1'};
+    if(language.startsWith('pt'))return {tool:'Âncoras internas',title:'Revisão de âncoras e links internos',hint:'Confira os links de fragmento (#id) em relação aos identificadores dos títulos do documento.',note:'Somente leitura e local: não visita sites, não verifica links externos e não altera conteúdo. Links externos com fragmento não são tratados como links internos desta página.',back:'Voltar ao editor',repair:'Reparar links',summary:'Links internos verificados: %1 · destinos ausentes: %2',clean:'Todos os links internos verificados apontam para um título com essa âncora.',invalid:'Não é possível analisar um documento que não passou na validação BDRE.',warning:'Destino ausente',openBlock:'Localizar link',suggestion:'Adicione uma âncora ao título correto ou revise o destino do link; esta ferramenta não aplica correções.',detail:'O destino #%1 não corresponde a nenhuma âncora de título no documento.',destination:'Destino: #%1'};
+    return {tool:'Internal anchors',title:'Internal anchor and link review',hint:'Check fragment links (#id) against heading IDs in this document.',note:'Read-only and local: this tool does not visit websites, check external links or change content. External URLs with fragments are not treated as links within this page.',back:'Back to editor',repair:'Repair links',summary:'Internal links checked: %1 · missing targets: %2',clean:'All checked internal links point to a heading with a matching anchor.',invalid:'A document that fails BDRE validation cannot be analyzed.',warning:'Missing target',openBlock:'Locate link',suggestion:'Add an anchor to the intended heading or review the link destination; this tool does not apply fixes.',detail:'Destination #%1 does not match a heading anchor in this document.',destination:'Destination: #%1'};
   }
 
 
@@ -946,6 +946,14 @@
   }
 
 
+  function internalAnchorRepairCopy() {
+    const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
+    if(language.startsWith('es'))return {tool:'Reparar enlaces internos',title:'Reparación asistida de enlaces',hint:'Elige el encabezado de destino para cada fragmento roto y revisa el cambio antes de aplicarlo. Cada acción confirma una corrección y solo afecta este documento.',back:'Volver a la revisión',summary:'Correcciones pendientes: %1',selectHeading:'Elegir encabezado de destino',selectPlaceholder:'Selecciona un encabezado…',noHeadings:'No hay encabezados con texto para usar como destino.',clean:'No hay enlaces internos rotos que corregir.',invalid:'No se puede reparar un documento que no supera la validación BDRE.',source:'Bloque de origen',destination:'Destino actual: #%1',linkLabel:'Texto del enlace: %1',preview:'Vista previa del cambio',before:'Antes: #%1',after:'Después: #%1',assign:'Se asignará esta ancla al encabezado elegido.',sameBlock:'Se actualizarán en conjunto los enlaces de este bloque que usan el mismo destino.',apply:'Aplicar esta corrección',done:'Enlace interno corregido; los demás bloques se conservaron.',unavailable:'El cambio no supera la validación BDRE; no se modificó el documento.',backAudit:'Volver a la auditoría',headingOption:'H%1 · %2 · #%3',existing:'ancla existente',generated:'ancla nueva'};
+    if(language.startsWith('pt'))return {tool:'Reparar links internos',title:'Reparo assistido de links',hint:'Escolha o título de destino para cada fragmento quebrado e confira a alteração antes de aplicar. Cada ação confirma uma correção e afeta somente este documento.',back:'Voltar à revisão',summary:'Correções pendentes: %1',selectHeading:'Escolher título de destino',selectPlaceholder:'Selecione um título…',noHeadings:'Não há títulos com texto para usar como destino.',clean:'Não há links internos quebrados para corrigir.',invalid:'Não é possível reparar um documento que não passou na validação BDRE.',source:'Bloco de origem',destination:'Destino atual: #%1',linkLabel:'Texto do link: %1',preview:'Prévia da alteração',before:'Antes: #%1',after:'Depois: #%1',assign:'Esta âncora será atribuída ao título escolhido.',sameBlock:'Os links deste bloco que usam o mesmo destino serão atualizados juntos.',apply:'Aplicar esta correção',done:'Link interno corrigido; os demais blocos foram preservados.',unavailable:'A alteração não passou na validação BDRE; o documento não foi modificado.',backAudit:'Voltar à auditoria',headingOption:'H%1 · %2 · #%3',existing:'âncora existente',generated:'nova âncora'};
+    return {tool:'Repair internal links',title:'Assisted internal link repair',hint:'Choose the destination heading for each broken fragment and review the change before applying it. Each action confirms one correction and affects only this document.',back:'Back to review',summary:'Corrections to review: %1',selectHeading:'Choose destination heading',selectPlaceholder:'Select a heading…',noHeadings:'There are no titled headings to use as destinations.',clean:'There are no broken internal links to repair.',invalid:'A document that fails BDRE validation cannot be repaired.',source:'Source block',destination:'Current destination: #%1',linkLabel:'Link text: %1',preview:'Change preview',before:'Before: #%1',after:'After: #%1',assign:'This anchor will be assigned to the selected heading.',sameBlock:'Matching links in this source block that use the same destination will be updated together.',apply:'Apply this correction',done:'Internal link corrected; all other blocks were preserved.',unavailable:'The change fails BDRE validation; the document was not modified.',backAudit:'Back to audit',headingOption:'H%1 · %2 · #%3',existing:'existing anchor',generated:'new anchor'};
+  }
+
+
   function analyzeInternalAnchors(document, allowPageMedia) {
     const validation=validateDocument(document,allowPageMedia);
     if(!validation.valid)return {valid:false,errors:validation.errors,checked:0,issues:[]};
@@ -968,6 +976,33 @@
       issues.push({code:'missing_target',severity:'warning',title:copy.warning,detail:copy.detail.replace('%1',link.destination),suggestion:copy.suggestion,nodeId:link.nodeId,type:link.type,destination:link.destination,label:link.label});
     });
     return {valid:true,checked:links.length,issues};
+  }
+
+
+  function repairInternalAnchorLinks(document, sourceId, destination, targetId, allowPageMedia) {
+    const validation=validateDocument(document,allowPageMedia);
+    if(!validation.valid)return {valid:false,errors:validation.errors,updatedLinks:0};
+    const review=analyzeInternalAnchors(document,allowPageMedia);
+    if(!review.valid||!review.issues.some((issue)=>issue.nodeId===sourceId&&issue.destination===destination))return {valid:false,errors:['missing_issue'],updatedLinks:0};
+    const plan=createTableOfContentsPlan(document,[1,2,3,4,5,6],allowPageMedia);
+    const target=plan.valid?plan.headings.find((heading)=>heading.nodeId===targetId):null;
+    if(!target)return {valid:false,errors:['target_heading_not_found'],updatedLinks:0};
+    const next=CLONE(document);let source=null,targetNode=null;
+    const find=(nodes)=>{nodes.forEach((node)=>{if(node.id===sourceId)source=node;if(node.id===targetId)targetNode=node;if(node.children&&node.children.length)find(node.children);});};
+    find(next.blocks);
+    if(!source||!targetNode||targetNode.type!=='core/heading')return {valid:false,errors:['repair_node_not_found'],updatedLinks:0};
+    if(target.needsAnchor)targetNode.attributes.anchor=target.anchor;
+    const before='#'+destination,after='#'+target.anchor;let updatedLinks=0;
+    if(source.type==='core/button'){
+      if(source.attributes.url===before){source.attributes.url=after;updatedLinks=1;}
+    }else if(Array.isArray(source.content)){
+      source.content.forEach((run)=>{if(run&&run.href===before){run.href=after;updatedLinks++;}});
+      source.content=canonicalRuns(source.content);
+    }
+    if(!updatedLinks)return {valid:false,errors:['repair_link_not_found'],updatedLinks:0};
+    const resultValidation=validateDocument(next,allowPageMedia);
+    if(!resultValidation.valid||utf8Length(JSON.stringify(next))>4194304)return {valid:false,errors:resultValidation.errors.length?resultValidation.errors:['document_too_large'],updatedLinks:0};
+    return {valid:true,errors:[],document:next,updatedLinks,anchor:target.anchor,anchorAdded:target.needsAnchor};
   }
 
 
@@ -1445,6 +1480,8 @@
       this.accessibility = accessibilityAuditCopy();
       this.linkReview = linkReviewCopy();
       this.internalAnchorReview = internalAnchorReviewCopy();
+      this.internalAnchorRepair = internalAnchorRepairCopy();
+      this.anchorRepairSelections = Object.create(null);
       this.readability = readabilityReviewCopy();
       this.preflight = preflightReviewCopy();
       this.revisionCompare = revisionCompareCopy();
@@ -1556,6 +1593,8 @@
         this.captureInlineSelection();
       });
       this.root.addEventListener('change', (event) => {
+        const repairTarget=event.target.closest('[data-anchor-repair-target]');
+        if(repairTarget){this.anchorRepairSelections[repairTarget.dataset.repairKey]=repairTarget.value;this.render();const focus=Array.from(this.root.querySelectorAll('[data-anchor-repair-target]')).find((input)=>input.dataset.repairKey===repairTarget.dataset.repairKey);if(focus)focus.focus();return;}
         const tocLevel=event.target.closest('[data-toc-level]');
         if(tocLevel){this.tocLevels=Array.from(this.root.querySelectorAll('[data-toc-level]:checked')).map((input)=>Number(input.dataset.tocLevel));this.render();const focus=this.root.querySelector('[data-toc-level="'+tocLevel.dataset.tocLevel+'"]');if(focus)focus.focus();return;}
         const spacerRange=event.target.closest('[data-spacer-height-range]');
@@ -1717,6 +1756,7 @@
       else if(tool==='accessibility'){this.workspaceView='accessibility';this.previewMode=false;}
       else if(tool==='links'){this.workspaceView='links';this.previewMode=false;}
       else if(tool==='internal-anchors'){this.workspaceView='internal-anchors';this.previewMode=false;}
+      else if(tool==='internal-anchor-repair'){this.workspaceView='internal-anchor-repair';this.previewMode=false;}
       else if(tool==='readability'){this.workspaceView='readability';this.previewMode=false;}
       else if(tool==='preflight'){this.workspaceView='preflight';this.previewMode=false;}
       else if(tool==='revision-compare'){this.workspaceView='revision-compare';this.previewMode=false;this.revisionCompareIndex=null;}
@@ -1737,7 +1777,7 @@
         const tabs={text:'home',media:'media',review:'review',view:'view'};
         if(tabs[tool])this.activeRibbonTab=tabs[tool];
       }
-      if(['models','accessibility','links','internal-anchors','readability','preflight','revision-compare','table-of-contents','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
+      if(['models','accessibility','links','internal-anchors','internal-anchor-repair','readability','preflight','revision-compare','table-of-contents','library','assistant','export','share','help'].includes(tool))this.activePanel='structure';
       this.findReplaceOpen=false;
       this.render();
       const focusTarget=Array.from(this.root.querySelectorAll('[data-action="workspace-tool"]')).find((item)=>item.dataset.tool===tool);
@@ -1797,6 +1837,8 @@
       else if (name === 'accessibility-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'link-review-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'internal-anchor-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
+      else if(name==='internal-anchor-repair-back'){this.workspaceView='internal-anchors';this.render();const focus=Array.from(this.root.querySelectorAll('[data-action=\"workspace-tool\"]')).find((item)=>item.dataset.tool==='internal-anchor-repair');if(focus)focus.focus();}
+      else if(name==='apply-internal-anchor-repair')this.applyInternalAnchorRepair(button.dataset.sourceId,button.dataset.destination,button.dataset.targetId);
       else if (name === 'readability-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'preflight-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
       else if (name === 'revision-compare-focus') { const id=button.dataset.nodeId;if(id&&this.findPath(this.state.blocks,id)){this.workspaceView='editor';this.previewMode=false;this.activeRibbonTab='home';this.activePanel='structure';this.selectedId=id;this.render();this.focusNode(id);this.announceStatus(this.strings.statusFocusChanged);} }
@@ -2168,6 +2210,14 @@
       this.finishInsert(next,node);return true;
     }
 
+
+
+    applyInternalAnchorRepair(sourceId,destination,targetId) {
+      const copy=this.internalAnchorRepair,result=repairInternalAnchorLinks(this.state,sourceId,destination,targetId,this.allowPageMedia);
+      if(!result.valid){this.announceStatus(copy.unavailable);return false;}
+      this.anchorRepairSelections=Object.create(null);this.statusMessage=copy.done;this.commit(result.document,sourceId);this.announceStatus(copy.done);
+      const first=this.root.querySelector('[data-anchor-repair-target]');if(first)first.focus();return true;
+    }
 
     insertTableOfContents() {
       const copy=this.tableOfContents,plan=createTableOfContentsPlan(this.state,this.tocLevels,this.allowPageMedia);
@@ -3239,6 +3289,7 @@
         g=this.renderRibbonGroup(this.accessibility.tool);const audit=this.button(this.accessibility.tool,'workspace-tool',{tool:'accessibility',icon:'check',showLabel:true});audit.dataset.workspaceTool='accessibility';g.tools.append(audit);panel.append(g.group);
         g=this.renderRibbonGroup(this.linkReview.tool);const linkAudit=this.button(this.linkReview.tool,'workspace-tool',{tool:'links',icon:'link',showLabel:true});linkAudit.dataset.workspaceTool='links';g.tools.append(linkAudit);panel.append(g.group);
         g=this.renderRibbonGroup(this.internalAnchorReview.tool);const anchorAudit=this.button(this.internalAnchorReview.tool,'workspace-tool',{tool:'internal-anchors',icon:'link',showLabel:true});anchorAudit.dataset.workspaceTool='internal-anchors';g.tools.append(anchorAudit);panel.append(g.group);
+        g=this.renderRibbonGroup(this.internalAnchorRepair.tool);const anchorRepair=this.button(this.internalAnchorRepair.tool,'workspace-tool',{tool:'internal-anchor-repair',icon:'link',showLabel:true});anchorRepair.dataset.workspaceTool='internal-anchor-repair';g.tools.append(anchorRepair);panel.append(g.group);
         g=this.renderRibbonGroup(this.readability.tool);const readabilityAudit=this.button(this.readability.tool,'workspace-tool',{tool:'readability',icon:'bookOpen',showLabel:true});readabilityAudit.dataset.workspaceTool='readability';g.tools.append(readabilityAudit);panel.append(g.group);
         g=this.renderRibbonGroup(this.preflight.tool);const preflightAudit=this.button(this.preflight.tool,'workspace-tool',{tool:'preflight',icon:'checklist',showLabel:true});preflightAudit.dataset.workspaceTool='preflight';g.tools.append(preflightAudit);panel.append(g.group);
         g=this.renderRibbonGroup(this.revisionCompare.tool);const compareAudit=this.button(this.revisionCompare.tool,'workspace-tool',{tool:'revision-compare',icon:'compare',showLabel:true});compareAudit.dataset.workspaceTool='revision-compare';g.tools.append(compareAudit);panel.append(g.group);
@@ -3319,7 +3370,7 @@
     renderInternalAnchorReview() {
       const copy=this.internalAnchorReview,wrap=this.el('div','rb-workspace-screen-content rb-accessibility-workspace rb-internal-anchor-review');
       const header=this.el('div','rb-accessibility-header'),titleGroup=this.el('div','');titleGroup.append(this.el('h1','rb-workspace-screen-title',copy.title));
-      header.append(titleGroup,this.button(copy.back,'workspace-tool',{tool:'home',icon:'collapse',showLabel:true}));
+      header.append(titleGroup,this.button(copy.repair,'workspace-tool',{tool:'internal-anchor-repair',icon:'link',showLabel:true}),this.button(copy.back,'workspace-tool',{tool:'home',icon:'collapse',showLabel:true}));
       wrap.append(header,this.el('p','rb-workspace-screen-lead',copy.hint),this.el('p','rb-accessibility-note',copy.note));
       const result=analyzeInternalAnchors(this.state,this.allowPageMedia);
       if(!result.valid){const warning=this.el('p','rb-workspace-warning',copy.invalid);warning.setAttribute('role','alert');wrap.append(warning);return wrap;}
@@ -3454,6 +3505,41 @@
 
 
 
+
+    renderInternalAnchorRepair() {
+      const copy=this.internalAnchorRepair,wrap=this.el('div','rb-workspace-screen-content rb-accessibility-workspace rb-anchor-repair-workspace');
+      const header=this.el('div','rb-accessibility-header'),titleGroup=this.el('div','');titleGroup.append(this.el('h1','rb-workspace-screen-title',copy.title));
+      header.append(titleGroup,this.button(copy.backAudit,'internal-anchor-repair-back',{icon:'collapse',showLabel:true}));
+      wrap.append(header,this.el('p','rb-workspace-screen-lead',copy.hint));
+      const result=analyzeInternalAnchors(this.state,this.allowPageMedia);
+      if(!result.valid){const error=this.el('p','rb-workspace-warning',copy.invalid);error.setAttribute('role','alert');wrap.append(error);return wrap;}
+      const plan=createTableOfContentsPlan(this.state,[1,2,3,4,5,6],this.allowPageMedia);
+      const summary=this.el('p','rb-accessibility-summary',copy.summary.replace('%1',String(result.issues.length)));summary.setAttribute('role','status');summary.setAttribute('aria-live','polite');wrap.append(summary);
+      if(!result.issues.length){const clean=this.el('section','rb-accessibility-empty');clean.append(this.icon('check','rb-icon'),this.el('strong','',copy.clean));wrap.append(clean);return wrap;}
+      if(!plan.valid){const error=this.el('p','rb-workspace-warning',copy.invalid);error.setAttribute('role','alert');wrap.append(error);return wrap;}
+      if(!plan.headings.length)wrap.append(this.el('p','rb-anchor-repair-empty-targets',copy.noHeadings));
+      const list=this.el('div','rb-accessibility-findings');list.setAttribute('role','list');
+      result.issues.forEach((issue)=>{
+        const item=this.el('article','rb-accessibility-issue rb-accessibility-issue--warning rb-anchor-repair-card');item.setAttribute('role','listitem');
+        const top=this.el('div','rb-accessibility-issue-top');top.append(this.el('span','rb-accessibility-severity',copy.destination.replace('%1',issue.destination)),this.el('span','rb-accessibility-block-type',this.label(issue.type)));item.append(top);
+        item.append(this.el('h2','rb-accessibility-issue-title',copy.source+': '+(issue.label||this.label(issue.type))),this.el('p','rb-accessibility-issue-detail',copy.sameBlock));
+        const key=issue.nodeId+'|'+issue.destination,selected=this.anchorRepairSelections[key]||'';
+        const field=this.el('label','rb-field rb-anchor-repair-select');field.append(this.el('span','',copy.selectHeading));
+        const select=this.el('select','rb-input');select.dataset.anchorRepairTarget='1';select.dataset.repairKey=key;
+        const placeholder=this.el('option','',copy.selectPlaceholder);placeholder.value='';placeholder.disabled=true;select.append(placeholder);
+        plan.headings.forEach((heading)=>{const option=this.el('option','',copy.headingOption.replace('%1',String(heading.level)).replace('%2',heading.text).replace('%3',heading.anchor)+' · '+(heading.needsAnchor?copy.generated:copy.existing));option.value=heading.nodeId;select.append(option);});
+        select.value=selected;field.append(select);item.append(field);
+        const target=selected?plan.headings.find((heading)=>heading.nodeId===selected):null;
+        if(target){
+          const preview=this.el('div','rb-anchor-repair-preview');preview.setAttribute('aria-label',copy.preview);
+          preview.append(this.el('span','',copy.before.replace('%1',issue.destination)),this.el('span','rb-anchor-repair-arrow','→'),this.el('span','',copy.after.replace('%1',target.anchor)));item.append(preview);
+          if(target.needsAnchor)item.append(this.el('p','rb-anchor-repair-generated-note',copy.assign));
+        }
+        const apply=this.button(copy.apply,'apply-internal-anchor-repair',{sourceId:issue.nodeId,destination:issue.destination,targetId:target?target.nodeId:'',icon:'check',showLabel:true});apply.disabled=!target||this.locked;item.append(apply);list.append(item);
+      });
+      wrap.append(list);return wrap;
+    }
+
     renderTableOfContentsPreview() {
       const copy=this.tableOfContents,wrap=this.el('div','rb-workspace-screen-content rb-toc-workspace'),header=this.el('div','rb-accessibility-header');
       const title=this.el('h1','rb-workspace-screen-title',copy.title);title.dataset.tocTitle='1';title.tabIndex=-1;
@@ -3543,6 +3629,8 @@
         surface.setAttribute('aria-label',this.linkReview.title);surface.append(this.renderLinkReview());
       }else if(this.workspaceView==='internal-anchors'){
         surface.setAttribute('aria-label',this.internalAnchorReview.title);surface.append(this.renderInternalAnchorReview());
+      }else if(this.workspaceView==='internal-anchor-repair'){
+        surface.setAttribute('aria-label',this.internalAnchorRepair.title);surface.append(this.renderInternalAnchorRepair());
       }else if(this.workspaceView==='readability'){
         surface.setAttribute('aria-label',this.readability.title);surface.append(this.renderReadabilityReview());
       }else if(this.workspaceView==='preflight'){
@@ -3664,6 +3752,7 @@
           ['accessibility',this.accessibility.tool,'check'],
           ['links',this.linkReview.tool,'link'],
           ['internal-anchors',this.internalAnchorReview.tool,'link'],
+          ['internal-anchor-repair',this.internalAnchorRepair.tool,'link'],
           ['readability',this.readability.tool,'bookOpen'],
           ['preflight',this.preflight.tool,'checklist'],
           ['revision-compare',this.revisionCompare.tool,'compare'],
@@ -3680,7 +3769,7 @@
         workspaceTools.forEach(([tool,label,icon])=>{
           if(tool==='text'||tool==='home'){const divider=this.el('span','rb-workspace-rail-divider');divider.setAttribute('aria-hidden','true');workspaceRail.append(divider);}
           const control=this.el('button','rb-workspace-tool'); control.type='button'; control.dataset.action='workspace-tool'; control.dataset.tool=tool;
-          const workspaceViews={models:'models',accessibility:'accessibility',links:'links','internal-anchors':'internal-anchors',readability:'readability',preflight:'preflight','revision-compare':'revision-compare','table-of-contents':'table-of-contents',library:'library',assistant:'assistant',export:'export',share:'share',help:'help'};
+          const workspaceViews={models:'models',accessibility:'accessibility',links:'links','internal-anchors':'internal-anchors','internal-anchor-repair':'internal-anchor-repair',readability:'readability',preflight:'preflight','revision-compare':'revision-compare','table-of-contents':'table-of-contents',library:'library',assistant:'assistant',export:'export',share:'share',help:'help'};
           const pressed=tool==='home'?this.workspaceView==='editor'&&this.activeRibbonTab==='home':Object.prototype.hasOwnProperty.call(workspaceViews,tool)?this.workspaceView===workspaceViews[tool]:tool==='elements'?(this.activePanel==='elements'&&this.inserterOpen):tool==='structure'?this.activePanel==='structure':tool==='appearance'?(this.inspectorOpen&&!this.previewMode):tool==='text'?this.activeRibbonTab==='home':tool==='media'?this.activeRibbonTab==='media':tool==='review'?this.activeRibbonTab==='review':tool==='view'?this.activeRibbonTab==='view':false;
           control.setAttribute('aria-label',label); control.setAttribute('aria-pressed',String(pressed));
           if(tool==='elements'||tool==='appearance')control.setAttribute('aria-expanded',String(pressed));
@@ -4256,6 +4345,7 @@
     analyzeDocumentAccessibility: analyzeDocumentAccessibility,
     analyzeDocumentLinks: analyzeDocumentLinks,
     analyzeInternalAnchors: analyzeInternalAnchors,
+    repairInternalAnchorLinks: repairInternalAnchorLinks,
     analyzeDocumentReadability: analyzeDocumentReadability,
     analyzeDocumentPreflight: analyzeDocumentPreflight,
     compareBDREDocuments: compareBDREDocuments,

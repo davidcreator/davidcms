@@ -37,4 +37,4 @@ const empty=api.analyzeInternalAnchors({format_version:2,blocks:[]},false);
 if(!empty.valid||empty.checked||empty.issues.length)throw new Error('Empty document should return a clean result');
 const invalid=api.analyzeInternalAnchors({format_version:2,blocks:[node('bad','core/heading',{level:2,anchor:'bad/id'},[run('Bad')])]},false);
 if(invalid.valid||invalid.issues.length)throw new Error('Invalid document should be refused without findings');
-console.log('PASS: internal anchor review checks local fragment links against heading IDs, finds missing targets, ignores external URL fragments, localizes result messages and preserves the document.');
+console.log('PASS: internal anchor review checks local fragment links against heading IDs, finds missing targets, ignores external URL fragments, reports results and preserves the document.');
