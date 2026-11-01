@@ -145,9 +145,9 @@
   }
   function groupSelectionCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
-    if(language.startsWith('pt'))return {select:'Selecionar para agrupar',deselect:'Remover da seleção',title:'Organizar blocos',hint:'Selecione blocos vizinhos para reuni-los em um Grupo nativo.',count:'%1 blocos selecionados',needMore:'Selecione ao menos dois blocos vizinhos.',group:'Agrupar seleção',clear:'Limpar seleção',previewTitle:'Prévia do agrupamento',previewHint:'Estes blocos serão reunidos em um Grupo. O conteúdo e os IDs atuais serão preservados.',confirm:'Confirmar agrupamento',back:'Voltar',outlineLabel:'Nome no navegador da estrutura (opcional)',labelPlaceholder:'Ex.: Introdução',labelTooLong:'O rótulo excede o limite seguro de 160 bytes. Reduza o texto para continuar.',groupDefault:'Grupo',invalid:'Não foi possível agrupar neste contêiner; o conteúdo não foi alterado.',notAdjacent:'Selecione blocos vizinhos do mesmo contêiner.',cannotContain:'Este contêiner não permite inserir um Grupo.',selected:'Bloco adicionado à seleção.',deselected:'Bloco removido da seleção.',done:'Blocos agrupados. A operação pode ser desfeita.',emptyPreview:'Sem texto de prévia'};
-    if(language.startsWith('es'))return {select:'Seleccionar para agrupar',deselect:'Quitar de la selección',title:'Organizar bloques',hint:'Selecciona bloques contiguos para reunirlos en un Grupo nativo.',count:'%1 bloques seleccionados',needMore:'Selecciona al menos dos bloques contiguos.',group:'Agrupar selección',clear:'Limpiar selección',previewTitle:'Vista previa del grupo',previewHint:'Estos bloques se reunirán en un Grupo. Se conservarán el contenido y los ID actuales.',confirm:'Confirmar agrupación',back:'Volver',outlineLabel:'Nombre en el navegador de estructura (opcional)',labelPlaceholder:'Ej.: Introducción',labelTooLong:'La etiqueta supera el límite seguro de 160 bytes. Acorta el texto para continuar.',groupDefault:'Grupo',invalid:'No se pudo agrupar en este contenedor; no se modificó el contenido.',notAdjacent:'Selecciona bloques contiguos del mismo contenedor.',cannotContain:'Este contenedor no permite insertar un Grupo.',selected:'Bloque añadido a la selección.',deselected:'Bloque quitado de la selección.',done:'Bloques agrupados. La operación se puede deshacer.',emptyPreview:'Sin texto de vista previa'};
-    return {select:'Select for grouping',deselect:'Remove from selection',title:'Organize blocks',hint:'Select adjacent blocks to combine them into a native Group.',count:'%1 blocks selected',needMore:'Select at least two adjacent blocks.',group:'Group selection',clear:'Clear selection',previewTitle:'Group preview',previewHint:'These blocks will be wrapped in a native Group. Their content and existing IDs will be preserved.',confirm:'Confirm grouping',back:'Back',outlineLabel:'Name in document outline (optional)',labelPlaceholder:'e.g. Introduction',labelTooLong:'The outline label exceeds the safe 160-byte limit. Shorten it to continue.',groupDefault:'Group',invalid:'These blocks cannot be grouped in this container; no content was changed.',notAdjacent:'Select adjacent blocks in the same container.',cannotContain:'This container does not allow a Group block.',selected:'Block added to selection.',deselected:'Block removed from selection.',done:'Blocks grouped. The operation can be undone.',emptyPreview:'No text preview'};
+    if(language.startsWith('pt'))return {select:'Selecionar para agrupar',deselect:'Remover da seleção',title:'Organizar blocos',hint:'Selecione blocos vizinhos para reuni-los em um Grupo nativo.',count:'%1 blocos selecionados',needMore:'Selecione ao menos dois blocos vizinhos.',group:'Agrupar seleção',duplicate:'Duplicar como Grupo',clear:'Limpar seleção',previewTitle:'Prévia do agrupamento',previewHint:'Estes blocos serão reunidos em um Grupo. O conteúdo e os IDs atuais serão preservados.',duplicatePreviewTitle:'Prévia da duplicação',duplicatePreviewHint:'Os originais permanecerão intactos. Uma cópia dos blocos será inserida logo depois, dentro de um novo Grupo e com IDs novos.',confirm:'Confirmar agrupamento',duplicateConfirm:'Confirmar duplicação',back:'Voltar',outlineLabel:'Nome no navegador da estrutura (opcional)',labelPlaceholder:'Ex.: Introdução',labelTooLong:'O rótulo excede o limite seguro de 160 bytes. Reduza o texto para continuar.',groupDefault:'Grupo',invalid:'Não foi possível agrupar neste contêiner; o conteúdo não foi alterado.',notAdjacent:'Selecione blocos vizinhos do mesmo contêiner.',cannotContain:'Este contêiner não permite inserir um Grupo.',moveBoundary:'Não há mais espaço nessa direção para mover a seleção.',movedUp:'Seleção movida uma posição para cima.',movedDown:'Seleção movida uma posição para baixo.',selected:'Bloco adicionado à seleção.',deselected:'Bloco removido da seleção.',done:'Blocos agrupados. A operação pode ser desfeita.',duplicated:'Cópia criada como Grupo. Os originais permanecem intactos.',emptyPreview:'Sem texto de prévia'};
+    if(language.startsWith('es'))return {select:'Seleccionar para agrupar',deselect:'Quitar de la selección',title:'Organizar bloques',hint:'Selecciona bloques contiguos para reunirlos en un Grupo nativo.',count:'%1 bloques seleccionados',needMore:'Selecciona al menos dos bloques contiguos.',group:'Agrupar selección',duplicate:'Duplicar como Grupo',clear:'Limpiar selección',previewTitle:'Vista previa del grupo',previewHint:'Estos bloques se reunirán en un Grupo. Se conservarán el contenido y los ID actuales.',duplicatePreviewTitle:'Vista previa de duplicación',duplicatePreviewHint:'Los originales permanecerán intactos. Se insertará después una copia en un Grupo nuevo y con ID nuevos.',confirm:'Confirmar agrupación',duplicateConfirm:'Confirmar duplicación',back:'Volver',outlineLabel:'Nombre en el navegador de estructura (opcional)',labelPlaceholder:'Ej.: Introducción',labelTooLong:'La etiqueta supera el límite seguro de 160 bytes. Acorta el texto para continuar.',groupDefault:'Grupo',invalid:'No se pudo agrupar en este contenedor; no se modificó el contenido.',notAdjacent:'Selecciona bloques contiguos del mismo contenedor.',cannotContain:'Este contenedor no permite insertar un Grupo.',moveBoundary:'No hay espacio en esa dirección para mover la selección.',movedUp:'Selección movida una posición hacia arriba.',movedDown:'Selección movida una posición hacia abajo.',selected:'Bloque añadido a la selección.',deselected:'Bloque quitado de la selección.',done:'Bloques agrupados. La operación se puede deshacer.',duplicated:'Copia creada como Grupo. Los originales permanecen intactos.',emptyPreview:'Sin texto de vista previa'};
+    return {select:'Select for grouping',deselect:'Remove from selection',title:'Organize blocks',hint:'Select adjacent blocks to combine them into a native Group.',count:'%1 blocks selected',needMore:'Select at least two adjacent blocks.',group:'Group selection',duplicate:'Duplicate as Group',clear:'Clear selection',previewTitle:'Group preview',previewHint:'These blocks will be wrapped in a native Group. Their content and existing IDs will be preserved.',duplicatePreviewTitle:'Duplicate preview',duplicatePreviewHint:'The originals will remain unchanged. A copy will be inserted after them inside a new Group with fresh IDs.',confirm:'Confirm grouping',duplicateConfirm:'Confirm duplication',back:'Back',outlineLabel:'Name in document outline (optional)',labelPlaceholder:'e.g. Introduction',labelTooLong:'The outline label exceeds the safe 160-byte limit. Shorten it to continue.',groupDefault:'Group',invalid:'These blocks cannot be grouped in this container; no content was changed.',notAdjacent:'Select adjacent blocks in the same container.',cannotContain:'This container does not allow a Group block.',moveBoundary:'There is no room to move the selection farther in that direction.',movedUp:'Selection moved up one position.',movedDown:'Selection moved down one position.',selected:'Block added to selection.',deselected:'Block removed from selection.',done:'Blocks grouped. The operation can be undone.',duplicated:'Copy created as a Group. The originals remain unchanged.',emptyPreview:'No text preview'};
   }
   function accessibilityAuditCopy() {
     const language=String(global.document&&global.document.documentElement&&global.document.documentElement.lang||'en').toLowerCase();
@@ -515,6 +515,55 @@
     location.siblings.splice(location.indices[0].index,selected.length,group);
     const result=validateDocument(next,!!allowPageMedia);
     return result.valid?{valid:true,document:next,groupId,childIds:selected.map((node)=>node.id)}:{valid:false,errors:result.errors};
+  }
+
+  function duplicateSiblingBlocksAsGroup(document, selectedIds, groupId, outlineLabel, makeId, allowPageMedia) {
+    const sourceValidation=validateDocument(document,!!allowPageMedia);
+    if(!sourceValidation.valid||!Array.isArray(selectedIds)||selectedIds.length<2||new Set(selectedIds).size!==selectedIds.length||typeof groupId!=='string'||!/^[A-Za-z0-9_-]{1,96}$/.test(groupId)||typeof makeId!=='function')return {valid:false,errors:sourceValidation.valid?['group_selection_invalid']:sourceValidation.errors};
+    const next=CLONE(document);let location=null;
+    const locate=(siblings)=>{
+      for(let index=0;index<siblings.length;index++){
+        const node=siblings[index];if(selectedIds.includes(node.id)){if(!location)location={siblings,indices:[]};if(location.siblings!==siblings)return false;location.indices.push({id:node.id,index});}
+        if(Array.isArray(node.children)&&node.children.length&&!locate(node.children))return false;
+      }
+      return true;
+    };
+    if(!locate(next.blocks)||!location||location.indices.length!==selectedIds.length)return {valid:false,errors:['group_selection_not_siblings']};
+    location.indices.sort((a,b)=>a.index-b.index);
+    for(let i=1;i<location.indices.length;i++)if(location.indices[i].index!==location.indices[i-1].index+1)return {valid:false,errors:['group_selection_not_contiguous']};
+    const allIds=new Set();const collect=(nodes)=>nodes.forEach((node)=>{allIds.add(node.id);collect(node.children||[]);});collect(next.blocks);
+    if(allIds.has(groupId))return {valid:false,errors:['group_id_collision']};allIds.add(groupId);
+    const label=typeof outlineLabel==='string'?outlineLabel.trim():'';const attrs={};
+    if(label){if(utf8Length(label)>160)return {valid:false,errors:['group_label_too_long']};attrs.outline_label=label;}
+    const selected=location.indices.map((entry)=>location.siblings[entry.index]),duplicates=[];
+    for(const node of selected){const copy=cloneBlockWithNewIds(node,()=>{const id=makeId();if(typeof id!=='string'||!/^[A-Za-z0-9_-]{1,96}$/.test(id)||allIds.has(id))return null;allIds.add(id);return id;});if(!copy)return {valid:false,errors:['group_duplicate_id_generation_failed']};duplicates.push(copy);}
+    const group={id:groupId,type:'core/group',attributes:attrs,content:'',children:duplicates};
+    const insertionIndex=location.indices[location.indices.length-1].index+1;location.siblings.splice(insertionIndex,0,group);
+    const result=validateDocument(next,!!allowPageMedia);
+    return result.valid?{valid:true,document:next,groupId,sourceIds:selected.map((node)=>node.id),duplicateIds:duplicates.map((node)=>node.id)}:{valid:false,errors:result.errors};
+  }
+
+  function moveSiblingSelection(document, selectedIds, direction, allowPageMedia) {
+    const sourceValidation=validateDocument(document,!!allowPageMedia),step=direction===-1?-1:(direction===1?1:0);
+    if(!sourceValidation.valid||step===0||!Array.isArray(selectedIds)||selectedIds.length<1||new Set(selectedIds).size!==selectedIds.length)return {valid:false,errors:sourceValidation.valid?['group_move_selection_invalid']:sourceValidation.errors};
+    const next=CLONE(document);let location=null;
+    const locate=(siblings)=>{
+      for(let index=0;index<siblings.length;index++){
+        const node=siblings[index];if(selectedIds.includes(node.id)){if(!location)location={siblings,indices:[]};if(location.siblings!==siblings)return false;location.indices.push({id:node.id,index});}
+        if(Array.isArray(node.children)&&node.children.length&&!locate(node.children))return false;
+      }
+      return true;
+    };
+    if(!locate(next.blocks)||!location||location.indices.length!==selectedIds.length)return {valid:false,errors:['group_selection_not_siblings']};
+    location.indices.sort((a,b)=>a.index-b.index);
+    for(let i=1;i<location.indices.length;i++)if(location.indices[i].index!==location.indices[i-1].index+1)return {valid:false,errors:['group_selection_not_contiguous']};
+    const first=location.indices[0].index,last=location.indices[location.indices.length-1].index;
+    if((step<0&&first===0)||(step>0&&last===location.siblings.length-1))return {valid:false,errors:['group_selection_boundary']};
+    const selected=location.indices.map((entry)=>location.siblings[entry.index]);
+    location.siblings.splice(first,selected.length);
+    location.siblings.splice(step<0?first-1:first+1,0,...selected);
+    const result=validateDocument(next,!!allowPageMedia);
+    return result.valid?{valid:true,document:next,movedIds:selected.map((node)=>node.id),direction:step}:{valid:false,errors:result.errors};
   }
 
   function getOutlineNavigationTarget(nodes, currentId, key) {
@@ -1511,7 +1560,7 @@
       this.workspaceView = 'editor';
       this.commandPalette = commandPaletteCopy();
       this.commandPaletteOpen = false; this.commandPaletteQuery = ''; this.commandPaletteActiveIndex = 0;
-      this.groupSelection = groupSelectionCopy(); this.groupSelectionIds = []; this.groupSelectionConfirmOpen = false; this.groupSelectionLabel = '';
+      this.groupSelection = groupSelectionCopy(); this.groupSelectionIds = []; this.groupSelectionConfirmOpen = false; this.groupSelectionMode = 'group'; this.groupSelectionLabel = '';
       this.patternFilter = 'all';
       this.patternQuery = '';
       this.ui = workspaceCopy();
@@ -1886,13 +1935,28 @@
       return this.groupSelectionCanContain(paths[0]);
     }
 
+    canMoveGroupSelection(direction) {
+      const step=direction===-1?-1:(direction===1?1:0);if(this.locked||step===0||!this.groupSelectionIds.length)return false;
+      const paths=this.groupSelectionIds.map((id)=>this.findPath(this.state.blocks,id));
+      if(paths.some((path)=>!path)||paths.some((path)=>path.nodes!==paths[0].nodes)||!this.groupSelectionCanContain(paths[0]))return false;
+      const indices=paths.map((path)=>path.index).sort((a,b)=>a-b);for(let i=1;i<indices.length;i++)if(indices[i]!==indices[i-1]+1)return false;
+      return step<0?indices[0]>0:indices[indices.length-1]<paths[0].nodes.length-1;
+    }
+
+    moveGroupSelection(direction) {
+      const step=direction===-1?-1:1;if(!this.canMoveGroupSelection(step)){this.announceStatus(this.groupSelection.moveBoundary);return;}
+      const result=moveSiblingSelection(this.getDocument(),this.groupSelectionIds,step,this.allowPageMedia);
+      if(!result.valid){this.announceStatus(this.groupSelection.invalid);return;}
+      const status=step<0?this.groupSelection.movedUp:this.groupSelection.movedDown,focusId=this.groupSelectionIds[0];this.statusMessage=status;this.commit(result.document,focusId);this.announceStatus(status);this.focusNode(focusId);
+    }
+
     pruneGroupSelection() {
       if(!Array.isArray(this.groupSelectionIds)||!this.groupSelectionIds.length)return;
       const paths=this.groupSelectionIds.map((id)=>this.findPath(this.state.blocks,id));
       const valid=paths.every(Boolean)&&paths.every((path)=>path.nodes===paths[0].nodes)&&this.groupSelectionCanContain(paths[0]);
-      if(!valid){this.groupSelectionIds=[];this.groupSelectionLabel='';this.groupSelectionConfirmOpen=false;return;}
+      if(!valid){this.groupSelectionIds=[];this.groupSelectionLabel='';this.groupSelectionConfirmOpen=false;this.groupSelectionMode='group';return;}
       const indices=paths.map((path)=>path.index).sort((a,b)=>a-b);
-      for(let i=1;i<indices.length;i++)if(indices[i]!==indices[i-1]+1){this.groupSelectionIds=[];this.groupSelectionLabel='';this.groupSelectionConfirmOpen=false;return;}
+      for(let i=1;i<indices.length;i++)if(indices[i]!==indices[i-1]+1){this.groupSelectionIds=[];this.groupSelectionLabel='';this.groupSelectionConfirmOpen=false;this.groupSelectionMode='group';return;}
       this.groupSelectionIds.sort((a,b)=>this.findPath(this.state.blocks,a).index-this.findPath(this.state.blocks,b).index);
     }
 
@@ -1912,41 +1976,43 @@
     }
 
     clearGroupSelection() {
-      const ids=this.groupSelectionIds.slice();this.groupSelectionIds=[];this.groupSelectionLabel='';this.groupSelectionConfirmOpen=false;this.render();
+      const ids=this.groupSelectionIds.slice();this.groupSelectionIds=[];this.groupSelectionLabel='';this.groupSelectionConfirmOpen=false;this.groupSelectionMode='group';this.render();
       const id=ids[0],control=id&&Array.from(this.root.querySelectorAll('[data-action="toggle-group-selection"]')).find((item)=>item.dataset.nodeId===id);if(control)control.focus();
     }
 
-    openGroupSelectionPreview() {
+    openGroupSelectionPreview(mode) {
       if(!this.canGroupSelection()){this.announceStatus(this.groupSelection.needMore);return;}
-      this.groupSelectionConfirmOpen=true;this.render();const back=this.root.querySelector('[data-action="group-selection-cancel"]');if(back)back.focus();
+      this.groupSelectionMode=mode==='duplicate'?'duplicate':'group';this.groupSelectionConfirmOpen=true;this.render();const back=this.root.querySelector('[data-action="group-selection-cancel"]');if(back)back.focus();
     }
 
     closeGroupSelectionPreview() {
-      if(!this.groupSelectionConfirmOpen)return;this.groupSelectionConfirmOpen=false;this.render();const button=this.root.querySelector('[data-action="group-selection-preview"]');if(button)button.focus();
+      if(!this.groupSelectionConfirmOpen)return;const mode=this.groupSelectionMode;this.groupSelectionConfirmOpen=false;this.render();const action=mode==='duplicate'?'group-selection-duplicate-preview':'group-selection-preview',button=this.root.querySelector('[data-action="'+action+'"]');if(button)button.focus();
     }
 
     confirmGroupSelection() {
       if(!this.canGroupSelection()){this.closeGroupSelectionPreview();this.announceStatus(this.groupSelection.invalid);return;}
-      const result=groupSiblingBlocks(this.getDocument(),this.groupSelectionIds,this.newId(),this.groupSelectionLabel,this.allowPageMedia);
+      const duplicateMode=this.groupSelectionMode==='duplicate';
+      const result=duplicateMode?duplicateSiblingBlocksAsGroup(this.getDocument(),this.groupSelectionIds,this.newId(),this.groupSelectionLabel,()=>this.newId(),this.allowPageMedia):groupSiblingBlocks(this.getDocument(),this.groupSelectionIds,this.newId(),this.groupSelectionLabel,this.allowPageMedia);
       if(!result.valid){if(result.errors.includes('group_label_too_long')){this.announceStatus(this.groupSelection.labelTooLong);const input=this.root.querySelector('[data-group-selection-label]');if(input)input.focus();return;}this.closeGroupSelectionPreview();this.announceStatus(this.groupSelection.invalid);return;}
-      this.groupSelectionIds=[];this.groupSelectionLabel='';this.groupSelectionConfirmOpen=false;this.workspaceView='editor';this.activePanel='structure';this.selectedId=result.groupId;this.statusMessage=this.groupSelection.done;this.commit(result.document,result.groupId);this.announceStatus(this.groupSelection.done);this.focusNode(result.groupId);
+      const status=duplicateMode?this.groupSelection.duplicated:this.groupSelection.done;
+      this.groupSelectionIds=[];this.groupSelectionLabel='';this.groupSelectionConfirmOpen=false;this.groupSelectionMode='group';this.workspaceView='editor';this.activePanel='structure';this.selectedId=result.groupId;this.statusMessage=status;this.commit(result.document,result.groupId);this.announceStatus(status);this.focusNode(result.groupId);
     }
 
     renderGroupSelectionBar() {
       const copy=this.groupSelection,bar=this.el('section','rb-group-selection-bar');bar.setAttribute('role','group');bar.setAttribute('aria-label',copy.title);
       const message=this.el('div','rb-group-selection-message');message.append(this.el('strong','',copy.count.replace('%1',String(this.groupSelectionIds.length))),this.el('span','',copy.hint));
-      const actions=this.el('div','rb-group-selection-actions');const group=this.button(copy.group,'group-selection-preview',{icon:'group',showLabel:true});group.disabled=!this.canGroupSelection();actions.append(group,this.button(copy.clear,'clear-group-selection',{icon:'close',showLabel:true}));bar.append(message,actions);return bar;
+      const actions=this.el('div','rb-group-selection-actions'),moveUp=this.button(this.strings.moveUp,'move-group-selection',{direction:'up',icon:'up',showLabel:true}),moveDown=this.button(this.strings.moveDown,'move-group-selection',{direction:'down',icon:'down',showLabel:true});moveUp.disabled=!this.canMoveGroupSelection(-1);moveDown.disabled=!this.canMoveGroupSelection(1);const canGroup=this.canGroupSelection(),group=this.button(copy.group,'group-selection-preview',{icon:'group',showLabel:true});group.disabled=!canGroup;const duplicate=this.button(copy.duplicate,'group-selection-duplicate-preview',{icon:'copy',showLabel:true});duplicate.disabled=!canGroup;actions.append(moveUp,moveDown,group,duplicate,this.button(copy.clear,'clear-group-selection',{icon:'close',showLabel:true}));bar.append(message,actions);return bar;
     }
 
     renderGroupSelectionConfirm() {
       const copy=this.groupSelection,overlay=this.el('div','rb-group-confirm-overlay');overlay.dataset.groupConfirmOverlay='1';
       const dialog=this.el('section','rb-group-confirm-dialog');dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','rb-group-confirm-title-'+this.instance);
-      const title=this.el('h2','rb-group-confirm-title',copy.previewTitle);title.id='rb-group-confirm-title-'+this.instance;
-      const lead=this.el('p','rb-group-confirm-lead',copy.previewHint);dialog.append(title,lead);
+      const duplicateMode=this.groupSelectionMode==='duplicate',title=this.el('h2','rb-group-confirm-title',duplicateMode?copy.duplicatePreviewTitle:copy.previewTitle);title.id='rb-group-confirm-title-'+this.instance;
+      const lead=this.el('p','rb-group-confirm-lead',duplicateMode?copy.duplicatePreviewHint:copy.previewHint);dialog.append(title,lead);
       const list=this.el('ol','rb-group-confirm-list');
       this.groupSelectionIds.forEach((id)=>{const path=this.findPath(this.state.blocks,id);if(!path)return;const node=path.node;const item=this.el('li','rb-group-confirm-item');const raw=typeof node.content==='string'?node.content:(Array.isArray(node.content)?node.content.map((run)=>run&&typeof run.text==='string'?run.text:'').join(''):'');const preview=String(raw||node.attributes.label||node.attributes.title||node.attributes.alt||'').trim();item.append(this.el('strong','',this.label(node.type)),this.el('span','',preview||copy.emptyPreview));list.append(item);});dialog.append(list);
       const label=this.el('label','rb-field rb-group-outline-label');label.append(this.el('span','',copy.outlineLabel));const input=this.el('input','rb-input');input.type='text';input.maxLength=160;input.value=this.groupSelectionLabel;input.placeholder=copy.labelPlaceholder;input.dataset.groupSelectionLabel='1';label.append(input);dialog.append(label);
-      const actions=this.el('div','rb-group-confirm-actions');actions.append(this.button(copy.back,'group-selection-cancel',{icon:'collapse',showLabel:true}),this.button(copy.confirm,'group-selection-confirm',{icon:'check',showLabel:true}));dialog.append(actions);overlay.append(dialog);return overlay;
+      const actions=this.el('div','rb-group-confirm-actions');actions.append(this.button(copy.back,'group-selection-cancel',{icon:'collapse',showLabel:true}),this.button(duplicateMode?copy.duplicateConfirm:copy.confirm,'group-selection-confirm',{icon:'check',showLabel:true}));dialog.append(actions);overlay.append(dialog);return overlay;
     }
 
     getCommandPaletteItems() {
@@ -2051,8 +2117,10 @@
       if(name==='command-palette-close'){this.closeCommandPalette(true);return;}
       if(name==='command-palette-select'){this.runCommandPaletteItem(button.dataset.commandId);return;}
       if(name==='toggle-group-selection'){this.toggleGroupSelection(button.dataset.nodeId);return;}
+      if(name==='move-group-selection'){this.moveGroupSelection(button.dataset.direction==='up'?-1:1);return;}
       if(name==='clear-group-selection'){this.clearGroupSelection();return;}
-      if(name==='group-selection-preview'){this.openGroupSelectionPreview();return;}
+      if(name==='group-selection-preview'){this.openGroupSelectionPreview('group');return;}
+      if(name==='group-selection-duplicate-preview'){this.openGroupSelectionPreview('duplicate');return;}
       if(name==='group-selection-cancel'){this.closeGroupSelectionPreview();return;}
       if(name==='group-selection-confirm'){this.confirmGroupSelection();return;}
       if (name === 'insert') this.insert(button.dataset.type, button.dataset.count);
@@ -4563,6 +4631,8 @@
     findNodeChain: findNodeChain,
     getOutlineNavigationTarget: getOutlineNavigationTarget,
     groupSiblingBlocks: groupSiblingBlocks,
+    duplicateSiblingBlocksAsGroup: duplicateSiblingBlocksAsGroup,
+    moveSiblingSelection: moveSiblingSelection,
     moveBlockAcrossHierarchy: moveBlockAcrossHierarchy,
     cloneBlockWithNewIds: cloneBlockWithNewIds,
     mount: function (root, options) { if (!(root instanceof Element)) throw new TypeError('editor root must be an Element'); return new Editor(root, options || {}); },
