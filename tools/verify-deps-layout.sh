@@ -13,6 +13,10 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT" || exit 1
 
+# Python real (inclui Windows com alias da Microsoft Store / launcher py -3).
+PYTHON_CMD="${PYTHON_CMD:-}"
+[ -f tools/lib/python-runtime.sh ] && . tools/lib/python-runtime.sh
+
 PASS=0; FAIL=0; WARN=0
 ck()  { if [ "$1" -eq 0 ]; then printf '  PASS  %s\n' "$2"; PASS=$((PASS+1)); else printf '  FAIL  %s\n' "$2"; FAIL=$((FAIL+1)); fi; }
 warn(){ printf '  WARN  %s\n' "$1"; WARN=$((WARN+1)); }
@@ -56,7 +60,11 @@ if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/n
   printf '  node_modules/ raiz: %s | storage/node_modules: %s | storage/vendor: %s arquivos no indice\n' \
          "$n_raiz" "$n_storage" "$n_vendor"
   [ "$n_raiz" -eq 0 ];    ck $? "nenhum node_modules/ da raiz versionado"
-  [ "$n_storage" -eq 0 ]; ck $? "nenhum node_modules/ do storage versionado"
+  # Layout corrigido: nenhuma DEPENDENCIA versionada, mas a pasta precisa
+  # existir no repo. Unico arquivo permitido e o index.html; qualquer pacote
+  # (playwright/, .bin/, .package-lock.json, ...) reprova — fail-closed.
+  storage_files="$(git ls-files 'dev/system/storage/node_modules/*')"
+  [ "$n_storage" -eq 1 ] && [ "$storage_files" = 'dev/system/storage/node_modules/index.html' ]; ck $? "storage/node_modules versiona APENAS index.html (nenhuma dependencia)"
   [ "$n_vendor" -eq 0 ];  ck $? "nenhum vendor/ do storage versionado"
   if [ "$n_raiz" -gt 0 ]; then
     echo

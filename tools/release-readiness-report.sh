@@ -14,9 +14,17 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT" || exit 1
 
-command -v python3 >/dev/null 2>&1 || { echo "python3 indisponivel"; exit 1; }
+# Python real (inclui Windows com alias da Microsoft Store / launcher py -3).
+PYTHON_CMD="${PYTHON_CMD:-}"
+[ -f tools/lib/python-runtime.sh ] && . tools/lib/python-runtime.sh
 
-python3 - <<'PY'
+if [ -z "$PYTHON_CMD" ]; then
+  echo '== SKIP: nenhum interpretador Python real — painel NAO EXECUTADO =='
+  echo '   SKIP nao e aprovacao. Instale Python 3 ou use o launcher py -3.'
+  exit 3
+fi
+
+pyrun - <<'PY'
 import json, os, sys
 
 def load(p):

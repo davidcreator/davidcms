@@ -13,26 +13,40 @@
 set -u
 cd "$(dirname "$0")/.." || exit 1
 
+# Python real (inclui Windows com alias da Microsoft Store / launcher py -3).
+PYTHON_CMD="${PYTHON_CMD:-}"
+[ -f tools/lib/python-runtime.sh ] && . tools/lib/python-runtime.sh
+
 # runner| caminho  (a ordem e a mesma do repo-guards no CI)
+# runner | caminho | requisito ('py' = exige interpretador Python real)
 GUARDS=(
-  'bash|tools/verify-deps-layout.sh'
-  'bash|tools/verify-checksums.sh'
-  'bash|tools/verify-ci-workflow.sh'
-  'bash|tools/verify-f11-01.sh'
-  'python3|tools/verify-contract-freeze.py'      # F11-11 (opcional)
-  'bash|tools/release-readiness-report.sh'       # F11-06 (opcional)
+  'bash|tools/verify-deps-layout.sh|'
+  'bash|tools/verify-checksums.sh|'
+  'bash|tools/verify-ci-workflow.sh|'
+  'bash|tools/verify-f11-01.sh|'
+  'python|tools/verify-contract-freeze.py|py'
+  'bash|tools/release-readiness-report.sh|py'
 )
 
 pass=0; fail=0; skip=0
 printf '%-46s %s\n' 'GUARDA' 'RESULTADO'
 printf '%-46s %s\n' '----------------------------------------------' '---------'
 for g in "${GUARDS[@]}"; do
-  runner="${g%%|*}"; path="${g#*|}"
+  IFS='|' read -r runner path need <<< "$g"
   if [ ! -f "$path" ]; then
     printf '%-46s %s\n' "$path" 'SKIP (pacote ainda nao aplicado)'
     skip=$((skip + 1)); continue
   fi
+  if [ "$need" = 'py' ] && [ -z "$PYTHON_CMD" ]; then
+    printf '%-46s %s\n' "$path" 'SKIP (Python real ausente — NAO EXECUTADO)'
+    skip=$((skip + 1)); continue
+  fi
+  [ "$runner" = 'python' ] && runner="$PYTHON_CMD"
   out="$($runner "$path" 2>&1)"; rc=$?
+  if [ "$rc" -eq 3 ]; then
+    printf '%-46s %s\n' "$path" 'SKIP (Python real ausente — NAO EXECUTADO)'
+    skip=$((skip + 1)); continue
+  fi
   if [ "$rc" -eq 0 ]; then
     resumo="$(printf '%s\n' "$out" | grep 'resumo:' | tail -1 | xargs)"
     printf '%-46s PASS %s\n' "$path" "$resumo"
@@ -48,6 +62,9 @@ printf '\n== repo-health: %d PASS / %d FAIL / %d SKIP ==\n' "$pass" "$fail" "$sk
 if [ "$fail" -ne 0 ]; then
   echo '   VEREDITO: REPROVADO — abra a saida do guarda indicado antes de qualquer release.'
   exit 1
+fi
+if [ "$skip" -ne 0 ]; then
+  echo "   ATENCAO: $skip guarda(s) NAO EXECUTADO(S) — ver linhas SKIP acima."
 fi
 echo '   VEREDITO: COERENTE (guardas estaticos). SKIP nao e aprovacao.'
 echo '   Fora deste health check, por exigirem runtime/rede: CI (7 jobs), 61 checkers e2e, F9-27, staging.'
