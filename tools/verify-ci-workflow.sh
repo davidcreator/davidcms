@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════════════
-# verify-ci-workflow.sh — F11-04 / ADR 0082 (reforcado em F11-05)
+# verify-ci-workflow.sh — F11-04 / ADR 0082 (reforcado em F11-05 e F11-08)
 # Auditor READ-ONLY do contrato do proprio CI (.github/workflows/php.yml).
 #
 #   bash tools/verify-ci-workflow.sh [caminho-do-workflow]
@@ -73,6 +73,12 @@ PY
 else
   printf '  SKIP  PyYAML indisponivel — parse estrutural nao executado\n'
 fi
+
+echo "-- 7. docs-links: binario pinado e sem relaxamento (F11-08) --"
+grep -qE '^[[:space:]]+lycheeVersion: v0\.15\.0' "$WF"; ck $? "lycheeVersion v0.15.0 (binario medido em 4 runs verdes)"
+! grep -qE 'lycheeVersion: (latest|nightly|\$\{\{)' "$WF"; ck $? "sem versao flutuante/latest/nightly no binario lychee"
+! grep -q -- '--accept' "$WF"; ck $? "sem --accept (nao mascara links quebrados)"
+[ "$(grep -c -- '--exclude ' "$WF")" -eq 5 ]; ck $? "5 exclusoes originais de links mantidas"
 
 echo
 echo "== resumo: $PASS PASS / $FAIL FAIL =="

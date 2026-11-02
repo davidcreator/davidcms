@@ -102,6 +102,12 @@ jobs:
       with:
         # v2 usa o input `token` (default github.token); na v1 era env GITHUB_TOKEN.
         token: ${{ secrets.GITHUB_TOKEN }}
+        # F11-08: a action v2 trocou o binario lychee 0.15.0 (usado pela v1)
+        # por v0.24.2 e o docs-links passou de ~6 min para >15 min. Pinar o
+        # binario medido em 4 runs verdes, mantendo a action v2 (Node 24),
+        # fail/failIfEmpty=true e todas as 5 exclusoes. Reavaliar 0.24.2 com
+        # logs de admin e flags explicitas antes de migrar.
+        lycheeVersion: v0.15.0
         args: >-
           --verbose
           --no-progress

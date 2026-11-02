@@ -1,5 +1,12 @@
 # Changelog
 
+## F11-08 — Hotfix de performance do `docs-links` (2026-11-02)
+- Diagnóstico: após F11-04 (`lychee-action@v1` → `@v2`), o `docs-links` passou de 358–369 s (~6 min, 4 runs) para 14,0 / 15,5 min em dois runs cancelados por push e ≥8,3 min no terceiro, nenhum com `success`; só +7 arquivos `.md` entraram no repo (297→304). A lentidão é observada, mas a causa interna do binário 0.24.2 não foi comprovada e pode incluir fator transitório de rede.
+- A v1 fixava o binário `lychee 0.15.0`; a v2.9.0 usa `v0.24.2`. Os defaults de `--timeout`/`--max-retries`/`--max-concurrency` são iguais nas duas versões, e os logs do job exigem admin (403) — a causa interna do 0.24.2 **não foi comprovada**.
+- Correção determinística: `lycheeVersion: v0.15.0` no `with:`, mantendo a action `@v2` (Node 24, sem avisos), `fail`/`failIfEmpty=true`, as 5 exclusões e sem `--accept`. Sem downgrade da action, sem desligar o job e sem alterar `timeout-minutes: 20`.
+- `verify-ci-workflow.sh` ganhou 4 checks de contrato; `CHECKSUMS.txt`, `CHECKSUMS-F11-04.txt` e `CHECKSUMS-F11-05.txt` reemitidos com hashes do estado final. `CHECKSUMS-F11-07.txt` permanece intacto.
+- Sem alteração de código PHP/JS, migration, banco, staging, deploy ou escrita no GitHub.
+
 ## F11-04 — Modernização e endurecimento do CI (2026-11-02)
 - ADR 0082: actions atualizadas para as majors com runtime Node 24 (`checkout@v7`, `setup-node@v7`, `cache@v6`, `setup-php@v2`, `lychee-action@v2`), eliminando os 8 avisos por run.
 - Runner pinado em `ubuntu-24.04` durante a janela de migração do `ubuntu-latest` para Ubuntu 26.04 (19/10–19/11/2026); revisão para 26.04 agendada após um run verde.
