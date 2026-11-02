@@ -1,11 +1,11 @@
 {
   "task": "F11-07",
-  "description": "Inventario auditado dos checkers tools/e2e/*.cjs com saida nao-zero no main @ fb7b56055",
-  "method": "replica de 777 arquivos; 61 checkers executados; 36 nao-zero; 0 alvos de arquivo ausentes na replica",
+  "description": "Inventario auditado dos checkers tools/e2e/*.cjs com saida nao-zero no main @ 440419b12 (pos F11-09)",
+  "method": "replica de 2353 arquivos do main; 61 checkers executados; 32 nao-zero; 4 falsos negativos corrigidos em F11-09; 0 alvos ausentes",
   "total_checkers": 61,
-  "nonzero": 36,
+  "nonzero": 32,
   "counts": {
-    "MARKER_OR_FINDING": 14,
+    "MARKER_OR_FINDING": 10,
     "STATIC_ONLY_FAIL_CLOSED": 4,
     "REQUIRES_WRAPPER": 7,
     "BLOCKED_CONTROL": 2,
@@ -28,15 +28,6 @@
       "rc": 1,
       "category": "MARKER_OR_FINDING",
       "evidence": "FAIL home and 404 consume only normalized system scene settings",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
-      "file": "check_threejs_sandbox.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "FAIL cache-busted admin editor and public runtime URLs prevent stale script UI/runtime",
       "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
       "inventoried_at": "2026-11-02",
       "head": "fb7b56055"
@@ -258,37 +249,10 @@
       "head": "fb7b56055"
     },
     {
-      "file": "e2e_f922_static.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "- inline editor/DOM reconstruction missing",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
-      "file": "e2e_f923_static.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "- missing source marker: renderInserter() / - missing source marker: this.undoStack.length > 50",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
       "file": "e2e_f925_static.cjs",
       "rc": 1,
       "category": "MARKER_OR_FINDING",
       "evidence": "- unexpected persistence/network marker sessionStorage / - unexpected persistence/network marker fetch( / - unexpected persistence/network marker XMLHttpRequest",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
-      "file": "e2e_f926_static.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "- native inserter buttons must not have overridden list roles",
       "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
       "inventoried_at": "2026-11-02",
       "head": "fb7b56055"
@@ -354,15 +318,6 @@
       "rc": 1,
       "category": "MARKER_OR_FINDING",
       "evidence": "FAIL home and 404 consume only normalized system scene settings",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    "check_threejs_sandbox.cjs": {
-      "file": "check_threejs_sandbox.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "FAIL cache-busted admin editor and public runtime URLs prevent stale script UI/runtime",
       "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
       "inventoried_at": "2026-11-02",
       "head": "fb7b56055"
@@ -583,38 +538,11 @@
       "inventoried_at": "2026-11-02",
       "head": "fb7b56055"
     },
-    "e2e_f922_static.cjs": {
-      "file": "e2e_f922_static.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "- inline editor/DOM reconstruction missing",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    "e2e_f923_static.cjs": {
-      "file": "e2e_f923_static.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "- missing source marker: renderInserter() / - missing source marker: this.undoStack.length > 50",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
     "e2e_f925_static.cjs": {
       "file": "e2e_f925_static.cjs",
       "rc": 1,
       "category": "MARKER_OR_FINDING",
       "evidence": "- unexpected persistence/network marker sessionStorage / - unexpected persistence/network marker fetch( / - unexpected persistence/network marker XMLHttpRequest",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    "e2e_f926_static.cjs": {
-      "file": "e2e_f926_static.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "- native inserter buttons must not have overridden list roles",
       "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
       "inventoried_at": "2026-11-02",
       "head": "fb7b56055"
@@ -664,5 +592,65 @@
       "inventoried_at": "2026-11-02",
       "head": "fb7b56055"
     }
-  }
+  },
+  "head": "440419b12",
+  "f11_09_resolutions": [
+    {
+      "file": "check_threejs_sandbox.cjs",
+      "marker": "threejs-5",
+      "equivalent": "threejs-49",
+      "fix": "exigir versao numerica threejs-\\d+ IGUAL nos 2 controllers (mais rigoroso que o literal)"
+    },
+    {
+      "file": "e2e_f922_static.cjs",
+      "marker": "contentEditable = 'true'",
+      "equivalent": "contentEditable='true' (4 ocorrencias)",
+      "fix": "regex tolerante a espacamento, sem alterar a exigencia dos 3 marcadores"
+    },
+    {
+      "file": "e2e_f923_static.cjs",
+      "marker": "renderInserter() / this.undoStack.length > 50",
+      "equivalent": "renderInserter(forceOpen) / while (stack.length > 50",
+      "fix": "marcadores literais atualizados, mesmo nivel de rigor"
+    },
+    {
+      "file": "e2e_f926_static.cjs",
+      "marker": "qualquer setAttribute role=list no arquivo",
+      "equivalent": "0 ocorrencias dentro de renderInserter; 24 em paineis de acessibilidade",
+      "fix": "restrito ao bloco do inserter, com fail-closed se o bloco nao existir"
+    }
+  ],
+  "f11_09_unresolved": [
+    "check_audio_catalog.cjs",
+    "check_threejs_native_admin.cjs",
+    "e2e_bdre_audio_static.cjs",
+    "e2e_bdre_block_copy_static.cjs",
+    "e2e_bdre_file_static.cjs",
+    "e2e_bdre_spacer_static.cjs",
+    "e2e_bdre_table_static.cjs",
+    "e2e_bdre_unsaved_changes_static.cjs",
+    "e2e_f805.cjs",
+    "e2e_f806_http.cjs",
+    "e2e_f807_http.cjs",
+    "e2e_f808_http.cjs",
+    "e2e_f809_http.cjs",
+    "e2e_f810_http.cjs",
+    "e2e_f811_http.cjs",
+    "e2e_f812.cjs",
+    "e2e_f901.cjs",
+    "e2e_f903.cjs",
+    "e2e_f904.cjs",
+    "e2e_f905.cjs",
+    "e2e_f914.cjs",
+    "e2e_f915.cjs",
+    "e2e_f917.cjs",
+    "e2e_f918_preflight.cjs",
+    "e2e_f919_static.cjs",
+    "e2e_f925_static.cjs",
+    "e2e_f927_static.cjs",
+    "threejs_admin_preview_sandbox_isolated.cjs",
+    "threejs_cms_playwright.cjs",
+    "threejs_native_admin_playwright.cjs",
+    "threejs_native_readonly_playwright.cjs"
+  ]
 }

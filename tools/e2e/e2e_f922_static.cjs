@@ -20,7 +20,7 @@ need(renderer.includes('renderInlineRuns') && renderer.includes('htmlspecialchar
 for (const tag of ['strong','em','u','s','code']) need(renderer.includes(`'${tag}'`), `renderer fixed inline tag missing ${tag}`);
 need(renderer.includes("'<a href=\"") && renderer.includes('rel=\"nofollow noopener noreferrer\"'), 'renderer fixed safe anchor missing');
 need(editor.includes('upgradeDocument') && editor.includes('format_version = 2'), 'editor must upgrade v1 to v2 in memory');
-need(editor.includes('contentEditable = \'true\'') && editor.includes('normalizeDomInline') && editor.includes('buildInlineDom'), 'inline editor/DOM reconstruction missing');
+need(/contentEditable\s*=\s*'true'/.test(editor) && editor.includes('normalizeDomInline') && editor.includes('buildInlineDom'), 'inline editor/DOM reconstruction missing');
 need(!editor.includes('execCommand') && !/\.innerHTML\s*=/.test(editor), 'editor must not use execCommand or persist/render data via innerHTML');
 for (const mark of ['bold','italic','underline','strike','code']) need(editor.includes(`'${mark}'`), `editor mark missing ${mark}`);
 need(init.includes('editorStrings') && init.includes('editor.serialize()'), 'localized initialization/serialization binding missing');
