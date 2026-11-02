@@ -668,13 +668,16 @@ html[data-rms-density="compact"] .admin-sidebar .nav-link { padding: 6px 12px; }
   align-items: center;
   white-space: nowrap;
 }
+/* F9-UI: mesmas cores solidas de .text-bg-success/.text-bg-secondary usadas
+   em cms/page_list. As classes badge-status--* sao mantidas: o checker
+   tools/e2e/e2e_f805_browser.js seleciona .badge-status--draft. */
 .badge-status--published {
-  background: rgba(var(--bs-success-rgb), .14);
-  color: var(--bs-success-text-emphasis, var(--bs-success));
+  background: var(--bs-success);
+  color: #fff;
 }
 .badge-status--draft {
-  background: var(--rms-badge-draft-bg);
-  color: var(--rms-badge-draft-fg);
+  background: var(--bs-secondary);
+  color: #fff;
 }
 
 .icon-btn--danger:hover, .icon-btn--danger:focus { color: var(--bs-danger); }

@@ -27,6 +27,9 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         $this->load->model('blog/blog');
 
+        // F9-UI: reutiliza o JS generico de Quick Edit de cms/page (sem duplicar).
+        $this->document->addScript($this->config->get('site_url') . 'view/js/cms-page-quick-edit.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-f9-ui-blog-quick-edit');
+
         $data['heading_title']        = $this->language->get('heading_title');
         $data['text_list']            = $this->language->get('text_list');
         $data['text_no_results']      = $this->language->get('text_no_results');
@@ -56,7 +59,9 @@ class Blog extends \Reamur\System\Engine\Controller {
             'text_total_posts', 'text_showing', 'text_search_placeholder',
             'text_all_status', 'text_published', 'text_draft', 'text_view_site',
             'text_empty_state', 'text_empty_state_cta',
-            'button_filter', 'button_reset',
+            'button_filter', 'button_reset', 'button_cancel',
+            'button_quick_edit', 'button_quick_update', 'text_quick_edit', 'text_quick_edit_hint',
+            'entry_title', 'entry_keyword', 'entry_status',
         ] as $key) {
             $data[$key] = $this->language->get($key);
         }
@@ -88,6 +93,15 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         // Imagens locais pertencem ao app Catalog; URLs externas HTTP(S) continuam válidas.
         $catalogBase = $this->catalogAssetUrl();
+        // F9-UI: idioma ativo para o Quick Edit (mesma regra de cms/page).
+        $quickLanguageId = 1;
+        $activeLanguageCode = strtolower((string)$this->config->get('language_directory', 'en-us'));
+        foreach ($this->model_blog_blog->getLanguages() as $languageRow) {
+            $languageRow = (array)$languageRow;
+            if (strtolower((string)($languageRow['code'] ?? '')) === $activeLanguageCode) { $quickLanguageId = (int)$languageRow['language_id']; break; }
+        }
+        $data['quick_language_id'] = $quickLanguageId;
+        $data['current_page'] = $page;
         $data['posts'] = [];
 
         foreach ($rows as $post) {
@@ -95,16 +109,23 @@ class Blog extends \Reamur\System\Engine\Controller {
             $pid  = (int)$post['post_id'];
             $img  = trim((string)($post['image'] ?? ''));
 
+            $postKeywords = $this->model_blog_blog->getPostKeywords($pid);
+            $publishedTs = strtotime((string)$post['date_published']) ?: time();
             $data['posts'][] = [
-                'post_id'        => $pid,
-                'title'          => (string)$post['title'],
-                'status'         => (int)$post['status'],
-                'date_published' => (string)$post['date_published'],
-                'date_modified'  => (string)$post['date_modified'],
-                'thumb'          => $this->catalogImageUrl($img),
-                'view_site'      => $catalogBase . 'index.php?route=blog/blog.info|' . $pid,
-                'edit'           => $this->url->link('blog/blog.edit|' . $pid),
-                'delete'         => $this->url->link('blog/blog.delete|' . $pid),
+                'post_id'             => $pid,
+                'title'               => (string)$post['title'],
+                'status'              => (int)$post['status'],
+                'date_published'      => (string)$post['date_published'],
+                'date_modified'       => (string)$post['date_modified'],
+                'thumb'               => $this->catalogImageUrl($img),
+                'view_site'           => $catalogBase . 'index.php?route=blog/blog.info|' . $pid,
+                'edit'                => $this->url->link('blog/blog.edit|' . $pid),
+                'quick_edit'          => $this->url->link('blog/blog.quickEdit|' . $pid),
+                'quick_title'         => (string)$post['title'],
+                'quick_keyword'       => (string)($postKeywords[$quickLanguageId] ?? ''),
+                'quick_status'        => (int)$post['status'],
+                'quick_date_published'=> date('Y-m-d\TH:i', $publishedTs),
+                'delete'              => $this->url->link('blog/blog.delete|' . $pid),
             ];
         }
 
@@ -261,6 +282,97 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->chrome($data);
 
         $this->response->setOutput($this->load->view('blog/blog_form', $data));
+    }
+
+
+    /**
+     * F9-UI: edicao rapida na grade do blog (titulo, keyword SEO, status e data).
+     * POST-only, ACL + CSRF + fingerprint. Preserva as descricoes dos demais
+     * idiomas e NAO toca no conteudo BDRE (nao chama savePostWithBlocks).
+     */
+    public function quickEdit(string $post_id = '0'): void {
+        $postId = (int)$post_id;
+        $this->load->language('blog/blog');
+        $this->load->model('blog/blog');
+        $qp = $this->request->post;
+        $scalar = static function (string $key) use ($qp): string { return isset($qp[$key]) && is_scalar($qp[$key]) ? (string)$qp[$key] : ''; };
+        $returnPage = max(1, (int)($scalar('return_page') ?: '1'));
+        $returnTitle = mb_substr(trim($scalar('return_filter_title')), 0, 255);
+        $returnStatusRaw = $scalar('return_filter_status');
+        $returnStatus = in_array($returnStatusRaw, ['all', '0', '1'], true) ? $returnStatusRaw : 'all';
+        $redirect = function () use ($returnPage, $returnTitle, $returnStatus): void {
+            $query = 'page=' . $returnPage;
+            if ($returnTitle !== '') $query .= '&filter_title=' . rawurlencode($returnTitle);
+            if ($returnStatus !== 'all') $query .= '&filter_status=' . $returnStatus;
+            $this->response->redirect($this->url->link('blog/blog', $query));
+        };
+        $requestMethod = $this->request->server['REQUEST_METHOD'] ?? '';
+        if (!is_string($requestMethod) || $requestMethod !== 'POST' || !$this->user->hasPermission('modify', 'blog/blog')) {
+            $this->setFlash($this->language->get('error_quick_permission'), 'error'); $redirect(); return;
+        }
+        if (!$this->csrfValid()) {
+            $this->setFlash($this->language->get('error_csrf'), 'error'); $redirect(); return;
+        }
+        $post = $postId > 0 ? $this->model_blog_blog->getPost($postId) : [];
+        if (!$post) {
+            $this->setFlash($this->language->get('error_quick_not_found'), 'error'); $redirect(); return;
+        }
+        $statusRaw = $scalar('quick_status');
+        $titleRaw = $qp['quick_title'] ?? '';
+        $keywordRaw = $qp['quick_keyword'] ?? '';
+        $dateRaw = $scalar('quick_date_published');
+        $languageId = 1;
+        $activeCode = strtolower((string)$this->config->get('language_directory', 'en-us'));
+        $knownLanguages = $this->model_blog_blog->getLanguages();
+        foreach ($knownLanguages as $knownLanguage) {
+            $knownLanguage = (array)$knownLanguage;
+            if (strtolower((string)($knownLanguage['code'] ?? '')) === $activeCode) { $languageId = (int)$knownLanguage['language_id']; break; }
+        }
+        $postedLanguageId = (int)$scalar('quick_language_id');
+        $errors = [];
+        if (!in_array($statusRaw, ['0', '1'], true)) $errors[] = $this->language->get('error_quick_status');
+        if ($postedLanguageId !== $languageId) $errors[] = $this->language->get('error_quick_language');
+        if (!is_string($titleRaw) || trim($titleRaw) === '' || mb_strlen(trim($titleRaw)) > 255) $errors[] = $this->language->get('error_title');
+        $keyword = is_string($keywordRaw) ? trim($keywordRaw) : '';
+        if (!is_string($keywordRaw)) $errors[] = sprintf($this->language->get('error_keyword_format'), $languageId);
+        elseif ($keyword !== '' && (mb_strlen($keyword) > 64 || !preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $keyword))) $errors[] = sprintf($this->language->get('error_keyword_format'), $languageId);
+        elseif ($keyword !== '' && $this->model_blog_blog->keywordTaken($keyword, $languageId, $postId)) $errors[] = sprintf($this->language->get('error_keyword_taken'), $keyword);
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/D', $dateRaw)) $errors[] = $this->language->get('error_quick_date');
+        if ($errors) { $this->setFlash(implode(' ', array_unique($errors)), 'error'); $redirect(); return; }
+
+        $descriptions = $this->model_blog_blog->getPostDescriptions($postId);
+        $keywords = $this->model_blog_blog->getPostKeywords($postId);
+        $descriptions[$languageId]['title'] = trim((string)$titleRaw);
+        $keywords[$languageId] = $keyword;
+        $allLanguageIds = array_unique(array_merge(
+            array_map('intval', array_keys($descriptions)),
+            array_map('intval', array_keys($keywords)),
+            array_map(static function ($row) { return (int)((array)$row)['language_id']; }, $knownLanguages)
+        ));
+        $descriptionPayload = [];
+        foreach ($allLanguageIds as $lid) {
+            $existing = (array)($descriptions[$lid] ?? []);
+            $descriptionPayload[$lid] = [
+                'title'            => (string)($existing['title'] ?? ''),
+                'description'      => (string)($existing['description'] ?? ''),
+                'meta_title'       => (string)($existing['meta_title'] ?? ''),
+                'meta_description' => (string)($existing['meta_description'] ?? ''),
+                'keyword'          => (string)($keywords[$lid] ?? ''),
+            ];
+        }
+        $payload = [
+            'image'          => (string)($post['image'] ?? ''),
+            'status'         => (int)$statusRaw,
+            'date_published' => str_replace('T', ' ', $dateRaw) . ':00',
+            'descriptions'   => $descriptionPayload,
+        ];
+        try {
+            $this->model_blog_blog->editPost($postId, $payload, true, $this->model_blog_blog->getPostEditFingerprint($postId));
+        } catch (\RuntimeException $exception) {
+            if ($exception->getMessage() !== 'edit_conflict') throw $exception;
+            $this->setFlash($this->language->get('error_edit_conflict'), 'error'); $redirect(); return;
+        }
+        $this->setFlash($this->language->get('text_success_edit')); $redirect();
     }
 
     /** POST-only list of saved revisions for the current Blog post/language. */

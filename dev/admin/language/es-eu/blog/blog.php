@@ -531,3 +531,14 @@ $_['text_block_ribbon_review'] = 'Revisar';
 $_['text_block_ribbon_home'] = 'Inicio';
 $_['text_block_ribbon_insert'] = 'Insertar';
 $_['text_block_ribbon_view'] = 'Ver';
+
+// F9-UI — padronizacao da grade com cms/page (Quick Edit).
+$_['button_quick_edit'] = "Edición rápida";
+$_['button_quick_update'] = "Actualizar";
+$_['text_quick_edit'] = "Edición rápida";
+$_['text_quick_edit_hint'] = "Cambia solo título, palabra clave SEO, estado y fecha de publicación. El contenido BDRE y los demás campos permanecen intactos.";
+$_['error_quick_status'] = "Estado no válido.";
+$_['error_quick_date'] = "Fecha de publicación no válida.";
+$_['error_quick_language'] = "El idioma activo cambió. Recargue la lista e inténtelo de nuevo.";
+$_['error_quick_not_found'] = "Entrada no encontrada.";
+$_['error_quick_permission'] = "No tiene permiso para modificar esta entrada.";

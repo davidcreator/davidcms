@@ -531,3 +531,14 @@ $_['text_block_ribbon_review'] = 'Review';
 $_['text_block_ribbon_home'] = 'Home';
 $_['text_block_ribbon_insert'] = 'Insert';
 $_['text_block_ribbon_view'] = 'View';
+
+// F9-UI — padronizacao da grade com cms/page (Quick Edit).
+$_['button_quick_edit'] = "Quick Edit";
+$_['button_quick_update'] = "Update";
+$_['text_quick_edit'] = "Quick Edit";
+$_['text_quick_edit_hint'] = "Changes only title, SEO keyword, status and publish date. BDRE content and all other fields remain untouched.";
+$_['error_quick_status'] = "Invalid status.";
+$_['error_quick_date'] = "Invalid publish date.";
+$_['error_quick_language'] = "The active language changed. Reload the list and try again.";
+$_['error_quick_not_found'] = "Post not found.";
+$_['error_quick_permission'] = "You do not have permission to modify this post.";
