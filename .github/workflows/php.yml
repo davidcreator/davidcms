@@ -108,14 +108,21 @@ jobs:
         # fail/failIfEmpty=true e todas as 5 exclusoes. Reavaliar 0.24.2 com
         # logs de admin e flags explicitas antes de migrar.
         lycheeVersion: v0.15.0
+        # F11-10: fail=true (default v2) expôs 16 links quebrados. 403/429 são
+        # recusa à verificação automatizada, não link inexistente; os 3 domínios
+        # abaixo são links mortos congelados em READMEs/LICENSEs de vendor.
         args: >-
           --verbose
           --no-progress
+          --accept '100..=103,200..=299,403,429'
           --exclude 'reamurcms\.com'
           --exclude 'wa\.me'
           --exclude 'davidalmeida\.xyz/catalog/tools'
           --exclude 'dev/system/storage/node_modules'
           --exclude 'node_modules'
+          --exclude 'watchersnet\.de'
+          --exclude 'code\.google\.com'
+          --exclude 'awio\.iljmp\.com'
           './**/*.md'
 
   static-analysis:

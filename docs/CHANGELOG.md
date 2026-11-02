@@ -1,5 +1,12 @@
 # Changelog
 
+## F11-10 — Correção dos links quebrados no `docs-links` (2026-11-02)
+- O pin de `lychee v0.15.0` (F11-08) fez o `docs-links` concluir em 6,5 min e expôs `exit code 2` em dois runs: a `@v2` tem `fail: true` por default, enquanto a `@v1` não falhava em links quebrados.
+- Diagnóstico executado com o **binário oficial lychee 0.15.0** e os `args` exatos do workflow numa réplica de 2.476 arquivos: **16 erros** (2 links locais, 6×429 GNU, 1×429 Instagram, 1×403 Redbubble, 2×404 e 2×500 e 2 redirects em vendor). A estimativa anterior de 41 links relativos ausentes era artefato de réplica incompleta e foi retificada.
+- Correção sem desligar `fail`: criado `docs/README.md` com índice real; 3 exclusões para domínios mortos de vendor (`watchersnet.de`, `code.google.com`, `awio.iljmp.com`); `--accept '100..=103,200..=299,403,429'` para rate limiting/anti-bot. `fail`/`failIfEmpty=true`, `timeout-minutes: 20` e o pin permanecem.
+- `verify-ci-workflow.sh` ganhou 4 checks e aposentou 2 obsoletos (28 PASS / 0 FAIL); 4 manifestos de integridade reemitidos com hashes do estado final.
+- Validação local com o binário do CI: `exit 0 / 0 erros / 522 OK`. Sem alteração de código PHP/JS, migration, banco, staging, deploy ou escrita no GitHub.
+
 ## F11-08 — Hotfix de performance do `docs-links` (2026-11-02)
 - Diagnóstico: após F11-04 (`lychee-action@v1` → `@v2`), o `docs-links` passou de 358–369 s (~6 min, 4 runs) para 14,0 / 15,5 min em dois runs cancelados por push e ≥8,3 min no terceiro, nenhum com `success`; só +7 arquivos `.md` entraram no repo (297→304). A lentidão é observada, mas a causa interna do binário 0.24.2 não foi comprovada e pode incluir fator transitório de rede.
 - A v1 fixava o binário `lychee 0.15.0`; a v2.9.0 usa `v0.24.2`. Os defaults de `--timeout`/`--max-retries`/`--max-concurrency` são iguais nas duas versões, e os logs do job exigem admin (403) — a causa interna do 0.24.2 **não foi comprovada**.

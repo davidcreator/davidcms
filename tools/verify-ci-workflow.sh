@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════════════
-# verify-ci-workflow.sh — F11-04 / ADR 0082 (reforcado em F11-05 e F11-08)
+# verify-ci-workflow.sh — F11-04 / ADR 0082 (reforcado em F11-05, F11-08 e F11-10)
 # Auditor READ-ONLY do contrato do proprio CI (.github/workflows/php.yml).
 #
 #   bash tools/verify-ci-workflow.sh [caminho-do-workflow]
@@ -77,8 +77,12 @@ fi
 echo "-- 7. docs-links: binario pinado e sem relaxamento (F11-08) --"
 grep -qE '^[[:space:]]+lycheeVersion: v0\.15\.0' "$WF"; ck $? "lycheeVersion v0.15.0 (binario medido em 4 runs verdes)"
 ! grep -qE 'lycheeVersion: (latest|nightly|\$\{\{)' "$WF"; ck $? "sem versao flutuante/latest/nightly no binario lychee"
-! grep -q -- '--accept' "$WF"; ck $? "sem --accept (nao mascara links quebrados)"
-[ "$(grep -c -- '--exclude ' "$WF")" -eq 5 ]; ck $? "5 exclusoes originais de links mantidas"
+
+echo "-- 8. docs-links: fail-safe e escopo de links (F11-10) --"
+! grep -qE 'fail:[[:space:]]*false' "$WF"; ck $? "fail/failIfEmpty continuam true (nada desligado)"
+grep -qF -- "--accept '100..=103,200..=299,403,429'" "$WF"; ck $? "--accept explicito para 403/429"
+[ "$(grep -c -- '--exclude ' "$WF")" -eq 8 ]; ck $? "8 exclusoes de URL (5 originais + 3 dominios mortos de vendor)"
+[ -f docs/README.md ]; ck $? "docs/README.md existe no disco (resolve 2 links relativos)"
 
 echo
 echo "== resumo: $PASS PASS / $FAIL FAIL =="

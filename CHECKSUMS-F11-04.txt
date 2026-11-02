@@ -1,14 +1,14 @@
-# F11-04 — integridade (reemitido em F11-08)
+# F11-04 — integridade (reemitido em F11-10)
 # Formato: CRC32  SHA256  tamanho(bytes)  caminho
 
 fca6effc  a4484945678861bb6f89faea1c0f0e237ba4f46db0042f02a61e90b2011359c4  2068  .github/pull_request_template.md
-6f487385  17c6d91f959c59fd0db1886d0942a3964d55b49bc6f83d188faf4e5bd558a63b  8098  .github/workflows/php.yml
+ec6ce34f  68746daf6a01d00e2e0aed6fd0eb64dc38b3a335b5c31830ef37d7a4baed8985  8508  .github/workflows/php.yml
 4d27c8a8  2397e787801e375c123124cc001608d9665c4532663c37acdb3fb777e258a269  2061  CONTRIBUTING.md
 01df2c67  de9d4791fde2f84a317b13ae60573f68bbfa568acf112d48be9a8f960660ec63  2074  F11-04-INDICE.md
 ac51fb1b  359ec1a0715153b2d7bdc990b573e574272eabfe1631238ff3a725104305fdf0  14112  README.md
 bd507bf2  6b5e5cff64d90b71e356ae5d7600cc02b22d459eeaf112a8e02a259ef4a98d65  6268  agents-ia/decisoes/0082-modernizacao-e-guards-do-ci.md
 b06c9661  29a480d6ebdeb4be28ac757567fa6d7e16df3ca4ffb06d047efe1060d4502e3e  4001  agents-ia/decisoes/README.md
-6044a7c2  4a80117f5768b7d81cc0a91c7033c3e7609b06787a19b4e8aa283055c6f23a23  13867  docs/CHANGELOG.md
+3653dcf8  f21b5b7c21565240e4a1594fece2554dc92b7c0ba55da8242e33f280322955d1  15132  docs/CHANGELOG.md
 88daa401  1e1ba2fa22bee77f4252825d232395eaa8c4b3769ffdfab846dd488f8b536b02  6690  docs/F11-04-Modernizacao-CI.md
 1f851404  f1d56f618eb9c41bb99be1fbf69d86131813bde0ed1a54c05e7307f64a999dc4  12047  docs/Guia-Composer.md
-57572a56  7130a67e13675f33c3471c9be9798c415504d47b5654f7d2103611d123293370  4563  tools/verify-ci-workflow.sh
+99ea58ec  bc9c8e0af3e75568f7a883ceb2e8a594a2ea922af0145df0165fc44c097a1327  4868  tools/verify-ci-workflow.sh
