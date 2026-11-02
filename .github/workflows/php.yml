@@ -159,8 +159,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     # F11-01 / ADR 0081: dependencias Node (Playwright) moram em
-    # dev/system/storage/. Nenhum browser e baixado (--ignore-scripts):
-    # este job valida apenas instalacao, resolucao e sintaxe.
+    # dev/system/storage/. O instalador canonico roda --ignore-scripts (nenhum
+    # browser e baixado), repoe o index.html versionado que a reinstalacao
+    # apaga e faz o smoke real de resolucao. Este job valida instalacao e sintaxe.
     # F11-04: matrix mantem o minimo declarado (>=20) e antecipa o LTS 22.
     strategy:
       fail-fast: false
@@ -185,11 +186,7 @@ jobs:
           ${{ runner.os }}-node${{ matrix.node-version }}-npm-
 
     - name: Instalar dependencias Node em dev/system/storage
-      run: npm ci --ignore-scripts --no-audit --no-fund --prefix dev/system/storage
-
-    - name: Resolver Playwright a partir do storage
-      run: |
-        node -e "const { loadPlaywright } = require('./tools/e2e/lib/load-playwright.cjs'); const pw = loadPlaywright(); if (!pw.chromium) process.exit(1); console.log('Playwright resolvido via dev/system/storage/node_modules');"
+      run: bash tools/install-deps.sh
 
     - name: Sintaxe dos scripts Node (tools/ e tests/)
       run: |

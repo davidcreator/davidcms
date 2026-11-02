@@ -1,7 +1,7 @@
 # F11-11 — integridade (reemitido em F11-14 com retificacoes)
 # Formato: CRC32  SHA256  tamanho(bytes)  caminho
 
-bc7610b8  7765ed9fc12f998d14ac42dc5dbb328992df6f3706554c48ad3f2004c5c52972  6649  docs/F11-11-Decisoes-Contratos.md
-f971b2fc  6af24508123eebd4722bc02151c5b2d25130e1c559ceee6d312a99cd4944456f  2919  tools/verify-contract-freeze.py
-39651d28  b679c2bf2d78e9be5e8f1260f823363529405fec864ce332e55ab3603c219d57  10953  tools/decision-matrix.json
 f8c80964  5abf3ce243a98dec918cc5062a6705a4a9795532b138e61e0e0cecb9f1c23765  1673  F11-11-INDICE.md
+bc7610b8  7765ed9fc12f998d14ac42dc5dbb328992df6f3706554c48ad3f2004c5c52972  6649  docs/F11-11-Decisoes-Contratos.md
+39651d28  b679c2bf2d78e9be5e8f1260f823363529405fec864ce332e55ab3603c219d57  10953  tools/decision-matrix.json
+f971b2fc  6af24508123eebd4722bc02151c5b2d25130e1c559ceee6d312a99cd4944456f  2919  tools/verify-contract-freeze.py

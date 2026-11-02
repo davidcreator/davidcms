@@ -61,6 +61,11 @@ for g in tools/verify-deps-layout.sh tools/verify-checksums.sh tools/verify-ci-w
   [ -f "$g" ]; ck $? "$g existe"
 done
 
+echo "-- 5b. Instalador canonico de dependencias (F11-17) --"
+grep -qF 'bash tools/install-deps.sh' "$WF"; ck $? "job node-deps usa tools/install-deps.sh"
+! grep -qE '^[[:space:]]+run:.*npm ci' "$WF"; ck $? "sem npm ci direto no workflow (nao apaga index.html versionado)"
+[ -f tools/install-deps.sh ]; ck $? "tools/install-deps.sh existe no disco"
+
 echo "-- 6. Sintaxe YAML (quando PyYAML disponivel) --"
 if command -v python3 >/dev/null 2>&1 && python3 -c 'import yaml' >/dev/null 2>&1; then
   python3 - "$WF" <<'PY'

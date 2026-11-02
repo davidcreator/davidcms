@@ -15,6 +15,10 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT" || exit 1
 
+# Python real (inclui Windows com alias da Microsoft Store / launcher py -3).
+PYTHON_CMD="${PYTHON_CMD:-}"
+[ -f tools/lib/python-runtime.sh ] && . tools/lib/python-runtime.sh
+
 PASS=0
 FAIL=0
 SKIP=0
@@ -34,12 +38,12 @@ echo "== F11-01 — verificacao local (raiz: $ROOT) =="
 echo "-- 1. Manifestos e estrutura --"
 [ -f dev/system/storage/package.json ] && [ -f dev/system/storage/package-lock.json ]
 ck $? "package.json e package-lock.json em dev/system/storage/"
-if command -v python3 >/dev/null 2>&1; then
-  python3 -m json.tool dev/system/storage/package.json >/dev/null 2>&1 \
-    && python3 -m json.tool dev/system/storage/package-lock.json >/dev/null 2>&1
+if [ -n "$PYTHON_CMD" ]; then
+  pyrun -m json.tool dev/system/storage/package.json >/dev/null 2>&1 \
+    && pyrun -m json.tool dev/system/storage/package-lock.json >/dev/null 2>&1
   ck $? "JSON dos manifestos Node e valido"
 else
-  skip "python3 ausente — validacao de JSON pulada"
+  skip "Python real ausente — validacao de JSON pulada"
 fi
 
 if [ -f .gitignore ]; then
@@ -58,8 +62,10 @@ if [ -f .github/workflows/php.yml ]; then
   ck $? "php.yml exclui node_modules do php-lint"
   grep -q 'node_modules' .github/workflows/php.yml
   ck $? "php.yml exclui node_modules do link check"
-  if python3 -c 'import yaml' >/dev/null 2>&1; then
-    python3 - <<'PY'
+  if [ -z "$PYTHON_CMD" ]; then
+    skip "Python real ausente — parse do YAML pulado"
+  elif pyrun -c 'import yaml' >/dev/null 2>&1; then
+    pyrun - <<'PY'
 import yaml
 with open('.github/workflows/php.yml', encoding='utf-8') as fh:
     d = yaml.safe_load(fh)
