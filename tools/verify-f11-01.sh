@@ -138,6 +138,15 @@ if [ "${SKIP_NPM:-0}" = "1" ]; then
 elif command -v npm >/dev/null 2>&1 && [ -f dev/system/storage/package-lock.json ]; then
   npm ci --ignore-scripts --no-audit --no-fund --prefix dev/system/storage >/dev/null 2>&1
   ck $? "npm ci --prefix dev/system/storage"
+  # npm ci recria node_modules/ e apaga o index.html versionado que mantem a
+  # pasta visivel no repo. Repor para nao sujar o Git a cada verificacao.
+  if [ ! -f dev/system/storage/node_modules/index.html ]; then
+    cat > dev/system/storage/node_modules/index.html <<'HTML'
+<!doctype html><title>ReamurCMS storage</title>
+<!-- Diretorio canonico das dependencias Node (npm ci --prefix dev/system/storage).
+     Unico conteudo versionado; as dependencias sao ignoradas pelo Git. -->
+HTML
+  fi
   node -e "const {loadPlaywright}=require('./tools/e2e/lib/load-playwright.cjs'); const pw=loadPlaywright(); if(!pw.chromium) process.exit(1);" >/dev/null 2>&1
   ck $? "Playwright resolvido via createRequire(storage/package.json)"
 else

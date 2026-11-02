@@ -9,8 +9,11 @@
 # versionados; apenas as pastas instaladas ficam fora do Git.
 # Vendor do Composer (onde quer que exista dentro de system/storage)
 **/system/storage/vendor/
-# Dependencias Node/Playwright — destino canonico
-**/system/storage/node_modules/
+# Dependencias Node/Playwright — destino canonico.
+# As dependencias sao ignoradas, mas a PASTA fica versionada com um
+# index.html, para que dev/system/storage/node_modules/ exista no repo.
+**/system/storage/node_modules/*
+!**/system/storage/node_modules/index.html
 # Legado: node_modules na RAIZ do repo foi commitado por engano em 26/10/2026.
 # Esta regra impede que volte a entrar; remova a pasta do indice com
 # `git rm -r --cached node_modules` (ver docs/F11-01-CI-e-Dependencias.md).
