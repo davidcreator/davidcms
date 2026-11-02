@@ -1,0 +1,331 @@
+{
+  "task": "F11-16",
+  "head": "04ac4c579",
+  "supersedes": "F11-15 (consolida a evidencia das 10 decisoes)",
+  "description": "Auditoria das 7 decisoes herdadas. Consolida as 10 em uma unica fonte de evidencia, no formato aceito por tools/verify-evidence-refs.py.",
+  "finding": "5 dos 10 marcadores (D01,D05,D06,D08,D09) sao contratos/gates de incremento congelados no tempo, nao defeitos do produto.",
+  "policy": "Nenhuma decisao tomada. decision-matrix.json segue com 10 PENDING_DECISION; 11 contratos congelados.",
+  "counts": {
+    "entries": 10,
+    "investigated_f11_15": 3,
+    "investigated_f11_16": 7,
+    "proposed_A": 7,
+    "proposed_A_conditional": 1,
+    "proposed_B": 2
+  },
+  "retifications": [
+    "D08: B -> A condicionada",
+    "D09: B -> A",
+    "D03: natureza refinada (sem falha de seguranca comprovada)",
+    "D06: A reforcado com evidencia de fases posteriores"
+  ],
+  "method": "Leitura estatica de ~40 arquivos do main + API de commits do GitHub. Sem PHP/Twig/browser/banco/staging/deploy.",
+  "central_commit": "3d481ecf65c124c17d61e1c5fa7ec6c031f1027b — feat(bdre-editor): add personal saved block pattern library (F9-25); adiciona rms_cms_block_pattern ao schema.sql e e o base_head do F9-27.",
+  "entries": [
+    {
+      "id": "D01",
+      "checker": "e2e_bdre_hierarchical_reordering_static.cjs",
+      "nature": "ASSINATURA_EVOLUIDA",
+      "conclusion": "10 de 13 marcadores presentes. Os 3 ausentes refletem a evolucao para moveBlockAcrossHierarchy(...,allowPageMedia) e validateDocument(doc,allowPageMedia); a validacao continua fail-closed. Nao e perda de seguranca.",
+      "proposed_choice": "A",
+      "evidence_level": "INVESTIGATED_F11_16",
+      "evidence_refs": [
+        {
+          "file": "dev/admin/view/js/blog-block-editor.js",
+          "snippet": "function moveBlockAcrossHierarchy(document, nodeId, direction, allowPageMedia)"
+        },
+        {
+          "file": "dev/admin/view/js/blog-block-editor.js",
+          "snippet": "validateDocument(document,!!allowPageMedia)"
+        },
+        {
+          "file": "dev/admin/view/js/blog-block-editor.js",
+          "snippet": "validateDocument(next,!!allowPageMedia)"
+        },
+        {
+          "file": "tools/e2e/e2e_bdre_hierarchical_reordering_static.cjs",
+          "snippet": "pure hierarchy move helper is present"
+        },
+        {
+          "file": "tests/fixtures/hierarchy_move.json",
+          "snippet": "format_version"
+        }
+      ]
+    },
+    {
+      "id": "D02",
+      "checker": "e2e_bdre_spacer_static.cjs",
+      "nature": "MARCADOR_OBSOLETO",
+      "conclusion": "Nao e regressao: F9-71 implementou slider + botoes com SPACER_HEIGHTS em vez de Object.entries(strings.spacer.heights). Mesmos 5 presets e mesma validacao client/server.",
+      "proposed_choice": "A",
+      "evidence_level": "INVESTIGATED_F11_15",
+      "evidence_refs": [
+        {
+          "file": "dev/admin/view/js/blog-block-editor.js",
+          "snippet": "data-spacer-height-range"
+        },
+        {
+          "file": "dev/admin/view/js/blog-block-editor.js",
+          "snippet": "SPACER_HEIGHTS[Number(spacerRange.value)]"
+        },
+        {
+          "file": "dev/admin/view/js/blog-block-editor.js",
+          "snippet": "this.strings.spacerInspector.decrease"
+        },
+        {
+          "file": "dev/admin/view/js/blog-block-editor.js",
+          "snippet": "spacer:{heightLabel:'Altura do espaçador'"
+        },
+        {
+          "file": "dev/admin/view/js/blog-block-editor.js",
+          "snippet": "[16,32,48,64,96]"
+        },
+        {
+          "file": "docs/F9-71-Vertical-Spacer.md",
+          "snippet": "controle range rotulado"
+        },
+        {
+          "file": "tools/e2e/e2e_bdre_spacer_static.cjs",
+          "snippet": "inspector exposes localized fixed-height choices"
+        }
+      ]
+    },
+    {
+      "id": "D03",
+      "checker": "check_audio_catalog.cjs",
+      "nature": "CONTRATO_DE_FASE_DESATUALIZADO",
+      "conclusion": "can_use_audio_catalog nao existe em nenhum arquivo do repo (so no checker). cms/page.php usa hasPermission(modify,cms/page), coerente com a independencia Pages/Blog do handoff; o checker esperava blog/blog. Sem evidencia de falha de seguranca.",
+      "proposed_choice": "B",
+      "evidence_level": "INVESTIGATED_F11_16",
+      "evidence_refs": [
+        {
+          "file": "dev/admin/view/template/cms/page_form.twig",
+          "snippet": "{% if can_modify %}"
+        },
+        {
+          "file": "dev/admin/controller/cms/page.php",
+          "snippet": "$data['can_modify'] = $this->user->hasPermission('modify', 'cms/page');"
+        },
+        {
+          "file": "dev/admin/controller/blog/blog.php",
+          "snippet": "hasPermission('modify', 'blog/blog')"
+        },
+        {
+          "file": "tools/e2e/check_audio_catalog.cjs",
+          "snippet": "can_modify and can_use_audio_catalog"
+        }
+      ]
+    },
+    {
+      "id": "D04",
+      "checker": "check_threejs_native_admin.cjs",
+      "nature": "MARCADOR_OBSOLETO",
+      "conclusion": "Nao e regressao: not_found.php atribui getSettings() a $threeSettings, aplica override intencional de three_not_found_enabled e chama runtime($threeSettings). home.php mantem runtime($siteInfo).",
+      "proposed_choice": "A",
+      "evidence_level": "INVESTIGATED_F11_15",
+      "evidence_refs": [
+        {
+          "file": "dev/catalog/controller/error/not_found.php",
+          "snippet": "$threeSettings = $this->model_setting_setting->getSettings();"
+        },
+        {
+          "file": "dev/catalog/controller/error/not_found.php",
+          "snippet": "$threeJs = $this->three_scene_config->runtime($threeSettings);"
+        },
+        {
+          "file": "dev/catalog/controller/error/not_found.php",
+          "snippet": "$threeSettings['three_not_found_enabled'] = '1';"
+        },
+        {
+          "file": "dev/catalog/controller/common/home.php",
+          "snippet": "$this->three_scene_config->runtime($siteInfo);"
+        },
+        {
+          "file": "tools/e2e/check_threejs_native_admin.cjs",
+          "snippet": "three_scene_config->runtime"
+        }
+      ]
+    },
+    {
+      "id": "D05",
+      "checker": "e2e_bdre_unsaved_changes_static.cjs",
+      "nature": "ENDPOINT_DE_REVISOES_FALSO_POSITIVO",
+      "conclusion": "fetch() no init e o POST de listagem de revisoes (F9-31/F9-33), disparado por clique; XMLHttpRequest e apenas valor de header X-Requested-With (falso positivo por substring). Sem sendBeacon/setInterval/autosave.",
+      "proposed_choice": "A",
+      "evidence_level": "INVESTIGATED_F11_16",
+      "evidence_refs": [
+        {
+          "file": "dev/admin/view/js/blog-block-editor-init.js",
+          "snippet": "return fetch(url, {method: 'POST'"
+        },
+        {
+          "file": "dev/admin/view/js/blog-block-editor-init.js",
+          "snippet": "'X-Requested-With': 'XMLHttpRequest'"
+        },
+        {
+          "file": "dev/admin/view/js/blog-block-editor-init.js",
+          "snippet": "data-bdre-history-load"
+        },
+        {
+          "file": "docs/F9-31-Historico-Persistente-BDRE.md",
+          "snippet": "Histórico persistente"
+        },
+        {
+          "file": "tools/e2e/e2e_bdre_unsaved_changes_static.cjs",
+          "snippet": "no autosave or network request was introduced"
+        }
+      ]
+    },
+    {
+      "id": "D06",
+      "checker": "e2e_f914.cjs",
+      "nature": "CONTRATO_MVP_CONGELADO",
+      "conclusion": "Contrato F9-14 (MVP) declara no_network_or_database=true e persistence=false; fases posteriores F9-24/25/31 introduziram rede de forma documentada. Contrato de incremento, nao proibicao permanente.",
+      "proposed_choice": "A",
+      "evidence_level": "INVESTIGATED_F11_16",
+      "evidence_refs": [
+        {
+          "file": "docs/F9-14-Contrato-Editor-MVP.json",
+          "snippet": "\"no_network_or_database\": true"
+        },
+        {
+          "file": "dev/admin/view/js/blog-block-editor.js",
+          "snippet": "await fetch("
+        },
+        {
+          "file": "tools/e2e/e2e_f914.cjs",
+          "snippet": "no HTML injection, network, or DB code allowed"
+        }
+      ]
+    },
+    {
+      "id": "D07",
+      "checker": "e2e_f915.cjs",
+      "nature": "MARCADOR_OBSOLETO_COM_RESSALVA_DE_SEGURANCA",
+      "conclusion": "NAO e regressao P1. twig.php usa autoescape=html, PROIBE |raw em templates de tema (F10-03) e marca post.block_html/post.description como Twig Markup para a rota blog/blog_info. O checker exige o marcador da arquitetura anterior. Nao se deve reintroduzir |raw.",
+      "proposed_choice": "A",
+      "supersedes": "F11-11 recomendava B / possivel regressao funcional P1; suspeita refutada.",
+      "evidence_level": "INVESTIGATED_F11_15",
+      "evidence_refs": [
+        {
+          "file": "dev/system/library/template/twig.php",
+          "snippet": "'autoescape'=>'html'"
+        },
+        {
+          "file": "dev/system/library/template/twig.php",
+          "snippet": "raw filter stays unavailable to theme source"
+        },
+        {
+          "file": "dev/system/library/template/twig.php",
+          "snippet": "blog/blog_info"
+        },
+        {
+          "file": "dev/system/library/template/twig.php",
+          "snippet": "new \\Twig\\Markup($data['post'][$key], 'UTF-8')"
+        },
+        {
+          "file": "dev/catalog/view/template/blog/blog_info.twig",
+          "snippet": "{{ post.block_html }}"
+        },
+        {
+          "file": "dev/catalog/view/template/blog/blog_info.twig",
+          "snippet": "{{ post.description }}"
+        },
+        {
+          "file": "docs/F9-15-Contrato-Renderer-Publico.json",
+          "snippet": "pass trusted renderer HTML to template"
+        },
+        {
+          "file": "tools/e2e/e2e_f915.cjs",
+          "snippet": "post.block_html|raw"
+        }
+      ]
+    },
+    {
+      "id": "D08",
+      "checker": "e2e_f925_static.cjs",
+      "nature": "PERSISTENCIA_IMPLEMENTADA_EM_FASES_POSTERIORES",
+      "conclusion": "Contrato F9-25 diz PROPOSAL_PENDING e exige autorizacao explicita do proprietario, mas o commit 3d481ecf6 (autodeclarado F9-25) adicionou rms_cms_block_pattern ao schema.sql e as fases F9-28/30/31/33 documentam sessionStorage e revisoes. Nao e implementacao clandestina, porem NAO foi encontrado registro da autorizacao formal exigida pelo contrato.",
+      "proposed_choice": "A",
+      "conditional": true,
+      "condition": "Somente apos o responsavel registrar que F9-28..F9-33 constituem a autorizacao explicita; sem confirmacao, permanece B.",
+      "retifies": "F11-11 recomendava B (achado de seguranca)",
+      "evidence_level": "INVESTIGATED_F11_16",
+      "evidence_refs": [
+        {
+          "file": "docs/F9-25-Contrato-Editor-Editorial.json",
+          "snippet": "\"status\": \"PROPOSAL_PENDING\""
+        },
+        {
+          "file": "docs/F9-25-Contrato-Editor-Editorial.json",
+          "snippet": "explicit mapping from the owner"
+        },
+        {
+          "file": "dev/install/sql/schema.sql",
+          "snippet": "-- F9-25 — Biblioteca pessoal de padrões BDRE"
+        },
+        {
+          "file": "dev/install/sql/schema.sql",
+          "snippet": "CREATE TABLE IF NOT EXISTS `rms_cms_block_pattern`"
+        },
+        {
+          "file": "docs/F9-28-Recuperacao-Rascunhos-BDRE.md",
+          "snippet": "sessionStorage"
+        },
+        {
+          "file": "tools/e2e/e2e_f925_static.cjs",
+          "snippet": "unexpected persistence/network marker"
+        }
+      ]
+    },
+    {
+      "id": "D09",
+      "checker": "e2e_f905.cjs",
+      "nature": "GATE_HISTORICO_SOBREPOSTO",
+      "conclusion": "O gate F9-05 proibe schema.sql, mas o contrato F9-05 nao o menciona. A API de commits mostra que o arquivo foi adicionado em 3d481ecf6 (2026-10-29) pela biblioteca de padroes F9-25, fase muito posterior. Nao e violacao do F9-05: e sobreposicao de gate de incremento.",
+      "proposed_choice": "A",
+      "retifies": "F11-11 recomendava B (achado real de governanca)",
+      "evidence_level": "INVESTIGATED_F11_16",
+      "evidence_refs": [
+        {
+          "file": "tools/e2e/e2e_f905.cjs",
+          "snippet": "F9-05 não deve entregar schema.sql"
+        },
+        {
+          "file": "docs/F9-05-Contrato-Definicoes-Campos.json",
+          "snippet": "implementation_partial_backend_model_acl"
+        },
+        {
+          "file": "dev/install/sql/schema.sql",
+          "snippet": "-- F9-25 — Biblioteca pessoal de padrões BDRE"
+        }
+      ]
+    },
+    {
+      "id": "D10",
+      "checker": "e2e_f927_static.cjs",
+      "nature": "DRIFT_INTERNO_DO_RUNBOOK",
+      "conclusion": "F9-27-Base-Hashes.json head=448dd61f (metodo declara F9-26) diverge de F9-27-Status.json base_head=3d481ecf6 (commit da biblioteca de padroes). Gate segue BLOCKED_NOT_RUN/release_approved=false.",
+      "proposed_choice": "B",
+      "evidence_level": "INVESTIGATED_F11_16",
+      "evidence_refs": [
+        {
+          "file": "docs/F9-27-Base-Hashes.json",
+          "snippet": "448dd61f467e8ce2b4a0d5bce481345dace4ca77"
+        },
+        {
+          "file": "docs/F9-27-Status.json",
+          "snippet": "3d481ecf65c124c17d61e1c5fa7ec6c031f1027b"
+        },
+        {
+          "file": "tools/e2e/e2e_f927_static.cjs",
+          "snippet": "base SHA manifest incomplete"
+        },
+        {
+          "file": "docs/F9-27-Release-Gate.md",
+          "snippet": "BLOQUEADO"
+        }
+      ]
+    }
+  ]
+}
