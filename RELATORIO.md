@@ -1,59 +1,86 @@
-# Contraste: links e icones de edicao invisiveis no tema claro
+# Temas: condicoes robustas + suporte declarativo a Three.js
 
-Sintoma (imagens 4-6): "Edit" e o icone de lapis so apareciam ao passar o
-mouse; "Quick Edit" (button.btn-link) e a lixeira (button) sempre apareciam.
+Pedido: o sistema de temas ja usa Twig por padrao; era preciso suportar ThreeJS
+tambem e ter condicoes robustas para personalizar um tema por completo.
 
-CAUSA RAIZ (uma unica origem, confirmada por varredura em TODOS os 62 CSS do
-repo, admin + catalogo publico):
-  dev/admin/view/css/reamurcms.css
-    :root, [data-bs-theme=light] { --bs-anchor: #ffffff; }   <- branco
-    a        { color: var(--bs-anchor); }                    <- todos os <a>
-    a:hover  { color: #0056b3; }                             <- so no hover
+## Diagnostico do HEAD be9ba22ad
 
-Branco sobre fundo branco = 1.00:1. Como "Edit" e .icon-btn de edicao sao
-elementos <a> e os demais controles sao <button>, apenas eles sumiam.
+- `dev/system/library/template.php` ja e um adapter multi-engine com Twig como
+  padrao. Three.js NAO e engine de template (produz canvas, nao HTML): ele entra
+  como camada declarativa de cena, reaproveitando o runtime self-hosted aprovado.
+- `dev/catalog/controller/startup/theme.php` aplicava `primary`, `surface`, `scene`
+  e `templates` de forma GLOBAL, sem nenhuma condicao.
+- `scene` so influenciava `common/home`; `has_3d` so existia em `home.php`, entao
+  NENHUMA outra rota carregava o runtime WebGL.
+- Cor/densidade/velocidade da cena vinham de `rms_setting` global, nao do tema.
+- `Twig::setThemeTemplates()` (F10-03) proibe `<script>`, `|raw`, `autoescape` e
+  event-handlers -- correto, mas por isso um tema nao conseguia pedir uma cena.
+- `scene-runner.js::boot()` ja varre `[data-scene]` e transforma `dataset` em
+  `config` da cena: a integracao podia ser 100% declarativa, sem JS novo.
 
-FALSOS POSITIVOS verificados e descartados no catalogo publico:
-  dev/catalog/view/css/reamurcms.css -> a { color: #23a1d1 } (visivel); o #fff
-     aparece apenas em :hover de menus com fundo azul, onde e correto.
-  dev/catalog/view/css/cms_extensions.css -> .rms-catalog-card__title a
-     { color: inherit } e .breadcrumb a { color: var(--rms-catalog-accent) }.
+## O que foi entregue (19 arquivos)
 
-ALCANCE (varredura integral): 49 templates Twig no admin, 44 contem <a>,
-8 usam .icon-btn (Pages, Posts, Catalog/Categories, Catalog/Projects, Tools,
-Custom Fields, Contact Messages e o header). A regra global corrigida cobre
-TODAS as telas de uma vez; nenhum template precisou ser alterado.
+1. **Motor de condicoes** `dev/system/library/theme/condition_engine.php` (novo):
+   15 campos allowlistados (rota, idioma, dispositivo, horario, query, ...),
+   16 operadores, grupos `all`/`any`/`not` aninhados, fail-closed, sem `eval`,
+   sem regex do usuario, sem IO, limites de 40 regras/120 nos/profundidade 5.
+   `validate()`, `normalize()`, `normalizeThree()`, `evaluate()`, `spec()`.
+2. **`framework.php`**: registra `theme_condition_engine` no Registry.
+3. **`startup/theme.php`**: monta contexto seguro, avalia as regras, faz merge dos
+   overrides e publica `catalog_theme_three`, `vars`, `flags`, `classes`, `matched`.
+4. **`Twig::setThemeGlobals()`**: publica `theme` e `theme_scene` para TODAS as
+   telas (inclusive preview sandboxado), aceitando apenas escalares/listas planas.
+5. **`header.php` / `header.twig`**: Three.js pode ser ligado em QUALQUER rota;
+   classes e regras casadas aparecem no `<body>` com escape.
+6. **Slots Three.js**: novo `partial/theme-scene.twig` (so `data-*`, sem script),
+   `home.twig` (`home_top`), `footer.twig` (`footer_top`) e `hero-3d.twig` (`hero`).
+   Qualquer template allowlisted pode incluir o partial onde quiser.
+7. **`theme.css`**: fallback em gradiente + respeito a reduced-motion.
+8. **Admin**: `design/theme.php` salva/valida `conditions` e `three`; novo bloco no
+   `theme_form.twig`; 15 chaves de idioma x3 (pt-br, en-us, es-eu).
+9. **`docs/GUIA-TEMAS-CONDICOES-THREEJS.md`**: contrato, exemplos, seguranca.
 
-CORRECAO (1 arquivo, 3 pontos):
-  --bs-anchor (light)        : #ffffff -> #0a58ca
-  --bs-anchor-hover (light)  : #0056b3 (token novo)
-  --bs-anchor (dark)         : #6ea8fe (token novo no bloco ja existente)
-  --bs-anchor-hover (dark)   : #9ec5fe
-  a:hover                    : #0056b3 -> var(--bs-anchor-hover)
+## Compatibilidade e seguranca
 
-Contraste WCAG medido (minimo AA = 4.5:1 para texto normal):
-  #0a58ca sobre #ffffff 6.44 | #f8f9fa 6.11 | #e9ecef 5.43 | #dee2e6 4.94
-  #6ea8fe sobre #212529 6.39 | #2b3035 5.51 | #343a40 4.76
-  ANTES #ffffff sobre #ffffff 1.00 -> invisivel
-O azul padrao #0d6efd foi DESCARTADO: falha AA em #e9ecef (3.80) e
-#dee2e6 (3.46), fundos usados pelas linhas em hover/estado selecionado.
+- Tema legado sem `conditions`/`three` continua IDENTICO (F10-03 intacto):
+  `primary`, `surface`, `scene`, `templates`, `catalog_theme_scene` e
+  `SceneConfig::runtime()` nao mudaram de comportamento.
+- Nenhum `<script>`, `|raw` novo, `autoescape` desligado ou codigo executavel vindo
+  do tema. So cenas registradas em `three/main.js` e slots allowlistados.
+- Nenhum contrato congelado, matriz, `schema.sql`, hash de release gate,
+  `release_approved`, workflow, checker, JS do runtime ou migration foi alterado.
+- Os 14 `CHECKSUMS*.txt` permanecem IDENTICOS: nenhum arquivo desta frente e
+  coberto por eles, entao NAO foram reemitidos nem incluidos no ZIP.
+- Nenhuma escrita remota. F9-27 segue `BLOCKED_NOT_RUN` / `release_approved:false`;
+  BDREditor segue pausado; P2 do F9-18 nao foi reaberto.
 
-Decisoes:
-  - Nao foi adicionada regra .icon-btn em admin.css: isso mudaria a cor da
-    lixeira e dos botoes da topbar, que ja estao corretos. A causa e global.
-  - Os 14 CHECKSUMS*.txt permanecem IDENTICOS (este CSS nao e coberto por
-    eles) e por isso NAO entram no pacote: evita colisao de manifestos.
-  - Nenhum contrato, matriz, schema.sql, hash de release gate, release_approved,
-    workflow, checker, template ou JS foi alterado. Nenhuma escrita remota.
+## Validacao executada
 
-Validado:
-  verify-checksums   14 manifestos / 142 arquivos / 0 divergentes
-  repo-health        6 PASS / 0 FAIL / 0 SKIP
-  verify-ci-workflow 31 PASS / 0 FAIL
-  verify-contract-freeze exit 0
-  CSS balanceado; contraste AA medido nos 2 temas; A/B do valor antigo
+| Verificacao | Resultado |
+|---|---|
+| `php -l` PHP 8.5 real (WASM) nos 9 arquivos PHP | 9 OK / 0 FAIL |
+| Motor de condicoes | 54 PASS / 0 FAIL |
+| Integracao `startup/theme.php` com mocks | 32 PASS / 0 FAIL |
+| Renderizacao Twig 3.14 real + sandbox | 24 PASS / 0 FAIL |
+| `verify-checksums` (A e B) | 14 manifestos / 142 arquivos / 0 divergentes |
+| `repo-health` (A e B) | 6 PASS / 0 FAIL / 0 SKIP |
+| `verify-ci-workflow` | 31 PASS / 0 FAIL |
+| `verify-contract-freeze` | exit 0 |
+| `node --check` runtime Three.js | 2/2 OK |
 
-LIMITACAO: sem browser real, PHP, Composer, banco, staging ou deploy neste
-sandbox. A conferencia visual final e do usuario. Nao ha screenshot automatizado.
+Os testes de integracao cobrem: regra casada, regra NAO casada, tema 100% legado,
+three de base, three invalido (descartado), JSON de condicoes corrompido
+(fail-closed), dispositivo mobile + UTM, e `normalizeThree()` aceitar/rejeitar.
+A renderizacao Twig cobre: importmap presente/ausente, classes do tema, parametros
+do hero (tema vs legado), os 3 slots, o `SecurityPolicy` da previa e o formulario.
 
-Aplicar: bash tools/verify-checksums.sh && bash tools/repo-health.sh
+## Limitacoes
+
+PHP usado e o `php-wasm-cli` 8.5 para lint e testes de logica/renderizacao, NAO o
+PHP do servidor de producao. Nao houve CMS completo, banco, Composer/PHPStan no
+host, browser real, WebGL real, E2E Chromium, migration, staging, deploy nem
+escrita no GitHub. A conferencia visual da cena e do tema e do usuario.
+CI verde e health verde NAO significam release aprovada.
+
+Aplicar: substituir os arquivos pelos completos deste ZIP e rodar
+`bash tools/verify-checksums.sh && bash tools/repo-health.sh`.

@@ -28,6 +28,19 @@ class Theme extends \Reamur\System\Engine\Controller {
         if ($id && !$theme) { $this->response->redirect($this->url->link('design/theme')); return; }
         $config=json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true); if (!is_array($config)) $config=[];
         $data=['heading_title'=>$this->language->get('heading_title'),'text_intro'=>$this->language->get('text_editor_scope'),'text_name'=>$this->language->get('text_name'),'text_slug'=>$this->language->get('text_slug'),'text_colors'=>$this->language->get('text_colors'),'text_primary'=>$this->language->get('text_primary'),'text_surface'=>$this->language->get('text_surface'),'text_scene'=>$this->language->get('text_scene'),'text_no_scene'=>$this->language->get('text_no_scene'),'button_save'=>$this->language->get('button_save'),'button_back'=>$this->language->get('button_back'),'error'=>'','can_modify'=>$this->user->hasPermission('modify','design/theme'),'csrf_token'=>\Reamur\System\Library\Security\Csrf::token($this->session),'action'=>$this->url->link('design/theme.edit'.($id?'|'.$id:'')),'cancel'=>$this->url->link('design/theme'),'name'=>(string)($theme['name']??''),'slug'=>(string)($theme['slug']??''),'primary'=>(string)($config['primary']??'#2563eb'),'surface'=>(string)($config['surface']??'#ffffff'),'scene'=>(string)($config['scene']??''),'templates'=>(array)($config['templates']??[])];
+        // F12-01: condicoes declarativas + Three.js por tema.
+        $engine=$this->theme_condition_engine;
+        $spec=$engine->spec();
+        $conditions=(isset($config['conditions'])&&is_array($config['conditions']))?$config['conditions']:['version'=>1,'rules'=>[]];
+        $data['conditions_json']=json_encode($conditions,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{"version":1,"rules":[]}';
+        $data['three']=$engine->normalizeThree(is_array($config['three']??null)?$config['three']:[]) ?? ['enabled'=>false,'scene'=>'','slot'=>'hero','count'=>400,'color'=>'#8a4fff','speed'=>0.05];
+        $data['three_scenes']=$spec['scenes'];
+        $data['three_slots']=$spec['slots'];
+        $data['condition_fields']=$spec['fields'];
+        $data['condition_query_keys']=$spec['query_keys'];
+        $data['condition_operators']=$spec['operators'];
+        $data['condition_max_rules']=$spec['max_rules'];
+        foreach(['text_conditions','text_conditions_help','text_three','text_three_enabled','text_three_scene','text_three_count','text_three_color','text_three_speed','text_three_slot','text_three_help','text_condition_fields','text_condition_operators','text_condition_example','error_conditions','error_three'] as $k) $data[$k]=$this->language->get($k);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
@@ -46,14 +59,49 @@ class Theme extends \Reamur\System\Engine\Controller {
                         }
                         if ($invalidTemplateSource) { $data['error']=$this->language->get('error_template_source'); }
                         else {
-                            $saved=$this->model_design_theme->save($id,['name'=>$name,'slug'=>$slug,'config'=>['primary'=>$primary,'surface'=>$surface,'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']: '', 'templates'=>$safeTemplates]],(int)$this->user->getUserId());
-                            if ($saved) { $this->response->redirect($this->url->link('design/theme')); return; }
-                            $data['error']=$this->language->get('error_validation');
+                            $engine=$this->theme_condition_engine;
+                            $conditionsRaw=(string)($post['conditions']??'');
+                            $conditions=json_decode($conditionsRaw,true);
+                            $conditions=is_array($conditions)?$conditions:['version'=>1,'rules'=>[]];
+                            $conditionErrors=$engine->validate($conditions);
+                            $threeRaw=[
+                                'enabled'=>(string)($post['three_enabled']??'0')==='1',
+                                'scene'=>(string)($post['three_scene']??''),
+                                'slot'=>(string)($post['three_slot']??'hero'),
+                                'count'=>(string)($post['three_count']??'400'),
+                                'color'=>(string)($post['three_color']??'#8a4fff'),
+                                'speed'=>(string)($post['three_speed']??'0.05'),
+                            ];
+                            $three=$engine->normalizeThree($threeRaw);
+                            if ($conditionErrors) { $data['error']=$this->language->get('error_conditions').' ('.$conditionErrors[0]['code'].')'; }
+                            elseif ($three===null) { $data['error']=$this->language->get('error_three'); }
+                            else {
+                                $normalized=$engine->normalize($conditions);
+                                $themeConfig=[
+                                    'primary'=>$primary,'surface'=>$surface,
+                                    'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']: '',
+                                    'templates'=>$safeTemplates,
+                                    'conditions'=>['version'=>1,'rules'=>$normalized['rules']],
+                                    'three'=>$three,
+                                ];
+                                $saved=$this->model_design_theme->save($id,['name'=>$name,'slug'=>$slug,'config'=>$themeConfig],(int)$this->user->getUserId());
+                                if ($saved) { $this->response->redirect($this->url->link('design/theme')); return; }
+                                $data['error']=$this->language->get('error_validation');
+                            }
                         }
                     }
                 }
             }
             foreach(['name','slug','primary','surface','scene'] as $k) $data[$k]=(string)($post[$k]??$data[$k]);
+            $data['conditions_json']=(string)($post['conditions']??$data['conditions_json']);
+            $data['three']=[
+                'enabled'=>(string)($post['three_enabled']??'0')==='1',
+                'scene'=>(string)($post['three_scene']??''),
+                'slot'=>(string)($post['three_slot']??'hero'),
+                'count'=>(string)($post['three_count']??'400'),
+                'color'=>(string)($post['three_color']??'#8a4fff'),
+                'speed'=>(string)($post['three_speed']??'0.05'),
+            ];
         }
         $data['scenes']=[['id'=>'','name'=>$this->language->get('text_no_scene')],['id'=>'hero-particles','name'=>'Hero particles'],['id'=>'portfolio-3d','name'=>'Portfolio 3D'],['id'=>'tools-3d','name'=>'Tools 3D'],['id'=>'not-found','name'=>'Not found']];
         $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[]; $data['template_keys'] = self::TEMPLATE_KEYS; $focusTemplate=$this->request->get['focus_template']??''; $data['focus_template']=is_string($focusTemplate)&&in_array($focusTemplate,self::TEMPLATE_KEYS,true)?$focusTemplate:''; $data['template_sources']=$data['templates']; foreach($data['template_keys'] as $templateKey) { if (!isset($data['template_sources'][$templateKey])) { $templateFile=DIR_SYSTEM.'../catalog/view/template/'.$templateKey.'.twig'; if (is_file($templateFile)) $data['template_sources'][$templateKey]=(string)file_get_contents($templateFile); } } $data['preview_links']=[]; foreach($data['template_keys'] as $key) $data['preview_links'][$key]=$this->url->link('design/theme.preview'.($id?'|'.$id:''),'template='.rawurlencode($key)); foreach($data['revisions'] as &$revision) $revision['restore']=$this->url->link('design/theme.restore|'.$id.'|'.(int)$revision['revision_id']); unset($revision);

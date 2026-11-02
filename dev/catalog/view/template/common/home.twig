@@ -1,6 +1,7 @@
 {# Estrutura permitida vem do contrato CMS PageLayout; includes de domínio permanecem fixos. #}
 {{ header }}
 <main>
+{% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'home_top' %}{% include 'partial/theme-scene.twig' %}{% endif %}
 {% for section in cms_home_sections %}
   {% if section == 'hero' %}{% include 'partial/hero-3d.twig' %}
   {% elseif section == 'about' %}{% include 'partial/about.twig' %}

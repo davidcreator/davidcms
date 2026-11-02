@@ -6,6 +6,26 @@
 <h2 class="h5">{{ text_colors }}</h2><div class="row"><div class="col-md-6 mb-3"><label class="form-label">{{ text_primary }}</label><input class="form-control form-control-color" type="color" name="primary" value="{{ primary }}"></div><div class="col-md-6 mb-3"><label class="form-label">{{ text_surface }}</label><input class="form-control form-control-color" type="color" name="surface" value="{{ surface }}"></div></div>
 <div class="mb-3"><label class="form-label">{{ text_scene }}</label><select class="form-select" name="scene">{% for item in scenes %}<option value="{{ item.id }}"{% if scene == item.id %} selected{% endif %}>{{ item.name }}</option>{% endfor %}</select><div class="form-text">{{ text_scene_help }}</div></div>
 <button class="btn btn-primary" {% if not can_modify %}disabled{% endif %}>{{ button_save }}</button> <a class="btn btn-outline-secondary" href="{{ cancel }}">{{ button_back }}</a></div></div>
+<div class="card mb-4"><div class="card-header"><h2 class="h5 mb-0">{{ text_three }}</h2><p class="mb-0 text-muted">{{ text_three_help }}</p></div><div class="card-body">
+<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="three_enabled" name="three_enabled" value="1"{% if three.enabled %} checked{% endif %}><label class="form-check-label" for="three_enabled">{{ text_three_enabled }}</label></div>
+<div class="row">
+<div class="col-md-3 mb-3"><label class="form-label">{{ text_three_scene }}</label><select class="form-select" name="three_scene">{% for s in three_scenes %}<option value="{{ s }}"{% if three.scene == s %} selected{% endif %}>{% if s == '' %}{{ text_no_scene }}{% else %}{{ s }}{% endif %}</option>{% endfor %}</select></div>
+<div class="col-md-3 mb-3"><label class="form-label">{{ text_three_slot }}</label><select class="form-select" name="three_slot">{% for s in three_slots %}<option value="{{ s }}"{% if three.slot == s %} selected{% endif %}>{{ s }}</option>{% endfor %}</select></div>
+<div class="col-md-2 mb-3"><label class="form-label">{{ text_three_count }}</label><input class="form-control" type="number" min="50" max="800" name="three_count" value="{{ three.count }}"></div>
+<div class="col-md-2 mb-3"><label class="form-label">{{ text_three_color }}</label><input class="form-control form-control-color" type="color" name="three_color" value="{{ three.color }}"></div>
+<div class="col-md-2 mb-3"><label class="form-label">{{ text_three_speed }}</label><input class="form-control" type="number" min="0.01" max="0.20" step="0.01" name="three_speed" value="{{ three.speed }}"></div>
+</div>
+<div class="form-text">{{ text_three_help }}</div>
+</div></div>
+<div class="card mb-4"><div class="card-header"><h2 class="h5 mb-0">{{ text_conditions }}</h2><p class="mb-0 text-muted">{{ text_conditions_help }}</p></div><div class="card-body">
+<textarea class="form-control font-monospace" name="conditions" rows="18" spellcheck="false" aria-label="{{ text_conditions }}">{{ conditions_json }}</textarea>
+<details class="mt-3"><summary>{{ text_condition_fields }}</summary>
+<p class="mt-2 mb-1"><code>{{ condition_fields|join(', ') }}</code></p>
+<p class="mb-1">query.*: <code>{{ condition_query_keys|join(', ') }}</code></p>
+<p class="mb-1">{{ text_condition_operators }}: <code>{{ condition_operators|join(', ') }}</code></p>
+<p class="mb-0">{{ text_condition_example }}</p>
+</details>
+</div></div>
 <div class="card"><div class="card-header"><h2 class="h5 mb-0">{{ text_template_editor }}</h2><p class="mb-0 text-muted">{{ text_template_help }}</p></div><div class="card-body">
 {% for key in template_keys %}<details class="mb-3"{% if key == focus_template %} open{% endif %}><summary><code>{{ key }}.twig</code></summary><textarea class="form-control font-monospace mt-2" name="templates[{{ key }}]" rows="14" maxlength="131072" spellcheck="false">{{ template_sources[key] ?? '' }}</textarea><a class="btn btn-sm btn-outline-secondary mt-2" href="{{ preview_links[key] }}" target="theme-preview">{{ text_preview }}</a></details>{% endfor %}
 </div></div></form>

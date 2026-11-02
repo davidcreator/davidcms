@@ -45,6 +45,19 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['theme_primary'] = (string)$this->config->get('catalog_theme_primary', '#6d28d9');
         $data['theme_surface'] = (string)$this->config->get('catalog_theme_surface', '#ffffff');
 
+        // F12-01: o tema pode pedir Three.js em QUALQUER rota, nao apenas na
+        // home. O header e o unico ponto que carrega o importmap aprovado;
+        // o tema continua sem poder escrever <script> ou |raw.
+        $themeThree = $this->config->get('catalog_theme_three', []);
+        if (is_array($themeThree) && !empty($themeThree['enabled'])) {
+            $data['has_3d'] = true;
+            if (empty($data['three_runtime_base'])) {
+                $data['three_runtime_base'] = rtrim((string)$this->config->get('site_url', ''), '/') . '/'
+                    . $this->three_asset_manifest->publicBasePath();
+            }
+        }
+        $data['theme_classes'] = implode(' ', (array)$this->config->get('catalog_theme_classes', []));
+
         // F4-07 (ADR 0031): canonical + Open Graph/Twitter + descoberta do sitemap.
         // Regra honesta: canonical/og:url SÓ quando a requisição chegou por caminho
         // limpo — com ?route= o canonical derivado ficaria errado e canonical

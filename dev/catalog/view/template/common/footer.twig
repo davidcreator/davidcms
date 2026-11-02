@@ -1,4 +1,5 @@
 {# dev/catalog/view/template/common/footer.twig — assinatura + legais/sociais (F3-01) #}
+{% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'footer_top' %}{% include 'partial/theme-scene.twig' %}{% endif %}
 <footer class="site-footer">
   <div class="container">
     <small>{{ text_powered }} · {{ text_copyright }}</small>

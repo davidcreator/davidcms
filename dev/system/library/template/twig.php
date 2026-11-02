@@ -33,6 +33,8 @@ final class Twig {
     private \Twig\Environment $twig;
     private bool $cacheEnabled;
     private string $directory;
+    /** @var array<string, mixed> Globais seguros publicados pelo tema (F12-01). */
+    private array $themeGlobals = [];
 
     public function __construct(string $directory = '', bool $cache = false) {
         $this->cacheEnabled = $cache;
@@ -46,6 +48,40 @@ final class Twig {
         $this->twig = new \Twig\Environment(new \Twig\Loader\FilesystemLoader($paths), [
             'autoescape'=>'html', 'cache'=>$cache ? $cacheDir : false, 'auto_reload'=>true
         ]);
+        $this->applyThemeGlobals($this->twig);
+    }
+
+    /**
+     * F12-01: publica APENAS escalares/listas planas como globais Twig, para
+     * que TODAS as telas (header, footer, home, qualquer rota) enxerguem as
+     * condicoes do tema. Objetos, closures, recursos, HTML e arrays aninhados
+     * sao descartados; Twig\Markup nao e aceito (sem |raw, sem HTML confiavel).
+     * @param array<string, mixed> $globals
+     */
+    public function setThemeGlobals(array $globals): void {
+        $safe = [];
+        foreach ($globals as $name => $value) {
+            if (!is_string($name) || preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/D', $name) !== 1) continue;
+            if (is_string($value)) {
+                if (strlen($value) <= 256 && !preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $value)) $safe[$name] = $value;
+                continue;
+            }
+            if (is_bool($value) || is_int($value) || (is_float($value) && is_finite($value))) { $safe[$name] = $value; continue; }
+            if (is_array($value)) {
+                $flat = [];
+                foreach ($value as $k => $v) {
+                    if (count($flat) >= 64) break;
+                    if (is_scalar($v) && (!is_string($v) || strlen($v) <= 256)) $flat[$k] = $v;
+                }
+                $safe[$name] = $flat;
+            }
+        }
+        $this->themeGlobals = $safe;
+        $this->applyThemeGlobals($this->twig);
+    }
+
+    private function applyThemeGlobals(\Twig\Environment $env): void {
+        foreach ($this->themeGlobals as $name => $value) $env->addGlobal($name, $value);
     }
 
     /**
@@ -74,6 +110,8 @@ final class Twig {
         $this->twig = new \Twig\Environment($loader, [
             'autoescape'=>'html', 'cache'=>$this->cacheEnabled ? $cacheDir : false, 'auto_reload'=>true
         ]);
+        // setThemeTemplates reconstrói o Environment: reaplica os globais.
+        $this->applyThemeGlobals($this->twig);
     }
 
     /**
@@ -105,6 +143,7 @@ final class Twig {
             new \Twig\Loader\FilesystemLoader([DIR_SYSTEM . '../catalog/view/template/'])
         ]);
         $env = new \Twig\Environment($loader, ['autoescape'=>'html','cache'=>false,'auto_reload'=>true]);
+        $this->applyThemeGlobals($env);
         $headerHtml = $env->render('common/header.twig', $headerData);
         $footerHtml = $env->render('common/footer.twig', $footerData);
         $viewData = array_replace($pageData, $routeData);
@@ -140,8 +179,11 @@ final class Twig {
         ]);
         $env = new \Twig\Environment($loader, ['autoescape'=>'html','cache'=>false,'auto_reload'=>true]);
         $env->addExtension(new \Twig\Extension\SandboxExtension($policy, true));
+        $this->applyThemeGlobals($env);
         return $env->render($key . '.twig', [
-            'theme'=>['primary'=>'#2563eb','surface'=>'#ffffff'], 'title'=>'Theme preview',
+            'theme'=>['primary'=>'#2563eb','surface'=>'#ffffff','vars'=>[],'flags'=>[],'classes'=>[],'matched'=>[]],
+            'theme_scene'=>['enabled'=>false,'scene'=>'','slot'=>'hero','count'=>400,'color'=>'#8a4fff','speed'=>0.05],
+            'title'=>'Theme preview',
             'heading_title'=>'Theme preview', 'content'=>'Safe sample content', 'description'=>'Safe sample content',
             'header'=>'', 'footer'=>'', 'cms_home_content'=>'', 'home'=>'#home', 'button_back_home'=>'Home',
             'text_brand'=>'Theme preview', 'text_languages'=>'Languages', 'text_nav_home'=>'Home',

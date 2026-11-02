@@ -36,6 +36,8 @@ $registry = new Registry();
 $registry->set('three_scene_config', new \Reamur\System\Library\Three\SceneConfig());
 $registry->set('three_asset_manifest', new \Reamur\System\Library\Three\AssetManifest());
 $registry->set('cms_page_layout', new \Reamur\System\Library\Cms\PageLayout());
+// F12-01: avaliador declarativo de condicoes de tema (sem eval, sem IO).
+$registry->set('theme_condition_engine', new \Reamur\System\Library\Theme\ConditionEngine());
 
 // 4. Config: default + aplicação (Contrato §4)
 $config = new Config();

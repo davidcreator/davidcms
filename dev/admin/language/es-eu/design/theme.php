@@ -34,3 +34,20 @@ $_['text_restore'] = 'Restaurar revisión';
 $_['text_preview_error'] = 'No se pudo renderizar esta plantilla en la vista previa restringida.';
 $_['text_slug_help'] = 'Use minúsculas, números, guion o guion bajo.';
 $_['text_scene_help'] = 'Solo están disponibles escenas aprobadas.';
+
+// F12-01 — condiciones de tema y Three.js declarativo.
+$_['text_conditions'] = 'Condiciones del tema (JSON)';
+$_['text_conditions_help'] = 'Reglas declarativas evaluadas en el servidor. Sin PHP, eval, scripts, regex ni datos sensibles. Una regla inválida se ignora (fail-closed).';
+$_['text_three'] = 'Three.js declarativo';
+$_['text_three_enabled'] = 'Activar una escena Three.js en el tema';
+$_['text_three_scene'] = 'Escena aprobada';
+$_['text_three_count'] = 'Partículas (50-800)';
+$_['text_three_color'] = 'Color';
+$_['text_three_speed'] = 'Velocidad (0.01-0.20)';
+$_['text_three_slot'] = 'Slot';
+$_['text_three_help'] = 'Solo escenas registradas en el runtime propio. El tema nunca escribe JavaScript: los parámetros se convierten en atributos data-* permitidos.';
+$_['text_condition_fields'] = 'Campos y operadores disponibles';
+$_['text_condition_operators'] = 'Operadores';
+$_['text_condition_example'] = 'Ejemplo: {"version":1,"rules":[{"id":"home-pt","when":{"all":[{"field":"route","op":"eq","value":"common/home"},{"field":"language","op":"in","value":["pt-br","es-eu"]}]},"then":{"primary":"#7c3aed","three":{"enabled":true,"scene":"hero-particles","slot":"hero","count":500,"color":"#8a4fff","speed":0.06},"vars":{"hero_variant":"aurora"},"flags":["aurora"]}}]}';
+$_['error_conditions'] = 'Condiciones inválidas; no se guardó nada.';
+$_['error_three'] = 'Parámetros Three.js fuera de la lista permitida; no se guardó nada.';

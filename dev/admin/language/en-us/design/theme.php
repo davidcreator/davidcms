@@ -34,3 +34,20 @@ $_['text_restore'] = 'Restore revision';
 $_['text_preview_error'] = 'This template could not be rendered in the restricted preview.';
 $_['text_slug_help'] = 'Use lowercase letters, numbers, hyphen or underscore.';
 $_['text_scene_help'] = 'Only approved scene configurations are available.';
+
+// F12-01 — theme conditions and declarative Three.js.
+$_['text_conditions'] = 'Theme conditions (JSON)';
+$_['text_conditions_help'] = 'Declarative rules evaluated on the server. No PHP, eval, scripts, regex or sensitive data. An invalid rule is ignored (fail-closed).';
+$_['text_three'] = 'Declarative Three.js';
+$_['text_three_enabled'] = 'Enable a Three.js scene in this theme';
+$_['text_three_scene'] = 'Approved scene';
+$_['text_three_count'] = 'Particles (50-800)';
+$_['text_three_color'] = 'Color';
+$_['text_three_speed'] = 'Speed (0.01-0.20)';
+$_['text_three_slot'] = 'Slot';
+$_['text_three_help'] = 'Only scenes registered in the self-hosted runtime. A theme never writes JavaScript: parameters become allowlisted data-* attributes.';
+$_['text_condition_fields'] = 'Available fields and operators';
+$_['text_condition_operators'] = 'Operators';
+$_['text_condition_example'] = 'Example: {"version":1,"rules":[{"id":"home-pt","when":{"all":[{"field":"route","op":"eq","value":"common/home"},{"field":"language","op":"in","value":["pt-br","es-eu"]}]},"then":{"primary":"#7c3aed","three":{"enabled":true,"scene":"hero-particles","slot":"hero","count":500,"color":"#8a4fff","speed":0.06},"vars":{"hero_variant":"aurora"},"flags":["aurora"]}}]}';
+$_['error_conditions'] = 'Invalid conditions; nothing was saved.';
+$_['error_three'] = 'Three.js parameters outside the allowlist; nothing was saved.';

@@ -5,12 +5,17 @@
    bloqueados — substitui o hero-fallback.webp do guia enquanto não há asset.
    data-model (Cena 2, vazio quando não publicado) acrescenta o logo GLB. #}
 <section class="hero hero--3d" id="top">
+  {# F12-01: quando o tema escolhe o slot 'hero', seus parametros allowlisted
+     substituem os valores globais de SceneConfig; sem tema, hero3d permanece. #}
+  {% set themed = theme_scene.enabled|default(false) and theme_scene.slot|default('hero') == 'hero' %}
+  {% set sc = themed ? theme_scene : hero3d|default({}) %}
+  {% set scName = themed and theme_scene.scene|default('') != '' ? theme_scene.scene : 'hero-particles' %}
   <div class="hero-3d__canvas" aria-hidden="true"
-       {% if hero3d.enabled %}data-scene="hero-particles"
-       data-count="{{ hero3d.count }}"
-       data-color="{{ hero3d.color }}"
-       data-speed="{{ hero3d.speed }}"
-       data-model="{{ hero3d.model }}"{% endif %}>
+       {% if sc.enabled|default(false) %}data-scene="{{ scName }}"
+       data-count="{{ sc.count|default(400) }}"
+       data-color="{{ sc.color|default('#8a4fff') }}"
+       data-speed="{{ sc.speed|default(0.05) }}"
+       data-model="{{ sc.model|default('') }}"{% endif %}>
     <div class="hero-3d__fallback" data-fallback></div>
   </div>
   <div class="container hero-3d__content">
