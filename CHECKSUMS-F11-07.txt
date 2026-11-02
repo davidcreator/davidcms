@@ -1,0 +1,7 @@
+# F11-07 — integridade do pacote de inventario
+# Formato: CRC32  SHA256  tamanho(bytes)  caminho
+
+9fe37b44  1ab9c422de37fecd63d161c3522173d0c015f6eb3c3099d076b0530cd41a56d3  2182  F11-07-INDICE.md
+e6b84739  69e593209f0de8edb7354ce27318ea3c5a3ef301dabc7ce0c8623ac242d7e9fe  10370  docs/F11-07-Inventario-Checkers.md
+1ab70ca7  54f323d5b15c9a9ed5763c76c2222bf6c891b189e70fbea7cb0fc3d0416f7616  29427  tools/checkers-inventory.json
+e27d97d4  5b87ab4b2dd2a12549216da7c5393cc51c1caf6275d00ef09eeaccf6a2243cd5  3086  tools/verify-checkers-inventory.py

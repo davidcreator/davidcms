@@ -1,0 +1,668 @@
+{
+  "task": "F11-07",
+  "description": "Inventario auditado dos checkers tools/e2e/*.cjs com saida nao-zero no main @ fb7b56055",
+  "method": "replica de 777 arquivos; 61 checkers executados; 36 nao-zero; 0 alvos de arquivo ausentes na replica",
+  "total_checkers": 61,
+  "nonzero": 36,
+  "counts": {
+    "MARKER_OR_FINDING": 14,
+    "STATIC_ONLY_FAIL_CLOSED": 4,
+    "REQUIRES_WRAPPER": 7,
+    "BLOCKED_CONTROL": 2,
+    "REQUIRES_ARGS": 5,
+    "REQUIRES_RUNTIME": 4
+  },
+  "policy": "NAO transformar NOT_RUN/STATIC_ONLY em PASS; NAO relaxar checks de seguranca sem evidencia",
+  "findings": [
+    {
+      "file": "check_audio_catalog.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "FAIL audio/video list and upload use the existing Blog controller and ACL / FAIL both media modals provide upload controls and existing-item selection / FAIL page still requires both CMS and Blog modify permissions and keeps document import",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "check_threejs_native_admin.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "FAIL home and 404 consume only normalized system scene settings",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "check_threejs_sandbox.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "FAIL cache-busted admin editor and public runtime URLs prevent stale script UI/runtime",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_bdre_audio_static.cjs",
+      "rc": 1,
+      "category": "STATIC_ONLY_FAIL_CLOSED",
+      "evidence": "FAIL: modal de áudio é separado e não inclui upload/exclusão / FAIL: não há endpoint/modelo de upload ou exclusão de áudio / STATIC_ONLY: fixture, execução isolada do validador JS e varredura de fontes; sem PHP runtime, banco, navegador rea",
+      "action": "Todos/maioria dos checks PASS, mas process.exitCode=1 por fail-closed. NAO trocar para 0 (transformaria NOT_RUN em PASS).",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_bdre_block_copy_static.cjs",
+      "rc": 1,
+      "category": "STATIC_ONLY_FAIL_CLOSED",
+      "evidence": "FAIL: ações copiar/colar são explícitas e acessíveis na interface / FAIL: colar valida estrutura/contexto e limite JSON antes de alterar estado / STATIC_ONLY: fixture + clone helper JS isolado em VM e inspeção de fonte; sem PHP runtime, bro",
+      "action": "Todos/maioria dos checks PASS, mas process.exitCode=1 por fail-closed. NAO trocar para 0 (transformaria NOT_RUN em PASS).",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_bdre_file_static.cjs",
+      "rc": 1,
+      "category": "STATIC_ONLY_FAIL_CLOSED",
+      "evidence": "FAIL: catálogo passa raízes físicas confiáveis ao renderer / STATIC_ONLY: JS/fixtures e varredura de fontes; sem PHP, SQL, browser/app, staging, deploy, migration ou banco.",
+      "action": "Todos/maioria dos checks PASS, mas process.exitCode=1 por fail-closed. NAO trocar para 0 (transformaria NOT_RUN em PASS).",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_bdre_hierarchical_reordering_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "Error: FAIL: pure hierarchy move helper is present",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_bdre_spacer_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "Error: FAIL: inspector exposes localized fixed-height choices",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_bdre_table_static.cjs",
+      "rc": 1,
+      "category": "STATIC_ONLY_FAIL_CLOSED",
+      "evidence": "STATIC_ONLY: sem PHP, SQL, browser, app, staging, deploy, migration ou banco. / FAIL: schema server-side contém v2 e estrutura de linhas/células / FAIL: renderer usa elementos de tabela fixos e renderizador inline escapado",
+      "action": "Todos/maioria dos checks PASS, mas process.exitCode=1 por fail-closed. NAO trocar para 0 (transformaria NOT_RUN em PASS).",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_bdre_unsaved_changes_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "Error: FAIL: no autosave or network request was introduced",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f805.cjs",
+      "rc": 2,
+      "category": "REQUIRES_WRAPPER",
+      "evidence": "BLOQUEADO/ERRO: Use o wrapper e2e_f805.sh --help.",
+      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f806_http.cjs",
+      "rc": 2,
+      "category": "REQUIRES_WRAPPER",
+      "evidence": "BLOQUEADO/ERRO: Use e2e_f806.sh --help.",
+      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f807_http.cjs",
+      "rc": 2,
+      "category": "REQUIRES_WRAPPER",
+      "evidence": "BLOQUEADO/ERRO: Use e2e_f807.sh --help.",
+      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f808_http.cjs",
+      "rc": 2,
+      "category": "REQUIRES_WRAPPER",
+      "evidence": "BLOQUEADO/ERRO: Use e2e_f808.sh --help.",
+      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f809_http.cjs",
+      "rc": 2,
+      "category": "REQUIRES_WRAPPER",
+      "evidence": "BLOQUEADO/ERRO: Use e2e_f809.sh --help.",
+      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f810_http.cjs",
+      "rc": 2,
+      "category": "REQUIRES_WRAPPER",
+      "evidence": "BLOQUEADO/ERRO: requisito de execução não atendido; consulte --help. Detalhes omitidos por privacidade.",
+      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f811_http.cjs",
+      "rc": 2,
+      "category": "REQUIRES_WRAPPER",
+      "evidence": "BLOQUEADO/ERRO: Use e2e_f811.sh --help.",
+      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f812.cjs",
+      "rc": 2,
+      "category": "BLOCKED_CONTROL",
+      "evidence": "\"status\": \"blocked\",",
+      "action": "Controle de consolidacao que reporta status=blocked por design. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f901.cjs",
+      "rc": 2,
+      "category": "BLOCKED_CONTROL",
+      "evidence": "\"status\": \"blocked\",",
+      "action": "Controle de consolidacao que reporta status=blocked por design. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f903.cjs",
+      "rc": 2,
+      "category": "REQUIRES_ARGS",
+      "evidence": "Uso: node e2e_f903.cjs --check [--sql <arquivo>] [--inventory <json>] [--fixture <sql>]",
+      "action": "Invocar com os argumentos de CLI declarados no Uso. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f904.cjs",
+      "rc": 2,
+      "category": "REQUIRES_ARGS",
+      "evidence": "Uso: node e2e_f904.cjs --check [--inventory docs/F9-03-Inventario-Banco-DavidAlmeida.json] [--map docs/F9-04-Mapa-Migracao-DavidAlmeida.json] [--sql /caminho/privado/bd-davidalmeida.sql]",
+      "action": "Invocar com os argumentos de CLI declarados no Uso. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f905.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "FAIL F9-05: F9-05 não deve entregar schema.sql",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f914.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "- no HTML injection, network, or DB code allowed",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f915.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "- template needs explicit trusted-render and legacy fallback branches",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f917.cjs",
+      "rc": 2,
+      "category": "REQUIRES_ARGS",
+      "evidence": "Usage: node e2e_f917.cjs <path-to-DavidCMS-checkout>",
+      "action": "Invocar com os argumentos de CLI declarados no Uso. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f918_preflight.cjs",
+      "rc": 2,
+      "category": "REQUIRES_ARGS",
+      "evidence": "Usage: node e2e_f918_preflight.cjs <path-to-DavidCMS-checkout>",
+      "action": "Invocar com os argumentos de CLI declarados no Uso. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f919_static.cjs",
+      "rc": 2,
+      "category": "REQUIRES_ARGS",
+      "evidence": "Usage: node e2e_f919_static.cjs <checkout-or-F9-19-package-root>",
+      "action": "Invocar com os argumentos de CLI declarados no Uso. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f922_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "- inline editor/DOM reconstruction missing",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f923_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "- missing source marker: renderInserter() / - missing source marker: this.undoStack.length > 50",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f925_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "- unexpected persistence/network marker sessionStorage / - unexpected persistence/network marker fetch( / - unexpected persistence/network marker XMLHttpRequest",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f926_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "- native inserter buttons must not have overridden list roles",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "e2e_f927_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "- base SHA manifest incomplete",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "threejs_admin_preview_sandbox_isolated.cjs",
+      "rc": 1,
+      "category": "REQUIRES_RUNTIME",
+      "evidence": "FAIL isolated Three.js sandbox browser test: Playwright is missing; install it only in the local QA environment.",
+      "action": "Documentar invocacao (browser/env). NAO alterar: a recusa e a protecao.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "threejs_cms_playwright.cjs",
+      "rc": 1,
+      "category": "REQUIRES_RUNTIME",
+      "evidence": "FAIL E2E: Playwright is missing. Install it locally with npm ci --prefix dev/system/storage, then install Chromium.",
+      "action": "Documentar invocacao (browser/env). NAO alterar: a recusa e a protecao.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "threejs_native_admin_playwright.cjs",
+      "rc": 1,
+      "category": "REQUIRES_RUNTIME",
+      "evidence": "FAIL native Three.js E2E: Playwright is missing; install it only in the local test environment.",
+      "action": "Documentar invocacao (browser/env). NAO alterar: a recusa e a protecao.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    {
+      "file": "threejs_native_readonly_playwright.cjs",
+      "rc": 1,
+      "category": "REQUIRES_RUNTIME",
+      "evidence": "FAIL read-only native Three.js E2E: Playwright is missing; install it only in the local test environment.",
+      "action": "Documentar invocacao (browser/env). NAO alterar: a recusa e a protecao.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    }
+  ],
+  "by_file": {
+    "check_audio_catalog.cjs": {
+      "file": "check_audio_catalog.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "FAIL audio/video list and upload use the existing Blog controller and ACL / FAIL both media modals provide upload controls and existing-item selection / FAIL page still requires both CMS and Blog modify permissions and keeps document import",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "check_threejs_native_admin.cjs": {
+      "file": "check_threejs_native_admin.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "FAIL home and 404 consume only normalized system scene settings",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "check_threejs_sandbox.cjs": {
+      "file": "check_threejs_sandbox.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "FAIL cache-busted admin editor and public runtime URLs prevent stale script UI/runtime",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_bdre_audio_static.cjs": {
+      "file": "e2e_bdre_audio_static.cjs",
+      "rc": 1,
+      "category": "STATIC_ONLY_FAIL_CLOSED",
+      "evidence": "FAIL: modal de áudio é separado e não inclui upload/exclusão / FAIL: não há endpoint/modelo de upload ou exclusão de áudio / STATIC_ONLY: fixture, execução isolada do validador JS e varredura de fontes; sem PHP runtime, banco, navegador rea",
+      "action": "Todos/maioria dos checks PASS, mas process.exitCode=1 por fail-closed. NAO trocar para 0 (transformaria NOT_RUN em PASS).",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_bdre_block_copy_static.cjs": {
+      "file": "e2e_bdre_block_copy_static.cjs",
+      "rc": 1,
+      "category": "STATIC_ONLY_FAIL_CLOSED",
+      "evidence": "FAIL: ações copiar/colar são explícitas e acessíveis na interface / FAIL: colar valida estrutura/contexto e limite JSON antes de alterar estado / STATIC_ONLY: fixture + clone helper JS isolado em VM e inspeção de fonte; sem PHP runtime, bro",
+      "action": "Todos/maioria dos checks PASS, mas process.exitCode=1 por fail-closed. NAO trocar para 0 (transformaria NOT_RUN em PASS).",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_bdre_file_static.cjs": {
+      "file": "e2e_bdre_file_static.cjs",
+      "rc": 1,
+      "category": "STATIC_ONLY_FAIL_CLOSED",
+      "evidence": "FAIL: catálogo passa raízes físicas confiáveis ao renderer / STATIC_ONLY: JS/fixtures e varredura de fontes; sem PHP, SQL, browser/app, staging, deploy, migration ou banco.",
+      "action": "Todos/maioria dos checks PASS, mas process.exitCode=1 por fail-closed. NAO trocar para 0 (transformaria NOT_RUN em PASS).",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_bdre_hierarchical_reordering_static.cjs": {
+      "file": "e2e_bdre_hierarchical_reordering_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "Error: FAIL: pure hierarchy move helper is present",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_bdre_spacer_static.cjs": {
+      "file": "e2e_bdre_spacer_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "Error: FAIL: inspector exposes localized fixed-height choices",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_bdre_table_static.cjs": {
+      "file": "e2e_bdre_table_static.cjs",
+      "rc": 1,
+      "category": "STATIC_ONLY_FAIL_CLOSED",
+      "evidence": "STATIC_ONLY: sem PHP, SQL, browser, app, staging, deploy, migration ou banco. / FAIL: schema server-side contém v2 e estrutura de linhas/células / FAIL: renderer usa elementos de tabela fixos e renderizador inline escapado",
+      "action": "Todos/maioria dos checks PASS, mas process.exitCode=1 por fail-closed. NAO trocar para 0 (transformaria NOT_RUN em PASS).",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_bdre_unsaved_changes_static.cjs": {
+      "file": "e2e_bdre_unsaved_changes_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "Error: FAIL: no autosave or network request was introduced",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f805.cjs": {
+      "file": "e2e_f805.cjs",
+      "rc": 2,
+      "category": "REQUIRES_WRAPPER",
+      "evidence": "BLOQUEADO/ERRO: Use o wrapper e2e_f805.sh --help.",
+      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f806_http.cjs": {
+      "file": "e2e_f806_http.cjs",
+      "rc": 2,
+      "category": "REQUIRES_WRAPPER",
+      "evidence": "BLOQUEADO/ERRO: Use e2e_f806.sh --help.",
+      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f807_http.cjs": {
+      "file": "e2e_f807_http.cjs",
+      "rc": 2,
+      "category": "REQUIRES_WRAPPER",
+      "evidence": "BLOQUEADO/ERRO: Use e2e_f807.sh --help.",
+      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f808_http.cjs": {
+      "file": "e2e_f808_http.cjs",
+      "rc": 2,
+      "category": "REQUIRES_WRAPPER",
+      "evidence": "BLOQUEADO/ERRO: Use e2e_f808.sh --help.",
+      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f809_http.cjs": {
+      "file": "e2e_f809_http.cjs",
+      "rc": 2,
+      "category": "REQUIRES_WRAPPER",
+      "evidence": "BLOQUEADO/ERRO: Use e2e_f809.sh --help.",
+      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f810_http.cjs": {
+      "file": "e2e_f810_http.cjs",
+      "rc": 2,
+      "category": "REQUIRES_WRAPPER",
+      "evidence": "BLOQUEADO/ERRO: requisito de execução não atendido; consulte --help. Detalhes omitidos por privacidade.",
+      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f811_http.cjs": {
+      "file": "e2e_f811_http.cjs",
+      "rc": 2,
+      "category": "REQUIRES_WRAPPER",
+      "evidence": "BLOQUEADO/ERRO: Use e2e_f811.sh --help.",
+      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f812.cjs": {
+      "file": "e2e_f812.cjs",
+      "rc": 2,
+      "category": "BLOCKED_CONTROL",
+      "evidence": "\"status\": \"blocked\",",
+      "action": "Controle de consolidacao que reporta status=blocked por design. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f901.cjs": {
+      "file": "e2e_f901.cjs",
+      "rc": 2,
+      "category": "BLOCKED_CONTROL",
+      "evidence": "\"status\": \"blocked\",",
+      "action": "Controle de consolidacao que reporta status=blocked por design. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f903.cjs": {
+      "file": "e2e_f903.cjs",
+      "rc": 2,
+      "category": "REQUIRES_ARGS",
+      "evidence": "Uso: node e2e_f903.cjs --check [--sql <arquivo>] [--inventory <json>] [--fixture <sql>]",
+      "action": "Invocar com os argumentos de CLI declarados no Uso. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f904.cjs": {
+      "file": "e2e_f904.cjs",
+      "rc": 2,
+      "category": "REQUIRES_ARGS",
+      "evidence": "Uso: node e2e_f904.cjs --check [--inventory docs/F9-03-Inventario-Banco-DavidAlmeida.json] [--map docs/F9-04-Mapa-Migracao-DavidAlmeida.json] [--sql /caminho/privado/bd-davidalmeida.sql]",
+      "action": "Invocar com os argumentos de CLI declarados no Uso. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f905.cjs": {
+      "file": "e2e_f905.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "FAIL F9-05: F9-05 não deve entregar schema.sql",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f914.cjs": {
+      "file": "e2e_f914.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "- no HTML injection, network, or DB code allowed",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f915.cjs": {
+      "file": "e2e_f915.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "- template needs explicit trusted-render and legacy fallback branches",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f917.cjs": {
+      "file": "e2e_f917.cjs",
+      "rc": 2,
+      "category": "REQUIRES_ARGS",
+      "evidence": "Usage: node e2e_f917.cjs <path-to-DavidCMS-checkout>",
+      "action": "Invocar com os argumentos de CLI declarados no Uso. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f918_preflight.cjs": {
+      "file": "e2e_f918_preflight.cjs",
+      "rc": 2,
+      "category": "REQUIRES_ARGS",
+      "evidence": "Usage: node e2e_f918_preflight.cjs <path-to-DavidCMS-checkout>",
+      "action": "Invocar com os argumentos de CLI declarados no Uso. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f919_static.cjs": {
+      "file": "e2e_f919_static.cjs",
+      "rc": 2,
+      "category": "REQUIRES_ARGS",
+      "evidence": "Usage: node e2e_f919_static.cjs <checkout-or-F9-19-package-root>",
+      "action": "Invocar com os argumentos de CLI declarados no Uso. NAO alterar.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f922_static.cjs": {
+      "file": "e2e_f922_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "- inline editor/DOM reconstruction missing",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f923_static.cjs": {
+      "file": "e2e_f923_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "- missing source marker: renderInserter() / - missing source marker: this.undoStack.length > 50",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f925_static.cjs": {
+      "file": "e2e_f925_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "- unexpected persistence/network marker sessionStorage / - unexpected persistence/network marker fetch( / - unexpected persistence/network marker XMLHttpRequest",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f926_static.cjs": {
+      "file": "e2e_f926_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "- native inserter buttons must not have overridden list roles",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "e2e_f927_static.cjs": {
+      "file": "e2e_f927_static.cjs",
+      "rc": 1,
+      "category": "MARKER_OR_FINDING",
+      "evidence": "- base SHA manifest incomplete",
+      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "threejs_admin_preview_sandbox_isolated.cjs": {
+      "file": "threejs_admin_preview_sandbox_isolated.cjs",
+      "rc": 1,
+      "category": "REQUIRES_RUNTIME",
+      "evidence": "FAIL isolated Three.js sandbox browser test: Playwright is missing; install it only in the local QA environment.",
+      "action": "Documentar invocacao (browser/env). NAO alterar: a recusa e a protecao.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "threejs_cms_playwright.cjs": {
+      "file": "threejs_cms_playwright.cjs",
+      "rc": 1,
+      "category": "REQUIRES_RUNTIME",
+      "evidence": "FAIL E2E: Playwright is missing. Install it locally with npm ci --prefix dev/system/storage, then install Chromium.",
+      "action": "Documentar invocacao (browser/env). NAO alterar: a recusa e a protecao.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "threejs_native_admin_playwright.cjs": {
+      "file": "threejs_native_admin_playwright.cjs",
+      "rc": 1,
+      "category": "REQUIRES_RUNTIME",
+      "evidence": "FAIL native Three.js E2E: Playwright is missing; install it only in the local test environment.",
+      "action": "Documentar invocacao (browser/env). NAO alterar: a recusa e a protecao.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    },
+    "threejs_native_readonly_playwright.cjs": {
+      "file": "threejs_native_readonly_playwright.cjs",
+      "rc": 1,
+      "category": "REQUIRES_RUNTIME",
+      "evidence": "FAIL read-only native Three.js E2E: Playwright is missing; install it only in the local test environment.",
+      "action": "Documentar invocacao (browser/env). NAO alterar: a recusa e a protecao.",
+      "inventoried_at": "2026-11-02",
+      "head": "fb7b56055"
+    }
+  }
+}
