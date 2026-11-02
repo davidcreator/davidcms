@@ -26,7 +26,11 @@
 
    :root,
    [data-bs-theme=light] {
-     --bs-anchor: #ffffff;
+     /* F9-UI-2: #ffffff deixava TODOS os <a> invisiveis no tema claro
+        (branco sobre branco); so apareciam no :hover. #0a58ca mantem >=4.5:1
+        em #fff, #f8f9fa, #e9ecef e #dee2e6 (medido WCAG). */
+     --bs-anchor: #0a58ca;
+     --bs-anchor-hover: #0056b3;
      --bs-blue: #0d6efd;
      --bs-indigo: #6610f2;
      --bs-purple: #6f42c1;
@@ -92,6 +96,8 @@
       do :root legado acima; sem este override, fundos terciários ficam escuros,
       mas o canvas permanece claro e perde contraste. */
    :root[data-bs-theme="dark"] {
+     --bs-anchor: #6ea8fe;
+     --bs-anchor-hover: #9ec5fe;
      --bs-body-color: #dee2e6;
      --bs-body-color-rgb: 222, 226, 230;
      --bs-body-bg: #212529;
@@ -130,7 +136,7 @@
    }
    
    a:hover {
-       color: #0056b3;
+       color: var(--bs-anchor-hover);
        text-decoration: none;
    }
    

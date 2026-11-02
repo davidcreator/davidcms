@@ -1,14 +1,8 @@
-# Indice — ReamurCMS-Padronizacao-UI-Pages-Posts
+# Indice — ReamurCMS-Contraste-Links-Tema-Claro
 
-- `INDICE.md`
+- `dev/admin/view/css/reamurcms.css` (correcao, 3 pontos)
 - `RELATORIO.md`
-- `dev/admin/controller/blog/blog.php`
-- `dev/admin/language/en-us/blog/blog.php`
-- `dev/admin/language/es-eu/blog/blog.php`
-- `dev/admin/language/pt-br/blog/blog.php`
-- `dev/admin/view/css/admin.css`
-- `dev/admin/view/template/blog/blog_list.twig`
+- `INDICE.md`
 
-Total: 8 arquivos. SHA-256 externo no arquivo .sha256.
-
-Os 14 CHECKSUMS*.txt nao fazem parte deste pacote: permanecem identicos no main.
+Total: 3 arquivos. SHA-256 externo no .sha256.
+Os 14 CHECKSUMS*.txt permanecem intactos no main e nao foram reenviados.
