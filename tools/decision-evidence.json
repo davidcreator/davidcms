@@ -1,0 +1,192 @@
+{
+  "task": "F11-15",
+  "head": "1908213b5",
+  "matrix": "tools/decision-matrix.json",
+  "description": "Evidencia tecnica estatica dos 10 MARKER_OR_FINDING. Complementa, NAO substitui, a matriz de decisao.",
+  "policy": "Nenhuma decisao tomada. As 10 continuam PENDING_DECISION em decision-matrix.json. Recomendacoes exigem registro explicito.",
+  "counts": {
+    "entries": 10,
+    "investigated": 3,
+    "inherited": 7,
+    "proposed_A": 6,
+    "proposed_B": 4
+  },
+  "security_note": "D07: NAO reintroduzir |raw. F10-03 proibe raw em templates de tema; twig.php marca HTML confiavel via Twig Markup.",
+  "method": "Leitura estatica de 24 arquivos do main via raw; sem PHP/Twig/browser/banco/staging/deploy.",
+  "entries": [
+    {
+      "id": "D01",
+      "checker": "e2e_bdre_hierarchical_reordering_static.cjs",
+      "nature": "CADEIA_MARCADORES",
+      "conclusion": "Cadeia de marcadores divergentes; requer revisao caso a caso antes de qualquer ajuste.",
+      "proposed_choice": "A",
+      "evidence_level": "INHERITED_F11_11",
+      "evidence_refs": []
+    },
+    {
+      "id": "D02",
+      "checker": "e2e_bdre_spacer_static.cjs",
+      "nature": "MARCADOR_OBSOLETO",
+      "conclusion": "Nao e regressao: F9-71 implementou slider + botoes com SPACER_HEIGHTS em vez de Object.entries(strings.spacer.heights). Mesmos 5 presets e mesma validacao client/server.",
+      "proposed_choice": "A",
+      "evidence_level": "INVESTIGATED_F11_15",
+      "evidence_refs": [
+        {
+          "file": "dev/admin/view/js/blog-block-editor.js",
+          "snippet": "data-spacer-height-range"
+        },
+        {
+          "file": "dev/admin/view/js/blog-block-editor.js",
+          "snippet": "SPACER_HEIGHTS[Number(spacerRange.value)]"
+        },
+        {
+          "file": "dev/admin/view/js/blog-block-editor.js",
+          "snippet": "this.strings.spacerInspector.decrease"
+        },
+        {
+          "file": "dev/admin/view/js/blog-block-editor.js",
+          "snippet": "spacer:{heightLabel:'Altura do espaçador'"
+        },
+        {
+          "file": "dev/admin/view/js/blog-block-editor.js",
+          "snippet": "[16,32,48,64,96]"
+        },
+        {
+          "file": "docs/F9-71-Vertical-Spacer.md",
+          "snippet": "controle range rotulado"
+        },
+        {
+          "file": "tools/e2e/e2e_bdre_spacer_static.cjs",
+          "snippet": "inspector exposes localized fixed-height choices"
+        }
+      ]
+    },
+    {
+      "id": "D03",
+      "checker": "check_audio_catalog.cjs",
+      "nature": "POSSIVEL_MUDANCA_ACL",
+      "conclusion": "Divergencia de ACL nao reauditada nesta frente; manter postura conservadora.",
+      "proposed_choice": "B",
+      "evidence_level": "INHERITED_F11_11",
+      "evidence_refs": []
+    },
+    {
+      "id": "D04",
+      "checker": "check_threejs_native_admin.cjs",
+      "nature": "MARCADOR_OBSOLETO",
+      "conclusion": "Nao e regressao: not_found.php atribui getSettings() a $threeSettings, aplica override intencional de three_not_found_enabled e chama runtime($threeSettings). home.php mantem runtime($siteInfo).",
+      "proposed_choice": "A",
+      "evidence_level": "INVESTIGATED_F11_15",
+      "evidence_refs": [
+        {
+          "file": "dev/catalog/controller/error/not_found.php",
+          "snippet": "$threeSettings = $this->model_setting_setting->getSettings();"
+        },
+        {
+          "file": "dev/catalog/controller/error/not_found.php",
+          "snippet": "$threeJs = $this->three_scene_config->runtime($threeSettings);"
+        },
+        {
+          "file": "dev/catalog/controller/error/not_found.php",
+          "snippet": "$threeSettings['three_not_found_enabled'] = '1';"
+        },
+        {
+          "file": "dev/catalog/controller/common/home.php",
+          "snippet": "$this->three_scene_config->runtime($siteInfo);"
+        },
+        {
+          "file": "tools/e2e/check_threejs_native_admin.cjs",
+          "snippet": "three_scene_config->runtime"
+        }
+      ]
+    },
+    {
+      "id": "D05",
+      "checker": "e2e_bdre_unsaved_changes_static.cjs",
+      "nature": "CONTRATO_HISTORICO",
+      "conclusion": "fetch() real no fluxo de historico de revisoes, disparado por clique; nao e autosave. Nao reauditado nesta frente.",
+      "proposed_choice": "A",
+      "evidence_level": "INHERITED_F11_11",
+      "evidence_refs": []
+    },
+    {
+      "id": "D06",
+      "checker": "e2e_f914.cjs",
+      "nature": "CONTRATO_HISTORICO",
+      "conclusion": "fetch(url, options) no editor vs. contrato F9-14 MVP que proibia rede. Nao reauditado nesta frente.",
+      "proposed_choice": "A",
+      "evidence_level": "INHERITED_F11_11",
+      "evidence_refs": []
+    },
+    {
+      "id": "D07",
+      "checker": "e2e_f915.cjs",
+      "nature": "MARCADOR_OBSOLETO_COM_RESSALVA_DE_SEGURANCA",
+      "conclusion": "NAO e regressao P1. twig.php usa autoescape=html, PROIBE |raw em templates de tema (F10-03) e marca post.block_html/post.description como Twig Markup para a rota blog/blog_info. O checker exige o marcador da arquitetura anterior. Nao se deve reintroduzir |raw.",
+      "proposed_choice": "A",
+      "supersedes": "F11-11 recomendava B / possivel regressao funcional P1; suspeita refutada.",
+      "evidence_level": "INVESTIGATED_F11_15",
+      "evidence_refs": [
+        {
+          "file": "dev/system/library/template/twig.php",
+          "snippet": "'autoescape'=>'html'"
+        },
+        {
+          "file": "dev/system/library/template/twig.php",
+          "snippet": "raw filter stays unavailable to theme source"
+        },
+        {
+          "file": "dev/system/library/template/twig.php",
+          "snippet": "blog/blog_info"
+        },
+        {
+          "file": "dev/system/library/template/twig.php",
+          "snippet": "new \\Twig\\Markup($data['post'][$key], 'UTF-8')"
+        },
+        {
+          "file": "dev/catalog/view/template/blog/blog_info.twig",
+          "snippet": "{{ post.block_html }}"
+        },
+        {
+          "file": "dev/catalog/view/template/blog/blog_info.twig",
+          "snippet": "{{ post.description }}"
+        },
+        {
+          "file": "docs/F9-15-Contrato-Renderer-Publico.json",
+          "snippet": "pass trusted renderer HTML to template"
+        },
+        {
+          "file": "tools/e2e/e2e_f915.cjs",
+          "snippet": "post.block_html|raw"
+        }
+      ]
+    },
+    {
+      "id": "D08",
+      "checker": "e2e_f925_static.cjs",
+      "nature": "DIVERGENCIA_REAL_CONTRATO",
+      "conclusion": "Storage/rede reais enquanto o contrato F9-25 diz PROPOSAL_PENDING. Mais sensivel; nao reauditada nesta frente.",
+      "proposed_choice": "B",
+      "evidence_level": "INHERITED_F11_11",
+      "evidence_refs": []
+    },
+    {
+      "id": "D09",
+      "checker": "e2e_f905.cjs",
+      "nature": "ACHADO_REAL_GOVERNANCA",
+      "conclusion": "schema.sql existe e o checker o proibe. Nao reauditado nesta frente.",
+      "proposed_choice": "B",
+      "evidence_level": "INHERITED_F11_11",
+      "evidence_refs": []
+    },
+    {
+      "id": "D10",
+      "checker": "e2e_f927_static.cjs",
+      "nature": "DRIFT_METADADOS",
+      "conclusion": "Drift de hashes do gate; nao atualizar SHA sem autorizacao. Nao reauditado nesta frente.",
+      "proposed_choice": "B",
+      "evidence_level": "INHERITED_F11_11",
+      "evidence_refs": []
+    }
+  ]
+}
