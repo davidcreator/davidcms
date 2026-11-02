@@ -6,6 +6,15 @@
 <h2 class="h5">{{ text_colors }}</h2><div class="row"><div class="col-md-6 mb-3"><label class="form-label">{{ text_primary }}</label><input class="form-control form-control-color" type="color" name="primary" value="{{ primary }}"></div><div class="col-md-6 mb-3"><label class="form-label">{{ text_surface }}</label><input class="form-control form-control-color" type="color" name="surface" value="{{ surface }}"></div></div>
 <div class="mb-3"><label class="form-label">{{ text_scene }}</label><select class="form-select" name="scene">{% for item in scenes %}<option value="{{ item.id }}"{% if scene == item.id %} selected{% endif %}>{{ item.name }}</option>{% endfor %}</select><div class="form-text">{{ text_scene_help }}</div></div>
 <button class="btn btn-primary" {% if not can_modify %}disabled{% endif %}>{{ button_save }}</button> <a class="btn btn-outline-secondary" href="{{ cancel }}">{{ button_back }}</a></div></div>
+<div class="card mb-4"><div class="card-header"><h2 class="h5 mb-0">{{ text_tokens }}</h2><p class="mb-0 text-muted">{{ text_tokens_help }}</p></div><div class="card-body">
+{% for group in token_groups %}<fieldset class="mb-3"><legend class="h6">{{ _context['text_token_group_' ~ group] }}</legend><div class="row">
+{% for f in token_fields %}{% if f.group == group %}<div class="col-md-3 mb-2"><label class="form-label">{{ f.label }}{% if f.unit %} <small class="text-muted">({{ f.unit }})</small>{% endif %}</label>
+{% if f.type == 'color' %}<input class="form-control form-control-color" type="color" name="tokens[{{ f.key }}]" value="{{ f.value }}">
+{% elseif f.type == 'enum' %}<select class="form-select" name="tokens[{{ f.key }}]">{% for o in f.options %}<option value="{{ o }}"{% if f.value == o %} selected{% endif %}>{{ o }}</option>{% endfor %}</select>
+{% else %}<input class="form-control" type="number" min="{{ f.min }}" max="{{ f.max }}" step="{{ f.step }}" name="tokens[{{ f.key }}]" value="{{ f.value }}">{% endif %}
+</div>{% endif %}{% endfor %}</div></fieldset>{% endfor %}
+<h3 class="h6">{{ text_token_contrast }}</h3><div class="row">{% for p in token_pairs %}<div class="col-md-4 mb-1"><span class="badge {{ p.ok ? 'text-bg-success' : 'text-bg-danger' }}">{{ p.ratio }}:1</span> <code>{{ p.code }}</code></div>{% endfor %}</div>
+</div></div>
 <div class="card mb-4"><div class="card-header"><h2 class="h5 mb-0">{{ text_three }}</h2><p class="mb-0 text-muted">{{ text_three_help }}</p></div><div class="card-body">
 <div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="three_enabled" name="three_enabled" value="1"{% if three.enabled %} checked{% endif %}><label class="form-check-label" for="three_enabled">{{ text_three_enabled }}</label></div>
 <div class="row">

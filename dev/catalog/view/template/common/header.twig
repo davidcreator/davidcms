@@ -38,7 +38,7 @@
   <script src="{{ src }}" defer></script>
   {% endfor %}
 </head>
-<body class="{{ body_class }}{% for c in theme.classes|default([]) %} {{ c|e('html_attr') }}{% endfor %}" data-theme-rules="{{ theme.matched|default([])|join(',')|e('html_attr') }}" style="--theme-primary: {{ theme_primary|default('#6d28d9') }}; --theme-surface: {{ theme_surface|default('#ffffff') }}">
+<body class="{{ body_class }}{% for c in theme.classes|default([]) %} {{ c|e('html_attr') }}{% endfor %}" data-theme-rules="{{ theme.matched|default([])|join(',')|e('html_attr') }}" style="--theme-primary: {{ theme_primary|default('#6d28d9') }}; --theme-surface: {{ theme_surface|default('#ffffff') }}; {{ theme_token_css|default('')|e('html_attr') }}">
 {# A barra visual é customizável; importmap/scripts permanecem neste shell confiável. #}
 {% include 'partial/site_header.twig' with {
   home: home, text_brand: text_brand, text_nav_home: text_nav_home,

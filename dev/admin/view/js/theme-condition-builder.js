@@ -244,6 +244,28 @@
       else ctrl = input(three[key] == null ? '' : three[key], function () { if (!then.three) then.three = {}; then.three[key] = this.value; sync(false); }, key === 'color' ? 'color' : 'number');
       threeBox.appendChild(labelRow(key, ctrl));
     });
+    // F13-B: patch parcial de tokens (then.tokens). O TokenRegistry valida no
+    // servidor; aqui so coletamos valores allowlistados, sem defaults.
+    var tok = (then.tokens && typeof then.tokens === 'object') ? then.tokens : {};
+    var tokBox = el('div', { 'class': 'tcb-tokens' });
+    function setToken(key, value) {
+      if (!then.tokens || typeof then.tokens !== 'object') then.tokens = {};
+      if (value === '' || value == null) delete then.tokens[key]; else then.tokens[key] = value;
+      if (Object.keys(then.tokens).length === 0) delete then.tokens;
+      sync(false);
+    }
+    [['color_text', 'color'], ['radius', 'number'], ['density', 'enum'], ['font_scale', 'number']].forEach(function (pair) {
+      const key = pair[0], type = pair[1];
+      let ctrl;
+      if (type === 'enum') {
+        const opts = [{ value: '', label: L('no_value', 'nenhuma') }].concat(['compact', 'comfortable', 'spacious'].map(function (o) { return { value: o, label: o }; }));
+        ctrl = sel(opts, tok[key] || '', function (v) { setToken(key, v); });
+      } else {
+        ctrl = input(tok[key] == null ? '' : tok[key], function () { setToken(key, this.value); }, type === 'color' ? 'color' : 'number');
+      }
+      tokBox.appendChild(labelRow(key, ctrl));
+    });
+    grid.appendChild(labelRow(L('tokens', 'Tokens'), tokBox));
     grid.appendChild(labelRow(L('three', 'Three.js'), threeBox));
     host.appendChild(grid);
   }

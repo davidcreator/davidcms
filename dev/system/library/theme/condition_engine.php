@@ -85,7 +85,7 @@ final class ConditionEngine {
             'groups'     => ['all', 'any', 'not'],
             'scenes'     => self::SCENES,
             'slots'      => self::SLOTS,
-            'then'       => ['primary', 'surface', 'scene', 'three', 'vars', 'flags', 'classes', 'body_class'],
+            'then'       => ['primary', 'surface', 'scene', 'three', 'vars', 'flags', 'classes', 'body_class', 'tokens'],
             'three'      => ['enabled', 'scene', 'count', 'color', 'speed', 'slot'],
             'limits'     => [
                 'count' => [50, 800], 'speed' => [0.01, 0.20],
@@ -299,6 +299,11 @@ final class ConditionEngine {
                     if (!is_numeric($speed) || (float)$speed < 0.01 || (float)$speed > 0.20) { $errors[] = ['code' => 'three_speed_invalid', 'path' => 'three.speed']; break; }
                     $three['speed'] = (float)number_format((float)$speed, 2, '.', '');
                     $out['three'] = $three; break;
+                case 'tokens':
+                    if (!is_array($value) || $value === [] || !class_exists(TokenRegistry::class)) { $errors[] = ['code' => 'tokens_invalid', 'path' => 'tokens']; break; }
+                    $patch = (new TokenRegistry())->normalize($value, true);
+                    if ($patch === null || $patch === []) { $errors[] = ['code' => 'tokens_invalid', 'path' => 'tokens']; break; }
+                    $out['tokens'] = $patch; break;
                 default:
                     $errors[] = ['code' => 'then_key_invalid', 'path' => (string)$key]; break;
             }
@@ -393,7 +398,7 @@ final class ConditionEngine {
     public function evaluate(array $rules, array $context): array {
         $result = [
             'primary' => null, 'surface' => null, 'scene' => null, 'three' => null,
-            'vars' => [], 'flags' => [], 'classes' => [], 'matched' => [], 'ignored' => [],
+            'vars' => [], 'flags' => [], 'classes' => [], 'tokens' => [], 'matched' => [], 'ignored' => [],
         ];
         foreach (array_slice($rules, 0, self::MAX_RULES) as $rule) {
             if (!is_array($rule) || !isset($rule['when'], $rule['then'])) { $result['ignored'][] = 'rule_invalid'; continue; }
@@ -405,6 +410,7 @@ final class ConditionEngine {
                 if (array_key_exists($k, $then)) $result[$k] = $then[$k];
             }
             if (isset($then['three'])) $result['three'] = $then['three'];
+            if (isset($then['tokens'])) $result['tokens'] = array_replace($result['tokens'], $then['tokens']);
             if (isset($then['vars'])) $result['vars'] = array_replace($result['vars'], $then['vars']);
             foreach (['flags', 'classes'] as $k) {
                 if (isset($then[$k])) $result[$k] = array_values(array_unique(array_merge($result[$k], $then[$k])));

@@ -57,6 +57,9 @@ class Header extends \Reamur\System\Engine\Controller {
             }
         }
         $data['theme_classes'] = implode(' ', (array)$this->config->get('catalog_theme_classes', []));
+        // F13-B: tokens viram declaracoes --rms-* allowlistadas no style do body.
+        $catalogTokens = $this->config->get('catalog_theme_tokens', []);
+        $data['theme_token_css'] = $this->theme_token_registry->css(is_array($catalogTokens) ? $catalogTokens : []);
 
         // F4-07 (ADR 0031): canonical + Open Graph/Twitter + descoberta do sitemap.
         // Regra honesta: canonical/og:url SÓ quando a requisição chegou por caminho

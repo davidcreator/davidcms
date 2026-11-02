@@ -41,6 +41,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['condition_operators']=$spec['operators'];
         $data['condition_max_rules']=$spec['max_rules'];
         foreach(['text_conditions','text_conditions_help','text_three','text_three_enabled','text_three_scene','text_three_count','text_three_color','text_three_speed','text_three_slot','text_three_help','text_condition_fields','text_condition_operators','text_condition_example','error_conditions','error_three'] as $k) $data[$k]=$this->language->get($k);
+        // F13-B: design tokens allowlistados + contraste WCAG medido.
+        $this->applyTokenFormData($data,(isset($config['tokens'])&&is_array($config['tokens']))?$config['tokens']:[]);
+        foreach(['text_tokens','text_tokens_help','text_token_group_typography','text_token_group_shape','text_token_group_light','text_token_group_dark','text_token_contrast','error_tokens'] as $k) $data[$k]=$this->language->get($k);
         // F13-A: builder visual + simulador. O textarea JSON continua sendo a
         // fonte submetida (progressive enhancement); sem JS nada muda.
         $jsonFlags=JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_UNESCAPED_SLASHES;
@@ -50,6 +53,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['builder_languages_json']=json_encode(['en-us','pt-br','es-eu'],$jsonFlags) ?: '[]';
         $data['builder_devices_json']=json_encode(['desktop','tablet','mobile'],$jsonFlags) ?: '[]';
         $labelMap=[
+            'tokens'=>'text_builder_tokens',
             'no_value'=>'text_builder_no_value',
             'add_condition'=>'text_builder_add_condition',
             'add_group'=>'text_builder_add_group',
@@ -125,8 +129,12 @@ class Theme extends \Reamur\System\Engine\Controller {
                                 'speed'=>(string)($post['three_speed']??'0.05'),
                             ];
                             $three=$engine->normalizeThree($threeRaw);
+                            $tokensRaw=(array)($post['tokens']??[]);
+                            $tokenErrors=$this->theme_token_registry->validate($tokensRaw);
+                            $tokensNormalized=$this->theme_token_registry->normalize($tokensRaw);
                             if ($conditionErrors) { $data['error']=$this->language->get('error_conditions').' ('.$conditionErrors[0]['code'].')'; }
                             elseif ($three===null) { $data['error']=$this->language->get('error_three'); }
+                            elseif ($tokenErrors || $tokensNormalized===null) { $data['error']=$this->language->get('error_tokens').' ('.($tokenErrors[0]['code']??'contrast').')'; }
                             else {
                                 $normalized=$engine->normalize($conditions);
                                 $themeConfig=[
@@ -135,6 +143,7 @@ class Theme extends \Reamur\System\Engine\Controller {
                                     'templates'=>$safeTemplates,
                                     'conditions'=>['version'=>1,'rules'=>$normalized['rules']],
                                     'three'=>$three,
+                                    'tokens'=>$tokensNormalized,
                                 ];
                                 $saved=$this->model_design_theme->save($id,['name'=>$name,'slug'=>$slug,'config'=>$themeConfig],(int)$this->user->getUserId());
                                 if ($saved) { $this->response->redirect($this->url->link('design/theme')); return; }
@@ -146,6 +155,7 @@ class Theme extends \Reamur\System\Engine\Controller {
             }
             foreach(['name','slug','primary','surface','scene'] as $k) $data[$k]=(string)($post[$k]??$data[$k]);
             $data['conditions_json']=(string)($post['conditions']??$data['conditions_json']);
+            $this->applyTokenFormData($data,(array)($post['tokens']??[]));
             $data['three']=[
                 'enabled'=>(string)($post['three_enabled']??'0')==='1',
                 'scene'=>(string)($post['three_scene']??''),
@@ -210,6 +220,17 @@ class Theme extends \Reamur\System\Engine\Controller {
     }
 
     /** Contexto do simulador: somente campos/valores allowlisted, sem globais. */
+    /** F13-B: monta os campos e os pares de contraste para o formulario. */
+    private function applyTokenFormData(array &$data, array $raw): void {
+        $registry=$this->theme_token_registry;
+        $normalized=$registry->normalize($raw);
+        $view=$normalized ?? array_replace($registry->defaults(),array_map(static function($v){ return is_scalar($v)?(string)$v:''; },$raw));
+        $data['tokens']=$view;
+        $data['token_fields']=$registry->formFields(fn(string $k): string => $this->language->get('text_token_'.$k),$view);
+        $data['token_groups']=$registry->groups();
+        $data['token_pairs']=$registry->contrastPairs($view);
+    }
+
     private function simulateContext(array $raw): array {
         $spec=$this->theme_condition_engine->spec();
         $str=static function($v,int $max=120): string { return is_scalar($v)?substr((string)$v,0,$max):''; };

@@ -47,6 +47,22 @@ class Theme extends \Reamur\System\Engine\Controller {
         if (($three['scene'] ?? '') === '' && $scene !== '') $three['scene'] = $scene;
         $this->config->set('catalog_theme_three', $three);
 
+
+        // F13-B: design tokens. Base allowlistada + patches das regras casadas.
+        // Se um patch derrubar o contraste AA, ele e ignorado (fail-closed).
+        $tokenRegistry = $this->theme_token_registry;
+        $tokenBase = isset($config['tokens']) && is_array($config['tokens']) ? $config['tokens'] : [];
+        $tokens = $tokenRegistry->normalize($tokenBase) ?? $tokenRegistry->defaults();
+        if (is_array($r['tokens']) && $r['tokens'] !== []) {
+            $merged = array_replace($tokens, $r['tokens']);
+            $readable = true;
+            foreach ($tokenRegistry->contrastPairs($merged) as $pair) {
+                if (!$pair['ok']) { $readable = false; break; }
+            }
+            if ($readable) $tokens = $merged;
+        }
+        $this->config->set('catalog_theme_tokens', $tokens);
+
         // Resultado das condicoes para o header e para o Twig.
         $this->config->set('catalog_theme_vars', $r['vars']);
         $this->config->set('catalog_theme_flags', $r['flags']);
@@ -60,6 +76,7 @@ class Theme extends \Reamur\System\Engine\Controller {
                 'theme' => [
                     'vars' => $r['vars'], 'flags' => $r['flags'],
                     'classes' => $r['classes'], 'matched' => $r['matched'],
+                    'tokens' => $tokens,
                 ],
                 'theme_scene' => $three,
             ]);

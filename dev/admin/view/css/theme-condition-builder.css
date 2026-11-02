@@ -59,3 +59,10 @@
   .tcb-cond { grid-template-columns: 1fr; }
   .tcb-three .tcb-field { grid-template-columns: 1fr; }
 }
+
+/* F13-B — patch de tokens dentro de then. */
+.tcb-tokens { display: flex; flex-direction: column; gap: .35rem;
+  border: 1px solid var(--bs-border-color); border-radius: .35rem; padding: .5rem; }
+.tcb-tokens .tcb-field { display: grid; grid-template-columns: 8rem 1fr; align-items: center; gap: .35rem; }
+.tcb-tokens .tcb-field__label { margin: 0; }
+@media (max-width: 767.98px) { .tcb-tokens .tcb-field { grid-template-columns: 1fr; } }

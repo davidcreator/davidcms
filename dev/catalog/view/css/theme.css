@@ -205,3 +205,41 @@ h2 { font-size: 1.75em; }
 @media (prefers-reduced-motion: reduce) {
   .theme-scene { min-height: 180px; }
 }
+
+/* F13-B — design tokens. Os valores chegam por --rms-* no style do <body>;
+   este bloco apenas os consome, com fallbacks para temas sem tokens. */
+body {
+  --rms-color-text: var(--rms-light-text, #212529);
+  --rms-color-muted: var(--rms-light-muted, #5c6773);
+  --rms-color-surface: var(--rms-light-surface, #ffffff);
+  --rms-color-primary: var(--rms-light-primary, #0a58ca);
+  font-family: var(--rms-font-family, system-ui, sans-serif);
+  font-size: var(--rms-font-size, 16px);
+  line-height: var(--rms-line-height, 1.55);
+  font-weight: var(--rms-font-weight, 400);
+  color: var(--rms-color-text);
+  background-color: var(--rms-color-surface);
+}
+[data-bs-theme="dark"] body {
+  --rms-color-text: var(--rms-dark-text, #dee2e6);
+  --rms-color-muted: var(--rms-dark-muted, #9aa4ae);
+  --rms-color-surface: var(--rms-dark-surface, #212529);
+  --rms-color-primary: var(--rms-dark-primary, #6ea8fe);
+}
+h1, h2, h3, h4, h5, h6 { font-weight: var(--rms-heading-weight, 700); }
+h1 { font-size: calc(var(--rms-font-size, 16px) * var(--rms-font-scale, 1.25) * var(--rms-font-scale, 1.25) * var(--rms-font-scale, 1.25)); }
+h2 { font-size: calc(var(--rms-font-size, 16px) * var(--rms-font-scale, 1.25) * var(--rms-font-scale, 1.25)); }
+h3 { font-size: calc(var(--rms-font-size, 16px) * var(--rms-font-scale, 1.25)); }
+a, .text-muted, .kicker { color: var(--rms-color-muted); }
+.btn.primary, .badge-status { border-radius: var(--rms-radius, 12px); }
+.btn, .card, .hero, .theme-scene {
+  border-radius: var(--rms-radius, 12px);
+  border-width: var(--rms-border-width, 1px);
+  box-shadow: var(--rms-shadow, none);
+}
+.card, .hero { border-top-left-radius: var(--rms-radius-lg, 20px); border-bottom-right-radius: var(--rms-radius-lg, 20px); }
+.section, .hero-3d__content, .site-footer .container {
+  padding-block: calc(var(--rms-space, 8px) * 3 * var(--rms-space-mult, 1));
+}
+.container { max-width: var(--rms-content-width, 1200px); }
+:focus-visible { outline: 2px solid var(--rms-focus-ring, #0a58ca); outline-offset: 2px; }
