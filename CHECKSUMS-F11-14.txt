@@ -1,7 +1,7 @@
 # F11-14 — aplicacao consolidada (hashes do estado final)
 # Formato: CRC32  SHA256  tamanho(bytes)  caminho
 
-664953d8  83b3ef6b08c44bd34c168668b11319a7653fdac687c13a3b8e590b74836404e4  446  CHECKSUMS-F11-06.txt
+e2da11c9  75625e2a86c33ac22fc56d9391bfd0a79bc31cdd343ced2a31bd2aab2643345a  446  CHECKSUMS-F11-06.txt
 99ed90f7  c964d872c2e511d3ad088abd72f3e4156e756bbcf0a9f5272728ae416d4151c2  554  CHECKSUMS-F11-11.txt
 d081da10  bb24b4d5c8959da89264c2f301b81c262030e6792a70a71c865185c254a7fbef  2055  F11-06-INDICE.md
 f8c80964  5abf3ce243a98dec918cc5062a6705a4a9795532b138e61e0e0cecb9f1c23765  1673  F11-11-INDICE.md
@@ -10,5 +10,5 @@ e0a70da9  2269f0290d0a6b7eb12303c4ca23421de7e9dc7eeac371c6ba9029856e314db3  7661
 bc7610b8  7765ed9fc12f998d14ac42dc5dbb328992df6f3706554c48ad3f2004c5c52972  6649  docs/F11-11-Decisoes-Contratos.md
 0b4e958b  3388e370e4b65fc92707363678f920ccb336a8c31b187f938bdfc4f720be7909  5946  docs/F11-14-Aplicacao-Pendentes.md
 39651d28  b679c2bf2d78e9be5e8f1260f823363529405fec864ce332e55ab3603c219d57  10953  tools/decision-matrix.json
-640bb3e3  878e723c7d46e86e98bc695b68eab0de527a1df73398217a411daad02907db5e  3612  tools/release-readiness-report.sh
+ac62eb67  ff3bae2aeccafafcee9c18edffa83b16d8d880bb5242514fac936bb4147de2eb  3320  tools/release-readiness-report.sh
 f971b2fc  6af24508123eebd4722bc02151c5b2d25130e1c559ceee6d312a99cd4944456f  2919  tools/verify-contract-freeze.py
