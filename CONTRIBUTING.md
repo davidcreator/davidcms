@@ -15,7 +15,7 @@ Obrigado pelo interesse! Este guia vale para contribuidores humanos **e** para a
 - Branches: trabalho novo sai de `feature/*` → PR para `staging` → merge em `main` após validação;
 - Commits em **pt-BR, Conventional Commits** (`feat(catalog): ...`, `fix(system): ...`, `docs: ...`);
 - Todo PR usa o [template](.github/pull_request_template.md) — o checklist é obrigatório;
-- CI precisa estar verde: `composer validate`, `php -l`, PHPStan nível 2, link check e `node-deps`;
+- CI precisa estar verde: `composer validate`, `php -l`, PHPStan nível 2, link check, `node-deps` (Node 20 + 22) e `repo-guards`;
 - Decisões arquiteturais: propor ADR em [`agents-ia/decisoes/`](agents-ia/decisoes/) antes de implementar.
 - Dependências: `composer install --working-dir=dev/system/storage` e `npm ci --prefix dev/system/storage`; nunca commitar `vendor/` ou `node_modules/` (ADR 0081).
 

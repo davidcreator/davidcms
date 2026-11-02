@@ -129,7 +129,7 @@ composer install --working-dir=dev/system/storage
 
 ## 5. CI — GitHub Actions
 
-Workflow: `.github/workflows/php.yml` (5 jobs). **F11-01 / ADR 0081** removeu o
+Workflow: `.github/workflows/php.yml` (6 jobs — F11-04 / ADR 0082). **F11-01 / ADR 0081** removeu o
 `defaults.run.working-directory` global: ele era correto para o Composer, mas
 fazia o `find dev ...` do `php-lint` rodar **dentro** de `dev/system/storage/`,
 onde não existe `dev/` — o job passava verde sem lintar nenhum arquivo.
@@ -138,9 +138,11 @@ onde não existe `dev/` — o job passava verde sem lintar nenhum arquivo.
 | --- | --- | --- |
 | `composer` | `dev/system/storage` | `composer validate --strict` + `composer install` (cache do `vendor/`) |
 | `php-lint` | **raiz do repo** | `find dev -name '*.php'` → `php -l`; falha se zero arquivos; exclui `storage/vendor/` e `storage/node_modules/` |
-| `docs-links` | **raiz do repo** | lychee em `./**/*.md`, excluindo `node_modules/` (o pacote Playwright traz 27 `.md`) |
+| `docs-links` | **raiz do repo** | lychee v2 em `./**/*.md`, excluindo `node_modules/` (o pacote Playwright traz 27 `.md`) |
 | `static-analysis` | `dev/system/storage` | `composer install` + `composer analyse` (PHPStan nível 2, baseline congelado) |
-| `node-deps` | **raiz do repo** | `npm ci --ignore-scripts --prefix dev/system/storage`, resolução do Playwright e `node --check` em `tools/` + `tests/` |
+| `node-deps` | **raiz do repo** | matrix **Node 20 + 22**: `npm ci --ignore-scripts --prefix dev/system/storage`, resolução do Playwright e `node --check` em `tools/` + `tests/` |
+| `repo-guards` | **raiz do repo** | `verify-deps-layout.sh`, `verify-checksums.sh` e `verify-ci-workflow.sh` — índice do Git, integridade dos manifests e contrato do próprio CI |
+
 
 Regra: **cada job declara o seu cwd**. `composer.json`/`.lock`/`vendor/` e
 `package.json`/`package-lock.json`/`node_modules/` vivem todos em
@@ -148,10 +150,12 @@ Regra: **cada job declara o seu cwd**. `composer.json`/`.lock`/`vendor/` e
 Chromium é instalado manualmente apenas por quem for executar E2E real:
 `npx --prefix dev/system/storage playwright install chromium`.
 
-> ⚠️ Ao aplicar esta frente, o `php-lint` passa a verificar **todos** os ~374
-> arquivos PHP de `dev/`. Erros de sintaxe antes mascarados podem aparecer.
-> Rode `find dev -name '*.php' -not -path '*/storage/vendor/*' -print0 | xargs -0 -n1 php -l`
-> localmente antes do push.
+**F11-04 / ADR 0082:** as actions usam as majors com runtime Node 24 (`checkout@v7`, `setup-node@v7`, `cache@v6`, `setup-php@v2`, `lychee-action@v2`); todos os jobs rodam em **`ubuntu-24.04`** (pinado enquanto `ubuntu-latest` migra para Ubuntu 26.04, entre 19/10 e 19/11/2026), com `concurrency` e `timeout-minutes`. O auditor `bash tools/verify-ci-workflow.sh` impede o retorno de `ubuntu-latest`, de actions antigas ou de um `defaults.run` global.
+
+> ✅ **Risco dissipado (F11-03):** ao aplicar a F11-01, o `php-lint` passou a verificar
+> **todos** os ~374 arquivos PHP de `dev/` e o job ficou **verde no CI real** — nenhum
+> erro de sintaxe antes mascarado apareceu. Ainda assim, antes de um push local:
+> `find dev -name '*.php' -not -path '*/storage/vendor/*' -print0 | xargs -0 -n1 php -l`.
 
 ## 5.1 Dependências Node (ADR 0081)
 

@@ -9,21 +9,39 @@ on:
 permissions:
   contents: read
 
+# Evita dois runs concorrentes no mesmo ref (economia de minutos e menos ruido).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ─────────────────────────────────────────────────────────────────────────────
 # F11-01 / ADR 0081 — NAO usar `defaults.run` global.
 # O composer.json/lock + vendor vivem em dev/system/storage/; o
 # package.json/lock + node_modules do Node tambem vivem la.
 # Um `defaults.run.working-directory` global fazia o `find dev ...` do job
 # php-lint rodar DENTRO de storage/ (onde nao existe dev/), e o job passava
 # VERDE sem lintar nenhum arquivo. Cada job declara o seu cwd agora.
+#
+# F11-04 / ADR 0082 — modernizacao e endurecimento:
+#   * actions nas majors com runtime Node 24 (checkout@v7, setup-node@v7,
+#     cache@v6, setup-php@v2, lychee-action@v2): elimina os avisos de
+#     "Node.js 20 is deprecated ... forced to run on Node.js 24".
+#   * runner PINADO em ubuntu-24.04: `ubuntu-latest` esta em janela de
+#     migracao gradual para Ubuntu 26.04 entre 19/10/2026 e 19/11/2026
+#     (actions/runner-images). Revisar para ubuntu-26.04 apos um run verde.
+#   * timeout-minutes em todos os jobs, concurrency e job `repo-guards`.
+#   * matrix Node 20 + 22 no job node-deps (engines declara >=20).
+# ─────────────────────────────────────────────────────────────────────────────
 
 jobs:
   composer:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: dev/system/storage
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -35,7 +53,7 @@ jobs:
       run: composer validate --strict
 
     - name: Cache Composer packages
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: dev/system/storage/vendor
         key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
@@ -46,9 +64,10 @@ jobs:
       run: composer install --prefer-dist --no-progress --no-interaction
 
   php-lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -73,13 +92,16 @@ jobs:
           | xargs -0 -r -n1 -P4 php -l -d display_errors=0
 
   docs-links:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Link check (docs, agents-ia e README)
-      uses: lycheeverse/lychee-action@v1
+      uses: lycheeverse/lychee-action@v2
       with:
+        # v2 usa o input `token` (default github.token); na v1 era env GITHUB_TOKEN.
+        token: ${{ secrets.GITHUB_TOKEN }}
         args: >-
           --verbose
           --no-progress
@@ -89,11 +111,10 @@ jobs:
           --exclude 'dev/system/storage/node_modules'
           --exclude 'node_modules'
           './**/*.md'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   static-analysis:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: dev/system/storage
@@ -101,7 +122,7 @@ jobs:
     # PHPStan nivel 2. F11-01: o erro real estava em
     # dev/system/library/blog/block_document.php:122 ($version ?? 0).
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -110,7 +131,7 @@ jobs:
         extensions: mbstring, curl, gd, zip, intl
 
     - name: Cache Composer packages
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: dev/system/storage/vendor
         key: ${{ runner.os }}-phpstan-${{ hashFiles('**/composer.lock') }}
@@ -124,19 +145,33 @@ jobs:
       run: composer analyse
 
   node-deps:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     # F11-01 / ADR 0081: dependencias Node (Playwright) moram em
     # dev/system/storage/. Nenhum browser e baixado (--ignore-scripts):
     # este job valida apenas instalacao, resolucao e sintaxe.
+    # F11-04: matrix mantem o minimo declarado (>=20) e antecipa o LTS 22.
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['20', '22']
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
-    - name: Setup Node
-      uses: actions/setup-node@v4
+    - name: Setup Node ${{ matrix.node-version }}
+      uses: actions/setup-node@v7
       with:
-        node-version: '20'
-        cache: npm
-        cache-dependency-path: dev/system/storage/package-lock.json
+        node-version: ${{ matrix.node-version }}
+        # Cache explicito via actions/cache@v6 para incluir a versao na chave.
+        package-manager-cache: false
+
+    - name: Cache npm (por versao do Node)
+      uses: actions/cache@v6
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node${{ matrix.node-version }}-npm-${{ hashFiles('dev/system/storage/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node${{ matrix.node-version }}-npm-
 
     - name: Instalar dependencias Node em dev/system/storage
       run: npm ci --ignore-scripts --no-audit --no-fund --prefix dev/system/storage
@@ -158,3 +193,20 @@ jobs:
           exit 1
         fi
         echo "$COUNT scripts Node verificados."
+
+  repo-guards:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # F11-04 / ADR 0082: guardas de governanca. Nenhum destes scripts instala
+    # dependencias, escreve no repo ou acessa banco/servicos externos.
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Layout de dependencias (indice do Git + .gitignore)
+      run: bash tools/verify-deps-layout.sh
+
+    - name: Integridade dos manifestos CHECKSUMS*.txt
+      run: bash tools/verify-checksums.sh
+
+    - name: Contrato do proprio workflow (actions, runner, guards)
+      run: bash tools/verify-ci-workflow.sh

@@ -79,7 +79,7 @@ O OpenCart provou, ao longo de anos, que a separação em quatro aplicações (`
 
 ```text
 davidcms/
-├── .github/workflows/      # CI (composer ✔ + php -l ✔ + PHPStan ✔ + link check ✔ + node-deps ✔)
+├── .github/workflows/      # CI (composer ✔ + php -l ✔ + PHPStan ✔ + link check ✔ + node-deps ✔ + repo-guards ✔)
 ├── .github/pull_request_template.md   # DoD obrigatório por PR
 ├── .editorconfig           # Formatação unificada (humanos + agentes)
 ├── CONTRIBUTING.md · SECURITY.md · CHANGELOG.md

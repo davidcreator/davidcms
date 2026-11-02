@@ -1,5 +1,12 @@
 # Changelog
 
+## F11-04 — Modernização e endurecimento do CI (2026-11-02)
+- ADR 0082: actions atualizadas para as majors com runtime Node 24 (`checkout@v7`, `setup-node@v7`, `cache@v6`, `setup-php@v2`, `lychee-action@v2`), eliminando os 8 avisos por run.
+- Runner pinado em `ubuntu-24.04` durante a janela de migração do `ubuntu-latest` para Ubuntu 26.04 (19/10–19/11/2026); revisão para 26.04 agendada após um run verde.
+- Novo job `repo-guards` executa `verify-deps-layout.sh`, `verify-checksums.sh` e o novo `verify-ci-workflow.sh` em todo push/PR.
+- `node-deps` passa a validar Node 20 + 22 em matrix (`fail-fast: false`), com cache npm explícito por versão; `concurrency` e `timeout-minutes` em todos os jobs.
+- Documentação, PR template, regras e índice de ADRs atualizados. Sem alteração de código PHP/JS, migration, banco, staging, deploy ou escrita no GitHub.
+
 ## F11-01 — CI e dependências em `dev/system/storage/` (2026-11-02)
 - Move as dependências Node/Playwright 1.64.1 da raiz para `dev/system/storage/` com `package.json` + `package-lock.json` versionados; `node_modules/` ignorado (ADR 0081).
 - Corrige o `php-lint` que passava verde sem lintar nada (`defaults.run.working-directory` global) e o erro do PHPStan em `block_document.php:122` (`$version ?? 0` redundante).
