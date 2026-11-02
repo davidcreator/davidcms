@@ -18,13 +18,39 @@
 <div class="form-text">{{ text_three_help }}</div>
 </div></div>
 <div class="card mb-4"><div class="card-header"><h2 class="h5 mb-0">{{ text_conditions }}</h2><p class="mb-0 text-muted">{{ text_conditions_help }}</p></div><div class="card-body">
-<textarea class="form-control font-monospace" name="conditions" rows="18" spellcheck="false" aria-label="{{ text_conditions }}">{{ conditions_json }}</textarea>
-<details class="mt-3"><summary>{{ text_condition_fields }}</summary>
-<p class="mt-2 mb-1"><code>{{ condition_fields|join(', ') }}</code></p>
-<p class="mb-1">query.*: <code>{{ condition_query_keys|join(', ') }}</code></p>
-<p class="mb-1">{{ text_condition_operators }}: <code>{{ condition_operators|join(', ') }}</code></p>
-<p class="mb-0">{{ text_condition_example }}</p>
-</details>
+<ul class="nav nav-tabs mb-3" role="tablist">
+<li class="nav-item"><button type="button" class="nav-link active" data-tcb-tab="visual">{{ text_builder_visual }}</button></li>
+<li class="nav-item"><button type="button" class="nav-link" data-tcb-tab="json">{{ text_builder_json }}</button></li>
+</ul>
+<div data-tcb-pane="visual">
+  <p class="form-text">{{ text_builder_help }}</p>
+  <div id="theme-condition-builder"
+       data-spec="{{ condition_spec_json|e('html_attr') }}"
+       data-labels="{{ builder_labels_json|e('html_attr') }}"
+       data-routes="{{ builder_routes_json|e('html_attr') }}"
+       data-languages="{{ builder_languages_json|e('html_attr') }}"
+       data-devices="{{ builder_devices_json|e('html_attr') }}"
+       data-url="{{ simulate_url|e('html_attr') }}"
+       data-csrf="{{ csrf_token|e('html_attr') }}">
+    <div class="tcb-rules" id="tcb-rules"></div>
+    <button type="button" class="btn btn-sm btn-outline-primary" id="tcb-add-rule">{{ text_builder_add_rule }}</button>
+  </div>
+  <div class="tcb-simulator mt-4">
+    <h3 class="h6">{{ text_builder_context }}</h3>
+    <div class="row g-2" id="tcb-context"></div>
+    <button type="button" class="btn btn-sm btn-secondary mt-2" id="tcb-simulate">{{ text_builder_simulate }}</button>
+    <div id="tcb-result" class="tcb-result mt-3" aria-live="polite"></div>
+  </div>
+</div>
+<div data-tcb-pane="json" hidden>
+  <textarea class="form-control font-monospace" name="conditions" rows="18" spellcheck="false" aria-label="{{ text_conditions }}">{{ conditions_json }}</textarea>
+  <details class="mt-3"><summary>{{ text_condition_fields }}</summary>
+  <p class="mt-2 mb-1"><code>{{ condition_fields|join(', ') }}</code></p>
+  <p class="mb-1">query.*: <code>{{ condition_query_keys|join(', ') }}</code></p>
+  <p class="mb-1">{{ text_condition_operators }}: <code>{{ condition_operators|join(', ') }}</code></p>
+  <p class="mb-0">{{ text_condition_example }}</p>
+  </details>
+</div>
 </div></div>
 <div class="card"><div class="card-header"><h2 class="h5 mb-0">{{ text_template_editor }}</h2><p class="mb-0 text-muted">{{ text_template_help }}</p></div><div class="card-body">
 {% for key in template_keys %}<details class="mb-3"{% if key == focus_template %} open{% endif %}><summary><code>{{ key }}.twig</code></summary><textarea class="form-control font-monospace mt-2" name="templates[{{ key }}]" rows="14" maxlength="131072" spellcheck="false">{{ template_sources[key] ?? '' }}</textarea><a class="btn btn-sm btn-outline-secondary mt-2" href="{{ preview_links[key] }}" target="theme-preview">{{ text_preview }}</a></details>{% endfor %}

@@ -1,86 +1,86 @@
-# Temas: condicoes robustas + suporte declarativo a Three.js
+# Frente A — Builder visual de condições de tema
 
-Pedido: o sistema de temas ja usa Twig por padrao; era preciso suportar ThreeJS
-tambem e ter condicoes robustas para personalizar um tema por completo.
+Série A→J solicitada pelo usuário: **esta é a frente A**; as próximas seguem
+B (design tokens), C (prévia real), D (editor de cena), E (pacotes
+versionáveis), F (section builder), G (componentes), H (agendamento/rollout),
+I (mídia) e J (escopo multisite), **um pacote instalável por frente**.
+Não é uma frente de auditoria nem um dossiê de governança.
 
-## Diagnostico do HEAD be9ba22ad
+## Diagnóstico
 
-- `dev/system/library/template.php` ja e um adapter multi-engine com Twig como
-  padrao. Three.js NAO e engine de template (produz canvas, nao HTML): ele entra
-  como camada declarativa de cena, reaproveitando o runtime self-hosted aprovado.
-- `dev/catalog/controller/startup/theme.php` aplicava `primary`, `surface`, `scene`
-  e `templates` de forma GLOBAL, sem nenhuma condicao.
-- `scene` so influenciava `common/home`; `has_3d` so existia em `home.php`, entao
-  NENHUMA outra rota carregava o runtime WebGL.
-- Cor/densidade/velocidade da cena vinham de `rms_setting` global, nao do tema.
-- `Twig::setThemeTemplates()` (F10-03) proibe `<script>`, `|raw`, `autoescape` e
-  event-handlers -- correto, mas por isso um tema nao conseguia pedir uma cena.
-- `scene-runner.js::boot()` ja varre `[data-scene]` e transforma `dataset` em
-  `config` da cena: a integracao podia ser 100% declarativa, sem JS novo.
+O `main` 5be826e1f já tem o motor `ConditionEngine` e o suporte declarativo a
+Three.js aplicados, mas o Admin só oferecia um **textarea JSON** para as
+condições e uma prévia com dados sintéticos. Para quem cria temas, isso exige
+conhecer o contrato de cor e não dá feedback algum até salvar.
 
-## O que foi entregue (19 arquivos)
+## Entregue (10 arquivos)
 
-1. **Motor de condicoes** `dev/system/library/theme/condition_engine.php` (novo):
-   15 campos allowlistados (rota, idioma, dispositivo, horario, query, ...),
-   16 operadores, grupos `all`/`any`/`not` aninhados, fail-closed, sem `eval`,
-   sem regex do usuario, sem IO, limites de 40 regras/120 nos/profundidade 5.
-   `validate()`, `normalize()`, `normalizeThree()`, `evaluate()`, `spec()`.
-2. **`framework.php`**: registra `theme_condition_engine` no Registry.
-3. **`startup/theme.php`**: monta contexto seguro, avalia as regras, faz merge dos
-   overrides e publica `catalog_theme_three`, `vars`, `flags`, `classes`, `matched`.
-4. **`Twig::setThemeGlobals()`**: publica `theme` e `theme_scene` para TODAS as
-   telas (inclusive preview sandboxado), aceitando apenas escalares/listas planas.
-5. **`header.php` / `header.twig`**: Three.js pode ser ligado em QUALQUER rota;
-   classes e regras casadas aparecem no `<body>` com escape.
-6. **Slots Three.js**: novo `partial/theme-scene.twig` (so `data-*`, sem script),
-   `home.twig` (`home_top`), `footer.twig` (`footer_top`) e `hero-3d.twig` (`hero`).
-   Qualquer template allowlisted pode incluir o partial onde quiser.
-7. **`theme.css`**: fallback em gradiente + respeito a reduced-motion.
-8. **Admin**: `design/theme.php` salva/valida `conditions` e `three`; novo bloco no
-   `theme_form.twig`; 15 chaves de idioma x3 (pt-br, en-us, es-eu).
-9. **`docs/GUIA-TEMAS-CONDICOES-THREEJS.md`**: contrato, exemplos, seguranca.
+- **Editor visual** no lugar do textarea como modo padrão: regras em cards,
+  grupos `all`/`any`/`not` **aninháveis** até a profundidade do motor, selects
+  de campo/operador vindos de `spec()`, valores com tipos corretos (`in` lista,
+  `between` par, operadores sem valor), editor de `then` (cores, cena, flags,
+  classes, variáveis e os 6 parâmetros Three.js), reordenação por arraste ou
+  botões ↑/↓.
+- **Aba JSON preservada**: o `textarea[name="conditions"]` continua sendo o
+  campo **submetido no POST**. O builder só o sincroniza. Sem JS, com JS
+  bloqueado ou se o script falhar, o modo JSON segue idêntico ao anterior
+  (*progressive enhancement*). Nenhuma mudança no POST do `edit()`.
+- **Simulador de contexto**: rota, idioma, dispositivo, variante, hora, login e
+  UTM. Validação **ao vivo** chamando `design/theme.simulate`, que usa o
+  **mesmo** `validate()/normalize()/evaluate()` do site publicado — sem
+  duplicar regras em JavaScript. Mostra badge válido/inválido, erros por regra,
+  quais regras casaram e os overrides resultantes.
+- **Endpoint somente leitura**: ACL `access`, CSRF, `application/json`,
+  `Cache-Control: no-store`, `nosniff`, zero escrita. O contexto é reconstruído
+  apenas com allowlists (device, idioma, variante, hora 0–23, data validada com
+  `checkdate`, chaves `query.*` do spec). Nada de cookies, headers ou sessão bruta.
+- **JS vanilla sem dependências** (`theme-condition-builder.js`) e CSS com
+  tokens Bootstrap (funciona em claro/escuro e skins). 43 rótulos ×3 idiomas.
+- **Guia** `docs/GUIA-BUILDER-CONDICOES-TEMA.md`.
 
-## Compatibilidade e seguranca
+## Achado de robustez
 
-- Tema legado sem `conditions`/`three` continua IDENTICO (F10-03 intacto):
-  `primary`, `surface`, `scene`, `templates`, `catalog_theme_scene` e
-  `SceneConfig::runtime()` nao mudaram de comportamento.
-- Nenhum `<script>`, `|raw` novo, `autoescape` desligado ou codigo executavel vindo
-  do tema. So cenas registradas em `three/main.js` e slots allowlistados.
-- Nenhum contrato congelado, matriz, `schema.sql`, hash de release gate,
-  `release_approved`, workflow, checker, JS do runtime ou migration foi alterado.
-- Os 14 `CHECKSUMS*.txt` permanecem IDENTICOS: nenhum arquivo desta frente e
-  coberto por eles, entao NAO foram reemitidos nem incluidos no ZIP.
-- Nenhuma escrita remota. F9-27 segue `BLOCKED_NOT_RUN` / `release_approved:false`;
-  BDREditor segue pausado; P2 do F9-18 nao foi reaberto.
+Com PHP 8.5 e `error_display=true` (o `admin.php` do projeto usa `true`), o
+escaper `html_attr` do Twig emite `Deprecated: ord(): Providing a string that
+is not one byte long...` ao escapar JSON com acentos — o aviso **vazava para o
+HTML** e corrompia o `data-labels`. Os JSON dos `data-*` passam a ser
+serializados em **ASCII puro** (`JSON_HEX_*`, sem `JSON_UNESCAPED_UNICODE`):
+`JSON.parse` reconstrói os acentos e nenhum aviso aparece. O campo JSON do
+textarea continua legível em UTF-8.
 
-## Validacao executada
+## Compatibilidade e segurança
 
-| Verificacao | Resultado |
+- `ConditionEngine`, o startup do Catalog, o runtime Three.js, os globais Twig,
+  os slots, os 14 `CHECKSUMS*.txt`, contratos congelados, `schema.sql`,
+  `release_approved`, workflows e checkers **não foram alterados**.
+- Nenhum `|raw` novo, nenhum `<script>` inline, nenhum `innerHTML` com conteúdo
+  do usuário, nenhum `eval`. Dados chegam ao JS por `data-*` com
+  `|e('html_attr')` + `JSON_HEX_*`.
+- Tema existente, rascunho, revisões e publicação seguem exatamente iguais.
+- Nenhuma escrita remota. F9-27 `BLOCKED_NOT_RUN` / `release_approved:false`;
+  BDREditor pausado; P2 do F9-18 não reaberto.
+
+## Validação executada
+
+| Verificação | Resultado |
 |---|---|
-| `php -l` PHP 8.5 real (WASM) nos 9 arquivos PHP | 9 OK / 0 FAIL |
-| Motor de condicoes | 54 PASS / 0 FAIL |
-| Integracao `startup/theme.php` com mocks | 32 PASS / 0 FAIL |
-| Renderizacao Twig 3.14 real + sandbox | 24 PASS / 0 FAIL |
+| `php -l` PHP 8.5 real nos 4 arquivos PHP | 4 OK / 0 FAIL |
+| `node --check` no builder JS | OK |
+| `simulate()` com mocks (ACL, CSRF, casou/não casou, inválido, JSON ruim, sanitização) | 32 PASS / 0 FAIL |
+| Render Twig 3.14 do formulário | 13 PASS / 0 FAIL |
+| **jsdom 29 (DOM real)**: render, adicionar regra, reordenar, operador `exists`, editar lista, abas, `fetch`, resultado | 32 PASS / 0 FAIL |
+| Cruzado: JSON produzido pelo JS validado pelo `ConditionEngine` PHP | 5 PASS / 0 FAIL |
 | `verify-checksums` (A e B) | 14 manifestos / 142 arquivos / 0 divergentes |
 | `repo-health` (A e B) | 6 PASS / 0 FAIL / 0 SKIP |
 | `verify-ci-workflow` | 31 PASS / 0 FAIL |
 | `verify-contract-freeze` | exit 0 |
-| `node --check` runtime Three.js | 2/2 OK |
 
-Os testes de integracao cobrem: regra casada, regra NAO casada, tema 100% legado,
-three de base, three invalido (descartado), JSON de condicoes corrompido
-(fail-closed), dispositivo mobile + UTM, e `normalizeThree()` aceitar/rejeitar.
-A renderizacao Twig cobre: importmap presente/ausente, classes do tema, parametros
-do hero (tema vs legado), os 3 slots, o `SecurityPolicy` da previa e o formulario.
+## Limitações
 
-## Limitacoes
+PHP 8.5 via WASM + Twig 3.14 + jsdom para lint/lógica/DOM. **Não** houve CMS
+completo, banco, sessão Admin autenticada real, browser com rede, WebGL, E2E,
+migration, staging, deploy ou escrita no GitHub. A conferência visual no painel
+é do usuário. **CI verde e health verde ≠ release aprovada.**
 
-PHP usado e o `php-wasm-cli` 8.5 para lint e testes de logica/renderizacao, NAO o
-PHP do servidor de producao. Nao houve CMS completo, banco, Composer/PHPStan no
-host, browser real, WebGL real, E2E Chromium, migration, staging, deploy nem
-escrita no GitHub. A conferencia visual da cena e do tema e do usuario.
-CI verde e health verde NAO significam release aprovada.
-
-Aplicar: substituir os arquivos pelos completos deste ZIP e rodar
+Aplicar: substituir pelos arquivos completos e rodar
 `bash tools/verify-checksums.sh && bash tools/repo-health.sh`.

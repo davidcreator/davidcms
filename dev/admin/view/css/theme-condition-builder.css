@@ -1,0 +1,61 @@
+/* ReamurCMS — Builder visual de condicoes de tema (Frente A).
+   Usa tokens do Bootstrap para funcionar nos temas claro/escuro e nas skins. */
+
+.tcb-field { display: flex; flex-direction: column; gap: .25rem; min-width: 0; }
+.tcb-field__label { font-size: .75rem; margin: 0; color: var(--bs-secondary-color); }
+.tcb-muted { color: var(--bs-secondary-color); font-size: .8rem; }
+.tcb-section-title { font-size: .75rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--bs-secondary-color); margin-bottom: .4rem; }
+
+.tcb-rules { display: flex; flex-direction: column; gap: .75rem; margin-bottom: .75rem; }
+.tcb-rule { border: 1px solid var(--bs-border-color); border-radius: .5rem;
+  background: var(--bs-body-bg); padding: .75rem; }
+.tcb-rule--over { outline: 2px dashed var(--bs-primary); outline-offset: 2px; }
+.tcb-rule__head { display: flex; align-items: end; gap: .4rem; flex-wrap: wrap; margin-bottom: .6rem; }
+.tcb-rule__head .tcb-field { flex: 1 1 180px; }
+.tcb-handle { cursor: grab; color: var(--bs-secondary-color); user-select: none;
+  padding: .25rem .35rem; font-size: 1rem; line-height: 1; }
+.tcb-rule__id { max-width: 260px; }
+.tcb-rule__section { margin-top: .5rem; }
+.tcb-x { padding: .1rem .45rem; line-height: 1.2; }
+
+.tcb-group { border-left: 3px solid var(--bs-primary-border-subtle);
+  background: var(--bs-tertiary-bg); border-radius: .35rem; padding: .5rem; }
+.tcb-group--any { border-left-color: var(--bs-info); }
+.tcb-group--not { border-left-color: var(--bs-danger); }
+.tcb-group__bar { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; margin-bottom: .45rem; }
+.tcb-group__kind { width: auto; min-width: 5.5rem; }
+.tcb-group__badge { font-size: .7rem; font-weight: 700; letter-spacing: .05em;
+  color: var(--bs-secondary-color); }
+.tcb-group__kids { display: flex; flex-direction: column; gap: .4rem; padding-left: .4rem; }
+
+.tcb-cond { display: grid; grid-template-columns: minmax(120px, 1.1fr) minmax(110px, .9fr) minmax(140px, 1.4fr) auto;
+  gap: .4rem; align-items: center; background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color); border-radius: .35rem; padding: .4rem; }
+.tcb-cond__value { min-width: 0; }
+.tcb-cond__value input, .tcb-cond__value select { width: 100%; }
+.tcb-pair { display: flex; align-items: center; gap: .35rem; }
+.tcb-pair input { min-width: 0; flex: 1 1 auto; }
+
+.tcb-then { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .5rem; }
+.tcb-then input[type="color"] { max-width: 90px; }
+.tcb-vars, .tcb-three { display: flex; flex-direction: column; gap: .35rem; }
+.tcb-three { border: 1px solid var(--bs-border-color); border-radius: .35rem; padding: .5rem; }
+.tcb-three .tcb-field { display: grid; grid-template-columns: 5rem 1fr; align-items: center; gap: .35rem; }
+.tcb-three .tcb-field__label { margin: 0; }
+
+.tcb-simulator { border-top: 1px solid var(--bs-border-color); padding-top: .75rem; }
+.tcb-result { border: 1px solid var(--bs-border-color); border-radius: .4rem;
+  padding: .6rem; min-height: 2.5rem; background: var(--bs-tertiary-bg); }
+.tcb-result__head { display: flex; align-items: center; gap: .4rem; margin-bottom: .4rem; }
+.tcb-errors { margin: .3rem 0; padding-left: 1.2rem; color: var(--bs-danger); font-size: .85rem; }
+.tcb-matched { margin: .2rem 0; font-size: .85rem; }
+.tcb-overrides { display: flex; flex-direction: column; gap: .15rem; }
+.tcb-override { display: grid; grid-template-columns: 7rem 1fr; gap: .5rem; font-size: .8rem; }
+.tcb-override code { color: var(--bs-primary); }
+.tcb-override span { word-break: break-word; }
+
+@media (max-width: 767.98px) {
+  .tcb-cond { grid-template-columns: 1fr; }
+  .tcb-three .tcb-field { grid-template-columns: 1fr; }
+}

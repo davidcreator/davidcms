@@ -41,6 +41,58 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['condition_operators']=$spec['operators'];
         $data['condition_max_rules']=$spec['max_rules'];
         foreach(['text_conditions','text_conditions_help','text_three','text_three_enabled','text_three_scene','text_three_count','text_three_color','text_three_speed','text_three_slot','text_three_help','text_condition_fields','text_condition_operators','text_condition_example','error_conditions','error_three'] as $k) $data[$k]=$this->language->get($k);
+        // F13-A: builder visual + simulador. O textarea JSON continua sendo a
+        // fonte submetida (progressive enhancement); sem JS nada muda.
+        $jsonFlags=JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_UNESCAPED_SLASHES;
+        $data['condition_spec_json']=json_encode($spec,$jsonFlags) ?: '{}';
+        $data['simulate_url']=$this->url->link('design/theme.simulate');
+        $data['builder_routes_json']=json_encode(['common/home','blog/blog_list','blog/blog_info','catalog/project_list','catalog/project_info','tool/tool_list','tool/tool_info','cms/page_info','common/contact','checkout/quote','error/not_found'],$jsonFlags) ?: '[]';
+        $data['builder_languages_json']=json_encode(['en-us','pt-br','es-eu'],$jsonFlags) ?: '[]';
+        $data['builder_devices_json']=json_encode(['desktop','tablet','mobile'],$jsonFlags) ?: '[]';
+        $labelMap=[
+            'no_value'=>'text_builder_no_value',
+            'add_condition'=>'text_builder_add_condition',
+            'add_group'=>'text_builder_add_group',
+            'remove'=>'text_builder_remove',
+            'list_hint'=>'text_builder_list_hint',
+            'group_all'=>'text_builder_group_all',
+            'group_any'=>'text_builder_group_any',
+            'group_not'=>'text_builder_group_not',
+            'primary'=>'text_builder_primary',
+            'surface'=>'text_builder_surface',
+            'scene'=>'text_builder_scene',
+            'no_scene'=>'text_builder_no_scene',
+            'flags'=>'text_builder_flags',
+            'classes'=>'text_builder_classes',
+            'vars'=>'text_builder_vars',
+            'add_var'=>'text_builder_add_var',
+            'three'=>'text_builder_three',
+            'rule_id'=>'text_builder_rule_id',
+            'drag'=>'text_builder_drag',
+            'up'=>'text_builder_up',
+            'down'=>'text_builder_down',
+            'when'=>'text_builder_when',
+            'then'=>'text_builder_then',
+            'valid'=>'text_builder_valid',
+            'invalid'=>'text_builder_invalid',
+            'matched'=>'text_builder_matched',
+            'simulating'=>'text_builder_simulating',
+            'offline'=>'text_builder_offline',
+            'route'=>'text_builder_route',
+            'language'=>'text_builder_language',
+            'device'=>'text_builder_device',
+            'variant'=>'text_builder_variant',
+            'hour'=>'text_builder_hour',
+            'logged'=>'text_builder_logged',
+            'query'=>'text_builder_query',
+            'json_invalid'=>'text_builder_json_invalid'
+        ];
+        $builderLabels=[];
+        foreach($labelMap as $jsKey=>$langKey) { $builderLabels[$jsKey]=$this->language->get($langKey); $data[$langKey]=$builderLabels[$jsKey]; }
+        $data['builder_labels_json']=json_encode($builderLabels,$jsonFlags) ?: '{}';
+        $builderAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-builder-a';
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/theme-condition-builder.css?v=' . $builderAssetV);
+        $this->document->addScript($this->config->get('site_url') . 'view/js/theme-condition-builder.js?v=' . $builderAssetV);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
@@ -121,6 +173,73 @@ class Theme extends \Reamur\System\Engine\Controller {
         if (\Reamur\System\Library\Security\Csrf::check($this->session,$this->request->post['csrf_token']??'')) $this->model_design_theme->restoreRevision((int)$theme_id,(int)$revision_id,(int)$this->user->getUserId());
         $this->response->redirect($this->url->link('design/theme.edit|'.(int)$theme_id));
     }
+    /**
+     * F13-A: avalia um rascunho de condicoes SEM gravar nada. Usado pelo
+     * builder para validacao ao vivo e pelo simulador de contexto.
+     * ACL + CSRF + no-store; contexto reconstruido apenas com allowlists.
+     */
+    public function simulate(): void {
+        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
+        $this->response->addHeader('Cache-Control: no-store');
+        $this->response->addHeader('X-Content-Type-Options: nosniff');
+        $jsonFlags=JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE;
+        $fail=static function(string $code) use ($jsonFlags): array {
+            return ['ok'=>false,'errors'=>[['code'=>$code,'path'=>'request','rule'=>-1]],'matched'=>[],'ignored'=>[],'overrides'=>[]];
+        };
+        if (!$this->user->hasPermission('access','design/theme')) { $this->response->setOutput(json_encode($fail('forbidden'),$jsonFlags) ?: '{}'); return; }
+        $post=$this->request->post;
+        if (!\Reamur\System\Library\Security\Csrf::check($this->session,(string)($post['csrf_token']??''))) { $this->response->setOutput(json_encode($fail('csrf'),$jsonFlags) ?: '{}'); return; }
+        $conditions=json_decode((string)($post['conditions']??''),true);
+        $conditions=is_array($conditions)?$conditions:['version'=>1,'rules'=>[]];
+        $engine=$this->theme_condition_engine;
+        $errors=$engine->validate($conditions);
+        $context=$this->simulateContext(isset($post['context'])&&is_array($post['context'])?$post['context']:[]);
+        $result=$engine->evaluate($engine->normalize($conditions)['rules'],$context);
+        $payload=[
+            'ok'=>$errors===[],
+            'errors'=>$errors,
+            'matched'=>$result['matched'],
+            'ignored'=>$result['ignored'],
+            'overrides'=>[
+                'primary'=>$result['primary'],'surface'=>$result['surface'],'scene'=>$result['scene'],
+                'three'=>$result['three'],'vars'=>$result['vars'],'flags'=>$result['flags'],'classes'=>$result['classes'],
+            ],
+            'context'=>$context,
+        ];
+        $this->response->setOutput(json_encode($payload,$jsonFlags) ?: '{}');
+    }
+
+    /** Contexto do simulador: somente campos/valores allowlisted, sem globais. */
+    private function simulateContext(array $raw): array {
+        $spec=$this->theme_condition_engine->spec();
+        $str=static function($v,int $max=120): string { return is_scalar($v)?substr((string)$v,0,$max):''; };
+        $device=$str($raw['device']??'desktop',20);
+        if (!in_array($device,['desktop','tablet','mobile'],true)) $device='desktop';
+        $language=$str($raw['language']??'en-us',16);
+        if (!in_array($language,['en-us','pt-br','es-eu'],true)) $language='en-us';
+        $route=$str($raw['route']??'common/home',120);
+        $variant=$str($raw['variant']??'',4);
+        if (!in_array($variant,['','a','b'],true)) $variant='';
+        $hour=filter_var($raw['hour']??9,FILTER_VALIDATE_INT);
+        if ($hour===false||$hour<0||$hour>23) $hour=9;
+        $date=$str($raw['date']??date('Y-m-d'),10);
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D',$date,$m)!==1 || !checkdate((int)$m[2],(int)$m[3],(int)$m[1])) $date=date('Y-m-d');
+        $stamp=(int)strtotime($date.' 12:00:00');
+        $query=[];
+        $q=isset($raw['query'])&&is_array($raw['query'])?$raw['query']:[];
+        foreach($spec['query_keys'] as $key) {
+            if (array_key_exists($key,$q) && is_scalar($q[$key])) $query[$key]=substr((string)$q[$key],0,120);
+        }
+        $logged=in_array(strtolower($str($raw['logged_in']??'')),['1','true','yes','on'],true);
+        return [
+            'route'=>$route,'path'=>'/'.ltrim($route,'/'),'language'=>$language,
+            'device'=>$device,'mobile'=>$device!=='desktop','logged_in'=>$logged,
+            'user_group'=>$str($raw['user_group']??'',48),'hour'=>(int)$hour,
+            'weekday'=>(int)date('N',$stamp),'date'=>$date,'month'=>(int)date('n',$stamp),
+            'variant'=>$variant,'https'=>true,'ajax'=>false,'query'=>$query,
+        ];
+    }
+
     private function chrome(array &$data): void {
         $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $data['header']=$this->load->controller('common/header',$data);
