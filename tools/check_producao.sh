@@ -136,9 +136,11 @@ echo "$H" | grep -qE "x-frame-options: (sameorigin|deny)" || wn "X-Frame-Options
 echo "$H" | grep -q "referrer-policy:" || wn "Referrer-Policy ausente (definido no cPanel?)"
 ck 13 $RC "headers-seguranca"
 
-echo '── 14 — ausências dev-only (build limpa provada de fora) ──'
+echo '── 14 — ausências dev-only (build limpa + deps Node, provada de fora) ──'
 RC=0
-for p in install/ tests/ agents-ia/ docs/ .git/config prod/ planejamento/; do
+for p in install/ tests/ agents-ia/ docs/ .git/config prod/ planejamento/ \
+         system/storage/node_modules/ system/storage/package.json \
+         system/storage/package-lock.json node_modules/; do
   st=$(code "$DOMAIN/$p")
   case "$st" in 200|301|302) RC=1; echo "   ↳ /$p visível ($st) — apague do servidor!";; esac
 done

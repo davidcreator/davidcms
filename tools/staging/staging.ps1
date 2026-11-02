@@ -80,9 +80,12 @@ function Invoke-Sync {
     Assert-Tool 'dev/' $Dev
     if (-not (Test-Path -LiteralPath $Stg)) { New-Item -ItemType Directory -Path $Stg -Force | Out-Null }
 
-    Write-Step 'sync dev/ -> staging/ (clone completo, menos config e volateis)'
+    Write-Step 'sync dev/ -> staging/ (clone completo, menos config, volateis e deps Node)'
+    # F11-01 / ADR 0081: node_modules e gerado em dev/system/storage/ e NAO
+    # precisa viajar para o clone descartavel (os runners resolvem pelo repo).
     $excludeDirs = @((Join-Path $Stg 'reports')) +
-        ($VolatileDirs | ForEach-Object { Join-Path $Dev ("system\storage\" + ($_ -replace '/', '\')) })
+        ($VolatileDirs | ForEach-Object { Join-Path $Dev ("system\storage\" + ($_ -replace '/', '\')) }) +
+        @((Join-Path $Dev 'system\storage\node_modules'))
 
     Invoke-Robocopy @(
         $Dev, $Stg, '/MIR', '/COPY:DAT', '/R:1', '/W:1',

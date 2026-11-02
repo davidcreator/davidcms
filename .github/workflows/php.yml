@@ -9,13 +9,19 @@ on:
 permissions:
   contents: read
 
-defaults:
-  run:
-    working-directory: dev/system/storage   # onde vive o composer.json (ADR 0003)
+# F11-01 / ADR 0081 — NAO usar `defaults.run` global.
+# O composer.json/lock + vendor vivem em dev/system/storage/; o
+# package.json/lock + node_modules do Node tambem vivem la.
+# Um `defaults.run.working-directory` global fazia o `find dev ...` do job
+# php-lint rodar DENTRO de storage/ (onde nao existe dev/), e o job passava
+# VERDE sem lintar nenhum arquivo. Cada job declara o seu cwd agora.
 
 jobs:
   composer:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dev/system/storage
     steps:
     - uses: actions/checkout@v4
 
@@ -29,7 +35,6 @@ jobs:
       run: composer validate --strict
 
     - name: Cache Composer packages
-      id: composer-cache
       uses: actions/cache@v4
       with:
         path: dev/system/storage/vendor
@@ -50,11 +55,22 @@ jobs:
       with:
         php-version: '8.2'
 
-    - name: PHP syntax check (todos os arquivos de dev/, exceto vendor)
+    - name: PHP syntax check (dev/, exceto dependencias)
+      # Roda na RAIZ do repositorio: sem working-directory (F11-01).
       run: |
-        find dev -name "*.php" -not -path "*/storage/vendor/*" -print0 \
-          | xargs -0 -n1 -P4 php -l -d display_errors=0 \
-          || exit 1
+        set -euo pipefail
+        COUNT=$(find dev -type f -name '*.php' \
+          -not -path '*/storage/vendor/*' \
+          -not -path '*/storage/node_modules/*' | wc -l)
+        if [ "$COUNT" -eq 0 ]; then
+          echo "ERRO: nenhum arquivo PHP encontrado; lint vazio nao e aprovacao." >&2
+          exit 1
+        fi
+        echo "Lintando $COUNT arquivo(s) PHP..."
+        find dev -type f -name '*.php' \
+          -not -path '*/storage/vendor/*' \
+          -not -path '*/storage/node_modules/*' -print0 \
+          | xargs -0 -r -n1 -P4 php -l -d display_errors=0
 
   docs-links:
     runs-on: ubuntu-latest
@@ -70,15 +86,20 @@ jobs:
           --exclude 'reamurcms\.com'
           --exclude 'wa\.me'
           --exclude 'davidalmeida\.xyz/catalog/tools'
+          --exclude 'dev/system/storage/node_modules'
+          --exclude 'node_modules'
           './**/*.md'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   static-analysis:
     runs-on: ubuntu-latest
-    # Fase 1·Tarefa 6c: BLOQUEANTE — núcleo completo (engine/+library/+helper/) e run verde
-    # validados localmente (0 errors, PHPStan level 2). Constantes do Contrato §1.1 são
-    # simuladas por dev/system/storage/phpstan-bootstrap.php (bootstrapFiles).
+    defaults:
+      run:
+        working-directory: dev/system/storage
+    # Fase 1·Tarefa 6c: BLOQUEANTE — nucleo (engine/library/helper),
+    # PHPStan nivel 2. F11-01: o erro real estava em
+    # dev/system/library/blog/block_document.php:122 ($version ?? 0).
     steps:
     - uses: actions/checkout@v4
 
@@ -93,9 +114,47 @@ jobs:
       with:
         path: dev/system/storage/vendor
         key: ${{ runner.os }}-phpstan-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-phpstan-
 
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress --no-interaction
 
     - name: PHPStan (nível 2 — subir por fase, ADR 0004)
       run: composer analyse
+
+  node-deps:
+    runs-on: ubuntu-latest
+    # F11-01 / ADR 0081: dependencias Node (Playwright) moram em
+    # dev/system/storage/. Nenhum browser e baixado (--ignore-scripts):
+    # este job valida apenas instalacao, resolucao e sintaxe.
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: npm
+        cache-dependency-path: dev/system/storage/package-lock.json
+
+    - name: Instalar dependencias Node em dev/system/storage
+      run: npm ci --ignore-scripts --no-audit --no-fund --prefix dev/system/storage
+
+    - name: Resolver Playwright a partir do storage
+      run: |
+        node -e "const { loadPlaywright } = require('./tools/e2e/lib/load-playwright.cjs'); const pw = loadPlaywright(); if (!pw.chromium) process.exit(1); console.log('Playwright resolvido via dev/system/storage/node_modules');"
+
+    - name: Sintaxe dos scripts Node (tools/ e tests/)
+      run: |
+        set -euo pipefail
+        COUNT=0
+        while IFS= read -r -d '' f; do
+          node --check "$f"
+          COUNT=$((COUNT + 1))
+        done < <(find tools tests -type f \( -name '*.js' -o -name '*.cjs' \) -print0)
+        if [ "$COUNT" -eq 0 ]; then
+          echo "ERRO: nenhum script Node encontrado; verificacao vazia nao e aprovacao." >&2
+          exit 1
+        fi
+        echo "$COUNT scripts Node verificados."

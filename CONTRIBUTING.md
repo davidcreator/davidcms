@@ -4,7 +4,7 @@ Obrigado pelo interesse! Este guia vale para contribuidores humanos **e** para a
 
 ## Antes de codar
 
-1. Leia o [README](README.md) e o índice de [`docs/`](docs/README.md);
+1. Leia o [README](README.md) e a pasta [`docs/`](docs/);
 2. Entenda a arquitetura: [MVCL](docs/Arquitetura-MVCL.md) e [Estrutura de Pastas](docs/Estrutura-de-Pastas.md);
 3. Regras invioláveis: [`agents-ia/regras/`](agents-ia/regras/) — contexto global, convenções, padrões de código e protocolo anti-alucinação;
 4. Schema de banco é contrato: [`docs/Dicionario-de-Dados.md`](docs/Dicionario-de-Dados.md) — mudança exige ADR + migração;
@@ -15,8 +15,9 @@ Obrigado pelo interesse! Este guia vale para contribuidores humanos **e** para a
 - Branches: trabalho novo sai de `feature/*` → PR para `staging` → merge em `main` após validação;
 - Commits em **pt-BR, Conventional Commits** (`feat(catalog): ...`, `fix(system): ...`, `docs: ...`);
 - Todo PR usa o [template](.github/pull_request_template.md) — o checklist é obrigatório;
-- CI precisa estar verde: `composer validate`, `php -l` e link check;
+- CI precisa estar verde: `composer validate`, `php -l`, PHPStan nível 2, link check e `node-deps`;
 - Decisões arquiteturais: propor ADR em [`agents-ia/decisoes/`](agents-ia/decisoes/) antes de implementar.
+- Dependências: `composer install --working-dir=dev/system/storage` e `npm ci --prefix dev/system/storage`; nunca commitar `vendor/` ou `node_modules/` (ADR 0081).
 
 ## Arquivos novos
 

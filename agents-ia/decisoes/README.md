@@ -63,4 +63,4 @@ Copiar para o novo arquivo `NNNN-titulo-curto.md`:
 | [0079](0079-temas-catalog-admin.md) | Temas do Catalog como ferramenta Admin separada | 🟡 incremento local; pendente runtime/preview/editor Twig | 2026-10-27 |
 
 | [0080](0080-temas-preview-sandboxed-templates.md) | Fontes Twig de tema com prévia isolada e publicação versionada | 🟡 incremento local | 2026-10-27 |
-| [0080](0080-temas-preview-sandboxed-templates.md) | Fontes Twig de tema com prévia isolada e publicação versionada | 🟡 incremento local | 2026-10-27 |
+| [0081](0081-dependencias-node-em-system-storage-e-ci.md) | Dependências Node em `dev/system/storage/` e correção do CI | ✅ aceita | 2026-11-02 |

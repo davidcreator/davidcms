@@ -21,9 +21,10 @@
 | Tag atual | `v1.0.0` |
 | Branches | `main` (estável) · `staging` (homologação) · `feature/*` |
 | **Idioma padrão** | **`en-us`** (ADR 0001) — secundários: `pt-br`, `es-eu`. Language obrigatória primeiro em `en-us` |
-| Estado do projeto | **Esqueleto**: pastas + `index.html` placeholders; engine/library/webhook já têm código PHP real |
+| Estado do projeto | **Implementado**: núcleo MVCL, admin, catalog, install, blog e BDREditor; frente F11-01 (CI/dependências) em 2026-11-02 |
 | PHP mínimo | `>=8.0.0` |
 | Composer | manifesto em `dev/system/storage/composer.json` — vendor em `dev/system/storage/vendor/` (**não commitar**) |
+| Node/npm | manifesto em `dev/system/storage/package.json` — `node_modules/` em `dev/system/storage/node_modules/` (**não commitar**) |
 
 ---
 
@@ -37,7 +38,7 @@ dev/
 └── system/    → núcleo compartilhado (engine, library, helper, config, storage, webhook)
 ```
 
-Cada aplicação segue **MVCL**: `controller/`, `model/`, `view/`, `language/` + ponto de entrada próprio (`index.php` — hoje placeholder `index.html`).
+Cada aplicação segue **MVCL**: `controller/`, `model/`, `view/`, `language/` + ponto de entrada próprio (`index.php`).
 
 ---
 
@@ -62,6 +63,8 @@ Dentro de Controller/Model, via `$this->`:
 
 `twig/twig ^3.3.7` (padrão de view) · `scssphp/scssphp ^1.10` · `guzzlehttp/guzzle ^7` + promises/psr7/uri-template · `aws/aws-sdk-php ^3.142` · `mustache/mustache ^3` · `latte/latte ^3` · `phpdocumentor/phpdocumentor ^3.4`.
 
+**Node/npm (F11-01 / ADR 0081):** `playwright 1.64.1` é a única dependência de QA/E2E, com `package-lock.json`. Instalação: `npm ci --prefix dev/system/storage`. Runners resolvem por `tools/e2e/lib/load-playwright.cjs` (`createRequire`); nunca `require('playwright')` direto, nunca `NODE_PATH` como mecanismo principal, nunca `node_modules/` na raiz.
+
 ## 6. Documentação viva (`docs/`)
 
 | Doc | Para quê |
@@ -83,13 +86,14 @@ Dentro de Controller/Model, via `$this->`:
 | **0001** | Idioma padrão `en-us`; eliminar referência `en-gb` do `default.php` na Fase 1 |
 | **0002** | Blog híbrido: externo (davidcreator.com) no lançamento; migração interna pós-lançamento — **não criar módulo de blog agora** |
 | **0003** | CI corrigido (`working-directory` + `php -l` + links); `.gitignore` cobre vendor; limpeza do histórico na Fase 1 |
+| **0081** | Dependências Node em `dev/system/storage/` e correção do CI (sem `defaults.run` global; PHPStan verde) |
 | **0004** | Contratos de fundação aprovados: `docs/Contrato-Bootstrap.md`, `docs/Dicionario-de-Dados.md`, `agents-ia/modelos/`, PHPStan/PHPUnit (`require-dev`), `dev/tests/` (única pasta de 1º nível autorizada), `.editorconfig`, PR template |
 
 ## 8. Peculiaridades intencionais (NÃO "corrigir" sem ADR)
 
 1. **`catalog/controller/localisation/`** (sem "z") **vs `admin/controller/localization/`** (com "z") — herança intencional do OpenCart: manter exatamente assim;
-2. **`dev/system/storage/vendor/` commitado** — aceito até a limpeza da Fase 1 (ADR 0003); novos commits não devem adicionar nada ao vendor;
-3. **`config/default.php` com restos `en-gb`** — resolvido pela ADR 0001; a mudança ocorre na Fase 1, não adiantar;
+2. **`dev/system/storage/vendor/` e `dev/system/storage/node_modules/` NÃO são commitados** — ADR 0003 + F11-01/ADR 0081; só os manifestos e locks vão ao Git. O `node_modules/` que existiu na raiz até 26/10/2026 é legado a remover do índice;
+3. **`config/default.php`** — já usa `en-us` (ADR 0001 aplicada); não reintroduzir `en-gb`;
 4. **Merge `hotfix/login` (15/10)** pré-contratos — qualquer desvio dele deve ser normalizado na revisão da Fase 1, não replicado como precedente;
 5. **Domínios fictícios do pacote** (`reamurcms.com` no composer.json/README) — placeholder oficial até o domínio real existir; o link check do CI já os exclui.
 

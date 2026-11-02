@@ -55,8 +55,8 @@
 
 `tools/e2e/threejs_cms_playwright.cjs` automatiza os casos de inserção, salvamento, reabertura e execução de `onFrame` na thumb pública. Ele grava conteúdo na página selecionada; execute somente em uma página **descartável** num ambiente de teste isolado.
 
-1. Instale Playwright apenas no clone/ambiente de teste, sem alterar dependências do produto: `npm install --no-save playwright` e `npx playwright install chromium`.
-2. Faça login manualmente e salve o estado local do navegador: `npx playwright codegen --save-storage="$HOME/.cache/reamur-cms-test-state.json" "$CMS_EDIT_URL"`. Mantenha o arquivo fora do repositório; nunca o compartilhe nem commite.
+1. Instale as dependências Node de QA em `dev/system/storage/` (ADR 0081), sem alterar as dependências do produto: `npm ci --prefix dev/system/storage` e, para o browser, `npx --prefix dev/system/storage playwright install chromium`.
+2. Faça login manualmente e salve o estado local do navegador: `npx --prefix dev/system/storage playwright codegen --save-storage="$HOME/.cache/reamur-cms-test-state.json" "$CMS_EDIT_URL"`. Mantenha o arquivo fora do repositório; nunca o compartilhe nem commite.
 3. Defina `CMS_EDIT_URL`, `PUBLIC_PAGE_URL`, `PLAYWRIGHT_STORAGE_STATE` e `E2E_CONFIRM_DISPOSABLE=1`. O editor e a URL pública devem apontar para a mesma página de teste.
 4. Execute `node tools/e2e/threejs_cms_playwright.cjs`. Use `HEADLESS=0` para observar o navegador. O runner não lê nem imprime senhas/tokens.
 

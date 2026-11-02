@@ -1,4 +1,5 @@
 'use strict';
+const { loadPlaywright } = require('./lib/load-playwright.cjs'); // F11-01 / ADR 0081
 /*
  * Optional authenticated E2E for the native Three.js settings.
  * Runs only on a disposable test installation and restores the original values in finally.
@@ -35,7 +36,7 @@ const fieldNames = ['three_hero_enabled','three_not_found_enabled','three_hero_p
   let restoreFailed = false;
   try {
     let chromium;
-    try { ({ chromium } = require('playwright')); }
+    try { ({ chromium } = loadPlaywright()); }
     catch (_) { throw new Error('Playwright is missing; install it only in the local test environment.'); }
     assert(process.env.E2E_CONFIRM_DISPOSABLE === '1', 'Refusing to modify settings without E2E_CONFIRM_DISPOSABLE=1 on a disposable test site.');
     settingsUrl = required('ADMIN_SETTINGS_URL');

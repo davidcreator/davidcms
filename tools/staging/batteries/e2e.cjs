@@ -8,7 +8,7 @@
  * bateria é NOT_RUN: um teste não executado não é um teste aprovado.
  *
  * Como preparar a sessão (uma vez, com o WAMP ligado):
- *   npx playwright codegen --save-storage=staging/reports/e2e-state.json \
+ *   npx --prefix dev/system/storage playwright codegen --save-storage=staging/reports/e2e-state.json \
  *       "http://localhost/davidcms/staging/admin/index.php?route=common/login"
  *   (faça login, feche o navegador, e exporte PLAYWRIGHT_STORAGE_STATE para o
  *    caminho absoluto do arquivo gerado)
@@ -25,12 +25,12 @@ async function run() {
   const battery = new BatteryResult('e2e', 'E2E em navegador real (Playwright)');
   const started = Date.now();
 
-  if (!cfg.exists(path.join(cfg.ROOT, 'node_modules', 'playwright'))) {
-    battery.check('Playwright instalado', STATUS.NOT_RUN, 'npm i --no-save playwright && npx playwright install chromium');
+  if (!cfg.exists(cfg.PATHS.nodePlaywright)) {
+    battery.check('Playwright instalado', STATUS.NOT_RUN, 'npm ci --prefix dev/system/storage && npx --prefix dev/system/storage playwright install chromium');
     battery.durationMs = Date.now() - started;
     return battery.finalize();
   }
-  battery.check('Playwright instalado', STATUS.PASS, 'node_modules/playwright presente');
+  battery.check('Playwright instalado', STATUS.PASS, 'dev/system/storage/node_modules/playwright presente');
 
   const statePath = cfg.E2E.storageState ? path.resolve(cfg.E2E.storageState) : '';
   if (!statePath || !fs.existsSync(statePath)) {
@@ -54,6 +54,7 @@ async function run() {
   }
 
   const env = { ...process.env, ...cfg.E2E.urls, PLAYWRIGHT_STORAGE_STATE: statePath };
+  env.NODE_PATH = cfg.NODE_DEPS_DIR; // compatibilidade com runners legados (ADR 0081)
   env.HEADLESS = cfg.E2E.headless ? '1' : '0';
   if (cfg.E2E.confirmDisposable) env.E2E_CONFIRM_DISPOSABLE = '1';
   env.MIRROR = cfg.URLS.devCatalog;

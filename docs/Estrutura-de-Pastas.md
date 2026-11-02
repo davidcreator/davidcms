@@ -196,14 +196,19 @@ storage/
 ├── cache/            # cache compartilhado
 │   └── template/     # templates Twig compilados (template_cache=true)
 ├── certs/cacert.pem  # bundle CA para chamadas HTTPS (Guzzle)
-├── composer.json     # manifesto do Composer (ver Guia-Composer)
-├── composer.lock
+├── composer.json     # manifesto do Composer (versionado)
+├── composer.lock     # lock do Composer (versionado)
+├── package.json      # manifesto npm / QA-E2E (versionado — ADR 0081)
+├── package-lock.json # lock npm (versionado — ADR 0081)
 ├── logs/             # error.log, migration_error.log
 ├── marketplace/      # pacotes baixados do marketplace
 ├── session/          # sessões em arquivo (session_engine=file)
 ├── temp/             # temporários (uploads em processamento etc.)
-└── vendor/           # dependências Composer — NUNCA commitar (ver Guia-Composer §6)
+├── vendor/           # deps Composer — NUNCA commitar (Guia-Composer §6)
+└── node_modules/     # deps Node/Playwright — NUNCA commitar (ADR 0081)
 ```
+
+> **F11-01 / ADR 0081:** todas as dependências geradas vivem aqui. `tools/build_prod.sh` exclui `node_modules/`, `package.json` e `package-lock.json` da build de produção; os runners `tools/e2e/*playwright*.cjs` resolvem o pacote por `tools/e2e/lib/load-playwright.cjs`.
 
 ---
 

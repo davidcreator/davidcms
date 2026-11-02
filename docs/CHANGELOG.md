@@ -1,5 +1,13 @@
 # Changelog
 
+## F11-01 — CI e dependências em `dev/system/storage/` (2026-11-02)
+- Move as dependências Node/Playwright 1.64.1 da raiz para `dev/system/storage/` com `package.json` + `package-lock.json` versionados; `node_modules/` ignorado (ADR 0081).
+- Corrige o `php-lint` que passava verde sem lintar nada (`defaults.run.working-directory` global) e o erro do PHPStan em `block_document.php:122` (`$version ?? 0` redundante).
+- Novo job `node-deps` no CI; `php-lint` e `docs-links` passam a rodar na raiz e a excluir `node_modules/`.
+- `build_prod.sh` e `check_producao.sh` passam a excluir/verificar as deps Node, preservando a build runtime-only (ADR 0039).
+- Runners E2E e bateria de staging resolvem Playwright por `createRequire`; `staging.ps1` não copia mais `node_modules` para o clone descartável.
+- Documentação, regras dos agentes, índice de ADRs e PR template atualizados. Sem migration, banco, staging, deploy ou escrita no GitHub.
+
 ## Cena 5 — ícones 3D opcionais de Ferramentas (2026-10-27)
 - Implementa ADR 0077 como camada decorativa para até quatro cards, com movimento leve e resposta a foco/ponteiro.
 - Reutiliza o SceneRunner e o gateway allowlisted; usa imagens same-origin existentes ou monogramas quando não há capa.

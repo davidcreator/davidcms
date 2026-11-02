@@ -1,0 +1,34 @@
+# F11-01 — integridade do pacote
+# Formato: CRC32  SHA256  tamanho(bytes)  caminho
+# O CRC-32 abaixo e o mesmo gravado no diretorio central do ZIP (unzip -t).
+
+7534d5d4  56539b1f1b5e6cb346c6d7ae321c5c4560b5a8ba5b55200757104bd5b9c2cd59  2038  .github/pull_request_template.md
+7f7bc332  efb9ff5fe42f5a8412b6c3ec9dc5c147a7a093c7de65bf9f19866f1ed243cf9d  5126  .github/workflows/php.yml
+bb661c0d  9e4f5814b398e0bf321fe8c5ec23e5236a1b270fb816e4c603bb3cf542a196dc  1802  .gitignore
+a88549b3  a6f2d72bc9cc5fcf11978dac0479a54272788877629173201aaef4dfcda80370  2031  CONTRIBUTING.md
+ea45f4ca  6ab8a4b41b2787381129f093e14fa599680f880a95083bc9433b84bc3b27d919  4164  F11-01-INDICE.md
+0c88fa61  306f3d6a843b84a16828019f9b3430f5b9b74c3c163fdc3b010f904c809d2158  14094  README.md
+91a8c159  0f9b6662235e3d82c5aad4d7ec7bc10892143d784b1207671abbf2e9b37318f3  5363  agents-ia/decisoes/0081-dependencias-node-em-system-storage-e-ci.md
+4dfe728b  e53b27e591aac61ca3c3ecc39ae7b7f01a1c03a77c1fbd170a472bfe03241f40  3841  agents-ia/decisoes/README.md
+5473b9ed  88aabbbd0d72f01177aa1316cb8f897f933252ebe9e0689a42db289786e88456  6956  agents-ia/regras/00-contexto-global.md
+40683cbc  45503c8122f0448122542331404c64a8121e7661831973e3b273fccbbf698b5f  4750  agents-ia/regras/02-padroes-de-codigo.md
+091cbed1  2423bf61ada6c156f3a936fac38bbf8f39fff221ac78d384be72429325a2a827  43153  dev/system/library/blog/block_document.php
+7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
+fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
+febcfc2b  6241ef097ccc1efaca7aced85fab7bb1d772e355d0445c44bbd80c8d0a72f6cd  11729  docs/CHANGELOG.md
+0665f69f  a834338e259c09a5e71f06c9e4a87b082c30343839f48cee81854c55a316d233  15344  docs/Estrutura-de-Pastas.md
+1e9004a1  f2def47dc85049546487ccd674a42f033a94cb738a9e218cd881905ccf8a06da  10048  docs/F11-01-CI-e-Dependencias.md
+ceb10349  1d41679c19df489421296d60af2b93a73d6fd8c773fb365f5a330816f4e3b022  11292  docs/Guia-Composer.md
+f35d6814  483d47bc11f6f801a820eda71e36dbdff951ca7ce5e6e47b13b5942f02575852  6026  docs/THREEJS_CMS_E2E.md
+ea17884f  f691d3e7c718d344cccc672838feaf5e066b86a8158da38260157e99e4de3e3c  5559  tools/build_prod.sh
+0efc435b  f8939da051d00449a2eafc094f71aa2acc17899ce95ce36bd16363d416ad8b60  7773  tools/check_producao.sh
+88e72464  897782ddba228af41ee32aba980ca71ec3a5871e13f9c12fd220d5cff5c7b976  1941  tools/e2e/README.md
+a3a8258b  3fc56d5744ebdfe603454d99ed369d709e6e37e87076e435683f63103e25a9e8  1352  tools/e2e/lib/load-playwright.cjs
+4634972a  80385df43c72523cf9110c172fa3980495e786089aa8c920377b9578dcd0336e  6949  tools/e2e/threejs_admin_preview_sandbox_isolated.cjs
+7589e5ed  97cac2985b4705f4bbb33f62f0fde7109c1e94e80e515dd330ad87b50196b392  7488  tools/e2e/threejs_cms_playwright.cjs
+d3de3365  bd6a82b746802b0f839b20f854c46e4441dcca6680e6266bcdd23f06e65cbf36  7573  tools/e2e/threejs_native_admin_playwright.cjs
+defcee94  4dd444104ff1329d0cf8d7c7f54bdc5cee64e409a3ad6343ba42386470e3d3cf  5491  tools/e2e/threejs_native_readonly_playwright.cjs
+ef1994c8  a00b0870367986b4619a0a6d31dfcb6f4e3644c08437fc6b31d4258e7c7747dc  4139  tools/staging/batteries/e2e.cjs
+0f44769b  07648ee53f67edbc0f9aa80172368ee9fe5951842635a219185889eb3f6ae209  4541  tools/staging/lib/config.cjs
+d8a27999  8cb90fca838612dc9b39dfb1fc8225e02b7518407d2d193fe76b63274be214bc  11458  tools/staging/staging.ps1
+78b0d957  f6193c0b7a57f424f4db8d44694c2076aad60663079245f67029b3c8fb8d6b2e  6234  tools/verify-f11-01.sh

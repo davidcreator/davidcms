@@ -1,6 +1,6 @@
 # Guia Composer — ReamurCMS
 
-> **Objetivo:** documentar como o Composer está configurado no ReamurCMS, os comandos do dia a dia e a integração com o CI — incluindo **duas correções pendentes** identificadas no repositório (workflow e `.gitignore`).
+> **Objetivo:** documentar como o Composer **e o npm** estão configurados no ReamurCMS, os comandos do dia a dia e a integração com o CI — estado atualizado pela frente **F11-01 / ADR 0081** (correções aplicadas).
 
 ---
 
@@ -129,109 +129,78 @@ composer install --working-dir=dev/system/storage
 
 ## 5. CI — GitHub Actions
 
-Workflow atual (`.github/workflows/php.yml`): valida o `composer.json`, cacheia o vendor e instala dependências a cada push/PR para `main`.
+Workflow: `.github/workflows/php.yml` (5 jobs). **F11-01 / ADR 0081** removeu o
+`defaults.run.working-directory` global: ele era correto para o Composer, mas
+fazia o `find dev ...` do `php-lint` rodar **dentro** de `dev/system/storage/`,
+onde não existe `dev/` — o job passava verde sem lintar nenhum arquivo.
 
-### ⚠️ Problema: workflow falhando
+| Job | `working-directory` | O que valida |
+| --- | --- | --- |
+| `composer` | `dev/system/storage` | `composer validate --strict` + `composer install` (cache do `vendor/`) |
+| `php-lint` | **raiz do repo** | `find dev -name '*.php'` → `php -l`; falha se zero arquivos; exclui `storage/vendor/` e `storage/node_modules/` |
+| `docs-links` | **raiz do repo** | lychee em `./**/*.md`, excluindo `node_modules/` (o pacote Playwright traz 27 `.md`) |
+| `static-analysis` | `dev/system/storage` | `composer install` + `composer analyse` (PHPStan nível 2, baseline congelado) |
+| `node-deps` | **raiz do repo** | `npm ci --ignore-scripts --prefix dev/system/storage`, resolução do Playwright e `node --check` em `tools/` + `tests/` |
 
-O primeiro run do workflow terminou em **falha**, porque `composer validate` e `composer install` rodam na **raiz do repositório**, onde **não existe** `composer.json` — ele está em `dev/system/storage/`.
+Regra: **cada job declara o seu cwd**. `composer.json`/`.lock`/`vendor/` e
+`package.json`/`package-lock.json`/`node_modules/` vivem todos em
+`dev/system/storage/`. O job `node-deps` não baixa browser (`--ignore-scripts`);
+Chromium é instalado manualmente apenas por quem for executar E2E real:
+`npx --prefix dev/system/storage playwright install chromium`.
 
-### ✅ Correção (workflow ajustado)
+> ⚠️ Ao aplicar esta frente, o `php-lint` passa a verificar **todos** os ~374
+> arquivos PHP de `dev/`. Erros de sintaxe antes mascarados podem aparecer.
+> Rode `find dev -name '*.php' -not -path '*/storage/vendor/*' -print0 | xargs -0 -n1 php -l`
+> localmente antes do push.
 
-```yaml
-name: PHP Composer
+## 5.1 Dependências Node (ADR 0081)
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+| Item | Caminho | Versionado? |
+| --- | --- | --- |
+| Manifesto | `dev/system/storage/package.json` | ✅ |
+| Lock | `dev/system/storage/package-lock.json` | ✅ |
+| Instalação | `dev/system/storage/node_modules/` | ❌ (`.gitignore`) |
+| Legado | `node_modules/` na raiz (commitado em 26/10/2026) | ❌ remover do índice |
 
-permissions:
-  contents: read
-
-defaults:
-  run:
-    working-directory: dev/system/storage   # 👈 onde vive o composer.json
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2'
-        extensions: mbstring, curl, gd, zip, intl
-
-    - name: Validate composer.json and composer.lock
-      run: composer validate --strict
-
-    - name: Cache Composer packages
-      id: composer-cache
-      uses: actions/cache@v4
-      with:
-        path: dev/system/storage/vendor     # 👈 caminho correto do vendor
-        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-php-
-
-    - name: Install dependencies
-      run: composer install --prefer-dist --no-progress --no-interaction
-
-    # Futuro (quando houver testes):
-    # - name: Run test suite
-    #   run: composer run-script test
+```sh
+npm ci --prefix dev/system/storage            # reproduz Playwright 1.64.1
+npx --prefix dev/system/storage playwright install chromium   # opcional, so para E2E real
 ```
 
-> Aplicar este ajuste na branch `feature/system` e abrir PR para `main`.
+Os runners `tools/e2e/*playwright*.cjs` usam
+`tools/e2e/lib/load-playwright.cjs` (`createRequire` ancorado no
+`package.json` do storage). Não existe mais `require('playwright')` direto nem
+dependência de `NODE_PATH`. Verificação local: `bash tools/verify-f11-01.sh`.
 
 ---
 
 ## 6. Pontos de atenção do repositório
 
-### 6.1 `.gitignore` não cobre o vendor real
-
-Situação atual:
+### 6.1 `.gitignore` cobre as duas árvores de dependências
 
 ```gitignore
-# .gitignore (raiz) — ATUAL
-/planejamento/
-/system/storage/vendor      # ❌ só casaria com <raiz>/system/storage/vendor
+**/system/storage/vendor/            # Composer
+**/system/storage/node_modules/      # npm (ADR 0081)
+/node_modules/                      # legado da raiz — nao volta a entrar
 ```
 
-O vendor real está em **`dev/`** `system/storage/vendor` — por isso o Twig inteiro (e demais pacotes) acabou **commitado** ao repositório (~11 mil arquivos).
-
-Correção recomendada:
-
-```gitignore
-# .gitignore — SUGERIDO
-/planejamento/
-# vendor do Composer onde quer que ele exista
-**/system/storage/vendor/
-# caches e logs locais
-dev/system/storage/cache/*
-dev/system/storage/logs/*
-dev/system/storage/session/*
-dev/system/storage/temp/*
-# artefatos de documentação gerada
-docs/api/
-```
-
-E para limpar o histórico futuro (sem reescrever passado):
+Os manifestos e locks **não** estão ignorados e devem permanecer commitados —
+são eles que garantem builds reproduzíveis. O `vendor/` que já foi commitado no
+passado foi removido; o `node_modules/` da raiz (222 paths, ~17,8 MB) ainda
+precisa sair do índice, **sem reescrever o histórico**:
 
 ```bash
-git rm -r --cached dev/system/storage/vendor
-git commit -m "build: remover vendor do versionamento (gerenciado pelo Composer)"
+git rm -r --cached node_modules
+git commit -m "chore(deps): remover node_modules da raiz (ADR 0081)"
 ```
 
-> Manter `composer.lock` **commitado** — é ele que garante builds reproduzíveis.
+> O pacote F11-01 **não executa** comandos Git: aplicação e commit ficam a cargo
+> do responsável, mediante autorização explícita.
 
 ### 6.2 Idioma padrão do config
 
-`system/config/default.php` referencia `en-gb`, mas as pastas de idiomas criadas são `en-us`, `es-eu`, `pt-br`. **Resolvido pela [ADR 0001](../agents-ia/decisoes/0001-idioma-padrao-en-us.md): padrão `en-us`**, ajuste aplicado na Fase 1. Recomendação adicional: adicionar `"platform": {"php": "8.2"}` ao `config` (já aplicado na versão de referência em `dev/system/storage/composer.json` — ADR 0004).
+`system/config/default.php` já usa `en-us` (ADR 0001 aplicada). O manifesto
+declara `config.platform.php = 8.2` (ADR 0004), alinhado ao PHP do CI.
 
 ---
 

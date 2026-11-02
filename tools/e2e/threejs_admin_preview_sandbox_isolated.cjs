@@ -1,4 +1,5 @@
 'use strict';
+const { loadPlaywright } = require('./lib/load-playwright.cjs'); // F11-01 / ADR 0081
 /*
  * Isolated browser smoke test for the self-hosted Three.js custom-script sandbox.
  * Serves only the three local runtime assets and an in-memory fixture. It never
@@ -17,7 +18,7 @@ function safeError(error) { return String(error && error.message || error).repla
   let server;
   try {
     let chromium;
-    try { ({ chromium } = require('playwright')); }
+    try { ({ chromium } = loadPlaywright()); }
     catch (_) { throw new Error('Playwright is missing; install it only in the local QA environment.'); }
 
     const root = process.cwd();

@@ -13,3 +13,20 @@ Os checkers de bloco verificam fixtures, contrato e integração por leitura de 
 ## CMS > Páginas (incremento 2026-10-25)
 
 Execute `node tests/check_cms_page_integration.js` para verificações estáticas da montagem do editor, envelope versionado no campo existente, validação server-side, renderer seguro e preservação do fallback legado. A verificação não substitui PHP lint, browser real, salvar/reabrir numa aplicação, nem autoriza banco/staging/produção.
+
+## Dependências Node — F11-01 / ADR 0081
+
+As dependências de QA (Playwright 1.64.1) **não ficam na raiz**: o manifesto e o lock
+estão em `dev/system/storage/` e a instalação em
+`dev/system/storage/node_modules/` (ignorada pelo Git), ao lado do `vendor/` do Composer.
+
+```sh
+# a partir da raiz do repositório
+npm ci --prefix dev/system/storage                 # deps (sem baixar browser)
+npx --prefix dev/system/storage playwright install chromium   # apenas se for rodar E2E real
+```
+
+Os runners `tools/e2e/*playwright*.cjs` carregam o pacote por
+`tools/e2e/lib/load-playwright.cjs` (`createRequire` ancorado no `package.json` do
+storage). Não use `require('playwright')` direto, `NODE_PATH` nem `node_modules/` na raiz.
+Os checkers estáticos `.cjs` continuam não exigindo Playwright instalado.

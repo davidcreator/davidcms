@@ -119,7 +119,7 @@ class BlockDocument {
         if (!isset($document['blocks']) || !is_array($document['blocks']) || !$this->isSequentialList($document['blocks']) || count($document['blocks']) > self::MAX_BLOCKS) $errors[] = 'blocks_invalid';
         $ids = []; $count = 0; $anchors = [];
         if (isset($document['blocks']) && is_array($document['blocks'])) {
-            foreach ($document['blocks'] as $node) $this->validateNode($node, 0, null, $ids, $errors, $count, $version ?? 0, $anchors);
+            foreach ($document['blocks'] as $node) $this->validateNode($node, 0, null, $ids, $errors, $count, $version, $anchors);
         }
         return ['valid' => !$errors, 'errors' => array_values(array_unique($errors))];
     }

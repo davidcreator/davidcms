@@ -65,7 +65,7 @@ O OpenCart provou, ao longo de anos, que a separação em quatro aplicações (`
 | Camada | Tecnologia |
 | --- | --- |
 | Linguagem | **PHP >= 8.0** (tipagem estrita, union types, `mixed`, arrow functions) |
-| Gerenciador de dependências | **Composer 2** (`dev/system/storage/composer.json`) |
+| Gerenciador de dependências | **Composer 2** (`dev/system/storage/composer.json`) · **npm / Node >= 20** (`dev/system/storage/package.json`, somente QA/E2E) |
 | Template engine | **Twig ^3.3** (padrão), Mustache ^3.0, Latte ^3.0 |
 | Front-end / 3D | **Three.js** (experiências 3D do novo site), HTML5, CSS3 (SCSS via `scssphp`), JavaScript |
 | HTTP / APIs | Guzzle 7, AWS SDK PHP |
@@ -79,7 +79,7 @@ O OpenCart provou, ao longo de anos, que a separação em quatro aplicações (`
 
 ```text
 davidcms/
-├── .github/workflows/      # CI (composer ✔ + php -l ✔ + link check ✔)
+├── .github/workflows/      # CI (composer ✔ + php -l ✔ + PHPStan ✔ + link check ✔ + node-deps ✔)
 ├── .github/pull_request_template.md   # DoD obrigatório por PR
 ├── .editorconfig           # Formatação unificada (humanos + agentes)
 ├── CONTRIBUTING.md · SECURITY.md · CHANGELOG.md
@@ -87,7 +87,7 @@ davidcms/
 │   ├── regras/             #   Constituição (contexto, convenções, padrões, anti-alucinação)
 │   ├── agentes/            #   orquestrador, system, install, admin, catalog
 │   ├── modelos/            #   Esqueletos canônicos de arquivo (copiar e preencher)
-│   └── decisoes/           #   Registro de decisões (ADR 0001–0004)
+│   └── decisoes/           #   Registro de decisões (ADR 0001–0081)
 ├── docs/                   # 📚 Documentação do projeto (este guia e manuais)
 │   ├── Analise-DavidAlmeida.md   # Análise do site atual → plano de migração
 │   ├── Arquitetura-MVCL.md       # Como o MVCL do ReamurCMS funciona
@@ -107,7 +107,7 @@ davidcms/
 │   ├── catalog/            # Loja/site público (front-end do CMS)
 │   ├── install/            # Wizard de instalação/upgrade + SQL
 │   ├── system/             # Núcleo do framework (engine, library, helper, config,
-│   │                       #   storage, webhook, vendor.php, framework.php, startup.php)
+│   │                       #   storage (composer/vendor + npm/node_modules), webhook, vendor.php, framework.php, startup.php)
 │   └── tests/              # Suíte PHPUnit (ativa na Fase 1 — ADR 0004)
 └── README.md               # Este arquivo
 ```
@@ -119,7 +119,7 @@ davidcms/
 ## Requisitos
 
 - **PHP >= 8.0** (recomendado 8.2+), com extensões `curl`, `mbstring`, `openssl`, `json`, `zip` e `gd`
-- **Composer 2**
+- **Composer 2** · **Node.js >= 20 + npm** (somente para QA/E2E)
 - **MySQL 5.7+ / MariaDB 10.3+** (ou PostgreSQL / PDO)
 - **Apache** (mod_rewrite) ou **Nginx**
 - Permissão de escrita em `dev/system/storage/` (`cache`, `logs`, `session`, `temp`)
@@ -128,7 +128,7 @@ davidcms/
 
 ## Instalação
 
-> ⚠️ O projeto está em fase de **esqueleto estrutural** (diretórios preenchidos com `index.html` de placeholder). Os passos abaixo refletem a instalação alvo do ReamurCMS e serão validados conforme o núcleo for implementado.
+> ℹ️ O núcleo MVCL, o painel e o catálogo já estão implementados. As dependências de terceiros (Composer e npm) ficam **somente** em `dev/system/storage/` (ADR 0081). O cutover para produção segue `docs/Runbook-Cutover-F6.md`.
 
 ```bash
 # 1. Clonar o repositório
@@ -138,12 +138,24 @@ cd davidcms
 # 2. Instalar dependências do núcleo (Twig, Guzzle, etc.)
 composer install --working-dir=dev/system/storage
 
+# 2b. Instalar dependências de QA/E2E (Playwright) no MESMO storage
+npm ci --prefix dev/system/storage
+
 # 3. Apontar o virtual host para a pasta dev/ e acessar o wizard
 #    http://localhost/install  → segue o passo a passo (banco, idioma, admin)
 
 # 4. Conferir permissões de escrita do storage
 chmod -R 755 dev/system/storage
 ```
+
+### Onde ficam as dependências (ADR 0081)
+
+| Ferramenta | Manifesto (versionado) | Instalação (ignorada no Git) | Comando |
+| --- | --- | --- | --- |
+| Composer | `dev/system/storage/composer.json` + `.lock` | `dev/system/storage/vendor/` | `composer install --working-dir=dev/system/storage` |
+| npm | `dev/system/storage/package.json` + `package-lock.json` | `dev/system/storage/node_modules/` | `npm ci --prefix dev/system/storage` |
+
+Nunca versionar `vendor/`, `node_modules/` ou um `node_modules/` na raiz. Os runners E2E resolvem o Playwright por `tools/e2e/lib/load-playwright.cjs`.
 
 ---
 

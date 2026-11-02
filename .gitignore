@@ -1,12 +1,24 @@
-# ReamurCMS — .gitignore (ADR 0003)
+# ReamurCMS — .gitignore (ADR 0003 · F11-01 / ADR 0081)
 
 # Planejamento local
 /planejamento/
 
+# ── Dependencias geradas (F11-01 / ADR 0081) ───────────────────────────────
+# TODA dependencia de terceiros vive em dev/system/storage/, ao lado do
+# composer.json. Os MANIFESTOS (composer.json/lock, package.json/lock) SAO
+# versionados; apenas as pastas instaladas ficam fora do Git.
 # Vendor do Composer (onde quer que exista dentro de system/storage)
 **/system/storage/vendor/
+# Dependencias Node/Playwright — destino canonico
+**/system/storage/node_modules/
+# Legado: node_modules na RAIZ do repo foi commitado por engano em 26/10/2026.
+# Esta regra impede que volte a entrar; remova a pasta do indice com
+# `git rm -r --cached node_modules` (ver docs/F11-01-CI-e-Dependencias.md).
+/node_modules/
+# Logs do npm (nao versionar)
+dev/system/storage/npm-debug.log*
 
-# Dados voláteis do storage (manter as pastas versionadas com index.html)
+# Dados volateis do storage (manter as pastas versionadas com index.html)
 dev/system/storage/cache/*
 dev/system/storage/logs/*
 dev/system/storage/session/*
@@ -18,7 +30,7 @@ dev/catalog/config.php
 dev/admin/config.php
 dev/install/config.php
 
-# Documentação de API gerada pelo phpDocumentor
+# Documentacao de API gerada pelo phpDocumentor
 docs/api/
 
 # Sistema operacional / IDEs
@@ -27,14 +39,14 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Build de produção (ADR 0039): artefato derivado — a fonte é dev/ + tools/build_prod.sh
+# Build de producao (ADR 0039): artefato derivado — a fonte e dev/ + tools/build_prod.sh
 /prod/
 
-# Ambiente de testes descartável (tools/staging) — clone derivado de dev/, com
-# config.php próprio (credenciais) e reports/. Nunca versionar.
+# Ambiente de testes descartavel (tools/staging) — clone derivado de dev/, com
+# config.php proprio (credenciais) e reports/. Nunca versionar.
 /staging/
 
-# Zips de build/deploy (gerados por build_prod.sh ou à mão — nunca versionar)
+# Zips de build/deploy (gerados por build_prod.sh ou a mao — nunca versionar)
 /build-prod-*.zip
 /build-staging-*.zip
 /build-dev-*.zip

@@ -27,6 +27,8 @@ Apague as seções que não se aplicam. Commits em pt-BR, Conventional Commits.
 - [ ] Nenhum texto de interface fora da camada **Language** (`en-us` completo — ADR 0001)
 - [ ] Nenhum SQL fora de Model · colunas conforme Dicionário de Dados
 - [ ] `php -l` passou em todos os arquivos PHP
+- [ ] CI verde: `composer`, `php-lint`, `static-analysis` (PHPStan), `docs-links` e `node-deps`
+- [ ] Dependências em `dev/system/storage/`; `vendor/` e `node_modules/` não versionados (ADR 0081)
 - [ ] CSRF/permissão verificados em ações do admin
 - [ ] Templates: escape intacto · `json_encode|raw` só para dados → JS
 - [ ] 3D (se houver): fallback + lazy-init + `prefers-reduced-motion` + budgets

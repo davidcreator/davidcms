@@ -12,6 +12,8 @@
 #   system/storage/{cache,logs,session,temp}/* (conteúdo volátil; guards
 #     index.html são regrados depois)
 #   system/storage/phpstan* e composer.{json,lock} (ferramentas de dev)
+#   system/storage/{node_modules,package.json,package-lock.json}
+#     (F11-01 / ADR 0081: deps Node/Playwright de QA — NUNCA em producao)
 #   catalogs/admin config.php reais (credenciais — gerados NO destino a
 #     partir dos *.EXEMPLO incluídos) e install.lock
 #
@@ -39,6 +41,10 @@ rsync -a --delete --delete-excluded \
   --exclude 'system/storage/phpstan-bootstrap.php' \
   --exclude 'system/storage/composer.json' \
   --exclude 'system/storage/composer.lock' \
+  --exclude 'system/storage/node_modules/' \
+  --exclude 'system/storage/package.json' \
+  --exclude 'system/storage/package-lock.json' \
+  --exclude 'node_modules/' \
   --exclude 'system/storage/cache/*' \
   --exclude 'system/storage/logs/*' \
   --exclude 'system/storage/session/*' \
@@ -83,6 +89,8 @@ for p in "$DST/catalog/index.php" "$DST/admin/index.php" "$DST/system/framework.
   [ -f "$p" ] || { echo "  FALTA $p"; FAIL=1; }
 done
 for p in "$DST/install" "$DST/tests" "$DST/system/storage/phpstan.neon" "$DST/system/storage/composer.json" \
+         "$DST/system/storage/node_modules" "$DST/system/storage/package.json" \
+         "$DST/system/storage/package-lock.json" "$DST/node_modules" \
          "$DST/system/storage/logs/error.log" "$DST/catalog/config.php" "$DST/admin/config.php"; do
   [ -e "$p" ] && { echo "  NÃO DEVERIA EXISTIR: $p"; FAIL=1; }
 done

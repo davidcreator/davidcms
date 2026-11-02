@@ -67,6 +67,8 @@ public function getProject(int $project_id): array {
 - `defer`/module; listeners com `{ passive: true }` quando possível; cleanup em `dispose()`;
 - Respeitar budgets: DPR ≤ 2, `prefers-reduced-motion`, lazy-init.
 
+- Dependências Node: `npm ci --prefix dev/system/storage`; runners Playwright usam `tools/e2e/lib/load-playwright.cjs` (ADR 0081).
+
 ## 6. Segurança (checklist por entrega)
 
 - [ ] SQL escapado/prepared
@@ -81,6 +83,9 @@ public function getProject(int $project_id): array {
 ```bash
 php -l <arquivo.php>                 # sintaxe (obrigatório em 100% dos arquivos alterados)
 composer validate --strict           # se tocou composer.json (working-dir dev/system/storage)
+npm ci --prefix dev/system/storage    # deps Node/QA (ADR 0081)
+node --check <arquivo.js|.cjs>        # sintaxe dos scripts alterados
+bash tools/verify-f11-01.sh          # verificacao local da frente F11-01
 ```
 
 ## 8. Commit

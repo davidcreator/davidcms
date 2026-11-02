@@ -1,4 +1,5 @@
 'use strict';
+const { loadPlaywright } = require('./lib/load-playwright.cjs'); // F11-01 / ADR 0081
 /*
  * Read-only authenticated E2E for native Three.js scenes.
  * Uses GET navigation only: it does not submit forms, click save, or change settings.
@@ -24,7 +25,7 @@ function safeError(error) {
   let context;
   try {
     let chromium;
-    try { ({ chromium } = require('playwright')); }
+    try { ({ chromium } = loadPlaywright()); }
     catch (_) { throw new Error('Playwright is missing; install it only in the local test environment.'); }
     const settingsUrl = safeUrl('ADMIN_SETTINGS_URL');
     const homeUrl = safeUrl('PUBLIC_HOME_URL');

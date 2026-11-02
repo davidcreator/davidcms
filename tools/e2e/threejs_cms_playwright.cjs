@@ -1,9 +1,12 @@
 'use strict';
+const { loadPlaywright } = require('./lib/load-playwright.cjs'); // F11-01 / ADR 0081
 /*
  * Optional authenticated E2E runner. Use only on a disposable CMS test page.
  * Authentication stays in a local Playwright storage-state file; no credentials are read from CLI or logged.
  * Required env: CMS_EDIT_URL, PUBLIC_PAGE_URL, PLAYWRIGHT_STORAGE_STATE.
- * Install Playwright outside the CMS project: npm install --no-save playwright && npx playwright install chromium
+ * Install the Node dev dependencies in dev/system/storage (ADR 0081):
+ *   npm ci --prefix dev/system/storage
+ *   npx --prefix dev/system/storage playwright install chromium
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -24,7 +27,7 @@ function assert(condition, message) { if (!condition) throw new Error(message); 
   let browser;
   try {
     let chromium;
-    try { ({ chromium } = require('playwright')); } catch (_) { throw new Error('Playwright is missing. Install it locally with npm install --no-save playwright, then install Chromium.'); }
+    try { ({ chromium } = loadPlaywright()); } catch (_) { throw new Error('Playwright is missing. Install it locally with npm ci --prefix dev/system/storage, then install Chromium.'); }
     assert(process.env.E2E_CONFIRM_DISPOSABLE === '1', 'This test edits and saves page content. Set E2E_CONFIRM_DISPOSABLE=1 only for a disposable CMS test page.');
     const adminUrl = safeUrl('CMS_EDIT_URL');
     const publicUrl = safeUrl('PUBLIC_PAGE_URL');

@@ -11,6 +11,8 @@ const fs = require('node:fs');
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
 const DEV_DIR = path.join(ROOT, 'dev');
+/* F11-01 / ADR 0081: deps Node (Playwright) vivem no storage do system. */
+const NODE_DEPS_DIR = path.join(DEV_DIR, 'system', 'storage', 'node_modules');
 const STAGING_DIR = path.join(ROOT, 'staging');
 const REPORTS_DIR = path.join(STAGING_DIR, 'reports');
 const BASELINES_DIR = path.join(__dirname, '..', 'baselines');
@@ -101,11 +103,12 @@ const PATHS = {
   stagingAdminConfig: path.join(STAGING_DIR, 'admin', 'config.php'),
   phpstanConfig: path.join(STAGING_DIR, 'system', 'storage', 'phpstan.neon'),
   phpstanPhar: path.join(STAGING_DIR, 'system', 'storage', 'vendor', 'bin', 'phpstan.phar'),
+  nodePlaywright: path.join(NODE_DEPS_DIR, 'playwright'),
   staticBaseline: path.join(BASELINES_DIR, 'static-baseline.json'),
 };
 
 module.exports = {
-  ROOT, DEV_DIR, STAGING_DIR, REPORTS_DIR, BASELINES_DIR,
+  ROOT, DEV_DIR, NODE_DEPS_DIR, STAGING_DIR, REPORTS_DIR, BASELINES_DIR,
   TOOLS_E2E_DIR, TESTS_DIR,
   BIN, DB, URLS, EXPECTED_SCHEMA, JSON_ACL_COLUMNS, E2E, PATHS, exists,
 };
