@@ -1,8 +1,8 @@
-# F11-10 — manifesto consolidado (hashes do estado final do repo)
+# F11-12 — manifesto consolidado (hashes do estado final do repo)
 # Formato: CRC32  SHA256  tamanho(bytes)  caminho
 
 fca6effc  a4484945678861bb6f89faea1c0f0e237ba4f46db0042f02a61e90b2011359c4  2068  .github/pull_request_template.md
-ec6ce34f  68746daf6a01d00e2e0aed6fd0eb64dc38b3a335b5c31830ef37d7a4baed8985  8508  .github/workflows/php.yml
+cf225ccd  75707b1baff0cbabc89ca673e9d53f72792a694765e91d11d4aa8b2a0ab8195f  8423  .github/workflows/php.yml
 bb661c0d  9e4f5814b398e0bf321fe8c5ec23e5236a1b270fb816e4c603bb3cf542a196dc  1802  .gitignore
 4d27c8a8  2397e787801e375c123124cc001608d9665c4532663c37acdb3fb777e258a269  2061  CONTRIBUTING.md
 ea45f4ca  6ab8a4b41b2787381129f093e14fa599680f880a95083bc9433b84bc3b27d919  4164  F11-01-INDICE.md
@@ -14,7 +14,7 @@ b06c9661  29a480d6ebdeb4be28ac757567fa6d7e16df3ca4ffb06d047efe1060d4502e3e  4001
 091cbed1  2423bf61ada6c156f3a936fac38bbf8f39fff221ac78d384be72429325a2a827  43153  dev/system/library/blog/block_document.php
 7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
 fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
-3653dcf8  f21b5b7c21565240e4a1594fece2554dc92b7c0ba55da8242e33f280322955d1  15132  docs/CHANGELOG.md
+6823a487  23b1a5d3636f46677ee0d3894999adf90d30fcb21bbe6efb7878f5db6217532e  16365  docs/CHANGELOG.md
 0665f69f  a834338e259c09a5e71f06c9e4a87b082c30343839f48cee81854c55a316d233  15344  docs/Estrutura-de-Pastas.md
 1e9004a1  f2def47dc85049546487ccd674a42f033a94cb738a9e218cd881905ccf8a06da  10048  docs/F11-01-CI-e-Dependencias.md
 1f851404  f1d56f618eb9c41bb99be1fbf69d86131813bde0ed1a54c05e7307f64a999dc4  12047  docs/Guia-Composer.md

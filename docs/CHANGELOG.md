@@ -1,5 +1,12 @@
 # Changelog
 
+## F11-12 — `docs-links` determinístico com `--offline` (2026-11-02)
+- O `docs-links` seguiu `failure` (`exit 2`) em três runs mesmo após F11-10, embora a correção desse `exit 0` localmente com o binário `lychee 0.15.0` idêntico. Descartadas as hipóteses de `--mode task`, `--format/--output` e réplica incompleta; a causa exata exige logs de admin (403). A única diferença restante é a rede do runner.
+- Decisão do responsável (opção A): `args` passa a usar **`--offline`**, validando apenas links internos/relativos. `fail`/`failIfEmpty=true`, `lycheeVersion: v0.15.0`, `timeout-minutes: 20` e as 5 exclusões originais permanecem; `--accept` e as 3 exclusões de domínios mortos foram removidos por serem inócuos neste modo.
+- Trade-off explícito: **links externos deixam de ser verificados** pelo CI; links locais quebrados continuam derrubando o job.
+- `verify-ci-workflow.sh` atualizado (28 PASS / 0 FAIL): exige `--offline`, proíbe `fail: false` e `--accept`, mantém `docs/README.md` no disco. Validação local: `exit 0 / 0 erros / 449 OK`.
+- 5 manifestos de integridade reemitidos com hashes do estado final. Sem alteração de código PHP/JS, migration, banco, staging, deploy ou escrita no GitHub.
+
 ## F11-10 — Correção dos links quebrados no `docs-links` (2026-11-02)
 - O pin de `lychee v0.15.0` (F11-08) fez o `docs-links` concluir em 6,5 min e expôs `exit code 2` em dois runs: a `@v2` tem `fail: true` por default, enquanto a `@v1` não falhava em links quebrados.
 - Diagnóstico executado com o **binário oficial lychee 0.15.0** e os `args` exatos do workflow numa réplica de 2.476 arquivos: **16 erros** (2 links locais, 6×429 GNU, 1×429 Instagram, 1×403 Redbubble, 2×404 e 2×500 e 2 redirects em vendor). A estimativa anterior de 41 links relativos ausentes era artefato de réplica incompleta e foi retificada.
