@@ -1,0 +1,291 @@
+{
+  "task": "F11-11",
+  "head": "749888e76",
+  "description": "Matriz de decisao dos 10 MARKER_OR_FINDING mantidos pelo F11-09",
+  "policy": "Nenhuma decisao tomada por inferencia. Contratos congelados ate registro explicito de status=DECIDED.",
+  "status_counts": {
+    "PENDING_DECISION": 10,
+    "DECIDED": 0
+  },
+  "frozen_artifacts_sha256": {
+    "docs/F9-14-Contrato-Editor-MVP.json": "c4a8b91d18ab9bad64ea9a698bca0e945c9024be477df1cbffa14b3f8288e4e7",
+    "docs/F9-15-Contrato-Renderer-Publico.json": "26a701aaef93e65d6f19f0bbd80ee621d9eb531aecd590736b1b9eb455fd6839",
+    "docs/F9-25-Contrato-Editor-Editorial.json": "8f431cc3d4124ab8b3c205e09a04d491443b5ea841a436172910a6bceea4ab27",
+    "docs/F9-26-Contrato-A11y-Performance.json": "da362c3d6a4f16a982f708a9f0e55991e1295534b4b31c40a3c3bc81bc600354",
+    "docs/F9-27-Status.json": "15172d9a7946e6285befd647f41b1a0759b4b999ec8d8b5feb3ff9de2d0e2715",
+    "docs/F9-27-Base-Hashes.json": "f6c599e26e05040fecd41197a06a06d460653556391bbc549d29d6de51e25d29",
+    "docs/F9-27-Preflight-Status.json": "e3a2cdab33258dde056e3f05dd816a6f810da830757bdc21f6c5b1c222704d16",
+    "docs/F9-05-Contrato-Definicoes-Campos.json": "8f90ee3bbb7bb8112a84dbde796c4e3cc7f0d448700d5836601d0fd466673f78",
+    "docs/F9-18-Risk-Register.json": "a5a3df0ac25a1bf195957bf881aac2c1d8965a2c2e9968f92f815d0c846759f3",
+    "dev/install/sql/schema.sql": "c9dd1ec27af95d7506b8aff6af06133f75b288c2db31e5537fb7fbac2e1f67a5",
+    "docs/PROJECT-HANDOFF.md": "5f65d408d5b9831b0999d09ace2fbb1248bd4695282fe75fa6fde0859aeb6c84"
+  },
+  "decisions": [
+    {
+      "id": "D01",
+      "checker": "e2e_bdre_hierarchical_reordering_static.cjs",
+      "phase": "F9/F11",
+      "nature": "CADEIA_MARCADORES",
+      "status": "PENDING_DECISION",
+      "evidence": "moveBlockAcrossHierarchy ganhou allowPageMedia; outros marcadores (validateDocument, indent.disabled) tambem divergem",
+      "options": [
+        {
+          "id": "A",
+          "label": "Atualizar o contrato da fase",
+          "requires": "autorizacao explicita do responsavel"
+        },
+        {
+          "id": "B",
+          "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+          "requires": "decisao do responsavel; checker permanece falhando"
+        }
+      ],
+      "recommendation": "A",
+      "recommended_action": "Revisar e atualizar os marcadores um a um, com evidencia de equivalencia",
+      "frozen_artifacts": [],
+      "decided_by": null,
+      "decision_date": null
+    },
+    {
+      "id": "D02",
+      "checker": "e2e_bdre_spacer_static.cjs",
+      "phase": "F9/F11",
+      "nature": "EQUIVALENTE_NAO_COMPROVADO",
+      "status": "PENDING_DECISION",
+      "evidence": "spacer:{heightLabel,heights} existe nos defaults, mas nao Object.entries(this.strings.spacer.heights)",
+      "options": [
+        {
+          "id": "A",
+          "label": "Atualizar o contrato da fase",
+          "requires": "autorizacao explicita do responsavel"
+        },
+        {
+          "id": "B",
+          "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+          "requires": "decisao do responsavel; checker permanece falhando"
+        }
+      ],
+      "recommendation": "INVESTIGAR",
+      "recommended_action": "Pode ser regressao real do inspector; leer o codigo antes de decidir",
+      "frozen_artifacts": [],
+      "decided_by": null,
+      "decision_date": null
+    },
+    {
+      "id": "D03",
+      "checker": "check_audio_catalog.cjs",
+      "phase": "F9/F11",
+      "nature": "POSSIVEL_MUDANCA_ACL",
+      "status": "PENDING_DECISION",
+      "evidence": "Rotas/IDs presentes; can_modify and can_use_audio_catalog ausente no Twig",
+      "options": [
+        {
+          "id": "A",
+          "label": "Atualizar o contrato da fase",
+          "requires": "autorizacao explicita do responsavel"
+        },
+        {
+          "id": "B",
+          "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+          "requires": "decisao do responsavel; checker permanece falhando"
+        }
+      ],
+      "recommendation": "B",
+      "recommended_action": "Seguranca/ACL: registrar como achado, nao relaxar o checker",
+      "frozen_artifacts": [],
+      "decided_by": null,
+      "decision_date": null
+    },
+    {
+      "id": "D04",
+      "checker": "check_threejs_native_admin.cjs",
+      "phase": "F9/F11",
+      "nature": "EQUIVALENTE_NAO_COMPROVADO",
+      "status": "PENDING_DECISION",
+      "evidence": "three_scene_config->runtime( presente nos 2 controllers, assinatura divergente",
+      "options": [
+        {
+          "id": "A",
+          "label": "Atualizar o contrato da fase",
+          "requires": "autorizacao explicita do responsavel"
+        },
+        {
+          "id": "B",
+          "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+          "requires": "decisao do responsavel; checker permanece falhando"
+        }
+      ],
+      "recommendation": "INVESTIGAR",
+      "recommended_action": "Confirmar se a assinatura atual e equivalente antes de atualizar o marcador",
+      "frozen_artifacts": [],
+      "decided_by": null,
+      "decision_date": null
+    },
+    {
+      "id": "D05",
+      "checker": "e2e_bdre_unsaved_changes_static.cjs",
+      "phase": "F9/F11",
+      "nature": "CONTRATO_HISTORICO",
+      "status": "PENDING_DECISION",
+      "evidence": "fetch(...) real no init para historico de revisoes, disparado por clique; nao e autosave",
+      "options": [
+        {
+          "id": "A",
+          "label": "Atualizar o contrato da fase",
+          "requires": "autorizacao explicita do responsavel"
+        },
+        {
+          "id": "B",
+          "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+          "requires": "decisao do responsavel; checker permanece falhando"
+        }
+      ],
+      "recommendation": "A",
+      "recommended_action": "Atualizar o contrato da fase reconhecendo a feature, mantendo a proibicao de autosave",
+      "frozen_artifacts": [],
+      "decided_by": null,
+      "decision_date": null
+    },
+    {
+      "id": "D06",
+      "checker": "e2e_f914.cjs",
+      "phase": "F9/F11",
+      "nature": "CONTRATO_HISTORICO",
+      "status": "PENDING_DECISION",
+      "evidence": "await fetch(url, options) no editor (L3243); contrato F9-14 (MVP) proibia rede",
+      "options": [
+        {
+          "id": "A",
+          "label": "Atualizar o contrato da fase",
+          "requires": "autorizacao explicita do responsavel"
+        },
+        {
+          "id": "B",
+          "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+          "requires": "decisao do responsavel; checker permanece falhando"
+        }
+      ],
+      "recommendation": "A",
+      "recommended_action": "Atualizar F9-14 para refletir a evolucao, SEM alterar o checker de seguranca",
+      "frozen_artifacts": [
+        "docs/F9-14-Contrato-Editor-MVP.json"
+      ],
+      "decided_by": null,
+      "decision_date": null
+    },
+    {
+      "id": "D07",
+      "checker": "e2e_f915.cjs",
+      "phase": "F9/F11",
+      "nature": "SEGURANCA_OU_REGRESSAO",
+      "status": "PENDING_DECISION",
+      "evidence": "Twig usa post.block_html / post.description sem |raw",
+      "options": [
+        {
+          "id": "A",
+          "label": "Atualizar o contrato da fase",
+          "requires": "autorizacao explicita do responsavel"
+        },
+        {
+          "id": "B",
+          "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+          "requires": "decisao do responsavel; checker permanece falhando"
+        }
+      ],
+      "recommendation": "B",
+      "recommended_action": "Se nao for Twig\\Markup, e regressao funcional: registrar como P1",
+      "frozen_artifacts": [
+        "docs/F9-15-Contrato-Renderer-Publico.json"
+      ],
+      "decided_by": null,
+      "decision_date": null
+    },
+    {
+      "id": "D08",
+      "checker": "e2e_f925_static.cjs",
+      "phase": "F9/F11",
+      "nature": "DIVERGENCIA_REAL_CONTRATO",
+      "status": "PENDING_DECISION",
+      "evidence": "localStorage/sessionStorage/fetch/XMLHttpRequest reais enquanto o contrato diz PROPOSAL_PENDING",
+      "options": [
+        {
+          "id": "A",
+          "label": "Atualizar o contrato da fase",
+          "requires": "autorizacao explicita do responsavel"
+        },
+        {
+          "id": "B",
+          "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+          "requires": "decisao do responsavel; checker permanece falhando"
+        }
+      ],
+      "recommendation": "B",
+      "recommended_action": "Mais sensivel: exige confirmacao de aprovacao das features antes de qualquer atualizacao de contrato",
+      "frozen_artifacts": [
+        "docs/F9-25-Contrato-Editor-Editorial.json",
+        "docs/F9-26-Contrato-A11y-Performance.json"
+      ],
+      "decided_by": null,
+      "decision_date": null
+    },
+    {
+      "id": "D09",
+      "checker": "e2e_f905.cjs",
+      "phase": "F9/F11",
+      "nature": "ACHADO_REAL_GOVERNANCA",
+      "status": "PENDING_DECISION",
+      "evidence": "dev/install/sql/schema.sql existe (22.495 bytes) e o checker o proibe",
+      "options": [
+        {
+          "id": "A",
+          "label": "Atualizar o contrato da fase",
+          "requires": "autorizacao explicita do responsavel"
+        },
+        {
+          "id": "B",
+          "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+          "requires": "decisao do responsavel; checker permanece falhando"
+        }
+      ],
+      "recommendation": "B",
+      "recommended_action": "Decidir se o arquivo e legitimo de outra fase e se o checker historico deve ser aposentado",
+      "frozen_artifacts": [
+        "docs/F9-05-Contrato-Definicoes-Campos.json",
+        "dev/install/sql/schema.sql"
+      ],
+      "decided_by": null,
+      "decision_date": null
+    },
+    {
+      "id": "D10",
+      "checker": "e2e_f927_static.cjs",
+      "phase": "F9/F11",
+      "nature": "DRIFT_METADADOS",
+      "status": "PENDING_DECISION",
+      "evidence": "hashes.head=448dd61f... != status.base_head=3d481ecf...",
+      "options": [
+        {
+          "id": "A",
+          "label": "Atualizar o contrato da fase",
+          "requires": "autorizacao explicita do responsavel"
+        },
+        {
+          "id": "B",
+          "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+          "requires": "decisao do responsavel; checker permanece falhando"
+        }
+      ],
+      "recommendation": "B",
+      "recommended_action": "NAO atualizar o SHA sem autorizacao: equivaleria a declarar prontidao do gate",
+      "frozen_artifacts": [
+        "docs/F9-27-Status.json",
+        "docs/F9-27-Base-Hashes.json",
+        "docs/F9-27-Preflight-Status.json"
+      ],
+      "decided_by": null,
+      "decision_date": null
+    }
+  ],
+  "retified_in": "F11-14",
+  "ci_status": "7/7 success (runs 41483802295 / 41504039830); docs-links 0.13 min com --offline desde F11-12"
+}
