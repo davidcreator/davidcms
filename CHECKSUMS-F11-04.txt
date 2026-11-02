@@ -1,4 +1,5 @@
 # F11-04 — integridade do pacote de modernizacao do CI
+# Recalculado em F11-05: tools/verify-ci-workflow.sh foi reforcado.
 # Formato: CRC32  SHA256  tamanho(bytes)  caminho
 
 fca6effc  a4484945678861bb6f89faea1c0f0e237ba4f46db0042f02a61e90b2011359c4  2068  .github/pull_request_template.md
@@ -11,4 +12,4 @@ b06c9661  29a480d6ebdeb4be28ac757567fa6d7e16df3ca4ffb06d047efe1060d4502e3e  4001
 edc61dec  aca6bf260a117700b101dbf5d9b67e60e7d2aaec04f4144a9bdbb11aadaca7eb  12603  docs/CHANGELOG.md
 88daa401  1e1ba2fa22bee77f4252825d232395eaa8c4b3769ffdfab846dd488f8b536b02  6690  docs/F11-04-Modernizacao-CI.md
 1f851404  f1d56f618eb9c41bb99be1fbf69d86131813bde0ed1a54c05e7307f64a999dc4  12047  docs/Guia-Composer.md
-6248157d  5d0ca46fc8415aaaf136422e7991f78961795443cac00bc19e089fb720bdaf7f  3710  tools/verify-ci-workflow.sh
+af0da524  de48cf83539ab1f6a9efe9cea0d816c0d6f657a3ca98e5a7e4aa542d6ecad6c9  4066  tools/verify-ci-workflow.sh

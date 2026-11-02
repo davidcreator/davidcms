@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════════════
-# verify-ci-workflow.sh — F11-04 / ADR 0082
+# verify-ci-workflow.sh — F11-04 / ADR 0082 (reforcado em F11-05)
 # Auditor READ-ONLY do contrato do proprio CI (.github/workflows/php.yml).
 #
 #   bash tools/verify-ci-workflow.sh [caminho-do-workflow]
@@ -54,7 +54,14 @@ done
 grep -q 'fail-fast: false' "$WF" && grep -q "node-version: \['20', '22'\]" "$WF"
 ck $? "matrix Node 20 + 22 com fail-fast: false"
 
-echo "-- 5. Sintaxe YAML (quando PyYAML disponivel) --"
+echo "-- 5. Guardas referenciados existem no disco (F11-05) --"
+# F11-05: o workflow citava tools/verify-checksums.sh sem que o arquivo
+# existisse no repo (exit 127). Conferir so o YAML nao bastava.
+for g in tools/verify-deps-layout.sh tools/verify-checksums.sh tools/verify-ci-workflow.sh; do
+  [ -f "$g" ]; ck $? "$g existe"
+done
+
+echo "-- 6. Sintaxe YAML (quando PyYAML disponivel) --"
 if command -v python3 >/dev/null 2>&1 && python3 -c 'import yaml' >/dev/null 2>&1; then
   python3 - "$WF" <<'PY'
 import sys,yaml
