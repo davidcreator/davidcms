@@ -197,3 +197,21 @@ $_['scene_preset_lost_help'] = 'Partículas discretas en la página 404.';
 $_['scene_preset_off'] = 'Sin escena';
 $_['scene_preset_off_help'] = 'Desactiva WebGL y mantiene el texto de reserva.';
 $_['compare_scene_thumb'] = 'Miniatura de la escena';
+
+// F13-E — pacotes versionaveis / child-theme.
+$_['text_package'] = 'Paquete de tema y herencia';
+$_['text_package_help'] = 'Exporte un JSON versionado con checksum o importe un paquete como borrador. Nada se publica automáticamente.';
+$_['text_package_export'] = 'Exportar borrador (.json)';
+$_['text_package_export_published'] = 'Exportar publicado (.json)';
+$_['text_package_import'] = 'Importar paquete';
+$_['text_package_import_help'] = 'Pegue el contenido del .reamurtheme.json o elija el archivo. El checksum y todas las allowlists se verifican antes de guardar.';
+$_['text_package_file'] = 'O elegir archivo .json';
+$_['text_package_paste'] = 'Contenido del paquete';
+$_['text_package_button'] = 'Importar como borrador';
+$_['text_package_version'] = 'Formato';
+$_['text_package_parent'] = 'Tema padre (child theme)';
+$_['text_package_parent_help'] = 'Hereda colores, tokens, condiciones, escena y plantillas; lo que defina aquí sobrescribe al padre. La cadena está limitada y los ciclos se ignoran.';
+$_['text_package_parent_none'] = 'Ninguno (tema base)';
+$_['text_import_ok'] = 'Paquete importado como borrador. Revíselo y publique cuando quiera.';
+$_['text_import_error'] = 'Paquete rechazado; no se guardó nada';
+$_['error_theme_parent'] = 'Tema padre inválido o igual al propio tema.';

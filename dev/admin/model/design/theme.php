@@ -51,6 +51,22 @@ class Theme extends \Reamur\System\Engine\Model {
         return true;
     }
 
+    /** F13-E: slug => config de todos os temas (draft ou published). */
+    public function getThemeMap(string $source = 'draft'): array {
+        $column = $source === 'published' ? 'published_config' : 'draft_config';
+        $q=$this->db->query("SELECT `slug`,`config`,`".$column."` FROM `".$this->table('design_theme')."`");
+        if (!($q instanceof \stdClass) || empty($q->rows)) return [];
+        $map=[];
+        foreach ((array)$q->rows as $row) {
+            $row=(array)$row; $slug=(string)($row['slug']??'');
+            if ($slug==='' || preg_match('/^[a-z0-9_-]{1,48}$/D',$slug)!==1) continue;
+            $raw=(string)($row[$column] ?: ($row['config']??'{}'));
+            $cfg=json_decode($raw,true);
+            if (is_array($cfg)) $map[$slug]=$cfg;
+        }
+        return $map;
+    }
+
     /** F13-C: payload explicitamente publicado, com fallback legado seguro. */
     public function getPublishedConfig(int $id): array {
         $theme=$this->getTheme($id);

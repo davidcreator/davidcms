@@ -83,3 +83,8 @@
 .scene-preset-card__values { font-family: var(--bs-font-monospace, monospace); font-size: .7rem; color: var(--bs-secondary-color, #5c6773); }
 #scene-thumb-live { display: block; width: 100%; height: auto; border: 1px solid var(--bs-border-color, #cbd5e1); border-radius: .5rem; }
 @media (max-width: 767.98px) { .scene-preset-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); } }
+
+/* F13-E — pacotes versionaveis / child-theme. */
+#theme-package textarea { font-size: .78rem; }
+#theme-package .btn { white-space: normal; }
+#theme-inheritance select { font-family: var(--bs-font-monospace, monospace); font-size: .85rem; }

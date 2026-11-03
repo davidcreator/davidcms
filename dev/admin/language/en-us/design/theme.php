@@ -197,3 +197,21 @@ $_['scene_preset_lost_help'] = 'Subtle particles on the 404 page.';
 $_['scene_preset_off'] = 'No scene';
 $_['scene_preset_off_help'] = 'Disables WebGL and keeps the text fallback.';
 $_['compare_scene_thumb'] = 'Scene thumbnail';
+
+// F13-E — pacotes versionaveis / child-theme.
+$_['text_package'] = 'Theme package and inheritance';
+$_['text_package_help'] = 'Export a versioned JSON file with a checksum, or import a package as a draft. Nothing is published automatically.';
+$_['text_package_export'] = 'Export draft (.json)';
+$_['text_package_export_published'] = 'Export published (.json)';
+$_['text_package_import'] = 'Import package';
+$_['text_package_import_help'] = 'Paste the .reamurtheme.json contents or pick the file below. Checksum and every allowlist are verified before writing.';
+$_['text_package_file'] = 'Or choose a .json file';
+$_['text_package_paste'] = 'Package contents';
+$_['text_package_button'] = 'Import as draft';
+$_['text_package_version'] = 'Format';
+$_['text_package_parent'] = 'Parent theme (child theme)';
+$_['text_package_parent_help'] = 'Inherits colors, tokens, conditions, scene and templates; anything you set here overrides the parent. The chain is bounded and cycles are ignored.';
+$_['text_package_parent_none'] = 'None (base theme)';
+$_['text_import_ok'] = 'Package imported as a draft. Review it and publish when ready.';
+$_['text_import_error'] = 'Package rejected; nothing was written';
+$_['error_theme_parent'] = 'Invalid parent theme or parent equals the theme itself.';

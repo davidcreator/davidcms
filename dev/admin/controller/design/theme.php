@@ -2,16 +2,7 @@
 /** Admin theme manager (F10-02); access and modify are separately ACL-gated. */
 namespace Reamur\Admin\Controller\Design;
 class Theme extends \Reamur\System\Engine\Controller {
-    /** Catalog templates the theme code editor may change; scripts stay in fixed runtime slots. */
-    private const TEMPLATE_KEYS = [
-        'common/home', 'common/footer', 'common/contact',
-        'partial/site_header', 'partial/hero', 'partial/hero-3d', 'partial/about',
-        'partial/methodology', 'partial/skills', 'partial/services', 'partial/testimonials',
-        'partial/portfolio', 'partial/tools', 'partial/news', 'partial/clients', 'partial/contact',
-        'cms/page_info', 'catalog/project_list', 'catalog/project_info',
-        'blog/blog_list', 'blog/blog_info', 'tool/tool_list', 'tool/tool_info',
-        'checkout/quote', 'error/not_found',
-    ];
+    // F13-E: allowlist unica em ThemePackage::TEMPLATE_KEYS (sem duplicacao).
     public function index(): void {
         if (!$this->user->hasPermission('access','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
         $this->load->language('design/theme'); $this->load->model('design/theme');
@@ -36,6 +27,28 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['three']=$engine->normalizeThree(is_array($config['three']??null)?$config['three']:[]) ?? ['enabled'=>false,'scene'=>'','slot'=>'hero','count'=>400,'color'=>'#8a4fff','speed'=>0.05];
         $data['three_scenes']=$spec['scenes'];
         $data['three_slots']=$spec['slots'];
+        // F13-E: pacote versionavel + child-theme.
+        $parents=[];
+        foreach($this->model_design_theme->getThemes() as $candidate) {
+            $candidateSlug=(string)($candidate['slug']??'');
+            if ($candidateSlug==='' || $candidateSlug===(string)($theme['slug']??'')) continue;
+            $parents[]=['slug'=>$candidateSlug,'name'=>(string)($candidate['name']??$candidateSlug)];
+        }
+        $data['theme_parents']=$parents;
+        $data['parent_theme']=(string)($config['parent']??'');
+        $data['package_format']=\Reamur\System\Library\Theme\ThemePackage::FORMAT;
+        $data['package_version']=\Reamur\System\Library\Theme\ThemePackage::VERSION;
+        $data['export_url']=$this->url->link('design/theme.export'.($id?'|'.$id:''));
+        $data['export_published_url']=$this->url->link('design/theme.export'.($id?'|'.$id:''),'source=published');
+        $data['import_url']=$this->url->link('design/theme.import'.($id?'|'.$id:''));
+        foreach(['text_package','text_package_help','text_package_export','text_package_export_published','text_package_import','text_package_import_help','text_package_file','text_package_paste','text_package_button','text_package_version','text_package_parent','text_package_parent_help','text_package_parent_none','text_import_ok','text_import_error','error_theme_parent'] as $k) $data[$k]=$this->language->get($k);
+        $data['notice']='';
+        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','save_failed','forbidden','csrf'];
+        $impErr=(string)($this->request->get['import_error']??'');
+        if ((string)($this->request->get['import_ok']??'')==='1') $data['notice']=$this->language->get('text_import_ok');
+        elseif ($impErr!=='') $data['error']=$this->language->get('text_import_error').' ('.(in_array($impErr,$codes,true)?$impErr:'unknown').')';
+        $this->document->addScript($this->config->get('site_url') . 'view/js/theme-package.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+
         // F13-D: presets allowlistados + miniatura SVG deterministica.
         $presets=[];
         foreach($this->three_scene_preset->all() as $p) {
@@ -149,6 +162,7 @@ class Theme extends \Reamur\System\Engine\Controller {
                 'speed'=>(string)($post['three_speed']??'0.05'),
             ];
             $data['scene_preset']=$this->three_scene_preset->matchingPreset($data['three']);
+            $data['parent_theme']=(string)($post['parent_theme']??$data['parent_theme']);
         }
         // F13-C: estado real de publicacao e dados do comparador.
         $publishedConfig=$id?$this->model_design_theme->getPublishedConfig($id):[];
@@ -163,15 +177,63 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['preview_devices']=['desktop','tablet','mobile'];
         $data['preview_variants']=['','a','b'];
         $focusPreview=(string)($this->request->get['focus_template']??'');
-        $data['preview_template']=in_array($focusPreview,self::TEMPLATE_KEYS,true)?$focusPreview:'common/home';
+        $data['preview_template']=in_array($focusPreview,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true)?$focusPreview:'common/home';
         $data['preview_theme_id']=$id;
         $data['scenes']=[['id'=>'','name'=>$this->language->get('text_no_scene')],['id'=>'hero-particles','name'=>'Hero particles'],['id'=>'portfolio-3d','name'=>'Portfolio 3D'],['id'=>'tools-3d','name'=>'Tools 3D'],['id'=>'not-found','name'=>'Not found']];
-        $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[]; $data['template_keys'] = self::TEMPLATE_KEYS; $focusTemplate=$this->request->get['focus_template']??''; $data['focus_template']=is_string($focusTemplate)&&in_array($focusTemplate,self::TEMPLATE_KEYS,true)?$focusTemplate:''; $data['template_sources']=$data['templates']; foreach($data['template_keys'] as $templateKey) { if (!isset($data['template_sources'][$templateKey])) { $templateFile=DIR_SYSTEM.'../catalog/view/template/'.$templateKey.'.twig'; if (is_file($templateFile)) $data['template_sources'][$templateKey]=(string)file_get_contents($templateFile); } } $data['preview_links']=[]; foreach($data['template_keys'] as $key) $data['preview_links'][$key]=$this->url->link('design/theme.preview'.($id?'|'.$id:''),'template='.rawurlencode($key)); foreach($data['revisions'] as &$revision) $revision['restore']=$this->url->link('design/theme.restore|'.$id.'|'.(int)$revision['revision_id']); unset($revision);
+        $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[]; $data['template_keys'] = \Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS; $focusTemplate=$this->request->get['focus_template']??''; $data['focus_template']=is_string($focusTemplate)&&in_array($focusTemplate,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true)?$focusTemplate:''; $data['template_sources']=$data['templates']; foreach($data['template_keys'] as $templateKey) { if (!isset($data['template_sources'][$templateKey])) { $templateFile=DIR_SYSTEM.'../catalog/view/template/'.$templateKey.'.twig'; if (is_file($templateFile)) $data['template_sources'][$templateKey]=(string)file_get_contents($templateFile); } } $data['preview_links']=[]; foreach($data['template_keys'] as $key) $data['preview_links'][$key]=$this->url->link('design/theme.preview'.($id?'|'.$id:''),'template='.rawurlencode($key)); foreach($data['revisions'] as &$revision) $revision['restore']=$this->url->link('design/theme.restore|'.$id.'|'.(int)$revision['revision_id']); unset($revision);
         // F13-C: Loader::view() nao mescla o idioma; publica todas as chaves
         // carregadas (sem sobrescrever valores calculados) para nao deixar rotulos vazios.
         $data=array_replace($this->language->all(),$data);
         $this->chrome($data); $this->response->setOutput($this->load->view('design/theme_form',$data));
     }
+    /**
+     * F13-E: exporta o tema como pacote JSON versionado (rascunho por padrao,
+     * publicado com ?source=published). GET de leitura, ACL access, no-store,
+     * zero escrita. O checksum cobre exatamente o config exportado.
+     */
+    public function export(string $theme_id='0'): void {
+        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
+        $this->response->addHeader('Cache-Control: no-store');
+        $this->response->addHeader('X-Content-Type-Options: nosniff');
+        $fail=static function(): string { return (string)json_encode(['ok'=>false,'errors'=>['forbidden']]); };
+        if (!$this->user->hasPermission('access','design/theme')) { $this->response->setOutput($fail()); return; }
+        $this->load->model('design/theme');
+        $id=(int)$theme_id; $theme=$id?$this->model_design_theme->getTheme($id):[];
+        if (!$theme) { $this->response->setOutput($fail()); return; }
+        $source=(string)($this->request->get['source']??'draft')==='published' ? 'published' : 'draft';
+        $config=$source==='published'?$this->model_design_theme->getPublishedConfig($id):$this->model_design_theme->getDraftConfig($id);
+        $package=$this->theme_package->export((string)($theme['name']??''),(string)($theme['slug']??''),$config,['source'=>$source]);
+        $filename=preg_replace('/[^a-z0-9_-]/','',(string)($theme['slug']??'')) ?: 'theme';
+        $this->response->addHeader('Content-Disposition: attachment; filename="'.$filename.'.reamurtheme.json"');
+        $this->response->setOutput($this->theme_package->encode($package));
+    }
+
+    /**
+     * F13-E: importa um pacote JSON como RASCUNHO do tema (nunca publica).
+     * POST, ACL modify, CSRF, tamanho/checksum/allowlists fail-closed. Um
+     * pacote invalido nao grava nada e volta com codigo de erro estavel.
+     */
+    public function import(string $theme_id='0'): void {
+        $this->load->language('design/theme'); $this->load->model('design/theme');
+        $id=(int)$theme_id;
+        $back=$this->url->link('design/theme.edit'.($id?'|'.$id:''));
+        $sep=str_contains($back,'?')?'&':'?';
+        $method=(string)($this->request->server['REQUEST_METHOD']??'');
+        if ($method!=='POST' || !$this->user->hasPermission('modify','design/theme')
+            || !\Reamur\System\Library\Security\Csrf::check($this->session,(string)($this->request->post['csrf_token']??''))) {
+            $this->response->redirect($back.$sep.'import_error=forbidden'); return;
+        }
+        $decoded=$this->theme_package->decode((string)($this->request->post['theme_package']??''));
+        if (!$decoded['ok']) { $this->response->redirect($back.$sep.'import_error='.rawurlencode($decoded['errors'][0])); return; }
+        $theme=$id?$this->model_design_theme->getTheme($id):[];
+        $name=$id?(string)($theme['name']??$decoded['name']):$decoded['name'];
+        $slug=$id?(string)($theme['slug']??$decoded['slug']):$decoded['slug'];
+        $config=$decoded['config'];
+        if (($config['parent']??'')===$slug) unset($config['parent']); // sem auto-heranca
+        $saved=$this->model_design_theme->save($id,['name'=>$name,'slug'=>$slug,'config'=>$config],(int)$this->user->getUserId());
+        $this->response->redirect($back.$sep.($saved?'import_ok=1':'import_error=save_failed'));
+    }
+
     public function preview(string $theme_id='0'): void {
         if (!$this->user->hasPermission('access','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
         $this->load->language('design/theme'); $this->load->model('design/theme'); $id=(int)$theme_id; $theme=$this->model_design_theme->getTheme($id);
@@ -235,10 +297,14 @@ class Theme extends \Reamur\System\Engine\Controller {
         if (!preg_match('/^#[0-9a-fA-F]{6}$/',$primary) || !preg_match('/^#[0-9a-fA-F]{6}$/',$surface)) return $bad($this->language->get('error_validation'));
         $templates=(array)($post['templates']??[]); $safeTemplates=[]; $invalidTemplateSource=false;
         foreach($templates as $templateKey=>$source) {
-            if (!in_array((string)$templateKey,self::TEMPLATE_KEYS,true) || !is_string($source) || strlen($source)>131072 || preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i',(string)$source)) { $invalidTemplateSource=true; continue; }
+            if (!in_array((string)$templateKey,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true) || !is_string($source) || strlen($source)>131072 || preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i',(string)$source)) { $invalidTemplateSource=true; continue; }
             $safeTemplates[(string)$templateKey]=$source;
         }
         if ($invalidTemplateSource) return $bad($this->language->get('error_template_source'));
+        // F13-E: child-theme. Sem coluna nova: `parent` e so uma chave do JSON.
+        // Formato allowlistado e proibido apontar para o proprio tema.
+        $parent=strtolower(trim((string)($post['parent_theme']??'')));
+        if ($parent!=='' && (preg_match('/^[a-z0-9_-]{1,48}$/D',$parent)!==1 || $parent===$slug)) return $bad($this->language->get('error_theme_parent'));
         $engine=$this->theme_condition_engine;
         $conditions=json_decode((string)($post['conditions']??''),true);
         $conditions=is_array($conditions)?$conditions:['version'=>1,'rules'=>[]];
@@ -282,6 +348,7 @@ class Theme extends \Reamur\System\Engine\Controller {
                 'conditions'=>['version'=>1,'rules'=>$normalized['rules']],
                 'three'=>$three,
                 'tokens'=>$tokensNormalized,
+                'parent'=>$parent,
             ],
         ];
     }
@@ -319,10 +386,13 @@ class Theme extends \Reamur\System\Engine\Controller {
             'query'=>isset($post['preview_query'])&&is_array($post['preview_query'])?$post['preview_query']:[],
         ]);
         $key=(string)($post['preview_template']??'common/home');
-        if (!in_array($key,self::TEMPLATE_KEYS,true)) $key='common/home';
+        if (!in_array($key,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true)) $key='common/home';
         $snapshot=$this->theme_snapshot;
-        $pubState=$snapshot->resolve($published,$context);
-        $draftState=$snapshot->resolve($draft,$context);
+        // F13-E: heranca resolvida no mesmo ponto do Catalog (ThemeSnapshot).
+        $mapPublished=$this->model_design_theme->getThemeMap('published');
+        $mapDraft=$this->model_design_theme->getThemeMap('draft');
+        $pubState=$snapshot->resolve($published,$context,$mapPublished,(string)($published['slug']??''));
+        $draftState=$snapshot->resolve($draft,$context,$mapDraft,(string)($draft['slug']??''));
         $pubSource=isset($published['templates'][$key])?$published['templates'][$key]:null;
         $draftSource=isset($draft['templates'][$key])?$draft['templates'][$key]:null;
         try {

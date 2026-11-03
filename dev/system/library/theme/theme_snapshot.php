@@ -13,10 +13,12 @@ final class ThemeSnapshot {
     private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found'];
     private ConditionEngine $engine;
     private TokenRegistry $tokens;
+    private ThemePackage $package;
 
-    public function __construct(ConditionEngine $engine, TokenRegistry $tokens) {
+    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?ThemePackage $package = null) {
         $this->engine = $engine;
         $this->tokens = $tokens;
+        $this->package = $package ?? new ThemePackage($engine, $tokens);
     }
 
     /**
@@ -24,7 +26,11 @@ final class ThemeSnapshot {
      * @param array<string,mixed> $context  Contexto allowlisted do ConditionEngine.
      * @return array<string,mixed>
      */
-    public function resolve(array $config, array $context): array {
+    public function resolve(array $config, array $context, array $themeMap = [], string $selfSlug = ''): array {
+        // F13-E: child-theme. Com mapa, resolve a cadeia de pais antes de
+        // calcular o estado efetivo; sem mapa, comportamento identico ao de C.
+        // Ciclo/profundidade/pai ausente param a caminhada (fail-closed).
+        if ($themeMap !== []) $config = $this->package->resolveChain($config, $themeMap, $selfSlug);
         $rules = [];
         if (isset($config['conditions']) && is_array($config['conditions'])) {
             $rules = $this->engine->normalize($config['conditions'])['rules'];

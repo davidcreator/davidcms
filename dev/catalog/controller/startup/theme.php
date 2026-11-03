@@ -20,7 +20,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         // F13-C: uma unica fonte de verdade para o estado efetivo do tema.
         // O Admin (previa rascunho x publicado) resolve exatamente o mesmo
         // calculo com a mesma classe, no mesmo contexto allowlistado.
-        $snapshot = $this->theme_snapshot->resolve($config, $this->context());
+        // F13-E: o Catalog resolve a cadeia de child-themes sobre o mapa publicado.
+        $themeMap = method_exists($this->model_common_theme, 'getThemeMap') ? $this->model_common_theme->getThemeMap('published') : [];
+        $snapshot = $this->theme_snapshot->resolve($config, $this->context(), $themeMap);
         $primary  = $snapshot['primary'];
         $surface  = $snapshot['surface'];
         $scene    = $snapshot['scene'];

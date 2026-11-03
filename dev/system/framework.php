@@ -46,6 +46,10 @@ $registry->set('theme_snapshot', new \Reamur\System\Library\Theme\ThemeSnapshot(
 ));
 // F13-D: presets + miniaturas SVG das cenas nativas (sem cenas novas/JS/GLB).
 $registry->set('three_scene_preset', new \Reamur\System\Library\Three\ScenePresetRegistry());
+// F13-E: pacotes versionaveis + resolucao de child-theme (sem migration).
+$registry->set('theme_package', new \Reamur\System\Library\Theme\ThemePackage(
+    $registry->get('theme_condition_engine'), $registry->get('theme_token_registry')
+));
 
 // 4. Config: default + aplicação (Contrato §4)
 $config = new Config();

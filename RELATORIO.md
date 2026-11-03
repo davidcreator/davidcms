@@ -1,97 +1,96 @@
-# Frente D — Editor de cena com miniatura e presets
+# Frente E — Pacotes versionáveis e child-theme
 
-Série A→J: **A** (builder de condições), **B** (design tokens) e **C** (prévia
-rascunho × publicado) já estão aplicadas no `main` 6967028f9; **esta é a D**.
-Próxima: **E — pacotes versionáveis / child-theme**. Um pacote instalável por
+Série A→J: **A** (builder de condições), **B** (design tokens), **C** (prévia
+rascunho × publicado) e **D** (editor de cena) já estão aplicadas no `main` c3be5a561;
+**esta é a E**. Próxima: **F — section builder**. Um pacote instalável por
 frente.
 
-## Recorte deliberado
+## Recorte
 
-A ADR 0072 fixa que as **cenas nativas** continuam allowlistadas e versionadas
-em código, sem scene builder genérico nem upload de GLB. As *thumbs
-declarativas* do BDREditor (`threejs-thumb.js`, `custom_js` em iframe opaco)
-são **outro subsistema** (F9-103, pausado) e não foram tocadas. D trabalha
-apenas nos parâmetros que `ConditionEngine::normalizeThree()` já aceita:
-`enabled`, `scene`, `slot`, `count`, `color`, `speed`. **Nenhuma chave nova
-entra no `config` do tema** — `ThemeSnapshot`, o `startup` do Catalog, a prévia
-da frente C e o runtime Three.js permanecem intactos.
+**Sem migration e sem schema.** `rms_design_theme` já tem `config`,
+`draft_config`, `published_config`, `slug` e `status`; o parent é apenas uma
+chave allowlistada (`parent`) dentro do JSON. Nenhum arquivo é lido/escrito no
+servidor: export devolve JSON na resposta, import recebe JSON no POST. Sem
+upload, `eval`, `call_user_func`, regex do usuário, `|raw` novo ou HTML novo.
 
 ## O que faltava
 
-O card Three.js do formulário de tema era só seis campos soltos: sem referência
-visual do que cada cena produz, sem combinações prontas e sem feedback ao
-alterar cor/partículas/velocidade.
+Temas só existiam no banco, um a um. Não havia como transportar um tema entre
+instalações, versioná-lo, nem criar uma variação que herdasse de outro — cada
+cópia exigia duplicar cores, tokens, condições, cena e 25 fontes Twig.
 
-## Entregue (13 arquivos)
+## Entregue (16 arquivos)
 
-- **`ScenePresetRegistry`** novo: **6 presets allowlistados** — Aurora suave,
-  Nebulosa densa, Portfólio geométrico, Oficina 3D, 404 noturno e Sem cena.
-  `find()`, `apply()`, `validate()`, `normalize()`, `matchingPreset()`,
-  `svg()`, `dataUri()`. Todos os valores passam pelas mesmas allowlists e
-  limites do motor (cenas, slots, 50–800, hex 6, 0,01–0,20); cada preset foi
-  testado contra `normalizeThree()`.
-- **Miniatura SVG determinística** por cena (partículas, losangos isométricos,
-  engrenagem esquemática, "404" e desligado). Sem `<script>`, `on*`, `url(`,
-  `<style>`, `foreignObject`, `href`/`xlink`, `rand()` ou texto livre do
-  usuário — só hex validado e números formatados. Servida como **imagem**,
-  nunca como HTML inline (sem `|raw` novo).
-- **Editor no formulário**: miniatura ao vivo, `<select name="scene_preset">`
-  com "Personalizado (manter campos)" e 6 cartões com miniatura, nome,
-  descrição e valores. `theme-scene-editor.js` aplica um preset em um clique,
-  atualiza a miniatura a cada alteração (debounce 180 ms) e volta para
-  *Personalizado* quando algum campo é editado manualmente. O select **sempre
-  abre em Personalizado**: se viesse pré-selecionado, um save sem JS
-  sobrescreveria edições manuais nos campos `three_*`. Sem JS o select continua
-  funcionando no POST.
-- **Endpoint `design/theme.sceneThumb`**: GET idempotente, ACL `access`,
-  `no-store`, `nosniff`, CSP `default-src 'none'`, `Content-Disposition:
-  inline`, `image/svg+xml`, zero escrita. Sem CSRF porque não há mutação
-  (mesmo padrão dos assets públicos allowlistados). Parâmetros normalizados
-  fail-closed antes de gerar o SVG; ACL negada devolve apenas o SVG "off".
-- **Prévia da frente C**: cada painel (publicado/rascunho) mostra também a
-  miniatura da cena via data URI — a CSP existente já permite `img-src data:`.
-- **10 chaves de UI + 6 nomes + 6 descrições + 1 rótulo de view ×3 idiomas**;
-  estilos no CSS do builder já existente (nenhuma ferramenta/checker novo).
-  Guia `docs/GUIA-EDITOR-CENA-PRESETS.md`.
+- **`ThemePackage`** novo: `FORMAT = reamurcms-theme`, `VERSION = 1`, limite de
+  512 KiB e cadeia limitada a 5 níveis. `export()`/`encode()` geram pacote com
+  **`checksum` SHA-256 do config canônico** (chaves ordenadas recursivamente);
+  `decode()` é fail-closed em tamanho, JSON, formato, versão, identidade,
+  checksum (`hash_equals`) e `validateConfig()` — que reusa `ConditionEngine`,
+  `TokenRegistry` e a mesma regex de fontes Twig. Um byte alterado no config
+  invalida o pacote. Códigos de erro estáveis.
+- **Allowlist única**: `ThemePackage::TEMPLATE_KEYS` passa a ser a fonte; o
+  controller Admin deixou de ter uma constante privada duplicada (5 usos).
+- **Child-theme resolvido em runtime**: `resolveChain()` mescla pai → filho
+  (mapas `tokens`/`templates`/`three` por chave; escalares e `conditions`
+  substituídos). Ciclo, profundidade ou pai ausente **param** a caminhada sem
+  loop. A resolução entra no `ThemeSnapshot::resolve()` — a **mesma** classe já
+  usada pelo Catalog e pela prévia C — via `themeMap` opcional. `startup` passa
+  o mapa **publicado**; `compare()` passa publicado e rascunho. Mudanças no pai
+  propagam sem regravar o filho.
+- **Dois models** ganham `getThemeMap('draft'|'published')` (SELECT simples,
+  sem coluna nova). `getDraftConfig()`/`getPublishedConfig()` continuam
+  devolvendo o config **próprio**, usado no export e no diff.
+- **Admin**: card "Tema pai (child-theme)" com `<select name="parent_theme">`
+  (auto-herança e slugs inválidos recusados) e card "Pacote de tema e herança"
+  com export do rascunho/publicado, textarea de import, arquivo `.json`
+  opcional por `theme-package.js` (FileReader, sem upload/fetch) e mensagens de
+  sucesso/erro allowlistadas.
+- **`design/theme.export`**: GET, ACL `access`, `no-store`, `nosniff`,
+  `application/json`, `Content-Disposition: attachment`, zero escrita.
+- **`design/theme.import`**: POST, ACL `modify`, CSRF, aplica como **rascunho**
+  via `save()` — nunca publica nem ativa. Pacote inválido não grava nada e
+  retorna código de erro estável (sem refletir texto livre). `parent` igual ao
+  próprio `slug` é removido.
+- **16 chaves de UI ×3 idiomas**; estilos no CSS do builder já existente. Guia
+  `docs/GUIA-PACOTES-CHILD-THEME.md`.
 
-## Segurança
+## Compatibilidade e regressão
 
-Nenhum preset cria cena, caminho, código executável, GLB, JavaScript de cena
-ou campo de script. SVG é imagem, não documento ativo; mesmo aberto direto, a
-CSP e a ausência de scripts bloqueiam execução. `buildDraftConfig()` valida o
-id do preset antes de usá-lo (`error_scene_preset`) e continua aplicando
-`normalizeThree()`, portanto prévia e save seguem as mesmas regras. O editor JS
-não usa `innerHTML`, `eval`, `fetch` nem `document.write`.
+Temas sem `parent` continuam idênticos (`themeMap` vazio → mesmo resultado das
+frentes A–D). `buildDraftConfig()` grava `parent: ''`, aceito por todas as
+allowlists. Builder, tokens, prévia rascunho×publicado, presets de cena,
+`simulate()`, `sceneThumb()`, `activate()` e `restore()` permanecem intactos.
 
 ## Validação executada
 
 | Verificação | Resultado |
 |---|---|
-| `php -l` PHP 8.5 real nos 7 arquivos PHP | 7 OK / 0 FAIL |
-| `node --check` (editor novo + builder A inalterado) | 2 OK |
-| `ScenePresetRegistry`: presets, allowlists, fail-closed, SVG, injeção | 134 PASS / 0 FAIL |
-| Controller Admin com mocks: presets, `sceneThumb`, `compare`, regressão A/B/C | 52 PASS / 0 FAIL |
-| Render Twig 3.14 + `ThemeCompareView` com miniaturas | 35 PASS / 0 FAIL |
-| **jsdom 29**: presets, miniatura ao vivo, edição manual, regressão A/B/C | 39 PASS / 0 FAIL |
+| `php -l` PHP 8.5 real nos 10 arquivos PHP | 10 OK / 0 FAIL |
+| `node --check` (3 JS: A, D e o novo) | 3 OK |
+| `ThemePackage`: checksum, fail-closed, sanitize, `resolveChain` | 55 PASS / 0 FAIL |
+| Núcleo: herança no `ThemeSnapshot`, paridade startup, mapas dos models | 35 PASS / 0 FAIL |
+| Controller Admin com mocks: export/import/parent, regressão A–D | 65 PASS / 0 FAIL |
+| Render Twig 3.14 + view (sem form aninhado, rótulos, miniaturas) | 39 PASS / 0 FAIL |
+| **jsdom 29**: FileReader, cards, regressão A/B/C/D | 32 PASS / 0 FAIL |
 | `verify-checksums` (A e B) | 14 manifestos / 142 arquivos / 0 divergentes |
 | `repo-health` (A e B) | 6 PASS / 0 FAIL / 0 SKIP |
 | `verify-ci-workflow` | 31 PASS / 0 FAIL |
 | `verify-contract-freeze` | exit 0 |
 
-**Total: 260 asserções, 0 falhas.** Os 14 `CHECKSUMS*.txt` permanecem
-**idênticos** (nenhum arquivo da frente é coberto por eles) e não foram
-reemitidos. Nenhum contrato congelado, `schema.sql`, `release_approved`,
-workflow, checker, `ConditionEngine`, `TokenRegistry`, `SceneConfig` ou
-arquivo do runtime Three.js/BDREditor foi modificado. Nenhuma escrita remota.
-F9-27 segue `BLOCKED_NOT_RUN`; BDREditor pausado; P2 do F9-18 não reaberto.
+**Total: 226 asserções, 0 falhas.** `schema.sql` verificado por hash antes e
+depois (inalterado). Os 14 `CHECKSUMS*.txt` permanecem **idênticos** e não
+foram reemitidos. Nenhum contrato congelado, `release_approved`, workflow,
+checker, `ConditionEngine`, `TokenRegistry`, `SceneConfig` ou runtime Three.js
+foi modificado. Nenhuma escrita remota. F9-27 segue `BLOCKED_NOT_RUN`;
+BDREditor pausado; P2 do F9-18 não reaberto.
 
 ## Limitações
 
 PHP 8.5 via WASM + Twig 3.14 + jsdom, com mocks de DB/sessão/response. **Não**
 houve CMS completo, MySQL real, sessão Admin autenticada, browser com rede,
-WebGL, E2E, migration, staging, deploy ou escrita no GitHub. A miniatura é uma
-representação esquemática estática, não um frame do WebGL; a conferência visual
-da cena real é do usuário. **CI verde e health verde ≠ release aprovada.**
+WebGL, E2E, migration, staging, deploy ou escrita no GitHub. Import entre
+instalações diferentes deve ser conferido pelo usuário. **CI verde e health
+verde ≠ release aprovada.**
 
 Aplicar: substituir pelos arquivos completos e rodar
 `bash tools/verify-checksums.sh && bash tools/repo-health.sh`.
