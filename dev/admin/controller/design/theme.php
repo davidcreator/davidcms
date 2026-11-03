@@ -228,6 +228,9 @@ class Theme extends \Reamur\System\Engine\Controller {
             $sr['help']=$this->language->get($sr['help_key']);
         } unset($sr);
         $data['site_languages']=$this->theme_sites->languages();
+        // F13-K: mostra no card o idioma que a frente K aplicara no Catalog.
+        $data['site_active_id']=(string)($siteActive['id']??'');
+        $data['site_active_language']=(string)($siteActive['language']??'');
         $data['site_theme_options']=[];
         foreach($this->model_design_theme->getThemes() as $candidate){
             $s=(string)($candidate['slug']??'');
@@ -489,7 +492,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         }
         $normalized=$engine->normalize($conditions);
         $out=['primary'=>$primary,'surface'=>$surface,
-            'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']:'',
+            'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)($post['scene']??''):'',
             'templates'=>$safeTemplates,
             'conditions'=>['version'=>1,'rules'=>$normalized['rules']],
             'three'=>$three,'tokens'=>$tokensNormalized,'parent'=>$parent];
