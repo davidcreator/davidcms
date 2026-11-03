@@ -33,12 +33,24 @@ class Theme extends \Reamur\System\Engine\Controller {
         $source = $decision['effective'] === 'draft' ? 'draft' : 'published';
         $config = $source === 'draft' ? $draft : $published;
 
+        // F13-J: politica de sites vem do config EFETIVO do tema ativo. O host
+        // do request so e COMPARADO (ThemeSites::match), nunca publicado.
+        $sitesCfg = $this->theme_sites->normalize($config['sites'] ?? null) ?? [];
+        $siteHost = (string)($this->request->server['HTTP_HOST'] ?? '');
+        $site = $this->theme_sites->match($sitesCfg, $siteHost);
+
         // F13-C: uma unica fonte de verdade para o estado efetivo do tema.
         // O Admin (previa rascunho x publicado) resolve exatamente o mesmo
         // calculo com a mesma classe, no mesmo contexto allowlistado.
         // F13-E: o Catalog resolve a cadeia de child-themes sobre o mapa publicado.
         $themeMap = method_exists($this->model_common_theme, 'getThemeMap') ? $this->model_common_theme->getThemeMap($source) : [];
-        $snapshot = $this->theme_snapshot->resolve($config, $context, $themeMap, $selfSlug, $decision);
+        // F13-J: o mapa acima ja traz TODOS os temas. Escolher o tema do site
+        // nao custa nenhuma consulta nova; slug ausente cai no tema ativo.
+        $root = $this->theme_sites->resolve($site, $themeMap, $selfSlug);
+        $rootConfig = $root['config'] ?? $config;
+        $rootSlug = (string)$root['slug'];
+        $snapshot = $this->theme_snapshot->resolve($rootConfig, $context, $themeMap, $rootSlug, $decision,
+            ['sites'=>$sitesCfg,'active'=>$site]);
         $primary  = $snapshot['primary'];
         $surface  = $snapshot['surface'];
         $scene    = $snapshot['scene'];
@@ -65,6 +77,10 @@ class Theme extends \Reamur\System\Engine\Controller {
         $this->config->set('catalog_theme_schedule_css', $snapshot['schedule_css']);
         // F13-I: variaveis --rms-media-* (data URI SVG deterministico).
         $this->config->set('catalog_theme_media_css', $snapshot['media_css']);
+        // F13-J: site ativo (allowlistado), CSS de inteiros e idioma sugerido.
+        $this->config->set('catalog_theme_site', $site);
+        $this->config->set('catalog_theme_site_css', $snapshot['site_css']);
+        $this->config->set('catalog_theme_site_language', $snapshot['site_language']);
 
         // Globais primeiro: setThemeTemplates() reconstrói o Environment e
         // reaplica estes mesmos valores (implementado no adaptador Twig).

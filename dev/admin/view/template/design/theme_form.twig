@@ -97,6 +97,21 @@
 <span class="tmm-status" data-model-status aria-live="polite"></span>
 <p class="form-text mb-0">{{ text_models_sections }} · {{ text_models_components }} · {{ text_models_media }}. {{ text_models_applied }}</p>
 </div></div>
+<div class="card mb-4" id="theme-sites" data-sites="{{ sites_json|e('html_attr') }}" data-site-unknown="{{ text_sites_probe_unknown|e('html_attr') }}"><div class="card-header"><h2 class="h5 mb-0">{{ text_sites }}</h2><p class="mb-0 text-muted">{{ text_sites_help }}</p></div><div class="card-body">
+<div class="tms-grid">
+{% for s in site_rows %}<div class="tms-card" data-site="{{ s.id }}">
+<div class="form-check"><input class="form-check-input" type="checkbox" name="sites[{{ s.id }}][enabled]" value="1" id="site-{{ s.id }}" data-site-enabled{% if s.enabled %} checked{% endif %}><label class="form-check-label" for="site-{{ s.id }}"><strong>{{ s.label }}</strong></label></div>
+<p class="tms-card__help">{{ s.help }}</p>
+<label class="form-label" for="site-host-{{ s.id }}">{{ text_sites_host }}</label>
+<input class="form-control form-control-sm" id="site-host-{{ s.id }}" name="sites[{{ s.id }}][host]" value="{{ s.host }}" maxlength="253" placeholder="exemplo.com" data-site-host>
+<div class="row g-2 mt-1"><div class="col"><label class="form-label">{{ text_sites_slug }}</label><select class="form-select form-select-sm" name="sites[{{ s.id }}][slug]" data-site-slug><option value="">{{ text_sites_default }}</option>{% for t in site_theme_options %}<option value="{{ t.slug }}"{% if t.slug == s.slug %} selected{% endif %}>{{ t.slug }}</option>{% endfor %}</select></div>
+<div class="col"><label class="form-label">{{ text_sites_language }}</label><select class="form-select form-select-sm" name="sites[{{ s.id }}][language]" data-site-language>{% for l in site_languages %}<option value="{{ l }}"{% if l == s.language %} selected{% endif %}>{{ l }}</option>{% endfor %}</select></div></div>
+{% if s.active %}<span class="badge text-bg-success mt-2">{{ text_sites_active }}</span>{% endif %}
+</div>{% endfor %}</div>
+<div class="row g-2 align-items-end mt-3"><div class="col-md-8"><label class="form-label" for="site-probe">{{ text_sites_probe }}</label><input class="form-control form-control-sm" id="site-probe" name="site_probe_host" data-site-probe value="{{ site_probe_host }}" maxlength="253" placeholder="loja.exemplo.com"><div class="form-text">{{ text_sites_probe_help }}</div></div><div class="col-md-4"><button type="button" class="btn btn-sm btn-outline-primary" data-site-probe-button>{{ text_sites_probe_button }}</button></div></div>
+<span class="tms-status" data-site-status aria-live="polite"></span>
+<p class="form-text mb-0">{{ text_sites_note }}</p>
+</div></div>
 <div class="card mb-4" id="theme-component-library" data-thumb-base="{{ component_thumb_base|e('html_attr') }}" data-snippets="{{ component_snippets_json|e('html_attr') }}"><div class="card-header"><h2 class="h5 mb-0">{{ text_components }}</h2><p class="mb-0 text-muted">{{ text_components_help }}</p></div><div class="card-body">
 <div class="row g-2 align-items-end mb-3"><div class="col-md-9"><label class="form-label" for="component-target">{{ text_component_target }}</label><select class="form-select form-select-sm" id="component-target" data-component-target>{% for k in template_keys %}<option value="{{ k }}"{% if k == 'common/home' %} selected{% endif %}>{{ k }}.twig</option>{% endfor %}</select></div><div class="col-md-3"><span class="tcl-status" data-component-status aria-live="polite"></span></div></div>
 <div class="tcl-grid">

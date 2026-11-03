@@ -18,8 +18,9 @@ final class ThemeSnapshot {
     private ComponentRegistry $components;
     private ThemeSchedule $schedule;
     private ThemeMedia $media;
+    private ThemeSites $sites;
 
-    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?ThemePackage $package = null, ?SectionRegistry $sections = null, ?ComponentRegistry $components = null, ?ThemeSchedule $schedule = null, ?ThemeMedia $media = null) {
+    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?ThemePackage $package = null, ?SectionRegistry $sections = null, ?ComponentRegistry $components = null, ?ThemeSchedule $schedule = null, ?ThemeMedia $media = null, ?ThemeSites $sites = null) {
         $this->engine = $engine;
         $this->tokens = $tokens;
         $this->package = $package ?? new ThemePackage($engine, $tokens);
@@ -27,6 +28,7 @@ final class ThemeSnapshot {
         $this->components = $components ?? $this->package->components();
         $this->schedule = $schedule ?? $this->package->schedule();
         $this->media = $media ?? $this->package->media();
+        $this->sites = $sites ?? $this->package->sites();
     }
 
     /**
@@ -34,7 +36,7 @@ final class ThemeSnapshot {
      * @param array<string,mixed> $context  Contexto allowlisted do ConditionEngine.
      * @return array<string,mixed>
      */
-    public function resolve(array $config, array $context, array $themeMap = [], string $selfSlug = '', array $scheduleState = []): array {
+    public function resolve(array $config, array $context, array $themeMap = [], string $selfSlug = '', array $scheduleState = [], array $siteState = []): array {
         // F13-E: child-theme. Com mapa, resolve a cadeia de pais antes de
         // calcular o estado efetivo; sem mapa, comportamento identico ao de C.
         // Ciclo/profundidade/pai ausente param a caminhada (fail-closed).
@@ -101,6 +103,17 @@ final class ThemeSnapshot {
         $mediaCss = $this->media->css($mediaConfig);
         $mediaGlobals = $this->media->globals($mediaConfig);
 
+        // F13-J: politica de sites do config + decisao por requisicao (fora).
+        // Sem siteState => nenhum site ativo, comportamento identico a A-I.
+        // A politica de sites e GLOBAL (tema ativo): quando o root e o tema de
+        // outro site, ela chega por $siteState e nao se perde na troca de raiz.
+        $sitesRaw = (array_key_exists('sites',$siteState) && is_array($siteState['sites']))
+            ? $siteState['sites'] : ($config['sites'] ?? null);
+        $sitesConfig = is_array($sitesRaw) ? ($this->sites->normalize($sitesRaw) ?? []) : [];
+        $siteActive = (array)($siteState['active'] ?? $this->sites->emptySite());
+        $siteCss = $this->sites->css($siteActive);
+        $siteGlobals = $this->sites->globals($sitesConfig,$siteActive);
+
         return [
             'primary'    => $primary,
             'surface'    => $surface,
@@ -124,6 +137,11 @@ final class ThemeSnapshot {
             'media_enabled' => $this->media->enabled($mediaConfig),
             'media_css' => $mediaCss,
             'media_bars' => $this->media->bars($mediaConfig),
+            'sites' => $sitesConfig,
+            'site' => $siteActive,
+            'site_css' => $siteCss,
+            'site_bars' => $this->sites->bars($sitesConfig,$siteActive),
+            'site_language' => (string)($siteActive['language'] ?? ''),
             'schedule' => $scheduleState,
             'schedule_effective' => (string)($scheduleState['effective'] ?? 'published'),
             'schedule_reason' => (string)($scheduleState['reason'] ?? 'disabled'),
@@ -138,7 +156,7 @@ final class ThemeSnapshot {
                     'tokens' => $tokens, 'sections' => ($sections ?? []),
                 ],
                 'theme_scene' => $three,
-            ], $componentGlobals, $this->schedule->globals($scheduleState), $mediaGlobals),
+            ], $componentGlobals, $this->schedule->globals($scheduleState), $mediaGlobals, $siteGlobals),
         ];
     }
 

@@ -43,7 +43,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['import_url']=$this->url->link('design/theme.import'.($id?'|'.$id:''));
         foreach(['text_package','text_package_help','text_package_export','text_package_export_published','text_package_import','text_package_import_help','text_package_file','text_package_paste','text_package_button','text_package_version','text_package_parent','text_package_parent_help','text_package_parent_none','text_import_ok','text_import_error','error_theme_parent'] as $k) $data[$k]=$this->language->get($k);
         $data['notice']='';
-        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','components_invalid','schedule_invalid','media_invalid','save_failed','forbidden','csrf'];
+        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','components_invalid','schedule_invalid','media_invalid','sites_invalid','save_failed','forbidden','csrf'];
         $impErr=(string)($this->request->get['import_error']??'');
         if ((string)($this->request->get['import_ok']??'')==='1') $data['notice']=$this->language->get('text_import_ok');
         elseif ($impErr!=='') $data['error']=$this->language->get('text_import_error').' ('.(in_array($impErr,$codes,true)?$impErr:'unknown').')';
@@ -219,6 +219,28 @@ class Theme extends \Reamur\System\Engine\Controller {
                  'text_models','text_models_help','text_models_apply','text_models_confirm','text_models_applied',
                  'text_models_sections','text_models_components','text_models_media','error_models'] as $k) $data[$k]=$this->language->get($k);
         $this->document->addScript($this->config->get('site_url') . 'view/js/theme-media.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-media-i');
+        // F13-J: mapa declarativo de sites/hosts -> temas por slug.
+        $sitesNorm=$this->theme_sites->normalize(is_array($config['sites']??null)?$config['sites']:[]) ?? [];
+        $siteActive=$this->theme_sites->match($sitesNorm,(string)($this->request->server['HTTP_HOST']??''));
+        $data['site_rows']=$this->theme_sites->view($sitesNorm,$siteActive);
+        foreach($data['site_rows'] as &$sr){
+            $sr['label']=$this->language->get($sr['label_key']);
+            $sr['help']=$this->language->get($sr['help_key']);
+        } unset($sr);
+        $data['site_languages']=$this->theme_sites->languages();
+        $data['site_theme_options']=[];
+        foreach($this->model_design_theme->getThemes() as $candidate){
+            $s=(string)($candidate['slug']??'');
+            if ($s!=='') $data['site_theme_options'][]=['slug'=>$s,'name'=>(string)($candidate['name']??$s)];
+        }
+        $data['sites_json']=json_encode($sitesNorm,$jsonFlags) ?: '{}';
+        // NUNCA refletir HTTP_HOST no HTML: a sonda comeca vazia e rodando no JS.
+        $data['site_probe_host']='';
+        foreach(['text_sites','text_sites_help','text_sites_host','text_sites_slug','text_sites_language',
+                 'text_sites_enabled','text_sites_active','text_sites_default','text_sites_probe',
+                 'text_sites_probe_help','text_sites_probe_button','text_sites_probe_unknown',
+                 'text_sites_note','text_sites_empty','text_sites_fallback','error_sites'] as $k) $data[$k]=$this->language->get($k);
+        $this->document->addScript($this->config->get('site_url') . 'view/js/theme-sites.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-sites-j');
         // F13-C: estado real de publicacao e dados do comparador.
         $publishedConfig=$id?$this->model_design_theme->getPublishedConfig($id):[];
         $draftNorm=json_encode(json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true) ?: new \stdClass());
@@ -449,6 +471,22 @@ class Theme extends \Reamur\System\Engine\Controller {
             $mediaOverride=$this->theme_media->normalize($cleanMedia);
             if ($mediaOverride===null) return $bad($this->language->get('error_media'));
         }
+        // F13-J: hosts/slugs/idiomas allowlistados. Campos ausentes preservam A-I.
+        $sitesOverride=null;
+        if (array_key_exists('sites',$post)) {
+            $rawSites=(array)$post['sites']; $cleanSites=[];
+            foreach($this->theme_sites->ids() as $sid) {
+                if (!isset($rawSites[$sid]) || !is_array($rawSites[$sid])) continue;
+                $cleanSites[$sid]=[
+                    'host'=>(string)($rawSites[$sid]['host']??''),
+                    'slug'=>(string)($rawSites[$sid]['slug']??''),
+                    'language'=>(string)($rawSites[$sid]['language']??'pt-br'),
+                    'enabled'=>isset($rawSites[$sid]['enabled'])&&(string)$rawSites[$sid]['enabled']==='1',
+                ];
+            }
+            $sitesOverride=$this->theme_sites->normalize($cleanSites);
+            if ($sitesOverride===null) return $bad($this->language->get('error_sites'));
+        }
         $normalized=$engine->normalize($conditions);
         $out=['primary'=>$primary,'surface'=>$surface,
             'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']:'',
@@ -459,6 +497,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         if ($componentOverride!==null) $out['components']=$componentOverride;
         if ($scheduleOverride!==null) $out['schedule']=$scheduleOverride;
         if ($mediaOverride!==null) $out['media']=$mediaOverride;
+        if ($sitesOverride!==null) $out['sites']=$sitesOverride;
         return ['name'=>$name,'slug'=>$slug,'error'=>'','config'=>$out];
     }
 
@@ -511,8 +550,17 @@ class Theme extends \Reamur\System\Engine\Controller {
         // F13-E: heranca resolvida no mesmo ponto do Catalog (ThemeSnapshot).
         $mapPublished=$this->model_design_theme->getThemeMap('published');
         $mapDraft=$this->model_design_theme->getThemeMap('draft');
-        $pubState=$snapshot->resolve($published,$context,$mapPublished,(string)($published['slug']??''),$pubDecision);
-        $draftState=$snapshot->resolve($draft,$context,$mapDraft,(string)($draft['slug']??''),$scheduleDecision);
+        // F13-J: a sonda de host e so COMPARADA (nunca exibida); cada painel
+        // mostra a politica de sites do seu proprio config. Zero escrita.
+        $sitesPub=$this->theme_sites->normalize($published['sites']??null) ?? [];
+        $sitesDraft=$this->theme_sites->normalize($draft['sites']??null) ?? [];
+        $probeHost=(string)($post['site_probe_host']??'');
+        $sitePub=$this->theme_sites->match($sitesPub,$probeHost);
+        $siteDraft=$this->theme_sites->match($sitesDraft,$probeHost);
+        $pubState=$snapshot->resolve($published,$context,$mapPublished,(string)($published['slug']??''),$pubDecision,
+            ['sites'=>$sitesPub,'active'=>$sitePub]);
+        $draftState=$snapshot->resolve($draft,$context,$mapDraft,(string)($draft['slug']??''),$scheduleDecision,
+            ['sites'=>$sitesDraft,'active'=>$siteDraft]);
         $pubSource=isset($published['templates'][$key])?$published['templates'][$key]:null;
         $draftSource=isset($draft['templates'][$key])?$draft['templates'][$key]:null;
         try {
@@ -651,7 +699,8 @@ class Theme extends \Reamur\System\Engine\Controller {
     private function compareLabels(): array {
         $keys=['title','context','variant','invalid','nothing_saved','identical','changes','diff_help','diff_title','changed','added','removed','truncated','empty','published','draft','sample_title','sample_body','sample_button','primary','surface','matched','flags','tokens','forbidden','render_error','sections','section_legacy','section_empty','components','component_empty','schedule','schedule_inactive','schedule_active',
          'schedule_window','schedule_rollout','schedule_scope','schedule_bucket',
-         'schedule_now','schedule_open','media','media_empty','media_ratio','media_variant'];
+         'schedule_now','schedule_open','media','media_empty','media_ratio','media_variant',
+         'site','site_empty','site_active','site_language'];
         $out=[]; foreach($keys as $k) $out[$k]=$this->language->get('compare_'.$k);
         return $out;
     }

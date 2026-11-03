@@ -139,3 +139,10 @@
 .tmm-model img { width: 100%; height: auto; border-radius: .3rem; }
 .tmm-model small { font-size: .68rem; color: var(--bs-secondary-color, #5c6773); }
 @media (max-width: 575.98px) { .tmm-grid, .tmm-models { grid-template-columns: 1fr; } }
+
+/* F13-J — multisite declarativo (hosts allowlistados -> temas por slug). */
+.tms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .75rem; }
+.tms-card { border: 1px solid #dee2e6; border-radius: .5rem; padding: .75rem; background: #fff; }
+.tms-card__help { margin: .35rem 0 .6rem; font-size: .78rem; color: #6c757d; }
+.tms-status { display: inline-block; margin-top: .5rem; font-size: .82rem; color: #0f5132; font-weight: 600; }
+@media (max-width: 575.98px) { .tms-grid { grid-template-columns: 1fr; } }

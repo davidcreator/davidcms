@@ -59,6 +59,10 @@ class Header extends \Reamur\System\Engine\Controller {
         $themeClasses = (array)$this->config->get('catalog_theme_classes', []);
         // F13-H: classe discreta quando o RASCUNHO esta em rollout (so CSS).
         if ((string)$this->config->get('catalog_theme_effective', 'published') === 'draft') $themeClasses[] = 'rms-theme-rollout';
+        // F13-J: classe allowlistada por site (nenhum host do request no HTML).
+        $siteState = (array)$this->config->get('catalog_theme_site', []);
+        $siteId = (string)($siteState['id'] ?? '');
+        if ($siteId !== '' && in_array($siteId, \Reamur\System\Library\Theme\ThemeSites::IDS, true)) $themeClasses[] = 'rms-site-' . $siteId;
         $data['theme_classes'] = implode(' ', $themeClasses);
         // F13-B: tokens viram declaracoes --rms-* allowlistadas no style do body.
         $catalogTokens = $this->config->get('catalog_theme_tokens', []);
@@ -68,7 +72,9 @@ class Header extends \Reamur\System\Engine\Controller {
             // F13-H: --rms-sched-* (inteiros allowlistados, sem texto livre).
             . (string)$this->config->get('catalog_theme_schedule_css', '')
             // F13-I: --rms-media-* (SVG deterministico em data URI allowlistado).
-            . (string)$this->config->get('catalog_theme_media_css', '');
+            . (string)$this->config->get('catalog_theme_media_css', '')
+            // F13-J: --rms-site-* (so inteiros allowlistados).
+            . (string)$this->config->get('catalog_theme_site_css', '');
 
         // F4-07 (ADR 0031): canonical + Open Graph/Twitter + descoberta do sitemap.
         // Regra honesta: canonical/og:url SÓ quando a requisição chegou por caminho

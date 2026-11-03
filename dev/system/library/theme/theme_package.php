@@ -26,7 +26,7 @@ final class ThemePackage {
         'blog/blog_list', 'blog/blog_info', 'tool/tool_list', 'tool/tool_info',
         'checkout/quote', 'error/not_found',
     ];
-    private const CONFIG_KEYS = ['primary','surface','scene','templates','conditions','three','tokens','parent','sections','components','schedule','media'];
+    private const CONFIG_KEYS = ['primary','surface','scene','templates','conditions','three','tokens','parent','sections','components','schedule','media','sites'];
     // F13-H: `schedule` e substituido integralmente na heranca (como `conditions`),
     // NAO mesclado por chave: um filho nunca herda metade de uma janela.
     private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found'];
@@ -38,14 +38,16 @@ final class ThemePackage {
     private ComponentRegistry $components;
     private ThemeSchedule $schedule;
     private ThemeMedia $media;
+    private ThemeSites $sites;
 
-    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?SectionRegistry $sections = null, ?ComponentRegistry $components = null, ?ThemeSchedule $schedule = null, ?ThemeMedia $media = null) {
+    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?SectionRegistry $sections = null, ?ComponentRegistry $components = null, ?ThemeSchedule $schedule = null, ?ThemeMedia $media = null, ?ThemeSites $sites = null) {
         $this->engine = $engine;
         $this->tokens = $tokens;
         $this->sections = $sections ?? new SectionRegistry();
         $this->components = $components ?? new ComponentRegistry();
         $this->schedule = $schedule ?? new ThemeSchedule();
         $this->media = $media ?? new ThemeMedia();
+        $this->sites = $sites ?? new ThemeSites();
     }
 
     /** Registro compartilhado com framework, controller Admin e snapshot. */
@@ -53,13 +55,16 @@ final class ThemePackage {
     public function components(): ComponentRegistry { return $this->components; }
     public function schedule(): ThemeSchedule { return $this->schedule; }
     public function media(): ThemeMedia { return $this->media; }
+    /** F13-J: registro allowlistado de sites/hosts (puro, sem IO). */
+    public function sites(): ThemeSites { return $this->sites; }
 
     public function spec(): array {
         return ['format'=>self::FORMAT,'version'=>self::VERSION,'max_bytes'=>self::MAX_BYTES,
                 'max_depth'=>self::MAX_DEPTH,'config_keys'=>self::CONFIG_KEYS,'template_keys'=>self::TEMPLATE_KEYS,
                 'section_ids'=>$this->sections->ids(),'component_ids'=>$this->components->ids(),
                 'schedule_keys'=>ThemeSchedule::KEYS,'schedule_scopes'=>$this->schedule->spec()['scopes'],
-                'media_ids'=>$this->media->ids(),'model_ids'=>$this->media->modelIds()];
+                'media_ids'=>$this->media->ids(),'model_ids'=>$this->media->modelIds(),
+                'site_ids'=>$this->sites->ids(),'site_languages'=>$this->sites->languages()];
     }
 
     /** @return array<string,mixed> */
@@ -90,6 +95,8 @@ final class ThemePackage {
         if (isset($out['components']) && !is_array($out['components'])) unset($out['components']);
         if (isset($out['schedule']) && !is_array($out['schedule'])) unset($out['schedule']);
         if (isset($out['media']) && !is_array($out['media'])) unset($out['media']);
+        // F13-J: `sites` e politica GLOBAL: substituida integralmente na heranca.
+        if (isset($out['sites']) && !is_array($out['sites'])) unset($out['sites']);
         return $out;
     }
 
@@ -136,6 +143,10 @@ final class ThemePackage {
         // F13-I: midia vetorial declarativa, enums allowlistados, fail-closed.
         if (array_key_exists('media',$config)) {
             if (!is_array($config['media']) || $this->media->normalize($config['media'])===null) $e[]='media_invalid';
+        }
+        // F13-J: hosts/slugs/idiomas allowlistados; host do request nunca entra aqui.
+        if (array_key_exists('sites',$config)) {
+            if (!is_array($config['sites']) || $this->sites->normalize($config['sites'])===null) $e[]='sites_invalid';
         }
         return array_values(array_unique($e));
     }
