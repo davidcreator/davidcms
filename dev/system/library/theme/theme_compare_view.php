@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 /**
+ * F13-M: fita de contexto exibe o site allowlistado usado na comparacao.
  * F13-C — HTML isolado da comparacao "publicado x rascunho".
  *
  * Nao e uma fonte Twig editavel: e gerado no servidor, com todo dado dinamico
@@ -34,6 +35,9 @@ final class ThemeCompareView {
            . '<p style="margin:0 0 12px;color:#475569;font-size:12px">'
            . $h($labels['context']) . ': <code>' . $h($ctx['route']) . '</code> · '
            . $h($ctx['language']) . ' · ' . $h($ctx['device'])
+           // F13-M: site allowlistado usado pelo publicado (L). Guard para
+           // chamadores antigos sem a chave; tudo escapado, nada do request.
+           . ((string)($ctx['site'] ?? '') !== '' ? ' · ' . $h($labels['site'] ?? 'Site') . ' <code>' . $h((string)$ctx['site']) . '</code>' : '')
            . ($ctx['variant'] !== '' ? ' · ' . $h($labels['variant']) . ' ' . $h($ctx['variant']) : '')
            . ' · <code>' . $h($p['template_key']) . '.twig</code></p>';
 

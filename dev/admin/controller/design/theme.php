@@ -255,6 +255,10 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['compare_url']=$this->url->link('design/theme.compare'.($id?'|'.$id:''));
         $data['preview_routes']=['common/home','blog/blog_list','blog/blog_info','catalog/project_list','catalog/project_info','tool/tool_list','tool/tool_info','cms/page_info','common/contact','checkout/quote','error/not_found'];
         $data['preview_languages']=['en-us','pt-br','es-eu'];
+        // F13-M: escolha de site por ID na previa (allowlist da J). Vazio =>
+        // sonda de host continua soberana, comportamento identico a A-L.
+        $data['preview_sites']=$this->theme_sites->ids();
+        $data['preview_site_selected']='';
         $data['preview_devices']=['desktop','tablet','mobile'];
         $data['preview_variants']=['','a','b'];
         $focusPreview=(string)($this->request->get['focus_template']??'');
@@ -559,13 +563,30 @@ class Theme extends \Reamur\System\Engine\Controller {
         $sitesPub=$this->theme_sites->normalize($published['sites']??null) ?? [];
         $sitesDraft=$this->theme_sites->normalize($draft['sites']??null) ?? [];
         $probeHost=(string)($post['site_probe_host']??'');
-        $sitePub=$this->theme_sites->match($sitesPub,$probeHost);
-        $siteDraft=$this->theme_sites->match($sitesDraft,$probeHost);
+        // F13-M: escolher o site por ID (allowlistado) compara o MESMO site
+        // nos dois paineis, mesmo que o rascunho tenha mudado o host dele.
+        // Cada painel usa o host da SUA politica; site ausente/desabilitado
+        // volta para a sonda (fail-closed). Nenhum host do request e exibido.
+        $previewSite=(string)($post['preview_site']??'');
+        $forced=in_array($previewSite,$this->theme_sites->ids(),true)?$previewSite:'';
+        $probeHostPub=$probeHost; $probeHostDraft=$probeHost;
+        if ($forced!=='') {
+            $hPub=(string)($sitesPub[$forced]['host']??'');
+            $hDraft=(string)($sitesDraft[$forced]['host']??'');
+            if ($hPub!=='')   $probeHostPub=$hPub;
+            if ($hDraft!=='') $probeHostDraft=$hDraft;
+        }
+        $sitePub=$this->theme_sites->match($sitesPub,$probeHostPub);
+        $siteDraft=$this->theme_sites->match($sitesDraft,$probeHostDraft);
         // F13-L: cada painel avalia as condicoes com o site allowlistado da
         // SUA politica (publicado x rascunho), exatamente como no Catalog.
         // A sonda de host continua sendo so comparada, nunca exibida.
-        $contextPub=$context;   $contextPub['site']=(string)($sitePub['id']??'primary');
-        $contextDraft=$context; $contextDraft['site']=(string)($siteDraft['id']??'primary');
+        // F13-M: sem sites configurados, match() devolve ID vazio. Alinhar ao
+        // Catalog (startup/theme da L): ID fora da allowlist => `primary`.
+        $siteIds=$this->theme_sites->ids();
+        $idPub=(string)($sitePub['id']??''); $idDraft=(string)($siteDraft['id']??'');
+        $contextPub=$context;   $contextPub['site']=in_array($idPub,$siteIds,true)?$idPub:'primary';
+        $contextDraft=$context; $contextDraft['site']=in_array($idDraft,$siteIds,true)?$idDraft:'primary';
         $pubState=$snapshot->resolve($published,$contextPub,$mapPublished,(string)($published['slug']??''),$pubDecision,
             ['sites'=>$sitesPub,'active'=>$sitePub]);
         $draftState=$snapshot->resolve($draft,$contextDraft,$mapDraft,(string)($draft['slug']??''),$scheduleDecision,

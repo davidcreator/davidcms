@@ -430,6 +430,17 @@
     contextHost.appendChild(el('div', { 'class': 'col-md-3 mb-2' }, [ctxRow(f[0], f[1], f[2])]));
   });
 
+  // F13-M: escolher o site na previa (card C) alinha o simulador da frente L.
+  // Sem JS, ou sem o select, nada muda: o POST da previa e o context[site]
+  // continuam independentes e allowlistados no servidor.
+  var previewSite = document.querySelector('select[name="preview_site"]');
+  if (previewSite) previewSite.addEventListener('change', function () {
+    var target = contextHost.querySelector('[data-ctx="site"]');
+    var v = siteIds.indexOf(previewSite.value) >= 0 ? previewSite.value : 'primary';
+    if (target) target.value = v;
+    if (url && csrf) simulate();
+  });
+
   renderAll();
   // Exposicao minima para testes automatizados (sem alterar comportamento).
   root.__tcb = { state: function () { return state; }, renderAll: renderAll, simulate: simulate, sync: sync, moveRule: moveRule };

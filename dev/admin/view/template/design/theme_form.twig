@@ -170,6 +170,7 @@
 <div class="col-md-2"><label class="form-label">{{ text_compare_device }}</label><select class="form-select form-select-sm" name="preview_device">{% for d in preview_devices %}<option value="{{ d }}">{{ d }}</option>{% endfor %}</select></div>
 <div class="col-md-2"><label class="form-label">{{ text_compare_variant }}</label><select class="form-select form-select-sm" name="preview_variant">{% for v in preview_variants %}<option value="{{ v }}">{{ v == '' ? '—' : v }}</option>{% endfor %}</select></div>
 <div class="col-md-3"><label class="form-label">{{ text_compare_template }}</label><select class="form-select form-select-sm" name="preview_template">{% for k in template_keys %}<option value="{{ k }}"{% if k == preview_template %} selected{% endif %}>{{ k }}.twig</option>{% endfor %}</select></div>
+<div class="col-md-3"><label class="form-label">{{ text_sites }}</label><select class="form-select form-select-sm" name="preview_site" id="preview-site"><option value="">{{ text_sites_probe }}</option>{% for s in preview_sites %}<option value="{{ s }}"{% if s == preview_site_selected %} selected{% endif %}>{{ s }}</option>{% endfor %}</select><div class="form-text">{{ text_sites_probe_help }}</div></div>
 </div>
 <button type="submit" class="btn btn-sm btn-primary mt-3" formaction="{{ compare_url }}" formtarget="theme-preview">{{ text_compare_button }}</button>
 <span class="form-text ms-2">{{ text_compare_note }}</span>
