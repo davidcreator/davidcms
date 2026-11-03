@@ -40,6 +40,10 @@ $registry->set('cms_page_layout', new \Reamur\System\Library\Cms\PageLayout());
 $registry->set('theme_condition_engine', new \Reamur\System\Library\Theme\ConditionEngine());
 // F13-B: registro allowlistado de design tokens + contraste WCAG.
 $registry->set('theme_token_registry', new \Reamur\System\Library\Theme\TokenRegistry());
+// F13-C: estado efetivo do tema (Catalog + previa Admin), sem duplicar regras.
+$registry->set('theme_snapshot', new \Reamur\System\Library\Theme\ThemeSnapshot(
+    $registry->get('theme_condition_engine'), $registry->get('theme_token_registry')
+));
 
 // 4. Config: default + aplicação (Contrato §4)
 $config = new Config();

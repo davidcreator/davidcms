@@ -17,72 +17,30 @@ class Theme extends \Reamur\System\Engine\Controller {
         $config = $this->model_common_theme->getPublishedTheme();
         if (!is_array($config)) $config = [];
 
-        $engine  = $this->theme_condition_engine;
-        $context = $this->context();
+        // F13-C: uma unica fonte de verdade para o estado efetivo do tema.
+        // O Admin (previa rascunho x publicado) resolve exatamente o mesmo
+        // calculo com a mesma classe, no mesmo contexto allowlistado.
+        $snapshot = $this->theme_snapshot->resolve($config, $this->context());
+        $primary  = $snapshot['primary'];
+        $surface  = $snapshot['surface'];
+        $scene    = $snapshot['scene'];
+        $three    = $snapshot['three'];
+        $tokens   = $snapshot['tokens'];
 
-        // Regras invalidas sao descartadas por normalize(); o resto do site
-        // continua com o comportamento legado mesmo se o JSON estiver ruim.
-        $rules = [];
-        if (isset($config['conditions']) && is_array($config['conditions'])) {
-            $rules = $engine->normalize($config['conditions'])['rules'];
-        }
-        $r = $engine->evaluate($rules, $context);
-
-        $primary = $r['primary'] ?? (is_string($config['primary'] ?? null) ? $config['primary'] : null);
-        $surface = $r['surface'] ?? (is_string($config['surface'] ?? null) ? $config['surface'] : null);
-        if ($primary !== null && preg_match('/^#[0-9a-fA-F]{6}$/D', $primary)) $this->config->set('catalog_theme_primary', $primary);
-        if ($surface !== null && preg_match('/^#[0-9a-fA-F]{6}$/D', $surface)) $this->config->set('catalog_theme_surface', $surface);
-
-        // Selecao de cena legada (F10-03) continua intacta; uma regra pode
-        // sobrepo-la, mas jamais introduzir uma cena fora da allowlist.
-        $scene = $r['scene'] ?? (is_string($config['scene'] ?? null) ? $config['scene'] : '');
-        if (!in_array($scene, self::SCENES, true)) $scene = '';
+        if ($primary !== null) $this->config->set('catalog_theme_primary', $primary);
+        if ($surface !== null) $this->config->set('catalog_theme_surface', $surface);
         $this->config->set('catalog_theme_scene', $scene);
-
-        // Three.js: base do tema + override da ultima regra casada.
-        $base = isset($config['three']) && is_array($config['three']) ? $config['three'] : [];
-        $three = $engine->normalizeThree($base) ?? [];
-        if (is_array($r['three'])) $three = array_replace($three, $r['three']);
-        if ($three === []) $three = ['enabled'=>false,'scene'=>'','slot'=>'hero','count'=>400,'color'=>'#8a4fff','speed'=>0.05];
-        if (($three['scene'] ?? '') === '' && $scene !== '') $three['scene'] = $scene;
         $this->config->set('catalog_theme_three', $three);
-
-
-        // F13-B: design tokens. Base allowlistada + patches das regras casadas.
-        // Se um patch derrubar o contraste AA, ele e ignorado (fail-closed).
-        $tokenRegistry = $this->theme_token_registry;
-        $tokenBase = isset($config['tokens']) && is_array($config['tokens']) ? $config['tokens'] : [];
-        $tokens = $tokenRegistry->normalize($tokenBase) ?? $tokenRegistry->defaults();
-        if (is_array($r['tokens']) && $r['tokens'] !== []) {
-            $merged = array_replace($tokens, $r['tokens']);
-            $readable = true;
-            foreach ($tokenRegistry->contrastPairs($merged) as $pair) {
-                if (!$pair['ok']) { $readable = false; break; }
-            }
-            if ($readable) $tokens = $merged;
-        }
         $this->config->set('catalog_theme_tokens', $tokens);
-
-        // Resultado das condicoes para o header e para o Twig.
-        $this->config->set('catalog_theme_vars', $r['vars']);
-        $this->config->set('catalog_theme_flags', $r['flags']);
-        $this->config->set('catalog_theme_classes', $r['classes']);
-        $this->config->set('catalog_theme_matched', $r['matched']);
+        $this->config->set('catalog_theme_vars', $snapshot['vars']);
+        $this->config->set('catalog_theme_flags', $snapshot['flags']);
+        $this->config->set('catalog_theme_classes', $snapshot['classes']);
+        $this->config->set('catalog_theme_matched', $snapshot['matched']);
 
         // Globais primeiro: setThemeTemplates() reconstrói o Environment e
         // reaplica estes mesmos valores (implementado no adaptador Twig).
-        if (method_exists($this->template, 'setThemeGlobals')) {
-            $this->template->setThemeGlobals([
-                'theme' => [
-                    'vars' => $r['vars'], 'flags' => $r['flags'],
-                    'classes' => $r['classes'], 'matched' => $r['matched'],
-                    'tokens' => $tokens,
-                ],
-                'theme_scene' => $three,
-            ]);
-        }
-        $templates = isset($config['templates']) && is_array($config['templates']) ? $config['templates'] : [];
-        if (method_exists($this->template, 'setThemeTemplates')) $this->template->setThemeTemplates($templates);
+        if (method_exists($this->template, 'setThemeGlobals')) $this->template->setThemeGlobals($snapshot['globals']);
+        if (method_exists($this->template, 'setThemeTemplates')) $this->template->setThemeTemplates($snapshot['templates']);
     }
 
     /** Contexto allowlisted e sem dados sensiveis (ver ConditionEngine::FIELDS). */

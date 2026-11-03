@@ -66,3 +66,8 @@
 .tcb-tokens .tcb-field { display: grid; grid-template-columns: 8rem 1fr; align-items: center; gap: .35rem; }
 .tcb-tokens .tcb-field__label { margin: 0; }
 @media (max-width: 767.98px) { .tcb-tokens .tcb-field { grid-template-columns: 1fr; } }
+
+/* F13-C — cartao de previa rascunho x publicado. */
+#theme-compare .card-header { align-items: flex-start; gap: .75rem; }
+#theme-compare select { font-family: var(--bs-font-monospace, monospace); font-size: .8rem; }
+#theme-compare .badge { white-space: normal; }

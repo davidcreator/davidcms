@@ -18,7 +18,10 @@ class Theme extends \Reamur\System\Engine\Model {
         if ($id) {
             $old=$this->getTheme($id); if (!$old) return 0;
             $this->db->query("INSERT INTO `".$this->table('design_theme_revision')."` SET `theme_id`='".$id."', `snapshot`='".$this->db->escape(json_encode($old, JSON_UNESCAPED_UNICODE) ?: '{}')."', `user_id`='".$userId."', `date_added`=NOW()");
-            $this->db->query("UPDATE `".$this->table('design_theme')."` SET `name`='".$name."',`slug`='".$slug."',`config`='".$config."',`draft_config`='".$config."',`date_modified`=NOW() WHERE `theme_id`='".$id."'");
+            // F13-C: SALVAR e RASCUNHO. `config` e `published_config` sao o
+            // payload publico (o Catalog usa `published_config ?: config`) e
+            // nao podem ser contaminados por uma edicao nao publicada (ADR 0080).
+            $this->db->query("UPDATE `".$this->table('design_theme')."` SET `name`='".$name."',`slug`='".$slug."',`draft_config`='".$config."',`date_modified`=NOW() WHERE `theme_id`='".$id."'");
             return $id;
         }
         $this->db->query("INSERT INTO `".$this->table('design_theme')."` SET `name`='".$name."',`slug`='".$slug."',`config`='".$config."',`draft_config`='".$config."',`published_config`='{}',`status`='0',`date_added`=NOW(),`date_modified`=NOW()");
@@ -27,7 +30,7 @@ class Theme extends \Reamur\System\Engine\Model {
     public function activate(int $id, int $userId): bool {
         if (!$this->getTheme($id)) return false;
         $this->db->query("UPDATE `".$this->table('design_theme')."` SET `status`='0'");
-        $this->db->query("UPDATE `".$this->table('design_theme')."` SET `status`='1',`published_config`=`draft_config`,`date_modified`=NOW() WHERE `theme_id`='".$id."'");
+        $this->db->query("UPDATE `".$this->table('design_theme')."` SET `status`='1',`published_config`=`draft_config`,`config`=`draft_config`,`date_modified`=NOW() WHERE `theme_id`='".$id."'");
         $theme=$this->getTheme($id);
         $this->db->query("INSERT INTO `".$this->table('design_theme_revision')."` SET `theme_id`='".$id."',`snapshot`='".$this->db->escape(json_encode($theme,JSON_UNESCAPED_UNICODE)?:'{}')."',`user_id`='".$userId."',`date_added`=NOW()");
         return true;
@@ -46,6 +49,23 @@ class Theme extends \Reamur\System\Engine\Model {
         $slug=$this->db->escape((string)($snapshot['slug']??$current['slug']));
         $this->db->query("UPDATE `".$this->table('design_theme')."` SET `name`='".$name."',`slug`='".$slug."',`config`='".$this->db->escape($draft)."',`draft_config`='".$this->db->escape($draft)."',`published_config`='".$this->db->escape($published)."',`date_modified`=NOW() WHERE `theme_id`='".$themeId."'");
         return true;
+    }
+
+    /** F13-C: payload explicitamente publicado, com fallback legado seguro. */
+    public function getPublishedConfig(int $id): array {
+        $theme=$this->getTheme($id);
+        if (!$theme) return [];
+        $raw=(string)($theme['published_config']??'');
+        if ($raw==='' || $raw==='{}') $raw=(string)($theme['config']??'{}');
+        $config=json_decode($raw,true);
+        return is_array($config)?$config:[];
+    }
+    /** F13-C: ultimo rascunho salvo (usado quando o POST da previa e invalido). */
+    public function getDraftConfig(int $id): array {
+        $theme=$this->getTheme($id);
+        if (!$theme) return [];
+        $config=json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true);
+        return is_array($config)?$config:[];
     }
 
     public function getRevisions(int $id): array {

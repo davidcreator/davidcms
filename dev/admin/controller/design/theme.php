@@ -102,55 +102,14 @@ class Theme extends \Reamur\System\Engine\Controller {
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
             elseif (!\Reamur\System\Library\Security\Csrf::check($this->session,(string)($post['csrf_token']??''))) { $data['error']=$this->language->get('error_csrf'); }
             else {
-                $name=trim((string)($post['name']??'')); $slug=strtolower(trim((string)($post['slug']??'')));
-                if ($name==='' || !preg_match('/^[a-z0-9_-]{1,48}$/',$slug)) $data['error']=$this->language->get('error_validation');
+                // F13-C: a previa e o save usam EXATAMENTE o mesmo construtor
+                // de config, com as mesmas validacoes (sem divergencia).
+                $built=$this->buildDraftConfig($post);
+                if ($built['error']!=='') $data['error']=$built['error'];
                 else {
-                    $primary=(string)($post['primary']??''); $surface=(string)($post['surface']??'');
-                    if (!preg_match('/^#[0-9a-fA-F]{6}$/',$primary) || !preg_match('/^#[0-9a-fA-F]{6}$/',$surface)) $data['error']=$this->language->get('error_validation');
-                    else {
-                        $templates=(array)($post['templates']??[]); $allowedTemplates=self::TEMPLATE_KEYS; $safeTemplates=[]; $invalidTemplateSource=false;
-                        foreach($templates as $templateKey=>$source) {
-                            if (!in_array((string)$templateKey,$allowedTemplates,true) || !is_string($source) || strlen($source)>131072 || preg_match('~<\\s*(script|iframe|object|embed)\\b|javascript\\s*:|\\bon[a-z]+\\s*=|\\|\\s*raw\\b|\\{%\\s*autoescape\\b|\\b(srcdoc|formaction)\\s*=~i',(string)$source)) { $invalidTemplateSource=true; continue; }
-                            $safeTemplates[(string)$templateKey]=$source;
-                        }
-                        if ($invalidTemplateSource) { $data['error']=$this->language->get('error_template_source'); }
-                        else {
-                            $engine=$this->theme_condition_engine;
-                            $conditionsRaw=(string)($post['conditions']??'');
-                            $conditions=json_decode($conditionsRaw,true);
-                            $conditions=is_array($conditions)?$conditions:['version'=>1,'rules'=>[]];
-                            $conditionErrors=$engine->validate($conditions);
-                            $threeRaw=[
-                                'enabled'=>(string)($post['three_enabled']??'0')==='1',
-                                'scene'=>(string)($post['three_scene']??''),
-                                'slot'=>(string)($post['three_slot']??'hero'),
-                                'count'=>(string)($post['three_count']??'400'),
-                                'color'=>(string)($post['three_color']??'#8a4fff'),
-                                'speed'=>(string)($post['three_speed']??'0.05'),
-                            ];
-                            $three=$engine->normalizeThree($threeRaw);
-                            $tokensRaw=(array)($post['tokens']??[]);
-                            $tokenErrors=$this->theme_token_registry->validate($tokensRaw);
-                            $tokensNormalized=$this->theme_token_registry->normalize($tokensRaw);
-                            if ($conditionErrors) { $data['error']=$this->language->get('error_conditions').' ('.$conditionErrors[0]['code'].')'; }
-                            elseif ($three===null) { $data['error']=$this->language->get('error_three'); }
-                            elseif ($tokenErrors || $tokensNormalized===null) { $data['error']=$this->language->get('error_tokens').' ('.($tokenErrors[0]['code']??'contrast').')'; }
-                            else {
-                                $normalized=$engine->normalize($conditions);
-                                $themeConfig=[
-                                    'primary'=>$primary,'surface'=>$surface,
-                                    'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']: '',
-                                    'templates'=>$safeTemplates,
-                                    'conditions'=>['version'=>1,'rules'=>$normalized['rules']],
-                                    'three'=>$three,
-                                    'tokens'=>$tokensNormalized,
-                                ];
-                                $saved=$this->model_design_theme->save($id,['name'=>$name,'slug'=>$slug,'config'=>$themeConfig],(int)$this->user->getUserId());
-                                if ($saved) { $this->response->redirect($this->url->link('design/theme')); return; }
-                                $data['error']=$this->language->get('error_validation');
-                            }
-                        }
-                    }
+                    $saved=$this->model_design_theme->save($id,['name'=>$built['name'],'slug'=>$built['slug'],'config'=>$built['config']],(int)$this->user->getUserId());
+                    if ($saved) { $this->response->redirect($this->url->link('design/theme')); return; }
+                    $data['error']=$this->language->get('error_validation');
                 }
             }
             foreach(['name','slug','primary','surface','scene'] as $k) $data[$k]=(string)($post[$k]??$data[$k]);
@@ -165,8 +124,26 @@ class Theme extends \Reamur\System\Engine\Controller {
                 'speed'=>(string)($post['three_speed']??'0.05'),
             ];
         }
+        // F13-C: estado real de publicacao e dados do comparador.
+        $publishedConfig=$id?$this->model_design_theme->getPublishedConfig($id):[];
+        $draftNorm=json_encode(json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true) ?: new \stdClass());
+        $pubNorm=json_encode(json_decode((string)($theme['published_config']??'{}'),true) ?: new \stdClass());
+        $data['theme_state']=((int)($theme['status']??0)===1 && $pubNorm!=='{}')?'published':'draft';
+        $data['has_unpublished_changes']=($id>0 && $draftNorm!==$pubNorm);
+        foreach(['text_compare','text_compare_help','text_compare_button','text_compare_note','text_compare_route','text_compare_language','text_compare_device','text_compare_variant','text_compare_template','text_state_published','text_state_draft','text_state_changed','text_state_clean'] as $k) $data[$k]=$this->language->get($k);
+        $data['compare_url']=$this->url->link('design/theme.compare'.($id?'|'.$id:''));
+        $data['preview_routes']=['common/home','blog/blog_list','blog/blog_info','catalog/project_list','catalog/project_info','tool/tool_list','tool/tool_info','cms/page_info','common/contact','checkout/quote','error/not_found'];
+        $data['preview_languages']=['en-us','pt-br','es-eu'];
+        $data['preview_devices']=['desktop','tablet','mobile'];
+        $data['preview_variants']=['','a','b'];
+        $focusPreview=(string)($this->request->get['focus_template']??'');
+        $data['preview_template']=in_array($focusPreview,self::TEMPLATE_KEYS,true)?$focusPreview:'common/home';
+        $data['preview_theme_id']=$id;
         $data['scenes']=[['id'=>'','name'=>$this->language->get('text_no_scene')],['id'=>'hero-particles','name'=>'Hero particles'],['id'=>'portfolio-3d','name'=>'Portfolio 3D'],['id'=>'tools-3d','name'=>'Tools 3D'],['id'=>'not-found','name'=>'Not found']];
         $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[]; $data['template_keys'] = self::TEMPLATE_KEYS; $focusTemplate=$this->request->get['focus_template']??''; $data['focus_template']=is_string($focusTemplate)&&in_array($focusTemplate,self::TEMPLATE_KEYS,true)?$focusTemplate:''; $data['template_sources']=$data['templates']; foreach($data['template_keys'] as $templateKey) { if (!isset($data['template_sources'][$templateKey])) { $templateFile=DIR_SYSTEM.'../catalog/view/template/'.$templateKey.'.twig'; if (is_file($templateFile)) $data['template_sources'][$templateKey]=(string)file_get_contents($templateFile); } } $data['preview_links']=[]; foreach($data['template_keys'] as $key) $data['preview_links'][$key]=$this->url->link('design/theme.preview'.($id?'|'.$id:''),'template='.rawurlencode($key)); foreach($data['revisions'] as &$revision) $revision['restore']=$this->url->link('design/theme.restore|'.$id.'|'.(int)$revision['revision_id']); unset($revision);
+        // F13-C: Loader::view() nao mescla o idioma; publica todas as chaves
+        // carregadas (sem sobrescrever valores calculados) para nao deixar rotulos vazios.
+        $data=array_replace($this->language->all(),$data);
         $this->chrome($data); $this->response->setOutput($this->load->view('design/theme_form',$data));
     }
     public function preview(string $theme_id='0'): void {
@@ -217,6 +194,133 @@ class Theme extends \Reamur\System\Engine\Controller {
             'context'=>$context,
         ];
         $this->response->setOutput(json_encode($payload,$jsonFlags) ?: '{}');
+    }
+
+    /**
+     * F13-C: constroi o config do RASCUNHO a partir do POST, sem gravar nada.
+     * Usado por edit() (save) e compare() (previa): uma unica validacao.
+     * @return array{name:string,slug:string,config:array,error:string}
+     */
+    private function buildDraftConfig(array $post): array {
+        $bad=function(string $message): array { return ['name'=>'','slug'=>'','config'=>[],'error'=>$message]; };
+        $name=trim((string)($post['name']??'')); $slug=strtolower(trim((string)($post['slug']??'')));
+        if ($name==='' || !preg_match('/^[a-z0-9_-]{1,48}$/',$slug)) return $bad($this->language->get('error_validation'));
+        $primary=(string)($post['primary']??''); $surface=(string)($post['surface']??'');
+        if (!preg_match('/^#[0-9a-fA-F]{6}$/',$primary) || !preg_match('/^#[0-9a-fA-F]{6}$/',$surface)) return $bad($this->language->get('error_validation'));
+        $templates=(array)($post['templates']??[]); $safeTemplates=[]; $invalidTemplateSource=false;
+        foreach($templates as $templateKey=>$source) {
+            if (!in_array((string)$templateKey,self::TEMPLATE_KEYS,true) || !is_string($source) || strlen($source)>131072 || preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i',(string)$source)) { $invalidTemplateSource=true; continue; }
+            $safeTemplates[(string)$templateKey]=$source;
+        }
+        if ($invalidTemplateSource) return $bad($this->language->get('error_template_source'));
+        $engine=$this->theme_condition_engine;
+        $conditions=json_decode((string)($post['conditions']??''),true);
+        $conditions=is_array($conditions)?$conditions:['version'=>1,'rules'=>[]];
+        $conditionErrors=$engine->validate($conditions);
+        $three=$engine->normalizeThree([
+            'enabled'=>(string)($post['three_enabled']??'0')==='1',
+            'scene'=>(string)($post['three_scene']??''),
+            'slot'=>(string)($post['three_slot']??'hero'),
+            'count'=>(string)($post['three_count']??'400'),
+            'color'=>(string)($post['three_color']??'#8a4fff'),
+            'speed'=>(string)($post['three_speed']??'0.05'),
+        ]);
+        $tokensRaw=(array)($post['tokens']??[]);
+        $tokenErrors=$this->theme_token_registry->validate($tokensRaw);
+        $tokensNormalized=$this->theme_token_registry->normalize($tokensRaw);
+        if ($conditionErrors) return $bad($this->language->get('error_conditions').' ('.$conditionErrors[0]['code'].')');
+        if ($three===null) return $bad($this->language->get('error_three'));
+        if ($tokenErrors || $tokensNormalized===null) return $bad($this->language->get('error_tokens').' ('.($tokenErrors[0]['code']??'contrast').')');
+        $normalized=$engine->normalize($conditions);
+        return [
+            'name'=>$name,'slug'=>$slug,'error'=>'',
+            'config'=>[
+                'primary'=>$primary,'surface'=>$surface,
+                'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']:'',
+                'templates'=>$safeTemplates,
+                'conditions'=>['version'=>1,'rules'=>$normalized['rules']],
+                'three'=>$three,
+                'tokens'=>$tokensNormalized,
+            ],
+        ];
+    }
+
+    /**
+     * F13-C: PREVIA REAL rascunho x publicado. POST do formulario atual,
+     * ACL access + CSRF + no-store, zero escrita, mesmo pipeline do Catalog.
+     */
+    public function compare(string $theme_id='0'): void {
+        $this->response->addHeader('Content-Type: text/html; charset=utf-8');
+        $this->response->addHeader('Cache-Control: no-store');
+        $this->response->addHeader('X-Content-Type-Options: nosniff');
+        $this->response->addHeader('Referrer-Policy: no-referrer');
+        $this->load->language('design/theme');
+        $labels=$this->compareLabels();
+        $method=(string)($this->request->server['REQUEST_METHOD']??'');
+        $post=$this->request->post;
+        if (!$this->user->hasPermission('access','design/theme') || $method!=='POST'
+            || !\Reamur\System\Library\Security\Csrf::check($this->session,(string)($post['csrf_token']??''))) {
+            $this->response->setOutput(self::compareErrorPage($labels['forbidden'])); return;
+        }
+        $this->load->model('design/theme');
+        $id=(int)$theme_id;
+        $published=$id?$this->model_design_theme->getPublishedConfig($id):[];
+        $built=$this->buildDraftConfig($post);
+        // Rascunho invalido: mostra o ultimo salvo e avisa; NAO grava nada.
+        $draft=$built['error']===''?$built['config']:($id?$this->model_design_theme->getDraftConfig($id):[]);
+        $context=$this->simulateContext([
+            'route'=>(string)($post['preview_route']??'common/home'),
+            'language'=>(string)($post['preview_language']??'en-us'),
+            'device'=>(string)($post['preview_device']??'desktop'),
+            'variant'=>(string)($post['preview_variant']??''),
+            'hour'=>(int)($post['preview_hour']??9),
+            'logged_in'=>(string)($post['preview_logged_in']??''),
+            'query'=>isset($post['preview_query'])&&is_array($post['preview_query'])?$post['preview_query']:[],
+        ]);
+        $key=(string)($post['preview_template']??'common/home');
+        if (!in_array($key,self::TEMPLATE_KEYS,true)) $key='common/home';
+        $snapshot=$this->theme_snapshot;
+        $pubState=$snapshot->resolve($published,$context);
+        $draftState=$snapshot->resolve($draft,$context);
+        $pubSource=isset($published['templates'][$key])?$published['templates'][$key]:null;
+        $draftSource=isset($draft['templates'][$key])?$draft['templates'][$key]:null;
+        try {
+            $html=(new \Reamur\System\Library\Theme\ThemeCompareView())->render([
+                'lang'=>(string)$this->config->get('language_directory','en-us'),
+                'labels'=>$labels,'context'=>$context,'template_key'=>$key,
+                'error'=>$built['error'],
+                'published'=>$pubState,'draft'=>$draftState,
+                'published_html'=>$this->renderPreviewFragment($key,$pubSource),
+                'draft_html'=>$this->renderPreviewFragment($key,$draftSource),
+                'diff'=>$snapshot->diff($published,$draft),
+            ]);
+        } catch (\Throwable $e) {
+            $html=self::compareErrorPage($labels['render_error']);
+        }
+        $this->response->setOutput($html);
+    }
+
+    /** Fragmento do template allowlistado, via Twig Sandbox (ADR 0080). */
+    private function renderPreviewFragment(string $key, $source): string {
+        if (!is_string($source) || $source==='') {
+            $file=DIR_SYSTEM.'../catalog/view/template/'.$key.'.twig';
+            $source=is_file($file)?(string)file_get_contents($file):'';
+        }
+        if ($source==='') return '<p>'.htmlspecialchars($this->language->get('text_preview_no_source'),ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'</p>';
+        if (!method_exists($this->template,'renderSandboxPreview')) return '<p>'.htmlspecialchars($this->language->get('text_preview_error'),ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'</p>';
+        try { return (string)$this->template->renderSandboxPreview($key,$source); }
+        catch (\Throwable $e) { return '<p>'.htmlspecialchars($this->language->get('text_preview_error'),ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'</p>'; }
+    }
+
+    /** @return array<string,string> */
+    private function compareLabels(): array {
+        $keys=['title','context','variant','invalid','nothing_saved','identical','changes','diff_help','diff_title','changed','added','removed','truncated','empty','published','draft','sample_title','sample_body','sample_button','primary','surface','matched','flags','tokens','forbidden','render_error'];
+        $out=[]; foreach($keys as $k) $out[$k]=$this->language->get('compare_'.$k);
+        return $out;
+    }
+
+    private static function compareErrorPage(string $message): string {
+        return '<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'"><title>Preview</title></head><body style="font:14px system-ui;padding:24px"><p>'.htmlspecialchars($message,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'</p></body></html>';
     }
 
     /** Contexto do simulador: somente campos/valores allowlisted, sem globais. */
