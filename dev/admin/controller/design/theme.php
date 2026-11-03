@@ -43,7 +43,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['import_url']=$this->url->link('design/theme.import'.($id?'|'.$id:''));
         foreach(['text_package','text_package_help','text_package_export','text_package_export_published','text_package_import','text_package_import_help','text_package_file','text_package_paste','text_package_button','text_package_version','text_package_parent','text_package_parent_help','text_package_parent_none','text_import_ok','text_import_error','error_theme_parent'] as $k) $data[$k]=$this->language->get($k);
         $data['notice']='';
-        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','components_invalid','save_failed','forbidden','csrf'];
+        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','components_invalid','schedule_invalid','save_failed','forbidden','csrf'];
         $impErr=(string)($this->request->get['import_error']??'');
         if ((string)($this->request->get['import_ok']??'')==='1') $data['notice']=$this->language->get('text_import_ok');
         elseif ($impErr!=='') $data['error']=$this->language->get('text_import_error').' ('.(in_array($impErr,$codes,true)?$impErr:'unknown').')';
@@ -192,6 +192,18 @@ class Theme extends \Reamur\System\Engine\Controller {
             // F13-G: reflete os componentes enviados mesmo em caso de erro.
             $data['component_rows']=$this->componentRows((array)($post['components']??[]));
         }
+        // F13-H: agendamento/rollout declarativo do rascunho (zero escrita).
+        $scheduleRaw=(isset($config['schedule'])&&is_array($config['schedule']))?$config['schedule']:null;
+        $scheduleNorm=$this->theme_schedule->normalize($scheduleRaw) ?? $this->theme_schedule->normalize(null);
+        $data['schedule']=$scheduleNorm;
+        $data['schedule_scopes']=$this->theme_schedule->spec()['scopes'];
+        $data['schedule_probe_now']=$this->theme_schedule->now();
+        foreach(['text_schedule','text_schedule_help','text_schedule_enabled','text_schedule_from',
+                 'text_schedule_until','text_schedule_percent','text_schedule_scope','text_schedule_scope_all',
+                 'text_schedule_scope_logged_in','text_schedule_scope_anonymous','text_schedule_note',
+                 'text_schedule_probe','text_schedule_probe_now','text_schedule_probe_visitor',
+                 'text_schedule_probe_logged','text_schedule_probe_button','error_schedule'] as $k) $data[$k]=$this->language->get($k);
+        $this->document->addScript($this->config->get('site_url') . 'view/js/theme-schedule.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-schedule-h');
         // F13-C: estado real de publicacao e dados do comparador.
         $publishedConfig=$id?$this->model_design_theme->getPublishedConfig($id):[];
         $draftNorm=json_encode(json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true) ?: new \stdClass());
@@ -393,6 +405,20 @@ class Theme extends \Reamur\System\Engine\Controller {
             $componentOverride=$this->theme_component_registry->normalize($clean);
             if ($componentOverride===null) return $bad($this->language->get('error_components'));
         }
+        // F13-H: janela UTC + publico + percentual, tudo allowlistado.
+        // Campos ausentes preservam pacotes/temas A-G (chave nao gravada).
+        $scheduleOverride=null;
+        if (array_key_exists('schedule',$post) && is_array($post['schedule'])) {
+            $rawSchedule=(array)$post['schedule'];
+            $scheduleOverride=$this->theme_schedule->normalize([
+                'enabled'=>$rawSchedule['enabled']??false,
+                'from'=>(string)($rawSchedule['from']??''),
+                'until'=>(string)($rawSchedule['until']??''),
+                'percent'=>(string)($rawSchedule['percent']??'0'),
+                'scope'=>(string)($rawSchedule['scope']??'all'),
+            ]);
+            if ($scheduleOverride===null) return $bad($this->language->get('error_schedule'));
+        }
         $normalized=$engine->normalize($conditions);
         $out=['primary'=>$primary,'surface'=>$surface,
             'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']:'',
@@ -401,6 +427,7 @@ class Theme extends \Reamur\System\Engine\Controller {
             'three'=>$three,'tokens'=>$tokensNormalized,'parent'=>$parent];
         if ($sectionOverride!==null) $out['sections']=$sectionOverride;
         if ($componentOverride!==null) $out['components']=$componentOverride;
+        if ($scheduleOverride!==null) $out['schedule']=$scheduleOverride;
         return ['name'=>$name,'slug'=>$slug,'error'=>'','config'=>$out];
     }
 
@@ -436,14 +463,25 @@ class Theme extends \Reamur\System\Engine\Controller {
             'logged_in'=>(string)($post['preview_logged_in']??''),
             'query'=>isset($post['preview_query'])&&is_array($post['preview_query'])?$post['preview_query']:[],
         ]);
+        // F13-H: sonda deterministica. Nenhum dado do visitante e exibido;
+        // apenas o bucket (inteiro) aparece na fita. Zero escrita.
+        $probeNow=(string)($post['schedule_probe_now']??$this->theme_schedule->now());
+        if ($this->theme_schedule->parseTime($probeNow)===null) $probeNow=$this->theme_schedule->now();
+        $probeVisitor=substr((string)($post['schedule_probe_visitor']??'visitor-a'),0,64);
+        $probeLogged=in_array(strtolower((string)($post['schedule_probe_logged']??'')),['1','true','yes','on'],true);
+        $scheduleDecision=$this->theme_schedule->decide(
+            $this->theme_schedule->normalize($draft['schedule']??null),
+            $probeNow, $probeVisitor, $probeLogged
+        );
+        $pubDecision=array_replace($scheduleDecision,['effective'=>'published','active'=>false,'reason'=>'disabled']);
         $key=(string)($post['preview_template']??'common/home');
         if (!in_array($key,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true)) $key='common/home';
         $snapshot=$this->theme_snapshot;
         // F13-E: heranca resolvida no mesmo ponto do Catalog (ThemeSnapshot).
         $mapPublished=$this->model_design_theme->getThemeMap('published');
         $mapDraft=$this->model_design_theme->getThemeMap('draft');
-        $pubState=$snapshot->resolve($published,$context,$mapPublished,(string)($published['slug']??''));
-        $draftState=$snapshot->resolve($draft,$context,$mapDraft,(string)($draft['slug']??''));
+        $pubState=$snapshot->resolve($published,$context,$mapPublished,(string)($published['slug']??''),$pubDecision);
+        $draftState=$snapshot->resolve($draft,$context,$mapDraft,(string)($draft['slug']??''),$scheduleDecision);
         $pubSource=isset($published['templates'][$key])?$published['templates'][$key]:null;
         $draftSource=isset($draft['templates'][$key])?$draft['templates'][$key]:null;
         try {
@@ -548,7 +586,9 @@ class Theme extends \Reamur\System\Engine\Controller {
 
     /** @return array<string,string> */
     private function compareLabels(): array {
-        $keys=['title','context','variant','invalid','nothing_saved','identical','changes','diff_help','diff_title','changed','added','removed','truncated','empty','published','draft','sample_title','sample_body','sample_button','primary','surface','matched','flags','tokens','forbidden','render_error','sections','section_legacy','section_empty','components','component_empty'];
+        $keys=['title','context','variant','invalid','nothing_saved','identical','changes','diff_help','diff_title','changed','added','removed','truncated','empty','published','draft','sample_title','sample_body','sample_button','primary','surface','matched','flags','tokens','forbidden','render_error','sections','section_legacy','section_empty','components','component_empty','schedule','schedule_inactive','schedule_active',
+         'schedule_window','schedule_rollout','schedule_scope','schedule_bucket',
+         'schedule_now','schedule_open'];
         $out=[]; foreach($keys as $k) $out[$k]=$this->language->get('compare_'.$k);
         return $out;
     }

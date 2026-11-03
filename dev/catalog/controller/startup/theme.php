@@ -14,15 +14,31 @@ class Theme extends \Reamur\System\Engine\Controller {
 
     public function index(): void {
         $this->load->model('common/theme');
-        $config = $this->model_common_theme->getPublishedTheme();
-        if (!is_array($config)) $config = [];
+        // F13-H: uma unica leitura traz publicado + rascunho do tema ativo.
+        // A decisao e PURA: zero escrita, zero cron, zero cookie novo. O
+        // publicado continua intacto no banco; 'Ativar' segue sendo explicito.
+        $effective = method_exists($this->model_common_theme, 'getEffectiveTheme')
+            ? $this->model_common_theme->getEffectiveTheme()
+            : ['published'=>(array)$this->model_common_theme->getPublishedTheme(),'draft'=>[],'slug'=>''];
+        $published = (array)($effective['published'] ?? []);
+        $draft     = (array)($effective['draft'] ?? []);
+        $selfSlug  = (string)($effective['slug'] ?? '');
+        $context   = $this->context();
+        $schedule  = $this->theme_schedule->normalize($draft['schedule'] ?? null);
+        $decision  = $this->theme_schedule->decide(
+            $schedule, $this->theme_schedule->now(),
+            hash('sha256', (string)$this->session->getId()),
+            (bool)($context['logged_in'] ?? false)
+        );
+        $source = $decision['effective'] === 'draft' ? 'draft' : 'published';
+        $config = $source === 'draft' ? $draft : $published;
 
         // F13-C: uma unica fonte de verdade para o estado efetivo do tema.
         // O Admin (previa rascunho x publicado) resolve exatamente o mesmo
         // calculo com a mesma classe, no mesmo contexto allowlistado.
         // F13-E: o Catalog resolve a cadeia de child-themes sobre o mapa publicado.
-        $themeMap = method_exists($this->model_common_theme, 'getThemeMap') ? $this->model_common_theme->getThemeMap('published') : [];
-        $snapshot = $this->theme_snapshot->resolve($config, $this->context(), $themeMap);
+        $themeMap = method_exists($this->model_common_theme, 'getThemeMap') ? $this->model_common_theme->getThemeMap($source) : [];
+        $snapshot = $this->theme_snapshot->resolve($config, $context, $themeMap, $selfSlug, $decision);
         $primary  = $snapshot['primary'];
         $surface  = $snapshot['surface'];
         $scene    = $snapshot['scene'];
@@ -43,6 +59,10 @@ class Theme extends \Reamur\System\Engine\Controller {
         // F13-G: componentes efetivos + variaveis CSS allowlistadas.
         $this->config->set('catalog_theme_components', $snapshot['components']);
         $this->config->set('catalog_theme_component_css', $snapshot['component_css']);
+        // F13-H: estado efetivo + variaveis planas (nenhum HTML novo).
+        $this->config->set('catalog_theme_schedule', $decision);
+        $this->config->set('catalog_theme_effective', $decision['effective']);
+        $this->config->set('catalog_theme_schedule_css', $snapshot['schedule_css']);
 
         // Globais primeiro: setThemeTemplates() reconstrói o Environment e
         // reaplica estes mesmos valores (implementado no adaptador Twig).

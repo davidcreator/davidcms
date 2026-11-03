@@ -56,12 +56,17 @@ class Header extends \Reamur\System\Engine\Controller {
                     . $this->three_asset_manifest->publicBasePath();
             }
         }
-        $data['theme_classes'] = implode(' ', (array)$this->config->get('catalog_theme_classes', []));
+        $themeClasses = (array)$this->config->get('catalog_theme_classes', []);
+        // F13-H: classe discreta quando o RASCUNHO esta em rollout (so CSS).
+        if ((string)$this->config->get('catalog_theme_effective', 'published') === 'draft') $themeClasses[] = 'rms-theme-rollout';
+        $data['theme_classes'] = implode(' ', $themeClasses);
         // F13-B: tokens viram declaracoes --rms-* allowlistadas no style do body.
         $catalogTokens = $this->config->get('catalog_theme_tokens', []);
         $data['theme_token_css'] = $this->theme_token_registry->css(is_array($catalogTokens) ? $catalogTokens : [])
             // F13-G: variaveis --rms-cmp-* dos componentes habilitados.
-            . (string)$this->config->get('catalog_theme_component_css', '');
+            . (string)$this->config->get('catalog_theme_component_css', '')
+            // F13-H: --rms-sched-* (inteiros allowlistados, sem texto livre).
+            . (string)$this->config->get('catalog_theme_schedule_css', '');
 
         // F4-07 (ADR 0031): canonical + Open Graph/Twitter + descoberta do sitemap.
         // Regra honesta: canonical/og:url SÓ quando a requisição chegou por caminho

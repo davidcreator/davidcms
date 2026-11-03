@@ -1,105 +1,103 @@
-# Frente G — Biblioteca de Componentes Declarativos
+# Frente H — Agendamento e Rollout Declarativo
 
 Série A→J: **A** (builder de condições), **B** (design tokens), **C** (prévia
 rascunho × publicado), **D** (editor de cena), **E** (pacotes/child-theme),
-**F** (section builder) e o **hotfix `ScenePresetRegistry`** já estão aplicados
-no `main` 83cbd4fa5; **esta é a G**. Próxima: **H — agendamento/rollout**.
-Um pacote instalável por frente.
+**F** (section builder), **G** (biblioteca de componentes) e o **hotfix
+`ScenePresetRegistry`** já estão aplicados no `main` deccff813; **esta é a H**.
+Próxima: **I — mídia/modelos**. Um pacote instalável por frente.
 
 ## Recorte
 
-Os 25 templates Twig do tema aceitam HTML autorizado, mas o Admin não oferecia
-nenhum bloco reutilizável: cada chamada, cartão ou aviso exigia escrever markup
-à mão. A G cria uma **biblioteca de 10 componentes declarativos**, allowlistados
-no servidor, com variantes e tons por enum, miniatura SVG determinística e
-snippet Twig fixo — insertável com um clique, versionável no pacote E e visível
-na prévia C. **Sem migration, sem coluna nova, sem upload e sem HTML livre.**
+Até a G, só havia dois estados: o tema **publicado** (o Catalog servia) e o
+**rascunho** (só o Admin via). A H permite que o rascunho passe a valer para
+uma **janela de tempo** e uma **parcela dos visitantes** — sem cron, sem
+migration, sem coluna nova, sem escrita no banco, sem cookie novo e sem
+promoção automática. **Ativar** continua um ato explícito.
 
-## Entregue (17 arquivos, 3 novos)
+## Entregue (18 arquivos, 3 novos)
 
-- **`ComponentRegistry`** (novo): 10 IDs — `button`, `badge`, `card`, `callout`,
-  `stat`, `quote`, `divider`, `feature`, `cta`, `notice` — com grupos (ação,
-  exibição, feedback), 2–3 variantes e tons permitidos por componente.
-  `normalize()` é **fail-closed** (ID/enum desconhecido, `enabled` de tipo
-  errado, aninhado, lista maior que 10 → `null`). `css()` emite apenas
-  variáveis `--rms-cmp-*`; `globals()` publica três mapas **planos** aceitos
-  pelo `twig.php` (`theme_components`, `theme_component_tones`,
-  `theme_component_enabled`); `svg()`/`dataUri()` geram miniaturas
-  determinísticas, sem texto do usuário.
-- **Snippets Twig fixos** (10): blocos `{% if theme_component_enabled.X %}` com
-  texto de exemplo e classes `rms-cmp-*`. Nenhum `|raw`, `<script>`, handler
-  `on*`, `javascript:`, `srcdoc`, `formaction`, `autoescape` ou tag perigosa.
-  Inseridos via `textarea.value` — o escape padrão do Twig continua valendo.
-- **Chave `components` no config do tema** (JSON, sem coluna nova), integrada ao
-  `ThemePackage` (`CONFIG_KEYS`, `MAP_KEYS`, `sanitizeConfig`,
-  `validateConfig` → **`components_invalid`**, `spec`, **checksum SHA-256**,
-  `decode()` e `resolveChain`). Herança E é **por ID**: o filho sobrescreve só
-  o componente que declarar e mantém os demais do pai; `[]` desliga todos.
-- **`ThemeSnapshot`**: `components`, `component_css`, `component_enabled` e os
-  globais; `ThemeCompareView` mostra a **fita de componentes** nos dois painéis
-  (ou "Nenhum componente ativo") e o diff (`components.button.variant`).
-- **Catalog**: `startup/theme` publica `catalog_theme_components`;
-  `common/header.php` concatena `component_css` a `theme_token_css` no `style`
-  do `<body>` (**nenhum `<style>`/`|raw` novo**); `twig.php` recebe os 3 mapas
-  planos via `setThemeGlobals()`. **`twig.php`, `header.twig`, `home.twig`,
-  `PageLayout`, `cms/slot.php`, models, `schema.sql` e o runtime WebGL ficam
-  intactos.**
-- **Admin**: card "Biblioteca de componentes" com galeria de 10 miniaturas,
-  checkbox de habilitação, `<select>` de variante/tom, botão "Inserir" e
-  seletor do template de destino. Endpoint **`componentThumb`** (GET, `access`,
-  `no-store`, CSP, fail-closed para ID/enum inválido). `edit()` publica as
-  linhas e os snippets; `buildDraftConfig()` valida e grava. **48 novas chaves
-  de UI ×3 idiomas** (235 → 283); estilos no CSS existente.
-- **`theme-component-library.js`** (novo): DOM puro (`getAttribute`,
-  `setAttribute`, `textContent`, `addEventListener`), sem
-  `fetch`/`eval`/`innerHTML`/`document.write`/`insertAdjacentHTML`. Sem
-  JavaScript, as miniaturas já vêm renderizadas e o formulário envia tudo.
-- Guia `docs/GUIA-BIBLIOTECA-COMPONENTES.md`.
+- **`ThemeSchedule`** (novo): 5 campos allowlistados (`enabled`, `from`, `until`,
+  `percent`, `scope`) e 7 motivos estáveis. `normalize()` é **fail-closed**
+  (chave extra, aninhamento, data fora de `YYYY-MM-DDTHH:MM` UTC, `until`
+  anterior a `from`, percentual fora de 0–100, público desconhecido ⇒ `null`).
+  Datas são validadas por `DateTimeImmutable` + round-trip, **nunca por regex
+  do usuário**. `bucket()` = `hexdec(substr(hash('sha256', seed), 0, 8)) % 100`:
+  estável por visitante, determinístico, **nunca renderizado nem persistido**.
+- **Decisão no Catalog**: `getEffectiveTheme()` (model, **1 SELECT** somente
+  leitura) traz publicado + rascunho do tema ativo; `startup/theme.php` decide
+  em cada requisição e resolve o `ThemeSnapshot` sobre o config escolhido,
+  usando `getThemeMap('published')` ou `getThemeMap('draft')` conforme o caso.
+  O publicado **permanece intacto**. Público `all` / `logged_in` / `anonymous`
+  usa o `logged_in` do contexto allowlistado já existente (A).
+- **`ThemeSnapshot`**: `schedule`, `schedule_effective`, `schedule_reason`,
+  `schedule_percent`, `schedule_bucket`, `schedule_bars`, `schedule_css` e 5
+  globais Twig **planos** (`theme_schedule_*`). `diff()` passa a incluir
+  `schedule.percent`, `schedule.from`, etc. **`ThemeCompareView`** mostra a fita
+  de agendamento nos dois painéis, com barra de rollout.
+- **Catalog**: `common/header.php` acrescenta a classe discreta
+  `rms-theme-rollout` e concatena `--rms-sched-*` ao `theme_token_css` já
+  existente no `style` do `<body>` (B + G). **Nenhum `<style>`, `<script>` ou
+  `|raw` novo**; `header.twig`, `twig.php`, `home.twig`, `PageLayout`,
+  `cms/slot.php`, engines e runtime WebGL intactos.
+- **Pacotes E**: `schedule` em `CONFIG_KEYS`, `spec`, `validateConfig`
+  (**`schedule_invalid`**), checksum SHA-256 e `decode()`. Na herança é
+  **substituído integralmente** (como `conditions`): filho sem `schedule`
+  herda a regra do pai por inteiro; filho com `schedule` substitui por inteiro.
+- **Admin**: card com checkbox, início/fim (`datetime-local`), percentual,
+  público e uma **sonda determinística** (data/hora, identificador de teste,
+  visitante autenticado). O botão **Simular** reusa a prévia C via
+  `formaction` + `formtarget="theme-preview"` — **sem JavaScript e sem
+  `fetch`**. `buildDraftConfig()` valida; `import` recusa JSON inválido.
+  **33 novas chaves de UI ×3 idiomas** (283 → 316).
+- **`theme-schedule.js`** (novo): DOM puro (habilita campos, mostra o
+  percentual), sem `fetch`/`eval`/`innerHTML`/`document.write`. Guia
+  `docs/GUIA-AGENDAMENTO-ROLLOUT.md`.
 
 ## Compatibilidade
 
-Formulários e pacotes sem `components` preservam **exatamente** o
-comportamento da F (a chave não é gravada); `component_css` fica vazio, os 3
-globais são mapas vazios e o CSS dos 22 tokens B continua idêntico. Os 10
-componentes abrem **desabilitados** num tema legado. Validação com o
-**`Autoloader` real** confirma que `ComponentRegistry` resolve para
-`component_registry.php` — a causa do fatal do hotfix não se repete. Os 6
-presets D e as 12 seções F seguem intactos.
+Config sem `schedule` ⇒ comportamento **idêntico à G**: `effective=published`,
+variáveis `--rms-sched-*` neutras, globais planos nos defaults e **nenhuma
+consulta extra** relevante (o model já fazia 1 SELECT; continua 1 SELECT).
+Model sem `getEffectiveTheme` cai para `getPublishedTheme()`. Os 6 presets D,
+as 12 seções F e os 10 componentes G seguem intactos. Validação com o
+**`Autoloader` real** confirma `ThemeSchedule` → `theme_schedule.php`.
 
 ## Validação executada
 
 | Verificação | Resultado |
 |---|---|
-| `php -l` PHP 8.5 real nos 11 arquivos PHP | 11 OK / 0 FAIL |
-| `node --check` (5 JS: A, D, E, F e o novo) | 5 OK |
-| **Autoloader real** (todas as classes do `framework.php`) | 43 PASS / 0 FAIL |
-| `ComponentRegistry` + pacote/checksum + snapshot + prévia | 118 PASS / 0 FAIL |
-| Núcleo: startup, paridade, globais, mapas dos models | 48 PASS / 0 FAIL |
-| Controller público `common/home` (regressão F) | 23 PASS / 0 FAIL |
-| Controller Admin: edit/save/export/import/compare/thumb | 139 PASS / 0 FAIL |
-| Render Twig 3.14 + view (card, galeria, escape, fita) | 95 PASS / 0 FAIL |
-| **jsdom 29**: insert, thumb, enums, fail-closed, sem JS | 82 PASS / 0 FAIL |
+| `php -l` PHP 8.5 real nos 12 arquivos PHP | 12 OK / 0 FAIL |
+| `node --check` (6 JS: A, D, E, F, G e o novo) | 6 OK |
+| **Autoloader real** (todas as classes do `framework.php`) | 53 PASS / 0 FAIL |
+| `ThemeSchedule` + pacote/checksum + snapshot + prévia | 135 PASS / 0 FAIL |
+| Startup Catalog: publicado × rascunho, escopo, janela, zero escrita | 69 PASS / 0 FAIL |
+| Controller público `common/home` (regressão F/G) | 23 PASS / 0 FAIL |
+| Controller Admin: edit/save/export/import/compare/sonda | 173 PASS / 0 FAIL |
+| Render Twig 3.14 + view (card, sonda, escape, fita) | 123 PASS / 0 FAIL |
+| **jsdom 29**: toggle, percentual, degradação sem JS, regressão A–G | 100 PASS / 0 FAIL |
 | `verify-checksums` (A e B) | 14 manifestos / 142 arquivos / 0 divergentes |
 | `repo-health` (A e B) | 6 PASS / 0 FAIL / 0 SKIP |
 | `verify-ci-workflow` | 31 PASS / 0 FAIL |
 | `verify-contract-freeze` | exit 0 |
 
-**Total: 548 asserções, 0 falhas.** 14 arquivos congelados
+**Total: 676 asserções, 0 falhas.** 16 arquivos congelados
 conferidos por hash antes/depois (inclui `schema.sql`, `home.twig`, `twig.php`,
-`autoloader.php`, `scene_preset_registry.php`, `PageLayout`, `cms/slot.php`,
-`ConditionEngine`, `TokenRegistry`). Os 14 `CHECKSUMS*.txt` permanecem
-**idênticos** e não foram reemitidos. Nenhum contrato congelado,
-`release_approved`, workflow, checker, `custom_js` do BDREditor ou runtime
-WebGL foi modificado. Nenhuma escrita remota. F9-27 segue `BLOCKED_NOT_RUN`;
-BDREditor pausado; P2 do F9-18 não reaberto.
+`autoloader.php`, `component_registry.php`, `theme-component-library.js`,
+`scene_preset_registry.php`, `PageLayout`, `cms/slot.php`, `ConditionEngine`,
+`TokenRegistry`). Os 14 `CHECKSUMS*.txt` permanecem **idênticos** e não
+foram reemitidos. Nenhum contrato congelado, `release_approved`, workflow,
+checker, `custom_js` do BDREditor ou runtime WebGL foi modificado. Nenhuma
+escrita remota. F9-27 segue `BLOCKED_NOT_RUN`; BDREditor pausado; P2 do F9-18
+não reaberto.
 
 ## Limitações
 
 PHP 8.5 via WASM + Twig 3.14 + jsdom, com mocks de DB/sessão/response. **Não**
 houve CMS completo, MySQL real, sessão Admin autenticada, browser com rede,
-WebGL, E2E, migration, staging, deploy ou escrita no GitHub. As miniaturas são
-SVG esquemático determinístico, não frames renderizados. **CI verde e health
-verde ≠ release aprovada.**
+cron, WebGL, E2E, migration, staging, deploy ou escrita no GitHub. A decisão é
+**por requisição**: não existe tarefa agendada que promova o rascunho; se o
+servidor reiniciar, a regra continua a mesma enquanto o JSON não mudar.
+**CI verde e health verde ≠ release aprovada.**
 
 Aplicar: substituir pelos arquivos completos (os 3 novos entram nos
 respectivos diretórios) e rodar

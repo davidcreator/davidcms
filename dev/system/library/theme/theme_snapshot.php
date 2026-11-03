@@ -16,13 +16,15 @@ final class ThemeSnapshot {
     private ThemePackage $package;
     private SectionRegistry $sections;
     private ComponentRegistry $components;
+    private ThemeSchedule $schedule;
 
-    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?ThemePackage $package = null, ?SectionRegistry $sections = null, ?ComponentRegistry $components = null) {
+    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?ThemePackage $package = null, ?SectionRegistry $sections = null, ?ComponentRegistry $components = null, ?ThemeSchedule $schedule = null) {
         $this->engine = $engine;
         $this->tokens = $tokens;
         $this->package = $package ?? new ThemePackage($engine, $tokens);
         $this->sections = $sections ?? $this->package->sections();
         $this->components = $components ?? $this->package->components();
+        $this->schedule = $schedule ?? $this->package->schedule();
     }
 
     /**
@@ -30,7 +32,7 @@ final class ThemeSnapshot {
      * @param array<string,mixed> $context  Contexto allowlisted do ConditionEngine.
      * @return array<string,mixed>
      */
-    public function resolve(array $config, array $context, array $themeMap = [], string $selfSlug = ''): array {
+    public function resolve(array $config, array $context, array $themeMap = [], string $selfSlug = '', array $scheduleState = []): array {
         // F13-E: child-theme. Com mapa, resolve a cadeia de pais antes de
         // calcular o estado efetivo; sem mapa, comportamento identico ao de C.
         // Ciclo/profundidade/pai ausente param a caminhada (fail-closed).
@@ -85,6 +87,11 @@ final class ThemeSnapshot {
         $componentCss = $this->components->css($componentConfig);
         $componentGlobals = $this->components->globals($componentConfig);
 
+        // F13-H: a DECISAO vem de fora (Catalog ou previa Admin); o snapshot
+        // apenas a publica. Sem scheduleState => publicado, sem alterar A-G.
+        $scheduleBars = $this->schedule->bars($scheduleState);
+        $scheduleCss = $this->schedule->css($scheduleState);
+
         return [
             'primary'    => $primary,
             'surface'    => $surface,
@@ -104,6 +111,13 @@ final class ThemeSnapshot {
             'components' => $componentConfig,
             'component_enabled' => $this->components->enabled($componentConfig),
             'component_css' => $componentCss,
+            'schedule' => $scheduleState,
+            'schedule_effective' => (string)($scheduleState['effective'] ?? 'published'),
+            'schedule_reason' => (string)($scheduleState['reason'] ?? 'disabled'),
+            'schedule_percent' => (int)($scheduleState['percent'] ?? 0),
+            'schedule_bucket' => (int)($scheduleState['bucket'] ?? 0),
+            'schedule_bars' => $scheduleBars,
+            'schedule_css' => $scheduleCss,
             'globals'    => array_replace([
                 'theme' => [
                     'vars' => $r['vars'], 'flags' => $r['flags'],
@@ -111,7 +125,7 @@ final class ThemeSnapshot {
                     'tokens' => $tokens, 'sections' => ($sections ?? []),
                 ],
                 'theme_scene' => $three,
-            ], $componentGlobals),
+            ], $componentGlobals, $this->schedule->globals($scheduleState)),
         ];
     }
 

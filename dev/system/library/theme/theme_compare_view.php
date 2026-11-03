@@ -95,6 +95,8 @@ final class ThemeCompareView {
         $o .= $this->sectionStrip($s, $labels, $h);
         // F13-G: fita de componentes habilitados (servidor, tudo escapado).
         $o .= $this->componentStrip($s, $labels, $h);
+        // F13-H: fita do agendamento/rollout (servidor, tudo escapado).
+        $o .= $this->scheduleStrip($s, $labels, $h);
         // Amostra visual REAL: consome as mesmas variaveis que o theme.css.
         $o .= '<div style="padding:14px;border-radius:var(--rms-radius,12px);box-shadow:var(--rms-shadow,none);border:var(--rms-border-width,1px) solid #e2e8f0;background:var(--rms-color-surface,#ffffff)">'
            . '<h3 style="margin:0 0 6px;font-size:calc(var(--rms-font-size,16px) * var(--rms-font-scale,1.25));font-weight:var(--rms-heading-weight,700)">' . $h($labels['sample_title']) . '</h3>'
@@ -143,6 +145,39 @@ final class ThemeCompareView {
             }
             $out .= '</div>';
         }
+        return $out . '</div>';
+    }
+
+    /** F13-H — janela, publico e rollout efetivos (nenhum HTML do usuario). */
+    private function scheduleStrip(array $s, array $labels, callable $h): string {
+        $bars = (array)($s['schedule_bars'] ?? []);
+        $effective = (string)($s['schedule_effective'] ?? 'published');
+        $reason = (string)($s['schedule_reason'] ?? 'disabled');
+        $window = (array)($bars['window'] ?? []);
+        $rollout = (array)($bars['rollout'] ?? []);
+        $out = '<div style="margin:0 0 10px"><div style="font-size:11px;font-weight:600;margin-bottom:5px;color:#475569">'
+             . $h($labels['schedule'] ?? 'Schedule') . '</div>';
+        $tone = $effective === 'draft' ? '#15803d' : '#64748b';
+        $out .= '<div style="font-size:11px;margin-bottom:4px"><span style="display:inline-block;padding:2px 7px;border-radius:999px;background:'
+             . ($effective === 'draft' ? '#dcfce7' : '#e2e8f0') . ';color:' . $tone . '">'
+             . $h($effective === 'draft' ? ($labels['schedule_active'] ?? 'Draft rollout') : ($labels['schedule_inactive'] ?? 'Published'))
+             . '</span> <code>' . $h($reason) . '</code></div>';
+        $out .= '<div style="display:flex;flex-wrap:wrap;gap:4px;font-size:10px">';
+        $out .= '<span style="padding:2px 6px;border:1px solid #cbd5e1;border-radius:4px;background:#fff">'
+             . $h($labels['schedule_window'] ?? 'Window') . ': <code>' . $h((string)($window['from'] ?? '')) . '</code> → <code>'
+             . $h((string)($window['until'] ?? '') !== '' ? (string)$window['until'] : ($labels['schedule_open'] ?? 'open')) . '</code></span>';
+        $out .= '<span style="padding:2px 6px;border:1px solid #cbd5e1;border-radius:4px;background:#fff">'
+             . $h($labels['schedule_rollout'] ?? 'Rollout') . ': <code>' . $h((string)($rollout['percent'] ?? 0)) . '%</code> · '
+             . $h($labels['schedule_bucket'] ?? 'bucket') . ' <code>' . $h((string)($rollout['bucket'] ?? 0)) . '</code></span>';
+        $out .= '<span style="padding:2px 6px;border:1px solid #cbd5e1;border-radius:4px;background:#fff">'
+             . $h($labels['schedule_scope'] ?? 'Scope') . ': <code>' . $h((string)($bars['scope'] ?? 'all')) . '</code></span>';
+        $out .= '</div>';
+        if (!empty($bars['active'])) {
+            $out .= '<div style="margin-top:5px;height:6px;border:1px solid #cbd5e1;border-radius:4px;background:#f8fafc;overflow:hidden">'
+                 . '<div style="height:100%;width:' . max(0,min(100,(int)($rollout['percent'] ?? 0))) . '%;background:#2563eb"></div></div>';
+        }
+        $out .= '<div style="font-size:10px;color:#64748b;margin-top:3px">'
+             . $h($labels['schedule_now'] ?? 'now') . ': <code>' . $h((string)($bars['now'] ?? '')) . '</code></div>';
         return $out . '</div>';
     }
 

@@ -115,3 +115,9 @@
 .tcl-card .btn { margin-top: .25rem; }
 .tcl-status { display: inline-block; font-size: .78rem; color: var(--bs-secondary-color, #5c6773); }
 @media (max-width: 575.98px) { .tcl-grid { grid-template-columns: 1fr; } }
+
+/* F13-H — agendamento/rollout. */
+.tsch-probe .form-label { font-size: .78rem; }
+.tsch-status { display: inline-block; margin-top: .4rem; font-size: .78rem;
+  color: var(--bs-secondary-color, #5c6773); }
+[data-schedule-fields] input:disabled, [data-schedule-fields] select:disabled { opacity: .55; }

@@ -60,6 +60,24 @@
 <input type="hidden" name="sections_order" id="sections-order" value="{{ sections_order|e('html_attr') }}">
 <p class="form-text">{{ text_section_hint }}</p>
 </div></div>
+<div class="card mb-4" id="theme-schedule" data-schedule-card><div class="card-header"><h2 class="h5 mb-0">{{ text_schedule }}</h2><p class="mb-0 text-muted">{{ text_schedule_help }}</p></div><div class="card-body">
+<div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="schedule[enabled]" value="1" id="schedule-enabled" data-schedule-enabled{% if schedule.enabled %} checked{% endif %}><label class="form-check-label" for="schedule-enabled"><strong>{{ text_schedule_enabled }}</strong></label></div>
+<div class="row g-2" data-schedule-fields>
+<div class="col-md-4"><label class="form-label" for="schedule-from">{{ text_schedule_from }}</label><input class="form-control form-control-sm" type="datetime-local" name="schedule[from]" id="schedule-from" value="{{ schedule.from }}" data-schedule-input></div>
+<div class="col-md-4"><label class="form-label" for="schedule-until">{{ text_schedule_until }}</label><input class="form-control form-control-sm" type="datetime-local" name="schedule[until]" id="schedule-until" value="{{ schedule.until }}" data-schedule-input></div>
+<div class="col-md-2"><label class="form-label" for="schedule-percent">{{ text_schedule_percent }}</label><input class="form-control form-control-sm" type="number" min="0" max="100" step="1" name="schedule[percent]" id="schedule-percent" value="{{ schedule.percent }}" data-schedule-input data-schedule-percent></div>
+<div class="col-md-2"><label class="form-label" for="schedule-scope">{{ text_schedule_scope }}</label><select class="form-select form-select-sm" name="schedule[scope]" id="schedule-scope" data-schedule-input>{% for s in schedule_scopes %}<option value="{{ s }}"{% if s == schedule.scope %} selected{% endif %}>{{ _context['text_schedule_scope_' ~ s]|default(s) }}</option>{% endfor %}</select></div>
+</div>
+<p class="form-text mb-0">{{ text_schedule_note }}</p>
+<div class="tsch-probe mt-3 pt-3 border-top"><strong class="d-block small mb-2">{{ text_schedule_probe }}</strong>
+<div class="row g-2 align-items-end">
+<div class="col-md-4"><label class="form-label" for="schedule-probe-now">{{ text_schedule_probe_now }}</label><input class="form-control form-control-sm" type="datetime-local" name="schedule_probe_now" id="schedule-probe-now" value="{{ schedule_probe_now }}"></div>
+<div class="col-md-3"><label class="form-label" for="schedule-probe-visitor">{{ text_schedule_probe_visitor }}</label><input class="form-control form-control-sm" type="text" name="schedule_probe_visitor" id="schedule-probe-visitor" value="visitor-a" maxlength="64"></div>
+<div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="schedule_probe_logged" value="1" id="schedule-probe-logged"><label class="form-check-label" for="schedule-probe-logged">{{ text_schedule_probe_logged }}</label></div></div>
+<div class="col-md-2"><button type="submit" class="btn btn-sm btn-outline-secondary" formaction="{{ compare_url }}" formtarget="theme-preview">{{ text_schedule_probe_button }}</button></div>
+</div></div>
+<span class="tsch-status" data-schedule-status aria-live="polite"></span>
+</div></div>
 <div class="card mb-4" id="theme-component-library" data-thumb-base="{{ component_thumb_base|e('html_attr') }}" data-snippets="{{ component_snippets_json|e('html_attr') }}"><div class="card-header"><h2 class="h5 mb-0">{{ text_components }}</h2><p class="mb-0 text-muted">{{ text_components_help }}</p></div><div class="card-body">
 <div class="row g-2 align-items-end mb-3"><div class="col-md-9"><label class="form-label" for="component-target">{{ text_component_target }}</label><select class="form-select form-select-sm" id="component-target" data-component-target>{% for k in template_keys %}<option value="{{ k }}"{% if k == 'common/home' %} selected{% endif %}>{{ k }}.twig</option>{% endfor %}</select></div><div class="col-md-3"><span class="tcl-status" data-component-status aria-live="polite"></span></div></div>
 <div class="tcl-grid">
