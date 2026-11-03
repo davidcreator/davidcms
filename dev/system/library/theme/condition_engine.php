@@ -40,7 +40,7 @@ final class ConditionEngine {
     private const FIELDS = [
         'route', 'path', 'language', 'device', 'mobile', 'logged_in',
         'user_group', 'hour', 'weekday', 'date', 'month', 'variant',
-        'https', 'ajax', 'query',
+        'https', 'ajax', 'query', 'site',
     ];
 
     /** Operadores permitidos; sem regex, sem expressoes, sem chamadas. */
@@ -61,6 +61,9 @@ final class ConditionEngine {
         'ref', 'lang', 'theme', 'variant', 'view', 'page', 'debug',
     ];
 
+    /** F13-L: unicos operadores com semantica definida para a dimensao site. */
+    private const SITE_OPS = ['eq', 'neq', 'in', 'not_in'];
+
     /** @return array<int,string> */
     public function fields(): array { return self::FIELDS; }
     /** @return array<int,string> */
@@ -72,6 +75,16 @@ final class ConditionEngine {
     /** @return array<int,string> */
     public function queryKeys(): array { return self::QUERY_KEYS; }
 
+    /**
+     * F13-L: IDs allowlistados da frente J (ThemeSites::IDS). Sem a classe J,
+     * a lista fica vazia e `site` nunca valida/casa — fail-closed. O motor nao
+     * recebe host nem texto livre: apenas IDs estaveis do proprio repositorio.
+     * @return array<int,string>
+     */
+    private function siteIds(): array {
+        return class_exists(ThemeSites::class) ? array_values(ThemeSites::IDS) : [];
+    }
+
     /** Contrato completo, usado pelo Admin e pela documentacao. */
     public function spec(): array {
         return [
@@ -80,6 +93,7 @@ final class ConditionEngine {
             'max_nodes'  => self::MAX_NODES,
             'max_depth'  => self::MAX_DEPTH,
             'fields'     => self::FIELDS,
+            'site_ids'   => $this->siteIds(),
             'query_keys' => self::QUERY_KEYS,
             'operators'  => self::OPS,
             'groups'     => ['all', 'any', 'not'],
@@ -150,7 +164,10 @@ final class ConditionEngine {
         if (!in_array($field, self::FIELDS, true)) return [false, null];
         if (!array_key_exists($field, $context)) return [false, null];
         $v = $context[$field];
-        return $this->safeScalar($v) ? [true, $v] : [false, null];
+        if (!$this->safeScalar($v)) return [false, null];
+        // F13-L: mesmo com contexto arbitrario, so um ID allowlistado resolve.
+        if ($field === 'site' && (!is_string($v) || !in_array($v, $this->siteIds(), true))) return [false, null];
+        return [true, $v];
     }
 
     /** @param mixed $left @param mixed $right */
@@ -237,6 +254,16 @@ final class ConditionEngine {
         if ($op === 'between' && (!is_array($value) || count($value) !== 2)) return [['code' => 'value_not_pair', 'path' => $field]];
         if (in_array($op, ['eq', 'neq', 'contains', 'starts_with', 'ends_with', 'gt', 'gte', 'lt', 'lte'], true) && is_array($value)) {
             return [['code' => 'value_not_scalar', 'path' => $field]];
+        }
+        // F13-L: `site` so compara IDs allowlistados, nunca texto livre do host.
+        if ($field === 'site') {
+            if (!in_array($op, self::SITE_OPS, true)) return [['code' => 'site_op_invalid', 'path' => $field]];
+            $ids = $this->siteIds();
+            $vals = is_array($value) ? $value : [$value];
+            if ($vals === []) return [['code' => 'site_invalid', 'path' => $field]];
+            foreach ($vals as $v) {
+                if (!is_string($v) || !in_array($v, $ids, true)) return [['code' => 'site_invalid', 'path' => $field]];
+            }
         }
         return [];
     }

@@ -39,6 +39,13 @@ class Theme extends \Reamur\System\Engine\Controller {
         $siteHost = (string)($this->request->server['HTTP_HOST'] ?? '');
         $site = $this->theme_sites->match($sitesCfg, $siteHost);
 
+        // F13-L: dimensao `site` entra no contexto allowlisted ANTES do
+        // ThemeSnapshot. O ID vem SOMENTE de ThemeSites::match (allowlist da
+        // J); HTTP_HOST continua sendo apenas COMPARADO, nunca publicado.
+        // Sem sites configurados, match() devolve `primary` (identico a K).
+        $siteId = (string)($site['id'] ?? '');
+        $context['site'] = in_array($siteId, $this->theme_sites->ids(), true) ? $siteId : 'primary';
+
         // F13-C: uma unica fonte de verdade para o estado efetivo do tema.
         // O Admin (previa rascunho x publicado) resolve exatamente o mesmo
         // calculo com a mesma classe, no mesmo contexto allowlistado.

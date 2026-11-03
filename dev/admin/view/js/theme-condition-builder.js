@@ -29,6 +29,7 @@
   var csrf = root.dataset.csrf || '';
   var fields = spec.fields || [];
   var queryKeys = spec.query_keys || [];
+  var siteIds = spec.site_ids || [];
   var operators = spec.operators || [];
   var scenes = spec.scenes || [];
   var slots = spec.slots || [];
@@ -127,6 +128,10 @@
       var ia = input(a, function () { node.value = [ia.value, ib.value]; sync(false); }, 'number');
       var ib = input(b, function () { node.value = [ia.value, ib.value]; sync(false); }, 'number');
       host.appendChild(el('div', { 'class': 'tcb-pair' }, [ia, el('span', { text: '…' }), ib]));
+      return;
+    }
+    if (node.field === 'site' && siteIds.length && op !== 'in' && op !== 'not_in') {
+      host.appendChild(sel(siteIds, node.value || siteIds[0], function (v) { node.value = v; sync(false); }, 'form-select form-select-sm tcb-cond__value'));
       return;
     }
     if (op === 'in' || op === 'not_in') {
@@ -409,6 +414,7 @@
   var ctxFields = [
     [L('route', 'Rota'), 'route', sel(routes.length ? routes : ['common/home'], (routes[0] || 'common/home'), null, 'form-select form-select-sm')],
     [L('language', 'Idioma'), 'language', sel(languages.length ? languages : ['en-us'], (languages[0] || 'en-us'), null, 'form-select form-select-sm')],
+    [L('site', 'Site'), 'site', sel(siteIds.length ? siteIds : ['primary'], 'primary', null, 'form-select form-select-sm')],
     [L('device', 'Dispositivo'), 'device', sel(devices.length ? devices : ['desktop'], (devices[0] || 'desktop'), null, 'form-select form-select-sm')],
     [L('variant', 'Variante'), 'variant', sel([{ value: '', label: '-' }, 'a', 'b'], '', null, 'form-select form-select-sm')],
     [L('hour', 'Hora'), 'hour', input('9', null, 'number')],

@@ -72,6 +72,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         foreach(['text_scene_editor','text_scene_editor_help','text_scene_thumb','text_scene_thumb_help','text_scene_preset','text_scene_preset_help','text_scene_preset_custom','text_scene_preset_active','text_scene_preset_apply','error_scene_preset'] as $k) $data[$k]=$this->language->get($k);
 
         $data['condition_fields']=$spec['fields'];
+        $data['condition_site_ids']=$spec['site_ids'];
         $data['condition_query_keys']=$spec['query_keys'];
         $data['condition_operators']=$spec['operators'];
         $data['condition_max_rules']=$spec['max_rules'];
@@ -560,16 +561,21 @@ class Theme extends \Reamur\System\Engine\Controller {
         $probeHost=(string)($post['site_probe_host']??'');
         $sitePub=$this->theme_sites->match($sitesPub,$probeHost);
         $siteDraft=$this->theme_sites->match($sitesDraft,$probeHost);
-        $pubState=$snapshot->resolve($published,$context,$mapPublished,(string)($published['slug']??''),$pubDecision,
+        // F13-L: cada painel avalia as condicoes com o site allowlistado da
+        // SUA politica (publicado x rascunho), exatamente como no Catalog.
+        // A sonda de host continua sendo so comparada, nunca exibida.
+        $contextPub=$context;   $contextPub['site']=(string)($sitePub['id']??'primary');
+        $contextDraft=$context; $contextDraft['site']=(string)($siteDraft['id']??'primary');
+        $pubState=$snapshot->resolve($published,$contextPub,$mapPublished,(string)($published['slug']??''),$pubDecision,
             ['sites'=>$sitesPub,'active'=>$sitePub]);
-        $draftState=$snapshot->resolve($draft,$context,$mapDraft,(string)($draft['slug']??''),$scheduleDecision,
+        $draftState=$snapshot->resolve($draft,$contextDraft,$mapDraft,(string)($draft['slug']??''),$scheduleDecision,
             ['sites'=>$sitesDraft,'active'=>$siteDraft]);
         $pubSource=isset($published['templates'][$key])?$published['templates'][$key]:null;
         $draftSource=isset($draft['templates'][$key])?$draft['templates'][$key]:null;
         try {
             $html=(new \Reamur\System\Library\Theme\ThemeCompareView())->render([
                 'lang'=>(string)$this->config->get('language_directory','en-us'),
-                'labels'=>$labels,'context'=>$context,'template_key'=>$key,
+                'labels'=>$labels,'context'=>$contextPub,'template_key'=>$key,
                 'error'=>$built['error'],
                 'published'=>$pubState,'draft'=>$draftState,
                 'published_html'=>$this->renderPreviewFragment($key,$pubSource),
@@ -734,6 +740,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         $route=$str($raw['route']??'common/home',120);
         $variant=$str($raw['variant']??'',4);
         if (!in_array($variant,['','a','b'],true)) $variant='';
+        // F13-L: site simulado so pode ser um ID allowlistado da frente J.
+        $site=$str($raw['site']??'',24);
+        if (!in_array($site,$this->theme_sites->ids(),true)) $site='primary';
         $hour=filter_var($raw['hour']??9,FILTER_VALIDATE_INT);
         if ($hour===false||$hour<0||$hour>23) $hour=9;
         $date=$str($raw['date']??date('Y-m-d'),10);
@@ -750,7 +759,7 @@ class Theme extends \Reamur\System\Engine\Controller {
             'device'=>$device,'mobile'=>$device!=='desktop','logged_in'=>$logged,
             'user_group'=>$str($raw['user_group']??'',48),'hour'=>(int)$hour,
             'weekday'=>(int)date('N',$stamp),'date'=>$date,'month'=>(int)date('n',$stamp),
-            'variant'=>$variant,'https'=>true,'ajax'=>false,'query'=>$query,
+            'variant'=>$variant,'https'=>true,'ajax'=>false,'query'=>$query,'site'=>$site,
         ];
     }
 
