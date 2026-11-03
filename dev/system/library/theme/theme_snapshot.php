@@ -14,11 +14,13 @@ final class ThemeSnapshot {
     private ConditionEngine $engine;
     private TokenRegistry $tokens;
     private ThemePackage $package;
+    private SectionRegistry $sections;
 
-    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?ThemePackage $package = null) {
+    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?ThemePackage $package = null, ?SectionRegistry $sections = null) {
         $this->engine = $engine;
         $this->tokens = $tokens;
         $this->package = $package ?? new ThemePackage($engine, $tokens);
+        $this->sections = $sections ?? $this->package->sections();
     }
 
     /**
@@ -69,6 +71,12 @@ final class ThemeSnapshot {
 
         $templates = isset($config['templates']) && is_array($config['templates']) ? $config['templates'] : [];
 
+        // F13-F: composicao declarativa da home. Ausente => null (layout legado
+        // do CMS); presente => lista validada, inclusive [] (nenhuma secao).
+        $sections = (array_key_exists('sections',$config) && is_array($config['sections']))
+            ? ($this->sections->normalize($config['sections']) ?? []) : null;
+        $sectionBars = $this->sections->bars($sections);
+
         return [
             'primary'    => $primary,
             'surface'    => $surface,
@@ -82,11 +90,14 @@ final class ThemeSnapshot {
             'matched'    => $r['matched'],
             'ignored'    => $r['ignored'],
             'templates'  => $templates,
+            'sections'   => $sections,
+            'sections_defined' => ($sections !== null),
+            'section_bars' => $sectionBars,
             'globals'    => [
                 'theme' => [
                     'vars' => $r['vars'], 'flags' => $r['flags'],
                     'classes' => $r['classes'], 'matched' => $r['matched'],
-                    'tokens' => $tokens,
+                    'tokens' => $tokens, 'sections' => ($sections ?? []),
                 ],
                 'theme_scene' => $three,
             ],

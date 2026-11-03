@@ -26,21 +26,27 @@ final class ThemePackage {
         'blog/blog_list', 'blog/blog_info', 'tool/tool_list', 'tool/tool_info',
         'checkout/quote', 'error/not_found',
     ];
-    private const CONFIG_KEYS = ['primary','surface','scene','templates','conditions','three','tokens','parent'];
+    private const CONFIG_KEYS = ['primary','surface','scene','templates','conditions','three','tokens','parent','sections'];
     private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found'];
     private const MAP_KEYS = ['tokens','templates','three'];
 
     private ConditionEngine $engine;
     private TokenRegistry $tokens;
+    private SectionRegistry $sections;
 
-    public function __construct(ConditionEngine $engine, TokenRegistry $tokens) {
+    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?SectionRegistry $sections = null) {
         $this->engine = $engine;
         $this->tokens = $tokens;
+        $this->sections = $sections ?? new SectionRegistry();
     }
+
+    /** Registro compartilhado com framework, controller Admin e snapshot. */
+    public function sections(): SectionRegistry { return $this->sections; }
 
     public function spec(): array {
         return ['format'=>self::FORMAT,'version'=>self::VERSION,'max_bytes'=>self::MAX_BYTES,
-                'max_depth'=>self::MAX_DEPTH,'config_keys'=>self::CONFIG_KEYS,'template_keys'=>self::TEMPLATE_KEYS];
+                'max_depth'=>self::MAX_DEPTH,'config_keys'=>self::CONFIG_KEYS,'template_keys'=>self::TEMPLATE_KEYS,
+                'section_ids'=>$this->sections->ids()];
     }
 
     /** @return array<string,mixed> */
@@ -67,6 +73,7 @@ final class ThemePackage {
         if (isset($out['tokens']) && !is_array($out['tokens'])) unset($out['tokens']);
         if (isset($out['three']) && !is_array($out['three'])) unset($out['three']);
         if (isset($out['conditions']) && !is_array($out['conditions'])) unset($out['conditions']);
+        if (isset($out['sections']) && !is_array($out['sections'])) unset($out['sections']);
         return $out;
     }
 
@@ -98,6 +105,10 @@ final class ThemePackage {
         if (!is_array($three) || $this->engine->normalizeThree($three)===null) $e[]='three_invalid';
         $tokens=$config['tokens']??[];
         if (!is_array($tokens) || $this->tokens->validate($tokens)!==[] || $this->tokens->normalize($tokens)===null) $e[]='tokens_invalid';
+        // F13-F: lista opcional, ordenada e allowlistada ([] e override valido).
+        if (array_key_exists('sections',$config)) {
+            if (!is_array($config['sections']) || $this->sections->normalize($config['sections'])===null) $e[]='sections_invalid';
+        }
         return array_values(array_unique($e));
     }
 

@@ -356,8 +356,16 @@ class Home extends \Reamur\System\Engine\Controller {
         // Conteúdo Home do CMS substitui apenas seções editoriais estáticas;
         // grades/listas dinâmicas continuam nos módulos especializados.
         $data['cms_home_content'] = (string)$this->load->controller('cms/slot.render', 'home');
-        $data['cms_home_sections'] = (array)$this->load->controller('cms/slot.sections', 'home');
-        $activeHomeSections = (array)$data['cms_home_sections'];
+        $cmsHomeSections = (array)$this->load->controller('cms/slot.sections', 'home');
+        // F13-F: o tema pode reordenar/habilitar SOMENTE secoes allowlistadas.
+        // Sem a chave no config (null) o layout legado do CMS permanece intacto;
+        // um array explicito — inclusive [] — e o override declarativo do tema.
+        $themeSections = $this->config->get('catalog_theme_sections', null);
+        if (is_array($themeSections)) {
+            $cmsHomeSections = $this->theme_section_registry->plan($themeSections);
+        }
+        $data['cms_home_sections'] = $cmsHomeSections;
+        $activeHomeSections = $cmsHomeSections;
         $data['has_3d'] = (in_array('hero', $activeHomeSections, true) && $threeJs['hero_enabled'])
             || (in_array('portfolio', $activeHomeSections, true) && $portfolioEnabled)
             || (in_array('tools', $activeHomeSections, true) && $tools3dEnabled);

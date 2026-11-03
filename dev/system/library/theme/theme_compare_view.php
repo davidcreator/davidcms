@@ -91,6 +91,8 @@ final class ThemeCompareView {
         if ($thumb !== '') {
             $o .= '<div style="margin:0 0 10px"><img src="' . $h($thumb) . '" alt="' . $h($labels['scene_thumb']??'Scene') . '" width="320" height="180" style="display:block;width:100%;max-width:320px;height:auto;border:1px solid #cbd5e1;border-radius:6px"></div>';
         }
+        // F13-F: fita de secoes da home, gerada no servidor e toda escapada.
+        $o .= $this->sectionStrip($s, $labels, $h);
         // Amostra visual REAL: consome as mesmas variaveis que o theme.css.
         $o .= '<div style="padding:14px;border-radius:var(--rms-radius,12px);box-shadow:var(--rms-shadow,none);border:var(--rms-border-width,1px) solid #e2e8f0;background:var(--rms-color-surface,#ffffff)">'
            . '<h3 style="margin:0 0 6px;font-size:calc(var(--rms-font-size,16px) * var(--rms-font-scale,1.25));font-weight:var(--rms-heading-weight,700)">' . $h($labels['sample_title']) . '</h3>'
@@ -113,5 +115,32 @@ final class ThemeCompareView {
            . $fragment . '</div>';
         $o .= '</div></section>';
         return $o;
+    }
+
+    /** F13-F — mapa declarativo das secoes (nenhum dado do usuario e HTML). */
+    private function sectionStrip(array $s, array $labels, callable $h): string {
+        $sections = $s['sections'] ?? null;
+        $out = '<div style="margin:0 0 10px"><div style="font-size:11px;font-weight:600;margin-bottom:5px;color:#475569">'
+             . $h($labels['sections'] ?? 'Sections') . '</div>';
+        if ($sections === null) {
+            $out .= '<div style="font-size:11px;color:#64748b;font-style:italic">'
+                 . $h($labels['section_legacy'] ?? 'CMS layout') . '</div>';
+        } elseif ($sections === []) {
+            $out .= '<div style="font-size:11px;color:#64748b;font-style:italic">'
+                 . $h($labels['section_empty'] ?? 'No sections') . '</div>';
+        } else {
+            $out .= '<div style="display:flex;align-items:flex-end;gap:3px;min-height:52px;padding:6px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc">';
+            foreach ((array)($s['section_bars'] ?? []) as $bar) {
+                $id = (string)($bar['id'] ?? '');
+                $height = max(8, min(48, (int)($bar['height'] ?? 16)));
+                $tone = preg_match('/^#[0-9a-fA-F]{6}$/D', (string)($bar['tone'] ?? '')) === 1 ? (string)$bar['tone'] : '#475569';
+                $out .= '<div title="' . $h($id) . '" style="flex:1 1 0;min-width:0;height:' . $height
+                     . 'px;background:' . $h($tone) . ';border-radius:2px;opacity:.85">'
+                     . '<span style="display:block;font-size:8px;line-height:1.1;color:#fff;padding:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+                     . $h($id) . '</span></div>';
+            }
+            $out .= '</div>';
+        }
+        return $out . '</div>';
     }
 }

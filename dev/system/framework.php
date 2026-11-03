@@ -40,16 +40,22 @@ $registry->set('cms_page_layout', new \Reamur\System\Library\Cms\PageLayout());
 $registry->set('theme_condition_engine', new \Reamur\System\Library\Theme\ConditionEngine());
 // F13-B: registro allowlistado de design tokens + contraste WCAG.
 $registry->set('theme_token_registry', new \Reamur\System\Library\Theme\TokenRegistry());
+// F13-F: section builder. Uma unica allowlist (PageLayout), sem HTML/IO/SQL.
+$registry->set('theme_section_registry', new \Reamur\System\Library\Theme\SectionRegistry(
+    $registry->get('cms_page_layout')
+));
+// F13-E: pacotes versionaveis + resolucao de child-theme (sem migration).
+$registry->set('theme_package', new \Reamur\System\Library\Theme\ThemePackage(
+    $registry->get('theme_condition_engine'), $registry->get('theme_token_registry'),
+    $registry->get('theme_section_registry')
+));
 // F13-C: estado efetivo do tema (Catalog + previa Admin), sem duplicar regras.
 $registry->set('theme_snapshot', new \Reamur\System\Library\Theme\ThemeSnapshot(
-    $registry->get('theme_condition_engine'), $registry->get('theme_token_registry')
+    $registry->get('theme_condition_engine'), $registry->get('theme_token_registry'),
+    $registry->get('theme_package'), $registry->get('theme_section_registry')
 ));
 // F13-D: presets + miniaturas SVG das cenas nativas (sem cenas novas/JS/GLB).
 $registry->set('three_scene_preset', new \Reamur\System\Library\Three\ScenePresetRegistry());
-// F13-E: pacotes versionaveis + resolucao de child-theme (sem migration).
-$registry->set('theme_package', new \Reamur\System\Library\Theme\ThemePackage(
-    $registry->get('theme_condition_engine'), $registry->get('theme_token_registry')
-));
 
 // 4. Config: default + aplicação (Contrato §4)
 $config = new Config();

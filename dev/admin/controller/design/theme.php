@@ -43,7 +43,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['import_url']=$this->url->link('design/theme.import'.($id?'|'.$id:''));
         foreach(['text_package','text_package_help','text_package_export','text_package_export_published','text_package_import','text_package_import_help','text_package_file','text_package_paste','text_package_button','text_package_version','text_package_parent','text_package_parent_help','text_package_parent_none','text_import_ok','text_import_error','error_theme_parent'] as $k) $data[$k]=$this->language->get($k);
         $data['notice']='';
-        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','save_failed','forbidden','csrf'];
+        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','save_failed','forbidden','csrf'];
         $impErr=(string)($this->request->get['import_error']??'');
         if ((string)($this->request->get['import_ok']??'')==='1') $data['notice']=$this->language->get('text_import_ok');
         elseif ($impErr!=='') $data['error']=$this->language->get('text_import_error').' ('.(in_array($impErr,$codes,true)?$impErr:'unknown').')';
@@ -134,6 +134,16 @@ class Theme extends \Reamur\System\Engine\Controller {
         $this->document->addScript($this->config->get('site_url') . 'view/js/theme-condition-builder.js?v=' . $builderAssetV);
         // F13-D: editor de cena (presets + miniatura ao vivo).
         $this->document->addScript($this->config->get('site_url') . 'view/js/theme-scene-editor.js?v=' . $builderAssetV);
+        // F13-F: section builder. Sem `sections` no config, o formulario
+        // comeca com o layout padrao do CMS e avisa que o override nao existe.
+        $sectionSelected=(array_key_exists('sections',$config)&&is_array($config['sections']))
+            ?$config['sections']:$this->theme_section_registry->defaults();
+        $data['section_rows']=$this->sectionRows($sectionSelected);
+        $data['sections_order']=implode(',',array_column($data['section_rows'],'id'));
+        $data['section_active_count']=count(array_filter($data['section_rows'],static fn(array $r):bool=>(bool)$r['enabled']));
+        $data['sections_defined']=array_key_exists('sections',$config);
+        foreach(['text_sections','text_sections_help','text_sections_active','text_section_up','text_section_down','text_section_partial','text_section_legacy','text_section_hint','error_sections','text_section_group_opening','text_section_group_content','text_section_group_proof','text_section_group_catalog','text_section_group_closing','text_section_kind_static','text_section_kind_dynamic','text_section_kind_editorial'] as $k) $data[$k]=$this->language->get($k);
+        $this->document->addScript($this->config->get('site_url') . 'view/js/theme-section-builder.js?v=' . $builderAssetV);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
@@ -163,6 +173,15 @@ class Theme extends \Reamur\System\Engine\Controller {
             ];
             $data['scene_preset']=$this->three_scene_preset->matchingPreset($data['three']);
             $data['parent_theme']=(string)($post['parent_theme']??$data['parent_theme']);
+            // F13-F: reflete a ordem/habilitacao enviadas mesmo em caso de erro.
+            $formOrder=$this->theme_section_registry->formOrder((string)($post['sections_order']??$data['sections_order']));
+            $formEnabled=(array)($post['sections']??[]);
+            $formSelected=[];
+            foreach($formOrder as $sid) if (in_array($sid,$formEnabled,true)) $formSelected[]=$sid;
+            $data['section_rows']=$this->sectionRows($formSelected);
+            $data['sections_order']=implode(',',array_column($data['section_rows'],'id'));
+            $data['section_active_count']=count($formSelected);
+            $data['sections_defined']=true;
         }
         // F13-C: estado real de publicacao e dados do comparador.
         $publishedConfig=$id?$this->model_design_theme->getPublishedConfig($id):[];
@@ -338,19 +357,25 @@ class Theme extends \Reamur\System\Engine\Controller {
         if ($conditionErrors) return $bad($this->language->get('error_conditions').' ('.$conditionErrors[0]['code'].')');
         if ($three===null) return $bad($this->language->get('error_three'));
         if ($tokenErrors || $tokensNormalized===null) return $bad($this->language->get('error_tokens').' ('.($tokenErrors[0]['code']??'contrast').')');
+        // F13-F: composicao das secoes da home. Campos ausentes (pacotes da
+        // frente E, clientes antigos) preservam o layout legado do CMS.
+        $sectionOverride=null;
+        if (array_key_exists('sections_order',$post)||array_key_exists('sections',$post)) {
+            $order=$this->theme_section_registry->formOrder((string)($post['sections_order']??''));
+            $enabled=(array)($post['sections']??[]);
+            $selected=[];
+            foreach($order as $sid) if (in_array($sid,$enabled,true)) $selected[]=$sid;
+            $sectionOverride=$this->theme_section_registry->normalize($selected);
+            if ($sectionOverride===null) return $bad($this->language->get('error_sections'));
+        }
         $normalized=$engine->normalize($conditions);
-        return [
-            'name'=>$name,'slug'=>$slug,'error'=>'',
-            'config'=>[
-                'primary'=>$primary,'surface'=>$surface,
-                'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']:'',
-                'templates'=>$safeTemplates,
-                'conditions'=>['version'=>1,'rules'=>$normalized['rules']],
-                'three'=>$three,
-                'tokens'=>$tokensNormalized,
-                'parent'=>$parent,
-            ],
-        ];
+        $out=['primary'=>$primary,'surface'=>$surface,
+            'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']:'',
+            'templates'=>$safeTemplates,
+            'conditions'=>['version'=>1,'rules'=>$normalized['rules']],
+            'three'=>$three,'tokens'=>$tokensNormalized,'parent'=>$parent];
+        if ($sectionOverride!==null) $out['sections']=$sectionOverride;
+        return ['name'=>$name,'slug'=>$slug,'error'=>'','config'=>$out];
     }
 
     /**
@@ -451,9 +476,20 @@ class Theme extends \Reamur\System\Engine\Controller {
         $this->response->setOutput($registry->svg($cfg));
     }
 
+    /** F13-F: linhas do builder ja com rotulos resolvidos (nenhum HTML aqui). */
+    private function sectionRows(array $selected): array {
+        $rows=$this->theme_section_registry->view($selected);
+        foreach($rows as &$row) {
+            $row['label']=$this->language->get($row['label_key']);
+            $row['group_label']=$this->language->get($row['group_key']);
+            $row['kind_label']=$this->language->get($row['kind_key']);
+        } unset($row);
+        return $rows;
+    }
+
     /** @return array<string,string> */
     private function compareLabels(): array {
-        $keys=['title','context','variant','invalid','nothing_saved','identical','changes','diff_help','diff_title','changed','added','removed','truncated','empty','published','draft','sample_title','sample_body','sample_button','primary','surface','matched','flags','tokens','forbidden','render_error'];
+        $keys=['title','context','variant','invalid','nothing_saved','identical','changes','diff_help','diff_title','changed','added','removed','truncated','empty','published','draft','sample_title','sample_body','sample_button','primary','surface','matched','flags','tokens','forbidden','render_error','sections','section_legacy','section_empty'];
         $out=[]; foreach($keys as $k) $out[$k]=$this->language->get('compare_'.$k);
         return $out;
     }

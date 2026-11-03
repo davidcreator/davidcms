@@ -88,3 +88,17 @@
 #theme-package textarea { font-size: .78rem; }
 #theme-package .btn { white-space: normal; }
 #theme-inheritance select { font-family: var(--bs-font-monospace, monospace); font-size: .85rem; }
+
+
+/* F13-F — section builder: ordem, ativação e fita de prévia. */
+#theme-section-builder .tsb-list { list-style: none; margin: 0 0 .75rem; padding: 0; display: grid; gap: .4rem; }
+.tsb-row { display: flex; align-items: center; gap: .6rem; padding: .45rem .6rem;
+  border: 1px solid var(--bs-border-color, #cbd5e1); border-radius: .5rem; background: var(--bs-body-bg, #fff); }
+.tsb-row--off { opacity: .6; }
+.tsb-bar { flex: 0 0 6px; width: 6px; display: block; border-radius: 3px; }
+.tsb-row__main { flex: 1 1 auto; min-width: 0; }
+.tsb-row__meta { margin-top: .15rem; font-size: .72rem; color: var(--bs-secondary-color, #5c6773); }
+.tsb-row__meta code { font-size: .7rem; }
+.tsb-row__actions { flex: 0 0 auto; display: flex; gap: .25rem; }
+.tsb-legend { font-size: .82rem; color: var(--bs-secondary-color, #5c6773); }
+@media (max-width: 575.98px) { .tsb-row { flex-wrap: wrap; } .tsb-row__meta code { word-break: break-all; } }
