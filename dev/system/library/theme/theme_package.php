@@ -26,36 +26,40 @@ final class ThemePackage {
         'blog/blog_list', 'blog/blog_info', 'tool/tool_list', 'tool/tool_info',
         'checkout/quote', 'error/not_found',
     ];
-    private const CONFIG_KEYS = ['primary','surface','scene','templates','conditions','three','tokens','parent','sections','components','schedule'];
+    private const CONFIG_KEYS = ['primary','surface','scene','templates','conditions','three','tokens','parent','sections','components','schedule','media'];
     // F13-H: `schedule` e substituido integralmente na heranca (como `conditions`),
     // NAO mesclado por chave: um filho nunca herda metade de uma janela.
     private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found'];
-    private const MAP_KEYS = ['tokens','templates','three','components'];
+    private const MAP_KEYS = ['tokens','templates','three','components','media'];
 
     private ConditionEngine $engine;
     private TokenRegistry $tokens;
     private SectionRegistry $sections;
     private ComponentRegistry $components;
     private ThemeSchedule $schedule;
+    private ThemeMedia $media;
 
-    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?SectionRegistry $sections = null, ?ComponentRegistry $components = null, ?ThemeSchedule $schedule = null) {
+    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?SectionRegistry $sections = null, ?ComponentRegistry $components = null, ?ThemeSchedule $schedule = null, ?ThemeMedia $media = null) {
         $this->engine = $engine;
         $this->tokens = $tokens;
         $this->sections = $sections ?? new SectionRegistry();
         $this->components = $components ?? new ComponentRegistry();
         $this->schedule = $schedule ?? new ThemeSchedule();
+        $this->media = $media ?? new ThemeMedia();
     }
 
     /** Registro compartilhado com framework, controller Admin e snapshot. */
     public function sections(): SectionRegistry { return $this->sections; }
     public function components(): ComponentRegistry { return $this->components; }
     public function schedule(): ThemeSchedule { return $this->schedule; }
+    public function media(): ThemeMedia { return $this->media; }
 
     public function spec(): array {
         return ['format'=>self::FORMAT,'version'=>self::VERSION,'max_bytes'=>self::MAX_BYTES,
                 'max_depth'=>self::MAX_DEPTH,'config_keys'=>self::CONFIG_KEYS,'template_keys'=>self::TEMPLATE_KEYS,
                 'section_ids'=>$this->sections->ids(),'component_ids'=>$this->components->ids(),
-                'schedule_keys'=>ThemeSchedule::KEYS,'schedule_scopes'=>$this->schedule->spec()['scopes']];
+                'schedule_keys'=>ThemeSchedule::KEYS,'schedule_scopes'=>$this->schedule->spec()['scopes'],
+                'media_ids'=>$this->media->ids(),'model_ids'=>$this->media->modelIds()];
     }
 
     /** @return array<string,mixed> */
@@ -85,6 +89,7 @@ final class ThemePackage {
         if (isset($out['sections']) && !is_array($out['sections'])) unset($out['sections']);
         if (isset($out['components']) && !is_array($out['components'])) unset($out['components']);
         if (isset($out['schedule']) && !is_array($out['schedule'])) unset($out['schedule']);
+        if (isset($out['media']) && !is_array($out['media'])) unset($out['media']);
         return $out;
     }
 
@@ -127,6 +132,10 @@ final class ThemePackage {
         // F13-H: janela UTC, publico e percentual allowlistados; fail-closed.
         if (array_key_exists('schedule',$config)) {
             if (!is_array($config['schedule']) || $this->schedule->normalize($config['schedule'])===null) $e[]='schedule_invalid';
+        }
+        // F13-I: midia vetorial declarativa, enums allowlistados, fail-closed.
+        if (array_key_exists('media',$config)) {
+            if (!is_array($config['media']) || $this->media->normalize($config['media'])===null) $e[]='media_invalid';
         }
         return array_values(array_unique($e));
     }

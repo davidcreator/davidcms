@@ -48,17 +48,20 @@ $registry->set('theme_section_registry', new \Reamur\System\Library\Theme\Sectio
 $registry->set('theme_component_registry', new \Reamur\System\Library\Theme\ComponentRegistry());
 // F13-H: agendamento/rollout declarativo (puro, sem cron/IO/escrita).
 $registry->set('theme_schedule', new \Reamur\System\Library\Theme\ThemeSchedule());
+// F13-I: midia vetorial declarativa + modelos de pagina (constantes, sem IO).
+$registry->set('theme_media', new \Reamur\System\Library\Theme\ThemeMedia());
 // F13-E: pacotes versionaveis + resolucao de child-theme (sem migration).
 $registry->set('theme_package', new \Reamur\System\Library\Theme\ThemePackage(
     $registry->get('theme_condition_engine'), $registry->get('theme_token_registry'),
     $registry->get('theme_section_registry'), $registry->get('theme_component_registry'),
-    $registry->get('theme_schedule')
+    $registry->get('theme_schedule'), $registry->get('theme_media')
 ));
 // F13-C: estado efetivo do tema (Catalog + previa Admin), sem duplicar regras.
 $registry->set('theme_snapshot', new \Reamur\System\Library\Theme\ThemeSnapshot(
     $registry->get('theme_condition_engine'), $registry->get('theme_token_registry'),
     $registry->get('theme_package'), $registry->get('theme_section_registry'),
-    $registry->get('theme_component_registry'), $registry->get('theme_schedule')
+    $registry->get('theme_component_registry'), $registry->get('theme_schedule'),
+    $registry->get('theme_media')
 ));
 // F13-D: presets + miniaturas SVG das cenas nativas (sem cenas novas/JS/GLB).
 $registry->set('three_scene_preset', new \Reamur\System\Library\Three\ScenePresetRegistry());

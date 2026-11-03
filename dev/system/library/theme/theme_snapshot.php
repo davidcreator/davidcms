@@ -17,14 +17,16 @@ final class ThemeSnapshot {
     private SectionRegistry $sections;
     private ComponentRegistry $components;
     private ThemeSchedule $schedule;
+    private ThemeMedia $media;
 
-    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?ThemePackage $package = null, ?SectionRegistry $sections = null, ?ComponentRegistry $components = null, ?ThemeSchedule $schedule = null) {
+    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?ThemePackage $package = null, ?SectionRegistry $sections = null, ?ComponentRegistry $components = null, ?ThemeSchedule $schedule = null, ?ThemeMedia $media = null) {
         $this->engine = $engine;
         $this->tokens = $tokens;
         $this->package = $package ?? new ThemePackage($engine, $tokens);
         $this->sections = $sections ?? $this->package->sections();
         $this->components = $components ?? $this->package->components();
         $this->schedule = $schedule ?? $this->package->schedule();
+        $this->media = $media ?? $this->package->media();
     }
 
     /**
@@ -92,6 +94,13 @@ final class ThemeSnapshot {
         $scheduleBars = $this->schedule->bars($scheduleState);
         $scheduleCss = $this->schedule->css($scheduleState);
 
+        // F13-I: midia vetorial. O data URI vai para --rms-media-* (style do
+        // body); os globais Twig continuam PLANOS e curtos (<=256 bytes).
+        $mediaConfig = (array_key_exists('media',$config) && is_array($config['media']))
+            ? ($this->media->normalize($config['media']) ?? []) : [];
+        $mediaCss = $this->media->css($mediaConfig);
+        $mediaGlobals = $this->media->globals($mediaConfig);
+
         return [
             'primary'    => $primary,
             'surface'    => $surface,
@@ -111,6 +120,10 @@ final class ThemeSnapshot {
             'components' => $componentConfig,
             'component_enabled' => $this->components->enabled($componentConfig),
             'component_css' => $componentCss,
+            'media' => $mediaConfig,
+            'media_enabled' => $this->media->enabled($mediaConfig),
+            'media_css' => $mediaCss,
+            'media_bars' => $this->media->bars($mediaConfig),
             'schedule' => $scheduleState,
             'schedule_effective' => (string)($scheduleState['effective'] ?? 'published'),
             'schedule_reason' => (string)($scheduleState['reason'] ?? 'disabled'),
@@ -125,7 +138,7 @@ final class ThemeSnapshot {
                     'tokens' => $tokens, 'sections' => ($sections ?? []),
                 ],
                 'theme_scene' => $three,
-            ], $componentGlobals, $this->schedule->globals($scheduleState)),
+            ], $componentGlobals, $this->schedule->globals($scheduleState), $mediaGlobals),
         ];
     }
 

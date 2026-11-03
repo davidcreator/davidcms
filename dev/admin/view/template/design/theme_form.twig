@@ -78,6 +78,25 @@
 </div></div>
 <span class="tsch-status" data-schedule-status aria-live="polite"></span>
 </div></div>
+<div class="card mb-4" id="theme-media" data-thumb-base="{{ media_thumb_base|e('html_attr') }}" data-snippets="{{ media_snippets_json|e('html_attr') }}"><div class="card-header"><h2 class="h5 mb-0">{{ text_media }}</h2><p class="mb-0 text-muted">{{ text_media_help }}</p></div><div class="card-body">
+<div class="row g-2 align-items-end mb-3"><div class="col-md-9"><label class="form-label" for="media-target">{{ text_media_target }}</label><select class="form-select form-select-sm" id="media-target" data-media-target>{% for k in template_keys %}<option value="{{ k }}"{% if k == 'common/home' %} selected{% endif %}>{{ k }}.twig</option>{% endfor %}</select></div><div class="col-md-3"><span class="tmm-status" data-media-status aria-live="polite"></span></div></div>
+<div class="tmm-grid">
+{% for m in media_rows %}<div class="tmm-card" data-media="{{ m.id }}">
+<img data-media-thumb src="{{ m.thumb|e('html_attr') }}" alt="{{ m.label }}" width="160" height="100" loading="lazy">
+<div class="form-check"><input class="form-check-input" type="checkbox" name="media[{{ m.id }}][enabled]" value="1" id="med-{{ m.id }}" data-media-enabled{% if m.enabled %} checked{% endif %}><label class="form-check-label" for="med-{{ m.id }}"><strong>{{ m.label }}</strong></label></div>
+<p class="tmm-card__help">{{ m.help }}</p><span class="badge text-bg-light">{{ m.group_label }}</span> <span class="badge text-bg-light">{{ m.ratio }}</span>
+<div class="tmm-card__opts"><label class="form-label">{{ text_media_variant }}</label><select class="form-select form-select-sm" name="media[{{ m.id }}][variant]" data-media-variant>{% for v in m.variants %}<option value="{{ v }}"{% if v == m.variant %} selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+<label class="form-label">{{ text_media_tone }}</label><select class="form-select form-select-sm" name="media[{{ m.id }}][tone]" data-media-tone>{% for t in m.tones %}<option value="{{ t }}"{% if t == m.tone %} selected{% endif %}>{{ t }}</option>{% endfor %}</select></div>
+<button type="button" class="btn btn-sm btn-outline-primary" data-media-insert="{{ m.id }}">{{ text_media_insert }}</button>
+</div>{% endfor %}</div>
+<p class="form-text">{{ text_media_inserted }}</p>
+</div></div>
+<div class="card mb-4" id="theme-page-models" data-models="{{ page_models_json|e('html_attr') }}"><div class="card-header"><h2 class="h5 mb-0">{{ text_models }}</h2><p class="mb-0 text-muted">{{ text_models_help }}</p></div><div class="card-body">
+<div class="tmm-models">{% for mdl in page_models %}<button type="button" class="tmm-model" data-model-apply="{{ mdl.id }}"><img src="{{ mdl.thumb|e('html_attr') }}" alt="" width="160" height="100" loading="lazy"><strong>{{ mdl.label }}</strong><small>{{ mdl.help }}</small><span class="badge text-bg-light">{{ mdl.section_count }} / {{ mdl.component_count }} / {{ mdl.media_count }}</span></button>{% endfor %}</div>
+<div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="model-confirm" data-model-confirm><label class="form-check-label" for="model-confirm">{{ text_models_confirm }}</label></div>
+<span class="tmm-status" data-model-status aria-live="polite"></span>
+<p class="form-text mb-0">{{ text_models_sections }} · {{ text_models_components }} · {{ text_models_media }}. {{ text_models_applied }}</p>
+</div></div>
 <div class="card mb-4" id="theme-component-library" data-thumb-base="{{ component_thumb_base|e('html_attr') }}" data-snippets="{{ component_snippets_json|e('html_attr') }}"><div class="card-header"><h2 class="h5 mb-0">{{ text_components }}</h2><p class="mb-0 text-muted">{{ text_components_help }}</p></div><div class="card-body">
 <div class="row g-2 align-items-end mb-3"><div class="col-md-9"><label class="form-label" for="component-target">{{ text_component_target }}</label><select class="form-select form-select-sm" id="component-target" data-component-target>{% for k in template_keys %}<option value="{{ k }}"{% if k == 'common/home' %} selected{% endif %}>{{ k }}.twig</option>{% endfor %}</select></div><div class="col-md-3"><span class="tcl-status" data-component-status aria-live="polite"></span></div></div>
 <div class="tcl-grid">

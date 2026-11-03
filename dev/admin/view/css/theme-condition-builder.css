@@ -121,3 +121,21 @@
 .tsch-status { display: inline-block; margin-top: .4rem; font-size: .78rem;
   color: var(--bs-secondary-color, #5c6773); }
 [data-schedule-fields] input:disabled, [data-schedule-fields] select:disabled { opacity: .55; }
+
+/* F13-I — midia vetorial + modelos de pagina. */
+.tmm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .75rem; }
+.tmm-card { display: flex; flex-direction: column; gap: .3rem; padding: .6rem;
+  border: 1px solid var(--bs-border-color, #cbd5e1); border-radius: .5rem; background: var(--bs-body-bg, #fff); }
+.tmm-card img { display: block; width: 100%; max-width: 160px; height: auto;
+  border: 1px solid var(--bs-border-color, #cbd5e1); border-radius: .35rem; }
+.tmm-card__help { margin: 0; font-size: .72rem; color: var(--bs-secondary-color, #5c6773); }
+.tmm-card__opts { display: grid; gap: .15rem; }
+.tmm-card__opts .form-label { margin: .2rem 0 0; font-size: .7rem; }
+.tmm-status { display: inline-block; margin-top: .4rem; font-size: .78rem;
+  color: var(--bs-secondary-color, #5c6773); }
+.tmm-models { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .6rem; }
+.tmm-model { display: flex; flex-direction: column; gap: .25rem; padding: .5rem; text-align: left;
+  border: 1px solid var(--bs-border-color, #cbd5e1); border-radius: .5rem; background: var(--bs-body-bg, #fff); cursor: pointer; }
+.tmm-model img { width: 100%; height: auto; border-radius: .3rem; }
+.tmm-model small { font-size: .68rem; color: var(--bs-secondary-color, #5c6773); }
+@media (max-width: 575.98px) { .tmm-grid, .tmm-models { grid-template-columns: 1fr; } }

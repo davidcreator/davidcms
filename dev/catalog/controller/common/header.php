@@ -66,7 +66,9 @@ class Header extends \Reamur\System\Engine\Controller {
             // F13-G: variaveis --rms-cmp-* dos componentes habilitados.
             . (string)$this->config->get('catalog_theme_component_css', '')
             // F13-H: --rms-sched-* (inteiros allowlistados, sem texto livre).
-            . (string)$this->config->get('catalog_theme_schedule_css', '');
+            . (string)$this->config->get('catalog_theme_schedule_css', '')
+            // F13-I: --rms-media-* (SVG deterministico em data URI allowlistado).
+            . (string)$this->config->get('catalog_theme_media_css', '');
 
         // F4-07 (ADR 0031): canonical + Open Graph/Twitter + descoberta do sitemap.
         // Regra honesta: canonical/og:url SÓ quando a requisição chegou por caminho

@@ -63,6 +63,8 @@ class Theme extends \Reamur\System\Engine\Controller {
         $this->config->set('catalog_theme_schedule', $decision);
         $this->config->set('catalog_theme_effective', $decision['effective']);
         $this->config->set('catalog_theme_schedule_css', $snapshot['schedule_css']);
+        // F13-I: variaveis --rms-media-* (data URI SVG deterministico).
+        $this->config->set('catalog_theme_media_css', $snapshot['media_css']);
 
         // Globais primeiro: setThemeTemplates() reconstrói o Environment e
         // reaplica estes mesmos valores (implementado no adaptador Twig).

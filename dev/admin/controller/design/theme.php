@@ -43,7 +43,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['import_url']=$this->url->link('design/theme.import'.($id?'|'.$id:''));
         foreach(['text_package','text_package_help','text_package_export','text_package_export_published','text_package_import','text_package_import_help','text_package_file','text_package_paste','text_package_button','text_package_version','text_package_parent','text_package_parent_help','text_package_parent_none','text_import_ok','text_import_error','error_theme_parent'] as $k) $data[$k]=$this->language->get($k);
         $data['notice']='';
-        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','components_invalid','schedule_invalid','save_failed','forbidden','csrf'];
+        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','components_invalid','schedule_invalid','media_invalid','save_failed','forbidden','csrf'];
         $impErr=(string)($this->request->get['import_error']??'');
         if ((string)($this->request->get['import_ok']??'')==='1') $data['notice']=$this->language->get('text_import_ok');
         elseif ($impErr!=='') $data['error']=$this->language->get('text_import_error').' ('.(in_array($impErr,$codes,true)?$impErr:'unknown').')';
@@ -204,6 +204,21 @@ class Theme extends \Reamur\System\Engine\Controller {
                  'text_schedule_probe','text_schedule_probe_now','text_schedule_probe_visitor',
                  'text_schedule_probe_logged','text_schedule_probe_button','error_schedule'] as $k) $data[$k]=$this->language->get($k);
         $this->document->addScript($this->config->get('site_url') . 'view/js/theme-schedule.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-schedule-h');
+        // F13-I: midia vetorial declarativa + modelos de pagina.
+        $data['media_rows']=$this->mediaRows((isset($config['media'])&&is_array($config['media']))?$config['media']:[]);
+        $data['media_snippets_json']=json_encode($this->theme_media->snippets(),$jsonFlags) ?: '{}';
+        $data['media_thumb_base']=$this->url->link('design/theme.mediaThumb');
+        $data['page_models']=$this->theme_media->models();
+        foreach($data['page_models'] as &$pm){
+            $pm['label']=$this->language->get($pm['label_key']);
+            $pm['help']=$this->language->get($pm['help_key']);
+        } unset($pm);
+        $data['page_models_json']=json_encode($this->theme_media->modelPayload(),$jsonFlags) ?: '{}';
+        foreach(['text_media','text_media_help','text_media_target','text_media_variant','text_media_tone',
+                 'text_media_insert','text_media_inserted','text_media_enabled','text_media_none','error_media',
+                 'text_models','text_models_help','text_models_apply','text_models_confirm','text_models_applied',
+                 'text_models_sections','text_models_components','text_models_media','error_models'] as $k) $data[$k]=$this->language->get($k);
+        $this->document->addScript($this->config->get('site_url') . 'view/js/theme-media.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-media-i');
         // F13-C: estado real de publicacao e dados do comparador.
         $publishedConfig=$id?$this->model_design_theme->getPublishedConfig($id):[];
         $draftNorm=json_encode(json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true) ?: new \stdClass());
@@ -419,6 +434,21 @@ class Theme extends \Reamur\System\Engine\Controller {
             ]);
             if ($scheduleOverride===null) return $bad($this->language->get('error_schedule'));
         }
+        // F13-I: midias vetoriais. Campos ausentes preservam pacotes A-H.
+        $mediaOverride=null;
+        if (array_key_exists('media',$post)) {
+            $rawMedia=(array)$post['media']; $cleanMedia=[];
+            foreach($this->theme_media->ids() as $mid) {
+                if (!isset($rawMedia[$mid]) || !is_array($rawMedia[$mid])) continue;
+                $cleanMedia[$mid]=[
+                    'enabled'=>isset($rawMedia[$mid]['enabled'])&&(string)$rawMedia[$mid]['enabled']==='1',
+                    'variant'=>(string)($rawMedia[$mid]['variant']??''),
+                    'tone'=>(string)($rawMedia[$mid]['tone']??''),
+                ];
+            }
+            $mediaOverride=$this->theme_media->normalize($cleanMedia);
+            if ($mediaOverride===null) return $bad($this->language->get('error_media'));
+        }
         $normalized=$engine->normalize($conditions);
         $out=['primary'=>$primary,'surface'=>$surface,
             'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']:'',
@@ -428,6 +458,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         if ($sectionOverride!==null) $out['sections']=$sectionOverride;
         if ($componentOverride!==null) $out['components']=$componentOverride;
         if ($scheduleOverride!==null) $out['schedule']=$scheduleOverride;
+        if ($mediaOverride!==null) $out['media']=$mediaOverride;
         return ['name'=>$name,'slug'=>$slug,'error'=>'','config'=>$out];
     }
 
@@ -561,6 +592,38 @@ class Theme extends \Reamur\System\Engine\Controller {
         ));
     }
 
+    /**
+     * F13-I: miniatura SVG de uma midia vetorial. GET idempotente, ACL access,
+     * no-store, nosniff, CSP propria e zero escrita. Id/variant/tone sao
+     * normalizados pela allowlist (valores invalidos caem no default).
+     */
+    public function mediaThumb(): void {
+        $this->response->addHeader('Content-Type: image/svg+xml; charset=utf-8');
+        $this->response->addHeader('Cache-Control: no-store');
+        $this->response->addHeader('X-Content-Type-Options: nosniff');
+        $this->response->addHeader("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'");
+        $this->response->addHeader('Content-Disposition: inline; filename="theme-media.svg"');
+        $registry=$this->theme_media;
+        if (!$this->user->hasPermission('access','design/theme')) {
+            $this->response->setOutput($registry->svg('pattern-dots')); return;
+        }
+        $g=$this->request->get;
+        $this->response->setOutput($registry->svg(
+            (string)($g['id']??'pattern-dots'),(string)($g['variant']??''),(string)($g['tone']??'')
+        ));
+    }
+
+    /** F13-I: linhas da galeria de midia com rotulos resolvidos. */
+    private function mediaRows(?array $raw): array {
+        $rows=$this->theme_media->view($raw);
+        foreach($rows as &$row) {
+            $row['label']=$this->language->get($row['label_key']);
+            $row['help']=$this->language->get($row['help_key']);
+            $row['group_label']=$this->language->get($row['group_key']);
+        } unset($row);
+        return $rows;
+    }
+
     /** F13-G: linhas da galeria com rotulos resolvidos e miniatura inicial. */
     private function componentRows(?array $raw): array {
         $rows=$this->theme_component_registry->view($raw);
@@ -588,7 +651,7 @@ class Theme extends \Reamur\System\Engine\Controller {
     private function compareLabels(): array {
         $keys=['title','context','variant','invalid','nothing_saved','identical','changes','diff_help','diff_title','changed','added','removed','truncated','empty','published','draft','sample_title','sample_body','sample_button','primary','surface','matched','flags','tokens','forbidden','render_error','sections','section_legacy','section_empty','components','component_empty','schedule','schedule_inactive','schedule_active',
          'schedule_window','schedule_rollout','schedule_scope','schedule_bucket',
-         'schedule_now','schedule_open'];
+         'schedule_now','schedule_open','media','media_empty','media_ratio','media_variant'];
         $out=[]; foreach($keys as $k) $out[$k]=$this->language->get('compare_'.$k);
         return $out;
     }
