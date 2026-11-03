@@ -15,12 +15,14 @@ final class ThemeSnapshot {
     private TokenRegistry $tokens;
     private ThemePackage $package;
     private SectionRegistry $sections;
+    private ComponentRegistry $components;
 
-    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?ThemePackage $package = null, ?SectionRegistry $sections = null) {
+    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?ThemePackage $package = null, ?SectionRegistry $sections = null, ?ComponentRegistry $components = null) {
         $this->engine = $engine;
         $this->tokens = $tokens;
         $this->package = $package ?? new ThemePackage($engine, $tokens);
         $this->sections = $sections ?? $this->package->sections();
+        $this->components = $components ?? $this->package->components();
     }
 
     /**
@@ -77,6 +79,12 @@ final class ThemeSnapshot {
             ? ($this->sections->normalize($config['sections']) ?? []) : null;
         $sectionBars = $this->sections->bars($sections);
 
+        // F13-G: biblioteca de componentes. Ausente/invalido => nenhum.
+        $componentConfig = (array_key_exists('components',$config) && is_array($config['components']))
+            ? ($this->components->normalize($config['components']) ?? []) : [];
+        $componentCss = $this->components->css($componentConfig);
+        $componentGlobals = $this->components->globals($componentConfig);
+
         return [
             'primary'    => $primary,
             'surface'    => $surface,
@@ -93,14 +101,17 @@ final class ThemeSnapshot {
             'sections'   => $sections,
             'sections_defined' => ($sections !== null),
             'section_bars' => $sectionBars,
-            'globals'    => [
+            'components' => $componentConfig,
+            'component_enabled' => $this->components->enabled($componentConfig),
+            'component_css' => $componentCss,
+            'globals'    => array_replace([
                 'theme' => [
                     'vars' => $r['vars'], 'flags' => $r['flags'],
                     'classes' => $r['classes'], 'matched' => $r['matched'],
                     'tokens' => $tokens, 'sections' => ($sections ?? []),
                 ],
                 'theme_scene' => $three,
-            ],
+            ], $componentGlobals),
         ];
     }
 

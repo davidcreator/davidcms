@@ -93,6 +93,8 @@ final class ThemeCompareView {
         }
         // F13-F: fita de secoes da home, gerada no servidor e toda escapada.
         $o .= $this->sectionStrip($s, $labels, $h);
+        // F13-G: fita de componentes habilitados (servidor, tudo escapado).
+        $o .= $this->componentStrip($s, $labels, $h);
         // Amostra visual REAL: consome as mesmas variaveis que o theme.css.
         $o .= '<div style="padding:14px;border-radius:var(--rms-radius,12px);box-shadow:var(--rms-shadow,none);border:var(--rms-border-width,1px) solid #e2e8f0;background:var(--rms-color-surface,#ffffff)">'
            . '<h3 style="margin:0 0 6px;font-size:calc(var(--rms-font-size,16px) * var(--rms-font-scale,1.25));font-weight:var(--rms-heading-weight,700)">' . $h($labels['sample_title']) . '</h3>'
@@ -138,6 +140,29 @@ final class ThemeCompareView {
                      . 'px;background:' . $h($tone) . ';border-radius:2px;opacity:.85">'
                      . '<span style="display:block;font-size:8px;line-height:1.1;color:#fff;padding:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
                      . $h($id) . '</span></div>';
+            }
+            $out .= '</div>';
+        }
+        return $out . '</div>';
+    }
+
+    /** F13-G — badges dos componentes efetivos (nenhum HTML do usuario). */
+    private function componentStrip(array $s, array $labels, callable $h): string {
+        $ids = (array)($s['component_enabled'] ?? []);
+        $cfg = (array)($s['components'] ?? []);
+        $out = '<div style="margin:0 0 10px"><div style="font-size:11px;font-weight:600;margin-bottom:5px;color:#475569">'
+             . $h($labels['components'] ?? 'Components') . '</div>';
+        if ($ids === []) {
+            $out .= '<div style="font-size:11px;color:#64748b;font-style:italic">'
+                 . $h($labels['component_empty'] ?? 'None') . '</div>';
+        } else {
+            $out .= '<div style="display:flex;flex-wrap:wrap;gap:4px">';
+            foreach ($ids as $id) {
+                $id = (string)$id;
+                $variant = (string)($cfg[$id]['variant'] ?? '');
+                $tone = (string)($cfg[$id]['tone'] ?? '');
+                $out .= '<span style="font-size:10px;padding:2px 6px;border:1px solid #cbd5e1;border-radius:999px;background:#fff">'
+                     . '<code>' . $h($id) . '</code> ' . $h($variant) . ' / ' . $h($tone) . '</span>';
             }
             $out .= '</div>';
         }

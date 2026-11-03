@@ -40,6 +40,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         $this->config->set('catalog_theme_matched', $snapshot['matched']);
         // F13-F: null = layout legado do CMS; array = override do tema.
         $this->config->set('catalog_theme_sections', $snapshot['sections']);
+        // F13-G: componentes efetivos + variaveis CSS allowlistadas.
+        $this->config->set('catalog_theme_components', $snapshot['components']);
+        $this->config->set('catalog_theme_component_css', $snapshot['component_css']);
 
         // Globais primeiro: setThemeTemplates() reconstrói o Environment e
         // reaplica estes mesmos valores (implementado no adaptador Twig).

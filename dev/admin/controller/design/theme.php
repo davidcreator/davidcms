@@ -43,7 +43,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['import_url']=$this->url->link('design/theme.import'.($id?'|'.$id:''));
         foreach(['text_package','text_package_help','text_package_export','text_package_export_published','text_package_import','text_package_import_help','text_package_file','text_package_paste','text_package_button','text_package_version','text_package_parent','text_package_parent_help','text_package_parent_none','text_import_ok','text_import_error','error_theme_parent'] as $k) $data[$k]=$this->language->get($k);
         $data['notice']='';
-        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','save_failed','forbidden','csrf'];
+        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','components_invalid','save_failed','forbidden','csrf'];
         $impErr=(string)($this->request->get['import_error']??'');
         if ((string)($this->request->get['import_ok']??'')==='1') $data['notice']=$this->language->get('text_import_ok');
         elseif ($impErr!=='') $data['error']=$this->language->get('text_import_error').' ('.(in_array($impErr,$codes,true)?$impErr:'unknown').')';
@@ -144,6 +144,13 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['sections_defined']=array_key_exists('sections',$config);
         foreach(['text_sections','text_sections_help','text_sections_active','text_section_up','text_section_down','text_section_partial','text_section_legacy','text_section_hint','error_sections','text_section_group_opening','text_section_group_content','text_section_group_proof','text_section_group_catalog','text_section_group_closing','text_section_kind_static','text_section_kind_dynamic','text_section_kind_editorial'] as $k) $data[$k]=$this->language->get($k);
         $this->document->addScript($this->config->get('site_url') . 'view/js/theme-section-builder.js?v=' . $builderAssetV);
+        // F13-G: biblioteca de componentes (galeria, opcoes e snippets Twig).
+        $componentRaw=(array_key_exists('components',$config)&&is_array($config['components']))?$config['components']:null;
+        $data['component_rows']=$this->componentRows($componentRaw);
+        $data['component_snippets_json']=json_encode($this->theme_component_registry->snippets(),$jsonFlags) ?: '{}';
+        $data['component_thumb_base']=$this->url->link('design/theme.componentThumb');
+        foreach(['text_components','text_components_help','text_component_target','text_component_variant','text_component_tone','text_component_insert','text_component_inserted','text_component_enabled','text_component_none','error_components','text_component_group_action','text_component_group_display','text_component_group_feedback'] as $k) $data[$k]=$this->language->get($k);
+        $this->document->addScript($this->config->get('site_url') . 'view/js/theme-component-library.js?v=' . $builderAssetV);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
@@ -182,6 +189,8 @@ class Theme extends \Reamur\System\Engine\Controller {
             $data['sections_order']=implode(',',array_column($data['section_rows'],'id'));
             $data['section_active_count']=count($formSelected);
             $data['sections_defined']=true;
+            // F13-G: reflete os componentes enviados mesmo em caso de erro.
+            $data['component_rows']=$this->componentRows((array)($post['components']??[]));
         }
         // F13-C: estado real de publicacao e dados do comparador.
         $publishedConfig=$id?$this->model_design_theme->getPublishedConfig($id):[];
@@ -368,6 +377,22 @@ class Theme extends \Reamur\System\Engine\Controller {
             $sectionOverride=$this->theme_section_registry->normalize($selected);
             if ($sectionOverride===null) return $bad($this->language->get('error_sections'));
         }
+        // F13-G: componentes. Campos ausentes preservam pacotes/ temas A-F.
+        $componentOverride=null;
+        if (array_key_exists('components',$post)) {
+            $rawComponents=(array)$post['components'];
+            $clean=[];
+            foreach($this->theme_component_registry->ids() as $cid) {
+                if (!isset($rawComponents[$cid]) || !is_array($rawComponents[$cid])) continue;
+                $clean[$cid]=[
+                    'enabled'=>isset($rawComponents[$cid]['enabled'])&&(string)$rawComponents[$cid]['enabled']==='1',
+                    'variant'=>(string)($rawComponents[$cid]['variant']??''),
+                    'tone'=>(string)($rawComponents[$cid]['tone']??''),
+                ];
+            }
+            $componentOverride=$this->theme_component_registry->normalize($clean);
+            if ($componentOverride===null) return $bad($this->language->get('error_components'));
+        }
         $normalized=$engine->normalize($conditions);
         $out=['primary'=>$primary,'surface'=>$surface,
             'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)$post['scene']:'',
@@ -375,6 +400,7 @@ class Theme extends \Reamur\System\Engine\Controller {
             'conditions'=>['version'=>1,'rules'=>$normalized['rules']],
             'three'=>$three,'tokens'=>$tokensNormalized,'parent'=>$parent];
         if ($sectionOverride!==null) $out['sections']=$sectionOverride;
+        if ($componentOverride!==null) $out['components']=$componentOverride;
         return ['name'=>$name,'slug'=>$slug,'error'=>'','config'=>$out];
     }
 
@@ -476,6 +502,39 @@ class Theme extends \Reamur\System\Engine\Controller {
         $this->response->setOutput($registry->svg($cfg));
     }
 
+    /**
+     * F13-G: miniatura SVG de um componente. GET idempotente, ACL access,
+     * no-store, nosniff, CSP propria e zero escrita. Id/variant/tone sao
+     * normalizados pela allowlist do registry (valores invalidos caem no default).
+     */
+    public function componentThumb(): void {
+        $this->response->addHeader('Content-Type: image/svg+xml; charset=utf-8');
+        $this->response->addHeader('Cache-Control: no-store');
+        $this->response->addHeader('X-Content-Type-Options: nosniff');
+        $this->response->addHeader("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'");
+        $this->response->addHeader('Content-Disposition: inline; filename="theme-component.svg"');
+        $registry=$this->theme_component_registry;
+        if (!$this->user->hasPermission('access','design/theme')) {
+            $this->response->setOutput($registry->svg('card')); return;
+        }
+        $g=$this->request->get;
+        $this->response->setOutput($registry->svg(
+            (string)($g['id']??'card'),(string)($g['variant']??''),(string)($g['tone']??'')
+        ));
+    }
+
+    /** F13-G: linhas da galeria com rotulos resolvidos e miniatura inicial. */
+    private function componentRows(?array $raw): array {
+        $rows=$this->theme_component_registry->view($raw);
+        foreach($rows as &$row) {
+            $row['label']=$this->language->get($row['label_key']);
+            $row['help']=$this->language->get($row['help_key']);
+            $row['group_label']=$this->language->get($row['group_key']);
+            $row['thumb']=$this->theme_component_registry->dataUri($row['id'],$row['variant'],$row['tone']);
+        } unset($row);
+        return $rows;
+    }
+
     /** F13-F: linhas do builder ja com rotulos resolvidos (nenhum HTML aqui). */
     private function sectionRows(array $selected): array {
         $rows=$this->theme_section_registry->view($selected);
@@ -489,7 +548,7 @@ class Theme extends \Reamur\System\Engine\Controller {
 
     /** @return array<string,string> */
     private function compareLabels(): array {
-        $keys=['title','context','variant','invalid','nothing_saved','identical','changes','diff_help','diff_title','changed','added','removed','truncated','empty','published','draft','sample_title','sample_body','sample_button','primary','surface','matched','flags','tokens','forbidden','render_error','sections','section_legacy','section_empty'];
+        $keys=['title','context','variant','invalid','nothing_saved','identical','changes','diff_help','diff_title','changed','added','removed','truncated','empty','published','draft','sample_title','sample_body','sample_button','primary','surface','matched','flags','tokens','forbidden','render_error','sections','section_legacy','section_empty','components','component_empty'];
         $out=[]; foreach($keys as $k) $out[$k]=$this->language->get('compare_'.$k);
         return $out;
     }

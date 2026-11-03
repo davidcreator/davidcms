@@ -102,3 +102,16 @@
 .tsb-row__actions { flex: 0 0 auto; display: flex; gap: .25rem; }
 .tsb-legend { font-size: .82rem; color: var(--bs-secondary-color, #5c6773); }
 @media (max-width: 575.98px) { .tsb-row { flex-wrap: wrap; } .tsb-row__meta code { word-break: break-all; } }
+
+
+/* F13-G — biblioteca de componentes. */
+.tcl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: .75rem; }
+.tcl-card { display: flex; flex-direction: column; gap: .35rem; padding: .6rem;
+  border: 1px solid var(--bs-border-color, #cbd5e1); border-radius: .5rem; background: var(--bs-body-bg, #fff); }
+.tcl-card img { display: block; width: 100%; max-width: 160px; height: auto; border: 1px solid var(--bs-border-color, #cbd5e1); border-radius: .35rem; }
+.tcl-card__help { margin: 0; font-size: .72rem; color: var(--bs-secondary-color, #5c6773); }
+.tcl-card__opts { display: grid; grid-template-columns: 1fr; gap: .15rem; }
+.tcl-card__opts .form-label { margin: .2rem 0 0; font-size: .7rem; }
+.tcl-card .btn { margin-top: .25rem; }
+.tcl-status { display: inline-block; font-size: .78rem; color: var(--bs-secondary-color, #5c6773); }
+@media (max-width: 575.98px) { .tcl-grid { grid-template-columns: 1fr; } }

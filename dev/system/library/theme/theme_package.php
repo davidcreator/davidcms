@@ -26,27 +26,30 @@ final class ThemePackage {
         'blog/blog_list', 'blog/blog_info', 'tool/tool_list', 'tool/tool_info',
         'checkout/quote', 'error/not_found',
     ];
-    private const CONFIG_KEYS = ['primary','surface','scene','templates','conditions','three','tokens','parent','sections'];
+    private const CONFIG_KEYS = ['primary','surface','scene','templates','conditions','three','tokens','parent','sections','components'];
     private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found'];
-    private const MAP_KEYS = ['tokens','templates','three'];
+    private const MAP_KEYS = ['tokens','templates','three','components'];
 
     private ConditionEngine $engine;
     private TokenRegistry $tokens;
     private SectionRegistry $sections;
+    private ComponentRegistry $components;
 
-    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?SectionRegistry $sections = null) {
+    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?SectionRegistry $sections = null, ?ComponentRegistry $components = null) {
         $this->engine = $engine;
         $this->tokens = $tokens;
         $this->sections = $sections ?? new SectionRegistry();
+        $this->components = $components ?? new ComponentRegistry();
     }
 
     /** Registro compartilhado com framework, controller Admin e snapshot. */
     public function sections(): SectionRegistry { return $this->sections; }
+    public function components(): ComponentRegistry { return $this->components; }
 
     public function spec(): array {
         return ['format'=>self::FORMAT,'version'=>self::VERSION,'max_bytes'=>self::MAX_BYTES,
                 'max_depth'=>self::MAX_DEPTH,'config_keys'=>self::CONFIG_KEYS,'template_keys'=>self::TEMPLATE_KEYS,
-                'section_ids'=>$this->sections->ids()];
+                'section_ids'=>$this->sections->ids(),'component_ids'=>$this->components->ids()];
     }
 
     /** @return array<string,mixed> */
@@ -74,6 +77,7 @@ final class ThemePackage {
         if (isset($out['three']) && !is_array($out['three'])) unset($out['three']);
         if (isset($out['conditions']) && !is_array($out['conditions'])) unset($out['conditions']);
         if (isset($out['sections']) && !is_array($out['sections'])) unset($out['sections']);
+        if (isset($out['components']) && !is_array($out['components'])) unset($out['components']);
         return $out;
     }
 
@@ -108,6 +112,10 @@ final class ThemePackage {
         // F13-F: lista opcional, ordenada e allowlistada ([] e override valido).
         if (array_key_exists('sections',$config)) {
             if (!is_array($config['sections']) || $this->sections->normalize($config['sections'])===null) $e[]='sections_invalid';
+        }
+        // F13-G: mapa opcional de componentes, enums allowlistados, fail-closed.
+        if (array_key_exists('components',$config)) {
+            if (!is_array($config['components']) || $this->components->normalize($config['components'])===null) $e[]='components_invalid';
         }
         return array_values(array_unique($e));
     }
