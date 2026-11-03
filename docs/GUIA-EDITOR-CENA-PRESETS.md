@@ -22,7 +22,8 @@ feedback ao alterar cor/partículas/velocidade.
 
 ## Entregue
 
-- **`ScenePresetRegistry`** (`dev/system/library/three/scene_preset.php`),
+- **`ScenePresetRegistry`** (`dev/system/library/three/scene_preset_registry.php`;
+  `scene_preset.php` e apenas um alias de compatibilidade com `require_once`),
   registrado como `three_scene_preset`: **6 presets allowlistados** — Aurora
   suave, Nebulosa densa, Portfólio geométrico, Oficina 3D, 404 noturno e Sem
   cena. `find()`, `apply()`, `validate()`, `normalize()`, `matchingPreset()`,
@@ -62,7 +63,7 @@ id do preset antes de usá-lo (`error_scene_preset`) e continua aplicando
 
 ## Arquivos
 
-`scene_preset.php` e `theme-scene-editor.js` (novos), `framework.php`,
+`scene_preset_registry.php` e `theme-scene-editor.js` (novos), `framework.php`,
 `admin/controller/design/theme.php`, `design/theme_form.twig`,
 `theme-condition-builder.css`, `theme_compare_view.php`, 3 idiomas e este guia.
 Nenhum manifesto `CHECKSUMS*.txt`, contrato congelado, `schema.sql`, workflow,
