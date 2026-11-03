@@ -71,3 +71,15 @@
 #theme-compare .card-header { align-items: flex-start; gap: .75rem; }
 #theme-compare select { font-family: var(--bs-font-monospace, monospace); font-size: .8rem; }
 #theme-compare .badge { white-space: normal; }
+
+/* F13-D — editor de cena: miniatura + presets. */
+.scene-preset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .6rem; }
+.scene-preset-card { display: flex; flex-direction: column; gap: .25rem; padding: .5rem; text-align: left; cursor: pointer;
+  color: inherit; background: var(--bs-body-bg, #fff); border: 1px solid var(--bs-border-color, #cbd5e1); border-radius: .5rem; }
+.scene-preset-card:hover { border-color: var(--bs-primary, #0d6efd); }
+.scene-preset-card.is-active { border-color: var(--bs-primary, #0d6efd); box-shadow: 0 0 0 2px rgba(13,110,253,.25); }
+.scene-preset-card img { display: block; width: 100%; height: auto; border-radius: .35rem; }
+.scene-preset-card small { color: var(--bs-secondary-color, #5c6773); }
+.scene-preset-card__values { font-family: var(--bs-font-monospace, monospace); font-size: .7rem; color: var(--bs-secondary-color, #5c6773); }
+#scene-thumb-live { display: block; width: 100%; height: auto; border: 1px solid var(--bs-border-color, #cbd5e1); border-radius: .5rem; }
+@media (max-width: 767.98px) { .scene-preset-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); } }

@@ -44,6 +44,8 @@ $registry->set('theme_token_registry', new \Reamur\System\Library\Theme\TokenReg
 $registry->set('theme_snapshot', new \Reamur\System\Library\Theme\ThemeSnapshot(
     $registry->get('theme_condition_engine'), $registry->get('theme_token_registry')
 ));
+// F13-D: presets + miniaturas SVG das cenas nativas (sem cenas novas/JS/GLB).
+$registry->set('three_scene_preset', new \Reamur\System\Library\Three\ScenePresetRegistry());
 
 // 4. Config: default + aplicação (Contrato §4)
 $config = new Config();

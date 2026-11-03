@@ -65,14 +65,14 @@ final class ThemeCompareView {
         }
 
         $o .= '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;align-items:start">';
-        $o .= $this->panel($labels['published'], $pub, $p['published_html'], $labels, $h, '#e2e8f0');
-        $o .= $this->panel($labels['draft'], $draft, $p['draft_html'], $labels, $h, '#dbeafe');
+        $o .= $this->panel($labels['published'], $pub, $p['published_html'], $labels, $h, '#e2e8f0', (string)($p['published_thumb']??''));
+        $o .= $this->panel($labels['draft'], $draft, $p['draft_html'], $labels, $h, '#dbeafe', (string)($p['draft_thumb']??''));
         $o .= '</div></div></body></html>';
         return $o;
     }
 
     /** @param array<string,mixed> $s @param array<string,string> $labels */
-    private function panel(string $title, array $s, string $fragment, array $labels, callable $h, string $barBg): string {
+    private function panel(string $title, array $s, string $fragment, array $labels, callable $h, string $barBg, string $thumb = ''): string {
         $css = $s['token_css'];
         $style = $css
             . ';--theme-primary:' . ($s['primary'] ?? '#2563eb')
@@ -87,6 +87,10 @@ final class ThemeCompareView {
            . '<h2 style="margin:0;padding:9px 12px;font-size:13px;background:' . $barBg . ';color:#0f172a;font-weight:600">' . $h($title) . '</h2>'
            . '<div style="padding:12px">';
 
+        // F13-D: miniatura da cena (data URI, sem |raw e sem <script>).
+        if ($thumb !== '') {
+            $o .= '<div style="margin:0 0 10px"><img src="' . $h($thumb) . '" alt="' . $h($labels['scene_thumb']??'Scene') . '" width="320" height="180" style="display:block;width:100%;max-width:320px;height:auto;border:1px solid #cbd5e1;border-radius:6px"></div>';
+        }
         // Amostra visual REAL: consome as mesmas variaveis que o theme.css.
         $o .= '<div style="padding:14px;border-radius:var(--rms-radius,12px);box-shadow:var(--rms-shadow,none);border:var(--rms-border-width,1px) solid #e2e8f0;background:var(--rms-color-surface,#ffffff)">'
            . '<h3 style="margin:0 0 6px;font-size:calc(var(--rms-font-size,16px) * var(--rms-font-scale,1.25));font-weight:var(--rms-heading-weight,700)">' . $h($labels['sample_title']) . '</h3>'

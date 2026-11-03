@@ -36,6 +36,28 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['three']=$engine->normalizeThree(is_array($config['three']??null)?$config['three']:[]) ?? ['enabled'=>false,'scene'=>'','slot'=>'hero','count'=>400,'color'=>'#8a4fff','speed'=>0.05];
         $data['three_scenes']=$spec['scenes'];
         $data['three_slots']=$spec['slots'];
+        // F13-D: presets allowlistados + miniatura SVG deterministica.
+        $presets=[];
+        foreach($this->three_scene_preset->all() as $p) {
+            $p['name']=$this->language->get($p['label']);
+            $p['help_text']=$this->language->get($p['help']);
+            $p['thumb']=$this->three_scene_preset->dataUri($p);
+            $p['enabled_str']=$p['enabled']?'1':'0';
+            $p['speed_str']=number_format($p['speed'],2,'.','');
+            $presets[]=$p;
+        }
+        $data['scene_presets']=$presets;
+        $data['scene_preset']=$this->three_scene_preset->matchingPreset($data['three']);
+        $thumbBase=$this->url->link('design/theme.sceneThumb');
+        $thumbQuery=http_build_query([
+            'scene'=>(string)($data['three']['scene']??''),'slot'=>(string)($data['three']['slot']??'hero'),
+            'count'=>(string)($data['three']['count']??400),'color'=>(string)($data['three']['color']??'#8a4fff'),
+            'speed'=>(string)($data['three']['speed']??0.05),'enabled'=>!empty($data['three']['enabled'])?'1':'0',
+        ],'','&',PHP_QUERY_RFC3986);
+        $data['scene_thumb_base']=$thumbBase;
+        $data['scene_thumb_live']=$thumbBase.(str_contains($thumbBase,'?')?'&':'?').$thumbQuery;
+        foreach(['text_scene_editor','text_scene_editor_help','text_scene_thumb','text_scene_thumb_help','text_scene_preset','text_scene_preset_help','text_scene_preset_custom','text_scene_preset_active','text_scene_preset_apply','error_scene_preset'] as $k) $data[$k]=$this->language->get($k);
+
         $data['condition_fields']=$spec['fields'];
         $data['condition_query_keys']=$spec['query_keys'];
         $data['condition_operators']=$spec['operators'];
@@ -97,6 +119,8 @@ class Theme extends \Reamur\System\Engine\Controller {
         $builderAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-builder-a';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/theme-condition-builder.css?v=' . $builderAssetV);
         $this->document->addScript($this->config->get('site_url') . 'view/js/theme-condition-builder.js?v=' . $builderAssetV);
+        // F13-D: editor de cena (presets + miniatura ao vivo).
+        $this->document->addScript($this->config->get('site_url') . 'view/js/theme-scene-editor.js?v=' . $builderAssetV);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
@@ -116,6 +140,7 @@ class Theme extends \Reamur\System\Engine\Controller {
             $data['conditions_json']=(string)($post['conditions']??$data['conditions_json']);
             $this->applyTokenFormData($data,(array)($post['tokens']??[]));
             $data['three']=[
+                // F13-D
                 'enabled'=>(string)($post['three_enabled']??'0')==='1',
                 'scene'=>(string)($post['three_scene']??''),
                 'slot'=>(string)($post['three_slot']??'hero'),
@@ -123,6 +148,7 @@ class Theme extends \Reamur\System\Engine\Controller {
                 'color'=>(string)($post['three_color']??'#8a4fff'),
                 'speed'=>(string)($post['three_speed']??'0.05'),
             ];
+            $data['scene_preset']=$this->three_scene_preset->matchingPreset($data['three']);
         }
         // F13-C: estado real de publicacao e dados do comparador.
         $publishedConfig=$id?$this->model_design_theme->getPublishedConfig($id):[];
@@ -217,14 +243,29 @@ class Theme extends \Reamur\System\Engine\Controller {
         $conditions=json_decode((string)($post['conditions']??''),true);
         $conditions=is_array($conditions)?$conditions:['version'=>1,'rules'=>[]];
         $conditionErrors=$engine->validate($conditions);
-        $three=$engine->normalizeThree([
+        // F13-D: um preset e apenas um ATALHO que preenche os mesmos campos
+        // three_*; nenhuma chave nova entra no config do tema. Valor '' (ou
+        // edicao manual) mantem os campos personalizados.
+        $threeInput=[
             'enabled'=>(string)($post['three_enabled']??'0')==='1',
             'scene'=>(string)($post['three_scene']??''),
             'slot'=>(string)($post['three_slot']??'hero'),
             'count'=>(string)($post['three_count']??'400'),
             'color'=>(string)($post['three_color']??'#8a4fff'),
             'speed'=>(string)($post['three_speed']??'0.05'),
-        ]);
+        ];
+        $presetId=(string)($post['scene_preset']??'');
+        if ($presetId!=='') {
+            $presetFields=$this->three_scene_preset->apply($presetId);
+            if ($presetFields===null) return $bad($this->language->get('error_scene_preset'));
+            $threeInput=[
+                'enabled'=>$presetFields['three_enabled']==='1',
+                'scene'=>$presetFields['three_scene'],'slot'=>$presetFields['three_slot'],
+                'count'=>$presetFields['three_count'],'color'=>$presetFields['three_color'],
+                'speed'=>$presetFields['three_speed'],
+            ];
+        }
+        $three=$engine->normalizeThree($threeInput);
         $tokensRaw=(array)($post['tokens']??[]);
         $tokenErrors=$this->theme_token_registry->validate($tokensRaw);
         $tokensNormalized=$this->theme_token_registry->normalize($tokensRaw);
@@ -292,6 +333,8 @@ class Theme extends \Reamur\System\Engine\Controller {
                 'published'=>$pubState,'draft'=>$draftState,
                 'published_html'=>$this->renderPreviewFragment($key,$pubSource),
                 'draft_html'=>$this->renderPreviewFragment($key,$draftSource),
+                'published_thumb'=>$this->three_scene_preset->dataUri($pubState['three']),
+                'draft_thumb'=>$this->three_scene_preset->dataUri($draftState['three']),
                 'diff'=>$snapshot->diff($published,$draft),
             ]);
         } catch (\Throwable $e) {
@@ -310,6 +353,32 @@ class Theme extends \Reamur\System\Engine\Controller {
         if (!method_exists($this->template,'renderSandboxPreview')) return '<p>'.htmlspecialchars($this->language->get('text_preview_error'),ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'</p>';
         try { return (string)$this->template->renderSandboxPreview($key,$source); }
         catch (\Throwable $e) { return '<p>'.htmlspecialchars($this->language->get('text_preview_error'),ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'</p>'; }
+    }
+
+    /**
+     * F13-D: miniatura SVG das cenas nativas. GET de leitura idempotente,
+     * ACL access, no-store, nosniff, CSP propria e zero escrita. So valores
+     * allowlistados entram no SVG; nada do usuario e interpolado como texto.
+     * Carregada via <img>, onde SVG nunca executa script. Sem CSRF: nao ha
+     * mutacao de estado (o mesmo padrao dos assets publicos allowlistados).
+     */
+    public function sceneThumb(): void {
+        $this->response->addHeader('Content-Type: image/svg+xml; charset=utf-8');
+        $this->response->addHeader('Cache-Control: no-store');
+        $this->response->addHeader('X-Content-Type-Options: nosniff');
+        $this->response->addHeader("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'");
+        $this->response->addHeader('Content-Disposition: inline; filename="theme-scene.svg"');
+        $registry=$this->three_scene_preset;
+        if (!$this->user->hasPermission('access','design/theme')) {
+            $this->response->setOutput($registry->svg(['enabled'=>false])); return;
+        }
+        $g=$this->request->get;
+        $cfg=$registry->normalize([
+            'scene'=>(string)($g['scene']??''),'slot'=>(string)($g['slot']??'hero'),
+            'count'=>(string)($g['count']??400),'color'=>(string)($g['color']??'#8a4fff'),
+            'speed'=>(string)($g['speed']??0.05),'enabled'=>(string)($g['enabled']??'0'),
+        ]);
+        $this->response->setOutput($registry->svg($cfg));
     }
 
     /** @return array<string,string> */

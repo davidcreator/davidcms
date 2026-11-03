@@ -26,6 +26,23 @@
 </div>
 <div class="form-text">{{ text_three_help }}</div>
 </div></div>
+<div class="card mb-4" id="theme-scene-editor" data-url="{{ scene_thumb_base|e('html_attr') }}"><div class="card-header"><h2 class="h5 mb-0">{{ text_scene_editor }}</h2><p class="mb-0 text-muted">{{ text_scene_editor_help }}</p></div><div class="card-body">
+<div class="row g-3"><div class="col-md-4">
+<h3 class="h6">{{ text_scene_thumb }}</h3>
+<img id="scene-thumb-live" src="{{ scene_thumb_live|e('html_attr') }}" alt="{{ text_scene_thumb }}" width="320" height="180" loading="lazy">
+<p class="form-text">{{ text_scene_thumb_help }}</p>
+<label class="form-label" for="scene-preset-select">{{ text_scene_preset }}</label>
+<select class="form-select" name="scene_preset" id="scene-preset-select"><option value="" selected>{{ text_scene_preset_custom }}</option>{% for p in scene_presets %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}</select>
+<div class="form-text">{{ text_scene_preset_help }}</div>
+</div><div class="col-md-8"><div class="scene-preset-grid">
+{% for p in scene_presets %}<button type="button" class="scene-preset-card" data-scene-preset="{{ p.id }}" data-three-enabled="{{ p.enabled_str }}" data-three-scene="{{ p.scene }}" data-three-slot="{{ p.slot }}" data-three-count="{{ p.count }}" data-three-color="{{ p.color }}" data-three-speed="{{ p.speed_str }}" aria-pressed="false">
+<img src="{{ p.thumb|e('html_attr') }}" alt="{{ p.name }}" width="320" height="180" loading="lazy">
+<strong>{{ p.name }}</strong><small>{{ p.help_text }}</small>
+<span class="scene-preset-card__values">{{ p.count }} · {{ p.color }} · {{ p.speed_str }}</span>
+<span class="badge text-bg-primary" data-preset-badge hidden>{{ text_scene_preset_active }}</span>
+</button>{% endfor %}
+</div></div></div>
+</div></div>
 <div class="card mb-4"><div class="card-header"><h2 class="h5 mb-0">{{ text_conditions }}</h2><p class="mb-0 text-muted">{{ text_conditions_help }}</p></div><div class="card-body">
 <ul class="nav nav-tabs mb-3" role="tablist">
 <li class="nav-item"><button type="button" class="nav-link active" data-tcb-tab="visual">{{ text_builder_visual }}</button></li>
