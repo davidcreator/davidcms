@@ -70,10 +70,12 @@ reaproveita `byId()` para propagar o ID estável da política publicada ao
 config efetivo — sem criar ciclo e sem reabrir a decisão da O.
 
 Permanece a limitação da frente **N** (`?language=` gera variantes com query,
-não paths/hosts distintos) — exigiria DNS/vhost, fora de escopo. Permanece
-também a da frente **P**: o idioma usado na negociação vem da política
-**publicada**, enquanto `catalog_theme_site_language` do snapshot descreve o
-config efetivo; a R alinha o **site**, não a origem do idioma negociado.
+não paths/hosts distintos) — exigiria DNS/vhost, fora de escopo.
+
+A divergência de idioma da **P** foi **fechada pela frente S**
+(`LanguageNegotiator::alignSite()`), sem reabrir a precedência da K. A sonda do
+Admin e a prévia comparativa, que a Q deixou intactas, foram **alinhadas pela
+frente T** ao ID estável da política publicada usado pela R no Catalog.
 
 Sem CMS completo, MySQL, sessão de Admin autenticada, browser com rede,
 DNS/vhost, WebGL, E2E, migration, staging, deploy, PHP nativo, Composer,

@@ -77,7 +77,10 @@ A limitação da **N** permanece: o CMS usa `?language=` (Adendo F2-3 do ADR
 distintos; isso exigiria DNS/vhost, fora de escopo. O idioma negociado continua
 sendo resolvido **antes** da decisão de rollout (necessário para não criar
 ciclo) e apenas **realinhado** depois — não há segunda negociação completa.
-A sonda do Admin (M/Q/O) e a prévia comparativa não foram tocadas.
+A sonda do Admin (M/Q/O) e a prévia comparativa foram **alinhadas pela frente
+T** ao mesmo ID estável da política publicada, sem alterar `alignSite()` nem a
+soberania de `?language=`, sessão e default. O `preview_language` do Admin
+continua sendo uma escolha explícita do simulador, equivalente a `?language=`.
 
 Sem CMS completo, MySQL, sessão autenticada, browser com rede, DNS/vhost,
 WebGL, E2E, migration, staging, deploy, PHP nativo, Composer, PHPStan, rsync

@@ -1,4 +1,5 @@
-/* F13-J — multisite declarativo: sonda local de host, apenas DOM.
+/* F13-T — sonda local usa a politica PUBLICADA (ID estavel da R).
+   F13-J — multisite declarativo: sonda local de host, apenas DOM.
    Sem fetch/eval/innerHTML/document.write. O mapa de sites vem do servidor
    em data-sites (constantes allowlistadas); o host digitado so e COMPARADO,
    nunca enviado, refletido em HTML nem publicado em global. */
@@ -7,7 +8,12 @@
   var root = document.getElementById('theme-sites');
   if (!root) return;
   var sites = {}, ids = ['primary','shop','blog','docs','landing','partner','legacy','staging'];
-  try { sites = JSON.parse(root.getAttribute('data-sites') || '{}'); } catch (e) { sites = {}; }
+  // F13-T: data-sites-published e a politica PUBLICADA (mesma fonte do ID
+  // estavel usado por decide()/byId() no Catalog). Sem o atributo (pacote
+  // parcial/HEAD A-S), cai no mapa atual: comportamento identico ao legado.
+  var mapJson = root.getAttribute('data-sites-published');
+  if (mapJson === null || mapJson === '') mapJson = root.getAttribute('data-sites');
+  try { sites = JSON.parse(mapJson || '{}'); } catch (e) { sites = {}; }
   var status = root.querySelector('[data-site-status]');
   var unknown = root.getAttribute('data-site-unknown') || '';
 

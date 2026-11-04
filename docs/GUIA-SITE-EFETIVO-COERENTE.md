@@ -74,8 +74,13 @@ idioma do mesmo ID no config efetivo, sem reabrir a precedência da K —
 `?language=`, sessão e default continuam soberanos.
 
 Permanece a limitação da **N** (`?language=` gera variantes com query, não
-paths/hosts distintos) — exigiria DNS/vhost, fora de escopo. A sonda do Admin
-(M/Q/O) e a prévia comparativa não foram tocadas.
+paths/hosts distintos) — exigiria DNS/vhost, fora de escopo.
+
+**Resolvido pela frente T:** a sonda do Admin (M/Q/O) e a prévia comparativa
+passam a usar o **mesmo ID estável** da política publicada: `compare()` decide
+o rollout e alinha os dois painéis por `ThemeSites::byId()`, e a sonda local
+compara o host com a política publicada. `preview_language` continua soberano
+(equivalente ao `?language=` da S); nenhuma reabertura de K/L/N/O/P/Q/R/S.
 
 Sem CMS completo, MySQL, sessão autenticada, browser com rede, DNS/vhost,
 WebGL, E2E, migration, staging, deploy, PHP nativo, Composer, PHPStan, rsync

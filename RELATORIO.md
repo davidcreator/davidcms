@@ -1,146 +1,163 @@
-# Frente S — Idioma efetivo coerente com o config efetivo
+# Frente T — Prévia e sonda do Admin coerentes com o site efetivo
 
-**Base inspecionada:** `main` @ `650f354e8c43fba3d46fa667f187cbf07e405683`
-(2026-11-04T12:05:12Z, `fix(catalog/theme): align catalog site with published
-rollout ID`), pai `db6f9965942bf7e1b67fcff0232535d358edb86f`. Árvore: 2.582
-blobs, `truncated:false`. **Verificação da frente R aplicada: 4/4 arquivos
-byte-idênticos ao HEAD S.** Refresh seletivo da árvore do HEAD S antes do
-build (662 paths / 4.551.581 bytes), sem clone Git.
+**Base inspecionada:** `main` @ `f993fe3c6cc8fdb7fe9b57a62a09ba06094452c2`
+(2026-11-04T12:22:07Z, `feat(language): align site language to effective
+config`), pai `650f354e8c43fba3d46fa667f187cbf07e405683`. Árvore: 2.583
+blobs, `truncated:false`, 14 `CHECKSUMS*.txt`. **Verificação da frente S
+aplicada: 7/7 arquivos byte-idênticos ao HEAD T** (inclusive `RELATORIO.md` e
+`INDICE.md` da raiz). Refresh seletivo do HEAD T antes do build (663 paths /
+4.560.341 bytes, mais 2 arquivos de raiz), sem clone Git.
 
 ## Lacuna funcional real
 
-A frente **P** unificou a negociação de idioma num resolvedor puro, mas
-registrou em `docs/GUIA-IDIOMA-EFETIVO.md:66` que a negociação acontece
-**antes** da decisão de rollout e usa a política **publicada** (para não criar
-ciclo). A frente **R** alinhou o **ID do site** ao config efetivo; faltava
-alinhar o **idioma desse site**. Guias da P e da R apontavam isso como a
-última divergência aberta.
+A frente **R** fechou no **Catalog** a divergência entre o site usado em
+`ThemeSchedule::decide()` (política **publicada**, para não criar ciclo) e o
+site re-resolvido por host no config efetivo; a **S** alinhou o idioma desse
+site. Os dois guias, porém, registravam: *"A sonda do Admin (M/Q/O) e a prévia
+comparativa não foram tocadas"*.
 
-Publicado `sites[shop].language = pt-br`; rascunho em rollout com
-`sites[shop].language = es-eu`; visitante novo em `loja.exemplo.com`, sem
-`?language=` e sem sessão:
+Publicado `shop.host = loja.exemplo.com`; rascunho em rollout liberado para
+`shop` com `shop.host = nova.exemplo.com` e condição `site eq shop`;
+visitante em `loja.exemplo.com`, sonda de rollout no padrão do formulário:
 
-| Valor | HEAD S | Frente S |
-|---|---|---|
-| `catalog_theme_site_language` (snapshot) | `es-eu` | `es-eu` |
-| `catalog_theme_language_effective` | **`pt-br`** | `es-eu` |
-| `language_directory` / `<html lang>` | **`pt-br`** | `es-eu` |
-| `og:locale` / `hreflang` | **`pt_br`** | `es_eu` |
-| `context['language']` (condições L) | **`pt-br`** | `es-eu` |
-| cor por `language eq es-eu` | **`#111111`** | `#333333` |
+| Consumidor | Catalog (R/S) | HEAD T (prévia Admin) | Frente T |
+|---|---|---|---|
+| `decide()` da O | `shop` → rascunho | **`primary`** → publicado | `shop` → rascunho |
+| site do painel rascunho | `shop` | **`primary`** | `shop` |
+| `context['site']` da L | `shop` | **`primary`** | `shop` |
+| cor por `site eq shop` | `#111111` | **`#222222`** | `#111111` |
+| badge do card Sites | `shop` / idioma efetivo | **`primary`** / `pt-br` | `shop` / `es-eu` |
 
-Uma regra `language eq es-eu` nunca casava, e o `<head>` anunciava idioma
-diferente do badge do Admin.
+A prévia mostrava "publicado × publicado" com cores de `primary` enquanto o
+visitante recebia o rascunho de `shop`. A causa é a mesma da R: `compare()`
+resolvia cada painel pelo host da **sua própria** política e a sonda da O
+começava em `primary`, sem relação com o host simulado.
 
-## O que muda (2 arquivos completos + 2 guias atualizados + 1 novo)
+## O que muda (3 arquivos completos + 5 guias atualizados + 1 novo)
 
 | Arquivo | Mudança |
 |---|---|
-| `dev/system/library/language_negotiator.php` | Novo `alignSite(array $resolved, mixed $effectiveSiteLanguage, array $enabled): array` — **puro**, mesmo formato de retorno de `resolve()`; `resolve()` e as constantes ficam intactos |
-| `dev/catalog/controller/startup/theme.php` | Guarda `getEnabledCodes()` (mesma 1 consulta), chama `alignSite()` **depois** da decisão e do realinhamento da R, e republica código/sessão/contexto **somente se o código mudou** |
-| `docs/GUIA-IDIOMA-EFETIVO.md` | Limitação da P substituída pelo comportamento resolvido |
-| `docs/GUIA-SITE-EFETIVO-COERENTE.md` | Seção "o que a R não fecha" atualizada |
-| `docs/GUIA-IDIOMA-EFETIVO-POR-CONFIG.md` | Guia de uso, soberania, segurança e limites (novo) |
+| `dev/admin/controller/design/theme.php` | `edit()` lê a política publicada (a **mesma** consulta já existente), publica `data-sites-published` e alinha o badge ao ID estável; `compare()` calcula `$seedId` pela política publicada, usa-o em `decide()` quando `schedule_probe_site` está vazio e propaga o ID aos dois painéis por `ThemeSites::byId()` (Q/R) |
+| `dev/admin/view/template/design/theme_form.twig` | Novo `data-sites-published` escapado com `e('html_attr')` e opção padrão vazia em `schedule_probe_site`, reaproveitando `text_sites_probe` — **nenhuma chave de tradução nova** |
+| `dev/admin/view/js/theme-sites.js` | A sonda local de host compara a política **publicada**; sem o atributo novo cai no mapa atual (fail-closed, idêntico a A–S) |
+| `docs/GUIA-SITE-EFETIVO-COERENTE.md` | Limitação da R sobre o Admin substituída |
+| `docs/GUIA-IDIOMA-EFETIVO-POR-CONFIG.md` | Limitação da S sobre o Admin substituída |
+| `docs/GUIA-SITE-POR-ID.md` | Observações da Q sobre P/Admin atualizadas |
+| `docs/GUIA-PREVIA-POR-SITE.md` | Observação da M sobre hosts divergentes atualizada |
+| `docs/GUIA-ROLLOUT-POR-SITE.md` | Sonda da O atualizada |
+| `docs/GUIA-PREVIA-SITE-EFETIVO.md` | Guia de uso, soberania, segurança e limites (novo) |
 
 ## Soberania preservada (o ponto central)
 
-`alignSite()` age **somente** quando `source === 'site'`:
-
-- **`?language=`** (`source=request`) ⇒ **nunca** alterado, continua soberano.
-- **Sessão do mesmo site** (`source=session`) ⇒ **nunca** alterada.
-- **Default do painel** (`source=default`) ⇒ **nunca** alterado.
-- Código fora de `pt-br|en-us|es-eu`, não habilitado, vazio, não-string ou
-  igual ao atual ⇒ **sem mudança** (fail-closed).
-
-`catalog_theme_language_source` continua em `request|session|site|default`;
-`startup/language.php` continua **aplicando** `catalog_theme_language_effective`
-sem decidir de novo. Ordem das pré-ações e precedência da K intactas. A R já
-havia alinhado o ID do site; a S lê o idioma **desse mesmo ID** no config
-efetivo — mesmo padrão, aplicado ao idioma.
+- **`preview_site` (Q/M)** com ID allowlistado e ativo nos dois painéis continua
+  sendo a fonte de verdade; o `byId()` da Q não é alterado.
+- **`schedule_probe_site` (O)** com ID explícito continua **soberano**: a T não
+  reescreve a escolha do usuário. Apenas a nova opção **vazia** segue `$seedId`.
+- **`preview_language`** continua soberano: é escolha explícita do simulador,
+  equivalente ao `?language=` da S. `LanguageNegotiator::alignSite()` **não** é
+  chamado no Admin e a precedência da K não é reaberta (medido: `es-eu` nos
+  dois lados em `preview_language_es`).
+- **`site_probe_host` / `HTTP_HOST`** continuam **apenas comparados**, nunca
+  refletidos em HTML, global Twig, CSS ou log (`has_evil=false` nos 20
+  cenários, nos dois lados).
+- **Fail-closed:** ID fora da allowlist, site ausente/desabilitado, política
+  publicada vazia ou `byId()` inativo ⇒ mantém o resultado legado de `match()`.
 
 ## Compatibilidade e segurança
 
-- **Sem divergência** (publicado = efetivo): `alignSite()` devolve o array
-  inalterado, o código não muda e **nada é republicado** ⇒ comportamento
-  **byte a byte idêntico às frentes A–R**. Medido em A/B real: **17 de 19
-  cenários idênticos campo a campo**, inclusive os 12 de regressão da R, os
-  de `?language=`/sessão/default e os de fail-closed (idioma desabilitado,
-  rollout desligado, sem sites).
-- **Nenhuma consulta nova:** a allowlist já lida pela P é reutilizada
-  (`selects=1` nos 19 cenários, nos dois lados).
-- A única escrita é a **mesma sessão** que a P já gravava (`language` +
-  `language_site`), atualizada para o código correto. `HTTP_HOST` continua
-  **apenas comparado**, nunca publicado (`has_evil=false` nos dois lados).
-- **Sem:** migration, schema, coluna, tabela, escrita em banco/arquivo, cookie
-  novo, cron, `custom_js`, `<script>` inline, `|raw` novo, `fetch`/`eval`/
-  `innerHTML`, JS, CSS, Twig, chave de tradução (418 ×3 intactas), global Twig
-  novo, manifesto, contrato, vhost/DNS, upload, GLB, WebGL, BDREditor ou
-  escrita remota. Os 14 `CHECKSUMS*.txt` permanecem intactos; nenhum arquivo
-  do pacote é coberto por eles.
+- `ThemeSites`, `ThemeSchedule`, `ThemeSnapshot`, `ThemeCompareView`,
+  `LanguageNegotiator`, `startup/theme.php`, `startup/language.php`, a ordem
+  `['startup/setting','startup/theme','startup/language']`, os 14 manifestos,
+  os contratos, as 418 chaves ×3 e os 25 `TEMPLATE_KEYS` ficam **intocados**.
+  Nenhuma reabertura de A–S.
+- **Sem consulta nova:** `getPublishedConfig()` já era chamada em `edit()`;
+  `compare()` continua com `db_calls=3` nos 20 cenários. `match()`, `byId()` e
+  `decide()` são puros. O contador de instrumentação `match_calls` cresce 1
+  pela leitura extra da política publicada, sem afetar o HTML.
+- **A/B real:** 20 cenários. **8 com HTML byte-idêntico** (sonda explícita da O,
+  sem sites, host desconhecido, idioma mudado, sites diferentes etc.) e **12
+  com correção funcional** (decisão, ID do site, contexto, cor ou fita). Casos
+  centrais: `normal_vazio` `primary/publicado → shop/rascunho`;
+  `host_mudado_vazio` `draft_id primary→shop`, `draft_primary #222222→#111111`,
+  `matched ['site-primary']→['site-shop']`, `reason default→id`,
+  `byId_calls 0→1`. `host_mudado_explicito_shop` prova que a sonda explícita
+  da O já decidia certo e a T corrige **somente** o alinhamento dos painéis.
+- **Form A/B:** `data-sites-published` ausente → presente (`shop.host=loja.test`
+  enquanto o rascunho tem `nova.test`), badge `primary/pt-br → shop/es-eu`,
+  `schedule_probe_site` 8 → 9 opções com primeiro valor `''`, asset
+  `-theme-sites-j → -theme-sites-t`.
+- **Sem:** escrita em banco/arquivo/sessão/cookie, migration, schema, coluna,
+  tabela, cron, `|raw` novo, `<script>` inline, `fetch`/`eval`/`innerHTML`,
+  CSS novo, global Twig novo, chave de tradução, vhost/DNS, upload, GLB,
+  WebGL, BDREditor, `custom_js`, pacote sobreposto ou escrita remota. O JS
+  continua apenas DOM (`textContent`, `getAttribute`, `JSON.parse`). Os 14
+  `CHECKSUMS*.txt` permanecem intactos; **9/9 arquivos do pacote livres**.
 
 ## Validação executada (tudo `/0`)
 
 | Harness | Resultado |
 |---|---|
-| `php -l` (2 PHP do pacote, PHP 8.5.12 WASM) | **2/0** |
-| `node --check` (40 JS do HEAD S) | **40/0** |
-| H1 `fs_negotiator_test.php` (`alignSite()` puro: soberania, allowlist, fail-closed) | **78/0** |
-| H2 `fs_pipeline_test.php` (pipeline real, 19 cenários, condições, `<head>`, segurança) | **224/0** |
-| H3 `fs_ab_test.php` (A/B **real** HEAD S × pacote S, 19 cenários) | **369/0** |
-| H4a `fs_autoload_test.php` (Autoloader real do `LanguageNegotiator` com `alignSite()`) | **12/0** |
-| H4b `fs_regression_test.php` (contratos, 418 ×3, 25 templates, guias, pacote) | **139/0** |
-| H5 `fs_jsdom_test.js` (jsdom 29.1.1: `<head>` A/B, `og:locale`, cor, guias) | **162/0** |
-| **Total de asserções** | **1026/0** |
+| `php -l` (1 PHP do pacote, PHP 8.5.12 WASM) | **1/0** |
+| `node --check` (40 JS da réplica B com o pacote aplicado) | **40/0** |
+| H1 `ft_sites_test.php` (contratos puros A–S + pureza dos 3 arquivos) | **102/0** |
+| H2 `ft_pipeline_test.php` (pipeline real do pacote, 20 cenários + `edit()`) | **443/0** |
+| H3 `ft_ab_test.php` (A/B **real** HEAD T × pacote T, campo a campo) | **556/0** |
+| H4a `ft_autoload_test.php` (Autoloader real do controller do pacote) | **16/0** |
+| H4b `ft_regression_test.php` (contratos, 418 ×3, 25 templates, guias, S 7/7) | **237/0** |
+| H5 `ft_jsdom_test.js` (jsdom 29.1.1: form, sonda JS real, HTML, guias) | **260/0** |
+| **Total de asserções** | **1655/0** |
 
-A/B **real**, não por inferência: `/tmp/fs_probe.php` executa
-`setting → theme → language` duas vezes (bootstrap do HEAD S e bootstrap do
-pacote S) sobre 19 cenários e o H3 compara os JSONs campo a campo. O H5
-compara o `<head>` real renderizado por Twig 3.14: `normal` e
-`idioma_mudado_request` idênticos; nos 2 cenários de divergência,
-`<html lang>` `pt-br → es-eu`, `og:locale` `pt_br → es_eu` e
-`--theme-primary` `#111111 → #333333`, com `hreflangs`/`x-default`/canonical
-inalterados.
+A/B **real**, não por inferência: `/tmp/ft_probe.php` executa `compare()` e
+`edit()` duas vezes (bootstrap do HEAD T e bootstrap do pacote T, separados)
+sobre 20 cenários; o H3 compara os JSONs campo a campo com valores literais.
+O H5 renderiza 10 HTMLs de prévia e 2 forms, e ainda **executa o
+`theme-sites.js` de cada lado** no jsdom: digitando `loja.test`, a sonda do
+HEAD responde `primary · default` e a do pacote `shop · exact`.
 
-Réplica A/B de validação com 828 paths (leitura remota, sem clone Git,
+Réplica A/B de validação com 829 paths (leitura remota, sem clone Git,
 sem vendor/imagens): `verify-checksums` (14 manifestos), `repo-health`,
 `verify-ci-workflow` e `verify-contract-freeze` **verdes e idênticos** antes e
-depois. 4 arquivos alterados + 1 novo, 824 paths
+depois. 8 arquivos alterados + 1 novo, 821 paths
 congelados idênticos, 14 manifestos byte-idênticos, 25 `TEMPLATE_KEYS`
-congelados, 418 chaves ×3, 27 arquivos de A–R intactos, frente R
-4/4, build idempotente 5/5, `unzip -t`/CRC OK, `sha256sum -c` OK.
+congelados, 418 chaves ×3, 29 arquivos de A–S intactos, frente S
+7/7, build idempotente 9/9, `unzip -t`/CRC OK, `sha256sum -c` 44/44 OK.
 
 ## Impacto crítico
 
-Verificado e corrigido onde apareceu: uma asserção do H4b procurava o texto
-"A divergência de idioma da **P**" no guia da R, mas o trecho real é "A
-**negociação** de idioma da **P** continua" — expectativa do harness
-corrigida, sem alterar o código entregue. Também foi feito o **refresh da
-árvore do HEAD S** antes de qualquer build (lição das frentes P/Q/R) e os
-bootstraps A/B foram separados corretamente: o do pacote carrega o
-`LanguageNegotiator` **com** `alignSite()`, o do HEAD carrega o **sem** —
-sem isso a A/B seria falsa. Nenhuma regressão A–R detectada.
+Verificado e corrigido onde apareceu: a primeira rodada do H4b acusou 10
+falhas, **todas em expectativas do harness** — regex das 418 chaves,
+`RELATORIO.md`/`INDICE.md` que ainda não estavam no recorte local, um trecho
+do guia Q com quebra de linha e o nome do próprio closure `$alignSite()` da T
+(confundido com `LanguageNegotiator::alignSite()`). Nenhuma linha do código
+entregue foi alterada por essas correções. Também foi feito o **refresh da
+árvore do HEAD T** antes de qualquer build e os bootstraps A/B foram mantidos
+separados (cada lado carrega o seu `theme.php`, o seu `theme_form.twig` e o seu
+`theme-sites.js`) — sem isso a A/B seria falsa. Nenhuma regressão A–S
+detectada. O H5 confirmou ainda o `iframe` de prévia legado (1 nos dois lados,
+com `sandbox`) e não o converteu em defeito novo.
 
-## Limitações honestas — o que a S **não** fecha
+## Limitações honestas — o que a T **não** fecha
 
 Permanece a limitação da **N**: o CMS usa `?language=` (Adendo F2-3 do ADR
 0001), então as variantes `hreflang` são URLs com query, não paths/hosts
-distintos — exigiria DNS/vhost, fora de escopo. O idioma continua sendo
-**negociado antes** da decisão de rollout (necessário para não criar ciclo) e
-apenas **realinhado** depois; não há segunda negociação completa. A sonda do
-Admin (M/Q/O) e a prévia comparativa não foram tocadas.
+distintos — exigiria DNS/vhost, fora de escopo. A prévia continua sendo uma
+**simulação declarativa**: não há sessão autenticada, MySQL, browser com rede,
+CMS completo, E2E, staging ou deploy. O `preview_language` é uma escolha do
+simulador, não a negociação real da P/S. A T **não** foi aplicada no GitHub
+por nós: este pacote é instalável, pendente de aplicação/confirmação.
 
-Sem CMS completo, MySQL, sessão autenticada, browser com rede, DNS/vhost,
-WebGL, E2E, migration, staging, deploy, PHP nativo, Composer, PHPStan, rsync
-ou escrita no GitHub. PHP 8.5.12 WASM, Twig 3.14 e jsdom 29.1.1 com mocks
-**não são um servidor**. CI remoto não verificado. **CI verde / health verde
-≠ release aprovada**; F9-27 segue `BLOCKED_NOT_RUN` com
+Sem CMS completo, MySQL, sessão de Admin autenticada, browser com rede,
+DNS/vhost, WebGL, E2E, migration, staging, deploy, PHP nativo, Composer,
+PHPStan, rsync ou escrita no GitHub. PHP 8.5.12 WASM, Twig 3.14 e jsdom 29.1.1
+com mocks **não são um servidor**. CI remoto não verificado. **CI verde /
+health verde ≠ release aprovada**; F9-27 segue `BLOCKED_NOT_RUN` com
 `release_approved:false`, BDREditor/F9-103 pausado. Nenhum status
 `NOT_RUN`/`SKIP`/`BLOCKED_NOT_RUN` foi convertido em `PASS`.
 
 ## Instalação
 
-Extrair os 5 arquivos completos sobre a raiz do repositório (o guia é novo),
+Extrair os 9 arquivos completos sobre a raiz do repositório (o guia é novo),
 preservando a estrutura de diretórios. Não há patches nem manifestos a
 atualizar. Depois: `bash tools/verify-checksums.sh && bash tools/repo-health.sh`.
-Sem divergência de idioma entre publicado e rascunho, o comportamento é
-idêntico ao das frentes A–R.
+Com `schedule_probe_site` explícito ou sem divergência de hosts entre
+publicado e rascunho, o comportamento é idêntico ao das frentes A–S.

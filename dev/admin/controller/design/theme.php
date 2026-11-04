@@ -1,5 +1,6 @@
 <?php
-/** Admin theme manager (F10-02); access and modify are separately ACL-gated. */
+/** Admin theme manager (F10-02); access and modify are separately ACL-gated.
+ * F13-T: sonda/prévia coerentes com o ID estável da política publicada (R/S). */
 namespace Reamur\Admin\Controller\Design;
 class Theme extends \Reamur\System\Engine\Controller {
     // F13-E: allowlist unica em ThemePackage::TEMPLATE_KEYS (sem duplicacao).
@@ -224,8 +225,25 @@ class Theme extends \Reamur\System\Engine\Controller {
                  'text_models_sections','text_models_components','text_models_media','error_models'] as $k) $data[$k]=$this->language->get($k);
         $this->document->addScript($this->config->get('site_url') . 'view/js/theme-media.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-media-i');
         // F13-J: mapa declarativo de sites/hosts -> temas por slug.
+        // F13-T: a política PUBLICADA é a fonte do ID estável (frente R),
+        // inclusive para o badge do card e para a sonda local. Nenhuma
+        // consulta nova: getPublishedConfig() já era chamada neste método.
+        $publishedConfig=$id?$this->model_design_theme->getPublishedConfig($id):[];
+        $publishedSitesNorm=$this->theme_sites->normalize(is_array($publishedConfig['sites']??null)?$publishedConfig['sites']:[]) ?? [];
         $sitesNorm=$this->theme_sites->normalize(is_array($config['sites']??null)?$config['sites']:[]) ?? [];
-        $siteActive=$this->theme_sites->match($sitesNorm,(string)($this->request->server['HTTP_HOST']??''));
+        $adminHost=(string)($this->request->server['HTTP_HOST']??'');
+        $seedSite=$this->theme_sites->match($publishedSitesNorm,$adminHost);
+        $seedId=(string)($seedSite['id']??'');
+        $seedId=in_array($seedId,$this->theme_sites->ids(),true)?$seedId:'primary';
+        $siteActive=$this->theme_sites->match($sitesNorm,$adminHost);
+        // F13-T: mesmo padrão da R, sem ciclo. Se o config efetivo do Admin
+        // re-resolve o host para OUTRO ID, byId() recupera os atributos do
+        // ID estável. Falha => mantém o resultado legado (fail-closed).
+        $activeId=(string)($siteActive['id']??'');
+        if($activeId!=='' && $activeId!==$seedId){
+            $aligned=$this->theme_sites->byId($sitesNorm,$seedId);
+            if(!empty($aligned['active'])) $siteActive=$aligned;
+        }
         $data['site_rows']=$this->theme_sites->view($sitesNorm,$siteActive);
         foreach($data['site_rows'] as &$sr){
             $sr['label']=$this->language->get($sr['label_key']);
@@ -241,15 +259,17 @@ class Theme extends \Reamur\System\Engine\Controller {
             if ($s!=='') $data['site_theme_options'][]=['slug'=>$s,'name'=>(string)($candidate['name']??$s)];
         }
         $data['sites_json']=json_encode($sitesNorm,$jsonFlags) ?: '{}';
+        // F13-T: a sonda local compara o host digitado com a política
+        // PUBLICADA (ID estável da R), nunca com o rascunho em edição.
+        $data['sites_published_json']=json_encode($publishedSitesNorm,$jsonFlags) ?: '{}';
         // NUNCA refletir HTTP_HOST no HTML: a sonda comeca vazia e rodando no JS.
         $data['site_probe_host']='';
         foreach(['text_sites','text_sites_help','text_sites_host','text_sites_slug','text_sites_language',
                  'text_sites_enabled','text_sites_active','text_sites_default','text_sites_probe',
                  'text_sites_probe_help','text_sites_probe_button','text_sites_probe_unknown',
                  'text_sites_note','text_sites_empty','text_sites_fallback','error_sites'] as $k) $data[$k]=$this->language->get($k);
-        $this->document->addScript($this->config->get('site_url') . 'view/js/theme-sites.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-sites-j');
+        $this->document->addScript($this->config->get('site_url') . 'view/js/theme-sites.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-sites-t');
         // F13-C: estado real de publicacao e dados do comparador.
-        $publishedConfig=$id?$this->model_design_theme->getPublishedConfig($id):[];
         $draftNorm=json_encode(json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true) ?: new \stdClass());
         $pubNorm=json_encode(json_decode((string)($theme['published_config']??'{}'),true) ?: new \stdClass());
         $data['theme_state']=((int)($theme['status']??0)===1 && $pubNorm!=='{}')?'published':'draft';
@@ -523,6 +543,8 @@ class Theme extends \Reamur\System\Engine\Controller {
     /**
      * F13-C: PREVIA REAL rascunho x publicado. POST do formulario atual,
      * ACL access + CSRF + no-store, zero escrita, mesmo pipeline do Catalog.
+     * F13-T: usa o MESMO ID estável da política PUBLICADA que a frente R
+     * propaga no Catalog; a sonda explícita da O continua soberana.
      */
     public function compare(string $theme_id='0'): void {
         $this->response->addHeader('Content-Type: text/html; charset=utf-8');
@@ -558,16 +580,6 @@ class Theme extends \Reamur\System\Engine\Controller {
         if ($this->theme_schedule->parseTime($probeNow)===null) $probeNow=$this->theme_schedule->now();
         $probeVisitor=substr((string)($post['schedule_probe_visitor']??'visitor-a'),0,64);
         $probeLogged=in_array(strtolower((string)($post['schedule_probe_logged']??'')),['1','true','yes','on'],true);
-        // F13-O: sonda de site allowlistada; sem valor usa o site do painel
-        // publicado (M ja resolve $contextPub/$contextDraft mais abaixo).
-        $probeSite=(string)($post['schedule_probe_site']??'');
-        $siteIdsProbe=$this->theme_sites->ids();
-        $probeSite=in_array($probeSite,$siteIdsProbe,true)?$probeSite:'primary';
-        $scheduleDecision=$this->theme_schedule->decide(
-            $this->theme_schedule->normalize($draft['schedule']??null),
-            $probeNow, $probeVisitor, $probeLogged, $probeSite
-        );
-        $pubDecision=array_replace($scheduleDecision,['effective'=>'published','active'=>false,'reason'=>'disabled']);
         $key=(string)($post['preview_template']??'common/home');
         if (!in_array($key,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true)) $key='common/home';
         $snapshot=$this->theme_snapshot;
@@ -584,15 +596,31 @@ class Theme extends \Reamur\System\Engine\Controller {
         // Cada painel usa o host da SUA politica; site ausente/desabilitado
         // volta para a sonda (fail-closed). Nenhum host do request e exibido.
         $previewSite=(string)($post['preview_site']??'');
-        $forced=in_array($previewSite,$this->theme_sites->ids(),true)?$previewSite:'';
+        $siteIds=$this->theme_sites->ids();
+        $forced=in_array($previewSite,$siteIds,true)?$previewSite:'';
         // F13-Q: o ID allowlistado e a FONTE DE VERDADE. Resolver por ID
-        // (puro, sem round-trip por host) fecha o desempate silencioso da M:
-        // se dois sites compartilham o host, match() devolvia o primeiro da
-        // ordem e a previa comparava shop x primary sem avisar. Nenhum host
-        // do request entra aqui; apenas o ID allowlistado escolhido no form.
+        // (puro, sem round-trip por host) fecha o desempate silencioso da M.
         $byPub   = $forced!=='' ? $this->theme_sites->byId($sitesPub,$forced)   : $this->theme_sites->emptySite();
         $byDraft = $forced!=='' ? $this->theme_sites->byId($sitesDraft,$forced) : $this->theme_sites->emptySite();
         $forcedOk = (bool)($byPub['active']??false) && (bool)($byDraft['active']??false);
+        // F13-T: ID ESTAVEL da politica PUBLICADA (mesmo criterio da R/O).
+        // Sem preview_site explicito, a sonda de host e comparada a politica
+        // publicada; com ID escolhido e ativo nos DOIS paineis, ele e a fonte.
+        // Nenhuma decisao depende do config que ela mesma escolheu => sem ciclo.
+        $seedSite=$this->theme_sites->match($sitesPub,$probeHost);
+        $seedId=(string)($seedSite['id']??'');
+        $seedId=in_array($seedId,$siteIds,true)?$seedId:'primary';
+        if ($forcedOk && $forced!=='') $seedId=$forced;
+        // F13-O/T: a sonda EXPLICITA da O continua soberana quando um ID e
+        // escolhido no select. A nova opcao padrao vazia faz decide() seguir
+        // o ID estavel, exatamente como startup/theme no Catalog.
+        $probeSite=(string)($post['schedule_probe_site']??'');
+        $decisionSite=in_array($probeSite,$siteIds,true)?$probeSite:$seedId;
+        $scheduleDecision=$this->theme_schedule->decide(
+            $this->theme_schedule->normalize($draft['schedule']??null),
+            $probeNow, $probeVisitor, $probeLogged, $decisionSite
+        );
+        $pubDecision=array_replace($scheduleDecision,['effective'=>'published','active'=>false,'reason'=>'disabled']);
         if ($forcedOk) {
             $sitePub=$byPub; $siteDraft=$byDraft;
         } else {
@@ -608,12 +636,25 @@ class Theme extends \Reamur\System\Engine\Controller {
             $sitePub=$this->theme_sites->match($sitesPub,$probeHostPub);
             $siteDraft=$this->theme_sites->match($sitesDraft,$probeHostDraft);
         }
+        // F13-T: propaga o MESMO ID estavel aos DOIS paineis (frente R no
+        // Admin). Se o rascunho mudou o host, match() re-resolvia para outro
+        // ID; byId() recupera os atributos do site correto no config efetivo.
+        // Sem divergencia nada muda; ID ausente/desabilitado => fail-closed.
+        $alignSite=function(array $sitesCfg,array $site) use ($seedId):array{
+            $id=(string)($site['id']??'');
+            if ($id!=='' && $id!==$seedId) {
+                $aligned=$this->theme_sites->byId($sitesCfg,$seedId);
+                if (!empty($aligned['active'])) return $aligned;
+            }
+            return $site;
+        };
+        $sitePub=$alignSite($sitesPub,$sitePub);
+        $siteDraft=$alignSite($sitesDraft,$siteDraft);
         // F13-L: cada painel avalia as condicoes com o site allowlistado da
         // SUA politica (publicado x rascunho), exatamente como no Catalog.
         // A sonda de host continua sendo so comparada, nunca exibida.
         // F13-M: sem sites configurados, match() devolve ID vazio. Alinhar ao
         // Catalog (startup/theme da L): ID fora da allowlist => `primary`.
-        $siteIds=$this->theme_sites->ids();
         $idPub=(string)($sitePub['id']??''); $idDraft=(string)($siteDraft['id']??'');
         $contextPub=$context;   $contextPub['site']=in_array($idPub,$siteIds,true)?$idPub:'primary';
         $contextDraft=$context; $contextDraft['site']=in_array($idDraft,$siteIds,true)?$idDraft:'primary';

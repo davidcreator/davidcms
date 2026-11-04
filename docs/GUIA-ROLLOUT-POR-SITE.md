@@ -63,3 +63,9 @@ A sonda do Admin sempre usa um ID allowlistado.
 
 Aplicar os 7 arquivos completos deste pacote (o guia é novo) e rodar
 `bash tools/verify-checksums.sh && bash tools/repo-health.sh`.
+
+**Resolvido pela frente T:** a sonda `schedule_probe_site` ganhou a opção padrão
+vazia, que faz `decide()` seguir o **ID estável** da política publicada em vez
+de cair sempre em `primary`. Escolher um ID explicitamente continua soberano
+(frente O); a prévia comparativa propaga o mesmo ID aos dois painéis, como a R
+faz no Catalog.

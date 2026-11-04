@@ -65,3 +65,9 @@ Selecionar **`shop`** na prévia mostra os dois painéis como `shop`, com a fita
 
 Aplicar os 5 arquivos completos deste pacote (o guia é novo) e rodar
 `bash tools/verify-checksums.sh && bash tools/repo-health.sh`.
+
+**Resolvido pela frente T:** sem `preview_site`, a prévia deixa de comparar
+`shop` publicado × `primary` rascunho quando o rascunho altera o host. O ID
+estável da política **publicada** (R) passa a ser propagado aos dois painéis
+por `byId()`, e a sonda local de hosts usa a política publicada. Com um ID
+escolhido no `<select>`, o comportamento da Q permanece idêntico.
