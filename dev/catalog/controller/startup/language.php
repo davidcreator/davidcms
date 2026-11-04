@@ -10,8 +10,8 @@
  * Ordem de decisão: ?language=codigo validado contra os diretórios existentes
  * → persiste na sessão; senão sessão; senão o padrão da app (en-us).
  * Substitui o serviço language montado pelo framework (contrato estável).
- * F13-K: o idioma do site (frente J) entra como DEFAULT por host, depois da
- * escolha explicita (?language=) e da sessao, antes do default do painel.
+ * F13-P: a decisao migrou para LanguageNegotiator em startup/theme;
+ * esta pre-acao aplica o idioma efetivo (K) e fecha a limitacao da L.
  * Nao toca no banco: a tabela rms_language entra na governança da UI de
  * idiomas (tarefa futura), aqui o filesystem é a fonte da verdade.
  */
@@ -20,74 +20,37 @@ namespace Reamur\Catalog\Controller\Startup;
 class Language extends \Reamur\System\Engine\Controller {
 
     /**
-     * Escolhe e grava o idioma ativo (silent fallback — nunca explode erro).
-     *
-     * F4-02 (ADR 0025): o gate deixa de ser “dir existe” para ser
-     * “status=1 na rms_language E dir existe” — a tela localization/language
-     * governa o que é publicável. O default também deixa de ser só o
-     * language_directory do configfile: primeiro vale config_language_catalog
-     * (persistido em rms_setting via F4-01 + injetado no Config pela pre-ação
-     * startup/setting, que agora roda ANTES desta).
+     * Aplica o idioma ativo (silent fallback — nunca explode erro).
+     * F4-02 (ADR 0025) continua governando os codigos publicaveis; a selecao
+     * é feita uma unica vez em LanguageNegotiator::resolve() pela pre-acao
+     * startup/theme, usando getEnabledCodes() (status=1 + diretorio real).
      */
     public function index(): void {
-        $this->load->model('localization/language');
-
-        $enabled = $this->model_localization_language->getEnabledCodes();
-
-        // Default resolvido: config gravada no painel → cair p/ o configfile
-        $default = (string)$this->config->get(
-            'config_language_catalog',
-            (string)$this->config->get('language_directory', 'en-us')
+        // F13-P: startup/theme (que roda ANTES) ja resolveu o idioma efetivo
+        // com LanguageNegotiator e gravou a sessao. Aqui apenas APLICAMOS o
+        // resultado: sem segunda decisao, sem segunda leitura e sem escrita.
+        // A precedencia ?language= > sessao > site > default (K) fica intacta.
+        $code = \Reamur\System\Library\LanguageNegotiator::clean(
+            (string)$this->config->get('catalog_theme_language_effective', '')
         );
-
-        if (!in_array($default, $enabled, true)) {
-            $default = (string)($enabled[0] ?? 'en-us');
+        // Fail-closed para instalacao parcial (theme sem a P): cai no default
+        // allowlistado do painel/configfile, nunca em texto livre do request.
+        if (!\Reamur\System\Library\LanguageNegotiator::isCode($code)) {
+            $code = \Reamur\System\Library\LanguageNegotiator::clean(
+                (string)$this->config->get('config_language_catalog',
+                    (string)$this->config->get('language_directory', 'en-us'))
+            );
         }
+        if (!\Reamur\System\Library\LanguageNegotiator::isCode($code)) $code = 'en-us';
 
-        // F13-K: `catalog_theme_site_language` foi publicado pela pre-acao
-        // startup/theme, que roda ANTES desta. So um codigo allowlistado E
-        // ativo no painel pode virar default; qualquer divergencia e ignorada.
-        // Nenhum dado do request entra aqui (o host ja foi resolvido na J).
-        $siteLanguage = strtolower((string)$this->config->get('catalog_theme_site_language', ''));
-        $siteOk = $siteLanguage !== ''
-            && in_array($siteLanguage, ['pt-br', 'en-us', 'es-eu'], true)
-            && in_array($siteLanguage, $enabled, true);
-
-        $session = $this->registry->get('session');
-        $stored  = ($session instanceof \Reamur\System\Library\Session)
-            ? (string)($session->data['language'] ?? '')
-            : '';
-
-        $requested = strtolower(preg_replace(
-            '/[^a-zA-Z-]/',
-            '',
-            (string)($this->request->get['language'] ?? '')
-        ));
-
-        // Precedencia (F13-K): ?language= > sessao > idioma do site > default.
-        // As duas primeiras permanecem EXATAMENTE como no legado F2-3/F4-02.
-        if ($requested !== '' && in_array($requested, $enabled, true)) {
-            $code = $requested;
-            $languageSource = 'request';
-        } elseif ($stored !== '' && in_array($stored, $enabled, true)) {
-            $code = $stored; // sessão antiga vale, mas só se o idioma continuou ativo
-            $languageSource = 'session';
-        } elseif ($siteOk) {
-            $code = $siteLanguage;
-            $languageSource = 'site';
-        } else {
-            $code = $default;
-            $languageSource = 'default';
+        $source = (string)$this->config->get('catalog_theme_language_source', 'default');
+        if (!in_array($source, \Reamur\System\Library\LanguageNegotiator::SOURCES, true)) {
+            $source = 'default';
         }
-
-        if ($session instanceof \Reamur\System\Library\Session && $stored !== $code) {
-            $session->data['language'] = $code;
-        }
-
         // Origem allowlistada (rastreabilidade, sem dado do visitante).
-        $this->config->set('catalog_theme_language_source', $languageSource);
+        $this->config->set('catalog_theme_language_source', $source);
 
-        // Substitui o idioma montado no framework pelo escolhido para a requisição
+        // Substitui o idioma montado no framework pelo escolhido para a requisicao
         $this->registry->set('language', new \Reamur\System\Library\Language($code));
 
         $this->config->set('language_directory', $code);

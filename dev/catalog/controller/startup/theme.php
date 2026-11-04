@@ -6,6 +6,7 @@
  *  - tokens de cor e cena (compatibilidade com o legado F10-03);
  *  - configuracao Three.js allowlisted (catalog_theme_three);
  *  - globais Twig seguros (theme / theme_scene) visiveis em TODAS as telas.
+ * F13-P: idioma efetivo unificado (K+L) antes do contexto das condicoes.
  * F13-O: rollout pode ser limitado a sites allowlistados (frentes H+J).
  * Nenhuma regra escreve arquivo, executa codigo ou acessa dado sensivel.
  */
@@ -24,16 +25,46 @@ class Theme extends \Reamur\System\Engine\Controller {
         $published = (array)($effective['published'] ?? []);
         $draft     = (array)($effective['draft'] ?? []);
         $selfSlug  = (string)($effective['slug'] ?? '');
-        $context   = $this->context();
-        $schedule  = $this->theme_schedule->normalize($draft['schedule'] ?? null);
         // F13-O: o site da DECISAO vem da politica PUBLICADA (estavel). Usar a
         // politica do config efetivo criaria ciclo: a escolha do config ja
         // depende da decisao. Nenhuma query nova: match() e puro.
+        // F13-P: este bloco sobe para ANTES do contexto — o idioma do site
+        // precisa estar disponivel na negociacao e nas condicoes (frente L).
         $publishedSites = $this->theme_sites->normalize($published['sites'] ?? null) ?? [];
         $siteHost = (string)($this->request->server['HTTP_HOST'] ?? '');
         $siteSeed = $this->theme_sites->match($publishedSites, $siteHost);
         $siteIdSeed = (string)($siteSeed['id'] ?? '');
         $siteIdSeed = in_array($siteIdSeed, $this->theme_sites->ids(), true) ? $siteIdSeed : 'primary';
+
+        // F13-P: uma UNICA decisao de idioma, antes de montar o contexto.
+        // A leitura de idiomas migra de startup/language para ca (mesmo 1
+        // SELECT, nenhuma query nova no total). O contexto das condicoes
+        // passa a ver o idioma EFETIVO, fechando a limitacao da frente L.
+        $this->load->model('localization/language');
+        $langSession = $this->registry->get('session');
+        $sessData = ($langSession instanceof \Reamur\System\Library\Session) ? $langSession->data : [];
+        $neg = \Reamur\System\Library\LanguageNegotiator::resolve([
+            'enabled'      => $this->model_localization_language->getEnabledCodes(),
+            'default'      => (string)$this->config->get('config_language_catalog',
+                                (string)$this->config->get('language_directory', 'en-us')),
+            'requested'    => (string)($this->request->get['language'] ?? ''),
+            'stored'       => (string)($sessData['language'] ?? ''),
+            'stored_site'  => (string)($sessData['language_site'] ?? ''),
+            'site'         => $siteIdSeed,
+            'site_language'=> (string)($siteSeed['language'] ?? ''),
+        ]);
+        if ($langSession instanceof \Reamur\System\Library\Session && $neg['store']) {
+            $langSession->data['language'] = $neg['code'];
+            $langSession->data['language_site'] = $neg['site'];
+        }
+        $this->config->set('catalog_theme_language_effective', $neg['code']);
+        $this->config->set('catalog_theme_language_source', $neg['source']);
+        $this->config->set('catalog_theme_language_site_changed', $neg['site_changed']);
+
+        $context   = $this->context();
+        // F13-P: substitui o default do configfile pelo idioma efetivo.
+        $context['language'] = $neg['code'];
+        $schedule  = $this->theme_schedule->normalize($draft['schedule'] ?? null);
         $decision  = $this->theme_schedule->decide(
             $schedule, $this->theme_schedule->now(),
             hash('sha256', (string)$this->session->getId()),

@@ -47,11 +47,14 @@ Admin, o card **Sites e domínios** mostra um badge com o idioma efetivo do site
 ativo e o ID allowlistado. `?language=` continua permitindo trocar a qualquer
 momento.
 
-## Limitação honesta
+## Limitação honesta — resolvida pela frente P
 
-Se o visitante **já tem** um idioma na sessão (ex.: navegou antes noutro host
-com o mesmo cookie), a sessão prevalece — preservar o legado teve prioridade
-sobre invalidar sessões. A troca explícita via `?language=` sempre funciona.
+A sessão de idioma agora registra também o **site** de origem
+(`language_site`). Se o visitante troca de site com o mesmo cookie, o idioma
+herdado do outro host é descartado e vale o idioma do site atual. Dentro do
+**mesmo** site a sessão continua prevalecendo, e a troca explícita via
+`?language=` continua soberana. Sessões antigas (sem `language_site`)
+mantêm o comportamento da K: nenhuma invalidação retroativa.
 Não houve MySQL real, sessão autenticada, browser com rede, DNS/vhost, E2E,
 staging ou deploy: validação com PHP 8.5 WASM, Twig 3.14 e mocks.
 **CI verde ≠ release aprovada.**

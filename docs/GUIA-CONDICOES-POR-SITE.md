@@ -79,10 +79,11 @@ banco, chave de tradução, CSS, schema, manifesto ou global Twig novo. Nenhum
 `|raw`, `<script>` inline, `fetch`/`eval`/`innerHTML` novo, dado do visitante
 em HTML, vhost/DNS ou upload. Os 14 `CHECKSUMS*.txt` permanecem intactos.
 
-**Limitação conhecida:** `startup/language` (frente K) roda **depois** de
-`startup/theme`, então `context['language']` continua sendo o default do
-config, não o idioma efetivo por domínio. Para condições por domínio use
-`site`; a frente L não altera essa precedência para não reabrir a K.
+**Resolvido pela frente P:** `context['language']` agora é o idioma
+**efetivo** (negociado uma única vez por `LanguageNegotiator` antes do
+`ThemeSnapshot`), não o default do configfile. Regras `language eq en-us`
+passam a casar com o idioma escolhido via `?language=`, sessão ou domínio.
+A dimensão `site` continua disponível e a precedência da K foi preservada.
 
 Aplicar os 6 arquivos completos deste pacote (o guia é novo) e rodar
 `bash tools/verify-checksums.sh && bash tools/repo-health.sh`.
