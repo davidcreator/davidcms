@@ -335,3 +335,87 @@
 .kaz-statusbar__module { color: #a7f3d0; font-weight: 600; }
 .kaz-statusbar__badge { color: #fbbf24; }
 .kaz-btn--ghost { background: transparent; border: 1px solid #3f3f46; color: #a1a1aa; }
+
+
+/* ==========================================================================
+   Frente AA — interatividade total, tamanhos de tela e pagina cheia
+   ========================================================================== */
+.kaz-linkbtn { font: inherit; color: inherit; cursor: pointer; border: 0;
+               background: transparent; padding: 0; text-align: left; }
+.kaz-linkbtn:focus-visible { outline: 2px solid var(--kaz-accent, #31efb8); }
+.kaz-topbar__page.kaz-linkbtn { color: #a1a1aa; font-size: 11px; }
+.kaz-topbar__page.kaz-linkbtn:hover { color: #fafafa; }
+.kaz-avatar.kaz-linkbtn { display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%; background: #7b61ff; color: #fff;
+  font-size: 11px; font-weight: 700; }
+.kaz-badge.kaz-linkbtn { cursor: pointer; }
+.kaz-badge--ok.kaz-linkbtn:hover { filter: brightness(1.15); }
+.kaz-badge--dirty.kaz-linkbtn:hover { filter: brightness(1.15); }
+.kaz-nav-full-local, .kaz-nav-full-page, .kaz-nav-full-exit { white-space: nowrap; }
+.kaz-nav-full-page { color: #a7f3d0; }
+
+/* barra de tamanhos de tela */
+.kaz-screenbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 6px 10px; background: #202024; border-bottom: 1px solid #313138;
+  font-size: 10px; color: #a1a1aa; }
+.kaz-screenbar[hidden], [hidden] { display: none !important; }
+.kaz-screenbar__title { text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.kaz-screenbar__select, .kaz-screenbar__num {
+  background: #18181b; border: 1px solid #3f3f46; color: #e7e7ea;
+  border-radius: 4px; padding: 3px 6px; font-size: 10px; }
+.kaz-screenbar__num { width: 62px; font-variant-numeric: tabular-nums; }
+.kaz-screenbar__x { color: #71717a; }
+.kaz-screenbar__size { color: #a7f3d0; font-variant-numeric: tabular-nums; font-weight: 600; }
+.kaz-screenbar__sep { width: 1px; height: 16px; background: #3f3f46; margin: 0 4px; }
+.kaz-screenbar .kaz-btn { font-size: 10px; padding: 3px 7px; }
+
+/* frame de dispositivo envolvendo o board da cena */
+.kaz-screen { position: relative; margin: 0 auto; width: 960px; height: 540px;
+  background: #ffffff; border: 1px dashed #52525b; border-radius: 4px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.45); display: flex;
+  align-items: center; justify-content: center; }
+.kaz-screen__label { position: absolute; top: -22px; left: 0; font-size: 10px;
+  color: #a1a1aa; letter-spacing: .04em; }
+.kaz-screen .kaz-board { position: relative; }
+.kaz-statusbar__screen { color: #a1a1aa; font-variant-numeric: tabular-nums; }
+.kaz-swatches .kaz-swatch { width: 22px; height: 22px; padding: 0; border: 2px solid #3f3f46;
+  border-radius: 4px; cursor: pointer; }
+.kaz-swatches .kaz-swatch:hover { border-color: #31efb8; }
+.kaz-token.kaz-linkbtn { display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 6px; border-radius: 5px; color: #d4d4d8; font-size: 11px; }
+.kaz-token.kaz-linkbtn:hover { background: #26262c; }
+.kaz-type-sample.kaz-linkbtn { display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px; background: #26262c; border-radius: 6px; color: #d4d4d8; }
+.kaz-type-sample.kaz-linkbtn:hover { border-color: #31efb8; }
+.kaz-panel__actions { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+
+/* densidade das colunas (sobrescreve a declaracao da frente Y) */
+.kaz-shell[data-kaz-density="compact"] .kaz-workspace { grid-template-columns: 200px minmax(0,1fr) 220px; }
+.kaz-shell[data-kaz-density="normal"]  .kaz-workspace { grid-template-columns: 236px minmax(0,1fr) 264px; }
+.kaz-shell[data-kaz-density="wide"]    .kaz-workspace { grid-template-columns: 300px minmax(0,1fr) 340px; }
+.kaz-shell[data-kaz-collapsed~="left"] .kaz-workspace { grid-template-columns: 0 minmax(0,1fr) 264px; }
+.kaz-shell[data-kaz-collapsed~="right"] .kaz-workspace { grid-template-columns: 236px minmax(0,1fr) 0; }
+.kaz-shell[data-kaz-collapsed~="left"][data-kaz-collapsed~="right"] .kaz-workspace { grid-template-columns: 0 minmax(0,1fr) 0; }
+.kaz-shell[data-kaz-collapsed~="left"] .kaz-sidebar--left,
+.kaz-shell[data-kaz-collapsed~="right"] .kaz-sidebar--right { display: none; }
+
+/* tela cheia nesta aba */
+.kaz-shell[data-kaz-fullscreen="1"] { position: fixed; inset: 0; z-index: 9998;
+  margin: 0; border-radius: 0; border: 0; height: 100vh; width: 100vw; }
+.kaz-shell[data-kaz-fullscreen="1"] .kaz-workspace { height: calc(100vh - 128px); }
+
+/* tela cheia em OUTRA pagina (controller omite header/footer do Admin) */
+.kaz-shell[data-kaz-page-mode="fullscreen"] { position: fixed; inset: 0; z-index: 9999;
+  margin: 0; border-radius: 0; border: 0; height: 100vh; width: 100vw; }
+.kaz-shell[data-kaz-page-mode="fullscreen"] .kaz-workspace { height: calc(100vh - 168px); }
+.kaz-shell[data-kaz-page-mode="fullscreen"] .kaz-extra,
+.kaz-shell[data-kaz-page-mode="fullscreen"] .kaz-io { max-height: 28vh; overflow: auto; }
+body:has(.kaz-shell[data-kaz-page-mode="fullscreen"]) { overflow: hidden; background: #18181b; }
+
+@media (max-width: 1100px) {
+  .kaz-screenbar { gap: 4px; }
+  .kaz-screenbar__select { max-width: 150px; }
+}
+@media (forced-colors: active) {
+  .kaz-swatch, .kaz-linkbtn { border: 2px solid Highlight; }
+}

@@ -1,4 +1,4 @@
-{# KAZTheme-Editor — frente Y (workspace inspirado no Penpot).
+{# KAZTheme-Editor — frente AA (interatividade total, tamanhos de tela, pagina cheia).
    Ponto de montagem dentro do formulário do tema. Sem filtro raw, sem tag
    script inline, sem dados do request. O JSON da cena vem do controller já
    escapado para atributo; o JS reconstrói tudo via DOM. O textarea é um campo
@@ -9,7 +9,9 @@
      data-kaz-surface="{{ surface|e('html_attr') }}"
      data-kaz-saved="{{ kaz_scene_saved ? '1' : '0' }}"
      data-kaz-dirty="0"
-     data-kaz-version="1">
+     data-kaz-version="1"
+     data-kaz-page-mode="{{ kaz_fullscreen_page ? 'fullscreen' : 'normal' }}"
+     data-kaz-density="normal">
   <form id="kaz-theme-form" method="post" action="{{ action }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   {# ---------- NAVBAR (Penpot: main menu, toolbar, history, users, status) ---------- #}
@@ -18,7 +20,7 @@
       <span class="kaz-brand__mark" aria-hidden="true"></span>
       <span class="kaz-topbar__file"><strong>KAZTheme-Editor</strong> · {{ heading_title }}</span>
       <span class="kaz-topbar__sep" aria-hidden="true"></span>
-      <span class="kaz-topbar__page">Página 1</span>
+      <button class="kaz-topbar__page kaz-linkbtn" type="button" data-kaz-action="pages" title="Abrir painel de páginas">Página 1</button>
       <span class="kaz-badge kaz-badge--muted">kaztheme-scene/v1</span>
     </div>
 
@@ -70,6 +72,9 @@
       <span class="kaz-topbar__state">{{ theme_state == 'published' ? text_state_published : text_state_draft }}</span>
       <button class="kaz-btn kaz-btn--primary kaz-nav-save" type="submit" form="kaz-theme-form" data-kaz-save {% if not can_modify %}disabled{% endif %}>{{ button_save }}</button>
       <a class="kaz-btn kaz-nav-back" href="{{ cancel }}">{{ button_back }}</a>
+      <button class="kaz-btn kaz-nav-full-local" type="button" data-kaz-action="fullscreen-local" title="Tela cheia nesta aba (F)" aria-label="Tela cheia nesta aba">⛶ Tela cheia</button>
+      {% if kaz_fullscreen_page %}<a class="kaz-btn kaz-nav-full-exit" href="{{ action }}">Sair da página cheia</a>
+      {% else %}<a class="kaz-btn kaz-nav-full-page" href="{{ action }}&amp;kaz_fullscreen=1" target="_blank" rel="noopener noreferrer" title="Abrir editor em outra página, sem chrome do Admin">↗ Tela cheia em nova página</a>{% endif %}
     <div class="kaz-topbar__right">
       <button class="kaz-tool" type="button" data-kaz-action="undo" title="Desfazer (Ctrl+Z)" aria-label="Desfazer">
         <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><path d="M7 5L3 9l4 4M3 9h7a4 4 0 010 8h-1"/></svg>
@@ -78,9 +83,9 @@
         <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 5l4 4-4 4M15 9H8a4 4 0 000 8h1"/></svg>
       </button>
       <span class="kaz-toolbar__sep" aria-hidden="true"></span>
-      <span class="kaz-avatar" title="1 editor local" aria-label="1 editor local">1</span>
-      <span class="kaz-badge kaz-badge--dirty" data-kaz-dirty-badge hidden>Alterações não salvas</span>
-      <span class="kaz-badge kaz-badge--ok" data-kaz-file-status>Salvo</span>
+      <button class="kaz-avatar kaz-linkbtn" type="button" data-kaz-action="users" title="Editores locais" aria-label="Editores locais">1</button>
+      <button class="kaz-badge kaz-badge--dirty kaz-linkbtn" type="button" data-kaz-action="revert" data-kaz-dirty-badge hidden title="Descartar alterações da cena">Alterações não salvas ↺</button>
+      <button class="kaz-badge kaz-badge--ok kaz-linkbtn" type="submit" form="kaz-theme-form" data-kaz-file-status title="Salvar o tema">Salvo</button>
     </div>
   </header>
   {% if error %}<div class="kaz-alert kaz-alert--error">{{ error }}</div>{% endif %}
@@ -105,7 +110,8 @@
         <ul class="kaz-pages">
           <li class="kaz-pages__item kaz-pages__item--on"><span class="kaz-page-ico" aria-hidden="true"></span>Página 1 <span class="kaz-panel__count">1 board</span></li>
         </ul>
-        <p class="kaz-panel__note">Uma página por tema. A cena <code>kaztheme-scene/v1</code> é o board desta página.</p>
+        <button class="kaz-btn kaz-btn--primary kaz-btn--wide" type="button" data-kaz-action="goto-board">Ir para o board</button>
+        <p class="kaz-panel__note">Uma página por tema. A cena <code>kaztheme-scene/v1</code> é o board desta página. O botão volta ao canvas e ajusta o zoom.</p>
       </section>
 
       <section class="kaz-panel" data-kaz-panel="layers">
@@ -135,14 +141,14 @@
         <p class="kaz-panel__title kaz-panel__title--spaced">Paleta de cores</p>
         <div class="kaz-swatches" data-kaz-swatches></div>
         <p class="kaz-panel__title kaz-panel__title--spaced">Tipografia</p>
-        <div class="kaz-type-sample"><span class="kaz-type-sample__aa">Aa</span><span>Título · system-ui</span></div>
+        <button class="kaz-type-sample kaz-linkbtn" type="button" data-kaz-action="add-text" title="Inserir camada de texto"><span class="kaz-type-sample__aa">Aa</span><span>Título · system-ui</span></button>
         <p class="kaz-panel__note">Os 6 blocos inserem camadas reais, allowlistadas e validadas no contrato <code>kaztheme-scene/v1</code>. Nenhum bloco altera o formulário sozinho.</p>
       </section>
 
       <section class="kaz-panel" data-kaz-panel="tokens" hidden>
         <p class="kaz-panel__title">Design tokens</p>
-        <div class="kaz-token"><span class="kaz-token__dot" data-kaz-token="primary"></span><span>primary</span><code data-kaz-token-value="primary"></code></div>
-        <div class="kaz-token"><span class="kaz-token__dot" data-kaz-token="surface"></span><span>surface</span><code data-kaz-token-value="surface"></code></div>
+        <button class="kaz-token kaz-linkbtn" type="button" data-kaz-token-apply="primary" title="Aplicar primary à camada selecionada"><span class="kaz-token__dot" data-kaz-token="primary"></span><span>primary</span><code data-kaz-token-value="primary"></code></button>
+        <button class="kaz-token kaz-linkbtn" type="button" data-kaz-token-apply="surface" title="Aplicar surface à camada selecionada"><span class="kaz-token__dot" data-kaz-token="surface"></span><span>surface</span><code data-kaz-token-value="surface"></code></button>
         <p class="kaz-panel__note">Tokens espelham os campos allowlistados do tema. Alterar o papel de uma camada para <code>primary</code> ou <code>surface</code> continua escrevendo nesses campos.</p>
       </section>
 
@@ -174,15 +180,45 @@
 
     {# CENTRO: réguas + viewport infinito + board #}
     <div class="kaz-center">
+      <div class="kaz-screenbar" data-kaz-screenbar>
+        <span class="kaz-screenbar__title">Tela</span>
+        <select class="kaz-screenbar__select" data-kaz-screen aria-label="Tamanho da tela">
+          <option value="tema">Tema (cena)</option>
+          <option value="desktop">Desktop · 1440 × 900</option>
+          <option value="laptop">Laptop · 1280 × 800</option>
+          <option value="tablet">Tablet · 768 × 1024</option>
+          <option value="mobile">Mobile · 390 × 844</option>
+          <option value="wide">Widescreen · 1920 × 1080</option>
+          <option value="custom">Personalizado</option>
+        </select>
+        <input class="kaz-screenbar__num" type="number" id="kaz-screen-w" data-kaz-screen-w min="320" max="3840" step="8" value="960" aria-label="Largura da tela">
+        <span class="kaz-screenbar__x">×</span>
+        <input class="kaz-screenbar__num" type="number" id="kaz-screen-h" data-kaz-screen-h min="240" max="2160" step="8" value="540" aria-label="Altura da tela">
+        <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-action="screen-apply">Aplicar</button>
+        <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-action="screen-fit" title="Ajustar zoom à tela">Ajustar à tela</button>
+        <span class="kaz-screenbar__size" data-kaz-screen-size>960 × 540</span>
+        <span class="kaz-screenbar__sep" aria-hidden="true"></span>
+        <span class="kaz-screenbar__title">Layout</span>
+        <select class="kaz-screenbar__select" data-kaz-density aria-label="Densidade das colunas">
+          <option value="compact">Compacto</option>
+          <option value="normal" selected>Normal</option>
+          <option value="wide">Amplo</option>
+        </select>
+        <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-action="toggle-left" title="Mostrar / ocultar painel esquerdo" aria-label="Alternar painel esquerdo">◧</button>
+        <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-action="toggle-right" title="Mostrar / ocultar inspector" aria-label="Alternar inspector">◨</button>
+      </div>
       <div class="kaz-ruler kaz-ruler--corner" aria-hidden="true"></div>
       <div class="kaz-ruler kaz-ruler--h" data-kaz-ruler-h aria-hidden="true"></div>
       <div class="kaz-ruler kaz-ruler--v" data-kaz-ruler-v aria-hidden="true"></div>
       <div class="kaz-viewport" data-kaz-viewport data-kaz-tool-state="move">
+        <div class="kaz-screen" data-kaz-screen-frame>
+          <div class="kaz-screen__label"><span data-kaz-screen-frame-label>Tema · 960 × 540</span></div>
         <div class="kaz-board" data-kaz-board>
           <div class="kaz-board__label"><span class="kaz-board__dot" aria-hidden="true"></span>Tema · <span data-kaz-board-size>960 × 540</span></div>
           <div class="kaz-board__frame">
             <svg data-kaz-canvas viewBox="0 0 960 540" preserveAspectRatio="xMidYMid meet" aria-label="Canvas KAZTheme-Editor"></svg>
           </div>
+        </div>
         </div>
       </div>
           <div class="kaz-modules" data-kaz-modules>
@@ -479,6 +515,11 @@
         <p class="kaz-panel__title">Protótipo</p>
         <p class="kaz-panel__note">O KAZTheme-Editor edita a <strong>cena do tema</strong>, não um protótipo navegável. Não há interações, fluxos ou View mode: a cena é dado de edição e versionamento (<code>kaz_scene</code>), não renderização no site público.</p>
         <p class="kaz-panel__note">Na frente Z o editor é o <strong>dono absoluto</strong> da página: os 14 módulos do formulário de tema (Geral, Herança, Tokens, Three.js, Cena 3D, Seções, Agenda, Mídia, Modelos, Sites, Componentes, Condições, Prévia e Templates) ficam na sidebar esquerda, além do pacote, do iframe de prévia e do histórico de revisões. Todos os <code>name=</code> originais foram preservados.</p>
+        <div class="kaz-panel__actions">
+          <button class="kaz-btn kaz-btn--primary kaz-btn--wide" type="button" data-kaz-module="comparar">Ir para a prévia do tema</button>
+          <button class="kaz-btn kaz-btn--wide" type="button" data-kaz-zoom="fit">Ajustar zoom à tela</button>
+          <button class="kaz-btn kaz-btn--wide" type="button" data-kaz-action="fullscreen-local">Tela cheia nesta aba</button>
+        </div>
         <p class="kaz-panel__note">Para conferir o resultado no Admin, use a prévia de tema já existente. As abas <em>Protótipo</em> e <em>Inspecionar</em> existem para manter o layout de trabalho familiar de um editor de design.</p>
       </section>
 
@@ -503,7 +544,8 @@
     <span class="kaz-status" data-kaz-status aria-live="polite"></span>
     <span class="kaz-statusbar__module" data-kaz-module-label>Design</span>
     <span class="kaz-statusbar__badge" data-kaz-form-dirty hidden>Formulário alterado</span>
-    <span class="kaz-statusbar__version">Frente Z · motor total</span>
+    <span class="kaz-statusbar__screen" data-kaz-status-screen>Tema · 960 × 540</span>
+    <span class="kaz-statusbar__version">Frente AA · interatividade total</span>
   </footer>
 
   {# ---------- IO: campo REAL do formulário (persistência da V) ---------- #}

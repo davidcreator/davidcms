@@ -1,4 +1,4 @@
-/* KAZTheme-Editor — frentes U/V/W/X + Y (workspace Penpot).
+/* KAZTheme-Editor — frentes U/V/W/X + Y + Z + AA (workspace Penpot).
    Editor de temas estruturado: canvas SVG + árvore de camadas + inspector.
    Apenas DOM puro: sem rede, codigo executavel do usuario, WebGL, Three.js,
    upload ou escrita remota. A cena e PERSISTENTE (frente V): volta ao abrir
@@ -7,7 +7,11 @@
    A frente Y reformula APENAS a interface: navbar/ferramentas, 3 colunas,
    abas, viewport infinito com zoom/pan, réguas, paleta, tokens, histórico,
    inspector com abas e barra de status. Nenhum contrato de dados mudou.
-   A conexão com o tema usa SOMENTE campos allowlistados do formulário. */
+   A conexão com o tema usa SOMENTE campos allowlistados do formulário.
+   A frente AA torna TODOS os controles do workspace operacionais e adiciona
+   tamanhos de tela, densidade de colunas e modo tela cheia (nesta aba e em
+   outra pagina). Screen/densidade/fullscreen sao estado LOCAL descartavel:
+   nao entram em kaz_scene_json, no baseline ou em armazenamento. */
 (function (document, window) {
   'use strict';
   var NS = 'http://www.w3.org/2000/svg';
@@ -23,6 +27,12 @@
   var ZOOM_MIN = 0.25, ZOOM_MAX = 2, ZOOM_STEP = 0.25;
   var zoom = 1, panX = 0, panY = 0, tool = 'move';
   var tabLeft = 'layers', tabRight = 'design';
+  /* ---- Frente AA: tamanhos de tela, densidade, colapso e fullscreen ----- */
+  var SCREENS = { tema: null, desktop: [1440, 900], laptop: [1280, 800],
+                  tablet: [768, 1024], mobile: [390, 844], wide: [1920, 1080] };
+  var DENSITY = { compact: [200, 220], normal: [236, 264], wide: [300, 340] };
+  var screenId = 'tema', screenSize = { w: W, h: H }, density = 'normal';
+  var collapsed = { left: false, right: false }, fullscreenLocal = false;
   var LEFT_TABS = ['pages', 'layers', 'assets', 'tokens', 'history'];
   var RIGHT_TABS = ['design', 'prototype', 'inspect'];
 
@@ -203,6 +213,8 @@
     var box = root.querySelector('[data-kaz-modules]');
     if (box) box.hidden = stateModule === 'design';
     if (viewport) viewport.hidden = stateModule !== 'design';
+    var sb = root.querySelector('[data-kaz-screenbar]');
+    if (sb) sb.hidden = stateModule !== 'design';
     var links = root.querySelectorAll('button[data-kaz-module]');
     for (i = 0; i < links.length; i++) {
       n = links[i];
@@ -319,6 +331,83 @@
   /* ---- Frente Y: chrome do workspace ---------------------------------- */
   /* Tudo com createElement/setAttribute/textContent/style; nenhum markup do
      usuario e injetado, nenhum codigo dinamico, nenhuma rede. */
+  /* ---- Frente AA: tela, densidade, fullscreen e acoes de conveniencia ---- */
+  function screenBox() { return root.querySelector('[data-kaz-screen-frame]'); }
+  function setScreen(id) {
+    if (id !== 'custom' && !Object.prototype.hasOwnProperty.call(SCREENS, id)) return false;
+    screenId = id;
+    if (id === 'tema') screenSize = { w: scene.canvas.w, h: scene.canvas.h };
+    else if (id === 'custom') {
+      var wi = root.querySelector('[data-kaz-screen-w]'), hi = root.querySelector('[data-kaz-screen-h]');
+      screenSize = { w: clamp(Number(wi && wi.value) || 960, 320, 3840),
+                     h: clamp(Number(hi && hi.value) || 540, 240, 2160) };
+    } else screenSize = { w: SCREENS[id][0], h: SCREENS[id][1] };
+    paintScreen(); return true;
+  }
+  function setScreenCustom(w, h) {
+    var wi = root.querySelector('[data-kaz-screen-w]'), hi = root.querySelector('[data-kaz-screen-h]');
+    if (wi) wi.value = String(clamp(Number(w) || 960, 320, 3840));
+    if (hi) hi.value = String(clamp(Number(h) || 540, 240, 2160));
+    return setScreen('custom');
+  }
+  function paintScreen() {
+    var box = screenBox();
+    if (box) { box.style.width = screenSize.w + 'px'; box.style.height = screenSize.h + 'px'; }
+    var sel = root.querySelector('[data-kaz-screen]');
+    if (sel) sel.value = screenId;
+    var wi = root.querySelector('[data-kaz-screen-w]'), hi = root.querySelector('[data-kaz-screen-h]');
+    if (wi && screenId !== 'custom') wi.value = String(screenSize.w);
+    if (hi && screenId !== 'custom') hi.value = String(screenSize.h);
+    var label = screenId === 'tema' ? 'Tema' : (screenId === 'custom' ? 'Personalizado' : screenId);
+    var txt = label + ' · ' + screenSize.w + ' × ' + screenSize.h;
+    var size = root.querySelector('[data-kaz-screen-size]');
+    if (size) size.textContent = screenSize.w + ' × ' + screenSize.h;
+    var fl = root.querySelector('[data-kaz-screen-frame-label]');
+    if (fl) fl.textContent = txt;
+    var st = root.querySelector('[data-kaz-status-screen]');
+    if (st) st.textContent = txt;
+    root.setAttribute('data-kaz-screen-id', screenId);
+    root.setAttribute('data-kaz-screen-w', String(screenSize.w));
+    root.setAttribute('data-kaz-screen-h', String(screenSize.h));
+  }
+  function setDensity(d) {
+    if (!Object.prototype.hasOwnProperty.call(DENSITY, d)) return false;
+    density = d; root.setAttribute('data-kaz-density', d);
+    say('layout ' + d + ' · ' + DENSITY[d][0] + 'px / ' + DENSITY[d][1] + 'px');
+    return true;
+  }
+  function togglePanel(side) {
+    if (side !== 'left' && side !== 'right') return false;
+    collapsed[side] = !collapsed[side];
+    var v = [];
+    if (collapsed.left) v.push('left');
+    if (collapsed.right) v.push('right');
+    if (v.length) root.setAttribute('data-kaz-collapsed', v.join(' '));
+    else root.removeAttribute('data-kaz-collapsed');
+    say('painel ' + side + (collapsed[side] ? ' oculto' : ' visível'));
+    return true;
+  }
+  function setFullscreenLocal(on) {
+    fullscreenLocal = !!on;
+    root.setAttribute('data-kaz-fullscreen', fullscreenLocal ? '1' : '0');
+    var d = document.documentElement || document.body;
+    try {
+      if (fullscreenLocal && d && d.requestFullscreen) d.requestFullscreen();
+      else if (!fullscreenLocal && document.exitFullscreen && document.fullscreenElement) document.exitFullscreen();
+    } catch (e) { /* sem Fullscreen API: permanece apenas o modo CSS */ }
+    say(fullscreenLocal ? 'tela cheia nesta aba' : 'tela cheia encerrada');
+    return fullscreenLocal;
+  }
+  function revertScene() {
+    scene = copy(baseline);
+    selected = scene.layers.length ? scene.layers[0].id : '';
+    history = [copy(scene)]; cursor = 0;
+    render(); say('alteracoes da cena descartadas'); return true;
+  }
+  function applyColor(c) {
+    if (!hex(c) || !selected) return false;
+    return set(selected, 'fill', c);
+  }
   function paintZoom() {
     if (board) board.setAttribute('style',
       'transform: translate(' + panX + 'px,' + panY + 'px) scale(' + zoom + ')');
@@ -333,7 +422,7 @@
   function fitZoom() {
     var vw = viewport && viewport.clientWidth ? viewport.clientWidth - 72 : 720;
     var vh = viewport && viewport.clientHeight ? viewport.clientHeight - 72 : 420;
-    var z = Math.min(vw / scene.canvas.w, vh / scene.canvas.h, 1);
+    var z = Math.min(vw / screenSize.w, vh / screenSize.h, 1);
     zoom = clamp(Math.round(z / ZOOM_STEP) * ZOOM_STEP, ZOOM_MIN, ZOOM_MAX);
     panX = 0; panY = 0; paintZoom();
     say('zoom ajustado ' + Math.round(zoom * 100) + '%'); return zoom;
@@ -401,8 +490,11 @@
   function paintSwatches() {
     if (!swatches || swatches.childNodes.length) return;
     ['#31efb8', '#7b61ff', '#0f172a', '#e2e8f0', '#ffffff', '#2563eb'].forEach(function (c) {
-      var s = el('span', 'kaz-swatch');
-      s.setAttribute('title', c); s.style.background = c; swatches.appendChild(s);
+      var s = el('button', 'kaz-swatch');
+      s.setAttribute('type', 'button');
+      s.setAttribute('data-kaz-swatch', c);
+      s.setAttribute('title', 'Aplicar ' + c + ' na camada selecionada');
+      s.style.background = c; swatches.appendChild(s);
     });
   }
   function paintTokens() {
@@ -569,7 +661,18 @@
   }
   function exportScene() {
     var s = JSON.stringify(scene, null, 2);
-    syncField(); say('cena exportada (' + scene.layers.length + ' camadas)');
+    syncField();
+    try {
+      if (window.Blob && window.URL && window.URL.createObjectURL && document.body) {
+        var url = window.URL.createObjectURL(new window.Blob([s], { type: 'application/json' }));
+        var a = document.createElement('a');
+        a.setAttribute('href', url); a.setAttribute('download', 'kaztheme-scene.json');
+        a.setAttribute('data-kaz-export-link', '1');
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        if (window.URL.revokeObjectURL) window.URL.revokeObjectURL(url);
+      }
+    } catch (e) { /* navegador sem download: o textarea continua sendo a fonte */ }
+    say('cena exportada (' + scene.layers.length + ' camadas)');
     return s;
   }
   function importScene(raw) {
@@ -645,8 +748,13 @@
     while (b && b !== root && !b.getAttribute('data-kaz-action') && !b.getAttribute('data-kaz-select')
            && !b.getAttribute('data-kaz-kind') && !b.getAttribute('data-kaz-block')
            && !b.getAttribute('data-kaz-tab') && !b.getAttribute('data-kaz-zoom')
-           && !b.getAttribute('data-kaz-tool') && !b.getAttribute('data-kaz-module')) b = b.parentNode;
+           && !b.getAttribute('data-kaz-tool') && !b.getAttribute('data-kaz-module')
+           && !b.getAttribute('data-kaz-swatch') && !b.getAttribute('data-kaz-token-apply')) b = b.parentNode;
     if (!b || b === root) return;
+    var sw = b.getAttribute('data-kaz-swatch');
+    if (sw) { applyColor(sw); return; }
+    var tk = b.getAttribute('data-kaz-token-apply');
+    if (tk) { applyColor(root.getAttribute('data-kaz-' + tk) || '#ffffff'); return; }
     var mod = b.getAttribute('data-kaz-module');
     if (mod) { setModule(mod); return; }
     var tab = b.getAttribute('data-kaz-tab');
@@ -679,9 +787,26 @@
     else if (act === 'bind') { applyBindings(); say('camadas aplicadas ao tema'); }
     else if (act === 'visible') set(selected, 'visible', !(layer(selected) || {}).visible);
     else if (act === 'lock') set(selected, 'locked', !(layer(selected) || {}).locked);
+    else if (act === 'pages') { setTab('pages'); setModule('design'); say('painel de paginas aberto'); }
+    else if (act === 'users') say('1 editor local · sessão Admin · sem colaboração em tempo real');
+    else if (act === 'revert') revertScene();
+    else if (act === 'goto-board') { setModule('design'); setTab('layers'); fitZoom(); say('board em foco'); }
+    else if (act === 'add-text') add('text');
+    else if (act === 'screen-apply') {
+      var sel = root.querySelector('[data-kaz-screen]');
+      setScreen(sel ? sel.value : 'tema'); fitZoom();
+    }
+    else if (act === 'screen-fit') fitZoom();
+    else if (act === 'toggle-left') togglePanel('left');
+    else if (act === 'toggle-right') togglePanel('right');
+    else if (act === 'fullscreen-local') setFullscreenLocal(!fullscreenLocal);
   });
   root.addEventListener('change', function (ev) {
     var f = ev.target;
+    var sc = f && f.hasAttribute && f.hasAttribute('data-kaz-screen') ? f.value : null;
+    if (sc) { setScreen(sc); fitZoom(); return; }
+    var dn = f && f.hasAttribute && f.hasAttribute('data-kaz-density') ? f.value : null;
+    if (dn) { setDensity(dn); return; }
     var key = f && f.getAttribute ? f.getAttribute('data-kaz-field') : null;
     if (!key || !selected) return;
     var v = f.type === 'checkbox' ? f.checked : f.value;
@@ -694,8 +819,15 @@
     if (ctrl && ev.key.toLowerCase() === 'z') { ev.preventDefault(); restore(ev.shiftKey ? cursor + 1 : cursor - 1); return; }
     if (ctrl && ev.key.toLowerCase() === 'd') { ev.preventDefault(); duplicate(selected); return; }
     if (ev.key === 'Delete' || ev.key === 'Backspace') { ev.preventDefault(); remove(selected); return; }
+    if (ev.shiftKey && /^[1-6]$/.test(ev.key)) {
+      var ids = ['desktop', 'laptop', 'tablet', 'mobile', 'wide', 'tema'];
+      setScreen(ids[Number(ev.key) - 1]); fitZoom(); return;
+    }
     if (!ctrl) {
       var k = ev.key.toLowerCase();
+      if (k === 'f') { setFullscreenLocal(!fullscreenLocal); return; }
+      if (k === '[') { setDensity('compact'); return; }
+      if (k === ']') { setDensity('wide'); return; }
       if (k === 'v' || k === 'h') { setTool(k === 'v' ? 'move' : 'hand'); return; }
       var kinds = { r: 'rect', t: 'text', b: 'button', c: 'card', s: 'section' };
       if (kinds[k]) { add(kinds[k]); return; }
@@ -723,6 +855,7 @@
     formBaseline = formSnapshot(); formTouched = false;
     paintDirty();
   });
+  setScreen('tema');
   render();
   formBaseline = formSnapshot();
   paintDirty();
@@ -742,6 +875,15 @@
     modules: function () { return Object.keys(modulesMap); },
     module: function () { return stateModule; }, setModule: setModule,
     formDirty: formDirty, formId: function () { return form ? form.id : ''; },
+    screen: function () { return { id: screenId, w: screenSize.w, h: screenSize.h }; },
+    setScreen: setScreen, setScreenCustom: setScreenCustom,
+    screens: function () { return Object.keys(SCREENS).concat(['custom']); },
+    density: function () { return density; }, setDensity: setDensity,
+    collapsed: function () { return { left: collapsed.left, right: collapsed.right }; },
+    togglePanel: togglePanel,
+    fullscreen: function () { return fullscreenLocal; }, setFullscreen: setFullscreenLocal,
+    pageMode: function () { return root.getAttribute('data-kaz-page-mode'); },
+    revert: revertScene, applyColor: applyColor,
     panelVisible: function (n) {
       var e = root.querySelector('[data-kaz-module-panel="' + n + '"]');
       return !!e && !e.hidden;
@@ -753,7 +895,10 @@
     tool: function () { return tool; }, setTool: setTool,
     tabs: function () { return { left: tabLeft, right: tabRight }; }, setTab: setTab,
     ui: function () { return { zoom: zoom, panX: panX, panY: panY, tool: tool,
-                              tabLeft: tabLeft, tabRight: tabRight }; }
+                              tabLeft: tabLeft, tabRight: tabRight,
+                              screenId: screenId, screenW: screenSize.w, screenH: screenSize.h,
+                              density: density, collapsedLeft: collapsed.left,
+                              collapsedRight: collapsed.right, fullscreen: fullscreenLocal }; }
   };
   say('KAZTheme-Editor pronto · ' + scene.layers.length + ' camadas · '
       + (root.getAttribute('data-kaz-saved') === '1' ? 'cena salva no tema' : 'cena derivada, salve para persistir'));

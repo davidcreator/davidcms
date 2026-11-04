@@ -197,9 +197,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
         $data['kaz_scene_saved']=$savedScene!==null;
         $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
-        $kazAssetZ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-z';
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetZ);
-        $this->document->addScript($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetZ);
+        $kazAssetAA=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-aa';
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAA);
+        $this->document->addScript($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAA);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
@@ -342,6 +342,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         // carregadas (sem sobrescrever valores calculados) para nao deixar rotulos vazios.
 
         $data=array_replace($this->language->all(),$data);
+        // Frente AA: modo pagina cheia em OUTRA pagina (sem chrome do Admin).
+        // Apenas leitura de GET; nenhuma rota, migration ou chave nova.
+        $data['kaz_fullscreen_page']=((string)($this->request->get['kaz_fullscreen']??'')==='1');
         $this->chrome($data); $this->response->setOutput($this->load->view('design/theme_form',$data));
     }
     /**

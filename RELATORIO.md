@@ -1,216 +1,161 @@
-# ReamurCMS — Frente Z: KAZTheme-Editor como motor total
+# ReamurCMS — Frente AA · Interatividade Total, Tamanhos de Tela e Tela Cheia
 
-**Data:** 4 de novembro de 2026 (America/Sao_Paulo)  
-**Base inspecionada:** `main` @ `909511ece6802928fbf658d3a3eaa20ee39784a3` — pai `d68ce60ff0a4…`, `2026-11-04T16:17:24Z`, mensagem `feat(kaz-theme-editor): add Penpot-style workspace UI overhaul`.  
-**Árvore:** 3.175 entradas, 2.593 blobs, 14 manifestos `CHECKSUMS*.txt`, `truncated:false`.  
-**Estado:** 1 ZIP instalável entregue para aplicação. **Não foi aplicado no GitHub por nós.** Não é release aprovada.
+> **Pacote instalável.** Aplica funcionalidades a **todos os botões e recursos**
+> do KAZTheme-Editor, permite **ajustar o tamanho das telas** e oferece
+> **tela cheia em outra página** — sem refazer o layout Z aprovado.
 
-## 1. O pedido desta frente
-
-> *"Vamos tomar uma direção bem pesada e extensa agora: o KAZTheme-Editor não é um campo dentro da página tema, ele deve ser o motor total com todos os formulários, blocos e todos os recursos de edição de temas do ReamurCMS dentro dele. Atualmente o KAZTheme-Editor é uma parte do criador de temas e não é o dono absoluto, o criador absoluto."*
-
-Antes, `theme_form.twig` (198 linhas / 28.952 bytes) era o dono da página e
-incluía `design/kaz_theme_editor.twig` na linha 183 — **um campo a mais** dentro
-do `<form>` principal. A frente Z **inverte a hierarquia**: o editor passa a ser
-a página inteira.
-
-## 2. A inversão
-
-| | Antes (HEAD Z) | Depois (pacote Z) |
-| --- | --- | --- |
-| `theme_form.twig` | 198 linhas / 28.952 bytes, 14 cards, 4 tipos de formulário | **3 linhas / 79 bytes**: `header`, include do editor, `footer` |
-| `kaz_theme_editor.twig` | um `card` incluído dentro do form | **57.443 bytes / 540 linhas**: workspace + os 14 módulos + pacote + iframe + histórico |
-| Dono da página | `theme_form.twig` | **`#kaz-theme-editor`** com `data-kaz-owner="1"` |
-| `<form>` principal | ancestral do editor | **filho** do editor (`#kaz-theme-form`) |
-
-Os **14 cards foram movidos byte a byte** por um parser balanceado de `<div>`:
-Geral, Herança, Tokens, Three.js, Cena 3D, Seções, Agendamento, Mídia,
-Modelos, Sites, Componentes, Condições, Prévia e Templates. Cada um virou um
-`<section data-kaz-module-panel="…">` no centro do workspace, com um botão na
-sidebar esquerda. O módulo `Design` (canvas/camadas/blocos) é o ativo por padrão.
-
-**Prova de não-perda:** os **52 `name="…"`** do formulário original continuam
-presentes e com as mesmas contagens; no HTML renderizado o A/B mediu
-**`names_total` 194 = 194**, `card_ids` 10 = 10, `data_cards` 13 = 13,
-`csrf_fields` 2 = 2, `formaction` 2 = 2, `formtarget="theme-preview"` 2 = 2,
-`iframe` 1 = 1 e `sandbox=""` 1 = 1. `formaction="{{ compare_url }}"`,
-`formtarget="theme-preview"`, `can_modify`/`disabled`, `button_save`,
-`button_back`, `cancel`, `error`/`notice`, `revisions[].restore`,
-`data-sites`, `data-models`, `data-snippets`, `data-thumb-base`,
-`data-schedule-card`, `data-spec` e `{{ footer|raw }}` foram preservados.
-
-**Sem formulários aninhados.** O `<form id="kaz-theme-form">` principal é
-irmão do formulário de importação (`action="{{ import_url }}"
-data-theme-package-form`) e dos formulários de restauração de revisão, todos
-dentro de `.kaz-extra`, ainda dentro de `#kaz-theme-editor`. O botão Salvar da
-navbar usa `form="kaz-theme-form"`; o botão Salvar original do card Geral
-continua onde sempre esteve. `form_nested=false` nos 24 cenários e no DOM real.
-
-## 3. O que é novo na interface
-
-- **Navbar soberana:** `heading_title`, estado publicado/rascunho, Salvar,
-  Voltar, desfazer/refazer, avatar, `file status`, 15 ícones SVG.
-- **Sidebar esquerda:** 5 abas da Y (Camadas, Ativos, Tokens, Design, Histórico)
-  + **Módulos do tema · 14 recursos** com numeração `01`–`14` e `aria-pressed`.
-- **Centro:** réguas + viewport/board quando `Design` está ativo; painel do
-  módulo selecionado quando qualquer outro está ativo, com cabeçalho e botão
-  "Voltar ao canvas".
-- **Sidebar direita:** inspector da Y (Design / Prototype / Inspect / Histórico).
-- **Statusbar:** zoom, **módulo ativo**, selo de formulário alterado, camadas,
-  coordenadas e versão `Frente Z · motor total`.
-- **`.kaz-extra`:** pacote (export/import), `<iframe name="theme-preview"
-  sandbox="">` e histórico de revisões — todos **dentro do editor**.
-
-**Estado de alterações.** `dirty()`, `data-kaz-dirty` e
-`data-kaz-file-status` continuam **exclusivamente** o estado de
-`kaz_scene_json` (contrato da frente X). A frente Z acrescenta apenas o selo
-informativo `data-kaz-form-dirty`, alimentado por `formSnapshot()` /
-`formDirty()`, que observa os demais campos do formulário via `input`/`change`,
-ignora `kaz_scene_json` e inputs de arquivo, e zera no `submit`. Nenhum dos dois
-bloqueia o envio. `root.__kaz` expõe `owner()`, `modules()`, `module()`,
-`setModule(n)`, `panelVisible(n)`, `formDirty()` e `formId()` além de toda a API
-U/V/W/X/Y.
-
-**Degradação.** Sem JavaScript, os 14 painéis são exibidos empilhados (nenhum
-`hidden` no HTML estático) — nenhum campo fica inacessível. Com JavaScript,
-`paintModules()` esconde os inativos no boot. Zoom, pan, aba ativa, ferramenta
-e **módulo ativo** são estado local descartável: não entram em
-`kaz_scene_json`, não usam `localStorage` e não afetam o `baseline`.
-
-Cache key dos assets: `-kaz-theme-editor-y` → **`-kaz-theme-editor-z`**.
-
-## 4. Arquivos do pacote (10 entradas, todos completos)
-
-| Arquivo | Bytes | Tipo | SHA-256 |
-| --- | ---: | --- | --- |
-| `dev/admin/controller/design/theme.php` | 69,616 | substitui | `96ee4ab0a6b272ea…` |
-| `dev/admin/view/css/kaz-theme-editor.css` | 21,804 | substitui | `0a79bf34df24f1d2…` |
-| `dev/admin/view/js/kaz-theme-editor.js` | 36,469 | substitui | `12ab9c0e915b6261…` |
-| `dev/admin/view/template/design/kaz_theme_editor.twig` | 57,443 | substitui | `6038efa6ffe0c223…` |
-| `dev/admin/view/template/design/theme_form.twig` | 79 | substitui | `eb964d823a31444a…` |
-| `docs/KAZTheme-Editor-Biblioteca-de-Blocos.md` | 8,029 | substitui | `9203c922e8fdc4b8…` |
-| `docs/KAZTheme-Editor-Guia-Rapido.md` | 9,532 | substitui | `b91db4c5912ad904…` |
-| `docs/KAZTheme-Editor-Interface-Penpot.md` | 10,864 | substitui | `99e7aa7b3ee09585…` |
-| `docs/KAZTheme-Editor-Motor-Total.md` | 6,190 | NOVO | `bf44cd03cdb8cb78…` |
-| `docs/KAZTheme-Editor.md` | 15,408 | substitui | `16ae11c5d54e1aca…` |
-
-`RELATORIO.md` e `INDICE.md` são as duas últimas entradas do ZIP e **não** são
-arquivos do repositório (os dois paths já existem na raiz do `main` e não foram
-tocados). Os 10 paths estão **LIVRES** nos 14 manifestos (142 entradas, 90 paths
-cobertos). Não há patches, diff ou arquivo parcial: 9 substituem, 1 é novo.
-
-## 5. O que NÃO mudou (congelado)
-
-- `ThemePackage` (14 `CONFIG_KEYS`, `MAP_KEYS` sem `kaz_scene`,
-  `validateScene()`, `normalizeScene()`, `validateConfig()`, `decode()`,
-  25 `TEMPLATE_KEYS`), `ThemeSites`, `theme-sites.js`, `ThemeSnapshot`,
-  `ConditionEngine`, `startup/*`, runtime do Catalog, 418 chaves de tradução ×
-  3 idiomas, 14 manifestos, 11 artefatos congelados, `schema.sql`,
-  `F9-27-Base-Hashes.json`, `tools/decision-matrix.json`,
-  `release_approved`, 10 `PENDING_DECISION` e 77 paths do BDREditor/F9-103 —
-  **byte-idênticos** na réplica A/B.
-- Comportamento U/V/W/X/Y: bindings aditivos (nunca no boot), `syncField()` +
-  `submit`, `baseline`/`dirty()`, os 6 blocos allowlistados, `MAX_LAYERS`,
-  fail-closed, descarte de linhas vazias do mapa de sites, 8 abas, 15 ícones,
-  3 colunas `236px · 1fr · 264px` e o tema escuro `--kaz-bg:#18181b`.
-- Sem migration, schema, coluna, `custom_js`, `|raw` novo, chave de tradução
-  nova, manifesto, `localStorage`, CDN, fontes remotas, `<script>` inline,
-  atributo `on*`, `innerHTML`, `eval`, `fetch`, upload, WebGL/Three.js real,
-  cena pública, escrita remota, deploy ou release aprovada. Os **dois** `|raw`
-  do `theme_form.twig` são os já existentes (`header`/`footer`); o shell do
-  editor tem **zero** `|raw`.
-- **A cena continua sem renderização no site público**; child-themes
-  continuam substituindo-a integralmente.
-- **Não há** protótipo navegável, View mode, comentários, colaboração
-  multiusuário, componentes reutilizáveis, flex/grid layout ou múltiplos boards.
-- F9-27 segue `BLOCKED_NOT_RUN`; BDREditor/F9-103 pausado; P2/F9-18 não
-  reaberto; a limitação de hreflang da frente N permanece.
-
-**Sobreposições legítimas:** a Y foi aplicada pelo usuário no HEAD Z, então
-**Y 8/8** byte-idêntica, **X 0/7**, **W 3/4** e **V 2/7** — a Y sobrepôs os
-mesmos arquivos do editor. Não é regressão: os 28 campos congelados do A/B e
-os testes de save/prévia cobrem o comportamento W/V/X/Y.
-
-## 6. Validação executada (tudo real, sem inferência)
-
-| Verificação | Resultado |
+| | |
 | --- | --- |
-| H1 — contrato do pacote, bibliotecas, HEAD Z = Y 8/8, gates | **289/0** |
-| H2 — pipeline real do pacote (12 cenários `edit()`/`compare()`) | **1802/0** |
-| H3 — A/B real HEAD Z × pacote Z (12 cenários + contratos Z) | **844/0** |
-| H4a — Autoloader real carregando controller do pacote | **34/0** |
-| H4b — regressão A–Y, manifestos, traduções, BDREditor | **227/0** |
-| H5 — jsdom: workspace + U/V/W/X/Y + **motor total no DOM real** | **1841/0** |
-| `php -l` (PHP WASM 8.5.12) em todos os `.php` do recorte | **136/0** |
-| `node --check` em todos os `.js` do recorte | **471/0** |
-| **Total de asserções** | **5644/0** |
-
-Bootstraps separados HEAD/pacote, PHP 8.5.12 WASM + Twig 3.14 + mocks:
-**12 + 12 cenários**, `twig_error=0` nos 24, **4 gravações em cada lado**.
-**== F11-11 — congelamento de contratos (11 artefatos) ==
-   11/11 hashes coerentes | 10 pendentes de decisao
-
-== RESULTADO: COERENTE — nenhum contrato alterado sem decisao ==
-   Lembrando: decisoes pendentes NAO sao aprovacao. F9-27 segue BLOCKED_NOT_RUN.
- comparações de campos congelados idênticas** (28 campos × 12 casos) —
-incluindo `block_buttons`, `dirty_*`, `note_saved`/`note_derived`,
-`name_field`, `sites_field`, `raw_markers`, `js_clean`, `config_keys_count`,
-`error`, `redirect`, `saved`, `saved_layers` e `db_calls`. Divergem apenas a
-casca Z, o cache key e o selo de versão.
-
-**H5 executou o motor total:** `owner() === true`, `formId() ===
-'kaz-theme-form'`, form **filho** do root e **não ancestral**, zero `<form>`
-aninhados, 15 módulos / 14 painéis / 29 links; `paintModules()` escondendo 13
-painéis no boot; clique real em `sites` trocando painel, viewport, rótulo e
-`aria-pressed` **sem sujar a cena**; os 14 módulos percorridos por `setModule()`;
-"Voltar ao canvas"; `setModule('naoexiste') === false`; os 10 cards, o iframe
-`sandbox=""`, o form de import **fora** do form principal, os 2 `csrf_token`,
-os 2 `formtarget`, os 25 `textarea[name^="templates["]`, os `data-*` dos cards,
-o selo `data-kaz-form-dirty` acendendo com `input` real e apagando no `submit`
-**sem** alterar `dirty()` da cena; e os 2 `|raw` existentes no
-`theme_form.twig` contra 0 no shell.
-
-**Réplica A/B:** 1151 paths / 18,036,551 bytes / 0 vazios;
-9 alterados + 1 novo + 1141 congelados;
-14 manifestos idênticos; 10/10 paths livres.
-
-**Guards HEAD × réplica (4/4 verdes, saídas IGUAIS):**
-`verify-checksums.sh` (3 PASS / 0 FAIL, 14 manifestos / 142 arquivos),
-`repo-health.sh` (6 PASS / 0 FAIL / 0 SKIP), `verify-ci-workflow.sh`
-(31 PASS / 0 FAIL), `verify-contract-freeze.py` (11/11 hashes, 10 pendentes).
-**Nenhum checker novo foi criado.** `verify-f11-01.sh` (via `repo-health`)
-executa `npm ci --prefix dev/system/storage` e cria 178 arquivos locais
-ignorados pelo Git — o HEAD Z versiona **apenas** `node_modules/index.html`;
-a réplica foi medida antes disso, os artefatos foram removidos depois e
-manifestos/congelados revalidados. A comparação normaliza o caminho do ROOT
-impresso no cabeçalho dos guards.
-
-Build idempotente **10/10**; CRC 12/12 do ZIP; `sha256sum -c` global 50/50.
-
-## 7. Limitações declaradas
-
-Sem PHP nativo, Composer, PHPStan, rsync, navegador real, MySQL, sessão Admin
-autenticada, migration, staging, deploy, E2E ou **CI remoto verificado**. PHP
-WASM, Twig 3.14 e jsdom 29.1.1 com mocks **não são um servidor**: a validação
-é de contrato, sintaxe, render Twig e DOM, não de requisição HTTP real nem de
-aparência em navegador real. **Nenhuma escrita no GitHub foi feita por nós**; o
-HEAD Z é escrita do usuário. Nenhum status `PENDING_DECISION`, `STATIC_ONLY`,
-`NOT_RUN`, `SKIP` ou `BLOCKED_NOT_RUN` foi convertido em `PASS`.
-F9-27 segue `BLOCKED_NOT_RUN` com `release_approved:false`.
-**CI verde / health coerente ≠ release aprovada.**
-
-## 8. Instalação
-
-1. Extrair os 10 arquivos completos sobre a raiz do repositório (9 substituem,
-   1 é novo). Nenhum manifesto precisa ser atualizado.
-2. `bash tools/verify-checksums.sh && PYTHON_CMD=python3 bash tools/repo-health.sh`.
-3. Admin → Design → Temas → editar um tema: a página inteira é o workspace
-   KAZTheme-Editor. Use a sidebar esquerda ("Módulos do tema") para alternar
-   entre os 14 formulários; `Design` volta ao canvas. Limpar o cache do
-   navegador não é necessário (cache key `-kaz-theme-editor-z`).
-4. Se os módulos não aparecerem, confirme que o CSS/JS servidos são os
-   `-kaz-theme-editor-z` e relate o comportamento.
+| Base | `main` @ `08eca35d39c7464d2543e21995807ea9c162d62c` (frente Z aplicada pelo usuário) |
+| Árvore | 3.176 entradas / 2.594 blobs / 14 manifestos / `truncated:false` |
+| Arquivos | **11** completos (10 substituições + 1 doc novo) + `RELATORIO.md` + `INDICE.md` no ZIP |
+| Recorte validado | 2195 arquivos / 30,976,154 bytes no HEAD AA |
+| Réplica | 2196 arquivos / 31,026,031 bytes (10 alterados + 1 novo + 2185 congelados) |
+| Validação | **5767 asserções / 0 falhas** (H1 193, H2 2718, H3 1502, H4a 40, H4b 138, H5 1176) |
+| Probes | **14 + 14** cenários reais `edit()`/`compare()`/`fullscreen`, `twig_error=0`, 5 gravações por lado |
+| Congelados A/B | 392 comparações, 0 divergências |
+| Guards | **4/4 verdes e byte-idênticos** HEAD × réplica |
+| Sintaxe | 387 PHP `php -l` 0 erros · 607 JS/CJS `node --check` 0 falhas novas |
+| Build | idempotente **10/10** |
+| SHA-256 | conteúdo (11 arquivos): `a1e91f6b415cc8fd21e59f86b5bc5e51f1348286534df2b3d8656bc9740783ec` · ZIP: ver `.sha256` externo |
+| CRC | 13/13 entradas, `sha256sum -c` 51/51 |
 
 ---
-**Próximo passo:** aguardar confirmação de aplicação e o retorno visual antes de
-qualquer nova frente.
+
+## 1. O que o pedido pedia
+
+1. *"Aplicar as funcionalidades para todos os botões e recursos"* → §2.
+2. *"Que possa ajustar o tamanho das telas"* → §3.
+3. *"Tenha uma opção de usar o tamanho tela cheia em outra página"* → §4.
+
+A frente Z deixou a interface **como esperado**; nenhum layout foi refeito.
+
+## 2. Todos os botões e recursos agora executam uma ação
+
+| Controle (antes decorativo) | Agora |
+| --- | --- |
+| `Página 1` | botão `data-kaz-action="pages"` → abre Páginas + módulo Design |
+| Avatar `1` | botão `data-kaz-action="users"` → informa a sessão local (sem rede) |
+| Selo `Alterações não salvas` | botão `data-kaz-action="revert"` → descarta a cena ao `baseline` |
+| Selo `Salvo` | `<button type="submit" form="kaz-theme-form">` → salva **sem JavaScript** |
+| 6 swatches | `<button data-kaz-swatch>` → aplica a cor à camada selecionada |
+| Tokens `primary`/`surface` | `<button data-kaz-token-apply>` → aplica o token à camada |
+| Amostra tipográfica `Aa` | botão `data-kaz-action="add-text"` → insere camada de texto |
+| Painel Páginas | `Ir para o board` → Design + Camadas + ajuste de zoom |
+| Painel Protótipo | 3 botões reais: ir para a prévia, ajustar zoom, tela cheia |
+| Exportar cena | além do textarea, baixa `kaztheme-scene.json` quando `Blob`/`createObjectURL` existem |
+
+**Já funcionais e inalterados:** 15 `data-kaz-action` originais, 8 abas, 3 zoom,
+2 ferramentas, 5 kinds, 6 blocos, 29 links de módulo, 11 campos do inspector,
+drag/resize/pan/roda Ctrl, teclado, réguas, Inspect, histórico e os 14 módulos.
+
+Os botões dos módulos legados (`data-section-move`, `data-media-insert`,
+`data-component-insert`, `data-site-probe-button`, `data-model-apply`,
+`data-scene-preset`, `data-tcb-*`, `data-theme-package-form`) continuam sendo
+atendidos pelos seus scripts originais — nenhum foi reimplementado.
+
+**Atalhos novos:** `F` tela cheia, `[` compacto, `]` amplo, `Shift+1..6` presets
+de tela. Nenhum conflita com `V/H/R/T/B/C/S/+/-/0`, `Ctrl+Z`, `Ctrl+D`,
+`Delete` ou setas.
+
+## 3. Ajuste do tamanho das telas
+
+Uma `.kaz-screenbar` no centro oferece **7 tamanhos**: Tema (cena), Desktop
+`1440×900`, Laptop `1280×800`, Tablet `768×1024`, Mobile `390×844`, Widescreen
+`1920×1080` e Personalizado (largura `320–3840`, altura `240–2160`, com clamp).
+
+O board passa a ficar dentro de `.kaz-screen`, que recebe as dimensões em px;
+rótulo do frame, `[data-kaz-screen-size]` e o statusbar espelham a escolha.
+`Ajustar à tela` recalcula o zoom pelo **tamanho da tela** (`fitZoom()` usa
+`screenSize`), e não pelo canvas. Como o preset inicial é `Tema`
+(= `scene.canvas`), o boot permanece idêntico à frente Z.
+
+**O tamanho da tela não altera `scene.canvas`** — é um frame de visualização,
+estado local descartável como zoom/pan/abas/módulo. `[data-kaz-board-size]`
+continua mostrando o canvas real. Nenhum controle novo tem `name=`: **o POST
+é byte-idêntico ao da frente Z** (53 `name=` no shell, 194 no HTML renderido).
+
+A mesma barra controla a **densidade das colunas** — Compacto `200/220`,
+Normal `236/264`, Amplo `300/340` — e oculta/mostra cada sidebar
+(`data-kaz-collapsed`).
+
+## 4. Tela cheia em outra página — decisão de escopo
+
+| Modo | Mecanismo | Efeito |
+| --- | --- | --- |
+| Nesta aba | `⛶ Tela cheia` / `F` | `requestFullscreen()` + `data-kaz-fullscreen="1"`; sem a API, apenas o CSS `position:fixed; inset:0` |
+| **Em outra página** | `↗ Tela cheia em nova página` → `<a target="_blank" rel="noopener noreferrer" href="{{ action }}&amp;kaz_fullscreen=1">` | controller publica `kaz_fullscreen_page` a partir do GET; `theme_form.twig` **omite `{{ header|raw }}` e `{{ footer|raw }}`**; `data-kaz-page-mode="fullscreen"`; shell `100vw × 100vh`, sem chrome do Admin |
+| Sair | `Sair da página cheia` | volta a `{{ action }}` sem o parâmetro |
+
+**Decisão tomada:** não foi criada rota nova nem controller novo. O parâmetro
+`kaz_fullscreen=1` é lido somente em `edit()`, e a outra página carrega o
+**estado gravado no servidor**. Não há `localStorage`, `fetch`, `postMessage`,
+sessão compartilhada ou upload. Por isso o selo `Alterações não salvas` e o
+botão `Salvo` (submit) ficam na navbar: salve antes de abrir a outra página.
+Isso evita transporte de estado e mantém o contrato de segurança Z.
+
+`theme_form.twig` continua com **3 linhas** e os **2 `|raw`** já existentes,
+agora condicionados por `{% if not kaz_fullscreen_page %}`. O shell tem **zero**
+`|raw`, zero `<script>` inline e zero atributo `on*`.
+
+## 5. Contratos preservados
+
+- `dirty()` / `data-kaz-dirty` / `data-kaz-file-status` exclusivos da cena;
+  `data-kaz-form-dirty` separado e informativo (frente Z).
+- `syncField()`, `submit`, `baseline`, `MAX_LAYERS=48`, fail-closed, 6 blocos,
+  15 módulos Design+14, 8 abas, 15 ícones SVG, 3 colunas, 29→30 links.
+- `#kaz-theme-editor` `data-kaz-owner="1"`, `<form id="kaz-theme-form">`
+  **filho**, 3 formulários irmãos (principal/import/restore) sem aninhamento,
+  `csrf_token` nos 2 renderizados, `can_modify`, `formaction="{{ compare_url }}"`,
+  `formtarget="theme-preview"`, iframe `sandbox=""`, pacote/restores.
+- `kaztheme-scene/v1`, `CONFIG_KEYS` 14, `TEMPLATE_KEYS` 25, 418 chaves × 3
+  idiomas, 14 manifestos idênticos / 90 paths cobertos / 11 paths LIVRES,
+  11 hashes, `schema.sql`, 10 `PENDING_DECISION`, 77 paths BDREditor.
+- Cache `-kaz-theme-editor-z` → **`-kaz-theme-editor-aa`**.
+
+Sem migration, schema, coluna, `custom_js`, `|raw` novo, chave de tradução,
+manifesto, CDN, fonte remota, `<script>` inline, `on*`, `innerHTML`, `eval`,
+`fetch`, `localStorage`, upload, WebGL/Three.js real, cena pública ou escrita
+remota. PHP WASM, Twig e jsdom com mocks **não são um servidor**.
+
+## 6. Validação
+
+| Harness | Escopo | Resultado |
+| --- | --- | --- |
+| H1 | contrato estático, HEAD AA = Z 10/10, árvore, manifestos, gates | 193/0 |
+| H2 | pipeline real do pacote, 14 cenários × 115 campos + semântica | 2718/0 |
+| H3 | A/B real HEAD × pacote, congelados + divergências AA | 1502/0 |
+| H4a | autoloader real das 15 classes + Twig | 40/0 |
+| H4b | regressão: manifestos, traduções, gates, docs, bibliotecas | 138/0 |
+| H5 | **DOM real jsdom**: todos os botões, 7 presets, clamp, densidade, colapso, fullscreen, outra página, atalhos, submit | 1176/0 |
+
+Probes: `14 + 14` cenários (`get`, `post`, `post_fullscreen`, `compare`, XSS,
+49 camadas, bloco hero, sites vazios), `twig_error=0`, 5 gravações por lado,
+392 comparações congeladas sem divergência. Guards 4/4 verdes e
+byte-idênticos: `verify-checksums` 3/0 e 142 arquivos, `repo-health` 6/0/0,
+`verify-ci-workflow` 31/0, `verify-contract-freeze` 11/11 hashes e 10 pendentes.
+
+Build idempotente 10/10; ZIP 13 entradas com CRC íntegro; `.sha256`
+externo; `sha256sum -c` 51/51 em `/home/user/entregas/`.
+
+## 7. Instalação
+
+Extraia o ZIP na raiz do repositório, preservando os caminhos. Os **11 arquivos
+são completos** (não são patches). Não há migration, comando, `npm install`,
+cache-bust manual além da query `-kaz-theme-editor-aa` já emitida pelo
+controller, nem passo de banco. Faça refresh forçado do Admin para carregar o
+novo CSS/JS. Abra `design/theme.edit` e use `↗ Tela cheia em nova página`.
+
+## 8. Limitações e status
+
+Sem PHP nativo, Composer, PHPStan, navegador real, MySQL, sessão autenticada,
+staging, deploy ou E2E neste sandbox. A Fullscreen API depende de gesto do
+usuário e do suporte do navegador (fallback CSS fornecido). A cena continua sem
+renderização no site público; não há colaboração multiusuário, comentários,
+protótipo navegável, View mode, componentes reutilizáveis ou múltiplos boards.
+
+Nenhum `PENDING_DECISION`, `STATIC_ONLY`, `NOT_RUN`, `SKIP` ou
+`BLOCKED_NOT_RUN` foi convertido em `PASS`. F9-27 segue `BLOCKED_NOT_RUN`;
+BDREditor/F9-103 pausado; P2/F9-18 não reaberto; `release_approved:false`.
+Nenhuma escrita no GitHub foi feita por este pacote e o CI remoto não foi
+verificado aqui. **CI verde ou health check não significa release aprovada.**

@@ -111,3 +111,84 @@ F9-27, P2/F9-18 ou o BDREditor. Não reentrega as frentes A–Y.
 
 Nenhuma escrita no GitHub foi feita por este pacote; o CI remoto não foi
 verificado aqui. **CI verde ou health check não significa release aprovada.**
+
+---
+
+## Frente AA — interatividade total, tamanhos de tela e página cheia
+
+A frente Z entregou a interface esperada, mas alguns controles do workspace
+ainda eram decorativos (avatar, "Página 1", swatches, tokens, amostra
+tipográfica, selo de status, painel Protótipo). A frente AA **dá função real a
+todos eles** e acrescenta três capacidades pedidas.
+
+### Todos os botões e recursos operacionais
+
+| Controle | Antes | Agora |
+| --- | --- | --- |
+| `Página 1` | `<span>` estático | botão `data-kaz-action="pages"` → abre Páginas + volta ao canvas |
+| Avatar `1` | `<span>` estático | botão `data-kaz-action="users"` → informa a sessão local (sem rede) |
+| Selo `Alterações não salvas` | texto | botão `data-kaz-action="revert"` → descarta alterações da cena ao baseline |
+| Selo `Salvo` | texto | `<button type="submit" form="kaz-theme-form">` → salva o tema sem JS |
+| 6 swatches | `<span>` | `<button data-kaz-swatch>` → aplica a cor à camada selecionada |
+| Tokens `primary`/`surface` | texto | `<button data-kaz-token-apply>` → aplica o token à camada |
+| Amostra `Aa` | texto | botão `data-kaz-action="add-text"` → insere camada de texto |
+| Páginas | texto | botão `Ir para o board` → Design + Camadas + ajuste de zoom |
+| Protótipo | 3 parágrafos | 3 botões reais: prévia do tema, ajustar zoom, tela cheia |
+| Exportar cena | só preenchia o textarea | também baixa `kaztheme-scene.json` quando o navegador oferece `Blob`/`createObjectURL`; sem a API, o textarea continua sendo a fonte |
+| Desfazer/refazer, duplicar, excluir, ordem, visibilidade, bloqueio, 6 blocos, 5 kinds, 8 abas, 15 módulos, zoom/pan/réguas/Inspect | já funcionais | **inalterados** |
+
+Os botões dos 14 módulos legados (`data-section-move`, `data-media-insert`,
+`data-component-insert`, `data-site-probe-button`, `data-model-apply`,
+`data-scene-preset`, `data-tcb-*`, `data-theme-package-form`) continuam sendo
+atendidos pelos seus próprios scripts já existentes — nenhum foi reimplementado.
+
+### Ajuste do tamanho das telas
+
+Uma `.kaz-screenbar` no centro do workspace oferece 7 tamanhos: **Tema (cena)**,
+Desktop `1440×900`, Laptop `1280×800`, Tablet `768×1024`, Mobile `390×844`,
+Widescreen `1920×1080` e **Personalizado** (largura `320–3840`, altura
+`240–2160`). O board da cena passa a ficar dentro de um `.kaz-screen` com as
+dimensões escolhidas, o rótulo e o statusbar acompanham, e `Ajustar à tela`
+recalcula o zoom pelo **tamanho da tela**, não pelo canvas.
+
+**O tamanho da tela NÃO altera `scene.canvas`**: é um frame de visualização,
+estado local descartável como zoom/pan/abas/módulo. `fitZoom()` continua idêntico
+no boot porque o preset padrão é `Tema` (= `scene.canvas`).
+
+A mesma barra controla a **densidade das colunas** — Compacto `200/220`, Normal
+`236/264`, Amplo `300/340` — e dois botões para **ocultar/mostrar** cada sidebar.
+Atalhos novos: `F` tela cheia, `[` compacto, `]` amplo, `Shift+1..6` presets.
+
+### Tela cheia em outra página
+
+- **`⛶ Tela cheia`** — Fullscreen API (`requestFullscreen`) nesta aba, com
+  fallback para o modo CSS quando a API não existe.
+- **`↗ Tela cheia em nova página`** — `<a target="_blank"
+  rel="noopener noreferrer" href="{{ action }}&amp;kaz_fullscreen=1">`.
+  O controller lê apenas esse GET, publica `kaz_fullscreen_page` e o
+  `theme_form.twig` **omite `{{ header|raw }}` e `{{ footer|raw }}`** nesse modo.
+  O shell recebe `data-kaz-page-mode="fullscreen"` e ocupa `100vw × 100vh`, sem
+  chrome do Admin. Um link `Sair da página cheia` volta à rota normal.
+- Não há rota nova, controller novo, migration, sessão compartilhada ou
+  transporte de estado: a nova página carrega o **estado gravado no servidor**.
+  Alterações não salvas devem ser salvas antes de abrir a outra página — o selo
+  `Alterações não salvas` e o botão `Salvo` estão na navbar para isso.
+- Os **dois** `|raw` (`header`/`footer`) continuam sendo os já existentes, agora
+  condicionados; o shell do editor permanece com **zero** `|raw`.
+
+### Contrato
+
+`dirty()` e `data-kaz-dirty` continuam exclusivos de `kaz_scene_json`;
+`data-kaz-form-dirty` continua separado. `syncField()`, `submit`, `baseline`,
+`MAX_LAYERS`, fail-closed, os 6 blocos, os 14 módulos, os 53 `name=`, os 3
+formulários irmãos, o iframe `sandbox=""`, CSRF, `can_modify` e
+`formaction/formtarget` foram preservados. Nenhum controle novo tem `name=` —
+o POST é byte-idêntico ao da frente Z. Cache key `-kaz-theme-editor-z` →
+`-kaz-theme-editor-aa`.
+
+Sem migration, schema, coluna, `custom_js`, `|raw` novo, chave de tradução,
+manifesto, `localStorage`, CDN, fonte remota, `<script>` inline, `on*`,
+`innerHTML`, `eval`, `fetch`, upload, WebGL/Three.js real, cena pública ou
+escrita remota. Nenhum `PENDING_DECISION`, `STATIC_ONLY`, `NOT_RUN`, `SKIP` ou
+`BLOCKED_NOT_RUN` virou `PASS`; `release_approved` permanece `false`.
+**CI verde ou health check não significa release aprovada.**
