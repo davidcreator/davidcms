@@ -1,0 +1,14 @@
+{# Frente AB — a cena desenhada no KAZTheme-Editor, publicada no Catalogo.
+   Todos os valores sao escalares allowlistados gerados por ThemeSceneCss.
+   O texto do usuario passa pelo autoescape do Twig: nada e marcado como seguro. #}
+{% if theme_scene_view.enabled|default(false) %}
+<section class="rms-scene" aria-label="Composição visual do tema">
+  <div class="rms-scene__stage" style="aspect-ratio: {{ theme_scene_view.canvas.w|default(960) }} / {{ theme_scene_view.canvas.h|default(540) }};">
+    {% for l in theme_scene_view.layers %}
+      <div class="rms-scene__layer rms-scene__layer--{{ l.kind|e('html_attr') }} rms-scene__role--{{ l.role|e('html_attr') }}"
+           data-rms-layer="{{ l.n|e('html_attr') }}"
+           style="left:{{ l.left|e('html_attr') }}%;top:{{ l.top|e('html_attr') }}%;width:{{ l.width|e('html_attr') }}%;height:{{ l.height|e('html_attr') }}%;background-color:{{ l.fill|e('html_attr') }};border-radius:{{ l.radius|e('html_attr') }}px;font-size:{{ l.font|e('html_attr') }}px;">{{ l.text }}</div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}

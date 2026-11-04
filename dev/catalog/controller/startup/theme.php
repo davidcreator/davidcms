@@ -150,6 +150,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         if ($primary !== null) $this->config->set('catalog_theme_primary', $primary);
         if ($surface !== null) $this->config->set('catalog_theme_surface', $surface);
         $this->config->set('catalog_theme_scene', $scene);
+        // Frente AB: cena do editor -> CSS allowlistado + camadas renderizaveis.
+        $this->config->set('catalog_theme_scene_css', $snapshot['scene_css']);
+        $this->config->set('catalog_theme_scene_view', $snapshot['scene_view']);
         $this->config->set('catalog_theme_three', $three);
         $this->config->set('catalog_theme_tokens', $tokens);
         $this->config->set('catalog_theme_vars', $snapshot['vars']);

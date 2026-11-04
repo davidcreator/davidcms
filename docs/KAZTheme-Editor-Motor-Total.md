@@ -192,3 +192,58 @@ manifesto, `localStorage`, CDN, fonte remota, `<script>` inline, `on*`,
 escrita remota. Nenhum `PENDING_DECISION`, `STATIC_ONLY`, `NOT_RUN`, `SKIP` ou
 `BLOCKED_NOT_RUN` virou `PASS`; `release_approved` permanece `false`.
 **CI verde ou health check não significa release aprovada.**
+
+---
+
+## Frente AB — tema publicado de verdade, editor responsivo em abas
+
+A frente AA foi aplicada, mas a interface ficou **inutilizável**: o canvas
+aparecia como uma faixa fina, os 14 formulários legados ficavam empilhados
+no centro, havia dois scrolls verticais e nenhuma ação gerava tema no site.
+A AB corrige as causas e fecha a ponte com o catálogo.
+
+### Diagnóstico do que estava quebrado
+
+| Causa | Correção AB |
+| --- | --- |
+| `render()` não chamava `paintModules()` e o boot nunca chamava `setModule('design')` → `.kaz-modules` nunca recebia `hidden` | ver §2: `paintChrome()` já chamava `paintModules()`; a causa real é o HTML sem `hidden` no servidor |
+| `.kaz-screenbar` inserida **dentro** do `.kaz-center` (réguas/viewport absolutos) → sobreposição | barra movida para fora do `.kaz-workspace` |
+| `.kaz-workspace { height: 548px }` fixo + `.kaz-modules` no fluxo → página longa com scroll aninhado | `.kaz-shell` em flex column com `height: calc(100dvh - 104px)`; `.kaz-stage` é o único scroll |
+| `.kaz-screen` com `display:flex` + board `inline-block` → canvas achatado | `.kaz-screen` em bloco; `.kaz-board` e `.kaz-board__frame` a `100%` |
+| `.kaz-io` (JSON) e `.kaz-extra` sempre visíveis | recolhidos em `<details>` "Avançado" |
+| 15 links de módulo verticais na sidebar | barra de **abas horizontais** no topo do centro |
+| A cena SVG não era consumida por nada no catálogo | novo compilador publica CSS + camadas reais na home |
+
+### Resultado real: editor → site publicado
+
+`ThemeSceneCss::compile()` reutiliza `ThemePackage::normalizeScene()` (fail-closed)
+e produz dois artefatos:
+
+- **`css`** — apenas declarações `--rms-scene-*` (inteiros, hex validado, `px`),
+  concatenadas ao `theme_token_css` do `common/header` e emitidas no `style`
+  do `<body>` com `|e('html_attr')`. **Nenhum `|raw` novo.**
+- **`layers`** — escalares allowlistados (posições em porcentagem, `fill`,
+  `radius`, `font`, texto truncado a 80 caracteres sem caracteres de controle).
+  `partial/theme-scene-block.twig` itera com `{{ l.text }}` sob **autoescape**.
+
+A cadeia completa: `edit()` grava `kaz_scene` no `draft_config` → `Publicar`
+(`design/theme.activate`, rota já existente) copia o rascunho para
+`published_config` → `startup/theme` resolve o `ThemeSnapshot` →
+`catalog_theme_scene_css` / `catalog_theme_scene_view` → `common/header` e
+`common/home` → `<section class="rms-scene">` na home publicada.
+`theme.css` consome as variáveis e posiciona as camadas de forma responsiva
+(`aspect-ratio`, porcentagens, `@container`, `@media`).
+
+O fluxo na navbar ficou explícito: **Salvar rascunho**, **Publicar** (com
+confirmação nativa em `<details>`, sem `on*` e sem JS) e **Prévia** (iframe
+`sandbox=""` já existente). Os 14 módulos seguem acessíveis pelas abas.
+
+### Contrato
+
+Zero migration, schema, coluna, `custom_js`, `|raw` novo, chave de tradução,
+manifesto, CDN, `<script>` inline, `on*`, `innerHTML`, `eval`, `fetch`,
+`localStorage`, upload ou WebGL real. Os 14 `data-kaz-module-panel`, os 30
+`data-kaz-module` e os 53 `name=` do shell foram preservados; `theme_form.twig`
+continua com 3 linhas e os 2 `|raw` existentes. Cache `-kaz-theme-editor-aa`
+→ **`-kaz-theme-editor-ab`**. Nenhum gate virou `PASS`; `release_approved`
+permanece `false`. **CI verde ou health check não significa release aprovada.**

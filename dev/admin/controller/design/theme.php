@@ -197,9 +197,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
         $data['kaz_scene_saved']=$savedScene!==null;
         $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
-        $kazAssetAA=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-aa';
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAA);
-        $this->document->addScript($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAA);
+        $kazAssetAB=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-ab';
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAB);
+        $this->document->addScript($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAB);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
@@ -325,6 +325,8 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['has_unpublished_changes']=($id>0 && $draftNorm!==$pubNorm);
         foreach(['text_compare','text_compare_help','text_compare_button','text_compare_note','text_compare_route','text_compare_language','text_compare_device','text_compare_variant','text_compare_template','text_state_published','text_state_draft','text_state_changed','text_state_clean'] as $k) $data[$k]=$this->language->get($k);
         $data['compare_url']=$this->url->link('design/theme.compare'.($id?'|'.$id:''));
+        // Frente AB: publicacao explicita do rascunho (rota já existente).
+        $data['activate_url']=$this->url->link('design/theme.activate'.($id?'|'.$id:''));
         $data['preview_routes']=['common/home','blog/blog_list','blog/blog_info','catalog/project_list','catalog/project_info','tool/tool_list','tool/tool_info','cms/page_info','common/contact','checkout/quote','error/not_found'];
         $data['preview_languages']=['en-us','pt-br','es-eu'];
         // F13-M: escolha de site por ID na previa (allowlist da J). Vazio =>

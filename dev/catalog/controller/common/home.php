@@ -365,6 +365,8 @@ class Home extends \Reamur\System\Engine\Controller {
             $cmsHomeSections = $this->theme_section_registry->plan($themeSections);
         }
         $data['cms_home_sections'] = $cmsHomeSections;
+        // Frente AB: blocos da cena desenhada no editor (escalares allowlistados).
+        $data['theme_scene_view'] = (array)$this->config->get('catalog_theme_scene_view', []);
         $activeHomeSections = $cmsHomeSections;
         $data['has_3d'] = (in_array('hero', $activeHomeSections, true) && $threeJs['hero_enabled'])
             || (in_array('portfolio', $activeHomeSections, true) && $portfolioEnabled)

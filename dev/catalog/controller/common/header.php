@@ -74,7 +74,9 @@ class Header extends \Reamur\System\Engine\Controller {
             // F13-I: --rms-media-* (SVG deterministico em data URI allowlistado).
             . (string)$this->config->get('catalog_theme_media_css', '')
             // F13-J: --rms-site-* (so inteiros allowlistados).
-            . (string)$this->config->get('catalog_theme_site_css', '');
+            . (string)$this->config->get('catalog_theme_site_css', '')
+            // Frente AB: --rms-scene-* compilados da cena do editor.
+            . (string)$this->config->get('catalog_theme_scene_css', '');
 
         // F4-07 (ADR 0031): canonical + Open Graph/Twitter + descoberta do sitemap.
         // Regra honesta: canonical/og:url SÓ quando a requisição chegou por caminho

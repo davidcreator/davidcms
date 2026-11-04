@@ -243,3 +243,48 @@ a, .text-muted, .kicker { color: var(--rms-color-muted); }
 }
 .container { max-width: var(--rms-content-width, 1200px); }
 :focus-visible { outline: 2px solid var(--rms-focus-ring, #0a58ca); outline-offset: 2px; }
+
+
+/* ==========================================================================
+   Frente AB — composição visual publicada (KAZTheme-Editor -> Catalogo)
+   Os valores vêm de --rms-scene-* (style do body, escapado) e dos atributos
+   allowlistados emitidos por partial/theme-scene-block.twig. Nenhum |raw.
+   ========================================================================== */
+.rms-scene { width: 100%; margin: 0; padding: 24px 0 8px; background: var(--bg, #fff); }
+.rms-scene__stage {
+  position: relative; width: 100%; max-width: var(--rms-content-width, 1200px);
+  margin: 0 auto; overflow: hidden; border-radius: var(--rms-radius-lg, 20px);
+  background: var(--theme-surface, #ffffff);
+  background-image: radial-gradient(circle, rgba(127,127,127,.18) 1px, transparent 1px);
+  background-size: 16px 16px;
+  container-type: inline-size;
+}
+.rms-scene__layer {
+  position: absolute; box-sizing: border-box; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  padding: .35em .6em; line-height: 1.25; text-align: center;
+  color: var(--rms-color-text, #212529); word-break: break-word;
+  border: 1px solid rgba(127,127,127,.22);
+}
+.rms-scene__layer--rect,
+.rms-scene__layer--card { color: transparent; }
+.rms-scene__layer--text { background: transparent !important; border-color: transparent; }
+.rms-scene__layer--button {
+  color: var(--rms-scene-btn-ink, #ffffff); font-weight: 600;
+  border: 0; box-shadow: var(--rms-shadow, none);
+}
+.rms-scene__layer--section { align-items: flex-start; justify-content: flex-start; }
+.rms-scene__role--primary { background-color: var(--theme-primary, #6d28d9) !important; }
+.rms-scene__role--surface { background-color: var(--theme-surface, #ffffff) !important; }
+@container (max-width: 620px) {
+  .rms-scene__layer { font-size: max(10px, 2.4cqw) !important; }
+}
+@media (max-width: 720px) {
+  .rms-scene { padding: 12px 0 4px; }
+  .rms-scene__stage { border-radius: 0; }
+  .rms-scene__layer { font-size: max(10px, 2.4vw) !important; }
+}
+@media (prefers-reduced-motion: reduce) { .rms-scene__layer { transition: none; } }
+@media (forced-colors: active) {
+  .rms-scene__layer { border: 2px solid CanvasText; forced-color-adjust: none; }
+}

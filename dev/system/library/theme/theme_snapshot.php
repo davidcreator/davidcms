@@ -19,8 +19,9 @@ final class ThemeSnapshot {
     private ThemeSchedule $schedule;
     private ThemeMedia $media;
     private ThemeSites $sites;
+    private ThemeSceneCss $sceneCss;
 
-    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?ThemePackage $package = null, ?SectionRegistry $sections = null, ?ComponentRegistry $components = null, ?ThemeSchedule $schedule = null, ?ThemeMedia $media = null, ?ThemeSites $sites = null) {
+    public function __construct(ConditionEngine $engine, TokenRegistry $tokens, ?ThemePackage $package = null, ?SectionRegistry $sections = null, ?ComponentRegistry $components = null, ?ThemeSchedule $schedule = null, ?ThemeMedia $media = null, ?ThemeSites $sites = null, ?ThemeSceneCss $sceneCss = null) {
         $this->engine = $engine;
         $this->tokens = $tokens;
         $this->package = $package ?? new ThemePackage($engine, $tokens);
@@ -29,6 +30,7 @@ final class ThemeSnapshot {
         $this->schedule = $schedule ?? $this->package->schedule();
         $this->media = $media ?? $this->package->media();
         $this->sites = $sites ?? $this->package->sites();
+        $this->sceneCss = $sceneCss ?? new ThemeSceneCss();
     }
 
     /**
@@ -114,7 +116,14 @@ final class ThemeSnapshot {
         $siteCss = $this->sites->css($siteActive);
         $siteGlobals = $this->sites->globals($sitesConfig,$siteActive);
 
+        // Frente AB: a cena desenhada no editor vira CSS + camadas do Catalogo.
+        $sceneView = $this->sceneCss->compile($config['kaz_scene'] ?? null);
+
         return [
+            'scene_view' => $sceneView,
+            'scene_css'  => $sceneView['css'],
+            'scene_layers' => $sceneView['layers'],
+            'scene_enabled' => $sceneView['enabled'],
             'primary'    => $primary,
             'surface'    => $surface,
             'scene'      => $scene,

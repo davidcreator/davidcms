@@ -1,4 +1,4 @@
-/* KAZTheme-Editor — frentes U/V/W/X + Y + Z + AA (workspace Penpot).
+/* KAZTheme-Editor — frentes U/V/W/X + Y + Z + AA + AB (tema publicado).
    Editor de temas estruturado: canvas SVG + árvore de camadas + inspector.
    Apenas DOM puro: sem rede, codigo executavel do usuario, WebGL, Three.js,
    upload ou escrita remota. A cena e PERSISTENTE (frente V): volta ao abrir
@@ -215,6 +215,8 @@
     if (viewport) viewport.hidden = stateModule !== 'design';
     var sb = root.querySelector('[data-kaz-screenbar]');
     if (sb) sb.hidden = stateModule !== 'design';
+    var stg = root.querySelector('[data-kaz-stage]');
+    if (stg) stg.setAttribute('data-kaz-active-module', stateModule);
     var links = root.querySelectorAll('button[data-kaz-module]');
     for (i = 0; i < links.length; i++) {
       n = links[i];
@@ -516,7 +518,11 @@
     if (bs) bs.textContent = scene.canvas.w + ' × ' + scene.canvas.h;
   }
 
-  function render() { drawCanvas(); drawLayers(); drawInspector(); syncField(); paintDirty(); paintChrome(); }
+  /* Frente AB: defesa em profundidade. paintChrome() ja chamava
+     paintModules(); a mudanca real e que o HTML agora vem com `hidden`
+     no SERVIDOR, entao uma falha no JS nao empilha os 14 formularios. */
+  function render() { drawCanvas(); drawLayers(); drawInspector(); syncField();
+                      paintDirty(); paintChrome(); paintModules(); }
 
   /* ---- Conexão com campos allowlistados do tema -------------------------- */
   /* Aplicacao aditiva e nao destrutiva: marca camadas allowlistadas sem
@@ -855,6 +861,7 @@
     formBaseline = formSnapshot(); formTouched = false;
     paintDirty();
   });
+  root.setAttribute('data-kaz-ready','1');
   setScreen('tema');
   render();
   formBaseline = formSnapshot();
