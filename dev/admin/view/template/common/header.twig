@@ -45,6 +45,11 @@
   {% for src in scripts %}
   <script src="{{ src }}"></script>
   {% endfor %}
+  {# Frente AD: apenas scripts registrados via addScriptDeferred() ganham
+     defer. Os demais controllers preservam integralmente a ordem anterior. #}
+  {% for src in scripts_deferred %}
+  <script src="{{ src }}" defer></script>
+  {% endfor %}
   <script>window.__rmsAppearanceMode = '{{ theme_mode }}';</script>
 </head>
 <body class="admin-shell {{ logged ? '' : 'auth-layout' }} {{ body_class }}">

@@ -1,104 +1,127 @@
-# ReamurCMS — Frente AC · Navegador Real e Responsividade Corrigida
+# ReamurCMS — Frente AD · Boot após o DOM, Ferramentas Operacionais
 
-> **A AB dizia que era responsiva. Chromium provou que não era.**
-> Esta frente roda um navegador de verdade em 6 viewports, mede o layout,
-> encontra o defeito e o corrige — com screenshots de antes e depois.
+> **"Nenhuma ferramenta responde e não existe erro no console do DevTools."**
+> Console limpo não era sinal de saúde: era o sintoma de um `return`
+> silencioso. Esta frente reproduz o defeito em Chromium e o corrige.
+> **Não é banco de dados — nenhuma migration é necessária.**
 
 | | |
 | --- | --- |
-| Base | `main` @ `13b0f7b8475b95b3777bd3a5fc50f48890ae280e` (AB aplicada pelo usuário, `feat: add published theme scene and fix admin UI`) |
-| Árvore | 3.180 entradas / 2.598 blobs / 14 manifestos / `truncated:false` |
-| Arquivos | **12** completos (10 substituições + 2 novos) + 4 evidências PNG + `RELATORIO.md` + `INDICE.md` |
-| Recorte | 2201 arquivos / 31,060,267 bytes |
-| Réplica | 2203 arquivos / 31,096,310 bytes (10 alterados + 2 novos + 2191 intactos) |
-| **Chromium real** | **251 asserções / 0 falhas** em 1920×1080, 1440×900, 1280×800, 1024×768, 768×1024, 390×844 |
-| Outros harnesses | ferramenta versionada 90/0 · regressão DOM 226/0 · PROBE publicação 93/0 = **660/0** |
-| Validação final | 117 OK / 0 FALHAS |
+| Base | estado pós-AC confirmado pelo usuário (`13b0f7b8475b…` + 12 arquivos da AC) |
+| Arquivos | **17** completos (14 substituições + 3 novos) + 4 evidências PNG + `RELATORIO.md` + `INDICE.md` |
+| Recorte | 2203 arquivos / 31,096,310 bytes |
+| Réplica | 2206 arquivos / 31,139,098 bytes (14 alterados + 3 novos + 2189 intactos) |
+| Harnesses | boot 22/0 · alcance 5/0 · Chromium defer 251/0 · Chromium head-real 251/0 · layout 90/0 · DOM 226/0 · PROBE 93/0 = **938/0** |
+| Validação final | 132 OK / 0 FALHAS |
 | Guards | 4/4 verdes e byte-idênticos HEAD × réplica |
-| Sintaxe | 388 PHP 0 erros · 610 JS/CJS 0 falhas |
-| Build | idempotente 5/5 · CRC 18/18 · `sha256sum -c` 53/53 |
+| Sintaxe | 388 PHP 0 erros · 611 JS/CJS 0 falhas |
+| Build | idempotente 5/5 · CRC 23/23 · `sha256sum -c` 54/54 |
 
 ---
 
-## 1. Por que esta frente existe
+## 1. O diagnóstico
 
-A AB foi validada com 347 asserções / 0 falhas — **PHP WASM, Twig e jsdom não
-calculam CSS**: não implementam cascata, flex/grid, `getBoundingClientRect`
-ou `overflow`. Foi exatamente esse tipo de prova que você reprovou na AA
-(*"não se auto ajusta ao tamanho de telas"*, *"telas atropeladas"*). A AC
-instala Chromium (Playwright 1.56) no sandbox e abre o HTML renderizado com
-as folhas CSS e o JS reais do repositório.
+O `header.twig` emitia no **`<head>`, sem `defer`**, todos os scripts de
+`addScript()`:
 
-## 2. O defeito que só o navegador viu
+```twig
+{% for src in scripts %}<script src="{{ src }}"></script>{% endfor %}
+```
 
-`kaz_theme_editor.twig` abre `<form id="kaz-theme-form">` **antes** do
-`<header class="kaz-topbar">`. Filhos diretos do `.kaz-shell`: apenas esse
-`<form>` e um `<details>`. Portanto **nenhum seletor `.kaz-shell > .kaz-*`
-da AB casou** — a responsividade anunciada nunca existiu no navegador.
+O `kaz-theme-editor.js` é uma IIFE que começa com
+`var root = document.getElementById('kaz-theme-editor'); if (!root) return;`.
+No `<head>` o `<body>` ainda não foi parseado → `root === null` → **`return`
+silencioso**. Nenhum listener é registrado e **o console permanece limpo**.
 
-| Medição em 390×844 | AB | AC |
-| --- | --- | --- |
-| `grid-template-columns` | `236px 0px 264px` (centro **0px**) | `1fr` (centro ocupa tudo) |
-| altura da `.kaz-topbar` | **453px** (um ícone por linha) | ~40px (faixa rolável) |
-| `.kaz-topbar__right` | `x=671` (fora dos 390px) | dentro da viewport |
-| altura do `.kaz-shell` | **1478px** em 844px | cabe na viewport |
-| scrolls aninhados | 4 | ≤3 |
-| altura da barra de abas | **244px** (`<p>` + `align-items:stretch`) | ~34px |
-| canvas | cortado / escalado duas vezes | inteiro, `aspect-ratio` preservado |
+O mesmo `if (!root) return;` existe em `theme-package.js`,
+`theme-condition-builder.js`, `theme-scene-editor.js`,
+`theme-section-builder.js`, `theme-component-library.js`,
+`theme-schedule.js` e `theme-sites.js` (`theme-media.js` já era tolerante).
+Ou seja: **os nove módulos do editor de temas estavam desligados** — o que
+explica a reprovação original da AA ("nada funciona, nenhuma das
+funcionalidades tem resultado para criação de temas"). AB e AC entregaram
+estado-sem-JS, tema publicado e layout responsivo, mas não religaram a
+inicialização.
 
-Em 768×1024 o shell media 1240px; em 1024×768 o stage tinha 151px.
+### Por que a AC não viu isso
 
-## 3. Correções
+`validacao/ac_site.py` da AC montava o documento de teste com
+`<script src="…" defer></script>`. Com `defer` o DOM já existe e o boot
+funciona: 251 asserções Chromium passaram — sobre uma ordem de carregamento
+que o Admin real **não** produz. A AD passa a testar o `<head>` sem `defer`.
 
-1. **O form é o contêiner flex** — `#kaz-theme-form { display:flex;
-   flex-direction:column; flex:1; min-height:0 }` e todos os `.kaz-shell >
-   .kaz-*` viram `#kaz-theme-form > .kaz-*`.
-2. **Altura nunca `auto`** — `calc(100dvh - 104px)` em todos os viewports.
-3. **Toolbar em faixa rolável** (`flex-wrap:nowrap; overflow-x:auto;
-   max-height:36px`) até 1280px; chrome compacto devolve altura ao stage.
-4. **Uma coluna até 980px** com sidebars em **overlay** recolhidas por padrão,
-   abertas pelos botões `toggle-left/right` já existentes (`data-kaz-mobile-open`).
-5. **Abas compactas** — `align-items:center` e o `<p>` herdado oculto.
-6. **Zoom coerente** — novo `paintFrame()` dimensiona o `.kaz-screen` com
-   `w*zoom`/`h*zoom`; `paintZoom()` não aplica mais `scale()` no board (evita
-   escala dupla). `fitZoom()` usa passo 0,05 com arredondamento para baixo e é
-   acionado no boot apenas em telas ≤980px.
-7. **`<details>` fechados sem layout interno** — elimina o 4º scroll aninhado.
-8. Cache `-kaz-theme-editor-ab` → **`-kaz-theme-editor-ac`**.
+Reprodução medida (`tools/verify-kaz-boot.cjs`, 22/0): com o JS da AC no
+`<head>` sem `defer`, `data-kaz-ready` ausente, `__kaz` ausente, clique em aba
+não abre painel e **zero erros de console**. Com o JS da AD, boot, abas,
+presets, cena e Publicar ativos. Medição de alcance
+(`validacao/ad_all_scripts.cjs`, 5/0): 7 módulos saem cedo no `<head>` e
+**zero** saem com `defer`.
 
-## 4. Evidência
+## 2. A correção
 
-`evidencia/` traz o antes (AB, mobile) e o depois (AC, mobile e desktop) mais
-a home do catálogo com a cena publicada. São capturas do documento de teste
-montado localmente com CSS/JS reais — **não** são capturas do seu servidor.
+1. **`Document::addScriptDeferred()` / `getScriptsDeferred()`** — novo par de
+   métodos; `addScript()` fica **intacto**.
+2. **`common/header.php`** publica `scripts_deferred`; **`header.twig`** ganha
+   um segundo loop `<script src="{{ src }}" defer></script>`, mantendo o loop
+   original sem alteração. Impacto restrito ao controller de temas: os outros
+   5 controllers preservam a ordem anterior, sem risco para os 6 templates
+   que têm `<script>` inline no corpo.
+3. **`design/theme.php`** troca as **9** chamadas e o cache passa a
+   `-kaz-theme-editor-ad` (refresh forçado).
+4. **`kaz-theme-editor.js`** — defesa em profundidade: todo o corpo vive em
+   `boot()`, disparado assim que `#kaz-theme-editor` existe; caso contrário
+   espera `DOMContentLoaded` com `load` como fallback e guard de idempotência.
+   A decisão é pela **presença do elemento**, não por `readyState` (jsdom
+   reporta `loading` mesmo com o DOM montado).
 
-`tools/verify-kaz-layout.cjs` (novo, opcional, exige Playwright) reproduz a
-medição com `node tools/verify-kaz-layout.cjs <url-admin> <url-catalog>`:
-falha com `exit 1` se houver overflow horizontal, canvas achatado, painéis
-empilhados no boot, sidebars sobrepostas, mais de 3 scrolls aninhados ou
-aspect-ratio incorreto. Não faz parte do runtime do CMS.
+## 3. Banco de dados — por que NÃO entreguei migration
 
-## 5. Instalação
+Você autorizou criar o arquivo de atualização se fosse necessário. **Não é.**
+Medimos a cadeia: a inclusão do JS em `design/theme.php:200-202` é
+**incondicional** — nenhum `setting`, `extension`, permissão ou consulta
+condiciona `addScript()`. A cena publicada vive dentro de
+`draft_config` / `published_config`, colunas preexistentes; a ausência da
+chave `kaz_scene` é tratada por `ThemePackage::normalizeScene(null)` como
+estado "não salvo". A AD não cria coluna, não faz `INSERT`, `UPDATE`,
+`ALTER TABLE` nem `CREATE TABLE`.
 
-Extrair na raiz preservando os caminhos — **12 arquivos completos**, sem
-migration, comando, `npm install` ou passo de banco. Refresh forçado do Admin
-(cache `-kaz-theme-editor-ac`). O `tools/` e `docs/` não afetam o runtime.
+Criar uma migration aqui seria inútil e arriscado. Em vez dela, o pacote traz
+`tools/diagnostico-kaztheme-somente-leitura.sql`, **apenas SELECTs** e com
+aviso explícito no cabeçalho de que **não é** arquivo de atualização: serve
+só se você quiser confirmar por conta própria. Não o aplique como migration.
 
-## 6. Contratos e limitações
+## 4. Instalação
 
-`theme_form.twig` com 3 linhas e 2 `|raw`; o `<form>` como filho do shell;
-14 painéis com `hidden` no servidor; 30 `data-kaz-module`; 53 `name=`;
-418 chaves × 3 idiomas; 14 manifestos; 10 `PENDING_DECISION`;
-`release_approved:false`. Sem migration, `|raw` novo, `on*`, `innerHTML`,
+Extrair os 17 arquivos na raiz preservando os caminhos. Sem migration, sem
+comando, sem `npm install`, sem reiniciar serviço. Dar **refresh forçado**
+(Ctrl+F5) no Admin por causa do cache `-kaz-theme-editor-ad`.
+
+Confirmação sugerida no DevTools do servidor real:
+`document.getElementById('kaz-theme-editor').__kaz.ui()` deve devolver o
+objeto de estado (não `undefined`); clicar numa aba deve abrir exatamente um
+painel; trocar o preset de tela deve mudar `data-kaz-screen-w`.
+
+## 5. Contratos e limitações
+
+`theme_form.twig` com 3 linhas e 2 `|raw`; 14 painéis com `hidden` no
+servidor; 53 `name=`; 3 forms; 418 chaves × 3 idiomas; 14 manifestos
+idênticos; 10 `PENDING_DECISION`; 11 hashes congelados; `schema.sql`
+intacto; `release_approved:false`. Sem `|raw` novo, `on*`, `innerHTML`,
 `eval`, `fetch`, `localStorage`, rota nova ou escrita no GitHub por este
-pacote.
+pacote. A cadeia `editar → salvar → Publicar → .rms-scene` da AB e a
+responsividade da AC seguem verificadas (PROBE e Chromium).
 
-Chromium headless sobre um documento local **não substitui o seu servidor**:
-não há sessão autenticada, banco, PHP nativo ou as demais folhas que o
-`header.twig` carrega em produção. Continua válida a recomendação de verificar
-no DevTools por que o `kaz-theme-editor.js` não executou no ambiente que
-produziu a imagem original — a AB/AC tornam o editor utilizável mesmo sem JS,
-mas identificar essa causa evita surpresas.
+**Observação sobre o HEAD remoto:** a API do GitHub continuou devolvendo
+`13b0f7b8475b95b3777bd3a5fc50f48890ae280e` (`pushed_at`
+`2026-11-04T19:22:03Z`) durante esta frente. Trabalhamos, portanto, sobre a
+réplica local do estado pós-AC que você confirmou ter aplicado — não
+assumimos nenhum commit novo. Se o push estiver em outro branch ou tenha
+ocorrido depois, os 17 paths continuam LIVRES nos 14 manifestos.
+
+Chromium headless sobre documento local **não é o seu servidor**: não há
+sessão autenticada, banco, PHP nativo nem proxy/CDN. Um cache de proxy
+servindo o `kaz-theme-editor.js` antigo reproduziria o sintoma mesmo após a
+correção — verifique a resposta **200** do asset com o sufixo `-ad`.
 
 Nenhum gate virou `PASS`: F9-27 segue `BLOCKED_NOT_RUN`, BDREditor/F9-103
 pausado, P2/F9-18 não reaberto. CI remoto não verificado aqui.

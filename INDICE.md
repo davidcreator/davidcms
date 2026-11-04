@@ -1,16 +1,19 @@
-# Índice — Frente AC
+# Índice — Frente AD
 
 | # | Arquivo | Papel |
 | --- | --- | --- |
-| 1 | `dev/admin/view/css/kaz-theme-editor.css` | **correção central**: form como contêiner, altura fixa, overlay, chrome compacto |
-| 2 | `dev/admin/view/js/kaz-theme-editor.js` | `paintFrame()`, fit no boot mobile, `data-kaz-mobile-open` |
-| 3 | `dev/admin/controller/design/theme.php` | cache `-kaz-theme-editor-ac` |
-| 4 | `tools/verify-kaz-layout.cjs` | **novo** — harness Chromium reutilizável |
-| 5–11 | `docs/KAZTheme-Editor*.md` | seção AC anexada aos 7 documentos |
-| 12 | `docs/KAZTheme-Editor-Validacao-Navegador-Real.md` | **novo** — referência completa |
-| 13–16 | `evidencia/*.png` | antes (AB) e depois (AC), mobile/desktop/catálogo |
-| 17 | `RELATORIO.md` | este relatório |
-| 18 | `INDICE.md` | este índice |
+| 1 | `dev/admin/view/js/kaz-theme-editor.js` | **boot resiliente** — `boot()` após o DOM |
+| 2 | `dev/admin/controller/design/theme.php` | 9 × `addScriptDeferred()`, cache `-ad` |
+| 3 | `dev/system/library/document.php` | `addScriptDeferred()` / `getScriptsDeferred()` (novos) |
+| 4 | `dev/admin/controller/common/header.php` | publica `scripts_deferred` |
+| 5 | `dev/admin/view/template/common/header.twig` | segundo loop com `defer`; loop original intacto |
+| 6 | `tools/verify-kaz-boot.cjs` | **novo** — reproduz o sintoma e prova a correção |
+| 7 | `tools/diagnostico-kaztheme-somente-leitura.sql` | **novo** — SELECTs apenas; **não é migration** |
+| 8 | `docs/KAZTheme-Editor-Boot-e-Ferramentas.md` | **novo** — diagnóstico completo |
+| 9–17 | `docs/KAZTheme-Editor*.md` | seção AD anexada aos 9 documentos |
+| 18–21 | `evidencia/*.png` | antes/depois do boot, mobile e catálogo |
+| 22 | `RELATORIO.md` | este relatório |
+| 23 | `INDICE.md` | este índice |
 
 `.sha256` fica fora do ZIP, em `/home/user/entregas/`.
-Frentes A–AB preservadas, aplicadas e confirmadas — não reentregues.
+Frentes A–AC preservadas, aplicadas e confirmadas — não reentregues.

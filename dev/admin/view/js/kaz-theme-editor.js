@@ -1,4 +1,4 @@
-/* KAZTheme-Editor — frentes U/V/W/X + Y + Z + AA + AB + AC (Chromium real).
+/* KAZTheme-Editor — frentes U/V/W/X + Y + Z + AA + AB + AC + AD (boot apos DOM).
    Editor de temas estruturado: canvas SVG + árvore de camadas + inspector.
    Apenas DOM puro: sem rede, codigo executavel do usuario, WebGL, Three.js,
    upload ou escrita remota. A cena e PERSISTENTE (frente V): volta ao abrir
@@ -14,6 +14,16 @@
    nao entram em kaz_scene_json, no baseline ou em armazenamento. */
 (function (document, window) {
   'use strict';
+  /* Frente AD — BOOT RESILIENTE.
+     header.twig emite a tag script no <head> sem defer. A IIFE rodava antes
+     do <body>, getElementById devolvia null e o 'if (!root) return;' saia
+     SILENCIOSAMENTE: nenhum handler, nenhum erro no console, nenhuma
+     ferramenta respondia. Todo o corpo agora vive em boot(), disparado
+     quando o editor ja existe; se ainda nao existe, espera o DOM. */
+  var bootDone = false;
+  function boot() {
+    if (bootDone) return;
+    bootDone = true;
   var NS = 'http://www.w3.org/2000/svg';
   var VERSION = 1;
   var KINDS = ['rect', 'text', 'button', 'card', 'section'];
@@ -942,4 +952,13 @@
   };
   say('KAZTheme-Editor pronto · ' + scene.layers.length + ' camadas · '
       + (root.getAttribute('data-kaz-saved') === '1' ? 'cena salva no tema' : 'cena derivada, salve para persistir'));
+  }
+  /* Decide pela PRESENCA DO ELEMENTO, nao por readyState: jsdom (eval
+     sincrono) reporta 'loading' mesmo com o DOM ja montado. */
+  if (document.getElementById('kaz-theme-editor')) {
+    boot();
+  } else {
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
+    window.addEventListener('load', boot, { once: true });
+  }
 })(document, window);

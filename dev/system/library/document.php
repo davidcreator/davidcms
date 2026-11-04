@@ -21,6 +21,8 @@ final class Document {
     private array $styles  = [];
     /** @var array<string, string> */
     private array $scripts = [];
+    /** @var array<string, string> Scripts que so executam apos o DOM (Frente AD) */
+    private array $scriptsDeferred = [];
 
     public function setTitle(string $title): void {
         $this->title = $title;
@@ -58,6 +60,12 @@ final class Document {
         $this->scripts[$href] = $href;
     }
 
+    /** Frente AD: registra um script para ser emitido com defer no <head>.
+     *  Nao altera addScript(): os demais controllers mantem a ordem atual. */
+    public function addScriptDeferred(string $href): void {
+        $this->scriptsDeferred[$href] = $href;
+    }
+
     /** @return array<string, string> */
     public function getLinks(): array {
         return $this->links;
@@ -71,5 +79,10 @@ final class Document {
     /** @return array<string, string> */
     public function getScripts(): array {
         return $this->scripts;
+    }
+
+    /** @return array<string, string> */
+    public function getScriptsDeferred(): array {
+        return $this->scriptsDeferred;
     }
 }

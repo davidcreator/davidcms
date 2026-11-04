@@ -31,6 +31,7 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['title']  = $this->document->getTitle();
         $data['styles']  = $this->document->getStyles();
         $data['scripts'] = $this->document->getScripts();
+        $data['scripts_deferred'] = $this->document->getScriptsDeferred();
 
         $data['home']           = (string)$this->config->get('site_url');
         $data['site_url']       = (string)$this->config->get('site_url');

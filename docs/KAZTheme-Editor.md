@@ -404,3 +404,74 @@ como filho do shell, 14 painéis, 30 `data-kaz-module`, 53 `name=`, 14
 manifestos, `release_approved:false`. Sem migration, `|raw` novo, `on*`,
 `innerHTML`, `eval`, `fetch`, `localStorage` ou escrita no GitHub por este
 pacote. **CI verde ou health check não significa release aprovada.**
+
+---
+
+## Frente AD — Boot após o DOM: por que nenhuma ferramenta respondia
+
+**Sintoma relatado:** todas as ferramentas inertes e **nenhum erro no console
+do DevTools**. A causa não era exceção, nem banco de dados, nem CSS: era a
+**ordem de carregamento**.
+
+`dev/admin/view/template/common/header.twig` emitia, no `<head>` e **sem
+`defer`**, todos os scripts registrados por `addScript()`:
+
+```twig
+{% for src in scripts %}<script src="{{ src }}"></script>{% endfor %}
+```
+
+O `kaz-theme-editor.js` é uma IIFE que começa com
+`var root = document.getElementById('kaz-theme-editor'); if (!root) return;`.
+No `<head>` o `<body>` ainda não existe → `root === null` → **`return`
+silencioso**. Nenhum listener é anexado e o console permanece limpo. O mesmo
+padrão `if (!root) return;` aparece em `theme-scene-editor.js`,
+`theme-section-builder.js`, `theme-component-library.js`, `theme-schedule.js`,
+`theme-media.js`, `theme-sites.js` e `theme-package.js` — ou seja, **os nove
+módulos do editor de temas estavam desligados desde a AA**, o que explica a
+queixa original de que "nenhuma das funcionalidades tem resultado".
+
+Por que os harnesses anteriores não viram: o documento de teste da AC
+injetava o script com `defer`. O DOM já estava montado, o boot funcionava e
+251 asserções Chromium passavam — numa condição que o Admin real não tem.
+A AC corrigiu o layout; **não** corrigiu a inicialização.
+
+### Correção (contida, sem banco de dados)
+
+1. `Document::addScriptDeferred()` / `getScriptsDeferred()` — novo par de
+   métodos; `addScript()` fica intacto.
+2. `common/header.php` publica `scripts_deferred`; `header.twig` emite um
+   segundo loop com `<script src="…" defer></script>`. **Só** o controller
+   `design/theme.php` usa o método novo; os outros 5 controllers mantêm a
+   ordem anterior, sem risco para os 6 templates que têm `<script>` inline
+   no corpo.
+3. `design/theme.php` troca as 9 chamadas e o cache passa a
+   `-kaz-theme-editor-ad` (refresh forçado).
+4. `kaz-theme-editor.js` ganha **defesa em profundidade**: o corpo inteiro
+   vive em `boot()`, disparado assim que `#kaz-theme-editor` existe; se ainda
+   não existe, espera `DOMContentLoaded` (com `load` como fallback e guard
+   de idempotência). A decisão é pela **presença do elemento**, não por
+   `readyState` — jsdom reporta `loading` mesmo com o DOM já montado.
+
+### Banco de dados
+
+**Não é necessária nenhuma migration.** A inclusão do JS em
+`design/theme.php` é incondicional e `ThemePackage::normalizeScene(
+$config['kaz_scene'] ?? null)` trata a ausência da chave como estado "não
+salvo" — zero coluna, zero `INSERT`, zero `UPDATE`. Fica disponível
+`tools/diagnostico-kaztheme-somente-leitura.sql`, com `SELECT`s apenas, para
+quem quiser confirmar; ele **não é** um arquivo de atualização e não deve ser
+aplicado como migration.
+
+### Verificação
+
+`tools/verify-kaz-boot.cjs` (novo, exige Playwright) abre um documento com o
+`<script>` no `<head>` **sem `defer`**, exatamente como o `header.twig`
+produzia. Com o JS da AC ele mede `data-kaz-ready` ausente, `__kaz` ausente,
+cliques sem efeito e **zero erros de console** — reproduzindo o sintoma.
+Com o JS da AD ele exige boot, handlers ativos e as interações de abas,
+presets, salvar e publicar. Use:
+`node tools/verify-kaz-boot.cjs <url-antes> <url-depois>`.
+
+A limitação anterior permanece: Chromium headless sobre documento local não é
+o servidor de produção. Confirme no Admin real após aplicar, com refresh
+forçado por causa do cache novo.
