@@ -1,32 +1,34 @@
-# Índice — ReamurCMS-Frente-X-Biblioteca-de-Blocos.zip
+# Índice — ReamurCMS-Frente-Y-Interface-Penpot.zip
 
-**Base:** `cd92573c507b6a5a4189d7b1b574cb73ec17ad59` · **Entradas:** 9 (7 arquivos completos + 2 documentos de entrega) · **sem patches**
+**Base:** `d68ce60ff0a42234f551ace4e919c38cb06b6e67` · **Entradas:** 10 (8 arquivos completos + 2 documentos de entrega) · **sem patches**
 
 | # | Entrada | Bytes | Tipo | CRC-32 |
 | ---: | --- | ---: | --- | --- |
-| 1 | `dev/admin/controller/design/theme.php` | 69616 | substitui | `cc84991b` |
-| 2 | `dev/admin/view/css/kaz-theme-editor.css` | 4502 | substitui | `afbd21e6` |
-| 3 | `dev/admin/view/js/kaz-theme-editor.js` | 24328 | substitui | `651e264b` |
-| 4 | `dev/admin/view/template/design/kaz_theme_editor.twig` | 8031 | substitui | `f1afa86a` |
-| 5 | `docs/KAZTheme-Editor-Biblioteca-de-Blocos.md` | 4488 | NOVO | `b0dde8f9` |
-| 6 | `docs/KAZTheme-Editor-Guia-Rapido.md` | 4827 | substitui | `997ab9af` |
-| 7 | `docs/KAZTheme-Editor.md` | 9605 | substitui | `2b015eb2` |
-| 8 | `RELATORIO.md` | — | documento final | — |
-| 9 | `INDICE.md` | — | documento final | — |
+| 1 | `dev/admin/controller/design/theme.php` | 69616 | substitui | `a1f58416` |
+| 2 | `dev/admin/view/css/kaz-theme-editor.css` | 16395 | substitui | `4fdccdf0` |
+| 3 | `dev/admin/view/js/kaz-theme-editor.js` | 32834 | substitui | `7e27b353` |
+| 4 | `dev/admin/view/template/design/kaz_theme_editor.twig` | 18817 | substitui | `b62b6e77` |
+| 5 | `docs/KAZTheme-Editor-Biblioteca-de-Blocos.md` | 4826 | substitui | `fd4f38e8` |
+| 6 | `docs/KAZTheme-Editor-Guia-Rapido.md` | 6329 | substitui | `262ce1bc` |
+| 7 | `docs/KAZTheme-Editor-Interface-Penpot.md` | 7661 | NOVO | `9dccb470` |
+| 8 | `docs/KAZTheme-Editor.md` | 12205 | substitui | `38a60e10` |
+| 9 | `RELATORIO.md` | — | documento final | — |
+| 10 | `INDICE.md` | — | documento final | — |
 
 **Ordem:** arquivos do repositório primeiro; `RELATORIO.md` e `INDICE.md` são as **duas últimas entradas**.
 
-**SHA-256 dos 7 arquivos (completos):**
-- `docs/KAZTheme-Editor-Biblioteca-de-Blocos.md` → `a93a052915942fd1c577e7bfa41a9685337cb2a2ea320327e06ef4cf5c7df7ad`
-- `docs/KAZTheme-Editor-Guia-Rapido.md` → `5934da5a78129b20e9d20be183f1c418051d73944305815a3f50eab717ebf103`
-- `docs/KAZTheme-Editor.md` → `f9fbcc16dabdc37979862ad3f4b6274c27d6bc322e1e115a4a696afd778ba1d1`
-- `dev/admin/view/css/kaz-theme-editor.css` → `1b8b33c6ab72f9abcfc6eb58943f6737b62693e1cbdacb63012fbdda3cf95914`
-- `dev/admin/view/template/design/kaz_theme_editor.twig` → `7e02888a1a925d4eb389e143aa5be92f0bc918d930c9ca9b3d1b1b0b2c244a9d`
-- `dev/admin/view/js/kaz-theme-editor.js` → `21617c066c82b840052a587c3170c3250946368493c4c17eef634a94a8023a7b`
-- `dev/admin/controller/design/theme.php` → `16ef309aaddc61ed8bafd239464df8a1dac83019437372cce4969bdce753a06f`
+**SHA-256 dos 8 arquivos (completos):**
+- `docs/KAZTheme-Editor-Biblioteca-de-Blocos.md` → `6b800f79605210b606af6fc6d73e5c92b9167e6cb8385103ba5618f11bd7eb31`
+- `docs/KAZTheme-Editor-Guia-Rapido.md` → `4ffda7946732cfc49e030bb22de52ba96adc370707cafa713e1802b897055fd5`
+- `docs/KAZTheme-Editor.md` → `8a142d04d357b9ded788b233686890a535c2bb3574167773192453005f47b68c`
+- `docs/KAZTheme-Editor-Interface-Penpot.md` → `3b076f466511ebfa3c7212a932d485fe62f9ed8a40a02e37971217fbecd8df1d`
+- `dev/admin/view/css/kaz-theme-editor.css` → `4034f84cddc088dc4751432e24e7a2ee6a1a9199ee2928415fc3c3151d39e842`
+- `dev/admin/view/template/design/kaz_theme_editor.twig` → `d6e491c941517f5ac6a73cb6af460c47f32aea434349e732de9f5b234fa636fe`
+- `dev/admin/view/js/kaz-theme-editor.js` → `6166948e8749238f468111f6b4778b324574250a3450bbb85af2b0519ff92f2f`
+- `dev/admin/controller/design/theme.php` → `28b59abf20cb9b127fcdfcdda3ca1d080b9e912dd5c7f072260c5f0af1a231d8`
 
-**SHA-256 do ZIP:** consulte `ReamurCMS-Frente-X-Biblioteca-de-Blocos.zip.sha256` (arquivo externo, fora do ZIP).
+**SHA-256 do ZIP:** consulte `ReamurCMS-Frente-Y-Interface-Penpot.zip.sha256` (arquivo externo, fora do ZIP).
 
-**Validação:** 3517/0 asserções · H1 214 · H2 614 · H3 884 · H4a 34 · H4b 218 · H5 946 · `php -l` 136 · `node --check` 471 · 12+12 cenários A/B · réplica 1149 paths / 17955466 bytes · guards 4/4 · CRC 9/9 · `sha256sum -c` 48/48.
+**Validação:** 4952/0 asserções · H1 276 · H2 962 · H3 1641 · H4a 34 · H4b 226 · H5 1206 · `php -l` 136 · `node --check` 471 · 12+12 cenários A/B · 28 campos congelados · réplica 1150 paths / 17998752 bytes · guards 4/4 · CRC 10/10 · `sha256sum -c` 49/49.
 
 **Não aplicado no GitHub por nós · não é release aprovada · CI verde ≠ release aprovada.**

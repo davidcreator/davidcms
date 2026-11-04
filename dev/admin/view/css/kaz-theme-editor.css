@@ -1,65 +1,253 @@
-/* KAZTheme-Editor — frentes U/V/X. Estilos escopados, sem importacao externa,
-   sem fontes remotas, sem codigo inline. Funciona no sandbox de preview. */
-.kaz-card { border: 1px solid #cbd5e1; }
-.kaz-card .card-header { background: linear-gradient(90deg, #0f172a, #1e3a8a); color: #fff; }
-.kaz-card .card-header .text-muted { color: #cbd5e1 !important; }
-.kaz-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; letter-spacing: .02em; }
-.kaz-brand__mark { display: inline-block; width: 22px; height: 22px; border-radius: 6px;
-  background: #38bdf8; box-shadow: inset 0 0 0 3px #0f172a; }
-.kaz-badge { font-size: 10px; padding: 2px 8px; border-radius: 999px;
-  background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); }
-.kaz-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr) 230px; gap: 10px; align-items: start; }
-.kaz-panel { border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; padding: 8px; min-height: 260px; }
-.kaz-panel__title { font-size: 11px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .06em; color: #475569; margin: 0 0 6px; }
-.kaz-tools { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-.kaz-btn { font-size: 11px; line-height: 1.2; padding: 4px 7px; border-radius: 6px;
-  border: 1px solid #cbd5e1; background: #fff; color: #0f172a; cursor: pointer; }
-.kaz-btn:hover { background: #e2e8f0; }
-.kaz-btn:focus-visible { outline: 2px solid #2563eb; outline-offset: 1px; }
-.kaz-btn--primary { background: #1e3a8a; border-color: #1e3a8a; color: #fff; }
-.kaz-btn--danger { color: #991b1b; }
-.kaz-layer-list { list-style: none; margin: 0; padding: 0; max-height: 230px; overflow: auto; }
+/* KAZTheme-Editor — frente Y. Workspace escuro inspirado no Penpot.
+   Estilos escopados em .kaz-*, sem importacao externa, sem fontes remotas,
+   sem codigo inline. Funciona no sandbox de preview (HTML/CSS local). */
+.kaz-card {
+  --kaz-bg: #18181b;
+  --kaz-panel: #1f1f23;
+  --kaz-panel-2: #26262b;
+  --kaz-elev: #2c2c33;
+  --kaz-line: #36363f;
+  --kaz-line-soft: #2b2b32;
+  --kaz-text: #e9e9ee;
+  --kaz-muted: #9b9ba7;
+  --kaz-dim: #6f6f7c;
+  --kaz-accent: #31efb8;
+  --kaz-accent-ink: #063a2c;
+  --kaz-blue: #7b61ff;
+  --kaz-danger: #ff6b6b;
+  --kaz-warn: #ffc857;
+  --kaz-ruler: 22px;
+  background: var(--kaz-bg);
+  border: 1px solid var(--kaz-line);
+  border-radius: 10px;
+  color: var(--kaz-text);
+  overflow: hidden;
+  box-shadow: 0 12px 34px rgba(0,0,0,.28);
+}
+.kaz-card * { box-sizing: border-box; }
+.kaz-card code { color: var(--kaz-accent); font-size: .92em; }
+.kaz-card .text-muted { color: var(--kaz-muted) !important; }
+
+/* ---------------- Navbar / toolbar ---------------- */
+.kaz-topbar { display: flex; align-items: center; gap: 10px; min-height: 46px;
+  padding: 5px 10px; background: var(--kaz-panel); border-bottom: 1px solid var(--kaz-line); }
+.kaz-topbar__brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.kaz-brand__mark { display: inline-block; width: 18px; height: 18px; border-radius: 5px;
+  background: var(--kaz-accent); box-shadow: inset 0 0 0 4px var(--kaz-bg); flex: none; }
+.kaz-topbar__file { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.kaz-topbar__file strong { color: var(--kaz-accent); }
+.kaz-topbar__sep, .kaz-toolbar__sep { width: 1px; height: 18px; background: var(--kaz-line); flex: none; }
+.kaz-topbar__page { font-size: 11px; color: var(--kaz-muted); white-space: nowrap; }
+.kaz-toolbar { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+.kaz-topbar__right { display: flex; align-items: center; gap: 5px; margin-left: auto; }
+.kaz-tool { display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; padding: 0; border: 1px solid transparent; border-radius: 6px;
+  background: transparent; color: var(--kaz-muted); cursor: pointer; }
+.kaz-tool:hover { background: var(--kaz-elev); color: var(--kaz-text); }
+.kaz-tool:focus-visible { outline: 2px solid var(--kaz-accent); outline-offset: 1px; }
+.kaz-tool--on { background: var(--kaz-elev); color: var(--kaz-accent); border-color: var(--kaz-line); }
+.kaz-ico { width: 16px; height: 16px; fill: none; stroke: currentColor;
+  stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.kaz-avatar { display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%; background: var(--kaz-blue);
+  color: #fff; font-size: 10px; font-weight: 700; }
+.kaz-badge { font-size: 10px; padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+  background: var(--kaz-elev); border: 1px solid var(--kaz-line); color: var(--kaz-muted); }
+.kaz-badge--muted { font-family: ui-monospace, monospace; font-size: 9px; }
+.kaz-badge--ok { background: rgba(49,239,184,.12); border-color: rgba(49,239,184,.35); color: var(--kaz-accent); }
+.kaz-badge--dirty { background: rgba(255,200,87,.14); border-color: rgba(255,200,87,.4);
+  color: var(--kaz-warn); font-weight: 700; }
+.kaz-badge--dirty[hidden] { display: none; }
+
+/* ---------------- Workspace 3 colunas ---------------- */
+.kaz-workspace { display: grid; grid-template-columns: 236px minmax(0,1fr) 264px;
+  height: 548px; background: var(--kaz-bg); }
+.kaz-sidebar { background: var(--kaz-panel); overflow: auto; min-width: 0; }
+.kaz-sidebar--left { border-right: 1px solid var(--kaz-line); }
+.kaz-sidebar--right { border-left: 1px solid var(--kaz-line); }
+.kaz-tabs { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px 6px 0;
+  border-bottom: 1px solid var(--kaz-line); background: var(--kaz-panel); position: sticky; top: 0; z-index: 2; }
+.kaz-tab { font-size: 10px; line-height: 1.2; padding: 5px 7px; border: 0; border-bottom: 2px solid transparent;
+  background: transparent; color: var(--kaz-muted); cursor: pointer; border-radius: 4px 4px 0 0; }
+.kaz-tab:hover { color: var(--kaz-text); background: var(--kaz-elev); }
+.kaz-tab--on { color: var(--kaz-accent); border-bottom-color: var(--kaz-accent); }
+.kaz-tab:focus-visible { outline: 2px solid var(--kaz-accent); outline-offset: -2px; }
+.kaz-panel { padding: 10px; }
+.kaz-panel[hidden] { display: none; }
+.kaz-panel__head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 8px; }
+.kaz-panel__title { font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--kaz-muted); margin: 0 0 8px; }
+.kaz-panel__title--spaced { margin-top: 16px; }
+.kaz-panel__count { font-size: 10px; color: var(--kaz-dim); font-family: ui-monospace, monospace; }
+.kaz-panel__note { font-size: 10px; line-height: 1.5; color: var(--kaz-dim); margin: 10px 0 0; }
+.kaz-panel__foot { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 10px;
+  padding-top: 8px; border-top: 1px solid var(--kaz-line-soft); }
+
+/* Paginas */
+.kaz-pages { list-style: none; margin: 0; padding: 0; }
+.kaz-pages__item { display: flex; align-items: center; gap: 6px; font-size: 11px;
+  padding: 6px 8px; border-radius: 5px; }
+.kaz-pages__item--on { background: var(--kaz-elev); color: var(--kaz-accent); }
+.kaz-page-ico { width: 10px; height: 12px; border: 1px solid currentColor; border-radius: 2px; }
+.kaz-pages__item .kaz-panel__count { margin-left: auto; }
+
+/* Arvore de camadas */
+.kaz-layer-list { list-style: none; margin: 0; padding: 0; }
 .kaz-layer { display: flex; justify-content: space-between; gap: 4px; align-items: center;
-  padding: 3px 5px; border: 1px solid transparent; border-radius: 5px; font-size: 11px; }
-.kaz-layer--selected { background: #dbeafe; border-color: #2563eb; }
+  padding: 5px 7px; border: 1px solid transparent; border-radius: 5px; font-size: 11px;
+  border-left: 2px solid transparent; }
+.kaz-layer:hover { background: var(--kaz-elev); }
+.kaz-layer--selected { background: rgba(123,97,255,.16); border-color: var(--kaz-blue);
+  border-left-color: var(--kaz-accent); }
 .kaz-layer__name { border: 0; background: transparent; padding: 0; text-align: left;
-  font: inherit; color: #0f172a; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kaz-layer__flags { font-size: 9px; color: #b91c1c; white-space: nowrap; }
-.kaz-stage { border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; overflow: hidden; }
+  font: inherit; color: var(--kaz-text); cursor: pointer; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.kaz-layer__flags { font-size: 9px; color: var(--kaz-warn); white-space: nowrap; }
+
+/* Ativos / blocos */
+.kaz-assets { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.kaz-asset { display: flex; flex-direction: column; align-items: stretch; gap: 4px;
+  padding: 5px; font-size: 10px; text-align: left; color: var(--kaz-text);
+  background: var(--kaz-panel-2); border: 1px solid var(--kaz-line);
+  border-radius: 6px; cursor: pointer; }
+.kaz-asset:hover { border-color: var(--kaz-accent); background: var(--kaz-elev); }
+.kaz-asset:focus-visible { outline: 2px solid var(--kaz-accent); outline-offset: 1px; }
+.kaz-asset__thumb { display: block; height: 30px; border-radius: 3px;
+  background: linear-gradient(135deg, #3b3b46, #232329); position: relative; overflow: hidden; }
+.kaz-asset__thumb::before { content: ''; position: absolute; left: 4px; right: 4px; top: 5px;
+  height: 8px; background: rgba(255,255,255,.28); border-radius: 2px; }
+.kaz-asset__thumb::after { content: ''; position: absolute; left: 4px; bottom: 5px;
+  width: 40%; height: 7px; background: var(--kaz-accent); border-radius: 2px; opacity: .8; }
+.kaz-asset__thumb--card::before { left: 6px; right: 6px; height: 16px; }
+.kaz-asset__thumb--banner::before { top: 8px; height: 12px; background: var(--kaz-blue); }
+.kaz-asset__thumb--titulo::before { height: 5px; background: var(--kaz-accent); }
+.kaz-asset__thumb--galeria::before { width: 26%; right: auto; height: 18px; box-shadow: 12px 0 0 rgba(255,255,255,.28), 24px 0 0 rgba(255,255,255,.28); }
+.kaz-asset__thumb--cta::before { height: 14px; background: rgba(255,255,255,.18); }
+.kaz-swatches { display: flex; flex-wrap: wrap; gap: 5px; }
+.kaz-swatch { width: 22px; height: 22px; border-radius: 5px; border: 1px solid var(--kaz-line);
+  cursor: default; }
+.kaz-type-sample { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--kaz-muted); }
+.kaz-type-sample__aa { font-size: 20px; font-weight: 700; color: var(--kaz-text); }
+.kaz-token { display: flex; align-items: center; gap: 7px; padding: 6px 0;
+  border-bottom: 1px solid var(--kaz-line-soft); font-size: 11px; }
+.kaz-token__dot { width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--kaz-line); }
+.kaz-token code { margin-left: auto; font-size: 10px; }
+.kaz-history { list-style: none; margin: 0; padding: 0; font-size: 10px; }
+.kaz-history li { padding: 4px 7px; border-radius: 4px; color: var(--kaz-muted); }
+.kaz-history li[data-kaz-current="1"] { background: var(--kaz-elev); color: var(--kaz-accent); }
+
+/* ---------------- Centro: réguas, viewport, board ---------------- */
+.kaz-center { position: relative; overflow: hidden; background: #121216; }
+.kaz-ruler { position: absolute; background: var(--kaz-panel); color: var(--kaz-dim);
+  font: 9px/1 ui-monospace, monospace; z-index: 3; overflow: hidden; }
+.kaz-ruler--corner { top: 0; left: 0; width: var(--kaz-ruler); height: var(--kaz-ruler);
+  border-right: 1px solid var(--kaz-line); border-bottom: 1px solid var(--kaz-line); }
+.kaz-ruler--h { top: 0; left: var(--kaz-ruler); right: 0; height: var(--kaz-ruler);
+  border-bottom: 1px solid var(--kaz-line); display: flex; align-items: flex-end; }
+.kaz-ruler--v { top: var(--kaz-ruler); left: 0; bottom: 0; width: var(--kaz-ruler);
+  border-right: 1px solid var(--kaz-line); display: flex; flex-direction: column; }
+.kaz-ruler__tick { flex: none; border-left: 1px solid var(--kaz-line); padding: 1px 0 2px 3px;
+  height: 100%; min-width: 56px; white-space: nowrap; }
+.kaz-ruler--v .kaz-ruler__tick { border-left: 0; border-top: 1px solid var(--kaz-line);
+  height: 56px; padding: 3px 0 0 2px; writing-mode: vertical-rl; }
+.kaz-viewport { position: absolute; top: var(--kaz-ruler); left: var(--kaz-ruler); right: 0; bottom: 0;
+  overflow: auto; background-color: #121216;
+  background-image: radial-gradient(circle, #35353f 1px, transparent 1px);
+  background-size: 16px 16px; padding: 36px; }
+.kaz-viewport[data-kaz-tool-state="hand"] { cursor: grab; }
+.kaz-viewport[data-kaz-tool-state="hand"]:active { cursor: grabbing; }
+.kaz-board { display: inline-block; transform-origin: 0 0; }
+.kaz-board__label { display: flex; align-items: center; gap: 5px; font-size: 10px;
+  color: var(--kaz-accent); margin: 0 0 6px 2px; font-family: ui-monospace, monospace; }
+.kaz-board__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--kaz-accent); }
+.kaz-board__frame { width: 960px; height: 540px; background: #fff;
+  border: 1px solid var(--kaz-line); border-radius: 2px; overflow: hidden;
+  box-shadow: 0 18px 44px rgba(0,0,0,.55); }
+.kaz-stage { border: 1px solid var(--kaz-line); border-radius: 8px; background: #fff; overflow: hidden; }
 .kaz-stage svg { display: block; width: 100%; height: auto; touch-action: none; }
+.kaz-board__frame svg { display: block; width: 100%; height: 100%; touch-action: none; }
 .kaz-g { cursor: move; }
 .kaz-g [data-kaz-handle] { cursor: nwse-resize; }
 .kaz-g--selected { outline: none; }
+
+/* ---------------- Inspector ---------------- */
+.kaz-section { padding: 0 0 10px; margin: 0 0 10px; border-bottom: 1px solid var(--kaz-line-soft); }
+.kaz-section:last-child { border-bottom: 0; }
+.kaz-section__title { display: flex; align-items: center; justify-content: space-between;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--kaz-muted); margin: 0 0 7px; }
+.kaz-section__meta { font-size: 9px; font-weight: 400; color: var(--kaz-dim); }
 .kaz-field { margin-bottom: 6px; }
-.kaz-field label { display: block; font-size: 10px; font-weight: 600; color: #475569; margin-bottom: 2px; }
-.kaz-field input, .kaz-field select { width: 100%; font-size: 11px; padding: 3px 5px;
-  border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; color: #0f172a; }
+.kaz-field label { display: block; font-size: 9px; font-weight: 600;
+  color: var(--kaz-dim); margin-bottom: 3px; }
+.kaz-field input, .kaz-field select { width: 100%; font-size: 11px; padding: 5px 6px;
+  border: 1px solid var(--kaz-line); border-radius: 5px; background: var(--kaz-panel-2);
+  color: var(--kaz-text); }
+.kaz-field input:focus, .kaz-field select:focus { outline: 1px solid var(--kaz-accent); border-color: var(--kaz-accent); }
 .kaz-field input[type="checkbox"] { width: auto; }
 .kaz-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.kaz-hint { font-size: 10px; color: #64748b; margin: 0 0 6px; word-break: break-all; }
-.kaz-io { margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0; }
-.kaz-io textarea { width: 100%; min-height: 92px; font-family: ui-monospace, monospace;
-  font-size: 11px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px; }
-.kaz-status { display: block; margin-top: 6px; font-size: 11px; color: #475569; min-height: 16px; }
-.kaz-note { font-size: 11px; color: #64748b; margin: 8px 0 0; }
-/* Frente X — biblioteca de blocos e selo de alteracoes nao salvas. */
-.kaz-blocks { margin: 0 0 10px; padding: 8px 10px; border: 1px solid #cbd5e1;
-  border-radius: 8px; background: #f8fafc; }
+.kaz-hint { font-size: 10px; color: var(--kaz-accent); margin: 0; word-break: break-all; }
+.kaz-code { margin: 0; padding: 8px; max-height: 320px; overflow: auto; white-space: pre-wrap;
+  word-break: break-word; font: 10px/1.5 ui-monospace, monospace; color: var(--kaz-text);
+  background: var(--kaz-bg); border: 1px solid var(--kaz-line); border-radius: 6px; }
+
+/* ---------------- Botoes ---------------- */
+.kaz-btn { font-size: 10px; line-height: 1.2; padding: 5px 8px; border-radius: 5px;
+  border: 1px solid var(--kaz-line); background: var(--kaz-panel-2);
+  color: var(--kaz-text); cursor: pointer; }
+.kaz-btn:hover { background: var(--kaz-elev); border-color: var(--kaz-muted); }
+.kaz-btn:focus-visible { outline: 2px solid var(--kaz-accent); outline-offset: 1px; }
+.kaz-btn--primary { background: var(--kaz-accent); border-color: var(--kaz-accent);
+  color: var(--kaz-accent-ink); font-weight: 700; }
+.kaz-btn--primary:hover { background: #5cffd0; border-color: #5cffd0; }
+.kaz-btn--ghost { background: transparent; }
+.kaz-btn--wide { width: 100%; }
+.kaz-btn--danger { color: var(--kaz-danger); }
+
+/* ---------------- Status bar / IO ---------------- */
+.kaz-statusbar { display: flex; align-items: center; gap: 10px; min-height: 32px;
+  padding: 4px 10px; background: var(--kaz-panel); border-top: 1px solid var(--kaz-line);
+  border-bottom: 1px solid var(--kaz-line); font-size: 10px; color: var(--kaz-muted); }
+.kaz-zoom { display: flex; align-items: center; gap: 3px; }
+.kaz-zoom__value { min-width: 40px; text-align: center; font-family: ui-monospace, monospace;
+  color: var(--kaz-text); }
+.kaz-statusbar__coords { font-family: ui-monospace, monospace; color: var(--kaz-dim); }
+.kaz-statusbar__spacer { flex: 1; }
+.kaz-statusbar__version { color: var(--kaz-accent); }
+.kaz-status { font-size: 10px; color: var(--kaz-muted); min-width: 0; }
+.kaz-io { padding: 10px 12px 12px; background: var(--kaz-bg); }
+.kaz-io textarea { width: 100%; min-height: 84px; font-family: ui-monospace, monospace;
+  font-size: 10px; line-height: 1.45; color: var(--kaz-text); background: var(--kaz-panel-2);
+  border: 1px solid var(--kaz-line); border-radius: 6px; padding: 7px; }
+.kaz-io__actions { display: flex; gap: 5px; margin-top: 6px; }
+.kaz-note { font-size: 10px; line-height: 1.55; color: var(--kaz-dim); margin: 9px 0 0; }
+.kaz-note strong { color: var(--kaz-muted); }
+.kaz-tools { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.kaz-blocks { margin: 0 0 10px; padding: 8px 10px; border: 1px solid var(--kaz-line);
+  border-radius: 8px; background: var(--kaz-panel-2); }
 .kaz-blocks__row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 4px; }
-.kaz-block { border-color: #94a3b8; font-weight: 600; }
-.kaz-block:hover { background: #dbeafe; border-color: #2563eb; }
-.kaz-badge--dirty { background: #fff3cd; border-color: #e0a800; color: #6b4a00;
-  font-weight: 700; }
-.kaz-badge--dirty[hidden] { display: none; }
-@media (max-width: 1100px) {
-  .kaz-blocks__row { gap: 4px; }
-  .kaz-layout { grid-template-columns: 1fr; }
-  .kaz-panel { min-height: 0; }
+.kaz-block { border-color: var(--kaz-line); font-weight: 600; }
+.kaz-block:hover { background: var(--kaz-elev); border-color: var(--kaz-accent); }
+
+/* ---------------- Responsivo / acessibilidade ---------------- */
+@media (max-width: 1280px) {
+  .kaz-workspace { grid-template-columns: 200px minmax(0,1fr) 228px; }
+  .kaz-topbar__page, .kaz-badge--muted { display: none; }
+}
+@media (max-width: 900px) {
+  .kaz-workspace { grid-template-columns: 1fr; height: auto; }
+  .kaz-sidebar { max-height: 240px; border: 0; border-bottom: 1px solid var(--kaz-line); }
+  .kaz-sidebar--right { border-top: 1px solid var(--kaz-line); }
+  .kaz-center { height: 420px; }
+  .kaz-viewport { padding: 18px; }
+  .kaz-topbar__brand .kaz-topbar__file { display: none; }
 }
 @media (forced-colors: active) {
-  .kaz-card .card-header { background: Canvas; color: CanvasText; border-bottom: 1px solid CanvasText; }
-  .kaz-layer--selected { border: 2px solid Highlight; }
-  .kaz-btn:focus-visible { outline: 2px solid Highlight; }
-  .kaz-badge--dirty { background: Canvas; color: CanvasText; border: 2px solid Highlight; }
+  .kaz-card { background: Canvas; color: CanvasText; border: 1px solid CanvasText; }
+  .kaz-topbar, .kaz-sidebar, .kaz-statusbar { background: Canvas; color: CanvasText; }
+  .kaz-tool, .kaz-tab, .kaz-btn, .kaz-asset { border: 1px solid CanvasText; color: CanvasText; }
+  .kaz-tool--on, .kaz-tab--on, .kaz-layer--selected { border: 2px solid Highlight; }
+  .kaz-tool:focus-visible, .kaz-tab:focus-visible, .kaz-btn:focus-visible { outline: 2px solid Highlight; }
+  .kaz-badge--ok, .kaz-badge--dirty { border: 2px solid Highlight; background: Canvas; color: CanvasText; }
+  .kaz-board__frame { border: 2px solid CanvasText; }
 }

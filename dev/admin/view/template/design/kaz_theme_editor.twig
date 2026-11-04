@@ -1,7 +1,8 @@
-{# KAZTheme-Editor — frente X. Ponto de montagem dentro do formulário do tema.
-   Sem filtro raw, sem tag script inline, sem dados do request. O JSON da cena
-   vem do controller já escapado para atributo; o JS reconstrói tudo via DOM.
-   O textarea é um campo REAL do formulário: salvar o tema persiste a cena. #}
+{# KAZTheme-Editor — frente Y (workspace inspirado no Penpot).
+   Ponto de montagem dentro do formulário do tema. Sem filtro raw, sem tag
+   script inline, sem dados do request. O JSON da cena vem do controller já
+   escapado para atributo; o JS reconstrói tudo via DOM. O textarea é um campo
+   REAL do formulário: salvar o tema persiste a cena (kaztheme-scene/v1). #}
 <div class="card mb-4 kaz-card" id="kaz-theme-editor"
      data-kaz-scene="{{ kaz_scene_json|e('html_attr') }}"
      data-kaz-primary="{{ primary|e('html_attr') }}"
@@ -9,88 +10,243 @@
      data-kaz-saved="{{ kaz_scene_saved ? '1' : '0' }}"
      data-kaz-dirty="0"
      data-kaz-version="1">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <div>
-      <h2 class="h5 mb-0"><span class="kaz-brand"><span class="kaz-brand__mark" aria-hidden="true"></span>KAZTheme-Editor</span></h2>
-      <p class="mb-0 text-muted">Editor visual de temas · canvas, camadas e inspector · kaztheme-scene/v1</p>
+  {# ---------- NAVBAR (Penpot: main menu, toolbar, history, users, status) ---------- #}
+  <header class="kaz-topbar">
+    <div class="kaz-topbar__brand">
+      <span class="kaz-brand__mark" aria-hidden="true"></span>
+      <span class="kaz-topbar__file">Tema · <strong>KAZTheme-Editor</strong></span>
+      <span class="kaz-topbar__sep" aria-hidden="true"></span>
+      <span class="kaz-topbar__page">Página 1</span>
+      <span class="kaz-badge kaz-badge--muted">kaztheme-scene/v1</span>
     </div>
-    <span class="kaz-badge">Frente X · biblioteca de blocos</span>
-    <span class="kaz-badge kaz-badge--dirty" data-kaz-dirty-badge hidden>Alterações não salvas</span>
+
+    <div class="kaz-toolbar" role="toolbar" aria-label="Ferramentas do KAZTheme-Editor">
+      <button class="kaz-tool kaz-tool--on" type="button" data-kaz-tool="move" title="Mover (V)" aria-label="Mover">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 2l11 7-5 1-2 5z"/></svg>
+      </button>
+      <button class="kaz-tool" type="button" data-kaz-tool="hand" title="Mão (H) — arraste o canvas" aria-label="Mão">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><path d="M6 9V4.5a1 1 0 012 0V8m0-2.5a1 1 0 012 0V8m0-1.5a1 1 0 012 0V9m0-1a1 1 0 012 0v3.5c0 3-2 4.5-4.5 4.5H9c-2 0-3-1-4-2.5L3 10.5a1 1 0 011.5-1.3L6 11"/></svg>
+      </button>
+      <span class="kaz-toolbar__sep" aria-hidden="true"></span>
+      <button class="kaz-tool" type="button" data-kaz-kind="rect" title="Retângulo (R)" aria-label="Retângulo">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="4" width="12" height="10" rx="1"/></svg>
+      </button>
+      <button class="kaz-tool" type="button" data-kaz-kind="text" title="Texto (T)" aria-label="Texto">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4h10M9 4v10M6.5 14h5"/></svg>
+      </button>
+      <button class="kaz-tool" type="button" data-kaz-kind="button" title="Botão (B)" aria-label="Botão">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="6" width="14" height="6" rx="3"/><path d="M6 9h6"/></svg>
+      </button>
+      <button class="kaz-tool" type="button" data-kaz-kind="card" title="Cartão (C)" aria-label="Cartão">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="3" width="12" height="12" rx="2"/><path d="M3 7h12M6 10h6"/></svg>
+      </button>
+      <button class="kaz-tool" type="button" data-kaz-kind="section" title="Seção (S)" aria-label="Seção">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 4h16M2 14h16M2 4v10M16 4v10" stroke-dasharray="3 2"/></svg>
+      </button>
+      <span class="kaz-toolbar__sep" aria-hidden="true"></span>
+      <button class="kaz-tool" type="button" data-kaz-action="duplicate" title="Duplicar (Ctrl+D)" aria-label="Duplicar">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="3" width="9" height="9" rx="1"/><path d="M6 12v3h9V6h-3"/></svg>
+      </button>
+      <button class="kaz-tool" type="button" data-kaz-action="delete" title="Excluir (Delete)" aria-label="Excluir">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 5h10M7 5V3h4v2M5 5l1 10h6l1-10M8 8v4M10 8v4"/></svg>
+      </button>
+      <button class="kaz-tool" type="button" data-kaz-action="up" title="Trazer para frente" aria-label="Trazer para frente">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 14V4M5 8l4-4 4 4"/></svg>
+      </button>
+      <button class="kaz-tool" type="button" data-kaz-action="down" title="Enviar para trás" aria-label="Enviar para trás">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 4v10M5 10l4 4 4-4"/></svg>
+      </button>
+      <button class="kaz-tool" type="button" data-kaz-action="visible" title="Ocultar / mostrar" aria-label="Ocultar ou mostrar">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 9s3-4 7-4 7 4 7 4-3 4-7 4-7-4-7-4z"/><circle cx="9" cy="9" r="2"/></svg>
+      </button>
+      <button class="kaz-tool" type="button" data-kaz-action="lock" title="Bloquear / desbloquear" aria-label="Bloquear ou desbloquear">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><rect x="4" y="8" width="10" height="7" rx="1"/><path d="M6 8V6a3 3 0 016 0v2"/></svg>
+      </button>
+    </div>
+
+    <div class="kaz-topbar__right">
+      <button class="kaz-tool" type="button" data-kaz-action="undo" title="Desfazer (Ctrl+Z)" aria-label="Desfazer">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><path d="M7 5L3 9l4 4M3 9h7a4 4 0 010 8h-1"/></svg>
+      </button>
+      <button class="kaz-tool" type="button" data-kaz-action="redo" title="Refazer (Ctrl+Shift+Z)" aria-label="Refazer">
+        <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><path d="M11 5l4 4-4 4M15 9H8a4 4 0 000 8h1"/></svg>
+      </button>
+      <span class="kaz-toolbar__sep" aria-hidden="true"></span>
+      <span class="kaz-avatar" title="1 editor local" aria-label="1 editor local">1</span>
+      <span class="kaz-badge kaz-badge--dirty" data-kaz-dirty-badge hidden>Alterações não salvas</span>
+      <span class="kaz-badge kaz-badge--ok" data-kaz-file-status>Salvo</span>
+    </div>
+  </header>
+
+  {# ---------- WORKSPACE: 3 areas como no Penpot ---------- #}
+  <div class="kaz-workspace" data-kaz-workspace>
+
+    {# SIDEBAR ESQUERDA: Pages / Layers / Assets / Design tokens / History #}
+    <aside class="kaz-sidebar kaz-sidebar--left" aria-label="Páginas, camadas e ativos">
+      <div class="kaz-tabs" role="tablist" aria-label="Painel esquerdo">
+        <button class="kaz-tab" type="button" role="tab" data-kaz-tab="pages">Páginas</button>
+        <button class="kaz-tab kaz-tab--on" type="button" role="tab" data-kaz-tab="layers">Camadas</button>
+        <button class="kaz-tab" type="button" role="tab" data-kaz-tab="assets">Ativos</button>
+        <button class="kaz-tab" type="button" role="tab" data-kaz-tab="tokens">Tokens</button>
+        <button class="kaz-tab" type="button" role="tab" data-kaz-tab="history">Histórico</button>
+      </div>
+
+      <section class="kaz-panel" data-kaz-panel="pages" hidden>
+        <p class="kaz-panel__title">Páginas</p>
+        <ul class="kaz-pages">
+          <li class="kaz-pages__item kaz-pages__item--on"><span class="kaz-page-ico" aria-hidden="true"></span>Página 1 <span class="kaz-panel__count">1 board</span></li>
+        </ul>
+        <p class="kaz-panel__note">Uma página por tema. A cena <code>kaztheme-scene/v1</code> é o board desta página.</p>
+      </section>
+
+      <section class="kaz-panel" data-kaz-panel="layers">
+        <div class="kaz-panel__head">
+          <p class="kaz-panel__title mb-0">Camadas</p>
+          <span class="kaz-panel__count" data-kaz-count>0</span>
+        </div>
+        <ul class="kaz-layer-list" data-kaz-layer-list></ul>
+        <div class="kaz-panel__foot">
+          <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-action="up">↑</button>
+          <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-action="down">↓</button>
+          <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-action="visible">Ocultar</button>
+          <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-action="lock">Bloquear</button>
+        </div>
+      </section>
+
+      <section class="kaz-panel" data-kaz-panel="assets" hidden>
+        <p class="kaz-panel__title">Biblioteca de blocos</p>
+        <div class="kaz-assets">
+          <button class="kaz-asset" type="button" data-kaz-block="hero" title="Faixa de destaque com título e botão"><span class="kaz-asset__thumb kaz-asset__thumb--hero" aria-hidden="true"></span>Hero</button>
+          <button class="kaz-asset" type="button" data-kaz-block="card" title="Cartão com texto"><span class="kaz-asset__thumb kaz-asset__thumb--card" aria-hidden="true"></span>Cartão</button>
+          <button class="kaz-asset" type="button" data-kaz-block="banner" title="Faixa larga com chamada"><span class="kaz-asset__thumb kaz-asset__thumb--banner" aria-hidden="true"></span>Faixa</button>
+          <button class="kaz-asset" type="button" data-kaz-block="titulo" title="Título com linha de destaque"><span class="kaz-asset__thumb kaz-asset__thumb--titulo" aria-hidden="true"></span>Título</button>
+          <button class="kaz-asset" type="button" data-kaz-block="galeria" title="Três molduras lado a lado"><span class="kaz-asset__thumb kaz-asset__thumb--galeria" aria-hidden="true"></span>Galeria</button>
+          <button class="kaz-asset" type="button" data-kaz-block="cta" title="Seção com botão de ação"><span class="kaz-asset__thumb kaz-asset__thumb--cta" aria-hidden="true"></span>CTA</button>
+        </div>
+        <p class="kaz-panel__title kaz-panel__title--spaced">Paleta de cores</p>
+        <div class="kaz-swatches" data-kaz-swatches></div>
+        <p class="kaz-panel__title kaz-panel__title--spaced">Tipografia</p>
+        <div class="kaz-type-sample"><span class="kaz-type-sample__aa">Aa</span><span>Título · system-ui</span></div>
+        <p class="kaz-panel__note">Os 6 blocos inserem camadas reais, allowlistadas e validadas no contrato <code>kaztheme-scene/v1</code>. Nenhum bloco altera o formulário sozinho.</p>
+      </section>
+
+      <section class="kaz-panel" data-kaz-panel="tokens" hidden>
+        <p class="kaz-panel__title">Design tokens</p>
+        <div class="kaz-token"><span class="kaz-token__dot" data-kaz-token="primary"></span><span>primary</span><code data-kaz-token-value="primary"></code></div>
+        <div class="kaz-token"><span class="kaz-token__dot" data-kaz-token="surface"></span><span>surface</span><code data-kaz-token-value="surface"></code></div>
+        <p class="kaz-panel__note">Tokens espelham os campos allowlistados do tema. Alterar o papel de uma camada para <code>primary</code> ou <code>surface</code> continua escrevendo nesses campos.</p>
+      </section>
+
+      <section class="kaz-panel" data-kaz-panel="history" hidden>
+        <p class="kaz-panel__title">Histórico</p>
+        <ol class="kaz-history" data-kaz-history-list></ol>
+        <p class="kaz-panel__note">Até 60 estados locais. Desfazer/refazer caminham por esta lista; ela não é gravada no servidor.</p>
+      </section>
+    </aside>
+
+    {# CENTRO: réguas + viewport infinito + board #}
+    <div class="kaz-center">
+      <div class="kaz-ruler kaz-ruler--corner" aria-hidden="true"></div>
+      <div class="kaz-ruler kaz-ruler--h" data-kaz-ruler-h aria-hidden="true"></div>
+      <div class="kaz-ruler kaz-ruler--v" data-kaz-ruler-v aria-hidden="true"></div>
+      <div class="kaz-viewport" data-kaz-viewport data-kaz-tool-state="move">
+        <div class="kaz-board" data-kaz-board>
+          <div class="kaz-board__label"><span class="kaz-board__dot" aria-hidden="true"></span>Tema · <span data-kaz-board-size>960 × 540</span></div>
+          <div class="kaz-board__frame">
+            <svg data-kaz-canvas viewBox="0 0 960 540" preserveAspectRatio="xMidYMid meet" aria-label="Canvas KAZTheme-Editor"></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# SIDEBAR DIREITA: Design / Prototype / Inspect #}
+    <aside class="kaz-sidebar kaz-sidebar--right" aria-label="Propriedades de design">
+      <div class="kaz-tabs" role="tablist" aria-label="Painel direito">
+        <button class="kaz-tab kaz-tab--on" type="button" role="tab" data-kaz-tab="design">Design</button>
+        <button class="kaz-tab" type="button" role="tab" data-kaz-tab="prototype">Protótipo</button>
+        <button class="kaz-tab" type="button" role="tab" data-kaz-tab="inspect">Inspecionar</button>
+      </div>
+
+      <section class="kaz-panel" data-kaz-panel="design">
+        <div class="kaz-panel__head"><p class="kaz-panel__title mb-0">Seleção</p><span class="kaz-hint" data-kaz-hint>nenhuma camada</span></div>
+
+        <div class="kaz-section">
+          <p class="kaz-section__title">Layout <span class="kaz-section__meta">X · Y · W · H</span></p>
+          <div class="kaz-grid2">
+            <div class="kaz-field"><label for="kaz-x">X</label><input id="kaz-x" type="number" step="8" data-kaz-field="x"></div>
+            <div class="kaz-field"><label for="kaz-y">Y</label><input id="kaz-y" type="number" step="8" data-kaz-field="y"></div>
+            <div class="kaz-field"><label for="kaz-w">W</label><input id="kaz-w" type="number" step="8" data-kaz-field="w"></div>
+            <div class="kaz-field"><label for="kaz-h">H</label><input id="kaz-h" type="number" step="8" data-kaz-field="h"></div>
+          </div>
+        </div>
+
+        <div class="kaz-section">
+          <p class="kaz-section__title">Aparência</p>
+          <div class="kaz-field"><label for="kaz-fill">Preenchimento (hex)</label><input id="kaz-fill" type="text" maxlength="7" data-kaz-field="fill"></div>
+          <div class="kaz-grid2">
+            <div class="kaz-field"><label for="kaz-radius">Raio</label><input id="kaz-radius" type="number" min="0" max="64" data-kaz-field="radius"></div>
+            <div class="kaz-field"><label for="kaz-size">Fonte</label><input id="kaz-size" type="number" min="8" max="72" data-kaz-field="fontSize"></div>
+          </div>
+        </div>
+
+        <div class="kaz-section">
+          <p class="kaz-section__title">Tipografia</p>
+          <div class="kaz-field"><label for="kaz-text">Texto</label><input id="kaz-text" type="text" maxlength="80" data-kaz-field="text"></div>
+        </div>
+
+        <div class="kaz-section">
+          <p class="kaz-section__title">Elemento</p>
+          <div class="kaz-field"><label for="kaz-kind">Tipo</label><select id="kaz-kind" data-kaz-field="kind"><option value="rect">rect</option><option value="text">text</option><option value="button">button</option><option value="card">card</option><option value="section">section</option></select></div>
+          <div class="kaz-field"><label for="kaz-role">Papel no tema</label><select id="kaz-role" data-kaz-field="role"><option value="none">none</option><option value="primary">primary</option><option value="surface">surface</option><option value="section">section</option><option value="component">component</option></select></div>
+          <div class="kaz-field"><label for="kaz-bind">ID allowlistado</label><input id="kaz-bind" type="text" maxlength="48" data-kaz-field="bindId"></div>
+        </div>
+
+        <div class="kaz-section">
+          <p class="kaz-section__title">Tema</p>
+          <button class="kaz-btn kaz-btn--primary kaz-btn--wide" type="button" data-kaz-action="bind">Aplicar ao tema</button>
+          <p class="kaz-panel__note mb-0">Propagação aditiva: marca seções/componentes sem desmarcar os já salvos. O servidor continua soberano.</p>
+        </div>
+      </section>
+
+      <section class="kaz-panel" data-kaz-panel="prototype" hidden>
+        <p class="kaz-panel__title">Protótipo</p>
+        <p class="kaz-panel__note">O KAZTheme-Editor edita a <strong>cena do tema</strong>, não um protótipo navegável. Não há interações, fluxos ou View mode: a cena é dado de edição e versionamento (<code>kaz_scene</code>), não renderização no site público.</p>
+        <p class="kaz-panel__note">Para conferir o resultado no Admin, use a prévia de tema já existente. As abas <em>Protótipo</em> e <em>Inspecionar</em> existem para manter o layout de trabalho familiar de um editor de design.</p>
+      </section>
+
+      <section class="kaz-panel" data-kaz-panel="inspect" hidden>
+        <p class="kaz-panel__title">Inspecionar</p>
+        <p class="kaz-panel__note">Especificações somente-leitura da camada selecionada.</p>
+        <pre class="kaz-code" data-kaz-inspect></pre>
+      </section>
+    </aside>
   </div>
-  <div class="card-body">
-    <p class="kaz-note mb-3">
+
+  {# ---------- STATUS BAR (zoom, coordenadas, layers, status do arquivo) ---------- #}
+  <footer class="kaz-statusbar">
+    <div class="kaz-zoom">
+      <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-zoom="out" title="Diminuir zoom" aria-label="Diminuir zoom">−</button>
+      <span class="kaz-zoom__value" data-kaz-zoom-value>100%</span>
+      <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-zoom="in" title="Aumentar zoom" aria-label="Aumentar zoom">+</button>
+      <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-zoom="fit" title="Ajustar ao board" aria-label="Ajustar ao board">Ajustar</button>
+    </div>
+    <span class="kaz-statusbar__coords" data-kaz-coords>X 0 · Y 0</span>
+    <span class="kaz-statusbar__spacer"></span>
+    <span class="kaz-status" data-kaz-status aria-live="polite"></span>
+    <span class="kaz-statusbar__version">Frente Y · workspace Penpot</span>
+  </footer>
+
+  {# ---------- IO: campo REAL do formulário (persistência da V) ---------- #}
+  <div class="kaz-io">
+    <p class="kaz-note kaz-note--state">
       {% if kaz_scene_saved %}<strong>Cena salva neste tema.</strong> Ela volta ao abrir a página e viaja com o pacote exportado.{% else %}<strong>Cena derivada do config.</strong> Este tema ainda não tem cena própria; salve o formulário para gravá-la.{% endif %}
     </p>
-    <div class="kaz-tools" role="toolbar" aria-label="KAZTheme-Editor ferramentas">
-      <button class="kaz-btn kaz-btn--primary" type="button" data-kaz-kind="rect">+ Retângulo</button>
-      <button class="kaz-btn" type="button" data-kaz-kind="text">+ Texto</button>
-      <button class="kaz-btn" type="button" data-kaz-kind="button">+ Botão</button>
-      <button class="kaz-btn" type="button" data-kaz-kind="card">+ Cartão</button>
-      <button class="kaz-btn" type="button" data-kaz-kind="section">+ Seção</button>
-      <button class="kaz-btn" type="button" data-kaz-action="duplicate">Duplicar</button>
-      <button class="kaz-btn" type="button" data-kaz-action="delete">Excluir</button>
-      <button class="kaz-btn" type="button" data-kaz-action="up">↑</button>
-      <button class="kaz-btn" type="button" data-kaz-action="down">↓</button>
-      <button class="kaz-btn" type="button" data-kaz-action="visible">Ocultar</button>
-      <button class="kaz-btn" type="button" data-kaz-action="lock">Bloquear</button>
-      <button class="kaz-btn" type="button" data-kaz-action="undo">Desfazer</button>
-      <button class="kaz-btn" type="button" data-kaz-action="redo">Refazer</button>
-      <button class="kaz-btn" type="button" data-kaz-action="bind">Aplicar ao tema</button>
+    <label class="kaz-panel__title" for="kaz-json">Cena kaztheme-scene/v1 — campo salvo com o tema</label>
+    <textarea id="kaz-json" name="kaz_scene_json" data-kaz-json spellcheck="false" aria-label="JSON da cena">{{ kaz_scene_json }}</textarea>
+    <div class="kaz-io__actions">
+      <button class="kaz-btn" type="button" data-kaz-action="export">Exportar cena</button>
+      <button class="kaz-btn" type="button" data-kaz-action="import">Importar cena</button>
     </div>
-
-    <div class="kaz-blocks" role="group" aria-label="Biblioteca de blocos">
-      <p class="kaz-panel__title">Biblioteca de blocos · inserir camadas prontas</p>
-      <div class="kaz-blocks__row">
-        <button class="kaz-btn kaz-block" type="button" data-kaz-block="hero" title="Faixa de destaque com título e botão">+ Hero</button>
-        <button class="kaz-btn kaz-block" type="button" data-kaz-block="card" title="Cartão com texto">+ Cartão</button>
-        <button class="kaz-btn kaz-block" type="button" data-kaz-block="banner" title="Faixa larga com chamada">+ Faixa</button>
-        <button class="kaz-btn kaz-block" type="button" data-kaz-block="titulo" title="Título com linha de destaque">+ Título</button>
-        <button class="kaz-btn kaz-block" type="button" data-kaz-block="galeria" title="Três molduras lado a lado">+ Galeria</button>
-        <button class="kaz-btn kaz-block" type="button" data-kaz-block="cta" title="Seção com botão de ação">+ CTA</button>
-      </div>
-      <p class="kaz-note mb-0">Cada bloco insere camadas reais, allowlistadas e já validadas no contrato <code>kaztheme-scene/v1</code>. Elas ficam no canvas, na árvore, no histórico (desfazer) e na cena salva com o tema. Nenhum bloco altera o formulário sozinho.</p>
-    </div>
-
-    <div class="kaz-layout">
-      <aside class="kaz-panel kaz-layers" aria-label="Camadas">
-        <p class="kaz-panel__title">Camadas</p>
-        <ul class="kaz-layer-list" data-kaz-layer-list></ul>
-      </aside>
-
-      <div class="kaz-stage">
-        <svg data-kaz-canvas viewBox="0 0 960 540" preserveAspectRatio="xMidYMid meet" aria-label="Canvas KAZTheme-Editor"></svg>
-      </div>
-
-      <aside class="kaz-panel kaz-inspector" aria-label="Inspector">
-        <p class="kaz-panel__title">Inspector</p>
-        <p class="kaz-hint" data-kaz-hint>nenhuma camada</p>
-        <div class="kaz-grid2">
-          <div class="kaz-field"><label for="kaz-x">X</label><input id="kaz-x" type="number" step="8" data-kaz-field="x"></div>
-          <div class="kaz-field"><label for="kaz-y">Y</label><input id="kaz-y" type="number" step="8" data-kaz-field="y"></div>
-          <div class="kaz-field"><label for="kaz-w">Largura</label><input id="kaz-w" type="number" step="8" data-kaz-field="w"></div>
-          <div class="kaz-field"><label for="kaz-h">Altura</label><input id="kaz-h" type="number" step="8" data-kaz-field="h"></div>
-        </div>
-        <div class="kaz-field"><label for="kaz-fill">Cor (hex)</label><input id="kaz-fill" type="text" maxlength="7" data-kaz-field="fill"></div>
-        <div class="kaz-grid2">
-          <div class="kaz-field"><label for="kaz-radius">Raio</label><input id="kaz-radius" type="number" min="0" max="64" data-kaz-field="radius"></div>
-          <div class="kaz-field"><label for="kaz-size">Fonte</label><input id="kaz-size" type="number" min="8" max="72" data-kaz-field="fontSize"></div>
-        </div>
-        <div class="kaz-field"><label for="kaz-text">Texto</label><input id="kaz-text" type="text" maxlength="80" data-kaz-field="text"></div>
-        <div class="kaz-field"><label for="kaz-kind">Tipo</label><select id="kaz-kind" data-kaz-field="kind"><option value="rect">rect</option><option value="text">text</option><option value="button">button</option><option value="card">card</option><option value="section">section</option></select></div>
-        <div class="kaz-field"><label for="kaz-role">Papel no tema</label><select id="kaz-role" data-kaz-field="role"><option value="none">none</option><option value="primary">primary</option><option value="surface">surface</option><option value="section">section</option><option value="component">component</option></select></div>
-        <div class="kaz-field"><label for="kaz-bind">ID allowlistado (seção/componente)</label><input id="kaz-bind" type="text" maxlength="48" data-kaz-field="bindId"></div>
-      </aside>
-    </div>
-
-    <div class="kaz-io">
-      <label class="kaz-panel__title" for="kaz-json">Cena kaztheme-scene/v1 — campo salvo com o tema</label>
-      <textarea id="kaz-json" name="kaz_scene_json" data-kaz-json spellcheck="false" aria-label="JSON da cena">{{ kaz_scene_json }}</textarea>
-      <div class="kaz-tools" style="margin-top:6px">
-        <button class="kaz-btn" type="button" data-kaz-action="export">Exportar cena</button>
-        <button class="kaz-btn" type="button" data-kaz-action="import">Importar cena</button>
-      </div>
-      <span class="kaz-status" data-kaz-status aria-live="polite"></span>
-      <p class="kaz-note">O selo <strong>Alterações não salvas</strong> aparece quando a cena difere da última gravação e desaparece ao salvar (ou ao desfazer até o estado carregado). A cena é gravada na chave allowlistada <code>kaz_scene</code> do config ao salvar o tema, validada no servidor (fail-closed), preservada no pacote exportado/importado e substituída integralmente na herança de child-theme. As camadas com papel <code>primary</code>, <code>surface</code>, <code>section</code> e <code>component</code> continuam escrevendo nos campos já existentes. Sem migration, schema, coluna, upload, <code>custom_js</code> ou chave de tradução nova.</p>
-    </div>
+    <p class="kaz-note">O selo <strong>Alterações não salvas</strong> e o <strong>status do arquivo</strong> aparecem quando a cena difere da última gravação e desaparecem ao salvar (ou ao desfazer até o estado carregado). A cena é gravada na chave allowlistada <code>kaz_scene</code> do config ao salvar o tema, validada no servidor (fail-closed), preservada no pacote exportado/importado e substituída integralmente na herança de child-theme. Sem migration, schema, coluna, upload, <code>custom_js</code> ou chave de tradução nova.</p>
   </div>
 </div>

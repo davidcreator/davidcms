@@ -1,9 +1,12 @@
-/* KAZTheme-Editor — frentes U/V/W + X (biblioteca de blocos).
+/* KAZTheme-Editor — frentes U/V/W/X + Y (workspace Penpot).
    Editor de temas estruturado: canvas SVG + árvore de camadas + inspector.
    Apenas DOM puro: sem rede, codigo executavel do usuario, WebGL, Three.js,
    upload ou escrita remota. A cena e PERSISTENTE (frente V): volta ao abrir
    o tema, viaja no pacote e e validada no servidor (kaztheme-scene/v1).
    A frente X adiciona 6 blocos allowlistados e o estado "nao salvo".
+   A frente Y reformula APENAS a interface: navbar/ferramentas, 3 colunas,
+   abas, viewport infinito com zoom/pan, réguas, paleta, tokens, histórico,
+   inspector com abas e barra de status. Nenhum contrato de dados mudou.
    A conexão com o tema usa SOMENTE campos allowlistados do formulário. */
 (function (document, window) {
   'use strict';
@@ -14,6 +17,14 @@
   var GRID = 8;
   var W = 960, H = 540;
   var MAX_LAYERS = 48;
+
+  /* Frente Y — estado LOCAL do workspace. Nada disso entra na cena JSON:
+     zoom/pan, ferramenta ativa e abas sao apenas preferencias de interface. */
+  var ZOOM_MIN = 0.25, ZOOM_MAX = 2, ZOOM_STEP = 0.25;
+  var zoom = 1, panX = 0, panY = 0, tool = 'move';
+  var tabLeft = 'layers', tabRight = 'design';
+  var LEFT_TABS = ['pages', 'layers', 'assets', 'tokens', 'history'];
+  var RIGHT_TABS = ['design', 'prototype', 'inspect'];
 
   /* Frente X — biblioteca de blocos. Presets DECLARATIVOS: nenhum texto do
      usuario entra aqui. Cada template gera uma camada valida do contrato
@@ -53,6 +64,16 @@
   var layerList = root.querySelector('[data-kaz-layer-list]');
   var jsonBox = root.querySelector('[data-kaz-json]');
   var status = root.querySelector('[data-kaz-status]');
+  var viewport = root.querySelector('[data-kaz-viewport]');
+  var board = root.querySelector('[data-kaz-board]');
+  var zoomValue = root.querySelector('[data-kaz-zoom-value]');
+  var coords = root.querySelector('[data-kaz-coords]');
+  var count = root.querySelector('[data-kaz-count]');
+  var historyList = root.querySelector('[data-kaz-history-list]');
+  var inspectBox = root.querySelector('[data-kaz-inspect]');
+  var rulerH = root.querySelector('[data-kaz-ruler-h]');
+  var rulerV = root.querySelector('[data-kaz-ruler-v]');
+  var swatches = root.querySelector('[data-kaz-swatches]');
   var form = root.closest('form');
   if (!canvas || !layerList || !jsonBox) return;
 
@@ -150,6 +171,9 @@
     root.setAttribute('data-kaz-dirty', on ? '1' : '0');
     var badge = root.querySelector('[data-kaz-dirty-badge]');
     if (badge) badge.hidden = !on;
+    /* Penpot #20: file status acompanha o estado de gravacao. */
+    var ok = root.querySelector('[data-kaz-file-status]');
+    if (ok) { ok.hidden = on; ok.textContent = on ? 'Não salvo' : 'Salvo'; }
   }
 
   function commit() {
@@ -242,7 +266,115 @@
   /* Frente V: o textarea e um campo REAL do formulario. Mantem o JSON da
      cena sempre sincronizado; o listener de submit garante o ultimo estado. */
   function syncField() { jsonBox.value = JSON.stringify(scene, null, 2); }
-  function render() { drawCanvas(); drawLayers(); drawInspector(); syncField(); paintDirty(); }
+  /* ---- Frente Y: chrome do workspace ---------------------------------- */
+  /* Tudo com createElement/setAttribute/textContent/style; nenhum markup do
+     usuario e injetado, nenhum codigo dinamico, nenhuma rede. */
+  function paintZoom() {
+    if (board) board.setAttribute('style',
+      'transform: translate(' + panX + 'px,' + panY + 'px) scale(' + zoom + ')');
+    if (zoomValue) zoomValue.textContent = Math.round(zoom * 100) + '%';
+    if (viewport) viewport.setAttribute('data-kaz-tool-state', tool);
+    canvas.setAttribute('data-kaz-zoom', String(zoom));
+  }
+  function setZoom(z) {
+    zoom = clamp(Math.round(z / ZOOM_STEP) * ZOOM_STEP, ZOOM_MIN, ZOOM_MAX);
+    paintZoom(); say('zoom ' + Math.round(zoom * 100) + '%'); return zoom;
+  }
+  function fitZoom() {
+    var vw = viewport && viewport.clientWidth ? viewport.clientWidth - 72 : 720;
+    var vh = viewport && viewport.clientHeight ? viewport.clientHeight - 72 : 420;
+    var z = Math.min(vw / scene.canvas.w, vh / scene.canvas.h, 1);
+    zoom = clamp(Math.round(z / ZOOM_STEP) * ZOOM_STEP, ZOOM_MIN, ZOOM_MAX);
+    panX = 0; panY = 0; paintZoom();
+    say('zoom ajustado ' + Math.round(zoom * 100) + '%'); return zoom;
+  }
+  function setPan(x, y) {
+    panX = clamp(Number(x) || 0, -4000, 4000);
+    panY = clamp(Number(y) || 0, -4000, 4000);
+    paintZoom(); return { x: panX, y: panY };
+  }
+  function setTool(t) {
+    if (t !== 'move' && t !== 'hand') return false;
+    tool = t; paintZoom();
+    root.querySelectorAll('[data-kaz-tool]').forEach(function (b) {
+      b.setAttribute('class', 'kaz-tool' + (b.getAttribute('data-kaz-tool') === t ? ' kaz-tool--on' : ''));
+    });
+    say(t === 'hand' ? 'ferramenta mão: arraste o canvas' : 'ferramenta mover');
+    return true;
+  }
+  function setTab(name) {
+    if (LEFT_TABS.indexOf(name) >= 0) tabLeft = name;
+    else if (RIGHT_TABS.indexOf(name) >= 0) tabRight = name;
+    else return false;
+    paintTabs(); return true;
+  }
+  function paintTabs() {
+    root.querySelectorAll('[data-kaz-tab]').forEach(function (t) {
+      var name = t.getAttribute('data-kaz-tab');
+      var on = (name === tabLeft || name === tabRight);
+      t.setAttribute('class', 'kaz-tab' + (on ? ' kaz-tab--on' : ''));
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    root.querySelectorAll('[data-kaz-panel]').forEach(function (p) {
+      var name = p.getAttribute('data-kaz-panel');
+      p.hidden = !(name === tabLeft || name === tabRight);
+    });
+  }
+  function paintRulers() {
+    if (!rulerH || !rulerV) return;
+    if (!rulerH.childNodes.length) {
+      for (var x = 0; x <= scene.canvas.w; x += 80) rulerH.appendChild(el('span', 'kaz-ruler__tick', String(x)));
+    }
+    if (!rulerV.childNodes.length) {
+      for (var y = 0; y <= scene.canvas.h; y += 80) rulerV.appendChild(el('span', 'kaz-ruler__tick', String(y)));
+    }
+  }
+  function paintHistory() {
+    if (!historyList) return;
+    clear(historyList);
+    for (var i = 0; i < history.length; i++) {
+      var li = el('li', '', (i + 1) + '. ' + history[i].layers.length + ' camadas' + (i === cursor ? ' · atual' : ''));
+      if (i === cursor) li.setAttribute('data-kaz-current', '1');
+      historyList.appendChild(li);
+    }
+  }
+  function paintInspect() {
+    if (!inspectBox) return;
+    var l = layer(selected);
+    if (!l) { inspectBox.textContent = '// nenhuma camada selecionada'; return; }
+    var css = '.' + l.id + ' {\n'
+      + '  position: absolute;\n  left: ' + l.x + 'px;\n  top: ' + l.y + 'px;\n'
+      + '  width: ' + l.w + 'px;\n  height: ' + l.h + 'px;\n'
+      + '  background: ' + l.fill + ';\n  border-radius: ' + l.radius + 'px;\n}';
+    inspectBox.textContent = css + '\n\n' + JSON.stringify(l, null, 2);
+  }
+  function paintSwatches() {
+    if (!swatches || swatches.childNodes.length) return;
+    ['#31efb8', '#7b61ff', '#0f172a', '#e2e8f0', '#ffffff', '#2563eb'].forEach(function (c) {
+      var s = el('span', 'kaz-swatch');
+      s.setAttribute('title', c); s.style.background = c; swatches.appendChild(s);
+    });
+  }
+  function paintTokens() {
+    ['primary', 'surface'].forEach(function (k) {
+      var v = root.getAttribute('data-kaz-' + k) || '#ffffff';
+      var dot = root.querySelector('[data-kaz-token="' + k + '"]');
+      var val = root.querySelector('[data-kaz-token-value="' + k + '"]');
+      if (dot) dot.style.background = v;
+      if (val) val.textContent = v;
+    });
+  }
+  function paintChrome() {
+    paintZoom(); paintTabs(); paintRulers(); paintHistory(); paintInspect();
+    paintSwatches(); paintTokens();
+    if (count) count.textContent = scene.layers.length + ' camadas';
+    var l = layer(selected);
+    if (coords) coords.textContent = l ? 'X ' + l.x + ' · Y ' + l.y : 'X 0 · Y 0';
+    var bs = root.querySelector('[data-kaz-board-size]');
+    if (bs) bs.textContent = scene.canvas.w + ' × ' + scene.canvas.h;
+  }
+
+  function render() { drawCanvas(); drawLayers(); drawInspector(); syncField(); paintDirty(); paintChrome(); }
 
   /* ---- Conexão com campos allowlistados do tema -------------------------- */
   /* Aplicacao aditiva e nao destrutiva: marca camadas allowlistadas sem
@@ -406,6 +538,7 @@
     return { x: scene.canvas.w / r.width, y: scene.canvas.h / r.height, left: r.left, top: r.top };
   }
   canvas.addEventListener('mousedown', function (ev) {
+    if (tool === 'hand') return;
     var target = ev.target;
     var handle = target && target.getAttribute ? target.getAttribute('data-kaz-handle') : null;
     var g = target;
@@ -419,7 +552,24 @@
              ox: l.x, oy: l.y, ow: l.w, oh: l.h, scale: s };
     render();
   });
+  var panDrag = null;
+  if (viewport) viewport.addEventListener('mousedown', function (ev) {
+    if (tool !== 'hand') return;
+    if (ev.target && ev.target.closest && ev.target.closest('[data-kaz-layer]')) return;
+    panDrag = { x: ev.clientX, y: ev.clientY, px: panX, py: panY };
+    ev.preventDefault();
+  });
+  if (viewport) viewport.addEventListener('wheel', function (ev) {
+    if (!ev.ctrlKey && !ev.metaKey) return;
+    ev.preventDefault();
+    setZoom(zoom + (ev.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP));
+  }, { passive: false });
   document.addEventListener('mousemove', function (ev) {
+    if (panDrag) {
+      panX = panDrag.px + (ev.clientX - panDrag.x);
+      panY = panDrag.py + (ev.clientY - panDrag.y);
+      paintZoom(); return;
+    }
     if (!drag) return;
     var l = layer(drag.id); if (!l) return;
     var dx = (ev.clientX - drag.sx) * drag.scale.x;
@@ -434,6 +584,7 @@
     drawCanvas();
   });
   document.addEventListener('mouseup', function () {
+    if (panDrag) { panDrag = null; return; }
     if (!drag) return;
     drag = null; commit(); render();
   });
@@ -442,8 +593,21 @@
   root.addEventListener('click', function (ev) {
     var b = ev.target;
     while (b && b !== root && !b.getAttribute('data-kaz-action') && !b.getAttribute('data-kaz-select')
-           && !b.getAttribute('data-kaz-kind') && !b.getAttribute('data-kaz-block')) b = b.parentNode;
+           && !b.getAttribute('data-kaz-kind') && !b.getAttribute('data-kaz-block')
+           && !b.getAttribute('data-kaz-tab') && !b.getAttribute('data-kaz-zoom')
+           && !b.getAttribute('data-kaz-tool')) b = b.parentNode;
     if (!b || b === root) return;
+    var tab = b.getAttribute('data-kaz-tab');
+    if (tab) { setTab(tab); return; }
+    var zm = b.getAttribute('data-kaz-zoom');
+    if (zm) {
+      if (zm === 'in') setZoom(zoom + ZOOM_STEP);
+      else if (zm === 'out') setZoom(zoom - ZOOM_STEP);
+      else fitZoom();
+      return;
+    }
+    var tl = b.getAttribute('data-kaz-tool');
+    if (tl) { setTool(tl); return; }
     var sel = b.getAttribute('data-kaz-select');
     if (sel) { selected = sel; render(); return; }
     var kind = b.getAttribute('data-kaz-kind');
@@ -478,6 +642,15 @@
     if (ctrl && ev.key.toLowerCase() === 'z') { ev.preventDefault(); restore(ev.shiftKey ? cursor + 1 : cursor - 1); return; }
     if (ctrl && ev.key.toLowerCase() === 'd') { ev.preventDefault(); duplicate(selected); return; }
     if (ev.key === 'Delete' || ev.key === 'Backspace') { ev.preventDefault(); remove(selected); return; }
+    if (!ctrl) {
+      var k = ev.key.toLowerCase();
+      if (k === 'v' || k === 'h') { setTool(k === 'v' ? 'move' : 'hand'); return; }
+      var kinds = { r: 'rect', t: 'text', b: 'button', c: 'card', s: 'section' };
+      if (kinds[k]) { add(kinds[k]); return; }
+      if (k === '+' || k === '=') { setZoom(zoom + ZOOM_STEP); return; }
+      if (k === '-') { setZoom(zoom - ZOOM_STEP); return; }
+      if (k === '0') { fitZoom(); return; }
+    }
     var step = ev.shiftKey ? GRID * 4 : GRID;
     if (ev.key === 'ArrowLeft') { ev.preventDefault(); move(selected, -step, 0); }
     else if (ev.key === 'ArrowRight') { ev.preventDefault(); move(selected, step, 0); }
@@ -502,7 +675,13 @@
     blocks: function () { return Object.keys(BLOCKS); },
     insertBlock: insertBlock, dirty: dirty,
     baseline: function () { return copy(baseline); },
-    render: render, validScene: validScene, fallback: fallback
+    render: render, validScene: validScene, fallback: fallback,
+    zoom: function () { return zoom; }, setZoom: setZoom, fitZoom: fitZoom,
+    pan: function () { return { x: panX, y: panY }; }, setPan: setPan,
+    tool: function () { return tool; }, setTool: setTool,
+    tabs: function () { return { left: tabLeft, right: tabRight }; }, setTab: setTab,
+    ui: function () { return { zoom: zoom, panX: panX, panY: panY, tool: tool,
+                              tabLeft: tabLeft, tabRight: tabRight }; }
   };
   say('KAZTheme-Editor pronto · ' + scene.layers.length + ' camadas · '
       + (root.getAttribute('data-kaz-saved') === '1' ? 'cena salva no tema' : 'cena derivada, salve para persistir'));

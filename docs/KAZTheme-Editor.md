@@ -1,7 +1,7 @@
-# KAZTheme-Editor — referência (Frentes U + V + X)
+# KAZTheme-Editor — referência (Frentes U + V + X + Y)
 
 **Data:** 4 de novembro de 2026 (America/Sao_Paulo)  
-**Estado:** fundação visual (U), cena persistente (V), correção do mapa de sites (W) e biblioteca de blocos + estado não salvo (X); não é release aprovada.  
+**Estado:** fundação visual (U), cena persistente (V), correção do mapa de sites (W), biblioteca de blocos + estado não salvo (X) e **workspace visual inspirado no Penpot (Y)**; não é release aprovada.  
 **Nome próprio:** KAZTheme-Editor, o editor de temas do ReamurCMS — na mesma linha de identidade do BDREditor, mas com escopo, documentos e arquivos próprios.
 
 ## 1. O que é
@@ -32,6 +32,7 @@ A implementação é **DOM + SVG puro**. Não há WebGL, Three.js, canvas 2D, bi
 | `docs/KAZTheme-Editor-Guia-Rapido.md` | Passo a passo de uso. |
 | `docs/KAZTheme-Editor-Cena-Persistente.md` | Contrato da frente V e regras de migração zero. |
 | `docs/KAZTheme-Editor-Biblioteca-de-Blocos.md` | Contrato dos 6 blocos da frente X e do selo de alterações não salvas. |
+| `docs/KAZTheme-Editor-Interface-Penpot.md` | Mapeamento do workspace da frente Y para a interface do Penpot, limites e validação. |
 
 O padrão de separação (JS de modelo/UI + CSS escopado + init no controller + documento de referência) é o mesmo que o BDREditor usa, mas os arquivos, nomes, identidade e contrato são **exclusivos** do KAZTheme-Editor.
 
@@ -98,7 +99,45 @@ alterados** pela X. Zero migration e zero chave de tradução nova: os rótulos 
 literais estáticos no Twig, como os botões existentes desde a U. O cache key dos
 assets passou de `-kaz-theme-editor-v` para `-kaz-theme-editor-x`.
 
-## 6. Segurança
+## 6. Workspace visual (frente Y)
+
+A reclamação de que a interface "não estava nem 1% semelhante" ao Penpot levou
+a uma reformulação **apenas de casca**: nenhum contrato de dados, servidor,
+formato de cena ou campo allowlistado mudou. O workspace passa a ter:
+
+| Área do Penpot | KAZTheme-Editor Y |
+| --- | --- |
+| Navbar, main menu, toolbar, histórico, usuários | `.kaz-topbar` com marca, nome do arquivo, página, 13 ferramentas SVG, desfazer/refazer, avatar e status |
+| Páginas / Camadas / Ativos / Design tokens / Histórico | 5 abas na sidebar esquerda (`data-kaz-tab`) |
+| Viewport infinito, réguas, boards | `.kaz-viewport` pontilhado com pan (ferramenta mão), zoom 25–200%, réguas H/V e board 960×540 |
+| Design properties / Prototype / Inspect | 3 abas na sidebar direita; inspector com seções Layout, Aparência, Tipografia, Elemento e Tema |
+| Color palette, typography, tokens | swatches, amostra `Aa` e tokens `primary`/`surface` lidos de `data-kaz-*` |
+| Zoom, coordenadas, file status | `.kaz-statusbar` e o selo `Salvo` / `Alterações não salvas` |
+
+O tema é **escuro por padrão** (o Penpot também), com variáveis CSS escopadas
+em `.kaz-card`, responsivo até 900 px e com regras `forced-colors`. Ícones são
+`<svg>` literais e estáticos no Twig — sem fontes remotas, CDN, bibliotecas de
+ícones, `<script>` inline ou atributo `on*`.
+
+**Zoom/pan/abas/ferramenta são estado LOCAL de interface**: não entram no
+`kaz_scene_json`, não são gravados, não usam `localStorage` e não afetam o
+`baseline` do indicador de alterações não salvas. O `scale()` do drag/resize
+continua usando `getBoundingClientRect()`, que já reflete o `transform` do
+board. Inserir blocos, editar camadas, desfazer, aplicar bindings e salvar
+continuam exatamente como na X.
+
+Atalhos novos (ignorados enquanto se digita): `V` mover, `H` mão,
+`R/T/B/C/S` criam camadas, `+`/`-` zoom, `0` ajusta, `Ctrl+roda` zoom. Os
+atalhos U/V (`Ctrl+Z`, `Ctrl+Shift+Z`, `Ctrl+D`, `Delete`, setas) permanecem.
+
+O cache key dos assets passou de `-kaz-theme-editor-x` para
+`-kaz-theme-editor-y`. **Não há** protótipo navegável, View mode, comentários,
+colaboração multiusuário, componentes reutilizáveis, flex/grid layout, upload
+ou renderização da cena no site público: as abas que remetem a isso são
+explicitamente informativas e somente-leitura, e o documento da frente Y lista
+cada limite.
+
+## 7. Segurança
 
 - Apenas `createElement`, `createElementNS`, `setAttribute`, `textContent`, `appendChild`, `removeChild`, `addEventListener`.
 - Sem `innerHTML`, `outerHTML`, `document.write`, `eval`, `Function`, `fetch`, `XMLHttpRequest`, jQuery AJAX, `srcdoc`, tag `script` inline ou atributo `on*`.
@@ -107,9 +146,9 @@ assets passou de `-kaz-theme-editor-v` para `-kaz-theme-editor-x`.
 - Import fail-closed; cena corrompida não executa nada e não derruba o formulário.
 - `MAX_LAYERS`, `SCENE_MAX_BYTES` e limites numéricos evitam abuso de render e de payload.
 
-## 7. Estado do repositório e validação
+## 8. Estado do repositório e validação
 
-Base inspecionada: `main` em `cd92573c507b6a5a4189d7b1b574cb73ec17ad59` (pai `004a99cd…`, frente W aplicada **4/4** no raw). Os caminhos desta frente foram triados como **livres** nos 14 manifestos. Nenhum manifesto, hash de release gate, `schema.sql`, `F9-27-Base-Hashes.json`, `tools/decision-matrix.json` ou `release_approved` foi reescrito.
+Base inspecionada: `main` em `d68ce60ff0a42234f551ace4e919c38cb06b6e67` (pai `cd92573c…`, frente X aplicada **7/7** no raw). Os caminhos desta frente foram triados como **livres** nos 14 manifestos. Nenhum manifesto, hash de release gate, `schema.sql`, `F9-27-Base-Hashes.json`, `tools/decision-matrix.json` ou `release_approved` foi reescrito.
 
 Validação executada nesta frente: A/B real com bootstraps separados HEAD/pacote, réplica A/B com guards, harnesses PHP (WASM 8.5.12), Twig 3.14, jsdom 29.1.1, `node --check`, `php -l`, CRC do ZIP e `sha256sum -c`. Os números exatos estão no `RELATORIO.md` da entrega.
 

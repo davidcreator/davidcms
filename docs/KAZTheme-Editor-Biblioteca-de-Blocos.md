@@ -1,7 +1,7 @@
 # KAZTheme-Editor — Biblioteca de Blocos (Frente X)
 
 **Data:** 4 de novembro de 2026 (America/Sao_Paulo)  
-**Base:** `main` @ `cd92573c507b6a5a4189d7b1b574cb73ec17ad59` (frente W aplicada 4/4).  
+**Base:** `main` @ `d68ce60ff0a42234f551ace4e919c38cb06b6e67` (frente X aplicada 7/7).  
 **Estado:** pacote instalável entregue para aplicação. **Não foi aplicado no GitHub por nós**; não é release aprovada.
 
 ## 1. O que a frente X acrescenta
@@ -25,6 +25,12 @@ Duas funcionalidades **visíveis no Admin**, dentro do card KAZTheme-Editor:
 | `titulo` | 2 | título 480×64, linha de destaque 480×8 |
 | `galeria` | 3 | três molduras 160×120 lado a lado |
 | `cta` | 2 | seção 480×120, botão 160×56 |
+
+**Frente Y:** os 6 botões foram movidos para a aba **Ativos** da sidebar
+esquerda do workspace, com miniaturas. O comportamento de inserção, os IDs,
+as camadas geradas, o fail-closed e a persistência na `kaz_scene` **não
+mudaram**. O selo "Alterações não salvas" da X passou a conviver com o status
+de arquivo `Salvo` na navbar.
 
 ## 2. Contrato e segurança
 

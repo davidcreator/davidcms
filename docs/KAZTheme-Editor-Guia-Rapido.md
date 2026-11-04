@@ -1,5 +1,17 @@
 # KAZTheme-Editor — guia rápido
 
+## Workspace (frente Y)
+
+A tela agora é um **workspace escuro de três colunas**, como o Penpot:
+
+- **Topo:** marca, nome do arquivo, página, barra de ferramentas com ícones, desfazer/refazer, avatar e o status do arquivo (**Salvo** / **Alterações não salvas**).
+- **Esquerda:** abas **Páginas**, **Camadas**, **Ativos**, **Tokens** e **Histórico**. Os 6 blocos da frente X ficam em **Ativos**, com miniaturas; **Tokens** mostra `primary`/`surface`; **Histórico** lista os estados locais do desfazer.
+- **Centro:** réguas, viewport pontilhado (infinito) e o board **Tema · 960 × 540**. Use **+ / − / Ajustar** na barra inferior, `Ctrl` + roda do mouse, ou `+`, `-`, `0`. A ferramenta **Mão** (`H`) arrasta o canvas sem mover camadas; **Mover** (`V`) volta ao arraste normal.
+- **Direita:** abas **Design**, **Protótipo** e **Inspecionar**. A aba Design tem as seções Layout (X/Y/W/H), Aparência, Tipografia, Elemento e Tema. Inspecionar mostra CSS e JSON **somente-leitura** da camada selecionada.
+- **Rodapé:** zoom, coordenadas da seleção, status e o campo `kaz_scene_json` (exportar/importar).
+
+Atalhos: `V` mover · `H` mão · `R` retângulo · `T` texto · `B` botão · `C` cartão · `S` seção · `+`/`-` zoom · `0` ajustar. Os atalhos anteriores continuam valendo. Protótipo/View mode/comentários **não existem**: a cena é dado de edição do tema, não um protótipo navegável.
+
 ## Onde fica
 
 Admin → Design → Temas → editar um tema. O card **KAZTheme-Editor** aparece depois do editor de templates, **dentro do formulário principal**. O card de pacote de tema continua fora do formulário, como antes.
@@ -10,7 +22,7 @@ Admin → Design → Temas → editar um tema. O card **KAZTheme-Editor** aparec
 2. Clique numa camada no canvas ou na lista à esquerda para selecioná-la. O inspector à direita mostra X, Y, largura, altura, cor, raio, fonte, texto, tipo, papel no tema e ID allowlistado.
 3. Arraste a camada no canvas para mover; arraste o quadrado azul no canto inferior direito para redimensionar. Tudo com snap na grade de 8 px.
 4. Use **+ Retângulo / Texto / Botão / Cartão / Seção** para criar camadas. **Duplicar**, **Excluir**, **↑**, **↓**, **Ocultar** e **Bloquear** agem sobre a seleção.
-5. Na **Biblioteca de blocos**, clique em **+ Hero / + Cartão / + Faixa / + Título / + Galeria / + CTA** para inserir um conjunto pronto de 2–3 camadas. Elas entram no canvas, na árvore, no histórico e no campo salvo com o tema. O bloco não muda o formulário sozinho.
+5. Na aba **Ativos**, clique em **Hero / Cartão / Faixa / Título / Galeria / CTA** para inserir um conjunto pronto de 2–3 camadas. Elas entram no canvas, na árvore, no histórico e no campo salvo com o tema. O bloco não muda o formulário sozinho.
 6. **Desfazer** / **Refazer** ou `Ctrl+Z` / `Ctrl+Shift+Z`. Outras teclas: `Ctrl+D` duplica, `Delete` exclui, setas movem (com `Shift`, 32 px). Atalhos são ignorados enquanto você digita num campo.
 
 ## Alterações não salvas
@@ -43,13 +55,14 @@ Abrir a tela **não muda nada** no formulário: a propagação só acontece quan
 
 | Quer mudar... | Arquivo |
 | --- | --- |
-| Tipos de camada, validação cliente, atalhos, histórico, blocos e selo | `dev/admin/view/js/kaz-theme-editor.js` |
-| Cores, layout de 3 colunas, responsivo | `dev/admin/view/css/kaz-theme-editor.css` |
+| Tipos de camada, validação cliente, atalhos, histórico, blocos, selo e workspace | `dev/admin/view/js/kaz-theme-editor.js` |
+| Tema escuro, 3 colunas, réguas, viewport, responsivo | `dev/admin/view/css/kaz-theme-editor.css` |
 | Rótulos, campos do inspector e note de estado | `dev/admin/view/template/design/kaz_theme_editor.twig` |
 | Leitura/gravação da cena e assets | `dev/admin/controller/design/theme.php` |
 | Contrato servidor, allowlist e normalização | `dev/system/library/theme/theme_package.php` |
 | Contrato e limites | `docs/KAZTheme-Editor.md`, `docs/KAZTheme-Editor-Cena-Persistente.md` |
 | Presets dos blocos | `docs/KAZTheme-Editor-Biblioteca-de-Blocos.md` |
+| Workspace e mapeamento Penpot | `docs/KAZTheme-Editor-Interface-Penpot.md` |
 
 ## Limites que continuam valendo
 
