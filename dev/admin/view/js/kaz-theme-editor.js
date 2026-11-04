@@ -74,7 +74,17 @@
   var rulerH = root.querySelector('[data-kaz-ruler-h]');
   var rulerV = root.querySelector('[data-kaz-ruler-v]');
   var swatches = root.querySelector('[data-kaz-swatches]');
-  var form = root.closest('form');
+  /* Frente Z: o form principal agora e FILHO do workspace, nao ancestral. */
+  var form = root.querySelector('#kaz-theme-form') || root.closest('form');
+  var owner = root.getAttribute('data-kaz-owner') === '1';
+  var modulesMap = {
+    design: 'Design', geral: 'Geral', heranca: 'Heranca', tokens: 'Tokens',
+    three: 'Three.js', cena3d: 'Cena 3D', secoes: 'Secoes', agenda: 'Agendamento',
+    midia: 'Midia', modelos: 'Modelos', sites: 'Sites', componentes: 'Componentes',
+    condicoes: 'Condicoes', comparar: 'Previa', templates: 'Templates'
+  };
+  var stateModule = 'design';
+  var formTouched = false, formBaseline = '';
   if (!canvas || !layerList || !jsonBox) return;
 
   function say(t) { if (status) status.textContent = String(t); }
@@ -166,11 +176,51 @@
      servidor; abrir a tela NAO suja o estado. Desfazer ate o baseline limpa. */
   var baseline = copy(scene);
   function dirty() { return JSON.stringify(scene) !== JSON.stringify(baseline); }
+  /* Frente Z — selo de alteracoes do FORMULARIO. Nao substitui dirty(): o
+     data-kaz-dirty e o file status continuam exclusivos de kaz_scene_json. */
+  function formSnapshot() {
+    if (!form) return '';
+    var out = [], nodes = form.querySelectorAll('input,select,textarea'), i, n, v, k, o;
+    for (i = 0; i < nodes.length; i++) {
+      n = nodes[i];
+      if (!n.name || n.name === 'kaz_scene_json' || n.type === 'file') continue;
+      if (n.type === 'checkbox' || n.type === 'radio') v = n.checked ? '1' : '0';
+      else if (n.multiple) { o = []; for (k = 0; k < n.options.length; k++) if (n.options[k].selected) o.push(n.options[k].value); v = o.join(','); }
+      else v = n.value;
+      out.push(n.name + '=' + v);
+    }
+    return out.join('\n');
+  }
+  function formDirty() { return owner && formTouched && formSnapshot() !== formBaseline; }
+  function setModule(n) {
+    if (!Object.prototype.hasOwnProperty.call(modulesMap, n)) return false;
+    stateModule = n; paintModules(); return true;
+  }
+  function paintModules() {
+    var panels = root.querySelectorAll('[data-kaz-module-panel]'), i, n;
+    for (i = 0; i < panels.length; i++)
+      panels[i].hidden = panels[i].getAttribute('data-kaz-module-panel') !== stateModule;
+    var box = root.querySelector('[data-kaz-modules]');
+    if (box) box.hidden = stateModule === 'design';
+    if (viewport) viewport.hidden = stateModule !== 'design';
+    var links = root.querySelectorAll('button[data-kaz-module]');
+    for (i = 0; i < links.length; i++) {
+      n = links[i];
+      if (!n.classList.contains('kaz-module-link')) continue;
+      var on = n.getAttribute('data-kaz-module') === stateModule;
+      n.classList.toggle('kaz-module-link--on', on);
+      n.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    var lab = root.querySelector('.kaz-statusbar__module');
+    if (lab) lab.textContent = modulesMap[stateModule] || 'Design';
+  }
   function paintDirty() {
     var on = dirty();
     root.setAttribute('data-kaz-dirty', on ? '1' : '0');
     var badge = root.querySelector('[data-kaz-dirty-badge]');
     if (badge) badge.hidden = !on;
+    var fbadge = root.querySelector('[data-kaz-form-dirty]');
+    if (fbadge) fbadge.hidden = !formDirty();
     /* Penpot #20: file status acompanha o estado de gravacao. */
     var ok = root.querySelector('[data-kaz-file-status]');
     if (ok) { ok.hidden = on; ok.textContent = on ? 'Não salvo' : 'Salvo'; }
@@ -366,7 +416,7 @@
   }
   function paintChrome() {
     paintZoom(); paintTabs(); paintRulers(); paintHistory(); paintInspect();
-    paintSwatches(); paintTokens();
+    paintSwatches(); paintTokens(); paintModules();
     if (count) count.textContent = scene.layers.length + ' camadas';
     var l = layer(selected);
     if (coords) coords.textContent = l ? 'X ' + l.x + ' · Y ' + l.y : 'X 0 · Y 0';
@@ -595,8 +645,10 @@
     while (b && b !== root && !b.getAttribute('data-kaz-action') && !b.getAttribute('data-kaz-select')
            && !b.getAttribute('data-kaz-kind') && !b.getAttribute('data-kaz-block')
            && !b.getAttribute('data-kaz-tab') && !b.getAttribute('data-kaz-zoom')
-           && !b.getAttribute('data-kaz-tool')) b = b.parentNode;
+           && !b.getAttribute('data-kaz-tool') && !b.getAttribute('data-kaz-module')) b = b.parentNode;
     if (!b || b === root) return;
+    var mod = b.getAttribute('data-kaz-module');
+    if (mod) { setModule(mod); return; }
     var tab = b.getAttribute('data-kaz-tab');
     if (tab) { setTab(tab); return; }
     var zm = b.getAttribute('data-kaz-zoom');
@@ -658,10 +710,22 @@
     else if (ev.key === 'ArrowDown') { ev.preventDefault(); move(selected, 0, step); }
   });
 
+  if (form) form.addEventListener('input', function (ev) {
+    if (ev.target && ev.target.name && ev.target.name !== 'kaz_scene_json') formTouched = true;
+    paintDirty();
+  });
+  if (form) form.addEventListener('change', function (ev) {
+    if (ev.target && ev.target.name && ev.target.name !== 'kaz_scene_json') formTouched = true;
+    paintDirty();
+  });
   if (form) form.addEventListener('submit', function () {
-    syncField(); baseline = copy(scene); paintDirty();
+    syncField(); baseline = copy(scene);
+    formBaseline = formSnapshot(); formTouched = false;
+    paintDirty();
   });
   render();
+  formBaseline = formSnapshot();
+  paintDirty();
   /* Exposição mínima para testes automatizados (sem alterar comportamento). */
   root.__kaz = {
     state: function () { return copy(scene); },
@@ -674,6 +738,14 @@
     export: exportScene, import: importScene, bind: applyBindings,
     blocks: function () { return Object.keys(BLOCKS); },
     insertBlock: insertBlock, dirty: dirty,
+    owner: function () { return owner; },
+    modules: function () { return Object.keys(modulesMap); },
+    module: function () { return stateModule; }, setModule: setModule,
+    formDirty: formDirty, formId: function () { return form ? form.id : ''; },
+    panelVisible: function (n) {
+      var e = root.querySelector('[data-kaz-module-panel="' + n + '"]');
+      return !!e && !e.hidden;
+    },
     baseline: function () { return copy(baseline); },
     render: render, validScene: validScene, fallback: fallback,
     zoom: function () { return zoom; }, setZoom: setZoom, fitZoom: fitZoom,

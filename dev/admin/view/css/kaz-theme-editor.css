@@ -251,3 +251,87 @@
   .kaz-badge--ok, .kaz-badge--dirty { border: 2px solid Highlight; background: Canvas; color: CanvasText; }
   .kaz-board__frame { border: 2px solid CanvasText; }
 }
+
+
+/* ==========================================================================
+   Frente Z — KAZTheme-Editor como MOTOR TOTAL / DONO ABSOLUTO
+   O workspace passa a ser a pagina inteira: os 14 modulos do formulario de
+   tema, o pacote, o iframe de preview e o historico ficam dentro dele.
+   Nenhum formulario e aninhado; os cards Bootstrap originais so ganham
+   uma camada de legibilidade sobre o tema escuro do workspace.
+   ========================================================================== */
+.kaz-shell { background: var(--kaz-bg, #18181b); color: #e7e7ea; padding: 0;
+             border-radius: 10px; overflow: hidden; }
+.kaz-shell__intro { margin: 0; padding: 6px 14px; font-size: 11px;
+                    color: #a1a1aa; border-bottom: 1px solid #2b2b31; }
+.kaz-alert { margin: 8px 14px; padding: 8px 12px; border-radius: 6px; font-size: 12px; }
+.kaz-alert--error { background: #3b1d22; border: 1px solid #7f3843; color: #fecdd3; }
+.kaz-alert--ok { background: #16302a; border: 1px solid #2f6b58; color: #a7f3d0; }
+.kaz-topbar__state { font-size: 10px; color: #a1a1aa; text-transform: uppercase;
+                     letter-spacing: .06em; }
+.kaz-btn--primary { background: var(--kaz-accent, #31efb8); color: #06251c;
+                    border: 1px solid var(--kaz-accent, #31efb8); }
+.kaz-btn--primary[disabled] { opacity: .45; }
+.kaz-nav-save { margin-left: 8px; }
+.kaz-nav-back { text-decoration: none; }
+
+.kaz-modules-nav { border-top: 1px solid #2b2b31; margin-top: 10px; padding-top: 8px;
+                   overflow-y: auto; max-height: 46vh; }
+.kaz-panel__title--spaced { margin-top: 4px; }
+.kaz-module-link { display: flex; align-items: center; gap: 7px; width: 100%;
+                   padding: 6px 8px; margin: 1px 0; border: 1px solid transparent;
+                   border-radius: 5px; background: transparent; color: #d4d4d8;
+                   font-size: 11px; text-align: left; cursor: pointer; }
+.kaz-module-link:hover { background: #26262c; }
+.kaz-module-link--on { background: #243a33; border-color: #2f6b58; color: #a7f3d0; }
+.kaz-module-link small { margin-left: auto; color: #71717a; font-size: 9px; }
+.kaz-module-link__num, .kaz-module-link__dot { flex: none; width: 18px; height: 18px;
+  display: inline-flex; align-items: center; justify-content: center; border-radius: 4px;
+  background: #313138; color: #a1a1aa; font-size: 9px; font-variant-numeric: tabular-nums; }
+.kaz-module-link--on .kaz-module-link__dot { background: var(--kaz-accent, #31efb8); }
+
+.kaz-modules { flex: 1; min-height: 0; overflow: auto; padding: 14px 18px 22px;
+               background: #1c1c20; }
+.kaz-modules[hidden], .kaz-module[hidden], [hidden] { display: none !important; }
+.kaz-module__head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+                    padding-bottom: 10px; border-bottom: 1px solid #313138; }
+.kaz-module__head h3 { margin: 0; font-size: 15px; font-weight: 600; color: #fafafa; }
+.kaz-module__head span { font-size: 11px; color: #a1a1aa; }
+.kaz-module__head .kaz-btn { margin-left: auto; }
+.kaz-modules__noscript { display: none; color: #a1a1aa; font-size: 11px; }
+
+/* Cards herdados do theme_form.twig — legibilidade sobre o tema escuro. */
+.kaz-module .card, .kaz-extra .card { background: #222227; border: 1px solid #35353d;
+  color: #e7e7ea; border-radius: 8px; margin-bottom: 12px; }
+.kaz-module .card-header, .kaz-extra .card-header { background: #2a2a31;
+  border-bottom: 1px solid #35353d; color: #fafafa; }
+.kaz-module .card-header h2, .kaz-extra .card-header h2 { color: #fafafa; }
+.kaz-module .form-label, .kaz-extra .form-label,
+.kaz-module .form-text, .kaz-extra .form-text,
+.kaz-module .text-muted, .kaz-extra .text-muted { color: #a1a1aa !important; }
+.kaz-module .form-control, .kaz-module .form-select,
+.kaz-extra .form-control, .kaz-extra .form-select { background: #18181b;
+  border: 1px solid #3f3f46; color: #fafafa; }
+.kaz-module .form-control:focus, .kaz-module .form-select:focus { border-color: #31efb8; }
+.kaz-module code, .kaz-extra code { color: #a7f3d0; background: #26262c; padding: 1px 4px;
+  border-radius: 3px; }
+.kaz-module .badge.text-bg-light, .kaz-extra .badge.text-bg-light { background: #3f3f46 !important;
+  color: #e7e7ea !important; }
+.kaz-module .nav-tabs, .kaz-extra .nav-tabs { border-bottom-color: #35353d; }
+.kaz-module .nav-link { color: #a1a1aa; }
+.kaz-module .nav-link.active { background: #222227; border-color: #35353d; color: #31efb8; }
+.kaz-module .btn-outline-secondary, .kaz-extra .btn-outline-secondary,
+.kaz-module .btn-outline-primary, .kaz-extra .btn-outline-primary { color: #d4d4d8;
+  border-color: #52525b; }
+.kaz-module .list-group-item, .kaz-extra .list-group-item { background: #222227;
+  border-color: #35353d; color: #e7e7ea; }
+.kaz-module .tsb-row, .kaz-module .tmm-card, .kaz-module .tcl-card,
+.kaz-module .tms-card, .kaz-module .tmm-model, .kaz-module .scene-preset-card { background: #222227; }
+.kaz-module img, .kaz-extra img { max-width: 100%; height: auto; }
+
+.kaz-extra { padding: 16px 18px 22px; border-top: 1px solid #2b2b31; background: #18181b; }
+.kaz-extra h2 { color: #fafafa; font-size: 14px; margin: 12px 0 8px; }
+.kaz-extra iframe { background: #fff; }
+.kaz-statusbar__module { color: #a7f3d0; font-weight: 600; }
+.kaz-statusbar__badge { color: #fbbf24; }
+.kaz-btn--ghost { background: transparent; border: 1px solid #3f3f46; color: #a1a1aa; }

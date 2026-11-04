@@ -153,3 +153,58 @@ Base inspecionada: `main` em `d68ce60ff0a42234f551ace4e919c38cb06b6e67` (pai `cd
 Validação executada nesta frente: A/B real com bootstraps separados HEAD/pacote, réplica A/B com guards, harnesses PHP (WASM 8.5.12), Twig 3.14, jsdom 29.1.1, `node --check`, `php -l`, CRC do ZIP e `sha256sum -c`. Os números exatos estão no `RELATORIO.md` da entrega.
 
 **Indisponível neste ambiente:** PHP nativo, Composer, PHPStan, rsync, navegador real, MySQL, sessão autenticada, migration, staging, deploy, E2E e CI remoto verificado. PHP WASM/Twig/jsdom com mocks **não são um servidor**. Nenhum status `PENDING_DECISION`, `STATIC_ONLY`, `NOT_RUN`, `SKIP` ou `BLOCKED_NOT_RUN` foi convertido em `PASS`. Nenhuma escrita no GitHub foi feita por nós.
+
+---
+
+## Frente Z — KAZTheme-Editor como motor total (dono absoluto)
+
+Antes da frente Z, `theme_form.twig` era o dono da página: renderizava 14 cards
+e incluía `design/kaz_theme_editor.twig` como **um campo a mais**, na linha 183,
+dentro do `<form>` principal. O editor era uma parte do criador de temas.
+
+A frente Z **inverte a hierarquia**:
+
+| Antes | Depois |
+| --- | --- |
+| `theme_form.twig` = 198 linhas, 14 cards, formulários, pacote, prévia, histórico | `theme_form.twig` = 3 linhas: `header`, `{% include 'design/kaz_theme_editor.twig' %}`, `footer` |
+| `kaz_theme_editor.twig` = um card incluído dentro do form | `kaz_theme_editor.twig` = **a página inteira**: workspace Penpot + os 14 módulos + pacote + iframe + histórico |
+| Editor subordinado | Editor `#kaz-theme-editor` com `data-kaz-owner="1"` e `<form id="kaz-theme-form">` filho |
+
+Os 14 módulos na sidebar esquerda, todos dentro do mesmo workspace:
+
+`Design` (canvas/camadas) · `Geral` · `Herança` · `Tokens` · `Three.js` ·
+`Cena 3D` · `Seções` · `Agendamento` · `Mídia` · `Modelos` · `Sites` ·
+`Componentes` · `Condições` · `Prévia` · `Templates`.
+
+**Contrato de não-regressão.** Os 14 cards foram movidos **byte a byte**: os
+52 `name="..."` do formulário original permanecem idênticos, assim como
+`csrf_token` nos 3 tipos de formulário, `can_modify`/`disabled`,
+`formaction="{{ compare_url }}" formtarget="theme-preview"`, todos os `data-*`
+dos cards (`data-sites`, `data-models`, `data-snippets`, `data-thumb-base`,
+`data-schedule-card`, `data-spec`, ...), `button_save`/`button_back`, `cancel`,
+`error`/`notice`, `revisions[].restore`, o `<iframe name="theme-preview" sandbox="">`
+e `{{ footer|raw }}`.
+
+**Sem formulários aninhados.** O `<form id="kaz-theme-form">` principal é
+**irmão** dos demais: o formulário de importação de pacote
+(`action="{{ import_url }}" data-theme-package-form`) e os formulários de
+restauração de revisão ficam depois do `</form>` principal, dentro de
+`.kaz-extra`, mas ainda dentro de `#kaz-theme-editor`. O botão Salvar da barra
+superior usa `form="kaz-theme-form"`, sem duplicar campos e sem alterar o POST.
+
+**Estado de alterações.** `dirty()` e `data-kaz-dirty` continuam sendo
+**exclusivamente** o estado de `kaz_scene_json` (contrato da frente X). A frente
+Z acrescenta apenas um selo informativo separado, `data-kaz-form-dirty`, que
+observa os demais campos do formulário. Nenhum dos dois bloqueia o envio.
+
+**Degradação.** Sem JavaScript, todos os módulos são exibidos empilhados —
+nenhum campo fica inacessível. Zoom, pan, aba ativa, ferramenta e módulo ativo
+continuam sendo estado local descartável: não entram em `kaz_scene_json`, não
+usam `localStorage` e não alteram o `baseline`.
+
+**Fora de escopo.** Sem migration, schema, coluna, `custom_js`, chave de
+tradução, manifesto, `|raw` novo, upload, WebGL/Three.js real, cena pública,
+CDN, fontes remotas, `<script>` inline, `on*`, `innerHTML`, `eval` ou `fetch`.
+Nenhum `PENDING_DECISION`, `STATIC_ONLY`, `NOT_RUN`, `SKIP` ou
+`BLOCKED_NOT_RUN` foi convertido em `PASS`; `release_approved` permanece
+`false`. **CI verde ou health check não significa release aprovada.**
