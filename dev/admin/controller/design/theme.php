@@ -198,6 +198,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         $scheduleNorm=$this->theme_schedule->normalize($scheduleRaw) ?? $this->theme_schedule->normalize(null);
         $data['schedule']=$scheduleNorm;
         $data['schedule_scopes']=$this->theme_schedule->spec()['scopes'];
+        // F13-O: IDs allowlistados para o multi-select e para a sonda.
+        $data['schedule_site_ids']=$this->theme_sites->ids();
+        $data['schedule_probe_site']='';
         $data['schedule_probe_now']=$this->theme_schedule->now();
         foreach(['text_schedule','text_schedule_help','text_schedule_enabled','text_schedule_from',
                  'text_schedule_until','text_schedule_percent','text_schedule_scope','text_schedule_scope_all',
@@ -455,12 +458,20 @@ class Theme extends \Reamur\System\Engine\Controller {
         $scheduleOverride=null;
         if (array_key_exists('schedule',$post) && is_array($post['schedule'])) {
             $rawSchedule=(array)$post['schedule'];
+            // F13-O: `sites` so pode ser array (ou ausente); o cast (array) de
+            // uma string viraria ['shop'] e passaria na allowlist por acidente.
+            if (array_key_exists('sites',$rawSchedule) && !is_array($rawSchedule['sites'])) {
+                return $bad($this->language->get('error_schedule'));
+            }
             $scheduleOverride=$this->theme_schedule->normalize([
                 'enabled'=>$rawSchedule['enabled']??false,
                 'from'=>(string)($rawSchedule['from']??''),
                 'until'=>(string)($rawSchedule['until']??''),
                 'percent'=>(string)($rawSchedule['percent']??'0'),
                 'scope'=>(string)($rawSchedule['scope']??'all'),
+                // F13-O: array de IDs; normalize() devolve null se houver
+                // qualquer ID fora da allowlist (fail-closed, error_schedule).
+                'sites'=>(array)($rawSchedule['sites']??[]),
             ]);
             if ($scheduleOverride===null) return $bad($this->language->get('error_schedule'));
         }
@@ -547,9 +558,14 @@ class Theme extends \Reamur\System\Engine\Controller {
         if ($this->theme_schedule->parseTime($probeNow)===null) $probeNow=$this->theme_schedule->now();
         $probeVisitor=substr((string)($post['schedule_probe_visitor']??'visitor-a'),0,64);
         $probeLogged=in_array(strtolower((string)($post['schedule_probe_logged']??'')),['1','true','yes','on'],true);
+        // F13-O: sonda de site allowlistada; sem valor usa o site do painel
+        // publicado (M ja resolve $contextPub/$contextDraft mais abaixo).
+        $probeSite=(string)($post['schedule_probe_site']??'');
+        $siteIdsProbe=$this->theme_sites->ids();
+        $probeSite=in_array($probeSite,$siteIdsProbe,true)?$probeSite:'primary';
         $scheduleDecision=$this->theme_schedule->decide(
             $this->theme_schedule->normalize($draft['schedule']??null),
-            $probeNow, $probeVisitor, $probeLogged
+            $probeNow, $probeVisitor, $probeLogged, $probeSite
         );
         $pubDecision=array_replace($scheduleDecision,['effective'=>'published','active'=>false,'reason'=>'disabled']);
         $key=(string)($post['preview_template']??'common/home');

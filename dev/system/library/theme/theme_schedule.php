@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 /**
+ * F13-O — escopo POR SITE (IDs allowlistados de ThemeSites, frente J).
  * F13-H — agendamento e rollout DECLARATIVO de temas.
  *
  * O rascunho pode declarar uma janela (from/until), um publico (scope) e um
@@ -16,14 +17,15 @@
 namespace Reamur\System\Library\Theme;
 
 final class ThemeSchedule {
-    public const KEYS = ['enabled','from','until','percent','scope'];
+    public const KEYS = ['enabled','from','until','percent','scope','sites'];
     public const SCOPES = ['all','logged_in','anonymous'];
-    public const REASONS = ['disabled','pending','expired','scope','zero','outside_bucket','active'];
+    public const REASONS = ['disabled','pending','expired','scope','site','zero','outside_bucket','active'];
     private const FORMAT = '!Y-m-d\TH:i';
 
     /** @return array{keys:list<string>,scopes:list<string>,reasons:list<string>,format:string} */
     public function spec(): array {
         return ['keys'=>self::KEYS,'scopes'=>self::SCOPES,'reasons'=>self::REASONS,
+                'site_ids'=>ThemeSites::IDS,
                 'format'=>'YYYY-MM-DDTHH:MM (UTC)','max_percent'=>100];
     }
 
@@ -42,14 +44,23 @@ final class ThemeSchedule {
     /** @return array{enabled:bool,from:string,until:string,percent:int,scope:string}|null */
     public function normalize(mixed $value): ?array {
         if ($value === null || $value === [] || $value === '') {
-            return ['enabled'=>false,'from'=>'','until'=>'','percent'=>0,'scope'=>'all'];
+            return ['enabled'=>false,'from'=>'','until'=>'','percent'=>0,'scope'=>'all','sites'=>[]];
         }
         if (!is_array($value)) return null;
         foreach (array_keys($value) as $k) {
             if (!in_array((string)$k, self::KEYS, true)) return null;
         }
-        foreach ($value as $v) {
+        // F13-O: `sites` e o unico valor array permitido (IDs allowlistados).
+        foreach ($value as $k => $v) {
+            if ((string)$k === 'sites') continue;
             if (is_array($v) || is_object($v) || is_resource($v)) return null;
+        }
+        $rawSites = $value['sites'] ?? [];
+        if (!is_array($rawSites)) return null;
+        $sites = [];
+        foreach ($rawSites as $sid) {
+            if (!is_string($sid) || !in_array($sid, ThemeSites::IDS, true)) return null;
+            if (!in_array($sid, $sites, true)) $sites[] = $sid;
         }
         $rawEnabled = $value['enabled'] ?? false;
         if (is_bool($rawEnabled)) $enabled = $rawEnabled;
@@ -74,7 +85,8 @@ final class ThemeSchedule {
         $scope = (string)($value['scope'] ?? 'all');
         if (!in_array($scope, self::SCOPES, true)) return null;
 
-        return ['enabled'=>$enabled,'from'=>$from,'until'=>$until,'percent'=>(int)$percent,'scope'=>$scope];
+        return ['enabled'=>$enabled,'from'=>$from,'until'=>$until,
+                'percent'=>(int)$percent,'scope'=>$scope,'sites'=>$sites];
     }
 
     /** Bucket estavel 0..99. Apenas um hash; nada e persistido ou exibido. */
@@ -85,16 +97,25 @@ final class ThemeSchedule {
     /**
      * Decisao pura. `$now` precisa estar no formato aceito por parseTime()
      * (use now()); valor invalido => decisao fail-closed 'published'.
+     * F13-O: $siteId e opcional (default 'primary') para nao quebrar A-N.
      * @return array{enabled:bool,from:string,until:string,percent:int,scope:string,
-     *               effective:string,reason:string,bucket:int,active:bool,now:string}
+     *               sites:list<string>,site:string,effective:string,reason:string,
+     *               bucket:int,active:bool,now:string}
      */
-    public function decide(?array $schedule, string $now, string $visitorSeed, bool $loggedIn): array {
+    public function decide(?array $schedule, string $now, string $visitorSeed, bool $loggedIn, string $siteId = ''): array {
         $s = $schedule ?? $this->normalize(null);
         $bucket = $this->bucket($visitorSeed);
+        $rawSites = (array)($s['sites'] ?? []);
+        $sites = [];
+        foreach ($rawSites as $sid) {
+            if (is_string($sid) && in_array($sid, ThemeSites::IDS, true)
+                && !in_array($sid, $sites, true)) $sites[] = $sid;
+        }
+        $site = in_array($siteId, ThemeSites::IDS, true) ? $siteId : 'primary';
         $base = ['enabled'=>(bool)($s['enabled'] ?? false),'from'=>(string)($s['from'] ?? ''),
                  'until'=>(string)($s['until'] ?? ''),'percent'=>(int)($s['percent'] ?? 0),
-                 'scope'=>(string)($s['scope'] ?? 'all'),'effective'=>'published',
-                 'reason'=>'disabled','bucket'=>$bucket,'active'=>false,
+                 'scope'=>(string)($s['scope'] ?? 'all'),'sites'=>$sites,'site'=>$site,
+                 'effective'=>'published','reason'=>'disabled','bucket'=>$bucket,'active'=>false,
                  'now'=>$this->parseTime($now) ?? $this->now()];
         if ($base['percent'] < 0 || $base['percent'] > 100
             || !in_array($base['scope'], self::SCOPES, true)
@@ -104,6 +125,9 @@ final class ThemeSchedule {
         if ($base['until'] !== '' && strcmp($base['now'], $base['until']) > 0) { $base['reason']='expired'; return $base; }
         if ($base['scope'] === 'logged_in' && !$loggedIn) { $base['reason']='scope'; return $base; }
         if ($base['scope'] === 'anonymous' && $loggedIn) { $base['reason']='scope'; return $base; }
+        // F13-O: lista vazia = todos os sites (identico a A-N). Lista nao
+        // vazia = somente os IDs allowlistados de ThemeSites entram no rollout.
+        if ($sites !== [] && !in_array($site, $sites, true)) { $base['reason']='site'; return $base; }
         if ($base['percent'] === 0) { $base['reason']='zero'; return $base; }
         if ($bucket >= $base['percent']) { $base['reason']='outside_bucket'; return $base; }
         $base['effective']='draft'; $base['active']=true; $base['reason']='active';
@@ -111,16 +135,19 @@ final class ThemeSchedule {
     }
 
     /** Estado completo (5 chaves + decisao), pronto para snapshot/config. */
-    public function state(?array $schedule, string $now, string $visitorSeed, bool $loggedIn): array {
-        return $this->decide($schedule, $now, $visitorSeed, $loggedIn);
+    public function state(?array $schedule, string $now, string $visitorSeed, bool $loggedIn, string $siteId = ''): array {
+        return $this->decide($schedule, $now, $visitorSeed, $loggedIn, $siteId);
     }
 
     /** Variaveis CSS planas; nenhum valor vem de texto livre do usuario. */
     public function css(array $state): string {
         $percent = max(0, min(100, (int)($state['percent'] ?? 0)));
         $bucket = max(0, min(99, (int)($state['bucket'] ?? 0)));
+        $siteCount = count(array_filter((array)($state['sites'] ?? []),
+            static fn($v): bool => is_string($v) && in_array($v, ThemeSites::IDS, true)));
         return '--rms-sched-percent:' . $percent . ';'
              . '--rms-sched-bucket:' . $bucket . ';'
+             . '--rms-sched-sites:' . $siteCount . ';'
              . '--rms-sched-active:' . (!empty($state['active']) ? '1' : '0') . ';';
     }
 
@@ -132,6 +159,8 @@ final class ThemeSchedule {
             'theme_schedule_percent'    => (int)($state['percent'] ?? 0),
             'theme_schedule_bucket'     => (int)($state['bucket'] ?? 0),
             'theme_schedule_scope'      => (string)($state['scope'] ?? 'all'),
+            'theme_schedule_site'       => (string)($state['site'] ?? 'primary'),
+            'theme_schedule_site_count' => (int)count((array)($state['sites'] ?? [])),
         ];
     }
 
@@ -142,6 +171,11 @@ final class ThemeSchedule {
             'rollout' => ['percent'=>max(0,min(100,(int)($state['percent'] ?? 0))),
                           'bucket'=>max(0,min(99,(int)($state['bucket'] ?? 0)))],
             'scope'   => (string)($state['scope'] ?? 'all'),
+            // F13-O: so IDs allowlistados, planos, para a fita da previa.
+            'sites'   => array_values(array_filter((array)($state['sites'] ?? []),
+                          static fn($v): bool => is_string($v) && in_array($v, ThemeSites::IDS, true))),
+            'site'    => in_array((string)($state['site'] ?? ''), ThemeSites::IDS, true)
+                          ? (string)$state['site'] : 'primary',
             'reason'  => (string)($state['reason'] ?? 'disabled'),
             'active'  => !empty($state['active']),
             'now'     => (string)($state['now'] ?? ''),

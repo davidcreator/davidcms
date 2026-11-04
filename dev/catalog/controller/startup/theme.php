@@ -6,6 +6,7 @@
  *  - tokens de cor e cena (compatibilidade com o legado F10-03);
  *  - configuracao Three.js allowlisted (catalog_theme_three);
  *  - globais Twig seguros (theme / theme_scene) visiveis em TODAS as telas.
+ * F13-O: rollout pode ser limitado a sites allowlistados (frentes H+J).
  * Nenhuma regra escreve arquivo, executa codigo ou acessa dado sensivel.
  */
 namespace Reamur\Catalog\Controller\Startup;
@@ -25,10 +26,19 @@ class Theme extends \Reamur\System\Engine\Controller {
         $selfSlug  = (string)($effective['slug'] ?? '');
         $context   = $this->context();
         $schedule  = $this->theme_schedule->normalize($draft['schedule'] ?? null);
+        // F13-O: o site da DECISAO vem da politica PUBLICADA (estavel). Usar a
+        // politica do config efetivo criaria ciclo: a escolha do config ja
+        // depende da decisao. Nenhuma query nova: match() e puro.
+        $publishedSites = $this->theme_sites->normalize($published['sites'] ?? null) ?? [];
+        $siteHost = (string)($this->request->server['HTTP_HOST'] ?? '');
+        $siteSeed = $this->theme_sites->match($publishedSites, $siteHost);
+        $siteIdSeed = (string)($siteSeed['id'] ?? '');
+        $siteIdSeed = in_array($siteIdSeed, $this->theme_sites->ids(), true) ? $siteIdSeed : 'primary';
         $decision  = $this->theme_schedule->decide(
             $schedule, $this->theme_schedule->now(),
             hash('sha256', (string)$this->session->getId()),
-            (bool)($context['logged_in'] ?? false)
+            (bool)($context['logged_in'] ?? false),
+            $siteIdSeed
         );
         $source = $decision['effective'] === 'draft' ? 'draft' : 'published';
         $config = $source === 'draft' ? $draft : $published;
@@ -36,7 +46,8 @@ class Theme extends \Reamur\System\Engine\Controller {
         // F13-J: politica de sites vem do config EFETIVO do tema ativo. O host
         // do request so e COMPARADO (ThemeSites::match), nunca publicado.
         $sitesCfg = $this->theme_sites->normalize($config['sites'] ?? null) ?? [];
-        $siteHost = (string)($this->request->server['HTTP_HOST'] ?? '');
+        // $siteHost ja resolvido acima (F13-O); J continua usando o config
+        // EFETIVO e o host apenas COMPARADO, nunca publicado.
         $site = $this->theme_sites->match($sitesCfg, $siteHost);
 
         // F13-L: dimensao `site` entra no contexto allowlisted ANTES do

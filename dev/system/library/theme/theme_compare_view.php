@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 /**
+ * F13-O: fita do agendamento exibe o escopo de sites do rollout.
  * F13-M: fita de contexto exibe o site allowlistado usado na comparacao.
  * F13-C — HTML isolado da comparacao "publicado x rascunho".
  *
@@ -226,6 +227,12 @@ final class ThemeCompareView {
              . $h($labels['schedule_bucket'] ?? 'bucket') . ' <code>' . $h((string)($rollout['bucket'] ?? 0)) . '</code></span>';
         $out .= '<span style="padding:2px 6px;border:1px solid #cbd5e1;border-radius:4px;background:#fff">'
              . $h($labels['schedule_scope'] ?? 'Scope') . ': <code>' . $h((string)($bars['scope'] ?? 'all')) . '</code></span>';
+        // F13-O: IDs allowlistados ja chegaram em bars(); tudo escapado.
+        $siteList = (array)($bars['sites'] ?? []);
+        $out .= '<span style="padding:2px 6px;border:1px solid #cbd5e1;border-radius:4px;background:#fff">'
+             . $h($labels['schedule_sites'] ?? 'Sites') . ': <code>'
+             . $h($siteList !== [] ? implode(', ', array_map('strval', $siteList)) : 'all')
+             . '</code> · <code>' . $h((string)($bars['site'] ?? 'primary')) . '</code></span>';
         $out .= '</div>';
         if (!empty($bars['active'])) {
             $out .= '<div style="margin-top:5px;height:6px;border:1px solid #cbd5e1;border-radius:4px;background:#f8fafc;overflow:hidden">'
