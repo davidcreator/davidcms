@@ -196,7 +196,10 @@
     if (hint) hint.textContent = l ? l.id : 'nenhuma camada';
   }
 
-  function render() { drawCanvas(); drawLayers(); drawInspector(); }
+  /* Frente V: o textarea e um campo REAL do formulario. Mantem o JSON da
+     cena sempre sincronizado; o listener de submit garante o ultimo estado. */
+  function syncField() { jsonBox.value = JSON.stringify(scene, null, 2); }
+  function render() { drawCanvas(); drawLayers(); drawInspector(); syncField(); }
 
   /* ---- Conexão com campos allowlistados do tema -------------------------- */
   /* Aplicacao aditiva e nao destrutiva: marca camadas allowlistadas sem
@@ -311,7 +314,7 @@
   }
   function exportScene() {
     var s = JSON.stringify(scene, null, 2);
-    jsonBox.value = s; say('cena exportada (' + scene.layers.length + ' camadas)');
+    syncField(); say('cena exportada (' + scene.layers.length + ' camadas)');
     return s;
   }
   function importScene(raw) {
@@ -406,6 +409,7 @@
     else if (ev.key === 'ArrowDown') { ev.preventDefault(); move(selected, 0, step); }
   });
 
+  if (form) form.addEventListener('submit', function () { syncField(); });
   render();
   /* Exposição mínima para testes automatizados (sem alterar comportamento). */
   root.__kaz = {
@@ -419,5 +423,6 @@
     export: exportScene, import: importScene, bind: applyBindings,
     render: render, validScene: validScene, fallback: fallback
   };
-  say('KAZTheme-Editor pronto · ' + scene.layers.length + ' camadas');
+  say('KAZTheme-Editor pronto · ' + scene.layers.length + ' camadas · '
+      + (root.getAttribute('data-kaz-saved') === '1' ? 'cena salva no tema' : 'cena derivada, salve para persistir'));
 })(document, window);

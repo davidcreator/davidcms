@@ -26,7 +26,14 @@ final class ThemePackage {
         'blog/blog_list', 'blog/blog_info', 'tool/tool_list', 'tool/tool_info',
         'checkout/quote', 'error/not_found',
     ];
-    private const CONFIG_KEYS = ['primary','surface','scene','templates','conditions','three','tokens','parent','sections','components','schedule','media','sites'];
+    // Frente V: `kaz_scene` e dado de EDICAO/versionamento (kaztheme-scene/v1).
+    // Nao participa de decide(), nao e global de runtime e nao exige migration.
+    private const CONFIG_KEYS = ['primary','surface','scene','templates','conditions','three','tokens','parent','sections','components','schedule','media','sites','kaz_scene'];
+    public const SCENE_VERSION = 1;
+    public const SCENE_KINDS = ['rect','text','button','card','section'];
+    public const SCENE_ROLES = ['none','primary','surface','section','component'];
+    public const SCENE_MAX_LAYERS = 48;
+    public const SCENE_MAX_BYTES = 65536;
     // F13-H: `schedule` e substituido integralmente na heranca (como `conditions`),
     // NAO mesclado por chave: um filho nunca herda metade de uma janela.
     private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found'];
@@ -64,7 +71,9 @@ final class ThemePackage {
                 'section_ids'=>$this->sections->ids(),'component_ids'=>$this->components->ids(),
                 'schedule_keys'=>ThemeSchedule::KEYS,'schedule_scopes'=>$this->schedule->spec()['scopes'],
                 'media_ids'=>$this->media->ids(),'model_ids'=>$this->media->modelIds(),
-                'site_ids'=>$this->sites->ids(),'site_languages'=>$this->sites->languages()];
+                'site_ids'=>$this->sites->ids(),'site_languages'=>$this->sites->languages(),
+                'kaz_scene_version'=>self::SCENE_VERSION,'kaz_scene_kinds'=>self::SCENE_KINDS,
+                'kaz_scene_roles'=>self::SCENE_ROLES,'kaz_scene_max_layers'=>self::SCENE_MAX_LAYERS];
     }
 
     /** @return array<string,mixed> */
@@ -97,6 +106,8 @@ final class ThemePackage {
         if (isset($out['media']) && !is_array($out['media'])) unset($out['media']);
         // F13-J: `sites` e politica GLOBAL: substituida integralmente na heranca.
         if (isset($out['sites']) && !is_array($out['sites'])) unset($out['sites']);
+        // Frente V: cena e sempre um array validado (nunca string/objeto).
+        if (isset($out['kaz_scene']) && !is_array($out['kaz_scene'])) unset($out['kaz_scene']);
         return $out;
     }
 
@@ -148,7 +159,70 @@ final class ThemePackage {
         if (array_key_exists('sites',$config)) {
             if (!is_array($config['sites']) || $this->sites->normalize($config['sites'])===null) $e[]='sites_invalid';
         }
+        // Frente V: chave ausente e valida (temas A-U); presente exige contrato.
+        if (array_key_exists('kaz_scene',$config)) {
+            if (!is_array($config['kaz_scene']) || self::validateScene($config['kaz_scene'])!==[]) $e[]='kaz_scene_invalid';
+        }
         return array_values(array_unique($e));
+    }
+
+    /** Frente V — validacao PURA de kaztheme-scene/v1. Sem IO, request,
+     *  sessao, banco, eval, regex do usuario ou codigo executavel. */
+    private static function intBetween(mixed $v,int $lo,int $hi): bool {
+        return is_int($v) && $v >= $lo && $v <= $hi;
+    }
+    /** @return list<string> Codigos estaveis; [] = cena valida. */
+    public static function validateScene(mixed $scene): array {
+        if (!is_array($scene)) return ['kaz_scene_type_invalid'];
+        if (($scene['version'] ?? null) !== self::SCENE_VERSION) return ['kaz_scene_version_invalid'];
+        $c=$scene['canvas'] ?? null;
+        if (!is_array($c) || !self::intBetween($c['w'] ?? null,320,3840)
+            || !self::intBetween($c['h'] ?? null,240,2160) || ($c['grid'] ?? null) !== 8)
+            return ['kaz_scene_canvas_invalid'];
+        $layers=$scene['layers'] ?? null;
+        if (!is_array($layers) || count($layers) > self::SCENE_MAX_LAYERS) return ['kaz_scene_layers_invalid'];
+        if (strlen((string)json_encode($scene)) > self::SCENE_MAX_BYTES) return ['kaz_scene_size_invalid'];
+        $limites=['x'=>[-2000,2000],'y'=>[-2000,2000],'w'=>[8,960],'h'=>[8,540],
+                  'radius'=>[0,64],'fontSize'=>[8,72]];
+        $seen=[];
+        foreach ($layers as $l) {
+            if (!is_array($l)) return ['kaz_scene_layer_invalid'];
+            $id=(string)($l['id'] ?? '');
+            if (preg_match('/^[a-z0-9_-]{1,48}$/D',$id)!==1 || isset($seen[$id])) return ['kaz_scene_id_invalid'];
+            $seen[$id]=true;
+            if (!in_array((string)($l['kind'] ?? ''),self::SCENE_KINDS,true)
+                || !in_array((string)($l['role'] ?? ''),self::SCENE_ROLES,true)) return ['kaz_scene_enum_invalid'];
+            foreach ($limites as $campo=>$faixa) {
+                if (!self::intBetween($l[$campo] ?? null,$faixa[0],$faixa[1])) return ['kaz_scene_number_invalid'];
+            }
+            if (!is_string($l['fill'] ?? null) || preg_match('/^#[0-9a-fA-F]{6}$/D',$l['fill'])!==1)
+                return ['kaz_scene_color_invalid'];
+            $texto=$l['text'] ?? null;
+            if (!is_string($texto) || strlen($texto)>80
+                || preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=|(\{\{|\{%)~i',$texto))
+                return ['kaz_scene_text_invalid'];
+            if (!is_bool($l['visible'] ?? null) || !is_bool($l['locked'] ?? null)) return ['kaz_scene_flag_invalid'];
+            $bind=(string)($l['bindId'] ?? '');
+            if ($bind!=='' && preg_match('/^[a-z0-9_-]{1,48}$/D',$bind)!==1) return ['kaz_scene_bind_invalid'];
+        }
+        return [];
+    }
+    /** Cena canonica allowlistada (14 chaves por camada) ou null (fail-closed). */
+    public static function normalizeScene(mixed $scene): ?array {
+        if (self::validateScene($scene)!==[]) return null;
+        $out=['version'=>self::SCENE_VERSION,
+              'canvas'=>['w'=>(int)$scene['canvas']['w'],'h'=>(int)$scene['canvas']['h'],'grid'=>8],
+              'layers'=>[]];
+        foreach ($scene['layers'] as $l) {
+            $out['layers'][]=[
+                'id'=>(string)$l['id'],'kind'=>(string)$l['kind'],'role'=>(string)$l['role'],
+                'x'=>(int)$l['x'],'y'=>(int)$l['y'],'w'=>(int)$l['w'],'h'=>(int)$l['h'],
+                'fill'=>(string)$l['fill'],'radius'=>(int)$l['radius'],'text'=>(string)$l['text'],
+                'fontSize'=>(int)$l['fontSize'],'visible'=>(bool)$l['visible'],
+                'locked'=>(bool)$l['locked'],'bindId'=>(string)($l['bindId'] ?? ''),
+            ];
+        }
+        return $out;
     }
 
     /** @return array<string,mixed> */

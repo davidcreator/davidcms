@@ -1,64 +1,73 @@
-# Frente U — KAZTheme-Editor (fundação visual)
+# Frente V — KAZTheme-Editor: cena persistente no tema
 
 **Data:** 4 de novembro de 2026 (America/Sao_Paulo)  
-**Base:** `main` @ `018cafb3846445d7e2e0f541554d662ce79be67c` (pai `f993fe3…`, frente T aplicada **11/11** no raw).  
+**Base:** `main` @ `aced5daa678c5e7c744c6f5fc9b2c8c3fb2394c5` (pai `018cafb…`, frente U aplicada **7/7** no raw).  
 **Estado:** pacote instalável entregue para aplicação. **Não foi aplicado no GitHub por nós**; não é release aprovada.
 
-## 1. O que foi entregue
+## 1. O que mudou de verdade
 
-Um **editor de temas com nome próprio**, dentro do gerenciador de temas do Admin, com interface inspirada em Figma/Penpot: canvas SVG com grade e snap, árvore de camadas, inspector, seleção, arrastar, redimensionar, duplicar, excluir, reordenar, ocultar, bloquear, desfazer/refazer e atalhos de teclado. Estrutura de fácil edição, espelhando a separação do BDREditor (JS de modelo/UI + CSS escopado + ponto de montagem + documento de referência), mas com **arquivos, identidade e contrato exclusivos**.
+Na frente U a cena do editor era **browser-local**: sobrevivia apenas por exportar/importar JSON. Nesta frente a cena passa a ser **parte do tema** e é gravada pelo botão **Salvar** do próprio gerenciador de temas, na mesma transação de `config` que já existia.
+
+| Antes (HEAD V) | Depois (pacote V) |
+|---|---|
+| `CONFIG_KEYS` com 13 chaves | 14 chaves, a nova `kaz_scene` na allowlist |
+| textarea do editor sem `name` | `name="kaz_scene_json"`, preenchido com `JSON_HEX_*` |
+| reabrir o tema recriava 5 camadas derivadas | reabre as camadas **salvas** (posições, texto, cores, visibilidade, travamento) |
+| POST ignorava o campo | `buildDraftConfig()` valida e persiste; JSON inválido → `error_validation` e **zero gravações** |
+| child-theme herdava tudo | `MAP_KEYS` **não** inclui `kaz_scene`: um tema filho substitui a cena integralmente |
+
+**Migração zero:** temas A–U não têm a chave; `validateConfig()` a aceita ausente e o controller usa `kazScene($config)` como fallback, gerando as mesmas 5 camadas derivadas da U. Nenhuma coluna, tabela, `schema.sql`, migration, sessão nova ou chave de tradução nova.
+
+## 2. Arquivos (7 completos, sem patches)
 
 | Arquivo | Papel |
 |---|---|
-| `dev/admin/view/js/kaz-theme-editor.js` | Modelo `kaztheme-scene/v1`, validação fail-closed, SVG, camadas, inspector, drag/resize, histórico, atalhos, export/import, conexão com o formulário |
-| `dev/admin/view/css/kaz-theme-editor.css` | Layout de 3 colunas, responsivo, `forced-colors`, foco visível |
-| `dev/admin/view/template/design/kaz_theme_editor.twig` | Ponto de montagem incluído **dentro** do `<form>` principal |
-| `dev/admin/controller/design/theme.php` | `kazScene()` puro derivado do config + publicação de `kaz_scene_json` + 2 assets com cache key `-kaz-theme-editor-u` |
-| `dev/admin/view/template/design/theme_form.twig` | Um `{% include %}` antes de fechar o formulário |
-| `docs/KAZTheme-Editor.md` | Referência: identidade, contrato, segurança, limites |
-| `docs/KAZTheme-Editor-Guia-Rapido.md` | Uso e aplicação |
+| `dev/system/library/theme/theme_package.php` | `SCENE_*`, `validateScene()`, `normalizeScene()`, `validateConfig()` aceita a 14ª chave, `sanitizeConfig()` descarta tipo errado, `decode()` revalida a cena pelo checksum, `spec()` publica os limites |
+| `dev/admin/controller/design/theme.php` | lê a cena salva, publica `kaz_scene_saved`/`kaz_scene_json`, reflete o POST, `buildDraftConfig()` fail-closed, assets `-kaz-theme-editor-v` |
+| `dev/admin/view/js/kaz-theme-editor.js` | `syncField()` a cada mutação + listener `submit`; status "cena salva no tema" / "cena derivada do config" |
+| `dev/admin/view/template/design/kaz_theme_editor.twig` | campo real `name="kaz_scene_json"`, `data-kaz-saved`, nota de procedência |
+| `docs/KAZTheme-Editor.md` | referência atualizada (contrato, 14 chaves, migração zero) |
+| `docs/KAZTheme-Editor-Guia-Rapido.md` | "Salvar a cena" e "Cena derivada do config" |
+| `docs/KAZTheme-Editor-Cena-Persistente.md` | **novo**: decisão, contrato, round-trip, child-theme, limites |
 
-**7 arquivos completos, sem patches, sem manifestos a atualizar.** O ZIP tem **9 entradas** (7 do pacote + este `RELATORIO.md` e o `INDICE.md` da frente, gerados como entradas finais sem duplicar nomes).
+O ZIP tem **9 entradas** (7 do pacote + este `RELATORIO.md` e o `INDICE.md`). O `.sha256` fica **fora** do ZIP. Nenhum dos 14 manifestos cobre os 7 arquivos (**7/7 livres**); `theme_package.php` não está entre os 11 artefatos congelados por hash de `tools/decision-matrix.json`.
 
-## 2. Conexão com o tema existente
+## 3. Contrato `kaztheme-scene/v1` no servidor
 
-`ThemePackage::CONFIG_KEYS` continua com as **13 chaves** originais, `validateConfig()` intacto e `TEMPLATE_KEYS` com 25 entradas. O editor **não cria chave nova**: camadas com papel `primary`/`surface` escrevem em `name="primary"`/`name="surface"`; `section` marca `sections[]` e `sections_order`; `component` marca `components[<id>][enabled]`. A validação do servidor continua soberana.
+`version=1`, canvas `960×540` com `grid=8`, 5 `kind` e 5 `role`, máximo **48 camadas** e **65.536 bytes**. `normalizeScene()` reconstrói cada camada com exatamente **14 chaves** e descarta extras, casando com o editor. `validateScene()` rejeita tipo, versão, canvas, tamanho, número de camadas, `id` duplicado, enums, números, cor hexadecimal, texto com marcação/`on*`/`srcdoc`/`formaction`, flags e `bind`. `validateConfig()` devolve `kaz_scene_invalid` para cena inválida e aceita a chave ausente. `export()`/`decode()` fazem round-trip e o `decode()` adulterado falha pelo checksum. `MAP_KEYS` sem `kaz_scene` ⇒ `resolveChain()` substitui a cena do tema filho, sem mesclar camadas.
 
-**Aplicação não destrutiva (corrigida durante a validação):** abrir a tela não executa nenhum binding; seções e componentes são marcados, nunca desmarcados, e `sections_order` preserva os IDs já salvos. Assim uma visita ao editor não apaga a configuração do tema. Também foi corrigido o bloqueio que impedia desbloquear uma camada.
+## 4. Segurança
 
-**Limitação honesta:** a cena (posições, texto, tipos) é um artefato de trabalho **browser-local**, como os *style presets* do BDREditor. Ela sobrevive por **Exportar cena / Importar cena** em JSON no textarea, offline. Gravá-la como chave do config exigiria evoluir `ThemePackage`, `validateConfig()`, `export()`, `decode()` e manifestos em frente posterior, com decisão explícita.
+Sem `|raw` novo, `custom_js`, `eval`, `call_user_func` novo, `fetch`, `innerHTML`, tag `script` inline, atributo `on*`, `srcdoc`, WebGL, Three.js, upload, migration, coluna ou escrita remota. Texto do usuário vai para `textContent`; o JSON entra por `|e('html_attr')` com `JSON_HEX_TAG|HEX_AMP|HEX_APOS|HEX_QUOT`. O POST usa a mensagem `error_validation` **já existente** nos 3 idiomas (418 chaves ×3 intactas, nenhuma chave nova). Import malformado ou fora do contrato é rejeitado integralmente, sem alterar o estado. `validateConfig()` é fail-closed: erro de validação → nenhum `save()`.
 
-## 3. Segurança
+## 5. Validação executada (números reais)
 
-Apenas `createElement`, `createElementNS`, `setAttribute`, `textContent`, `appendChild`, `removeChild`, `addEventListener`. Zero `innerHTML`, `outerHTML`, `document.write`, `eval`, `Function`, `fetch`, `XMLHttpRequest`, jQuery AJAX, `srcdoc`, tag `script` inline, atributo `on*`, `localStorage`, `|raw` novo, `custom_js`, WebGL, Three.js, upload, migration, schema, coluna, chave de tradução nova ou escrita remota. Texto do usuário vai para `textContent`; o JSON da cena entra por `|e('html_attr')`. Import malformado ou fora do contrato é **rejeitado integralmente** sem alterar o estado. Nenhum dos 14 manifestos cobre os 7 arquivos (7/7 livres).
-
-## 4. Validação executada (números reais)
-
-A/B **real** com bootstraps PHP separados (`FU_MODE=head|pkg`), bibliotecas reais do HEAD U em ambos, controller/template do HEAD vs do pacote. 12 cenários de config por lado; formulário Twig 3.14 renderizado nos dois; editor executado de verdade no jsdom 29.1.1.
+A/B **real** com bootstraps PHP separados (`FV_MODE=head|pkg`), bibliotecas reais do HEAD V em ambos, `ThemePackage`/controller/template do HEAD vs do pacote; Twig 3.14 renderizando o formulário nos dois lados; editor executado no jsdom 29.1.1; PHP 8.5.12 WASM.
 
 | Verificação | Resultado |
 |---|---|
-| H1 contratos A–T + `kazScene()` puro + `CONFIG_KEYS` + BDREditor | **209/0** |
-| H2 pipeline `edit()` no pacote, 12 cenários, valores literais | **446/0** |
-| H3 A/B HEAD × pacote, 12 cenários, congelados e novos | **686/0** |
-| H4a Autoloader real carregando o controller do pacote | **16/0** |
-| H4b regressão A–T, manifestos, 418×3, gates, BDREditor | **223/0** |
-| H5 jsdom: DOM real, editor executado, 12 cenários, docs/CSS | **490/0** |
-| `php -l` (PHP 8.5.12 WASM) | **1/0** |
-| `node --check` (40 JS do HEAD U + 1 novo) | **41/0** |
-| **Total de asserções** | **2070/0** (+42 lint/sintaxe = **2112/0**) |
+| Probe A/B `edit()` — 12 cenários × HEAD e pacote | **12 + 12**, `twig_error=0` |
+| H1 contratos, `kazScene()`, `CONFIG_KEYS` 14, `validateScene/normalizeScene`, autoloader | **170/0** |
+| H2 pipeline real do pacote, 12 cenários, valores literais | **530/0** |
+| H3 A/B HEAD × pacote, 12 cenários, congelados e derivações | **767/0** |
+| H4a Autoloader real carregando controller + `ThemePackage` do pacote | **25/0** |
+| H4b regressão A–U, manifestos, 418×3, gates, BDREditor, U 7/7 | **230/0** |
+| H5 jsdom: DOM real, editor executado, `syncField`/`submit`, XSS, 12 cenários, contrato | **413/0** |
+| `php -l` (2 PHP do pacote) | **2/0** |
+| `node --check` (471 JS do HEAD V, com o do pacote) | **471/0** |
+| **Total de asserções + sintaxe** | **2608/0** |
 
-Réplica A/B: **1486 paths**, **2 alterados**, **5 novos**, **0 idênticos no pacote**, **1484 congelados idênticos**; guards **4/4 verdes e byte-idênticos** (`verify-checksums` 14 manifestos/142 arquivos, `repo-health`, `verify-ci-workflow`, `verify-contract-freeze`); 14 manifestos idênticos A/B; 418 chaves ×3; 25 `TEMPLATE_KEYS`; **37 arquivos de A–T intactos**; T **11/11** no raw; BDREditor **77 paths** nenhum no pacote e todos congelados; `schema.sql` presente; build idempotente **7/7**; CRC **9/9**; `sha256sum -c` **45/45**.
+Probe: HEAD `com_nome=0`, `gravados=8`, `asset_v=u,u`, contrato `nao`; pacote `com_nome=10`, `gravados=2`, `asset_v=v,v`, contrato `sim` (os 2 POSTs válidos redirecionam, por isso 10 formulários com `name`). `abre_com_cena`: pacote `data-kaz-saved=1`, 2 camadas, `#111111`, nota "Cena salva neste tema"; HEAD 5 camadas derivadas `#2563eb`. `post_json_ruim`: pacote **0 gravações** + `error_validation`; HEAD 1 gravação.
 
-A/B do formulário: HEAD sem `#kaz-theme-editor`, sem cena, sem assets; pacote com editor, `kaztheme-scene/v1` de 5 camadas derivadas do config, 2 assets, **2 SELECTs inalterados** em todos os 12 cenários, `primary`/`surface`/`sites_published_json` idênticos, nenhuma tag `script`, nenhum `|raw` novo (2 no HEAD, 2 no pacote), `scene_attr_escaped=true`.
+Réplica A/B: **1313 paths**, **6 alterados**, **1 novo**, **1307 congelados idênticos**; guards **4/4 verdes e byte-idênticos** (`verify-checksums`, `repo-health`, `verify-ci-workflow`, `verify-contract-freeze`); 14 manifestos idênticos A/B; 418 chaves ×3; 25 `TEMPLATE_KEYS`; **40 arquivos de A–U intactos**; U **7/7** no raw; BDREditor **77 paths**, nenhum no pacote e todos congelados; `schema.sql` presente; 10 `PENDING_DECISION` e 11 hashes congelados intocados; build idempotente **7/7**; CRC **9/9**; `sha256sum -c` **46/46**.
 
-## 5. Limitações e estado do repositório
+## 6. Limitações e estado do repositório
 
-- **Não disponível neste ambiente:** PHP nativo, Composer, PHPStan, rsync, navegador real, MySQL, sessão autenticada, migration, staging, deploy, E2E e CI remoto verificado. PHP WASM 8.5.12, Twig 3.14 e jsdom com mocks **não são um servidor**. Nenhuma escrita no GitHub foi feita por nós; CI verde/health coerente **não é release aprovada**.
+- **Não disponível neste ambiente:** PHP nativo, Composer, PHPStan, rsync, navegador real, MySQL, sessão autenticada, migration, staging, deploy, E2E e CI remoto verificado. PHP WASM, Twig e jsdom com mocks **não são um servidor**. Nenhuma escrita no GitHub foi feita por nós; **CI verde/health coerente não é release aprovada**.
 - F9-27 continua `BLOCKED_NOT_RUN` com `release_approved:false`; `docs/F9-27-Base-Hashes.json`, `docs/F9-18-Risk-Register.json`, `tools/decision-matrix.json` e `schema.sql` intocados. Nenhum `PENDING_DECISION`, `STATIC_ONLY`, `NOT_RUN`, `SKIP` ou `BLOCKED_NOT_RUN` foi convertido em `PASS`; nenhum guard foi relaxado.
-- BDREditor/F9-103 **pausado e não tocado**; P2/F9-18 não reaberto; a limitação de hreflang/variantes com query da frente **N permanece**. As frentes A–T não foram reentregues.
-- O relatório/índice da raiz do HEAD ainda são os da frente T; as **entradas finais** de `RELATORIO.md` e `INDICE.md` neste ZIP são as desta frente (padrão A–T).
+- **Escopo decidido, não autorizado em detalhe:** persistir a cena no config foi uma decisão de implementação nossa; **não há renderização da cena no Catalog**, nem ADR0080, `ThemeSnapshot`, `ConditionEngine`, `header.php`, hashes de release ou manifestos alterados. BDREditor/F9-103 pausado; P2/F9-18 não reaberto; a limitação de hreflang da frente **N permanece**. As frentes A–U não foram reentregues.
+- O relatório/índice da raiz do HEAD ainda são os da frente U; as **entradas finais** neste ZIP são as desta frente (padrão A–U).
 
 ## Instalação
 
-Extrair os 7 arquivos completos sobre a raiz do repositório, preservando a estrutura de diretórios (5 são novos). `RELATORIO.md` e `INDICE.md` são informativos e podem substituir os da raiz. Não há patches nem manifestos a atualizar. Depois: `bash tools/verify-checksums.sh && bash tools/repo-health.sh`. Sem aplicação, o comportamento do Admin permanece idêntico ao HEAD U.
+Extrair os 7 arquivos completos sobre a raiz do repositório, preservando a estrutura de diretórios (1 é novo, 6 substituem). `RELATORIO.md` e `INDICE.md` são informativos e podem substituir os da raiz. Não há patches, migração nem manifestos a atualizar. Depois: `bash tools/verify-checksums.sh && bash tools/repo-health.sh`. Sem aplicação, o comportamento do Admin permanece idêntico ao HEAD V.

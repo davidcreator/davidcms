@@ -1,19 +1,24 @@
-{# KAZTheme-Editor — frente U. Ponto de montagem dentro do formulário do tema.
+{# KAZTheme-Editor — frente V. Ponto de montagem dentro do formulário do tema.
    Sem filtro raw, sem tag script inline, sem dados do request. O JSON da cena
-   vem do controller já escapado para atributo; o JS reconstrói tudo via DOM. #}
+   vem do controller já escapado para atributo; o JS reconstrói tudo via DOM.
+   O textarea é um campo REAL do formulário: salvar o tema persiste a cena. #}
 <div class="card mb-4 kaz-card" id="kaz-theme-editor"
      data-kaz-scene="{{ kaz_scene_json|e('html_attr') }}"
      data-kaz-primary="{{ primary|e('html_attr') }}"
      data-kaz-surface="{{ surface|e('html_attr') }}"
+     data-kaz-saved="{{ kaz_scene_saved ? '1' : '0' }}"
      data-kaz-version="1">
   <div class="card-header d-flex justify-content-between align-items-center">
     <div>
       <h2 class="h5 mb-0"><span class="kaz-brand"><span class="kaz-brand__mark" aria-hidden="true"></span>KAZTheme-Editor</span></h2>
       <p class="mb-0 text-muted">Editor visual de temas · canvas, camadas e inspector · kaztheme-scene/v1</p>
     </div>
-    <span class="kaz-badge">Frente U · fundação visual</span>
+    <span class="kaz-badge">Frente V · cena persistente</span>
   </div>
   <div class="card-body">
+    <p class="kaz-note mb-3">
+      {% if kaz_scene_saved %}<strong>Cena salva neste tema.</strong> Ela volta ao abrir a página e viaja com o pacote exportado.{% else %}<strong>Cena derivada do config.</strong> Este tema ainda não tem cena própria; salve o formulário para gravá-la.{% endif %}
+    </p>
     <div class="kaz-tools" role="toolbar" aria-label="KAZTheme-Editor ferramentas">
       <button class="kaz-btn kaz-btn--primary" type="button" data-kaz-kind="rect">+ Retângulo</button>
       <button class="kaz-btn" type="button" data-kaz-kind="text">+ Texto</button>
@@ -63,14 +68,14 @@
     </div>
 
     <div class="kaz-io">
-      <label class="kaz-panel__title" for="kaz-json">Cena kaztheme-scene/v1 (exportar / colar para importar)</label>
-      <textarea id="kaz-json" data-kaz-json spellcheck="false" aria-label="JSON da cena"></textarea>
+      <label class="kaz-panel__title" for="kaz-json">Cena kaztheme-scene/v1 — campo salvo com o tema</label>
+      <textarea id="kaz-json" name="kaz_scene_json" data-kaz-json spellcheck="false" aria-label="JSON da cena">{{ kaz_scene_json }}</textarea>
       <div class="kaz-tools" style="margin-top:6px">
         <button class="kaz-btn" type="button" data-kaz-action="export">Exportar cena</button>
         <button class="kaz-btn" type="button" data-kaz-action="import">Importar cena</button>
       </div>
       <span class="kaz-status" data-kaz-status aria-live="polite"></span>
-      <p class="kaz-note">A cena é um artefato de trabalho local (como os style presets do BDREditor). As camadas com papel <code>primary</code>, <code>surface</code>, <code>section</code> e <code>component</code> escrevem nos campos já allowlistados do formulário; salvar o tema persiste essas cores, seções e componentes. Sem migration, schema, coluna, upload, <code>custom_js</code> ou chave de tradução nova.</p>
+      <p class="kaz-note">A cena é gravada na chave allowlistada <code>kaz_scene</code> do config ao salvar o tema, validada no servidor (fail-closed), preservada no pacote exportado/importado e substituída integralmente na herança de child-theme. As camadas com papel <code>primary</code>, <code>surface</code>, <code>section</code> e <code>component</code> continuam escrevendo nos campos já existentes. Sem migration, schema, coluna, upload, <code>custom_js</code> ou chave de tradução nova.</p>
     </div>
   </div>
 </div>

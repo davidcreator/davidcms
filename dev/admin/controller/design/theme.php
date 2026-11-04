@@ -191,6 +191,15 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['component_thumb_base']=$this->url->link('design/theme.componentThumb');
         foreach(['text_components','text_components_help','text_component_target','text_component_variant','text_component_tone','text_component_insert','text_component_inserted','text_component_enabled','text_component_none','error_components','text_component_group_action','text_component_group_display','text_component_group_feedback'] as $k) $data[$k]=$this->language->get($k);
         $this->document->addScript($this->config->get('site_url') . 'view/js/theme-component-library.js?v=' . $builderAssetV);
+        // Frente V — cena PERSISTENTE: usa a cena salva e validada do config;
+        // temas A-U (sem a chave) continuam recebendo a cena derivada da U.
+        // Zero migration: ausencia nao e erro, apenas estado "nao salvo".
+        $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
+        $data['kaz_scene_saved']=$savedScene!==null;
+        $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
+        $kazAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-v';
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetV);
+        $this->document->addScript($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetV);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
@@ -207,6 +216,8 @@ class Theme extends \Reamur\System\Engine\Controller {
                 }
             }
             foreach(['name','slug','primary','surface','scene'] as $k) $data[$k]=(string)($post[$k]??$data[$k]);
+            // Frente V: reflete a cena enviada mesmo quando o save falha.
+            $data['kaz_scene_json']=(string)($post['kaz_scene_json']??$data['kaz_scene_json']);
             $data['conditions_json']=(string)($post['conditions']??$data['conditions_json']);
             $this->applyTokenFormData($data,(array)($post['tokens']??[]));
             $data['three']=[
@@ -329,12 +340,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[]; $data['template_keys'] = \Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS; $focusTemplate=$this->request->get['focus_template']??''; $data['focus_template']=is_string($focusTemplate)&&in_array($focusTemplate,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true)?$focusTemplate:''; $data['template_sources']=$data['templates']; foreach($data['template_keys'] as $templateKey) { if (!isset($data['template_sources'][$templateKey])) { $templateFile=DIR_SYSTEM.'../catalog/view/template/'.$templateKey.'.twig'; if (is_file($templateFile)) $data['template_sources'][$templateKey]=(string)file_get_contents($templateFile); } } $data['preview_links']=[]; foreach($data['template_keys'] as $key) $data['preview_links'][$key]=$this->url->link('design/theme.preview'.($id?'|'.$id:''),'template='.rawurlencode($key)); foreach($data['revisions'] as &$revision) $revision['restore']=$this->url->link('design/theme.restore|'.$id.'|'.(int)$revision['revision_id']); unset($revision);
         // F13-C: Loader::view() nao mescla o idioma; publica todas as chaves
         // carregadas (sem sobrescrever valores calculados) para nao deixar rotulos vazios.
-        // Frente U — KAZTheme-Editor: cena derivada do config + assets proprios.
-        // Nao cria chave no config, nao toca BDREditor, nao usa servico novo.
-        $data['kaz_scene_json']=json_encode(self::kazScene($config),$jsonFlags) ?: '{}';
-        $kazAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-u';
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetV);
-        $this->document->addScript($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetV);
+
         $data=array_replace($this->language->all(),$data);
         $this->chrome($data); $this->response->setOutput($this->load->view('design/theme_form',$data));
     }
@@ -570,6 +576,15 @@ class Theme extends \Reamur\System\Engine\Controller {
             $sitesOverride=$this->theme_sites->normalize($cleanSites);
             if ($sitesOverride===null) return $bad($this->language->get('error_sites'));
         }
+        // Frente V — KAZTheme-Editor: cena persistente, validada NO SERVIDOR.
+        // Campo ausente preserva temas/pacotes A-U (chave nao gravada). Usa
+        // error_validation, chave de traducao ja existente nos 3 idiomas.
+        $kazSceneOverride=null;
+        if (array_key_exists('kaz_scene_json',$post)) {
+            $rawKazScene=json_decode((string)$post['kaz_scene_json'],true);
+            $kazSceneOverride=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($rawKazScene);
+            if ($kazSceneOverride===null) return $bad($this->language->get('error_validation'));
+        }
         $normalized=$engine->normalize($conditions);
         $out=['primary'=>$primary,'surface'=>$surface,
             'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)($post['scene']??''):'',
@@ -581,6 +596,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         if ($scheduleOverride!==null) $out['schedule']=$scheduleOverride;
         if ($mediaOverride!==null) $out['media']=$mediaOverride;
         if ($sitesOverride!==null) $out['sites']=$sitesOverride;
+        if ($kazSceneOverride!==null) $out['kaz_scene']=$kazSceneOverride;
         return ['name'=>$name,'slug'=>$slug,'error'=>'','config'=>$out];
     }
 
