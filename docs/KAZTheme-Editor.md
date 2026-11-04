@@ -1,7 +1,7 @@
-# KAZTheme-Editor — referência (Frentes U + V)
+# KAZTheme-Editor — referência (Frentes U + V + X)
 
 **Data:** 4 de novembro de 2026 (America/Sao_Paulo)  
-**Estado:** fundação visual (U) + cena persistente (V) entregues para aplicação; não é release aprovada.  
+**Estado:** fundação visual (U), cena persistente (V), correção do mapa de sites (W) e biblioteca de blocos + estado não salvo (X); não é release aprovada.  
 **Nome próprio:** KAZTheme-Editor, o editor de temas do ReamurCMS — na mesma linha de identidade do BDREditor, mas com escopo, documentos e arquivos próprios.
 
 ## 1. O que é
@@ -31,6 +31,7 @@ A implementação é **DOM + SVG puro**. Não há WebGL, Three.js, canvas 2D, bi
 | `docs/KAZTheme-Editor.md` | Esta referência. |
 | `docs/KAZTheme-Editor-Guia-Rapido.md` | Passo a passo de uso. |
 | `docs/KAZTheme-Editor-Cena-Persistente.md` | Contrato da frente V e regras de migração zero. |
+| `docs/KAZTheme-Editor-Biblioteca-de-Blocos.md` | Contrato dos 6 blocos da frente X e do selo de alterações não salvas. |
 
 O padrão de separação (JS de modelo/UI + CSS escopado + init no controller + documento de referência) é o mesmo que o BDREditor usa, mas os arquivos, nomes, identidade e contrato são **exclusivos** do KAZTheme-Editor.
 
@@ -72,7 +73,32 @@ Validação **fail-closed no cliente e no servidor**: `version === 1`; `canvas.w
 
 **Aplicação não destrutiva:** abrir o editor não executa nenhum binding; seções e componentes são marcados, nunca desmarcados, e `sections_order` preserva os IDs já salvos.
 
-## 5. Segurança
+## 5. Biblioteca de blocos e estado não salvo (frente X)
+
+A frente X acrescenta um painel **Biblioteca de blocos** com 6 presets
+allowlistados (`hero`, `card`, `banner`, `titulo`, `galeria`, `cta`). Cada preset
+é uma lista **declarativa** de 2–3 templates que geram camadas reais dentro do
+contrato `kaztheme-scene/v1`: `kind` entre os 5 permitidos, `role='none'`,
+`bindId=''`, cores hex, coordenadas com snap na grade de 8 px e limites
+respeitados. Inserir um bloco:
+
+- cria IDs únicos, seleciona a primeira camada, entra no histórico (desfazer) e
+  **sincroniza o textarea** `kaz_scene_json` — portanto é persistido ao salvar;
+- respeita `MAX_LAYERS` (48): se o bloco não couber, nada é alterado;
+- **não** aplica bindings ao formulário e **não** roda no boot: só por clique.
+
+O selo **Alterações não salvas** (`data-kaz-dirty`) compara a cena atual com o
+`baseline` carregado do servidor. Abrir a tela não suja o estado; desfazer até o
+estado inicial limpa o selo; o `submit` atualiza o `baseline`. É um indicador
+local — a validação e a gravação continuam soberanas no servidor.
+
+O contrato de dados, `CONFIG_KEYS` (14 chaves), `MAP_KEYS`, `validateScene()`,
+`normalizeScene()`, `validateConfig()`, `decode()` e os 14 manifestos **não foram
+alterados** pela X. Zero migration e zero chave de tradução nova: os rótulos são
+literais estáticos no Twig, como os botões existentes desde a U. O cache key dos
+assets passou de `-kaz-theme-editor-v` para `-kaz-theme-editor-x`.
+
+## 6. Segurança
 
 - Apenas `createElement`, `createElementNS`, `setAttribute`, `textContent`, `appendChild`, `removeChild`, `addEventListener`.
 - Sem `innerHTML`, `outerHTML`, `document.write`, `eval`, `Function`, `fetch`, `XMLHttpRequest`, jQuery AJAX, `srcdoc`, tag `script` inline ou atributo `on*`.
@@ -81,9 +107,9 @@ Validação **fail-closed no cliente e no servidor**: `version === 1`; `canvas.w
 - Import fail-closed; cena corrompida não executa nada e não derruba o formulário.
 - `MAX_LAYERS`, `SCENE_MAX_BYTES` e limites numéricos evitam abuso de render e de payload.
 
-## 6. Estado do repositório e validação
+## 7. Estado do repositório e validação
 
-Base inspecionada: `main` em `aced5daa678c5e7c744c6f5fc9b2c8c3fb2394c5` (pai `018cafb3…`, frente U aplicada **7/7** no raw). Os caminhos desta frente foram triados como **livres** nos 14 manifestos. Nenhum manifesto, hash de release gate, `schema.sql`, `F9-27-Base-Hashes.json`, `tools/decision-matrix.json` ou `release_approved` foi reescrito.
+Base inspecionada: `main` em `cd92573c507b6a5a4189d7b1b574cb73ec17ad59` (pai `004a99cd…`, frente W aplicada **4/4** no raw). Os caminhos desta frente foram triados como **livres** nos 14 manifestos. Nenhum manifesto, hash de release gate, `schema.sql`, `F9-27-Base-Hashes.json`, `tools/decision-matrix.json` ou `release_approved` foi reescrito.
 
 Validação executada nesta frente: A/B real com bootstraps separados HEAD/pacote, réplica A/B com guards, harnesses PHP (WASM 8.5.12), Twig 3.14, jsdom 29.1.1, `node --check`, `php -l`, CRC do ZIP e `sha256sum -c`. Os números exatos estão no `RELATORIO.md` da entrega.
 

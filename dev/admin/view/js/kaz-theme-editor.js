@@ -1,8 +1,9 @@
-/* KAZTheme-Editor — frente U (fundação visual).
+/* KAZTheme-Editor — frentes U/V/W + X (biblioteca de blocos).
    Editor de temas estruturado: canvas SVG + árvore de camadas + inspector.
    Apenas DOM puro: sem rede, codigo executavel do usuario, WebGL, Three.js,
-   upload ou escrita remota. O estado da cena e
-   browser-local (kaztheme-scene/v1), como os style presets do BDREditor.
+   upload ou escrita remota. A cena e PERSISTENTE (frente V): volta ao abrir
+   o tema, viaja no pacote e e validada no servidor (kaztheme-scene/v1).
+   A frente X adiciona 6 blocos allowlistados e o estado "nao salvo".
    A conexão com o tema usa SOMENTE campos allowlistados do formulário. */
 (function (document, window) {
   'use strict';
@@ -13,6 +14,38 @@
   var GRID = 8;
   var W = 960, H = 540;
   var MAX_LAYERS = 48;
+
+  /* Frente X — biblioteca de blocos. Presets DECLARATIVOS: nenhum texto do
+     usuario entra aqui. Cada template gera uma camada valida do contrato
+     kaztheme-scene/v1; dx/dy sao relativos a uma origem calculada no canvas. */
+  var BLOCKS = {
+    hero: { label: 'Hero', layers: [
+      { kind: 'rect', w: 560, h: 200, fill: '#e2e8f0', radius: 12, text: '', fontSize: 16, dx: 0, dy: 0 },
+      { kind: 'text', w: 480, h: 80, fill: '#0f172a', radius: 0, text: 'Titulo do hero', fontSize: 32, dx: 24, dy: 32 },
+      { kind: 'button', w: 160, h: 56, fill: '#2563eb', radius: 12, text: 'Saiba mais', fontSize: 16, dx: 24, dy: 120 }
+    ] },
+    card: { label: 'Cartao', layers: [
+      { kind: 'card', w: 280, h: 176, fill: '#ffffff', radius: 12, text: '', fontSize: 16, dx: 0, dy: 0 },
+      { kind: 'text', w: 240, h: 64, fill: '#0f172a', radius: 0, text: 'Cartao de conteudo', fontSize: 20, dx: 16, dy: 24 }
+    ] },
+    banner: { label: 'Faixa', layers: [
+      { kind: 'rect', w: 720, h: 96, fill: '#1e3a8a', radius: 8, text: '', fontSize: 16, dx: 0, dy: 0 },
+      { kind: 'text', w: 640, h: 48, fill: '#ffffff', radius: 0, text: 'Aviso ou chamada', fontSize: 24, dx: 24, dy: 24 }
+    ] },
+    titulo: { label: 'Titulo', layers: [
+      { kind: 'text', w: 480, h: 64, fill: '#0f172a', radius: 0, text: 'Novo titulo', fontSize: 40, dx: 0, dy: 0 },
+      { kind: 'rect', w: 480, h: 8, fill: '#38bdf8', radius: 0, text: '', fontSize: 16, dx: 0, dy: 72 }
+    ] },
+    galeria: { label: 'Galeria', layers: [
+      { kind: 'rect', w: 160, h: 120, fill: '#cbd5e1', radius: 8, text: '', fontSize: 16, dx: 0, dy: 0 },
+      { kind: 'rect', w: 160, h: 120, fill: '#cbd5e1', radius: 8, text: '', fontSize: 16, dx: 176, dy: 0 },
+      { kind: 'rect', w: 160, h: 120, fill: '#cbd5e1', radius: 8, text: '', fontSize: 16, dx: 352, dy: 0 }
+    ] },
+    cta: { label: 'CTA', layers: [
+      { kind: 'section', w: 480, h: 120, fill: '#f1f5f9', radius: 8, text: '', fontSize: 16, dx: 0, dy: 0 },
+      { kind: 'button', w: 160, h: 56, fill: '#2563eb', radius: 12, text: 'Comecar', fontSize: 16, dx: 24, dy: 32 }
+    ] }
+  };
 
   var root = document.getElementById('kaz-theme-editor');
   if (!root) return;
@@ -108,6 +141,16 @@
   var history = [copy(scene)];
   var cursor = 0;
   var drag = null;
+  /* Frente X — "alteracoes nao salvas". O baseline e a cena carregada do
+     servidor; abrir a tela NAO suja o estado. Desfazer ate o baseline limpa. */
+  var baseline = copy(scene);
+  function dirty() { return JSON.stringify(scene) !== JSON.stringify(baseline); }
+  function paintDirty() {
+    var on = dirty();
+    root.setAttribute('data-kaz-dirty', on ? '1' : '0');
+    var badge = root.querySelector('[data-kaz-dirty-badge]');
+    if (badge) badge.hidden = !on;
+  }
 
   function commit() {
     history = history.slice(0, cursor + 1);
@@ -199,7 +242,7 @@
   /* Frente V: o textarea e um campo REAL do formulario. Mantem o JSON da
      cena sempre sincronizado; o listener de submit garante o ultimo estado. */
   function syncField() { jsonBox.value = JSON.stringify(scene, null, 2); }
-  function render() { drawCanvas(); drawLayers(); drawInspector(); syncField(); }
+  function render() { drawCanvas(); drawLayers(); drawInspector(); syncField(); paintDirty(); }
 
   /* ---- Conexão com campos allowlistados do tema -------------------------- */
   /* Aplicacao aditiva e nao destrutiva: marca camadas allowlistadas sem
@@ -259,6 +302,36 @@
     scene.layers.push(l); selected = l.id; commit(); render();
     say('camada adicionada: ' + l.id);
     return l.id;
+  }
+  /* Frente X — insere um bloco allowlistado como camadas REAIS da cena.
+     Respeita MAX_LAYERS, gera IDs unicos e nao aplica bindings no boot. */
+  function nextOrigin() {
+    var maxY = 0;
+    scene.layers.forEach(function (l) { maxY = Math.max(maxY, l.y + l.h); });
+    var span = Math.max(GRID * 2, scene.canvas.h - 160);
+    return { x: 40, y: snap((maxY + GRID * 2) % span) };
+  }
+  function insertBlock(blockId) {
+    var b = Object.prototype.hasOwnProperty.call(BLOCKS, blockId) ? BLOCKS[blockId] : null;
+    if (!b) { say('bloco desconhecido'); return false; }
+    if (scene.layers.length + b.layers.length > MAX_LAYERS) {
+      say('limite de ' + MAX_LAYERS + ' camadas atingido'); return false;
+    }
+    var o = nextOrigin(), added = [];
+    b.layers.forEach(function (tpl) {
+      var l = {
+        id: newId(), kind: tpl.kind, role: 'none',
+        x: clamp(snap(o.x + tpl.dx), -2000, 2000),
+        y: clamp(snap(o.y + tpl.dy), -2000, 2000),
+        w: tpl.w, h: tpl.h, fill: tpl.fill, radius: tpl.radius,
+        text: tpl.text, fontSize: tpl.fontSize,
+        visible: true, locked: false, bindId: ''
+      };
+      scene.layers.push(l); added.push(l.id);
+    });
+    selected = added[0]; commit(); render();
+    say('bloco ' + blockId + ' inserido · ' + added.length + ' camadas');
+    return true;
   }
   function remove(id) {
     var i = scene.layers.findIndex(function (l) { return l.id === id; });
@@ -368,12 +441,15 @@
   /* ---- Toolbar / inspector / IO ----------------------------------------- */
   root.addEventListener('click', function (ev) {
     var b = ev.target;
-    while (b && b !== root && !b.getAttribute('data-kaz-action') && !b.getAttribute('data-kaz-select') && !b.getAttribute('data-kaz-kind')) b = b.parentNode;
+    while (b && b !== root && !b.getAttribute('data-kaz-action') && !b.getAttribute('data-kaz-select')
+           && !b.getAttribute('data-kaz-kind') && !b.getAttribute('data-kaz-block')) b = b.parentNode;
     if (!b || b === root) return;
     var sel = b.getAttribute('data-kaz-select');
     if (sel) { selected = sel; render(); return; }
     var kind = b.getAttribute('data-kaz-kind');
     if (kind) { add(kind); return; }
+    var block = b.getAttribute('data-kaz-block');
+    if (block) { insertBlock(block); return; }
     var act = b.getAttribute('data-kaz-action');
     if (!act) return;
     if (act === 'duplicate') duplicate(selected);
@@ -409,7 +485,9 @@
     else if (ev.key === 'ArrowDown') { ev.preventDefault(); move(selected, 0, step); }
   });
 
-  if (form) form.addEventListener('submit', function () { syncField(); });
+  if (form) form.addEventListener('submit', function () {
+    syncField(); baseline = copy(scene); paintDirty();
+  });
   render();
   /* Exposição mínima para testes automatizados (sem alterar comportamento). */
   root.__kaz = {
@@ -421,6 +499,9 @@
     redo: function () { return restore(cursor + 1); },
     history: function () { return { cursor: cursor, length: history.length }; },
     export: exportScene, import: importScene, bind: applyBindings,
+    blocks: function () { return Object.keys(BLOCKS); },
+    insertBlock: insertBlock, dirty: dirty,
+    baseline: function () { return copy(baseline); },
     render: render, validScene: validScene, fallback: fallback
   };
   say('KAZTheme-Editor pronto · ' + scene.layers.length + ' camadas · '
