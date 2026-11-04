@@ -9,6 +9,10 @@
   {% if description %}<meta name="description" content="{{ description }}">{% endif %}
   {# F4-07 (ADR 0031): canonical honesto (só URL limpa), sitemap discovery, OG/Twitter #}
   {% if canonical %}<link rel="canonical" href="{{ canonical }}">{% endif %}
+  {# F13-N: matriz hreflang; tudo autoescapado, sem filtro raw e sem dados do request. #}
+  {% for alt in hreflangs|default([]) %}<link rel="alternate" hreflang="{{ alt.code }}" href="{{ alt.href }}">{% endfor %}
+  {% if hreflang_default %}<link rel="alternate" hreflang="x-default" href="{{ hreflang_default }}">{% endif %}
+  {% for loc in og.locale_alternate|default([]) %}<meta property="og:locale:alternate" content="{{ loc }}">{% endfor %}
   <link rel="sitemap" type="application/xml" href="{{ sitemap_href }}">
   <meta property="og:type" content="{{ og.type }}">
   <meta property="og:site_name" content="{{ og.site_name }}">

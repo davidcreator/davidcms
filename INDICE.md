@@ -1,16 +1,17 @@
-# Índice — ReamurCMS-Frente-M-Previa-por-Site
+# Índice — ReamurCMS-Frente-N-Hreflang-Multilingue.zip
 
-Arquivos completos (sem patches). Total: 7 (1 novo).
+| # | Arquivo | Tipo | Bytes |
+|---|---|---|---|
+| 1 | `dev/catalog/controller/common/header.php` | completo (substituir) | 10500 |
+| 2 | `dev/catalog/controller/common/sitemap.php` | completo (substituir) | 6924 |
+| 3 | `dev/catalog/view/template/common/header.twig` | completo (substituir) | 3471 |
+| 4 | `dev/catalog/view/template/common/sitemap.twig` | completo (substituir) | 735 |
+| 5 | `docs/GUIA-HREFLANG-MULTILINGUE.md` | novo | 3172 |
 
-- `dev/admin/controller/design/theme.php`
-- `dev/admin/view/js/theme-condition-builder.js`
-- `dev/admin/view/template/design/theme_form.twig`
-- `dev/system/library/theme/theme_compare_view.php`
-- `docs/GUIA-PREVIA-POR-SITE.md` **(novo)**
-- `RELATORIO.md`
-- `INDICE.md`
+| 6 | `RELATORIO.md` | este relatório | — |
+| 7 | `INDICE.md` | este índice | — |
 
-SHA-256 externo no `.sha256`.
-Os 14 `CHECKSUMS*.txt` permanecem intactos no main e não foram reenviados.
-
-Roadmap A→J concluído; K = idioma por site, L = condições por site. A M unifica a prévia C com a dimensão site.
+**Arquivos completos, sem patches.** O `.sha256` fica **fora** do ZIP, em
+`/home/user/entregas/ReamurCMS-Frente-N-Hreflang-Multilingue.zip.sha256`.
+Base: `main` @ `6cd1d9c254776d2947b6645a88cbb7f240c8ac34` (M aplicada 5/5).
+Nenhuma escrita remota foi feita por nós.

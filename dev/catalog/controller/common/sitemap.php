@@ -8,6 +8,7 @@
  *
  * common/sitemap (CATALOG) — sitemap.xml DINÂMICO (F4-07, ADR 0031):
  *  · home + aliases públicas estáticas (portfolio, tools, contato, orcamento)
+ * F13-N: matriz hreflang (xhtml:link) para cada <loc> + x-default.
  *  · keywords de rms_seo_url resolvidas para rotas e FILTRADAS por entidade
  *    ativa (status=1 via models de conteúdo — projeto/page/tool/blog despublicado
  *    sai do índice junto); dedup por alvo preferindo language_id=1 (en-us,
@@ -30,6 +31,13 @@ class Sitemap extends \Reamur\System\Engine\Controller {
     ];
 
     public function index(): void {
+        // F13-N: matriz hreflang (a ADR 0031 renunciou e marcou como futura).
+        // Um SELECT de leitura (status=1 + diretorio real); zero escrita.
+        $this->load->model('localization/language');
+        $codes = array_values(array_filter(
+            $this->model_localization_language->getEnabledCodes(),
+            static fn($c): bool => in_array((string)$c, ['pt-br','en-us','es-eu'], true)
+        ));
         $urls = [];
 
         // Home — raiz da publicação
@@ -56,6 +64,18 @@ class Sitemap extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        // F13-N: para cada <loc>, as variantes de idioma + x-default. So
+        // site_url/rotas allowlistadas entram; nenhum dado do request.
+        foreach ($urls as $i => $u) {
+            $loc = (string)$u['loc'];
+            $sep = str_contains($loc, '?') ? '&' : '?';
+            $links = [];
+            foreach ($codes as $code) {
+                $links[] = ['code'=>$code, 'href'=>$loc . $sep . 'language=' . rawurlencode($code)];
+            }
+            $links[] = ['code'=>'x-default', 'href'=>$loc];
+            $urls[$i]['xhtml_links'] = $links;
+        }
         $data['urls'] = $urls;
 
         $this->response->addHeader('Content-Type: application/xml; charset=utf-8');

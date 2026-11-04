@@ -1,12 +1,14 @@
 {# dev/catalog/view/template/common/sitemap.twig — urlset XML (F4-07, ADR 0031). Conteúdo = URLs; XML estrutural não é texto de interface #}
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 {% for u in urls %}
   <url>
     <loc>{{ u.loc }}</loc>
     {% if u.lastmod %}<lastmod>{{ u.lastmod }}</lastmod>{% endif %}
     <changefreq>{{ u.changefreq }}</changefreq>
     <priority>{{ u.priority }}</priority>
+    {# F13-N: alternates autoescapados (& vira &amp; no XML). #}
+    {% for alt in u.xhtml_links|default([]) %}<xhtml:link rel="alternate" hreflang="{{ alt.code }}" href="{{ alt.href }}"/>{% endfor %}
   </url>
 {% endfor %}
 </urlset>

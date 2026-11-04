@@ -146,6 +146,26 @@ class Header extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        // F13-N (ADR 0031/F4-07): matriz hreflang declarativa, marcada como
+        // "tarefa futura" no sitemap. So existe quando o canonical e honesto
+        // (caminho limpo). A origem vem de site_url via requestOrigin(), NUNCA
+        // de HTTP_HOST; os codigos sao os mesmos idiomas ATIVOS do switcher
+        // (F4-02) — zero query nova e nenhum texto livre do request na URL.
+        $data['hreflangs'] = [];
+        $data['hreflang_default'] = '';
+        $data['og']['locale_alternate'] = [];
+        if ($canonical !== '') {
+            foreach ($data['languages'] as $lang) {
+                $code = (string)$lang['code'];
+                if (!in_array($code, ['pt-br','en-us','es-eu'], true)) continue;
+                $sep = str_contains($canonical, '?') ? '&' : '?';
+                $data['hreflangs'][] = ['code'=>$code,
+                    'href'=>$canonical . $sep . 'language=' . rawurlencode($code)];
+                $data['og']['locale_alternate'][] = str_replace('-', '_', $code);
+            }
+            $data['hreflang_default'] = $canonical;
+        }
+
         return $this->load->view('common/header', $data);
     }
 

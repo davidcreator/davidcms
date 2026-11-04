@@ -1,83 +1,97 @@
-# Frente M — Prévia comparativa por site (continuação da L)
+# Frente N — Matriz hreflang multilíngue (SEO)
 
-O roadmap **A→J está concluído**; K (idioma por site) e L (condições por
-site) foram aplicadas no `main` 026a2a163. Ao pedir o próximo passo, a M foi
-tratada como a **continuação funcional natural**: a prévia comparativa da
-frente C decidia o site **apenas pelo host** da sonda da J, enquanto o motor
-da L trabalha com **IDs**. **Não é** auditoria, dossiê ou pacote de
-governança.
+**Base inspecionada:** `main` @ `6cd1d9c254776d2947b6645a88cbb7f240c8ac34`
+(2026-11-03T21:00:23Z, `feat: add site selector for theme comparison preview`),
+pai `026a2a163665a3a6cc49abbf9bc1815e40192793`. Árvore: 2.576 blobs,
+`truncated:false`. **Verificação da frente M aplicada: 5/5 arquivos
+byte-idênticos ao HEAD N.**
 
-## O problema corrigido
+## Lacuna funcional real
 
-Se o **rascunho mudou o host** do site `shop`, um mesmo host na sonda casa com
-`shop` no painel publicado e com `primary` no rascunho. A comparação passa a
-ser "shop × primary" sem que a fita de contexto mostre isso — cores e
-condições divergem por um motivo invisível.
+O próprio `dev/catalog/controller/common/sitemap.php` (F4-07 / ADR 0031)
+documenta: *"matriz hreflang é tarefa futura, renúncia na ADR"*. O `<head>` do
+Catálogo publica canonical, OG/Twitter e descoberta do sitemap, e o switcher
+F2-3/F4-02 já lista os idiomas ativos — mas **nenhuma** variante de idioma é
+declarada para motores de busca, nem no HTML nem no `sitemap.xml`. A frente N
+implementa essa tarefa pendente sem mexer no canonical, no dedup, nas rotas ou
+nas decisões A–M.
 
-## Recorte
+## O que muda (4 arquivos completos + 1 guia novo)
 
-- O card **Comparar publicado × rascunho** ganha
-  `<select name="preview_site">` com os 8 IDs allowlistados de
-  `ThemeSites::IDS` (`primary`…`staging`) e a opção padrão **Simular host**.
-  **Nenhuma chave de tradução nova**: reutiliza `text_sites`,
-  `text_sites_probe` e `text_sites_probe_help` (418 ×3 intactas).
-- `compare()` com um ID escolhido usa o **host da própria política** de cada
-  painel para chamar `ThemeSites::match()`: o publicado usa o host que ele
-  configurou para aquele ID, o rascunho usa o dele. Resultado: compara-se
-  **`shop` publicado × `shop` rascunho** mesmo com hosts diferentes. A J não
-  é alterada — nenhum método, chave ou formato novo.
-- **Fail-closed**: `preview_site` só é aceito em `ThemeSites::IDS`. Valor
-  inválido, site sem host naquela política ou desabilitado ⇒ volta para a
-  sonda. O host do request continua sendo **apenas comparado**, nunca
-  refletido em HTML, global Twig, CSS ou log.
-- **Correção de coerência com a L**: sem `sites` configurados, `match()`
-  devolve ID vazio. A prévia passava `site=''` ao motor, enquanto o Catálogo
-  (`startup/theme`) usa `primary`. A M alinha os dois (ID fora da allowlist
-  ⇒ `primary`).
-- A **fita de contexto** da prévia exibe o site allowlistado usado (guard
-  para chamadores antigos sem a chave; tudo escapado com `htmlspecialchars`).
-- O `theme-condition-builder.js` sincroniza o select da prévia com o campo
-  **Site** do simulador (L). Sem JavaScript nada muda: o formulário da prévia
-  e `context[site]` continuam validados no servidor.
-
-Guia `docs/GUIA-PREVIA-POR-SITE.md` (novo). 7 arquivos no ZIP,
-1 novo, arquivos completos, sem patches.
-
-**Compatibilidade:** com `preview_site` vazio (padrão) o comportamento é
-**idêntico às frentes A–L**. **Nenhuma** query, migration, coluna, tabela,
-schema, cookie, cron, escrita no banco, CSS, manifesto, global Twig, `|raw`,
-`<script>` inline, `fetch`/`eval`/`innerHTML` novo, upload, GLB, WebGL,
-BDREditor, `custom_js`, vhost/DNS ou escrita remota.
-
-## Validação executada
-
-| Verificação | Resultado |
+| Arquivo | Mudança |
 |---|---|
-| `php -l` PHP 8.5 real nos 2 arquivos PHP | 2 OK / 0 FAIL |
-| `node --check` (8 JS de A–L, 1 modificado) | 8 OK |
-| **Autoloader real** + pacote E (export/import com condição `site`) | 75 PASS / 0 FAIL |
-| `compare()` por site + fail-closed + ACL/CSRF + regressão A–L | 65 PASS / 0 FAIL |
-| `edit()` + render Twig 3.14 + regressão A–L | 69 PASS / 0 FAIL |
-| **jsdom 29**: select, sincronização, degradação sem JS | 48 PASS / 0 FAIL |
-| `verify-checksums` (A e B) | 14 manifestos / 142 arquivos / 0 divergentes |
-| `repo-health` (A e B) | 6 PASS / 0 FAIL / 0 SKIP |
-| `verify-ci-workflow` | 31 PASS / 0 FAIL |
-| `verify-contract-freeze` | exit 0 |
+| `dev/catalog/controller/common/header.php` | Publica `hreflangs[]`, `hreflang_default` e `og.locale_alternate`, derivados do canonical e dos idiomas ativos do switcher |
+| `dev/catalog/view/template/common/header.twig` | `<link rel="alternate" hreflang>` por idioma + `x-default`, e `<meta property="og:locale:alternate">`; tudo autoescapado |
+| `dev/catalog/controller/common/sitemap.php` | Matriz `xhtml_links` por `<loc>` (idiomas ativos + `x-default`); 1 SELECT de leitura |
+| `dev/catalog/view/template/common/sitemap.twig` | `xmlns:xhtml` no `<urlset>` e `<xhtml:link rel="alternate">` por URL |
+| `docs/GUIA-HREFLANG-MULTILINGUE.md` | Guia de instalação, regras de segurança e limites (novo) |
 
-**Total: 257 asserções, 0 falhas.** 44 arquivos congelados
-conferidos por hash antes/depois (15 da J, 4 da K, 6 da L, 3 idiomas,
-`schema.sql`, `home.twig`, `twig.php`, `autoloader.php`, `framework.php`,
-ambos os startups, `common/header.php`, engines, runtime e guias). Os
-14 `CHECKSUMS*.txt` permanecem **idênticos** e não foram reemitidos.
-Nenhum contrato congelado, `release_approved`, workflow, checker ou runtime
-WebGL foi modificado. Nenhuma escrita remota. Nenhum
-`Deprecated:`/`Warning:`/`Fatal` no PHP 8.5 WASM. F9-27 segue
-`BLOCKED_NOT_RUN`; BDREditor pausado; P2 do F9-18 não reaberto.
+**Sem:** migration, schema, coluna, tabela, escrita, sessão, cookie, cron,
+`custom_js`, `<script>` inline, `|raw` novo, `fetch`/`eval`/`innerHTML`,
+chave de tradução, token CSS, JS, manifesto, contrato, global Twig ou vhost/DNS.
+Os 14 `CHECKSUMS*.txt` permanecem intactos; nenhum arquivo do pacote está
+coberto por eles.
 
-PHP 8.5 via WASM + Twig 3.14 + jsdom com mocks de DB/sessão/response. **Não**
-houve CMS completo, MySQL real, sessão Admin autenticada, browser com rede,
-DNS/vhost, WebGL, E2E, migration, staging, deploy ou escrita no GitHub.
-**CI verde e health verde ≠ release aprovada.**
+## Segurança (fail-closed)
 
-Aplicar: substituir pelos 5 arquivos completos (o guia é novo) e rodar
-`bash tools/verify-checksums.sh && bash tools/repo-health.sh`.
+- Origem das URLs = **`site_url`** (config) via `requestOrigin()`; **nunca**
+  `HTTP_HOST`. Testado com `HTTP_HOST=evil-marker.test`: zero ocorrência.
+- Sem canonical (rota suja `index.php`) ⇒ `hreflangs=[]` e **nenhum** alternate.
+- Allowlist `pt-br|en-us|es-eu` **e** `getEnabledCodes()` (`status=1` +
+  diretório real). Nenhum parâmetro do request é copiado para as URLs.
+- `x-default` = próprio canonical / próprio `<loc>` (sem `language`).
+- `&` das URLs é escapado como `&amp;` pelo autoescape do Twig; XML validado
+  por `simplexml_load_string` e `DOMParser`.
+
+## Validação executada (tudo `/0`)
+
+| Harness | Resultado |
+|---|---|
+| `php -l` (2 PHP do pacote, PHP 8.5.12 WASM) | **2/0** |
+| `node --check` (9 JS de tema do HEAD) | **9/0** |
+| H1 `fn_header_test.php` (`header.php` + Twig 3.14) | **60/0** |
+| H2 `fn_sitemap_test.php` (`sitemap.php` + Twig, XML) | **60/0** |
+| H3 `fn_regression_test.php` (autoloader real + A–M) | **56/0** |
+| H4 `fn_jsdom_test.js` (jsdom 29.1.1 + DOMParser) | **49/0** |
+| **Total de asserções** | **236/0** |
+
+Réplica A/B de validação com 1201 paths (leitura remota, sem clone Git,
+sem vendor/imagens): `verify-checksums`, `repo-health`,
+`verify-ci-workflow` e `verify-contract-freeze` **verdes e idênticos** antes e
+depois. 1197 arquivos congelados idênticos, 14 manifestos byte-idênticos,
+25 TEMPLATE_KEYS congelados, 418 chaves ×3, build idempotente 5/5, `unzip -t`/CRC OK,
+`sha256sum -c` do pacote OK.
+
+## Impacto crítico
+
+Verificado e corrigido onde apareceu: o build inicial inseriu `|raw` dentro de
+um **comentário Twig**, o que inflaria os guards de contagem — removido. As
+demais divergências encontradas eram expectativas dos harnesses (formato
+`og:locale` legado `pt_br`, assinatura de `ThemeCompareView::render()`,
+`ThemePackage::spec()/decode()`, `site_rows` no form e a classe `ScenePreset` — canônica apenas em
+`ScenePresetRegistry` —),
+corrigidas sem alterar o código entregue. Nenhuma regressão A–M detectada:
+`ConditionEngine` com `site`, `ThemeSites` 8 IDs, `ThemePackage` export/import,
+`ThemeCompareView` com `Sites <code>shop</code>`, form Admin M com
+`#preview-site` e 8 IDs, builder L/M com `data-ctx="site"`.
+
+## Limitações honestas
+
+Sem CMS completo, MySQL, sessão autenticada, browser com rede, DNS/vhost,
+WebGL, E2E, migration, staging, deploy, PHP nativo, Composer, PHPStan, rsync ou
+escrita no GitHub. PHP 8.5.12 WASM, Twig 3.14 e jsdom 29.1.1 com mocks **não
+são um servidor**. CI remoto não verificado. O CMS usa `?language=`
+(Adendo F2-3/ADR 0001), portanto as variantes são URLs com query, não
+paths/hosts distintos; `hreflang` entre domínios exigiria DNS/vhost, fora de
+escopo. Idiomas extras no painel aparecem no switcher, mas não entram na
+matriz (allowlist dos 3 códigos do core). `og:locale` segue o
+`str_replace('-','_')` do F4-07 (`pt_br`), sem alterar o metadado legado.
+**CI verde / health verde ≠ release aprovada**; F9-27 segue
+`BLOCKED_NOT_RUN` com `release_approved:false`, BDREditor/F9-103 pausado.
+
+## Instalação
+
+Extrair os 4 arquivos completos sobre a raiz do repositório (o guia é novo),
+preservando a estrutura de diretórios. Não há patches, nem manifestos a
+atualizar. Depois: `bash tools/verify-checksums.sh && bash tools/repo-health.sh`.
+Sem canonical, o HTML é idêntico ao das frentes A–M.
