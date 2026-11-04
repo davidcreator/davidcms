@@ -51,11 +51,15 @@ exportados/importados (E) continuam funcionando — os sem `sites` caem em `[]`.
 `ThemeSchedule::SCOPES` **não muda**: `scope` continua sendo o público
 (`all|logged_in|anonymous`) e `sites` é uma dimensão independente.
 
-**Limitação honesta:** se o **rascunho** alterar o host de um site, o site da
-decisão vem da política publicada (necessário para evitar o ciclo), enquanto o
-`context['site']` das condições (L) vem da política efetiva. Em configs com
-hosts divergentes entre publicado e rascunho, use o seletor de site da prévia
-(M) para comparar pelo ID. A sonda do Admin sempre usa um ID allowlistado.
+**Resolvido pela frente R:** a decisão continua vindo da política
+**publicada** (necessário para evitar o ciclo), e o **mesmo ID** agora é
+propagado ao `context['site']` das condições (L), ao tema-raiz da J e ao
+`catalog_theme_site_language`. Quando o rascunho altera o host de um site,
+`ThemeSites::byId()` (frente Q) recupera os atributos daquele ID na política
+efetiva, em vez de re-resolver o host e cair noutro site. Um rollout liberado
+para `shop` renderiza com as cores, condições e idioma de `shop`. Sem
+divergência entre publicado e rascunho nada muda, inclusive `reason='exact'`.
+A sonda do Admin sempre usa um ID allowlistado.
 
 Aplicar os 7 arquivos completos deste pacote (o guia é novo) e rodar
 `bash tools/verify-checksums.sh && bash tools/repo-health.sh`.

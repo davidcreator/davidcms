@@ -63,14 +63,17 @@ permanecem intactos; nenhum arquivo do pacote é coberto por eles.
 
 ## Limitações honestas — o que a Q **não** fecha
 
-A limitação da frente **O** continua: se o **rascunho** alterar o host de um
-site, o site da decisão de rollout vem da política **publicada** (necessário
-para não criar ciclo com a escolha do config efetivo), enquanto
-`context['site']` das condições (L) vem da política efetiva. A Q atua apenas
-na **prévia do Admin**, onde o ID é conhecido; no request real do Catalog só
-existe o host, e `match()` segue sendo a decisão correta. A limitação da
-frente **N** (`?language=` gera variantes com query, não paths/hosts
-distintos) também permanece — exigiria DNS/vhost, fora de escopo.
+A Q atua apenas na **prévia do Admin**, onde o ID é conhecido. A divergência
+que ela expôs no **Catalog** (rollout decidido para um site, mas renderizado
+com outro quando o rascunho altera hosts) foi **fechada pela frente R**, que
+reaproveita `byId()` para propagar o ID estável da política publicada ao
+config efetivo — sem criar ciclo e sem reabrir a decisão da O.
+
+Permanece a limitação da frente **N** (`?language=` gera variantes com query,
+não paths/hosts distintos) — exigiria DNS/vhost, fora de escopo. Permanece
+também a da frente **P**: o idioma usado na negociação vem da política
+**publicada**, enquanto `catalog_theme_site_language` do snapshot descreve o
+config efetivo; a R alinha o **site**, não a origem do idioma negociado.
 
 Sem CMS completo, MySQL, sessão de Admin autenticada, browser com rede,
 DNS/vhost, WebGL, E2E, migration, staging, deploy, PHP nativo, Composer,

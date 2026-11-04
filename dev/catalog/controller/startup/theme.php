@@ -6,6 +6,7 @@
  *  - tokens de cor e cena (compatibilidade com o legado F10-03);
  *  - configuracao Three.js allowlisted (catalog_theme_three);
  *  - globais Twig seguros (theme / theme_scene) visiveis em TODAS as telas.
+ * F13-R: site efetivo alinhado ao ID estavel da decisao (fecha a O).
  * F13-P: idioma efetivo unificado (K+L) antes do contexto das condicoes.
  * F13-O: rollout pode ser limitado a sites allowlistados (frentes H+J).
  * Nenhuma regra escreve arquivo, executa codigo ou acessa dado sensivel.
@@ -81,9 +82,26 @@ class Theme extends \Reamur\System\Engine\Controller {
         // EFETIVO e o host apenas COMPARADO, nunca publicado.
         $site = $this->theme_sites->match($sitesCfg, $siteHost);
 
+        // F13-R: fecha a limitacao declarada da frente O. O ID estavel da
+        // politica PUBLICADA ($siteIdSeed, usado no decide() e na negociacao
+        // de idioma da P) e a fonte de verdade para TODA a requisicao. Se o
+        // rascunho alterou o host de um site, match() sobre o config efetivo
+        // re-resolvia o MESMO host para OUTRO ID: um rollout liberado para
+        // `shop` renderizava com tema, condicoes e idioma de `primary`.
+        // byId() (frente Q) recupera os ATRIBUTOS daquele ID no config efetivo,
+        // sem ciclo: nenhuma decisao depende do config que ela mesma escolheu.
+        // A decisao da O (politica publicada) fica INTACTA; apenas propagamos
+        // o mesmo ID aos consumidores. Sem divergencia NADA muda, inclusive
+        // `reason='exact'` => compatibilidade byte a byte com A-Q.
+        $effectiveId = (string)($site['id'] ?? '');
+        if ($effectiveId !== '' && $effectiveId !== $siteIdSeed) {
+            $aligned = $this->theme_sites->byId($sitesCfg, $siteIdSeed);
+            if (!empty($aligned['active'])) $site = $aligned;
+        }
+
         // F13-L: dimensao `site` entra no contexto allowlisted ANTES do
-        // ThemeSnapshot. O ID vem SOMENTE de ThemeSites::match (allowlist da
-        // J); HTTP_HOST continua sendo apenas COMPARADO, nunca publicado.
+        // ThemeSnapshot. O ID vem SOMENTE de ThemeSites (allowlist da J);
+        // HTTP_HOST continua sendo apenas COMPARADO, nunca publicado.
         // Sem sites configurados, match() devolve `primary` (identico a K).
         $siteId = (string)($site['id'] ?? '');
         $context['site'] = in_array($siteId, $this->theme_sites->ids(), true) ? $siteId : 'primary';

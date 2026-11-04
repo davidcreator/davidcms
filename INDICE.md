@@ -1,16 +1,16 @@
-# Índice — ReamurCMS-Frente-Q-Site-por-ID.zip
+# Índice — ReamurCMS-Frente-R-Site-Efetivo-Coerente.zip
 
 | # | Arquivo | Tipo | Bytes |
 |---|---|---|---|
-| 1 | `dev/admin/controller/design/theme.php` | completo (substituir) | 61974 |
-| 2 | `dev/system/library/theme/theme_sites.php` | completo (substituir) | 11343 |
-| 3 | `docs/GUIA-PREVIA-POR-SITE.md` | completo (substituir) | 3935 |
-| 4 | `docs/GUIA-SITE-POR-ID.md` | novo | 5039 |
+| 1 | `dev/catalog/controller/startup/theme.php` | completo (substituir) | 11747 |
+| 2 | `docs/GUIA-ROLLOUT-POR-SITE.md` | completo (substituir) | 3742 |
+| 3 | `docs/GUIA-SITE-EFETIVO-COERENTE.md` | novo | 5068 |
+| 4 | `docs/GUIA-SITE-POR-ID.md` | completo (substituir) | 5201 |
 
 | 5 | `RELATORIO.md` | este relatório | — |
 | 6 | `INDICE.md` | este índice | — |
 
 **Arquivos completos, sem patches.** O `.sha256` fica **fora** do ZIP, em
-`/home/user/entregas/ReamurCMS-Frente-Q-Site-por-ID.zip.sha256`.
-Base: `main` @ `6eb23384a61ff9c7a01e05e6ebac5587702d6008` (P aplicada 6/6).
+`/home/user/entregas/ReamurCMS-Frente-R-Site-Efetivo-Coerente.zip.sha256`.
+Base: `main` @ `db6f9965942bf7e1b67fcff0232535d358edb86f` (Q aplicada 4/4).
 Nenhuma escrita remota foi feita por nós.
