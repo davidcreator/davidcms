@@ -317,7 +317,7 @@ class Theme extends \Reamur\System\Engine\Controller {
                  'text_sites_enabled','text_sites_active','text_sites_default','text_sites_probe',
                  'text_sites_probe_help','text_sites_probe_button','text_sites_probe_unknown',
                  'text_sites_note','text_sites_empty','text_sites_fallback','error_sites'] as $k) $data[$k]=$this->language->get($k);
-        $this->document->addScript($this->config->get('site_url') . 'view/js/theme-sites.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-sites-t');
+        $this->document->addScript($this->config->get('site_url') . 'view/js/theme-sites.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-sites-w');
         // F13-C: estado real de publicacao e dados do comparador.
         $draftNorm=json_encode(json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true) ?: new \stdClass());
         $pubNorm=json_encode(json_decode((string)($theme['published_config']??'{}'),true) ?: new \stdClass());
@@ -561,20 +561,37 @@ class Theme extends \Reamur\System\Engine\Controller {
             if ($mediaOverride===null) return $bad($this->language->get('error_media'));
         }
         // F13-J: hosts/slugs/idiomas allowlistados. Campos ausentes preservam A-I.
+        // F13-W: o formulario publica os 8 blocos allowlistados mesmo quando
+        // nunca configurados (e tambem quando o JS nao carregou). Uma linha
+        // SEM host, SEM slug e DESABILITADA nao e politica: descartada antes
+        // de normalize(), sem gravar nada. Qualquer conteudo (host, slug ou
+        // checkbox marcado) continua indo para normalize() -> fail-closed.
         $sitesOverride=null;
         if (array_key_exists('sites',$post)) {
             $rawSites=(array)$post['sites']; $cleanSites=[];
             foreach($this->theme_sites->ids() as $sid) {
                 if (!isset($rawSites[$sid]) || !is_array($rawSites[$sid])) continue;
+                $siteHost=(string)($rawSites[$sid]['host']??'');
+                $siteSlug=(string)($rawSites[$sid]['slug']??'');
+                $siteOn=isset($rawSites[$sid]['enabled'])&&(string)$rawSites[$sid]['enabled']==='1';
+                if (!$siteOn && trim($siteHost)==='' && trim($siteSlug)==='') continue;
                 $cleanSites[$sid]=[
-                    'host'=>(string)($rawSites[$sid]['host']??''),
-                    'slug'=>(string)($rawSites[$sid]['slug']??''),
+                    'host'=>$siteHost,
+                    'slug'=>$siteSlug,
                     'language'=>(string)($rawSites[$sid]['language']??'pt-br'),
-                    'enabled'=>isset($rawSites[$sid]['enabled'])&&(string)$rawSites[$sid]['enabled']==='1',
+                    'enabled'=>$siteOn,
                 ];
             }
             $sitesOverride=$this->theme_sites->normalize($cleanSites);
-            if ($sitesOverride===null) return $bad($this->language->get('error_sites'));
+            if ($sitesOverride===null) {
+                // F13-W: diagnostico allowlistado. O ID vem de ThemeSites::ids(),
+                // nunca e texto livre do request; nenhuma chave de traducao nova.
+                foreach($cleanSites as $sid=>$one){
+                    if($this->theme_sites->normalize([$sid=>$one])===null)
+                        return $bad($this->language->get('error_sites').' ('.$sid.')');
+                }
+                return $bad($this->language->get('error_sites'));
+            }
         }
         // Frente V — KAZTheme-Editor: cena persistente, validada NO SERVIDOR.
         // Campo ausente preserva temas/pacotes A-U (chave nao gravada). Usa

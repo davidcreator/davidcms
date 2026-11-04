@@ -57,6 +57,26 @@ temas existentes, idioma) e uma **sonda**: `theme-sites.js` simula o host
 (382 → 418). O `common/header.php` concatena `--rms-site-*` no `style` do
 `<body>`, reaproveitando B, G, H e I.
 
+### Correção da frente W — linhas em branco não são política
+
+O formulário sempre publica os 8 blocos allowlistados. Até a V, o servidor
+montava as 8 entradas e chamava `ThemeSites::normalize()`, que exige host
+válido em **todas**: com 7 linhas em branco o `save()` era bloqueado por
+`error_sites` — *"Mapa de sites inválido: revise host, slug e idioma."* — mesmo
+sem o usuário ter tocado no card (e a cena persistente da V também não salvava).
+A **W** descarta, antes de `normalize()`, apenas a linha que está **sem host,
+sem slug e desmarcada**. Qualquer conteúdo continua **fail-closed**: host com
+scheme, porta, underline, caminho, `..`, slug fora de `^[a-z0-9_-]{1,48}$`,
+idioma desconhecido ou mais de 8 sites ainda retornam `null` e nenhuma
+gravação. Quando há erro real, a mensagem existente ganha o **ID allowlistado**
+do bloco (`(shop)`), sem chave de tradução nova e sem refletir texto livre.
+
+No cliente, `theme-sites.js` libera no `submit` os campos das linhas **com host
+preenchido**, mesmo desabilitadas, para que a política de um site temporariamente
+desligado não seja apagada ao salvar; linhas vazias continuam `disabled`. O
+cache key passou de `-theme-sites-t` para `-theme-sites-w`. Servidor e cliente
+são independentes: com JS antigo ou desligado o servidor já resolve o bloqueio.
+
 ## Compatibilidade e limites
 
 Config sem `sites` ⇒ nenhuma classe `rms-site-*`, `site_css` vazio, globais nos

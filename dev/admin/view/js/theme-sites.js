@@ -1,4 +1,4 @@
-/* F13-T — sonda local usa a politica PUBLICADA (ID estavel da R).
+/* F13-W — preserva sites desabilitados no submit; F13-T — sonda local usa a politica PUBLICADA (ID estavel da R).
    F13-J — multisite declarativo: sonda local de host, apenas DOM.
    Sem fetch/eval/innerHTML/document.write. O mapa de sites vem do servidor
    em data-sites (constantes allowlistadas); o host digitado so e COMPARADO,
@@ -69,5 +69,18 @@
   if (button) button.addEventListener('click', run);
   if (input) input.addEventListener('keydown', function (ev) {
     if (ev.key === 'Enter') { ev.preventDefault(); run(); }
+  });
+  // F13-W: linhas totalmente vazias CONTINUAM disabled (nao entram no POST).
+  // Linhas com host preenchido sao liberadas no submit para PRESERVAR a
+  // politica de um site desabilitado (host/slug/idioma nao se perdem ao
+  // salvar). O servidor descarta linhas vazias e continua soberano: nenhum
+  // dado novo e aceito sem ThemeSites::normalize(). Sem rede e sem markup.
+  var form = root.closest('form');
+  if (form) form.addEventListener('submit', function () {
+    Array.prototype.slice.call(root.querySelectorAll('[data-site]')).forEach(function (row) {
+      var input = row.querySelector('[data-site-host]');
+      if (!input || String(input.value).replace(/^\s+|\s+$/g, '') === '') return;
+      fields(row).forEach(function (f) { f.disabled = false; });
+    });
   });
 })(document, window);
