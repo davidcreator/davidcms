@@ -1,4 +1,4 @@
-/* KAZTheme-Editor — frentes U/V/W/X + Y + Z + AA + AB + AC + AD (boot apos DOM).
+/* KAZTheme-Editor — frentes U/V/W/X + Y + Z + AA + AB + AC + AD + AE (fail-loud).
    Editor de temas estruturado: canvas SVG + árvore de camadas + inspector.
    Apenas DOM puro: sem rede, codigo executavel do usuario, WebGL, Three.js,
    upload ou escrita remota. A cena e PERSISTENTE (frente V): volta ao abrir
@@ -23,7 +23,6 @@
   var bootDone = false;
   function boot() {
     if (bootDone) return;
-    bootDone = true;
   var NS = 'http://www.w3.org/2000/svg';
   var VERSION = 1;
   var KINDS = ['rect', 'text', 'button', 'card', 'section'];
@@ -80,6 +79,9 @@
 
   var root = document.getElementById('kaz-theme-editor');
   if (!root) return;
+  bootDone = true;
+  /* Frente AE: metadados minimos para o health check de producao. */
+  root.setAttribute('data-kaz-health', 'ad+ae');
   var canvas = root.querySelector('[data-kaz-canvas]');
   var layerList = root.querySelector('[data-kaz-layer-list]');
   var jsonBox = root.querySelector('[data-kaz-json]');
@@ -961,4 +963,29 @@
     document.addEventListener('DOMContentLoaded', boot, { once: true });
     window.addEventListener('load', boot, { once: true });
   }
+  /* Frente AE — FAIL-LOUD. O sintoma que levou quatro frentes a diagnosticar
+     era justamente o silencio: nenhuma ferramenta respondia e o console estava
+     limpo. Se o boot NAO aconteceu, a pagina passa a dizer isso. Apenas DOM
+     puro (createElement/textContent), sem marcacao interpolada, rede,
+     execucao dinamica de codigo ou excecao. */
+  window.setTimeout(function () {
+    if (bootDone || !document.body) return;
+    var isEditorPage = document.getElementById('kaz-theme-form')
+      || document.querySelector('.kaz-shell');
+    if (!isEditorPage) return;
+    if (document.querySelector('[data-kaz-boot-warning]')) return;
+    var note = document.createElement('div');
+    note.setAttribute('data-kaz-boot-warning', '1');
+    note.setAttribute('role', 'alert');
+    note.setAttribute('style',
+      'position:fixed;left:16px;right:16px;bottom:16px;z-index:2147483000;'
+      + 'padding:12px 16px;border-radius:10px;background:#7f1d1d;color:#fff;'
+      + 'font:600 14px/1.45 system-ui,sans-serif;box-shadow:0 8px 28px #0007');
+    note.textContent = 'KAZTheme-Editor nao inicializou: o editor existe na pagina, '
+      + 'mas o JavaScript nao concluiu o boot. Verifique se o asset '
+      + 'kaz-theme-editor.js foi servido (HTTP 200), se o header.twig ativo contem '
+      + 'o loop scripts_deferred e se um cache/proxy nao entrega uma versao antiga. '
+      + 'Execute tools/kaz-theme-editor-health.js no console para o diagnostico.';
+    document.body.appendChild(note);
+  }, 500);
 })(document, window);

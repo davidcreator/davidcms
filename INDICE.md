@@ -1,19 +1,17 @@
-# Índice — Frente AD
+# Índice — Frente AE
 
 | # | Arquivo | Papel |
 | --- | --- | --- |
-| 1 | `dev/admin/view/js/kaz-theme-editor.js` | **boot resiliente** — `boot()` após o DOM |
-| 2 | `dev/admin/controller/design/theme.php` | 9 × `addScriptDeferred()`, cache `-ad` |
-| 3 | `dev/system/library/document.php` | `addScriptDeferred()` / `getScriptsDeferred()` (novos) |
-| 4 | `dev/admin/controller/common/header.php` | publica `scripts_deferred` |
-| 5 | `dev/admin/view/template/common/header.twig` | segundo loop com `defer`; loop original intacto |
-| 6 | `tools/verify-kaz-boot.cjs` | **novo** — reproduz o sintoma e prova a correção |
-| 7 | `tools/diagnostico-kaztheme-somente-leitura.sql` | **novo** — SELECTs apenas; **não é migration** |
-| 8 | `docs/KAZTheme-Editor-Boot-e-Ferramentas.md` | **novo** — diagnóstico completo |
-| 9–17 | `docs/KAZTheme-Editor*.md` | seção AD anexada aos 9 documentos |
-| 18–21 | `evidencia/*.png` | antes/depois do boot, mobile e catálogo |
+| 1 | `dev/admin/view/js/kaz-theme-editor.js` | **fail-loud**, `bootDone` após root, `data-kaz-health` |
+| 2 | `dev/admin/controller/design/theme.php` | cache `-kaz-theme-editor-ae` |
+| 3 | `tools/kaz-theme-editor-health.js` | **novo** — snippet de console, somente leitura |
+| 4 | `tools/verify-kaz-health.cjs` | **novo** — harness Chromium, 4 estados |
+| 5 | `docs/KAZTheme-Editor-Diagnostico-em-Producao.md` | **novo** — passo a passo e leitura do veredito |
+| 6 | `docs/RELATORIO-ADERENCIA-main.md` | **novo** — auditoria 19/19 do repositório real |
+| 7–16 | `docs/KAZTheme-Editor*.md` | seção AE anexada aos 10 documentos |
+| 17–21 | `evidencia/*.png` | silêncio anterior, fail-loud, health OK, mobile, JSON |
 | 22 | `RELATORIO.md` | este relatório |
 | 23 | `INDICE.md` | este índice |
 
 `.sha256` fica fora do ZIP, em `/home/user/entregas/`.
-Frentes A–AC preservadas, aplicadas e confirmadas — não reentregues.
+Frentes A–AD preservadas, aplicadas e confirmadas — não reentregues.

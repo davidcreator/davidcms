@@ -80,3 +80,67 @@ não consulta `setting`, `extension` nem permissão para decidir incluir o JS.
 5. Se `__kaz` continuar `undefined`, verificar se um proxy/CDN serve o JS
    antigo em cache e se o `header.twig` ativo contém o loop
    `scripts_deferred`.
+
+---
+
+## Frente AE — Aderência ao `main`, fail-loud e diagnóstico em produção
+
+Pela primeira vez foi possível ler o repositório **real** em vez de uma réplica
+local: a API devolvia sempre `13b0f7b…` por cache até que uma consulta com
+`per_page=5` e `nocache` novo revelou dois commits.
+
+| Commit | Data (UTC) | Mensagem |
+| --- | --- | --- |
+| `50d4844f66d9…` | 2026-11-04 19:46:39 | `fix(admin/theme-editor): correct browser layout issues from AB release` (AC) |
+| `56fd0c5d40fb…` | 2026-11-04 20:06:31 | `fix(admin/theme-editor): fix silent theme editor boot failure` (AD) |
+
+`pushed_at = 2026-11-04T20:06:35Z`; árvore `3194` entradas / `2611` blobs /
+`truncated:false`. Auditoria baixando o conteúdo cru de `56fd0c5d40fb`:
+**19/19 arquivos entregues pelas frentes AC e AD são byte a byte idênticos ao
+`main`** — incluindo `theme.php` (70.109), `kaz-theme-editor.js` (47.669),
+`header.twig` (6.089), `document.php` (2.476) e o CSS (34.897). Os 405 paths
+presentes no `main` e ausentes no recorte local são 227 `index.html` e 178
+binários (fontes, imagens, sourcemaps) que o download filtra; **nenhum
+arquivo de migration novo**. `schema.sql` segue intacto.
+
+### O que ainda faltava
+
+Desde a frente A, a confirmação recebida era sempre "aplicado com sucesso,
+github atualizado" — nunca "as ferramentas agora respondem no meu servidor".
+E o sintoma que levou quatro frentes para ser diagnosticado era justamente o
+**silêncio**: ferramentas inertes com console limpo. A AD corrigiu a causa,
+mas não deixou nenhum sinal visível caso o problema volte (Twig compilado em
+cache, CDN servindo JS antigo, CSP, asset 404).
+
+### Correções da AE
+
+1. **Fail-loud** — `bootDone` passa a ser marcado **depois** de confirmar o
+   root, permitindo que `DOMContentLoaded` e `load` tentem novamente. Se,
+   passados 500 ms, o boot não ocorreu e a página é de fato a do editor, um
+   aviso `role="alert"` é inserido com `createElement` + `textContent`,
+   explicando o que verificar. Sem `innerHTML`, rede, `eval` ou exceção.
+2. **`data-kaz-health="ad+ae"`** no root, para o diagnóstico saber qual
+   versão do JS está viva.
+3. **Cache** `-kaz-theme-editor-ad` → **`-kaz-theme-editor-ae`** (refresh).
+4. **`tools/kaz-theme-editor-health.js`** (novo) — snippet **somente leitura**
+   para colar no console do DevTools na página de temas. Devolve um JSON com
+   veredito (`OK` / `FALHA_ASSET_OU_DEFER` / `FALHA_BOOT` /
+   `OK_COM_RESSALVAS`), assets e versões, `data-kaz-ready`, `__kaz`, os 9
+   módulos, medidas de layout, CSRF/form e o aviso fail-loud. Use
+   `copy(__kazHealth())` para copiar.
+5. **`tools/verify-kaz-health.cjs`** (novo) prova em Chromium que o health
+   distingue o estado quebrado do corrigido, e que o aviso aparece **só**
+   quando o boot falha.
+
+### Banco de dados
+
+Sem migration, novamente. A auditoria do `main` confirmou que não foi
+adicionado nenhum `.sql` além do diagnóstico somente-leitura da AD. A cadeia
+de publicação continua usando `draft_config`/`published_config` existentes.
+
+### Limite
+
+Chromium headless local não é o servidor de produção. A AE entrega o
+**instrumento** para medir o servidor real; o veredito que importa é o que
+`__kazHealth()` devolver no Admin dele. CI verde ou health check local não
+significa release aprovada.

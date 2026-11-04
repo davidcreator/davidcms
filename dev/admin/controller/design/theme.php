@@ -197,9 +197,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
         $data['kaz_scene_saved']=$savedScene!==null;
         $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
-        $kazAssetAD=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-ad';
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAD);
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAD);
+        $kazAssetAE=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-ae';
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAE);
+        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAE);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
