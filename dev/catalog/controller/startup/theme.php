@@ -6,6 +6,7 @@
  *  - tokens de cor e cena (compatibilidade com o legado F10-03);
  *  - configuracao Three.js allowlisted (catalog_theme_three);
  *  - globais Twig seguros (theme / theme_scene) visiveis em TODAS as telas.
+ * F13-S: idioma do site alinhado ao config efetivo (fecha a P).
  * F13-R: site efetivo alinhado ao ID estavel da decisao (fecha a O).
  * F13-P: idioma efetivo unificado (K+L) antes do contexto das condicoes.
  * F13-O: rollout pode ser limitado a sites allowlistados (frentes H+J).
@@ -42,10 +43,13 @@ class Theme extends \Reamur\System\Engine\Controller {
         // SELECT, nenhuma query nova no total). O contexto das condicoes
         // passa a ver o idioma EFETIVO, fechando a limitacao da frente L.
         $this->load->model('localization/language');
+        // F13-S: guardamos a allowlist para realinhar o idioma do site ao
+        // config EFETIVO depois da decisao de rollout (nenhuma query nova).
+        $enabledCodes = $this->model_localization_language->getEnabledCodes();
         $langSession = $this->registry->get('session');
         $sessData = ($langSession instanceof \Reamur\System\Library\Session) ? $langSession->data : [];
         $neg = \Reamur\System\Library\LanguageNegotiator::resolve([
-            'enabled'      => $this->model_localization_language->getEnabledCodes(),
+            'enabled'      => $enabledCodes,
             'default'      => (string)$this->config->get('config_language_catalog',
                                 (string)$this->config->get('language_directory', 'en-us')),
             'requested'    => (string)($this->request->get['language'] ?? ''),
@@ -97,6 +101,25 @@ class Theme extends \Reamur\System\Engine\Controller {
         if ($effectiveId !== '' && $effectiveId !== $siteIdSeed) {
             $aligned = $this->theme_sites->byId($sitesCfg, $siteIdSeed);
             if (!empty($aligned['active'])) $site = $aligned;
+        }
+
+        // F13-S: fecha a ultima limitacao da P. A R alinhou o SITE ao ID
+        // estavel; aqui alinhamos o IDIOMA DO SITE ao config EFETIVO, usando
+        // o mesmo ID ($site ja realinhado). alignSite() so age quando a
+        // origem e 'site': ?language=, sessao e default continuam soberanos.
+        // startup/language le catalog_theme_language_effective e aplica o
+        // codigo; nenhuma query, escrita em banco ou cookie novo.
+        $codeBefore = (string)$neg['code'];
+        $neg = \Reamur\System\Library\LanguageNegotiator::alignSite(
+            $neg, (string)($site['language'] ?? ''), (array)$enabledCodes
+        );
+        if ($neg['code'] !== $codeBefore) {
+            if ($langSession instanceof \Reamur\System\Library\Session) {
+                $langSession->data['language'] = $neg['code'];
+                $langSession->data['language_site'] = $neg['site'];
+            }
+            $this->config->set('catalog_theme_language_effective', $neg['code']);
+            $context['language'] = $neg['code'];
         }
 
         // F13-L: dimensao `site` entra no contexto allowlisted ANTES do

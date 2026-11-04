@@ -67,12 +67,14 @@ do pacote é coberto por eles. Ordem das pré-ações
 
 ## Limitações honestas — o que a R **não** fecha
 
-A negociação de idioma da **P** continua usando a política **publicada** para
-o idioma do site (`$siteSeed['language']`), enquanto
-`catalog_theme_site_language` descreve o config efetivo; a R alinha o **site**,
-não a origem do idioma negociado. Alterar isso exigiria reabrir a K/P. A
-limitação da **N** (`?language=` gera variantes com query, não paths/hosts
-distintos) permanece — exigiria DNS/vhost, fora de escopo. A sonda do Admin
+A divergência de idioma da **P** (negociação pela política publicada versus
+`catalog_theme_site_language` do config efetivo) foi **fechada pela frente S**:
+depois da decisão, `LanguageNegotiator::alignSite()` realinha o código ao
+idioma do mesmo ID no config efetivo, sem reabrir a precedência da K —
+`?language=`, sessão e default continuam soberanos.
+
+Permanece a limitação da **N** (`?language=` gera variantes com query, não
+paths/hosts distintos) — exigiria DNS/vhost, fora de escopo. A sonda do Admin
 (M/Q/O) e a prévia comparativa não foram tocadas.
 
 Sem CMS completo, MySQL, sessão autenticada, browser com rede, DNS/vhost,

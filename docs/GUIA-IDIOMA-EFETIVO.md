@@ -65,10 +65,17 @@ passa a **aplicar** esse resultado (serviço `Language`,
 
 ## Limitações honestas
 
-O idioma do site usado na negociação vem da política **publicada** (mesmo
-critério da frente O, para não criar ciclo com a escolha do config efetivo);
-`catalog_theme_site_language` do snapshot (J/K) continua sendo publicado
-normalmente para o Admin. Sem CMS completo, MySQL, sessão autenticada,
+**Resolvido pela frente S:** a negociação continua acontecendo **antes** da
+decisão de rollout, com a política **publicada** (necessário para não criar
+ciclo, mesmo critério da O). Depois da decisão, `LanguageNegotiator::alignSite()`
+realinha o código ao idioma do **mesmo ID de site** no config efetivo — mas
+**somente** quando a origem é `site`; `?language=`, sessão e default do painel
+continuam soberanos. A frente R já havia alinhado o ID do site. Com isso
+`language_directory`, `context['language']`, `<html lang>`, `og:locale` e
+`catalog_theme_site_language` passam a descrever o mesmo config. Sem
+divergência entre publicado e rascunho, nada muda.
+
+Sem CMS completo, MySQL, sessão autenticada,
 browser com rede, DNS/vhost, E2E, staging, deploy, PHP nativo, Composer,
 PHPStan ou escrita no GitHub: validação com PHP 8.5 WASM, Twig 3.14 e
 jsdom com mocks, que **não são um servidor**. CI remoto não verificado.

@@ -6,6 +6,7 @@
  * @license   https://opensource.org/licenses/GPL-3.0
  * @link      https://reamurcms.com
  *
+ * F13-S: alignSite() realinha o idioma do site ao config EFETIVO.
  * F13-P — negociacao de idioma PURA e sem IO. Uma unica fonte de verdade
  * para as pre-acoes startup/theme (contexto das condicoes, frente L) e
  * startup/language (servico Language, frente K), que antes decidiam em
@@ -82,5 +83,37 @@ final class LanguageNegotiator {
             'site_changed' => $siteChanged,
             'store' => $stored !== $code || $storedSite !== $site,
         ];
+    }
+
+    /**
+     * F13-S — realinha o idioma do site ao config EFETIVO, DEPOIS da decisao
+     * de rollout. A frente P negocia antes da decisao (para nao criar ciclo)
+     * e por isso usa a politica PUBLICADA; se o rascunho mudou
+     * `sites[shop].language`, o visitante abria no idioma antigo enquanto o
+     * snapshot publicava o novo. A frente R ja alinhou o ID do site; aqui
+     * fechamos a ultima divergencia da P, lendo o idioma do MESMO ID no
+     * config efetivo.
+     *
+     * SOBERANIA PRESERVADA: apenas `source === 'site'` pode ser realinhado.
+     * `?language=`, sessao e default do painel continuam INTACTOS. Codigo
+     * fora da allowlist, nao habilitado ou igual ao atual => sem mudanca.
+     * Continua PURO: sem IO, sem request, sem sessao. O chamador decide se
+     * regrava a sessao/config comparando `code` antes e depois.
+     *
+     * @param array{code:string,source:string,site:string,
+     *              site_changed:bool,store:bool} $resolved
+     * @param mixed $effectiveSiteLanguage idioma do site no config efetivo
+     * @param list<string> $enabled codigos habilitados (getEnabledCodes)
+     * @return array<string,mixed> MESMO formato de resolve()
+     */
+    public static function alignSite(array $resolved, mixed $effectiveSiteLanguage, array $enabled): array {
+        if (($resolved['source'] ?? '') !== 'site') return $resolved;
+        $code = self::clean(is_string($effectiveSiteLanguage) ? $effectiveSiteLanguage : '');
+        if (!self::isCode($code) || !in_array($code, $enabled, true)) return $resolved;
+        if ($code === (string)($resolved['code'] ?? '')) return $resolved;
+        $out = $resolved;
+        $out['code'] = $code;
+        $out['store'] = true;
+        return $out;
     }
 }
