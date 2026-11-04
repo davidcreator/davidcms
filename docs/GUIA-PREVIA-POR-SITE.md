@@ -45,9 +45,16 @@ intactas), CSS, manifesto, global Twig, `|raw`, `<script>` inline, `fetch`/
 `eval`/`innerHTML` novo, upload, GLB, WebGL, BDREditor, `custom_js`, vhost/DNS
 ou escrita remota. Os 14 `CHECKSUMS*.txt` permanecem intactos.
 
-**Limitação:** o select escolhe o site pelo host configurado; se um site usa o
-mesmo host de outro dentro da mesma política, vale a ordem allowlistada da J
-(o primeiro habilitado). Nesse caso use a sonda de host para desempatar.
+**Resolvido pela frente Q:** o select escolhe o site por **ID allowlistado**
+e `ThemeSites::byId()` resolve cada painel diretamente, sem voltar a
+`match(host)`. Mesmo que dois sites compartilhem o mesmo host, ou que o
+rascunho tenha mudado o host, a comparação é sempre **`shop` × `shop`** —
+o ID escolhido é a fonte de verdade, como já acontece na sonda de rollout
+(O) e na sessão de idioma (P). Se o ID estiver ausente ou desabilitado em
+qualquer painel, a prévia cai para a sonda de host (fail-closed), sem
+fabricar site a partir de texto livre. A sonda de host continua soberana
+quando o select está vazio e continua simulando fielmente o `match()` do
+request real (onde só existe o `HTTP_HOST`).
 
 ## Exemplo
 

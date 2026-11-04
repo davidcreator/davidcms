@@ -1,18 +1,16 @@
-# Índice — ReamurCMS-Frente-P-Idioma-Efetivo.zip
+# Índice — ReamurCMS-Frente-Q-Site-por-ID.zip
 
 | # | Arquivo | Tipo | Bytes |
 |---|---|---|---|
-| 1 | `dev/catalog/controller/startup/language.php` | completo (substituir) | 2928 |
-| 2 | `dev/catalog/controller/startup/theme.php` | completo (substituir) | 10577 |
-| 3 | `dev/system/library/language_negotiator.php` | novo | 3753 |
-| 4 | `docs/GUIA-CONDICOES-POR-SITE.md` | completo (substituir) | 3939 |
-| 5 | `docs/GUIA-IDIOMA-EFETIVO.md` | novo | 3945 |
-| 6 | `docs/GUIA-IDIOMA-POR-SITE.md` | completo (substituir) | 2931 |
+| 1 | `dev/admin/controller/design/theme.php` | completo (substituir) | 61974 |
+| 2 | `dev/system/library/theme/theme_sites.php` | completo (substituir) | 11343 |
+| 3 | `docs/GUIA-PREVIA-POR-SITE.md` | completo (substituir) | 3935 |
+| 4 | `docs/GUIA-SITE-POR-ID.md` | novo | 5039 |
 
-| 7 | `RELATORIO.md` | este relatório | — |
-| 8 | `INDICE.md` | este índice | — |
+| 5 | `RELATORIO.md` | este relatório | — |
+| 6 | `INDICE.md` | este índice | — |
 
 **Arquivos completos, sem patches.** O `.sha256` fica **fora** do ZIP, em
-`/home/user/entregas/ReamurCMS-Frente-P-Idioma-Efetivo.zip.sha256`.
-Base: `main` @ `9285acdcc55a9eb39db7d4e5b1c48339c0c49780` (O aplicada 7/7).
+`/home/user/entregas/ReamurCMS-Frente-Q-Site-por-ID.zip.sha256`.
+Base: `main` @ `6eb23384a61ff9c7a01e05e6ebac5587702d6008` (P aplicada 6/6).
 Nenhuma escrita remota foi feita por nós.

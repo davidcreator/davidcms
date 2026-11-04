@@ -23,7 +23,7 @@ final class ThemeSites {
     public const IDS = ['primary','shop','blog','docs','landing','partner','legacy','staging'];
     public const KEYS = ['host','slug','language','enabled'];
     public const LANGUAGES = ['pt-br','en-us','es-eu'];
-    private const REASONS = ['exact','default','empty'];
+    private const REASONS = ['exact','default','empty','id'];
 
     /** Rotulos de UI (resolvidos pelo Language do Admin). */
     private const LABELS = [
@@ -129,6 +129,36 @@ final class ThemeSites {
             }
         }
         return $this->defaultSite($sites);
+    }
+
+    /**
+     * F13-Q — resolucao por ID allowlistado, SEM round-trip por host.
+     *
+     * A frente M escolhia o site na previa por ID mas voltava a chamar
+     * match(host): com dois sites compartilhando o mesmo host, match()
+     * devolvia o PRIMEIRO da ordem allowlistada e a comparacao virava
+     * "shop x primary" em silencio. Aqui o ID escolhido e a fonte de
+     * verdade, exatamente como a sonda de rollout (O) e a sessao de idioma
+     * (P) ja fazem. Continua PURO: nenhum request, sessao, banco, arquivo
+     * ou escrita; o host do visitante nunca entra nesta decisao.
+     *
+     * Fail-closed: ID fora de IDS, site ausente, desabilitado ou com host
+     * invalido => emptySite(). O chamador cai para a sonda de host (M).
+     * @return array{id:string,host:string,slug:string,language:string,
+     *               enabled:bool,reason:string,active:bool}
+     */
+    public function byId(array $sites, mixed $rawId): array {
+        $id = is_string($rawId) ? $rawId : '';
+        if ($id === '' || !in_array($id, self::IDS, true) || !isset($sites[$id]) || !is_array($sites[$id])) {
+            return $this->emptySite();
+        }
+        $cfg = $sites[$id];
+        if (empty($cfg['enabled'])) return $this->emptySite();
+        $host = strtolower(trim((string)($cfg['host'] ?? '')));
+        if (!self::validHost($host)) return $this->emptySite();
+        return ['id'=>$id,'host'=>$host,'slug'=>(string)($cfg['slug'] ?? ''),
+                'language'=>(string)($cfg['language'] ?? ''),'enabled'=>true,
+                'reason'=>'id','active'=>true];
     }
 
     /**

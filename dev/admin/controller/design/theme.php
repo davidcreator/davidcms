@@ -585,15 +585,29 @@ class Theme extends \Reamur\System\Engine\Controller {
         // volta para a sonda (fail-closed). Nenhum host do request e exibido.
         $previewSite=(string)($post['preview_site']??'');
         $forced=in_array($previewSite,$this->theme_sites->ids(),true)?$previewSite:'';
-        $probeHostPub=$probeHost; $probeHostDraft=$probeHost;
-        if ($forced!=='') {
-            $hPub=(string)($sitesPub[$forced]['host']??'');
-            $hDraft=(string)($sitesDraft[$forced]['host']??'');
-            if ($hPub!=='')   $probeHostPub=$hPub;
-            if ($hDraft!=='') $probeHostDraft=$hDraft;
+        // F13-Q: o ID allowlistado e a FONTE DE VERDADE. Resolver por ID
+        // (puro, sem round-trip por host) fecha o desempate silencioso da M:
+        // se dois sites compartilham o host, match() devolvia o primeiro da
+        // ordem e a previa comparava shop x primary sem avisar. Nenhum host
+        // do request entra aqui; apenas o ID allowlistado escolhido no form.
+        $byPub   = $forced!=='' ? $this->theme_sites->byId($sitesPub,$forced)   : $this->theme_sites->emptySite();
+        $byDraft = $forced!=='' ? $this->theme_sites->byId($sitesDraft,$forced) : $this->theme_sites->emptySite();
+        $forcedOk = (bool)($byPub['active']??false) && (bool)($byDraft['active']??false);
+        if ($forcedOk) {
+            $sitePub=$byPub; $siteDraft=$byDraft;
+        } else {
+            // Legado M (A-P) INTACTO: sem preview_site, site ausente ou
+            // desabilitado em qualquer painel, volta para a sonda de host.
+            $probeHostPub=$probeHost; $probeHostDraft=$probeHost;
+            if ($forced!=='') {
+                $hPub=(string)($sitesPub[$forced]['host']??'');
+                $hDraft=(string)($sitesDraft[$forced]['host']??'');
+                if ($hPub!=='')   $probeHostPub=$hPub;
+                if ($hDraft!=='') $probeHostDraft=$hDraft;
+            }
+            $sitePub=$this->theme_sites->match($sitesPub,$probeHostPub);
+            $siteDraft=$this->theme_sites->match($sitesDraft,$probeHostDraft);
         }
-        $sitePub=$this->theme_sites->match($sitesPub,$probeHostPub);
-        $siteDraft=$this->theme_sites->match($sitesDraft,$probeHostDraft);
         // F13-L: cada painel avalia as condicoes com o site allowlistado da
         // SUA politica (publicado x rascunho), exatamente como no Catalog.
         // A sonda de host continua sendo so comparada, nunca exibida.
