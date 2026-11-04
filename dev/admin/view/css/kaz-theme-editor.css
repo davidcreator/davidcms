@@ -1,0 +1,54 @@
+/* KAZTheme-Editor — frente U. Estilos escopados, sem importacao externa,
+   sem fontes remotas, sem codigo inline. Funciona no sandbox de preview. */
+.kaz-card { border: 1px solid #cbd5e1; }
+.kaz-card .card-header { background: linear-gradient(90deg, #0f172a, #1e3a8a); color: #fff; }
+.kaz-card .card-header .text-muted { color: #cbd5e1 !important; }
+.kaz-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; letter-spacing: .02em; }
+.kaz-brand__mark { display: inline-block; width: 22px; height: 22px; border-radius: 6px;
+  background: #38bdf8; box-shadow: inset 0 0 0 3px #0f172a; }
+.kaz-badge { font-size: 10px; padding: 2px 8px; border-radius: 999px;
+  background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); }
+.kaz-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr) 230px; gap: 10px; align-items: start; }
+.kaz-panel { border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; padding: 8px; min-height: 260px; }
+.kaz-panel__title { font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: #475569; margin: 0 0 6px; }
+.kaz-tools { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.kaz-btn { font-size: 11px; line-height: 1.2; padding: 4px 7px; border-radius: 6px;
+  border: 1px solid #cbd5e1; background: #fff; color: #0f172a; cursor: pointer; }
+.kaz-btn:hover { background: #e2e8f0; }
+.kaz-btn:focus-visible { outline: 2px solid #2563eb; outline-offset: 1px; }
+.kaz-btn--primary { background: #1e3a8a; border-color: #1e3a8a; color: #fff; }
+.kaz-btn--danger { color: #991b1b; }
+.kaz-layer-list { list-style: none; margin: 0; padding: 0; max-height: 230px; overflow: auto; }
+.kaz-layer { display: flex; justify-content: space-between; gap: 4px; align-items: center;
+  padding: 3px 5px; border: 1px solid transparent; border-radius: 5px; font-size: 11px; }
+.kaz-layer--selected { background: #dbeafe; border-color: #2563eb; }
+.kaz-layer__name { border: 0; background: transparent; padding: 0; text-align: left;
+  font: inherit; color: #0f172a; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kaz-layer__flags { font-size: 9px; color: #b91c1c; white-space: nowrap; }
+.kaz-stage { border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; overflow: hidden; }
+.kaz-stage svg { display: block; width: 100%; height: auto; touch-action: none; }
+.kaz-g { cursor: move; }
+.kaz-g [data-kaz-handle] { cursor: nwse-resize; }
+.kaz-g--selected { outline: none; }
+.kaz-field { margin-bottom: 6px; }
+.kaz-field label { display: block; font-size: 10px; font-weight: 600; color: #475569; margin-bottom: 2px; }
+.kaz-field input, .kaz-field select { width: 100%; font-size: 11px; padding: 3px 5px;
+  border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; color: #0f172a; }
+.kaz-field input[type="checkbox"] { width: auto; }
+.kaz-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.kaz-hint { font-size: 10px; color: #64748b; margin: 0 0 6px; word-break: break-all; }
+.kaz-io { margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0; }
+.kaz-io textarea { width: 100%; min-height: 92px; font-family: ui-monospace, monospace;
+  font-size: 11px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px; }
+.kaz-status { display: block; margin-top: 6px; font-size: 11px; color: #475569; min-height: 16px; }
+.kaz-note { font-size: 11px; color: #64748b; margin: 8px 0 0; }
+@media (max-width: 1100px) {
+  .kaz-layout { grid-template-columns: 1fr; }
+  .kaz-panel { min-height: 0; }
+}
+@media (forced-colors: active) {
+  .kaz-card .card-header { background: Canvas; color: CanvasText; border-bottom: 1px solid CanvasText; }
+  .kaz-layer--selected { border: 2px solid Highlight; }
+  .kaz-btn:focus-visible { outline: 2px solid Highlight; }
+}

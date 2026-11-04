@@ -179,7 +179,9 @@
 </div></div>
 <div class="card"><div class="card-header"><h2 class="h5 mb-0">{{ text_template_editor }}</h2><p class="mb-0 text-muted">{{ text_template_help }}</p></div><div class="card-body">
 {% for key in template_keys %}<details class="mb-3"{% if key == focus_template %} open{% endif %}><summary><code>{{ key }}.twig</code></summary><textarea class="form-control font-monospace mt-2" name="templates[{{ key }}]" rows="14" maxlength="131072" spellcheck="false">{{ template_sources[key] ?? '' }}</textarea><a class="btn btn-sm btn-outline-secondary mt-2" href="{{ preview_links[key] }}" target="theme-preview">{{ text_preview }}</a></details>{% endfor %}
-</div></div></form>
+</div></div>
+{% include 'design/kaz_theme_editor.twig' %}
+</form>
 <div class="card mb-4" id="theme-package"><div class="card-header"><h2 class="h5 mb-0">{{ text_package }}</h2><p class="mb-0 text-muted">{{ text_package_help }}</p></div><div class="card-body">
 <p class="mb-2"><span class="badge text-bg-secondary">{{ package_format }} v{{ package_version }}</span></p>
 <p class="mb-3"><a class="btn btn-sm btn-outline-primary" href="{{ export_url }}">{{ text_package_export }}</a> <a class="btn btn-sm btn-outline-secondary" href="{{ export_published_url }}">{{ text_package_export_published }}</a></p>

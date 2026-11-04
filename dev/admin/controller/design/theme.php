@@ -13,6 +13,44 @@ class Theme extends \Reamur\System\Engine\Controller {
         foreach($data['themes'] as &$theme) { $theme['edit']=$this->url->link('design/theme.edit|' . (int)$theme['theme_id']); $theme['activate']=$this->url->link('design/theme.activate|' . (int)$theme['theme_id']); } unset($theme);
         $this->chrome($data); $this->response->setOutput($this->load->view('design/theme_list',$data));
     }
+    /** Frente U — KAZTheme-Editor: cena inicial kaztheme-scene/v1 derivada
+     *  APENAS do config efetivo. Metodo puro: sem IO, request, servico, banco,
+     *  sessao ou codigo executavel. Nenhuma chave nova no pacote do tema. */
+    private static function kazScene(array $config): array {
+        $primary=(string)($config['primary']??'#2563eb');
+        if (preg_match('/^#[0-9a-fA-F]{6}$/D',$primary)!==1) $primary='#2563eb';
+        $surface=(string)($config['surface']??'#ffffff');
+        if (preg_match('/^#[0-9a-fA-F]{6}$/D',$surface)!==1) $surface='#ffffff';
+        $sectionId=''; $componentId='';
+        $sections=$config['sections']??[];
+        if (is_array($sections)) foreach ($sections as $key=>$value) {
+            foreach ([is_string($value)?$value:null,(string)$key] as $cand) {
+                if ($cand!==null && !is_numeric($cand) && preg_match('/^[a-z0-9_-]{1,48}$/D',$cand)===1) { $sectionId=$cand; break 2; }
+            }
+        }
+        $components=$config['components']??[];
+        if (is_array($components)) foreach (array_keys($components) as $key) {
+            $key=(string)$key;
+            if (!is_numeric($key) && preg_match('/^[a-z0-9_-]{1,48}$/D',$key)===1) { $componentId=$key; break; }
+        }
+        $mk=function(string $id,string $kind,string $role,int $x,int $y,int $w,int $h,string $fill,int $radius,string $text,int $fontSize,string $bindId=''): array {
+            return ['id'=>$id,'kind'=>$kind,'role'=>$role,'x'=>$x,'y'=>$y,'w'=>$w,'h'=>$h,
+                'fill'=>$fill,'radius'=>$radius,'text'=>$text,'fontSize'=>$fontSize,
+                'visible'=>true,'locked'=>false,'bindId'=>$bindId];
+        };
+        return [
+            'version'=>1,
+            'canvas'=>['w'=>960,'h'=>540,'grid'=>8],
+            'layers'=>[
+                $mk('kaz-primary','rect','primary',40,40,200,120,$primary,12,'Primary',16),
+                $mk('kaz-surface','card','surface',40,200,320,180,$surface,12,'Surface',16),
+                $mk('kaz-title','text','none',400,56,480,80,'#0f172a',0,'KAZTheme-Editor',32),
+                $mk('kaz-section','section','section',400,176,220,120,'#e2e8f0',8,'Section',16,$sectionId),
+                $mk('kaz-component','button','component',650,176,180,64,$primary,12,'Button',16,$componentId),
+            ],
+        ];
+    }
+
     public function edit(string $theme_id='0'): void {
         if (!$this->user->hasPermission('access','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
         $id=(int)$theme_id; $this->load->language('design/theme'); $this->load->model('design/theme');
@@ -291,6 +329,12 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[]; $data['template_keys'] = \Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS; $focusTemplate=$this->request->get['focus_template']??''; $data['focus_template']=is_string($focusTemplate)&&in_array($focusTemplate,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true)?$focusTemplate:''; $data['template_sources']=$data['templates']; foreach($data['template_keys'] as $templateKey) { if (!isset($data['template_sources'][$templateKey])) { $templateFile=DIR_SYSTEM.'../catalog/view/template/'.$templateKey.'.twig'; if (is_file($templateFile)) $data['template_sources'][$templateKey]=(string)file_get_contents($templateFile); } } $data['preview_links']=[]; foreach($data['template_keys'] as $key) $data['preview_links'][$key]=$this->url->link('design/theme.preview'.($id?'|'.$id:''),'template='.rawurlencode($key)); foreach($data['revisions'] as &$revision) $revision['restore']=$this->url->link('design/theme.restore|'.$id.'|'.(int)$revision['revision_id']); unset($revision);
         // F13-C: Loader::view() nao mescla o idioma; publica todas as chaves
         // carregadas (sem sobrescrever valores calculados) para nao deixar rotulos vazios.
+        // Frente U — KAZTheme-Editor: cena derivada do config + assets proprios.
+        // Nao cria chave no config, nao toca BDREditor, nao usa servico novo.
+        $data['kaz_scene_json']=json_encode(self::kazScene($config),$jsonFlags) ?: '{}';
+        $kazAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-u';
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetV);
+        $this->document->addScript($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetV);
         $data=array_replace($this->language->all(),$data);
         $this->chrome($data); $this->response->setOutput($this->load->view('design/theme_form',$data));
     }
