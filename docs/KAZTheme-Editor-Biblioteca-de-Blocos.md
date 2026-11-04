@@ -278,3 +278,63 @@ manifesto, CDN, `<script>` inline, `on*`, `innerHTML`, `eval`, `fetch`,
 continua com 3 linhas e os 2 `|raw` existentes. Cache `-kaz-theme-editor-aa`
 → **`-kaz-theme-editor-ab`**. Nenhum gate virou `PASS`; `release_approved`
 permanece `false`. **CI verde ou health check não significa release aprovada.**
+
+---
+
+## Frente AC — validação em navegador real e responsividade corrigida
+
+A AB foi validada com PHP WASM, Twig e jsdom — **nenhum deles executa CSS de
+verdade**. A AC roda Chromium (Playwright) sobre o HTML renderizado com as
+folhas e o JavaScript reais, em 6 viewports (1920×1080, 1440×900, 1280×800,
+1024×768, 768×1024, 390×844), e mede `getBoundingClientRect`, overflow,
+`scrollHeight/clientHeight` e erros de console.
+
+### O que o navegador encontrou (e os harnesses não)
+
+O Twig abre `<form id="kaz-theme-form">` antes do `<header class="kaz-topbar">`.
+**Todos** os blocos do editor — topbar, intro, screenbar, workspace, statusbar
+e o painel avançado — são filhos desse `<form>`, não do `.kaz-shell`.
+Consequentemente **nenhum seletor `.kaz-shell > .kaz-*` da AB casou**:
+
+| Medição em 390×844 (Chromium) | AB | AC |
+| --- | --- | --- |
+| `grid-template-columns` do workspace | `236px 0px 264px` (centro com **0px**) | `1fr` (centro ocupa tudo) |
+| altura da `.kaz-topbar` | **453px** (coluna de ícones) | ~40px (faixa horizontal rolável) |
+| altura do `.kaz-shell` | **1478px** em 844px de viewport | cabe na viewport |
+| scrolls aninhados | 4 | ≤3 |
+| `.kaz-screen`/SVG | cortado | altura ≥200px |
+
+Ou seja: a AB **anunciou** responsividade no CSS, mas ela nunca existiu no
+navegador. Em tablet (768×1024) o shell media 1240px. A reclamação原始
+("não se auto ajusta ao tamanho de telas", "telas atropeladas") permanecia
+válida — e só apareceu quando um navegador real calculou o layout.
+
+### Correções
+
+- O **form** passa a ser o contêiner flex (`#kaz-theme-form`), com
+  `flex:1; min-height:0`; o `.kaz-shell` mantém `height: calc(100dvh - 104px)`
+  e **nunca** volta a `height:auto`.
+- Toolbar vira faixa horizontal rolável (`flex-wrap:nowrap; overflow-x:auto;
+  max-height:36px`) até 1280px, em vez de empilhar 15 ícones.
+- Até 980px: uma coluna (`grid-template-rows: minmax(0,1fr)`) e as duas
+  sidebars viram **overlays** recolhidos por padrão, abertos pelos botões
+  `toggle-left`/`toggle-right` já existentes (novo atributo
+  `data-kaz-mobile-open`, sem rota nova).
+- Até 620px: rótulos, campos numéricos de tela e metadados da statusbar são
+  ocultados; os toggles das sidebars permanecem.
+- `<details>` fechados não geram layout interno (`.kaz-advanced:not([open])
+  > .kaz-io { display:none }`), eliminando o 4º scroll aninhado do textarea.
+- Cache `-kaz-theme-editor-ab` → **`-kaz-theme-editor-ac`**.
+
+### Evidência
+
+`tools/verify-kaz-layout.cjs` (novo, opcional, exige Playwright) reproduz a
+medição. O pacote inclui screenshots do antes (AB) e do depois (AC) em
+`evidencia/`, geradas sobre o HTML renderizado com CSS/JS reais — **não** são
+capturas do servidor de produção.
+
+Contratos preservados: `theme_form.twig` com 3 linhas e 2 `|raw`, o `<form>`
+como filho do shell, 14 painéis, 30 `data-kaz-module`, 53 `name=`, 14
+manifestos, `release_approved:false`. Sem migration, `|raw` novo, `on*`,
+`innerHTML`, `eval`, `fetch`, `localStorage` ou escrita no GitHub por este
+pacote. **CI verde ou health check não significa release aprovada.**

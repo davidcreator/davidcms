@@ -1,4 +1,4 @@
-/* KAZTheme-Editor — frentes U/V/W/X + Y + Z + AA + AB (tema publicado).
+/* KAZTheme-Editor — frentes U/V/W/X + Y + Z + AA + AB + AC (Chromium real).
    Editor de temas estruturado: canvas SVG + árvore de camadas + inspector.
    Apenas DOM puro: sem rede, codigo executavel do usuario, WebGL, Three.js,
    upload ou escrita remota. A cena e PERSISTENTE (frente V): volta ao abrir
@@ -354,7 +354,7 @@
   }
   function paintScreen() {
     var box = screenBox();
-    if (box) { box.style.width = screenSize.w + 'px'; box.style.height = screenSize.h + 'px'; }
+    paintFrame();
     var sel = root.querySelector('[data-kaz-screen]');
     if (sel) sel.value = screenId;
     var wi = root.querySelector('[data-kaz-screen-w]'), hi = root.querySelector('[data-kaz-screen-h]');
@@ -386,6 +386,9 @@
     if (collapsed.right) v.push('right');
     if (v.length) root.setAttribute('data-kaz-collapsed', v.join(' '));
     else root.removeAttribute('data-kaz-collapsed');
+    /* AC: em telas pequenas as sidebars sao overlay controladas por este
+       mesmo atributo; sem isto o toggle nao tinha efeito visual no mobile. */
+    root.setAttribute('data-kaz-mobile-open', collapsed[side] ? '' : side);
     say('painel ' + side + (collapsed[side] ? ' oculto' : ' visível'));
     return true;
   }
@@ -410,12 +413,26 @@
     if (!hex(c) || !selected) return false;
     return set(selected, 'fill', c);
   }
+  /* AC: o CONTÊINER da tela acompanha o zoom. Antes so o board era
+     escalado e o .kaz-screen continuava com 960px, gerando scroll horizontal
+     e canvas cortado mesmo com o zoom em 25%. */
+  function paintFrame() {
+    var box = screenBox();
+    if (box) {
+      box.style.width = Math.max(1, Math.round(screenSize.w * zoom)) + 'px';
+      box.style.height = Math.max(1, Math.round(screenSize.h * zoom)) + 'px';
+    }
+  }
   function paintZoom() {
+    /* AC: sem scale() no board. paintFrame() ja dimensiona o .kaz-screen
+       (w*zoom, h*zoom) e o SVG com viewBox escala a cena. Manter scale aqui
+       escalava DUAS vezes: em 390px o frame de 135px virava 33px de SVG. */
     if (board) board.setAttribute('style',
-      'transform: translate(' + panX + 'px,' + panY + 'px) scale(' + zoom + ')');
+      'transform: translate(' + panX + 'px,' + panY + 'px)');
     if (zoomValue) zoomValue.textContent = Math.round(zoom * 100) + '%';
     if (viewport) viewport.setAttribute('data-kaz-tool-state', tool);
     canvas.setAttribute('data-kaz-zoom', String(zoom));
+    paintFrame();
   }
   function setZoom(z) {
     zoom = clamp(Math.round(z / ZOOM_STEP) * ZOOM_STEP, ZOOM_MIN, ZOOM_MAX);
@@ -425,7 +442,9 @@
     var vw = viewport && viewport.clientWidth ? viewport.clientWidth - 72 : 720;
     var vh = viewport && viewport.clientHeight ? viewport.clientHeight - 72 : 420;
     var z = Math.min(vw / screenSize.w, vh / screenSize.h, 1);
-    zoom = clamp(Math.round(z / ZOOM_STEP) * ZOOM_STEP, ZOOM_MIN, ZOOM_MAX);
+    /* AC: passo de 0.05 e arredondamento para BAIXO garante que o frame
+       escalado caiba no viewport (0.25 deixava 720px em 710px). */
+    zoom = clamp(Math.floor(z * 20) / 20, ZOOM_MIN, ZOOM_MAX);
     panX = 0; panY = 0; paintZoom();
     say('zoom ajustado ' + Math.round(zoom * 100) + '%'); return zoom;
   }
@@ -862,7 +881,21 @@
     paintDirty();
   });
   root.setAttribute('data-kaz-ready','1');
+  /* AC: no mobile as duas sidebars comecam recolhidas (overlay), senao o
+     grid de 3 colunas espremia o centro a 0px. matchMedia e opcional para
+     nao quebrar ambientes sem MediaQueryList (jsdom/PHP WASM). */
+  if (typeof window.matchMedia === 'function'
+      && window.matchMedia('(max-width: 980px)').matches) {
+    collapsed.left = true; collapsed.right = true;
+    root.setAttribute('data-kaz-collapsed', 'left right');
+    root.setAttribute('data-kaz-mobile-open', '');
+  }
   setScreen('tema');
+  /* AC: auto-ajuste REAL. Se o canvas nao cabe no viewport, entra em 'Ajustar'
+     no boot. Em jsdom/clientWidth=0 nao dispara (zoom permanece 1). */
+  if (typeof window.matchMedia === 'function'
+      && window.matchMedia('(max-width: 980px)').matches
+      && viewport && viewport.clientWidth > 0) fitZoom();
   render();
   formBaseline = formSnapshot();
   paintDirty();
