@@ -1139,6 +1139,10 @@ class Page extends \Reamur\System\Engine\Controller {
                    Marcador proprio para preservar as contagens de $version. */
                 $kazBdreAsset = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-bdre-an';
                 $this->document->addStyle($site . 'view/css/blog-block-editor-kaz.css?v=' . $kazBdreAsset);
+                /* Frente AO: tema TOTAL (pagina Admin + estados sob demanda).
+                   Carregado APOS a AN; marcador proprio, sem tocar nos demais assets. */
+                $kazBdreTotalAsset = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-bdre-ao';
+                $this->document->addStyle($site . 'view/css/blog-block-editor-kaz-total.css?v=' . $kazBdreTotalAsset);
                 $this->document->addScriptDeferred($site . 'view/js/blog-block-editor-kaz.js?v=' . $kazBdreAsset);
                 $this->document->addStyle($catalogAssetBase . 'view/css/threejs-thumb.css?v=' . $version);
                 $this->document->addScript($catalogAssetBase . $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=' . $version);

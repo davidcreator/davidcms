@@ -1,0 +1,303 @@
+/* Frente AO — Tema TOTAL do BDREditor <-> KAZTheme-Editor.
+   Camada ADITIVA, carregada APOS blog-block-editor-kaz.css (AN).
+   Escopo: SOMENTE paginas Admin que hospedam [data-blog-block-editor].
+   body:has() e o mecanismo principal; html[data-kaz-bdre-tema="1"] e o
+   fallback para navegadores sem :has(). Sem :has() a AN continua intacta
+   (degradacao graciosa, nada quebra).
+
+   "Sempre escuro KAZ": nao depende de data-bs-theme, theme_mode ou skin.
+   Nao clona screenbar/3 colunas; nao toca em DOM, estrutura, documento
+   de blocos, renderer, catalogo, banco, migration ou contratos.
+   Foco F9-26 permanece #174ea6 / 3px / offset 2px. */
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body)  {
+  --kaz-bdre-bg: #18181b;
+  --kaz-bdre-panel: #1f1f23;
+  --kaz-bdre-panel-2: #26262b;
+  --kaz-bdre-elev: #2c2c33;
+  --kaz-bdre-line: #36363f;
+  --kaz-bdre-text: #e9e9ee;
+  --kaz-bdre-muted: #9b9ba7;
+  --kaz-bdre-primary: #31efb8;
+  --kaz-bdre-primary-ink: #063a2c;
+  --kaz-bdre-blue: #7b61ff;
+  --kaz-bdre-track: color-mix(in srgb, var(--kaz-bdre-primary) 7%, var(--kaz-bdre-panel));
+  --kaz-bdre-thumb: color-mix(in srgb, var(--kaz-bdre-primary) 62%, var(--kaz-bdre-panel));
+  --bs-body-bg: #18181b;
+  --bs-body-bg-rgb: 24, 24, 27;
+  --bs-body-color: #e9e9ee;
+  --bs-body-color-rgb: 233, 233, 238;
+  --bs-card-bg: #1f1f23;
+  --bs-card-cap-bg: #1f1f23;
+  --bs-border-color: #36363f;
+  --bs-border-color-translucent: rgba(255,255,255,.12);
+  --bs-secondary-bg: #26262b;
+  --bs-tertiary-bg: #1f1f23;
+  --bs-emphasis-color: #fff;
+  --bs-heading-color: #e9e9ee;
+  --bs-primary: #31efb8;
+  --bs-primary-rgb: 49, 239, 184;
+  --bs-secondary: #7b61ff;
+  --bs-anchor: #31efb8;
+  --bs-anchor-hover: #7b61ff;
+  --bs-link-color: #31efb8;
+  --bs-link-hover-color: #7b61ff;
+  --bs-gray-100: #2c2c33;
+  --bs-gray-200: #36363f;
+  --bs-gray-300: #45454f;
+  --bs-gray-400: #6f6f7c;
+  --bs-gray-500: #9b9ba7;
+  --bs-gray-600: #b8b8c2;
+  --bs-gray-700: #d0d0d8;
+  --bs-gray-800: #e9e9ee;
+  --bs-gray-900: #fff;
+  --bs-form-control-bg: #2c2c33;
+  --bs-form-control-color: #e9e9ee;
+  background-color: var(--kaz-bdre-bg) !important;
+  color: var(--kaz-bdre-text) !important;
+  scrollbar-color: var(--kaz-bdre-thumb) var(--kaz-bdre-track);
+  scrollbar-width: thin;
+}
+:is(html:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"]) {
+  background-color: #18181b !important;
+  color: #e9e9ee !important;
+  scrollbar-color: var(--kaz-bdre-thumb, #31efb8) var(--kaz-bdre-track, #18181b);
+  scrollbar-width: thin;
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .page-titlebar,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .page-header,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rms-page-actions,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rms-admin-card,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .card,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .card-header,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .card-body,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .card-footer,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .card-title,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .data-card,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .tile,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .well,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .panel,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .panel-heading,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .modal-content,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .modal-header,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .modal-footer,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .dropdown-menu,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .list-group-item,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .breadcrumb,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .table,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .tab-content,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .tab-pane,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .input-group-text,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .seo-base,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .navbar,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .sidebar,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) #menu,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) #navigation,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .page-title,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .form-layout,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .form-text,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .alert,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .alert-info,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .alert-warning,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .alert-danger,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .badge,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .border,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) hr {
+  background-color: var(--kaz-bdre-panel) !important;
+  color: var(--kaz-bdre-text) !important;
+  border-color: var(--kaz-bdre-line) !important;
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .text-muted,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .text-body-secondary,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .form-text,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .form-label,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .col-form-label,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .card-title,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .page-title,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .breadcrumb-item,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .small,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) small {
+  color: var(--kaz-bdre-muted) !important;
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .page-title, :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .card-title, :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) h1, :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) h2, :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) h3 {
+  color: var(--kaz-bdre-text) !important;
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .form-control,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .form-select,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .form-check-input,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) input[type="text"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) input[type="search"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) input[type="number"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) input[type="email"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) input[type="password"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) textarea,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) select,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .input-group {
+  background-color: var(--kaz-bdre-elev) !important;
+  color: var(--kaz-bdre-text) !important;
+  border-color: var(--kaz-bdre-line) !important;
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .btn,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .btn-outline-secondary,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .btn-outline-primary,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .btn-outline-danger,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .btn-light,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .btn-close,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .nav-link,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .nav-tabs,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .tabs-lang,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .page-link,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .icon-button {
+  background-color: var(--kaz-bdre-elev) !important;
+  color: var(--kaz-bdre-text) !important;
+  border-color: var(--kaz-bdre-line) !important;
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .nav-link.active,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .nav-link:hover,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .btn.active,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .btn[aria-pressed="true"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .page-item.active .page-link {
+  background-color: color-mix(in srgb, var(--kaz-bdre-primary) 18%, var(--kaz-bdre-panel)) !important;
+  color: var(--kaz-bdre-primary) !important;
+  border-color: var(--kaz-bdre-primary) !important;
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .btn-primary,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .btn-success,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .icon-button.primary,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .btn-check:checked + .btn {
+  background-color: var(--kaz-bdre-primary) !important;
+  color: var(--kaz-bdre-primary-ink) !important;
+  border-color: var(--kaz-bdre-primary) !important;
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .btn:disabled, :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .btn.disabled {
+  opacity: .48 !important;
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rb-command-overlay,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rb-group-confirm-overlay,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rb-command-dialog,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rb-group-confirm-dialog,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rb-style-presets-dialog,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rb-modal,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .modal-backdrop,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rb-bdre-fullscreen-open,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rb-fullscreen-toggle,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rb-fullscreen-done,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-pattern-library"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-pattern-card"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-inserter"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-preview-"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-table-"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-admin-"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-page-context"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-command-palette"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-drag"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-file-drop"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-anchor-repair"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-group-"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-style-"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-keyboard-help"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rb-alert,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .is-selected,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .is-fullscreen,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rb-selected-type,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-builder-sidebar"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-builder-inspector"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-collapsible-panel"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-workspace-rail"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-workspace-"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-sidebar"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rb-save-status,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-outline"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-history"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-previews"] {
+  background-color: var(--kaz-bdre-panel-2) !important;
+  color: var(--kaz-bdre-text) !important;
+  border-color: var(--kaz-bdre-line) !important;
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-command-overlay,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-group-confirm-overlay,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-command-dialog,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-group-confirm-dialog,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-style-presets-dialog,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-modal,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .modal-backdrop,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-bdre-fullscreen-open,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-fullscreen-toggle,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-fullscreen-done,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-pattern-library"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-pattern-card"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-inserter"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-preview-"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-table-"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-admin-"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-page-context"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-command-palette"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-drag"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-file-drop"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-anchor-repair"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-group-"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-style-"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-keyboard-help"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-alert,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .is-selected,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .is-fullscreen,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-selected-type,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-builder-sidebar"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-builder-inspector"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-collapsible-panel"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-workspace-rail"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-workspace-"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-sidebar"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-save-status,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-outline"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-history"],
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] [class*="rb-previews"] {
+  background-color: var(--kaz-bdre-panel-2) !important;
+  color: var(--kaz-bdre-text) !important;
+  border-color: var(--kaz-bdre-line) !important;
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .modal-backdrop {
+  background-color: rgba(0,0,0,.72) !important;
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rb-alert, :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [class*="rb-pattern-hint"] {
+  background-color: color-mix(in srgb, #ffc857 14%, var(--kaz-bdre-panel)) !important;
+  color: var(--kaz-bdre-text) !important;
+  border-color: #ffc857 !important;
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) *, :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) *::-webkit-scrollbar {
+  scrollbar-color: var(--kaz-bdre-thumb) var(--kaz-bdre-track);
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) *::-webkit-scrollbar { width: 10px; height: 10px; }
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) *::-webkit-scrollbar-track { background: var(--kaz-bdre-track); border-radius: 8px; }
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) *::-webkit-scrollbar-thumb { background: var(--kaz-bdre-thumb); border: 2px solid var(--kaz-bdre-track); border-radius: 8px; }
+@media (forced-colors: active) { :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) * { scrollbar-color: auto; } :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) *::-webkit-scrollbar-thumb { background: ButtonText; } }
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) :focus-visible {
+  outline: 3px solid #174ea6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 5px rgba(255,255,255,.22);
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-canvas,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-canvas .rb-block,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-canvas .rb-content,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-canvas .rb-input,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-canvas .rb-block-title,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-canvas .rb-preview-value,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-canvas .rb-field label,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-canvas .rb-inspector,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-canvas .rb-note,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-canvas .rb-button,
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) [data-blog-block-editor] .rb-canvas [class*="rb-block"] {
+  background-color: #fff !important;
+  color: #172033 !important;
+  border-color: #d5dce5 !important;
+  box-shadow: none !important;
+}
+:is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .page-titlebar, :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .rms-page-actions {
+  flex-wrap: wrap !important;
+}
+@media (max-width: 760px) {
+  :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .container-fluid, :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .form-layout { padding-left: 10px !important; padding-right: 10px !important; }
+  :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .card, :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) .data-card { min-width: 0 !important; max-width: 100% !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(body:has([data-blog-block-editor]), html[data-kaz-bdre-tema="1"] body) * { transition: none !important; animation: none !important; }
+}
