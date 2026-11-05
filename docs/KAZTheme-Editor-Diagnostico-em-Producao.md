@@ -298,3 +298,27 @@ que a AE não detectava) e um **controle com o JS da AH** que reproduz o
 silêncio original. Com asset 404 nenhum JavaScript roda — nem o fail-loud —
 e o painel amarelo server-side é justamente o aviso que resta. Com boot
 abortado, o painel fica vermelho. `release_approved` permanece `false`.
+
+## Frente AL — Aparência e ergonomia visual (2026-11-05)
+
+Camada **aditiva**: `kaz-theme-editor-ergonomia.css` e
+`kaz-theme-editor-ergonomia.js` são carregados **depois** dos assets `-aj`,
+com o marcador de cache `-aj-al`. O CSS, o JS, o Twig e o painel de aceitação
+da AJ **não foram alterados** — os `tools/` e os harnesses A–AJ seguem válidos.
+
+| O que | Como |
+| --- | --- |
+| Barras de rolagem conformes ao tema | `scrollbar-color` + `::-webkit-scrollbar-*` em todos os containers roláveis; `color-mix()` sobre `--kaz-al-primary` / `--kaz-al-surface`, preenchidos pelo JS a partir de `data-kaz-primary` / `data-kaz-surface` e atualizados **ao vivo** ao editar os campos de cor. `--rms-color-*` / `--rms-radius` também são honrados quando presentes. |
+| Tamanho de todos os elementos | `--kaz-ui` com 4 níveis (compacto .86 / normal 1 / confortável 1.14 / amplo 1.30) escalando **em conjunto** tipografia, altura de botões, ícones, abas, gaps e paddings do chrome. O canvas não escala — o zoom da cena continua independente. |
+| Expandir / recolher ferramentas | 4 botões na screenbar (Ícones, Abas, Status, Recolher tudo/Expandir tudo), estado em `data-kaz-fold`, `aria-pressed` e `role="status"`. A screenbar nunca é recolhida, portanto a reabertura está sempre disponível. |
+
+Com `normal` todos os `calc()` resolvem nos valores originais do CSS, e as
+regras responsivas da AC (36/38/28 px) foram replicadas com a mesma escala
+para não cortar controles ampliados. DOM puro (`createElement`, `textContent`,
+`setAttribute`): sem `innerHTML`, `eval`, `fetch`, `localStorage`, migração,
+coluna, rota Admin, tradução nova, `|raw` novo ou `name=` novo. Preferências
+são estado local descartável, como densidade e fullscreen da AA.
+
+**Prova:** `tools/kaz-theme-ergonomia-probe.php` e
+`tools/verify-kaz-ergonomia.cjs` (Chromium, 5 cenários + 390 px). `release_approved`
+permanece `false`; isto é apresentação, não aprovação de release.

@@ -1,0 +1,199 @@
+/* Frente AL — Aparência e ergonomia visual do KAZTheme-Editor.
+   Arquivo ADITIVO, carregado DEPOIS de kaz-theme-editor.css.
+   Somente apresentação: nao toca em cena, tema, banco, rota, CSRF, CSP,
+   traducao ou formulario. O JS companion cria os controles via DOM puro. */
+
+/* =========================================================================
+   1. BARRAS DE ROLAGEM CONFORMES AO TEMA
+   --kaz-al-primary / --kaz-al-surface sao preenchidos pelo JS companion a
+   partir de data-kaz-primary / data-kaz-surface (config efetiva do tema) e
+   acompanham a edicao dos campos de cor ao vivo. Quando o tema publicado
+   expoe --rms-color-primary / --rms-color-surface / --rms-radius, esses
+   tokens tambem sao honrados. Nenhuma cor e fixada em codigo: o fallback
+   usa os proprios tokens escuros do workspace.
+   ========================================================================= */
+#kaz-theme-editor {
+  --kaz-al-primary: var(--rms-color-primary, #31efb8);
+  --kaz-al-surface: var(--rms-color-surface, #1f1f23);
+  --kaz-al-size: 10px;
+  --kaz-al-track: color-mix(in srgb, var(--kaz-al-surface) 22%, #1f1f23);
+  --kaz-al-thumb: color-mix(in srgb, var(--kaz-al-primary) 68%, #2c2c33);
+  --kaz-al-hover: var(--kaz-al-primary);
+  --kaz-al-radius: min(var(--rms-radius, 8px), 6px);
+}
+#kaz-theme-editor, #kaz-theme-editor * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--kaz-al-thumb) var(--kaz-al-track);
+}
+#kaz-theme-editor *::-webkit-scrollbar {
+  width: var(--kaz-al-size); height: var(--kaz-al-size);
+}
+#kaz-theme-editor *::-webkit-scrollbar-track {
+  background: var(--kaz-al-track); border-radius: var(--kaz-al-radius);
+}
+#kaz-theme-editor *::-webkit-scrollbar-thumb {
+  background: var(--kaz-al-thumb);
+  border: 2px solid var(--kaz-al-track);
+  border-radius: var(--kaz-al-radius);
+}
+#kaz-theme-editor *::-webkit-scrollbar-thumb:hover,
+#kaz-theme-editor *::-webkit-scrollbar-thumb:active {
+  background: var(--kaz-al-hover);
+}
+#kaz-theme-editor *::-webkit-scrollbar-corner { background: var(--kaz-al-track); }
+#kaz-theme-editor *::-webkit-scrollbar-button { display: none; }
+@media (forced-colors: active) {
+  #kaz-theme-editor, #kaz-theme-editor * { scrollbar-color: CanvasText Canvas; }
+}
+
+/* =========================================================================
+   2. ESCALA DE TODOS OS ELEMENTOS DO CHROME
+   --kaz-ui escala tipografia, altura de botoes, icones, abas, gaps e
+   paddings EM CONJUNTO. O canvas/cena NAO escala: o zoom da cena continua
+   independente (data-kaz-action="zoom"). Com "normal" (--kaz-ui: 1) todos
+   os calc() abaixo resolvem EXATAMENTE nos valores do CSS original, entao o
+   layout medido pelas frentes AC/AJ permanece identico.
+   ========================================================================= */
+#kaz-theme-editor { --kaz-ui: 1; }
+#kaz-theme-editor[data-kaz-ui-scale="compact"] { --kaz-ui: .86; }
+#kaz-theme-editor[data-kaz-ui-scale="comfortable"] { --kaz-ui: 1.14; }
+#kaz-theme-editor[data-kaz-ui-scale="large"] { --kaz-ui: 1.30; }
+
+#kaz-theme-editor .kaz-topbar {
+  min-height: calc(46px * var(--kaz-ui));
+  padding: calc(5px * var(--kaz-ui)) calc(10px * var(--kaz-ui));
+  gap: calc(10px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-tool {
+  width: calc(28px * var(--kaz-ui)); height: calc(28px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-ico {
+  width: calc(16px * var(--kaz-ui)); height: calc(16px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-avatar {
+  width: calc(24px * var(--kaz-ui)); height: calc(24px * var(--kaz-ui));
+  font-size: calc(10px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-topbar__file { font-size: calc(12px * var(--kaz-ui)); }
+#kaz-theme-editor .kaz-topbar__page { font-size: calc(11px * var(--kaz-ui)); }
+#kaz-theme-editor .kaz-btn {
+  font-size: calc(10px * var(--kaz-ui));
+  padding: calc(5px * var(--kaz-ui)) calc(8px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-badge {
+  font-size: calc(10px * var(--kaz-ui));
+  padding: calc(3px * var(--kaz-ui)) calc(8px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-tab {
+  font-size: calc(10px * var(--kaz-ui));
+  padding: calc(5px * var(--kaz-ui)) calc(7px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-screenbar {
+  gap: calc(6px * var(--kaz-ui));
+  padding: calc(6px * var(--kaz-ui)) calc(10px * var(--kaz-ui));
+  font-size: calc(10px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-screenbar__select,
+#kaz-theme-editor .kaz-screenbar__num {
+  font-size: calc(10px * var(--kaz-ui));
+  padding: calc(3px * var(--kaz-ui)) calc(6px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-screenbar .kaz-btn {
+  font-size: calc(10px * var(--kaz-ui));
+  padding: calc(3px * var(--kaz-ui)) calc(7px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-screenbar__sep { height: calc(16px * var(--kaz-ui)); }
+#kaz-theme-editor .kaz-statusbar {
+  min-height: calc(32px * var(--kaz-ui));
+  padding: calc(4px * var(--kaz-ui)) calc(10px * var(--kaz-ui));
+  gap: calc(10px * var(--kaz-ui));
+  font-size: calc(10px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-module-tabs {
+  max-height: calc(44px * var(--kaz-ui));
+  padding: calc(6px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-module-tabs .kaz-module-link {
+  font-size: calc(10px * var(--kaz-ui));
+  padding: calc(5px * var(--kaz-ui)) calc(10px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-module-link {
+  font-size: calc(11px * var(--kaz-ui));
+  padding: calc(6px * var(--kaz-ui)) calc(8px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-layer {
+  font-size: calc(11px * var(--kaz-ui));
+  padding: calc(5px * var(--kaz-ui)) calc(7px * var(--kaz-ui));
+}
+#kaz-theme-editor .kaz-panel { padding: calc(10px * var(--kaz-ui)); }
+#kaz-theme-editor .kaz-panel__title,
+#kaz-theme-editor .kaz-panel__note,
+#kaz-theme-editor .kaz-panel__count { font-size: calc(10px * var(--kaz-ui)); }
+
+/* Regras responsivas das frentes AC/AJ, replicadas com a mesma escala.
+   Sem isto o chrome compacto de 36/38/28px cortaria os controles ampliados. */
+@media (max-width: 1280px) {
+  #kaz-theme-editor .kaz-topbar {
+    min-height: calc(36px * var(--kaz-ui));
+    padding: calc(3px * var(--kaz-ui)) calc(8px * var(--kaz-ui));
+  }
+  #kaz-theme-editor .kaz-toolbar { max-height: calc(36px * var(--kaz-ui)); }
+  #kaz-theme-editor .kaz-screenbar--outer { max-height: calc(38px * var(--kaz-ui)); }
+  #kaz-theme-editor .kaz-statusbar {
+    min-height: calc(28px * var(--kaz-ui));
+    padding: calc(2px * var(--kaz-ui)) calc(8px * var(--kaz-ui));
+  }
+  #kaz-theme-editor .kaz-module-tabs { padding: calc(3px * var(--kaz-ui)); }
+}
+@media (max-width: 980px) {
+  #kaz-theme-editor .kaz-screenbar--outer { max-height: calc(40px * var(--kaz-ui)); }
+}
+@media (max-width: 620px) {
+  #kaz-theme-editor .kaz-module-tabs { padding: calc(4px * var(--kaz-ui)); }
+}
+
+/* O chrome ampliado reduz a altura do stage. Compensamos o padding do
+   viewport na mesma proporcao para que o canvas ajustado por fitZoom()
+   continue cabendo sem criar uma rolagem aninhada. Com --kaz-ui:1 os
+   valores sao exatamente os da AC (36 / 18 / 12 px). */
+#kaz-theme-editor .kaz-stage .kaz-viewport { padding: calc(36px / var(--kaz-ui)); }
+@media (max-width: 980px) {
+  #kaz-theme-editor .kaz-stage .kaz-viewport { padding: calc(18px / var(--kaz-ui)); }
+}
+@media (max-width: 620px) {
+  #kaz-theme-editor .kaz-stage .kaz-viewport { padding: calc(12px / var(--kaz-ui)); }
+}
+
+/* =========================================================================
+   3. EXPANDIR / RECOLHER FERRAMENTAS
+   Estado em data-kaz-fold (tokens: toolbar, tabs, status). Os botoes de
+   reabertura ficam na screenbar, que NUNCA e recolhida. display:none e
+   apenas visual: nenhum input[name] e removido do formulario.
+   ========================================================================= */
+#kaz-theme-editor[data-kaz-fold~="toolbar"] .kaz-toolbar { display: none !important; }
+#kaz-theme-editor[data-kaz-fold~="tabs"] .kaz-module-tabs { display: none !important; }
+#kaz-theme-editor[data-kaz-fold~="status"] .kaz-statusbar { display: none !important; }
+
+/* =========================================================================
+   4. CONTROLES DE ERGONOMIA (criados pelo JS companion na screenbar)
+   ========================================================================= */
+.kaz-ergo { display: inline-flex; align-items: center; flex: none;
+  gap: calc(4px * var(--kaz-ui, 1)); white-space: nowrap; }
+.kaz-ergo__label { text-transform: uppercase; letter-spacing: .06em;
+  font-weight: 600; color: #a1a1aa; font-size: calc(10px * var(--kaz-ui, 1)); }
+.kaz-ergo__status { color: #a7f3d0; font-size: calc(10px * var(--kaz-ui, 1)); }
+.kaz-ergo [aria-pressed="true"] { background: #243a33; border-color: #2f6b58;
+  color: #a7f3d0; }
+.kaz-ergo [data-kaz-ui-scale] { min-width: calc(96px * var(--kaz-ui, 1)); }
+@media (max-width: 1280px) {
+  /* Em telas estreitas o texto de status consumiria a faixa util; os
+     botoes continuam visiveis no inicio da barra. */
+  #kaz-theme-editor .kaz-ergo__status { display: none; }
+}
+@media (max-width: 620px) {
+  #kaz-theme-editor .kaz-ergo__label,
+  #kaz-theme-editor .kaz-ergo__status { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #kaz-theme-editor * { scroll-behavior: auto !important; }
+}

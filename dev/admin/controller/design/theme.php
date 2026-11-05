@@ -200,6 +200,12 @@ class Theme extends \Reamur\System\Engine\Controller {
         $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-aj';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAJ);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAJ);
+        /* Frente AL: camada ADITIVA de aparencia. O marcador -aj do editor
+           permanece intacto, entao o painel de aceitacao e os harnesses
+           A-AJ continuam medindo exatamente o mesmo codigo. */
+        $kazAssetAL=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-aj-al';
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor-ergonomia.css?v=' . $kazAssetAL);
+        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor-ergonomia.js?v=' . $kazAssetAL);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
