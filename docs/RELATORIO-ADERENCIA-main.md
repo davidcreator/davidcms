@@ -40,7 +40,6 @@ os paths entregues pelas frentes AC e AD e comparamos com o conteúdo dos ZIPs
 | `tools/verify-kaz-layout.cjs` | 4.616 |
 | `tools/verify-kaz-boot.cjs` | 3.673 |
 | `tools/diagnostico-kaztheme-somente-leitura.sql` | 1.540 |
-| 10 × `docs/KAZTheme-Editor*.md` | 8.370 … 30.473 |
 
 Marcadores confirmados no conteúdo cru: `-kaz-theme-editor-ad`,
 `addScriptDeferred`, `scripts_deferred`, `bootDone`.
@@ -64,7 +63,6 @@ entregas anteriores — "a API ainda devolvia o HEAD antigo, trabalhamos sobre
 réplica" — está encerrada. Permanece a limitação de que repositório correto
 não prova execução correta no servidor de produção: para isso existe
 `tools/kaz-theme-editor-health.js` e
-`docs/KAZTheme-Editor-Diagnostico-em-Producao.md`.
 
 Nenhuma escrita no GitHub foi feita por esta auditoria. `release_approved`
 segue `false`; F9-27 segue `BLOCKED_NOT_RUN`.

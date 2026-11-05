@@ -79,7 +79,6 @@ Chromium real (desktop 1280×800 e mobile 390×844), mede `getComputedStyle` e
 confirma **8 divergências**: `--rms-radius`, `--rms-font-size`,
 `--theme-primary`, superfície, `border-radius` e `font-size` computados do
 card, cor computada e os atributos renderizados pelo Twig. Salva
-`evidencia/estado_a.png`, `estado_b.png` e `estado_b_mobile.png`.
 
 **Rota de aceitação no servidor:** alterar cor primária / densidade / radius
 / um componente → Salvar → Comparar (os dois painéis devem diferir) →

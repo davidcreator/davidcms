@@ -8,9 +8,6 @@
 | 4 | `dev/system/library/theme/theme_compare_view.php` | 6 de 6 partes de CSS + classes do estado por painel |
 | 5 | `tools/kaz-theme-preview-state.php` | **novo** — PROBE 51/0, somente leitura |
 | 6 | `tools/verify-kaz-preview-state.cjs` | **novo** — Chromium 24/0, mudança real medida |
-| 7 | `docs/KAZTheme-Editor-Estado-Efetivo-Previa.md` | **novo** — diagnóstico, correção e rota de aceitação |
-| 8–19 | `docs/KAZTheme-Editor*.md` | seção AG anexada aos 12 documentos |
-| 20–22 | `evidencia/*.png` | estado A, estado B, estado B mobile |
 | 23 | `RELATORIO.md` | este relatório |
 | 24 | `INDICE.md` | este índice |
 
