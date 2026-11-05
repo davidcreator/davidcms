@@ -3,6 +3,25 @@
    script inline, sem dados do request. O JSON da cena vem do controller já
    escapado para atributo; o JS reconstrói tudo via DOM. O textarea é um campo
    REAL do formulário: salvar o tema persiste a cena (kaztheme-scene/v1). #}
+{# Frente AH — estado da liberacao. HTML PURO do servidor: aparece MESMO
+   se o JS do editor nao inicializar (o cenario silencioso de AD/AE).
+   Sem |raw, sem name=, sem data-kaz-module, sem chave de traducao nova.
+   Irmao do .kaz-shell: nao altera os filhos de #kaz-theme-form (frente AC). #}
+{% set kr = kaz_release|default({}) %}
+<section id="kaz-release-status" class="mb-3" role="status" aria-live="polite"
+         data-kaz-release-verdict="{{ kr.verdict|default('SEM_TEMA_ATIVO')|e('html_attr') }}"
+         data-kaz-release-pending="{{ kr.pending|default(0)|e('html_attr') }}"
+         data-kaz-release-parts="{{ kr.css_parts|default(0)|e('html_attr') }}"
+         data-kaz-release-layers="{{ kr.scene_layers|default(0)|e('html_attr') }}"
+         data-kaz-release-asset="{{ kr.asset_ok|default(0)|e('html_attr') }}">
+  <div class="alert {% if kr.pending|default(0) %}alert-warning{% else %}alert-success{% endif %} py-2 px-3 mb-0">
+    <strong>KAZTheme · Liberação</strong>
+    <span class="badge bg-secondary ms-2">{{ kr.verdict_label|default('Nenhum tema ativo') }}</span>
+    <span class="small ms-2">{{ kr.hint|default('') }}</span>
+    <span class="small text-muted ms-2">CSS: {{ kr.css_parts|default(0) }}/6 partes · {{ kr.css_bytes|default(0) }} bytes · {{ kr.scene_layers|default(0) }} camadas</span>
+    {% if kr.pending_keys|default('') %}<div class="small mt-1">Pendente: <code>{{ kr.pending_keys }}</code></div>{% endif %}
+  </div>
+</section>
 <div class="kaz-shell card mb-4 kaz-card" id="kaz-theme-editor" data-kaz-owner="1"
      data-kaz-scene="{{ kaz_scene_json|e('html_attr') }}"
      data-kaz-primary="{{ primary|e('html_attr') }}"

@@ -197,9 +197,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
         $data['kaz_scene_saved']=$savedScene!==null;
         $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
-        $kazAssetAG=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-ag';
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAG);
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAG);
+        $kazAssetAH=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-ah';
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAH);
+        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAH);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
@@ -347,6 +347,15 @@ class Theme extends \Reamur\System\Engine\Controller {
         // Frente AA: modo pagina cheia em OUTRA pagina (sem chrome do Admin).
         // Apenas leitura de GET; nenhuma rota, migration ou chave nova.
         $data['kaz_fullscreen_page']=((string)($this->request->get['kaz_fullscreen']??'')==='1');
+        /* Frente AH: estado da LIBERACAO visivel no proprio Admin. HTML
+           server-side: aparece mesmo se o JS nao inicializar (AD/AE). Puro,
+           sem rota/coluna/traducao nova e sem nenhuma escrita. */
+        $pubCfg=json_decode((string)($theme['published_config']??$theme['config']??'{}'),true);
+        $pubCfg=is_array($pubCfg)?$pubCfg:[];
+        $ahState=$this->theme_snapshot->resolve($config,$this->simulateContext(['route'=>'common/home','device'=>'desktop']));
+        $ahScene=(new \Reamur\System\Library\Theme\ThemeSceneCss())->compile($config['kaz_scene']??null);
+        $data['kaz_release']=\Reamur\System\Library\Theme\ThemeReleaseProbe::summarize(
+            $config,$pubCfg,$ahState,$ahScene,(int)($theme['status']??0)===1,$kazAssetAH);
         $this->chrome($data); $this->response->setOutput($this->load->view('design/theme_form',$data));
     }
     /**

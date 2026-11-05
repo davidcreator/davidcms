@@ -633,3 +633,49 @@ concatenação que `header.php` publica. Regressões A–AF preservadas.
 congelado, tradução ou `PENDING_DECISION` alterado. `release_approved`
 permanece `false`. Aprovação em produção e o veredito `__kazHealth()` do
 servidor real **continuam pendentes**.
+
+
+## Frente AH — Publicar com prova e estado da liberação visível (2026-11-05)
+
+**Problema medido no `main` `8cfce45dae00` (AG aplicada, 19/19 idêntica).**
+`activate()` copia `draft_config` → `published_config`/`config` e
+`getEffectiveTheme()` lê `published_config`; o elo está correto no código, mas
+**nunca foi exercitado por nenhum harness** e, principalmente, **a tela do
+Admin não dizia se havia rascunho pendente**. O usuário editava, salvava,
+pré-visualizava e não tinha como saber se o que via já era o que o catálogo
+renderizaria. O instrumento da AE (`__kazHealth()`) exige abrir o console e
+colar um JSON — desde AE até AG ele nunca foi colado.
+
+**Correção (3 arquivos de código + 1 novo, sem migration/rota/tradução):**
+
+1. **Nova** `ThemeReleaseProbe::summarize()` — **pura** (sem IO, banco,
+   sessão, request, eval). Compara `draft_config` e `published_config` por
+   primeiro nível canonizado (`ksort` + serialização determinística) e devolve
+   **apenas escalares allowlistados**: `verdict`
+   (`PUBLICADO`/`RASCUNHO_PENDENTE`/`SEM_TEMA_ATIVO`), `pending`,
+   `pending_count`, `pending_keys`, `css_parts` (quantas das 6 partes de CSS da
+   AG estão presentes), `css_bytes`, `scene_layers`, `asset_ok`, rótulo e dica.
+2. `design/theme.php::edit()` — publica `kaz_release` no `$data` a partir do
+   tema já carregado, do `ThemeSnapshot` e da cena; cache `-ag` → `-ah`.
+3. `kaz_theme_editor.twig` — bloco `#kaz-release-status` com `role="status"`,
+   autoescape em todos os valores, **sem `|raw`, sem `name=`, sem
+   `data-kaz-module` e sem chave de tradução nova**. É **irmão** do
+   `.kaz-shell`, não filho: não altera a árvore medida pela AC.
+
+**Por que server-side:** o bloco aparece **mesmo com JavaScript desabilitado**.
+É a resposta direta ao cenário "nenhuma ferramenta responde e não existe erro
+no console" (AD): o veredito não depende de `bootDone`, de asset ou de
+`__kazHealth()`.
+
+**Prova:** `tools/kaz-theme-release-probe.php` constrói rascunho B e
+publicado A, mostra `RASCUNHO_PENDENTE`, simula `activate()` (`published = draft`)
+e mostra `PUBLICADO`; verifica estaticamente as duas SQL dos models; e prova
+que `ThemePreviewState::css(resolve(rascunho))` é **idêntico** a
+`css(resolve(published_config após ativar))` — ou seja, **a prévia e a home do
+catálogo renderizam o mesmo tema**. `tools/verify-kaz-release.cjs` confirma no
+Chromium que o painel está visível com JS ligado **e desligado**.
+
+**Escopo:** nenhuma migration, coluna, `schema.sql`, manifesto, hash
+congelado, tradução, `PENDING_DECISION` ou `release_approved` alterado.
+`release_approved` permanece `false`; aprovação em produção e o veredito
+`__kazHealth()` do servidor real continuam pendentes.
