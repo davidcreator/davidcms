@@ -1,0 +1,24 @@
+# Indice — Frente AI
+
+- `docs/KAZTheme-Editor-Biblioteca-de-Blocos.md`
+- `docs/KAZTheme-Editor-Boot-e-Ferramentas.md`
+- `docs/KAZTheme-Editor-Cena-Persistente.md`
+- `docs/KAZTheme-Editor-Ciclo-Real.md`
+- `docs/KAZTheme-Editor-Diagnostico-em-Producao.md`
+- `docs/KAZTheme-Editor-Estado-Efetivo-Previa.md`
+- `docs/KAZTheme-Editor-Guia-Rapido.md`
+- `docs/KAZTheme-Editor-Interatividade-Total.md`
+- `docs/KAZTheme-Editor-Interface-Penpot.md`
+- `docs/KAZTheme-Editor-Liberacao-e-Publicar.md`
+- `docs/KAZTheme-Editor-Motor-Total.md`
+- `docs/KAZTheme-Editor-Previa-Publicada.md`
+- `docs/KAZTheme-Editor-Tema-Publicado.md`
+- `docs/KAZTheme-Editor-Validacao-Navegador-Real.md`
+- `docs/KAZTheme-Editor.md`
+- `tools/kaz-theme-lifecycle-probe.php`
+- `tools/verify-kaz-lifecycle.cjs`
+- `evidencia/antes.png`
+- `evidencia/depois.png`
+- `evidencia/depois_mobile.png`
+- `RELATORIO-FINAL-AI.md`
+- `INDICE-AI.md`

@@ -232,3 +232,35 @@ Chromium que o painel está visível com JS ligado **e desligado**.
 congelado, tradução, `PENDING_DECISION` ou `release_approved` alterado.
 `release_approved` permanece `false`; aprovação em produção e o veredito
 `__kazHealth()` do servidor real continuam pendentes.
+
+
+## Frente AI — Ciclo real de criação de tema (2026-11-05)
+
+**Base:** `main` `39697000fd4057a3f5ab220d50c0fffc4d1d8df0` (AH aplicada;
+auditoria 19/19 arquivos AH byte a byte, tree 3226 entradas / 2643 blobs).
+
+Depois de A–AH corrigirem layout, boot, cena, estado efetivo e liberação,
+faltava uma coisa que nenhum harness tinha feito: **executar o controller**.
+A AH simulava `activate()` por atribuição de array; a AF/AG renderizavam
+prévias isoladas. Ninguém havia provado que o POST do formulário chega ao
+banco, que Publicar copia o rascunho para o publicado e que a **home do
+catálogo** renderiza a cor, o raio e a fonte escolhidos no editor.
+
+`tools/kaz-theme-lifecycle-probe.php` executa o **código real do projeto**:
+`buildDraftConfig()` (método privado, via Reflection) com os 11 serviços reais
+do `framework.php` registrados no `Registry`; `ModelDesignTheme::save()`;
+`Controller::activate()` com CSRF e ACL reais; `ModelCommonTheme::
+getEffectiveTheme()`; `ThemeSnapshot::resolve()`; `ThemePreviewState::css()`;
+e a tag `<body>` do `header.twig` real renderizada por Twig 3. As **SQL dos
+models são reais**, interpretadas por um banco em memória. O POST é montado a
+partir dos campos `name=` do formulário real.
+
+`tools/verify-kaz-lifecycle.cjs` abre no Chromium a home **antes** e **depois**
+de Publicar e mede `getComputedStyle()`: `rgb(37,99,235)` → `rgb(220,38,38)`,
+raio `12px` → `32px`, fonte `16px` → `20px`. PROBE 54/0, Chromium 22/0.
+
+**Esta frente não altera nenhum arquivo `dev/`.** Não há migration, coluna,
+rota, tradução, `|raw` novo, asset novo nem quebra de contrato: é evidência
+executável, não uma correção de produto. Não substitui MySQL, sessão Admin
+autenticada, deploy ou avaliação visual do usuário. `release_approved`
+permanece `false`.
