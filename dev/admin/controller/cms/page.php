@@ -1135,6 +1135,11 @@ class Page extends \Reamur\System\Engine\Controller {
                 $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-49-media-accessibility';
                 $catalogAssetBase = $this->pageCatalogAssetUrl();
                 $this->document->addStyle($site . 'view/css/blog-block-editor.css?v=' . $version);
+                /* Frente AN: identidade visual do KAZTheme-Editor no BDREditor.
+                   Marcador proprio para preservar as contagens de $version. */
+                $kazBdreAsset = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-bdre-an';
+                $this->document->addStyle($site . 'view/css/blog-block-editor-kaz.css?v=' . $kazBdreAsset);
+                $this->document->addScriptDeferred($site . 'view/js/blog-block-editor-kaz.js?v=' . $kazBdreAsset);
                 $this->document->addStyle($catalogAssetBase . 'view/css/threejs-thumb.css?v=' . $version);
                 $this->document->addScript($catalogAssetBase . $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=' . $version);
                 $this->document->addScript($site . 'view/js/blog-block-import.js?v=' . $version);

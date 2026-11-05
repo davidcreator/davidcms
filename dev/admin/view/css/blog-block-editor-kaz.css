@@ -1,0 +1,334 @@
+/* Frente AN — Padrao visual BDREditor <-> KAZTheme-Editor.
+   Camada ADITIVA, escopada em [data-blog-block-editor]. Nao altera
+   blog-block-editor.css, nao altera o JS de 600 KB, nao toca em documento,
+   formulario, CSRF, renderer, catalogo, banco ou contratos.
+
+   Regra de composicao (igual ao KAZ): CHROME escuro, CANVAS claro.
+   O board/canvas e o conteudo que sera publicado, entao permanece branco
+   sobre o workspace escuro — exatamente como o board 960x540 do KAZ. */
+
+/* 1. Tokens KAZ + remapeamento das variaveis nativas do BDREditor.
+   --rb-focus permanece #174ea6: contrato congelado F9-26. */
+[data-blog-block-editor] {
+  --kaz-bdre-bg: #18181b;
+  --kaz-bdre-panel: #1f1f23;
+  --kaz-bdre-panel-2: #26262b;
+  --kaz-bdre-elev: #2c2c33;
+  --kaz-bdre-line: #36363f;
+  --kaz-bdre-line-soft: #2b2b32;
+  --kaz-bdre-text: #e9e9ee;
+  --kaz-bdre-muted: #9b9ba7;
+  --kaz-bdre-dim: #6f6f7c;
+  --kaz-bdre-primary: #31efb8;
+  --kaz-bdre-primary-ink: #063a2c;
+  --kaz-bdre-blue: #7b61ff;
+  --kaz-bdre-danger: #ff6b6b;
+  --kaz-bdre-warn: #ffc857;
+  --kaz-ui: 1;
+  --rb-ink: var(--kaz-bdre-text);
+  --rb-muted: var(--kaz-bdre-muted);
+  --rb-line: var(--kaz-bdre-line);
+  --rb-accent: var(--kaz-bdre-primary);
+  --rb-accent-strong: var(--kaz-bdre-primary);
+  --rb-soft: var(--kaz-bdre-bg);
+  --rb-surface: var(--kaz-bdre-panel);
+  --rb-focus: #174ea6;
+}
+[data-blog-block-editor][data-kaz-ui-scale="compact"]     { --kaz-ui: .86; }
+[data-blog-block-editor][data-kaz-ui-scale="comfortable"] { --kaz-ui: 1.14; }
+[data-blog-block-editor][data-kaz-ui-scale="large"]       { --kaz-ui: 1.30; }
+
+/* 2. Chrome: superficies escuras. Especificidade (0,2,0) + !important
+   cobre as 842 cores literais espalhadas pelas 1140 regras originais.
+   O init do BDREditor monta no PROPRIO host (class="... rb-editor"),
+   entao o host tambem precisa ser alvo explicito. */
+[data-blog-block-editor].rb-editor,
+[data-blog-block-editor].rb-editor-host,
+[data-blog-block-editor].bdre-page-editor,
+[data-blog-block-editor] .rb-editor,
+[data-blog-block-editor] .rb-toolbar,
+[data-blog-block-editor] .rb-ribbon,
+[data-blog-block-editor] .rb-ribbon-group,
+[data-blog-block-editor] .rb-layout,
+[data-blog-block-editor] .rb-builder-layout,
+[data-blog-block-editor] .rb-builder-panel,
+[data-blog-block-editor] .rb-builder-panel-body,
+[data-blog-block-editor] .rb-builder-panel-head,
+[data-blog-block-editor] .rb-builder-panel-foot,
+[data-blog-block-editor] .rb-inspector,
+[data-blog-block-editor] .rb-outline,
+[data-blog-block-editor] .rb-note,
+[data-blog-block-editor] .rb-history,
+[data-blog-block-editor] .rb-previews,
+[data-blog-block-editor] .rb-inserter,
+[data-blog-block-editor] .rb-workspace-tool,
+[data-blog-block-editor] .rb-workspace,
+[data-blog-block-editor] .rb-statusbar,
+[data-blog-block-editor] .rb-footer,
+[data-blog-block-editor] .rb-panel,
+[data-blog-block-editor] .rb-dialog,
+[data-blog-block-editor] .rb-popover,
+[data-blog-block-editor] .rb-menu,
+[data-blog-block-editor] .rb-dropdown,
+[data-blog-block-editor] .rb-search,
+[data-blog-block-editor] .rb-tabs,
+[data-blog-block-editor] .rb-tabbar,
+[data-blog-block-editor] .rb-accessibility-header,
+[data-blog-block-editor] .rb-accessibility-findings,
+[data-blog-block-editor] .rb-table-tools,
+[data-blog-block-editor] [class*="rb-builder-panel"],
+[data-blog-block-editor] [class*="rb-ribbon-"] {
+  background: var(--kaz-bdre-panel) !important;
+  color: var(--kaz-bdre-text) !important;
+  border-color: var(--kaz-bdre-line) !important;
+}
+[data-blog-block-editor] .rb-editor-host,
+[data-blog-block-editor].rb-editor-host,
+[data-blog-block-editor].bdre-page-editor,
+[data-blog-block-editor] .rb-layout,
+[data-blog-block-editor] .rb-builder-layout {
+  background: var(--kaz-bdre-bg) !important;
+  color: var(--kaz-bdre-text) !important;
+}
+[data-blog-block-editor] .rb-builder-panel,
+[data-blog-block-editor] .rb-inspector,
+[data-blog-block-editor] .rb-outline,
+[data-blog-block-editor] .rb-popover,
+[data-blog-block-editor] .rb-dialog {
+  background: var(--kaz-bdre-panel-2) !important;
+  box-shadow: 0 12px 34px rgba(0,0,0,.38) !important;
+}
+
+/* 2b. Bolsões remanescentes do chrome (medidos no Chromium A/B) e marca. */
+[data-blog-block-editor] .rb-editor-masthead,
+[data-blog-block-editor] .rb-editor-identity,
+[data-blog-block-editor] .rb-editor-quick-actions,
+[data-blog-block-editor] .rb-keyboard-help {
+  background: var(--kaz-bdre-panel) !important;
+  color: var(--kaz-bdre-text) !important;
+  border-color: var(--kaz-bdre-line) !important;
+}
+[data-blog-block-editor] .rb-keyboard-help > summary,
+[data-blog-block-editor] .rb-keyboard-help-text,
+[data-blog-block-editor] .rb-editor-brand { color: var(--kaz-bdre-text) !important; }
+[data-blog-block-editor] .rb-editor-subtitle { color: var(--kaz-bdre-muted) !important; }
+[data-blog-block-editor] .rb-brand-icon {
+  background: var(--kaz-bdre-primary) !important;
+  color: var(--kaz-bdre-primary-ink) !important;
+  border-color: var(--kaz-bdre-primary) !important;
+}
+
+/* 3. Textos e estados */
+[data-blog-block-editor] .rb-muted,
+[data-blog-block-editor] .rb-empty,
+[data-blog-block-editor] .rb-canvas-head,
+[data-blog-block-editor] .rb-preview-value,
+[data-blog-block-editor] .rb-editor-note,
+[data-blog-block-editor] .rb-hint,
+[data-blog-block-editor] .rb-help,
+[data-blog-block-editor] .text-muted { color: var(--kaz-bdre-muted) !important; }
+[data-blog-block-editor] .rb-selected-type,
+[data-blog-block-editor] .rb-field label,
+[data-blog-block-editor] .rb-inspector-title,
+[data-blog-block-editor] .rb-block-title { color: var(--kaz-bdre-text) !important; }
+[data-blog-block-editor] code { color: var(--kaz-bdre-primary) !important; }
+
+/* 4. Botoes, campos, abas — linguagem visual do KAZ */
+[data-blog-block-editor] .rb-button,
+[data-blog-block-editor] .rb-input,
+[data-blog-block-editor] .rb-select,
+[data-blog-block-editor] .rb-content,
+[data-blog-block-editor] button.rb-tool,
+[data-blog-block-editor] input[type="text"],
+[data-blog-block-editor] input[type="search"],
+[data-blog-block-editor] select,
+[data-blog-block-editor] textarea {
+  background: var(--kaz-bdre-elev) !important;
+  color: var(--kaz-bdre-text) !important;
+  border-color: var(--kaz-bdre-line) !important;
+  border-radius: calc(8px / var(--kaz-ui)) !important;
+  font-size: calc(.82rem * var(--kaz-ui)) !important;
+}
+[data-blog-block-editor] .rb-button:hover,
+[data-blog-block-editor] .rb-button:focus-visible {
+  border-color: #174ea6 !important; /* contrato F9-26 preservado */
+  color: var(--kaz-bdre-text) !important;
+}
+[data-blog-block-editor] .rb-button[aria-pressed="true"],
+[data-blog-block-editor] .rb-button.is-active,
+[data-blog-block-editor] .rb-tab.is-selected,
+[data-blog-block-editor] .langtabs .selected {
+  background: color-mix(in srgb, var(--kaz-bdre-primary) 18%, var(--kaz-bdre-panel)) !important;
+  border-color: var(--kaz-bdre-primary) !important;
+  color: var(--kaz-bdre-primary) !important;
+}
+[data-blog-block-editor] .rb-button--primary,
+[data-blog-block-editor] .rb-button.primary,
+[data-blog-block-editor] .icon-button.primary {
+  background: var(--kaz-bdre-primary) !important;
+  border-color: var(--kaz-bdre-primary) !important;
+  color: var(--kaz-bdre-primary-ink) !important;
+}
+[data-blog-block-editor] .rb-button:disabled { opacity: .48 !important; }
+[data-blog-block-editor] .rb-icon,
+[data-blog-block-editor] .rb-icon svg { color: var(--kaz-bdre-muted) !important; }
+
+/* 5. Alertas e avisos adaptados ao escuro */
+[data-blog-block-editor] .rb-alert,
+[data-blog-block-editor] .rb-accessibility-issue {
+  background: color-mix(in srgb, var(--kaz-bdre-warn) 14%, var(--kaz-bdre-panel)) !important;
+  border-color: var(--kaz-bdre-warn) !important;
+  color: var(--kaz-bdre-text) !important;
+}
+
+/* 6. CANVAS CLARO — o conteudo publicado nao muda de paleta.
+   Regra de restauracao vem por ultimo e tem especificidade alta. */
+[data-blog-block-editor] .rb-canvas,
+[data-blog-block-editor] .rb-canvas .rb-block,
+[data-blog-block-editor] .rb-canvas .rb-content,
+[data-blog-block-editor] .rb-canvas .rb-input,
+[data-blog-block-editor] .rb-canvas .rb-block-title,
+[data-blog-block-editor] .rb-canvas .rb-preview-value,
+[data-blog-block-editor] .rb-canvas .rb-field label,
+[data-blog-block-editor] .rb-canvas .rb-inspector,
+[data-blog-block-editor] .rb-canvas .rb-note {
+  background: #fff !important;
+  color: #172033 !important;
+  border-color: #d5dce5 !important;
+  box-shadow: none !important;
+}
+[data-blog-block-editor] .rb-canvas .rb-button,
+[data-blog-block-editor] .rb-canvas .rb-block-head .rb-button {
+  background: #fff !important;
+  color: #172033 !important;
+  border-color: #bdc7d5 !important;
+}
+[data-blog-block-editor] .rb-canvas .rb-button:hover,
+[data-blog-block-editor] .rb-canvas .rb-button[aria-pressed="true"] {
+  background: #eaf0ff !important;
+  color: #1649b8 !important;
+  border-color: #174ea6 !important;
+}
+[data-blog-block-editor] .rb-canvas .rb-block.is-selected {
+  border-color: #215bd6 !important;
+  box-shadow: 0 0 0 2px #215bd622 !important;
+}
+
+/* 7. Barras de rolagem conforme o tema (mesma tecnica da frente AL).
+   color-mix() sobre a cor primaria; atualizada ao vivo via custom property. */
+[data-blog-block-editor] {
+  --kaz-bdre-track: color-mix(in srgb, var(--kaz-bdre-primary) 7%, var(--kaz-bdre-panel));
+  --kaz-bdre-thumb: color-mix(in srgb, var(--kaz-bdre-primary) 62%, var(--kaz-bdre-panel));
+  --kaz-bdre-hover: color-mix(in srgb, var(--kaz-bdre-primary) 82%, var(--kaz-bdre-panel));
+  scrollbar-color: var(--kaz-bdre-thumb) var(--kaz-bdre-track);
+  scrollbar-width: thin;
+}
+[data-blog-block-editor] * { scrollbar-color: var(--kaz-bdre-thumb) var(--kaz-bdre-track); }
+[data-blog-block-editor] *::-webkit-scrollbar { width: calc(10px / var(--kaz-ui)); height: calc(10px / var(--kaz-ui)); }
+[data-blog-block-editor] *::-webkit-scrollbar-track { background: var(--kaz-bdre-track); border-radius: 8px; }
+[data-blog-block-editor] *::-webkit-scrollbar-thumb {
+  background: var(--kaz-bdre-thumb); border-radius: 8px;
+  border: 2px solid var(--kaz-bdre-track); }
+[data-blog-block-editor] *::-webkit-scrollbar-thumb:hover { background: var(--kaz-bdre-hover); }
+[data-blog-block-editor] *::-webkit-scrollbar-corner { background: var(--kaz-bdre-track); }
+@media (forced-colors: active) {
+  [data-blog-block-editor] * { scrollbar-color: auto; }
+  [data-blog-block-editor] *::-webkit-scrollbar-thumb { background: ButtonText; }
+}
+
+/* 8. Escala --kaz-ui: todos os elementos do chrome, nao o canvas. */
+[data-blog-block-editor] .rb-toolbar,
+[data-blog-block-editor] .rb-ribbon { gap: calc(.65rem * var(--kaz-ui)) !important; padding: calc(.85rem * var(--kaz-ui)) !important; }
+[data-blog-block-editor] .rb-inserter,
+[data-blog-block-editor] .rb-history,
+[data-blog-block-editor] .rb-previews { gap: calc(.35rem * var(--kaz-ui)) !important; }
+[data-blog-block-editor] .rb-button { padding: calc(.42rem * var(--kaz-ui)) calc(.58rem * var(--kaz-ui)) !important; }
+[data-blog-block-editor] .rb-layout,
+[data-blog-block-editor] .rb-builder-layout { gap: calc(1rem * var(--kaz-ui)) !important; padding: calc(1rem * var(--kaz-ui)) !important; }
+[data-blog-block-editor] .rb-inspector,
+[data-blog-block-editor] .rb-builder-panel { padding: calc(.8rem * var(--kaz-ui)) !important; }
+[data-blog-block-editor] .rb-field { gap: calc(.25rem * var(--kaz-ui)) !important; margin: calc(.7rem * var(--kaz-ui)) 0 !important; font-size: calc(.8rem * var(--kaz-ui)) !important; }
+[data-blog-block-editor] .rb-input { min-height: calc(2.2rem * var(--kaz-ui)) !important; padding: calc(.4rem * var(--kaz-ui)) calc(.5rem * var(--kaz-ui)) !important; }
+[data-blog-block-editor] .rb-note { font-size: calc(.78rem * var(--kaz-ui)) !important; padding: calc(.65rem * var(--kaz-ui)) calc(1rem * var(--kaz-ui)) !important; }
+[data-blog-block-editor] .rb-block-title { font-size: calc(.78rem * var(--kaz-ui)) !important; }
+[data-blog-block-editor] .rb-icon { width: calc(17px * var(--kaz-ui)); height: calc(17px * var(--kaz-ui)); }
+
+/* 9. Expandir / recolher ferramentas — puramente visual. */
+[data-blog-block-editor][data-kaz-fold~="toolbar"] .rb-toolbar,
+[data-blog-block-editor][data-kaz-fold~="toolbar"] .rb-ribbon { display: none !important; }
+[data-blog-block-editor][data-kaz-fold~="tabs"] .rb-tabs,
+[data-blog-block-editor][data-kaz-fold~="tabs"] .rb-tabbar { display: none !important; }
+[data-blog-block-editor][data-kaz-fold~="status"] .rb-note,
+[data-blog-block-editor][data-kaz-fold~="status"] .rb-statusbar { display: none !important; }
+/* A barra de controles NUNCA e recolhida: a reabertura fica disponivel. */
+
+/* 10. Foco: cor/espessura congeladas em F9-26 + halo para contraste no escuro. */
+[data-blog-block-editor] :focus-visible {
+  outline: 3px solid #174ea6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 5px rgba(255,255,255,.22);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-blog-block-editor] * { transition: none !important; animation: none !important; }
+}
+
+/* 11. Controles injetados pelo companion JS */
+.kaz-bdre-bar { display: flex; align-items: center; gap: calc(8px * var(--kaz-ui, 1));
+  flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; padding: calc(6px * var(--kaz-ui, 1));
+  background: var(--kaz-bdre-panel, #1f1f23); border-bottom: 1px solid var(--kaz-bdre-line, #36363f);
+  color: var(--kaz-bdre-text, #e9e9ee); scrollbar-color: var(--kaz-bdre-thumb, #31efb8) var(--kaz-bdre-track, #18181b); }
+.kaz-bdre-bar > * { flex: none; }
+.kaz-bdre-bar label { font-size: calc(11px * var(--kaz-ui, 1)); font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--kaz-bdre-muted, #9b9ba7); }
+.kaz-bdre-bar select, .kaz-bdre-bar button {
+  font: inherit; font-size: calc(12px * var(--kaz-ui, 1)); padding: calc(4px * var(--kaz-ui, 1)) calc(8px * var(--kaz-ui, 1));
+  background: var(--kaz-bdre-elev, #2c2c33); color: var(--kaz-bdre-text, #e9e9ee);
+  border: 1px solid var(--kaz-bdre-line, #36363f); border-radius: 6px; cursor: pointer; }
+.kaz-bdre-bar button[aria-pressed="true"] { background: var(--kaz-bdre-primary, #31efb8);
+  color: var(--kaz-bdre-primary-ink, #063a2c); border-color: var(--kaz-bdre-primary, #31efb8); }
+.kaz-bdre-bar button:focus-visible, .kaz-bdre-bar select:focus-visible {
+  outline: 3px solid #174ea6 !important; outline-offset: 2px; }
+.kaz-bdre-status { font-size: calc(11px * var(--kaz-ui, 1)); color: var(--kaz-bdre-muted, #9b9ba7); white-space: nowrap; }
+@media (max-width: 1280px) { .kaz-bdre-status { display: none; } }
+@media (max-width: 620px) {
+  .kaz-bdre-bar label { display: none; }
+  .kaz-bdre-bar { flex-wrap: wrap !important; overflow-x: visible !important; }
+  .kaz-bdre-status { display: none; }
+}
+
+/* 12. Contencao de largura. A barra e flex nowrap; sem min-width:0 ela
+   forca o min-content do host e AGRAVA o overflow horizontal em 390px. */
+.kaz-bdre-bar { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+[data-blog-block-editor].rb-editor { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+/* O ribbon do BDREditor ja tem overflow horizontal proprio a 390px no
+   controle (sem AN). A camada nao o aumenta e permite quebra em telas
+   estreitas, sem alterar DOM, colunas ou a hierarquia do editor. */
+@media (max-width: 760px) {
+  [data-blog-block-editor] .rb-ribbon-content,
+  [data-blog-block-editor] .rb-ribbon-group,
+  [data-blog-block-editor] .rb-ribbon-tabs,
+  [data-blog-block-editor] .rb-ribbon-tools,
+  [data-blog-block-editor] .rb-ribbon-head { flex-wrap: wrap !important; }
+  [data-blog-block-editor] .rb-editor-masthead { flex-wrap: wrap !important; }
+  [data-blog-block-editor] .rb-keyboard-help-text,
+  [data-blog-block-editor] .rb-ribbon-group-title { white-space: normal !important; }
+  [data-blog-block-editor] .rb-layout,
+  [data-blog-block-editor] .rb-canvas { min-width: 0; }
+  [data-blog-block-editor].rb-editor,
+  [data-blog-block-editor] .rb-ribbon,
+  [data-blog-block-editor] .rb-ribbon-head,
+  [data-blog-block-editor] .rb-ribbon-content,
+  [data-blog-block-editor] .rb-layout,
+  [data-blog-block-editor] .rb-canvas,
+  [data-blog-block-editor] .rb-keyboard-help,
+  [data-blog-block-editor] .rb-note {
+    max-width: calc(100vw - 34px) !important;
+    overflow-x: auto !important;
+  }
+  [data-blog-block-editor] .rb-inline-link,
+  [data-blog-block-editor] .rb-keyboard-help-text,
+  [data-blog-block-editor] .rb-ribbon-group-title {
+    max-width: 100% !important; min-width: 0 !important;
+    white-space: normal !important;
+  }
+}
