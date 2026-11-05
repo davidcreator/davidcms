@@ -1,18 +1,18 @@
-# Índice — Frente AF
+# Índice — Frente AG
 
 | # | Arquivo | Papel |
 | --- | --- | --- |
-| 1 | `dev/system/library/template/twig.php` | `previewSceneView()` fail-closed + `theme_scene_view` no sandbox |
-| 2 | `dev/admin/controller/design/theme.php` | `scene_view` por painel, cena no `preview()`, cache `-af` |
-| 3 | `dev/system/library/theme/theme_scene_css.php` | `previewCss()` estático allowlistado |
-| 4 | `dev/system/library/theme/theme_compare_view.php` | `<style>`, `scene_css` por painel, `sceneBlock()` |
-| 5 | `tools/kaz-theme-preview-parity.php` | **novo** — PROBE 43/0, somente leitura |
-| 6 | `tools/verify-kaz-preview.cjs` | **novo** — Chromium 22/0, paridade visual |
-| 7 | `docs/KAZTheme-Editor-Previa-Publicada.md` | **novo** — diagnóstico, correção e rota de aceitação |
-| 8–18 | `docs/KAZTheme-Editor*.md` | seção AF anexada aos 11 documentos |
-| 19–21 | `evidencia/*.png` | prévia, publicado, prévia mobile |
-| 22 | `RELATORIO.md` | este relatório |
-| 23 | `INDICE.md` | este índice |
+| 1 | `dev/system/library/theme/theme_preview_state.php` | **novo** — única tradutora do estado: `css()`, `globals()`, `catalogCss()` |
+| 2 | `dev/system/library/template/twig.php` | 4º argumento `$themeState`, globais allowlistados no sandbox |
+| 3 | `dev/admin/controller/design/theme.php` | `preview()` usa `ThemeSnapshot`; `compare()` repassa os dois estados; cache `-ag` |
+| 4 | `dev/system/library/theme/theme_compare_view.php` | 6 de 6 partes de CSS + classes do estado por painel |
+| 5 | `tools/kaz-theme-preview-state.php` | **novo** — PROBE 51/0, somente leitura |
+| 6 | `tools/verify-kaz-preview-state.cjs` | **novo** — Chromium 24/0, mudança real medida |
+| 7 | `docs/KAZTheme-Editor-Estado-Efetivo-Previa.md` | **novo** — diagnóstico, correção e rota de aceitação |
+| 8–19 | `docs/KAZTheme-Editor*.md` | seção AG anexada aos 12 documentos |
+| 20–22 | `evidencia/*.png` | estado A, estado B, estado B mobile |
+| 23 | `RELATORIO.md` | este relatório |
+| 24 | `INDICE.md` | este índice |
 
 `.sha256` fica fora do ZIP, em `/home/user/entregas/`.
-Frentes A–AE preservadas, aplicadas e confirmadas — não reentregues.
+Frentes A–AF preservadas, aplicadas e confirmadas — não reentregues.

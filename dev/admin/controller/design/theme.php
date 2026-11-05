@@ -197,9 +197,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
         $data['kaz_scene_saved']=$savedScene!==null;
         $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
-        $kazAssetAF=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-af';
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAF);
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAF);
+        $kazAssetAG=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-ag';
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAG);
+        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAG);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
@@ -403,7 +403,16 @@ class Theme extends \Reamur\System\Engine\Controller {
         $key=(string)($this->request->get['template']??''); $config=json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true); $templates=is_array($config)?(array)($config['templates']??[]):[];
         if (!isset($templates[$key]) || !method_exists($this->template,'renderSandboxPreview')) { $this->response->setOutput('No saved source is available for this allowlisted preview.'); return; }
         $sceneV=(new \Reamur\System\Library\Theme\ThemeSceneCss())->compile(is_array($config)?($config['kaz_scene']??null):null);
-        try { $html=$this->template->renderSandboxPreview($key,(string)$templates[$key],$sceneV); $this->response->setOutput('<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'"><title>Theme preview</title><style>' . \Reamur\System\Library\Theme\ThemeSceneCss::previewCss() . '</style></head><body><main style="font:16px system-ui;padding:24px">'.$html.'</main></body></html>'); }
+        /* Frente AG: o MESMO estado efetivo que startup/theme.php publica.
+           ThemeSnapshot ja e usado por compare(); aqui a previa isolada deixa
+           de usar tokens/cores de exemplo. Zero escrita, zero request novo. */
+        $ctx=$this->simulateContext(['route'=>$key,'language'=>(string)$this->config->get('language_directory','en-us'),'device'=>'desktop']);
+        $state=$this->theme_snapshot->resolve(is_array($config)?$config:[],$ctx);
+        $S='\Reamur\System\Library\Theme\ThemePreviewState';
+        $styleCss=$S::css($state) . $S::colorVars($state);
+        $classes=$S::bodyClasses($state);
+        $styleRules=$S::catalogCss() . \Reamur\System\Library\Theme\ThemeSceneCss::previewCss();
+        try { $html=$this->template->renderSandboxPreview($key,(string)$templates[$key],$sceneV,$state); $this->response->setOutput('<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'"><title>Theme preview</title><style>' . $styleRules . '</style></head><body class="' . htmlspecialchars($classes,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8') . '" style="' . htmlspecialchars($styleCss,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8') . '"><main style="padding:24px">'.$html.'</main></body></html>'); }
         catch (\Throwable $e) { $this->response->setOutput('<!doctype html><meta charset="utf-8"><p>'.htmlspecialchars($this->language->get('text_preview_error'),ENT_QUOTES,'UTF-8').'</p>'); }
     }
     public function restore(string $theme_id='0', string $revision_id='0'): void {
@@ -754,8 +763,10 @@ class Theme extends \Reamur\System\Engine\Controller {
                 'error'=>$built['error'],
                 'published'=>$pubState,'draft'=>$draftState,
                 /* Frente AF: cada painel recebe a SUA cena (publicada x rascunho). */
-                'published_html'=>$this->renderPreviewFragment($key,$pubSource,(array)($pubState['scene_view']??[])),
-                'draft_html'=>$this->renderPreviewFragment($key,$draftSource,(array)($draftState['scene_view']??[])),
+                /* Frente AG: alem da cena (AF), cada painel recebe o SEU
+                   estado efetivo completo (tokens, cores, componentes...). */
+                'published_html'=>$this->renderPreviewFragment($key,$pubSource,(array)($pubState['scene_view']??[]),$pubState),
+                'draft_html'=>$this->renderPreviewFragment($key,$draftSource,(array)($draftState['scene_view']??[]),$draftState),
                 'published_thumb'=>$this->three_scene_preset->dataUri($pubState['three']),
                 'draft_thumb'=>$this->three_scene_preset->dataUri($draftState['three']),
                 'diff'=>$snapshot->diff($published,$draft),
@@ -767,14 +778,14 @@ class Theme extends \Reamur\System\Engine\Controller {
     }
 
     /** Fragmento do template allowlistado, via Twig Sandbox (ADR 0080). */
-    private function renderPreviewFragment(string $key, $source, array $sceneView = []): string {
+    private function renderPreviewFragment(string $key, $source, array $sceneView = [], array $themeState = []): string {
         if (!is_string($source) || $source==='') {
             $file=DIR_SYSTEM.'../catalog/view/template/'.$key.'.twig';
             $source=is_file($file)?(string)file_get_contents($file):'';
         }
         if ($source==='') return '<p>'.htmlspecialchars($this->language->get('text_preview_no_source'),ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'</p>';
         if (!method_exists($this->template,'renderSandboxPreview')) return '<p>'.htmlspecialchars($this->language->get('text_preview_error'),ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'</p>';
-        try { return (string)$this->template->renderSandboxPreview($key,$source,$sceneView); }
+        try { return (string)$this->template->renderSandboxPreview($key,$source,$sceneView,$themeState); }
         catch (\Throwable $e) { return '<p>'.htmlspecialchars($this->language->get('text_preview_error'),ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'</p>'; }
     }
 

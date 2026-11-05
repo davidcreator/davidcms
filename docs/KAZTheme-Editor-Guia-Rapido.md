@@ -515,3 +515,63 @@ próprio `theme.css`.
 manifesto, hash congelado, tradução ou `PENDING_DECISION` foi tocado.
 Aprovação de release permanece `false`; esta frente **não** foi avaliada em
 sessão Admin autenticada nem no servidor de produção.
+
+
+## Frente AG — prévia e comparação consomem o estado efetivo do tema (2026-11-05)
+
+**Problema medido no `main` `2494669eda6e` (AF aplicada, 18/18 idêntica).**
+`ThemeSnapshot::resolve()` — a única fonte de verdade do que o visitante vê —
+devolve `token_css`, `component_css`, `schedule_css`, `media_css`, `site_css`,
+`scene_css`, `primary`, `surface`, `vars`, `flags`, `classes`, `tokens`,
+`globals` e `scene_view`. `startup/theme.php` publica tudo isso e
+`common/header.php` concatena as seis partes de CSS no `style` do body, nesta
+ordem: tokens → componentes → agenda → mídia → sites → cena.
+
+Mas a prévia e os painéis só consumiam **duas** dessas partes:
+`ThemeCompareView::panel()` usava `token_css` + `scene_css` (AF), e
+`preview()` injetava apenas `ThemeSceneCss::previewCss()`. Pior:
+`Twig::renderSandboxPreview()` fixava `theme=['primary'=>'#2563eb',...]` e
+deixava `vars`/`flags`/`classes`/`tokens`/`sections` vazios. Consequência: a
+AF fez a **cena** aparecer, mas alterar cor primária, tipografia, densidade,
+radius, componentes, agenda ou sites no editor **continuava sem nenhum efeito
+na prévia** — só depois de Publicar. A mesma perda silenciosa, um passo acima.
+
+**Correção (5 arquivos, sem migration, sem rota nova, sem `|raw` novo):**
+
+1. **Novo** `dev/system/library/theme/theme_preview_state.php` —
+   `ThemePreviewState` traduz o estado em: `css()` (as seis partes, na ordem
+   do `header.php`, **fail-closed por parte**: descarta `<`, `>`, `{`, `}`,
+   barra invertida, `javascript:`, `@import`, `expression(`, `behavior:`),
+   `colorVars()`, `bodyClasses()` (classes allowlistadas + `rms-theme-rollout`
+   + `rms-site-*`), `globals()` (somente chaves `theme`/`theme_*`, planas,
+   escalares ≤256 — `header`/`footer` do sandbox jamais sobrescrevíveis) e
+   `catalogCss()` (o `theme.css` real do catálogo, leitura limitada e
+   fail-closed; sem ele as variáveis existiriam mas nenhuma regra as usaria).
+2. `dev/system/library/template/twig.php` — `renderSandboxPreview()` ganha 4º
+   argumento **opcional** `$themeState` e aplica os globais allowlistados ao
+   contexto. A cena sanitizada da AF continua prevalecendo.
+3. `dev/admin/controller/design/theme.php` — `preview()` resolve o rascunho
+   com o **mesmo** `ThemeSnapshot` que `compare()` já usava, injeta
+   `catalogCss() + previewCss()` no `<style>`, `css()+colorVars()` no `style`
+   do body, `bodyClasses()` na classe e passa o estado ao sandbox;
+   `compare()` repassa `$pubState`/`$draftState` a `renderPreviewFragment()`;
+   cache de assets `-af` → `-ag`.
+4. `dev/system/library/theme/theme_compare_view.php` — `panel()` usa
+   `ThemePreviewState::css()` (todas as seis partes) + `colorVars()`, corrige
+   os nomes das variáveis para os realmente emitidos pelo `TokenRegistry`
+   (`--rms-light-text`/`--rms-light-surface`), faz o `border-radius` consumir
+   `--rms-radius` e aplica `bodyClasses()` na classe do painel. CSP, sandbox,
+   autoescape e proibições intactos.
+5. Ferramentas: `tools/kaz-theme-preview-state.php` (PROBE somente leitura) e
+   `tools/verify-kaz-preview-state.cjs` (Chromium real).
+
+**Prova:** dois estados A/B com tokens diferentes (radius 12→32px, fonte
+16→20px, cor `#2563eb`→`#dc2626`, componente habilitado) geram CSS diferente;
+o Chromium mede `getComputedStyle` e confirma que **a prévia muda quando o
+rascunho muda**, e que `ThemePreviewState::css($state)` é **idêntico** à
+concatenação que `header.php` publica. Regressões A–AF preservadas.
+
+**Escopo:** nenhuma migration, coluna, `schema.sql`, manifesto, hash
+congelado, tradução ou `PENDING_DECISION` alterado. `release_approved`
+permanece `false`. Aprovação em produção e o veredito `__kazHealth()` do
+servidor real **continuam pendentes**.

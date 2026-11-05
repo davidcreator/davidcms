@@ -18,6 +18,11 @@
  * STATUS: concluído localmente; SQL/migration ainda não executados.
  */
 namespace Reamur\System\Library\Template;
+/* Frente AG: includers manuais (PROBEs, harnesses) nao registram autoloader
+   para o namespace Theme. Sem este guard a classe nova nao seria encontrada. */
+if (!class_exists(\Reamur\System\Library\Theme\ThemePreviewState::class, false)) {
+    require_once __DIR__ . '/../theme/theme_preview_state.php';
+}
 
 final class Twig {
     /** Fixed Catalog source keys editable through Themes; arbitrary paths, script tags and raw filters are rejected. */
@@ -198,9 +203,11 @@ final class Twig {
     }
 
     /** Render a saved source in a restrictive sandbox with fixed, nonpersistent sample data.
-     *  Frente AF: $sceneView e o scene_view ja compilado por ThemeSceneCss;
-     *  o terceiro argumento e OPCIONAL (chamadores legados continuam validos). */
-    public function renderSandboxPreview(string $key, string $source, array $sceneView = []): string {
+     *  Frente AF: $sceneView e o scene_view ja compilado por ThemeSceneCss.
+     *  Frente AG: $themeState e o estado EFETIVO de ThemeSnapshot::resolve();
+     *  seus globais allowlistados substituem os valores de exemplo. Ambos os
+     *  argumentos novos sao OPCIONAIS: chamadores legados continuam validos. */
+    public function renderSandboxPreview(string $key, string $source, array $sceneView = [], array $themeState = []): string {
         $allow = self::THEME_TEMPLATE_KEYS;
         if (!in_array($key, $allow, true) || strlen($source) > 131072 || preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i', $source)) {
             throw new \InvalidArgumentException('Template outside the preview allowlist.');
@@ -217,7 +224,7 @@ final class Twig {
         $env = new \Twig\Environment($loader, ['autoescape'=>'html','cache'=>false,'auto_reload'=>true]);
         $env->addExtension(new \Twig\Extension\SandboxExtension($policy, true));
         $this->applyThemeGlobals($env);
-        return $env->render($key . '.twig', [
+        $context = [
             'theme'=>['primary'=>'#2563eb','surface'=>'#ffffff','vars'=>[],'flags'=>[],'classes'=>[],'matched'=>[]],
             'theme_scene'=>['enabled'=>false,'scene'=>'','slot'=>'hero','count'=>400,'color'=>'#8a4fff','speed'=>0.05],
             /* Frente AF: sem isto o home.twig incluia theme-scene-block.twig,
@@ -242,7 +249,18 @@ final class Twig {
             'nf3d'=>['count'=>120,'color'=>'#8a4fff','speed'=>0.05,'drift'=>0.4],
             'text_code'=>'404', 'text_error'=>'Not found', 'text_suggestion'=>'Return to the site home.',
             'button_continue'=>'Home', 'button_send'=>'Send',
-        ]);
+        ];
+        /* Frente AG: sem isto a previa usava theme.primary FIXO (#2563eb) e
+           tokens/classes/componentes do rascunho nunca apareciam. Somente
+           chaves `theme`/`theme_*` podem entrar; a cena sanitizada da AF
+           prevalece sobre qualquer global de mesmo nome. */
+        if ($themeState !== []) {
+            $extra = \Reamur\System\Library\Theme\ThemePreviewState::globals($themeState);
+            unset($extra['header'], $extra['footer']);
+            $context = array_replace($context, $extra);
+            $context['theme_scene_view'] = self::previewSceneView($sceneView);
+        }
+        return $env->render($key . '.twig', $context);
     }
 
     /** Mark only HTML fragments produced by trusted renderers/sanitizers; raw filter stays unavailable to theme source.

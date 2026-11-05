@@ -13,6 +13,10 @@
  * escapado e o fragmento ja produzido pelo Twig sandbox + autoescape.
  */
 namespace Reamur\System\Library\Theme;
+/* Frente AG: mesmo guard de includers manuais usado em template/twig.php. */
+if (!class_exists(ThemePreviewState::class, false)) {
+    require_once __DIR__ . '/theme_preview_state.php';
+}
 
 final class ThemeCompareView {
     /** @param array<string,mixed> $p */
@@ -104,20 +108,17 @@ final class ThemeCompareView {
 
     /** @param array<string,mixed> $s @param array<string,string> $labels */
     private function panel(string $title, array $s, string $fragment, array $labels, callable $h, string $barBg, string $thumb = ''): string {
-        $css = $s['token_css'];
-        /* Frente AF: disponibiliza as variaveis --rms-scene-* no painel. */
-        $sceneCss = preg_match('/^[A-Za-z0-9#:.;\-]*$/D', (string)($s['scene_css'] ?? '')) === 1
-            ? (string)($s['scene_css'] ?? '') : '';
-        $style = $css . ';' . $sceneCss
-            . ';--theme-primary:' . ($s['primary'] ?? '#2563eb')
-            . ';--theme-surface:' . ($s['surface'] ?? '#ffffff')
+        /* Frente AG: TODAS as seis partes que header.php publica, na mesma
+           ordem, e nao apenas token_css + scene_css (AF). */
+        $css = ThemePreviewState::css($s) . ThemePreviewState::colorVars($s);
+        $style = $css
             . ';font-family:var(--rms-font-family,system-ui,sans-serif)'
             . ';font-size:var(--rms-font-size,16px)'
             . ';line-height:var(--rms-line-height,1.55)'
-            . ';color:var(--rms-color-text,#212529)'
-            . ';background-color:var(--rms-color-surface,#ffffff)'
-            . ';border:1px solid #cbd5e1;border-radius:8px;overflow:hidden';
-        $o = '<section style="' . $h($style) . '">'
+            . ';color:var(--rms-light-text,#212529)'
+            . ';background-color:var(--rms-light-surface,#ffffff)'
+            . ';border:1px solid #cbd5e1;border-radius:var(--rms-radius,8px);overflow:hidden';
+        $o = '<section class="' . $h(ThemePreviewState::bodyClasses($s)) . '" style="' . $h($style) . '">'
            . '<h2 style="margin:0;padding:9px 12px;font-size:13px;background:' . $barBg . ';color:#0f172a;font-weight:600">' . $h($title) . '</h2>'
            . '<div style="padding:12px">';
 
