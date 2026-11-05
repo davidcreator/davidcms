@@ -1,121 +1,107 @@
-# ReamurCMS — Frente AE · Aderência ao `main`, Fail-loud e Diagnóstico
+# ReamurCMS — Frente AF · Prévia e Publicado mostram a mesma cena
 
-> **Pela primeira vez validamos o repositório real, não uma réplica.**
-> E, antes de empilhar mais funcionalidade, entregamos o instrumento que
-> responde à pergunta que ficou em aberto desde a frente A: *o editor está
-> realmente vivo no seu servidor?* **Sem migration.**
+> **A lacuna era de dados, não de CSS e não de banco.** `ThemeSnapshot::resolve()`
+> já compilava a cena; o catálogo já a desenhava. Faltava entregá-la ao
+> **sandbox da prévia** e dar regras `.rms-scene*` aos painéis de comparação.
+> **Sem migration, sem coluna, sem rota nova, sem `|raw` novo.**
 
 | | |
 | --- | --- |
-| Base | `main` @ `56fd0c5d40fb…` (AD) + `50d4844f66d9…` (AC), `pushed_at=2026-11-04T20:06:35Z` |
-| Árvore real | 3.194 entradas / 2.611 blobs / `truncated:false` |
-| **Aderência** | **19/19 arquivos AC+AD byte a byte idênticos ao `main`**, 0 divergentes, 0 ausentes |
-| Arquivos | **16** completos (12 substituições + 4 novos) + 5 evidências PNG + `RELATORIO.md` + `INDICE.md` |
-| Réplica | 2206 → 2210 arquivos (12 alterados + 4 novos + 2194 intactos) |
-| Harnesses | health 26/0 · boot 22/0 · Chromium defer 251/0 · Chromium head-real 251/0 · layout 90/0 · DOM 226/0 · PROBE 93/0 · alcance 5/0 = **964/0** |
-| Validação final | 151 OK / 0 FALHAS |
+| Base | `main` @ `5932b910aca5…` (AE aplicada), `pushed_at=2026-11-04T21:18:36Z` |
+| Árvore real | 3.203 entradas / 2.620 blobs / `truncated:false` |
+| **Aderência** | **16/16 arquivos da AE byte a byte idênticos ao `main`**, 0 divergentes |
+| Arquivos | **18** completos (15 substituições + 3 novos) + 3 evidências PNG + `RELATORIO.md` + `INDICE.md` |
+| Réplica | 2210 → 2213 arquivos (15 alterados + 3 novos + 2195 intactos) |
+| **Paridade** | PROBE 43/0 · Chromium 22/0 — as 6 camadas da prévia são **idênticas em estilo, texto e cor computada** às 6 do publicado, **sem nenhum texto cortado** |
+| Harnesses | paridade 43 + 22 · health 26 · boot 22 · Chromium 251 + 251 · layout 90 · DOM 226 · PROBE publicação 93 · alcance 5 = **1029/0** |
+| Validação final | 171 OK / 0 FALHAS |
 | Guards | 4/4 verdes e byte-idênticos |
-| Sintaxe | 388 PHP 0 erros · 613 JS/CJS 0 falhas |
-| Build | idempotente 5/5 · CRC 23/23 · `sha256sum -c` 55/55 |
+| Sintaxe | 389 PHP 0 erros · 614 JS/CJS 0 falhas |
+| Build | idempotente 5/5 · CRC 23/23 · `sha256sum -c` 56/56 |
 
 ---
 
-## 1. O que mudou nesta frente
+## 1. O problema medido
 
-As frentes AC e AD foram escritas sobre **réplicas locais** porque a API
-`commits/main` devolvia sempre `13b0f7b8475b…`. Uma consulta com
-`per_page=5` e `nocache` novo revelou a cadeia completa:
+No `main` `5932b910aca5`, `dev/system/library/template/twig.php` montava o
+contexto da prévia assim:
 
-| Commit | Data (UTC) | Mensagem | Frente |
-| --- | --- | --- | --- |
-| `56fd0c5d40fb…` | 20:06:31 | `fix(admin/theme-editor): fix silent theme editor boot failure` | AD |
-| `50d4844f66d9…` | 19:46:39 | `fix(admin/theme-editor): correct browser layout issues from AB release` | AC |
-| `13b0f7b8475b…` | 19:21:59 | `feat: add published theme scene and fix admin UI` | AB |
+```php
+'theme_scene'=>['enabled'=>false, ...],   // e nenhum theme_scene_view
+```
 
-Baixamos o conteúdo cru de `56fd0c5d40fb` e comparamos com os ZIPs entregues:
-**19/19 IGUAL** — `theme.php` (70.109), `kaz-theme-editor.js` (47.669),
-`header.twig` (6.089), `document.php` (2.476), CSS (34.897), as ferramentas e
-os 10 documentos. Os 405 paths presentes no `main` e ausentes no recorte são
-227 `index.html` + 178 binários (fontes, imagens, sourcemaps) que o download
-filtra. **Nenhum arquivo de migration novo; `schema.sql` intacto.** Detalhes
-em `docs/RELATORIO-ADERENCIA-main.md`.
+`common/home.twig` inclui `partial/theme-scene-block.twig`, cuja primeira
+linha é `{% if theme_scene_view.enabled|default(false) %}`. Sem a chave, o
+`default` caía em falso: **zero camadas na prévia**. Ao mesmo tempo,
+`ThemeCompareView::panel()` não carregava nenhuma regra `.rms-scene*` —
+as camadas, mesmo que chegassem, ficariam empilhadas sem
+`position:absolute`. O usuário desenhava, salvava, pré-visualizava e não via
+nada; só depois de **Publicar** a cena aparecia. Sem erro e sem console:
+perda silenciosa entre dois consumidores do mesmo `draft_config`.
 
-## 2. Por que não é "mais uma funcionalidade"
+`compare()` já tinha `$pubState['scene_view']` e `$draftState['scene_view']`
+em mãos, mas só os usava para tokens e para a miniatura Three.js.
 
-Desde a frente A, a confirmação recebida foi sempre *"aplicado com sucesso,
-github atualizado"* — nunca *"as ferramentas agora respondem no meu
-servidor"*. E o sintoma que custou quatro frentes de diagnóstico era o
-**silêncio**: ferramentas inertes com console limpo. A AD corrigiu a causa
-(`<script>` no `<head>` sem `defer` → `return` silencioso), mas não deixou
-nenhum sinal caso o problema volte por Twig compilado em cache, CDN servindo
-JS antigo, CSP ou asset 404.
+## 2. A correção (4 arquivos de código)
 
-Entregar nova funcionalidade agora seria empilhá-la sobre um editor cujo
-funcionamento em produção ainda não foi confirmado. A AE fecha esse ciclo.
-
-## 3. As três entregas
-
-1. **Fail-loud** — `bootDone` passa a ser marcado **depois** de confirmar o
-   root (assim `DOMContentLoaded` e `load` podem tentar de novo). Se, após
-   500 ms, o boot não ocorreu e a página é a do editor, um aviso
-   `role="alert"` é inserido com `createElement` + `textContent`, dizendo
-   exatamente o que verificar. Sem marcação interpolada, rede, execução
-   dinâmica de código ou exceção. `evidencia/AE_fail_loud.png` mostra o
-   resultado; `AE_antes_silencioso.png` mostra o estado anterior.
-2. **`data-kaz-health="ad+ae"`** no root, para o diagnóstico identificar a
-   versão viva do JS. Cache `-kaz-theme-editor-ad` → **`-kaz-theme-editor-ae`**.
-3. **`tools/kaz-theme-editor-health.js`** — snippet **somente leitura** para
-   colar no console do DevTools na página de temas. Devolve um JSON com
-   veredito (`OK` / `FALHA_ASSET` / `FALHA_BOOT` / `OK_COM_RESSALVAS`),
-   assets e versões, `data-kaz-ready`, `__kaz`, os 9 módulos, medidas reais
-   de layout, CSRF/form e o aviso fail-loud. `copy(__kazHealth())` copia o
-   relatório. Instruções em
-   `docs/KAZTheme-Editor-Diagnostico-em-Producao.md`.
-
-**`tools/verify-kaz-health.cjs`** prova, em Chromium e em 4 documentos, que o
-health distingue o estado quebrado (`FALHA_BOOT`, `__kaz` ausente, `SEM_DEFER`)
-do corrigido (`OK`), que a AE inicializa **mesmo sem `defer`** (nesse caso
-`OK_COM_RESSALVAS`, não falha) e que o aviso aparece **somente** quando o boot
-falha. 26/0.
-
-## 4. Banco de dados
-
-**Nenhuma migration.** A auditoria do `main` confirmou que não foi adicionado
-nenhum `.sql` além do diagnóstico somente-leitura da AD. `kaz_scene` segue
-dentro de `draft_config`/`published_config`, colunas preexistentes, com
-ausência tratada por `ThemePackage::normalizeScene(null)`.
-
-## 5. Instalação e como usar
-
-Extrair os 16 arquivos na raiz, sem comando nem migration. **Ctrl+F5** no
-Admin (cache `-kaz-theme-editor-ae`). Depois, na página de edição de tema:
-abrir DevTools → Console → colar `tools/kaz-theme-editor-health.js` →
-`copy(__kazHealth())` → enviar o JSON.
-
-| Veredito | Significado |
+| Arquivo | Mudança |
 | --- | --- |
-| `OK` | boot, API, 9 módulos, CSS e CSRF presentes |
-| `FALHA_ASSET` | `kaz-theme-editor.js` não referenciado |
-| `FALHA_BOOT` | asset carregou, mas `__kaz` não existe — checar HTTP 200, CDN, CSP |
-| `OK_COM_RESSALVAS` | funciona; ler `problemas[]` (ex.: script sem `defer`) |
+| `dev/system/library/template/twig.php` | `renderSandboxPreview()` ganha 3º argumento **opcional** `$sceneView`; novo `previewSceneView()` normaliza **fail-closed** (canvas 320–3840 × 240–2160, ≤48 camadas, `kind`/`role` por allowlist, `fill` `#rrggbb`, % 0–100, `radius` 0–64, `font` 8–72, texto ≤80) e publica `theme_scene_view` |
+| `dev/admin/controller/design/theme.php` | `compare()` passa o `scene_view` **de cada painel**; `preview()` compila `kaz_scene` do rascunho e injeta o `<style>` da cena; cache `-ae` → `-af` |
+| `dev/system/library/theme/theme_scene_css.php` | `previewCss()`: regras `.rms-scene*` **literais**, sem `url()`, `@import`, `expression` ou dado do usuário |
+| `dev/system/library/theme/theme_compare_view.php` | um `<style>` estático no `<head>`, `scene_css` allowlistado no `style` de cada painel, e `sceneBlock()` como fallback quando um template customizado não inclui o partial |
 
-## 6. Contratos e limitações
+`sceneBlock()` **não duplica** a cena quando o fragmento já traz `rms-scene`.
+CSP (`default-src 'none'; img-src data:; style-src 'unsafe-inline'`), sandbox
+do iframe, `autoescape` e proibição de tag script / `srcdoc` / `iframe` /
+`form` permanecem intactos. Chamadores legados sem o 3º argumento continuam
+válidos e recebem cena desabilitada.
 
-`theme_form.twig` com 3 linhas e 2 `|raw`; 14 painéis com `hidden`; 53
-`name=`; 418 chaves × 3 idiomas; 14 manifestos idênticos; 10
-`PENDING_DECISION`; 11 hashes congelados; `schema.sql` intacto;
-`release_approved:false`. Sem `|raw` novo, `on*`, marcação interpolada,
-execução dinâmica de código, `fetch`, `localStorage`, rota nova ou escrita no
-GitHub por este pacote.
+## 3. Prova ponta a ponta
 
-**O limite continua sendo o mais importante:** Chromium headless local não é
-o seu servidor e a aderência ao repositório não prova execução correta em
-produção. O veredito que importa é o que `__kazHealth()` devolver no Admin
-real. Só com ele confirmado faz sentido avançar para a próxima frente
-funcional — retomando o objetivo declarado de fazer o editor produzir
-**config, CSS e templates reais que o catálogo renderiza**, com prova ponta
-a ponta no seu servidor.
+`tools/kaz-theme-preview-parity.php` (**43/0**, somente leitura) executa a
+cadeia real: `ThemePackage::normalizeScene()` → `ThemeSceneCss::compile()` →
+`Twig::previewSceneView()` → `home.twig` em **Twig 3.14 sandbox** →
+`ThemeCompareView::render()` → extração das camadas. Verifica também que o
+mesmo template **sem** `theme_scene_view` produz zero `.rms-scene` (a lacuna
+da AE reproduzida), que entrada inválida é fail-closed, e que
+`ThemeSnapshot::diff()` acusa `kaz_scene.layers.N.text`.
 
-Nenhum gate virou `PASS`: F9-27 segue `BLOCKED_NOT_RUN`, BDREditor/F9-103
-pausado, P2/F9-18 não reaberto. CI remoto não verificado aqui.
-**CI verde ou health check local não significa release aprovada.**
+`tools/verify-kaz-preview.cjs` (**22/0**) abre os dois HTMLs em Chromium
+real, em 1440×900 e 390×844, compara `getComputedStyle`, os 6 atributos
+`style`, os 6 textos e a **cor computada** da camada `primary`, e prova que
+**nenhum texto foi cortado**; salva `evidencia/*.png`.
+
+> **Defeito visual corrigido após o primeiro harness.** Ele passava 18/18
+> comparando atributos, mas as screenshots mostravam texto cortado e cor
+> divergente (azul no painel, roxo no catálogo). Medido no Chromium: o painel
+> tem 666px, acima do `@container (max-width:620px)` do `theme.css`, então o
+> `font-size:32px` absoluto não escalava; e o HTML de evidência não injetava
+> `--theme-primary` como `header.php`. `previewCss()` passou a espelhar
+> `container-type:inline-size` e a estender a `@container` a 1200px **apenas
+> na prévia**; o PROBE passou a publicar as variáveis do tema. É a mesma
+> armadilha da frente AA: **contagem de atributos não é renderização**.
+
+A única diferença visual restante é a tipografia responsiva (16px no painel
+vs 32px no catálogo), deliberada e prevista no próprio `theme.css`.
+
+**Rota de aceitação no servidor:** desenhar a cena → Salvar → Comparar (a
+cena aparece nos 2 painéis, com as diferenças entre publicado e rascunho) →
+Publicar/ativar → abrir a home do catálogo (a **mesma** cena). Se a prévia
+aparecer e a home não, o problema está em `startup/theme.php`; se nenhuma
+aparecer, cole `copy(__kazHealth()` da frente AE para descartar boot.
+
+## 4. O que não foi feito
+
+- **Nenhuma migration, coluna, tabela ou `schema.sql` alterado**: `kaz_scene`
+  continua em `draft_config`/`published_config`. O hash congelado do schema
+  foi conferido contra o `main` real.
+- Nenhum manifesto, hash congelado, tradução, `PENDING_DECISION` ou
+  `release_approved` tocado. F9-27 segue `BLOCKED_NOT_RUN`; BDREditor/F9-103
+  pausado; P2/F9-18 não reaberto.
+- Nenhuma escrita nossa no GitHub: o pacote é para **você** instalar.
+- **Harnesses, PROBE e Chromium headless não são o seu Admin autenticado.**
+  Não há nova avaliação visual do usuário desde `image-7.png`, nem veredito
+  `__kazHealth()` colado do servidor de produção. Esta frente **não** alega
+  aprovação de release; CI verde ou health local não significam release
+  aprovada.

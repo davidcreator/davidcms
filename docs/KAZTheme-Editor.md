@@ -539,3 +539,65 @@ Chromium headless local não é o servidor de produção. A AE entrega o
 **instrumento** para medir o servidor real; o veredito que importa é o que
 `__kazHealth()` devolver no Admin dele. CI verde ou health check local não
 significa release aprovada.
+
+
+## Frente AF — prévia e publicado mostram a mesma cena (2026-11-05)
+
+**Problema medido no `main` `5932b910aca5`.** `ThemeSnapshot::resolve()` já
+compilava `kaz_scene` em `scene_view`/`scene_css`, e o catálogo publicado
+(`startup/theme.php` → `header.php` → `home.php` → `home.twig` →
+`partial/theme-scene-block.twig`) renderizava `.rms-scene*`. Mas a tela de
+**Comparar** e o **Pré-visualizar** não entregavam essa cena ao Twig:
+`Twig::renderSandboxPreview()` fixava `theme_scene=['enabled'=>false]` e não
+definia `theme_scene_view`; `ThemeCompareView::panel()` não carregava nenhuma
+regra `.rms-scene*`. Consequência: o usuário desenhava a composição no editor,
+salvava, pré-visualizava e **não via nada** — só depois de Publicar a cena
+aparecia. Console limpo, sem erro, sem efeito visível.
+
+**Correção (4 arquivos, sem migration, sem rota nova, sem `|raw` novo):**
+
+1. `dev/system/library/template/twig.php` — `renderSandboxPreview()` ganha 3º
+   argumento opcional `$sceneView` e publica `theme_scene_view` no contexto
+   sandbox. Novo `previewSceneView()` normaliza a cena **fail-closed**: canvas
+   320–3840 × 240–2160, até 48 camadas, `kind`/`role` por allowlist, `fill`
+   `#rrggbb`, percentuais 0–100, `radius` 0–64, `font` 8–72, texto ≤80 com
+   caracteres de controle removidos. Sem HTML, sem caminho, sem executável.
+   Assinatura compatível: chamadores legados sem o 3º argumento continuam
+   válidos e recebem cena desabilitada.
+2. `dev/admin/controller/design/theme.php` — `compare()` passa o `scene_view`
+   **de cada estado** (`$pubState` / `$draftState`) a `renderPreviewFragment()`;
+   `preview()` compila `kaz_scene` do rascunho com `ThemeSceneCss` e injeta o
+   `<style>` estático da cena. Cache de assets `-ae` → `-af`.
+3. `dev/system/library/theme/theme_scene_css.php` — novo `previewCss()` devolve
+   as regras `.rms-scene*` **literais/estáticas** (sem `url()`, `@import`,
+   `expression`, tags ou dado do usuário), espelhando `theme.css` do catálogo.
+   Inclui `container-type:inline-size` e `@container`: **medido no Chromium**,
+   sem elas o texto de 32px ficava cortado num painel de 666px. O limite sobe
+   de 620px para 1200px apenas na prévia, porque o catálogo chega a 1200px e
+   cada painel de comparação é mais estreito.
+4. `dev/system/library/theme/theme_compare_view.php` — um único `<style>` com
+   `previewCss()` no `<head>`; o `scene_css` allowlistado (`--rms-scene-*`) vai
+   para o atributo `style` de cada painel; fallback `sceneBlock()` renderiza a
+   cena quando um template customizado não inclui o partial. **Sem** `<script>`,
+   `srcdoc`, `iframe`, `form`, `|raw`; CSP `default-src 'none'; img-src data:;
+   style-src 'unsafe-inline'` intacta. `sceneBlock()` não duplica quando o
+   fragmento já traz `rms-scene`.
+
+**Prova ponta a ponta** (`tools/kaz-theme-preview-parity.php`, 43 asserções):
+`ThemeSceneCss::compile()` → `previewSceneView()` → `home.twig` real em Twig
+sandbox → `ThemeCompareView::render()` → extração das camadas → **as 6 camadas
+da prévia são idênticas, em estilo e texto, às 6 do HTML publicado**. O mesmo
+template renderizado **sem** `theme_scene_view` produz zero `.rms-scene` (a
+lacuna da AE reproduzida). `tools/verify-kaz-preview.cjs` repete a comparação
+em Chromium real (desktop 1440×900 e mobile 390×844), 22 asserções, compara
+também a **cor computada** e prova que **nenhum texto foi cortado**; salva
+screenshots. `ThemeSnapshot::diff()` acusa `kaz_scene.layers.N.text` entre
+publicado e rascunho. A única diferença visual restante é a tipografia
+responsiva (16px no painel vs 32px no catálogo), deliberada e prevista no
+próprio `theme.css`.
+
+**Escopo:** nenhuma coluna, tabela, migration ou `schema.sql` foi alterado —
+`kaz_scene` continua vivendo em `draft_config`/`published_config`. Nenhum
+manifesto, hash congelado, tradução ou `PENDING_DECISION` foi tocado.
+Aprovação de release permanece `false`; esta frente **não** foi avaliada em
+sessão Admin autenticada nem no servidor de produção.

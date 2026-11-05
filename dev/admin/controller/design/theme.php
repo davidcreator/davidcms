@@ -197,9 +197,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
         $data['kaz_scene_saved']=$savedScene!==null;
         $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
-        $kazAssetAE=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-ae';
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAE);
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAE);
+        $kazAssetAF=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-af';
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAF);
+        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAF);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
@@ -402,7 +402,8 @@ class Theme extends \Reamur\System\Engine\Controller {
         $this->load->language('design/theme'); $this->load->model('design/theme'); $id=(int)$theme_id; $theme=$this->model_design_theme->getTheme($id);
         $key=(string)($this->request->get['template']??''); $config=json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true); $templates=is_array($config)?(array)($config['templates']??[]):[];
         if (!isset($templates[$key]) || !method_exists($this->template,'renderSandboxPreview')) { $this->response->setOutput('No saved source is available for this allowlisted preview.'); return; }
-        try { $html=$this->template->renderSandboxPreview($key,(string)$templates[$key]); $this->response->setOutput('<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'"></head><body><main style="font:16px system-ui;padding:24px">'.$html.'</main></body></html>'); }
+        $sceneV=(new \Reamur\System\Library\Theme\ThemeSceneCss())->compile(is_array($config)?($config['kaz_scene']??null):null);
+        try { $html=$this->template->renderSandboxPreview($key,(string)$templates[$key],$sceneV); $this->response->setOutput('<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'"><title>Theme preview</title><style>' . \Reamur\System\Library\Theme\ThemeSceneCss::previewCss() . '</style></head><body><main style="font:16px system-ui;padding:24px">'.$html.'</main></body></html>'); }
         catch (\Throwable $e) { $this->response->setOutput('<!doctype html><meta charset="utf-8"><p>'.htmlspecialchars($this->language->get('text_preview_error'),ENT_QUOTES,'UTF-8').'</p>'); }
     }
     public function restore(string $theme_id='0', string $revision_id='0'): void {
@@ -752,8 +753,9 @@ class Theme extends \Reamur\System\Engine\Controller {
                 'labels'=>$labels,'context'=>$contextPub,'template_key'=>$key,
                 'error'=>$built['error'],
                 'published'=>$pubState,'draft'=>$draftState,
-                'published_html'=>$this->renderPreviewFragment($key,$pubSource),
-                'draft_html'=>$this->renderPreviewFragment($key,$draftSource),
+                /* Frente AF: cada painel recebe a SUA cena (publicada x rascunho). */
+                'published_html'=>$this->renderPreviewFragment($key,$pubSource,(array)($pubState['scene_view']??[])),
+                'draft_html'=>$this->renderPreviewFragment($key,$draftSource,(array)($draftState['scene_view']??[])),
                 'published_thumb'=>$this->three_scene_preset->dataUri($pubState['three']),
                 'draft_thumb'=>$this->three_scene_preset->dataUri($draftState['three']),
                 'diff'=>$snapshot->diff($published,$draft),
@@ -765,14 +767,14 @@ class Theme extends \Reamur\System\Engine\Controller {
     }
 
     /** Fragmento do template allowlistado, via Twig Sandbox (ADR 0080). */
-    private function renderPreviewFragment(string $key, $source): string {
+    private function renderPreviewFragment(string $key, $source, array $sceneView = []): string {
         if (!is_string($source) || $source==='') {
             $file=DIR_SYSTEM.'../catalog/view/template/'.$key.'.twig';
             $source=is_file($file)?(string)file_get_contents($file):'';
         }
         if ($source==='') return '<p>'.htmlspecialchars($this->language->get('text_preview_no_source'),ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'</p>';
         if (!method_exists($this->template,'renderSandboxPreview')) return '<p>'.htmlspecialchars($this->language->get('text_preview_error'),ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'</p>';
-        try { return (string)$this->template->renderSandboxPreview($key,$source); }
+        try { return (string)$this->template->renderSandboxPreview($key,$source,$sceneView); }
         catch (\Throwable $e) { return '<p>'.htmlspecialchars($this->language->get('text_preview_error'),ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8').'</p>'; }
     }
 

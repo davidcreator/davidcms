@@ -162,8 +162,45 @@ final class Twig {
         return $env->render($routeKey . '.twig', $viewData);
     }
 
-    /** Render a saved source in a restrictive sandbox with fixed, nonpersistent sample data. */
-    public function renderSandboxPreview(string $key, string $source): string {
+    /** Frente AF — normaliza a cena do KAZTheme-Editor para o contexto da
+     *  previa. FAIL-CLOSED: so escalares allowlistados, sem HTML, sem texto
+     *  longo, sem caminho, sem executavel. Nao depende de servico nem de IO.
+     *  @param array<string,mixed> $raw
+     *  @return array{enabled:bool,css:string,layers:array<int,array<string,scalar>>,canvas:array{w:int,h:int}} */
+    public static function previewSceneView(array $raw): array {
+        $empty = ['enabled'=>false,'css'=>'','layers'=>[],'canvas'=>['w'=>960,'h'=>540]];
+        if (($raw['enabled'] ?? false) !== true) return $empty;
+        $w = (int)($raw['canvas']['w'] ?? 0); $h = (int)($raw['canvas']['h'] ?? 0);
+        if ($w < 320 || $w > 3840 || $h < 240 || $h > 2160) return $empty;
+        $src = is_array($raw['layers'] ?? null) ? $raw['layers'] : [];
+        $kinds = ['rect','text','button','card','section'];
+        $roles = ['none','primary','surface','section','component'];
+        $pct = static function ($v): float { return round(max(0.0,min(100.0,(float)$v)),3); };
+        $out = []; $n = 0;
+        foreach ($src as $l) {
+            if (!is_array($l) || ++$n > 48) break;
+            $kind = in_array((string)($l['kind'] ?? ''), $kinds, true) ? (string)$l['kind'] : 'rect';
+            $role = in_array((string)($l['role'] ?? ''), $roles, true) ? (string)$l['role'] : 'none';
+            $fill = preg_match('/^#[0-9a-fA-F]{6}$/D', (string)($l['fill'] ?? '')) === 1
+                  ? (string)$l['fill'] : '#ffffff';
+            $text = (string)preg_replace('/[\x00-\x1F\x7F]/',' ',(string)($l['text'] ?? ''));
+            $text = function_exists('mb_substr') ? mb_substr($text,0,80) : substr($text,0,80);
+            $out[] = [
+                'n'=>$n,'kind'=>$kind,'role'=>$role,
+                'left'=>$pct($l['left'] ?? 0),'top'=>$pct($l['top'] ?? 0),
+                'width'=>$pct($l['width'] ?? 0),'height'=>$pct($l['height'] ?? 0),
+                'fill'=>$fill,'radius'=>max(0,min(64,(int)($l['radius'] ?? 0))),
+                'font'=>max(8,min(72,(int)($l['font'] ?? 16))),'text'=>$text,
+            ];
+        }
+        if (!$out) return $empty;
+        return ['enabled'=>true,'css'=>'','layers'=>$out,'canvas'=>['w'=>$w,'h'=>$h]];
+    }
+
+    /** Render a saved source in a restrictive sandbox with fixed, nonpersistent sample data.
+     *  Frente AF: $sceneView e o scene_view ja compilado por ThemeSceneCss;
+     *  o terceiro argumento e OPCIONAL (chamadores legados continuam validos). */
+    public function renderSandboxPreview(string $key, string $source, array $sceneView = []): string {
         $allow = self::THEME_TEMPLATE_KEYS;
         if (!in_array($key, $allow, true) || strlen($source) > 131072 || preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i', $source)) {
             throw new \InvalidArgumentException('Template outside the preview allowlist.');
@@ -183,6 +220,10 @@ final class Twig {
         return $env->render($key . '.twig', [
             'theme'=>['primary'=>'#2563eb','surface'=>'#ffffff','vars'=>[],'flags'=>[],'classes'=>[],'matched'=>[]],
             'theme_scene'=>['enabled'=>false,'scene'=>'','slot'=>'hero','count'=>400,'color'=>'#8a4fff','speed'=>0.05],
+            /* Frente AF: sem isto o home.twig incluia theme-scene-block.twig,
+               mas theme_scene_view.enabled caia em default(false) e a cena
+               desenhada no editor NAO aparecia na previa. */
+            'theme_scene_view'=>self::previewSceneView($sceneView),
             'title'=>'Theme preview',
             'heading_title'=>'Theme preview', 'content'=>'Safe sample content', 'description'=>'Safe sample content',
             'header'=>'', 'footer'=>'', 'cms_home_content'=>'', 'home'=>'#home', 'button_back_home'=>'Home',

@@ -5,10 +5,12 @@
  * F13-C — HTML isolado da comparacao "publicado x rascunho".
  *
  * Nao e uma fonte Twig editavel: e gerado no servidor, com todo dado dinamico
- * escapado. Sem <script>, sem <style> (so atributos style), sem |raw, sem
- * srcdoc, sem iframe, sem form, sem rede. A CSP endurece o preview legado com
- * base-uri 'none' e form-action 'none'. O unico HTML nao escapado e o fragmento
- * ja produzido por Tpl::renderSandboxPreview() (Twig sandbox + autoescape).
+ * escapado. Sem script, sem |raw, sem srcdoc, sem iframe, sem form, sem rede.
+ * A CSP endurece o preview legado com base-uri 'none' e form-action 'none'.
+ * Frente AF: um unico bloco style ESTATICO (ThemeSceneCss::previewCss) leva
+ * as regras .rms-scene* para dentro do preview; antes a cena desenhada no
+ * editor nao tinha CSS nesta tela e por isso nunca aparecia. O unico HTML nao
+ * escapado e o fragmento ja produzido pelo Twig sandbox + autoescape.
  */
 namespace Reamur\System\Library\Theme;
 
@@ -29,7 +31,8 @@ final class ThemeCompareView {
            . '<meta name="viewport" content="width=device-width, initial-scale=1">'
            . '<meta name="robots" content="noindex,nofollow,noarchive">'
            . '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'; base-uri \'none\'; form-action \'none\'">'
-           . '<title>' . $h($labels['title']) . '</title></head>'
+           . '<title>' . $h($labels['title']) . '</title>'
+           . '<style>' . ThemeSceneCss::previewCss() . '</style></head>'
            . '<body style="margin:0;padding:16px;font:14px/1.5 system-ui,sans-serif;background:#f1f5f9;color:#0f172a">'
            . '<div style="max-width:1400px;margin:0 auto">'
            . '<h1 style="margin:0 0 4px;font-size:18px">' . $h($labels['title']) . '</h1>'
@@ -76,10 +79,36 @@ final class ThemeCompareView {
         return $o;
     }
 
+    /** Frente AF — fallback deterministico da cena, espelhando
+     *  partial/theme-scene-block.twig. Todo valor escalar e escapado. */
+    private function sceneBlock(array $view, callable $h, array $labels): string {
+        if (($view['enabled'] ?? false) !== true) return '';
+        $layers = is_array($view['layers'] ?? null) ? $view['layers'] : [];
+        if (!$layers) return '';
+        $w = max(320, min(3840, (int)($view['canvas']['w'] ?? 960)));
+        $hh = max(240, min(2160, (int)($view['canvas']['h'] ?? 540)));
+        $o = '<section class="rms-scene" aria-label="' . $h($labels['scene_label'] ?? 'Scene') . '">'
+           . '<div class="rms-scene__stage" style="aspect-ratio:' . $w . ' / ' . $hh . '">';
+        foreach ($layers as $l) {
+            if (!is_array($l)) continue;
+            $o .= '<div class="rms-scene__layer rms-scene__layer--' . $h($l['kind'] ?? 'rect')
+                . ' rms-scene__role--' . $h($l['role'] ?? 'none') . '"'
+                . ' style="left:' . $h($l['left'] ?? 0) . '%;top:' . $h($l['top'] ?? 0)
+                . '%;width:' . $h($l['width'] ?? 0) . '%;height:' . $h($l['height'] ?? 0)
+                . '%;background-color:' . $h($l['fill'] ?? '#ffffff')
+                . ';border-radius:' . $h($l['radius'] ?? 0) . 'px;font-size:'
+                . $h($l['font'] ?? 16) . 'px;">' . $h($l['text'] ?? '') . '</div>';
+        }
+        return $o . '</div></section>';
+    }
+
     /** @param array<string,mixed> $s @param array<string,string> $labels */
     private function panel(string $title, array $s, string $fragment, array $labels, callable $h, string $barBg, string $thumb = ''): string {
         $css = $s['token_css'];
-        $style = $css
+        /* Frente AF: disponibiliza as variaveis --rms-scene-* no painel. */
+        $sceneCss = preg_match('/^[A-Za-z0-9#:.;\-]*$/D', (string)($s['scene_css'] ?? '')) === 1
+            ? (string)($s['scene_css'] ?? '') : '';
+        $style = $css . ';' . $sceneCss
             . ';--theme-primary:' . ($s['primary'] ?? '#2563eb')
             . ';--theme-surface:' . ($s['surface'] ?? '#ffffff')
             . ';font-family:var(--rms-font-family,system-ui,sans-serif)'
@@ -106,7 +135,14 @@ final class ThemeCompareView {
         $o .= $this->mediaStrip($s, $labels, $h);
         // F13-J: fita de sites/hosts (servidor, tudo escapado, sem host do request).
         $o .= $this->siteStrip($s, $labels, $h);
+        /* Frente AF: se o template allowlistado nao inclui o partial da cena
+           (ex.: fonte customizada salva pelo usuario), renderiza a cena aqui
+           mesmo. Se o fragmento ja trouxe rms-scene, nao duplica. */
+        if (strpos($fragment, 'rms-scene') === false) {
+            $o .= $this->sceneBlock((array)($s['scene_view'] ?? []), $h, $labels);
+        }
         // Amostra visual REAL: consome as mesmas variaveis que o theme.css.
+        // O fragmento (com a cena, quando o template a inclui) e emitido abaixo.
         $o .= '<div style="padding:14px;border-radius:var(--rms-radius,12px);box-shadow:var(--rms-shadow,none);border:var(--rms-border-width,1px) solid #e2e8f0;background:var(--rms-color-surface,#ffffff)">'
            . '<h3 style="margin:0 0 6px;font-size:calc(var(--rms-font-size,16px) * var(--rms-font-scale,1.25));font-weight:var(--rms-heading-weight,700)">' . $h($labels['sample_title']) . '</h3>'
            . '<p style="margin:0 0 10px;color:var(--rms-color-muted,#5c6773)">' . $h($labels['sample_body']) . '</p>'
