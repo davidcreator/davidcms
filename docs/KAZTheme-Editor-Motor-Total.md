@@ -642,3 +642,37 @@ rota, tradução, `|raw` novo, asset novo nem quebra de contrato: é evidência
 executável, não uma correção de produto. Não substitui MySQL, sessão Admin
 autenticada, deploy ou avaliação visual do usuário. `release_approved`
 permanece `false`.
+
+
+## Frente AJ — Aceitação visual sem console (2026-11-05)
+
+**Base:** `main` `50a386442653c5846899f2f71c2a6b9cc51e7e24` (AI aplicada;
+auditoria 17/17 arquivos AI byte a byte, tree 3240 entradas / 2656 blobs).
+
+A AE entregou `window.__kazHealth()` com 26 verificações em 4 estados, mas o
+usuário precisa abrir o DevTools e colar um JSON — desde então isso nunca foi
+feito. A AH deu um painel **server-side** de liberação (rascunho/publicado),
+mas não dizia se o **editor** tinha inicializado. E havia uma lacuna medida:
+`kaz-theme-editor.js` marcava `bootDone = true` **antes** de
+`if (!canvas || !layerList || !jsonBox) return;`. Se o boot abortasse no meio,
+o fail-loud de 500 ms não disparava e a tela ficava silenciosa outra vez.
+
+**Correção:** `#kaz-acceptance`, irmão do `.kaz-shell`, emitido pelo servidor
+no estado `aguardando` (amarelo), com `<noscript>` explícito. Um novo sinal
+`bootComplete` só fica `true` **no fim** do boot; ali o painel passa a
+`pronto` (verde) e mostra, em `textContent`, o asset servido, o número de
+módulos e camadas, o veredito da AH e se prévia e catálogo usam o mesmo tema.
+Se o boot falhar, o fail-loud existente continua e o painel passa a `falhou`
+(vermelho) com a causa — **sem console, sem JSON para colar**.
+
+DOM puro (`textContent` + `setAttribute`): sem `innerHTML`, `eval`, rede,
+`localStorage`, `|raw` novo, chave de tradução, rota Admin, migration ou
+coluna. Cache do editor passa de `-ah` para `-aj`.
+
+**Prova:** `tools/kaz-theme-acceptance-probe.php` (45/0) e
+`tools/verify-kaz-acceptance.cjs` (31/0) medem **5 cenários** no Chromium:
+boot normal, JavaScript desligado, asset 404, boot abortado no meio (o caso
+que a AE não detectava) e um **controle com o JS da AH** que reproduz o
+silêncio original. Com asset 404 nenhum JavaScript roda — nem o fail-loud —
+e o painel amarelo server-side é justamente o aviso que resta. Com boot
+abortado, o painel fica vermelho. `release_approved` permanece `false`.

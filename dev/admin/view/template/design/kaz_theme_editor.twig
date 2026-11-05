@@ -22,6 +22,20 @@
     {% if kr.pending_keys|default('') %}<div class="small mt-1">Pendente: <code>{{ kr.pending_keys }}</code></div>{% endif %}
   </div>
 </section>
+{# Frente AJ — aceitacao VISIVEL sem console. O estado 'aguardando' e
+   HTML PURO do servidor: se o JS nao inicializar, permanece na tela e o
+   motivo aparece sem abrir o DevTools. Sem |raw, sem name=, sem
+   data-kaz-module, sem chave de traducao nova. Irmao do .kaz-shell: a
+   arvore medida pela AC nao muda. #}
+<section id="kaz-acceptance" class="mb-3" role="status" aria-live="polite"
+         data-kaz-acceptance="aguardando">
+  <div class="alert alert-warning py-2 px-3 mb-0">
+    <strong>KAZTheme · Aceitação</strong>
+    <span class="badge bg-secondary ms-2" data-kaz-acceptance-state>Aguardando o editor</span>
+    <span class="small ms-2" data-kaz-acceptance-detail>Este aviso muda quando o editor inicializa. Se permanecer, o JavaScript não carregou — não é erro de tema nem de banco.</span>
+    <noscript><div class="small mt-1"><strong>JavaScript desabilitado:</strong> o editor não pode inicializar; os painéis desta página continuam sendo HTML do servidor.</div></noscript>
+  </div>
+</section>
 <div class="kaz-shell card mb-4 kaz-card" id="kaz-theme-editor" data-kaz-owner="1"
      data-kaz-scene="{{ kaz_scene_json|e('html_attr') }}"
      data-kaz-primary="{{ primary|e('html_attr') }}"

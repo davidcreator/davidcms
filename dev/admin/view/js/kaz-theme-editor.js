@@ -21,6 +21,46 @@
      ferramenta respondia. Todo o corpo agora vive em boot(), disparado
      quando o editor ja existe; se ainda nao existe, espera o DOM. */
   var bootDone = false;
+  /* Frente AJ: a AE marcava bootDone ANTES de um 'return' intermediario
+     (canvas/layerList/jsonBox ausentes). Se o boot abortasse no meio, o
+     fail-loud de 500ms nao disparava e a tela ficava silenciosa. bootComplete
+     so fica true no FIM do boot. */
+  var bootComplete = false;
+  /* Frente AJ — aceitacao VISIVEL._DOM puro: textContent + setAttribute.
+     Sem innerHTML, sem rede, sem execucao dinamica, sem armazenamento. */
+  function markAcceptance(ok, detail) {
+    var panel = document.getElementById('kaz-acceptance');
+    if (!panel) return;
+    var state = panel.querySelector('[data-kaz-acceptance-state]');
+    var text = panel.querySelector('[data-kaz-acceptance-detail]');
+    var box = panel.querySelector('.alert');
+    panel.setAttribute('data-kaz-acceptance', ok ? 'pronto' : 'falhou');
+    if (box) box.className = ok ? 'alert alert-success py-2 px-3 mb-0'
+                                : 'alert alert-danger py-2 px-3 mb-0';
+    if (state) state.textContent = ok ? 'Editor pronto' : 'Editor não inicializou';
+    if (text) text.textContent = detail;
+  }
+  function acceptanceDetail(ok, layerCount) {
+    var asset = 'sem-versao';
+    var tag = document.querySelector('script[src*="kaz-theme-editor.js"]');
+    if (tag) {
+      var m = /[?&]v=([^&"']+)/.exec(tag.getAttribute('src') || '');
+      if (m) asset = m[1];
+    }
+    var rootEl = document.getElementById('kaz-theme-editor');
+    var modules = rootEl ? rootEl.querySelectorAll('[data-kaz-module]').length : 0;
+    var rel = document.getElementById('kaz-release-status');
+    var verdict = rel ? (rel.getAttribute('data-kaz-release-verdict') || 'indisponivel') : 'indisponivel';
+    var pending = rel ? (rel.getAttribute('data-kaz-release-pending') || '?') : '?';
+    if (!ok) return 'O JavaScript não concluiu o boot. Confira o asset '
+      + 'kaz-theme-editor.js (HTTP 200), o loop scripts_deferred do header.twig '
+      + 'e o cache/proxy. Nenhum erro no console é esperado neste cenário.';
+    return 'Boot OK · asset ' + asset + ' · ' + modules + ' módulos · ' + layerCount
+      + ' camadas · liberação ' + verdict + ' (pendente=' + pending + ')'
+      + (verdict === 'PUBLICADO'
+          ? ' · prévia e catálogo usam o mesmo tema'
+          : ' · use Publicar para aplicar no catálogo');
+  }
   function boot() {
     if (bootDone) return;
   var NS = 'http://www.w3.org/2000/svg';
@@ -952,6 +992,10 @@
                               density: density, collapsedLeft: collapsed.left,
                               collapsedRight: collapsed.right, fullscreen: fullscreenLocal }; }
   };
+  /* Frente AJ: so agora o boot esta COMPLETO. O painel de aceitacao sai do
+     estado server-side 'aguardando' para 'pronto' sem exigir console. */
+  bootComplete = true;
+  markAcceptance(true, acceptanceDetail(true, scene.layers.length));
   say('KAZTheme-Editor pronto · ' + scene.layers.length + ' camadas · '
       + (root.getAttribute('data-kaz-saved') === '1' ? 'cena salva no tema' : 'cena derivada, salve para persistir'));
   }
@@ -969,7 +1013,7 @@
      puro (createElement/textContent), sem marcacao interpolada, rede,
      execucao dinamica de codigo ou excecao. */
   window.setTimeout(function () {
-    if (bootDone || !document.body) return;
+    if (bootComplete || !document.body) return;
     var isEditorPage = document.getElementById('kaz-theme-form')
       || document.querySelector('.kaz-shell');
     if (!isEditorPage) return;
@@ -987,5 +1031,6 @@
       + 'o loop scripts_deferred e se um cache/proxy nao entrega uma versao antiga. '
       + 'Execute tools/kaz-theme-editor-health.js no console para o diagnostico.';
     document.body.appendChild(note);
+    markAcceptance(false, acceptanceDetail(false, 0));
   }, 500);
 })(document, window);
