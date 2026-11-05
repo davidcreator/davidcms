@@ -1,0 +1,58 @@
+/* Frente AM — Ajuste direto na tela (camada ADITIVA sobre AJ + AL).
+   Somente apresentacao e interacao de layout. Nao toca em cena, tema,
+   banco, rota, CSRF, CSP, traducao ou formulario. */
+
+/* 1. Screenbar em UMA linha tambem no desktop.
+   A AL inseriu 413px de controles; acima de 1280px a barra ainda usava
+   flex-wrap:wrap e quebrava em duas linhas (68px medidos em 1490x728),
+   roubando altura do canvas. */
+@media (min-width: 981px) {
+  #kaz-theme-editor .kaz-screenbar--outer {
+    flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+    max-height: calc(38px * var(--kaz-ui, 1));
+  }
+  #kaz-theme-editor .kaz-screenbar--outer > * { flex: none; }
+}
+
+/* 2. Divisorias redimensionaveis entre as tres colunas.
+   Sem data-kaz-cols NENHUMA regra de largura e sobrescrita: densidade
+   (compact/normal/wide) e colapso (left/right) das frentes AA/AJ continuam
+   valendo exatamente como antes. O atributo so aparece apos um arraste. */
+#kaz-theme-editor .kaz-workspace { position: relative; }
+#kaz-theme-editor[data-kaz-cols] .kaz-workspace {
+  grid-template-columns: var(--kaz-col-left, 236px) minmax(0, 1fr) var(--kaz-col-right, 264px);
+}
+#kaz-theme-editor[data-kaz-cols][data-kaz-collapsed~="left"] .kaz-workspace {
+  grid-template-columns: 0 minmax(0, 1fr) var(--kaz-col-right, 264px);
+}
+#kaz-theme-editor[data-kaz-cols][data-kaz-collapsed~="right"] .kaz-workspace {
+  grid-template-columns: var(--kaz-col-left, 236px) minmax(0, 1fr) 0;
+}
+#kaz-theme-editor[data-kaz-cols][data-kaz-collapsed~="left"][data-kaz-collapsed~="right"] .kaz-workspace {
+  grid-template-columns: 0 minmax(0, 1fr) 0;
+}
+
+/* 3. Alcas de arraste */
+.kaz-grip { display: none; }
+@media (min-width: 981px) {
+  .kaz-grip { display: block; position: absolute; top: 0; bottom: 0; width: 10px;
+    z-index: 30; cursor: col-resize; touch-action: none; background: transparent; }
+  .kaz-grip::after { content: ''; position: absolute; left: 4px; top: 14px; bottom: 14px;
+    width: 2px; border-radius: 2px; opacity: .38;
+    background: var(--kaz-al-primary, #31efb8); }
+  .kaz-grip:hover::after, .kaz-grip:focus-visible::after,
+  .kaz-grip[data-kaz-dragging="1"]::after { opacity: 1; width: 3px; }
+  .kaz-grip:focus-visible { outline: 2px solid var(--kaz-accent, #31efb8); outline-offset: -2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kaz-grip::after { transition: none !important; }
+}
+
+/* 4. O fitZoom() da AC subtrai 72px de margem, mas o frame tambem tem
+   margin-top:36px e o viewport padding:36px. Sem esta compensacao o
+   auto-ajuste precisava cair para 25% para eliminar a rolagem residual.
+   Com margens enxutas o zoom util maior (45%) ja cabe sem reducao. */
+@media (min-width: 981px) {
+  #kaz-theme-editor .kaz-stage .kaz-viewport { padding: calc(12px / var(--kaz-ui, 1)); }
+  #kaz-theme-editor .kaz-screen { margin-top: 0; }
+}

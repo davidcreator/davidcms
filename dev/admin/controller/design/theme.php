@@ -206,6 +206,11 @@ class Theme extends \Reamur\System\Engine\Controller {
         $kazAssetAL=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-aj-al';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor-ergonomia.css?v=' . $kazAssetAL);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor-ergonomia.js?v=' . $kazAssetAL);
+        /* Frente AM: ajuste direto na tela. Marcador proprio para nao
+           alterar as contagens de -aj / -al dos PROBEs anteriores. */
+        $kazAssetAM=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-aj-am';
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor-ajuste.css?v=' . $kazAssetAM);
+        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor-ajuste.js?v=' . $kazAssetAM);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }

@@ -402,3 +402,29 @@ são estado local descartável, como densidade e fullscreen da AA.
 **Prova:** `tools/kaz-theme-ergonomia-probe.php` e
 `tools/verify-kaz-ergonomia.cjs` (Chromium, 5 cenários + 390 px). `release_approved`
 permanece `false`; isto é apresentação, não aprovação de release.
+
+## Frente AM — Ajuste direto na tela (2026-11-05)
+
+**Causa medida em uso real (`image-8.png`):** em desktop o editor abria com
+zoom **100%**, porque o `fitZoom()` da AC so era chamado no boot em
+`max-width: 980px`. Em 1490×728 o board 960×540 ficava cortado
+(`scrollWidth 1032` vs `clientWidth 666`) e as camadas caiam **fora da area
+clicavel** — o arraste e o redimensionamento existentes funcionavam, mas
+nao havia como alcanca-los. Ajustando manualmente, medimos x 40→192,
+y 40→120 e w 560→688, h 220→280.
+
+| O que | Como |
+| --- | --- |
+| Auto-ajuste universal | `kaz-theme-editor-ajuste.js` chama o botao publico `Ajustar à tela` da AC em **qualquer** viewport, no boot, apos fontes e em `resize`; reduz um passo de zoom ate o board caber de verdade (o `fitZoom` nao contabiliza `margin-top` do frame nem o padding do viewport). |
+| Screenbar em 1 linha | A AL inseriu 413 px de controles e, acima de 1280 px, a barra quebrava em 2 linhas (68 px medidos). `flex-wrap: nowrap` + rolagem horizontal devolvem a altura ao canvas sem esconder os controles (eles ficam no inicio). |
+| Divisorias redimensionaveis | 2 alcas com `role="separator"`, `aria-valuenow`, arraste por pointer events, teclado (setas) e duplo clique para restaurar. Sem `data-kaz-cols` **nenhuma** largura e sobrescrita: densidade e colapso das frentes AA/AJ continuam intactos. |
+| X/Y/W/H ao vivo | `MutationObserver` no SVG acompanha o retangulo selecionado durante o arraste; antes os campos do inspector so atualizavam no `mouseup`. |
+
+Camada **aditiva**: marcador `-aj-am`, dois arquivos novos e duas linhas no
+controller. CSS, JS, Twig e paineis de AJ/AL **nao foram alterados**; os
+marcadores `-aj` (4 usos) e `-al` permanecem intactos, entao os PROBEs e
+harnesses A–AL seguem medindo exatamente o mesmo codigo.
+
+Sem escrita dinamica de marcacao, execucao dinamica, rede, armazenamento,
+migracao, coluna, rota Admin, traducao nova, `|raw` novo, `name=` novo ou
+alteracao de CSP/sandbox. `release_approved` permanece `false`.
