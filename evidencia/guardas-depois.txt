@@ -1,0 +1,12 @@
+GUARDA                                         RESULTADO
+---------------------------------------------- ---------
+tools/verify-deps-layout.sh                    PASS == resumo: 8 PASS / 0 FAIL / 2 WARN ==
+tools/verify-checksums.sh                      PASS == resumo: 3 PASS / 0 FAIL | 14 manifesto(s), 142 arquivo(s) conferidos ==
+tools/verify-ci-workflow.sh                    PASS == resumo: 31 PASS / 0 FAIL ==
+tools/verify-f11-01.sh                         PASS == resumo: 17 PASS / 0 FAIL / 0 SKIP ==
+tools/verify-contract-freeze.py                PASS 
+tools/release-readiness-report.sh              PASS 
+
+== repo-health: 6 PASS / 0 FAIL / 0 SKIP ==
+   VEREDITO: COERENTE (guardas estaticos). SKIP nao e aprovacao.
+   Fora deste health check, por exigirem runtime/rede: CI (7 jobs), 61 checkers e2e, F9-27, staging.

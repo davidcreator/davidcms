@@ -1,0 +1,11 @@
+# F11-09 — integridade do pacote de triagem
+# Formato: CRC32  SHA256  tamanho(bytes)  caminho
+
+06aac395  cea51706ddcf600c562ac72564ea5c092a70df110af35edcce1cab7b6275b66a  573  CHECKSUMS-F11-07.txt
+421af334  cfa9b5cfd28358e0f64bb402daefa6abffde0123aed14f5e02be1599ca1763db  2266  F11-09-INDICE.md
+a5f33865  b932fe1cf2339b1fe907982c5fcc75d134de3b634c4b165b976a9a53036b569d  6698  docs/F11-09-Triagem-Marcadores.md
+c1155518  4838e48c20a5b05fb7a060549877804c786ca4a724ece0dba3c0a25d2bd291ea  28299  tools/checkers-inventory.json
+bc63ab87  c3a5dad0ced3837b25afb3402183ec2471165ebcf15765b363310fadf1058f62  4252  tools/e2e/check_threejs_sandbox.cjs
+35f9f27e  30ac19a0a541860ecb00ac5cd3a4ad8fd6c16d39f6bd0a8b89b844ceeb6fc743  4289  tools/e2e/e2e_f922_static.cjs
+0e85a1e7  4956705a55118f3889090fa228bb24b401be7044851e1cc9ae7dc31511230ce3  3294  tools/e2e/e2e_f923_static.cjs
+a91a4d57  587c34f941e4194befee4073a22f75ea32629a01f2d1e66f5b9e0da5c50c0dd4  4874  tools/e2e/e2e_f926_static.cjs

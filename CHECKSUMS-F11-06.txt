@@ -1,0 +1,6 @@
+# F11-06 — integridade (reemitido em F11-14 com retificacoes)
+# Formato: CRC32  SHA256  tamanho(bytes)  caminho
+
+d081da10  bb24b4d5c8959da89264c2f301b81c262030e6792a70a71c865185c254a7fbef  2055  F11-06-INDICE.md
+e0a70da9  2269f0290d0a6b7eb12303c4ca23421de7e9dc7eeac371c6ba9029856e314db3  7661  docs/F11-06-Fechamento-e-Radar.md
+640bb3e3  878e723c7d46e86e98bc695b68eab0de527a1df73398217a411daad02907db5e  3612  tools/release-readiness-report.sh
