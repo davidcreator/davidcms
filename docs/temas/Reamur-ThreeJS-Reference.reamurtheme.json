@@ -1,0 +1,658 @@
+{
+    "format": "reamurcms-theme",
+    "version": 1,
+    "name": "Reamur ThreeJS Reference",
+    "slug": "reamur_threejs_reference",
+    "parent": "",
+    "config": {
+        "primary": "#8a4fff",
+        "surface": "#101827",
+        "scene": "hero-particles",
+        "templates": {
+            "common/home": "{# Reamur ThreeJS Reference — cena declarativa e composicao allowlistada. #}\n{{ header }}\n<main class=\"thr-main\">\n  <div class=\"thr-container\">\n    <header class=\"thr-page-head\">\n      <p class=\"thr-kicker\">{{ theme.vars.scene_preset|default('threejs') }}</p>\n      <h1 class=\"thr-title\">{{ heading_title|default('Tema ThreeJS de referencia') }}</h1>\n      <p class=\"thr-lead\">{{ text_tagline|default('Seis presets, tres slots, dois mecanismos 3D.') }}</p>\n    </header>\n    {% include 'partial/theme-scene-block.twig' %}\n      {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'hero' %}\n        {% include 'partial/theme-scene.twig' %}\n      {% endif %}\n    {% if 'threejs' in theme.flags|default([]) %}<p class=\"thr-badge\">Cena allowlistada ativa</p>{% endif %}\n    {% for section in cms_home_sections|default([]) %}\n      {% if section == 'hero' %}{% include 'partial/hero-3d.twig' %}\n      {% elseif section == 'about' %}{% include 'partial/about.twig' %}\n      {% elseif section == 'skills' %}{% include 'partial/skills.twig' %}\n      {% elseif section == 'services' %}{% include 'partial/services.twig' %}\n      {% elseif section == 'portfolio' %}{% include 'partial/portfolio.twig' %}\n      {% elseif section == 'tools' %}{% include 'partial/tools.twig' %}\n      {% elseif section == 'news' %}{% include 'partial/news.twig' %}\n      {% endif %}\n    {% endfor %}\n  </div>\n</main>\n",
+            "common/footer": "{# ThreeJS Reference — rodape com slot footer_top. #}\n      {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'footer_top' %}\n        {% include 'partial/theme-scene.twig' %}\n      {% endif %}\n<footer class=\"thr-footer\"><div class=\"thr-container thr-footer-inner\">\n  <p class=\"thr-footer-brand\">{{ text_powered|default('ReamurCMS') }} · ThreeJS Reference</p>\n  <nav class=\"thr-footer-nav\" aria-label=\"{{ text_legal|default('Links') }}\">\n    {% for l in legal|default([]) %}<a href=\"{{ l.href }}\">{{ l.name }}</a>{% endfor %}\n  </nav>\n  <small>{{ text_copyright|default('Todos os direitos reservados.') }}</small>\n</div></footer>\n</body>\n</html>\n",
+            "common/contact": "{# Reamur ThreeJS Reference — cena declarativa e composicao allowlistada. #}\n{{ header }}\n<main class=\"thr-main\">\n  <div class=\"thr-container\">\n    <header class=\"thr-page-head\">\n      <p class=\"thr-kicker\">{{ theme.vars.scene_preset|default('threejs') }}</p>\n      <h1 class=\"thr-title\">{{ heading_title|default('Contato') }}</h1>\n      <p class=\"thr-lead\">{{ text_contact_lead|default('Fale com a equipe.') }}</p>\n    </header>\n    {% include 'partial/theme-scene-block.twig' %}\n      {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'home_top' %}\n        {% include 'partial/theme-scene.twig' %}\n      {% endif %}\n    {% if 'threejs' in theme.flags|default([]) %}<p class=\"thr-badge\">Cena allowlistada ativa</p>{% endif %}\n    {% include 'partial/contact.twig' %}\n  </div>\n</main>\n",
+            "partial/site_header": "{# ThreeJS Reference — cabecalho. #}\n<header class=\"thr-site-header\"><div class=\"thr-container\">\n  <a class=\"thr-brand\" href=\"{{ home|default('/') }}\">{{ site_name|default('ThreeJS Reference') }}</a>\n  <span class=\"thr-scene-tag\">{{ theme_scene.scene|default('nenhuma') }}</span>\n</div></header>\n",
+            "partial/hero": "{# ThreeJS Reference / hero — hero estatico #}\n<section class=\"thr-section thr-section--hero\">\n  <div class=\"thr-container\">\n<h2 class=\"thr-h2\">{{ heading_title|default('Cena de particulas') }}</h2>\n    <p class=\"thr-lead\">{{ text_tagline|default('Runtime declarativo self-hosted.') }}</p>\n    <p class=\"thr-actions\"><a class=\"thr-btn thr-btn--primary\" href=\"{{ portfolio|default('#') }}\">{{ button_portfolio|default('Portfolio') }}</a></p>\n  </div>\n</section>\n",
+            "partial/hero-3d": "{# ThreeJS Reference / hero-3d — hero com runtime ThreeJS #}\n<section class=\"thr-section thr-section--hero-3d\">\n  <div class=\"thr-container\">\n{% include 'partial/theme-scene-block.twig' %}\n      {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'hero' %}\n        {% include 'partial/theme-scene.twig' %}\n      {% endif %}\n    <div class=\"thr-hero-overlay\"><h2 class=\"thr-h2\">{{ heading_title|default('Aurora') }}</h2>\n      <p class=\"thr-lead\">{{ text_tagline|default('Preset aurora: 400 particulas, #8a4fff, 0.05.') }}</p></div>\n  </div>\n</section>\n",
+            "partial/about": "{# ThreeJS Reference / about — institucional #}\n<section class=\"thr-section thr-section--about\">\n  <div class=\"thr-container\">\n<h2 class=\"thr-h2\">{{ text_about_title|default('Sobre') }}</h2>\n    <p>{{ text_about|default('Tema de referencia para cenas declarativas.') }}</p>\n  </div>\n</section>\n",
+            "partial/methodology": "{# ThreeJS Reference / methodology — etapas #}\n<section class=\"thr-section thr-section--methodology\">\n  <div class=\"thr-container\">\n<h2 class=\"thr-h2\">{{ text_methodology_title|default('Metodo') }}</h2>\n    <ol class=\"thr-steps\">{% for step in steps|default([]) %}<li>{{ step }}</li>{% endfor %}</ol>\n  </div>\n</section>\n",
+            "partial/skills": "{# ThreeJS Reference / skills — cenas allowlistadas #}\n<section class=\"thr-section thr-section--skills\">\n  <div class=\"thr-container\">\n<h2 class=\"thr-h2\">{{ text_skills_title|default('Cenas') }}</h2>\n    <ul class=\"thr-tags\">{% for skill in skills|default([]) %}<li>{{ skill }}</li>{% endfor %}</ul>\n  </div>\n</section>\n",
+            "partial/services": "{# ThreeJS Reference / services — grade #}\n<section class=\"thr-section thr-section--services\">\n  <div class=\"thr-container\">\n<h2 class=\"thr-h2\">{{ text_services_title|default('Servicos') }}</h2>\n    {% if services %}<div class=\"thr-grid\">\n      {% for item in services %}<article class=\"thr-card\">\n        {% if item.image|default('') %}<img class=\"thr-card-img\" src=\"{{ item.image }}\" alt=\"{{ item.title|default(item.name|default('')) }}\" loading=\"lazy\">{% endif %}\n        <h3 class=\"thr-card-title\">{{ item.title|default(item.name|default('')) }}</h3>\n        <p class=\"thr-card-text\">{{ item.description|default(item.summary|default('')) }}</p>\n      </article>{% endfor %}\n    </div>{% else %}<p class=\"thr-empty\">Nenhum servico publicado.</p>{% endif %}\n  </div>\n</section>\n",
+            "partial/testimonials": "{# ThreeJS Reference / testimonials — grade #}\n<section class=\"thr-section thr-section--testimonials\">\n  <div class=\"thr-container\">\n<h2 class=\"thr-h2\">{{ text_testimonials_title|default('Depoimentos') }}</h2>\n    {% if testimonials %}<div class=\"thr-grid\">\n      {% for item in testimonials %}<article class=\"thr-card\">\n        {% if item.image|default('') %}<img class=\"thr-card-img\" src=\"{{ item.image }}\" alt=\"{{ item.title|default(item.name|default('')) }}\" loading=\"lazy\">{% endif %}\n        <h3 class=\"thr-card-title\">{{ item.title|default(item.name|default('')) }}</h3>\n        <p class=\"thr-card-text\">{{ item.description|default(item.summary|default('')) }}</p>\n      </article>{% endfor %}\n    </div>{% else %}<p class=\"thr-empty\">Nenhum depoimento publicado.</p>{% endif %}\n  </div>\n</section>\n",
+            "partial/portfolio": "{# ThreeJS Reference / portfolio — grade com preset geometric #}\n<section class=\"thr-section thr-section--portfolio\">\n  <div class=\"thr-container\">\n<h2 class=\"thr-h2\">{{ text_portfolio_title|default('Portfolio 3D') }}</h2>\n    {% if projects %}<div class=\"thr-grid\">\n      {% for item in projects %}<article class=\"thr-card\">\n        {% if item.image|default('') %}<img class=\"thr-card-img\" src=\"{{ item.image }}\" alt=\"{{ item.title|default(item.name|default('')) }}\" loading=\"lazy\">{% endif %}\n        <h3 class=\"thr-card-title\">{{ item.title|default(item.name|default('')) }}</h3>\n        <p class=\"thr-card-text\">{{ item.description|default(item.summary|default('')) }}</p>\n      </article>{% endfor %}\n    </div>{% else %}<p class=\"thr-empty\">Nenhum projeto publicado.</p>{% endif %}\n  </div>\n</section>\n",
+            "partial/tools": "{# ThreeJS Reference / tools — grade com preset workshop #}\n<section class=\"thr-section thr-section--tools\">\n  <div class=\"thr-container\">\n<h2 class=\"thr-h2\">{{ text_tools_title|default('Tools 3D') }}</h2>\n    {% if tools %}<div class=\"thr-grid\">\n      {% for item in tools %}<article class=\"thr-card\">\n        {% if item.image|default('') %}<img class=\"thr-card-img\" src=\"{{ item.image }}\" alt=\"{{ item.title|default(item.name|default('')) }}\" loading=\"lazy\">{% endif %}\n        <h3 class=\"thr-card-title\">{{ item.title|default(item.name|default('')) }}</h3>\n        <p class=\"thr-card-text\">{{ item.description|default(item.summary|default('')) }}</p>\n      </article>{% endfor %}\n    </div>{% else %}<p class=\"thr-empty\">Nenhuma ferramenta publicada.</p>{% endif %}\n  </div>\n</section>\n",
+            "partial/news": "{# ThreeJS Reference / news — grade #}\n<section class=\"thr-section thr-section--news\">\n  <div class=\"thr-container\">\n<h2 class=\"thr-h2\">{{ text_news_title|default('Noticias') }}</h2>\n    {% if posts %}<div class=\"thr-grid\">\n      {% for item in posts %}<article class=\"thr-card\">\n        {% if item.image|default('') %}<img class=\"thr-card-img\" src=\"{{ item.image }}\" alt=\"{{ item.title|default(item.name|default('')) }}\" loading=\"lazy\">{% endif %}\n        <h3 class=\"thr-card-title\">{{ item.title|default(item.name|default('')) }}</h3>\n        <p class=\"thr-card-text\">{{ item.description|default(item.summary|default('')) }}</p>\n      </article>{% endfor %}\n    </div>{% else %}<p class=\"thr-empty\">Nenhuma noticia publicada.</p>{% endif %}\n  </div>\n</section>\n",
+            "partial/clients": "{# ThreeJS Reference / clients — grade #}\n<section class=\"thr-section thr-section--clients\">\n  <div class=\"thr-container\">\n<h2 class=\"thr-h2\">{{ text_clients_title|default('Clientes') }}</h2>\n    {% if clients %}<div class=\"thr-grid\">\n      {% for item in clients %}<article class=\"thr-card\">\n        {% if item.image|default('') %}<img class=\"thr-card-img\" src=\"{{ item.image }}\" alt=\"{{ item.title|default(item.name|default('')) }}\" loading=\"lazy\">{% endif %}\n        <h3 class=\"thr-card-title\">{{ item.title|default(item.name|default('')) }}</h3>\n        <p class=\"thr-card-text\">{{ item.description|default(item.summary|default('')) }}</p>\n      </article>{% endfor %}\n    </div>{% else %}<p class=\"thr-empty\">Nenhum cliente publicado.</p>{% endif %}\n  </div>\n</section>\n",
+            "partial/contact": "{# ThreeJS Reference / contact — contato #}\n<section class=\"thr-section thr-section--contact\">\n  <div class=\"thr-container\">\n<h2 class=\"thr-h2\">{{ text_contact_title|default('Contato') }}</h2>\n    <p>{{ text_contact|default('Entre em contato.') }}</p>\n  </div>\n</section>\n",
+            "cms/page_info": "{# Reamur ThreeJS Reference — cena declarativa e composicao allowlistada. #}\n{{ header }}\n<main class=\"thr-main\">\n  <div class=\"thr-container\">\n    <header class=\"thr-page-head\">\n      <p class=\"thr-kicker\">{{ theme.vars.scene_preset|default('threejs') }}</p>\n      <h1 class=\"thr-title\">{{ heading_title|default('Pagina') }}</h1>\n      <p class=\"thr-lead\">Conteudo editorial.</p>\n    </header>\n    {% include 'partial/theme-scene-block.twig' %}\n      {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'home_top' %}\n        {% include 'partial/theme-scene.twig' %}\n      {% endif %}\n    {% if 'threejs' in theme.flags|default([]) %}<p class=\"thr-badge\">Cena allowlistada ativa</p>{% endif %}\n    <article class=\"thr-prose\">{{ description|default('') }}</article>\n  </div>\n</main>\n",
+            "catalog/project_list": "{# Reamur ThreeJS Reference — cena declarativa e composicao allowlistada. #}\n{{ header }}\n<main class=\"thr-main\">\n  <div class=\"thr-container\">\n    <header class=\"thr-page-head\">\n      <p class=\"thr-kicker\">{{ theme.vars.scene_preset|default('threejs') }}</p>\n      <h1 class=\"thr-title\">{{ heading_title|default('Projetos') }}</h1>\n      <p class=\"thr-lead\">Preset geometric / slot home_top.</p>\n    </header>\n    {% include 'partial/theme-scene-block.twig' %}\n      {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'home_top' %}\n        {% include 'partial/theme-scene.twig' %}\n      {% endif %}\n    {% if 'threejs' in theme.flags|default([]) %}<p class=\"thr-badge\">Cena allowlistada ativa</p>{% endif %}\n    {% if projects %}<div class=\"thr-grid\">\n      {% for item in projects %}<article class=\"thr-card\">\n        {% if item.image|default('') %}<img class=\"thr-card-img\" src=\"{{ item.image }}\" alt=\"{{ item.title|default(item.name|default('')) }}\" loading=\"lazy\">{% endif %}\n        <h3 class=\"thr-card-title\">{{ item.title|default(item.name|default('')) }}</h3>\n        <p class=\"thr-card-text\">{{ item.description|default(item.summary|default('')) }}</p>\n      </article>{% endfor %}\n    </div>{% else %}<p class=\"thr-empty\">Nenhum projeto publicado.</p>{% endif %}\n    {% include 'partial/theme-scene.twig' %}\n  </div>\n</main>\n",
+            "catalog/project_info": "{# Reamur ThreeJS Reference — cena declarativa e composicao allowlistada. #}\n{{ header }}\n<main class=\"thr-main\">\n  <div class=\"thr-container\">\n    <header class=\"thr-page-head\">\n      <p class=\"thr-kicker\">{{ theme.vars.scene_preset|default('threejs') }}</p>\n      <h1 class=\"thr-title\">{{ heading_title|default('Projeto') }}</h1>\n      <p class=\"thr-lead\">Detalhe do projeto.</p>\n    </header>\n    {% include 'partial/theme-scene-block.twig' %}\n      {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'home_top' %}\n        {% include 'partial/theme-scene.twig' %}\n      {% endif %}\n    {% if 'threejs' in theme.flags|default([]) %}<p class=\"thr-badge\">Cena allowlistada ativa</p>{% endif %}\n    <article class=\"thr-prose\">{{ description|default('') }}</article>\n  </div>\n</main>\n",
+            "blog/blog_list": "{# Reamur ThreeJS Reference — cena declarativa e composicao allowlistada. #}\n{{ header }}\n<main class=\"thr-main\">\n  <div class=\"thr-container\">\n    <header class=\"thr-page-head\">\n      <p class=\"thr-kicker\">{{ theme.vars.scene_preset|default('threejs') }}</p>\n      <h1 class=\"thr-title\">{{ heading_title|default('Blog') }}</h1>\n      <p class=\"thr-lead\">Lista de posts.</p>\n    </header>\n    {% include 'partial/theme-scene-block.twig' %}\n      {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'home_top' %}\n        {% include 'partial/theme-scene.twig' %}\n      {% endif %}\n    {% if 'threejs' in theme.flags|default([]) %}<p class=\"thr-badge\">Cena allowlistada ativa</p>{% endif %}\n    {% if posts %}<div class=\"thr-grid\">\n      {% for item in posts %}<article class=\"thr-card\">\n        {% if item.image|default('') %}<img class=\"thr-card-img\" src=\"{{ item.image }}\" alt=\"{{ item.title|default(item.name|default('')) }}\" loading=\"lazy\">{% endif %}\n        <h3 class=\"thr-card-title\">{{ item.title|default(item.name|default('')) }}</h3>\n        <p class=\"thr-card-text\">{{ item.description|default(item.summary|default('')) }}</p>\n      </article>{% endfor %}\n    </div>{% else %}<p class=\"thr-empty\">Nenhum post publicado.</p>{% endif %}\n  </div>\n</main>\n",
+            "blog/blog_info": "{# Reamur ThreeJS Reference — cena declarativa e composicao allowlistada. #}\n{{ header }}\n<main class=\"thr-main\">\n  <div class=\"thr-container\">\n    <header class=\"thr-page-head\">\n      <p class=\"thr-kicker\">{{ theme.vars.scene_preset|default('threejs') }}</p>\n      <h1 class=\"thr-title\">{{ heading_title|default('Post') }}</h1>\n      <p class=\"thr-lead\">Post completo.</p>\n    </header>\n    {% include 'partial/theme-scene-block.twig' %}\n      {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'home_top' %}\n        {% include 'partial/theme-scene.twig' %}\n      {% endif %}\n    {% if 'threejs' in theme.flags|default([]) %}<p class=\"thr-badge\">Cena allowlistada ativa</p>{% endif %}\n    <article class=\"thr-prose\">{{ description|default('') }}</article>\n  </div>\n</main>\n",
+            "tool/tool_list": "{# Reamur ThreeJS Reference — cena declarativa e composicao allowlistada. #}\n{{ header }}\n<main class=\"thr-main\">\n  <div class=\"thr-container\">\n    <header class=\"thr-page-head\">\n      <p class=\"thr-kicker\">{{ theme.vars.scene_preset|default('threejs') }}</p>\n      <h1 class=\"thr-title\">{{ heading_title|default('Ferramentas') }}</h1>\n      <p class=\"thr-lead\">Preset workshop / slot home_top.</p>\n    </header>\n    {% include 'partial/theme-scene-block.twig' %}\n      {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'home_top' %}\n        {% include 'partial/theme-scene.twig' %}\n      {% endif %}\n    {% if 'threejs' in theme.flags|default([]) %}<p class=\"thr-badge\">Cena allowlistada ativa</p>{% endif %}\n    {% if tools %}<div class=\"thr-grid\">\n      {% for item in tools %}<article class=\"thr-card\">\n        {% if item.image|default('') %}<img class=\"thr-card-img\" src=\"{{ item.image }}\" alt=\"{{ item.title|default(item.name|default('')) }}\" loading=\"lazy\">{% endif %}\n        <h3 class=\"thr-card-title\">{{ item.title|default(item.name|default('')) }}</h3>\n        <p class=\"thr-card-text\">{{ item.description|default(item.summary|default('')) }}</p>\n      </article>{% endfor %}\n    </div>{% else %}<p class=\"thr-empty\">Nenhuma ferramenta publicada.</p>{% endif %}\n    {% include 'partial/theme-scene.twig' %}\n  </div>\n</main>\n",
+            "tool/tool_info": "{# Reamur ThreeJS Reference — cena declarativa e composicao allowlistada. #}\n{{ header }}\n<main class=\"thr-main\">\n  <div class=\"thr-container\">\n    <header class=\"thr-page-head\">\n      <p class=\"thr-kicker\">{{ theme.vars.scene_preset|default('threejs') }}</p>\n      <h1 class=\"thr-title\">{{ heading_title|default('Ferramenta') }}</h1>\n      <p class=\"thr-lead\">Detalhe.</p>\n    </header>\n    {% include 'partial/theme-scene-block.twig' %}\n      {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'home_top' %}\n        {% include 'partial/theme-scene.twig' %}\n      {% endif %}\n    {% if 'threejs' in theme.flags|default([]) %}<p class=\"thr-badge\">Cena allowlistada ativa</p>{% endif %}\n    <article class=\"thr-prose\">{{ description|default('') }}</article>\n  </div>\n</main>\n",
+            "checkout/quote": "{# Reamur ThreeJS Reference — cena declarativa e composicao allowlistada. #}\n{{ header }}\n<main class=\"thr-main\">\n  <div class=\"thr-container\">\n    <header class=\"thr-page-head\">\n      <p class=\"thr-kicker\">{{ theme.vars.scene_preset|default('threejs') }}</p>\n      <h1 class=\"thr-title\">{{ heading_title|default('Orcamento') }}</h1>\n      <p class=\"thr-lead\">Orcamento.</p>\n    </header>\n    {% include 'partial/theme-scene-block.twig' %}\n      {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'home_top' %}\n        {% include 'partial/theme-scene.twig' %}\n      {% endif %}\n    {% if 'threejs' in theme.flags|default([]) %}<p class=\"thr-badge\">Cena allowlistada ativa</p>{% endif %}\n    {% if quote_items %}<div class=\"thr-grid\">\n      {% for item in quote_items %}<article class=\"thr-card\">\n        {% if item.image|default('') %}<img class=\"thr-card-img\" src=\"{{ item.image }}\" alt=\"{{ item.title|default(item.name|default('')) }}\" loading=\"lazy\">{% endif %}\n        <h3 class=\"thr-card-title\">{{ item.title|default(item.name|default('')) }}</h3>\n        <p class=\"thr-card-text\">{{ item.description|default(item.summary|default('')) }}</p>\n      </article>{% endfor %}\n    </div>{% else %}<p class=\"thr-empty\">Nenhum item.</p>{% endif %}\n  </div>\n</main>\n",
+            "error/not_found": "{# Reamur ThreeJS Reference — cena declarativa e composicao allowlistada. #}\n{{ header }}\n<main class=\"thr-main\">\n  <div class=\"thr-container\">\n    <header class=\"thr-page-head\">\n      <p class=\"thr-kicker\">{{ theme.vars.scene_preset|default('threejs') }}</p>\n      <h1 class=\"thr-title\">{{ heading_title|default('Nao encontrado') }}</h1>\n      <p class=\"thr-lead\">Preset lost / slot footer_top.</p>\n    </header>\n    {% include 'partial/theme-scene-block.twig' %}\n      {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'footer_top' %}\n        {% include 'partial/theme-scene.twig' %}\n      {% endif %}\n    {% if 'threejs' in theme.flags|default([]) %}<p class=\"thr-badge\">Cena allowlistada ativa</p>{% endif %}\n    <p class=\"thr-code\">{{ text_code|default('404') }}</p>\n    <p>{{ text_error|default('Endereco inexistente.') }}</p>\n    {% include 'partial/theme-scene.twig' %}\n    <a class=\"thr-btn thr-btn--primary\" href=\"{{ home|default('/') }}\">{{ button_continue|default('Continuar') }}</a>\n  </div>\n</main>\n"
+        },
+        "conditions": {
+            "version": 1,
+            "rules": [
+                {
+                    "id": "home-aurora",
+                    "when": {
+                        "all": [
+                            {
+                                "field": "route",
+                                "op": "eq",
+                                "value": "common/home"
+                            }
+                        ]
+                    },
+                    "then": {
+                        "three": {
+                            "enabled": true,
+                            "scene": "hero-particles",
+                            "slot": "hero",
+                            "count": 400,
+                            "color": "#8a4fff",
+                            "speed": 0.05
+                        },
+                        "vars": {
+                            "scene_preset": "aurora"
+                        },
+                        "flags": [
+                            "threejs"
+                        ],
+                        "classes": [
+                            "thr-aurora"
+                        ]
+                    }
+                },
+                {
+                    "id": "portfolio-geometric",
+                    "when": {
+                        "all": [
+                            {
+                                "field": "path",
+                                "op": "contains",
+                                "value": "project"
+                            }
+                        ]
+                    },
+                    "then": {
+                        "three": {
+                            "enabled": true,
+                            "scene": "portfolio-3d",
+                            "slot": "home_top",
+                            "count": 500,
+                            "color": "#22d3ee",
+                            "speed": 0.06
+                        },
+                        "vars": {
+                            "scene_preset": "geometric"
+                        },
+                        "flags": [
+                            "threejs",
+                            "portfolio3d"
+                        ]
+                    }
+                },
+                {
+                    "id": "tools-workshop",
+                    "when": {
+                        "all": [
+                            {
+                                "field": "path",
+                                "op": "contains",
+                                "value": "tool"
+                            }
+                        ]
+                    },
+                    "then": {
+                        "three": {
+                            "enabled": true,
+                            "scene": "tools-3d",
+                            "slot": "home_top",
+                            "count": 350,
+                            "color": "#f59e0b",
+                            "speed": 0.08
+                        },
+                        "vars": {
+                            "scene_preset": "workshop"
+                        },
+                        "flags": [
+                            "threejs",
+                            "tools3d"
+                        ]
+                    }
+                },
+                {
+                    "id": "notfound-lost",
+                    "when": {
+                        "all": [
+                            {
+                                "field": "route",
+                                "op": "eq",
+                                "value": "error/not_found"
+                            }
+                        ]
+                    },
+                    "then": {
+                        "three": {
+                            "enabled": true,
+                            "scene": "not-found",
+                            "slot": "footer_top",
+                            "count": 200,
+                            "color": "#94a3b8",
+                            "speed": 0.04
+                        },
+                        "vars": {
+                            "scene_preset": "lost"
+                        },
+                        "flags": [
+                            "threejs",
+                            "notfound3d"
+                        ]
+                    }
+                },
+                {
+                    "id": "variant-nebula",
+                    "when": {
+                        "all": [
+                            {
+                                "field": "query.variant",
+                                "op": "eq",
+                                "value": "b"
+                            }
+                        ]
+                    },
+                    "then": {
+                        "three": {
+                            "enabled": true,
+                            "scene": "hero-particles",
+                            "slot": "hero",
+                            "count": 800,
+                            "color": "#6ea8fe",
+                            "speed": 0.12
+                        },
+                        "vars": {
+                            "scene_preset": "nebula"
+                        },
+                        "flags": [
+                            "threejs",
+                            "nebula"
+                        ]
+                    }
+                },
+                {
+                    "id": "mobile-off",
+                    "when": {
+                        "any": [
+                            {
+                                "field": "device",
+                                "op": "eq",
+                                "value": "mobile"
+                            },
+                            {
+                                "field": "hour",
+                                "op": "lt",
+                                "value": 7
+                            }
+                        ]
+                    },
+                    "then": {
+                        "three": {
+                            "enabled": false,
+                            "scene": "",
+                            "slot": "hero",
+                            "count": 400,
+                            "color": "#8a4fff",
+                            "speed": 0.05
+                        },
+                        "vars": {
+                            "scene_preset": "off"
+                        },
+                        "flags": [
+                            "threejs",
+                            "reduced"
+                        ]
+                    }
+                }
+            ]
+        },
+        "three": {
+            "enabled": true,
+            "scene": "hero-particles",
+            "slot": "hero",
+            "count": 400,
+            "color": "#8a4fff",
+            "speed": 0.05
+        },
+        "tokens": {
+            "font_family": "system",
+            "font_size": "16",
+            "font_scale": "1.250",
+            "line_height": "1.55",
+            "font_weight": "400",
+            "heading_weight": "700",
+            "space_unit": "8",
+            "density": "comfortable",
+            "content_width": "1200",
+            "radius": "12",
+            "radius_lg": "20",
+            "border_width": "1",
+            "shadow": "1",
+            "color_text": "#212529",
+            "color_muted": "#5c6773",
+            "color_surface": "#ffffff",
+            "color_primary": "#8a4fff",
+            "focus_ring": "#8a4fff",
+            "dark_text": "#dee2e6",
+            "dark_muted": "#9aa4ae",
+            "dark_surface": "#212529",
+            "dark_primary": "#b794ff"
+        },
+        "parent": "",
+        "kaz_scene": {
+            "version": 1,
+            "canvas": {
+                "w": 960,
+                "h": 540,
+                "grid": 8
+            },
+            "layers": [
+                {
+                    "id": "thr-bg",
+                    "kind": "rect",
+                    "role": "none",
+                    "x": 0,
+                    "y": 0,
+                    "w": 960,
+                    "h": 540,
+                    "fill": "#101827",
+                    "radius": 0,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-glow",
+                    "kind": "rect",
+                    "role": "primary",
+                    "x": 40,
+                    "y": 40,
+                    "w": 240,
+                    "h": 140,
+                    "fill": "#8a4fff",
+                    "radius": 18,
+                    "text": "Aurora",
+                    "fontSize": 18,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": "hero"
+                },
+                {
+                    "id": "thr-stage",
+                    "kind": "card",
+                    "role": "surface",
+                    "x": 40,
+                    "y": 200,
+                    "w": 340,
+                    "h": 190,
+                    "fill": "#1e293b",
+                    "radius": 20,
+                    "text": "Composicao 3D",
+                    "fontSize": 20,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-title",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 400,
+                    "y": 48,
+                    "w": 500,
+                    "h": 84,
+                    "fill": "#f8fafc",
+                    "radius": 0,
+                    "text": "Reamur ThreeJS Reference",
+                    "fontSize": 32,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-subtitle",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 400,
+                    "y": 132,
+                    "w": 500,
+                    "h": 40,
+                    "fill": "#94a3b8",
+                    "radius": 0,
+                    "text": "Seis presets allowlistados, tres slots e dois mecanismos.",
+                    "fontSize": 14,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-section-portfolio",
+                    "kind": "section",
+                    "role": "section",
+                    "x": 400,
+                    "y": 190,
+                    "w": 220,
+                    "h": 120,
+                    "fill": "#22d3ee",
+                    "radius": 10,
+                    "text": "Portfolio 3D",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": "portfolio"
+                },
+                {
+                    "id": "thr-section-tools",
+                    "kind": "section",
+                    "role": "section",
+                    "x": 640,
+                    "y": 190,
+                    "w": 220,
+                    "h": 120,
+                    "fill": "#f59e0b",
+                    "radius": 10,
+                    "text": "Tools 3D",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": "tools"
+                },
+                {
+                    "id": "thr-cta-primary",
+                    "kind": "button",
+                    "role": "component",
+                    "x": 400,
+                    "y": 340,
+                    "w": 190,
+                    "h": 64,
+                    "fill": "#8a4fff",
+                    "radius": 14,
+                    "text": "Ativar cena",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": "hero"
+                },
+                {
+                    "id": "thr-cta-secondary",
+                    "kind": "button",
+                    "role": "component",
+                    "x": 610,
+                    "y": 340,
+                    "w": 190,
+                    "h": 64,
+                    "fill": "#6ea8fe",
+                    "radius": 14,
+                    "text": "Variante B",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-notfound",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 400,
+                    "y": 430,
+                    "w": 420,
+                    "h": 60,
+                    "fill": "#94a3b8",
+                    "radius": 0,
+                    "text": "404 / not-found",
+                    "fontSize": 24,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-particle-a",
+                    "kind": "rect",
+                    "role": "none",
+                    "x": 840,
+                    "y": 40,
+                    "w": 80,
+                    "h": 80,
+                    "fill": "#8a4fff",
+                    "radius": 40,
+                    "text": "Particulas",
+                    "fontSize": 12,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-particle-b",
+                    "kind": "rect",
+                    "role": "none",
+                    "x": 840,
+                    "y": 140,
+                    "w": 80,
+                    "h": 80,
+                    "fill": "#6ea8fe",
+                    "radius": 40,
+                    "text": "Nebula",
+                    "fontSize": 12,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-particle-c",
+                    "kind": "rect",
+                    "role": "none",
+                    "x": 840,
+                    "y": 240,
+                    "w": 80,
+                    "h": 80,
+                    "fill": "#22d3ee",
+                    "radius": 40,
+                    "text": "Geometric",
+                    "fontSize": 12,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-particle-d",
+                    "kind": "rect",
+                    "role": "none",
+                    "x": 840,
+                    "y": 340,
+                    "w": 80,
+                    "h": 80,
+                    "fill": "#f59e0b",
+                    "radius": 40,
+                    "text": "Workshop",
+                    "fontSize": 12,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-particle-e",
+                    "kind": "rect",
+                    "role": "none",
+                    "x": 840,
+                    "y": 440,
+                    "w": 80,
+                    "h": 80,
+                    "fill": "#94a3b8",
+                    "radius": 40,
+                    "text": "Lost",
+                    "fontSize": 12,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-slot-hero",
+                    "kind": "card",
+                    "role": "primary",
+                    "x": 40,
+                    "y": 410,
+                    "w": 110,
+                    "h": 90,
+                    "fill": "#8a4fff",
+                    "radius": 8,
+                    "text": "slot hero",
+                    "fontSize": 12,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": "hero"
+                },
+                {
+                    "id": "thr-slot-home",
+                    "kind": "card",
+                    "role": "surface",
+                    "x": 165,
+                    "y": 410,
+                    "w": 110,
+                    "h": 90,
+                    "fill": "#22d3ee",
+                    "radius": 8,
+                    "text": "slot home_top",
+                    "fontSize": 12,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-slot-footer",
+                    "kind": "card",
+                    "role": "section",
+                    "x": 290,
+                    "y": 410,
+                    "w": 110,
+                    "h": 90,
+                    "fill": "#f59e0b",
+                    "radius": 8,
+                    "text": "slot footer_top",
+                    "fontSize": 12,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-runner",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 400,
+                    "y": 410,
+                    "w": 220,
+                    "h": 40,
+                    "fill": "#cbd5e1",
+                    "radius": 0,
+                    "text": "scene-runner.js / boot()",
+                    "fontSize": 12,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-fallback",
+                    "kind": "card",
+                    "role": "component",
+                    "x": 400,
+                    "y": 460,
+                    "w": 220,
+                    "h": 60,
+                    "fill": "#334155",
+                    "radius": 8,
+                    "text": "fallback sem WebGL",
+                    "fontSize": 12,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-reduced",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 640,
+                    "y": 410,
+                    "w": 180,
+                    "h": 40,
+                    "fill": "#cbd5e1",
+                    "radius": 0,
+                    "text": "reduced-motion",
+                    "fontSize": 12,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-locked-guide",
+                    "kind": "section",
+                    "role": "none",
+                    "x": 640,
+                    "y": 460,
+                    "w": 180,
+                    "h": 60,
+                    "fill": "#1e293b",
+                    "radius": 8,
+                    "text": "guia travada",
+                    "fontSize": 12,
+                    "visible": true,
+                    "locked": true,
+                    "bindId": ""
+                },
+                {
+                    "id": "thr-bind-a",
+                    "kind": "button",
+                    "role": "component",
+                    "x": 40,
+                    "y": 330,
+                    "w": 110,
+                    "h": 56,
+                    "fill": "#8a4fff",
+                    "radius": 8,
+                    "text": "bind hero",
+                    "fontSize": 12,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": "hero"
+                },
+                {
+                    "id": "thr-bind-b",
+                    "kind": "button",
+                    "role": "component",
+                    "x": 165,
+                    "y": 330,
+                    "w": 110,
+                    "h": 56,
+                    "fill": "#22d3ee",
+                    "radius": 8,
+                    "text": "bind portfolio",
+                    "fontSize": 12,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": "portfolio"
+                }
+            ]
+        }
+    },
+    "meta": {
+        "generator": "ReamurCMS",
+        "schema": 1,
+        "source": "draft"
+    },
+    "checksum": "16461680c8a1e5a42bf0c53bb1906bdeca794e99d49e3d9e3a4e1b3d94611742"
+}

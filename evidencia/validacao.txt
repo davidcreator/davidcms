@@ -1,61 +1,60 @@
-$ php-wasm-cli -n validacao/bg_decode_harness.php
-OK   pacote presente
-OK   JSON valido
-OK   format = reamurcms-theme · reamurcms-theme
-OK   version = 1 · 1
-OK   name / slug
-OK   slug no padrao
-OK   parent vazio (tema base)
-OK   meta.source = draft
-OK   checksum 64 hex
-OK   checksum SHA-256 canonico confere · 07b6b2d294681e01
-OK   tamanho <= 512 KiB · 26226 bytes
-OK   config e objeto
-OK   nenhuma chave fora da allowlist
-OK   primary / surface hex
-OK   scene allowlistada
-OK   conditions version=1 sem regras
-OK   three allowlistado
+$ php-wasm-cli -n validacao/bh_decode_harness.php
+OK   JSON do pacote valido
+OK   format/version
+OK   validateConfig() = []
+OK   decode() ok = true · []
+OK   checksum confere
+OK   nome/slug/parent
 OK   25 fontes Twig · 25
-OK   chaves exatamente TEMPLATE_KEYS
-OK   nenhuma fonte com conteudo proibido
-OK   nenhuma fonte vazia
-OK   nenhuma fonte > 131072 bytes
-OK   nenhum |raw
-OK   nenhum <script
-OK   nenhuma fonte externa / CDN
-OK   sem !important
-OK   sem redefinicao --bs-* / --rms-*
-OK   usa |default defensivamente
-OK   templates de rota incluem header
-OK   footer fecha o documento
-OK   preserva ThreeJS via includes
-OK   classes proprias ref-*
-OK   Twig if/for balanceados por fonte
-OK   kaz_scene version=1
-OK   canvas allowlistado
-OK   layers <= 48 · 5
-OK   kinds/roles allowlistados
-OK   ids unicos e validos
-OK   textos sem codigo executavel
-OK   cores hex nas layers
-OK   guia presente
-OK   relatorio presente
-OK   indice presente
-OK   explica como importar
-OK   registra decode() real
-OK   sem migration
-OK   sem codigo executavel
-OK   nao afirma release
-OK   release_approved false
-OK   F9-27 preservado
-OK   F9-18 preservado
-OK   10 PENDING_DECISION
-OK   sem escrita no GitHub
-CJS BG: 53 OK / 0 FALHAS
+OK   24 camadas kaz_scene · 24
+OK   6 regras condicionais · 6
+OK   ScenePresetRegistry::scenes() = 5
+OK   ScenePresetRegistry::slots() = 3
+OK   ScenePresetRegistry::ids() = 6
+OK   three de base = preset aurora · aurora
+OK   three base validate() = []
+OK   normalizeThree() nao nulo
+OK   regra home-aurora -> preset aurora · aurora
+OK   regra home-aurora three validate() = []
+OK   regra portfolio-geometric -> preset geometric · geometric
+OK   regra portfolio-geometric three validate() = []
+OK   regra tools-workshop -> preset workshop · workshop
+OK   regra tools-workshop three validate() = []
+OK   regra notfound-lost -> preset lost · lost
+OK   regra notfound-lost three validate() = []
+OK   regra variant-nebula -> preset nebula · nebula
+OK   regra variant-nebula three validate() = []
+OK   regra mobile-off -> preset off · off
+OK   regra mobile-off three validate() = []
+OK   todos os 6 presets cobertos
+OK   ConditionEngine::validate() = []
+OK   evaluate() casa home-aurora · home-aurora
+OK   evaluate() home-aurora -> aurora · aurora
+OK   evaluate() casa portfolio-geometric · portfolio-geometric
+OK   evaluate() portfolio-geometric -> geometric · geometric
+OK   evaluate() casa tools-workshop · tools-workshop
+OK   evaluate() tools-workshop -> workshop · workshop
+OK   evaluate() casa notfound-lost · notfound-lost
+OK   evaluate() notfound-lost -> lost · lost
+OK   evaluate() casa variant-nebula · home-aurora,variant-nebula
+OK   evaluate() variant-nebula -> nebula · nebula
+OK   mobile desliga a cena (off)
+OK   hora < 7 tambem desliga (off)
+OK   validateScene() = []
+OK   normalizeScene() nao nulo
+OK   ThemeSceneCss enabled=true
+OK   ThemeSceneCss 24 camadas · 24
+OK   ThemeSceneCss canvas 960x540
+OK   CSS comeca com --rms-scene-w
+OK   5 kinds cobertos · rect,card,text,section,button
+OK   5 roles cobertos · none,primary,surface,section,component
+OK   bindIds demonstrados · 7
+OK   export() reproduz o checksum
+OK   1 byte alterado -> decode recusa
+PHP BH decode harness: 52 OK / 0 FALHAS
 
-$ node tools/verify-reference-theme.cjs
-CJS BG: 53 OK / 0 FALHAS
+$ node tools/verify-threejs-reference.cjs
+CJS BH: 73 OK / 0 FALHAS
 
 $ bash tools/verify-checksums.sh
 == resumo: 3 PASS / 0 FAIL | 14 manifesto(s), 142 arquivo(s) conferidos ==
