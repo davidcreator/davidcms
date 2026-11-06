@@ -1,0 +1,11 @@
+$ php-wasm-cli -n /tmp/ay_wasm/harness.php (JSON 1.0.0)
+real => 2 itens | name="BDREditor-Content" version="1.0.0" updated="2026-11-06" notes=0 legacy="BDREditor"
+
+$ node tools/verify-internal-tools.cjs
+CJS AY: 65 OK / 0 FALHAS
+
+$ bash tools/verify-checksums.sh
+== resumo: 3 PASS / 0 FAIL | 14 manifesto(s), 142 arquivo(s) conferidos ==
+
+$ bash tools/repo-health.sh
+== repo-health: 6 PASS / 0 FAIL / 0 SKIP == · COERENTE

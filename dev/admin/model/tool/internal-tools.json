@@ -6,8 +6,8 @@
       "name": "BDREditor-Content",
       "legacy_name": "BDREditor",
       "vendor": "ReamurCMS",
-      "version": "PENDENTE_USUARIO",
-      "updated_at": null,
+      "version": "1.0.0",
+      "updated_at": "2026-11-06",
       "notes": []
     },
     {
@@ -15,8 +15,8 @@
       "name": "KAZEditor-Theme",
       "legacy_name": "KAZTheme-Editor",
       "vendor": "ReamurCMS",
-      "version": "PENDENTE_USUARIO",
-      "updated_at": null,
+      "version": "1.0.0",
+      "updated_at": "2026-11-06",
       "notes": []
     }
   ]
