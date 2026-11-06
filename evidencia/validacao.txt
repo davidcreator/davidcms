@@ -1,15 +1,10 @@
-$ php-wasm-cli -n -l dev/admin/language/pt-br/cms/page.php  [rc=0]  No syntax errors detected in /tmp/bb_pkg/dev/admin/language/pt-br/cms/page.php
-$ php-wasm-cli -n -l dev/admin/language/pt-br/blog/blog.php  [rc=0]  No syntax errors detected in /tmp/bb_pkg/dev/admin/language/pt-br/blog/blog.php
-$ php-wasm-cli -n -l dev/admin/language/es-eu/cms/page.php  [rc=0]  No syntax errors detected in /tmp/bb_pkg/dev/admin/language/es-eu/cms/page.php
-$ php-wasm-cli -n -l dev/admin/language/es-eu/blog/blog.php  [rc=0]  No syntax errors detected in /tmp/bb_pkg/dev/admin/language/es-eu/blog/blog.php
-$ php-wasm-cli -n -l dev/admin/language/en-us/cms/page.php  [rc=0]  No syntax errors detected in /tmp/bb_pkg/dev/admin/language/en-us/cms/page.php
-$ php-wasm-cli -n -l dev/admin/language/en-us/blog/blog.php  [rc=0]  No syntax errors detected in /tmp/bb_pkg/dev/admin/language/en-us/blog/blog.php
-$ twig-balance dev/admin/view/template/design/kaz_theme_editor.twig  [OK]
-$ twig-balance dev/admin/view/template/cms/page_form.twig  [OK]
-$ twig-balance dev/admin/view/template/cms/page_content_form.twig  [OK]
+$ php-wasm-cli -n -l dev/admin/controller/design/theme.php  [rc=0]  No syntax errors detected in /tmp/bc_final_pkg/dev/admin/controller/design/theme.php
+$ php-wasm-cli -n -l dev/admin/language/en-us/design/theme.php  [rc=0]  No syntax errors detected in /tmp/bc_final_pkg/dev/admin/language/en-us/design/theme.
+$ php-wasm-cli -n -l dev/admin/language/pt-br/design/theme.php  [rc=0]  No syntax errors detected in /tmp/bc_final_pkg/dev/admin/language/pt-br/design/theme.
+$ php-wasm-cli -n -l dev/admin/language/es-eu/design/theme.php  [rc=0]  No syntax errors detected in /tmp/bc_final_pkg/dev/admin/language/es-eu/design/theme.
 
-$ node tools/verify-rename-b1.cjs
-CJS BB: 117 OK / 0 FALHAS
+$ node tools/verify-theme-import-file.cjs
+CJS BC: 51 OK / 0 FALHAS
 
 $ bash tools/verify-checksums.sh
 == resumo: 3 PASS / 0 FAIL | 14 manifesto(s), 142 arquivo(s) conferidos ==

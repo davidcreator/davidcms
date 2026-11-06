@@ -1,0 +1,33 @@
+$ node validacao/bc_harness.cjs  [rc=0]
+OK   validacao client: textarea recebe o JSON exato
+OK   preview visivel
+OK   preview nome
+OK   preview slug
+OK   preview versao
+OK   preview pai
+OK   preview arquivo
+OK   status ok
+OK   nome do POST preservado
+OK   pai vazio usa fallback
+OK   >512 KiB recusado
+OK   >512 KiB mensagem
+OK   extensao invalida recusada
+OK   JSON invalido recusado
+OK   recusa formato
+OK   recusa versao
+OK   recusa checksum curto
+OK   recusa slug invalido
+OK   recusa config ausente
+OK   drag-and-drop preenche textarea
+OK   drag-and-drop limpa estado de arraste
+OK   edicao manual esconde preview
+OK   sem fetch/XMLHttpRequest
+OK   sem eval/Function/document.write
+OK   sem innerHTML/outerHTML
+OK   sem localStorage/sessionStorage
+OK   sem import/require dinamico
+OK   usa textContent para o preview
+OK   FileReader presente
+OK   limite 524288 coerente
+OK   formato/versao coerentes
+CJS BC harness: 31 OK / 0 FALHAS

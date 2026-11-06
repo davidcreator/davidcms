@@ -440,3 +440,15 @@ $_['text_site_legacy'] = 'Legado';
 $_['text_site_legacy_help'] = 'Domínio antigo em transição.';
 $_['text_site_staging'] = 'Homologação';
 $_['text_site_staging_help'] = 'Ambiente de testes controlado.';
+
+// Frente BC — import de pacote por arquivo (recorte A, sem upload em disco)
+$_['text_package_drop'] = 'Arraste um arquivo .json aqui ou escolha abaixo';
+$_['text_package_preview'] = 'Prévia do pacote';
+$_['text_package_preview_name'] = 'Nome';
+$_['text_package_preview_slug'] = 'Slug';
+$_['text_package_preview_file'] = 'Arquivo';
+$_['text_package_ready'] = 'Pacote pronto para importar como rascunho.';
+$_['error_package_size'] = 'Arquivo maior que 512 KiB.';
+$_['error_package_type'] = 'Use um arquivo .json.';
+$_['error_package_json'] = 'JSON inválido.';
+$_['error_package_format'] = 'Pacote incompatível (formato/versão/checksum).';
