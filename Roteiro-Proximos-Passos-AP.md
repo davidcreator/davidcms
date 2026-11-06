@@ -20,7 +20,7 @@ ao pacote entregue.
 | Item | Estado no HEAD |
 |---|---|
 | Aplicação técnica da AP | ✅ fiel (6/6 idênticos, 9 adições, 0 remoções) |
-| **Veredito visual da AP** | ⏳ **PENDENTE** — `image-9.png` ainda é a reprovação vigente |
+| **Veredito visual da AP** | ✅ **APROVADO pelo usuário em 2026-11-06** — `image-9.png` é registro histórico superado; `image-10.png` referência atendida |
 | `decision-matrix.json` | `PENDING_DECISION: 10`, `DECIDED: 0` |
 | F9-27 | `BLOCKED_NOT_RUN`, `release_approved: false`, `runtime_tests_executed: false` |
 | F9-18 | `release_ready: false`, 4 achados abertos (2 × P1, 2 × P2) |
@@ -36,7 +36,16 @@ ao pacote entregue.
 
 ---
 
-## 1. Passo 1 — Veredito visual (seu, bloqueante para tudo mais)
+## 1. Passo 1 — Veredito visual ✅ **CONCLUÍDO: APROVADO (2026-11-06)**
+
+> **Atualização AU.** O usuário respondeu explicitamente **`aprovado`** após
+> avaliar o Admin real. Os quatro critérios abaixo foram considerados
+> satisfeitos. `image-9.png` deixa de ser a reprovação vigente; o escopo
+> "editar somente o BDREditor" fica **fechado e congelado**. Registro
+> completo em `Registro-Veredito-Visual-AP.md`. **Isto não é release**:
+> `release_approved: false` e todos os contratos permanecem como estavam.
+
+Critérios avaliados (mantidos para rastreabilidade):
 
 Abrir **Pages › Edit** e **Blog › Edit post** no Admin autenticado e conferir:
 
@@ -47,17 +56,19 @@ Abrir **Pages › Edit** e **Blog › Edit post** no Admin autenticado e conferi
 4. **Nada mais** alterado fora do BDREditor (overlays do próprio editor podem
    e devem ser escuros).
 
-**Como registrar:** uma captura desktop + uma a 390 px, e um "aprovado"/
-"reprovado" explícito. Com isso eu atualizo
-`Protocolo-Aceitacao-Visual-AP.md` e `image-9.png` deixa de ser vigente.
+**Como foi registrado:** resposta explícita **`aprovado`** do usuário em
+2026-11-06, após avaliação no Admin real. `Protocolo-Aceitacao-Visual-AP.md`
+e `Registro-Veredito-Visual-AP.md` foram atualizados; `image-9.png` passou a
+registro histórico superado.
 
 | Desfecho | Ação |
 |---|---|
-| Aprovado | Registrar veredito; congelar o escopo; seguir para o passo 2 |
-| Reprovado | Frente de ajuste **pontual**, sem reabrir o escopo da página |
+| ✅ **Aprovado (ocorrido)** | Veredito registrado; escopo congelado; passos 2–4 liberados para as ações do usuário |
+| Reprovado (não ocorreu) | Frente de ajuste **pontual**, sem reabrir o escopo da página |
 
-**Critério de saída:** veredito explícito + captura. PROBE 53/0, Chromium
-41/0 e 117 asserções finais **não** substituem isso.
+**Critério de saída: SATISFEITO** pelo veredito explícito. PROBE 53/0,
+Chromium 41/0, 117 asserções finais e CI 7/7 foram apoio técnico — **não**
+substituíram a decisão e **não significam release aprovada**.
 
 ---
 
@@ -192,8 +203,13 @@ D02, D04. Para cada uma registrar `status: DECIDED`, `decided_by` e
 
 ## 4. Dependências em uma linha
 
-`1 veredito visual` → `2 health + CI` → `3 decisões + P1` →
+`✅ 1 veredito visual (APROVADO)` → `2 health + ✅ CI` → `3 decisões + P1` →
 `4 backend/ciclo salvar–Publicar` → `5 (opcional) identidade extra`.
+
+**Após o veredito, todos os passos restantes dependem de uma ação do
+usuário**: colar o health no console (2), decidir D01–D10 (3), autorizar
+staging/runtime (4) ou revisar o escopo (5). Não há próxima frente de código
+a ser entregue pelo agente sem uma dessas ações.
 
 O passo 4 é o maior risco funcional remanescente e **exige** sessão
 autenticada, MySQL e staging — tudo fora deste ambiente. Deve ser uma frente
