@@ -1,0 +1,31 @@
+--- a/dev/catalog/view/template/common/home.twig
++++ b/dev/catalog/view/template/common/home.twig
+@@ -1,7 +1,6 @@
+ {# Estrutura permitida vem do contrato CMS PageLayout; includes de domínio permanecem fixos. #}
+ {{ header }}
+ <main>
+-{% include 'partial/theme-scene-block.twig' %}
+ {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'home_top' %}{% include 'partial/theme-scene.twig' %}{% endif %}
+ {% for section in cms_home_sections %}
+   {% if section == 'hero' %}{% include 'partial/hero-3d.twig' %}
+--- a/dev/catalog/controller/common/home.php
++++ b/dev/catalog/controller/common/home.php
+@@ -365,8 +365,6 @@
+             $cmsHomeSections = $this->theme_section_registry->plan($themeSections);
+         }
+         $data['cms_home_sections'] = $cmsHomeSections;
+-        // Frente AB: blocos da cena desenhada no editor (escalares allowlistados).
+-        $data['theme_scene_view'] = (array)$this->config->get('catalog_theme_scene_view', []);
+         $activeHomeSections = $cmsHomeSections;
+         $data['has_3d'] = (in_array('hero', $activeHomeSections, true) && $threeJs['hero_enabled'])
+             || (in_array('portfolio', $activeHomeSections, true) && $portfolioEnabled)
+--- a/dev/catalog/controller/startup/theme.php
++++ b/dev/catalog/controller/startup/theme.php
+@@ -152,7 +152,6 @@
+         $this->config->set('catalog_theme_scene', $scene);
+         // Frente AB: cena do editor -> CSS allowlistado + camadas renderizaveis.
+         $this->config->set('catalog_theme_scene_css', $snapshot['scene_css']);
+-        $this->config->set('catalog_theme_scene_view', $snapshot['scene_view']);
+         $this->config->set('catalog_theme_three', $three);
+         $this->config->set('catalog_theme_tokens', $tokens);
+         $this->config->set('catalog_theme_vars', $snapshot['vars']);

@@ -1,0 +1,47 @@
+
+-- atlas_studio --
+OK   validateConfig = []
+OK   decode ok=true · []
+OK   checksum confere
+OK   25 fontes
+OK   sem theme-scene-block
+OK   theme-scene declarativo mantido
+OK   kaz_scene preservado
+OK   <=512 KiB · 62437 bytes
+   checksum: dced34ce27247a9295f5185b4b5299e86bcb007c27b7748722f3a4fb3d972dd4
+
+-- david_creator --
+OK   validateConfig = []
+OK   decode ok=true · []
+OK   checksum confere
+OK   25 fontes
+OK   sem theme-scene-block
+OK   theme-scene declarativo mantido
+OK   kaz_scene preservado
+OK   <=512 KiB · 62777 bytes
+   checksum: f2e53d070b252e71b07e64128191f51a02c908642e5d3c8c8f16a051894354ff
+
+-- reamur_reference --
+OK   validateConfig = []
+OK   decode ok=true · []
+OK   checksum confere
+OK   25 fontes
+OK   sem theme-scene-block
+OK   theme-scene declarativo mantido
+OK   kaz_scene preservado
+OK   <=512 KiB · 26126 bytes
+   checksum: 0197e1400ccadf51155d58371c49350448b72446cfdc7ddd51f921a18e15a9e5
+
+-- reamur_threejs_reference --
+OK   validateConfig = []
+OK   decode ok=true · []
+OK   checksum confere
+OK   25 fontes
+OK   sem theme-scene-block
+OK   theme-scene declarativo mantido
+OK   kaz_scene preservado
+OK   <=512 KiB · 42045 bytes
+   checksum: 1c6fc07ac9fb9995fead752dd642ea0c8b0cb831b2ed24320fc29a31dbd8c053
+
+PHP BK export: 32 OK / 0 FALHAS
+sync /tmp/bk_patch: [object Object]

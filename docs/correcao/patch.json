@@ -1,0 +1,14 @@
+{
+ "arquivos": [
+  "dev/catalog/view/template/common/home.twig",
+  "dev/catalog/controller/common/home.php",
+  "dev/catalog/controller/startup/theme.php"
+ ],
+ "linhas_removidas": 4,
+ "admin_intacto": [
+  "dev/system/library/template/twig.php",
+  "dev/system/library/theme/theme_compare_view.php",
+  "dev/admin/controller/design/theme.php",
+  "dev/catalog/view/template/partial/theme-scene-block.twig"
+ ]
+}
