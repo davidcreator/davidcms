@@ -1,0 +1,1111 @@
+{
+ "head": "481b690209ec1a1caf4d9f334cef6012d4597653",
+ "arquivos": 179,
+ "ocorrencias": 762,
+ "por_categoria": {
+  "Doc/contrato": 107,
+  "ADR/decisoes": 9,
+  "PHP runtime": 34,
+  "Traducao": 55,
+  "CSS": 190,
+  "JS runtime": 42,
+  "Template Twig": 14,
+  "Docs": 231,
+  "Shell (guard)": 3,
+  "Preview": 4,
+  "Tests": 1,
+  "Tools (probe/smoke/guard)": 68,
+  "Replica tree/": 4
+ },
+ "arquivos_por_categoria": {
+  "Doc/contrato": 19,
+  "ADR/decisoes": 4,
+  "PHP runtime": 9,
+  "Traducao": 6,
+  "CSS": 8,
+  "JS runtime": 8,
+  "Template Twig": 5,
+  "Docs": 99,
+  "Shell (guard)": 1,
+  "Preview": 2,
+  "Tests": 1,
+  "Tools (probe/smoke/guard)": 14,
+  "Replica tree/": 3
+ },
+ "itens": [
+  {
+   "path": "F11-01-INDICE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "F11-06-INDICE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "F11-07-INDICE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "F11-13-INDICE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "F11-14-INDICE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "F11-16-INDICE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "INDICE-AN.md",
+   "ocorrencias": 11,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "INDICE-AO.md",
+   "ocorrencias": 12,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "INDICE-AP.md",
+   "ocorrencias": 11,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "INDICE-AQ.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "Protocolo-Aceitacao-Visual-AP.md",
+   "ocorrencias": 6,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "RELATORIO-FINAL-AN.md",
+   "ocorrencias": 9,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "RELATORIO-FINAL-AO.md",
+   "ocorrencias": 14,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "RELATORIO-FINAL-AP.md",
+   "ocorrencias": 16,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "RELATORIO-FINAL-AU.md",
+   "ocorrencias": 3,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "RELATORIO.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "Registro-Veredito-Visual-AP.md",
+   "ocorrencias": 6,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "Roteiro-Proximos-Passos-AP.md",
+   "ocorrencias": 6,
+   "nome_no_path": false,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "agents-ia/Agent-BDREditor/AGENT.md",
+   "ocorrencias": 4,
+   "nome_no_path": true,
+   "categoria": "ADR/decisoes"
+  },
+  {
+   "path": "agents-ia/Agent-BDREditor/README.md",
+   "ocorrencias": 3,
+   "nome_no_path": true,
+   "categoria": "ADR/decisoes"
+  },
+  {
+   "path": "agents-ia/README.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "ADR/decisoes"
+  },
+  {
+   "path": "agents-ia/regras/00-contexto-global.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "ADR/decisoes"
+  },
+  {
+   "path": "dev/admin/controller/blog/blog.php",
+   "ocorrencias": 8,
+   "nome_no_path": false,
+   "categoria": "PHP runtime"
+  },
+  {
+   "path": "dev/admin/controller/cms/page.php",
+   "ocorrencias": 8,
+   "nome_no_path": false,
+   "categoria": "PHP runtime"
+  },
+  {
+   "path": "dev/admin/controller/design/theme.php",
+   "ocorrencias": 12,
+   "nome_no_path": false,
+   "categoria": "PHP runtime"
+  },
+  {
+   "path": "dev/admin/language/en-us/blog/blog.php",
+   "ocorrencias": 14,
+   "nome_no_path": false,
+   "categoria": "Traducao"
+  },
+  {
+   "path": "dev/admin/language/en-us/cms/page.php",
+   "ocorrencias": 4,
+   "nome_no_path": false,
+   "categoria": "Traducao"
+  },
+  {
+   "path": "dev/admin/language/es-eu/blog/blog.php",
+   "ocorrencias": 14,
+   "nome_no_path": false,
+   "categoria": "Traducao"
+  },
+  {
+   "path": "dev/admin/language/es-eu/cms/page.php",
+   "ocorrencias": 4,
+   "nome_no_path": false,
+   "categoria": "Traducao"
+  },
+  {
+   "path": "dev/admin/language/pt-br/blog/blog.php",
+   "ocorrencias": 14,
+   "nome_no_path": false,
+   "categoria": "Traducao"
+  },
+  {
+   "path": "dev/admin/language/pt-br/cms/page.php",
+   "ocorrencias": 5,
+   "nome_no_path": false,
+   "categoria": "Traducao"
+  },
+  {
+   "path": "dev/admin/view/css/blog-block-editor-kaz-total.css",
+   "ocorrencias": 4,
+   "nome_no_path": true,
+   "categoria": "CSS"
+  },
+  {
+   "path": "dev/admin/view/css/blog-block-editor-kaz.css",
+   "ocorrencias": 104,
+   "nome_no_path": true,
+   "categoria": "CSS"
+  },
+  {
+   "path": "dev/admin/view/css/blog-block-editor.css",
+   "ocorrencias": 4,
+   "nome_no_path": false,
+   "categoria": "CSS"
+  },
+  {
+   "path": "dev/admin/view/css/kaz-theme-editor-ajuste.css",
+   "ocorrencias": 9,
+   "nome_no_path": true,
+   "categoria": "CSS"
+  },
+  {
+   "path": "dev/admin/view/css/kaz-theme-editor-ergonomia.css",
+   "ocorrencias": 58,
+   "nome_no_path": true,
+   "categoria": "CSS"
+  },
+  {
+   "path": "dev/admin/view/css/kaz-theme-editor.css",
+   "ocorrencias": 2,
+   "nome_no_path": true,
+   "categoria": "CSS"
+  },
+  {
+   "path": "dev/admin/view/js/blog-audio-media.js",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "JS runtime"
+  },
+  {
+   "path": "dev/admin/view/js/blog-block-editor-kaz.js",
+   "ocorrencias": 19,
+   "nome_no_path": true,
+   "categoria": "JS runtime"
+  },
+  {
+   "path": "dev/admin/view/js/blog-block-editor.js",
+   "ocorrencias": 4,
+   "nome_no_path": false,
+   "categoria": "JS runtime"
+  },
+  {
+   "path": "dev/admin/view/js/blog-block-import.js",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "JS runtime"
+  },
+  {
+   "path": "dev/admin/view/js/blog-file-media.js",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "JS runtime"
+  },
+  {
+   "path": "dev/admin/view/js/kaz-theme-editor-ajuste.js",
+   "ocorrencias": 1,
+   "nome_no_path": true,
+   "categoria": "JS runtime"
+  },
+  {
+   "path": "dev/admin/view/js/kaz-theme-editor-ergonomia.js",
+   "ocorrencias": 3,
+   "nome_no_path": true,
+   "categoria": "JS runtime"
+  },
+  {
+   "path": "dev/admin/view/js/kaz-theme-editor.js",
+   "ocorrencias": 12,
+   "nome_no_path": true,
+   "categoria": "JS runtime"
+  },
+  {
+   "path": "dev/admin/view/template/cms/page_content_form.twig",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Template Twig"
+  },
+  {
+   "path": "dev/admin/view/template/cms/page_form.twig",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Template Twig"
+  },
+  {
+   "path": "dev/admin/view/template/design/kaz_theme_editor.twig",
+   "ocorrencias": 9,
+   "nome_no_path": true,
+   "categoria": "Template Twig"
+  },
+  {
+   "path": "dev/admin/view/template/design/theme_form.twig",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Template Twig"
+  },
+  {
+   "path": "dev/catalog/view/css/blog-blocks.css",
+   "ocorrencias": 8,
+   "nome_no_path": false,
+   "categoria": "CSS"
+  },
+  {
+   "path": "dev/catalog/view/css/theme.css",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "CSS"
+  },
+  {
+   "path": "dev/catalog/view/template/partial/theme-scene-block.twig",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Template Twig"
+  },
+  {
+   "path": "dev/system/library/template/twig.php",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "PHP runtime"
+  },
+  {
+   "path": "dev/system/library/theme/component_registry.php",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "PHP runtime"
+  },
+  {
+   "path": "dev/system/library/theme/theme_media.php",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "PHP runtime"
+  },
+  {
+   "path": "dev/system/library/theme/theme_preview_state.php",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "PHP runtime"
+  },
+  {
+   "path": "dev/system/library/theme/theme_release_probe.php",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "PHP runtime"
+  },
+  {
+   "path": "dev/system/library/three/scene_preset_registry.php",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "PHP runtime"
+  },
+  {
+   "path": "docs/Analise-Pos-Limpeza-GitHub-2026-11-05.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/Auditoria-Limpeza-GitHub-2026-11-05.md",
+   "ocorrencias": 10,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor — complete project reference and closure.md",
+   "ocorrencias": 5,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Accessible-Details.md",
+   "ocorrencias": 2,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Audio-Scope.md",
+   "ocorrencias": 2,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Audio.md",
+   "ocorrencias": 1,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Block-Copy-Paste-Scope.md",
+   "ocorrencias": 1,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Block-Copy-Paste.md",
+   "ocorrencias": 0,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Blog-Catalog-Preview.md",
+   "ocorrencias": 0,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-CMS-Page-Integration.md",
+   "ocorrencias": 4,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Complete-Reference-and-Closure.md",
+   "ocorrencias": 8,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Editorial-Callout.md",
+   "ocorrencias": 2,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Elementor-Style-Workbench.md",
+   "ocorrencias": 2,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-File-Download-Scope.md",
+   "ocorrencias": 3,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-File-Download.md",
+   "ocorrencias": 1,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Hierarchical-Navigation-Scope.md",
+   "ocorrencias": 1,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Hierarchical-Navigation.md",
+   "ocorrencias": 1,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Hierarchical-Reordering.md",
+   "ocorrencias": 2,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Immersive-Editing.md",
+   "ocorrencias": 1,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Keyboard-Editing-Scope.md",
+   "ocorrencias": 1,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Keyboard-Editing.md",
+   "ocorrencias": 0,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Modern-Interface.md",
+   "ocorrencias": 1,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Outline-Keyboard-Navigation-Scope.md",
+   "ocorrencias": 0,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Outline-Keyboard-Navigation.md",
+   "ocorrencias": 0,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Pages-Gap-Audit.md",
+   "ocorrencias": 5,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Preformatted-Code.md",
+   "ocorrencias": 2,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Table-Base-Hashes.json",
+   "ocorrencias": 0,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Table-Contract.json",
+   "ocorrencias": 2,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Table-Verification.json",
+   "ocorrencias": 2,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Table.md",
+   "ocorrencias": 2,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-UI-Interpretation.md",
+   "ocorrencias": 4,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Unsaved-Changes-Warning.md",
+   "ocorrencias": 3,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BDREditor-Vertical-Spacer.md",
+   "ocorrencias": 2,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/BLOG_MEDIA_UPLOAD.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/CHANGELOG.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/CORRECAO-MAPA-DE-SITES.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/Checklist-Veredito-Visual-AP.md",
+   "ocorrencias": 3,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F11-01-CI-e-Dependencias.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F11-02-Verificacao-Dependencias.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F11-06-Fechamento-e-Radar.md",
+   "ocorrencias": 4,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F11-07-Inventario-Checkers.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F11-09-Triagem-Marcadores.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F11-11-Decisoes-Contratos.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F11-13-Fechamento-Fase-11.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F11-14-Aplicacao-Pendentes.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F11-16-Auditoria-Contratos-Congelados.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-100-Visual-Consistency-Audit.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-21-Roadmap-Editor-Avancado.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-25-Editor-Editorial.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-28-Recuperacao-Rascunhos-BDRE.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-29-Portabilidade-Documento-BDRE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-30-Historico-Local-BDRE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-35-Preflight-Statico-Release-BDRE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-36-Busca-e-Substituicao-BDRE.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-37-Acessibilidade-Atalhos-BDRE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-38-Busca-Atravessa-Formatacao-BDRE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-42-Estatisticas-Documento-BDRE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-43-Personalizar-Blocos-BDRE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-44-Funcoes-Blocos-e-Faixa.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-46-Guias-Faixa-BDREditor.md",
+   "ocorrencias": 1,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-47-Auditoria-Funcional-BDREditor.md",
+   "ocorrencias": 2,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-48-Barra-Lateral-de-Ferramentas-BDREditor.md",
+   "ocorrencias": 2,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-49-Workspace-Office-Modelos-e-Acesso-Rapido.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-50-Workspace-Office-Interface-Completa.md",
+   "ocorrencias": 3,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-51-BDREditor-Area-de-Edicao-em-Largura-Total.md",
+   "ocorrencias": 3,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-52-BDREditor-Workspace-Fullscreen.md",
+   "ocorrencias": 5,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-53-Bloco-Paragrafo-Inspector-e-Acoes.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-55-Bloco-List-Inspetor-e-Toolbar.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-56-Bloco-Quote-Inspetor-e-Toolbar.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-57-BDREditor-Bateria-Completa-e-Toolbar.md",
+   "ocorrencias": 1,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-75-BDREditor-Interface.md",
+   "ocorrencias": 1,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-83-Markdown-Import.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-87-Pages-Fullscreen-Create-Workflow.md",
+   "ocorrencias": 3,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-88-Pages-Quick-Edit-and-Fullscreen-Editor.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-89-Single-Ribbon-and-Editor-Brand.md",
+   "ocorrencias": 3,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/F9-91-Command-Palette.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/GUIA-AGENDAMENTO-ROLLOUT.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/GUIA-BIBLIOTECA-COMPONENTES.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/GUIA-EDITOR-CENA-PRESETS.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/GUIA-IDIOMA-EFETIVO-POR-CONFIG.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/GUIA-IDIOMA-POR-SITE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/GUIA-MIDIA-MODELOS.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/GUIA-MULTISITE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/GUIA-PREVIA-POR-SITE.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/GUIA-PREVIA-SITE-EFETIVO.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/GUIA-SECTION-BUILDER.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/GUIA-SITE-EFETIVO-COERENTE.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/GUIA-SITE-POR-ID.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/Guia-CMS.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/Guia-ThreeJS.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/KAZ-BDREditor-Padrao-Visual.md",
+   "ocorrencias": 15,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/KAZ-BDREditor-Tema-Total.md",
+   "ocorrencias": 18,
+   "nome_no_path": true,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/PROJECT-HANDOFF.md",
+   "ocorrencias": 7,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/README.md",
+   "ocorrencias": 6,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/RELATORIO-ADERENCIA-main.md",
+   "ocorrencias": 6,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/Registro-CI-Remoto-HEAD-bfe9eec7.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/Registro-Visual-AP.md",
+   "ocorrencias": 7,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/THREEJS_CMS_E2E.md",
+   "ocorrencias": 3,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "docs/THREEJS_THUMB.md",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Docs"
+  },
+  {
+   "path": "entregas/BDREditor-UI-Interpretation-Preview.html",
+   "ocorrencias": 5,
+   "nome_no_path": true,
+   "categoria": "Doc/contrato"
+  },
+  {
+   "path": "limpar-github.sh",
+   "ocorrencias": 3,
+   "nome_no_path": false,
+   "categoria": "Shell (guard)"
+  },
+  {
+   "path": "preview/assets/blog-block-editor.css",
+   "ocorrencias": 3,
+   "nome_no_path": false,
+   "categoria": "Preview"
+  },
+  {
+   "path": "preview/assets/blog-block-editor.js",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Preview"
+  },
+  {
+   "path": "tests/check_cms_page_integration.js",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Tests"
+  },
+  {
+   "path": "tools/e2e/README.md",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Tools (probe/smoke/guard)"
+  },
+  {
+   "path": "tools/e2e/check_page_content_flow.cjs",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Tools (probe/smoke/guard)"
+  },
+  {
+   "path": "tools/e2e/check_single_page_ribbon.cjs",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Tools (probe/smoke/guard)"
+  },
+  {
+   "path": "tools/e2e/e2e_bdre_block_copy_static.cjs",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Tools (probe/smoke/guard)"
+  },
+  {
+   "path": "tools/e2e/threejs_cms_playwright.cjs",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Tools (probe/smoke/guard)"
+  },
+  {
+   "path": "tools/f9-57-static-battery.py",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Tools (probe/smoke/guard)"
+  },
+  {
+   "path": "tools/f9-76-content-model-smoke.js",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Tools (probe/smoke/guard)"
+  },
+  {
+   "path": "tools/f9-89-single-ribbon-brand-smoke.js",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Tools (probe/smoke/guard)"
+  },
+  {
+   "path": "tools/health-admin-ap.js",
+   "ocorrencias": 3,
+   "nome_no_path": false,
+   "categoria": "Tools (probe/smoke/guard)"
+  },
+  {
+   "path": "tools/kaz-bdre-total-probe.php",
+   "ocorrencias": 22,
+   "nome_no_path": true,
+   "categoria": "Tools (probe/smoke/guard)"
+  },
+  {
+   "path": "tools/kaz-bdre-visual-probe.php",
+   "ocorrencias": 18,
+   "nome_no_path": true,
+   "categoria": "Tools (probe/smoke/guard)"
+  },
+  {
+   "path": "tools/release-readiness-report.sh",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Tools (probe/smoke/guard)"
+  },
+  {
+   "path": "tools/verify-kaz-bdre-total.cjs",
+   "ocorrencias": 4,
+   "nome_no_path": true,
+   "categoria": "Tools (probe/smoke/guard)"
+  },
+  {
+   "path": "tools/verify-kaz-bdre-visual.cjs",
+   "ocorrencias": 11,
+   "nome_no_path": true,
+   "categoria": "Tools (probe/smoke/guard)"
+  },
+  {
+   "path": "tree/dev/admin/language/pt-br/cms/page.php",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Replica tree/"
+  },
+  {
+   "path": "tree/dev/admin/view/js/blog-block-editor.js",
+   "ocorrencias": 2,
+   "nome_no_path": false,
+   "categoria": "Replica tree/"
+  },
+  {
+   "path": "tree/dev/admin/view/template/cms/page_form.twig",
+   "ocorrencias": 1,
+   "nome_no_path": false,
+   "categoria": "Replica tree/"
+  }
+ ]
+}
