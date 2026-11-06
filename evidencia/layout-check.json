@@ -1,0 +1,32 @@
+[
+  {
+    "name": "desktop",
+    "innerWidth": 1440,
+    "scrollWidth": 1440,
+    "sections": 9,
+    "cards": 16,
+    "header": true,
+    "footer": true,
+    "cta": true,
+    "primaryBtnColor": "rgb(255, 255, 255)",
+    "primaryBtnBg": "rgb(67, 56, 202)",
+    "overflow": false,
+    "out": "/tmp/bi_shot_desktop.png",
+    "bytes": 985657
+  },
+  {
+    "name": "mobile",
+    "innerWidth": 390,
+    "scrollWidth": 390,
+    "sections": 9,
+    "cards": 16,
+    "header": true,
+    "footer": true,
+    "cta": true,
+    "primaryBtnColor": "rgb(255, 255, 255)",
+    "primaryBtnBg": "rgb(67, 56, 202)",
+    "overflow": false,
+    "out": "/tmp/bi_shot_mobile.png",
+    "bytes": 135463
+  }
+]

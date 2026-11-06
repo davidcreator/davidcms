@@ -1,0 +1,37 @@
+OK   JSON do pacote valido
+OK   format/version
+OK   validateConfig() = []
+OK   decode() ok = true · []
+OK   checksum confere
+OK   nome/slug/parent
+OK   25 fontes Twig · 25
+OK   todas as fontes nao vazias
+OK   cores hex
+OK   site_header com folha de estilo
+OK   header com nav semantica
+OK   header usa only-safe vars
+OK   footer completo fecha documento
+OK   rodape em colunas
+OK   CSS > 12 KB · 14497 bytes
+OK   CSS usa tokens do tema
+OK   CSS responsivo
+OK   CSS acessibilidade
+OK   CSS sem !important/@import/CDN
+OK   CSS sem --bs-* / --rms-*
+OK   nenhuma fonte com conteudo proibido
+OK   sem |raw
+OK   sem <script
+OK   sem CDN / fontes externas
+OK   rotas usam {{ header }} · 11
+OK   rotas usam {{ footer }} · 11
+OK   conteudo editorial real
+OK   componentes de site
+OK   SVG inline (sem imagens externas) · 15
+OK   aria / acessibilidade no markup
+OK   Twig balanceado por fonte
+OK   tokens 22 campos
+OK   kaz_scene valido
+OK   three desligado (site editorial)
+OK   export() reproduz o checksum
+OK   1 byte alterado -> decode recusa
+PHP BI decode harness: 36 OK / 0 FALHAS
