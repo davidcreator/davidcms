@@ -1,4 +1,4 @@
-$ php-wasm-cli -n validacao/bi_decode_harness.php
+$ php-wasm-cli -n validacao/bj_decode_harness.php
 OK   JSON do pacote valido
 OK   format/version
 OK   validateConfig() = []
@@ -6,39 +6,49 @@ OK   decode() ok = true · []
 OK   checksum confere
 OK   nome/slug/parent
 OK   25 fontes Twig · 25
-OK   todas as fontes nao vazias
+OK   todas nao vazias
 OK   cores hex
+OK   acento ciano do site
+OK   superficie escura do site
+OK   ThreeJS ligado (site cosmico)
+OK   normalizeThree() valido
+OK   tokens AA validos
+OK   conditions base limpa
+OK   kaz_scene valido
 OK   site_header com folha de estilo
 OK   header com nav semantica
-OK   header usa only-safe vars
-OK   footer completo fecha documento
-OK   rodape em colunas
-OK   CSS > 12 KB · 14497 bytes
+OK   header respeita only
+OK   footer semantico fecha documento
+OK   CSS > 14 KB · 16287 bytes
 OK   CSS usa tokens do tema
+OK   CSS escuro cosmico
 OK   CSS responsivo
 OK   CSS acessibilidade
-OK   CSS sem !important/@import/CDN
-OK   CSS sem --bs-* / --rms-*
+OK   CSS sem !important/@import/CDN/--bs-/--rms-
 OK   nenhuma fonte com conteudo proibido
-OK   sem |raw
-OK   sem <script
-OK   sem CDN / fontes externas
+OK   sem |raw / <script / @import
 OK   rotas usam {{ header }} · 11
 OK   rotas usam {{ footer }} · 11
-OK   conteudo editorial real
-OK   componentes de site
-OK   SVG inline (sem imagens externas) · 15
-OK   aria / acessibilidade no markup
+OK   hero transcrito
+OK   conteudo real: Who I Am
+OK   conteudo real: 6 etapas
+OK   conteudo real: servicos
+OK   conteudo real: depoimentos
+OK   conteudo real: works
+OK   conteudo real: ferramentas
+OK   conteudo real: clientes
+OK   conteudo real: contato
+OK   conteudo real: redes
+OK   conteudo real: copyright 2025
+OK   SVG inline · 12
+OK   aria no markup
 OK   Twig balanceado por fonte
-OK   tokens 22 campos
-OK   kaz_scene valido
-OK   three desligado (site editorial)
 OK   export() reproduz o checksum
 OK   1 byte alterado -> decode recusa
-PHP BI decode harness: 36 OK / 0 FALHAS
+PHP BJ decode harness: 46 OK / 0 FALHAS
 
-$ node tools/verify-site-theme.cjs
-CJS BI: 58 OK / 0 FALHAS
+$ node tools/verify-david-theme.cjs
+CJS BJ: 62 OK / 0 FALHAS
 
 $ bash tools/verify-checksums.sh
 == resumo: 3 PASS / 0 FAIL | 14 manifesto(s), 142 arquivo(s) conferidos ==

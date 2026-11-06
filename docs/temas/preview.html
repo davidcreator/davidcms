@@ -1,367 +1,439 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Atlas Studio — Tema de site completo</title>
-<meta name="description" content="Previa estatica do tema Atlas Studio para ReamurCMS.">
+<title>David L. Almeida — Creative Developer</title>
+<meta name="description" content="Previa estatica do tema David Creator para ReamurCMS.">
 <style>
 :root{
-  --at-primary:var(--theme-primary,#4338ca);
-  --at-surface:var(--theme-surface,#ffffff);
-  --at-ink:#101828;
-  --at-muted:#52627a;
-  --at-line:#e3e8f0;
-  --at-soft:#f5f7fc;
-  --at-accent:#0ea5e9;
-  --at-warm:#f59e0b;
-  --at-radius:16px;
-  --at-radius-sm:10px;
-  --at-shadow:0 12px 34px rgba(16,24,40,.09);
-  --at-shadow-sm:0 3px 12px rgba(16,24,40,.06);
-  --at-max:1140px;
-  --at-font:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --dj-primary:var(--theme-primary,#5cc6d0);
+  --dj-surface:var(--theme-surface,#1b1f24);
+  --dj-bg:#1b1f24;
+  --dj-panel:#23282e;
+  --dj-panel-2:#2a3037;
+  --dj-line:rgba(92,198,208,.20);
+  --dj-line-soft:rgba(255,255,255,.09);
+  --dj-ink:#eef3f7;
+  --dj-muted:#a7b2bd;
+  --dj-dim:#7f8b96;
+  --dj-font:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --dj-display:system-ui,-apple-system,"Segoe UI Light","Segoe UI",Roboto,sans-serif;
+  --dj-max:1100px;
+  --dj-radius:4px;
 }
 *,*::before,*::after{box-sizing:border-box}
-.atlas{font-family:var(--at-font);color:var(--at-ink);line-height:1.65;-webkit-font-smoothing:antialiased}
-.atlas a{color:var(--at-primary);text-decoration:none}
-.atlas a:hover{text-decoration:underline}
-.atlas img{max-width:100%;height:auto;display:block}
-.atlas h1,.atlas h2,.atlas h3,.atlas h4{line-height:1.18;letter-spacing:-.02em;margin:0 0 14px;font-weight:750}
-.atlas h1{font-size:clamp(2.2rem,5vw,3.65rem)}
-.atlas h2{font-size:clamp(1.6rem,3.2vw,2.4rem)}
-.atlas h3{font-size:1.16rem}
-.atlas p{margin:0 0 16px}
-.atlas :focus-visible{outline:3px solid var(--at-accent);outline-offset:3px;border-radius:4px}
-.atlas-wrap{max-width:var(--at-max);margin:0 auto;padding:0 24px}
-.atlas-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+body{background:var(--dj-surface);color:var(--dj-ink);font-family:var(--dj-font);line-height:1.7;-webkit-font-smoothing:antialiased}
+img{max-width:100%;height:auto;display:block}
+a{color:var(--dj-primary);text-decoration:none}
+a:hover{text-decoration:underline}
+.dj{color:var(--dj-ink);font-family:var(--dj-font)}
+.dj :focus-visible{outline:2px solid var(--dj-primary);outline-offset:3px}
+.dj-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.dj-wrap{max-width:var(--dj-max);margin:0 auto;padding:0 28px}
 
-/* ── Cabeçalho ───────────────────────────────────────────────── */
-.atlas-header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--at-line)}
-.atlas-header-in{display:flex;align-items:center;gap:28px;min-height:74px;max-width:var(--at-max);margin:0 auto;padding:0 24px}
-.atlas-brand{display:inline-flex;align-items:center;gap:11px;font-weight:800;font-size:1.12rem;letter-spacing:-.03em;color:var(--at-ink);white-space:nowrap}
-.atlas-brand:hover{text-decoration:none}
-.atlas-brand-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:var(--at-primary);color:#fff;font-size:.82rem;font-weight:800;letter-spacing:.02em}
-.atlas-nav{display:flex;align-items:center;gap:4px;margin-left:auto;flex-wrap:wrap}
-.atlas-nav a{color:var(--at-muted);font-size:.93rem;font-weight:600;padding:9px 13px;border-radius:9px;white-space:nowrap}
-.atlas-nav a:hover{color:var(--at-primary);background:var(--at-soft);text-decoration:none}
-.atlas-nav .atlas-nav-cta{background:var(--at-primary);color:#fff;padding:10px 18px;margin-left:8px;box-shadow:var(--at-shadow-sm)}
-.atlas-nav .atlas-nav-cta:hover{background:var(--at-ink);color:#fff}
-.atlas-langs{display:flex;gap:6px;padding-left:16px;border-left:1px solid var(--at-line)}
-.atlas-langs a{font-size:.78rem;color:var(--at-muted);text-transform:uppercase;letter-spacing:.05em}
-.atlas-langs a.is-active{color:var(--at-primary);font-weight:800}
+/* ── Tipografia display ─────────────────────────────────────── */
+.dj-display{font-family:var(--dj-display);font-weight:200;letter-spacing:.14em;text-transform:uppercase;line-height:1.15}
+.dj h1,.dj h2,.dj h3,.dj h4{margin:0 0 16px;font-family:var(--dj-display);font-weight:200;letter-spacing:.13em;text-transform:uppercase}
+.dj h1{font-size:clamp(2.4rem,6vw,4.4rem)}
+.dj h2{font-size:clamp(1.7rem,3.6vw,2.7rem)}
+.dj h3{font-size:1.15rem;letter-spacing:.1em}
+.dj h4{font-size:.98rem}
+.dj p{color:var(--dj-muted);margin:0 0 16px}
+.dj-rule{width:150px;height:1px;background:var(--dj-line);margin:22px auto;border:0}
+.dj-kicker{font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;color:var(--dj-primary);font-weight:600}
 
-/* ── Botões e etiquetas ──────────────────────────────────────── */
-.atlas-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 24px;border-radius:11px;font-weight:700;font-size:.95rem;border:1px solid transparent;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
-.atlas-btn:hover{text-decoration:none;transform:translateY(-2px)}
-.atlas-btn-primary{background:var(--at-primary);color:#fff;box-shadow:0 8px 20px rgba(67,56,202,.24)}
-.atlas-btn-primary:hover{background:var(--at-ink);color:#fff}
-.atlas-btn-ghost{background:#fff;color:var(--at-ink);border-color:var(--at-line)}
-.atlas-btn-ghost:hover{border-color:var(--at-primary);color:var(--at-primary)}
-/* .atlas a (0,1,1) vence .atlas-btn-* (0,1,0): fixa a cor do texto dos botoes. */
-.atlas a.atlas-btn{color:var(--at-ink)}
-.atlas a.atlas-btn-primary,.atlas a.atlas-btn-primary:hover{color:#fff}
-.atlas a.atlas-btn-ghost,.atlas a.atlas-btn-ghost:hover{color:var(--at-ink)}
-.atlas .atlas-cta a.atlas-btn,.atlas .atlas-cta a.atlas-btn:hover{color:var(--at-primary)}
-.atlas a.atlas-nav-cta,.atlas a.atlas-nav-cta:hover{color:#fff}
-.atlas-eyebrow{display:inline-flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.13em;font-size:.73rem;font-weight:800;color:var(--at-primary);background:var(--at-soft);border:1px solid var(--at-line);padding:7px 14px;border-radius:999px;margin-bottom:20px}
-.atlas-dot{width:7px;height:7px;border-radius:50%;background:var(--at-accent)}
+/* ── Cabeçalho ──────────────────────────────────────────────── */
+.dj-header{position:sticky;top:0;z-index:30;background:rgba(20,24,28,.93);backdrop-filter:blur(10px);border-bottom:1px solid var(--dj-line-soft)}
+.dj-header-in{max-width:var(--dj-max);margin:0 auto;padding:0 28px;display:flex;align-items:center;gap:24px;min-height:74px}
+.dj-brand{display:inline-flex;align-items:center;gap:10px;color:#fff;white-space:nowrap}
+.dj-brand:hover{text-decoration:none}
+.dj-brand-mark{display:grid;place-items:center;width:36px;height:36px;border:1px solid var(--dj-primary);color:var(--dj-primary);font-weight:300;font-size:1.05rem;letter-spacing:.02em;transform:rotate(-4deg)}
+.dj-brand-txt{display:flex;flex-direction:column;line-height:1.05;font-weight:300;letter-spacing:.16em;font-size:.86rem;text-transform:uppercase}
+.dj-brand-txt b{font-weight:600;letter-spacing:.2em}
+.dj-nav{display:flex;align-items:center;gap:2px;margin-left:auto;flex-wrap:wrap}
+.dj-nav a{color:#d7dfe6;font-size:.72rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;padding:10px 11px}
+.dj-nav a:hover{color:var(--dj-primary);text-decoration:none}
+.dj-langs{display:flex;gap:7px;padding-left:14px;border-left:1px solid var(--dj-line-soft);font-size:.8rem}
+.dj-langs a{color:var(--dj-dim)}
+.dj-langs a.is-active{color:var(--dj-primary)}
 
-/* ── Hero ────────────────────────────────────────────────────── */
-.atlas-hero{position:relative;overflow:hidden;background:linear-gradient(155deg,#f7f8ff 0%,#ffffff 52%,#eef4ff 100%);border-bottom:1px solid var(--at-line)}
-.atlas-hero::before{content:"";position:absolute;width:520px;height:520px;right:-170px;top:-220px;border-radius:50%;background:radial-gradient(circle,rgba(14,165,233,.18),transparent 66%)}
-.atlas-hero-in{display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:center;padding:88px 0 92px;position:relative}
-.atlas-hero h1{max-width:15ch}
-.atlas-hero-lead{font-size:1.13rem;color:var(--at-muted);max-width:52ch;margin-bottom:30px}
-.atlas-hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:44px}
-.atlas-hero-art{position:relative;border-radius:22px;background:linear-gradient(145deg,var(--at-primary),#6d5ce7 58%,#0ea5e9);box-shadow:var(--at-shadow);padding:30px;min-height:340px;display:grid;place-items:center;overflow:hidden}
-.atlas-hero-art svg{width:100%;max-width:330px;height:auto}
-.atlas-hero-float{position:absolute;background:#fff;border-radius:12px;padding:12px 16px;box-shadow:var(--at-shadow);font-size:.8rem;font-weight:700;color:var(--at-ink)}
-.atlas-hero-float.one{top:22px;left:-18px}
-.atlas-hero-float.two{bottom:24px;right:-16px}
-.atlas-hero-float b{display:block;font-size:1.15rem;color:var(--at-primary)}
-.atlas-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;border-top:1px solid var(--at-line);padding-top:28px}
-.atlas-stat b{display:block;font-size:1.65rem;letter-spacing:-.04em;color:var(--at-ink)}
-.atlas-stat span{font-size:.82rem;color:var(--at-muted)}
+/* ── Hero cósmico ───────────────────────────────────────────── */
+.dj-hero{position:relative;overflow:hidden;min-height:620px;display:grid;place-items:center;text-align:center;
+ background:radial-gradient(ellipse 70% 80% at 18% 22%,rgba(178,116,160,.42),transparent 62%),
+            radial-gradient(ellipse 60% 70% at 84% 72%,rgba(58,110,170,.50),transparent 64%),
+            radial-gradient(ellipse 90% 60% at 50% 110%,rgba(126,80,150,.32),transparent 70%),
+            linear-gradient(135deg,#151a20,#232b36 55%,#141a22)}
+.dj-hero::after{content:"";position:absolute;inset:0;
+ background-image:radial-gradient(1px 1px at 12% 18%,rgba(255,255,255,.65),transparent),
+  radial-gradient(1px 1px at 28% 62%,rgba(255,255,255,.45),transparent),
+  radial-gradient(1.5px 1.5px at 68% 14%,rgba(255,255,255,.7),transparent),
+  radial-gradient(1px 1px at 82% 44%,rgba(255,255,255,.5),transparent),
+  radial-gradient(1px 1px at 46% 82%,rgba(255,255,255,.4),transparent),
+  radial-gradient(1px 1px at 92% 78%,rgba(255,255,255,.5),transparent),
+  radial-gradient(1px 1px at 6% 72%,rgba(255,255,255,.4),transparent);
+ pointer-events:none}
+.dj-hero-panel{position:relative;z-index:2;width:min(760px,92%);padding:60px 40px;background:rgba(16,20,24,.52);border:1px solid var(--dj-line-soft);box-shadow:0 24px 70px rgba(0,0,0,.35)}
+.dj-hero-im{color:var(--dj-primary);font-size:1rem;letter-spacing:.5em;font-weight:200;text-transform:uppercase}
+.dj-hero-line{width:200px;height:1px;background:rgba(255,255,255,.45);margin:18px auto}
+.dj-hero-name{color:#fff;font-size:clamp(3rem,9vw,6.2rem);font-weight:200;letter-spacing:.16em;line-height:1.02;margin:0;text-transform:uppercase}
+.dj-hero-last{color:var(--dj-primary);font-size:clamp(2.3rem,7vw,4.9rem);font-weight:200;letter-spacing:.13em;line-height:1.1;margin:0;text-transform:uppercase}
+.dj-hero-role{color:var(--dj-primary);font-size:clamp(.8rem,1.8vw,1.15rem);letter-spacing:.42em;text-transform:uppercase;margin-top:18px;font-weight:300}
+.dj-hero-social{display:flex;justify-content:center;flex-wrap:wrap;gap:16px;margin-top:34px;position:relative;z-index:2}
+.dj-hero-social a{color:#cfd8e0;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;border-bottom:1px solid transparent;padding-bottom:3px}
+.dj-hero-social a:hover{color:var(--dj-primary);border-color:var(--dj-primary);text-decoration:none}
 
-/* ── Seções ──────────────────────────────────────────────────── */
-.atlas-section{padding:84px 0}
-.atlas-section--soft{background:var(--at-soft);border-block:1px solid var(--at-line)}
-.atlas-section-head{max-width:680px;margin-bottom:46px}
-.atlas-section-head p{color:var(--at-muted);font-size:1.05rem}
-.atlas-clients{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:26px 0 4px}
-.atlas-client{font-weight:800;letter-spacing:.06em;color:#8a97ad;font-size:.95rem;text-transform:uppercase}
-.atlas-grid{display:grid;gap:22px}
-.atlas-grid--3{grid-template-columns:repeat(3,1fr)}
-.atlas-grid--2{grid-template-columns:repeat(2,1fr)}
-.atlas-card{background:#fff;border:1px solid var(--at-line);border-radius:var(--at-radius);padding:28px;box-shadow:var(--at-shadow-sm);transition:transform .18s ease,box-shadow .18s ease}
-.atlas-card:hover{transform:translateY(-4px);box-shadow:var(--at-shadow)}
-.atlas-card-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:13px;background:var(--at-soft);color:var(--at-primary);margin-bottom:20px}
-.atlas-card-icon svg{width:24px;height:24px}
-.atlas-card p{color:var(--at-muted);font-size:.94rem;margin:0}
-.atlas-card-meta{display:block;margin-top:18px;font-size:.8rem;font-weight:700;color:var(--at-primary)}
-.atlas-card-figure{aspect-ratio:16/10;border-radius:var(--at-radius-sm);background:linear-gradient(135deg,#dbe4ff,#e8f6ff 55%,#d9f2ff);display:grid;place-items:center;font-weight:800;color:var(--at-primary);font-size:1.1rem;letter-spacing:.04em;margin-bottom:18px}
-.atlas-card-figure.b{background:linear-gradient(135deg,#e7ddff,#f4e9ff 55%,#ffe9f3)}
-.atlas-card-figure.c{background:linear-gradient(135deg,#dcfce7,#e9fbe9 55%,#fff4d6)}
+/* ── Seções ─────────────────────────────────────────────────── */
+.dj-section{padding:92px 0;border-bottom:1px solid var(--dj-line-soft);background:var(--dj-bg)}
+.dj-section--alt{background:var(--dj-panel)}
+.dj-section--cosmos{position:relative;overflow:hidden;
+ background:radial-gradient(ellipse 60% 90% at 12% 20%,rgba(150,95,145,.28),transparent 65%),
+            radial-gradient(ellipse 60% 90% at 88% 80%,rgba(52,105,160,.30),transparent 65%),
+            var(--dj-panel-2)}
+.dj-section-head{text-align:center;max-width:760px;margin:0 auto 52px}
+.dj-section-head h2{color:#fff}
+.dj-section-head .dj-kicker{display:block;margin-bottom:16px}
+.dj-section-head p{font-size:1rem}
+.dj-lead{font-size:1.05rem;color:#c9d3dc}
+.dj-grid{display:grid;gap:22px}
+.dj-grid--2{grid-template-columns:repeat(2,1fr)}
+.dj-grid--3{grid-template-columns:repeat(3,1fr)}
+.dj-grid--4{grid-template-columns:repeat(4,1fr)}
+.dj-card{background:var(--dj-panel);border:1px solid var(--dj-line-soft);padding:26px;border-radius:var(--dj-radius);transition:border-color .18s ease,transform .18s ease}
+.dj-card:hover{border-color:var(--dj-line);transform:translateY(-3px)}
+.dj-card h3{color:#fff;margin-bottom:12px}
+.dj-card p{font-size:.92rem;margin:0}
+.dj-num{display:block;color:var(--dj-primary);font-size:.78rem;letter-spacing:.24em;margin-bottom:14px}
+.dj-icon{width:38px;height:38px;border:1px solid var(--dj-line);display:grid;place-items:center;color:var(--dj-primary);margin-bottom:18px;border-radius:50%}
+.dj-icon svg{width:19px;height:19px}
+.dj-list{list-style:none;padding:0;margin:0;display:grid;gap:9px}
+.dj-list li{color:var(--dj-muted);font-size:.92rem;padding-left:18px;position:relative}
+.dj-list li::before{content:"";position:absolute;left:0;top:.72em;width:6px;height:1px;background:var(--dj-primary)}
+.dj-tags{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+.dj-tag{border:1px solid var(--dj-line);color:var(--dj-primary);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;border-radius:2px}
 
-/* ── Sobre / split ───────────────────────────────────────────── */
-.atlas-split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
-.atlas-checklist{list-style:none;padding:0;margin:26px 0 0;display:grid;gap:13px}
-.atlas-checklist li{display:flex;gap:12px;align-items:flex-start;color:var(--at-ink);font-size:.96rem}
-.atlas-checklist svg{flex:0 0 20px;width:20px;height:20px;color:var(--at-primary);margin-top:3px}
-.atlas-panel{background:#fff;border:1px solid var(--at-line);border-radius:var(--at-radius);padding:32px;box-shadow:var(--at-shadow-sm)}
-.atlas-panel-row{display:flex;justify-content:space-between;gap:16px;padding:15px 0;border-bottom:1px solid var(--at-line);font-size:.92rem}
-.atlas-panel-row:last-child{border-bottom:0}
-.atlas-panel-row span{color:var(--at-muted)}
-.atlas-panel-row b{color:var(--at-ink)}
+/* ── Processo / etapas ──────────────────────────────────────── */
+.dj-step{background:var(--dj-panel);border:1px solid var(--dj-line-soft);padding:24px;position:relative}
+.dj-step-n{position:absolute;top:14px;right:18px;color:rgba(92,198,208,.22);font-size:2rem;font-weight:200;letter-spacing:0}
+.dj-step h3{color:#fff;font-size:.96rem}
+.dj-step p{font-size:.87rem;margin:0}
 
-/* ── Depoimentos ─────────────────────────────────────────────── */
-.atlas-quote{background:#fff;border:1px solid var(--at-line);border-radius:var(--at-radius);padding:32px;box-shadow:var(--at-shadow-sm)}
-.atlas-quote p{font-size:1.04rem;font-style:italic;color:var(--at-ink)}
-.atlas-quote-by{display:flex;align-items:center;gap:12px;font-size:.88rem;color:var(--at-muted)}
-.atlas-avatar{width:40px;height:40px;border-radius:50%;background:var(--at-primary);color:#fff;display:grid;place-items:center;font-weight:800;font-size:.8rem}
-.atlas-quote-by b{display:block;color:var(--at-ink)}
+/* ── Portfólio ──────────────────────────────────────────────── */
+.dj-work{background:var(--dj-panel);border:1px solid var(--dj-line-soft);overflow:hidden;display:block}
+.dj-work:hover{text-decoration:none;border-color:var(--dj-line)}
+.dj-work-art{aspect-ratio:16/10;display:grid;place-items:center;font-family:var(--dj-display);font-weight:200;letter-spacing:.2em;text-transform:uppercase;font-size:1.1rem;color:rgba(255,255,255,.86)}
+.dj-work-art.a{background:radial-gradient(circle at 30% 25%,#4c6fa8,#202a3b 70%)}
+.dj-work-art.b{background:radial-gradient(circle at 70% 30%,#8a5a3c,#2a211c 70%)}
+.dj-work-art.c{background:radial-gradient(circle at 40% 70%,#3d7b5a,#1d2c24 70%)}
+.dj-work-art.d{background:radial-gradient(circle at 60% 40%,#6d4b8f,#241d31 70%)}
+.dj-work-art.e{background:radial-gradient(circle at 25% 60%,#a5713a,#2c2318 70%)}
+.dj-work-art.f{background:radial-gradient(circle at 75% 70%,#3c7f95,#1a2a30 70%)}
+.dj-work-body{padding:18px 20px}
+.dj-work-body h3{color:#fff;font-size:.9rem;margin:0}
+.dj-work-body span{color:var(--dj-dim);font-size:.76rem;letter-spacing:.1em;text-transform:uppercase}
 
-/* ── CTA ─────────────────────────────────────────────────────── */
-.atlas-cta{background:linear-gradient(120deg,var(--at-primary),#5b4bd6 60%,#0e7490);color:#fff;border-radius:24px;padding:56px 48px;display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;box-shadow:var(--at-shadow)}
-.atlas-cta h2{color:#fff;margin-bottom:10px}
-.atlas-cta p{color:rgba(255,255,255,.86);margin:0;max-width:54ch}
-.atlas-cta .atlas-btn{background:#fff;color:var(--at-primary)}
+/* ── Depoimentos ────────────────────────────────────────────── */
+.dj-quote{background:var(--dj-panel-2);border-left:2px solid var(--dj-primary);padding:28px;margin:0}
+.dj-quote p{color:#dbe4ec;font-size:.98rem;font-style:italic}
+.dj-quote-by{display:flex;align-items:center;gap:12px;margin-top:18px}
+.dj-avatar{width:38px;height:38px;border-radius:50%;border:1px solid var(--dj-line);color:var(--dj-primary);display:grid;place-items:center;font-size:.74rem;letter-spacing:.05em}
+.dj-quote-by b{display:block;color:#fff;font-size:.86rem;font-weight:600}
+.dj-quote-by span{color:var(--dj-dim);font-size:.78rem}
 
-/* ── Páginas internas ────────────────────────────────────────── */
-.atlas-page{padding:56px 0 90px}
-.atlas-crumb{font-size:.84rem;color:var(--at-muted);margin-bottom:22px}
-.atlas-crumb a{color:var(--at-muted)}
-.atlas-crumb span{margin:0 8px;color:#b6c0d0}
-.atlas-page-head{max-width:760px;margin-bottom:44px}
-.atlas-page-head p{font-size:1.08rem;color:var(--at-muted)}
-.atlas-prose{max-width:760px;font-size:1.02rem;color:var(--at-ink)}
-.atlas-prose h2{margin-top:38px}
-.atlas-prose ul{padding-left:22px;color:var(--at-muted)}
-.atlas-prose li{margin:8px 0}
-.atlas-aside{background:var(--at-soft);border:1px solid var(--at-line);border-radius:var(--at-radius);padding:28px}
-.atlas-aside h3{margin-bottom:14px}
-.atlas-aside a{display:block;padding:9px 0;border-bottom:1px solid var(--at-line);font-size:.93rem;font-weight:600}
-.atlas-aside a:last-child{border-bottom:0}
-.atlas-aside .atlas-btn{margin-top:18px;width:100%}
-.atlas-empty{color:var(--at-muted);padding:26px;border:1px dashed var(--at-line);border-radius:var(--at-radius-sm);text-align:center}
-.atlas-404{text-align:center;padding:90px 0}
-.atlas-404-code{font-size:clamp(5rem,14vw,9rem);font-weight:800;letter-spacing:-.06em;color:var(--at-primary);line-height:1;margin-bottom:8px}
-.atlas-404 h1{font-size:2rem}
+/* ── Clientes / ferramentas ─────────────────────────────────── */
+.dj-clients{display:flex;flex-wrap:wrap;justify-content:space-around;gap:18px;padding:12px 0}
+.dj-client{color:#9aa6b1;font-family:var(--dj-display);font-weight:300;letter-spacing:.18em;text-transform:uppercase;font-size:.92rem}
+.dj-tool{border:1px solid var(--dj-line-soft);background:var(--dj-panel);padding:24px;text-align:center}
+.dj-tool-mark{width:52px;height:52px;margin:0 auto 18px;border:1px solid var(--dj-line);border-radius:50%;display:grid;place-items:center;color:var(--dj-primary);font-weight:300;font-size:1.1rem}
+.dj-tool h3{color:#fff;font-size:.94rem}
+.dj-tool p{font-size:.86rem;margin-bottom:16px}
+.dj-tool a{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;border-bottom:1px solid var(--dj-line);padding-bottom:3px}
 
-/* ── Contato ─────────────────────────────────────────────────── */
-.atlas-contact-list{list-style:none;padding:0;margin:0;display:grid;gap:18px}
-.atlas-contact-list li{display:flex;gap:14px;align-items:flex-start}
-.atlas-contact-list svg{width:22px;height:22px;flex:0 0 22px;color:var(--at-primary);margin-top:2px}
-.atlas-contact-list b{display:block;font-size:.95rem}
-.atlas-contact-list span{font-size:.9rem;color:var(--at-muted)}
+/* ── CTA / botões ───────────────────────────────────────────── */
+.dj-btn{display:inline-flex;align-items:center;justify-content:center;padding:13px 30px;background:var(--dj-primary);color:#101820;border:1px solid var(--dj-primary);font-size:.76rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;border-radius:2px;transition:background .16s ease,color .16s ease}
+.dj-btn:hover{background:transparent;color:var(--dj-primary);text-decoration:none}
+.dj-btn-ghost{display:inline-flex;align-items:center;justify-content:center;padding:12px 28px;border:1px solid var(--dj-line);color:var(--dj-primary);background:transparent;font-size:.76rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;border-radius:2px}
+.dj-btn-ghost:hover{background:rgba(92,198,208,.09);text-decoration:none}
+.dj a.dj-btn,.dj a.dj-btn:hover{color:#101820}
+.dj a.dj-btn:hover{color:var(--dj-primary)}
+.dj a.dj-btn-ghost,.dj a.dj-btn-ghost:hover{color:var(--dj-primary)}
+.dj-cta{text-align:center;padding:80px 24px;background:linear-gradient(120deg,rgba(92,198,208,.10),rgba(140,90,160,.12)),var(--dj-panel)}
+.dj-cta h2{color:#fff}
+.dj-cta p{max-width:60ch;margin:0 auto 26px}
 
-/* ── Rodapé ──────────────────────────────────────────────────── */
-.atlas-footer{background:#0d1526;color:#c8d2e2;padding:64px 0 0;margin-top:0}
-.atlas-footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:40px;padding-bottom:48px}
-.atlas-footer h3{color:#fff;font-size:.95rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:18px}
-.atlas-footer p{font-size:.92rem;color:#9aa8be;max-width:34ch}
-.atlas-footer a{display:block;color:#9aa8be;font-size:.92rem;padding:6px 0}
-.atlas-footer a:hover{color:#fff}
-.atlas-footer .atlas-brand{color:#fff;margin-bottom:18px}
-.atlas-footer-bottom{border-top:1px solid #22304a;padding:22px 0;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:.84rem;color:#8391a8}
-.atlas-footer-bottom a{display:inline;padding:0;color:#8391a8}
+/* ── Páginas internas ───────────────────────────────────────── */
+.dj-page{padding:64px 0 96px}
+.dj-crumb{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dj-dim);margin-bottom:26px}
+.dj-crumb a{color:var(--dj-dim)}
+.dj-crumb span{margin:0 9px;color:var(--dj-primary)}
+.dj-page-head{max-width:760px;margin-bottom:46px}
+.dj-page-head h1{color:#fff;font-size:clamp(2rem,4.4vw,3.2rem)}
+.dj-prose{max-width:760px}
+.dj-prose h2{color:#fff;font-size:1.5rem;margin-top:38px}
+.dj-prose p{font-size:1rem}
+.dj-aside{background:var(--dj-panel);border:1px solid var(--dj-line-soft);padding:26px}
+.dj-aside h3{color:#fff;font-size:.9rem}
+.dj-aside a{display:block;padding:9px 0;border-bottom:1px solid var(--dj-line-soft);color:var(--dj-muted);font-size:.86rem}
+.dj-aside a:last-of-type{border-bottom:0}
+.dj-aside .dj-btn{margin-top:18px;width:100%}
+.dj-contact-list{list-style:none;padding:0;margin:0;display:grid;gap:20px}
+.dj-contact-list li{display:flex;gap:14px;align-items:flex-start}
+.dj-contact-list svg{width:20px;height:20px;flex:0 0 20px;color:var(--dj-primary);margin-top:4px}
+.dj-contact-list b{display:block;color:#fff;font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;font-weight:600}
+.dj-contact-list span{color:var(--dj-muted);font-size:.92rem}
+.dj-404{text-align:center;padding:90px 0}
+.dj-404-code{font-size:clamp(5rem,14vw,9rem);font-weight:200;color:var(--dj-primary);letter-spacing:.1em;line-height:1}
 
-/* ── Responsivo ──────────────────────────────────────────────── */
+/* ── Rodapé ─────────────────────────────────────────────────── */
+.dj-footer{background:#12161a;border-top:1px solid var(--dj-line);padding:56px 0 0}
+.dj-footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.2fr;gap:36px;padding-bottom:42px}
+.dj-footer h3{color:#fff;font-size:.78rem;letter-spacing:.2em;margin-bottom:18px}
+.dj-footer p{font-size:.88rem;color:var(--dj-dim)}
+.dj-footer a{display:block;color:var(--dj-muted);font-size:.86rem;padding:5px 0}
+.dj-footer a:hover{color:var(--dj-primary)}
+.dj-footer-bottom{border-top:1px solid var(--dj-line-soft);padding:20px 0;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--dj-dim);letter-spacing:.06em}
+.dj-footer-bottom a{display:inline;padding:0;color:var(--dj-dim)}
+.dj-social{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
+.dj-social a{border:1px solid var(--dj-line-soft);padding:7px 11px;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dj-muted)}
+
+/* ── Responsivo ─────────────────────────────────────────────── */
 @media(max-width:980px){
-  .atlas-hero-in{grid-template-columns:1fr;gap:44px;padding:64px 0 72px}
-  .atlas-hero-art{min-height:280px}
-  .atlas-split{grid-template-columns:1fr;gap:34px}
-  .atlas-grid--3{grid-template-columns:repeat(2,1fr)}
-  .atlas-footer-grid{grid-template-columns:repeat(2,1fr);gap:32px}
-  .atlas-langs{display:none}
+ .dj-hero{min-height:520px}
+ .dj-grid--4{grid-template-columns:repeat(2,1fr)}
+ .dj-grid--3{grid-template-columns:repeat(2,1fr)}
+ .dj-footer-grid{grid-template-columns:repeat(2,1fr)}
+ .dj-langs{display:none}
 }
 @media(max-width:640px){
-  .atlas-wrap,.atlas-header-in{padding:0 18px}
-  .atlas-header-in{min-height:64px;gap:12px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
-  .atlas-nav{width:100%;margin-left:0;gap:0;overflow-x:auto;padding-bottom:4px}
-  .atlas-nav a{padding:8px 10px;font-size:.86rem}
-  .atlas-nav .atlas-nav-cta{margin-left:4px}
-  .atlas-section{padding:58px 0}
-  .atlas-grid--3,.atlas-grid--2{grid-template-columns:1fr}
-  .atlas-stats{grid-template-columns:1fr;gap:12px}
-  .atlas-hero-art{min-height:220px;padding:20px}
-  .atlas-hero-float{display:none}
-  .atlas-cta{padding:38px 26px}
-  .atlas-footer-grid{grid-template-columns:1fr;gap:28px}
+ .dj-wrap,.dj-header-in{padding:0 18px}
+ .dj-header-in{min-height:auto;flex-wrap:wrap;gap:10px;padding-top:12px;padding-bottom:10px}
+ .dj-nav{width:100%;margin-left:0;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}
+ .dj-nav a{padding:8px 9px;font-size:.66rem;white-space:nowrap}
+ .dj-section{padding:60px 0}
+ .dj-section-head{margin-bottom:34px}
+ .dj-grid--2,.dj-grid--3,.dj-grid--4{grid-template-columns:1fr}
+ .dj-hero{min-height:440px}
+ .dj-hero-panel{padding:38px 18px;width:94%}
+ .dj-hero-line{width:130px}
+ .dj-hero-social{gap:10px}
+ .dj-cta{padding:54px 18px}
+ .dj-footer-grid{grid-template-columns:1fr;gap:26px}
 }
 @media(prefers-reduced-motion:reduce){
-  .atlas-btn,.atlas-card{transition:none}
-  .atlas-btn:hover,.atlas-card:hover{transform:none}
+ .dj-card,.dj-btn{transition:none}
+ .dj-card:hover{transform:none}
 }
 </style>
 </head>
-<body style="--theme-primary:#4338ca;--theme-surface:#ffffff;margin:0">
+<body style="--theme-primary:#5cc6d0;--theme-surface:#1b1f24">
 
 
-<header class="atlas atlas-header">
-  <div class="atlas-header-in">
-    <a class="atlas-brand" href="/" aria-label="Atlas Studio"><span class="atlas-brand-mark">AS</span><span>Atlas Studio</span></a>
-    <nav class="atlas-nav" aria-label="Navegacao principal">
-      <a href="/">Inicio</a>
-      <a href="#servicos">Servicos</a>
-      <a href="#projetos">Projetos</a>
-      <a href="#blog">Blog</a>
-      <a href="#contato">Contato</a>
-      <a class="atlas-nav-cta" href="#contato">Solicitar proposta</a>
-    </nav>
-    <nav class="atlas-langs" aria-label="Idiomas">
-      
-    </nav>
-  </div>
-</header>
+<div class="dj dj-header"><div class="dj-header-in">
+  <a class="dj-brand" href="/" aria-label="David Creator"><span class="dj-brand-mark">DC</span><span class="dj-brand-txt"><b>David</b><span>Creator</span></span></a>
+  <nav class="dj-nav" aria-label="Main navigation">
+    <a href="/">Home</a>
+    <a href="#about">About</a>
+    <a href="#services">Services</a><a href="#works">Works</a>
+    <a href="#news">Blog</a>
+    <a href="#contact">Contact</a>
+    <a href="#tools">Tools</a><a href="#works">Alunos</a>
+    <a href="#contact">Get in touch</a>
+  </nav>
+  <nav class="dj-langs" aria-label="Languages">
+    
+  </nav>
+</div></div>
 
 <main>
 
-<section id="inicio" class="atlas atlas-hero">
-  <div class="atlas-wrap atlas-hero-in">
-    <div>
-      <span class="atlas-eyebrow"><span class="atlas-dot"></span>Estudio de produtos digitais</span>
-      <h1>Ideias que viram produtos digitais.</h1>
-      <p class="atlas-hero-lead">Da primeira hipótese ao lançamento: estratégia, design e engenharia trabalhando juntos para construir experiências que as pessoas realmente usam.</p>
-      <div class="atlas-hero-actions">
-        <a class="atlas-btn atlas-btn-primary" href="#contato">Solicitar proposta</a>
-        <a class="atlas-btn atlas-btn-ghost" href="#projetos">Ver projetos</a>
-      </div>
-      <div class="atlas-stats">
-        <div class="atlas-stat"><b>120+</b><span>projetos entregues</span></div>
-        <div class="atlas-stat"><b>14</b><span>anos de mercado</span></div>
-        <div class="atlas-stat"><b>98%</b><span>clientes que renovam</span></div>
-      </div>
-    </div>
-    <div class="atlas-hero-art"><svg viewBox="0 0 320 260" fill="none" aria-hidden="true"><rect x="26" y="30" width="268" height="188" rx="16" fill="#ffffff" opacity=".16"/><rect x="46" y="52" width="228" height="14" rx="7" fill="#ffffff" opacity=".30"/><rect x="46" y="80" width="86" height="10" rx="5" fill="#ffffff" opacity=".55"/><rect x="46" y="100" width="150" height="10" rx="5" fill="#ffffff" opacity=".34"/><rect x="46" y="132" width="66" height="66" rx="12" fill="#ffffff" opacity=".22"/><rect x="124" y="132" width="66" height="66" rx="12" fill="#ffffff" opacity=".34"/><rect x="202" y="132" width="66" height="66" rx="12" fill="#ffffff" opacity=".48"/><circle cx="252" cy="44" r="16" fill="#ffffff" opacity=".70"/><path d="M46 218h228" stroke="#ffffff" stroke-opacity=".45" stroke-width="2"/></svg>
-      <div class="atlas-hero-float one"><b>+38%</b>conversao</div>
-      <div class="atlas-hero-float two"><b>4.9/5</b>avaliacao media</div>
-    </div>
+<section id="top" class="dj dj-hero">
+  <div class="dj-hero-panel">
+    <div class="dj-hero-im">I'm</div><hr class="dj-hero-line">
+    <h1 class="dj-hero-name">David</h1>
+    <div class="dj-hero-last">L. Almeida</div>
+    <hr class="dj-hero-line">
+    <div class="dj-hero-role">Creative Developer</div>
   </div>
+  <nav class="dj-hero-social" aria-label="Social profiles">
+    <a href="https://www.facebook.com/davidalmeidadesigner/" rel="noopener me">Facebook</a>
+    <a href="https://www.instagram.com/davidalmeidades/" rel="noopener me">Instagram</a>
+    <a href="https://br.pinterest.com/davidalmeidades/" rel="noopener me">Pinterest</a>
+    <a href="https://x.com/DavidAlmeidaDes" rel="noopener me">X</a>
+    <a href="https://www.google.com/search?q=David+Creator" rel="noopener me">Google Business</a>
+    <a href="https://www.redbubble.com/people/DavidCreator/" rel="noopener me">RedBubble</a>
+  </nav>
+  
 </section>
-<section id="clientes" class="atlas-section "><div class="atlas-wrap">
-  <p class="atlas-eyebrow">Quem confia no nosso trabalho</p>
-  <div class="atlas-clients">
-    <span class="atlas-client">Vera</span><span class="atlas-client">Norte Log</span><span class="atlas-client">Aurora</span>
-    <span class="atlas-client">Solis</span><span class="atlas-client">Quotia</span><span class="atlas-client">Vertex</span>
+<section id="about" class="dj dj-section dj-section--alt"><div class="dj-wrap">
+  <div class="dj-section-head"><span class="dj-kicker">Who I am?</span><h2>Who I am?</h2>
+    <p>I am an experienced designer and developer</p>
+    <hr class="dj-rule">
+  </div>
+  <div class="dj-grid dj-grid--2">
+    <div><p class="dj-lead">As a passionate designer and developer, I transform ideas into reality with creativity and responsibility.</p>
+      <p>With years of experience in graphic design, website development, and creating visual identities, I deliver innovative and high-quality solutions that strengthen brands and stand out in the market.</p>
+      <p>My portfolio ranges from impactful logos to intuitive user interfaces, always aligned with the best SEO practices to ensure the visibility and success of my clients.</p></div>
+    <div><p class="dj-lead">I like to work on visual identity projects that help brands position themselves in the market, bringing their characteristics, personality and values.</p>
+      <p>At the core of each brand lies a carefully crafted world, where each attribute is strategically designed to meet the unique needs of our customers.</p>
+      <p>From the logo to the colors, typography and graphics, we design a striking and personalized experience that echoes the identity of each business.</p></div>
+  </div>
+  <div class="dj-grid dj-grid--3" style="margin-top:40px">
+    <div class="dj-card"><h3>Unity</h3><p>A company without a well-developed visual identity has no personality. With a brand manual and a good visual identity, your audience can identify it wherever they go.</p></div>
+    <div class="dj-card"><h3>Credibility</h3><p>A well-crafted visual identity brings confidence to those who see it, adding greater credibility and professionalism to the brand.</p></div>
+    <div class="dj-card"><h3>Attraction</h3><p>Attracting the right audience and communicating with it correctly. A clear and professionally developed visual identity ensures the most appropriate communication.</p></div>
   </div>
 </div></section>
-<section id="servicos" class="atlas-section atlas-section--soft"><div class="atlas-wrap">
-  <div class="atlas-section-head"><span class="atlas-eyebrow">O que fazemos</span>
-    <h2>Um time completo, do diagnóstico à operação</h2>
-    <p>Atuamos em squads enxutos, com entregas curtas e indicadores visíveis. Escolha um ponto de partida ou monte um pacote sob medida.</p></div>
-  <div class="atlas-grid atlas-grid--3">
-    <article class="atlas-card"><div class="atlas-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></div><h3>Estrategia digital</h3><p>Diagnostico de produto, pesquisa com usuarios e roteiro de evolucao com metas claras para cada trimestre.</p><span class="atlas-card-meta">2 a 4 semanas</span></article>
-    <article class="atlas-card"><div class="atlas-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m4 17 5-5 4 4 3-3 4 4"/></svg></div><h3>Design de produto</h3><p>Interfaces acessiveis, sistema de design e prototipos testados antes de qualquer linha de codigo.</p><span class="atlas-card-meta">3 a 6 semanas</span></article>
-    <article class="atlas-card"><div class="atlas-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/></svg></div><h3>Desenvolvimento</h3><p>Aplicacoes web rapidas e seguras, com arquitetura modular, testes e observabilidade desde o primeiro dia.</p><span class="atlas-card-meta">6 a 12 semanas</span></article>
-    <article class="atlas-card"><div class="atlas-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div><h3>Dados e analytics</h3><p>Instrumentacao, paineis de decisao e experimentos que mostram o impacto real de cada entrega.</p><span class="atlas-card-meta">Contínuo</span></article>
-    <article class="atlas-card"><div class="atlas-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg></div><h3>Conteudo e SEO</h3><p>Arquitetura de informacao, conteudo editorial e otimizacao tecnica para busca organica.</p><span class="atlas-card-meta">Contínuo</span></article>
-    <article class="atlas-card"><div class="atlas-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13a8 8 0 0 1 16 0v5a2 2 0 0 1-2 2h-2v-7h4M4 13v5a2 2 0 0 0 2 2h2v-7H4"/></svg></div><h3>Suporte e evolucao</h3><p>Time dedicado para manter, monitorar e evoluir o produto depois do lancamento.</p><span class="atlas-card-meta">Mensal</span></article>
+<section id="process" class="dj dj-section "><div class="dj-wrap">
+  <div class="dj-section-head"><span class="dj-kicker">Creation process</span><h2>In my creation process I use the following steps</h2>
+    <hr class="dj-rule">
+  </div>
+  <div class="dj-grid dj-grid--3">
+    <div class="dj-step"><span class="dj-step-n">1</span><div class="dj-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg></div><h3>Knowing the Client and the Company</h3><p>In the first stage, I seek to gather as much information about the characteristics and personality of the client and the company. A detailed questionnaire with strategic questions about the project.</p></div>
+    <div class="dj-step"><span class="dj-step-n">2</span><div class="dj-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></svg></div><h3>Search</h3><p>With the information collected, I begin to research the company, the market it operates in, its competitors and target audience. Essential so the creation process is well-founded and not generic.</p></div>
+    <div class="dj-step"><span class="dj-step-n">3</span><div class="dj-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 18h6M10 21h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 3H9c0-1 0-2-1-3Z"/></svg></div><h3>Concept</h3><p>According to the results obtained in the research, I start a brainstorming process, mapping ideas and drafting concepts, always looking for a greater meaning beyond the visual.</p></div>
+    <div class="dj-step"><span class="dj-step-n">4</span><div class="dj-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></div><h3>Execution</h3><p>After all the tests, and with an established idea, I start defining typography and colors, in addition to creating shapes, graphics, patterns and support elements.</p></div>
+    <div class="dj-step"><span class="dj-step-n">5</span><div class="dj-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div><h3>Flexibility</h3><p>With everything in hand, I begin the application stage in products such as stationery, uniforms, billboards and gifts, ensuring the brand is identified in any situation.</p></div>
+    <div class="dj-step"><span class="dj-step-n">6</span><div class="dj-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 3 3 10l7 3 3 8Z"/><path d="M10 13 21 3"/></svg></div><h3>Delivery</h3><p>With the project finalized, I create and send a presentation and the manual for using the brand. Once approved, all files are saved, organized and sent to the customer.</p></div>
   </div>
 </div></section>
-<section id="sobre" class="atlas-section "><div class="atlas-wrap">
-  <div class="atlas-split">
-    <div>
-      <span class="atlas-eyebrow">Sobre o estudio</span>
-      <h2>Tecnica com repertorio, entrega com contexto.</h2>
-      <p>Somos um estúdio de 28 pessoas entre estratégia, design e engenharia. Fundado em 2012, o Atlas nasceu para diminuir a distância entre a decisão de negócio e o produto que chega ao usuário.</p>
-      <p style="color:var(--at-muted)">Trabalhamos com escopo claro, comunicação semanal e um responsável técnico em cada projeto. Sem surpresa no orçamento, sem fila de aprovação infinita.</p>
-      <ul class="atlas-checklist">
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg><span>Squad dedicado com um ponto de contato único</span></li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg><span>Protótipo validado antes do desenvolvimento</span></li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg><span>Métricas combinadas no início e revisadas a cada sprint</span></li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg><span>Documentação e handover inclusos em toda entrega</span></li>
-      </ul>
-    </div>
-    <div class="atlas-panel">
-      <h3>Como trabalhamos</h3>
-      <div class="atlas-panel-row"><span>Descoberta</span><b>1 a 2 semanas</b></div>
-      <div class="atlas-panel-row"><span>Design e protótipo</span><b>3 a 6 semanas</b></div>
-      <div class="atlas-panel-row"><span>Construção</span><b>6 a 12 semanas</b></div>
-      <div class="atlas-panel-row"><span>Lançamento</span><b>1 semana</b></div>
-      <div class="atlas-panel-row"><span>Evolução</span><b>Contínua</b></div>
-    </div>
+<section id="skills" class="dj dj-section dj-section--alt"><div class="dj-wrap">
+  <div class="dj-section-head"><span class="dj-kicker">My skills</span><h2>My skills</h2>
+    <p>I can create websites, apps, logos and other amazing digital media</p>
+    <hr class="dj-rule">
+  </div>
+  <div class="dj-grid dj-grid--3">
+    <div class="dj-card"><h3>Developer</h3><p>HTML, CSS, PHP and JavaScript for fast, accessible and maintainable interfaces.</p></div>
+    <div class="dj-card"><h3>Brand Design</h3><p>Visual identities built from research, concept and a consistent brand manual.</p></div>
+    <div class="dj-card"><h3>Product Design</h3><p>User interfaces, illustrations and digital experiences with attention to detail.</p></div>
+  </div>
+  <div class="dj-tags" style="justify-content:center;margin:30px 0 44px">
+    <span class="dj-tag">Developer</span>
+    <span class="dj-tag">Brand Design</span>
+    <span class="dj-tag">Visual Identity</span>
+    <span class="dj-tag">Product Design</span>
+    <span class="dj-tag">Illustrations</span>
+    <span class="dj-tag">Brand Action</span>
+  </div>
+  <div class="dj-grid dj-grid--3">
+    <div class="dj-card"><h3>Tech</h3><ul class="dj-list"><li>HTML</li><li>CSS</li><li>PHP</li><li>Javascript</li><li>jQuery</li></ul></div>
+    <div class="dj-card"><h3>Platforms</h3><ul class="dj-list"><li>Wordpress</li><li>Prestashop</li><li>Joomla</li><li>Blogger</li><li>Winter</li></ul></div>
+    <div class="dj-card"><h3>Programs</h3><ul class="dj-list"><li>VS Code</li><li>Illustrator</li><li>Photoshop</li><li>CorelDRAW</li><li>Figma</li></ul></div>
   </div>
 </div></section>
-<section id="metodo" class="atlas-section atlas-section--soft"><div class="atlas-wrap">
-  <div class="atlas-section-head"><span class="atlas-eyebrow">Metodo</span><h2>Quatro etapas, nenhuma caixa preta</h2></div>
-  <div class="atlas-grid atlas-grid--3">
-    <article class="atlas-card"><span class="atlas-card-meta">Etapa 1</span><h3>Entender</h3><p>Entrevistas, dados e mapa de restrições para definir o problema certo.</p></article>
-    <article class="atlas-card"><span class="atlas-card-meta">Etapa 2</span><h3>Desenhar</h3><p>Fluxos, protótipos e testes de usabilidade com usuários reais.</p></article>
-    <article class="atlas-card"><span class="atlas-card-meta">Etapa 3</span><h3>Construir</h3><p>Sprints quinzenais com demo, qualidade e revisão de escopo.</p></article>
-    <article class="atlas-card"><span class="atlas-card-meta">Etapa 4</span><h3>Evoluir</h3><p>Métricas, ajustes e novas apostas após o lançamento.</p></article>
+<section id="services" class="dj dj-section dj-section--cosmos"><div class="dj-wrap">
+  <div class="dj-section-head"><span class="dj-kicker">What do I do?</span><h2>What do I do?</h2>
+    <p>My services are provided with a lot of dedication and years of experience</p>
+    <hr class="dj-rule">
+  </div>
+  <div class="dj-grid dj-grid--3">
+    <div class="dj-card"><div class="dj-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div><h3>Graphic Design</h3><ul class="dj-list"><li>Brand Design</li><li>User Interface</li><li>Illustrations</li><li>Social Media</li><li>Digital Installations</li></ul></div>
+    <div class="dj-card"><div class="dj-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></div><h3>Web Design</h3><ul class="dj-list"><li>Landing Page</li><li>CMS</li><li>E-commerce</li><li>Web App</li><li>Institutional</li></ul></div>
+    <div class="dj-card"><div class="dj-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></svg></div><h3>SEO</h3><ul class="dj-list"><li>Keyword Analysis</li><li>On-Page Optimization</li><li>Content Creation</li><li>Link Building</li><li>SEO Audit</li></ul></div>
   </div>
 </div></section>
-<section id="projetos" class="atlas-section atlas-section--soft"><div class="atlas-wrap">
-  <div class="atlas-section-head"><span class="atlas-eyebrow">Projetos selecionados</span><h2>Problemas reais, resultados medíveis</h2></div>
-  <div class="atlas-grid atlas-grid--3">
-    <article class="atlas-card"><div class="atlas-card-figure a">Aurora</div><h3>Aurora Finance</h3><p>Plataforma de planejamento financeiro para pequenas empresas, com paineis e conciliacao automatica.</p><span class="atlas-card-meta">Fintech · 2026</span></article>
-    <article class="atlas-card"><div class="atlas-card-figure b">Vera</div><h3>Vera Saude</h3><p>Portal de agendamento e prontuario leve para clinicas, com fluxo de atendimento redesenhado.</p><span class="atlas-card-meta">Saude · 2025</span></article>
-    <article class="atlas-card"><div class="atlas-card-figure c">Norte</div><h3>Norte Log</h3><p>Sistema de acompanhamento de entregas com mapa, notificacoes e indicadores por rota.</p><span class="atlas-card-meta">Logistica · 2025</span></article>
+<section id="testimonials" class="dj dj-section dj-section--alt"><div class="dj-wrap">
+  <div class="dj-section-head"><span class="dj-kicker">Client testimonials</span><h2>Client testimonials</h2>
+    <hr class="dj-rule">
+  </div>
+  <div class="dj-grid dj-grid--3">
+    <figure class="dj-quote"><p>“Best professional in the field I've ever met. Tact for details, technical eye and fair price.”</p><figcaption class="dj-quote-by"><span class="dj-avatar">SR</span><span><b>Silvio Robson B. Lima</b><span>Client</span></span></figcaption></figure>
+    <figure class="dj-quote"><p>“David is a sensational professional, I highly recommend him!”</p><figcaption class="dj-quote-by"><span class="dj-avatar">PS</span><span><b>Pedrinho Seus Brinquedos</b><span>Client</span></span></figcaption></figure>
+    <figure class="dj-quote"><p>“About the work I have no words to describe the work of this excellent professional, knowledge, attention, incredible quality, a person with enormous knowledge willing to always give the best.”</p><figcaption class="dj-quote-by"><span class="dj-avatar">BR</span><span><b>Bruno Reis</b><span>Client</span></span></figcaption></figure>
   </div>
 </div></section>
-<section id="depoimentos" class="atlas-section "><div class="atlas-wrap">
-  <div class="atlas-section-head"><span class="atlas-eyebrow">Depoimentos</span><h2>O que dizem os times que trabalham com a gente</h2></div>
-  <div class="atlas-grid atlas-grid--2">
-    <figure class="atlas-quote" style="margin:0"><p>“O Atlas reorganizou nosso roadmap em três semanas e entregou o primeiro módulo em produção antes do prazo. Clareza que a gente não tinha havia dois anos.”</p><figcaption class="atlas-quote-by"><span class="atlas-avatar">MR</span><span><b>Marina Ribeiro</b>Diretora de Produto · Aurora Finance</span></figcaption></figure>
-    <figure class="atlas-quote" style="margin:0"><p>“Contratamos para redesenhar o agendamento e terminamos com um processo inteiro mais simples. A equipe deles Documenta tudo e ensina o time a manter.”</p><figcaption class="atlas-quote-by"><span class="atlas-avatar">AC</span><span><b>André Costa</b>COO · Vera Saúde</span></figcaption></figure>
+<section id="works" class="dj dj-section "><div class="dj-wrap">
+  <div class="dj-section-head"><span class="dj-kicker">What it looks like?</span><h2>What it looks like?</h2>
+    <p>Hire us if you like what we do</p>
+    <hr class="dj-rule">
+  </div>
+  <div class="dj-grid dj-grid--3">
+    <a class="dj-work" href="/"><div class="dj-work-art a">JWA</div><div class="dj-work-body"><h3>JWA</h3><span>Visual Identity</span></div></a>
+    <a class="dj-work" href="/"><div class="dj-work-art b">Steel</div><div class="dj-work-body"><h3>Steel of Death</h3><span>Brand</span></div></a>
+    <a class="dj-work" href="/"><div class="dj-work-art c">Farmer</div><div class="dj-work-body"><h3>Farmer Life Simulation</h3><span>Illustration</span></div></a>
+    <a class="dj-work" href="/"><div class="dj-work-art d">Chameleon</div><div class="dj-work-body"><h3>Chameleon Digital Art</h3><span>Digital Art</span></div></a>
+    <a class="dj-work" href="/"><div class="dj-work-art e">Hiperion</div><div class="dj-work-body"><h3>Hiperion Gamer</h3><span>Web Design</span></div></a>
+    <a class="dj-work" href="/"><div class="dj-work-art f">RC</div><div class="dj-work-body"><h3>RC - Rogério Consultoria</h3><span>Brand</span></div></a>
+    <a class="dj-work" href="/"><div class="dj-work-art b">Pitbull</div><div class="dj-work-body"><h3>Pitbull Colors</h3><span>Illustration</span></div></a>
+    <a class="dj-work" href="/"><div class="dj-work-art d">Cat</div><div class="dj-work-body"><h3>Cat Fe - Digital Art</h3><span>Digital Art</span></div></a>
+    <a class="dj-work" href="/"><div class="dj-work-art c">Selva</div><div class="dj-work-body"><h3>Selva Dev</h3><span>Visual Identity</span></div></a>
   </div>
 </div></section>
-<section id="blog" class="atlas-section atlas-section--soft"><div class="atlas-wrap">
-  <div class="atlas-section-head"><span class="atlas-eyebrow">Do blog</span><h2>Notas sobre produto, design e engenharia</h2></div>
-  <div class="atlas-grid atlas-grid--3">
-    <article class="atlas-card"><span class="atlas-card-meta">12 de setembro de 2026 · 5 min de leitura</span><h3>Como priorizar um roadmap sem perder a visao de produto</h3><p> Um metodo simples para transformar pedidos em apostas mensuráveis.</p></article>
-    <article class="atlas-card"><span class="atlas-card-meta">28 de agosto de 2026 · 8 min de leitura</span><h3>Acessibilidade na pratica: sete decisoes que mudam o resultado</h3><p> Contraste, foco, semantica e testes com leitores de tela no dia a dia do time.</p></article>
-    <article class="atlas-card"><span class="atlas-card-meta">03 de agosto de 2026 · 6 min de leitura</span><h3>Design system enxuto: quando ele comeca a valer a pena</h3><p> Sinais de que chegou a hora de padronizar componentes e tokens.</p></article>
+<section id="tools" class="dj dj-section dj-section--alt"><div class="dj-wrap">
+  <div class="dj-section-head"><span class="dj-kicker">Connected tools</span><h2>Connected tools</h2>
+    <p>Access resources from the DavidCreator ecosystem to speed up processes and boost results.</p>
+    <hr class="dj-rule">
+  </div>
+  <div class="dj-grid dj-grid--4">
+    <div class="dj-tool"><div class="dj-tool-mark">F</div><h3>Fluxa</h3><p>Ferramenta para gestão financeira e acompanhamento de indicadores.</p><a href="/">Open Fluxa</a></div>
+    <div class="dj-tool"><div class="dj-tool-mark">Q</div><h3>Quotia</h3><p>Plataforma para solicitar e organizar orçamentos em um único fluxo.</p><a href="/">Open Quotia</a></div>
+    <div class="dj-tool"><div class="dj-tool-mark">V</div><h3>Vertex</h3><p>Gerador gratuito de currículos com foco em clareza e apresentação profissional.</p><a href="/">Open Vertex</a></div>
+    <div class="dj-tool"><div class="dj-tool-mark">S</div><h3>Solis</h3><p>Gerador estratégico para planejamento de conteúdo e postagens em redes sociais.</p><a href="/">Open Solis</a></div>
   </div>
 </div></section>
-<section id="contato" class="atlas-section "><div class="atlas-wrap">
-  <div class="atlas-split">
-    <div><span class="atlas-eyebrow">Vamos conversar</span>
-      <h2>Conte o problema. A gente volta com um plano.</h2>
-      <p style="color:var(--at-muted)">Atendemos projetos de descobrimento, redesign e construção de produto. A primeira conversa é sem compromisso e dura cerca de 40 minutos.</p>
-      <a class="atlas-btn atlas-btn-primary" href="mailto:contato@atlasstudio.example">Solicitar proposta</a>
-    </div>
-    <ul class="atlas-contact-list">
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><div><b>E-mail</b><span>contato@atlasstudio.example</span></div></li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h4l2 5-3 2a12 12 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg><div><b>Telefone</b><span>+55 11 4002 8922 · seg a sex, 9h às 18h</span></div></li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg><div><b>Endereço</b><span>Av. Paulista, 1106 · São Paulo, SP</span></div></li>
+<section id="clients" class="dj dj-section "><div class="dj-wrap">
+  <div class="dj-section-head"><span class="dj-kicker">Beloved clients</span><h2>Beloved clients</h2>
+    <hr class="dj-rule">
+  </div>
+  <div class="dj-clients">
+    <span class="dj-client">SEVEN A</span>
+    <span class="dj-client">Alex Cristopher</span>
+    <span class="dj-client">BDRProPlayer</span>
+    <span class="dj-client">AJL Sorvete Express</span>
+    <span class="dj-client">Horror na Veia</span>
+  </div>
+</div></section>
+<section id="news" class="dj dj-section dj-section--alt"><div class="dj-wrap">
+  <div class="dj-section-head"><span class="dj-kicker">Latest news</span><h2>Latest news</h2>
+    <hr class="dj-rule">
+  </div>
+  <div class="dj-grid dj-grid--3">
+    <article class="dj-card"><span class="dj-num">November 20, 2024</span><h3>Create PowerPoint Event Invitation (Beginner)</h3><p>Do you have a special event coming up and want to create a visually stunning invitation for your guests? Microsoft PowerPoint might be the perfect tool for this task!</p></article>
+    <article class="dj-card"><span class="dj-num">August 09, 2024</span><h3>Scratch: Creating a Sonic Game</h3><p>Sonic the Hedgehog is one of the most iconic characters in the world of video games. Created by Sega, he made his first appearance on June 23, 1991.</p></article>
+    <article class="dj-card"><span class="dj-num">July 24, 2024</span><h3>Scratch: Creating a Pong Game</h3><p>Pong is one of the most iconic and influential games in video game history. Released in 1972 by Atari, it often played a crucial role in the development of the industry.</p></article>
+  </div>
+</div></section>
+<section id="contact" class="dj dj-section "><div class="dj-wrap">
+  <div class="dj-section-head"><span class="dj-kicker">Say hello</span><h2>Let's have a chat?</h2>
+    <p>I can help you promote your business</p>
+    <hr class="dj-rule">
+  </div>
+  <div class="dj-grid dj-grid--2" style="align-items:start">
+    <div><p class="dj-lead">Have a project in mind? Tell me about your idea and let us start a conversation. I answer every message personally.</p>
+      <a class="dj-btn" href="mailto:contato@davidalmeida.xyz">Get in touch</a></div>
+    <ul class="dj-contact-list">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg><div><b>Address</b><span>Home and Office: São Paulo, Brazil</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><div><b>E-mail</b><span>contato@davidalmeida.xyz</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h4l2 5-3 2a12 12 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg><div><b>WhatsApp</b><span>+55 11 98393-8347</span></div></li>
     </ul>
   </div>
 </div></section>
 
-<div class="atlas-wrap" style="padding-top:18px;padding-bottom:84px">
-  <div class="atlas atlas-cta">
-    <div><h2>Pronto para tirar a ideia do papel?</h2>
-      <p>Conte o objetivo do projeto e receba uma proposta com escopo, prazo e investimento estimado.</p></div>
-    <a class="atlas-btn" href="mailto:contato@atlasstudio.example">Falar com o time</a>
-  </div>
+<div class="dj dj-cta">
+  <h2>Are you ready to start a conversation?</h2>
+  <p>I can help you promote your business with design, code and a visual identity that stands out.</p>
+  <a class="dj-btn" href="mailto:contato@davidalmeida.xyz">Get in touch</a>
 </div>
 </main>
 
-<footer class="atlas atlas-footer">
-  <div class="atlas-wrap">
-    <div class="atlas-footer-grid">
-      <div><a class="atlas-brand" href="/"><span class="atlas-brand-mark">AS</span><span>Atlas Studio</span></a>
-        <p>Estudio de produtos digitais. Estrategia, design e engenharia para empresas que querem crescer com consistencia.</p>
-        <p style="margin-top:18px"><a href="mailto:contato@atlasstudio.example">contato@atlasstudio.example</a></p></div>
-      <div><h3>Explorar</h3>
-        <a href="/">Inicio</a><a href="#servicos">Servicos</a>
-        <a href="#projetos">Projetos</a><a href="#blog">Blog</a></div>
-      <div><h3>Servicos</h3>
-        <a href="#servicos">Estrategia digital</a><a href="#servicos">Design de produto</a>
-        <a href="#servicos">Desenvolvimento</a><a href="#contato">Consultoria</a></div>
-      <div><h3>Contato</h3>
-        <a href="#contato">Fale conosco</a><a href="mailto:contato@atlasstudio.example">E-mail</a>
-        <a href="tel:+551140028922">+55 11 4002 8922</a><a href="#contato">Solicitar proposta</a></div>
-    </div>
-    <div class="atlas-footer-bottom">
-      <span>© 2026 Atlas Studio. Todos os direitos reservados.</span>
-      <span><a href="/">Privacidade</a> · <a href="/">Termos</a> · ReamurCMS</span>
-    </div>
+<footer class="dj dj-footer"><div class="dj-wrap">
+  <div class="dj-footer-grid">
+    <div><a class="dj-brand" href="/"><span class="dj-brand-mark">DC</span><span class="dj-brand-txt"><b>David</b><span>Creator</span></span></a>
+      <p>David L. Almeida — Creative Developer. Straight from São Paulo, Brazil. Design, code and visual identity for brands that want to stand out.</p>
+      <div class="dj-social">
+        <a href="https://www.facebook.com/davidalmeidadesigner/" rel="noopener me">Facebook</a>
+        <a href="https://www.instagram.com/davidalmeidades/" rel="noopener me">Instagram</a>
+        <a href="https://br.pinterest.com/davidalmeidades/" rel="noopener me">Pinterest</a>
+        <a href="https://x.com/DavidAlmeidaDes" rel="noopener me">X</a>
+        <a href="https://www.google.com/search?q=David+Creator" rel="noopener me">Google Business</a>
+        <a href="https://www.redbubble.com/people/DavidCreator/" rel="noopener me">RedBubble</a>
+      </div></div>
+    <div><h3>Navigate</h3><a href="/">Home</a><a href="#about">About</a><a href="#services">Services</a><a href="#works">Works</a><a href="#news">Blog</a><a href="#contact">Contact</a></div>
+    <div><h3>Ecosystem</h3><a href="#tools">Fluxa</a><a href="#tools">Quotia</a><a href="#tools">Vertex</a><a href="#tools">Solis</a><a href="https://github.com/davidcreator">GitHub</a></div>
+    <div><h3>Say hello</h3><p>Home and Office: São Paulo, Brazil</p><p>contact: <a href="mailto:contato@davidalmeida.xyz">contato@davidalmeida.xyz</a></p><p>WhatsApp: <a href="https://wa.me/+5511983938347">+55 11 98393-8347</a></p></div>
   </div>
-</footer>
+  <div class="dj-footer-bottom"><span>© 2025 All rights reserved. David L. Almeida - Creative Developer.</span>
+    <span><a href="/">Cookies</a> · <a href="/">Politicas</a> · ReamurCMS</span></div>
+</div></footer>
 
 
 
