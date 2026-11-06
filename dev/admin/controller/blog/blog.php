@@ -1140,9 +1140,9 @@ class Blog extends \Reamur\System\Engine\Controller {
            Marcador proprio para preservar as contagens de $assetVersion. */
         $kazBdreAsset = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-bdre-an';
         $this->document->addStyle($assetBase . 'css/blog-block-editor-kaz.css?v=' . $kazBdreAsset);
-        /* Frente AO: tema TOTAL (pagina Admin + estados sob demanda).
-           Carregado APOS a AN; marcador proprio, sem tocar nos demais assets. */
-        $kazBdreTotalAsset = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-bdre-ao';
+        /* Frente AP: escopo recolhido SOMENTE ao BDREditor (correcao image-9).
+           Mesma folha da AO, agora sem tocar no Admin; marcador novo p/ cache. */
+        $kazBdreTotalAsset = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-bdre-ap';
         $this->document->addStyle($assetBase . 'css/blog-block-editor-kaz-total.css?v=' . $kazBdreTotalAsset);
         $this->document->addScriptDeferred($assetBase . 'js/blog-block-editor-kaz.js?v=' . $kazBdreAsset);
             $this->document->addStyle($catalogViewBase . 'css/threejs-thumb.css?v=' . $assetVersion);
