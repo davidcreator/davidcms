@@ -7,10 +7,20 @@ class Theme extends \Reamur\System\Engine\Controller {
     public function index(): void {
         if (!$this->user->hasPermission('access','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
         $this->load->language('design/theme'); $this->load->model('design/theme');
-        $data=[]; foreach(['heading_title','text_intro','text_empty','column_name','column_slug','column_status','column_modified','button_edit','button_add','button_save','button_activate','text_active','text_inactive'] as $k) $data[$k]=$this->language->get($k);
+        $data=[]; foreach(['heading_title','text_intro','text_empty','column_name','column_slug','column_status','column_modified','column_actions','button_edit','button_add','button_save','button_activate','button_deactivate','button_delete','button_delete_confirm','button_import','text_active','text_inactive','text_activate_help','text_deactivate_help','text_delete_confirm','text_delete_blocked_active','text_import_title','text_import_ok','text_import_error','text_activate_ok','text_deactivate_ok','text_delete_ok','text_delete_error','text_package_help','text_package_paste','text_package_import_help','text_package_drop','text_package_preview','text_package_preview_name','text_package_preview_slug','text_package_preview_file','text_package_ready','text_package_version','text_package_parent','text_package_parent_none','text_package_button','error_package_size','error_package_type','error_package_json','error_package_format'] as $k) $data[$k]=$this->language->get($k);
         $data['themes']=$this->model_design_theme->getThemes(); $data['csrf_token']=\Reamur\System\Library\Security\Csrf::token($this->session); $data['can_modify']=$this->user->hasPermission('modify','design/theme');
         $data['add']=$this->url->link('design/theme.edit');
-        foreach($data['themes'] as &$theme) { $theme['edit']=$this->url->link('design/theme.edit|' . (int)$theme['theme_id']); $theme['activate']=$this->url->link('design/theme.activate|' . (int)$theme['theme_id']); } unset($theme);
+        $data['import_url']=$this->url->link('design/theme.import');
+        $data['package_format']=\Reamur\System\Library\Theme\ThemePackage::FORMAT;
+        $data['package_version']=\Reamur\System\Library\Theme\ThemePackage::VERSION;
+        // Frente BE: feedback estavel por query string (allowlist); sem gravar estado.
+        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','components_invalid','schedule_invalid','media_invalid','sites_invalid','save_failed','forbidden','csrf'];
+        $ok=(string)($this->request->get['ok']??''); $err=(string)($this->request->get['error']??''); $code=(string)($this->request->get['code']??'');
+        $data['notice']=in_array($ok,['import','activate','deactivate','delete'],true)?$this->language->get('text_'.$ok.'_ok'):'';
+        $data['error']=$err==='import'?$this->language->get('text_import_error').' ('.(in_array($code,$codes,true)?$code:'unknown').')':($err==='delete'?$this->language->get('text_delete_error'):'');
+        $data['import_open']=(bool)($this->request->get['import']??'');
+        foreach($data['themes'] as &$theme) { $id=(int)$theme['theme_id']; $theme['edit']=$this->url->link('design/theme.edit|'.$id); $theme['activate']=$this->url->link('design/theme.activate|'.$id); $theme['deactivate']=$this->url->link('design/theme.deactivate|'.$id); $theme['delete']=$this->url->link('design/theme.delete|'.$id); } unset($theme);
+        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-package.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->chrome($data); $this->response->setOutput($this->load->view('design/theme_list',$data));
     }
     /** Frente U — KAZTheme-Editor: cena inicial kaztheme-scene/v1 derivada
@@ -399,22 +409,22 @@ class Theme extends \Reamur\System\Engine\Controller {
     public function import(string $theme_id='0'): void {
         $this->load->language('design/theme'); $this->load->model('design/theme');
         $id=(int)$theme_id;
-        $back=$this->url->link('design/theme.edit'.($id?'|'.$id:''));
+        $back=$id?$this->url->link('design/theme.edit|'.$id):$this->url->link('design/theme');
         $sep=str_contains($back,'?')?'&':'?';
         $method=(string)($this->request->server['REQUEST_METHOD']??'');
         if ($method!=='POST' || !$this->user->hasPermission('modify','design/theme')
             || !\Reamur\System\Library\Security\Csrf::check($this->session,(string)($this->request->post['csrf_token']??''))) {
-            $this->response->redirect($back.$sep.'import_error=forbidden'); return;
+            $this->response->redirect($back.$sep.($id?'import_error=forbidden':'error=import&code=forbidden')); return;
         }
         $decoded=$this->theme_package->decode((string)($this->request->post['theme_package']??''));
-        if (!$decoded['ok']) { $this->response->redirect($back.$sep.'import_error='.rawurlencode($decoded['errors'][0])); return; }
+        if (!$decoded['ok']) { $this->response->redirect($back.$sep.($id?'import_error='.rawurlencode($decoded['errors'][0]):'error=import&code='.rawurlencode($decoded['errors'][0]))); return; }
         $theme=$id?$this->model_design_theme->getTheme($id):[];
         $name=$id?(string)($theme['name']??$decoded['name']):$decoded['name'];
         $slug=$id?(string)($theme['slug']??$decoded['slug']):$decoded['slug'];
         $config=$decoded['config'];
         if (($config['parent']??'')===$slug) unset($config['parent']); // sem auto-heranca
         $saved=$this->model_design_theme->save($id,['name'=>$name,'slug'=>$slug,'config'=>$config],(int)$this->user->getUserId());
-        $this->response->redirect($back.$sep.($saved?'import_ok=1':'import_error=save_failed'));
+        $this->response->redirect($back.$sep.($id?($saved?'import_ok=1':'import_error=save_failed'):($saved?'ok=import':'error=import&code=save_failed')));
     }
 
     public function preview(string $theme_id='0'): void {
@@ -978,7 +988,29 @@ class Theme extends \Reamur\System\Engine\Controller {
     public function activate(string $theme_id='0'): void {
         if ($this->request->server['REQUEST_METHOD']!=='POST' || !$this->user->hasPermission('modify','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
         $this->load->model('design/theme'); $token=(string)($this->request->post['csrf_token']??'');
-        if (\Reamur\System\Library\Security\Csrf::check($this->session,$token)) $this->model_design_theme->activate((int)$theme_id,(int)$this->user->getUserId());
-        $this->response->redirect($this->url->link('design/theme'));
+        $done=false;
+        if (\Reamur\System\Library\Security\Csrf::check($this->session,$token)) $done=$this->model_design_theme->activate((int)$theme_id,(int)$this->user->getUserId());
+        $target=$this->url->link('design/theme'); $sep=str_contains($target,'?')?'&':'?';
+        $this->response->redirect($target.($done?$sep.'ok=activate':''));
+    }
+    /** Frente BE: desativa o tema ativo. Nao apaga config/publicado; o Catalog
+     *  passa a usar os padroes (getEffectiveTheme devolve arrays vazios). */
+    public function deactivate(string $theme_id='0'): void {
+        $target=$this->url->link('design/theme'); $sep=str_contains($target,'?')?'&':'?';
+        if ($this->request->server['REQUEST_METHOD']!=='POST' || !$this->user->hasPermission('modify','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
+        $this->load->model('design/theme'); $token=(string)($this->request->post['csrf_token']??'');
+        $done=false;
+        if (\Reamur\System\Library\Security\Csrf::check($this->session,$token)) $done=$this->model_design_theme->deactivate((int)$theme_id,(int)$this->user->getUserId());
+        $this->response->redirect($target.($done?$sep.'ok=deactivate':''));
+    }
+    /** Frente BE: exclusao definitiva (tema + revisoes). NUNCA remove o tema
+     *  ativo; exige desativar antes. POST, ACL modify e CSRF. */
+    public function delete(string $theme_id='0'): void {
+        $target=$this->url->link('design/theme'); $sep=str_contains($target,'?')?'&':'?';
+        if ($this->request->server['REQUEST_METHOD']!=='POST' || !$this->user->hasPermission('modify','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
+        $this->load->model('design/theme'); $token=(string)($this->request->post['csrf_token']??'');
+        $done=false;
+        if (\Reamur\System\Library\Security\Csrf::check($this->session,$token)) $done=$this->model_design_theme->delete((int)$theme_id);
+        $this->response->redirect($target.($done?$sep.'ok=delete':$sep.'error=delete'));
     }
 }

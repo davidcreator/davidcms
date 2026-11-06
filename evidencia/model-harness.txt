@@ -1,0 +1,22 @@
+$ php-wasm-cli -n validacao/be_model_harness.php  [rc=0]
+OK   deactivate em tema ATIVO retorna true
+OK   deactivate zera status
+OK   deactivate NAO apaga payload
+OK   deactivate registra revisao
+OK   deactivate nao usa ALTER/migration
+OK   deactivate em tema INATIVO retorna false (fail-closed)
+OK   nenhuma query de escrita no caso inativo
+OK   delete em tema ATIVO e RECUSADO
+OK   delete recusado nao emite DELETE
+OK   tema ativo permanece
+OK   delete em tema INATIVO retorna true
+OK   delete remove tema E revisoes (2 DELETE) · 2
+OK   delete das revisoes vem primeiro
+OK   delete do tema vem depois
+OK   delete nao usa ALTER/migration
+OK   delete de tema INEXISTENTE retorna false
+OK   deactivate de tema INEXISTENTE retorna false
+OK   save() original intacto (insert sem status=1)
+OK   activate() original intacto
+OK   getThemeMap() original intacto
+PHP BE model harness: 20 OK / 0 FALHAS

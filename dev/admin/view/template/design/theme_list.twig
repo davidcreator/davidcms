@@ -1,3 +1,73 @@
 {{ header|raw }}
-<div class="container-fluid py-4"><div class="d-flex justify-content-between align-items-center mb-3"><div><h1>{{ heading_title }}</h1><p class="text-muted">{{ text_intro }}</p></div>{% if can_modify %}<a class="btn btn-primary" href="{{ add }}">{{ button_add }}</a>{% endif %}</div>
-{% if themes %}<div class="card"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>{{ column_name }}</th><th>{{ column_slug }}</th><th>{{ column_status }}</th><th>{{ column_modified }}</th><th></th></tr></thead><tbody>{% for theme in themes %}<tr><td>{{ theme.name }}</td><td><code>{{ theme.slug }}</code></td><td>{{ theme.status ? text_active : text_inactive }}</td><td>{{ theme.date_modified }}</td><td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ theme.edit }}">{{ button_edit }}</a>{% if can_modify and not theme.status %}<form method="post" action="{{ theme.activate }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-sm btn-success">{{ button_activate }}</button></form>{% endif %}</td></tr>{% endfor %}</tbody></table></div></div>{% else %}<div class="alert alert-info">{{ text_empty }}</div>{% endif %}</div>{{ footer|raw }}
+<div class="container-fluid py-4">
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div><h1>{{ heading_title }}</h1><p class="text-muted">{{ text_intro }}</p></div>
+  <div class="d-flex gap-2">
+    {% if can_modify %}<a class="btn btn-primary" href="{{ add }}">{{ button_add }}</a>{% endif %}
+    {% if can_modify %}<a class="btn btn-outline-primary" href="#theme-import">{{ button_import }}</a>{% endif %}
+  </div>
+</div>
+
+{% if notice %}<div class="alert alert-success" role="status">{{ notice }}</div>{% endif %}
+{% if error %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+
+{% if can_modify %}
+<details id="theme-import" {% if import_open %}open{% endif %} class="mb-4">
+  <summary class="small text-body-secondary mb-2">{{ text_import_title }}</summary>
+  <div class="card"><div class="card-header"><h2 class="h6 mb-0">{{ button_import }}</h2><p class="mb-0 text-muted small">{{ text_package_help }}</p></div>
+  <div class="card-body">
+    <p class="mb-2"><span class="badge text-bg-secondary">{{ package_format }} v{{ package_version }}</span></p>
+    <form method="post" action="{{ import_url }}" data-theme-package-form>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label class="form-label" for="theme-package-json">{{ text_package_paste }}</label>
+      <textarea class="form-control font-monospace" id="theme-package-json" name="theme_package" rows="6" spellcheck="false"></textarea>
+      <div class="form-text">{{ text_package_import_help }}</div>
+      <div class="border rounded p-3 mt-2" data-theme-package-drop
+           data-msg-size="{{ error_package_size }}" data-msg-type="{{ error_package_type }}"
+           data-msg-json="{{ error_package_json }}" data-msg-format="{{ error_package_format }}"
+           data-msg-ready="{{ text_package_ready }}" data-msg-none="{{ text_package_parent_none }}">
+        <label class="form-label" for="theme-package-file">{{ text_package_drop }}</label>
+        <input class="form-control form-control-sm" type="file" id="theme-package-file" accept=".json,.reamurtheme.json,application/json">
+        <div class="mt-3 border rounded p-2" data-theme-package-preview hidden>
+          <p class="small fw-semibold mb-2">{{ text_package_preview }}</p>
+          <dl class="row small mb-0">
+            <dt class="col-4">{{ text_package_preview_name }}</dt><dd class="col-8 mb-1" data-p-name></dd>
+            <dt class="col-4">{{ text_package_preview_slug }}</dt><dd class="col-8 mb-1" data-p-slug></dd>
+            <dt class="col-4">{{ text_package_version }}</dt><dd class="col-8 mb-1" data-p-version></dd>
+            <dt class="col-4">{{ text_package_parent }}</dt><dd class="col-8 mb-1" data-p-parent></dd>
+            <dt class="col-4">{{ text_package_preview_file }}</dt><dd class="col-8 mb-1"><span data-p-file></span> · <span data-p-size></span></dd>
+          </dl>
+        </div>
+        <div class="small mt-2 text-body-secondary" data-theme-package-status role="status" aria-live="polite"></div>
+      </div>
+      <button class="btn btn-sm btn-primary mt-3" type="submit">{{ text_package_button }}</button>
+    </form>
+  </div></div>
+</details>
+{% endif %}
+
+{% if themes %}<div class="card"><div class="table-responsive"><table class="table align-middle mb-0">
+<thead><tr><th>{{ column_name }}</th><th>{{ column_slug }}</th><th>{{ column_status }}</th><th>{{ column_modified }}</th><th class="text-end">{{ column_actions }}</th></tr></thead>
+<tbody>{% for theme in themes %}<tr>
+  <td>{{ theme.name }}</td><td><code>{{ theme.slug }}</code></td>
+  <td>{{ theme.status ? text_active : text_inactive }}</td><td>{{ theme.date_modified }}</td>
+  <td class="text-end">
+    <a class="btn btn-sm btn-outline-primary" href="{{ theme.edit }}">{{ button_edit }}</a>
+    {% if can_modify %}
+      {% if theme.status %}
+        <form method="post" action="{{ theme.deactivate }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-sm btn-outline-secondary" type="submit" title="{{ text_deactivate_help }}">{{ button_deactivate }}</button></form>
+        <span class="btn btn-sm btn-outline-danger disabled" title="{{ text_delete_blocked_active }}" aria-disabled="true">{{ button_delete }}</span>
+      {% else %}
+        <form method="post" action="{{ theme.activate }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-sm btn-success" type="submit" title="{{ text_activate_help }}">{{ button_activate }}</button></form>
+        <details class="d-inline-block align-middle"><summary class="btn btn-sm btn-outline-danger mb-0">{{ button_delete }}</summary>
+          <div class="card mt-1 p-2 text-start" style="min-width:230px"><p class="small mb-2">{{ text_delete_confirm }}</p>
+            <form method="post" action="{{ theme.delete }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-sm btn-danger" type="submit">{{ button_delete_confirm }}</button></form>
+          </div>
+        </details>
+      {% endif %}
+    {% endif %}
+  </td>
+</tr>{% endfor %}</tbody>
+</table></div></div>
+{% else %}<div class="alert alert-info">{{ text_empty }}</div>{% endif %}
+</div>{{ footer|raw }}

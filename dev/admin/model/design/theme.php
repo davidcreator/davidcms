@@ -35,6 +35,25 @@ class Theme extends \Reamur\System\Engine\Model {
         $this->db->query("INSERT INTO `".$this->table('design_theme_revision')."` SET `theme_id`='".$id."',`snapshot`='".$this->db->escape(json_encode($theme,JSON_UNESCAPED_UNICODE)?:'{}')."',`user_id`='".$userId."',`date_added`=NOW()");
         return true;
     }
+    /** Frente BE: despublica sem apagar payload; registra revisao. Sem ALTER. */
+    public function deactivate(int $id, int $userId): bool {
+        $theme=$this->getTheme($id);
+        if (!$theme || (int)($theme['status']??0)!==1) return false;
+        $this->db->query("UPDATE `".$this->table('design_theme')."` SET `status`='0',`date_modified`=NOW() WHERE `theme_id`='".$id."'");
+        $after=$this->getTheme($id);
+        $this->db->query("INSERT INTO `".$this->table('design_theme_revision')."` SET `theme_id`='".$id."', `snapshot`='".$this->db->escape(json_encode($after,JSON_UNESCAPED_UNICODE)?:'{}')."', `user_id`='".$userId."', `date_added`=NOW()");
+        return true;
+    }
+    /** Frente BE: exclusao definitiva. Fail-closed: nunca remove tema ativo.
+     *  Remove tambem as revisoes para nao deixar orfaos. Sem ALTER/migration. */
+    public function delete(int $id): bool {
+        $theme=$this->getTheme($id);
+        if (!$theme || (int)($theme['status']??0)===1) return false;
+        $this->db->query("DELETE FROM `".$this->table('design_theme_revision')."` WHERE `theme_id`='".$id."'");
+        $this->db->query("DELETE FROM `".$this->table('design_theme')."` WHERE `theme_id`='".$id."'");
+        return true;
+    }
+
     public function restoreRevision(int $themeId, int $revisionId, int $userId): bool {
         $q=$this->db->query("SELECT `snapshot` FROM `".$this->table('design_theme_revision')."` WHERE `theme_id`='".$themeId."' AND `revision_id`='".$revisionId."' LIMIT 1");
         if (!($q instanceof \stdClass) || empty($q->row['snapshot'])) return false;
