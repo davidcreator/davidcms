@@ -13,6 +13,7 @@ Data: 2026-11-06 · Base: `9c809050ff908b66b6f3bf97c1fc5a1aed9b3160`.
 | **AO** | **REPROVADA**: *"passou dos limites, era para Editar somente o BDREditor mas acabou editando a barra de navegação lateral do ReamurCMS"* | **`image-9.png`** |
 | KAZTheme-Editor | **Referência** do tema desejado | **`image-10.png`** |
 | **AP** | **Aplicada tecnicamente** (`179269fe…`, +9/−0/~6, 6/6 arquivos idênticos) · **aguardando veredito visual** | capturas A/B/C no pacote + `Roteiro-Proximos-Passos-AP.md` |
+| **AQ** | Roteiro aplicado (`bfe9eec7…`, +6/−0/~0, 10/10 idênticos); CI remoto **7/7 success** | `Roteiro-Proximos-Passos-AP.md` + `evidencia/ci-remoto-bfe9eec7.json` |
 
 ## O que verificar no Admin real, após aplicar a AP
 
@@ -42,10 +43,14 @@ Varredura de todos os elementos fora do editor: **AO = 54 divergências**,
 
 ## Limites
 
-PHP WASM, Chromium headless, CI verde e `copy(__kazHealth())` local **não
-significam release aprovada**. CI remoto não verificado; produção, backend/DB
-e ciclo salvar–Publicar fora de escopo. `release_approved: false`, F9-27
-`BLOCKED_NOT_RUN`, F9-18 `release_ready: false`.
+PHP WASM, Chromium headless, CI verde e health local **não significam release
+aprovada**. O CI remoto foi **verificado** (run `42217429359`, 7/7 success no
+HEAD `bfe9eec7…`), mas isso não substitui o veredito visual. `__kazHealth()`
+não existe no código; o health observacional é `tools/health-admin-ap.js` e
+ainda depende de ser colado no console do Admin real. Produção autenticada,
+backend/DB e ciclo salvar–Publicar seguem fora de escopo.
+`release_approved: false`, F9-27 `BLOCKED_NOT_RUN`,
+F9-18 `release_ready: false`.
 
 **O veredito final é do usuário, no Admin real.** Sem ele, a AP permanece
 "entregue para avaliação", não "aprovada".

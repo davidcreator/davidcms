@@ -1,0 +1,111 @@
+{
+  "task": "Evidencia de CI remoto — Frente AT",
+  "collected_at": "2026-11-06T12:31:08+00:00",
+  "repository": "davidcreator/davidcms",
+  "head": "bfe9eec7aae82dc72c7054bcb46dbd901307d7c5",
+  "endpoints": [
+    "/repos/davidcreator/davidcms/actions/runs?per_page=3",
+    "/repos/davidcreator/davidcms/commits/<sha>/check-runs?per_page=30"
+  ],
+  "auth": "leitura publica sem token; o 403 \"Must have admin rights\" registrado antes aplicava-se a outro endpoint",
+  "head_run": {
+    "id": 42217429359,
+    "head_sha": "bfe9eec7aae82dc72c7054bcb46dbd901307d7c5",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-06T12:24:32Z",
+    "html_url": "https://github.com/davidcreator/davidcms/actions/runs/42217429359",
+    "name": "PHP Composer"
+  },
+  "head_total_count": 7,
+  "head_check_runs": [
+    {
+      "name": "php-lint",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "node-deps (22)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "static-analysis",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "repo-guards",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "node-deps (20)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "docs-links",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "composer",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "previous_ap_run": {
+    "id": 42212306218,
+    "head_sha": "179269fea36584076f9ef41b95ae94638dd08f45",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-06T11:43:07Z",
+    "html_url": "https://github.com/davidcreator/davidcms/actions/runs/42212306218",
+    "name": "PHP Composer"
+  },
+  "previous_ap_total_count": 7,
+  "previous_ap_check_runs": [
+    {
+      "name": "php-lint",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "node-deps (20)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "repo-guards",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "node-deps (22)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "docs-links",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "static-analysis",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "composer",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "ci_status_registrado_no_contrato": "7/7 success (runs 41483802295 / 41504039830) — runs antigos, nao o HEAD",
+  "limits": [
+    "CI verde nao substitui o veredito visual do usuario",
+    "CI verde nao converte NOT_RUN / BLOCKED_NOT_RUN em PASS",
+    "CI verde nao significa release aprovada; release_approved segue false"
+  ]
+}

@@ -1,8 +1,11 @@
 # Roteiro dos próximos passos — pós-AP
 
-**Data:** 2026-11-06 · **HEAD auditado:** `179269fea36584076f9ef41b95ae94638dd08f45`
-(`fix(bdre-editor): limit dark theme to editor`, árvore 3.218 entradas /
-2.635 blobs, `truncated: false`).
+**Data:** 2026-11-06 (atualizado pela Frente AT) · **HEAD atual:**
+`bfe9eec7aae82dc72c7054bcb46dbd901307d7c5`
+(`docs(aq-acceptance): add full planning package and health tool`, árvore
+3.224 entradas / 2.641 blobs, `truncated: false`). A Frente **AQ** foi
+aplicada sobre `179269fe…` (`fix(bdre-editor): limit dark theme to editor`):
++6 / −0 / ~0, com **10/10 arquivos do pacote idênticos** no remoto.
 
 **Natureza deste documento:** planejamento e leitura de contratos. **Não** é
 uma frente de código, **não** executa runtime, **não** altera contrato,
@@ -24,7 +27,9 @@ ao pacote entregue.
 | F9-25 | `patterns_persistence: PROPOSAL_PENDING`, `catalog_context_preview: DESIGN_GATE_PENDING` |
 | F9-26 | `wcag_conformance_claimed: false`, runtime/axe/performance `false`; foco `#174ea6`/3 px/2 px intacto |
 | F9-14 | `standalone_in_memory_component_prepared_not_integrated` |
-| CI remoto | não verificado nesta conversa (`403 Must have admin rights` via API) |
+| CI remoto | ✅ **verificado** (Frente AT): run `42217429359` `completed/success`, **7/7 check-runs success** no HEAD `bfe9eec7…`; leitura pública da API, sem token |
+| Health do Admin real | ⏳ pendente: `tools/health-admin-ap.js` já está no GitHub, falta colar no console do Admin autenticado |
+| Aplicação da AQ | ✅ +6 / −0 / ~0; 10/10 arquivos idênticos (6 novos + 4 evidências já existentes da AP) |
 
 > Regra que segue valendo: **aplicar ≠ aprovar**. AA e AO também foram
 > aplicadas e depois reprovadas.
@@ -111,15 +116,25 @@ O workflow `.github/workflows/php.yml` tem **6 jobs**: `composer`,
 `php-lint`, `docs-links`, `static-analysis`, `node-deps`, `repo-guards`
 (este último chama `tools/repo-health.sh`).
 
-Atenção: `decision-matrix.json` registra
-`ci_status: "7/7 success (runs 41483802295 / 41504039830)"` — são **runs
-antigos**, **não** o run de `179269fe…`. Conferir em
-`github.com/davidcreator/davidcms/actions` o run **do commit atual**. Se a
-API devolver `403`, usar a UI com conta que tenha permissão de admin.
+**Resultado verificado em 2026-11-06 (Frente AT).** A leitura pública da
+API funcionou sem token — o `403 Must have admin rights` registrado antes
+aplicava-se a outro endpoint, não a `/actions/runs` nem a
+`/commits/<sha>/check-runs`:
 
-**Critério de saída:** run do commit atual verde + health colado. Isso
-**não** converte `NOT_RUN`/`BLOCKED_NOT_RUN` em `PASS` e **não** autoriza
-release.
+| Commit | Run | Status | Check-runs |
+|---|---|---|---|
+| **`bfe9eec7…` (AQ, HEAD atual)** | `42217429359` | `completed / success` | **7/7 success** |
+| `179269fe…` (AP) | `42212306218` | `completed / success` | **7/7 success** |
+
+Os 7 checks: `php-lint`, `node-deps (22)`, `static-analysis`, `repo-guards`,
+`node-deps (20)`, `docs-links`, `composer`. Atenção: o
+`ci_status: "7/7 success (runs 41483802295 / 41504039830)"` gravado em
+`decision-matrix.json` continua sendo de **runs antigos**; a evidência
+acima é a do commit atual, registrada em `evidencia/ci-remoto-bfe9eec7.json`.
+
+**Critério de saída do passo 2:** ✅ CI do commit atual verde (concluído) +
+⏳ health colado do Admin real (pendente, depende do usuário). Isso **não**
+converte `NOT_RUN`/`BLOCKED_NOT_RUN` em `PASS` e **não** autoriza release.
 
 ---
 
@@ -207,6 +222,8 @@ F9-18 `release_ready: false`.
 **Fez:** reauditou o HEAD pós-AP, confirmou 6/6 arquivos idênticos, leu 13
 arquivos de contrato/CI do remoto, varreu 924 arquivos em busca de
 `kazHealth`, corrigiu a inconsistência e montou a pauta de decisões.
+**Atualização AT:** confirmou a aplicação da AQ (10/10 idênticos), verificou
+o CI remoto do HEAD atual (7/7 success) e registrou a evidência em JSON.
 
 **Não fez:** executar runtime, acessar banco/staging, aplicar correção,
 alterar qualquer contrato, escrever no GitHub, deploy ou declaração de
