@@ -11,7 +11,7 @@
 
 // Headings & texts
 $_['heading_title']        = 'Content Pages';
-$_['text_list']            = 'Manage informational pages. Use Quick Edit for title, slug, status and order; choose Edit to work on content in the full-screen BDREditor.';
+$_['text_list']            = 'Manage informational pages. Use Quick Edit for title, slug, status and order; choose Edit to work on content in the full-screen BDREditor-Content.';
 $_['text_no_results']      = 'No pages yet. Create the first one.';
 $_['text_confirm_delete']  = 'Delete this page? Its descriptions, SEO keywords, and custom field values are removed.';
 $_['text_enabled']         = 'Enabled';
@@ -350,9 +350,9 @@ $_['text_block_workspace_tool_patterns'] = 'Patterns';
 $_['text_block_ribbon_insert'] = 'Insert';
 $_['text_block_ribbon_view'] = 'View';
 
-// F9-87 — Fluxo independente de criação de páginas no BDREditor.
-$_['text_page_create_intro'] = 'Create your content in BDREditor. The page is stored only when you save; cancel returns to the list without creating a draft.';
-$_['text_page_create_title_help'] = 'Required. You can also edit the title directly in the BDREditor toolbar.';
+// F9-87 — Fluxo independente de criação de páginas no BDREditor-Content.
+$_['text_page_create_intro'] = 'Create your content in BDREditor-Content. The page is stored only when you save; cancel returns to the list without creating a draft.';
+$_['text_page_create_title_help'] = 'Required. You can also edit the title directly in the BDREditor-Content toolbar.';
 $_['text_page_create_keyword_help'] = 'Optional friendly URL. You can fill it in after leaving the immersive editor.';
 
 // F9-88 — Edição rápida das propriedades já suportadas pelo Pages.

@@ -69,7 +69,7 @@
               {% elseif language.fields.block_mode == 'invalid' %}
                 <input type="hidden" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" value="{{ language.fields.description|e('html_attr') }}">
                 <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="invalid">
-                <div class="alert alert-warning" role="status">O documento BDREditor armazenado não passou na validação. O original será preservado sem alterações; restaure uma versão válida antes de editar.</div>
+                <div class="alert alert-warning" role="status">O documento BDREditor-Content armazenado não passou na validação. O original será preservado sem alterações; restaure uma versão válida antes de editar.</div>
               {% else %}
                 <textarea class="form-control" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="10">{{ language.fields.description }}</textarea>
                 <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="preserve">

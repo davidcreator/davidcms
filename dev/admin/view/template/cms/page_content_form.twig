@@ -1,4 +1,4 @@
-{# BDREditor exclusivo de conteúdo de uma página CMS. Metadados permanecem no formulário geral. #}
+{# BDREditor-Content exclusivo de conteúdo de uma página CMS. Metadados permanecem no formulário geral. #}
 {{ header|raw }}
 <div class="cms-page-content-form">
   <div class="page-titlebar d-flex justify-content-between align-items-center gap-3">
@@ -32,7 +32,7 @@
           {% elseif language.fields.block_mode == 'invalid' %}
             <input type="hidden" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" value="{{ language.fields.description|e('html_attr') }}">
             <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="invalid">
-            <div class="alert alert-warning" role="status">O documento BDREditor armazenado não passou na validação. O original será preservado sem alterações; restaure uma versão válida antes de editá-lo.</div>
+            <div class="alert alert-warning" role="status">O documento BDREditor-Content armazenado não passou na validação. O original será preservado sem alterações; restaure uma versão válida antes de editá-lo.</div>
           {% else %}
             <textarea class="form-control" name="page_description[{{ language.language_id }}][description]" id="input-description-{{ language.language_id }}" rows="18">{{ language.fields.description }}</textarea>
             <input type="hidden" name="page_block_mode[{{ language.language_id }}]" value="preserve">

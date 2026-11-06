@@ -1,0 +1,65 @@
+{
+ "dev/admin/view/template/design/kaz_theme_editor.twig": {
+  "keys": 0,
+  "class": 641,
+  "id": 61,
+  "data": 187,
+  "raw": 2
+ },
+ "dev/admin/view/template/cms/page_form.twig": {
+  "keys": 0,
+  "class": 127,
+  "id": 42,
+  "data": 59,
+  "raw": 2
+ },
+ "dev/admin/view/template/cms/page_content_form.twig": {
+  "keys": 0,
+  "class": 31,
+  "id": 7,
+  "data": 8,
+  "raw": 2
+ },
+ "dev/admin/language/pt-br/cms/page.php": {
+  "keys": 277,
+  "class": 0,
+  "id": 0,
+  "data": 0,
+  "raw": 0
+ },
+ "dev/admin/language/pt-br/blog/blog.php": {
+  "keys": 436,
+  "class": 0,
+  "id": 0,
+  "data": 0,
+  "raw": 0
+ },
+ "dev/admin/language/es-eu/cms/page.php": {
+  "keys": 277,
+  "class": 0,
+  "id": 0,
+  "data": 0,
+  "raw": 0
+ },
+ "dev/admin/language/es-eu/blog/blog.php": {
+  "keys": 436,
+  "class": 0,
+  "id": 0,
+  "data": 0,
+  "raw": 0
+ },
+ "dev/admin/language/en-us/cms/page.php": {
+  "keys": 291,
+  "class": 0,
+  "id": 0,
+  "data": 0,
+  "raw": 0
+ },
+ "dev/admin/language/en-us/blog/blog.php": {
+  "keys": 436,
+  "class": 0,
+  "id": 0,
+  "data": 0,
+  "raw": 0
+ }
+}

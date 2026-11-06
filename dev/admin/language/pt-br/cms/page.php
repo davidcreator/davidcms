@@ -11,7 +11,7 @@
 
 // Headings & texts
 $_['heading_title']        = 'Páginas de Conteúdo';
-$_['text_list']            = 'Gerencie páginas informativas. Use Edição rápida para título, slug, status e ordenação; abra Editar para trabalhar o conteúdo no BDREditor em tela cheia.';
+$_['text_list']            = 'Gerencie páginas informativas. Use Edição rápida para título, slug, status e ordenação; abra Editar para trabalhar o conteúdo no BDREditor-Content em tela cheia.';
 $_['text_no_results']      = 'Nenhuma página ainda. Crie a primeira.';
 $_['text_confirm_delete']  = 'Excluir esta página? Suas descrições e keywords SEO serão removidas.';
 $_['text_enabled']         = 'Habilitado';
@@ -72,7 +72,7 @@ $_['button_previous_page'] = '‹ Anterior';
 $_['error_csrf'] = 'Token de sessão inválido. Recarregue o formulário e tente novamente.';
 $_['button_close'] = 'Fechar';
 
-// Fluxo de edição em página exclusiva para conteúdo BDREditor.
+// Fluxo de edição em página exclusiva para conteúdo BDREditor-Content.
 $_['text_page_context_page'] = 'Página';
 $_['text_page_context_language'] = 'Idioma';
 $_['text_page_context_untitled'] = 'Página sem título';
@@ -334,9 +334,9 @@ $_['text_block_workspace_tool_patterns'] = 'Padrões';
 $_['text_block_ribbon_insert'] = 'Inserir';
 $_['text_block_ribbon_view'] = 'Exibir';
 
-// F9-87 — Fluxo independente de criação de páginas no BDREditor.
-$_['text_page_create_intro'] = 'Criar conteúdo no BDREditor. A página só será gravada ao salvar; cancelar retorna à lista sem criar um rascunho.';
-$_['text_page_create_title_help'] = 'Obrigatório. Também pode editar o título diretamente na barra do BDREditor.';
+// F9-87 — Fluxo independente de criação de páginas no BDREditor-Content.
+$_['text_page_create_intro'] = 'Criar conteúdo no BDREditor-Content. A página só será gravada ao salvar; cancelar retorna à lista sem criar um rascunho.';
+$_['text_page_create_title_help'] = 'Obrigatório. Também pode editar o título diretamente na barra do BDREditor-Content.';
 $_['text_page_create_keyword_help'] = 'URL amigável opcional; pode ser preenchida após sair da tela imersiva.';
 
 // F9-88 — Edição rápida das propriedades já suportadas pelo Pages.

@@ -1,4 +1,4 @@
-{# KAZTheme-Editor — frente AB (tema publicado de verdade, workspace responsivo em abas).
+{# KAZEditor-Theme — frente AB (tema publicado de verdade, workspace responsivo em abas).
    Ponto de montagem dentro do formulário do tema. Sem filtro raw, sem tag
    script inline, sem dados do request. O JSON da cena vem do controller já
    escapado para atributo; o JS reconstrói tudo via DOM. O textarea é um campo
@@ -15,7 +15,7 @@
          data-kaz-release-layers="{{ kr.scene_layers|default(0)|e('html_attr') }}"
          data-kaz-release-asset="{{ kr.asset_ok|default(0)|e('html_attr') }}">
   <div class="alert {% if kr.pending|default(0) %}alert-warning{% else %}alert-success{% endif %} py-2 px-3 mb-0">
-    <strong>KAZTheme · Liberação</strong>
+    <strong>KAZEditor-Theme · Liberação</strong>
     <span class="badge bg-secondary ms-2">{{ kr.verdict_label|default('Nenhum tema ativo') }}</span>
     <span class="small ms-2">{{ kr.hint|default('') }}</span>
     <span class="small text-muted ms-2">CSS: {{ kr.css_parts|default(0) }}/6 partes · {{ kr.css_bytes|default(0) }} bytes · {{ kr.scene_layers|default(0) }} camadas</span>
@@ -30,7 +30,7 @@
 <section id="kaz-acceptance" class="mb-3" role="status" aria-live="polite"
          data-kaz-acceptance="aguardando">
   <div class="alert alert-warning py-2 px-3 mb-0">
-    <strong>KAZTheme · Aceitação</strong>
+    <strong>KAZEditor-Theme · Aceitação</strong>
     <span class="badge bg-secondary ms-2" data-kaz-acceptance-state>Aguardando o editor</span>
     <span class="small ms-2" data-kaz-acceptance-detail>Este aviso muda quando o editor inicializa. Se permanecer, o JavaScript não carregou — não é erro de tema nem de banco.</span>
     <noscript><div class="small mt-1"><strong>JavaScript desabilitado:</strong> o editor não pode inicializar; os painéis desta página continuam sendo HTML do servidor.</div></noscript>
@@ -51,13 +51,13 @@
   <header class="kaz-topbar">
     <div class="kaz-topbar__brand">
       <span class="kaz-brand__mark" aria-hidden="true"></span>
-      <span class="kaz-topbar__file"><strong>KAZTheme-Editor</strong> · {{ heading_title }}</span>
+      <span class="kaz-topbar__file"><strong>KAZEditor-Theme</strong> · {{ heading_title }}</span>
       <span class="kaz-topbar__sep" aria-hidden="true"></span>
       <button class="kaz-topbar__page kaz-linkbtn" type="button" data-kaz-action="pages" title="Abrir painel de páginas">Página 1</button>
       <span class="kaz-badge kaz-badge--muted">kaztheme-scene/v1</span>
     </div>
 
-    <div class="kaz-toolbar" role="toolbar" aria-label="Ferramentas do KAZTheme-Editor">
+    <div class="kaz-toolbar" role="toolbar" aria-label="Ferramentas do KAZEditor-Theme">
       <button class="kaz-tool kaz-tool--on" type="button" data-kaz-tool="move" title="Mover (V)" aria-label="Mover">
         <svg class="kaz-ico" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 2l11 7-5 1-2 5z"/></svg>
       </button>
@@ -253,7 +253,7 @@
         <button class="kaz-module-link" type="button" data-kaz-module="condicoes" data-kaz-tablabel="Condições" aria-pressed="false"><span class="kaz-module-link__num">12</span>Condições </button>
         <button class="kaz-module-link" type="button" data-kaz-module="comparar" data-kaz-tablabel="Prévia" aria-pressed="false"><span class="kaz-module-link__num">13</span>Prévia </button>
         <button class="kaz-module-link" type="button" data-kaz-module="templates" data-kaz-tablabel="Templates" aria-pressed="false"><span class="kaz-module-link__num">14</span>Templates </button>
-        <p class="kaz-panel__note">O KAZTheme-Editor é o dono desta página: todos os formulários, blocos e recursos de edição de tema vivem aqui, dentro do mesmo workspace.</p>
+        <p class="kaz-panel__note">O KAZEditor-Theme é o dono desta página: todos os formulários, blocos e recursos de edição de tema vivem aqui, dentro do mesmo workspace.</p>
       </div>
       <div class="kaz-stage" data-kaz-stage>
       <div class="kaz-ruler kaz-ruler--corner" aria-hidden="true"></div>
@@ -265,7 +265,7 @@
         <div class="kaz-board" data-kaz-board>
           <div class="kaz-board__label"><span class="kaz-board__dot" aria-hidden="true"></span>Tema · <span data-kaz-board-size>960 × 540</span></div>
           <div class="kaz-board__frame">
-            <svg data-kaz-canvas viewBox="0 0 960 540" preserveAspectRatio="xMidYMid meet" aria-label="Canvas KAZTheme-Editor"></svg>
+            <svg data-kaz-canvas viewBox="0 0 960 540" preserveAspectRatio="xMidYMid meet" aria-label="Canvas KAZEditor-Theme"></svg>
           </div>
         </div>
         </div>
@@ -563,7 +563,7 @@
 
       <section class="kaz-panel" data-kaz-panel="prototype" hidden>
         <p class="kaz-panel__title">Protótipo</p>
-        <p class="kaz-panel__note">O KAZTheme-Editor edita a <strong>cena do tema</strong>, não um protótipo navegável. Não há interações, fluxos ou View mode: a cena é dado de edição e versionamento (<code>kaz_scene</code>), não renderização no site público.</p>
+        <p class="kaz-panel__note">O KAZEditor-Theme edita a <strong>cena do tema</strong>, não um protótipo navegável. Não há interações, fluxos ou View mode: a cena é dado de edição e versionamento (<code>kaz_scene</code>), não renderização no site público.</p>
         <p class="kaz-panel__note">Na frente Z o editor é o <strong>dono absoluto</strong> da página: os 14 módulos do formulário de tema (Geral, Herança, Tokens, Three.js, Cena 3D, Seções, Agenda, Mídia, Modelos, Sites, Componentes, Condições, Prévia e Templates) ficam na sidebar esquerda, além do pacote, do iframe de prévia e do histórico de revisões. Todos os <code>name=</code> originais foram preservados.</p>
         <div class="kaz-panel__actions">
           <button class="kaz-btn kaz-btn--primary kaz-btn--wide" type="button" data-kaz-module="comparar">Ir para a prévia do tema</button>

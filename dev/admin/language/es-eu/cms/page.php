@@ -11,7 +11,7 @@
 
 // Headings & texts
 $_['heading_title']        = 'Páginas de Contenido';
-$_['text_list']            = 'Gestione las páginas informativas. Use Edición rápida para título, slug, estado y orden; elija Editar para trabajar el contenido en BDREditor a pantalla completa.';
+$_['text_list']            = 'Gestione las páginas informativas. Use Edición rápida para título, slug, estado y orden; elija Editar para trabajar el contenido en BDREditor-Content a pantalla completa.';
 $_['text_no_results']      = 'Aún no hay páginas. Cree la primera.';
 $_['text_confirm_delete']  = '¿Eliminar esta página? Se quitarán sus descripciones y keywords SEO.';
 $_['text_enabled']         = 'Habilitado';
@@ -334,9 +334,9 @@ $_['text_block_workspace_tool_patterns'] = 'Patrones';
 $_['text_block_ribbon_insert'] = 'Insertar';
 $_['text_block_ribbon_view'] = 'Ver';
 
-// F9-87 — Fluxo independente de criação de páginas no BDREditor.
-$_['text_page_create_intro'] = 'Cree el contenido en BDREditor. La página se guarda solo al confirmar; cancelar vuelve a la lista sin crear un borrador.';
-$_['text_page_create_title_help'] = 'Obligatorio. También puede editar el título directamente en la barra de BDREditor.';
+// F9-87 — Fluxo independente de criação de páginas no BDREditor-Content.
+$_['text_page_create_intro'] = 'Cree el contenido en BDREditor-Content. La página se guarda solo al confirmar; cancelar vuelve a la lista sin crear un borrador.';
+$_['text_page_create_title_help'] = 'Obligatorio. También puede editar el título directamente en la barra de BDREditor-Content.';
 $_['text_page_create_keyword_help'] = 'URL amigable opcional; puede completarla al salir del editor inmersivo.';
 
 // F9-88 — Edição rápida das propriedades já suportadas pelo Pages.

@@ -1,8 +1,15 @@
-$ php-wasm-cli -n /tmp/ay_wasm/harness.php (JSON 1.0.0)
-real => 2 itens | name="BDREditor-Content" version="1.0.0" updated="2026-11-06" notes=0 legacy="BDREditor"
+$ php-wasm-cli -n -l dev/admin/language/pt-br/cms/page.php  [rc=0]  No syntax errors detected in /tmp/bb_pkg/dev/admin/language/pt-br/cms/page.php
+$ php-wasm-cli -n -l dev/admin/language/pt-br/blog/blog.php  [rc=0]  No syntax errors detected in /tmp/bb_pkg/dev/admin/language/pt-br/blog/blog.php
+$ php-wasm-cli -n -l dev/admin/language/es-eu/cms/page.php  [rc=0]  No syntax errors detected in /tmp/bb_pkg/dev/admin/language/es-eu/cms/page.php
+$ php-wasm-cli -n -l dev/admin/language/es-eu/blog/blog.php  [rc=0]  No syntax errors detected in /tmp/bb_pkg/dev/admin/language/es-eu/blog/blog.php
+$ php-wasm-cli -n -l dev/admin/language/en-us/cms/page.php  [rc=0]  No syntax errors detected in /tmp/bb_pkg/dev/admin/language/en-us/cms/page.php
+$ php-wasm-cli -n -l dev/admin/language/en-us/blog/blog.php  [rc=0]  No syntax errors detected in /tmp/bb_pkg/dev/admin/language/en-us/blog/blog.php
+$ twig-balance dev/admin/view/template/design/kaz_theme_editor.twig  [OK]
+$ twig-balance dev/admin/view/template/cms/page_form.twig  [OK]
+$ twig-balance dev/admin/view/template/cms/page_content_form.twig  [OK]
 
-$ node tools/verify-internal-tools.cjs
-CJS AY: 65 OK / 0 FALHAS
+$ node tools/verify-rename-b1.cjs
+CJS BB: 117 OK / 0 FALHAS
 
 $ bash tools/verify-checksums.sh
 == resumo: 3 PASS / 0 FAIL | 14 manifesto(s), 142 arquivo(s) conferidos ==

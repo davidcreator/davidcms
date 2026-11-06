@@ -232,7 +232,7 @@ $_['text_block_column_count'] = 'columns · stack on narrow screens';
 $_['text_block_type_gallery'] = 'Gallery';
 $_['text_block_type_cover'] = 'Cover';
 
-// BDREditor: structured table controls
+// BDREditor-Content: structured table controls
 $_['text_block_type_table'] = 'Table';
 $_['text_block_table_header'] = 'First row is a header';
 $_['text_block_table_add_row'] = 'Add row';
@@ -275,7 +275,7 @@ $_['text_block_outline_label'] = 'Label in outline';
 $_['text_block_initial_invalid'] = 'The initial block document is invalid. Its source is preserved for review; editing is blocked.';
 $_['text_block_document_too_large'] = 'The block document exceeds the 4 MiB size limit.';
 
-// BDREditor core/file — biblioteca de descargas local.
+// BDREditor-Content core/file — biblioteca de descargas local.
 $_['text_block_type_file'] = 'Download file';
 $_['text_block_file_source'] = 'Local file reference';
 $_['text_block_file_choose'] = 'Choose a library file';
@@ -292,7 +292,7 @@ $_['error_download_upload_type'] = 'Invalid document type or mismatched content.
 $_['error_download_upload_move'] = 'The document could not be saved. Check catalog folder permissions.';
 $_['error_download_generic'] = 'Could not load the download library.';
 
-// BDREditor media: allowlisted audio/video uploads; no deletion.
+// BDREditor-Content media: allowlisted audio/video uploads; no deletion.
 $_['text_block_type_audio'] = 'Audio';
 $_['text_block_audio_source'] = 'Local audio reference';
 $_['text_block_audio_choose'] = 'Choose audio from library';
@@ -303,40 +303,40 @@ $_['text_audio_drag_hint']                 = 'Drag into the editor to insert thi
 $_['button_audio_select'] = 'Use this audio';
 $_['error_audio_generic'] = 'Could not load the audio library.';
 
-// BDREditor keyboard help
+// BDREditor-Content keyboard help
 $_['text_block_keyboard_shortcuts_title'] = 'Keyboard shortcuts';
 $_['text_block_keyboard_shortcuts'] = 'Ctrl/⌘+F find · Ctrl/⌘+B bold · Ctrl/⌘+I italic · Ctrl/⌘+U underline · Ctrl/⌘+K link · Ctrl/⌘+Z undo · Ctrl/⌘+Shift+Z or Ctrl+Y redo · Alt+↑/↓ move block · / insert block';
 
-// BDREditor local block clipboard
+// BDREditor-Content local block clipboard
 $_['text_block_copy'] = 'Copy block';
 $_['text_block_paste'] = 'Paste block';
 $_['text_block_status_copied'] = 'Block copied in this editor.';
 $_['text_block_status_pasted'] = 'Block pasted.';
 $_['text_block_paste_unavailable'] = 'This block cannot be pasted here or a document limit would be exceeded.';
 
-// BDREditor hierarchical navigation
+// BDREditor-Content hierarchical navigation
 $_['text_block_navigation_path'] = 'Selected block path';
 $_['text_block_navigation_cell'] = 'Cell';
 $_['text_block_status_focus_changed'] = 'Focus moved to the selected block.';
 $_['text_block_navigation_row'] = 'Row';
 
-// BDREditor outline keyboard navigation
+// BDREditor-Content outline keyboard navigation
 $_['text_block_outline_keyboard_hint'] = '↑/↓ navigate · → first child · ← parent block · Home/End first/last';
 $_['text_block_status_outline_changed'] = 'Selected block updated from outline navigation.';
 
-// BDREditor indent/outdent
+// BDREditor-Content indent/outdent
 $_['text_block_indent'] = 'Indent into previous block';
 $_['text_block_outdent'] = 'Outdent after parent';
 $_['text_block_status_indented'] = 'Block moved into the previous container.';
 $_['text_block_status_outdented'] = 'Block moved after its parent.';
 $_['text_block_hierarchy_move_unavailable'] = 'This move is not allowed here or would exceed a document limit.';
 
-// BDREditor save-state feedback
+// BDREditor-Content save-state feedback
 $_['text_block_save_state_saved'] = 'All changes are saved.';
 $_['text_block_save_state_unsaved'] = 'You have unsaved changes.';
 $_['text_block_save_state_saving'] = 'Saving changes…';
 
-// BDREditor editorial callout
+// BDREditor-Content editorial callout
 $_['text_block_type_callout'] = 'Callout';
 $_['text_block_callout_tone'] = 'Callout style';
 $_['text_block_callout_tone_info'] = 'Information';
@@ -345,13 +345,13 @@ $_['text_block_callout_tone_warning'] = 'Warning';
 $_['text_block_callout_tone_danger'] = 'Critical';
 $_['text_block_callout_default'] = 'Add an important note for readers.';
 
-// BDREditor accessible details block
+// BDREditor-Content accessible details block
 $_['text_block_type_details'] = 'Expandable details';
 $_['text_block_details_summary_label'] = 'Expandable section title';
 $_['text_block_details_summary_default'] = 'More information';
 $_['text_block_details_default'] = 'Add the details here.';
 
-// BDREditor vertical spacer block
+// BDREditor-Content vertical spacer block
 $_['text_block_type_spacer'] = 'Vertical spacer';
 $_['text_block_spacer_height'] = 'Spacing height';
 $_['text_block_spacer_16'] = 'Extra small · 16 px';
@@ -360,13 +360,13 @@ $_['text_block_spacer_48'] = 'Medium · 48 px';
 $_['text_block_spacer_64'] = 'Large · 64 px';
 $_['text_block_spacer_96'] = 'Extra large · 96 px';
 
-// BDREditor preformatted code block
+// BDREditor-Content preformatted code block
 $_['text_block_type_code'] = 'Preformatted code';
 $_['text_block_code_label'] = 'Preformatted code';
 $_['text_block_code_default'] = '';
 $_['text_block_code_too_large'] = 'The code block exceeds the 256 KiB limit.';
 
-// BDREditor: secure uploads to dedicated local audio/video roots; no deletion.
+// BDREditor-Content: secure uploads to dedicated local audio/video roots; no deletion.
 $_['text_audio_upload_hint'] = 'Upload MP3, OGG, or WAV · up to 20 MiB. The file will be stored in the local Blog library.';
 $_['text_video_library'] = 'Blog video library';
 $_['text_video_empty'] = 'No local videos are registered.';
