@@ -1,0 +1,14 @@
+OK   JSON do pacote valido
+OK   format/version
+OK   validateConfig() = []
+OK   decode() ok = true · []
+OK   decode() sem erros
+OK   checksum confere
+OK   25 fontes Twig · 25
+OK   nome/slug/parent
+OK   scene ThreeJS allowlistada
+OK   tokens normalizados
+OK   resolveChain() sem pai
+OK   export() reproduz o checksum
+OK   1 byte alterado -> checksum_invalid
+PHP BG decode harness: 13 OK / 0 FALHAS

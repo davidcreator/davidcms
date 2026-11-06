@@ -1,10 +1,61 @@
-$ php-wasm-cli -n -l dev/admin/controller/design/theme.php  [rc=0]  No syntax errors detected in /tmp/bf_final_pkg/dev/admin/controller/design/theme.php
-$ php-wasm-cli -n -l dev/admin/language/en-us/design/theme.php  [rc=0]  No syntax errors detected in /tmp/bf_final_pkg/dev/admin/language/en-us/design/theme.
-$ php-wasm-cli -n -l dev/admin/language/pt-br/design/theme.php  [rc=0]  No syntax errors detected in /tmp/bf_final_pkg/dev/admin/language/pt-br/design/theme.
-$ php-wasm-cli -n -l dev/admin/language/es-eu/design/theme.php  [rc=0]  No syntax errors detected in /tmp/bf_final_pkg/dev/admin/language/es-eu/design/theme.
+$ php-wasm-cli -n validacao/bg_decode_harness.php
+OK   pacote presente
+OK   JSON valido
+OK   format = reamurcms-theme · reamurcms-theme
+OK   version = 1 · 1
+OK   name / slug
+OK   slug no padrao
+OK   parent vazio (tema base)
+OK   meta.source = draft
+OK   checksum 64 hex
+OK   checksum SHA-256 canonico confere · 07b6b2d294681e01
+OK   tamanho <= 512 KiB · 26226 bytes
+OK   config e objeto
+OK   nenhuma chave fora da allowlist
+OK   primary / surface hex
+OK   scene allowlistada
+OK   conditions version=1 sem regras
+OK   three allowlistado
+OK   25 fontes Twig · 25
+OK   chaves exatamente TEMPLATE_KEYS
+OK   nenhuma fonte com conteudo proibido
+OK   nenhuma fonte vazia
+OK   nenhuma fonte > 131072 bytes
+OK   nenhum |raw
+OK   nenhum <script
+OK   nenhuma fonte externa / CDN
+OK   sem !important
+OK   sem redefinicao --bs-* / --rms-*
+OK   usa |default defensivamente
+OK   templates de rota incluem header
+OK   footer fecha o documento
+OK   preserva ThreeJS via includes
+OK   classes proprias ref-*
+OK   Twig if/for balanceados por fonte
+OK   kaz_scene version=1
+OK   canvas allowlistado
+OK   layers <= 48 · 5
+OK   kinds/roles allowlistados
+OK   ids unicos e validos
+OK   textos sem codigo executavel
+OK   cores hex nas layers
+OK   guia presente
+OK   relatorio presente
+OK   indice presente
+OK   explica como importar
+OK   registra decode() real
+OK   sem migration
+OK   sem codigo executavel
+OK   nao afirma release
+OK   release_approved false
+OK   F9-27 preservado
+OK   F9-18 preservado
+OK   10 PENDING_DECISION
+OK   sem escrita no GitHub
+CJS BG: 53 OK / 0 FALHAS
 
-$ node tools/verify-theme-manager.cjs
-CJS BF: 67 OK / 0 FALHAS
+$ node tools/verify-reference-theme.cjs
+CJS BG: 53 OK / 0 FALHAS
 
 $ bash tools/verify-checksums.sh
 == resumo: 3 PASS / 0 FAIL | 14 manifesto(s), 142 arquivo(s) conferidos ==
