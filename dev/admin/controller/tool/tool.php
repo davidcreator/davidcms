@@ -86,6 +86,7 @@ class Tool extends \Reamur\System\Engine\Controller {
             . ($filter_status !== 'all' ? '&filter_status=' . $filter_status : ''));
         // Normalização local do escape duplo da library, sem alterar o núcleo.
         $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
+        $data['internal_tools'] = $this->internalTools();
         $this->chrome($data);
         $this->response->setOutput($this->load->view('tool/tool_list', $data));
     }
@@ -438,6 +439,84 @@ class Tool extends \Reamur\System\Engine\Controller {
     }
 
     /** Chrome compartilhado + estilo do módulo */
+
+    /**
+     * Metadados versionados das ferramentas INTERNAS do ReamurCMS (Frente AY).
+     * Fonte: arquivo JSON dentro do proprio aplicativo — sem banco, sem migration,
+     * sem rede. Fail-closed: arquivo ausente/ilegivel/invalido → lista vazia e a
+     * secao simplesmente nao e renderizada (a pagina nunca quebra).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function internalTools(): array {
+        $file = rtrim((string)DIR_APPLICATION, '/\\') . '/model/tool/internal-tools.json';
+
+        if (!is_file($file) || !is_readable($file)) {
+            return [];
+        }
+
+        try {
+            $raw  = (string)file_get_contents($file);
+            $data = json_decode($raw, true, 32, JSON_THROW_ON_ERROR);
+        } catch (\Throwable $e) {
+            return [];
+        }
+
+        if (!is_array($data) || ($data['schema'] ?? null) !== 1 || !is_array($data['tools'] ?? null)) {
+            return [];
+        }
+
+        $out   = [];
+        $seen  = [];
+        $notes = 0;
+
+        foreach ($data['tools'] as $tool) {
+            if (!is_array($tool)) {
+                continue;
+            }
+
+            $id   = (string)($tool['id'] ?? '');
+            $name = trim((string)($tool['name'] ?? ''));
+
+            // id unico, curto e seguro; nome obrigatorio. Itens invalidos sao ignorados.
+            if (!preg_match('~^[a-z0-9][a-z0-9-]{0,63}$~', $id)
+                || isset($seen[$id]) || $name === '' || mb_strlen($name) > 128) {
+                continue;
+            }
+
+            $version = trim((string)($tool['version'] ?? ''));
+            if ($version === 'PENDENTE_USUARIO' || mb_strlen($version) > 32) {
+                $version = '';
+            }
+
+            $updated = trim((string)($tool['updated_at'] ?? ''));
+            if (!preg_match('~^\d{4}-\d{2}-\d{2}$~', $updated)) {
+                $updated = '';
+            }
+
+            $lines = [];
+            foreach ((array)($tool['notes'] ?? []) as $note) {
+                if (is_string($note) && trim($note) !== '' && count($lines) < 5) {
+                    $lines[] = mb_substr(trim($note), 0, 255);
+                }
+            }
+
+            $seen[$id] = true;
+            $out[] = [
+                'id'          => $id,
+                'name'        => $name,
+                'legacy_name' => mb_substr(trim((string)($tool['legacy_name'] ?? '')), 0, 128),
+                'vendor'      => mb_substr(trim((string)($tool['vendor'] ?? 'ReamurCMS')), 0, 64),
+                'version'     => $version,
+                'updated_at'  => $updated,
+                'notes'       => $lines,
+            ];
+            $notes += count($lines);
+        }
+
+        return $out;
+    }
+
     private function chrome(array &$data): void {
         $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 

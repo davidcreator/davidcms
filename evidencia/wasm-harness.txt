@@ -1,0 +1,12 @@
+$ php-wasm-cli -n /tmp/ay_wasm/harness.php  [rc=0]
+real => 2 itens | name="BDREditor-Content" version="" updated="" notes=0 legacy="BDREditor"
+ausente => 0 itens
+json_invalido => 0 itens
+schema_errado => 0 itens
+sem_tools => 0 itens
+id_duplicado => 1 itens | name="A" version="1.0" updated="" notes=0 legacy=""
+nome_vazio => 0 itens
+versao_longa => 1 itens | name="A" version="" updated="" notes=0 legacy=""
+data_invalida => 1 itens | name="A" version="" updated="" notes=0 legacy=""
+notas_limite => 1 itens | name="A" version="2.1" updated="2026-11-06" notes=5 legacy=""
+html_escapado_no_twig => 1 itens | name="<b>A<\/b>" version="" updated="" notes=1 legacy=""

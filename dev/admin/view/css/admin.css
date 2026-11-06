@@ -959,3 +959,16 @@ html[data-rms-density="compact"] .admin-sidebar .nav-link { padding: 6px 12px; }
 }
 .localization-language-list .pagination li:first-child > * { border-radius: var(--bs-pagination-border-radius) 0 0 var(--bs-pagination-border-radius); }
 .localization-language-list .pagination li:last-child > * { border-radius: 0 var(--bs-pagination-border-radius) var(--bs-pagination-border-radius) 0; }
+
+/* ── Frente AY · Ferramentas internas (ADENDO; nada acima e alterado) ──────── */
+.internal-tools-panel { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--bs-border-color); }
+.internal-tools-panel .page-titlebar { margin-bottom: .5rem; }
+.internal-tools-card { border-color: var(--bs-border-color); }
+.internal-tools-card .card-body { padding: 1rem 1.15rem; }
+.internal-tools-version { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.internal-tools-notes { padding-left: 1.15rem; color: var(--bs-secondary-color); }
+.internal-tools-notes li + li { margin-top: .25rem; }
+@media (max-width: 575.98px) {
+  .internal-tools-card .card-body { padding: .85rem; }
+}
+

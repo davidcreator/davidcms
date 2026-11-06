@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "tools": [
+    {
+      "id": "bdreditor-content",
+      "name": "BDREditor-Content",
+      "legacy_name": "BDREditor",
+      "vendor": "ReamurCMS",
+      "version": "PENDENTE_USUARIO",
+      "updated_at": null,
+      "notes": []
+    },
+    {
+      "id": "kazeditor-theme",
+      "name": "KAZEditor-Theme",
+      "legacy_name": "KAZTheme-Editor",
+      "vendor": "ReamurCMS",
+      "version": "PENDENTE_USUARIO",
+      "updated_at": null,
+      "notes": []
+    }
+  ]
+}

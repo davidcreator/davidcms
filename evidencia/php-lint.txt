@@ -1,0 +1,8 @@
+$ php-wasm-cli -n -l dev/admin/controller/tool/tool.php  [rc=0]
+No syntax errors detected in /tmp/ay_final_pkg/dev/admin/controller/tool/tool.php
+$ php-wasm-cli -n -l dev/admin/language/en-us/tool/tool.php  [rc=0]
+No syntax errors detected in /tmp/ay_final_pkg/dev/admin/language/en-us/tool/tool.php
+$ php-wasm-cli -n -l dev/admin/language/pt-br/tool/tool.php  [rc=0]
+No syntax errors detected in /tmp/ay_final_pkg/dev/admin/language/pt-br/tool/tool.php
+$ php-wasm-cli -n -l dev/admin/language/es-eu/tool/tool.php  [rc=0]
+No syntax errors detected in /tmp/ay_final_pkg/dev/admin/language/es-eu/tool/tool.php

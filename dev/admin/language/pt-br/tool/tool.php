@@ -83,3 +83,13 @@ $_['button_last_page'] = 'Última »';
 $_['button_next_page'] = 'Próxima ›';
 $_['button_previous_page'] = '‹ Anterior';
 $_['error_csrf'] = 'Token de sessão inválido. Recarregue o formulário e tente novamente.';
+
+// Frente AY — Ferramentas internas (somente leitura de metadados, sem migration)
+$_['text_internal_tools'] = 'Ferramentas internas';
+$_['text_internal_tools_hint'] = 'Ferramentas do próprio ReamurCMS, com versão e histórico de atualizações.';
+$_['text_internal_version'] = 'Versão';
+$_['text_internal_updated'] = 'Atualizado em';
+$_['text_internal_notes'] = 'Atualizações';
+$_['text_internal_not_set'] = 'Não informado';
+$_['text_internal_no_updates'] = 'Nenhuma atualização registrada.';
+$_['text_internal_legacy'] = 'Nome anterior:';
