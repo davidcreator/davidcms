@@ -4,7 +4,7 @@
   <div><h1>{{ heading_title }}</h1><p class="text-muted">{{ text_intro }}</p></div>
   <div class="d-flex gap-2">
     {% if can_modify %}<a class="btn btn-primary" href="{{ add }}">{{ button_add }}</a>{% endif %}
-    {% if can_modify %}<a class="btn btn-outline-primary" href="#theme-import">{{ button_import }}</a>{% endif %}
+    {% if can_modify %}<a class="btn btn-outline-primary" href="#theme-import" data-theme-import-open>{{ button_import }}</a>{% endif %}
   </div>
 </div>
 
@@ -13,9 +13,20 @@
 
 {% if can_modify %}
 <details id="theme-import" {% if import_open %}open{% endif %} class="mb-4">
-  <summary class="small text-body-secondary mb-2">{{ text_import_title }}</summary>
-  <div class="card"><div class="card-header"><h2 class="h6 mb-0">{{ button_import }}</h2><p class="mb-0 text-muted small">{{ text_package_help }}</p></div>
+  <summary class="small text-body-secondary mb-2">{{ text_manager_title }}</summary>
+  <div class="card"><div class="card-header"><h2 class="h5 mb-0">{{ text_manager_title }}</h2><p class="mb-0 text-muted small">{{ text_manager_intro }}</p></div>
   <div class="card-body">
+    <h3 class="h6">{{ text_package_capacity }}</h3>
+    <div class="row g-2 mb-4">
+      <div class="col-md-6"><div class="border rounded p-3 h-100"><p class="fw-semibold mb-1">{{ text_package_twig }}</p>
+        <p class="small text-body-secondary mb-1">{{ text_package_twig_help }}</p>
+        <span class="badge text-bg-secondary">{{ template_count }} {{ text_template_fonts }}</span></div></div>
+      <div class="col-md-6"><div class="border rounded p-3 h-100"><p class="fw-semibold mb-1">{{ text_package_three }}</p>
+        <p class="small text-body-secondary mb-1">{{ text_package_three_help }}</p>
+        <span class="badge text-bg-secondary">{{ scene_count }} {{ text_scene_units }}</span> <span class="badge text-bg-secondary">{{ preset_count }} {{ text_preset_units }}</span></div></div>
+    </div>
+    <h3 class="h6">{{ button_import }}</h3>
+    <p class="small text-body-secondary">{{ text_package_help }}</p>
     <p class="mb-2"><span class="badge text-bg-secondary">{{ package_format }} v{{ package_version }}</span></p>
     <form method="post" action="{{ import_url }}" data-theme-package-form>
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -23,20 +34,39 @@
       <textarea class="form-control font-monospace" id="theme-package-json" name="theme_package" rows="6" spellcheck="false"></textarea>
       <div class="form-text">{{ text_package_import_help }}</div>
       <div class="border rounded p-3 mt-2" data-theme-package-drop
+           data-template-keys="{{ template_keys_list }}" data-scenes="{{ scene_list }}"
            data-msg-size="{{ error_package_size }}" data-msg-type="{{ error_package_type }}"
            data-msg-json="{{ error_package_json }}" data-msg-format="{{ error_package_format }}"
-           data-msg-ready="{{ text_package_ready }}" data-msg-none="{{ text_package_parent_none }}">
+           data-msg-ready="{{ text_package_ready }}" data-msg-none="{{ text_package_parent_none }}"
+           data-msg-fonts="{{ text_template_fonts }}" data-msg-absent="{{ status_absent }}"
+           data-msg-twig-ok="{{ status_twig_ok }}" data-msg-twig-bad="{{ status_twig_bad }}"
+           data-msg-three-ok="{{ status_three_ok }}" data-msg-three-bad="{{ status_three_bad }}"
+           data-msg-blocks-none="{{ text_preview_blocks_none }}">
         <label class="form-label" for="theme-package-file">{{ text_package_drop }}</label>
         <input class="form-control form-control-sm" type="file" id="theme-package-file" accept=".json,.reamurtheme.json,application/json">
         <div class="mt-3 border rounded p-2" data-theme-package-preview hidden>
-          <p class="small fw-semibold mb-2">{{ text_package_preview }}</p>
-          <dl class="row small mb-0">
+          <p class="small fw-semibold mb-2">{{ text_preview_content }}</p>
+          <dl class="row small mb-2">
             <dt class="col-4">{{ text_package_preview_name }}</dt><dd class="col-8 mb-1" data-p-name></dd>
             <dt class="col-4">{{ text_package_preview_slug }}</dt><dd class="col-8 mb-1" data-p-slug></dd>
             <dt class="col-4">{{ text_package_version }}</dt><dd class="col-8 mb-1" data-p-version></dd>
             <dt class="col-4">{{ text_package_parent }}</dt><dd class="col-8 mb-1" data-p-parent></dd>
             <dt class="col-4">{{ text_package_preview_file }}</dt><dd class="col-8 mb-1"><span data-p-file></span> · <span data-p-size></span></dd>
           </dl>
+          <div class="row small">
+            <div class="col-md-6"><p class="fw-semibold mb-1">{{ text_preview_twig }}</p>
+              <p class="mb-1"><strong>{{ text_preview_twig_count }}:</strong> <span data-p-twig-count></span> · <span data-p-twig-status></span></p>
+              <ul class="mb-2 small" data-p-twig-list></ul></div>
+            <div class="col-md-6"><p class="fw-semibold mb-1">{{ text_preview_three }}</p>
+              <dl class="row mb-1">
+                <dt class="col-5">{{ text_preview_three_scene }}</dt><dd class="col-7" data-p-three-scene></dd>
+                <dt class="col-5">{{ text_preview_three_slot }}</dt><dd class="col-7" data-p-three-slot></dd>
+                <dt class="col-5">{{ text_preview_scene_layers }}</dt><dd class="col-7" data-p-scene-layers></dd>
+                <dt class="col-5">{{ text_preview_scene_kinds }}</dt><dd class="col-7" data-p-scene-kinds></dd>
+              </dl>
+              <p class="mb-2"><span data-p-three-status></span></p></div>
+          </div>
+          <p class="small mb-0"><strong>{{ text_preview_blocks }}:</strong> <span data-p-blocks></span></p>
         </div>
         <div class="small mt-2 text-body-secondary" data-theme-package-status role="status" aria-live="polite"></div>
       </div>

@@ -1,11 +1,10 @@
-$ php-wasm-cli -n -l dev/admin/controller/design/theme.php  [rc=0]  No syntax errors detected in /tmp/be_final_pkg/dev/admin/controller/design/theme.php
-$ php-wasm-cli -n -l dev/admin/model/design/theme.php  [rc=0]  No syntax errors detected in /tmp/be_final_pkg/dev/admin/model/design/theme.php
-$ php-wasm-cli -n -l dev/admin/language/en-us/design/theme.php  [rc=0]  No syntax errors detected in /tmp/be_final_pkg/dev/admin/language/en-us/design/theme.
-$ php-wasm-cli -n -l dev/admin/language/pt-br/design/theme.php  [rc=0]  No syntax errors detected in /tmp/be_final_pkg/dev/admin/language/pt-br/design/theme.
-$ php-wasm-cli -n -l dev/admin/language/es-eu/design/theme.php  [rc=0]  No syntax errors detected in /tmp/be_final_pkg/dev/admin/language/es-eu/design/theme.
+$ php-wasm-cli -n -l dev/admin/controller/design/theme.php  [rc=0]  No syntax errors detected in /tmp/bf_final_pkg/dev/admin/controller/design/theme.php
+$ php-wasm-cli -n -l dev/admin/language/en-us/design/theme.php  [rc=0]  No syntax errors detected in /tmp/bf_final_pkg/dev/admin/language/en-us/design/theme.
+$ php-wasm-cli -n -l dev/admin/language/pt-br/design/theme.php  [rc=0]  No syntax errors detected in /tmp/bf_final_pkg/dev/admin/language/pt-br/design/theme.
+$ php-wasm-cli -n -l dev/admin/language/es-eu/design/theme.php  [rc=0]  No syntax errors detected in /tmp/bf_final_pkg/dev/admin/language/es-eu/design/theme.
 
-$ node tools/verify-theme-crud.cjs
-CJS BE: 82 OK / 0 FALHAS
+$ node tools/verify-theme-manager.cjs
+CJS BF: 67 OK / 0 FALHAS
 
 $ bash tools/verify-checksums.sh
 == resumo: 3 PASS / 0 FAIL | 14 manifesto(s), 142 arquivo(s) conferidos ==

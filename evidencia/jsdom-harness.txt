@@ -1,33 +1,49 @@
-$ node validacao/bc_harness.cjs  [rc=0]
-OK   validacao client: textarea recebe o JSON exato
+$ node validacao/bf_harness.cjs  [rc=0]
+OK   painel inicia FECHADO (reproducao do bug)
+OK   CLIQUE abre o painel (bug corrigido)
+OK   clique foca a textarea
+OK   clique nao navega (preventDefault)
+OK   botao funciona mesmo sem FileReader
+OK   textarea preenchida
 OK   preview visivel
-OK   preview nome
-OK   preview slug
-OK   preview versao
-OK   preview pai
-OK   preview arquivo
 OK   status ok
-OK   nome do POST preservado
-OK   pai vazio usa fallback
+OK   nome/slug/pai
+OK   Twig: 3 fontes · 3 fontes
+OK   Twig: todas allowlistadas
+OK   Twig: lista com 3 chaves
+OK   Twig: primeira chave correta
+OK   ThreeJS: cena
+OK   ThreeJS: slot
+OK   ThreeJS: allowlistada
+OK   ThreeJS: 4 camadas v1 · 4 (1)
+OK   ThreeJS: kinds unicos · rect, text, button
+OK   Demais blocos · tokens, conditions, components
+OK   lista criada sem innerHTML
+OK   Twig fora da allowlist sinalizado
+OK   ainda envia ao servidor (nao decide no client)
+OK   cena fora da allowlist sinalizada
+OK   Twig ausente
+OK   ThreeJS ausente
+OK   sem blocos adicionais
 OK   >512 KiB recusado
-OK   >512 KiB mensagem
 OK   extensao invalida recusada
 OK   JSON invalido recusado
-OK   recusa formato
-OK   recusa versao
-OK   recusa checksum curto
-OK   recusa slug invalido
-OK   recusa config ausente
+OK   checksum curto recusado
 OK   drag-and-drop preenche textarea
-OK   drag-and-drop limpa estado de arraste
-OK   edicao manual esconde preview
-OK   sem fetch/XMLHttpRequest
-OK   sem eval/Function/document.write
+OK   sem fetch/XHR
+OK   sem eval/Function
 OK   sem innerHTML/outerHTML
-OK   sem localStorage/sessionStorage
+OK   sem storage
 OK   sem import/require dinamico
-OK   usa textContent para o preview
-OK   FileReader presente
-OK   limite 524288 coerente
-OK   formato/versao coerentes
-CJS BC harness: 31 OK / 0 FALHAS
+OK   usa textContent
+OK   usa createElement para listas
+OK   handler do botao presente
+OK   limite/versao/formato preservados
+OK   twig: botao com data-theme-import-open
+OK   twig: cartao Twig e ThreeJS
+OK   twig: allowlists injetadas
+OK   twig: campos de preview Twig/ThreeJS
+OK   twig: |raw apenas chrome
+OK   twig: sem <script>
+OK   twig balanceado · if 9/9 for 1/1
+CJS BF harness: 47 OK / 0 FALHAS
