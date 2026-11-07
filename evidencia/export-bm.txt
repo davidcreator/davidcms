@@ -1,0 +1,19 @@
+OK   validateConfig = [] · []
+OK   normalizeScene ok
+OK   ThemeSceneCss compiled · 16 camadas · css 1322 bytes
+OK   CSS allowlistado
+OK   snapshot common/home cena=hero-particles · hero-particles
+OK   snapshot catalog/project_list cena=portfolio-3d · portfolio-3d
+OK   snapshot tool/tool_list cena=tools-3d · tools-3d
+OK   snapshot error/not_found cena=not-found · not-found
+OK   encode <= 512 KiB · 76637 bytes
+OK   decode ok=true · []
+OK   decode 25 fontes
+OK   decode three.enabled
+OK   decode kaz_scene 16 camadas
+OK   checksum canonico · 59ca4cd1ae312abd4c5a5771ed9981335d90f6fd35cc30e3aa8f233c1fb4adbf
+
+PHP BM export: 14 OK / 0 FALHAS
+sync /tmp/bk_out: [object Object]
+sync /tmp/bk_patch: [object Object]
+sync /tmp/bk_configs: [object Object]

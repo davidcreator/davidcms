@@ -1,0 +1,452 @@
+{
+    "format": "reamurcms-theme",
+    "version": 1,
+    "name": "Atlas Studio 3D",
+    "slug": "atlas_studio_3d",
+    "parent": "",
+    "config": {
+        "primary": "#4338ca",
+        "surface": "#ffffff",
+        "scene": "hero-particles",
+        "templates": {
+            "common/home": "{# Atlas Studio — home completa #}\n{{ header }}\n<main class=\"atlas\">\n{% include 'partial/theme-scene.twig' %}\n<div class=\"atlas-scene-caption\"><b>Atlas Studio 3D</b><span>Cena declarativa · sem codigo executavel no tema</span><span>WebGL self-hosted e carregado pelo shell confiavel</span></div>\n<div class=\"atlas-wrap\"><ul class=\"atlas-scene-grid\"><li><strong>hero-particles</strong><span>Campo de particulas na abertura</span></li><li><strong>portfolio-3d</strong><span>Quadros de projeto em profundidade</span></li><li><strong>tools-3d</strong><span>Oficina e ferramentas</span></li></ul></div>\n{% for section in cms_home_sections|default([]) %}\n  {% if section == 'hero' %}{% include 'partial/hero.twig' %}\n  {% elseif section == 'clients' %}{% include 'partial/clients.twig' %}\n  {% elseif section == 'services' %}{% include 'partial/services.twig' %}\n  {% elseif section == 'about' %}{% include 'partial/about.twig' %}\n  {% elseif section == 'methodology' %}{% include 'partial/methodology.twig' %}\n  {% elseif section == 'skills' %}{% include 'partial/skills.twig' %}\n  {% elseif section == 'portfolio' %}{% include 'partial/portfolio.twig' %}\n  {% elseif section == 'tools' %}{% include 'partial/tools.twig' %}\n  {% elseif section == 'testimonials' %}{% include 'partial/testimonials.twig' %}\n  {% elseif section == 'news' %}{% include 'partial/news.twig' %}\n  {% elseif section == 'contact' %}{% include 'partial/contact.twig' %}\n  {% endif %}\n{% endfor %}\n</main>\n<div class=\"atlas-wrap\" style=\"padding-top:18px;padding-bottom:84px\">\n  <div class=\"atlas atlas-cta\">\n    <div><h2>Pronto para tirar a ideia do papel?</h2>\n      <p>Conte o objetivo do projeto e receba uma proposta com escopo, prazo e investimento estimado.</p></div>\n    <a class=\"atlas-btn\" href=\"mailto:contato@atlasstudio.example\">Falar com o time</a>\n  </div>\n</div>\n{{ footer }}\n",
+            "common/footer": "{# Atlas Studio — rodape completo. Fecha o documento. #}\n<footer class=\"atlas atlas-footer\">\n  <div class=\"atlas-wrap\">\n    <div class=\"atlas-footer-grid\">\n      <div><a class=\"atlas-brand\" href=\"{{ home|default('/') }}\"><span class=\"atlas-brand-mark\">AS</span><span>Atlas Studio</span></a>\n        <p>Estudio de produtos digitais. Estrategia, design e engenharia para empresas que querem crescer com consistencia.</p>\n        <p style=\"margin-top:18px\"><a href=\"mailto:contato@atlasstudio.example\">contato@atlasstudio.example</a></p></div>\n      <div><h3>Explorar</h3>\n        <a href=\"{{ home|default('/') }}\">Inicio</a><a href=\"{{ nav_about|default('#servicos') }}\">Servicos</a>\n        <a href=\"{{ nav_portfolio|default('#projetos') }}\">Projetos</a><a href=\"{{ nav_blog|default('#blog') }}\">Blog</a></div>\n      <div><h3>Servicos</h3>\n        <a href=\"{{ nav_about|default('#servicos') }}\">Estrategia digital</a><a href=\"{{ nav_about|default('#servicos') }}\">Design de produto</a>\n        <a href=\"{{ nav_about|default('#servicos') }}\">Desenvolvimento</a><a href=\"{{ nav_quote|default('#contato') }}\">Consultoria</a></div>\n      <div><h3>Contato</h3>\n        <a href=\"{{ nav_contact|default('#contato') }}\">Fale conosco</a><a href=\"mailto:contato@atlasstudio.example\">E-mail</a>\n        <a href=\"tel:+551140028922\">+55 11 4002 8922</a><a href=\"{{ nav_quote|default('#contato') }}\">Solicitar proposta</a></div>\n    </div>\n    <div class=\"atlas-footer-bottom\">\n      <span>{{ text_copyright|default('© 2026 Atlas Studio. Todos os direitos reservados.') }}</span>\n      <span><a href=\"{{ home|default('/') }}\">Privacidade</a> · <a href=\"{{ home|default('/') }}\">Termos</a> · {{ text_powered|default('ReamurCMS') }}</span>\n    </div>\n  </div>\n</footer>\n{% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'footer_top' %}{% include 'partial/theme-scene.twig' %}{% endif %}\n</body>\n</html>\n",
+            "partial/site_header": "{# Atlas Studio — cabecalho + folha de estilo do tema. O header.twig do sistema inclui este partial com only. #}\n<style>\n:root{\n  --at-primary:var(--theme-primary,#4338ca);\n  --at-surface:var(--theme-surface,#ffffff);\n  --at-ink:#101828;\n  --at-muted:#52627a;\n  --at-line:#e3e8f0;\n  --at-soft:#f5f7fc;\n  --at-accent:#0ea5e9;\n  --at-warm:#f59e0b;\n  --at-radius:16px;\n  --at-radius-sm:10px;\n  --at-shadow:0 12px 34px rgba(16,24,40,.09);\n  --at-shadow-sm:0 3px 12px rgba(16,24,40,.06);\n  --at-max:1140px;\n  --at-font:system-ui,-apple-system,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif;\n}\n*,*::before,*::after{box-sizing:border-box}\n.atlas{font-family:var(--at-font);color:var(--at-ink);line-height:1.65;-webkit-font-smoothing:antialiased}\n.atlas a{color:var(--at-primary);text-decoration:none}\n.atlas a:hover{text-decoration:underline}\n.atlas img{max-width:100%;height:auto;display:block}\n.atlas h1,.atlas h2,.atlas h3,.atlas h4{line-height:1.18;letter-spacing:-.02em;margin:0 0 14px;font-weight:750}\n.atlas h1{font-size:clamp(2.2rem,5vw,3.65rem)}\n.atlas h2{font-size:clamp(1.6rem,3.2vw,2.4rem)}\n.atlas h3{font-size:1.16rem}\n.atlas p{margin:0 0 16px}\n.atlas :focus-visible{outline:3px solid var(--at-accent);outline-offset:3px;border-radius:4px}\n.atlas-wrap{max-width:var(--at-max);margin:0 auto;padding:0 24px}\n.atlas-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}\n\n/* ── Cabeçalho ───────────────────────────────────────────────── */\n.atlas-header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--at-line)}\n.atlas-header-in{display:flex;align-items:center;gap:28px;min-height:74px;max-width:var(--at-max);margin:0 auto;padding:0 24px}\n.atlas-brand{display:inline-flex;align-items:center;gap:11px;font-weight:800;font-size:1.12rem;letter-spacing:-.03em;color:var(--at-ink);white-space:nowrap}\n.atlas-brand:hover{text-decoration:none}\n.atlas-brand-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:var(--at-primary);color:#fff;font-size:.82rem;font-weight:800;letter-spacing:.02em}\n.atlas-nav{display:flex;align-items:center;gap:4px;margin-left:auto;flex-wrap:wrap}\n.atlas-nav a{color:var(--at-muted);font-size:.93rem;font-weight:600;padding:9px 13px;border-radius:9px;white-space:nowrap}\n.atlas-nav a:hover{color:var(--at-primary);background:var(--at-soft);text-decoration:none}\n.atlas-nav .atlas-nav-cta{background:var(--at-primary);color:#fff;padding:10px 18px;margin-left:8px;box-shadow:var(--at-shadow-sm)}\n.atlas-nav .atlas-nav-cta:hover{background:var(--at-ink);color:#fff}\n.atlas-langs{display:flex;gap:6px;padding-left:16px;border-left:1px solid var(--at-line)}\n.atlas-langs a{font-size:.78rem;color:var(--at-muted);text-transform:uppercase;letter-spacing:.05em}\n.atlas-langs a.is-active{color:var(--at-primary);font-weight:800}\n\n/* ── Botões e etiquetas ──────────────────────────────────────── */\n.atlas-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 24px;border-radius:11px;font-weight:700;font-size:.95rem;border:1px solid transparent;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,background .16s ease}\n.atlas-btn:hover{text-decoration:none;transform:translateY(-2px)}\n.atlas-btn-primary{background:var(--at-primary);color:#fff;box-shadow:0 8px 20px rgba(67,56,202,.24)}\n.atlas-btn-primary:hover{background:var(--at-ink);color:#fff}\n.atlas-btn-ghost{background:#fff;color:var(--at-ink);border-color:var(--at-line)}\n.atlas-btn-ghost:hover{border-color:var(--at-primary);color:var(--at-primary)}\n/* .atlas a (0,1,1) vence .atlas-btn-* (0,1,0): fixa a cor do texto dos botoes. */\n.atlas a.atlas-btn{color:var(--at-ink)}\n.atlas a.atlas-btn-primary,.atlas a.atlas-btn-primary:hover{color:#fff}\n.atlas a.atlas-btn-ghost,.atlas a.atlas-btn-ghost:hover{color:var(--at-ink)}\n.atlas .atlas-cta a.atlas-btn,.atlas .atlas-cta a.atlas-btn:hover{color:var(--at-primary)}\n.atlas a.atlas-nav-cta,.atlas a.atlas-nav-cta:hover{color:#fff}\n.atlas-eyebrow{display:inline-flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.13em;font-size:.73rem;font-weight:800;color:var(--at-primary);background:var(--at-soft);border:1px solid var(--at-line);padding:7px 14px;border-radius:999px;margin-bottom:20px}\n.atlas-dot{width:7px;height:7px;border-radius:50%;background:var(--at-accent)}\n\n/* ── Hero ────────────────────────────────────────────────────── */\n.atlas-hero{position:relative;overflow:hidden;background:linear-gradient(155deg,#f7f8ff 0%,#ffffff 52%,#eef4ff 100%);border-bottom:1px solid var(--at-line)}\n.atlas-hero::before{content:\"\";position:absolute;width:520px;height:520px;right:-170px;top:-220px;border-radius:50%;background:radial-gradient(circle,rgba(14,165,233,.18),transparent 66%)}\n.atlas-hero-in{display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:center;padding:88px 0 92px;position:relative}\n.atlas-hero h1{max-width:15ch}\n.atlas-hero-lead{font-size:1.13rem;color:var(--at-muted);max-width:52ch;margin-bottom:30px}\n.atlas-hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:44px}\n.atlas-hero-art{position:relative;border-radius:22px;background:linear-gradient(145deg,var(--at-primary),#6d5ce7 58%,#0ea5e9);box-shadow:var(--at-shadow);padding:30px;min-height:340px;display:grid;place-items:center;overflow:hidden}\n.atlas-hero-art svg{width:100%;max-width:330px;height:auto}\n.atlas-hero-float{position:absolute;background:#fff;border-radius:12px;padding:12px 16px;box-shadow:var(--at-shadow);font-size:.8rem;font-weight:700;color:var(--at-ink)}\n.atlas-hero-float.one{top:22px;left:-18px}\n.atlas-hero-float.two{bottom:24px;right:-16px}\n.atlas-hero-float b{display:block;font-size:1.15rem;color:var(--at-primary)}\n.atlas-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;border-top:1px solid var(--at-line);padding-top:28px}\n.atlas-stat b{display:block;font-size:1.65rem;letter-spacing:-.04em;color:var(--at-ink)}\n.atlas-stat span{font-size:.82rem;color:var(--at-muted)}\n\n/* ── Seções ──────────────────────────────────────────────────── */\n.atlas-section{padding:84px 0}\n.atlas-section--soft{background:var(--at-soft);border-block:1px solid var(--at-line)}\n.atlas-section-head{max-width:680px;margin-bottom:46px}\n.atlas-section-head p{color:var(--at-muted);font-size:1.05rem}\n.atlas-clients{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:26px 0 4px}\n.atlas-client{font-weight:800;letter-spacing:.06em;color:#8a97ad;font-size:.95rem;text-transform:uppercase}\n.atlas-grid{display:grid;gap:22px}\n.atlas-grid--3{grid-template-columns:repeat(3,1fr)}\n.atlas-grid--2{grid-template-columns:repeat(2,1fr)}\n.atlas-card{background:#fff;border:1px solid var(--at-line);border-radius:var(--at-radius);padding:28px;box-shadow:var(--at-shadow-sm);transition:transform .18s ease,box-shadow .18s ease}\n.atlas-card:hover{transform:translateY(-4px);box-shadow:var(--at-shadow)}\n.atlas-card-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:13px;background:var(--at-soft);color:var(--at-primary);margin-bottom:20px}\n.atlas-card-icon svg{width:24px;height:24px}\n.atlas-card p{color:var(--at-muted);font-size:.94rem;margin:0}\n.atlas-card-meta{display:block;margin-top:18px;font-size:.8rem;font-weight:700;color:var(--at-primary)}\n.atlas-card-figure{aspect-ratio:16/10;border-radius:var(--at-radius-sm);background:linear-gradient(135deg,#dbe4ff,#e8f6ff 55%,#d9f2ff);display:grid;place-items:center;font-weight:800;color:var(--at-primary);font-size:1.1rem;letter-spacing:.04em;margin-bottom:18px}\n.atlas-card-figure.b{background:linear-gradient(135deg,#e7ddff,#f4e9ff 55%,#ffe9f3)}\n.atlas-card-figure.c{background:linear-gradient(135deg,#dcfce7,#e9fbe9 55%,#fff4d6)}\n\n/* ── Sobre / split ───────────────────────────────────────────── */\n.atlas-split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}\n.atlas-checklist{list-style:none;padding:0;margin:26px 0 0;display:grid;gap:13px}\n.atlas-checklist li{display:flex;gap:12px;align-items:flex-start;color:var(--at-ink);font-size:.96rem}\n.atlas-checklist svg{flex:0 0 20px;width:20px;height:20px;color:var(--at-primary);margin-top:3px}\n.atlas-panel{background:#fff;border:1px solid var(--at-line);border-radius:var(--at-radius);padding:32px;box-shadow:var(--at-shadow-sm)}\n.atlas-panel-row{display:flex;justify-content:space-between;gap:16px;padding:15px 0;border-bottom:1px solid var(--at-line);font-size:.92rem}\n.atlas-panel-row:last-child{border-bottom:0}\n.atlas-panel-row span{color:var(--at-muted)}\n.atlas-panel-row b{color:var(--at-ink)}\n\n/* ── Depoimentos ─────────────────────────────────────────────── */\n.atlas-quote{background:#fff;border:1px solid var(--at-line);border-radius:var(--at-radius);padding:32px;box-shadow:var(--at-shadow-sm)}\n.atlas-quote p{font-size:1.04rem;font-style:italic;color:var(--at-ink)}\n.atlas-quote-by{display:flex;align-items:center;gap:12px;font-size:.88rem;color:var(--at-muted)}\n.atlas-avatar{width:40px;height:40px;border-radius:50%;background:var(--at-primary);color:#fff;display:grid;place-items:center;font-weight:800;font-size:.8rem}\n.atlas-quote-by b{display:block;color:var(--at-ink)}\n\n/* ── CTA ─────────────────────────────────────────────────────── */\n.atlas-cta{background:linear-gradient(120deg,var(--at-primary),#5b4bd6 60%,#0e7490);color:#fff;border-radius:24px;padding:56px 48px;display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;box-shadow:var(--at-shadow)}\n.atlas-cta h2{color:#fff;margin-bottom:10px}\n.atlas-cta p{color:rgba(255,255,255,.86);margin:0;max-width:54ch}\n.atlas-cta .atlas-btn{background:#fff;color:var(--at-primary)}\n\n/* ── Páginas internas ────────────────────────────────────────── */\n.atlas-page{padding:56px 0 90px}\n.atlas-crumb{font-size:.84rem;color:var(--at-muted);margin-bottom:22px}\n.atlas-crumb a{color:var(--at-muted)}\n.atlas-crumb span{margin:0 8px;color:#b6c0d0}\n.atlas-page-head{max-width:760px;margin-bottom:44px}\n.atlas-page-head p{font-size:1.08rem;color:var(--at-muted)}\n.atlas-prose{max-width:760px;font-size:1.02rem;color:var(--at-ink)}\n.atlas-prose h2{margin-top:38px}\n.atlas-prose ul{padding-left:22px;color:var(--at-muted)}\n.atlas-prose li{margin:8px 0}\n.atlas-aside{background:var(--at-soft);border:1px solid var(--at-line);border-radius:var(--at-radius);padding:28px}\n.atlas-aside h3{margin-bottom:14px}\n.atlas-aside a{display:block;padding:9px 0;border-bottom:1px solid var(--at-line);font-size:.93rem;font-weight:600}\n.atlas-aside a:last-child{border-bottom:0}\n.atlas-aside .atlas-btn{margin-top:18px;width:100%}\n.atlas-empty{color:var(--at-muted);padding:26px;border:1px dashed var(--at-line);border-radius:var(--at-radius-sm);text-align:center}\n.atlas-404{text-align:center;padding:90px 0}\n.atlas-404-code{font-size:clamp(5rem,14vw,9rem);font-weight:800;letter-spacing:-.06em;color:var(--at-primary);line-height:1;margin-bottom:8px}\n.atlas-404 h1{font-size:2rem}\n\n/* ── Contato ─────────────────────────────────────────────────── */\n.atlas-contact-list{list-style:none;padding:0;margin:0;display:grid;gap:18px}\n.atlas-contact-list li{display:flex;gap:14px;align-items:flex-start}\n.atlas-contact-list svg{width:22px;height:22px;flex:0 0 22px;color:var(--at-primary);margin-top:2px}\n.atlas-contact-list b{display:block;font-size:.95rem}\n.atlas-contact-list span{font-size:.9rem;color:var(--at-muted)}\n\n/* ── Rodapé ──────────────────────────────────────────────────── */\n.atlas-footer{background:#0d1526;color:#c8d2e2;padding:64px 0 0;margin-top:0}\n.atlas-footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:40px;padding-bottom:48px}\n.atlas-footer h3{color:#fff;font-size:.95rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:18px}\n.atlas-footer p{font-size:.92rem;color:#9aa8be;max-width:34ch}\n.atlas-footer a{display:block;color:#9aa8be;font-size:.92rem;padding:6px 0}\n.atlas-footer a:hover{color:#fff}\n.atlas-footer .atlas-brand{color:#fff;margin-bottom:18px}\n.atlas-footer-bottom{border-top:1px solid #22304a;padding:22px 0;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:.84rem;color:#8391a8}\n.atlas-footer-bottom a{display:inline;padding:0;color:#8391a8}\n\n/* ── Responsivo ──────────────────────────────────────────────── */\n@media(max-width:980px){\n  .atlas-hero-in{grid-template-columns:1fr;gap:44px;padding:64px 0 72px}\n  .atlas-hero-art{min-height:280px}\n  .atlas-split{grid-template-columns:1fr;gap:34px}\n  .atlas-grid--3{grid-template-columns:repeat(2,1fr)}\n  .atlas-footer-grid{grid-template-columns:repeat(2,1fr);gap:32px}\n  .atlas-langs{display:none}\n}\n@media(max-width:640px){\n  .atlas-wrap,.atlas-header-in{padding:0 18px}\n  .atlas-header-in{min-height:64px;gap:12px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}\n  .atlas-nav{width:100%;margin-left:0;gap:0;overflow-x:auto;padding-bottom:4px}\n  .atlas-nav a{padding:8px 10px;font-size:.86rem}\n  .atlas-nav .atlas-nav-cta{margin-left:4px}\n  .atlas-section{padding:58px 0}\n  .atlas-grid--3,.atlas-grid--2{grid-template-columns:1fr}\n  .atlas-stats{grid-template-columns:1fr;gap:12px}\n  .atlas-hero-art{min-height:220px;padding:20px}\n  .atlas-hero-float{display:none}\n  .atlas-cta{padding:38px 26px}\n  .atlas-footer-grid{grid-template-columns:1fr;gap:28px}\n}\n@media(prefers-reduced-motion:reduce){\n  .atlas-btn,.atlas-card{transition:none}\n  .atlas-btn:hover,.atlas-card:hover{transform:none}\n}\n\n/* ── Atlas Studio 3D · slots declarativos de cena (sem JS neste arquivo) ── */\n.theme-scene{position:relative;width:100%;border-radius:var(--at-radius-lg,24px);\n  overflow:hidden;background:radial-gradient(circle at 20% 20%,rgba(67,56,202,.18),transparent 60%),\n  radial-gradient(circle at 80% 70%,rgba(14,165,233,.16),transparent 62%),var(--at-dark,#0d1526);\n  border:1px solid rgba(127,127,127,.20);isolation:isolate}\n.theme-scene[data-scene]{min-height:220px}\n.theme-scene.theme-scene--hero{min-height:340px;margin:0 0 32px}\n.theme-scene.theme-scene--home_top{min-height:240px;margin:0 0 28px}\n.theme-scene.theme-scene--footer_top{min-height:180px;margin:0 0 18px}\n.theme-scene__fallback{position:absolute;inset:0;\n  background-image:radial-gradient(circle,rgba(165,180,252,.62) 1.5px,transparent 2px),\n  radial-gradient(circle,rgba(34,211,238,.42) 1px,transparent 1.5px),\n  radial-gradient(circle,rgba(255,255,255,.20) 2px,transparent 3px);\n  background-size:26px 26px,41px 41px,88px 88px;\n  background-position:0 0,13px 19px,44px 30px;opacity:.88}\n.theme-scene[data-scene=\"portfolio-3d\"] .theme-scene__fallback{\n  background-image:linear-gradient(135deg,transparent 46%,rgba(67,56,202,.30) 47%,\n  rgba(67,56,202,.30) 53%,transparent 54%);background-size:64px 64px}\n.theme-scene[data-scene=\"tools-3d\"] .theme-scene__fallback{\n  background-image:repeating-linear-gradient(60deg,transparent 0 22px,\n  rgba(245,158,11,.24) 23px 25px,transparent 26px 48px);background-size:auto}\n.theme-scene[data-scene=\"not-found\"] .theme-scene__fallback{opacity:.28}\n.atlas-hero .theme-scene{box-shadow:0 24px 60px rgba(13,21,38,.28)}\n.atlas-scene-caption{display:flex;align-items:center;gap:10px;flex-wrap:wrap;\n  padding:12px 18px;font-size:13px;letter-spacing:.04em;color:var(--at-muted,#52627a)}\n.atlas-scene-caption b{color:var(--at-primary,#4338ca);font-weight:750}\n.atlas-scene-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;\n  margin:18px 0 0;padding:0;list-style:none}\n.atlas-scene-grid li{padding:16px;border-radius:var(--at-radius,16px);\n  border:1px solid rgba(127,127,127,.20);background:var(--at-surface,#ffffff)}\n.atlas-scene-grid strong{display:block;font-size:15px;margin-bottom:4px}\n.atlas-scene-grid span{font-size:13px;color:var(--at-muted,#52627a)}\n.atlas-scene-lite .theme-scene__fallback{opacity:.32}\n.atlas-scene-lite .theme-scene.theme-scene--hero{min-height:220px}\n@media(max-width:720px){.theme-scene.theme-scene--hero{min-height:220px}\n  .atlas-scene-grid{grid-template-columns:1fr}}\n@media(prefers-reduced-motion:reduce){.theme-scene__fallback{opacity:.18}}\n\n</style>\n<header class=\"atlas atlas-header\">\n  <div class=\"atlas-header-in\">\n    <a class=\"atlas-brand\" href=\"{{ home|default('/') }}\" aria-label=\"{{ text_brand|default('Atlas Studio') }}\"><span class=\"atlas-brand-mark\">AS</span><span>{{ text_brand|default('Atlas Studio') }}</span></a>\n    <nav class=\"atlas-nav\" aria-label=\"Navegacao principal\">\n      <a href=\"{{ home|default('/') }}\">{{ text_nav_home|default('Inicio') }}</a>\n      <a href=\"{{ nav_about|default('#servicos') }}\">{{ text_nav_about|default('Servicos') }}</a>\n      <a href=\"{{ nav_portfolio|default('#projetos') }}\">{{ text_nav_portfolio|default('Projetos') }}</a>\n      <a href=\"{{ nav_blog|default('#blog') }}\">{{ text_nav_blog|default('Blog') }}</a>\n      <a href=\"{{ nav_contact|default('#contato') }}\">{{ text_nav_contact|default('Contato') }}</a>\n      <a class=\"atlas-nav-cta\" href=\"{{ nav_quote|default('#contato') }}\">{{ text_nav_quote|default('Solicitar proposta') }}</a>\n    </nav>\n    <nav class=\"atlas-langs\" aria-label=\"{{ text_languages|default('Idiomas') }}\">\n      {% for lang in languages|default([]) %}<a class=\"atlas-lang{{ lang.active ? ' is-active' : '' }}\" href=\"{{ lang.href }}\" hreflang=\"{{ lang.code }}\">{{ lang.code }}</a>{% endfor %}\n    </nav>\n  </div>\n</header>\n",
+            "partial/hero": "{# Hero principal #}\n<section id=\"inicio\" class=\"atlas atlas-hero\">\n  <div class=\"atlas-wrap atlas-hero-in\">\n    <div>\n      <span class=\"atlas-eyebrow\"><span class=\"atlas-dot\"></span>Estudio de produtos digitais</span>\n      <h1>{{ heading_title|default('Ideias que viram produtos digitais.') }}</h1>\n      <p class=\"atlas-hero-lead\">{{ text_tagline|default('Da primeira hipótese ao lançamento: estratégia, design e engenharia trabalhando juntos para construir experiências que as pessoas realmente usam.') }}</p>\n      <div class=\"atlas-hero-actions\">\n        <a class=\"atlas-btn atlas-btn-primary\" href=\"{{ nav_quote|default('#contato') }}\">{{ button_quote|default('Solicitar proposta') }}</a>\n        <a class=\"atlas-btn atlas-btn-ghost\" href=\"{{ portfolio|default('#projetos') }}\">{{ button_portfolio|default('Ver projetos') }}</a>\n      </div>\n      <div class=\"atlas-stats\">\n        <div class=\"atlas-stat\"><b>120+</b><span>projetos entregues</span></div>\n        <div class=\"atlas-stat\"><b>14</b><span>anos de mercado</span></div>\n        <div class=\"atlas-stat\"><b>98%</b><span>clientes que renovam</span></div>\n      </div>\n    </div>\n    <div class=\"atlas-hero-art\"><svg viewBox=\"0 0 320 260\" fill=\"none\" aria-hidden=\"true\"><rect x=\"26\" y=\"30\" width=\"268\" height=\"188\" rx=\"16\" fill=\"#ffffff\" opacity=\".16\"/><rect x=\"46\" y=\"52\" width=\"228\" height=\"14\" rx=\"7\" fill=\"#ffffff\" opacity=\".30\"/><rect x=\"46\" y=\"80\" width=\"86\" height=\"10\" rx=\"5\" fill=\"#ffffff\" opacity=\".55\"/><rect x=\"46\" y=\"100\" width=\"150\" height=\"10\" rx=\"5\" fill=\"#ffffff\" opacity=\".34\"/><rect x=\"46\" y=\"132\" width=\"66\" height=\"66\" rx=\"12\" fill=\"#ffffff\" opacity=\".22\"/><rect x=\"124\" y=\"132\" width=\"66\" height=\"66\" rx=\"12\" fill=\"#ffffff\" opacity=\".34\"/><rect x=\"202\" y=\"132\" width=\"66\" height=\"66\" rx=\"12\" fill=\"#ffffff\" opacity=\".48\"/><circle cx=\"252\" cy=\"44\" r=\"16\" fill=\"#ffffff\" opacity=\".70\"/><path d=\"M46 218h228\" stroke=\"#ffffff\" stroke-opacity=\".45\" stroke-width=\"2\"/></svg>\n      <div class=\"atlas-hero-float one\"><b>+38%</b>conversao</div>\n      <div class=\"atlas-hero-float two\"><b>4.9/5</b>avaliacao media</div>\n    </div>\n  </div>\n</section>\n",
+            "partial/hero-3d": "{# Hero principal (variante de cena) #}\n<section id=\"inicio\" class=\"atlas atlas-hero\">\n  <div class=\"atlas-wrap atlas-hero-in\">\n    <div>\n      <span class=\"atlas-eyebrow\"><span class=\"atlas-dot\"></span>Estudio de produtos digitais</span>\n      <h1>{{ heading_title|default('Ideias que viram produtos digitais.') }}</h1>\n      <p class=\"atlas-hero-lead\">{{ text_tagline|default('Da primeira hipótese ao lançamento: estratégia, design e engenharia trabalhando juntos para construir experiências que as pessoas realmente usam.') }}</p>\n      <div class=\"atlas-hero-actions\">\n        <a class=\"atlas-btn atlas-btn-primary\" href=\"{{ nav_quote|default('#contato') }}\">{{ button_quote|default('Solicitar proposta') }}</a>\n        <a class=\"atlas-btn atlas-btn-ghost\" href=\"{{ portfolio|default('#projetos') }}\">{{ button_portfolio|default('Ver projetos') }}</a>\n      </div>\n      <div class=\"atlas-stats\">\n        <div class=\"atlas-stat\"><b>120+</b><span>projetos entregues</span></div>\n        <div class=\"atlas-stat\"><b>14</b><span>anos de mercado</span></div>\n        <div class=\"atlas-stat\"><b>98%</b><span>clientes que renovam</span></div>\n      </div>\n    </div>\n    <div class=\"atlas-hero-art\"><svg viewBox=\"0 0 320 260\" fill=\"none\" aria-hidden=\"true\"><rect x=\"26\" y=\"30\" width=\"268\" height=\"188\" rx=\"16\" fill=\"#ffffff\" opacity=\".16\"/><rect x=\"46\" y=\"52\" width=\"228\" height=\"14\" rx=\"7\" fill=\"#ffffff\" opacity=\".30\"/><rect x=\"46\" y=\"80\" width=\"86\" height=\"10\" rx=\"5\" fill=\"#ffffff\" opacity=\".55\"/><rect x=\"46\" y=\"100\" width=\"150\" height=\"10\" rx=\"5\" fill=\"#ffffff\" opacity=\".34\"/><rect x=\"46\" y=\"132\" width=\"66\" height=\"66\" rx=\"12\" fill=\"#ffffff\" opacity=\".22\"/><rect x=\"124\" y=\"132\" width=\"66\" height=\"66\" rx=\"12\" fill=\"#ffffff\" opacity=\".34\"/><rect x=\"202\" y=\"132\" width=\"66\" height=\"66\" rx=\"12\" fill=\"#ffffff\" opacity=\".48\"/><circle cx=\"252\" cy=\"44\" r=\"16\" fill=\"#ffffff\" opacity=\".70\"/><path d=\"M46 218h228\" stroke=\"#ffffff\" stroke-opacity=\".45\" stroke-width=\"2\"/></svg>\n      <div class=\"atlas-hero-float one\"><b>+38%</b>conversao</div>\n      <div class=\"atlas-hero-float two\"><b>4.9/5</b>avaliacao media</div>\n    </div>\n  </div>\n</section>\n",
+            "partial/clients": "<section id=\"clientes\" class=\"atlas-section \"><div class=\"atlas-wrap\">\n  <p class=\"atlas-eyebrow\">Quem confia no nosso trabalho</p>\n  <div class=\"atlas-clients\">\n    <span class=\"atlas-client\">Vera</span><span class=\"atlas-client\">Norte Log</span><span class=\"atlas-client\">Aurora</span>\n    <span class=\"atlas-client\">Solis</span><span class=\"atlas-client\">Quotia</span><span class=\"atlas-client\">Vertex</span>\n  </div>\n</div></section>\n",
+            "partial/services": "<section id=\"servicos\" class=\"atlas-section atlas-section--soft\"><div class=\"atlas-wrap\">\n  <div class=\"atlas-section-head\"><span class=\"atlas-eyebrow\">O que fazemos</span>\n    <h2>Um time completo, do diagnóstico à operação</h2>\n    <p>Atuamos em squads enxutos, com entregas curtas e indicadores visíveis. Escolha um ponto de partida ou monte um pacote sob medida.</p></div>\n  <div class=\"atlas-grid atlas-grid--3\">\n    <article class=\"atlas-card\"><div class=\"atlas-card-icon\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 3v3M12 18v3M3 12h3M18 12h3\"/></svg></div><h3>Estrategia digital</h3><p>Diagnostico de produto, pesquisa com usuarios e roteiro de evolucao com metas claras para cada trimestre.</p><span class=\"atlas-card-meta\">2 a 4 semanas</span></article>\n    <article class=\"atlas-card\"><div class=\"atlas-card-icon\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"3\"/><circle cx=\"8.5\" cy=\"8.5\" r=\"1.6\"/><path d=\"m4 17 5-5 4 4 3-3 4 4\"/></svg></div><h3>Design de produto</h3><p>Interfaces acessiveis, sistema de design e prototipos testados antes de qualquer linha de codigo.</p><span class=\"atlas-card-meta\">3 a 6 semanas</span></article>\n    <article class=\"atlas-card\"><div class=\"atlas-card-icon\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14\"/></svg></div><h3>Desenvolvimento</h3><p>Aplicacoes web rapidas e seguras, com arquitetura modular, testes e observabilidade desde o primeiro dia.</p><span class=\"atlas-card-meta\">6 a 12 semanas</span></article>\n    <article class=\"atlas-card\"><div class=\"atlas-card-icon\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 20V10M10 20V4M16 20v-7M22 20H2\"/></svg></div><h3>Dados e analytics</h3><p>Instrumentacao, paineis de decisao e experimentos que mostram o impacto real de cada entrega.</p><span class=\"atlas-card-meta\">Contínuo</span></article>\n    <article class=\"atlas-card\"><div class=\"atlas-card-icon\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 4h11l3 3v13H5z\"/><path d=\"M8 10h8M8 14h8M8 18h5\"/></svg></div><h3>Conteudo e SEO</h3><p>Arquitetura de informacao, conteudo editorial e otimizacao tecnica para busca organica.</p><span class=\"atlas-card-meta\">Contínuo</span></article>\n    <article class=\"atlas-card\"><div class=\"atlas-card-icon\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 13a8 8 0 0 1 16 0v5a2 2 0 0 1-2 2h-2v-7h4M4 13v5a2 2 0 0 0 2 2h2v-7H4\"/></svg></div><h3>Suporte e evolucao</h3><p>Time dedicado para manter, monitorar e evoluir o produto depois do lancamento.</p><span class=\"atlas-card-meta\">Mensal</span></article>\n  </div>\n</div></section>\n",
+            "partial/about": "<section id=\"sobre\" class=\"atlas-section \"><div class=\"atlas-wrap\">\n  <div class=\"atlas-split\">\n    <div>\n      <span class=\"atlas-eyebrow\">Sobre o estudio</span>\n      <h2>{{ text_about_title|default('Tecnica com repertorio, entrega com contexto.') }}</h2>\n      <p>{{ text_about|default('Somos um estúdio de 28 pessoas entre estratégia, design e engenharia. Fundado em 2012, o Atlas nasceu para diminuir a distância entre a decisão de negócio e o produto que chega ao usuário.') }}</p>\n      <p style=\"color:var(--at-muted)\">Trabalhamos com escopo claro, comunicação semanal e um responsável técnico em cada projeto. Sem surpresa no orçamento, sem fila de aprovação infinita.</p>\n      <ul class=\"atlas-checklist\">\n        <li><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12 4 4L19 6\"/></svg><span>Squad dedicado com um ponto de contato único</span></li>\n        <li><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12 4 4L19 6\"/></svg><span>Protótipo validado antes do desenvolvimento</span></li>\n        <li><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12 4 4L19 6\"/></svg><span>Métricas combinadas no início e revisadas a cada sprint</span></li>\n        <li><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12 4 4L19 6\"/></svg><span>Documentação e handover inclusos em toda entrega</span></li>\n      </ul>\n    </div>\n    <div class=\"atlas-panel\">\n      <h3>Como trabalhamos</h3>\n      <div class=\"atlas-panel-row\"><span>Descoberta</span><b>1 a 2 semanas</b></div>\n      <div class=\"atlas-panel-row\"><span>Design e protótipo</span><b>3 a 6 semanas</b></div>\n      <div class=\"atlas-panel-row\"><span>Construção</span><b>6 a 12 semanas</b></div>\n      <div class=\"atlas-panel-row\"><span>Lançamento</span><b>1 semana</b></div>\n      <div class=\"atlas-panel-row\"><span>Evolução</span><b>Contínua</b></div>\n    </div>\n  </div>\n</div></section>\n",
+            "partial/methodology": "<section id=\"metodo\" class=\"atlas-section atlas-section--soft\"><div class=\"atlas-wrap\">\n  <div class=\"atlas-section-head\"><span class=\"atlas-eyebrow\">Metodo</span><h2>Quatro etapas, nenhuma caixa preta</h2></div>\n  <div class=\"atlas-grid atlas-grid--3\">\n    <article class=\"atlas-card\"><span class=\"atlas-card-meta\">Etapa 1</span><h3>Entender</h3><p>Entrevistas, dados e mapa de restrições para definir o problema certo.</p></article>\n    <article class=\"atlas-card\"><span class=\"atlas-card-meta\">Etapa 2</span><h3>Desenhar</h3><p>Fluxos, protótipos e testes de usabilidade com usuários reais.</p></article>\n    <article class=\"atlas-card\"><span class=\"atlas-card-meta\">Etapa 3</span><h3>Construir</h3><p>Sprints quinzenais com demo, qualidade e revisão de escopo.</p></article>\n    <article class=\"atlas-card\"><span class=\"atlas-card-meta\">Etapa 4</span><h3>Evoluir</h3><p>Métricas, ajustes e novas apostas após o lançamento.</p></article>\n  </div>\n</div></section>\n",
+            "partial/skills": "<section id=\"competencias\" class=\"atlas-section \"><div class=\"atlas-wrap\">\n  <div class=\"atlas-section-head\"><span class=\"atlas-eyebrow\">Competencias</span><h2>Ferramentas a servico do resultado</h2></div>\n  <div class=\"atlas-grid atlas-grid--3\">\n    <article class=\"atlas-card\"><h3>Pesquisa e estratégia</h3><p>Entrevistas, jobs-to-be-done, análise de funil e priorização.</p></article>\n    <article class=\"atlas-card\"><h3>Produto e interface</h3><p>Design systems, prototipação, acessibilidade e conteúdo.</p></article>\n    <article class=\"atlas-card\"><h3>Engenharia</h3><p>PHP, Twig, JavaScript, bancos relacionais e infraestrutura observável.</p></article>\n  </div>\n</div></section>\n",
+            "partial/portfolio": "<section id=\"projetos\" class=\"atlas-section atlas-section--soft\"><div class=\"atlas-wrap\">\n  <div class=\"atlas-section-head\"><span class=\"atlas-eyebrow\">Projetos selecionados</span><h2>Problemas reais, resultados medíveis</h2></div>\n  <div class=\"atlas-grid atlas-grid--3\">\n    <article class=\"atlas-card\"><div class=\"atlas-card-figure a\">Aurora</div><h3>Aurora Finance</h3><p>Plataforma de planejamento financeiro para pequenas empresas, com paineis e conciliacao automatica.</p><span class=\"atlas-card-meta\">Fintech · 2026</span></article>\n    <article class=\"atlas-card\"><div class=\"atlas-card-figure b\">Vera</div><h3>Vera Saude</h3><p>Portal de agendamento e prontuario leve para clinicas, com fluxo de atendimento redesenhado.</p><span class=\"atlas-card-meta\">Saude · 2025</span></article>\n    <article class=\"atlas-card\"><div class=\"atlas-card-figure c\">Norte</div><h3>Norte Log</h3><p>Sistema de acompanhamento de entregas com mapa, notificacoes e indicadores por rota.</p><span class=\"atlas-card-meta\">Logistica · 2025</span></article>\n  </div>\n</div></section>\n",
+            "partial/tools": "<section id=\"ferramentas\" class=\"atlas-section \"><div class=\"atlas-wrap\">\n  <div class=\"atlas-section-head\"><span class=\"atlas-eyebrow\">Ferramentas</span><h2>O que usamos no dia a dia</h2><p>Stacks maduras, sem moda passageira e sem dependência de fornecedor único.</p></div>\n  <div class=\"atlas-grid atlas-grid--3\">\n    <article class=\"atlas-card\"><h3>Fluxa</h3><p>Orquestração de fluxos e integrações entre sistemas internos.</p></article>\n    <article class=\"atlas-card\"><h3>Vertex</h3><p>Análise de dados e painéis de acompanhamento de produto.</p></article>\n    <article class=\"atlas-card\"><h3>Solis</h3><p>Automação de conteúdo e publicação multicanal.</p></article>\n  </div>\n</div></section>\n",
+            "partial/testimonials": "<section id=\"depoimentos\" class=\"atlas-section \"><div class=\"atlas-wrap\">\n  <div class=\"atlas-section-head\"><span class=\"atlas-eyebrow\">Depoimentos</span><h2>O que dizem os times que trabalham com a gente</h2></div>\n  <div class=\"atlas-grid atlas-grid--2\">\n    <figure class=\"atlas-quote\" style=\"margin:0\"><p>“O Atlas reorganizou nosso roadmap em três semanas e entregou o primeiro módulo em produção antes do prazo. Clareza que a gente não tinha havia dois anos.”</p><figcaption class=\"atlas-quote-by\"><span class=\"atlas-avatar\">MR</span><span><b>Marina Ribeiro</b>Diretora de Produto · Aurora Finance</span></figcaption></figure>\n    <figure class=\"atlas-quote\" style=\"margin:0\"><p>“Contratamos para redesenhar o agendamento e terminamos com um processo inteiro mais simples. A equipe deles Documenta tudo e ensina o time a manter.”</p><figcaption class=\"atlas-quote-by\"><span class=\"atlas-avatar\">AC</span><span><b>André Costa</b>COO · Vera Saúde</span></figcaption></figure>\n  </div>\n</div></section>\n",
+            "partial/news": "<section id=\"blog\" class=\"atlas-section atlas-section--soft\"><div class=\"atlas-wrap\">\n  <div class=\"atlas-section-head\"><span class=\"atlas-eyebrow\">Do blog</span><h2>Notas sobre produto, design e engenharia</h2></div>\n  <div class=\"atlas-grid atlas-grid--3\">\n    <article class=\"atlas-card\"><span class=\"atlas-card-meta\">12 de setembro de 2026 · 5 min de leitura</span><h3>Como priorizar um roadmap sem perder a visao de produto</h3><p> Um metodo simples para transformar pedidos em apostas mensuráveis.</p></article>\n    <article class=\"atlas-card\"><span class=\"atlas-card-meta\">28 de agosto de 2026 · 8 min de leitura</span><h3>Acessibilidade na pratica: sete decisoes que mudam o resultado</h3><p> Contraste, foco, semantica e testes com leitores de tela no dia a dia do time.</p></article>\n    <article class=\"atlas-card\"><span class=\"atlas-card-meta\">03 de agosto de 2026 · 6 min de leitura</span><h3>Design system enxuto: quando ele comeca a valer a pena</h3><p> Sinais de que chegou a hora de padronizar componentes e tokens.</p></article>\n  </div>\n</div></section>\n",
+            "partial/contact": "<section id=\"contato\" class=\"atlas-section \"><div class=\"atlas-wrap\">\n  <div class=\"atlas-split\">\n    <div><span class=\"atlas-eyebrow\">Vamos conversar</span>\n      <h2>Conte o problema. A gente volta com um plano.</h2>\n      <p style=\"color:var(--at-muted)\">Atendemos projetos de descobrimento, redesign e construção de produto. A primeira conversa é sem compromisso e dura cerca de 40 minutos.</p>\n      <a class=\"atlas-btn atlas-btn-primary\" href=\"mailto:contato@atlasstudio.example\">Solicitar proposta</a>\n    </div>\n    <ul class=\"atlas-contact-list\">\n      <li><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"m3 7 9 6 9-6\"/></svg><div><b>E-mail</b><span>contato@atlasstudio.example</span></div></li>\n      <li><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6 3h4l2 5-3 2a12 12 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 4 5a2 2 0 0 1 2-2Z\"/></svg><div><b>Telefone</b><span>+55 11 4002 8922 · seg a sex, 9h às 18h</span></div></li>\n      <li><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11Z\"/><circle cx=\"12\" cy=\"10\" r=\"2.5\"/></svg><div><b>Endereço</b><span>Av. Paulista, 1106 · São Paulo, SP</span></div></li>\n    </ul>\n  </div>\n</div></section>\n",
+            "common/contact": "{# Atlas Studio — pagina interna #}\n{% include 'partial/theme-scene.twig' %}\n{{ header }}\n<div class=\"atlas atlas-page\"><div class=\"atlas-wrap\">\n<nav class=\"atlas-crumb\" aria-label=\"Trilha\"><a href=\"{{ home|default('/') }}\">Início</a><span>/</span>Contato</nav>\n  <div class=\"atlas-page-head\"><span class=\"atlas-eyebrow\">Atlas Studio</span><h1>Fale com o Atlas Studio</h1><p>Escolha o canal mais conveniente. Respondemos em até um dia útil.</p></div>\n  <div class=\"atlas-grid\" style=\"grid-template-columns:minmax(0,1fr) 290px;align-items:start\">\n    <div>\n      <div class=\"atlas-grid atlas-grid--2\">\n        <div class=\"atlas-card\"><h3>Novos projetos</h3><p>Conte o desafio, o prazo desejado e o orçamento aproximado. Enviamos uma proposta com escopo e etapas.</p><a class=\"atlas-card-meta\" href=\"mailto:contato@atlasstudio.example\">contato@atlasstudio.example</a></div>\n        <div class=\"atlas-card\"><h3>Imprensa e parcerias</h3><p>Para entrevistas, conteúdos conjuntos ou integrações, fale diretamente com a equipe de comunicação.</p><a class=\"atlas-card-meta\" href=\"mailto:imprensa@atlasstudio.example\">imprensa@atlasstudio.example</a></div>\n      </div>\n{% include 'partial/contact.twig' %}\n    </div>\n    <aside class=\"atlas-aside\"><h3>Links úteis</h3><a href=\"{{ nav_about|default('#servicos') }}\">Nossos serviços</a><a href=\"{{ nav_portfolio|default('#projetos') }}\">Projetos selecionados</a><a href=\"{{ nav_blog|default('#blog') }}\">Blog</a><a href=\"{{ nav_contact|default('#contato') }}\">Contato</a><a class=\"atlas-btn atlas-btn-primary\" href=\"{{ nav_quote|default('#contato') }}\">Solicitar proposta</a></aside>\n  </div>\n</div></div>\n<div class=\"atlas-wrap\" style=\"padding-top:18px;padding-bottom:84px\">\n  <div class=\"atlas atlas-cta\">\n    <div><h2>Pronto para tirar a ideia do papel?</h2>\n      <p>Conte o objetivo do projeto e receba uma proposta com escopo, prazo e investimento estimado.</p></div>\n    <a class=\"atlas-btn\" href=\"mailto:contato@atlasstudio.example\">Falar com o time</a>\n  </div>\n</div>\n{{ footer }}\n",
+            "cms/page_info": "{# Atlas Studio — pagina interna #}\n{% include 'partial/theme-scene.twig' %}\n{{ header }}\n<div class=\"atlas atlas-page\"><div class=\"atlas-wrap\">\n<nav class=\"atlas-crumb\" aria-label=\"Trilha\"><a href=\"{{ home|default('/') }}\">Início</a><span>/</span>Institucional</nav>\n  <div class=\"atlas-page-head\"><span class=\"atlas-eyebrow\">Atlas Studio</span><h1>{{ heading_title|default('Sobre o Atlas Studio') }}</h1><p>{{ text_lead|default('Um estúdio de produtos digitais fundado em 2012, em São Paulo.') }}</p></div>\n  <div class=\"atlas-grid\" style=\"grid-template-columns:minmax(0,1fr) 290px;align-items:start\">\n    <div>\n      <div class=\"atlas-prose\">\n        <h2>Nossa história</h2><p>Começamos como uma dupla de desenvolvedores atendendo pequenos negócios. Hoje somos 28 pessoas entre estratégia, design e engenharia, com mais de 120 projetos entregues em fintech, saúde, logística e educação.</p>\n        <h2>Como pensamos</h2><p>Acreditamos em escopo claro, entregas curtas e decisões baseadas em evidência. Cada projeto tem um responsável técnico, um canal de comunicação e métricas combinadas antes da primeira sprint.</p>\n        <h2>Compromisso com qualidade</h2><p>Acessibilidade, desempenho e segurança não são etapas finais: fazem parte da definição de pronto desde a descoberta.</p>\n      </div>\n      <div class=\"atlas-prose\"><p>{{ description|default('') }}</p></div>\n    </div>\n    <aside class=\"atlas-aside\"><h3>Links úteis</h3><a href=\"{{ nav_about|default('#servicos') }}\">Nossos serviços</a><a href=\"{{ nav_portfolio|default('#projetos') }}\">Projetos selecionados</a><a href=\"{{ nav_blog|default('#blog') }}\">Blog</a><a href=\"{{ nav_contact|default('#contato') }}\">Contato</a><a class=\"atlas-btn atlas-btn-primary\" href=\"{{ nav_quote|default('#contato') }}\">Solicitar proposta</a></aside>\n  </div>\n</div></div>\n<div class=\"atlas-wrap\" style=\"padding-top:18px;padding-bottom:84px\">\n  <div class=\"atlas atlas-cta\">\n    <div><h2>Pronto para tirar a ideia do papel?</h2>\n      <p>Conte o objetivo do projeto e receba uma proposta com escopo, prazo e investimento estimado.</p></div>\n    <a class=\"atlas-btn\" href=\"mailto:contato@atlasstudio.example\">Falar com o time</a>\n  </div>\n</div>\n{{ footer }}\n",
+            "catalog/project_list": "{# Atlas Studio — pagina interna #}\n{% include 'partial/theme-scene.twig' %}\n{{ header }}\n<div class=\"atlas atlas-page\"><div class=\"atlas-wrap\">\n<nav class=\"atlas-crumb\" aria-label=\"Trilha\"><a href=\"{{ home|default('/') }}\">Início</a><span>/</span>Projetos</nav>\n  <div class=\"atlas-page-head\"><span class=\"atlas-eyebrow\">Atlas Studio</span><h1>Projetos selecionados</h1><p>Uma amostra de problemas que resolvemos com times de produto e tecnologia.</p></div>\n  <div class=\"atlas-grid\" style=\"grid-template-columns:minmax(0,1fr) 290px;align-items:start\">\n    <div>\n      <div class=\"atlas-grid atlas-grid--2\">\n        <article class=\"atlas-card\"><div class=\"atlas-card-figure a\">Aurora</div><h3>Aurora Finance</h3><p>Plataforma de planejamento financeiro para pequenas empresas, com paineis e conciliacao automatica.</p><span class=\"atlas-card-meta\">Fintech · 2026</span></article>\n        <article class=\"atlas-card\"><div class=\"atlas-card-figure b\">Vera</div><h3>Vera Saude</h3><p>Portal de agendamento e prontuario leve para clinicas, com fluxo de atendimento redesenhado.</p><span class=\"atlas-card-meta\">Saude · 2025</span></article>\n        <article class=\"atlas-card\"><div class=\"atlas-card-figure c\">Norte</div><h3>Norte Log</h3><p>Sistema de acompanhamento de entregas com mapa, notificacoes e indicadores por rota.</p><span class=\"atlas-card-meta\">Logistica · 2025</span></article>\n      </div>\n    </div>\n    <aside class=\"atlas-aside\"><h3>Links úteis</h3><a href=\"{{ nav_about|default('#servicos') }}\">Nossos serviços</a><a href=\"{{ nav_portfolio|default('#projetos') }}\">Projetos selecionados</a><a href=\"{{ nav_blog|default('#blog') }}\">Blog</a><a href=\"{{ nav_contact|default('#contato') }}\">Contato</a><a class=\"atlas-btn atlas-btn-primary\" href=\"{{ nav_quote|default('#contato') }}\">Solicitar proposta</a></aside>\n  </div>\n</div></div>\n<div class=\"atlas-wrap\" style=\"padding-top:18px;padding-bottom:84px\">\n  <div class=\"atlas atlas-cta\">\n    <div><h2>Pronto para tirar a ideia do papel?</h2>\n      <p>Conte o objetivo do projeto e receba uma proposta com escopo, prazo e investimento estimado.</p></div>\n    <a class=\"atlas-btn\" href=\"mailto:contato@atlasstudio.example\">Falar com o time</a>\n  </div>\n</div>\n{{ footer }}\n",
+            "catalog/project_info": "{# Atlas Studio — pagina interna #}\n{% include 'partial/theme-scene.twig' %}\n{{ header }}\n<div class=\"atlas atlas-page\"><div class=\"atlas-wrap\">\n<nav class=\"atlas-crumb\" aria-label=\"Trilha\"><a href=\"{{ home|default('/') }}\">Início</a><span>/</span>Projetos</nav>\n  <div class=\"atlas-page-head\"><span class=\"atlas-eyebrow\">Atlas Studio</span><h1>{{ heading_title|default('Aurora Finance') }}</h1><p>Plataforma de planejamento financeiro para pequenas empresas.</p></div>\n  <div class=\"atlas-grid\" style=\"grid-template-columns:minmax(0,1fr) 290px;align-items:start\">\n    <div>\n      <div class=\"atlas-prose\">\n        <h2>O desafio</h2><p>A empresa crescia rápido, mas as informações financeiras viviam em planilhas separadas. O time levava dias para fechar o mês e não conseguia projetar caixa com confiança.</p>\n        <h2>A solução</h2><p>Redesenhamos o fluxo de importação, criamos um painel único de entradas e saídas e automatizamos a conciliação bancária. O resultado foi uma redução de 38% no tempo de fechamento.</p>\n        <h2>O que entregamos</h2><p>Descoberta, design system, aplicação web, integração com APIs bancárias, documentação e treinamento do time interno.</p>\n      </div>\n      <div class=\"atlas-prose\"><p>{{ description|default('') }}</p></div>\n    </div>\n    <aside class=\"atlas-aside\"><h3>Links úteis</h3><a href=\"{{ nav_about|default('#servicos') }}\">Nossos serviços</a><a href=\"{{ nav_portfolio|default('#projetos') }}\">Projetos selecionados</a><a href=\"{{ nav_blog|default('#blog') }}\">Blog</a><a href=\"{{ nav_contact|default('#contato') }}\">Contato</a><a class=\"atlas-btn atlas-btn-primary\" href=\"{{ nav_quote|default('#contato') }}\">Solicitar proposta</a></aside>\n  </div>\n</div></div>\n<div class=\"atlas-wrap\" style=\"padding-top:18px;padding-bottom:84px\">\n  <div class=\"atlas atlas-cta\">\n    <div><h2>Pronto para tirar a ideia do papel?</h2>\n      <p>Conte o objetivo do projeto e receba uma proposta com escopo, prazo e investimento estimado.</p></div>\n    <a class=\"atlas-btn\" href=\"mailto:contato@atlasstudio.example\">Falar com o time</a>\n  </div>\n</div>\n{{ footer }}\n",
+            "blog/blog_list": "{# Atlas Studio — pagina interna #}\n{% include 'partial/theme-scene.twig' %}\n{{ header }}\n<div class=\"atlas atlas-page\"><div class=\"atlas-wrap\">\n<nav class=\"atlas-crumb\" aria-label=\"Trilha\"><a href=\"{{ home|default('/') }}\">Início</a><span>/</span>Blog</nav>\n  <div class=\"atlas-page-head\"><span class=\"atlas-eyebrow\">Atlas Studio</span><h1>Blog do Atlas</h1><p>Notas práticas sobre produto, design, engenharia e gestão de projetos digitais.</p></div>\n  <div class=\"atlas-grid\" style=\"grid-template-columns:minmax(0,1fr) 290px;align-items:start\">\n    <div>\n      <div class=\"atlas-grid\">\n        <article class=\"atlas-card\"><span class=\"atlas-card-meta\">12 de setembro de 2026 · 5 min de leitura</span><h3>Como priorizar um roadmap sem perder a visao de produto</h3><p> Um metodo simples para transformar pedidos em apostas mensuráveis.</p><a class=\"atlas-card-meta\" href=\"{{ home|default('/') }}\">Ler artigo</a></article>\n        <article class=\"atlas-card\"><span class=\"atlas-card-meta\">28 de agosto de 2026 · 8 min de leitura</span><h3>Acessibilidade na pratica: sete decisoes que mudam o resultado</h3><p> Contraste, foco, semantica e testes com leitores de tela no dia a dia do time.</p><a class=\"atlas-card-meta\" href=\"{{ home|default('/') }}\">Ler artigo</a></article>\n        <article class=\"atlas-card\"><span class=\"atlas-card-meta\">03 de agosto de 2026 · 6 min de leitura</span><h3>Design system enxuto: quando ele comeca a valer a pena</h3><p> Sinais de que chegou a hora de padronizar componentes e tokens.</p><a class=\"atlas-card-meta\" href=\"{{ home|default('/') }}\">Ler artigo</a></article>\n      </div>\n      <div class=\"atlas-prose\"><p>{{ description|default('') }}</p></div>\n    </div>\n    <aside class=\"atlas-aside\"><h3>Links úteis</h3><a href=\"{{ nav_about|default('#servicos') }}\">Nossos serviços</a><a href=\"{{ nav_portfolio|default('#projetos') }}\">Projetos selecionados</a><a href=\"{{ nav_blog|default('#blog') }}\">Blog</a><a href=\"{{ nav_contact|default('#contato') }}\">Contato</a><a class=\"atlas-btn atlas-btn-primary\" href=\"{{ nav_quote|default('#contato') }}\">Solicitar proposta</a></aside>\n  </div>\n</div></div>\n<div class=\"atlas-wrap\" style=\"padding-top:18px;padding-bottom:84px\">\n  <div class=\"atlas atlas-cta\">\n    <div><h2>Pronto para tirar a ideia do papel?</h2>\n      <p>Conte o objetivo do projeto e receba uma proposta com escopo, prazo e investimento estimado.</p></div>\n    <a class=\"atlas-btn\" href=\"mailto:contato@atlasstudio.example\">Falar com o time</a>\n  </div>\n</div>\n{{ footer }}\n",
+            "blog/blog_info": "{# Atlas Studio — pagina interna #}\n{% include 'partial/theme-scene.twig' %}\n{{ header }}\n<div class=\"atlas atlas-page\"><div class=\"atlas-wrap\">\n<nav class=\"atlas-crumb\" aria-label=\"Trilha\"><a href=\"{{ home|default('/') }}\">Início</a><span>/</span>Blog</nav>\n  <div class=\"atlas-page-head\"><span class=\"atlas-eyebrow\">Atlas Studio</span><h1>{{ heading_title|default('Como priorizar um roadmap sem perder a visão de produto') }}</h1><p>Um método simples para transformar pedidos em apostas mensuráveis.</p></div>\n  <div class=\"atlas-grid\" style=\"grid-template-columns:minmax(0,1fr) 290px;align-items:start\">\n    <div>\n      <div class=\"atlas-prose\">\n        <h2>O problema da lista</h2><p>Roadmaps viram depósitos de pedidos. Sem critério explícito, a ordem é definida por urgência ou por quem fala mais alto na reunião.</p>\n        <h2>Três perguntas antes de priorizar</h2><p>Qual hipótese estamos testando? Que sinal confirma que funcionou? Quanto custa não fazer agora? Se alguma resposta estiver vazia, o item ainda não está pronto para entrar na fila.</p>\n        <h2>Revise o corte, não a lista</h2><p>Uma revisão quinzenal do próximo corte é mais útil do que reorganizar o trimestre inteiro toda semana.</p>\n      </div>\n      <div class=\"atlas-prose\"><p>{{ date_added|default('12 de setembro de 2026') }} · {{ description|default('') }}</p></div>\n    </div>\n    <aside class=\"atlas-aside\"><h3>Links úteis</h3><a href=\"{{ nav_about|default('#servicos') }}\">Nossos serviços</a><a href=\"{{ nav_portfolio|default('#projetos') }}\">Projetos selecionados</a><a href=\"{{ nav_blog|default('#blog') }}\">Blog</a><a href=\"{{ nav_contact|default('#contato') }}\">Contato</a><a class=\"atlas-btn atlas-btn-primary\" href=\"{{ nav_quote|default('#contato') }}\">Solicitar proposta</a></aside>\n  </div>\n</div></div>\n<div class=\"atlas-wrap\" style=\"padding-top:18px;padding-bottom:84px\">\n  <div class=\"atlas atlas-cta\">\n    <div><h2>Pronto para tirar a ideia do papel?</h2>\n      <p>Conte o objetivo do projeto e receba uma proposta com escopo, prazo e investimento estimado.</p></div>\n    <a class=\"atlas-btn\" href=\"mailto:contato@atlasstudio.example\">Falar com o time</a>\n  </div>\n</div>\n{{ footer }}\n",
+            "tool/tool_list": "{# Atlas Studio — pagina interna #}\n{% include 'partial/theme-scene.twig' %}\n{{ header }}\n<div class=\"atlas atlas-page\"><div class=\"atlas-wrap\">\n<nav class=\"atlas-crumb\" aria-label=\"Trilha\"><a href=\"{{ home|default('/') }}\">Início</a><span>/</span>Ferramentas</nav>\n  <div class=\"atlas-page-head\"><span class=\"atlas-eyebrow\">Atlas Studio</span><h1>Ferramentas</h1><p>Os produtos que usamos para entregar e acompanhar cada projeto.</p></div>\n  <div class=\"atlas-grid\" style=\"grid-template-columns:minmax(0,1fr) 290px;align-items:start\">\n    <div>\n      <div class=\"atlas-grid atlas-grid--3\">\n        <article class=\"atlas-card\"><h3>Fluxa</h3><p>Orquestração de fluxos e integrações entre sistemas internos.</p></article>\n        <article class=\"atlas-card\"><h3>Vertex</h3><p>Análise de dados e painéis de acompanhamento de produto.</p></article>\n        <article class=\"atlas-card\"><h3>Solis</h3><p>Automação de conteúdo e publicação multicanal.</p></article>\n      </div>\n    </div>\n    <aside class=\"atlas-aside\"><h3>Links úteis</h3><a href=\"{{ nav_about|default('#servicos') }}\">Nossos serviços</a><a href=\"{{ nav_portfolio|default('#projetos') }}\">Projetos selecionados</a><a href=\"{{ nav_blog|default('#blog') }}\">Blog</a><a href=\"{{ nav_contact|default('#contato') }}\">Contato</a><a class=\"atlas-btn atlas-btn-primary\" href=\"{{ nav_quote|default('#contato') }}\">Solicitar proposta</a></aside>\n  </div>\n</div></div>\n<div class=\"atlas-wrap\" style=\"padding-top:18px;padding-bottom:84px\">\n  <div class=\"atlas atlas-cta\">\n    <div><h2>Pronto para tirar a ideia do papel?</h2>\n      <p>Conte o objetivo do projeto e receba uma proposta com escopo, prazo e investimento estimado.</p></div>\n    <a class=\"atlas-btn\" href=\"mailto:contato@atlasstudio.example\">Falar com o time</a>\n  </div>\n</div>\n{{ footer }}\n",
+            "tool/tool_info": "{# Atlas Studio — pagina interna #}\n{% include 'partial/theme-scene.twig' %}\n{{ header }}\n<div class=\"atlas atlas-page\"><div class=\"atlas-wrap\">\n<nav class=\"atlas-crumb\" aria-label=\"Trilha\"><a href=\"{{ home|default('/') }}\">Início</a><span>/</span>Ferramentas</nav>\n  <div class=\"atlas-page-head\"><span class=\"atlas-eyebrow\">Atlas Studio</span><h1>{{ heading_title|default('Fluxa') }}</h1><p>Orquestração de fluxos e integrações entre sistemas internos.</p></div>\n  <div class=\"atlas-grid\" style=\"grid-template-columns:minmax(0,1fr) 290px;align-items:start\">\n    <div>\n      <div class=\"atlas-prose\">\n        <h2>Para que serve</h2><p>Conecta formulários, ERPs e serviços internos em fluxos auditáveis, com retentativa e registro de cada execução.</p>\n        <h2>Quando recomendamos</h2><p>Quando o time tem tarefas repetitivas entre sistemas e precisa de rastreabilidade sem criar mais um sistema para manter.</p>\n      </div>\n      <div class=\"atlas-prose\"><p>{{ description|default('') }}</p></div>\n    </div>\n    <aside class=\"atlas-aside\"><h3>Links úteis</h3><a href=\"{{ nav_about|default('#servicos') }}\">Nossos serviços</a><a href=\"{{ nav_portfolio|default('#projetos') }}\">Projetos selecionados</a><a href=\"{{ nav_blog|default('#blog') }}\">Blog</a><a href=\"{{ nav_contact|default('#contato') }}\">Contato</a><a class=\"atlas-btn atlas-btn-primary\" href=\"{{ nav_quote|default('#contato') }}\">Solicitar proposta</a></aside>\n  </div>\n</div></div>\n<div class=\"atlas-wrap\" style=\"padding-top:18px;padding-bottom:84px\">\n  <div class=\"atlas atlas-cta\">\n    <div><h2>Pronto para tirar a ideia do papel?</h2>\n      <p>Conte o objetivo do projeto e receba uma proposta com escopo, prazo e investimento estimado.</p></div>\n    <a class=\"atlas-btn\" href=\"mailto:contato@atlasstudio.example\">Falar com o time</a>\n  </div>\n</div>\n{{ footer }}\n",
+            "checkout/quote": "{# Atlas Studio — pagina interna #}\n{% include 'partial/theme-scene.twig' %}\n{{ header }}\n<div class=\"atlas atlas-page\"><div class=\"atlas-wrap\">\n<nav class=\"atlas-crumb\" aria-label=\"Trilha\"><a href=\"{{ home|default('/') }}\">Início</a><span>/</span>Orçamento</nav>\n  <div class=\"atlas-page-head\"><span class=\"atlas-eyebrow\">Atlas Studio</span><h1>Solicitar proposta</h1><p>Preencha o briefing e receba escopo, prazo e investimento estimado.</p></div>\n  <div class=\"atlas-grid\" style=\"grid-template-columns:minmax(0,1fr) 290px;align-items:start\">\n    <div>\n      <div class=\"atlas-prose\">\n        <h2>O que preparar</h2><p>Objetivo do projeto, público, prazo desejado, sistemas envolvidos e faixa de investimento. Não precisa ter tudo definido: a primeira conversa existe justamente para isso.</p>\n        <h2>Como funciona</h2><p>Em até um dia útil respondemos com perguntas de alinhamento. Depois agendamos uma conversa de 40 minutos e enviamos a proposta em até cinco dias úteis.</p>\n      </div>\n      <a class=\"atlas-btn atlas-btn-primary\" href=\"mailto:contato@atlasstudio.example\">Enviar briefing por e-mail</a>\n    </div>\n    <aside class=\"atlas-aside\"><h3>Links úteis</h3><a href=\"{{ nav_about|default('#servicos') }}\">Nossos serviços</a><a href=\"{{ nav_portfolio|default('#projetos') }}\">Projetos selecionados</a><a href=\"{{ nav_blog|default('#blog') }}\">Blog</a><a href=\"{{ nav_contact|default('#contato') }}\">Contato</a><a class=\"atlas-btn atlas-btn-primary\" href=\"{{ nav_quote|default('#contato') }}\">Solicitar proposta</a></aside>\n  </div>\n</div></div>\n<div class=\"atlas-wrap\" style=\"padding-top:18px;padding-bottom:84px\">\n  <div class=\"atlas atlas-cta\">\n    <div><h2>Pronto para tirar a ideia do papel?</h2>\n      <p>Conte o objetivo do projeto e receba uma proposta com escopo, prazo e investimento estimado.</p></div>\n    <a class=\"atlas-btn\" href=\"mailto:contato@atlasstudio.example\">Falar com o time</a>\n  </div>\n</div>\n{{ footer }}\n",
+            "error/not_found": "{# Atlas Studio — 404 #}\n{{ header }}\n<div class=\"atlas atlas-page\"><div class=\"atlas-wrap\">\n  <div class=\"atlas-404\"><div class=\"atlas-404-code\">{{ text_code|default('404') }}</div>\n    <h1>{{ heading_title|default('Esta página não existe') }}</h1>\n    <p style=\"color:var(--at-muted);max-width:52ch;margin:0 auto 26px\">{{ text_error|default('O endereço mudou ou o conteúdo foi arquivado. Veja abaixo os caminhos mais úteis para continuar.') }}</p>\n    <a class=\"atlas-btn atlas-btn-primary\" href=\"{{ home|default('/') }}\">{{ button_continue|default('Voltar ao início') }}</a>\n    <div class=\"atlas-grid atlas-grid--3\" style=\"margin-top:56px;text-align:left\">\n      <a class=\"atlas-card\" href=\"{{ nav_about|default('#servicos') }}\"><h3>Serviços</h3><p>Como podemos ajudar seu produto.</p></a>\n      <a class=\"atlas-card\" href=\"{{ nav_portfolio|default('#projetos') }}\"><h3>Projetos</h3><p>Cases e resultados recentes.</p></a>\n      <a class=\"atlas-card\" href=\"{{ nav_contact|default('#contato') }}\"><h3>Contato</h3><p>Fale diretamente com o time.</p></a>\n    </div>\n  </div>\n</div></div>\n{{ footer }}\n"
+        },
+        "conditions": {
+            "version": 1,
+            "rules": [
+                {
+                    "id": "atlas_home_particles",
+                    "when": {
+                        "field": "route",
+                        "op": "eq",
+                        "value": "common/home"
+                    },
+                    "then": {
+                        "scene": "hero-particles",
+                        "three": {
+                            "enabled": true,
+                            "scene": "hero-particles",
+                            "slot": "hero",
+                            "count": 520,
+                            "color": "#4338ca",
+                            "speed": 0.06
+                        }
+                    }
+                },
+                {
+                    "id": "atlas_portfolio_3d",
+                    "when": {
+                        "field": "route",
+                        "op": "in",
+                        "value": [
+                            "catalog/project_list",
+                            "catalog/project_info"
+                        ]
+                    },
+                    "then": {
+                        "scene": "portfolio-3d",
+                        "three": {
+                            "enabled": true,
+                            "scene": "portfolio-3d",
+                            "slot": "home_top",
+                            "count": 500,
+                            "color": "#22d3ee",
+                            "speed": 0.06
+                        }
+                    }
+                },
+                {
+                    "id": "atlas_tools_3d",
+                    "when": {
+                        "field": "route",
+                        "op": "in",
+                        "value": [
+                            "tool/tool_list",
+                            "tool/tool_info"
+                        ]
+                    },
+                    "then": {
+                        "scene": "tools-3d",
+                        "three": {
+                            "enabled": true,
+                            "scene": "tools-3d",
+                            "slot": "home_top",
+                            "count": 350,
+                            "color": "#f59e0b",
+                            "speed": 0.08
+                        }
+                    }
+                },
+                {
+                    "id": "atlas_not_found",
+                    "when": {
+                        "field": "route",
+                        "op": "eq",
+                        "value": "error/not_found"
+                    },
+                    "then": {
+                        "scene": "not-found",
+                        "three": {
+                            "enabled": true,
+                            "scene": "not-found",
+                            "slot": "footer_top",
+                            "count": 200,
+                            "color": "#94a3b8",
+                            "speed": 0.04
+                        }
+                    }
+                },
+                {
+                    "id": "atlas_mobile_lite",
+                    "when": {
+                        "field": "mobile",
+                        "op": "eq",
+                        "value": true
+                    },
+                    "then": {
+                        "classes": [
+                            "atlas-scene-lite"
+                        ],
+                        "three": {
+                            "enabled": true,
+                            "scene": "hero-particles",
+                            "slot": "hero",
+                            "count": 180,
+                            "color": "#4338ca",
+                            "speed": 0.04
+                        }
+                    }
+                }
+            ]
+        },
+        "three": {
+            "enabled": true,
+            "scene": "hero-particles",
+            "slot": "hero",
+            "count": 520,
+            "color": "#4338ca",
+            "speed": 0.06
+        },
+        "tokens": {
+            "font_family": "system",
+            "font_size": "16",
+            "font_scale": "1.250",
+            "line_height": "1.65",
+            "font_weight": "400",
+            "heading_weight": "750",
+            "space_unit": "8",
+            "density": "comfortable",
+            "content_width": "1140",
+            "radius": "16",
+            "radius_lg": "24",
+            "border_width": "1",
+            "shadow": "2",
+            "color_text": "#101828",
+            "color_muted": "#52627a",
+            "color_surface": "#ffffff",
+            "color_primary": "#4338ca",
+            "focus_ring": "#0ea5e9",
+            "dark_text": "#dee2e6",
+            "dark_muted": "#9aa4ae",
+            "dark_surface": "#0d1526",
+            "dark_primary": "#a5b4fc"
+        },
+        "parent": "",
+        "kaz_scene": {
+            "version": 1,
+            "canvas": {
+                "w": 960,
+                "h": 540,
+                "grid": 8
+            },
+            "layers": [
+                {
+                    "id": "atlas3d-01",
+                    "kind": "rect",
+                    "role": "primary",
+                    "x": 40,
+                    "y": 40,
+                    "w": 420,
+                    "h": 200,
+                    "fill": "#4338ca",
+                    "radius": 20,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-02",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 60,
+                    "y": 62,
+                    "w": 380,
+                    "h": 46,
+                    "fill": "#ffffff",
+                    "radius": 0,
+                    "text": "Atlas Studio 3D",
+                    "fontSize": 32,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-03",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 60,
+                    "y": 118,
+                    "w": 380,
+                    "h": 34,
+                    "fill": "#ffffff",
+                    "radius": 0,
+                    "text": "Cena declarativa por rota",
+                    "fontSize": 18,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-04",
+                    "kind": "button",
+                    "role": "component",
+                    "x": 60,
+                    "y": 178,
+                    "w": 220,
+                    "h": 44,
+                    "fill": "#0ea5e9",
+                    "radius": 11,
+                    "text": "Ver projetos",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-05",
+                    "kind": "card",
+                    "role": "surface",
+                    "x": 480,
+                    "y": 40,
+                    "w": 440,
+                    "h": 200,
+                    "fill": "#f5f7fc",
+                    "radius": 20,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-06",
+                    "kind": "rect",
+                    "role": "none",
+                    "x": 500,
+                    "y": 60,
+                    "w": 180,
+                    "h": 120,
+                    "fill": "#22d3ee",
+                    "radius": 12,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-07",
+                    "kind": "rect",
+                    "role": "none",
+                    "x": 694,
+                    "y": 60,
+                    "w": 206,
+                    "h": 120,
+                    "fill": "#4338ca",
+                    "radius": 12,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-08",
+                    "kind": "rect",
+                    "role": "none",
+                    "x": 500,
+                    "y": 194,
+                    "w": 400,
+                    "h": 28,
+                    "fill": "#ffffff",
+                    "radius": 8,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-09",
+                    "kind": "section",
+                    "role": "section",
+                    "x": 40,
+                    "y": 264,
+                    "w": 280,
+                    "h": 220,
+                    "fill": "#0d1526",
+                    "radius": 20,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-10",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 58,
+                    "y": 284,
+                    "w": 244,
+                    "h": 40,
+                    "fill": "#ffffff",
+                    "radius": 0,
+                    "text": "hero-particles",
+                    "fontSize": 20,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-11",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 58,
+                    "y": 332,
+                    "w": 244,
+                    "h": 34,
+                    "fill": "#dee2e6",
+                    "radius": 0,
+                    "text": "520 particulas · 0.06",
+                    "fontSize": 14,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-12",
+                    "kind": "card",
+                    "role": "surface",
+                    "x": 340,
+                    "y": 264,
+                    "w": 280,
+                    "h": 220,
+                    "fill": "#f5f7fc",
+                    "radius": 20,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-13",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 358,
+                    "y": 284,
+                    "w": 244,
+                    "h": 40,
+                    "fill": "#101828",
+                    "radius": 0,
+                    "text": "portfolio-3d",
+                    "fontSize": 20,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-14",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 358,
+                    "y": 332,
+                    "w": 244,
+                    "h": 34,
+                    "fill": "#52627a",
+                    "radius": 0,
+                    "text": "Quadros em profundidade",
+                    "fontSize": 14,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-15",
+                    "kind": "card",
+                    "role": "surface",
+                    "x": 640,
+                    "y": 264,
+                    "w": 280,
+                    "h": 220,
+                    "fill": "#f5f7fc",
+                    "radius": 20,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "atlas3d-16",
+                    "kind": "button",
+                    "role": "component",
+                    "x": 660,
+                    "y": 420,
+                    "w": 240,
+                    "h": 48,
+                    "fill": "#f59e0b",
+                    "radius": 11,
+                    "text": "Solicitar proposta",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                }
+            ]
+        }
+    },
+    "meta": {
+        "generator": "ReamurCMS",
+        "schema": 1,
+        "source": "draft"
+    },
+    "checksum": "59ca4cd1ae312abd4c5a5771ed9981335d90f6fd35cc30e3aa8f233c1fb4adbf"
+}
