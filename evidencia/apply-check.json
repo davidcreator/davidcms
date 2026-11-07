@@ -1,0 +1,6 @@
+{
+ "A": "git apply --check OK",
+ "B": "git apply --check OK",
+ "aplicados": "ambos aplicados sem conflito",
+ "php_token_parse": "4/4"
+}

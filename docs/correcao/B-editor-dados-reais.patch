@@ -1,0 +1,37 @@
+--- a/dev/admin/controller/design/theme.php
++++ b/dev/admin/controller/design/theme.php
+@@ -73,6 +73,13 @@
+         $theme=$id ? $this->model_design_theme->getTheme($id) : [];
+         if ($id && !$theme) { $this->response->redirect($this->url->link('design/theme')); return; }
+         $config=json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true); if (!is_array($config)) $config=[];
++        // BL: quando o rascunho nao traz templates, o dado real do tema esta
++        // no payload publicado. Sem isto o editor caia nos .twig do disco.
++        if (!isset($config['templates']) || !is_array($config['templates']) || $config['templates']===[]) {
++            $published=json_decode((string)($theme['published_config']??$theme['config']??'{}'),true);
++            if (is_array($published) && isset($published['templates']) && is_array($published['templates']))
++                $config['templates']=$published['templates'];
++        }
+         $data=['heading_title'=>$this->language->get('heading_title'),'text_intro'=>$this->language->get('text_editor_scope'),'text_name'=>$this->language->get('text_name'),'text_slug'=>$this->language->get('text_slug'),'text_colors'=>$this->language->get('text_colors'),'text_primary'=>$this->language->get('text_primary'),'text_surface'=>$this->language->get('text_surface'),'text_scene'=>$this->language->get('text_scene'),'text_no_scene'=>$this->language->get('text_no_scene'),'button_save'=>$this->language->get('button_save'),'button_back'=>$this->language->get('button_back'),'error'=>'','can_modify'=>$this->user->hasPermission('modify','design/theme'),'csrf_token'=>\Reamur\System\Library\Security\Csrf::token($this->session),'action'=>$this->url->link('design/theme.edit'.($id?'|'.$id:'')),'cancel'=>$this->url->link('design/theme'),'name'=>(string)($theme['name']??''),'slug'=>(string)($theme['slug']??''),'primary'=>(string)($config['primary']??'#2563eb'),'surface'=>(string)($config['surface']??'#ffffff'),'scene'=>(string)($config['scene']??''),'templates'=>(array)($config['templates']??[])];
+         // F12-01: condicoes declarativas + Three.js por tema.
+         $engine=$this->theme_condition_engine;
+@@ -366,7 +373,8 @@
+         $data['preview_template']=in_array($focusPreview,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true)?$focusPreview:'common/home';
+         $data['preview_theme_id']=$id;
+         $data['scenes']=[['id'=>'','name'=>$this->language->get('text_no_scene')],['id'=>'hero-particles','name'=>'Hero particles'],['id'=>'portfolio-3d','name'=>'Portfolio 3D'],['id'=>'tools-3d','name'=>'Tools 3D'],['id'=>'not-found','name'=>'Not found']];
+-        $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[]; $data['template_keys'] = \Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS; $focusTemplate=$this->request->get['focus_template']??''; $data['focus_template']=is_string($focusTemplate)&&in_array($focusTemplate,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true)?$focusTemplate:''; $data['template_sources']=$data['templates']; foreach($data['template_keys'] as $templateKey) { if (!isset($data['template_sources'][$templateKey])) { $templateFile=DIR_SYSTEM.'../catalog/view/template/'.$templateKey.'.twig'; if (is_file($templateFile)) $data['template_sources'][$templateKey]=(string)file_get_contents($templateFile); } } $data['preview_links']=[]; foreach($data['template_keys'] as $key) $data['preview_links'][$key]=$this->url->link('design/theme.preview'.($id?'|'.$id:''),'template='.rawurlencode($key)); foreach($data['revisions'] as &$revision) $revision['restore']=$this->url->link('design/theme.restore|'.$id.'|'.(int)$revision['revision_id']); unset($revision);
++        $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[]; $data['template_keys'] = \Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS; $focusTemplate=$this->request->get['focus_template']??''; $data['focus_template']=is_string($focusTemplate)&&in_array($focusTemplate,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true)?$focusTemplate:''; $data['template_saved_keys']=array_keys((array)$data['templates']);
++        $data['template_sources']=$data['templates']; foreach($data['template_keys'] as $templateKey) { if (!isset($data['template_sources'][$templateKey])) { $templateFile=DIR_SYSTEM.'../catalog/view/template/'.$templateKey.'.twig'; if (is_file($templateFile)) $data['template_sources'][$templateKey]=(string)file_get_contents($templateFile); } } $data['preview_links']=[]; foreach($data['template_keys'] as $key) $data['preview_links'][$key]=$this->url->link('design/theme.preview'.($id?'|'.$id:''),'template='.rawurlencode($key)); foreach($data['revisions'] as &$revision) $revision['restore']=$this->url->link('design/theme.restore|'.$id.'|'.(int)$revision['revision_id']); unset($revision);
+         // F13-C: Loader::view() nao mescla o idioma; publica todas as chaves
+         // carregadas (sem sobrescrever valores calculados) para nao deixar rotulos vazios.
+ 
+--- a/dev/admin/view/template/design/kaz_theme_editor.twig
++++ b/dev/admin/view/template/design/kaz_theme_editor.twig
+@@ -504,7 +504,7 @@
+           <div class="kaz-module__head"><h3>Templates</h3><span>25 templates Twig</span>
+             <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+           <div class="card"><div class="card-header"><h2 class="h5 mb-0">{{ text_template_editor }}</h2><p class="mb-0 text-muted">{{ text_template_help }}</p></div><div class="card-body">
+-{% for key in template_keys %}<details class="mb-3"{% if key == focus_template %} open{% endif %}><summary><code>{{ key }}.twig</code></summary><textarea class="form-control font-monospace mt-2" name="templates[{{ key }}]" rows="14" maxlength="131072" spellcheck="false">{{ template_sources[key] ?? '' }}</textarea><a class="btn btn-sm btn-outline-secondary mt-2" href="{{ preview_links[key] }}" target="theme-preview">{{ text_preview }}</a></details>{% endfor %}
++{% for key in template_keys %}<details class="mb-3"{% if key == focus_template %} open{% endif %}><summary><code>{{ key }}.twig</code></summary><textarea class="form-control font-monospace mt-2" {% if key in template_saved_keys|default([]) %}name="templates[{{ key }}]"{% else %}disabled aria-label="Fonte nativa (nao faz parte do tema)"{% endif %} rows="14" maxlength="131072" spellcheck="false">{{ template_sources[key] ?? '' }}</textarea>{% if key not in template_saved_keys|default([]) %}<p class="form-text">Fonte nativa do disco — não pertence a este tema e não é salva.</p>{% endif %}<a class="btn btn-sm btn-outline-secondary mt-2" href="{{ preview_links[key] }}" target="theme-preview">{{ text_preview }}</a></details>{% endfor %}
+ </div></div>
+         </section>
+         <p class="kaz-modules__noscript">Com JavaScript desativado, todos os módulos são exibidos empilhados — nenhum campo fica inacessível.</p>

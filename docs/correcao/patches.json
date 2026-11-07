@@ -1,0 +1,22 @@
+{
+ "head": "3219ccae80550f81510068c311a8afcc1de8d71a",
+ "A": {
+  "arquivos": [
+   "dev/catalog/controller/common/home.php",
+   "dev/catalog/controller/startup/theme.php",
+   "dev/catalog/view/template/common/home.twig",
+   "dev/catalog/view/template/partial/theme-scene-block.twig",
+   "dev/system/library/template/twig.php"
+  ],
+  "edicoes": 6,
+  "bytes": 3566
+ },
+ "B": {
+  "arquivos": [
+   "dev/admin/controller/design/theme.php",
+   "dev/admin/view/template/design/kaz_theme_editor.twig"
+  ],
+  "edicoes": 3,
+  "bytes": 6963
+ }
+}

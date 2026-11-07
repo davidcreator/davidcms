@@ -1,0 +1,60 @@
+--- a/dev/catalog/controller/common/home.php
++++ b/dev/catalog/controller/common/home.php
+@@ -365,8 +365,6 @@
+             $cmsHomeSections = $this->theme_section_registry->plan($themeSections);
+         }
+         $data['cms_home_sections'] = $cmsHomeSections;
+-        // Frente AB: blocos da cena desenhada no editor (escalares allowlistados).
+-        $data['theme_scene_view'] = (array)$this->config->get('catalog_theme_scene_view', []);
+         $activeHomeSections = $cmsHomeSections;
+         $data['has_3d'] = (in_array('hero', $activeHomeSections, true) && $threeJs['hero_enabled'])
+             || (in_array('portfolio', $activeHomeSections, true) && $portfolioEnabled)
+--- a/dev/catalog/controller/startup/theme.php
++++ b/dev/catalog/controller/startup/theme.php
+@@ -152,7 +152,6 @@
+         $this->config->set('catalog_theme_scene', $scene);
+         // Frente AB: cena do editor -> CSS allowlistado + camadas renderizaveis.
+         $this->config->set('catalog_theme_scene_css', $snapshot['scene_css']);
+-        $this->config->set('catalog_theme_scene_view', $snapshot['scene_view']);
+         $this->config->set('catalog_theme_three', $three);
+         $this->config->set('catalog_theme_tokens', $tokens);
+         $this->config->set('catalog_theme_vars', $snapshot['vars']);
+--- a/dev/catalog/view/template/common/home.twig
++++ b/dev/catalog/view/template/common/home.twig
+@@ -1,7 +1,6 @@
+ {# Estrutura permitida vem do contrato CMS PageLayout; includes de domínio permanecem fixos. #}
+ {{ header }}
+ <main>
+-{% include 'partial/theme-scene-block.twig' %}
+ {% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'home_top' %}{% include 'partial/theme-scene.twig' %}{% endif %}
+ {% for section in cms_home_sections %}
+   {% if section == 'hero' %}{% include 'partial/hero-3d.twig' %}
+--- a/dev/catalog/view/template/partial/theme-scene-block.twig
++++ b/dev/catalog/view/template/partial/theme-scene-block.twig
+@@ -1,7 +1,7 @@
+ {# Frente AB — a cena desenhada no KAZTheme-Editor, publicada no Catalogo.
+    Todos os valores sao escalares allowlistados gerados por ThemeSceneCss.
+    O texto do usuario passa pelo autoescape do Twig: nada e marcado como seguro. #}
+-{% if theme_scene_view.enabled|default(false) %}
++{% if theme_scene_preview|default(false) and theme_scene_view.enabled|default(false) %}
+ <section class="rms-scene" aria-label="Composição visual do tema">
+   <div class="rms-scene__stage" style="aspect-ratio: {{ theme_scene_view.canvas.w|default(960) }} / {{ theme_scene_view.canvas.h|default(540) }};">
+     {% for l in theme_scene_view.layers %}
+--- a/dev/system/library/template/twig.php
++++ b/dev/system/library/template/twig.php
+@@ -231,6 +231,7 @@
+                mas theme_scene_view.enabled caia em default(false) e a cena
+                desenhada no editor NAO aparecia na previa. */
+             'theme_scene_view'=>self::previewSceneView($sceneView),
++            'theme_scene_preview'=>true,
+             'title'=>'Theme preview',
+             'heading_title'=>'Theme preview', 'content'=>'Safe sample content', 'description'=>'Safe sample content',
+             'header'=>'', 'footer'=>'', 'cms_home_content'=>'', 'home'=>'#home', 'button_back_home'=>'Home',
+@@ -259,6 +260,7 @@
+             unset($extra['header'], $extra['footer']);
+             $context = array_replace($context, $extra);
+             $context['theme_scene_view'] = self::previewSceneView($sceneView);
++            $context['theme_scene_preview'] = true;
+         }
+         return $env->render($key . '.twig', $context);
+     }

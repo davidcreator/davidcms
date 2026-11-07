@@ -1,0 +1,5 @@
+OK   home.php · 3542 tokens · 18859 bytes
+OK   theme.php · 2124 tokens · 13212 bytes
+OK   theme.php · 14968 tokens · 79682 bytes
+OK   twig.php · 3495 tokens · 17871 bytes
+sync /tmp/bk_patch: [object Object]

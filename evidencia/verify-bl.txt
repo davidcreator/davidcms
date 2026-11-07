@@ -1,0 +1,66 @@
+-- 1. Diagnóstico e documentação --
+OK   presente: DIAGNOSTICO-BL.md
+OK   presente: GUIA-BL.md
+OK   presente: RELATORIO-FINAL-BL.md
+OK   presente: INDICE-BL.md
+OK   presente: docs/correcao/A-vazamento-failclosed.patch
+OK   presente: docs/correcao/B-editor-dados-reais.patch
+OK   presente: docs/correcao/patches.json
+OK   presente: tools/diagnostico-tema.sql
+OK   presente: evidencia/model-harness.txt
+OK   presente: evidencia/cadeia-bl.json
+OK   doc cita: draft_config
+OK   doc cita: published_config
+OK   doc cita: activate()
+OK   doc cita: theme.php:369
+OK   doc cita: template_sources
+OK   doc cita: git apply
+OK   doc cita: Ativar
+OK   doc cita: release_approved: false
+OK   doc cita: BLOCKED_NOT_RUN
+OK   doc cita: PENDING_DECISION
+OK   doc cita: escrita do agente no GitHub
+OK   não afirma release
+-- 2. Patch A (fail-closed) --
+OK   gate theme_scene_preview no partial
+OK   flag no twig.php (2 pontos)
+OK   remove include do home.twig
+OK   remove theme_scene_view do home.php
+OK   remove set do startup
+OK   5 arquivos no patch A
+OK   patch A não remove o partial
+OK   patch A não toca Admin/contratos
+-- 3. Patch B (dados reais) --
+OK   herda templates do publicado
+OK   expoe template_saved_keys
+OK   fonte nativa disabled
+OK   fonte nativa SEM name=
+OK   2 arquivos no patch B
+OK   patch B não altera buildDraftConfig/save/activate
+-- 4. Prova com model real e SQL --
+OK   10 OK / 0 FALHAS
+OK   harness: apos import(): draft SEM include
+OK   harness: published AINDA COM include
+OK   harness: salvar no editor REINTRODUZ o include
+OK   harness: activate() copia draft -> published/config
+OK   harness: gate fail-closed BLOQUEIA no Catalogo
+OK   harness: gate PERMITE na previa do Admin
+OK   SQL somente SELECT
+OK   SQL cobre os 3 payloads
+OK   SQL aponta include no publicado
+OK   cadeia com 8 elos · 8
+OK   HEAD da cadeia
+-- 5. Temas corrigidos (inalterados desde a BK) --
+OK   presente: docs/temas/David-Creator.reamurtheme.json
+OK     David-Creator: 25 fontes / sem include
+OK     David-Creator: kaz_scene preservado
+OK   presente: docs/temas/Atlas-Studio.reamurtheme.json
+OK     Atlas-Studio: 25 fontes / sem include
+OK     Atlas-Studio: kaz_scene preservado
+OK   presente: docs/temas/Reamur-Reference.reamurtheme.json
+OK     Reamur-Reference: 25 fontes / sem include
+OK     Reamur-Reference: kaz_scene preservado
+OK   presente: docs/temas/Reamur-ThreeJS-Reference.reamurtheme.json
+OK     Reamur-ThreeJS-Reference: 25 fontes / sem include
+OK     Reamur-ThreeJS-Reference: kaz_scene preservado
+CJS BL: 60 OK / 0 FALHAS

@@ -1,0 +1,54 @@
+{
+ "head": "3219ccae80550f81510068c311a8afcc1de8d71a",
+ "diagnostico": "repo != banco; patch BK nao aplicado; save() so draft; editor cai no disco",
+ "elos": [
+  {
+   "n": 1,
+   "arquivo": "dev/admin/controller/design/theme.php",
+   "linha": 73,
+   "fato": "edit() le draft_config"
+  },
+  {
+   "n": 2,
+   "arquivo": "dev/admin/model/design/theme.php",
+   "linha": 28,
+   "fato": "save(id) UPDATE apenas draft_config"
+  },
+  {
+   "n": 3,
+   "arquivo": "dev/admin/model/design/theme.php",
+   "linha": 36,
+   "fato": "activate() published_config = draft_config, config = draft_config, status=1"
+  },
+  {
+   "n": 4,
+   "arquivo": "dev/admin/controller/design/theme.php",
+   "linha": 415,
+   "fato": "import() com id=0 cria registro status=0; com id grava so draft"
+  },
+  {
+   "n": 5,
+   "arquivo": "dev/catalog/controller/startup/theme.php",
+   "linha": 79,
+   "fato": "source = published; getThemeMap('published')"
+  },
+  {
+   "n": 6,
+   "arquivo": "dev/catalog/controller/startup/theme.php",
+   "linha": 155,
+   "fato": "publica catalog_theme_scene_view a partir do snapshot"
+  },
+  {
+   "n": 7,
+   "arquivo": "dev/catalog/view/template/common/home.twig",
+   "linha": 4,
+   "fato": "inclui partial/theme-scene-block.twig no topo do main"
+  },
+  {
+   "n": 8,
+   "arquivo": "dev/admin/controller/design/theme.php",
+   "linha": 369,
+   "fato": "template_sources completa lacunas com .twig do disco; textareas tem name=templates[...]"
+  }
+ ]
+}
