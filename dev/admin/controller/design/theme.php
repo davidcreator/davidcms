@@ -365,7 +365,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $focusPreview=(string)($this->request->get['focus_template']??'');
         $data['preview_template']=in_array($focusPreview,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true)?$focusPreview:'common/home';
         $data['preview_theme_id']=$id;
-        $data['scenes']=[['id'=>'','name'=>$this->language->get('text_no_scene')],['id'=>'hero-particles','name'=>'Hero particles'],['id'=>'portfolio-3d','name'=>'Portfolio 3D'],['id'=>'tools-3d','name'=>'Tools 3D'],['id'=>'not-found','name'=>'Not found']];
+        $data['scenes']=[['id'=>'','name'=>$this->language->get('text_no_scene')],['id'=>'hero-particles','name'=>'Hero particles'],['id'=>'portfolio-3d','name'=>'Portfolio 3D'],['id'=>'tools-3d','name'=>'Tools 3D'],['id'=>'not-found','name'=>'Not found'],['id'=>'david-universe','name'=>'David Universe (nave + orbes)']];
         $data['revisions']=$id?$this->model_design_theme->getRevisions($id):[]; $data['template_keys'] = \Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS; $focusTemplate=$this->request->get['focus_template']??''; $data['focus_template']=is_string($focusTemplate)&&in_array($focusTemplate,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true)?$focusTemplate:''; $data['template_sources']=$data['templates']; foreach($data['template_keys'] as $templateKey) { if (!isset($data['template_sources'][$templateKey])) { $templateFile=DIR_SYSTEM.'../catalog/view/template/'.$templateKey.'.twig'; if (is_file($templateFile)) $data['template_sources'][$templateKey]=(string)file_get_contents($templateFile); } } $data['preview_links']=[]; foreach($data['template_keys'] as $key) $data['preview_links'][$key]=$this->url->link('design/theme.preview'.($id?'|'.$id:''),'template='.rawurlencode($key)); foreach($data['revisions'] as &$revision) $revision['restore']=$this->url->link('design/theme.restore|'.$id.'|'.(int)$revision['revision_id']); unset($revision);
         // F13-C: Loader::view() nao mescla o idioma; publica todas as chaves
         // carregadas (sem sobrescrever valores calculados) para nao deixar rotulos vazios.
@@ -655,7 +655,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         }
         $normalized=$engine->normalize($conditions);
         $out=['primary'=>$primary,'surface'=>$surface,
-            'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found'],true)?(string)($post['scene']??''):'',
+            'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found','david-universe'],true)?(string)($post['scene']??''):'',
             'templates'=>$safeTemplates,
             'conditions'=>['version'=>1,'rules'=>$normalized['rules']],
             'three'=>$three,'tokens'=>$tokensNormalized,'parent'=>$parent];

@@ -14,7 +14,7 @@
  */
 namespace Reamur\Catalog\Controller\Startup;
 class Theme extends \Reamur\System\Engine\Controller {
-    private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found'];
+    private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found', 'david-universe'];
 
     public function index(): void {
         $this->load->model('common/theme');

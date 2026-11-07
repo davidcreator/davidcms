@@ -50,7 +50,7 @@ final class ConditionEngine {
     ];
 
     /** Cenas registradas em three/main.js — espelha a allowlist do runtime. */
-    private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found'];
+    private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found', 'david-universe'];
 
     /** Slots onde o shell confiavel pode emitir o container [data-scene]. */
     private const SLOTS = ['hero', 'home_top', 'footer_top'];

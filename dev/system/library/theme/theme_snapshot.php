@@ -10,7 +10,7 @@
 namespace Reamur\System\Library\Theme;
 
 final class ThemeSnapshot {
-    private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found'];
+    private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found', 'david-universe'];
     private ConditionEngine $engine;
     private TokenRegistry $tokens;
     private ThemePackage $package;

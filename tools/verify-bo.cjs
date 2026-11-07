@@ -207,5 +207,22 @@ ok('AssetManifest publica o modulo novo',
 ok('header has_3d provado pelo snapshot',
    /OK   header has_3d derivado do tema/.test(read('evidencia/integracao-bo.log')));
 
+// ── r4: alternativas sem Python (Windows PowerShell / duplo clique / FTP) ──
+const ps1 = read('instalar-bo.ps1');
+ok('instalador PowerShell presente', has('instalar-bo.ps1') && /-Apply/.test(ps1) &&
+   /david-universe\.js/.test(ps1) && /\$PSScriptRoot/.test(ps1));
+ok('PowerShell lista os mesmos 10 arquivos', (ps1.match(/^\s*'dev\/[^']+'/gm) || []).length === 10);
+ok('PowerShell sem acentos (codepage Windows)', /^[\x00-\x7F]*$/.test(ps1));
+ok('PowerShell chaves balanceadas', (() => {
+   const s = ps1.replace(/'[^'\n]*'|"[^"\n]*"|#[^\n]*/g, '');
+   return (s.match(/{/g)||[]).length === (s.match(/}/g)||[]).length;
+})());
+ok('atalho INSTALAR.bat presente', has('INSTALAR.bat') &&
+   /instalar-bo\.ps1/.test(read('INSTALAR.bat')) && /-ExecutionPolicy Bypass/.test(read('INSTALAR.bat')));
+ok('guia de copia manual (10 linhas + item novo)', (() => {
+   const m = read('COPIAR-MANUALMENTE.md');
+   return (m.match(/^\| \d+ \| `/gm) || []).length === 10 && /NOVO/.test(m);
+})());
+
 console.log(`\nBO verify: ${P} OK / ${F} FALHAS\n`);
 process.exit(F ? 1 : 0);

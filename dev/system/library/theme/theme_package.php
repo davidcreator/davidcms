@@ -36,7 +36,7 @@ final class ThemePackage {
     public const SCENE_MAX_BYTES = 65536;
     // F13-H: `schedule` e substituido integralmente na heranca (como `conditions`),
     // NAO mesclado por chave: um filho nunca herda metade de uma janela.
-    private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found'];
+    private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found', 'david-universe'];
     private const MAP_KEYS = ['tokens','templates','three','components','media'];
 
     private ConditionEngine $engine;

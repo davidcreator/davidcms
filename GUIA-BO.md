@@ -4,15 +4,30 @@ Ordem recomendada. **Você aplica**; o agente não escreve no GitHub.
 
 ## 0. Caminho mais curto (se o 3D já falhou uma vez)
 
+Escolha **uma** das três formas; fazem a mesma coisa (copiam os **10** arquivos
+e verificam que `scenes/david-universe.js` ficou legível):
+
+**A · Windows, sem Python — duplo clique.** Extraia o ZIP e dê duplo clique em
+`INSTALAR.bat`. Ele pergunta a pasta raiz do davidcms (a que contém `dev`) e
+chama o PowerShell com `Bypass`. Se apareceu
+`Python was not found; ... Microsoft Store`, **é esta a opção**.
+
+**B · PowerShell / terminal.**
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File instalar-bo.ps1 -Repo "C:\xampp\htdocs\davidcms" -Apply
+```
 ```bash
+# macOS / Linux, se tiver Python:
 python3 instalar-bo.py --repo /caminho/para/davidcms --apply
 ```
 
-O instalador copia os **10** arquivos e verifica explicitamente que
-`dev/system/library/three/runtime/three/scenes/david-universe.js` ficou legível.
-Depois: limpe o cache de opcode/Twig, **ative** o tema `david_universe_3d_bo`
-no Admin e abra `verificar-bo.html` (copie para a raiz do site) — ele mostra
-qual dos 5 elos quebrou, sem precisar abrir o Console.
+**C · Sem script nenhum.** Siga `COPIAR-MANUALMENTE.md` (10 pares
+origem → destino, para FTP/cPanel/Gerenciador de Arquivos).
+
+Depois de qualquer uma: limpe o cache de opcode/Twig, **ative** o tema
+`david_universe_3d_bo` no Admin e abra `verificar-bo.html` (copie para a raiz
+do site) — ele mostra qual dos 5 elos quebrou, sem precisar abrir o Console.
 
 > **Se os objetos 3D não aparecerem**, pare aqui e abra `DIAGNOSTICO-3D.md`.
 > Na maioria dos casos é o `PATCH-BO.diff` aplicado pela metade: `main.js` foi

@@ -55,6 +55,7 @@ class Home extends \Reamur\System\Engine\Controller {
             'hero-particles' => 'three_hero_enabled',
             'portfolio-3d' => 'three_portfolio_enabled',
             'tools-3d' => 'three_tools_enabled',
+            'david-universe' => 'three_hero_enabled',
         ];
         if (isset($themeSceneSettings[$themeScene])) $siteInfo[$themeSceneSettings[$themeScene]] = '1';
         $threeJs = $this->three_scene_config->runtime($siteInfo);

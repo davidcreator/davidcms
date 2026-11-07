@@ -141,6 +141,33 @@ Correções de entrega (nenhuma altera o CMS em produção):
 - `verificar-bo.html`: diagnóstico visual same-origin; busca a home, lê `[data-scene]`/importmap, faz `fetch` nas 6 URLs e aponta o elo quebrado. Reproduzido contra uma prévia sem o módulo → "ELO 3 QUEBRADO · HTTP 404", 0 erros de JS.
 - `tools/bo_integracao.php` + `evidencia/integracao-bo.log` no pacote; verificador ganhou 8 checks novos.
 
+## 4d. Revisão r4 — instalação sem Python (Windows)
+
+Ao aplicar a r3 no Windows, o comando `python3 instalar-bo.py …` retornou
+`Python was not found; run without arguments to install from the Microsoft Store`
+(alias de App Execution Aliases: não há Python instalado). **Não é falha do
+pacote nem do CMS** — é ausência do interpretador. Para não exigir que o usuário
+instale software, a r4 acrescenta três caminhos equivalentes:
+
+- `INSTALAR.bat` — duplo clique, pede a pasta raiz, valida `%REPO%\dev`, chama
+  `powershell.exe -NoProfile -ExecutionPolicy Bypass -File instalar-bo.ps1 -Repo … -Apply`.
+- `instalar-bo.ps1` — PowerShell 5.1+ nativo, ASCII puro (sem acentos para não
+  depender de codepage), mesmos **10** arquivos, mesmas **5 verificações
+  pós-install** (`main.js` importa, `asset_manifest.php` publica, `home.php`
+  mapeia `three_hero_enabled`, módulo novo >10.000 bytes legível, todos os 10
+  presentes) e o mesmo contador `25 OK / 0 FALHAS`. Usa `$PSScriptRoot` para
+  achar `patch\arquivos\` e `Join-Path` parte a parte para converter `/` em `\`.
+- `COPIAR-MANUALMENTE.md` — tabela exata dos 10 pares origem → destino com
+  tamanhos, para FTP/cPanel/Gerenciador de Arquivos, destacando o item 10
+  (`new file mode`) e a checagem direta da URL do módulo no navegador.
+
+Validação estática disponível neste ambiente (Linux, sem `pwsh`): chaves e
+parênteses balanceados (26/26 e 68/68), ASCII puro no `.ps1` e no `.bat`, os
+10 caminhos do `.ps1` existem em `patch/arquivos/`, os 3 needles de conteúdo
+conferem com os arquivos de origem, e o `.bat` referencia o `.ps1` com
+`-Apply`. A execução real do PowerShell **não foi feita aqui** — acontece na
+máquina do usuário. O verificador ganhou 6 checks novos.
+
 ## 5. O que este pacote NÃO é
 
 Não é release, não é deploy, não é migration, não é escrita no GitHub, não é health autenticado, não é veredito visual. **Você aplica** o `PATCH-BO.diff`; o agente não escreveu no repositório.

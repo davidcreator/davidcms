@@ -1,11 +1,13 @@
-# BO-r3 — Nave e interações ThreeJS no ReamurCMS
+# BO-r4 — Nave e interações ThreeJS no ReamurCMS
 
 Pacote de correção da BN. **Recorte B autorizado** (`ask_user caminho = b_catalogo`).
-**r2:** corrigiu os erros `<path> attribute d`. **r3:** provou a integração com as classes PHP reais (25/0), isolou a causa do 3D ausente e trouxe `instalar-bo.py` + `verificar-bo.html` (diagnóstico sem console). Os ZIPs BO e r2 anteriores continuam inalterados.
+**r2:** corrigiu `<path> attribute d`. **r3:** integrou com as classes PHP reais (25/0) e isolou a causa. **r4:** instalação **sem Python** (`INSTALAR.bat` / `instalar-bo.ps1` / `COPIAR-MANUALMENTE.md`) para Windows. Os ZIPs BO, r2 e r3 continuam inalterados.
 
 | O que | Onde |
 |---|---|
-| **3D não aparece? Comece aqui** | `instalar-bo.py --apply` (garante o arquivo novo) e `verificar-bo.html` na raiz do site (diagnóstico visual, sem console) |
+| **3D não aparece? Comece aqui** | `INSTALAR.bat` (duplo clique, sem Python) ou `instalar-bo.ps1 -Apply` — e `verificar-bo.html` na raiz do site (diagnóstico visual, sem console) |
+| **Sem terminal / FTP** | `COPIAR-MANUALMENTE.md` — os 10 pares origem → destino, com o item novo destacado |
+| **Erro `Python was not found ... Microsoft Store`** | É só o Windows sem Python. Não instale nada: use o `.bat` ou a cópia manual. |
 | Entender a causa | `DIAGNOSTICO-3D.md` — 5 elos, causa confirmada, snippet de console, tabela de interpretação |
 | **Comece aqui** | `GUIA-BO.md` — aplicação, importação, teste, rollback |
 | Relatório completo | `RELATORIO-BO.md` — diagnóstico, arquitetura, 26/0 + 49/0 + r2 |

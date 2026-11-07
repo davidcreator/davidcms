@@ -5,7 +5,7 @@ Nao escreve no GitHub, nao aplica no servidor, nao dispara CI/deploy.
 import os,shutil,subprocess,hashlib,json,zipfile
 SRC='/home/user'
 DST='/home/user/bo_pkg_final'
-ZIP='/home/user/entregas/ReamurCMS-Frente-BO-r3-Instalacao-e-Diagnostico.zip'
+ZIP='/home/user/entregas/ReamurCMS-Frente-BO-r4-Windows.zip'
 shutil.rmtree(DST,ignore_errors=True)
 os.makedirs(DST,exist_ok=True)
 os.makedirs(os.path.dirname(ZIP),exist_ok=True)
@@ -30,6 +30,11 @@ cp('bo_docs/verificar-bo.html','diagnostico/verificar-bo.html')
 cp('bo_docs/verificar-bo.html','verificar-bo.html')
 cp('bo_docs/instalar-bo.py','instalar-bo.py')
 cp('bo_docs/instalar-bo.py','diagnostico/instalar-bo.py')
+cp('bo_docs/instalar-bo.ps1','instalar-bo.ps1')
+cp('bo_docs/instalar-bo.ps1','diagnostico/instalar-bo.ps1')
+cp('bo_docs/INSTALAR.bat','INSTALAR.bat')
+cp('bo_docs/COPIAR-MANUALMENTE.md','COPIAR-MANUALMENTE.md')
+cp('bo_docs/COPIAR-MANUALMENTE.md','diagnostico/COPIAR-MANUALMENTE.md')
 put('LEIA-ME.md',open('/home/user/bo_docs/INDICE-BO.md',encoding='utf-8').read())
 
 # ── tema ──────────────────────────────────────────────────────────────

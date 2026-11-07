@@ -8,5 +8,6 @@ import './scenes/hero-particles.js'; // auto-registro via registerScene()
 import './scenes/not-found.js';      // Cena 4 (F3-03): fog na 404
 import './scenes/portfolio-3d.js';   // Cena 3, etapa 2: galeria decorativa do portfólio
 import './scenes/tools-3d.js';       // Cena 5: ícones flutuantes das ferramentas
+import './scenes/david-universe.js'; // BO: nave, orbes e voo por scroll (g3 portada)
 
 boot();

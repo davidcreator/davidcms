@@ -12,8 +12,13 @@ Duas ferramentas novas no pacote, para resolver sem precisar do Console/DevTools
 
 | Arquivo | O que faz |
 |---|---|
-| **`instalar-bo.py`** | Alternativa ao `git apply`: copia os **10** arquivos (incluindo o novo) e **falha alto e claro** se `david-universe.js` não estiver legível ao final. `python3 instalar-bo.py --repo /caminho/do/davidcms --apply`. Testado em réplica limpa: **25/0**. |
+| **`INSTALAR.bat`** ⭐ | **Windows, sem Python, sem terminal:** duplo clique, digite a pasta do davidcms, pronto. Chama o PowerShell com `-ExecutionPolicy Bypass`. |
+| **`instalar-bo.ps1`** | O mesmo em PowerShell puro (já vem no Windows). `powershell -NoProfile -ExecutionPolicy Bypass -File instalar-bo.ps1 -Repo "C:\xampp\htdocs\davidcms" -Apply`. |
+| **`instalar-bo.py`** | Versão Python/macOS/Linux: `python3 instalar-bo.py --repo /caminho/do/davidcms --apply`. Testado em réplica limpa: **25/0**. |
+| **`COPIAR-MANUALMENTE.md`** | Sem script nenhum: tabela dos 10 arquivos para copiar por FTP/cPanel/Gerenciador de Arquivos. |
 | **`verificar-bo.html`** | Coloque na **raiz do site** e abra `https://seusite/verificar-bo.html`. Busca a home, lê `[data-scene]`/importmap, faz `fetch` nas 6 URLs do runtime e mostra uma tabela verde/vermelho + o veredito do elo quebrado. **Sem console, sem DevTools, somente-leitura.** |
+
+> **Se apareceu `Python was not found; run without arguments to install from the Microsoft Store`**: é só o Windows sem Python. **Não precisa instalar nada.** Use o `INSTALAR.bat` (duplo clique) ou o `COPIAR-MANUALMENTE.md`. O `.ps1` e o `.bat` fazem exatamente a mesma cópia dos 10 arquivos e as mesmas 5 verificações pós-install.
 
 Reproduzi o `verificar-bo.html` contra uma prévia sem o módulo novo: ele apontou **"ELO 3 QUEBRADO — HTTP 404"** com 0 erros de JS (captura em `evidencia/shot-bo-diagnostico.png`).
 

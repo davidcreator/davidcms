@@ -136,6 +136,12 @@ OK   instalador 25/0 na replica
 OK   tools/bo_integracao.php presente
 OK   AssetManifest publica o modulo novo
 OK   header has_3d provado pelo snapshot
+OK   instalador PowerShell presente
+OK   PowerShell lista os mesmos 10 arquivos
+OK   PowerShell sem acentos (codepage Windows)
+OK   PowerShell chaves balanceadas
+OK   atalho INSTALAR.bat presente
+OK   guia de copia manual (10 linhas + item novo)
 
-BO verify: 136 OK / 0 FALHAS
+BO verify: 142 OK / 0 FALHAS
 

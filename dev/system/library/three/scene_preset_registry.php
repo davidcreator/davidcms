@@ -14,7 +14,7 @@
 namespace Reamur\System\Library\Three;
 
 final class ScenePresetRegistry {
-    private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found'];
+    private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found', 'david-universe'];
     private const SLOTS  = ['hero', 'home_top', 'footer_top'];
     private const LIMITS = ['count'=>[50,800], 'speed'=>[0.01,0.20]];
 
@@ -25,6 +25,7 @@ final class ScenePresetRegistry {
         ['id'=>'geometric',   'scene'=>'portfolio-3d',  'slot'=>'home_top',   'count'=>500, 'color'=>'#22d3ee', 'speed'=>0.06, 'enabled'=>true,  'label'=>'scene_preset_geometric',   'help'=>'scene_preset_geometric_help'],
         ['id'=>'workshop',    'scene'=>'tools-3d',      'slot'=>'home_top',   'count'=>350, 'color'=>'#f59e0b', 'speed'=>0.08, 'enabled'=>true,  'label'=>'scene_preset_workshop',    'help'=>'scene_preset_workshop_help'],
         ['id'=>'lost',        'scene'=>'not-found',     'slot'=>'footer_top', 'count'=>200, 'color'=>'#94a3b8', 'speed'=>0.04, 'enabled'=>true,  'label'=>'scene_preset_lost',        'help'=>'scene_preset_lost_help'],
+        ['id'=>'universe',    'scene'=>'david-universe','slot'=>'hero',       'count'=>520, 'color'=>'#5cc6d0', 'speed'=>0.06, 'enabled'=>true,  'label'=>'scene_preset_universe',    'help'=>'scene_preset_universe_help'],
         ['id'=>'off',         'scene'=>'',              'slot'=>'hero',       'count'=>400, 'color'=>'#8a4fff', 'speed'=>0.05, 'enabled'=>false, 'label'=>'scene_preset_off',         'help'=>'scene_preset_off_help'],
     ];
 
@@ -143,6 +144,24 @@ final class ScenePresetRegistry {
                 $o.='<line x1="'.$x1.'" y1="'.$y1.'" x2="'.$x2.'" y2="'.$y2.'" stroke="'.$color.'" stroke-width="3" opacity="0.75"/>';
             }
             $o.='<circle cx="160" cy="90" r="9" fill="'.$color.'"/>';
+        } elseif ($c['scene']==='david-universe') {
+            // Miniatura estatica: estrelas, nave e orbes. Sem script, sem url(.
+            for ($i=0;$i<34;$i++) {
+                $x=12+(($i*71)%296); $y=14+(($i*43)%136);
+                $r=sprintf('%.1f',0.7+(($i*5)%3)*0.5);
+                $o.='<circle cx="'.$x.'" cy="'.$y.'" r="'.$r.'" fill="#ffffff" opacity="'.sprintf('%.2f',0.25+(($i*3)%5)*0.11).'"/>';
+            }
+            $o.='<circle cx="252" cy="44" r="22" fill="'.$color.'" opacity="0.20"/>'
+               .'<circle cx="252" cy="44" r="14" fill="none" stroke="'.$color.'" stroke-width="1" opacity="0.55"/>'
+               .'<polygon points="160,58 172,104 160,96 148,104" fill="'.$color.'" opacity="0.92"/>'
+               .'<polygon points="160,70 168,102 160,96 152,102" fill="#121516"/>'
+               .'<line x1="148" y1="98" x2="132" y2="112" stroke="'.$color.'" stroke-width="3" opacity="0.75"/>'
+               .'<line x1="172" y1="98" x2="188" y2="112" stroke="'.$color.'" stroke-width="3" opacity="0.75"/>'
+               .'<ellipse cx="160" cy="110" rx="7" ry="16" fill="'.$color.'" opacity="0.35"/>';
+            for ($i=0;$i<4;$i++) {
+                $x=42+$i*74; $y=140+(($i%2===0)?-8:8);
+                $o.='<circle cx="'.$x.'" cy="'.$y.'" r="5" fill="none" stroke="'.$color.'" stroke-width="2" opacity="'.sprintf('%.2f',0.45+$i*0.12).'"/>';
+            }
         } elseif ($c['scene']==='not-found') {
             for ($i=0;$i<18;$i++) {
                 $x=18+(($i*89)%284); $y=18+(($i*53)%144);
