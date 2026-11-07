@@ -1,4 +1,25 @@
-# BO-r2 — Por que os objetos 3D não aparecem (e os erros de `<path>`)
+# BO-r3 — Por que os objetos 3D não aparecem (e os erros de `<path>`)
+
+## 0. r3: diagnóstico sem console + causa mais provável confirmada
+
+Refiz a integração com as **classes PHP reais** (`ThemeSnapshot` → `startup/theme.php` → `common/header.php` → `common/home.php` → `header.twig` → `theme-scene.twig` → `AssetManifest`), não só com a prévia HTML isolada. Resultado: **25 OK / 0 FALHAS**. Ou seja: com o patch completo, `theme_scene.enabled=true`, `theme_scene.scene=david-universe`, `has_3d=true`, o importmap e o `<script type="module">` são emitidos e o manifest publica o módulo novo.
+
+Isso **isola a falha no servidor**, e o ponto mais frágil ficou demonstrado:
+
+> `AssetManifest::resolve('three/scenes/david-universe.js')` devolve um caminho, mas `common/three.php` responde **404 se o arquivo não existir no disco**. É um **arquivo NOVO** (`new file mode` no diff). Quem aplica só os 9 arquivos modificados — por `patch -p1`, GUI de Git ou upload manual — fica com o `main.js` importando algo que não existe. **Um único import com 404 aborta o módulo ES inteiro**: nenhuma cena, nem as 4 antigas.
+
+Duas ferramentas novas no pacote, para resolver sem precisar do Console/DevTools:
+
+| Arquivo | O que faz |
+|---|---|
+| **`instalar-bo.py`** | Alternativa ao `git apply`: copia os **10** arquivos (incluindo o novo) e **falha alto e claro** se `david-universe.js` não estiver legível ao final. `python3 instalar-bo.py --repo /caminho/do/davidcms --apply`. Testado em réplica limpa: **25/0**. |
+| **`verificar-bo.html`** | Coloque na **raiz do site** e abra `https://seusite/verificar-bo.html`. Busca a home, lê `[data-scene]`/importmap, faz `fetch` nas 6 URLs do runtime e mostra uma tabela verde/vermelho + o veredito do elo quebrado. **Sem console, sem DevTools, somente-leitura.** |
+
+Reproduzi o `verificar-bo.html` contra uma prévia sem o módulo novo: ele apontou **"ELO 3 QUEBRADO — HTTP 404"** com 0 erros de JS (captura em `evidencia/shot-bo-diagnostico.png`).
+
+**Se você não quer ler nada:** rode o `instalar-bo.py --apply`, limpe o cache do CMS, ative o tema no Admin e abra o `verificar-bo.html`. Se continuar vermelho, me mande um print da página.
+
+---
 
 ## 1. Os dois erros do console NÃO são a causa do 3D
 

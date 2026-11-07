@@ -1,6 +1,18 @@
-# Guia de aplicação — Frente BO-r2
+# Guia de aplicação — Frente BO-r3
 
 Ordem recomendada. **Você aplica**; o agente não escreve no GitHub.
+
+## 0. Caminho mais curto (se o 3D já falhou uma vez)
+
+```bash
+python3 instalar-bo.py --repo /caminho/para/davidcms --apply
+```
+
+O instalador copia os **10** arquivos e verifica explicitamente que
+`dev/system/library/three/runtime/three/scenes/david-universe.js` ficou legível.
+Depois: limpe o cache de opcode/Twig, **ative** o tema `david_universe_3d_bo`
+no Admin e abra `verificar-bo.html` (copie para a raiz do site) — ele mostra
+qual dos 5 elos quebrou, sem precisar abrir o Console.
 
 > **Se os objetos 3D não aparecerem**, pare aqui e abra `DIAGNOSTICO-3D.md`.
 > Na maioria dos casos é o `PATCH-BO.diff` aplicado pela metade: `main.js` foi

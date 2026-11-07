@@ -1,0 +1,37 @@
+--- snapshot (startup/theme.php) ---
+scene                 = "david-universe"
+three                 = {"enabled":true,"scene":"david-universe","slot":"hero","count":520,"color":"#5cc6d0","speed":0.06}
+theme_scene (globals) = {"enabled":true,"scene":"david-universe","slot":"hero","count":520,"color":"#5cc6d0","speed":0.06}
+chaves do snapshot    = scene_view,scene_css,scene_layers,scene_enabled,primary,surface,scene,three,tokens,token_css,vars,flags,classes,matched,ignored,templates,sections,sections_defined,section_bars,components,component_enabled,component_css,media,media_enabled,media_css,media_bars,sites,site,site_css,site_bars,site_language,schedule,schedule_effective,schedule_reason,schedule_percent,schedule_bucket,schedule_bars,schedule_css,globals
+
+OK   catalog_theme_three.enabled = true · true
+OK   header has_3d derivado do tema
+OK   theme_scene.enabled = true · true
+OK   theme_scene.scene = david-universe · david-universe
+OK   slot declarativo = hero · hero
+OK   home.php mapeia david-universe · david-universe
+OK   SceneConfig hero_enabled = true · true
+OK   home.php has_3d = true
+OK   publicBasePath = three-runtime/ · three-runtime/
+OK   resolve(david-universe.js) nao nulo · {"path":"\/home\/user\/bo_lib\/dev\/system\/library\/three\/runtime\/three\/scenes\/david-universe.js","content_type":"application\/javascript; charset=utf-8"}
+OK   MIME do modulo novo = JS · application/javascript; charset=utf-8
+OK   path do modulo novo no runtime · /home/user/bo_lib/dev/system/library/three/runtime/three/scenes/david-universe.js
+OK   main.js publicado
+OK   three.module.js publicado
+OK   three.core.js publicado
+OK   scene-runner.js publicado
+OK   dom.js publicado
+OK   importmap/rota main resolvivel · three/main.js
+OK   importmap/rota runner resolvivel · three/core/scene-runner.js
+OK   importmap/rota cena resolvivel · three/scenes/david-universe.js
+OK   importmap/rota three resolvivel · three.module.js
+OK   cena antiga hero-particles preservada
+OK   cena antiga not-found preservada
+OK   cena antiga portfolio-3d preservada
+OK   cena antiga tools-3d preservada
+
+PHP BO integracao: 25 OK / 0 FALHAS
+sync /tmp/bk_out: [object Object]
+sync /tmp/bk_patch: [object Object]
+sync /tmp/bk_configs: [object Object]
+sync /tmp/bm_out: [object Object]

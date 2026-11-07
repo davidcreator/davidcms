@@ -128,6 +128,14 @@ OK   doc especificacao.json
 OK   diagnostico de console pronto
 OK   nenhum path corrompido no pacote
 OK   previa funcional completa
+OK   instalador presente
+OK   diagnostico visual presente
+OK   captura do diagnostico
+OK   integracao CMS 25/0
+OK   instalador 25/0 na replica
+OK   tools/bo_integracao.php presente
+OK   AssetManifest publica o modulo novo
+OK   header has_3d provado pelo snapshot
 
-BO verify: 128 OK / 0 FALHAS
+BO verify: 136 OK / 0 FALHAS
 

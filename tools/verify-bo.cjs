@@ -191,5 +191,21 @@ ok('previa funcional completa', ['previa/index.html', 'previa/main-bo.js',
   'previa/runtime/three/core/scene-runner.js', 'previa/runtime/three/scenes/david-universe.js']
   .every(has));
 
+// ── r3: instalador + diagnostico visual + prova de integracao ──────────
+ok('instalador presente', has('instalar-bo.py') && /--apply/.test(read('instalar-bo.py')) &&
+   /david-universe\.js/.test(read('instalar-bo.py')));
+ok('diagnostico visual presente', has('verificar-bo.html') &&
+   /three\/scenes\/david-universe\.js/.test(read('verificar-bo.html')) &&
+   !/<(script|link)[^>]+(src|href)=["']https?:/i.test(read('verificar-bo.html')));
+ok('captura do diagnostico', has('evidencia/shot-bo-diagnostico.png') &&
+   fs.statSync(R('evidencia/shot-bo-diagnostico.png')).size > 5000);
+ok('integracao CMS 25/0', /PHP BO integracao: 25 OK \/ 0 FALHAS/.test(read('evidencia/integracao-bo.log')));
+ok('instalador 25/0 na replica', /BO instalador: 25 OK \/ 0 FALHAS/.test(read('evidencia/instalar-bo.log')));
+ok('tools/bo_integracao.php presente', has('tools/bo_integracao.php'));
+ok('AssetManifest publica o modulo novo',
+   /OK   resolve\(david-universe\.js\) nao nulo/.test(read('evidencia/integracao-bo.log')));
+ok('header has_3d provado pelo snapshot',
+   /OK   header has_3d derivado do tema/.test(read('evidencia/integracao-bo.log')));
+
 console.log(`\nBO verify: ${P} OK / ${F} FALHAS\n`);
 process.exit(F ? 1 : 0);

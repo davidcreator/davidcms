@@ -1,11 +1,12 @@
-# BO-r2 — Nave e interações ThreeJS no ReamurCMS
+# BO-r3 — Nave e interações ThreeJS no ReamurCMS
 
 Pacote de correção da BN. **Recorte B autorizado** (`ask_user caminho = b_catalogo`).
-**Revisão r2:** corrige os erros `<path> attribute d` do console e traz o diagnóstico para quando o 3D não renderiza. O ZIP BO original (`...-BO-Nave-e-Interacoes.zip`) continua inalterado.
+**r2:** corrigiu os erros `<path> attribute d`. **r3:** provou a integração com as classes PHP reais (25/0), isolou a causa do 3D ausente e trouxe `instalar-bo.py` + `verificar-bo.html` (diagnóstico sem console). Os ZIPs BO e r2 anteriores continuam inalterados.
 
 | O que | Onde |
 |---|---|
-| **Se o 3D não aparecer** | `DIAGNOSTICO-3D.md` + `diagnostico/console.js` — 5 elos, snippet de console, tabela de interpretação |
+| **3D não aparece? Comece aqui** | `instalar-bo.py --apply` (garante o arquivo novo) e `verificar-bo.html` na raiz do site (diagnóstico visual, sem console) |
+| Entender a causa | `DIAGNOSTICO-3D.md` — 5 elos, causa confirmada, snippet de console, tabela de interpretação |
 | **Comece aqui** | `GUIA-BO.md` — aplicação, importação, teste, rollback |
 | Relatório completo | `RELATORIO-BO.md` — diagnóstico, arquitetura, 26/0 + 49/0 + r2 |
 | Diagnóstico do erro BN | `docs/DIAGNOSTICO-BO.md` — por que o tema não comportava a cena |
@@ -25,7 +26,7 @@ Pacote de correção da BN. **Recorte B autorizado** (`ask_user caminho = b_cata
 - Módulo portado: **~33 KB**, sem React, sem bundle, sem CDN.
 - `checksum` do tema r2: `e2b935d8fd4bfc336c4f14cd6ba3f45bcfb397466438966b9999d8c5b5a146c0` (o `81f618c1…` era do BO antes da correção dos SVG).
 - 25 fontes Twig · 5 regras · 20 camadas `kaz_scene` · **30 `<path d>` válidos / 0 inválidos** · 14 orbes · 8 gates · 5 planetas · 46 asteroides · 2 astronautas · trilha 60.
-- **26 OK / 0 FALHAS** (PHP WASM) · **49 OK / 0 FALHAS** (Chromium WebGL 2.0) · **8 OK / 0** (TOKEN_PARSE) · **12 OK / 0** (diagnóstico) · verificador do pacote com o novo check de SVG.
+- **26 OK / 0 FALHAS** (export PHP) · **25 OK / 0 FALHAS** (integração CMS real) · **49 OK / 0 FALHAS** (Chromium WebGL 2.0) · **25 OK / 0** (instalador em réplica) · **8 OK / 0** (TOKEN_PARSE) · **12 OK / 0** (diagnóstico) · verificador do pacote com checks de SVG e de integração.
 
 ## Estado
 

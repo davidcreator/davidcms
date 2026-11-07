@@ -119,6 +119,28 @@ O pacote traz `DIAGNOSTICO-3D.md` (tabela dos 5 elos, checklist de aplicação, 
 
 > O ZIP BN anterior **não foi corrigido** e segue com os paths inválidos. Se ele estiver ativo, troque pelo tema r2.
 
+## 4c. Revisão r3 — integração real e causa isolada
+
+A prévia `bo_preview/index.html` é um HTML isolado: prova que o módulo funciona, mas **não** prova que o CMS entrega o slot, o importmap e o `main.js`. Montei então `tools/bo_integracao.php`, que executa as classes PHP patchadas e simula a cadeia verdadeira:
+
+```
+ThemeSnapshot::resolve() → startup/theme.php (catalog_theme_three) →
+common/header.php (has_3d + three_runtime_base) → common/home.php
+(themeSceneSettings → three_hero_enabled → SceneConfig::runtime) →
+header.twig (importmap + <script type=module>) → theme-scene.twig
+(data-scene) → AssetManifest::resolve()
+```
+
+Resultado: **25 OK / 0 FALHAS** — `three.enabled=true`, `theme_scene.scene=david-universe`, `has_3d=true`, `publicBasePath()='three-runtime/'`, as 6 URLs do runtime resolvíveis e as 4 cenas antigas preservadas.
+
+Com isso a falha fica **isolada no servidor**. O elo mais frágil é o arquivo novo: `AssetManifest::resolve()` devolve o caminho, mas `common/three.php` devolve **404 quando `is_file()` falha**. Como `david-universe.js` é `new file mode` no diff, quem aplica apenas os 9 modificados (via `patch -p1`, GUI de Git ou upload manual) fica com `main.js` importando um 404 — e **um import com 404 aborta o módulo ES inteiro**, derrubando também as 4 cenas antigas. É o sintoma relatado.
+
+Correções de entrega (nenhuma altera o CMS em produção):
+
+- `instalar-bo.py`: caminho alternativo ao `git apply`, copia os 10 arquivos e falha explicitamente se o módulo novo não estiver legível. Testado em réplica limpa: **25/0**.
+- `verificar-bo.html`: diagnóstico visual same-origin; busca a home, lê `[data-scene]`/importmap, faz `fetch` nas 6 URLs e aponta o elo quebrado. Reproduzido contra uma prévia sem o módulo → "ELO 3 QUEBRADO · HTTP 404", 0 erros de JS.
+- `tools/bo_integracao.php` + `evidencia/integracao-bo.log` no pacote; verificador ganhou 8 checks novos.
+
 ## 5. O que este pacote NÃO é
 
 Não é release, não é deploy, não é migration, não é escrita no GitHub, não é health autenticado, não é veredito visual. **Você aplica** o `PATCH-BO.diff`; o agente não escreveu no repositório.

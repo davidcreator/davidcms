@@ -5,7 +5,7 @@ Nao escreve no GitHub, nao aplica no servidor, nao dispara CI/deploy.
 import os,shutil,subprocess,hashlib,json,zipfile
 SRC='/home/user'
 DST='/home/user/bo_pkg_final'
-ZIP='/home/user/entregas/ReamurCMS-Frente-BO-r2-SVG-e-Diagnostico.zip'
+ZIP='/home/user/entregas/ReamurCMS-Frente-BO-r3-Instalacao-e-Diagnostico.zip'
 shutil.rmtree(DST,ignore_errors=True)
 os.makedirs(DST,exist_ok=True)
 os.makedirs(os.path.dirname(ZIP),exist_ok=True)
@@ -26,6 +26,10 @@ cp('bo_ref/ESPECIFICACAO-CENA.md','docs/ESPECIFICACAO-CENA.md')
 cp('bo_ref/especificacao.json','docs/especificacao.json')
 cp('bo_docs/console.js','diagnostico/console.js')
 cp('bo_docs/console.js','diagnostico-console.js')
+cp('bo_docs/verificar-bo.html','diagnostico/verificar-bo.html')
+cp('bo_docs/verificar-bo.html','verificar-bo.html')
+cp('bo_docs/instalar-bo.py','instalar-bo.py')
+cp('bo_docs/instalar-bo.py','diagnostico/instalar-bo.py')
 put('LEIA-ME.md',open('/home/user/bo_docs/INDICE-BO.md',encoding='utf-8').read())
 
 # ── tema ──────────────────────────────────────────────────────────────
@@ -66,6 +70,12 @@ cp('bo_export.log','evidencia/export-bo.txt')
 cp('bo_runtime.log','evidencia/runtime-bo.log')
 cp('bo_token.log','evidencia/token-parse.log')
 cp('bo_ref/prova.log','evidencia/prova-bloqueio.log')
+cp('bo_integracao.log','evidencia/integracao-bo.log')
+cp('bo_out/shot-bo-diagnostico.png','evidencia/shot-bo-diagnostico.png')
+open('/home/user/bo_out/instalar-bo.log','w',encoding='utf-8').write(
+    open('/tmp/bo_install.log',encoding='utf-8').read() if os.path.exists('/tmp/bo_install.log')
+    else 'BO instalador: executar python3 instalar-bo.py --repo <repo> --apply\n')
+cp('bo_out/instalar-bo.log','evidencia/instalar-bo.log')
 cp('bo_out/runtime-bo.json','evidencia/runtime-bo.json')
 cp('bo_out/export-report.json','evidencia/export-report.json')
 cp('BO-Nave-e-Interacoes.png','evidencia/BO-Nave-e-Interacoes.png')
@@ -107,7 +117,8 @@ for p,h in [
 
 # ── tools ─────────────────────────────────────────────────────────────
 for f in ['bo_spec.py','bo_patch.py','bo_theme_gen.py','bo_preview.py','bo_export.php',
-          'bo_runtime.cjs','bo_montagem.py','verify-bo.cjs','bo_final.py','bn_theme_gen.py']:
+          'bo_runtime.cjs','bo_montagem.py','verify-bo.cjs','bo_final.py','bn_theme_gen.py',
+          'bo_integracao.php']:
     cp('validacao/'+f,'tools/'+f)
 
 # ── verificador ───────────────────────────────────────────────────────
