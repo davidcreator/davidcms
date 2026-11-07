@@ -1,0 +1,68 @@
+
+-- boot --
+OK   SceneRunner montou a cena (debug hook)
+OK   Three.js self-hosted r186 · REVISION=186
+OK   WebGL real (contexto criado) · WebGL 2.0 (OpenGL ES 3.0 Chromium) · WebKit WebGL
+OK   canvas dentro do slot · 1440×900
+OK   slot hero e backdrop fixo · position=fixed
+OK   1 slot por pagina · 1
+OK   fallback declarativo recua · 0.16
+OK   14 orbes · {"stars":520,"planets":5,"asteroids":46,"astronauts":2,"gates":8,"orbs":14,"trail":60}
+OK   8 gates
+OK   5 planetas + 46 asteroides + 2 astronautas
+OK   trilha de 60 particulas
+OK   estrelas limitadas por data-count · 520
+OK   cena povoada (>150 objetos na arvore) · 231 objetos · 90 filhos diretos
+OK   HUD ORBES 00/14 · 00/14
+OK   HUD DISTANCIA 0 KM · 0 KM
+OK   HUD exibe fase numerada · FASE 01 — SOBRE
+OK   9 fases observadas pelo IntersectionObserver · 9
+OK   pagina longa o bastante para voar · 4608px
+
+-- pilotagem --
+OK   pointermove move a nave em X · 1.09 → 3.84
+OK   pointermove move a nave em Y · 0.67 → 1.39
+
+-- voo por scroll --
+OK   scroll dispara setProgress (target > 0) · target=0.683
+OK   progresso acompanha o target · progress=0.361
+OK   camera = 8 - progress*320 · camera.z=-107.6
+OK   scroll move a camera para dentro do tunel · camera.z=-107.6
+OK   nave acompanha a camera (z = camZ - 9) · ship.z=-116.6
+OK   warp altera FOV · fov=77.2 warp=0.70
+OK   HUD distancia = round(progress*384400) km · 138,854 KM
+OK   hint de distancia atualiza · 138,854 KM
+OK   barra de progresso coerente · 36.1%
+OK   IntersectionObserver troca a fase · FASE 07 — DEPOIMENTOS
+
+-- coleta de orbes --
+OK   a coleta acontece durante o voo · 3/14
+OK   orbes coletados marcados na cena · 3 marcados
+OK   HUD ORBES reflete a coleta · 03/14
+OK   toast de coleta aparece · Orbe coletado 3/14
+
+-- fim do voo (hold 1) --
+OK   progresso converge para 1 · 0.99994
+OK   camera chega a z=-312 · camera.z=-311.98
+OK   camera = 8 - progress*320 no fim · camera.z=-311.98
+OK   distancia = round(progress*384400) km, chegando a ~384.400 KM · 384,376 KM (384.400 KM em progress=1)
+OK   barra chega a 100% · 100%
+
+-- erros --
+OK   0 pageerrors · []
+OK   0 console.error · []
+OK   0 requests falhos (tudo self-hosted) · []
+
+-- reduced motion --
+OK   runner respeita prefers-reduced-motion · {"debug":false,"canvas":false,"fallback":true}
+OK   fallback declarativo permanece
+
+-- mobile 390px --
+OK   cena monta no mobile · {"debug":true,"orbs":14,"canvas":true,"scrollW":390,"innerW":390,"coarse":true}
+OK   14 orbes tambem no mobile · 14
+OK   pointer coarse ativa autopiloto · true
+OK   0 overflow horizontal · 390 vs 390
+OK   0 pageerrors no mobile · []
+
+CHROMIUM BO runtime: 49 OK / 0 FALHAS
+

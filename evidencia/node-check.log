@@ -1,0 +1,2 @@
+node --check david-universe.mjs: OK
+node --check main.mjs: OK

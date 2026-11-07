@@ -1,10 +1,22 @@
 {
-    "name": "David Universe 3D",
-    "slug": "david_universe_3d",
-    "checksum": "e081f0d26759034b15f1e200e2248199bbee43dea30765fb8977704c3f29a1d4",
-    "bytes": 89309,
+    "name": "David Universe 3D — Cena Real",
+    "slug": "david_universe_3d_bo",
+    "checksum": "81f618c19d9b43387275397c926ae8ae3d87e2714aa89e0388c92a14cdcabe10",
+    "bytes": 91559,
     "templates": 25,
     "scene_layers": 20,
     "conditions": 5,
-    "errors": []
+    "errors": [],
+    "scenes": [
+        "",
+        "hero-particles",
+        "portfolio-3d",
+        "tools-3d",
+        "not-found",
+        "david-universe"
+    ],
+    "asset": {
+        "path": "/home/user/bo_lib/dev/system/library/three/runtime/three/scenes/david-universe.js",
+        "content_type": "application/javascript; charset=utf-8"
+    }
 }

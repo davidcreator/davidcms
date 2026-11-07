@@ -1,0 +1,82 @@
+{
+ "boot": {
+  "debug": true,
+  "revision": "186",
+  "counts": {
+   "stars": 520,
+   "planets": 5,
+   "asteroids": 46,
+   "astronauts": 2,
+   "gates": 8,
+   "orbs": 14,
+   "trail": 60
+  },
+  "sceneChildren": 90,
+  "sceneObjects": 231,
+  "canvas": true,
+  "canvasW": 1440,
+  "canvasH": 900,
+  "gl": true,
+  "glVersion": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+  "renderer": "WebKit WebGL",
+  "slots": 1,
+  "fixed": "fixed",
+  "fallbackOpacity": "0.16",
+  "hudOrbes": "00/14",
+  "hudDist": "0 KM",
+  "hudFase": "FASE 01 — SOBRE",
+  "scrollHeight": 4608,
+  "target": 0,
+  "phases": 9
+ },
+ "mid": {
+  "progress": 0.3612229548773038,
+  "target": 0.6833872707659115,
+  "scroll": {
+   "y": 2534,
+   "max": 3708
+  },
+  "camZ": -107.59134556073722,
+  "fov": 77.18089260940476,
+  "warp": 0.698805788087798,
+  "shipZ": -116.59134556073722,
+  "dist": "138,854 KM",
+  "hint": "138,854 KM",
+  "bar": "36.1%",
+  "fase": "FASE 07 — DEPOIMENTOS"
+ },
+ "collected": {
+  "n": 3,
+  "total": 14,
+  "marked": 3,
+  "orb": "03/14",
+  "toast": "Orbe coletado 3/14",
+  "dist": "329,923 KM"
+ },
+ "end": {
+  "progress": 0.9999363372545904,
+  "target": 1,
+  "camZ": -311.97962792146893,
+  "dist": "384,376 KM",
+  "bar": "100%"
+ },
+ "converged": true,
+ "rmState": {
+  "debug": false,
+  "canvas": false,
+  "fallback": true
+ },
+ "mob": {
+  "debug": true,
+  "orbs": 14,
+  "canvas": true,
+  "scrollW": 390,
+  "innerW": 390,
+  "coarse": true
+ },
+ "errors": [],
+ "consoleErrors": [],
+ "failed": [],
+ "P": 49,
+ "F": 0
+}

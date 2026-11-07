@@ -1,0 +1,30 @@
+
+Warning: PHP Request Startup: Failed to open stream: No such file or directory in php-wasm run script on line 14
+OK   theme.php
+
+Warning: PHP Request Startup: Failed to open stream: No such file or directory in php-wasm run script on line 14
+OK   home.php
+
+Warning: PHP Request Startup: Failed to open stream: No such file or directory in php-wasm run script on line 14
+OK   theme.php
+
+Warning: PHP Request Startup: Failed to open stream: No such file or directory in php-wasm run script on line 14
+OK   theme_snapshot.php
+
+Warning: PHP Request Startup: Failed to open stream: No such file or directory in php-wasm run script on line 14
+OK   condition_engine.php
+
+Warning: PHP Request Startup: Failed to open stream: No such file or directory in php-wasm run script on line 14
+OK   theme_package.php
+
+Warning: PHP Request Startup: Failed to open stream: No such file or directory in php-wasm run script on line 14
+OK   scene_preset_registry.php
+
+Warning: PHP Request Startup: Failed to open stream: No such file or directory in php-wasm run script on line 14
+OK   asset_manifest.php
+
+TOKEN_PARSE: 8 OK / 0 FALHAS
+sync /tmp/bk_out: [object Object]
+sync /tmp/bk_patch: [object Object]
+sync /tmp/bk_configs: [object Object]
+sync /tmp/bm_out: [object Object]
