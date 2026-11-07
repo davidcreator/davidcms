@@ -1,11 +1,10 @@
 {
-    "name": "Atlas Studio 3D",
-    "slug": "atlas_studio_3d",
-    "checksum": "59ca4cd1ae312abd4c5a5771ed9981335d90f6fd35cc30e3aa8f233c1fb4adbf",
-    "bytes": 76637,
+    "name": "David Universe 3D",
+    "slug": "david_universe_3d",
+    "checksum": "e081f0d26759034b15f1e200e2248199bbee43dea30765fb8977704c3f29a1d4",
+    "bytes": 89309,
     "templates": 25,
-    "scene_layers": 16,
-    "css_scene_layers": 16,
+    "scene_layers": 20,
     "conditions": 5,
     "errors": []
 }

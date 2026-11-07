@@ -1,0 +1,517 @@
+{
+    "format": "reamurcms-theme",
+    "version": 1,
+    "name": "David Universe 3D",
+    "slug": "david_universe_3d",
+    "parent": "",
+    "config": {
+        "primary": "#5cc6d0",
+        "surface": "#121516",
+        "scene": "hero-particles",
+        "templates": {
+            "common/home": "{# Home completa — fases 00 a 09 #}\n{{ header }}\n<main class=\"du\">\n{% include 'partial/theme-scene.twig' %}\n<div class=\"du-wrap\"><div class=\"du-scene-caption\"><b>UNIVERSO 3D</b><span>Cena declarativa · sem código executável no tema</span></div></div>\n{# Fase 00 — Decolagem / cockpit #}\n<section id=\"fase-00\" class=\"du du-hero\"><div class=\"du-wrap du-hero-in\">\n  <div><div class=\"du-overline\">EU SOU</div>\n    <h1>DAVID L.<br>ALMEIDA</h1>\n    <div class=\"du-hero-sub\">{{ text_role|default('Desenvolvido') }}</div>\n    <p class=\"du-hero-lead\">Posso criar sites, aplicativos, logotipos e outras mídias digitais incríveis.</p>\n    <div class=\"du-hero-actions\"><a class=\"du-btn\" href=\"#fase-01\">Iniciar missão →</a><a class=\"du-btn du-btn--ghost\" href=\"#fase-06\">Ver catálogo</a></div>\n    <div class=\"du-socials\" aria-label=\"Redes sociais\"><a href=\"#\" aria-label=\"Facebook\">Fa</a><a href=\"#\" aria-label=\"Instagram\">In</a><a href=\"#\" aria-label=\"Pinterest\">Pi</a><a href=\"https://x.com/DavidAlmeidaDes\" aria-label=\"X\">X</a><a href=\"#\" aria-label=\"RedBubble\">Re</a></div>\n  </div>\n  <div class=\"du-controls\"><h3>Controles</h3><div class=\"du-control\"><b>MOUSE</b><span>Mova o mouse para pilotar e navegar.</span></div><div class=\"du-control\"><b>TECLADO</b><span>Role para voar pelo universo.</span></div><div class=\"du-control\"><b>ORBES</b><span>Colete os orbes pelo caminho.</span></div><div class=\"du-control\"><b>MISSÃO</b><span>Escolha um nível para explorar o projeto completo.</span></div></div>\n</div>\n<div class=\"du-wrap du-hint\"><span>ROLE PARA VOAR ▾</span><span>DISTÂNCIA 0 KM</span></div>\n</section>\n<section id=\"fase-01\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">01</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 01</b><span>Sobre</span></div>\n<h2>QUEM SOU EU?</h2>\n<div class=\"du-grid du-grid--2\"><article class=\"du-card\"><span class=\"du-card-tag\">Classe</span><h3>SOU UM DESIGNER E DESENVOLVEDOR EXPERIENTE</h3><p>Como designer e desenvolvedor apaixonado, transformo ideias em realidade com criatividade e responsabilidade. Com anos de experiência em design gráfico, desenvolvimento de sites e criação de identidades visuais, entrego soluções inovadoras e de alta qualidade que fortalecem marcas e as destacam no mercado.</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Jogador 1 · LVL 01</span><h3>David L. Almeida</h3><p>Meu portfólio vai de logotipos de impacto a interfaces intuitivas, sempre alinhado às melhores práticas de SEO. Descubra como posso ajudar a elevar a sua marca ao próximo nível!</p></article></div><div class=\"du-grid du-grid--2\" style=\"margin-top:20px\"><article class=\"du-card\"><span class=\"du-card-tag\">Identidade visual</span><h3>GOSTO DE TRABALHAR EM PROJETOS QUE AJUDAM MARCAS A SE POSICIONAREM</h3><p>No núcleo de cada marca existe um mundo cuidadosamente construído, onde cada atributo é projetado estrategicamente para atender às necessidades únicas dos nossos clientes.</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Universo do design</span><h3>BEM-VINDO AO UNIVERSO DO DESIGN</h3><p>Do logotipo às cores, da tipografia aos grafismos, desenhamos uma experiência marcante e personalizada que ecoa a identidade de cada negócio. Onde damos vida às marcas e contamos histórias por meio de formas, cores e letras.</p></article></div><div class=\"du-profile\" style=\"margin-top:20px\"><div class=\"du-card\"><span class=\"du-card-tag\">Ficha do jogador</span><h3>David L. Almeida</h3><div class=\"du-profile-row\"><span>Classe</span><b>Desenvolvedor Criativo</b></div><div class=\"du-profile-row\"><span>Local</span><b>São Paulo, Brazil</b></div><div class=\"du-profile-row\"><span>E-mail</span><b>contact@davidalmeida.xyz</b></div><div class=\"du-profile-row\"><span>Nível</span><b>LVL 01</b></div></div><div class=\"du-card\"><span class=\"du-card-tag\">Me encontre em</span><h3>Canais</h3><ul class=\"du-list\"><li><b>01</b><span>GitHub</span></li><li><b>02</b><span>GitLab</span></li><li><b>03</b><span>X / Twitter</span></li><li><b>04</b><span>Instagram</span></li><li><b>05</b><span>Pinterest</span></li><li><b>06</b><span>RedBubble</span></li></ul></div></div>\n</div>\n</section>\n<section id=\"fase-02\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">02</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 02</b><span>Processo</span></div>\n<h2>NO MEU PROCESSO DE CRIAÇÃO EU USO AS SEGUINTES ETAPAS:</h2>\n<p class=\"du-lead\">Seis níveis, nenhuma caixa preta: cada etapa termina com uma validação antes da próxima.</p><div class=\"du-grid du-grid--6\" style=\"margin-top:28px\"><article class=\"du-card du-level\"><div class=\"du-level-no\">01</div><span class=\"du-level-tag\">Nível 01 · OK</span><h3>Conhecendo o Cliente e a Empresa</h3><p>Na primeira etapa, busco reunir o máximo de informações sobre as características e a personalidade do cliente e da empresa! Uso um questionário detalhado, cheio de perguntas estratégicas sobre o projeto.</p></article><article class=\"du-card du-level\"><div class=\"du-level-no\">02</div><span class=\"du-level-tag\">Nível 02 · OK</span><h3>Pesquisa</h3><p>Com as informações coletadas, começo a pesquisar a empresa, o mercado em que atua, seus concorrentes e o público-alvo. Essas informações evitam criar algo genérico.</p></article><article class=\"du-card du-level\"><div class=\"du-level-no\">03</div><span class=\"du-level-tag\">Nível 03 · OK</span><h3>Conceito</h3><p>De acordo com os resultados da pesquisa, inicio um processo de brainstorming, mapeando ideias e esboçando conceitos, sempre em busca de um significado maior, além do visual.</p></article><article class=\"du-card du-level\"><div class=\"du-level-no\">04</div><span class=\"du-level-tag\">Nível 04 · OK</span><h3>Execução</h3><p>Depois de todos os testes, com uma ideia estabelecida, começo a definir tipografia e cores, além de criar formas, grafismos, padrões e elementos de apoio.</p></article><article class=\"du-card du-level\"><div class=\"du-level-no\">05</div><span class=\"du-level-tag\">Nível 05 · OK</span><h3>Flexibilidade</h3><p>Com tudo em mãos, começo a etapa de aplicação em produtos como papelaria, uniformes, outdoors e brindes. Garantindo que a marca possa ser usada e identificada em qualquer situação.</p></article><article class=\"du-card du-level\"><div class=\"du-level-no\">06</div><span class=\"du-level-tag\">Nível 06 · OK</span><h3>Entrega</h3><p>Com o projeto finalizado, crio e envio uma apresentação e o manual de uso da marca, mostrando cada etapa do projeto. Todos os arquivos são salvos, organizados e enviados ao cliente.</p></article></div>\n</div>\n</section>\n<section id=\"fase-03\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">03</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 03</b><span>Por que investir</span></div>\n<h2>POR QUE INVESTIR EM UMA IDENTIDADE VISUAL?</h2>\n<div class=\"du-grid du-grid--3\"><article class=\"du-card\"><span class=\"du-card-tag\">Power-up 01 · +1</span><h3>Unidade</h3><p>Uma empresa sem identidade visual bem desenvolvida não tem personalidade. Com um manual de marca e uma boa identidade visual, seu público consegue identificá-la onde quer que vá.</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Power-up 02 · +1</span><h3>Credibilidade</h3><p>Uma identidade visual bem elaborada traz confiança a quem a vê, agregando maior credibilidade e profissionalismo à marca.</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Power-up 03 · +1</span><h3>Atração</h3><p>Atrair o público certo e ampliar o potencial de consumidores exige uma comunicação clara. Uma identidade visual profissional garante que ela seja a mais adequada.</p></article></div>\n</div>\n</section>\n<section id=\"fase-04\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">04</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 04</b><span>Habilidades</span></div>\n<h2>MINHAS HABILIDADES</h2>\n<div class=\"du-grid du-grid--3\"><div class=\"du-card\"><span class=\"du-card-tag\">Classe</span><h3>Desenvolvedor Criativo</h3><p>Posso criar sites, aplicativos, logotipos e outras mídias digitais incríveis.</p><ul class=\"du-list\"><li><b>01</b><span>Desenvolvedor</span></li><li><b>02</b><span>Design de Marca</span></li><li><b>03</b><span>Identidade Visual</span></li><li><b>04</b><span>Design de Produto</span></li><li><b>05</b><span>Ilustrações</span></li><li><b>06</b><span>Ação de Marca</span></li></ul></div><div class=\"du-card\"><span class=\"du-card-tag\">Inventário</span><h3>Tecnologias</h3><ul class=\"du-list\"><li><b>01</b><span>HTML</span></li><li><b>02</b><span>CSS</span></li><li><b>03</b><span>PHP</span></li><li><b>04</b><span>Javascript</span></li><li><b>05</b><span>jQuery</span></li></ul><p class=\"du-slots\">05 slots</p></div><div class=\"du-card\"><span class=\"du-card-tag\">Inventário</span><h3>Plataformas</h3><ul class=\"du-list\"><li><b>01</b><span>Wordpress</span></li><li><b>02</b><span>Prestashop</span></li><li><b>03</b><span>Joomla</span></li><li><b>04</b><span>Blogger</span></li><li><b>05</b><span>Winter</span></li></ul><p class=\"du-slots\">05 slots</p></div><div class=\"du-card\"><span class=\"du-card-tag\">Inventário</span><h3>Programas</h3><ul class=\"du-list\"><li><b>01</b><span>VS Code</span></li><li><b>02</b><span>Illustrator</span></li><li><b>03</b><span>Photoshop</span></li><li><b>04</b><span>CorelDRAW</span></li><li><b>05</b><span>Figma</span></li></ul><p class=\"du-slots\">05 slots</p></div></div>\n</div>\n</section>\n<section id=\"fase-05\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">05</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 05</b><span>Serviços</span></div>\n<h2>O QUE EU FAÇO?</h2>\n<p class=\"du-lead\">MEUS SERVIÇOS SÃO PRESTADOS COM MUITA DEDICAÇÃO E ANOS DE EXPERIÊNCIA.</p><div class=\"du-grid du-grid--3\" style=\"margin-top:28px\"><div class=\"du-card\"><span class=\"du-card-tag\">01</span><h3>Design Gráfico</h3><ul class=\"du-list\"><li><b>01</b><span>Design de Marca</span></li><li><b>02</b><span>Interface de Usuário</span></li><li><b>03</b><span>Ilustrações</span></li><li><b>04</b><span>Mídias Sociais</span></li><li><b>05</b><span>Instalações Digitais</span></li></ul></div><div class=\"du-card\"><span class=\"du-card-tag\">02</span><h3>Web Design</h3><ul class=\"du-list\"><li><b>01</b><span>Landing Page</span></li><li><b>02</b><span>CMS</span></li><li><b>03</b><span>E-commerce</span></li><li><b>04</b><span>Web App</span></li><li><b>05</b><span>Institucional</span></li></ul></div><div class=\"du-card\"><span class=\"du-card-tag\">03</span><h3>SEO</h3><ul class=\"du-list\"><li><b>01</b><span>Análise de Palavras-chave</span></li><li><b>02</b><span>Otimização On-Page</span></li><li><b>03</b><span>Criação de Conteúdo</span></li><li><b>04</b><span>Link Building</span></li><li><b>05</b><span>Auditoria de SEO</span></li></ul></div></div>\n</div>\n</section>\n<section id=\"fase-06\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">06</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 06</b><span>Catálogo</span></div>\n<h2>ESCOLHA O SEU NÍVEL</h2>\n<p class=\"du-lead\">Marcas, identidades e arte digital criadas ao longo do caminho. Escolha um nível para explorar o projeto completo.</p><div class=\"du-grid du-grid--3\" style=\"margin-top:28px\"><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><circle cx=\"80\" cy=\"60\" r=\"34\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"2\"/><circle cx=\"80\" cy=\"60\" r=\"20\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"1\" opacity=\".6\"/><path d=\"M20 96h120\" stroke=\"#5cc6d0\" stroke-width=\"1\" opacity=\".5\"/></svg></figure><span class=\"du-card-tag\">Nível 01 · Academia</span><h3>Juvenile World Academy</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">Prévia do logo</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M28 96 80 24l52 72z\" fill=\"none\" stroke=\"#eb767e\" stroke-width=\"2\"/><path d=\"M52 96 80 58l28 38\" fill=\"none\" stroke=\"#eb767e\" stroke-width=\"1\" opacity=\".6\"/></svg></figure><span class=\"du-card-tag\">Nível 02 · RedBubble</span><h3>Steel of Death</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">6 imagens</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><rect x=\"30\" y=\"30\" width=\"100\" height=\"72\" rx=\"8\" fill=\"none\" stroke=\"#ffdf00\" stroke-width=\"2\"/><path d=\"M30 60h100M80 30v72\" stroke=\"#ffdf00\" stroke-width=\"1\" opacity=\".5\"/></svg></figure><span class=\"du-card-tag\">Nível 03 · Jogo Roblox</span><h3>Farmer Life Simulation</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">Prévia do logo</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><circle cx=\"80\" cy=\"60\" r=\"40\" fill=\"none\" stroke=\"#7fdc8c\" stroke-width=\"2\"/><ellipse cx=\"80\" cy=\"60\" rx=\"40\" ry=\"15\" fill=\"none\" stroke=\"#7fdc8c\" stroke-width=\"1\" opacity=\".6\"/></svg></figure><span class=\"du-card-tag\">Nível 04 · RedBubble</span><h3>Chameleon Digital Art</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">6 imagens</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M26 90q27-60 54 0t54 0\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"2\"/><circle cx=\"80\" cy=\"46\" r=\"12\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"1\"/></svg></figure><span class=\"du-card-tag\">Nível 05 · Consultoria</span><h3>Rogério Consultoria</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">6 imagens</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M40 24h80v84#eb767e40z\" fill=\"none\" stroke=\"#eb767e\" stroke-width=\"2\"/><path d=\"M40 24l40 42 40-42M40 108l40-42 40 42\" stroke=\"#eb767e\" stroke-width=\"1\" opacity=\".6\"/></svg></figure><span class=\"du-card-tag\">Nível 06 · RedBubble</span><h3>Pitbul Color</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">6 imagens</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><circle cx=\"60\" cy=\"60\" r=\"26\" fill=\"none\" stroke=\"#ffdf00\" stroke-width=\"2\"/><circle cx=\"100\" cy=\"60\" r=\"26\" fill=\"none\" stroke=\"#ffdf00\" stroke-width=\"2\"/></svg></figure><span class=\"du-card-tag\">Nível 07 · Arte Digital</span><h3>Cat Fe</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">6 imagens</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M24 60h112M80 16v88\" stroke=\"#a7b3b5\" stroke-width=\"2\"/><circle cx=\"80\" cy=\"60\" r=\"30\" fill=\"none\" stroke=\"#a7b3b5\" stroke-width=\"1\" opacity=\".6\"/></svg></figure><span class=\"du-card-tag\">Nível 08 · RedBubble</span><h3>Classic Car</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">6 imagens</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M80 18 96 50l34 4-25 24 7 34-32-17-32 17 7-34-25-24 34-4z\" fill=\"none\" stroke=\"#7fdc8c\" stroke-width=\"2\"/></svg></figure><span class=\"du-card-tag\">Nível 09 · StartUp</span><h3>Selva Dev</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">6 imagens</span></article></div>\n</div>\n</section>\n<section id=\"fase-07\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">07</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 07</b><span>Depoimentos</span></div>\n<h2>DEPOIMENTOS DE CLIENTES</h2>\n<div class=\"du-card du-quote\"><p>“O melhor profissional da área que já conheci. Tato para os detalhes, olhar técnico e preço justo. David é um profissional sensacional, eu o recomendo!”</p><span class=\"du-quote-by\">SCRE &amp; TRABALHO · Cliente</span></div>\n</div>\n</section>\n<section id=\"fase-07-social\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">07</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 07</b><span>Social</span></div>\n<h2>ÚLTIMOS POSTS DO INSTAGRAM</h2>\n<div class=\"du-social-grid\"><div><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M28 96 80 24l52 72z\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"2\"/><path d=\"M52 96 80 58l28 38\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"1\" opacity=\".6\"/></svg></div><div><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><rect x=\"30\" y=\"30\" width=\"100\" height=\"72\" rx=\"8\" fill=\"none\" stroke=\"#eb767e\" stroke-width=\"2\"/><path d=\"M30 60h100M80 30v72\" stroke=\"#eb767e\" stroke-width=\"1\" opacity=\".5\"/></svg></div><div><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><circle cx=\"80\" cy=\"60\" r=\"40\" fill=\"none\" stroke=\"#ffdf00\" stroke-width=\"2\"/><ellipse cx=\"80\" cy=\"60\" rx=\"40\" ry=\"15\" fill=\"none\" stroke=\"#ffdf00\" stroke-width=\"1\" opacity=\".6\"/></svg></div><div><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M26 90q27-60 54 0t54 0\" fill=\"none\" stroke=\"#7fdc8c\" stroke-width=\"2\"/><circle cx=\"80\" cy=\"46\" r=\"12\" fill=\"none\" stroke=\"#7fdc8c\" stroke-width=\"1\"/></svg></div><div><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M40 24h80v84#a7b3b540z\" fill=\"none\" stroke=\"#a7b3b5\" stroke-width=\"2\"/><path d=\"M40 24l40 42 40-42M40 108l40-42 40 42\" stroke=\"#a7b3b5\" stroke-width=\"1\" opacity=\".6\"/></svg></div><div><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><circle cx=\"60\" cy=\"60\" r=\"26\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"2\"/><circle cx=\"100\" cy=\"60\" r=\"26\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"2\"/></svg></div></div><p style=\"margin-top:24px\"><a class=\"du-btn du-btn--ghost\" href=\"#\">Seguir no Instagram</a></p>\n</div>\n</section>\n<section id=\"fase-08\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">08</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 08</b><span>Contato</span></div>\n<h2>VAMOS CONVERSAR?</h2>\n<div class=\"du-grid du-grid--2\"><div class=\"du-card\"><span class=\"du-card-tag\">Diga olá</span><h3>Endereço</h3><p>Casa e Escritório: São Paulo, Brasil</p><p><a href=\"mailto:contact@davidalmeida.xyz\">contact@davidalmeida.xyz</a></p><ul class=\"du-list\"><li><b>01</b><span>Facebook</span></li><li><b>02</b><span>Instagram</span></li><li><b>03</b><span>Pinterest</span></li><li><b>04</b><span>X</span></li><li><b>05</b><span>Google Business</span></li><li><b>06</b><span>RedBubble</span></li></ul></div><div class=\"du-card\"><form class=\"du-form\" method=\"post\" action=\"{{ action|default('#') }}\"><label for=\"du-nome\">Nome</label><input id=\"du-nome\" name=\"name\" type=\"text\" maxlength=\"120\" required><label for=\"du-email\">E-mail</label><input id=\"du-email\" name=\"email\" type=\"email\" maxlength=\"160\" required><label for=\"du-msg\">Mensagem</label><textarea id=\"du-msg\" name=\"message\" maxlength=\"4000\" required></textarea><button class=\"du-btn\" type=\"submit\">Enviar mensagem →</button></form></div></div>\n</div>\n</section>\n</main>\n{{ footer }}\n",
+            "common/footer": "{# Rodape — fecha o documento. #}\n<footer class=\"du du-footer\"><div class=\"du-wrap\">\n<div class=\"du-footer-ghost\" aria-hidden=\"true\">DAVID L. ALMEIDA</div>\n<div class=\"du-footer-grid\">\n  <div><h4>David L. Almeida</h4><p style=\"color:var(--du-muted);font-size:.86rem\">Desenvolvedor Criativo. Posso criar sites, aplicativos, logotipos e outras mídias digitais incríveis. Casa e Escritório: São Paulo, Brasil.</p><p style=\"font-size:.86rem\"><a href=\"mailto:contact@davidalmeida.xyz\">contact@davidalmeida.xyz</a></p></div>\n  <div><h4>Me encontre em</h4><a href=\"https://github.com/davidcreator\">GitHub</a><a href=\"https://x.com/DavidAlmeidaDes\">X</a><a href=\"#\">GitLab</a><a href=\"#\">Instagram</a><a href=\"#\">Pinterest</a><a href=\"#\">RedBubble</a></div>\n  <div><h4>Navegar</h4><a href=\"#fase-01\">SOBRE</a><a href=\"#fase-02\">PROCESSO</a><a href=\"#fase-04\">HABILIDADES</a><a href=\"#fase-05\">SERVIÇOS</a><a href=\"#fase-06\">CATÁLOGO</a><a href=\"#fase-08\">CONTATO</a></div>\n</div>\n<div class=\"du-footer-bottom\"><span>© 2026 David L. Almeida · Desenvolvedor Criativo</span><span>ROLE PARA VOAR · DISTÂNCIA 0 KM</span></div>\n</div></footer>\n{% if theme_scene.enabled|default(false) and theme_scene.slot|default('') == 'footer_top' %}{% include 'partial/theme-scene.twig' %}{% endif %}\n</body>\n</html>\n",
+            "common/contact": "<section id=\"fase-08\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">08</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 08</b><span>Contato</span></div>\n<h2>VAMOS CONVERSAR?</h2>\n<div class=\"du-grid du-grid--2\"><div class=\"du-card\"><span class=\"du-card-tag\">Diga olá</span><h3>Endereço</h3><p>Casa e Escritório: São Paulo, Brasil</p><p><a href=\"mailto:contact@davidalmeida.xyz\">contact@davidalmeida.xyz</a></p><ul class=\"du-list\"><li><b>01</b><span>Facebook</span></li><li><b>02</b><span>Instagram</span></li><li><b>03</b><span>Pinterest</span></li><li><b>04</b><span>X</span></li><li><b>05</b><span>Google Business</span></li><li><b>06</b><span>RedBubble</span></li></ul></div><div class=\"du-card\"><form class=\"du-form\" method=\"post\" action=\"{{ action|default('#') }}\"><label for=\"du-nome\">Nome</label><input id=\"du-nome\" name=\"name\" type=\"text\" maxlength=\"120\" required><label for=\"du-email\">E-mail</label><input id=\"du-email\" name=\"email\" type=\"email\" maxlength=\"160\" required><label for=\"du-msg\">Mensagem</label><textarea id=\"du-msg\" name=\"message\" maxlength=\"4000\" required></textarea><button class=\"du-btn\" type=\"submit\">Enviar mensagem →</button></form></div></div>\n</div>\n</section>\n",
+            "partial/site_header": "{# David Universe 3D — HUD + folha de estilo. O header.twig do sistema inclui este partial com only. #}\n<style>\n\n:root{\n  --du-bg:#121516; --du-bg-2:#0e1011; --du-panel:rgba(24,30,32,.86);\n  --du-panel-2:#1d2426; --du-line:rgba(92,198,208,.28); --du-line-soft:rgba(167,179,181,.18);\n  --du-cyan:#5cc6d0; --du-cyan-dim:#2b7f89; --du-ink:#dfdfdf; --du-muted:#a7b3b5;\n  --du-rose:#eb767e; --du-gold:#ffdf00; --du-green:#7fdc8c;\n  --du-radius:4px; --du-radius-lg:8px; --du-max:1180px;\n  --du-font:system-ui,-apple-system,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif;\n  --du-display:\"Poiret One\",\"Century Gothic\",\"Trebuchet MS\",var(--du-font);\n}\n*,*::before,*::after{box-sizing:border-box}\n.du{font-family:var(--du-font);color:var(--du-ink);line-height:1.70;\n  background:var(--du-bg);-webkit-font-smoothing:antialiased}\n.du a{color:var(--du-cyan);text-decoration:none}\n.du a:hover{text-decoration:underline}\n.du h1,.du h2,.du h3,.du h4{font-family:var(--du-display);font-weight:400;\n  letter-spacing:.03em;line-height:1.16;margin:0 0 18px;color:var(--du-cyan)}\n.du h1{font-size:clamp(3.2rem,9vw,7.4rem);letter-spacing:.01em;text-transform:none}\n.du h2{font-size:clamp(1.8rem,4vw,3.2rem);text-transform:uppercase}\n.du h3{font-size:1.35rem}\n.du p{margin:0 0 16px}\n.du :focus-visible{outline:2px solid var(--du-cyan);outline-offset:3px}\n.du-wrap{max-width:var(--du-max);margin:0 auto;padding:0 28px}\n.du-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}\n\n/* ── HUD fixo ─────────────────────────────────────────────── */\n.du-hud{position:sticky;top:0;z-index:30;background:rgba(14,16,17,.92);\n  backdrop-filter:blur(10px);border-bottom:1px solid var(--du-line-soft)}\n.du-hud-in{display:flex;align-items:center;gap:22px;min-height:62px;\n  max-width:var(--du-max);margin:0 auto;padding:0 28px}\n.du-brand{display:inline-flex;align-items:center;gap:10px;white-space:nowrap}\n.du-brand-mark{display:grid;place-items:center;width:32px;height:32px;\n  border:1px solid var(--du-cyan);color:var(--du-cyan);font-family:var(--du-display);\n  font-size:1rem;letter-spacing:.06em}\n.du-brand-txt{font-family:var(--du-display);font-size:.92rem;letter-spacing:.14em;\n  color:var(--du-ink);line-height:1.15}\n.du-brand-txt small{display:block;font-family:var(--du-font);font-size:.56rem;\n  letter-spacing:.22em;color:var(--du-muted);text-transform:uppercase}\n.du-nav{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}\n.du-nav a{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;\n  color:var(--du-muted);padding:8px 10px}\n.du-nav a:hover{color:var(--du-cyan);text-decoration:none}\n.du-orbs{display:flex;gap:7px;align-items:center;font-size:.66rem;\n  letter-spacing:.14em;color:var(--du-cyan);white-space:nowrap}\n.du-orb{width:11px;height:11px;border-radius:50%;border:1px solid var(--du-cyan)}\n.du-orb.on{background:var(--du-cyan);box-shadow:0 0 10px var(--du-cyan)}\n.du-orb.gold{background:var(--du-gold);border-color:var(--du-gold)}\n.du-orb.rose{background:var(--du-rose);border-color:var(--du-rose)}\n.du-orb.green{background:var(--du-green);border-color:var(--du-green)}\n.du-status{display:flex;justify-content:space-between;gap:16px;\n  max-width:var(--du-max);margin:0 auto;padding:10px 28px;\n  font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--du-muted)}\n.du-status b{color:var(--du-cyan);font-weight:400}\n\n/* ── Fases e numeros fantasma ─────────────────────────────── */\n.du-phase{position:relative;padding:96px 0;border-bottom:1px solid var(--du-line-soft);\n  overflow:hidden;background:radial-gradient(ellipse at 85% 10%,rgba(92,198,208,.09),transparent 55%)}\n.du-phase-num{position:absolute;right:4%;top:26px;font-family:var(--du-display);\n  font-size:clamp(5rem,13vw,11rem);line-height:1;color:rgba(92,198,208,.09);\n  pointer-events:none;user-select:none}\n.du-phase-tag{display:flex;align-items:center;gap:14px;margin-bottom:34px;\n  font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:var(--du-muted)}\n.du-phase-tag b{font-family:var(--du-display);font-size:1.1rem;color:var(--du-cyan);font-weight:400}\n.du-phase-tag::after{content:\"\";flex:1;height:1px;background:var(--du-line)}\n.du-lead{font-size:1.02rem;color:var(--du-muted);max-width:70ch}\n.du-overline{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;\n  color:var(--du-cyan);margin-bottom:12px}\n\n/* ── Cards HUD ────────────────────────────────────────────── */\n.du-card{position:relative;background:var(--du-panel);border:1px solid var(--du-line);\n  border-radius:var(--du-radius);padding:28px;backdrop-filter:blur(6px)}\n.du-card::before,.du-card::after{content:\"\";position:absolute;width:12px;height:12px;\n  border-color:var(--du-cyan);opacity:.7}\n.du-card::before{top:-1px;left:-1px;border-top:2px solid;border-left:2px solid}\n.du-card::after{bottom:-1px;right:-1px;border-bottom:2px solid;border-right:2px solid}\n.du-card-tag{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;\n  color:var(--du-cyan);display:block;margin-bottom:14px}\n.du-card h3{text-transform:none;font-size:1.5rem;margin-bottom:12px}\n.du-card p{font-size:.9rem;color:var(--du-muted);margin:0}\n.du-grid{display:grid;gap:20px}\n.du-grid--2{grid-template-columns:repeat(2,1fr)}\n.du-grid--3{grid-template-columns:repeat(3,1fr)}\n.du-grid--6{grid-template-columns:repeat(3,1fr)}\n\n/* ── Botoes ───────────────────────────────────────────────── */\n.du-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;\n  padding:12px 22px;border:1px solid var(--du-cyan);border-radius:var(--du-radius);\n  font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;\n  background:var(--du-cyan);color:#082327;font-weight:700}\n.du .du-btn,.du a.du-btn:hover{color:#082327;text-decoration:none}\n.du-btn--ghost{background:rgba(50,58,61,.6);color:var(--du-ink);border-color:var(--du-line-soft)}\n.du .du-btn--ghost,.du a.du-btn--ghost:hover{color:var(--du-ink)}\n.du-btn:hover{filter:brightness(1.12)}\n\n/* ── Hero / cockpit ───────────────────────────────────────── */\n.du-hero{position:relative;padding:120px 0 100px;\n  background:radial-gradient(circle at 68% 42%,rgba(92,198,208,.16),transparent 46%),\n  radial-gradient(circle at 22% 78%,rgba(235,118,126,.09),transparent 40%),var(--du-bg)}\n.du-hero-in{display:grid;grid-template-columns:1.1fr .9fr;gap:52px;align-items:center}\n.du-hero h1{color:var(--du-ink);margin:0 0 22px}\n.du-hero h1 em{font-style:normal;color:var(--du-cyan)}\n.du-hero-sub{font-size:1.35rem;color:var(--du-cyan);font-family:var(--du-display);\n  letter-spacing:.06em;margin-bottom:14px}\n.du-hero-lead{color:var(--du-muted);max-width:48ch;margin-bottom:30px}\n.du-hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:34px}\n.du-controls{border:1px solid var(--du-line);background:var(--du-panel);\n  padding:22px;border-radius:var(--du-radius)}\n.du-controls h3{font-size:1.05rem;text-transform:uppercase;letter-spacing:.18em;margin-bottom:16px}\n.du-control{display:flex;gap:12px;padding:9px 0;border-top:1px solid var(--du-line-soft);\n  font-size:.8rem;color:var(--du-muted)}\n.du-control b{min-width:64px;color:var(--du-cyan);font-weight:400;letter-spacing:.14em}\n.du-socials{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}\n.du-socials a{width:32px;height:32px;display:grid;place-items:center;\n  border:1px solid var(--du-line-soft);border-radius:var(--du-radius);font-size:.68rem;\n  letter-spacing:.06em;color:var(--du-muted)}\n.du-socials a:hover{color:var(--du-cyan);border-color:var(--du-cyan);text-decoration:none}\n.du-hint{display:flex;justify-content:space-between;gap:14px;margin-top:56px;\n  font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--du-muted)}\n.du-hint b{color:var(--du-cyan);font-weight:400}\n\n/* ── Perfil (cartao de jogador) ───────────────────────────── */\n.du-profile{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start}\n.du-profile-row{display:flex;justify-content:space-between;gap:14px;\n  padding:11px 0;border-bottom:1px solid var(--du-line-soft);font-size:.84rem}\n.du-profile-row span{color:var(--du-muted)}\n.du-profile-row b{color:var(--du-cyan);font-weight:400}\n\n/* ── Etapas / niveis ──────────────────────────────────────── */\n.du-level{position:relative}\n.du-level-no{font-family:var(--du-display);font-size:2.2rem;color:var(--du-cyan);\n  opacity:.5;line-height:1;margin-bottom:10px}\n.du-level-tag{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;\n  color:var(--du-green);margin-bottom:8px}\n\n/* ── Inventario / listas ──────────────────────────────────── */\n.du-list{list-style:none;padding:0;margin:16px 0 0;display:grid;gap:9px}\n.du-list li{display:flex;gap:10px;font-size:.86rem;color:var(--du-muted);\n  padding:7px 0;border-bottom:1px solid var(--du-line-soft)}\n.du-list li b{color:var(--du-cyan);font-weight:400;min-width:26px}\n.du-slots{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;\n  color:var(--du-muted);margin-top:10px}\n\n/* ── Catalogo de niveis ───────────────────────────────────── */\n.du-level-card figure{margin:0 0 16px;aspect-ratio:16/10;border-radius:var(--du-radius);\n  background:linear-gradient(145deg,#182226,#0e1011);border:1px solid var(--du-line-soft);\n  display:grid;place-items:center;overflow:hidden}\n.du-level-card figure svg{width:78%;height:78%}\n.du-level-card h3{font-size:1.25rem}\n.du-level-meta{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;\n  color:var(--du-muted);display:block;margin-top:12px}\n\n/* ── Depoimento ───────────────────────────────────────────── */\n.du-quote{max-width:800px;margin:0 auto;text-align:center;padding:34px}\n.du-quote p{font-family:var(--du-display);font-size:1.5rem;color:var(--du-ink);\n  line-height:1.5;margin-bottom:20px}\n.du-quote-by{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--du-cyan)}\n.du-social-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:34px}\n.du-social-grid div{aspect-ratio:1;border:1px solid var(--du-line-soft);border-radius:50%;\n  display:grid;place-items:center;overflow:hidden;background:#182226}\n.du-social-grid svg{width:70%;height:70%}\n\n/* ── Formulario ───────────────────────────────────────────── */\n.du-form{display:grid;gap:14px}\n.du-form label{font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--du-muted)}\n.du-form input,.du-form textarea{width:100%;background:rgba(14,16,17,.8);\n  border:1px solid var(--du-line-soft);border-radius:var(--du-radius);padding:12px 14px;\n  color:var(--du-ink);font-family:var(--du-font);font-size:.9rem}\n.du-form textarea{min-height:120px;resize:vertical}\n.du-form .du-btn{justify-self:start;margin-top:8px}\n\n/* ── Rodape ───────────────────────────────────────────────── */\n.du-footer{position:relative;padding:70px 0 30px;background:var(--du-bg-2);\n  border-top:1px solid var(--du-line-soft);overflow:hidden}\n.du-footer-ghost{font-family:var(--du-display);font-size:clamp(2.4rem,8vw,6rem);\n  color:rgba(92,198,208,.10);text-align:center;letter-spacing:.06em;white-space:nowrap;\n  margin-bottom:34px;user-select:none}\n.du-footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:34px}\n.du-footer-grid h4{font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;\n  color:var(--du-cyan);margin-bottom:14px}\n.du-footer-grid a{display:block;font-size:.82rem;color:var(--du-muted);padding:4px 0}\n.du-footer-bottom{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;\n  margin-top:44px;padding-top:18px;border-top:1px solid var(--du-line-soft);\n  font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--du-muted)}\n\n/* ── Slot ThreeJS declarativo ─────────────────────────────── */\n.theme-scene{position:relative;width:100%;overflow:hidden;\n  border:1px solid var(--du-line);border-radius:var(--du-radius-lg);\n  background:radial-gradient(circle at 24% 22%,rgba(92,198,208,.18),transparent 58%),\n  radial-gradient(circle at 78% 72%,rgba(235,118,126,.12),transparent 60%),var(--du-bg-2);\n  isolation:isolate}\n.theme-scene[data-scene]{min-height:200px}\n.theme-scene.theme-scene--hero{min-height:320px;margin:0 0 34px}\n.theme-scene.theme-scene--home_top{min-height:230px;margin:0 0 26px}\n.theme-scene.theme-scene--footer_top{min-height:170px;margin:0 0 18px}\n.theme-scene__fallback{position:absolute;inset:0;\n  background-image:radial-gradient(circle,rgba(92,198,208,.72) 1.4px,transparent 2px),\n  radial-gradient(circle,rgba(223,223,223,.30) 1px,transparent 1.5px),\n  radial-gradient(circle,rgba(255,223,0,.26) 2px,transparent 3px);\n  background-size:28px 28px,47px 47px,103px 103px;\n  background-position:0 0,17px 23px,51px 37px;opacity:.86}\n.theme-scene__fallback::after{content:\"\";position:absolute;left:50%;top:50%;\n  width:280px;height:280px;margin:-140px 0 0 -140px;border-radius:50%;\n  border:1px solid rgba(92,198,208,.34);\n  box-shadow:0 0 0 42px rgba(92,198,208,.05),0 0 0 88px rgba(92,198,208,.04)}\n.theme-scene[data-scene=\"portfolio-3d\"] .theme-scene__fallback{\n  background-image:linear-gradient(135deg,transparent 46%,rgba(92,198,208,.28) 47%,\n  rgba(92,198,208,.28) 53%,transparent 54%);background-size:64px 64px}\n.theme-scene[data-scene=\"tools-3d\"] .theme-scene__fallback{\n  background-image:repeating-linear-gradient(60deg,transparent 0 22px,\n  rgba(235,118,126,.26) 23px 25px,transparent 26px 48px)}\n.theme-scene[data-scene=\"not-found\"] .theme-scene__fallback{opacity:.30}\n.du-scene-caption{display:flex;align-items:center;gap:12px;flex-wrap:wrap;\n  padding:12px 0 24px;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--du-muted)}\n.du-scene-caption b{color:var(--du-cyan);font-weight:400}\n.du-scene-caption::after{content:\"\";flex:1;height:1px;background:var(--du-line)}\n.du-scene-lite .theme-scene__fallback{opacity:.36}\n.du-scene-lite .theme-scene.theme-scene--hero{min-height:210px}\n\n/* ── 404 ──────────────────────────────────────────────────── */\n.du-404{text-align:center;padding:70px 0}\n.du-404 strong{display:block;font-family:var(--du-display);font-size:clamp(5rem,16vw,11rem);\n  color:var(--du-cyan);line-height:1;margin-bottom:16px}\n\n@media(max-width:900px){\n .du-hero-in,.du-profile{grid-template-columns:1fr}\n .du-grid--3,.du-grid--6,.du-footer-grid{grid-template-columns:repeat(2,1fr)}\n .du-nav{display:none}\n}\n@media(max-width:620px){\n .du-grid--2,.du-grid--3,.du-grid--6,.du-footer-grid{grid-template-columns:1fr}\n .du-social-grid{grid-template-columns:repeat(3,1fr)}\n .du-phase{padding:64px 0}\n .du-hero{padding:76px 0 64px}\n .theme-scene.theme-scene--hero{min-height:210px}\n .du-hud-in{padding:0 16px;gap:10px}\n .du-brand-txt{font-size:.72rem;letter-spacing:.08em}\n .du-brand-txt small{font-size:.5rem;letter-spacing:.12em}\n .du-brand-mark{width:28px;height:28px;font-size:.85rem}\n nav.du-orbs{display:none}\n .du-orbs{gap:4px;font-size:.56rem;letter-spacing:.06em}\n .du-orbs .du-orb{width:8px;height:8px}\n .du-orb:nth-of-type(n+4){display:none}\n .du-status{padding:8px 16px;font-size:.55rem;letter-spacing:.1em}\n .du-wrap{padding:0 16px}\n}\n@media(prefers-reduced-motion:reduce){.theme-scene__fallback{opacity:.22}}\n\n</style>\n<div class=\"du du-hud\"><div class=\"du-hud-in\">\n  <a class=\"du-brand\" href=\"{{ home|default('/') }}\" aria-label=\"{{ text_brand|default('David L. Almeida') }}\"><span class=\"du-brand-mark\">DA</span><span class=\"du-brand-txt\">DAVID L. ALMEIDA<small>Creative Developer</small></span></a>\n  <nav class=\"du-nav\" aria-label=\"Navegação principal\">\n    <a href=\"#fase-01\">SOBRE</a>\n    <a href=\"#fase-02\">PROCESSO</a>\n    <a href=\"#fase-04\">HABILIDADES</a>\n    <a href=\"#fase-05\">SERVIÇOS</a>\n    <a href=\"#fase-06\">CATÁLOGO</a>\n    <a href=\"#fase-08\">CONTATO</a>\n  </nav>\n  <div class=\"du-orbs\" aria-label=\"Orbes coletados\">ORBES 00/10<span class=\"du-orb on\"></span><span class=\"du-orb on\"></span><span class=\"du-orb gold\"></span><span class=\"du-orb rose\"></span><span class=\"du-orb green\"></span></div>\n  <nav class=\"du-orbs\" aria-label=\"{{ text_languages|default('Idiomas') }}\">{% for lang in languages|default([]) %}<a href=\"{{ lang.href }}\" hreflang=\"{{ lang.code }}\">{{ lang.code }}</a>{% endfor %}</nav>\n</div>\n<div class=\"du-status\"><span>FASE 00 — DECOLAGEM</span><span>DISTÂNCIA <b>0 KM</b></span></div>\n</div>\n",
+            "partial/hero": "{# Fase 00 — Decolagem / cockpit #}\n<section id=\"fase-00\" class=\"du du-hero\"><div class=\"du-wrap du-hero-in\">\n  <div><div class=\"du-overline\">EU SOU</div>\n    <h1>DAVID L.<br>ALMEIDA</h1>\n    <div class=\"du-hero-sub\">{{ text_role|default('Desenvolvido') }}</div>\n    <p class=\"du-hero-lead\">Posso criar sites, aplicativos, logotipos e outras mídias digitais incríveis.</p>\n    <div class=\"du-hero-actions\"><a class=\"du-btn\" href=\"#fase-01\">Iniciar missão →</a><a class=\"du-btn du-btn--ghost\" href=\"#fase-06\">Ver catálogo</a></div>\n    <div class=\"du-socials\" aria-label=\"Redes sociais\"><a href=\"#\" aria-label=\"Facebook\">Fa</a><a href=\"#\" aria-label=\"Instagram\">In</a><a href=\"#\" aria-label=\"Pinterest\">Pi</a><a href=\"https://x.com/DavidAlmeidaDes\" aria-label=\"X\">X</a><a href=\"#\" aria-label=\"RedBubble\">Re</a></div>\n  </div>\n  <div class=\"du-controls\"><h3>Controles</h3><div class=\"du-control\"><b>MOUSE</b><span>Mova o mouse para pilotar e navegar.</span></div><div class=\"du-control\"><b>TECLADO</b><span>Role para voar pelo universo.</span></div><div class=\"du-control\"><b>ORBES</b><span>Colete os orbes pelo caminho.</span></div><div class=\"du-control\"><b>MISSÃO</b><span>Escolha um nível para explorar o projeto completo.</span></div></div>\n</div>\n<div class=\"du-wrap du-hint\"><span>ROLE PARA VOAR ▾</span><span>DISTÂNCIA 0 KM</span></div>\n</section>\n",
+            "partial/hero-3d": "{# Fase 00 — variante de cena 3D #}\n<section id=\"fase-00\" class=\"du du-hero\"><div class=\"du-wrap du-hero-in\">\n  <div><div class=\"du-overline\">EU SOU</div>\n    <h1>DAVID L.<br>ALMEIDA</h1>\n    <div class=\"du-hero-sub\">{{ text_role|default('Desenvolvido') }}</div>\n    <p class=\"du-hero-lead\">Posso criar sites, aplicativos, logotipos e outras mídias digitais incríveis.</p>\n    <div class=\"du-hero-actions\"><a class=\"du-btn\" href=\"#fase-01\">Iniciar missão →</a><a class=\"du-btn du-btn--ghost\" href=\"#fase-06\">Ver catálogo</a></div>\n    <div class=\"du-socials\" aria-label=\"Redes sociais\"><a href=\"#\" aria-label=\"Facebook\">Fa</a><a href=\"#\" aria-label=\"Instagram\">In</a><a href=\"#\" aria-label=\"Pinterest\">Pi</a><a href=\"https://x.com/DavidAlmeidaDes\" aria-label=\"X\">X</a><a href=\"#\" aria-label=\"RedBubble\">Re</a></div>\n  </div>\n  <div class=\"du-controls\"><h3>Controles</h3><div class=\"du-control\"><b>MOUSE</b><span>Mova o mouse para pilotar e navegar.</span></div><div class=\"du-control\"><b>TECLADO</b><span>Role para voar pelo universo.</span></div><div class=\"du-control\"><b>ORBES</b><span>Colete os orbes pelo caminho.</span></div><div class=\"du-control\"><b>MISSÃO</b><span>Escolha um nível para explorar o projeto completo.</span></div></div>\n</div>\n<div class=\"du-wrap du-hint\"><span>ROLE PARA VOAR ▾</span><span>DISTÂNCIA 0 KM</span></div>\n</section>\n",
+            "partial/about": "<section id=\"fase-01\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">01</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 01</b><span>Sobre</span></div>\n<h2>QUEM SOU EU?</h2>\n<div class=\"du-grid du-grid--2\"><article class=\"du-card\"><span class=\"du-card-tag\">Classe</span><h3>SOU UM DESIGNER E DESENVOLVEDOR EXPERIENTE</h3><p>Como designer e desenvolvedor apaixonado, transformo ideias em realidade com criatividade e responsabilidade. Com anos de experiência em design gráfico, desenvolvimento de sites e criação de identidades visuais, entrego soluções inovadoras e de alta qualidade que fortalecem marcas e as destacam no mercado.</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Jogador 1 · LVL 01</span><h3>David L. Almeida</h3><p>Meu portfólio vai de logotipos de impacto a interfaces intuitivas, sempre alinhado às melhores práticas de SEO. Descubra como posso ajudar a elevar a sua marca ao próximo nível!</p></article></div><div class=\"du-grid du-grid--2\" style=\"margin-top:20px\"><article class=\"du-card\"><span class=\"du-card-tag\">Identidade visual</span><h3>GOSTO DE TRABALHAR EM PROJETOS QUE AJUDAM MARCAS A SE POSICIONAREM</h3><p>No núcleo de cada marca existe um mundo cuidadosamente construído, onde cada atributo é projetado estrategicamente para atender às necessidades únicas dos nossos clientes.</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Universo do design</span><h3>BEM-VINDO AO UNIVERSO DO DESIGN</h3><p>Do logotipo às cores, da tipografia aos grafismos, desenhamos uma experiência marcante e personalizada que ecoa a identidade de cada negócio. Onde damos vida às marcas e contamos histórias por meio de formas, cores e letras.</p></article></div><div class=\"du-profile\" style=\"margin-top:20px\"><div class=\"du-card\"><span class=\"du-card-tag\">Ficha do jogador</span><h3>David L. Almeida</h3><div class=\"du-profile-row\"><span>Classe</span><b>Desenvolvedor Criativo</b></div><div class=\"du-profile-row\"><span>Local</span><b>São Paulo, Brazil</b></div><div class=\"du-profile-row\"><span>E-mail</span><b>contact@davidalmeida.xyz</b></div><div class=\"du-profile-row\"><span>Nível</span><b>LVL 01</b></div></div><div class=\"du-card\"><span class=\"du-card-tag\">Me encontre em</span><h3>Canais</h3><ul class=\"du-list\"><li><b>01</b><span>GitHub</span></li><li><b>02</b><span>GitLab</span></li><li><b>03</b><span>X / Twitter</span></li><li><b>04</b><span>Instagram</span></li><li><b>05</b><span>Pinterest</span></li><li><b>06</b><span>RedBubble</span></li></ul></div></div>\n</div>\n</section>\n",
+            "partial/methodology": "<section id=\"fase-02\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">02</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 02</b><span>Processo</span></div>\n<h2>NO MEU PROCESSO DE CRIAÇÃO EU USO AS SEGUINTES ETAPAS:</h2>\n<p class=\"du-lead\">Seis níveis, nenhuma caixa preta: cada etapa termina com uma validação antes da próxima.</p><div class=\"du-grid du-grid--6\" style=\"margin-top:28px\"><article class=\"du-card du-level\"><div class=\"du-level-no\">01</div><span class=\"du-level-tag\">Nível 01 · OK</span><h3>Conhecendo o Cliente e a Empresa</h3><p>Na primeira etapa, busco reunir o máximo de informações sobre as características e a personalidade do cliente e da empresa! Uso um questionário detalhado, cheio de perguntas estratégicas sobre o projeto.</p></article><article class=\"du-card du-level\"><div class=\"du-level-no\">02</div><span class=\"du-level-tag\">Nível 02 · OK</span><h3>Pesquisa</h3><p>Com as informações coletadas, começo a pesquisar a empresa, o mercado em que atua, seus concorrentes e o público-alvo. Essas informações evitam criar algo genérico.</p></article><article class=\"du-card du-level\"><div class=\"du-level-no\">03</div><span class=\"du-level-tag\">Nível 03 · OK</span><h3>Conceito</h3><p>De acordo com os resultados da pesquisa, inicio um processo de brainstorming, mapeando ideias e esboçando conceitos, sempre em busca de um significado maior, além do visual.</p></article><article class=\"du-card du-level\"><div class=\"du-level-no\">04</div><span class=\"du-level-tag\">Nível 04 · OK</span><h3>Execução</h3><p>Depois de todos os testes, com uma ideia estabelecida, começo a definir tipografia e cores, além de criar formas, grafismos, padrões e elementos de apoio.</p></article><article class=\"du-card du-level\"><div class=\"du-level-no\">05</div><span class=\"du-level-tag\">Nível 05 · OK</span><h3>Flexibilidade</h3><p>Com tudo em mãos, começo a etapa de aplicação em produtos como papelaria, uniformes, outdoors e brindes. Garantindo que a marca possa ser usada e identificada em qualquer situação.</p></article><article class=\"du-card du-level\"><div class=\"du-level-no\">06</div><span class=\"du-level-tag\">Nível 06 · OK</span><h3>Entrega</h3><p>Com o projeto finalizado, crio e envio uma apresentação e o manual de uso da marca, mostrando cada etapa do projeto. Todos os arquivos são salvos, organizados e enviados ao cliente.</p></article></div>\n</div>\n</section>\n",
+            "partial/skills": "<section id=\"fase-04\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">04</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 04</b><span>Habilidades</span></div>\n<h2>MINHAS HABILIDADES</h2>\n<div class=\"du-grid du-grid--3\"><div class=\"du-card\"><span class=\"du-card-tag\">Classe</span><h3>Desenvolvedor Criativo</h3><p>Posso criar sites, aplicativos, logotipos e outras mídias digitais incríveis.</p><ul class=\"du-list\"><li><b>01</b><span>Desenvolvedor</span></li><li><b>02</b><span>Design de Marca</span></li><li><b>03</b><span>Identidade Visual</span></li><li><b>04</b><span>Design de Produto</span></li><li><b>05</b><span>Ilustrações</span></li><li><b>06</b><span>Ação de Marca</span></li></ul></div><div class=\"du-card\"><span class=\"du-card-tag\">Inventário</span><h3>Tecnologias</h3><ul class=\"du-list\"><li><b>01</b><span>HTML</span></li><li><b>02</b><span>CSS</span></li><li><b>03</b><span>PHP</span></li><li><b>04</b><span>Javascript</span></li><li><b>05</b><span>jQuery</span></li></ul><p class=\"du-slots\">05 slots</p></div><div class=\"du-card\"><span class=\"du-card-tag\">Inventário</span><h3>Plataformas</h3><ul class=\"du-list\"><li><b>01</b><span>Wordpress</span></li><li><b>02</b><span>Prestashop</span></li><li><b>03</b><span>Joomla</span></li><li><b>04</b><span>Blogger</span></li><li><b>05</b><span>Winter</span></li></ul><p class=\"du-slots\">05 slots</p></div><div class=\"du-card\"><span class=\"du-card-tag\">Inventário</span><h3>Programas</h3><ul class=\"du-list\"><li><b>01</b><span>VS Code</span></li><li><b>02</b><span>Illustrator</span></li><li><b>03</b><span>Photoshop</span></li><li><b>04</b><span>CorelDRAW</span></li><li><b>05</b><span>Figma</span></li></ul><p class=\"du-slots\">05 slots</p></div></div>\n</div>\n</section>\n",
+            "partial/services": "<section id=\"fase-05\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">05</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 05</b><span>Serviços</span></div>\n<h2>O QUE EU FAÇO?</h2>\n<p class=\"du-lead\">MEUS SERVIÇOS SÃO PRESTADOS COM MUITA DEDICAÇÃO E ANOS DE EXPERIÊNCIA.</p><div class=\"du-grid du-grid--3\" style=\"margin-top:28px\"><div class=\"du-card\"><span class=\"du-card-tag\">01</span><h3>Design Gráfico</h3><ul class=\"du-list\"><li><b>01</b><span>Design de Marca</span></li><li><b>02</b><span>Interface de Usuário</span></li><li><b>03</b><span>Ilustrações</span></li><li><b>04</b><span>Mídias Sociais</span></li><li><b>05</b><span>Instalações Digitais</span></li></ul></div><div class=\"du-card\"><span class=\"du-card-tag\">02</span><h3>Web Design</h3><ul class=\"du-list\"><li><b>01</b><span>Landing Page</span></li><li><b>02</b><span>CMS</span></li><li><b>03</b><span>E-commerce</span></li><li><b>04</b><span>Web App</span></li><li><b>05</b><span>Institucional</span></li></ul></div><div class=\"du-card\"><span class=\"du-card-tag\">03</span><h3>SEO</h3><ul class=\"du-list\"><li><b>01</b><span>Análise de Palavras-chave</span></li><li><b>02</b><span>Otimização On-Page</span></li><li><b>03</b><span>Criação de Conteúdo</span></li><li><b>04</b><span>Link Building</span></li><li><b>05</b><span>Auditoria de SEO</span></li></ul></div></div>\n</div>\n</section>\n",
+            "partial/testimonials": "<section id=\"fase-07\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">07</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 07</b><span>Depoimentos</span></div>\n<h2>DEPOIMENTOS DE CLIENTES</h2>\n<div class=\"du-card du-quote\"><p>“O melhor profissional da área que já conheci. Tato para os detalhes, olhar técnico e preço justo. David é um profissional sensacional, eu o recomendo!”</p><span class=\"du-quote-by\">SCRE &amp; TRABALHO · Cliente</span></div>\n</div>\n</section>\n",
+            "partial/portfolio": "<section id=\"fase-06\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">06</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 06</b><span>Catálogo</span></div>\n<h2>ESCOLHA O SEU NÍVEL</h2>\n<p class=\"du-lead\">Marcas, identidades e arte digital criadas ao longo do caminho. Escolha um nível para explorar o projeto completo.</p><div class=\"du-grid du-grid--3\" style=\"margin-top:28px\"><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><circle cx=\"80\" cy=\"60\" r=\"34\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"2\"/><circle cx=\"80\" cy=\"60\" r=\"20\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"1\" opacity=\".6\"/><path d=\"M20 96h120\" stroke=\"#5cc6d0\" stroke-width=\"1\" opacity=\".5\"/></svg></figure><span class=\"du-card-tag\">Nível 01 · Academia</span><h3>Juvenile World Academy</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">Prévia do logo</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M28 96 80 24l52 72z\" fill=\"none\" stroke=\"#eb767e\" stroke-width=\"2\"/><path d=\"M52 96 80 58l28 38\" fill=\"none\" stroke=\"#eb767e\" stroke-width=\"1\" opacity=\".6\"/></svg></figure><span class=\"du-card-tag\">Nível 02 · RedBubble</span><h3>Steel of Death</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">6 imagens</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><rect x=\"30\" y=\"30\" width=\"100\" height=\"72\" rx=\"8\" fill=\"none\" stroke=\"#ffdf00\" stroke-width=\"2\"/><path d=\"M30 60h100M80 30v72\" stroke=\"#ffdf00\" stroke-width=\"1\" opacity=\".5\"/></svg></figure><span class=\"du-card-tag\">Nível 03 · Jogo Roblox</span><h3>Farmer Life Simulation</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">Prévia do logo</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><circle cx=\"80\" cy=\"60\" r=\"40\" fill=\"none\" stroke=\"#7fdc8c\" stroke-width=\"2\"/><ellipse cx=\"80\" cy=\"60\" rx=\"40\" ry=\"15\" fill=\"none\" stroke=\"#7fdc8c\" stroke-width=\"1\" opacity=\".6\"/></svg></figure><span class=\"du-card-tag\">Nível 04 · RedBubble</span><h3>Chameleon Digital Art</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">6 imagens</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M26 90q27-60 54 0t54 0\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"2\"/><circle cx=\"80\" cy=\"46\" r=\"12\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"1\"/></svg></figure><span class=\"du-card-tag\">Nível 05 · Consultoria</span><h3>Rogério Consultoria</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">6 imagens</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M40 24h80v84#eb767e40z\" fill=\"none\" stroke=\"#eb767e\" stroke-width=\"2\"/><path d=\"M40 24l40 42 40-42M40 108l40-42 40 42\" stroke=\"#eb767e\" stroke-width=\"1\" opacity=\".6\"/></svg></figure><span class=\"du-card-tag\">Nível 06 · RedBubble</span><h3>Pitbul Color</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">6 imagens</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><circle cx=\"60\" cy=\"60\" r=\"26\" fill=\"none\" stroke=\"#ffdf00\" stroke-width=\"2\"/><circle cx=\"100\" cy=\"60\" r=\"26\" fill=\"none\" stroke=\"#ffdf00\" stroke-width=\"2\"/></svg></figure><span class=\"du-card-tag\">Nível 07 · Arte Digital</span><h3>Cat Fe</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">6 imagens</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M24 60h112M80 16v88\" stroke=\"#a7b3b5\" stroke-width=\"2\"/><circle cx=\"80\" cy=\"60\" r=\"30\" fill=\"none\" stroke=\"#a7b3b5\" stroke-width=\"1\" opacity=\".6\"/></svg></figure><span class=\"du-card-tag\">Nível 08 · RedBubble</span><h3>Classic Car</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">6 imagens</span></article><article class=\"du-card du-level-card\"><figure><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M80 18 96 50l34 4-25 24 7 34-32-17-32 17 7-34-25-24 34-4z\" fill=\"none\" stroke=\"#7fdc8c\" stroke-width=\"2\"/></svg></figure><span class=\"du-card-tag\">Nível 09 · StartUp</span><h3>Selva Dev</h3><p>Projeto completo no catálogo de níveis.</p><span class=\"du-level-meta\">6 imagens</span></article></div>\n</div>\n</section>\n",
+            "partial/tools": "<section class=\"du du-phase\" id=\"fase-ferramentas\"><div class=\"du-wrap\"><div class=\"du-phase-tag\"><b>FASE 04</b><span>Inventário</span></div><h2>FERRAMENTAS DA MISSÃO</h2><div class=\"du-grid du-grid--3\"><div class=\"du-card\"><span class=\"du-card-tag\">Tecnologias</span><h3>Stack</h3><ul class=\"du-list\"><li><b>01</b><span>HTML</span></li><li><b>02</b><span>CSS</span></li><li><b>03</b><span>PHP</span></li><li><b>04</b><span>Javascript</span></li><li><b>05</b><span>jQuery</span></li></ul><p class=\"du-slots\">05 slots</p></div><div class=\"du-card\"><span class=\"du-card-tag\">Plataformas</span><h3>CMS</h3><ul class=\"du-list\"><li><b>01</b><span>Wordpress</span></li><li><b>02</b><span>Prestashop</span></li><li><b>03</b><span>Joomla</span></li><li><b>04</b><span>Blogger</span></li><li><b>05</b><span>Winter</span></li></ul><p class=\"du-slots\">05 slots</p></div><div class=\"du-card\"><span class=\"du-card-tag\">Programas</span><h3>Estúdio</h3><ul class=\"du-list\"><li><b>01</b><span>VS Code</span></li><li><b>02</b><span>Illustrator</span></li><li><b>03</b><span>Photoshop</span></li><li><b>04</b><span>CorelDRAW</span></li><li><b>05</b><span>Figma</span></li></ul><p class=\"du-slots\">05 slots</p></div></div></div></section>\n",
+            "partial/news": "<section id=\"fase-07-social\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">07</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 07</b><span>Social</span></div>\n<h2>ÚLTIMOS POSTS DO INSTAGRAM</h2>\n<div class=\"du-social-grid\"><div><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M28 96 80 24l52 72z\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"2\"/><path d=\"M52 96 80 58l28 38\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"1\" opacity=\".6\"/></svg></div><div><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><rect x=\"30\" y=\"30\" width=\"100\" height=\"72\" rx=\"8\" fill=\"none\" stroke=\"#eb767e\" stroke-width=\"2\"/><path d=\"M30 60h100M80 30v72\" stroke=\"#eb767e\" stroke-width=\"1\" opacity=\".5\"/></svg></div><div><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><circle cx=\"80\" cy=\"60\" r=\"40\" fill=\"none\" stroke=\"#ffdf00\" stroke-width=\"2\"/><ellipse cx=\"80\" cy=\"60\" rx=\"40\" ry=\"15\" fill=\"none\" stroke=\"#ffdf00\" stroke-width=\"1\" opacity=\".6\"/></svg></div><div><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M26 90q27-60 54 0t54 0\" fill=\"none\" stroke=\"#7fdc8c\" stroke-width=\"2\"/><circle cx=\"80\" cy=\"46\" r=\"12\" fill=\"none\" stroke=\"#7fdc8c\" stroke-width=\"1\"/></svg></div><div><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><path d=\"M40 24h80v84#a7b3b540z\" fill=\"none\" stroke=\"#a7b3b5\" stroke-width=\"2\"/><path d=\"M40 24l40 42 40-42M40 108l40-42 40 42\" stroke=\"#a7b3b5\" stroke-width=\"1\" opacity=\".6\"/></svg></div><div><svg viewBox=\"0 0 160 120\" fill=\"none\" aria-hidden=\"true\" role=\"img\" aria-label=\"Selo do projeto\"><circle cx=\"60\" cy=\"60\" r=\"26\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"2\"/><circle cx=\"100\" cy=\"60\" r=\"26\" fill=\"none\" stroke=\"#5cc6d0\" stroke-width=\"2\"/></svg></div></div><p style=\"margin-top:24px\"><a class=\"du-btn du-btn--ghost\" href=\"#\">Seguir no Instagram</a></p>\n</div>\n</section>\n",
+            "partial/clients": "<section class=\"du du-phase\" id=\"fase-clientes\"><div class=\"du-wrap\"><div class=\"du-phase-tag\"><b>FASE 01</b><span>Parceiros</span></div><div class=\"du-grid du-grid--3\"><div class=\"du-card\"><span class=\"du-card-tag\">01</span><h3>Marcas</h3><p>Identidades visuais e manuais de uso para empresas de diferentes segmentos.</p></div><div class=\"du-card\"><span class=\"du-card-tag\">02</span><h3>Produtos digitais</h3><p>Interfaces, sites e aplicativos com foco em clareza e resultado.</p></div><div class=\"du-card\"><span class=\"du-card-tag\">03</span><h3>Conteúdo</h3><p>Arte digital, ilustrações e peças para redes sociais e campanhas.</p></div></div></div></section>\n",
+            "partial/contact": "<section id=\"fase-08\" class=\"du du-phase\">\n<span class=\"du-phase-num\" aria-hidden=\"true\">08</span>\n<div class=\"du-wrap\">\n<div class=\"du-phase-tag\"><b>FASE 08</b><span>Contato</span></div>\n<h2>VAMOS CONVERSAR?</h2>\n<div class=\"du-grid du-grid--2\"><div class=\"du-card\"><span class=\"du-card-tag\">Diga olá</span><h3>Endereço</h3><p>Casa e Escritório: São Paulo, Brasil</p><p><a href=\"mailto:contact@davidalmeida.xyz\">contact@davidalmeida.xyz</a></p><ul class=\"du-list\"><li><b>01</b><span>Facebook</span></li><li><b>02</b><span>Instagram</span></li><li><b>03</b><span>Pinterest</span></li><li><b>04</b><span>X</span></li><li><b>05</b><span>Google Business</span></li><li><b>06</b><span>RedBubble</span></li></ul></div><div class=\"du-card\"><form class=\"du-form\" method=\"post\" action=\"{{ action|default('#') }}\"><label for=\"du-nome\">Nome</label><input id=\"du-nome\" name=\"name\" type=\"text\" maxlength=\"120\" required><label for=\"du-email\">E-mail</label><input id=\"du-email\" name=\"email\" type=\"email\" maxlength=\"160\" required><label for=\"du-msg\">Mensagem</label><textarea id=\"du-msg\" name=\"message\" maxlength=\"4000\" required></textarea><button class=\"du-btn\" type=\"submit\">Enviar mensagem →</button></form></div></div>\n</div>\n</section>\n",
+            "cms/page_info": "{# Página interna #}\n{{ header }}\n<main class=\"du\">\n{% include 'partial/theme-scene.twig' %}\n<div class=\"du-wrap\"><section class=\"du du-phase\" style=\"border:0\"><div class=\"du-phase-tag\"><b>FASE EXTRA</b><span>Catálogo</span></div><h2>SOBRE O PROJETO</h2><p class=\"du-lead\">Cada nível do catálogo é uma missão completa.</p><div class=\"du-grid du-grid--3\" style=\"margin-top:28px\"><article class=\"du-card\"><span class=\"du-card-tag\">Nível 01</span><h3>Juvenile World Academy</h3><p>Prévia do logo</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 02</span><h3>Steel of Death</h3><p>6 imagens</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 03</span><h3>Farmer Life Simulation</h3><p>Prévia do logo</p></article></div></section></div>\n</main>\n{{ footer }}\n",
+            "catalog/project_list": "{# Página interna #}\n{{ header }}\n<main class=\"du\">\n{% include 'partial/theme-scene.twig' %}\n<div class=\"du-wrap\"><section class=\"du du-phase\" style=\"border:0\"><div class=\"du-phase-tag\"><b>FASE EXTRA</b><span>Catálogo</span></div><h2>ESCOLHA O SEU NÍVEL</h2><p class=\"du-lead\">Marcas, identidades e arte digital criadas ao longo do caminho.</p><div class=\"du-grid du-grid--3\" style=\"margin-top:28px\"><article class=\"du-card\"><span class=\"du-card-tag\">Nível 01</span><h3>Juvenile World Academy</h3><p>Academia · Prévia do logo</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 02</span><h3>Steel of Death</h3><p>RedBubble · 6 imagens</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 03</span><h3>Farmer Life Simulation</h3><p>Jogo Roblox · Prévia do logo</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 04</span><h3>Chameleon Digital Art</h3><p>RedBubble · 6 imagens</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 05</span><h3>Rogério Consultoria</h3><p>Consultoria · 6 imagens</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 06</span><h3>Pitbul Color</h3><p>RedBubble · 6 imagens</p></article></div></section></div>\n</main>\n{{ footer }}\n",
+            "catalog/project_info": "{# Página interna #}\n{{ header }}\n<main class=\"du\">\n{% include 'partial/theme-scene.twig' %}\n<div class=\"du-wrap\"><section class=\"du du-phase\" style=\"border:0\"><div class=\"du-phase-tag\"><b>FASE EXTRA</b><span>Catálogo</span></div><h2>PROJETO COMPLETO</h2><p class=\"du-lead\">Prévia do nível selecionado.</p><div class=\"du-grid du-grid--3\" style=\"margin-top:28px\"><article class=\"du-card\"><span class=\"du-card-tag\">Nível 01</span><h3>Conhecendo o Cliente e a Empresa</h3><p>Etapa validada</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 02</span><h3>Pesquisa</h3><p>Etapa validada</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 03</span><h3>Conceito</h3><p>Etapa validada</p></article></div></section></div>\n</main>\n{{ footer }}\n",
+            "blog/blog_list": "{# Página interna #}\n{{ header }}\n<main class=\"du\">\n{% include 'partial/theme-scene.twig' %}\n<div class=\"du-wrap\"><section class=\"du du-phase\" style=\"border:0\"><div class=\"du-phase-tag\"><b>FASE EXTRA</b><span>Catálogo</span></div><h2>ÚLTIMOS POSTS</h2><p class=\"du-lead\">Notas sobre design, marca e desenvolvimento.</p><div class=\"du-grid du-grid--3\" style=\"margin-top:28px\"><article class=\"du-card\"><span class=\"du-card-tag\">Nível 01</span><h3>Unidade</h3><p>Cores, formas e padrões que identificam uma marca.</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 02</span><h3>Credibilidade</h3><p>Como uma identidade clara gera confiança.</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 03</span><h3>Atração</h3><p>Comunicação certa com o público certo.</p></article></div></section></div>\n</main>\n{{ footer }}\n",
+            "blog/blog_info": "{# Página interna #}\n{{ header }}\n<main class=\"du\">\n{% include 'partial/theme-scene.twig' %}\n<div class=\"du-wrap\"><section class=\"du du-phase\" style=\"border:0\"><div class=\"du-phase-tag\"><b>FASE EXTRA</b><span>Catálogo</span></div><h2>NOTA DO UNIVERSO</h2><p class=\"du-lead\">Leitura de cinco minutos.</p><div class=\"du-grid du-grid--3\" style=\"margin-top:28px\"><article class=\"du-card\"><span class=\"du-card-tag\">Nível 01</span><h3>Unidade</h3><p>Uma empresa sem identidade visual bem desenvolvida não tem personalidade. Com um manual de marca e uma boa identidade visual, seu público consegue identificá-la onde quer que vá.</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 02</span><h3>Credibilidade</h3><p>Uma identidade visual bem elaborada traz confiança a quem a vê, agregando maior credibilidade e profissionalismo à marca.</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 03</span><h3>Atração</h3><p>Atrair o público certo e ampliar o potencial de consumidores exige uma comunicação clara. Uma identidade visual profissional garante que ela seja a mais adequada.</p></article></div></section></div>\n</main>\n{{ footer }}\n",
+            "tool/tool_list": "{# Página interna #}\n{{ header }}\n<main class=\"du\">\n{% include 'partial/theme-scene.twig' %}\n<div class=\"du-wrap\"><section class=\"du du-phase\" style=\"border:0\"><div class=\"du-phase-tag\"><b>FASE EXTRA</b><span>Catálogo</span></div><h2>FERRAMENTAS DA MISSÃO</h2><p class=\"du-lead\">Inventário completo de tecnologias e plataformas.</p><div class=\"du-grid du-grid--3\" style=\"margin-top:28px\"><article class=\"du-card\"><span class=\"du-card-tag\">Nível 01</span><h3>Tecnologias</h3><p>HTML, CSS, PHP, Javascript e jQuery.</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 02</span><h3>Plataformas</h3><p>Wordpress, Prestashop, Joomla, Blogger e Winter.</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 03</span><h3>Programas</h3><p>VS Code, Illustrator, Photoshop, CorelDRAW e Figma.</p></article></div></section></div>\n</main>\n{{ footer }}\n",
+            "tool/tool_info": "{# Página interna #}\n{{ header }}\n<main class=\"du\">\n{% include 'partial/theme-scene.twig' %}\n<div class=\"du-wrap\"><section class=\"du du-phase\" style=\"border:0\"><div class=\"du-phase-tag\"><b>FASE EXTRA</b><span>Catálogo</span></div><h2>SLOT DO INVENTÁRIO</h2><p class=\"du-lead\">Cinco itens por categoria.</p><div class=\"du-grid du-grid--3\" style=\"margin-top:28px\"><article class=\"du-card\"><span class=\"du-card-tag\">Nível 01</span><h3>HTML</h3><p>Disponível</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 02</span><h3>CSS</h3><p>Disponível</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 03</span><h3>PHP</h3><p>Disponível</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 04</span><h3>Javascript</h3><p>Disponível</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 05</span><h3>jQuery</h3><p>Disponível</p></article></div></section></div>\n</main>\n{{ footer }}\n",
+            "checkout/quote": "{# Página interna #}\n{{ header }}\n<main class=\"du\">\n{% include 'partial/theme-scene.twig' %}\n<div class=\"du-wrap\"><section class=\"du du-phase\" style=\"border:0\"><div class=\"du-phase-tag\"><b>FASE EXTRA</b><span>Catálogo</span></div><h2>SOLICITAR MISSÃO</h2><p class=\"du-lead\">Conte o objetivo e receba uma proposta com escopo e prazo.</p><div class=\"du-grid du-grid--3\" style=\"margin-top:28px\"><article class=\"du-card\"><span class=\"du-card-tag\">Nível 01</span><h3>Descoberta</h3><p>Entender o cliente e a empresa.</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 02</span><h3>Conceito</h3><p>Brainstorming e esboços.</p></article><article class=\"du-card\"><span class=\"du-card-tag\">Nível 03</span><h3>Entrega</h3><p>Apresentação e manual de uso.</p></article></div></section></div>\n</main>\n{{ footer }}\n",
+            "error/not_found": "{# Nível não encontrado #}\n{{ header }}\n<main class=\"du\">\n<div class=\"du-wrap du-404\"><strong>404</strong><h2>Esta página não existe</h2><p class=\"du-lead\" style=\"margin:0 auto 26px\">O universo continua em frente. Volte ao início ou escolha outro nível.</p><a class=\"du-btn\" href=\"{{ home|default('/') }}\">Voltar à decolagem →</a></div>\n</main>\n{{ footer }}\n"
+        },
+        "conditions": {
+            "version": 1,
+            "rules": [
+                {
+                    "id": "du_home_particles",
+                    "when": {
+                        "field": "route",
+                        "op": "eq",
+                        "value": "common/home"
+                    },
+                    "then": {
+                        "scene": "hero-particles",
+                        "three": {
+                            "enabled": true,
+                            "scene": "hero-particles",
+                            "slot": "hero",
+                            "count": 520,
+                            "color": "#5cc6d0",
+                            "speed": 0.06
+                        }
+                    }
+                },
+                {
+                    "id": "du_catalog_3d",
+                    "when": {
+                        "field": "route",
+                        "op": "in",
+                        "value": [
+                            "catalog/project_list",
+                            "catalog/project_info"
+                        ]
+                    },
+                    "then": {
+                        "scene": "portfolio-3d",
+                        "three": {
+                            "enabled": true,
+                            "scene": "portfolio-3d",
+                            "slot": "home_top",
+                            "count": 500,
+                            "color": "#eb767e",
+                            "speed": 0.07
+                        }
+                    }
+                },
+                {
+                    "id": "du_tools_3d",
+                    "when": {
+                        "field": "route",
+                        "op": "in",
+                        "value": [
+                            "tool/tool_list",
+                            "tool/tool_info",
+                            "blog/blog_list"
+                        ]
+                    },
+                    "then": {
+                        "scene": "tools-3d",
+                        "three": {
+                            "enabled": true,
+                            "scene": "tools-3d",
+                            "slot": "home_top",
+                            "count": 350,
+                            "color": "#ffdf00",
+                            "speed": 0.08
+                        }
+                    }
+                },
+                {
+                    "id": "du_not_found",
+                    "when": {
+                        "field": "route",
+                        "op": "eq",
+                        "value": "error/not_found"
+                    },
+                    "then": {
+                        "scene": "not-found",
+                        "three": {
+                            "enabled": true,
+                            "scene": "not-found",
+                            "slot": "footer_top",
+                            "count": 200,
+                            "color": "#a7b3b5",
+                            "speed": 0.04
+                        }
+                    }
+                },
+                {
+                    "id": "du_mobile_lite",
+                    "when": {
+                        "field": "mobile",
+                        "op": "eq",
+                        "value": true
+                    },
+                    "then": {
+                        "classes": [
+                            "du-scene-lite"
+                        ],
+                        "three": {
+                            "enabled": true,
+                            "scene": "hero-particles",
+                            "slot": "hero",
+                            "count": 180,
+                            "color": "#5cc6d0",
+                            "speed": 0.04
+                        }
+                    }
+                }
+            ]
+        },
+        "three": {
+            "enabled": true,
+            "scene": "hero-particles",
+            "slot": "hero",
+            "count": 520,
+            "color": "#5cc6d0",
+            "speed": 0.06
+        },
+        "tokens": {
+            "font_family": "system",
+            "font_size": "16",
+            "font_scale": "1.250",
+            "line_height": "1.70",
+            "font_weight": "400",
+            "heading_weight": "700",
+            "space_unit": "8",
+            "density": "comfortable",
+            "content_width": "1180",
+            "radius": "4",
+            "radius_lg": "8",
+            "border_width": "1",
+            "shadow": "1",
+            "color_text": "#212529",
+            "color_muted": "#5c6773",
+            "color_surface": "#ffffff",
+            "color_primary": "#0e6d7a",
+            "focus_ring": "#5cc6d0",
+            "dark_text": "#dfdfdf",
+            "dark_muted": "#a7b3b5",
+            "dark_surface": "#121516",
+            "dark_primary": "#5cc6d0"
+        },
+        "parent": "",
+        "kaz_scene": {
+            "version": 1,
+            "canvas": {
+                "w": 960,
+                "h": 540,
+                "grid": 8
+            },
+            "layers": [
+                {
+                    "id": "du-01",
+                    "kind": "rect",
+                    "role": "primary",
+                    "x": 40,
+                    "y": 40,
+                    "w": 880,
+                    "h": 70,
+                    "fill": "#0e1011",
+                    "radius": 4,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-02",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 60,
+                    "y": 56,
+                    "w": 360,
+                    "h": 38,
+                    "fill": "#5cc6d0",
+                    "radius": 0,
+                    "text": "David Universe 3D",
+                    "fontSize": 26,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-03",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 620,
+                    "y": 62,
+                    "w": 280,
+                    "h": 30,
+                    "fill": "#a7b3b5",
+                    "radius": 0,
+                    "text": "FASE 00 — DECOLAGEM",
+                    "fontSize": 14,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-04",
+                    "kind": "card",
+                    "role": "surface",
+                    "x": 40,
+                    "y": 130,
+                    "w": 420,
+                    "h": 220,
+                    "fill": "#0e1011",
+                    "radius": 8,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-05",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 60,
+                    "y": 150,
+                    "w": 380,
+                    "h": 50,
+                    "fill": "#dfdfdf",
+                    "radius": 0,
+                    "text": "DAVID L. ALMEIDA",
+                    "fontSize": 36,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-06",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 60,
+                    "y": 210,
+                    "w": 380,
+                    "h": 36,
+                    "fill": "#5cc6d0",
+                    "radius": 0,
+                    "text": "Desenvolvedor Criativo",
+                    "fontSize": 20,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-07",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 60,
+                    "y": 258,
+                    "w": 380,
+                    "h": 34,
+                    "fill": "#a7b3b5",
+                    "radius": 0,
+                    "text": "Sites, apps, logotipos e mídias digitais",
+                    "fontSize": 14,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-08",
+                    "kind": "button",
+                    "role": "component",
+                    "x": 60,
+                    "y": 310,
+                    "w": 220,
+                    "h": 42,
+                    "fill": "#5cc6d0",
+                    "radius": 4,
+                    "text": "Iniciar missão",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-09",
+                    "kind": "card",
+                    "role": "surface",
+                    "x": 480,
+                    "y": 130,
+                    "w": 440,
+                    "h": 220,
+                    "fill": "#0e1011",
+                    "radius": 8,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-10",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 500,
+                    "y": 150,
+                    "w": 400,
+                    "h": 34,
+                    "fill": "#5cc6d0",
+                    "radius": 0,
+                    "text": "CONTROLES",
+                    "fontSize": 20,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-11",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 500,
+                    "y": 194,
+                    "w": 400,
+                    "h": 30,
+                    "fill": "#a7b3b5",
+                    "radius": 0,
+                    "text": "Mouse · pilotar a nave",
+                    "fontSize": 14,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-12",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 500,
+                    "y": 230,
+                    "w": 400,
+                    "h": 30,
+                    "fill": "#a7b3b5",
+                    "radius": 0,
+                    "text": "Teclado · role para voar",
+                    "fontSize": 14,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-13",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 500,
+                    "y": 266,
+                    "w": 400,
+                    "h": 30,
+                    "fill": "#a7b3b5",
+                    "radius": 0,
+                    "text": "Orbes · colete pelo caminho",
+                    "fontSize": 14,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-14",
+                    "kind": "card",
+                    "role": "surface",
+                    "x": 40,
+                    "y": 372,
+                    "w": 280,
+                    "h": 140,
+                    "fill": "#0e1011",
+                    "radius": 8,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-15",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 58,
+                    "y": 390,
+                    "w": 244,
+                    "h": 34,
+                    "fill": "#5cc6d0",
+                    "radius": 0,
+                    "text": "FASE 01 · SOBRE",
+                    "fontSize": 18,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-16",
+                    "kind": "card",
+                    "role": "surface",
+                    "x": 340,
+                    "y": 372,
+                    "w": 280,
+                    "h": 140,
+                    "fill": "#0e1011",
+                    "radius": 8,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-17",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 358,
+                    "y": 390,
+                    "w": 244,
+                    "h": 34,
+                    "fill": "#5cc6d0",
+                    "radius": 0,
+                    "text": "FASE 02 · PROCESSO",
+                    "fontSize": 18,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-18",
+                    "kind": "card",
+                    "role": "surface",
+                    "x": 640,
+                    "y": 372,
+                    "w": 280,
+                    "h": 140,
+                    "fill": "#0e1011",
+                    "radius": 8,
+                    "text": "",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-19",
+                    "kind": "text",
+                    "role": "none",
+                    "x": 658,
+                    "y": 390,
+                    "w": 244,
+                    "h": 34,
+                    "fill": "#5cc6d0",
+                    "radius": 0,
+                    "text": "FASE 06 · CATÁLOGO",
+                    "fontSize": 18,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                },
+                {
+                    "id": "du-20",
+                    "kind": "button",
+                    "role": "component",
+                    "x": 700,
+                    "y": 470,
+                    "w": 220,
+                    "h": 42,
+                    "fill": "#eb767e",
+                    "radius": 4,
+                    "text": "Ver catálogo",
+                    "fontSize": 16,
+                    "visible": true,
+                    "locked": false,
+                    "bindId": ""
+                }
+            ]
+        }
+    },
+    "meta": {
+        "generator": "ReamurCMS",
+        "schema": 1,
+        "source": "draft"
+    },
+    "checksum": "e081f0d26759034b15f1e200e2248199bbee43dea30765fb8977704c3f29a1d4"
+}

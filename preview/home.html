@@ -3,405 +3,373 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Atlas Studio 3D — Início</title>
+<meta name="theme-color" content="#121516">
+<title>David Universe 3D — Início</title>
 <style>
 
+
 :root{
-  --at-primary:var(--theme-primary,#4338ca);
-  --at-surface:var(--theme-surface,#ffffff);
-  --at-ink:#101828;
-  --at-muted:#52627a;
-  --at-line:#e3e8f0;
-  --at-soft:#f5f7fc;
-  --at-accent:#0ea5e9;
-  --at-warm:#f59e0b;
-  --at-radius:16px;
-  --at-radius-sm:10px;
-  --at-shadow:0 12px 34px rgba(16,24,40,.09);
-  --at-shadow-sm:0 3px 12px rgba(16,24,40,.06);
-  --at-max:1140px;
-  --at-font:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --du-bg:#121516; --du-bg-2:#0e1011; --du-panel:rgba(24,30,32,.86);
+  --du-panel-2:#1d2426; --du-line:rgba(92,198,208,.28); --du-line-soft:rgba(167,179,181,.18);
+  --du-cyan:#5cc6d0; --du-cyan-dim:#2b7f89; --du-ink:#dfdfdf; --du-muted:#a7b3b5;
+  --du-rose:#eb767e; --du-gold:#ffdf00; --du-green:#7fdc8c;
+  --du-radius:4px; --du-radius-lg:8px; --du-max:1180px;
+  --du-font:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --du-display:"Poiret One","Century Gothic","Trebuchet MS",var(--du-font);
 }
 *,*::before,*::after{box-sizing:border-box}
-.atlas{font-family:var(--at-font);color:var(--at-ink);line-height:1.65;-webkit-font-smoothing:antialiased}
-.atlas a{color:var(--at-primary);text-decoration:none}
-.atlas a:hover{text-decoration:underline}
-.atlas img{max-width:100%;height:auto;display:block}
-.atlas h1,.atlas h2,.atlas h3,.atlas h4{line-height:1.18;letter-spacing:-.02em;margin:0 0 14px;font-weight:750}
-.atlas h1{font-size:clamp(2.2rem,5vw,3.65rem)}
-.atlas h2{font-size:clamp(1.6rem,3.2vw,2.4rem)}
-.atlas h3{font-size:1.16rem}
-.atlas p{margin:0 0 16px}
-.atlas :focus-visible{outline:3px solid var(--at-accent);outline-offset:3px;border-radius:4px}
-.atlas-wrap{max-width:var(--at-max);margin:0 auto;padding:0 24px}
-.atlas-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.du{font-family:var(--du-font);color:var(--du-ink);line-height:1.70;
+  background:var(--du-bg);-webkit-font-smoothing:antialiased}
+.du a{color:var(--du-cyan);text-decoration:none}
+.du a:hover{text-decoration:underline}
+.du h1,.du h2,.du h3,.du h4{font-family:var(--du-display);font-weight:400;
+  letter-spacing:.03em;line-height:1.16;margin:0 0 18px;color:var(--du-cyan)}
+.du h1{font-size:clamp(3.2rem,9vw,7.4rem);letter-spacing:.01em;text-transform:none}
+.du h2{font-size:clamp(1.8rem,4vw,3.2rem);text-transform:uppercase}
+.du h3{font-size:1.35rem}
+.du p{margin:0 0 16px}
+.du :focus-visible{outline:2px solid var(--du-cyan);outline-offset:3px}
+.du-wrap{max-width:var(--du-max);margin:0 auto;padding:0 28px}
+.du-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 
-/* ── Cabeçalho ───────────────────────────────────────────────── */
-.atlas-header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--at-line)}
-.atlas-header-in{display:flex;align-items:center;gap:28px;min-height:74px;max-width:var(--at-max);margin:0 auto;padding:0 24px}
-.atlas-brand{display:inline-flex;align-items:center;gap:11px;font-weight:800;font-size:1.12rem;letter-spacing:-.03em;color:var(--at-ink);white-space:nowrap}
-.atlas-brand:hover{text-decoration:none}
-.atlas-brand-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:var(--at-primary);color:#fff;font-size:.82rem;font-weight:800;letter-spacing:.02em}
-.atlas-nav{display:flex;align-items:center;gap:4px;margin-left:auto;flex-wrap:wrap}
-.atlas-nav a{color:var(--at-muted);font-size:.93rem;font-weight:600;padding:9px 13px;border-radius:9px;white-space:nowrap}
-.atlas-nav a:hover{color:var(--at-primary);background:var(--at-soft);text-decoration:none}
-.atlas-nav .atlas-nav-cta{background:var(--at-primary);color:#fff;padding:10px 18px;margin-left:8px;box-shadow:var(--at-shadow-sm)}
-.atlas-nav .atlas-nav-cta:hover{background:var(--at-ink);color:#fff}
-.atlas-langs{display:flex;gap:6px;padding-left:16px;border-left:1px solid var(--at-line)}
-.atlas-langs a{font-size:.78rem;color:var(--at-muted);text-transform:uppercase;letter-spacing:.05em}
-.atlas-langs a.is-active{color:var(--at-primary);font-weight:800}
+/* ── HUD fixo ─────────────────────────────────────────────── */
+.du-hud{position:sticky;top:0;z-index:30;background:rgba(14,16,17,.92);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--du-line-soft)}
+.du-hud-in{display:flex;align-items:center;gap:22px;min-height:62px;
+  max-width:var(--du-max);margin:0 auto;padding:0 28px}
+.du-brand{display:inline-flex;align-items:center;gap:10px;white-space:nowrap}
+.du-brand-mark{display:grid;place-items:center;width:32px;height:32px;
+  border:1px solid var(--du-cyan);color:var(--du-cyan);font-family:var(--du-display);
+  font-size:1rem;letter-spacing:.06em}
+.du-brand-txt{font-family:var(--du-display);font-size:.92rem;letter-spacing:.14em;
+  color:var(--du-ink);line-height:1.15}
+.du-brand-txt small{display:block;font-family:var(--du-font);font-size:.56rem;
+  letter-spacing:.22em;color:var(--du-muted);text-transform:uppercase}
+.du-nav{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.du-nav a{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--du-muted);padding:8px 10px}
+.du-nav a:hover{color:var(--du-cyan);text-decoration:none}
+.du-orbs{display:flex;gap:7px;align-items:center;font-size:.66rem;
+  letter-spacing:.14em;color:var(--du-cyan);white-space:nowrap}
+.du-orb{width:11px;height:11px;border-radius:50%;border:1px solid var(--du-cyan)}
+.du-orb.on{background:var(--du-cyan);box-shadow:0 0 10px var(--du-cyan)}
+.du-orb.gold{background:var(--du-gold);border-color:var(--du-gold)}
+.du-orb.rose{background:var(--du-rose);border-color:var(--du-rose)}
+.du-orb.green{background:var(--du-green);border-color:var(--du-green)}
+.du-status{display:flex;justify-content:space-between;gap:16px;
+  max-width:var(--du-max);margin:0 auto;padding:10px 28px;
+  font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--du-muted)}
+.du-status b{color:var(--du-cyan);font-weight:400}
 
-/* ── Botões e etiquetas ──────────────────────────────────────── */
-.atlas-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 24px;border-radius:11px;font-weight:700;font-size:.95rem;border:1px solid transparent;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
-.atlas-btn:hover{text-decoration:none;transform:translateY(-2px)}
-.atlas-btn-primary{background:var(--at-primary);color:#fff;box-shadow:0 8px 20px rgba(67,56,202,.24)}
-.atlas-btn-primary:hover{background:var(--at-ink);color:#fff}
-.atlas-btn-ghost{background:#fff;color:var(--at-ink);border-color:var(--at-line)}
-.atlas-btn-ghost:hover{border-color:var(--at-primary);color:var(--at-primary)}
-/* .atlas a (0,1,1) vence .atlas-btn-* (0,1,0): fixa a cor do texto dos botoes. */
-.atlas a.atlas-btn{color:var(--at-ink)}
-.atlas a.atlas-btn-primary,.atlas a.atlas-btn-primary:hover{color:#fff}
-.atlas a.atlas-btn-ghost,.atlas a.atlas-btn-ghost:hover{color:var(--at-ink)}
-.atlas .atlas-cta a.atlas-btn,.atlas .atlas-cta a.atlas-btn:hover{color:var(--at-primary)}
-.atlas a.atlas-nav-cta,.atlas a.atlas-nav-cta:hover{color:#fff}
-.atlas-eyebrow{display:inline-flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.13em;font-size:.73rem;font-weight:800;color:var(--at-primary);background:var(--at-soft);border:1px solid var(--at-line);padding:7px 14px;border-radius:999px;margin-bottom:20px}
-.atlas-dot{width:7px;height:7px;border-radius:50%;background:var(--at-accent)}
+/* ── Fases e numeros fantasma ─────────────────────────────── */
+.du-phase{position:relative;padding:96px 0;border-bottom:1px solid var(--du-line-soft);
+  overflow:hidden;background:radial-gradient(ellipse at 85% 10%,rgba(92,198,208,.09),transparent 55%)}
+.du-phase-num{position:absolute;right:4%;top:26px;font-family:var(--du-display);
+  font-size:clamp(5rem,13vw,11rem);line-height:1;color:rgba(92,198,208,.09);
+  pointer-events:none;user-select:none}
+.du-phase-tag{display:flex;align-items:center;gap:14px;margin-bottom:34px;
+  font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:var(--du-muted)}
+.du-phase-tag b{font-family:var(--du-display);font-size:1.1rem;color:var(--du-cyan);font-weight:400}
+.du-phase-tag::after{content:"";flex:1;height:1px;background:var(--du-line)}
+.du-lead{font-size:1.02rem;color:var(--du-muted);max-width:70ch}
+.du-overline{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--du-cyan);margin-bottom:12px}
 
-/* ── Hero ────────────────────────────────────────────────────── */
-.atlas-hero{position:relative;overflow:hidden;background:linear-gradient(155deg,#f7f8ff 0%,#ffffff 52%,#eef4ff 100%);border-bottom:1px solid var(--at-line)}
-.atlas-hero::before{content:"";position:absolute;width:520px;height:520px;right:-170px;top:-220px;border-radius:50%;background:radial-gradient(circle,rgba(14,165,233,.18),transparent 66%)}
-.atlas-hero-in{display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:center;padding:88px 0 92px;position:relative}
-.atlas-hero h1{max-width:15ch}
-.atlas-hero-lead{font-size:1.13rem;color:var(--at-muted);max-width:52ch;margin-bottom:30px}
-.atlas-hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:44px}
-.atlas-hero-art{position:relative;border-radius:22px;background:linear-gradient(145deg,var(--at-primary),#6d5ce7 58%,#0ea5e9);box-shadow:var(--at-shadow);padding:30px;min-height:340px;display:grid;place-items:center;overflow:hidden}
-.atlas-hero-art svg{width:100%;max-width:330px;height:auto}
-.atlas-hero-float{position:absolute;background:#fff;border-radius:12px;padding:12px 16px;box-shadow:var(--at-shadow);font-size:.8rem;font-weight:700;color:var(--at-ink)}
-.atlas-hero-float.one{top:22px;left:-18px}
-.atlas-hero-float.two{bottom:24px;right:-16px}
-.atlas-hero-float b{display:block;font-size:1.15rem;color:var(--at-primary)}
-.atlas-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;border-top:1px solid var(--at-line);padding-top:28px}
-.atlas-stat b{display:block;font-size:1.65rem;letter-spacing:-.04em;color:var(--at-ink)}
-.atlas-stat span{font-size:.82rem;color:var(--at-muted)}
+/* ── Cards HUD ────────────────────────────────────────────── */
+.du-card{position:relative;background:var(--du-panel);border:1px solid var(--du-line);
+  border-radius:var(--du-radius);padding:28px;backdrop-filter:blur(6px)}
+.du-card::before,.du-card::after{content:"";position:absolute;width:12px;height:12px;
+  border-color:var(--du-cyan);opacity:.7}
+.du-card::before{top:-1px;left:-1px;border-top:2px solid;border-left:2px solid}
+.du-card::after{bottom:-1px;right:-1px;border-bottom:2px solid;border-right:2px solid}
+.du-card-tag{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--du-cyan);display:block;margin-bottom:14px}
+.du-card h3{text-transform:none;font-size:1.5rem;margin-bottom:12px}
+.du-card p{font-size:.9rem;color:var(--du-muted);margin:0}
+.du-grid{display:grid;gap:20px}
+.du-grid--2{grid-template-columns:repeat(2,1fr)}
+.du-grid--3{grid-template-columns:repeat(3,1fr)}
+.du-grid--6{grid-template-columns:repeat(3,1fr)}
 
-/* ── Seções ──────────────────────────────────────────────────── */
-.atlas-section{padding:84px 0}
-.atlas-section--soft{background:var(--at-soft);border-block:1px solid var(--at-line)}
-.atlas-section-head{max-width:680px;margin-bottom:46px}
-.atlas-section-head p{color:var(--at-muted);font-size:1.05rem}
-.atlas-clients{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;padding:26px 0 4px}
-.atlas-client{font-weight:800;letter-spacing:.06em;color:#8a97ad;font-size:.95rem;text-transform:uppercase}
-.atlas-grid{display:grid;gap:22px}
-.atlas-grid--3{grid-template-columns:repeat(3,1fr)}
-.atlas-grid--2{grid-template-columns:repeat(2,1fr)}
-.atlas-card{background:#fff;border:1px solid var(--at-line);border-radius:var(--at-radius);padding:28px;box-shadow:var(--at-shadow-sm);transition:transform .18s ease,box-shadow .18s ease}
-.atlas-card:hover{transform:translateY(-4px);box-shadow:var(--at-shadow)}
-.atlas-card-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:13px;background:var(--at-soft);color:var(--at-primary);margin-bottom:20px}
-.atlas-card-icon svg{width:24px;height:24px}
-.atlas-card p{color:var(--at-muted);font-size:.94rem;margin:0}
-.atlas-card-meta{display:block;margin-top:18px;font-size:.8rem;font-weight:700;color:var(--at-primary)}
-.atlas-card-figure{aspect-ratio:16/10;border-radius:var(--at-radius-sm);background:linear-gradient(135deg,#dbe4ff,#e8f6ff 55%,#d9f2ff);display:grid;place-items:center;font-weight:800;color:var(--at-primary);font-size:1.1rem;letter-spacing:.04em;margin-bottom:18px}
-.atlas-card-figure.b{background:linear-gradient(135deg,#e7ddff,#f4e9ff 55%,#ffe9f3)}
-.atlas-card-figure.c{background:linear-gradient(135deg,#dcfce7,#e9fbe9 55%,#fff4d6)}
+/* ── Botoes ───────────────────────────────────────────────── */
+.du-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:12px 22px;border:1px solid var(--du-cyan);border-radius:var(--du-radius);
+  font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;
+  background:var(--du-cyan);color:#082327;font-weight:700}
+.du .du-btn,.du a.du-btn:hover{color:#082327;text-decoration:none}
+.du-btn--ghost{background:rgba(50,58,61,.6);color:var(--du-ink);border-color:var(--du-line-soft)}
+.du .du-btn--ghost,.du a.du-btn--ghost:hover{color:var(--du-ink)}
+.du-btn:hover{filter:brightness(1.12)}
 
-/* ── Sobre / split ───────────────────────────────────────────── */
-.atlas-split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
-.atlas-checklist{list-style:none;padding:0;margin:26px 0 0;display:grid;gap:13px}
-.atlas-checklist li{display:flex;gap:12px;align-items:flex-start;color:var(--at-ink);font-size:.96rem}
-.atlas-checklist svg{flex:0 0 20px;width:20px;height:20px;color:var(--at-primary);margin-top:3px}
-.atlas-panel{background:#fff;border:1px solid var(--at-line);border-radius:var(--at-radius);padding:32px;box-shadow:var(--at-shadow-sm)}
-.atlas-panel-row{display:flex;justify-content:space-between;gap:16px;padding:15px 0;border-bottom:1px solid var(--at-line);font-size:.92rem}
-.atlas-panel-row:last-child{border-bottom:0}
-.atlas-panel-row span{color:var(--at-muted)}
-.atlas-panel-row b{color:var(--at-ink)}
+/* ── Hero / cockpit ───────────────────────────────────────── */
+.du-hero{position:relative;padding:120px 0 100px;
+  background:radial-gradient(circle at 68% 42%,rgba(92,198,208,.16),transparent 46%),
+  radial-gradient(circle at 22% 78%,rgba(235,118,126,.09),transparent 40%),var(--du-bg)}
+.du-hero-in{display:grid;grid-template-columns:1.1fr .9fr;gap:52px;align-items:center}
+.du-hero h1{color:var(--du-ink);margin:0 0 22px}
+.du-hero h1 em{font-style:normal;color:var(--du-cyan)}
+.du-hero-sub{font-size:1.35rem;color:var(--du-cyan);font-family:var(--du-display);
+  letter-spacing:.06em;margin-bottom:14px}
+.du-hero-lead{color:var(--du-muted);max-width:48ch;margin-bottom:30px}
+.du-hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:34px}
+.du-controls{border:1px solid var(--du-line);background:var(--du-panel);
+  padding:22px;border-radius:var(--du-radius)}
+.du-controls h3{font-size:1.05rem;text-transform:uppercase;letter-spacing:.18em;margin-bottom:16px}
+.du-control{display:flex;gap:12px;padding:9px 0;border-top:1px solid var(--du-line-soft);
+  font-size:.8rem;color:var(--du-muted)}
+.du-control b{min-width:64px;color:var(--du-cyan);font-weight:400;letter-spacing:.14em}
+.du-socials{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+.du-socials a{width:32px;height:32px;display:grid;place-items:center;
+  border:1px solid var(--du-line-soft);border-radius:var(--du-radius);font-size:.68rem;
+  letter-spacing:.06em;color:var(--du-muted)}
+.du-socials a:hover{color:var(--du-cyan);border-color:var(--du-cyan);text-decoration:none}
+.du-hint{display:flex;justify-content:space-between;gap:14px;margin-top:56px;
+  font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--du-muted)}
+.du-hint b{color:var(--du-cyan);font-weight:400}
 
-/* ── Depoimentos ─────────────────────────────────────────────── */
-.atlas-quote{background:#fff;border:1px solid var(--at-line);border-radius:var(--at-radius);padding:32px;box-shadow:var(--at-shadow-sm)}
-.atlas-quote p{font-size:1.04rem;font-style:italic;color:var(--at-ink)}
-.atlas-quote-by{display:flex;align-items:center;gap:12px;font-size:.88rem;color:var(--at-muted)}
-.atlas-avatar{width:40px;height:40px;border-radius:50%;background:var(--at-primary);color:#fff;display:grid;place-items:center;font-weight:800;font-size:.8rem}
-.atlas-quote-by b{display:block;color:var(--at-ink)}
+/* ── Perfil (cartao de jogador) ───────────────────────────── */
+.du-profile{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start}
+.du-profile-row{display:flex;justify-content:space-between;gap:14px;
+  padding:11px 0;border-bottom:1px solid var(--du-line-soft);font-size:.84rem}
+.du-profile-row span{color:var(--du-muted)}
+.du-profile-row b{color:var(--du-cyan);font-weight:400}
 
-/* ── CTA ─────────────────────────────────────────────────────── */
-.atlas-cta{background:linear-gradient(120deg,var(--at-primary),#5b4bd6 60%,#0e7490);color:#fff;border-radius:24px;padding:56px 48px;display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;box-shadow:var(--at-shadow)}
-.atlas-cta h2{color:#fff;margin-bottom:10px}
-.atlas-cta p{color:rgba(255,255,255,.86);margin:0;max-width:54ch}
-.atlas-cta .atlas-btn{background:#fff;color:var(--at-primary)}
+/* ── Etapas / niveis ──────────────────────────────────────── */
+.du-level{position:relative}
+.du-level-no{font-family:var(--du-display);font-size:2.2rem;color:var(--du-cyan);
+  opacity:.5;line-height:1;margin-bottom:10px}
+.du-level-tag{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--du-green);margin-bottom:8px}
 
-/* ── Páginas internas ────────────────────────────────────────── */
-.atlas-page{padding:56px 0 90px}
-.atlas-crumb{font-size:.84rem;color:var(--at-muted);margin-bottom:22px}
-.atlas-crumb a{color:var(--at-muted)}
-.atlas-crumb span{margin:0 8px;color:#b6c0d0}
-.atlas-page-head{max-width:760px;margin-bottom:44px}
-.atlas-page-head p{font-size:1.08rem;color:var(--at-muted)}
-.atlas-prose{max-width:760px;font-size:1.02rem;color:var(--at-ink)}
-.atlas-prose h2{margin-top:38px}
-.atlas-prose ul{padding-left:22px;color:var(--at-muted)}
-.atlas-prose li{margin:8px 0}
-.atlas-aside{background:var(--at-soft);border:1px solid var(--at-line);border-radius:var(--at-radius);padding:28px}
-.atlas-aside h3{margin-bottom:14px}
-.atlas-aside a{display:block;padding:9px 0;border-bottom:1px solid var(--at-line);font-size:.93rem;font-weight:600}
-.atlas-aside a:last-child{border-bottom:0}
-.atlas-aside .atlas-btn{margin-top:18px;width:100%}
-.atlas-empty{color:var(--at-muted);padding:26px;border:1px dashed var(--at-line);border-radius:var(--at-radius-sm);text-align:center}
-.atlas-404{text-align:center;padding:90px 0}
-.atlas-404-code{font-size:clamp(5rem,14vw,9rem);font-weight:800;letter-spacing:-.06em;color:var(--at-primary);line-height:1;margin-bottom:8px}
-.atlas-404 h1{font-size:2rem}
+/* ── Inventario / listas ──────────────────────────────────── */
+.du-list{list-style:none;padding:0;margin:16px 0 0;display:grid;gap:9px}
+.du-list li{display:flex;gap:10px;font-size:.86rem;color:var(--du-muted);
+  padding:7px 0;border-bottom:1px solid var(--du-line-soft)}
+.du-list li b{color:var(--du-cyan);font-weight:400;min-width:26px}
+.du-slots{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--du-muted);margin-top:10px}
 
-/* ── Contato ─────────────────────────────────────────────────── */
-.atlas-contact-list{list-style:none;padding:0;margin:0;display:grid;gap:18px}
-.atlas-contact-list li{display:flex;gap:14px;align-items:flex-start}
-.atlas-contact-list svg{width:22px;height:22px;flex:0 0 22px;color:var(--at-primary);margin-top:2px}
-.atlas-contact-list b{display:block;font-size:.95rem}
-.atlas-contact-list span{font-size:.9rem;color:var(--at-muted)}
+/* ── Catalogo de niveis ───────────────────────────────────── */
+.du-level-card figure{margin:0 0 16px;aspect-ratio:16/10;border-radius:var(--du-radius);
+  background:linear-gradient(145deg,#182226,#0e1011);border:1px solid var(--du-line-soft);
+  display:grid;place-items:center;overflow:hidden}
+.du-level-card figure svg{width:78%;height:78%}
+.du-level-card h3{font-size:1.25rem}
+.du-level-meta{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--du-muted);display:block;margin-top:12px}
 
-/* ── Rodapé ──────────────────────────────────────────────────── */
-.atlas-footer{background:#0d1526;color:#c8d2e2;padding:64px 0 0;margin-top:0}
-.atlas-footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:40px;padding-bottom:48px}
-.atlas-footer h3{color:#fff;font-size:.95rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:18px}
-.atlas-footer p{font-size:.92rem;color:#9aa8be;max-width:34ch}
-.atlas-footer a{display:block;color:#9aa8be;font-size:.92rem;padding:6px 0}
-.atlas-footer a:hover{color:#fff}
-.atlas-footer .atlas-brand{color:#fff;margin-bottom:18px}
-.atlas-footer-bottom{border-top:1px solid #22304a;padding:22px 0;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:.84rem;color:#8391a8}
-.atlas-footer-bottom a{display:inline;padding:0;color:#8391a8}
+/* ── Depoimento ───────────────────────────────────────────── */
+.du-quote{max-width:800px;margin:0 auto;text-align:center;padding:34px}
+.du-quote p{font-family:var(--du-display);font-size:1.5rem;color:var(--du-ink);
+  line-height:1.5;margin-bottom:20px}
+.du-quote-by{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--du-cyan)}
+.du-social-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:34px}
+.du-social-grid div{aspect-ratio:1;border:1px solid var(--du-line-soft);border-radius:50%;
+  display:grid;place-items:center;overflow:hidden;background:#182226}
+.du-social-grid svg{width:70%;height:70%}
 
-/* ── Responsivo ──────────────────────────────────────────────── */
-@media(max-width:980px){
-  .atlas-hero-in{grid-template-columns:1fr;gap:44px;padding:64px 0 72px}
-  .atlas-hero-art{min-height:280px}
-  .atlas-split{grid-template-columns:1fr;gap:34px}
-  .atlas-grid--3{grid-template-columns:repeat(2,1fr)}
-  .atlas-footer-grid{grid-template-columns:repeat(2,1fr);gap:32px}
-  .atlas-langs{display:none}
-}
-@media(max-width:640px){
-  .atlas-wrap,.atlas-header-in{padding:0 18px}
-  .atlas-header-in{min-height:64px;gap:12px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
-  .atlas-nav{width:100%;margin-left:0;gap:0;overflow-x:auto;padding-bottom:4px}
-  .atlas-nav a{padding:8px 10px;font-size:.86rem}
-  .atlas-nav .atlas-nav-cta{margin-left:4px}
-  .atlas-section{padding:58px 0}
-  .atlas-grid--3,.atlas-grid--2{grid-template-columns:1fr}
-  .atlas-stats{grid-template-columns:1fr;gap:12px}
-  .atlas-hero-art{min-height:220px;padding:20px}
-  .atlas-hero-float{display:none}
-  .atlas-cta{padding:38px 26px}
-  .atlas-footer-grid{grid-template-columns:1fr;gap:28px}
-}
-@media(prefers-reduced-motion:reduce){
-  .atlas-btn,.atlas-card{transition:none}
-  .atlas-btn:hover,.atlas-card:hover{transform:none}
-}
+/* ── Formulario ───────────────────────────────────────────── */
+.du-form{display:grid;gap:14px}
+.du-form label{font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--du-muted)}
+.du-form input,.du-form textarea{width:100%;background:rgba(14,16,17,.8);
+  border:1px solid var(--du-line-soft);border-radius:var(--du-radius);padding:12px 14px;
+  color:var(--du-ink);font-family:var(--du-font);font-size:.9rem}
+.du-form textarea{min-height:120px;resize:vertical}
+.du-form .du-btn{justify-self:start;margin-top:8px}
 
-/* ── Atlas Studio 3D · slots declarativos de cena (sem JS neste arquivo) ── */
-.theme-scene{position:relative;width:100%;border-radius:var(--at-radius-lg,24px);
-  overflow:hidden;background:radial-gradient(circle at 20% 20%,rgba(67,56,202,.18),transparent 60%),
-  radial-gradient(circle at 80% 70%,rgba(14,165,233,.16),transparent 62%),var(--at-dark,#0d1526);
-  border:1px solid rgba(127,127,127,.20);isolation:isolate}
-.theme-scene[data-scene]{min-height:220px}
-.theme-scene.theme-scene--hero{min-height:340px;margin:0 0 32px}
-.theme-scene.theme-scene--home_top{min-height:240px;margin:0 0 28px}
-.theme-scene.theme-scene--footer_top{min-height:180px;margin:0 0 18px}
+/* ── Rodape ───────────────────────────────────────────────── */
+.du-footer{position:relative;padding:70px 0 30px;background:var(--du-bg-2);
+  border-top:1px solid var(--du-line-soft);overflow:hidden}
+.du-footer-ghost{font-family:var(--du-display);font-size:clamp(2.4rem,8vw,6rem);
+  color:rgba(92,198,208,.10);text-align:center;letter-spacing:.06em;white-space:nowrap;
+  margin-bottom:34px;user-select:none}
+.du-footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:34px}
+.du-footer-grid h4{font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--du-cyan);margin-bottom:14px}
+.du-footer-grid a{display:block;font-size:.82rem;color:var(--du-muted);padding:4px 0}
+.du-footer-bottom{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  margin-top:44px;padding-top:18px;border-top:1px solid var(--du-line-soft);
+  font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--du-muted)}
+
+/* ── Slot ThreeJS declarativo ─────────────────────────────── */
+.theme-scene{position:relative;width:100%;overflow:hidden;
+  border:1px solid var(--du-line);border-radius:var(--du-radius-lg);
+  background:radial-gradient(circle at 24% 22%,rgba(92,198,208,.18),transparent 58%),
+  radial-gradient(circle at 78% 72%,rgba(235,118,126,.12),transparent 60%),var(--du-bg-2);
+  isolation:isolate}
+.theme-scene[data-scene]{min-height:200px}
+.theme-scene.theme-scene--hero{min-height:320px;margin:0 0 34px}
+.theme-scene.theme-scene--home_top{min-height:230px;margin:0 0 26px}
+.theme-scene.theme-scene--footer_top{min-height:170px;margin:0 0 18px}
 .theme-scene__fallback{position:absolute;inset:0;
-  background-image:radial-gradient(circle,rgba(165,180,252,.62) 1.5px,transparent 2px),
-  radial-gradient(circle,rgba(34,211,238,.42) 1px,transparent 1.5px),
-  radial-gradient(circle,rgba(255,255,255,.20) 2px,transparent 3px);
-  background-size:26px 26px,41px 41px,88px 88px;
-  background-position:0 0,13px 19px,44px 30px;opacity:.88}
+  background-image:radial-gradient(circle,rgba(92,198,208,.72) 1.4px,transparent 2px),
+  radial-gradient(circle,rgba(223,223,223,.30) 1px,transparent 1.5px),
+  radial-gradient(circle,rgba(255,223,0,.26) 2px,transparent 3px);
+  background-size:28px 28px,47px 47px,103px 103px;
+  background-position:0 0,17px 23px,51px 37px;opacity:.86}
+.theme-scene__fallback::after{content:"";position:absolute;left:50%;top:50%;
+  width:280px;height:280px;margin:-140px 0 0 -140px;border-radius:50%;
+  border:1px solid rgba(92,198,208,.34);
+  box-shadow:0 0 0 42px rgba(92,198,208,.05),0 0 0 88px rgba(92,198,208,.04)}
 .theme-scene[data-scene="portfolio-3d"] .theme-scene__fallback{
-  background-image:linear-gradient(135deg,transparent 46%,rgba(67,56,202,.30) 47%,
-  rgba(67,56,202,.30) 53%,transparent 54%);background-size:64px 64px}
+  background-image:linear-gradient(135deg,transparent 46%,rgba(92,198,208,.28) 47%,
+  rgba(92,198,208,.28) 53%,transparent 54%);background-size:64px 64px}
 .theme-scene[data-scene="tools-3d"] .theme-scene__fallback{
   background-image:repeating-linear-gradient(60deg,transparent 0 22px,
-  rgba(245,158,11,.24) 23px 25px,transparent 26px 48px);background-size:auto}
-.theme-scene[data-scene="not-found"] .theme-scene__fallback{opacity:.28}
-.atlas-hero .theme-scene{box-shadow:0 24px 60px rgba(13,21,38,.28)}
-.atlas-scene-caption{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-  padding:12px 18px;font-size:13px;letter-spacing:.04em;color:var(--at-muted,#52627a)}
-.atlas-scene-caption b{color:var(--at-primary,#4338ca);font-weight:750}
-.atlas-scene-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
-  margin:18px 0 0;padding:0;list-style:none}
-.atlas-scene-grid li{padding:16px;border-radius:var(--at-radius,16px);
-  border:1px solid rgba(127,127,127,.20);background:var(--at-surface,#ffffff)}
-.atlas-scene-grid strong{display:block;font-size:15px;margin-bottom:4px}
-.atlas-scene-grid span{font-size:13px;color:var(--at-muted,#52627a)}
-.atlas-scene-lite .theme-scene__fallback{opacity:.32}
-.atlas-scene-lite .theme-scene.theme-scene--hero{min-height:220px}
-@media(max-width:720px){.theme-scene.theme-scene--hero{min-height:220px}
-  .atlas-scene-grid{grid-template-columns:1fr}}
-@media(prefers-reduced-motion:reduce){.theme-scene__fallback{opacity:.18}}
+  rgba(235,118,126,.26) 23px 25px,transparent 26px 48px)}
+.theme-scene[data-scene="not-found"] .theme-scene__fallback{opacity:.30}
+.du-scene-caption{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:12px 0 24px;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--du-muted)}
+.du-scene-caption b{color:var(--du-cyan);font-weight:400}
+.du-scene-caption::after{content:"";flex:1;height:1px;background:var(--du-line)}
+.du-scene-lite .theme-scene__fallback{opacity:.36}
+.du-scene-lite .theme-scene.theme-scene--hero{min-height:210px}
+
+/* ── 404 ──────────────────────────────────────────────────── */
+.du-404{text-align:center;padding:70px 0}
+.du-404 strong{display:block;font-family:var(--du-display);font-size:clamp(5rem,16vw,11rem);
+  color:var(--du-cyan);line-height:1;margin-bottom:16px}
+
+@media(max-width:900px){
+ .du-hero-in,.du-profile{grid-template-columns:1fr}
+ .du-grid--3,.du-grid--6,.du-footer-grid{grid-template-columns:repeat(2,1fr)}
+ .du-nav{display:none}
+}
+@media(max-width:620px){
+ .du-grid--2,.du-grid--3,.du-grid--6,.du-footer-grid{grid-template-columns:1fr}
+ .du-social-grid{grid-template-columns:repeat(3,1fr)}
+ .du-phase{padding:64px 0}
+ .du-hero{padding:76px 0 64px}
+ .theme-scene.theme-scene--hero{min-height:210px}
+ .du-hud-in{padding:0 16px;gap:10px}
+ .du-brand-txt{font-size:.72rem;letter-spacing:.08em}
+ .du-brand-txt small{font-size:.5rem;letter-spacing:.12em}
+ .du-brand-mark{width:28px;height:28px;font-size:.85rem}
+ nav.du-orbs{display:none}
+ .du-orbs{gap:4px;font-size:.56rem;letter-spacing:.06em}
+ .du-orbs .du-orb{width:8px;height:8px}
+ .du-orb:nth-of-type(n+4){display:none}
+ .du-status{padding:8px 16px;font-size:.55rem;letter-spacing:.1em}
+ .du-wrap{padding:0 16px}
+}
+@media(prefers-reduced-motion:reduce){.theme-scene__fallback{opacity:.22}}
 
 
 </style>
 </head>
-<body class="" style="--theme-primary:#4338ca;--theme-surface:#ffffff;margin:0">
+<body class="" style="--theme-primary:#5cc6d0;--theme-surface:#121516;margin:0;background:#121516">
 
 
-<header class="atlas atlas-header">
-  <div class="atlas-header-in">
-    <a class="atlas-brand" href="/" aria-label="Atlas Studio"><span class="atlas-brand-mark">AS</span><span>Atlas Studio</span></a>
-    <nav class="atlas-nav" aria-label="Navegacao principal">
-      <a href="/">Inicio</a>
-      <a href="#servicos">Servicos</a>
-      <a href="#projetos">Projetos</a>
-      <a href="#blog">Blog</a>
-      <a href="#contato">Contato</a>
-      <a class="atlas-nav-cta" href="#contato">Solicitar proposta</a>
-    </nav>
-    <nav class="atlas-langs" aria-label="Idiomas">
-      
-    </nav>
-  </div>
-</header>
-
-<main class="atlas">
-<div class="theme-scene theme-scene--hero" data-scene="hero-particles" data-count="520" data-color="#4338ca" data-speed="0.06" aria-hidden="true"><div class="theme-scene__fallback" data-fallback></div></div>
-<div class="atlas-scene-caption"><b>Atlas Studio 3D</b><span>Cena declarativa · sem codigo executavel no tema</span><span>WebGL self-hosted e carregado pelo shell confiavel</span></div><div class="atlas-wrap"><ul class="atlas-scene-grid"><li><strong>hero-particles</strong><span>Campo de particulas na abertura</span></li><li><strong>portfolio-3d</strong><span>Quadros de projeto em profundidade</span></li><li><strong>tools-3d</strong><span>Oficina e ferramentas</span></li></ul></div>
-<section id="inicio" class="atlas atlas-hero">
-  <div class="atlas-wrap atlas-hero-in">
-    <div>
-      <span class="atlas-eyebrow"><span class="atlas-dot"></span>Estudio de produtos digitais</span>
-      <h1>Ideias que viram produtos digitais.</h1>
-      <p class="atlas-hero-lead">Da primeira hipótese ao lançamento: estratégia, design e engenharia trabalhando juntos para construir experiências que as pessoas realmente usam.</p>
-      <div class="atlas-hero-actions">
-        <a class="atlas-btn atlas-btn-primary" href="#contato">Solicitar proposta</a>
-        <a class="atlas-btn atlas-btn-ghost" href="#projetos">Ver projetos</a>
-      </div>
-      <div class="atlas-stats">
-        <div class="atlas-stat"><b>120+</b><span>projetos entregues</span></div>
-        <div class="atlas-stat"><b>14</b><span>anos de mercado</span></div>
-        <div class="atlas-stat"><b>98%</b><span>clientes que renovam</span></div>
-      </div>
-    </div>
-    <div class="atlas-hero-art"><svg viewBox="0 0 320 260" fill="none" aria-hidden="true"><rect x="26" y="30" width="268" height="188" rx="16" fill="#ffffff" opacity=".16"/><rect x="46" y="52" width="228" height="14" rx="7" fill="#ffffff" opacity=".30"/><rect x="46" y="80" width="86" height="10" rx="5" fill="#ffffff" opacity=".55"/><rect x="46" y="100" width="150" height="10" rx="5" fill="#ffffff" opacity=".34"/><rect x="46" y="132" width="66" height="66" rx="12" fill="#ffffff" opacity=".22"/><rect x="124" y="132" width="66" height="66" rx="12" fill="#ffffff" opacity=".34"/><rect x="202" y="132" width="66" height="66" rx="12" fill="#ffffff" opacity=".48"/><circle cx="252" cy="44" r="16" fill="#ffffff" opacity=".70"/><path d="M46 218h228" stroke="#ffffff" stroke-opacity=".45" stroke-width="2"/></svg>
-      <div class="atlas-hero-float one"><b>+38%</b>conversao</div>
-      <div class="atlas-hero-float two"><b>4.9/5</b>avaliacao media</div>
-    </div>
-  </div>
-</section>
-<section id="clientes" class="atlas-section "><div class="atlas-wrap">
-  <p class="atlas-eyebrow">Quem confia no nosso trabalho</p>
-  <div class="atlas-clients">
-    <span class="atlas-client">Vera</span><span class="atlas-client">Norte Log</span><span class="atlas-client">Aurora</span>
-    <span class="atlas-client">Solis</span><span class="atlas-client">Quotia</span><span class="atlas-client">Vertex</span>
-  </div>
-</div></section>
-<section id="servicos" class="atlas-section atlas-section--soft"><div class="atlas-wrap">
-  <div class="atlas-section-head"><span class="atlas-eyebrow">O que fazemos</span>
-    <h2>Um time completo, do diagnóstico à operação</h2>
-    <p>Atuamos em squads enxutos, com entregas curtas e indicadores visíveis. Escolha um ponto de partida ou monte um pacote sob medida.</p></div>
-  <div class="atlas-grid atlas-grid--3">
-    <article class="atlas-card"><div class="atlas-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></div><h3>Estrategia digital</h3><p>Diagnostico de produto, pesquisa com usuarios e roteiro de evolucao com metas claras para cada trimestre.</p><span class="atlas-card-meta">2 a 4 semanas</span></article>
-    <article class="atlas-card"><div class="atlas-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m4 17 5-5 4 4 3-3 4 4"/></svg></div><h3>Design de produto</h3><p>Interfaces acessiveis, sistema de design e prototipos testados antes de qualquer linha de codigo.</p><span class="atlas-card-meta">3 a 6 semanas</span></article>
-    <article class="atlas-card"><div class="atlas-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/></svg></div><h3>Desenvolvimento</h3><p>Aplicacoes web rapidas e seguras, com arquitetura modular, testes e observabilidade desde o primeiro dia.</p><span class="atlas-card-meta">6 a 12 semanas</span></article>
-    <article class="atlas-card"><div class="atlas-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div><h3>Dados e analytics</h3><p>Instrumentacao, paineis de decisao e experimentos que mostram o impacto real de cada entrega.</p><span class="atlas-card-meta">Contínuo</span></article>
-    <article class="atlas-card"><div class="atlas-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg></div><h3>Conteudo e SEO</h3><p>Arquitetura de informacao, conteudo editorial e otimizacao tecnica para busca organica.</p><span class="atlas-card-meta">Contínuo</span></article>
-    <article class="atlas-card"><div class="atlas-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13a8 8 0 0 1 16 0v5a2 2 0 0 1-2 2h-2v-7h4M4 13v5a2 2 0 0 0 2 2h2v-7H4"/></svg></div><h3>Suporte e evolucao</h3><p>Time dedicado para manter, monitorar e evoluir o produto depois do lancamento.</p><span class="atlas-card-meta">Mensal</span></article>
-  </div>
-</div></section>
-<section id="sobre" class="atlas-section "><div class="atlas-wrap">
-  <div class="atlas-split">
-    <div>
-      <span class="atlas-eyebrow">Sobre o estudio</span>
-      <h2>Tecnica com repertorio, entrega com contexto.</h2>
-      <p>Somos um estúdio de 28 pessoas entre estratégia, design e engenharia. Fundado em 2012, o Atlas nasceu para diminuir a distância entre a decisão de negócio e o produto que chega ao usuário.</p>
-      <p style="color:var(--at-muted)">Trabalhamos com escopo claro, comunicação semanal e um responsável técnico em cada projeto. Sem surpresa no orçamento, sem fila de aprovação infinita.</p>
-      <ul class="atlas-checklist">
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg><span>Squad dedicado com um ponto de contato único</span></li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg><span>Protótipo validado antes do desenvolvimento</span></li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg><span>Métricas combinadas no início e revisadas a cada sprint</span></li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg><span>Documentação e handover inclusos em toda entrega</span></li>
-      </ul>
-    </div>
-    <div class="atlas-panel">
-      <h3>Como trabalhamos</h3>
-      <div class="atlas-panel-row"><span>Descoberta</span><b>1 a 2 semanas</b></div>
-      <div class="atlas-panel-row"><span>Design e protótipo</span><b>3 a 6 semanas</b></div>
-      <div class="atlas-panel-row"><span>Construção</span><b>6 a 12 semanas</b></div>
-      <div class="atlas-panel-row"><span>Lançamento</span><b>1 semana</b></div>
-      <div class="atlas-panel-row"><span>Evolução</span><b>Contínua</b></div>
-    </div>
-  </div>
-</div></section>
-<section id="metodo" class="atlas-section atlas-section--soft"><div class="atlas-wrap">
-  <div class="atlas-section-head"><span class="atlas-eyebrow">Metodo</span><h2>Quatro etapas, nenhuma caixa preta</h2></div>
-  <div class="atlas-grid atlas-grid--3">
-    <article class="atlas-card"><span class="atlas-card-meta">Etapa 1</span><h3>Entender</h3><p>Entrevistas, dados e mapa de restrições para definir o problema certo.</p></article>
-    <article class="atlas-card"><span class="atlas-card-meta">Etapa 2</span><h3>Desenhar</h3><p>Fluxos, protótipos e testes de usabilidade com usuários reais.</p></article>
-    <article class="atlas-card"><span class="atlas-card-meta">Etapa 3</span><h3>Construir</h3><p>Sprints quinzenais com demo, qualidade e revisão de escopo.</p></article>
-    <article class="atlas-card"><span class="atlas-card-meta">Etapa 4</span><h3>Evoluir</h3><p>Métricas, ajustes e novas apostas após o lançamento.</p></article>
-  </div>
-</div></section>
-<section id="projetos" class="atlas-section atlas-section--soft"><div class="atlas-wrap">
-  <div class="atlas-section-head"><span class="atlas-eyebrow">Projetos selecionados</span><h2>Problemas reais, resultados medíveis</h2></div>
-  <div class="atlas-grid atlas-grid--3">
-    <article class="atlas-card"><div class="atlas-card-figure a">Aurora</div><h3>Aurora Finance</h3><p>Plataforma de planejamento financeiro para pequenas empresas, com paineis e conciliacao automatica.</p><span class="atlas-card-meta">Fintech · 2026</span></article>
-    <article class="atlas-card"><div class="atlas-card-figure b">Vera</div><h3>Vera Saude</h3><p>Portal de agendamento e prontuario leve para clinicas, com fluxo de atendimento redesenhado.</p><span class="atlas-card-meta">Saude · 2025</span></article>
-    <article class="atlas-card"><div class="atlas-card-figure c">Norte</div><h3>Norte Log</h3><p>Sistema de acompanhamento de entregas com mapa, notificacoes e indicadores por rota.</p><span class="atlas-card-meta">Logistica · 2025</span></article>
-  </div>
-</div></section>
-<section id="depoimentos" class="atlas-section "><div class="atlas-wrap">
-  <div class="atlas-section-head"><span class="atlas-eyebrow">Depoimentos</span><h2>O que dizem os times que trabalham com a gente</h2></div>
-  <div class="atlas-grid atlas-grid--2">
-    <figure class="atlas-quote" style="margin:0"><p>“O Atlas reorganizou nosso roadmap em três semanas e entregou o primeiro módulo em produção antes do prazo. Clareza que a gente não tinha havia dois anos.”</p><figcaption class="atlas-quote-by"><span class="atlas-avatar">MR</span><span><b>Marina Ribeiro</b>Diretora de Produto · Aurora Finance</span></figcaption></figure>
-    <figure class="atlas-quote" style="margin:0"><p>“Contratamos para redesenhar o agendamento e terminamos com um processo inteiro mais simples. A equipe deles Documenta tudo e ensina o time a manter.”</p><figcaption class="atlas-quote-by"><span class="atlas-avatar">AC</span><span><b>André Costa</b>COO · Vera Saúde</span></figcaption></figure>
-  </div>
-</div></section>
-<section id="blog" class="atlas-section atlas-section--soft"><div class="atlas-wrap">
-  <div class="atlas-section-head"><span class="atlas-eyebrow">Do blog</span><h2>Notas sobre produto, design e engenharia</h2></div>
-  <div class="atlas-grid atlas-grid--3">
-    <article class="atlas-card"><span class="atlas-card-meta">12 de setembro de 2026 · 5 min de leitura</span><h3>Como priorizar um roadmap sem perder a visao de produto</h3><p> Um metodo simples para transformar pedidos em apostas mensuráveis.</p></article>
-    <article class="atlas-card"><span class="atlas-card-meta">28 de agosto de 2026 · 8 min de leitura</span><h3>Acessibilidade na pratica: sete decisoes que mudam o resultado</h3><p> Contraste, foco, semantica e testes com leitores de tela no dia a dia do time.</p></article>
-    <article class="atlas-card"><span class="atlas-card-meta">03 de agosto de 2026 · 6 min de leitura</span><h3>Design system enxuto: quando ele comeca a valer a pena</h3><p> Sinais de que chegou a hora de padronizar componentes e tokens.</p></article>
-  </div>
-</div></section>
-<section id="contato" class="atlas-section "><div class="atlas-wrap">
-  <div class="atlas-split">
-    <div><span class="atlas-eyebrow">Vamos conversar</span>
-      <h2>Conte o problema. A gente volta com um plano.</h2>
-      <p style="color:var(--at-muted)">Atendemos projetos de descobrimento, redesign e construção de produto. A primeira conversa é sem compromisso e dura cerca de 40 minutos.</p>
-      <a class="atlas-btn atlas-btn-primary" href="mailto:contato@atlasstudio.example">Solicitar proposta</a>
-    </div>
-    <ul class="atlas-contact-list">
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><div><b>E-mail</b><span>contato@atlasstudio.example</span></div></li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h4l2 5-3 2a12 12 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 4 5a2 2 0 0 1 2-2Z"/></svg><div><b>Telefone</b><span>+55 11 4002 8922 · seg a sex, 9h às 18h</span></div></li>
-      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg><div><b>Endereço</b><span>Av. Paulista, 1106 · São Paulo, SP</span></div></li>
-    </ul>
-  </div>
-</div></section>
-<div class="atlas-wrap" style="padding-top:18px;padding-bottom:84px">
-  <div class="atlas atlas-cta">
-    <div><h2>Pronto para tirar a ideia do papel?</h2>
-      <p>Conte o objetivo do projeto e receba uma proposta com escopo, prazo e investimento estimado.</p></div>
-    <a class="atlas-btn" href="mailto:contato@atlasstudio.example">Falar com o time</a>
-  </div>
+<div class="du du-hud"><div class="du-hud-in">
+  <a class="du-brand" href="/" aria-label="David L. Almeida"><span class="du-brand-mark">DA</span><span class="du-brand-txt">DAVID L. ALMEIDA<small>Creative Developer</small></span></a>
+  <nav class="du-nav" aria-label="Navegação principal">
+    <a href="#fase-01">SOBRE</a>
+    <a href="#fase-02">PROCESSO</a>
+    <a href="#fase-04">HABILIDADES</a>
+    <a href="#fase-05">SERVIÇOS</a>
+    <a href="#fase-06">CATÁLOGO</a>
+    <a href="#fase-08">CONTATO</a>
+  </nav>
+  <div class="du-orbs" aria-label="Orbes coletados">ORBES 00/10<span class="du-orb on"></span><span class="du-orb on"></span><span class="du-orb gold"></span><span class="du-orb rose"></span><span class="du-orb green"></span></div>
+  <nav class="du-orbs" aria-label="Idiomas"></nav>
 </div>
+<div class="du-status"><span>FASE 00 — DECOLAGEM</span><span>DISTÂNCIA <b>0 KM</b></span></div>
+</div>
+
+<main class="du">
+<div class="theme-scene theme-scene--hero" data-scene="hero-particles" data-count="520" data-color="#5cc6d0" data-speed="0.06" aria-hidden="true"><div class="theme-scene__fallback" data-fallback></div></div>
+<div class="du-wrap"><div class="du-scene-caption"><b>UNIVERSO 3D</b><span>Cena declarativa · sem código executável no tema</span></div></div>
+
+<section id="fase-00" class="du du-hero"><div class="du-wrap du-hero-in">
+  <div><div class="du-overline">EU SOU</div>
+    <h1>DAVID L.<br>ALMEIDA</h1>
+    <div class="du-hero-sub">Desenvolvido</div>
+    <p class="du-hero-lead">Posso criar sites, aplicativos, logotipos e outras mídias digitais incríveis.</p>
+    <div class="du-hero-actions"><a class="du-btn" href="#fase-01">Iniciar missão →</a><a class="du-btn du-btn--ghost" href="#fase-06">Ver catálogo</a></div>
+    <div class="du-socials" aria-label="Redes sociais"><a href="#" aria-label="Facebook">Fa</a><a href="#" aria-label="Instagram">In</a><a href="#" aria-label="Pinterest">Pi</a><a href="https://x.com/DavidAlmeidaDes" aria-label="X">X</a><a href="#" aria-label="RedBubble">Re</a></div>
+  </div>
+  <div class="du-controls"><h3>Controles</h3><div class="du-control"><b>MOUSE</b><span>Mova o mouse para pilotar e navegar.</span></div><div class="du-control"><b>TECLADO</b><span>Role para voar pelo universo.</span></div><div class="du-control"><b>ORBES</b><span>Colete os orbes pelo caminho.</span></div><div class="du-control"><b>MISSÃO</b><span>Escolha um nível para explorar o projeto completo.</span></div></div>
+</div>
+<div class="du-wrap du-hint"><span>ROLE PARA VOAR ▾</span><span>DISTÂNCIA 0 KM</span></div>
+</section>
+<section id="fase-01" class="du du-phase">
+<span class="du-phase-num" aria-hidden="true">01</span>
+<div class="du-wrap">
+<div class="du-phase-tag"><b>FASE 01</b><span>Sobre</span></div>
+<h2>QUEM SOU EU?</h2>
+<div class="du-grid du-grid--2"><article class="du-card"><span class="du-card-tag">Classe</span><h3>SOU UM DESIGNER E DESENVOLVEDOR EXPERIENTE</h3><p>Como designer e desenvolvedor apaixonado, transformo ideias em realidade com criatividade e responsabilidade. Com anos de experiência em design gráfico, desenvolvimento de sites e criação de identidades visuais, entrego soluções inovadoras e de alta qualidade que fortalecem marcas e as destacam no mercado.</p></article><article class="du-card"><span class="du-card-tag">Jogador 1 · LVL 01</span><h3>David L. Almeida</h3><p>Meu portfólio vai de logotipos de impacto a interfaces intuitivas, sempre alinhado às melhores práticas de SEO. Descubra como posso ajudar a elevar a sua marca ao próximo nível!</p></article></div><div class="du-grid du-grid--2" style="margin-top:20px"><article class="du-card"><span class="du-card-tag">Identidade visual</span><h3>GOSTO DE TRABALHAR EM PROJETOS QUE AJUDAM MARCAS A SE POSICIONAREM</h3><p>No núcleo de cada marca existe um mundo cuidadosamente construído, onde cada atributo é projetado estrategicamente para atender às necessidades únicas dos nossos clientes.</p></article><article class="du-card"><span class="du-card-tag">Universo do design</span><h3>BEM-VINDO AO UNIVERSO DO DESIGN</h3><p>Do logotipo às cores, da tipografia aos grafismos, desenhamos uma experiência marcante e personalizada que ecoa a identidade de cada negócio. Onde damos vida às marcas e contamos histórias por meio de formas, cores e letras.</p></article></div><div class="du-profile" style="margin-top:20px"><div class="du-card"><span class="du-card-tag">Ficha do jogador</span><h3>David L. Almeida</h3><div class="du-profile-row"><span>Classe</span><b>Desenvolvedor Criativo</b></div><div class="du-profile-row"><span>Local</span><b>São Paulo, Brazil</b></div><div class="du-profile-row"><span>E-mail</span><b>contact@davidalmeida.xyz</b></div><div class="du-profile-row"><span>Nível</span><b>LVL 01</b></div></div><div class="du-card"><span class="du-card-tag">Me encontre em</span><h3>Canais</h3><ul class="du-list"><li><b>01</b><span>GitHub</span></li><li><b>02</b><span>GitLab</span></li><li><b>03</b><span>X / Twitter</span></li><li><b>04</b><span>Instagram</span></li><li><b>05</b><span>Pinterest</span></li><li><b>06</b><span>RedBubble</span></li></ul></div></div>
+</div>
+</section>
+<section id="fase-02" class="du du-phase">
+<span class="du-phase-num" aria-hidden="true">02</span>
+<div class="du-wrap">
+<div class="du-phase-tag"><b>FASE 02</b><span>Processo</span></div>
+<h2>NO MEU PROCESSO DE CRIAÇÃO EU USO AS SEGUINTES ETAPAS:</h2>
+<p class="du-lead">Seis níveis, nenhuma caixa preta: cada etapa termina com uma validação antes da próxima.</p><div class="du-grid du-grid--6" style="margin-top:28px"><article class="du-card du-level"><div class="du-level-no">01</div><span class="du-level-tag">Nível 01 · OK</span><h3>Conhecendo o Cliente e a Empresa</h3><p>Na primeira etapa, busco reunir o máximo de informações sobre as características e a personalidade do cliente e da empresa! Uso um questionário detalhado, cheio de perguntas estratégicas sobre o projeto.</p></article><article class="du-card du-level"><div class="du-level-no">02</div><span class="du-level-tag">Nível 02 · OK</span><h3>Pesquisa</h3><p>Com as informações coletadas, começo a pesquisar a empresa, o mercado em que atua, seus concorrentes e o público-alvo. Essas informações evitam criar algo genérico.</p></article><article class="du-card du-level"><div class="du-level-no">03</div><span class="du-level-tag">Nível 03 · OK</span><h3>Conceito</h3><p>De acordo com os resultados da pesquisa, inicio um processo de brainstorming, mapeando ideias e esboçando conceitos, sempre em busca de um significado maior, além do visual.</p></article><article class="du-card du-level"><div class="du-level-no">04</div><span class="du-level-tag">Nível 04 · OK</span><h3>Execução</h3><p>Depois de todos os testes, com uma ideia estabelecida, começo a definir tipografia e cores, além de criar formas, grafismos, padrões e elementos de apoio.</p></article><article class="du-card du-level"><div class="du-level-no">05</div><span class="du-level-tag">Nível 05 · OK</span><h3>Flexibilidade</h3><p>Com tudo em mãos, começo a etapa de aplicação em produtos como papelaria, uniformes, outdoors e brindes. Garantindo que a marca possa ser usada e identificada em qualquer situação.</p></article><article class="du-card du-level"><div class="du-level-no">06</div><span class="du-level-tag">Nível 06 · OK</span><h3>Entrega</h3><p>Com o projeto finalizado, crio e envio uma apresentação e o manual de uso da marca, mostrando cada etapa do projeto. Todos os arquivos são salvos, organizados e enviados ao cliente.</p></article></div>
+</div>
+</section>
+<section class="du du-phase" id="fase-clientes"><div class="du-wrap"><div class="du-phase-tag"><b>FASE 01</b><span>Parceiros</span></div><div class="du-grid du-grid--3"><div class="du-card"><span class="du-card-tag">01</span><h3>Marcas</h3><p>Identidades visuais e manuais de uso para empresas de diferentes segmentos.</p></div><div class="du-card"><span class="du-card-tag">02</span><h3>Produtos digitais</h3><p>Interfaces, sites e aplicativos com foco em clareza e resultado.</p></div><div class="du-card"><span class="du-card-tag">03</span><h3>Conteúdo</h3><p>Arte digital, ilustrações e peças para redes sociais e campanhas.</p></div></div></div></section>
+<section id="fase-05" class="du du-phase">
+<span class="du-phase-num" aria-hidden="true">05</span>
+<div class="du-wrap">
+<div class="du-phase-tag"><b>FASE 05</b><span>Serviços</span></div>
+<h2>O QUE EU FAÇO?</h2>
+<p class="du-lead">MEUS SERVIÇOS SÃO PRESTADOS COM MUITA DEDICAÇÃO E ANOS DE EXPERIÊNCIA.</p><div class="du-grid du-grid--3" style="margin-top:28px"><div class="du-card"><span class="du-card-tag">01</span><h3>Design Gráfico</h3><ul class="du-list"><li><b>01</b><span>Design de Marca</span></li><li><b>02</b><span>Interface de Usuário</span></li><li><b>03</b><span>Ilustrações</span></li><li><b>04</b><span>Mídias Sociais</span></li><li><b>05</b><span>Instalações Digitais</span></li></ul></div><div class="du-card"><span class="du-card-tag">02</span><h3>Web Design</h3><ul class="du-list"><li><b>01</b><span>Landing Page</span></li><li><b>02</b><span>CMS</span></li><li><b>03</b><span>E-commerce</span></li><li><b>04</b><span>Web App</span></li><li><b>05</b><span>Institucional</span></li></ul></div><div class="du-card"><span class="du-card-tag">03</span><h3>SEO</h3><ul class="du-list"><li><b>01</b><span>Análise de Palavras-chave</span></li><li><b>02</b><span>Otimização On-Page</span></li><li><b>03</b><span>Criação de Conteúdo</span></li><li><b>04</b><span>Link Building</span></li><li><b>05</b><span>Auditoria de SEO</span></li></ul></div></div>
+</div>
+</section>
+<section id="fase-04" class="du du-phase">
+<span class="du-phase-num" aria-hidden="true">04</span>
+<div class="du-wrap">
+<div class="du-phase-tag"><b>FASE 04</b><span>Habilidades</span></div>
+<h2>MINHAS HABILIDADES</h2>
+<div class="du-grid du-grid--3"><div class="du-card"><span class="du-card-tag">Classe</span><h3>Desenvolvedor Criativo</h3><p>Posso criar sites, aplicativos, logotipos e outras mídias digitais incríveis.</p><ul class="du-list"><li><b>01</b><span>Desenvolvedor</span></li><li><b>02</b><span>Design de Marca</span></li><li><b>03</b><span>Identidade Visual</span></li><li><b>04</b><span>Design de Produto</span></li><li><b>05</b><span>Ilustrações</span></li><li><b>06</b><span>Ação de Marca</span></li></ul></div><div class="du-card"><span class="du-card-tag">Inventário</span><h3>Tecnologias</h3><ul class="du-list"><li><b>01</b><span>HTML</span></li><li><b>02</b><span>CSS</span></li><li><b>03</b><span>PHP</span></li><li><b>04</b><span>Javascript</span></li><li><b>05</b><span>jQuery</span></li></ul><p class="du-slots">05 slots</p></div><div class="du-card"><span class="du-card-tag">Inventário</span><h3>Plataformas</h3><ul class="du-list"><li><b>01</b><span>Wordpress</span></li><li><b>02</b><span>Prestashop</span></li><li><b>03</b><span>Joomla</span></li><li><b>04</b><span>Blogger</span></li><li><b>05</b><span>Winter</span></li></ul><p class="du-slots">05 slots</p></div><div class="du-card"><span class="du-card-tag">Inventário</span><h3>Programas</h3><ul class="du-list"><li><b>01</b><span>VS Code</span></li><li><b>02</b><span>Illustrator</span></li><li><b>03</b><span>Photoshop</span></li><li><b>04</b><span>CorelDRAW</span></li><li><b>05</b><span>Figma</span></li></ul><p class="du-slots">05 slots</p></div></div>
+</div>
+</section>
+<section id="fase-06" class="du du-phase">
+<span class="du-phase-num" aria-hidden="true">06</span>
+<div class="du-wrap">
+<div class="du-phase-tag"><b>FASE 06</b><span>Catálogo</span></div>
+<h2>ESCOLHA O SEU NÍVEL</h2>
+<p class="du-lead">Marcas, identidades e arte digital criadas ao longo do caminho. Escolha um nível para explorar o projeto completo.</p><div class="du-grid du-grid--3" style="margin-top:28px"><article class="du-card du-level-card"><figure><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><circle cx="80" cy="60" r="34" fill="none" stroke="#5cc6d0" stroke-width="2"/><circle cx="80" cy="60" r="20" fill="none" stroke="#5cc6d0" stroke-width="1" opacity=".6"/><path d="M20 96h120" stroke="#5cc6d0" stroke-width="1" opacity=".5"/></svg></figure><span class="du-card-tag">Nível 01 · Academia</span><h3>Juvenile World Academy</h3><p>Projeto completo no catálogo de níveis.</p><span class="du-level-meta">Prévia do logo</span></article><article class="du-card du-level-card"><figure><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><path d="M28 96 80 24l52 72z" fill="none" stroke="#eb767e" stroke-width="2"/><path d="M52 96 80 58l28 38" fill="none" stroke="#eb767e" stroke-width="1" opacity=".6"/></svg></figure><span class="du-card-tag">Nível 02 · RedBubble</span><h3>Steel of Death</h3><p>Projeto completo no catálogo de níveis.</p><span class="du-level-meta">6 imagens</span></article><article class="du-card du-level-card"><figure><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><rect x="30" y="30" width="100" height="72" rx="8" fill="none" stroke="#ffdf00" stroke-width="2"/><path d="M30 60h100M80 30v72" stroke="#ffdf00" stroke-width="1" opacity=".5"/></svg></figure><span class="du-card-tag">Nível 03 · Jogo Roblox</span><h3>Farmer Life Simulation</h3><p>Projeto completo no catálogo de níveis.</p><span class="du-level-meta">Prévia do logo</span></article><article class="du-card du-level-card"><figure><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><circle cx="80" cy="60" r="40" fill="none" stroke="#7fdc8c" stroke-width="2"/><ellipse cx="80" cy="60" rx="40" ry="15" fill="none" stroke="#7fdc8c" stroke-width="1" opacity=".6"/></svg></figure><span class="du-card-tag">Nível 04 · RedBubble</span><h3>Chameleon Digital Art</h3><p>Projeto completo no catálogo de níveis.</p><span class="du-level-meta">6 imagens</span></article><article class="du-card du-level-card"><figure><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><path d="M26 90q27-60 54 0t54 0" fill="none" stroke="#5cc6d0" stroke-width="2"/><circle cx="80" cy="46" r="12" fill="none" stroke="#5cc6d0" stroke-width="1"/></svg></figure><span class="du-card-tag">Nível 05 · Consultoria</span><h3>Rogério Consultoria</h3><p>Projeto completo no catálogo de níveis.</p><span class="du-level-meta">6 imagens</span></article><article class="du-card du-level-card"><figure><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><path d="M40 24h80v84#eb767e40z" fill="none" stroke="#eb767e" stroke-width="2"/><path d="M40 24l40 42 40-42M40 108l40-42 40 42" stroke="#eb767e" stroke-width="1" opacity=".6"/></svg></figure><span class="du-card-tag">Nível 06 · RedBubble</span><h3>Pitbul Color</h3><p>Projeto completo no catálogo de níveis.</p><span class="du-level-meta">6 imagens</span></article><article class="du-card du-level-card"><figure><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><circle cx="60" cy="60" r="26" fill="none" stroke="#ffdf00" stroke-width="2"/><circle cx="100" cy="60" r="26" fill="none" stroke="#ffdf00" stroke-width="2"/></svg></figure><span class="du-card-tag">Nível 07 · Arte Digital</span><h3>Cat Fe</h3><p>Projeto completo no catálogo de níveis.</p><span class="du-level-meta">6 imagens</span></article><article class="du-card du-level-card"><figure><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><path d="M24 60h112M80 16v88" stroke="#a7b3b5" stroke-width="2"/><circle cx="80" cy="60" r="30" fill="none" stroke="#a7b3b5" stroke-width="1" opacity=".6"/></svg></figure><span class="du-card-tag">Nível 08 · RedBubble</span><h3>Classic Car</h3><p>Projeto completo no catálogo de níveis.</p><span class="du-level-meta">6 imagens</span></article><article class="du-card du-level-card"><figure><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><path d="M80 18 96 50l34 4-25 24 7 34-32-17-32 17 7-34-25-24 34-4z" fill="none" stroke="#7fdc8c" stroke-width="2"/></svg></figure><span class="du-card-tag">Nível 09 · StartUp</span><h3>Selva Dev</h3><p>Projeto completo no catálogo de níveis.</p><span class="du-level-meta">6 imagens</span></article></div>
+</div>
+</section>
+<section class="du du-phase" id="fase-ferramentas"><div class="du-wrap"><div class="du-phase-tag"><b>FASE 04</b><span>Inventário</span></div><h2>FERRAMENTAS DA MISSÃO</h2><div class="du-grid du-grid--3"><div class="du-card"><span class="du-card-tag">Tecnologias</span><h3>Stack</h3><ul class="du-list"><li><b>01</b><span>HTML</span></li><li><b>02</b><span>CSS</span></li><li><b>03</b><span>PHP</span></li><li><b>04</b><span>Javascript</span></li><li><b>05</b><span>jQuery</span></li></ul><p class="du-slots">05 slots</p></div><div class="du-card"><span class="du-card-tag">Plataformas</span><h3>CMS</h3><ul class="du-list"><li><b>01</b><span>Wordpress</span></li><li><b>02</b><span>Prestashop</span></li><li><b>03</b><span>Joomla</span></li><li><b>04</b><span>Blogger</span></li><li><b>05</b><span>Winter</span></li></ul><p class="du-slots">05 slots</p></div><div class="du-card"><span class="du-card-tag">Programas</span><h3>Estúdio</h3><ul class="du-list"><li><b>01</b><span>VS Code</span></li><li><b>02</b><span>Illustrator</span></li><li><b>03</b><span>Photoshop</span></li><li><b>04</b><span>CorelDRAW</span></li><li><b>05</b><span>Figma</span></li></ul><p class="du-slots">05 slots</p></div></div></div></section>
+<section id="fase-07" class="du du-phase">
+<span class="du-phase-num" aria-hidden="true">07</span>
+<div class="du-wrap">
+<div class="du-phase-tag"><b>FASE 07</b><span>Depoimentos</span></div>
+<h2>DEPOIMENTOS DE CLIENTES</h2>
+<div class="du-card du-quote"><p>“O melhor profissional da área que já conheci. Tato para os detalhes, olhar técnico e preço justo. David é um profissional sensacional, eu o recomendo!”</p><span class="du-quote-by">SCRE &amp; TRABALHO · Cliente</span></div>
+</div>
+</section>
+<section id="fase-07-social" class="du du-phase">
+<span class="du-phase-num" aria-hidden="true">07</span>
+<div class="du-wrap">
+<div class="du-phase-tag"><b>FASE 07</b><span>Social</span></div>
+<h2>ÚLTIMOS POSTS DO INSTAGRAM</h2>
+<div class="du-social-grid"><div><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><path d="M28 96 80 24l52 72z" fill="none" stroke="#5cc6d0" stroke-width="2"/><path d="M52 96 80 58l28 38" fill="none" stroke="#5cc6d0" stroke-width="1" opacity=".6"/></svg></div><div><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><rect x="30" y="30" width="100" height="72" rx="8" fill="none" stroke="#eb767e" stroke-width="2"/><path d="M30 60h100M80 30v72" stroke="#eb767e" stroke-width="1" opacity=".5"/></svg></div><div><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><circle cx="80" cy="60" r="40" fill="none" stroke="#ffdf00" stroke-width="2"/><ellipse cx="80" cy="60" rx="40" ry="15" fill="none" stroke="#ffdf00" stroke-width="1" opacity=".6"/></svg></div><div><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><path d="M26 90q27-60 54 0t54 0" fill="none" stroke="#7fdc8c" stroke-width="2"/><circle cx="80" cy="46" r="12" fill="none" stroke="#7fdc8c" stroke-width="1"/></svg></div><div><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><path d="M40 24h80v84#a7b3b540z" fill="none" stroke="#a7b3b5" stroke-width="2"/><path d="M40 24l40 42 40-42M40 108l40-42 40 42" stroke="#a7b3b5" stroke-width="1" opacity=".6"/></svg></div><div><svg viewBox="0 0 160 120" fill="none" aria-hidden="true" role="img" aria-label="Selo do projeto"><circle cx="60" cy="60" r="26" fill="none" stroke="#5cc6d0" stroke-width="2"/><circle cx="100" cy="60" r="26" fill="none" stroke="#5cc6d0" stroke-width="2"/></svg></div></div><p style="margin-top:24px"><a class="du-btn du-btn--ghost" href="#">Seguir no Instagram</a></p>
+</div>
+</section>
+<section id="fase-08" class="du du-phase">
+<span class="du-phase-num" aria-hidden="true">08</span>
+<div class="du-wrap">
+<div class="du-phase-tag"><b>FASE 08</b><span>Contato</span></div>
+<h2>VAMOS CONVERSAR?</h2>
+<div class="du-grid du-grid--2"><div class="du-card"><span class="du-card-tag">Diga olá</span><h3>Endereço</h3><p>Casa e Escritório: São Paulo, Brasil</p><p><a href="mailto:contact@davidalmeida.xyz">contact@davidalmeida.xyz</a></p><ul class="du-list"><li><b>01</b><span>Facebook</span></li><li><b>02</b><span>Instagram</span></li><li><b>03</b><span>Pinterest</span></li><li><b>04</b><span>X</span></li><li><b>05</b><span>Google Business</span></li><li><b>06</b><span>RedBubble</span></li></ul></div><div class="du-card"><form class="du-form" method="post" action="#"><label for="du-nome">Nome</label><input id="du-nome" name="name" type="text" maxlength="120" required><label for="du-email">E-mail</label><input id="du-email" name="email" type="email" maxlength="160" required><label for="du-msg">Mensagem</label><textarea id="du-msg" name="message" maxlength="4000" required></textarea><button class="du-btn" type="submit">Enviar mensagem →</button></form></div></div>
+</div>
+</section>
+
 </main>
 
-<footer class="atlas atlas-footer">
-  <div class="atlas-wrap">
-    <div class="atlas-footer-grid">
-      <div><a class="atlas-brand" href="/"><span class="atlas-brand-mark">AS</span><span>Atlas Studio</span></a>
-        <p>Estudio de produtos digitais. Estrategia, design e engenharia para empresas que querem crescer com consistencia.</p>
-        <p style="margin-top:18px"><a href="mailto:contato@atlasstudio.example">contato@atlasstudio.example</a></p></div>
-      <div><h3>Explorar</h3>
-        <a href="/">Inicio</a><a href="#servicos">Servicos</a>
-        <a href="#projetos">Projetos</a><a href="#blog">Blog</a></div>
-      <div><h3>Servicos</h3>
-        <a href="#servicos">Estrategia digital</a><a href="#servicos">Design de produto</a>
-        <a href="#servicos">Desenvolvimento</a><a href="#contato">Consultoria</a></div>
-      <div><h3>Contato</h3>
-        <a href="#contato">Fale conosco</a><a href="mailto:contato@atlasstudio.example">E-mail</a>
-        <a href="tel:+551140028922">+55 11 4002 8922</a><a href="#contato">Solicitar proposta</a></div>
-    </div>
-    <div class="atlas-footer-bottom">
-      <span>© 2026 Atlas Studio. Todos os direitos reservados.</span>
-      <span><a href="/">Privacidade</a> · <a href="/">Termos</a> · ReamurCMS</span>
-    </div>
-  </div>
-</footer>
+<footer class="du du-footer"><div class="du-wrap">
+<div class="du-footer-ghost" aria-hidden="true">DAVID L. ALMEIDA</div>
+<div class="du-footer-grid">
+  <div><h4>David L. Almeida</h4><p style="color:var(--du-muted);font-size:.86rem">Desenvolvedor Criativo. Posso criar sites, aplicativos, logotipos e outras mídias digitais incríveis. Casa e Escritório: São Paulo, Brasil.</p><p style="font-size:.86rem"><a href="mailto:contact@davidalmeida.xyz">contact@davidalmeida.xyz</a></p></div>
+  <div><h4>Me encontre em</h4><a href="https://github.com/davidcreator">GitHub</a><a href="https://x.com/DavidAlmeidaDes">X</a><a href="#">GitLab</a><a href="#">Instagram</a><a href="#">Pinterest</a><a href="#">RedBubble</a></div>
+  <div><h4>Navegar</h4><a href="#fase-01">SOBRE</a><a href="#fase-02">PROCESSO</a><a href="#fase-04">HABILIDADES</a><a href="#fase-05">SERVIÇOS</a><a href="#fase-06">CATÁLOGO</a><a href="#fase-08">CONTATO</a></div>
+</div>
+<div class="du-footer-bottom"><span>© 2026 David L. Almeida · Desenvolvedor Criativo</span><span>ROLE PARA VOAR · DISTÂNCIA 0 KM</span></div>
+</div></footer>
 
 
 

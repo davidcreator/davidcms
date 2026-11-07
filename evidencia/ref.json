@@ -1,0 +1,70 @@
+[
+  {
+    "title": "David L. Almeida — Desenvolvedor Criativo",
+    "lang": "pt-BR",
+    "bodyBg": "rgb(18, 21, 22)",
+    "bodyColor": "rgb(223, 223, 223)",
+    "bodyFont": "\"Open Sans\", system-ui, sans-serif",
+    "headingFont": "\"Poiret One\", cursive",
+    "themeColor": "#121516",
+    "scrollHeight": 13548,
+    "sections": 10,
+    "h2": [
+      "QUEM SOU EU?",
+      "NO MEU PROCESSO DE CRIAÇÃO EU USO AS SEGUINTES ETAPAS:",
+      "POR QUE INVESTIR EM UMA IDENTIDADE VISUAL?",
+      "MINHAS HABILIDADES",
+      "O QUE EU FAÇO?",
+      "ESCOLHA O SEU NÍVEL",
+      "DEPOIMENTOS DE CLIENTES",
+      "ÚLTIMOS POSTS DO INSTAGRAM",
+      "VAMOS CONVERSAR?"
+    ],
+    "canvas": 1,
+    "imgs": 21,
+    "hasWebGL": true,
+    "phrases": [
+      "Mova o mouse"
+    ],
+    "links": 49,
+    "name": "desktop",
+    "innerWidth": 1440,
+    "pageerrors": 0,
+    "errSample": [],
+    "bytes": 2915545,
+    "shot": "/tmp/bn_ref_desktop.png"
+  },
+  {
+    "title": "David L. Almeida — Desenvolvedor Criativo",
+    "lang": "pt-BR",
+    "bodyBg": "rgb(18, 21, 22)",
+    "bodyColor": "rgb(223, 223, 223)",
+    "bodyFont": "\"Open Sans\", system-ui, sans-serif",
+    "headingFont": "\"Poiret One\", cursive",
+    "themeColor": "#121516",
+    "scrollHeight": 20611,
+    "sections": 10,
+    "h2": [
+      "QUEM SOU EU?",
+      "NO MEU PROCESSO DE CRIAÇÃO EU USO AS SEGUINTES ETAPAS:",
+      "POR QUE INVESTIR EM UMA IDENTIDADE VISUAL?",
+      "MINHAS HABILIDADES",
+      "O QUE EU FAÇO?",
+      "ESCOLHA O SEU NÍVEL",
+      "DEPOIMENTOS DE CLIENTES",
+      "ÚLTIMOS POSTS DO INSTAGRAM",
+      "VAMOS CONVERSAR?"
+    ],
+    "canvas": 1,
+    "imgs": 22,
+    "hasWebGL": true,
+    "phrases": [],
+    "links": 49,
+    "name": "mobile",
+    "innerWidth": 390,
+    "pageerrors": 0,
+    "errSample": [],
+    "bytes": 316758,
+    "shot": "/tmp/bn_ref_mobile.png"
+  }
+]

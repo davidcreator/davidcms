@@ -1,0 +1,141 @@
+-- 1. Estrutura e documentação --
+OK   presente: docs/temas/David-Universe-3D.reamurtheme.json
+OK   presente: RELATORIO-FINAL-BN.md
+OK   presente: GUIA-BN.md
+OK   presente: INDICE-BN.md
+OK   presente: BN-Amostra-vs-Tema.png
+OK   presente: evidencia/ref.json
+OK   presente: evidencia/export-bn.txt
+OK   presente: evidencia/export-report.json
+OK   presente: evidencia/layout-bn.json
+OK   presente: tools/verify-bn.cjs
+OK   presente: preview/home.html
+OK   presente: preview/catalogo.html
+OK   presente: preview/ferramentas.html
+OK   presente: preview/not-found.html
+OK   doc cita: release_approved: false
+OK   doc cita: BLOCKED_NOT_RUN
+OK   doc cita: PENDING_DECISION
+OK   doc cita: escrita do agente no GitHub
+OK   doc cita: Ativar
+OK   doc cita: draft_config
+OK   doc cita: sem código executável
+OK   cita amostra online
+OK   não afirma release
+-- 2. Pacote (dados validados) --
+OK   format/version
+OK   name/slug/parent
+OK   checksum SHA-256 · e081f0d26759…
+OK   <= 512 KiB · 89309 bytes
+OK   25 fontes allowlistadas
+OK   chaves config válidas · primary,surface,scene,templates,conditions,three,tokens,parent,kaz_scene
+OK   cores da amostra
+OK   tokens modo escuro
+OK   checksum recomputado
+-- 3. ThreeJS declarativo --
+OK   three.enabled
+OK   scene hero-particles
+OK   count 50..800
+OK   speed 0.01..0.20
+OK   slot allowlistado
+OK   5 regras
+OK   conditions: hero-particles
+OK   conditions: portfolio-3d
+OK   conditions: tools-3d
+OK   conditions: not-found
+OK   10 templates com slot · 10
+OK   nenhum slot duplicado
+OK   footer condiciona footer_top
+OK   404 sem slot proprio
+-- 4. kaz_scene (20 camadas) --
+OK   version/canvas/grid
+OK   20 camadas / ids únicos
+OK   kinds/roles allowlistados
+OK   cores hex
+OK   texto <=80 sem markup
+OK   limites numéricos
+OK   flags booleanos
+-- 5. Fidelidade ao conteúdo da amostra --
+OK   conteúdo: DAVID L. ALMEIDA
+OK   conteúdo: Desenvolvedor Criativo
+OK   conteúdo: contact@davidalmeida.xyz
+OK   conteúdo: FASE 00
+OK   conteúdo: DECOLAGEM
+OK   conteúdo: DISTÂNCIA
+OK   conteúdo: ORBES 00/10
+OK   conteúdo: Controles
+OK   conteúdo: Iniciar missão
+OK   conteúdo: QUEM SOU EU?
+OK   conteúdo: ESCOLHA O SEU NÍVEL
+OK   conteúdo: VAMOS CONVERSAR?
+OK   conteúdo: ÚLTIMOS POSTS DO INSTAGRAM
+OK   conteúdo: Juvenile World Academy
+OK   conteúdo: Steel of Death
+OK   conteúdo: Farmer Life Simulation
+OK   conteúdo: Selva Dev
+OK   conteúdo: Conhecendo o Cliente e a Empresa
+OK   conteúdo: Pesquisa
+OK   conteúdo: Conceito
+OK   conteúdo: Execução
+OK   conteúdo: Flexibilidade
+OK   conteúdo: Entrega
+OK   conteúdo: Unidade
+OK   conteúdo: Credibilidade
+OK   conteúdo: Atração
+OK   conteúdo: Design Gráfico
+OK   conteúdo: Web Design
+OK   conteúdo: SEO
+OK   conteúdo: Tecnologias
+OK   conteúdo: Plataformas
+OK   conteúdo: Programas
+OK   conteúdo: São Paulo
+OK   9 selos SVG inline
+OK   9 níveis no catálogo
+-- 6. Recorte A / sem código executável --
+OK   fontes sem <script
+OK   fontes sem <iframe
+OK   fontes sem javascript:
+OK   fontes sem handler inline
+OK   fontes sem |raw
+OK   fontes sem autoescape
+OK   fontes sem srcdoc/formaction
+OK   fontes sem @import
+OK   fontes sem url(
+OK   fontes sem <link
+OK   fontes sem Google Fonts
+OK   fontes sem innerHTML
+OK   fontes sem eval(
+OK   fontes sem fetch(
+-- 7. Evidências --
+OK   PHP 14 OK / 0 FALHAS
+OK   export: validateConfig = []
+OK   export: tokens dark AA
+OK   export: ThemeSceneCss 20 camadas
+OK   export: decode ok=true
+OK   export: snapshot common/home
+OK   export: snapshot catalog/project_list
+OK   export: snapshot tool/tool_list
+OK   export: snapshot error/not_found
+OK   export: checksum canonico
+OK   export-report checksum
+OK   5 capturas
+OK     home: 1 slot/0 scripts/0 overflow/0 erros
+OK     home-mob: 1 slot/0 scripts/0 overflow/0 erros
+OK     catalogo: 1 slot/0 scripts/0 overflow/0 erros
+OK     ferramentas: 1 slot/0 scripts/0 overflow/0 erros
+OK     not-found: 1 slot/0 scripts/0 overflow/0 erros
+OK   4 cenas distintas
+OK   bodyBg = rgb(18,21,22)
+OK   0 overflow também em 360/320 · medido em bn_shot: 390/360/320
+OK   ref: bodyBg medido
+OK   ref: canvas WebGL
+OK   ref: Poiret One
+OK   preview home → hero-particles
+OK   preview home sem script
+OK   preview catalogo → portfolio-3d
+OK   preview catalogo sem script
+OK   preview ferramentas → tools-3d
+OK   preview ferramentas sem script
+OK   preview not-found → not-found
+OK   preview not-found sem script
+CJS BN: 133 OK / 0 FALHAS

@@ -1,0 +1,20 @@
+OK   validateConfig = [] · []
+OK   tokens dark AA
+OK   ThemeSceneCss 20 camadas · 20 camadas · css 1629 bytes
+OK   CSS allowlistado
+OK   snapshot common/home → hero-particles · hero-particles
+OK   snapshot catalog/project_list → portfolio-3d · portfolio-3d
+OK   snapshot tool/tool_list → tools-3d · tools-3d
+OK   snapshot error/not_found → not-found · not-found
+OK   encode <= 512 KiB · 89309 bytes
+OK   decode ok=true · []
+OK   decode 25 fontes
+OK   decode three.enabled
+OK   decode kaz_scene 20 camadas
+OK   checksum canonico · e081f0d26759034b15f1e200e2248199bbee43dea30765fb8977704c3f29a1d4
+
+PHP BN export: 14 OK / 0 FALHAS
+sync /tmp/bk_out: [object Object]
+sync /tmp/bk_patch: [object Object]
+sync /tmp/bk_configs: [object Object]
+sync /tmp/bm_out: [object Object]
