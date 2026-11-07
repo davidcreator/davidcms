@@ -52,6 +52,20 @@ body.du{background:#121516}
 
 T=c['templates']
 
+# ── BO-r2: repara os paths SVG corrompidos herdados do BN ──────────────
+# O gerador BN usava a letra "H" como marcador de cor (stroke="H") e fazia
+# .replace('H', hue). Isso tambem trocava o comando SVG "H40z" do selo 06,
+# produzindo d="M40 24h80v84#eb767e40z" -> "Expected path command" no console.
+# O correto e "M40 24h80v84H40z". O gerador BN foi corrigido para usar
+# __SEAL_HUE__; aqui saneamos o config BN ja exportado, sem tocar no ZIP BN.
+BAD_PATH = re.compile(r'M40 24h80v84#[0-9a-fA-F]{6}40z')
+fixed = 0
+for _k, _v in list(T.items()):
+    if isinstance(_v, str) and BAD_PATH.search(_v):
+        fixed += len(BAD_PATH.findall(_v))
+        T[_k] = BAD_PATH.sub('M40 24h80v84H40z', _v)
+print('BO-r2: %d paths SVG reparados' % fixed)
+
 # ── HUD: ganchos data-* + barra de progresso + toast ──────────────────
 h=T['partial/site_header']
 assert h.count('</style>')==1

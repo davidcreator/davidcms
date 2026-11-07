@@ -157,6 +157,9 @@ for rel in list(PATCHERS)+['dev/system/library/three/runtime/three/scenes/david-
         r=subprocess.run(['git','diff','--no-index','--',a,b],capture_output=True,text=True)
     d=r.stdout
     d=d.replace('a'+a,'a/'+rel).replace('b'+b,'b/'+rel)
+    # Para arquivo novo, git diff --no-index /dev/null <absoluto> emite
+    # "a/home/user/bo_pkg/dev/..."; normaliza para o caminho relativo do repo.
+    d=d.replace('a'+DST+'/', 'a/').replace('b'+DST+'/', 'b/')
     d=d.replace('--- /dev/null','--- /dev/null').replace('+++ /dev/null','+++ /dev/null')
     diff.append(d.rstrip())
     diff.append('')

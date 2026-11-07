@@ -1,6 +1,14 @@
-# Guia de aplicação — Frente BO
+# Guia de aplicação — Frente BO-r2
 
 Ordem recomendada. **Você aplica**; o agente não escreve no GitHub.
+
+> **Se os objetos 3D não aparecerem**, pare aqui e abra `DIAGNOSTICO-3D.md`.
+> Na maioria dos casos é o `PATCH-BO.diff` aplicado pela metade: `main.js` foi
+> atualizado, mas `dev/system/library/three/runtime/three/scenes/david-universe.js`
+> não existe no servidor ou não é publicado pelo `asset_manifest.php`. Um import
+> com 404 derruba o módulo ES inteiro. Use `diagnostico/console.js` para confirmar
+> em 10 segundos. Os erros `<path> attribute d` do console **não** são a causa do
+> 3D — são selos SVG decorativos, já corrigidos nesta revisão r2.
 
 ## 1. Aplicar o patch do runtime
 

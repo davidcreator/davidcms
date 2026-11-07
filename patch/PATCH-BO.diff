@@ -166,7 +166,7 @@ index 5f49b18..ccf9826 100644
              'conditions'=>['version'=>1,'rules'=>$normalized['rules']],
              'three'=>$three,'tokens'=>$tokensNormalized,'parent'=>$parent];
 
-diff --git a/home/user/bo_pkg/dev/system/library/three/runtime/three/scenes/david-universe.js b/dev/system/library/three/runtime/three/scenes/david-universe.js
+diff --git a/dev/system/library/three/runtime/three/scenes/david-universe.js b/dev/system/library/three/runtime/three/scenes/david-universe.js
 new file mode 100644
 index 0000000..1b72032
 --- /dev/null

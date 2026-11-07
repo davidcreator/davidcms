@@ -36,7 +36,25 @@ ok('20 camadas kaz_scene (fallback)', cfg.kaz_scene?.layers?.length === 20);
 ok('tokens dark presentes', cfg.tokens?.dark_surface === '#121516' && cfg.tokens?.dark_primary === '#5cc6d0');
 const report = JSON.parse(read('evidencia/export-report.json'));
 ok('checksum canonico no tema', theme.checksum === report.checksum, String(theme.checksum));
-ok('checksum = 81f618c1…', /^81f618c1/.test(String(report.checksum)), report.checksum);
+ok('checksum SHA-256 canonico', /^[0-9a-f]{64}$/.test(String(report.checksum)), report.checksum);
+
+// ── 1b. BO-r2: nenhum path SVG corrompido no tema ─────────────────────
+// Regressao do placeholder "H" do BN: a cor era injetada dentro do atributo
+// d, gerando "Expected path command" no console. Varre os 25 templates.
+const svgIssues = [];
+let svgCount = 0;
+for (const [k, v] of Object.entries(cfg.templates || {})) {
+  if (typeof v !== 'string') continue;
+  for (const m of v.matchAll(/<path\b[^>]*\sd="([^"]*)"/g)) {
+    svgCount++;
+    const d = m[1];
+    if (d.includes('#') || !/^[MmLlHhVvCcSsQqTtAaZz0-9,.\s+-]*$/.test(d)) {
+      svgIssues.push(k + ': ' + d);
+    }
+  }
+}
+ok('paths SVG validos no tema', svgIssues.length === 0 && svgCount > 0,
+   svgCount + ' paths · ' + (svgIssues.length ? svgIssues.join(' | ') : '0 invalidos'));
 
 // HUD funcional
 const header = cfg.templates['partial/site_header'];
@@ -164,7 +182,10 @@ ok('convergencia do voo', (() => JSON.parse(read('evidencia/runtime-bo.json')).c
  'shot-bo-mobile.png', 'BO-Nave-e-Interacoes.png'].forEach(f =>
   ok('captura ' + f, has('evidencia/' + f) && fs.statSync(R('evidencia/' + f)).size > 10000));
 ['RELATORIO-BO.md', 'GUIA-BO.md', 'INDICE-BO.md', 'DIAGNOSTICO-BO.md',
- 'ESPECIFICACAO-CENA.md', 'especificacao.json'].forEach(f => ok('doc ' + f, has('docs/' + f)));
+ 'ESPECIFICACAO-CENA.md', 'DIAGNOSTICO-3D.md', 'especificacao.json'].forEach(f => ok('doc ' + f, has('docs/' + f)));
+ok('diagnostico de console pronto', has('diagnostico/console.js') &&
+   /getEntriesByType\('resource'\)/.test(read('diagnostico/console.js')));
+ok('nenhum path corrompido no pacote', !/M40 24h80v84#[0-9a-f]{6}40z/.test(read(themeP)));
 ok('previa funcional completa', ['previa/index.html', 'previa/main-bo.js',
   'previa/runtime/three.module.js', 'previa/runtime/three.core.js',
   'previa/runtime/three/core/scene-runner.js', 'previa/runtime/three/scenes/david-universe.js']

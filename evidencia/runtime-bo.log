@@ -20,32 +20,32 @@ OK   9 fases observadas pelo IntersectionObserver · 9
 OK   pagina longa o bastante para voar · 4608px
 
 -- pilotagem --
-OK   pointermove move a nave em X · 1.09 → 3.84
-OK   pointermove move a nave em Y · 0.67 → 1.39
+OK   pointermove move a nave em X · 0.96 → 3.80
+OK   pointermove move a nave em Y · 0.64 → 1.39
 
 -- voo por scroll --
 OK   scroll dispara setProgress (target > 0) · target=0.683
-OK   progresso acompanha o target · progress=0.361
-OK   camera = 8 - progress*320 · camera.z=-107.6
-OK   scroll move a camera para dentro do tunel · camera.z=-107.6
-OK   nave acompanha a camera (z = camZ - 9) · ship.z=-116.6
-OK   warp altera FOV · fov=77.2 warp=0.70
-OK   HUD distancia = round(progress*384400) km · 138,854 KM
-OK   hint de distancia atualiza · 138,854 KM
-OK   barra de progresso coerente · 36.1%
+OK   progresso acompanha o target · progress=0.295
+OK   camera = 8 - progress*320 · camera.z=-86.3
+OK   scroll move a camera para dentro do tunel · camera.z=-86.3
+OK   nave acompanha a camera (z = camZ - 9) · ship.z=-95.3
+OK   warp altera FOV · fov=75.5 warp=0.59
+OK   HUD distancia = round(progress*384400) km · 113,240 KM
+OK   hint de distancia atualiza · 113,240 KM
+OK   barra de progresso coerente · 29.5%
 OK   IntersectionObserver troca a fase · FASE 07 — DEPOIMENTOS
 
 -- coleta de orbes --
-OK   a coleta acontece durante o voo · 3/14
-OK   orbes coletados marcados na cena · 3 marcados
-OK   HUD ORBES reflete a coleta · 03/14
-OK   toast de coleta aparece · Orbe coletado 3/14
+OK   a coleta acontece durante o voo · 4/14
+OK   orbes coletados marcados na cena · 4 marcados
+OK   HUD ORBES reflete a coleta · 04/14
+OK   toast de coleta aparece · Orbe coletado 4/14
 
 -- fim do voo (hold 1) --
-OK   progresso converge para 1 · 0.99994
-OK   camera chega a z=-312 · camera.z=-311.98
-OK   camera = 8 - progress*320 no fim · camera.z=-311.98
-OK   distancia = round(progress*384400) km, chegando a ~384.400 KM · 384,376 KM (384.400 KM em progress=1)
+OK   progresso converge para 1 · 0.99996
+OK   camera chega a z=-312 · camera.z=-311.99
+OK   camera = 8 - progress*320 no fim · camera.z=-311.99
+OK   distancia = round(progress*384400) km, chegando a ~384.400 KM · 384,383 KM (384.400 KM em progress=1)
 OK   barra chega a 100% · 100%
 
 -- erros --

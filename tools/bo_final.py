@@ -5,7 +5,7 @@ Nao escreve no GitHub, nao aplica no servidor, nao dispara CI/deploy.
 import os,shutil,subprocess,hashlib,json,zipfile
 SRC='/home/user'
 DST='/home/user/bo_pkg_final'
-ZIP='/home/user/entregas/ReamurCMS-Frente-BO-Nave-e-Interacoes.zip'
+ZIP='/home/user/entregas/ReamurCMS-Frente-BO-r2-SVG-e-Diagnostico.zip'
 shutil.rmtree(DST,ignore_errors=True)
 os.makedirs(DST,exist_ok=True)
 os.makedirs(os.path.dirname(ZIP),exist_ok=True)
@@ -18,12 +18,14 @@ def put(dst,text):
     open(os.path.join(DST,dst),'w',encoding='utf-8').write(text)
 
 # ── docs ──────────────────────────────────────────────────────────────
-for f in ['RELATORIO-BO.md','GUIA-BO.md','INDICE-BO.md']:
+for f in ['RELATORIO-BO.md','GUIA-BO.md','INDICE-BO.md','DIAGNOSTICO-3D.md']:
     cp('bo_docs/'+f,'docs/'+f)
     cp('bo_docs/'+f,f)
 cp('bo_ref/DIAGNOSTICO-BO.md','docs/DIAGNOSTICO-BO.md')
 cp('bo_ref/ESPECIFICACAO-CENA.md','docs/ESPECIFICACAO-CENA.md')
 cp('bo_ref/especificacao.json','docs/especificacao.json')
+cp('bo_docs/console.js','diagnostico/console.js')
+cp('bo_docs/console.js','diagnostico-console.js')
 put('LEIA-ME.md',open('/home/user/bo_docs/INDICE-BO.md',encoding='utf-8').read())
 
 # ── tema ──────────────────────────────────────────────────────────────
@@ -105,7 +107,7 @@ for p,h in [
 
 # ── tools ─────────────────────────────────────────────────────────────
 for f in ['bo_spec.py','bo_patch.py','bo_theme_gen.py','bo_preview.py','bo_export.php',
-          'bo_runtime.cjs','bo_montagem.py','verify-bo.cjs','bo_final.py']:
+          'bo_runtime.cjs','bo_montagem.py','verify-bo.cjs','bo_final.py','bn_theme_gen.py']:
     cp('validacao/'+f,'tools/'+f)
 
 # ── verificador ───────────────────────────────────────────────────────

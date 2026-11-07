@@ -17,17 +17,17 @@ SLOT="{% include 'partial/theme-scene.twig' %}"
 # ── selos SVG inline (substituem as .webp remotas da amostra) ──────────
 def seal(i,hue='#5cc6d0'):
     shapes=[
-     '<circle cx="80" cy="60" r="34" fill="none" stroke="H" stroke-width="2"/><circle cx="80" cy="60" r="20" fill="none" stroke="H" stroke-width="1" opacity=".6"/><path d="M20 96h120" stroke="H" stroke-width="1" opacity=".5"/>',
-     '<path d="M28 96 80 24l52 72z" fill="none" stroke="H" stroke-width="2"/><path d="M52 96 80 58l28 38" fill="none" stroke="H" stroke-width="1" opacity=".6"/>',
-     '<rect x="30" y="30" width="100" height="72" rx="8" fill="none" stroke="H" stroke-width="2"/><path d="M30 60h100M80 30v72" stroke="H" stroke-width="1" opacity=".5"/>',
-     '<circle cx="80" cy="60" r="40" fill="none" stroke="H" stroke-width="2"/><ellipse cx="80" cy="60" rx="40" ry="15" fill="none" stroke="H" stroke-width="1" opacity=".6"/>',
-     '<path d="M26 90q27-60 54 0t54 0" fill="none" stroke="H" stroke-width="2"/><circle cx="80" cy="46" r="12" fill="none" stroke="H" stroke-width="1"/>',
-     '<path d="M40 24h80v84H40z" fill="none" stroke="H" stroke-width="2"/><path d="M40 24l40 42 40-42M40 108l40-42 40 42" stroke="H" stroke-width="1" opacity=".6"/>',
-     '<circle cx="60" cy="60" r="26" fill="none" stroke="H" stroke-width="2"/><circle cx="100" cy="60" r="26" fill="none" stroke="H" stroke-width="2"/>',
-     '<path d="M24 60h112M80 16v88" stroke="H" stroke-width="2"/><circle cx="80" cy="60" r="30" fill="none" stroke="H" stroke-width="1" opacity=".6"/>',
-     '<path d="M80 18 96 50l34 4-25 24 7 34-32-17-32 17 7-34-25-24 34-4z" fill="none" stroke="H" stroke-width="2"/>',
+     '<circle cx="80" cy="60" r="34" fill="none" stroke="__SEAL_HUE__" stroke-width="2"/><circle cx="80" cy="60" r="20" fill="none" stroke="__SEAL_HUE__" stroke-width="1" opacity=".6"/><path d="M20 96h120" stroke="__SEAL_HUE__" stroke-width="1" opacity=".5"/>',
+     '<path d="M28 96 80 24l52 72z" fill="none" stroke="__SEAL_HUE__" stroke-width="2"/><path d="M52 96 80 58l28 38" fill="none" stroke="__SEAL_HUE__" stroke-width="1" opacity=".6"/>',
+     '<rect x="30" y="30" width="100" height="72" rx="8" fill="none" stroke="__SEAL_HUE__" stroke-width="2"/><path d="M30 60h100M80 30v72" stroke="__SEAL_HUE__" stroke-width="1" opacity=".5"/>',
+     '<circle cx="80" cy="60" r="40" fill="none" stroke="__SEAL_HUE__" stroke-width="2"/><ellipse cx="80" cy="60" rx="40" ry="15" fill="none" stroke="__SEAL_HUE__" stroke-width="1" opacity=".6"/>',
+     '<path d="M26 90q27-60 54 0t54 0" fill="none" stroke="__SEAL_HUE__" stroke-width="2"/><circle cx="80" cy="46" r="12" fill="none" stroke="__SEAL_HUE__" stroke-width="1"/>',
+     '<path d="M40 24h80v84H40z" fill="none" stroke="__SEAL_HUE__" stroke-width="2"/><path d="M40 24l40 42 40-42M40 108l40-42 40 42" stroke="__SEAL_HUE__" stroke-width="1" opacity=".6"/>',
+     '<circle cx="60" cy="60" r="26" fill="none" stroke="__SEAL_HUE__" stroke-width="2"/><circle cx="100" cy="60" r="26" fill="none" stroke="__SEAL_HUE__" stroke-width="2"/>',
+     '<path d="M24 60h112M80 16v88" stroke="__SEAL_HUE__" stroke-width="2"/><circle cx="80" cy="60" r="30" fill="none" stroke="__SEAL_HUE__" stroke-width="1" opacity=".6"/>',
+     '<path d="M80 18 96 50l34 4-25 24 7 34-32-17-32 17 7-34-25-24 34-4z" fill="none" stroke="__SEAL_HUE__" stroke-width="2"/>',
     ]
-    s=shapes[i%len(shapes)].replace('H',hue)
+    s=shapes[i%len(shapes)].replace('__SEAL_HUE__',hue)
     return ('<svg viewBox="0 0 160 120" fill="none" aria-hidden="true" '
             'role="img" aria-label="Selo do projeto">'+s+'</svg>')
 

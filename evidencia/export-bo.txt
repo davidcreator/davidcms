@@ -17,13 +17,13 @@ OK   snapshot common/home → david-universe · david-universe
 OK   snapshot catalog/project_list → portfolio-3d · portfolio-3d
 OK   snapshot tool/tool_list → tools-3d · tools-3d
 OK   snapshot error/not_found → not-found · not-found
-OK   encode <= 512 KiB · 91559 bytes
+OK   encode <= 512 KiB · 91535 bytes
 OK   decode ok=true · []
 OK   decode 25 fontes
 OK   decode three.scene=david-universe
 OK   decode kaz_scene 20 camadas
 OK   decode HUD data-du-orbes
-OK   checksum canonico · 81f618c19d9b43387275397c926ae8ae3d87e2714aa89e0388c92a14cdcabe10
+OK   checksum canonico · e2b935d8fd4bfc336c4f14cd6ba3f45bcfb397466438966b9999d8c5b5a146c0
 
 PHP BO export: 26 OK / 0 FALHAS
 sync /tmp/bk_out: [object Object]

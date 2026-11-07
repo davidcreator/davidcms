@@ -13,8 +13,9 @@ OK   regra da home usa a cena real
 OK   4 cenas originais preservadas nas regras
 OK   20 camadas kaz_scene (fallback)
 OK   tokens dark presentes
-OK   checksum canonico no tema · 81f618c19d9b43387275397c926ae8ae3d87e2714aa89e0388c92a14cdcabe10
-OK   checksum = 81f618c1… · 81f618c19d9b43387275397c926ae8ae3d87e2714aa89e0388c92a14cdcabe10
+OK   checksum canonico no tema · e2b935d8fd4bfc336c4f14cd6ba3f45bcfb397466438966b9999d8c5b5a146c0
+OK   checksum SHA-256 canonico · e2b935d8fd4bfc336c4f14cd6ba3f45bcfb397466438966b9999d8c5b5a146c0
+OK   paths SVG validos no tema · 30 paths · 0 invalidos
 OK   HUD data-du-orbes
 OK   HUD data-du-distancia
 OK   HUD data-du-fase
@@ -122,8 +123,11 @@ OK   doc GUIA-BO.md
 OK   doc INDICE-BO.md
 OK   doc DIAGNOSTICO-BO.md
 OK   doc ESPECIFICACAO-CENA.md
+OK   doc DIAGNOSTICO-3D.md
 OK   doc especificacao.json
+OK   diagnostico de console pronto
+OK   nenhum path corrompido no pacote
 OK   previa funcional completa
 
-BO verify: 124 OK / 0 FALHAS
+BO verify: 128 OK / 0 FALHAS
 

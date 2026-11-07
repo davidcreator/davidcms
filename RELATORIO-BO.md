@@ -85,6 +85,40 @@ A classe `g3` do bundle Vite/React de 891.703 bytes foi **portada** para um mód
 
 Slug novo para não colidir com o pacote BN já importado.
 
+## 4b. Revisão r2 — erros de `<path>` no console e 3D ausente
+
+Após o primeiro teste no servidor, você reportou: *"não está renderizando os objetos 3d … no console aparece `Expected path command, "M40 24h80v84#eb767e40z"` e `#a7b3b540z`"*.
+
+**São dois problemas independentes.**
+
+### O bug dos SVG (corrigido)
+
+O gerador do BN usava `H` como marcador de cor (`stroke="H"`) com `.replace('H', hue)`. O selo 06 contém o comando SVG `H40z`; o replace trocou **todos** os `H`, injetando a cor dentro do atributo `d`:
+
+```
+correto : d="M40 24h80v84H40z"
+gerado  : d="M40 24h80v84#eb767e40z"
+```
+
+As duas cores do log (`#eb767e`, `#a7b3b5`) correspondem às 4 ocorrências em 3 templates (`common/home` ×2, `partial/portfolio`, `partial/news`). Um `<path>` inválido é ignorado pelo navegador com um aviso — **não bloqueia WebGL**, não interrompe o parse do HTML. Correções:
+
+- `tools/bn_theme_gen.py`: placeholder agora é `__SEAL_HUE__`;
+- `tools/bo_theme_gen.py`: saneia os 4 paths do config BN já exportado;
+- `tools/verify-bo.cjs`: novo check varre todos os `<path d>` dos 25 templates → **30 paths, 0 inválidos**, e falha se qualquer cor for injetada novamente.
+- `PATCH-BO.diff`: cabeçalho do arquivo novo normalizado para caminho relativo (`git apply` reverso + direto revalidados).
+
+Com a mudança, o `config` passou a 84.074 bytes, o encode a **91.535 bytes** e o checksum canônico a **`e2b935d8fd4bfc336c4f14cd6ba3f45bcfb397466438966b9999d8c5b5a146c0`**. Export PHP refeito: **26/0**, `validateConfig=[]`, `decode ok=true`. Runtime Chromium refeito: **49/0**, WebGL 2.0, 0 erros de console.
+
+### O 3D ausente (diagnóstico, não correção no servidor)
+
+Eu não tenho acesso ao seu servidor, então não posso afirmar qual elo quebrou. O tema sozinho só declara `data-scene="david-universe"`; quem cria a nave é o runtime patchado. A cadeia tem 5 elos: patch aplicado, `main.js` publicado, `asset_manifest.php` + arquivo novo com HTTP 200 e MIME JS, `has_3d` verdadeiro e allowlists PHP aceitando a cena.
+
+**A causa mais provável é o patch aplicado pela metade**: `main.js` atualizado, mas `scenes/david-universe.js` ausente ou não allowlistado. Um único `import` com 404 **aborta o módulo ES inteiro**, e por isso nem as 4 cenas antigas aparecem — exatamente o sintoma relatado. `prefers-reduced-motion: reduce` também desliga o WebGL por desenho.
+
+O pacote traz `DIAGNOSTICO-3D.md` (tabela dos 5 elos, checklist de aplicação, interpretação) e `diagnostico/console.js` (snippet somente-leitura que devolve o estado do slot, dos módulos carregados, do WebGL e do reduced-motion). Cole o JSON resultante aqui se ainda falhar.
+
+> O ZIP BN anterior **não foi corrigido** e segue com os paths inválidos. Se ele estiver ativo, troque pelo tema r2.
+
 ## 5. O que este pacote NÃO é
 
 Não é release, não é deploy, não é migration, não é escrita no GitHub, não é health autenticado, não é veredito visual. **Você aplica** o `PATCH-BO.diff`; o agente não escreveu no repositório.
