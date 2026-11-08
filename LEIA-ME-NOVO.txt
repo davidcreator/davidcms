@@ -1,0 +1,28 @@
+ReamurCMS — ANALISE POS-LIMPEZA
+Data: 2026-11-01 | HEAD auditado: 9c606810a030c9ee5e16bf34d915f25bfa836d36
+
+LIMPEZA DE ESCOPOS CONFIRMADA: 2.840 -> 2.701 blobs | 57.864.981 -> 43.303.922 B
+Nivel A: 153/153 aplicado, 0 restante | dev/ e tools/ intactos
+14 manifestos -> 142 OK / 0 divergentes / 0 ausentes
+11/11 congelados (schema.sql 22.495 B restaurado; D09 NAO decidido)
+docs/README.md 3.213 B / 6f0783e2... | 10 PENDING_DECISION / 0 DECIDED
+F9-27 BLOCKED_NOT_RUN | release_approved:false
+384 .md | 281 links | 4 sem alvo (ckeditor, pre-existentes) | 0 links aos 154 removidos
+
+ACHADO NOVO: 7 artefatos redundantes do meu KIT = 559.354 bytes
+  (4 duplicatas docs/ <-> listas/, 2 inventarios desatualizados,
+   LEIA-ME.txt na raiz, RESTAURAR-docs-README.txt redundante)
+
+  bash docs/aplicar-limpeza-final-C.sh           # dry-run
+  bash docs/aplicar-limpeza-final-C.sh --apply   # voce decide, SEM push
+
+PENDENTES POR DECISAO:
+  A2: 16 .map / 4.383.046 B (decisao de build)
+  B : 399 arquivos / 3.178.114 B (docs/ compilaveis + tools/)
+
+INTOCAVEIS: dev/, tests/, agents-ia/, 90 paths de manifesto, 11 congelados,
+CI, threejs/index.html (953.239 B), tema/ (2 arquivos).
+
+inventario-HEAD-9c606810.csv = 2.701 linhas (substitui o antigo de 2.840).
+NAO reemita manifestos, NAO decida D01-D10, NAO faca push por minha conta.
+sha256sum -c ReamurCMS-Analise-Pos-Limpeza-2026-11-01.zip.sha256
