@@ -1,0 +1,34 @@
+categoria,caminho,arquivos,bytes,motivo,acao
+QUARENTENA,bo_scan,536,16038942,replica stale de ad7643de (536 arquivos achatados); duplica bo_src e nao tem header.twig,mover
+QUARENTENA,bn_previews,11,4502204,duplicatas byte a byte de bn_pkg/ e das pranchas da raiz,mover
+QUARENTENA,bo_chromium.log,1,8487,rastro de validacao; evidencia ja consolidada em bo_out/ e bo_pkg_final/evidencia/,mover
+QUARENTENA,bo_zip_verify.log,1,4210,rastro de validacao; evidencia ja consolidada em bo_out/ e bo_pkg_final/evidencia/,mover
+QUARENTENA,bo_r2_verify.log,1,4370,rastro de validacao; evidencia ja consolidada em bo_out/ e bo_pkg_final/evidencia/,mover
+QUARENTENA,bo_r3_verify.log,1,4633,rastro de validacao; evidencia ja consolidada em bo_out/ e bo_pkg_final/evidencia/,mover
+QUARENTENA,bo_r4_verify.log,1,4879,rastro de validacao; evidencia ja consolidada em bo_out/ e bo_pkg_final/evidencia/,mover
+QUARENTENA,bo_token.log,1,1256,rastro de validacao; evidencia ja consolidada em bo_out/ e bo_pkg_final/evidencia/,mover
+QUARENTENA,bo_export.log,1,1843,rastro de validacao; evidencia ja consolidada em bo_out/ e bo_pkg_final/evidencia/,mover
+QUARENTENA,bo_runtime.log,1,2685,rastro de validacao; evidencia ja consolidada em bo_out/ e bo_pkg_final/evidencia/,mover
+QUARENTENA,bo_integracao.log,1,2284,rastro de validacao; evidencia ja consolidada em bo_out/ e bo_pkg_final/evidencia/,mover
+QUARENTENA,bo_final.log,1,2975,rastro de validacao; evidencia ja consolidada em bo_out/ e bo_pkg_final/evidencia/,mover
+QUARENTENA,bn_final.log,1,1112,rastro de validacao; evidencia ja consolidada em bo_out/ e bo_pkg_final/evidencia/,mover
+QUARENTENA,bn_export.log,1,788,rastro de validacao; evidencia ja consolidada em bo_out/ e bo_pkg_final/evidencia/,mover
+QUARENTENA,.sudo_as_admin_successful,1,0,rastro de validacao; evidencia ja consolidada em bo_out/ e bo_pkg_final/evidencia/,mover
+FORA_DO_SNAPSHOT,.pw-browsers,484,967776325,"Chromium headless (~924 MB); nao e lixo do projeto, mas domina o disco local",avaliar a parte
+FORA_DO_SNAPSHOT,phptest/node_modules,81,94675577,dependencia de teste; nao versionada / nao persiste em snapshot,manter ou reinstalar
+FORA_DO_SNAPSHOT,browser/node_modules,513,12107418,dependencia de teste; nao versionada / nao persiste em snapshot,manter ou reinstalar
+FORA_DO_SNAPSHOT,libs,131,17859830,dependencia de teste; nao versionada / nao persiste em snapshot,manter ou reinstalar
+MANTER,entregas,196,35921898,"90 ZIPs + 90 .sha256, 90/90 OK — historico integral de entrega",manter
+MANTER,uploads,12,1127539,"12 imagens fornecidas pelo usuario — originais, insubstituiveis",manter
+MANTER,validacao,326,2978419,scripts de validacao e geradores das frentes,manter
+MANTER,docs,1,6215,documentacao consolidada (esta entrega),manter
+MANTER,bo_docs,10,59642,fonte dos pacotes BO r2/r3/r4,manter
+MANTER,bo_pkg_final,80,5458701,pacote r4 montado e verificado 142/0,manter
+MANTER,bo_ref,10,2876170,"build.html, bundle e especificacao g3 (fonte funcional)",manter
+MANTER,bo_out,11,1765877,evidencias e JSON canonicos (checksum e2b935d8),manter
+MANTER,bo_src,26,3034161,originais ad7643de + Three r186,manter
+MANTER,bo_preview,8,2195457,previa HTTP 200 / 49-0,manter
+MANTER,bo_lib,24,318275,mirror PHP WASM,manter
+MANTER,bn_pkg,39,8371745,BN historico contestado — evidencia do erro de escopo,manter
+MANTER,bn_out,4,172201,config BN (nao regerado),manter
+MANTER,bn_src,17,160251,fontes BN,manter

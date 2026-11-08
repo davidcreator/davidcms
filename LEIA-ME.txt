@@ -1,22 +1,41 @@
-ReamurCMS — CORRECAO DEFINITIVA do FAIL CHECKSUMS-F11-10.txt
+ReamurCMS — KIT COMPLETO DE LIMPEZA DA RAIZ
 Data: 2026-11-01
 
-Blob Git exato: 24b7957d1d668591d9792659a41d2a6e26bcc470
-              3213 bytes / 6f0783e2...a79ae340bec / LF puro
+EXTRAIA ESTE ZIP NA RAIZ DO REPO (E:\wamp64\www\davidcms).
+Ele contém TUDO: aplicador, listas, consolidados e verificadores.
 
-UM COMANDO, conforme o terminal:
+ESTADO ATUAL (confirmado por voce):
+  verify-checksums.sh -> 3 PASS / 0 FAIL | 14 manifestos | 142 arquivos
+  docs/README.md -> 3213 bytes / 6f0783e2...  (corrigido)
 
-  PowerShell:  powershell -NoProfile -ExecutionPolicy Bypass -File docs\CORRIGIR-README.ps1
-  Git Bash/WSL: bash docs/CORRIGIR-README.sh
+ANTES DE TUDO — aviso "LF will be replaced by CRLF":
+  git config core.autocrlf input
+  Isso impede que o proximo checkout reconverta docs/README.md e traga o FAIL
+  de volta. Nao altera contrato, manifesto, CI nem arquivo versionado.
 
-Grava os BYTES CRUS do objeto Git em docs/README.md. Sem Python, sem ZIP
-extraido, sem rede, sem checkout, imune a core.autocrlf. Testado: 0 divergentes.
+CONFERIR (nada escrito):
+  bash docs/aplicar-limpeza-raiz.sh
+     -> 66 paths | seguranca: 0 intocaveis, 0 em manifestos, 0 linkados
 
-DEPOIS:
-  bash tools/verify-checksums.sh   (Git Bash/WSL)  -> 0 divergente(s)
-  powershell -ExecutionPolicy Bypass -File docs\VERIFICAR.ps1  (PowerShell)
+  powershell -NoProfile -ExecutionPolicy Bypass -File docs\VERIFICAR.ps1
+     -> alternativa PowerShell pura, tambem dry-run
 
-NAO reemita CHECKSUMS-F11-10.txt. NAO faca push.
-NAO houve escrita minha no GitHub. Voce aplica.
+APLICAR (voce decide, commit local e seu, SEM push):
+  bash docs/aplicar-limpeza-raiz.sh --apply
+  git rm -- ANALISE-RAIZ-GITHUB.md LEIA-ME.txt
 
-sha256sum -c ReamurCMS-Correcao-README-Definitiva-2026-11-01.zip.sha256
+  bash tools/verify-checksums.sh     # deve continuar 0 FAIL
+  bash docs/verificar-links.sh       # triagem offline, sem lychee
+
+SE O git commit DISSE "no changes added to commit":
+  Nao e erro. O git status nao listou docs/README.md como modificado,
+  logo indice e HEAD ja tinham o blob correto; so o working tree divergia.
+  Confirme com: git status --short docs/README.md   (esperado: vazio)
+
+NAO reemita CHECKSUMS-F11-10.txt. NAO faca push por minha conta.
+release_approved:false | F9-27 BLOCKED_NOT_RUN | D01-D10 intactas.
+
+sha256sum -c ReamurCMS-KIT-Limpeza-Completo-2026-11-01.zip.sha256
+
+NOVIDADE: leia docs/PROXIMO-PASSO.md (os 3 pontos do ultimo output).
+O aplicador agora checa o SHA de docs/README.md antes do --apply.
