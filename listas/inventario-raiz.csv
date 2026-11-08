@@ -1,0 +1,110 @@
+arquivo,bytes,classificacao,motivo
+.gitignore,1987,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+CHECKSUMS-F11-04.txt,1288,INTOCAVEL,manifesto CHECKSUMS*.txt; verify-checksums.sh varre por glob
+CHECKSUMS-F11-05.txt,928,INTOCAVEL,manifesto CHECKSUMS*.txt; verify-checksums.sh varre por glob
+CHECKSUMS-F11-06.txt,446,INTOCAVEL,manifesto CHECKSUMS*.txt; verify-checksums.sh varre por glob
+CHECKSUMS-F11-07.txt,573,INTOCAVEL,manifesto CHECKSUMS*.txt; verify-checksums.sh varre por glob
+CHECKSUMS-F11-08.txt,932,INTOCAVEL,manifesto CHECKSUMS*.txt; verify-checksums.sh varre por glob
+CHECKSUMS-F11-09.txt,981,INTOCAVEL,manifesto CHECKSUMS*.txt; verify-checksums.sh varre por glob
+CHECKSUMS-F11-10.txt,1129,INTOCAVEL,manifesto CHECKSUMS*.txt; verify-checksums.sh varre por glob
+CHECKSUMS-F11-11.txt,554,INTOCAVEL,manifesto CHECKSUMS*.txt; verify-checksums.sh varre por glob
+CHECKSUMS-F11-12.txt,1136,INTOCAVEL,manifesto CHECKSUMS*.txt; verify-checksums.sh varre por glob
+CHECKSUMS-F11-13.txt,1250,INTOCAVEL,manifesto CHECKSUMS*.txt; verify-checksums.sh varre por glob
+CHECKSUMS-F11-14.txt,1301,INTOCAVEL,manifesto CHECKSUMS*.txt; verify-checksums.sh varre por glob
+CHECKSUMS-F11-15.txt,544,INTOCAVEL,manifesto CHECKSUMS*.txt; verify-checksums.sh varre por glob
+CHECKSUMS-F11-16.txt,1788,INTOCAVEL,manifesto CHECKSUMS*.txt; verify-checksums.sh varre por glob
+CHECKSUMS.txt,3946,INTOCAVEL,manifesto CHECKSUMS*.txt; verify-checksums.sh varre por glob
+CONTRIBUTING.md,2061,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-01-INDICE.md,4164,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-02-INDICE.md,2356,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-04-INDICE.md,2074,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-05-INDICE.md,1781,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-06-INDICE.md,2055,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-07-INDICE.md,2182,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-08-INDICE.md,2123,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-09-INDICE.md,2266,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-10-INDICE.md,2365,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-11-INDICE.md,1673,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-12-INDICE.md,2314,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-13-INDICE.md,1958,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-14-INDICE.md,2475,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-15-INDICE.md,2523,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+F11-16-INDICE.md,2680,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+README.md,14112,INTOCAVEL,path referenciado em CHECKSUMS*.txt; verify-checksums.sh e fail-closed
+SECURITY.md,1297,INTOCAVEL,alvo de link Markdown; docs-links (lychee --offline) quebraria
+.editorconfig,706,MANTER,infra/legal do repositorio
+LICENSE,35149,MANTER,infra/legal do repositorio
+Pauta-Decisoes-D01-D10.md,5143,MANTER,contem as 10 PENDING_DECISION; nao decidir D01-D10
+COPIAR-MANUALMENTE.md,3098,OPERACIONAL,ferramenta de aplicacao BO-r4 / limpeza; manter ate aceite do 3D e Nivel 2
+INSTALAR.bat,1140,OPERACIONAL,ferramenta de aplicacao BO-r4 / limpeza; manter ate aceite do 3D e Nivel 2
+diagnostico-console.js,1241,OPERACIONAL,ferramenta de aplicacao BO-r4 / limpeza; manter ate aceite do 3D e Nivel 2
+instalar-bo.ps1,6274,OPERACIONAL,ferramenta de aplicacao BO-r4 / limpeza; manter ate aceite do 3D e Nivel 2
+instalar-bo.py,5105,OPERACIONAL,ferramenta de aplicacao BO-r4 / limpeza; manter ate aceite do 3D e Nivel 2
+limpar-github.sh,9827,OPERACIONAL,ferramenta de aplicacao BO-r4 / limpeza; manter ate aceite do 3D e Nivel 2
+verificar-bo.html,9938,OPERACIONAL,ferramenta de aplicacao BO-r4 / limpeza; manter ate aceite do 3D e Nivel 2
+BM-Preview-Cenas.png,1344397,REMOVER,"evidencia PNG duplicada no workspace e nos ZIPs; 0 links, 0 manifesto"
+BN-Amostra-vs-Tema.png,2191551,REMOVER,"evidencia PNG duplicada no workspace e nos ZIPs; 0 links, 0 manifesto"
+verify-bn.log,4457,REMOVER,"log de validacao; 0 links, 0 manifesto"
+Analise-Viabilidade-Ferramentas-Internas.md,8041,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+DIAGNOSTICO-3D.md,10843,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+DIAGNOSTICO-BK.md,7230,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+DIAGNOSTICO-BL.md,7044,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+GUIA-BL.md,3151,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+GUIA-BM.md,3110,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+GUIA-BN.md,3350,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+GUIA-BO.md,5070,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+GUIA-CORRECAO-BK.md,3132,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-AN.md,3070,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-AO.md,3500,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-AP.md,2627,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-AQ.md,1612,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-AT.md,1699,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-AU.md,1721,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-AV.md,2311,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-AX.md,1578,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-AY.md,2531,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-BA.md,1827,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-BB.md,2096,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-BC.md,2494,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-BE.md,2788,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-BF.md,2851,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-BG.md,2426,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-BH.md,2799,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-BI.md,3021,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-BJ.md,3493,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-BK.md,3148,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-BL.md,3153,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-BM.md,2891,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-BN.md,3163,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE-BO.md,2981,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+INDICE.md,954,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+Inventario-Rename-Global.md,4128,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+LEIA-ME.md,2981,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+Plano-Frente-AX.md,5426,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+Protocolo-Aceitacao-Visual-AP.md,4724,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-BO.md,13952,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-AN.md,5031,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-AO.md,5875,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-AP.md,7231,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-AQ.md,2976,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-AT.md,3677,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-AU.md,3894,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-AV.md,3898,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-AX.md,4220,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-AY.md,5826,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-BA.md,3436,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-BB.md,4694,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-BC.md,5601,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-BE.md,6484,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-BF.md,6138,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-BG.md,5675,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-BH.md,5911,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-BI.md,6156,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-BJ.md,6679,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-BK.md,5559,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-BL.md,5276,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-BM.md,6178,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO-FINAL-BN.md,7285,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+RELATORIO.md,6091,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+Registro-Veredito-Visual-AP.md,4058,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md
+Roteiro-Proximos-Passos-AP.md,14167,UNIFICAR,documentacao de frente repetitiva; compilar em docs/FRENTES-CONSOLIDADO.md

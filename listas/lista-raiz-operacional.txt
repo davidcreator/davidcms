@@ -1,0 +1,7 @@
+COPIAR-MANUALMENTE.md
+INSTALAR.bat
+diagnostico-console.js
+instalar-bo.ps1
+instalar-bo.py
+limpar-github.sh
+verificar-bo.html
