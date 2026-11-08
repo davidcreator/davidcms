@@ -38,14 +38,14 @@ O commit `b2569ef…` (`docs: add github root audit…`, +48/−29) gravou no me
 
 ### ✅ Como corrigir
 
-Entreguei o conteúdo original exato em **`docs/RESTAURAR-docs-README.md`**
+Entreguei o conteúdo original exato em **`docs/RESTAURAR-docs-README.txt`**
 (3.213 bytes · SHA `6f0783e24765594763237fdc023cb092db47c8be2051df027f802a79ae340bec` — conferido).
 
 ```bash
 cd /e/wamp64/www/davidcms
 
 # opção A (usando o arquivo que entreguei)
-cp docs/RESTAURAR-docs-README.md docs/README.md
+cp docs/RESTAURAR-docs-README.txt docs/README.md
 
 # opção B, se você tem o commit anterior local
 git checkout 687fba34f90b0eefcef5e32907d74be8ce42432b -- docs/README.md
@@ -138,7 +138,7 @@ Mantenha as cópias de `docs/`. O conteúdo é idêntico; não há link apontand
 cd /e/wamp64/www/davidcms
 
 # 1) CORRIGIR O BLOQUEANTE
-cp docs/RESTAURAR-docs-README.md docs/README.md
+cp docs/RESTAURAR-docs-README.txt docs/README.md
 git show b2569efbaf8e99736258c6bbe62de67761799823:docs/README.md > docs/INDICE-CONSOLIDADO.md
 
 # 2) GUARDS — todos devem ficar verdes
@@ -166,4 +166,4 @@ Consulta somente-leitura aos HEADs `687fba34…` e `b2569ef…`. Não executei `
 
 ---
 
-*Artefatos entregues: `RESTAURAR-docs-README.md`, `verificar-congelados.sh`, `verificar-links.sh`, `aplicar-limpeza-raiz.sh`, este guia.*
+*Artefatos entregues: `RESTAURAR-docs-README.txt`, `verificar-congelados.sh`, `verificar-links.sh`, `aplicar-limpeza-raiz.sh`, este guia.*

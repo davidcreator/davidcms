@@ -51,7 +51,7 @@ git commit -m "fix(docs): restore frozen docs/README.md (CHECKSUMS-F11-10)"
 
 **O que o `git status` mostrou de fato** (esperado, veio dos ZIPs extraídos):
 - modificados: `LEIA-ME.txt`, `docs/ANALISE-RAIZ-GITHUB.md`
-- untracked: `docs/COMANDOS-POWERSHELL.md`, `CORRIGIR-4-ERROS.md`, `CORRIGIR-AGORA.md`, `CORRIGIR-README.ps1`, `CORRIGIR-README.sh`, `RESTAURAR-docs-README.md`, `VERIFICAR.ps1`
+- untracked: `docs/COMANDOS-POWERSHELL.md`, `CORRIGIR-4-ERROS.md`, `CORRIGIR-AGORA.md`, `CORRIGIR-README.ps1`, `CORRIGIR-README.sh`, `RESTAURAR-docs-README.txt`, `VERIFICAR.ps1`
 
 Não são problema. São os artefatos que você copiou para o repo.
 

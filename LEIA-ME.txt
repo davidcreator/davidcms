@@ -1,0 +1,36 @@
+ReamurCMS — KIT UNICO (tudo em um so ZIP)
+Data: 2026-11-01 | HEAD: 703b0127f5acaaf1c6a49c7092ce4551ed46e91a
+
+EXTRAIA NA RAIZ:  unzip -o ReamurCMS-KIT-UNICO-2026-11-01.zip
+
+NO ACHADO: repo-health REPROVADO por D09 / schema.sql.
+  O contrato esta CORRETO no GitHub (22495 bytes / c9dd1ec2...).
+  A divergencia e CRLF no SEU working tree (22960 bytes).
+  NAO decidir D09, NAO alterar matriz, NAO reemitir hash.
+
+CORRECAO (1 comando):
+  git config core.autocrlf input
+  bash docs/CORRIGIR-SCHEMA.sh
+  powershell -ExecutionPolicy Bypass -File docs\CORRIGIR-SCHEMA.ps1  (alternativa)
+
+DEPOIS:
+  bash tools/verify-checksums.sh      142 OK / 0 FAIL
+  bash docs/verificar-congelados.sh   11/11, 10 pendentes
+  bash tools/repo-health.sh           6 PASS / 0 FAIL
+  bash tools/verify-ci-workflow.sh    30 PASS / 0 FAIL
+  bash docs/verificar-links.sh        triagem sem lychee (exclusoes = CI)
+
+LIMPEZA DE ESCOPOS (dry-run, nada escrito):
+  bash docs/aplicar-limpeza-escopos.sh
+  bash docs/aplicar-limpeza-escopos.sh --apply     # voce decide, SEM push
+
+LEIA: docs/DIAGNOSTICO-D09.md e docs/ANALISE-ESCOPOS-GITHUB.md
+
+OBS: RESTAURAR-docs-README agora e .txt (o .md gerava 39 links quebrados).
+     Se voce ja extraiu o .md: rm docs/RESTAURAR-docs-README.md
+     staging/ nao existe no remoto; lychee nao existe localmente (so no CI).
+
+NAO faca push por minha conta. release_approved:false | F9-27 BLOCKED_NOT_RUN
+| 10 PENDING_DECISION | D01-D10 intactas.
+
+sha256sum -c ReamurCMS-KIT-UNICO-2026-11-01.zip.sha256

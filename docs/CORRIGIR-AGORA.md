@@ -32,7 +32,7 @@ Achei o **objeto Git exato** na árvore do commit `687fba34…`:
 | EOL | LF puro (0 CRLF), sem BOM |
 | `.gitattributes` | **não existe** no repo (404) |
 
-**Prova de identidade:** gravei o `RESTAURAR-docs-README.md` num repositório Git de teste com
+**Prova de identidade:** gravei o `RESTAURAR-docs-README.txt` num repositório Git de teste com
 `git hash-object -w` e o SHA-1 resultante foi **exatamente `24b7957d…`** — o mesmo do GitHub.
 O conteúdo é idêntico byte a byte ao blob do commit.
 
@@ -127,4 +127,4 @@ D01–D10 intactas. **Guard verde não significa release aprovada.**
 
 ---
 
-*Artefatos: `CORRIGIR-README.ps1` · `CORRIGIR-README.sh` · `VERIFICAR.ps1` · `RESTAURAR-docs-README.md` · `COMANDOS-POWERSHELL.md`.*
+*Artefatos: `CORRIGIR-README.ps1` · `CORRIGIR-README.sh` · `VERIFICAR.ps1` · `RESTAURAR-docs-README.txt` · `COMANDOS-POWERSHELL.md`.*

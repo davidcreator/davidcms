@@ -13,7 +13,7 @@ git checkout 687fba34f90b0eefcef5e32907d74be8ce42432b -- docs/README.md
 
 Esse comando rodou **sem erro** na sua execução. Ele restaurou `docs/README.md` ao blob original (3.213 bytes / `6f0783e2…`) e o **estagiou no índice**. O `FAIL` do `CHECKSUMS-F11-10.txt` deve ter desaparecido.
 
-O `cp docs/RESTAURAR-docs-README.md docs/README.md` falhou apenas porque o arquivo está dentro do ZIP **`ReamurCMS-Correcao-4-Erros-2026-11-01.zip`**, no meu workspace — você não o extraiu no repo. **Não é mais necessário.**
+O `cp docs/RESTAURAR-docs-README.txt docs/README.md` falhou apenas porque o arquivo está dentro do ZIP **`ReamurCMS-Correcao-4-Erros-2026-11-01.zip`**, no meu workspace — você não o extraiu no repo. **Não é mais necessário.**
 
 > ⚠️ `git checkout <sha> -- <path>` deixa o arquivo **no stage**. Faça o commit dessa correção antes de qualquer `git rm`.
 > E **não reemita `CHECKSUMS-F11-10.txt`**.
