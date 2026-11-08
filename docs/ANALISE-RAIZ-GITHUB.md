@@ -1,7 +1,13 @@
 # Análise da Raiz do GitHub — compilação, união e remoção
 
-**Data:** 2026-11-01 · **HEAD consultado agora:** `687fba34f90b0eefcef5e32907d74be8ce42432b`
+**Data:** 2026-11-01 · **HEAD da auditoria:** `687fba34f90b0eefcef5e32907d74be8ce42432b`
 (`docs: add general ReamurCMS audit and consolidation report`, `2026-11-08T12:23:33Z`)
+**HEAD atual (posterior, já consultado):** `b2569efbaf8e99736258c6bbe62de67761799823` — subiu esta análise e **introduziu um `FAIL`** no `CHECKSUMS-F11-10.txt` ao substituir `docs/README.md`.
+
+> ⚠️ **ANTES DE APLICAR QUALQUER `git rm`, leia `CORRIGIR-4-ERROS.md`.**
+> O PASSO 0 é restaurar `docs/README.md` ao blob `6f0783e2…` / 3.213 bytes.
+> **Não reemita o manifesto.** Com o HEAD novo a raiz passou a **111 arquivos**
+> (+ `ANALISE-RAIZ-GITHUB.md` e `LEIA-ME.txt` duplicados na raiz).
 **Escopo:** **somente os arquivos da raiz do repositório** (`path` sem `/`).
 **Natureza:** consulta e proposta. **Não removi nada, não alterei nada e não escrevi no GitHub.**
 

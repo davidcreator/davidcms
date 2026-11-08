@@ -1,20 +1,22 @@
-ReamurCMS — Analise da RAIZ do GitHub (HEAD 687fba34f90b0eefcef5e32907d74be8ce42432b)
+ReamurCMS — CORRECAO DEFINITIVA do FAIL CHECKSUMS-F11-10.txt
 Data: 2026-11-01
 
-Comece por docs/ANALISE-RAIZ-GITHUB.md
+Blob Git exato: 24b7957d1d668591d9792659a41d2a6e26bcc470
+              3213 bytes / 6f0783e2...a79ae340bec / LF puro
 
-docs/FRENTES-CONSOLIDADO.md   uniao enxuta de 63 documentos (29.717 bytes)
-docs/FRENTES-INTEGRAL.md      texto integral dos mesmos 63 (290.670 bytes)
-listas/lista-raiz-unificar.txt      63 paths
-listas/lista-raiz-remover.txt        3 paths (2 PNGs + 1 log = 3.540.405 bytes)
-listas/lista-raiz-operacional.txt    7 paths (manter ate o aceite do 3D)
-listas/inventario-raiz.csv          os 109 arquivos classificados
+UM COMANDO, conforme o terminal:
 
-ATENCAO: 33 arquivos sao INTOCAVEIS (14 CHECKSUMS*.txt + 15 F11-XX-INDICE.md
-+ README/CONTRIBUTING/.gitignore + SECURITY.md). Nao reemitir manifestos,
-nao recalcular hashes, nao decidir D01-D10.
+  PowerShell:  powershell -NoProfile -ExecutionPolicy Bypass -File docs\CORRIGIR-README.ps1
+  Git Bash/WSL: bash docs/CORRIGIR-README.sh
 
-Isto NAO e aprovacao, release, deploy nem escrita no GitHub.
-Nenhum arquivo foi removido. Todas as aplicacoes sao suas.
+Grava os BYTES CRUS do objeto Git em docs/README.md. Sem Python, sem ZIP
+extraido, sem rede, sem checkout, imune a core.autocrlf. Testado: 0 divergentes.
 
-sha256sum -c ReamurCMS-Analise-Raiz-GitHub-2026-11-01.zip.sha256
+DEPOIS:
+  bash tools/verify-checksums.sh   (Git Bash/WSL)  -> 0 divergente(s)
+  powershell -ExecutionPolicy Bypass -File docs\VERIFICAR.ps1  (PowerShell)
+
+NAO reemita CHECKSUMS-F11-10.txt. NAO faca push.
+NAO houve escrita minha no GitHub. Voce aplica.
+
+sha256sum -c ReamurCMS-Correcao-README-Definitiva-2026-11-01.zip.sha256
