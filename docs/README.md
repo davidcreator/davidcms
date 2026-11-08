@@ -1,70 +1,44 @@
-# docs/ — Documentação consolidada do ReamurCMS
+# Documentação — ReamurCMS
 
-**Data:** 2026-11-01 · **Abrangência:** frentes iniciais → **BO-r4**
-**Isto é documentação, não é aprovação, release, deploy nem escrita no GitHub.**
-
----
+Índice da pasta `docs/`. O `README.md` da raiz e `Estrutura-de-Pastas.md` apontam para este arquivo; ele foi criado em F11-10 para fechar os dois links relativos quebrados detectados pelo `lychee` no CI.
 
 ## Comece aqui
 
-| Se você quer… | Abra |
-|---|---|
-| **O relatório geral de tudo que foi feito** | **`RELATORIO-GERAL.md`** ⭐ |
-| Saber o que está aprovado / pendente / proibido | `ESTADO-GOVERNANCA.md` |
-| Saber o que pode ser removido e como | `PLANO-LIMPEZA.md` |
-| **Limpar a raiz do GitHub (compilar + remover)** | **`ANALISE-RAIZ-GITHUB.md`** |
-| Encontrar qualquer documento da raiz | `INDICE-DOCUMENTACAO.md` |
-| Ver os 33 itens classificados com bytes | `inventario-limpeza.csv` |
-| Fazer a limpeza local sem apagar nada | `limpar-workspace.py` |
+- [PROJECT-HANDOFF.md](PROJECT-HANDOFF.md) — estado do projeto, pausa do BDREditor em F9-103 e restrições permanentes.
+- [CHANGELOG.md](CHANGELOG.md) — histórico de entregas.
+- [Estrutura-de-Pastas.md](Estrutura-de-Pastas.md) — layout do repositório.
+- [Arquitetura-MVCL.md](Arquitetura-MVCL.md) · [Contrato-Bootstrap.md](Contrato-Bootstrap.md) · [Dicionario-de-Dados.md](Dicionario-de-Dados.md) · [Auditoria-Fundacao.md](Auditoria-Fundacao.md).
 
----
+## Guias
 
-## Conteúdo desta pasta
+[Guia-CMS.md](Guia-CMS.md) · [Guia-Composer.md](Guia-Composer.md) · [Guia-PHP8.md](Guia-PHP8.md) · [Guia-Twig.md](Guia-Twig.md) · [Guia-ThreeJS.md](Guia-ThreeJS.md) · [Implementacao-ThreeJS.md](Implementacao-ThreeJS.md) · [IMPORT_FORMATS.md](IMPORT_FORMATS.md).
 
-| Arquivo | O que é |
-|---|---|
-| `README.md` | Este mapa |
-| `RELATORIO-GERAL.md` | Linha do tempo A→BO-r4, decisões `ask_user`, entregas, validações, lições, limites |
-| `ESTADO-GOVERNANCA.md` | Cartão de consulta: `release_approved:false`, F9-27 `BLOCKED_NOT_RUN`, D01–D10, aceites, restrições |
-| `PLANO-LIMPEZA.md` | Nível 2 do GitHub (46 arquivos), correção doc dentro do repo, quarentena do workspace, o que **não** remover |
-| `INDICE-DOCUMENTACAO.md` | Catálogo dos 73 `.md` da raiz por categoria e situação |
-| `inventario-limpeza.csv` | 33 itens: categoria, caminho, arquivos, bytes, motivo, ação |
-| `limpar-workspace.py` | Quarentena reversível — **dry-run por padrão**, `--apply` move, `--restore` desfaz |
-| **`ANALISE-RAIZ-GITHUB.md`** | Auditoria fresca da **raiz do GitHub** (`687fba34…`): 109 arquivos, o que compilar, o que remover, o que é intocável |
-| `FRENTES-CONSOLIDADO.md` | União enxuta de **63 documentos de frente** (tabela-mestra + resumos) |
-| `FRENTES-INTEGRAL.md` | Texto **byte a byte** dos mesmos 63, sem perda de conteúdo |
-| `inventario-raiz.csv` | Os 109 arquivos da raiz classificados com bytes e motivo |
-| **`CORRIGIR-4-ERROS.md`** | ⚠️ **Leia antes de aplicar**: o `FAIL` do `CHECKSUMS-F11-10.txt`, como restaurar `docs/README.md` e as alternativas sem Python/lychee |
-| `RESTAURAR-docs-README.md` | Conteúdo original exato (3.213 bytes / `6f0783e2…`) para desfazer a colisão de nomes |
-| `verificar-congelados.sh` | Equivalente read-only do `verify-contract-freeze.py`, **sem Python** |
-| `verificar-links.sh` | Triagem de links Markdown relativos, **sem lychee/Python/Node** |
-| `aplicar-limpeza-raiz.sh` | Aplicador da limpeza: acha `listas/`, **dry-run por padrão**, nunca faz push |
-| **`VERIFICAR.ps1`** ⭐ | **PowerShell puro** — faz os 4 guards + limpeza sem Bash/Python/`sha256sum`/`lychee` |
-| `COMANDOS-POWERSHELL.md` | Equivalentes de `sha256sum`/`wc`/`cp` e a sequência no `PS E:\wamp64\www\davidcms>` |
+## CI, dependências e governança (frentes F11)
 
----
+- [F11-01 — CI e dependências em `dev/system/storage/`](F11-01-CI-e-Dependencias.md)
+- [F11-02 — Verificação de dependências](F11-02-Verificacao-Dependencias.md)
+- [F11-04 — Modernização do CI](F11-04-Modernizacao-CI.md)
+- [F11-05 — Hotfix do `repo-guards`](F11-05-Hotfix-Repo-Guards.md)
+- [F11-07 — Inventário dos checkers](F11-07-Inventario-Checkers.md)
+- [F11-08 — Hotfix de performance do `docs-links`](F11-08-Hotfix-Docs-Links.md)
+- [F11-09 — Triagem dos marcadores](F11-09-Triagem-Marcadores.md)
+- [F11-10 — Links quebrados no `docs-links`](F11-10-Links-Quebrados.md)
 
-## Regra de organização
+Índices de entrega na raiz: [`F11-01-INDICE.md`](../F11-01-INDICE.md) · [`F11-02-INDICE.md`](../F11-02-INDICE.md) · [`F11-05-INDICE.md`](../F11-05-INDICE.md) · [`F11-07-INDICE.md`](../F11-07-INDICE.md) · [`F11-08-INDICE.md`](../F11-08-INDICE.md) · [`F11-09-INDICE.md`](../F11-09-INDICE.md) · [`F11-10-INDICE.md`](../F11-10-INDICE.md).
 
-Os documentos antigos **permanecem na raiz**, indexados e não movidos.
-Mover quebraria links relativos em `INDICE.md`, `RELATORIO.md` e ADRs `agents-ia/`,
-e exigiria reemitir os 14 `CHECKSUMS*.txt` — o que os contratos congelados proíbem.
-**Organizar = indexar sem duplicar, sem mover e sem alterar hashes.**
+## Fase 9, BDREditor e release
 
----
+O projeto do BDREditor está **pausado em F9-103** por determinação do responsável; consulte o handoff antes de retomar.
 
-## Estado em uma linha
+- [F9-27 — Plano E2E de staging e release gate](F9-27-Release-Gate.md) · [F9-27 — Preflight](F9-27-Preflight-Execucao.md)
+- [F9-18 — Relatório de revisão estática](F9-18-Relatorio-Revisao-Estatica.md) · [F9-47 — Auditoria funcional do BDREditor](F9-47-Auditoria-Funcional-BDREditor.md)
+- [F9-103 — Auditoria de acessibilidade de mídia](F9-103-Media-Accessibility-Audit.md) · [Referência completa e encerramento](BDREditor-Complete-Reference-and-Closure.md)
 
-Entrega corrente: `entregas/ReamurCMS-Frente-BO-r4-Windows.zip`
-(3.203.580 bytes / 80 entradas / SHA `e69ed9f306b5f2c6c91533d79c03f4eb0bd2332af42d93d27d5f69287f01f76c`),
-**90/90** `.sha256` OK, verificador **142 OK / 0 FALHAS**.
-Aceites visuais: **AP, BI, BM**. Reprovadas: **AO, BK**. Contestado: **BN**.
-**Sem aceite visual do 3D no servidor e sem release aprovada.**
+## Ferramentas de verificação
 
----
+- [`tools/verify-deps-layout.sh`](../tools/verify-deps-layout.sh) — layout de `vendor/` e `node_modules/`.
+- [`tools/verify-checksums.sh`](../tools/verify-checksums.sh) — integridade dos manifestos `CHECKSUMS*.txt`.
+- [`tools/verify-ci-workflow.sh`](../tools/verify-ci-workflow.sh) — contrato do `.github/workflows/php.yml`.
+- [`tools/verify-checkers-inventory.py`](../tools/verify-checkers-inventory.py) — estabilidade do conjunto de checkers.
 
-## Limites
-
-Nenhuma escrita do agente foi feita no GitHub. Não houve migration, deploy, CI remoto autenticado,
-health real, sessão Admin, MySQL nem decisão das D01–D10. Toda aplicação em repositório é sua.
-**CI verde, PHP WASM, jsdom, Chromium headless e guardas não substituem veredito nem release.**
+> O CI verde **não** significa release aprovada: F9-27 segue `BLOCKED_NOT_RUN` e `release_approved: false`.
