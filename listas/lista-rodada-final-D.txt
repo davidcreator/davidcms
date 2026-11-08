@@ -1,0 +1,13 @@
+LEIA-ME.txt
+LEIA-ME-NOVO.txt
+inventario-HEAD-9c606810.csv
+docs/inventario-escopos.csv
+listas/inventario-escopos.csv
+docs/lista-nivel-A-remover.txt
+docs/lista-nivel-A2-map.txt
+docs/lista-nivel-B-compilar.txt
+docs/lista-raiz-unificar.txt
+docs/lista-raiz-remover.txt
+docs/lista-raiz-operacional.txt
+docs/inventario-raiz.csv
+docs/aplicar-limpeza-raiz.sh
