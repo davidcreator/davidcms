@@ -1,7 +1,0 @@
-# F11-15 — integridade do pacote de evidencia tecnica
-# Formato: CRC32  SHA256  tamanho(bytes)  caminho
-
-b607dd54  fc607c710515fa1323724be9c4a5680f2086f768c3a6b5e56c5d7827efe55387  2523  F11-15-INDICE.md
-e36153e7  fdff8f76ea7b3d60bb2bb7acdbbf92325cc28f34a6f1fd00750d39c69210e007  9869  docs/F11-15-Evidencia-Tecnica.md
-78cd5c80  790dbd2dafb9737859faf459a47b26e7b89b07f5dcac4f88052feac4e0a333f3  7332  tools/decision-evidence.json
-99ff32d9  549c2e0995805dfa9c00a2564e183f0a05494d2403fdf93563156a813ad0df5b  2472  tools/verify-evidence-refs.py

@@ -53,3 +53,6 @@ Thumbs.db
 /build-prod-*.zip
 /build-staging-*.zip
 /build-dev-*.zip
+
+# Lock local de instalacao (nao versionar)
+dev/system/storage/install.lock

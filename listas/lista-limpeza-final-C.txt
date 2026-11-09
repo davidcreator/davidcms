@@ -1,7 +1,0 @@
-LEIA-ME.txt
-docs/inventario-escopos.csv
-listas/inventario-escopos.csv
-docs/RESTAURAR-docs-README.txt
-docs/lista-nivel-A-remover.txt
-docs/lista-nivel-A2-map.txt
-docs/lista-nivel-B-compilar.txt
