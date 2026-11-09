@@ -1,0 +1,57 @@
+diff --git a/dev/admin/index.php b/dev/admin/index.php
+index 2f19f296..5ad2ee3a 100644
+--- a/dev/admin/index.php
++++ b/dev/admin/index.php
+@@ -18,8 +18,12 @@ define('REAMUR_VERSION', '1.0.0');
+ define('APPLICATION', 'Admin');
+ 
+ // 3. Configuração da instalação (gerada pelo wizard install/)
+-if (is_file('config.php')) {
+-    require_once('config.php');
++// F11-19: __DIR__ em vez do diretório de trabalho. Com CWD relativo, qualquer
++// SAPI que não faça chdir para a pasta do script (ex.: `php -S -t dev`) não
++// encontrava o config.php e o app caía no wizard. Com __DIR__ o comportamento
++// é o mesmo no Apache e passa a funcionar em qualquer docroot.
++if (is_file(__DIR__ . '/config.php')) {
++    require_once __DIR__ . '/config.php';
+ }
+ 
+ // 4. Instalação pendente? → wizard (admin está um nível abaixo da raiz pública)
+diff --git a/dev/catalog/index.php b/dev/catalog/index.php
+index e4c1d4bf..44ed04f5 100644
+--- a/dev/catalog/index.php
++++ b/dev/catalog/index.php
+@@ -18,8 +18,12 @@ define('REAMUR_VERSION', '1.0.0');
+ define('APPLICATION', 'Catalog');
+ 
+ // 3. Configuração da instalação (gerada pelo wizard install/)
+-if (is_file('config.php')) {
+-    require_once('config.php');
++// F11-19: __DIR__ em vez do diretório de trabalho. Com CWD relativo, qualquer
++// SAPI que não faça chdir para a pasta do script (ex.: `php -S -t dev`) não
++// encontrava o config.php e o app caía no wizard. Com __DIR__ o comportamento
++// é o mesmo no Apache e passa a funcionar em qualquer docroot.
++if (is_file(__DIR__ . '/config.php')) {
++    require_once __DIR__ . '/config.php';
+ }
+ 
+ // 4. Instalação pendente? → wizard
+diff --git a/dev/install/index.php b/dev/install/index.php
+index 4940d064..2b8de7d2 100644
+--- a/dev/install/index.php
++++ b/dev/install/index.php
+@@ -18,8 +18,12 @@ define('REAMUR_VERSION', '1.0.0');
+ define('APPLICATION', 'Install');
+ 
+ // 3. Configuração da instalação (gerada pelo wizard install/)
+-if (is_file('config.php')) {
+-    require_once('config.php');
++// F11-19: __DIR__ em vez do diretório de trabalho. Com CWD relativo, qualquer
++// SAPI que não faça chdir para a pasta do script (ex.: `php -S -t dev`) não
++// encontrava o config.php e o app caía no wizard. Com __DIR__ o comportamento
++// é o mesmo no Apache e passa a funcionar em qualquer docroot.
++if (is_file(__DIR__ . '/config.php')) {
++    require_once __DIR__ . '/config.php';
+ }
+ 
+ // 4. Install NUNCA redireciona (ela É o wizard). Para rodar ANTES do config.php

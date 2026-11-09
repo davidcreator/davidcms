@@ -1,0 +1,51 @@
+diff --git a/dev/admin/view/css/admin.css b/dev/admin/view/css/admin.css
+index 974601fc..a3beb023 100644
+--- a/dev/admin/view/css/admin.css
++++ b/dev/admin/view/css/admin.css
+@@ -485,6 +485,20 @@ html[data-rms-density="compact"] .admin-sidebar .nav-link { padding: 6px 12px; }
+ .auth-card h1 { font-size: 1.3rem; font-weight: 700; text-align: center; margin: 14px 0 22px; }
+ .auth-card .btn-submit { width: 100%; }
+ 
++/* F11-17: a muralha (.auth-card) NÃO está dentro de .admin-content, então as
++   regras `.admin-content .btn.primary` não a alcançavam e o botão "Login"
++   virava texto solto, sem fundo nem padding. Escopo próprio para o card. */
++.auth-card .btn.primary,
++.auth-card button.btn.primary,
++.auth-card input.btn.primary {
++  background: var(--rms-accent);
++  border-color: var(--rms-accent);
++  color: #fff;
++  justify-content: center;
++  padding: 11px 18px;
++}
++.auth-card .btn.primary:hover { filter: brightness(.94); }
++
+ .auth-footer {
+   position: fixed;
+   bottom: 14px;
+@@ -772,11 +786,25 @@ html[data-rms-density="compact"] .admin-sidebar .nav-link { padding: 6px 12px; }
+ }
+ 
+ /* ── F8-V · setting/appearance (ADR 0047) ─────────────────────────────── */
++/* F11-17: `.admin-content .btn` é inline-flex em LINHA; usado como card, os
++   três blocos (amostras, nome e descrição) ficavam lado a lado e vazavam por
++   cima dos cards vizinhos. Como card, a direção tem de ser coluna. */
++/* A especificidade importa: `.admin-content .btn` (0,2,0) é inline-flex em linha
++   e vencia `.rms-skin-card` (0,1,0) — por isso o seletor repete o ancestral. */
++.admin-content .btn.rms-skin-card,
+ .rms-skin-card {
++  display: flex;
++  flex-direction: column;
++  align-items: stretch;
++  gap: 0;
+   height: 100%;
+   text-align: left;
++  white-space: normal;
++  overflow-wrap: anywhere;
+   transition: border-color .15s ease, box-shadow .15s ease;
+ }
++.rms-skin-card > .d-flex { flex-wrap: wrap; }
++.rms-skin-card > .small { line-height: 1.25; }
+ .btn-check:checked + .rms-skin-card {
+   border-color: var(--rms-accent) !important;
+   box-shadow: 0 0 0 3px color-mix(in srgb, var(--rms-accent) 25%, transparent);

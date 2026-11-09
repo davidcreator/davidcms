@@ -1,0 +1,174 @@
+diff --git a/agents-ia/decisoes/0084-instalacao-confiavel-schema-e-acl.md b/agents-ia/decisoes/0084-instalacao-confiavel-schema-e-acl.md
+new file mode 100644
+index 00000000..3b56e48f
+--- /dev/null
++++ b/agents-ia/decisoes/0084-instalacao-confiavel-schema-e-acl.md
+@@ -0,0 +1,67 @@
++# ADR 0084 — Instalação confiável: schema completo, colação explícita e ACL do Administrator
++
++| | |
++|---|---|
++| **Status** | Aceita (autorizada pelo mantenedor em 09/11/2026) |
++| **Data** | 2026-11-09 |
++| **Fase** | F11-17 |
++| **Substitui/revoga** | A cláusula "Intocáveis: `schema.sql`, `schema-complete.sql`" de `docs/ESTADO-GOVERNANCA.md` e `docs/RELATORIO-GERAL.md`, **na parte que impede corrigir defeitos de instalação** |
++| **Contexto de origem** | Análise externa do repositório com instalação real em MariaDB 11.8 + PHP 8.4 (09/11/2026) |
++
++---
++
++## Contexto
++
++Uma instalação real, feita a partir de um clone limpo, revelou que o ReamurCMS **não conclui a instalação** em MariaDB ≥ 11.4 e, quando conclui, **produz um banco incompleto** que quebra o editor de páginas. Nenhum desses defeitos é detectável pelo CI atual (lint + PHPStan + guardas), porque nenhum job executa o sistema.
++
++Três causas independentes, todas no caminho de instalação:
++
++1. **`dev/system/storage/install.lock` estava versionado.** Um clone novo responde `403 Installation locked` em `install/index.php` antes de qualquer passo.
++2. **A temporária `tmp_f10_catalog_page` nasce sem `COLLATE`.** Em MariaDB ≥ 11.4 o padrão de `utf8mb4` é `utf8mb4_uca1400_ai_ci`, incompatível com as colunas `utf8mb4_unicode_ci` do restante do schema. O `INSERT ... SELECT ... CASE ... IN ('en-us',…)` falha com `Illegal mix of collations` no **statement 33 de 39**, abortando o import no meio.
++3. **O wizard importa `schema.sql` (32 tabelas, sem seed) em vez de `schema-complete.sql` (43 tabelas + conteúdo).** Resultado: instalação "bem-sucedida" sem `rms_blog_post*`, `rms_custom_field*`, `rms_import_contact`, `rms_mp_*` e com `rms_setting`/portfólio/depoimentos vazios — o editor de páginas (`cms/page.edit`) devolve 404 por `Table 'rms_custom_field' doesn't exist`.
++
++Agravante: o grupo **Administrator** era semeado com 13 rotas fixas, deixando o próprio dono da instalação sem acesso a `setting/*`, `design/theme`, `blog/*` e `localization/language` (302 → `error/permission`).
++
++O congelamento de `schema.sql`/`schema-complete.sql` pela governança (F11-16) tornava esses defeitos **incorrigíveis por decisão**, embora o próprio contrato congelado documentasse um estado que nunca foi validado em banco real.
++
++## Decisão
++
++1. **`install.lock` deixa de ser versionado.** O selo é artefato de execução do wizard; `.gitignore` passa a ignorá-lo.
++2. **`COLLATE=utf8mb4_unicode_ci` explícito** na temporária de `schema.sql` e `schema-complete.sql` — uma linha em cada arquivo. Regra geral: **nenhum `DEFAULT CHARSET` sem `COLLATE`** em SQL do projeto.
++3. **`schema-complete.sql` é a fonte da verdade da instalação.** `importSchema()` passa a lê-lo. `schema.sql` permanece no repositório apenas como referência histórica e **não deve ganhar tabelas novas** (ver §Consequências).
++4. **O grupo Administrator nasce com todas as rotas de admin presentes no disco** (`dev/admin/controller/**`, exceto `startup/*` e `error/*`), derivadas por varredura de diretório, em vez de lista fixa. Módulos futuros passam a entrar no grupo 1 automaticamente.
++5. **Mídia de conteúdo versionada por Git LFS** (`.gitattributes`), conforme decisão do mantenedor: binários não inflam o clone de quem só lê código.
++
++6. **O caminho PDO do importador é corrigido**: `connect()` passa a usar
++   `PDO::MYSQL_ATTR_USE_BUFFERED_QUERY` e `importSchema()` usa
++   `prepare/execute/closeCursor()` em vez de `exec()` direto. Sem isso, o
++   driver `pdo` (oferecido no passo 3 do wizard) abortava o import com
++   `SQLSTATE[HY000] 2014 Cannot execute queries while other unbuffered queries
++   are active` — 4 tabelas criadas e nenhum admin.
++
++
++## Consequências
++
++- Instalação em MariaDB 11.8 / PHP 8.4 validada de ponta a ponta: **43 tabelas, conteúdo real semeado, login no painel e `cms/page.edit` respondendo 200**.
++- `schema.sql` fica **legado e incompleto por definição**. Próximo passo (F11-18, fora desta ADR): substituir os dois arquivos por migrações aplicadas por um runner (`rms_schema_migration(version, applied_at, checksum)`), eliminando a divergência entre `schema.sql`, `schema-complete.sql` e os 29 `upgrade_*.sql`.
++- Deixa de ser legítimo invocar "arquivo congelado" para bloquear correções no caminho de instalação. Congelar continua valendo para contratos de comportamento (rotas, DOM público, hashes de renderer), **não** para defeitos reproduzíveis de instalação.
++- Um clone limpo passa a instalar sem intervenção manual.
++
++## Evidências
++
++| Verificação | Antes | Depois |
++|---|---|---|
++| `install/index.php` em clone novo | 403 `Installation locked` | 200 (passo 1) |
++| Import do schema (mysqli) | aborta no statement 33/39 | 139/139 statements |
++| Import do schema (PDO) | aborta com erro 2014 (4 tabelas) | 43 tabelas, sem erro |
++| Tabelas criadas | 32 (de 43) | 43 |
++| `rms_project` / `rms_setting` | 0 / 0 | 10 / 37 |
++| `cms/page.edit\|1` | 404 (`rms_custom_field` ausente) | 200, 92 KB |
++| Admin recém-criado em `setting/setting` | 302 → `error/permission` | 200 |
++| Editor BDRE (histórico, campos, idiomas) | inacessível | funcional |
++
++## Referências
++
++- `docs/ESTADO-GOVERNANCA.md` (cláusula de congelamento revista)
++- `dev/install/sql/schema-complete.sql`, `dev/install/model/install/install.php`
++- Análise externa de 09/11/2026 — anexos de captura 01/06/07 e relatório `ANALISE-COMPLETA.md`
+diff --git a/agents-ia/decisoes/0085-schema-versionado-e-smoke-com-banco-real.md b/agents-ia/decisoes/0085-schema-versionado-e-smoke-com-banco-real.md
+new file mode 100644
+index 00000000..dad142f5
+--- /dev/null
++++ b/agents-ia/decisoes/0085-schema-versionado-e-smoke-com-banco-real.md
+@@ -0,0 +1,95 @@
++# ADR 0085 — Schema versionado, migrações executáveis e smoke com banco real
++
++| | |
++|---|---|
++| **Status** | Aceita |
++| **Data** | 2026-11-09 |
++| **Fase** | F11-18 (runner de migrações) · F11-19 (smoke em banco real) |
++| **Depende de** | ADR 0084 (instalação confiável) |
++| **Evidência de origem** | instalação real em MariaDB 11.8 + PHP 8.4; smoke no `main` `bfc9e26` reprovando com **28 falhas** |
++
++---
++
++## Contexto
++
++A ADR 0084 consertou a instalação, mas deixou dois problemas estruturais em aberto:
++
++1. **Nada registrava em que estado um banco estava.** Existiam três verdades paralelas — `schema.sql`, `schema-complete.sql` e 29 arquivos `upgrade_*.sql` — sem tabela de versão, sem checksum e sem executor. Aplicar as migrações "na mão" era o único caminho, e ele falha por duplicidade (`upgrade_f10_01`, `upgrade_f10_03`, `upgrade_f8_05` já estão dentro do `schema-complete.sql`).
++2. **Nenhum job de CI abria o sistema.** Os 6 jobs existentes (composer, php -l, links, PHPStan, node, guardas) ficaram verdes durante onze fases enquanto o produto **não instalava**. O `db-smoke` no código anterior a 0084 devolve **28 falhas** — inclusive as três camadas de defeito que a análise encontrou.
++
++Além disso, os três front controllers carregavam `config.php` por caminho **relativo ao diretório de trabalho** (`is_file('config.php')`). No Apache (CWD = pasta do script) funciona; em qualquer SAPI que não faça `chdir` — `php -S`, FPM com `chdir` alterado, teste automatizado — o app "acha" que não está instalado e cai no wizard.
++
++## Decisão
++
++### 1. `rms_schema_migration` é a fonte de verdade do estado do schema
++
++```
++rms_schema_migration(version PK, checksum CHAR(64), source, applied_at)
++```
++
++- O wizard grava a linha `baseline` logo após importar `schema-complete.sql` (`markSchemaBaseline()`), com o SHA-256 do arquivo importado.
++- Bancos criados **antes** desta ADR não têm baseline: o runner avisa e `php tools/migrate.php baseline` faz a adoção explícita (nunca executando SQL).
++- `checksum` por migração detecta arquivo alterado depois de aplicado (`state: divergent`) — não reaplica sozinho.
++
++### 2. Manifesto ordenado, não varredura de diretório
++
++`dev/install/sql/migrations.json` lista as migrações **na ordem de fase** (f2 → f10), cada uma com `in_schema_complete`:
++
++| `in_schema_complete` | Significado |
++|---|---|
++| `true` | o SQL já está dentro do `schema-complete.sql`; em instalação com baseline é apenas **marcada** como aplicada (`contained`), sem execução |
++| `false` | migração nova: **pendente** em qualquer banco e executada pelo runner |
++
++Fluxo para uma migração futura: criar `upgrade_fXX_YY_nome.sql` → acrescentar no fim do manifesto com `in_schema_complete: false` → `php tools/migrate.php run` → quando o SQL for dobrado no `schema-complete.sql`, virar a flag para `true`.
++
++**Regra de ouro:** `schema-complete.sql` é "o estado final de todas as migrações listadas como contidas". Uma migração nova **não** entra no `schema-complete.sql` no mesmo commit que a cria.
++
++### 3. Um único divisor de SQL
++
++`system/library/sql/splitter.php` (classe `Splitter`) é usado pelo **instalador** e pelo **runner**. Ele respeita aspas e comentários, então `PREPARE …; EXECUTE …; DEALLOCATE …` na mesma linha, `;` depois de comentário e `&nbsp;` dentro do HTML do seed deixam de ser armadilha. Antes havia duas cópias da regra (uma delas `explode(";\n")`).
++
++### 4. Front controllers carregam config por `__DIR__`
++
++`is_file(__DIR__ . '/config.php')` nas três aplicações. Mesmo comportamento no Apache; independência do diretório de trabalho em qualquer outra SAPI.
++
++### 5. `db-smoke` no CI, contra MariaDB 11.8 de verdade
++
++Job novo em `.github/workflows/php.yml` (serviço `mariadb:11.8`, colação **padrão do servidor** de propósito) que executa `tools/e2e/db-smoke.sh`:
++
++1. cria o banco **sem declarar colação** (é assim que a regressão `uca1400` reaparece);
++2. roda o wizard por HTTP, 3 passos;
++3. exige ≥ 43 tabelas, o seed real (10 projetos, 3 depoimentos, 5 logos, 4 ferramentas, ≥ 20 settings, ≥ 10 páginas) e as tabelas críticas (`custom_field`, `blog_post`, `seo_url`, `schema_migration`);
++4. exige `200` em `/catalog/`, `/portfolio`, `/blog`, `/contact`, `/tools`, `/sitemap.xml`;
++5. exige `200` nas 8 telas críticas do painel **com login real** (CSRF incluído), inclusive `cms/page.edit|1` com o editor no DOM;
++6. exige `three.asset` publicando o runtime e **bloqueando path traversal**;
++7. exige nenhuma migração pendente e `error.log` vazio do início ao fim.
++
++O guarda `tools/verify-ci-workflow.sh` ganhou a seção 6, que quebra se o job ou os arquivos do smoke desaparecerem.
++
++## Consequências
++
++- Estado do banco passa a ser auditável: `php tools/migrate.php status` responde "em que ponto este banco está" em uma consulta.
++- `schema.sql` fica oficialmente legado: o runner nunca o lê, o wizard nunca o importa.
++- Regressão de instalação/colunação/ACL passa a falhar no CI **em minutos**, não em onze fases.
++- Custo: +1 job (~4 min) e um conceito novo (`in_schema_complete`) que precisa ser mantido com disciplina ao criar migrações.
++- **Não** cobre navegador real (Playwright continua fora do CI por tempo de execução) — o smoke é HTTP, não visual. A fidelidade visual segue dependendo dos aceites manuais já registrados em `docs/ESTADO-GOVERNANCA.md`.
++
++## Evidências
++
++| Verificação | `main` antes | Depois (0084 + 0085) |
++|---|---|---|
++| Wizard por HTTP | passo 3 sem redirect | `302 → step_4` |
++| Tabelas | 28 | 44 (43 + `schema_migration`) |
++| Seed (projetos/settings) | 0 / 0 | 10 / 37 |
++| Editor de páginas | inacessível (sem tabela) | `200` com `bdre` no DOM |
++| `php tools/migrate.php status` | comando não existia | 29 `contained`, 0 pendente |
++| Aplicação de migração nova | manual, sem registro | `applied` + checksum + idempotente |
++| Banco legado sem baseline | — | aviso + `baseline` explícito |
++| **`db-smoke.sh`** | **28 FAIL** | **41 PASS / 0 FAIL** |
++| Guarda `verify-ci-workflow.sh` | 31 PASS | 37 PASS / 0 FAIL |
++
++## Referências
++
++- ADR 0084 — instalação confiável (schema completo, colação, ACL)
++- `dev/system/library/migration.php`, `dev/install/sql/migrations.json`, `tools/migrate.php`
++- `tools/e2e/db-smoke.sh`, `tools/e2e/lib/php-router.php`, `.github/workflows/php.yml`

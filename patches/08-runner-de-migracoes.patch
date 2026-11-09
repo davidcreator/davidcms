@@ -1,0 +1,630 @@
+diff --git a/dev/install/sql/migrations.json b/dev/install/sql/migrations.json
+new file mode 100644
+index 00000000..1a510189
+--- /dev/null
++++ b/dev/install/sql/migrations.json
+@@ -0,0 +1,150 @@
++{
++  "comment": "Manifesto ordenado de migracoes (F11-18 / ADR 0085). 'in_schema_complete: true' = o SQL ja esta dentro de schema-complete.sql; em instalacao feita pelo wizard (com baseline) a migracao e apenas marcada, sem execucao. Ao criar uma migracao NOVA, adicione-a no fim com in_schema_complete:false e rode `php tools/migrate.php run`.",
++  "migrations": [
++    {
++      "version": "f2_8_portfolio_grant",
++      "file": "upgrade_f2_8_portfolio_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_9_category_grant",
++      "file": "upgrade_f2_9_category_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_10_cms_page_grant",
++      "file": "upgrade_f2_10_cms_page_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_11_marketing_testimonial_grant",
++      "file": "upgrade_f2_11_marketing_testimonial_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_12_marketing_client_logo_grant",
++      "file": "upgrade_f2_12_marketing_client_logo_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_13_tool_grant",
++      "file": "upgrade_f2_13_tool_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_14_sale_order_grant",
++      "file": "upgrade_f2_14_sale_order_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_15_contact_message_grant",
++      "file": "upgrade_f2_15_contact_message_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_16_webhook_grant",
++      "file": "upgrade_f2_16_webhook_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_18_rate_limit_table",
++      "file": "upgrade_f2_18_rate_limit_table.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f3_01_seed_conteudo_davidalmeida",
++      "file": "upgrade_f3_01_seed_conteudo_davidalmeida.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f4_01_setting_op_grant",
++      "file": "upgrade_f4_01_setting_op_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f4_02_localization_language_op_grant",
++      "file": "upgrade_f4_02_localization_language_op_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f4_03_site_info_op_grant",
++      "file": "upgrade_f4_03_site_info_op_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f4_08_import_historico_contatos",
++      "file": "upgrade_f4_08_import_historico_contatos.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f5_02_mp_marketplace_foundation",
++      "file": "upgrade_f5_02_mp_marketplace_foundation.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f5_03_mp_checkout",
++      "file": "upgrade_f5_03_mp_checkout.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f7_01_blog",
++      "file": "upgrade_f7_01_blog.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f7_03_blog_import",
++      "file": "upgrade_f7_03_blog_import.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f8_01_permission_canonical",
++      "file": "upgrade_f8_01_permission_canonical.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f8_05_admin_theming",
++      "file": "upgrade_f8_05_admin_theming.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f9_02_custom_fields_schema",
++      "file": "upgrade_f9_02_custom_fields_schema.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f9_05_custom_field_definition_grant",
++      "file": "upgrade_f9_05_custom_field_definition_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f9_12_blog_block_content",
++      "file": "upgrade_f9_12_blog_block_content.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f9_25_bdreditor_patterns",
++      "file": "upgrade_f9_25_bdreditor_patterns.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f9_31_bdre_revision_history",
++      "file": "upgrade_f9_31_bdre_revision_history.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f10_01_cms_catalog_routes",
++      "file": "upgrade_f10_01_cms_catalog_routes.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f10_02_design_themes",
++      "file": "upgrade_f10_02_design_themes.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f10_03_theme_templates",
++      "file": "upgrade_f10_03_theme_templates.sql",
++      "in_schema_complete": true
++    }
++  ]
++}
+\ No newline at end of file
+diff --git a/dev/system/library/migration.php b/dev/system/library/migration.php
+new file mode 100644
+index 00000000..58c75427
+--- /dev/null
++++ b/dev/system/library/migration.php
+@@ -0,0 +1,242 @@
++<?php declare(strict_types=1);
++/**
++ * @package   ReamurCMS
++ * @author    David L. Almeida
++ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
++ * @license   https://opensource.org/licenses/GPL-3.0
++ * @link      https://reamurcms.com
++ *
++ * Runner de migrações (F11-18 / ADR 0085).
++ *
++ * Por que existe: `schema.sql`, `schema-complete.sql` e os 29 `upgrade_*.sql`
++ * divergiram porque NADA registrava em que estado um banco estava. Este runner
++ * cria a tabela `{prefix}schema_migration` e passa a ser a única fonte de
++ * verdade sobre o que já foi aplicado.
++ *
++ * Contrato:
++ *  · o manifesto `install/sql/migrations.json` lista as migrações NA ORDEM;
++ *  · `in_schema_complete: true` significa "este SQL já está dentro do
++ *    schema-complete.sql" — em uma instalação feita pelo wizard (que tem
++ *    baseline registrado) ela é apenas MARCADA como aplicada, sem execução;
++ *  · `false` = migração nova, pendente em qualquer instalação;
++ *  · checksum SHA-256 por arquivo: se o arquivo mudar depois de aplicado,
++ *    `status()` acusa divergência (não reaplica sozinho).
++ */
++namespace Reamur\System\Library;
++
++use Reamur\System\Library\Sql\Splitter;
++
++final class Migration {
++    public const TABLE = 'schema_migration';
++    /** Versão reservada do registro de baseline do schema-complete.sql */
++    public const BASELINE = 'baseline';
++
++    public function __construct(
++        private Db $db,
++        private string $sqlDir,
++        private string $prefix = 'rms_'
++    ) {}
++
++    private function table(): string {
++        return '`' . $this->prefix . self::TABLE . '`';
++    }
++
++    public function ensureTable(): void {
++        $this->db->query(
++            'CREATE TABLE IF NOT EXISTS ' . $this->table() . ' (
++                `version`    VARCHAR(64)  NOT NULL,
++                `checksum`   CHAR(64)     NOT NULL,
++                `source`     VARCHAR(16)  NOT NULL DEFAULT \'upgrade\',
++                `applied_at` DATETIME     NOT NULL,
++                PRIMARY KEY (`version`)
++            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
++        );
++    }
++
++    /**
++     * Manifesto ordenado. Cada item: version, file, in_schema_complete.
++     *
++     * @return array<int, array{version: string, file: string, in_schema_complete: bool}>
++     */
++    public function manifest(): array {
++        $path = rtrim($this->sqlDir, '/') . '/migrations.json';
++
++        if (!is_file($path)) {
++            return [];
++        }
++
++        $data = json_decode((string)file_get_contents($path), true);
++
++        if (!is_array($data) || !isset($data['migrations']) || !is_array($data['migrations'])) {
++            return [];
++        }
++
++        $migrations = [];
++
++        foreach ($data['migrations'] as $item) {
++            if (!is_array($item) || empty($item['version']) || empty($item['file'])) {
++                continue;
++            }
++
++            $migrations[] = [
++                'version'           => (string)$item['version'],
++                'file'              => (string)$item['file'],
++                'in_schema_complete' => (bool)($item['in_schema_complete'] ?? false),
++            ];
++        }
++
++        return $migrations;
++    }
++
++    /** @return array<string, array{checksum: string, source: string, applied_at: string}> */
++    public function applied(): array {
++        $this->ensureTable();
++
++        $result = $this->db->query('SELECT `version`, `checksum`, `source`, `applied_at` FROM ' . $this->table());
++        $rows   = is_object($result) ? (array)($result->rows ?? []) : [];
++        $map    = [];
++
++        foreach ($rows as $row) {
++            $map[(string)$row['version']] = [
++                'checksum'   => (string)$row['checksum'],
++                'source'     => (string)$row['source'],
++                'applied_at' => (string)$row['applied_at'],
++            ];
++        }
++
++        return $map;
++    }
++
++    /**
++     * Situação de cada migração, na ordem do manifesto.
++     *
++     * @return array<int, array{version: string, file: string, state: string, detail: string}>
++     */
++    public function status(): array {
++        $applied  = $this->applied();
++        $baseline = isset($applied[self::BASELINE]);
++        $report   = [];
++
++        foreach ($this->manifest() as $migration) {
++            $file       = rtrim($this->sqlDir, '/') . '/' . $migration['file'];
++            $exists     = is_file($file);
++            $checksum   = $exists ? (string)hash_file('sha256', $file) : '';
++            $registered = $applied[$migration['version']] ?? null;
++
++            if ($registered !== null) {
++                $state  = 'applied';
++                $detail = $registered['source'] . ' · ' . $registered['applied_at'];
++
++                if ($exists && $registered['checksum'] !== $checksum) {
++                    $state  = 'divergent';
++                    $detail = 'arquivo mudou depois de aplicado';
++                }
++            } elseif (!$exists) {
++                $state  = 'missing';
++                $detail = 'arquivo não encontrado';
++            } elseif ($migration['in_schema_complete'] && $baseline) {
++                $state  = 'contained';
++                $detail = 'já contida no schema-complete (instalação nova)';
++            } else {
++                $state  = 'pending';
++                $detail = 'será aplicada';
++            }
++
++            $report[] = [
++                'version' => $migration['version'],
++                'file'    => $migration['file'],
++                'state'   => $state,
++                'detail'  => $detail,
++            ];
++        }
++
++        return $report;
++    }
++
++    /**
++     * Aplica o que está pendente. Idempotente por versão registrada.
++     *
++     * @return array<int, array{version: string, result: string, detail: string}>
++     */
++    public function run(bool $dryRun = false): array {
++        $this->ensureTable();
++
++        $applied  = $this->applied();
++        $baseline = isset($applied[self::BASELINE]);
++        $results  = [];
++
++        foreach ($this->manifest() as $migration) {
++            $version = $migration['version'];
++            $file    = rtrim($this->sqlDir, '/') . '/' . $migration['file'];
++
++            if (isset($applied[$version])) {
++                $results[] = ['version' => $version, 'result' => 'skipped', 'detail' => 'já aplicada'];
++                continue;
++            }
++
++            if (!is_file($file)) {
++                $results[] = ['version' => $version, 'result' => 'error', 'detail' => 'arquivo ausente'];
++                continue;
++            }
++
++            $checksum = (string)hash_file('sha256', $file);
++
++            // Instalação feita pelo wizard: o schema-complete já traz este SQL.
++            if ($migration['in_schema_complete'] && $baseline) {
++                if (!$dryRun) {
++                    $this->record($version, $checksum, 'contained');
++                }
++
++                $results[] = ['version' => $version, 'result' => 'contained', 'detail' => 'já no schema-complete'];
++                continue;
++            }
++
++            if ($dryRun) {
++                $results[] = ['version' => $version, 'result' => 'would-apply', 'detail' => $migration['file']];
++                continue;
++            }
++
++            try {
++                foreach (Splitter::statements((string)file_get_contents($file)) as $statement) {
++                    $this->db->query($statement);
++                }
++
++                $this->record($version, $checksum, 'upgrade');
++                $results[] = ['version' => $version, 'result' => 'applied', 'detail' => $migration['file']];
++            } catch (\Throwable $exception) {
++                $results[] = [
++                    'version' => $version,
++                    'result'  => 'error',
++                    'detail'  => $exception->getMessage(),
++                ];
++
++                break; // não aplica a próxima em cima de um estado quebrado
++            }
++        }
++
++        return $results;
++    }
++
++    /**
++     * Marca o estado atual do banco como "igual ao schema-complete.sql".
++     * Chamado pelo wizard após importar o schema; e disponível na CLI para
++     * adoção de bancos criados antes do F11-18.
++     */
++    public function markBaseline(): void {
++        $this->ensureTable();
++
++        $schema   = rtrim($this->sqlDir, '/') . '/schema-complete.sql';
++        $checksum = is_file($schema) ? (string)hash_file('sha256', $schema) : str_repeat('0', 64);
++
++        $this->record(self::BASELINE, $checksum, 'schema');
++    }
++
++    private function record(string $version, string $checksum, string $source): void {
++        $this->db->query(
++            'REPLACE INTO ' . $this->table() . " SET `version` = '" . $this->db->escape($version) . "',
++                `checksum` = '" . $this->db->escape($checksum) . "',
++                `source` = '" . $this->db->escape($source) . "',
++                `applied_at` = NOW()"
++        );
++    }
++}
+diff --git a/dev/system/library/sql/splitter.php b/dev/system/library/sql/splitter.php
+new file mode 100644
+index 00000000..8877c7e3
+--- /dev/null
++++ b/dev/system/library/sql/splitter.php
+@@ -0,0 +1,102 @@
++<?php declare(strict_types=1);
++/**
++ * @package   ReamurCMS
++ * @author    David L. Almeida
++ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
++ * @license   https://opensource.org/licenses/GPL-3.0
++ * @link      https://reamurcms.com
++ *
++ * Divisor de arquivos .sql em statements (ADR 0084 §3, F11-18).
++ *
++ * Um `explode(";\n")` não serve: o schema usa três comandos na mesma linha
++ * ("PREPARE …; EXECUTE …; DEALLOCATE …") e tem `;` depois de comentário, além
++ * de `&nbsp;` dentro do HTML do seed. Aqui o `;` só separa quando está FORA
++ * de string e FORA de comentário.
++ *
++ * Compartilhado pelo instalador (install/) e pelo runner de migrações
++ * (system/library/migration.php) para que os dois leiam SQL do mesmo jeito.
++ */
++namespace Reamur\System\Library\Sql;
++
++final class Splitter {
++
++    /** @return array<int, string> */
++    public static function statements(string $sql): array {
++        $statements = [];
++        $buffer     = '';
++        $length     = strlen($sql);
++        $quote      = '';
++
++        for ($i = 0; $i < $length; $i++) {
++            $char = $sql[$i];
++
++            if ($quote !== '') {
++                $buffer .= $char;
++
++                if ($char === '\\' && $i + 1 < $length) {
++                    $buffer .= $sql[++$i];
++                } elseif ($char === $quote) {
++                    if ($i + 1 < $length && $sql[$i + 1] === $quote) {
++                        $buffer .= $sql[++$i]; // aspas escapadas ('' ou "")
++                    } else {
++                        $quote = '';
++                    }
++                }
++
++                continue;
++            }
++
++            // comentário de linha (MySQL exige espaço/tab/quebra depois de --)
++            if ($char === '-' && substr($sql, $i, 2) === '--') {
++                $after = $i + 2 < $length ? $sql[$i + 2] : "\n";
++
++                if ($after === ' ' || $after === "\t" || $after === "\n" || $after === "\r") {
++                    while ($i < $length && $sql[$i] !== "\n") {
++                        $i++;
++                    }
++
++                    $buffer .= "\n";
++
++                    continue;
++                }
++            }
++
++            // comentário de bloco
++            if ($char === '/' && substr($sql, $i, 2) === '/*') {
++                $end = strpos($sql, '*/', $i + 2);
++                $i   = $end === false ? $length : $end + 1;
++
++                continue;
++            }
++
++            if ($char === "'" || $char === '"') {
++                $quote   = $char;
++                $buffer .= $char;
++
++                continue;
++            }
++
++            if ($char === ';') {
++                $statement = trim($buffer);
++
++                if ($statement !== '') {
++                    $statements[] = $statement;
++                }
++
++                $buffer = '';
++
++                continue;
++            }
++
++            $buffer .= $char;
++        }
++
++        $statement = trim($buffer);
++
++        if ($statement !== '') {
++            $statements[] = $statement;
++        }
++
++        return $statements;
++    }
++}
+diff --git a/tools/migrate.php b/tools/migrate.php
+new file mode 100755
+index 00000000..e8c0a55e
+--- /dev/null
++++ b/tools/migrate.php
+@@ -0,0 +1,111 @@
++<?php declare(strict_types=1);
++/**
++ * Runner de migrações do ReamurCMS (F11-18 / ADR 0085).
++ *
++ *   php tools/migrate.php status            # situação de cada migração
++ *   php tools/migrate.php run               # aplica o que estiver pendente
++ *   php tools/migrate.php run --dry-run     # mostra o que faria, sem escrever
++ *   php tools/migrate.php baseline          # adota o banco atual como baseline
++ *   php tools/migrate.php status --config=/caminho/catalog/config.php
++ *
++ * Não usa o framework: carrega só as classes necessárias (Db, Migration,
++ * Splitter), então roda em qualquer PHP 8 com as credenciais do config.php.
++ */
++if (PHP_SAPI !== 'cli') {
++    http_response_code(404);
++    exit(1);
++}
++
++$root   = dirname(__DIR__);
++$config = $root . '/dev/catalog/config.php';
++$args   = array_slice($argv, 1);
++$command = 'status';
++
++foreach ($args as $arg) {
++    if (str_starts_with($arg, '--config=')) {
++        $config = substr($arg, strlen('--config='));
++    } elseif (!str_starts_with($arg, '--')) {
++        $command = $arg;
++    }
++}
++
++$dryRun = in_array('--dry-run', $args, true);
++
++if (!is_file($config)) {
++    fwrite(STDERR, "config.php não encontrado: {$config}\n");
++    fwrite(STDERR, "Instale o ReamurCMS antes (wizard em install/) ou use --config=...\n");
++    exit(2);
++}
++
++require_once $config;
++require_once $root . '/dev/system/library/db.php';
++require_once $root . '/dev/system/library/db/mysqli.php';
++require_once $root . '/dev/system/library/db/pdo.php';
++require_once $root . '/dev/system/library/db/mariadb.php';
++require_once $root . '/dev/system/library/sql/splitter.php';
++require_once $root . '/dev/system/library/migration.php';
++
++try {
++    $db = new \Reamur\System\Library\Db(
++        defined('DB_DRIVER') ? (string)DB_DRIVER : 'mysqli',
++        (string)DB_HOSTNAME,
++        (string)DB_USERNAME,
++        (string)DB_PASSWORD,
++        (string)DB_DATABASE,
++        (string)DB_PORT
++    );
++} catch (\Throwable $exception) {
++    fwrite(STDERR, 'Falha ao conectar: ' . $exception->getMessage() . "\n");
++    exit(3);
++}
++
++$migration = new \Reamur\System\Library\Migration(
++    $db,
++    $root . '/dev/install/sql',
++    defined('DB_PREFIX') ? (string)DB_PREFIX : 'rms_'
++);
++
++$symbols = ['applied' => 'OK  ', 'contained' => 'BASE', 'pending' => 'PEND', 'divergent' => 'DIV ', 'missing' => 'MISS'];
++
++if ($command === 'status') {
++    printf("Banco: %s | prefixo: %s | %d migração(ões) no manifesto\n\n", DB_DATABASE, DB_PREFIX, count($migration->manifest()));
++
++    foreach ($migration->status() as $row) {
++        printf("  [%s] %-34s %s\n", $symbols[$row['state']] ?? '?   ', $row['version'], $row['detail']);
++    }
++
++    $applied = $migration->applied();
++
++    if (!isset($applied[\Reamur\System\Library\Migration::BASELINE])) {
++        echo "\nAVISO: sem registro de baseline — banco criado antes do F11-18.\n";
++        echo "       Rode `php tools/migrate.php baseline` para adotar o estado atual.\n";
++    }
++
++    exit(0);
++}
++
++if ($command === 'baseline') {
++    $migration->markBaseline();
++    echo "Baseline registrado para o banco " . DB_DATABASE . ".\n";
++    exit(0);
++}
++
++if ($command === 'run') {
++    $results = $migration->run($dryRun);
++    $counts  = [];
++
++    foreach ($results as $result) {
++        $counts[$result['result']] = ($counts[$result['result']] ?? 0) + 1;
++        printf("  %-12s %-34s %s\n", strtoupper($result['result']), $result['version'], $result['detail']);
++    }
++
++    echo "\n";
++    foreach ($counts as $result => $count) {
++        printf("%s: %d\n", $result, $count);
++    }
++
++    exit(isset($counts['error']) ? 1 : 0);
++}
++
++fwrite(STDERR, "Comando desconhecido: {$command}\nUse: status | run [--dry-run] | baseline\n");
++exit(2);

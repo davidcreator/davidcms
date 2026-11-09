@@ -1,0 +1,19 @@
+diff --git a/dev/system/storage/install.lock b/dev/system/storage/install.lock
+deleted file mode 100644
+index 1dd26945..00000000
+--- a/dev/system/storage/install.lock
++++ /dev/null
+@@ -1 +0,0 @@
+-installed 2026-10-19T22:41:06+00:00
+diff --git a/.gitignore b/.gitignore
+index 3e133d15..f75c7d25 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -53,3 +53,7 @@ Thumbs.db
+ /build-prod-*.zip
+ /build-staging-*.zip
+ /build-dev-*.zip
++
++# F11-17 / ADR 0084: o wizard grava este selo; versioná-lo fazia um clone
++# novo nascer com o instalador bloqueado (403 "Installation locked").
++dev/system/storage/install.lock
