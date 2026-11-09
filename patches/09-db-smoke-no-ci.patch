@@ -75,10 +75,10 @@ index 6e410d83..d05f5738 100644
      timeout-minutes: 10
 diff --git a/tools/e2e/db-smoke.sh b/tools/e2e/db-smoke.sh
 new file mode 100755
-index 00000000..426837d3
+index 00000000..f879ea9a
 --- /dev/null
 +++ b/tools/e2e/db-smoke.sh
-@@ -0,0 +1,211 @@
+@@ -0,0 +1,250 @@
 +#!/usr/bin/env bash
 +# =============================================================================
 +# db-smoke.sh — instala o ReamurCMS num banco REAL e prova que ele funciona.
@@ -110,6 +110,9 @@ index 00000000..426837d3
 +DB_USER="${DB_USER:-root}"
 +DB_PASS="${DB_PASS:-}"
 +DB_NAME="${DB_NAME:-rms_smoke}"
++# Binário do cliente MySQL. No WAMP ele não está no PATH por padrão:
++#   MYSQL_BIN="/c/wamp64/bin/mysql/mysql8.0.32/bin/mysql.exe" bash tools/e2e/db-smoke.sh
++MYSQL_BIN="${MYSQL_BIN:-mysql}"
 +PORT="${PORT:-$( (php -r 'echo random_int(8300, 8999);') )}"
 +ADMIN_USER="smoke"
 +ADMIN_PASS="Smoke!Pass#2026"
@@ -132,9 +135,45 @@ index 00000000..426837d3
 +
 +sql() { # sql <banco|-> <comando>
 +  local db="$1"; shift
-+  mysql --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USER" \
++  "$MYSQL_BIN" --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USER" \
 +        ${DB_PASS:+--password="$DB_PASS"} --protocol=TCP --silent --skip-column-names \
 +        ${db:+-D "$db"} -e "$1" 2>/dev/null
++}
++
++# ── GUARDA DESTRUTIVA ───────────────────────────────────────────────────────
++# Este script APAGA o banco informado. Rodar com DB_NAME apontando para o banco
++# de desenvolvimento (ex.: davidcms) destruiria o conteúdo. Só aceita nomes que
++# declarem ser descartáveis: *_smoke, *_test, *_ci, *_tmp.
++case "$DB_NAME" in
++  *_smoke|*_test|*_ci|*_tmp) : ;;
++  *)
++    if [ "${FORCE_DESTRUCTIVE:-0}" != "1" ]; then
++      cat >&2 <<EOF
++ERRO: recusando rodar com DB_NAME="$DB_NAME".
++
++Este smoke APAGA o banco no início e no fim. Use um banco descartável, por
++exemplo:  DB_NAME=davidcms_smoke
++
++Se você tem certeza de que "$DB_NAME" pode ser apagado, rode com
++FORCE_DESTRUCTIVE=1.
++EOF
++      exit 4
++    fi
++    printf 'AVISO: FORCE_DESTRUCTIVE=1 — o banco "%s" será APAGADO.\n' "$DB_NAME"
++    ;;
++esac
++
++command -v "$MYSQL_BIN" >/dev/null 2>&1 || {
++  cat >&2 <<EOF
++ERRO: cliente MySQL não encontrado ("$MYSQL_BIN").
++
++No WAMP ele fica em algo como:
++  C:/wamp64/bin/mysql/mysql8.0.32/bin/mysql.exe
++
++Aponte explicitamente (Git Bash):
++  MYSQL_BIN="/c/wamp64/bin/mysql/mysql8.0.32/bin/mysql.exe" DB_NAME=davidcms_smoke bash tools/e2e/db-smoke.sh
++EOF
++  exit 5
 +}
 +
 +echo "== 1. Banco de teste ======================================================"

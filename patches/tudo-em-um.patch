@@ -1,0 +1,1596 @@
+diff --git a/.gitattributes b/.gitattributes
+new file mode 100644
+index 00000000..02993b11
+--- /dev/null
++++ b/.gitattributes
+@@ -0,0 +1,17 @@
++# ReamurCMS — atributos de repositório (ADR 0084 §4)
++#
++# Mídia de conteúdo (portfólio, logos de clientes, depoimentos, ferramentas,
++# blog) vai versionada por Git LFS: são binários que não devem inflar o
++# histórico nem o clone de quem só lê código.
++*.webp  filter=lfs diff=lfs merge=lfs -text
++*.avif  filter=lfs diff=lfs merge=lfs -text
++*.jpg   filter=lfs diff=lfs merge=lfs -text
++*.jpeg  filter=lfs diff=lfs merge=lfs -text
++*.png   filter=lfs diff=lfs merge=lfs -text
++*.gif   filter=lfs diff=lfs merge=lfs -text
++*.ttf   filter=lfs diff=lfs merge=lfs -text
++*.otf   filter=lfs diff=lfs merge=lfs -text
++*.woff  filter=lfs diff=lfs merge=lfs -text
++*.woff2 filter=lfs diff=lfs merge=lfs -text
++*.glb   filter=lfs diff=lfs merge=lfs -text
++*.mp4   filter=lfs diff=lfs merge=lfs -text
+diff --git a/.github/workflows/php.yml b/.github/workflows/php.yml
+index 6e410d83..d05f5738 100644
+--- a/.github/workflows/php.yml
++++ b/.github/workflows/php.yml
+@@ -202,6 +202,70 @@ jobs:
+         fi
+         echo "$COUNT scripts Node verificados."
+ 
++  db-smoke:
++    runs-on: ubuntu-24.04
++    timeout-minutes: 20
++    # F11-19 / ADR 0085: nenhum job deste workflow ABRIA o sistema — foi assim
++    # que um import de schema quebrado (colação uca1400), um wizard que
++    # importava o schema incompleto e um caminho PDO inoperante atravessaram
++    # onze fases. Este job sobe um MariaDB 11.8 REAL (colação padrão do
++    # servidor, de propósito), roda o wizard por HTTP e exige 200 nas rotas
++    # críticas do site e do painel, com login e editor de páginas inclusos.
++    # NAO declara o campo working-directory (o guarda conta exatamente 2
++    # ocorrencias no arquivo) — os caminhos sao explicitos em cada comando.
++    services:
++      mariadb:
++        image: mariadb:11.8
++        env:
++          MARIADB_ROOT_PASSWORD: root
++          MARIADB_DATABASE: rms_smoke
++        ports:
++          - 3306:3306
++        options: >-
++          --health-cmd="healthcheck.sh --connect --innodb_initialized"
++          --health-interval=10s
++          --health-timeout=5s
++          --health-retries=12
++    steps:
++    - uses: actions/checkout@v7
++
++    - name: Setup PHP
++      uses: shivammathur/setup-php@v2
++      with:
++        php-version: '8.2'
++        extensions: mbstring, curl, gd, zip, intl, mysqli, pdo_mysql
++
++    - name: Cache Composer packages
++      uses: actions/cache@v6
++      with:
++        path: dev/system/storage/vendor
++        key: ${{ runner.os }}-db-smoke-${{ hashFiles('**/composer.lock') }}
++        restore-keys: |
++          ${{ runner.os }}-db-smoke-
++
++    - name: Instalar dependencias do nucleo
++      run: composer install --working-dir=dev/system/storage --prefer-dist --no-progress --no-interaction
++
++    - name: Cliente MySQL
++      run: sudo apt-get update -qq && sudo apt-get install -y -qq default-mysql-client
++
++    - name: Instalar em banco real e navegar (site + painel)
++      env:
++        DB_HOST: 127.0.0.1
++        DB_PORT: '3306'
++        DB_USER: root
++        DB_PASS: root
++        DB_NAME: rms_smoke
++      run: bash tools/e2e/db-smoke.sh
++
++    - name: Evidencia em caso de falha
++      if: failure()
++      run: |
++        echo '--- dev/system/storage/logs/error.log ---'
++        cat dev/system/storage/logs/error.log 2>/dev/null || echo '(vazio)'
++        echo '--- log do servidor PHP ---'
++        cat /tmp/rms-db-smoke-server.log 2>/dev/null || echo '(vazio)'
++
+   repo-guards:
+     runs-on: ubuntu-24.04
+     timeout-minutes: 10
+diff --git a/.gitignore b/.gitignore
+index 3e133d15..f75c7d25 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -53,3 +53,7 @@ Thumbs.db
+ /build-prod-*.zip
+ /build-staging-*.zip
+ /build-dev-*.zip
++
++# F11-17 / ADR 0084: o wizard grava este selo; versioná-lo fazia um clone
++# novo nascer com o instalador bloqueado (403 "Installation locked").
++dev/system/storage/install.lock
+diff --git a/agents-ia/decisoes/0084-instalacao-confiavel-schema-e-acl.md b/agents-ia/decisoes/0084-instalacao-confiavel-schema-e-acl.md
+new file mode 100644
+index 00000000..3b56e48f
+--- /dev/null
++++ b/agents-ia/decisoes/0084-instalacao-confiavel-schema-e-acl.md
+@@ -0,0 +1,67 @@
++# ADR 0084 — Instalação confiável: schema completo, colação explícita e ACL do Administrator
++
++| | |
++|---|---|
++| **Status** | Aceita (autorizada pelo mantenedor em 09/11/2026) |
++| **Data** | 2026-11-09 |
++| **Fase** | F11-17 |
++| **Substitui/revoga** | A cláusula "Intocáveis: `schema.sql`, `schema-complete.sql`" de `docs/ESTADO-GOVERNANCA.md` e `docs/RELATORIO-GERAL.md`, **na parte que impede corrigir defeitos de instalação** |
++| **Contexto de origem** | Análise externa do repositório com instalação real em MariaDB 11.8 + PHP 8.4 (09/11/2026) |
++
++---
++
++## Contexto
++
++Uma instalação real, feita a partir de um clone limpo, revelou que o ReamurCMS **não conclui a instalação** em MariaDB ≥ 11.4 e, quando conclui, **produz um banco incompleto** que quebra o editor de páginas. Nenhum desses defeitos é detectável pelo CI atual (lint + PHPStan + guardas), porque nenhum job executa o sistema.
++
++Três causas independentes, todas no caminho de instalação:
++
++1. **`dev/system/storage/install.lock` estava versionado.** Um clone novo responde `403 Installation locked` em `install/index.php` antes de qualquer passo.
++2. **A temporária `tmp_f10_catalog_page` nasce sem `COLLATE`.** Em MariaDB ≥ 11.4 o padrão de `utf8mb4` é `utf8mb4_uca1400_ai_ci`, incompatível com as colunas `utf8mb4_unicode_ci` do restante do schema. O `INSERT ... SELECT ... CASE ... IN ('en-us',…)` falha com `Illegal mix of collations` no **statement 33 de 39**, abortando o import no meio.
++3. **O wizard importa `schema.sql` (32 tabelas, sem seed) em vez de `schema-complete.sql` (43 tabelas + conteúdo).** Resultado: instalação "bem-sucedida" sem `rms_blog_post*`, `rms_custom_field*`, `rms_import_contact`, `rms_mp_*` e com `rms_setting`/portfólio/depoimentos vazios — o editor de páginas (`cms/page.edit`) devolve 404 por `Table 'rms_custom_field' doesn't exist`.
++
++Agravante: o grupo **Administrator** era semeado com 13 rotas fixas, deixando o próprio dono da instalação sem acesso a `setting/*`, `design/theme`, `blog/*` e `localization/language` (302 → `error/permission`).
++
++O congelamento de `schema.sql`/`schema-complete.sql` pela governança (F11-16) tornava esses defeitos **incorrigíveis por decisão**, embora o próprio contrato congelado documentasse um estado que nunca foi validado em banco real.
++
++## Decisão
++
++1. **`install.lock` deixa de ser versionado.** O selo é artefato de execução do wizard; `.gitignore` passa a ignorá-lo.
++2. **`COLLATE=utf8mb4_unicode_ci` explícito** na temporária de `schema.sql` e `schema-complete.sql` — uma linha em cada arquivo. Regra geral: **nenhum `DEFAULT CHARSET` sem `COLLATE`** em SQL do projeto.
++3. **`schema-complete.sql` é a fonte da verdade da instalação.** `importSchema()` passa a lê-lo. `schema.sql` permanece no repositório apenas como referência histórica e **não deve ganhar tabelas novas** (ver §Consequências).
++4. **O grupo Administrator nasce com todas as rotas de admin presentes no disco** (`dev/admin/controller/**`, exceto `startup/*` e `error/*`), derivadas por varredura de diretório, em vez de lista fixa. Módulos futuros passam a entrar no grupo 1 automaticamente.
++5. **Mídia de conteúdo versionada por Git LFS** (`.gitattributes`), conforme decisão do mantenedor: binários não inflam o clone de quem só lê código.
++
++6. **O caminho PDO do importador é corrigido**: `connect()` passa a usar
++   `PDO::MYSQL_ATTR_USE_BUFFERED_QUERY` e `importSchema()` usa
++   `prepare/execute/closeCursor()` em vez de `exec()` direto. Sem isso, o
++   driver `pdo` (oferecido no passo 3 do wizard) abortava o import com
++   `SQLSTATE[HY000] 2014 Cannot execute queries while other unbuffered queries
++   are active` — 4 tabelas criadas e nenhum admin.
++
++
++## Consequências
++
++- Instalação em MariaDB 11.8 / PHP 8.4 validada de ponta a ponta: **43 tabelas, conteúdo real semeado, login no painel e `cms/page.edit` respondendo 200**.
++- `schema.sql` fica **legado e incompleto por definição**. Próximo passo (F11-18, fora desta ADR): substituir os dois arquivos por migrações aplicadas por um runner (`rms_schema_migration(version, applied_at, checksum)`), eliminando a divergência entre `schema.sql`, `schema-complete.sql` e os 29 `upgrade_*.sql`.
++- Deixa de ser legítimo invocar "arquivo congelado" para bloquear correções no caminho de instalação. Congelar continua valendo para contratos de comportamento (rotas, DOM público, hashes de renderer), **não** para defeitos reproduzíveis de instalação.
++- Um clone limpo passa a instalar sem intervenção manual.
++
++## Evidências
++
++| Verificação | Antes | Depois |
++|---|---|---|
++| `install/index.php` em clone novo | 403 `Installation locked` | 200 (passo 1) |
++| Import do schema (mysqli) | aborta no statement 33/39 | 139/139 statements |
++| Import do schema (PDO) | aborta com erro 2014 (4 tabelas) | 43 tabelas, sem erro |
++| Tabelas criadas | 32 (de 43) | 43 |
++| `rms_project` / `rms_setting` | 0 / 0 | 10 / 37 |
++| `cms/page.edit\|1` | 404 (`rms_custom_field` ausente) | 200, 92 KB |
++| Admin recém-criado em `setting/setting` | 302 → `error/permission` | 200 |
++| Editor BDRE (histórico, campos, idiomas) | inacessível | funcional |
++
++## Referências
++
++- `docs/ESTADO-GOVERNANCA.md` (cláusula de congelamento revista)
++- `dev/install/sql/schema-complete.sql`, `dev/install/model/install/install.php`
++- Análise externa de 09/11/2026 — anexos de captura 01/06/07 e relatório `ANALISE-COMPLETA.md`
+diff --git a/agents-ia/decisoes/0085-schema-versionado-e-smoke-com-banco-real.md b/agents-ia/decisoes/0085-schema-versionado-e-smoke-com-banco-real.md
+new file mode 100644
+index 00000000..dad142f5
+--- /dev/null
++++ b/agents-ia/decisoes/0085-schema-versionado-e-smoke-com-banco-real.md
+@@ -0,0 +1,95 @@
++# ADR 0085 — Schema versionado, migrações executáveis e smoke com banco real
++
++| | |
++|---|---|
++| **Status** | Aceita |
++| **Data** | 2026-11-09 |
++| **Fase** | F11-18 (runner de migrações) · F11-19 (smoke em banco real) |
++| **Depende de** | ADR 0084 (instalação confiável) |
++| **Evidência de origem** | instalação real em MariaDB 11.8 + PHP 8.4; smoke no `main` `bfc9e26` reprovando com **28 falhas** |
++
++---
++
++## Contexto
++
++A ADR 0084 consertou a instalação, mas deixou dois problemas estruturais em aberto:
++
++1. **Nada registrava em que estado um banco estava.** Existiam três verdades paralelas — `schema.sql`, `schema-complete.sql` e 29 arquivos `upgrade_*.sql` — sem tabela de versão, sem checksum e sem executor. Aplicar as migrações "na mão" era o único caminho, e ele falha por duplicidade (`upgrade_f10_01`, `upgrade_f10_03`, `upgrade_f8_05` já estão dentro do `schema-complete.sql`).
++2. **Nenhum job de CI abria o sistema.** Os 6 jobs existentes (composer, php -l, links, PHPStan, node, guardas) ficaram verdes durante onze fases enquanto o produto **não instalava**. O `db-smoke` no código anterior a 0084 devolve **28 falhas** — inclusive as três camadas de defeito que a análise encontrou.
++
++Além disso, os três front controllers carregavam `config.php` por caminho **relativo ao diretório de trabalho** (`is_file('config.php')`). No Apache (CWD = pasta do script) funciona; em qualquer SAPI que não faça `chdir` — `php -S`, FPM com `chdir` alterado, teste automatizado — o app "acha" que não está instalado e cai no wizard.
++
++## Decisão
++
++### 1. `rms_schema_migration` é a fonte de verdade do estado do schema
++
++```
++rms_schema_migration(version PK, checksum CHAR(64), source, applied_at)
++```
++
++- O wizard grava a linha `baseline` logo após importar `schema-complete.sql` (`markSchemaBaseline()`), com o SHA-256 do arquivo importado.
++- Bancos criados **antes** desta ADR não têm baseline: o runner avisa e `php tools/migrate.php baseline` faz a adoção explícita (nunca executando SQL).
++- `checksum` por migração detecta arquivo alterado depois de aplicado (`state: divergent`) — não reaplica sozinho.
++
++### 2. Manifesto ordenado, não varredura de diretório
++
++`dev/install/sql/migrations.json` lista as migrações **na ordem de fase** (f2 → f10), cada uma com `in_schema_complete`:
++
++| `in_schema_complete` | Significado |
++|---|---|
++| `true` | o SQL já está dentro do `schema-complete.sql`; em instalação com baseline é apenas **marcada** como aplicada (`contained`), sem execução |
++| `false` | migração nova: **pendente** em qualquer banco e executada pelo runner |
++
++Fluxo para uma migração futura: criar `upgrade_fXX_YY_nome.sql` → acrescentar no fim do manifesto com `in_schema_complete: false` → `php tools/migrate.php run` → quando o SQL for dobrado no `schema-complete.sql`, virar a flag para `true`.
++
++**Regra de ouro:** `schema-complete.sql` é "o estado final de todas as migrações listadas como contidas". Uma migração nova **não** entra no `schema-complete.sql` no mesmo commit que a cria.
++
++### 3. Um único divisor de SQL
++
++`system/library/sql/splitter.php` (classe `Splitter`) é usado pelo **instalador** e pelo **runner**. Ele respeita aspas e comentários, então `PREPARE …; EXECUTE …; DEALLOCATE …` na mesma linha, `;` depois de comentário e `&nbsp;` dentro do HTML do seed deixam de ser armadilha. Antes havia duas cópias da regra (uma delas `explode(";\n")`).
++
++### 4. Front controllers carregam config por `__DIR__`
++
++`is_file(__DIR__ . '/config.php')` nas três aplicações. Mesmo comportamento no Apache; independência do diretório de trabalho em qualquer outra SAPI.
++
++### 5. `db-smoke` no CI, contra MariaDB 11.8 de verdade
++
++Job novo em `.github/workflows/php.yml` (serviço `mariadb:11.8`, colação **padrão do servidor** de propósito) que executa `tools/e2e/db-smoke.sh`:
++
++1. cria o banco **sem declarar colação** (é assim que a regressão `uca1400` reaparece);
++2. roda o wizard por HTTP, 3 passos;
++3. exige ≥ 43 tabelas, o seed real (10 projetos, 3 depoimentos, 5 logos, 4 ferramentas, ≥ 20 settings, ≥ 10 páginas) e as tabelas críticas (`custom_field`, `blog_post`, `seo_url`, `schema_migration`);
++4. exige `200` em `/catalog/`, `/portfolio`, `/blog`, `/contact`, `/tools`, `/sitemap.xml`;
++5. exige `200` nas 8 telas críticas do painel **com login real** (CSRF incluído), inclusive `cms/page.edit|1` com o editor no DOM;
++6. exige `three.asset` publicando o runtime e **bloqueando path traversal**;
++7. exige nenhuma migração pendente e `error.log` vazio do início ao fim.
++
++O guarda `tools/verify-ci-workflow.sh` ganhou a seção 6, que quebra se o job ou os arquivos do smoke desaparecerem.
++
++## Consequências
++
++- Estado do banco passa a ser auditável: `php tools/migrate.php status` responde "em que ponto este banco está" em uma consulta.
++- `schema.sql` fica oficialmente legado: o runner nunca o lê, o wizard nunca o importa.
++- Regressão de instalação/colunação/ACL passa a falhar no CI **em minutos**, não em onze fases.
++- Custo: +1 job (~4 min) e um conceito novo (`in_schema_complete`) que precisa ser mantido com disciplina ao criar migrações.
++- **Não** cobre navegador real (Playwright continua fora do CI por tempo de execução) — o smoke é HTTP, não visual. A fidelidade visual segue dependendo dos aceites manuais já registrados em `docs/ESTADO-GOVERNANCA.md`.
++
++## Evidências
++
++| Verificação | `main` antes | Depois (0084 + 0085) |
++|---|---|---|
++| Wizard por HTTP | passo 3 sem redirect | `302 → step_4` |
++| Tabelas | 28 | 44 (43 + `schema_migration`) |
++| Seed (projetos/settings) | 0 / 0 | 10 / 37 |
++| Editor de páginas | inacessível (sem tabela) | `200` com `bdre` no DOM |
++| `php tools/migrate.php status` | comando não existia | 29 `contained`, 0 pendente |
++| Aplicação de migração nova | manual, sem registro | `applied` + checksum + idempotente |
++| Banco legado sem baseline | — | aviso + `baseline` explícito |
++| **`db-smoke.sh`** | **28 FAIL** | **41 PASS / 0 FAIL** |
++| Guarda `verify-ci-workflow.sh` | 31 PASS | 37 PASS / 0 FAIL |
++
++## Referências
++
++- ADR 0084 — instalação confiável (schema completo, colação, ACL)
++- `dev/system/library/migration.php`, `dev/install/sql/migrations.json`, `tools/migrate.php`
++- `tools/e2e/db-smoke.sh`, `tools/e2e/lib/php-router.php`, `.github/workflows/php.yml`
+diff --git a/dev/admin/index.php b/dev/admin/index.php
+index 2f19f296..5ad2ee3a 100644
+--- a/dev/admin/index.php
++++ b/dev/admin/index.php
+@@ -18,8 +18,12 @@ define('REAMUR_VERSION', '1.0.0');
+ define('APPLICATION', 'Admin');
+ 
+ // 3. Configuração da instalação (gerada pelo wizard install/)
+-if (is_file('config.php')) {
+-    require_once('config.php');
++// F11-19: __DIR__ em vez do diretório de trabalho. Com CWD relativo, qualquer
++// SAPI que não faça chdir para a pasta do script (ex.: `php -S -t dev`) não
++// encontrava o config.php e o app caía no wizard. Com __DIR__ o comportamento
++// é o mesmo no Apache e passa a funcionar em qualquer docroot.
++if (is_file(__DIR__ . '/config.php')) {
++    require_once __DIR__ . '/config.php';
+ }
+ 
+ // 4. Instalação pendente? → wizard (admin está um nível abaixo da raiz pública)
+diff --git a/dev/admin/view/css/admin.css b/dev/admin/view/css/admin.css
+index 974601fc..a3beb023 100644
+--- a/dev/admin/view/css/admin.css
++++ b/dev/admin/view/css/admin.css
+@@ -485,6 +485,20 @@ html[data-rms-density="compact"] .admin-sidebar .nav-link { padding: 6px 12px; }
+ .auth-card h1 { font-size: 1.3rem; font-weight: 700; text-align: center; margin: 14px 0 22px; }
+ .auth-card .btn-submit { width: 100%; }
+ 
++/* F11-17: a muralha (.auth-card) NÃO está dentro de .admin-content, então as
++   regras `.admin-content .btn.primary` não a alcançavam e o botão "Login"
++   virava texto solto, sem fundo nem padding. Escopo próprio para o card. */
++.auth-card .btn.primary,
++.auth-card button.btn.primary,
++.auth-card input.btn.primary {
++  background: var(--rms-accent);
++  border-color: var(--rms-accent);
++  color: #fff;
++  justify-content: center;
++  padding: 11px 18px;
++}
++.auth-card .btn.primary:hover { filter: brightness(.94); }
++
+ .auth-footer {
+   position: fixed;
+   bottom: 14px;
+@@ -772,11 +786,25 @@ html[data-rms-density="compact"] .admin-sidebar .nav-link { padding: 6px 12px; }
+ }
+ 
+ /* ── F8-V · setting/appearance (ADR 0047) ─────────────────────────────── */
++/* F11-17: `.admin-content .btn` é inline-flex em LINHA; usado como card, os
++   três blocos (amostras, nome e descrição) ficavam lado a lado e vazavam por
++   cima dos cards vizinhos. Como card, a direção tem de ser coluna. */
++/* A especificidade importa: `.admin-content .btn` (0,2,0) é inline-flex em linha
++   e vencia `.rms-skin-card` (0,1,0) — por isso o seletor repete o ancestral. */
++.admin-content .btn.rms-skin-card,
+ .rms-skin-card {
++  display: flex;
++  flex-direction: column;
++  align-items: stretch;
++  gap: 0;
+   height: 100%;
+   text-align: left;
++  white-space: normal;
++  overflow-wrap: anywhere;
+   transition: border-color .15s ease, box-shadow .15s ease;
+ }
++.rms-skin-card > .d-flex { flex-wrap: wrap; }
++.rms-skin-card > .small { line-height: 1.25; }
+ .btn-check:checked + .rms-skin-card {
+   border-color: var(--rms-accent) !important;
+   box-shadow: 0 0 0 3px color-mix(in srgb, var(--rms-accent) 25%, transparent);
+diff --git a/dev/catalog/index.php b/dev/catalog/index.php
+index e4c1d4bf..44ed04f5 100644
+--- a/dev/catalog/index.php
++++ b/dev/catalog/index.php
+@@ -18,8 +18,12 @@ define('REAMUR_VERSION', '1.0.0');
+ define('APPLICATION', 'Catalog');
+ 
+ // 3. Configuração da instalação (gerada pelo wizard install/)
+-if (is_file('config.php')) {
+-    require_once('config.php');
++// F11-19: __DIR__ em vez do diretório de trabalho. Com CWD relativo, qualquer
++// SAPI que não faça chdir para a pasta do script (ex.: `php -S -t dev`) não
++// encontrava o config.php e o app caía no wizard. Com __DIR__ o comportamento
++// é o mesmo no Apache e passa a funcionar em qualquer docroot.
++if (is_file(__DIR__ . '/config.php')) {
++    require_once __DIR__ . '/config.php';
+ }
+ 
+ // 4. Instalação pendente? → wizard
+diff --git a/dev/catalog/view/css/theme.css b/dev/catalog/view/css/theme.css
+index 9783e8e4..77d25616 100644
+--- a/dev/catalog/view/css/theme.css
++++ b/dev/catalog/view/css/theme.css
+@@ -135,13 +135,18 @@ h2 { font-size: 1.75em; }
+ #portfolio.portfolio-3d-active .pcard .body { background: rgba(255,255,255,.88); }
+ @media (prefers-reduced-motion: reduce) { .portfolio-3d__canvas canvas { display: none; } }
+ .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+-.pcard { display: block; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; text-decoration: none; color: inherit; background: #fff; transition: transform .25s ease, box-shadow .25s ease; transform-style: preserve-3d; }
++/* F11-17: card como coluna flex — o badge "Featured" ficava metade fora da
++   borda inferior (overflow:hidden) quando o texto do card era o mais alto da
++   linha da grade. */
++.pcard { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; text-decoration: none; color: inherit; background: #fff; transition: transform .25s ease, box-shadow .25s ease; transform-style: preserve-3d; }
+ /* Cena 3 etapa 1 (F3-03, Guia §7): tilt 3D por CSS — barato e acessível */
+ .pcard:hover { transform: perspective(800px) rotateX(4deg) rotateY(-4deg) translateY(-4px); box-shadow: 0 10px 24px rgba(17,24,39,.08); }
+ @media (prefers-reduced-motion: reduce) { .pcard:hover { transform: none; } }
+ .pcard .thumb { aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ede9fe, #faf5ff); color: var(--accent); font-size: 2.4em; font-weight: 800; }
+ .pcard .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+-.pcard .body { padding: 14px; }
++.pcard .thumb { flex: 0 0 auto; }
++.pcard .body { padding: 14px; flex: 1 1 auto; display: flex; flex-direction: column; align-items: flex-start; }
++.pcard .body .badge { margin-top: auto; }
+ .pcard .body strong { display: block; }
+ .pcard .body small { color: var(--muted); display: block; margin-top: 4px; }
+ .badge { display: inline-block; font-size: .72em; font-weight: 700; background: #ede9fe; color: var(--accent); border-radius: 999px; padding: 2px 10px; margin-top: 8px; }
+diff --git a/dev/install/controller/install/step_3.php b/dev/install/controller/install/step_3.php
+index f8171b56..b452634f 100644
+--- a/dev/install/controller/install/step_3.php
++++ b/dev/install/controller/install/step_3.php
+@@ -48,6 +48,10 @@ class Step_3 extends \Reamur\System\Engine\Controller {
+                     } else {
+                         $this->model_install_install->importSchema($prefix);
+ 
++                        // F11-18 / ADR 0085: registra o baseline do schema para o
++                        // runner de migrações (tools/migrate.php).
++                        $this->model_install_install->markSchemaBaseline($prefix);
++
+                         // Grupo Administrator já nasce com access+modify em
+                         // 'user/user' e 'user/user_group' (Adendo F2-6 do ADR 0005)
+                         $this->model_install_install->createAdministrator([
+diff --git a/dev/install/index.php b/dev/install/index.php
+index 4940d064..2b8de7d2 100644
+--- a/dev/install/index.php
++++ b/dev/install/index.php
+@@ -18,8 +18,12 @@ define('REAMUR_VERSION', '1.0.0');
+ define('APPLICATION', 'Install');
+ 
+ // 3. Configuração da instalação (gerada pelo wizard install/)
+-if (is_file('config.php')) {
+-    require_once('config.php');
++// F11-19: __DIR__ em vez do diretório de trabalho. Com CWD relativo, qualquer
++// SAPI que não faça chdir para a pasta do script (ex.: `php -S -t dev`) não
++// encontrava o config.php e o app caía no wizard. Com __DIR__ o comportamento
++// é o mesmo no Apache e passa a funcionar em qualquer docroot.
++if (is_file(__DIR__ . '/config.php')) {
++    require_once __DIR__ . '/config.php';
+ }
+ 
+ // 4. Install NUNCA redireciona (ela É o wizard). Para rodar ANTES do config.php
+diff --git a/dev/install/model/install/install.php b/dev/install/model/install/install.php
+index 967f7fe0..cf8fa706 100644
+--- a/dev/install/model/install/install.php
++++ b/dev/install/model/install/install.php
+@@ -56,7 +56,14 @@ class Install extends \Reamur\System\Engine\Model {
+                     ),
+                     (string)$data['db_username'],
+                     (string)$data['db_password'],
+-                    [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]
++                    [
++                        \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
++                        // ADR 0084 §3: sem buffer, o import do schema morria em
++                        // "SQLSTATE[HY000]: General error: 2014 Cannot execute
++                        // queries while other unbuffered queries are active"
++                        // (o schema tem SET @var := (SELECT ...)).
++                        \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
++                    ]
+                 );
+             }
+         } catch (\mysqli_sql_exception|\PDOException $e) {
+@@ -97,24 +104,30 @@ class Install extends \Reamur\System\Engine\Model {
+      * atinge somente nomes de tabelas — inclusive nos INSERTs de seed.
+      */
+     public function importSchema(string $prefix): void {
+-        $sql = (string)file_get_contents(dirname(__DIR__, 2) . '/sql/schema.sql'); // dev/install/sql/schema.sql
+-
+-        // Linhas de comentário (cabeçalhos de seção do arquivo) saem ANTES do split —
+-        // um chunk começando com '--' não pode derrubar o CREATE/INSERT que o segue.
+-        $sql = (string)preg_replace('/^\s*--[^\n]*$/m', '', $sql);
++        // ADR 0084 §3: o wizard importa o schema COMPLETO. Antes lia schema.sql
++        // (32 tabelas, sem seed) e a instalação nascia sem blog, custom fields,
++        // marketplace e sem conteúdo — o editor de páginas abria 404 por falta
++        // de rms_custom_field*. schema-complete.sql tem as 43 tabelas + seed.
++        $sql = (string)file_get_contents(dirname(__DIR__, 2) . '/sql/schema-complete.sql');
+ 
+         if ($prefix !== 'rms_') {
+             $sql = str_replace('`rms_', '`' . $prefix, $sql);
+         }
+ 
+-        foreach (array_filter(array_map('trim', explode(";\n", $sql))) as $statement) {
+-            if ($statement === '') {
++        // O divisor vive em system/library/sql/splitter.php e é o MESMO usado
++        // pelo runner de migrações (F11-18) — uma regra só para ler SQL.
++        foreach (\Reamur\System\Library\Sql\Splitter::statements($sql) as $statement) {
++            if ($this->handle instanceof \mysqli) {
++                $this->handle->query($statement);
++
+                 continue;
+             }
+ 
+-            $this->handle instanceof \mysqli
+-                ? $this->handle->query($statement)
+-                : $this->handle->exec($statement);
++            // PDO: exec() direto em statements que devolvem rows (SET @x := SELECT,
++            // SELECT 1) deixa resultset pendente e derruba o statement seguinte.
++            $stmt = $this->handle->prepare($statement);
++            $stmt->execute();
++            $stmt->closeCursor();
+         }
+     }
+ 
+@@ -127,8 +140,83 @@ class Install extends \Reamur\System\Engine\Model {
+      *
+      * @param array{username: string, firstname: string, lastname: string, email: string, password: string} $data
+      */
++    /**
++     * Rotas do painel presentes no disco (ADR 0084 §2).
++     * startup/* e error/* ficam fora: são pré-ações e fluxo de erro, não telas.
++     *
++     * @return array<int, string>
++     */
++    private function administratorRoutes(): array {
++        $base = (defined('DIR_REAMUR') ? DIR_REAMUR : '') . 'dev/admin/controller/';
++        $routes = [];
++
++        if (is_dir($base)) {
++            $iterator = new \RecursiveIteratorIterator(
++                new \RecursiveDirectoryIterator($base, \FilesystemIterator::SKIP_DOTS)
++            );
++
++            foreach ($iterator as $file) {
++                if (!$file->isFile() || $file->getExtension() !== 'php') {
++                    continue;
++                }
++
++                $route = str_replace('\\', '/', substr($file->getPathname(), strlen($base)));
++                $route = substr($route, 0, -4);
++
++                if (str_starts_with($route, 'startup/') || str_starts_with($route, 'error/')) {
++                    continue;
++                }
++
++                $routes[] = $route;
++            }
++        }
++
++        sort($routes);
++
++        return $routes;
++    }
++
++    /**
++     * Registra no banco que o schema importado é o schema-complete.sql atual
++     * (F11-18 / ADR 0085). Sem isso, o runner de migrações não tem como saber
++     * se um banco novo já contém os upgrade_*.sql.
++     */
++    public function markSchemaBaseline(string $prefix): void {
++        $schema   = dirname(__DIR__, 2) . '/sql/schema-complete.sql';
++        $checksum = is_file($schema) ? (string)hash_file('sha256', $schema) : str_repeat('0', 64);
++        $table    = '`' . $prefix . 'schema_migration`';
++
++        $ddl = 'CREATE TABLE IF NOT EXISTS ' . $table . ' (
++            `version`    VARCHAR(64)  NOT NULL,
++            `checksum`   CHAR(64)     NOT NULL,
++            `source`     VARCHAR(16)  NOT NULL DEFAULT \'upgrade\',
++            `applied_at` DATETIME     NOT NULL,
++            PRIMARY KEY (`version`)
++        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci';
++
++        if ($this->handle instanceof \mysqli) {
++            $this->handle->query($ddl);
++            $e = fn(string $v): string => $this->handle->real_escape_string($v);
++
++            $this->handle->query('REPLACE INTO ' . $table
++                . " SET `version` = 'baseline', `checksum` = '" . $e($checksum) . "'"
++                . ", `source` = 'schema', `applied_at` = NOW()");
++
++            return;
++        }
++
++        $this->handle->prepare($ddl)->execute();
++        $stmt = $this->handle->prepare('REPLACE INTO ' . $table
++            . " SET `version` = 'baseline', `checksum` = ?, `source` = 'schema', `applied_at` = NOW()");
++        $stmt->execute([$checksum]);
++    }
++
+     public function createAdministrator(array $data, string $prefix): void {
+-        $seedRoutes = ['user/user', 'user/user_group', 'catalog/project', 'catalog/category', 'cms/page', 'marketing/testimonial', 'marketing/client_logo', 'tool/tool', 'sale/order', 'communication/contact_message', 'setting/webhook', 'custom_field/definition', 'cms/block_pattern']; // F2-8..16 + F9-25 padrões BDRE privados
++        // ADR 0084 §2: o grupo Administrator nasce com TODAS as rotas de admin
++        // que existem na instalação. A lista fixa anterior (13 rotas) deixava o
++        // próprio dono sem acesso a setting/*, design/theme, blog/* e
++        // localization/language — 302 → error/permission logo após instalar.
++        $seedRoutes = $this->administratorRoutes();
+         // F8-01 (ADR 0045 §bugfix-escape-ACL): UNESCAPED_SLASHES impede que
+         // real_escape_string dobre o '\' produzido pelo json_encode padrão —
+         // combinando, os valores ficavam "user\\/user" e nenhum hasPermission
+diff --git a/dev/install/sql/migrations.json b/dev/install/sql/migrations.json
+new file mode 100644
+index 00000000..1a510189
+--- /dev/null
++++ b/dev/install/sql/migrations.json
+@@ -0,0 +1,150 @@
++{
++  "comment": "Manifesto ordenado de migracoes (F11-18 / ADR 0085). 'in_schema_complete: true' = o SQL ja esta dentro de schema-complete.sql; em instalacao feita pelo wizard (com baseline) a migracao e apenas marcada, sem execucao. Ao criar uma migracao NOVA, adicione-a no fim com in_schema_complete:false e rode `php tools/migrate.php run`.",
++  "migrations": [
++    {
++      "version": "f2_8_portfolio_grant",
++      "file": "upgrade_f2_8_portfolio_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_9_category_grant",
++      "file": "upgrade_f2_9_category_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_10_cms_page_grant",
++      "file": "upgrade_f2_10_cms_page_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_11_marketing_testimonial_grant",
++      "file": "upgrade_f2_11_marketing_testimonial_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_12_marketing_client_logo_grant",
++      "file": "upgrade_f2_12_marketing_client_logo_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_13_tool_grant",
++      "file": "upgrade_f2_13_tool_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_14_sale_order_grant",
++      "file": "upgrade_f2_14_sale_order_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_15_contact_message_grant",
++      "file": "upgrade_f2_15_contact_message_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_16_webhook_grant",
++      "file": "upgrade_f2_16_webhook_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f2_18_rate_limit_table",
++      "file": "upgrade_f2_18_rate_limit_table.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f3_01_seed_conteudo_davidalmeida",
++      "file": "upgrade_f3_01_seed_conteudo_davidalmeida.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f4_01_setting_op_grant",
++      "file": "upgrade_f4_01_setting_op_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f4_02_localization_language_op_grant",
++      "file": "upgrade_f4_02_localization_language_op_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f4_03_site_info_op_grant",
++      "file": "upgrade_f4_03_site_info_op_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f4_08_import_historico_contatos",
++      "file": "upgrade_f4_08_import_historico_contatos.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f5_02_mp_marketplace_foundation",
++      "file": "upgrade_f5_02_mp_marketplace_foundation.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f5_03_mp_checkout",
++      "file": "upgrade_f5_03_mp_checkout.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f7_01_blog",
++      "file": "upgrade_f7_01_blog.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f7_03_blog_import",
++      "file": "upgrade_f7_03_blog_import.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f8_01_permission_canonical",
++      "file": "upgrade_f8_01_permission_canonical.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f8_05_admin_theming",
++      "file": "upgrade_f8_05_admin_theming.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f9_02_custom_fields_schema",
++      "file": "upgrade_f9_02_custom_fields_schema.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f9_05_custom_field_definition_grant",
++      "file": "upgrade_f9_05_custom_field_definition_grant.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f9_12_blog_block_content",
++      "file": "upgrade_f9_12_blog_block_content.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f9_25_bdreditor_patterns",
++      "file": "upgrade_f9_25_bdreditor_patterns.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f9_31_bdre_revision_history",
++      "file": "upgrade_f9_31_bdre_revision_history.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f10_01_cms_catalog_routes",
++      "file": "upgrade_f10_01_cms_catalog_routes.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f10_02_design_themes",
++      "file": "upgrade_f10_02_design_themes.sql",
++      "in_schema_complete": true
++    },
++    {
++      "version": "f10_03_theme_templates",
++      "file": "upgrade_f10_03_theme_templates.sql",
++      "in_schema_complete": true
++    }
++  ]
++}
+\ No newline at end of file
+diff --git a/dev/install/sql/schema-complete.sql b/dev/install/sql/schema-complete.sql
+index 88dd7989..7bbfa100 100644
+--- a/dev/install/sql/schema-complete.sql
++++ b/dev/install/sql/schema-complete.sql
+@@ -40,6 +40,17 @@
+ -- 1. NÚCLEO
+ -- ----------------------------------------------------------------------------
+ 
++-- F11-18 / ADR 0085: registro do estado do schema. O runner (tools/migrate.php)
++-- usa esta tabela como fonte de verdade; o wizard grava aqui a linha 'baseline'
++-- logo após importar este arquivo.
++CREATE TABLE IF NOT EXISTS `rms_schema_migration` (
++  `version`    VARCHAR(64)  NOT NULL,
++  `checksum`   CHAR(64)     NOT NULL,
++  `source`     VARCHAR(16)  NOT NULL DEFAULT 'upgrade',
++  `applied_at` DATETIME     NOT NULL,
++  PRIMARY KEY (`version`)
++) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
++
+ CREATE TABLE IF NOT EXISTS `rms_setting` (
+   `setting_id` INT NOT NULL AUTO_INCREMENT,
+   `code`       VARCHAR(64)  NOT NULL,
+@@ -910,7 +921,7 @@ CREATE TEMPORARY TABLE `tmp_f10_catalog_page` (
+   `title_pt` VARCHAR(255) NOT NULL,
+   `title_es` VARCHAR(255) NOT NULL,
+   `sort_order` INT NOT NULL
+-) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4;
++) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+ INSERT INTO `tmp_f10_catalog_page` VALUES
+ ('home','Home','Início','Inicio',10),
+ ('portfolio','Portfolio','Portfólio','Portafolio',20),
+diff --git a/dev/install/sql/schema.sql b/dev/install/sql/schema.sql
+index bcd0a351..04606abe 100644
+--- a/dev/install/sql/schema.sql
++++ b/dev/install/sql/schema.sql
+@@ -387,7 +387,7 @@ CREATE TEMPORARY TABLE `tmp_f10_catalog_page` (
+   `title_pt` VARCHAR(255) NOT NULL,
+   `title_es` VARCHAR(255) NOT NULL,
+   `sort_order` INT NOT NULL
+-) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4;
++) ENGINE=MEMORY DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+ INSERT INTO `tmp_f10_catalog_page` VALUES
+ ('home','Home','Início','Inicio',10),
+ ('portfolio','Portfolio','Portfólio','Portafolio',20),
+diff --git a/dev/system/library/migration.php b/dev/system/library/migration.php
+new file mode 100644
+index 00000000..58c75427
+--- /dev/null
++++ b/dev/system/library/migration.php
+@@ -0,0 +1,242 @@
++<?php declare(strict_types=1);
++/**
++ * @package   ReamurCMS
++ * @author    David L. Almeida
++ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
++ * @license   https://opensource.org/licenses/GPL-3.0
++ * @link      https://reamurcms.com
++ *
++ * Runner de migrações (F11-18 / ADR 0085).
++ *
++ * Por que existe: `schema.sql`, `schema-complete.sql` e os 29 `upgrade_*.sql`
++ * divergiram porque NADA registrava em que estado um banco estava. Este runner
++ * cria a tabela `{prefix}schema_migration` e passa a ser a única fonte de
++ * verdade sobre o que já foi aplicado.
++ *
++ * Contrato:
++ *  · o manifesto `install/sql/migrations.json` lista as migrações NA ORDEM;
++ *  · `in_schema_complete: true` significa "este SQL já está dentro do
++ *    schema-complete.sql" — em uma instalação feita pelo wizard (que tem
++ *    baseline registrado) ela é apenas MARCADA como aplicada, sem execução;
++ *  · `false` = migração nova, pendente em qualquer instalação;
++ *  · checksum SHA-256 por arquivo: se o arquivo mudar depois de aplicado,
++ *    `status()` acusa divergência (não reaplica sozinho).
++ */
++namespace Reamur\System\Library;
++
++use Reamur\System\Library\Sql\Splitter;
++
++final class Migration {
++    public const TABLE = 'schema_migration';
++    /** Versão reservada do registro de baseline do schema-complete.sql */
++    public const BASELINE = 'baseline';
++
++    public function __construct(
++        private Db $db,
++        private string $sqlDir,
++        private string $prefix = 'rms_'
++    ) {}
++
++    private function table(): string {
++        return '`' . $this->prefix . self::TABLE . '`';
++    }
++
++    public function ensureTable(): void {
++        $this->db->query(
++            'CREATE TABLE IF NOT EXISTS ' . $this->table() . ' (
++                `version`    VARCHAR(64)  NOT NULL,
++                `checksum`   CHAR(64)     NOT NULL,
++                `source`     VARCHAR(16)  NOT NULL DEFAULT \'upgrade\',
++                `applied_at` DATETIME     NOT NULL,
++                PRIMARY KEY (`version`)
++            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
++        );
++    }
++
++    /**
++     * Manifesto ordenado. Cada item: version, file, in_schema_complete.
++     *
++     * @return array<int, array{version: string, file: string, in_schema_complete: bool}>
++     */
++    public function manifest(): array {
++        $path = rtrim($this->sqlDir, '/') . '/migrations.json';
++
++        if (!is_file($path)) {
++            return [];
++        }
++
++        $data = json_decode((string)file_get_contents($path), true);
++
++        if (!is_array($data) || !isset($data['migrations']) || !is_array($data['migrations'])) {
++            return [];
++        }
++
++        $migrations = [];
++
++        foreach ($data['migrations'] as $item) {
++            if (!is_array($item) || empty($item['version']) || empty($item['file'])) {
++                continue;
++            }
++
++            $migrations[] = [
++                'version'           => (string)$item['version'],
++                'file'              => (string)$item['file'],
++                'in_schema_complete' => (bool)($item['in_schema_complete'] ?? false),
++            ];
++        }
++
++        return $migrations;
++    }
++
++    /** @return array<string, array{checksum: string, source: string, applied_at: string}> */
++    public function applied(): array {
++        $this->ensureTable();
++
++        $result = $this->db->query('SELECT `version`, `checksum`, `source`, `applied_at` FROM ' . $this->table());
++        $rows   = is_object($result) ? (array)($result->rows ?? []) : [];
++        $map    = [];
++
++        foreach ($rows as $row) {
++            $map[(string)$row['version']] = [
++                'checksum'   => (string)$row['checksum'],
++                'source'     => (string)$row['source'],
++                'applied_at' => (string)$row['applied_at'],
++            ];
++        }
++
++        return $map;
++    }
++
++    /**
++     * Situação de cada migração, na ordem do manifesto.
++     *
++     * @return array<int, array{version: string, file: string, state: string, detail: string}>
++     */
++    public function status(): array {
++        $applied  = $this->applied();
++        $baseline = isset($applied[self::BASELINE]);
++        $report   = [];
++
++        foreach ($this->manifest() as $migration) {
++            $file       = rtrim($this->sqlDir, '/') . '/' . $migration['file'];
++            $exists     = is_file($file);
++            $checksum   = $exists ? (string)hash_file('sha256', $file) : '';
++            $registered = $applied[$migration['version']] ?? null;
++
++            if ($registered !== null) {
++                $state  = 'applied';
++                $detail = $registered['source'] . ' · ' . $registered['applied_at'];
++
++                if ($exists && $registered['checksum'] !== $checksum) {
++                    $state  = 'divergent';
++                    $detail = 'arquivo mudou depois de aplicado';
++                }
++            } elseif (!$exists) {
++                $state  = 'missing';
++                $detail = 'arquivo não encontrado';
++            } elseif ($migration['in_schema_complete'] && $baseline) {
++                $state  = 'contained';
++                $detail = 'já contida no schema-complete (instalação nova)';
++            } else {
++                $state  = 'pending';
++                $detail = 'será aplicada';
++            }
++
++            $report[] = [
++                'version' => $migration['version'],
++                'file'    => $migration['file'],
++                'state'   => $state,
++                'detail'  => $detail,
++            ];
++        }
++
++        return $report;
++    }
++
++    /**
++     * Aplica o que está pendente. Idempotente por versão registrada.
++     *
++     * @return array<int, array{version: string, result: string, detail: string}>
++     */
++    public function run(bool $dryRun = false): array {
++        $this->ensureTable();
++
++        $applied  = $this->applied();
++        $baseline = isset($applied[self::BASELINE]);
++        $results  = [];
++
++        foreach ($this->manifest() as $migration) {
++            $version = $migration['version'];
++            $file    = rtrim($this->sqlDir, '/') . '/' . $migration['file'];
++
++            if (isset($applied[$version])) {
++                $results[] = ['version' => $version, 'result' => 'skipped', 'detail' => 'já aplicada'];
++                continue;
++            }
++
++            if (!is_file($file)) {
++                $results[] = ['version' => $version, 'result' => 'error', 'detail' => 'arquivo ausente'];
++                continue;
++            }
++
++            $checksum = (string)hash_file('sha256', $file);
++
++            // Instalação feita pelo wizard: o schema-complete já traz este SQL.
++            if ($migration['in_schema_complete'] && $baseline) {
++                if (!$dryRun) {
++                    $this->record($version, $checksum, 'contained');
++                }
++
++                $results[] = ['version' => $version, 'result' => 'contained', 'detail' => 'já no schema-complete'];
++                continue;
++            }
++
++            if ($dryRun) {
++                $results[] = ['version' => $version, 'result' => 'would-apply', 'detail' => $migration['file']];
++                continue;
++            }
++
++            try {
++                foreach (Splitter::statements((string)file_get_contents($file)) as $statement) {
++                    $this->db->query($statement);
++                }
++
++                $this->record($version, $checksum, 'upgrade');
++                $results[] = ['version' => $version, 'result' => 'applied', 'detail' => $migration['file']];
++            } catch (\Throwable $exception) {
++                $results[] = [
++                    'version' => $version,
++                    'result'  => 'error',
++                    'detail'  => $exception->getMessage(),
++                ];
++
++                break; // não aplica a próxima em cima de um estado quebrado
++            }
++        }
++
++        return $results;
++    }
++
++    /**
++     * Marca o estado atual do banco como "igual ao schema-complete.sql".
++     * Chamado pelo wizard após importar o schema; e disponível na CLI para
++     * adoção de bancos criados antes do F11-18.
++     */
++    public function markBaseline(): void {
++        $this->ensureTable();
++
++        $schema   = rtrim($this->sqlDir, '/') . '/schema-complete.sql';
++        $checksum = is_file($schema) ? (string)hash_file('sha256', $schema) : str_repeat('0', 64);
++
++        $this->record(self::BASELINE, $checksum, 'schema');
++    }
++
++    private function record(string $version, string $checksum, string $source): void {
++        $this->db->query(
++            'REPLACE INTO ' . $this->table() . " SET `version` = '" . $this->db->escape($version) . "',
++                `checksum` = '" . $this->db->escape($checksum) . "',
++                `source` = '" . $this->db->escape($source) . "',
++                `applied_at` = NOW()"
++        );
++    }
++}
+diff --git a/dev/system/library/sql/splitter.php b/dev/system/library/sql/splitter.php
+new file mode 100644
+index 00000000..8877c7e3
+--- /dev/null
++++ b/dev/system/library/sql/splitter.php
+@@ -0,0 +1,102 @@
++<?php declare(strict_types=1);
++/**
++ * @package   ReamurCMS
++ * @author    David L. Almeida
++ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
++ * @license   https://opensource.org/licenses/GPL-3.0
++ * @link      https://reamurcms.com
++ *
++ * Divisor de arquivos .sql em statements (ADR 0084 §3, F11-18).
++ *
++ * Um `explode(";\n")` não serve: o schema usa três comandos na mesma linha
++ * ("PREPARE …; EXECUTE …; DEALLOCATE …") e tem `;` depois de comentário, além
++ * de `&nbsp;` dentro do HTML do seed. Aqui o `;` só separa quando está FORA
++ * de string e FORA de comentário.
++ *
++ * Compartilhado pelo instalador (install/) e pelo runner de migrações
++ * (system/library/migration.php) para que os dois leiam SQL do mesmo jeito.
++ */
++namespace Reamur\System\Library\Sql;
++
++final class Splitter {
++
++    /** @return array<int, string> */
++    public static function statements(string $sql): array {
++        $statements = [];
++        $buffer     = '';
++        $length     = strlen($sql);
++        $quote      = '';
++
++        for ($i = 0; $i < $length; $i++) {
++            $char = $sql[$i];
++
++            if ($quote !== '') {
++                $buffer .= $char;
++
++                if ($char === '\\' && $i + 1 < $length) {
++                    $buffer .= $sql[++$i];
++                } elseif ($char === $quote) {
++                    if ($i + 1 < $length && $sql[$i + 1] === $quote) {
++                        $buffer .= $sql[++$i]; // aspas escapadas ('' ou "")
++                    } else {
++                        $quote = '';
++                    }
++                }
++
++                continue;
++            }
++
++            // comentário de linha (MySQL exige espaço/tab/quebra depois de --)
++            if ($char === '-' && substr($sql, $i, 2) === '--') {
++                $after = $i + 2 < $length ? $sql[$i + 2] : "\n";
++
++                if ($after === ' ' || $after === "\t" || $after === "\n" || $after === "\r") {
++                    while ($i < $length && $sql[$i] !== "\n") {
++                        $i++;
++                    }
++
++                    $buffer .= "\n";
++
++                    continue;
++                }
++            }
++
++            // comentário de bloco
++            if ($char === '/' && substr($sql, $i, 2) === '/*') {
++                $end = strpos($sql, '*/', $i + 2);
++                $i   = $end === false ? $length : $end + 1;
++
++                continue;
++            }
++
++            if ($char === "'" || $char === '"') {
++                $quote   = $char;
++                $buffer .= $char;
++
++                continue;
++            }
++
++            if ($char === ';') {
++                $statement = trim($buffer);
++
++                if ($statement !== '') {
++                    $statements[] = $statement;
++                }
++
++                $buffer = '';
++
++                continue;
++            }
++
++            $buffer .= $char;
++        }
++
++        $statement = trim($buffer);
++
++        if ($statement !== '') {
++            $statements[] = $statement;
++        }
++
++        return $statements;
++    }
++}
+diff --git a/dev/system/storage/install.lock b/dev/system/storage/install.lock
+deleted file mode 100644
+index 1dd26945..00000000
+--- a/dev/system/storage/install.lock
++++ /dev/null
+@@ -1 +0,0 @@
+-installed 2026-10-19T22:41:06+00:00
+diff --git a/tools/e2e/db-smoke.sh b/tools/e2e/db-smoke.sh
+new file mode 100755
+index 00000000..f879ea9a
+--- /dev/null
++++ b/tools/e2e/db-smoke.sh
+@@ -0,0 +1,250 @@
++#!/usr/bin/env bash
++# =============================================================================
++# db-smoke.sh — instala o ReamurCMS num banco REAL e prova que ele funciona.
++# F11-19 / ADR 0085.
++#
++# Por que existe: lint, PHPStan e guardas de governança não abrem o sistema.
++# Foi assim que um import de schema quebrado (colação), um wizard que importava
++# o schema incompleto e um caminho PDO inoperante atravessaram 11 fases.
++#
++# O que faz:
++#   1. cria o banco SEM declarar colação (usa o padrão do servidor — é assim
++#      que o bug do utf8mb4_uca1400 aparece em MariaDB >= 11.4);
++#   2. roda o wizard de verdade por HTTP (3 passos, POST de instalação);
++#   3. exige o schema completo, o seed e o baseline de migrações;
++#   4. sobe o site e o painel e exige 200 nas rotas críticas, com login real
++#      e o editor de páginas aberto;
++#   5. exige que `tools/migrate.php status` não tenha migração pendente.
++#
++# Uso:
++#   DB_HOST=127.0.0.1 DB_PORT=3306 DB_USER=root DB_PASS= DB_NAME=rms_smoke \
++#     bash tools/e2e/db-smoke.sh
++#
++# Requisitos: php >= 8.1 com mysqli (ou pdo_mysql), cliente mysql/mariadb, curl.
++# =============================================================================
++set -uo pipefail
++
++DB_HOST="${DB_HOST:-127.0.0.1}"
++DB_PORT="${DB_PORT:-3306}"
++DB_USER="${DB_USER:-root}"
++DB_PASS="${DB_PASS:-}"
++DB_NAME="${DB_NAME:-rms_smoke}"
++# Binário do cliente MySQL. No WAMP ele não está no PATH por padrão:
++#   MYSQL_BIN="/c/wamp64/bin/mysql/mysql8.0.32/bin/mysql.exe" bash tools/e2e/db-smoke.sh
++MYSQL_BIN="${MYSQL_BIN:-mysql}"
++PORT="${PORT:-$( (php -r 'echo random_int(8300, 8999);') )}"
++ADMIN_USER="smoke"
++ADMIN_PASS="Smoke!Pass#2026"
++ADMIN_EMAIL="smoke@example.test"
++
++ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
++cd "$ROOT"
++
++PASS=0
++FAIL=0
++ok()   { PASS=$((PASS+1)); printf '  PASS  %s\n' "$1"; }
++bad()  { FAIL=$((FAIL+1)); printf '  FAIL  %s\n' "$1"; }
++note() { printf '  ----  %s\n' "$1"; }
++
++cleanup() {
++  [ -n "${SERVER_PID:-}" ] && kill "$SERVER_PID" 2>/dev/null
++  return 0
++}
++trap cleanup EXIT
++
++sql() { # sql <banco|-> <comando>
++  local db="$1"; shift
++  "$MYSQL_BIN" --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USER" \
++        ${DB_PASS:+--password="$DB_PASS"} --protocol=TCP --silent --skip-column-names \
++        ${db:+-D "$db"} -e "$1" 2>/dev/null
++}
++
++# ── GUARDA DESTRUTIVA ───────────────────────────────────────────────────────
++# Este script APAGA o banco informado. Rodar com DB_NAME apontando para o banco
++# de desenvolvimento (ex.: davidcms) destruiria o conteúdo. Só aceita nomes que
++# declarem ser descartáveis: *_smoke, *_test, *_ci, *_tmp.
++case "$DB_NAME" in
++  *_smoke|*_test|*_ci|*_tmp) : ;;
++  *)
++    if [ "${FORCE_DESTRUCTIVE:-0}" != "1" ]; then
++      cat >&2 <<EOF
++ERRO: recusando rodar com DB_NAME="$DB_NAME".
++
++Este smoke APAGA o banco no início e no fim. Use um banco descartável, por
++exemplo:  DB_NAME=davidcms_smoke
++
++Se você tem certeza de que "$DB_NAME" pode ser apagado, rode com
++FORCE_DESTRUCTIVE=1.
++EOF
++      exit 4
++    fi
++    printf 'AVISO: FORCE_DESTRUCTIVE=1 — o banco "%s" será APAGADO.\n' "$DB_NAME"
++    ;;
++esac
++
++command -v "$MYSQL_BIN" >/dev/null 2>&1 || {
++  cat >&2 <<EOF
++ERRO: cliente MySQL não encontrado ("$MYSQL_BIN").
++
++No WAMP ele fica em algo como:
++  C:/wamp64/bin/mysql/mysql8.0.32/bin/mysql.exe
++
++Aponte explicitamente (Git Bash):
++  MYSQL_BIN="/c/wamp64/bin/mysql/mysql8.0.32/bin/mysql.exe" DB_NAME=davidcms_smoke bash tools/e2e/db-smoke.sh
++EOF
++  exit 5
++}
++
++echo "== 1. Banco de teste ======================================================"
++sql "" "DROP DATABASE IF EXISTS \`$DB_NAME\`" || { echo "sem conexão com o MySQL"; exit 1; }
++# Sem COLLATE explícito DE PROPÓSITO: reproduz o padrão do servidor (regressão de colação).
++sql "" "CREATE DATABASE \`$DB_NAME\` CHARACTER SET utf8mb4" || { echo "não criou o banco"; exit 1; }
++COLL=$(sql "" "SELECT DEFAULT_COLLATION_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='$DB_NAME'")
++note "banco $DB_NAME criado com a colação padrão do servidor: $COLL"
++
++echo
++echo "== 2. Preparo do ambiente ================================================="
++rm -f dev/catalog/config.php dev/admin/config.php dev/system/storage/install.lock
++mkdir -p dev/system/storage/cache dev/system/storage/logs dev/system/storage/session dev/system/storage/temp
++: > dev/system/storage/logs/error.log 2>/dev/null || true
++
++if [ ! -d dev/system/storage/vendor ]; then
++  if command -v composer >/dev/null 2>&1; then
++    note "instalando dependências do Composer…"
++    composer install --working-dir=dev/system/storage --prefer-dist --no-progress --no-interaction >/dev/null 2>&1
++  else
++    echo "ERRO: dev/system/storage/vendor ausente e composer não encontrado"; exit 1
++  fi
++fi
++ok "dependências presentes"
++
++php -S "127.0.0.1:$PORT" -t dev tools/e2e/lib/php-router.php >/tmp/rms-db-smoke-server.log 2>&1 &
++SERVER_PID=$!
++BASE="http://127.0.0.1:$PORT"
++COOKIE="$(mktemp)"
++for _ in $(seq 1 40); do
++  curl -s -o /dev/null --max-time 2 "$BASE/install/" && break
++  sleep 0.25
++done
++ok "servidor de teste no ar em $BASE"
++
++echo
++echo "== 3. Wizard de instalação (HTTP, 3 passos) ==============================="
++code=$(curl -s -o /dev/null -w '%{http_code}' -c "$COOKIE" -b "$COOKIE" "$BASE/install/")
++[ "$code" = "200" ] && ok "passo 1 (licença/idioma): $code" || bad "passo 1 devolveu $code (esperado 200)"
++
++code=$(curl -s -o /dev/null -w '%{http_code}' -c "$COOKIE" -b "$COOKIE" "$BASE/install/index.php?route=install/step_2")
++[ "$code" = "200" ] && ok "passo 2 (requisitos): $code" || bad "passo 2 devolveu $code"
++
++REDIRECT=$(curl -s -o /dev/null -w '%{redirect_url}' -c "$COOKIE" -b "$COOKIE" \
++  -X POST "$BASE/install/index.php?route=install/step_3" \
++  --data-urlencode "db_driver=${DB_DRIVER:-mysqli}" \
++  --data-urlencode "db_hostname=$DB_HOST" --data-urlencode "db_username=$DB_USER" \
++  --data-urlencode "db_password=$DB_PASS" --data-urlencode "db_database=$DB_NAME" \
++  --data-urlencode "db_port=$DB_PORT" --data-urlencode "db_prefix=rms_" \
++  --data-urlencode "http_server=$BASE/catalog/" \
++  --data-urlencode "username=$ADMIN_USER" --data-urlencode "email=$ADMIN_EMAIL" \
++  --data-urlencode "firstname=Smoke" --data-urlencode "lastname=Test" \
++  --data-urlencode "password=$ADMIN_PASS" --data-urlencode "confirm=$ADMIN_PASS")
++
++case "$REDIRECT" in
++  *step_4*) ok "passo 3 (banco + configs + schema + admin): redirecionou para step_4" ;;
++  *)        bad "passo 3 falhou (redirect='$REDIRECT') — ver dev/system/storage/logs/error.log" ;;
++esac
++
++echo
++echo "== 4. Estado do banco ====================================================="
++TABLES=$(sql "$DB_NAME" "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$DB_NAME'")
++[ "${TABLES:-0}" -ge 43 ] && ok "$TABLES tabelas criadas (esperado >= 43)" || bad "só $TABLES tabelas (esperado >= 43)"
++
++for pair in "rms_project:10" "rms_category:3" "rms_testimonial:3" "rms_client_logo:5" "rms_tool:4" "rms_setting:20" "rms_page:10"; do
++  table="${pair%%:*}"; minimum="${pair##*:}"
++  count=$(sql "$DB_NAME" "SELECT COUNT(*) FROM \`$table\`")
++  [ "${count:-0}" -ge "$minimum" ] && ok "seed: $table com $count registro(s)" || bad "seed: $table com ${count:-0} registro(s) (esperado >= $minimum)"
++done
++
++for table in rms_custom_field rms_blog_post rms_seo_url rms_schema_migration; do
++  exists=$(sql "$DB_NAME" "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$DB_NAME' AND table_name='$table'")
++  [ "${exists:-0}" -ge 1 ] && ok "tabela crítica presente: $table" || bad "tabela ausente: $table (schema incompleto)"
++done
++
++BASELINE=$(sql "$DB_NAME" "SELECT COUNT(*) FROM rms_schema_migration WHERE version='baseline'")
++[ "${BASELINE:-0}" -ge 1 ] && ok "baseline de migrações registrado" || bad "baseline de migrações não registrado"
++
++if [ -s dev/system/storage/logs/error.log ]; then
++  bad "error.log não está vazio:"; head -3 dev/system/storage/logs/error.log | sed 's/^/          /'
++else
++  ok "error.log vazio durante a instalação"
++fi
++
++echo
++echo "== 5. Rotas públicas ======================================================"
++for route in "/catalog/" "/catalog/portfolio" "/catalog/blog" "/catalog/contact" "/catalog/tools"; do
++  code=$(curl -s -o /tmp/rms-smoke-body.html -w '%{http_code}' "$BASE$route")
++  [ "$code" = "200" ] && ok "GET $route → $code" || bad "GET $route → $code"
++done
++
++code=$(curl -s -o /tmp/rms-smoke-body.html -w '%{http_code}' "$BASE/catalog/sitemap.xml")
++[ "$code" = "200" ] && ok "GET /catalog/sitemap.xml → $code" || bad "GET /catalog/sitemap.xml → $code"
++
++code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/catalog/index.php?route=common/three.asset&asset=three/main.js")
++[ "$code" = "200" ] && ok "runtime Three.js publicado pela allowlist" || bad "three.asset devolveu $code"
++
++code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/catalog/index.php?route=common/three.asset&asset=../../config.php")
++[ "$code" = "404" ] && ok "path traversal bloqueado no three.asset ($code)" || bad "path traversal devolveu $code"
++
++echo
++echo "== 6. Painel: login real + telas críticas ================================="
++ACOOKIE="$(mktemp)"
++curl -s -o /tmp/rms-login.html -c "$ACOOKIE" -b "$ACOOKIE" "$BASE/admin/index.php?route=common/login"
++TOKEN=$(grep -oE 'name="csrf_token" value="[a-f0-9]+"' /tmp/rms-login.html | head -1 | grep -oE '[a-f0-9]{40,}')
++[ -n "${TOKEN:-}" ] && ok "formulário de login servido com token CSRF" || bad "sem token CSRF na tela de login"
++
++LOGIN_REDIRECT=$(curl -s -o /dev/null -w '%{redirect_url}' -c "$ACOOKIE" -b "$ACOOKIE" \
++  -X POST "$BASE/admin/index.php?route=common/login" \
++  --data-urlencode "csrf_token=${TOKEN:-}" --data-urlencode "username=$ADMIN_USER" \
++  --data-urlencode "password=$ADMIN_PASS")
++case "$LOGIN_REDIRECT" in
++  *dashboard*) ok "login do administrador aceito" ;;
++  *)           bad "login falhou (redirect='$LOGIN_REDIRECT')" ;;
++esac
++
++for route in "common/dashboard" "cms/page" "catalog/project" "setting/setting" "design/theme" "blog/blog" "custom_field/definition" "setting/appearance"; do
++  code=$(curl -s -o /tmp/rms-admin-body.html -w '%{http_code}' -b "$ACOOKIE" "$BASE/admin/index.php?route=$route")
++  [ "$code" = "200" ] && ok "admin $route → $code" || bad "admin $route → $code"
++done
++
++code=$(curl -s -o /tmp/rms-editor.html -w '%{http_code}' -b "$ACOOKIE" "$BASE/admin/index.php?route=cms/page.edit%7C1")
++if [ "$code" = "200" ] && grep -q 'bdre' /tmp/rms-editor.html; then
++  ok "editor de páginas (BDREditor) abre com 200 e o editor no DOM"
++else
++  bad "editor de páginas devolveu $code (esperado 200 com 'bdre' no HTML)"
++fi
++
++echo
++echo "== 7. Migrações ==========================================================="
++MIGRATE_OUT=$(php tools/migrate.php status 2>&1)
++if echo "$MIGRATE_OUT" | grep -q '\[PEND\]'; then
++  bad "existem migrações pendentes:"; echo "$MIGRATE_OUT" | grep '\[PEND\]' | sed 's/^/          /'
++else
++  ok "nenhuma migração pendente"
++fi
++if echo "$MIGRATE_OUT" | grep -q 'sem registro de baseline'; then
++  bad "banco instalado pelo wizard sem baseline"
++else
++  ok "estado do schema registrado (adr 0085)"
++fi
++
++echo
++echo "== 8. Encerramento ========================================================"
++if [ -s dev/system/storage/logs/error.log ]; then
++  bad "error.log recebeu linhas durante o smoke:"; tail -5 dev/system/storage/logs/error.log | sed 's/^/          /'
++else
++  ok "error.log permaneceu vazio do início ao fim"
++fi
++
++printf '\n== RESUMO: %d PASS / %d FAIL ==\n' "$PASS" "$FAIL"
++sql "" "DROP DATABASE IF EXISTS \`$DB_NAME\`" >/dev/null 2>&1
++rm -f "$COOKIE" "$ACOOKIE"
++[ "$FAIL" -eq 0 ] || exit 1
++exit 0
+diff --git a/tools/e2e/lib/php-router.php b/tools/e2e/lib/php-router.php
+new file mode 100644
+index 00000000..c8b3457f
+--- /dev/null
++++ b/tools/e2e/lib/php-router.php
+@@ -0,0 +1,56 @@
++<?php declare(strict_types=1);
++/**
++ * Roteador do servidor embutido do PHP para desenvolvimento e smoke tests
++ * (F11-19). Espelha o dev/catalog/.htaccess sem exigir Apache:
++ *
++ *   · arquivo existente → servido direto (css, js, imagens);
++ *   · /three-runtime/<asset>.<js|glb> → route=common/three.asset (allowlist do manifesto);
++ *   · extensão de asset inexistente → 404 binário (não chega ao PHP);
++ *   · qualquer outra rota → index.php da aplicação correspondente
++ *     (/admin/... → admin, /install/... → install, resto → catalog).
++ *
++ * Uso: php -S 127.0.0.1:8080 -t dev tools/e2e/lib/php-router.php
++ */
++$uri  = (string)(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/');
++$root = rtrim($_SERVER['DOCUMENT_ROOT'] ?? getcwd(), '/');
++$file = $root . $uri;
++
++if ($uri !== '/' && is_file($file)) {
++    return false; // deixa o servidor embutido entregar o estático
++}
++
++if (preg_match('~^/(?:catalog/)?three-runtime/([A-Za-z0-9_/.\-]+\.(?:js|glb))$~', $uri, $match)) {
++    $_GET['route'] = 'common/three.asset';
++    $_GET['asset'] = $match[1];
++    require $root . '/catalog/index.php';
++
++    return true;
++}
++
++if (preg_match('~\.(?:js|css|map|png|jpe?g|gif|webp|avif|svg|ico|woff2?|glb|mp4)$~', $uri)) {
++    http_response_code(404);
++
++    return true;
++}
++
++if (str_starts_with($uri, '/admin/')) {
++    require $root . '/admin/index.php';
++
++    return true;
++}
++
++if (str_starts_with($uri, '/install/')) {
++    require $root . '/install/index.php';
++
++    return true;
++}
++
++// rotas limpas do catálogo: /, /portfolio, /blog, /contato… → front controller
++$path = trim($uri, '/');
++
++if ($path !== '' && !str_contains($path, '.')) {
++    $_GET['route'] = '';
++}
++require $root . '/catalog/index.php';
++
++return true;
+diff --git a/tools/migrate.php b/tools/migrate.php
+new file mode 100755
+index 00000000..e8c0a55e
+--- /dev/null
++++ b/tools/migrate.php
+@@ -0,0 +1,111 @@
++<?php declare(strict_types=1);
++/**
++ * Runner de migrações do ReamurCMS (F11-18 / ADR 0085).
++ *
++ *   php tools/migrate.php status            # situação de cada migração
++ *   php tools/migrate.php run               # aplica o que estiver pendente
++ *   php tools/migrate.php run --dry-run     # mostra o que faria, sem escrever
++ *   php tools/migrate.php baseline          # adota o banco atual como baseline
++ *   php tools/migrate.php status --config=/caminho/catalog/config.php
++ *
++ * Não usa o framework: carrega só as classes necessárias (Db, Migration,
++ * Splitter), então roda em qualquer PHP 8 com as credenciais do config.php.
++ */
++if (PHP_SAPI !== 'cli') {
++    http_response_code(404);
++    exit(1);
++}
++
++$root   = dirname(__DIR__);
++$config = $root . '/dev/catalog/config.php';
++$args   = array_slice($argv, 1);
++$command = 'status';
++
++foreach ($args as $arg) {
++    if (str_starts_with($arg, '--config=')) {
++        $config = substr($arg, strlen('--config='));
++    } elseif (!str_starts_with($arg, '--')) {
++        $command = $arg;
++    }
++}
++
++$dryRun = in_array('--dry-run', $args, true);
++
++if (!is_file($config)) {
++    fwrite(STDERR, "config.php não encontrado: {$config}\n");
++    fwrite(STDERR, "Instale o ReamurCMS antes (wizard em install/) ou use --config=...\n");
++    exit(2);
++}
++
++require_once $config;
++require_once $root . '/dev/system/library/db.php';
++require_once $root . '/dev/system/library/db/mysqli.php';
++require_once $root . '/dev/system/library/db/pdo.php';
++require_once $root . '/dev/system/library/db/mariadb.php';
++require_once $root . '/dev/system/library/sql/splitter.php';
++require_once $root . '/dev/system/library/migration.php';
++
++try {
++    $db = new \Reamur\System\Library\Db(
++        defined('DB_DRIVER') ? (string)DB_DRIVER : 'mysqli',
++        (string)DB_HOSTNAME,
++        (string)DB_USERNAME,
++        (string)DB_PASSWORD,
++        (string)DB_DATABASE,
++        (string)DB_PORT
++    );
++} catch (\Throwable $exception) {
++    fwrite(STDERR, 'Falha ao conectar: ' . $exception->getMessage() . "\n");
++    exit(3);
++}
++
++$migration = new \Reamur\System\Library\Migration(
++    $db,
++    $root . '/dev/install/sql',
++    defined('DB_PREFIX') ? (string)DB_PREFIX : 'rms_'
++);
++
++$symbols = ['applied' => 'OK  ', 'contained' => 'BASE', 'pending' => 'PEND', 'divergent' => 'DIV ', 'missing' => 'MISS'];
++
++if ($command === 'status') {
++    printf("Banco: %s | prefixo: %s | %d migração(ões) no manifesto\n\n", DB_DATABASE, DB_PREFIX, count($migration->manifest()));
++
++    foreach ($migration->status() as $row) {
++        printf("  [%s] %-34s %s\n", $symbols[$row['state']] ?? '?   ', $row['version'], $row['detail']);
++    }
++
++    $applied = $migration->applied();
++
++    if (!isset($applied[\Reamur\System\Library\Migration::BASELINE])) {
++        echo "\nAVISO: sem registro de baseline — banco criado antes do F11-18.\n";
++        echo "       Rode `php tools/migrate.php baseline` para adotar o estado atual.\n";
++    }
++
++    exit(0);
++}
++
++if ($command === 'baseline') {
++    $migration->markBaseline();
++    echo "Baseline registrado para o banco " . DB_DATABASE . ".\n";
++    exit(0);
++}
++
++if ($command === 'run') {
++    $results = $migration->run($dryRun);
++    $counts  = [];
++
++    foreach ($results as $result) {
++        $counts[$result['result']] = ($counts[$result['result']] ?? 0) + 1;
++        printf("  %-12s %-34s %s\n", strtoupper($result['result']), $result['version'], $result['detail']);
++    }
++
++    echo "\n";
++    foreach ($counts as $result => $count) {
++        printf("%s: %d\n", $result, $count);
++    }
++
++    exit(isset($counts['error']) ? 1 : 0);
++}
++
++fwrite(STDERR, "Comando desconhecido: {$command}\nUse: status | run [--dry-run] | baseline\n");
++exit(2);
+diff --git a/tools/verify-ci-workflow.sh b/tools/verify-ci-workflow.sh
+index 427aece0..f1135a95 100644
+--- a/tools/verify-ci-workflow.sh
++++ b/tools/verify-ci-workflow.sh
+@@ -90,6 +90,14 @@ grep -qE '^[[:space:]]+--offline' "$WF"; ck $? "--offline (somente links interno
+ [ -f docs/README.md ]; ck $? "docs/README.md existe no disco (resolve 2 links relativos)"
+ 
+ echo
++echo "-- 6. Smoke com banco real (F11-19) --"
++grep -qF 'tools/e2e/db-smoke.sh' "$WF"; ck $? "workflow executa tools/e2e/db-smoke.sh"
++[ -f tools/e2e/db-smoke.sh ]; ck $? "tools/e2e/db-smoke.sh existe no disco"
++[ -f tools/e2e/lib/php-router.php ]; ck $? "roteador de teste tools/e2e/lib/php-router.php existe"
++[ -f tools/migrate.php ]; ck $? "runner de migracoes tools/migrate.php existe"
++[ -f dev/install/sql/migrations.json ]; ck $? "manifesto dev/install/sql/migrations.json existe"
++grep -q 'mariadb:11.8' "$WF"; ck $? "job db-smoke usa MariaDB 11.8 (regressao de colacao)"
++
+ echo "== resumo: $PASS PASS / $FAIL FAIL =="
+ echo "   Este script NAO executa PHP, Composer, PHPStan, npm, browser ou deploy."
+ [ "$FAIL" -eq 0 ]
