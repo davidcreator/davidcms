@@ -24,7 +24,6 @@
 - [F11-09 — Triagem dos marcadores](F11-09-Triagem-Marcadores.md)
 - [F11-10 — Links quebrados no `docs-links`](F11-10-Links-Quebrados.md)
 
-Índices de entrega na raiz: [`F11-01-INDICE.md`](../F11-01-INDICE.md) · [`F11-02-INDICE.md`](../F11-02-INDICE.md) · [`F11-05-INDICE.md`](../F11-05-INDICE.md) · [`F11-07-INDICE.md`](../F11-07-INDICE.md) · [`F11-08-INDICE.md`](../F11-08-INDICE.md) · [`F11-09-INDICE.md`](../F11-09-INDICE.md) · [`F11-10-INDICE.md`](../F11-10-INDICE.md).
 
 ## Fase 9, BDREditor e release
 
