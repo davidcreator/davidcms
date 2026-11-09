@@ -1,3 +1,0 @@
-id	arquivo	sha256_esperado	acao_proposta	condicao
-f9-02-duplicado	docs/F9-02-Contrato-Campos-Personalizados.json	c042ec00f5b179aff66fd794495b5b8b9c803067dba84c7eb9107d39bc6cac04	git-rm reversível	Deve continuar idêntico a docs/F9-01-Contrato-Campos-Personalizados.json; fora de CHECKSUMS; sem referências de código/teste/documentação
-frentes-integral	docs/FRENTES-INTEGRAL.md	8f564851da5490546c2924f4ed090ee7a3fabe509eadb4f88247e8656e957e20	git-rm reversível	64 fontes comprovadas recuperáveis no commit 0ae835b5^; retirar/revisar referências em docs e listas antes
