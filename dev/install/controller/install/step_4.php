@@ -65,7 +65,7 @@ class Step_4 extends \Reamur\System\Engine\Controller {
         // Sessão efêmera do wizard: encerra antes da despedida (links já montados)
         unset($this->session->data['install_db'], $this->session->data['install_site'], $this->session->data['install_admin'], $this->session->data['install_done']);
 
-        $this->chrome($data);
+        $this->installChrome($data);
 
         $this->response->setOutput($this->load->view('install/step_4', $data));
     }
@@ -80,13 +80,5 @@ class Step_4 extends \Reamur\System\Engine\Controller {
         }
 
         return '';
-    }
-
-    /** Chrome compartilhado do wizard (header + seletor de idiomas + footer) */
-    private function chrome(array &$data): void {
-        $data['page_title'] = $this->language->get('heading_title');
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['language']   = $this->load->controller('common/language');
-        $data['footer']     = $this->load->controller('common/footer');
     }
 }

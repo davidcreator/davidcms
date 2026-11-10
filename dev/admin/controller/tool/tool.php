@@ -207,7 +207,7 @@ class Tool extends \Reamur\System\Engine\Controller {
             $image = (string)$tool['image'];
 
             if ($image !== '') {
-                $this->media()->delete($image);
+                $this->catalogMedia()->delete($image);
             }
 
             $this->model_tool_tool->deleteTool($tool_id);
@@ -233,7 +233,7 @@ class Tool extends \Reamur\System\Engine\Controller {
         } elseif (!$this->csrfValid()) {
             $msg = $this->language->get('error_csrf');
         } else {
-            $result = $this->media()->store((array)($this->request->files['file'] ?? []), self::UPLOAD_DIR);
+            $result = $this->catalogMedia()->store((array)($this->request->files['file'] ?? []), self::UPLOAD_DIR);
 
             if ($result['ok']) {
                 $ok   = true;
@@ -314,7 +314,7 @@ class Tool extends \Reamur\System\Engine\Controller {
 
         $data['upload']     = $this->url->link('tool/tool.upload');
         $data['catalog']    = $this->catalogUrl();
-        $relative = $this->media()->guard($data['image'], self::UPLOAD_DIR);
+        $relative = $this->catalogMedia()->guard($data['image'], self::UPLOAD_DIR);
         $data['image_preview'] = $relative !== '' ? $data['catalog'] . $relative : '';
         $data['cancel']     = $this->url->link('tool/tool');
         $data['text_error_upload_js'] = $this->language->get('error_upload');
@@ -342,7 +342,7 @@ class Tool extends \Reamur\System\Engine\Controller {
         }
 
         return [
-            'image'        => $this->media()->guard((string)($post['image'] ?? ''), self::UPLOAD_DIR),
+            'image'        => $this->catalogMedia()->guard((string)($post['image'] ?? ''), self::UPLOAD_DIR),
             'vendor'       => mb_substr(trim((string)($post['vendor'] ?? '')), 0, 64),
             'url'          => mb_substr(trim((string)($post['url'] ?? '')), 0, 255),
             'status'       => isset($post['status']) ? 1 : 0,
@@ -375,17 +375,12 @@ class Tool extends \Reamur\System\Engine\Controller {
         // Imagem: só dentro do diretório do módulo (componente MediaUpload)
         $image = (string)($post['image'] ?? '');
 
-        if ($image !== '' && $this->media()->guard($image, self::UPLOAD_DIR) === '') {
+        if ($image !== '' && $this->catalogMedia()->guard($image, self::UPLOAD_DIR) === '') {
             $errors[] = $this->language->get('error_image_path');
         }
 
         return $errors;
     }
-    /** Componente compartilhado (regra dos três — ADR 0011); root = catalog/ irmão do admin */
-    private function media(): MediaUpload {
-        return new MediaUpload(rtrim((string)dirname(DIR_APPLICATION), '/') . '/catalog/');
-    }
-
     /** Chrome compartilhado + estilo do módulo */
 
     /**

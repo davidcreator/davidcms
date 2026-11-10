@@ -228,7 +228,7 @@ class Client_logo extends \Reamur\System\Engine\Controller {
             $image = (string)$logo['image'];
 
             if ($image !== '') {
-                $this->media()->delete($image);
+                $this->catalogMedia()->delete($image);
             }
 
             $this->model_marketing_client_logo->deleteClientLogo($client_logo_id);
@@ -254,7 +254,7 @@ class Client_logo extends \Reamur\System\Engine\Controller {
         } elseif (!$this->csrfValid()) {
             $msg = $this->language->get('error_csrf');
         } else {
-            $result = $this->media()->store((array)($this->request->files['file'] ?? []), self::UPLOAD_DIR);
+            $result = $this->catalogMedia()->store((array)($this->request->files['file'] ?? []), self::UPLOAD_DIR);
 
             if ($result['ok']) {
                 $ok   = true;
@@ -324,7 +324,7 @@ class Client_logo extends \Reamur\System\Engine\Controller {
 
         return [
             'name'       => mb_substr(trim((string)($post['name'] ?? '')), 0, 128),
-            'image'      => $this->media()->guard((string)($post['image'] ?? ''), self::UPLOAD_DIR),
+            'image'      => $this->catalogMedia()->guard((string)($post['image'] ?? ''), self::UPLOAD_DIR),
             'url'        => mb_substr(trim((string)($post['url'] ?? '')), 0, 255),
             'status'     => isset($post['status']) ? 1 : 0,
             'sort_order' => (int)($post['sort_order'] ?? 0),
@@ -354,14 +354,9 @@ class Client_logo extends \Reamur\System\Engine\Controller {
         // Imagem: só dentro do diretório do módulo (componente MediaUpload)
         $image = (string)($post['image'] ?? '');
 
-        if ($image !== '' && $this->media()->guard($image, self::UPLOAD_DIR) === '') {
+        if ($image !== '' && $this->catalogMedia()->guard($image, self::UPLOAD_DIR) === '') {
             $errors[] = $this->language->get('error_image_path');
         }
 
         return $errors;
-    }
-    /** Componente compartilhado (regra dos três — ADR 0011); root = catalog/ irmão do admin */
-    private function media(): MediaUpload {
-        return new MediaUpload(rtrim((string)dirname(DIR_APPLICATION), '/') . '/catalog/');
-    }
-}
+    }}

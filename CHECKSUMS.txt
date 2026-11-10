@@ -2,7 +2,7 @@
 # Formato: CRC32  SHA256  tamanho(bytes)  caminho
 
 1bb3b164  8d0c5534adfc5442f08083fa72ca1cbaf37a69fa533ec49f8f6196cc2850879e  2080  .github/pull_request_template.md
-ca77bb4b  53499f25a069a2e599226c96b42b6def8371e78c6f29fa406ba06ec4e3c78999  8184  .github/workflows/php.yml
+cfda3b8a  a80e2939a6287bdc8ef123d0638adb7107a725315c33d367ad97befef97d7fe2  8247  .github/workflows/php.yml
 514b332c  9168d1255e3ca73c24408ad7fb81b48d58f3182904f057daaf89bd8a6486820e  2073  .gitignore
 1610b8dd  9f5678325665b8751e3bfafc64be3cba7ccf5686bb25cd302ad3c275c443811c  2121  CONTRIBUTING.md
 956a0f9c  77f0fd12e9f39ced35111bcf16802a5a5c2f08722fdb30b38c401898cfa55aba  14181  README.md

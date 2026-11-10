@@ -53,7 +53,13 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'blog');
         $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'blog');
 
-        $this->chrome($data, 'rms-blog');
+        $extraStyles = ['view/css/blog-blocks.css'];
+        $extraScripts = [];
+        if (!empty($data['requires_threejs'])) {
+            $extraStyles[] = 'view/css/threejs-thumb.css?v=20261026c';
+            $extraScripts[] = $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=20261026c';
+        }
+        $this->catalogChrome($data, 'rms-blog', $extraStyles, $extraScripts);
 
         $this->response->setOutput($this->load->view('blog/blog_list', $data));
     }
@@ -135,7 +141,13 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'blog_post', 0);
         $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'blog_post');
 
-        $this->chrome($data, 'rms-blog-post');
+        $extraStyles = ['view/css/blog-blocks.css'];
+        $extraScripts = [];
+        if (!empty($data['requires_threejs'])) {
+            $extraStyles[] = 'view/css/threejs-thumb.css?v=20261026c';
+            $extraScripts[] = $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=20261026c';
+        }
+        $this->catalogChrome($data, 'rms-blog-post', $extraStyles, $extraScripts);
 
         $this->response->setOutput($this->load->view('blog/blog_info', $data));
     }
@@ -165,19 +177,5 @@ class Blog extends \Reamur\System\Engine\Controller {
         $plain = trim(preg_replace('/\s+/', ' ', strip_tags(html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8'))) ?? '');
 
         return mb_strlen($plain) > 160 ? mb_strimwidth($plain, 0, 160, '…', 'UTF-8') : $plain;
-    }
-
-    /** Chrome compartilhado (mesmo padrão F2-4/F3-01) */
-    private function chrome(array &$data, string $body_class): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/common.css');
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/blog-blocks.css');
-        if (!empty($data['requires_threejs'])) {
-            $this->document->addStyle($this->config->get('site_url') . 'view/css/threejs-thumb.css?v=20261026c');
-            $this->document->addScript($this->config->get('site_url') . $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=20261026c');
-        }
-
-        $data['body_class'] = $body_class;
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
     }
 }

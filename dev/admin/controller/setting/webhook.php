@@ -471,7 +471,7 @@ class Webhook extends \Reamur\System\Engine\Controller {
             $errors[] = $this->language->get('error_trigger');
         }
 
-        if ($url === '' || mb_strlen($url) > 255 || !str_starts_with($url, 'https://')) {
+        if ($url === '' || mb_strlen($url) > 255 || !\Reamur\System\Library\Security\UrlGuard::isSafeExternalUrl($url, true, false)) {
             $errors[] = $this->language->get('error_url_https');
         }
 

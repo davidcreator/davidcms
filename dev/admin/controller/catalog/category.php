@@ -211,7 +211,7 @@ class Category extends \Reamur\System\Engine\Controller {
             $image = (string)$category['image'];
 
             if ($image !== '') {
-                $this->media()->delete($image);
+                $this->catalogMedia()->delete($image);
             }
 
             $this->model_catalog_category->deleteCategory($category_id);
@@ -237,7 +237,7 @@ class Category extends \Reamur\System\Engine\Controller {
         } elseif (!$this->csrfValid()) {
             $msg = $this->language->get('error_csrf');
         } else {
-            $result = $this->media()->store((array)($this->request->files['file'] ?? []), self::UPLOAD_DIR);
+            $result = $this->catalogMedia()->store((array)($this->request->files['file'] ?? []), self::UPLOAD_DIR);
 
             if ($result['ok']) {
                 $ok   = true;
@@ -413,18 +413,13 @@ class Category extends \Reamur\System\Engine\Controller {
 
         return $errors;
     }
-
-    /** Componente compartilhado de upload (regra dos três — ADR 0011); root = catalog/ irmão do admin */
-    private function media(): MediaUpload {
-        return new MediaUpload(rtrim((string)dirname(DIR_APPLICATION), '/') . '/catalog/');
-    }
     /** Só vale path relativo dentro do diretório de uploads do módulo e arquivo existente (delega ao MediaUpload) */
     private function imageGuard(string $path): string {
-        return $this->media()->guard($path, self::UPLOAD_DIR);
+        return $this->catalogMedia()->guard($path, self::UPLOAD_DIR);
     }
 
     /** Resolve o path físico no catalog (irmão do admin); '' se não existir (delega ao MediaUpload) */
     private function imagePath(string $relative): string {
-        return $this->media()->absolute($relative);
+        return $this->catalogMedia()->absolute($relative);
     }
 }

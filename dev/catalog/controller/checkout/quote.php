@@ -73,7 +73,10 @@ class Quote extends \Reamur\System\Engine\Controller {
                 );
 
                 if ($order_id) {
-                    $this->dispatchOrderWebhook('order_add', (int)$order_id);
+                    $this->dispatchWebhookEvent('order_add', function () use ($order_id): array {
+                        $this->load->model('checkout/quote');
+                        return $this->webhookOrderPayload((int)$order_id);
+                    }, 'pedido #' . (int)$order_id);
 
                     $this->setFlash(sprintf($this->language->get('text_success'), $order_id));
 
@@ -88,7 +91,7 @@ class Quote extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('checkout/quote');
 
-        $this->chrome($data);
+        $this->catalogChrome($data, 'rms-quote');
 
         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'quote');
         $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'quote');
@@ -98,44 +101,6 @@ class Quote extends \Reamur\System\Engine\Controller {
     private function isBot(): bool {
         return trim((string)($this->request->post['company'] ?? '')) !== '';
     }
-
-    /**
-     * F5-01 (ADR 0033): despacha o evento de pedido aos webhooks ativos.
-     * GUARDA-CHUVA — qualquer falha (endpoint fora, tabela ausente,
-     * erro de rede) é registrada em log e NUNCA afeta a resposta do
-     * orçamento: a operação de negócio tem prioridade sobre a notificação.
-     */
-    private function dispatchOrderWebhook(string $event, int $order_id): void {
-        try {
-            $this->load->model('setting/webhook');
-
-            $hooks = $this->model_setting_webhook->getHooksForEvent($event);
-
-            if (!$hooks) {
-                return;
-            }
-
-            $this->load->model('checkout/quote');
-
-            $dispatcher = new \Reamur\System\Library\Webhook\Dispatcher($this->log);
-
-            $results = $dispatcher->dispatch($event, $this->webhookOrderPayload($order_id), $hooks);
-
-            foreach ($results as $r) {
-                $this->model_setting_webhook->addLog(
-                    (int)$r['webhook_id'],
-                    (string)$r['delivery'],
-                    (string)$r['payload'],
-                    (int)$r['http_code'],
-                    (float)$r['duration'],
-                    (int)$r['attempt']
-                );
-            }
-        } catch (\Throwable $e) {
-            $this->log->write("webhook {$event} (pedido #{$order_id}) falhou e foi isolado: " . $e->getMessage());
-        }
-    }
-
     /**
      * Payload de domínio do pedido para o envelope do Dispatcher.
      * Contém PII (nome/email/telefone) — o CRUD de endpoints só aceita
@@ -260,13 +225,5 @@ class Quote extends \Reamur\System\Engine\Controller {
             'home'              => $this->config->get('site_url', ''),
             'error'             => '',
         ];
-    }
-
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/common.css');
-
-        $data['body_class'] = 'rms-quote';
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
     }
 }

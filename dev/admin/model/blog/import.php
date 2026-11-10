@@ -37,11 +37,7 @@ class Import extends \Reamur\System\Engine\Model {
     public function fetchPage(string $base_url, int $page, int $per_page): array {
         $base_url = trim($base_url);
 
-        if (!preg_match('#^https?://#i', $base_url)) {
-            return ['posts' => [], 'error' => 'invalid_base_url'];
-        }
-
-        if (in_array(strtolower($base_url), ['null', 'about:blank'], true)) {
+        if (!\Reamur\System\Library\Security\UrlGuard::isSafeExternalUrl($base_url)) {
             return ['posts' => [], 'error' => 'invalid_base_url'];
         }
 
@@ -307,41 +303,73 @@ class Import extends \Reamur\System\Engine\Model {
         ];
     }
 
-    /** fetch binário/HTML leve (cURL direto — sem wrapper externo no admin) */
+    /** fetch binário/HTML leve com proteção SSRF em cada salto de redirect */
     private function httpGet(string $url, bool $headOnly = false): array {
-        $ch = curl_init($url);
+        $currentUrl = $url;
+        $maxRedirs  = 3;
 
-        if ($ch === false) {
-            return ['body' => '', 'error' => 'curl_init_failed'];
+        for ($hop = 0; $hop <= $maxRedirs; $hop++) {
+            if (!\Reamur\System\Library\Security\UrlGuard::isSafeExternalUrl($currentUrl)) {
+                return ['body' => '', 'error' => 'ssrf_blocked'];
+            }
+
+            $ch = curl_init($currentUrl);
+            if ($ch === false) {
+                return ['body' => '', 'error' => 'curl_init_failed'];
+            }
+
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HEADER         => true,
+                CURLOPT_FOLLOWLOCATION => false,
+                CURLOPT_PROTOCOLS      => \Reamur\System\Library\Security\UrlGuard::allowedCurlProtocols(),
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_SSL_VERIFYHOST => 2,
+                CURLOPT_CONNECTTIMEOUT => self::FETCH_CONNECT,
+                CURLOPT_TIMEOUT        => self::FETCH_TIMEOUT,
+                CURLOPT_USERAGENT      => self::USER_AGENT,
+                CURLOPT_NOBODY         => $headOnly,
+                CURLOPT_HTTPHEADER     => ['Accept: application/json,*/*;q=0.8'],
+            ]);
+
+            $raw        = curl_exec($ch);
+            $code       = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $headerSize = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+            $err        = (string)curl_error($ch);
+
+            curl_close($ch);
+
+            if ($raw === false || $err !== '') {
+                return ['body' => '', 'error' => 'fetch_failed:' . ($err !== '' ? $err : "http $code")];
+            }
+
+            $rawStr     = (string)$raw;
+            $rawHeaders = substr($rawStr, 0, $headerSize);
+            $body       = $headOnly ? '' : substr($rawStr, $headerSize);
+
+            if ($code >= 300 && $code < 400 && $code !== 304) {
+                if ($hop >= $maxRedirs) {
+                    return ['body' => '', 'error' => 'too_many_redirects'];
+                }
+                if (preg_match('/^Location:\s*(.+)$/im', $rawHeaders, $m) !== 1) {
+                    return ['body' => '', 'error' => 'http_' . $code];
+                }
+                $nextUrl = \Reamur\System\Library\Security\UrlGuard::resolveRedirect($currentUrl, trim($m[1]));
+                if ($nextUrl === '') {
+                    return ['body' => '', 'error' => 'ssrf_blocked'];
+                }
+                $currentUrl = $nextUrl;
+                continue;
+            }
+
+            if ($code < 200 || $code >= 300) {
+                return ['body' => '', 'error' => 'http_' . $code];
+            }
+
+            return ['body' => $body, 'error' => ''];
         }
 
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HEADER         => false,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS      => 3,
-            CURLOPT_CONNECTTIMEOUT => self::FETCH_CONNECT,
-            CURLOPT_TIMEOUT        => self::FETCH_TIMEOUT,
-            CURLOPT_USERAGENT      => self::USER_AGENT,
-            CURLOPT_NOBODY         => $headOnly,
-            CURLOPT_HTTPHEADER     => ['Accept: application/json,*/*;q=0.8'],
-        ]);
-
-        $body = curl_exec($ch);
-        $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err  = (string)curl_error($ch);
-
-        curl_close($ch);
-
-        if ($body === false || $err !== '') {
-            return ['body' => '', 'error' => 'fetch_failed:' . ($err !== '' ? $err : "http $code")];
-        }
-
-        if ($code < 200 || $code >= 300) {
-            return ['body' => '', 'error' => 'http_' . $code];
-        }
-
-        return ['body' => (string)$body, 'error' => ''];
+        return ['body' => '', 'error' => 'too_many_redirects'];
     }
 
     /**

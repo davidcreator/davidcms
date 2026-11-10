@@ -130,4 +130,121 @@ class Controller {
             default => $language->get('error_upload'),
         };
     }
+
+    /** Instancia o serviço de upload apontando para o diretório catalog/ irmão. */
+    protected function catalogMedia(): \Reamur\System\Library\MediaUpload {
+        return new \Reamur\System\Library\MediaUpload(
+            rtrim((string)dirname(DIR_APPLICATION), '/\\') . '/catalog/'
+        );
+    }
+
+    /**
+     * Monta CSS base, classe do body e header/footer padrão do catálogo público.
+     *
+     * @param array<string, mixed>  $data
+     * @param array<int, string>    $extraStyles  caminhos relativos a site_url
+     * @param array<int, string>    $extraScripts caminhos relativos a site_url
+     */
+    protected function catalogChrome(
+        array &$data,
+        string $bodyClass = '',
+        array $extraStyles = [],
+        array $extraScripts = []
+    ): void {
+        $config   = $this->registry->get('config');
+        $document = $this->registry->get('document');
+        $load     = $this->registry->get('load');
+
+        $siteUrl = ($config instanceof Config) ? (string)$config->get('site_url', '') : '';
+
+        if ($document instanceof \Reamur\System\Library\Document) {
+            $document->addStyle($siteUrl . 'view/css/common.css');
+            foreach ($extraStyles as $style) {
+                $document->addStyle($siteUrl . $style);
+            }
+            foreach ($extraScripts as $script) {
+                $document->addScript($siteUrl . $script);
+            }
+        }
+
+        if ($bodyClass !== '') {
+            $data['body_class'] = $bodyClass;
+        }
+
+        if ($load instanceof Loader) {
+            $data['header'] = $load->controller('common/header', $data);
+            $data['footer'] = $load->controller('common/footer', $data);
+        }
+    }
+
+    /** Monta chrome padrão do wizard de instalação (header + seletor de idiomas + footer). */
+    protected function installChrome(array &$data): void {
+        $language = $this->registry->get('language');
+        $load     = $this->registry->get('load');
+
+        if ($language instanceof \Reamur\System\Library\Language) {
+            $data['page_title'] = $language->get('heading_title');
+        }
+
+        if ($load instanceof Loader) {
+            $data['header']   = $load->controller('common/header', $data);
+            $data['language'] = $load->controller('common/language');
+            $data['footer']   = $load->controller('common/footer');
+        }
+    }
+
+    /**
+     * Despacha evento de webhook para os endpoints ativos e persiste logs sem
+     * propagar exceções para o fluxo de negócio.
+     *
+     * @param array<string, mixed>|\Closure(): array<string, mixed> $payload
+     */
+    protected function dispatchWebhookEvent(string $event, array|\Closure $payload, string $contextLabel = ''): void {
+        $load = $this->registry->get('load');
+        $log  = $this->registry->get('log');
+
+        if (!$load instanceof Loader || !$log instanceof \Reamur\System\Library\Log) {
+            return;
+        }
+
+        try {
+            $load->model('setting/webhook');
+
+            $webhookModel = $this->registry->get('model_setting_webhook');
+            if (!is_object($webhookModel)) {
+                return;
+            }
+
+            $getHooks = [$webhookModel, 'getHooksForEvent'];
+            $addLog   = [$webhookModel, 'addLog'];
+            if (!is_callable($getHooks) || !is_callable($addLog)) {
+                return;
+            }
+
+            $hooks = $getHooks($event);
+            if (!is_array($hooks) || $hooks === []) {
+                return;
+            }
+
+            $payloadData = $payload instanceof \Closure ? $payload() : $payload;
+            if (!is_array($payloadData)) {
+                return;
+            }
+
+            $dispatcher = new \Reamur\System\Library\Webhook\Dispatcher($log);
+            foreach ($dispatcher->dispatch($event, $payloadData, $hooks) as $r) {
+                $addLog(
+                    (int)$r['webhook_id'],
+                    (string)$r['delivery'],
+                    (string)$r['payload'],
+                    (int)$r['http_code'],
+                    (float)$r['duration'],
+                    (int)$r['attempt']
+                );
+            }
+        } catch (\Throwable $e) {
+            $suffix = $contextLabel !== '' ? " ({$contextLabel})" : '';
+            $log->write("webhook {$event}{$suffix} falhou e foi isolado: " . $e->getMessage());
+        }
+    }
 }

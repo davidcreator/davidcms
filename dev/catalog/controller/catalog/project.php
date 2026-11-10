@@ -75,7 +75,7 @@ class Project extends \Reamur\System\Engine\Controller {
         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'portfolio');
         $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'portfolio');
 
-        $this->chrome($data, 'rms-portfolio');
+        $this->catalogChrome($data, 'rms-portfolio');
 
         $this->response->setOutput($this->load->view('catalog/project_list', $data));
     }
@@ -153,17 +153,8 @@ class Project extends \Reamur\System\Engine\Controller {
         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'portfolio_detail');
         $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'portfolio_detail');
 
-        $this->chrome($data, 'rms-project');
+        $this->catalogChrome($data, 'rms-project');
 
         $this->response->setOutput($this->load->view('catalog/project_info', $data));
-    }
-
-    /** Chrome compartilhado (mesmo padrão da home F2-4) */
-    private function chrome(array &$data, string $body_class): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/common.css');
-
-        $data['body_class'] = $body_class;
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
     }
 }

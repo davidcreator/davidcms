@@ -125,14 +125,23 @@ class Dispatcher {
      * @return array{0:int,1:float} [http_code, duration em segundos]
      */
     private function post(string $url, string $body, string $event, string $deliver, string $signature): array {
+        if (!\Reamur\System\Library\Security\UrlGuard::isSafeExternalUrl($url, true)) {
+            $this->log->write('webhook dispatcher bloqueado (SSRF): ' . $url);
+            return [0, 0.0];
+        }
+
         try {
             $ch = curl_init($url);
+            if ($ch === false) {
+                return [0, 0.0];
+            }
 
             curl_setopt_array($ch, [
                 CURLOPT_POST           => true,
                 CURLOPT_POSTFIELDS     => $body,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_FOLLOWLOCATION => false,      // 3xx não é sucesso nem seguido (SSRF-safety)
+                CURLOPT_PROTOCOLS      => \Reamur\System\Library\Security\UrlGuard::allowedCurlProtocols(),
                 CURLOPT_SSL_VERIFYPEER => true,
                 CURLOPT_SSL_VERIFYHOST => 2,
                 CURLOPT_CONNECTTIMEOUT => self::CONNECT_TIMEOUT,

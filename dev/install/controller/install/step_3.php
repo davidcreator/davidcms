@@ -78,7 +78,7 @@ class Step_3 extends \Reamur\System\Engine\Controller {
             }
         }
 
-        $this->chrome($data);
+        $this->installChrome($data);
 
         $this->response->setOutput($this->load->view('install/step_3', $data));
     }
@@ -366,13 +366,5 @@ class Step_3 extends \Reamur\System\Engine\Controller {
         }
 
         return true;
-    }
-
-    /** Chrome compartilhado do wizard (header + seletor de idiomas + footer) */
-    private function chrome(array &$data): void {
-        $data['page_title'] = $this->language->get('heading_title');
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['language']   = $this->load->controller('common/language');
-        $data['footer']     = $this->load->controller('common/footer');
     }
 }

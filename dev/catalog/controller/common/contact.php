@@ -80,7 +80,7 @@ class Contact extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('common/contact');
 
-        $this->chrome($data);
+        $this->catalogChrome($data, 'rms-contact');
 
         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'contact');
         $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'contact');
@@ -201,13 +201,5 @@ class Contact extends \Reamur\System\Engine\Controller {
             'home'            => $this->config->get('site_url', ''),
             'error'           => '',
         ];
-    }
-
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/common.css');
-
-        $data['body_class'] = 'rms-contact';
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
     }
 }

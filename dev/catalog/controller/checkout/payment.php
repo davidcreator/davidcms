@@ -136,7 +136,21 @@ class Payment extends \Reamur\System\Engine\Controller {
             );
 
             if ($changed && $status === 'approved') {
-                $this->dispatchOrderWebhook('order_history_edit', $order_id);
+                $this->dispatchWebhookEvent('order_history_edit', function () use ($order_id): array {
+                    $this->load->model('checkout/quote');
+                    $order = $this->model_checkout_quote->getQuoteForNotification($order_id);
+                    return [
+                        'order_id'  => $order_id,
+                        'firstname' => (string)($order['firstname'] ?? ''),
+                        'lastname'  => (string)($order['lastname'] ?? ''),
+                        'email'     => (string)($order['email'] ?? ''),
+                        'telephone' => (string)($order['telephone'] ?? ''),
+                        'comment'   => (string)($order['comment'] ?? ''),
+                        'total'     => (float)($order['total'] ?? 0),
+                        'status_id' => (int)($order['order_status_id'] ?? 0),
+                        'items'     => (array)($order['items'] ?? []),
+                    ];
+                }, 'pedido #' . $order_id);
             }
 
             $this->finish($changed ? 'processed' : 'already-processed');
@@ -250,53 +264,6 @@ class Payment extends \Reamur\System\Engine\Controller {
 
         return $map;
     }
-
-    /** Reusa o transporte F5-01: pedido aprovado = order_history_edit nos hooks */
-    private function dispatchOrderWebhook(string $event, int $order_id): void {
-        try {
-            $this->load->model('setting/webhook');
-
-            $hooks = $this->model_setting_webhook->getHooksForEvent($event);
-
-            if (!$hooks) {
-                return;
-            }
-
-            $this->load->model('checkout/quote');
-
-            $order = $this->model_checkout_quote->getQuoteForNotification($order_id);
-
-            $payload_domain = [
-                'order_id'  => $order_id,
-                'firstname' => (string)($order['firstname'] ?? ''),
-                'lastname'  => (string)($order['lastname'] ?? ''),
-                'email'     => (string)($order['email'] ?? ''),
-                'telephone' => (string)($order['telephone'] ?? ''),
-                'comment'   => (string)($order['comment'] ?? ''),
-                'total'     => (float)($order['total'] ?? 0),
-                'status_id' => (int)($order['order_status_id'] ?? 0),
-                'items'     => (array)($order['items'] ?? []),
-            ];
-
-            $dispatcher = new \Reamur\System\Library\Webhook\Dispatcher($this->log);
-
-            $results = $dispatcher->dispatch($event, $payload_domain, $hooks);
-
-            foreach ($results as $r) {
-                $this->model_setting_webhook->addLog(
-                    (int)$r['webhook_id'],
-                    (string)$r['delivery'],
-                    (string)$r['payload'],
-                    (int)$r['http_code'],
-                    (float)$r['duration'],
-                    (int)$r['attempt']
-                );
-            }
-        } catch (\Throwable $e) {
-            $this->log->write("webhook $event (pedido #$order_id) falhou e foi isolado: " . $e->getMessage());
-        }
-    }
-
     /** O MP reenvia a notificação se não receber 2xx: a resposta é SEMPRE 200 */
     private function finish(string $label): void {
         $this->response->setOutput('ok:' . $label);

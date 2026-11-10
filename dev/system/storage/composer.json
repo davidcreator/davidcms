@@ -44,7 +44,7 @@
     },
     "scripts": {
       "analyse": "phpstan analyse --memory-limit=512M",
-      "test": "phpunit --configuration ../../tests/phpunit.xml.dist",
+      "test": "phpunit --configuration ../../../tests/phpunit.xml.dist --do-not-cache-result",
       "docs": "@php phpDocumentor.phar run -d ../engine -d ../library -t ../../../docs/api"
     }
 }

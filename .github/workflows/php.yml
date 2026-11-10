@@ -63,6 +63,9 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress --no-interaction
 
+    - name: Run unit tests (PHPUnit)
+      run: composer test
+
   php-lint:
     runs-on: ubuntu-24.04
     timeout-minutes: 10

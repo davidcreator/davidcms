@@ -768,7 +768,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             return;
         }
 
-        $result = $this->mediaUploader()->store((array)($this->request->files['file'] ?? []), $target);
+        $result = $this->catalogMedia()->store((array)($this->request->files['file'] ?? []), $target);
 
         if (!$result['ok']) {
             $key = match ((string)$result['error']) {
@@ -1494,11 +1494,6 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         return $errors;
     }
-
-    private function mediaUploader(): MediaUpload {
-        return new MediaUpload(rtrim((string)dirname(DIR_APPLICATION), '/\\') . '/catalog/');
-    }
-
     /** @param array<string, mixed> $payload */
     private function mediaJson(array $payload): void {
         $this->response->addHeader('Content-Type: application/json; charset=utf-8');

@@ -48,7 +48,7 @@ class Tool extends \Reamur\System\Engine\Controller {
         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'tools');
         $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'tools');
 
-        $this->chrome($data, 'rms-tools');
+        $this->catalogChrome($data, 'rms-tools');
 
         $this->response->setOutput($this->load->view('tool/tool_list', $data));
     }
@@ -95,7 +95,7 @@ class Tool extends \Reamur\System\Engine\Controller {
         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'tool_detail');
         $data['cms_page_sections'] = (array)$this->load->controller('cms/slot.sections', 'tool_detail');
 
-        $this->chrome($data, 'rms-tool');
+        $this->catalogChrome($data, 'rms-tool');
 
         $this->response->setOutput($this->load->view('tool/tool_info', $data));
     }
@@ -119,14 +119,5 @@ class Tool extends \Reamur\System\Engine\Controller {
             'external'    => ((string)$tool['url'] !== ''),
             'href'        => $this->url->link('tool/tool.info|' . (int)$tool['tool_id']),
         ];
-    }
-
-    /** Chrome compartilhado (mesmo padrão F2-4/F3-01) */
-    private function chrome(array &$data, string $body_class): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/common.css');
-
-        $data['body_class'] = $body_class;
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
     }
 }
