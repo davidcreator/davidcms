@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -59,8 +59,12 @@ class Step_4 extends \Reamur\System\Engine\Controller {
                 : $site . 'admin/';
         }
 
-        $data['catalog'] = $site !== '' ? $site : '#';
-        $data['admin']   = $admin !== '' ? $admin : '#';
+        $isHttp = static fn(string $u): bool => $u !== ''
+            && in_array(strtolower((string)parse_url($u, PHP_URL_SCHEME)), ['http', 'https'], true)
+            && filter_var($u, FILTER_VALIDATE_URL) !== false;
+
+        $data['catalog'] = $isHttp($site) ? $site : '#';
+        $data['admin']   = $isHttp($admin) ? $admin : '#';
 
         // Sessão efêmera do wizard: encerra antes da despedida (links já montados)
         unset($this->session->data['install_db'], $this->session->data['install_site'], $this->session->data['install_admin'], $this->session->data['install_done']);

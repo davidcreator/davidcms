@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -40,9 +40,10 @@ if (!defined('DIR_APPLICATION')) {
 
     // HTTP (§1.1) — URL base da própria aplicação install
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host   = preg_replace('/[^a-zA-Z0-9.:\[\]-]/', '', (string)($_SERVER['HTTP_HOST'] ?? 'localhost')) ?: 'localhost';
     $base   = str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/install/index.php')));
 
-    define('HTTP_SERVER', $scheme . '://' . (string)($_SERVER['HTTP_HOST'] ?? 'localhost') . rtrim($base, '/') . '/');
+    define('HTTP_SERVER', $scheme . '://' . $host . rtrim($base, '/') . '/');
     define('HTTPS_SERVER', HTTP_SERVER);
 }
 

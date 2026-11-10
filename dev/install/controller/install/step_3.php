@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -233,7 +233,13 @@ class Step_3 extends \Reamur\System\Engine\Controller {
 
         $httpServer = rtrim(str_replace('\\', '/', $httpServer), '/'); // sem barra final aqui — writeConfigs recompõe
 
-        if ($httpServer === '' || !filter_var($httpServer, FILTER_VALIDATE_URL)) {
+        $scheme = strtolower((string)parse_url($httpServer, PHP_URL_SCHEME));
+        if (
+            $httpServer === ''
+            || preg_match('/[\x00-\x20\x7f]/', $httpServer) === 1
+            || !in_array($scheme, ['http', 'https'], true)
+            || !filter_var($httpServer, FILTER_VALIDATE_URL)
+        ) {
             $error['http_server'] = $this->language->get('error_http_server');
         } else {
             $this->request->post['http_server'] = $httpServer . '/';
@@ -292,7 +298,7 @@ class Step_3 extends \Reamur\System\Engine\Controller {
             || strtolower((string)($server['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
 
         $scheme = $https ? 'https://' : 'http://';
-        $host   = (string)($server['HTTP_HOST'] ?? 'localhost');
+        $host   = preg_replace('/[^a-zA-Z0-9.:\[\]-]/', '', (string)($server['HTTP_HOST'] ?? 'localhost')) ?: 'localhost';
 
         $script = str_replace('\\', '/', (string)($server['SCRIPT_NAME'] ?? '/index.php'));
         $dir    = rtrim((string)dirname($script), '/');
@@ -325,6 +331,13 @@ class Step_3 extends \Reamur\System\Engine\Controller {
      * Gera dev/catalog/config.php e dev/admin/config.php a partir do template.
      * admin usa HTTP_SERVER = {url}admin/ (S5 do plano — precedente OpenCart).
      */
+    /** Escape a string safely for single-quoted PHP config literals. */
+    public static function escapePhpStringLiteral(string $value): string {
+        $clean = str_replace("\0", '', $value);
+        return str_replace(['\\', "'"], ['\\\\', "\\'"], $clean);
+    }
+
+    /** @param array<string, mixed> $db */
     private function writeConfigs(array $db, string $prefix, string &$error = ''): bool {
         $template = dirname(__DIR__, 2) . '/config.php.tpl'; // dev/install/config.php.tpl
         $dir_dev  = dirname(__DIR__, 3) . '/';               // dev/
@@ -341,17 +354,17 @@ class Step_3 extends \Reamur\System\Engine\Controller {
 
         foreach (['catalog', 'admin'] as $app) {
             $output = strtr($tpl, [
-                '{{HTTP_SERVER}}'  => $app === 'admin' ? $adminUrl : $base,
-                '{{HTTPS_SERVER}}' => $app === 'admin' ? $adminUrl : $base,
-                '{{DIR_REAMUR}}'   => dirname($dir_dev) . '/',
+                '{{HTTP_SERVER}}'  => self::escapePhpStringLiteral($app === 'admin' ? $adminUrl : $base),
+                '{{HTTPS_SERVER}}' => self::escapePhpStringLiteral($app === 'admin' ? $adminUrl : $base),
+                '{{DIR_REAMUR}}'   => self::escapePhpStringLiteral(dirname($dir_dev) . '/'),
                 '{{APP_DIR}}'      => $app,
-                '{{DB_DRIVER}}'    => $db['db_driver'],
-                '{{DB_HOSTNAME}}'  => $db['db_hostname'],
-                '{{DB_USERNAME}}'  => $db['db_username'],
-                '{{DB_PASSWORD}}'  => $db['db_password'],
-                '{{DB_DATABASE}}'  => $db['db_database'],
-                '{{DB_PORT}}'      => (string)$db['db_port'],
-                '{{DB_PREFIX}}'    => $prefix,
+                '{{DB_DRIVER}}'    => self::escapePhpStringLiteral((string)$db['db_driver']),
+                '{{DB_HOSTNAME}}'  => self::escapePhpStringLiteral((string)$db['db_hostname']),
+                '{{DB_USERNAME}}'  => self::escapePhpStringLiteral((string)$db['db_username']),
+                '{{DB_PASSWORD}}'  => self::escapePhpStringLiteral((string)$db['db_password']),
+                '{{DB_DATABASE}}'  => self::escapePhpStringLiteral((string)$db['db_database']),
+                '{{DB_PORT}}'      => self::escapePhpStringLiteral((string)$db['db_port']),
+                '{{DB_PREFIX}}'    => self::escapePhpStringLiteral($prefix),
             ]);
 
             $target = $dir_dev . $app . '/config.php';

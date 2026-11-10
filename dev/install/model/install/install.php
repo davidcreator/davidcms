@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -76,16 +76,32 @@ class Install extends \Reamur\System\Engine\Model {
     /**
      * Verifica se o banco já contém tabelas do prefixo (instalação deve partir de banco vazio).
      */
-    public function hasTables(string $prefix): bool {
-        $like = str_replace(['%', '_'], ['\\%', '\\_'], $prefix) . '%';
+    private function assertValidPrefix(string $prefix): void {
+        if (preg_match('/^[a-z][a-z0-9_]{0,19}$/', $prefix) !== 1) {
+            throw new \InvalidArgumentException('Invalid database table prefix.');
+        }
+    }
 
-        if ($this->handle instanceof \mysqli) {
-            $result = $this->handle->query("SHOW TABLES LIKE '" . $this->handle->real_escape_string($like) . "'");
-
-            return $result && $result->num_rows > 0;
+    private function requireHandle(): \mysqli|\PDO {
+        if (!$this->handle instanceof \mysqli && !$this->handle instanceof \PDO) {
+            throw new \RuntimeException('Database connection is not initialized.');
         }
 
-        $stmt = $this->handle->prepare('SHOW TABLES LIKE ?');
+        return $this->handle;
+    }
+
+    public function hasTables(string $prefix): bool {
+        $this->assertValidPrefix($prefix);
+        $handle = $this->requireHandle();
+        $like = str_replace(['%', '_'], ['\\%', '\\_'], $prefix) . '%';
+
+        if ($handle instanceof \mysqli) {
+            $result = $handle->query("SHOW TABLES LIKE '" . $handle->real_escape_string($like) . "'");
+
+            return $result instanceof \mysqli_result && $result->num_rows > 0;
+        }
+
+        $stmt = $handle->prepare('SHOW TABLES LIKE ?');
         $stmt->execute([$like]);
 
         return (bool)$stmt->fetchColumn();
@@ -97,7 +113,13 @@ class Install extends \Reamur\System\Engine\Model {
      * atinge somente nomes de tabelas — inclusive nos INSERTs de seed.
      */
     public function importSchema(string $prefix): void {
-        $sql = (string)file_get_contents(dirname(__DIR__, 2) . '/sql/schema-complete.sql'); // dev/install/sql/schema-complete.sql
+        $this->assertValidPrefix($prefix);
+        $handle = $this->requireHandle();
+        $schemaPath = dirname(__DIR__, 2) . '/sql/schema-complete.sql';
+        $sql = @file_get_contents($schemaPath); // dev/install/sql/schema-complete.sql
+        if ($sql === false) {
+            throw new \RuntimeException('Installation SQL schema file could not be read.');
+        }
 
         // Linhas de comentário (cabeçalhos de seção do arquivo) saem ANTES do split —
         // um chunk começando com '--' não pode derrubar o CREATE/INSERT que o segue.
@@ -112,9 +134,9 @@ class Install extends \Reamur\System\Engine\Model {
                 continue;
             }
 
-            $this->handle instanceof \mysqli
-                ? $this->handle->query($statement)
-                : $this->handle->exec($statement);
+            $handle instanceof \mysqli
+                ? $handle->query($statement)
+                : $handle->exec($statement);
         }
     }
 
@@ -128,6 +150,8 @@ class Install extends \Reamur\System\Engine\Model {
      * @param array{username: string, firstname: string, lastname: string, email: string, password: string} $data
      */
     public function createAdministrator(array $data, string $prefix): void {
+        $this->assertValidPrefix($prefix);
+        $handle = $this->requireHandle();
         $seedRoutes = [
             'user/user', 'user/user_group', 'catalog/project', 'catalog/category',
             'cms/page', 'cms/block_pattern', 'marketing/testimonial', 'marketing/client_logo',
@@ -140,17 +164,18 @@ class Install extends \Reamur\System\Engine\Model {
         // real_escape_string dobre o '\' produzido pelo json_encode padrão —
         // combinando, os valores ficavam "user\\/user" e nenhum hasPermission
         // batia nas rotas recém-semeadas (302 mudo em cascata no admin).
-        $permission = json_encode(['access' => $seedRoutes, 'modify' => $seedRoutes], JSON_UNESCAPED_SLASHES);
+        $permission = json_encode(['access' => $seedRoutes, 'modify' => $seedRoutes], JSON_UNESCAPED_SLASHES)
+            ?: '{"access":[],"modify":[]}';
 
-        if ($this->handle instanceof \mysqli) {
-            $e = fn(string $v): string => $this->handle->real_escape_string($v);
+        if ($handle instanceof \mysqli) {
+            $e = fn(string $v): string => $handle->real_escape_string($v);
 
-            $this->handle->query("INSERT INTO `" . $e($prefix) . "user_group`
+            $handle->query("INSERT INTO `" . $e($prefix) . "user_group`
                 SET `name` = 'Administrator', `permission` = '" . $e($permission) . "'");
 
-            $group_id = (int)$this->handle->insert_id;
+            $group_id = (int)$handle->insert_id;
 
-            $this->handle->query("INSERT INTO `" . $e($prefix) . "user`
+            $handle->query("INSERT INTO `" . $e($prefix) . "user`
                 SET `user_group_id` = '" . $group_id . "',
                     `username`  = '" . $e($data['username']) . "',
                     `password`  = '" . $e(password_hash($data['password'], PASSWORD_DEFAULT)) . "',
@@ -161,12 +186,12 @@ class Install extends \Reamur\System\Engine\Model {
                     `status`    = '1',
                     `date_added` = NOW()");
         } else {
-            $stmt = $this->handle->prepare("INSERT INTO `" . $prefix . "user_group` SET `name` = 'Administrator', `permission` = ?");
+            $stmt = $handle->prepare("INSERT INTO `" . $prefix . "user_group` SET `name` = 'Administrator', `permission` = ?");
             $stmt->execute([$permission]);
 
-            $group_id = (int)$this->handle->lastInsertId();
+            $group_id = (int)$handle->lastInsertId();
 
-            $stmt = $this->handle->prepare("INSERT INTO `" . $prefix . "user`
+            $stmt = $handle->prepare("INSERT INTO `" . $prefix . "user`
                 SET `user_group_id` = ?, `username` = ?, `password` = ?, `email` = ?,
                     `firstname` = ?, `lastname` = ?, `image` = '', `status` = '1', `date_added` = NOW()");
             $stmt->execute([

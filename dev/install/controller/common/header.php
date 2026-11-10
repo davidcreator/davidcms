@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -27,7 +27,7 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['dir']     = 'ltr';
         $data['title']   = (string)($args['page_title'] ?? $this->language->get('heading_installer'));
         $data['home']    = $this->url->link('install/step_1');
-        $data['version'] = defined('REAMUR_VERSION') ? REAMUR_VERSION : '1.0';
+        $data['version'] = defined('REAMUR_VERSION') ? (string)REAMUR_VERSION : '1.0';
 
         return $this->load->view('common/header', $data);
     }

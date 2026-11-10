@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -29,7 +29,8 @@ class Language extends \Reamur\System\Engine\Controller {
         $data['code']          = $code;
         $data['text_language'] = $this->language->get('text_language');
 
-        $route = (string)($this->request->get['route'] ?? 'install/step_1');
+        $rawRoute = (string)($this->request->get['route'] ?? 'install/step_1');
+        $route = preg_replace('/[^a-zA-Z0-9_\/.-]/', '', $rawRoute) ?: 'install/step_1';
 
         $data['languages'] = [];
 

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -24,7 +24,7 @@ class Language extends \Reamur\System\Engine\Controller {
             ? (string)($session->data['language'] ?? '')
             : '';
 
-        $requested = strtolower(preg_replace(
+        $requested = strtolower((string)preg_replace(
             '/[^a-zA-Z-]/',
             '',
             (string)($this->request->get['language'] ?? '')

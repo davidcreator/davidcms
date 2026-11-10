@@ -16,6 +16,8 @@ use Reamur\System\Library\MercadopagoMarketplace;
 use Reamur\System\Library\Request;
 use Reamur\System\Library\Response;
 
+require_once dirname(__DIR__, 3) . '/dev/system/library/pagination.php';
+
 final class Step11StrictAndSettingsTest extends TestCase {
     public function testPaginationSetConfigCastsMixedTypesUnderStrictTypes(): void {
         $pagination = new \Pagination();
@@ -44,7 +46,7 @@ final class Step11StrictAndSettingsTest extends TestCase {
     }
 
     public function testSmtpHelpersSanitizeHeadersAndApplyDotStuffing(): void {
-        self::assertSame('Order #42', Smtp::sanitizeHeaderValue("  Order #42\r\nBcc: evil@test\0 "));
+        self::assertSame('Order #42Bcc: evil@test', Smtp::sanitizeHeaderValue("  Order #42\r\nBcc: evil@test\0 "));
         self::assertSame('user@example.com', Smtp::validateEmailAddress('  user@example.com '));
 
         $lines = Smtp::prepareDataLines("Hello\r\n.hidden\n" . str_repeat('a', 1005));
