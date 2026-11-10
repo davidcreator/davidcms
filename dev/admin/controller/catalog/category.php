@@ -91,7 +91,7 @@ class Category extends \Reamur\System\Engine\Controller {
             . ($filter_status !== 'all' ? '&filter_status=' . $filter_status : ''));
         // Correção local do escape duplo da library, como no CMS (F8-06).
         $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->response->setOutput($this->load->view('catalog/category_list', $data));
     }
 
@@ -131,7 +131,7 @@ class Category extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('catalog/category.add');
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $this->response->setOutput($this->load->view('catalog/category_form', $data));
     }
@@ -181,7 +181,7 @@ class Category extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('catalog/category.edit|' . $category_id);
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $this->response->setOutput($this->load->view('catalog/category_form', $data));
     }
@@ -418,17 +418,6 @@ class Category extends \Reamur\System\Engine\Controller {
     private function media(): MediaUpload {
         return new MediaUpload(rtrim((string)dirname(DIR_APPLICATION), '/') . '/catalog/');
     }
-
-    /** Código simbólico do MediaUpload → mensagem do módulo (idioma vigente) */
-    private function uploadErrorMessage(string $code): string {
-        return match ($code) {
-            'size'  => sprintf($this->language->get('error_upload_size'), '2 MB'),
-            'type'  => $this->language->get('error_upload_type'),
-            'move'  => $this->language->get('error_upload_move'),
-            default => $this->language->get('error_upload'),
-        };
-    }
-
     /** Só vale path relativo dentro do diretório de uploads do módulo e arquivo existente (delega ao MediaUpload) */
     private function imageGuard(string $path): string {
         return $this->media()->guard($path, self::UPLOAD_DIR);
@@ -437,13 +426,5 @@ class Category extends \Reamur\System\Engine\Controller {
     /** Resolve o path físico no catalog (irmão do admin); '' se não existir (delega ao MediaUpload) */
     private function imagePath(string $relative): string {
         return $this->media()->absolute($relative);
-    }
-
-    /** Chrome compartilhado + estilo do módulo */
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
     }
 }

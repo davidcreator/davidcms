@@ -31,3 +31,4 @@ $_['text_error_summary']  = 'Fix the items marked as missing above and try again
 // Button
 $_['button_back']     = 'Back';
 $_['button_continue'] = 'Continue';
+$_['error_csrf'] = 'Invalid or expired security token. Please reload the page and try again.';

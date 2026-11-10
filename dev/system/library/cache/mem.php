@@ -57,8 +57,7 @@ class Mem {
 
         $this->memcache = new Memcache();
         
-        // Configurar timeout de conexão
-        $this->memcache->setConnectTimeout(self::CONNECTION_TIMEOUT * 1000); // em milissegundos
+        // Timeout de conexão (self::CONNECTION_TIMEOUT) é aplicado diretamente em pconnect()
 
         $this->connect();
     }
@@ -75,7 +74,7 @@ class Mem {
             $attempts++;
             
             try {
-                $this->connected = $this->memcache->pconnect(CACHE_HOSTNAME, CACHE_PORT);
+                $this->connected = (bool)$this->memcache->pconnect(CACHE_HOSTNAME, (int)CACHE_PORT, self::CONNECTION_TIMEOUT);
                 
                 if (!$this->connected) {
                     throw new Exception("Falha na conexão persistente - tentativa {$attempts}");

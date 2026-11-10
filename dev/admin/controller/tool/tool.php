@@ -87,7 +87,7 @@ class Tool extends \Reamur\System\Engine\Controller {
         // Normalização local do escape duplo da library, sem alterar o núcleo.
         $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
         $data['internal_tools'] = $this->internalTools();
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->response->setOutput($this->load->view('tool/tool_list', $data));
     }
 
@@ -127,7 +127,7 @@ class Tool extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('tool/tool.add');
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $this->response->setOutput($this->load->view('tool/tool_form', $data));
     }
@@ -177,7 +177,7 @@ class Tool extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('tool/tool.edit|' . $tool_id);
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $this->response->setOutput($this->load->view('tool/tool_form', $data));
     }
@@ -381,17 +381,6 @@ class Tool extends \Reamur\System\Engine\Controller {
 
         return $errors;
     }
-
-    /** Código simbólico do MediaUpload → mensagem do módulo (idioma vigente) */
-    private function uploadErrorMessage(string $code): string {
-        return match ($code) {
-            'size'  => sprintf($this->language->get('error_upload_size'), '2 MB'),
-            'type'  => $this->language->get('error_upload_type'),
-            'move'  => $this->language->get('error_upload_move'),
-            default => $this->language->get('error_upload'),
-        };
-    }
-
     /** Componente compartilhado (regra dos três — ADR 0011); root = catalog/ irmão do admin */
     private function media(): MediaUpload {
         return new MediaUpload(rtrim((string)dirname(DIR_APPLICATION), '/') . '/catalog/');
@@ -474,12 +463,5 @@ class Tool extends \Reamur\System\Engine\Controller {
         }
 
         return $out;
-    }
-
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
     }
 }

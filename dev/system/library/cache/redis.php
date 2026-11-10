@@ -193,7 +193,7 @@ class Redis {
 
         try {
             $result = $this->redis->del($this->config['prefix'] . $key);
-            return $result > 0; // Returns number of keys deleted
+            return is_int($result) && $result > 0; // Returns number of keys deleted
             
         } catch (RedisException $e) {
             error_log(sprintf('Redis DELETE error for key "%s": %s', $key, $e->getMessage()));
@@ -213,7 +213,8 @@ class Redis {
         }
 
         try {
-            return $this->redis->exists($this->config['prefix'] . $key) > 0;
+            $exists = $this->redis->exists($this->config['prefix'] . $key);
+            return is_int($exists) ? $exists > 0 : $exists === true;
         } catch (RedisException $e) {
             error_log(sprintf('Redis EXISTS error for key "%s": %s', $key, $e->getMessage()));
             return false;
@@ -239,7 +240,7 @@ class Redis {
             }
 
             $result = $this->redis->del($keys);
-            return $result > 0;
+            return is_int($result) && $result > 0;
             
         } catch (RedisException $e) {
             error_log(sprintf('Redis FLUSH error: %s', $e->getMessage()));

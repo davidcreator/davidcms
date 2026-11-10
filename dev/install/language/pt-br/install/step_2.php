@@ -30,3 +30,4 @@ $_['text_error_summary']  = 'Corrija os itens marcados como ausentes acima e ten
 // Button
 $_['button_back']     = 'Voltar';
 $_['button_continue'] = 'Continuar';
+$_['error_csrf'] = 'Token de segurança inválido ou expirado. Recarregue a página e tente novamente.';

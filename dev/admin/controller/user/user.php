@@ -96,7 +96,7 @@ class User extends \Reamur\System\Engine\Controller {
         $pagination->text_prev = $this->language->get('text_page_prev');
         $data['pagination'] = $pagination->render();
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
         $this->response->setOutput($this->load->view('user/user_list', $data));
     }
 
@@ -141,7 +141,7 @@ class User extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('user/user.add');
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
         $this->response->setOutput($this->load->view('user/user_form', $data));
     }
@@ -208,7 +208,7 @@ class User extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('user/user.edit|' . $user_id);
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
         $this->response->setOutput($this->load->view('user/user_form', $data));
     }
@@ -364,14 +364,5 @@ class User extends \Reamur\System\Engine\Controller {
         }
 
         return $errors;
-    }
-
-    /** Chrome compartilhado + estilo do módulo */
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-
-        $data['body_class'] = 'rms-dash';
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
     }
 }

@@ -32,6 +32,9 @@ $constants = [
     'DB_DATABASE'     => 'phpstan',
     'DB_PORT'         => '3306',
     'DB_PREFIX'       => 'rms_',
+    'CACHE_HOSTNAME'  => '127.0.0.1',
+    'CACHE_PORT'      => 11211,
+    'CACHE_PREFIX'    => 'rms_',
 ];
 
 foreach ($constants as $name => $value) {

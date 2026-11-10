@@ -187,7 +187,7 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             'sellers'              => $this->model_setting_marketplace->getSellers($sellerFilter),
         ];
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
         $this->response->setOutput($this->load->view('setting/marketplace', $data));
     }
@@ -591,14 +591,5 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             // F5-03 (ADR 0035 §3): base /checkout/preferences + /v1/payments
             'api_url'       => (string)($settings['mp_api_url'] ?? ''),
         ]);
-    }
-
-    /** Chrome compartilhado (mesmo padrão dos demais módulos admin) */
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-
-        $data['body_class'] = 'rms-dash';
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
     }
 }

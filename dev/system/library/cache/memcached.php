@@ -36,7 +36,7 @@ class Memcached {
 		
 		// Check if server is already added to avoid duplicates
 		if (empty($this->memcached->getServerList())) {
-			$this->connected = $this->memcached->addServer(CACHE_HOSTNAME, CACHE_PORT);
+			$this->connected = $this->memcached->addServer(CACHE_HOSTNAME, (int)CACHE_PORT);
 			
 			if (!$this->connected) {
 				throw new \Exception('Failed to connect to Memcached server at ' . CACHE_HOSTNAME . ':' . CACHE_PORT);

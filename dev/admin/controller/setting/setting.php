@@ -126,7 +126,7 @@ class Setting extends \Reamur\System\Engine\Controller {
         $data['test_mail']   = $this->url->link('setting/setting.testMail');
         $data['back']        = $this->url->link('common/dashboard');
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
         $this->response->setOutput($this->load->view('setting/setting', $data));
     }
@@ -347,13 +347,4 @@ class Setting extends \Reamur\System\Engine\Controller {
 
         return $errors;
     }
-
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-
-        $data['body_class'] = 'rms-dash';
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
-    }
-
 }

@@ -69,3 +69,4 @@ $_['error_lastname']    = 'O sobrenome precisa ter entre 1 e 32 caracteres!';
 $_['error_email']       = 'Endereço de e-mail inválido!';
 $_['error_password']    = 'A senha precisa ter pelo menos 8 caracteres!';
 $_['error_confirm']     = 'A confirmação da senha não confere!';
+$_['error_csrf'] = 'Token de segurança inválido ou expirado. Recarregue a página e tente novamente.';

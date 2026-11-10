@@ -20,3 +20,4 @@ $_['button_continue'] = 'Continue';
 
 // Error
 $_['error_license_missing'] = 'License file (LICENSE) not found at the repository root.';
+$_['error_csrf'] = 'Invalid or expired security token. Please reload the page and try again.';

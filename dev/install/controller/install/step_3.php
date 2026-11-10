@@ -28,7 +28,11 @@ class Step_3 extends \Reamur\System\Engine\Controller {
         $data = $this->viewData();
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $data['error'] = $this->validate();
+            if (!$this->csrfValid()) {
+                $data['error']['csrf'] = $this->language->get('error_csrf');
+            } else {
+                $data['error'] = $this->validate();
+            }
 
             if ($data['error'] === []) {
                 $db = $this->dbCredentials();
@@ -84,14 +88,25 @@ class Step_3 extends \Reamur\System\Engine\Controller {
      * não importa nada). Responde JSON {success, error}.
      */
     public function test(): void {
+        $this->load->language('install/step_3');
+        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
+
+        if ($this->request->server['REQUEST_METHOD'] !== 'POST' || !$this->csrfValid()) {
+            http_response_code(403);
+            $this->response->setOutput((string)json_encode([
+                'success' => false,
+                'error'   => $this->language->get('error_csrf'),
+            ]));
+
+            return;
+        }
+
         $this->load->model('install/install');
 
         $db = $this->dbCredentials();
 
         $ok = in_array($db['db_driver'], ['mysqli', 'pdo'], true)
             && $this->model_install_install->connect($db);
-
-        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
 
         $this->response->setOutput((string)json_encode([
             'success' => $ok,
@@ -167,7 +182,8 @@ class Step_3 extends \Reamur\System\Engine\Controller {
 
         $data['text_http_server_hint'] = $this->language->get('text_http_server_hint');
 
-        $data['action']    = $this->url->link('install/step_3');
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['action']     = $this->url->link('install/step_3');
         $data['test_json'] = $this->url->link('install/step_3.test');
         $data['back']      = $this->url->link('install/step_2');
 

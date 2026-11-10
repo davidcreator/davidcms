@@ -105,7 +105,7 @@ class Page extends \Reamur\System\Engine\Controller {
         // Pagination escapa o href duas vezes. Normalização local; não alterar o núcleo.
         $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->response->setOutput($this->load->view('cms/page_list', $data));
     }
 
@@ -159,7 +159,7 @@ class Page extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('cms/page.add', 'create_draft_id=' . $data['page_create_draft_id']);
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $this->response->setOutput($this->load->view('cms/page_create_editor', $data));
     }
@@ -222,7 +222,7 @@ class Page extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('cms/page.edit|' . $page_id);
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $this->response->setOutput($this->load->view('cms/page_form', $data));
     }
@@ -1515,13 +1515,5 @@ class Page extends \Reamur\System\Engine\Controller {
         if (str_ends_with($base, 'admin/')) return substr($base, 0, -strlen('admin/')) . 'catalog/';
         if (str_ends_with($base, 'catalog/')) return $base;
         return rtrim($base, '/') . '/catalog/';
-    }
-
-    /** Chrome compartilhado + estilo do módulo */
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
     }
 }

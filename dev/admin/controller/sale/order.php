@@ -136,7 +136,7 @@ class Order extends \Reamur\System\Engine\Controller {
         $pagination->text_prev = $this->language->get('text_page_prev');
         $data['pagination'] = $pagination->render();
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
         $this->response->setOutput($this->load->view('sale/order_list', $data));
     }
 
@@ -178,7 +178,7 @@ class Order extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('sale/order.add');
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
         $this->response->setOutput($this->load->view('sale/order_form', $data));
     }
@@ -238,7 +238,7 @@ class Order extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('sale/order.edit|' . $order_id);
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
         $this->response->setOutput($this->load->view('sale/order_form', $data));
     }
@@ -451,16 +451,6 @@ class Order extends \Reamur\System\Engine\Controller {
 
         return max(0.0, (float)$raw);
     }
-
-    /** Chrome compartilhado + estilo do módulo */
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-
-        $data['body_class'] = 'rms-dash';
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
-    }
-
     // ── F5-01 (ADR 0033) — notificação de webhooks ────────────────────────
 
     /**

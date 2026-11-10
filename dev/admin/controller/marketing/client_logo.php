@@ -102,7 +102,7 @@ class Client_logo extends \Reamur\System\Engine\Controller {
         $pagination->text_prev = $this->language->get('text_page_prev');
         $data['pagination'] = $pagination->render();
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
         $this->response->setOutput($this->load->view('marketing/client_logo_list', $data));
     }
 
@@ -144,7 +144,7 @@ class Client_logo extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('marketing/client_logo.add');
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
         $this->response->setOutput($this->load->view('marketing/client_logo_form', $data));
     }
@@ -196,7 +196,7 @@ class Client_logo extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('marketing/client_logo.edit|' . $client_logo_id);
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
         $this->response->setOutput($this->load->view('marketing/client_logo_form', $data));
     }
@@ -360,28 +360,8 @@ class Client_logo extends \Reamur\System\Engine\Controller {
 
         return $errors;
     }
-
-    /** Código simbólico do MediaUpload → mensagem do módulo (idioma vigente) */
-    private function uploadErrorMessage(string $code): string {
-        return match ($code) {
-            'size'  => sprintf($this->language->get('error_upload_size'), '2 MB'),
-            'type'  => $this->language->get('error_upload_type'),
-            'move'  => $this->language->get('error_upload_move'),
-            default => $this->language->get('error_upload'),
-        };
-    }
-
     /** Componente compartilhado (regra dos três — ADR 0011); root = catalog/ irmão do admin */
     private function media(): MediaUpload {
         return new MediaUpload(rtrim((string)dirname(DIR_APPLICATION), '/') . '/catalog/');
-    }
-
-    /** Chrome compartilhado + estilo do módulo */
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-
-        $data['body_class'] = 'rms-dash';
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
     }
 }

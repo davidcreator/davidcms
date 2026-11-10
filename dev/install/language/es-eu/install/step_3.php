@@ -69,3 +69,4 @@ $_['error_lastname']    = '¡Los apellidos deben tener entre 1 y 32 caracteres!'
 $_['error_email']       = '¡Dirección de e-mail no válida!';
 $_['error_password']    = '¡La contraseña debe tener al menos 8 caracteres!';
 $_['error_confirm']     = '¡La confirmación de la contraseña no coincide!';
+$_['error_csrf'] = 'Token de seguridad no válido o caducado. Recargue la página e inténtelo de nuevo.';

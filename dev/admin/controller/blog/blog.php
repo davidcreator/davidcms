@@ -158,7 +158,7 @@ class Blog extends \Reamur\System\Engine\Controller {
               )
             : '';
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $this->response->setOutput($this->load->view('blog/blog_list', $data));
     }
@@ -210,7 +210,7 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('blog/blog.add');
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $this->response->setOutput($this->load->view('blog/blog_form', $data));
     }
@@ -279,7 +279,7 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('blog/blog.edit|' . $post_id);
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $this->response->setOutput($this->load->view('blog/blog_form', $data));
     }
@@ -1539,15 +1539,6 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         return is_scalar($value) ? trim((string)$value) : '';
     }
-
-    /** Chrome compartilhado + estilo do módulo (F8-01, ADR 0045: par header/footer) */
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-
-        $data['header'] = $this->load->controller('common/header', $data);
-        $data['footer'] = $this->load->controller('common/footer', $data);
-    }
-
     /** Base pública canônica do site (admin /admin/ → raiz), usada no preview SEO. */
     private function siteRootUrl(): string {
         $siteUrl = rtrim((string)$this->config->get('site_url', ''), '/') . '/';

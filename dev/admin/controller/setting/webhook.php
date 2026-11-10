@@ -102,7 +102,7 @@ class Webhook extends \Reamur\System\Engine\Controller {
         $pagination->text_prev = $this->language->get('text_page_prev');
         $data['pagination'] = $pagination->render();
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
         $this->response->setOutput($this->load->view('setting/webhook_list', $data));
     }
 
@@ -143,7 +143,7 @@ class Webhook extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('setting/webhook.add');
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
         $this->response->setOutput($this->load->view('setting/webhook_form', $data));
     }
@@ -208,7 +208,7 @@ class Webhook extends \Reamur\System\Engine\Controller {
 
         $data['action'] = $this->url->link('setting/webhook.edit|' . $webhook_id);
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
         $this->response->setOutput($this->load->view('setting/webhook_form', $data));
     }
@@ -345,7 +345,7 @@ class Webhook extends \Reamur\System\Engine\Controller {
         $pagination->text_prev = $this->language->get('text_page_prev');
         $data['pagination'] = $pagination->render();
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
         $this->response->setOutput($this->load->view('setting/webhook_logs', $data));
     }
@@ -402,7 +402,7 @@ class Webhook extends \Reamur\System\Engine\Controller {
 
         $data['back'] = $this->url->link('setting/webhook.logs|' . (int)$log['webhook_id']);
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
         $this->response->setOutput($this->load->view('setting/webhook_log', $data));
     }
@@ -505,14 +505,5 @@ class Webhook extends \Reamur\System\Engine\Controller {
             // coerção dura: qualquer valor adulterado vira 0/1
             'status'      => !empty($post['status']) && (int)$post['status'] === 1 ? 1 : 0,
         ];
-    }
-
-    /** Chrome compartilhado + estilo do módulo */
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-
-        $data['body_class'] = 'rms-dash';
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
     }
 }

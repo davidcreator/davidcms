@@ -88,7 +88,7 @@ class Profile extends \Reamur\System\Engine\Controller {
         $data['action'] = $this->url->link('user/profile');
         $data['back']   = $this->url->link('common/dashboard');
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
         $this->response->setOutput($this->load->view('user/profile', $data));
     }
@@ -153,14 +153,5 @@ class Profile extends \Reamur\System\Engine\Controller {
         if ($this->session instanceof \Reamur\System\Library\Session) {
             $this->session->data['flash'] = ['type' => $type, 'text' => $text];
         }
-    }
-
-    /** Chrome compartilhado com as telas do dashboard (mesma assinatura do módulo) */
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-
-        $data['body_class'] = 'rms-dash';
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
     }
 }

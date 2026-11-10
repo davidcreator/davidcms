@@ -20,3 +20,4 @@ $_['button_continue'] = 'Continuar';
 
 // Error
 $_['error_license_missing'] = 'Arquivo de licença (LICENSE) não encontrado na raiz do repositório.';
+$_['error_csrf'] = 'Token de segurança inválido ou expirado. Recarregue a página e tente novamente.';

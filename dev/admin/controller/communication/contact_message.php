@@ -85,7 +85,7 @@ class Contact_message extends \Reamur\System\Engine\Controller {
             . ($search !== '' ? '&filter_search=' . rawurlencode($search) : '')
             . ($filter !== null ? '&filter_status=' . $filter : ''));
         $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->response->setOutput($this->load->view('communication/contact_message_list', $data));
     }
 
@@ -177,7 +177,7 @@ class Contact_message extends \Reamur\System\Engine\Controller {
         $data['delete']        = $this->url->link('communication/contact_message.delete|' . $contact_message_id);
         $data['back']          = $this->url->link('communication/contact_message');
 
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $this->response->setOutput($this->load->view('communication/contact_message_read', $data));
     }
@@ -276,13 +276,5 @@ class Contact_message extends \Reamur\System\Engine\Controller {
             MessageModel::STATUS_REPLIED => $this->language->get('text_replied'),
             default                      => $this->language->get('text_new'),
         };
-    }
-
-    /** Chrome compartilhado + estilo do módulo */
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-
-        $data['header']     = $this->load->controller('common/header', $data);
-        $data['footer']     = $this->load->controller('common/footer', $data);
     }
 }

@@ -8,6 +8,12 @@
 		</div>
 	</div>
 	<div class="container">
+		{% if error_csrf %}
+		<div class="alert alert-danger" role="alert">
+			<i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+			<span class="ms-2">{{ error_csrf }}</span>
+		</div>
+		{% endif %}
 		{% if not ok %}
 		<div class="alert alert-danger" role="alert">
 			<i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
@@ -15,6 +21,7 @@
 		</div>
 		{% endif %}
 		<form action="{{ action }}" method="post">
+			<input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
 			<div class="card">
 				<div class="card-header">
 					<i class="fa-solid fa-pencil" aria-hidden="true"></i>

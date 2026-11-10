@@ -27,7 +27,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['import_open']=(bool)($this->request->get['import']??'');
         foreach($data['themes'] as &$theme) { $id=(int)$theme['theme_id']; $theme['edit']=$this->url->link('design/theme.edit|'.$id); $theme['activate']=$this->url->link('design/theme.activate|'.$id); $theme['deactivate']=$this->url->link('design/theme.deactivate|'.$id); $theme['delete']=$this->url->link('design/theme.delete|'.$id); } unset($theme);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-package.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-        $this->chrome($data); $this->response->setOutput($this->load->view('design/theme_list',$data));
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V); $this->response->setOutput($this->load->view('design/theme_list',$data));
     }
     /** Frente U — KAZTheme-Editor: cena inicial kaztheme-scene/v1 derivada
      *  APENAS do config efetivo. Metodo puro: sem IO, request, servico, banco,
@@ -372,7 +372,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $ahScene=(new \Reamur\System\Library\Theme\ThemeSceneCss())->compile($config['kaz_scene']??null);
         $data['kaz_release']=\Reamur\System\Library\Theme\ThemeReleaseProbe::summarize(
             $config,$pubCfg,$ahState,$ahScene,(int)($theme['status']??0)===1,$kazAssetAJ);
-        $this->chrome($data); $this->response->setOutput($this->load->view('design/theme_form',$data));
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V); $this->response->setOutput($this->load->view('design/theme_form',$data));
     }
     /**
      * F13-E: exporta o tema como pacote JSON versionado (rascunho por padrao,
@@ -973,12 +973,6 @@ class Theme extends \Reamur\System\Engine\Controller {
             'weekday'=>(int)date('N',$stamp),'date'=>$date,'month'=>(int)date('n',$stamp),
             'variant'=>$variant,'https'=>true,'ajax'=>false,'query'=>$query,'site'=>$site,
         ];
-    }
-
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-        $data['header']=$this->load->controller('common/header',$data);
-        $data['footer']=$this->load->controller('common/footer',$data);
     }
     public function activate(string $theme_id='0'): void {
         if ($this->request->server['REQUEST_METHOD']!=='POST' || !$this->user->hasPermission('modify','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }

@@ -30,3 +30,4 @@ $_['text_error_summary']  = 'Corrija los elementos marcados como ausentes arriba
 // Button
 $_['button_back']     = 'Volver';
 $_['button_continue'] = 'Continuar';
+$_['error_csrf'] = 'Token de seguridad no válido o caducado. Recargue la página e inténtelo de nuevo.';

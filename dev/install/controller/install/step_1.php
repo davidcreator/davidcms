@@ -15,15 +15,21 @@ namespace Reamur\Install\Controller\Install;
 
 class Step_1 extends \Reamur\System\Engine\Controller {
 
-    /** Exibe a licença; qualquer POST (ou o link Continuar) avança ao passo 2 */
+    /** Exibe a licença; POST exige CSRF válido para avançar ao passo 2 */
     public function index(): void {
-        if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $this->response->redirect($this->url->link('install/step_2'));
-
-            return;
-        }
-
         $this->load->language('install/step_1');
+
+        $data['error_csrf'] = '';
+
+        if ($this->request->server['REQUEST_METHOD'] === 'POST') {
+            if ($this->csrfValid()) {
+                $this->response->redirect($this->url->link('install/step_2'));
+
+                return;
+            }
+
+            $data['error_csrf'] = $this->language->get('error_csrf');
+        }
 
         $this->document->setTitle($this->language->get('heading_title'));
 
@@ -38,7 +44,9 @@ class Step_1 extends \Reamur\System\Engine\Controller {
 
         $data['license'] = is_file($license) ? (string)file_get_contents($license) : $this->language->get('error_license_missing');
 
-        $data['continue'] = $this->url->link('install/step_2');
+        $data['action']     = $this->url->link('install/step_1');
+        $data['continue']   = $this->url->link('install/step_2');
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
 
         $this->chrome($data);
 

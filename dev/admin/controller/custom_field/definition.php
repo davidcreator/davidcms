@@ -36,7 +36,7 @@ class Definition extends \Reamur\System\Engine\Controller {
         $data['add_field']=$this->url->link(self::ROUTE.'.add_field');
         $data['text_private']=$this->language->get('text_private');
         $data['text_public']=$this->language->get('text_public');
-        $this->chrome($data);
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->response->setOutput($this->load->view('custom_field/definition_list',$data));
     }
 
@@ -64,7 +64,7 @@ class Definition extends \Reamur\System\Engine\Controller {
         $data['sort_order']=(string)($this->request->post['sort_order']??($group['sort_order']??0));
         $data['descriptions']=$this->descriptionRows('group',$id);
         $data['cancel']=$this->url->link(self::ROUTE);
-        $this->chrome($data); $this->response->setOutput($this->load->view('custom_field/definition_form',$data));
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V); $this->response->setOutput($this->load->view('custom_field/definition_form',$data));
     }
 
     public function add_field(): void { $this->fieldForm(0); }
@@ -98,7 +98,7 @@ class Definition extends \Reamur\System\Engine\Controller {
         $stored=json_decode((string)($field['options']??'[]'),true); $posted=$this->request->post['options']??null;
         $data['options']=is_array($posted)?$posted:(is_array($stored)?$stored:[]);
         $data['cancel']=$this->url->link(self::ROUTE);
-        $this->chrome($data); $this->response->setOutput($this->load->view('custom_field/definition_form',$data));
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V); $this->response->setOutput($this->load->view('custom_field/definition_form',$data));
     }
 
     public function delete_group(string $id='0'): void { $this->deleteDefinition((int)$id,'group'); }
@@ -155,10 +155,4 @@ class Definition extends \Reamur\System\Engine\Controller {
     private function labels(array $keys): array { $d=[];foreach($keys as $k)$d[$k]=$this->language->get($k);return $d; }
     private function canModifyPost(): bool { if($this->isPost()&&!$this->user->hasPermission('modify',self::ROUTE)){$this->response->redirect($this->url->link('error/permission'));return false;}return true; }
     private function isPost(): bool { return ($this->request->server['REQUEST_METHOD']??'GET')==='POST'; }
-    protected function csrfValid(): bool { return \Reamur\System\Library\Security\Csrf::check($this->session,$this->request->post['csrf_token']??''); }
-    private function chrome(array &$data): void {
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-        $data['header']=$this->load->controller('common/header',$data);
-        $data['footer']=$this->load->controller('common/footer',$data);
-    }
-}
+    protected function csrfValid(): bool { return \Reamur\System\Library\Security\Csrf::check($this->session,$this->request->post['csrf_token']??''); }}

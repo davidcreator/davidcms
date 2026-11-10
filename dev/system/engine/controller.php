@@ -92,4 +92,42 @@ class Controller {
 
         return $base;
     }
+
+    /** Monta CSS base, classe do body e header/footer padrão do painel admin. */
+    protected function adminChrome(array &$data, string $assetVersion, ?string $bodyClass = null): void {
+        $config   = $this->registry->get('config');
+        $document = $this->registry->get('document');
+        $load     = $this->registry->get('load');
+
+        $siteUrl = ($config instanceof Config) ? (string)$config->get('site_url', '') : '';
+        $suffix  = $assetVersion !== '' ? ('?v=' . $assetVersion) : '';
+
+        if ($document instanceof \Reamur\System\Library\Document) {
+            $document->addStyle($siteUrl . 'view/css/admin.css' . $suffix);
+        }
+
+        if ($bodyClass !== null && $bodyClass !== '') {
+            $data['body_class'] = $bodyClass;
+        }
+
+        if ($load instanceof Loader) {
+            $data['header'] = $load->controller('common/header', $data);
+            $data['footer'] = $load->controller('common/footer', $data);
+        }
+    }
+
+    /** Traduz o código de erro padronizado de upload de mídia do admin. */
+    protected function uploadErrorMessage(string $code, string $maxSize = '2 MB'): string {
+        $language = $this->registry->get('language');
+        if (!$language instanceof \Reamur\System\Library\Language) {
+            return 'Upload error';
+        }
+
+        return match ($code) {
+            'size'  => sprintf($language->get('error_upload_size'), $maxSize),
+            'type'  => $language->get('error_upload_type'),
+            'move'  => $language->get('error_upload_move'),
+            default => $language->get('error_upload'),
+        };
+    }
 }

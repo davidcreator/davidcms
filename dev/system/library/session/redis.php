@@ -1,122 +1,92 @@
-<?php
+<?php declare(strict_types=1);
+/**
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * Driver de sessão em Redis.
+ * Implementa \SessionHandlerInterface para compatibilidade com session_set_save_handler().
+ */
 namespace Reamur\System\Library\Session;
 
-/**
- * Class Redis - Session handler using Redis storage
- * 
- * @package Reamur\System\Library\Session
- */
-class Redis {
-    private object $config;
-    private ?\Redis $redis;
+class Redis implements \SessionHandlerInterface {
+    private \Reamur\System\Engine\Config $config;
+    private \Redis $redis;
     private string $prefix;
 
     /**
-     * Constructor
-     *
-     * @param object $registry
-     * @throws \RuntimeException If Redis connection fails
+     * @throws \RuntimeException If Redis connection fails or Config is unavailable
      */
     public function __construct(\Reamur\System\Engine\Registry $registry) {
-        $this->config = $registry->get('config');
-        $this->prefix = CACHE_PREFIX . '.session.';
-        
+        $config = $registry->get('config');
+        if (!$config instanceof \Reamur\System\Engine\Config) {
+            throw new \RuntimeException('Session\\Redis requires config service in Registry');
+        }
+
+        $this->config = $config;
+
+        $host   = defined('CACHE_HOSTNAME') ? (string)CACHE_HOSTNAME : '127.0.0.1';
+        $port   = defined('CACHE_PORT') ? (int)CACHE_PORT : 6379;
+        $prefix = defined('CACHE_PREFIX') ? (string)CACHE_PREFIX : 'rms_';
+
+        $this->prefix = $prefix . '.session.';
+
         try {
             $this->redis = new \Redis();
-            if (!$this->redis->pconnect(CACHE_HOSTNAME, (int)CACHE_PORT)) {
+            if (!$this->redis->pconnect($host, $port)) {
                 throw new \RuntimeException('Failed to connect to Redis server');
             }
-            
-            // Test connection immediately
+
             $this->redis->ping();
         } catch (\RedisException $e) {
-            throw new \RuntimeException('Redis connection error: ' . $e->getMessage());
+            throw new \RuntimeException('Redis connection error: ' . $e->getMessage(), 0, $e);
         }
     }
 
-    /**
-     * Read session data
-     *
-     * @param string $session_id
-     * @return array
-     * @throws \RuntimeException If session data is corrupted
-     */
-    public function read(string $session_id): array {
-        if (!$this->validateSessionId($session_id)) {
-            return [];
-        }
-        
-        $data = $this->redis->get($this->prefix . $session_id);
-        if ($data === false || empty($data)) {
-            return [];
-        }
-        
-        $result = json_decode($data, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException('Invalid session data format');
-        }
-        
-        return $result ?? [];
-    }
-
-    /**
-     * Write session data
-     *
-     * @param string $session_id
-     * @param array $data
-     * @return bool
-     * @throws \RuntimeException If session write fails
-     */
-    public function write(string $session_id, array $data): bool {
-        if (!$this->validateSessionId($session_id)) {
-            return false;
-        }
-        
-        $json = json_encode($data, JSON_UNESCAPED_UNICODE);
-        if ($json === false) {
-            throw new \RuntimeException('Failed to encode session data');
-        }
-        
-        $ttl = (int)$this->config->get('session_expire');
-        $result = $this->redis->setEx($this->prefix . $session_id, $ttl, $json);
-        
-        if ($result === false) {
-            throw new \RuntimeException('Failed to write session data to Redis');
-        }
-        
+    public function open(string $path, string $name): bool {
         return true;
     }
 
-    /**
-     * Destroy session
-     *
-     * @param string $session_id
-     * @return bool
-     */
-    public function destroy(string $session_id): bool {
-        if (!$this->validateSessionId($session_id)) {
-            return false;
-        }
-        
-        return (bool)$this->redis->unlink($this->prefix . $session_id);
-    }
-
-    /**
-     * Garbage collection
-     *
-     * @return bool
-     */
-    public function gc(): bool {
-        // Redis handles expiration automatically
+    public function close(): bool {
         return true;
     }
 
-    /**
-     * Validate session ID format
-     *
-     * @param string $session_id
-     * @return bool
-     */
+    public function read(string $id): string|false {
+        if (!$this->validateSessionId($id)) {
+            return '';
+        }
+
+        $data = $this->redis->get($this->prefix . $id);
+
+        return is_string($data) ? $data : '';
+    }
+
+    public function write(string $id, string $data): bool {
+        if (!$this->validateSessionId($id)) {
+            return false;
+        }
+
+        $ttl    = max(1, (int)$this->config->get('session_expire', 3600));
+        $result = $this->redis->setEx($this->prefix . $id, $ttl, $data);
+
+        return $result === true;
+    }
+
+    public function destroy(string $id): bool {
+        if (!$this->validateSessionId($id)) {
+            return false;
+        }
+
+        return $this->redis->unlink($this->prefix . $id) !== false;
+    }
+
+    public function gc(int $max_lifetime): int|false {
+        // Redis handles key expiration automatically via TTL
+        return 0;
+    }
+
     private function validateSessionId(string $session_id): bool {
         return preg_match('/^[a-zA-Z0-9,-]{22,256}$/', $session_id) === 1;
     }

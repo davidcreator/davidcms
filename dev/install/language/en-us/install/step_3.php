@@ -68,3 +68,4 @@ $_['error_lastname']    = 'Last name must be between 1 and 32 characters!';
 $_['error_email']       = 'Invalid e-mail address!';
 $_['error_password']    = 'Password must be at least 8 characters!';
 $_['error_confirm']     = 'Password confirmation does not match!';
+$_['error_csrf'] = 'Invalid or expired security token. Please reload the page and try again.';

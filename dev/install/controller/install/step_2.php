@@ -36,12 +36,19 @@ class Step_2 extends \Reamur\System\Engine\Controller {
 
         $ok = !in_array(false, array_column($checks, 'status'), true);
 
-        if ($this->request->server['REQUEST_METHOD'] === 'POST' && $ok) {
-            $this->response->redirect($this->url->link('install/step_3'));
-            return;
+        $data['error_csrf'] = '';
+
+        if ($this->request->server['REQUEST_METHOD'] === 'POST') {
+            if (!$this->csrfValid()) {
+                $data['error_csrf'] = $this->language->get('error_csrf');
+            } elseif ($ok) {
+                $this->response->redirect($this->url->link('install/step_3'));
+                return;
+            }
         }
 
-        $data['checks']  = $checks;
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
+        $data['checks']     = $checks;
         $data['ok']      = $ok;
         $data['action']  = $this->url->link('install/step_2');
         $data['back']    = $this->url->link('install/step_1');

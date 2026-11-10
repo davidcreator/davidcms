@@ -237,7 +237,6 @@ class Language extends \Reamur\System\Engine\Controller {
     /** Chrome comum (header/footer + breadcrumbs), padrão dos CRUDs admin */
     private function chrome(): array {
         $data = [];
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $data['error'] = '';
         $data['can_modify'] = $this->user->hasPermission('modify', 'localization/language');
         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
@@ -274,8 +273,7 @@ class Language extends \Reamur\System\Engine\Controller {
         $data['button_edit']   = $this->language->get('button_edit');
         $data['button_cancel'] = $this->language->get('button_cancel');
 
-        $data['header'] = $this->load->controller('common/header', $data);
-        $data['footer'] = $this->load->controller('common/footer');
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         return $data;
     }

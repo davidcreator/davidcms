@@ -221,13 +221,18 @@ $registry->set('cache', $cache ?? new \Reamur\System\Library\Cache\File($cacheEx
 
 // 9. Session
 if ($config->get('session_autostart')) {
-    $sessionEngine = 'Reamur\\System\\Library\\Session\\' . ucfirst((string)$config->get('session_engine', 'file'));
+    $sessionDriver = ucfirst((string)$config->get('session_engine', 'file'));
+    $sessionEngine = 'Reamur\\System\\Library\\Session\\' . $sessionDriver;
 
     if (!class_exists($sessionEngine)) {
         throw new \Exception("Driver de sessão {$sessionEngine} não encontrado.");
     }
 
-    $registry->set('session', new \Reamur\System\Library\Session(new $sessionEngine(), [
+    $sessionAdaptor = $sessionDriver === 'File'
+        ? new \Reamur\System\Library\Session\File()
+        : new $sessionEngine($registry);
+
+    $registry->set('session', new \Reamur\System\Library\Session($sessionAdaptor, [
         'name'        => $config->get('session_name'),
         'path'        => $config->get('session_path'),
         'domain'      => $config->get('session_domain'),
