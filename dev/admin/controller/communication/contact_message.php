@@ -84,7 +84,7 @@ class Contact_message extends \Reamur\System\Engine\Controller {
         $pagination->url = $this->url->link('communication/contact_message', 'page={page}'
             . ($search !== '' ? '&filter_search=' . rawurlencode($search) : '')
             . ($filter !== null ? '&filter_status=' . $filter : ''));
-        $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
+        $data['pagination'] = $pagination->render();
         $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->response->setOutput($this->load->view('communication/contact_message_list', $data));
     }

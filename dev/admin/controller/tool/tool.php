@@ -14,7 +14,6 @@
  */
 namespace Reamur\Admin\Controller\Tool;
 
-use Reamur\System\Library\MediaUpload;
 
 class Tool extends \Reamur\System\Engine\Controller {
 
@@ -84,8 +83,7 @@ class Tool extends \Reamur\System\Engine\Controller {
             . ($filter_name !== '' ? '&filter_name=' . rawurlencode($filter_name) : '')
             . ($filter_vendor !== '' ? '&filter_vendor=' . rawurlencode($filter_vendor) : '')
             . ($filter_status !== 'all' ? '&filter_status=' . $filter_status : ''));
-        // Normalização local do escape duplo da library, sem alterar o núcleo.
-        $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
+        $data['pagination'] = $pagination->render();
         $data['internal_tools'] = $this->internalTools();
         $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->response->setOutput($this->load->view('tool/tool_list', $data));
@@ -220,36 +218,7 @@ class Tool extends \Reamur\System\Engine\Controller {
 
     /** Upload do ícone — POST multipart 'file' → JSON {success, path} (componente MediaUpload) */
     public function upload(): void {
-        $this->load->language('tool/tool');
-
-        $ok   = false;
-        $msg  = '';
-        $path = '';
-
-        if ($this->request->server['REQUEST_METHOD'] !== 'POST') {
-            $msg = $this->language->get('error_upload_method');
-        } elseif (!$this->user->hasPermission('modify', 'tool/tool')) {
-            $msg = $this->language->get('error_permission');
-        } elseif (!$this->csrfValid()) {
-            $msg = $this->language->get('error_csrf');
-        } else {
-            $result = $this->catalogMedia()->store((array)($this->request->files['file'] ?? []), self::UPLOAD_DIR);
-
-            if ($result['ok']) {
-                $ok   = true;
-                $path = $result['path'];
-            } else {
-                $msg = $this->uploadErrorMessage($result['error']);
-            }
-        }
-
-        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
-
-        $this->response->setOutput((string)json_encode([
-            'success' => $ok,
-            'path'    => $ok ? $path : '',
-            'error'   => $ok ? '' : $msg,
-        ]));
+        $this->handleAdminUpload('tool/tool', self::UPLOAD_DIR);
     }
 
     // ─── internos ────────────────────────────────────────────────────────

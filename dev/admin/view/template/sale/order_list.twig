@@ -103,7 +103,7 @@
       </div>
       {% if showing or pagination %}
       <div class="card-footer bg-body d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <span class="small text-body-secondary">{{ showing }}</span>{{ pagination|replace({'&amp;amp;': '&amp;'})|raw }}
+        <span class="small text-body-secondary">{{ showing }}</span>{{ pagination|raw }}
       </div>
       {% endif %}
     </section>

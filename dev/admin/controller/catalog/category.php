@@ -14,7 +14,6 @@
  */
 namespace Reamur\Admin\Controller\Catalog;
 
-use Reamur\System\Library\MediaUpload;
 
 class Category extends \Reamur\System\Engine\Controller {
 
@@ -89,8 +88,7 @@ class Category extends \Reamur\System\Engine\Controller {
         $pagination->url = $this->url->link('catalog/category', 'page={page}'
             . ($filter_name !== '' ? '&filter_name=' . rawurlencode($filter_name) : '')
             . ($filter_status !== 'all' ? '&filter_status=' . $filter_status : ''));
-        // Correção local do escape duplo da library, como no CMS (F8-06).
-        $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
+        $data['pagination'] = $pagination->render();
         $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->response->setOutput($this->load->view('catalog/category_list', $data));
     }
@@ -224,36 +222,7 @@ class Category extends \Reamur\System\Engine\Controller {
 
     /** Upload da imagem da categoria — POST multipart 'file' → JSON {success, path} */
     public function upload(): void {
-        $this->load->language('catalog/category');
-
-        $ok   = false;
-        $msg  = '';
-        $path = '';
-
-        if ($this->request->server['REQUEST_METHOD'] !== 'POST') {
-            $msg = $this->language->get('error_upload_method');
-        } elseif (!$this->user->hasPermission('modify', 'catalog/category')) {
-            $msg = $this->language->get('error_permission');
-        } elseif (!$this->csrfValid()) {
-            $msg = $this->language->get('error_csrf');
-        } else {
-            $result = $this->catalogMedia()->store((array)($this->request->files['file'] ?? []), self::UPLOAD_DIR);
-
-            if ($result['ok']) {
-                $ok   = true;
-                $path = $result['path'];
-            } else {
-                $msg = $this->uploadErrorMessage($result['error']);
-            }
-        }
-
-        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
-
-        $this->response->setOutput((string)json_encode([
-            'success' => $ok,
-            'path'    => $ok ? $path : '',
-            'error'   => $ok ? '' : $msg,
-        ]));
+        $this->handleAdminUpload('catalog/category', self::UPLOAD_DIR);
     }
 
     // ─── internos ────────────────────────────────────────────────────────

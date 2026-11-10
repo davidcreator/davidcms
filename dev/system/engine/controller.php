@@ -138,6 +138,62 @@ class Controller {
         );
     }
 
+    /** Executa o endpoint JSON padrão de upload de mídia no admin (POST + ACL + CSRF). */
+    protected function handleAdminUpload(string $route, string $uploadDir): void {
+        $load     = $this->registry->get('load');
+        $request  = $this->registry->get('request');
+        $language = $this->registry->get('language');
+        $user     = $this->registry->get('user');
+        $response = $this->registry->get('response');
+
+        if ($load instanceof Loader) {
+            $load->language($route);
+        }
+
+        $translate = static fn(string $key, string $fallback): string => ($language instanceof \Reamur\System\Library\Language)
+            ? $language->get($key)
+            : $fallback;
+
+        $ok   = false;
+        $msg  = '';
+        $path = '';
+
+        $method = ($request instanceof \Reamur\System\Library\Request)
+            ? (string)($request->server['REQUEST_METHOD'] ?? '')
+            : '';
+
+        if ($method !== 'POST') {
+            $msg = $translate('error_upload_method', 'Method not allowed');
+        } elseif (!$user instanceof \Reamur\System\Library\User || !$user->hasPermission('modify', $route)) {
+            $msg = $translate('error_permission', 'Permission denied');
+        } elseif (!$this->csrfValid()) {
+            $msg = $translate('error_csrf', 'Invalid CSRF token');
+        } else {
+            $rawFile = ($request instanceof \Reamur\System\Library\Request)
+                ? ($request->files['file'] ?? [])
+                : [];
+            /** @var array<string, mixed> $files */
+            $files  = is_array($rawFile) ? $rawFile : [];
+            $result = $this->catalogMedia()->store($files, $uploadDir);
+
+            if ($result['ok']) {
+                $ok   = true;
+                $path = $result['path'];
+            } else {
+                $msg = $this->uploadErrorMessage((string)$result['error']);
+            }
+        }
+
+        if ($response instanceof \Reamur\System\Library\Response) {
+            $response->addHeader('Content-Type: application/json; charset=utf-8');
+            $response->setOutput((string)json_encode([
+                'success' => $ok,
+                'path'    => $ok ? $path : '',
+                'error'   => $ok ? '' : $msg,
+            ]));
+        }
+    }
+
     /**
      * Monta CSS base, classe do body e header/footer padrão do catálogo público.
      *

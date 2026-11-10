@@ -21,13 +21,13 @@ class Pagination {
     public string $text_last = 'Last »';
     public string $text_next = 'Next ›';
     public string $text_prev = '‹ Prev';
-    
+
     // Configurações adicionais para melhor controle
     public bool $show_first_last = true;
     public bool $show_prev_next = true;
     public string $css_class = 'pagination';
     public string $active_class = 'active';
-    
+
     // Cache para evitar recálculos
     private ?int $num_pages = null;
     private ?string $sanitized_url = null;
@@ -38,19 +38,17 @@ class Pagination {
      * @throws InvalidArgumentException Se os parâmetros forem inválidos
      */
     public function render(): string {
-        // Validação de entrada mais robusta
         if ($this->total <= 0 || $this->limit <= 0) {
             return '';
         }
-        
+
         if ($this->total <= $this->limit) {
             return '';
         }
 
         $this->validateAndSanitizeInputs();
-        
+
         $page = $this->page;
-        $limit = $this->limit;
         $num_pages = $this->getNumPages();
         $num_links = max(2, $this->num_links);
 
@@ -125,26 +123,31 @@ class Pagination {
         $href = $this->buildHref($pageNum);
         $relAttr = $rel ? ' rel="' . htmlspecialchars($rel, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '"' : '';
         $ariaAttr = $ariaLabel ? ' aria-label="' . htmlspecialchars($ariaLabel, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '"' : '';
-        
-        return '<li><a href="' . $href . '"' . $relAttr . $ariaAttr . '>' 
-            . htmlspecialchars($text, ENT_QUOTES | ENT_HTML5, 'UTF-8') 
+
+        return '<li><a href="' . $href . '"' . $relAttr . $ariaAttr . '>'
+            . htmlspecialchars($text, ENT_QUOTES | ENT_HTML5, 'UTF-8')
             . '</a></li>';
     }
 
     /**
-     * Build href URL for a specific page
+     * Build href URL for a specific page (escaped exactly once for HTML href attribute)
      * @param int $pageNum Page number
-     * @return string Sanitized URL
+     * @return string Escaped URL safe for HTML href
      */
     private function buildHref(int $pageNum): string {
         $url = $this->getSanitizedUrl();
-        
+
         if ($pageNum === 1) {
-            // Remove page parameter for first page (cleaner URLs)
-            $href = preg_replace('/[?&]page=\{page\}/', '', $url);
-            $href = str_replace(['{page}', '%7Bpage%7D'], '', $href);
+            // Remove page parameter for first page while keeping query delimiter intact
+            $href = (string)preg_replace('/\?page=\{page\}&/i', '?', $url);
+            $href = (string)preg_replace('/[?&]page=\{page\}/i', '', $href);
+            $href = str_replace('{page}', '', $href);
         } else {
-            $href = str_replace(['{page}', '%7Bpage%7D'], (string)$pageNum, $url);
+            $href = str_replace('{page}', (string)$pageNum, $url);
+        }
+
+        if (preg_match('#^(?:javascript|data|vbscript):#i', ltrim($href)) === 1) {
+            $href = '#';
         }
 
         return htmlspecialchars($href, ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -155,10 +158,10 @@ class Pagination {
      * @param int $currentPage Current page
      * @param int $totalPages Total number of pages
      * @param int $numLinks Number of links to show
-     * @return array Start and end page numbers
+     * @return array{start: int, end: int} Start and end page numbers
      */
     private function calculatePageRange(int $currentPage, int $totalPages, int $numLinks): array {
-        $start = max(1, $currentPage - floor($numLinks / 2));
+        $start = max(1, $currentPage - (int)floor($numLinks / 2));
         $end = min($totalPages, $start + $numLinks - 1);
         $start = max(1, $end - $numLinks + 1);
 
@@ -166,7 +169,7 @@ class Pagination {
         if ($start <= 2) {
             $start = 1;
         }
-        
+
         // Ajustar para não mostrar última página duas vezes
         if ($end >= $totalPages - 1) {
             $end = $totalPages;
@@ -181,22 +184,21 @@ class Pagination {
      */
     private function getNumPages(): int {
         if ($this->num_pages === null) {
-            $this->num_pages = (int)ceil($this->total / $this->limit);
+            $limit = max(1, $this->limit);
+            $this->num_pages = (int)ceil($this->total / $limit);
         }
         return $this->num_pages;
     }
 
     /**
-     * Get sanitized URL (cached)
-     * @return string Sanitized URL
+     * Get normalized raw URL (cached, unescaped for clean query-parameter manipulation)
+     * @return string Normalized URL
      */
     private function getSanitizedUrl(): string {
         if ($this->sanitized_url === null) {
-            $this->sanitized_url = htmlspecialchars(
-                str_replace('%7Bpage%7D', '{page}', $this->url),
-                ENT_QUOTES | ENT_HTML5,
-                'UTF-8'
-            );
+            $url = str_replace(["\r", "\n", "\0"], '', $this->url);
+            $url = str_replace(['%7Bpage%7D', '%7bpage%7d'], '{page}', $url);
+            $this->sanitized_url = str_replace('&amp;', '&', $url);
         }
         return $this->sanitized_url;
     }
@@ -211,7 +213,7 @@ class Pagination {
         $this->total = max(0, (int)$this->total);
         $this->num_links = max(2, (int)$this->num_links);
 
-        if (empty($this->url)) {
+        if (trim($this->url) === '') {
             throw new InvalidArgumentException('URL cannot be empty');
         }
 
@@ -222,36 +224,41 @@ class Pagination {
 
     /**
      * Set pagination configuration
-     * @param array $config Configuration array
+     * @param array<string, mixed> $config Configuration array
      * @return self For method chaining
      */
     public function setConfig(array $config): self {
         foreach ($config as $key => $value) {
-            if (property_exists($this, $key)) {
+            if (property_exists($this, $key) && !in_array($key, ['num_pages', 'sanitized_url'], true)) {
                 $this->$key = $value;
             }
         }
+        $this->num_pages = null;
+        $this->sanitized_url = null;
         return $this;
     }
 
     /**
      * Get pagination information
-     * @return array Pagination data
+     * @return array<string, int|bool> Pagination data
      */
     public function getInfo(): array {
-        $num_pages = $this->getNumPages();
-        $start_record = (($this->page - 1) * $this->limit) + 1;
-        $end_record = min($this->page * $this->limit, $this->total);
+        $limit = max(1, $this->limit);
+        $page  = max(1, $this->page);
+        $total = max(0, $this->total);
+        $num_pages = $total > 0 ? (int)ceil($total / $limit) : 0;
+        $start_record = $total > 0 ? (($page - 1) * $limit) + 1 : 0;
+        $end_record = $total > 0 ? min($page * $limit, $total) : 0;
 
         return [
-            'total' => $this->total,
-            'page' => $this->page,
-            'limit' => $this->limit,
+            'total' => $total,
+            'page' => $page,
+            'limit' => $limit,
             'num_pages' => $num_pages,
             'start_record' => $start_record,
             'end_record' => $end_record,
-            'has_prev' => $this->page > 1,
-            'has_next' => $this->page < $num_pages
+            'has_prev' => $page > 1 && $num_pages > 1,
+            'has_next' => $page < $num_pages
         ];
     }
 }

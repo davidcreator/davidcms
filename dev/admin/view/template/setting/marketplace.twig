@@ -33,7 +33,7 @@
             {% if can_modify %}<td class="text-end text-nowrap"><form method="post" action="{{ action_refresh }}|{{ s.mp_seller_id }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-arrow-repeat me-1" aria-hidden="true"></i>{{ button_refresh }}</button></form> <form method="post" action="{{ action_delete }}|{{ s.mp_seller_id }}" class="d-inline" onsubmit="return confirm('{{ text_confirm_disconnect|e('js') }}');"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-link-45deg me-1" aria-hidden="true"></i>{{ button_disconnect }}</button></form></td>{% endif %}
           </tr>{% endfor %}
         </tbody></table></div>{% else %}<p class="text-body-secondary">{{ text_no_sellers }}</p>{% endif %}
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3"><span class="small text-body-secondary">{{ seller_showing }}</span>{{ seller_pagination|replace({'&amp;amp;': '&amp;'})|raw }}</div>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3"><span class="small text-body-secondary">{{ seller_showing }}</span>{{ seller_pagination|raw }}</div>
         <p class="small text-body-secondary mt-2 mb-0">{{ text_disconnect_note }}</p>
       </div>
     </section>
@@ -52,7 +52,7 @@
         {% if payments %}<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th scope="col">{{ column_order }}</th><th scope="col">{{ column_customer }}</th><th scope="col">{{ column_amount }}</th><th scope="col">{{ column_fee }}</th><th scope="col">{{ column_seller }}</th><th scope="col">{{ column_payment_status }}</th><th scope="col">{{ column_pay_link }}</th></tr></thead><tbody>
           {% for p in payments %}<tr><td class="fw-semibold">#{{ p.order_id }}</td><td>{{ p.firstname }} {{ p.lastname }}</td><td>{{ p.currency_id }} {{ p.amount }}</td><td>{{ p.currency_id }} {{ p.marketplace_fee }}</td><td>{{ p.seller_nickname ?: p.seller_mp_user_id }}</td><td><span class="badge text-bg-{{ p.status == 'approved' ? 'success' : (p.status == 'pending' ? 'warning' : 'secondary') }}">{{ p.status }}</span></td><td>{% if p.status == 'pending' %}<a class="d-inline-block text-truncate" style="max-width:22rem;" title="{{ p.pay_url }}" href="{{ p.pay_url }}" target="_blank" rel="noopener">{{ p.pay_url }}</a>{% else %}—{% endif %}</td></tr>{% endfor %}
         </tbody></table></div>{% else %}<p class="text-body-secondary">{{ text_no_payments }}</p>{% endif %}
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3"><span class="small text-body-secondary">{{ payment_showing }}</span>{{ payment_pagination|replace({'&amp;amp;': '&amp;'})|raw }}</div>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3"><span class="small text-body-secondary">{{ payment_showing }}</span>{{ payment_pagination|raw }}</div>
       </div>
     </section>
   </div>

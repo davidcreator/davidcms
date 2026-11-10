@@ -76,7 +76,7 @@ class Language extends \Reamur\System\Engine\Controller {
         $pagination->url = $this->url->link('localization/language', 'page={page}'
             . ($search !== '' ? '&filter_search=' . rawurlencode($search) : '')
             . ($status !== 'all' ? '&filter_status=' . $status : ''));
-        $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
+        $data['pagination'] = $pagination->render();
         $this->response->setOutput($this->load->view('localization/language_list', $data));
     }
 

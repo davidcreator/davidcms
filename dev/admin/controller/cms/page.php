@@ -102,8 +102,7 @@ class Page extends \Reamur\System\Engine\Controller {
         $pagination->url = $this->url->link('cms/page', 'page={page}'
             . ($filter_title !== '' ? '&filter_title=' . rawurlencode($filter_title) : '')
             . ($filter_status !== 'all' ? '&filter_status=' . $filter_status : ''));
-        // Pagination escapa o href duas vezes. Normalização local; não alterar o núcleo.
-        $data['pagination'] = str_replace('&amp;amp;', '&amp;', $pagination->render());
+        $data['pagination'] = $pagination->render();
 
         $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->response->setOutput($this->load->view('cms/page_list', $data));
