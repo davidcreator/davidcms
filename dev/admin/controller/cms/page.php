@@ -89,20 +89,15 @@ class Page extends \Reamur\System\Engine\Controller {
             ? sprintf($this->language->get('text_showing'), ($page - 1) * $limit + 1, min($page * $limit, $total), $total)
             : '';
 
-        require_once DIR_SYSTEM . 'library/pagination.php';
-        $pagination = new \Pagination();
-        $pagination->total = $total;
-        $pagination->page = $page;
-        $pagination->limit = $limit;
-        $pagination->css_class = 'pagination pagination-sm mb-0';
-        $pagination->text_first = $this->language->get('button_first_page');
-        $pagination->text_last = $this->language->get('button_last_page');
-        $pagination->text_next = $this->language->get('button_next_page');
-        $pagination->text_prev = $this->language->get('button_previous_page');
-        $pagination->url = $this->url->link('cms/page', 'page={page}'
-            . ($filter_title !== '' ? '&filter_title=' . rawurlencode($filter_title) : '')
-            . ($filter_status !== 'all' ? '&filter_status=' . $filter_status : ''));
-        $data['pagination'] = $pagination->render();
+        $data['pagination'] = $this->adminPagination(
+            $total,
+            $page,
+            $limit,
+            $this->url->link('cms/page', 'page={page}'
+                . ($filter_title !== '' ? '&filter_title=' . rawurlencode($filter_title) : '')
+                . ($filter_status !== 'all' ? '&filter_status=' . $filter_status : '')),
+            $this->paginationLabels('button')
+        );
 
         $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->response->setOutput($this->load->view('cms/page_list', $data));

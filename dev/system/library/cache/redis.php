@@ -226,6 +226,10 @@ class Redis {
      * 
      * @return bool Success status
      */
+    public function clear(): bool {
+        return $this->flush();
+    }
+
     public function flush(): bool {
         if (!$this->isConnected()) {
             return false;

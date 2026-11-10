@@ -13,8 +13,10 @@ namespace Reamur\System\Library\Session;
 class File implements \SessionHandlerInterface {
     private string $directory;
 
-    public function __construct() {
-        $this->directory = DIR_STORAGE . 'session/';
+    public function __construct(string $directory = '') {
+        $this->directory = $directory !== ''
+            ? rtrim($directory, '/\\') . '/'
+            : DIR_STORAGE . 'session/';
 
         if (!is_dir($this->directory)) {
             mkdir($this->directory, 0755, true);
@@ -22,26 +24,39 @@ class File implements \SessionHandlerInterface {
     }
 
     public function read(string $session_id): string {
-        $file = $this->directory . 'sess_' . $session_id;
+        $file = $this->sessionPath($session_id);
+        if ($file === null || !is_file($file)) {
+            return '';
+        }
 
-        return is_file($file) ? (string)file_get_contents($file) : '';
+        $content = @file_get_contents($file);
+        return is_string($content) ? $content : '';
     }
 
     public function write(string $session_id, string $data): bool {
-        return file_put_contents($this->directory . 'sess_' . $session_id, $data, LOCK_EX) !== false;
+        $file = $this->sessionPath($session_id);
+        if ($file === null) {
+            return false;
+        }
+
+        return file_put_contents($file, $data, LOCK_EX) !== false;
     }
 
     public function destroy(string $session_id): bool {
-        $file = $this->directory . 'sess_' . $session_id;
+        $file = $this->sessionPath($session_id);
+        if ($file === null) {
+            return false;
+        }
 
-        return !is_file($file) || unlink($file);
+        return !is_file($file) || @unlink($file);
     }
 
     public function gc(int $maxlifetime): int {
         $count = 0;
+        $cutoff = time() - max(0, $maxlifetime);
 
         foreach (glob($this->directory . 'sess_*') ?: [] as $file) {
-            if (filemtime($file) < time() - $maxlifetime && unlink($file)) {
+            if (is_file($file) && (int)@filemtime($file) < $cutoff && @unlink($file)) {
                 $count++;
             }
         }
@@ -55,5 +70,13 @@ class File implements \SessionHandlerInterface {
 
     public function close(): bool {
         return true;
+    }
+
+    private function sessionPath(string $session_id): ?string {
+        if (preg_match('/^[a-zA-Z0-9,-]{1,256}$/', $session_id) !== 1) {
+            return null;
+        }
+
+        return $this->directory . 'sess_' . $session_id;
     }
 }

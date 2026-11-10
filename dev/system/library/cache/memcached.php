@@ -179,6 +179,10 @@ class Memcached {
 	 * Flush all cache entries
 	 * @return bool Success status
 	 */
+	public function clear(): bool {
+		return $this->flush();
+	}
+
 	public function flush(): bool {
 		if (!$this->connected) {
 			return false;

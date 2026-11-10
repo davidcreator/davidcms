@@ -195,6 +195,79 @@ class Controller {
     }
 
     /**
+     * Renderiza paginação padrão do painel admin com labels traduzíveis opcionais.
+     *
+     * @param array{first?: string, last?: string, next?: string, prev?: string} $labels
+     */
+    protected function adminPagination(
+        int $total,
+        int $page,
+        int $limit,
+        string $url,
+        array $labels = [],
+        string $cssClass = 'pagination pagination-sm mb-0'
+    ): string {
+        if (!class_exists(\Pagination::class, false)) {
+            require_once DIR_SYSTEM . 'library/pagination.php';
+        }
+
+        $pagination = new \Pagination();
+        $pagination->total     = $total;
+        $pagination->page      = $page;
+        $pagination->limit     = $limit;
+        $pagination->url       = $url;
+        $pagination->css_class = $cssClass;
+
+        if (isset($labels['first'])) {
+            $pagination->text_first = $labels['first'];
+        }
+        if (isset($labels['last'])) {
+            $pagination->text_last = $labels['last'];
+        }
+        if (isset($labels['next'])) {
+            $pagination->text_next = $labels['next'];
+        }
+        if (isset($labels['prev'])) {
+            $pagination->text_prev = $labels['prev'];
+        }
+
+        return $pagination->render();
+    }
+
+    /**
+     * Monta os labels de paginação a partir do serviço Language (`text` ou `button`).
+     *
+     * @return array{first: string, last: string, next: string, prev: string}
+     */
+    protected function paginationLabels(string $style = 'text'): array {
+        $language = $this->registry->get('language');
+        if (!$language instanceof \Reamur\System\Library\Language) {
+            return [
+                'first' => '« First',
+                'last'  => 'Last »',
+                'next'  => 'Next ›',
+                'prev'  => '‹ Prev',
+            ];
+        }
+
+        if ($style === 'button') {
+            return [
+                'first' => $language->get('button_first_page'),
+                'last'  => $language->get('button_last_page'),
+                'next'  => $language->get('button_next_page'),
+                'prev'  => $language->get('button_previous_page'),
+            ];
+        }
+
+        return [
+            'first' => $language->get('text_page_first'),
+            'last'  => $language->get('text_page_last'),
+            'next'  => $language->get('text_page_next'),
+            'prev'  => $language->get('text_page_prev'),
+        ];
+    }
+
+    /**
      * Monta CSS base, classe do body e header/footer padrão do catálogo público.
      *
      * @param array<string, mixed>  $data

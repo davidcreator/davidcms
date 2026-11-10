@@ -169,11 +169,14 @@ class Payment extends \Reamur\System\Engine\Controller {
 
     /** Webhook v2 (?type=payment&data.id=) e IPN clássico (?topic=payment&id=/POST) */
     private function extractPaymentId(): int {
+        $get  = $this->request->get;
+        $post = $this->request->post;
+
         $sources = [
-            $_GET['data.id']   ?? null,
-            $_GET['data_id']   ?? null, // PHP converte o ponto de ?data.id=
-            $_GET['id']        ?? null,
-            $_POST['id']       ?? null, // IPN clássico = POST application/x-www-form-urlencoded
+            $get['data.id'] ?? null,
+            $get['data_id'] ?? null, // PHP converte o ponto de ?data.id=
+            $get['id']      ?? null,
+            $post['id']     ?? null, // IPN clássico = POST application/x-www-form-urlencoded
         ];
 
         $raw  = file_get_contents('php://input') ?: '';
@@ -183,7 +186,9 @@ class Payment extends \Reamur\System\Engine\Controller {
             $sources[] = $body['data']['id'];
         }
 
-        $type = (string)(($_GET['type'] ?? $_GET['topic'] ?? '') ?: ($body['type'] ?? $body['topic'] ?? ''));
+        $queryType = $get['type'] ?? $get['topic'] ?? '';
+        $bodyType  = is_array($body) ? ($body['type'] ?? $body['topic'] ?? '') : '';
+        $type      = (string)((is_scalar($queryType) && (string)$queryType !== '') ? $queryType : $bodyType);
 
         if (!in_array($type, ['payment', ''], true)) {
             return 0; // merchant_order & afins: fora do nosso recorte F5-03
@@ -221,8 +226,8 @@ class Payment extends \Reamur\System\Engine\Controller {
             return true; // validação por consulta à API permanece (§4)
         }
 
-        $header = (string)($_SERVER['HTTP_X_SIGNATURE'] ?? '');
-        $rid    = (string)($_SERVER['HTTP_X_REQUEST_ID'] ?? '');
+        $header = (string)($this->request->server['HTTP_X_SIGNATURE'] ?? '');
+        $rid    = (string)($this->request->server['HTTP_X_REQUEST_ID'] ?? '');
         $ts     = '';
         $v1     = '';
 

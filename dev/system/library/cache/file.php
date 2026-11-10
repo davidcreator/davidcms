@@ -14,8 +14,11 @@ namespace Reamur\System\Library\Cache;
 final class File {
     private string $directory;
 
-    public function __construct(private int $expire = 3600) {
-        $this->directory = DIR_STORAGE . 'cache/';
+    public function __construct(private int $expire = 3600, string $directory = '') {
+        $this->expire = max(1, $expire);
+        $this->directory = $directory !== ''
+            ? rtrim($directory, '/\\') . '/'
+            : DIR_STORAGE . 'cache/';
 
         if (!is_dir($this->directory)) {
             mkdir($this->directory, 0755, true);
@@ -23,15 +26,19 @@ final class File {
     }
 
     public function get(string $key): mixed {
-        $file = $this->directory . 'cache.' . preg_replace('/[^a-zA-Z0-9_.\-]/', '', $key);
-
-        if (!is_file($file)) {
+        $file = $this->filePath($key);
+        if ($file === null || !is_file($file)) {
             return null;
         }
 
-        $payload = json_decode((string)file_get_contents($file), true);
+        $raw = @file_get_contents($file);
+        if (!is_string($raw) || $raw === '') {
+            return null;
+        }
 
-        if (!is_array($payload) || ($payload['expire'] ?? 0) < time()) {
+        $payload = json_decode($raw, true);
+
+        if (!is_array($payload) || (int)($payload['expire'] ?? 0) < time()) {
             $this->delete($key);
 
             return null;
@@ -40,34 +47,78 @@ final class File {
         return $payload['data'] ?? null;
     }
 
-    public function set(string $key, mixed $value): void {
-        $file = $this->directory . 'cache.' . preg_replace('/[^a-zA-Z0-9_.\-]/', '', $key);
+    public function set(string $key, mixed $value, int $expire = 0): bool {
+        if ($expire < 0) {
+            return false;
+        }
 
-        file_put_contents($file, json_encode([
-            'expire' => time() + $this->expire,
+        $file = $this->filePath($key);
+        if ($file === null) {
+            return false;
+        }
+
+        $ttl = $expire > 0 ? $expire : $this->expire;
+        $encoded = json_encode([
+            'expire' => time() + $ttl,
             'data'   => $value,
-        ]), LOCK_EX);
+        ]);
+
+        if ($encoded === false) {
+            return false;
+        }
+
+        return file_put_contents($file, $encoded, LOCK_EX) !== false;
     }
 
-    public function delete(string $key): void {
-        $file = $this->directory . 'cache.' . preg_replace('/[^a-zA-Z0-9_.\-]/', '', $key);
-
-        if (is_file($file)) {
-            unlink($file);
+    public function exists(string $key): bool {
+        $file = $this->filePath($key);
+        if ($file === null || !is_file($file)) {
+            return false;
         }
+
+        $raw = @file_get_contents($file);
+        $payload = is_string($raw) ? json_decode($raw, true) : null;
+
+        if (!is_array($payload) || (int)($payload['expire'] ?? 0) < time()) {
+            $this->delete($key);
+            return false;
+        }
+
+        return true;
+    }
+
+    public function delete(string $key): bool {
+        $file = $this->filePath($key);
+        if ($file === null) {
+            return false;
+        }
+
+        return !is_file($file) || @unlink($file);
     }
 
     /**
      * Limpa TODOS os arquivos cache.* (botão "Limpar cache" do painel — F4-01).
-     * O framework registra o adapter cru no Registry (sd no wrapper Cache),
-     * o que tornava o method_exists do wrapper cache/Cache::clear() a apenas
-     * proteção — o adapter em si precisa existir com o mesmo contrato.
      */
-    public function clear(): void {
+    public function clear(): bool {
+        $ok = true;
         foreach (glob($this->directory . 'cache.*') ?: [] as $file) {
-            if (is_file($file)) {
-                unlink($file);
+            if (is_file($file) && !@unlink($file)) {
+                $ok = false;
             }
         }
+        return $ok;
+    }
+
+    private function filePath(string $key): ?string {
+        if ($key === '' || str_contains($key, '..')) {
+            return null;
+        }
+
+        $safe = (string)preg_replace('/[^a-zA-Z0-9_.\-]/', '', $key);
+        if ($safe === '' || str_contains($safe, '..')) {
+            return null;
+        }
+
+        return $this->directory . 'cache.' . $safe;
     }
 }

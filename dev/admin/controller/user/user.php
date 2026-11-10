@@ -77,24 +77,19 @@ class User extends \Reamur\System\Engine\Controller {
         $data['filter_action'] = $this->url->link('user/user');
         $data['total'] = $total;
         $data['showing'] = $total > 0 ? sprintf($data['text_showing'], (($page - 1) * $limit) + 1, min($page * $limit, $total), $total) : '';
-        require_once DIR_SYSTEM . 'library/pagination.php';
-        $pagination = new \Pagination();
-        $pagination->total = $total;
-        $pagination->page = $page;
-        $pagination->limit = $limit;
         $query = 'page={page}';
         foreach (['username' => 'filter_username', 'email' => 'filter_email', 'user_group_id' => 'filter_user_group_id', 'status' => 'filter_status'] as $key => $param) {
             if ((string)$filter[$key] !== '' && !($key === 'status' && $filter[$key] === 'all') && !($key === 'user_group_id' && (int)$filter[$key] === 0)) {
                 $query .= '&' . $param . '=' . rawurlencode((string)$filter[$key]);
             }
         }
-        $pagination->url = $this->url->link('user/user', $query);
-        $pagination->css_class = 'pagination pagination-sm mb-0';
-        $pagination->text_first = $this->language->get('text_page_first');
-        $pagination->text_last = $this->language->get('text_page_last');
-        $pagination->text_next = $this->language->get('text_page_next');
-        $pagination->text_prev = $this->language->get('text_page_prev');
-        $data['pagination'] = $pagination->render();
+        $data['pagination'] = $this->adminPagination(
+            $total,
+            $page,
+            $limit,
+            $this->url->link('user/user', $query),
+            $this->paginationLabels()
+        );
 
         $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
         $this->response->setOutput($this->load->view('user/user_list', $data));

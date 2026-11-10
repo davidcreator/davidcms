@@ -193,6 +193,10 @@ class Mem {
      * 
      * @return bool Sucesso da operação
      */
+    public function clear(): bool {
+        return $this->flush();
+    }
+
     public function flush(): bool {
         if (!$this->ensureConnection()) {
             return false;

@@ -83,24 +83,19 @@ class Webhook extends \Reamur\System\Engine\Controller {
         $data['logs_all'] = $this->url->link('setting/webhook.logs|0');
         $data['total'] = $total;
         $data['showing'] = $total > 0 ? sprintf($data['text_showing'], (($page - 1) * $limit) + 1, min($page * $limit, $total), $total) : '';
-        require_once DIR_SYSTEM . 'library/pagination.php';
-        $pagination = new \Pagination();
-        $pagination->total = $total;
-        $pagination->page = $page;
-        $pagination->limit = $limit;
         $query = 'page={page}';
         foreach (['trigger' => 'filter_trigger', 'url' => 'filter_url', 'status' => 'filter_status'] as $key => $param) {
             if ($filter[$key] !== '' && !($key === 'status' && $filter[$key] === 'all')) {
                 $query .= '&' . $param . '=' . rawurlencode((string)$filter[$key]);
             }
         }
-        $pagination->url = $this->url->link('setting/webhook', $query);
-        $pagination->css_class = 'pagination pagination-sm mb-0';
-        $pagination->text_first = $this->language->get('text_page_first');
-        $pagination->text_last = $this->language->get('text_page_last');
-        $pagination->text_next = $this->language->get('text_page_next');
-        $pagination->text_prev = $this->language->get('text_page_prev');
-        $data['pagination'] = $pagination->render();
+        $data['pagination'] = $this->adminPagination(
+            $total,
+            $page,
+            $limit,
+            $this->url->link('setting/webhook', $query),
+            $this->paginationLabels()
+        );
 
         $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
         $this->response->setOutput($this->load->view('setting/webhook_list', $data));
@@ -326,24 +321,19 @@ class Webhook extends \Reamur\System\Engine\Controller {
 
         $data['back'] = $this->url->link('setting/webhook');
         $data['logs_base'] = $this->url->link('setting/webhook.logs|0');
-        require_once DIR_SYSTEM . 'library/pagination.php';
-        $pagination = new \Pagination();
-        $pagination->total = $data['total'];
-        $pagination->page = $page;
-        $pagination->limit = $limit;
         $logQuery = 'page={page}';
         foreach (['delivery' => 'filter_delivery', 'trigger' => 'filter_trigger', 'http_code' => 'filter_http_code'] as $key => $param) {
             if ((string)$logFilter[$key] !== '' && !($key === 'http_code' && $logFilter[$key] === 0)) {
                 $logQuery .= '&' . $param . '=' . rawurlencode((string)$logFilter[$key]);
             }
         }
-        $pagination->url = $this->url->link('setting/webhook.logs|' . $webhook_id, $logQuery);
-        $pagination->css_class = 'pagination pagination-sm mb-0';
-        $pagination->text_first = $this->language->get('text_page_first');
-        $pagination->text_last = $this->language->get('text_page_last');
-        $pagination->text_next = $this->language->get('text_page_next');
-        $pagination->text_prev = $this->language->get('text_page_prev');
-        $data['pagination'] = $pagination->render();
+        $data['pagination'] = $this->adminPagination(
+            (int)$data['total'],
+            $page,
+            $limit,
+            $this->url->link('setting/webhook.logs|' . $webhook_id, $logQuery),
+            $this->paginationLabels()
+        );
 
         $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 

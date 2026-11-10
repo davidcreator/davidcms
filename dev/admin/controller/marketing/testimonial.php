@@ -83,11 +83,6 @@ class Testimonial extends \Reamur\System\Engine\Controller {
             ? sprintf($data['text_showing'], (($page - 1) * $limit) + 1, min($page * $limit, $total), $total)
             : '';
 
-        require_once DIR_SYSTEM . 'library/pagination.php';
-        $pagination = new \Pagination();
-        $pagination->total = $total;
-        $pagination->page = $page;
-        $pagination->limit = $limit;
         $query = 'page={page}';
         if ($filter_author !== '') {
             $query .= '&filter_author=' . rawurlencode($filter_author);
@@ -95,13 +90,13 @@ class Testimonial extends \Reamur\System\Engine\Controller {
         if ($filter_status !== 'all') {
             $query .= '&filter_status=' . $filter_status;
         }
-        $pagination->url = $this->url->link('marketing/testimonial', $query);
-        $pagination->css_class = 'pagination pagination-sm mb-0';
-        $pagination->text_first = $this->language->get('text_page_first');
-        $pagination->text_last = $this->language->get('text_page_last');
-        $pagination->text_next = $this->language->get('text_page_next');
-        $pagination->text_prev = $this->language->get('text_page_prev');
-        $data['pagination'] = $pagination->render();
+        $data['pagination'] = $this->adminPagination(
+            $total,
+            $page,
+            $limit,
+            $this->url->link('marketing/testimonial', $query),
+            $this->paginationLabels()
+        );
 
         $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
         $this->response->setOutput($this->load->view('marketing/testimonial_list', $data));

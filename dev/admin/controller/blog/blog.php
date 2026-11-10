@@ -139,16 +139,12 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['filter_reset']  = $this->url->link('blog/blog');
 
         // mudança de filtro sempre volta para a página 1 (JS-admin: submit puro)
-        require_once DIR_SYSTEM . 'library/pagination.php';
-
-        $pagination           = new \Pagination();
-        $pagination->total    = $total;
-        $pagination->page     = $page;
-        $pagination->limit    = $limit;
-        $pagination->url      = $this->url->link('blog/blog', 'page={page}' . ($filter_title !== '' ? '&filter_title=' . rawurlencode($filter_title) : '') . ($filter_status !== 'all' ? '&filter_status=' . $filter_status : ''));
-        $pagination->css_class = 'pagination pagination-sm mb-0';
-
-        $data['pagination'] = $pagination->render();
+        $data['pagination'] = $this->adminPagination(
+            $total,
+            $page,
+            $limit,
+            $this->url->link('blog/blog', 'page={page}' . ($filter_title !== '' ? '&filter_title=' . rawurlencode($filter_title) : '') . ($filter_status !== 'all' ? '&filter_status=' . $filter_status : ''))
+        );
         $data['showing']    = $total > 0
             ? sprintf(
                 $this->language->get('text_showing'),

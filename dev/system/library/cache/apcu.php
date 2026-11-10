@@ -133,6 +133,10 @@ class APCU {
      * 
      * @return bool True on success, false on failure
      */
+    public function clear(): bool {
+        return $this->flush();
+    }
+
     public function flush(): bool {
         if (!$this->active) {
             return false;

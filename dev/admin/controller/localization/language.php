@@ -66,17 +66,15 @@ class Language extends \Reamur\System\Engine\Controller {
         $data['filter_reset'] = $this->url->link('localization/language');
         $data['filter_search'] = $search; $data['filter_status'] = $status; $data['total_languages'] = $total;
         $data['showing'] = $total > 0 ? sprintf($this->language->get('text_showing'), ($page - 1) * $limit + 1, min($page * $limit, $total), $total) : '';
-        require_once DIR_SYSTEM . 'library/pagination.php';
-        $pagination = new \Pagination(); $pagination->total = $total; $pagination->page = $page; $pagination->limit = $limit;
-        $pagination->css_class = 'pagination pagination-sm mb-0';
-        $pagination->text_first = $this->language->get('button_first_page');
-        $pagination->text_last = $this->language->get('button_last_page');
-        $pagination->text_next = $this->language->get('button_next_page');
-        $pagination->text_prev = $this->language->get('button_previous_page');
-        $pagination->url = $this->url->link('localization/language', 'page={page}'
-            . ($search !== '' ? '&filter_search=' . rawurlencode($search) : '')
-            . ($status !== 'all' ? '&filter_status=' . $status : ''));
-        $data['pagination'] = $pagination->render();
+        $data['pagination'] = $this->adminPagination(
+            $total,
+            $page,
+            $limit,
+            $this->url->link('localization/language', 'page={page}'
+                . ($search !== '' ? '&filter_search=' . rawurlencode($search) : '')
+                . ($status !== 'all' ? '&filter_status=' . $status : '')),
+            $this->paginationLabels('button')
+        );
         $this->response->setOutput($this->load->view('localization/language_list', $data));
     }
 

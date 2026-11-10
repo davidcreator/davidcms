@@ -80,28 +80,40 @@ class Dispatcher {
                 'delivery_id' => $deliver,
                 'timestamp'   => time(),
                 'data'        => $data,
-            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}';
 
             $signature = hash_hmac('sha256', $body, $secret);
 
-            for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; $attempt++) {
-                if (self::BACKOFF[$attempt] > 0) {
-                    sleep(self::BACKOFF[$attempt]);
-                }
-
-                [$code, $duration] = $this->post($url, $body, $event, $deliver, $signature);
-
+            if (!\Reamur\System\Library\Security\UrlGuard::isSafeExternalUrl($url, true)) {
+                $this->log->write('webhook dispatcher bloqueado (SSRF): ' . $url);
                 $results[] = [
                     'webhook_id' => $wid,
                     'delivery'   => $deliver,
                     'payload'    => $body,
-                    'http_code'  => $code,
-                    'duration'   => $duration,
-                    'attempt'    => $attempt,
+                    'http_code'  => 0,
+                    'duration'   => 0.0,
+                    'attempt'    => 1,
                 ];
+            } else {
+                for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; $attempt++) {
+                    if (self::BACKOFF[$attempt] > 0) {
+                        sleep(self::BACKOFF[$attempt]);
+                    }
 
-                if ($code >= 200 && $code < 300) {
-                    break; // sucesso: encerra os retries deste endpoint
+                    [$code, $duration] = $this->post($url, $body, $event, $deliver, $signature);
+
+                    $results[] = [
+                        'webhook_id' => $wid,
+                        'delivery'   => $deliver,
+                        'payload'    => $body,
+                        'http_code'  => $code,
+                        'duration'   => $duration,
+                        'attempt'    => $attempt,
+                    ];
+
+                    if ($code >= 200 && $code < 300) {
+                        break; // sucesso: encerra os retries deste endpoint
+                    }
                 }
             }
 

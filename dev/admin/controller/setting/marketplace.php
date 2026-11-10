@@ -66,35 +66,29 @@ class Marketplace extends \Reamur\System\Engine\Controller {
         $paymentFilter['start'] = ($paymentPage - 1) * $paymentLimit;
         $paymentFilter['limit'] = $paymentLimit;
 
-        require_once DIR_SYSTEM . 'library/pagination.php';
-        $sellerPagination = new \Pagination();
-        $sellerPagination->total = $sellerTotal;
-        $sellerPagination->page = $sellerPage;
-        $sellerPagination->limit = $sellerLimit;
+        $mpLabels = $this->paginationLabels();
         $sellerQuery = 'seller_page={page}';
         if ($sellerFilter['search'] !== '') { $sellerQuery .= '&filter_seller=' . rawurlencode($sellerFilter['search']); }
         if ($sellerFilter['status'] !== 'all') { $sellerQuery .= '&filter_seller_status=' . $sellerFilter['status']; }
-        $sellerPagination->url = $this->url->link('setting/marketplace', $sellerQuery);
-        $sellerPagination->css_class = 'pagination pagination-sm mb-0';
-        $sellerPagination->text_first = $this->language->get('text_page_first');
-        $sellerPagination->text_last = $this->language->get('text_page_last');
-        $sellerPagination->text_next = $this->language->get('text_page_next');
-        $sellerPagination->text_prev = $this->language->get('text_page_prev');
+        $sellerPaginationHtml = $this->adminPagination(
+            $sellerTotal,
+            $sellerPage,
+            $sellerLimit,
+            $this->url->link('setting/marketplace', $sellerQuery),
+            $mpLabels
+        );
 
-        $paymentPagination = new \Pagination();
-        $paymentPagination->total = $paymentTotal;
-        $paymentPagination->page = $paymentPage;
-        $paymentPagination->limit = $paymentLimit;
         $paymentQuery = 'payment_page={page}';
         if ($paymentFilter['order_id'] > 0) { $paymentQuery .= '&filter_order_id=' . $paymentFilter['order_id']; }
         if ($paymentFilter['customer'] !== '') { $paymentQuery .= '&filter_customer=' . rawurlencode($paymentFilter['customer']); }
         if ($paymentFilter['status'] !== 'all') { $paymentQuery .= '&filter_payment_status=' . rawurlencode($paymentFilter['status']); }
-        $paymentPagination->url = $this->url->link('setting/marketplace', $paymentQuery);
-        $paymentPagination->css_class = 'pagination pagination-sm mb-0';
-        $paymentPagination->text_first = $this->language->get('text_page_first');
-        $paymentPagination->text_last = $this->language->get('text_page_last');
-        $paymentPagination->text_next = $this->language->get('text_page_next');
-        $paymentPagination->text_prev = $this->language->get('text_page_prev');
+        $paymentPaginationHtml = $this->adminPagination(
+            $paymentTotal,
+            $paymentPage,
+            $paymentLimit,
+            $this->url->link('setting/marketplace', $paymentQuery),
+            $mpLabels
+        );
 
         $rawPayments = $this->model_setting_marketplace->getPayments($paymentFilter);
         $payments = array_map(function (array $payment): array {
@@ -176,10 +170,10 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             'payment_filter_status' => $paymentFilter['status'],
             'seller_total' => $sellerTotal,
             'seller_showing' => $sellerTotal > 0 ? sprintf($this->language->get('text_showing'), (($sellerPage - 1) * $sellerLimit) + 1, min($sellerPage * $sellerLimit, $sellerTotal), $sellerTotal) : '',
-            'seller_pagination' => $sellerPagination->render(),
+            'seller_pagination' => $sellerPaginationHtml,
             'payment_total' => $paymentTotal,
             'payment_showing' => $paymentTotal > 0 ? sprintf($this->language->get('text_showing'), (($paymentPage - 1) * $paymentLimit) + 1, min($paymentPage * $paymentLimit, $paymentTotal), $paymentTotal) : '',
-            'payment_pagination' => $paymentPagination->render(),
+            'payment_pagination' => $paymentPaginationHtml,
             'action_save'          => $this->url->link('setting/marketplace.save'),
             'action_connect'       => $this->url->link('setting/marketplace.authorize'),
             'action_refresh'       => $this->url->link('setting/marketplace.refresh'),
