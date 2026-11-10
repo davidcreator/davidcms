@@ -12,6 +12,11 @@ namespace Reamur\Catalog\Controller\Common;
 
 class Three extends \Reamur\System\Engine\Controller {
 
+    /** Default entry point delegates cleanly to asset() (404 when no asset param). */
+    public function index(): void {
+        $this->asset();
+    }
+
     /** Serve one manifest-approved Three.js module from the protected System tree. */
     public function asset(): void {
         $asset = trim((string)($this->request->get['asset'] ?? ''));
@@ -26,7 +31,7 @@ class Three extends \Reamur\System\Engine\Controller {
             return;
         }
 
-        $content = file_get_contents($entry['path']);
+        $content = @file_get_contents($entry['path']);
 
         if ($content === false) {
             $this->response->addHeader('HTTP/1.1 404 Not Found');

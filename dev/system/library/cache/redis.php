@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace Reamur\System\Library\Cache;
 
 use Redis as RedisClient;
@@ -24,7 +24,7 @@ class Redis {
     /** @var bool Connection status flag */
     private bool $connected = false;
 
-    /** @var array Default connection configuration */
+    /** @var array<string, mixed> Default connection configuration */
     private array $config = [
         'hostname' => 'localhost',
         'port' => 6379,
@@ -239,7 +239,7 @@ class Redis {
             $pattern = $this->config['prefix'] . '*';
             $keys = $this->redis->keys($pattern);
             
-            if (empty($keys)) {
+            if (!is_array($keys) || $keys === []) {
                 return true; // No keys to delete
             }
 
@@ -255,7 +255,7 @@ class Redis {
     /**
      * Get cache statistics
      * 
-     * @return array Cache statistics or empty array on error
+     * @return array<string, int|string> Cache statistics or empty array on error
      */
     public function getStats(): array {
         if (!$this->isConnected()) {

@@ -51,8 +51,8 @@ final class Autoloader {
         return false;
     }
 
-    /** PascalCase / CamelCase / Step_1 → snake_case */
+    /** PascalCase / CamelCase / Step_1 / DB / APCU → snake_case */
     private static function toSnake(string $segment): string {
-        return strtolower((string)preg_replace('/(?<!^)[A-Z]/', '_$0', $segment));
+        return strtolower((string)preg_replace('/(?<=[a-z0-9])[A-Z]|(?<!^)[A-Z](?=[a-z])/', '_$0', $segment));
     }
 }

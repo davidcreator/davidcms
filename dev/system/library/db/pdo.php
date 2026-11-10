@@ -61,7 +61,12 @@ final class Pdo {
     }
 
     public function escape(string $value): string {
-        return substr((string)$this->connection->quote($value), 1, -1);
+        $quoted = $this->connection->quote($value);
+        if ($quoted === false) {
+            throw new \RuntimeException('Failed to escape SQL value');
+        }
+
+        return substr($quoted, 1, -1);
     }
 
     public function countAffected(): int {

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace Reamur\System\Library\Cache;
 
 /**
@@ -166,14 +166,15 @@ class APCU {
     /**
      * Get cache statistics
      * 
-     * @return array|null Cache info array or null if not available
+     * @return array<string, mixed> Cache info array or empty array if unavailable
      */
-    public function getStats(): ?array {
+    public function getStats(): array {
         if (!$this->active || !function_exists('apcu_cache_info')) {
-            return null;
+            return [];
         }
 
-        return apcu_cache_info();
+        $info = apcu_cache_info();
+        return is_array($info) ? $info : [];
     }
 
     /**
@@ -183,8 +184,9 @@ class APCU {
      * @return string Prefixed cache key
      */
     private function getCacheKey(string $key): string {
-        $prefix = defined('CACHE_PREFIX') ? CACHE_PREFIX : 'cache_';
-        return $prefix . $key;
+        $prefix = defined('CACHE_PREFIX') ? (string)CACHE_PREFIX : 'cache_';
+        $safe = str_replace(["\0", '..'], '', $key);
+        return $prefix . $safe;
     }
 
     /**

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package ReamurCMS
  * @author David L. Almeida
@@ -15,6 +15,7 @@ namespace Reamur\System\Library;
  */
 class Mail {
     private object $adaptor;
+    /** @var array<string, mixed> */
     private array $option = [];
     
     // Constantes para validação
@@ -25,7 +26,7 @@ class Mail {
     /**
      * Constructor
      * @param string $adaptor The mail adapter to use (default: 'mail')
-     * @param array $option Configuration options for the adapter
+     * @param array<string, mixed> $option Configuration options for the adapter
      * @throws \InvalidArgumentException If adapter is invalid
      * @throws \RuntimeException If adapter fails to initialize
      */
@@ -53,7 +54,7 @@ class Mail {
     /**
      * Initialize the mail adapter
      * @param string $adaptor
-     * @param array $option
+     * @param array<string, mixed> $option
      * @throws \RuntimeException
      */
     private function initializeAdaptor(string $adaptor, array $option): void {
@@ -110,7 +111,7 @@ class Mail {
 
     /**
      * Set recipient email address(es)
-     * @param string|array $to Email address or array of addresses
+     * @param string|array<int|string, mixed> $to Email address or array of addresses
      * @throws \InvalidArgumentException If email is invalid
      */
     public function setTo($to): void {
@@ -257,7 +258,7 @@ class Mail {
 
     /**
      * Get current mail configuration
-     * @return array Current mail options (excluding sensitive data)
+     * @return array<string, mixed> Current mail options (excluding sensitive data)
      */
     public function getOptions(): array {
         // Return copy without sensitive information
@@ -281,7 +282,7 @@ class Mail {
      */
     public function supportsFeature(string $feature): bool {
         if (method_exists($this->adaptor, 'supportsFeature')) {
-            return $this->adaptor->supportsFeature($feature);
+            return (bool)$this->adaptor->supportsFeature($feature);
         }
         return false;
     }
@@ -294,7 +295,7 @@ class Mail {
     public function send(): bool {
         try {
             $this->validateRequiredFields();
-            return $this->adaptor->send($this->option);
+            return (bool)$this->adaptor->send($this->option);
         } catch (\RuntimeException $e) {
             // Re-throw runtime exceptions as-is
             throw $e;

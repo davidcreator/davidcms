@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace Reamur\System\Library\Mail;
 
 use Reamur\System\Engine\Config;

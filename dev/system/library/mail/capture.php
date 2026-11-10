@@ -1,16 +1,19 @@
-<?php
+<?php declare(strict_types=1);
 namespace Reamur\System\Library\Mail;
 
 /**
  * Capture mail adapter for deterministic local and CI regression tests.
  */
 class Capture {
+    /** @var array<string, mixed> */
     protected array $option = [];
 
+    /** @param array<string, mixed> $option */
     public function __construct(array &$option = []) {
         $this->option = &$option;
     }
 
+    /** @param array<string, mixed>|null $option */
     public function send(?array $option = null): bool {
         if (is_array($option) && $option) {
             $this->option = $option;
@@ -18,14 +21,14 @@ class Capture {
 
         $capture_path = trim((string)($this->option['capture_path'] ?? ''));
 
-        if ($capture_path === '') {
+        if ($capture_path === '' || str_contains($capture_path, "\0")) {
             throw new \RuntimeException('Capture path is required for the capture mail adapter.');
         }
 
         $directory = dirname($capture_path);
 
         if (!is_dir($directory)) {
-            @mkdir($directory, 0777, true);
+            @mkdir($directory, 0750, true);
         }
 
         $payload = [
