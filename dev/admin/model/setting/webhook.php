@@ -17,7 +17,6 @@ namespace Reamur\Admin\Model\Setting;
 
 class Webhook extends \Reamur\System\Engine\Model {
 
-
     /**
      * Endpoints filtrados e paginados, agrupados por trigger.
      * @param array<string, mixed> $filter_data
@@ -174,11 +173,6 @@ class Webhook extends \Reamur\System\Engine\Model {
         );
 
         return ($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : [];
-    }
-
-    /** Tabela com prefixo (mesmo helper dos demais models F2) */
-    private function t(string $table): string {
-        return DB_PREFIX . $table;
     }
 
     // ── F5-01 (ADR 0033) — despacho de eventos do lado admin ──────────────

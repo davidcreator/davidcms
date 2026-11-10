@@ -119,8 +119,4 @@ class Setting extends \Reamur\System\Engine\Model {
             : $value;
     }
 
-    /** Tabela com prefixo (mesmo helper dos demais models F2) */
-    private function t(string $table): string {
-        return DB_PREFIX . $table;
-    }
 }

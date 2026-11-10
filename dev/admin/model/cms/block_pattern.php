@@ -114,7 +114,4 @@ class Block_pattern extends \Reamur\System\Engine\Model {
         return $cache;
     }
 
-    private function t(string $table): string {
-        return (defined('DB_PREFIX') ? DB_PREFIX : 'rms_') . $table;
-    }
 }

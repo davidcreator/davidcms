@@ -39,7 +39,7 @@ class Import extends \Reamur\System\Engine\Controller {
         $data = $this->baseData();
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            if (!\Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '')) {
+            if (!$this->csrfValid()) {
                 $data['error'] = $this->language->get('error_csrf');
             } else {
                 $action = (string)($this->request->post['action'] ?? '');

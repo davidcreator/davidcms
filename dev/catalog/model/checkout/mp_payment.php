@@ -159,7 +159,4 @@ class Mp_payment extends \Reamur\System\Engine\Model {
         return ($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : [];
     }
 
-    private function t(string $table): string {
-        return DB_PREFIX . $table;
-    }
 }

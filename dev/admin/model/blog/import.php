@@ -525,7 +525,4 @@ class Import extends \Reamur\System\Engine\Model {
         return array_values(array_filter($out));
     }
 
-    private function t(string $base): string {
-        return DB_PREFIX . $base;
-    }
 }

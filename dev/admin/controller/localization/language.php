@@ -35,13 +35,13 @@ class Language extends \Reamur\System\Engine\Controller {
                     'config_language_catalog' => (string)($this->request->post['config_language_catalog'] ?? ''),
                     'config_language_admin' => (string)($this->request->post['config_language_admin'] ?? ''),
                 ]);
-                $this->flash('success', $this->language->get('text_success_defaults'));
-            } else { $this->flash('error', $error); }
+                $this->setFlash($this->language->get('text_success_defaults'));
+            } else { $this->setFlash($error, 'error'); }
             $this->response->redirect($this->url->link('localization/language'));
             return;
         }
         $data = $this->chrome();
-        $data['text_flash'] = $this->flashReader();
+        $data['text_flash'] = $this->flash();
         $rawSearch = $this->request->get['filter_search'] ?? '';
         $rawStatus = $this->request->get['filter_status'] ?? 'all';
         $search = is_string($rawSearch) ? mb_substr(trim($rawSearch), 0, 255) : '';
@@ -96,7 +96,7 @@ class Language extends \Reamur\System\Engine\Controller {
         $language = $this->model_localization_language->getLanguage($language_id);
 
         if (!$language) {
-            $this->flash('error', $this->language->get('error_not_found'));
+            $this->setFlash($this->language->get('error_not_found'), 'error');
             $this->response->redirect($this->url->link('localization/language'));
             return;
         }
@@ -121,7 +121,7 @@ class Language extends \Reamur\System\Engine\Controller {
                     'status'     => !empty($post['status']) ? 1 : 0,
                 ]);
 
-                $this->flash('success', $this->language->get('text_success_edit'));
+                $this->setFlash($this->language->get('text_success_edit'));
                 $this->response->redirect($this->url->link('localization/language'));
                 return;
             }
@@ -234,10 +234,6 @@ class Language extends \Reamur\System\Engine\Controller {
             'edit' => $this->url->link('localization/language.edit|' . (int)$row['language_id'])];
     }
 
-    private function csrfValid(): bool {
-        return \Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '');
-    }
-
     /** Chrome comum (header/footer + breadcrumbs), padrão dos CRUDs admin */
     private function chrome(): array {
         $data = [];
@@ -284,19 +280,5 @@ class Language extends \Reamur\System\Engine\Controller {
         return $data;
     }
 
-    /** flash + reader no padrão da casa (same session bag) */
-    private function flash(string $type, string $text): void {
-        $this->session->data['flash'] = ['type' => $type, 'text' => $text];
-    }
-
     /** @return array{type: string, text: string} */
-    private function flashReader(): array {
-        $flash = (array)($this->session->data['flash'] ?? []);
-        unset($this->session->data['flash']);
-
-        return [
-            'type' => (string)($flash['type'] ?? ''),
-            'text' => (string)($flash['text'] ?? ''),
-        ];
-    }
 }

@@ -284,7 +284,6 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->response->setOutput($this->load->view('blog/blog_form', $data));
     }
 
-
     /**
      * F9-UI: edicao rapida na grade do blog (titulo, keyword SEO, status e data).
      * POST-only, ACL + CSRF + fingerprint. Preserva as descricoes dos demais
@@ -456,7 +455,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         $downloadRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/download/blog';
         $audioRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/audio/blog';
         $videoRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/video/blog';
-        $base = $this->catalogUrl();
+        $base = $this->siteRootUrl();
         $assetBase = $this->catalogAssetUrl();
         $renderer = new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot, $audioRoot, $videoRoot);
         $rendered = $renderer->renderJson($canonical, (int)$document['format_version'], $assetBase);
@@ -1125,7 +1124,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->document->addScript($this->config->get('site_url') . 'view/js/blog-media.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->document->addScript($this->config->get('site_url') . 'view/js/bdre-concurrency.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
-        $data['seo_base'] = $this->catalogUrl();
+        $data['seo_base'] = $this->siteRootUrl();
         $data['catalog_base'] = $this->catalogAssetUrl();
         $data['can_modify'] = $this->user->hasPermission('modify', 'blog/blog');
         $data['block_editor_available'] = $data['can_modify'] && $this->model_blog_blog->blogBlockContentTableExists();
@@ -1390,7 +1389,7 @@ class Blog extends \Reamur\System\Engine\Controller {
                 continue;
             }
             $canonical = $validator->serializeDocument($decoded['document']);
-            $rendered = $renderer->renderJson($canonical, (int)$decoded['document']['format_version'], $this->catalogUrl());
+            $rendered = $renderer->renderJson($canonical, (int)$decoded['document']['format_version'], $this->siteRootUrl());
             if (!$rendered['valid']) {
                 $result['errors'][] = $this->language->get('error_block_document_invalid');
                 continue;
@@ -1496,14 +1495,6 @@ class Blog extends \Reamur\System\Engine\Controller {
         return $errors;
     }
 
-    /** Valida token em sessão em todos os POSTs mutáveis do Blog. */
-    private function csrfValid(): bool {
-        return \Reamur\System\Library\Security\Csrf::check(
-            $this->session,
-            $this->request->post['csrf_token'] ?? ''
-        );
-    }
-
     private function mediaUploader(): MediaUpload {
         return new MediaUpload(rtrim((string)dirname(DIR_APPLICATION), '/\\') . '/catalog/');
     }
@@ -1549,31 +1540,6 @@ class Blog extends \Reamur\System\Engine\Controller {
         return is_scalar($value) ? trim((string)$value) : '';
     }
 
-    /** Leia-uma-vez (consume) do flash da sessão */
-    private function flash(): array {
-        $session = $this->session;
-
-        $data = ['type' => '', 'text' => ''];
-
-        if ($session instanceof \Reamur\System\Library\Session && !empty($session->data['flash'])) {
-            $data         = (array)$session->data['flash'];
-            $data['type'] = (string)($data['type'] ?? 'success');
-            $data['text'] = (string)($data['text'] ?? '');
-
-            unset($session->data['flash']);
-        }
-
-        return $data;
-    }
-
-    private function setFlash(string $text, string $type = 'success'): void {
-        $session = $this->session;
-
-        if ($session instanceof \Reamur\System\Library\Session) {
-            $session->data['flash'] = ['type' => $type, 'text' => $text];
-        }
-    }
-
     /** Chrome compartilhado + estilo do módulo (F8-01, ADR 0045: par header/footer) */
     private function chrome(array &$data): void {
         $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
@@ -1583,7 +1549,7 @@ class Blog extends \Reamur\System\Engine\Controller {
     }
 
     /** Base pública canônica do site (admin /admin/ → raiz), usada no preview SEO. */
-    private function catalogUrl(): string {
+    private function siteRootUrl(): string {
         $siteUrl = rtrim((string)$this->config->get('site_url', ''), '/') . '/';
 
         return str_ireplace('/admin/', '/', $siteUrl);

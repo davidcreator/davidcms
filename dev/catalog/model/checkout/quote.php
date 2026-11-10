@@ -118,7 +118,4 @@ class Quote extends \Reamur\System\Engine\Model {
         return $order;
     }
 
-    private function t(string $table): string {
-        return DB_PREFIX . $table;
-    }
 }

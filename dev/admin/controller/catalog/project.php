@@ -497,12 +497,6 @@ class Project extends \Reamur\System\Engine\Controller {
         return $errors;
     }
 
-
-    /** Token estável da sessão para add/edit/delete/upload. */
-    private function csrfValid(): bool {
-        return \Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '');
-    }
-
     /** Componente compartilhado de upload (regra dos três — ADR 0011); root = catalog/ irmão do admin */
     private function media(): MediaUpload {
         return new MediaUpload(rtrim((string)dirname(DIR_APPLICATION), '/') . '/catalog/');
@@ -526,46 +520,6 @@ class Project extends \Reamur\System\Engine\Controller {
     /** Resolve o path físico no catalog (irmão do admin); '' se não existir (delega ao MediaUpload) */
     private function imagePath(string $relative): string {
         return $this->media()->absolute($relative);
-    }
-
-    /**
-     * Base pública do CATALOG derivada do site_url do admin (irmão catalog/ —
-     * ADR 0008). Usada só para MONTAR <img src>. HTTP_CATALOG formal fica
-     * para quando o Contrato-Bootstrap ganhar a constante.
-     */
-    private function catalogUrl(): string {
-        $base = (string)$this->config->get('site_url', '');
-
-        if (str_ends_with($base, 'admin/')) {
-            return substr($base, 0, -strlen('admin/')) . 'catalog/';
-        }
-
-        return $base;
-    }
-
-    /** Leia-uma-vez (consume) do flash da sessão */
-    private function flash(): array {
-        $session = $this->session;
-
-        $data = ['type' => '', 'text' => ''];
-
-        if ($session instanceof \Reamur\System\Library\Session && !empty($session->data['flash'])) {
-            $data         = (array)$session->data['flash'];
-            $data['type'] = (string)($data['type'] ?? 'success');
-            $data['text'] = (string)($data['text'] ?? '');
-
-            unset($session->data['flash']);
-        }
-
-        return $data;
-    }
-
-    private function setFlash(string $text, string $type = 'success'): void {
-        $session = $this->session;
-
-        if ($session instanceof \Reamur\System\Library\Session) {
-            $session->data['flash'] = ['type' => $type, 'text' => $text];
-        }
     }
 
     /** Chrome compartilhado + estilo do módulo */

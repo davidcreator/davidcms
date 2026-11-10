@@ -585,7 +585,4 @@ class Definition extends \Reamur\System\Engine\Model {
         return $where ? ' WHERE ' . implode(' AND ', $where) : '';
     }
 
-    private function t(string $table): string {
-        return DB_PREFIX . $table;
-    }
 }

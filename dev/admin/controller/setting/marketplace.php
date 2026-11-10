@@ -519,7 +519,7 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             ]],
             'marketplace_fee'    => $fee,
             'external_reference' => (string)$order_id,
-            'notification_url'   => $this->catalogUrl('checkout/payment.notify'),
+            'notification_url'   => $this->catalogRouteUrl('checkout/payment.notify'),
         ], (string)$seller['access_token']);
 
         $preference_id = (string)($preference['id'] ?? '');
@@ -557,7 +557,7 @@ class Marketplace extends \Reamur\System\Engine\Controller {
 
     /** Link público do cliente (catálogo — sem sessão) */
     private function publicPayUrl(string $token): string {
-        return $this->catalogUrl('checkout/payment.pay|' . $token);
+        return $this->catalogRouteUrl('checkout/payment.pay|' . $token);
     }
 
     /**
@@ -566,7 +566,7 @@ class Marketplace extends \Reamur\System\Engine\Controller {
      * convenção do Contrato-Bootstrap). Nunca usar site_url "cru" aqui:
      * apontaria o cliente para a aplicação admin (bug da revisão F5-03).
      */
-    private function catalogUrl(string $route): string {
+    private function catalogRouteUrl(string $route): string {
         $base = rtrim((string)$this->config->get('site_url'), '/');
 
         if (str_ends_with($base, '/admin')) {
@@ -591,27 +591,6 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             // F5-03 (ADR 0035 §3): base /checkout/preferences + /v1/payments
             'api_url'       => (string)($settings['mp_api_url'] ?? ''),
         ]);
-    }
-
-    private function flash(): array {
-        $flash = $this->session->data['flash'] ?? ['type' => '', 'text' => ''];
-
-        unset($this->session->data['flash']);
-
-        return ['type' => (string)($flash['type'] ?? ''), 'text' => (string)($flash['text'] ?? '')];
-    }
-
-    /** Lê valores escalares da querystring sem converter arrays para string. */
-    private function queryValue(string $key): string {
-        $value = $this->request->get[$key] ?? '';
-        return is_scalar($value) ? trim((string)$value) : '';
-    }
-
-    private function csrfValid(): bool {
-        return \Reamur\System\Library\Security\Csrf::check(
-            $this->session,
-            (string)($this->request->post['csrf_token'] ?? '')
-        );
     }
 
     /** Chrome compartilhado (mesmo padrão dos demais módulos admin) */

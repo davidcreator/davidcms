@@ -176,11 +176,6 @@ class Block_pattern extends \Reamur\System\Engine\Controller {
         return $this->jsonPost[$key] ?? null;
     }
 
-    private function csrfValid(): bool {
-        $token = $this->postValue('csrf_token');
-        return \Reamur\System\Library\Security\Csrf::check($this->session, is_string($token) ? $token : '');
-    }
-
     private function json(array $payload, int $status = 200): void {
         $this->response->addHeader('Content-Type: application/json; charset=utf-8');
         $this->response->addHeader('Cache-Control: no-store, private');

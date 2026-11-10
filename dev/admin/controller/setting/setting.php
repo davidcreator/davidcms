@@ -299,13 +299,6 @@ class Setting extends \Reamur\System\Engine\Controller {
             : (string)$this->config->get('mail_smtp_password', '');
     }
 
-    private function csrfValid(): bool {
-        return \Reamur\System\Library\Security\Csrf::check(
-            $this->session,
-            (string)($this->request->post['csrf_token'] ?? '')
-        );
-    }
-
     /**
      * @param array<string, string> $post
      * @return array<string, string> field → mensagem de erro
@@ -363,19 +356,4 @@ class Setting extends \Reamur\System\Engine\Controller {
         $data['footer']     = $this->load->controller('common/footer', $data);
     }
 
-    private function flash(): array {
-        $session = $this->session;
-
-        $data = ['type' => '', 'text' => ''];
-
-        if ($session instanceof \Reamur\System\Library\Session && !empty($session->data['flash'])) {
-            $data         = (array)$session->data['flash'];
-            $data['type'] = (string)($data['type'] ?? 'success');
-            $data['text'] = (string)($data['text'] ?? '');
-
-            unset($session->data['flash']);
-        }
-
-        return $data;
-    }
 }

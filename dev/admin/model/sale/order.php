@@ -254,8 +254,4 @@ class Order extends \Reamur\System\Engine\Model {
         );
     }
 
-    /** Tabela com prefixo (mesmo helper dos demais models F2) */
-    private function t(string $table): string {
-        return DB_PREFIX . $table;
-    }
 }

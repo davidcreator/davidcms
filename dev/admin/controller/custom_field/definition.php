@@ -155,9 +155,7 @@ class Definition extends \Reamur\System\Engine\Controller {
     private function labels(array $keys): array { $d=[];foreach($keys as $k)$d[$k]=$this->language->get($k);return $d; }
     private function canModifyPost(): bool { if($this->isPost()&&!$this->user->hasPermission('modify',self::ROUTE)){$this->response->redirect($this->url->link('error/permission'));return false;}return true; }
     private function isPost(): bool { return ($this->request->server['REQUEST_METHOD']??'GET')==='POST'; }
-    private function csrfValid(): bool { return \Reamur\System\Library\Security\Csrf::check($this->session,$this->request->post['csrf_token']??''); }
-    private function flash(): array { $s=$this->session;$d=['type'=>'','text'=>''];if($s instanceof \Reamur\System\Library\Session&&!empty($s->data['flash'])){$d=(array)$s->data['flash'];unset($s->data['flash']);}return $d; }
-    private function setFlash(string $text,string $type='success'): void { $s=$this->session;if($s instanceof \Reamur\System\Library\Session)$s->data['flash']=['type'=>$type,'text'=>$text]; }
+    protected function csrfValid(): bool { return \Reamur\System\Library\Security\Csrf::check($this->session,$this->request->post['csrf_token']??''); }
     private function chrome(array &$data): void {
         $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $data['header']=$this->load->controller('common/header',$data);

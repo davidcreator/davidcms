@@ -262,10 +262,6 @@ class Contact_message extends \Reamur\System\Engine\Controller {
         return in_array($text, ['0', '1', '2'], true) ? (int)$text : null;
     }
 
-    private function csrfValid(): bool {
-        return \Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '');
-    }
-
     /** Voltar para o detalhe (from=read) ou para a grade (padrão) */
     private function readBackUrl(int $id): string {
         return (($this->request->post['from'] ?? '') === 'read')
@@ -280,31 +276,6 @@ class Contact_message extends \Reamur\System\Engine\Controller {
             MessageModel::STATUS_REPLIED => $this->language->get('text_replied'),
             default                      => $this->language->get('text_new'),
         };
-    }
-
-    /** Leia-uma-vez (consume) do flash da sessão — mesmo helper dos demais CRUDs */
-    private function flash(): array {
-        $session = $this->session;
-
-        $data = ['type' => '', 'text' => ''];
-
-        if ($session instanceof \Reamur\System\Library\Session && !empty($session->data['flash'])) {
-            $data         = (array)$session->data['flash'];
-            $data['type'] = (string)($data['type'] ?? 'success');
-            $data['text'] = (string)($data['text'] ?? '');
-
-            unset($session->data['flash']);
-        }
-
-        return $data;
-    }
-
-    private function setFlash(string $text, string $type = 'success'): void {
-        $session = $this->session;
-
-        if ($session instanceof \Reamur\System\Library\Session) {
-            $session->data['flash'] = ['type' => $type, 'text' => $text];
-        }
     }
 
     /** Chrome compartilhado + estilo do módulo */

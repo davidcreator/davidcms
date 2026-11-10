@@ -165,11 +165,4 @@ class User extends \Reamur\System\Engine\Model {
         return implode(' AND ', $where);
     }
 
-    private function t(string $table): string {
-        return $this->prefix() . $table;
-    }
-
-    private function prefix(): string {
-        return defined('DB_PREFIX') ? DB_PREFIX : 'rms_';
-    }
 }

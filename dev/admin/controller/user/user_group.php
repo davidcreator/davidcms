@@ -261,41 +261,6 @@ class User_group extends \Reamur\System\Engine\Controller {
         return $routes;
     }
 
-    private function flash(): array {
-        $session = $this->session;
-        $data    = ['type' => '', 'text' => ''];
-
-        if ($session instanceof \Reamur\System\Library\Session && !empty($session->data['flash'])) {
-            $data = (array)$session->data['flash'];
-            $data['type'] = (string)($data['type'] ?? 'success');
-            $data['text'] = (string)($data['text'] ?? '');
-
-            unset($session->data['flash']);
-        }
-
-        return $data;
-    }
-
-    private function setFlash(string $text, string $type = 'success'): void {
-        $session = $this->session;
-
-        if ($session instanceof \Reamur\System\Library\Session) {
-            $session->data['flash'] = ['type' => $type, 'text' => $text];
-        }
-    }
-
-    private function queryValue(string $key): string {
-        $value = $this->request->get[$key] ?? '';
-        return is_scalar($value) ? trim((string)$value) : '';
-    }
-
-    private function csrfValid(): bool {
-        return \Reamur\System\Library\Security\Csrf::check(
-            $this->session,
-            (string)($this->request->post['csrf_token'] ?? '')
-        );
-    }
-
     private function chrome(array &$data): void {
         $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 

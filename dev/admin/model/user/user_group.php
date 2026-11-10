@@ -84,7 +84,6 @@ class User_group extends \Reamur\System\Engine\Model {
         ]);
     }
 
-
     /** F4-04 (ADR 0027): total de usuários vinculados (0 = grupo segregável) */
     public function countUsers(int $user_group_id): int {
         $query = $this->db->query(
@@ -138,11 +137,4 @@ class User_group extends \Reamur\System\Engine\Model {
         );
     }
 
-    private function t(string $table): string {
-        return $this->prefix() . $table;
-    }
-
-    private function prefix(): string {
-        return defined('DB_PREFIX') ? DB_PREFIX : 'rms_';
-    }
 }

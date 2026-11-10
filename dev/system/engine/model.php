@@ -8,12 +8,13 @@
  *
  * Classe base de todo model (Arquitetura-MVCL §7).
  * Mesmo acesso mágico ao Registry dos controllers: $this->db, $this->config, ...
- *
- * @property \Reamur\System\Library\Db    $db
- * @property \Reamur\System\Engine\Config $config
  */
 namespace Reamur\System\Engine;
 
+/**
+ * @property \Reamur\System\Library\Db    $db
+ * @property \Reamur\System\Engine\Config $config
+ */
 class Model {
     public function __construct(protected Registry $registry) {}
 
@@ -22,16 +23,26 @@ class Model {
         return $this->registry->get($key);
     }
 
+    /** Prefixa o nome lógico da tabela com DB_PREFIX. */
+    protected function t(string $table): string {
+        return (defined('DB_PREFIX') ? DB_PREFIX : 'rms_') . $table;
+    }
+
     /** Verifica se a tabela prefixada existe no banco atual (cacheada por requisição). */
     protected function hasTable(string $table): bool {
         static $cache = [];
 
-        $full = DB_PREFIX . $table;
+        $full = $this->t($table);
         if (array_key_exists($full, $cache)) {
             return $cache[$full];
         }
 
-        $query = $this->db->query("SHOW TABLES LIKE '" . $this->db->escape($full) . "'");
+        $db = $this->registry->get('db');
+        if (!$db) {
+            return false;
+        }
+
+        $query = $db->query("SHOW TABLES LIKE '" . $db->escape($full) . "'");
         $cache[$full] = $query instanceof \stdClass && $query->num_rows > 0;
 
         return $cache[$full];
@@ -41,7 +52,8 @@ class Model {
     protected function currentLanguageId(): int {
         static $cache = [];
 
-        $code = (string)$this->config->get('language_directory', 'en-us');
+        $config = $this->registry->get('config');
+        $code = $config ? (string)$config->get('language_directory', 'en-us') : 'en-us';
         if ($code === '') {
             $code = 'en-us';
         }
@@ -50,9 +62,14 @@ class Model {
             return $cache[$code];
         }
 
-        $query = $this->db->query(
-            "SELECT `language_id` FROM `" . DB_PREFIX . "language`
-             WHERE `code` = '" . $this->db->escape($code) . "' LIMIT 1"
+        $db = $this->registry->get('db');
+        if (!$db) {
+            return 1;
+        }
+
+        $query = $db->query(
+            "SELECT `language_id` FROM `" . $this->t('language') . "`
+             WHERE `code` = '" . $db->escape($code) . "' LIMIT 1"
         );
 
         $cache[$code] = ($query instanceof \stdClass && !empty($query->row))

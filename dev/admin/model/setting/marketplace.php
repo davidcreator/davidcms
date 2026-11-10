@@ -200,8 +200,4 @@ class Marketplace extends \Reamur\System\Engine\Model {
         return implode(' AND ', $where);
     }
 
-    /** Tabela com prefixo (mesmo helper dos demais models) */
-    private function t(string $table): string {
-        return DB_PREFIX . $table;
-    }
 }

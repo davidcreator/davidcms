@@ -80,5 +80,4 @@ class Value extends \Reamur\System\Engine\Model {
         return $this->db->query("DELETE FROM `".$this->t('custom_field_value')."` WHERE `entity_type`='".self::ENTITY."' AND `entity_id`='".$page_id."'") !== false;
     }
 
-    private function t(string $table): string { return DB_PREFIX.$table; }
 }

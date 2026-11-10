@@ -437,8 +437,4 @@ class Blog extends \Reamur\System\Engine\Model {
         }
     }
 
-    /** Nome real da tabela com o prefixo do banco (padrão Model base) */
-    private function t(string $base): string {
-        return DB_PREFIX . $base;
-    }
 }

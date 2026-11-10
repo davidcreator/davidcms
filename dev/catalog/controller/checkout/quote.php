@@ -262,30 +262,6 @@ class Quote extends \Reamur\System\Engine\Controller {
         ];
     }
 
-    private function flash(): array {
-        $session = $this->session;
-
-        $data = ['type' => '', 'text' => ''];
-
-        if ($session instanceof \Reamur\System\Library\Session && !empty($session->data['flash'])) {
-            $data         = (array)$session->data['flash'];
-            $data['type'] = (string)($data['type'] ?? 'success');
-            $data['text'] = (string)($data['text'] ?? '');
-
-            unset($session->data['flash']);
-        }
-
-        return $data;
-    }
-
-    private function setFlash(string $text, string $type = 'success'): void {
-        $session = $this->session;
-
-        if ($session instanceof \Reamur\System\Library\Session) {
-            $session->data['flash'] = ['type' => $type, 'text' => $text];
-        }
-    }
-
     private function chrome(array &$data): void {
         $this->document->addStyle($this->config->get('site_url') . 'view/css/common.css');
 

@@ -109,7 +109,4 @@ class Project extends \Reamur\System\Engine\Model {
         return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
     }
 
-    private function t(string $table): string {
-        return DB_PREFIX . $table;
-    }
 }

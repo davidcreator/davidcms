@@ -106,8 +106,4 @@ class Language extends \Reamur\System\Engine\Model {
         return $codes;
     }
 
-    /** Helper local (ADR 0024 §1): tabela com prefixo, sem mágica de base */
-    private function t(string $table): string {
-        return DB_PREFIX . $table;
-    }
 }

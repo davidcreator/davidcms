@@ -1168,8 +1168,6 @@ class Page extends \Reamur\System\Engine\Controller {
                     ];
                 }
 
-
-
         }
 
         $data['error']      = '';
@@ -1517,36 +1515,6 @@ class Page extends \Reamur\System\Engine\Controller {
         if (str_ends_with($base, 'admin/')) return substr($base, 0, -strlen('admin/')) . 'catalog/';
         if (str_ends_with($base, 'catalog/')) return $base;
         return rtrim($base, '/') . '/catalog/';
-    }
-
-    /** Token estável da sessão em todas as mutações de cms/page. */
-    private function csrfValid(): bool {
-        return \Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '');
-    }
-
-    /** Leia-uma-vez (consume) do flash da sessão */
-    private function flash(): array {
-        $session = $this->session;
-
-        $data = ['type' => '', 'text' => ''];
-
-        if ($session instanceof \Reamur\System\Library\Session && !empty($session->data['flash'])) {
-            $data         = (array)$session->data['flash'];
-            $data['type'] = (string)($data['type'] ?? 'success');
-            $data['text'] = (string)($data['text'] ?? '');
-
-            unset($session->data['flash']);
-        }
-
-        return $data;
-    }
-
-    private function setFlash(string $text, string $type = 'success'): void {
-        $session = $this->session;
-
-        if ($session instanceof \Reamur\System\Library\Session) {
-            $session->data['flash'] = ['type' => $type, 'text' => $text];
-        }
     }
 
     /** Chrome compartilhado + estilo do módulo */

@@ -208,28 +208,6 @@ class Site_info extends \Reamur\System\Engine\Controller {
     }
 
     /** @return array{type: string, text: string} */
-    private function flash(): array {
-        $session = $this->session;
-
-        $data = ['type' => '', 'text' => ''];
-
-        if ($session instanceof \Reamur\System\Library\Session && !empty($session->data['flash'])) {
-            $data         = (array)$session->data['flash'];
-            $data['type'] = (string)($data['type'] ?? 'success');
-            $data['text'] = (string)($data['text'] ?? '');
-
-            unset($session->data['flash']);
-        }
-
-        return $data;
-    }
-
-    private function csrfValid(): bool {
-        return \Reamur\System\Library\Security\Csrf::check(
-            $this->session,
-            (string)($this->request->post['csrf_token'] ?? '')
-        );
-    }
 
     private function chrome(array &$data): void {
         $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);

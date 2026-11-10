@@ -113,8 +113,4 @@ class Client_logo extends \Reamur\System\Engine\Model {
         $this->db->query("DELETE FROM `" . $this->t('client_logo') . "` WHERE `client_logo_id` = '" . $client_logo_id . "'");
     }
 
-    /** Tabela com prefixo (mesmo helper dos demais models F2) */
-    private function t(string $table): string {
-        return DB_PREFIX . $table;
-    }
 }

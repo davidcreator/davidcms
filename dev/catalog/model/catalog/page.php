@@ -98,7 +98,4 @@ class Page extends \Reamur\System\Engine\Model {
         return $available;
     }
 
-    private function t(string $table): string {
-        return DB_PREFIX . $table;
-    }
 }

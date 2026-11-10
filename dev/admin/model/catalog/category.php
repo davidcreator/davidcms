@@ -277,8 +277,4 @@ class Category extends \Reamur\System\Engine\Model {
         }
     }
 
-    private function t(string $table): string {
-        return DB_PREFIX . $table;
-    }
-
 }

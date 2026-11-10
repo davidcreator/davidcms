@@ -261,25 +261,6 @@ class Appearance extends \Reamur\System\Engine\Controller {
         return $data;
     }
 
-    /** Leia-uma-vez do flash da sessão */
-    private function flash(): array {
-        $data = ['type' => '', 'text' => ''];
-
-        if (!empty($this->session->data['flash'])) {
-            $data         = (array)$this->session->data['flash'];
-            $data['type'] = (string)($data['type'] ?? 'success');
-            $data['text'] = (string)($data['text'] ?? '');
-
-            unset($this->session->data['flash']);
-        }
-
-        return $data;
-    }
-
-    private function setFlash(string $text, string $type = 'success'): void {
-        $this->session->data['flash'] = ['type' => $type, 'text' => $text];
-    }
-
     /** Chrome compartilhado (F8-01) */
     private function chrome(array &$data): void {
         $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
