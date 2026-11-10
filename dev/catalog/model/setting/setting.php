@@ -33,12 +33,43 @@ class Setting extends \Reamur\System\Engine\Model {
             foreach ($rows->rows as $row) {
                 $row = (array)$row;
 
-                $map[(string)$row['key']] = ((int)$row['serialized'])
-                    ? (string)unserialize((string)$row['value'], ['allowed_classes' => false])
-                    : (string)$row['value'];
+                $map[(string)$row['key']] = $this->decodeSettingValue((string)$row['value'], (int)$row['serialized']);
             }
         }
 
         return $map;
+    }
+
+    private function decodeSettingValue(string $value, int $serialized): string {
+        if ($serialized === 0) {
+            return $value;
+        }
+
+        if ($value === 'b:0;') {
+            return '0';
+        }
+
+        if ($value === '' || preg_match('/^(?:[abisdOCrR]:|N;)/', $value) !== 1) {
+            return '';
+        }
+
+        $decoded = @unserialize($value, ['allowed_classes' => false]);
+        if ($decoded === false) {
+            return '';
+        }
+
+        if (is_bool($decoded)) {
+            return $decoded ? '1' : '0';
+        }
+
+        if (is_scalar($decoded)) {
+            return (string)$decoded;
+        }
+
+        if (is_array($decoded)) {
+            return json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '';
+        }
+
+        return '';
     }
 }

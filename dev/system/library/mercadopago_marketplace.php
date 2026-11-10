@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace Reamur\System\Library;
 
 use Reamur\System\Library\Security\UrlGuard;
@@ -303,8 +303,8 @@ class MercadopagoMarketplace {
             getenv('CURL_CA_BUNDLE') ?: '',
             (string)ini_get('curl.cainfo'),
             (string)ini_get('openssl.cafile'),
-            defined('DIR_STORAGE') ? rtrim(DIR_STORAGE, '/\\') . '/certs/cacert.pem' : '',
-            defined('DIR_SYSTEM') ? rtrim(DIR_SYSTEM, '/\\') . '/storage/certs/cacert.pem' : ''
+            defined('DIR_STORAGE') ? rtrim((string)DIR_STORAGE, '/\\') . '/certs/cacert.pem' : '',
+            defined('DIR_SYSTEM') ? rtrim((string)DIR_SYSTEM, '/\\') . '/storage/certs/cacert.pem' : ''
         ]);
 
         foreach ($candidates as $candidate) {

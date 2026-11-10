@@ -11,6 +11,10 @@
 namespace Reamur\Catalog\Controller\Cms;
 
 class Page extends \Reamur\System\Engine\Controller {
+    public function index(): void {
+        $this->info('0');
+    }
+
     public function info(string $page_id = '0'): void {
         $page_id = (int)$page_id;
         $this->load->language('cms/page');

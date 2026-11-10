@@ -384,14 +384,13 @@ class Theme extends \Reamur\System\Engine\Controller {
      * zero escrita. O checksum cobre exatamente o config exportado.
      */
     public function export(string $theme_id='0'): void {
+        if (!$this->user->hasPermission('access','design/theme')) { $this->jsonResponse(['ok'=>false,'errors'=>['forbidden']], 403, true); return; }
+        $this->load->model('design/theme');
+        $id=(int)$theme_id; $theme=$id?$this->model_design_theme->getTheme($id):[];
+        if (!$theme) { $this->jsonResponse(['ok'=>false,'errors'=>['forbidden']], 404, true); return; }
         $this->response->addHeader('Content-Type: application/json; charset=utf-8');
         $this->response->addHeader('Cache-Control: no-store');
         $this->response->addHeader('X-Content-Type-Options: nosniff');
-        $fail=static function(): string { return (string)json_encode(['ok'=>false,'errors'=>['forbidden']]); };
-        if (!$this->user->hasPermission('access','design/theme')) { $this->response->setOutput($fail()); return; }
-        $this->load->model('design/theme');
-        $id=(int)$theme_id; $theme=$id?$this->model_design_theme->getTheme($id):[];
-        if (!$theme) { $this->response->setOutput($fail()); return; }
         $source=(string)($this->request->get['source']??'draft')==='published' ? 'published' : 'draft';
         $config=$source==='published'?$this->model_design_theme->getPublishedConfig($id):$this->model_design_theme->getDraftConfig($id);
         $package=$this->theme_package->export((string)($theme['name']??''),(string)($theme['slug']??''),$config,['source'=>$source]);
@@ -466,16 +465,12 @@ class Theme extends \Reamur\System\Engine\Controller {
      * ACL + CSRF + no-store; contexto reconstruido apenas com allowlists.
      */
     public function simulate(): void {
-        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
-        $this->response->addHeader('Cache-Control: no-store');
-        $this->response->addHeader('X-Content-Type-Options: nosniff');
-        $jsonFlags=JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE;
-        $fail=static function(string $code) use ($jsonFlags): array {
+        $fail=static function(string $code): array {
             return ['ok'=>false,'errors'=>[['code'=>$code,'path'=>'request','rule'=>-1]],'matched'=>[],'ignored'=>[],'overrides'=>[]];
         };
-        if (!$this->user->hasPermission('access','design/theme')) { $this->response->setOutput(json_encode($fail('forbidden'),$jsonFlags) ?: '{}'); return; }
+        if (!$this->user->hasPermission('access','design/theme')) { $this->jsonResponse($fail('forbidden'), 200, true); return; }
         $post=$this->request->post;
-        if (!\Reamur\System\Library\Security\Csrf::check($this->session,(string)($post['csrf_token']??''))) { $this->response->setOutput(json_encode($fail('csrf'),$jsonFlags) ?: '{}'); return; }
+        if (!\Reamur\System\Library\Security\Csrf::check($this->session,(string)($post['csrf_token']??''))) { $this->jsonResponse($fail('csrf'), 200, true); return; }
         $conditions=json_decode((string)($post['conditions']??''),true);
         $conditions=is_array($conditions)?$conditions:['version'=>1,'rules'=>[]];
         $engine=$this->theme_condition_engine;
@@ -493,7 +488,7 @@ class Theme extends \Reamur\System\Engine\Controller {
             ],
             'context'=>$context,
         ];
-        $this->response->setOutput(json_encode($payload,$jsonFlags) ?: '{}');
+        $this->jsonResponse($payload, 200, true);
     }
 
     /**

@@ -114,9 +114,36 @@ class Setting extends \Reamur\System\Engine\Model {
     }
 
     private function unserialize(string $value, int $serialized): string {
-        return $serialized
-            ? (string)unserialize($value, ['allowed_classes' => false])
-            : $value;
+        if ($serialized === 0) {
+            return $value;
+        }
+
+        if ($value === 'b:0;') {
+            return '0';
+        }
+
+        if ($value === '' || preg_match('/^(?:[abisdOCrR]:|N;)/', $value) !== 1) {
+            return '';
+        }
+
+        $decoded = @unserialize($value, ['allowed_classes' => false]);
+        if ($decoded === false) {
+            return '';
+        }
+
+        if (is_bool($decoded)) {
+            return $decoded ? '1' : '0';
+        }
+
+        if (is_scalar($decoded)) {
+            return (string)$decoded;
+        }
+
+        if (is_array($decoded)) {
+            return json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '';
+        }
+
+        return '';
     }
 
 }

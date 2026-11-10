@@ -12,5 +12,4 @@ parameters:
         - phpstan-bootstrap.php   # constantes do Contrato §1.1 simuladas para análise
     excludePaths:
         - ../storage/vendor/*
-        - ../webhook/controller/*   # estilo-ponte legado (ControllerWebhook*), tratamento na Fase 5
     treatPhpDocTypesAsCertain: false

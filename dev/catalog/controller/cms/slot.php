@@ -12,6 +12,10 @@ namespace Reamur\Catalog\Controller\Cms;
 
 class Slot extends \Reamur\System\Engine\Controller {
 
+    public function index(): void {
+        (new \Reamur\System\Engine\Action('error/not_found'))->execute($this->registry);
+    }
+
     /** Renderiza conteúdo público validado de uma chave de rota fixa. */
     public function render(string $system_key = '', int $apply_meta = 1): string {
         $system_key = strtolower(trim($system_key));

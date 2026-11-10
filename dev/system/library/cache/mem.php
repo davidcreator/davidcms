@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace Reamur\System\Library\Cache;
 
 use Exception;
@@ -74,7 +74,7 @@ class Mem {
             $attempts++;
             
             try {
-                $this->connected = (bool)$this->memcache->pconnect(CACHE_HOSTNAME, (int)CACHE_PORT, self::CONNECTION_TIMEOUT);
+                $this->connected = (bool)$this->memcache->pconnect((string)CACHE_HOSTNAME, (int)CACHE_PORT, self::CONNECTION_TIMEOUT);
                 
                 if (!$this->connected) {
                     throw new Exception("Falha na conexão persistente - tentativa {$attempts}");
@@ -123,7 +123,7 @@ class Mem {
         }
 
         try {
-            $result = $this->memcache->get(CACHE_PREFIX . $key);
+            $result = $this->memcache->get($this->formatKey($key));
             return $result === false ? null : $result;
         } catch (Exception $e) {
             error_log("Erro ao recuperar cache '{$key}': " . $e->getMessage());
@@ -154,7 +154,7 @@ class Mem {
 
         try {
             return $this->memcache->set(
-                CACHE_PREFIX . $key, 
+                $this->formatKey($key), 
                 $value, 
                 MEMCACHE_COMPRESSED, 
                 $expire
@@ -181,7 +181,7 @@ class Mem {
         }
 
         try {
-            return $this->memcache->delete(CACHE_PREFIX . $key);
+            return $this->memcache->delete($this->formatKey($key));
         } catch (Exception $e) {
             error_log("Erro ao deletar cache '{$key}': " . $e->getMessage());
             return false;
@@ -224,21 +224,27 @@ class Mem {
         return $this->get($key) !== null;
     }
 
+    private function formatKey(string $key): string {
+        $safe = str_replace(["\0", '..'], '', $key);
+        return (string)CACHE_PREFIX . $safe;
+    }
+
     /**
      * Obtém estatísticas do servidor Memcache
      * 
-     * @return array|null Estatísticas ou null em caso de erro
+     * @return array<string, mixed> Estatísticas ou array vazio em caso de erro
      */
-    public function getStats(): ?array {
-        if (!$this->ensureConnection()) {
-            return null;
+    public function getStats(): array {
+        if (!$this->ensureConnection() || $this->memcache === null) {
+            return [];
         }
 
         try {
-            return $this->memcache->getStats();
+            $stats = $this->memcache->getStats();
+            return is_array($stats) ? $stats : [];
         } catch (Exception $e) {
             error_log("Erro ao obter estatísticas do cache: " . $e->getMessage());
-            return null;
+            return [];
         }
     }
 
@@ -248,12 +254,13 @@ class Mem {
      * @return string|null Versão do servidor ou null em caso de erro
      */
     public function getVersion(): ?string {
-        if (!$this->ensureConnection()) {
+        if (!$this->ensureConnection() || $this->memcache === null) {
             return null;
         }
 
         try {
-            return $this->memcache->getVersion();
+            $version = $this->memcache->getVersion();
+            return is_string($version) ? $version : null;
         } catch (Exception $e) {
             error_log("Erro ao obter versão do servidor: " . $e->getMessage());
             return null;

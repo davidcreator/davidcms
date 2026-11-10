@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace Reamur\System\Library\Cache;
 
 /**
@@ -36,10 +36,10 @@ class Memcached {
 		
 		// Check if server is already added to avoid duplicates
 		if (empty($this->memcached->getServerList())) {
-			$this->connected = $this->memcached->addServer(CACHE_HOSTNAME, (int)CACHE_PORT);
+			$this->connected = $this->memcached->addServer((string)CACHE_HOSTNAME, (int)CACHE_PORT);
 			
 			if (!$this->connected) {
-				throw new \Exception('Failed to connect to Memcached server at ' . CACHE_HOSTNAME . ':' . CACHE_PORT);
+				throw new \Exception('Failed to connect to Memcached server at ' . (string)CACHE_HOSTNAME . ':' . (int)CACHE_PORT);
 			}
 		} else {
 			$this->connected = true;
@@ -83,10 +83,10 @@ class Memcached {
 	/**
 	 * Get value from cache
 	 * @param string $key
-	 * @return array|string|null
+	 * @return mixed
 	 * @throws \InvalidArgumentException
 	 */
-	public function get(string $key): array|string|null {
+	public function get(string $key): mixed {
 		$this->validateKey($key);
 
 		if (!$this->connected) {
@@ -111,7 +111,7 @@ class Memcached {
 	 * @return bool Success status
 	 * @throws \InvalidArgumentException
 	 */
-	public function set(string $key, array|string|null $value, int $expire = 0): bool {
+	public function set(string $key, mixed $value, int $expire = 0): bool {
 		$this->validateKey($key);
 
 		if (!$this->connected) {
@@ -209,13 +209,14 @@ class Memcached {
 
 	/**
 	 * Get cache statistics
-	 * @return array|false
+	 * @return array<string, mixed>
 	 */
-	public function getStats(): array|false {
+	public function getStats(): array {
 		if (!$this->connected) {
-			return false;
+			return [];
 		}
 
-		return $this->memcached->getStats();
+		$stats = $this->memcached->getStats();
+		return is_array($stats) ? $stats : [];
 	}
 }

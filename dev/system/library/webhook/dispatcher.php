@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace Reamur\System\Library\Webhook;
 
 /**
@@ -119,7 +119,7 @@ class Dispatcher {
 
             $last = end($results);
 
-            if ($last['http_code'] < 200 || $last['http_code'] >= 300) {
+            if (is_array($last) && ($last['http_code'] < 200 || $last['http_code'] >= 300)) {
                 $this->log->write(
                     "webhook dispatch: endpoint #{$wid} esgotou " . self::MAX_ATTEMPTS .
                     " tentativas p/ {$event} (último HTTP {$last['http_code']}, delivery {$deliver})"

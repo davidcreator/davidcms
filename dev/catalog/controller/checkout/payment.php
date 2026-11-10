@@ -23,6 +23,10 @@ namespace Reamur\Catalog\Controller\Checkout;
 
 class Payment extends \Reamur\System\Engine\Controller {
 
+    public function index(): void {
+        (new \Reamur\System\Engine\Action('error/not_found'))->execute($this->registry);
+    }
+
     /** Cliente abre o link: valida token e manda ao Checkout Pro do seller */
     public function pay(string $token = ''): void {
         $this->load->language('checkout/payment');

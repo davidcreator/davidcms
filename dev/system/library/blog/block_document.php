@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * ReamurCMS — F9-13 deterministic, fail-closed legacy Blog HTML converter.
  * No persistence, UI, database, rendering, or automatic rewrite side effects.
@@ -69,7 +69,7 @@ class BlockDocument {
         try {
             $blocks = [];
             foreach ($root->childNodes as $i => $child) {
-                if ($child instanceof DOMText && trim($child->nodeValue) === '') continue;
+                if ($child instanceof DOMText && trim((string)$child->nodeValue) === '') continue;
                 if ($child instanceof DOMComment) throw new RuntimeException('comment_not_supported');
                 $blocks[] = $this->convertBlock($child, $html, 'b' . $i, 0);
                 if (count($blocks) > self::MAX_BLOCKS) throw new RuntimeException('too_many_blocks');
@@ -372,7 +372,8 @@ class BlockDocument {
         $path = (string)($parts['path'] ?? '');
         if (in_array($host, ['youtube.com','www.youtube.com'], true) && $path === '/watch') {
             parse_str((string)($parts['query'] ?? ''), $query);
-            $id = (string)($query['v'] ?? '');
+            $rawV = $query['v'] ?? '';
+            $id = is_string($rawV) ? $rawV : '';
             return preg_match('/^[A-Za-z0-9_-]{6,20}$/D', $id) ? ['provider' => 'youtube', 'id' => $id] : null;
         }
         if ($host === 'youtu.be' && preg_match('#^/([A-Za-z0-9_-]{6,20})/?$#D', $path, $m)) return ['provider' => 'youtube', 'id' => $m[1]];
@@ -396,7 +397,7 @@ class BlockDocument {
         } elseif ($tag === 'ul' || $tag === 'ol') {
             $this->assertNoAttributes($node, []); $type = 'core/list'; $attrs['ordered'] = $tag === 'ol';
             foreach ($node->childNodes as $i => $child) {
-                if ($child instanceof DOMText && trim($child->nodeValue) === '') continue;
+                if ($child instanceof DOMText && trim((string)$child->nodeValue) === '') continue;
                 if (!$child instanceof DOMElement || strtolower($child->tagName) !== 'li') throw new RuntimeException('list_child_unsupported');
                 $this->assertNoAttributes($child, []);
                 $children[] = $this->makeNode('core/list-item', [], [], $this->readInlineText($child), $source, $path . '.i' . $i);
@@ -424,7 +425,7 @@ class BlockDocument {
     private function readInlineText(DOMElement $element): string {
         $out = '';
         foreach ($element->childNodes as $child) {
-            if ($child instanceof DOMText) { $out .= $child->nodeValue; continue; }
+            if ($child instanceof DOMText) { $out .= (string)$child->nodeValue; continue; }
             if ($child instanceof DOMElement && strtolower($child->tagName) === 'br' && $child->attributes->length === 0 && $child->childNodes->length === 0) { $out .= "\n"; continue; }
             throw new RuntimeException('inline_markup_not_supported');
         }

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package ReamurCMS
  * @author David L. Almeida
@@ -229,8 +229,16 @@ class Pagination {
      */
     public function setConfig(array $config): self {
         foreach ($config as $key => $value) {
-            if (property_exists($this, $key) && !in_array($key, ['num_pages', 'sanitized_url'], true)) {
-                $this->$key = $value;
+            if (!property_exists($this, $key) || in_array($key, ['num_pages', 'sanitized_url'], true)) {
+                continue;
+            }
+
+            if (in_array($key, ['total', 'page', 'limit', 'num_links'], true)) {
+                $this->$key = (int)$value;
+            } elseif (in_array($key, ['show_first_last', 'show_prev_next'], true)) {
+                $this->$key = (bool)$value;
+            } else {
+                $this->$key = is_scalar($value) ? (string)$value : '';
             }
         }
         $this->num_pages = null;

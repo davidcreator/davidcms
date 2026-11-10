@@ -89,14 +89,12 @@ class Step_3 extends \Reamur\System\Engine\Controller {
      */
     public function test(): void {
         $this->load->language('install/step_3');
-        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
 
-        if ($this->request->server['REQUEST_METHOD'] !== 'POST' || !$this->csrfValid()) {
-            http_response_code(403);
-            $this->response->setOutput((string)json_encode([
+        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST' || !$this->csrfValid()) {
+            $this->jsonResponse([
                 'success' => false,
                 'error'   => $this->language->get('error_csrf'),
-            ]));
+            ], 403, true);
 
             return;
         }
@@ -108,10 +106,10 @@ class Step_3 extends \Reamur\System\Engine\Controller {
         $ok = in_array($db['db_driver'], ['mysqli', 'pdo'], true)
             && $this->model_install_install->connect($db);
 
-        $this->response->setOutput((string)json_encode([
+        $this->jsonResponse([
             'success' => $ok,
             'error'   => $ok ? '' : $this->model_install_install->getError(),
-        ]));
+        ], 200, true);
     }
 
     // ─── internos ────────────────────────────────────────────────────────
