@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace Reamur\System\Library\Db;
 
 /**
@@ -23,7 +23,7 @@ class Mariadb {
 	 * @param string $password
 	 * @param string $database
 	 * @param string $port
-	 * @param array  $options
+	 * @param array<int|string, mixed> $options
 	 */
 	public function __construct(
 		string $hostname,
@@ -63,9 +63,9 @@ class Mariadb {
 	 *
 	 * @param string $sql
 	 *
-	 * @return bool|object
+	 * @return \stdClass|bool
 	 */
-	public function query(string $sql): bool|object {
+	public function query(string $sql): \stdClass|bool {
 		$this->ensureConnection();
 
 		try {
@@ -101,11 +101,11 @@ class Mariadb {
 	 * Execute a prepared statement with bound parameters
 	 *
 	 * @param string $sql
-	 * @param array  $params
+	 * @param array<int|string, mixed> $params
 	 *
-	 * @return bool|object
+	 * @return \stdClass|bool
 	 */
-	public function prepare(string $sql, array $params = []): bool|object {
+	public function prepare(string $sql, array $params = []): \stdClass|bool {
 		$this->ensureConnection();
 
 		try {
@@ -145,6 +145,9 @@ class Mariadb {
 		$this->ensureConnection();
 
 		$quoted = $this->connection->quote($value);
+		if ($quoted === false) {
+			throw new \RuntimeException('Failed to escape SQL value');
+		}
 
 		return substr($quoted, 1, -1);
 	}

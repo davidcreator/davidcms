@@ -495,3 +495,4 @@ $_['status_twig_ok'] = 'Todas allowlistadas';
 $_['status_twig_bad'] = 'Chave fora da allowlist';
 $_['status_three_ok'] = 'Cena allowlistada';
 $_['status_three_bad'] = 'Cena fora da allowlist';
+$_['error_slug_exists'] = 'Já existe outro tema com este slug.';

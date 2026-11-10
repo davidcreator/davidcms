@@ -75,16 +75,16 @@ class Image {
 
         switch ($this->mime) {
             case 'image/gif':
-                $image = imagecreatefromgif($file);
+                $image = @imagecreatefromgif($file);
                 break;
             case 'image/png':
                 $image = $this->createPngResource($file);
                 break;
             case 'image/jpeg':
-                $image = imagecreatefromjpeg($file);
+                $image = @imagecreatefromjpeg($file);
                 break;
             case 'image/webp':
-                $image = imagecreatefromwebp($file);
+                $image = @imagecreatefromwebp($file);
                 break;
         }
 
@@ -96,23 +96,8 @@ class Image {
     }
 
     private function createPngResource(string $file): \GdImage|false {
-        set_error_handler(
-            function (int $severity, string $message): bool {
-                if (str_contains($message, 'libpng warning: iCCP') || str_contains($message, 'libpng warning: cHRM')) {
-                    return true;
-                }
-                return false;
-            },
-            E_WARNING
-        );
-
-        $previousReporting = error_reporting();
-        error_reporting($previousReporting & ~E_WARNING);
-
-        $image = imagecreatefrompng($file);
-
-        error_reporting($previousReporting);
-        restore_error_handler();
+        // Suprime warnings não-fatais de perfis ICC/cHRM via @ sem mutar error_handler global.
+        $image = @imagecreatefrompng($file);
 
         if ($image instanceof \GdImage) {
             imageinterlace($image, false);

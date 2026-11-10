@@ -165,8 +165,7 @@ class Appearance extends \Reamur\System\Engine\Controller {
             }
         }
 
-        $this->response->addHeader('Content-Type: application/json');
-        $this->response->setOutput((string)json_encode(['ok' => $ok, 'mode' => $mode]));
+        $this->jsonResponse(['ok' => $ok, 'mode' => $mode]);
     }
 
     /**

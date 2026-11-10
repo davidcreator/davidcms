@@ -495,3 +495,4 @@ $_['status_twig_ok'] = 'All allowlisted';
 $_['status_twig_bad'] = 'Key outside allowlist';
 $_['status_three_ok'] = 'Scene allowlisted';
 $_['status_three_bad'] = 'Scene outside allowlist';
+$_['error_slug_exists'] = 'Another theme already uses this slug.';

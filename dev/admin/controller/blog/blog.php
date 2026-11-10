@@ -373,21 +373,21 @@ class Blog extends \Reamur\System\Engine\Controller {
     /** POST-only list of saved revisions for the current Blog post/language. */
     public function revisions(string $post_id = '0'): void {
         $this->load->language('blog/blog'); $this->load->model('blog/blog');
-        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST' || !$this->csrfValid() || !$this->user->hasPermission('modify', 'blog/blog')) { $this->mediaJson(['success'=>false,'error'=>'forbidden']); return; }
+        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST' || !$this->csrfValid() || !$this->user->hasPermission('modify', 'blog/blog')) { $this->jsonResponse(['success'=>false,'error'=>'forbidden']); return; }
         $postId=(int)$post_id; $languageId=(int)($this->request->post['language_id'] ?? 0); $knownLanguages=array_map(static fn($l)=>(int)((array)$l)['language_id'],$this->model_blog_blog->getLanguages());
-        if ($postId < 1 || !$this->model_blog_blog->getPost($postId) || !in_array($languageId,$knownLanguages,true)) { $this->mediaJson(['success'=>false,'error'=>'invalid_target']); return; }
+        if ($postId < 1 || !$this->model_blog_blog->getPost($postId) || !in_array($languageId,$knownLanguages,true)) { $this->jsonResponse(['success'=>false,'error'=>'invalid_target']); return; }
         $items=$this->model_blog_blog->getPostRevisions($postId,$languageId);
-        $this->mediaJson(['success'=>true,'items'=>array_map(static fn($r)=>['revision_id'=>$r['revision_id'],'date_added'=>$r['date_added']],$items)]);
+        $this->jsonResponse(['success'=>true,'items'=>array_map(static fn($r)=>['revision_id'=>$r['revision_id'],'date_added'=>$r['date_added']],$items)]);
     }
 
     /** POST-only fetch; restored content stays in memory until explicit Save. */
     public function revision(string $post_id = '0'): void {
         $this->load->language('blog/blog'); $this->load->model('blog/blog');
-        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST' || !$this->csrfValid() || !$this->user->hasPermission('modify', 'blog/blog')) { $this->mediaJson(['success'=>false,'error'=>'forbidden']); return; }
+        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST' || !$this->csrfValid() || !$this->user->hasPermission('modify', 'blog/blog')) { $this->jsonResponse(['success'=>false,'error'=>'forbidden']); return; }
         $postId=(int)$post_id; $languageId=(int)($this->request->post['language_id'] ?? 0); $revisionId=(int)($this->request->post['revision_id'] ?? 0); $knownLanguages=array_map(static fn($l)=>(int)((array)$l)['language_id'],$this->model_blog_blog->getLanguages());
-        if ($postId < 1 || !$this->model_blog_blog->getPost($postId) || !in_array($languageId,$knownLanguages,true) || $revisionId < 1) { $this->mediaJson(['success'=>false,'error'=>'invalid_target']); return; }
-        foreach ($this->model_blog_blog->getPostRevisions($postId,$languageId) as $revision) if ((int)$revision['revision_id']===$revisionId) { $this->mediaJson(['success'=>true,'snapshot'=>$revision['snapshot']]); return; }
-        $this->mediaJson(['success'=>false,'error'=>'not_found']);
+        if ($postId < 1 || !$this->model_blog_blog->getPost($postId) || !in_array($languageId,$knownLanguages,true) || $revisionId < 1) { $this->jsonResponse(['success'=>false,'error'=>'invalid_target']); return; }
+        foreach ($this->model_blog_blog->getPostRevisions($postId,$languageId) as $revision) if ((int)$revision['revision_id']===$revisionId) { $this->jsonResponse(['success'=>true,'snapshot'=>$revision['snapshot']]); return; }
+        $this->jsonResponse(['success'=>false,'error'=>'not_found']);
     }
 
     /** Preview the unsaved Blog BDRE document in the Catalog post template. */
@@ -696,12 +696,12 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->load->language('blog/blog');
 
         if ($this->request->server['REQUEST_METHOD'] !== 'GET') {
-            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_media_method')]);
             return;
         }
 
         if (!$this->user->hasPermission('modify', 'blog/blog')) {
-            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_permission')]);
             return;
         }
 
@@ -714,7 +714,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         );
 
         if (!$result['ok']) {
-            $this->mediaJson(['success' => false, 'error' => $this->mediaError((string)$result['error'])]);
+            $this->jsonResponse(['success' => false, 'error' => $this->mediaError((string)$result['error'])]);
             return;
         }
 
@@ -726,7 +726,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             $files[] = $file;
         }
 
-        $this->mediaJson([
+        $this->jsonResponse([
             'success' => true,
             'folder' => (string)$result['folder'],
             'folders' => $result['folders'],
@@ -742,17 +742,17 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->load->language('blog/blog');
 
         if ($this->request->server['REQUEST_METHOD'] !== 'POST') {
-            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_media_method')]);
             return;
         }
 
         if (!$this->user->hasPermission('modify', 'blog/blog')) {
-            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_permission')]);
             return;
         }
 
         if (!$this->csrfValid()) {
-            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_csrf')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_csrf')]);
             return;
         }
 
@@ -760,7 +760,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         $target = $this->model_blog_media->getUploadTarget($this->postScalar('folder'));
 
         if ($target === '') {
-            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_folder_not_found')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_media_folder_not_found')]);
             return;
         }
 
@@ -779,11 +779,11 @@ class Blog extends \Reamur\System\Engine\Controller {
                 ? sprintf($this->language->get($key), '2 MB')
                 : $this->language->get($key);
 
-            $this->mediaJson(['success' => false, 'error' => $message]);
+            $this->jsonResponse(['success' => false, 'error' => $message]);
             return;
         }
 
-        $this->mediaJson([
+        $this->jsonResponse([
             'success' => true,
             'path' => (string)$result['path'],
             'url' => $this->catalogAssetUrl() . ltrim((string)$result['path'], '/'),
@@ -794,12 +794,12 @@ class Blog extends \Reamur\System\Engine\Controller {
     /** Lista arquivos de áudio locais validados; upload tem rota POST separada e não há exclusão. */
     public function audioList(): void {
         $this->load->language('blog/blog');
-        if ($this->request->server['REQUEST_METHOD'] !== 'GET') { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
-        if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
+        if ($this->request->server['REQUEST_METHOD'] !== 'GET') { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
+        if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
         $this->load->model('blog/media');
         $result = $this->model_blog_media->getAudioPage($this->queryScalar('search'), max(1, (int)$this->queryScalar('page')));
-        if (!$result['ok']) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_audio_generic')]); return; }
-        $this->mediaJson(['success' => true, 'files' => $result['files'], 'total' => $result['total'], 'page' => $result['page'], 'pages' => $result['pages']]);
+        if (!$result['ok']) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_audio_generic')]); return; }
+        $this->jsonResponse(['success' => true, 'files' => $result['files'], 'total' => $result['total'], 'page' => $result['page'], 'pages' => $result['pages']]);
     }
 
     /** Upload de áudio local com allowlist estrita, ACL do Blog e CSRF; sem exclusão. */
@@ -810,12 +810,12 @@ class Blog extends \Reamur\System\Engine\Controller {
     /** Lista vídeos locais validados da raiz dedicada do Blog. */
     public function videoList(): void {
         $this->load->language('blog/blog');
-        if ($this->request->server['REQUEST_METHOD'] !== 'GET') { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
-        if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
+        if ($this->request->server['REQUEST_METHOD'] !== 'GET') { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
+        if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
         $this->load->model('blog/media');
         $result = $this->model_blog_media->getVideoPage($this->queryScalar('search'), max(1, (int)$this->queryScalar('page')));
-        if (!$result['ok']) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_video_generic')]); return; }
-        $this->mediaJson(['success' => true, 'files' => $result['files'], 'total' => $result['total'], 'page' => $result['page'], 'pages' => $result['pages']]);
+        if (!$result['ok']) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_video_generic')]); return; }
+        $this->jsonResponse(['success' => true, 'files' => $result['files'], 'total' => $result['total'], 'page' => $result['page'], 'pages' => $result['pages']]);
     }
 
     /** Upload de vídeo local com allowlist estrita, ACL do Blog e CSRF; sem exclusão. */
@@ -825,13 +825,13 @@ class Blog extends \Reamur\System\Engine\Controller {
 
     private function uploadBlogMedia(string $kind): void {
         $this->load->language('blog/blog');
-        if ($this->request->server['REQUEST_METHOD'] !== 'POST') { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
-        if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
+        if ($this->request->server['REQUEST_METHOD'] !== 'POST') { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
+        if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
         if ($this->requestExceedsPostMaxSize()) {
             $limit = $kind === 'audio' ? '20 MiB' : '100 MiB';
-            $this->mediaJson(['success' => false, 'error' => sprintf($this->language->get('error_audio_video_upload_size'), $limit)]); return;
+            $this->jsonResponse(['success' => false, 'error' => sprintf($this->language->get('error_audio_video_upload_size'), $limit)]); return;
         }
-        if (!$this->csrfValid()) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_csrf')]); return; }
+        if (!$this->csrfValid()) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_csrf')]); return; }
         $this->load->model('blog/media');
         $result = $this->model_blog_media->uploadLocalBlogMedia((array)($this->request->files['file'] ?? []), $kind);
         if (!$result['ok']) {
@@ -844,9 +844,9 @@ class Blog extends \Reamur\System\Engine\Controller {
             };
             $limit = $kind === 'audio' ? '20 MiB' : '100 MiB';
             $message = $key === 'error_audio_video_upload_size' ? sprintf($this->language->get($key), $limit) : $this->language->get($key);
-            $this->mediaJson(['success' => false, 'error' => $message]); return;
+            $this->jsonResponse(['success' => false, 'error' => $message]); return;
         }
-        $this->mediaJson(['success' => true, 'path' => (string)$result['path'], 'name' => (string)$result['name'], 'size' => (int)$result['size']]);
+        $this->jsonResponse(['success' => true, 'path' => (string)$result['path'], 'name' => (string)$result['name'], 'size' => (int)$result['size']]);
     }
 
     private function requestExceedsPostMaxSize(): bool {
@@ -862,30 +862,30 @@ class Blog extends \Reamur\System\Engine\Controller {
     /** Lista documentos da raiz dedicada de downloads; acesso protegido por ACL. */
     public function downloadList(): void {
         $this->load->language('blog/blog');
-        if ($this->request->server['REQUEST_METHOD'] !== 'GET') { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
-        if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
+        if ($this->request->server['REQUEST_METHOD'] !== 'GET') { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
+        if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
         $this->load->model('blog/media');
         $result = $this->model_blog_media->getDownloadPage($this->queryScalar('search'), max(1, (int)$this->queryScalar('page')));
-        if (!$result['ok']) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_download_generic')]); return; }
+        if (!$result['ok']) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_download_generic')]); return; }
         foreach ($result['files'] as &$file) $file['url'] = $this->catalogAssetUrl() . ltrim((string)$file['path'], '/');
         unset($file);
-        $this->mediaJson(['success' => true, 'files' => $result['files'], 'total' => $result['total'], 'page' => $result['page'], 'pages' => $result['pages']]);
+        $this->jsonResponse(['success' => true, 'files' => $result['files'], 'total' => $result['total'], 'page' => $result['page'], 'pages' => $result['pages']]);
     }
 
     /** Upload de documento via allowlist dedicada, ACL modify e CSRF; não há exclusão. */
     public function downloadUpload(): void {
         $this->load->language('blog/blog');
-        if ($this->request->server['REQUEST_METHOD'] !== 'POST') { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
-        if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
-        if (!$this->csrfValid()) { $this->mediaJson(['success' => false, 'error' => $this->language->get('error_csrf')]); return; }
+        if ($this->request->server['REQUEST_METHOD'] !== 'POST') { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
+        if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
+        if (!$this->csrfValid()) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_csrf')]); return; }
         $this->load->model('blog/media');
         $result = $this->model_blog_media->uploadDownload((array)($this->request->files['file'] ?? []));
         if (!$result['ok']) {
             $key = match ((string)$result['error']) { 'no_file' => 'error_download_upload_no_file', 'size' => 'error_download_upload_size', 'type' => 'error_download_upload_type', 'move' => 'error_download_upload_move', default => 'error_download_generic' };
             $message = $key === 'error_download_upload_size' ? sprintf($this->language->get($key), '2 MiB') : $this->language->get($key);
-            $this->mediaJson(['success' => false, 'error' => $message]); return;
+            $this->jsonResponse(['success' => false, 'error' => $message]); return;
         }
-        $this->mediaJson(['success' => true, 'path' => (string)$result['path'], 'name' => (string)$result['name'], 'url' => $this->catalogAssetUrl() . ltrim((string)$result['path'], '/')]);
+        $this->jsonResponse(['success' => true, 'path' => (string)$result['path'], 'name' => (string)$result['name'], 'url' => $this->catalogAssetUrl() . ltrim((string)$result['path'], '/')]);
     }
 
     /** Cria uma subpasta no filesystem da biblioteca, com ACL + CSRF. */
@@ -893,17 +893,17 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->load->language('blog/blog');
 
         if ($this->request->server['REQUEST_METHOD'] !== 'POST') {
-            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_media_method')]);
             return;
         }
 
         if (!$this->user->hasPermission('modify', 'blog/blog')) {
-            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_permission')]);
             return;
         }
 
         if (!$this->csrfValid()) {
-            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_csrf')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_csrf')]);
             return;
         }
 
@@ -911,11 +911,11 @@ class Blog extends \Reamur\System\Engine\Controller {
         $result = $this->model_blog_media->createFolder($this->postScalar('folder'), $this->postScalar('name'));
 
         if ($result !== 'ok') {
-            $this->mediaJson(['success' => false, 'error' => $this->mediaError($result)]);
+            $this->jsonResponse(['success' => false, 'error' => $this->mediaError($result)]);
             return;
         }
 
-        $this->mediaJson(['success' => true, 'message' => $this->language->get('text_media_folder_created')]);
+        $this->jsonResponse(['success' => true, 'message' => $this->language->get('text_media_folder_created')]);
     }
 
     /** Exclui somente imagens não referenciadas ou pastas vazias (ACL + CSRF). */
@@ -923,17 +923,17 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->load->language('blog/blog');
 
         if ($this->request->server['REQUEST_METHOD'] !== 'POST') {
-            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_media_method')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_media_method')]);
             return;
         }
 
         if (!$this->user->hasPermission('modify', 'blog/blog')) {
-            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_permission')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_permission')]);
             return;
         }
 
         if (!$this->csrfValid()) {
-            $this->mediaJson(['success' => false, 'error' => $this->language->get('error_csrf')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_csrf')]);
             return;
         }
 
@@ -941,7 +941,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         $result = $this->model_blog_media->deleteMedia($this->postScalar('type'), $this->postScalar('path'));
 
         if ($result !== 'ok') {
-            $this->mediaJson(['success' => false, 'error' => $this->mediaError($result)]);
+            $this->jsonResponse(['success' => false, 'error' => $this->mediaError($result)]);
             return;
         }
 
@@ -949,7 +949,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             ? $this->language->get('text_media_folder_deleted')
             : $this->language->get('text_media_file_deleted');
 
-        $this->mediaJson(['success' => true, 'message' => $message]);
+        $this->jsonResponse(['success' => true, 'message' => $message]);
     }
 
     /**
@@ -1490,15 +1490,6 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         return $errors;
     }
-    /** @param array<string, mixed> $payload */
-    private function mediaJson(array $payload): void {
-        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
-        $this->response->setOutput((string)json_encode(
-            $payload,
-            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE
-        ));
-    }
-
     private function mediaError(string $code): string {
         $key = match ($code) {
             'invalid_folder', 'invalid_path', 'invalid_type' => 'error_media_invalid_path',
@@ -1562,17 +1553,4 @@ class Blog extends \Reamur\System\Engine\Controller {
     }
 
     /** Base física pública do app catalog, usada em src de imagens do filesystem. */
-    private function catalogAssetUrl(): string {
-        $base = (string)$this->config->get('site_url', '');
-
-        if (str_ends_with($base, 'admin/')) {
-            return substr($base, 0, -strlen('admin/')) . 'catalog/';
-        }
-
-        if (str_ends_with($base, 'catalog/')) {
-            return $base;
-        }
-
-        return rtrim($base, '/') . '/catalog/';
-    }
 }

@@ -346,26 +346,26 @@ class Page extends \Reamur\System\Engine\Controller {
     /** POST-only list of saved revisions for the current Page/language. */
     public function revisions(string $page_id = '0'): void {
         $this->load->language('cms/page'); $this->load->model('cms/page');
-        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST' || !$this->csrfValid() || !$this->user->hasPermission('modify', 'cms/page')) { $this->pageMediaJson(['success'=>false,'error'=>'forbidden']); return; }
+        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST' || !$this->csrfValid() || !$this->user->hasPermission('modify', 'cms/page')) { $this->jsonResponse(['success'=>false,'error'=>'forbidden']); return; }
         $pageId=(int)$page_id; $languageId=(int)($this->request->post['language_id'] ?? 0); $knownLanguages=array_map(static fn($l)=>(int)((array)$l)['language_id'],$this->model_cms_page->getLanguages());
-        if ($pageId < 1 || !$this->model_cms_page->getPage($pageId) || !in_array($languageId,$knownLanguages,true)) { $this->pageMediaJson(['success'=>false,'error'=>'invalid_target']); return; }
+        if ($pageId < 1 || !$this->model_cms_page->getPage($pageId) || !in_array($languageId,$knownLanguages,true)) { $this->jsonResponse(['success'=>false,'error'=>'invalid_target']); return; }
         $items=$this->model_cms_page->getPageRevisions($pageId,$languageId);
-        $this->pageMediaJson(['success'=>true,'items'=>array_map(static fn($r)=>['revision_id'=>$r['revision_id'],'date_added'=>$r['date_added']],$items)]);
+        $this->jsonResponse(['success'=>true,'items'=>array_map(static fn($r)=>['revision_id'=>$r['revision_id'],'date_added'=>$r['date_added']],$items)]);
     }
 
     /** POST-only fetch of one revision; the client restores it in memory and must still Save. */
     public function revision(string $page_id = '0'): void {
         $this->load->language('cms/page'); $this->load->model('cms/page');
-        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST' || !$this->csrfValid() || !$this->user->hasPermission('modify', 'cms/page')) { $this->pageMediaJson(['success'=>false,'error'=>'forbidden']); return; }
+        if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST' || !$this->csrfValid() || !$this->user->hasPermission('modify', 'cms/page')) { $this->jsonResponse(['success'=>false,'error'=>'forbidden']); return; }
         $pageId=(int)$page_id; $languageId=(int)($this->request->post['language_id'] ?? 0); $revisionId=(int)($this->request->post['revision_id'] ?? 0); $knownLanguages=array_map(static fn($l)=>(int)((array)$l)['language_id'],$this->model_cms_page->getLanguages());
-        if ($pageId < 1 || !$this->model_cms_page->getPage($pageId) || !in_array($languageId,$knownLanguages,true) || $revisionId < 1) { $this->pageMediaJson(['success'=>false,'error'=>'invalid_target']); return; }
+        if ($pageId < 1 || !$this->model_cms_page->getPage($pageId) || !in_array($languageId,$knownLanguages,true) || $revisionId < 1) { $this->jsonResponse(['success'=>false,'error'=>'invalid_target']); return; }
         foreach ($this->model_cms_page->getPageRevisions($pageId,$languageId) as $revision) if ((int)$revision['revision_id']===$revisionId) {
             $snapshot=$revision['snapshot']; $raw=(string)($snapshot['description']['description'] ?? ''); $page=$this->model_cms_page->getPage($pageId);
             $layout=(new \Reamur\System\Library\Cms\PageLayout())->decode($raw,(string)($page['system_key'] ?? ''));
             if ($layout !== null) { $snapshot['page_layout_sections']=$layout['sections']; $snapshot['block_document']=$layout['content']; }
-            $this->pageMediaJson(['success'=>true,'snapshot'=>$snapshot]); return;
+            $this->jsonResponse(['success'=>true,'snapshot'=>$snapshot]); return;
         }
-        $this->pageMediaJson(['success'=>false,'error'=>'not_found']);
+        $this->jsonResponse(['success'=>false,'error'=>'not_found']);
     }
 
     /** POST-only private preview of an unsaved CMS Page document and its allowlisted system-page layout. */
@@ -376,7 +376,7 @@ class Page extends \Reamur\System\Engine\Controller {
         $this->response->addHeader('X-Content-Type-Options: nosniff');
         $this->response->addHeader('X-Frame-Options: DENY');
         $this->response->addHeader('Referrer-Policy: no-referrer');
-        $assetBase = $this->pageCatalogAssetUrl();
+        $assetBase = $this->catalogAssetUrl();
         $assetOrigin = $this->pageCatalogAssetOrigin($assetBase);
         $originSource = $assetOrigin !== '' ? ' ' . $assetOrigin : '';
         $this->response->addHeader("Content-Security-Policy: default-src 'none'; img-src 'self' data:" . $originSource . "; style-src 'self' 'unsafe-inline'" . $originSource . "; script-src 'self'" . $originSource . "; font-src 'self' data:" . $originSource . "; media-src 'self'" . $originSource . "; frame-src https://www.youtube-nocookie.com https://player.vimeo.com; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'none'");
@@ -417,7 +417,7 @@ class Page extends \Reamur\System\Engine\Controller {
             return;
         }
 
-        $assetBase = $this->pageCatalogAssetUrl();
+        $assetBase = $this->catalogAssetUrl();
         // Resolve only the renderer's allowlisted local files. New Page media stays under cms/page;
         // the existing validator permits Blog paths solely for read-only legacy references.
         $catalogViewRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view';
@@ -542,7 +542,7 @@ class Page extends \Reamur\System\Engine\Controller {
         if (!preg_match('/^#[a-fA-F0-9]{6}$/D', $surface)) $surface = '#ffffff';
         $themeTemplates = is_array($publishedTheme['templates'] ?? null) ? $publishedTheme['templates'] : [];
 
-        $assetBase = $this->pageCatalogAssetUrl();
+        $assetBase = $this->catalogAssetUrl();
         $languageLinks = [];
         foreach ($publicLanguages as $row) {
             $row = (array)$row;
@@ -816,8 +816,8 @@ class Page extends \Reamur\System\Engine\Controller {
             'text_page_preview_notice' => '',
             'description' => '',
             'preview_error' => $message,
-            'common_css_url' => $this->pageCatalogAssetUrl() . 'view/css/common.css',
-            'blocks_css_url' => $this->pageCatalogAssetUrl() . 'view/css/blog-blocks.css',
+            'common_css_url' => $this->catalogAssetUrl() . 'view/css/common.css',
+            'blocks_css_url' => $this->catalogAssetUrl() . 'view/css/blog-blocks.css',
             'requires_threejs' => false,
             'threejs_css_url' => '',
             'threejs_script_url' => '',
@@ -828,11 +828,11 @@ class Page extends \Reamur\System\Engine\Controller {
     public function mediaList(): void {
         $this->load->language('cms/page');
         if (!$this->user->hasPermission('modify', 'cms/page')) {
-            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_permission')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_page_media_permission')]);
             return;
         }
         if (($this->request->server['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
-            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_method')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_page_media_method')]);
             return;
         }
         $search = $this->request->get['search'] ?? '';
@@ -842,32 +842,32 @@ class Page extends \Reamur\System\Engine\Controller {
         $kind = is_string($kind) ? $kind : '';
         $result = $this->model_cms_page_media->listPageMedia($kind, is_string($search) ? trim($search) : '', is_scalar($page) ? max(1, (int)$page) : 1);
         if (empty($result['success'])) {
-            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_list')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_page_media_list')]);
             return;
         }
-        $base = $this->pageCatalogAssetUrl();
+        $base = $this->catalogAssetUrl();
         foreach ($result['files'] as &$file) $file['url'] = $base . $file['path'];
         unset($file);
-        $this->pageMediaJson($result);
+        $this->jsonResponse($result);
     }
 
     /** POST: upload allowlisted Page media with CSRF + ACL enforcement. */
     public function mediaUpload(): void {
         $this->load->language('cms/page');
         if (!$this->user->hasPermission('modify', 'cms/page')) {
-            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_permission')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_page_media_permission')]);
             return;
         }
         if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST') {
-            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_method')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_page_media_method')]);
             return;
         }
         if ($this->pageMediaRequestExceedsPostLimit()) {
-            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_size')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_page_media_size')]);
             return;
         }
         if (!$this->csrfValid()) {
-            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_csrf')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_page_media_csrf')]);
             return;
         }
         $this->load->model('cms/page_media');
@@ -882,26 +882,26 @@ class Page extends \Reamur\System\Engine\Controller {
                 'root' => 'error_page_media_root',
                 default => 'error_page_media_upload',
             };
-            $this->pageMediaJson(['success' => false, 'error' => $this->language->get($key)]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get($key)]);
             return;
         }
-        $result['url'] = $this->pageCatalogAssetUrl() . $result['path'];
-        $this->pageMediaJson($result);
+        $result['url'] = $this->catalogAssetUrl() . $result['path'];
+        $this->jsonResponse($result);
     }
 
     /** POST: permanently remove one CMS Pages video; ACL and CSRF protected. */
     public function mediaDelete(): void {
         $this->load->language('cms/page');
         if (!$this->user->hasPermission('modify', 'cms/page')) {
-            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_permission')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_page_media_permission')]);
             return;
         }
         if (($this->request->server['REQUEST_METHOD'] ?? '') !== 'POST') {
-            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_method')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_page_media_method')]);
             return;
         }
         if (!$this->csrfValid()) {
-            $this->pageMediaJson(['success' => false, 'error' => $this->language->get('error_page_media_csrf')]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_page_media_csrf')]);
             return;
         }
         $kind = $this->request->post['kind'] ?? '';
@@ -916,10 +916,10 @@ class Page extends \Reamur\System\Engine\Controller {
                 'not_found' => 'error_page_media_not_found',
                 default => 'error_page_media_delete',
             };
-            $this->pageMediaJson(['success' => false, 'error' => $this->language->get($key)]);
+            $this->jsonResponse(['success' => false, 'error' => $this->language->get($key)]);
             return;
         }
-        $this->pageMediaJson(['success' => true, 'name' => $result['name']]);
+        $this->jsonResponse(['success' => true, 'name' => $result['name']]);
     }
 
     private function pageMediaRequestExceedsPostLimit(): bool {
@@ -932,13 +932,6 @@ class Page extends \Reamur\System\Engine\Controller {
         elseif ($unit === 'm') $limit *= 1024 * 1024;
         elseif ($unit === 'k') $limit *= 1024;
         return $limit > 0 && $contentLength > $limit;
-    }
-
-    /** @param array<string, mixed> $payload */
-    private function pageMediaJson(array $payload): void {
-        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
-        $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
-        $this->response->setOutput($json === false ? '{"success":false}' : $json);
     }
 
     // ─── internos ────────────────────────────────────────────────────────
@@ -1080,8 +1073,8 @@ class Page extends \Reamur\System\Engine\Controller {
                 'details' => ['summaryLabel' => $data['text_block_details_summary_label'], 'summaryDefault' => $data['text_block_details_summary_default'], 'defaultText' => $data['text_block_details_default']],
                 'callout' => ['defaultText' => $data['text_block_callout_default'], 'tone' => $data['text_block_callout_tone'],  'tones' => ['info' => $data['text_block_callout_tone_info'], 'success' => $data['text_block_callout_tone_success'], 'warning' => $data['text_block_callout_tone_warning'], 'danger' => $data['text_block_callout_tone_danger']]],
                 'file' => ['source' => $data['text_block_file_source'], 'choose' => $data['text_block_file_choose']],
-                'audio' => ['source' => $data['text_block_audio_source'], 'choose' => $data['text_block_audio_choose'], 'catalogBase' => $this->pageCatalogAssetUrl()],
-                'videoFile' => ['source' => $data['text_block_video_file_source'], 'choose' => $data['text_block_video_file_choose'], 'catalogBase' => $this->pageCatalogAssetUrl()],
+                'audio' => ['source' => $data['text_block_audio_source'], 'choose' => $data['text_block_audio_choose'], 'catalogBase' => $this->catalogAssetUrl()],
+                'videoFile' => ['source' => $data['text_block_video_file_source'], 'choose' => $data['text_block_video_file_choose'], 'catalogBase' => $this->catalogAssetUrl()],
                 'threejs' => ['label' => $data['text_block_threejs_label'], 'sceneConfig' => $data['text_block_threejs_scene_config'], 'configHint' => $data['text_block_threejs_config_hint'], 'previewHint' => $data['text_block_threejs_preview_hint'], 'objects' => $data['text_block_threejs_objects'], 'lights' => $data['text_block_threejs_lights'], 'addShape' => $data['text_block_threejs_addShape'], 'addLight' => $data['text_block_threejs_addLight'], 'remove' => $data['text_block_threejs_remove'], 'color' => $data['text_block_threejs_color'], 'animation' => $data['text_block_threejs_animation'], 'intensity' => $data['text_block_threejs_intensity'], 'invalidScene' => $data['text_block_threejs_invalidScene'], 'scriptLabel' => $data['text_block_threejs_scriptLabel'], 'scriptHint' => $data['text_block_threejs_scriptHint'], 'editInline' => $data['text_block_threejs_editInline'], 'closeInline' => $data['text_block_threejs_closeInline'], 'deleteScript' => $data['text_block_threejs_deleteScript'], 'scriptDeleted' => $data['text_block_threejs_scriptDeleted'], 'scriptPlaceholder' => $data['text_block_threejs_scriptPlaceholder'], 'addScript' => $data['text_block_threejs_addScript']],
                 'table' => [
                     'header' => $data['text_block_table_header'], 'addRow' => $data['text_block_table_add_row'],
@@ -1095,7 +1088,7 @@ class Page extends \Reamur\System\Engine\Controller {
                     'galleryColumns' => $data['text_block_gallery_columns'], 'source' => $data['text_block_media_source'],
                     'alt' => $data['text_block_image_alt'], 'title' => $data['text_block_image_title'],
                     'videoPreview' => $data['text_block_video_preview'], 'videoPreviewHint' => $data['text_block_video_preview_hint'],
-                    'placeholder' => $data['text_block_media_placeholder'], 'catalogBase' => $this->pageCatalogAssetUrl(),
+                    'placeholder' => $data['text_block_media_placeholder'], 'catalogBase' => $this->catalogAssetUrl(),
                     'alignments' => ['left'=>$data['text_block_align_left'],'center'=>$data['text_block_align_center'],'right'=>$data['text_block_align_right'],'content'=>$data['text_block_align_content'],'wide'=>$data['text_block_align_wide'],'full'=>$data['text_block_align_full']],
                     'sizes' => ['small'=>$data['text_block_size_small'],'medium'=>$data['text_block_size_medium'],'large'=>$data['text_block_size_large'],'full'=>$data['text_block_size_full']],
                     'mobileSizes' => ['full'=>$data['text_block_mobile_full'],'large'=>$data['text_block_mobile_large'],'medium'=>$data['text_block_mobile_medium']],
@@ -1127,7 +1120,7 @@ class Page extends \Reamur\System\Engine\Controller {
 
                 $site = $this->config->get('site_url');
                 $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-49-media-accessibility';
-                $catalogAssetBase = $this->pageCatalogAssetUrl();
+                $catalogAssetBase = $this->catalogAssetUrl();
                 $this->document->addStyle($site . 'view/css/blog-block-editor.css?v=' . $version);
                 $kazBdreAsset = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-bdre-ap';
                 $this->document->addStyle($site . 'view/css/blog-block-editor-kaz.css?v=' . $kazBdreAsset);
@@ -1504,10 +1497,4 @@ class Page extends \Reamur\System\Engine\Controller {
     }
 
     /** Public site root used for safe media URLs in page block rendering. */
-    private function pageCatalogAssetUrl(): string {
-        $base = (string)$this->config->get('site_url', '');
-        if (str_ends_with($base, 'admin/')) return substr($base, 0, -strlen('admin/')) . 'catalog/';
-        if (str_ends_with($base, 'catalog/')) return $base;
-        return rtrim($base, '/') . '/catalog/';
-    }
 }

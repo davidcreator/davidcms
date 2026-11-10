@@ -16,6 +16,11 @@ class Block_pattern extends \Reamur\System\Engine\Controller {
         'core/cover','core/table','core/file','core/audio','core/video_file','core/threejs_thumb'
     ];
 
+    public function index(): void {
+        if (!$this->authorize('read', 'pages')) return;
+        $this->json(['success' => false, 'error' => 'method_not_allowed'], 405);
+    }
+
     public function listPages(): void { $this->listPatternsFor('pages'); }
     public function listBlog(): void { $this->listPatternsFor('blog'); }
     public function getPages(): void { $this->getPatternFor('pages'); }
@@ -176,9 +181,8 @@ class Block_pattern extends \Reamur\System\Engine\Controller {
         return $this->jsonPost[$key] ?? null;
     }
 
+
     private function json(array $payload, int $status = 200): void {
-        $this->response->addHeader('Content-Type: application/json; charset=utf-8');
-        $this->response->addHeader('Cache-Control: no-store, private');
-        $this->response->setOutput(json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '{}');
+        $this->jsonResponse($payload, $status, true);
     }
 }

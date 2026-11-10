@@ -36,6 +36,10 @@ class DB implements \SessionHandlerInterface {
     }
 
     public function read(string $id): string|false {
+        if (!$this->validateSessionId($id)) {
+            return '';
+        }
+
         $prefix = defined('DB_PREFIX') ? DB_PREFIX : 'rms_';
         $query  = $this->db->query(
             "SELECT `data` FROM `" . $prefix . "session` "
@@ -51,7 +55,7 @@ class DB implements \SessionHandlerInterface {
     }
 
     public function write(string $id, string $data): bool {
-        if ($id === '') {
+        if (!$this->validateSessionId($id)) {
             return false;
         }
 
@@ -67,7 +71,7 @@ class DB implements \SessionHandlerInterface {
     }
 
     public function destroy(string $id): bool {
-        if ($id === '') {
+        if (!$this->validateSessionId($id)) {
             return false;
         }
 
@@ -89,5 +93,9 @@ class DB implements \SessionHandlerInterface {
         );
 
         return $this->db->countAffected();
+    }
+
+    private function validateSessionId(string $id): bool {
+        return preg_match('/^[a-zA-Z0-9,-]{1,256}$/', $id) === 1;
     }
 }

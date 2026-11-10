@@ -20,7 +20,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['scene_count']=count($this->three_scene_preset->scenes());
         $data['preset_count']=count($this->three_scene_preset->ids());
         // Frente BE: feedback estavel por query string (allowlist); sem gravar estado.
-        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','components_invalid','schedule_invalid','media_invalid','sites_invalid','save_failed','forbidden','csrf'];
+        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','components_invalid','schedule_invalid','media_invalid','sites_invalid','slug_exists','save_failed','forbidden','csrf'];
         $ok=(string)($this->request->get['ok']??''); $err=(string)($this->request->get['error']??''); $code=(string)($this->request->get['code']??'');
         $data['notice']=in_array($ok,['import','activate','deactivate','delete'],true)?$this->language->get('text_'.$ok.'_ok'):'';
         $data['error']=$err==='import'?$this->language->get('text_import_error').' ('.(in_array($code,$codes,true)?$code:'unknown').')':($err==='delete'?$this->language->get('text_delete_error'):'');
@@ -98,7 +98,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['import_url']=$this->url->link('design/theme.import'.($id?'|'.$id:''));
         foreach(['text_package','text_package_help','text_package_export','text_package_export_published','text_package_import','text_package_import_help','text_package_file','text_package_paste','text_package_button','text_package_version','text_package_parent','text_package_parent_help','text_package_parent_none','text_import_ok','text_import_error','error_theme_parent','text_package_drop','text_package_preview','text_package_preview_name','text_package_preview_slug','text_package_preview_file','text_package_ready','error_package_size','error_package_type','error_package_json','error_package_format'] as $k) $data[$k]=$this->language->get($k);
         $data['notice']='';
-        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','components_invalid','schedule_invalid','media_invalid','sites_invalid','save_failed','forbidden','csrf'];
+        $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','components_invalid','schedule_invalid','media_invalid','sites_invalid','slug_exists','save_failed','forbidden','csrf'];
         $impErr=(string)($this->request->get['import_error']??'');
         if ((string)($this->request->get['import_ok']??'')==='1') $data['notice']=$this->language->get('text_import_ok');
         elseif ($impErr!=='') $data['error']=$this->language->get('text_import_error').' ('.(in_array($impErr,$codes,true)?$impErr:'unknown').')';
@@ -225,6 +225,10 @@ class Theme extends \Reamur\System\Engine\Controller {
                 // de config, com as mesmas validacoes (sem divergencia).
                 $built=$this->buildDraftConfig($post);
                 if ($built['error']!=='') $data['error']=$built['error'];
+                elseif ($this->model_design_theme->slugExists($built['slug'],$id)) {
+                    $slugErr=$this->language->get('error_slug_exists');
+                    $data['error']=($slugErr!=='error_slug_exists') ? $slugErr : $this->language->get('error_validation');
+                }
                 else {
                     $saved=$this->model_design_theme->save($id,['name'=>$built['name'],'slug'=>$built['slug'],'config'=>$built['config']],(int)$this->user->getUserId());
                     if ($saved) { $this->response->redirect($this->url->link('design/theme')); return; }
@@ -413,12 +417,22 @@ class Theme extends \Reamur\System\Engine\Controller {
         }
         $decoded=$this->theme_package->decode((string)($this->request->post['theme_package']??''));
         if (!$decoded['ok']) { $this->response->redirect($back.$sep.($id?'import_error='.rawurlencode($decoded['errors'][0]):'error=import&code='.rawurlencode($decoded['errors'][0]))); return; }
-        $theme=$id?$this->model_design_theme->getTheme($id):[];
-        $name=$id?(string)($theme['name']??$decoded['name']):$decoded['name'];
-        $slug=$id?(string)($theme['slug']??$decoded['slug']):$decoded['slug'];
+        if ($id>0) {
+            $theme=$this->model_design_theme->getTheme($id);
+            if (!$theme) { $this->response->redirect($back.$sep.'import_error=save_failed'); return; }
+            $targetId=$id;
+            $name=(string)($theme['name']??$decoded['name']);
+            $slug=(string)($theme['slug']??$decoded['slug']);
+        } else {
+            // Se o slug ja existir na listagem, atualiza apenas o rascunho (com revisao) em vez de falhar no INSERT.
+            $existing=$this->model_design_theme->getThemeBySlug((string)$decoded['slug']);
+            $targetId=!empty($existing['theme_id']) ? (int)$existing['theme_id'] : 0;
+            $name=$decoded['name']!=='' ? $decoded['name'] : (string)($existing['name']??'');
+            $slug=$targetId>0 ? (string)($existing['slug']??$decoded['slug']) : $decoded['slug'];
+        }
         $config=$decoded['config'];
         if (($config['parent']??'')===$slug) unset($config['parent']); // sem auto-heranca
-        $saved=$this->model_design_theme->save($id,['name'=>$name,'slug'=>$slug,'config'=>$config],(int)$this->user->getUserId());
+        $saved=$this->model_design_theme->save($targetId,['name'=>$name,'slug'=>$slug,'config'=>$config],(int)$this->user->getUserId());
         $this->response->redirect($back.$sep.($id?($saved?'import_ok=1':'import_error=save_failed'):($saved?'ok=import':'error=import&code=save_failed')));
     }
 

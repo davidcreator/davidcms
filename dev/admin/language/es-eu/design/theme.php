@@ -495,3 +495,4 @@ $_['status_twig_ok'] = 'Todas permitidas';
 $_['status_twig_bad'] = 'Clave fuera de la lista';
 $_['status_three_ok'] = 'Escena permitida';
 $_['status_three_bad'] = 'Escena fuera de la lista';
+$_['error_slug_exists'] = 'Ya existe otro tema con este slug.';

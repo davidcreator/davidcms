@@ -93,6 +93,46 @@ class Controller {
         return $base;
     }
 
+    /** Base URL pública da pasta catalog/ (preserva /catalog/ explícito ou converte sufixo admin/). */
+    protected function catalogAssetUrl(): string {
+        $config = $this->registry->get('config');
+        $base = ($config instanceof Config) ? (string)$config->get('site_url', '') : '';
+
+        if (str_ends_with($base, 'admin/')) {
+            return substr($base, 0, -strlen('admin/')) . 'catalog/';
+        }
+        if (str_ends_with($base, 'catalog/')) {
+            return $base;
+        }
+
+        return rtrim($base, '/') . '/catalog/';
+    }
+
+    /**
+     * Emite resposta JSON UTF-8 padronizada no objeto Response.
+     *
+     * @param array<string|int, mixed> $payload
+     */
+    protected function jsonResponse(array $payload, int $status = 200, bool $noStore = false): void {
+        $response = $this->registry->get('response');
+        if (!$response instanceof \Reamur\System\Library\Response) {
+            return;
+        }
+
+        if ($status !== 200 && PHP_SAPI !== 'cli' && !headers_sent()) {
+            http_response_code($status);
+        }
+
+        $response->addHeader('Content-Type: application/json; charset=utf-8');
+        $response->addHeader('X-Content-Type-Options: nosniff');
+        if ($noStore) {
+            $response->addHeader('Cache-Control: no-store, private');
+        }
+
+        $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        $response->setOutput($json === false ? '{"success":false}' : $json);
+    }
+
     /** Monta CSS base, classe do body e header/footer padrão do painel admin. */
     protected function adminChrome(array &$data, string $assetVersion, ?string $bodyClass = null): void {
         $config   = $this->registry->get('config');

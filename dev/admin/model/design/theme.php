@@ -11,8 +11,22 @@ class Theme extends \Reamur\System\Engine\Model {
         $q=$this->db->query("SELECT * FROM `".$this->table('design_theme')."` WHERE `theme_id`='".$id."' LIMIT 1");
         return ($q instanceof \stdClass && !empty($q->row)) ? (array)$q->row : [];
     }
+    public function getThemeBySlug(string $slug): array {
+        if ($slug === '') return [];
+        $q=$this->db->query("SELECT * FROM `".$this->table('design_theme')."` WHERE `slug`='".$this->db->escape($slug)."' LIMIT 1");
+        return ($q instanceof \stdClass && !empty($q->row)) ? (array)$q->row : [];
+    }
+    public function slugExists(string $slug, int $excludeThemeId = 0): bool {
+        if ($slug === '') return false;
+        $sql="SELECT `theme_id` FROM `".$this->table('design_theme')."` WHERE `slug`='".$this->db->escape($slug)."'";
+        if ($excludeThemeId > 0) $sql.=" AND `theme_id`!='".(int)$excludeThemeId."'";
+        $q=$this->db->query($sql." LIMIT 1");
+        return ($q instanceof \stdClass && !empty($q->row));
+    }
     public function save(int $id, array $data, int $userId): int {
-        $name=$this->db->escape($data['name']); $slug=$this->db->escape($data['slug']);
+        $rawSlug=(string)($data['slug']??'');
+        if ($rawSlug==='' || $this->slugExists($rawSlug, $id > 0 ? $id : 0)) return 0;
+        $name=$this->db->escape((string)$data['name']); $slug=$this->db->escape($rawSlug);
         $configJson=json_encode($data['config'], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
         $config=$this->db->escape($configJson);
         if ($id) {

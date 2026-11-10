@@ -46,6 +46,7 @@ final class CoreServicesSecurityTest extends TestCase {
                 'data'   => 'old',
             ]));
             self::assertNull($cache->get('stale_key'));
+            clearstatcache(true, $dir . 'cache.stale_key');
             self::assertFalse(is_file($dir . 'cache.stale_key'));
 
             self::assertFalse($cache->set('../escape', 'bad'));
@@ -114,7 +115,8 @@ final class CoreServicesSecurityTest extends TestCase {
             self::assertSame('', $handler->read('../evil'));
             self::assertFalse($handler->destroy(''));
 
-            @touch($dir . 'sess_' . $sid, time() - 7200);
+            self::assertTrue(touch($dir . 'sess_' . $sid, time() - 7200));
+            clearstatcache(true, $dir . 'sess_' . $sid);
             self::assertSame(1, $handler->gc(60));
             self::assertSame('', $handler->read($sid));
             self::assertTrue($handler->close());

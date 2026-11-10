@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 namespace Reamur\System\Library\Mail;
 
 /**
@@ -19,7 +19,7 @@ class Mail {
      */
     public function __construct(array &$option = []) {
         $this->option = &$option;
-        $this->eol = (substr(PHP_OS, 0, 3) == 'WIN') ? "\r\n" : PHP_EOL;
+        $this->eol = (substr(PHP_OS, 0, 3) === 'WIN') ? "\r\n" : PHP_EOL;
 
         $this->validateRequiredOptions();
     }
@@ -246,7 +246,7 @@ class Mail {
         $items = $attachments ?? (is_array($this->option['attachments'] ?? null) ? $this->option['attachments'] : []);
 
         foreach ($items as $attachment) {
-            if (!is_string($attachment) || !is_file($attachment)) {
+            if (!is_string($attachment) || $attachment === '' || str_contains($attachment, "\0") || !is_file($attachment) || !is_readable($attachment)) {
                 continue;
             }
 
