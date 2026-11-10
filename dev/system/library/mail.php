@@ -76,13 +76,18 @@ class Mail {
      * @param string $email
      * @return bool
      */
+    private function containsHeaderControlChars(string $value): bool {
+        return preg_match('/[\r\n\0]/', $value) === 1;
+    }
+
     private function isValidEmail(string $email): bool {
-        return filter_var(trim($email), FILTER_VALIDATE_EMAIL) !== false;
+        return !$this->containsHeaderControlChars($email)
+            && filter_var(trim($email), FILTER_VALIDATE_EMAIL) !== false;
     }
 
     /**
      * Validate array of email addresses
-     * @param array $emails
+     * @param array<int|string, mixed> $emails
      * @throws \InvalidArgumentException
      */
     private function validateEmailArray(array $emails): void {
@@ -92,7 +97,8 @@ class Mail {
 
         foreach ($emails as $email) {
             if (!is_string($email) || !$this->isValidEmail($email)) {
-                throw new \InvalidArgumentException(sprintf('Invalid email address: %s', $email ?? 'null'));
+                $desc = is_scalar($email) ? (string)$email : get_debug_type($email);
+                throw new \InvalidArgumentException(sprintf('Invalid email address: %s', $desc));
             }
         }
     }
@@ -137,8 +143,11 @@ class Mail {
      */
     public function setSender(string $sender): void {
         $sender = trim($sender);
-        if (empty($sender)) {
+        if ($sender === '') {
             throw new \InvalidArgumentException('Sender cannot be empty');
+        }
+        if ($this->containsHeaderControlChars($sender)) {
+            throw new \InvalidArgumentException('Sender contains invalid control characters');
         }
         $this->option['sender'] = $sender;
     }
@@ -172,7 +181,7 @@ class Mail {
         }
         
         // Remove potential header injection attempts
-        $subject = str_replace(["\r", "\n"], '', $subject);
+        $subject = str_replace(["\r", "\n", "\0"], '', $subject);
         
         $this->option['subject'] = $subject;
     }
@@ -210,8 +219,8 @@ class Mail {
      */
     public function addAttachment(string $filename): void {
         $filename = trim($filename);
-        if (empty($filename)) {
-            throw new \InvalidArgumentException('Attachment filename cannot be empty');
+        if ($filename === '' || $this->containsHeaderControlChars($filename)) {
+            throw new \InvalidArgumentException('Attachment filename is invalid');
         }
         
         if (!file_exists($filename)) {

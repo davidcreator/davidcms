@@ -32,8 +32,12 @@ class Payment extends \Reamur\System\Engine\Controller {
 
         $init_point = (string)($payment['init_point'] ?? '');
 
-        // Estados em que o link não deve mais levar ao checkout
-        if (!$payment || $init_point === '' || in_array((string)$payment['status'], ['approved', 'rejected', 'cancelled'], true)) {
+        $validInitPoint = $init_point !== ''
+            && str_starts_with($init_point, 'https://')
+            && filter_var($init_point, FILTER_VALIDATE_URL) !== false;
+
+        // Estados em que o link não deve mais levar ao checkout (e exige HTTPS válido no init_point)
+        if (!$payment || !$validInitPoint || in_array((string)$payment['status'], ['approved', 'rejected', 'cancelled'], true)) {
             $this->response->redirect($this->url->link('error/not_found'));
 
             return;

@@ -20,8 +20,10 @@ final class Response {
     private int $compression = 0;
 
     public function addHeader(string $header): void {
-        if (!in_array($header, $this->headers, true)) {
-            $this->headers[] = $header;
+        $clean = trim(str_replace(["\r", "\n", "\0"], '', $header));
+
+        if ($clean !== '' && !in_array($clean, $this->headers, true)) {
+            $this->headers[] = $clean;
         }
     }
 
@@ -42,14 +44,33 @@ final class Response {
         return $this->output;
     }
 
+    /** Sanitiza destino de redirect contra CRLF/NUL e esquemas não-HTTP (javascript:, data:). */
+    public static function sanitizeRedirectTarget(string $url): string {
+        $clean = trim(str_replace(['&amp;', "\n", "\r", "\0"], ['&', '', '', ''], $url));
+
+        if ($clean === '') {
+            return 'index.php';
+        }
+
+        if (preg_match('#^([a-z][a-z0-9+.-]*):#i', $clean, $m) === 1) {
+            if (!in_array(strtolower($m[1]), ['http', 'https'], true)) {
+                return 'index.php';
+            }
+        }
+
+        return $clean;
+    }
+
     /** Redirect HTTP; em web, encerra a execução (padrão OpenCart) */
     public function redirect(string $url, int $status = 302): void {
+        $safeUrl = self::sanitizeRedirectTarget($url);
+
         if (PHP_SAPI !== 'cli') {
-            header('Location: ' . str_replace(['&amp;', "\n", "\r"], ['&'], $url), true, $status);
+            header('Location: ' . $safeUrl, true, $status);
             exit();
         }
 
-        $this->addHeader('Location: ' . $url);
+        $this->addHeader('Location: ' . $safeUrl);
     }
 
     /** Envia headers + corpo (com compressão opcional) */

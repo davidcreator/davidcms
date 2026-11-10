@@ -106,7 +106,7 @@ final class ThemePreviewState {
         $v = is_string($value) ? $value : '';
         return preg_match('/^#[0-9a-fA-F]{6}$/D', $v) === 1 ? $v : $fallback;
     }
-    private static function scalar($value) {
+    private static function scalar(mixed $value): mixed {
         if (is_bool($value) || is_int($value) || (is_float($value) && is_finite($value))) return $value;
         if (!is_string($value) || strlen($value) > 256) return null;
         return preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $value) === 1 ? null : $value;
