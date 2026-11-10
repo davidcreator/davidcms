@@ -23,7 +23,7 @@ if(Array.isArray(fixture)){
  need(!/bd-davidalmeida\.sql|localhost|127\.0\.0\.1|password\s*[:=]|token\s*[:=]/i.test(images),'fixture must not include secrets, private dump names or local targets');
 }
 need(hashes&&hashes.head===status.base_head&&Array.isArray(hashes.relevant_point_sources)&&hashes.relevant_point_sources.length>=5,'base SHA manifest incomplete');
-const plan=fs.readFileSync(path.join(root,'docs/F9-27-Release-Gate.md'),'utf8');
+const plan=fs.readFileSync(path.join(root,'docs/fases/f9/F9-27-Release-Gate.md'),'utf8');
 for(const marker of ['BLOQUEADO','F9-12','ABORTAR','NOT RUN','credenciais','descartável'])need(plan.toLowerCase().includes(marker.toLowerCase()),`release plan missing ${marker}`);
 if(errors.length){console.error('F9-27 STATIC RELEASE-GATE CHECK: FAIL\n- '+errors.join('\n- '));process.exit(1)}
 console.log(`F9-27 STATIC RELEASE-GATE CHECK: PASS — ${fixture.length} synthetic scenarios; F9-12 unknown; runtime/DB/deploy not run.`);

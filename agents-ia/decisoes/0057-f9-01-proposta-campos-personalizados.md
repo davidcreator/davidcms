@@ -46,4 +46,4 @@ Pré-fila proposta: Tarefa02 desenho físico/migração **após aprovação**; T
 
 A transição F8→F9 fica registrada sem reabrir aceites ou fabricar checklist real. Mantêm-se dívidas separadas CKEditor/sanitização, uploads/referências/órfãos, paginação global/confirms inline, roadmap visual próprio do catalog. Não se promete resolvê-las por campos personalizados.
 
-Guia/modelo/revisão: [F9-01 — Campos personalizados](../../docs/F9-01-Campos-Personalizados.md).
+Guia/modelo/revisão: [F9-01 — Campos personalizados](../../docs/fases/f9/F9-01-Campos-Personalizados.md).

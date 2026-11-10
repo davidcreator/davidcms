@@ -123,7 +123,7 @@ class Install extends \Reamur\System\Engine\Model {
      * (F2-6) com access+modify nas rotas-base mínimas de autogestão —
      * 'user/user', 'user/user_group', 'catalog/project', 'catalog/category', 'cms/page', 'marketing/testimonial', 'marketing/client_logo', 'tool/tool', 'sale/order', 'communication/contact_message' e 'setting/webhook' (F2-16 — último do schema) — senão o único admin sairia do wizard
      * sem poder administrar as próprias contas. Colunas 1:1 com
-     * docs/Dicionario-de-Dados.md.
+     * docs/arquitetura/Dicionario-de-Dados.md.
      *
      * @param array{username: string, firstname: string, lastname: string, email: string, password: string} $data
      */

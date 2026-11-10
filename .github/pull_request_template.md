@@ -17,7 +17,7 @@ Apague as seções que não se aplicam. Commits em pt-BR, Conventional Commits.
 
 <!-- Se tocou núcleo ou criou pasta/rota/entidade nova: cole o plano aprovado e/ou link do ADR -->
 - ADR relacionado: <!-- ex.: agents-ia/decisoes/0004-...md -->
-- Novas tabelas/colunas conforme `docs/Dicionario-de-Dados.md`? ☐ N/A ☐ Sim ☐ **Diverge → ADR obrigatório**
+- Novas tabelas/colunas conforme `docs/arquitetura/Dicionario-de-Dados.md`? ☐ N/A ☐ Sim ☐ **Diverge → ADR obrigatório**
 
 ## ✅ Checklist (Definition of Done)
 

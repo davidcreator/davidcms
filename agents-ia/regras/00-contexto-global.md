@@ -69,13 +69,13 @@ Dentro de Controller/Model, via `$this->`:
 
 | Doc | Para quê |
 | --- | --- |
-| `Analise-DavidAlmeida.md` | O que estamos migrando e o plano de fases |
-| `Arquitetura-MVCL.md` | Como o MVCL funciona + ciclo de vida da requisição |
+| `guias/Analise-DavidAlmeida.md` | O que estamos migrando e o plano de fases |
+| `arquitetura/Arquitetura-MVCL.md` | Como o MVCL funciona + ciclo de vida da requisição |
 | `Estrutura-de-Pastas.md` | **Onde cada arquivo mora — consulte antes de criar arquivo** |
-| `Guia-PHP8.md` · `Guia-Composer.md` · `Guia-Twig.md` | Padrões técnicos |
-| `Guia-ThreeJS.md` + `Implementacao-ThreeJS.md` | Front 3D do site |
-| `Webhooks.md` | Sistema de webhooks |
-| `Guia-CMS.md` | Visão de produto/módulos |
+| `guias/Guia-PHP8.md` · `guias/Guia-Composer.md` · `guias/Guia-Twig.md` | Padrões técnicos |
+| `threejs/Guia-ThreeJS.md` + `threejs/Implementacao-ThreeJS.md` | Front 3D do site |
+| `integracoes/Webhooks.md` | Sistema de webhooks |
+| `guias/Guia-CMS.md` | Visão de produto/módulos |
 
 **Obrigação:** se uma tarefa mudar comportamento/estrutura, **atualizar o doc correspondente no mesmo commit**.
 
@@ -87,7 +87,7 @@ Dentro de Controller/Model, via `$this->`:
 | **0002** | Blog híbrido: externo (davidcreator.com) no lançamento; migração interna pós-lançamento — **não criar módulo de blog agora** |
 | **0003** | CI corrigido (`working-directory` + `php -l` + links); `.gitignore` cobre vendor; limpeza do histórico na Fase 1 |
 | **0081** | Dependências Node em `dev/system/storage/` e correção do CI (sem `defaults.run` global; PHPStan verde) |
-| **0004** | Contratos de fundação aprovados: `docs/Contrato-Bootstrap.md`, `docs/Dicionario-de-Dados.md`, `agents-ia/modelos/`, PHPStan/PHPUnit (`require-dev`), `dev/tests/` (única pasta de 1º nível autorizada), `.editorconfig`, PR template |
+| **0004** | Contratos de fundação aprovados: `docs/arquitetura/Contrato-Bootstrap.md`, `docs/arquitetura/Dicionario-de-Dados.md`, `agents-ia/modelos/`, PHPStan/PHPUnit (`require-dev`), `dev/tests/` (única pasta de 1º nível autorizada), `.editorconfig`, PR template |
 
 ## 8. Peculiaridades intencionais (NÃO "corrigir" sem ADR)
 

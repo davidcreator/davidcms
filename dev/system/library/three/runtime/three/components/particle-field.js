@@ -1,6 +1,6 @@
 /**
  * Campo de partículas reutilizável.
- * Esqueleto de docs/Implementacao-ThreeJS.md §5 (components/particle-field.js).
+ * Esqueleto de docs/threejs/Implementacao-ThreeJS.md §5 (components/particle-field.js).
  */
 import * as THREE from 'three';
 

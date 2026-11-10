@@ -14,7 +14,7 @@ const controller = read('dev/catalog/controller/blog/blog.php');
 const twig = read('dev/catalog/view/template/blog/blog_info.twig');
 const css = read('dev/catalog/view/css/blog-blocks.css');
 const preview = read('tools/preview/f915-renderer-preview.html');
-const docs = read('docs/F9-15-Renderer-Publico-Blog-Blocos.md');
+const docs = read('docs/fases/f9/F9-15-Renderer-Publico-Blog-Blocos.md');
 let contract, fixtures;
 try { contract = JSON.parse(read('docs/F9-15-Contrato-Renderer-Publico.json')); } catch (e) { errors.push(`contract JSON: ${e.message}`); }
 try { fixtures = JSON.parse(read('tests/fixtures/renderer.json')); } catch (e) { errors.push(`fixture JSON: ${e.message}`); }

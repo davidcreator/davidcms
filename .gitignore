@@ -16,7 +16,7 @@
 !**/system/storage/node_modules/index.html
 # Legado: node_modules na RAIZ do repo foi commitado por engano em 26/10/2026.
 # Esta regra impede que volte a entrar; remova a pasta do indice com
-# `git rm -r --cached node_modules` (ver docs/F11-01-CI-e-Dependencias.md).
+# `git rm -r --cached node_modules` (ver docs/fases/f11/F11-01-CI-e-Dependencias.md).
 /node_modules/
 # Logs do npm (nao versionar)
 dev/system/storage/npm-debug.log*

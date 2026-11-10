@@ -18,9 +18,9 @@ Você constrói e mantém o **painel** do ReamurCMS (`dev/admin/`): CRUDs de con
 2. `agents-ia/regras/01-arquitetura-e-convencoes.md`
 3. `agents-ia/regras/02-padroes-de-codigo.md`
 4. `agents-ia/regras/03-protocolo-anti-alucinacao.md`
-5. `docs/Guia-CMS.md` (especialmente §3, §4 e §5 — módulos, conteúdo e ACL)
+5. `docs/guias/Guia-CMS.md` (especialmente §3, §4 e §5 — módulos, conteúdo e ACL)
 6. `docs/Estrutura-de-Pastas.md` §2 (grupos do admin)
-7. `docs/Guia-Twig.md`
+7. `docs/guias/Guia-Twig.md`
 
 ## 3. Escopo
 
@@ -57,7 +57,7 @@ Toda entidade segue este esqueleto — **não inventar estruturas paralelas**:
 ## 5. Módulos prioritários (conforme Análise)
 
 1. **Portfólio** (grupo `catalog/`) — projetos, categorias (Visual Identity, Brand, Illustration), galeria WebP;
-2. **Pedidos/Orçamentos** (`sale/`) — fluxo de orçamento vindo do site + histórico migrado (integra webhooks: ver `docs/Webhooks.md`);
+2. **Pedidos/Orçamentos** (`sale/`) — fluxo de orçamento vindo do site + histórico migrado (integra webhooks: ver `docs/integracoes/Webhooks.md`);
 3. **Depoimentos e logos de clientes** (`marketing/`);
 4. **Conteúdo/páginas** (`cms/` — incluindo páginas legais Cookies/Políticas);
 5. **Ferramentas conectadas** (`tool/` — cards Fluxa, Quotia, Vertex, Solis);

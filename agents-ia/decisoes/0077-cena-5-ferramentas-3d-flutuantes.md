@@ -37,6 +37,6 @@
 - [ADR 0073 — runtime System e gateway allowlisted](0073-threejs-runtime-system-asset-gateway.md)
 - [ADR 0074 — SceneRunner compartilhado](0074-threejs-shared-scene-runner.md)
 - [ADR 0076 — galeria 3D opcional do Portfólio](0076-cena-3-etapa-2-galeria-3d-do-portfolio.md)
-- `docs/Guia-ThreeJS.md`
-- `docs/Implementacao-ThreeJS.md`
+- `docs/threejs/Guia-ThreeJS.md`
+- `docs/threejs/Implementacao-ThreeJS.md`
 - `dev/catalog/view/template/partial/tools.twig`

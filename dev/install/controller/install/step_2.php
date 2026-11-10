@@ -7,7 +7,7 @@
  * @link      https://reamurcms.com
  *
  * Wizard — Passo 2: Pré-requisitos do ambiente.
- * Fonte da lista: docs/Guia-PHP8.md §9 (extensões obrigatórias) + Contrato-Bootstrap §1.3 (PHP >= 8.0).
+ * Fonte da lista: docs/guias/Guia-PHP8.md §9 (extensões obrigatórias) + Contrato-Bootstrap §1.3 (PHP >= 8.0).
  */
 namespace Reamur\Install\Controller\Install;
 

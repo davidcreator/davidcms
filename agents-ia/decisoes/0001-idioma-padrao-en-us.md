@@ -17,7 +17,7 @@
 
 ## Contexto
 
-`system/config/default.php` declarava `language_code = 'en-gb'`, porém a estrutura de pastas criada no repositório é `en-us`, `es-eu` e `pt-br` — divergência que faria cada agente decidir de um jeito (lacuna L4 da [Auditoria](../../docs/Auditoria-Fundacao.md)). O site atual é majoritariamente em inglês, com público internacional e brasileiro.
+`system/config/default.php` declarava `language_code = 'en-gb'`, porém a estrutura de pastas criada no repositório é `en-us`, `es-eu` e `pt-br` — divergência que faria cada agente decidir de um jeito (lacuna L4 da [Auditoria](../../docs/arquitetura/Auditoria-Fundacao.md)). O site atual é majoritariamente em inglês, com público internacional e brasileiro.
 
 ## Decisão
 
@@ -42,4 +42,4 @@
 - `agents-ia/regras/00-contexto-global.md` (fatos + pendências)
 - `agents-ia/modelos/language.php.tpl` (regra en-us primeiro)
 - `agentes/agente-admin.md`, `agentes/agente-catalog.md` (prioridade de idioma)
-- `docs/Arquitetura-MVCL.md` §9 · `docs/Guia-CMS.md` §6 · `docs/Guia-Composer.md` §6.2 · `docs/Analise-DavidAlmeida.md`
+- `docs/arquitetura/Arquitetura-MVCL.md` §9 · `docs/guias/Guia-CMS.md` §6 · `docs/guias/Guia-Composer.md` §6.2 · `docs/guias/Analise-DavidAlmeida.md`

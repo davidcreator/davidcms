@@ -67,12 +67,12 @@ Language    → TODO texto de interface via $_['chave']. NUNCA texto solto em co
 
 | Mudou... | Atualizar no mesmo commit |
 | --- | --- |
-| Arquitetura/ciclo de vida | `docs/Arquitetura-MVCL.md` |
+| Arquitetura/ciclo de vida | `docs/arquitetura/Arquitetura-MVCL.md` |
 | Criei pasta/módulo | `docs/Estrutura-de-Pastas.md` |
 | Regra/convenção | `agents-ia/regras/*` (via orquestrador) |
 | Decisão arquitetural/renúncia técnica | `agents-ia/decisoes/` (ADR) |
-| Padrão de template | `docs/Guia-Twig.md` / `Implementacao-ThreeJS.md` |
-| Webhook | `docs/Webhooks.md` |
+| Padrão de template | `docs/guias/Guia-Twig.md` / `docs/threejs/Implementacao-ThreeJS.md` |
+| Webhook | `docs/integracoes/Webhooks.md` |
 
 ---
 

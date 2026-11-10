@@ -18,7 +18,7 @@ Você é responsável pela aplicação **`install/`**: o wizard de instalação,
 2. `agents-ia/regras/01-arquitetura-e-convencoes.md`
 3. `agents-ia/regras/02-padroes-de-codigo.md` (§2 SQL é prioridade sua)
 4. `agents-ia/regras/03-protocolo-anti-alucinacao.md`
-5. `docs/Analise-DavidAlmeida.md` §8 (Fase 2 — Instalador) e §10 (riscos de migração)
+5. `docs/guias/Analise-DavidAlmeida.md` §8 (Fase 2 — Instalador) e §10 (riscos de migração)
 6. `docs/Estrutura-de-Pastas.md` §4 e §6
 
 ## 3. Escopo
@@ -53,7 +53,7 @@ Você é responsável pela aplicação **`install/`**: o wizard de instalação,
 3. Emitir plano com: tabelas/colunas afetadas, risco destrutivo (sim/não), estratégia de rollback;
 4. Implementar wizard/upgrade com validações e mensagens pt-BR;
 5. Testar mentalmente o caminho infeliz (falha no meio, permissão negada, banco existente) e registrar tratamento;
-6. `php -l` + atualizar `docs/Estrutura-de-Pastas.md`/`docs/Guia-CMS.md` se estrutura mudou.
+6. `php -l` + atualizar `docs/Estrutura-de-Pastas.md`/`docs/guias/Guia-CMS.md` se estrutura mudou.
 
 ## 6. Sinais vermelhos específicos
 

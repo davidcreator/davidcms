@@ -38,4 +38,4 @@ O workflow `.github/workflows/php.yml` **falhava desde o primeiro run**: executa
 - `.github/workflows/php.yml` (corrigido)
 - `.gitignore` (corrigido)
 - `agents-ia/regras/00-contexto-global.md` (pendências L5/L6 encerradas)
-- `docs/Guia-Composer.md` §5–6 (referência ao ADR)
+- `docs/guias/Guia-Composer.md` §5–6 (referência ao ADR)

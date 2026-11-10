@@ -43,4 +43,4 @@ Entrada `tools/e2e/e2e_f809.sh`, padrão `--check`. PHP8.4.26, Twig3.30.0 (vers�
 - Suíte f213 permanece destrutiva, não homologada integralmente aqui; mudanças somente de compatibilidade UI/CSRF. Não se declara sua bateria real aprovada.
 - Entrega preparada/publicação não comprova aplicação, nem encerra a Fase8.
 
-Guia, aplicação, limpeza e rollback: [F8-09 — Ferramentas conectadas](../../docs/F8-09-Ferramentas-Conectadas.md).
+Guia, aplicação, limpeza e rollback: [F8-09 — Ferramentas conectadas](../../docs/fases/f7-f8/F8-09-Ferramentas-Conectadas.md).

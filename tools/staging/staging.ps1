@@ -120,7 +120,7 @@ function Write-ConfigFile([string]$App) {
 /**
  * config.php do AMBIENTE DE TESTES (staging) - gerado por tools/staging/staging.ps1.
  * NUNCA versionar. Nada aqui pode apontar para dev/ ou prod/.
- * Constantes permitidas: docs/Contrato-Bootstrap.md 1.1.
+ * Constantes permitidas: docs/arquitetura/Contrato-Bootstrap.md 1.1.
  */
 
 // HTTP

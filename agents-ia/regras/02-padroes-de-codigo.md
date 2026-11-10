@@ -29,7 +29,7 @@
 - `die()`/`exit()` fora de `startup.php`; uso correto é `$this->response->redirect()`/output;
 - Funções globais novas fora de `system/helper/`.
 
-Referência completa: [`docs/Guia-PHP8.md`](../../docs/Guia-PHP8.md).
+Referência completa: [`docs/guias/Guia-PHP8.md`](../../docs/guias/Guia-PHP8.md).
 
 ## 2. SQL e Model
 
@@ -58,12 +58,12 @@ public function getProject(int $project_id): array {
 
 - Todo texto: `{{ text_* }}` / `{{ heading_title }}` vindos da language;
 - Dados p/ JS: `{{ var|json_encode|raw }}` — único `|raw` permitido sem justificativa;
-- Herança: páginas estendem `layout/base.twig`; sem bloco novo sem atualizar o `Guia-Twig`;
+- Herança: páginas estendem `layout/base.twig`; sem bloco novo sem atualizar o `docs/guias/Guia-Twig.md`;
 - Partials com `{% include ... with { ... } only %}`.
 
 ## 5. JavaScript / Three.js
 
-- A engine/runtime Three.js é canônica em `system/library/three/runtime/`; publicação web só via allowlist `catalog/controller/common/three.php` + `system/library/three/asset_manifest.php`. `three/core/scene-runner.js` é a única camada WebGL/lifecycle para cenas nativas e thumbs declarativas; `custom_js` mantém iframe sandbox isolado. Cenas/markup específicos continuam no domínio Catalog. Seguir [`docs/Implementacao-ThreeJS.md`](../../docs/Implementacao-ThreeJS.md); não duplicar vendor, renderer ou loop em `catalog/view/js/`.
+- A engine/runtime Three.js é canônica em `system/library/three/runtime/`; publicação web só via allowlist `catalog/controller/common/three.php` + `system/library/three/asset_manifest.php`. `three/core/scene-runner.js` é a única camada WebGL/lifecycle para cenas nativas e thumbs declarativas; `custom_js` mantém iframe sandbox isolado. Cenas/markup específicos continuam no domínio Catalog. Seguir [`docs/threejs/Implementacao-ThreeJS.md`](../../docs/threejs/Implementacao-ThreeJS.md); não duplicar vendor, renderer ou loop em `catalog/view/js/`.
 - `defer`/module; listeners com `{ passive: true }` quando possível; cleanup em `dispose()`;
 - Respeitar budgets: DPR ≤ 2, `prefers-reduced-motion`, lazy-init.
 

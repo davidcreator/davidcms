@@ -15,7 +15,7 @@ O arquivo já se encontra no repositório em `dev/install/sql/bd-davidalmeida.sq
 1. **Prioridade de dados:** o único escopo de origem aprovado é `davidalmeida.xyz`; nenhuma rotina, mapa ou inventário para importar `davidcreator.com` entra nesta tarefa.
 2. **Credenciais:** o usuário autorizou leitura porque serão alteradas. Ainda assim, a decisão é tratar o dump como sensível e **não copiar nenhum valor/credencial** para documentação, relatório, logs ou Tool.
 3. **Auditoria sem execução:** o SQL é somente parseado. Nenhum `CREATE`, `INSERT`, `ALTER`, conexão, transação ou rollback foi executado.
-4. **Inventário sanitizado:** publicar apenas metadados, nomes/tipos de colunas, contagens e flags sensíveis, conforme `docs/F9-03-Inventario-Banco-DavidAlmeida.json`.
+4. **Inventário sanitizado:** publicar apenas metadados, nomes/tipos de colunas, contagens e flags sensíveis, conforme `docs/fases/f9/F9-03-Inventario-Banco-DavidAlmeida.json`.
 5. **Importação adiada:** nenhum mapeamento é autoridade de importação ainda. A migração real exigirá plano/staging/dry-run e aprovação posterior.
 
 ## Resultados técnicos confirmados

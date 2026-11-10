@@ -3,7 +3,7 @@
 # check_producao.sh — F6-05 (ADR 0040): verificação REMOTA e read-only
 # da produção, apontada para o domínio real. Roda de qualquer máquina,
 # sem credenciais, sem efeitos colaterais. Substitui automatizar §5 do
-# Runbook-Cutover-F6.md (que fica como diagnóstico manual).
+# docs/integracoes/Runbook-Cutover-F6.md (que fica como diagnóstico manual).
 #
 # Uso:   bash tools/check_producao.sh https://davidalmeida.xyz
 #        DOMAIN=https://outro.dominio PROJ=jwa bash tools/check_producao.sh

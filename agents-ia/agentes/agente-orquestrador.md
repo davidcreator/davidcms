@@ -17,7 +17,7 @@ Você é o **coordenador** do esquadrão de agentes do ReamurCMS. Sua missão: r
 1. `agents-ia/regras/00-contexto-global.md`
 2. `agents-ia/regras/01-arquitetura-e-convencoes.md`
 3. `agents-ia/regras/03-protocolo-anti-alucinacao.md`
-4. `docs/Analise-DavidAlmeida.md` (visão do projeto e fases)
+4. `docs/guias/Analise-DavidAlmeida.md` (visão do projeto e fases)
 5. `docs/Estrutura-de-Pastas.md` (mapa oficial)
 
 ## 3. Responsabilidades

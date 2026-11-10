@@ -42,4 +42,4 @@ Reutiliza apenas helpers/transportes/guardas anteriores, sem executar seus fluxo
 - Homologar navegador/foco, preview/galeria, responsividade, temas/contraste, outro perfil ACL e volume real. Guardas não atestam backend/proxy/diretórios mal configurados; proibido produção/túnel/proxy para produção.
 - Código preparado/publicado não comprova aplicação ou encerramento da Fase 8.
 
-Guia, aplicação, E2E e rollback: [F8-08 — Projetos do portfólio](../../docs/F8-08-Projetos-Portfolio.md).
+Guia, aplicação, E2E e rollback: [F8-08 — Projetos do portfólio](../../docs/fases/f7-f8/F8-08-Projetos-Portfolio.md).

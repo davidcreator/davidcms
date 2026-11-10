@@ -7,7 +7,7 @@
  * @link      https://reamurcms.com
  *
  * Front controller — aplicação CATALOG (site público).
- * Especificação: docs/Contrato-Bootstrap.md §2. A ÚNICA linha específica
+ * Especificação: docs/arquitetura/Contrato-Bootstrap.md §2. A ÚNICA linha específica
  * da aplicação é o valor de APPLICATION (demais apps mudam apenas ela).
  */
 
@@ -32,4 +32,4 @@ if (!defined('DIR_APPLICATION')) {
 require_once(DIR_SYSTEM . 'startup.php');
 require_once(DIR_SYSTEM . 'framework.php');
 
-// 6. A partir daqui o fluxo segue o ciclo MVCL (docs/Arquitetura-MVCL.md §4)
+// 6. A partir daqui o fluxo segue o ciclo MVCL (docs/arquitetura/Arquitetura-MVCL.md §4)

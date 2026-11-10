@@ -51,7 +51,7 @@ for (const rel of localeFiles) {
   }
 }
 let contract, fixtures;
-try { contract = JSON.parse(fs.readFileSync(path.join(pkg, 'docs/F9-17-Contrato-E2E-Blog-Blocos.json'), 'utf8')); }
+try { contract = JSON.parse(fs.readFileSync(path.join(pkg, 'docs/fases/f9/F9-17-Contrato-E2E-Blog-Blocos.json'), 'utf8')); }
 catch (e) { errors.push(`contract JSON: ${e.message}`); }
 try { fixtures = JSON.parse(fs.readFileSync(path.join(pkg, 'tests/fixtures/blog_block_workflows.json'), 'utf8')); }
 catch (e) { errors.push(`workflow fixtures JSON: ${e.message}`); }

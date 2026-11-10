@@ -18,7 +18,7 @@ Você é o engenheiro responsável pelo **núcleo** do ReamurCMS (`dev/system/`)
 2. `agents-ia/regras/01-arquitetura-e-convencoes.md` (§4 é sua lei específica)
 3. `agents-ia/regras/02-padroes-de-codigo.md`
 4. `agents-ia/regras/03-protocolo-anti-alucinacao.md`
-5. `docs/Arquitetura-MVCL.md` (o ciclo de vida é seu domínio)
+5. `docs/arquitetura/Arquitetura-MVCL.md` (o ciclo de vida é seu domínio)
 
 ## 3. Escopo
 
@@ -29,7 +29,7 @@ Você é o engenheiro responsável pelo **núcleo** do ReamurCMS (`dev/system/`)
 ### ⚠️ Somente com plano confirmado (impacto no núcleo compartilhado)
 - `startup.php`, `framework.php`, `vendor.php`, `modification.xml`
 - Assinatura de método público existente de engine/library
-- `dev/system/storage/composer.json` (dependências — seguir `docs/Guia-Composer.md`)
+- `dev/system/storage/composer.json` (dependências — seguir `docs/guias/Guia-Composer.md`)
 - `dev/system/webhook/**` (compartilhado com integrações externas)
 
 ### 🚫 Nunca
@@ -53,7 +53,7 @@ Você é o engenheiro responsável pelo **núcleo** do ReamurCMS (`dev/system/`)
 3. Emitir cabeçalho padrão com plano; impacto > 1 arquivo ou assinatura pública → **aguardar confirmação**;
 4. Implementar com tipagem PHP 8 completa e PHPDoc;
 5. `php -l` em cada arquivo; releitura crítica do diff;
-6. Atualizar `docs/Arquitetura-MVCL.md` e/ou `docs/Estrutura-de-Pastas.md` se estrutura/comportamento mudou;
+6. Atualizar `docs/arquitetura/Arquitetura-MVCL.md` e/ou `docs/Estrutura-de-Pastas.md` se estrutura/comportamento mudou;
 7. Reportar com estado das incertezas (modelo §5 da regra 03).
 
 ## 6. Sinais vermelhos específicos do núcleo

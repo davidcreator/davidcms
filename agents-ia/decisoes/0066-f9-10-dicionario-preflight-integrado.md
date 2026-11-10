@@ -12,7 +12,7 @@ Os gates das tarefas anteriores eram locais. O teste F9-05 também trazia uma as
 
 ## Decisão
 
-1. Registrar no `docs/Dicionario-de-Dados.md` as cinco tabelas e colunas exatamente como no upgrade F9-02; documentar `language_id=0`, precision `DECIMAL(38,6)`, visibilidade, índices e ausência de FK.
+1. Registrar no `docs/arquitetura/Dicionario-de-Dados.md` as cinco tabelas e colunas exatamente como no upgrade F9-02; documentar `language_id=0`, precision `DECIMAL(38,6)`, visibilidade, índices e ausência de FK.
 2. Preservar o conteúdo histórico do contrato F9-05, mas remover assertions de ausência física de arquivos futuros. O teste verifica `controller_available=false` e `ui_available=false` no contrato F9-05 daquela tarefa, sem proibir evolução posterior.
 3. Criar um runner único F9-10 que executa apenas gates estáticos entregues na F9-02 e F9-05…09 e confirma a congruência do dicionário/schema. Raiz pode ser apontada para uma cópia do repositório com `--root`.
 4. Manter a não execução: o runner não consulta bancos nem comprova estado de tabelas; essa parte permanece sob verificação direta e operacional do mantenedor.

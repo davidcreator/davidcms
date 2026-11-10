@@ -2,7 +2,7 @@
 
 > **Objetivo:** referência anotada de toda a árvore de diretórios do repositório — consulta rápida para saber **onde** criar cada arquivo novo.
 
-> 📌 Estado atual: esqueleto estrutural — as pastas contêm `index.html` vazios (placeholders para versionar a árvore no Git) e serão preenchidas conforme as fases do [plano de migração](Analise-DavidAlmeida.md#8-plano-de-migração).
+> 📌 Estado atual: esqueleto estrutural — as pastas contêm `index.html` vazios (placeholders para versionar a árvore no Git) e serão preenchidas conforme as fases do [plano de migração](guias/Analise-DavidAlmeida.md#8-plano-de-migração).
 
 ---
 
@@ -27,7 +27,15 @@ davidcms/
 ├── .github/workflows/php.yml   # CI — valida e instala Composer (ver Guia-Composer §5)
 ├── .gitignore
 ├── README.md                   # Apresentação do projeto
-├── docs/                       # 📚 Esta documentação
+├── docs/                       # 📚 Esta documentação (ver docs/README.md)
+│   ├── arquitetura/            # MVCL, Contrato-Bootstrap, Dicionario-de-Dados, Auditoria
+│   ├── guias/                  # Analise-DavidAlmeida, Guia-CMS/Composer/PHP8/Twig, uploads
+│   ├── temas/                  # Presets .reamurtheme.json + guias/ (Frentes A–T)
+│   ├── threejs/                # Guias Three.js, specs de cena e E2E 3D
+│   ├── integracoes/            # Webhooks, MercadoPago e Runbook F6
+│   ├── fases/{f7-f8,f9,f11}/   # Artefatos e contratos por fase
+│   ├── historico/              # Consolidados e análises históricas
+│   └── PROJECT-HANDOFF.md (+ F9-*.json congelados em tools/decision-matrix.json)
 └── dev/                        # Código-fonte (multi-aplicação MVCL)
     ├── admin/                  # Aplicação 1 — painel administrativo
     ├── catalog/                # Aplicação 2 — site público
@@ -138,7 +146,7 @@ install/
 
 ## 5. `dev/system/` — Núcleo
 
-O framework ReamurCMS propriamente dito (detalhado em [Arquitetura MVCL §3](Arquitetura-MVCL.md#3-o-núcleo-system)):
+O framework ReamurCMS propriamente dito (detalhado em [Arquitetura MVCL §3](arquitetura/Arquitetura-MVCL.md#3-o-núcleo-system)):
 
 ```text
 system/
@@ -223,7 +231,7 @@ webhook/
     └── advanced/webhook.php   # getHooks($trigger) → lê tabela rms_webhook
 ```
 
-Documentação completa: [Webhooks.md](Webhooks.md).
+Documentação completa: [Webhooks.md](integracoes/Webhooks.md).
 
 ---
 
@@ -254,7 +262,7 @@ Chaves mais importantes (de `default.php`):
 | `db_engine` | `mysqli` | `mysqli`, `pdo`, `pgsql`, `mariadb` |
 | `cache_engine` | `file` | `apcu`, `file`, `mem`, `memcached`, `redis` |
 | `session_engine` / `session_name` | `file` / `RMSSESSION` | `db`, `file`, `redis` |
-| `template_engine` / `template_cache` | `twig` / `true` (prod) | ver [Guia Twig](Guia-Twig.md) |
+| `template_engine` / `template_cache` | `twig` / `true` (prod) | ver [Guia Twig](guias/Guia-Twig.md) |
 | `error_display` / `error_log` | `false` (prod) / `true` | nunca exibir erro em produção |
 | `mail_engine` | `smtp` | configurar SMTP no admin |
 
@@ -269,7 +277,7 @@ Chaves mais importantes (de `default.php`):
 | CRUD de conteúdo no painel | `admin/controller/{grupo}/` + `admin/model/{grupo}/` + `admin/view/template/` |
 | Nova ferramenta conectada | `catalog/controller/tool/` + card gestor em `admin/controller/tool/` |
 | Novo endpoint de API | `catalog/controller/api/` ou `admin/controller/api/` |
-| Novo webhook | `system/webhook/controller/` + trigger cadastrado ([Webhooks §6](Webhooks.md#6-criando-um-novo-webhook)) |
+| Novo webhook | `system/webhook/controller/` + trigger cadastrado ([Webhooks §6](integracoes/Webhooks.md#6-criando-um-novo-webhook)) |
 | Novo serviço de biblioteca | `system/library/meu_servico.php` (classe) — registrado via `$this->load->library()` |
 | Novo helper de funções | `system/helper/meu_helper.php` — `$this->load->helper('meu_helper')` |
 | Novo driver (cache/db/session) | `system/library/{cache,db,session}/meu_driver.php` + opção no config |
@@ -277,17 +285,17 @@ Chaves mais importantes (de `default.php`):
 | Schema de banco | `install/sql/` (migrações versionadas) |
 | Assets do front | `catalog/view/{css,js}/` e tema em `catalog/view/theme/` |
 | Engine/runtime Three.js compartilhado | `system/library/three/runtime/`; acesso web só pela allowlist `catalog/controller/common/three.php` |
-| Cena e markup específicos do site | `catalog/view/` — ver [Guia Three.js](Guia-ThreeJS.md) |
+| Cena e markup específicos do site | `catalog/view/` — ver [Guia Three.js](threejs/Guia-ThreeJS.md) |
 | Config nova | chave em `system/config/default.php` + override por app se necessário |
-| Documentação nova | `docs/` (pt-BR, kebab-case) + entrada no [índice](README.md) |
+| Documentação nova | `docs/{arquitetura,guias,temas,threejs,integracoes,fases,historico}/` + entrada no [índice](README.md) |
 
 ---
 
 ## Veja também
 
-- [Arquitetura MVCL](Arquitetura-MVCL.md) — como essas pastas interagem em runtime
-- [Análise §8](Analise-DavidAlmeida.md#8-plano-de-migração) — ordem de preenchimento (Fases 1–6)
-- [Guia CMS §3](Guia-CMS.md#3-módulos-essenciais-de-um-cms--reamurcms) — módulos em visão de produto
+- [Arquitetura MVCL](arquitetura/Arquitetura-MVCL.md) — como essas pastas interagem em runtime
+- [Análise §8](guias/Analise-DavidAlmeida.md#8-plano-de-migração) — ordem de preenchimento (Fases 1–6)
+- [Guia CMS §3](guias/Guia-CMS.md#3-módulos-essenciais-de-um-cms--reamurcms) — módulos em visão de produto
 
 ### F10-02 — Temas do Catalog
 

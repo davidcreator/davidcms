@@ -116,7 +116,7 @@
       "file": "e2e_f904.cjs",
       "rc": 2,
       "category": "REQUIRES_ARGS",
-      "evidence": "Uso: node e2e_f904.cjs --check [--inventory docs/F9-03-Inventario-Banco-DavidAlmeida.json] [--map docs/F9-04-Mapa-Migracao-DavidAlmeida.json] [--sql /caminho/privado/bd-davidalmeida.sql]",
+      "evidence": "Uso: node e2e_f904.cjs --check [--inventory docs/fases/f9/F9-03-Inventario-Banco-DavidAlmeida.json] [--map docs/fases/f9/F9-04-Mapa-Migracao-DavidAlmeida.json] [--sql /caminho/privado/bd-davidalmeida.sql]",
       "action": "Invocar com os argumentos de CLI declarados no Uso. NAO alterar.",
       "inventoried_at": "2026-11-02",
       "head": "fb7b56055"
@@ -334,7 +334,7 @@
       "file": "e2e_f904.cjs",
       "rc": 2,
       "category": "REQUIRES_ARGS",
-      "evidence": "Uso: node e2e_f904.cjs --check [--inventory docs/F9-03-Inventario-Banco-DavidAlmeida.json] [--map docs/F9-04-Mapa-Migracao-DavidAlmeida.json] [--sql /caminho/privado/bd-davidalmeida.sql]",
+      "evidence": "Uso: node e2e_f904.cjs --check [--inventory docs/fases/f9/F9-03-Inventario-Banco-DavidAlmeida.json] [--map docs/fases/f9/F9-04-Mapa-Migracao-DavidAlmeida.json] [--sql /caminho/privado/bd-davidalmeida.sql]",
       "action": "Invocar com os argumentos de CLI declarados no Uso. NAO alterar.",
       "inventoried_at": "2026-11-02",
       "head": "fb7b56055"

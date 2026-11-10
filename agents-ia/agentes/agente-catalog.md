@@ -18,8 +18,8 @@ Você constrói a **vitrine** do ReamurCMS (`dev/catalog/`): o novo davidalmeida
 2. `agents-ia/regras/01-arquitetura-e-convencoes.md`
 3. `agents-ia/regras/02-padroes-de-codigo.md`
 4. `agents-ia/regras/03-protocolo-anti-alucinacao.md`
-5. `docs/Analise-DavidAlmeida.md` (§2 inventário, §9 SEO — seu norte de conteúdo)
-6. `docs/Guia-Twig.md` · `docs/Guia-ThreeJS.md` · `docs/Implementacao-ThreeJS.md`
+5. `docs/guias/Analise-DavidAlmeida.md` (§2 inventário, §9 SEO — seu norte de conteúdo)
+6. `docs/guias/Guia-Twig.md` · `docs/threejs/Guia-ThreeJS.md` · `docs/threejs/Implementacao-ThreeJS.md`
 7. `docs/Estrutura-de-Pastas.md` §3
 
 ## 3. Escopo
@@ -47,7 +47,7 @@ Você constrói a **vitrine** do ReamurCMS (`dev/catalog/`): o novo davidalmeida
 3. Language espelhando a rota; URLs com `$this->url->link()`; imagens WebP com `alt` e dimensões;
 4. Breadcrumbs e dados estruturados quando aplicável (`Person`, `CreativeWork`, `LocalBusiness`).
 
-### 4.2 Three.js (resumo — contrato completo em Implementacao-ThreeJS.md)
+### 4.2 Three.js (resumo — contrato completo em docs/threejs/Implementacao-ThreeJS.md)
 
 - Cenas nativas e thumbs declarativas usam o `SceneRunner` canônico em `system/library/three/runtime/three/core/scene-runner.js`; só cenas nativas são registradas no `main.js`;
 - Factories retornam atualização/limpeza de cena; não criam renderer, RAF nem observadores próprios. `custom_js` permanece isolado no iframe sandbox;

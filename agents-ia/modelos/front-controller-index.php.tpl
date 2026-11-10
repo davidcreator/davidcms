@@ -36,4 +36,4 @@ if (is_file('config.php')) {
 require_once(DIR_SYSTEM . 'startup.php');
 require_once(DIR_SYSTEM . 'framework.php');
 
-// 6. A partir daqui o fluxo segue o ciclo MVCL (docs/Arquitetura-MVCL.md §4)
+// 6. A partir daqui o fluxo segue o ciclo MVCL (docs/arquitetura/Arquitetura-MVCL.md §4)

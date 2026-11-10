@@ -123,7 +123,7 @@
 - Adicionado `core/threejs_thumb` ao BDREditor de CMS > Páginas e Blog, com configuração de cena JSON e rótulo acessível no inspetor.
 - Incluído runtime Three.js local/self-hosted (0.186.1), renderer público condicional e validação estrita de cena; sem código arbitrário, CDN, modelos ou assets externos.
 - Incluídos textos PT-BR, EN-US e ES-EU, CSS administrativo/público e checker estático específico.
-- Ver `docs/THREEJS_THUMB.md` para esquema, limites e verificações.
+- Ver `docs/threejs/THREEJS_THUMB.md` para esquema, limites e verificações.
 
 ## Correção — inserir formas dentro da cena Three.js (2026-10-26)
 - O Inspetor do bloco agora tem ações dedicadas para adicionar/remover formas e luzes e editar tipo, cor, animação e intensidade.

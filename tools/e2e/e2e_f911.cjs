@@ -4,8 +4,8 @@
 const fs=require('fs'),path=require('path');const root=path.resolve(__dirname,'..','..');
 function fail(m){console.error('FAIL F9-11: '+m);process.exit(1)}
 function read(p){const f=path.join(root,p);if(!fs.existsSync(f))fail('missing '+p);return fs.readFileSync(f,'utf8')}
-const c=JSON.parse(read('docs/F9-11-Contrato-Editor-Blocos-Blog.json'));
-const plan=read('docs/F9-11-Editor-de-Blocos-Blog.md');const adr=read('agents-ia/decisoes/0067-f9-11-editor-de-blocos-blog-contrato.md');
+const c=JSON.parse(read('docs/fases/f9/F9-11-Contrato-Editor-Blocos-Blog.json'));
+const plan=read('docs/fases/f9/F9-11-Editor-de-Blocos-Blog.md');const adr=read('agents-ia/decisoes/0067-f9-11-editor-de-blocos-blog-contrato.md');
 if(c.task!=='F9-11'||c.status!=='requirements_and_architecture_contract_only')fail('task/status mismatch');
 if(c.product.implementation!=='native ReamurCMS editor; no WordPress runtime or package dependency')fail('implementation must be native, no WP runtime');
 if(c.product.module_scope!=='blog/blog'||c.product.cms_page_scope!=='unchanged')fail('scope drift');

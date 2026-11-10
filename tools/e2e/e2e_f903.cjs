@@ -110,7 +110,7 @@ if (isFixture) {
   process.exit(0);
 }
 
-if (!inventoryPath) inventoryPath = path.resolve(root, 'docs', 'F9-03-Inventario-Banco-DavidAlmeida.json');
+if (!inventoryPath) inventoryPath = path.resolve(root, 'docs', 'fases', 'f9', 'F9-03-Inventario-Banco-DavidAlmeida.json');
 if (!fs.existsSync(inventoryPath)) fail(`inventário sanitizado ausente: ${path.relative(root, inventoryPath)}`);
 const inv = JSON.parse(fs.readFileSync(inventoryPath, 'utf8'));
 const sha = crypto.createHash('sha256').update(fs.readFileSync(sqlPath)).digest('hex');

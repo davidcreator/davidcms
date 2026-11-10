@@ -8,14 +8,14 @@
 
 ## Contexto
 
-A [Auditoria de Fundação](../../docs/Auditoria-Fundacao.md) identificou 10 lacunas (L1–L10). As 4 críticas são de *contrato* (bootstrap, schema, modelos de arquivo, decisões pendentes); as demais são de *infraestrutura de qualidade*. Sem elas, os agentes — mesmo disciplinados — divergiriam em entry points, colunas de banco e formato de arquivos.
+A [Auditoria de Fundação](../../docs/arquitetura/Auditoria-Fundacao.md) identificou 10 lacunas (L1–L10). As 4 críticas são de *contrato* (bootstrap, schema, modelos de arquivo, decisões pendentes); as demais são de *infraestrutura de qualidade*. Sem elas, os agentes — mesmo disciplinados — divergiriam em entry points, colunas de banco e formato de arquivos.
 
 ## Decisão
 
 Aprovar e versionar **todos** os itens de amarração:
 
-1. **L1** — [`docs/Contrato-Bootstrap.md`](../../docs/Contrato-Bootstrap.md) + modelo `front-controller-index.php.tpl` (única fonte para `index.php` das apps);
-2. **L2** — [`docs/Dicionario-de-Dados.md`](../../docs/Dicionario-de-Dados.md) como fonte da verdade do schema (mudança = ADR + migração);
+1. **L1** — [`docs/arquitetura/Contrato-Bootstrap.md`](../../docs/arquitetura/Contrato-Bootstrap.md) + modelo `front-controller-index.php.tpl` (única fonte para `index.php` das apps);
+2. **L2** — [`docs/arquitetura/Dicionario-de-Dados.md`](../../docs/arquitetura/Dicionario-de-Dados.md) como fonte da verdade do schema (mudança = ADR + migração);
 3. **L3** — pasta [`agents-ia/modelos/`](../modelos/) com 7 esqueletos canônicos;
 4. **L4** — pendências resolvidas pelos ADRs 0001 (idioma), 0002 (blog) e 0003 (CI/.gitignore);
 5. **L5** — CI reforçado (ADR 0003): composer validado no diretório certo + `php -l` em `dev/**` + link check;
@@ -47,7 +47,7 @@ Aprovar e versionar **todos** os itens de amarração:
 
 ## Documentos/arquivos criados ou atualizados
 
-`docs/Contrato-Bootstrap.md` · `docs/Dicionario-de-Dados.md` · `agents-ia/modelos/**` · `.github/workflows/php.yml` · `.github/pull_request_template.md` · `.gitignore` · `.editorconfig` · `CONTRIBUTING.md` · `SECURITY.md` · `CHANGELOG.md` · `dev/system/storage/composer.json` · `dev/system/storage/phpstan.neon` · `dev/tests/README.md` · `agents-ia/regras/00` e `03` (patches)
+`docs/arquitetura/Contrato-Bootstrap.md` · `docs/arquitetura/Dicionario-de-Dados.md` · `agents-ia/modelos/**` · `.github/workflows/php.yml` · `.github/pull_request_template.md` · `.gitignore` · `.editorconfig` · `CONTRIBUTING.md` · `SECURITY.md` · `CHANGELOG.md` · `dev/system/storage/composer.json` · `dev/system/storage/phpstan.neon` · `dev/tests/README.md` · `agents-ia/regras/00` e `03` (patches)
 
 ---
 

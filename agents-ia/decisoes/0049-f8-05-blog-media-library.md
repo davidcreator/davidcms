@@ -63,7 +63,7 @@ está `loading`, aguarda `DOMContentLoaded` com `{ once: true }`. Nos estados
 - Aplicação, homologação real e a validação integrada F8-05 permanecem
   pendentes. CKEditor fica para o Ajuste 02, fora deste pacote.
 
-Guia: [F8-05-A01 — Inicialização da biblioteca de mídia](../../docs/F8-05-A01-Inicializacao-Biblioteca-Midia.md).
+Guia: [F8-05-A01 — Inicialização da biblioteca de mídia](../../docs/fases/f7-f8/F8-05-A01-Inicializacao-Biblioteca-Midia.md).
 
 ## Fase 8 · Tarefa 05 — validação integrada (2026-10-23)
 
@@ -87,4 +87,4 @@ A primeira execução real do Tool novo ainda depende do laboratório/sessão do
 
 **Tarefa 05 permanece em validação; Fase 8 não encerrada.** Suporte/segurança/licença do CKEditor 4.22.1 e sanitização do HTML continuam dívidas separadas, sem suprimir avisos de versão.
 
-Guia: [F8-05 — Validação integrada do Blog](../../docs/F8-05-Validacao-Integrada-Blog.md).
+Guia: [F8-05 — Validação integrada do Blog](../../docs/fases/f7-f8/F8-05-Validacao-Integrada-Blog.md).

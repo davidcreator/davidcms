@@ -88,20 +88,18 @@ davidcms/
 │   ├── agentes/            #   orquestrador, system, install, admin, catalog
 │   ├── modelos/            #   Esqueletos canônicos de arquivo (copiar e preencher)
 │   └── decisoes/           #   Registro de decisões (ADR 0001–0081)
-├── docs/                   # 📚 Documentação do projeto (este guia e manuais)
-│   ├── Analise-DavidAlmeida.md   # Análise do site atual → plano de migração
-│   ├── Arquitetura-MVCL.md       # Como o MVCL do ReamurCMS funciona
-│   ├── Auditoria-Fundacao.md     # Auditoria: o que faltava amarrar (L1–L10)
-│   ├── Contrato-Bootstrap.md     # Contrato dos pontos de entrada (index.php)
-│   ├── Dicionario-de-Dados.md    # Schema canônico do banco de dados
-│   ├── Guia-CMS.md               # Conceitos de CMS aplicados ao projeto
-│   ├── Guia-PHP8.md              # PHP 8+ no ReamurCMS
-│   ├── Guia-Composer.md          # Composer, dependências e CI
-│   ├── Guia-Twig.md              # Twig 3 e adaptadores de template
-│   ├── Guia-ThreeJS.md           # Three.js no front-end do novo site
-│   ├── Implementacao-ThreeJS.md  # Plano de implementação do front 3D
-│   ├── Webhooks.md               # Sistema de webhooks (pedidos e produtos)
-│   └── Estrutura-de-Pastas.md    # Referência completa da árvore de diretórios
+├── docs/                   # 📚 Documentação do projeto (índice em docs/README.md)
+│   ├── README.md                 # Índice mestre da documentação
+│   ├── CHANGELOG.md              # Histórico de entregas
+│   ├── Estrutura-de-Pastas.md    # Referência completa da árvore de diretórios
+│   ├── PROJECT-HANDOFF.md        # Handoff e contratos congelados (F9-*.json) na raiz
+│   ├── arquitetura/              # MVCL, Bootstrap, Dicionário de Dados e Auditoria
+│   ├── guias/                    # Migração, CMS, PHP 8, Composer, Twig, Upload e Importação
+│   ├── temas/                    # Presets .reamurtheme.json, guias de temas e Frentes A–T
+│   ├── threejs/                  # Runtime 3D, thumbs, preview e especificação de cenas
+│   ├── integracoes/              # Webhooks, Mercado Pago e Runbook de cutover
+│   ├── fases/                    # Registros e contratos das fases (f7-f8, f9, f11)
+│   └── historico/                # Documentos consolidados e análises legadas
 ├── dev/                    # Código-fonte da aplicação
 │   ├── admin/              # Painel administrativo (controller, model, view, language)
 │   ├── catalog/            # Loja/site público (front-end do CMS)
@@ -128,7 +126,7 @@ davidcms/
 
 ## Instalação
 
-> ℹ️ O núcleo MVCL, o painel e o catálogo já estão implementados. As dependências de terceiros (Composer e npm) ficam **somente** em `dev/system/storage/` (ADR 0081). O cutover para produção segue `docs/Runbook-Cutover-F6.md`.
+> ℹ️ O núcleo MVCL, o painel e o catálogo já estão implementados. As dependências de terceiros (Composer e npm) ficam **somente** em `dev/system/storage/` (ADR 0081). O cutover para produção segue `docs/integracoes/Runbook-Cutover-F6.md`.
 
 ```bash
 # 1. Clonar o repositório
@@ -181,15 +179,15 @@ Toda a documentação do projeto vive na pasta [`docs/`](docs/README.md):
 
 | Documento | Conteúdo |
 | --- | --- |
-| [Análise — DavidAlmeida.xyz](docs/Analise-DavidAlmeida.md) | Inventário do site atual, diagnóstico e plano de migração para o ReamurCMS |
-| [Arquitetura MVCL](docs/Arquitetura-MVCL.md) | Ciclo de vida da requisição, engine, Registry, Events e convenções |
-| [Guia CMS](docs/Guia-CMS.md) | Módulos do CMS, conteúdo, usuários, SEO e segurança |
-| [Guia PHP 8+](docs/Guia-PHP8.md) | Recursos do PHP 8 usados no núcleo e boas práticas |
-| [Guia Composer](docs/Guia-Composer.md) | Dependências, autoload, comandos e integração com o CI |
-| [Guia Twig](docs/Guia-Twig.md) | Sintaxe, herança de templates e integração com o núcleo |
-| [Guia Three.js](docs/Guia-ThreeJS.md) | Cenas 3D para o novo front-end do site |
-| [Implementação Three.js](docs/Implementacao-ThreeJS.md) | Plano prático do front 3D: módulos de cena, budgets e critérios de aceite |
-| [Webhooks](docs/Webhooks.md) | Engine de webhooks para pedidos e produtos |
+| [Análise — DavidAlmeida.xyz](docs/guias/Analise-DavidAlmeida.md) | Inventário do site atual, diagnóstico e plano de migração para o ReamurCMS |
+| [Arquitetura MVCL](docs/arquitetura/Arquitetura-MVCL.md) | Ciclo de vida da requisição, engine, Registry, Events e convenções |
+| [Guia CMS](docs/guias/Guia-CMS.md) | Módulos do CMS, conteúdo, usuários, SEO e segurança |
+| [Guia PHP 8+](docs/guias/Guia-PHP8.md) | Recursos do PHP 8 usados no núcleo e boas práticas |
+| [Guia Composer](docs/guias/Guia-Composer.md) | Dependências, autoload, comandos e integração com o CI |
+| [Guia Twig](docs/guias/Guia-Twig.md) | Sintaxe, herança de templates e integração com o núcleo |
+| [Guia Three.js](docs/threejs/Guia-ThreeJS.md) | Cenas 3D para o novo front-end do site |
+| [Implementação Three.js](docs/threejs/Implementacao-ThreeJS.md) | Plano prático do front 3D: módulos de cena, budgets e critérios de aceite |
+| [Webhooks](docs/integracoes/Webhooks.md) | Engine de webhooks para pedidos e produtos |
 | [Estrutura de Pastas](docs/Estrutura-de-Pastas.md) | Mapa completo e anotado do diretório `dev/` |
 
 **Desenvolvimento assistido por IA:** os agentes (`agente-system`, `agente-install`, `agente-admin`, `agente-catalog` + orquestrador), as regras globais (contexto, convenções, padrões e protocolo anti-alucinação) e o registro de decisões vivem em [`agents-ia/`](agents-ia/README.md).
@@ -214,7 +212,7 @@ Toda a documentação do projeto vive na pasta [`docs/`](docs/README.md):
 
 Encontrou uma vulnerabilidade? **Não abra uma issue pública.** Entre em contato diretamente pelo e-mail [contato@davidalmeida.xyz](mailto:contato@davidalmeida.xyz) descrevendo o problema, e ele será tratado com prioridade.
 
-Recomendações gerais e checklist de hardening estão em [`docs/Guia-CMS.md`](docs/Guia-CMS.md) e [`docs/Webhooks.md`](docs/Webhooks.md).
+Recomendações gerais e checklist de hardening estão em [`docs/guias/Guia-CMS.md`](docs/guias/Guia-CMS.md) e [`docs/integracoes/Webhooks.md`](docs/integracoes/Webhooks.md).
 
 ---
 

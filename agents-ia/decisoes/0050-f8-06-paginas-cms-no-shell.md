@@ -39,4 +39,4 @@ O modo HTTP confere um probe temporário do FUI antes de enviar credenciais fict
 - Homologação real de backend, foco da aba EN inválida, responsividade, temas e contraste permanece com o usuário. A Fase 8 não é encerrada por esta entrega.
 - Permanecem separados: saneamento global da paginação, sanitização de HTML e suporte/licença/segurança do CKEditor legado, cujo uso não é ampliado.
 
-Guia, aplicação, E2E, cache e rollback: [F8-06 — Páginas CMS](../../docs/F8-06-Paginas-CMS.md).
+Guia, aplicação, E2E, cache e rollback: [F8-06 — Páginas CMS](../../docs/fases/f7-f8/F8-06-Paginas-CMS.md).

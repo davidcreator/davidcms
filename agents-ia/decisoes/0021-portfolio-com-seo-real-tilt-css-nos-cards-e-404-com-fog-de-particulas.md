@@ -4,7 +4,7 @@
 - **Data:** 2026-10-19
 - **Autor:** Cascade (Coevolve AI)
 - **Tarefa:** Fase 3 — Tarefa 03 (F3-03)
-- **Regras relacionadas:** agents-ia/regras/00-contexto-global.md, 03-protocolo-anti-alucinacao.md; docs/Implementacao-ThreeJS.md §7, §8; ADR 0016, 0019, 0020
+- **Regras relacionadas:** agents-ia/regras/00-contexto-global.md, 03-protocolo-anti-alucinacao.md; docs/threejs/Implementacao-ThreeJS.md §7, §8; ADR 0016, 0019, 0020
 - **Decisão de escopo do mantenedor (ask_user, 2026-10-19):** a Cena 2 (logo GLB, cronograma S3) depende do asset real `logo-da.glb` que ainda não existe — o mantenedor escolheu avançar com **Portfólio + tilt CSS + 404** (itens sem bloqueio de asset) e adiar a Cena 2 até o GLB existir. Oferecidas e recusadas: anexar o GLB agora, GLB placeholder gerado (violaria "zero binários artificiais" das ADRs 0019/0020), páginas das ferramentas.
 
 ## Contexto

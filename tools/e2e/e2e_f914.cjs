@@ -12,7 +12,7 @@ try { contract = JSON.parse(read('docs/F9-14-Contrato-Editor-MVP.json')); } catc
 const js = read('dev/admin/view/js/blog-block-editor.js');
 const css = read('dev/admin/view/css/blog-block-editor.css');
 const preview = read('tools/preview/f914-editor-mvp.html');
-const docs = read('docs/F9-14-Editor-de-Blocos-MVP.md');
+const docs = read('docs/fases/f9/F9-14-Editor-de-Blocos-MVP.md');
 for (const marker of ['rb-inserter','rb-inspector','undo','redo','dragstart','data-preview','core/columns','core/video_embed']) need(js.includes(marker), `editor capability missing: ${marker}`);
 need(js.includes('createElement') && js.includes('textContent'), 'DOM must be constructed without injecting editor values as HTML');
 need(!/\.innerHTML\s*=|\beval\s*\(|\bfetch\s*\(|XMLHttpRequest|\$this->db|DB_PREFIX/i.test(js), 'no HTML injection, network, or DB code allowed');

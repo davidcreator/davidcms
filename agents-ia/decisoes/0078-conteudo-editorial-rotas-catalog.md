@@ -5,7 +5,7 @@
 | **Status** | ✅ aceita para implementação incremental |
 | **Data** | 2026-10-27 |
 | **Agente proponente** | orquestrador → admin/catalog/install |
-| **Contexto** | `cms/page` administra registros CMS por `page_id`, enquanto Home, Portfolio, Blog, Ferramentas e formulários públicos são controllers próprios. O requisito é permitir editar o conteúdo editorial de todas as páginas públicas sem duplicar dados de domínio nem substituir seus fluxos. A revisão base está em `docs/Pages-Temas-Revisao-HEAD-2f28.md`. |
+| **Contexto** | `cms/page` administra registros CMS por `page_id`, enquanto Home, Portfolio, Blog, Ferramentas e formulários públicos são controllers próprios. O requisito é permitir editar o conteúdo editorial de todas as páginas públicas sem duplicar dados de domínio nem substituir seus fluxos. A revisão base está em `docs/temas/Pages-Temas-Revisao-HEAD-2f28.md`. |
 
 ## Decisão
 
@@ -38,8 +38,8 @@
 
 ## Documentos atualizados
 
-- `docs/Dicionario-de-Dados.md`
-- `docs/Guia-CMS.md`
-- `docs/Arquitetura-MVCL.md`
+- `docs/arquitetura/Dicionario-de-Dados.md`
+- `docs/guias/Guia-CMS.md`
+- `docs/arquitetura/Arquitetura-MVCL.md`
 - `docs/Estrutura-de-Pastas.md`
 - `dev/install/sql/schema-complete.sql`

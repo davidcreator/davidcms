@@ -5,7 +5,7 @@
 -- Prefixo rms_ é o placeholder padrão: wizard/operador substituem por DB_PREFIX.
 -- Sem FKs (integridade no Model) e sem grant/dado/seed/migração de conteúdo.
 -- NÃO edite migração aplicada; correções pedem migração nova, conforme regras.
--- Devolução de verdade: docs/Dicionario-de-Dados.md deve citar estas tabelas APÓS
+-- Devolução de verdade: docs/arquitetura/Dicionario-de-Dados.md deve citar estas tabelas APÓS
 -- a migração ser aplicada/aprovada; este SQL não muda o dicionário sozinho.
 -- ════════════════════════════════════════════════════════════════════
 

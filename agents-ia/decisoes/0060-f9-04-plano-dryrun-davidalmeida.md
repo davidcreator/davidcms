@@ -14,7 +14,7 @@ A análise F9-03 mapeou 18 tabelas, mas não é autoridade de importação. Ante
 
 1. **Dump real fora do repositório:** `bd-davidalmeida.sql` torna-se artefato privado, fornecido localmente pelo operador e removido do GitHub. Somente hash, bytes, estrutura e inventário sanitizado podem permanecer na base.
 2. **Ciclo de dados legado observado está fechado:** o dump analisado já teve constatações aceitas em ADR 0032 — sem pedidos, contatos spam não migram, ferramentas já migradas, portfólio sem linhas e cursos fora de escopo. Logo, não importar novamente.
-3. **Mapa de decisão obrigatório:** `docs/F9-04-Mapa-Migracao-DavidAlmeida.json` decide cada tabela como `archive_only`, `already_migrated_f3`, `excluded_prior_decision`, `out_of_scope_course_module`, `sensitive_out_of_scope`, `whitelist_future_review` ou `no_rows_already_curated_f3`; todas com `action_now: none`.
+3. **Mapa de decisão obrigatório:** `docs/fases/f9/F9-04-Mapa-Migracao-DavidAlmeida.json` decide cada tabela como `archive_only`, `already_migrated_f3`, `excluded_prior_decision`, `out_of_scope_course_module`, `sensitive_out_of_scope`, `whitelist_future_review` ou `no_rows_already_curated_f3`; todas com `action_now: none`.
 4. **Dry-run é gate, não execução:** se um dump novo aparecer, a única ação permitida automaticamente é auditoria estática/validação. Nova estrutura ou conteúdo só entra com plano novo, backup, laboratório, contagem antes/depois e log sem valores.
 5. **Não importar davidcreator.com:** qualquer referência textual legada ao site externo permanece fora do escopo; blog/importação não entra nesta etapa.
 

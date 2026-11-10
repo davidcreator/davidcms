@@ -40,4 +40,4 @@ Entrada `tools/e2e/e2e_f810.sh`:
 - Nenhum backend, mensagem real, navegador, e-mail, escrita GitHub, deploy ou Actions executados pelo agente. F215 destrutivo não homologado integralmente aqui.
 - Aplicação/publicação não é encerramento da Fase8.
 
-Guia/fixture/aceite/rollback: [F8-10 — Mensagens de contato](../../docs/F8-10-Mensagens-Contato.md).
+Guia/fixture/aceite/rollback: [F8-10 — Mensagens de contato](../../docs/fases/f7-f8/F8-10-Mensagens-Contato.md).

@@ -1,6 +1,6 @@
 /**
  * Helpers de DOM para cenas Three.js.
- * Esqueleto de docs/Implementacao-ThreeJS.md §4 (core/dom.js).
+ * Esqueleto de docs/threejs/Implementacao-ThreeJS.md §4 (core/dom.js).
  */
 
 export function clearFallback(container) {

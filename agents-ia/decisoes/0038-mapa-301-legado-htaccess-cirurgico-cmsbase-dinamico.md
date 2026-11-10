@@ -8,7 +8,7 @@
   (a) as keywords de segmento único (`jwa`, `cookies`, `fluxa`, …)
       resolvem **dentro do app** — caminho real hoje é `/catalog/<kw>`,
       não `/<kw>` (a decisão "home na raiz" do §9 é de topologia de
-      hospedagem, ver `docs/Runbook-Cutover-F6.md`);
+      hospedagem, ver `docs/integracoes/Runbook-Cutover-F6.md`);
   (b) `dev/catalog/.htaccess` já traz o front controller
       (`^(.*)$ index.php`), e regras per-dir do diretório mais profundo
       vencem — regras no `dev/.htaccess` **nem eram avaliadas** para essas

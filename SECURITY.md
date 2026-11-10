@@ -24,7 +24,7 @@ Você receberá retorno em até **5 dias úteis** e, se confirmado, o crédito n
 - `error_display = false` em produção; logs em `dev/system/storage/logs/`;
 - Credenciais nunca versionadas (`config.php` gerado + `.gitignore`);
 - Uploads via `system/library/security/upload_security.php`;
-- Webhooks assinados com HMAC por endpoint (ver `docs/Webhooks.md` §5);
-- Checklist completo: [`docs/Guia-CMS.md` §8](docs/Guia-CMS.md#8-segurança).
+- Webhooks assinados com HMAC por endpoint (ver `docs/integracoes/Webhooks.md` §5);
+- Checklist completo: [`docs/guias/Guia-CMS.md` §8](docs/guias/Guia-CMS.md#8-segurança).
 
 Suportado: branch `main` e tags mais recentes (≥ `v1.0.0`).

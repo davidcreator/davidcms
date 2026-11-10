@@ -81,7 +81,7 @@
           "snippet": "[16,32,48,64,96]"
         },
         {
-          "file": "docs/F9-71-Vertical-Spacer.md",
+          "file": "docs/fases/f9/F9-71-Vertical-Spacer.md",
           "snippet": "controle range rotulado"
         },
         {
@@ -167,7 +167,7 @@
           "snippet": "data-bdre-history-load"
         },
         {
-          "file": "docs/F9-31-Historico-Persistente-BDRE.md",
+          "file": "docs/fases/f9/F9-31-Historico-Persistente-BDRE.md",
           "snippet": "Histórico persistente"
         },
         {
@@ -269,7 +269,7 @@
           "snippet": "CREATE TABLE IF NOT EXISTS `rms_cms_block_pattern`"
         },
         {
-          "file": "docs/F9-28-Recuperacao-Rascunhos-BDRE.md",
+          "file": "docs/fases/f9/F9-28-Recuperacao-Rascunhos-BDRE.md",
           "snippet": "sessionStorage"
         },
         {
@@ -322,7 +322,7 @@
           "snippet": "base SHA manifest incomplete"
         },
         {
-          "file": "docs/F9-27-Release-Gate.md",
+          "file": "docs/fases/f9/F9-27-Release-Gate.md",
           "snippet": "BLOQUEADO"
         }
       ]

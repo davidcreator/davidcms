@@ -6,7 +6,7 @@
 
 ## Decisão
 
-1. O asset canônico é `dev/system/library/three/runtime/three/models/logo-da.glb`, entregue publicamente por `/catalog/three-runtime/three/models/logo-da.glb`. Fica **no System**, junto do runtime, e não em `catalog/view/assets/3d/` como previa o `docs/Implementacao-ThreeJS.md` §6 — manter uma única origem de assets evita cópia paralela e respeita a ADR 0073.
+1. O asset canônico é `dev/system/library/three/runtime/three/models/logo-da.glb`, entregue publicamente por `/catalog/three-runtime/three/models/logo-da.glb`. Fica **no System**, junto do runtime, e não em `catalog/view/assets/3d/` como previa o `docs/threejs/Implementacao-ThreeJS.md` §6 — manter uma única origem de assets evita cópia paralela e respeita a ADR 0073.
 2. O arquivo atual é um **placeholder procedural válido** (monograma "DA": 168 vértices, 252 índices, 84 triângulos, um `MeshStandardMaterial` com `baseColorFactor` da marca). O binário foi gerado por script e **validado com o próprio `GLTFLoader` r186 em Node** antes de ser versionado. Não é um binário fictício: é um GLB 2.0 conforme que o loader real abre. O override da ADR 0021 é registrado aqui. O mantenedor autorizou usar este asset como a versão vigente da Cena 2 e prosseguir; um export futuro do Blender fica como melhoria opcional, não como bloqueio.
 3. O gateway aceita a extensão `glb` sem caminho livre: a regex da rota passa a `\.(?:js|glb)` e o `AssetManifest` resolve `three/models/logo-da.glb`; o MIME é derivado por extensão na tabela `TYPES` (`glb` → `model/gltf-binary`). O controller `common/three.php` não muda: já publica o `Content-Type` devolvido pelo manifesto.
 4. `GLTFLoader` r186 e suas dependências (`BufferGeometryUtils`, `SkeletonUtils`) entram na allowlist em `three/addons/`; o import map do `common/header.twig` ganha `"three/addons/": "{{ three_runtime_base }}three/addons/"`, necessário porque o loader importa de bare specifier `'three'` e de caminhos relativos `../utils/*`.
@@ -32,9 +32,9 @@
 
 ## Documentos relacionados
 
-- [ADR 0019/0020 — tema e hero F3](../decisoes/0020-hero-threejs-cena-1-particulas-parallax-e-slot-webgl-no-chrome.md)
+- [ADR 0019/0020 — tema e hero F3](0020-hero-threejs-cena-1-particulas-parallax-e-slot-webgl-no-chrome.md)
 - [ADR 0021 — decisão sobreposta (Cena 2 adiada e placeholder recusado)](0021-portfolio-com-seo-real-tilt-css-nos-cards-e-404-com-fog-de-particulas.md)
 - [ADR 0073 — runtime canônico no System com entrega allowlisted](0073-threejs-runtime-system-asset-gateway.md)
 - [ADR 0074 — ciclo de vida compartilhado das cenas](0074-threejs-shared-scene-runner.md)
-- `docs/Implementacao-ThreeJS.md` §6
-- `docs/THREEJS_NATIVE_SYSTEM.md`
+- `docs/threejs/Implementacao-ThreeJS.md` §6
+- `docs/threejs/THREEJS_NATIVE_SYSTEM.md`

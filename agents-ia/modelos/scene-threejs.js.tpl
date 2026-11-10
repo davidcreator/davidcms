@@ -1,7 +1,7 @@
 /**
  * TEMPLATE: cena Three.js no padrão SceneModule.
  * Destino: dev/system/library/three/runtime/three/scenes/{{scene-name}}.js
- * REGRAS (docs/Implementacao-ThreeJS.md §4, ADR 0074):
+ * REGRAS (docs/threejs/Implementacao-ThreeJS.md §4, ADR 0074):
  *  - a factory recebe { scene, camera, container, config } e devolve
  *    { animated, update({ time, delta }), dispose() }
  *  - renderer, câmera, resize, lazy-init, pausa e descarte ficam no

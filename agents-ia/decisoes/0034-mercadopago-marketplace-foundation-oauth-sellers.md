@@ -126,7 +126,7 @@
 - **Consequências:** `rms_mp_seller` pronta p/ F5-03 (coleção de
   receivers por pedido = verificação de `mp_user_id` conectado/ativo);
   tela já exercitável no XAMPP do usuário com o mock (guia
-  `docs/MercadoPago-Marketplace.md`); sem credenciais o botão de conectar
+  `docs/integracoes/MercadoPago-Marketplace.md`); sem credenciais o botão de conectar
   fica desabilitado e a tela explica o pré-requisito — **zero 500/blank
   em qualquer estado de configuração**.
 

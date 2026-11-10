@@ -10,7 +10,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 function usage() {
-  console.error('Uso: node e2e_f904.cjs --check [--inventory docs/F9-03-Inventario-Banco-DavidAlmeida.json] [--map docs/F9-04-Mapa-Migracao-DavidAlmeida.json] [--sql /caminho/privado/bd-davidalmeida.sql]');
+  console.error('Uso: node e2e_f904.cjs --check [--inventory docs/fases/f9/F9-03-Inventario-Banco-DavidAlmeida.json] [--map docs/fases/f9/F9-04-Mapa-Migracao-DavidAlmeida.json] [--sql /caminho/privado/bd-davidalmeida.sql]');
   process.exit(2);
 }
 function fail(msg) { console.error(`FAIL F9-04: ${msg}`); process.exit(1); }
@@ -31,9 +31,9 @@ for (let i = 0; i < args.length; i++) {
 if (!check) usage();
 
 const root = path.resolve(__dirname, '..', '..');
-if (!inventoryPath) inventoryPath = path.resolve(root, 'docs', 'F9-03-Inventario-Banco-DavidAlmeida.json');
+if (!inventoryPath) inventoryPath = path.resolve(root, 'docs', 'fases', 'f9', 'F9-03-Inventario-Banco-DavidAlmeida.json');
 else if (!path.isAbsolute(inventoryPath)) inventoryPath = path.resolve(root, inventoryPath);
-if (!mapPath) mapPath = path.resolve(root, 'docs', 'F9-04-Mapa-Migracao-DavidAlmeida.json');
+if (!mapPath) mapPath = path.resolve(root, 'docs', 'fases', 'f9', 'F9-04-Mapa-Migracao-DavidAlmeida.json');
 else if (!path.isAbsolute(mapPath)) mapPath = path.resolve(root, mapPath);
 if (!fs.existsSync(inventoryPath)) fail(`inventário F9-03 ausente: ${path.relative(root, inventoryPath)}`);
 if (!fs.existsSync(mapPath)) fail(`mapa F9-04 ausente: ${path.relative(root, mapPath)}`);
@@ -52,7 +52,7 @@ if (map.source_contract?.repository_policy !== 'never_commit_sql_dump') fail('po
 if (map.source_contract?.public_repository_absent_required !== true) fail('gate exige ausência pública do dump');
 if (map.source_contract?.last_observed_sha256 !== inventory.source?.sha256) fail('hash de referência não confere com inventário sanitizado');
 if (Number(map.source_contract?.last_observed_bytes) !== Number(inventory.source?.bytes)) fail('bytes de referência não conferem');
-if (map.source_contract?.last_observed_inventory !== 'docs/F9-03-Inventario-Banco-DavidAlmeida.json') fail('referência de inventário F9-03 incorreta');
+if (map.source_contract?.last_observed_inventory !== 'docs/fases/f9/F9-03-Inventario-Banco-DavidAlmeida.json') fail('referência de inventário F9-03 incorreta');
 
 const requiredBooleans = ['no_sql_execution', 'dry_run_first', 'counts_only_logging', 'no_row_values_in_reports', 'credentials_must_be_rotated_before_import', 'backup_required_before_any_apply', 'requires_new_approval_for_new_data'];
 for (const key of requiredBooleans) {

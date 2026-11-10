@@ -7,8 +7,8 @@ const root = path.resolve(__dirname, '../..');
 const files = {
   upgrade: 'dev/install/sql/upgrade_f9_12_blog_block_content.sql',
   rollback: 'dev/install/sql/rollback_f9_12_blog_block_content.sql',
-  contract: 'docs/F9-12-Contrato-Persistencia-Blog-Blocos.json',
-  dictionary: 'docs/Dicionario-de-Dados.md',
+  contract: 'docs/fases/f9/F9-12-Contrato-Persistencia-Blog-Blocos.json',
+  dictionary: 'docs/arquitetura/Dicionario-de-Dados.md',
   adr: 'agents-ia/decisoes/0068-f9-12-blog-block-content-sidecar.md',
 };
 const errors = [];

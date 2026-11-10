@@ -32,7 +32,7 @@
 
 ## Documentos atualizados
 
-- `docs/Implementacao-ThreeJS.md`
+- `docs/threejs/Implementacao-ThreeJS.md`
 - `docs/Estrutura-de-Pastas.md`
-- `docs/THREEJS_NATIVE_SYSTEM.md`
+- `docs/threejs/THREEJS_NATIVE_SYSTEM.md`
 - `docs/CHANGELOG.md`

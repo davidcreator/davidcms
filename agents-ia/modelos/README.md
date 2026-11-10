@@ -1,6 +1,6 @@
 # 🧩 modelos — Esqueletos Canônicos de Arquivo
 
-> Estes templates resolvem a lacuna **L3** da [Auditoria](../../docs/Auditoria-Fundacao.md): agente **nunca gera arquivo "de memória"** — copia o modelo correspondente e substitui os placeholders.
+> Estes templates resolvem a lacuna **L3** da [Auditoria](../../docs/arquitetura/Auditoria-Fundacao.md): agente **nunca gera arquivo "de memória"** — copia o modelo correspondente e substitui os placeholders.
 
 ## Como usar
 
@@ -14,13 +14,13 @@
 
 | Modelo | Gera | Quando usar |
 | --- | --- | --- |
-| `front-controller-index.php.tpl` | `index.php` de `catalog`/`admin`/`install` | Somente conforme [Contrato-Bootstrap](../../docs/Contrato-Bootstrap.md) |
+| `front-controller-index.php.tpl` | `index.php` de `catalog`/`admin`/`install` | Somente conforme [Contrato-Bootstrap](../../docs/arquitetura/Contrato-Bootstrap.md) |
 | `controller-crud-admin.php.tpl` | Controller de CRUD do painel (`index`/`form`/`save`/`delete`) | Nova entidade do admin |
 | `model.php.tpl` | Model com `get/add/edit/delete/getTotal` | Qualquer aplicação |
 | `language.php.tpl` | Arquivo `$_['chave']` | Sempre que criar controller/template |
 | `admin-list.twig.tpl` | Lista do admin (tabela, paginação, ações em massa) | CRUDs do painel |
 | `admin-form.twig.tpl` | Formulário do admin (abas por idioma, CSRF, validação) | CRUDs do painel |
-| `scene-threejs.js.tpl` | Cena Three.js no padrão SceneModule | Nova cena 3D (ver `docs/Implementacao-ThreeJS.md`) |
+| `scene-threejs.js.tpl` | Cena Three.js no padrão SceneModule | Nova cena 3D (ver `docs/threejs/Implementacao-ThreeJS.md`) |
 
 ## Regras
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * config.php gerado pelo wizard de instalação (dev/install) — NUNCA versionar.
- * Constantes permitidas: docs/Contrato-Bootstrap.md §1.1 (nada além desta lista).
+ * Constantes permitidas: docs/arquitetura/Contrato-Bootstrap.md §1.1 (nada além desta lista).
  * Placeholders {{...}} são substituídos por install/step_3.php via strtr().
  */
 

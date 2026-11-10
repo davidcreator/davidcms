@@ -8,7 +8,7 @@
 
 ## Contexto
 
-O blog atual vive em WordPress, em domínio separado ([davidcreator.com](https://davidcreator.com)), e alimenta a seção "Latest News" do site. A [Análise](../../docs/Analise-DavidAlmeida.md) apontava duas opções: internalizar no ReamurCMS (`catalog/controller/cms/`) ganhando SEO no domínio principal, ou manter externo evitando trabalho de migração no curto prazo (lacuna L4 da Auditoria).
+O blog atual vive em WordPress, em domínio separado ([davidcreator.com](https://davidcreator.com)), e alimenta a seção "Latest News" do site. A [Análise](../../docs/guias/Analise-DavidAlmeida.md) apontava duas opções: internalizar no ReamurCMS (`catalog/controller/cms/`) ganhando SEO no domínio principal, ou manter externo evitando trabalho de migração no curto prazo (lacuna L4 da Auditoria).
 
 ## Decisão
 
@@ -32,5 +32,5 @@ O blog atual vive em WordPress, em domínio separado ([davidcreator.com](https:/
 
 ## Documentos atualizados
 
-- `docs/Analise-DavidAlmeida.md` (§2.2 notícias, §7 mapeamento blog, §8 Fase 3 decisão)
+- `docs/guias/Analise-DavidAlmeida.md` (§2.2 notícias, §7 mapeamento blog, §8 Fase 3 decisão)
 - `docs/Estrutura-de-Pastas.md` §3 (grupo `cms/` menciona blog apenas como etapa futura)

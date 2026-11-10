@@ -4,7 +4,7 @@
 - **Data:** 2026-10-19
 - **Autor:** Cascade (Coevolve AI)
 - **Tarefa:** Fase 3 — Tarefa 02 (F3-02)
-- **Regras relacionadas:** agents-ia/regras/00-contexto-global.md, 03-protocolo-anti-alucinacao.md; docs/Guia-ThreeJS.md §9, docs/Implementacao-ThreeJS.md §3–§11; ADR 0016 (ErrorException), ADR 0019 (tema F3-01; hero estático provisório)
+- **Regras relacionadas:** agents-ia/regras/00-contexto-global.md, 03-protocolo-anti-alucinacao.md; docs/threejs/Guia-ThreeJS.md §9, docs/threejs/Implementacao-ThreeJS.md §3–§11; ADR 0016 (ErrorException), ADR 0019 (tema F3-01; hero estático provisório)
 
 ## Contexto
 

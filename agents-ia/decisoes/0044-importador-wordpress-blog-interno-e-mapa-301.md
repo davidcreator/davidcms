@@ -86,7 +86,7 @@
 
 ## §301 — snippets de aplicação do mapa
 
-Ver `docs/F7-03-301-snippets.md` (anexo desta entrega): cenário A
+Ver `docs/fases/f7-f8/F7-03-301-snippets.md` (anexo desta entrega): cenário A
 (mesmo domínio, diretivas no `.htaccess` do app novo usando o mapa com
 `RewriteRule` por linha gerada) e cenário B (domínios distintos,
 `Redirect 301` gerado a partir do mapa para colar no `.htaccess` do

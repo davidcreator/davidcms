@@ -38,5 +38,5 @@
 
 - `.github/workflows/php.yml` · `.gitignore` · `dev/system/storage/package.json` + `package-lock.json` · `dev/system/library/blog/block_document.php`
 - `tools/build_prod.sh` · `tools/check_producao.sh` · `tools/e2e/lib/load-playwright.cjs` · `tools/e2e/*playwright*.cjs` · `tools/e2e/README.md` · `tools/staging/{lib/config.cjs,batteries/e2e.cjs,staging.ps1}` · `tools/verify-f11-01.sh`
-- `README.md` · `CONTRIBUTING.md` · `docs/Guia-Composer.md` · `docs/Estrutura-de-Pastas.md` · `docs/THREEJS_CMS_E2E.md` · `docs/CHANGELOG.md` · `docs/F11-01-CI-e-Dependencias.md`
+- `README.md` · `CONTRIBUTING.md` · `docs/guias/Guia-Composer.md` · `docs/Estrutura-de-Pastas.md` · `docs/threejs/THREEJS_CMS_E2E.md` · `docs/CHANGELOG.md` · `docs/fases/f11/F11-01-CI-e-Dependencias.md`
 - `agents-ia/regras/00-contexto-global.md` · `agents-ia/regras/02-padroes-de-codigo.md` · `agents-ia/decisoes/README.md`

@@ -5,7 +5,7 @@
 -- @author    David L. Almeida
 -- @license   GPL-3.0 (https://opensource.org/licenses/GPL-3.0)
 --
--- FONTE DA VERDADE: docs/Dicionario-de-Dados.md (não alterar colunas sem ADR)
+-- FONTE DA VERDADE: docs/arquitetura/Dicionario-de-Dados.md (não alterar colunas sem ADR)
 --
 -- Consolida, num único arquivo executável e IDEMPOTENTE:
 --   • schema.sql                                  (schema base v1.0)
@@ -1147,7 +1147,7 @@ WHERE (`name` = 'Administrator' OR `user_group_id` = 1)
 -- ============================================================================
 -- FIM — schema-complete.sql
 -- Consolidação aditiva e idempotente de schema.sql + todos os upgrade_*.sql
--- da pasta install/sql. Histórico de alterações: docs/Dicionario-de-Dados.md.
+-- da pasta install/sql. Histórico de alterações: docs/arquitetura/Dicionario-de-Dados.md.
 -- ============================================================================
 
 -- F10-02 — Catalog Themes (same definitions as upgrade_f10_02_design_themes.sql).

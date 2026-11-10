@@ -11,7 +11,7 @@ namespace Reamur\{{APP}}\Model\{{GROUP}};
 /**
  * TEMPLATE: Model padrão.
  * Placeholders: {{APP}} Admin|Catalog|Install · {{GROUP}} ex.: Cms · {{ENTITY}} ex.: Project · {{entity}} ex.: project
- * REGRA: colunas SEMPRE conforme docs/Dicionario-de-Dados.md — nunca inventar nomes.
+ * REGRA: colunas SEMPRE conforme docs/arquitetura/Dicionario-de-Dados.md — nunca inventar nomes.
  * REGRA: multi-idioma segue o padrão *_description (gravar um registro por language_id).
  */
 class {{ENTITY}} extends \Reamur\System\Engine\Model {

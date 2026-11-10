@@ -4,7 +4,7 @@
  * ORM, SQL, rotas, segurança de produção ou renderer. Nunca executa PHP/HTTP/DB.
  */
 const fs=require('node:fs');const os=require('node:os');const path=require('node:path');const crypto=require('node:crypto');const assert=require('node:assert/strict');
-const BASE='96158da5810262246aa2dd34ca900cf45c0ecbed';const ROOT=path.resolve(__dirname,'../..');const CONTRACT='docs/F9-01-Contrato-Campos-Personalizados.json';
+const BASE='96158da5810262246aa2dd34ca900cf45c0ecbed';const ROOT=path.resolve(__dirname,'../..');const CONTRACT='docs/fases/f9/F9-01-Contrato-Campos-Personalizados.json';
 const SOURCE_PATHS=Object.freeze([
   "dev/admin/controller/cms/page.php",
   "dev/admin/model/cms/page.php",
@@ -18,7 +18,7 @@ const SOURCE_PATHS=Object.freeze([
   "dev/install/sql/upgrade_f7_01_blog.sql",
   "dev/admin/model/localization/language.php",
   "dev/system/library/security/csrf.php",
-  "docs/Dicionario-de-Dados.md",
+  "docs/arquitetura/Dicionario-de-Dados.md",
   "agents-ia/decisoes/0047-f8-v-aparencia-do-painel-skins-wcag-trava-contraste-e-dupla-camada-de-persistencia.md"
 ]);
 const TYPES=Object.freeze(['text','textarea','number','boolean','url','select']);
@@ -93,8 +93,8 @@ MIRROR, se exportado, deve ser o dev deste projeto; não mistura inventários.
 F901_REPORT=/tmp/novo-f901.json opcional, absoluto novo/0600, sem sobrescrever.
 PASS significa coerência da PROPOSTA, nunca design aprovado ou feature pronta.
 A Fase8 foi encerrada por escolha explícita do operador, não por este Tool.
-Guia: docs/F9-01-Campos-Personalizados.md
-Contrato: docs/F9-01-Contrato-Campos-Personalizados.json
+Guia: docs/fases/f9/F9-01-Campos-Personalizados.md
+Contrato: docs/fases/f9/F9-01-Contrato-Campos-Personalizados.json
 `;}
 async function main(args,root=ROOT,env=process.env){const mode=parseArgs(args);need(Number(process.versions.node.split('.')[0])>=20,'NODE20_REQUIRED');if(mode==='--help'){console.log(help());return 0;}if(mode==='--self-test'){const c=readContract(root);const r=await selfTest(c,true);return r.failed?1:0;}const r=await check(root,env);console.log(JSON.stringify(r,null,2));return r.status==='passed'?0:1;}
 if(require.main===module)main(process.argv.slice(2)).then(code=>{process.exitCode=code;}).catch(e=>{console.log(JSON.stringify({task:'Fase 9 / Tarefa 01',kind:'contract-proposal-validation',status:'blocked',errorCode:e instanceof ProposalError?e.code:'IO_OR_MODEL_ERROR',proposalApproval:'pending',runtimeImplemented:false,schemaImplemented:false},null,2));process.exitCode=2;});

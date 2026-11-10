@@ -2,7 +2,7 @@
 
 - **Status:** aceita para implementação incremental; etapa antecipada por autorização do mantenedor
 - **Data:** 2026-10-27
-- **Contexto:** A ADR 0021 entregou a Cena 3 etapa 1 como tilt CSS puro nos cards do portfólio e deixou a etapa 2 (galeria 3D navegável) explicitamente fora do escopo do lançamento. O `docs/Implementacao-ThreeJS.md` §7 descreve a etapa 2 em uma linha — `scenes/portfolio-3d.js`, "quadros 3D com as capas dos projetos como texturas" — sem contrato, sem orçamento e sem critério de acessibilidade. Desde então o runtime passou a ter origem única no System com entrega allowlisted pelo Catalog (ADRs 0072–0074) e o ciclo de vida das cenas foi centralizado no `SceneRunner` (ADR 0074), então a etapa 2 precisa ser especificada dentro dessas restrições antes de qualquer código. A grade atual é HTML real e acessível: `dev/catalog/view/template/partial/portfolio.twig` renderiza `.pgrid` > `.pcard` (âncoras com nome, cliente, badge e `<img loading="lazy">` da capa, ou a inicial do nome quando não há imagem), alimentada pelo controller com `$data['projects']`.
+- **Contexto:** A ADR 0021 entregou a Cena 3 etapa 1 como tilt CSS puro nos cards do portfólio e deixou a etapa 2 (galeria 3D navegável) explicitamente fora do escopo do lançamento. O `docs/threejs/Implementacao-ThreeJS.md` §7 descreve a etapa 2 em uma linha — `scenes/portfolio-3d.js`, "quadros 3D com as capas dos projetos como texturas" — sem contrato, sem orçamento e sem critério de acessibilidade. Desde então o runtime passou a ter origem única no System com entrega allowlisted pelo Catalog (ADRs 0072–0074) e o ciclo de vida das cenas foi centralizado no `SceneRunner` (ADR 0074), então a etapa 2 precisa ser especificada dentro dessas restrições antes de qualquer código. A grade atual é HTML real e acessível: `dev/catalog/view/template/partial/portfolio.twig` renderiza `.pgrid` > `.pcard` (âncoras com nome, cliente, badge e `<img loading="lazy">` da capa, ou a inicial do nome quando não há imagem), alimentada pelo controller com `$data['projects']`.
 
 ## Decisão
 
@@ -41,6 +41,6 @@
 - [ADR 0073 — runtime canônico no System com entrega allowlisted](0073-threejs-runtime-system-asset-gateway.md)
 - [ADR 0074 — ciclo de vida compartilhado das cenas](0074-threejs-shared-scene-runner.md)
 - [ADR 0075 — Cena 2 do Hero: logo GLB pela allowlist](0075-cena-2-hero-logo-glb-placeholder-procedural.md)
-- `docs/Implementacao-ThreeJS.md` §7
+- `docs/threejs/Implementacao-ThreeJS.md` §7
 - `dev/catalog/view/template/partial/portfolio.twig`
 - `dev/catalog/view/css/theme.css` (etapa 1: `.pcard` com tilt e guard `prefers-reduced-motion`)

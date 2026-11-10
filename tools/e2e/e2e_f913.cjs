@@ -12,9 +12,9 @@ function read(rel) {
 }
 function need(ok, message) { if (!ok) errors.push(message); }
 const php = read('dev/system/library/blog/block_document.php');
-const contractText = read('docs/F9-13-Contrato-Parser-y-Conversion-Blog.json');
+const contractText = read('docs/fases/f9/F9-13-Contrato-Parser-y-Conversion-Blog.json');
 const fixturesText = read('tests/fixtures/legacy-conversion.json');
-const docs = read('docs/F9-13-Parser-Serializer-Conversor-Legado.md');
+const docs = read('docs/fases/f9/F9-13-Parser-Serializer-Conversor-Legado.md');
 let contract, fixtures;
 try { contract = JSON.parse(contractText); } catch (e) { errors.push(`invalid task contract JSON: ${e.message}`); }
 try { fixtures = JSON.parse(fixturesText); } catch (e) { errors.push(`invalid fixtures JSON: ${e.message}`); }

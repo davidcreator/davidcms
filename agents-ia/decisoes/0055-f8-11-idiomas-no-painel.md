@@ -45,4 +45,4 @@ O teste altera **somente sort_order**, preservando name/locale/status/code, veri
 - Guardas não atestam DB/PHP/proxy incorreto; proibido produção/dados reais/túnel/proxy/concorrrência. Se não há alvo não-padrão elegível, não instalar idioma nem trocar default para forçar o teste.
 - Entrega preparada ou publicada não encerra automaticamente Fase8.
 
-Guia/Tool/aceite/rollback: [F8-11 — Idiomas no painel](../../docs/F8-11-Idiomas-no-Painel.md).
+Guia/Tool/aceite/rollback: [F8-11 — Idiomas no painel](../../docs/fases/f7-f8/F8-11-Idiomas-no-Painel.md).

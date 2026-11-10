@@ -22,7 +22,7 @@
 
 ## Documentos atualizados
 
-- `docs/THREEJS_NATIVE_SYSTEM.md`
-- `docs/Implementacao-ThreeJS.md`
-- `docs/Arquitetura-MVCL.md`
+- `docs/threejs/THREEJS_NATIVE_SYSTEM.md`
+- `docs/threejs/Implementacao-ThreeJS.md`
+- `docs/arquitetura/Arquitetura-MVCL.md`
 - `docs/Estrutura-de-Pastas.md`

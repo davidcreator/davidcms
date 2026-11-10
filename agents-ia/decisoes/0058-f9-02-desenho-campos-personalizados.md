@@ -44,4 +44,4 @@ O F9-01 mapeou cms/page como primeiro alvo e regras de namespace/localização/v
 - Permissions de gestão/visão ainda pendentes da Tarefa03; nenhum endpoint novo foi registrado.
 - Dicionário/Guia/estrutura devem gant citar as tabelas após a migração ser aplicada e aprovada; não alteramos esses docs aqui por enquanto.
 
-Guia e Tool: [F9-02 — Desenho físico](../../docs/F9-02-Desenho-Campos-Personalizados.md).
+Guia e Tool: [F9-02 — Desenho físico](../../docs/fases/f9/F9-02-Desenho-Campos-Personalizados.md).

@@ -24,6 +24,6 @@
 
 - [ADR 0072 — Configuração declarativa das cenas Three.js nativas via System e Admin](0072-threejs-scenes-admin-system.md)
 - [ADR 0073 — Runtime Three.js canônico no System com entrega allowlisted pelo Catalog](0073-threejs-runtime-system-asset-gateway.md)
-- `docs/THREEJS_NATIVE_SYSTEM.md`
-- `docs/THREEJS_THUMB.md`
-- `docs/Implementacao-ThreeJS.md`
+- `docs/threejs/THREEJS_NATIVE_SYSTEM.md`
+- `docs/threejs/THREEJS_THUMB.md`
+- `docs/threejs/Implementacao-ThreeJS.md`

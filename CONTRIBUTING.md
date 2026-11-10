@@ -5,10 +5,10 @@ Obrigado pelo interesse! Este guia vale para contribuidores humanos **e** para a
 ## Antes de codar
 
 1. Leia o [README](README.md) e a pasta [`docs/`](docs/);
-2. Entenda a arquitetura: [MVCL](docs/Arquitetura-MVCL.md) e [Estrutura de Pastas](docs/Estrutura-de-Pastas.md);
+2. Entenda a arquitetura: [MVCL](docs/arquitetura/Arquitetura-MVCL.md) e [Estrutura de Pastas](docs/Estrutura-de-Pastas.md);
 3. Regras invioláveis: [`agents-ia/regras/`](agents-ia/regras/) — contexto global, convenções, padrões de código e protocolo anti-alucinação;
-4. Schema de banco é contrato: [`docs/Dicionario-de-Dados.md`](docs/Dicionario-de-Dados.md) — mudança exige ADR + migração;
-5. Pontos de entrada são contrato: [`docs/Contrato-Bootstrap.md`](docs/Contrato-Bootstrap.md).
+4. Schema de banco é contrato: [`docs/arquitetura/Dicionario-de-Dados.md`](docs/arquitetura/Dicionario-de-Dados.md) — mudança exige ADR + migração;
+5. Pontos de entrada são contrato: [`docs/arquitetura/Contrato-Bootstrap.md`](docs/arquitetura/Contrato-Bootstrap.md).
 
 ## Fluxo de trabalho
 

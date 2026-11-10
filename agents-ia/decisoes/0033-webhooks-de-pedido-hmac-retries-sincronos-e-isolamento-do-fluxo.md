@@ -13,7 +13,7 @@
 - **Leitura real (prova, HEAD `2d79602`):** `grep webhook` em
   `catalog/checkout/quote.php` e `admin/sale/order.php` = zero ocorrências;
   `system/engine/webhook.php` é um registry in-memory sem registrantes;
-  `docs/Webhooks.md` descrevia o formato antigo das tabelas-fantasma.
+  `docs/integracoes/Webhooks.md` descrevia o formato antigo das tabelas-fantasma.
 
 - **Decisões:**
 

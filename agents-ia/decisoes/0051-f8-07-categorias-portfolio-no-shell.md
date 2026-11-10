@@ -50,4 +50,4 @@ O fluxo de **14 etapas preparado, ainda não executado contra o backend**, cria 
 - Homologar navegador/foco, preview, mobile/temas/contraste, outro perfil ACL e volume real. O preflight não atesta DB/proxy mal configurado: proibido usar produção, túnel ou proxy para produção.
 - Código preparado não significa aplicação/deploy ou conclusão da Fase 8.
 
-Guia de aplicação/Tool/aceite/limpeza/rollback: [F8-07 — Categorias do portfólio](../../docs/F8-07-Categorias-Portfolio.md).
+Guia de aplicação/Tool/aceite/limpeza/rollback: [F8-07 — Categorias do portfólio](../../docs/fases/f7-f8/F8-07-Categorias-Portfolio.md).

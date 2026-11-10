@@ -60,4 +60,4 @@ O boot aguarda o DOM se necessário, evita instância duplicada e mantém textar
 - Um único arquivo de runtime muda, somente seu bloco RTE. Tema/sidebar, delete, tabs, status, preview, biblioteca de capas A01, importador, rotas, schema e ACL/CSRF não são alterados.
 - O core **4.22.1 continua sem suporte comunitário**; versão/licença/segurança ficam como dívida separada. A02 não suprime a verificação/aviso de versão. `allowedContent: true` permanece um contrato, não sanitização.
 
-Aplicação, Tool, cache, rollback e critérios de homologação: [guia F8-05 A02](../../docs/F8-05-A02-Configuracao-Isolada-CKEditor.md). O passo seguinte, após aplicar/homologar este ajuste, é a **Validação 03** integrada (criar/editar, editor/capa, upload/seleção, salvar/reabrir).
+Aplicação, Tool, cache, rollback e critérios de homologação: [guia F8-05 A02](../../docs/fases/f7-f8/F8-05-A02-Configuracao-Isolada-CKEditor.md). O passo seguinte, após aplicar/homologar este ajuste, é a **Validação 03** integrada (criar/editar, editor/capa, upload/seleção, salvar/reabrir).

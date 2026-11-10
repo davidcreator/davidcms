@@ -31,4 +31,4 @@
 ## Documentos atualizados
 
 - `dev/tests/e2e/e2e_f212.sh`, `dev/tests/e2e/e2e_f214.sh`, `dev/tests/e2e/e2e_regressao.sh` — passam a enviar CSRF nos fluxos afetados; F214/F212 incluem rejeição de POST sem token.
-- Nenhuma alteração em `docs/Guia-Twig.md`, `docs/Estrutura-de-Pastas.md` ou schema: o padrão Twig/Bootstrap existente é reutilizado, sem novo bloco/rota/pasta.
+- Nenhuma alteração em `docs/guias/Guia-Twig.md`, `docs/Estrutura-de-Pastas.md` ou schema: o padrão Twig/Bootstrap existente é reutilizado, sem novo bloco/rota/pasta.
