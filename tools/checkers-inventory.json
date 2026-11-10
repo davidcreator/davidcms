@@ -2,13 +2,12 @@
   "task": "F11-07",
   "description": "Inventario auditado dos checkers tools/e2e/*.cjs com saida nao-zero no main @ 440419b12 (pos F11-09)",
   "method": "replica de 2353 arquivos do main; 61 checkers executados; 32 nao-zero; 4 falsos negativos corrigidos em F11-09; 0 alvos ausentes",
-  "total_checkers": 61,
-  "nonzero": 32,
+  "total_checkers": 45,
+  "nonzero": 24,
   "counts": {
     "MARKER_OR_FINDING": 10,
     "STATIC_ONLY_FAIL_CLOSED": 4,
-    "REQUIRES_WRAPPER": 7,
-    "BLOCKED_CONTROL": 2,
+    "BLOCKED_CONTROL": 1,
     "REQUIRES_ARGS": 5,
     "REQUIRES_RUNTIME": 4
   },
@@ -92,78 +91,6 @@
       "category": "MARKER_OR_FINDING",
       "evidence": "Error: FAIL: no autosave or network request was introduced",
       "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
-      "file": "e2e_f805.cjs",
-      "rc": 2,
-      "category": "REQUIRES_WRAPPER",
-      "evidence": "BLOQUEADO/ERRO: Use o wrapper e2e_f805.sh --help.",
-      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
-      "file": "e2e_f806_http.cjs",
-      "rc": 2,
-      "category": "REQUIRES_WRAPPER",
-      "evidence": "BLOQUEADO/ERRO: Use e2e_f806.sh --help.",
-      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
-      "file": "e2e_f807_http.cjs",
-      "rc": 2,
-      "category": "REQUIRES_WRAPPER",
-      "evidence": "BLOQUEADO/ERRO: Use e2e_f807.sh --help.",
-      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
-      "file": "e2e_f808_http.cjs",
-      "rc": 2,
-      "category": "REQUIRES_WRAPPER",
-      "evidence": "BLOQUEADO/ERRO: Use e2e_f808.sh --help.",
-      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
-      "file": "e2e_f809_http.cjs",
-      "rc": 2,
-      "category": "REQUIRES_WRAPPER",
-      "evidence": "BLOQUEADO/ERRO: Use e2e_f809.sh --help.",
-      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
-      "file": "e2e_f810_http.cjs",
-      "rc": 2,
-      "category": "REQUIRES_WRAPPER",
-      "evidence": "BLOQUEADO/ERRO: requisito de execução não atendido; consulte --help. Detalhes omitidos por privacidade.",
-      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
-      "file": "e2e_f811_http.cjs",
-      "rc": 2,
-      "category": "REQUIRES_WRAPPER",
-      "evidence": "BLOQUEADO/ERRO: Use e2e_f811.sh --help.",
-      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
-      "file": "e2e_f812.cjs",
-      "rc": 2,
-      "category": "BLOCKED_CONTROL",
-      "evidence": "\"status\": \"blocked\",",
-      "action": "Controle de consolidacao que reporta status=blocked por design. NAO alterar.",
       "inventoried_at": "2026-11-02",
       "head": "fb7b56055"
     },
@@ -385,78 +312,6 @@
       "inventoried_at": "2026-11-02",
       "head": "fb7b56055"
     },
-    "e2e_f805.cjs": {
-      "file": "e2e_f805.cjs",
-      "rc": 2,
-      "category": "REQUIRES_WRAPPER",
-      "evidence": "BLOQUEADO/ERRO: Use o wrapper e2e_f805.sh --help.",
-      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    "e2e_f806_http.cjs": {
-      "file": "e2e_f806_http.cjs",
-      "rc": 2,
-      "category": "REQUIRES_WRAPPER",
-      "evidence": "BLOQUEADO/ERRO: Use e2e_f806.sh --help.",
-      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    "e2e_f807_http.cjs": {
-      "file": "e2e_f807_http.cjs",
-      "rc": 2,
-      "category": "REQUIRES_WRAPPER",
-      "evidence": "BLOQUEADO/ERRO: Use e2e_f807.sh --help.",
-      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    "e2e_f808_http.cjs": {
-      "file": "e2e_f808_http.cjs",
-      "rc": 2,
-      "category": "REQUIRES_WRAPPER",
-      "evidence": "BLOQUEADO/ERRO: Use e2e_f808.sh --help.",
-      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    "e2e_f809_http.cjs": {
-      "file": "e2e_f809_http.cjs",
-      "rc": 2,
-      "category": "REQUIRES_WRAPPER",
-      "evidence": "BLOQUEADO/ERRO: Use e2e_f809.sh --help.",
-      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    "e2e_f810_http.cjs": {
-      "file": "e2e_f810_http.cjs",
-      "rc": 2,
-      "category": "REQUIRES_WRAPPER",
-      "evidence": "BLOQUEADO/ERRO: requisito de execução não atendido; consulte --help. Detalhes omitidos por privacidade.",
-      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    "e2e_f811_http.cjs": {
-      "file": "e2e_f811_http.cjs",
-      "rc": 2,
-      "category": "REQUIRES_WRAPPER",
-      "evidence": "BLOQUEADO/ERRO: Use e2e_f811.sh --help.",
-      "action": "Invocar pelo wrapper .sh correspondente. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    "e2e_f812.cjs": {
-      "file": "e2e_f812.cjs",
-      "rc": 2,
-      "category": "BLOCKED_CONTROL",
-      "evidence": "\"status\": \"blocked\",",
-      "action": "Controle de consolidacao que reporta status=blocked por design. NAO alterar.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
     "e2e_f901.cjs": {
       "file": "e2e_f901.cjs",
       "rc": 2,
@@ -629,14 +484,6 @@
     "e2e_bdre_spacer_static.cjs",
     "e2e_bdre_table_static.cjs",
     "e2e_bdre_unsaved_changes_static.cjs",
-    "e2e_f805.cjs",
-    "e2e_f806_http.cjs",
-    "e2e_f807_http.cjs",
-    "e2e_f808_http.cjs",
-    "e2e_f809_http.cjs",
-    "e2e_f810_http.cjs",
-    "e2e_f811_http.cjs",
-    "e2e_f812.cjs",
     "e2e_f901.cjs",
     "e2e_f903.cjs",
     "e2e_f904.cjs",
