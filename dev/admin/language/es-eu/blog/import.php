@@ -58,3 +58,4 @@ $_['error_fetch']              = 'Falla al leer el endpoint de WordPress: %s';
 // F8-02 (ADR 0046): cards
 $_['text_source_card']     = 'Fuente';
 $_['text_pagination_card'] = 'Ventana de la muestra';
+$_['error_csrf']                 = 'Token de sesión no válido. Recarga la página e inténtalo de nuevo.';

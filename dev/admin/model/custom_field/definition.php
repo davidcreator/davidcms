@@ -29,6 +29,10 @@ class Definition extends \Reamur\System\Engine\Model {
      * @return array<int, array<string, mixed>>
      */
     public function getGroups(array $filters = []): array {
+        if (!$this->hasTable('custom_field_group') || !$this->hasTable('custom_field_group_description')) {
+            return [];
+        }
+
         $sql = "SELECT g.`group_id`, g.`entity_type`, g.`key`, g.`name`, g.`status`, g.`sort_order`, g.`date_added`, g.`date_modified`,
                        COALESCE(gd.`name`, gd_en.`name`, g.`name`) AS `label`
                 " . $this->groupListFrom() . $this->groupListWhere($filters) . "
@@ -47,6 +51,10 @@ class Definition extends \Reamur\System\Engine\Model {
 
     /** @param array{entity_type?: string, key?: string, name?: string, status?: string|int} $filters */
     public function getTotalGroups(array $filters = []): int {
+        if (!$this->hasTable('custom_field_group') || !$this->hasTable('custom_field_group_description')) {
+            return 0;
+        }
+
         $query = $this->db->query("SELECT COUNT(*) AS `total` " . $this->groupListFrom() . $this->groupListWhere($filters));
 
         return ($query instanceof \stdClass && isset($query->row['total'])) ? (int)$query->row['total'] : 0;
@@ -54,6 +62,10 @@ class Definition extends \Reamur\System\Engine\Model {
 
     /** @return array<string, mixed> */
     public function getGroup(int $group_id): array {
+        if (!$this->hasTable('custom_field_group')) {
+            return [];
+        }
+
         $query = $this->db->query(
             "SELECT * FROM `" . $this->t('custom_field_group') . "` WHERE `group_id` = '" . $group_id . "'"
         );
@@ -66,6 +78,10 @@ class Definition extends \Reamur\System\Engine\Model {
      * @return array<int, array{name: string}>
      */
     public function getGroupDescriptions(int $group_id): array {
+        if (!$this->hasTable('custom_field_group_description')) {
+            return [];
+        }
+
         $query = $this->db->query(
             "SELECT * FROM `" . $this->t('custom_field_group_description') . "` WHERE `group_id` = '" . $group_id . "'"
         );
@@ -82,7 +98,7 @@ class Definition extends \Reamur\System\Engine\Model {
     }
 
     public function groupExists(string $entity_type, string $key, int $exclude_group_id = 0): bool {
-        if (!$this->isAllowedEntity($entity_type) || !$this->isValidKey($key)) {
+        if (!$this->isAllowedEntity($entity_type) || !$this->isValidKey($key) || !$this->hasTable('custom_field_group')) {
             return false;
         }
 
@@ -159,6 +175,10 @@ class Definition extends \Reamur\System\Engine\Model {
      * @return array<int, array<string, mixed>>
      */
     public function getFields(array $filters = []): array {
+        if (!$this->hasTable('custom_field') || !$this->hasTable('custom_field_group') || !$this->hasTable('custom_field_description')) {
+            return [];
+        }
+
         $sql = "SELECT f.`field_id`, f.`entity_type`, f.`group_id`, f.`key`, f.`type`, f.`localized`, f.`required`, f.`visibility`,
                        f.`options`, f.`sort_order`, f.`date_added`, f.`date_modified`,
                        g.`key` AS `group_key`, g.`name` AS `group_name`, g.`status` AS `group_status`,
@@ -185,6 +205,10 @@ class Definition extends \Reamur\System\Engine\Model {
 
     /** @param array{entity_type?: string, group_id?: int|string, key?: string, type?: string, status?: string, visibility?: string} $filters */
     public function getTotalFields(array $filters = []): int {
+        if (!$this->hasTable('custom_field') || !$this->hasTable('custom_field_description')) {
+            return 0;
+        }
+
         $query = $this->db->query(
             "SELECT COUNT(*) AS `total` FROM `" . $this->t('custom_field') . "` f
              LEFT JOIN `" . $this->t('custom_field_description') . "` fd
@@ -199,6 +223,10 @@ class Definition extends \Reamur\System\Engine\Model {
 
     /** @return array<string, mixed> */
     public function getField(int $field_id): array {
+        if (!$this->hasTable('custom_field')) {
+            return [];
+        }
+
         $query = $this->db->query(
             "SELECT * FROM `" . $this->t('custom_field') . "` WHERE `field_id` = '" . $field_id . "'"
         );
@@ -210,6 +238,10 @@ class Definition extends \Reamur\System\Engine\Model {
      * @return array<int, array{label: string, help: string}>
      */
     public function getFieldDescriptions(int $field_id): array {
+        if (!$this->hasTable('custom_field_description')) {
+            return [];
+        }
+
         $query = $this->db->query(
             "SELECT * FROM `" . $this->t('custom_field_description') . "` WHERE `field_id` = '" . $field_id . "'"
         );
@@ -229,7 +261,7 @@ class Definition extends \Reamur\System\Engine\Model {
     }
 
     public function fieldExists(string $entity_type, string $key, int $exclude_field_id = 0): bool {
-        if (!$this->isAllowedEntity($entity_type) || !$this->isValidKey($key)) {
+        if (!$this->isAllowedEntity($entity_type) || !$this->isValidKey($key) || !$this->hasTable('custom_field')) {
             return false;
         }
 
@@ -353,6 +385,10 @@ class Definition extends \Reamur\System\Engine\Model {
     }
 
     public function countGroupFields(int $group_id): int {
+        if (!$this->hasTable('custom_field')) {
+            return 0;
+        }
+
         $query = $this->db->query(
             "SELECT COUNT(*) AS `total` FROM `" . $this->t('custom_field') . "` WHERE `group_id` = '" . $group_id . "'"
         );
@@ -361,6 +397,10 @@ class Definition extends \Reamur\System\Engine\Model {
     }
 
     public function countFieldValues(int $field_id): int {
+        if (!$this->hasTable('custom_field_value')) {
+            return 0;
+        }
+
         $query = $this->db->query(
             "SELECT COUNT(*) AS `total` FROM `" . $this->t('custom_field_value') . "` WHERE `field_id` = '" . $field_id . "'"
         );
@@ -484,23 +524,6 @@ class Definition extends \Reamur\System\Engine\Model {
                     `help`        = '" . $this->db->escape((string)($description['help'] ?? '')) . "'"
             );
         }
-    }
-
-    private function currentLanguageId(): int {
-        static $cache = 0;
-
-        if ($cache > 0) {
-            return $cache;
-        }
-
-        $query = $this->db->query(
-            "SELECT `language_id` FROM `" . $this->t('language') . "`
-             WHERE `code` = '" . $this->db->escape((string)$this->config->get('language_directory', 'en-us')) . "' LIMIT 1"
-        );
-
-        $cache = ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['language_id'] : 1;
-
-        return $cache;
     }
 
     private function groupListFrom(): string {

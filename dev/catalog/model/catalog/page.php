@@ -87,23 +87,6 @@ class Page extends \Reamur\System\Engine\Model {
         return ($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : null;
     }
 
-    private function currentLanguageId(): int {
-        static $cache = 0;
-
-        if ($cache > 0) {
-            return $cache;
-        }
-
-        $query = $this->db->query(
-            "SELECT `language_id` FROM `" . $this->t('language') . "`
-             WHERE `code` = '" . $this->db->escape((string)$this->config->get('language_directory', 'en-us')) . "' LIMIT 1"
-        );
-
-        $cache = ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['language_id'] : 1;
-
-        return $cache;
-    }
-
     private function hasSystemKeyColumn(): bool {
         static $available = null;
         if ($available !== null) {

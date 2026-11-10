@@ -100,23 +100,6 @@ class Seo_url extends \Reamur\System\Engine\Model {
         return $out;
     }
 
-    private function currentLanguageId(): int {
-        static $cache = 0;
-
-        if ($cache > 0) {
-            return $cache;
-        }
-
-        $query = $this->db->query(
-            "SELECT `language_id` FROM `" . DB_PREFIX . "language`
-             WHERE `code` = '" . $this->escape((string)$this->config->get('language_directory', 'en-us')) . "' LIMIT 1"
-        );
-
-        $cache = ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['language_id'] : 1;
-
-        return $cache;
-    }
-
     private function escape(string $value): string {
         return $this->db->escape($value);
     }

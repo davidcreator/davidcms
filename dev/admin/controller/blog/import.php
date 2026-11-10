@@ -39,12 +39,16 @@ class Import extends \Reamur\System\Engine\Controller {
         $data = $this->baseData();
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $action = (string)($this->request->post['action'] ?? '');
-
-            if ($action === 'preview' || $action === 'run') {
-                $this->handle($data, $action === 'run');
+            if (!\Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '')) {
+                $data['error'] = $this->language->get('error_csrf');
             } else {
-                $data['error'] = $this->language->get('error_action');
+                $action = (string)($this->request->post['action'] ?? '');
+
+                if ($action === 'preview' || $action === 'run') {
+                    $this->handle($data, $action === 'run');
+                } else {
+                    $data['error'] = $this->language->get('error_action');
+                }
             }
         }
 
@@ -163,7 +167,7 @@ class Import extends \Reamur\System\Engine\Controller {
             'help_page', 'help_per_page',
             'column_wp_id', 'column_title', 'column_date', 'column_keyword',
             'column_action_taken', 'column_image', 'column_status_label',
-            'text_summary_header', 'error_base_url', 'error_action',
+            'text_summary_header', 'error_base_url', 'error_action', 'error_csrf',
             'error_fetch', 'text_summary_preview', 'text_summary_run',
             'text_map_written', 'text_map_failed', 'entry_public_url', 'help_public_url',
             'text_actions', 'text_action_imported', 'text_action_import_with_suffix',
@@ -193,7 +197,8 @@ class Import extends \Reamur\System\Engine\Controller {
         ];
 
         $data['back']  = $this->url->link('blog/blog');
-        $data['action']= $this->url->link('blog/import');
+        $data['action']     = $this->url->link('blog/import');
+        $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
 
         return $data;
     }

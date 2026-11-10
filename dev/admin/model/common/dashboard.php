@@ -17,11 +17,7 @@ class Dashboard extends \Reamur\System\Engine\Model {
 
     /** SHOW TABLES defensivo (padrão ADR 0043 §model-sabichão) */
     private function tableExists(string $table): bool {
-        $query = $this->db->query(
-            "SHOW TABLES LIKE '" . $this->db->escape(DB_PREFIX . $table) . "'"
-        );
-
-        return $query instanceof \stdClass && $query->num_rows > 0;
+        return $this->hasTable($table);
     }
 
     /**

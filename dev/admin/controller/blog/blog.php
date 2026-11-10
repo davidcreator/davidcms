@@ -1136,14 +1136,8 @@ class Blog extends \Reamur\System\Engine\Controller {
             $catalogAssetBase = $this->catalogAssetUrl();
             $catalogViewBase = $catalogAssetBase . 'view/';
             $this->document->addStyle($assetBase . 'css/blog-block-editor.css?v=' . $assetVersion);
-        /* Frente AN: identidade visual do KAZTheme-Editor no BDREditor.
-           Marcador proprio para preservar as contagens de $assetVersion. */
-        $kazBdreAsset = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-bdre-an';
+        $kazBdreAsset = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-bdre-ap';
         $this->document->addStyle($assetBase . 'css/blog-block-editor-kaz.css?v=' . $kazBdreAsset);
-        /* Frente AP: escopo recolhido SOMENTE ao BDREditor (correcao image-9).
-           Mesma folha da AO, agora sem tocar no Admin; marcador novo p/ cache. */
-        $kazBdreTotalAsset = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-bdre-ap';
-        $this->document->addStyle($assetBase . 'css/blog-block-editor-kaz-total.css?v=' . $kazBdreTotalAsset);
         $this->document->addScriptDeferred($assetBase . 'js/blog-block-editor-kaz.js?v=' . $kazBdreAsset);
             $this->document->addStyle($catalogViewBase . 'css/threejs-thumb.css?v=' . $assetVersion);
             $this->document->addScript($catalogAssetBase . $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=' . $assetVersion);

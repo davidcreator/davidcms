@@ -314,21 +314,4 @@ class Project extends \Reamur\System\Engine\Model {
         return DB_PREFIX . $table;
     }
 
-    /** language_id do idioma ATIVO no admin (language_directory → rms_language) */
-    private function currentLanguageId(): int {
-        static $cache = 0;
-
-        if ($cache > 0) {
-            return $cache;
-        }
-
-        $query = $this->db->query(
-            "SELECT `language_id` FROM `" . $this->t('language') . "`
-             WHERE `code` = '" . $this->db->escape((string)$this->config->get('language_directory', 'en-us')) . "' LIMIT 1"
-        );
-
-        $cache = ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['language_id'] : 1;
-
-        return $cache;
-    }
 }

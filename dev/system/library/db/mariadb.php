@@ -1,5 +1,5 @@
 <?php
-namespace Reamur\System\Library\DB;
+namespace Reamur\System\Library\Db;
 
 /**
  * MariaDB adapter using PDO

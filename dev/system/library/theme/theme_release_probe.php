@@ -23,7 +23,7 @@ if (!class_exists(ThemePreviewState::class, false)) {
 }
 
 final class ThemeReleaseProbe {
-    public const ASSET_MARK = '-kaz-theme-editor-ah';
+    public const ASSET_MARK = '-kaz-theme-editor-aj';
     private const CSS_PARTS = ['token_css','component_css','schedule_css','media_css','site_css','scene_css'];
 
     /** @param array<string,mixed> $draft      draft_config decodificado

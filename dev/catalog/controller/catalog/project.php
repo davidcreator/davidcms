@@ -118,7 +118,7 @@ class Project extends \Reamur\System\Engine\Controller {
         $data['project'] = [
             'name'        => $name,
             'summary'     => (string)$project['summary'],
-            'description' => nl2br((string)$project['description'], false),
+            'description' => (string)$project['description'],
             'client'      => (string)$project['client'],
             'url'         => (string)$project['url'],
             'image'       => ((string)$project['image'] !== '') ? $base . (string)$project['image'] : '',

@@ -10,6 +10,9 @@ class Value extends \Reamur\System\Engine\Model {
 
     /** Definições cujo grupo está ativo, com labels/options para o formulário. */
     public function getPageFields(?int $languageId = null): array {
+        if (!$this->hasTable('custom_field') || !$this->hasTable('custom_field_group') || !$this->hasTable('custom_field_description') || !$this->hasTable('custom_field_group_description')) {
+            return [];
+        }
         $languageId=$languageId ?? $this->currentLanguageId();
         $q=$this->db->query("SELECT f.`field_id`, f.`entity_type`, f.`group_id`, f.`key`, f.`type`, f.`localized`, f.`required`, f.`visibility`, f.`options`, f.`sort_order`, g.`key` AS `group_key`, g.`name` AS `group_name`, COALESCE(fd.`label`, fd_en.`label`, f.`key`) AS `label`, COALESCE(fd.`help`, fd_en.`help`, '') AS `help`, COALESCE(gd.`name`, gd_en.`name`, g.`name`) AS `group_label` FROM `".$this->t('custom_field')."` f INNER JOIN `".$this->t('custom_field_group')."` g ON g.`group_id`=f.`group_id` AND g.`entity_type`='".self::ENTITY."' AND g.`status`='1' LEFT JOIN `".$this->t('custom_field_description')."` fd ON fd.`field_id`=f.`field_id` AND fd.`language_id`='".$languageId."' LEFT JOIN `".$this->t('custom_field_description')."` fd_en ON fd_en.`field_id`=f.`field_id` AND fd_en.`language_id`=1 LEFT JOIN `".$this->t('custom_field_group_description')."` gd ON gd.`group_id`=g.`group_id` AND gd.`language_id`='".$languageId."' LEFT JOIN `".$this->t('custom_field_group_description')."` gd_en ON gd_en.`group_id`=g.`group_id` AND gd_en.`language_id`=1 WHERE f.`entity_type`='".self::ENTITY."' ORDER BY g.`sort_order`,g.`group_id`,f.`sort_order`,f.`field_id`");
         return ($q instanceof \stdClass && !empty($q->rows))?(array)$q->rows:[];
@@ -23,6 +26,9 @@ class Value extends \Reamur\System\Engine\Model {
 
     /** @return array<int,array<int,string>> field_id => language_id => value */
     public function getPageValues(int $page_id): array {
+        if (!$this->hasTable('custom_field_value') || !$this->hasTable('custom_field')) {
+            return [];
+        }
         $q=$this->db->query("SELECT v.`field_id`,v.`language_id`,v.`value_text` FROM `".$this->t('custom_field_value')."` v INNER JOIN `".$this->t('custom_field')."` f ON f.`field_id`=v.`field_id` AND f.`entity_type`='".self::ENTITY."' WHERE v.`entity_type`='".self::ENTITY."' AND v.`entity_id`='".$page_id."'");
         $out=[];
         if($q instanceof \stdClass && !empty($q->rows)) foreach((array)$q->rows as $r){$r=(array)$r;$out[(int)$r['field_id']][(int)$r['language_id']]=(string)$r['value_text'];}
@@ -68,12 +74,11 @@ class Value extends \Reamur\System\Engine\Model {
 
     /** Cascata explícita no delete de página (sem FK conforme schema F9-02). */
     public function deletePageValues(int $page_id): bool {
+        if (!$this->hasTable('custom_field_value')) {
+            return true;
+        }
         return $this->db->query("DELETE FROM `".$this->t('custom_field_value')."` WHERE `entity_type`='".self::ENTITY."' AND `entity_id`='".$page_id."'") !== false;
     }
 
-    private function currentLanguageId(): int {
-        $q=$this->db->query("SELECT `language_id` FROM `".$this->t('language')."` WHERE `code`='".$this->db->escape((string)$this->config->get('language_directory','en-us'))."' LIMIT 1");
-        return ($q instanceof \stdClass && !empty($q->row))?(int)$q->row['language_id']:1;
-    }
     private function t(string $table): string { return DB_PREFIX.$table; }
 }

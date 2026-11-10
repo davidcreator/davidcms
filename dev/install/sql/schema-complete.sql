@@ -16,8 +16,8 @@
 --   • upgrade_f7_01/f7_03 (Blog + grant de importação)
 --   • upgrade_f8_01       (normalização canônica de ACL + session_expire)
 --   • upgrade_f8_05       (aparência do painel — ADR 0047)
---   • upgrade_f9_02/f9_05/f9_12 (campos personalizados + sidecar de blocos)
---   • upgrade_f10_01 (conteúdo editorial vinculado a rotas Catalog)
+--   • upgrade_f9_02/f9_05/f9_12/f9_25/f9_31 (campos, sidecar, padrões e revisões BDRE)
+--   • upgrade_f10_01/f10_02/f10_03 (rotas Catalog + temas + templates)
 --
 -- COMO LER ESTE ARQUIVO
 --   1. O prefixo `rms_` é o placeholder padrão — o wizard substitui pelo
@@ -1144,12 +1144,6 @@ SET `permission` = JSON_ARRAY_APPEND(`permission`, '$.modify', 'custom_field/def
 WHERE (`name` = 'Administrator' OR `user_group_id` = 1)
   AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.modify'), 'one', 'custom_field/definition') IS NULL;
 
--- ============================================================================
--- FIM — schema-complete.sql
--- Consolidação aditiva e idempotente de schema.sql + todos os upgrade_*.sql
--- da pasta install/sql. Histórico de alterações: docs/arquitetura/Dicionario-de-Dados.md.
--- ============================================================================
-
 -- F10-02 — Catalog Themes (same definitions as upgrade_f10_02_design_themes.sql).
 CREATE TABLE IF NOT EXISTS `rms_design_theme` (
   `theme_id` INT NOT NULL AUTO_INCREMENT, `name` VARCHAR(120) NOT NULL, `slug` VARCHAR(48) NOT NULL,
@@ -1191,3 +1185,33 @@ UPDATE `rms_user_group`
 SET `permission` = JSON_ARRAY_APPEND(`permission`, '$.modify', 'cms/block_pattern')
 WHERE (`name` = 'Administrator' OR `user_group_id` = 1)
   AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.modify'), 'one', 'cms/block_pattern') IS NULL;
+
+-- F9-31 — Armazenamento de revisões persistentes do BDRE.
+CREATE TABLE IF NOT EXISTS `rms_bdre_revision` (
+  `revision_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `entity_type` VARCHAR(16) NOT NULL COMMENT 'page ou blog; fluxos isolados',
+  `entity_id` INT UNSIGNED NOT NULL,
+  `language_id` INT UNSIGNED NOT NULL,
+  `content_hash` CHAR(64) NOT NULL,
+  `snapshot_json` MEDIUMTEXT NOT NULL,
+  `date_added` DATETIME NOT NULL,
+  PRIMARY KEY (`revision_id`),
+  KEY `entity_language_revision` (`entity_type`, `entity_id`, `language_id`, `revision_id`),
+  KEY `entity_hash` (`entity_type`, `entity_id`, `language_id`, `content_hash`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- design/theme (F10-02)
+UPDATE `rms_user_group`
+SET `permission` = JSON_ARRAY_APPEND(`permission`, '$.access', 'design/theme')
+WHERE (`name` = 'Administrator' OR `user_group_id` = 1)
+  AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.access'), 'one', 'design/theme') IS NULL;
+UPDATE `rms_user_group`
+SET `permission` = JSON_ARRAY_APPEND(`permission`, '$.modify', 'design/theme')
+WHERE (`name` = 'Administrator' OR `user_group_id` = 1)
+  AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.modify'), 'one', 'design/theme') IS NULL;
+
+-- ============================================================================
+-- FIM — schema-complete.sql
+-- Consolidação aditiva e idempotente de schema.sql + todos os upgrade_*.sql
+-- da pasta install/sql. Histórico de alterações: docs/arquitetura/Dicionario-de-Dados.md.
+-- ============================================================================

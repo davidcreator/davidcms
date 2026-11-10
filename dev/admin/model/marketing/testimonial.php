@@ -195,23 +195,6 @@ class Testimonial extends \Reamur\System\Engine\Model {
         }
     }
 
-    private function currentLanguageId(): int {
-        static $cache = 0;
-
-        if ($cache > 0) {
-            return $cache;
-        }
-
-        $query = $this->db->query(
-            "SELECT `language_id` FROM `" . $this->t('language') . "`
-             WHERE `code` = '" . $this->db->escape((string)$this->config->get('language_directory', 'en-us')) . "' LIMIT 1"
-        );
-
-        $cache = ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['language_id'] : 1;
-
-        return $cache;
-    }
-
     /** Tabela com prefixo (mesmo helper dos demais models F2) */
     private function t(string $table): string {
         return DB_PREFIX . $table;

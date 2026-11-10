@@ -7,6 +7,9 @@ namespace Reamur\Catalog\Model\Custom_field;
 
 class Value extends \Reamur\System\Engine\Model {
     public function getPagePublicFields(int $page_id): array {
+        if (!$this->hasTable('custom_field') || !$this->hasTable('custom_field_group') || !$this->hasTable('custom_field_description') || !$this->hasTable('custom_field_group_description') || !$this->hasTable('custom_field_value')) {
+            return [];
+        }
         $languageId=$this->currentLanguageId();
         $sql="SELECT f.`field_id`,f.`group_id`,f.`type`,f.`localized`,f.`options`,
                     COALESCE(NULLIF(fd.`label`,''),fd_en.`label`,f.`key`) AS `label`,
@@ -28,9 +31,5 @@ class Value extends \Reamur\System\Engine\Model {
         return ($query instanceof \stdClass && !empty($query->rows))?(array)$query->rows:[];
     }
 
-    private function currentLanguageId(): int {
-        $query=$this->db->query("SELECT `language_id` FROM `".$this->t('language')."` WHERE `code`='".$this->db->escape((string)$this->config->get('language_directory','en-us'))."' LIMIT 1");
-        return ($query instanceof \stdClass && !empty($query->row))?(int)$query->row['language_id']:1;
-    }
     private function t(string $table): string { return DB_PREFIX.$table; }
 }

@@ -73,11 +73,14 @@ class Slot extends \Reamur\System\Engine\Controller {
         $prefix = 'REAMURCMS_BDRE_JSON_V2:';
         if (!str_starts_with($content, $prefix)) return $this->cacheHtml($system_key, $content);
 
-        $downloadRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/download/blog';
-        $audioRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/audio/blog';
-        $videoRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/video/blog';
+        $downloadRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/download';
+        $audioRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/audio';
+        $videoRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/video';
         $assetBase = (string)$this->config->get('site_url', '');
-        $rendered = (new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot, $audioRoot, $videoRoot))
+        if (str_ends_with($assetBase, 'admin/')) {
+            $assetBase = substr($assetBase, 0, -strlen('admin/'));
+        }
+        $rendered = (new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot, $audioRoot, $videoRoot, true))
             ->renderJson(substr($content, strlen($prefix)), 2, $assetBase);
 
         if (empty($rendered['valid'])) return $this->cacheHtml($system_key, '');

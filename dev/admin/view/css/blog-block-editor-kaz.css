@@ -332,3 +332,230 @@
     white-space: normal !important;
   }
 }
+
+/* Frente AP — Escopo CORRIGIDO: somente o BDREditor.
+   SUBSTITUI o conteudo da folha da AO (mesmo caminho, marcador -kaz-bdre-ap).
+   Reprovação visual image-9.png: a AO pintou a barra de navegação lateral
+   do ReamurCMS (item ativo/borda verde) porque sobrescrevia --bs-* no body.
+   Referencia image-10.png: o KAZTheme-Editor mantem a sidebar AZUL do Admin
+   e aplica a identidade KAZ apenas dentro do editor (#kaz-theme-editor).
+
+   REGRAS DESTA FOLHA:
+   - NUNCA estiliza html, body, :root, --bs-*, --rms-*, #menu, .sidebar,
+     .navbar, .page-titlebar, .card/.form-control/.nav-tabs/.btn/.alert/.badge
+     do ADMIN, nem o acento do painel.
+   - Estiliza apenas [data-blog-block-editor] e os descendentes, e os
+     overlays/dialogs de classes rb-* que o editor cria em document.body.
+   - body:has(...) aparece SOMENTE como condicao de ancestral, nunca como alvo.
+   - Canvas do conteúdo publicado continua BRANCO.
+   - Foco F9-26: #174ea6 / 3px / offset 2px, apenas dentro do editor.
+   - Sem JS novo, sem DOM, sem catalogo, sem contratos, sem release. */
+[data-blog-block-editor] {
+  --kaz-ap-panel: #1f1f23;
+  --kaz-ap-panel-2: #26262b;
+  --kaz-ap-elev: #2c2c33;
+  --kaz-ap-line: #36363f;
+  --kaz-ap-text: #e9e9ee;
+  --kaz-ap-muted: #9b9ba7;
+  --kaz-ap-primary: #31efb8;
+  --kaz-ap-primary-ink: #063a2c;
+  --kaz-ap-track: #1f1f23;
+  --kaz-ap-thumb: #31efb8;
+}
+[data-blog-block-editor] .rb-command-overlay,
+[data-blog-block-editor] .rb-command-dialog,
+[data-blog-block-editor] .rb-group-confirm-overlay,
+[data-blog-block-editor] .rb-group-confirm-dialog,
+[data-blog-block-editor] .rb-style-presets-dialog,
+[data-blog-block-editor] .rb-modal,
+[data-blog-block-editor] .rb-bdre-fullscreen-open,
+[data-blog-block-editor] .rb-fullscreen-toggle,
+[data-blog-block-editor] .rb-fullscreen-done,
+[data-blog-block-editor] [class*="rb-pattern-library"],
+[data-blog-block-editor] [class*="rb-pattern-card"],
+[data-blog-block-editor] [class*="rb-pattern-hint"],
+[data-blog-block-editor] [class*="rb-inserter"],
+[data-blog-block-editor] [class*="rb-preview-"],
+[data-blog-block-editor] [class*="rb-table-"],
+[data-blog-block-editor] [class*="rb-admin-"],
+[data-blog-block-editor] [class*="rb-page-context"],
+[data-blog-block-editor] [class*="rb-command-palette"],
+[data-blog-block-editor] [class*="rb-drag"],
+[data-blog-block-editor] [class*="rb-file-drop"],
+[data-blog-block-editor] [class*="rb-anchor-repair"],
+[data-blog-block-editor] [class*="rb-group-"],
+[data-blog-block-editor] [class*="rb-style-"],
+[data-blog-block-editor] [class*="rb-keyboard-help"],
+[data-blog-block-editor] [class*="rb-builder-sidebar"],
+[data-blog-block-editor] [class*="rb-builder-inspector"],
+[data-blog-block-editor] [class*="rb-collapsible-panel"],
+[data-blog-block-editor] [class*="rb-workspace-rail"],
+[data-blog-block-editor] [class*="rb-workspace-"],
+[data-blog-block-editor] [class*="rb-sidebar"],
+[data-blog-block-editor] [class*="rb-outline"],
+[data-blog-block-editor] [class*="rb-history"],
+[data-blog-block-editor] [class*="rb-previews"],
+[data-blog-block-editor] .rb-save-status,
+[data-blog-block-editor] .rb-alert,
+[data-blog-block-editor] .is-selected,
+[data-blog-block-editor] .is-fullscreen,
+[data-blog-block-editor] .rb-selected-type {
+  background-color: #26262b !important;
+  color: #e9e9ee !important;
+  border-color: #36363f !important;
+}
+body:has([data-blog-block-editor]) .rb-command-overlay,
+body:has([data-blog-block-editor]) .rb-command-dialog,
+body:has([data-blog-block-editor]) .rb-group-confirm-overlay,
+body:has([data-blog-block-editor]) .rb-group-confirm-dialog,
+body:has([data-blog-block-editor]) .rb-style-presets-dialog,
+body:has([data-blog-block-editor]) .rb-modal,
+body:has([data-blog-block-editor]) .rb-bdre-fullscreen-open,
+body:has([data-blog-block-editor]) .rb-fullscreen-toggle,
+body:has([data-blog-block-editor]) .rb-fullscreen-done,
+body:has([data-blog-block-editor]) [class*="rb-pattern-library"],
+body:has([data-blog-block-editor]) [class*="rb-pattern-card"],
+body:has([data-blog-block-editor]) [class*="rb-pattern-hint"],
+body:has([data-blog-block-editor]) [class*="rb-inserter"],
+body:has([data-blog-block-editor]) [class*="rb-preview-"],
+body:has([data-blog-block-editor]) [class*="rb-table-"],
+body:has([data-blog-block-editor]) [class*="rb-admin-"],
+body:has([data-blog-block-editor]) [class*="rb-page-context"],
+body:has([data-blog-block-editor]) [class*="rb-command-palette"],
+body:has([data-blog-block-editor]) [class*="rb-drag"],
+body:has([data-blog-block-editor]) [class*="rb-file-drop"],
+body:has([data-blog-block-editor]) [class*="rb-anchor-repair"],
+body:has([data-blog-block-editor]) [class*="rb-group-"],
+body:has([data-blog-block-editor]) [class*="rb-style-"],
+body:has([data-blog-block-editor]) [class*="rb-keyboard-help"],
+body:has([data-blog-block-editor]) [class*="rb-builder-sidebar"],
+body:has([data-blog-block-editor]) [class*="rb-builder-inspector"],
+body:has([data-blog-block-editor]) [class*="rb-collapsible-panel"],
+body:has([data-blog-block-editor]) [class*="rb-workspace-rail"],
+body:has([data-blog-block-editor]) [class*="rb-workspace-"],
+body:has([data-blog-block-editor]) [class*="rb-sidebar"],
+body:has([data-blog-block-editor]) [class*="rb-outline"],
+body:has([data-blog-block-editor]) [class*="rb-history"],
+body:has([data-blog-block-editor]) [class*="rb-previews"],
+body:has([data-blog-block-editor]) .rb-save-status,
+body:has([data-blog-block-editor]) .rb-alert,
+body:has([data-blog-block-editor]) .is-selected,
+body:has([data-blog-block-editor]) .is-fullscreen,
+body:has([data-blog-block-editor]) .rb-selected-type {
+  background-color: #26262b !important;
+  color: #e9e9ee !important;
+  border-color: #36363f !important;
+}
+body:has([data-blog-block-editor]) .rb-command-dialog .form-control,
+body:has([data-blog-block-editor]) .rb-command-dialog input[type="search"],
+body:has([data-blog-block-editor]) .rb-command-dialog input[type="text"],
+body:has([data-blog-block-editor]) .rb-command-dialog select,
+body:has([data-blog-block-editor]) .rb-command-dialog textarea,
+body:has([data-blog-block-editor]) .rb-command-dialog .btn,
+body:has([data-blog-block-editor]) .rb-command-dialog button,
+body:has([data-blog-block-editor]) .rb-style-presets-dialog .form-control,
+body:has([data-blog-block-editor]) .rb-style-presets-dialog input[type="search"],
+body:has([data-blog-block-editor]) .rb-style-presets-dialog input[type="text"],
+body:has([data-blog-block-editor]) .rb-style-presets-dialog select,
+body:has([data-blog-block-editor]) .rb-style-presets-dialog textarea,
+body:has([data-blog-block-editor]) .rb-style-presets-dialog .btn,
+body:has([data-blog-block-editor]) .rb-style-presets-dialog button,
+body:has([data-blog-block-editor]) .rb-group-confirm-dialog .form-control,
+body:has([data-blog-block-editor]) .rb-group-confirm-dialog input[type="search"],
+body:has([data-blog-block-editor]) .rb-group-confirm-dialog input[type="text"],
+body:has([data-blog-block-editor]) .rb-group-confirm-dialog select,
+body:has([data-blog-block-editor]) .rb-group-confirm-dialog textarea,
+body:has([data-blog-block-editor]) .rb-group-confirm-dialog .btn,
+body:has([data-blog-block-editor]) .rb-group-confirm-dialog button,
+body:has([data-blog-block-editor]) .rb-modal .form-control,
+body:has([data-blog-block-editor]) .rb-modal input[type="search"],
+body:has([data-blog-block-editor]) .rb-modal input[type="text"],
+body:has([data-blog-block-editor]) .rb-modal select,
+body:has([data-blog-block-editor]) .rb-modal textarea,
+body:has([data-blog-block-editor]) .rb-modal .btn,
+body:has([data-blog-block-editor]) .rb-modal button {
+  background-color: #2c2c33 !important;
+  color: #e9e9ee !important;
+  border-color: #36363f !important;
+}
+body:has([data-blog-block-editor]) .rb-command-dialog .rb-pattern-library-card,
+body:has([data-blog-block-editor]) .rb-command-dialog .rb-inserter-option,
+body:has([data-blog-block-editor]) .rb-command-dialog .rb-preview-table-of-contents,
+body:has([data-blog-block-editor]) .rb-style-presets-dialog .rb-pattern-library-card,
+body:has([data-blog-block-editor]) .rb-style-presets-dialog .rb-inserter-option,
+body:has([data-blog-block-editor]) .rb-style-presets-dialog .rb-preview-table-of-contents {
+  background-color: #2c2c33 !important;
+  color: #e9e9ee !important;
+  border-color: #36363f !important;
+}
+[data-blog-block-editor] .rb-brand-icon,
+[data-blog-block-editor] .rb-save-status,
+body:has([data-blog-block-editor]) .rb-brand-icon,body:has([data-blog-block-editor]) .rb-save-status {
+  color: #31efb8 !important;
+}
+body:has([data-blog-block-editor]) .rb-alert, [data-blog-block-editor] .rb-alert {
+  background-color: #3a3320 !important;
+  color: #e9e9ee !important;
+  border-color: #ffc857 !important;
+}
+[data-blog-block-editor] {
+  scrollbar-color: #31efb8 #1f1f23;
+  scrollbar-width: thin;
+}
+[data-blog-block-editor] *::-webkit-scrollbar { width: 10px; height: 10px; }
+[data-blog-block-editor] *::-webkit-scrollbar-track { background: #1f1f23; border-radius: 8px; }
+[data-blog-block-editor] *::-webkit-scrollbar-thumb { background: #31efb8; border: 2px solid #1f1f23; border-radius: 8px; }
+body:has([data-blog-block-editor]) .rb-command-dialog {
+  scrollbar-color: #31efb8 #1f1f23;
+  scrollbar-width: thin;
+}
+body:has([data-blog-block-editor]) .rb-command-dialog *::-webkit-scrollbar { width: 10px; height: 10px; }
+body:has([data-blog-block-editor]) .rb-command-dialog *::-webkit-scrollbar-track { background: #1f1f23; border-radius: 8px; }
+body:has([data-blog-block-editor]) .rb-command-dialog *::-webkit-scrollbar-thumb { background: #31efb8; border: 2px solid #1f1f23; border-radius: 8px; }
+body:has([data-blog-block-editor]) .rb-style-presets-dialog {
+  scrollbar-color: #31efb8 #1f1f23;
+  scrollbar-width: thin;
+}
+body:has([data-blog-block-editor]) .rb-style-presets-dialog *::-webkit-scrollbar { width: 10px; height: 10px; }
+body:has([data-blog-block-editor]) .rb-style-presets-dialog *::-webkit-scrollbar-track { background: #1f1f23; border-radius: 8px; }
+body:has([data-blog-block-editor]) .rb-style-presets-dialog *::-webkit-scrollbar-thumb { background: #31efb8; border: 2px solid #1f1f23; border-radius: 8px; }
+@media (forced-colors: active) { [data-blog-block-editor] *, body:has([data-blog-block-editor]) .rb-command-dialog * { scrollbar-color: auto; } }
+[data-blog-block-editor] :focus-visible {
+  outline: 3px solid #174ea6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 5px rgba(255,255,255,.22);
+}
+body:has([data-blog-block-editor]) .rb-command-dialog :focus-visible {
+  outline: 3px solid #174ea6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 5px rgba(255,255,255,.22);
+}
+body:has([data-blog-block-editor]) .rb-style-presets-dialog :focus-visible {
+  outline: 3px solid #174ea6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 5px rgba(255,255,255,.22);
+}
+[data-blog-block-editor] .rb-canvas,
+[data-blog-block-editor] .rb-canvas .rb-block,
+[data-blog-block-editor] .rb-canvas .rb-content,
+[data-blog-block-editor] .rb-canvas .rb-input,
+[data-blog-block-editor] .rb-canvas .rb-block-title,
+[data-blog-block-editor] .rb-canvas .rb-preview-value,
+[data-blog-block-editor] .rb-canvas .rb-field label,
+[data-blog-block-editor] .rb-canvas .rb-inspector,
+[data-blog-block-editor] .rb-canvas .rb-note,
+[data-blog-block-editor] .rb-canvas .rb-button,
+[data-blog-block-editor] .rb-canvas [class*="rb-block"],
+[data-blog-block-editor] .rb-canvas [class*="rb-preview"] {
+  background-color: #fff !important;
+  color: #172033 !important;
+  border-color: #d5dce5 !important;
+  box-shadow: none !important;
+}
+@media (max-width: 760px) {
+  [data-blog-block-editor] .rb-ribbon-content, [data-blog-block-editor] .rb-ribbon-tabs, [data-blog-block-editor] .rb-ribbon-tools { flex-wrap: wrap !important; }
+  [data-blog-block-editor].rb-editor { max-width: 100% !important; min-width: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-blog-block-editor] * { transition: none !important; animation: none !important; }
+}

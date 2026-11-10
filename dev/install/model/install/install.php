@@ -92,12 +92,12 @@ class Install extends \Reamur\System\Engine\Model {
     }
 
     /**
-     * Importa sql/schema.sql trocando o prefixo-padrão `rms_` pelo escolhido.
+     * Importa sql/schema-complete.sql trocando o prefixo-padrão `rms_` pelo escolhido.
      * O arquivo usa identificadores cravados (`rms_tabela`), então a troca cirúrgica
      * atinge somente nomes de tabelas — inclusive nos INSERTs de seed.
      */
     public function importSchema(string $prefix): void {
-        $sql = (string)file_get_contents(dirname(__DIR__, 2) . '/sql/schema.sql'); // dev/install/sql/schema.sql
+        $sql = (string)file_get_contents(dirname(__DIR__, 2) . '/sql/schema-complete.sql'); // dev/install/sql/schema-complete.sql
 
         // Linhas de comentário (cabeçalhos de seção do arquivo) saem ANTES do split —
         // um chunk começando com '--' não pode derrubar o CREATE/INSERT que o segue.
@@ -128,7 +128,14 @@ class Install extends \Reamur\System\Engine\Model {
      * @param array{username: string, firstname: string, lastname: string, email: string, password: string} $data
      */
     public function createAdministrator(array $data, string $prefix): void {
-        $seedRoutes = ['user/user', 'user/user_group', 'catalog/project', 'catalog/category', 'cms/page', 'marketing/testimonial', 'marketing/client_logo', 'tool/tool', 'sale/order', 'communication/contact_message', 'setting/webhook', 'custom_field/definition', 'cms/block_pattern']; // F2-8..16 + F9-25 padrões BDRE privados
+        $seedRoutes = [
+            'user/user', 'user/user_group', 'catalog/project', 'catalog/category',
+            'cms/page', 'cms/block_pattern', 'marketing/testimonial', 'marketing/client_logo',
+            'tool/tool', 'sale/order', 'communication/contact_message', 'setting/webhook',
+            'setting/setting', 'setting/site_info', 'setting/appearance', 'setting/marketplace',
+            'localization/language', 'blog/blog', 'blog/import',
+            'custom_field/definition', 'design/theme',
+        ]; // Todas as rotas administrativas consolidadas em schema-complete.sql
         // F8-01 (ADR 0045 §bugfix-escape-ACL): UNESCAPED_SLASHES impede que
         // real_escape_string dobre o '\' produzido pelo json_encode padrão —
         // combinando, os valores ficavam "user\\/user" e nenhum hasPermission
