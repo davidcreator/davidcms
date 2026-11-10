@@ -10,7 +10,7 @@ cfda3b8a  a80e2939a6287bdc8ef123d0638adb7107a725315c33d367ad97befef97d7fe2  8247
 b06c9661  29a480d6ebdeb4be28ac757567fa6d7e16df3ca4ffb06d047efe1060d4502e3e  4001  agents-ia/decisoes/README.md
 12feea24  b6d93cb1839df0c424777ac809ffeb7b87fc94852ebaea6549f3456bbaa78610  7050  agents-ia/regras/00-contexto-global.md
 8ecb0847  0d4b0a10d40d84a9582064e295a316610876ae987353966f95e3583964eaeb39  4792  agents-ia/regras/02-padroes-de-codigo.md
-091cbed1  2423bf61ada6c156f3a936fac38bbf8f39fff221ac78d384be72429325a2a827  43153  dev/system/library/blog/block_document.php
+31a3bbcd  fc5ebe93984f8910506fa5d8c5fabf17ad326c659d83104b3203f3b1a524569d  43189  dev/system/library/blog/block_document.php
 7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
 fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
 9f6c99e1  7971452b6bbeacdead766475c55aef7e2363bf0a076e4e5e9afdbe30632ba6d5  16373  docs/CHANGELOG.md

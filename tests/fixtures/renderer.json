@@ -227,7 +227,7 @@
       "<ol class=\"rms-block rms-block-list\"><li>Item 1</li><li>Item 2</li></ol>",
       "<blockquote class=\"rms-block rms-block-quote\"><p>Uma citação</p></blockquote>",
       "href=\"/contact\"",
-      "<hr class=\"rms-block rms-block-separator\">"
+      "<hr class=\"rms-block rms-block-separator rms-block-separator--solid"
     ]
   },
   {

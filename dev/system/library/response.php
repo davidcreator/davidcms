@@ -46,7 +46,8 @@ final class Response {
 
     /** Sanitiza destino de redirect contra CRLF/NUL e esquemas não-HTTP (javascript:, data:). */
     public static function sanitizeRedirectTarget(string $url): string {
-        $clean = trim(str_replace(['&amp;', "\n", "\r", "\0"], ['&', '', '', ''], $url));
+        $head  = substr($url, 0, strcspn($url, "\r\n\0"));
+        $clean = trim(str_replace('&amp;', '&', $head));
 
         if ($clean === '') {
             return 'index.php';

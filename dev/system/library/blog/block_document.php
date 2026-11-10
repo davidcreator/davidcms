@@ -413,6 +413,7 @@ class BlockDocument {
         } else {
             throw new RuntimeException('unsupported_tag_' . preg_replace('/[^a-z0-9_-]/', '', $tag));
         }
+        ksort($attrs, SORT_STRING);
         return $this->makeNode($type, $attrs, $children, $content, $source, $path);
     }
 

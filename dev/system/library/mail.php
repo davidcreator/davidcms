@@ -72,14 +72,19 @@ class Mail {
     }
 
     /**
-     * Validate email address format
-     * @param string $email
+     * Check for CR, LF, or NUL control bytes in header values.
+     * @param string $value
      * @return bool
      */
     private function containsHeaderControlChars(string $value): bool {
         return preg_match('/[\r\n\0]/', $value) === 1;
     }
 
+    /**
+     * Validate email address format
+     * @param string $email
+     * @return bool
+     */
     private function isValidEmail(string $email): bool {
         return !$this->containsHeaderControlChars($email)
             && filter_var(trim($email), FILTER_VALIDATE_EMAIL) !== false;
