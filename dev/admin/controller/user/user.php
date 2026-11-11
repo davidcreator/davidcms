@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -277,13 +277,16 @@ class User extends \Reamur\System\Engine\Controller {
         $data['error']             = '';
         $data['text_flash']        = '';
 
+        $post = $this->request->post;
+        $rawGroup = $post['user_group_id'] ?? ($user['user_group_id'] ?? 0);
+        $rawStatus = ($this->request->server['REQUEST_METHOD'] ?? '') === 'POST' ? 0 : ($user['status'] ?? '1');
         $data['user_id']       = (int)($user['user_id'] ?? 0);
-        $data['user_group_id'] = (int)($this->request->post['user_group_id'] ?? ($user['user_group_id'] ?? 0));
-        $data['username']      = (string)($this->request->post['username'] ?? ($user['username'] ?? ''));
-        $data['firstname']     = (string)($this->request->post['firstname'] ?? ($user['firstname'] ?? ''));
-        $data['lastname']      = (string)($this->request->post['lastname'] ?? ($user['lastname'] ?? ''));
-        $data['email']         = (string)($this->request->post['email'] ?? ($user['email'] ?? ''));
-        $data['status']        = isset($this->request->post['status']) ? '1' : (string)($this->request->server['REQUEST_METHOD'] === 'POST' ? 0 : ($user['status'] ?? '1'));
+        $data['user_group_id'] = is_scalar($rawGroup) ? (int)$rawGroup : 0;
+        $data['username']      = is_scalar($post['username'] ?? null) ? (string)$post['username'] : (string)($user['username'] ?? '');
+        $data['firstname']     = is_scalar($post['firstname'] ?? null) ? (string)$post['firstname'] : (string)($user['firstname'] ?? '');
+        $data['lastname']      = is_scalar($post['lastname'] ?? null) ? (string)$post['lastname'] : (string)($user['lastname'] ?? '');
+        $data['email']         = is_scalar($post['email'] ?? null) ? (string)$post['email'] : (string)($user['email'] ?? '');
+        $data['status']        = isset($post['status']) ? '1' : (is_scalar($rawStatus) ? (string)$rawStatus : '0');
         $data['cancel']        = $this->url->link('user/user');
 
         $data['user_groups'] = $this->model_user_user->getUserGroups();
@@ -301,12 +304,12 @@ class User extends \Reamur\System\Engine\Controller {
         $post = $this->request->post;
 
         return [
-            'user_group_id' => (int)($post['user_group_id'] ?? 0),
-            'username'      => (string)($post['username'] ?? ''),
-            'password'      => (string)($post['password'] ?? ''),
-            'email'         => (string)($post['email'] ?? ''),
-            'firstname'     => (string)($post['firstname'] ?? ''),
-            'lastname'      => (string)($post['lastname'] ?? ''),
+            'user_group_id' => (int)$this->postScalar('user_group_id', '0'),
+            'username'      => $this->postScalar('username'),
+            'password'      => $this->postScalar('password'),
+            'email'         => $this->postScalar('email'),
+            'firstname'     => $this->postScalar('firstname'),
+            'lastname'      => $this->postScalar('lastname'),
             'status'        => isset($post['status']) ? 1 : 0,
         ];
     }
@@ -318,9 +321,8 @@ class User extends \Reamur\System\Engine\Controller {
      */
     private function validateUser(int $exclude_user_id, array $data): array {
         $errors = [];
-        $post   = $this->request->post;
 
-        $username = (string)($post['username'] ?? '');
+        $username = $this->postScalar('username');
 
         if (mb_strlen($username) < 3 || mb_strlen($username) > 32) {
             $errors[] = $this->language->get('error_username');
@@ -332,29 +334,31 @@ class User extends \Reamur\System\Engine\Controller {
             }
         }
 
-        if (!filter_var((string)($post['email'] ?? ''), FILTER_VALIDATE_EMAIL)) {
+        if (!filter_var($this->postScalar('email'), FILTER_VALIDATE_EMAIL)) {
             $errors[] = $this->language->get('error_email');
         }
 
-        if (mb_strlen((string)($post['firstname'] ?? '')) < 1 || mb_strlen((string)$post['firstname']) > 32) {
+        $firstname = $this->postScalar('firstname');
+        if (mb_strlen($firstname) < 1 || mb_strlen($firstname) > 32) {
             $errors[] = $this->language->get('error_firstname');
         }
 
-        if (mb_strlen((string)($post['lastname'] ?? '')) < 1 || mb_strlen((string)$post['lastname']) > 32) {
+        $lastname = $this->postScalar('lastname');
+        if (mb_strlen($lastname) < 1 || mb_strlen($lastname) > 32) {
             $errors[] = $this->language->get('error_lastname');
         }
 
-        $password = (string)($post['password'] ?? '');
+        $password = $this->postScalar('password');
 
         if ($exclude_user_id === 0 || $password !== '') {
             if (mb_strlen($password) < 8) {
                 $errors[] = $this->language->get('error_password');
-            } elseif ($password !== (string)($post['confirm'] ?? '')) {
+            } elseif ($password !== $this->postScalar('confirm')) {
                 $errors[] = $this->language->get('error_confirm');
             }
         }
 
-        if ((int)($post['user_group_id'] ?? 0) <= 0) {
+        if ((int)$this->postScalar('user_group_id', '0') <= 0) {
             $errors[] = $this->language->get('error_group');
         }
 

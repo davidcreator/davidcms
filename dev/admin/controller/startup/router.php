@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -36,7 +36,7 @@ class Router extends \Reamur\System\Engine\Controller {
 
     /** Converte o REQUEST_URI do pedido em rota interna */
     private function resolve(): string {
-        $uri  = (string)($this->request->server['REQUEST_URI'] ?? '');
+        $uri  = str_replace("\0", '', (string)($this->request->server['REQUEST_URI'] ?? ''));
         $path = (string)(parse_url($uri, PHP_URL_PATH) ?: '');
 
         // Base da app vem do config (site_url = HTTP_SERVER gerado pelo wizard):

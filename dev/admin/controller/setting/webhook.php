@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -174,8 +174,8 @@ class Webhook extends \Reamur\System\Engine\Controller {
             $csrfOk = $this->csrfValid();
             $allowEmptySecret = false;
             if ($csrfOk) {
-                $secretInput = (string)($this->request->post['secret'] ?? '');
-                $clearSecret = (string)($this->request->post['secret_clear'] ?? '') === '1';
+                $secretInput = $this->postScalar('secret');
+                $clearSecret = $this->postScalar('secret_clear') === '1';
                 if ($secretInput === '' && $clearSecret) {
                     // Limpar o segredo HMAC desativa o endpoint para impedir envios sem assinatura.
                     $this->request->post['secret'] = '';
@@ -430,14 +430,14 @@ class Webhook extends \Reamur\System\Engine\Controller {
             'can_modify'         => $this->user->hasPermission('modify', 'setting/webhook'),
             'secret_required'    => empty($webhook['webhook_id']),
             'trigger_suggestions' => self::TRIGGER_SUGGESTIONS,
-            'value_trigger'      => (string)($post['trigger'] ?? ($webhook['trigger'] ?? '')),
-            'value_url'          => (string)($post['url'] ?? ($webhook['url'] ?? '')),
+            'value_trigger'      => is_scalar($post['trigger'] ?? null) ? (string)$post['trigger'] : (string)($webhook['trigger'] ?? ''),
+            'value_url'          => is_scalar($post['url'] ?? null) ? (string)$post['url'] : (string)($webhook['url'] ?? ''),
             // Segredos jamais são devolvidos no HTML nem após erro de validação.
             'value_secret'       => '',
             'secret_is_set'      => (string)($webhook['secret'] ?? '') !== '',
-            'value_secret_clear' => (string)($post['secret_clear'] ?? '') === '1' && (string)($post['secret'] ?? '') === '',
-            'value_description'  => (string)($post['description'] ?? ($webhook['description'] ?? '')),
-            'value_status'       => $post ? (int)($post['status'] ?? 0) : (int)($webhook['status'] ?? 1),
+            'value_secret_clear' => $this->postScalar('secret_clear') === '1' && $this->postScalar('secret') === '',
+            'value_description'  => is_scalar($post['description'] ?? null) ? (string)$post['description'] : (string)($webhook['description'] ?? ''),
+            'value_status'       => $post ? (is_scalar($post['status'] ?? null) ? (int)$post['status'] : 0) : (int)($webhook['status'] ?? 1),
             'cancel'             => $this->url->link('setting/webhook'),
         ];
     }
@@ -452,10 +452,10 @@ class Webhook extends \Reamur\System\Engine\Controller {
         $post   = $this->request->post;
         $errors = [];
 
-        $trigger = strtolower(trim((string)($post['trigger'] ?? '')));
-        $url     = trim((string)($post['url'] ?? ''));
-        $secret  = trim((string)($post['secret'] ?? ''));
-        $descr   = trim((string)($post['description'] ?? ''));
+        $trigger = strtolower(trim($this->postScalar('trigger')));
+        $url     = trim($this->postScalar('url'));
+        $secret  = trim($this->postScalar('secret'));
+        $descr   = trim($this->postScalar('description'));
 
         if ($trigger === '' || mb_strlen($trigger) > 64 || !preg_match('/^\*{0,1}[a-z0-9_]{1,63}(\.\*)?$/u', $trigger)) {
             $errors[] = $this->language->get('error_trigger');
@@ -485,15 +485,15 @@ class Webhook extends \Reamur\System\Engine\Controller {
      * @return array{trigger: string, url: string, secret: string, description: string, status: int}
      */
     private function postPayload(): array {
-        $post = $this->request->post;
+        $statusRaw = $this->request->post['status'] ?? null;
 
         return [
-            'trigger'     => strtolower(trim((string)($post['trigger'] ?? ''))),
-            'url'         => trim((string)($post['url'] ?? '')),
-            'secret'      => trim((string)($post['secret'] ?? '')),
-            'description' => trim((string)($post['description'] ?? '')),
+            'trigger'     => strtolower(trim($this->postScalar('trigger'))),
+            'url'         => trim($this->postScalar('url')),
+            'secret'      => trim($this->postScalar('secret')),
+            'description' => trim($this->postScalar('description')),
             // coerção dura: qualquer valor adulterado vira 0/1
-            'status'      => !empty($post['status']) && (int)$post['status'] === 1 ? 1 : 0,
+            'status'      => is_scalar($statusRaw) && (int)$statusRaw === 1 ? 1 : 0,
         ];
     }
 }

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -36,14 +36,13 @@ class Language extends \Reamur\System\Engine\Controller {
         }
 
         $session = $this->registry->get('session');
-        $stored  = ($session instanceof \Reamur\System\Library\Session)
-            ? (string)($session->data['language'] ?? '')
-            : '';
+        $rawStored = ($session instanceof \Reamur\System\Library\Session) ? ($session->data['language'] ?? '') : '';
+        $stored    = is_string($rawStored) ? $rawStored : '';
 
-        $requested = strtolower(preg_replace(
+        $requested = strtolower((string)preg_replace(
             '/[^a-zA-Z-]/',
             '',
-            (string)($this->request->get['language'] ?? '')
+            $this->queryValue('language')
         ));
 
         if ($requested !== '' && in_array($requested, $enabled, true)) {

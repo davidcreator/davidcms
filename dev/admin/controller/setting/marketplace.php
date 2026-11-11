@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -204,10 +204,10 @@ class Marketplace extends \Reamur\System\Engine\Controller {
 
         $settings = $this->model_setting_setting->getSettings();
 
-        $app_id        = trim((string)($this->request->post['mp_app_id'] ?? ''));
-        $client_secret = trim((string)($this->request->post['mp_client_secret'] ?? ''));
-        $env           = (string)($this->request->post['mp_env'] ?? 'test');
-        $redirect_uri  = trim((string)($this->request->post['mp_redirect_uri'] ?? ''));
+        $app_id        = trim($this->postScalar('mp_app_id'));
+        $client_secret = trim($this->postScalar('mp_client_secret'));
+        $env           = $this->postScalar('mp_env', 'test');
+        $redirect_uri  = trim($this->postScalar('mp_redirect_uri'));
 
         $errors = [];
 
@@ -219,7 +219,8 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             $env = 'test';
         }
 
-        if ($redirect_uri !== '' && !preg_match('#^https://#i', $redirect_uri)) {
+        $safeRedirectUri = $redirect_uri !== '' ? $this->safeExternalUrl($redirect_uri) : '';
+        if ($redirect_uri !== '' && ($safeRedirectUri === '' || !str_starts_with(strtolower($safeRedirectUri), 'https://'))) {
             $errors[] = $this->language->get('error_redirect_uri');
         }
 
@@ -297,8 +298,8 @@ class Marketplace extends \Reamur\System\Engine\Controller {
         $this->load->model('setting/marketplace');
 
         $expected = (string)($this->session->data['mp_oauth_state'] ?? '');
-        $received = (string)($this->request->get['state'] ?? '');
-        $code     = (string)($this->request->get['code'] ?? '');
+        $received = $this->queryValue('state');
+        $code     = $this->queryValue('code');
 
         unset($this->session->data['mp_oauth_state'], $this->session->data['mp_oauth_state_at']);
 
@@ -540,9 +541,8 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             'init_point'      => $init_point,
         ]);
 
-        $public = $this->publicPayUrl(
-            (string)$this->model_setting_marketplace->getPaymentByOrder($order_id)['public_token']
-        );
+        $savedPayment = $this->model_setting_marketplace->getPaymentByOrder($order_id);
+        $public = $this->publicPayUrl((string)($savedPayment['public_token'] ?? ''));
 
         $this->session->data['flash'] = ['type' => 'success', 'text' => sprintf($this->language->get('text_paylink_created'), $public)];
 
@@ -561,7 +561,7 @@ class Marketplace extends \Reamur\System\Engine\Controller {
      * apontaria o cliente para a aplicação admin (bug da revisão F5-03).
      */
     private function catalogRouteUrl(string $route): string {
-        $base = rtrim((string)$this->config->get('site_url'), '/');
+        $base = rtrim((string)$this->config->get('site_url', ''), '/');
 
         if (str_ends_with($base, '/admin')) {
             $base = substr($base, 0, -6);

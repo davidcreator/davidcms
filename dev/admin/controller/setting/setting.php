@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -43,7 +43,7 @@ class Setting extends \Reamur\System\Engine\Controller {
                 $post = $this->sanitize($this->request->post);
                 $storedPassword = $this->storedSmtpPassword();
                 $newPassword = (string)($post['mail_smtp_password'] ?? '');
-                $clearPassword = (string)($this->request->post['mail_smtp_password_clear'] ?? '') === '1';
+                $clearPassword = $this->postScalar('mail_smtp_password_clear') === '1';
 
                 // Vazio mantém o segredo atual; a remoção exige a checkbox explícita.
                 if ($newPassword === '' && !$clearPassword) {
@@ -264,8 +264,12 @@ class Setting extends \Reamur\System\Engine\Controller {
      * @return array<string, string>
      */
     private function sanitize(array $post): array {
-        $str = static function (string $k, int $max = 255) use ($post): string {
-            return mb_substr(trim((string)($post[$k] ?? '')), 0, $max);
+        $scalar = static function (string $k) use ($post): string {
+            $value = $post[$k] ?? '';
+            return is_scalar($value) ? (string)$value : '';
+        };
+        $str = static function (string $k, int $max = 255) use ($scalar): string {
+            return mb_substr(trim($scalar($k)), 0, $max);
         };
 
         return [
@@ -275,7 +279,7 @@ class Setting extends \Reamur\System\Engine\Controller {
             'mail_engine'             => $str('mail_engine', 32),
             'mail_smtp_hostname'      => $str('mail_smtp_hostname', 128),
             'mail_smtp_username'      => $str('mail_smtp_username', 128),
-            'mail_smtp_password'      => (string)($post['mail_smtp_password'] ?? ''), // sem trim (espaços fazem parte)
+            'mail_smtp_password'      => $scalar('mail_smtp_password'), // sem trim (espaços fazem parte)
             'mail_smtp_port'          => $str('mail_smtp_port', 5),
             'mail_smtp_timeout'       => $str('mail_smtp_timeout', 3),
             'mail_reply_to'           => $str('mail_reply_to', 96),

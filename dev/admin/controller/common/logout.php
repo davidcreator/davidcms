@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -15,8 +15,9 @@ class Logout extends \Reamur\System\Engine\Controller {
 
     /** Destrói a sessão e volta à tela de acesso */
     public function index(): void {
-        if ($this->user instanceof \Reamur\System\Library\User) {
-            $this->user->logout();
+        $user = $this->registry->get('user');
+        if ($user instanceof \Reamur\System\Library\User) {
+            $user->logout();
         }
 
         $this->response->redirect($this->url->link('common/login'));

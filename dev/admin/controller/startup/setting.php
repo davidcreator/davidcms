@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -49,6 +49,9 @@ class Setting extends \Reamur\System\Engine\Controller {
                 continue;
             }
 
+            if (!is_scalar($value)) {
+                continue;
+            }
             $value = (string)$value;
 
             if ($value === '') {

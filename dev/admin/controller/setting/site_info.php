@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -161,11 +161,11 @@ class Site_info extends \Reamur\System\Engine\Controller {
             }
         }
 
-        // Redes sociais: vazio = "remover do site"; preenchido = URL http(s) válida
+        // Redes sociais: vazio = "remover do site"; preenchido = URL http(s) válida sem controle/CRLF
         foreach (['config_social_facebook_href', 'config_social_instagram_href', 'config_social_pinterest_href',
                   'config_social_x_href', 'config_social_google_business_href', 'config_social_redbubble_href'] as $field) {
             $v = (string)$post[$field];
-            if ($v !== '' && !preg_match('#^https?://#i', $v)) {
+            if ($v !== '' && $this->safeExternalUrl($v) === '') {
                 $errors[$field] = sprintf($this->language->get('error_url'), $this->language->get('entry_' . $field));
             }
         }
@@ -180,8 +180,12 @@ class Site_info extends \Reamur\System\Engine\Controller {
      * @return array<string, string>
      */
     private function sanitize(array $post): array {
-        $str   = static function (string $k, int $max = 255) use ($post): string {
-            return mb_substr(trim((string)($post[$k] ?? '')), 0, $max);
+        $scalar = static function (string $k) use ($post): string {
+            $value = $post[$k] ?? '';
+            return is_scalar($value) ? (string)$value : '';
+        };
+        $str   = static function (string $k, int $max = 255) use ($scalar): string {
+            return mb_substr(trim($scalar($k)), 0, $max);
         };
         $langs = $this->activeLanguages();
 
@@ -189,7 +193,7 @@ class Site_info extends \Reamur\System\Engine\Controller {
             'config_contact_email'                   => $str('config_contact_email', 96),
             'config_contact_whatsapp_text'           => $str('config_contact_whatsapp_text', 32),
             // link só recebe dígitos (wa.me) — descarte silencioso de não-dígitos
-            'config_contact_whatsapp_href'           => preg_replace('/\D/', '', (string)($post['config_contact_whatsapp_href'] ?? '')),
+            'config_contact_whatsapp_href'           => (string)preg_replace('/\D/', '', $scalar('config_contact_whatsapp_href')),
             'config_social_facebook_href'            => $str('config_social_facebook_href'),
             'config_social_instagram_href'           => $str('config_social_instagram_href'),
             'config_social_pinterest_href'           => $str('config_social_pinterest_href'),

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -33,8 +33,8 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['scripts'] = $this->document->getScripts();
         $data['scripts_deferred'] = $this->document->getScriptsDeferred();
 
-        $data['home']           = (string)$this->config->get('site_url');
-        $data['site_url']       = (string)$this->config->get('site_url');
+        $data['home']           = (string)$this->config->get('site_url', '');
+        $data['site_url']       = (string)$this->config->get('site_url', '');
         $data['asset_v']        = self::ASSET_V;
         $data['text_languages'] = $this->language->get('text_languages');
         $data['body_class']     = (string)($data['body_class'] ?? '');
@@ -44,10 +44,13 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['button_logout'] = $this->language->get('button_logout');
 
         // Rota corrente — drive do estado ativo do menu e do switcher de idiomas
-        $args  = $this->request->get;
-        $route = (string)($args['route'] ?? '');
-
-        unset($args['route'], $args['language']);
+        $route = $this->queryValue('route');
+        $args  = [];
+        foreach ($this->request->get as $k => $v) {
+            if ($k !== 'route' && $k !== 'language' && is_string($k) && is_scalar($v)) {
+                $args[$k] = (string)$v;
+            }
+        }
 
         if ($route === '') {
             $route = (string)$this->config->get('action_default', 'common/dashboard');
@@ -56,7 +59,7 @@ class Header extends \Reamur\System\Engine\Controller {
         // idempotente: switcher mantém a rota e os args atuais
         $data['languages'] = [];
 
-        foreach ((array)glob(DIR_APPLICATION . 'language/*', GLOB_ONLYDIR) as $dir) {
+        foreach (glob(DIR_APPLICATION . 'language/*', GLOB_ONLYDIR) ?: [] as $dir) {
             $code                 = basename((string)$dir);
             $langArgs             = $args;
             $langArgs['language'] = $code;
@@ -84,7 +87,7 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['user_username'] = $data['logged'] ? $this->user->getUsername() : '';
         $data['user_initials'] = $this->initials($data['user_fullname']);
         $data['profile_href']  = $this->url->link('user/profile');
-        $data['version_label'] = sprintf($this->language->get('text_version_label'), REAMUR_VERSION);
+        $data['version_label'] = sprintf($this->language->get('text_version_label'), (string)REAMUR_VERSION);
 
         // ── F8-V (ADR 0047): tema efetivo (override do usuário > padrão global > defaults) ──
         $this->load->model('setting/appearance');

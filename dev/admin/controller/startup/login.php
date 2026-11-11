@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -29,7 +29,7 @@ class Login extends \Reamur\System\Engine\Controller {
         $route = (string)$this->config->get('_route', '');
 
         if ($route === '') {
-            $route = (string)($this->request->get['route'] ?? '');
+            $route = $this->queryValue('route');
         }
 
         if ($route === '') {

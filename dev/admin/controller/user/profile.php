@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -48,7 +48,7 @@ class Profile extends \Reamur\System\Engine\Controller {
             if ($errors === []) {
                 $this->model_user_user->editProfile($user_id, $post);
 
-                $this->flashSet($this->language->get('text_success'), 'success');
+                $this->setFlash($this->language->get('text_success'));
 
                 $this->response->redirect($this->url->link('user/profile'));
 
@@ -98,17 +98,21 @@ class Profile extends \Reamur\System\Engine\Controller {
      * @return array<string, string>
      */
     private function sanitize(array $post): array {
-        $str = static function (string $k, int $max = 96) use ($post): string {
-            return mb_substr(trim((string)($post[$k] ?? '')), 0, $max);
+        $scalar = static function (string $k) use ($post): string {
+            $value = $post[$k] ?? '';
+            return is_scalar($value) ? (string)$value : '';
+        };
+        $str = static function (string $k, int $max = 96) use ($scalar): string {
+            return mb_substr(trim($scalar($k)), 0, $max);
         };
 
         return [
             'email'            => $str('email'),
             'firstname'        => $str('firstname', 32),
             'lastname'         => $str('lastname', 32),
-            'password_current' => (string)($post['password_current'] ?? ''), // sem trim — espaços fazem parte da senha
-            'password_new'     => (string)($post['password_new'] ?? ''),
-            'password_confirm' => (string)($post['password_confirm'] ?? ''),
+            'password_current' => $scalar('password_current'), // sem trim — espaços fazem parte da senha
+            'password_new'     => $scalar('password_new'),
+            'password_confirm' => $scalar('password_confirm'),
         ];
     }
 
@@ -147,11 +151,5 @@ class Profile extends \Reamur\System\Engine\Controller {
         return $errors;
     }
 
-    /** @return array{type: string, text: string} */
 
-    private function flashSet(string $text, string $type = 'success'): void {
-        if ($this->session instanceof \Reamur\System\Library\Session) {
-            $this->session->data['flash'] = ['type' => $type, 'text' => $text];
-        }
-    }
 }

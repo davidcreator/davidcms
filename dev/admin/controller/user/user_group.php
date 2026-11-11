@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -154,8 +154,8 @@ class User_group extends \Reamur\System\Engine\Controller {
         if (!empty($group['permission'])) {
             $decoded    = (array)json_decode((string)$group['permission'], true);
             $permission = [
-                'access' => array_values(array_map('strval', (array)($decoded['access'] ?? []))),
-                'modify' => array_values(array_map('strval', (array)($decoded['modify'] ?? []))),
+                'access' => array_values(array_map('strval', array_filter((array)($decoded['access'] ?? []), 'is_scalar'))),
+                'modify' => array_values(array_map('strval', array_filter((array)($decoded['modify'] ?? []), 'is_scalar'))),
             ];
         }
 
@@ -174,7 +174,8 @@ class User_group extends \Reamur\System\Engine\Controller {
         $data['csrf_token']      = \Reamur\System\Library\Security\Csrf::token($this->session);
         $data['can_modify']      = $this->user->hasPermission('modify', 'user/user_group');
 
-        $data['name'] = (string)($this->request->post['name'] ?? ($group['name'] ?? ''));
+        $rawName = $this->request->post['name'] ?? ($group['name'] ?? '');
+        $data['name'] = is_scalar($rawName) ? (string)$rawName : '';
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
             if (!$this->user->hasPermission('modify', 'user/user_group')) {
@@ -187,8 +188,10 @@ class User_group extends \Reamur\System\Engine\Controller {
                 $data['error'] = $this->language->get('error_csrf');
                 $errors = [];
             } else {
-                $access = array_map('strval', (array)($this->request->post['access'] ?? []));
-                $modify = array_map('strval', (array)($this->request->post['modify'] ?? []));
+                $accessRaw = is_array($this->request->post['access'] ?? null) ? $this->request->post['access'] : [];
+                $modifyRaw = is_array($this->request->post['modify'] ?? null) ? $this->request->post['modify'] : [];
+                $access = array_values(array_map('strval', array_filter($accessRaw, 'is_scalar')));
+                $modify = array_values(array_map('strval', array_filter($modifyRaw, 'is_scalar')));
                 $errors = [];
 
                 if (mb_strlen($data['name']) < 1 || mb_strlen($data['name']) > 64) {
@@ -240,14 +243,18 @@ class User_group extends \Reamur\System\Engine\Controller {
      * @return array<int, string>
      */
     private function allRoutes(): array {
-        $routes   = [];
+        $routes  = [];
+        $baseDir = str_replace('\\', '/', rtrim(DIR_APPLICATION, '/\\')) . '/controller/';
         $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator(DIR_APPLICATION . 'controller/', \FilesystemIterator::SKIP_DOTS)
+            new \RecursiveDirectoryIterator($baseDir, \FilesystemIterator::SKIP_DOTS)
         );
 
         foreach ($iterator as $file) {
             if ($file instanceof \SplFileInfo && $file->isFile() && $file->getExtension() === 'php') {
-                $routes[] = substr(str_replace(DIR_APPLICATION . 'controller/', '', $file->getPathname()), 0, -4);
+                $path = str_replace('\\', '/', $file->getPathname());
+                if (str_starts_with($path, $baseDir)) {
+                    $routes[] = substr($path, strlen($baseDir), -4);
+                }
             }
         }
 

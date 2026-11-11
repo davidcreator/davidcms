@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -28,10 +28,10 @@ class Not_found extends \Reamur\System\Engine\Controller {
         $data['text_suggestion'] = $this->language->get('text_suggestion');
         $data['button_continue'] = $this->language->get('button_continue');
 
-        $data['home'] = $this->config->get('site_url');
+        $data['home'] = (string)$this->config->get('site_url', '');
 
         // Chrome compartilhado (F2-4)
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+        $this->document->addStyle((string)$this->config->get('site_url', '') . 'view/css/admin.css');
 
         $data['body_class'] = 'rms-404';
         $data['header']     = $this->load->controller('common/header', $data);

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -34,15 +34,17 @@ class Permission extends \Reamur\System\Engine\Controller {
     ];
 
     public function index(): void {
-        if (!$this->user instanceof \Reamur\System\Library\User || !$this->user->isLogged()) {
+        $user = $this->registry->get('user');
+        if (!$user instanceof \Reamur\System\Library\User || !$user->isLogged()) {
             return; // muralha de login já tratou
         }
 
         $route = (string)$this->config->get('_route', '');
 
         if ($route === '') {
-            $route = (string)($this->request->get['route'] ?? '');
+            $route = $this->queryValue('route');
         }
+        $route = (string)preg_replace('/[^a-zA-Z0-9_\/.|]/', '', $route);
 
         if ($route === '') {
             $route = (string)$this->config->get('action_default', 'common/dashboard');
@@ -57,6 +59,7 @@ class Permission extends \Reamur\System\Engine\Controller {
         // cobre TODOS os métodos do controller — métodos com efeito colateral
         // verificam adicionalmente hasPermission('modify', ...).
         $route = (string)(preg_split('/[.|]/', $route, 2)[0] ?? $route);
+        $route = (string)preg_replace('/[^a-zA-Z0-9_\/]/', '', $route);
 
         if ($route === '' || in_array($route, self::ALLOWED_ROUTES, true)) {
             return;
@@ -67,7 +70,7 @@ class Permission extends \Reamur\System\Engine\Controller {
             return;
         }
 
-        if (!$this->user->hasPermission('access', $route)) {
+        if (!$user->hasPermission('access', $route)) {
             $this->response->redirect($this->url->link('error/permission'));
         }
     }

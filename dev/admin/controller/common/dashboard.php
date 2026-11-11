@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -127,7 +127,7 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             : '';
 
         // Chrome compartilhado (F8-01)
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css?v=' . Header::ASSET_V);
+        $this->document->addStyle((string)$this->config->get('site_url', '') . 'view/css/admin.css?v=' . Header::ASSET_V);
 
         $data['body_class'] = '';
         $data['header']     = $this->load->controller('common/header', $data);
@@ -159,7 +159,7 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             $data[$key] = $this->language->get($key);
         }
 
-        $data['text_version'] = sprintf($this->language->get('text_version'), REAMUR_VERSION);
+        $data['text_version'] = sprintf($this->language->get('text_version'), (string)REAMUR_VERSION);
 
         $data['logout']        = $this->url->link('common/logout');
         $data['button_logout'] = $this->language->get('button_logout');
