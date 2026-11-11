@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -76,7 +76,7 @@ $config->load(strtolower(APPLICATION));
 $registry->set('config', $config);
 
 // 5. Log + handlers de erro/exceção
-$log = new \Reamur\System\Library\Log($config->get('error_filename', 'error.log'));
+$log = new \Reamur\System\Library\Log((string)$config->get('error_filename', 'error.log'));
 $registry->set('log', $log);
 
 ini_set('display_errors', $config->get('error_display', true) ? '1' : '0');
@@ -152,7 +152,7 @@ if ($config->get('db_autostart')) {
         $dbBoot = $registry->has('db') ? $registry->get('db') : null;
 
         if ($dbBoot !== null) {
-            $bootPrefix = defined('DB_PREFIX') ? DB_PREFIX : 'rms_';
+            $bootPrefix = defined('DB_PREFIX') ? (string)DB_PREFIX : 'rms_';
 
             $bootRows = $dbBoot->query(
                 "SELECT `key`, `value` FROM `" . $bootPrefix . "setting`
@@ -260,7 +260,7 @@ $registry->set('language', new \Reamur\System\Library\Language((string)$config->
 
 // 12. Url (base = HTTP_SERVER do config/Adendo F1-4)
 if ($config->get('url_autostart')) {
-    $registry->set('url', new \Reamur\System\Library\Url(defined('HTTP_SERVER') ? HTTP_SERVER : '/'));
+    $registry->set('url', new \Reamur\System\Library\Url(defined('HTTP_SERVER') ? (string)HTTP_SERVER : '/'));
 }
 
 // 13. Document
@@ -269,7 +269,8 @@ $registry->set('document', new \Reamur\System\Library\Document());
 // 14. Rota da requisição (ADR 0006): ?route= tem prioridade absoluta; senão o
 // router da aplicação (config action_router = 'startup/router') resolve o
 // caminho limpo; senão a rota padrão da app.
-$route = (string)($request->get['route'] ?? '');
+$rawRoute = $request->get['route'] ?? '';
+$route    = is_scalar($rawRoute) ? (string)$rawRoute : '';
 
 if ($route === '') {
     $actionRouter = (string)$config->get('action_router', '');

@@ -93,6 +93,31 @@ class Controller {
         return is_scalar($value) ? trim((string)$value) : '';
     }
 
+    /** Lê um parâmetro inteiro escalar da query string (GET) com fallback seguro. */
+    protected function queryInt(string $key, int $default = 0): int {
+        $raw = $this->queryValue($key);
+        if ($raw === '' || preg_match('/^-?\d+$/', $raw) !== 1) {
+            return $default;
+        }
+
+        return (int)$raw;
+    }
+
+    /** Valida URL externa para links públicos (somente http/https, sem controle/CRLF/NUL). */
+    protected function safeExternalUrl(string $url): string {
+        $clean = trim($url);
+        if ($clean === '' || preg_match('/[\x00-\x20\x7f]/', $clean) === 1) {
+            return '';
+        }
+
+        $scheme = strtolower((string)parse_url($clean, PHP_URL_SCHEME));
+        if (!in_array($scheme, ['http', 'https'], true)) {
+            return '';
+        }
+
+        return filter_var($clean, FILTER_VALIDATE_URL) !== false ? $clean : '';
+    }
+
     /** Base URL pública do catálogo (converte sufixo admin/ em catalog/). */
     protected function catalogUrl(): string {
         $config = $this->registry->get('config');

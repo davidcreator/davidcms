@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -39,7 +39,7 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['styles']      = $this->document->getStyles();
         $data['scripts']     = $this->document->getScripts();
 
-        $data['home']           = (string)$this->config->get('site_url');
+        $data['home']           = (string)$this->config->get('site_url', '');
         $data['text_languages'] = $this->language->get('text_languages');
         $data['body_class']     = (string)($data['body_class'] ?? '');
         $data['theme_primary'] = (string)$this->config->get('catalog_theme_primary', '#6d28d9');
@@ -120,10 +120,13 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['nav_quote']    = $this->url->link('checkout/quote');
 
         // Switcher: diretórios que EXISTEM são as opções (fonte da verdade = filesystem)
-        $args  = $this->request->get;
-        $route = (string)($args['route'] ?? '');
-
-        unset($args['route'], $args['language']);
+        $route = $this->queryValue('route');
+        $args  = [];
+        foreach ($this->request->get as $k => $v) {
+            if (is_string($k) && $k !== 'route' && $k !== 'language' && is_scalar($v)) {
+                $args[$k] = (string)$v;
+            }
+        }
 
         if ($route === '') {
             $route = (string)$this->config->get('action_default', 'common/home');
@@ -194,11 +197,13 @@ class Header extends \Reamur\System\Engine\Controller {
      * NUNCA o header Host cru (preview/proxy pode mascarar).
      */
     private function requestOrigin(): string {
-        $site   = (string)$this->config->get('site_url', '');
-        $scheme = (string)(parse_url($site, PHP_URL_SCHEME) ?: 'http');
-        $host   = (string)(parse_url($site, PHP_URL_HOST) ?: 'localhost');
-        $port   = parse_url($site, PHP_URL_PORT);
+        $site      = (string)$this->config->get('site_url', '');
+        $rawScheme = strtolower((string)(parse_url($site, PHP_URL_SCHEME) ?: 'http'));
+        $scheme    = in_array($rawScheme, ['http', 'https'], true) ? $rawScheme : 'http';
+        $rawHost   = (string)(parse_url($site, PHP_URL_HOST) ?: 'localhost');
+        $host      = preg_replace('/[^a-zA-Z0-9.\[\]-]/', '', $rawHost) ?: 'localhost';
+        $port      = parse_url($site, PHP_URL_PORT);
 
-        return $scheme . '://' . $host . ($port !== null ? ':' . $port : '');
+        return $scheme . '://' . $host . (is_int($port) ? ':' . $port : '');
     }
 }

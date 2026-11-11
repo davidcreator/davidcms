@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -158,8 +158,12 @@ class Blog extends \Reamur\System\Engine\Controller {
             return '';
         }
 
-        if (preg_match('#^https?://#i', $image)) {
-            return $image;
+        if (preg_match('#^https?://#i', $image) === 1) {
+            return $this->safeExternalUrl($image);
+        }
+
+        if (preg_match('/[\x00-\x1f\x7f]/', $image) === 1 || preg_match('/^[a-z][a-z0-9+.-]*:/i', $image) === 1) {
+            return '';
         }
 
         return $base . '/' . ltrim($image, '/');

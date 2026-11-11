@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -25,7 +25,7 @@ class Project extends \Reamur\System\Engine\Controller {
         $this->load->model('catalog/project');
         $this->load->model('catalog/category');
 
-        $category_id = (int)($this->request->get['category_id'] ?? 0);
+        $category_id = max(0, $this->queryInt('category_id'));
 
         $data['heading_title']      = $this->language->get('heading_title');
         $data['text_lead']          = $this->language->get('text_lead');
@@ -36,7 +36,7 @@ class Project extends \Reamur\System\Engine\Controller {
         $data['button_back_home']   = $this->language->get('button_back_home');
         $data['text_featured']      = $this->language->get('text_featured');
 
-        $base = $this->config->get('site_url', '');
+        $base = (string)$this->config->get('site_url', '');
 
         $data['categories'] = [];
 
@@ -104,7 +104,7 @@ class Project extends \Reamur\System\Engine\Controller {
         $this->document->setTitle((string)($project['meta_title'] !== '' ? $project['meta_title'] : $name));
         $this->document->setDescription((string)$project['meta_description']);
 
-        $base = $this->config->get('site_url', '');
+        $base = (string)$this->config->get('site_url', '');
 
         $data['heading_title'] = $name;
         $data['text_summary']  = (string)$project['summary'];
@@ -120,7 +120,7 @@ class Project extends \Reamur\System\Engine\Controller {
             'summary'     => (string)$project['summary'],
             'description' => (string)$project['description'],
             'client'      => (string)$project['client'],
-            'url'         => (string)$project['url'],
+            'url'         => $this->safeExternalUrl((string)$project['url']),
             'image'       => ((string)$project['image'] !== '') ? $base . (string)$project['image'] : '',
         ];
 

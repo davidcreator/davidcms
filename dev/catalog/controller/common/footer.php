@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -22,14 +22,15 @@ class Footer extends \Reamur\System\Engine\Controller {
         $this->load->language('common/footer');
         $this->load->language('common/home'); // redes sociais (F3-01)
 
-        $data['text_powered']   = sprintf($this->language->get('text_powered'), REAMUR_VERSION);
+        $data['text_powered']   = sprintf($this->language->get('text_powered'), (string)REAMUR_VERSION);
 
         // F4-03 (ADR 0026): copyright institucional por idioma — banco governa
         // quando a chave EXISTE; ausência cai no lang file (degradação silenciosa ADR 0023)
         $this->load->model('setting/setting');
 
         $settings  = $this->model_setting_setting->getSettings();
-        $langCode  = (string)($this->session->data['language'] ?? 'en-us');
+        $rawLang   = $this->session->data['language'] ?? 'en-us';
+        $langCode  = \Reamur\System\Library\LanguageNegotiator::clean(is_string($rawLang) ? $rawLang : '') ?: 'en-us';
         $copyKey   = 'config_copyright_' . $langCode;
         $copy      = array_key_exists($copyKey, $settings)
             ? (string)$settings[$copyKey]
@@ -66,11 +67,12 @@ class Footer extends \Reamur\System\Engine\Controller {
             $href = array_key_exists($key, $settings)
                 ? (string)$settings[$key]
                 : (string)$this->language->get('text_social_' . $net . '_href');
+            $safeHref = $this->safeExternalUrl($href);
 
-            if ($href !== '') {
+            if ($safeHref !== '') {
                 $socials[] = [
                     'name' => (string)$this->language->get('text_social_' . $net),
-                    'href' => $href,
+                    'href' => $safeHref,
                 ];
             }
         }

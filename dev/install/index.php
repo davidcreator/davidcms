@@ -40,7 +40,9 @@ if (!defined('DIR_APPLICATION')) {
 
     // HTTP (§1.1) — URL base da própria aplicação install
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host   = preg_replace('/[^a-zA-Z0-9.:\[\]-]/', '', (string)($_SERVER['HTTP_HOST'] ?? 'localhost')) ?: 'localhost';
+    $rawHost = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
+    $rawHost = substr($rawHost, 0, strcspn($rawHost, "\r\n\0"));
+    $host    = preg_replace('/[^a-zA-Z0-9.:\[\]-]/', '', $rawHost) ?: 'localhost';
     $base   = str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/install/index.php')));
 
     define('HTTP_SERVER', $scheme . '://' . $host . rtrim($base, '/') . '/');

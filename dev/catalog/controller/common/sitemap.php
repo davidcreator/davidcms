@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -41,7 +41,7 @@ class Sitemap extends \Reamur\System\Engine\Controller {
         $urls = [];
 
         // Home — raiz da publicação
-        $urls[] = ['loc' => (string)$this->config->get('site_url'), 'lastmod' => '', 'changefreq' => 'weekly', 'priority' => '1.0'];
+        $urls[] = ['loc' => (string)$this->config->get('site_url', ''), 'lastmod' => '', 'changefreq' => 'weekly', 'priority' => '1.0'];
 
         // Aliases estáticas (mesmo conjunto público do startup/router)
         foreach ([

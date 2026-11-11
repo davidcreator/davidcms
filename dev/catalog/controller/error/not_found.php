@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -28,7 +28,7 @@ class Not_found extends \Reamur\System\Engine\Controller {
         $data['text_suggestion'] = $this->language->get('text_suggestion');
         $data['button_continue'] = $this->language->get('button_continue');
 
-        $data['home'] = $this->config->get('site_url');
+        $data['home'] = (string)$this->config->get('site_url', '');
 
         // Cena Three.js configurável pelo painel; o fallback permanece se desativada.
         $this->load->model('setting/setting');
@@ -42,7 +42,7 @@ class Not_found extends \Reamur\System\Engine\Controller {
         $data['nf3d']       = $threeJs['not_found'];
 
         // Chrome compartilhado (F2-4)
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/common.css');
+        $this->document->addStyle((string)$this->config->get('site_url', '') . 'view/css/common.css');
 
         $data['body_class'] = 'rms-404';
         $data['cms_page_content'] = (string)$this->load->controller('cms/slot.render', 'not_found');

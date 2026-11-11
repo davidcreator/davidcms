@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -109,14 +109,16 @@ class Tool extends \Reamur\System\Engine\Controller {
      * @return array<string, mixed>
      */
     private function hydrate(array $tool, string $base): array {
+        $safeUrl = $this->safeExternalUrl((string)$tool['url']);
+
         return [
             'tool_id'     => (int)$tool['tool_id'],
             'name'        => (string)$tool['name'],
             'vendor'      => (string)$tool['vendor'],
             'description' => (string)$tool['description'],
             'image'       => ((string)$tool['image'] !== '') ? $base . '/' . (string)$tool['image'] : '',
-            'url'         => (string)$tool['url'],
-            'external'    => ((string)$tool['url'] !== ''),
+            'url'         => $safeUrl,
+            'external'    => ($safeUrl !== ''),
             'href'        => $this->url->link('tool/tool.info|' . (int)$tool['tool_id']),
         ];
     }

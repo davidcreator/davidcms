@@ -298,7 +298,9 @@ class Step_3 extends \Reamur\System\Engine\Controller {
             || strtolower((string)($server['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
 
         $scheme = $https ? 'https://' : 'http://';
-        $host   = preg_replace('/[^a-zA-Z0-9.:\[\]-]/', '', (string)($server['HTTP_HOST'] ?? 'localhost')) ?: 'localhost';
+        $rawHost = (string)($server['HTTP_HOST'] ?? 'localhost');
+        $rawHost = substr($rawHost, 0, strcspn($rawHost, "\r\n\0"));
+        $host    = preg_replace('/[^a-zA-Z0-9.:\[\]-]/', '', $rawHost) ?: 'localhost';
 
         $script = str_replace('\\', '/', (string)($server['SCRIPT_NAME'] ?? '/index.php'));
         $dir    = rtrim((string)dirname($script), '/');

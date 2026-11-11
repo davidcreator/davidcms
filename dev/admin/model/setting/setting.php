@@ -126,7 +126,12 @@ class Setting extends \Reamur\System\Engine\Model {
             return '';
         }
 
-        $decoded = @unserialize($value, ['allowed_classes' => false]);
+        set_error_handler(static fn (): bool => true);
+        try {
+            $decoded = unserialize($value, ['allowed_classes' => false]);
+        } finally {
+            restore_error_handler();
+        }
         if ($decoded === false) {
             return '';
         }

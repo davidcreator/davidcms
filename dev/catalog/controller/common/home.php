@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -32,7 +32,8 @@ class Home extends \Reamur\System\Engine\Controller {
         $this->load->model('setting/setting');
 
         $siteInfo = $this->model_setting_setting->getSettings();
-        $langCode = (string)($this->session->data['language'] ?? 'en-us');
+        $rawLang  = $this->session->data['language'] ?? 'en-us';
+        $langCode = \Reamur\System\Library\LanguageNegotiator::clean(is_string($rawLang) ? $rawLang : '') ?: 'en-us';
 
         $addrKey = 'config_contact_address_' . $langCode;
 
@@ -45,7 +46,7 @@ class Home extends \Reamur\System\Engine\Controller {
         $siteWhatsappText = array_key_exists('config_contact_whatsapp_text', $siteInfo)
             ? (string)$siteInfo['config_contact_whatsapp_text']
             : $this->language->get('text_contact_whatsapp');
-        $siteWhatsDigits  = (string)($siteInfo['config_contact_whatsapp_href'] ?? '');
+        $siteWhatsDigits  = (string)preg_replace('/\D+/', '', (string)($siteInfo['config_contact_whatsapp_href'] ?? ''));
         $siteWhatsappHref = $siteWhatsDigits !== '' ? 'https://wa.me/' . $siteWhatsDigits : '';
 
         // F10-03 theme choice is an enable-only selector over the existing
@@ -149,7 +150,7 @@ class Home extends \Reamur\System\Engine\Controller {
 
         // Filtro ativo via ?category_id= (o router resolve o keyword para
         // catalog/project.info|N; a grade ouve o id direto da requisição)
-        $active = (int)($this->request->get['category_id'] ?? 0);
+        $active = max(0, $this->queryInt('category_id'));
 
         $data['active_category'] = $active;
 
@@ -167,8 +168,9 @@ class Home extends \Reamur\System\Engine\Controller {
 
         $data['projects'] = [];
 
-        foreach ($this->model_catalog_project->getProjects($active ?: null) as $p) {
+        foreach ($this->model_catalog_project->getProjects($active > 0 ? $active : null) as $p) {
             $p = (array)$p;
+            $externalUrl = $this->safeExternalUrl((string)($p['url'] ?? ''));
 
             $data['projects'][] = [
                 'name'     => (string)$p['name'],
@@ -177,7 +179,7 @@ class Home extends \Reamur\System\Engine\Controller {
                 'featured' => (int)$p['featured'],
                 'image'    => ((string)$p['image'] !== '') ? $base . (string)$p['image'] : '',
                 'href'     => $this->projectHref($p),
-                'external' => ((string)$p['url'] !== '') ? 1 : 0,
+                'external' => ($externalUrl !== '') ? 1 : 0,
             ];
         }
 
@@ -217,7 +219,7 @@ class Home extends \Reamur\System\Engine\Controller {
             $data['client_logos'][] = [
                 'name'  => (string)$c['name'],
                 'image' => ((string)$c['image'] !== '') ? $base . (string)$c['image'] : '',
-                'url'   => (string)$c['url'],
+                'url'   => $this->safeExternalUrl((string)$c['url']),
             ];
         }
 
@@ -231,7 +233,7 @@ class Home extends \Reamur\System\Engine\Controller {
                 'vendor'      => (string)$tool['vendor'],
                 'description' => (string)$tool['description'],
                 'image'       => ((string)$tool['image'] !== '') ? $base . (string)$tool['image'] : '',
-                'url'         => (string)$tool['url'],
+                'url'         => $this->safeExternalUrl((string)$tool['url']),
                 'href'        => $this->url->link('tool/tool.info|' . (int)$tool['tool_id']), // página dedicada (F3-04)
             ];
         }
@@ -260,10 +262,12 @@ class Home extends \Reamur\System\Engine\Controller {
 
             $news_plain = trim(preg_replace('/\s+/', ' ', strip_tags(html_entity_decode((string)$news_post['description'], ENT_QUOTES | ENT_HTML5, 'UTF-8'))) ?? '');
 
+            $newsTs = strtotime((string)$news_post['date_published']);
+
             $data['news_items'][] = [
                 'title'   => (string)$news_post['title'],
                 'url'     => $this->url->link('blog/blog.info|' . (int)$news_post['post_id']),
-                'date'    => date('Y-m-d', (int)strtotime((string)$news_post['date_published'])),
+                'date'    => $newsTs !== false ? date('Y-m-d', $newsTs) : '',
                 'excerpt' => mb_strlen($news_plain) > 160 ? mb_strimwidth($news_plain, 0, 160, '…', 'UTF-8') : $news_plain,
                 'source'  => 'Blog',
             ];
@@ -345,11 +349,12 @@ class Home extends \Reamur\System\Engine\Controller {
             $href = array_key_exists($key, $siteInfo)
                 ? (string)$siteInfo[$key]
                 : (string)$this->language->get('text_social_' . $net . '_href');
+            $safeHref = $this->safeExternalUrl($href);
 
-            if ($href !== '') {
+            if ($safeHref !== '') {
                 $data['socials'][] = [
                     'name' => $this->language->get('text_social_' . $net),
-                    'href' => $href,
+                    'href' => $safeHref,
                 ];
             }
         }
@@ -390,8 +395,9 @@ class Home extends \Reamur\System\Engine\Controller {
     private function projectHref(array $p): string {
         // Card externo quando o projeto tem URL real cadastrada (Hiperion Gamer
         // abre o site dele — mesma regra da produção); senão a página interna.
-        if ((string)($p['url'] ?? '') !== '') {
-            return (string)$p['url'];
+        $externalUrl = $this->safeExternalUrl((string)($p['url'] ?? ''));
+        if ($externalUrl !== '') {
+            return $externalUrl;
         }
 
         return $this->url->link('catalog/project.info|' . (int)$p['project_id']);

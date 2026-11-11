@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -35,14 +35,14 @@ class Page extends \Reamur\System\Engine\Controller {
             $downloadRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/download';
             $audioRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/audio';
             $videoRoot = rtrim(dirname(DIR_APPLICATION), '/\\') . '/catalog/view/video';
-            $assetBase = $this->config->get('site_url', '');
+            $assetBase = (string)$this->config->get('site_url', '');
             if (str_ends_with($assetBase, 'admin/')) $assetBase = substr($assetBase, 0, -strlen('admin/'));
             $rendered = (new \Reamur\System\Library\Blog\BlockRenderer($downloadRoot, $audioRoot, $videoRoot, true))->renderJson($json, 2, $assetBase);
             $data['description'] = !empty($rendered['valid']) ? (string)$rendered['html'] : '';
-            if (!empty($rendered['valid'])) $this->document->addStyle($this->config->get('site_url') . 'view/css/blog-blocks.css');
+            if (!empty($rendered['valid'])) $this->document->addStyle((string)$this->config->get('site_url', '') . 'view/css/blog-blocks.css');
             if (!empty($rendered['requires_threejs'])) {
-                $this->document->addStyle($this->config->get('site_url') . 'view/css/threejs-thumb.css?v=20261026c');
-                $this->document->addScript($this->config->get('site_url') . $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=20261026c');
+                $this->document->addStyle((string)$this->config->get('site_url', '') . 'view/css/threejs-thumb.css?v=20261026c');
+                $this->document->addScript((string)$this->config->get('site_url', '') . $this->three_asset_manifest->publicBasePath() . 'threejs-thumb.js?v=20261026c');
             }
         } else {
             // Legacy HTML remains on its existing path; the marker is never sent to Twig.
@@ -50,7 +50,7 @@ class Page extends \Reamur\System\Engine\Controller {
         }
         $data['button_back_home'] = null;
         $data['heading_home'] = $this->language->get('heading_home');
-        $data['home'] = $this->config->get('site_url', '');
+        $data['home'] = (string)$this->config->get('site_url', '');
         $data['text_custom_fields'] = $this->language->get('text_custom_fields');
         $data['text_yes'] = $this->language->get('text_yes');
         $data['text_no'] = $this->language->get('text_no');
@@ -76,7 +76,7 @@ class Page extends \Reamur\System\Engine\Controller {
         }
         $data['public_custom_field_groups']=array_values($groups);
 
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/common.css');
+        $this->document->addStyle((string)$this->config->get('site_url', '') . 'view/css/common.css');
         $data['body_class']='rms-page';
         $data['header']=$this->load->controller('common/header',$data);
         $data['footer']=$this->load->controller('common/footer',$data);

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * Apply published Catalog theme overrides; isolated to the Catalog pre-action.
  *
@@ -33,7 +33,8 @@ class Theme extends \Reamur\System\Engine\Controller {
         // F13-P: este bloco sobe para ANTES do contexto — o idioma do site
         // precisa estar disponivel na negociacao e nas condicoes (frente L).
         $publishedSites = $this->theme_sites->normalize($published['sites'] ?? null) ?? [];
-        $siteHost = (string)($this->request->server['HTTP_HOST'] ?? '');
+        $rawHost  = (string)($this->request->server['HTTP_HOST'] ?? '');
+        $siteHost = substr($rawHost, 0, strcspn($rawHost, "\r\n\0"));
         $siteSeed = $this->theme_sites->match($publishedSites, $siteHost);
         $siteIdSeed = (string)($siteSeed['id'] ?? '');
         $siteIdSeed = in_array($siteIdSeed, $this->theme_sites->ids(), true) ? $siteIdSeed : 'primary';
@@ -52,7 +53,7 @@ class Theme extends \Reamur\System\Engine\Controller {
             'enabled'      => $enabledCodes,
             'default'      => (string)$this->config->get('config_language_catalog',
                                 (string)$this->config->get('language_directory', 'en-us')),
-            'requested'    => (string)($this->request->get['language'] ?? ''),
+            'requested'    => $this->queryValue('language'),
             'stored'       => (string)($sessData['language'] ?? ''),
             'stored_site'  => (string)($sessData['language_site'] ?? ''),
             'site'         => $siteIdSeed,
@@ -70,9 +71,10 @@ class Theme extends \Reamur\System\Engine\Controller {
         // F13-P: substitui o default do configfile pelo idioma efetivo.
         $context['language'] = $neg['code'];
         $schedule  = $this->theme_schedule->normalize($draft['schedule'] ?? null);
+        $sessId    = ($langSession instanceof \Reamur\System\Library\Session) ? $langSession->getId() : '';
         $decision  = $this->theme_schedule->decide(
             $schedule, $this->theme_schedule->now(),
-            hash('sha256', (string)$this->session->getId()),
+            hash('sha256', $sessId),
             (bool)($context['logged_in'] ?? false),
             $siteIdSeed
         );
@@ -192,14 +194,17 @@ class Theme extends \Reamur\System\Engine\Controller {
             if (is_string($k) && is_scalar($v)) $query[$k] = substr((string)$v, 0, 120);
         }
         $variant = isset($query['variant']) && in_array((string)$query['variant'], ['a','b'], true) ? (string)$query['variant'] : '';
+        $sessObj  = $this->registry->get('session');
+        $sessData = ($sessObj instanceof \Reamur\System\Library\Session) ? $sessObj->data : [];
+        $userGrp  = $sessData['user_group'] ?? '';
         return [
             'route'      => (string)$this->config->get('_route', ''),
             'path'       => (string)(parse_url((string)($server['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?: ''),
             'language'   => (string)$this->config->get('language_directory', 'en-us'),
             'device'     => $tablet ? 'tablet' : ($mobile ? 'mobile' : 'desktop'),
             'mobile'     => $mobile || $tablet,
-            'logged_in'  => !empty($this->session->data['user_id']) || !empty($this->session->data['customer_id']),
-            'user_group' => (string)($this->session->data['user_group'] ?? ''),
+            'logged_in'  => !empty($sessData['user_id']) || !empty($sessData['customer_id']),
+            'user_group' => is_scalar($userGrp) ? (string)$userGrp : '',
             'hour'       => (int)date('G'),
             'weekday'    => (int)date('N'),
             'date'       => date('Y-m-d'),
