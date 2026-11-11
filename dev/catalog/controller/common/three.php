@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -48,7 +48,7 @@ class Three extends \Reamur\System\Engine\Controller {
         $this->response->addHeader('Cache-Control: public, max-age=3600, must-revalidate');
         $this->response->addHeader('ETag: ' . $etag);
 
-        if (trim((string)($this->request->server['HTTP_IF_NONE_MATCH'] ?? '')) === $etag) {
+        if (hash_equals($etag, trim((string)($this->request->server['HTTP_IF_NONE_MATCH'] ?? '')))) {
             $this->response->addHeader('HTTP/1.1 304 Not Modified');
             $this->response->setOutput('');
             return;

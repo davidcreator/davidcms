@@ -155,4 +155,4 @@ class Definition extends \Reamur\System\Engine\Controller {
     private function labels(array $keys): array { $d=[];foreach($keys as $k)$d[$k]=$this->language->get($k);return $d; }
     private function canModifyPost(): bool { if($this->isPost()&&!$this->user->hasPermission('modify',self::ROUTE)){$this->response->redirect($this->url->link('error/permission'));return false;}return true; }
     private function isPost(): bool { return ($this->request->server['REQUEST_METHOD']??'GET')==='POST'; }
-    protected function csrfValid(): bool { return \Reamur\System\Library\Security\Csrf::check($this->session,$this->request->post['csrf_token']??''); }}
+}

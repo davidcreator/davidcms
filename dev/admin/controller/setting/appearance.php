@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -29,13 +29,10 @@ class Appearance extends \Reamur\System\Engine\Controller {
         $data['can_edit_global'] = $this->user->hasPermission('modify', 'setting/appearance');
 
         $isPost = $this->request->server['REQUEST_METHOD'] === 'POST';
-        $scope = (string)($this->request->post['scope'] ?? '');
+        $scope = $this->postScalar('scope');
 
         if ($isPost) {
-            $csrfOk = \Reamur\System\Library\Security\Csrf::check(
-                $this->session,
-                (string)($this->request->post['csrf_token'] ?? '')
-            );
+            $csrfOk = $this->csrfValid();
 
             if (!$csrfOk) {
                 $data['error'] = $this->language->get('error_csrf');
@@ -43,7 +40,7 @@ class Appearance extends \Reamur\System\Engine\Controller {
                 $data['error'] = $this->language->get('error_invalid_scope');
             } elseif ($scope === 'global' && !$data['can_edit_global']) {
                 $data['error'] = $this->language->get('error_modify_denied');
-            } elseif ($scope === 'user' && (string)($this->request->post['user_override'] ?? '') !== '1') {
+            } elseif ($scope === 'user' && $this->postScalar('user_override') !== '1') {
                 // Desligar o override preserva os valores pessoais, mas passa a
                 // usar o padrão global imediatamente no próximo GET (PRG).
                 $prefs = $this->user->getThemePrefs();
@@ -109,7 +106,7 @@ class Appearance extends \Reamur\System\Engine\Controller {
 
         if ($isPost && $data['error'] !== '') {
             $data['user_override_on'] = $scope === 'user'
-                ? ((string)($this->request->post['user_override'] ?? '') === '1')
+                ? ($this->postScalar('user_override') === '1')
                 : $data['user_override_on'];
 
             // Não substitui o estado salvo por campos ausentes/disabled.
@@ -148,12 +145,15 @@ class Appearance extends \Reamur\System\Engine\Controller {
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST'
             && $this->user instanceof \Reamur\System\Library\User && $this->user->isLogged()) {
-            $csrfOk = \Reamur\System\Library\Security\Csrf::check(
-                $this->session,
-                (string)($this->request->post['csrf_token'] ?? ($this->request->post['csrf_token_ajax'] ?? ''))
-            );
+            $csrfOk = $this->csrfValid();
+            if (!$csrfOk && $this->session instanceof \Reamur\System\Library\Session) {
+                $ajaxToken = $this->postScalar('csrf_token_ajax');
+                if ($ajaxToken !== '') {
+                    $csrfOk = \Reamur\System\Library\Security\Csrf::check($this->session, $ajaxToken);
+                }
+            }
 
-            $mode = (string)($this->request->post['mode'] ?? '');
+            $mode = $this->postScalar('mode');
 
             if ($csrfOk && in_array($mode, \Reamur\Admin\Model\Setting\Appearance::MODES, true)) {
                 $prefs = $this->user->getThemePrefs();
@@ -174,17 +174,15 @@ class Appearance extends \Reamur\System\Engine\Controller {
      * @return array<string, string>
      */
     private function readFormTheme(): array {
-        $p = $this->request->post;
-
-        $accentChoice = (string)($p['accent_choice'] ?? ''); // '' | curated id | 'custom'
+        $accentChoice = $this->postScalar('accent_choice'); // '' | curated id | 'custom'
         $curated = \Reamur\Admin\Model\Setting\Appearance::CURATED_ACCENTS[$accentChoice] ?? null;
 
         if ($curated !== null) {
             $accent      = $curated['light'];
             $accent_dark = $curated['dark'];
         } else {
-            $accent      = trim((string)($p['accent_custom'] ?? ''));
-            $accent_dark = trim((string)($p['accent_custom_dark'] ?? ''));
+            $accent      = trim($this->postScalar('accent_custom'));
+            $accent_dark = trim($this->postScalar('accent_custom_dark'));
             // normaliza #rgb → #rrggbb
             foreach (['accent', 'accent_dark'] as $k) {
                 $v = ${$k};
@@ -197,13 +195,13 @@ class Appearance extends \Reamur\System\Engine\Controller {
         }
 
         return [
-            'skin'       => (string)($p['skin'] ?? ''),
+            'skin'       => $this->postScalar('skin'),
             'accent'     => strtolower($accent),
             'accent_dark' => strtolower($accent_dark),
-            'sidebar'    => (string)($p['sidebar'] ?? ''),
-            'density'    => (string)($p['density'] ?? ''),
-            'font_scale' => (string)($p['font_scale'] ?? ''),
-            'mode'       => (string)($p['mode'] ?? ''),
+            'sidebar'    => $this->postScalar('sidebar'),
+            'density'    => $this->postScalar('density'),
+            'font_scale' => $this->postScalar('font_scale'),
+            'mode'       => $this->postScalar('mode'),
         ];
     }
 

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -37,6 +37,7 @@ class Payment extends \Reamur\System\Engine\Controller {
         $init_point = (string)($payment['init_point'] ?? '');
 
         $validInitPoint = $init_point !== ''
+            && preg_match('/[\r\n\0]/', $init_point) !== 1
             && str_starts_with($init_point, 'https://')
             && filter_var($init_point, FILTER_VALIDATE_URL) !== false;
 
@@ -55,7 +56,8 @@ class Payment extends \Reamur\System\Engine\Controller {
         $this->response->addHeader('Content-Type: text/plain; charset=utf-8');
 
         try {
-            $payment_id = $this->extractPaymentId();
+            $raw        = file_get_contents('php://input') ?: '';
+            $payment_id = $this->extractPaymentId($raw);
 
             if ($payment_id <= 0) {
                 $this->finish('ignored'); // merchant_order / lixo — 200 p/ o MP parar de reenviar
@@ -67,8 +69,8 @@ class Payment extends \Reamur\System\Engine\Controller {
 
             $settings  = $this->catalogSettings();
             $mp        = $this->mpFromSettings($settings);
-            $raw       = file_get_contents('php://input') ?: '';
-            $body      = (json_decode($raw, true) ?: []);
+            $decoded   = json_decode($raw, true);
+            $body      = is_array($decoded) ? $decoded : [];
 
             // §6 — validação de assinatura quando segredo configurado
             if (!$this->signatureOk((string)($settings['mp_webhook_secret'] ?? ''), $payment_id)) {
@@ -83,7 +85,8 @@ class Payment extends \Reamur\System\Engine\Controller {
             // primeiro em cuja /v1/payments o id existe (ADR 0035 §5).
             $seller  = [];
             $payment = [];
-            $mp_user_id = (int)($body['user_id'] ?? 0);
+            $rawMpUid   = $body['user_id'] ?? 0;
+            $mp_user_id = is_scalar($rawMpUid) ? (int)$rawMpUid : 0;
 
             if ($mp_user_id > 0) {
                 $seller = $this->model_checkout_mp_payment->getSellerByMpUserId($mp_user_id);
@@ -172,7 +175,7 @@ class Payment extends \Reamur\System\Engine\Controller {
     // ── internos ──────────────────────────────────────────────────────────
 
     /** Webhook v2 (?type=payment&data.id=) e IPN clássico (?topic=payment&id=/POST) */
-    private function extractPaymentId(): int {
+    private function extractPaymentId(string $raw = ''): int {
         $get  = $this->request->get;
         $post = $this->request->post;
 
@@ -183,8 +186,7 @@ class Payment extends \Reamur\System\Engine\Controller {
             $post['id']     ?? null, // IPN clássico = POST application/x-www-form-urlencoded
         ];
 
-        $raw  = file_get_contents('php://input') ?: '';
-        $body = json_decode($raw, true);
+        $body = $raw !== '' ? json_decode($raw, true) : null;
 
         if (is_array($body) && isset($body['data']['id'])) {
             $sources[] = $body['data']['id'];
@@ -199,7 +201,7 @@ class Payment extends \Reamur\System\Engine\Controller {
         }
 
         foreach ($sources as $s) {
-            $id = (int)$s;
+            $id = is_scalar($s) ? (int)$s : 0;
 
             if ($id > 0) {
                 return $id;
@@ -224,18 +226,20 @@ class Payment extends \Reamur\System\Engine\Controller {
         return $p;
     }
 
-    /** x-signature: ts=…,v1=… (hex) — valida só quando o segredo ESTIVER configurado */
-    private function signatureOk(string $secret, int $payment_id): bool {
+    /** Validação pura do header x-signature (ts=…,v1=…) contra o segredo configurado. */
+    public static function verifyWebhookSignature(string $secret, int $paymentId, string $signatureHeader, string $requestId): bool {
         if ($secret === '') {
             return true; // validação por consulta à API permanece (§4)
         }
 
-        $header = (string)($this->request->server['HTTP_X_SIGNATURE'] ?? '');
-        $rid    = (string)($this->request->server['HTTP_X_REQUEST_ID'] ?? '');
-        $ts     = '';
-        $v1     = '';
+        if ($paymentId <= 0 || preg_match('/[\r\n\0]/', $requestId) === 1) {
+            return false;
+        }
 
-        foreach (explode(',', $header) as $part) {
+        $ts = '';
+        $v1 = '';
+
+        foreach (explode(',', $signatureHeader) as $part) {
             [$k, $v] = array_pad(explode('=', trim($part), 2), 2, '');
 
             if ($k === 'ts') {
@@ -245,13 +249,21 @@ class Payment extends \Reamur\System\Engine\Controller {
             }
         }
 
-        if ($ts === '' || $v1 === '') {
+        if ($ts === '' || !ctype_digit($ts) || $v1 === '' || strlen($v1) !== 64 || !ctype_xdigit($v1)) {
             return false;
         }
 
-        $manifest = 'id:' . $payment_id . ';request-id:' . $rid . ';ts:' . $ts . ';';
+        $manifest = 'id:' . $paymentId . ';request-id:' . $requestId . ';ts:' . $ts . ';';
 
-        return hash_equals(hash_hmac('sha256', $manifest, $secret), $v1);
+        return hash_equals(hash_hmac('sha256', $manifest, $secret), strtolower($v1));
+    }
+
+    /** x-signature: ts=…,v1=… (hex) — valida só quando o segredo ESTIVER configurado */
+    private function signatureOk(string $secret, int $payment_id): bool {
+        $header = (string)($this->request->server['HTTP_X_SIGNATURE'] ?? '');
+        $rid    = (string)($this->request->server['HTTP_X_REQUEST_ID'] ?? '');
+
+        return self::verifyWebhookSignature($secret, $payment_id, $header, $rid);
     }
 
     private function mpFromSettings(array $settings): \Reamur\System\Library\MercadopagoMarketplace {
@@ -271,8 +283,11 @@ class Payment extends \Reamur\System\Engine\Controller {
 
         $map = [];
 
-        foreach ((array)$query->rows as $row) {
-            $map[(string)$row['key']] = (string)$row['value'];
+        if ($query instanceof \stdClass && !empty($query->rows)) {
+            foreach ($query->rows as $row) {
+                $row = (array)$row;
+                $map[(string)$row['key']] = (string)$row['value'];
+            }
         }
 
         return $map;

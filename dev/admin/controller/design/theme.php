@@ -219,7 +219,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
-            elseif (!\Reamur\System\Library\Security\Csrf::check($this->session,(string)($post['csrf_token']??''))) { $data['error']=$this->language->get('error_csrf'); }
+            elseif (!$this->csrfValid()) { $data['error']=$this->language->get('error_csrf'); }
             else {
                 // F13-C: a previa e o save usam EXATAMENTE o mesmo construtor
                 // de config, com as mesmas validacoes (sem divergencia).
@@ -411,7 +411,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $sep=str_contains($back,'?')?'&':'?';
         $method=(string)($this->request->server['REQUEST_METHOD']??'');
         if ($method!=='POST' || !$this->user->hasPermission('modify','design/theme')
-            || !\Reamur\System\Library\Security\Csrf::check($this->session,(string)($this->request->post['csrf_token']??''))) {
+            || !$this->csrfValid()) {
             $this->response->redirect($back.$sep.($id?'import_error=forbidden':'error=import&code=forbidden')); return;
         }
         $decoded=$this->theme_package->decode((string)($this->request->post['theme_package']??''));
@@ -456,7 +456,7 @@ class Theme extends \Reamur\System\Engine\Controller {
     public function restore(string $theme_id='0', string $revision_id='0'): void {
         if ($this->request->server['REQUEST_METHOD']!=='POST' || !$this->user->hasPermission('modify','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
         $this->load->model('design/theme');
-        if (\Reamur\System\Library\Security\Csrf::check($this->session,$this->request->post['csrf_token']??'')) $this->model_design_theme->restoreRevision((int)$theme_id,(int)$revision_id,(int)$this->user->getUserId());
+        if ($this->csrfValid()) $this->model_design_theme->restoreRevision((int)$theme_id,(int)$revision_id,(int)$this->user->getUserId());
         $this->response->redirect($this->url->link('design/theme.edit|'.(int)$theme_id));
     }
     /**
@@ -470,7 +470,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         };
         if (!$this->user->hasPermission('access','design/theme')) { $this->jsonResponse($fail('forbidden'), 200, true); return; }
         $post=$this->request->post;
-        if (!\Reamur\System\Library\Security\Csrf::check($this->session,(string)($post['csrf_token']??''))) { $this->jsonResponse($fail('csrf'), 200, true); return; }
+        if (!$this->csrfValid()) { $this->jsonResponse($fail('csrf'), 200, true); return; }
         $conditions=json_decode((string)($post['conditions']??''),true);
         $conditions=is_array($conditions)?$conditions:['version'=>1,'rules'=>[]];
         $engine=$this->theme_condition_engine;
@@ -682,7 +682,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $method=(string)($this->request->server['REQUEST_METHOD']??'');
         $post=$this->request->post;
         if (!$this->user->hasPermission('access','design/theme') || $method!=='POST'
-            || !\Reamur\System\Library\Security\Csrf::check($this->session,(string)($post['csrf_token']??''))) {
+            || !$this->csrfValid()) {
             $this->response->setOutput(self::compareErrorPage($labels['forbidden'])); return;
         }
         $this->load->model('design/theme');
@@ -985,9 +985,8 @@ class Theme extends \Reamur\System\Engine\Controller {
     }
     public function activate(string $theme_id='0'): void {
         if ($this->request->server['REQUEST_METHOD']!=='POST' || !$this->user->hasPermission('modify','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
-        $this->load->model('design/theme'); $token=(string)($this->request->post['csrf_token']??'');
-        $done=false;
-        if (\Reamur\System\Library\Security\Csrf::check($this->session,$token)) $done=$this->model_design_theme->activate((int)$theme_id,(int)$this->user->getUserId());
+        $this->load->model('design/theme'); $done=false;
+        if ($this->csrfValid()) $done=$this->model_design_theme->activate((int)$theme_id,(int)$this->user->getUserId());
         $target=$this->url->link('design/theme'); $sep=str_contains($target,'?')?'&':'?';
         $this->response->redirect($target.($done?$sep.'ok=activate':''));
     }
@@ -996,9 +995,8 @@ class Theme extends \Reamur\System\Engine\Controller {
     public function deactivate(string $theme_id='0'): void {
         $target=$this->url->link('design/theme'); $sep=str_contains($target,'?')?'&':'?';
         if ($this->request->server['REQUEST_METHOD']!=='POST' || !$this->user->hasPermission('modify','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
-        $this->load->model('design/theme'); $token=(string)($this->request->post['csrf_token']??'');
-        $done=false;
-        if (\Reamur\System\Library\Security\Csrf::check($this->session,$token)) $done=$this->model_design_theme->deactivate((int)$theme_id,(int)$this->user->getUserId());
+        $this->load->model('design/theme'); $done=false;
+        if ($this->csrfValid()) $done=$this->model_design_theme->deactivate((int)$theme_id,(int)$this->user->getUserId());
         $this->response->redirect($target.($done?$sep.'ok=deactivate':''));
     }
     /** Frente BE: exclusao definitiva (tema + revisoes). NUNCA remove o tema
@@ -1006,9 +1004,8 @@ class Theme extends \Reamur\System\Engine\Controller {
     public function delete(string $theme_id='0'): void {
         $target=$this->url->link('design/theme'); $sep=str_contains($target,'?')?'&':'?';
         if ($this->request->server['REQUEST_METHOD']!=='POST' || !$this->user->hasPermission('modify','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
-        $this->load->model('design/theme'); $token=(string)($this->request->post['csrf_token']??'');
-        $done=false;
-        if (\Reamur\System\Library\Security\Csrf::check($this->session,$token)) $done=$this->model_design_theme->delete((int)$theme_id);
+        $this->load->model('design/theme'); $done=false;
+        if ($this->csrfValid()) $done=$this->model_design_theme->delete((int)$theme_id);
         $this->response->redirect($target.($done?$sep.'ok=delete':$sep.'error=delete'));
     }
 }

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -37,11 +37,11 @@ class Login extends \Reamur\System\Engine\Controller {
         $data['username'] = '';
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $username = trim((string)($this->request->post['username'] ?? ''));
-            $password = (string)($this->request->post['password'] ?? '');
+            $username = trim($this->postScalar('username'));
+            $password = $this->postScalar('password');
 
             // F2-18 (ADR 0018): CSRF da sessão + rate limit por IP (6 tentativas / 15 min).
-            $csrfOk = \Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '');
+            $csrfOk = $this->csrfValid();
 
             $limitOk = true;
 
@@ -73,7 +73,7 @@ class Login extends \Reamur\System\Engine\Controller {
         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
 
         // Chrome compartilhado (F2-4)
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/admin.css');
+        $this->document->addStyle((string)$this->config->get('site_url', '') . 'view/css/admin.css');
 
         $data['body_class'] = 'rms-login';
         $data['header']     = $this->load->controller('common/header', $data);

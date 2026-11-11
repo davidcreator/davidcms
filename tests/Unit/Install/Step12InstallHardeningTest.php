@@ -64,7 +64,6 @@ final class Step12InstallHardeningTest extends TestCase {
 
         $controller = new Step_3($registry);
         $method = new \ReflectionMethod($controller, 'guessSiteUrl');
-        $method->setAccessible(true);
 
         self::assertSame('https://evil.example:8443X-Injected1/cms/catalog/', $method->invoke($controller));
     }

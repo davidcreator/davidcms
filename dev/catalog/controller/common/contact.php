@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -39,7 +39,7 @@ class Contact extends \Reamur\System\Engine\Controller {
             // F2-18 (ADR 0018): CSRF antes de qualquer validação; rate limit por IP.
             $errors = [];
 
-            if (!\Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '')) {
+            if (!$this->csrfValid()) {
                 $errors[] = $this->language->get('error_csrf');
             }
 
@@ -55,11 +55,11 @@ class Contact extends \Reamur\System\Engine\Controller {
                 $this->load->model('communication/contact_message');
 
                 $contact = [
-                    'name'      => trim((string)($this->request->post['name'] ?? '')),
-                    'email'     => trim((string)($this->request->post['email'] ?? '')),
-                    'telephone' => trim((string)($this->request->post['telephone'] ?? '')),
-                    'subject'   => trim((string)($this->request->post['subject'] ?? '')),
-                    'message'   => trim((string)($this->request->post['message'] ?? '')),
+                    'name'      => trim($this->postScalar('name')),
+                    'email'     => trim($this->postScalar('email')),
+                    'telephone' => trim($this->postScalar('telephone')),
+                    'subject'   => trim($this->postScalar('subject')),
+                    'message'   => trim($this->postScalar('message')),
                     'ip'        => (string)($this->request->server['REMOTE_ADDR'] ?? ''),
                 ];
 
@@ -89,7 +89,7 @@ class Contact extends \Reamur\System\Engine\Controller {
 
     /** Honeypot: humanos não veem nem preenchem o campo 'company' */
     private function isBot(): bool {
-        return trim((string)($this->request->post['company'] ?? '')) !== '';
+        return trim($this->postScalar('company')) !== '';
     }
 
     /**
@@ -142,14 +142,13 @@ class Contact extends \Reamur\System\Engine\Controller {
      * @return array<int, string>
      */
     private function validateContact(): array {
-        $post   = $this->request->post;
         $errors = [];
 
-        $name    = trim((string)($post['name'] ?? ''));
-        $email   = trim((string)($post['email'] ?? ''));
-        $tel     = trim((string)($post['telephone'] ?? ''));
-        $subject = trim((string)($post['subject'] ?? ''));
-        $message = trim((string)($post['message'] ?? ''));
+        $name    = trim($this->postScalar('name'));
+        $email   = trim($this->postScalar('email'));
+        $tel     = trim($this->postScalar('telephone'));
+        $subject = trim($this->postScalar('subject'));
+        $message = trim($this->postScalar('message'));
 
         if ($name === '' || mb_strlen($name) > 128) {
             $errors[] = $this->language->get('error_name');
@@ -178,8 +177,6 @@ class Contact extends \Reamur\System\Engine\Controller {
      * @return array<string, mixed>
      */
     private function formData(): array {
-        $post = $this->request->post;
-
         return [
             'heading_title'   => $this->language->get('heading_title'),
             'text_lead'       => $this->language->get('text_lead'),
@@ -193,11 +190,11 @@ class Contact extends \Reamur\System\Engine\Controller {
             'button_back_home'=> $this->language->get('button_back_home'),
             'text_flash'      => $this->flash(),
             'csrf_token'      => \Reamur\System\Library\Security\Csrf::token($this->session),
-            'value_name'      => (string)($post['name'] ?? ''),
-            'value_email'     => (string)($post['email'] ?? ''),
-            'value_telephone' => (string)($post['telephone'] ?? ''),
-            'value_subject'   => (string)($post['subject'] ?? ''),
-            'value_message'   => (string)($post['message'] ?? ''),
+            'value_name'      => $this->postScalar('name'),
+            'value_email'     => $this->postScalar('email'),
+            'value_telephone' => $this->postScalar('telephone'),
+            'value_subject'   => $this->postScalar('subject'),
+            'value_message'   => $this->postScalar('message'),
             'home'            => $this->config->get('site_url', ''),
             'error'           => '',
         ];

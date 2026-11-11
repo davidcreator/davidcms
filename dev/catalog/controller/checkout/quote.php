@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -45,7 +45,7 @@ class Quote extends \Reamur\System\Engine\Controller {
             $errors   = [];
             $products = [];
 
-            if (!\Reamur\System\Library\Security\Csrf::check($this->session, $this->request->post['csrf_token'] ?? '')) {
+            if (!$this->csrfValid()) {
                 $errors[] = $this->language->get('error_csrf');
             }
 
@@ -62,11 +62,11 @@ class Quote extends \Reamur\System\Engine\Controller {
 
                 $order_id = $this->model_checkout_quote->addQuote(
                     [
-                        'firstname' => trim((string)($this->request->post['firstname'] ?? '')),
-                        'lastname'  => trim((string)($this->request->post['lastname'] ?? '')),
-                        'email'     => trim((string)($this->request->post['email'] ?? '')),
-                        'telephone' => trim((string)($this->request->post['telephone'] ?? '')),
-                        'comment'   => trim((string)($this->request->post['comment'] ?? '')),
+                        'firstname' => trim($this->postScalar('firstname')),
+                        'lastname'  => trim($this->postScalar('lastname')),
+                        'email'     => trim($this->postScalar('email')),
+                        'telephone' => trim($this->postScalar('telephone')),
+                        'comment'   => trim($this->postScalar('comment')),
                         'ip'        => (string)($this->request->server['REMOTE_ADDR'] ?? ''),
                     ],
                     $products
@@ -99,7 +99,7 @@ class Quote extends \Reamur\System\Engine\Controller {
     }
 
     private function isBot(): bool {
-        return trim((string)($this->request->post['company'] ?? '')) !== '';
+        return trim($this->postScalar('company')) !== '';
     }
     /**
      * Payload de domínio do pedido para o envelope do Dispatcher.
@@ -142,12 +142,13 @@ class Quote extends \Reamur\System\Engine\Controller {
         $errors   = [];
         $products = [];
 
-        $firstname = trim((string)($post['firstname'] ?? ''));
-        $lastname  = trim((string)($post['lastname'] ?? ''));
-        $email     = trim((string)($post['email'] ?? ''));
-        $tel       = trim((string)($post['telephone'] ?? ''));
-        $comment   = trim((string)($post['comment'] ?? ''));
-        $picked    = (array)($post['services'] ?? []);
+        $firstname = trim($this->postScalar('firstname'));
+        $lastname  = trim($this->postScalar('lastname'));
+        $email     = trim($this->postScalar('email'));
+        $tel       = trim($this->postScalar('telephone'));
+        $comment   = trim($this->postScalar('comment'));
+        $rawPicked = $post['services'] ?? [];
+        $picked    = is_array($rawPicked) ? $rawPicked : [];
 
         if ($firstname === '' || mb_strlen($firstname) > 32) {
             $errors[] = $this->language->get('error_firstname');
@@ -170,6 +171,9 @@ class Quote extends \Reamur\System\Engine\Controller {
         }
 
         foreach ($picked as $key) {
+            if (!is_scalar($key)) {
+                continue;
+            }
             $key = (string)$key;
 
             if (in_array($key, self::SERVICES, true)) {
@@ -189,7 +193,8 @@ class Quote extends \Reamur\System\Engine\Controller {
      */
     private function formData(): array {
         $post = $this->request->post;
-        $picked = (array)($post['services'] ?? []);
+        $rawPicked = $post['services'] ?? [];
+        $picked = is_array($rawPicked) ? array_filter($rawPicked, 'is_scalar') : [];
 
         $services = [];
 
@@ -217,11 +222,11 @@ class Quote extends \Reamur\System\Engine\Controller {
             'text_flash'        => $this->flash(),
             'csrf_token'        => \Reamur\System\Library\Security\Csrf::token($this->session),
             'services'          => $services,
-            'value_firstname'   => (string)($post['firstname'] ?? ''),
-            'value_lastname'    => (string)($post['lastname'] ?? ''),
-            'value_email'       => (string)($post['email'] ?? ''),
-            'value_telephone'   => (string)($post['telephone'] ?? ''),
-            'value_comment'     => (string)($post['comment'] ?? ''),
+            'value_firstname'   => $this->postScalar('firstname'),
+            'value_lastname'    => $this->postScalar('lastname'),
+            'value_email'       => $this->postScalar('email'),
+            'value_telephone'   => $this->postScalar('telephone'),
+            'value_comment'     => $this->postScalar('comment'),
             'home'              => $this->config->get('site_url', ''),
             'error'             => '',
         ];

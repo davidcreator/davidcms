@@ -43,6 +43,18 @@ class Controller {
         );
     }
 
+    /** Lê um campo escalar de POST com fallback seguro (evita TypeError/Array-to-string em inputs array). */
+    protected function postScalar(string $key, string $default = ''): string {
+        $request = $this->registry->get('request');
+        if (!$request instanceof \Reamur\System\Library\Request) {
+            return $default;
+        }
+
+        $value = $request->post[$key] ?? null;
+
+        return is_scalar($value) ? (string)$value : $default;
+    }
+
     /**
      * Lê e limpa a mensagem flash armazenada na sessão.
      *
