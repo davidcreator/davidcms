@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -25,7 +25,7 @@ class User_group extends \Reamur\System\Engine\Model {
                 `permission` = '" . $this->db->escape($this->encode($access, $modify)) . "'"
         );
 
-        return $this->db->getLastId();
+        return (int)$this->db->getLastId();
     }
 
     /**
@@ -130,7 +130,7 @@ class User_group extends \Reamur\System\Engine\Model {
         return ($query instanceof \stdClass && !empty($query->row));
     }
 
-    /** @return array<int, array<string, mixed>> grupos que concedem 'user/user' (delete-guard) */
+    /** Remove um grupo pelo ID. */
     public function deleteUserGroup(int $user_group_id): void {
         $this->db->query(
             "DELETE FROM `" . $this->t('user_group') . "` WHERE `user_group_id` = '" . $user_group_id . "'"

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /** Catalog's read-only view of the currently published design theme. */
 namespace Reamur\Catalog\Model\Common;
 class Theme extends \Reamur\System\Engine\Model {
@@ -11,8 +11,10 @@ class Theme extends \Reamur\System\Engine\Model {
         foreach ((array)$q->rows as $row) {
             $row=(array)$row; $slug=(string)($row['slug']??'');
             if ($slug==='' || preg_match('/^[a-z0-9_-]{1,48}$/D',$slug)!==1) continue;
-            $raw=(string)($row[$column] ?: ($row['config']??'{}'));
-            $cfg=json_decode($raw,true);
+            $primaryRaw = is_string($row[$column] ?? null) ? $row[$column] : '';
+            $fallbackRaw = is_string($row['config'] ?? null) ? $row['config'] : '{}';
+            $raw = $primaryRaw !== '' ? $primaryRaw : $fallbackRaw;
+            $cfg = $raw !== '' ? json_decode($raw, true) : null;
             if (is_array($cfg)) $map[$slug]=$cfg;
         }
         return $map;
@@ -28,8 +30,11 @@ class Theme extends \Reamur\System\Engine\Model {
         $q=$this->db->query("SELECT `theme_id`,`slug`,`config`,`published_config`,`draft_config` FROM `".DB_PREFIX."design_theme` WHERE `status`='1' ORDER BY `theme_id` DESC LIMIT 1");
         if (!($q instanceof \stdClass) || empty($q->row)) return ['published'=>[],'draft'=>[],'slug'=>''];
         $row=(array)$q->row;
-        $decode=static function($primary,$fallback): array {
-            $cfg=json_decode((string)($primary ?: $fallback),true);
+        $decode=static function(mixed $primary, mixed $fallback): array {
+            $p = is_string($primary) ? $primary : '';
+            $f = is_string($fallback) ? $fallback : '{}';
+            $raw = $p !== '' ? $p : $f;
+            $cfg = $raw !== '' ? json_decode($raw, true) : null;
             return is_array($cfg) ? $cfg : [];
         };
         return [
@@ -42,7 +47,11 @@ class Theme extends \Reamur\System\Engine\Model {
     public function getPublishedTheme(): array {
         $q=$this->db->query("SELECT `theme_id`,`config`,`published_config` FROM `".DB_PREFIX."design_theme` WHERE `status`='1' ORDER BY `theme_id` DESC LIMIT 1");
         if (!($q instanceof \stdClass) || empty($q->row)) return [];
-        $row=(array)$q->row; $config=json_decode((string)($row['published_config'] ?: $row['config']),true);
+        $row=(array)$q->row;
+        $pub = is_string($row['published_config'] ?? null) ? $row['published_config'] : '';
+        $cfg = is_string($row['config'] ?? null) ? $row['config'] : '{}';
+        $raw = $pub !== '' ? $pub : $cfg;
+        $config = $raw !== '' ? json_decode($raw, true) : null;
         return is_array($config) ? $config : [];
     }
 }

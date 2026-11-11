@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -280,18 +280,22 @@ class Project extends \Reamur\System\Engine\Controller {
         // Abas por idioma: sempre TODAS as línguas cadastradas
         $data['languages'] = [];
 
+        $postedDescriptions = is_array($post['project_description'] ?? null) ? $post['project_description'] : [];
+        $scalarStr = static fn(mixed $v): string => is_scalar($v) ? (string)$v : '';
+
         foreach ($this->model_catalog_project->getLanguages() as $language) {
             $language = (array)$language;
             $lid      = (int)$language['language_id'];
             $saved    = (array)($descriptions[$lid] ?? []);
+            $postedLang = is_array($postedDescriptions[$lid] ?? null) ? $postedDescriptions[$lid] : [];
 
             $fields = [];
 
             foreach (['name', 'summary', 'description', 'tag', 'meta_title', 'meta_description'] as $f) {
-                $fields[$f] = (string)($post['project_description'][$lid][$f] ?? ($saved[$f] ?? ''));
+                $fields[$f] = $scalarStr($postedLang[$f] ?? ($saved[$f] ?? ''));
             }
 
-            $fields['keyword'] = (string)($post['project_description'][$lid]['keyword'] ?? ($keywords[$lid] ?? ''));
+            $fields['keyword'] = $scalarStr($postedLang['keyword'] ?? ($keywords[$lid] ?? ''));
 
             $data['languages'][] = [
                 'language_id' => $lid,
@@ -302,16 +306,16 @@ class Project extends \Reamur\System\Engine\Controller {
         }
 
         $data['project_id'] = $pid;
-        $data['client']     = (string)($post['client'] ?? ($project['client'] ?? ''));
-        $data['url']        = (string)($post['url'] ?? ($project['url'] ?? ''));
-        $data['image']      = (string)($post['image'] ?? ($project['image'] ?? ''));
-        $data['sort_order'] = (string)($post['sort_order'] ?? (string)($project['sort_order'] ?? '0'));
+        $data['client']     = $this->postScalar('client', (string)($project['client'] ?? ''));
+        $data['url']        = $this->postScalar('url', (string)($project['url'] ?? ''));
+        $data['image']      = $this->postScalar('image', (string)($project['image'] ?? ''));
+        $data['sort_order'] = $this->postScalar('sort_order', (string)($project['sort_order'] ?? '0'));
         $data['featured']   = isset($post['featured']) ? '1' : ($isPost ? '0' : (string)(int)($project['featured'] ?? 0));
         $data['status']     = isset($post['status']) ? '1' : ($isPost ? '0' : (string)(int)($project['status'] ?? 0));
 
         // Categorias (checkbox N:N)
         $selected = $isPost
-            ? array_map('intval', (array)($post['project_category'] ?? []))
+            ? array_values(array_filter(array_map(static fn($v): int => is_scalar($v) ? (int)$v : 0, is_array($post['project_category'] ?? null) ? $post['project_category'] : [])))
             : ($pid ? $this->model_catalog_project->getProjectCategories($pid) : []);
 
         $data['categories'] = [];
@@ -335,16 +339,19 @@ class Project extends \Reamur\System\Engine\Controller {
             : $this->model_catalog_project->getProjectImages($pid);
 
         foreach ($rawImages as $img) {
-            $img = (array)$img;
+            if (!is_array($img)) {
+                continue;
+            }
 
-            if (trim((string)($img['image'] ?? '')) === '') {
+            $imgPath = $scalarStr($img['image'] ?? '');
+            if (trim($imgPath) === '') {
                 continue;
             }
 
             $data['images'][] = [
-                'image'      => (string)$img['image'],
-                'alt'        => (string)($img['alt'] ?? ''),
-                'sort_order' => (string)($img['sort_order'] ?? '0'),
+                'image'      => $imgPath,
+                'alt'        => $scalarStr($img['alt'] ?? ''),
+                'sort_order' => $scalarStr($img['sort_order'] ?? '0'),
             ];
         }
 
@@ -369,44 +376,52 @@ class Project extends \Reamur\System\Engine\Controller {
      */
     private function postPayload(): array {
         $post = $this->request->post;
+        $scalarStr = static fn(mixed $v): string => is_scalar($v) ? (string)$v : '';
+        $scalarInt = static fn(mixed $v): int => is_scalar($v) && preg_match('/^-?\d+$/', trim((string)$v)) === 1 ? (int)$v : 0;
 
         $descriptions = [];
+        $rawDescs = is_array($post['project_description'] ?? null) ? $post['project_description'] : [];
 
-        foreach ((array)($post['project_description'] ?? []) as $lid => $d) {
-            $d = (array)$d;
+        foreach ($rawDescs as $lid => $d) {
+            if (!is_array($d)) {
+                continue;
+            }
 
             $descriptions[(int)$lid] = [
-                'name'             => mb_substr(trim((string)($d['name'] ?? '')), 0, 255),
-                'summary'          => mb_substr(trim((string)($d['summary'] ?? '')), 0, 255),
-                'description'      => trim((string)($d['description'] ?? '')),
-                'tag'              => mb_substr(trim((string)($d['tag'] ?? '')), 0, 255),
-                'meta_title'       => mb_substr(trim((string)($d['meta_title'] ?? '')), 0, 255),
-                'meta_description' => mb_substr(trim((string)($d['meta_description'] ?? '')), 0, 255),
-                'keyword'          => mb_substr(trim((string)($d['keyword'] ?? '')), 0, 64),
+                'name'             => mb_substr(trim($scalarStr($d['name'] ?? '')), 0, 255),
+                'summary'          => mb_substr(trim($scalarStr($d['summary'] ?? '')), 0, 255),
+                'description'      => trim($scalarStr($d['description'] ?? '')),
+                'tag'              => mb_substr(trim($scalarStr($d['tag'] ?? '')), 0, 255),
+                'meta_title'       => mb_substr(trim($scalarStr($d['meta_title'] ?? '')), 0, 255),
+                'meta_description' => mb_substr(trim($scalarStr($d['meta_description'] ?? '')), 0, 255),
+                'keyword'          => mb_substr(trim($scalarStr($d['keyword'] ?? '')), 0, 64),
             ];
         }
 
         $images = [];
+        $rawImgs = is_array($post['project_image'] ?? null) ? $post['project_image'] : [];
 
-        foreach ((array)($post['project_image'] ?? []) as $img) {
-            $img = (array)$img;
+        foreach ($rawImgs as $img) {
+            if (!is_array($img)) {
+                continue;
+            }
 
             $images[] = [
-                'image'      => $this->imageGuard((string)($img['image'] ?? '')),
-                'alt'        => mb_substr(trim((string)($img['alt'] ?? '')), 0, 255),
-                'sort_order' => (int)($img['sort_order'] ?? 0),
+                'image'      => $this->imageGuard($scalarStr($img['image'] ?? '')),
+                'alt'        => mb_substr(trim($scalarStr($img['alt'] ?? '')), 0, 255),
+                'sort_order' => $scalarInt($img['sort_order'] ?? 0),
             ];
         }
 
-        $categories = array_values(array_filter(array_map('intval', (array)($post['project_category'] ?? []))));
+        $categories = array_values(array_filter(array_map($scalarInt, is_array($post['project_category'] ?? null) ? $post['project_category'] : [])));
 
         return [
-            'image'        => $this->imageGuard((string)($post['image'] ?? '')),
-            'client'       => mb_substr(trim((string)($post['client'] ?? '')), 0, 128),
-            'url'          => mb_substr(trim((string)($post['url'] ?? '')), 0, 255),
+            'image'        => $this->imageGuard($this->postScalar('image')),
+            'client'       => mb_substr(trim($this->postScalar('client')), 0, 128),
+            'url'          => mb_substr(trim($this->postScalar('url')), 0, 255),
             'status'       => isset($post['status']) ? 1 : 0,
             'featured'     => isset($post['featured']) ? 1 : 0,
-            'sort_order'   => (int)($post['sort_order'] ?? 0),
+            'sort_order'   => $scalarInt($this->postScalar('sort_order', '0')),
             'descriptions' => $descriptions,
             'images'       => $images,
             'categories'   => $categories,
@@ -421,24 +436,28 @@ class Project extends \Reamur\System\Engine\Controller {
     private function validateProject(int $project_id): array {
         $errors = [];
         $post   = $this->request->post;
-        $desp   = (array)($post['project_description'] ?? []);
+        $desp   = is_array($post['project_description'] ?? null) ? $post['project_description'] : [];
+        $row1   = is_array($desp[1] ?? null) ? $desp[1] : [];
 
         // Título no idioma padrão (language_id=1, en-US — ADR 0001) é o mínimo
-        $nameEn = trim((string)($desp[1]['name'] ?? ''));
+        $nameEn = is_scalar($row1['name'] ?? null) ? trim((string)$row1['name']) : '';
 
         if ($nameEn === '' || mb_strlen($nameEn) > 255) {
             $errors[] = $this->language->get('error_name');
         }
 
-        $url = trim((string)($post['url'] ?? ''));
+        $url = trim($this->postScalar('url'));
 
-        if ($url !== '' && !filter_var($url, FILTER_VALIDATE_URL)) {
+        if ($url !== '' && $this->safeExternalUrl($url) === '') {
             $errors[] = $this->language->get('error_url');
         }
 
         // keyword SEO: formato + unicidade por idioma (o UNIQUE do seo_url é a rede final)
         foreach ($desp as $lid => $d) {
-            $keyword = trim((string)(((array)$d)['keyword'] ?? ''));
+            if (!is_array($d)) {
+                continue;
+            }
+            $keyword = is_scalar($d['keyword'] ?? null) ? trim((string)$d['keyword']) : '';
 
             if ($keyword === '') {
                 continue;
@@ -452,7 +471,7 @@ class Project extends \Reamur\System\Engine\Controller {
         }
 
         // Capa: só dentro do diretório de uploads do módulo
-        $cover = (string)($post['image'] ?? '');
+        $cover = $this->postScalar('image');
 
         if ($cover !== '' && $this->imageGuard($cover) === '') {
             $errors[] = $this->language->get('error_image_path');

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -17,6 +17,10 @@ class Page extends \Reamur\System\Engine\Model {
      * @return array<string, mixed> Página ativa (vazio = inexistente/inativa)
      */
     public function getPage(int $page_id): array {
+        if ($page_id <= 0) {
+            return [];
+        }
+
         $lang  = $this->currentLanguageId();
 
         $query = $this->db->query(

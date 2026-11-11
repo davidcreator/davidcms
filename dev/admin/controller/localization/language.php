@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -32,8 +32,8 @@ class Language extends \Reamur\System\Engine\Controller {
             $error = $this->csrfValid() ? $this->validateDefaults() : $this->language->get('error_csrf');
             if ($error === '') {
                 $this->model_setting_setting->editSettings([
-                    'config_language_catalog' => (string)($this->request->post['config_language_catalog'] ?? ''),
-                    'config_language_admin' => (string)($this->request->post['config_language_admin'] ?? ''),
+                    'config_language_catalog' => $this->postScalar('config_language_catalog'),
+                    'config_language_admin' => $this->postScalar('config_language_admin'),
                 ]);
                 $this->setFlash($this->language->get('text_success_defaults'));
             } else { $this->setFlash($error, 'error'); }
@@ -112,10 +112,11 @@ class Language extends \Reamur\System\Engine\Controller {
             if (!$errors) {
                 $post = $this->request->post;
 
+                $sortRaw = trim($this->postScalar('sort_order', '0'));
                 $this->model_localization_language->editLanguage($language_id, [
-                    'name'       => (string)$post['name'],
-                    'locale'     => (string)$post['locale'],
-                    'sort_order' => (int)$post['sort_order'],
+                    'name'       => $this->postScalar('name'),
+                    'locale'     => $this->postScalar('locale'),
+                    'sort_order' => preg_match('/^-?\d+$/', $sortRaw) === 1 ? (int)$sortRaw : 0,
                     'status'     => !empty($post['status']) ? 1 : 0,
                 ]);
 
@@ -136,14 +137,16 @@ class Language extends \Reamur\System\Engine\Controller {
 
         $data['text_flash'] = ['type' => '', 'text' => ''];
 
+        $sortRaw = trim($this->postScalar('sort_order', (string)$language['sort_order']));
         $data['entry'] = array_replace($language, [
-            'name'       => (string)($post['name'] ?? $language['name']),
-            'locale'     => (string)($post['locale'] ?? $language['locale']),
-            'sort_order' => (int)($post['sort_order'] ?? $language['sort_order']),
+            'name'       => $this->postScalar('name', (string)$language['name']),
+            'locale'     => $this->postScalar('locale', (string)$language['locale']),
+            'sort_order' => preg_match('/^-?\d+$/', $sortRaw) === 1 ? (int)$sortRaw : (int)$language['sort_order'],
             'status'     => $this->request->server['REQUEST_METHOD'] === 'POST' ? (!empty($post['status']) ? 1 : 0) : (int)$language['status'],
         ]);
+        $cleanCode = \Reamur\System\Library\LanguageNegotiator::clean((string)($language['code'] ?? ''));
         $data['entry']['code']       = (string)$language['code'];
-        $data['entry']['dir_exists'] = is_dir(DIR_APPLICATION . 'language/' . $data['entry']['code']);
+        $data['entry']['dir_exists'] = $cleanCode !== '' && is_dir(DIR_APPLICATION . 'language/' . $cleanCode);
 
         $data['is_default_catalog'] = $data['entry']['code'] === (string)$this->config->get('config_language_catalog', 'en-us');
         $data['is_default_admin']   = $data['entry']['code'] === (string)$this->config->get('config_language_admin', 'en-us');
@@ -165,8 +168,8 @@ class Language extends \Reamur\System\Engine\Controller {
     private function validateDefaults(): string {
         $post = $this->request->post;
 
-        $catalog = (string)($post['config_language_catalog'] ?? '');
-        $admin   = (string)($post['config_language_admin'] ?? '');
+        $catalog = $this->postScalar('config_language_catalog');
+        $admin   = $this->postScalar('config_language_admin');
 
         $enabled = [];
         foreach ($this->model_localization_language->getLanguages() as $row) {
@@ -194,8 +197,8 @@ class Language extends \Reamur\System\Engine\Controller {
         $errors = [];
         $post   = $this->request->post;
 
-        $name   = trim((string)($post['name'] ?? ''));
-        $locale = trim((string)($post['locale'] ?? ''));
+        $name   = trim($this->postScalar('name'));
+        $locale = trim($this->postScalar('locale'));
         $status = !empty($post['status']) ? 1 : 0;
 
         if ($name === '' || mb_strlen($name) > 32) {
@@ -226,9 +229,10 @@ class Language extends \Reamur\System\Engine\Controller {
     /** Projeção da grade/opções sem alterar dados, diretórios ou códigos. */
     private function languageRow(array $row): array {
         $code = (string)$row['code'];
+        $cleanCode = \Reamur\System\Library\LanguageNegotiator::clean($code);
         return ['language_id' => (int)$row['language_id'], 'name' => (string)$row['name'], 'code' => $code,
             'locale' => (string)$row['locale'], 'sort_order' => (int)$row['sort_order'], 'status' => (int)$row['status'],
-            'dir_exists' => is_dir(DIR_APPLICATION . 'language/' . $code),
+            'dir_exists' => $cleanCode !== '' && is_dir(DIR_APPLICATION . 'language/' . $cleanCode),
             'edit' => $this->url->link('localization/language.edit|' . (int)$row['language_id'])];
     }
 

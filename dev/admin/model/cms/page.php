@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -172,7 +172,7 @@ class Page extends \Reamur\System\Engine\Model {
                 `date_modified` = NOW()"
         );
 
-        $page_id = $this->db->getLastId();
+        $page_id = (int)$this->db->getLastId();
 
         $this->syncDescriptions($page_id, (array)$data['descriptions']);
 

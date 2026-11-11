@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -379,7 +379,8 @@ class Import extends \Reamur\System\Engine\Model {
      * @return array{ok: bool, path: string, error: string}
      */
     private function downloadImage(string $url, string $slug): array {
-        $name = $this->safeName($slug, parse_url((string)$url, PHP_URL_PATH) ?? '');
+        $urlPath = parse_url($url, PHP_URL_PATH);
+        $name = $this->safeName($slug, is_string($urlPath) ? $urlPath : '');
 
         if ($name === '') {
             return ['ok' => false, 'path' => '', 'error' => 'bad_name'];
@@ -391,15 +392,37 @@ class Import extends \Reamur\System\Engine\Model {
             return ['ok' => false, 'path' => '', 'error' => $fetch['error']];
         }
 
-        if (strlen($fetch['body']) > self::MAX_IMAGE_BYTES) {
+        if ($fetch['body'] === '' || strlen($fetch['body']) > self::MAX_IMAGE_BYTES) {
             return ['ok' => false, 'path' => '', 'error' => 'too_big'];
         }
 
-        $info = getimagesizefromstring($fetch['body']);
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mime = (string)($finfo->buffer($fetch['body']) ?: '');
+        $mimeExt = match ($mime) {
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/webp' => 'webp',
+            'image/gif'  => 'gif',
+            default      => '',
+        };
 
-        if ($info === false) {
+        if ($mimeExt === '') {
             return ['ok' => false, 'path' => '', 'error' => 'not_image'];
         }
+
+        set_error_handler(static fn(): bool => true);
+        try {
+            $info = getimagesizefromstring($fetch['body']);
+        } finally {
+            restore_error_handler();
+        }
+
+        if ($info === false || ($info['mime'] ?? '') !== $mime) {
+            return ['ok' => false, 'path' => '', 'error' => 'not_image'];
+        }
+
+        $stem = pathinfo($name, PATHINFO_FILENAME);
+        $name = ($stem !== '' ? $stem : 'imagem') . '.' . $mimeExt;
 
         // cria <catalog>/view/image/blog/ — raiz muda entre dev tree e build
         // prod (cPanel): tenta prod (catalog/ ao lado do admin) 1º, dev depois.
@@ -419,21 +442,23 @@ class Import extends \Reamur\System\Engine\Model {
             $baseDir  = ($cands[0] ?? '') !== '' ? $cands[0] . 'view/image/blog/' : '';
         }
 
-        if ($baseDir === '') {
+        if ($baseDir === '' || is_link(rtrim($baseDir, '/'))) {
             return ['ok' => false, 'path' => '', 'error' => 'no_dir'];
         }
 
-        if (!is_dir($baseDir) && !@mkdir($baseDir, 0775, true)) {
+        if (!is_dir($baseDir) && !@mkdir($baseDir, 0775, true) && !is_dir($baseDir)) {
             return ['ok' => false, 'path' => '', 'error' => 'mkdir_failed'];
         }
 
-        if (@file_put_contents($baseDir . $name, $fetch['body']) === false) {
+        $targetFile = $baseDir . $name;
+        if (is_link($baseDir) || is_link($targetFile) || @file_put_contents($targetFile, $fetch['body'], LOCK_EX) === false) {
             return ['ok' => false, 'path' => '', 'error' => 'write_failed'];
         }
 
         // guard anti-listing
-        if (!file_exists($baseDir . 'index.html')) {
-            @file_put_contents($baseDir . 'index.html', '');
+        $indexFile = $baseDir . 'index.html';
+        if (!is_link($indexFile) && !file_exists($indexFile)) {
+            @file_put_contents($indexFile, '', LOCK_EX);
         }
 
         return ['ok' => true, 'path' => 'view/image/blog/' . $name, 'error' => ''];

@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -30,13 +30,13 @@ class Language extends \Reamur\System\Engine\Model {
             $sql .= " LIMIT " . $start . ", " . $limit;
         }
         $query = $this->db->query($sql);
-        return $query->rows;
+        return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
     }
 
     /** @param array{search?: string, status?: string|int} $options */
     public function getTotalLanguages(array $options = []): int {
         $query = $this->db->query("SELECT COUNT(*) AS `total` FROM `" . $this->t('language') . "`" . $this->languageListWhere($options));
-        return isset($query->row['total']) ? (int)$query->row['total'] : 0;
+        return ($query instanceof \stdClass && isset($query->row['total'])) ? (int)$query->row['total'] : 0;
     }
 
     /** @param array{search?: string, status?: string|int} $options */
@@ -60,7 +60,7 @@ class Language extends \Reamur\System\Engine\Model {
             "SELECT * FROM `" . $this->t('language') . "` WHERE `language_id` = '" . (int)$language_id . "' LIMIT 1"
         );
 
-        return $query->row ?: [];
+        return ($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : [];
     }
 
     /**
@@ -95,10 +95,15 @@ class Language extends \Reamur\System\Engine\Model {
              ORDER BY `sort_order` ASC, `language_id` ASC"
         );
 
-        foreach ($query->rows as $row) {
-            $code = (string)$row['code'];
+        if (!($query instanceof \stdClass) || empty($query->rows)) {
+            return [];
+        }
 
-            if (is_dir(DIR_APPLICATION . 'language/' . $code)) {
+        foreach ($query->rows as $row) {
+            $row  = (array)$row;
+            $code = \Reamur\System\Library\LanguageNegotiator::clean((string)($row['code'] ?? ''));
+
+            if ($code !== '' && is_dir(DIR_APPLICATION . 'language/' . $code)) {
                 $codes[] = $code;
             }
         }

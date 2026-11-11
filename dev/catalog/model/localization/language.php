@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -30,10 +30,15 @@ class Language extends \Reamur\System\Engine\Model {
              ORDER BY `sort_order` ASC, `language_id` ASC"
         );
 
-        foreach ($query->rows as $row) {
-            $code = (string)$row['code'];
+        if (!($query instanceof \stdClass) || empty($query->rows)) {
+            return [];
+        }
 
-            if (is_dir(DIR_APPLICATION . 'language/' . $code)) {
+        foreach ($query->rows as $row) {
+            $row  = (array)$row;
+            $code = \Reamur\System\Library\LanguageNegotiator::clean((string)($row['code'] ?? ''));
+
+            if ($code !== '' && is_dir(DIR_APPLICATION . 'language/' . $code)) {
                 $codes[] = $code;
             }
         }

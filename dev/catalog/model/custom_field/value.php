@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * F9-08 — leitura pública, estritamente filtrada, de valores custom em CMS/page.
  * Somente páginas publicadas + grupos ativos + fields visibility=public.

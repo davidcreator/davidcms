@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -255,18 +255,22 @@ class Category extends \Reamur\System\Engine\Controller {
 
         $data['languages'] = [];
 
+        $postedDescriptions = is_array($post['category_description'] ?? null) ? $post['category_description'] : [];
+        $scalarStr = static fn(mixed $v): string => is_scalar($v) ? (string)$v : '';
+
         foreach ($this->model_catalog_category->getLanguages() as $language) {
             $language = (array)$language;
             $lid      = (int)$language['language_id'];
             $saved    = (array)($descriptions[$lid] ?? []);
+            $postedLang = is_array($postedDescriptions[$lid] ?? null) ? $postedDescriptions[$lid] : [];
 
             $fields = [];
 
             foreach (['name', 'description', 'meta_title', 'meta_description'] as $f) {
-                $fields[$f] = (string)($post['category_description'][$lid][$f] ?? ($saved[$f] ?? ''));
+                $fields[$f] = $scalarStr($postedLang[$f] ?? ($saved[$f] ?? ''));
             }
 
-            $fields['keyword'] = (string)($post['category_description'][$lid]['keyword'] ?? ($keywords[$lid] ?? ''));
+            $fields['keyword'] = $scalarStr($postedLang['keyword'] ?? ($keywords[$lid] ?? ''));
 
             $data['languages'][] = [
                 'language_id' => $lid,
@@ -276,10 +280,11 @@ class Category extends \Reamur\System\Engine\Controller {
             ];
         }
 
+        $parentRaw = $this->postScalar('parent_id', (string)($category['parent_id'] ?? 0));
         $data['category_id'] = $cid;
-        $data['parent_id']   = (int)($post['parent_id'] ?? ($category['parent_id'] ?? 0));
-        $data['image']       = (string)($post['image'] ?? ($category['image'] ?? ''));
-        $data['sort_order']  = (string)($post['sort_order'] ?? (string)($category['sort_order'] ?? '0'));
+        $data['parent_id']   = preg_match('/^-?\d+$/', trim($parentRaw)) === 1 ? (int)$parentRaw : 0;
+        $data['image']       = $this->postScalar('image', (string)($category['image'] ?? ''));
+        $data['sort_order']  = $this->postScalar('sort_order', (string)($category['sort_order'] ?? '0'));
         $data['status']      = isset($post['status']) ? '1' : ($isPost ? '0' : (string)(int)($category['status'] ?? 0));
 
         $data['parents']  = array_map(
@@ -303,26 +308,31 @@ class Category extends \Reamur\System\Engine\Controller {
      */
     private function postPayload(): array {
         $post = $this->request->post;
+        $scalarStr = static fn(mixed $v): string => is_scalar($v) ? (string)$v : '';
+        $scalarInt = static fn(mixed $v): int => is_scalar($v) && preg_match('/^-?\d+$/', trim((string)$v)) === 1 ? (int)$v : 0;
 
         $descriptions = [];
+        $rawDescs = is_array($post['category_description'] ?? null) ? $post['category_description'] : [];
 
-        foreach ((array)($post['category_description'] ?? []) as $lid => $d) {
-            $d = (array)$d;
+        foreach ($rawDescs as $lid => $d) {
+            if (!is_array($d)) {
+                continue;
+            }
 
             $descriptions[(int)$lid] = [
-                'name'             => mb_substr(trim((string)($d['name'] ?? '')), 0, 255),
-                'description'      => trim((string)($d['description'] ?? '')),
-                'meta_title'       => mb_substr(trim((string)($d['meta_title'] ?? '')), 0, 255),
-                'meta_description' => mb_substr(trim((string)($d['meta_description'] ?? '')), 0, 255),
-                'keyword'          => mb_substr(trim((string)($d['keyword'] ?? '')), 0, 64),
+                'name'             => mb_substr(trim($scalarStr($d['name'] ?? '')), 0, 255),
+                'description'      => trim($scalarStr($d['description'] ?? '')),
+                'meta_title'       => mb_substr(trim($scalarStr($d['meta_title'] ?? '')), 0, 255),
+                'meta_description' => mb_substr(trim($scalarStr($d['meta_description'] ?? '')), 0, 255),
+                'keyword'          => mb_substr(trim($scalarStr($d['keyword'] ?? '')), 0, 64),
             ];
         }
 
         return [
-            'parent_id'    => (int)($post['parent_id'] ?? 0),
-            'image'        => $this->imageGuard((string)($post['image'] ?? '')),
+            'parent_id'    => $scalarInt($this->postScalar('parent_id', '0')),
+            'image'        => $this->imageGuard($this->postScalar('image')),
             'status'       => isset($post['status']) ? 1 : 0,
-            'sort_order'   => (int)($post['sort_order'] ?? 0),
+            'sort_order'   => $scalarInt($this->postScalar('sort_order', '0')),
             'descriptions' => $descriptions,
         ];
     }
@@ -333,9 +343,10 @@ class Category extends \Reamur\System\Engine\Controller {
     private function validateCategory(int $category_id): array {
         $errors = [];
         $post   = $this->request->post;
-        $desp   = (array)($post['category_description'] ?? []);
+        $desp   = is_array($post['category_description'] ?? null) ? $post['category_description'] : [];
+        $row1   = is_array($desp[1] ?? null) ? $desp[1] : [];
 
-        $nameEn = trim((string)($desp[1]['name'] ?? ''));
+        $nameEn = is_scalar($row1['name'] ?? null) ? trim((string)$row1['name']) : '';
 
         if ($nameEn === '' || mb_strlen($nameEn) > 255) {
             $errors[] = $this->language->get('error_name');
@@ -343,7 +354,10 @@ class Category extends \Reamur\System\Engine\Controller {
 
         // keyword SEO: formato + unicidade global por idioma (seo_url é compartilhada)
         foreach ($desp as $lid => $d) {
-            $keyword = trim((string)(((array)$d)['keyword'] ?? ''));
+            if (!is_array($d)) {
+                continue;
+            }
+            $keyword = is_scalar($d['keyword'] ?? null) ? trim((string)$d['keyword']) : '';
 
             if ($keyword === '') {
                 continue;
@@ -357,7 +371,7 @@ class Category extends \Reamur\System\Engine\Controller {
         }
 
         // Imagem: só dentro do diretório do módulo
-        $cover = (string)($post['image'] ?? '');
+        $cover = $this->postScalar('image');
 
         if ($cover !== '' && $this->imageGuard($cover) === '') {
             $errors[] = $this->language->get('error_image_path');
@@ -365,7 +379,8 @@ class Category extends \Reamur\System\Engine\Controller {
 
         // Anti-ciclo: pai não pode ser a própria nem descendente (model já
         // exclui do dropdown — o POST pode vir adulterado)
-        $parent_id = (int)($post['parent_id'] ?? 0);
+        $parentRaw = trim($this->postScalar('parent_id', '0'));
+        $parent_id = preg_match('/^-?\d+$/', $parentRaw) === 1 ? (int)$parentRaw : 0;
 
         if ($parent_id > 0) {
             $valid = array_column($this->model_catalog_category->getParentOptions($category_id), 'category_id');

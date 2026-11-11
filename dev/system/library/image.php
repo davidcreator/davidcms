@@ -40,7 +40,7 @@ class Image {
             throw new \InvalidArgumentException('Invalid image file path');
         }
 
-        if (!is_file($file) || !is_readable($file)) {
+        if (is_link($file) || !is_file($file) || !is_readable($file)) {
             throw new \InvalidArgumentException('Could not load image: ' . $file);
         }
 
@@ -147,7 +147,7 @@ class Image {
         $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
         $dir = dirname($file);
 
-        if (!is_dir($dir) || !is_writable($dir)) {
+        if (is_link($file) || is_link($dir) || !is_dir($dir) || !is_writable($dir)) {
             throw new \RuntimeException('Directory not writable: ' . $dir);
         }
 

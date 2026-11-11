@@ -37,7 +37,7 @@ class Step_3 extends \Reamur\System\Engine\Controller {
             if ($data['error'] === []) {
                 $db = $this->dbCredentials();
 
-                $prefix = trim((string)$this->request->post['db_prefix']);
+                $prefix = trim($this->postScalar('db_prefix'));
 
                 if (!$this->model_install_install->connect($db)) {
                     $data['error']['connect'] = $this->language->get('error_db_connect') . ' ' . $this->model_install_install->getError();
@@ -55,17 +55,17 @@ class Step_3 extends \Reamur\System\Engine\Controller {
                         // Grupo Administrator já nasce com access+modify em
                         // 'user/user' e 'user/user_group' (Adendo F2-6 do ADR 0005)
                         $this->model_install_install->createAdministrator([
-                            'username'  => trim((string)$this->request->post['username']),
-                            'firstname' => trim((string)$this->request->post['firstname']),
-                            'lastname'  => trim((string)$this->request->post['lastname']),
-                            'email'     => trim((string)$this->request->post['email']),
-                            'password'  => (string)$this->request->post['password'],
+                            'username'  => trim($this->postScalar('username')),
+                            'firstname' => trim($this->postScalar('firstname')),
+                            'lastname'  => trim($this->postScalar('lastname')),
+                            'email'     => trim($this->postScalar('email')),
+                            'password'  => $this->postScalar('password'),
                         ], $prefix);
 
                         // URLs públicas REAIS vêm da entrada do usuário (site_url) —
                         // jamais de SCRIPT_NAME/PATH_INFO (armadilha SAPI corrigida na F2-5).
                         $this->session->data['install_done']  = true;
-                        $this->session->data['install_site']  = rtrim((string)$this->request->post['http_server'], '/') . '/';
+                        $this->session->data['install_site']  = rtrim($this->postScalar('http_server'), '/') . '/';
                         $this->session->data['install_admin'] = $this->adminUrl((string)$this->session->data['install_site']);
 
                         unset($this->session->data['install_db']); // legado do fluxo s3/s4 separado
@@ -118,15 +118,13 @@ class Step_3 extends \Reamur\System\Engine\Controller {
      * @return array{db_driver: string, db_hostname: string, db_username: string, db_password: string, db_database: string, db_port: string}
      */
     private function dbCredentials(): array {
-        $post = $this->request->post;
-
         return [
-            'db_driver'   => (string)($post['db_driver'] ?? ''),
-            'db_hostname' => trim((string)($post['db_hostname'] ?? '')),
-            'db_username' => trim((string)($post['db_username'] ?? '')),
-            'db_password' => (string)($post['db_password'] ?? ''),
-            'db_database' => trim((string)($post['db_database'] ?? '')),
-            'db_port'     => trim((string)($post['db_port'] ?? '3306')),
+            'db_driver'   => $this->postScalar('db_driver'),
+            'db_hostname' => trim($this->postScalar('db_hostname')),
+            'db_username' => trim($this->postScalar('db_username')),
+            'db_password' => $this->postScalar('db_password'),
+            'db_database' => trim($this->postScalar('db_database')),
+            'db_port'     => trim($this->postScalar('db_port', '3306')),
         ];
     }
 
@@ -162,13 +160,14 @@ class Step_3 extends \Reamur\System\Engine\Controller {
 
         // Repopula o formulário (POST) ou aplica defaults honestos
         foreach (['db_driver', 'db_hostname', 'db_username', 'db_password', 'db_database', 'db_port', 'db_prefix', 'http_server', 'username', 'firstname', 'lastname', 'email'] as $field) {
-            $data[$field] = $this->request->post[$field] ?? match ($field) {
+            $default = match ($field) {
                 'db_driver'   => in_array('mysqli', $data['drivers'], true) ? 'mysqli' : (string)($data['drivers'][0] ?? 'mysqli'),
                 'db_hostname' => 'localhost',
                 'db_port'     => '3306',
                 'db_prefix'   => 'rms_',
                 default       => '',
             };
+            $data[$field] = $this->postScalar($field, $default);
         }
 
         // Site URL: prefill honesto por tentativa (o usuário pode — e deve —
@@ -196,24 +195,24 @@ class Step_3 extends \Reamur\System\Engine\Controller {
      */
     private function validate(): array {
         $error = [];
-        $post  = $this->request->post;
 
         // ── conexão ──
-        if (!in_array((string)($post['db_driver'] ?? ''), ['mysqli', 'pdo'], true)) {
+        if (!in_array($this->postScalar('db_driver'), ['mysqli', 'pdo'], true)) {
             $error['db_driver'] = $this->language->get('error_db_driver');
         }
 
         foreach (['db_hostname', 'db_username', 'db_database'] as $field) {
-            if (trim((string)($post[$field] ?? '')) === '') {
+            if (trim($this->postScalar($field)) === '') {
                 $error[$field] = $this->language->get('error_required');
             }
         }
 
-        if (!preg_match('/^[a-z][a-z0-9_]{0,19}$/', (string)($post['db_prefix'] ?? ''))) {
+        if (!preg_match('/^[a-z][a-z0-9_]{0,19}$/', $this->postScalar('db_prefix'))) {
             $error['db_prefix'] = $this->language->get('error_db_prefix');
         }
 
-        if ($this->varchar((string)($post['db_port'] ?? ''), 1, 5) === '' || !ctype_digit((string)($post['db_port'] ?? ''))) {
+        $dbPort = $this->postScalar('db_port');
+        if ($this->varchar($dbPort, 1, 5) === '' || !ctype_digit($dbPort)) {
             $error['db_port'] = $this->language->get('error_db_port');
         }
 
@@ -221,7 +220,7 @@ class Step_3 extends \Reamur\System\Engine\Controller {
         // de onde o wizard responde); esquema ausente vira http:// (o valor
         // normalizado volta ao POST para repovoar o form e gravar o config
         // com o endereço FINAL). Localhost/porta dedicada vale sempre.
-        $httpServer = trim((string)($post['http_server'] ?? ''));
+        $httpServer = trim($this->postScalar('http_server'));
 
         if ($httpServer === '') {
             $httpServer = $this->guessSiteUrl();
@@ -233,7 +232,8 @@ class Step_3 extends \Reamur\System\Engine\Controller {
 
         $httpServer = rtrim(str_replace('\\', '/', $httpServer), '/'); // sem barra final aqui — writeConfigs recompõe
 
-        $scheme = strtolower((string)parse_url($httpServer, PHP_URL_SCHEME));
+        $parsedScheme = parse_url($httpServer, PHP_URL_SCHEME);
+        $scheme = is_string($parsedScheme) ? strtolower($parsedScheme) : '';
         if (
             $httpServer === ''
             || preg_match('/[\x00-\x20\x7f]/', $httpServer) === 1
@@ -246,29 +246,29 @@ class Step_3 extends \Reamur\System\Engine\Controller {
         }
 
         // ── administração (mesmas regras do antigo s4 e do CRUD do painel) ──
-        $username = trim((string)($post['username'] ?? ''));
+        $username = trim($this->postScalar('username'));
 
         if (mb_strlen($username) < 3 || mb_strlen($username) > 32) {
             $error['username'] = $this->language->get('error_username');
         }
 
         foreach (['firstname' => 'error_firstname', 'lastname' => 'error_lastname'] as $field => $key) {
-            $len = mb_strlen(trim((string)($post[$field] ?? '')));
+            $len = mb_strlen(trim($this->postScalar($field)));
 
             if ($len < 1 || $len > 32) {
                 $error[$field] = $this->language->get($key);
             }
         }
 
-        if (!filter_var((string)($post['email'] ?? ''), FILTER_VALIDATE_EMAIL)) {
+        if (!filter_var($this->postScalar('email'), FILTER_VALIDATE_EMAIL)) {
             $error['email'] = $this->language->get('error_email');
         }
 
-        $password = (string)($post['password'] ?? '');
+        $password = $this->postScalar('password');
 
         if (mb_strlen($password) < 8) {
             $error['password'] = $this->language->get('error_password');
-        } elseif ($password !== (string)($post['confirm'] ?? '')) {
+        } elseif ($password !== $this->postScalar('confirm')) {
             $error['confirm'] = $this->language->get('error_confirm');
         }
 
@@ -351,7 +351,7 @@ class Step_3 extends \Reamur\System\Engine\Controller {
         }
 
         $tpl      = (string)file_get_contents($template);
-        $base     = rtrim((string)$this->request->post['http_server'], '/') . '/';
+        $base     = rtrim($this->postScalar('http_server'), '/') . '/';
         $adminUrl = $this->adminUrl($base); // irmão da loja (catalog/ → admin/) — ver método
 
         foreach (['catalog', 'admin'] as $app) {

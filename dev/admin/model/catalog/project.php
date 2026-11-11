@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -204,7 +204,7 @@ class Project extends \Reamur\System\Engine\Model {
                 `date_modified` = NOW()"
         );
 
-        $project_id = $this->db->getLastId();
+        $project_id = (int)$this->db->getLastId();
 
         $this->syncChildren($project_id, $data);
 

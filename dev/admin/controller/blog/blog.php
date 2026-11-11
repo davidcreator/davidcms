@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -68,14 +68,14 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         // F8-02 (ADR 0046): filtros server-side (busca por título, status)
         // e paginação 20/página preservando os filtros nos links.
-        $filter_title  = trim((string)($this->request->get['filter_title'] ?? ''));
-        $filter_status = (string)($this->request->get['filter_status'] ?? 'all');
+        $filter_title  = $this->queryValue('filter_title');
+        $filter_status = $this->queryValue('filter_status');
 
         if (!in_array($filter_status, ['all', '0', '1'], true)) {
             $filter_status = 'all';
         }
 
-        $page    = max(1, (int)($this->request->get['page'] ?? 1));
+        $page    = max(1, $this->queryInt('page', 1));
         $limit   = 20;
         $filters = ['title' => $filter_title, 'status' => $filter_status];
 
@@ -239,7 +239,7 @@ class Blog extends \Reamur\System\Engine\Controller {
                 return;
             }
 
-            $submittedFingerprint = (string)($this->request->post['edit_fingerprint'] ?? '');
+            $submittedFingerprint = trim($this->postScalar('edit_fingerprint'));
             $data['edit_fingerprint'] = $submittedFingerprint;
             $currentFingerprint = $this->model_blog_blog->getPostEditFingerprint($post_id);
             $fingerprintMatches = $submittedFingerprint !== '' && $currentFingerprint !== '' && hash_equals($currentFingerprint, $submittedFingerprint);
@@ -461,12 +461,12 @@ class Blog extends \Reamur\System\Engine\Controller {
         }
         $cmsSlot = $this->blogPreviewCmsSlot((int)$languageId, $assetBase, $downloadRoot, $audioRoot, $videoRoot);
 
-        $title = mb_substr($this->postScalar('preview_title'), 0, 255);
+        $title = mb_substr(trim($this->postScalar('preview_title')), 0, 255);
         if ($title === '') $title = $this->language->get('text_catalog_preview_untitled');
-        $metaTitle = mb_substr($this->postScalar('preview_meta_title'), 0, 255);
-        $metaDescription = mb_substr($this->postScalar('preview_meta_description'), 0, 255);
-        $image = $this->catalogImageUrl($this->postScalar('preview_image'));
-        $timestamp = strtotime($this->postScalar('preview_date_published'));
+        $metaTitle = mb_substr(trim($this->postScalar('preview_meta_title')), 0, 255);
+        $metaDescription = mb_substr(trim($this->postScalar('preview_meta_description')), 0, 255);
+        $image = $this->catalogImageUrl(trim($this->postScalar('preview_image')));
+        $timestamp = strtotime(trim($this->postScalar('preview_date_published')));
         $date = $timestamp !== false ? date('Y-m-d', $timestamp) : '';
 
         $this->load->model('setting/setting');
@@ -651,7 +651,7 @@ class Blog extends \Reamur\System\Engine\Controller {
 
     private function blogPreviewError(string $message): void {
         $assetBase = $this->catalogAssetUrl();
-        $language = $this->postScalar('preview_language') ?: 'en-us';
+        $language = trim($this->postScalar('preview_language')) ?: 'en-us';
         if (!preg_match('/^[a-z]{2,3}(?:-[a-z0-9]{2,8})?$/i', $language)) $language = 'en-us';
         $this->response->setOutput($this->load->view('blog/blog_preview_error', [
             'preview_language'=>$language,'heading_title'=>$this->language->get('heading_title'),
@@ -708,9 +708,9 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->load->model('blog/media');
 
         $result = $this->model_blog_media->getMediaPage(
-            $this->queryScalar('folder'),
-            $this->queryScalar('search'),
-            max(1, (int)$this->queryScalar('page'))
+            $this->queryValue('folder'),
+            $this->queryValue('search'),
+            max(1, $this->queryInt('page', 1))
         );
 
         if (!$result['ok']) {
@@ -757,7 +757,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         }
 
         $this->load->model('blog/media');
-        $target = $this->model_blog_media->getUploadTarget($this->postScalar('folder'));
+        $target = $this->model_blog_media->getUploadTarget(trim($this->postScalar('folder')));
 
         if ($target === '') {
             $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_media_folder_not_found')]);
@@ -797,7 +797,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         if ($this->request->server['REQUEST_METHOD'] !== 'GET') { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
         if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
         $this->load->model('blog/media');
-        $result = $this->model_blog_media->getAudioPage($this->queryScalar('search'), max(1, (int)$this->queryScalar('page')));
+        $result = $this->model_blog_media->getAudioPage($this->queryValue('search'), max(1, $this->queryInt('page', 1)));
         if (!$result['ok']) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_audio_generic')]); return; }
         $this->jsonResponse(['success' => true, 'files' => $result['files'], 'total' => $result['total'], 'page' => $result['page'], 'pages' => $result['pages']]);
     }
@@ -813,7 +813,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         if ($this->request->server['REQUEST_METHOD'] !== 'GET') { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
         if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
         $this->load->model('blog/media');
-        $result = $this->model_blog_media->getVideoPage($this->queryScalar('search'), max(1, (int)$this->queryScalar('page')));
+        $result = $this->model_blog_media->getVideoPage($this->queryValue('search'), max(1, $this->queryInt('page', 1)));
         if (!$result['ok']) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_video_generic')]); return; }
         $this->jsonResponse(['success' => true, 'files' => $result['files'], 'total' => $result['total'], 'page' => $result['page'], 'pages' => $result['pages']]);
     }
@@ -865,7 +865,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         if ($this->request->server['REQUEST_METHOD'] !== 'GET') { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_media_method')]); return; }
         if (!$this->user->hasPermission('modify', 'blog/blog')) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_permission')]); return; }
         $this->load->model('blog/media');
-        $result = $this->model_blog_media->getDownloadPage($this->queryScalar('search'), max(1, (int)$this->queryScalar('page')));
+        $result = $this->model_blog_media->getDownloadPage($this->queryValue('search'), max(1, $this->queryInt('page', 1)));
         if (!$result['ok']) { $this->jsonResponse(['success' => false, 'error' => $this->language->get('error_download_generic')]); return; }
         foreach ($result['files'] as &$file) $file['url'] = $this->catalogAssetUrl() . ltrim((string)$file['path'], '/');
         unset($file);
@@ -908,7 +908,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         }
 
         $this->load->model('blog/media');
-        $result = $this->model_blog_media->createFolder($this->postScalar('folder'), $this->postScalar('name'));
+        $result = $this->model_blog_media->createFolder(trim($this->postScalar('folder')), trim($this->postScalar('name')));
 
         if ($result !== 'ok') {
             $this->jsonResponse(['success' => false, 'error' => $this->mediaError($result)]);
@@ -938,14 +938,14 @@ class Blog extends \Reamur\System\Engine\Controller {
         }
 
         $this->load->model('blog/media');
-        $result = $this->model_blog_media->deleteMedia($this->postScalar('type'), $this->postScalar('path'));
+        $result = $this->model_blog_media->deleteMedia(trim($this->postScalar('type')), trim($this->postScalar('path')));
 
         if ($result !== 'ok') {
             $this->jsonResponse(['success' => false, 'error' => $this->mediaError($result)]);
             return;
         }
 
-        $message = $this->postScalar('type') === 'folder'
+        $message = trim($this->postScalar('type')) === 'folder'
             ? $this->language->get('text_media_folder_deleted')
             : $this->language->get('text_media_file_deleted');
 
@@ -1209,27 +1209,31 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['languages'] = [];
         $blockRows = ($data['block_editor_available'] && $pid > 0) ? $this->model_blog_blog->getPostBlockContents($pid) : [];
         $blockValidator = $data['block_editor_available'] ? new \Reamur\System\Library\Blog\BlockDocument() : null;
-        $postedBlockModes = (array)($posted['blog_block_mode'] ?? []);
-        $postedBlockJson = (array)($posted['blog_blocks'] ?? []);
+        $postedDescriptions = is_array($posted['blog_description'] ?? null) ? $posted['blog_description'] : [];
+        $postedBlockModes = is_array($posted['blog_block_mode'] ?? null) ? $posted['blog_block_mode'] : [];
+        $postedBlockJson = is_array($posted['blog_blocks'] ?? null) ? $posted['blog_blocks'] : [];
 
         foreach ($this->model_blog_blog->getLanguages() as $language) {
             $language = (array)$language;
             $lid      = (int)$language['language_id'];
             $saved    = (array)($descriptions[$lid] ?? []);
+            $postedLang = is_array($postedDescriptions[$lid] ?? null) ? $postedDescriptions[$lid] : [];
 
             $fields = [];
 
             foreach (['title', 'description', 'meta_title', 'meta_description'] as $f) {
-                $fields[$f] = (string)($posted['blog_description'][$lid][$f] ?? ($saved[$f] ?? ''));
+                $rawField = $postedLang[$f] ?? ($saved[$f] ?? '');
+                $fields[$f] = is_scalar($rawField) ? (string)$rawField : '';
             }
 
-            $fields['keyword'] = (string)($posted['blog_description'][$lid]['keyword'] ?? ($keywords[$lid] ?? ''));
+            $rawKeyword = $postedLang['keyword'] ?? ($keywords[$lid] ?? '');
+            $fields['keyword'] = is_scalar($rawKeyword) ? (string)$rawKeyword : '';
             $blockMode = 'legacy';
             $blockDocumentJson = '';
             $blockStatus = '';
             if ($data['block_editor_available'] && $blockValidator instanceof \Reamur\System\Library\Blog\BlockDocument) {
                 $row = (array)($blockRows[$lid] ?? []);
-                $postedMode = (string)($postedBlockModes[$lid] ?? '');
+                $postedMode = is_scalar($postedBlockModes[$lid] ?? null) ? (string)$postedBlockModes[$lid] : '';
                 $postedJson = $postedBlockJson[$lid] ?? null;
                 if ($row !== []) {
                     $stored = $blockValidator->deserializeDocument((string)($row['content_json'] ?? ''));
@@ -1293,9 +1297,9 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['revision_conflict'] = false;
         $data['post_revisions_url'] = $pid > 0 ? $this->url->link('blog/blog.revisions|' . $pid) : '';
         $data['post_revision_url'] = $pid > 0 ? $this->url->link('blog/blog.revision|' . $pid) : '';
-        $data['image']          = (string)($posted['image'] ?? (string)($post['image'] ?? ''));
+        $data['image']          = $this->postScalar('image', (string)($post['image'] ?? ''));
         $data['image_preview']  = $this->catalogImageUrl($data['image']);
-        $data['date_published'] = (string)($posted['date_published'] ?? (string)($post['date_published'] ?? date('Y-m-d H:i:s')));
+        $data['date_published'] = $this->postScalar('date_published', (string)($post['date_published'] ?? date('Y-m-d H:i:s')));
         $data['status']         = isset($posted['status']) ? '1' : ($isPost ? '0' : (string)(int)($post['status'] ?? 0));
 
         $data['cancel'] = $this->url->link('blog/blog');
@@ -1310,9 +1314,9 @@ class Blog extends \Reamur\System\Engine\Controller {
     private function prepareBlockSubmission(int $post_id): array {
         $result = ['storage_available' => false, 'documents' => [], 'snapshots' => [], 'errors' => []];
         $storage = $this->model_blog_blog->blogBlockContentTableExists();
-        $modes = (array)($this->request->post['blog_block_mode'] ?? []);
-        $posted = (array)($this->request->post['blog_blocks'] ?? []);
-        $readyFlags = (array)($this->request->post['blog_editor_ready'] ?? []);
+        $modes = is_array($this->request->post['blog_block_mode'] ?? null) ? $this->request->post['blog_block_mode'] : [];
+        $posted = is_array($this->request->post['blog_blocks'] ?? null) ? $this->request->post['blog_blocks'] : [];
+        $readyFlags = is_array($this->request->post['blog_editor_ready'] ?? null) ? $this->request->post['blog_editor_ready'] : [];
         if (!$storage) {
             if (in_array('blocks', $modes, true) || $posted !== []) $result['errors'][] = $this->language->get('error_block_schema_unavailable');
             return $result;
@@ -1336,7 +1340,7 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         foreach (array_keys($languages) as $language_id) {
             $language_id = (int)$language_id;
-            $mode = (string)($modes[$language_id] ?? 'legacy');
+            $mode = is_scalar($modes[$language_id] ?? null) ? (string)$modes[$language_id] : 'legacy';
             $row = (array)($rows[$language_id] ?? []);
             $sourceHtml = (string)($savedDescriptions[$language_id]['description'] ?? '');
 
@@ -1420,19 +1424,24 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         $descriptions = [];
 
-        foreach ((array)($posted['blog_description'] ?? []) as $lid => $d) {
-            $d = (array)$d;
+        $scalarStr = static fn(mixed $v): string => is_scalar($v) ? (string)$v : '';
+        $rawDescs = is_array($posted['blog_description'] ?? null) ? $posted['blog_description'] : [];
+
+        foreach ($rawDescs as $lid => $d) {
+            if (!is_array($d)) {
+                continue;
+            }
 
             $descriptions[(int)$lid] = [
-                'title'            => mb_substr(trim((string)($d['title'] ?? '')), 0, 255),
-                'description'      => trim((string)($d['description'] ?? '')),
-                'meta_title'       => mb_substr(trim((string)($d['meta_title'] ?? '')), 0, 255),
-                'meta_description' => mb_substr(trim((string)($d['meta_description'] ?? '')), 0, 255),
-                'keyword'          => mb_substr(trim((string)($d['keyword'] ?? '')), 0, 64),
+                'title'            => mb_substr(trim($scalarStr($d['title'] ?? '')), 0, 255),
+                'description'      => trim($scalarStr($d['description'] ?? '')),
+                'meta_title'       => mb_substr(trim($scalarStr($d['meta_title'] ?? '')), 0, 255),
+                'meta_description' => mb_substr(trim($scalarStr($d['meta_description'] ?? '')), 0, 255),
+                'keyword'          => mb_substr(trim($scalarStr($d['keyword'] ?? '')), 0, 64),
             ];
         }
 
-        $date = trim((string)($posted['date_published'] ?? ''));
+        $date = trim($this->postScalar('date_published'));
 
         if ($date !== '') {
             // datetime-local envia 'Y-m-d\TH:i' — normaliza para MySQL 'Y-m-d H:i:s'
@@ -1446,7 +1455,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         }
 
         return [
-            'image'          => mb_substr(trim((string)($posted['image'] ?? '')), 0, 255),
+            'image'          => mb_substr(trim($this->postScalar('image')), 0, 255),
             'status'         => isset($posted['status']) ? 1 : 0,
             'date_published' => $date,
             'descriptions'   => $descriptions,
@@ -1459,15 +1468,16 @@ class Blog extends \Reamur\System\Engine\Controller {
     private function validatePost(int $post_id): array {
         $errors = [];
         $posted = $this->request->post;
-        $desp   = (array)($posted['blog_description'] ?? []);
+        $desp   = is_array($posted['blog_description'] ?? null) ? $posted['blog_description'] : [];
+        $row1   = is_array($desp[1] ?? null) ? $desp[1] : [];
 
-        $titleEn = trim((string)($desp[1]['title'] ?? ''));
+        $titleEn = is_scalar($row1['title'] ?? null) ? trim((string)$row1['title']) : '';
 
         if ($titleEn === '' || mb_strlen($titleEn) > 255) {
             $errors[] = $this->language->get('error_title');
         }
 
-        $date = trim((string)($posted['date_published'] ?? ''));
+        $date = trim($this->postScalar('date_published'));
 
         if ($date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?)?$/', $date)) {
             $errors[] = $this->language->get('error_date_published');
@@ -1475,7 +1485,10 @@ class Blog extends \Reamur\System\Engine\Controller {
 
         // keyword SEO: formato + unicidade global por idioma (seo_url compartilhada)
         foreach ($desp as $lid => $d) {
-            $keyword = trim((string)(((array)$d)['keyword'] ?? ''));
+            if (!is_array($d)) {
+                continue;
+            }
+            $keyword = is_scalar($d['keyword'] ?? null) ? trim((string)$d['keyword']) : '';
 
             if ($keyword === '') {
                 continue;
@@ -1510,17 +1523,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         return $this->language->get($key);
     }
 
-    private function postScalar(string $key): string {
-        $value = $this->request->post[$key] ?? '';
 
-        return is_scalar($value) ? trim((string)$value) : '';
-    }
-
-    private function queryScalar(string $key): string {
-        $value = $this->request->get[$key] ?? '';
-
-        return is_scalar($value) ? trim((string)$value) : '';
-    }
     /** Base pública canônica do site (admin /admin/ → raiz), usada no preview SEO. */
     private function siteRootUrl(): string {
         $siteUrl = rtrim((string)$this->config->get('site_url', ''), '/') . '/';

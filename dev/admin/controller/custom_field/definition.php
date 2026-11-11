@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * F9-06 — interface administrativa para definições de campos personalizados.
  * Sem integração com CMS/page nem renderização pública (reservadas à F9-07+).
@@ -58,10 +58,10 @@ class Definition extends \Reamur\System\Engine\Controller {
         } else $errors=[];
         $data=$this->formBase($id?'text_edit_group':'text_add_group',$errors);
         $data['form_kind']='group'; $data['action']=$this->url->link(self::ROUTE.($id?'.edit_group|'.$id:'.add_group'));
-        $data['key']=(string)($this->request->post['key']??($group['key']??''));
-        $data['name']=(string)($this->request->post['name']??($group['name']??''));
+        $data['key']=$this->postScalar('key',(string)($group['key']??''));
+        $data['name']=$this->postScalar('name',(string)($group['name']??''));
         $data['status']=isset($this->request->post['status'])?1:($this->isPost()?0:(int)($group['status']??1));
-        $data['sort_order']=(string)($this->request->post['sort_order']??($group['sort_order']??0));
+        $data['sort_order']=$this->postScalar('sort_order',(string)($group['sort_order']??0));
         $data['descriptions']=$this->descriptionRows('group',$id);
         $data['cancel']=$this->url->link(self::ROUTE);
         $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V); $this->response->setOutput($this->load->view('custom_field/definition_form',$data));
@@ -88,12 +88,15 @@ class Definition extends \Reamur\System\Engine\Controller {
         $data['groups']=$this->model_custom_field_definition->getGroups(['entity_type'=>'cms/page']);
         $data['types']=$this->model_custom_field_definition->getAllowedTypes();
         $data['visibility_options']=$this->model_custom_field_definition->getAllowedVisibility();
-        $data['group_id']=(int)($this->request->post['group_id']??($field['group_id']??0));
-        $data['key']=(string)($this->request->post['key']??($field['key']??''));
-        $data['type']=(string)($field['type']??($this->request->post['type']??'text'));
-        $data['localized']=(int)($field['localized']??($this->request->post['localized']??0)); $data['required']=isset($this->request->post['required'])?1:($this->isPost()?0:(int)($field['required']??0));
-        $data['visibility']=(string)($this->request->post['visibility']??($field['visibility']??'admin_only'));
-        $data['sort_order']=(string)($this->request->post['sort_order']??($field['sort_order']??0));
+        $gidRaw=$this->postScalar('group_id',(string)($field['group_id']??0));
+        $data['group_id']=preg_match('/^-?\d+$/',trim($gidRaw))===1?(int)$gidRaw:0;
+        $data['key']=$this->postScalar('key',(string)($field['key']??''));
+        $data['type']=(string)($field['type']??$this->postScalar('type','text'));
+        $locRaw=(string)($field['localized']??$this->postScalar('localized','0'));
+        $data['localized']=preg_match('/^-?\d+$/',trim($locRaw))===1?(int)$locRaw:0;
+        $data['required']=isset($this->request->post['required'])?1:($this->isPost()?0:(int)($field['required']??0));
+        $data['visibility']=$this->postScalar('visibility',(string)($field['visibility']??'admin_only'));
+        $data['sort_order']=$this->postScalar('sort_order',(string)($field['sort_order']??0));
         $data['descriptions']=$this->descriptionRows('field',$id);
         $stored=json_decode((string)($field['options']??'[]'),true); $posted=$this->request->post['options']??null;
         $data['options']=is_array($posted)?$posted:(is_array($stored)?$stored:[]);
@@ -114,38 +117,53 @@ class Definition extends \Reamur\System\Engine\Controller {
     }
 
     private function validateGroup(int $id): array {
-        $p=$this->request->post; $key=trim((string)($p['key']??'')); $name=trim((string)($p['name']??'')); $errors=[];
+        $p=$this->request->post; $key=trim($this->postScalar('key')); $name=trim($this->postScalar('name')); $errors=[];
         if (!preg_match('/^[a-z][a-z0-9_]{1,63}$/',$key)) $errors[]=$this->language->get('error_key');
         if ($name==='') $errors[]=$this->language->get('error_name');
         if ($this->model_custom_field_definition->groupExists('cms/page',$key,$id)) $errors[]=$this->language->get('error_duplicate_key');
-        if (empty($p['group_description'][1]['name'])) $errors[]=$this->language->get('error_en_label');
+        $gDesc=is_array($p['group_description']??null)?$p['group_description']:[]; $row1=is_array($gDesc[1]??null)?$gDesc[1]:[];
+        if (!is_scalar($row1['name']??null) || trim((string)$row1['name'])==='') $errors[]=$this->language->get('error_en_label');
         return $errors;
     }
     private function validateField(int $id,array $field): array {
-        $p=$this->request->post; $key=trim((string)($p['key']??($field['key']??''))); $type=(string)($field['type']??($p['type']??'')); $errors=[];
+        $p=$this->request->post; $key=trim($this->postScalar('key',(string)($field['key']??''))); $type=(string)($field['type']??$this->postScalar('type')); $errors=[];
         if (!$id && !preg_match('/^[a-z][a-z0-9_]{1,63}$/',$key)) $errors[]=$this->language->get('error_key');
         if (!$id && !in_array($type,$this->model_custom_field_definition->getAllowedTypes(),true)) $errors[]=$this->language->get('error_type');
         if ($this->model_custom_field_definition->fieldExists('cms/page',$key,$id)) $errors[]=$this->language->get('error_duplicate_key');
         $groups=$this->model_custom_field_definition->getGroups(['entity_type'=>'cms/page']); $allowed=array_map(static fn($g)=>(int)((array)$g)['group_id'],$groups);
-        if (!in_array((int)($p['group_id']??0),$allowed,true)) $errors[]=$this->language->get('error_group');
-        if (!in_array((string)($p['visibility']??'admin_only'),$this->model_custom_field_definition->getAllowedVisibility(),true)) $errors[]=$this->language->get('error_visibility');
-        if (empty($p['field_description'][1]['label'])) $errors[]=$this->language->get('error_en_label');
+        $gidRaw=trim($this->postScalar('group_id','0')); $gid=preg_match('/^-?\d+$/',$gidRaw)===1?(int)$gidRaw:0;
+        if (!in_array($gid,$allowed,true)) $errors[]=$this->language->get('error_group');
+        if (!in_array($this->postScalar('visibility','admin_only'),$this->model_custom_field_definition->getAllowedVisibility(),true)) $errors[]=$this->language->get('error_visibility');
+        $fDesc=is_array($p['field_description']??null)?$p['field_description']:[]; $row1=is_array($fDesc[1]??null)?$fDesc[1]:[];
+        if (!is_scalar($row1['label']??null) || trim((string)$row1['label'])==='') $errors[]=$this->language->get('error_en_label');
         return $errors;
     }
     private function groupPayload(): array {
-        $p=$this->request->post; $d=[]; foreach ((array)($p['group_description']??[]) as $lid=>$row) $d[(int)$lid]=['name'=>mb_substr(trim((string)($row['name']??'')),0,128)];
-        return ['entity_type'=>'cms/page','key'=>mb_substr(trim((string)($p['key']??'')),0,64),'name'=>mb_substr(trim((string)($p['name']??'')),0,128),'status'=>isset($p['status'])?1:0,'sort_order'=>(int)($p['sort_order']??0),'descriptions'=>$d];
+        $p=$this->request->post; $d=[];
+        $scalarStr=static fn(mixed $v): string => is_scalar($v)?(string)$v:'';
+        $rawDesc=is_array($p['group_description']??null)?$p['group_description']:[];
+        foreach ($rawDesc as $lid=>$row) { if (is_array($row)) $d[(int)$lid]=['name'=>mb_substr(trim($scalarStr($row['name']??'')),0,128)]; }
+        $sortRaw=trim($this->postScalar('sort_order','0'));
+        return ['entity_type'=>'cms/page','key'=>mb_substr(trim($this->postScalar('key')),0,64),'name'=>mb_substr(trim($this->postScalar('name')),0,128),'status'=>isset($p['status'])?1:0,'sort_order'=>preg_match('/^-?\d+$/',$sortRaw)===1?(int)$sortRaw:0,'descriptions'=>$d];
     }
     private function fieldPayload(array $field): array {
-        $p=$this->request->post; $d=[]; foreach ((array)($p['field_description']??[]) as $lid=>$row) $d[(int)$lid]=['label'=>mb_substr(trim((string)($row['label']??'')),0,128),'help'=>mb_substr(trim((string)($row['help']??'')),0,255)];
-        $opts=[];foreach ((array)($p['options']['value']??[]) as $i=>$v) $opts[]=['value'=>(string)$v,'label'=>(string)($p['options']['label'][$i]??'')];
-        return ['entity_type'=>'cms/page','group_id'=>(int)($p['group_id']??0),'key'=>(string)($field['key']??trim((string)($p['key']??''))),'type'=>(string)($field['type']??($p['type']??'')),'localized'=>(int)($field['localized']??($p['localized']??0)),'required'=>isset($p['required'])?1:0,'visibility'=>(string)($p['visibility']??'admin_only'),'options'=>$opts,'sort_order'=>(int)($p['sort_order']??0),'descriptions'=>$d];
+        $p=$this->request->post; $d=[];
+        $scalarStr=static fn(mixed $v): string => is_scalar($v)?(string)$v:'';
+        $scalarInt=static fn(mixed $v): int => is_scalar($v)&&preg_match('/^-?\d+$/',trim((string)$v))===1?(int)$v:0;
+        $rawDesc=is_array($p['field_description']??null)?$p['field_description']:[];
+        foreach ($rawDesc as $lid=>$row) { if (is_array($row)) $d[(int)$lid]=['label'=>mb_substr(trim($scalarStr($row['label']??'')),0,128),'help'=>mb_substr(trim($scalarStr($row['help']??'')),0,255)]; }
+        $opts=[]; $rawOpts=is_array($p['options']??null)?$p['options']:[];
+        $optValues=is_array($rawOpts['value']??null)?$rawOpts['value']:[]; $optLabels=is_array($rawOpts['label']??null)?$rawOpts['label']:[];
+        foreach ($optValues as $i=>$v) $opts[]=['value'=>$scalarStr($v),'label'=>$scalarStr($optLabels[$i]??'')];
+        return ['entity_type'=>'cms/page','group_id'=>$scalarInt($this->postScalar('group_id','0')),'key'=>(string)($field['key']??trim($this->postScalar('key'))),'type'=>(string)($field['type']??$this->postScalar('type')),'localized'=>isset($field['localized'])?(int)$field['localized']:$scalarInt($this->postScalar('localized','0')),'required'=>isset($p['required'])?1:0,'visibility'=>$this->postScalar('visibility','admin_only'),'options'=>$opts,'sort_order'=>$scalarInt($this->postScalar('sort_order','0')),'descriptions'=>$d];
     }
     private function descriptionRows(string $kind,int $id): array {
         $langs=$this->model_custom_field_definition->getLanguages();
         $saved=$id?($kind==='group'?$this->model_custom_field_definition->getGroupDescriptions($id):$this->model_custom_field_definition->getFieldDescriptions($id)):[];
-        $post=$this->request->post[$kind==='group'?'group_description':'field_description']??[]; $out=[];
-        foreach($langs as $lang){$lang=(array)$lang;$lid=(int)$lang['language_id'];$old=(array)($saved[$lid]??[]);$new=(array)($post[$lid]??[]);$out[]=['language_id'=>$lid,'name'=>(string)$lang['name'],'code'=>(string)$lang['code'],'label'=>(string)($new['label']??$old['label']??''),'help'=>(string)($new['help']??$old['help']??''),'group_name'=>(string)($new['name']??$old['name']??'')];}
+        $rawPost=$this->request->post[$kind==='group'?'group_description':'field_description']??[];
+        $post=is_array($rawPost)?$rawPost:[]; $out=[];
+        $scalarStr=static fn(mixed $v): string => is_scalar($v)?(string)$v:'';
+        foreach($langs as $lang){$lang=(array)$lang;$lid=(int)$lang['language_id'];$old=(array)($saved[$lid]??[]);$new=is_array($post[$lid]??null)?$post[$lid]:[];$out[]=['language_id'=>$lid,'name'=>(string)$lang['name'],'code'=>(string)$lang['code'],'label'=>$scalarStr($new['label']??$old['label']??''),'help'=>$scalarStr($new['help']??$old['help']??''),'group_name'=>$scalarStr($new['name']??$old['name']??'')];}
         return $out;
     }
     private function formBase(string $title,array $errors): array {

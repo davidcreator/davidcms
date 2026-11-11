@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -31,7 +31,7 @@ class User extends \Reamur\System\Engine\Model {
                 `date_added`    = NOW()"
         );
 
-        return $this->db->getLastId();
+        return (int)$this->db->getLastId();
     }
 
     /**

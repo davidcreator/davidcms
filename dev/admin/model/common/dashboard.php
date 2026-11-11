@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -162,7 +162,7 @@ class Dashboard extends \Reamur\System\Engine\Model {
               LIMIT " . $limit
         );
 
-        return ($query instanceof \stdClass) ? (array)$query->rows : [];
+        return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
     }
 
     /**
@@ -184,6 +184,6 @@ class Dashboard extends \Reamur\System\Engine\Model {
               LIMIT " . $limit
         );
 
-        return ($query instanceof \stdClass) ? (array)$query->rows : [];
+        return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
     }
 }

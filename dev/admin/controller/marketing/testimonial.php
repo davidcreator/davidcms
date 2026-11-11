@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -271,15 +271,19 @@ class Testimonial extends \Reamur\System\Engine\Controller {
 
         $data['languages'] = [];
 
+        $postedDescriptions = is_array($post['testimonial_description'] ?? null) ? $post['testimonial_description'] : [];
+        $scalarStr = static fn(mixed $v): string => is_scalar($v) ? (string)$v : '';
+
         foreach ($this->model_marketing_testimonial->getLanguages() as $language) {
             $language = (array)$language;
             $lid      = (int)$language['language_id'];
             $saved    = (array)($descriptions[$lid] ?? []);
+            $postedLang = is_array($postedDescriptions[$lid] ?? null) ? $postedDescriptions[$lid] : [];
 
             $fields = [];
 
             foreach (['author', 'company', 'text'] as $f) {
-                $fields[$f] = (string)($post['testimonial_description'][$lid][$f] ?? ($saved[$f] ?? ''));
+                $fields[$f] = $scalarStr($postedLang[$f] ?? ($saved[$f] ?? ''));
             }
 
             $data['languages'][] = [
@@ -291,8 +295,8 @@ class Testimonial extends \Reamur\System\Engine\Controller {
         }
 
         $data['testimonial_id'] = $tid;
-        $data['image']          = (string)($post['image'] ?? ($testimonial['image'] ?? ''));
-        $data['sort_order']     = (string)($post['sort_order'] ?? (string)($testimonial['sort_order'] ?? '0'));
+        $data['image']          = $this->postScalar('image', (string)($testimonial['image'] ?? ''));
+        $data['sort_order']     = $this->postScalar('sort_order', (string)($testimonial['sort_order'] ?? '0'));
         $data['status']         = isset($post['status']) ? '1' : ($isPost ? '0' : (string)(int)($testimonial['status'] ?? 0));
 
         $data['upload']     = $this->url->link('marketing/testimonial.upload');
@@ -310,23 +314,28 @@ class Testimonial extends \Reamur\System\Engine\Controller {
      */
     private function postPayload(): array {
         $post = $this->request->post;
+        $scalarStr = static fn(mixed $v): string => is_scalar($v) ? (string)$v : '';
+        $sortRaw = trim($this->postScalar('sort_order', '0'));
 
         $descriptions = [];
+        $rawDescs = is_array($post['testimonial_description'] ?? null) ? $post['testimonial_description'] : [];
 
-        foreach ((array)($post['testimonial_description'] ?? []) as $lid => $d) {
-            $d = (array)$d;
+        foreach ($rawDescs as $lid => $d) {
+            if (!is_array($d)) {
+                continue;
+            }
 
             $descriptions[(int)$lid] = [
-                'author'  => mb_substr(trim((string)($d['author'] ?? '')), 0, 128),
-                'company' => mb_substr(trim((string)($d['company'] ?? '')), 0, 128),
-                'text'    => trim((string)($d['text'] ?? '')),
+                'author'  => mb_substr(trim($scalarStr($d['author'] ?? '')), 0, 128),
+                'company' => mb_substr(trim($scalarStr($d['company'] ?? '')), 0, 128),
+                'text'    => trim($scalarStr($d['text'] ?? '')),
             ];
         }
 
         return [
-            'image'        => $this->catalogMedia()->guard((string)($post['image'] ?? ''), self::UPLOAD_DIR),
+            'image'        => $this->catalogMedia()->guard($this->postScalar('image'), self::UPLOAD_DIR),
             'status'       => isset($post['status']) ? 1 : 0,
-            'sort_order'   => (int)($post['sort_order'] ?? 0),
+            'sort_order'   => preg_match('/^-?\d+$/', $sortRaw) === 1 ? (int)$sortRaw : 0,
             'descriptions' => $descriptions,
         ];
     }
@@ -337,16 +346,17 @@ class Testimonial extends \Reamur\System\Engine\Controller {
     private function validateTestimonial(): array {
         $errors = [];
         $post   = $this->request->post;
-        $desp   = (array)($post['testimonial_description'] ?? []);
+        $desp   = is_array($post['testimonial_description'] ?? null) ? $post['testimonial_description'] : [];
+        $row1   = is_array($desp[1] ?? null) ? $desp[1] : [];
 
-        $authorEn = trim((string)($desp[1]['author'] ?? ''));
+        $authorEn = is_scalar($row1['author'] ?? null) ? trim((string)$row1['author']) : '';
 
         if ($authorEn === '' || mb_strlen($authorEn) > 128) {
             $errors[] = $this->language->get('error_author');
         }
 
         // Imagem: só dentro do diretório do módulo (componente MediaUpload)
-        $image = (string)($post['image'] ?? '');
+        $image = $this->postScalar('image');
 
         if ($image !== '' && $this->catalogMedia()->guard($image, self::UPLOAD_DIR) === '') {
             $errors[] = $this->language->get('error_image_path');

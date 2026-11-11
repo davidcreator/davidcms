@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -297,23 +297,29 @@ class Order extends \Reamur\System\Engine\Controller {
         $isPost = $this->request->server['REQUEST_METHOD'] === 'POST';
         $post   = $this->request->post;
 
+        $statusRaw = trim($this->postScalar('order_status_id', (string)($order['order_status_id'] ?? 1)));
+        $scalarStr = static fn(mixed $v, string $default = ''): string => is_scalar($v) ? (string)$v : $default;
+
         $data['order_id']       = $oid;
-        $data['firstname']      = (string)($post['firstname'] ?? ($order['firstname'] ?? ''));
-        $data['lastname']       = (string)($post['lastname'] ?? ($order['lastname'] ?? ''));
-        $data['email']          = (string)($post['email'] ?? ($order['email'] ?? ''));
-        $data['telephone']      = (string)($post['telephone'] ?? ($order['telephone'] ?? ''));
-        $data['comment']        = (string)($post['comment'] ?? ($order['comment'] ?? ''));
-        $data['order_status_id'] = (int)($post['order_status_id'] ?? (int)($order['order_status_id'] ?? 1));
+        $data['firstname']      = $this->postScalar('firstname', (string)($order['firstname'] ?? ''));
+        $data['lastname']       = $this->postScalar('lastname', (string)($order['lastname'] ?? ''));
+        $data['email']          = $this->postScalar('email', (string)($order['email'] ?? ''));
+        $data['telephone']      = $this->postScalar('telephone', (string)($order['telephone'] ?? ''));
+        $data['comment']        = $this->postScalar('comment', (string)($order['comment'] ?? ''));
+        $data['order_status_id'] = preg_match('/^-?\d+$/', $statusRaw) === 1 ? (int)$statusRaw : 1;
 
         // Itens: POST (repovoa após erro) → banco; sempre reformatados p/ exibição
         $source = [];
         if ($isPost) {
-            foreach ((array)($post['order_product'] ?? []) as $p) {
-                $p = (array)$p;
+            $rawProducts = is_array($post['order_product'] ?? null) ? $post['order_product'] : [];
+            foreach ($rawProducts as $p) {
+                if (!is_array($p)) {
+                    continue;
+                }
                 $source[] = [
-                    'name'     => (string)($p['name'] ?? ''),
-                    'quantity' => (string)($p['quantity'] ?? '1'),
-                    'price'    => (string)($p['price'] ?? '0.0000'),
+                    'name'     => $scalarStr($p['name'] ?? ''),
+                    'quantity' => $scalarStr($p['quantity'] ?? '1', '1'),
+                    'price'    => $scalarStr($p['price'] ?? '0.0000', '0.0000'),
                 ];
             }
         } else {
@@ -348,16 +354,21 @@ class Order extends \Reamur\System\Engine\Controller {
      * @return array<string, mixed>
      */
     private function postPayload(array $existing = []): array {
-        $post = $this->request->post;
+        $post      = $this->request->post;
+        $scalarStr = static fn(mixed $v, string $default = ''): string => is_scalar($v) ? (string)$v : $default;
+        $scalarInt = static fn(mixed $v, int $default = 0): int => is_scalar($v) && preg_match('/^-?\d+$/', trim((string)$v)) === 1 ? (int)$v : $default;
 
         $products = [];
         $total    = 0.0;
+        $rawProducts = is_array($post['order_product'] ?? null) ? $post['order_product'] : [];
 
-        foreach ((array)($post['order_product'] ?? []) as $p) {
-            $p = (array)$p;
+        foreach ($rawProducts as $p) {
+            if (!is_array($p)) {
+                continue;
+            }
 
-            $name     = mb_substr(trim((string)($p['name'] ?? '')), 0, 255);
-            $quantity = (int)($p['quantity'] ?? 1);
+            $name     = mb_substr(trim($scalarStr($p['name'] ?? '')), 0, 255);
+            $quantity = $scalarInt($p['quantity'] ?? 1, 1);
             $price    = $this->toDecimal($p['price'] ?? '0');
 
             if ($name === '') {
@@ -376,17 +387,17 @@ class Order extends \Reamur\System\Engine\Controller {
             ];
         }
 
-        $status_id = (int)($post['order_status_id'] ?? 1);
+        $status_id = $scalarInt($this->postScalar('order_status_id', '1'), 1);
 
         return [
             'customer_id'     => 0, // orçamento/visitante (admin não edita customers — Fase futura)
-            'firstname'       => mb_substr(trim((string)($post['firstname'] ?? '')), 0, 32),
-            'lastname'        => mb_substr(trim((string)($post['lastname'] ?? '')), 0, 32),
-            'email'           => mb_substr(trim((string)($post['email'] ?? '')), 0, 96),
-            'telephone'       => mb_substr(trim((string)($post['telephone'] ?? '')), 0, 32),
+            'firstname'       => mb_substr(trim($this->postScalar('firstname')), 0, 32),
+            'lastname'        => mb_substr(trim($this->postScalar('lastname')), 0, 32),
+            'email'           => mb_substr(trim($this->postScalar('email')), 0, 96),
+            'telephone'       => mb_substr(trim($this->postScalar('telephone')), 0, 32),
             'total'           => number_format($total, 4, '.', ''),
             'order_status_id' => $status_id,
-            'comment'         => trim((string)($post['comment'] ?? '')),
+            'comment'         => trim($this->postScalar('comment')),
             'ip'              => (string)($this->request->server['REMOTE_ADDR'] ?? ''),
             'status_changed'  => $existing !== [] && (int)($existing['order_status_id'] ?? 0) !== $status_id ? 1 : 0,
             'products'        => $products,
@@ -397,28 +408,32 @@ class Order extends \Reamur\System\Engine\Controller {
      * @return array<int, string> Mensagens de erro (vazio = válido)
      */
     private function validateOrder(): array {
-        $errors = [];
-        $post   = $this->request->post;
+        $errors    = [];
+        $post      = $this->request->post;
+        $scalarStr = static fn(mixed $v): string => is_scalar($v) ? (string)$v : '';
 
-        $firstname = trim((string)($post['firstname'] ?? ''));
+        $firstname = trim($this->postScalar('firstname'));
 
         if ($firstname === '' || mb_strlen($firstname) > 32) {
             $errors[] = $this->language->get('error_firstname');
         }
 
-        $email = trim((string)($post['email'] ?? ''));
+        $email = trim($this->postScalar('email'));
 
         if ($email === '' || mb_strlen($email) > 96 || !preg_match('/^[^\s@]+@[^\s@]+\.[^\s@]+$/', $email)) {
             $errors[] = $this->language->get('error_email');
         }
 
         // Linhas de item: se algum campo veio preenchido mas o nome ficou vazio
-        foreach ((array)($post['order_product'] ?? []) as $p) {
-            $p = (array)$p;
+        $rawProducts = is_array($post['order_product'] ?? null) ? $post['order_product'] : [];
+        foreach ($rawProducts as $p) {
+            if (!is_array($p)) {
+                continue;
+            }
 
-            $name = trim((string)($p['name'] ?? ''));
+            $name = trim($scalarStr($p['name'] ?? ''));
 
-            if ($name === '' && ((string)($p['price'] ?? '') !== '' || (string)($p['quantity'] ?? '') !== '')) {
+            if ($name === '' && ($scalarStr($p['price'] ?? '') !== '' || $scalarStr($p['quantity'] ?? '') !== '')) {
                 $errors[] = $this->language->get('error_product');
 
                 break;
@@ -426,7 +441,8 @@ class Order extends \Reamur\System\Engine\Controller {
         }
 
         // Status precisa existir (POST adulterado)
-        $status_id = (int)($post['order_status_id'] ?? 1);
+        $statusRaw = trim($this->postScalar('order_status_id', '1'));
+        $status_id = preg_match('/^-?\d+$/', $statusRaw) === 1 ? (int)$statusRaw : 0;
         $valid     = array_column($this->model_sale_order->getOrderStatusOptions(), 'order_status_id');
 
         if (!in_array($status_id, array_map('intval', $valid), true)) {
@@ -438,6 +454,9 @@ class Order extends \Reamur\System\Engine\Controller {
 
     /** Converte "1234.56" (com vírgula ou ponto) para float ≥ 0 — sem warnings */
     private function toDecimal(mixed $raw): float {
+        if (!is_scalar($raw)) {
+            return 0.0;
+        }
         $raw = str_replace(',', '.', trim((string)$raw));
 
         if ($raw === '' || !preg_match('/^\d+(\.\d{1,4})?$/', $raw)) {

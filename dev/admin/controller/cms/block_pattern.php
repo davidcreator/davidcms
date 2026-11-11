@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package ReamurCMS
  * @license https://opensource.org/licenses/GPL-3.0

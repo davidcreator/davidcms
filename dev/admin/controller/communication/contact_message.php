@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -262,7 +262,7 @@ class Contact_message extends \Reamur\System\Engine\Controller {
 
     /** Voltar para o detalhe (from=read) ou para a grade (padrão) */
     private function readBackUrl(int $id): string {
-        return (($this->request->post['from'] ?? '') === 'read')
+        return ($this->postScalar('from') === 'read')
             ? $this->url->link('communication/contact_message.read|' . $id)
             : $this->url->link('communication/contact_message');
     }

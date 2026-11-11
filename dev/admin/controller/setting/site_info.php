@@ -211,5 +211,4 @@ class Site_info extends \Reamur\System\Engine\Controller {
         return $out;
     }
 
-    /** @return array{type: string, text: string} */
 }

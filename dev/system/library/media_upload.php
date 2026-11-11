@@ -41,7 +41,9 @@ final class MediaUpload {
      *         error ∈ {'no_file','size','type','move'} (controller traduz p/ idioma)
      */
     public function store(array $file, string $targetDir): array {
-        if (str_ends_with($targetDir, '/') === false || str_contains($targetDir, '..')) {
+        if ($targetDir === '' || str_starts_with($targetDir, '/') || str_contains($targetDir, '\\')
+            || preg_match('/[\x00-\x1f\x7f]/', $targetDir) === 1
+            || str_ends_with($targetDir, '/') === false || str_contains($targetDir, '..')) {
             throw new \InvalidArgumentException('MediaUpload: targetDir inválido');
         }
 
@@ -74,10 +76,18 @@ final class MediaUpload {
             default      => 'gif',
         };
 
-        $dir = $this->catalogRoot . $targetDir;
+        $dir = rtrim(str_replace('\\', '/', $this->catalogRoot), '/') . '/' . $targetDir;
+
+        if (is_link(rtrim($dir, '/'))) {
+            return ['ok' => false, 'path' => '', 'error' => 'move'];
+        }
 
         if (!is_dir($dir)) {
             @mkdir($dir, 0755, true);
+        }
+
+        if (is_link(rtrim($dir, '/')) || !is_dir($dir)) {
+            return ['ok' => false, 'path' => '', 'error' => 'move'];
         }
 
         $filename = date('YmdHis') . '-' . bin2hex(random_bytes(6)) . '.' . $ext;
@@ -94,20 +104,43 @@ final class MediaUpload {
      * Retorna o path saneado ou '' — usado em validação/payload normalizado.
      */
     public function guard(string $path, string $targetDir): string {
+        $targetDir = ltrim(str_replace('\\', '/', trim($targetDir)), '/');
         $path = str_replace('\\', '/', trim($path));
 
-        if ($path === '' || !str_starts_with($path, $targetDir) || str_contains($path, '..')) {
+        if ($targetDir === '' || $path === '' || preg_match('/[\x00-\x1f\x7f]/', $path) === 1
+            || !str_starts_with($path, $targetDir) || str_contains($path, '..')) {
             return '';
         }
 
         return $this->absolute($path) !== '' ? $path : '';
     }
 
-    /** Resolve o path físico no catalog; '' se não existir */
+    /** Resolve o path físico no catalog; '' se não existir ou escapar do root */
     public function absolute(string $relative): string {
-        $path = $this->catalogRoot . $relative;
+        $normalized = str_replace('\\', '/', trim($relative));
 
-        return is_file($path) ? $path : '';
+        if ($normalized === '' || preg_match('/[\x00-\x1f\x7f]/', $normalized) === 1
+            || str_starts_with($normalized, '/') || str_contains($normalized, '..')) {
+            return '';
+        }
+
+        $root = rtrim(str_replace('\\', '/', $this->catalogRoot), '/') . '/';
+        $path = $root . $normalized;
+
+        if (is_link($path) || !is_file($path)) {
+            return '';
+        }
+
+        $realRoot = realpath($root);
+        $realPath = realpath($path);
+
+        if ($realRoot === false || $realPath === false) {
+            return '';
+        }
+
+        $realRootPrefix = rtrim($realRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+
+        return str_starts_with($realPath, $realRootPrefix) ? $path : '';
     }
 
     /** Remoção física best-effort (delete de entidade / troca de imagem) */

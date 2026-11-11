@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /** Admin theme manager (F10-02); access and modify are separately ACL-gated.
  * F13-T: sonda/prévia coerentes com o ID estável da política publicada (R/S). */
 namespace Reamur\Admin\Controller\Design;
@@ -21,10 +21,10 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['preset_count']=count($this->three_scene_preset->ids());
         // Frente BE: feedback estavel por query string (allowlist); sem gravar estado.
         $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','components_invalid','schedule_invalid','media_invalid','sites_invalid','slug_exists','save_failed','forbidden','csrf'];
-        $ok=(string)($this->request->get['ok']??''); $err=(string)($this->request->get['error']??''); $code=(string)($this->request->get['code']??'');
+        $ok=$this->queryValue('ok'); $err=$this->queryValue('error'); $code=$this->queryValue('code');
         $data['notice']=in_array($ok,['import','activate','deactivate','delete'],true)?$this->language->get('text_'.$ok.'_ok'):'';
         $data['error']=$err==='import'?$this->language->get('text_import_error').' ('.(in_array($code,$codes,true)?$code:'unknown').')':($err==='delete'?$this->language->get('text_delete_error'):'');
-        $data['import_open']=(bool)($this->request->get['import']??'');
+        $data['import_open']=$this->queryValue('import')!=='';
         foreach($data['themes'] as &$theme) { $id=(int)$theme['theme_id']; $theme['edit']=$this->url->link('design/theme.edit|'.$id); $theme['activate']=$this->url->link('design/theme.activate|'.$id); $theme['deactivate']=$this->url->link('design/theme.deactivate|'.$id); $theme['delete']=$this->url->link('design/theme.delete|'.$id); } unset($theme);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-package.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V); $this->response->setOutput($this->load->view('design/theme_list',$data));
@@ -99,8 +99,8 @@ class Theme extends \Reamur\System\Engine\Controller {
         foreach(['text_package','text_package_help','text_package_export','text_package_export_published','text_package_import','text_package_import_help','text_package_file','text_package_paste','text_package_button','text_package_version','text_package_parent','text_package_parent_help','text_package_parent_none','text_import_ok','text_import_error','error_theme_parent','text_package_drop','text_package_preview','text_package_preview_name','text_package_preview_slug','text_package_preview_file','text_package_ready','error_package_size','error_package_type','error_package_json','error_package_format'] as $k) $data[$k]=$this->language->get($k);
         $data['notice']='';
         $codes=['package_size_invalid','json_invalid','format_invalid','version_invalid','identity_invalid','config_invalid','checksum_invalid','config_key_invalid','color_invalid','scene_invalid','parent_invalid','templates_invalid','template_source_invalid','conditions_invalid','three_invalid','tokens_invalid','sections_invalid','components_invalid','schedule_invalid','media_invalid','sites_invalid','slug_exists','save_failed','forbidden','csrf'];
-        $impErr=(string)($this->request->get['import_error']??'');
-        if ((string)($this->request->get['import_ok']??'')==='1') $data['notice']=$this->language->get('text_import_ok');
+        $impErr=$this->queryValue('import_error');
+        if ($this->queryValue('import_ok')==='1') $data['notice']=$this->language->get('text_import_ok');
         elseif ($impErr!=='') $data['error']=$this->language->get('text_import_error').' ('.(in_array($impErr,$codes,true)?$impErr:'unknown').')';
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-package.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
@@ -355,7 +355,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['preview_site_selected']='';
         $data['preview_devices']=['desktop','tablet','mobile'];
         $data['preview_variants']=['','a','b'];
-        $focusPreview=(string)($this->request->get['focus_template']??'');
+        $focusPreview=$this->queryValue('focus_template');
         $data['preview_template']=in_array($focusPreview,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true)?$focusPreview:'common/home';
         $data['preview_theme_id']=$id;
         $data['scenes']=[['id'=>'','name'=>$this->language->get('text_no_scene')],['id'=>'hero-particles','name'=>'Hero particles'],['id'=>'portfolio-3d','name'=>'Portfolio 3D'],['id'=>'tools-3d','name'=>'Tools 3D'],['id'=>'not-found','name'=>'Not found'],['id'=>'david-universe','name'=>'David Universe (nave + orbes)']];
@@ -366,7 +366,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data=array_replace($this->language->all(),$data);
         // Frente AA: modo pagina cheia em OUTRA pagina (sem chrome do Admin).
         // Apenas leitura de GET; nenhuma rota, migration ou chave nova.
-        $data['kaz_fullscreen_page']=((string)($this->request->get['kaz_fullscreen']??'')==='1');
+        $data['kaz_fullscreen_page']=($this->queryValue('kaz_fullscreen')==='1');
         /* Frente AH: estado da LIBERACAO visivel no proprio Admin. HTML
            server-side: aparece mesmo se o JS nao inicializar (AD/AE). Puro,
            sem rota/coluna/traducao nova e sem nenhuma escrita. */
@@ -391,7 +391,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $this->response->addHeader('Content-Type: application/json; charset=utf-8');
         $this->response->addHeader('Cache-Control: no-store');
         $this->response->addHeader('X-Content-Type-Options: nosniff');
-        $source=(string)($this->request->get['source']??'draft')==='published' ? 'published' : 'draft';
+        $source=$this->queryValue('source')==='published' ? 'published' : 'draft';
         $config=$source==='published'?$this->model_design_theme->getPublishedConfig($id):$this->model_design_theme->getDraftConfig($id);
         $package=$this->theme_package->export((string)($theme['name']??''),(string)($theme['slug']??''),$config,['source'=>$source]);
         $filename=preg_replace('/[^a-z0-9_-]/','',(string)($theme['slug']??'')) ?: 'theme';
@@ -438,8 +438,11 @@ class Theme extends \Reamur\System\Engine\Controller {
     public function preview(string $theme_id='0'): void {
         if (!$this->user->hasPermission('access','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
         $this->load->language('design/theme'); $this->load->model('design/theme'); $id=(int)$theme_id; $theme=$this->model_design_theme->getTheme($id);
-        $key=(string)($this->request->get['template']??''); $config=json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true); $templates=is_array($config)?(array)($config['templates']??[]):[];
-        if (!isset($templates[$key]) || !method_exists($this->template,'renderSandboxPreview')) { $this->response->setOutput('No saved source is available for this allowlisted preview.'); return; }
+        $key=$this->queryValue('template');
+        $rawCfg=is_string($theme['draft_config']??null)&&$theme['draft_config']!==''?$theme['draft_config']:(is_string($theme['config']??null)?$theme['config']:'{}');
+        $config=$rawCfg!==''?json_decode($rawCfg,true):null;
+        $templates=is_array($config)&&is_array($config['templates']??null)?$config['templates']:[];
+        if (!in_array($key,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true) || !isset($templates[$key]) || !is_string($templates[$key]) || !method_exists($this->template,'renderSandboxPreview')) { $this->response->setOutput('No saved source is available for this allowlisted preview.'); return; }
         $sceneV=(new \Reamur\System\Library\Theme\ThemeSceneCss())->compile(is_array($config)?($config['kaz_scene']??null):null);
         /* Frente AG: o MESMO estado efetivo que startup/theme.php publica.
            ThemeSnapshot ja e usado por compare(); aqui a previa isolada deixa
@@ -471,7 +474,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         if (!$this->user->hasPermission('access','design/theme')) { $this->jsonResponse($fail('forbidden'), 200, true); return; }
         $post=$this->request->post;
         if (!$this->csrfValid()) { $this->jsonResponse($fail('csrf'), 200, true); return; }
-        $conditions=json_decode((string)($post['conditions']??''),true);
+        $conditions=is_string($post['conditions']??null)?json_decode($post['conditions'],true):null;
         $conditions=is_array($conditions)?$conditions:['version'=>1,'rules'=>[]];
         $engine=$this->theme_condition_engine;
         $errors=$engine->validate($conditions);
@@ -498,11 +501,12 @@ class Theme extends \Reamur\System\Engine\Controller {
      */
     private function buildDraftConfig(array $post): array {
         $bad=function(string $message): array { return ['name'=>'','slug'=>'','config'=>[],'error'=>$message]; };
-        $name=trim((string)($post['name']??'')); $slug=strtolower(trim((string)($post['slug']??'')));
+        $scalarStr=static fn(mixed $v,string $default=''): string => is_scalar($v)?(string)$v:$default;
+        $name=trim($scalarStr($post['name']??'')); $slug=strtolower(trim($scalarStr($post['slug']??'')));
         if ($name==='' || !preg_match('/^[a-z0-9_-]{1,48}$/',$slug)) return $bad($this->language->get('error_validation'));
-        $primary=(string)($post['primary']??''); $surface=(string)($post['surface']??'');
+        $primary=$scalarStr($post['primary']??''); $surface=$scalarStr($post['surface']??'');
         if (!preg_match('/^#[0-9a-fA-F]{6}$/',$primary) || !preg_match('/^#[0-9a-fA-F]{6}$/',$surface)) return $bad($this->language->get('error_validation'));
-        $templates=(array)($post['templates']??[]); $safeTemplates=[]; $invalidTemplateSource=false;
+        $templates=is_array($post['templates']??null)?$post['templates']:[]; $safeTemplates=[]; $invalidTemplateSource=false;
         foreach($templates as $templateKey=>$source) {
             if (!in_array((string)$templateKey,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true) || !is_string($source) || strlen($source)>131072 || preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i',(string)$source)) { $invalidTemplateSource=true; continue; }
             $safeTemplates[(string)$templateKey]=$source;
@@ -510,24 +514,24 @@ class Theme extends \Reamur\System\Engine\Controller {
         if ($invalidTemplateSource) return $bad($this->language->get('error_template_source'));
         // F13-E: child-theme. Sem coluna nova: `parent` e so uma chave do JSON.
         // Formato allowlistado e proibido apontar para o proprio tema.
-        $parent=strtolower(trim((string)($post['parent_theme']??'')));
+        $parent=strtolower(trim($scalarStr($post['parent_theme']??'')));
         if ($parent!=='' && (preg_match('/^[a-z0-9_-]{1,48}$/D',$parent)!==1 || $parent===$slug)) return $bad($this->language->get('error_theme_parent'));
         $engine=$this->theme_condition_engine;
-        $conditions=json_decode((string)($post['conditions']??''),true);
+        $conditions=is_string($post['conditions']??null)?json_decode($post['conditions'],true):null;
         $conditions=is_array($conditions)?$conditions:['version'=>1,'rules'=>[]];
         $conditionErrors=$engine->validate($conditions);
         // F13-D: um preset e apenas um ATALHO que preenche os mesmos campos
         // three_*; nenhuma chave nova entra no config do tema. Valor '' (ou
         // edicao manual) mantem os campos personalizados.
         $threeInput=[
-            'enabled'=>(string)($post['three_enabled']??'0')==='1',
-            'scene'=>(string)($post['three_scene']??''),
-            'slot'=>(string)($post['three_slot']??'hero'),
-            'count'=>(string)($post['three_count']??'400'),
-            'color'=>(string)($post['three_color']??'#8a4fff'),
-            'speed'=>(string)($post['three_speed']??'0.05'),
+            'enabled'=>$scalarStr($post['three_enabled']??'0','0')==='1',
+            'scene'=>$scalarStr($post['three_scene']??''),
+            'slot'=>$scalarStr($post['three_slot']??'hero','hero'),
+            'count'=>$scalarStr($post['three_count']??'400','400'),
+            'color'=>$scalarStr($post['three_color']??'#8a4fff','#8a4fff'),
+            'speed'=>$scalarStr($post['three_speed']??'0.05','0.05'),
         ];
-        $presetId=(string)($post['scene_preset']??'');
+        $presetId=$scalarStr($post['scene_preset']??'');
         if ($presetId!=='') {
             $presetFields=$this->three_scene_preset->apply($presetId);
             if ($presetFields===null) return $bad($this->language->get('error_scene_preset'));
@@ -539,7 +543,7 @@ class Theme extends \Reamur\System\Engine\Controller {
             ];
         }
         $three=$engine->normalizeThree($threeInput);
-        $tokensRaw=(array)($post['tokens']??[]);
+        $tokensRaw=is_array($post['tokens']??null)?$post['tokens']:[];
         $tokenErrors=$this->theme_token_registry->validate($tokensRaw);
         $tokensNormalized=$this->theme_token_registry->normalize($tokensRaw);
         if ($conditionErrors) return $bad($this->language->get('error_conditions').' ('.$conditionErrors[0]['code'].')');
@@ -549,8 +553,8 @@ class Theme extends \Reamur\System\Engine\Controller {
         // frente E, clientes antigos) preservam o layout legado do CMS.
         $sectionOverride=null;
         if (array_key_exists('sections_order',$post)||array_key_exists('sections',$post)) {
-            $order=$this->theme_section_registry->formOrder((string)($post['sections_order']??''));
-            $enabled=(array)($post['sections']??[]);
+            $order=$this->theme_section_registry->formOrder($scalarStr($post['sections_order']??''));
+            $enabled=is_array($post['sections']??null)?$post['sections']:[];
             $selected=[];
             foreach($order as $sid) if (in_array($sid,$enabled,true)) $selected[]=$sid;
             $sectionOverride=$this->theme_section_registry->normalize($selected);
@@ -559,14 +563,14 @@ class Theme extends \Reamur\System\Engine\Controller {
         // F13-G: componentes. Campos ausentes preservam pacotes/ temas A-F.
         $componentOverride=null;
         if (array_key_exists('components',$post)) {
-            $rawComponents=(array)$post['components'];
+            $rawComponents=is_array($post['components'])?$post['components']:[];
             $clean=[];
             foreach($this->theme_component_registry->ids() as $cid) {
                 if (!isset($rawComponents[$cid]) || !is_array($rawComponents[$cid])) continue;
                 $clean[$cid]=[
-                    'enabled'=>isset($rawComponents[$cid]['enabled'])&&(string)$rawComponents[$cid]['enabled']==='1',
-                    'variant'=>(string)($rawComponents[$cid]['variant']??''),
-                    'tone'=>(string)($rawComponents[$cid]['tone']??''),
+                    'enabled'=>isset($rawComponents[$cid]['enabled'])&&$scalarStr($rawComponents[$cid]['enabled'])==='1',
+                    'variant'=>$scalarStr($rawComponents[$cid]['variant']??''),
+                    'tone'=>$scalarStr($rawComponents[$cid]['tone']??''),
                 ];
             }
             $componentOverride=$this->theme_component_registry->normalize($clean);
@@ -584,10 +588,10 @@ class Theme extends \Reamur\System\Engine\Controller {
             }
             $scheduleOverride=$this->theme_schedule->normalize([
                 'enabled'=>$rawSchedule['enabled']??false,
-                'from'=>(string)($rawSchedule['from']??''),
-                'until'=>(string)($rawSchedule['until']??''),
-                'percent'=>(string)($rawSchedule['percent']??'0'),
-                'scope'=>(string)($rawSchedule['scope']??'all'),
+                'from'=>$scalarStr($rawSchedule['from']??''),
+                'until'=>$scalarStr($rawSchedule['until']??''),
+                'percent'=>$scalarStr($rawSchedule['percent']??'0','0'),
+                'scope'=>$scalarStr($rawSchedule['scope']??'all','all'),
                 // F13-O: array de IDs; normalize() devolve null se houver
                 // qualquer ID fora da allowlist (fail-closed, error_schedule).
                 'sites'=>(array)($rawSchedule['sites']??[]),
@@ -597,13 +601,13 @@ class Theme extends \Reamur\System\Engine\Controller {
         // F13-I: midias vetoriais. Campos ausentes preservam pacotes A-H.
         $mediaOverride=null;
         if (array_key_exists('media',$post)) {
-            $rawMedia=(array)$post['media']; $cleanMedia=[];
+            $rawMedia=is_array($post['media'])?$post['media']:[]; $cleanMedia=[];
             foreach($this->theme_media->ids() as $mid) {
                 if (!isset($rawMedia[$mid]) || !is_array($rawMedia[$mid])) continue;
                 $cleanMedia[$mid]=[
-                    'enabled'=>isset($rawMedia[$mid]['enabled'])&&(string)$rawMedia[$mid]['enabled']==='1',
-                    'variant'=>(string)($rawMedia[$mid]['variant']??''),
-                    'tone'=>(string)($rawMedia[$mid]['tone']??''),
+                    'enabled'=>isset($rawMedia[$mid]['enabled'])&&$scalarStr($rawMedia[$mid]['enabled'])==='1',
+                    'variant'=>$scalarStr($rawMedia[$mid]['variant']??''),
+                    'tone'=>$scalarStr($rawMedia[$mid]['tone']??''),
                 ];
             }
             $mediaOverride=$this->theme_media->normalize($cleanMedia);
@@ -617,17 +621,17 @@ class Theme extends \Reamur\System\Engine\Controller {
         // checkbox marcado) continua indo para normalize() -> fail-closed.
         $sitesOverride=null;
         if (array_key_exists('sites',$post)) {
-            $rawSites=(array)$post['sites']; $cleanSites=[];
+            $rawSites=is_array($post['sites'])?$post['sites']:[]; $cleanSites=[];
             foreach($this->theme_sites->ids() as $sid) {
                 if (!isset($rawSites[$sid]) || !is_array($rawSites[$sid])) continue;
-                $siteHost=(string)($rawSites[$sid]['host']??'');
-                $siteSlug=(string)($rawSites[$sid]['slug']??'');
-                $siteOn=isset($rawSites[$sid]['enabled'])&&(string)$rawSites[$sid]['enabled']==='1';
+                $siteHost=$scalarStr($rawSites[$sid]['host']??'');
+                $siteSlug=$scalarStr($rawSites[$sid]['slug']??'');
+                $siteOn=isset($rawSites[$sid]['enabled'])&&$scalarStr($rawSites[$sid]['enabled'])==='1';
                 if (!$siteOn && trim($siteHost)==='' && trim($siteSlug)==='') continue;
                 $cleanSites[$sid]=[
                     'host'=>$siteHost,
                     'slug'=>$siteSlug,
-                    'language'=>(string)($rawSites[$sid]['language']??'pt-br'),
+                    'language'=>$scalarStr($rawSites[$sid]['language']??'pt-br','pt-br'),
                     'enabled'=>$siteOn,
                 ];
             }
@@ -647,13 +651,14 @@ class Theme extends \Reamur\System\Engine\Controller {
         // error_validation, chave de traducao ja existente nos 3 idiomas.
         $kazSceneOverride=null;
         if (array_key_exists('kaz_scene_json',$post)) {
-            $rawKazScene=json_decode((string)$post['kaz_scene_json'],true);
+            $rawKazScene=is_string($post['kaz_scene_json'])?json_decode($post['kaz_scene_json'],true):null;
             $kazSceneOverride=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($rawKazScene);
             if ($kazSceneOverride===null) return $bad($this->language->get('error_validation'));
         }
         $normalized=$engine->normalize($conditions);
+        $sceneChoice=$scalarStr($post['scene']??'');
         $out=['primary'=>$primary,'surface'=>$surface,
-            'scene'=>in_array(($post['scene']??''),['','hero-particles','portfolio-3d','tools-3d','not-found','david-universe'],true)?(string)($post['scene']??''):'',
+            'scene'=>in_array($sceneChoice,['','hero-particles','portfolio-3d','tools-3d','not-found','david-universe'],true)?$sceneChoice:'',
             'templates'=>$safeTemplates,
             'conditions'=>['version'=>1,'rules'=>$normalized['rules']],
             'three'=>$three,'tokens'=>$tokensNormalized,'parent'=>$parent];
@@ -692,21 +697,21 @@ class Theme extends \Reamur\System\Engine\Controller {
         // Rascunho invalido: mostra o ultimo salvo e avisa; NAO grava nada.
         $draft=$built['error']===''?$built['config']:($id?$this->model_design_theme->getDraftConfig($id):[]);
         $context=$this->simulateContext([
-            'route'=>(string)($post['preview_route']??'common/home'),
-            'language'=>(string)($post['preview_language']??'en-us'),
-            'device'=>(string)($post['preview_device']??'desktop'),
-            'variant'=>(string)($post['preview_variant']??''),
-            'hour'=>(int)($post['preview_hour']??9),
-            'logged_in'=>(string)($post['preview_logged_in']??''),
+            'route'=>$this->postScalar('preview_route','common/home'),
+            'language'=>$this->postScalar('preview_language','en-us'),
+            'device'=>$this->postScalar('preview_device','desktop'),
+            'variant'=>$this->postScalar('preview_variant'),
+            'hour'=>is_scalar($post['preview_hour']??9)?(int)$post['preview_hour']:9,
+            'logged_in'=>$this->postScalar('preview_logged_in'),
             'query'=>isset($post['preview_query'])&&is_array($post['preview_query'])?$post['preview_query']:[],
         ]);
         // F13-H: sonda deterministica. Nenhum dado do visitante e exibido;
         // apenas o bucket (inteiro) aparece na fita. Zero escrita.
-        $probeNow=(string)($post['schedule_probe_now']??$this->theme_schedule->now());
+        $probeNow=$this->postScalar('schedule_probe_now',$this->theme_schedule->now());
         if ($this->theme_schedule->parseTime($probeNow)===null) $probeNow=$this->theme_schedule->now();
-        $probeVisitor=substr((string)($post['schedule_probe_visitor']??'visitor-a'),0,64);
-        $probeLogged=in_array(strtolower((string)($post['schedule_probe_logged']??'')),['1','true','yes','on'],true);
-        $key=(string)($post['preview_template']??'common/home');
+        $probeVisitor=substr($this->postScalar('schedule_probe_visitor','visitor-a'),0,64);
+        $probeLogged=in_array(strtolower($this->postScalar('schedule_probe_logged')),['1','true','yes','on'],true);
+        $key=$this->postScalar('preview_template','common/home');
         if (!in_array($key,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true)) $key='common/home';
         $snapshot=$this->theme_snapshot;
         // F13-E: heranca resolvida no mesmo ponto do Catalog (ThemeSnapshot).
@@ -716,12 +721,12 @@ class Theme extends \Reamur\System\Engine\Controller {
         // mostra a politica de sites do seu proprio config. Zero escrita.
         $sitesPub=$this->theme_sites->normalize($published['sites']??null) ?? [];
         $sitesDraft=$this->theme_sites->normalize($draft['sites']??null) ?? [];
-        $probeHost=(string)($post['site_probe_host']??'');
+        $probeHost=$this->postScalar('site_probe_host');
         // F13-M: escolher o site por ID (allowlistado) compara o MESMO site
         // nos dois paineis, mesmo que o rascunho tenha mudado o host dele.
         // Cada painel usa o host da SUA politica; site ausente/desabilitado
         // volta para a sonda (fail-closed). Nenhum host do request e exibido.
-        $previewSite=(string)($post['preview_site']??'');
+        $previewSite=$this->postScalar('preview_site');
         $siteIds=$this->theme_sites->ids();
         $forced=in_array($previewSite,$siteIds,true)?$previewSite:'';
         // F13-Q: o ID allowlistado e a FONTE DE VERDADE. Resolver por ID
@@ -740,7 +745,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         // F13-O/T: a sonda EXPLICITA da O continua soberana quando um ID e
         // escolhido no select. A nova opcao padrao vazia faz decide() seguir
         // o ID estavel, exatamente como startup/theme no Catalog.
-        $probeSite=(string)($post['schedule_probe_site']??'');
+        $probeSite=$this->postScalar('schedule_probe_site');
         $decisionSite=in_array($probeSite,$siteIds,true)?$probeSite:$seedId;
         $scheduleDecision=$this->theme_schedule->decide(
             $this->theme_schedule->normalize($draft['schedule']??null),
@@ -842,9 +847,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         }
         $g=$this->request->get;
         $cfg=$registry->normalize([
-            'scene'=>(string)($g['scene']??''),'slot'=>(string)($g['slot']??'hero'),
-            'count'=>(string)($g['count']??400),'color'=>(string)($g['color']??'#8a4fff'),
-            'speed'=>(string)($g['speed']??0.05),'enabled'=>(string)($g['enabled']??'0'),
+            'scene'=>$this->queryValue('scene'),'slot'=>$this->queryValue('slot') ?: 'hero',
+            'count'=>is_scalar($g['count']??null)?(string)$g['count']:'400','color'=>$this->queryValue('color') ?: '#8a4fff',
+            'speed'=>is_scalar($g['speed']??null)?(string)$g['speed']:'0.05','enabled'=>$this->queryValue('enabled') ?: '0',
         ]);
         $this->response->setOutput($registry->svg($cfg));
     }
@@ -864,9 +869,8 @@ class Theme extends \Reamur\System\Engine\Controller {
         if (!$this->user->hasPermission('access','design/theme')) {
             $this->response->setOutput($registry->svg('card')); return;
         }
-        $g=$this->request->get;
         $this->response->setOutput($registry->svg(
-            (string)($g['id']??'card'),(string)($g['variant']??''),(string)($g['tone']??'')
+            $this->queryValue('id') ?: 'card',$this->queryValue('variant'),$this->queryValue('tone')
         ));
     }
 
@@ -885,9 +889,8 @@ class Theme extends \Reamur\System\Engine\Controller {
         if (!$this->user->hasPermission('access','design/theme')) {
             $this->response->setOutput($registry->svg('pattern-dots')); return;
         }
-        $g=$this->request->get;
         $this->response->setOutput($registry->svg(
-            (string)($g['id']??'pattern-dots'),(string)($g['variant']??''),(string)($g['tone']??'')
+            $this->queryValue('id') ?: 'pattern-dots',$this->queryValue('variant'),$this->queryValue('tone')
         ));
     }
 

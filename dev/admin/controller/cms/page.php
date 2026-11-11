@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -290,7 +290,7 @@ class Page extends \Reamur\System\Engine\Controller {
             ];
         }
         try {
-            $this->model_cms_page->editPage($pageId, ['status'=>(int)$statusRaw,'sort_order'=>$sortOrder,'descriptions'=>$descriptionPayload], $this->model_cms_page->getPageEditFingerprint($pageId));
+            $this->model_cms_page->editPage($pageId, ['status'=>(int)$statusValue,'sort_order'=>$sortOrder,'descriptions'=>$descriptionPayload], $this->model_cms_page->getPageEditFingerprint($pageId));
         } catch (\RuntimeException $exception) {
             if ($exception->getMessage() !== 'edit_conflict') throw $exception;
             $this->setFlash($this->language->get('error_edit_conflict'), 'error'); $redirect(); return;
@@ -452,7 +452,7 @@ class Page extends \Reamur\System\Engine\Controller {
         $publicLanguages = [];
         foreach ($this->model_localization_language->getLanguages(['status' => 1]) as $row) {
             $row = (array)$row;
-            $code = strtolower((string)($row['code'] ?? ''));
+            $code = \Reamur\System\Library\LanguageNegotiator::clean((string)($row['code'] ?? ''));
             if ($code !== '' && is_dir(rtrim(DIR_SYSTEM, '/\\') . '/../catalog/language/' . $code)) $publicLanguages[] = $row;
         }
 
@@ -1202,24 +1202,30 @@ class Page extends \Reamur\System\Engine\Controller {
 
         $data['languages'] = [];
 
+        $postedDescriptions = is_array($post['page_description'] ?? null) ? $post['page_description'] : [];
+        $postedLayoutSections = is_array($post['page_layout_sections'] ?? null) ? $post['page_layout_sections'] : [];
+        $postedLayoutPresent = is_array($post['page_layout_sections_present'] ?? null) ? $post['page_layout_sections_present'] : [];
+        $scalarStr = static fn(mixed $v): string => is_scalar($v) ? (string)$v : '';
+
         foreach ($this->model_cms_page->getLanguages() as $language) {
             $language = (array)$language;
             $lid      = (int)$language['language_id'];
             $saved    = (array)($descriptions[$lid] ?? []);
+            $postedLang = is_array($postedDescriptions[$lid] ?? null) ? $postedDescriptions[$lid] : [];
 
             $fields = [];
 
             foreach (['title', 'description', 'meta_title', 'meta_description'] as $f) {
-                $fields[$f] = (string)($post['page_description'][$lid][$f] ?? ($saved[$f] ?? ''));
+                $fields[$f] = $scalarStr($postedLang[$f] ?? ($saved[$f] ?? ''));
             }
 
-            $fields['keyword'] = (string)($post['page_description'][$lid]['keyword'] ?? ($keywords[$lid] ?? ''));
+            $fields['keyword'] = $scalarStr($postedLang['keyword'] ?? ($keywords[$lid] ?? ''));
             $description = $fields['description'];
             $layoutSections = [];
             $layoutOptions = $pageLayout->options($systemKey);
             if ($layoutOptions !== []) {
-                $submittedSections = $post['page_layout_sections'][$lid] ?? null;
-                if ($submittedSections === null && isset($post['page_layout_sections_present'][$lid])) $submittedSections = [];
+                $submittedSections = $postedLayoutSections[$lid] ?? null;
+                if ($submittedSections === null && isset($postedLayoutPresent[$lid])) $submittedSections = [];
                 $hasEditorial = trim($description) !== '';
                 if (str_starts_with($description, 'REAMURCMS_BDRE_JSON_V2:')) {
                     $existingContent = (new \Reamur\System\Library\Blog\BlockDocument(true))->deserializeDocument(substr($description, strlen('REAMURCMS_BDRE_JSON_V2:')));
@@ -1360,13 +1366,22 @@ class Page extends \Reamur\System\Engine\Controller {
         $descriptions = [];
         $savedDescriptions = $pageId ? $this->model_cms_page->getPageDescriptions($pageId) : [];
 
-        foreach ((array)($post['page_description'] ?? []) as $lid => $d) {
-            $d = (array)$d;
+        $scalarStr = static fn(mixed $v): string => is_scalar($v) ? (string)$v : '';
+        $rawDescs = is_array($post['page_description'] ?? null) ? $post['page_description'] : [];
+        $modes = is_array($post['page_block_mode'] ?? null) ? $post['page_block_mode'] : [];
+        $layoutSections = is_array($post['page_layout_sections'] ?? null) ? $post['page_layout_sections'] : [];
+        $layoutPresent = is_array($post['page_layout_sections_present'] ?? null) ? $post['page_layout_sections_present'] : [];
+
+        foreach ($rawDescs as $lid => $d) {
+            if (!is_array($d)) {
+                continue;
+            }
 
             $description = array_key_exists('description', $d)
-                ? (string)$d['description']
+                ? $scalarStr($d['description'])
                 : (string)($savedDescriptions[(int)$lid]['description'] ?? '');
-            if (($post['page_block_mode'][$lid] ?? '') === 'blocks' && str_starts_with($description, 'REAMURCMS_BDRE_JSON_V2:')) {
+            $mode = $scalarStr($modes[$lid] ?? '');
+            if ($mode === 'blocks' && str_starts_with($description, 'REAMURCMS_BDRE_JSON_V2:')) {
                 $decoded = (new \Reamur\System\Library\Blog\BlockDocument(true))->deserializeDocument(substr($description, strlen('REAMURCMS_BDRE_JSON_V2:')));
                 if (!empty($decoded['valid']) && is_array($decoded['document']) && ($decoded['document']['format_version'] ?? null) === 2) {
                     $content = $decoded['document'];
@@ -1374,24 +1389,26 @@ class Page extends \Reamur\System\Engine\Controller {
                     if ($pageId > 0) {
                         $page = $this->model_cms_page->getPage($pageId);
                         $systemKey = (string)($page['system_key'] ?? '');
-                        $postedSections = $post['page_layout_sections'][$lid] ?? (isset($post['page_layout_sections_present'][$lid]) ? [] : null);
+                        $postedSections = $layoutSections[$lid] ?? (isset($layoutPresent[$lid]) ? [] : null);
                         $sections = $this->cms_page_layout->normalizeSections($systemKey, $postedSections);
                         if ($sections !== null) $description = $this->cms_page_layout->encode($systemKey, $content, $sections);
                     }
                 }
             }
             $descriptions[(int)$lid] = [
-                'title'            => mb_substr(trim((string)($d['title'] ?? '')), 0, 255),
-                'description'      => in_array(($post['page_block_mode'][$lid] ?? ''), ['blocks', 'invalid', 'preserve'], true) ? $description : trim($description),
-                'meta_title'       => mb_substr(trim((string)($d['meta_title'] ?? '')), 0, 255),
-                'meta_description' => mb_substr(trim((string)($d['meta_description'] ?? '')), 0, 255),
-                'keyword'          => mb_substr(trim((string)($d['keyword'] ?? '')), 0, 64),
+                'title'            => mb_substr(trim($scalarStr($d['title'] ?? '')), 0, 255),
+                'description'      => in_array($mode, ['blocks', 'invalid', 'preserve'], true) ? $description : trim($description),
+                'meta_title'       => mb_substr(trim($scalarStr($d['meta_title'] ?? '')), 0, 255),
+                'meta_description' => mb_substr(trim($scalarStr($d['meta_description'] ?? '')), 0, 255),
+                'keyword'          => mb_substr(trim($scalarStr($d['keyword'] ?? '')), 0, 64),
             ];
         }
 
+        $sortRaw = $this->postScalar('sort_order', '0');
+
         return [
-            'status'       => (string)($post['status'] ?? '0') === '1' ? 1 : 0,
-            'sort_order'   => (int)($post['sort_order'] ?? 0),
+            'status'       => $this->postScalar('status', '0') === '1' ? 1 : 0,
+            'sort_order'   => preg_match('/^-?\d+$/', trim($sortRaw)) === 1 ? (int)$sortRaw : 0,
             'descriptions' => $descriptions,
         ];
     }
@@ -1402,15 +1419,17 @@ class Page extends \Reamur\System\Engine\Controller {
     private function validatePage(int $page_id): array {
         $errors = [];
         $post   = $this->request->post;
-        $desp   = (array)($post['page_description'] ?? []);
+        $desp   = is_array($post['page_description'] ?? null) ? $post['page_description'] : [];
+        $row1   = is_array($desp[1] ?? null) ? $desp[1] : [];
 
-        $titleEn = trim((string)($desp[1]['title'] ?? ''));
+        $titleEn = is_scalar($row1['title'] ?? null) ? trim((string)$row1['title']) : '';
         $customFields = $this->model_custom_field_value->getPageFields();
-        $postedFields = (array)($post['custom_field'] ?? []);
+        $postedFields = is_array($post['custom_field'] ?? null) ? $post['custom_field'] : [];
         $activeLanguages = array_map(static fn($l)=>(int)((array)$l)['language_id'], $this->model_custom_field_value->getActiveLanguages());
         foreach ($customFields as $field) {
             $field=(array)$field; $fid=(int)$field['field_id']; $targets=(int)$field['localized']===1?$activeLanguages:[0];
-            foreach($targets as $lid) { $value=$postedFields[$fid][$lid] ?? ''; $problem=$this->model_custom_field_value->validateValue($field,$value); if($problem!=='') { $errors[]=$this->language->get('error_custom_field_'.$problem); } }
+            $fieldRow = is_array($postedFields[$fid] ?? null) ? $postedFields[$fid] : [];
+            foreach($targets as $lid) { $value=$fieldRow[$lid] ?? ''; $problem=$this->model_custom_field_value->validateValue($field,$value); if($problem!=='') { $errors[]=$this->language->get('error_custom_field_'.$problem); } }
         }
 
         if ($titleEn === '' || mb_strlen($titleEn) > 255) {
@@ -1419,7 +1438,10 @@ class Page extends \Reamur\System\Engine\Controller {
 
         // keyword SEO: formato + unicidade global por idioma (seo_url compartilhada)
         foreach ($desp as $lid => $d) {
-            $keyword = trim((string)(((array)$d)['keyword'] ?? ''));
+            if (!is_array($d)) {
+                continue;
+            }
+            $keyword = is_scalar($d['keyword'] ?? null) ? trim((string)$d['keyword']) : '';
 
             if ($keyword === '') {
                 continue;
@@ -1457,8 +1479,11 @@ class Page extends \Reamur\System\Engine\Controller {
     private function validateBlockSubmission(int $pageId): array {
         $errors = [];
         $post = (array)$this->request->post;
-        $modes = (array)($post['page_block_mode'] ?? []);
-        $descriptions = (array)($post['page_description'] ?? []);
+        $modes = is_array($post['page_block_mode'] ?? null) ? $post['page_block_mode'] : [];
+        $descriptions = is_array($post['page_description'] ?? null) ? $post['page_description'] : [];
+        $readyFlags = is_array($post['page_editor_ready'] ?? null) ? $post['page_editor_ready'] : [];
+        $layoutSections = is_array($post['page_layout_sections'] ?? null) ? $post['page_layout_sections'] : [];
+        $layoutPresent = is_array($post['page_layout_sections_present'] ?? null) ? $post['page_layout_sections_present'] : [];
         $storedDescriptions = $pageId ? $this->model_cms_page->getPageDescriptions($pageId) : [];
         $page = $pageId ? $this->model_cms_page->getPage($pageId) : [];
         $systemKey = (string)($page['system_key'] ?? '');
@@ -1466,9 +1491,11 @@ class Page extends \Reamur\System\Engine\Controller {
         $prefix = 'REAMURCMS_BDRE_JSON_V2:';
         $validator = new \Reamur\System\Library\Blog\BlockDocument(true);
         foreach ($descriptions as $languageId => $posted) {
-            $mode = (string)($modes[$languageId] ?? '');
-            $posted = (array)$posted;
-            $description = (string)($posted['description'] ?? '');
+            if (!is_array($posted)) {
+                continue;
+            }
+            $mode = is_scalar($modes[$languageId] ?? null) ? (string)$modes[$languageId] : '';
+            $description = is_scalar($posted['description'] ?? null) ? (string)$posted['description'] : '';
             $hasMarker = str_starts_with($description, $prefix);
             if ($mode === 'invalid') {
                 $original = (string)($storedDescriptions[(int)$languageId]['description'] ?? '');
@@ -1478,7 +1505,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 continue;
             }
             if ($mode !== 'blocks' && !$hasMarker) continue;
-            $ready = (string)($post['page_editor_ready'][$languageId] ?? '');
+            $ready = is_scalar($readyFlags[$languageId] ?? null) ? (string)$readyFlags[$languageId] : '';
             if ($mode !== 'blocks' || $ready !== '1' || !$hasMarker) {
                 $errors[] = 'O editor de blocos não foi inicializado corretamente. Recarregue a página antes de salvar.';
                 continue;
@@ -1488,7 +1515,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 $errors[] = 'O documento do editor é inválido ou excede o limite permitido. O conteúdo não foi salvo.';
                 continue;
             }
-            $postedSections = $post['page_layout_sections'][$languageId] ?? (isset($post['page_layout_sections_present'][$languageId]) ? [] : null);
+            $postedSections = $layoutSections[$languageId] ?? (isset($layoutPresent[$languageId]) ? [] : null);
             if ($layoutOptions !== [] && $this->cms_page_layout->normalizeSections($systemKey, $postedSections) === null) {
                 $errors[] = 'A ordem das seções da página é inválida. Recarregue a página e tente novamente.';
             }

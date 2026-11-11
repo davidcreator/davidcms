@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -42,7 +42,7 @@ class Import extends \Reamur\System\Engine\Controller {
             if (!$this->csrfValid()) {
                 $data['error'] = $this->language->get('error_csrf');
             } else {
-                $action = (string)($this->request->post['action'] ?? '');
+                $action = trim($this->postScalar('action'));
 
                 if ($action === 'preview' || $action === 'run') {
                     $this->handle($data, $action === 'run');
@@ -63,11 +63,13 @@ class Import extends \Reamur\System\Engine\Controller {
      * @param array<string, mixed> $data
      */
     private function handle(array &$data, bool $commit): void {
-        $base_url = trim((string)($this->request->post['base_url'] ?? ''));
-        $page     = (int)($this->request->post['page'] ?? 1);
-        $per_page = (int)($this->request->post['per_page'] ?? 50);
+        $base_url = trim($this->postScalar('base_url'));
+        $pageRaw  = trim($this->postScalar('page', '1'));
+        $perRaw   = trim($this->postScalar('per_page', '50'));
+        $page     = ctype_digit($pageRaw) ? (int)$pageRaw : 1;
+        $per_page = ctype_digit($perRaw) ? (int)$perRaw : 50;
 
-        if ($base_url === '') {
+        if ($base_url === '' || $this->safeExternalUrl($base_url) === '') {
             $data['error'] = $this->language->get('error_base_url');
 
             return;
@@ -78,10 +80,11 @@ class Import extends \Reamur\System\Engine\Controller {
         $data['form']['base_url']   = $base_url;
         $data['form']['page']       = max(1, $page);
         $data['form']['per_page']   = min(100, max(1, $per_page));
-        $posted_public = trim((string)($this->request->post['public_url'] ?? ''));
+        $posted_public = trim($this->postScalar('public_url'));
+        $safe_public   = $posted_public !== '' ? $this->safeExternalUrl($posted_public) : '';
 
-        $data['form']['public_url'] = $posted_public !== ''
-            ? $posted_public
+        $data['form']['public_url'] = $safe_public !== ''
+            ? $safe_public
             : $this->model_blog_import->defaultPublicUrl();
 
         if ($res['error'] !== '') {
@@ -127,7 +130,7 @@ class Import extends \Reamur\System\Engine\Controller {
 
         if ($commit) {
             // Mapa 301 por URL nova absoluta — base pública editável no form
-            $public_url = trim((string)($this->request->post['public_url'] ?? ''));
+            $public_url = $this->safeExternalUrl(trim($this->postScalar('public_url')));
 
             if ($public_url === '') {
                 $public_url = $this->model_blog_import->defaultPublicUrl();

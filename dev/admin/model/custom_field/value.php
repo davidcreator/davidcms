@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * F9-07 — adapter de valores de campos personalizados para cms/page (admin only).
  * A saída pública do catálogo não é alterada por este model.
@@ -61,7 +61,7 @@ class Value extends \Reamur\System\Engine\Model {
             $fid=(int)$fieldId;if(!isset($allowed[$fid])||!is_array($byLanguage))continue;$field=$allowed[$fid];$localized=(int)$field['localized']===1;
             foreach($byLanguage as $languageId=>$value){$lid=(int)$languageId;if(($localized&&!in_array($lid,$langs,true))||(!$localized&&$lid!==0))continue;
                 if($this->validateValue($field,$value)!=='') return false;
-                $text=(string)$value;$number=(string)$field['type']==='number'&&$text!==""?"'".$this->db->escape($text)."'":'NULL';
+                $text=trim((string)$value);$number=(string)$field['type']==='number'&&$text!==""?"'".$this->db->escape($text)."'":'NULL';
                 $writes[] = "INSERT INTO `".$this->t('custom_field_value')."` SET `entity_type`='".self::ENTITY."',`entity_id`='".$page_id."',`field_id`='".$fid."',`language_id`='".$lid."',`value_text`='".$this->db->escape($text)."',`value_number`=".$number." ON DUPLICATE KEY UPDATE `value_text`=VALUES(`value_text`),`value_number`=VALUES(`value_number`)";
             }
         }

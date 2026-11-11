@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -265,10 +265,10 @@ class Client_logo extends \Reamur\System\Engine\Controller {
         $post   = $this->request->post;
 
         $data['client_logo_id'] = $lid;
-        $data['name']       = (string)($post['name'] ?? ($logo['name'] ?? ''));
-        $data['url']        = (string)($post['url'] ?? ($logo['url'] ?? ''));
-        $data['image']      = (string)($post['image'] ?? ($logo['image'] ?? ''));
-        $data['sort_order'] = (string)($post['sort_order'] ?? (string)($logo['sort_order'] ?? '0'));
+        $data['name']       = $this->postScalar('name', (string)($logo['name'] ?? ''));
+        $data['url']        = $this->postScalar('url', (string)($logo['url'] ?? ''));
+        $data['image']      = $this->postScalar('image', (string)($logo['image'] ?? ''));
+        $data['sort_order'] = $this->postScalar('sort_order', (string)($logo['sort_order'] ?? '0'));
         $data['status']     = isset($post['status']) ? '1' : ($isPost ? '0' : (string)(int)($logo['status'] ?? 0));
 
         $data['upload']     = $this->url->link('marketing/client_logo.upload');
@@ -285,14 +285,15 @@ class Client_logo extends \Reamur\System\Engine\Controller {
      * @return array{name: string, image: string, url: string, status: int, sort_order: int}
      */
     private function postPayload(): array {
-        $post = $this->request->post;
+        $post    = $this->request->post;
+        $sortRaw = trim($this->postScalar('sort_order', '0'));
 
         return [
-            'name'       => mb_substr(trim((string)($post['name'] ?? '')), 0, 128),
-            'image'      => $this->catalogMedia()->guard((string)($post['image'] ?? ''), self::UPLOAD_DIR),
-            'url'        => mb_substr(trim((string)($post['url'] ?? '')), 0, 255),
+            'name'       => mb_substr(trim($this->postScalar('name')), 0, 128),
+            'image'      => $this->catalogMedia()->guard($this->postScalar('image'), self::UPLOAD_DIR),
+            'url'        => mb_substr(trim($this->postScalar('url')), 0, 255),
             'status'     => isset($post['status']) ? 1 : 0,
-            'sort_order' => (int)($post['sort_order'] ?? 0),
+            'sort_order' => preg_match('/^-?\d+$/', $sortRaw) === 1 ? (int)$sortRaw : 0,
         ];
     }
 
@@ -301,23 +302,22 @@ class Client_logo extends \Reamur\System\Engine\Controller {
      */
     private function validateClientLogo(): array {
         $errors = [];
-        $post   = $this->request->post;
 
-        $name = trim((string)($post['name'] ?? ''));
+        $name = trim($this->postScalar('name'));
 
         if ($name === '' || mb_strlen($name) > 128) {
             $errors[] = $this->language->get('error_name');
         }
 
-        // URL opcional; se presente, somente http(s)://
-        $url = trim((string)($post['url'] ?? ''));
+        // URL opcional; se presente, somente http(s):// válida
+        $url = trim($this->postScalar('url'));
 
-        if ($url !== '' && !preg_match('~^https?://~i', $url)) {
+        if ($url !== '' && $this->safeExternalUrl($url) === '') {
             $errors[] = $this->language->get('error_url');
         }
 
         // Imagem: só dentro do diretório do módulo (componente MediaUpload)
-        $image = (string)($post['image'] ?? '');
+        $image = $this->postScalar('image');
 
         if ($image !== '' && $this->catalogMedia()->guard($image, self::UPLOAD_DIR) === '') {
             $errors[] = $this->language->get('error_image_path');

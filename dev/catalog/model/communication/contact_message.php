@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -21,12 +21,12 @@ class Contact_message extends \Reamur\System\Engine\Model {
     public function addContactMessage(array $data): int {
         $this->db->query(
             "INSERT INTO `" . DB_PREFIX . "contact_message` SET
-                `name`       = '" . $this->db->escape((string)$data['name']) . "',
-                `email`      = '" . $this->db->escape((string)$data['email']) . "',
-                `telephone`  = '" . $this->db->escape((string)$data['telephone']) . "',
-                `subject`    = '" . $this->db->escape((string)$data['subject']) . "',
-                `message`    = '" . $this->db->escape((string)$data['message']) . "',
-                `ip`         = '" . $this->db->escape((string)$data['ip']) . "',
+                `name`       = '" . $this->db->escape((string)($data['name'] ?? '')) . "',
+                `email`      = '" . $this->db->escape((string)($data['email'] ?? '')) . "',
+                `telephone`  = '" . $this->db->escape((string)($data['telephone'] ?? '')) . "',
+                `subject`    = '" . $this->db->escape((string)($data['subject'] ?? '')) . "',
+                `message`    = '" . $this->db->escape((string)($data['message'] ?? '')) . "',
+                `ip`         = '" . $this->db->escape((string)($data['ip'] ?? '')) . "',
                 `status`     = '0',
                 `date_added` = NOW()"
         );

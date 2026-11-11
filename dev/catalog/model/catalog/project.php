@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -50,6 +50,10 @@ class Project extends \Reamur\System\Engine\Model {
      * @return array<string, mixed>
      */
     public function getProject(int $project_id): array {
+        if ($project_id <= 0) {
+            return [];
+        }
+
         $lang  = $this->currentLanguageId();
 
         $query = $this->db->query(
@@ -75,6 +79,10 @@ class Project extends \Reamur\System\Engine\Model {
      * @return array<int, array<string, mixed>> Galeria ordenada
      */
     public function getProjectImages(int $project_id): array {
+        if ($project_id <= 0) {
+            return [];
+        }
+
         $query = $this->db->query(
             "SELECT `image`, `alt` FROM `" . $this->t('project_image') . "`
               WHERE `project_id` = '" . $project_id . "'
@@ -90,6 +98,10 @@ class Project extends \Reamur\System\Engine\Model {
      * @return array<int, array<string, mixed>>
      */
     public function getProjectCategories(int $project_id): array {
+        if ($project_id <= 0) {
+            return [];
+        }
+
         $lang  = $this->currentLanguageId();
 
         $query = $this->db->query(

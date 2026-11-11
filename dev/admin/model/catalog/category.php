@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -203,7 +203,7 @@ class Category extends \Reamur\System\Engine\Model {
                 `date_modified` = NOW()"
         );
 
-        $category_id = $this->db->getLastId();
+        $category_id = (int)$this->db->getLastId();
 
         $this->syncDescriptions($category_id, (array)$data['descriptions']);
 

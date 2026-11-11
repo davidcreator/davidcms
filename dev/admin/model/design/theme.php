@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /** Theme administration persistence; data remains isolated from CMS pages and Blog. */
 namespace Reamur\Admin\Model\Design;
 class Theme extends \Reamur\System\Engine\Model {
@@ -26,8 +26,8 @@ class Theme extends \Reamur\System\Engine\Model {
     public function save(int $id, array $data, int $userId): int {
         $rawSlug=(string)($data['slug']??'');
         if ($rawSlug==='' || $this->slugExists($rawSlug, $id > 0 ? $id : 0)) return 0;
-        $name=$this->db->escape((string)$data['name']); $slug=$this->db->escape($rawSlug);
-        $configJson=json_encode($data['config'], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
+        $name=$this->db->escape((string)($data['name']??'')); $slug=$this->db->escape($rawSlug);
+        $configJson=json_encode($data['config']??[], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
         $config=$this->db->escape($configJson);
         if ($id) {
             $old=$this->getTheme($id); if (!$old) return 0;
@@ -70,16 +70,16 @@ class Theme extends \Reamur\System\Engine\Model {
 
     public function restoreRevision(int $themeId, int $revisionId, int $userId): bool {
         $q=$this->db->query("SELECT `snapshot` FROM `".$this->table('design_theme_revision')."` WHERE `theme_id`='".$themeId."' AND `revision_id`='".$revisionId."' LIMIT 1");
-        if (!($q instanceof \stdClass) || empty($q->row['snapshot'])) return false;
-        $snapshot=json_decode((string)$q->row['snapshot'],true);
+        if (!($q instanceof \stdClass) || !is_string($q->row['snapshot'] ?? null) || $q->row['snapshot'] === '') return false;
+        $snapshot=json_decode($q->row['snapshot'],true);
         if (!is_array($snapshot) || empty($snapshot['theme_id']) || (int)$snapshot['theme_id']!==$themeId) return false;
         $current=$this->getTheme($themeId);
         if (!$current) return false;
         $this->db->query("INSERT INTO `".$this->table('design_theme_revision')."` SET `theme_id`='".$themeId."',`snapshot`='".$this->db->escape(json_encode($current,JSON_UNESCAPED_UNICODE)?:'{}')."',`user_id`='".$userId."',`date_added`=NOW()");
         $draft=(string)($snapshot['draft_config']??$snapshot['config']??'{}');
         $published=(int)($current['status']??0) ? (string)($snapshot['published_config']??$draft) : (string)($current['published_config']??'{}');
-        $name=$this->db->escape((string)($snapshot['name']??$current['name']));
-        $slug=$this->db->escape((string)($snapshot['slug']??$current['slug']));
+        $name=$this->db->escape((string)($snapshot['name']??($current['name']??'')));
+        $slug=$this->db->escape((string)($snapshot['slug']??($current['slug']??'')));
         $this->db->query("UPDATE `".$this->table('design_theme')."` SET `name`='".$name."',`slug`='".$slug."',`config`='".$this->db->escape($draft)."',`draft_config`='".$this->db->escape($draft)."',`published_config`='".$this->db->escape($published)."',`date_modified`=NOW() WHERE `theme_id`='".$themeId."'");
         return true;
     }
@@ -93,8 +93,10 @@ class Theme extends \Reamur\System\Engine\Model {
         foreach ((array)$q->rows as $row) {
             $row=(array)$row; $slug=(string)($row['slug']??'');
             if ($slug==='' || preg_match('/^[a-z0-9_-]{1,48}$/D',$slug)!==1) continue;
-            $raw=(string)($row[$column] ?: ($row['config']??'{}'));
-            $cfg=json_decode($raw,true);
+            $primaryRaw=is_string($row[$column]??null)?$row[$column]:'';
+            $fallbackRaw=is_string($row['config']??null)?$row['config']:'{}';
+            $raw=$primaryRaw!==''?$primaryRaw:$fallbackRaw;
+            $cfg=$raw!==''?json_decode($raw,true):null;
             if (is_array($cfg)) $map[$slug]=$cfg;
         }
         return $map;
@@ -104,16 +106,18 @@ class Theme extends \Reamur\System\Engine\Model {
     public function getPublishedConfig(int $id): array {
         $theme=$this->getTheme($id);
         if (!$theme) return [];
-        $raw=(string)($theme['published_config']??'');
-        if ($raw==='' || $raw==='{}') $raw=(string)($theme['config']??'{}');
-        $config=json_decode($raw,true);
+        $raw=is_string($theme['published_config']??null)?$theme['published_config']:'';
+        if ($raw==='' || $raw==='{}') $raw=is_string($theme['config']??null)?$theme['config']:'{}';
+        $config=$raw!==''?json_decode($raw,true):null;
         return is_array($config)?$config:[];
     }
     /** F13-C: ultimo rascunho salvo (usado quando o POST da previa e invalido). */
     public function getDraftConfig(int $id): array {
         $theme=$this->getTheme($id);
         if (!$theme) return [];
-        $config=json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true);
+        $draft=is_string($theme['draft_config']??null)?$theme['draft_config']:'';
+        $raw=$draft!==''?$draft:(is_string($theme['config']??null)?$theme['config']:'{}');
+        $config=$raw!==''?json_decode($raw,true):null;
         return is_array($config)?$config:[];
     }
 

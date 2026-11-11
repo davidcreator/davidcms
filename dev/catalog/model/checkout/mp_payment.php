@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /**
  * @package   ReamurCMS
  * @author    David L. Almeida
@@ -134,14 +134,14 @@ class Mp_payment extends \Reamur\System\Engine\Model {
               ORDER BY `mp_seller_id` ASC"
         );
 
-        return (array)$query->rows;
+        return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
     }
 
     public function getSellerByMpUserId(int $mp_user_id): array {
         return $this->row(
             "SELECT `mp_seller_id`, `mp_user_id`, `nickname`, `access_token`
                FROM `" . $this->t('mp_seller') . "`
-              WHERE `mp_user_id` = '" . $mp_user_id . "' AND `status` = 1"
+              WHERE `mp_user_id` = '" . (int)$mp_user_id . "' AND `status` = 1"
         );
     }
 
