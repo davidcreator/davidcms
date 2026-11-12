@@ -1,5 +1,15 @@
 # Changelog
 
+## KZ-02 — KAZEditor-Theme: apontar e editar (2026-11-12)
+- ADR 0084: clicar em um trecho da página do rascunho seleciona a fonte Twig que o gerou. Painel **Estrutura** (trechos da página, com origem "Deste tema" / "Padrão do sistema") e painel **Trecho selecionado** (arquivo, tamanho em cada quadro, código editável, "Personalizar este trecho", "Voltar ao padrão do sistema" com desfazer). Nas seções da página inicial: subir, descer, ocultar e mostrar.
+- `Twig::renderThemePage()` ganha `bool $annotate` (padrão `false`): cerca a saída de cada fonte allowlistada com comentários `<!--kz:b:CHAVE-->`…`<!--kz:e:CHAVE-->` e devolve `defaults` (fonte padrão das partes da página que o tema não redefine). Só `design/theme.canvas` usa; Catalog, prévia isolada e site publicado não recebem marcadores.
+- Dados salvos iguais: o painel escreve nos campos que já existiam (`templates[chave]`, `sections[]`, `sections_order`). Nenhum campo novo no `POST`; sem tabela, coluna, migration, rota ou dependência.
+- Barra de módulos reorganizada por uso: Herança, Three.js, Cena 3D, Mídia, Modelos, Agendamento, Sites, Condições e Prévia ficam em **Configurações**. Os módulos em si não mudaram.
+- Correção: um aviso do PHP durante o render do canvas vazava para dentro da página; agora vira erro de template com fallback, como no Catalog (conversão restrita à execução de `renderThemePage()`).
+- Correção de preset: `docs/temas/Reamur-Reference.reamurtheme.json` imprimia uma lista como texto em `catalog/project_info` (`{{ img }}` → `{{ img.src }}`), o que derruba a página de projeto no Catalog; `checksum` do pacote reemitido.
+- Limpeza: removidos da raiz os arquivos de pacotes anteriores commitados por engano (`copiar-para-o-repositorio/`, `kz-01-canvas-pagina-real.patch`, `ci-fix-phpunit.patch`, `LEIA-ME.txt`, `MANIFESTO.txt`). A cópia do índice de ADRs dentro daquela pasta tinha 17 links relativos quebrados e deixava o job `docs-links` vermelho.
+- Validação local: PHPUnit `OK (77 tests, 1476 assertions)` em PHP 8.2.32 e 8.3.32 (7 testes novos em `KazPointEditTest`), PHPStan nível 2 sem erros, `php -l`, `node --check`, os três `tools/verify-*.sh` e `lychee 0.15.0 --offline` limpos; fluxo conferido em Chromium headless (mouse, teclado e toque). Sem banco, sem sessão real de admin, sem Firefox/Safari.
+
 ## KZ-01 — KAZEditor-Theme abre na página real do rascunho (2026-11-12)
 - ADR 0083: o editor de temas passa a abrir no módulo **Página**, que mostra a página inteira do rascunho (cabeçalho do tema + rota + rodapé) em três quadros — desktop 1440, tablet 768 e celular 390 — sobre um canvas com zoom e deslocamento livres. 11 rotas selecionáveis e 3 idiomas.
 - O canvas reflete o formulário **antes de salvar**: nova ação somente leitura `design/theme.canvas` (`POST` + CSRF + ACL `access`) e método aditivo `Twig::renderThemePage()`, em Twig Sandbox, com todas as fontes do tema sobre os templates padrão. Nada é gravado; sem tabela, coluna, migration ou chave de configuração nova.

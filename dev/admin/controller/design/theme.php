@@ -374,16 +374,25 @@ class Theme extends \Reamur\System\Engine\Controller {
             $canvasDevices[]=['id'=>$deviceId,'label'=>$this->language->get('text_canvas_device_'.$deviceId),'w'=>$deviceSize['w'],'h'=>$deviceSize['h']];
         }
         $canvasLabels=[];
-        foreach(['loading','ready','error','saved_draft','template_errors','default_source','frame_hint','empty'] as $canvasKey) {
+        foreach(['loading','ready','error','saved_draft','template_errors','default_source','frame_hint','empty',
+                 'select_hint','from_theme','from_default','from_default_help','customize','revert','revert_undo','code','code_help',
+                 'open_templates','size','not_visible','section','section_up','section_down','section_hide','section_show','hidden_sections'] as $canvasKey) {
             $canvasLabels[$canvasKey]=$this->language->get('text_canvas_'.$canvasKey);
+        }
+        // KZ-02 (ADR 0084): nome legivel de cada fonte allowlistada (rota ou parte).
+        $canvasParts=[];
+        foreach(\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS as $canvasPart) {
+            $canvasSlug=str_replace(['/','-'],'_',$canvasPart);
+            $canvasName=$this->language->get(($canvasSample::isRoute($canvasPart)?'text_canvas_route_':'text_canvas_part_').$canvasSlug);
+            $canvasParts[$canvasPart]=str_starts_with($canvasName,'text_canvas_')?$canvasPart:$canvasName;
         }
         $data['canvas_url']=$this->url->link('design/theme.canvas'.($id?'|'.$id:''));
         $data['canvas_routes']=$canvasRoutes;
         $data['canvas_devices']=$canvasDevices;
         $data['canvas_languages']=['en-us','pt-br','es-eu'];
         $data['canvas_language']=in_array((string)$this->config->get('language_directory','en-us'),['en-us','pt-br','es-eu'],true)?(string)$this->config->get('language_directory','en-us'):'en-us';
-        $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
-        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz01';
+        $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels,'parts'=>$canvasParts],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
+        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz02';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-canvas.css?v=' . $canvasAssetV);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-canvas.js?v=' . $canvasAssetV);
 
@@ -875,7 +884,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         // Secoes da home: o override do tema vence o layout padrao (como no Catalog).
         if (is_array($state['sections']??null)) $context['cms_home_sections']=$state['sections'];
         try {
-            $page=$this->template->renderThemePage($route,(array)($state['templates']??[]),$context,$sceneView,$state);
+            $page=$this->template->renderThemePage($route,(array)($state['templates']??[]),$context,$sceneView,$state,true);
         } catch (\Throwable $e) {
             $this->jsonResponse(['success'=>false,'error'=>$this->language->get('text_preview_error')],200,true); return;
         }
@@ -892,7 +901,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $themed=array_keys(array_filter($page['sources'],static fn(string $v): bool => $v==='theme'));
         $this->jsonResponse([
             'success'=>true,'route'=>$route,'source'=>$source,'language'=>(string)$ctx['language'],
-            'html'=>$html,'errors'=>$errors,'themed'=>$themed,'bytes'=>strlen($html),
+            'html'=>$html,'errors'=>$errors,'themed'=>$themed,'defaults'=>(object)($page['defaults']??[]),'bytes'=>strlen($html),
         ],200,true);
     }
 

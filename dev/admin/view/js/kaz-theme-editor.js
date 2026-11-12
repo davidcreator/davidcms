@@ -257,8 +257,24 @@
   function formDirty() { return owner && formTouched && formSnapshot() !== formBaseline; }
   function setModule(n) {
     if (!Object.prototype.hasOwnProperty.call(modulesMap, n)) return false;
-    stateModule = n; paintModules(); return true;
+    stateModule = n;
+    /* KZ-02 (ADR 0084): entrar em um modulo de "Configuracoes" abre o grupo. */
+    if (navGroup && navGroup.querySelector('button[data-kaz-module="' + n + '"]')) navOpen = true;
+    paintModules(); return true;
   }
+  /* KZ-02 (ADR 0084): modulos avancados ficam atras de "Configuracoes".
+     So visibilidade: os botoes e o comportamento de cada modulo nao mudam. */
+  var navGroup = root.querySelector('[data-kaz-nav-group]');
+  var navToggle = root.querySelector('[data-kaz-nav-toggle]');
+  var navOpen = false;
+  function paintNav() {
+    if (!navGroup || !navToggle) return;
+    var inside = !!navGroup.querySelector('button[data-kaz-module="' + stateModule + '"]');
+    navGroup.hidden = !navOpen;
+    navToggle.setAttribute('aria-expanded', navOpen ? 'true' : 'false');
+    navToggle.classList.toggle('kaz-module-link--on', inside && !navOpen);
+  }
+  if (navToggle) navToggle.addEventListener('click', function () { navOpen = !navOpen; paintNav(); });
   function paintModules() {
     var panels = root.querySelectorAll('[data-kaz-module-panel]'), i, n;
     for (i = 0; i < panels.length; i++)
@@ -284,6 +300,7 @@
     }
     var lab = root.querySelector('.kaz-statusbar__module');
     if (lab) lab.textContent = modulesMap[stateModule] || 'Design';
+    paintNav();
   }
   function paintDirty() {
     var on = dirty();
