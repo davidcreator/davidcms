@@ -1,5 +1,16 @@
 # Changelog
 
+## KZ-03 — KAZEditor-Theme: tokens ao vivo (2026-11-12)
+- ADR 0085: o painel direito do módulo **Página** ganha a aba **Design**. Cores do tema, os 22 tokens (tipografia, espaçamento e forma, cores claro/escuro) e as variáveis que o próprio tema declara são editados ao lado da página; a mudança aparece na hora e o render do servidor confirma em seguida.
+- **Variáveis deste tema:** nova classe pura `Theme\ThemeLiveTokens` lê os `<style>` das fontes do tema e oferece controle para cada variável com cor `#rrggbb` ou tamanho em `px`. Mudar um controle reescreve só aquele valor em `templates[chave]`. É o que faz a aba funcionar nos pacotes desenhados (`Atlas-Studio`, `Atlas-Studio-3D`, `David-Creator`, `David-Universe-3D`), que não leem os tokens do sistema.
+- Selo **não usado** nos valores que não mudam nada na página aberta (medido no navegador, trocando uma variável por vez).
+- Seletor **Claro / Escuro** na barra do canvas: `design/theme.canvas` aceita `canvas_scheme` e devolve a página com `data-bs-theme="dark"`. Preferência local; não é salva no tema.
+- O canvas passa a dizer **por que** voltou ao rascunho salvo (`form_error`) e lista os sete pares de contraste com a razão medida (`contrast`). Antes, um contraste abaixo de 4,5:1 fazia a página parar de atualizar sem explicação.
+- Dados salvos iguais: nenhum controle novo tem `name`; tudo é escrito nos campos que já existiam (`primary`, `surface`, `tokens[…]`, `templates[…]`). Sem tabela, coluna, migration, rota ou dependência.
+- Desvio documentado da ADR 0084: o editor passa a escrever propriedades personalizadas CSS (nome e valor validados) no documento do quadro para a prévia imediata. O `sandbox` dos quadros não muda.
+- Achado, não corrigido: em `catalog/view/css/theme.css`, `--accent` é resolvido em `:root` e não enxerga `--theme-primary` (definido no `<body>`); a cor Primária do módulo Geral não alcança as regras que usam `--accent`. Detalhe na ADR 0085.
+- Validação local: PHPUnit `OK (86 tests, 1794 assertions)` em PHP 8.2.32 e 8.3.32 (9 testes novos em `KazLiveTokensTest`), PHPStan nível 2 sem erros, `php -l`, `node --check`, os três `tools/verify-*.sh` e `lychee 0.15.0 --offline` limpos; fluxo conferido em Chromium headless nos seis pacotes de `docs/temas/`. Sem banco, sem sessão real de admin, sem Firefox/Safari.
+
 ## KZ-02 — KAZEditor-Theme: apontar e editar (2026-11-12)
 - ADR 0084: clicar em um trecho da página do rascunho seleciona a fonte Twig que o gerou. Painel **Estrutura** (trechos da página, com origem "Deste tema" / "Padrão do sistema") e painel **Trecho selecionado** (arquivo, tamanho em cada quadro, código editável, "Personalizar este trecho", "Voltar ao padrão do sistema" com desfazer). Nas seções da página inicial: subir, descer, ocultar e mostrar.
 - `Twig::renderThemePage()` ganha `bool $annotate` (padrão `false`): cerca a saída de cada fonte allowlistada com comentários `<!--kz:b:CHAVE-->`…`<!--kz:e:CHAVE-->` e devolve `defaults` (fonte padrão das partes da página que o tema não redefine). Só `design/theme.canvas` usa; Catalog, prévia isolada e site publicado não recebem marcadores.

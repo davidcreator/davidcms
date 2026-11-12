@@ -149,6 +149,39 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; tab-size: 2; }
 .kaz-canvas__code[readonly] { color: #a1a1aa; background: #18181b; }
 
+/* ================= KZ-03 (ADR 0085): aba Design ================= */
+.kaz-canvas__tabs { display: flex; gap: 2px; margin: -2px 0 8px; padding: 2px; border-radius: 7px; background: #121216; }
+.kaz-canvas__tab { flex: 1 1 0; min-height: 28px; padding: 4px 8px; border: 0; border-radius: 5px; background: transparent;
+  color: #a1a1aa; font-size: 12px; font-weight: 600; cursor: pointer; }
+.kaz-canvas__tab:hover { color: #e4e4e7; }
+.kaz-canvas__tab[aria-selected="true"] { background: #2a2a31; color: #fafafa; }
+.kaz-canvas__tab:focus-visible, .kaz-canvas__control :focus-visible { outline: 2px solid #31efb8; outline-offset: 1px; }
+.kaz-canvas__sidesub2 { margin: 10px 0 4px; font-size: 10px; font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; color: #8b8b94; }
+.kaz-canvas__field { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 8px;
+  padding: 4px 0; border-bottom: 1px solid #26262c; }
+.kaz-canvas__fieldname { min-width: 0; margin: 0; font-size: 12px; color: #d4d4d8; overflow-wrap: anywhere; }
+.kaz-canvas__fieldname--mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; color: #a7f3d0; }
+.kaz-canvas__scope { display: block; font-size: 10px; color: #8b8b94; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.kaz-canvas__field .kaz-canvas__badge { display: inline-block; margin-left: 6px; }
+.kaz-canvas__field .kaz-canvas__badge[hidden] { display: none; }
+.kaz-canvas__badge--off { background: #3a2f16; color: #fcd34d; cursor: help; }
+.kaz-canvas__field--off .kaz-canvas__control { opacity: .55; }
+.kaz-canvas__control { display: inline-flex; align-items: center; gap: 6px; }
+.kaz-canvas__swatch { width: 34px; height: 26px; padding: 0; border: 1px solid #3f3f46; border-radius: 5px; background: transparent; cursor: pointer; }
+.kaz-canvas__value { min-width: 58px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; color: #a1a1aa; }
+.kaz-canvas__range { width: 84px; accent-color: #31efb8; }
+.kaz-canvas__number, .kaz-canvas__select { height: 26px; padding: 2px 6px; border: 1px solid #3f3f46; border-radius: 5px;
+  background: #121216; color: #e4e4e7; font-size: 12px; font-variant-numeric: tabular-nums; }
+.kaz-canvas__number { width: 64px; }
+.kaz-canvas__select { max-width: 132px; }
+.kaz-canvas__contrast { list-style: none; margin: 0; padding: 0; }
+.kaz-canvas__contrast li { display: flex; align-items: baseline; gap: 8px; padding: 3px 0; color: #d4d4d8; }
+.kaz-canvas__ratio { flex: none; min-width: 58px; padding: 1px 6px; border-radius: 999px; background: rgba(49, 239, 184, .14);
+  color: #6ee7b7; font-size: 11px; font-variant-numeric: tabular-nums; text-align: center; }
+.kaz-canvas__contrast--fail .kaz-canvas__ratio { background: rgba(248, 113, 113, .18); color: #fecaca; }
+.kaz-canvas__contrast--note { color: #fecaca !important; font-size: 11px; }
+
 /* contornos sobre a pagina (em coordenadas do quadro; espessura constante na tela) */
 .kaz-canvas__mark { position: absolute; box-sizing: border-box; pointer-events: none;
   border: calc(2px / var(--kaz-canvas-k, 1)) solid #31efb8; }

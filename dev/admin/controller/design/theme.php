@@ -376,7 +376,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         $canvasLabels=[];
         foreach(['loading','ready','error','saved_draft','template_errors','default_source','frame_hint','empty',
                  'select_hint','from_theme','from_default','from_default_help','customize','revert','revert_undo','code','code_help',
-                 'open_templates','size','not_visible','section','section_up','section_down','section_hide','section_show','hidden_sections'] as $canvasKey) {
+                 'open_templates','size','not_visible','section','section_up','section_down','section_hide','section_show','hidden_sections',
+                 'form_invalid','design_general','design_theme_vars','design_theme_vars_help','design_colors','design_sizes','design_unused',
+                 'design_unused_help','design_dark_only','design_contrast','design_contrast_fail','design_no_vars','design_stale'] as $canvasKey) {
             $canvasLabels[$canvasKey]=$this->language->get('text_canvas_'.$canvasKey);
         }
         // KZ-02 (ADR 0084): nome legivel de cada fonte allowlistada (rota ou parte).
@@ -391,8 +393,20 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['canvas_devices']=$canvasDevices;
         $data['canvas_languages']=['en-us','pt-br','es-eu'];
         $data['canvas_language']=in_array((string)$this->config->get('language_directory','en-us'),['en-us','pt-br','es-eu'],true)?(string)$this->config->get('language_directory','en-us'):'en-us';
-        $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels,'parts'=>$canvasParts],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
-        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz02';
+        // KZ-03 (ADR 0085): o que cada token alimenta no CSS, derivado do proprio registro.
+        $canvasLive='\Reamur\System\Library\Theme\ThemeLiveTokens';
+        $canvasTokens=['fields'=>[],'groups'=>[],'general'=>[],'pairs'=>[]];
+        foreach($canvasLive::spec($this->theme_token_registry) as $canvasToken=>$canvasSpec) {
+            $canvasTokens['fields'][$canvasToken]=$canvasSpec+['label'=>$this->language->get('text_token_'.$canvasToken)];
+        }
+        foreach($this->theme_token_registry->groups() as $canvasGroup) $canvasTokens['groups'][]=['id'=>$canvasGroup,'label'=>$this->language->get('text_token_group_'.$canvasGroup)];
+        foreach($canvasLive::GENERAL as $canvasField=>$canvasVar) $canvasTokens['general'][$canvasField]=['var'=>$canvasVar,'label'=>$this->language->get('text_'.$canvasField)];
+        foreach($this->theme_token_registry->contrastPairs([]) as $canvasPair) {
+            $canvasPairName=$this->language->get('text_canvas_pair_'.$canvasPair['code']);
+            $canvasTokens['pairs'][$canvasPair['code']]=str_starts_with($canvasPairName,'text_canvas_')?$canvasPair['code']:$canvasPairName;
+        }
+        $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels,'parts'=>$canvasParts,'tokens'=>$canvasTokens],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
+        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz03';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-canvas.css?v=' . $canvasAssetV);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-canvas.js?v=' . $canvasAssetV);
 
@@ -877,6 +891,8 @@ class Theme extends \Reamur\System\Engine\Controller {
         $built=$this->buildDraftConfig($this->request->post);
         $source=$built['error']===''?'form':'saved';
         $draft=$source==='form'?$built['config']:($id?$this->model_design_theme->getDraftConfig($id):[]);
+        // KZ-03 (ADR 0085): esquema claro/escuro e so uma allowlist de dois valores.
+        $scheme=$this->postScalar('canvas_scheme','light')==='dark'?'dark':'light';
         $ctx=$this->simulateContext(['route'=>$route,'language'=>$this->postScalar('canvas_language','en-us'),'device'=>'desktop']);
         $state=$this->theme_snapshot->resolve($draft,$ctx,$this->model_design_theme->getThemeMap('draft'),(string)($built['slug']??''));
         $sceneView=(array)($state['scene_view']??[]);
@@ -890,7 +906,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         }
         $S='\Reamur\System\Library\Theme\ThemePreviewState';
         $attr=static fn(string $v): string => htmlspecialchars($v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
-        $html='<!doctype html><html lang="'.$attr((string)$ctx['language']).'"><head><meta charset="utf-8">'
+        $html='<!doctype html><html lang="'.$attr((string)$ctx['language']).'"'.($scheme==='dark'?' data-bs-theme="dark"':'').'><head><meta charset="utf-8">'
             .'<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'; font-src data:">'
             .'<meta name="viewport" content="width=device-width, initial-scale=1"><title>Canvas</title>'
             .'<style>'.$S::catalogCss().\Reamur\System\Library\Theme\ThemeSceneCss::previewCss().'</style></head>'
@@ -899,9 +915,19 @@ class Theme extends \Reamur\System\Engine\Controller {
         $errors=[];
         foreach ($page['errors'] as $template=>$message) $errors[]=['template'=>(string)$template,'message'=>(string)$message,'fallback'=>in_array((string)$template,$page['fallbacks'],true)];
         $themed=array_keys(array_filter($page['sources'],static fn(string $v): bool => $v==='theme'));
+        // KZ-03: variaveis que o proprio tema declara e contraste medido com as
+        // cores do formulario (mesmo quando o resto do formulario esta invalido).
+        $live='\Reamur\System\Library\Theme\ThemeLiveTokens';
+        $tokensPosted=is_array($this->request->post['tokens']??null)?$this->request->post['tokens']:[];
+        $contrast=[];
+        foreach($this->theme_token_registry->contrastPairs($live::colors($this->theme_token_registry,$tokensPosted)) as $pair) {
+            $contrast[]=['code'=>(string)$pair['code'],'ratio'=>(float)$pair['ratio'],'min'=>(float)$pair['min'],'ok'=>(bool)$pair['ok']];
+        }
         $this->jsonResponse([
             'success'=>true,'route'=>$route,'source'=>$source,'language'=>(string)$ctx['language'],
             'html'=>$html,'errors'=>$errors,'themed'=>$themed,'defaults'=>(object)($page['defaults']??[]),'bytes'=>strlen($html),
+            'scheme'=>$scheme,'form_error'=>$source==='form'?'':(string)$built['error'],
+            'style_vars'=>$live::styleVars((array)($draft['templates']??[])),'contrast'=>$contrast,
         ],200,true);
     }
 

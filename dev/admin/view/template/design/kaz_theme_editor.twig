@@ -299,7 +299,12 @@
             </span>
             <span class="kaz-canvas__devices" role="group" aria-label="{{ text_canvas_structure|e('html_attr') }}">
               <button class="kaz-canvas__toggle" type="button" data-kaz-canvas-panel="structure" aria-pressed="true" title="{{ text_canvas_panel_structure|e('html_attr') }}">{{ text_canvas_structure }}</button>
-              <button class="kaz-canvas__toggle" type="button" data-kaz-canvas-panel="inspector" aria-pressed="true" title="{{ text_canvas_panel_inspector|e('html_attr') }}">{{ text_canvas_selected }}</button>
+              <button class="kaz-canvas__toggle" type="button" data-kaz-canvas-panel="inspector" aria-pressed="true" title="{{ text_canvas_panel_inspector|e('html_attr') }}">{{ text_canvas_properties }}</button>
+            </span>
+            {# KZ-03 (ADR 0085): a pagina no esquema claro ou escuro. Sem `name`. #}
+            <span class="kaz-canvas__devices" role="group" aria-label="{{ text_canvas_scheme|e('html_attr') }}">
+              <button class="kaz-canvas__toggle" type="button" data-kaz-canvas-scheme="light" aria-pressed="true">{{ text_canvas_scheme_light }}</button>
+              <button class="kaz-canvas__toggle" type="button" data-kaz-canvas-scheme="dark" aria-pressed="false">{{ text_canvas_scheme_dark }}</button>
             </span>
             <span class="kaz-canvas__spacer"></span>
             <span class="kaz-canvas__status" data-kaz-canvas-status role="status" aria-live="polite"></span>
@@ -326,9 +331,18 @@
               <div class="kaz-canvas__world" data-kaz-canvas-world></div>
               <noscript><p class="kaz-canvas__noscript">{{ text_canvas_noscript }}</p></noscript>
             </div>
-            <aside class="kaz-canvas__side kaz-canvas__side--right" data-kaz-canvas-inspector aria-label="{{ text_canvas_selected|e('html_attr') }}">
-              <h4 class="kaz-canvas__sidetitle">{{ text_canvas_selected }}</h4>
-              <div data-kaz-canvas-inspector-body><p class="kaz-canvas__sidehelp">{{ text_canvas_select_hint }}</p></div>
+            <aside class="kaz-canvas__side kaz-canvas__side--right" data-kaz-canvas-inspector aria-label="{{ text_canvas_properties|e('html_attr') }}">
+              {# KZ-03 (ADR 0085): "Design" espelha os campos reais de tokens e cores; nenhum controle daqui tem `name`. #}
+              <div class="kaz-canvas__tabs" role="tablist" aria-label="{{ text_canvas_properties|e('html_attr') }}">
+                <button class="kaz-canvas__tab" type="button" role="tab" id="kaz-canvas-tab-piece" data-kaz-canvas-tab="piece" aria-selected="true" aria-controls="kaz-canvas-tabpanel-piece">{{ text_canvas_tab_piece }}</button>
+                <button class="kaz-canvas__tab" type="button" role="tab" id="kaz-canvas-tab-design" data-kaz-canvas-tab="design" aria-selected="false" aria-controls="kaz-canvas-tabpanel-design">{{ text_canvas_tab_design }}</button>
+              </div>
+              <div role="tabpanel" id="kaz-canvas-tabpanel-piece" aria-labelledby="kaz-canvas-tab-piece" data-kaz-canvas-tabpanel="piece">
+                <div data-kaz-canvas-inspector-body><p class="kaz-canvas__sidehelp">{{ text_canvas_select_hint }}</p></div>
+              </div>
+              <div role="tabpanel" id="kaz-canvas-tabpanel-design" aria-labelledby="kaz-canvas-tab-design" data-kaz-canvas-tabpanel="design" hidden>
+                <div data-kaz-canvas-design-body></div>
+              </div>
             </aside>
           </div>
           <p class="kaz-canvas__hint">{{ text_canvas_hint }}</p>

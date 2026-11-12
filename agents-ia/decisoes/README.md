@@ -66,3 +66,4 @@ Copiar para o novo arquivo `NNNN-titulo-curto.md`:
 | [0082](0082-modernizacao-e-guards-do-ci.md) | Modernização e endurecimento do CI (actions Node 24, runner pinado, `repo-guards`) | ✅ aceita | 2026-11-02 |
 | [0083](0083-kazeditor-canvas-pagina-real.md) | KAZEditor-Theme: canvas com a página real do rascunho (três larguras, sandbox) | ✅ aceita | 2026-11-12 |
 | [0084](0084-kazeditor-apontar-e-editar.md) | KAZEditor-Theme: apontar e editar (marcadores de origem, estrutura, trecho selecionado) | ✅ aceita | 2026-11-12 |
+| [0085](0085-kazeditor-tokens-ao-vivo.md) | KAZEditor-Theme: tokens ao vivo (aba Design, variáveis do tema, esquema claro/escuro, contraste) | ✅ aceita | 2026-11-12 |

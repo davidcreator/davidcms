@@ -22,6 +22,13 @@
  * do modulo Templates; ordem e visibilidade de secoes usam os controles do
  * modulo Secoes. Nenhum campo novo entra no POST do tema.
  *
+ * KZ-03 (ADR 0085) — tokens ao vivo. A aba "Design" espelha os campos reais
+ * do formulario (`tokens[...]`, `primary`, `surface`) e lista as variaveis que
+ * o proprio tema declara em um <style> das suas fontes. Ao mexer em um
+ * controle o valor e aplicado na hora como variavel CSS no quadro (so nomes
+ * vindos do servidor e valores validados aqui) e o render do servidor confirma
+ * em seguida. Esta e a UNICA escrita no documento do quadro.
+ *
  * Independente de kaz-theme-editor.js: os dois conversam somente pelo evento
  * `kaz:module` e pelo atributo `data-kaz-active-module` do shell.
  */
@@ -46,7 +53,8 @@
   var treeEl = root.querySelector('[data-kaz-canvas-tree]');
   var hiddenEl = root.querySelector('[data-kaz-canvas-hidden]');
   var inspectorEl = root.querySelector('[data-kaz-canvas-inspector-body]');
-  var config = { routes: [], devices: [], labels: {}, parts: {} };
+  var designEl = root.querySelector('[data-kaz-canvas-design-body]');
+  var config = { routes: [], devices: [], labels: {}, parts: {}, tokens: { fields: {}, groups: [], general: {}, pairs: {} } };
   try {
     var parsed = JSON.parse(root.getAttribute('data-kaz-canvas-config') || '{}');
     if (parsed && typeof parsed === 'object') {
@@ -54,6 +62,12 @@
       if (Array.isArray(parsed.devices)) config.devices = parsed.devices;
       if (parsed.labels && typeof parsed.labels === 'object') config.labels = parsed.labels;
       if (parsed.parts && typeof parsed.parts === 'object') config.parts = parsed.parts;
+      if (parsed.tokens && typeof parsed.tokens === 'object') {
+        ['fields', 'general', 'pairs'].forEach(function (k) {
+          if (parsed.tokens[k] && typeof parsed.tokens[k] === 'object') config.tokens[k] = parsed.tokens[k];
+        });
+        if (Array.isArray(parsed.tokens.groups)) config.tokens.groups = parsed.tokens.groups;
+      }
     }
   } catch (e) { /* configuracao invalida: o canvas fica vazio, o editor segue */ }
 
@@ -61,6 +75,12 @@
   var MAX_FRAME_H = 30000, DEBOUNCE_MS = 700, CLICK_SLOP = 4, HIT_GAP = 64;
   var STORE_KEY = 'reamur.kaz.canvas.v1';
   var MARK = /^kz:([be]):([a-z0-9_\/-]{1,64})$/;
+  var HEX = /^#[0-9a-fA-F]{6}$/, CSS_VAR = /^--[a-z][a-z0-9-]{0,47}$/, PX = /^(\d{1,4}(?:\.\d{1,3})?)px$/;
+  /* Propriedades comparadas para saber se um token muda a pagina. */
+  var PROBE_PROPS = ['color', 'background-color', 'border-top-color', 'font-family', 'font-size', 'font-weight',
+    'line-height', 'border-top-left-radius', 'border-bottom-right-radius', 'border-top-width', 'box-shadow',
+    'padding-top', 'padding-left', 'margin-top', 'margin-bottom', 'gap', 'max-width', 'width'];
+  var PROBE_SAMPLE = 3000;
 
   var view = { x: PAD, y: PAD + LABEL_H, k: 1 };
   var frames = {};          // id -> { el, iframe, label, device, on, height }
@@ -77,6 +97,16 @@
   var hovered = '';
   var reverted = {};        // chave -> fonte guardada por "voltar ao padrao"
   var panels = { structure: true, inspector: true };
+  var scheme = 'light';     // esquema de cores pedido ao servidor
+  var tab = 'piece';        // aba do painel direito: piece | design
+  var styleVars = [];       // variaveis declaradas pelo proprio tema (do servidor)
+  var varsKnown = false;    // o servidor ja respondeu ao menos uma vez
+  var contrast = [];        // pares de contraste medidos pelo servidor
+  var usage = {};           // id do controle -> o valor muda esta pagina?
+  var usageKey = '';        // para que conteudo `usage` foi medido
+  var probeRun = 0;         // cancela uma medicao em andamento
+  var designSig = '';       // estrutura atual da aba Design
+  var touched = 0;          // ultima vez que um controle da aba Design mudou
 
   function label(key, fallback) {
     var v = config.labels[key];
@@ -96,7 +126,7 @@
     var off = [];
     Object.keys(frames).forEach(function (id) { if (!frames[id].on) off.push(id); });
     try {
-      window.localStorage.setItem(STORE_KEY, JSON.stringify({ route: routeSel ? routeSel.value : '', off: off, panels: panels }));
+      window.localStorage.setItem(STORE_KEY, JSON.stringify({ route: routeSel ? routeSel.value : '', off: off, panels: panels, scheme: scheme, tab: tab }));
     } catch (e) { /* armazenamento indisponivel: preferencias nao persistem */ }
   }
 
@@ -108,6 +138,8 @@
       panels.structure = prefs.panels.structure !== false;
       panels.inspector = prefs.panels.inspector !== false;
     }
+    scheme = prefs.scheme === 'dark' ? 'dark' : 'light';
+    tab = prefs.tab === 'design' ? 'design' : 'piece';
     config.devices.forEach(function (d) {
       if (!d || typeof d.id !== 'string') return;
       var w = clamp(Number(d.w) || 0, 240, 2560), h = clamp(Number(d.h) || 0, 240, 2560);
@@ -210,6 +242,7 @@
     paintMarks();
     paintTree();
     paintInspector();
+    scheduleProbe();
     if (!fitted && active) { fitted = true; fitInitial(); }
   }
 
@@ -512,6 +545,388 @@
     for (var i = 0; i < btns.length; i++) {
       btns[i].setAttribute('aria-pressed', panels[btns[i].getAttribute('data-kaz-canvas-panel')] ? 'true' : 'false');
     }
+    var tabs = root.querySelectorAll('[data-kaz-canvas-tab]');
+    for (i = 0; i < tabs.length; i++) {
+      var on = tabs[i].getAttribute('data-kaz-canvas-tab') === tab;
+      tabs[i].setAttribute('aria-selected', on ? 'true' : 'false');
+      tabs[i].tabIndex = on ? 0 : -1;
+    }
+    var tabPanels = root.querySelectorAll('[data-kaz-canvas-tabpanel]');
+    for (i = 0; i < tabPanels.length; i++) tabPanels[i].hidden = tabPanels[i].getAttribute('data-kaz-canvas-tabpanel') !== tab;
+    var schemes = root.querySelectorAll('[data-kaz-canvas-scheme]');
+    for (i = 0; i < schemes.length; i++) {
+      schemes[i].setAttribute('aria-pressed', schemes[i].getAttribute('data-kaz-canvas-scheme') === scheme ? 'true' : 'false');
+    }
+  }
+
+  /* ---------------- KZ-03: aba Design ---------------- */
+  function field(name) {
+    var els = form.elements;
+    for (var i = 0; i < els.length; i++) if (els[i].name === name) return els[i];
+    return null;
+  }
+  /** Escreve no campo REAL do formulario; e ele que viaja no POST. */
+  function writeField(name, value) {
+    var el = field(name);
+    if (!el) return false;
+    el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    return true;
+  }
+  function designVisible() { return active && panels.inspector && tab === 'design'; }
+  /** Valor CSS que um token produz, pela tabela derivada no servidor. */
+  function tokenCss(spec, value) {
+    if (!spec) return null;
+    if (spec.kind === 'color') return HEX.test(value) ? value : null;
+    if (spec.kind === 'map') {
+      var v = spec.map ? spec.map[value] : null;
+      return typeof v === 'string' ? v : null;
+    }
+    var n = Number(value);
+    if (value === '' || !isFinite(n) || n < Number(spec.min) || n > Number(spec.max)) return null;
+    return String(value) + String(spec.suffix || '');
+  }
+  /** Unica escrita no quadro: uma variavel CSS no <body>, com nome vindo do servidor. */
+  function setBodyVar(name, css) {
+    if (!CSS_VAR.test(String(name)) || typeof css !== 'string' || /[;{}<>]/.test(css)) return;
+    visibleFrames().forEach(function (f) {
+      var doc = null;
+      try { doc = f.iframe.contentDocument; } catch (e) { doc = null; }
+      if (doc && doc.body) doc.body.style.setProperty(name, css);
+    });
+  }
+  /** Regras que declaram `name`, na ordem do documento (inclui @media). */
+  function rulesDeclaring(doc, name) {
+    var out = [];
+    function walk(list) {
+      for (var i = 0; list && i < list.length; i++) {
+        var r = list[i];
+        if (r.style && r.style.getPropertyValue(name) !== '') out.push(r);
+        if (r.cssRules) walk(r.cssRules);
+      }
+    }
+    for (var s = 0; s < doc.styleSheets.length; s++) {
+      try { walk(doc.styleSheets[s].cssRules); } catch (e) { /* folha inacessivel */ }
+    }
+    return out;
+  }
+  function setRuleVar(name, index, css) {
+    if (!CSS_VAR.test(String(name))) return;
+    visibleFrames().forEach(function (f) {
+      var doc = null;
+      try { doc = f.iframe.contentDocument; } catch (e) { doc = null; }
+      if (!doc) return;
+      var rules = rulesDeclaring(doc, name);
+      if (rules[index]) rules[index].style.setProperty(name, css);
+    });
+  }
+  /**
+   * Reescreve o valor da `index`-esima declaracao de `name` dentro dos <style>
+   * de uma fonte. Mesma gramatica de ThemeLiveTokens::styleVars(). Devolve
+   * null quando a declaracao nao esta mais la.
+   */
+  function rewriteVar(source, name, index, value) {
+    if (!CSS_VAR.test(name)) return null;
+    var blockRe = /<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi, block, count = 0;
+    while ((block = blockRe.exec(source))) {
+      var start = block.index + block[0].indexOf('>') + 1;
+      var css = block[1].replace(/\/\*[\s\S]*?\*\//g, function (c) { return c.replace(/[^\n]/g, ' '); });
+      var declRe = new RegExp('(^|[^\\w-])(' + name + ')(\\s*:\\s*)([^;{}]*?)(?=\\s*[;}])', 'g'), d;
+      while ((d = declRe.exec(css))) {
+        if (count++ !== index) continue;
+        var at = start + d.index + d[1].length + d[2].length + d[3].length;
+        return source.slice(0, at) + value + source.slice(at + d[4].length);
+      }
+    }
+    return null;
+  }
+  function varId(v) { return v.template + '|' + v.name + '|' + v.index; }
+  function findVar(id) {
+    for (var i = 0; i < styleVars.length; i++) if (varId(styleVars[i]) === id) return styleVars[i];
+    return null;
+  }
+  function designSignature() {
+    return scheme + '§' + (varsKnown ? '1' : '0') + '§' + styleVars.map(function (v) { return varId(v) + '|' + v.type; }).join('§');
+  }
+  function control(kind, id, type, value, spec) {
+    var wrap = make('span', 'kaz-canvas__control');
+    var attr = 'data-kaz-canvas-' + kind;
+    if (type === 'color') {
+      var c = make('input', 'kaz-canvas__swatch');
+      c.type = 'color'; c.value = HEX.test(value) ? value : '#000000';
+      c.setAttribute(attr, id);
+      wrap.appendChild(c);
+      var out = make('output', 'kaz-canvas__value', c.value);
+      wrap.appendChild(out);
+    } else if (type === 'map' && spec && spec.options) {
+      var sel = make('select', 'kaz-canvas__select');
+      spec.options.forEach(function (o) {
+        var opt = make('option', '', o); opt.value = o; sel.appendChild(opt);
+      });
+      sel.value = value;
+      sel.setAttribute(attr, id);
+      wrap.appendChild(sel);
+    } else {
+      if (spec && spec.max !== undefined) {
+        var range = make('input', 'kaz-canvas__range');
+        range.type = 'range'; range.min = String(spec.min); range.max = String(spec.max); range.step = String(spec.step || '1');
+        range.value = value;
+        range.setAttribute(attr, id);
+        range.setAttribute('data-kaz-canvas-twin', 'range');
+        wrap.appendChild(range);
+      }
+      var num = make('input', 'kaz-canvas__number');
+      num.type = 'number';
+      num.min = spec && spec.min !== undefined ? String(spec.min) : '0';
+      num.max = spec && spec.max !== undefined ? String(spec.max) : '4000';
+      num.step = spec && spec.step ? String(spec.step) : '1';
+      num.value = value;
+      num.setAttribute(attr, id);
+      num.setAttribute('data-kaz-canvas-twin', 'number');
+      wrap.appendChild(num);
+    }
+    return wrap;
+  }
+  function row(labelText, mono, node, usageId, extra) {
+    var r = make('div', 'kaz-canvas__field');
+    if (usageId) r.setAttribute('data-kaz-canvas-usage', usageId);
+    var name = make('label', 'kaz-canvas__fieldname' + (mono ? ' kaz-canvas__fieldname--mono' : ''), labelText);
+    var input = node.querySelector('input,select');
+    if (input) {
+      input.id = 'kaz-canvas-ctl-' + (++row.n);
+      name.htmlFor = input.id;
+    }
+    if (extra) name.appendChild(make('small', 'kaz-canvas__scope', extra));
+    var badge = make('span', 'kaz-canvas__badge kaz-canvas__badge--off', label('design_unused', ''));
+    badge.title = label('design_unused_help', '');
+    badge.hidden = true;
+    name.appendChild(badge);
+    r.appendChild(name);
+    r.appendChild(node);
+    return r;
+  }
+  row.n = 0;
+  function paintDesign() {
+    if (!designEl) return;
+    var sig = designSignature();
+    if (sig === designSig && designEl.firstChild) { syncDesign(); return; }
+    designSig = sig;
+    clear(designEl);
+    var T = config.tokens;
+
+    /* 1. Variaveis do proprio tema: e o que os temas desenhados realmente leem. */
+    if (varsKnown) designEl.appendChild(make('h5', 'kaz-canvas__sidesub', label('design_theme_vars', '')));
+    if (!varsKnown) {
+      /* Antes da primeira resposta nao se sabe o que o tema declara: nao afirma nada. */
+    } else if (!styleVars.length) {
+      designEl.appendChild(make('p', 'kaz-canvas__sidehelp', label('design_no_vars', '')));
+    } else {
+      designEl.appendChild(make('p', 'kaz-canvas__sidehelp', label('design_theme_vars_help', '')));
+      [['color', 'design_colors'], ['length', 'design_sizes']].forEach(function (g) {
+        var list = styleVars.filter(function (v) { return v.type === g[0]; });
+        if (!list.length) return;
+        designEl.appendChild(make('h6', 'kaz-canvas__sidesub2', label(g[1], '')));
+        list.forEach(function (v) {
+          var m = PX.exec(v.value);
+          var node = control('var', varId(v), g[0] === 'color' ? 'color' : 'number', g[0] === 'color' ? v.value : (m ? m[1] : '0'),
+            g[0] === 'color' ? null : { step: m && m[1].indexOf('.') !== -1 ? '0.1' : '1' });
+          var scope = v.scope && v.scope !== ':root' ? v.scope : '';
+          designEl.appendChild(row(v.name, true, node, '', scope));
+        });
+      });
+    }
+
+    /* 2. As duas cores do modulo Geral. */
+    var general = Object.keys(T.general || {});
+    if (general.length) {
+      designEl.appendChild(make('h5', 'kaz-canvas__sidesub', label('design_general', '')));
+      general.forEach(function (k) {
+        var el = field(k);
+        if (!el) return;
+        designEl.appendChild(row(String(T.general[k].label || k), false, control('general', k, 'color', el.value, null), 'general:' + k));
+      });
+    }
+
+    /* 3. Design tokens do sistema, por grupo. */
+    (T.groups || []).forEach(function (g) {
+      var keys = Object.keys(T.fields || {}).filter(function (k) { return T.fields[k].group === g.id && field('tokens[' + k + ']'); });
+      if (!keys.length) return;
+      designEl.appendChild(make('h5', 'kaz-canvas__sidesub', String(g.label || g.id)));
+      if (g.id === 'dark' && scheme !== 'dark') designEl.appendChild(make('p', 'kaz-canvas__sidehelp', label('design_dark_only', '')));
+      keys.forEach(function (k) {
+        var spec = T.fields[k], el = field('tokens[' + k + ']');
+        var type = spec.kind === 'color' ? 'color' : (spec.options ? 'map' : 'number');
+        var text = String(spec.label || k) + (spec.unit ? ' (' + spec.unit + ')' : '');
+        designEl.appendChild(row(text, false, control('token', k, type, el.value, spec), 'token:' + k));
+      });
+    });
+
+    /* 4. Contraste medido pelo servidor com as cores do formulario. */
+    if (varsKnown) {
+      designEl.appendChild(make('h5', 'kaz-canvas__sidesub', label('design_contrast', '')));
+      designEl.appendChild(make('ul', 'kaz-canvas__contrast'));
+    }
+    syncDesign();
+  }
+  /** Atualiza valores, avisos de uso e contraste sem reconstruir (o foco fica). */
+  function syncDesign() {
+    if (!designEl) return;
+    var focus = document.activeElement;
+    var ctls = designEl.querySelectorAll('[data-kaz-canvas-token],[data-kaz-canvas-general],[data-kaz-canvas-var]');
+    for (var i = 0; i < ctls.length; i++) {
+      var c = ctls[i], value = null, k;
+      if (c === focus) continue;
+      if ((k = c.getAttribute('data-kaz-canvas-token'))) { var el = field('tokens[' + k + ']'); value = el ? el.value : null; }
+      else if ((k = c.getAttribute('data-kaz-canvas-general'))) { var ge = field(k); value = ge ? ge.value : null; }
+      else if ((k = c.getAttribute('data-kaz-canvas-var'))) {
+        var v = findVar(k);
+        if (v) { var m = PX.exec(v.value); value = v.type === 'color' ? v.value : (m ? m[1] : null); }
+      }
+      if (value === null || c.value === value) continue;
+      c.value = value;
+      if (c.type === 'color' && c.nextSibling) c.nextSibling.textContent = c.value;
+    }
+    var rows = designEl.querySelectorAll('[data-kaz-canvas-usage]');
+    for (i = 0; i < rows.length; i++) {
+      var id = rows[i].getAttribute('data-kaz-canvas-usage'), badge = rows[i].querySelector('.kaz-canvas__badge--off');
+      var off = usage[id] === false;
+      if (badge) badge.hidden = !off;
+      rows[i].classList.toggle('kaz-canvas__field--off', off);
+    }
+    var ul = designEl.querySelector('.kaz-canvas__contrast');
+    if (ul) {
+      clear(ul);
+      var failed = false;
+      contrast.forEach(function (p) {
+        var li = make('li', p.ok ? '' : 'kaz-canvas__contrast--fail');
+        li.appendChild(make('span', 'kaz-canvas__ratio', Number(p.ratio).toFixed(2) + ':1'));
+        li.appendChild(make('span', '', String(config.tokens.pairs[p.code] || p.code)));
+        ul.appendChild(li);
+        if (!p.ok) failed = true;
+      });
+      if (failed) ul.appendChild(make('li', 'kaz-canvas__contrast--note', label('design_contrast_fail', '')));
+    }
+  }
+  /** Um controle da aba Design mudou: campo real + previa imediata no quadro. */
+  function onDesignInput(t) {
+    var k, value = String(t.value);
+    touched = Date.now();
+    probeRun++;
+    /* range e number do mesmo campo andam juntos. */
+    var twin = t.getAttribute('data-kaz-canvas-twin');
+    if (twin && t.parentNode) {
+      var other = t.parentNode.querySelector('[data-kaz-canvas-twin="' + (twin === 'range' ? 'number' : 'range') + '"]');
+      if (other) other.value = value;
+    }
+    if (t.type === 'color' && t.nextSibling) t.nextSibling.textContent = value;
+
+    if ((k = t.getAttribute('data-kaz-canvas-token'))) {
+      var spec = config.tokens.fields[k], css = tokenCss(spec, value);
+      if (css === null) return true;
+      writeField('tokens[' + k + ']', value);
+      setBodyVar(spec['var'], css);
+      return true;
+    }
+    if ((k = t.getAttribute('data-kaz-canvas-general'))) {
+      var g = config.tokens.general[k];
+      if (!g || !HEX.test(value)) return true;
+      writeField(k, value);
+      setBodyVar(g['var'], value);
+      return true;
+    }
+    if ((k = t.getAttribute('data-kaz-canvas-var'))) {
+      var v = findVar(k);
+      if (!v) return true;
+      var next = null;
+      if (v.type === 'color') { if (HEX.test(value)) next = value.toLowerCase(); }
+      else { var n = Number(value); if (value !== '' && isFinite(n) && n >= 0 && n <= 4000) next = String(Math.round(n * 1000) / 1000) + 'px'; }
+      if (next === null) return true;
+      var src = sourceField(v.template);
+      var rewritten = src ? rewriteVar(src.value, v.name, v.index, next) : null;
+      if (rewritten === null || rewritten.length > 131072) {
+        notes([{ kind: 'warn', text: label('design_stale', '') }]);
+        return true;
+      }
+      v.value = next;
+      writeSource(v.template, rewritten);
+      setRuleVar(v.name, v.index, next);
+      /* O codigo aberto na aba Trecho mostra a mesma fonte. */
+      if (keyOf(selected) === v.template) paintInspector();
+      return true;
+    }
+    return false;
+  }
+
+  /* ---------------- KZ-03: este token muda a pagina? ---------------- */
+  function probeKey() {
+    var parts = [scheme, routeSel ? routeSel.value : '', (field('sections_order') || {}).value || ''], els = form.elements;
+    for (var i = 0; i < els.length; i++) {
+      var n = els[i].name || '';
+      if (n.indexOf('templates[') === 0) parts.push(els[i].value.length);
+      else if (n === 'sections[]' && els[i].checked) parts.push(els[i].value);
+    }
+    return parts.join('|');
+  }
+  function scheduleProbe() {
+    if (!designVisible()) return;
+    var key = probeKey();
+    if (key === usageKey) { syncDesign(); return; }
+    var run = ++probeRun;
+    window.setTimeout(function () { if (run === probeRun) probe(run, key); }, 250);
+  }
+  /**
+   * Mede no primeiro quadro: troca UMA variavel por um valor de sondagem, le o
+   * estilo calculado de uma amostra de elementos e devolve a variavel ao valor
+   * anterior. Se nada mudou, o token nao tem efeito nesta pagina.
+   */
+  function probe(run, key) {
+    if (Date.now() - touched < 1500) { window.setTimeout(function () { if (run === probeRun) probe(run, key); }, 800); return; }
+    var f = leadFrame(), doc = null, win = null;
+    try { doc = f ? f.iframe.contentDocument : null; win = doc ? doc.defaultView : null; } catch (e) { doc = null; }
+    if (!doc || !doc.body || !win || typeof win.getComputedStyle !== 'function') return;
+    var all = doc.body.querySelectorAll('*'), els = [doc.body], step = Math.max(1, Math.ceil(all.length / PROBE_SAMPLE));
+    for (var i = 0; i < all.length; i += step) els.push(all[i]);
+    function print() {
+      var out = [];
+      for (var e = 0; e < els.length; e++) {
+        var cs = win.getComputedStyle(els[e]);
+        for (var p = 0; p < PROBE_PROPS.length; p++) out.push(cs.getPropertyValue(PROBE_PROPS[p]));
+      }
+      return out.join('|');
+    }
+    var jobs = [], T = config.tokens;
+    Object.keys(T.general || {}).forEach(function (k) {
+      var el = field(k);
+      if (el) jobs.push({ id: 'general:' + k, name: T.general[k]['var'], css: el.value.toLowerCase() === '#ff00ff' ? '#00ff00' : '#ff00ff' });
+    });
+    Object.keys(T.fields || {}).forEach(function (k) {
+      var spec = T.fields[k], el = field('tokens[' + k + ']');
+      if (!el) return;
+      /* O anel de foco so aparece com foco; cores do outro esquema nao estao em uso agora. */
+      if (k === 'focus_ring' || (spec.group === 'dark' && scheme !== 'dark') || (spec.group === 'light' && scheme === 'dark' && k !== 'focus_ring')) return;
+      var now = tokenCss(spec, el.value), css = null;
+      if (spec.kind === 'color') css = String(now).toLowerCase() === '#ff00ff' ? '#00ff00' : '#ff00ff';
+      else if (spec.kind === 'map') { Object.keys(spec.map || {}).forEach(function (o) { if (css === null && spec.map[o] !== now) css = spec.map[o]; }); }
+      else css = tokenCss(spec, String(Number(el.value) === Number(spec.max) ? spec.min : spec.max));
+      if (css !== null) jobs.push({ id: 'token:' + k, name: spec['var'], css: css });
+    });
+    var base = print(), result = {}, at = 0;
+    (function next() {
+      if (run !== probeRun || !doc.body) return;
+      var until = Date.now() + 12;
+      while (at < jobs.length && Date.now() < until) {
+        var j = jobs[at++];
+        if (!CSS_VAR.test(String(j.name))) continue;
+        var before = doc.body.style.getPropertyValue(j.name);
+        doc.body.style.setProperty(j.name, j.css);
+        result[j.id] = print() !== base;
+        if (before !== '') doc.body.style.setProperty(j.name, before); else doc.body.style.removeProperty(j.name);
+      }
+      if (at < jobs.length) { window.setTimeout(next, 0); return; }
+      usage = result;
+      usageKey = key;
+      syncDesign();
+    })();
   }
 
   function setDocument(doc) {
@@ -605,6 +1020,7 @@
     drop.forEach(function (key) { body.delete(key); });
     body.set('canvas_route', routeSel ? routeSel.value : 'common/home');
     body.set('canvas_language', langSel ? langSel.value : 'en-us');
+    body.set('canvas_scheme', scheme);
 
     if (controller) { try { controller.abort(); } catch (e) { /* ja terminou */ } }
     controller = typeof window.AbortController === 'function' ? new window.AbortController() : null;
@@ -628,9 +1044,22 @@
       themed = {};
       if (Array.isArray(json.themed)) json.themed.forEach(function (k) { themed[String(k)] = true; });
       defaults = json.defaults && typeof json.defaults === 'object' ? json.defaults : {};
+      styleVars = [];
+      if (Array.isArray(json.style_vars)) json.style_vars.forEach(function (v) {
+        if (!v || !CSS_VAR.test(String(v.name)) || typeof v.template !== 'string' || typeof v.value !== 'string') return;
+        if (v.type === 'color' ? !HEX.test(v.value) : (v.type !== 'length' || !PX.test(v.value))) return;
+        styleVars.push({ template: v.template, name: String(v.name), index: Number(v.index) || 0, value: v.value, type: v.type, scope: String(v.scope || '') });
+      });
+      contrast = Array.isArray(json.contrast) ? json.contrast.filter(function (p) { return p && typeof p.code === 'string'; }) : [];
+      varsKnown = true;
+      probeRun++;
       setDocument(json.html);
+      paintDesign();
       var lines = [];
-      if (json.source === 'saved') lines.push({ kind: 'warn', text: label('saved_draft', '') });
+      if (json.source === 'saved') {
+        var why = typeof json.form_error === 'string' && json.form_error !== '' ? ' ' + label('form_invalid', '') + ' ' + json.form_error : '';
+        lines.push({ kind: 'warn', text: label('saved_draft', '') + why });
+      }
       if (Array.isArray(json.errors) && json.errors.length) {
         json.errors.forEach(function (e) {
           lines.push({
@@ -667,16 +1096,37 @@
   root.addEventListener('click', function (ev) {
     var t = ev.target && ev.target.closest ? ev.target.closest(
       '[data-kaz-canvas-act],[data-kaz-canvas-device],[data-kaz-canvas-panel],[data-kaz-canvas-uid],' +
+      '[data-kaz-canvas-tab],[data-kaz-canvas-scheme],' +
       '[data-kaz-canvas-section],[data-kaz-canvas-show-section],[data-kaz-canvas-source]') : null;
     if (!t || !root.contains(t)) return;
     var panel = t.getAttribute('data-kaz-canvas-panel');
     if (panel === 'structure' || panel === 'inspector') {
       panels[panel] = !panels[panel];
       paintPanels(); savePrefs();
+      if (designVisible()) { paintDesign(); scheduleProbe(); }
+      return;
+    }
+    var nextTab = t.getAttribute('data-kaz-canvas-tab');
+    if (nextTab === 'piece' || nextTab === 'design') {
+      tab = nextTab;
+      paintPanels(); savePrefs();
+      if (tab === 'design') { paintDesign(); scheduleProbe(); }
+      return;
+    }
+    var nextScheme = t.getAttribute('data-kaz-canvas-scheme');
+    if (nextScheme === 'light' || nextScheme === 'dark') {
+      if (nextScheme === scheme) return;
+      scheme = nextScheme;
+      paintPanels(); savePrefs(); refresh();
       return;
     }
     var uid = t.getAttribute('data-kaz-canvas-uid');
-    if (uid) { select(uid, true); return; }
+    if (uid) {
+      /* Escolher na Estrutura e pedir para ver aquele trecho. */
+      if (tab !== 'piece') { tab = 'piece'; paintPanels(); savePrefs(); }
+      select(uid, true);
+      return;
+    }
     var show = t.getAttribute('data-kaz-canvas-show-section');
     if (show) { toggleSection(show, true); paintHiddenSections(); return; }
     var sec = t.getAttribute('data-kaz-canvas-section');
@@ -694,8 +1144,8 @@
       else if (src === 'revert') { reverted[key] = field.value; writeSource(key, ''); }
       else if (src === 'undo' && typeof reverted[key] === 'string') { writeSource(key, reverted[key]); delete reverted[key]; }
       else if (src === 'open') {
-        var tab = shell.querySelector('button.kaz-module-link[data-kaz-module="templates"]');
-        if (tab) tab.click();
+        var moduleBtn = shell.querySelector('button.kaz-module-link[data-kaz-module="templates"]');
+        if (moduleBtn) moduleBtn.click();
         var det = field.closest ? field.closest('details') : null;
         if (det) det.open = true;
         if (typeof field.scrollIntoView === 'function') field.scrollIntoView({ block: 'center' });
@@ -722,9 +1172,24 @@
     else if (act === 'fit') fitAll();
   });
   root.addEventListener('input', function (ev) {
-    var t = ev.target, key = t && t.getAttribute ? t.getAttribute('data-kaz-canvas-code') : null;
+    var t = ev.target;
+    if (!t || !t.getAttribute) return;
+    if (designEl && designEl.contains(t)) { onDesignInput(t); return; }
+    var key = t.getAttribute('data-kaz-canvas-code');
     if (!key || t.readOnly) return;
     writeSource(key, t.value);
+  });
+  /* Ao sair de um controle, ele volta a mostrar o valor que o campo real aceitou. */
+  root.addEventListener('focusout', function (ev) {
+    if (designEl && ev.target && designEl.contains(ev.target)) window.setTimeout(syncDesign, 0);
+  });
+  /* Setas trocam de aba (padrao de tablist). */
+  root.addEventListener('keydown', function (ev) {
+    var t = ev.target;
+    if (!t || !t.getAttribute || !t.getAttribute('data-kaz-canvas-tab')) return;
+    if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
+    var other = root.querySelector('[data-kaz-canvas-tab="' + (tab === 'piece' ? 'design' : 'piece') + '"]');
+    if (other) { ev.preventDefault(); other.click(); other.focus(); }
   });
   if (treeEl) {
     treeEl.addEventListener('mouseover', function (ev) {
@@ -857,6 +1322,8 @@
     if (on === active) return;
     active = on;
     if (!active) { window.clearTimeout(timer); return; }
+    /* Os controles do Design nao dependem do servidor: aparecem ja na abertura. */
+    if (tab === 'design') paintDesign();
     if (stale || html === '') refresh();
     /* O painel acabou de ganhar tamanho: enquadra na proxima pintura. */
     window.requestAnimationFrame(function () {
