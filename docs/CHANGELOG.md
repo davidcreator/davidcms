@@ -1,5 +1,16 @@
 # Changelog
 
+## Segurança S6 + S7 — requisições de saída usam o IP conferido (2026-11-12)
+- ADR 0090. Achados da análise, reproduzidos antes da correção em uma rede isolada com DNS, "site público" e "serviço interno" de teste.
+- **Corrigido (S7):** a guarda contra SSRF consultava o DNS e o cURL consultava de novo. Um nome que responde um IP público na primeira consulta e `127.0.0.1` na segunda fazia o importador de blog ler um serviço interno do servidor (página de posts, redirecionamento e imagem de capa) e fazia o webhook abrir conexão nele. Agora o cURL conecta só nos endereços que a guarda conferiu (`CURLOPT_RESOLVE`), no webhook a cada tentativa e no importador a cada redirecionamento.
+- **Corrigido (S6):** a guarda cortava as pontas da URL antes de conferir e aceitava URL com quebra de linha, tab ou NUL no fim. A URL passa a ser conferida crua. `MediaUpload::absolute()` confere o caminho cru.
+- **Guarda mais estrita:** recusa IP em forma decimal, hexadecimal, octal ou abreviada (`2130706433`, `0x7f000001`, `0177.0.0.1`, `127.1`), `localhost.` com ponto final, e IPv6 que carrega um IPv4 interno (`::127.0.0.1`, NAT64, 6to4). Um endereço interno entre os que o DNS devolve reprova o nome inteiro.
+- **Importador de blog:** resposta cortada durante o download (8 MB para a página de posts, 5 MB para a imagem); antes, uma página de 400 MB derrubava a tela com erro fatal de memória. Redirecionamento para `file://` e afins encerra na hora com `ssrf_blocked`. URL de imagem inválida vira erro registrado e a importação segue.
+- **Webhook:** URL recusada pela guarda não gera novas tentativas (antes, URL com quebra de linha gastava 3 tentativas e cerca de 6 s). A linha de log sai sem bytes de controle.
+- **Efeito em site existente:** webhooks e importações para destinos públicos se comportam como antes. Importação com página de posts acima de 8 MB falha com `too_big`: reduza "posts por página". Salvar um webhook continua sem consultar o DNS.
+- `UrlGuard` ganha `inspect()`, `curlOptions()` e `pinLines()`; `isSafeExternalUrl()` mantém a assinatura. Código novo que conecta deve usar `inspect()` + `curlOptions()` (há teste que reprova `curl_init(` sem os dois). Sem tabela, coluna, migration, rota, configuração ou dependência nova.
+- **Limite:** se o servidor sai para a internet por um proxy HTTP, quem resolve o nome é o proxy e a trava de IP não se aplica.
+
 ## Segurança S5 — IP do visitante e HTTPS atrás de proxy ou CDN (2026-11-12)
 - ADR 0089. Achado da análise, reproduzido na instalação de teste com um proxy TLS na frente do site antes da correção.
 - **Corrigido:** atrás de CDN ou proxy reverso, todos os visitantes chegavam ao PHP com o IP do proxy. Seis senhas erradas de qualquer pessoa trancavam o login do admin para todos por 15 minutos (inclusive para quem digitava a senha certa); cinco mensagens de um visitante fechavam o contato e o orçamento para os demais por 10 minutos; o IP gravado em mensagens e pedidos era sempre o do proxy.

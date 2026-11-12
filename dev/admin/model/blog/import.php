@@ -22,6 +22,7 @@ class Import extends \Reamur\System\Engine\Model {
     private const FETCH_TIMEOUT = 20;
     private const FETCH_CONNECT = 5;
     private const MAX_IMAGE_BYTES = 5_000_000; // 5 MB — capa WP média é byte-level standard; sem resize
+    private const MAX_JSON_BYTES  = 8_000_000; // 8 MB — página de até 100 posts com _embed (ADR 0090)
 
     /** UA identificável (transparência com o servidor de origem) */
     private const USER_AGENT = 'ReamurCMS-Importer/1.0 (+https://reamurcms.com)';
@@ -285,6 +286,10 @@ class Import extends \Reamur\System\Engine\Model {
                 ?: (string)($embed[0]['media_details']['sizes']['full']['source_url'] ?? '')
                 ?: (string)($embed[0]['source_url'] ?? '');
 
+            // O valor vem do site remoto. O que é conferido aqui é o que
+            // segue para o download: pontas limpas antes, não depois.
+            $candidate = trim($candidate);
+
             if (preg_match('#^https?://#i', $candidate)) {
                 $image_url = $candidate;
             }
@@ -303,58 +308,100 @@ class Import extends \Reamur\System\Engine\Model {
         ];
     }
 
-    /** fetch binário/HTML leve com proteção SSRF em cada salto de redirect */
-    private function httpGet(string $url, bool $headOnly = false): array {
+    /**
+     * fetch binário/HTML leve com proteção SSRF em cada salto de redirect.
+     *
+     * ADR 0090: cada salto é conferido por UrlGuard::inspect() e o cURL só
+     * conecta nos endereços conferidos (sem nova consulta ao DNS). A resposta
+     * é cortada em $maxBytes: o site remoto não decide quanta memória o admin
+     * gasta. Nunca lança — URL que o cURL recusa vira erro de retorno.
+     *
+     * @return array{body: string, error: string}
+     */
+    private function httpGet(string $url, bool $headOnly = false, int $maxBytes = self::MAX_JSON_BYTES): array {
         $currentUrl = $url;
         $maxRedirs  = 3;
 
         for ($hop = 0; $hop <= $maxRedirs; $hop++) {
-            if (!\Reamur\System\Library\Security\UrlGuard::isSafeExternalUrl($currentUrl)) {
+            $target = \Reamur\System\Library\Security\UrlGuard::inspect($currentUrl);
+
+            if ($target === null) {
                 return ['body' => '', 'error' => 'ssrf_blocked'];
             }
 
-            $ch = curl_init($currentUrl);
-            if ($ch === false) {
-                return ['body' => '', 'error' => 'curl_init_failed'];
+            $rawHeaders = '';
+            $body       = '';
+            $tooBig     = false;
+
+            try {
+                $ch = curl_init($currentUrl);
+                if ($ch === false) {
+                    return ['body' => '', 'error' => 'curl_init_failed'];
+                }
+
+                curl_setopt_array($ch, \Reamur\System\Library\Security\UrlGuard::curlOptions($target) + [
+                    CURLOPT_SSL_VERIFYPEER => true,
+                    CURLOPT_SSL_VERIFYHOST => 2,
+                    CURLOPT_CONNECTTIMEOUT => self::FETCH_CONNECT,
+                    CURLOPT_TIMEOUT        => self::FETCH_TIMEOUT,
+                    CURLOPT_USERAGENT      => self::USER_AGENT,
+                    CURLOPT_NOBODY         => $headOnly,
+                    CURLOPT_HTTPHEADER     => ['Accept: application/json,*/*;q=0.8'],
+                    // Tamanho declarado maior que o limite: nem começa a baixar.
+                    CURLOPT_MAXFILESIZE    => $maxBytes,
+                    CURLOPT_HEADERFUNCTION => static function ($handle, string $line) use (&$rawHeaders): int {
+                        if (strlen($rawHeaders) + strlen($line) > 65536) {
+                            return 0; // cabeçalho sem fim: aborta
+                        }
+
+                        $rawHeaders .= $line;
+
+                        return strlen($line);
+                    },
+                    // Tamanho não declarado (ou mentiroso): corta ao passar do limite.
+                    CURLOPT_WRITEFUNCTION  => static function ($handle, string $chunk) use (&$body, &$tooBig, $maxBytes): int {
+                        if (strlen($body) + strlen($chunk) > $maxBytes) {
+                            $tooBig = true;
+
+                            return 0;
+                        }
+
+                        $body .= $chunk;
+
+                        return strlen($chunk);
+                    },
+                ]);
+
+                $ok    = curl_exec($ch);
+                $code  = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $errno = curl_errno($ch);
+                $err   = (string)curl_error($ch);
+
+                curl_close($ch);
+            } catch (\Throwable $e) {
+                return ['body' => '', 'error' => 'fetch_failed:invalid_request'];
             }
 
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HEADER         => true,
-                CURLOPT_FOLLOWLOCATION => false,
-                CURLOPT_PROTOCOLS      => \Reamur\System\Library\Security\UrlGuard::allowedCurlProtocols(),
-                CURLOPT_SSL_VERIFYPEER => true,
-                CURLOPT_SSL_VERIFYHOST => 2,
-                CURLOPT_CONNECTTIMEOUT => self::FETCH_CONNECT,
-                CURLOPT_TIMEOUT        => self::FETCH_TIMEOUT,
-                CURLOPT_USERAGENT      => self::USER_AGENT,
-                CURLOPT_NOBODY         => $headOnly,
-                CURLOPT_HTTPHEADER     => ['Accept: application/json,*/*;q=0.8'],
-            ]);
+            if ($tooBig || $errno === 63) { // 63 = CURLE_FILESIZE_EXCEEDED
+                return ['body' => '', 'error' => 'too_big'];
+            }
 
-            $raw        = curl_exec($ch);
-            $code       = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $headerSize = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-            $err        = (string)curl_error($ch);
-
-            curl_close($ch);
-
-            if ($raw === false || $err !== '') {
+            if ($ok === false || $err !== '') {
                 return ['body' => '', 'error' => 'fetch_failed:' . ($err !== '' ? $err : "http $code")];
             }
 
-            $rawStr     = (string)$raw;
-            $rawHeaders = substr($rawStr, 0, $headerSize);
-            $body       = $headOnly ? '' : substr($rawStr, $headerSize);
+            if ($headOnly) {
+                $body = '';
+            }
 
             if ($code >= 300 && $code < 400 && $code !== 304) {
                 if ($hop >= $maxRedirs) {
                     return ['body' => '', 'error' => 'too_many_redirects'];
                 }
-                if (preg_match('/^Location:\s*(.+)$/im', $rawHeaders, $m) !== 1) {
+                if (preg_match('/^Location:[ \t]*([^\r\n]+)/im', $rawHeaders, $m) !== 1) {
                     return ['body' => '', 'error' => 'http_' . $code];
                 }
-                $nextUrl = \Reamur\System\Library\Security\UrlGuard::resolveRedirect($currentUrl, trim($m[1]));
+                $nextUrl = \Reamur\System\Library\Security\UrlGuard::resolveRedirect($currentUrl, $m[1]);
                 if ($nextUrl === '') {
                     return ['body' => '', 'error' => 'ssrf_blocked'];
                 }
@@ -386,7 +433,8 @@ class Import extends \Reamur\System\Engine\Model {
             return ['ok' => false, 'path' => '', 'error' => 'bad_name'];
         }
 
-        $fetch = $this->httpGet($url);
+        // O limite vale durante o download (ADR 0090), não só depois dele.
+        $fetch = $this->httpGet($url, false, self::MAX_IMAGE_BYTES);
 
         if ($fetch['error'] !== '') {
             return ['ok' => false, 'path' => '', 'error' => $fetch['error']];

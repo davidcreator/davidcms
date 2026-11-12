@@ -258,7 +258,7 @@ $valid = hash_equals(
 3. **Falhar em silêncio controlado:** exceções vão para `storage/logs/error.log` — nunca expor URL/secret em tela.
 4. **Bloqueio de IP** para a API interna: `system/config/api/settings/ip_blocked.php`.
 5. **Timeout curto (5s)** e limite de payload nos envios.
-6. **Validação de URL** ao cadastrar hook (somente `https://`, sem IPs privados em produção — anti-SSRF).
+6. **Validação de URL** ao cadastrar hook (somente `https://`, sem IPs privados em produção — anti-SSRF). No envio, a URL é conferida de novo com DNS e a conexão usa só os endereços conferidos (ADR 0090): um webhook para um nome que resolve para dentro é salvo, mas cada envio é recusado e registrado em log.
 
 ---
 

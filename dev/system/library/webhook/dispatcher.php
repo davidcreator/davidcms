@@ -84,8 +84,12 @@ class Dispatcher {
 
             $signature = hash_hmac('sha256', $body, $secret);
 
-            if (!\Reamur\System\Library\Security\UrlGuard::isSafeExternalUrl($url, true)) {
-                $this->log->write('webhook dispatcher bloqueado (SSRF): ' . $url);
+            // ADR 0090 (S7): o destino conferido aqui é o que o cURL usa. Sem
+            // isso o cURL consultava o DNS de novo e podia receber outro IP.
+            $target = \Reamur\System\Library\Security\UrlGuard::inspect($url, true);
+
+            if ($target === null) {
+                $this->log->write('webhook dispatcher bloqueado (SSRF): ' . self::printable($url));
                 $results[] = [
                     'webhook_id' => $wid,
                     'delivery'   => $deliver,
@@ -100,7 +104,13 @@ class Dispatcher {
                         sleep(self::BACKOFF[$attempt]);
                     }
 
-                    [$code, $duration] = $this->post($url, $body, $event, $deliver, $signature);
+                    // Nova tentativa, nova conferência: o DNS pode ter mudado
+                    // de verdade entre uma e outra.
+                    if ($attempt > 1) {
+                        $target = \Reamur\System\Library\Security\UrlGuard::inspect($url, true);
+                    }
+
+                    [$code, $duration] = $this->post($url, $target, $body, $event, $deliver, $signature);
 
                     $results[] = [
                         'webhook_id' => $wid,
@@ -134,11 +144,12 @@ class Dispatcher {
      * POST único com os headers do protocolo. Nunca lança — falha de rede
      * retorna http_code 0.
      *
+     * @param array{resolve: list<string>}|null $target Destino conferido por UrlGuard::inspect(); null = recusado
      * @return array{0:int,1:float} [http_code, duration em segundos]
      */
-    private function post(string $url, string $body, string $event, string $deliver, string $signature): array {
-        if (!\Reamur\System\Library\Security\UrlGuard::isSafeExternalUrl($url, true)) {
-            $this->log->write('webhook dispatcher bloqueado (SSRF): ' . $url);
+    private function post(string $url, ?array $target, string $body, string $event, string $deliver, string $signature): array {
+        if ($target === null) {
+            $this->log->write('webhook dispatcher bloqueado (SSRF): ' . self::printable($url));
             return [0, 0.0];
         }
 
@@ -148,12 +159,12 @@ class Dispatcher {
                 return [0, 0.0];
             }
 
-            curl_setopt_array($ch, [
+            // curlOptions(): só http/https, 3xx não é seguido (nem é sucesso) e
+            // a conexão fica presa aos endereços conferidos (CURLOPT_RESOLVE).
+            curl_setopt_array($ch, \Reamur\System\Library\Security\UrlGuard::curlOptions($target) + [
                 CURLOPT_POST           => true,
                 CURLOPT_POSTFIELDS     => $body,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_FOLLOWLOCATION => false,      // 3xx não é sucesso nem seguido (SSRF-safety)
-                CURLOPT_PROTOCOLS      => \Reamur\System\Library\Security\UrlGuard::allowedCurlProtocols(),
                 CURLOPT_SSL_VERIFYPEER => true,
                 CURLOPT_SSL_VERIFYHOST => 2,
                 CURLOPT_CONNECTTIMEOUT => self::CONNECT_TIMEOUT,
@@ -177,6 +188,11 @@ class Dispatcher {
             $this->log->write('webhook dispatcher exceção: ' . $e->getMessage());
             return [0, 0.0];
         }
+    }
+
+    /** URL para a linha de log: sem bytes de controle (não quebra a linha) e com tamanho limitado. */
+    private static function printable(string $url): string {
+        return substr((string)preg_replace('/[\x00-\x1f\x7f]+/', ' ', $url), 0, 255);
     }
 
     /** Identidade única por entrega — receptor usa para deduplicar retries. */

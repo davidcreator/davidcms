@@ -123,9 +123,15 @@ final class MediaUpload {
 
     /** Resolve o path físico no catalog; '' se não existir ou escapar do root */
     public function absolute(string $relative): string {
+        // Controle/NUL checados no valor CRU, como em guard(): trim() tira
+        // \0, \n, \r e \t das pontas e esconderia o byte (ADR 0090).
+        if (preg_match('/[\x00-\x1f\x7f]/', $relative) === 1) {
+            return '';
+        }
+
         $normalized = str_replace('\\', '/', trim($relative));
 
-        if ($normalized === '' || preg_match('/[\x00-\x1f\x7f]/', $normalized) === 1
+        if ($normalized === ''
             || str_starts_with($normalized, '/') || str_contains($normalized, '..')) {
             return '';
         }
