@@ -1,6 +1,10 @@
 # ADR 0037 — Hardening pré-cutover: modo produção de erros, headers extras e remoção do legado morto
 
 - **Status:** Aceita — 2026-10-21 (F6 Tarefa 01)
+- **Revisão (2026-11-12):** o item 1 desta ADR não tinha efeito, porque
+  `config/catalog.php` e `config/admin.php` fixavam `error_display = true`
+  por cima do `default.php`. Corrigido na
+  [ADR 0088](0088-seguranca-modo-producao-e-erro-500.md).
 - **Contexto:** Plano da Análise §Fase 6: *hardening (HTTPS, headers,
   `error_display=false`), composer validate verde no CI, redirects e
   cutover*. O item CI já estava sanado (`working-directory` do

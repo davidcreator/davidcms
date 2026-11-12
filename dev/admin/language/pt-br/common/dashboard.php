@@ -70,3 +70,6 @@ $_['action_new_page']    = 'Páginas (CMS)';
 $_['action_new_project'] = 'Novo projeto';
 $_['action_new_tool']    = 'Ferramentas';
 $_['action_import_wp']   = 'Importar do WordPress';
+
+// ADR 0088 (S3)
+$_['warning_error_display'] = 'A exibição de erros está ligada nesta instalação: se algo falhar, detalhes técnicos (arquivo, linha, SQL) aparecem na tela para qualquer visitante. Em produção, defina REAMUR_ERROR_DISPLAY como false nos arquivos config.php de catalog/ e admin/.';

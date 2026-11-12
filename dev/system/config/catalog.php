@@ -32,5 +32,7 @@ $_['action_pre_action']   = ['startup/setting', 'startup/theme', 'startup/langua
 $_['action_post_action']  = [];
 
 // Erros
-$_['error_display']       = true; // virar false em produção
+// ADR 0088 (S3): error_display NÃO é definido aqui. Vale o default.php, que
+// lê REAMUR_ERROR_DISPLAY do config.php da instalação (ausente = false).
+// Antes esta linha fixava true e anulava o modo produção.
 $_['error_log']           = true;

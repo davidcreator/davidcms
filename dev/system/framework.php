@@ -14,6 +14,10 @@
 
 use Reamur\System\Engine\{Autoloader, Registry, Config, Event, Loader, Action, Router};
 
+// 0. ADR 0088 (S3): até o config ser lido (passo 4), vale o que o config.php
+// da instalação pediu; sem a constante, erro do PHP não vai para a tela.
+ini_set('display_errors', (defined('REAMUR_ERROR_DISPLAY') && REAMUR_ERROR_DISPLAY) ? '1' : '0');
+
 // 1. Autoloader: namespaces do núcleo + da aplicação (Arquitetura §2)
 require_once(DIR_SYSTEM . 'engine/autoloader.php');
 
@@ -79,7 +83,10 @@ $registry->set('config', $config);
 $log = new \Reamur\System\Library\Log((string)$config->get('error_filename', 'error.log'));
 $registry->set('log', $log);
 
-ini_set('display_errors', $config->get('error_display', true) ? '1' : '0');
+// ADR 0088 (S3): o padrão de leitura é SEMPRE false. Antes era true, e os
+// configs de catalog e admin ainda fixavam true por cima do default.php: o
+// modo produção (REAMUR_ERROR_DISPLAY=false) não desligava nada.
+ini_set('display_errors', $config->get('error_display', false) ? '1' : '0');
 ini_set('log_errors', $config->get('error_log', true) ? '1' : '0');
 
 set_error_handler(static function (int $code, string $message, string $file, int $line): bool {
@@ -90,20 +97,93 @@ set_error_handler(static function (int $code, string $message, string $file, int
     throw new \ErrorException($message, 0, $code, $file, $line);
 });
 
-set_exception_handler(static function (\Throwable $e) use ($registry, $config): void {
-    $registry->get('log')->write(
-        get_class($e) . ': ' . $e->getMessage() . ' em ' . $e->getFile() . ':' . $e->getLine()
-    );
+// A página de erro não pode depender do autoloader na hora da falha.
+require_once(DIR_SYSTEM . 'library/error_page.php');
 
-    http_response_code(500);
+// Dados da página de erro lidos NA HORA da falha (idioma e nome do site só
+// existem depois das pré-ações) e sem tocar em banco, template ou idioma.
+$errorPageContext = static function () use ($config): array {
+    return [
+        (string)$config->get('language_directory', 'en-us'),
+        (string)$config->get('config_name', ''),
+        (string)$config->get('site_url', defined('HTTP_SERVER') ? (string)HTTP_SERVER : '/'),
+    ];
+};
 
-    if ($config->get('error_display', true)) {
-        echo '<strong>ReamurCMS ' . REAMUR_VERSION . '</strong> — ' . get_class($e) . ': '
-            . $e->getMessage() . ' em ' . $e->getFile() . ':' . $e->getLine();
-    } else {
-        echo 'Ocorreu um erro. Detalhes no log do sistema.';
+// Sufixo do log: a URL pedida, como o Router já registra (ADR 0041).
+$errorRequest = static function (): string {
+    $uri = is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '';
+
+    return $uri !== '' ? ' — request: ' . $uri : '';
+};
+
+// Exceção FORA do dispatch (banco fora do ar, pré-ação, saída): 500.
+// O detalhe (classe, mensagem, arquivo, linha) vai sempre para o log e só
+// vai para a tela com error_display ligado, escapado.
+set_exception_handler(static function (\Throwable $e) use ($registry, $config, $errorPageContext, $errorRequest): void {
+    $reference = \Reamur\System\Library\ErrorPage::reference();
+    $detail    = \Reamur\System\Library\ErrorPage::describe($e);
+
+    try {
+        $registry->get('log')->write('[' . $reference . '] ' . $detail . $errorRequest());
+    } catch (\Throwable $ignored) {
+        // log indisponível não pode impedir a resposta de erro
     }
+
+    [$language, $siteName, $home] = $errorPageContext();
+
+    \Reamur\System\Library\ErrorPage::discardOutput();
+    \Reamur\System\Library\ErrorPage::send(
+        $_SERVER, $language, $siteName, $home, $reference,
+        $config->get('error_display', false) ? $detail : null
+    );
 });
+
+// Erro fatal do PHP (memória, tempo, código inválido): não passa pelos
+// tratadores acima e, sozinho, o PHP devolveria uma tela em branco. Aqui ele
+// vira a mesma página 500, com o detalhe escapado quando error_display está
+// ligado.
+\Reamur\System\Library\ErrorPage::reserve();
+
+register_shutdown_function(static function () use ($registry, $config, $errorPageContext, $errorRequest): void {
+    $error = error_get_last();
+
+    if ($error === null || !in_array($error['type'], \Reamur\System\Library\ErrorPage::FATAL, true)) {
+        return;
+    }
+
+    \Reamur\System\Library\ErrorPage::release();
+
+    $reference = \Reamur\System\Library\ErrorPage::reference();
+
+    try {
+        $registry->get('log')->write('[' . $reference . '] PHP fatal: ' . $error['message'] . ' em ' . $error['file'] . ':' . $error['line'] . $errorRequest());
+    } catch (\Throwable $ignored) {
+        // log indisponível não pode impedir a resposta de erro
+    }
+
+    $display = (bool)$config->get('error_display', false);
+
+    if ($display && PHP_SAPI === 'cli') {
+        return; // no terminal o próprio PHP já escreveu o erro
+    }
+
+    [$language, $siteName, $home] = $errorPageContext();
+
+    \Reamur\System\Library\ErrorPage::discardOutput();
+    \Reamur\System\Library\ErrorPage::send(
+        $_SERVER, $language, $siteName, $home, $reference,
+        $display ? 'PHP fatal: ' . $error['message'] . ' em ' . $error['file'] . ':' . $error['line'] : null
+    );
+});
+
+// Daqui em diante os três tratadores acima respondem por todo erro, e são eles
+// que mostram o detalhe quando error_display está ligado. O PHP deixa de
+// escrever o erro cru na saída: ele saía com status 200, sem escape e, em
+// falta de memória, por fora de qualquer buffer. No terminal nada muda.
+if (PHP_SAPI !== 'cli') {
+    ini_set('display_errors', '0');
+}
 
 // 6. Event + listeners do config (action_event)
 $event = new Event();

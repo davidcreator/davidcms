@@ -89,27 +89,105 @@ final class Action {
     }
 
     /**
-     * Instancia o controller com o MESMO registry compartilhado e chama o método.
+     * Resolve a rota até um controller pronto para ser chamado, SEM chamá-lo.
+     *
+     * ADR 0088 (S4): separa as duas perguntas que antes davam a mesma resposta.
+     * "Essa URL corresponde a uma tela?" é respondida aqui, e o não é sempre
+     * um NotFoundException. "A tela funcionou?" só é respondida quando o
+     * chamável devolvido roda. O Router usa essa fronteira para responder 404
+     * num caso e 500 no outro.
+     *
+     * Erro de sintaxe no arquivo do controller ou exceção no construtor NÃO
+     * são NotFoundException: a rota existe e está quebrada.
      *
      * @param array<int, mixed> $args Argumentos explícitos (têm prioridade sobre os '|' da rota)
+     * @return \Closure(): mixed
+     * @throws NotFoundException
      */
-    public function execute(Registry $registry, array $args = []): mixed {
+    public function prepare(Registry $registry, array $args = []): \Closure {
         if (!$this->isCallable()) {
-            throw new \Exception(sprintf('Route not found: %s.%s', $this->route, $this->method));
+            throw new NotFoundException(sprintf('Route not found: %s.%s', $this->route, $this->method));
         }
 
         $class = $this->getClass();
 
         if (!class_exists($class)) {
-            throw new \Exception(sprintf('Controller class not found: %s (route "%s")', $class, $this->route));
+            throw new NotFoundException(sprintf('Controller class not found: %s (route "%s")', $class, $this->route));
         }
 
         $controller = new $class($registry);
+        $method     = $this->method;
 
-        if (!is_callable([$controller, $this->method])) {
-            throw new \Exception(sprintf('Method not callable: %s::%s', $class, $this->method));
+        if (!is_callable([$controller, $method])) {
+            throw new NotFoundException(sprintf('Method not callable: %s::%s', $class, $method));
         }
 
-        return $controller->{$this->method}(...($args ?: $this->args));
+        // Argumentos vindos da URL ('rota|a|b') são sempre texto. Se o método
+        // exige mais argumentos, ou exige outro tipo, a URL não corresponde a
+        // essa tela: 404, como já era (antes por um TypeError capturado).
+        // Argumentos explícitos vêm do código (load->controller); ali um tipo
+        // errado é defeito do sistema e segue como erro.
+        if ($args === [] && !self::acceptsUrlArguments($controller, $method, $this->args)) {
+            throw new NotFoundException(sprintf('Arguments do not match: %s::%s', $class, $method));
+        }
+
+        $call = $args ?: $this->args;
+
+        return static fn (): mixed => $controller->{$method}(...$call);
+    }
+
+    /**
+     * Instancia o controller com o MESMO registry compartilhado e chama o método.
+     *
+     * @param array<int, mixed> $args Argumentos explícitos (têm prioridade sobre os '|' da rota)
+     * @throws NotFoundException quando a rota, o método ou os argumentos da URL não correspondem a nada chamável
+     */
+    public function execute(Registry $registry, array $args = []): mixed {
+        return $this->prepare($registry, $args)();
+    }
+
+    /** @param array<int, string> $args */
+    private static function acceptsUrlArguments(object $controller, string $method, array $args): bool {
+        try {
+            $reflection = new \ReflectionMethod($controller, $method);
+        } catch (\ReflectionException $e) {
+            return true; // método atendido por __call: não há assinatura para conferir
+        }
+
+        if (count($args) < $reflection->getNumberOfRequiredParameters()) {
+            return false;
+        }
+
+        foreach ($reflection->getParameters() as $position => $parameter) {
+            if (!$parameter->isVariadic() && !array_key_exists($position, $args)) {
+                break;
+            }
+
+            if (count($args) > $position && !self::typeAcceptsString($parameter->getType())) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static function typeAcceptsString(?\ReflectionType $type): bool {
+        if ($type === null) {
+            return true;
+        }
+
+        if ($type instanceof \ReflectionNamedType) {
+            return in_array(strtolower($type->getName()), ['string', 'mixed'], true);
+        }
+
+        if ($type instanceof \ReflectionUnionType) {
+            foreach ($type->getTypes() as $member) {
+                if (self::typeAcceptsString($member)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

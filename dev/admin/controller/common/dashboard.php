@@ -30,6 +30,12 @@ class Dashboard extends \Reamur\System\Engine\Controller {
 
         $data = $this->baseData();
 
+        // ADR 0088 (S3): instalação nova nasce com REAMUR_ERROR_DISPLAY=true.
+        // Enquanto estiver assim, o painel avisa; vazio = nada a mostrar.
+        $data['warning_error_display'] = $this->config->get('error_display', false)
+            ? $this->language->get('warning_error_display')
+            : '';
+
         // ── Cards de visão-geral: ACL-driven + tableExists no model ──
         $data['cards'] = [];
 

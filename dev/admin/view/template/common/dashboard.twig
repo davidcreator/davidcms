@@ -6,6 +6,10 @@
     <p class="muted">{{ text_welcome_overview }}</p>
   </div>
 
+  {% if warning_error_display %}
+  <div class="alert alert-warning" role="alert" data-rms-warning="error-display"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ warning_error_display }}</div>
+  {% endif %}
+
   {% if cards %}
   <div class="stat-grid" role="list" aria-label="{{ text_stats_overview }}">
     {% for card in cards %}

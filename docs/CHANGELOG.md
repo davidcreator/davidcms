@@ -1,5 +1,19 @@
 # Changelog
 
+## Segurança S3 + S4 — modo produção e erro 500 (2026-11-12)
+- ADR 0088. Dois achados da análise, reproduzidos numa instalação real (instalador web, MariaDB 11.8.6, PHP 8.2.32) antes da correção.
+- **S3, corrigido:** `REAMUR_ERROR_DISPLAY = false` não desligava nada, porque `config/catalog.php` e `config/admin.php` fixavam `error_display = true` por cima do `default.php`. Com o modo produção ligado, senha de banco errada mostrava `Access denied for user …`, tabela ausente mostrava o SQL e o caminho do arquivo. As duas linhas saíram; `framework.php` lê a opção com padrão `false`.
+- **S4, corrigido:** qualquer falha dentro de uma tela respondia "404 Página não encontrada" (uma tabela ausente derrubava a home como 404). Agora 404 fica só para URL que não corresponde a uma tela; tela que falha responde **500**.
+- **Página 500 nova** (`Library\ErrorPage`): HTML curto e fixo, sem banco, tema ou template; nome do site, link para a home e um código de referência que aparece também na linha do log. Em `pt-br`, `en-us` e `es-eu`. Quem pede JSON recebe `{"success":false,"error":…,"ref":…}`.
+- A resposta 500 sai com `Cache-Control: no-store` e `X-Robots-Tag: noindex`, mantém os cabeçalhos de segurança do config e descarta os cabeçalhos e a saída parcial do controller que falhou. Erro fatal do PHP (memória, código inválido) responde a mesma página.
+- **Log:** a linha de erro ganha classe, arquivo e linha: `[F11E7B37] RuntimeException: … em /caminho/arquivo.php:6 — request: /…`.
+- **Atenção em instalação nova:** o instalador continua gravando `define('REAMUR_ERROR_DISPLAY', true);`. Em produção, troque para `false` em `catalog/config.php` e `admin/config.php`. Enquanto estiver `true`, o painel inicial do admin mostra um aviso.
+- **Instalador, corrigido:** a instalação parava no meio (erro 1267, `Illegal mix of collations`) em servidor cuja collation padrão de utf8mb4 não é `utf8mb4_unicode_ci`, caso do MariaDB 11.8. A tabela temporária de `schema-complete.sql` e `schema.sql` passou a declarar a collation.
+- `tools/check_producao.sh`, check 12: reprova também vestígio de erro do PHP ou de SQL nas páginas lidas.
+- `Action` ganha `prepare()` e a exceção `Engine\NotFoundException`; `Response` ganha `reset()`. `Action::execute()` mantém assinatura e mensagens. Sem tabela, coluna, migration, rota ou dependência nova.
+- Não verificado: Apache/nginx com PHP-FPM (a bateria usou o servidor embutido do PHP), MySQL, driver `mysqli`, e a página 500 atrás da CDN de produção.
+- Validação local: bateria HTTP de 41 casos antes e depois, nos dois modos (8 respostas 200, 11 respostas 404, 22 respostas 500); PHPUnit `OK (300 tests, 5140 assertions)` em PHP 8.2.32 e 8.3.32 (98 testes novos em `ErrorDispatchTest`, `ErrorPageTest` e `ErrorDisplayConfigTest`), PHPStan nível 2 sem erros, `php -l`, guards do repositório.
+
 ## Segurança S1 + S2 — ACL do admin e sandbox do tema publicado (2026-11-12)
 - ADR 0087. Dois achados de severidade alta da análise, reproduzidos no código antes da correção.
 - **S1, corrigido:** um usuário logado de um grupo restrito abria qualquer tela do admin escrevendo a rota com `..` (`?route=user/us..er` era checada como `user/us` e executada como `user/user`). `startup/permission` e o dispatcher agora leem a rota pela mesma função, `Action::parse()`. Rota com `..` deixa de ser "consertada" e dá 404 (Admin, Catalog e Install).

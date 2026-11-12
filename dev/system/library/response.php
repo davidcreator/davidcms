@@ -32,6 +32,22 @@ final class Response {
         return $this->headers;
     }
 
+    /**
+     * ADR 0088 (S4): descarta o que um controller que falhou deixou para trás
+     * (Content-Type de XML ou JSON, Cache-Control público, Location, corpo
+     * parcial) e recomeça dos cabeçalhos informados.
+     *
+     * @param array<int, string> $headers
+     */
+    public function reset(array $headers = []): void {
+        $this->headers = [];
+        $this->output  = '';
+
+        foreach ($headers as $header) {
+            $this->addHeader((string)$header);
+        }
+    }
+
     public function setCompression(int $level): void {
         $this->compression = $level;
     }

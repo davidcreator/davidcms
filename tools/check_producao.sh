@@ -20,7 +20,8 @@
 #   9 Admin protegido: login 200 pública, dashboard sem sessão NUNCA 200
 #  10 system/ selado: framework.php e default.php ≠ 200 (403/404)
 #  11 Logs não vazam: storage/logs/error.log ≠ 200
-#  12 Erro sem stack: rota inexistente = 404 limpo (error_display off)
+#  12 Erro sem stack: rota inexistente = 404 limpo, e nenhuma página lida
+#     mostra detalhe de erro (error_display off — ADR 0037 / 0088)
 #  13 Headers de segurança (ADR 0037): nosniff + frame + referrer
 #  14 Ausências dev-only: /install /tests /agents-ia /docs /.git /prod ≠ 200
 #  15 TTFB (warn apenas, não reprova)
@@ -126,6 +127,15 @@ RC=0
 st=$(curl -sk -m 15 -o /tmp/f605_404.html -w "%{http_code}" "$C/rota-inexistente-check-f605")
 [ "$st" = "404" ] || { RC=1; echo "   ↳ rota inexistente respondeu $st (esperado 404)"; }
 grep -qiE "exception|stack trace|/home/|/var/www|db_error|trace" /tmp/f605_404.html && { RC=1; echo "   ↳ página de erro vaza detalhes!"; }
+# ADR 0088 (S3/S4): com REAMUR_ERROR_DISPLAY=true o detalhe técnico sai na tela.
+# De fora não dá para provocar um erro sem efeito colateral; o que dá é
+# reprovar qualquer vestígio dele nas páginas que já são lidas aqui.
+LEAK='SQLSTATE|ReamurCMS error|Fatal error|Parse error|Warning</b>|Notice</b>|Deprecated</b>|PDOException|mysqli_sql_exception|\.php:[0-9]+|\.php</b> on line|Access denied for user'
+for f in /tmp/f605_home.html /tmp/f605_404.html; do
+  [ -s "$f" ] && grep -qE "$LEAK" "$f" && { RC=1; echo "   ↳ $(basename "$f") mostra detalhe de erro (REAMUR_ERROR_DISPLAY ligado em produção?)"; }
+done
+# Uma falha do servidor nunca pode chegar como página comum: 5xx aqui é incidente.
+case "$st" in 5*) echo "   ↳ o site respondeu $st: veja system/storage/logs/error.log (a referência da página aponta a linha)";; esac
 ck 12 $RC "erro-limpo"
 
 echo '── 13 — headers de segurança (ADR 0037) ──'
