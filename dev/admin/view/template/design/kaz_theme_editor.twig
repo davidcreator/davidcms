@@ -238,7 +238,9 @@
 
           <div class="kaz-modules-nav kaz-module-tabs" role="tablist" aria-label="Módulos do tema">
         <p class="kaz-panel__title kaz-panel__title--spaced">Módulos do tema · 14 recursos</p>
-        <button class="kaz-module-link kaz-module-link--on" type="button" data-kaz-module="design" data-kaz-tablabel="Design" aria-pressed="true"><span class="kaz-module-link__dot" aria-hidden="true"></span>Design </button>
+        {# KZ-01 (ADR 0083): a pagina real do rascunho e a vista de abertura. #}
+        <button class="kaz-module-link" type="button" data-kaz-module="pagina" data-kaz-tablabel="{{ text_canvas|e('html_attr') }}" aria-pressed="false"><span class="kaz-module-link__dot" aria-hidden="true"></span>{{ text_canvas }} </button>
+        <button class="kaz-module-link kaz-module-link--on" type="button" data-kaz-module="design" data-kaz-tablabel="{{ text_canvas_scene|e('html_attr') }}" aria-pressed="true"><span class="kaz-module-link__dot" aria-hidden="true"></span>{{ text_canvas_scene }} </button>
         <button class="kaz-module-link" type="button" data-kaz-module="geral" data-kaz-tablabel="Geral" aria-pressed="false"><span class="kaz-module-link__num">01</span>Geral </button>
         <button class="kaz-module-link" type="button" data-kaz-module="heranca" data-kaz-tablabel="Herança" aria-pressed="false"><span class="kaz-module-link__num">02</span>Herança </button>
         <button class="kaz-module-link" type="button" data-kaz-module="tokens" data-kaz-tablabel="Tokens" aria-pressed="false"><span class="kaz-module-link__num">03</span>Tokens </button>
@@ -271,6 +273,41 @@
         </div>
       </div>
           <div class="kaz-modules" data-kaz-modules hidden>
+        {# KZ-01 (ADR 0083) — canvas com a PAGINA REAL do rascunho.
+           Nenhum campo aqui tem `name`: nada deste painel entra no POST do tema.
+           O HTML da pagina chega por POST+CSRF (design/theme.canvas), ja
+           renderizado em Twig Sandbox, e vai para iframes SEM allow-scripts. #}
+        <section class="kaz-module kaz-canvas" data-kaz-module-panel="pagina" hidden aria-label="{{ text_canvas_title|e('html_attr') }}"
+                 data-kaz-canvas-root
+                 data-kaz-canvas-url="{{ canvas_url|e('html_attr') }}"
+                 data-kaz-canvas-config="{{ canvas_config_json|e('html_attr') }}">
+          <div class="kaz-canvas__bar" role="toolbar" aria-label="{{ text_canvas_title|e('html_attr') }}">
+            <label class="kaz-canvas__field"><span>{{ text_canvas_page }}</span>
+              <select data-kaz-canvas-route>{% for item in canvas_routes %}<option value="{{ item.id }}">{{ item.label }}</option>{% endfor %}</select>
+            </label>
+            <label class="kaz-canvas__field"><span>{{ text_canvas_language }}</span>
+              <select data-kaz-canvas-language>{% for code in canvas_languages %}<option value="{{ code }}"{% if code == canvas_language %} selected{% endif %}>{{ code }}</option>{% endfor %}</select>
+            </label>
+            <span class="kaz-canvas__devices" role="group" aria-label="{{ text_canvas_title|e('html_attr') }}">
+              {% for device in canvas_devices %}<button class="kaz-canvas__toggle" type="button" data-kaz-canvas-device="{{ device.id }}" aria-pressed="true">{{ device.label }} <small>{{ device.w }}</small></button>{% endfor %}
+            </span>
+            <span class="kaz-canvas__spacer"></span>
+            <span class="kaz-canvas__status" data-kaz-canvas-status role="status" aria-live="polite"></span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-canvas-act="refresh">{{ text_canvas_refresh }}</button>
+            <span class="kaz-canvas__zoom">
+              <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-canvas-act="zoom-out" title="{{ text_canvas_zoom_out|e('html_attr') }}" aria-label="{{ text_canvas_zoom_out|e('html_attr') }}">−</button>
+              <button class="kaz-btn kaz-btn--ghost kaz-canvas__zoomvalue" type="button" data-kaz-canvas-act="zoom-reset" title="{{ text_canvas_zoom_reset|e('html_attr') }}" aria-label="{{ text_canvas_zoom_reset|e('html_attr') }}"><span data-kaz-canvas-zoom>100%</span></button>
+              <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-canvas-act="zoom-in" title="{{ text_canvas_zoom_in|e('html_attr') }}" aria-label="{{ text_canvas_zoom_in|e('html_attr') }}">+</button>
+              <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-canvas-act="fit">{{ text_canvas_fit }}</button>
+            </span>
+          </div>
+          <div class="kaz-canvas__notes" data-kaz-canvas-notes hidden></div>
+          <div class="kaz-canvas__viewport" data-kaz-canvas-viewport tabindex="0" aria-label="{{ text_canvas_title|e('html_attr') }} — {{ text_canvas_sub|e('html_attr') }}">
+            <div class="kaz-canvas__world" data-kaz-canvas-world></div>
+            <noscript><p class="kaz-canvas__noscript">{{ text_canvas_noscript }}</p></noscript>
+          </div>
+          <p class="kaz-canvas__hint">{{ text_canvas_hint }}</p>
+        </section>
         <section class="kaz-module" data-kaz-module-panel="geral" hidden aria-label="Geral">
           <div class="kaz-module__head"><h3>Geral</h3><span>Nome, slug, cores e cena</span>
             <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>

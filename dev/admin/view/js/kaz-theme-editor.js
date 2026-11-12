@@ -140,6 +140,7 @@
   var form = root.querySelector('#kaz-theme-form') || root.closest('form');
   var owner = root.getAttribute('data-kaz-owner') === '1';
   var modulesMap = {
+    pagina: 'Pagina',
     design: 'Design', geral: 'Geral', heranca: 'Heranca', tokens: 'Tokens',
     three: 'Three.js', cena3d: 'Cena 3D', secoes: 'Secoes', agenda: 'Agendamento',
     midia: 'Midia', modelos: 'Modelos', sites: 'Sites', componentes: 'Componentes',
@@ -269,6 +270,10 @@
     if (sb) sb.hidden = stateModule !== 'design';
     var stg = root.querySelector('[data-kaz-stage]');
     if (stg) stg.setAttribute('data-kaz-active-module', stateModule);
+    /* KZ-01 (ADR 0083): o shell conhece o modulo ativo (layout do canvas da
+       pagina real) e avisa quem quiser ouvir, sem acoplar os dois scripts. */
+    root.setAttribute('data-kaz-active-module', stateModule);
+    try { root.dispatchEvent(new CustomEvent('kaz:module', { detail: { module: stateModule } })); } catch (e) { /* sem CustomEvent: o canvas so nao atualiza sozinho */ }
     var links = root.querySelectorAll('button[data-kaz-module]');
     for (i = 0; i < links.length; i++) {
       n = links[i];
@@ -892,6 +897,9 @@
   document.addEventListener('keydown', function (ev) {
     var t = ev.target;
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
+    /* KZ-01: os atalhos abaixo editam a CENA. Fora do modulo dela eles nao
+       podem agir (antes, Backspace em qualquer modulo apagava uma camada). */
+    if (stateModule !== 'design') return;
     var ctrl = ev.ctrlKey || ev.metaKey;
     if (ctrl && ev.key.toLowerCase() === 'z') { ev.preventDefault(); restore(ev.shiftKey ? cursor + 1 : cursor - 1); return; }
     if (ctrl && ev.key.toLowerCase() === 'd') { ev.preventDefault(); duplicate(selected); return; }
@@ -932,6 +940,8 @@
     formBaseline = formSnapshot(); formTouched = false;
     paintDirty();
   });
+  /* KZ-01 (ADR 0083): a pagina real do rascunho e a vista de abertura. */
+  if (root.querySelector('[data-kaz-module-panel="pagina"]')) setModule('pagina');
   root.setAttribute('data-kaz-ready','1');
   /* AC: no mobile as duas sidebars comecam recolhidas (overlay), senao o
      grid de 3 colunas espremia o centro a 0px. matchMedia e opcional para

@@ -1,5 +1,14 @@
 # Changelog
 
+## KZ-01 — KAZEditor-Theme abre na página real do rascunho (2026-11-12)
+- ADR 0083: o editor de temas passa a abrir no módulo **Página**, que mostra a página inteira do rascunho (cabeçalho do tema + rota + rodapé) em três quadros — desktop 1440, tablet 768 e celular 390 — sobre um canvas com zoom e deslocamento livres. 11 rotas selecionáveis e 3 idiomas.
+- O canvas reflete o formulário **antes de salvar**: nova ação somente leitura `design/theme.canvas` (`POST` + CSRF + ACL `access`) e método aditivo `Twig::renderThemePage()`, em Twig Sandbox, com todas as fontes do tema sobre os templates padrão. Nada é gravado; sem tabela, coluna, migration ou chave de configuração nova.
+- Uma fonte Twig quebrada não apaga mais a prévia: o template padrão entra no lugar e o erro aparece com template e linha.
+- Nova classe pura `Theme\ThemeCanvasSample` com os dados de amostra. O board SVG (`kaztheme-scene/v1`) continua igual, agora como módulo **Cena decorativa**.
+- Correção: os atalhos de cena (`Backspace`, `Delete`, `R`, `T`…) agiam com qualquer módulo aberto e podiam apagar ou criar camadas sem a cena estar visível; agora só valem no módulo da cena.
+- Desvio documentado da ADR 0080: os quadros usam `sandbox="allow-same-origin"` (sem `allow-scripts`) para medir a altura da página; a prévia antiga segue com `sandbox=""`.
+- Validação local: PHPUnit `OK (70 tests, 1268 assertions)` em PHP 8.2.32 e 8.3.32 (8 testes novos em `KazCanvasPageTest`), PHPStan nível 2 sem erros, `php -l`, `node --check` e os três `tools/verify-*.sh` limpos; fluxo conferido em Chromium headless com os 6 pacotes de `docs/temas/`. Sem banco, staging, deploy ou escrita no GitHub.
+
 ## F11-12 — `docs-links` determinístico com `--offline` (2026-11-02)
 - O `docs-links` seguiu `failure` (`exit 2`) em três runs mesmo após F11-10, embora a correção desse `exit 0` localmente com o binário `lychee 0.15.0` idêntico. Descartadas as hipóteses de `--mode task`, `--format/--output` e réplica incompleta; a causa exata exige logs de admin (403). A única diferença restante é a rede do runner.
 - Decisão do responsável (opção A): `args` passa a usar **`--offline`**, validando apenas links internos/relativos. `fail`/`failIfEmpty=true`, `lycheeVersion: v0.15.0`, `timeout-minutes: 20` e as 5 exclusões originais permanecem; `--accept` e as 3 exclusões de domínios mortos foram removidos por serem inócuos neste modo.

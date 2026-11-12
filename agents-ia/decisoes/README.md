@@ -64,3 +64,4 @@ Copiar para o novo arquivo `NNNN-titulo-curto.md`:
 | [0080](0080-temas-preview-sandboxed-templates.md) | Fontes Twig de tema com prévia isolada e publicação versionada | 🟡 incremento local | 2026-10-27 |
 | [0081](0081-dependencias-node-em-system-storage-e-ci.md) | Dependências Node em `dev/system/storage/` e correção do CI | ✅ aceita | 2026-11-02 |
 | [0082](0082-modernizacao-e-guards-do-ci.md) | Modernização e endurecimento do CI (actions Node 24, runner pinado, `repo-guards`) | ✅ aceita | 2026-11-02 |
+| [0083](0083-kazeditor-canvas-pagina-real.md) | KAZEditor-Theme: canvas com a página real do rascunho (três larguras, sandbox) | ✅ aceita | 2026-11-12 |

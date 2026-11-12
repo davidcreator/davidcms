@@ -1,0 +1,1547 @@
+diff --git a/CHECKSUMS.txt b/CHECKSUMS.txt
+index 1fe1158..d29eb24 100644
+--- a/CHECKSUMS.txt
++++ b/CHECKSUMS.txt
+@@ -7,13 +7,13 @@ cfda3b8a  a80e2939a6287bdc8ef123d0638adb7107a725315c33d367ad97befef97d7fe2  8247
+ 1610b8dd  9f5678325665b8751e3bfafc64be3cba7ccf5686bb25cd302ad3c275c443811c  2121  CONTRIBUTING.md
+ 956a0f9c  77f0fd12e9f39ced35111bcf16802a5a5c2f08722fdb30b38c401898cfa55aba  14181  README.md
+ 54e8d62d  5019e3c67f81e5d9c21b0d60fe5e8566b2ce3bcd76248fbeab5eb404bce9065c  5387  agents-ia/decisoes/0081-dependencias-node-em-system-storage-e-ci.md
+-b06c9661  29a480d6ebdeb4be28ac757567fa6d7e16df3ca4ffb06d047efe1060d4502e3e  4001  agents-ia/decisoes/README.md
++caa7bbaf  1a267877b624652f684730b9881f9c83e68659294a88a51fb7108733bbbfb258  4159  agents-ia/decisoes/README.md
+ 12feea24  b6d93cb1839df0c424777ac809ffeb7b87fc94852ebaea6549f3456bbaa78610  7050  agents-ia/regras/00-contexto-global.md
+ 8ecb0847  0d4b0a10d40d84a9582064e295a316610876ae987353966f95e3583964eaeb39  4792  agents-ia/regras/02-padroes-de-codigo.md
+ 39e1dff4  337fd885ee97e0c1321169076eeedaa4d2b92bded2268de9c465d4f7b164319b  43279  dev/system/library/blog/block_document.php
+ 7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
+ fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
+-9f6c99e1  7971452b6bbeacdead766475c55aef7e2363bf0a076e4e5e9afdbe30632ba6d5  16373  docs/CHANGELOG.md
++88861d5a  dce1e1a218c023a23a4f70259a28a4ddc13cf989a9a8e1ba616f6ee965928bdb  18078  docs/CHANGELOG.md
+ bb737e44  5e2277cfe87917649e2c8a2443727b1b59f822c8f226220eedabed5d1bd4a935  16180  docs/Estrutura-de-Pastas.md
+ 8cf915e5  7e59282a72e074a6aa6a909b482fc87696f25e32c1c67699e1cc8ccee6f46fd4  10077  docs/fases/f11/F11-01-CI-e-Dependencias.md
+ 945670b3  1ee53b4a8f5978afe13f260d8eb425a21f537d2df2d6b8df0ca65e60b5d6cf69  7884  docs/fases/f11/F11-02-Verificacao-Dependencias.md
+diff --git a/agents-ia/decisoes/0083-kazeditor-canvas-pagina-real.md b/agents-ia/decisoes/0083-kazeditor-canvas-pagina-real.md
+new file mode 100644
+index 0000000..d9bfb30
+--- /dev/null
++++ b/agents-ia/decisoes/0083-kazeditor-canvas-pagina-real.md
+@@ -0,0 +1,62 @@
++# ADR 0083 — KAZEditor-Theme: canvas com a página real do rascunho
++
++| | |
++| --- | --- |
++| **Status** | ✅ aceita (KZ-01, 2026-11-12) |
++| **Data** | 2026-11-12 |
++| **Contexto** | O KAZEditor-Theme abria em um board SVG de 960 × 540 (contrato `kaztheme-scene/v1`) que nenhum tema entregue exibe: os pacotes sobrescrevem `common/home` e não incluem `partial/theme-scene-block`. O tema de verdade vivia em 14 módulos de formulário e 25 fontes Twig em `textarea`, e a prévia existente renderiza **uma fonte isolada**, com `header`/`footer` vazios e listas vazias — a prévia de `common/home` de um tema completo saía quase em branco. Quem monta um tema não via o resultado do que editava. |
++
++## Direção escolhida pelo responsável
++
++Caminho **B**: um editor de desenho livre (quadros, auto layout, componentes) que **gera** o tema em Twig e CSS, usável por quem não programa; o código passa a ser um modo avançado. A tela do editor pode ser reorganizada; **os dados salvos do tema continuam compatíveis**.
++
++Esta ADR decide apenas a **primeira etapa**, que é pré-requisito de todas as outras: **ver a página real do rascunho dentro do editor**. Sem uma superfície fiel não há como desenhar sobre ela nem conferir o que o desenho gerou.
++
++## Decisão
++
++1. **A vista de abertura do editor é o módulo "Página"**: a página inteira do rascunho (cabeçalho do tema + rota + rodapé) em três quadros lado a lado — desktop 1440, tablet 768, celular 390 — sobre um canvas com zoom contínuo (5 %–400 %) e deslocamento livre por roda, arrasto, pinça e teclado. O board SVG continua existindo, sem mudança de contrato, como módulo **"Cena decorativa"**.
++
++2. **Render no servidor, nunca no navegador.** Nova ação `design/theme.canvas` (`POST` + CSRF + ACL `access`, somente leitura). O corpo do `POST` é o próprio formulário do tema, validado pelo `buildDraftConfig()` já existente: o canvas mostra o que está na tela **antes de salvar**. Formulário inválido: mostra o último rascunho salvo e avisa. Nada é gravado, nenhuma tabela, coluna, migration ou chave de configuração nova.
++
++3. **`Twig::renderThemePage()`** (aditivo em `system/library/template/twig.php`): monta `partial/site_header` + rota + `common/footer` com **todas** as fontes do tema no loader, sobre os templates padrão do Catalog — a mesma precedência do site publicado. Mantém as barreiras da ADR 0080: allowlist de 25 chaves, limite de 131072 bytes, padrões proibidos (`<script`, `on…=`, `javascript:`, `|raw`, `autoescape`, `srcdoc`, `formaction`), **Twig Sandbox** e cache desligado. A política do sandbox é a de `renderSandboxPreview()` mais os filtros `slice` e `nl2br`, que os templates padrão do Catalog usam. Objetos (inclusive `Twig\Markup`) são removidos do contexto.
++
++4. **Uma fonte quebrada não apaga a página.** Cada fonte do tema é compilada sozinha; a que falha (sintaxe ou política do sandbox) sai do loader, o template padrão ocupa o lugar e o erro volta com template e linha. O editor mostra o aviso acima do canvas.
++
++5. **Dados de amostra em um único lugar:** `Theme\ThemeCanvasSample` (pura: sem banco, sessão, request, rede ou escrita). Listas preenchidas, imagens em data URI SVG determinístico e textos lidos dos arquivos de idioma do Catalog por caminho fixo. As rotas saem de `ThemePackage::TEMPLATE_KEYS` (menos `partial/*` e `common/footer`); não há segunda allowlist. Nenhum dado real do site entra na prévia.
++
++6. **Isolamento no navegador.** O documento devolvido carrega CSP `default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:`. Cada quadro é um `<iframe sandbox="allow-same-origin">` — **sem** `allow-scripts`, `allow-forms`, `allow-popups` ou `allow-top-navigation` — coberto por uma camada que recebe os gestos: a página não é clicável.
++
++7. **Desacoplamento.** `kaz-canvas.js`/`kaz-canvas.css` são arquivos novos. `kaz-theme-editor.js` muda em quatro pontos: registra o módulo, publica `data-kaz-active-module` + evento `kaz:module`, abre em "Página" e restringe os atalhos de cena ao módulo da cena.
++
++## Desvio consciente da ADR 0080
++
++A ADR 0080 pede "iframe sem permissões" (`sandbox=""`). O canvas usa `sandbox="allow-same-origin"`. Motivo: para mostrar a página **inteira** o editor precisa medir a altura do documento, o que é impossível em origem opaca. Sem `allow-scripts` nenhum código do quadro executa, então a mesma origem não dá ao conteúdo nenhuma capacidade nova; a CSP `default-src 'none'` e a rejeição de `<script`/handlers no servidor são barreiras independentes. A prévia antiga (`design/theme.preview` e o comparador) **continua com `sandbox=""`**. A mesma origem também é o que permitirá, na etapa seguinte, apontar um elemento da página e descobrir de qual fonte ele veio.
++
++## Alternativas consideradas
++
++1. **Renderizar no navegador** (Twig em JS ou reconstrução do DOM) — rejeitado: seria uma segunda implementação do renderer, divergente do Catalog e fora do sandbox.
++2. **Reaproveitar `renderSandboxPreview()`** — rejeitado: ela carrega só a fonte pedida; os `include` cairiam nos templates padrão e a página mostrada não seria a do tema.
++3. **Reaproveitar `renderCatalogPagePreview()`** — rejeitado: não usa sandbox e marca HTML como confiável; serve à prévia de página CMS com tema **publicado**, não a fonte de rascunho ainda não revisada.
++4. **`sandbox=""` com altura fixa e rolagem interna** — rejeitado: três quadros com rolagens independentes não mostram a página inteira nem permitem comparar larguras.
++5. **Trocar o board SVG pelo canvas novo** — adiado: a cena `kaztheme-scene/v1` é dado salvo; a substituição depende do contrato de cena v2 (etapa de desenho).
++
++## Limites conhecidos
++
++- Cenas Three.js não executam (não há script): aparece o fallback estático.
++- Unidades `vh` são medidas com a altura do aparelho antes de o quadro ser esticado; depois disso elas passam a valer sobre a altura do quadro. Os temas entregues não usam `vh`; `theme.css` usa uma vez (`60vh`).
++- Os dados são de amostra: contagens e textos reais do site não aparecem.
++- Condições, agendamento e sites são resolvidos com o contexto padrão (`desktop`, sem variante). O comparador (módulo Prévia) continua sendo o lugar para simular esses eixos.
++- S2 do relatório de análise (`setThemeTemplates()` renderiza o tema **publicado** sem sandbox) **não** é tratado aqui e continua aberto.
++
++## Consequências
++
++- Arquivos: 3 novos de código (`theme_canvas_sample.php`, `kaz-canvas.js`, `kaz-canvas.css`), 1 teste novo (`KazCanvasPageTest`), 7 alterados (controller, `twig.php`, template do editor, `kaz-theme-editor.js`, 3 idiomas).
++- 35 chaves de idioma novas (`text_canvas*`) em `en-us`, `pt-br` e `es-eu`.
++- Correção incidental: os atalhos de cena (`Backspace`, `Delete`, `R`, `T`…) agiam com qualquer módulo aberto e podiam apagar ou criar camadas sem a cena estar visível.
++
++## Próximas etapas (fora desta ADR)
++
++1. **Apontar e editar:** clicar em um elemento da página seleciona a seção/fonte que o gerou; painel lateral com as propriedades daquele trecho; módulos avançados (sites, agendamento, condições) agrupados em Configurações.
++2. **Tokens ao vivo:** cores, tipografia e espaçamentos editados ao lado da página, com resultado imediato.
++3. **Contrato de cena v2:** árvore de quadros com auto layout, restrições e componentes, com compilador determinístico para Twig + CSS e ligação declarativa a dados (`projects`, `posts`…).
++4. **Ferramentas de desenho** sobre o canvas (seleção múltipla, guias, alinhamento, texto inline, copiar/colar) e modo código como visão avançada do mesmo documento.
+diff --git a/agents-ia/decisoes/README.md b/agents-ia/decisoes/README.md
+index 41b7119..29b0f60 100644
+--- a/agents-ia/decisoes/README.md
++++ b/agents-ia/decisoes/README.md
+@@ -64,3 +64,4 @@ Copiar para o novo arquivo `NNNN-titulo-curto.md`:
+ | [0080](0080-temas-preview-sandboxed-templates.md) | Fontes Twig de tema com prévia isolada e publicação versionada | 🟡 incremento local | 2026-10-27 |
+ | [0081](0081-dependencias-node-em-system-storage-e-ci.md) | Dependências Node em `dev/system/storage/` e correção do CI | ✅ aceita | 2026-11-02 |
+ | [0082](0082-modernizacao-e-guards-do-ci.md) | Modernização e endurecimento do CI (actions Node 24, runner pinado, `repo-guards`) | ✅ aceita | 2026-11-02 |
++| [0083](0083-kazeditor-canvas-pagina-real.md) | KAZEditor-Theme: canvas com a página real do rascunho (três larguras, sandbox) | ✅ aceita | 2026-11-12 |
+diff --git a/dev/admin/controller/design/theme.php b/dev/admin/controller/design/theme.php
+index 2f690c1..401bd48 100644
+--- a/dev/admin/controller/design/theme.php
++++ b/dev/admin/controller/design/theme.php
+@@ -363,6 +363,30 @@ class Theme extends \Reamur\System\Engine\Controller {
+         // F13-C: Loader::view() nao mescla o idioma; publica todas as chaves
+         // carregadas (sem sobrescrever valores calculados) para nao deixar rotulos vazios.
+ 
++        // KZ-01 (ADR 0083): canvas com a pagina real do rascunho.
++        $canvasSample='\Reamur\System\Library\Theme\ThemeCanvasSample';
++        $canvasRoutes=[];
++        foreach($canvasSample::routes() as $canvasRoute) {
++            $canvasRoutes[]=['id'=>$canvasRoute,'label'=>$this->language->get('text_canvas_route_'.str_replace('/','_',$canvasRoute))];
++        }
++        $canvasDevices=[];
++        foreach($canvasSample::devices() as $deviceId=>$deviceSize) {
++            $canvasDevices[]=['id'=>$deviceId,'label'=>$this->language->get('text_canvas_device_'.$deviceId),'w'=>$deviceSize['w'],'h'=>$deviceSize['h']];
++        }
++        $canvasLabels=[];
++        foreach(['loading','ready','error','saved_draft','template_errors','default_source','frame_hint','empty'] as $canvasKey) {
++            $canvasLabels[$canvasKey]=$this->language->get('text_canvas_'.$canvasKey);
++        }
++        $data['canvas_url']=$this->url->link('design/theme.canvas'.($id?'|'.$id:''));
++        $data['canvas_routes']=$canvasRoutes;
++        $data['canvas_devices']=$canvasDevices;
++        $data['canvas_languages']=['en-us','pt-br','es-eu'];
++        $data['canvas_language']=in_array((string)$this->config->get('language_directory','en-us'),['en-us','pt-br','es-eu'],true)?(string)$this->config->get('language_directory','en-us'):'en-us';
++        $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
++        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz01';
++        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-canvas.css?v=' . $canvasAssetV);
++        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-canvas.js?v=' . $canvasAssetV);
++
+         $data=array_replace($this->language->all(),$data);
+         // Frente AA: modo pagina cheia em OUTRA pagina (sem chrome do Admin).
+         // Apenas leitura de GET; nenhuma rota, migration ou chave nova.
+@@ -817,6 +841,61 @@ class Theme extends \Reamur\System\Engine\Controller {
+     }
+ 
+     /** Fragmento do template allowlistado, via Twig Sandbox (ADR 0080). */
++    /**
++     * KZ-01 (ADR 0083) — pagina INTEIRA do rascunho para o canvas do editor.
++     *
++     * POST + CSRF + ACL `access`, somente leitura: nada e gravado. O corpo do
++     * POST e o proprio formulario do tema, entao o canvas mostra o que esta
++     * na tela ANTES de salvar. Formulario invalido: mostra o ultimo rascunho
++     * salvo e avisa (`source=saved`). A resposta e JSON; o HTML e um documento
++     * completo com CSP `default-src 'none'`, renderizado em Twig Sandbox, que
++     * o editor coloca em um iframe sem permissao de script.
++     */
++    public function canvas(string $theme_id='0'): void {
++        $this->load->language('design/theme');
++        $method=(string)($this->request->server['REQUEST_METHOD']??'');
++        if (!$this->user->hasPermission('access','design/theme') || $method!=='POST' || !$this->csrfValid()) {
++            $this->jsonResponse(['success'=>false,'error'=>$this->language->get('compare_forbidden')],403,true); return;
++        }
++        if (!method_exists($this->template,'renderThemePage')) {
++            $this->jsonResponse(['success'=>false,'error'=>$this->language->get('text_preview_error')],200,true); return;
++        }
++        $this->load->model('design/theme');
++        $id=(int)$theme_id;
++        $sample='\Reamur\System\Library\Theme\ThemeCanvasSample';
++        $route=$this->postScalar('canvas_route','common/home');
++        if (!$sample::isRoute($route)) $route='common/home';
++        $built=$this->buildDraftConfig($this->request->post);
++        $source=$built['error']===''?'form':'saved';
++        $draft=$source==='form'?$built['config']:($id?$this->model_design_theme->getDraftConfig($id):[]);
++        $ctx=$this->simulateContext(['route'=>$route,'language'=>$this->postScalar('canvas_language','en-us'),'device'=>'desktop']);
++        $state=$this->theme_snapshot->resolve($draft,$ctx,$this->model_design_theme->getThemeMap('draft'),(string)($built['slug']??''));
++        $sceneView=(array)($state['scene_view']??[]);
++        $context=$sample::context($route,$sample::strings((string)$ctx['language'],$route));
++        // Secoes da home: o override do tema vence o layout padrao (como no Catalog).
++        if (is_array($state['sections']??null)) $context['cms_home_sections']=$state['sections'];
++        try {
++            $page=$this->template->renderThemePage($route,(array)($state['templates']??[]),$context,$sceneView,$state);
++        } catch (\Throwable $e) {
++            $this->jsonResponse(['success'=>false,'error'=>$this->language->get('text_preview_error')],200,true); return;
++        }
++        $S='\Reamur\System\Library\Theme\ThemePreviewState';
++        $attr=static fn(string $v): string => htmlspecialchars($v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
++        $html='<!doctype html><html lang="'.$attr((string)$ctx['language']).'"><head><meta charset="utf-8">'
++            .'<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'; font-src data:">'
++            .'<meta name="viewport" content="width=device-width, initial-scale=1"><title>Canvas</title>'
++            .'<style>'.$S::catalogCss().\Reamur\System\Library\Theme\ThemeSceneCss::previewCss().'</style></head>'
++            .'<body class="'.$attr($S::bodyClasses($state)).'" style="'.$attr($S::css($state).$S::colorVars($state)).'">'
++            .$page['header'].$page['main'].$page['footer'].'</body></html>';
++        $errors=[];
++        foreach ($page['errors'] as $template=>$message) $errors[]=['template'=>(string)$template,'message'=>(string)$message,'fallback'=>in_array((string)$template,$page['fallbacks'],true)];
++        $themed=array_keys(array_filter($page['sources'],static fn(string $v): bool => $v==='theme'));
++        $this->jsonResponse([
++            'success'=>true,'route'=>$route,'source'=>$source,'language'=>(string)$ctx['language'],
++            'html'=>$html,'errors'=>$errors,'themed'=>$themed,'bytes'=>strlen($html),
++        ],200,true);
++    }
++
+     private function renderPreviewFragment(string $key, $source, array $sceneView = [], array $themeState = []): string {
+         if (!is_string($source) || $source==='') {
+             $file=DIR_SYSTEM.'../catalog/view/template/'.$key.'.twig';
+diff --git a/dev/admin/language/en-us/design/theme.php b/dev/admin/language/en-us/design/theme.php
+index 8600879..85dbbff 100644
+--- a/dev/admin/language/en-us/design/theme.php
++++ b/dev/admin/language/en-us/design/theme.php
+@@ -496,3 +496,40 @@ $_['status_twig_bad'] = 'Key outside allowlist';
+ $_['status_three_ok'] = 'Scene allowlisted';
+ $_['status_three_bad'] = 'Scene outside allowlist';
+ $_['error_slug_exists'] = 'Another theme already uses this slug.';
++
++// KZ-01 (ADR 0083) — canvas com a página real do rascunho.
++$_['text_canvas'] = 'Page';
++$_['text_canvas_title'] = 'Real page';
++$_['text_canvas_sub'] = 'Draft rendered as the site will show it';
++$_['text_canvas_page'] = 'Page';
++$_['text_canvas_language'] = 'Language';
++$_['text_canvas_refresh'] = 'Refresh';
++$_['text_canvas_fit'] = 'Fit all';
++$_['text_canvas_zoom_in'] = 'Zoom in';
++$_['text_canvas_zoom_out'] = 'Zoom out';
++$_['text_canvas_zoom_reset'] = 'Zoom to 100%';
++$_['text_canvas_hint'] = 'Drag to move · Scroll to travel the page · Ctrl + scroll or pinch to zoom · Double-click a frame to focus it · 1 fits everything · 0 is 100%';
++$_['text_canvas_loading'] = 'Rendering the draft…';
++$_['text_canvas_ready'] = 'Draft rendered';
++$_['text_canvas_error'] = 'The page could not be rendered.';
++$_['text_canvas_saved_draft'] = 'The form has a validation error: showing the last saved draft.';
++$_['text_canvas_template_errors'] = 'Template errors';
++$_['text_canvas_default_source'] = 'The default template is shown in its place.';
++$_['text_canvas_frame_hint'] = 'Double-click to focus';
++$_['text_canvas_empty'] = 'No device selected.';
++$_['text_canvas_noscript'] = 'The canvas needs JavaScript. The theme modules below still work without it.';
++$_['text_canvas_scene'] = 'Decorative scene';
++$_['text_canvas_device_desktop'] = 'Desktop';
++$_['text_canvas_device_tablet'] = 'Tablet';
++$_['text_canvas_device_mobile'] = 'Mobile';
++$_['text_canvas_route_common_home'] = 'Home';
++$_['text_canvas_route_common_contact'] = 'Contact';
++$_['text_canvas_route_cms_page_info'] = 'CMS page';
++$_['text_canvas_route_catalog_project_list'] = 'Portfolio';
++$_['text_canvas_route_catalog_project_info'] = 'Project';
++$_['text_canvas_route_blog_blog_list'] = 'Blog';
++$_['text_canvas_route_blog_blog_info'] = 'Blog post';
++$_['text_canvas_route_tool_tool_list'] = 'Tools';
++$_['text_canvas_route_tool_tool_info'] = 'Tool';
++$_['text_canvas_route_checkout_quote'] = 'Quote request';
++$_['text_canvas_route_error_not_found'] = 'Not found (404)';
+diff --git a/dev/admin/language/es-eu/design/theme.php b/dev/admin/language/es-eu/design/theme.php
+index 3555499..21ed775 100644
+--- a/dev/admin/language/es-eu/design/theme.php
++++ b/dev/admin/language/es-eu/design/theme.php
+@@ -496,3 +496,40 @@ $_['status_twig_bad'] = 'Clave fuera de la lista';
+ $_['status_three_ok'] = 'Escena permitida';
+ $_['status_three_bad'] = 'Escena fuera de la lista';
+ $_['error_slug_exists'] = 'Ya existe otro tema con este slug.';
++
++// KZ-01 (ADR 0083) — canvas com a página real do rascunho.
++$_['text_canvas'] = 'Página';
++$_['text_canvas_title'] = 'Página real';
++$_['text_canvas_sub'] = 'Borrador renderizado como lo mostrará el sitio';
++$_['text_canvas_page'] = 'Página';
++$_['text_canvas_language'] = 'Idioma';
++$_['text_canvas_refresh'] = 'Actualizar';
++$_['text_canvas_fit'] = 'Ver todo';
++$_['text_canvas_zoom_in'] = 'Acercar';
++$_['text_canvas_zoom_out'] = 'Alejar';
++$_['text_canvas_zoom_reset'] = 'Zoom al 100%';
++$_['text_canvas_hint'] = 'Arrastra para mover · Desplaza para recorrer la página · Ctrl + desplazamiento o pellizco para zoom · Doble clic en un marco para enfocarlo · 1 muestra todo · 0 vuelve al 100%';
++$_['text_canvas_loading'] = 'Renderizando el borrador…';
++$_['text_canvas_ready'] = 'Borrador renderizado';
++$_['text_canvas_error'] = 'No se pudo renderizar la página.';
++$_['text_canvas_saved_draft'] = 'El formulario tiene un error de validación: se muestra el último borrador guardado.';
++$_['text_canvas_template_errors'] = 'Errores de plantilla';
++$_['text_canvas_default_source'] = 'La plantilla predeterminada se muestra en su lugar.';
++$_['text_canvas_frame_hint'] = 'Doble clic para enfocar';
++$_['text_canvas_empty'] = 'Ningún dispositivo seleccionado.';
++$_['text_canvas_noscript'] = 'El canvas necesita JavaScript. Los módulos del tema de abajo siguen funcionando sin él.';
++$_['text_canvas_scene'] = 'Escena decorativa';
++$_['text_canvas_device_desktop'] = 'Escritorio';
++$_['text_canvas_device_tablet'] = 'Tableta';
++$_['text_canvas_device_mobile'] = 'Móvil';
++$_['text_canvas_route_common_home'] = 'Inicio';
++$_['text_canvas_route_common_contact'] = 'Contacto';
++$_['text_canvas_route_cms_page_info'] = 'Página CMS';
++$_['text_canvas_route_catalog_project_list'] = 'Portafolio';
++$_['text_canvas_route_catalog_project_info'] = 'Proyecto';
++$_['text_canvas_route_blog_blog_list'] = 'Blog';
++$_['text_canvas_route_blog_blog_info'] = 'Entrada del blog';
++$_['text_canvas_route_tool_tool_list'] = 'Herramientas';
++$_['text_canvas_route_tool_tool_info'] = 'Herramienta';
++$_['text_canvas_route_checkout_quote'] = 'Solicitud de presupuesto';
++$_['text_canvas_route_error_not_found'] = 'No encontrada (404)';
+diff --git a/dev/admin/language/pt-br/design/theme.php b/dev/admin/language/pt-br/design/theme.php
+index b09eecd..15111a1 100644
+--- a/dev/admin/language/pt-br/design/theme.php
++++ b/dev/admin/language/pt-br/design/theme.php
+@@ -496,3 +496,40 @@ $_['status_twig_bad'] = 'Chave fora da allowlist';
+ $_['status_three_ok'] = 'Cena allowlistada';
+ $_['status_three_bad'] = 'Cena fora da allowlist';
+ $_['error_slug_exists'] = 'Já existe outro tema com este slug.';
++
++// KZ-01 (ADR 0083) — canvas com a página real do rascunho.
++$_['text_canvas'] = 'Página';
++$_['text_canvas_title'] = 'Página real';
++$_['text_canvas_sub'] = 'Rascunho renderizado como o site vai mostrar';
++$_['text_canvas_page'] = 'Página';
++$_['text_canvas_language'] = 'Idioma';
++$_['text_canvas_refresh'] = 'Atualizar';
++$_['text_canvas_fit'] = 'Ver tudo';
++$_['text_canvas_zoom_in'] = 'Aumentar zoom';
++$_['text_canvas_zoom_out'] = 'Diminuir zoom';
++$_['text_canvas_zoom_reset'] = 'Zoom em 100%';
++$_['text_canvas_hint'] = 'Arraste para mover · Role para percorrer a página · Ctrl + rolagem ou pinça para zoom · Duplo clique em um quadro para focar · 1 mostra tudo · 0 volta a 100%';
++$_['text_canvas_loading'] = 'Renderizando o rascunho…';
++$_['text_canvas_ready'] = 'Rascunho renderizado';
++$_['text_canvas_error'] = 'Não foi possível renderizar a página.';
++$_['text_canvas_saved_draft'] = 'O formulário tem erro de validação: mostrando o último rascunho salvo.';
++$_['text_canvas_template_errors'] = 'Erros de template';
++$_['text_canvas_default_source'] = 'O template padrão aparece no lugar dele.';
++$_['text_canvas_frame_hint'] = 'Duplo clique para focar';
++$_['text_canvas_empty'] = 'Nenhum dispositivo selecionado.';
++$_['text_canvas_noscript'] = 'O canvas precisa de JavaScript. Os módulos do tema abaixo continuam funcionando sem ele.';
++$_['text_canvas_scene'] = 'Cena decorativa';
++$_['text_canvas_device_desktop'] = 'Desktop';
++$_['text_canvas_device_tablet'] = 'Tablet';
++$_['text_canvas_device_mobile'] = 'Celular';
++$_['text_canvas_route_common_home'] = 'Início';
++$_['text_canvas_route_common_contact'] = 'Contato';
++$_['text_canvas_route_cms_page_info'] = 'Página CMS';
++$_['text_canvas_route_catalog_project_list'] = 'Portfólio';
++$_['text_canvas_route_catalog_project_info'] = 'Projeto';
++$_['text_canvas_route_blog_blog_list'] = 'Blog';
++$_['text_canvas_route_blog_blog_info'] = 'Post do blog';
++$_['text_canvas_route_tool_tool_list'] = 'Ferramentas';
++$_['text_canvas_route_tool_tool_info'] = 'Ferramenta';
++$_['text_canvas_route_checkout_quote'] = 'Pedido de orçamento';
++$_['text_canvas_route_error_not_found'] = 'Não encontrada (404)';
+diff --git a/dev/admin/view/css/kaz-canvas.css b/dev/admin/view/css/kaz-canvas.css
+new file mode 100644
+index 0000000..3e89d3e
+--- /dev/null
++++ b/dev/admin/view/css/kaz-canvas.css
+@@ -0,0 +1,101 @@
++/**
++ * @package   ReamurCMS
++ * @license   https://opensource.org/licenses/GPL-3.0
++ *
++ * KZ-01 (ADR 0083) — canvas do KAZEditor-Theme com a pagina real do rascunho.
++ * Carregado DEPOIS de kaz-theme-editor.css. So estiliza o modulo "pagina" e o
++ * layout do shell enquanto ele esta ativo; nenhuma regra dos outros modulos muda.
++ */
++
++/* ---- o shell cede a tela inteira ao canvas enquanto "pagina" esta ativo ---- */
++/* !important: precisa vencer as regras de densidade, colapso e colunas
++   arrastadas ([data-kaz-cols]) sem reescreve-las. A altura continua vindo do
++   flex do shell (kaz-theme-editor.css), que ja ocupa a janela. */
++#kaz-theme-editor[data-kaz-active-module="pagina"] .kaz-workspace { grid-template-columns: minmax(0, 1fr) !important; }
++#kaz-theme-editor[data-kaz-active-module="pagina"] .kaz-sidebar,
++#kaz-theme-editor[data-kaz-active-module="pagina"] .kaz-grip { display: none !important; }
++#kaz-theme-editor[data-kaz-active-module="pagina"] .kaz-center { grid-column: 1 / -1; }
++/* Ferramentas de desenho da cena nao agem sobre a pagina real. */
++#kaz-theme-editor[data-kaz-active-module="pagina"] .kaz-toolbar,
++#kaz-theme-editor[data-kaz-active-module="pagina"] .kaz-topbar__page,
++#kaz-theme-editor[data-kaz-active-module="pagina"] .kaz-topbar__brand .kaz-badge--muted { display: none; }
++#kaz-theme-editor[data-kaz-active-module="pagina"] .kaz-stage .kaz-ruler { display: none; }
++#kaz-theme-editor[data-kaz-active-module="pagina"] .kaz-modules {
++  padding: 0; overflow: hidden; display: flex; flex-direction: column;
++  position: absolute; inset: 0;
++}
++/* Controles que so fazem sentido para a cena (zoom do board, coordenadas). */
++#kaz-theme-editor[data-kaz-active-module="pagina"] .kaz-statusbar .kaz-zoom,
++#kaz-theme-editor[data-kaz-active-module="pagina"] .kaz-statusbar__coords,
++#kaz-theme-editor[data-kaz-active-module="pagina"] .kaz-statusbar__screen { visibility: hidden; }
++
++/* ---- painel ---- */
++.kaz-canvas { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; height: 100%; }
++.kaz-canvas[hidden] { display: none !important; }
++
++.kaz-canvas__bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px;
++  padding: 8px 12px; background: #1f1f24; border-bottom: 1px solid #313138; font-size: 12px; color: #d4d4d8; }
++.kaz-canvas__field { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
++.kaz-canvas__field span { color: #a1a1aa; font-size: 11px; }
++.kaz-canvas__field select { height: 28px; padding: 0 24px 0 8px; border-radius: 6px; border: 1px solid #3f3f46;
++  background-color: #26262c; color: #fafafa; font-size: 12px; }
++.kaz-canvas__field select:focus-visible,
++.kaz-canvas__toggle:focus-visible,
++.kaz-canvas__viewport:focus-visible { outline: 2px solid #31efb8; outline-offset: 1px; }
++.kaz-canvas__devices { display: inline-flex; border: 1px solid #3f3f46; border-radius: 6px; overflow: hidden; }
++.kaz-canvas__toggle { height: 28px; padding: 0 10px; border: 0; border-right: 1px solid #3f3f46;
++  background: #26262c; color: #a1a1aa; font-size: 12px; cursor: pointer; }
++.kaz-canvas__toggle:last-child { border-right: 0; }
++.kaz-canvas__toggle small { color: inherit; opacity: .7; font-size: 10px; font-variant-numeric: tabular-nums; }
++.kaz-canvas__toggle[aria-pressed="true"] { background: #243a33; color: #a7f3d0; }
++.kaz-canvas__toggle:hover { color: #fafafa; }
++.kaz-canvas__spacer { flex: 1 1 auto; }
++.kaz-canvas__status { font-size: 11px; color: #a1a1aa; font-variant-numeric: tabular-nums; }
++.kaz-canvas[data-kaz-canvas-state="ready"] .kaz-canvas__status { color: #a7f3d0; }
++.kaz-canvas[data-kaz-canvas-state="warn"] .kaz-canvas__status { color: #fcd34d; }
++.kaz-canvas[data-kaz-canvas-state="error"] .kaz-canvas__status { color: #fca5a5; }
++.kaz-canvas__zoom { display: inline-flex; align-items: center; gap: 2px; }
++.kaz-canvas__zoomvalue { min-width: 54px; font-variant-numeric: tabular-nums; }
++
++.kaz-canvas__notes { max-height: 132px; overflow: auto; padding: 6px 12px; background: #1c1c20;
++  border-bottom: 1px solid #313138; }
++.kaz-canvas__note { margin: 2px 0; font-size: 12px; line-height: 1.45; color: #e4e4e7; overflow-wrap: anywhere; }
++.kaz-canvas__note--warn { color: #fcd34d; }
++.kaz-canvas__note--error { color: #fecaca; }
++.kaz-canvas__note strong { font-weight: 600; }
++
++/* ---- area de trabalho ---- */
++.kaz-canvas__viewport { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden;
++  background-color: #121216;
++  background-image: radial-gradient(#2b2b33 1px, transparent 1px); background-size: 24px 24px;
++  cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
++.kaz-canvas__viewport[data-kaz-canvas-panning="1"] { cursor: grabbing; }
++.kaz-canvas__world { position: absolute; top: 0; left: 0; width: 0; height: 0;
++  transform-origin: 0 0; will-change: transform; }
++.kaz-canvas__world[data-kaz-canvas-empty="1"]::after { content: attr(data-kaz-canvas-empty-label);
++  position: absolute; top: 40px; left: 0; white-space: nowrap; color: #a1a1aa; font-size: 14px; }
++
++.kaz-canvas__frame { position: absolute; top: 0; }
++.kaz-canvas__frame[hidden] { display: none !important; }
++/* O rotulo mantem tamanho de leitura constante em qualquer zoom. */
++.kaz-canvas__framelabel { position: absolute; left: 0; bottom: 100%; margin-bottom: calc(8px / var(--kaz-canvas-k, 1));
++  font-size: calc(12px / var(--kaz-canvas-k, 1)); line-height: 1.3; color: #a1a1aa; white-space: nowrap;
++  font-variant-numeric: tabular-nums; }
++.kaz-canvas__framebody { position: relative; background: #ffffff; overflow: hidden;
++  box-shadow: 0 0 0 calc(1px / var(--kaz-canvas-k, 1)) #3f3f46, 0 18px 48px rgba(0, 0, 0, .45); }
++.kaz-canvas__framebody iframe { display: block; border: 0; background: #ffffff; }
++/* Camada que recebe os gestos: a pagina nao e clicavel dentro do canvas. */
++.kaz-canvas__shield { position: absolute; inset: 0; }
++.kaz-canvas[data-kaz-canvas-state="loading"] .kaz-canvas__framebody { opacity: .72; }
++
++.kaz-canvas__hint { margin: 0; padding: 5px 12px; font-size: 11px; color: #8b8b94; background: #1c1c20;
++  border-top: 1px solid #313138; }
++.kaz-canvas__noscript { margin: 24px; color: #e4e4e7; font-size: 13px; }
++
++@media (prefers-reduced-motion: no-preference) {
++  .kaz-canvas__framebody { transition: opacity .12s ease; }
++}
++@media (max-width: 760px) {
++  .kaz-canvas__hint { display: none; }
++  .kaz-canvas__viewport { min-height: 360px; }
++}
+diff --git a/dev/admin/view/js/kaz-canvas.js b/dev/admin/view/js/kaz-canvas.js
+new file mode 100644
+index 0000000..e5f6288
+--- /dev/null
++++ b/dev/admin/view/js/kaz-canvas.js
+@@ -0,0 +1,447 @@
++/**
++ * @package   ReamurCMS
++ * @license   https://opensource.org/licenses/GPL-3.0
++ *
++ * KZ-01 (ADR 0083) — canvas do KAZEditor-Theme com a PAGINA REAL do rascunho.
++ *
++ * O que faz: pede ao servidor (POST + CSRF em design/theme.canvas) a pagina
++ * inteira do rascunho que esta no formulario e a mostra em quadros lado a lado
++ * (desktop, tablet, celular) sobre um canvas com zoom e deslocamento livres.
++ *
++ * O que NAO faz: nao grava nada, nao altera o formulario, nao executa o HTML
++ * do tema. Cada quadro e um <iframe sandbox="allow-same-origin"> SEM
++ * allow-scripts; `allow-same-origin` existe apenas para este script medir a
++ * altura do documento. Uma camada transparente cobre cada quadro: a pagina e
++ * uma imagem viva, sem clique, link ou envio de formulario.
++ *
++ * Independente de kaz-theme-editor.js: os dois conversam somente pelo evento
++ * `kaz:module` e pelo atributo `data-kaz-active-module` do shell.
++ */
++(function () {
++  'use strict';
++
++  var shell = document.getElementById('kaz-theme-editor');
++  var root = shell ? shell.querySelector('[data-kaz-canvas-root]') : null;
++  if (!shell || !root) return;
++
++  var viewport = root.querySelector('[data-kaz-canvas-viewport]');
++  var world = root.querySelector('[data-kaz-canvas-world]');
++  var statusEl = root.querySelector('[data-kaz-canvas-status]');
++  var notesEl = root.querySelector('[data-kaz-canvas-notes]');
++  var zoomEl = root.querySelector('[data-kaz-canvas-zoom]');
++  var routeSel = root.querySelector('[data-kaz-canvas-route]');
++  var langSel = root.querySelector('[data-kaz-canvas-language]');
++  var form = shell.querySelector('#kaz-theme-form') || shell.closest('form');
++  var url = root.getAttribute('data-kaz-canvas-url') || '';
++  if (!viewport || !world || !form || !url || typeof window.fetch !== 'function') return;
++
++  var config = { routes: [], devices: [], labels: {} };
++  try {
++    var parsed = JSON.parse(root.getAttribute('data-kaz-canvas-config') || '{}');
++    if (parsed && typeof parsed === 'object') {
++      if (Array.isArray(parsed.routes)) config.routes = parsed.routes;
++      if (Array.isArray(parsed.devices)) config.devices = parsed.devices;
++      if (parsed.labels && typeof parsed.labels === 'object') config.labels = parsed.labels;
++    }
++  } catch (e) { /* configuracao invalida: o canvas fica vazio, o editor segue */ }
++
++  var MIN_SCALE = 0.05, MAX_SCALE = 4, GAP = 96, PAD = 48, LABEL_H = 28;
++  var MAX_FRAME_H = 30000, DEBOUNCE_MS = 700;
++  var STORE_KEY = 'reamur.kaz.canvas.v1';
++
++  var view = { x: PAD, y: PAD + LABEL_H, k: 1 };
++  var frames = {};          // id -> { el, iframe, label, device, on, height }
++  var html = '';            // ultimo documento recebido
++  var active = false;       // o modulo "pagina" esta visivel?
++  var stale = true;         // o formulario mudou desde o ultimo render?
++  var fitted = false;       // ja houve um enquadramento inicial?
++  var seq = 0;              // descarta respostas antigas
++  var timer = 0;
++  var controller = null;
++
++  function label(key, fallback) {
++    var v = config.labels[key];
++    return typeof v === 'string' && v !== '' ? v : fallback;
++  }
++  function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
++
++  /* ---------------- preferencias (somente UI; nunca dados do tema) ---------------- */
++  function loadPrefs() {
++    try {
++      var raw = window.localStorage.getItem(STORE_KEY);
++      var p = raw ? JSON.parse(raw) : null;
++      return p && typeof p === 'object' ? p : {};
++    } catch (e) { return {}; }
++  }
++  function savePrefs() {
++    var off = [];
++    Object.keys(frames).forEach(function (id) { if (!frames[id].on) off.push(id); });
++    try {
++      window.localStorage.setItem(STORE_KEY, JSON.stringify({ route: routeSel ? routeSel.value : '', off: off }));
++    } catch (e) { /* armazenamento indisponivel: preferencias nao persistem */ }
++  }
++
++  /* ---------------- quadros ---------------- */
++  function buildFrames() {
++    var prefs = loadPrefs();
++    var off = Array.isArray(prefs.off) ? prefs.off : [];
++    config.devices.forEach(function (d) {
++      if (!d || typeof d.id !== 'string') return;
++      var w = clamp(Number(d.w) || 0, 240, 2560), h = clamp(Number(d.h) || 0, 240, 2560);
++      var el = document.createElement('div');
++      el.className = 'kaz-canvas__frame';
++      el.setAttribute('data-kaz-canvas-frame', d.id);
++      el.style.width = w + 'px';
++
++      var cap = document.createElement('div');
++      cap.className = 'kaz-canvas__framelabel';
++      cap.title = label('frame_hint', '');
++      el.appendChild(cap);
++
++      var body = document.createElement('div');
++      body.className = 'kaz-canvas__framebody';
++      body.style.height = h + 'px';
++
++      var iframe = document.createElement('iframe');
++      /* SEM allow-scripts, allow-forms, allow-popups ou allow-top-navigation. */
++      iframe.setAttribute('sandbox', 'allow-same-origin');
++      iframe.setAttribute('referrerpolicy', 'no-referrer');
++      iframe.setAttribute('tabindex', '-1');
++      iframe.setAttribute('aria-hidden', 'true');
++      iframe.setAttribute('scrolling', 'no');
++      iframe.title = String(d.label || d.id);
++      iframe.style.width = w + 'px';
++      iframe.style.height = h + 'px';
++      body.appendChild(iframe);
++
++      var shield = document.createElement('div');
++      shield.className = 'kaz-canvas__shield';
++      body.appendChild(shield);
++      el.appendChild(body);
++      world.appendChild(el);
++
++      var f = { el: el, body: body, iframe: iframe, cap: cap, device: { id: d.id, label: String(d.label || d.id), w: w, h: h }, on: off.indexOf(d.id) === -1, height: h };
++      frames[d.id] = f;
++      iframe.addEventListener('load', function () { measure(f); });
++      paintCaption(f);
++    });
++    if (routeSel && typeof prefs.route === 'string') {
++      for (var i = 0; i < routeSel.options.length; i++) {
++        if (routeSel.options[i].value === prefs.route) { routeSel.value = prefs.route; break; }
++      }
++    }
++    paintToggles();
++    layout();
++  }
++
++  function paintCaption(f) {
++    f.cap.textContent = f.device.label + ' · ' + f.device.w + ' × ' + Math.round(f.height);
++  }
++
++  function visibleFrames() {
++    var out = [];
++    config.devices.forEach(function (d) { var f = d && frames[d.id]; if (f && f.on) out.push(f); });
++    return out;
++  }
++
++  function layout() {
++    var x = 0;
++    Object.keys(frames).forEach(function (id) { frames[id].el.hidden = !frames[id].on; });
++    visibleFrames().forEach(function (f) {
++      f.el.style.left = x + 'px';
++      f.left = x;
++      x += f.device.w + GAP;
++    });
++    world.setAttribute('data-kaz-canvas-empty', visibleFrames().length ? '0' : '1');
++    world.setAttribute('data-kaz-canvas-empty-label', label('empty', ''));
++  }
++
++  function measure(f) {
++    var doc = null;
++    try { doc = f.iframe.contentDocument; } catch (e) { doc = null; }
++    if (!doc || !doc.documentElement) return;
++    /* Mede com a altura do aparelho (unidades vh corretas) e so depois estica. */
++    f.iframe.style.height = f.device.h + 'px';
++    var h = Math.max(doc.documentElement.scrollHeight, doc.body ? doc.body.scrollHeight : 0, f.device.h);
++    f.height = clamp(h, f.device.h, MAX_FRAME_H);
++    f.iframe.style.height = f.height + 'px';
++    f.body.style.height = f.height + 'px';
++    paintCaption(f);
++    if (!fitted && active) { fitted = true; fitInitial(); }
++  }
++
++  function setDocument(doc) {
++    html = doc;
++    Object.keys(frames).forEach(function (id) { frames[id].iframe.srcdoc = doc; });
++  }
++
++  /* ---------------- camera ---------------- */
++  function apply() {
++    world.style.transform = 'translate(' + view.x + 'px,' + view.y + 'px) scale(' + view.k + ')';
++    if (zoomEl) zoomEl.textContent = Math.round(view.k * 100) + '%';
++    viewport.style.setProperty('--kaz-canvas-k', String(view.k));
++  }
++  function zoomAt(k, cx, cy) {
++    k = clamp(k, MIN_SCALE, MAX_SCALE);
++    var wx = (cx - view.x) / view.k, wy = (cy - view.y) / view.k;
++    view.k = k;
++    view.x = cx - wx * k;
++    view.y = cy - wy * k;
++    apply();
++  }
++  function zoomCenter(factor) {
++    var r = viewport.getBoundingClientRect();
++    zoomAt(view.k * factor, r.width / 2, r.height / 2);
++  }
++  /** Enquadra a LARGURA dos quadros visiveis; o topo das paginas fica no topo. */
++  function fitAll() {
++    var list = visibleFrames();
++    var r = viewport.getBoundingClientRect();
++    if (!list.length || r.width < 50) return;
++    var last = list[list.length - 1];
++    var total = last.left + last.device.w;
++    view.k = clamp((r.width - PAD * 2) / total, MIN_SCALE, 1);
++    view.x = Math.round((r.width - total * view.k) / 2);
++    view.y = PAD + LABEL_H;
++    apply();
++  }
++  /** Enquadramento de abertura: em tela estreita, tres quadros lado a lado
++      ficam ilegiveis; abre no quadro mais estreito (os outros seguem ao lado). */
++  function fitInitial() {
++    var list = visibleFrames();
++    var r = viewport.getBoundingClientRect();
++    if (list.length > 1 && r.width < 720) {
++      var narrow = list[0];
++      list.forEach(function (f) { if (f.device.w < narrow.device.w) narrow = f; });
++      focusFrame(narrow);
++      return;
++    }
++    fitAll();
++  }
++  function focusFrame(f) {
++    var r = viewport.getBoundingClientRect();
++    if (!f.on || r.width < 50) return;
++    view.k = clamp((r.width - PAD * 2) / f.device.w, MIN_SCALE, 1);
++    view.x = Math.round((r.width - f.device.w * view.k) / 2 - f.left * view.k);
++    view.y = PAD + LABEL_H;
++    apply();
++  }
++
++  /* ---------------- estado e avisos ---------------- */
++  function say(state, text) {
++    root.setAttribute('data-kaz-canvas-state', state);
++    if (statusEl) statusEl.textContent = text;
++  }
++  function notes(lines) {
++    if (!notesEl) return;
++    while (notesEl.firstChild) notesEl.removeChild(notesEl.firstChild);
++    lines.forEach(function (line) {
++      var p = document.createElement('p');
++      p.className = 'kaz-canvas__note kaz-canvas__note--' + line.kind;
++      if (line.strong) { var b = document.createElement('strong'); b.textContent = line.strong + ' '; p.appendChild(b); }
++      p.appendChild(document.createTextNode(line.text));
++      notesEl.appendChild(p);
++    });
++    notesEl.hidden = lines.length === 0;
++  }
++
++  /* ---------------- render ---------------- */
++  function refresh() {
++    window.clearTimeout(timer);
++    var body;
++    try { body = new FormData(form); } catch (e) { say('error', label('error', 'Error')); return; }
++    /* Arquivos nunca viajam para a previa. */
++    var drop = [];
++    body.forEach(function (value, key) { if (typeof value !== 'string') drop.push(key); });
++    drop.forEach(function (key) { body.delete(key); });
++    body.set('canvas_route', routeSel ? routeSel.value : 'common/home');
++    body.set('canvas_language', langSel ? langSel.value : 'en-us');
++
++    if (controller) { try { controller.abort(); } catch (e) { /* ja terminou */ } }
++    controller = typeof window.AbortController === 'function' ? new window.AbortController() : null;
++    var mine = ++seq;
++    stale = false;
++    say('loading', label('loading', '…'));
++
++    window.fetch(url, {
++      method: 'POST', body: body, credentials: 'same-origin', cache: 'no-store',
++      headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
++      signal: controller ? controller.signal : undefined
++    }).then(function (res) {
++      return res.json().catch(function () { return { success: false, error: 'HTTP ' + res.status }; });
++    }).then(function (json) {
++      if (mine !== seq) return;
++      if (!json || json.success !== true || typeof json.html !== 'string') {
++        say('error', label('error', 'Error'));
++        notes([{ kind: 'error', text: json && typeof json.error === 'string' ? json.error : label('error', 'Error') }]);
++        return;
++      }
++      setDocument(json.html);
++      var lines = [];
++      if (json.source === 'saved') lines.push({ kind: 'warn', text: label('saved_draft', '') });
++      if (Array.isArray(json.errors) && json.errors.length) {
++        json.errors.forEach(function (e) {
++          lines.push({
++            kind: 'error', strong: label('template_errors', 'Template') + ' · ' + String(e.template || '') + '.twig:',
++            text: String(e.message || '') + (e.fallback ? ' ' + label('default_source', '') : '')
++          });
++        });
++      }
++      notes(lines);
++      var stamp = new Date();
++      var hh = ('0' + stamp.getHours()).slice(-2) + ':' + ('0' + stamp.getMinutes()).slice(-2) + ':' + ('0' + stamp.getSeconds()).slice(-2);
++      say(lines.length ? 'warn' : 'ready', label('ready', 'OK') + ' · ' + hh);
++    }).catch(function (err) {
++      if (mine !== seq || (err && err.name === 'AbortError')) return;
++      say('error', label('error', 'Error'));
++      notes([{ kind: 'error', text: label('error', 'Error') }]);
++    });
++  }
++  function schedule() {
++    stale = true;
++    if (!active) return;
++    window.clearTimeout(timer);
++    timer = window.setTimeout(refresh, DEBOUNCE_MS);
++  }
++
++  /* ---------------- barra ---------------- */
++  function paintToggles() {
++    var btns = root.querySelectorAll('[data-kaz-canvas-device]');
++    for (var i = 0; i < btns.length; i++) {
++      var f = frames[btns[i].getAttribute('data-kaz-canvas-device')];
++      btns[i].setAttribute('aria-pressed', f && f.on ? 'true' : 'false');
++    }
++  }
++  root.addEventListener('click', function (ev) {
++    var t = ev.target && ev.target.closest ? ev.target.closest('[data-kaz-canvas-act],[data-kaz-canvas-device]') : null;
++    if (!t || !root.contains(t)) return;
++    var dev = t.getAttribute('data-kaz-canvas-device');
++    if (dev) {
++      var f = frames[dev];
++      if (!f) return;
++      f.on = !f.on;
++      paintToggles(); layout(); fitAll(); savePrefs();
++      return;
++    }
++    var act = t.getAttribute('data-kaz-canvas-act');
++    if (act === 'refresh') refresh();
++    else if (act === 'zoom-in') zoomCenter(1.25);
++    else if (act === 'zoom-out') zoomCenter(0.8);
++    else if (act === 'zoom-reset') { var r = viewport.getBoundingClientRect(); zoomAt(1, r.width / 2, r.height / 2); }
++    else if (act === 'fit') fitAll();
++  });
++  if (routeSel) routeSel.addEventListener('change', function () { savePrefs(); refresh(); });
++  if (langSel) langSel.addEventListener('change', function () { refresh(); });
++
++  /* ---------------- gestos: roda, arrasto, pinca, teclado ---------------- */
++  viewport.addEventListener('wheel', function (ev) {
++    ev.preventDefault();
++    var r = viewport.getBoundingClientRect();
++    var unit = ev.deltaMode === 1 ? 32 : (ev.deltaMode === 2 ? r.height : 1);
++    if (ev.ctrlKey || ev.metaKey) {
++      zoomAt(view.k * Math.exp(-ev.deltaY * unit * 0.0022), ev.clientX - r.left, ev.clientY - r.top);
++      return;
++    }
++    var dx = ev.deltaX * unit, dy = ev.deltaY * unit;
++    if (ev.shiftKey && dx === 0) { dx = dy; dy = 0; }
++    view.x -= dx; view.y -= dy;
++    apply();
++  }, { passive: false });
++
++  var pointers = {}, pan = null, pinch = null;
++  function pointerCount() { return Object.keys(pointers).length; }
++  viewport.addEventListener('pointerdown', function (ev) {
++    if (ev.pointerType === 'mouse' && ev.button !== 0 && ev.button !== 1) return;
++    pointers[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
++    try { viewport.setPointerCapture(ev.pointerId); } catch (e) { /* sem captura: o arrasto ainda funciona dentro da area */ }
++    if (pointerCount() === 1) {
++      pan = { x: ev.clientX, y: ev.clientY, vx: view.x, vy: view.y };
++      viewport.setAttribute('data-kaz-canvas-panning', '1');
++      if (ev.button === 1) ev.preventDefault();
++    } else if (pointerCount() === 2) {
++      var ids = Object.keys(pointers), a = pointers[ids[0]], b = pointers[ids[1]];
++      pinch = { d: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), k: view.k };
++      pan = null;
++    }
++  });
++  viewport.addEventListener('pointermove', function (ev) {
++    if (!pointers[ev.pointerId]) return;
++    pointers[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
++    if (pinch && pointerCount() === 2) {
++      var ids = Object.keys(pointers), a = pointers[ids[0]], b = pointers[ids[1]];
++      var r = viewport.getBoundingClientRect();
++      zoomAt(pinch.k * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top);
++      return;
++    }
++    if (pan) {
++      view.x = pan.vx + (ev.clientX - pan.x);
++      view.y = pan.vy + (ev.clientY - pan.y);
++      apply();
++    }
++  });
++  function release(ev) {
++    delete pointers[ev.pointerId];
++    if (pointerCount() < 2) pinch = null;
++    if (pointerCount() === 0) { pan = null; viewport.removeAttribute('data-kaz-canvas-panning'); }
++    else if (pointerCount() === 1) {
++      var id = Object.keys(pointers)[0];
++      pan = { x: pointers[id].x, y: pointers[id].y, vx: view.x, vy: view.y };
++    }
++  }
++  viewport.addEventListener('pointerup', release);
++  viewport.addEventListener('pointercancel', release);
++
++  /* A captura de ponteiro entrega o duplo clique ao viewport: o quadro e
++     achado pela posicao no mundo, nao pelo alvo do evento. */
++  viewport.addEventListener('dblclick', function (ev) {
++    var r = viewport.getBoundingClientRect();
++    var wx = (ev.clientX - r.left - view.x) / view.k, wy = (ev.clientY - r.top - view.y) / view.k;
++    var hit = null;
++    visibleFrames().forEach(function (f) {
++      if (wx >= f.left && wx <= f.left + f.device.w && wy >= -LABEL_H / view.k && wy <= f.height) hit = f;
++    });
++    if (hit) focusFrame(hit); else fitAll();
++  });
++
++  viewport.addEventListener('keydown', function (ev) {
++    if (ev.altKey) return;
++    var ctrl = ev.ctrlKey || ev.metaKey, step = ev.shiftKey ? 240 : 80, used = true;
++    if (ev.key === '+' || ev.key === '=') zoomCenter(1.25);
++    else if (ev.key === '-' || ev.key === '_') zoomCenter(0.8);
++    else if (ev.key === '0') { var r = viewport.getBoundingClientRect(); zoomAt(1, r.width / 2, r.height / 2); }
++    else if (ev.key === '1' && !ctrl) fitAll();
++    else if (ev.key === 'ArrowLeft') { view.x += step; apply(); }
++    else if (ev.key === 'ArrowRight') { view.x -= step; apply(); }
++    else if (ev.key === 'ArrowUp') { view.y += step; apply(); }
++    else if (ev.key === 'ArrowDown') { view.y -= step; apply(); }
++    else if (ev.key === 'PageDown' || (ev.key === ' ' && !ev.shiftKey)) { view.y -= viewport.clientHeight * 0.8; apply(); }
++    else if (ev.key === 'PageUp' || (ev.key === ' ' && ev.shiftKey)) { view.y += viewport.clientHeight * 0.8; apply(); }
++    else if (ev.key === 'Home') { view.y = PAD + LABEL_H; apply(); }
++    else if (ev.key.toLowerCase() === 'r' && !ctrl) refresh();
++    else used = false;
++    if (used) { ev.preventDefault(); ev.stopPropagation(); }
++  });
++
++  /* ---------------- integracao com o editor ---------------- */
++  function setActive(on) {
++    if (on === active) return;
++    active = on;
++    if (!active) { window.clearTimeout(timer); return; }
++    if (stale || html === '') refresh();
++    /* O painel acabou de ganhar tamanho: enquadra na proxima pintura. */
++    window.requestAnimationFrame(function () {
++      if (!fitted) fitInitial();
++    });
++  }
++  shell.addEventListener('kaz:module', function (ev) {
++    setActive(!!(ev.detail && ev.detail.module === 'pagina'));
++  });
++  form.addEventListener('input', function (ev) { if (ev.target && ev.target.name) schedule(); });
++  form.addEventListener('change', function (ev) { if (ev.target && ev.target.name) schedule(); });
++  window.addEventListener('resize', function () { if (active && !fitted) fitInitial(); });
++
++  buildFrames();
++  apply();
++  root.setAttribute('data-kaz-canvas-ready', '1');
++  setActive(shell.getAttribute('data-kaz-active-module') === 'pagina');
++})();
+diff --git a/dev/admin/view/js/kaz-theme-editor.js b/dev/admin/view/js/kaz-theme-editor.js
+index 62d41ff..60eddeb 100644
+--- a/dev/admin/view/js/kaz-theme-editor.js
++++ b/dev/admin/view/js/kaz-theme-editor.js
+@@ -140,6 +140,7 @@
+   var form = root.querySelector('#kaz-theme-form') || root.closest('form');
+   var owner = root.getAttribute('data-kaz-owner') === '1';
+   var modulesMap = {
++    pagina: 'Pagina',
+     design: 'Design', geral: 'Geral', heranca: 'Heranca', tokens: 'Tokens',
+     three: 'Three.js', cena3d: 'Cena 3D', secoes: 'Secoes', agenda: 'Agendamento',
+     midia: 'Midia', modelos: 'Modelos', sites: 'Sites', componentes: 'Componentes',
+@@ -269,6 +270,10 @@
+     if (sb) sb.hidden = stateModule !== 'design';
+     var stg = root.querySelector('[data-kaz-stage]');
+     if (stg) stg.setAttribute('data-kaz-active-module', stateModule);
++    /* KZ-01 (ADR 0083): o shell conhece o modulo ativo (layout do canvas da
++       pagina real) e avisa quem quiser ouvir, sem acoplar os dois scripts. */
++    root.setAttribute('data-kaz-active-module', stateModule);
++    try { root.dispatchEvent(new CustomEvent('kaz:module', { detail: { module: stateModule } })); } catch (e) { /* sem CustomEvent: o canvas so nao atualiza sozinho */ }
+     var links = root.querySelectorAll('button[data-kaz-module]');
+     for (i = 0; i < links.length; i++) {
+       n = links[i];
+@@ -892,6 +897,9 @@
+   document.addEventListener('keydown', function (ev) {
+     var t = ev.target;
+     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
++    /* KZ-01: os atalhos abaixo editam a CENA. Fora do modulo dela eles nao
++       podem agir (antes, Backspace em qualquer modulo apagava uma camada). */
++    if (stateModule !== 'design') return;
+     var ctrl = ev.ctrlKey || ev.metaKey;
+     if (ctrl && ev.key.toLowerCase() === 'z') { ev.preventDefault(); restore(ev.shiftKey ? cursor + 1 : cursor - 1); return; }
+     if (ctrl && ev.key.toLowerCase() === 'd') { ev.preventDefault(); duplicate(selected); return; }
+@@ -932,6 +940,8 @@
+     formBaseline = formSnapshot(); formTouched = false;
+     paintDirty();
+   });
++  /* KZ-01 (ADR 0083): a pagina real do rascunho e a vista de abertura. */
++  if (root.querySelector('[data-kaz-module-panel="pagina"]')) setModule('pagina');
+   root.setAttribute('data-kaz-ready','1');
+   /* AC: no mobile as duas sidebars comecam recolhidas (overlay), senao o
+      grid de 3 colunas espremia o centro a 0px. matchMedia e opcional para
+diff --git a/dev/admin/view/template/design/kaz_theme_editor.twig b/dev/admin/view/template/design/kaz_theme_editor.twig
+index 0fda8e1..cb9cf89 100644
+--- a/dev/admin/view/template/design/kaz_theme_editor.twig
++++ b/dev/admin/view/template/design/kaz_theme_editor.twig
+@@ -238,7 +238,9 @@
+ 
+           <div class="kaz-modules-nav kaz-module-tabs" role="tablist" aria-label="Módulos do tema">
+         <p class="kaz-panel__title kaz-panel__title--spaced">Módulos do tema · 14 recursos</p>
+-        <button class="kaz-module-link kaz-module-link--on" type="button" data-kaz-module="design" data-kaz-tablabel="Design" aria-pressed="true"><span class="kaz-module-link__dot" aria-hidden="true"></span>Design </button>
++        {# KZ-01 (ADR 0083): a pagina real do rascunho e a vista de abertura. #}
++        <button class="kaz-module-link" type="button" data-kaz-module="pagina" data-kaz-tablabel="{{ text_canvas|e('html_attr') }}" aria-pressed="false"><span class="kaz-module-link__dot" aria-hidden="true"></span>{{ text_canvas }} </button>
++        <button class="kaz-module-link kaz-module-link--on" type="button" data-kaz-module="design" data-kaz-tablabel="{{ text_canvas_scene|e('html_attr') }}" aria-pressed="true"><span class="kaz-module-link__dot" aria-hidden="true"></span>{{ text_canvas_scene }} </button>
+         <button class="kaz-module-link" type="button" data-kaz-module="geral" data-kaz-tablabel="Geral" aria-pressed="false"><span class="kaz-module-link__num">01</span>Geral </button>
+         <button class="kaz-module-link" type="button" data-kaz-module="heranca" data-kaz-tablabel="Herança" aria-pressed="false"><span class="kaz-module-link__num">02</span>Herança </button>
+         <button class="kaz-module-link" type="button" data-kaz-module="tokens" data-kaz-tablabel="Tokens" aria-pressed="false"><span class="kaz-module-link__num">03</span>Tokens </button>
+@@ -271,6 +273,41 @@
+         </div>
+       </div>
+           <div class="kaz-modules" data-kaz-modules hidden>
++        {# KZ-01 (ADR 0083) — canvas com a PAGINA REAL do rascunho.
++           Nenhum campo aqui tem `name`: nada deste painel entra no POST do tema.
++           O HTML da pagina chega por POST+CSRF (design/theme.canvas), ja
++           renderizado em Twig Sandbox, e vai para iframes SEM allow-scripts. #}
++        <section class="kaz-module kaz-canvas" data-kaz-module-panel="pagina" hidden aria-label="{{ text_canvas_title|e('html_attr') }}"
++                 data-kaz-canvas-root
++                 data-kaz-canvas-url="{{ canvas_url|e('html_attr') }}"
++                 data-kaz-canvas-config="{{ canvas_config_json|e('html_attr') }}">
++          <div class="kaz-canvas__bar" role="toolbar" aria-label="{{ text_canvas_title|e('html_attr') }}">
++            <label class="kaz-canvas__field"><span>{{ text_canvas_page }}</span>
++              <select data-kaz-canvas-route>{% for item in canvas_routes %}<option value="{{ item.id }}">{{ item.label }}</option>{% endfor %}</select>
++            </label>
++            <label class="kaz-canvas__field"><span>{{ text_canvas_language }}</span>
++              <select data-kaz-canvas-language>{% for code in canvas_languages %}<option value="{{ code }}"{% if code == canvas_language %} selected{% endif %}>{{ code }}</option>{% endfor %}</select>
++            </label>
++            <span class="kaz-canvas__devices" role="group" aria-label="{{ text_canvas_title|e('html_attr') }}">
++              {% for device in canvas_devices %}<button class="kaz-canvas__toggle" type="button" data-kaz-canvas-device="{{ device.id }}" aria-pressed="true">{{ device.label }} <small>{{ device.w }}</small></button>{% endfor %}
++            </span>
++            <span class="kaz-canvas__spacer"></span>
++            <span class="kaz-canvas__status" data-kaz-canvas-status role="status" aria-live="polite"></span>
++            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-canvas-act="refresh">{{ text_canvas_refresh }}</button>
++            <span class="kaz-canvas__zoom">
++              <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-canvas-act="zoom-out" title="{{ text_canvas_zoom_out|e('html_attr') }}" aria-label="{{ text_canvas_zoom_out|e('html_attr') }}">−</button>
++              <button class="kaz-btn kaz-btn--ghost kaz-canvas__zoomvalue" type="button" data-kaz-canvas-act="zoom-reset" title="{{ text_canvas_zoom_reset|e('html_attr') }}" aria-label="{{ text_canvas_zoom_reset|e('html_attr') }}"><span data-kaz-canvas-zoom>100%</span></button>
++              <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-canvas-act="zoom-in" title="{{ text_canvas_zoom_in|e('html_attr') }}" aria-label="{{ text_canvas_zoom_in|e('html_attr') }}">+</button>
++              <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-canvas-act="fit">{{ text_canvas_fit }}</button>
++            </span>
++          </div>
++          <div class="kaz-canvas__notes" data-kaz-canvas-notes hidden></div>
++          <div class="kaz-canvas__viewport" data-kaz-canvas-viewport tabindex="0" aria-label="{{ text_canvas_title|e('html_attr') }} — {{ text_canvas_sub|e('html_attr') }}">
++            <div class="kaz-canvas__world" data-kaz-canvas-world></div>
++            <noscript><p class="kaz-canvas__noscript">{{ text_canvas_noscript }}</p></noscript>
++          </div>
++          <p class="kaz-canvas__hint">{{ text_canvas_hint }}</p>
++        </section>
+         <section class="kaz-module" data-kaz-module-panel="geral" hidden aria-label="Geral">
+           <div class="kaz-module__head"><h3>Geral</h3><span>Nome, slug, cores e cena</span>
+             <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+diff --git a/dev/system/library/template/twig.php b/dev/system/library/template/twig.php
+index 48ce219..c91f47b 100644
+--- a/dev/system/library/template/twig.php
++++ b/dev/system/library/template/twig.php
+@@ -263,6 +263,150 @@ final class Twig {
+         return $env->render($key . '.twig', $context);
+     }
+ 
++    /**
++     * KZ-01 (ADR 0083): renderiza a PAGINA INTEIRA de uma rota para o canvas do
++     * KAZEditor-Theme: cabecalho do tema + rota + rodape, tudo em Twig Sandbox.
++     *
++     * Diferencas em relacao a renderSandboxPreview():
++     *  - TODAS as fontes do tema entram no loader (um include de partial resolve
++     *    para a versao do tema, como no Catalog publicado), nao so a fonte pedida;
++     *  - o contexto vem de fora (ThemeCanvasSample), com listas preenchidas;
++     *  - cada fonte falha sozinha: a fonte do tema que nao compila da lugar ao
++     *    template padrao e o erro volta com a linha; a pagina nao some.
++     * Mantem: allowlist de chaves, limite de tamanho, padroes proibidos, Twig
++     * Sandbox, cache desligado e nenhum Twig\Markup aceito no contexto.
++     *
++     * @param array<string, mixed> $templates Fontes do tema (chave allowlistada => Twig).
++     * @param array<string, mixed> $context   Contexto sintetico da rota.
++     * @param array<string, mixed> $sceneView scene_view compilado (ThemeSceneCss).
++     * @param array<string, mixed> $themeState Estado efetivo (ThemeSnapshot::resolve()).
++     * @return array{header:string, main:string, footer:string, errors:array<string,string>, fallbacks:list<string>, sources:array<string,string>}
++     */
++    public function renderThemePage(string $route, array $templates, array $context, array $sceneView = [], array $themeState = []): array {
++        if (!in_array($route, self::THEME_TEMPLATE_KEYS, true) || str_starts_with($route, 'partial/') || $route === 'common/footer') {
++            throw new \InvalidArgumentException('Route outside the canvas allowlist.');
++        }
++        $safe = [];
++        $errors = [];
++        $fallbacks = [];
++        foreach ($templates as $key => $source) {
++            if (!is_string($key) || !in_array($key, self::THEME_TEMPLATE_KEYS, true) || !is_string($source) || $source === '') continue;
++            if (strlen($source) > 131072 || preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i', $source)) {
++                $errors[$key] = 'Source rejected by the theme allowlist.';
++                $fallbacks[] = $key;
++                continue;
++            }
++            $safe[$key . '.twig'] = $source;
++        }
++        $policy = new \Twig\Sandbox\SecurityPolicy(
++            ['if', 'for', 'set', 'block', 'extends', 'include'],
++            // Mesma politica de renderSandboxPreview() + `slice` e `nl2br`, filtros
++            // de dados puros que os templates PADRAO do Catalog usam.
++            ['escape', 'e', 'default', 'join', 'length', 'upper', 'lower', 'title', 'trim', 'date', 'json_encode', 'slice', 'nl2br'],
++            [], [], ['range', 'cycle', 'parent']
++        );
++        $catalog = new \Twig\Loader\FilesystemLoader([DIR_SYSTEM . '../catalog/view/template/']);
++        $build = function (array $sources) use ($policy, $catalog): \Twig\Environment {
++            $env = new \Twig\Environment(
++                new \Twig\Loader\ChainLoader([new \Twig\Loader\ArrayLoader($sources), $catalog]),
++                ['autoescape' => 'html', 'cache' => false, 'auto_reload' => true]
++            );
++            $env->addExtension(new \Twig\Extension\SandboxExtension($policy, true));
++            $this->applyThemeGlobals($env);
++            return $env;
++        };
++        // Cada fonte do tema e compilada sozinha antes de montar a pagina. A que
++        // falhar (sintaxe ou politica do sandbox) sai do loader: o template
++        // padrao ocupa o lugar dela e o erro e devolvido com a linha. Assim um
++        // partial quebrado nao apaga a pagina inteira no canvas.
++        $env = $build($safe);
++        $broken = [];
++        foreach (array_keys($safe) as $name) {
++            $key = substr($name, 0, -5);
++            try {
++                $env->load($name);
++            } catch (\Twig\Error\Error $e) {
++                $line = $e->getTemplateLine();
++                $errors[$key] = substr($e->getRawMessage(), 0, 300) . ($line > 0 ? ' (line ' . $line . ')' : '');
++                $broken[] = $key;
++            } catch (\Throwable $e) {
++                $errors[$key] = 'Template could not be compiled.';
++                $broken[] = $key;
++            }
++        }
++        if ($broken !== []) {
++            foreach ($broken as $key) {
++                unset($safe[$key . '.twig']);
++                $fallbacks[] = $key;
++            }
++            $env = $build($safe);
++        }
++
++        // Somente dados simples: nenhum objeto (nem Twig\Markup) chega ao sandbox.
++        $clean = static function (mixed $value, int $depth = 0) use (&$clean): mixed {
++            if (is_array($value)) {
++                if ($depth > 6) return [];
++                $out = [];
++                foreach ($value as $k => $v) $out[$k] = $clean($v, $depth + 1);
++                return $out;
++            }
++            return (is_scalar($value) || $value === null) ? $value : null;
++        };
++        $context = (array)$clean($context);
++        $context['theme'] = ['primary' => '#2563eb', 'surface' => '#ffffff', 'vars' => [], 'flags' => [], 'classes' => [], 'matched' => []];
++        $context['theme_scene'] = ['enabled' => false, 'scene' => '', 'slot' => 'hero', 'count' => 400, 'color' => '#8a4fff', 'speed' => 0.05];
++        if ($themeState !== []) {
++            $extra = \Reamur\System\Library\Theme\ThemePreviewState::globals($themeState);
++            unset($extra['header'], $extra['footer']);
++            $context = array_replace($context, $extra);
++        }
++        $context['theme_scene_view'] = self::previewSceneView($sceneView);
++        $context['header'] = '';
++        $context['footer'] = '';
++
++        // Render das tres partes. Violacoes da politica do sandbox so aparecem
++        // aqui: se a culpada for uma fonte do TEMA, ela sai do loader, o padrao
++        // entra no lugar e a pagina e montada de novo (no maximo uma vez por chave).
++        $slots = ['header' => 'partial/site_header', 'main' => $route, 'footer' => 'common/footer'];
++        $attempt = 0;
++        do {
++            $retry = false;
++            $runtime = [];
++            $parts = ['header' => '', 'main' => '', 'footer' => ''];
++            foreach ($slots as $slot => $key) {
++                try {
++                    $parts[$slot] = $env->render($key . '.twig', $context);
++                } catch (\Twig\Error\Error $e) {
++                    $source = $e->getSourceContext();
++                    $where = $source ? (string)preg_replace('/\.twig$/', '', $source->getName()) : $key;
++                    $line = $e->getTemplateLine();
++                    $message = substr($e->getRawMessage(), 0, 300) . ($line > 0 ? ' (line ' . $line . ')' : '');
++                    if (isset($safe[$where . '.twig'])) {
++                        $errors[$where] = $message;
++                        $fallbacks[] = $where;
++                        unset($safe[$where . '.twig']);
++                        $env = $build($safe);
++                        $retry = true;
++                        break;
++                    }
++                    $runtime[$where] = $message;
++                } catch (\Throwable $e) {
++                    $runtime[$key] = 'Template could not be rendered.';
++                }
++            }
++        } while ($retry && ++$attempt <= count(self::THEME_TEMPLATE_KEYS));
++        $errors += $runtime;
++        $header = $parts['header'];
++        $main   = $parts['main'];
++        $footer = $parts['footer'];
++        // Temas fecham </body></html> no rodape; o documento da previa e do chamador.
++        $footer = (string)preg_replace('~</\s*(body|html)\s*>~i', '', $footer);
++
++        $sources = [];
++        foreach (self::THEME_TEMPLATE_KEYS as $key) $sources[$key] = isset($safe[$key . '.twig']) ? 'theme' : 'default';
++        return ['header' => $header, 'main' => $main, 'footer' => $footer, 'errors' => $errors, 'fallbacks' => $fallbacks, 'sources' => $sources];
++    }
++
+     /** Mark only HTML fragments produced by trusted renderers/sanitizers; raw filter stays unavailable to theme source.
+      * @param array<string,mixed> $data @param list<string> $keys @return array<string,mixed>
+      */
+diff --git a/dev/system/library/theme/theme_canvas_sample.php b/dev/system/library/theme/theme_canvas_sample.php
+new file mode 100644
+index 0000000..8082ef9
+--- /dev/null
++++ b/dev/system/library/theme/theme_canvas_sample.php
+@@ -0,0 +1,244 @@
++<?php declare(strict_types=1);
++/**
++ * @package   ReamurCMS
++ * @license   https://opensource.org/licenses/GPL-3.0
++ *
++ * KZ-01 (ADR 0083) — dados de amostra do canvas do KAZEditor-Theme.
++ *
++ * O canvas mostra a PAGINA INTEIRA do rascunho (cabecalho + rota + rodape),
++ * e nao um template isolado. Para isso cada rota precisa de um contexto
++ * representativo: listas preenchidas, textos e imagens. Esta classe e a
++ * fonte unica desse contexto.
++ *
++ * Regras:
++ *  - PURA: nenhum banco, sessao, request, rede, cookie ou escrita. A unica
++ *    leitura e de arquivos de idioma do Catalog, por caminho FIXO e
++ *    allowlistado (codigo de idioma validado + nome de arquivo constante).
++ *  - Nenhum dado real do site entra na previa: tudo aqui e sintetico.
++ *  - Imagens sao data URI SVG deterministicos (a previa roda com CSP
++ *    `img-src data:`).
++ *  - As rotas aceitas saem de ThemePackage::TEMPLATE_KEYS: nao existe uma
++ *    segunda allowlist de templates.
++ */
++namespace Reamur\System\Library\Theme;
++
++final class ThemeCanvasSample {
++    /** Fontes que nao sao paginas: entram como parte de uma pagina. */
++    private const NOT_A_PAGE = ['common/footer'];
++
++    /** Arquivos de idioma do Catalog lidos por rota (alem dos comuns). */
++    private const LANGUAGE_FILES = [
++        'common/home'          => ['common/home'],
++        'common/contact'       => ['common/contact'],
++        'cms/page_info'        => ['cms/page'],
++        'catalog/project_list' => ['catalog/project'],
++        'catalog/project_info' => ['catalog/project'],
++        'blog/blog_list'       => ['blog/blog'],
++        'blog/blog_info'       => ['blog/blog'],
++        'tool/tool_list'       => ['tool/tool'],
++        'tool/tool_info'       => ['tool/tool'],
++        'checkout/quote'       => ['checkout/quote'],
++        'error/not_found'      => ['error/not_found'],
++    ];
++    private const LANGUAGE_COMMON = ['common/header', 'common/footer'];
++
++    /** Rota => chave de layout do contrato Cms\PageLayout (secoes da pagina). */
++    private const LAYOUT_KEYS = [
++        'common/home'          => 'home',
++        'common/contact'       => 'contact',
++        'catalog/project_list' => 'portfolio',
++        'catalog/project_info' => 'portfolio_detail',
++        'blog/blog_list'       => 'blog',
++        'blog/blog_info'       => 'blog_post',
++        'tool/tool_list'       => 'tools',
++        'tool/tool_info'       => 'tool_detail',
++        'checkout/quote'       => 'quote',
++        'error/not_found'      => 'not_found',
++    ];
++
++    /** Larguras dos quadros do canvas (px). Altura = viewport do aparelho. */
++    private const DEVICES = [
++        'desktop' => ['w' => 1440, 'h' => 900],
++        'tablet'  => ['w' => 768,  'h' => 1024],
++        'mobile'  => ['w' => 390,  'h' => 844],
++    ];
++
++    /** @return list<string> Rotas que o canvas sabe montar como pagina. */
++    public static function routes(): array {
++        $out = [];
++        foreach (ThemePackage::TEMPLATE_KEYS as $key) {
++            if (str_starts_with($key, 'partial/') || in_array($key, self::NOT_A_PAGE, true)) continue;
++            $out[] = $key;
++        }
++        return $out;
++    }
++
++    public static function isRoute(string $route): bool {
++        return in_array($route, self::routes(), true);
++    }
++
++    /** @return array<string, array{w:int,h:int}> */
++    public static function devices(): array {
++        return self::DEVICES;
++    }
++
++    /**
++     * Textos do Catalog para a rota, no idioma pedido (fallback en-us).
++     * Somente strings escalares curtas sao devolvidas.
++     * @return array<string, string>
++     */
++    public static function strings(string $language, string $route): array {
++        if (!self::isRoute($route) || !defined('DIR_SYSTEM')) return [];
++        $base = DIR_SYSTEM . '../catalog/language/';
++        $codes = ['en-us'];
++        if ($language !== 'en-us' && preg_match('/^[a-z]{2}-[a-z]{2}$/D', $language) === 1 && is_dir($base . $language)) {
++            $codes[] = $language;
++        }
++        $files = array_merge(self::LANGUAGE_COMMON, self::LANGUAGE_FILES[$route] ?? []);
++        $out = [];
++        foreach ($codes as $code) {
++            foreach ($files as $file) {
++                foreach (self::readLanguageFile($base . $code . '/' . $file . '.php') as $key => $value) {
++                    $out[$key] = $value;
++                }
++            }
++        }
++        return $out;
++    }
++
++    /**
++     * Contexto sintetico completo para renderizar a pagina da rota.
++     * @param array<string, string> $strings Textos de idioma (ver strings()).
++     * @return array<string, mixed>
++     */
++    public static function context(string $route, array $strings = []): array {
++        $list = static function (int $count, callable $make): array {
++            $out = [];
++            for ($i = 1; $i <= $count; $i++) $out[] = $make($i);
++            return $out;
++        };
++        $lorem = 'Sample text so the layout can be judged with realistic length and rhythm.';
++        $project = static fn(int $i): array => [
++            'project_id' => $i, 'name' => 'Sample project ' . $i, 'title' => 'Sample project ' . $i,
++            'client' => 'Client ' . $i, 'date' => '2026-01-0' . min($i, 9), 'summary' => $lorem, 'excerpt' => $lorem,
++            'description' => $lorem, 'href' => '#project-' . $i, 'url' => '#project-' . $i,
++            'image' => self::image(640, 400, 'Project ' . $i, $i), 'external' => false, 'featured' => $i === 1,
++        ];
++        $post = static fn(int $i): array => [
++            'post_id' => $i, 'title' => 'Sample post ' . $i, 'name' => 'Sample post ' . $i, 'date' => '2026-02-0' . min($i, 9),
++            'excerpt' => $lorem, 'summary' => $lorem, 'href' => '#post-' . $i, 'url' => '#post-' . $i,
++            'image' => self::image(640, 360, 'Post ' . $i, $i + 3), 'source' => 'Blog',
++        ];
++        $tool = static fn(int $i): array => [
++            'tool_id' => $i, 'name' => 'Sample tool ' . $i, 'vendor' => 'Vendor ' . $i, 'description' => $lorem,
++            'href' => '#tool-' . $i, 'url' => '#tool-' . $i, 'external' => false,
++            'image' => self::image(320, 200, 'Tool ' . $i, $i + 6),
++        ];
++        $category = static fn(int $i): array => [
++            'category_id' => $i, 'name' => 'Category ' . $i, 'href' => '#category-' . $i, 'url' => '#category-' . $i,
++            'active' => false, 'image' => self::image(320, 200, 'Category ' . $i, $i),
++        ];
++
++        $context = [
++            // Navegacao e marca (partial/site_header recebe estas chaves).
++            'home' => '#home', 'text_brand' => 'Sample brand', 'text_languages' => 'Languages',
++            'text_nav_home' => 'Home', 'text_nav_about' => 'About', 'text_nav_blog' => 'Blog',
++            'text_nav_portfolio' => 'Portfolio', 'text_nav_contact' => 'Contact', 'text_nav_quote' => 'Request a quote',
++            'nav_about' => '#about', 'nav_blog' => '#blog', 'nav_portfolio' => '#portfolio',
++            'nav_contact' => '#contact', 'nav_quote' => '#quote',
++            'languages' => [
++                ['code' => 'en-us', 'name' => 'English', 'active' => true, 'href' => '#language-en'],
++                ['code' => 'pt-br', 'name' => 'Português', 'active' => false, 'href' => '#language-pt'],
++            ],
++            // Pagina.
++            'title' => 'Theme preview', 'heading_title' => 'Sample heading', 'description' => $lorem,
++            'content' => $lorem, 'text_lead' => $lorem, 'text_tagline' => 'Sample tagline',
++            'text_all' => 'All', 'text_filter' => 'Filter', 'filter_all' => ['active' => true, 'href' => '#all'],
++            'action' => '#form', 'error' => '', 'text_flash' => ['text' => '', 'type' => 'success'],
++            'button_send' => 'Send', 'button_continue' => 'Home', 'button_back_home' => 'Home',
++            'quote' => '#quote', 'contact' => '#contact', 'portfolio' => '#portfolio', 'news_blog_href' => '#blog',
++            'active_category' => 0,
++            // Home: a ordem real vem do tema (sections) quando definida.
++            'cms_home_sections' => (new SectionRegistry())->defaults(), 'cms_home_content' => '',
++            'cms_page_sections' => isset(self::LAYOUT_KEYS[$route])
++                ? (new \Reamur\System\Library\Cms\PageLayout())->defaults(self::LAYOUT_KEYS[$route], false)
++                : [],
++            'cms_page_content' => '',
++            'about_paragraphs' => [$lorem, $lorem],
++            'skill_chips' => ['Design', 'Code', 'Brand', 'Motion'],
++            'skill_groups' => $list(3, static fn(int $i): array => ['title' => 'Skill group ' . $i, 'items' => ['Skill A', 'Skill B', 'Skill C']]),
++            'method_steps' => $list(4, static fn(int $i): array => ['n' => $i, 'title' => 'Step ' . $i, 'text' => $lorem]),
++            'identity_reasons' => $list(3, static fn(int $i): array => ['title' => 'Reason ' . $i, 'text' => $lorem]),
++            'service_groups' => $list(3, static fn(int $i): array => ['title' => 'Service ' . $i, 'text' => $lorem, 'items' => ['Item A', 'Item B', 'Item C']]),
++            'services' => $list(3, static fn(int $i): array => ['name' => 'Service ' . $i, 'title' => 'Service ' . $i, 'description' => $lorem, 'href' => '#service-' . $i]),
++            'testimonials' => $list(3, static fn(int $i): array => [
++                'author' => 'Person ' . $i, 'name' => 'Person ' . $i, 'company' => 'Company ' . $i,
++                'text' => $lorem, 'description' => $lorem, 'image' => self::image(96, 96, 'P' . $i, $i),
++            ]),
++            'categories' => $list(3, $category),
++            'projects' => $list(6, $project),
++            'tools' => $list(4, $tool),
++            'news_items' => $list(3, $post),
++            'posts' => $list(4, $post),
++            'client_logos' => $list(5, static fn(int $i): array => [
++                'name' => 'Client ' . $i, 'image' => self::image(200, 80, 'Client ' . $i, $i + 2), 'url' => '#client-' . $i, 'href' => '#client-' . $i,
++            ]),
++            'images' => $list(3, static fn(int $i): array => ['src' => self::image(960, 540, 'Image ' . $i, $i), 'alt' => 'Sample image ' . $i]),
++            'public_custom_field_groups' => [['label' => 'Details', 'fields' => [['label' => 'Year', 'value' => '2026'], ['label' => 'Role', 'value' => 'Design']]]],
++            'project' => $project(1),
++            'tool' => $tool(1),
++            'post' => $post(1) + ['content_mode' => 'html', 'content_valid' => true, 'block_html' => '', 'description' => $lorem],
++            'legal' => [['name' => 'Privacy', 'href' => '#privacy'], ['name' => 'Terms', 'href' => '#terms']],
++            'socials' => [['name' => 'Instagram', 'href' => '#instagram'], ['name' => 'GitHub', 'href' => '#github']],
++            // Cenas Three.js nao executam na previa (sem script): so o fallback.
++            'portfolio3d' => ['enabled' => false, 'frame_limit' => 0, 'images' => []],
++            'tools3d' => ['enabled' => false, 'items' => []],
++            'nf3d' => ['count' => 120, 'color' => '#8a4fff', 'speed' => 0.05, 'drift' => 0.4],
++            'text_code' => '404', 'text_error' => 'Not found', 'text_suggestion' => 'Return to the site home.',
++            'text_powered' => 'ReamurCMS', 'text_copyright' => '© Sample brand', 'text_legal' => 'Legal',
++        ];
++        // Textos reais do Catalog vencem os rotulos genericos.
++        foreach ($strings as $key => $value) {
++            if (is_string($key) && is_string($value)) $context[$key] = $value;
++        }
++        // header/footer NUNCA vem daqui: o adaptador monta as partes da pagina.
++        unset($context['header'], $context['footer']);
++        $context['canvas_route'] = self::isRoute($route) ? $route : 'common/home';
++        return $context;
++    }
++
++    /** Imagem de amostra: SVG deterministico, sem texto do usuario. */
++    public static function image(int $w, int $h, string $label, int $tone = 0): string {
++        $w = max(16, min(1920, $w));
++        $h = max(16, min(1080, $h));
++        $tones = ['#334155', '#3f3f46', '#1e3a8a', '#134e4a', '#4c1d95', '#7c2d12', '#365314', '#831843'];
++        $fill = $tones[abs($tone) % count($tones)];
++        $label = (string)preg_replace('/[^A-Za-z0-9 ]/', '', $label);
++        $size = max(10, (int)round(min($w, $h) / 6));
++        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' . $w . '" height="' . $h . '" viewBox="0 0 ' . $w . ' ' . $h . '">'
++             . '<rect width="' . $w . '" height="' . $h . '" fill="' . $fill . '"/>'
++             . '<path d="M0 ' . $h . 'L' . (int)($w * 0.35) . ' ' . (int)($h * 0.45) . 'L' . (int)($w * 0.6) . ' ' . (int)($h * 0.75)
++             . 'L' . (int)($w * 0.78) . ' ' . (int)($h * 0.55) . 'L' . $w . ' ' . $h . 'Z" fill="#ffffff" fill-opacity="0.12"/>'
++             . '<text x="' . (int)($w / 2) . '" y="' . (int)($h / 2) . '" fill="#ffffff" fill-opacity="0.82" font-family="sans-serif" font-size="'
++             . $size . '" text-anchor="middle" dominant-baseline="middle">' . $label . '</text></svg>';
++        return 'data:image/svg+xml;base64,' . base64_encode($svg);
++    }
++
++    /**
++     * Le um arquivo de idioma do Catalog em escopo isolado.
++     * @return array<string, string>
++     */
++    private static function readLanguageFile(string $path): array {
++        if (!is_file($path)) return [];
++        $read = static function (string $file): array {
++            $_ = [];
++            include $file;
++            return $_;
++        };
++        $out = [];
++        foreach ($read($path) as $key => $value) {
++            if (is_string($key) && is_string($value) && strlen($value) <= 4096) $out[$key] = $value;
++        }
++        return $out;
++    }
++}
+diff --git a/docs/CHANGELOG.md b/docs/CHANGELOG.md
+index 9c8292c..f75d323 100644
+--- a/docs/CHANGELOG.md
++++ b/docs/CHANGELOG.md
+@@ -1,5 +1,14 @@
+ # Changelog
+ 
++## KZ-01 — KAZEditor-Theme abre na página real do rascunho (2026-11-12)
++- ADR 0083: o editor de temas passa a abrir no módulo **Página**, que mostra a página inteira do rascunho (cabeçalho do tema + rota + rodapé) em três quadros — desktop 1440, tablet 768 e celular 390 — sobre um canvas com zoom e deslocamento livres. 11 rotas selecionáveis e 3 idiomas.
++- O canvas reflete o formulário **antes de salvar**: nova ação somente leitura `design/theme.canvas` (`POST` + CSRF + ACL `access`) e método aditivo `Twig::renderThemePage()`, em Twig Sandbox, com todas as fontes do tema sobre os templates padrão. Nada é gravado; sem tabela, coluna, migration ou chave de configuração nova.
++- Uma fonte Twig quebrada não apaga mais a prévia: o template padrão entra no lugar e o erro aparece com template e linha.
++- Nova classe pura `Theme\ThemeCanvasSample` com os dados de amostra. O board SVG (`kaztheme-scene/v1`) continua igual, agora como módulo **Cena decorativa**.
++- Correção: os atalhos de cena (`Backspace`, `Delete`, `R`, `T`…) agiam com qualquer módulo aberto e podiam apagar ou criar camadas sem a cena estar visível; agora só valem no módulo da cena.
++- Desvio documentado da ADR 0080: os quadros usam `sandbox="allow-same-origin"` (sem `allow-scripts`) para medir a altura da página; a prévia antiga segue com `sandbox=""`.
++- Validação local: PHPUnit `OK (70 tests, 1268 assertions)` em PHP 8.2.32 e 8.3.32 (8 testes novos em `KazCanvasPageTest`), PHPStan nível 2 sem erros, `php -l`, `node --check` e os três `tools/verify-*.sh` limpos; fluxo conferido em Chromium headless com os 6 pacotes de `docs/temas/`. Sem banco, staging, deploy ou escrita no GitHub.
++
+ ## F11-12 — `docs-links` determinístico com `--offline` (2026-11-02)
+ - O `docs-links` seguiu `failure` (`exit 2`) em três runs mesmo após F11-10, embora a correção desse `exit 0` localmente com o binário `lychee 0.15.0` idêntico. Descartadas as hipóteses de `--mode task`, `--format/--output` e réplica incompleta; a causa exata exige logs de admin (403). A única diferença restante é a rede do runner.
+ - Decisão do responsável (opção A): `args` passa a usar **`--offline`**, validando apenas links internos/relativos. `fail`/`failIfEmpty=true`, `lycheeVersion: v0.15.0`, `timeout-minutes: 20` e as 5 exclusões originais permanecem; `--accept` e as 3 exclusões de domínios mortos foram removidos por serem inócuos neste modo.
+diff --git a/tests/Unit/Library/KazCanvasPageTest.php b/tests/Unit/Library/KazCanvasPageTest.php
+new file mode 100644
+index 0000000..ddbe447
+--- /dev/null
++++ b/tests/Unit/Library/KazCanvasPageTest.php
+@@ -0,0 +1,129 @@
++<?php declare(strict_types=1);
++
++namespace Reamur\Tests\Unit\Library;
++
++use PHPUnit\Framework\TestCase;
++use Reamur\System\Library\Template\Twig;
++use Reamur\System\Library\Theme\ThemeCanvasSample;
++use Reamur\System\Library\Theme\ThemePackage;
++
++/**
++ * KZ-01 (ADR 0083): canvas do KAZEditor-Theme com a pagina real do rascunho.
++ * Cobre os dados de amostra e o render em sandbox da pagina inteira.
++ */
++final class KazCanvasPageTest extends TestCase {
++    private function twig(): Twig {
++        return new Twig(DIR_TEMPLATE, false);
++    }
++
++    public function testRoutesComeFromTheTemplateAllowlistAndExcludeFragments(): void {
++        $routes = ThemeCanvasSample::routes();
++
++        self::assertNotEmpty($routes);
++        self::assertContains('common/home', $routes);
++        self::assertNotContains('common/footer', $routes);
++        foreach ($routes as $route) {
++            self::assertContains($route, ThemePackage::TEMPLATE_KEYS);
++            self::assertStringStartsNotWith('partial/', $route);
++            self::assertTrue(ThemeCanvasSample::isRoute($route));
++        }
++        self::assertFalse(ThemeCanvasSample::isRoute('partial/hero'));
++        self::assertFalse(ThemeCanvasSample::isRoute('../../etc/passwd'));
++        self::assertSame(['desktop', 'tablet', 'mobile'], array_keys(ThemeCanvasSample::devices()));
++    }
++
++    public function testSampleContextIsPlainDataWithoutPageShell(): void {
++        $context = ThemeCanvasSample::context('common/home', ['heading_title' => 'From language', 'bad' => 'x']);
++
++        self::assertArrayNotHasKey('header', $context);
++        self::assertArrayNotHasKey('footer', $context);
++        self::assertSame('From language', $context['heading_title']);
++        self::assertNotEmpty($context['projects']);
++        self::assertStringStartsWith('data:image/svg+xml;base64,', $context['projects'][0]['image']);
++        array_walk_recursive($context, static function (mixed $value): void {
++            self::assertTrue(is_scalar($value) || $value === null);
++        });
++        // Rota fora da allowlist nunca chega ao contexto.
++        self::assertSame('common/home', ThemeCanvasSample::context('nope/nope')['canvas_route']);
++    }
++
++    public function testLanguageStringsOnlyReadAllowlistedCatalogFiles(): void {
++        self::assertSame([], ThemeCanvasSample::strings('en-us', '../../system/config/admin'));
++        $strings = ThemeCanvasSample::strings('../..', 'common/home');
++        self::assertNotEmpty($strings);
++        foreach ($strings as $value) {
++            self::assertIsString($value);
++        }
++    }
++
++    public function testEveryRouteRendersWithDefaultTemplatesAndNoErrors(): void {
++        $twig = $this->twig();
++        foreach (ThemeCanvasSample::routes() as $route) {
++            $page = $twig->renderThemePage($route, [], ThemeCanvasSample::context($route, ThemeCanvasSample::strings('en-us', $route)));
++
++            self::assertSame([], $page['errors'], $route);
++            self::assertSame([], $page['fallbacks'], $route);
++            self::assertNotSame('', $page['header'], $route);
++            self::assertNotSame('', $page['main'], $route);
++            self::assertStringNotContainsStringIgnoringCase('</body>', $page['footer'], $route);
++            self::assertStringNotContainsStringIgnoringCase('<script', $page['header'] . $page['main'] . $page['footer'], $route);
++        }
++    }
++
++    public function testThemeSourceOverridesIncludedPartialAndEscapesContext(): void {
++        $context = ThemeCanvasSample::context('common/home');
++        $context['text_tagline'] = '<b>bold</b>';
++        $page = $this->twig()->renderThemePage(
++            'common/home',
++            ['partial/hero-3d' => '<section id="kz-hero">{{ text_tagline }}</section>'],
++            $context
++        );
++
++        self::assertSame([], $page['errors']);
++        self::assertSame('theme', $page['sources']['partial/hero-3d']);
++        self::assertSame('default', $page['sources']['partial/about']);
++        self::assertStringContainsString('<section id="kz-hero">&lt;b&gt;bold&lt;/b&gt;</section>', $page['main']);
++    }
++
++    public function testBrokenOrForbiddenThemeSourceFallsBackToDefaultTemplate(): void {
++        $context = ThemeCanvasSample::context('common/home');
++        $baseline = $this->twig()->renderThemePage('common/home', [], $context);
++        $cases = [
++            'syntax'   => '<p>{{ nope|unknownfilter }}</p>',
++            'constant' => "<p>KZ-LEAK {{ constant('DIR_SYSTEM') }}</p>",
++            'source'   => "<p>KZ-LEAK {{ source('common/header.twig') }}</p>",
++            'include'  => "KZ-LEAK {% include '/etc/passwd' %}",
++            'script'   => '<script>alert(1)</script>',
++            'handler'  => '<img src="x" onerror="alert(1)">',
++            'raw'      => '{{ description|raw }}',
++        ];
++        foreach ($cases as $name => $source) {
++            $page = $this->twig()->renderThemePage('common/home', ['partial/hero-3d' => $source], $context);
++
++            self::assertArrayHasKey('partial/hero-3d', $page['errors'], $name);
++            self::assertContains('partial/hero-3d', $page['fallbacks'], $name);
++            self::assertSame('default', $page['sources']['partial/hero-3d'], $name);
++            self::assertSame($baseline['main'], $page['main'], $name);
++            self::assertStringNotContainsString('KZ-LEAK', $page['main'], $name);
++        }
++    }
++
++    public function testObjectsNeverReachTheSandboxContext(): void {
++        $context = ThemeCanvasSample::context('common/home');
++        $context['text_tagline'] = new \Twig\Markup('<i>trusted?</i>', 'UTF-8');
++        $page = $this->twig()->renderThemePage('common/home', ['partial/hero-3d' => '<p id="kz">[{{ text_tagline }}]</p>'], $context);
++
++        self::assertStringContainsString('<p id="kz">[]</p>', $page['main']);
++    }
++
++    public function testRouteOutsideTheCanvasAllowlistIsRejected(): void {
++        foreach (['partial/hero', 'common/footer', 'common/header', '../x'] as $route) {
++            try {
++                $this->twig()->renderThemePage($route, [], []);
++                self::fail('Route should have been rejected: ' . $route);
++            } catch (\InvalidArgumentException $e) {
++                self::assertSame('Route outside the canvas allowlist.', $e->getMessage());
++            }
++        }
++    }
++}

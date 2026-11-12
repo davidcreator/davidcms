@@ -363,6 +363,30 @@ class Theme extends \Reamur\System\Engine\Controller {
         // F13-C: Loader::view() nao mescla o idioma; publica todas as chaves
         // carregadas (sem sobrescrever valores calculados) para nao deixar rotulos vazios.
 
+        // KZ-01 (ADR 0083): canvas com a pagina real do rascunho.
+        $canvasSample='\Reamur\System\Library\Theme\ThemeCanvasSample';
+        $canvasRoutes=[];
+        foreach($canvasSample::routes() as $canvasRoute) {
+            $canvasRoutes[]=['id'=>$canvasRoute,'label'=>$this->language->get('text_canvas_route_'.str_replace('/','_',$canvasRoute))];
+        }
+        $canvasDevices=[];
+        foreach($canvasSample::devices() as $deviceId=>$deviceSize) {
+            $canvasDevices[]=['id'=>$deviceId,'label'=>$this->language->get('text_canvas_device_'.$deviceId),'w'=>$deviceSize['w'],'h'=>$deviceSize['h']];
+        }
+        $canvasLabels=[];
+        foreach(['loading','ready','error','saved_draft','template_errors','default_source','frame_hint','empty'] as $canvasKey) {
+            $canvasLabels[$canvasKey]=$this->language->get('text_canvas_'.$canvasKey);
+        }
+        $data['canvas_url']=$this->url->link('design/theme.canvas'.($id?'|'.$id:''));
+        $data['canvas_routes']=$canvasRoutes;
+        $data['canvas_devices']=$canvasDevices;
+        $data['canvas_languages']=['en-us','pt-br','es-eu'];
+        $data['canvas_language']=in_array((string)$this->config->get('language_directory','en-us'),['en-us','pt-br','es-eu'],true)?(string)$this->config->get('language_directory','en-us'):'en-us';
+        $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
+        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz01';
+        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-canvas.css?v=' . $canvasAssetV);
+        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-canvas.js?v=' . $canvasAssetV);
+
         $data=array_replace($this->language->all(),$data);
         // Frente AA: modo pagina cheia em OUTRA pagina (sem chrome do Admin).
         // Apenas leitura de GET; nenhuma rota, migration ou chave nova.
@@ -817,6 +841,61 @@ class Theme extends \Reamur\System\Engine\Controller {
     }
 
     /** Fragmento do template allowlistado, via Twig Sandbox (ADR 0080). */
+    /**
+     * KZ-01 (ADR 0083) — pagina INTEIRA do rascunho para o canvas do editor.
+     *
+     * POST + CSRF + ACL `access`, somente leitura: nada e gravado. O corpo do
+     * POST e o proprio formulario do tema, entao o canvas mostra o que esta
+     * na tela ANTES de salvar. Formulario invalido: mostra o ultimo rascunho
+     * salvo e avisa (`source=saved`). A resposta e JSON; o HTML e um documento
+     * completo com CSP `default-src 'none'`, renderizado em Twig Sandbox, que
+     * o editor coloca em um iframe sem permissao de script.
+     */
+    public function canvas(string $theme_id='0'): void {
+        $this->load->language('design/theme');
+        $method=(string)($this->request->server['REQUEST_METHOD']??'');
+        if (!$this->user->hasPermission('access','design/theme') || $method!=='POST' || !$this->csrfValid()) {
+            $this->jsonResponse(['success'=>false,'error'=>$this->language->get('compare_forbidden')],403,true); return;
+        }
+        if (!method_exists($this->template,'renderThemePage')) {
+            $this->jsonResponse(['success'=>false,'error'=>$this->language->get('text_preview_error')],200,true); return;
+        }
+        $this->load->model('design/theme');
+        $id=(int)$theme_id;
+        $sample='\Reamur\System\Library\Theme\ThemeCanvasSample';
+        $route=$this->postScalar('canvas_route','common/home');
+        if (!$sample::isRoute($route)) $route='common/home';
+        $built=$this->buildDraftConfig($this->request->post);
+        $source=$built['error']===''?'form':'saved';
+        $draft=$source==='form'?$built['config']:($id?$this->model_design_theme->getDraftConfig($id):[]);
+        $ctx=$this->simulateContext(['route'=>$route,'language'=>$this->postScalar('canvas_language','en-us'),'device'=>'desktop']);
+        $state=$this->theme_snapshot->resolve($draft,$ctx,$this->model_design_theme->getThemeMap('draft'),(string)($built['slug']??''));
+        $sceneView=(array)($state['scene_view']??[]);
+        $context=$sample::context($route,$sample::strings((string)$ctx['language'],$route));
+        // Secoes da home: o override do tema vence o layout padrao (como no Catalog).
+        if (is_array($state['sections']??null)) $context['cms_home_sections']=$state['sections'];
+        try {
+            $page=$this->template->renderThemePage($route,(array)($state['templates']??[]),$context,$sceneView,$state);
+        } catch (\Throwable $e) {
+            $this->jsonResponse(['success'=>false,'error'=>$this->language->get('text_preview_error')],200,true); return;
+        }
+        $S='\Reamur\System\Library\Theme\ThemePreviewState';
+        $attr=static fn(string $v): string => htmlspecialchars($v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
+        $html='<!doctype html><html lang="'.$attr((string)$ctx['language']).'"><head><meta charset="utf-8">'
+            .'<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'; font-src data:">'
+            .'<meta name="viewport" content="width=device-width, initial-scale=1"><title>Canvas</title>'
+            .'<style>'.$S::catalogCss().\Reamur\System\Library\Theme\ThemeSceneCss::previewCss().'</style></head>'
+            .'<body class="'.$attr($S::bodyClasses($state)).'" style="'.$attr($S::css($state).$S::colorVars($state)).'">'
+            .$page['header'].$page['main'].$page['footer'].'</body></html>';
+        $errors=[];
+        foreach ($page['errors'] as $template=>$message) $errors[]=['template'=>(string)$template,'message'=>(string)$message,'fallback'=>in_array((string)$template,$page['fallbacks'],true)];
+        $themed=array_keys(array_filter($page['sources'],static fn(string $v): bool => $v==='theme'));
+        $this->jsonResponse([
+            'success'=>true,'route'=>$route,'source'=>$source,'language'=>(string)$ctx['language'],
+            'html'=>$html,'errors'=>$errors,'themed'=>$themed,'bytes'=>strlen($html),
+        ],200,true);
+    }
+
     private function renderPreviewFragment(string $key, $source, array $sceneView = [], array $themeState = []): string {
         if (!is_string($source) || $source==='') {
             $file=DIR_SYSTEM.'../catalog/view/template/'.$key.'.twig';

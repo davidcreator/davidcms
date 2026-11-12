@@ -263,6 +263,150 @@ final class Twig {
         return $env->render($key . '.twig', $context);
     }
 
+    /**
+     * KZ-01 (ADR 0083): renderiza a PAGINA INTEIRA de uma rota para o canvas do
+     * KAZEditor-Theme: cabecalho do tema + rota + rodape, tudo em Twig Sandbox.
+     *
+     * Diferencas em relacao a renderSandboxPreview():
+     *  - TODAS as fontes do tema entram no loader (um include de partial resolve
+     *    para a versao do tema, como no Catalog publicado), nao so a fonte pedida;
+     *  - o contexto vem de fora (ThemeCanvasSample), com listas preenchidas;
+     *  - cada fonte falha sozinha: a fonte do tema que nao compila da lugar ao
+     *    template padrao e o erro volta com a linha; a pagina nao some.
+     * Mantem: allowlist de chaves, limite de tamanho, padroes proibidos, Twig
+     * Sandbox, cache desligado e nenhum Twig\Markup aceito no contexto.
+     *
+     * @param array<string, mixed> $templates Fontes do tema (chave allowlistada => Twig).
+     * @param array<string, mixed> $context   Contexto sintetico da rota.
+     * @param array<string, mixed> $sceneView scene_view compilado (ThemeSceneCss).
+     * @param array<string, mixed> $themeState Estado efetivo (ThemeSnapshot::resolve()).
+     * @return array{header:string, main:string, footer:string, errors:array<string,string>, fallbacks:list<string>, sources:array<string,string>}
+     */
+    public function renderThemePage(string $route, array $templates, array $context, array $sceneView = [], array $themeState = []): array {
+        if (!in_array($route, self::THEME_TEMPLATE_KEYS, true) || str_starts_with($route, 'partial/') || $route === 'common/footer') {
+            throw new \InvalidArgumentException('Route outside the canvas allowlist.');
+        }
+        $safe = [];
+        $errors = [];
+        $fallbacks = [];
+        foreach ($templates as $key => $source) {
+            if (!is_string($key) || !in_array($key, self::THEME_TEMPLATE_KEYS, true) || !is_string($source) || $source === '') continue;
+            if (strlen($source) > 131072 || preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i', $source)) {
+                $errors[$key] = 'Source rejected by the theme allowlist.';
+                $fallbacks[] = $key;
+                continue;
+            }
+            $safe[$key . '.twig'] = $source;
+        }
+        $policy = new \Twig\Sandbox\SecurityPolicy(
+            ['if', 'for', 'set', 'block', 'extends', 'include'],
+            // Mesma politica de renderSandboxPreview() + `slice` e `nl2br`, filtros
+            // de dados puros que os templates PADRAO do Catalog usam.
+            ['escape', 'e', 'default', 'join', 'length', 'upper', 'lower', 'title', 'trim', 'date', 'json_encode', 'slice', 'nl2br'],
+            [], [], ['range', 'cycle', 'parent']
+        );
+        $catalog = new \Twig\Loader\FilesystemLoader([DIR_SYSTEM . '../catalog/view/template/']);
+        $build = function (array $sources) use ($policy, $catalog): \Twig\Environment {
+            $env = new \Twig\Environment(
+                new \Twig\Loader\ChainLoader([new \Twig\Loader\ArrayLoader($sources), $catalog]),
+                ['autoescape' => 'html', 'cache' => false, 'auto_reload' => true]
+            );
+            $env->addExtension(new \Twig\Extension\SandboxExtension($policy, true));
+            $this->applyThemeGlobals($env);
+            return $env;
+        };
+        // Cada fonte do tema e compilada sozinha antes de montar a pagina. A que
+        // falhar (sintaxe ou politica do sandbox) sai do loader: o template
+        // padrao ocupa o lugar dela e o erro e devolvido com a linha. Assim um
+        // partial quebrado nao apaga a pagina inteira no canvas.
+        $env = $build($safe);
+        $broken = [];
+        foreach (array_keys($safe) as $name) {
+            $key = substr($name, 0, -5);
+            try {
+                $env->load($name);
+            } catch (\Twig\Error\Error $e) {
+                $line = $e->getTemplateLine();
+                $errors[$key] = substr($e->getRawMessage(), 0, 300) . ($line > 0 ? ' (line ' . $line . ')' : '');
+                $broken[] = $key;
+            } catch (\Throwable $e) {
+                $errors[$key] = 'Template could not be compiled.';
+                $broken[] = $key;
+            }
+        }
+        if ($broken !== []) {
+            foreach ($broken as $key) {
+                unset($safe[$key . '.twig']);
+                $fallbacks[] = $key;
+            }
+            $env = $build($safe);
+        }
+
+        // Somente dados simples: nenhum objeto (nem Twig\Markup) chega ao sandbox.
+        $clean = static function (mixed $value, int $depth = 0) use (&$clean): mixed {
+            if (is_array($value)) {
+                if ($depth > 6) return [];
+                $out = [];
+                foreach ($value as $k => $v) $out[$k] = $clean($v, $depth + 1);
+                return $out;
+            }
+            return (is_scalar($value) || $value === null) ? $value : null;
+        };
+        $context = (array)$clean($context);
+        $context['theme'] = ['primary' => '#2563eb', 'surface' => '#ffffff', 'vars' => [], 'flags' => [], 'classes' => [], 'matched' => []];
+        $context['theme_scene'] = ['enabled' => false, 'scene' => '', 'slot' => 'hero', 'count' => 400, 'color' => '#8a4fff', 'speed' => 0.05];
+        if ($themeState !== []) {
+            $extra = \Reamur\System\Library\Theme\ThemePreviewState::globals($themeState);
+            unset($extra['header'], $extra['footer']);
+            $context = array_replace($context, $extra);
+        }
+        $context['theme_scene_view'] = self::previewSceneView($sceneView);
+        $context['header'] = '';
+        $context['footer'] = '';
+
+        // Render das tres partes. Violacoes da politica do sandbox so aparecem
+        // aqui: se a culpada for uma fonte do TEMA, ela sai do loader, o padrao
+        // entra no lugar e a pagina e montada de novo (no maximo uma vez por chave).
+        $slots = ['header' => 'partial/site_header', 'main' => $route, 'footer' => 'common/footer'];
+        $attempt = 0;
+        do {
+            $retry = false;
+            $runtime = [];
+            $parts = ['header' => '', 'main' => '', 'footer' => ''];
+            foreach ($slots as $slot => $key) {
+                try {
+                    $parts[$slot] = $env->render($key . '.twig', $context);
+                } catch (\Twig\Error\Error $e) {
+                    $source = $e->getSourceContext();
+                    $where = $source ? (string)preg_replace('/\.twig$/', '', $source->getName()) : $key;
+                    $line = $e->getTemplateLine();
+                    $message = substr($e->getRawMessage(), 0, 300) . ($line > 0 ? ' (line ' . $line . ')' : '');
+                    if (isset($safe[$where . '.twig'])) {
+                        $errors[$where] = $message;
+                        $fallbacks[] = $where;
+                        unset($safe[$where . '.twig']);
+                        $env = $build($safe);
+                        $retry = true;
+                        break;
+                    }
+                    $runtime[$where] = $message;
+                } catch (\Throwable $e) {
+                    $runtime[$key] = 'Template could not be rendered.';
+                }
+            }
+        } while ($retry && ++$attempt <= count(self::THEME_TEMPLATE_KEYS));
+        $errors += $runtime;
+        $header = $parts['header'];
+        $main   = $parts['main'];
+        $footer = $parts['footer'];
+        // Temas fecham </body></html> no rodape; o documento da previa e do chamador.
+        $footer = (string)preg_replace('~</\s*(body|html)\s*>~i', '', $footer);
+
+        $sources = [];
+        foreach (self::THEME_TEMPLATE_KEYS as $key) $sources[$key] = isset($safe[$key . '.twig']) ? 'theme' : 'default';
+        return ['header' => $header, 'main' => $main, 'footer' => $footer, 'errors' => $errors, 'fallbacks' => $fallbacks, 'sources' => $sources];
+    }
+
     /** Mark only HTML fragments produced by trusted renderers/sanitizers; raw filter stays unavailable to theme source.
      * @param array<string,mixed> $data @param list<string> $keys @return array<string,mixed>
      */
