@@ -283,7 +283,9 @@ final class Twig {
      * @param bool $annotate KZ-02 (ADR 0084): cerca a saida de cada fonte allowlistada com
      *        comentarios `<!--kz:b:CHAVE-->`…`<!--kz:e:CHAVE-->` para o editor saber de qual
      *        fonte veio cada trecho da pagina. So constantes da allowlist entram no marcador.
-     * @return array{header:string, main:string, footer:string, errors:array<string,string>, fallbacks:list<string>, sources:array<string,string>, defaults:array<string,string>}
+     *        KZ-04 (ADR 0086): tambem poe `data-kz-el="CHAVE:N"` em cada tag de abertura
+     *        escrita nas fontes e devolve `elements` (ThemeSourceMap::describe() por chave).
+     * @return array{header:string, main:string, footer:string, errors:array<string,string>, fallbacks:list<string>, sources:array<string,string>, defaults:array<string,string>, elements:array<string,array<string,mixed>>}
      */
     public function renderThemePage(string $route, array $templates, array $context, array $sceneView = [], array $themeState = [], bool $annotate = false): array {
         if (!in_array($route, self::THEME_TEMPLATE_KEYS, true) || str_starts_with($route, 'partial/') || $route === 'common/footer') {
@@ -299,7 +301,9 @@ final class Twig {
                 $fallbacks[] = $key;
                 continue;
             }
-            $safe[$key . '.twig'] = $source;
+            // KZ-04: no canvas a fonte e lida com quebras `\n`, como o <textarea> do
+            // editor a entrega; as posicoes do mapa de elementos dependem disso.
+            $safe[$key . '.twig'] = $annotate ? \Reamur\System\Library\Theme\ThemeSourceMap::normalize($source) : $source;
         }
         $policy = new \Twig\Sandbox\SecurityPolicy(
             ['if', 'for', 'set', 'block', 'extends', 'include'],
@@ -316,13 +320,46 @@ final class Twig {
             foreach (self::THEME_TEMPLATE_KEYS as $key) {
                 $file = DIR_SYSTEM . '../catalog/view/template/' . $key . '.twig';
                 $raw = is_file($file) ? file_get_contents($file) : false;
-                if (is_string($raw) && $raw !== '' && strlen($raw) <= 131072) $defaults[$key] = $raw;
+                if (is_string($raw) && $raw !== '' && strlen($raw) <= 131072) $defaults[$key] = \Reamur\System\Library\Theme\ThemeSourceMap::normalize($raw);
             }
         }
-        $mark = static function (string $key, string $source): string {
+        // KZ-04 (ADR 0086): alem dos marcadores de trecho, cada tag de abertura
+        // escrita na fonte recebe `data-kz-el="CHAVE:N"`. A anotacao so vale se
+        // os tokens Twig da fonte anotada forem identicos aos da original; se
+        // nao forem (ou a fonte nao lexar), a fonte segue sem anotacao.
+        $lexer = null;
+        $twigTokens = static function (string $code) use (&$lexer): ?array {
+            try {
+                $lexer ??= new \Twig\Environment(new \Twig\Loader\ArrayLoader([]), ['cache' => false]);
+                $stream = $lexer->tokenize(new \Twig\Source($code, 'kz'));
+                $out = [];
+                while (!$stream->isEOF()) {
+                    $token = $stream->next();
+                    $out[] = $token->getType() === \Twig\Token::TEXT_TYPE ? 'text' : $token->getType() . ':' . (string)$token->getValue();
+                }
+                return $out;
+            } catch (\Throwable $e) {
+                return null;
+            }
+        };
+        /** @var array<string,array{0:string,1:?array<string,mixed>}> $annotated fonte anotada + mapa, por chave e conteudo */
+        $annotated = [];
+        $mark = static function (string $key, string $source) use (&$annotated, $twigTokens): string {
             // Template com heranca nao aceita conteudo fora de blocos: fica sem marcador.
             if (preg_match('/\{%-?\s*extends\b/', $source) === 1) return $source;
-            return '<!--kz:b:' . $key . '-->' . $source . '<!--kz:e:' . $key . '-->';
+            $id = $key . ':' . md5($source);
+            if (!isset($annotated[$id])) {
+                $map = '\Reamur\System\Library\Theme\ThemeSourceMap';
+                $elements = $map::scan($source);
+                $with = $map::annotate($key, $source, $elements);
+                $entry = [$source, null];
+                if ($with !== $source) {
+                    $plain = $twigTokens($source);
+                    if ($plain !== null && $plain === $twigTokens($with)) $entry = [$with, $map::describe($source, $elements)];
+                }
+                $annotated[$id] = $entry;
+            }
+            return '<!--kz:b:' . $key . '-->' . $annotated[$id][0] . '<!--kz:e:' . $key . '-->';
         };
         $build = function (array $sources) use ($policy, $catalog, $annotate, $defaults, $mark): \Twig\Environment {
             if ($annotate) {
@@ -443,13 +480,20 @@ final class Twig {
         // Fonte padrao so das chaves que realmente aparecem na pagina e que o tema
         // nao redefine: e o ponto de partida de "personalizar este trecho".
         $used = [];
+        // KZ-04: mapa de elementos das fontes que aparecem nesta pagina (do tema ou padrao).
+        $elements = [];
         if ($annotate) {
             $all = $header . $main . $footer;
-            foreach ($defaults as $key => $raw) {
-                if (($sources[$key] ?? '') === 'default' && str_contains($all, '<!--kz:b:' . $key . '-->')) $used[$key] = $raw;
+            foreach (self::THEME_TEMPLATE_KEYS as $key) {
+                if (!str_contains($all, '<!--kz:b:' . $key . '-->')) continue;
+                $own = ($sources[$key] ?? '') === 'theme';
+                if (!$own && isset($defaults[$key])) $used[$key] = $defaults[$key];
+                $source = $own ? ($safe[$key . '.twig'] ?? null) : ($defaults[$key] ?? null);
+                $entry = is_string($source) ? ($annotated[$key . ':' . md5($source)] ?? null) : null;
+                if ($entry !== null && $entry[1] !== null) $elements[$key] = $entry[1];
             }
         }
-        return ['header' => $header, 'main' => $main, 'footer' => $footer, 'errors' => $errors, 'fallbacks' => $fallbacks, 'sources' => $sources, 'defaults' => $used];
+        return ['header' => $header, 'main' => $main, 'footer' => $footer, 'errors' => $errors, 'fallbacks' => $fallbacks, 'sources' => $sources, 'defaults' => $used, 'elements' => $elements];
     }
 
     /** Mark only HTML fragments produced by trusted renderers/sanitizers; raw filter stays unavailable to theme source.

@@ -1,5 +1,16 @@
 # Changelog
 
+## KZ-04 — KAZEditor-Theme: selecionar um elemento dentro do trecho (2026-11-12)
+- ADR 0086: clicar em um título, parágrafo, link ou botão da página do rascunho seleciona **aquele elemento** (contorno próprio e caminho clicável no painel **Trecho**). O painel **Estrutura** continua selecionando trechos; `Esc` solta primeiro o elemento, depois o trecho.
+- **Texto fixo editável no painel:** o campo **Texto** reescreve só aquele texto em `templates[chave]`; o resto do código fica byte a byte igual. O que é digitado é sempre texto: `<`, `>`, `&` e `{` viram entidades, nunca HTML nem Twig.
+- **Texto que vem de dado** mostra a expressão de origem (`{{ heading_title }}`) e não é editado ali. Elemento dentro de laço avisa quantas vezes aparece. Trecho padrão do sistema pede **Personalizar este trecho** antes de editar.
+- **Ver no código** leva à tag do elemento no código do trecho. Com o trecho inteiro selecionado, o painel lista os textos fixos dele (caminho por teclado).
+- Nova classe pura `Theme\ThemeSourceMap` (mapa de elementos de uma fonte Twig). `Twig::renderThemePage()` com `$annotate` passa a escrever `data-kz-el="CHAVE:N"` nas tags das fontes e a devolver `elements`; a anotação é descartada se mudar os tokens Twig da fonte. `design/theme.canvas` devolve `elements`. Catalog, prévia isolada e site publicado não recebem âncoras.
+- Revisão documentada da ADR 0084, que havia recusado atributos `data-*`: agora a anotação é feita na fonte (não na saída) e os comentários continuam marcando os trechos. Motivos na ADR 0086.
+- **Correção com efeito em sites publicados:** em `catalog/view/css/theme.css`, `--accent` passa a ser resolvido no `body` e segue a cor **Primária** do tema (antes ficava sempre `#6d28d9`; achado da ADR 0085). Sites nos templates padrão com outra cor Primária mudam de cor em botões, links e destaques. `--bg`/Superfície tem o mesmo defeito e **não** foi alterado.
+- Dados salvos iguais: nenhum controle novo tem `name`; sem tabela, coluna, migration, rota, dependência ou entrada nova em `design/theme.canvas`.
+- Validação local: PHPUnit `OK (99 tests, 4184 assertions)` em PHP 8.2.32 e 8.3.32 (13 testes novos em `KazElementSelectTest`; 3 de `KazPointEditTest` ajustados), PHPStan nível 2 sem erros, `php -l`, `node --check`, os três `tools/verify-*.sh` e `lychee 0.15.0 --offline` limpos; fluxo conferido em Chromium headless nos seis pacotes de `docs/temas/` (mouse, teclado e toque). Sem banco, sem sessão real de admin, sem Firefox/Safari.
+
 ## KZ-03 — KAZEditor-Theme: tokens ao vivo (2026-11-12)
 - ADR 0085: o painel direito do módulo **Página** ganha a aba **Design**. Cores do tema, os 22 tokens (tipografia, espaçamento e forma, cores claro/escuro) e as variáveis que o próprio tema declara são editados ao lado da página; a mudança aparece na hora e o render do servidor confirma em seguida.
 - **Variáveis deste tema:** nova classe pura `Theme\ThemeLiveTokens` lê os `<style>` das fontes do tema e oferece controle para cada variável com cor `#rrggbb` ou tamanho em `px`. Mudar um controle reescreve só aquele valor em `templates[chave]`. É o que faz a aba funcionar nos pacotes desenhados (`Atlas-Studio`, `Atlas-Studio-3D`, `David-Creator`, `David-Universe-3D`), que não leem os tokens do sistema.

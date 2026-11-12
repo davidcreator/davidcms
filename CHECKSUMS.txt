@@ -7,13 +7,13 @@ cfda3b8a  a80e2939a6287bdc8ef123d0638adb7107a725315c33d367ad97befef97d7fe2  8247
 1610b8dd  9f5678325665b8751e3bfafc64be3cba7ccf5686bb25cd302ad3c275c443811c  2121  CONTRIBUTING.md
 956a0f9c  77f0fd12e9f39ced35111bcf16802a5a5c2f08722fdb30b38c401898cfa55aba  14181  README.md
 54e8d62d  5019e3c67f81e5d9c21b0d60fe5e8566b2ce3bcd76248fbeab5eb404bce9065c  5387  agents-ia/decisoes/0081-dependencias-node-em-system-storage-e-ci.md
-61459e43  10c67318c5ff71bd5ab7b34f959bc1844ea5d4218b10547ab7f9983e191e80c4  4493  agents-ia/decisoes/README.md
+5c286d3c  b5354c5cc3f2ce382c6d091559fbae77ce9e3a6754919a3cc32148e7150d7086  4710  agents-ia/decisoes/README.md
 12feea24  b6d93cb1839df0c424777ac809ffeb7b87fc94852ebaea6549f3456bbaa78610  7050  agents-ia/regras/00-contexto-global.md
 8ecb0847  0d4b0a10d40d84a9582064e295a316610876ae987353966f95e3583964eaeb39  4792  agents-ia/regras/02-padroes-de-codigo.md
 39e1dff4  337fd885ee97e0c1321169076eeedaa4d2b92bded2268de9c465d4f7b164319b  43279  dev/system/library/blog/block_document.php
 7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
 fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
-84d1696c  c13224aa6ff81794816fed5d0bf46fe68918272190372a1429579336dad8fc88  22801  docs/CHANGELOG.md
+87a6d17d  4722dd20103ff16fec693d4c234c5852b86de4652f3b57956d3ba113ba1c957e  25339  docs/CHANGELOG.md
 bb737e44  5e2277cfe87917649e2c8a2443727b1b59f822c8f226220eedabed5d1bd4a935  16180  docs/Estrutura-de-Pastas.md
 8cf915e5  7e59282a72e074a6aa6a909b482fc87696f25e32c1c67699e1cc8ccee6f46fd4  10077  docs/fases/f11/F11-01-CI-e-Dependencias.md
 945670b3  1ee53b4a8f5978afe13f260d8eb425a21f537d2df2d6b8df0ca65e60b5d6cf69  7884  docs/fases/f11/F11-02-Verificacao-Dependencias.md

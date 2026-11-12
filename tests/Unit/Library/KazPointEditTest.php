@@ -14,6 +14,9 @@ use Reamur\System\Library\Theme\ThemePackage;
 final class KazPointEditTest extends TestCase {
     private const MARKER = '/<!--kz:([be]):([a-z0-9_\/-]+)-->/';
 
+    /** KZ-04 (ADR 0086): o modo canvas tambem ancora cada elemento a sua fonte. */
+    private const ANCHOR = '/ data-kz-el="[a-z0-9_\/-]+:\d+"/';
+
     private function twig(): Twig {
         return new Twig(DIR_TEMPLATE, false);
     }
@@ -43,8 +46,8 @@ final class KazPointEditTest extends TestCase {
             $html = $this->html($marked);
 
             self::assertSame([], $marked['errors'], $route);
-            // Sem os marcadores, a pagina e byte a byte a mesma.
-            self::assertSame($this->html($plain), preg_replace(self::MARKER, '', $html), $route);
+            // Sem os marcadores e as ancoras de elemento, a pagina e byte a byte a mesma.
+            self::assertSame($this->html($plain), preg_replace([self::MARKER, self::ANCHOR], '', $html), $route);
 
             preg_match_all(self::MARKER, $html, $found, PREG_SET_ORDER);
             self::assertNotEmpty($found, $route);
@@ -77,7 +80,7 @@ final class KazPointEditTest extends TestCase {
             (string)file_get_contents(DIR_SYSTEM . '../catalog/view/template/partial/services.twig'),
             $page['defaults']['partial/services']
         );
-        self::assertStringContainsString('<!--kz:b:partial/about--><section id="about">', $this->html($page));
+        self::assertStringContainsString('<!--kz:b:partial/about--><section data-kz-el="partial/about:0" id="about">', $this->html($page));
     }
 
     public function testDefaultSourceRendersTheSamePageWhenAdoptedByTheTheme(): void {
@@ -106,7 +109,7 @@ final class KazPointEditTest extends TestCase {
         $page = $this->twig()->renderThemePage('common/home', ['partial/about' => $source], $context, [], [], true);
 
         // Dado da pagina passa pelo autoescape: nunca vira um marcador.
-        self::assertStringContainsString('<h2>&lt;!--kz:b:common/footer--&gt;</h2>', $this->html($page));
+        self::assertStringContainsString('<h2 data-kz-el="partial/about:1">&lt;!--kz:b:common/footer--&gt;</h2>', $this->html($page));
         self::assertSame(1, substr_count($this->html($page), '<!--kz:b:common/footer-->'));
     }
 

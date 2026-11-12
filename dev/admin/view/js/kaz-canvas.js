@@ -81,6 +81,9 @@
     'line-height', 'border-top-left-radius', 'border-bottom-right-radius', 'border-top-width', 'box-shadow',
     'padding-top', 'padding-left', 'margin-top', 'margin-bottom', 'gap', 'max-width', 'width'];
   var PROBE_SAMPLE = 3000;
+  /* KZ-04 (ADR 0086): elemento dentro de um trecho. */
+  var EL_ATTR = 'data-kz-el', EL_REF = /^([a-z0-9_\/-]{1,64}):(\d{1,5})$/;
+  var TEXT_MAX = 2000, SOURCE_MAX = 131072, TEXT_LIST_MAX = 80, WS = ' \t\r\n\f';
 
   var view = { x: PAD, y: PAD + LABEL_H, k: 1 };
   var frames = {};          // id -> { el, iframe, label, device, on, height }
@@ -107,6 +110,10 @@
   var probeRun = 0;         // cancela uma medicao em andamento
   var designSig = '';       // estrutura atual da aba Design
   var touched = 0;          // ultima vez que um controle da aba Design mudou
+  var elements = {};        // chave -> { sig, items } (mapa de elementos, do servidor)
+  var picked = null;        // elemento selecionado: { key, n, inst, tag, sig }
+  var hoverEl = null;       // elemento sob o ponteiro: { key, n, inst }
+  var liveText = null;      // texto digitado que o servidor ainda nao devolveu: { key, n, text }
 
   function label(key, fallback) {
     var v = config.labels[key];
@@ -181,6 +188,18 @@
       selectBox.appendChild(selectTag);
       body.appendChild(selectBox);
 
+      var elHoverBox = document.createElement('div');
+      elHoverBox.className = 'kaz-canvas__mark kaz-canvas__mark--elhover';
+      elHoverBox.hidden = true;
+      body.appendChild(elHoverBox);
+      var elBox = document.createElement('div');
+      elBox.className = 'kaz-canvas__mark kaz-canvas__mark--el';
+      elBox.hidden = true;
+      var elTag = document.createElement('span');
+      elTag.className = 'kaz-canvas__marktag kaz-canvas__marktag--el';
+      elBox.appendChild(elTag);
+      body.appendChild(elBox);
+
       var shield = document.createElement('div');
       shield.className = 'kaz-canvas__shield';
       body.appendChild(shield);
@@ -189,6 +208,7 @@
 
       var f = {
         el: el, body: body, iframe: iframe, cap: cap, hoverBox: hoverBox, selectBox: selectBox, selectTag: selectTag,
+        elHoverBox: elHoverBox, elBox: elBox, elTag: elTag,
         device: { id: d.id, label: String(d.label || d.id), w: w, h: h }, on: off.indexOf(d.id) === -1, height: h, regions: []
       };
       frames[d.id] = f;
@@ -239,6 +259,7 @@
     f.body.style.height = f.height + 'px';
     paintCaption(f);
     readRegions(f, doc);
+    if (liveText) setElementText(doc, liveText.key, liveText.n, liveText.text);
     paintMarks();
     paintTree();
     paintInspector();
@@ -325,7 +346,11 @@
       placeMark(f.hoverBox, hovered && hovered !== selected ? regionOf(f, hovered) : null);
       placeMark(f.selectBox, selected ? regionOf(f, selected) : null);
       f.selectTag.textContent = selected ? partLabel(keyOf(selected)) : '';
+      placeMark(f.elHoverBox, hoverEl && !sameElement(hoverEl, picked) ? elementRect(f, hoverEl) : null);
+      placeMark(f.elBox, picked ? elementRect(f, picked) : null);
+      f.elTag.textContent = picked ? '<' + picked.tag + '>' : '';
     });
+    root.setAttribute('data-kaz-canvas-element', picked ? '1' : '0');
     if (treeEl) {
       var items = treeEl.querySelectorAll('[data-kaz-canvas-uid]');
       for (var i = 0; i < items.length; i++) {
@@ -342,6 +367,7 @@
   }
   function select(uid, reveal) {
     selected = uid || '';
+    if (picked && picked.key !== keyOf(selected)) picked = null;
     root.setAttribute('data-kaz-canvas-selection', selected ? '1' : '0');
     paintMarks();
     paintInspector();
@@ -358,6 +384,331 @@
     apply();
   }
 
+  /* ---------------- KZ-04: elemento dentro do trecho ---------------- */
+  var crcTable = null;
+  /** CRC-32 dos bytes UTF-8 + tamanho em unidades UTF-16: igual a ThemeSourceMap::signature(). */
+  function sigOf(text) {
+    var i, j, c, bytes;
+    if (!crcTable) {
+      crcTable = [];
+      for (i = 0; i < 256; i++) { c = i; for (j = 0; j < 8; j++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); crcTable[i] = c >>> 0; }
+    }
+    text = String(text);
+    try { bytes = new window.TextEncoder().encode(text); } catch (e) { return ''; }
+    c = 0xFFFFFFFF;
+    for (i = 0; i < bytes.length; i++) c = crcTable[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return ('0000000' + ((c ^ 0xFFFFFFFF) >>> 0).toString(16)).slice(-8) + ':' + text.length;
+  }
+  function frameDoc(f) {
+    var doc = null;
+    try { doc = f.iframe.contentDocument; } catch (e) { doc = null; }
+    return doc && doc.documentElement ? doc : null;
+  }
+  function elementItem(key, n) {
+    var m = elements[key];
+    return m && m.items[n] ? m.items[n] : null;
+  }
+  /** Todas as ocorrencias de um elemento do codigo na pagina (um laco gera varias). */
+  function elementNodes(doc, key, n) {
+    if (!doc || !EL_REF.test(key + ':' + n)) return [];
+    return doc.querySelectorAll('[' + EL_ATTR + '="' + key + ':' + n + '"]');
+  }
+  /** Elemento mapeado mais proximo, subindo a partir de um no. Confere chave, indice e tag. */
+  function elementRef(node) {
+    while (node && node.nodeType === 1) {
+      var m = EL_REF.exec(node.getAttribute(EL_ATTR) || '');
+      if (m) {
+        var it = elementItem(m[1], Number(m[2]));
+        if (it && it[0] === String(node.localName || '').toLowerCase()) return { key: m[1], n: Number(m[2]), node: node };
+      }
+      node = node.parentElement;
+    }
+    return null;
+  }
+  function instanceOf(doc, ref) {
+    return Math.max(0, Array.prototype.indexOf.call(elementNodes(doc, ref.key, ref.n), ref.node));
+  }
+  /** Elemento sob um ponto do mundo. Somente leitura do documento do quadro. */
+  function elementAt(wx, wy) {
+    var out = null;
+    visibleFrames().forEach(function (f) {
+      if (out || wx < f.left || wx > f.left + f.device.w || wy < 0 || wy > f.height) return;
+      var doc = frameDoc(f), node = null;
+      if (!doc || typeof doc.elementFromPoint !== 'function') return;
+      try { node = doc.elementFromPoint(wx - f.left, wy); } catch (e) { node = null; }
+      var ref = elementRef(node);
+      if (ref) out = { key: ref.key, n: ref.n, inst: instanceOf(doc, ref), tag: elementItem(ref.key, ref.n)[0] };
+    });
+    return out;
+  }
+  function sameElement(a, b) { return !!a && !!b && a.key === b.key && a.n === b.n && a.inst === b.inst; }
+  function elementNode(f, sel) {
+    var list = elementNodes(frameDoc(f), sel.key, sel.n);
+    return list[sel.inst] || list[0] || null;
+  }
+  function elementRect(f, sel) {
+    var node = elementNode(f, sel);
+    if (!node) return null;
+    var b = node.getBoundingClientRect(), x = Math.max(0, b.left), y = Math.max(0, b.top);
+    var r = { x: x, y: y, w: Math.min(f.device.w, b.right) - x, h: b.bottom - y, shown: false };
+    r.shown = r.w >= 1 && r.h >= 1;
+    return r;
+  }
+  function setHoverElement(sel) {
+    if (sameElement(sel, hoverEl) || (!sel && !hoverEl)) return;
+    hoverEl = sel;
+    paintMarks();
+  }
+  /** Trecho (uid) da chave do elemento que contem o ponto; senao o primeiro daquela chave. */
+  function regionFor(key, wx, wy) {
+    var inside = '', first = '';
+    visibleFrames().forEach(function (f) {
+      var lx = wx - f.left;
+      f.regions.forEach(function (r) {
+        if (r.key !== key) return;
+        if (!first) first = r.uid;
+        if (!inside && r.shown && lx >= r.x && lx <= r.x + r.w && wy >= r.y && wy <= r.y + r.h) inside = r.uid;
+      });
+    });
+    return inside || first;
+  }
+  /** Escolhe um elemento (ou nenhum) e o trecho que o contem. */
+  function pick(sel, uid, reveal) {
+    picked = sel && elementItem(sel.key, sel.n) ? { key: sel.key, n: sel.n, inst: sel.inst || 0, tag: elementItem(sel.key, sel.n)[0], sig: elements[sel.key].sig } : null;
+    if (picked && keyOf(uid) !== picked.key) uid = regionFor(picked.key, -1, -1) || uid;
+    if (picked && keyOf(uid) !== picked.key) picked = null;
+    select(uid, false);
+    /* Nova escolha: o painel volta ao topo, onde fica o bloco do elemento. */
+    var side = inspectorEl && typeof inspectorEl.closest === 'function' ? inspectorEl.closest('.kaz-canvas__side') : null;
+    if (side) side.scrollTop = 0;
+    if (reveal && picked) revealElement();
+  }
+  function revealElement() {
+    var f = leadFrame(), r = f && picked ? elementRect(f, picked) : null;
+    if (!f || !r || !r.shown) return;
+    var vr = viewport.getBoundingClientRect();
+    var top = view.y + r.y * view.k, bottom = top + r.h * view.k;
+    if (top >= 40 && bottom <= vr.height - 20) return;
+    view.y = Math.round(Math.max(72, vr.height / 3) - r.y * view.k);
+    apply();
+  }
+  /** Indices dos elementos da MESMA fonte que contem o escolhido, de fora para dentro. */
+  function elementChain(sel) {
+    var f = leadFrame(), node = f ? elementNode(f, sel) : null, out = [sel.n];
+    node = node ? node.parentElement : null;
+    while (node && out.length < 32) {
+      var ref = elementRef(node);
+      if (!ref) break;
+      if (ref.key === sel.key && out[0] !== ref.n) out.unshift(ref.n);
+      node = ref.node.parentElement;
+    }
+    return out;
+  }
+  /** Fonte em que as posicoes do mapa valem: o campo do tema ou a fonte padrao. */
+  function elementSource(key) {
+    var field = sourceField(key);
+    if (field && field.value !== '') return field.value;
+    return typeof defaults[key] === 'string' ? defaults[key] : '';
+  }
+  function mapFresh(key) {
+    var m = elements[key];
+    return !!m && m.sig !== '' && m.sig === sigOf(elementSource(key));
+  }
+  function trimWs(text) {
+    var a = 0, b = text.length;
+    while (a < b && WS.indexOf(text.charAt(a)) !== -1) a++;
+    while (b > a && WS.indexOf(text.charAt(b - 1)) !== -1) b--;
+    return { lead: text.slice(0, a), body: text.slice(a, b), trail: text.slice(b) };
+  }
+  /** Texto do codigo -> texto como se le na pagina (entidades resolvidas, espacos juntos). */
+  function decodeText(raw) {
+    var box = document.createElement('textarea');
+    box.innerHTML = String(raw);
+    return trimWs(box.value.replace(/[ \t\r\n\f]+/g, ' ')).body;
+  }
+  /**
+   * Texto digitado -> texto seguro para o codigo. Nunca vira tag nem Twig, e
+   * nao esbarra nos padroes que a validacao do tema recusa.
+   */
+  function encodeText(value) {
+    var v = String(value).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').slice(0, TEXT_MAX);
+    v = v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\{/g, '&#123;');
+    if (/\b(on[a-z]+|srcdoc|formaction)\s*=/i.test(v)) v = v.replace(/=/g, '&#61;');
+    if (/\|\s*raw\b/i.test(v)) v = v.replace(/\|/g, '&#124;');
+    return v.replace(/(javascript\s*):/gi, '$1&#58;');
+  }
+  /** Previa imediata: troca so o texto das ocorrencias do elemento em um documento. */
+  function setElementText(doc, key, n, text) {
+    var list = elementNodes(doc, key, n);
+    for (var i = 0; i < list.length; i++) {
+      /* So folhas: um elemento com filhos nunca e sobrescrito. */
+      if (list[i].firstElementChild) continue;
+      list[i].textContent = text;
+    }
+  }
+  /** O campo "Texto" mudou: reescreve so aquele texto na fonte do tema. */
+  function onTextInput(t) {
+    if (!picked) return;
+    var key = picked.key, n = picked.n, map = elements[key], it = elementItem(key, n), field = sourceField(key);
+    var warn = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-el-warn]') : null;
+    if (!map || !it || !field || field.value === '' || (it[1] !== 'fixed' && it[1] !== 'empty') || it[4] < 0) return;
+    var src = field.value;
+    if (map.sig !== sigOf(src)) { if (warn) { warn.hidden = false; warn.textContent = label('el_stale', ''); } return; }
+    if (warn) warn.hidden = true;
+    /* As pontas digitadas nao entram: o recuo original do codigo e mantido
+       e um espaco no fim nao se acumula a cada tecla. */
+    var parts = trimWs(src.slice(it[4], it[5])), enc = trimWs(encodeText(t.value)).body;
+    var next = src.slice(0, it[4]) + parts.lead + enc + parts.trail + src.slice(it[5]);
+    if (next.length > SOURCE_MAX) return;
+    var delta = next.length - src.length;
+    /* O mapa local acompanha a escrita: a proxima tecla nao espera o servidor. */
+    for (var j = n + 1; j < map.items.length; j++) {
+      for (var k = 2; k <= 5; k++) if (map.items[j][k] >= 0) map.items[j][k] += delta;
+    }
+    it[5] += delta;
+    it[1] = trimWs(enc).body === '' ? 'empty' : 'fixed';
+    map.sig = sigOf(next);
+    picked.sig = map.sig;
+    liveText = { key: key, n: n, text: String(t.value).slice(0, TEXT_MAX) };
+    visibleFrames().forEach(function (f) { setElementText(frameDoc(f), key, n, liveText.text); });
+    var code = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-code]') : null;
+    if (code && code.getAttribute('data-kaz-canvas-code') === key) code.value = next;
+    writeSource(key, next);
+    paintMarks();
+  }
+  /** Mostra, no codigo do trecho, a tag de abertura do elemento escolhido. */
+  function showInCode() {
+    var code = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-code]') : null;
+    var it = picked ? elementItem(picked.key, picked.n) : null;
+    if (!code || !it || !mapFresh(picked.key) || code.value !== elementSource(picked.key)) return;
+    var before = code.value.slice(0, it[2]), line = before.split('\n').length - 1, col = before.length - before.lastIndexOf('\n') - 1;
+    var cs = window.getComputedStyle(code), lh = parseFloat(cs.lineHeight) || 16, fs = parseFloat(cs.fontSize) || 12;
+    code.focus();
+    try { code.setSelectionRange(it[2], it[3]); } catch (e) { /* campo sem selecao: so o foco */ }
+    code.scrollTop = Math.max(0, line * lh - code.clientHeight / 3);
+    code.scrollLeft = Math.max(0, col * fs * 0.6 - code.clientWidth / 3);
+    if (typeof code.scrollIntoView === 'function') code.scrollIntoView({ block: 'nearest' });
+  }
+  /** Bloco "Elemento" do painel do trecho. */
+  function paintElement(key, host) {
+    var it = elementItem(picked.key, picked.n);
+    if (!it) return;
+    var field = sourceField(key), own = !!(field && field.value !== ''), fresh = mapFresh(key);
+    host.appendChild(make('h5', 'kaz-canvas__sidesub', label('el_title', '')));
+
+    var crumbs = make('nav', 'kaz-canvas__crumbs');
+    crumbs.setAttribute('aria-label', label('el_path', ''));
+    var chain = elementChain(picked), from = Math.max(0, chain.length - 5);
+    if (from > 0) crumbs.appendChild(make('span', 'kaz-canvas__crumbsep', '…'));
+    for (var i = from; i < chain.length; i++) {
+      var ci = elementItem(key, chain[i]);
+      if (!ci) continue;
+      if (i > from) crumbs.appendChild(make('span', 'kaz-canvas__crumbsep', '›'));
+      var b = make('button', 'kaz-canvas__crumb', ci[0]);
+      b.type = 'button';
+      b.setAttribute('data-kaz-canvas-el', String(chain[i]));
+      if (chain[i] === picked.n) b.setAttribute('aria-current', 'true');
+      crumbs.appendChild(b);
+    }
+    host.appendChild(crumbs);
+
+    var f = leadFrame(), count = f ? elementNodes(frameDoc(f), key, picked.n).length : 0;
+    if (count > 1) host.appendChild(make('p', 'kaz-canvas__sidehelp', label('el_repeats', '').replace('%s', String(count))));
+
+    var kind = it[1];
+    if ((kind === 'fixed' || kind === 'empty') && it[4] >= 0) {
+      var id = 'kaz-canvas-el-text';
+      var lab = make('label', 'kaz-canvas__fieldname', label('el_text', ''));
+      lab.setAttribute('for', id);
+      host.appendChild(lab);
+      var box = make('textarea', 'kaz-canvas__text');
+      box.id = id;
+      box.rows = 3;
+      box.maxLength = TEXT_MAX;
+      box.setAttribute('data-kaz-canvas-text', key + ':' + picked.n);
+      box.setAttribute('placeholder', label('el_empty', ''));
+      box.value = fresh ? decodeText(elementSource(key).slice(it[4], it[5])) : '';
+      box.readOnly = !own || !fresh;
+      host.appendChild(box);
+      var warn = make('p', 'kaz-canvas__sidehelp kaz-canvas__sidehelp--warn', '');
+      warn.setAttribute('data-kaz-canvas-el-warn', '');
+      warn.setAttribute('role', 'status');
+      warn.hidden = fresh;
+      if (!fresh) warn.textContent = label('el_stale', '');
+      host.appendChild(warn);
+      host.appendChild(make('p', 'kaz-canvas__sidehelp', label(own ? 'el_text_help' : 'el_need_customize', '')));
+    } else if (kind === 'variable') {
+      var p = make('p', 'kaz-canvas__sidehelp', label('el_variable', '') + ' ');
+      p.appendChild(make('code', 'kaz-canvas__expr', '{{ ' + String(it[6] || '') + ' }}'));
+      host.appendChild(p);
+      host.appendChild(make('p', 'kaz-canvas__sidehelp', label('el_variable_help', '')));
+    } else {
+      host.appendChild(make('p', 'kaz-canvas__sidehelp', label(kind === 'mixed' ? 'el_mixed' : (kind === 'void' ? 'el_void' : 'el_group'), '')));
+    }
+
+    var bar = make('div', 'kaz-canvas__actions');
+    var show = make('button', 'kaz-btn kaz-btn--ghost', label('el_show_code', ''));
+    show.type = 'button';
+    show.setAttribute('data-kaz-canvas-el-act', 'code');
+    show.disabled = !fresh || !field;
+    bar.appendChild(show);
+    var whole = make('button', 'kaz-btn kaz-btn--ghost', label('el_whole_piece', ''));
+    whole.type = 'button';
+    whole.setAttribute('data-kaz-canvas-el-act', 'clear');
+    bar.appendChild(whole);
+    host.appendChild(bar);
+  }
+  /** Lista "Textos deste trecho": caminho por teclado ate cada texto fixo. */
+  function paintTextList(key, host) {
+    var map = elements[key];
+    if (!map || !mapFresh(key)) return;
+    var src = elementSource(key), rows = [], total = 0;
+    map.items.forEach(function (it, n) {
+      if (it[1] !== 'fixed' || it[4] < 0) return;
+      total++;
+      if (rows.length < TEXT_LIST_MAX) rows.push([n, it[0], decodeText(src.slice(it[4], it[5]))]);
+    });
+    if (!rows.length) return;
+    host.appendChild(make('h5', 'kaz-canvas__sidesub', label('el_texts', '')));
+    host.appendChild(make('p', 'kaz-canvas__sidehelp', label('el_texts_help', '')));
+    var ul = make('ul', 'kaz-canvas__textlist');
+    rows.forEach(function (r) {
+      var li = make('li', ''), b = make('button', 'kaz-canvas__textrow', '');
+      b.type = 'button';
+      b.setAttribute('data-kaz-canvas-el', String(r[0]));
+      b.appendChild(make('code', 'kaz-canvas__texttag', r[1]));
+      b.appendChild(make('span', 'kaz-canvas__textsnip', r[2].length > 90 ? r[2].slice(0, 90) + '…' : r[2]));
+      li.appendChild(b);
+      ul.appendChild(li);
+    });
+    host.appendChild(ul);
+    if (total > rows.length) host.appendChild(make('p', 'kaz-canvas__sidehelp', label('el_more', '').replace('%s', String(total - rows.length))));
+  }
+
+  /** Bloco do elemento (ou a lista de textos), em um espaco proprio do painel. */
+  function paintElementBlock() {
+    var host = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-elbox]') : null, key = keyOf(selected);
+    if (!host) return;
+    clear(host);
+    if (!key) return;
+    if (picked && picked.key === key) paintElement(key, host);
+    else paintTextList(key, host);
+  }
+  /** Roda fn sem deixar o controle em uso (anchor) sair do lugar na rolagem do painel. */
+  function steady(anchor, fn) {
+    var before = anchor ? anchor.getBoundingClientRect().top : 0;
+    fn();
+    var box = anchor && inspectorEl && typeof inspectorEl.closest === 'function' ? inspectorEl.closest('.kaz-canvas__side') : null;
+    if (box) box.scrollTop += anchor.getBoundingClientRect().top - before;
+  }
+  /** O campo "Texto" esta em uso e o painel nao e reconstruido: so o aviso acompanha o mapa. */
+  function syncElement() {
+    var warn = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-el-warn]') : null;
+    if (!warn || !picked) return;
+    var fresh = mapFresh(picked.key);
+    warn.hidden = fresh;
+    if (!fresh) warn.textContent = label('el_stale', '');
+  }
   /* ---------------- KZ-02: estrutura ---------------- */
   function make(tag, cls, text) {
     var el = document.createElement(tag);
@@ -461,6 +812,14 @@
     /* Digitando no codigo do mesmo trecho: nao reconstruir (o foco e o cursor ficam). */
     if (keep && document.activeElement === keep && keep.getAttribute('data-kaz-canvas-code') === key) {
       paintSizes();
+      steady(keep, paintElementBlock);
+      return;
+    }
+    /* Digitando no texto do mesmo elemento: idem. */
+    var typing = inspectorEl.querySelector('[data-kaz-canvas-text]');
+    if (typing && document.activeElement === typing && picked && typing.getAttribute('data-kaz-canvas-text') === picked.key + ':' + picked.n) {
+      paintSizes();
+      syncElement();
       return;
     }
     clear(inspectorEl);
@@ -474,6 +833,11 @@
     head.appendChild(make('span', 'kaz-canvas__badge' + (own ? ' kaz-canvas__badge--theme' : ''), label(own ? 'from_theme' : 'from_default', '')));
     inspectorEl.appendChild(head);
     if (!own) inspectorEl.appendChild(make('p', 'kaz-canvas__sidehelp', label('from_default_help', '')));
+
+    var elbox = make('div', 'kaz-canvas__elbox');
+    elbox.setAttribute('data-kaz-canvas-elbox', '');
+    inspectorEl.appendChild(elbox);
+    paintElementBlock();
 
     var sid = sectionId(key), row = isHome() ? sectionRow(sid) : null;
     if (row) {
@@ -1051,6 +1415,32 @@
         styleVars.push({ template: v.template, name: String(v.name), index: Number(v.index) || 0, value: v.value, type: v.type, scope: String(v.scope || '') });
       });
       contrast = Array.isArray(json.contrast) ? json.contrast.filter(function (p) { return p && typeof p.code === 'string'; }) : [];
+      /* KZ-04: mapa de elementos. Se o usuario digitou depois do pedido, o mapa
+         local (ja ajustado) continua valendo ate o servidor alcancar. */
+      var maps = {};
+      if (json.elements && typeof json.elements === 'object') Object.keys(json.elements).forEach(function (key) {
+        var m = json.elements[key];
+        if (!MARK.test('kz:b:' + key) || !m || typeof m.sig !== 'string' || !Array.isArray(m.items)) return;
+        var items = m.items.filter(function (it) {
+          return Array.isArray(it) && it.length >= 7 && typeof it[0] === 'string' && typeof it[1] === 'string' &&
+            [2, 3, 4, 5].every(function (k) { return typeof it[k] === 'number' && isFinite(it[k]); });
+        });
+        if (items.length !== m.items.length) return;
+        var now = sigOf(elementSource(key)), old = elements[key];
+        maps[key] = (old && old.sig === now && m.sig !== now) ? old : { sig: m.sig, items: items };
+      });
+      elements = maps;
+      if (liveText) {
+        var served = json.elements && json.elements[liveText.key], local = elements[liveText.key];
+        if (!local || (served && served.sig === local.sig)) liveText = null;
+      }
+      if (picked) {
+        /* A fonte mudou por outro caminho (codigo, Templates, voltar ao padrao):
+           os numeros dos elementos podem ter mudado, entao a escolha e solta. */
+        var still = elementItem(picked.key, picked.n), pm = elements[picked.key];
+        if (!still || still[0] !== picked.tag || !pm || pm.sig !== picked.sig) picked = null;
+      }
+      hoverEl = null;
       varsKnown = true;
       probeRun++;
       setDocument(json.html);
@@ -1096,7 +1486,7 @@
   root.addEventListener('click', function (ev) {
     var t = ev.target && ev.target.closest ? ev.target.closest(
       '[data-kaz-canvas-act],[data-kaz-canvas-device],[data-kaz-canvas-panel],[data-kaz-canvas-uid],' +
-      '[data-kaz-canvas-tab],[data-kaz-canvas-scheme],' +
+      '[data-kaz-canvas-tab],[data-kaz-canvas-scheme],[data-kaz-canvas-el],[data-kaz-canvas-el-act],' +
       '[data-kaz-canvas-section],[data-kaz-canvas-show-section],[data-kaz-canvas-source]') : null;
     if (!t || !root.contains(t)) return;
     var panel = t.getAttribute('data-kaz-canvas-panel');
@@ -1120,10 +1510,32 @@
       paintPanels(); savePrefs(); refresh();
       return;
     }
+    var elAct = t.getAttribute('data-kaz-canvas-el-act');
+    if (elAct === 'code') { showInCode(); return; }
+    if (elAct === 'clear') { picked = null; select(selected, false); return; }
+    var elN = t.getAttribute('data-kaz-canvas-el');
+    if (elN !== null && selected) {
+      /* Caminho ou lista de textos: escolhe outro elemento da mesma fonte. */
+      var elKey = keyOf(selected), want = Number(elN), inst = 0, lead = leadFrame();
+      var cur = picked && lead ? elementNode(lead, picked) : null;
+      while (cur) {
+        var up = elementRef(cur);
+        if (!up) break;
+        if (up.key === elKey && up.n === want) { inst = instanceOf(frameDoc(lead), up); break; }
+        cur = up.node.parentElement;
+      }
+      pick({ key: elKey, n: want, inst: inst }, selected, true);
+      /* O foco segue: campo de texto editavel, senao o item atual do caminho. */
+      var again = inspectorEl ? (inspectorEl.querySelector('[data-kaz-canvas-text]:not([readonly])') ||
+        inspectorEl.querySelector('[data-kaz-canvas-el][aria-current="true"]')) : null;
+      if (again) again.focus();
+      return;
+    }
     var uid = t.getAttribute('data-kaz-canvas-uid');
     if (uid) {
-      /* Escolher na Estrutura e pedir para ver aquele trecho. */
+      /* Escolher na Estrutura e pedir para ver aquele trecho (inteiro). */
       if (tab !== 'piece') { tab = 'piece'; paintPanels(); savePrefs(); }
+      picked = null;
       select(uid, true);
       return;
     }
@@ -1175,6 +1587,7 @@
     var t = ev.target;
     if (!t || !t.getAttribute) return;
     if (designEl && designEl.contains(t)) { onDesignInput(t); return; }
+    if (t.getAttribute('data-kaz-canvas-text') !== null) { if (!t.readOnly) onTextInput(t); return; }
     var key = t.getAttribute('data-kaz-canvas-code');
     if (!key || t.readOnly) return;
     writeSource(key, t.value);
@@ -1202,7 +1615,7 @@
       if (t) setHover(t.getAttribute('data-kaz-canvas-uid'));
     });
   }
-  if (routeSel) routeSel.addEventListener('change', function () { savePrefs(); select('', false); refresh(); });
+  if (routeSel) routeSel.addEventListener('change', function () { savePrefs(); picked = null; liveText = null; select('', false); refresh(); });
   if (langSel) langSel.addEventListener('change', function () { refresh(); });
 
   /* ---------------- gestos: roda, arrasto, pinca, teclado ---------------- */
@@ -1245,12 +1658,13 @@
   viewport.addEventListener('pointermove', function (ev) {
     if (!pointers[ev.pointerId]) {
       /* Sem botao apertado: so aponta o trecho sob o ponteiro. */
-      if (ev.pointerType !== 'touch') { var w = worldPoint(ev); setHover(hitTest(w.x, w.y)); }
+      if (ev.pointerType !== 'touch') { var w = worldPoint(ev); setHover(hitTest(w.x, w.y)); setHoverElement(elementAt(w.x, w.y)); }
       return;
     }
     if (press && press.id === ev.pointerId && Math.hypot(ev.clientX - press.x, ev.clientY - press.y) > CLICK_SLOP) {
       press = null;
       setHover('');
+      setHoverElement(null);
       viewport.setAttribute('data-kaz-canvas-panning', '1');
     }
     pointers[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
@@ -1267,10 +1681,12 @@
     }
   });
   function release(ev) {
-    /* Soltou sem arrastar: e um clique. Seleciona o trecho (ou limpa, no vazio). */
+    /* Soltou sem arrastar: e um clique. Seleciona o elemento apontado e o
+       trecho que o contem (ou limpa, no vazio). */
     if (press && press.id === ev.pointerId && ev.type === 'pointerup') {
-      var w = worldPoint(ev);
-      select(hitTest(w.x, w.y), false);
+      var w = worldPoint(ev), hitEl = elementAt(w.x, w.y), uid = hitTest(w.x, w.y);
+      if (hitEl && keyOf(uid) !== hitEl.key) uid = regionFor(hitEl.key, w.x, w.y) || uid;
+      pick(hitEl, uid, false);
     }
     if (press && press.id === ev.pointerId) press = null;
     delete pointers[ev.pointerId];
@@ -1282,7 +1698,7 @@
     }
   }
   viewport.addEventListener('pointerup', release);
-  viewport.addEventListener('pointerleave', function () { if (!pointerCount()) setHover(''); });
+  viewport.addEventListener('pointerleave', function () { if (!pointerCount()) { setHover(''); setHoverElement(null); } });
   viewport.addEventListener('pointercancel', release);
 
   /* A captura de ponteiro entrega o duplo clique ao viewport: o quadro e
@@ -1312,6 +1728,7 @@
     else if (ev.key === 'PageUp' || (ev.key === ' ' && ev.shiftKey)) { view.y += viewport.clientHeight * 0.8; apply(); }
     else if (ev.key === 'Home') { view.y = PAD + LABEL_H; apply(); }
     else if (ev.key.toLowerCase() === 'r' && !ctrl) refresh();
+    else if (ev.key === 'Escape' && picked) { picked = null; select(selected, false); }
     else if (ev.key === 'Escape' && selected) select('', false);
     else used = false;
     if (used) { ev.preventDefault(); ev.stopPropagation(); }

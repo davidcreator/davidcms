@@ -378,7 +378,9 @@ class Theme extends \Reamur\System\Engine\Controller {
                  'select_hint','from_theme','from_default','from_default_help','customize','revert','revert_undo','code','code_help',
                  'open_templates','size','not_visible','section','section_up','section_down','section_hide','section_show','hidden_sections',
                  'form_invalid','design_general','design_theme_vars','design_theme_vars_help','design_colors','design_sizes','design_unused',
-                 'design_unused_help','design_dark_only','design_contrast','design_contrast_fail','design_no_vars','design_stale'] as $canvasKey) {
+                 'design_unused_help','design_dark_only','design_contrast','design_contrast_fail','design_no_vars','design_stale',
+                 'el_title','el_path','el_text','el_text_help','el_empty','el_variable','el_variable_help','el_mixed','el_group','el_void',
+                 'el_repeats','el_need_customize','el_stale','el_show_code','el_whole_piece','el_texts','el_texts_help','el_more'] as $canvasKey) {
             $canvasLabels[$canvasKey]=$this->language->get('text_canvas_'.$canvasKey);
         }
         // KZ-02 (ADR 0084): nome legivel de cada fonte allowlistada (rota ou parte).
@@ -406,7 +408,7 @@ class Theme extends \Reamur\System\Engine\Controller {
             $canvasTokens['pairs'][$canvasPair['code']]=str_starts_with($canvasPairName,'text_canvas_')?$canvasPair['code']:$canvasPairName;
         }
         $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels,'parts'=>$canvasParts,'tokens'=>$canvasTokens],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
-        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz03';
+        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz04';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-canvas.css?v=' . $canvasAssetV);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-canvas.js?v=' . $canvasAssetV);
 
@@ -928,6 +930,8 @@ class Theme extends \Reamur\System\Engine\Controller {
             'html'=>$html,'errors'=>$errors,'themed'=>$themed,'defaults'=>(object)($page['defaults']??[]),'bytes'=>strlen($html),
             'scheme'=>$scheme,'form_error'=>$source==='form'?'':(string)$built['error'],
             'style_vars'=>$live::styleVars((array)($draft['templates']??[])),'contrast'=>$contrast,
+            // KZ-04 (ADR 0086): mapa de elementos das fontes desta pagina.
+            'elements'=>(object)($page['elements']??[]),
         ],200,true);
     }
 

@@ -10,6 +10,11 @@
     --line: #e5e7eb;
     --radius: 10px;
 }
+/* --theme-primary chega no style do <body> (common/header.twig). Uma variavel
+   resolvida no :root nao enxerga um valor definido no <body>, entao --accent
+   ficava sempre no padrao. Redeclarada aqui, ela passa a seguir a cor Primaria
+   do tema; sem tema, o valor continua #6d28d9. */
+body { --accent: var(--theme-primary, #6d28d9); }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
