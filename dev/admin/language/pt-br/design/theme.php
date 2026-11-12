@@ -27,6 +27,7 @@ $_['error_permission'] = 'Você não tem permissão.';
 $_['error_csrf'] = 'Token de segurança inválido.';
 $_['error_validation'] = 'Revise os campos.';
 $_['error_template_source'] = 'Uma fonte contém uma construção bloqueada, caminho inválido ou excede o limite permitido. Nenhuma alteração foi salva.';
+$_['error_template_source_detail'] = 'Fonte %s, linha %d: %s';
 $_['text_template_editor'] = 'Código avançado dos templates Twig';
 $_['text_template_help'] = 'Salve o rascunho antes da prévia isolada. PHP, scripts, atributos de evento, frames embutidos, caminhos arbitrários, o filtro raw e a desativação do autoescape são bloqueados; use componentes e cenas aprovados e configuráveis.';
 $_['text_preview'] = 'Prévia isolada';

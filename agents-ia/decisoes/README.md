@@ -68,3 +68,4 @@ Copiar para o novo arquivo `NNNN-titulo-curto.md`:
 | [0084](0084-kazeditor-apontar-e-editar.md) | KAZEditor-Theme: apontar e editar (marcadores de origem, estrutura, trecho selecionado) | ✅ aceita | 2026-11-12 |
 | [0085](0085-kazeditor-tokens-ao-vivo.md) | KAZEditor-Theme: tokens ao vivo (aba Design, variáveis do tema, esquema claro/escuro, contraste) | ✅ aceita | 2026-11-12 |
 | [0086](0086-kazeditor-selecionar-elemento.md) | KAZEditor-Theme: selecionar um elemento dentro do trecho (âncoras por elemento, edição de texto fixo); `--accent` segue a cor Primária | ✅ aceita | 2026-11-12 |
+| [0087](0087-seguranca-acl-admin-e-sandbox-do-tema-publicado.md) | Segurança S1 + S2: a ACL do admin checa a rota que executa (`Action::parse()`); fonte de tema roda em Twig Sandbox também no site publicado (`ThemeSandbox`) | ✅ aceita | 2026-11-12 |

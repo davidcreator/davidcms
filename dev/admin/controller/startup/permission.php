@@ -44,29 +44,32 @@ class Permission extends \Reamur\System\Engine\Controller {
         if ($route === '') {
             $route = $this->queryValue('route');
         }
-        $route = (string)preg_replace('/[^a-zA-Z0-9_\/.|]/', '', $route);
 
         if ($route === '') {
             $route = (string)$this->config->get('action_default', 'common/dashboard');
         }
 
-        if (in_array($route, self::ALLOWED_ROUTES, true)) {
-            return;
-        }
-
+        // S1 (ADR 0087): a rota checada aqui é a MESMA que o dispatcher executa.
+        // Antes este arquivo limpava a rota por conta própria (cortava no
+        // primeiro '.') enquanto Action removia '..': 'user/us..er' era checada
+        // como 'user/us' (arquivo inexistente → liberada) e executada como
+        // 'user/user'. Agora as duas pontas leem a rota com Action::parse().
+        //
         // Granularidade base-route (Adendo F2-6 do ADR 0005): 'user/user.add|3',
         // 'user/user.delete' etc. herdam a ACL do arquivo 'user/user'. Um grant
         // cobre TODOS os métodos do controller — métodos com efeito colateral
         // verificam adicionalmente hasPermission('modify', ...).
-        $route = (string)(preg_split('/[.|]/', $route, 2)[0] ?? $route);
-        $route = (string)preg_replace('/[^a-zA-Z0-9_\/]/', '', $route);
+        $action = new \Reamur\System\Engine\Action($route);
+        $route  = $action->getRoute();
 
-        if ($route === '' || in_array($route, self::ALLOWED_ROUTES, true)) {
+        if (in_array($route, self::ALLOWED_ROUTES, true)) {
             return;
         }
 
-        // Rota inexistente NÃO é negação de permissão: deixa o dispatcher entregar o 404
-        if (!is_file(DIR_APPLICATION . 'controller/' . $route . '.php')) {
+        // Rota que o dispatcher NÃO consegue executar (vazia, malformada, sem
+        // arquivo, método '_privado') não é negação de permissão: ele entrega o
+        // 404. É seguro liberar aqui porque a pergunta é feita ao mesmo Action.
+        if (!$action->isCallable()) {
             return;
         }
 

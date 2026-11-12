@@ -207,6 +207,8 @@ Includes para seções reutilizáveis:
 
 ## 6. Filtros e funções úteis
 
+> Esta tabela vale para os **arquivos de template do sistema**. Fonte de tema editada no Admin (`design/theme`) aceita uma lista menor: veja "Política do sandbox para fonte de tema" no fim deste guia.
+
 | Twig | Resultado |
 | --- | --- |
 | `{{ title|upper }}`, `|lower`, `|capitalize` | Caixa do texto |
@@ -375,6 +377,24 @@ Erros comuns e mensagens-chave:
 
 ## F10-03 — Templates de tema
 
-O Admin pode propor fontes somente para chaves fixas allowlisted em `design/theme`, incluindo as views públicas de Home, Portfolio, Blog, Ferramentas, Contato, Orçamento, 404, CMS e seus partials. Os rascunhos ficam em `draft_config`; o Catalog lê somente `published_config`. `Twig::setThemeTemplates()` é opt-in no pré-action Catalog e adiciona um `ArrayLoader` antes do `FilesystemLoader` existente, mantendo fallback. A prévia usa `SandboxExtension`, contexto de amostra não persistente, CSP restritiva e iframe sandboxado.
+O Admin pode propor fontes somente para chaves fixas allowlisted em `design/theme`, incluindo as views públicas de Home, Portfolio, Blog, Ferramentas, Contato, Orçamento, 404, CMS e seus partials. Os rascunhos ficam em `draft_config`; o Catalog lê somente `published_config`. `Twig::setThemeTemplates()` é opt-in no pré-action Catalog. Desde a [ADR 0087](../../agents-ia/decisoes/0087-seguranca-acl-admin-e-sandbox-do-tema-publicado.md), as fontes do tema ficam em um Environment dedicado e **sempre em Twig Sandbox** (`Template\ThemeSandbox`), também no site publicado; o Environment dos arquivos do sistema não enxerga fonte de tema. A prévia e o canvas usam a mesma política, com contexto de amostra não persistente, CSP restritiva e iframe sandboxado.
 
 A barra visual do cabeçalho é o partial `partial/site_header`; `common/header.twig` mantém o bootstrap/importmap e inclusão dos scripts controlados pelo sistema. Templates de tema não aceitam PHP, `<script>`, atributos de evento, caminhos arbitrários ou o filtro `raw`. Fragmentos HTML já produzidos por renderizadores/sanitizadores confiáveis só são marcados como `Twig\Markup` nos campos e rotas fixos que já exigem HTML; outros valores continuam autoescapados. Comportamentos interativos ficam limitados a componentes e cenas aprovados/configuráveis; código Three.js livre não é executado.
+
+### Política do sandbox para fonte de tema (ADR 0087)
+
+Uma lista só, usada pela prévia, pelo canvas, pela prévia de página do CMS e pelo site publicado (`ThemeSandbox::TAGS`, `FILTERS`, `FUNCTIONS`):
+
+| Tipo | Liberado |
+| --- | --- |
+| Tags | `if`, `for`, `set`, `block`, `extends`, `include` |
+| Filtros | `escape`, `e`, `default`, `join`, `length`, `upper`, `lower`, `title`, `trim`, `date`, `json_encode`, `slice`, `nl2br` |
+| Funções | `range`, `cycle`, `parent` |
+| Testes | os testes embutidos seguros do Twig (`defined`, `empty`, `same as`…) |
+
+Todo o resto é recusado: `constant()`, `source()`, `include()` como função, `attribute()`, `block()`, `map`/`filter`/`sort`/`reduce`, `replace`, `raw`, as tags `apply`, `do`, `import`, `use`, `sandbox`, e qualquer método ou propriedade de objeto (só `Twig\Markup` é impresso).
+
+- **Ao salvar e ao importar um pacote**, a fonte fora da política é recusada com a fonte e a linha (`ThemeSandbox::check()`).
+- **No site publicado**, uma fonte fora da política (tema salvo antes desta regra) não derruba a página: ela sai, o template padrão entra no lugar e o motivo vai para o log do sistema (`Theme sandbox: source "…" left out…`), no máximo uma vez por hora por fonte.
+- `common/header.twig` é arquivo do sistema, usa `raw` e **não** é fonte de tema. Ele pede a barra com `{{ theme_partial('partial/site_header', {...}) }}`, que entrega só as variáveis listadas e renderiza a barra do tema dentro do sandbox. Não troque por `{% include %}`: a barra do tema deixaria de aparecer. `theme_partial` não existe para fonte de tema.
+- Para liberar um filtro novo, altere `ThemeSandbox::FILTERS` e registre o motivo em uma ADR; a lista vale para os quatro caminhos de uma vez.

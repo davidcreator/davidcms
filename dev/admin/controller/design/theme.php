@@ -221,9 +221,10 @@ class Theme extends \Reamur\System\Engine\Controller {
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
             elseif (!$this->csrfValid()) { $data['error']=$this->language->get('error_csrf'); }
             else {
-                // F13-C: a previa e o save usam EXATAMENTE o mesmo construtor
-                // de config, com as mesmas validacoes (sem divergencia).
-                $built=$this->buildDraftConfig($post);
+                // F13-C: a previa e o save usam o mesmo construtor de config. Unica
+                // diferenca (ADR 0087): o save tambem confere cada fonte contra a
+                // politica do Twig Sandbox; ver buildDraftConfig().
+                $built=$this->buildDraftConfig($post,true); // ADR 0087: salvar confere a politica do sandbox
                 if ($built['error']!=='') $data['error']=$built['error'];
                 elseif ($this->model_design_theme->slugExists($built['slug'],$id)) {
                     $slugErr=$this->language->get('error_slug_exists');
@@ -262,6 +263,16 @@ class Theme extends \Reamur\System\Engine\Controller {
             $data['sections_defined']=true;
             // F13-G: reflete os componentes enviados mesmo em caso de erro.
             $data['component_rows']=$this->componentRows((array)($post['components']??[]));
+            // ADR 0087: reflete as fontes enviadas quando o save falha. Antes o
+            // formulario voltava com as fontes SALVAS e o que a pessoa tinha editado se
+            // perdia; com a conferencia da politica ao salvar isso ficaria mais comum.
+            // Nada e gravado: e so o texto de volta nos <textarea> (com escape do Twig).
+            if (($data['error']??'')!=='' && is_array($post['templates']??null)) {
+                foreach(\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS as $templateKey) {
+                    $posted=$post['templates'][$templateKey]??null;
+                    if (is_string($posted) && strlen($posted)<=131072) $data['templates'][$templateKey]=$posted;
+                }
+            }
         }
         // F13-H: agendamento/rollout declarativo do rascunho (zero escrita).
         $scheduleRaw=(isset($config['schedule'])&&is_array($config['schedule']))?$config['schedule']:null;
@@ -546,21 +557,37 @@ class Theme extends \Reamur\System\Engine\Controller {
     /**
      * F13-C: constroi o config do RASCUNHO a partir do POST, sem gravar nada.
      * Usado por edit() (save) e compare() (previa): uma unica validacao.
+     * ADR 0087 (S2): com $checkPolicy (so ao SALVAR) cada fonte tambem e conferida
+     * contra a politica do Twig Sandbox. Canvas e comparacao NAO pedem isso de
+     * proposito: la a fonte fora da politica ja e trocada pelo padrao com o erro
+     * no proprio trecho, e reprovar o formulario inteiro apagaria da tela as
+     * demais edicoes nao salvas.
      * @return array{name:string,slug:string,config:array,error:string}
      */
-    private function buildDraftConfig(array $post): array {
+    private function buildDraftConfig(array $post, bool $checkPolicy = false): array {
         $bad=function(string $message): array { return ['name'=>'','slug'=>'','config'=>[],'error'=>$message]; };
         $scalarStr=static fn(mixed $v,string $default=''): string => is_scalar($v)?(string)$v:$default;
         $name=trim($scalarStr($post['name']??'')); $slug=strtolower(trim($scalarStr($post['slug']??'')));
         if ($name==='' || !preg_match('/^[a-z0-9_-]{1,48}$/',$slug)) return $bad($this->language->get('error_validation'));
         $primary=$scalarStr($post['primary']??''); $surface=$scalarStr($post['surface']??'');
         if (!preg_match('/^#[0-9a-fA-F]{6}$/',$primary) || !preg_match('/^#[0-9a-fA-F]{6}$/',$surface)) return $bad($this->language->get('error_validation'));
-        $templates=is_array($post['templates']??null)?$post['templates']:[]; $safeTemplates=[]; $invalidTemplateSource=false;
+        $templates=is_array($post['templates']??null)?$post['templates']:[]; $safeTemplates=[]; $invalidTemplateSource=false; $templateSourceDetail='';
         foreach($templates as $templateKey=>$source) {
-            if (!in_array((string)$templateKey,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true) || !is_string($source) || strlen($source)>131072 || preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i',(string)$source)) { $invalidTemplateSource=true; continue; }
+            if (!in_array((string)$templateKey,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true) || !is_string($source)) { $invalidTemplateSource=true; continue; }
+            // ADR 0087 (S2): tamanho e camada de HTML valem sempre (como antes). Ao
+            // salvar, a fonte tambem e conferida pelo parser do Twig contra a politica
+            // do sandbox: o que nao renderiza no site publicado nao e salvo, e o erro
+            // diz a fonte e a linha.
+            $sandbox='\Reamur\System\Library\Template\ThemeSandbox';
+            $violation=($checkPolicy || $sandbox::blocked($source))?$sandbox::check($source):null;
+            if ($violation!==null) {
+                $invalidTemplateSource=true;
+                if ($templateSourceDetail==='') $templateSourceDetail=sprintf($this->language->get('error_template_source_detail'),(string)$templateKey,(int)$violation['line'],(string)$violation['message']);
+                continue;
+            }
             $safeTemplates[(string)$templateKey]=$source;
         }
-        if ($invalidTemplateSource) return $bad($this->language->get('error_template_source'));
+        if ($invalidTemplateSource) return $bad(trim($this->language->get('error_template_source').' '.$templateSourceDetail));
         // F13-E: child-theme. Sem coluna nova: `parent` e so uma chave do JSON.
         // Formato allowlistado e proibido apontar para o proprio tema.
         $parent=strtolower(trim($scalarStr($post['parent_theme']??'')));

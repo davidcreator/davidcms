@@ -43,15 +43,19 @@
   {% endfor %}
 </head>
 <body class="{{ body_class }}{% for c in theme.classes|default([]) %} {{ c|e('html_attr') }}{% endfor %}" data-theme-rules="{{ theme.matched|default([])|join(',')|e('html_attr') }}" style="--theme-primary: {{ theme_primary|default('#6d28d9') }}; --theme-surface: {{ theme_surface|default('#ffffff') }}; {{ theme_token_css|default('')|e('html_attr') }}">
-{# A barra visual é customizável; importmap/scripts permanecem neste shell confiável. #}
-{% include 'partial/site_header.twig' with {
+{# A barra visual é customizável; importmap/scripts permanecem neste shell confiável.
+   ADR 0087: theme_partial() entrega a barra pelo sandbox quando o tema a redefine
+   e passa SÓ estas variáveis (equivale ao antigo `include ... with {...} only`).
+   Não troque por `include`: este shell não enxerga fonte de tema. O `-}}` remove
+   a quebra de linha que a tag `include` já removia (saída idêntica byte a byte). #}
+{{ theme_partial('partial/site_header', {
   home: home, text_brand: text_brand, text_nav_home: text_nav_home,
   text_nav_about: text_nav_about, text_nav_blog: text_nav_blog,
   text_nav_portfolio: text_nav_portfolio, text_nav_contact: text_nav_contact,
   text_nav_quote: text_nav_quote, nav_about: nav_about, nav_blog: nav_blog,
   nav_portfolio: nav_portfolio, nav_contact: nav_contact, nav_quote: nav_quote,
   text_languages: text_languages, languages: languages
-} only %}
+}) -}}
 {% if cms_route_content|default('') %}
 <section class="cms-route-content" data-cms-route="{{ cms_route_key|e('html_attr') }}">
   {{ cms_route_content|raw }}

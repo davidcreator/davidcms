@@ -27,6 +27,7 @@ $_['error_permission'] = 'You do not have permission.';
 $_['error_csrf'] = 'The security token is invalid.';
 $_['error_validation'] = 'Review the fields and try again.';
 $_['error_template_source'] = 'A source contains a blocked construct, invalid path, or exceeds the allowed size. No changes were saved.';
+$_['error_template_source_detail'] = 'Source %s, line %d: %s';
 $_['text_template_editor'] = 'Advanced Twig template source';
 $_['text_template_help'] = 'Save the draft before opening a sandbox preview. PHP, scripts, event handlers, embedded frames, arbitrary paths, the raw filter and autoescape overrides are blocked; use approved, configurable components and scenes.';
 $_['text_preview'] = 'Sandbox preview';

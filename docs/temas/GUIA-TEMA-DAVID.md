@@ -57,7 +57,8 @@ cósmico/3D), com a cena `hero-particles` na cor ciano.
 
 ## Como o tema se encaixa no ReamurCMS
 
-O `header.twig` do sistema inclui `partial/site_header.twig` (com `only`) e
+O `header.twig` do sistema pede `partial/site_header` com
+`theme_partial(...)` (só as variáveis listadas chegam ao trecho; ADR 0087) e
 injeta `--theme-primary` / `--theme-surface` no `<body>`; as rotas usam
 `{{ header }}` e `{{ footer }}`. Então:
 

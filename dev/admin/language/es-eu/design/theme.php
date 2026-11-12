@@ -27,6 +27,7 @@ $_['error_permission'] = 'Sin permiso.';
 $_['error_csrf'] = 'Token de seguridad inválido.';
 $_['error_validation'] = 'Revise los campos.';
 $_['error_template_source'] = 'Una fuente contiene una construcción bloqueada, una ruta no permitida o supera el tamaño máximo. No se guardaron los cambios.';
+$_['error_template_source_detail'] = 'Fuente %s, línea %d: %s';
 $_['text_template_editor'] = 'Código avanzado de plantillas Twig';
 $_['text_template_help'] = 'Guarde el borrador antes de abrir la vista aislada. Se bloquean PHP, scripts, atributos de evento, marcos incrustados, rutas arbitrarias, el filtro raw y la desactivación del escape automático; use componentes y escenas aprobados y configurables.';
 $_['text_preview'] = 'Vista previa aislada';

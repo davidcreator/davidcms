@@ -269,7 +269,7 @@ O registro `cms/page` de cada rota do sistema mantém o atalho **Editar template
 | `contact` · `quote` | `common/contact` · `checkout/quote` (POST, CSRF e validação permanecem nos controllers) |
 | `not_found` | `error/not_found` |
 
-`common/header.twig` mantém o bootstrap/importmap de scripts sob controle do sistema; sua barra visual é customizável por `partial/site_header`. A allowlist do tema também inclui o footer e os partials públicos usados pela Home. A edição de fonte permite Twig/HTML de apresentação, não PHP nem JavaScript inline: interações devem usar somente componentes/cenas aprovados e configuráveis. JavaScript personalizado do componente Three.js continua isolado no sandbox existente. API, sitemap XML, callbacks e fluxos internos não entram no editor de páginas.
+`common/header.twig` mantém o bootstrap/importmap de scripts sob controle do sistema; sua barra visual é customizável por `partial/site_header`. A allowlist do tema também inclui o footer e os partials públicos usados pela Home. A edição de fonte permite Twig/HTML de apresentação, não PHP nem JavaScript inline; o Twig das fontes roda em sandbox também no site publicado, com a lista de tags, filtros e funções de `docs/guias/Guia-Twig.md` (ADR 0087): interações devem usar somente componentes/cenas aprovados e configuráveis. JavaScript personalizado do componente Three.js continua isolado no sandbox existente. API, sitemap XML, callbacks e fluxos internos não entram no editor de páginas.
 
 ## Estrutura visual das páginas públicas
 

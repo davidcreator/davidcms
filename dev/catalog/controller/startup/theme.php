@@ -180,7 +180,36 @@ class Theme extends \Reamur\System\Engine\Controller {
         // Globais primeiro: setThemeTemplates() reconstrói o Environment e
         // reaplica estes mesmos valores (implementado no adaptador Twig).
         if (method_exists($this->template, 'setThemeGlobals')) $this->template->setThemeGlobals($snapshot['globals']);
-        if (method_exists($this->template, 'setThemeTemplates')) $this->template->setThemeTemplates($snapshot['templates']);
+        // ADR 0087 (S2): as fontes do tema rodam em Twig Sandbox tambem aqui.
+        if (method_exists($this->template, 'setThemeTemplates')) $this->template->setThemeTemplates($snapshot['templates'], $this->themeSourceReporter());
+    }
+
+    /**
+     * ADR 0087 (S2): fonte de tema que viola a politica do sandbox nao derruba
+     * a pagina: o template padrao entra no lugar. Sem registro, o dono do site
+     * veria o visual mudar sem saber por que. O aviso vai para o log do sistema,
+     * no maximo uma vez por hora por (fonte, motivo): sem o limite, cada visita
+     * escreveria uma linha.
+     * @return \Closure(string, string): void
+     */
+    private function themeSourceReporter(): \Closure {
+        $log   = $this->registry->get('log');
+        $cache = $this->registry->get('cache');
+
+        return static function (string $key, string $message) use ($log, $cache): void {
+            if (!is_object($log) || !method_exists($log, 'write')) return;
+            $message = (string)preg_replace('/[\x00-\x1F\x7F]+/', ' ', $message);
+            $mark = 'theme_sandbox.' . md5($key . '|' . $message);
+            if (is_object($cache) && method_exists($cache, 'get') && method_exists($cache, 'set')) {
+                try {
+                    if ($cache->get($mark) !== null) return;
+                    $cache->set($mark, 1, 3600);
+                } catch (\Throwable $e) {
+                    // cache indisponivel: registra sem o limite
+                }
+            }
+            $log->write('Theme sandbox: source "' . $key . '" left out, default template used. ' . $message);
+        };
     }
 
     /** Contexto allowlisted e sem dados sensiveis (ver ConditionEngine::FIELDS). */

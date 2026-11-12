@@ -128,8 +128,12 @@ final class ThemePackage {
         $templates=$config['templates']??[];
         if (!is_array($templates)) $e[]='templates_invalid';
         else foreach ($templates as $key=>$source) {
-            if (!in_array((string)$key,self::TEMPLATE_KEYS,true) || !is_string($source) || strlen($source)>131072
-                || preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i',$source)) {
+            // ADR 0087 (S2): pacote importado e entrada nao confiavel. A regex que
+            // havia aqui deixava passar `constant()`, `map('system')` e `source()`;
+            // agora a fonte e conferida pelo parser do Twig contra a politica do
+            // sandbox (ThemeSandbox::check cobre tamanho + camada de HTML + Twig).
+            if (!in_array((string)$key,self::TEMPLATE_KEYS,true) || !is_string($source)
+                || \Reamur\System\Library\Template\ThemeSandbox::check($source)!==null) {
                 $e[]='template_source_invalid'; break;
             }
         }

@@ -36,7 +36,8 @@ porque é um site editorial — você pode ligar a cena depois se quiser.
 
 ## Como o tema se encaixa no ReamurCMS
 
-O `header.twig` do sistema já inclui **`partial/site_header.twig`** e injeta
+O `header.twig` do sistema já pede **`partial/site_header`** (com
+`theme_partial(...)`, ADR 0087) e injeta
 `--theme-primary` / `--theme-surface` no `<body>`. Os templates de rota usam
 `{{ header }}` no início e `{{ footer }}` no fim. Então as três peças visuais
 substituíveis são justamente:

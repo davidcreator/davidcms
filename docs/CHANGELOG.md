@@ -1,5 +1,17 @@
 # Changelog
 
+## Segurança S1 + S2 — ACL do admin e sandbox do tema publicado (2026-11-12)
+- ADR 0087. Dois achados de severidade alta da análise, reproduzidos no código antes da correção.
+- **S1, corrigido:** um usuário logado de um grupo restrito abria qualquer tela do admin escrevendo a rota com `..` (`?route=user/us..er` era checada como `user/us` e executada como `user/user`). `startup/permission` e o dispatcher agora leem a rota pela mesma função, `Action::parse()`. Rota com `..` deixa de ser "consertada" e dá 404 (Admin, Catalog e Install).
+- **S2, corrigido:** uma fonte Twig de tema publicada lia constantes do PHP (`constant('DB_PASSWORD')`) e executava comando no servidor (`map('system')`); a importação de pacote `.reamurtheme.json` aceitava a mesma fonte. As fontes de tema passam a rodar em Twig Sandbox também no site publicado e na prévia de página do CMS, com a mesma política do canvas (nova classe `Template\ThemeSandbox`, modo estrito).
+- **Salvar e importar** conferem cada fonte pelo parser do Twig. O salvar recusado informa a fonte e a linha e devolve ao formulário o que foi digitado (antes a edição se perdia).
+- **No site publicado**, uma fonte fora da política não derruba a página: o template padrão entra no lugar e o motivo vai para o log do sistema (`Theme sandbox: source "…" left out…`), no máximo uma vez por hora por fonte.
+- `common/header.twig` pede a barra do tema com `{{ theme_partial('partial/site_header', {…}) -}}` no lugar do `{% include … only %}`. Não troque de volta: a barra do tema deixaria de aparecer.
+- **Efeito em sites existentes:** os 6 presets × 11 rotas saem byte a byte iguais (canvas e publicado; cache desligado, frio e quente). Tema próprio que use tag, filtro ou função fora da lista (`replace`, `number_format`…) perde aquele template no site até ser ajustado; a lista está em `docs/guias/Guia-Twig.md`. O canvas do editor já recusava o mesmo, exceto `block()` e `attribute()`, que ele aceitava e agora são recusadas (modo estrito).
+- Sem tabela, coluna, migration, rota ou dependência nova. Dados salvos iguais. `Twig::setThemeTemplates()` ganha um segundo parâmetro opcional.
+- Não verificado: instalação com banco, sessão real de admin e servidor web.
+- Validação local: PHPUnit `OK (202 tests, 4809 assertions)` em PHP 8.2.32 e 8.3.32 (45 testes novos em `AdminAclRouteTest`, 58 em `ThemeSandboxPublishedTest`), PHPStan nível 2 sem erros, `php -l`, os três `tools/verify-*.sh` e `lychee 0.15.0` sem erros.
+
 ## KZ-04 — KAZEditor-Theme: selecionar um elemento dentro do trecho (2026-11-12)
 - ADR 0086: clicar em um título, parágrafo, link ou botão da página do rascunho seleciona **aquele elemento** (contorno próprio e caminho clicável no painel **Trecho**). O painel **Estrutura** continua selecionando trechos; `Esc` solta primeiro o elemento, depois o trecho.
 - **Texto fixo editável no painel:** o campo **Texto** reescreve só aquele texto em `templates[chave]`; o resto do código fica byte a byte igual. O que é digitado é sempre texto: `<`, `>`, `&` e `{` viram entidades, nunca HTML nem Twig.

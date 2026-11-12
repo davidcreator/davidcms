@@ -21,13 +21,41 @@ final class Action {
     private array $args;
 
     public function __construct(string $route) {
-        $parts = explode('|', str_replace(['../', '..\\', '..'], '', trim($route)));
+        $parsed = self::parse($route);
 
+        $this->route  = $parsed['route'];
+        $this->method = $parsed['method'];
+        $this->args   = $parsed['args'];
+    }
+
+    /**
+     * Fonte ÚNICA da leitura de uma rota (ADR 0087, S1): quem decide permissão
+     * e quem executa precisam chegar ao MESMO controller. Qualquer checagem
+     * por rota deve usar `(new Action($rota))->getRoute()`, nunca uma limpeza
+     * própria.
+     *
+     * Entrada com '..' NÃO é consertada: antes 'user/us..er' virava
+     * 'user/user' e uma checagem que cortasse no primeiro '.' via 'user/us'.
+     * Agora a rota fica vazia, `isCallable()` devolve false e o dispatcher
+     * entrega o 404 da aplicação.
+     *
+     * @return array{route: string, method: string, args: array<int, string>}
+     */
+    public static function parse(string $route): array {
+        $route = trim($route);
+
+        if (str_contains($route, '..')) {
+            return ['route' => '', 'method' => 'index', 'args' => []];
+        }
+
+        $parts       = explode('|', $route);
         $routeMethod = explode('.', (string)array_shift($parts), 2);
 
-        $this->route  = (string)preg_replace('/[^a-zA-Z0-9_\/]/', '', $routeMethod[0]);
-        $this->method = (string)($routeMethod[1] ?? 'index');
-        $this->args   = array_values($parts);
+        return [
+            'route'  => (string)preg_replace('/[^a-zA-Z0-9_\/]/', '', $routeMethod[0]),
+            'method' => (string)($routeMethod[1] ?? 'index'),
+            'args'   => array_values($parts),
+        ];
     }
 
     public function getRoute(): string {

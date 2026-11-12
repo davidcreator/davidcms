@@ -23,6 +23,9 @@ namespace Reamur\System\Library\Template;
 if (!class_exists(\Reamur\System\Library\Theme\ThemePreviewState::class, false)) {
     require_once __DIR__ . '/../theme/theme_preview_state.php';
 }
+if (!class_exists(ThemeSandbox::class, false)) {
+    require_once __DIR__ . '/theme_sandbox.php';
+}
 
 final class Twig {
     /** Fixed Catalog source keys editable through Themes; arbitrary paths, script tags and raw filters are rejected. */
@@ -40,6 +43,8 @@ final class Twig {
     private string $directory;
     /** @var array<string, mixed> Globais seguros publicados pelo tema (F12-01). */
     private array $themeGlobals = [];
+    /** S2 (ADR 0087): fontes do tema publicado, sempre em sandbox. null = tema sem fontes. */
+    private ?ThemeSandbox $themeSandbox = null;
 
     public function __construct(string $directory = '', bool $cache = false) {
         $this->cacheEnabled = $cache;
@@ -53,7 +58,41 @@ final class Twig {
         $this->twig = new \Twig\Environment(new \Twig\Loader\FilesystemLoader($paths), [
             'autoescape'=>'html', 'cache'=>$cache ? $cacheDir : false, 'auto_reload'=>true
         ]);
+        $this->addThemePartial($this->twig, fn (string $key, array $data): string => $this->renderThemeKey($key, $data));
         $this->applyThemeGlobals($this->twig);
+    }
+
+    /** @return list<string> Pastas dos templates do sistema, na ordem de busca. */
+    private function templatePaths(): array {
+        $paths = [DIR_TEMPLATE];
+        if ($this->directory !== '' && is_dir(DIR_TEMPLATE . $this->directory)) array_unshift($paths, DIR_TEMPLATE . rtrim($this->directory, '/') . '/');
+        return $paths;
+    }
+
+    /**
+     * S2 (ADR 0087): `{{ theme_partial('partial/site_header', {...}) }}` e o
+     * UNICO caminho de um template confiavel (arquivo do sistema, ex.
+     * common/header.twig, que usa |raw) ate um trecho que o tema pode redefinir.
+     * O trecho e renderizado por $render: em sandbox se o tema o redefine. Um
+     * `{% include %}` no lugar leria so o arquivo padrao, porque o Environment
+     * confiavel nao enxerga fonte de tema.
+     * O trecho recebe SO as variaveis passadas (e os globais do tema), como
+     * `{% include ... with {...} only %}`: o contexto do template confiavel,
+     * que carrega HTML ja marcado como seguro, nao vaza para a fonte de tema.
+     * @param \Closure(string, array<string, mixed>): string $render
+     */
+    private function addThemePartial(\Twig\Environment $env, \Closure $render): void {
+        $keys = self::THEME_TEMPLATE_KEYS;
+        $env->addFunction(new \Twig\TwigFunction(ThemeSandbox::TRUSTED_PARTIAL, static function (string $key, array $variables = []) use ($render, $keys): \Twig\Markup {
+            if (!in_array($key, $keys, true)) throw new \InvalidArgumentException('Template outside the theme allowlist.');
+            return new \Twig\Markup($render($key, $variables), 'UTF-8');
+        }, ['is_safe' => ['html']]));
+    }
+
+    /** @param array<string, mixed> $data */
+    private function renderThemeKey(string $key, array $data): string {
+        if ($this->themeSandbox !== null) return $this->themeSandbox->render($key, $data, $this->twig);
+        return $this->twig->render($key . '.twig', $data);
     }
 
     /**
@@ -83,6 +122,7 @@ final class Twig {
         }
         $this->themeGlobals = $safe;
         $this->applyThemeGlobals($this->twig);
+        if ($this->themeSandbox !== null) $this->themeSandbox->setGlobals($safe);
     }
 
     private function applyThemeGlobals(\Twig\Environment $env): void {
@@ -91,32 +131,27 @@ final class Twig {
 
     /**
      * PLAN F10-03: opt-in Catalog-only template source overrides. Additive API;
-     * fixed allowlist, bounded source, no raw/script/event-handler syntax, and
-     * filesystem fallback. Admin and Install do not invoke it; no filesystem writes.
+     * fixed allowlist, bounded source, and filesystem fallback. Admin and
+     * Install do not invoke it.
+     *
+     * S2 (ADR 0087): as fontes NAO entram mais no Environment confiavel. Antes
+     * este metodo trocava `$this->twig` por um Environment comum com as fontes
+     * do tema dentro, protegido so por uma regex: `constant()`, `map('system')`
+     * e `source()` funcionavam no site publicado. Agora elas vivem num
+     * Environment dedicado e sempre em sandbox (ThemeSandbox), com a mesma
+     * politica da previa e do canvas. Fonte que viola a politica sai, o
+     * template padrao entra no lugar e $report recebe (chave, motivo).
      * @param array<string, string> $templates
+     * @param \Closure(string, string): void|null $report
      */
-    public function setThemeTemplates(array $templates): void {
-        $allow = self::THEME_TEMPLATE_KEYS;
-        $safe = [];
-        foreach ($templates as $key => $source) {
-            if (!is_string($key) || !in_array($key, $allow, true) || !is_string($source) || strlen($source) > 131072) continue;
-            if (preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i', $source)) continue;
-            $safe[$key . '.twig'] = $source;
-        }
-        if ($safe === []) return;
-        $paths = [DIR_TEMPLATE];
-        if ($this->directory !== '' && is_dir(DIR_TEMPLATE . $this->directory)) array_unshift($paths, DIR_TEMPLATE . rtrim($this->directory, '/') . '/');
-        $loader = new \Twig\Loader\ChainLoader([
-            new \Twig\Loader\ArrayLoader($safe),
-            new \Twig\Loader\FilesystemLoader($paths)
-        ]);
+    public function setThemeTemplates(array $templates, ?\Closure $report = null): void {
         $cacheDir = DIR_STORAGE . 'cache/template/';
         if ($this->cacheEnabled && !is_dir($cacheDir)) mkdir($cacheDir, 0755, true);
-        $this->twig = new \Twig\Environment($loader, [
-            'autoescape'=>'html', 'cache'=>$this->cacheEnabled ? $cacheDir : false, 'auto_reload'=>true
-        ]);
-        // setThemeTemplates reconstrói o Environment: reaplica os globais.
-        $this->applyThemeGlobals($this->twig);
+        $sandbox = new ThemeSandbox(
+            $templates, self::THEME_TEMPLATE_KEYS, $this->templatePaths(),
+            $this->cacheEnabled ? $cacheDir : false, $this->themeGlobals, $report
+        );
+        $this->themeSandbox = $sandbox->isEmpty() ? null : $sandbox;
     }
 
     /**
@@ -136,21 +171,17 @@ final class Twig {
             'common/contact', 'checkout/quote', 'error/not_found',
         ];
         if (!in_array($routeKey, $routes, true)) throw new \InvalidArgumentException('Catalog preview route is not allowed.');
-        $allow = self::THEME_TEMPLATE_KEYS;
-        $safe = [];
-        foreach ($templates as $key => $source) {
-            if (!is_string($key) || !in_array($key, $allow, true) || !is_string($source) || strlen($source) > 131072) continue;
-            if (preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i', $source)) continue;
-            $safe[$key . '.twig'] = $source;
-        }
-        $loader = new \Twig\Loader\ChainLoader([
-            new \Twig\Loader\ArrayLoader($safe),
-            new \Twig\Loader\FilesystemLoader([DIR_SYSTEM . '../catalog/view/template/'])
-        ]);
-        $env = new \Twig\Environment($loader, ['autoescape'=>'html','cache'=>false,'auto_reload'=>true]);
+        // S2 (ADR 0087): mesma separacao do site publicado. $env so le arquivos do
+        // sistema; as fontes do tema ficam em $themed, sempre em sandbox. Antes as
+        // duas coisas dividiam um Environment comum, e esta previa executava no
+        // admin qualquer Twig que a regex deixasse passar.
+        $paths = [DIR_SYSTEM . '../catalog/view/template/'];
+        $env = new \Twig\Environment(new \Twig\Loader\FilesystemLoader($paths), ['autoescape'=>'html','cache'=>false,'auto_reload'=>true]);
+        $themed = new ThemeSandbox($templates, self::THEME_TEMPLATE_KEYS, $paths, false, $this->themeGlobals);
+        $this->addThemePartial($env, static fn (string $key, array $data): string => $themed->render($key, $data, $env));
         $this->applyThemeGlobals($env);
         $headerHtml = $env->render('common/header.twig', $headerData);
-        $footerHtml = $env->render('common/footer.twig', $footerData);
+        $footerHtml = $themed->render('common/footer', $footerData, $env);
         $viewData = array_replace($pageData, $routeData);
         if ($routeKey !== 'cms/page_info') {
             $notice = trim((string)($pageData['preview_notice'] ?? ''));
@@ -164,7 +195,7 @@ final class Twig {
         if (isset($viewData['post']) && is_array($viewData['post']) && is_string($viewData['post']['block_html'] ?? null)) {
             $viewData['post']['block_html'] = new \Twig\Markup($viewData['post']['block_html'], 'UTF-8');
         }
-        return $env->render($routeKey . '.twig', $viewData);
+        return $themed->render($routeKey, $viewData, $env);
     }
 
     /** Frente AF — normaliza a cena do KAZTheme-Editor para o contexto da
@@ -209,20 +240,15 @@ final class Twig {
      *  argumentos novos sao OPCIONAIS: chamadores legados continuam validos. */
     public function renderSandboxPreview(string $key, string $source, array $sceneView = [], array $themeState = []): string {
         $allow = self::THEME_TEMPLATE_KEYS;
-        if (!in_array($key, $allow, true) || strlen($source) > 131072 || preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i', $source)) {
+        if (!in_array($key, $allow, true) || ThemeSandbox::blocked($source)) {
             throw new \InvalidArgumentException('Template outside the preview allowlist.');
         }
-        $policy = new \Twig\Sandbox\SecurityPolicy(
-            ['if','for','set','block','extends','include'],
-            ['escape','e','default','join','length','upper','lower','title','trim','date','json_encode'],
-            [], [], ['range','cycle','parent']
-        );
+        // ADR 0087: politica unica (ThemeSandbox), a mesma do canvas e do site.
         $loader = new \Twig\Loader\ChainLoader([
             new \Twig\Loader\ArrayLoader([$key . '.twig'=>$source]),
             new \Twig\Loader\FilesystemLoader([DIR_SYSTEM . '../catalog/view/template/'])
         ]);
-        $env = new \Twig\Environment($loader, ['autoescape'=>'html','cache'=>false,'auto_reload'=>true]);
-        $env->addExtension(new \Twig\Extension\SandboxExtension($policy, true));
+        $env = ThemeSandbox::environment($loader);
         $this->applyThemeGlobals($env);
         $context = [
             'theme'=>['primary'=>'#2563eb','surface'=>'#ffffff','vars'=>[],'flags'=>[],'classes'=>[],'matched'=>[]],
@@ -296,7 +322,7 @@ final class Twig {
         $fallbacks = [];
         foreach ($templates as $key => $source) {
             if (!is_string($key) || !in_array($key, self::THEME_TEMPLATE_KEYS, true) || !is_string($source) || $source === '') continue;
-            if (strlen($source) > 131072 || preg_match('~<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*=|\|\s*raw\b|\{%\s*autoescape\b|\b(srcdoc|formaction)\s*=~i', $source)) {
+            if (ThemeSandbox::blocked($source)) {
                 $errors[$key] = 'Source rejected by the theme allowlist.';
                 $fallbacks[] = $key;
                 continue;
@@ -305,13 +331,9 @@ final class Twig {
             // editor a entrega; as posicoes do mapa de elementos dependem disso.
             $safe[$key . '.twig'] = $annotate ? \Reamur\System\Library\Theme\ThemeSourceMap::normalize($source) : $source;
         }
-        $policy = new \Twig\Sandbox\SecurityPolicy(
-            ['if', 'for', 'set', 'block', 'extends', 'include'],
-            // Mesma politica de renderSandboxPreview() + `slice` e `nl2br`, filtros
-            // de dados puros que os templates PADRAO do Catalog usam.
-            ['escape', 'e', 'default', 'join', 'length', 'upper', 'lower', 'title', 'trim', 'date', 'json_encode', 'slice', 'nl2br'],
-            [], [], ['range', 'cycle', 'parent']
-        );
+        // ADR 0087: politica unica (ThemeSandbox), a mesma da previa e do site
+        // publicado. `slice` e `nl2br` estao nela porque os templates PADRAO do
+        // Catalog usam.
         $catalog = new \Twig\Loader\FilesystemLoader([DIR_SYSTEM . '../catalog/view/template/']);
         // KZ-02: com $annotate, os templates PADRAO das chaves allowlistadas sao
         // lidos por caminho fixo (constante + extensao) para receber o marcador.
@@ -361,18 +383,14 @@ final class Twig {
             }
             return '<!--kz:b:' . $key . '-->' . $annotated[$id][0] . '<!--kz:e:' . $key . '-->';
         };
-        $build = function (array $sources) use ($policy, $catalog, $annotate, $defaults, $mark): \Twig\Environment {
+        $build = function (array $sources) use ($catalog, $annotate, $defaults, $mark): \Twig\Environment {
             if ($annotate) {
                 $marked = [];
                 foreach ($defaults as $key => $raw) $marked[$key . '.twig'] = $mark($key, $raw);
                 foreach ($sources as $name => $source) $marked[$name] = $mark(substr($name, 0, -5), $source);
                 $sources = $marked;
             }
-            $env = new \Twig\Environment(
-                new \Twig\Loader\ChainLoader([new \Twig\Loader\ArrayLoader($sources), $catalog]),
-                ['autoescape' => 'html', 'cache' => false, 'auto_reload' => true]
-            );
-            $env->addExtension(new \Twig\Extension\SandboxExtension($policy, true));
+            $env = ThemeSandbox::environment(new \Twig\Loader\ChainLoader([new \Twig\Loader\ArrayLoader($sources), $catalog]));
             $this->applyThemeGlobals($env);
             return $env;
         };
@@ -518,6 +536,11 @@ final class Twig {
             foreach (['block_html','description'] as $key) {
                 if (isset($data['post'][$key]) && is_string($data['post'][$key])) $data['post'][$key] = new \Twig\Markup($data['post'][$key], 'UTF-8');
             }
+        }
+        // S2 (ADR 0087): rota que o tema pode redefinir (ou que inclui trecho que
+        // ele redefine) sai pelo sandbox quando ha fontes de tema publicadas.
+        if ($this->themeSandbox !== null && in_array($route, self::THEME_TEMPLATE_KEYS, true)) {
+            return $this->themeSandbox->render($route, $data, $this->twig);
         }
         return $this->twig->render($route . '.twig', $data);
     }
