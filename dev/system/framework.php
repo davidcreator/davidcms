@@ -194,6 +194,8 @@ $loader = new Loader($registry);
 $registry->set('load', $loader);
 
 $request = new \Reamur\System\Library\Request();
+// ADR 0089 (S5): IP do visitante e HTTPS atrás de CDN/proxy — só com confiança declarada.
+$request->setProxyTrust($config->get('proxy_trusted', ''), (int)$config->get('proxy_hops', 0));
 $registry->set('request', $request);
 
 $response = new \Reamur\System\Library\Response();
@@ -320,6 +322,12 @@ if ($config->get('session_autostart')) {
         'expire'      => $config->get('session_expire'),
         'probability' => $config->get('session_probability'),
         'divisor'     => $config->get('session_divisor'),
+        // ADR 0089 (S5): cookie Secure quando o endereço do site é https (vale
+        // mesmo se o proxy esconder o HTTPS do PHP) ou a conexão é HTTPS.
+        'secure'      => \Reamur\System\Library\Session::cookieSecure(
+            defined('HTTP_SERVER') ? (string)HTTP_SERVER : '',
+            $request->isHttps()
+        ),
     ]));
 }
 

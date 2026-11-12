@@ -36,6 +36,9 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ? $this->language->get('warning_error_display')
             : '';
 
+        // ADR 0089 (S5): o que o servidor enxerga da conexão e avisos de proxy.
+        $data = array_merge($data, $this->connectionData());
+
         // ── Cards de visão-geral: ACL-driven + tableExists no model ──
         $data['cards'] = [];
 
@@ -147,6 +150,72 @@ class Dashboard extends \Reamur\System\Engine\Controller {
      *
      * @return array<string, mixed>
      */
+    /**
+     * ADR 0089 (S5): leitura da conexão para o painel "Conta e sistema" e os
+     * avisos de proxy/CDN. É o jeito de descobrir o que a hospedagem entrega
+     * ao PHP antes de declarar REAMUR_TRUSTED_PROXIES / _HOPS no config.php.
+     *
+     * @return array<string, mixed>
+     */
+    private function connectionData(): array {
+        $connection = $this->request->connection();
+        $lang       = fn (string $key): string => (string)$this->language->get($key);
+
+        $rawHttps = $this->request->server['HTTPS'] ?? '';
+        $direct   = is_string($rawHttps) && $rawHttps !== '' && strtolower($rawHttps) !== 'off';
+
+        if (!$connection->https) {
+            $https = $lang('text_conn_https_no');
+        } elseif ($direct) {
+            $https = $lang('text_conn_https_direct');
+        } else {
+            $https = $lang('text_conn_https_proxy');
+        }
+
+        if ($connection->mode === $connection::MODE_LIST) {
+            $trust = sprintf($lang('text_conn_trust_list'), $connection->entries);
+        } elseif ($connection->mode === $connection::MODE_HOPS) {
+            $trust = sprintf($lang('text_conn_trust_hops'), $connection->hops);
+        } else {
+            $trust = $lang('text_conn_trust_none');
+        }
+
+        $secure = \Reamur\System\Library\Session::cookieSecure(
+            defined('HTTP_SERVER') ? (string)HTTP_SERVER : '',
+            $connection->https
+        );
+
+        $warnings = [];
+
+        if ($connection->invalid !== []) {
+            $warnings[] = sprintf($lang('warning_proxy_invalid'), implode(', ', $connection->invalid));
+        }
+
+        if ($connection->forwarded && $connection->mode === $connection::MODE_DIRECT) {
+            $warnings[] = sprintf($lang('warning_proxy_unconfigured'), $connection->peer);
+        } elseif ($connection->forwarded && $connection->mode === $connection::MODE_LIST && !$connection->honoured) {
+            $warnings[] = sprintf($lang('warning_proxy_untrusted_peer'), $connection->peer);
+        } elseif ($connection->mode === $connection::MODE_HOPS && !$connection->forwarded) {
+            $warnings[] = sprintf($lang('warning_proxy_hops_direct'), $connection->hops);
+        }
+
+        return [
+            'text_conn_heading' => $lang('text_conn_heading'),
+            'text_conn_ip'      => $lang('text_conn_ip'),
+            'text_conn_peer'    => $lang('text_conn_peer'),
+            'text_conn_https'   => $lang('text_conn_https'),
+            'text_conn_cookie'  => $lang('text_conn_cookie'),
+            'text_conn_trust'   => $lang('text_conn_trust'),
+            'text_conn_note'    => $lang('text_conn_note'),
+            'conn_ip'           => $connection->ip !== '' ? $connection->ip : '—',
+            'conn_peer'         => $connection->peer !== '' ? $connection->peer : '—',
+            'conn_https'        => $https,
+            'conn_cookie'       => $lang($secure ? 'text_conn_cookie_secure' : 'text_conn_cookie_plain'),
+            'conn_trust'        => $trust,
+            'warnings_proxy'    => $warnings,
+        ];
+    }
+
     private function baseData(): array {
         foreach ([
             'heading_title', 'text_welcome_overview',

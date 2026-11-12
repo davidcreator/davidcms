@@ -39,7 +39,14 @@ if (!defined('DIR_APPLICATION')) {
     define('DIR_EXTENSION', DIR_REAMUR . 'dev/extension/');
 
     // HTTP (§1.1) — URL base da própria aplicação install
-    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    // ADR 0089 (S5): mesma regra do palpite de URL do passo 3. Atrás de CDN
+    // ou proxy que termina o TLS o PHP não vê HTTPS, e os formulários do
+    // instalador saíam apontando para http:// numa página aberta em https.
+    // Aqui não há config.php (logo, não há lista de proxies confiáveis); o
+    // cabeçalho só decide os links da própria resposta.
+    $scheme = ((!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off')
+        || (int)($_SERVER['SERVER_PORT'] ?? 80) === 443
+        || strtolower(trim(explode(',', (string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''), 2)[0])) === 'https') ? 'https' : 'http';
     $rawHost = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
     $rawHost = substr($rawHost, 0, strcspn($rawHost, "\r\n\0"));
     $host    = preg_replace('/[^a-zA-Z0-9.:\[\]-]/', '', $rawHost) ?: 'localhost';

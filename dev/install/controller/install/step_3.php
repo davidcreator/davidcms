@@ -293,9 +293,8 @@ class Step_3 extends \Reamur\System\Engine\Controller {
     private function guessSiteUrl(): string {
         $server = $this->request->server;
 
-        $https = (!empty($server['HTTPS']) && strtolower((string)$server['HTTPS']) !== 'off')
-            || (int)($server['SERVER_PORT'] ?? 80) === 443
-            || strtolower((string)($server['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+        // ADR 0089 (S5): mesma regra de install/index.php, num lugar só.
+        $https = \Reamur\System\Library\Security\ClientAddress::looksHttps($server);
 
         $scheme = $https ? 'https://' : 'http://';
         $rawHost = (string)($server['HTTP_HOST'] ?? 'localhost');

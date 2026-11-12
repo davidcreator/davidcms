@@ -239,7 +239,8 @@ class Theme extends \Reamur\System\Engine\Controller {
             'date'       => date('Y-m-d'),
             'month'      => (int)date('n'),
             'variant'    => $variant,
-            'https'      => !empty($server['HTTPS']) && strtolower((string)$server['HTTPS']) !== 'off',
+            // ADR 0089 (S5): atrás de CDN/proxy o HTTPS vem do proxy confiável.
+            'https'      => $this->request->isHttps(),
             'ajax'       => strtolower((string)($server['HTTP_X_REQUESTED_WITH'] ?? '')) === 'xmlhttprequest',
             'query'      => $query,
         ];

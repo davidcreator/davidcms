@@ -8,7 +8,7 @@
 # Uso:   bash tools/check_producao.sh https://davidalmeida.xyz
 #        DOMAIN=https://outro.dominio PROJ=jwa bash tools/check_producao.sh
 #
-# Checks (15):
+# Checks (16):
 #   1 Catálogo no ar (TLS válido quando https)
 #   2 Força HTTPS (HTTP aberto servindo site = FAIL; sem :80 = warn)
 #   3 Raiz   → 302 → catalog (index.php de atalho)   e segue 200
@@ -25,6 +25,8 @@
 #  13 Headers de segurança (ADR 0037): nosniff + frame + referrer
 #  14 Ausências dev-only: /install /tests /agents-ia /docs /.git /prod ≠ 200
 #  15 TTFB (warn apenas, não reprova)
+#  16 Cookie de sessão: HttpOnly + SameSite sempre, e Secure quando o
+#     alvo é https (ADR 0089: atrás de CDN o PHP pode não enxergar o HTTPS)
 # ════════════════════════════════════════════════════════════════════
 set -u
 DOMAIN="${1:-${DOMAIN:-https://davidalmeida.xyz}}"
@@ -162,6 +164,31 @@ T=$(curl -sk -m 20 -o /dev/null -w "%{time_starttransfer}" "$C/")
 TMS=$(echo "$T * 1000 / 1" | bc)
 if [ "${TMS:-9999}" -gt 3000 ]; then wn "TTFB ${TMS}ms — acima de 3s (investigar: cache ligado? host lento?)"; else echo "TTFB ${TMS}ms"; fi
 ck 15 0 "ttfb-medido"
+
+echo '── 16 — cookie de sessão (ADR 0089) ──'
+# Atrás de CDN ou proxy o PHP pode não enxergar o HTTPS e emitir o cookie sem
+# Secure. O cookie sai com Secure quando HTTP_SERVER do config.php começa com
+# https:// ou quando o proxy está declarado em REAMUR_TRUSTED_PROXIES / _HOPS.
+RC=0; SEEN=0
+for u in "$C/" "$DOMAIN/admin/index.php?route=common/login"; do
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    SEEN=$((SEEN+1))
+    name=$(echo "$line" | sed -E 's/^set-cookie: *([^=]+)=.*/\1/')
+    miss=""
+    echo "$line" | grep -qE ';[[:space:]]*httponly([[:space:]]*;|[[:space:]]*$)' || miss="$miss HttpOnly"
+    echo "$line" | grep -qE ';[[:space:]]*samesite=(lax|strict)([[:space:]]*;|[[:space:]]*$)' || miss="$miss SameSite"
+    if [ "$SCHEME" = "https" ]; then
+      echo "$line" | grep -qE ';[[:space:]]*secure([[:space:]]*;|[[:space:]]*$)' || miss="$miss Secure"
+    fi
+    if [ -n "$miss" ]; then RC=1; echo "   ↳ cookie '$name' em $u sem:$miss"; else echo "   cookie '$name' ok ($u)"; fi
+  done <<EOF_COOKIES
+$(hdrs "$u" | grep -E '^set-cookie: *(rmssession|rmsadmin|phpsessid)=')
+EOF_COOKIES
+done
+[ "$SEEN" = "0" ] && wn "nenhum cookie de sessão veio nas respostas (página em cache na CDN?) — confira no navegador"
+[ "$SCHEME" = "https" ] || wn "alvo em http: a flag Secure não foi cobrada"
+ck 16 $RC "cookie-sessao"
 
 echo
 echo "════════ summary: $PASS pass / $FAIL fail / $WARN avisos ════════"

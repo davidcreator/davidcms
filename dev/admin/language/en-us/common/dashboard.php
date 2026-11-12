@@ -73,3 +73,24 @@ $_['action_import_wp']   = 'Import from WordPress';
 
 // ADR 0088 (S3)
 $_['warning_error_display'] = 'Error display is on for this installation: if something fails, technical details (file, line, SQL) are shown on screen to any visitor. In production, set REAMUR_ERROR_DISPLAY to false in the config.php files of catalog/ and admin/.';
+
+// ADR 0089 (S5): conexão, proxy e CDN
+$_['text_conn_heading']           = 'Connection';
+$_['text_conn_ip']                = 'Your IP for the system';
+$_['text_conn_peer']              = 'Connection received from';
+$_['text_conn_https']             = 'HTTPS';
+$_['text_conn_https_no']          = 'no';
+$_['text_conn_https_direct']      = 'yes, seen by the server';
+$_['text_conn_https_proxy']       = 'yes, reported by the proxy';
+$_['text_conn_cookie']            = 'Session cookie';
+$_['text_conn_cookie_secure']     = 'with Secure';
+$_['text_conn_cookie_plain']      = 'without Secure';
+$_['text_conn_trust']             = 'Trusted proxies';
+$_['text_conn_trust_none']        = 'not configured';
+$_['text_conn_trust_list']        = 'list with %d entry(ies)';
+$_['text_conn_trust_hops']        = '%d proxy(ies) in front';
+$_['text_conn_note']              = 'If both addresses are the same and are not your IP, the site is behind a proxy or CDN that has not been declared in config.php yet.';
+$_['warning_proxy_unconfigured']  = 'The connection came from %s carrying proxy headers. If the site sits behind a CDN or reverse proxy, all visitors currently count as a single IP for the login, contact and quote attempt limits. Set REAMUR_TRUSTED_PROXIES or REAMUR_TRUSTED_PROXY_HOPS in catalog/config.php and admin/config.php.';
+$_['warning_proxy_untrusted_peer']= 'The connection came from %s, which is not in REAMUR_TRUSTED_PROXIES. The proxy headers were ignored. If that address belongs to your CDN, add it to the list in both config.php files.';
+$_['warning_proxy_invalid']       = 'REAMUR_TRUSTED_PROXIES has entries that are neither an address nor a range and were ignored: %s';
+$_['warning_proxy_hops_direct']   = 'REAMUR_TRUSTED_PROXY_HOPS is %d, but this connection arrived without X-Forwarded-For. If the server can be reached without going through the proxy, the visitor IP can be forged: prefer REAMUR_TRUSTED_PROXIES with the proxy addresses.';

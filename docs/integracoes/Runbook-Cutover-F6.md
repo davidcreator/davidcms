@@ -125,6 +125,25 @@ nunca no ar.
   - [ ] forçar HTTPS (opção "Force HTTPS" do painel);
   - [ ] conferir cadeado em `https://davidalmeida.xyz/catalog/`.
 - [ ] **4.6** Ajustar a **URL pública** nas configs (4.3) já com `https://`.
+- [ ] **4.6b** Proxy / CDN (ADR 0089): entre no admin e leia o bloco
+       **Conexão** do painel inicial ("Conta e sistema").
+  - [ ] "Seu IP para o sistema" é o seu IP público (confira em outro site
+        de "qual é meu IP") e "Cookie de sessão" diz **com Secure**: nada
+        a fazer.
+  - [ ] "Seu IP para o sistema" é igual a "Conexão recebida de" e **não** é
+        o seu IP, ou aparece o aviso de cabeçalhos de proxy: o site está
+        atrás da CDN da hospedagem. Em `catalog/config.php` **e**
+        `admin/config.php`, acrescente uma das linhas (exemplo comentado
+        no próprio arquivo):
+        `define('REAMUR_TRUSTED_PROXIES', '<endereços ou faixas da CDN>');`
+        quando a hospedagem publica as faixas, ou
+        `define('REAMUR_TRUSTED_PROXY_HOPS', 1);` quando não publica.
+        ⚠ A segunda só é segura se o servidor **não** responde por fora
+        da CDN: com ela, quem alcançar o servidor direto escolhe o IP que
+        o sistema registra.
+  - [ ] Recarregue o painel: "Seu IP para o sistema" passa a ser o seu e o
+        aviso some. Se o IP mostrado for de outro proxy, aumente o número
+        de saltos em 1 e repita.
 - [ ] **4.7** Site antigo: com o novo validado (§5), aposentar (mover para
        pasta `_old` ou apontar o domínio de vez). **Não apague** nada
        antes do §5.9.
@@ -137,10 +156,11 @@ nunca no ar.
 bash tools/check_producao.sh https://davidalmeida.xyz
 ```
 
-15 checks remotos read-only (todos de fora): catálogo + TLS, força HTTPS,
+16 checks remotos read-only (todos de fora): catálogo + TLS, força HTTPS,
 raiz→catalog, aliases, SEO, os 301s, sitemap, robots, admin protegido,
 system/ e logs selados, erro sem stack, headers, **ausência de dev-only
-no ar** e TTFB. Resultado: `15 pass / 0 fail` = ✅ go. A lista manual
+no ar**, TTFB e flags do cookie de sessão (`Secure`, `HttpOnly`,
+`SameSite`). Resultado: `16 pass / 0 fail` = ✅ go. A lista manual
 abaixo fica como *diagnóstico* de qualquer FAIL específico.
 
 **Lista manual (diagnóstico)** — rode em qualquer máquina (ajuste `DOMINIO`):

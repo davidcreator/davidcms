@@ -19,7 +19,7 @@ final class Session {
 
     /**
      * @param object $adaptor Driver com métodos open/close/read/write/destroy/gc
-     * @param array<string, mixed> $options name, path, domain, samesite, expire, probability, divisor
+     * @param array<string, mixed> $options name, path, domain, samesite, expire, probability, divisor, secure
      */
     public function __construct(private object $adaptor, private array $options = []) {
         if (session_status() === PHP_SESSION_ACTIVE) {
@@ -34,7 +34,9 @@ final class Session {
             'lifetime' => 0,
             'path'     => $options['path'] ?? '/',
             'domain'   => $options['domain'] ?? '',
-            'secure'   => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+            'secure'   => array_key_exists('secure', $options)
+                ? (bool)$options['secure']
+                : (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
             'httponly' => true,
             'samesite' => $options['samesite'] ?? 'Lax',
         ]);
@@ -53,6 +55,16 @@ final class Session {
         register_shutdown_function(function (): void {
             $this->close();
         });
+    }
+
+    /**
+     * ADR 0089 (S5): o cookie de sessão sai com Secure quando o endereço
+     * configurado do site é https, ou quando a conexão é HTTPS. A primeira
+     * regra não depende do que o proxy repassa ao PHP: site publicado em
+     * https nunca entrega o cookie por HTTP puro.
+     */
+    public static function cookieSecure(string $siteUrl, bool $https): bool {
+        return $https || str_starts_with(strtolower(ltrim($siteUrl)), 'https://');
     }
 
     public function getId(): string {

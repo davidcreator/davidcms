@@ -15,6 +15,18 @@ define('HTTPS_SERVER', '{{HTTPS_SERVER}}');
 // erros SEMPRE em system/storage/logs/error.log).
 define('REAMUR_ERROR_DISPLAY', true);
 
+// Proxy / CDN (ADR 0089). Se o site fica atrás de CDN ou proxy reverso, o PHP
+// recebe todos os visitantes com o IP do proxy: o limite de tentativas de
+// login, contato e orçamento passa a valer para todos juntos. Declare em quem
+// confiar (o painel inicial do admin mostra o que o servidor enxerga):
+//   - endereços e faixas dos proxies (mais seguro):
+//       define('REAMUR_TRUSTED_PROXIES', '203.0.113.0/24, 2001:db8::/32');
+//   - ou quantos proxies ficam na frente do site. Use só se o servidor NÃO
+//     puder ser acessado por fora da CDN:
+//       define('REAMUR_TRUSTED_PROXY_HOPS', 1);
+// Sem nenhuma das duas linhas, vale o IP de quem conectou. Use os mesmos
+// valores em catalog/config.php e admin/config.php.
+
 // DIR (raízes calculadas a partir de DIR_REAMUR — ver §1.1)
 define('DIR_REAMUR', '{{DIR_REAMUR}}');
 define('DIR_APPLICATION', DIR_REAMUR . 'dev/{{APP_DIR}}/');

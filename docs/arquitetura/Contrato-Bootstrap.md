@@ -30,6 +30,14 @@
 | `DB_HOSTNAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE`, `DB_PORT` | — | Credenciais (nunca no Git) |
 | `DB_PREFIX` | `rms_` | Prefixo de tabelas |
 
+**Opcionais** (ausentes = comportamento padrão; mesmos valores em `catalog/config.php` e `admin/config.php`):
+
+| Constante | Exemplo | Descrição |
+| --- | --- | --- |
+| `REAMUR_ERROR_DISPLAY` | `false` | Mostra o detalhe técnico dos erros na tela. Ausente = `false` (ADR 0037 / 0088) |
+| `REAMUR_TRUSTED_PROXIES` | `'203.0.113.0/24, 2001:db8::/32'` | Endereços e faixas dos proxies / CDN cujos cabeçalhos `X-Forwarded-For` e `X-Forwarded-Proto` valem (ADR 0089) |
+| `REAMUR_TRUSTED_PROXY_HOPS` | `1` | Quantos proxies ficam na frente do site. Usada só sem a lista; exige servidor inalcançável por fora do proxy (ADR 0089) |
+
 > **Regra:** `config.php` é gerado pelo wizard (`install/`) e **nunca** versionado (entra no `.gitignore`). O instalador deve validar e recusar escrever credenciais vazias em produção.
 
 ### 1.2 Definidas pelo **index.php** (front controller)

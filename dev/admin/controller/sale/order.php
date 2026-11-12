@@ -398,7 +398,7 @@ class Order extends \Reamur\System\Engine\Controller {
             'total'           => number_format($total, 4, '.', ''),
             'order_status_id' => $status_id,
             'comment'         => trim($this->postScalar('comment')),
-            'ip'              => (string)($this->request->server['REMOTE_ADDR'] ?? ''),
+            'ip'              => $this->request->ip(),
             'status_changed'  => $existing !== [] && (int)($existing['order_status_id'] ?? 0) !== $status_id ? 1 : 0,
             'products'        => $products,
         ];

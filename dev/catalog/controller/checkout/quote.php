@@ -67,7 +67,7 @@ class Quote extends \Reamur\System\Engine\Controller {
                         'email'     => trim($this->postScalar('email')),
                         'telephone' => trim($this->postScalar('telephone')),
                         'comment'   => trim($this->postScalar('comment')),
-                        'ip'        => (string)($this->request->server['REMOTE_ADDR'] ?? ''),
+                        'ip'        => $this->request->ip(),
                     ],
                     $products
                 );
@@ -128,7 +128,7 @@ class Quote extends \Reamur\System\Engine\Controller {
     private function rateLimitAllow(string $scope, int $max, int $windowSeconds): bool {
         $limiter = new \Reamur\System\Library\Security\RateLimit($this->db);
 
-        return $limiter->allow($scope, (string)($this->request->server['REMOTE_ADDR'] ?? ''), $max, $windowSeconds);
+        return $limiter->allow($scope, $this->request->ip(), $max, $windowSeconds);
     }
 
     /**

@@ -48,7 +48,7 @@ class Login extends \Reamur\System\Engine\Controller {
             if ($csrfOk) {
                 $limiter = new \Reamur\System\Library\Security\RateLimit($this->db);
 
-                $limitOk = $limiter->allow('login', (string)($this->request->server['REMOTE_ADDR'] ?? ''), 6, 900);
+                $limitOk = $limiter->allow('login', $this->request->ip(), 6, 900);
             }
 
             if (!$csrfOk) {

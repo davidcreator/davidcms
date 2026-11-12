@@ -9,6 +9,9 @@
   {% if warning_error_display %}
   <div class="alert alert-warning" role="alert" data-rms-warning="error-display"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ warning_error_display }}</div>
   {% endif %}
+  {% for warning in warnings_proxy %}
+  <div class="alert alert-warning" role="alert" data-rms-warning="proxy"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ warning }}</div>
+  {% endfor %}
 
   {% if cards %}
   <div class="stat-grid" role="list" aria-label="{{ text_stats_overview }}">
@@ -84,6 +87,20 @@
         <dt class="col-6">{{ text_modify_routes }}</dt>
         <dd class="col-6">{{ modify_routes }}</dd>
       </dl>
+      <h3 class="h6 mt-3">{{ text_conn_heading }}</h3>
+      <dl class="row small mb-2" data-rms-connection>
+        <dt class="col-6">{{ text_conn_ip }}</dt>
+        <dd class="col-6" data-rms-conn="ip">{{ conn_ip }}</dd>
+        <dt class="col-6">{{ text_conn_peer }}</dt>
+        <dd class="col-6" data-rms-conn="peer">{{ conn_peer }}</dd>
+        <dt class="col-6">{{ text_conn_https }}</dt>
+        <dd class="col-6" data-rms-conn="https">{{ conn_https }}</dd>
+        <dt class="col-6">{{ text_conn_cookie }}</dt>
+        <dd class="col-6" data-rms-conn="cookie">{{ conn_cookie }}</dd>
+        <dt class="col-6">{{ text_conn_trust }}</dt>
+        <dd class="col-6" data-rms-conn="trust">{{ conn_trust }}</dd>
+      </dl>
+      <p class="muted small mb-2">{{ text_conn_note }}</p>
       <p class="muted small mb-1">{{ text_cache_indicator }}{% if text_cache_fallback %} · {{ text_cache_fallback }}{% endif %}</p>
       <p class="muted small mb-2">{{ text_version }}</p>
       <a class="btn ghost small" href="{{ profile }}">{{ text_manage_profile }}</a>

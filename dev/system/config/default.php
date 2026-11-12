@@ -67,6 +67,17 @@ $_['error_log']            = true;
 $_['error_filename']       = 'error.log';
 $_['error_page']           = 'error.html';
 
+// Proxy / CDN (ADR 0089, S5)
+// Atrás de CDN ou proxy reverso o PHP recebe a conexão do proxy: todos os
+// visitantes chegam com o mesmo IP e o HTTPS não aparece. Os cabeçalhos
+// X-Forwarded-For e X-Forwarded-Proto só são aceitos quando o config.php da
+// instalação declara em quem confiar:
+//   REAMUR_TRUSTED_PROXIES    endereços e faixas dos proxies ('203.0.113.0/24, 2001:db8::/32')
+//   REAMUR_TRUSTED_PROXY_HOPS quantos proxies ficam na frente (usado só sem a lista)
+// Sem nenhuma das duas, vale a conexão direta.
+$_['proxy_trusted']        = (defined('REAMUR_TRUSTED_PROXIES') && (is_string(REAMUR_TRUSTED_PROXIES) || is_array(REAMUR_TRUSTED_PROXIES))) ? REAMUR_TRUSTED_PROXIES : '';
+$_['proxy_hops']           = (defined('REAMUR_TRUSTED_PROXY_HOPS') && is_numeric(REAMUR_TRUSTED_PROXY_HOPS)) ? max(0, (int)REAMUR_TRUSTED_PROXY_HOPS) : 0;
+
 // Response
 $_['response_header']      = [
     'Content-Type: text/html; charset=utf-8',

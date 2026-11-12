@@ -60,7 +60,7 @@ class Contact extends \Reamur\System\Engine\Controller {
                     'telephone' => trim($this->postScalar('telephone')),
                     'subject'   => trim($this->postScalar('subject')),
                     'message'   => trim($this->postScalar('message')),
-                    'ip'        => (string)($this->request->server['REMOTE_ADDR'] ?? ''),
+                    'ip'        => $this->request->ip(),
                 ];
 
                 $this->model_communication_contact_message->addContactMessage($contact);
@@ -135,7 +135,7 @@ class Contact extends \Reamur\System\Engine\Controller {
     private function rateLimitAllow(string $scope, int $max, int $windowSeconds): bool {
         $limiter = new \Reamur\System\Library\Security\RateLimit($this->db);
 
-        return $limiter->allow($scope, (string)($this->request->server['REMOTE_ADDR'] ?? ''), $max, $windowSeconds);
+        return $limiter->allow($scope, $this->request->ip(), $max, $windowSeconds);
     }
 
     /**
