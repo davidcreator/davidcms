@@ -1,0 +1,7 @@
+# Manifesto de integridade - ReamurCMS-CI-Fix-PHPUnit
+# Base: main 772975c14dded1d528d39d244d78f977c53ae0e8
+# Formato: CRC32  SHA256  tamanho(bytes)  caminho (relativo a raiz do repositorio)
+
+5b85b7bc  d89433b86d85bc15bc5a6e6fe814d9c851066d695acfcbd3f63203d9f7faa989  5935  dev/system/library/media_upload.php
+60732318  0bbee39f4eeafe94537f5cb766c6f28a9b1e5b3adf1658ffc4efe50a61f7d7bd  12846  dev/system/library/mercadopago_marketplace.php
+e080496d  2bfe49919549648926f94b2f67069536df8afe6be1cb819ae16d2dc20d73df85  14360  tests/Unit/Library/Step15WindowsAndAdminHardeningTest.php

@@ -104,10 +104,16 @@ final class MediaUpload {
      * Retorna o path saneado ou '' — usado em validação/payload normalizado.
      */
     public function guard(string $path, string $targetDir): string {
+        // Controle/NUL checados no $path CRU: trim() remove \0, \n, \r e \t das
+        // pontas e esconderia o byte da validação (ex.: "sample.png\0").
+        if (preg_match('/[\x00-\x1f\x7f]/', $path) === 1) {
+            return '';
+        }
+
         $targetDir = ltrim(str_replace('\\', '/', trim($targetDir)), '/');
         $path = str_replace('\\', '/', trim($path));
 
-        if ($targetDir === '' || $path === '' || preg_match('/[\x00-\x1f\x7f]/', $path) === 1
+        if ($targetDir === '' || $path === ''
             || !str_starts_with($path, $targetDir) || str_contains($path, '..')) {
             return '';
         }

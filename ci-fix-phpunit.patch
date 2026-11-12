@@ -1,0 +1,56 @@
+diff --git a/dev/system/library/media_upload.php b/dev/system/library/media_upload.php
+index 1c62f22..4839a6d 100644
+--- a/dev/system/library/media_upload.php
++++ b/dev/system/library/media_upload.php
+@@ -104,10 +104,16 @@ final class MediaUpload {
+      * Retorna o path saneado ou '' — usado em validação/payload normalizado.
+      */
+     public function guard(string $path, string $targetDir): string {
++        // Controle/NUL checados no $path CRU: trim() remove \0, \n, \r e \t das
++        // pontas e esconderia o byte da validação (ex.: "sample.png\0").
++        if (preg_match('/[\x00-\x1f\x7f]/', $path) === 1) {
++            return '';
++        }
++
+         $targetDir = ltrim(str_replace('\\', '/', trim($targetDir)), '/');
+         $path = str_replace('\\', '/', trim($path));
+ 
+-        if ($targetDir === '' || $path === '' || preg_match('/[\x00-\x1f\x7f]/', $path) === 1
++        if ($targetDir === '' || $path === ''
+             || !str_starts_with($path, $targetDir) || str_contains($path, '..')) {
+             return '';
+         }
+diff --git a/dev/system/library/mercadopago_marketplace.php b/dev/system/library/mercadopago_marketplace.php
+index 31c6e57..eadc633 100644
+--- a/dev/system/library/mercadopago_marketplace.php
++++ b/dev/system/library/mercadopago_marketplace.php
+@@ -44,8 +44,12 @@ class MercadopagoMarketplace {
+         return trim((string)($this->config['redirect_uri'] ?? ''));
+     }
+ 
++    /**
++     * Valida a string EXATA recebida: sem trim() aqui, senão um espaço/CR/LF/NUL
++     * nas pontas passaria na checagem e seguiria cru para quem usa o valor
++     * original (cURL, header). Quem aceita espaços nas pontas faz o trim antes.
++     */
+     public static function isHttpUrl(string $url): bool {
+-        $url = trim($url);
+         if ($url === '' || preg_match('/[\x00-\x20\x7f]/', $url) === 1) {
+             return false;
+         }
+diff --git a/tests/Unit/Library/Step15WindowsAndAdminHardeningTest.php b/tests/Unit/Library/Step15WindowsAndAdminHardeningTest.php
+index d88d51b..64f0451 100644
+--- a/tests/Unit/Library/Step15WindowsAndAdminHardeningTest.php
++++ b/tests/Unit/Library/Step15WindowsAndAdminHardeningTest.php
+@@ -171,7 +171,10 @@ final class Step15WindowsAndAdminHardeningTest extends TestCase {
+         $registry->set('response', $logoutRes);
+         (new Logout($registry))->index();
+         self::assertFalse($user->isLogged());
+-        self::assertContains('Location: https://example.test/admin/index.php?route=common/login', $logoutRes->getHeaders());
++        // O $router->index() acima registrou o rewrite de URLs limpas no Url
++        // compartilhado (ADR 0006), como o boot real faz antes de qualquer
++        // controller: a partir dali common/login sai como o alias /login.
++        self::assertContains('Location: https://example.test/admin/login', $logoutRes->getHeaders());
+     }
+ 
+     public function testAdminSettingAndUserControllersSanitizeArrayPayloadsAndUrls(): void {

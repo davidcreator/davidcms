@@ -171,7 +171,10 @@ final class Step15WindowsAndAdminHardeningTest extends TestCase {
         $registry->set('response', $logoutRes);
         (new Logout($registry))->index();
         self::assertFalse($user->isLogged());
-        self::assertContains('Location: https://example.test/admin/index.php?route=common/login', $logoutRes->getHeaders());
+        // O $router->index() acima registrou o rewrite de URLs limpas no Url
+        // compartilhado (ADR 0006), como o boot real faz antes de qualquer
+        // controller: a partir dali common/login sai como o alias /login.
+        self::assertContains('Location: https://example.test/admin/login', $logoutRes->getHeaders());
     }
 
     public function testAdminSettingAndUserControllersSanitizeArrayPayloadsAndUrls(): void {

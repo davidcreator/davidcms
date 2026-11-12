@@ -44,8 +44,12 @@ class MercadopagoMarketplace {
         return trim((string)($this->config['redirect_uri'] ?? ''));
     }
 
+    /**
+     * Valida a string EXATA recebida: sem trim() aqui, senão um espaço/CR/LF/NUL
+     * nas pontas passaria na checagem e seguiria cru para quem usa o valor
+     * original (cURL, header). Quem aceita espaços nas pontas faz o trim antes.
+     */
     public static function isHttpUrl(string $url): bool {
-        $url = trim($url);
         if ($url === '' || preg_match('/[\x00-\x20\x7f]/', $url) === 1) {
             return false;
         }
