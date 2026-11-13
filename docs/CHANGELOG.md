@@ -1,5 +1,18 @@
 # Changelog
 
+## Extensões EX-03 — contrato de meio de pagamento (2026-11-13)
+- ADR 0097. Terceira etapa da frente de extensões. Não acrescenta meio de pagamento, tela, tabela nem configuração.
+- **Para quem usa o site: nada muda.** Mesmos endereços (`checkout/payment.pay|<chave>`, `checkout/payment.notify`), mesma tela *Mercado Pago*, mesmo botão na lista de pedidos, mesmas respostas ao Mercado Pago, mesmos avisos na tela e mesmas linhas de log. Links já enviados a clientes e avisos de cobranças antigas continuam valendo.
+- **Novo no código:** `system/library/payment/`. Um meio de pagamento cumpre `Payment\Method` e responde a três perguntas: está pronto para cobrar, crie a cobrança deste pedido, este aviso é verdadeiro e de qual pagamento ele fala.
+- **Regras gerais num lugar só:** `Payment\Checkout` cuida da chave do link, do link pendente reaproveitado, do aviso repetido, da situação do pedido, do histórico e do evento de pedido pago. Antes essas regras estavam misturadas ao Mercado Pago e repetidas no admin e no site público.
+- **Mercado Pago** passa a ser o primeiro meio (`Payment\Mercadopago`), com as regras de antes (ADRs 0035 e 0094).
+- **Conferência:** o mesmo roteiro (painel, site público e avisos, contra um Mercado Pago de mentira) foi rodado no código anterior e no novo. Os relatórios, com respostas, avisos de tela, banco, histórico dos pedidos, log e chamadas feitas ao Mercado Pago, são idênticos.
+- **Atenção ao atualizar um site instalado:** suba os arquivos. Não há SQL, linha nova no `config.php` nem configuração.
+- **Banco:** nenhuma tabela ou coluna nova. As cobranças continuam em `rms_mp_payment`.
+- **Para quem escreve código:** saíram dos models `addPayment`, `getPaymentByOrder`, `getPaymentByToken`, `reflectPaymentStatus` (catálogo) e `addPayment`, `getPaymentByOrder`, `getActiveSeller` (admin); o admin ganhou `getActiveSellers()` e `getSellerByMpUserId()`. Regra em `agents-ia/regras/02-padroes-de-codigo.md`. Exemplo de meio de pagamento: `tests/Unit/Payment/FictitiousMethod.php`.
+- **Limite:** conferido só contra um Mercado Pago de mentira, porque o ambiente de teste do Mercado Pago real não consegue enviar avisos ao ambiente local. O contrato foi provado com um meio fictício; o primeiro meio real (Stripe, PayPal) pode pedir ajustes nele, e traz junto a lista de meios, a tabela geral de cobranças e a tela dele.
+- **Mantido como estava (ver ADR 0097):** vale o último aviso recebido, mesmo que cancele um pedido já aprovado; devolução não muda a situação do pedido.
+
 ## Extensões EX-02 — aviso de cookies e extensões de medição (2026-11-13)
 - ADR 0096. Guia: [`docs/guias/Guia-Extensoes.md`](guias/Guia-Extensoes.md), §10. Segunda etapa da frente de extensões; meio de pagamento (EX-03) vem depois.
 - **Novo no site público:** aviso de cookies do próprio CMS, com "Recusar" e "Aceitar" de mesma aparência e "Personalizar"; tela **Preferências de cookies** (rota `common/consent`), com link no rodapé. Funciona sem JavaScript. Textos em `en-us`, `pt-br` e `es-eu`.

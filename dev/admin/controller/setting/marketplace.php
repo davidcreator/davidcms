@@ -26,6 +26,11 @@
  */
 namespace Reamur\Admin\Controller\Setting;
 
+use Reamur\System\Library\Payment\Checkout;
+use Reamur\System\Library\Payment\DbLedger;
+use Reamur\System\Library\Payment\Link;
+use Reamur\System\Library\Payment\Mercadopago;
+
 class Marketplace extends \Reamur\System\Engine\Controller {
 
     /** Tela única (config + vendedores) */
@@ -493,101 +498,26 @@ class Marketplace extends \Reamur\System\Engine\Controller {
 
         $settings = $this->model_setting_setting->getSettings();
 
-        $existing = $this->model_setting_marketplace->getPaymentByOrder($order_id);
+        // ADR 0097: as regras (já pago, link pendente, meio pronto, valor,
+        // chave do link) estão no Checkout; aqui só se escolhe o texto.
+        $link = (new Checkout(new DbLedger($this->db, DB_PREFIX)))->link(
+            $this->method($settings),
+            $order_id,
+            (float)$order['total'],
+            sprintf($this->language->get('text_item_title'), $order_id),
+            $this->catalogRouteUrl('checkout/payment.notify')
+        );
 
-        if ($existing && (string)$existing['status'] === 'approved') {
-            $this->session->data['flash'] = ['type' => 'warning', 'text' => sprintf($this->language->get('error_already_paid'), $order_id)];
-
-            $this->response->redirect($this->url->link('setting/marketplace'));
-
-            return;
-        }
-
-        if ($existing && (string)$existing['status'] === 'pending' && (string)($existing['init_point'] ?? '') !== '') {
-            $this->session->data['flash'] = [
-                'type' => 'info',
-                'text' => sprintf($this->language->get('text_paylink_reused'), $this->publicPayUrl((string)$existing['public_token'])),
-            ];
-
-            $this->response->redirect($this->url->link('setting/marketplace'));
-
-            return;
-        }
-
-        $seller = $this->model_setting_marketplace->getActiveSeller();
-
-        if (!$seller) {
-            $this->session->data['flash'] = ['type' => 'warning', 'text' => $this->language->get('error_no_seller')];
-
-            $this->response->redirect($this->url->link('setting/marketplace'));
-
-            return;
-        }
-
-        if (!empty($seller['token_locked'])) {
-            $this->session->data['flash'] = ['type' => 'danger', 'text' => $this->language->get('error_token_locked')];
-
-            $this->response->redirect($this->url->link('setting/marketplace'));
-
-            return;
-        }
-
-        $amount = round((float)$order['total'], 2);
-
-        if ($amount <= 0) {
-            $this->session->data['flash'] = ['type' => 'warning', 'text' => sprintf($this->language->get('error_no_total'), $order_id)];
-
-            $this->response->redirect($this->url->link('setting/marketplace'));
-
-            return;
-        }
-
-        $percent = (float)str_replace(',', '.', (string)($settings['mp_marketplace_fee_percent'] ?? '10'));
-        $percent = max(0.0, min(100.0, $percent));
-        $fee     = round($amount * $percent / 100, 2);
-
-        $mp = $this->mpFromSettings($settings);
-
-        $preference = $mp->createPreference([
-            'items' => [[
-                'title'       => sprintf($this->language->get('text_item_title'), $order_id),
-                'quantity'    => 1,
-                'currency_id' => 'BRL',
-                'unit_price'  => $amount,
-            ]],
-            'marketplace_fee'    => $fee,
-            'external_reference' => (string)$order_id,
-            'notification_url'   => $this->catalogRouteUrl('checkout/payment.notify'),
-        ], (string)$seller['access_token']);
-
-        $preference_id = (string)($preference['id'] ?? '');
-        $init_point    = (string)($preference['init_point'] ?? $preference['sandbox_init_point'] ?? '');
-
-        if ((int)($preference['_http_status'] ?? 0) < 200 || (int)($preference['_http_status'] ?? 0) >= 300 || $preference_id === '' || $init_point === '') {
-            $this->session->data['flash'] = [
-                'type' => 'danger',
-                'text' => sprintf($this->language->get('error_preference'), $mp->extractErrorMessage($preference)),
-            ];
-
-            $this->response->redirect($this->url->link('setting/marketplace'));
-
-            return;
-        }
-
-        $this->model_setting_marketplace->addPayment([
-            'order_id'        => $order_id,
-            'mp_seller_id'    => (int)$seller['mp_seller_id'],
-            'preference_id'   => $preference_id,
-            'public_token'    => bin2hex(random_bytes(24)),
-            'amount'          => $amount,
-            'marketplace_fee' => $fee,
-            'init_point'      => $init_point,
-        ]);
-
-        $savedPayment = $this->model_setting_marketplace->getPaymentByOrder($order_id);
-        $public = $this->publicPayUrl((string)($savedPayment['public_token'] ?? ''));
-
-        $this->session->data['flash'] = ['type' => 'success', 'text' => sprintf($this->language->get('text_paylink_created'), $public)];
+        $this->session->data['flash'] = match ($link->state) {
+            Link::PAID     => ['type' => 'warning', 'text' => sprintf($this->language->get('error_already_paid'), $order_id)],
+            Link::REUSED   => ['type' => 'info', 'text' => sprintf($this->language->get('text_paylink_reused'), $this->publicPayUrl($link->token))],
+            Link::BLOCKED  => $link->detail === 'token_locked'
+                ? ['type' => 'danger', 'text' => $this->language->get('error_token_locked')]
+                : ['type' => 'warning', 'text' => $this->language->get('error_no_seller')],
+            Link::NO_TOTAL => ['type' => 'warning', 'text' => sprintf($this->language->get('error_no_total'), $order_id)],
+            Link::CREATED  => ['type' => 'success', 'text' => sprintf($this->language->get('text_paylink_created'), $this->publicPayUrl($link->token))],
+            default        => ['type' => 'danger', 'text' => sprintf($this->language->get('error_preference'), $link->detail)],
+        };
 
         $this->response->redirect($this->url->link('setting/marketplace'));
     }
@@ -615,19 +545,18 @@ class Marketplace extends \Reamur\System\Engine\Controller {
 
     // ── internos ──────────────────────────────────────────────────────────
 
-    /** Monta a library OAuth a partir de rms_setting (credenciais fora do git) */
+    /** Cliente da API do Mercado Pago a partir de rms_setting (credenciais fora do git) */
     private function mpFromSettings(array $settings): \Reamur\System\Library\MercadopagoMarketplace {
-        return new \Reamur\System\Library\MercadopagoMarketplace([
-            'app_id'        => (string)($settings['mp_app_id'] ?? ''),
-            // ADR 0094 (S9): cifrado no banco, aberto só aqui, no ponto de uso.
-            'client_secret' => $this->secrets()->open((string)($settings['mp_client_secret'] ?? ''), \Reamur\System\Library\Security\SecretBox::settingContext('mp_client_secret')),
-            'redirect_uri'  => (string)($settings['mp_redirect_uri'] ?? ''),
-            // Costura de ambiente p/ baterias e2e (ADR 0034 §4): existir só se
-            // alguém gravar as chaves-opcionais — fora das telas e do seed.
-            'token_url'     => (string)($settings['mp_token_url'] ?? ''),
-            'users_me_url'  => (string)($settings['mp_users_me_url'] ?? ''),
-            // F5-03 (ADR 0035 §3): base /checkout/preferences + /v1/payments
-            'api_url'       => (string)($settings['mp_api_url'] ?? ''),
-        ]);
+        return Mercadopago::client($settings, $this->secrets());
+    }
+
+    /** Mercado Pago como meio de pagamento do contrato (ADR 0097) */
+    private function method(array $settings): Mercadopago {
+        return new Mercadopago(
+            $this->secrets(),
+            static fn (): array => $settings,
+            fn (): array => (array)$this->model_setting_marketplace->getActiveSellers(),
+            fn (int $mpUserId): array => (array)$this->model_setting_marketplace->getSellerByMpUserId($mpUserId)
+        );
     }
 }

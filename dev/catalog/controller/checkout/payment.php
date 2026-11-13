@@ -6,20 +6,24 @@
  * @license   https://opensource.org/licenses/GPL-3.0
  * @link      https://reamurcms.com
  *
- * checkout/payment (CATALOG) — endpoints PÚBLICOS do checkout MP (F5-03,
- * ADR 0035):
- *  · pay|TOKEN   → link do cliente: 302 ao init_point (Checkout Pro) do
- *                  seller; token inválido → 404 da casa. Sem sessão/login.
- *  · notify      → webhook/IPN do MP. A fonte da verdade NUNCA é o POST:
- *                  o handler extrai o payment id, CONSULTA /v1/payments/{id}
- *                  com o token do seller e só então reflete o status
- *                  (idempotente por payment_id+status — ADR 0035 §4).
- *                  Sequência de defesa quando mp_webhook_secret estiver
- *                  configurado: valida x-signature ts/v1 (HMAC sha256 do
- *                  manifest "id:<id>;request-id:<rid>;ts:<ts>;") ANTES de
- *                  chamar a API do MP (ADR 0035 §6).
+ * checkout/payment (CATALOG) — endereços PÚBLICOS de pagamento, sem sessão
+ * nem login (ADR 0035; contrato de meio de pagamento: ADR 0097):
+ *  · pay|CHAVE  → link do cliente: 302 para o endereço de pagamento do
+ *                 provedor; chave que não vale → página "não encontrado".
+ *  · notify     → aviso do provedor. Resposta 200 com rótulo; 503 só quando
+ *                 um segredo gravado não abre (ADR 0094).
+ *
+ * As regras estão em system/library/payment/: Checkout (o que vale para
+ * qualquer meio) e Mercadopago (o que é do Mercado Pago). Este controller só
+ * junta as peças, responde HTTP e entrega o evento de pedido pago.
  */
 namespace Reamur\Catalog\Controller\Checkout;
+
+use Reamur\System\Library\Payment\Checkout;
+use Reamur\System\Library\Payment\DbLedger;
+use Reamur\System\Library\Payment\Mercadopago;
+use Reamur\System\Library\Payment\Method;
+use Reamur\System\Library\Payment\Notification;
 
 class Payment extends \Reamur\System\Engine\Controller {
 
@@ -27,290 +31,106 @@ class Payment extends \Reamur\System\Engine\Controller {
         (new \Reamur\System\Engine\Action('error/not_found'))->execute($this->registry);
     }
 
-    /** Cliente abre o link: valida token e manda ao Checkout Pro do seller */
+    /** Cliente abre o link: chave válida leva ao pagamento no provedor */
     public function pay(string $token = ''): void {
-        $this->load->language('checkout/payment');
-        $this->load->model('checkout/mp_payment');
+        $target = $this->checkout()->target((string)$token);
 
-        $payment = $this->model_checkout_mp_payment->getPaymentByToken((string)$token);
-
-        $init_point = (string)($payment['init_point'] ?? '');
-
-        $validInitPoint = $init_point !== ''
-            && preg_match('/[\r\n\0]/', $init_point) !== 1
-            && str_starts_with($init_point, 'https://')
-            && filter_var($init_point, FILTER_VALIDATE_URL) !== false;
-
-        // Estados em que o link não deve mais levar ao checkout (e exige HTTPS válido no init_point)
-        if (!$payment || !$validInitPoint || in_array((string)$payment['status'], ['approved', 'rejected', 'cancelled'], true)) {
-            $this->response->redirect($this->url->link('error/not_found'));
-
-            return;
-        }
-
-        $this->response->redirect($init_point);
+        $this->response->redirect($target !== '' ? $target : $this->url->link('error/not_found'));
     }
 
-    /** Webhook (v2) / IPN (clássico) do MP — resposta 200 c/ rótulo; 503 só quando um segredo gravado não abre (ADR 0094) */
+    /** Aviso do Mercado Pago (formato novo e antigo) */
     public function notify(): void {
         $this->response->addHeader('Content-Type: text/plain; charset=utf-8');
 
         try {
-            $raw        = file_get_contents('php://input') ?: '';
-            $payment_id = $this->extractPaymentId($raw);
-
-            if ($payment_id <= 0) {
-                $this->finish('ignored'); // merchant_order / lixo — 200 p/ o MP parar de reenviar
-                return;
-            }
-
             $this->load->language('checkout/payment');
             $this->load->model('checkout/mp_payment');
 
-            $settings  = $this->catalogSettings();
-            $mp        = $this->mpFromSettings($settings);
-            $decoded   = json_decode($raw, true);
-            $body      = is_array($decoded) ? $decoded : [];
-
-            // ADR 0094 (S9): segredos chegam cifrados do banco. Um segredo de
-            // assinatura que NÃO ABRE (chave do config.php trocada ou ausente)
-            // não vale como "sem segredo": a conferência seria pulada. O MP
-            // recebe 503 e reenvia depois, quando a chave estiver corrigida.
-            $signatureContext = \Reamur\System\Library\Security\SecretBox::settingContext('mp_webhook_secret');
-            $signatureStored  = (string)($settings['mp_webhook_secret'] ?? '');
-
-            if ($this->secrets()->locked($signatureStored, $signatureContext)) {
-                $this->log->write("mp notify: o segredo de assinatura gravado não abre com a REAMUR_SECRET_KEY do catalog/config.php (payment $payment_id); notificação devolvida para reenvio");
-
-                $this->retryLater('secret-locked');
-                return;
-            }
-
-            // §6 — validação de assinatura quando segredo configurado
-            if (!$this->signatureOk($this->secrets()->open($signatureStored, $signatureContext), $payment_id)) {
-                $this->log->write("mp notify: assinatura rejeitada (payment $payment_id)");
-
-                $this->finish('signature-rejected');
-                return;
-            }
-
-            // Descobre o seller dono do pagamento: user_id do payload (v2) →
-            // direto; sem ele (IPN clássico), itera os sellers ativos e para no
-            // primeiro em cuja /v1/payments o id existe (ADR 0035 §5).
-            $seller  = [];
-            $payment = [];
-            $rawMpUid   = $body['user_id'] ?? 0;
-            $mp_user_id = is_scalar($rawMpUid) ? (int)$rawMpUid : 0;
-
-            if ($mp_user_id > 0) {
-                $seller = $this->model_checkout_mp_payment->getSellerByMpUserId($mp_user_id);
-            }
-
-            // ADR 0094 (S9): vendedor cujo token não abre não é consultado
-            // (o token vem vazio); se por isso o pagamento não for achado, o
-            // MP recebe 503 e reenvia.
-            $tokenLocked = false;
-
-            if ($seller && !empty($seller['token_locked'])) {
-                $tokenLocked = true;
-            } elseif ($seller) {
-                $payment = $this->confirmedPayment($mp, $payment_id, (string)$seller['access_token']);
-            }
-
-            if (!$payment) {
-                foreach ($this->model_checkout_mp_payment->getActiveSellers() as $candidate) {
-                    if ($seller && (int)$candidate['mp_seller_id'] === (int)$seller['mp_seller_id']) {
-                        continue;
-                    }
-
-                    if (!empty($candidate['token_locked'])) {
-                        $tokenLocked = true;
-                        continue;
-                    }
-
-                    $payment = $this->confirmedPayment($mp, $payment_id, (string)$candidate['access_token']);
-
-                    if ($payment) {
-                        $seller = $candidate;
-                        break;
-                    }
-                }
-            }
-
-            if (!$payment && $tokenLocked) {
-                $this->log->write("mp notify: token de vendedor gravado não abre com a REAMUR_SECRET_KEY do catalog/config.php (payment $payment_id); notificação devolvida para reenvio");
-
-                $this->retryLater('token-locked');
-                return;
-            }
-
-            if (!$payment) {
-                $this->log->write("mp notify: payment $payment_id não confirmado em nenhum seller ativo");
-
-                $this->finish('not-ours');
-                return;
-            }
-
-            // Liga ao lançamento local: external_reference = order_id (paylink)
-            $order_id = (int)($payment['external_reference'] ?? 0);
-
-            if ($order_id <= 0) {
-                $this->log->write("mp notify: payment $payment_id sem external_reference");
-
-                $this->finish('no-reference');
-                return;
-            }
-
-            $record = $this->model_checkout_mp_payment->getPaymentByOrder($order_id);
-
-            if (!$record) {
-                $this->log->write("mp notify: pedido {$order_id} (payment $payment_id) sem lançamento local");
-
-                $this->finish('no-local-record');
-                return;
-            }
-
-            $status = (string)($payment['status'] ?? 'pending');
-
-            $changed = $this->model_checkout_mp_payment->reflectPaymentStatus(
-                (int)$record['mp_payment_id'],
-                $payment_id,
-                $status,
-                sprintf($this->language->get('text_history_mp'), $payment_id, $status)
+            $notification = new Notification(
+                (array)$this->request->get,
+                (array)$this->request->post,
+                (array)$this->request->server,
+                file_get_contents('php://input') ?: ''
             );
 
-            if ($changed && $status === 'approved') {
-                $this->dispatchWebhookEvent('order_history_edit', function () use ($order_id): array {
-                    $this->load->model('checkout/quote');
-                    $order = $this->model_checkout_quote->getQuoteForNotification($order_id);
-                    return [
-                        'order_id'  => $order_id,
-                        'firstname' => (string)($order['firstname'] ?? ''),
-                        'lastname'  => (string)($order['lastname'] ?? ''),
-                        'email'     => (string)($order['email'] ?? ''),
-                        'telephone' => (string)($order['telephone'] ?? ''),
-                        'comment'   => (string)($order['comment'] ?? ''),
-                        'total'     => (float)($order['total'] ?? 0),
-                        'status_id' => (int)($order['order_status_id'] ?? 0),
-                        'items'     => (array)($order['items'] ?? []),
-                    ];
-                }, 'pedido #' . $order_id);
-            }
-
-            $this->finish($changed ? 'processed' : 'already-processed');
+            $reply = $this->checkout()->notify(
+                $this->method(),
+                $notification,
+                fn (string $payment, string $status): string => sprintf((string)$this->language->get('text_history_mp'), $payment, $status)
+            );
         } catch (\Throwable $e) {
             $this->log->write('mp notify falhou e foi isolado: ' . $e->getMessage());
 
-            $this->finish('error'); // ainda 200: falha local não deve re-entregar em loop
+            $this->response->setOutput('ok:error'); // ainda 200: falha local não deve re-entregar em loop
+
+            return;
         }
+
+        if ($reply->retry) {
+            // Única exceção ao "sempre 200" (ADR 0094): com 503 o provedor
+            // reenvia o aviso mais tarde, quando a chave estiver corrigida.
+            $this->response->addHeader('HTTP/1.1 503 Service Unavailable');
+            $this->response->addHeader('Retry-After: 3600');
+        }
+
+        if ($reply->paidOrder > 0) {
+            $order_id = $reply->paidOrder;
+
+            $this->dispatchWebhookEvent('order_history_edit', function () use ($order_id): array {
+                $this->load->model('checkout/quote');
+                $order = $this->model_checkout_quote->getQuoteForNotification($order_id);
+                return [
+                    'order_id'  => $order_id,
+                    'firstname' => (string)($order['firstname'] ?? ''),
+                    'lastname'  => (string)($order['lastname'] ?? ''),
+                    'email'     => (string)($order['email'] ?? ''),
+                    'telephone' => (string)($order['telephone'] ?? ''),
+                    'comment'   => (string)($order['comment'] ?? ''),
+                    'total'     => (float)($order['total'] ?? 0),
+                    'status_id' => (int)($order['order_status_id'] ?? 0),
+                    'items'     => (array)($order['items'] ?? []),
+                ];
+            }, 'pedido #' . $order_id);
+        }
+
+        $this->response->setOutput($reply->body);
+    }
+
+    /**
+     * Conferência do cabeçalho x-signature do Mercado Pago. Mantido aqui por
+     * compatibilidade; a regra mora em Mercadopago::signatureValid().
+     */
+    public static function verifyWebhookSignature(string $secret, int $paymentId, string $signatureHeader, string $requestId): bool {
+        return Mercadopago::signatureValid($secret, $paymentId, $signatureHeader, $requestId);
     }
 
     // ── internos ──────────────────────────────────────────────────────────
 
-    /** Webhook v2 (?type=payment&data.id=) e IPN clássico (?topic=payment&id=/POST) */
-    private function extractPaymentId(string $raw = ''): int {
-        $get  = $this->request->get;
-        $post = $this->request->post;
-
-        $sources = [
-            $get['data.id'] ?? null,
-            $get['data_id'] ?? null, // PHP converte o ponto de ?data.id=
-            $get['id']      ?? null,
-            $post['id']     ?? null, // IPN clássico = POST application/x-www-form-urlencoded
-        ];
-
-        $body = $raw !== '' ? json_decode($raw, true) : null;
-
-        if (is_array($body) && isset($body['data']['id'])) {
-            $sources[] = $body['data']['id'];
-        }
-
-        $queryType = $get['type'] ?? $get['topic'] ?? '';
-        $bodyType  = is_array($body) ? ($body['type'] ?? $body['topic'] ?? '') : '';
-        $type      = (string)((is_scalar($queryType) && (string)$queryType !== '') ? $queryType : $bodyType);
-
-        if (!in_array($type, ['payment', ''], true)) {
-            return 0; // merchant_order & afins: fora do nosso recorte F5-03
-        }
-
-        foreach ($sources as $s) {
-            $id = is_scalar($s) ? (int)$s : 0;
-
-            if ($id > 0) {
-                return $id;
+    private function checkout(): Checkout {
+        return new Checkout(
+            new DbLedger($this->db, DB_PREFIX),
+            function (string $line): void {
+                $this->log->write($line);
             }
-        }
-
-        return 0;
+        );
     }
 
-    /** Só aceita como verdade 2xx com recurso de pagamento bem formado */
-    private function confirmedPayment(\Reamur\System\Library\MercadopagoMarketplace $mp, int $payment_id, string $access_token): array {
-        $p = $mp->getPayment($payment_id, $access_token);
-
-        if ((int)($p['_http_status'] ?? 0) < 200 || (int)($p['_http_status'] ?? 0) >= 300) {
-            return [];
-        }
-
-        if (empty($p['id']) || empty($p['status'])) {
-            return [];
-        }
-
-        return $p;
+    /** Meio de pagamento deste endereço. Hoje há um só: Mercado Pago. */
+    private function method(): Method {
+        return new Mercadopago(
+            $this->secrets(),
+            fn (): array => $this->catalogSettings(),
+            fn (): array => (array)$this->model_checkout_mp_payment->getActiveSellers(),
+            fn (int $mpUserId): array => (array)$this->model_checkout_mp_payment->getSellerByMpUserId($mpUserId)
+        );
     }
 
-    /** Validação pura do header x-signature (ts=…,v1=…) contra o segredo configurado. */
-    public static function verifyWebhookSignature(string $secret, int $paymentId, string $signatureHeader, string $requestId): bool {
-        if ($secret === '') {
-            return true; // validação por consulta à API permanece (§4)
-        }
-
-        if ($paymentId <= 0 || preg_match('/[\r\n\0]/', $requestId) === 1) {
-            return false;
-        }
-
-        $ts = '';
-        $v1 = '';
-
-        foreach (explode(',', $signatureHeader) as $part) {
-            [$k, $v] = array_pad(explode('=', trim($part), 2), 2, '');
-
-            if ($k === 'ts') {
-                $ts = $v;
-            } elseif ($k === 'v1') {
-                $v1 = $v;
-            }
-        }
-
-        if ($ts === '' || !ctype_digit($ts) || $v1 === '' || strlen($v1) !== 64 || !ctype_xdigit($v1)) {
-            return false;
-        }
-
-        $manifest = 'id:' . $paymentId . ';request-id:' . $requestId . ';ts:' . $ts . ';';
-
-        return hash_equals(hash_hmac('sha256', $manifest, $secret), strtolower($v1));
-    }
-
-    /** x-signature: ts=…,v1=… (hex) — valida só quando o segredo ESTIVER configurado */
-    private function signatureOk(string $secret, int $payment_id): bool {
-        $header = (string)($this->request->server['HTTP_X_SIGNATURE'] ?? '');
-        $rid    = (string)($this->request->server['HTTP_X_REQUEST_ID'] ?? '');
-
-        return self::verifyWebhookSignature($secret, $payment_id, $header, $rid);
-    }
-
-    private function mpFromSettings(array $settings): \Reamur\System\Library\MercadopagoMarketplace {
-        return new \Reamur\System\Library\MercadopagoMarketplace([
-            'app_id'        => (string)($settings['mp_app_id'] ?? ''),
-            'client_secret' => $this->secrets()->open((string)($settings['mp_client_secret'] ?? ''), \Reamur\System\Library\Security\SecretBox::settingContext('mp_client_secret')),
-            'redirect_uri'  => (string)($settings['mp_redirect_uri'] ?? ''),
-            'token_url'     => (string)($settings['mp_token_url'] ?? ''),
-            'users_me_url'  => (string)($settings['mp_users_me_url'] ?? ''),
-            'api_url'       => (string)($settings['mp_api_url'] ?? ''),
-        ]);
-    }
-
-    /** rms_setting inteira, com a MESMA tolerância a cache do model admin */
+    /**
+     * rms_setting direto do banco: o catálogo só carrega na memória as chaves
+     * da lista de startup/setting, e as do Mercado Pago não estão nela.
+     *
+     * @return array<string, string>
+     */
     private function catalogSettings(): array {
         $query = $this->db->query("SELECT `key`, `value` FROM `" . DB_PREFIX . "setting` WHERE `code` = 'config'");
 
@@ -324,21 +144,5 @@ class Payment extends \Reamur\System\Engine\Controller {
         }
 
         return $map;
-    }
-    /** O MP reenvia a notificação se não receber 2xx: a resposta normal é 200 (exceção: retryLater) */
-    private function finish(string $label): void {
-        $this->response->setOutput('ok:' . $label);
-    }
-
-    /**
-     * Única exceção ao "sempre 200" (ADR 0094, S9): um segredo gravado não
-     * abre porque a chave do config.php está errada. A falha é da instalação
-     * e tem conserto; responder 200 jogaria fora a confirmação do pagamento.
-     * Com 503 o Mercado Pago reenvia a notificação mais tarde.
-     */
-    private function retryLater(string $label): void {
-        $this->response->addHeader('HTTP/1.1 503 Service Unavailable');
-        $this->response->addHeader('Retry-After: 3600');
-        $this->response->setOutput('retry:' . $label);
     }
 }

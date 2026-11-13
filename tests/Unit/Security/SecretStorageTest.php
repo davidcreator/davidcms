@@ -144,8 +144,8 @@ final class SecretStorageTest extends TestCase {
         self::assertSame(self::REFRESH, $seller['refresh_token']);
         self::assertFalse($seller['token_locked']);
 
-        $active = (new AdminMarketplaceModel($this->registry($this->db($answer), $box)))->getActiveSeller();
-        self::assertSame(self::ACCESS, $active['access_token']);
+        $active = (new AdminMarketplaceModel($this->registry($this->db($answer), $box)))->getActiveSellers();
+        self::assertSame(self::ACCESS, $active[0]['access_token']);
 
         // A grade nunca recebe token, nem cifrado.
         $list = (new AdminMarketplaceModel($this->registry($this->db($answer), $box)))->getSellers();

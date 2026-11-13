@@ -1,6 +1,12 @@
 # ADR 0035 — Checkout com split (marketplace_fee) e notificação de pagamento: a verdade é a API, nunca o POST
 
 - **Status:** Aceita — 2026-10-20 (F5 Tarefa 03)
+- **Revisão (2026-11-13):** as regras desta decisão continuam valendo, mas
+  mudaram de lugar. As que servem a qualquer meio de pagamento estão em
+  `Payment\Checkout`; as do Mercado Pago, em `Payment\Mercadopago`. Os
+  métodos de model citados abaixo (`reflectPaymentStatus` e os demais de
+  cobrança) não existem mais. Ver
+  [ADR 0097](0097-contrato-de-meio-de-pagamento.md).
 - **Contexto:** ADR 0034 entregou a fundação do Marketplace (OAuth de
   vendedores). F5-03 entrega o fluxo de dinheiro: o admin gera um **link
   de pagamento** por pedido (Checkout Pro autenticado no **seller**, com

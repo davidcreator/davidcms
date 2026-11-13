@@ -175,6 +175,7 @@ system/
 │   ├── security/upload_security.php
 │   ├── extension/{manifest, store, manager, page_output, extension}.php   # extensões (ADR 0095)
 │   ├── consent.php            # escolha de cookies do visitante (ADR 0096)
+│   ├── payment/{method, checkout, ledger, db_ledger, mercadopago, ...}.php   # contrato de meio de pagamento e regras gerais (ADR 0097)
 │   ├── three/                  # serviço/config + runtime Three.js canônico self-hosted
 │   │   ├── scene_config.php    # política declarativa allowlisted
 │   │   ├── asset_manifest.php  # allowlist de módulos servidos pelo Catalog
