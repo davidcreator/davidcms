@@ -1,0 +1,53 @@
+{{ header }}
+{# EX-02 (ADR 0096): preferências de cookies. Formulário comum, sem script. #}
+<main class="site-main rms-consent-page">
+  <div class="rms-consent-page__head">
+    <h1>{{ heading_title }}</h1>
+    <a href="{{ home }}">{{ button_back_home }}</a>
+  </div>
+  <p class="lead">{{ text_lead }}</p>
+
+  {% if text_flash.text %}
+  <div class="rms-consent-page__note rms-consent-page__note--ok" role="status">{{ text_flash.text }}</div>
+  {% endif %}
+
+  {% if error %}
+  <div class="rms-consent-page__note rms-consent-page__note--error" role="alert">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ action }}" data-rms-consent-form>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <div class="rms-consent-page__item">
+      <div class="rms-consent-page__row">
+        <strong>{{ text_necessary }}</strong>
+        <span class="rms-consent-page__fixed">{{ text_always_on }}</span>
+      </div>
+      <p>{{ text_necessary_help }}</p>
+    </div>
+
+    {% for category in categories %}
+    <div class="rms-consent-page__item" data-rms-consent-category="{{ category.code }}">
+      <div class="rms-consent-page__row">
+        <label for="rms-consent-{{ category.code }}"><strong>{{ category.name }}</strong></label>
+        <input type="checkbox" id="rms-consent-{{ category.code }}" name="category[{{ category.code }}]" value="1"{% if category.checked %} checked{% endif %} aria-describedby="rms-consent-{{ category.code }}-help">
+      </div>
+      <p id="rms-consent-{{ category.code }}-help">{{ category.help }}</p>
+      {% if category.services %}<p class="rms-consent-page__detail">{{ text_services }} {{ category.services }}</p>{% endif %}
+      {% if category.cookies %}<p class="rms-consent-page__detail">{{ text_cookies }} {{ category.cookies }}</p>{% endif %}
+    </div>
+    {% endfor %}
+
+    {% if has_categories %}
+    <p class="rms-consent-page__status">{{ text_status }}</p>
+    <div class="rms-consent-page__actions">
+      <button class="rms-consent__button" type="submit" name="decision" value="custom">{{ button_save }}</button>
+      <button class="rms-consent__button" type="submit" name="decision" value="reject_all">{{ button_reject_all }}</button>
+      <button class="rms-consent__button" type="submit" name="decision" value="accept_all">{{ button_accept_all }}</button>
+    </div>
+    {% else %}
+    <p class="rms-consent-page__status">{{ text_none_in_use }}</p>
+    {% endif %}
+  </form>
+</main>
+{{ footer }}

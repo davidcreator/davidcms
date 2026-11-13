@@ -97,6 +97,60 @@ class Controller {
         }
     }
 
+    /**
+     * EX-02 (ADR 0096): avisa às extensões, na PRÓXIMA página que o
+     * visitante abrir, que algo aconteceu (um formulário enviado). O envio
+     * termina em redirecionamento, então o aviso espera na sessão e sai uma
+     * única vez (takePageSignals). Só o nome do acontecimento: nenhum dado
+     * do formulário.
+     */
+    protected function pageSignal(string $signal): void {
+        $session = $this->registry->get('session');
+
+        if (!$session instanceof \Reamur\System\Library\Session
+            || !in_array($signal, \Reamur\System\Library\Extension\PageOutput::SIGNALS, true)) {
+            return;
+        }
+
+        $waiting = $session->data['page_signals'] ?? [];
+        $waiting = is_array($waiting) ? $waiting : [];
+
+        if (!in_array($signal, $waiting, true)) {
+            $waiting[] = $signal;
+        }
+
+        $session->data['page_signals'] = $waiting;
+    }
+
+    /**
+     * Retira da sessão os avisos pendentes. Quem chama é o cabeçalho público,
+     * a cada página, haja ou não extensão ouvindo: um aviso nunca fica
+     * guardado para uma página aberta mais tarde.
+     *
+     * @return list<string>
+     */
+    protected function takePageSignals(): array {
+        $session = $this->registry->get('session');
+
+        if (!$session instanceof \Reamur\System\Library\Session || !isset($session->data['page_signals'])) {
+            return [];
+        }
+
+        $waiting = $session->data['page_signals'];
+
+        unset($session->data['page_signals']);
+
+        if (!is_array($waiting)) {
+            return [];
+        }
+
+        // A sessão pode ter vindo de outra versão ou ter sido adulterada: só nomes conhecidos saem.
+        return array_values(array_filter(
+            \Reamur\System\Library\Extension\PageOutput::SIGNALS,
+            static fn (string $signal): bool => in_array($signal, $waiting, true)
+        ));
+    }
+
     /** Lê parâmetro escalar da query string (GET) normalizado com trim. */
     protected function queryValue(string $key): string {
         $request = $this->registry->get('request');

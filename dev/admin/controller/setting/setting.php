@@ -89,6 +89,7 @@ class Setting extends \Reamur\System\Engine\Controller {
         $data['fieldset_store']    = $this->language->get('fieldset_store');
         $data['fieldset_mail']     = $this->language->get('fieldset_mail');
         $data['fieldset_cache']    = $this->language->get('fieldset_cache');
+        $data['fieldset_privacy']  = $this->language->get('fieldset_privacy');
         $data['fieldset_threejs']  = $this->language->get('fieldset_threejs');
         $data['threejs_toggle_options'] = ['1' => $this->language->get('text_enabled'), '0' => $this->language->get('text_disabled')];
         foreach (['three_hero_enabled', 'three_hero_particle_count', 'three_hero_color', 'three_hero_speed', 'three_not_found_enabled', 'three_portfolio_enabled', 'three_portfolio_frame_limit', 'three_tools_enabled'] as $field) {
@@ -103,6 +104,7 @@ class Setting extends \Reamur\System\Engine\Controller {
             'mail_engine', 'mail_smtp_hostname', 'mail_smtp_username',
             'mail_smtp_port', 'mail_smtp_timeout',
             'mail_reply_to', 'cache_engine', 'cache_expire',
+            'config_consent_days',
         ] as $field) {
             $data['entry_' . $field]  = $this->language->get('entry_' . $field);
             $data['help_' . $field]   = $this->language->get('help_' . $field);
@@ -301,6 +303,7 @@ class Setting extends \Reamur\System\Engine\Controller {
             'mail_engine', 'mail_smtp_hostname', 'mail_smtp_username',
             'mail_smtp_password', 'mail_smtp_port', 'mail_smtp_timeout',
             'mail_reply_to', 'cache_engine', 'cache_expire',
+            'config_consent_days',
         ];
 
         $out = [];
@@ -347,6 +350,11 @@ class Setting extends \Reamur\System\Engine\Controller {
             'mail_reply_to'           => $str('mail_reply_to', 96),
             'cache_engine'            => $str('cache_engine', 16),
             'cache_expire'            => $str('cache_expire', 10),
+            // Campo vazio (ou ausente num formulário antigo) = o padrão. O corte fica acima de três
+            // dígitos de propósito: "1800" tem de ser recusado na validação, não virar "180" em silêncio.
+            'config_consent_days'     => $str('config_consent_days', 8) !== ''
+                ? $str('config_consent_days', 8)
+                : (string)\Reamur\System\Library\Consent::DEFAULT_DAYS,
             'three_hero_enabled' => $str('three_hero_enabled', 1),
             'three_hero_particle_count' => $str('three_hero_particle_count', 4),
             'three_hero_color' => $str('three_hero_color', 7),
@@ -465,6 +473,13 @@ class Setting extends \Reamur\System\Engine\Controller {
 
         if ((int)$post['cache_expire'] < 60 || (int)$post['cache_expire'] > 86400 * 30) {
             $errors['cache_expire'] = $this->language->get('error_cache_expire');
+        }
+
+        // EX-02 (ADR 0096): validade da escolha de cookies do visitante, em dias.
+        if (preg_match('/^[0-9]{1,3}$/D', $post['config_consent_days']) !== 1
+            || (int)$post['config_consent_days'] < \Reamur\System\Library\Consent::MIN_DAYS
+            || (int)$post['config_consent_days'] > \Reamur\System\Library\Consent::MAX_DAYS) {
+            $errors['config_consent_days'] = $this->language->get('error_config_consent_days');
         }
 
         foreach ($this->three_scene_config->validateSettings($post) as $field => $_code) {

@@ -100,6 +100,15 @@ class Header extends \Reamur\System\Engine\Controller {
 
         // Tema base (F3-01, ADR 0019): folha própria do site publicado
         $this->document->addStyle(rtrim($data['home'], '/') . '/view/css/theme.css');
+
+        // EX-02 (ADR 0096): aviso de cookies. Só existe quando uma extensão
+        // ligada pede uma categoria que o visitante ainda não respondeu.
+        $data['consent_banner'] = $this->consentBanner();
+
+        if ($data['consent_banner'] !== []) {
+            $this->document->addStyle(rtrim($data['home'], '/') . '/view/css/consent.css');
+        }
+
         $data['styles'] = $this->document->getStyles();
 
         // Marca + navegação da publicação (F2-17): idioma é a fonte de verdade
@@ -184,11 +193,19 @@ class Header extends \Reamur\System\Engine\Controller {
 
         $events = $this->registry->get('event');
 
+        // EX-02 (ADR 0096): avisos de "formulário enviado" saem da sessão a
+        // cada página, com ou sem extensão ouvindo, para nunca sobrarem para
+        // uma página aberta depois.
+        $signals = $this->takePageSignals();
+        $consent = $this->registry->get('consent');
+
         if ($events instanceof \Reamur\System\Engine\Event
             && $events->has(\Reamur\System\Library\Extension\Manager::EVENT_PAGE_OUTPUT)) {
             $page = new \Reamur\System\Library\Extension\PageOutput(
                 (string)$this->config->get('_route', ''),
-                (string)$data['locale']
+                (string)$data['locale'],
+                $consent instanceof \Reamur\System\Library\Consent ? $consent : null,
+                $signals
             );
 
             $args = [$page];
@@ -203,6 +220,57 @@ class Header extends \Reamur\System\Engine\Controller {
         }
 
         return $this->load->view('common/header', $data);
+    }
+
+    /**
+     * EX-02 (ADR 0096): dados do aviso de cookies, ou [] quando ele não deve
+     * aparecer (nenhuma extensão pede aceitação, o visitante já respondeu a
+     * tudo o que está em uso, ou a página é a própria tela de preferências).
+     *
+     * O aviso é um formulário comum (POST para common/consent): funciona sem
+     * JavaScript e não precisa de script na página.
+     *
+     * @return array<string, string>
+     */
+    private function consentBanner(): array {
+        $manager = $this->registry->get('extensions');
+        $consent = $this->registry->get('consent');
+
+        if (!$manager instanceof \Reamur\System\Library\Extension\Manager
+            || !$consent instanceof \Reamur\System\Library\Consent) {
+            return [];
+        }
+
+        $pending = $consent->pending($manager->consentCategories());
+
+        if ($pending === [] || explode('|', (string)$this->config->get('_route', ''), 2)[0] === 'common/consent') {
+            return [];
+        }
+
+        $purposes = array_map(fn (string $category): string => $this->language->get('text_consent_purpose_' . $category), $pending);
+
+        // Volta para a página em que o visitante está. O destino é conferido
+        // de novo na gravação (common/consent): aqui só sai o caminho pedido.
+        $uri    = (string)($this->request->server['REQUEST_URI'] ?? '');
+        $return = preg_match('#^/(?![/\\\\])[^\\\\\x00-\x20\x7f]*$#D', $uri) === 1 && strlen($uri) <= 2000 ? $uri : '';
+
+        $this->load->model('catalog/page');
+
+        $policy = $this->model_catalog_page->getPageByKeyword('cookies');
+
+        return [
+            'title'       => $this->language->get('text_consent_title'),
+            'text'        => sprintf($this->language->get('text_consent_banner'), implode($this->language->get('text_consent_and'), $purposes)),
+            'action'      => $this->url->link('common/consent'),
+            'preferences' => $this->url->link('common/consent'),
+            'policy_href' => $policy ? $this->url->link('cms/page.info|' . (int)$policy['page_id']) : '',
+            'policy_text' => $this->language->get('text_consent_policy'),
+            'csrf_token'  => \Reamur\System\Library\Security\Csrf::token($this->session),
+            'return'      => $return,
+            'accept'      => $this->language->get('button_consent_accept'),
+            'reject'      => $this->language->get('button_consent_reject'),
+            'customize'   => $this->language->get('button_consent_customize'),
+        ];
     }
 
     /** Mapeia rotas públicas para as chaves de conteúdo fixas do CMS. */

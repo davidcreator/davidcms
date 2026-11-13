@@ -78,6 +78,9 @@ class Quote extends \Reamur\System\Engine\Controller {
                         return $this->webhookOrderPayload((int)$order_id);
                     }, 'pedido #' . (int)$order_id);
 
+                    // EX-02 (ADR 0096): as extensões de medição ficam sabendo na próxima página.
+                    $this->pageSignal(\Reamur\System\Library\Extension\PageOutput::SIGNAL_QUOTE);
+
                     $this->setFlash(sprintf($this->language->get('text_success'), $order_id));
 
                     $this->response->redirect($this->url->link('checkout/quote'));

@@ -1,7 +1,7 @@
 # Guia de Extensões — ReamurCMS
 
-> Como instalar, ligar e escrever uma extensão. Base entregue na etapa EX-01 ([ADR 0095](../../agents-ia/decisoes/0095-extensoes-base-pasta-manifesto-eventos.md)).
-> Exemplo pronto para copiar: `dev/extension/site_verification/` ("Verificação de site").
+> Como instalar, ligar e escrever uma extensão. Base entregue na etapa EX-01 ([ADR 0095](../../agents-ia/decisoes/0095-extensoes-base-pasta-manifesto-eventos.md)); aviso de cookies e extensões de medição na etapa EX-02 ([ADR 0096](../../agents-ia/decisoes/0096-consentimento-de-cookies-e-extensoes-de-medicao.md)).
+> Exemplos prontos para copiar: `dev/extension/site_verification/` ("Verificação de site") e `dev/extension/google_analytics/` (extensão que depende da aceitação do visitante).
 
 ## Sumário
 
@@ -14,7 +14,8 @@
 7. [Saída na página pública](#7-saída-na-página-pública)
 8. [Endereços de fora](#8-endereços-de-fora)
 9. [Configurações e segredos](#9-configurações-e-segredos)
-10. [O que esta etapa não oferece](#10-o-que-esta-etapa-não-oferece)
+10. [Cookies e aceitação do visitante](#10-cookies-e-aceitação-do-visitante)
+11. [O que a base não oferece](#11-o-que-a-base-não-oferece)
 
 ---
 
@@ -56,6 +57,18 @@ Situações que a tela mostra:
 | Inválida | O `extension.json` não passou na conferência; os problemas aparecem na linha | Corrigir o arquivo. Se estava ligada, não roda |
 | Incompatível | Pede uma versão do CMS ou do PHP que o site não tem | Atualizar o site ou a extensão |
 | Pasta ausente | Há dados gravados, mas a pasta saiu do servidor | Devolver a pasta, ou desligar e remover os dados |
+
+Extensões que acompanham o CMS, todas desligadas até alguém ligar:
+
+| Extensão | Pasta | Depende da aceitação do visitante |
+| --- | --- | --- |
+| Verificação de site | `site_verification` | Não |
+| Google Analytics 4 | `google_analytics` | Sim: medição de visitas |
+| Google Tag Manager | `google_tag_manager` | Sim: medição de visitas ou publicidade |
+| Pixel da Meta | `meta_pixel` | Sim: publicidade |
+| Tag do Pinterest | `pinterest_tag` | Sim: publicidade |
+
+Ligar uma das quatro últimas faz o aviso de cookies aparecer no site público ([§10](#10-cookies-e-aceitação-do-visitante)).
 
 **Permissão.** A tela é a rota `extension/extension`. Instalação nova já nasce com ela no grupo Administrator. Em site já instalado, rode `install/sql/upgrade_ex01_extension_grant.sql` no phpMyAdmin, ou marque `extension/extension` (acessar e modificar) em *Usuários → Grupos de usuários*.
 
@@ -151,6 +164,8 @@ A leitura é estrita: **chave desconhecida, em qualquer nível, invalida o arqui
 | `settings` | não | Campos de configuração ([§9](#9-configurações-e-segredos)). Até 40 |
 | `events` | não | Lista de `{"trigger", "handler", "priority"}` ([§6](#6-eventos)). Até 40 |
 | `csp` | não | Endereços de fora, por tipo de recurso ([§8](#8-endereços-de-fora)) |
+| `consent` | não | Para que a extensão usa cookies: `["analytics"]`, `["marketing"]` ou os dois ([§10](#10-cookies-e-aceitação-do-visitante)). Só em extensão com `apps` igual a `["catalog"]` |
+| `cookies` | não | Nomes dos cookies que a extensão grava no navegador, para o CMS apagar na retirada. Só junto com `consent`. Até 30 |
 
 Texto por idioma: o CMS usa o idioma do admin, depois `en-us`, depois o primeiro que houver.
 
@@ -208,6 +223,8 @@ public function onPageOutput(PageOutput $page): void {
 | `script($código, $posição)` | `<script nonce="...">código</script>` | Até 20000 bytes; não pode conter `</script` nem `<!--` |
 | `PageOutput::js($valor)` | Literal JavaScript seguro | **Todo valor de configuração ou do visitante entra no script por aqui** |
 | `$page->route()`, `$page->language()` | Rota e idioma da página | Ex.: `common/home`, `pt-br` |
+| `$page->allows($categoria)` | `true` se o visitante aceitou `analytics` ou `marketing` | [§10](#10-cookies-e-aceitação-do-visitante) |
+| `$page->happened($aviso)` | `true` se o visitante acabou de enviar um formulário | [§10](#10-cookies-e-aceitação-do-visitante) |
 
 Posições: `PageOutput::HEAD` (padrão, antes de `</head>`) e `PageOutput::BODY_START` (logo depois de `<body>`). Limite de 60 itens por página, somando todas as extensões.
 
@@ -273,10 +290,71 @@ O valor é conferido ao salvar **e de novo a cada uso**: se o que está no banco
 
 Estado gravado, para referência: tabela `rms_setting`, `code = 'extension'`, chaves `<código>.enabled`, `<código>.config` (JSON) e `<código>.secret.<campo>`.
 
-## 10. O que esta etapa não oferece
+## 10. Cookies e aceitação do visitante
+
+Extensão que grava cookies de medição ou de publicidade declara isso, e o CMS só a executa para o visitante que aceitou:
+
+```json
+"consent": ["analytics"],
+"cookies": ["_ga", "_ga_*"]
+```
+
+| Categoria | Para quê | Nome que o visitante vê |
+| --- | --- | --- |
+| `analytics` | Contar visitas e entender o uso do site | Medição de visitas |
+| `marketing` | Medir anúncios, remarketing | Publicidade |
+
+Cookies necessários (sessão, idioma, segurança dos formulários e a própria escolha) não dependem de aceitação e não se declaram.
+
+**O que o CMS faz com a declaração**
+
+- Enquanto o visitante não aceitou nenhuma das categorias da extensão, **o `extension.php` dela não é carregado**, nenhum evento dela roda e os endereços do `csp` dela não entram na política do site. O navegador desse visitante não recebe nada da extensão.
+- Com mais de uma categoria (`["analytics", "marketing"]`), a extensão roda quando o visitante aceitou **pelo menos uma**, e pergunta `$page->allows('marketing')` para decidir o que faz com cada uma.
+- O aviso de cookies aparece no site público só quando alguma extensão ligada declara `consent`, e só pergunta pelas categorias em uso. Ligar depois uma extensão de categoria nova faz o aviso voltar, só para a categoria nova.
+- Na tela de extensões, a linha mostra de que aceitação a extensão depende.
+
+**O aviso e a tela de preferências**
+
+- Botões "Recusar" e "Aceitar" com a mesma aparência, e "Personalizar", que leva à tela *Preferências de cookies* (rota `common/consent`), onde cada categoria tem uma caixa, com os serviços e os cookies de cada uma.
+- O rodapé ganha o link "Preferências de cookies" enquanto houver extensão que dependa de aceitação: o visitante muda a escolha quando quiser.
+- Se existir uma página do CMS com a palavra-chave `cookies`, o aviso mostra o link para ela ("Política de cookies").
+- A escolha fica num cookie do próprio site (`rms_consent`), sem tabela no banco. Vale 180 dias; o prazo muda em *admin → Configurações → Privacidade* (de 30 a 390 dias). Depois dele, o aviso pergunta de novo.
+- Funciona sem JavaScript, nos três idiomas do site.
+
+**Retirada.** Quando o visitante recusa uma categoria que tinha aceitado, a extensão para de rodar na página seguinte e o CMS manda o navegador apagar os cookies que ela declarou em `cookies`:
+
+- nome exato (`_fbp`) ou começo do nome com `*` no fim (`_ga_*`, pelo menos dois caracteres antes do `*`);
+- só cookies deste site. Cookie gravado no domínio da plataforma (por exemplo `facebook.com`) o site não alcança;
+- o cookie de sessão e o da própria escolha nunca são apagados por essa lista, mesmo que um padrão os alcance;
+- cookie que outra extensão ainda em uso também declara fica.
+
+**Envio de formulário.** Depois que o visitante envia o formulário de contato ou o pedido de orçamento, a página seguinte responde `true`, uma única vez, a:
+
+| Pergunta | Quando |
+| --- | --- |
+| `$page->happened(PageOutput::SIGNAL_CONTACT)` | Formulário de contato enviado |
+| `$page->happened(PageOutput::SIGNAL_QUOTE)` | Pedido de orçamento enviado |
+
+A extensão recebe só o fato. Nome, e-mail, telefone e mensagem do visitante não passam pelo `PageOutput`.
+
+**As quatro extensões de medição**
+
+| Extensão | Campo obrigatório | Evento ao enviar contato / orçamento | Observações |
+| --- | --- | --- | --- |
+| Google Analytics 4 | ID de medição (`G-...`) | `generate_lead` (`lead_source` `contact` ou `quote`) | Sinais de publicidade sempre negados; para anúncios use o Tag Manager |
+| Google Tag Manager | ID do contêiner (`GTM-...`) | `generate_lead` na camada de dados | Envia ao contêiner o que o visitante aceitou (Consent Mode). Etiquetas de "HTML personalizado" só com a caixa "Permitir etiquetas de HTML personalizado" marcada. Etiquetas que dependem de `eval` não funcionam |
+| Pixel da Meta | ID do pixel | `Contact` / `Lead` | "Coleta automática de cliques e dados da página" desligada por padrão |
+| Tag do Pinterest | ID da tag | `lead` (`lead_type` `contact` ou `quote`) | — |
+
+Em todas, a caixa "Avisar formulários enviados" pode ser desmarcada. Não ligue o Google Analytics 4 e o Tag Manager ao mesmo tempo se o contêiner também carrega o GA4: as visitas contam em dobro.
+
+O aviso e o bloqueio são o mecanismo. A adequação do site à LGPD depende também do texto da política de privacidade e de cookies e do que cada serviço contratado faz com os dados.
+
+## 11. O que a base não oferece
 
 - Tela própria da extensão no admin (só o formulário gerado), rota pública própria, e arquivos da pasta servidos ao navegador (CSS, JS, imagem).
 - Tabelas próprias criadas pelo CMS, rotina de instalação ou de atualização da extensão.
 - Envio de extensão por ZIP pelo admin e loja de extensões.
-- Aviso de cookies e consentimento (etapa EX-02) e contrato de meio de pagamento (etapa EX-03).
+- Registro da escolha de cookies no servidor (a escolha fica só no navegador do visitante), envio de eventos pelo servidor (Conversions API) e eventos de loja.
+- Contrato de meio de pagamento (etapa EX-03).
 - Isolamento do PHP da extensão: veja [§1](#1-o-que-é-uma-extensão).

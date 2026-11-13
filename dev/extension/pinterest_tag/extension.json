@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "code": "pinterest_tag",
+  "name": {
+    "en-us": "Pinterest Tag",
+    "pt-br": "Tag do Pinterest",
+    "es-eu": "Etiqueta de Pinterest"
+  },
+  "description": {
+    "en-us": "Measures the results of Pinterest ads with the Pinterest Tag. Runs only for visitors who accepted advertising cookies.",
+    "pt-br": "Mede o resultado de anúncios do Pinterest com a Tag do Pinterest. Só roda para o visitante que aceitou cookies de publicidade.",
+    "es-eu": "Mide el resultado de los anuncios de Pinterest con la Etiqueta de Pinterest. Solo funciona para el visitante que aceptó cookies de publicidad."
+  },
+  "version": "1.0.0",
+  "author": "ReamurCMS",
+  "link": "https://reamurcms.com",
+  "requires": {
+    "reamur": ">=1.0.0",
+    "php": ">=8.2"
+  },
+  "apps": [
+    "catalog"
+  ],
+  "consent": [
+    "marketing"
+  ],
+  "cookies": [
+    "_pin_unauth",
+    "_pinterest_ct_ua",
+    "_derived_epik",
+    "_epik"
+  ],
+  "settings": [
+    {
+      "key": "tag_id",
+      "type": "text",
+      "required": true,
+      "max": 20,
+      "pattern": "[0-9]{10,20}",
+      "label": {
+        "en-us": "Tag ID",
+        "pt-br": "ID da tag",
+        "es-eu": "ID de la etiqueta"
+      },
+      "help": {
+        "en-us": "In Pinterest Ads Manager: Conversions, Tag Manager. Digits only.",
+        "pt-br": "No Gerenciador de Anúncios do Pinterest: Conversões, Gerenciador de tags. Só dígitos.",
+        "es-eu": "En el Administrador de anuncios de Pinterest: Conversiones, Administrador de etiquetas. Solo dígitos."
+      }
+    },
+    {
+      "key": "form_events",
+      "type": "checkbox",
+      "default": true,
+      "label": {
+        "en-us": "Report sent forms",
+        "pt-br": "Avisar formulários enviados",
+        "es-eu": "Avisar formularios enviados"
+      },
+      "help": {
+        "en-us": "After the contact form or a quote request is sent, reports the lead event. Only the event: no name, e-mail, phone or message is sent.",
+        "pt-br": "Depois que o formulário de contato ou um pedido de orçamento é enviado, avisa o evento lead. Só o evento: nenhum nome, e-mail, telefone ou mensagem é enviado.",
+        "es-eu": "Después de enviar el formulario de contacto o una solicitud de presupuesto, avisa el evento lead. Solo el evento: no se envía ningún nombre, correo, teléfono ni mensaje."
+      }
+    }
+  ],
+  "events": [
+    {
+      "trigger": "page/output",
+      "handler": "onPageOutput"
+    }
+  ],
+  "csp": {
+    "script-src": [
+      "https://s.pinimg.com"
+    ],
+    "img-src": [
+      "https://ct.pinterest.com"
+    ],
+    "connect-src": [
+      "https://ct.pinterest.com"
+    ],
+    "frame-src": [
+      "https://ct.pinterest.com"
+    ]
+  }
+}

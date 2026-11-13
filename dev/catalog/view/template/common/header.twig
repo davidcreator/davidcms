@@ -48,6 +48,25 @@
 </head>
 <body class="{{ body_class }}{% for c in theme.classes|default([]) %} {{ c|e('html_attr') }}{% endfor %}" data-theme-rules="{{ theme.matched|default([])|join(',')|e('html_attr') }}" style="--theme-primary: {{ theme_primary|default('#6d28d9') }}; --theme-surface: {{ theme_surface|default('#ffffff') }}; {{ theme_token_css|default('')|e('html_attr') }}">
 {% if extension_body_start|default('') %}{{ extension_body_start|raw }}{% endif %}
+{# EX-02 (ADR 0096): aviso de cookies. Formulário comum, sem script: os dois botões
+   têm o mesmo peso e gravam a escolha em common/consent. Fica neste cabeçalho, que o
+   tema não redefine, para nenhum tema poder escondê-lo ou trocar o que ele diz.
+   Vem antes do cabeçalho do site para ser o primeiro item na ordem do teclado. #}
+{% if consent_banner|default([]) %}
+<section class="rms-consent" aria-labelledby="rms-consent-title" data-rms-consent>
+  <div class="rms-consent__box">
+    <h2 class="rms-consent__title" id="rms-consent-title">{{ consent_banner.title }}</h2>
+    <p class="rms-consent__text">{{ consent_banner.text }}{% if consent_banner.policy_href %} <a href="{{ consent_banner.policy_href }}">{{ consent_banner.policy_text }}</a>{% endif %}</p>
+    <form class="rms-consent__actions" method="post" action="{{ consent_banner.action }}">
+      <input type="hidden" name="csrf_token" value="{{ consent_banner.csrf_token }}">
+      <input type="hidden" name="return" value="{{ consent_banner.return }}">
+      <button class="rms-consent__button" type="submit" name="decision" value="reject">{{ consent_banner.reject }}</button>
+      <button class="rms-consent__button" type="submit" name="decision" value="accept">{{ consent_banner.accept }}</button>
+      <a class="rms-consent__more" href="{{ consent_banner.preferences }}">{{ consent_banner.customize }}</a>
+    </form>
+  </div>
+</section>
+{% endif %}
 {# A barra visual é customizável; importmap/scripts permanecem neste shell confiável.
    ADR 0087: theme_partial() entrega a barra pelo sandbox quando o tema a redefine
    e passa SÓ estas variáveis (equivale ao antigo `include ... with {...} only`).

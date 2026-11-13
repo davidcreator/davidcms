@@ -20,6 +20,7 @@
 namespace Reamur\System\Library\Extension;
 
 use Reamur\System\Engine\Autoloader;
+use Reamur\System\Library\Consent;
 use Reamur\System\Library\Security\Csp;
 
 final class Manifest {
@@ -38,8 +39,9 @@ final class Manifest {
     public const MAX_EVENTS   = 40;
     public const MAX_OPTIONS  = 50;
     public const MAX_SOURCES  = 20;
+    public const MAX_COOKIES  = 30;
 
-    private const KEYS          = ['schema', 'code', 'name', 'description', 'version', 'author', 'link', 'requires', 'apps', 'settings', 'events', 'csp'];
+    private const KEYS          = ['schema', 'code', 'name', 'description', 'version', 'author', 'link', 'requires', 'apps', 'settings', 'events', 'csp', 'consent', 'cookies'];
     private const SETTING_KEYS  = ['key', 'type', 'label', 'help', 'placeholder', 'default', 'required', 'max', 'pattern', 'options'];
     private const EVENT_KEYS    = ['trigger', 'handler', 'priority'];
     private const DEFAULT_MAX   = ['text' => 255, 'textarea' => 2000, 'secret' => 255];
@@ -205,6 +207,8 @@ final class Manifest {
         $data['settings'] = self::settingsOf($raw['settings'] ?? [], $problems);
         $data['events']   = self::eventsOf($raw['events'] ?? [], $problems);
         $data['csp']      = self::cspOf($raw['csp'] ?? [], $problems);
+        $data['consent']  = self::consentOf($raw['consent'] ?? [], $data['apps'], $problems);
+        $data['cookies']  = self::cookiesOf($raw['cookies'] ?? [], $data['consent'], $problems);
 
         if ($problems !== []) {
             throw new ManifestException($problems);
@@ -221,6 +225,11 @@ final class Manifest {
 
     public function name(string $language = 'en-us'): string {
         return self::pick($this->data['name'], $language);
+    }
+
+    /** @return array<string, string> o nome em todos os idiomas declarados (para Manifest::pick) */
+    public function names(): array {
+        return $this->data['name'];
     }
 
     public function description(string $language = 'en-us'): string {
@@ -279,6 +288,28 @@ final class Manifest {
     /** @return array<string, list<string>> origens por diretiva, já conferidas por Csp::sources() */
     public function csp(): array {
         return $this->data['csp'];
+    }
+
+    /**
+     * EX-02 (ADR 0096): categorias de consentimento. Vazio = a extensão roda
+     * para todo visitante. Com categorias, ela só roda para quem aceitou pelo
+     * menos uma delas; para os demais, conta como desligada.
+     *
+     * @return list<string> subconjunto de Consent::CATEGORIES
+     */
+    public function consent(): array {
+        return $this->data['consent'];
+    }
+
+    /**
+     * Cookies que as etiquetas desta extensão criam no navegador: nome exato
+     * ou prefixo terminado em `*`. A tela os mostra, e o site os apaga quando
+     * o visitante retira a aceitação.
+     *
+     * @return list<string>
+     */
+    public function cookies(): array {
+        return $this->data['cookies'];
     }
 
     /** Texto de um rótulo no idioma pedido; cai para en-us e depois para o primeiro que houver. */
@@ -915,6 +946,89 @@ final class Manifest {
 
             $seen[$trigger . ' ' . $handler] = true;
             $out[]                           = ['trigger' => $trigger, 'handler' => $handler, 'priority' => $priority];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param list<string> $apps
+     * @param list<string> $problems
+     * @return list<string>
+     */
+    private static function consentOf(mixed $raw, array $apps, array &$problems): array {
+        if ($raw === []) {
+            return [];
+        }
+
+        $known = '"' . implode('", "', Consent::CATEGORIES) . '"';
+
+        if (!is_array($raw) || !self::isList($raw) || count($raw) > count(Consent::CATEGORIES)) {
+            $problems[] = 'consent: a list with ' . $known;
+
+            return [];
+        }
+
+        foreach ($raw as $category) {
+            if (!is_string($category) || !in_array($category, Consent::CATEGORIES, true)) {
+                $problems[] = 'consent: only ' . $known . ' are accepted';
+
+                return [];
+            }
+        }
+
+        if (count(array_unique($raw)) !== count($raw)) {
+            $problems[] = 'consent: each category once';
+
+            return [];
+        }
+
+        // A escolha é do visitante do site público. No admin não há a quem perguntar.
+        if ($apps !== ['catalog']) {
+            $problems[] = 'consent: only for an extension that runs on the public site alone ("apps": ["catalog"])';
+
+            return [];
+        }
+
+        // Ordem fixa, a de Consent::CATEGORIES, para a tela e o aviso mostrarem sempre igual.
+        return array_values(array_intersect(Consent::CATEGORIES, $raw));
+    }
+
+    /**
+     * @param list<string> $consent
+     * @param list<string> $problems
+     * @return list<string>
+     */
+    private static function cookiesOf(mixed $raw, array $consent, array &$problems): array {
+        if ($raw === []) {
+            return [];
+        }
+
+        if (!is_array($raw) || !self::isList($raw) || count($raw) > self::MAX_COOKIES) {
+            $problems[] = 'cookies: a list of up to ' . self::MAX_COOKIES . ' cookie names';
+
+            return [];
+        }
+
+        $out = [];
+
+        foreach ($raw as $name) {
+            // Nome exato ou prefixo com `*` no fim. Prefixo de menos de 2 caracteres apagaria cookies demais.
+            if (!is_string($name) || preg_match('/^(?:[A-Za-z0-9_.-]{1,63}|[A-Za-z0-9_.-]{2,62}\*)$/D', $name) !== 1) {
+                $problems[] = 'cookies: each item is a cookie name (letters, digits, "_", ".", "-"), optionally ending in "*" after at least 2 characters';
+
+                return [];
+            }
+
+            if (!in_array($name, $out, true)) {
+                $out[] = $name;
+            }
+        }
+
+        if ($consent === []) {
+            $problems[] = 'cookies: only together with "consent" (the cookies are removed when the visitor withdraws it)';
+
+            return [];
         }
 
         return $out;

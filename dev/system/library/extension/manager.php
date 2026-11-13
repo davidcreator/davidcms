@@ -27,6 +27,7 @@ namespace Reamur\System\Library\Extension;
 use Reamur\System\Engine\Config;
 use Reamur\System\Engine\Event;
 use Reamur\System\Engine\Registry;
+use Reamur\System\Library\Consent;
 use Reamur\System\Library\Response;
 use Reamur\System\Library\Security\Csp;
 use Reamur\System\Library\Security\SecretBox;
@@ -47,6 +48,14 @@ final class Manager {
 
     /** @var array<string, string> código => motivo de não ter entrado em funcionamento nesta requisição */
     private array $failed = [];
+
+    /**
+     * EX-02 (ADR 0096): extensões ligadas que dependem da escolha do
+     * visitante, estejam rodando ou esperando por ela.
+     *
+     * @var array<string, array{name: array<string, string>, categories: list<string>, cookies: list<string>, running: bool}>
+     */
+    private array $consented = [];
 
     private ?Store $store = null;
 
@@ -225,6 +234,85 @@ final class Manager {
     }
 
     /**
+     * EX-02 (ADR 0096): extensões ligadas, prontas para rodar, que dependem
+     * da escolha do visitante. `running` diz se, nesta requisição, o
+     * visitante aceitou alguma das categorias dela.
+     *
+     * @return array<string, array{name: array<string, string>, categories: list<string>, cookies: list<string>, running: bool}>
+     */
+    public function consented(): array {
+        return $this->consented;
+    }
+
+    /**
+     * EX-02 (ADR 0096): linhas `Set-Cookie` que apagam os cookies deixados
+     * por extensões que o visitante RECUSOU (todas as categorias dela já
+     * respondidas, nenhuma aceita). Fica de fora o cookie que uma extensão em
+     * funcionamento para ele também declara, e a extensão que ainda espera
+     * resposta.
+     *
+     * Vale para a gravação da escolha e para os pedidos seguintes: a etiqueta
+     * que estava na página pode regravar o cookie dela enquanto a página é
+     * fechada, depois de a resposta que o apagava já ter chegado.
+     *
+     * @param list<string|int> $names nomes dos cookies recebidos no pedido
+     * @param string           $host  domínio do site (de `site_url`)
+     * @param list<string>     $keep  nomes que nunca são apagados
+     * @return list<string>
+     */
+    public function staleCookieLines(Consent $choice, array $names, string $host, array $keep = []): array {
+        $refused = [];
+        $in_use  = [];
+
+        foreach ($this->consented as $entry) {
+            if ($choice->allowsAny($entry['categories'])) {
+                $in_use = array_merge($in_use, $entry['cookies']);
+            } elseif ($choice->pending($entry['categories']) === []) {
+                $refused = array_merge($refused, $entry['cookies']);
+            }
+        }
+
+        if ($refused === []) {
+            return [];
+        }
+
+        $stale = [];
+
+        foreach ($names as $name) {
+            $name = (string)$name;
+
+            foreach ($in_use as $pattern) {
+                if (Consent::nameMatches($name, $pattern)) {
+                    continue 2;
+                }
+            }
+
+            $stale[] = $name;
+        }
+
+        return Consent::expireLines($stale, array_values(array_unique($refused)), $host, $keep);
+    }
+
+    /**
+     * Categorias de consentimento em uso no site agora, na ordem de
+     * Consent::CATEGORIES. Vazio = nenhuma extensão ligada pede aceitação, e
+     * o aviso de cookies não aparece.
+     *
+     * @return list<string>
+     */
+    public function consentCategories(): array {
+        $used = [];
+
+        foreach ($this->consented as $entry) {
+            foreach ($entry['categories'] as $category) {
+                $used[$category] = true;
+            }
+        }
+
+        return array_values(array_filter(Consent::CATEGORIES, static fn (string $category): bool => isset($used[$category])));
+    }
+
+    /**
      * @param array{enabled: bool, config: array<string, mixed>, secrets: array<string, string>} $row
      */
     private function start(string $code, array $row, string $app): void {
@@ -238,6 +326,28 @@ final class Manager {
 
         if ($blockers !== []) {
             throw new \RuntimeException(implode('; ', $blockers));
+        }
+
+        // EX-02 (ADR 0096): extensão que declara categorias de consentimento
+        // só roda para o visitante que aceitou pelo menos uma delas. Para os
+        // demais ela conta como desligada: o PHP dela não é carregado, nenhum
+        // ouvinte é registrado e nenhuma origem entra na política. Sem o
+        // serviço `consent` no registro (não deveria acontecer no catálogo),
+        // vale a resposta segura: ninguém aceitou.
+        if ($manifest->consent() !== []) {
+            $consent = $this->registry->get('consent');
+            $allowed = $consent instanceof Consent && $consent->allowsAny($manifest->consent());
+
+            $this->consented[$code] = [
+                'name'       => $manifest->names(),
+                'categories' => $manifest->consent(),
+                'cookies'    => $manifest->cookies(),
+                'running'    => $allowed,
+            ];
+
+            if (!$allowed) {
+                return;
+            }
         }
 
         // Só agora o PHP da extensão é carregado. O arquivo de entrada é

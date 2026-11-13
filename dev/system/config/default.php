@@ -118,6 +118,8 @@ $_['response_compression'] = 0;
 
 // Autoload Configs
 $_['config_autoload']      = [];
+// EX-02 (ADR 0096): por quantos dias vale a escolha de cookies do visitante (30 a 390).
+$_['config_consent_days']  = 180;
 
 // Autoload Libraries
 $_['library_autoload']     = [];

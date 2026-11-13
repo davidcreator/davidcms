@@ -39,7 +39,7 @@ davidcms/
 └── dev/                        # Código-fonte (multi-aplicação MVCL)
     ├── admin/                  # Aplicação 1 — painel administrativo
     ├── catalog/                # Aplicação 2 — site público
-    ├── extension/              # Extensões: uma pasta por extensão, fechada ao navegador (ADR 0095, guias/Guia-Extensoes.md)
+    ├── extension/              # Extensões: uma pasta por extensão, fechada ao navegador (ADRs 0095 e 0096, guias/Guia-Extensoes.md)
     ├── install/                # Aplicação 3 — wizard de instalação/upgrade
     └── system/                 # Núcleo compartilhado do framework
 ```
@@ -174,6 +174,7 @@ system/
 │   ├── googleshopping/ openbay/ squareup/   # integrações legadas portadas
 │   ├── security/upload_security.php
 │   ├── extension/{manifest, store, manager, page_output, extension}.php   # extensões (ADR 0095)
+│   ├── consent.php            # escolha de cookies do visitante (ADR 0096)
 │   ├── three/                  # serviço/config + runtime Three.js canônico self-hosted
 │   │   ├── scene_config.php    # política declarativa allowlisted
 │   │   ├── asset_manifest.php  # allowlist de módulos servidos pelo Catalog

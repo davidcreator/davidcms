@@ -51,6 +51,33 @@ final class Response {
         $this->headers[] = $clean;
     }
 
+    /**
+     * EX-02 (ADR 0096): acrescenta um `Set-Cookie`, sem tirar os que já
+     * existem (o da sessão, por exemplo). Na web sai na hora, com
+     * `header(..., false)`: output() troca cabeçalhos de mesmo nome, e
+     * redirect() encerra o pedido sem passar por output(). Em linha de
+     * comando (testes) a linha fica na lista, como em redirect().
+     *
+     * @param string $cookie `nome=valor; Max-Age=...; Path=/; ...`
+     */
+    public function addCookie(string $cookie): void {
+        $clean = trim(str_replace(["\r", "\n", "\0"], '', $cookie));
+
+        if ($clean === '' || preg_match('/^[A-Za-z0-9_.-]{1,64}=/', $clean) !== 1) {
+            return;
+        }
+
+        if (PHP_SAPI !== 'cli') {
+            if (!headers_sent()) {
+                header('Set-Cookie: ' . $clean, false);
+            }
+
+            return;
+        }
+
+        $this->headers[] = 'Set-Cookie: ' . $clean;
+    }
+
     /** @return array<int, string> */
     public function getHeaders(): array {
         return $this->headers;

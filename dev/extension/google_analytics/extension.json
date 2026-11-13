@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "code": "google_analytics",
+  "name": "Google Analytics 4",
+  "description": {
+    "en-us": "Measures visits with Google Analytics 4. Runs only for visitors who accepted measurement cookies. Advertising features (Google signals, ad personalization) stay off.",
+    "pt-br": "Mede as visitas com o Google Analytics 4. Só roda para o visitante que aceitou cookies de medição. Os recursos de publicidade (Google signals, personalização de anúncios) ficam desligados.",
+    "es-eu": "Mide las visitas con Google Analytics 4. Solo funciona para el visitante que aceptó cookies de medición. Las funciones de publicidad (Google signals, personalización de anuncios) quedan desactivadas."
+  },
+  "version": "1.0.0",
+  "author": "ReamurCMS",
+  "link": "https://reamurcms.com",
+  "requires": {
+    "reamur": ">=1.0.0",
+    "php": ">=8.2"
+  },
+  "apps": [
+    "catalog"
+  ],
+  "consent": [
+    "analytics"
+  ],
+  "cookies": [
+    "_ga",
+    "_ga_*"
+  ],
+  "settings": [
+    {
+      "key": "measurement_id",
+      "type": "text",
+      "required": true,
+      "max": 24,
+      "pattern": "G-[A-Z0-9]{4,20}",
+      "placeholder": "G-XXXXXXXXXX",
+      "label": {
+        "en-us": "Measurement ID",
+        "pt-br": "ID da métrica",
+        "es-eu": "ID de medición"
+      },
+      "help": {
+        "en-us": "In Google Analytics: Admin, Data streams, your web stream. It starts with G-.",
+        "pt-br": "No Google Analytics: Administrador, Fluxos de dados, o fluxo da Web. Começa com G-.",
+        "es-eu": "En Google Analytics: Administrar, Flujos de datos, el flujo web. Empieza por G-."
+      }
+    },
+    {
+      "key": "form_events",
+      "type": "checkbox",
+      "default": true,
+      "label": {
+        "en-us": "Report sent forms",
+        "pt-br": "Avisar formulários enviados",
+        "es-eu": "Avisar formularios enviados"
+      },
+      "help": {
+        "en-us": "After the contact form or a quote request is sent, reports the generate_lead event. Only the event: no name, e-mail, phone or message is sent.",
+        "pt-br": "Depois que o formulário de contato ou um pedido de orçamento é enviado, avisa o evento generate_lead. Só o evento: nenhum nome, e-mail, telefone ou mensagem é enviado.",
+        "es-eu": "Después de enviar el formulario de contacto o una solicitud de presupuesto, avisa el evento generate_lead. Solo el evento: no se envía ningún nombre, correo, teléfono ni mensaje."
+      }
+    }
+  ],
+  "events": [
+    {
+      "trigger": "page/output",
+      "handler": "onPageOutput"
+    }
+  ],
+  "csp": {
+    "script-src": [
+      "https://www.googletagmanager.com"
+    ],
+    "img-src": [
+      "https://www.googletagmanager.com",
+      "https://*.google-analytics.com"
+    ],
+    "connect-src": [
+      "https://www.googletagmanager.com",
+      "https://*.google-analytics.com",
+      "https://*.google.com"
+    ]
+  }
+}

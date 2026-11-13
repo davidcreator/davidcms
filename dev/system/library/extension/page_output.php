@@ -19,6 +19,7 @@
  */
 namespace Reamur\System\Library\Extension;
 
+use Reamur\System\Library\Consent;
 use Reamur\System\Library\Security\Csp;
 
 final class PageOutput {
@@ -44,7 +45,28 @@ final class PageOutput {
     /** @var list<string> origens de script que a extensão da vez declarou */
     private array $scriptSources = [];
 
-    public function __construct(private string $route = '', private string $language = 'en-us') {}
+    /**
+     * EX-02 (ADR 0096): acontecimentos que o núcleo avisa uma única vez, na
+     * página seguinte ao envio de um formulário. Sem dado pessoal: só o nome.
+     */
+    public const SIGNAL_CONTACT = 'contact_sent';
+    public const SIGNAL_QUOTE   = 'quote_sent';
+    public const SIGNALS        = [self::SIGNAL_CONTACT, self::SIGNAL_QUOTE];
+
+    /** @var list<string> */
+    private array $signals;
+
+    /**
+     * @param list<string> $signals acontecimentos desta página (subconjunto de SIGNALS)
+     */
+    public function __construct(
+        private string $route = '',
+        private string $language = 'en-us',
+        private ?Consent $consent = null,
+        array $signals = []
+    ) {
+        $this->signals = array_values(array_filter(self::SIGNALS, static fn (string $signal): bool => in_array($signal, $signals, true)));
+    }
 
     /** Rota da página que está sendo montada (ex.: common/home, blog/blog.info). */
     public function route(): string {
@@ -54,6 +76,25 @@ final class PageOutput {
     /** Idioma da página (ex.: pt-br). */
     public function language(): string {
         return $this->language;
+    }
+
+    /**
+     * EX-02 (ADR 0096): o visitante aceitou esta categoria de cookies
+     * ('analytics' ou 'marketing')? A extensão que declara `consent` só é
+     * chamada quando ele aceitou pelo menos uma das categorias dela; este
+     * método serve para a que declara duas e precisa saber qual.
+     */
+    public function allows(string $category): bool {
+        return $this->consent !== null && $this->consent->allows($category);
+    }
+
+    /**
+     * EX-02 (ADR 0096): esta página é a que o visitante vê logo depois de
+     * enviar o formulário de contato (SIGNAL_CONTACT) ou o pedido de
+     * orçamento (SIGNAL_QUOTE)? Verdadeiro uma única vez por envio.
+     */
+    public function happened(string $signal): bool {
+        return in_array($signal, $this->signals, true);
     }
 
     /**

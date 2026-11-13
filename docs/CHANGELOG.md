@@ -1,5 +1,25 @@
 # Changelog
 
+## Extensões EX-02 — aviso de cookies e extensões de medição (2026-11-13)
+- ADR 0096. Guia: [`docs/guias/Guia-Extensoes.md`](guias/Guia-Extensoes.md), §10. Segunda etapa da frente de extensões; meio de pagamento (EX-03) vem depois.
+- **Novo no site público:** aviso de cookies do próprio CMS, com "Recusar" e "Aceitar" de mesma aparência e "Personalizar"; tela **Preferências de cookies** (rota `common/consent`), com link no rodapé. Funciona sem JavaScript. Textos em `en-us`, `pt-br` e `es-eu`.
+- **Só aparece quando é preciso:** sem extensão ligada que dependa de aceitação, não há aviso nem link no rodapé, e a página pública sai idêntica à de antes.
+- **Garantia:** extensão que declara `consent` não é carregada, e os endereços dela não entram na política de conteúdo, para o visitante que não aceitou. Sem escolha vale "não": nenhum pedido a outro site e nenhum cookie além da sessão.
+- **Retirada:** o visitante muda a escolha quando quiser; a extensão para na página seguinte e o CMS apaga do navegador os cookies que ela declarou.
+- **Quatro extensões novas, desligadas até alguém ligar:** Google Analytics 4 (`google_analytics`), Google Tag Manager (`google_tag_manager`), Pixel da Meta (`meta_pixel`) e Tag do Pinterest (`pinterest_tag`). Cada uma pede só o identificador da conta.
+- **Formulários:** depois de um envio do formulário de contato ou do pedido de orçamento, as extensões ligadas e aceitas registram um evento de contato (`generate_lead`, `Contact` / `Lead`, `lead`). Nome, e-mail, telefone e mensagem não são enviados. A caixa "Avisar formulários enviados" de cada extensão desliga isso.
+- **Escolhas de privacidade de fábrica:** GA4 sem sinais de publicidade; Pixel da Meta sem a coleta automática de cliques e dados da página; Tag Manager sem etiquetas de HTML personalizado. As duas últimas têm caixa para ligar.
+- **Novo no admin:** *Configurações → Privacidade → Validade da escolha de cookies* (de 30 a 390 dias; padrão 180). Na tela *Extensões*, a linha mostra de que aceitação a extensão depende.
+- **Para quem escreve extensão:** chaves `consent` e `cookies` no `extension.json`; `$page->allows('marketing')` e `$page->happened(PageOutput::SIGNAL_CONTACT)`.
+- **Atenção ao atualizar um site instalado:**
+  1. suba os arquivos (inclui quatro pastas novas em `extension/`); não há SQL nem linha nova no `config.php`;
+  2. antes de ligar uma das quatro extensões, confira se o site tem uma página com a palavra-chave `cookies`: o aviso mostra o link para ela;
+  3. revise a política de privacidade do site para citar os serviços que forem ligados.
+- **Banco:** nenhuma tabela ou coluna nova. A escolha do visitante fica só no navegador dele (cookie `rms_consent`); o prazo, quando alterado, em `rms_setting` (`config_consent_days`).
+- **Limite:** o aviso e o bloqueio são o mecanismo. A adequação à LGPD depende também da política de privacidade do site e do contrato com cada plataforma. O site não guarda prova de quem aceitou. Cookies gravados no domínio da própria plataforma (por exemplo `facebook.com`) o site não consegue apagar.
+- **Não conferido:** os painéis das plataformas, porque o teste usou identificadores fictícios. O pedido sai do navegador com os parâmetros certos; a chegada do dado na conta precisa ser conferida com os identificadores reais.
+- **Para quem escreve código:** regra em `agents-ia/regras/02-padroes-de-codigo.md`; o trecho de exemplo do guia é lido por `tests/Unit/Extension/GuideTest.php`.
+
 ## Extensões EX-01 — base: pasta, descrição conferida, eventos e saída controlada (2026-11-13)
 - ADR 0095. Guia: [`docs/guias/Guia-Extensoes.md`](guias/Guia-Extensoes.md). Primeira etapa da frente de extensões; aviso de cookies (EX-02) e meio de pagamento (EX-03) vêm depois.
 - **Novo:** uma extensão é uma pasta em `dev/extension/<código>/` com `extension.json` (nome, versão, versão mínima do CMS, campos de configuração, eventos, endereços de fora) e `extension.php`. Chega por FTP ou deploy; não há envio de ZIP pelo admin.

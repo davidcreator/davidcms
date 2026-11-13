@@ -84,6 +84,9 @@ class Setting extends \Reamur\System\Engine\Model {
             // Three.js (ADRs 0072+): configuração declarativa allowlisted das cenas nativas
             'three_hero_enabled', 'three_hero_particle_count', 'three_hero_color', 'three_hero_speed',
             'three_not_found_enabled', 'three_portfolio_enabled', 'three_portfolio_frame_limit', 'three_tools_enabled',
+
+            // EX-02 (ADR 0096): validade, em dias, da escolha de cookies do visitante
+            'config_consent_days',
         ];
 
         foreach ($data as $key => $value) {

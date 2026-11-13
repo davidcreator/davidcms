@@ -141,3 +141,9 @@ $_['text_secrets_protected'] = '%d value(s) encrypted.';
 $_['text_secrets_nothing'] = 'Nothing to convert: the stored secrets are already encrypted with the current key.';
 $_['text_secrets_webhook_column'] = '%d webhook secret(s) were left out: the database column cannot hold the encrypted value yet. Run install/sql/upgrade_s9_webhook_secret.sql in phpMyAdmin and repeat.';
 $_['error_secrets_not_ready'] = 'Secrets cannot be encrypted yet: check the key status on this screen.';
+
+// EX-02 (ADR 0096): aviso de cookies
+$_['fieldset_privacy']             = 'Privacy';
+$_['entry_config_consent_days']    = 'Cookie choice validity (days)';
+$_['help_config_consent_days']     = 'From 30 to 390 days. After that, the cookie notice asks the visitor again. The notice only appears when an enabled extension depends on acceptance.';
+$_['error_config_consent_days']    = 'The cookie choice validity must be from 30 to 390 days.';

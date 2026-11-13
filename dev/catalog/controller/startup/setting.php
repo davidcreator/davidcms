@@ -25,6 +25,9 @@ class Setting extends \Reamur\System\Engine\Controller {
         'mail_reply_to',
         'cache_engine', 'cache_expire',
 
+        // EX-02 (ADR 0096): validade, em dias, da escolha de cookies do visitante
+        'config_consent_days',
+
         // F4-02 (ADR 0025): injeta também os idiomas governados pela tela
         // localization/language — catalog usa o default de catálogo
         'config_language_catalog',

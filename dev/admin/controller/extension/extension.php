@@ -46,6 +46,7 @@ class Extension extends \Reamur\System\Engine\Controller {
             'text_enabled', 'text_disabled', 'text_invalid', 'text_incompatible', 'text_folder_missing',
             'text_runs_in', 'text_app_catalog', 'text_app_admin', 'text_events', 'text_no_events',
             'text_sources', 'text_no_sources', 'text_problems', 'text_blockers', 'text_details',
+            'text_consent', 'text_cookies',
             'text_confirm_enable', 'text_confirm_purge', 'text_off_by_config', 'text_no_folder',
             'text_version', 'text_author', 'text_folder_missing_hint', 'text_secret_locked',
             'column_extension', 'column_status', 'column_action',
@@ -80,6 +81,8 @@ class Extension extends \Reamur\System\Engine\Controller {
                 'apps'        => [],
                 'events'      => [],
                 'sources'     => [],
+                'consent'     => [],
+                'cookies'     => [],
                 'has_settings' => false,
                 'has_data'    => $row['config'] !== [] || $row['secrets'] !== [],
                 'locked'      => false,
@@ -110,6 +113,14 @@ class Extension extends \Reamur\System\Engine\Controller {
                 foreach ($manifest->csp() as $directive => $sources) {
                     $entry['sources'][] = $directive . ' ' . implode(' ', $sources);
                 }
+
+                // EX-02 (ADR 0096): de qual aceitação do visitante ela depende
+                // e quais cookies as etiquetas dela criam.
+                foreach ($manifest->consent() as $category) {
+                    $entry['consent'][] = $this->language->get('text_consent_' . $category);
+                }
+
+                $entry['cookies'] = $manifest->cookies();
             }
 
             $data['extensions'][] = $entry;
@@ -133,6 +144,8 @@ class Extension extends \Reamur\System\Engine\Controller {
                 'apps'        => [],
                 'events'      => [],
                 'sources'     => [],
+                'consent'     => [],
+                'cookies'     => [],
                 'has_settings' => false,
                 'has_data'    => true,
                 'locked'      => false,

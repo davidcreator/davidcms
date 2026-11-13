@@ -56,6 +56,18 @@ class Footer extends \Reamur\System\Engine\Controller {
             }
         }
 
+        // EX-02 (ADR 0096): enquanto alguma extensão ligada depender de
+        // aceitação, o rodapé leva à tela onde o visitante muda a escolha.
+        // Entra na mesma lista das páginas legais, que todo tema já percorre.
+        $extensions = $this->registry->get('extensions');
+
+        if ($extensions instanceof \Reamur\System\Library\Extension\Manager && $extensions->consentCategories() !== []) {
+            $legal[] = [
+                'name' => $this->language->get('text_consent_preferences'),
+                'href' => $this->url->link('common/consent'),
+            ];
+        }
+
         $data['legal'] = $legal;
 
         // Redes sociais (F4-03: banco governa — chave existente + vazia = esconder;

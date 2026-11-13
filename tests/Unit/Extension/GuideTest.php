@@ -67,7 +67,54 @@ final class GuideTest extends ExtensionTestCase {
 
         sort($seen);
 
-        self::assertSame(['csp', 'event', 'manifest', 'settings'], $seen);
+        self::assertSame(['consent', 'csp', 'event', 'manifest', 'settings'], $seen);
+    }
+
+    public function testTheConsentSampleDeclaresWhatTheGuideSays(): void {
+        // EX-02: o trecho "consent" + "cookies" do guia, lido pelo manifesto de verdade.
+        $part = [];
+
+        foreach (self::blocks('json') as $block) {
+            if (str_starts_with(trim($block), '"consent"')) {
+                $part = (array)json_decode('{' . $block . '}', true, 16, JSON_THROW_ON_ERROR);
+            }
+        }
+
+        $base     = self::minimal();
+        $manifest = Manifest::parse((string)json_encode($part + $base), (string)$base['code']);
+
+        self::assertSame(['analytics'], $manifest->consent());
+        self::assertSame(['_ga', '_ga_*'], $manifest->cookies());
+    }
+
+    public function testConsentFactsQuotedInTheGuideAreTheOnesInTheCode(): void {
+        $guide = self::guide();
+
+        self::assertStringContainsString('Só junto com `consent`. Até ' . Manifest::MAX_COOKIES . ' |', $guide);
+        self::assertStringContainsString('(`' . \Reamur\System\Library\Consent::COOKIE . '`)', $guide);
+        self::assertStringContainsString(
+            'Vale ' . \Reamur\System\Library\Consent::DEFAULT_DAYS . ' dias; o prazo muda em *admin → Configurações → Privacidade* (de '
+            . \Reamur\System\Library\Consent::MIN_DAYS . ' a ' . \Reamur\System\Library\Consent::MAX_DAYS . ' dias)',
+            $guide
+        );
+
+        foreach (\Reamur\System\Library\Consent::CATEGORIES as $category) {
+            self::assertStringContainsString('| `' . $category . '` |', $guide);
+        }
+
+        // Os dois avisos de formulario sao citados pelo nome da constante, e as constantes existem.
+        self::assertStringContainsString('PageOutput::SIGNAL_CONTACT', $guide);
+        self::assertStringContainsString('PageOutput::SIGNAL_QUOTE', $guide);
+        self::assertSame([PageOutput::SIGNAL_CONTACT, PageOutput::SIGNAL_QUOTE], PageOutput::SIGNALS);
+
+        // A tabela das extensoes que acompanham o CMS cita exatamente as pastas entregues.
+        $shipped = array_map('basename', (array)glob(dirname(__DIR__, 3) . '/dev/extension/*', GLOB_ONLYDIR));
+        preg_match_all('/^\| [^|]+ \| `([a-z_]+)` \| (?:Não|Sim)/mu', $guide, $m);
+        sort($shipped);
+        $listed = $m[1];
+        sort($listed);
+
+        self::assertSame($shipped, $listed);
     }
 
     public function testTheSettingsSampleBehavesAsTheGuideSays(): void {

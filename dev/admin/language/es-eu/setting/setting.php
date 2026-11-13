@@ -141,3 +141,9 @@ $_['text_secrets_protected'] = '%d valor(es) cifrado(s).';
 $_['text_secrets_nothing'] = 'Nada que convertir: los secretos guardados ya están cifrados con la clave actual.';
 $_['text_secrets_webhook_column'] = '%d secreto(s) de webhook quedaron fuera: la columna de la base de datos todavía no admite el valor cifrado. Ejecuta install/sql/upgrade_s9_webhook_secret.sql en phpMyAdmin y repite.';
 $_['error_secrets_not_ready'] = 'Todavía no es posible cifrar: revisa el estado de la clave en esta pantalla.';
+
+// EX-02 (ADR 0096): aviso de cookies
+$_['fieldset_privacy']             = 'Privacidad';
+$_['entry_config_consent_days']    = 'Validez de la elección de cookies (días)';
+$_['help_config_consent_days']     = 'De 30 a 390 días. Pasado ese plazo, el aviso de cookies vuelve a preguntar al visitante. El aviso solo aparece cuando una extensión activada depende de aceptación.';
+$_['error_config_consent_days']    = 'La validez de la elección de cookies debe ser de 30 a 390 días.';

@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "code": "google_tag_manager",
+  "name": "Google Tag Manager",
+  "description": {
+    "en-us": "Loads your Tag Manager container for visitors who accepted measurement or advertising cookies, and tells it which of the two was accepted (Consent Mode). Whoever can edit the container decides which tags run on this site: give that access only to people you trust.",
+    "pt-br": "Carrega o seu contêiner do Tag Manager para o visitante que aceitou cookies de medição ou de publicidade, e informa a ele qual dos dois foi aceito (Consent Mode). Quem pode editar o contêiner decide quais etiquetas rodam neste site: dê esse acesso só a quem você confia.",
+    "es-eu": "Carga tu contenedor de Tag Manager para el visitante que aceptó cookies de medición o de publicidad, y le indica cuál de las dos aceptó (Consent Mode). Quien puede editar el contenedor decide qué etiquetas se ejecutan en este sitio: da ese acceso solo a personas de confianza."
+  },
+  "version": "1.0.0",
+  "author": "ReamurCMS",
+  "link": "https://reamurcms.com",
+  "requires": {
+    "reamur": ">=1.0.0",
+    "php": ">=8.2"
+  },
+  "apps": [
+    "catalog"
+  ],
+  "consent": [
+    "analytics",
+    "marketing"
+  ],
+  "cookies": [
+    "_ga",
+    "_ga_*",
+    "_gid",
+    "_gcl_*"
+  ],
+  "settings": [
+    {
+      "key": "container_id",
+      "type": "text",
+      "required": true,
+      "max": 16,
+      "pattern": "GTM-[A-Z0-9]{4,12}",
+      "placeholder": "GTM-XXXXXXX",
+      "label": {
+        "en-us": "Container ID",
+        "pt-br": "ID do contêiner",
+        "es-eu": "ID del contenedor"
+      },
+      "help": {
+        "en-us": "Shown at the top of the Tag Manager workspace. It starts with GTM-.",
+        "pt-br": "Aparece no alto do espaço de trabalho do Tag Manager. Começa com GTM-.",
+        "es-eu": "Aparece en la parte superior del espacio de trabajo de Tag Manager. Empieza por GTM-."
+      }
+    },
+    {
+      "key": "custom_html",
+      "type": "checkbox",
+      "default": false,
+      "label": {
+        "en-us": "Allow Custom HTML tags",
+        "pt-br": "Permitir etiquetas de HTML personalizado",
+        "es-eu": "Permitir etiquetas de HTML personalizado"
+      },
+      "help": {
+        "en-us": "Off: only tags that load from origins this site allows can run; a Custom HTML tag with its own script is blocked by the browser. On: any script written in the container runs on every page, with the same reach as the site's own code. Custom JavaScript variables do not work in either case.",
+        "pt-br": "Desligado: só rodam etiquetas carregadas de origens que este site permite; uma etiqueta de HTML personalizado com script próprio é barrada pelo navegador. Ligado: qualquer script escrito no contêiner roda em todas as páginas, com o mesmo alcance do código do próprio site. Variáveis de JavaScript personalizado não funcionam em nenhum dos dois casos.",
+        "es-eu": "Desactivado: solo se ejecutan etiquetas cargadas desde orígenes que este sitio permite; una etiqueta de HTML personalizado con script propio es bloqueada por el navegador. Activado: cualquier script escrito en el contenedor se ejecuta en todas las páginas, con el mismo alcance que el código del propio sitio. Las variables de JavaScript personalizado no funcionan en ningún caso."
+      }
+    },
+    {
+      "key": "form_events",
+      "type": "checkbox",
+      "default": true,
+      "label": {
+        "en-us": "Report sent forms",
+        "pt-br": "Avisar formulários enviados",
+        "es-eu": "Avisar formularios enviados"
+      },
+      "help": {
+        "en-us": "After the contact form or a quote request is sent, reports the generate_lead event to the data layer. Only the event: no name, e-mail, phone or message is sent.",
+        "pt-br": "Depois que o formulário de contato ou um pedido de orçamento é enviado, avisa o evento generate_lead à camada de dados. Só o evento: nenhum nome, e-mail, telefone ou mensagem é enviado.",
+        "es-eu": "Después de enviar el formulario de contacto o una solicitud de presupuesto, avisa el evento generate_lead a la capa de datos. Solo el evento: no se envía ningún nombre, correo, teléfono ni mensaje."
+      }
+    }
+  ],
+  "events": [
+    {
+      "trigger": "page/output",
+      "handler": "onPageOutput"
+    }
+  ],
+  "csp": {
+    "script-src": [
+      "https://www.googletagmanager.com"
+    ],
+    "img-src": [
+      "https://www.googletagmanager.com",
+      "https://*.google-analytics.com"
+    ],
+    "connect-src": [
+      "https://www.googletagmanager.com",
+      "https://www.google.com",
+      "https://*.google-analytics.com",
+      "https://*.google.com"
+    ]
+  }
+}

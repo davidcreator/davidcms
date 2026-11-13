@@ -20,6 +20,7 @@
             <div class="fw-semibold">{{ ext.name }}{% if ext.version %} <span class="badge text-bg-light border fw-normal">{{ text_version }} {{ ext.version }}</span>{% endif %}</div>
             <div class="small text-body-secondary"><code>{{ ext.code }}</code>{% if ext.author %} · {{ text_author }}: {% if ext.link %}<a href="{{ ext.link }}" target="_blank" rel="noopener noreferrer">{{ ext.author }}</a>{% else %}{{ ext.author }}{% endif %}{% endif %}</div>
             {% if ext.description %}<div class="mt-1">{{ ext.description }}</div>{% endif %}
+            {% if ext.consent %}<div class="small mt-1" data-rms-extension-consent><i class="bi bi-shield-check me-1" aria-hidden="true"></i>{{ text_consent }} {{ ext.consent|join(', ') }}</div>{% endif %}
             {% if ext.missing %}<div class="small text-danger mt-1"><i class="bi bi-folder-x me-1" aria-hidden="true"></i>{{ text_folder_missing_hint }}</div>{% endif %}
             {% if ext.problems %}<div class="small text-danger mt-2"><div class="fw-semibold">{{ text_problems }}</div><ul class="mb-0 ps-3">{% for p in ext.problems %}<li><code>{{ p }}</code></li>{% endfor %}</ul></div>{% endif %}
             {% if ext.blockers %}<div class="small text-warning-emphasis mt-2"><div class="fw-semibold">{{ text_blockers }}</div><ul class="mb-0 ps-3">{% for b in ext.blockers %}<li><code>{{ b }}</code></li>{% endfor %}</ul></div>{% endif %}
@@ -29,6 +30,7 @@
                 <dt class="col-sm-3 fw-normal text-body-secondary">{{ text_runs_in }}</dt><dd class="col-sm-9 mb-1">{% for app in ext.apps %}{{ app == 'admin' ? text_app_admin : text_app_catalog }}{{ not loop.last ? ', ' : '' }}{% endfor %}</dd>
                 <dt class="col-sm-3 fw-normal text-body-secondary">{{ text_events }}</dt><dd class="col-sm-9 mb-1">{% for e in ext.events %}<code>{{ e }}</code>{{ not loop.last ? ', ' : '' }}{% else %}{{ text_no_events }}{% endfor %}</dd>
                 <dt class="col-sm-3 fw-normal text-body-secondary">{{ text_sources }}</dt><dd class="col-sm-9 mb-0">{% for s in ext.sources %}<div><code>{{ s }}</code></div>{% else %}{{ text_no_sources }}{% endfor %}</dd>
+                {% if ext.cookies %}<dt class="col-sm-3 fw-normal text-body-secondary mt-1">{{ text_cookies }}</dt><dd class="col-sm-9 mb-0 mt-1">{% for c in ext.cookies %}<code>{{ c }}</code>{{ not loop.last ? ', ' : '' }}{% endfor %}</dd>{% endif %}
               </dl>
             </details>{% endif %}
           </td>

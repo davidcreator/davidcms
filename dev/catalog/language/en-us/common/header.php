@@ -23,3 +23,15 @@ $_['text_nav_portfolio'] = 'Portfolio';
 $_['text_nav_contact']  = 'Contact';
 $_['text_nav_quote']    = 'Get a quote';
 $_['text_brand']        = 'David Almeida';
+
+// Cookie notice (EX-02, ADR 0096). Nomes próprios (text_consent_*): este arquivo é
+// carregado em toda página e não pode trocar texto de quem a montou.
+$_['text_consent_title']             = 'Cookies on this site';
+$_['text_consent_banner']            = 'We use necessary cookies to make the site work. With your permission, we also use cookies for %s. You can change your choice at any time in "Cookie preferences".';
+$_['text_consent_and']               = ' and ';
+$_['text_consent_purpose_analytics'] = 'visit measurement';
+$_['text_consent_purpose_marketing'] = 'advertising';
+$_['text_consent_policy']            = 'Cookie policy';
+$_['button_consent_accept']          = 'Accept';
+$_['button_consent_reject']          = 'Reject';
+$_['button_consent_customize']       = 'Customize';

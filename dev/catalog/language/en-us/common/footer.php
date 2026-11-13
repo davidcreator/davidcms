@@ -14,3 +14,6 @@ $_['text_powered'] = 'Powered by ReamurCMS %s';
 
 $_['text_copyright'] = '© %s All rights reserved. David L. Almeida — Creative Developer.';
 $_['text_legal'] = 'Legal';
+
+// EX-02 (ADR 0096)
+$_['text_consent_preferences'] = 'Cookie preferences';

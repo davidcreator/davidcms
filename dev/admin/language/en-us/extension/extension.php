@@ -70,3 +70,9 @@ $_['error_not_found']          = 'Extension not found in the folder, or its exte
 $_['error_no_settings']        = 'This extension has nothing to configure.';
 $_['error_blocked']            = '"%s" cannot be enabled: %s';
 $_['error_purge_enabled']      = 'Disable the extension before removing its data.';
+
+// EX-02 (ADR 0096): consentimento do visitante
+$_['text_consent']             = 'Runs only for visitors who accepted cookies for:';
+$_['text_consent_analytics']   = 'visit measurement';
+$_['text_consent_marketing']   = 'advertising';
+$_['text_cookies']             = 'Cookies in the browser';

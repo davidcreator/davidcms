@@ -68,6 +68,9 @@ class Contact extends \Reamur\System\Engine\Controller {
                 // F4-05 (ADR 0029): notificação por e-mail — nunca atrapalha o visitante
                 $this->notifyOwner($contact);
 
+                // EX-02 (ADR 0096): as extensões de medição ficam sabendo na próxima página.
+                $this->pageSignal(\Reamur\System\Library\Extension\PageOutput::SIGNAL_CONTACT);
+
                 $this->setFlash($this->language->get('text_success'));
 
                 $this->response->redirect($this->url->link('common/contact'));
