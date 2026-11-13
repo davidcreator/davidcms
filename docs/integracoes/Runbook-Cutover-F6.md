@@ -75,9 +75,14 @@ gerada com 1 comando a partir da sua pasta local (XAMPP):
 Isso recria `~/davidcms/prod/` com **somente o runtime** (`catalog/`,
 `admin/`, `system/`, `.htaccess`, `index.php`, `index.html`, `robots.txt`)
 — e **sem**: `install/` (o wizard nunca vai ao ar), `tests/`,
-planejamento/agentes/docs, configs reais, phpstan/composer, logs e sessões
-antigas. O script termina com um veredito automático (algo obrigatório
-faltando ou algo proibido presente = ele acusa). `agents-ia/`, `docs/`,
+planejamento/agentes/docs, configs reais, PHPUnit/PHPStan e os manifestos
+do Composer, logs e sessões antigas. O script termina com um veredito
+automático (algo obrigatório faltando ou algo proibido presente = ele acusa).
+
+**O script precisa do Composer** (ADR 0092): é ele que tira PHPUnit e
+PHPStan da cópia que vai para `prod/`. Se aparecer "Composer não
+encontrado", a build parou antes de copiar; rode de novo apontando o
+executável: `COMPOSER_BIN="php /caminho/composer.phar" bash tools/build_prod.sh`. `agents-ia/`, `docs/`,
 `tools/`, `dev/` inteiro: **ficam só na sua máquina** (e no git privado),
 nunca no ar.
 

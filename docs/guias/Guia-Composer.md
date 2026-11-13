@@ -78,7 +78,9 @@ Manifesto real do projeto (`dev/system/storage/composer.json`), comentado bloco 
 | `mustache/mustache` | `^3.0` | Adaptador de template Mustache |
 | `latte/latte` | `^3.0` | Adaptador de template Latte |
 
-**require-dev (ADR 0004):** `phpstan/phpstan ^1.10` · `phpunit/phpunit ^10.5`.
+**require-dev (ADR 0004):** `phpstan/phpstan ^1.10` · `phpunit/phpunit ^10.5`. Não vão para produção: `tools/build_prod.sh` entrega só os pacotes de `require` (ADR 0092).
+
+> **Uso real hoje (ADR 0092, 2026-11-13):** o código de `dev/` referencia apenas `twig/twig`. Os outros 8 pacotes da tabela estão declarados para as integrações descritas e ainda não são chamados. Eles vão para o servidor (75 MB, 71 MB do AWS SDK) e entram no `composer audit`.
 
 > ⚠️ **phpDocumentor via PHAR, não via Composer:** suas dependências (flysystem 1.x) são bloqueadas por advisories. Baixar `phpDocumentor.phar` quando precisar gerar a doc de API e rodar `composer docs` (ver [Guia PHP 8 §8](Guia-PHP8.md#8-documentação-de-api-com-phpdocumentor)).
 
@@ -91,8 +93,11 @@ Todos rodados **a partir de** `dev/system/storage/` (ou com `--working-dir`):
 ```bash
 cd dev/system/storage
 
-# Instalar conforme o composer.lock (produção/CI)
+# Instalar conforme o composer.lock (máquina de desenvolvimento e CI)
 composer install --prefer-dist --no-progress --no-interaction
+
+# Produção NÃO usa este vendor inteiro: tools/build_prod.sh monta prod/ só com
+# os pacotes de `require` (composer install --no-dev sobre a cópia — ADR 0092)
 
 # Instalar/atualizar resolvendo dependências (dev)
 composer update
@@ -115,7 +120,7 @@ composer dump-autoload
 # Autoload otimizado para deploy de produção
 composer dump-autoload --optimize --classmap-authoritative
 
-# Auditar vulnerabilidades conhecidas
+# Auditar vulnerabilidades conhecidas (o CI roda como aviso — ADR 0092)
 composer audit
 ```
 
@@ -136,7 +141,7 @@ onde não existe `dev/` — o job passava verde sem lintar nenhum arquivo.
 
 | Job | `working-directory` | O que valida |
 | --- | --- | --- |
-| `composer` | `dev/system/storage` | `composer validate --strict` + `composer install` (cache do `vendor/`) |
+| `composer` | `dev/system/storage` | `composer validate --strict` + `composer install` (cache do `vendor/`) + `composer test` + `tools/verify-build-prod.sh` (build de produção sem pacotes de desenvolvimento) + `composer audit --locked` como aviso (ADR 0092) |
 | `php-lint` | **raiz do repo** | `find dev -name '*.php'` → `php -l`; falha se zero arquivos; exclui `storage/vendor/` e `storage/node_modules/` |
 | `docs-links` | **raiz do repo** | lychee v2 em `./**/*.md`, excluindo `node_modules/` (o pacote Playwright traz 27 `.md`) |
 | `static-analysis` | `dev/system/storage` | `composer install` + `composer analyse` (PHPStan nível 2, baseline congelado) |
@@ -241,7 +246,7 @@ O autoloader nativo resolve o namespace pela pasta (`Reamur\Catalog\Controller\C
 2. **`composer install` (não `update`)** em CI e produção — build determinístico.
 3. **Restrições `^`** para pacotes estáveis (semver), pin exato só para mitigar bug conhecido.
 4. **`composer audit`** a cada release; dependências AWS/Guzzle grandes — revisar `outdated` mensalmente.
-5. **`require-dev`** para ferramentas (phpDocumentor, futuro PHPUnit/PHPStan) com `--no-dev` no deploy.
+5. **`require-dev`** para ferramentas (phpDocumentor, futuro PHPUnit/PHPStan) com `--no-dev` no deploy. Quem aplica o `--no-dev` é `tools/build_prod.sh`, e o veredito da build reprova se sobrar ferramenta (ADR 0092).
 6. **`scripts`** úteis a adicionar:
 
 ```json

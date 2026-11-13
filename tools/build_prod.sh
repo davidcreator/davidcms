@@ -6,12 +6,15 @@
 #
 # Fica EM prod/ (relativo a dev/):
 #   admin/ catalog/ extension/ image/ system/ .htaccess index.php robots.txt
-#   system/storage/vendor/ (autoload runtime — composer já resolvido)
+#   system/storage/vendor/ (SÓ os pacotes de `require` — ADR 0092: o
+#     Composer tira da cópia tudo que é `require-dev` e refaz o autoload)
 # Fica FORA (superfície/dev-only):
 #   install/ (o wizard NÃO sobe — produção instala via SQL + config manual)
 #   system/storage/{cache,logs,session,temp}/* (conteúdo volátil; guards
 #     index.html são regrados depois)
 #   system/storage/phpstan* e composer.{json,lock} (ferramentas de dev)
+#   system/storage/vendor/{phpunit,phpstan,...} e vendor/bin/{phpunit,
+#     phpstan,php-parse} (ADR 0092: PHPUnit/PHPStan e o que só eles usam)
 #   system/storage/{node_modules,package.json,package-lock.json}
 #     (F11-01 / ADR 0081: deps Node/Playwright de QA — NUNCA em producao)
 #   catalogs/admin config.php reais (credenciais — gerados NO destino a
@@ -21,6 +24,10 @@
 # exemplos PRONTOS para editar — prod/catalog/config.php.EXEMPLO e
 # prod/admin/config.php.EXEMPLO — com caminhos dev/→prod/ já reescritos.
 #
+# Precisa de: bash, rsync e Composer 2 (o mesmo que instalou o vendor).
+#   Composer fora do PATH? Aponte:  COMPOSER_BIN="php /caminho/composer.phar"
+#   Sem Composer a build PARA antes de copiar — nunca sobe o vendor inteiro.
+#
 # Uso:   bash tools/build_prod.sh            # gera/atualiza prod/
 # Saída: prod/  (artefato derivado — NÃO versionar; .gitignore cobre)
 # ════════════════════════════════════════════════════════════════════
@@ -28,6 +35,25 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"   # raiz do repo (onde moram dev/ e prod/)
 SRC="$ROOT/dev"; DST="$ROOT/prod"
 [ -f "$SRC/catalog/index.php" ] || { echo "dev/ inválido em $ROOT" >&2; exit 1; }
+
+# ADR 0092: o vendor de dev/ traz PHPUnit, PHPStan e dependentes; a build só
+# pode levar os pacotes de `require`. Quem separa uma coisa da outra é o
+# Composer, então ele é pré-requisito — conferido ANTES de tocar em prod/.
+COMPOSER_BIN="${COMPOSER_BIN:-composer}"
+# shellcheck disable=SC2086  # COMPOSER_BIN pode ser "php /caminho/composer.phar"
+set -- $COMPOSER_BIN
+command -v "${1:-composer}" >/dev/null 2>&1 || {
+  echo "Composer não encontrado ('$COMPOSER_BIN')." >&2
+  echo "  A build precisa dele para tirar PHPUnit/PHPStan do pacote de produção (ADR 0092)." >&2
+  echo "  Instale o Composer 2 ou aponte o executável, por exemplo:" >&2
+  echo "    COMPOSER_BIN=\"php /caminho/composer.phar\" bash tools/build_prod.sh" >&2
+  exit 1
+}
+STO="$DST/system/storage"
+# Os manifestos entram em prod/ só enquanto o Composer trabalha; saem sempre,
+# inclusive se a build parar no meio.
+limpar_manifestos(){ rm -f "$STO/composer.json" "$STO/composer.lock"; }
+trap limpar_manifestos EXIT
 
 echo "== sync dev/ → prod/ (runtime only) =="
 rsync -a --delete --delete-excluded \
@@ -57,6 +83,21 @@ for d in cache cache/template logs session temp; do
   mkdir -p "$DST/system/storage/$d"
   [ -f "$SRC/system/storage/$d/index.html" ] && cp "$SRC/system/storage/$d/index.html" "$DST/system/storage/$d/index.html"
 done
+
+echo "== vendor de produção: só pacotes de 'require' (ADR 0092) =="
+# O rsync acima copiou o vendor de dev/ inteiro. Aqui o Composer, lendo o
+# MESMO composer.lock, remove da cópia os pacotes de `require-dev`, acerta
+# qualquer versão que esteja diferente do lock e regrava o autoload sem as
+# entradas de desenvolvimento. dev/ não é tocado. Com o vendor de dev/ em
+# dia com o lock, este passo não usa a rede.
+cp "$SRC/system/storage/composer.json" "$SRC/system/storage/composer.lock" "$STO/"
+# shellcheck disable=SC2086
+$COMPOSER_BIN install --working-dir="$STO" --no-dev --prefer-dist \
+  --no-interaction --no-progress --no-scripts --no-plugins --optimize-autoloader || {
+  echo "  Composer falhou ao montar o vendor de produção — prod/ NÃO está pronta para subir." >&2
+  exit 1
+}
+limpar_manifestos
 
 echo "== exemplos de config de produção (dev/ → prod/) =="
 TPL="$SRC/install/config.php.tpl"
@@ -89,11 +130,24 @@ for p in "$DST/catalog/index.php" "$DST/admin/index.php" "$DST/system/framework.
   [ -f "$p" ] || { echo "  FALTA $p"; FAIL=1; }
 done
 for p in "$DST/install" "$DST/tests" "$DST/system/storage/phpstan.neon" "$DST/system/storage/composer.json" \
+         "$DST/system/storage/composer.lock" \
+         "$STO/vendor/phpunit" "$STO/vendor/phpstan" "$STO/vendor/bin/phpunit" \
+         "$STO/vendor/bin/phpstan" "$STO/vendor/bin/phpstan.phar" "$STO/vendor/bin/php-parse" \
          "$DST/system/storage/node_modules" "$DST/system/storage/package.json" \
          "$DST/system/storage/package-lock.json" "$DST/node_modules" \
          "$DST/system/storage/logs/error.log" "$DST/catalog/config.php" "$DST/admin/config.php"; do
   [ -e "$p" ] && { echo "  NÃO DEVERIA EXISTIR: $p"; FAIL=1; }
 done
+# ADR 0092: o registro do próprio Composer tem de dizer "instalado sem dev" e
+# não pode listar nenhum pacote de desenvolvimento (cobre os que não têm
+# nome fixo acima: sebastian/*, nikic/php-parser, myclabs/deep-copy, ...).
+INST="$STO/vendor/composer/installed.php"
+if [ -f "$INST" ]; then
+  grep -q "'dev' => false" "$INST" || { echo "  vendor instalado COM pacotes de desenvolvimento ($INST)"; FAIL=1; }
+  if grep -q "'dev_requirement' => true" "$INST"; then echo "  pacote de desenvolvimento registrado em $INST"; FAIL=1; fi
+else
+  echo "  FALTA $INST"; FAIL=1
+fi
 grep -rl "dev/webhook\|openbay\|googleshopping\|squareup" "$DST/system" 2>/dev/null | head -3 && { echo "  legado na build!"; FAIL=1; } || true
 [ -f "$DST/catalog/config.php.EXEMPLO" ] && [ -f "$DST/admin/config.php.EXEMPLO" ] || { echo "  FALTA config EXEMPLO"; FAIL=1; }
 if [ "$FAIL" = 0 ]; then echo "  OK — build pronta em $DST (subir o CONTEÚDO de prod/ para o docroot público)"; else echo "  BUILD COM PROBLEMAS"; exit 1; fi

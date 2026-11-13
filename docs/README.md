@@ -125,6 +125,7 @@ Documentos de registro histórico e pacotes consolidados anteriores:
 - [`tools/verify-deps-layout.sh`](../tools/verify-deps-layout.sh) — layout de `vendor/` e `node_modules/`
 - [`tools/verify-checksums.sh`](../tools/verify-checksums.sh) — integridade dos manifestos `CHECKSUMS*.txt`
 - [`tools/verify-ci-workflow.sh`](../tools/verify-ci-workflow.sh) — contrato do `.github/workflows/php.yml`
+- [`tools/verify-build-prod.sh`](../tools/verify-build-prod.sh) — gera `prod/` e prova que a build não leva pacotes de desenvolvimento (ADR 0092; precisa do `vendor/` instalado)
 - [`tools/verify-checkers-inventory.py`](../tools/verify-checkers-inventory.py) — estabilidade do conjunto de checkers
 - [`tools/verify-contract-freeze.py`](../tools/verify-contract-freeze.py) — congelamento dos 11 artefatos em `decision-matrix.json`
 - [`tools/verify-evidence-refs.py`](../tools/verify-evidence-refs.py) — integridade de `tools/decision-evidence.json`

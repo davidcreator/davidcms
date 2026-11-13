@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════════════
-# verify-ci-workflow.sh — F11-04 / ADR 0082 (reforcado em F11-05, F11-08 e F11-12)
+# verify-ci-workflow.sh — F11-04 / ADR 0082 (reforcado em F11-05, F11-08, F11-12
+# e ADR 0092)
 # Auditor READ-ONLY do contrato do proprio CI (.github/workflows/php.yml).
 #
 #   bash tools/verify-ci-workflow.sh [caminho-do-workflow]
@@ -88,6 +89,12 @@ echo "-- 8. docs-links: modo offline deterministico (F11-12) --"
 grep -qE '^[[:space:]]+--offline' "$WF"; ck $? "--offline (somente links internos, imune a rede)"
 ! grep -q -- '--accept' "$WF"; ck $? "sem --accept (seria enganoso com --offline)"
 [ -f docs/README.md ]; ck $? "docs/README.md existe no disco (resolve 2 links relativos)"
+
+echo "-- 9. Build de producao e auditoria de dependencias (ADR 0092) --"
+grep -qE '^[[:space:]]+run: bash \.\./\.\./\.\./tools/verify-build-prod\.sh$' "$WF"; ck $? "job composer prova a build de producao (tools/verify-build-prod.sh)"
+[ -f tools/verify-build-prod.sh ]; ck $? "tools/verify-build-prod.sh existe no disco"
+[ "$(grep -cE '^[[:space:]]+run: composer audit' "$WF")" -eq 1 ]; ck $? "composer audit roda no CI (1 passo)"
+grep -E '^[[:space:]]+run: composer audit' "$WF" | grep -qF '|| echo "::warning'; ck $? "composer audit so avisa, nao reprova (decisao do mantenedor, ADR 0092)"
 
 echo
 echo "== resumo: $PASS PASS / $FAIL FAIL =="

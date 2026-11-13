@@ -1,5 +1,17 @@
 # Changelog
 
+## Segurança S10 + S11 — build de produção sem PHPUnit / PHPStan; aviso em dependência (2026-11-13)
+- ADR 0092. Achados da análise, reproduzidos antes da correção: `tools/build_prod.sh` executado como estava e `composer audit` sobre o `composer.lock`.
+- **Corrigido (S10):** a build copiava o `vendor/` de `dev/` inteiro. `prod/` levava 27 pacotes de desenvolvimento (PHPUnit, PHPStan e dependentes) e o servidor incluía 3 arquivos deles a cada requisição. Agora o Composer remove da cópia tudo que é `require-dev` e refaz o autoload. `prod/` passa de 132 MB para 97 MB; o `vendor/` de produção, de 47 para 20 pacotes.
+- **Veredito da build:** reprova se sobrar PHPUnit, PHPStan, seus executáveis em `vendor/bin/` ou qualquer pacote de desenvolvimento no registro do Composer.
+- **Pré-requisito novo de `tools/build_prod.sh`: Composer** no terminal em que o script roda. Sem ele, a build para antes de copiar e diz o que fazer. `COMPOSER_BIN="php /caminho/composer.phar"` aponta outro executável.
+- **Corrigido (S11):** `symfony/filesystem` v7.4.21 → v7.4.23 no `composer.lock` (aviso GHSA-6prc-h956-hxjq; o pacote entra pelo AWS SDK e o CMS não o chama). `composer audit` fica sem avisos. `composer.json` não muda.
+- **CI, job `composer`:** `tools/verify-build-prod.sh` gera a build e confere `prod/` contra o lock (46 verificações); `composer audit --locked` roda como aviso e não reprova o CI. `tools/verify-ci-workflow.sh` passa a 35 verificações.
+- **Depois de aplicar:** rode `composer install --working-dir=dev/system/storage` para atualizar o `vendor/` local.
+- **Efeito no site:** nenhum no comportamento. Nenhum arquivo PHP do CMS foi alterado. Sem tabela, coluna, migration, rota ou configuração nova.
+- **Mantido por decisão do mantenedor:** os 8 pacotes de `require` que o código ainda não usa (AWS SDK, Guzzle, Mustache, Latte, scssphp). Medidas e opção de remoção na ADR 0092.
+- **Pendência:** a pasta `install` do site antigo em `davidalmeida.xyz` fica para a troca de site.
+
 ## Segurança S12 — instalador fechado pelo estado real da instalação (2026-11-12)
 - ADR 0091. Achado da análise, reproduzido na instalação de teste antes da correção.
 - **Corrigido:** o instalador só se fechava com o arquivo `install.lock`, gravado ao abrir a página do passo 4. Com o site instalado e a trava ausente (assistente interrompido, pasta `storage` sem permissão de escrita, `config.php` criado à mão), qualquer visitante refazia a instalação com um banco dele: os `config.php` eram regravados, o dono perdia o login e o visitante entrava no admin. Agora o instalador responde 403 quando existe `install.lock` **ou** um `config.php` do site, antes de subir o núcleo.

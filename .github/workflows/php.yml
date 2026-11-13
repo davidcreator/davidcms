@@ -66,6 +66,18 @@ jobs:
     - name: Run unit tests (PHPUnit)
       run: composer test
 
+    - name: Build de produção sem pacotes de desenvolvimento (ADR 0092)
+      # Roda tools/build_prod.sh de verdade e confere prod/ contra o
+      # composer.lock: nenhum pacote de require-dev, autoload funcionando.
+      # Caminho relativo de proposito: o cwd do job e dev/system/storage e um
+      # terceiro `working-directory` quebraria o contrato F11-01.
+      run: bash ../../../tools/verify-build-prod.sh
+
+    - name: Auditoria de dependências (aviso — não reprova o CI, ADR 0092)
+      # Decisao do mantenedor: o resultado aparece como aviso no run; um
+      # advisory novo contra uma dependencia nao deixa o CI vermelho.
+      run: composer audit --locked || echo "::warning title=composer audit::Aviso de seguranca ou pacote abandonado nas dependencias (detalhes no log deste passo)."
+
   php-lint:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
