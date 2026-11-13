@@ -18,14 +18,23 @@ class Marketplace extends \Reamur\System\Engine\Model {
     public function getSellers(array $filter_data = []): array {
         $where = $this->sellerFilterWhere($filter_data);
         $sql = "SELECT `mp_seller_id`, `mp_user_id`, `nickname`, `email`, `scope`,
-                    `token_expires_at`, `status`, `date_added`, `date_modified`
+                    `token_expires_at`, `status`, `date_added`, `date_modified`,
+                    `access_token`, `refresh_token`
                FROM `" . $this->t('mp_seller') . "`";
         if ($where !== '') { $sql .= ' WHERE ' . $where; }
         $start = max(0, (int)($filter_data['start'] ?? 0));
         $limit = min(100, max(1, (int)($filter_data['limit'] ?? 10)));
         $sql .= " ORDER BY `date_added` DESC, `mp_seller_id` DESC LIMIT " . $start . "," . $limit;
         $query = $this->db->query($sql);
-        return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+        $rows = ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+
+        // ADR 0094 (S9): a grade só recebe a informação "os tokens abrem?".
+        return array_map(function ($row): array {
+            $row = $this->openSeller((array)$row);
+            unset($row['access_token'], $row['refresh_token']);
+
+            return $row;
+        }, $rows);
     }
 
     /** @param array<string, mixed> $filter_data */
@@ -56,7 +65,42 @@ class Marketplace extends \Reamur\System\Engine\Model {
             "SELECT * FROM `" . $this->t('mp_seller') . "` WHERE `mp_seller_id` = '" . $mp_seller_id . "'"
         );
 
-        return ($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : [];
+        return $this->openSeller(($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : []);
+    }
+
+    /**
+     * ADR 0094 (S9): tokens saem do banco cifrados e chegam aqui prontos para
+     * uso. `token_locked` = há token gravado que a chave do config.php não
+     * abre (chave trocada ou perdida): o token vem vazio e o vendedor precisa
+     * reconectar. O texto cifrado nunca é devolvido como se fosse o token.
+     *
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private function openSeller(array $row): array {
+        if ($row === []) {
+            return [];
+        }
+
+        $box    = $this->secrets();
+        $locked = false;
+
+        foreach ([
+            'access_token'  => \Reamur\System\Library\Security\SecretBox::CTX_MP_ACCESS,
+            'refresh_token' => \Reamur\System\Library\Security\SecretBox::CTX_MP_REFRESH,
+        ] as $column => $context) {
+            if (!array_key_exists($column, $row)) {
+                continue;
+            }
+
+            $stored       = (string)$row[$column];
+            $locked       = $locked || $box->locked($stored, $context);
+            $row[$column] = $box->open($stored, $context);
+        }
+
+        $row['token_locked'] = $locked;
+
+        return $row;
     }
 
     /**
@@ -64,6 +108,10 @@ class Marketplace extends \Reamur\System\Engine\Model {
      * vendedor que clica "conectar" de novo atualiza tokens, não duplica).
      */
     public function upsertSeller(array $data): void {
+        // ADR 0094 (S9): os tokens vão cifrados para o banco.
+        $data['access_token']  = $this->secrets()->seal((string)$data['access_token'], \Reamur\System\Library\Security\SecretBox::CTX_MP_ACCESS);
+        $data['refresh_token'] = $this->secrets()->seal((string)($data['refresh_token'] ?? ''), \Reamur\System\Library\Security\SecretBox::CTX_MP_REFRESH);
+
         $this->db->query(
             "INSERT INTO `" . $this->t('mp_seller') . "` SET
                `mp_user_id`       = '" . (int)$data['mp_user_id'] . "',
@@ -90,6 +138,9 @@ class Marketplace extends \Reamur\System\Engine\Model {
 
     /** Rotação pós-refresh: apenas tokens + expiração + marca de modificação */
     public function rotateTokens(int $mp_seller_id, string $access_token, string $refresh_token, string $token_expires_at): void {
+        $access_token  = $this->secrets()->seal($access_token, \Reamur\System\Library\Security\SecretBox::CTX_MP_ACCESS);
+        $refresh_token = $this->secrets()->seal($refresh_token, \Reamur\System\Library\Security\SecretBox::CTX_MP_REFRESH);
+
         $this->db->query(
             "UPDATE `" . $this->t('mp_seller') . "` SET
                `access_token`     = '" . $this->db->escape($access_token) . "',
@@ -120,7 +171,7 @@ class Marketplace extends \Reamur\System\Engine\Model {
               ORDER BY `mp_seller_id` ASC LIMIT 1"
         );
 
-        return ($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : [];
+        return $this->openSeller(($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : []);
     }
 
     /** Tentativa vigente do pedido (a mais recente, qualquer status) */

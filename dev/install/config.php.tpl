@@ -44,6 +44,17 @@ define('REAMUR_ERROR_DISPLAY', true);
 //   - prazo do HTTPS obrigatório, em segundos (0 desliga):
 //       define('REAMUR_HSTS_MAX_AGE', 15552000);
 
+// Chave dos segredos (ADR 0094). Tokens do Mercado Pago, segredos de webhook
+// e a senha SMTP são gravados cifrados no banco; esta chave é o que os abre.
+//   - a linha é IGUAL em catalog/config.php e admin/config.php;
+//   - guarde uma cópia junto do backup: banco restaurado sem esta chave não
+//     abre os segredos (será preciso reconectar vendedores e redigitar senhas);
+//   - para trocar a chave: ponha a nova aqui, a antiga em REAMUR_SECRET_KEY_OLD
+//     (nos dois arquivos), use Configurações > "Proteger segredos" e então
+//     apague a linha da antiga:
+//       define('REAMUR_SECRET_KEY_OLD', 'chave-anterior');
+define('REAMUR_SECRET_KEY', '{{SECRET_KEY}}');
+
 // DIR (raízes calculadas a partir de DIR_REAMUR — ver §1.1)
 define('DIR_REAMUR', '{{DIR_REAMUR}}');
 define('DIR_APPLICATION', DIR_REAMUR . 'dev/{{APP_DIR}}/');

@@ -1,6 +1,11 @@
 # ADR 0034 — Mercado Pago Marketplace: fundação OAuth de vendedores (config fora do git, costuras de ambiente)
 
 - **Status:** Aceita — 2026-10-20 (F5 Tarefa 02)
+- **Revisão (2026-11-13):** o item 6 da decisão (tokens de vendedor em
+  texto legível no banco, risco aceito) foi revisto: os tokens e os demais
+  segredos passam a ser gravados cifrados, com a chave no `config.php`. A
+  chave fora da pasta do site, sugerida ali, não foi feita. Ver
+  [ADR 0094](0094-seguranca-segredos-cifrados-no-banco.md), seção Limites.
 - **Contexto:** O plano da Fase 5 objetiva pagamento real no ReamurCMS. O
   modelador aprovou como recorte F5-02 um **marketplace multi-vendedor
   real**: lojistas (sellers) conectados via **OAuth do Mercado Pago**, no

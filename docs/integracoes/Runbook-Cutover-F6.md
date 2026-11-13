@@ -62,6 +62,12 @@ A seção 7 (rollback) é o botão de emergência — leia **antes** de começar
        com seus orçamentos). Pode dropar o banco de teste depois.
 - [ ] **2.4** Anote onde os backups ficaram (pasta/pen drive/nuvem) — o
        rollback (§7) depende deles.
+- [ ] **2.5 Chave dos segredos (ADR 0094):** a linha
+       `define('REAMUR_SECRET_KEY', '…')` do `config.php` precisa estar
+       guardada junto do backup do banco. Banco restaurado sem ela não abre
+       tokens do Mercado Pago, senha SMTP nem segredos de webhook. Não
+       deixe cópias do `config.php` dentro da pasta do site
+       (`config.php.bak`, `config.php~`): o check 18 reprova.
 
 ## 3. O que sobe para o servidor (modelo build → deploy, ADR 0039 — **decidido**)
 
@@ -164,12 +170,13 @@ nunca no ar.
 bash tools/check_producao.sh https://davidalmeida.xyz
 ```
 
-17 checks remotos read-only (todos de fora): catálogo + TLS, força HTTPS,
+18 checks remotos read-only (todos de fora): catálogo + TLS, força HTTPS,
 raiz→catalog, aliases, SEO, os 301s, sitemap, robots, admin protegido,
 system/ e logs selados, erro sem stack, headers, **ausência de dev-only
 no ar**, TTFB, flags do cookie de sessão (`Secure`, `HttpOnly`,
-`SameSite`) e política de conteúdo aplicada + HSTS (ADR 0093).
-Resultado: `17 pass / 0 fail` = ✅ go. A lista manual
+`SameSite`), política de conteúdo aplicada + HSTS (ADR 0093) e `config.php`
+(com a chave dos segredos) fora do alcance do navegador (ADR 0094).
+Resultado: `18 pass / 0 fail` = ✅ go. A lista manual
 abaixo fica como *diagnóstico* de qualquer FAIL específico.
 
 **Lista manual (diagnóstico)** — rode em qualquer máquina (ajuste `DOMINIO`):

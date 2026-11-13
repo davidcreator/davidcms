@@ -45,8 +45,8 @@ rms_mp_seller
 ├─ mp_seller_id     INT PK AI
 ├─ mp_user_id       BIGINT UNIQUE  ← chave natural do MP
 ├─ nickname, email  VARCHAR        ← identificação na grade (NUNCA tokens)
-├─ access_token     TEXT           ← texto plano nesta entrega (ADR 0034 §6)
-├─ refresh_token    TEXT
+├─ access_token     TEXT           ← cifrado (ADR 0094); começa com rmsenc:v1:
+├─ refresh_token    TEXT           ← cifrado (ADR 0094)
 ├─ scope            VARCHAR
 ├─ token_expires_at DATETIME       ← NOW() + expires_in
 ├─ status           TINYINT
@@ -72,10 +72,15 @@ Rode com o ambiente padrão: `bash tools/e2e/e2e_f502.sh` (precisa do Apache + b
 ### Segurança do endpoint de notificação
 
 - O CMS **nunca confia no POST** do webhook: extrai o id e **consulta `/v1/payments/{id}`** com o token do vendedor — só o status confirmado pela API é refletido no banco (idempotente).
-- Opcional e recomendado para produção: cadastre a chave de **assinatura de webhooks** no app do MP e grave-a em `rms_setting` (`mp_webhook_secret`) — o CMS valida o header `x-signature` antes de chamar a API.
+- Opcional e recomendado para produção: cadastre a chave de **assinatura de webhooks** no app do MP e cole-a no campo **Segredo das notificações (assinatura)** da tela *Mercado Pago Marketplace* (16 a 255 caracteres; o campo é só de escrita). Com ela o CMS valida o header `x-signature` antes de chamar a API. Sem ela, a assinatura não é conferida.
+- A notificação responde **503 com `Retry-After`** quando um segredo gravado não abre com a chave do `catalog/config.php` (ver §7). O Mercado Pago reenvia; corrigida a chave, a mesma notificação é processada.
 
 ## 7. Segurança — o que já vale e o que é dívida
 
 - `state` aleatório de 16 bytes, comparado com `hash_equals` e consumido após uso ✔
 - Redirect URI `https://` obrigatório ✔ · credenciais fora do git ✔ · grade sem tokens ✔
-- **Dívida declarada (ADR 0034 §6):** access/refresh tokens persistem em texto plano no banco. Sem KMS/keyring no projeto, cifrar com chave em arquivo próximo seria ilusão. Hardening = env keyring fora do docroot + cifragem em repouso (Fase 6).
+- **Tokens e segredos cifrados no banco (ADR 0094)** ✔ — tokens de acesso e de renovação, segredo do aplicativo e chave de assinatura são gravados cifrados. A chave que os abre é a linha `REAMUR_SECRET_KEY`, igual em `catalog/config.php` e `admin/config.php`.
+  - **Site já instalado:** abra *Configurações → Proteção dos segredos*, cole a linha mostrada nos dois `config.php`, recarregue a tela e use **Proteger segredos**. Até lá tudo funciona como antes, com os valores legíveis, e o painel avisa.
+  - **Guarde a linha da chave junto da cópia de segurança.** Banco restaurado sem ela não abre os tokens: será preciso reconectar cada vendedor e redigitar os segredos.
+  - **Vendedor marcado "Reconectar"** = os tokens gravados não abrem com a chave atual. Restaure a chave anterior no `config.php`, ou desconecte e conecte o vendedor de novo.
+  - **Limite:** a chave fica no `config.php`. Protege contra quem alcança só o banco (cópia de segurança, arquivo `.sql`, phpMyAdmin, falha de leitura por SQL); não protege contra quem lê os arquivos do site.

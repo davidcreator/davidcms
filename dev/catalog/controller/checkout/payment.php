@@ -51,7 +51,7 @@ class Payment extends \Reamur\System\Engine\Controller {
         $this->response->redirect($init_point);
     }
 
-    /** Webhook (v2) / IPN (clássico) do MP — resposta SEMPRE 200 c/ rótulo */
+    /** Webhook (v2) / IPN (clássico) do MP — resposta 200 c/ rótulo; 503 só quando um segredo gravado não abre (ADR 0094) */
     public function notify(): void {
         $this->response->addHeader('Content-Type: text/plain; charset=utf-8');
 
@@ -72,8 +72,22 @@ class Payment extends \Reamur\System\Engine\Controller {
             $decoded   = json_decode($raw, true);
             $body      = is_array($decoded) ? $decoded : [];
 
+            // ADR 0094 (S9): segredos chegam cifrados do banco. Um segredo de
+            // assinatura que NÃO ABRE (chave do config.php trocada ou ausente)
+            // não vale como "sem segredo": a conferência seria pulada. O MP
+            // recebe 503 e reenvia depois, quando a chave estiver corrigida.
+            $signatureContext = \Reamur\System\Library\Security\SecretBox::settingContext('mp_webhook_secret');
+            $signatureStored  = (string)($settings['mp_webhook_secret'] ?? '');
+
+            if ($this->secrets()->locked($signatureStored, $signatureContext)) {
+                $this->log->write("mp notify: o segredo de assinatura gravado não abre com a REAMUR_SECRET_KEY do catalog/config.php (payment $payment_id); notificação devolvida para reenvio");
+
+                $this->retryLater('secret-locked');
+                return;
+            }
+
             // §6 — validação de assinatura quando segredo configurado
-            if (!$this->signatureOk((string)($settings['mp_webhook_secret'] ?? ''), $payment_id)) {
+            if (!$this->signatureOk($this->secrets()->open($signatureStored, $signatureContext), $payment_id)) {
                 $this->log->write("mp notify: assinatura rejeitada (payment $payment_id)");
 
                 $this->finish('signature-rejected');
@@ -92,13 +106,25 @@ class Payment extends \Reamur\System\Engine\Controller {
                 $seller = $this->model_checkout_mp_payment->getSellerByMpUserId($mp_user_id);
             }
 
-            if ($seller) {
+            // ADR 0094 (S9): vendedor cujo token não abre não é consultado
+            // (o token vem vazio); se por isso o pagamento não for achado, o
+            // MP recebe 503 e reenvia.
+            $tokenLocked = false;
+
+            if ($seller && !empty($seller['token_locked'])) {
+                $tokenLocked = true;
+            } elseif ($seller) {
                 $payment = $this->confirmedPayment($mp, $payment_id, (string)$seller['access_token']);
             }
 
             if (!$payment) {
                 foreach ($this->model_checkout_mp_payment->getActiveSellers() as $candidate) {
                     if ($seller && (int)$candidate['mp_seller_id'] === (int)$seller['mp_seller_id']) {
+                        continue;
+                    }
+
+                    if (!empty($candidate['token_locked'])) {
+                        $tokenLocked = true;
                         continue;
                     }
 
@@ -109,6 +135,13 @@ class Payment extends \Reamur\System\Engine\Controller {
                         break;
                     }
                 }
+            }
+
+            if (!$payment && $tokenLocked) {
+                $this->log->write("mp notify: token de vendedor gravado não abre com a REAMUR_SECRET_KEY do catalog/config.php (payment $payment_id); notificação devolvida para reenvio");
+
+                $this->retryLater('token-locked');
+                return;
             }
 
             if (!$payment) {
@@ -269,7 +302,7 @@ class Payment extends \Reamur\System\Engine\Controller {
     private function mpFromSettings(array $settings): \Reamur\System\Library\MercadopagoMarketplace {
         return new \Reamur\System\Library\MercadopagoMarketplace([
             'app_id'        => (string)($settings['mp_app_id'] ?? ''),
-            'client_secret' => (string)($settings['mp_client_secret'] ?? ''),
+            'client_secret' => $this->secrets()->open((string)($settings['mp_client_secret'] ?? ''), \Reamur\System\Library\Security\SecretBox::settingContext('mp_client_secret')),
             'redirect_uri'  => (string)($settings['mp_redirect_uri'] ?? ''),
             'token_url'     => (string)($settings['mp_token_url'] ?? ''),
             'users_me_url'  => (string)($settings['mp_users_me_url'] ?? ''),
@@ -292,8 +325,20 @@ class Payment extends \Reamur\System\Engine\Controller {
 
         return $map;
     }
-    /** O MP reenvia a notificação se não receber 2xx: a resposta é SEMPRE 200 */
+    /** O MP reenvia a notificação se não receber 2xx: a resposta normal é 200 (exceção: retryLater) */
     private function finish(string $label): void {
         $this->response->setOutput('ok:' . $label);
+    }
+
+    /**
+     * Única exceção ao "sempre 200" (ADR 0094, S9): um segredo gravado não
+     * abre porque a chave do config.php está errada. A falha é da instalação
+     * e tem conserto; responder 200 jogaria fora a confirmação do pagamento.
+     * Com 503 o Mercado Pago reenvia a notificação mais tarde.
+     */
+    private function retryLater(string $label): void {
+        $this->response->addHeader('HTTP/1.1 503 Service Unavailable');
+        $this->response->addHeader('Retry-After: 3600');
+        $this->response->setOutput('retry:' . $label);
     }
 }

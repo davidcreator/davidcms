@@ -34,6 +34,8 @@ if (!hash_equals($esperado, $_SERVER['HTTP_X_REAMUR_SIGNATURE'] ?? '')) { http_r
 
 **Cadastro:** admin `Configurações → Webhooks` (F2-16): URL **somente https://**, secret 16–64 chars, trigger com wildcard (`order_add`, `order_*`, `*_add`), logs read-only por endpoint.
 
+**Segredo cifrado no banco (ADR 0094):** o secret é gravado cifrado (`rmsenc:v1:…`) e aberto só na hora de assinar o envio; quem recebe continua conferindo com o secret que foi digitado. Ao editar um endpoint, campo de secret em branco mantém o atual. Se a chave `REAMUR_SECRET_KEY` do `config.php` for trocada ou perdida, o secret gravado deixa de abrir: o evento **não é enviado** (linha no log de entregas com código 0), a tela do endpoint avisa e pede um secret novo. Cadastre sempre pela tela: um `INSERT` direto no banco grava o secret legível, e ele só passa a ser cifrado em *Configurações → Proteger segredos*.
+
 ---
 
 
@@ -217,7 +219,7 @@ CREATE TABLE `rms_webhook` (
   `webhook_id`  INT AUTO_INCREMENT PRIMARY KEY,
   `trigger`     VARCHAR(64)  NOT NULL,           -- order_add, order_edit, product_*
   `url`         VARCHAR(255) NOT NULL,           -- endpoint receptor (HTTPS)
-  `secret`      VARCHAR(64)  NOT NULL,           -- segredo HMAC por endpoint
+  `secret`      VARCHAR(512) NOT NULL,           -- segredo HMAC por endpoint, cifrado (ADR 0094)
   `description` VARCHAR(255) NOT NULL DEFAULT '',
   `status`      TINYINT(1)   NOT NULL DEFAULT 1, -- 1 = ativo
   `date_added`  DATETIME     NOT NULL,

@@ -1,5 +1,23 @@
 # Changelog
 
+## Segurança S9 — segredos cifrados no banco (2026-11-13)
+- ADR 0094. Achado da análise, reproduzido antes da correção: tokens do Mercado Pago, segredo do aplicativo, chave de assinatura das notificações, senha SMTP e segredos de webhook estavam legíveis no banco. Um token copiado do banco foi aceito pelo Mercado Pago de teste. Revisa o item 6 da ADR 0034.
+- **Corrigido:** os seis valores passam a ser gravados cifrados (AES-256-GCM) e abertos só no ponto de uso. Cada valor fica preso à coluna dele; valor alterado ou movido não abre. As telas continuam sem mostrar segredo, e o cache das configurações deixa de guardá-lo legível.
+- **Configuração nova no `config.php`:** `define('REAMUR_SECRET_KEY', '…');`, a mesma linha em `catalog/config.php` e `admin/config.php`. O instalador gera e escreve a chave nos dois arquivos.
+- **Atenção ao atualizar um site instalado:** nada muda sozinho. O painel passa a avisar. Para proteger:
+  1. abra *Configurações → Proteção dos segredos* e copie a linha mostrada;
+  2. cole a mesma linha em `catalog/config.php` e em `admin/config.php`;
+  3. recarregue a tela e clique em **Proteger segredos**.
+- **Atenção à cópia de segurança:** guarde a linha da chave junto do backup do banco. Sem a chave, os valores cifrados não voltam: é preciso reconectar cada vendedor no Mercado Pago e redigitar segredo do aplicativo, chave de assinatura, senha SMTP e segredos de webhook.
+- **Chave errada ou perdida:** o valor conta como ausente e nunca é enviado para fora. E-mail por SMTP, renovação de token e link de pagamento são recusados com explicação; o webhook não é enviado (código 0 no registro de entregas); salvar uma tela sem redigitar não destrói o valor gravado. Restaurar a chave devolve tudo ao normal.
+- **Mudança de comportamento:** `checkout/payment.notify` responde **503 com `Retry-After: 3600`** quando a chave de assinatura ou o token do vendedor não abre (antes respondia sempre 200). O Mercado Pago reenvia.
+- **Troca de chave:** chave nova em `REAMUR_SECRET_KEY`, a anterior em `REAMUR_SECRET_KEY_OLD` (só abre), **Proteger segredos**, e a linha da anterior sai.
+- **Banco:** `rms_webhook.secret` passa de `VARCHAR(64)` para `VARCHAR(512)`. O painel alarga a coluna sozinho; se o usuário do banco não tiver permissão de `ALTER`, a tela avisa e `install/sql/upgrade_s9_webhook_secret.sql` faz o mesmo no phpMyAdmin (`rollback_s9_webhook_secret.sql` desfaz).
+- **Admin:** a chave de assinatura das notificações do Mercado Pago (`mp_webhook_secret`) entra pela tela *Mercado Pago Marketplace*; antes, só por SQL. Editar um webhook com o campo de segredo em branco mantém o atual.
+- **Limite:** a chave fica no `config.php`. Protege contra quem alcança só o banco (cópia de segurança, arquivo `.sql`, phpMyAdmin, falha de leitura por SQL). Não protege contra quem lê os arquivos do site. Cópias de segurança anteriores à conversão continuam com os valores legíveis.
+- **Para quem escreve código:** segredo novo no banco passa por `$this->secrets()->seal()` / `->open()`. Regra em `agents-ia/regras/02-padroes-de-codigo.md`.
+- `tools/check_producao.sh`, check 18 (novo): nenhum `config.php`, cópia dele ou cache de configurações entregue como texto. O script passa a ter 18 checks.
+
 ## Segurança S8 — política de conteúdo aplicada e HTTPS obrigatório no navegador (2026-11-13)
 - ADR 0093. Achado da análise, reproduzido antes da correção com navegador real: a política do site estava em modo de relato e, mesmo aplicada, aceitaria script embutido, `eval` e script de qualquer site. Um ataque simulado na página inicial executava os quatro testes; agora os quatro são bloqueados.
 - **Corrigido:** `Content-Security-Policy` aplicada no site público e no admin. O navegador só executa scripts do próprio site e os blocos que o servidor marcou com um código sorteado a cada página (nonce). Sem `eval`. Estilos embutidos continuam permitidos.

@@ -53,6 +53,21 @@ class Setting extends \Reamur\System\Engine\Controller {
                 continue; // default do arquivo permanece em vez de apagar
             }
 
+            // ADR 0094 (S9): a senha SMTP está cifrada no banco e no cache; é
+            // aberta aqui, em memória. Se a chave do config.php não a abre, a
+            // Mail\Factory recusa o envio por SMTP com uma mensagem que diz o porquê.
+            if (in_array($key, \Reamur\System\Library\Security\SecretBox::SETTING_KEYS, true)) {
+                $context = \Reamur\System\Library\Security\SecretBox::settingContext($key);
+
+                if ($this->secrets()->locked($value, $context)) {
+                    $this->config->set($key . '_locked', true);
+
+                    continue;
+                }
+
+                $value = $this->secrets()->open($value, $context);
+            }
+
             $this->config->set($key, $value);
         }
     }

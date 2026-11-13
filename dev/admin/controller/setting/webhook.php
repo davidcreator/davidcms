@@ -174,6 +174,10 @@ class Webhook extends \Reamur\System\Engine\Controller {
 
             $csrfOk = $this->csrfValid();
             $allowEmptySecret = false;
+            // ADR 0094 (S9): campo vazio mantém o segredo gravado. O valor não
+            // volta mais pelo POST (no banco ele está cifrado): o model recebe
+            // secret = null e não toca na coluna.
+            $keepSecret = false;
             if ($csrfOk) {
                 $secretInput = $this->postScalar('secret');
                 $clearSecret = $this->postScalar('secret_clear') === '1';
@@ -183,14 +187,26 @@ class Webhook extends \Reamur\System\Engine\Controller {
                     $this->request->post['status'] = '0';
                     $allowEmptySecret = true;
                 } elseif ($secretInput === '') {
-                    $this->request->post['secret'] = (string)($webhook['secret'] ?? '');
-                    $allowEmptySecret = (string)($webhook['secret'] ?? '') === '';
+                    $keepSecret       = (string)($webhook['secret'] ?? '') !== '';
+                    $allowEmptySecret = !$keepSecret;
                 }
             }
-            $errors = $csrfOk ? $this->validateWebhook($webhook_id, $allowEmptySecret) : [$this->language->get('error_csrf')];
+            $errors = $csrfOk ? $this->validateWebhook($webhook_id, $allowEmptySecret, $keepSecret) : [$this->language->get('error_csrf')];
+
+            // Manter um segredo que não abre deixaria o endpoint ativo sem conseguir assinar.
+            if ($errors === [] && $keepSecret && $this->postScalar('status') === '1'
+                && $this->secrets()->locked((string)($webhook['secret'] ?? ''), \Reamur\System\Library\Security\SecretBox::CTX_WEBHOOK)) {
+                $errors[] = $this->language->get('error_secret_locked');
+            }
 
             if ($errors === []) {
-                $this->model_setting_webhook->editWebhook($webhook_id, $this->postPayload());
+                $payload = $this->postPayload();
+
+                if ($keepSecret) {
+                    $payload['secret'] = null;
+                }
+
+                $this->model_setting_webhook->editWebhook($webhook_id, $payload);
 
                 $this->setFlash($this->language->get('text_success_edit'));
 
@@ -437,6 +453,8 @@ class Webhook extends \Reamur\System\Engine\Controller {
             // Segredos jamais são devolvidos no HTML nem após erro de validação.
             'value_secret'       => '',
             'secret_is_set'      => (string)($webhook['secret'] ?? '') !== '',
+            'secret_locked'      => $this->secrets()->locked((string)($webhook['secret'] ?? ''), \Reamur\System\Library\Security\SecretBox::CTX_WEBHOOK),
+            'text_secret_locked' => $this->language->get('text_secret_locked'),
             'value_secret_clear' => $this->postScalar('secret_clear') === '1' && $this->postScalar('secret') === '',
             'value_description'  => is_scalar($post['description'] ?? null) ? (string)$post['description'] : (string)($webhook['description'] ?? ''),
             'value_status'       => $post ? (is_scalar($post['status'] ?? null) ? (int)$post['status'] : 0) : (int)($webhook['status'] ?? 1),
@@ -450,7 +468,7 @@ class Webhook extends \Reamur\System\Engine\Controller {
      *
      * @return array<int, string>
      */
-    private function validateWebhook(int $except_webhook_id = 0, bool $allow_empty_secret = false): array {
+    private function validateWebhook(int $except_webhook_id = 0, bool $allow_empty_secret = false, bool $keep_secret = false): array {
         $post   = $this->request->post;
         $errors = [];
 
@@ -468,7 +486,8 @@ class Webhook extends \Reamur\System\Engine\Controller {
         }
 
         $emptySecretAllowed = $secret === '' && $allow_empty_secret && $except_webhook_id > 0 && empty($post['status']);
-        if (!($emptySecretAllowed || (mb_strlen($secret) >= 16 && mb_strlen($secret) <= 64))) {
+        $secretKept = $keep_secret && $secret === '' && $except_webhook_id > 0;
+        if (!($emptySecretAllowed || $secretKept || (mb_strlen($secret) >= 16 && mb_strlen($secret) <= 64))) {
             $errors[] = $this->language->get('error_secret');
         }
 

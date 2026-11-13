@@ -404,7 +404,7 @@ CREATE TABLE IF NOT EXISTS `rms_webhook` (
   `webhook_id`  INT          NOT NULL AUTO_INCREMENT,
   `trigger`     VARCHAR(64)  NOT NULL COMMENT 'ex.: order_add, product_*',
   `url`         VARCHAR(255) NOT NULL COMMENT 'HTTPS obrigatório',
-  `secret`      VARCHAR(64)  NOT NULL COMMENT 'segredo HMAC por endpoint',
+  `secret`      VARCHAR(512) NOT NULL COMMENT 'segredo HMAC por endpoint, cifrado (ADR 0094)',
   `description` VARCHAR(255) NOT NULL,
   `status`      TINYINT(1)   NOT NULL DEFAULT '1',
   `date_added`  DATETIME     NOT NULL,
@@ -430,16 +430,16 @@ CREATE TABLE IF NOT EXISTS `rms_webhook_log` (
 -- ----------------------------------------------------------------------------
 -- 10. MERCADO PAGO (F5-02 / F5-03)
 -- ----------------------------------------------------------------------------
--- Tokens em TEXTO PLANO nesta fase — decisão DOCUMENTADA no ADR 0034 §6:
--- não existe chave-mestra na casa para cifragem reversível; gestão de chave
--- (KMS/env) fica para tarefa de hardening futura.
+-- Tokens gravados CIFRADOS (ADR 0094, que revisa o ADR 0034 §6): o valor na
+-- coluna começa com rmsenc:v1: e só abre com a REAMUR_SECRET_KEY do config.php.
+-- Valor legível = site que ainda não usou "Proteger segredos" em Configurações.
 
 CREATE TABLE IF NOT EXISTS `rms_mp_seller` (
   `mp_seller_id`     INT UNSIGNED  NOT NULL AUTO_INCREMENT,
   `mp_user_id`       BIGINT        NOT NULL COMMENT 'user_id do vendedor no Mercado Pago',
   `nickname`         VARCHAR(190)  NOT NULL DEFAULT '' COMMENT 'apelido público (/users/me)',
   `email`            VARCHAR(190)  NOT NULL DEFAULT '',
-  `access_token`     TEXT          NOT NULL COMMENT 'token OAuth do vendedor (ver ADR 0034 §6)',
+  `access_token`     TEXT          NOT NULL COMMENT 'token OAuth do vendedor, cifrado (ADR 0094)',
   `refresh_token`    TEXT          NOT NULL,
   `scope`            VARCHAR(255)  NOT NULL DEFAULT '',
   `token_expires_at` DATETIME      NOT NULL COMMENT 'NOW() + expires_in no momento da concessão',

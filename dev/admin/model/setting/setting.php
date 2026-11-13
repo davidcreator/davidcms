@@ -70,6 +70,9 @@ class Setting extends \Reamur\System\Engine\Model {
             // F5-02 (ADR 0034): app do Mercado Pago Marketplace — credenciais gravadas
             // no banco via painel, NUNCA versionadas no git
             'mp_app_id', 'mp_client_secret', 'mp_env', 'mp_redirect_uri',
+            // ADR 0094 (S9): segredo de assinatura das notificações do Mercado Pago
+            // (antes só entrava por SQL)
+            'mp_webhook_secret',
             // costuras de ambiente (ADR 0034 §4): não expostas em tela; existem p/
             // baterias e2e e manutenção apontarem rotas alternativas (mock/sandbox)
             'mp_token_url', 'mp_users_me_url',
@@ -88,6 +91,13 @@ class Setting extends \Reamur\System\Engine\Model {
 
             if (!in_array($key, $allow, true)) {
                 continue;
+            }
+
+            // ADR 0094 (S9): segredos vão cifrados para o banco (e, por
+            // consequência, para o arquivo de cache). Valor que já chega
+            // cifrado — tela que "manteve o gravado" — passa como está.
+            if (!is_array($value) && in_array($key, \Reamur\System\Library\Security\SecretBox::SETTING_KEYS, true)) {
+                $value = $this->secrets()->seal((string)$value, \Reamur\System\Library\Security\SecretBox::settingContext($key));
             }
 
             $serialized = is_array($value) ? 1 : 0;

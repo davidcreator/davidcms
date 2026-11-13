@@ -53,6 +53,13 @@ final class Factory {
         $data['parameter'] = (string)$config->get('mail_parameter', '');
 
         if ($engine === 'smtp') {
+            // ADR 0094 (S9): a senha SMTP gravada não abre com a chave do
+            // config.php. Tentar autenticar sem ela daria um erro que não
+            // aponta a causa; a mensagem abaixo aponta.
+            if ($config->get('mail_smtp_password_locked', false)) {
+                throw new \RuntimeException('The saved SMTP password cannot be opened with REAMUR_SECRET_KEY from config.php. Enter the SMTP password again in Settings, or restore the previous key.');
+            }
+
             $data['smtp_hostname'] = (string)$config->get('mail_smtp_hostname', '');
             $data['smtp_username'] = (string)$config->get('mail_smtp_username', '');
             $data['smtp_password'] = (string)$config->get('mail_smtp_password', '');

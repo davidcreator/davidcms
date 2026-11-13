@@ -84,3 +84,14 @@ $_['text_page_first'] = '« Primera';
 $_['text_page_last'] = 'Última »';
 $_['text_page_next'] = 'Siguiente ›';
 $_['text_page_prev'] = '‹ Anterior';
+
+// ADR 0094 (S9): segredos cifrados no banco
+$_['entry_webhook_secret'] = 'Secreto de las notificaciones (firma)';
+$_['entry_webhook_secret_clear'] = 'Borrar el secreto guardado (las notificaciones dejan de tener la firma comprobada)';
+$_['text_webhook_secret_hint'] = 'Clave de firma de webhooks de tu aplicación en Mercado Pago. Con ella se comprueba la firma de cada notificación de pago. Déjalo vacío para conservar la actual. Mínimo 16 caracteres.';
+$_['text_webhook_secret_set'] = 'Secreto configurado';
+$_['text_webhook_secret_unset'] = 'Sin secreto: firma no comprobada';
+$_['text_secret_locked'] = 'El valor guardado no se abre con la clave actual de config.php. Escríbelo de nuevo.';
+$_['text_token_locked'] = 'Reconectar';
+$_['error_token_locked'] = 'Los tokens de este vendedor no se abren con la clave actual de config.php. Restaura la clave anterior o desconecta y vuelve a conectar al vendedor.';
+$_['error_webhook_secret'] = 'El secreto de las notificaciones debe tener de 16 a 255 caracteres.';

@@ -84,3 +84,14 @@ $_['text_page_first'] = '« First';
 $_['text_page_last'] = 'Last »';
 $_['text_page_next'] = 'Next ›';
 $_['text_page_prev'] = '‹ Prev';
+
+// ADR 0094 (S9): segredos cifrados no banco
+$_['entry_webhook_secret'] = 'Notification secret (signature)';
+$_['entry_webhook_secret_clear'] = 'Remove the saved secret (notification signatures stop being checked)';
+$_['text_webhook_secret_hint'] = 'The webhook signature key of your Mercado Pago app. With it, the signature of every payment notification is checked. Leave empty to keep the current one. Minimum 16 characters.';
+$_['text_webhook_secret_set'] = 'Secret saved';
+$_['text_webhook_secret_unset'] = 'No secret: signature not checked';
+$_['text_secret_locked'] = 'The saved value cannot be opened with the current key in config.php. Type it again.';
+$_['text_token_locked'] = 'Reconnect';
+$_['error_token_locked'] = 'This seller\'s tokens cannot be opened with the current key in config.php. Restore the previous key, or disconnect and connect the seller again.';
+$_['error_webhook_secret'] = 'The notification secret must be 16 to 255 characters long.';

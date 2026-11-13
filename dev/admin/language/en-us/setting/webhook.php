@@ -96,3 +96,7 @@ $_['text_page_first'] = '« First';
 $_['text_page_last'] = 'Last »';
 $_['text_page_next'] = 'Next ›';
 $_['text_page_prev'] = '‹ Prev';
+
+// ADR 0094 (S9): segredos cifrados no banco
+$_['text_secret_locked'] = 'The saved secret cannot be opened with the current key in config.php. Type a new secret.';
+$_['error_secret_locked'] = 'The saved secret cannot be opened with the current key in config.php: type a new secret (or disable the endpoint).';

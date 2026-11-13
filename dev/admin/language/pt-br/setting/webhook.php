@@ -96,3 +96,7 @@ $_['text_page_first'] = '« Primeira';
 $_['text_page_last'] = 'Última »';
 $_['text_page_next'] = 'Próxima ›';
 $_['text_page_prev'] = '‹ Anterior';
+
+// ADR 0094 (S9): segredos cifrados no banco
+$_['text_secret_locked'] = 'O segredo gravado não abre com a chave atual do config.php. Digite um novo segredo.';
+$_['error_secret_locked'] = 'O segredo gravado não abre com a chave atual do config.php: digite um novo segredo (ou desative o endpoint).';

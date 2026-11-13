@@ -40,6 +40,8 @@
 | `REAMUR_CSP_MODE` | `'report'` | Chave de emergência da política de conteúdo. `'report'` = o navegador só relata no console, nada é bloqueado; `'off'` = sem política. Ausente ou qualquer outro valor = política aplicada (ADR 0093) |
 | `REAMUR_CSP_SOURCES` | `['script-src' => 'https://cdn.exemplo.com']` | Sites de fora liberados no site público, por tipo de recurso (`script-src`, `style-src`, `img-src`, `font-src`, `connect-src`, `media-src`, `frame-src`, `form-action`). Só endereço `https://` de site; o resto é ignorado. Vale só em `catalog/config.php` (ADR 0093) |
 | `REAMUR_HSTS_MAX_AGE` | `15552000` | Prazo, em segundos, do `Strict-Transport-Security`. Ausente = 180 dias; `0` desliga. O cabeçalho só sai quando `HTTP_SERVER` começa com `https://` (ADR 0093) |
+| `REAMUR_SECRET_KEY` | linha gerada pelo instalador ou por *Configurações → Proteção dos segredos* | Chave que cifra os segredos gravados no banco (tokens do Mercado Pago, segredos de webhook, senha SMTP). 32 bytes aleatórios em base64, escritos como texto, **iguais nos dois arquivos**. Ausente = segredos gravados legíveis e aviso no painel. Guarde uma cópia com o backup: sem ela o banco restaurado não abre os segredos (ADR 0094) |
+| `REAMUR_SECRET_KEY_OLD` | a chave anterior | Só durante uma troca de chave: abre o que a chave anterior cifrou, nunca grava. Sai depois de "Proteger segredos" (ADR 0094) |
 
 > **Regra:** `config.php` é gerado pelo wizard (`install/`) e **nunca** versionado (entra no `.gitignore`). O instalador deve validar e recusar escrever credenciais vazias em produção.
 

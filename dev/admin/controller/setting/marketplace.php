@@ -147,6 +147,18 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             'button_disconnect'    => $this->language->get('button_disconnect'),
             'mp_app_id'            => (string)($settings['mp_app_id'] ?? ''),
             'mp_has_secret'        => trim((string)($settings['mp_client_secret'] ?? '')) !== '',
+            // ADR 0094 (S9): segredo das notificações com campo próprio; os dois
+            // segredos ficam cifrados no banco e a tela só sabe "tem / não abre".
+            'mp_secret_locked'         => $this->secrets()->locked((string)($settings['mp_client_secret'] ?? ''), \Reamur\System\Library\Security\SecretBox::settingContext('mp_client_secret')),
+            'mp_has_webhook_secret'    => trim((string)($settings['mp_webhook_secret'] ?? '')) !== '',
+            'mp_webhook_secret_locked' => $this->secrets()->locked((string)($settings['mp_webhook_secret'] ?? ''), \Reamur\System\Library\Security\SecretBox::settingContext('mp_webhook_secret')),
+            'entry_webhook_secret'       => $this->language->get('entry_webhook_secret'),
+            'entry_webhook_secret_clear' => $this->language->get('entry_webhook_secret_clear'),
+            'text_webhook_secret_hint'   => $this->language->get('text_webhook_secret_hint'),
+            'text_webhook_secret_set'    => $this->language->get('text_webhook_secret_set'),
+            'text_webhook_secret_unset'  => $this->language->get('text_webhook_secret_unset'),
+            'text_secret_locked'         => $this->language->get('text_secret_locked'),
+            'text_token_locked'          => $this->language->get('text_token_locked'),
             'mp_env'               => (string)($settings['mp_env'] ?? 'test'),
             'mp_redirect_uri'      => (string)($settings['mp_redirect_uri'] ?? ''),
             'mp_configured'        => $mp->isConfigured(),
@@ -206,6 +218,8 @@ class Marketplace extends \Reamur\System\Engine\Controller {
 
         $app_id        = trim($this->postScalar('mp_app_id'));
         $client_secret = trim($this->postScalar('mp_client_secret'));
+        $webhook_secret       = trim($this->postScalar('mp_webhook_secret'));
+        $webhook_secret_clear = $this->postScalar('mp_webhook_secret_clear') === '1';
         $env           = $this->postScalar('mp_env', 'test');
         $redirect_uri  = trim($this->postScalar('mp_redirect_uri'));
 
@@ -228,6 +242,10 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             $errors[] = $this->language->get('error_client_secret');
         }
 
+        if ($webhook_secret !== '' && (strlen($webhook_secret) < 16 || strlen($webhook_secret) > 255 || preg_match('/[\x00-\x1F\x7F]/', $webhook_secret) === 1)) {
+            $errors[] = $this->language->get('error_webhook_secret');
+        }
+
         if ($errors) {
             $this->session->data['flash'] = ['type' => 'danger', 'text' => implode("\n", $errors)];
         } else {
@@ -240,6 +258,14 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             // Segredo vazio = MANTER o gravado (campo nunca volta preenchido ao GET)
             if ($client_secret !== '') {
                 $save['mp_client_secret'] = $client_secret;
+            }
+
+            // Segredo das notificações (ADR 0094): vazio mantém; apagar exige a
+            // caixa marcada, porque sem ele a assinatura deixa de ser conferida.
+            if ($webhook_secret !== '') {
+                $save['mp_webhook_secret'] = $webhook_secret;
+            } elseif ($webhook_secret_clear) {
+                $save['mp_webhook_secret'] = '';
             }
 
             $this->model_setting_setting->editSettings($save);
@@ -374,6 +400,15 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             return;
         }
 
+        // ADR 0094 (S9): token gravado que não abre → reconectar o vendedor.
+        if (!empty($seller['token_locked'])) {
+            $this->session->data['flash'] = ['type' => 'danger', 'text' => $this->language->get('error_token_locked')];
+
+            $this->response->redirect($this->url->link('setting/marketplace'));
+
+            return;
+        }
+
         $mp = $this->mpFromSettings($this->model_setting_setting->getSettings());
 
         $result = $mp->refreshSellerToken((string)$seller['refresh_token']);
@@ -489,6 +524,14 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             return;
         }
 
+        if (!empty($seller['token_locked'])) {
+            $this->session->data['flash'] = ['type' => 'danger', 'text' => $this->language->get('error_token_locked')];
+
+            $this->response->redirect($this->url->link('setting/marketplace'));
+
+            return;
+        }
+
         $amount = round((float)$order['total'], 2);
 
         if ($amount <= 0) {
@@ -576,7 +619,8 @@ class Marketplace extends \Reamur\System\Engine\Controller {
     private function mpFromSettings(array $settings): \Reamur\System\Library\MercadopagoMarketplace {
         return new \Reamur\System\Library\MercadopagoMarketplace([
             'app_id'        => (string)($settings['mp_app_id'] ?? ''),
-            'client_secret' => (string)($settings['mp_client_secret'] ?? ''),
+            // ADR 0094 (S9): cifrado no banco, aberto só aqui, no ponto de uso.
+            'client_secret' => $this->secrets()->open((string)($settings['mp_client_secret'] ?? ''), \Reamur\System\Library\Security\SecretBox::settingContext('mp_client_secret')),
             'redirect_uri'  => (string)($settings['mp_redirect_uri'] ?? ''),
             // Costura de ambiente p/ baterias e2e (ADR 0034 §4): existir só se
             // alguém gravar as chaves-opcionais — fora das telas e do seed.

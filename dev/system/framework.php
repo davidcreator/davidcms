@@ -222,6 +222,19 @@ $response->setHeader(\Reamur\System\Library\Security\Csp::hsts(
 $response->setCompression((int)$config->get('response_compression', 0));
 $registry->set('response', $response);
 
+// ADR 0094 (S9): cifra dos segredos guardados no banco (tokens do Mercado
+// Pago, segredos de webhook, senha SMTP). A chave vem direto da constante do
+// config.php e NÃO passa pelo Config. Só o admin grava segredos; ele só cifra
+// se o config.php do catálogo tiver a mesma chave, senão o catálogo não
+// abriria o que o admin gravou.
+$registry->set('secret_box', new \Reamur\System\Library\Security\SecretBox(
+    defined('REAMUR_SECRET_KEY') ? REAMUR_SECRET_KEY : '',
+    defined('REAMUR_SECRET_KEY_OLD') ? REAMUR_SECRET_KEY_OLD : '',
+    (defined('APPLICATION') && strtolower((string)APPLICATION) === 'admin' && defined('DIR_APPLICATION'))
+        ? dirname(rtrim((string)DIR_APPLICATION, '/\\')) . '/catalog/config.php'
+        : null
+));
+
 // 8. DB — somente quando a app pede via db_autostart (install fica off deliberadamente)
 if ($config->get('db_autostart')) {
     $registry->set('db', new \Reamur\System\Library\Db(

@@ -8,7 +8,7 @@
 # Uso:   bash tools/check_producao.sh https://davidalmeida.xyz
 #        DOMAIN=https://outro.dominio PROJ=jwa bash tools/check_producao.sh
 #
-# Checks (17):
+# Checks (18):
 #   1 Catálogo no ar (TLS válido quando https)
 #   2 Força HTTPS (HTTP aberto servindo site = FAIL; sem :80 = warn)
 #   3 Raiz   → 302 → catalog (index.php de atalho)   e segue 200
@@ -32,6 +32,9 @@
 #     Content-Security-Policy de script por nonce, sem 'unsafe-eval' e sem
 #     'unsafe-inline' para script (só relato ou ausente = FAIL);
 #     Strict-Transport-Security em alvo https (ausente = warn)
+#  18 Chave dos segredos fora do alcance do navegador (ADR 0094): nenhum
+#     config.php, nenhuma cópia dele (.bak, .old, ~ …) e nem o cache de
+#     configurações são entregues como texto
 # ════════════════════════════════════════════════════════════════════
 set -u
 DOMAIN="${1:-${DOMAIN:-https://davidalmeida.xyz}}"
@@ -230,6 +233,26 @@ else
   wn "alvo em http: Strict-Transport-Security não foi cobrado"
 fi
 ck 17 $RC "politica-de-conteudo"
+
+echo '── 18 — chave dos segredos fora do alcance do navegador (ADR 0094) ──'
+# O config.php guarda a senha do banco e a REAMUR_SECRET_KEY. Executado pelo
+# PHP ele responde vazio; o risco é o servidor entregá-lo como texto, ou uma
+# cópia deixada por um editor (config.php.bak, config.php~) ser baixada.
+# Só reprova quando o conteúdo aparece: status 200 sozinho pode ser a página
+# de "não encontrado" de uma CDN.
+RC=0
+body(){ curl -sk -m 15 "$1" | head -c 20000; }
+for app in catalog admin; do
+  for f in config.php config.php.bak config.php.old config.php.save config.php.txt config.php~ .config.php.swp; do
+    if body "$DOMAIN/$app/$f" | grep -qaE "REAMUR_SECRET_KEY|DB_PASSWORD|DB_USERNAME"; then
+      RC=1; echo "   ↳ /$app/$f entrega o conteúdo do config.php — apague a cópia (ou corrija o PHP do servidor) e TROQUE a senha do banco e a chave dos segredos"
+    fi
+  done
+done
+if body "$DOMAIN/system/storage/cache/cache.setting.config" | grep -qaE "mail_engine|config_name|mp_client_secret"; then
+  RC=1; echo "   ↳ /system/storage/cache/cache.setting.config é entregue — a pasta system/ está aberta (ver check 10)"
+fi
+ck 18 $RC "chave-dos-segredos"
 
 echo
 echo "════════ summary: $PASS pass / $FAIL fail / $WARN avisos ════════"

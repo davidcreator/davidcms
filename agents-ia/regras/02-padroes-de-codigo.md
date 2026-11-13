@@ -45,7 +45,8 @@ public function getProject(int $project_id): array {
 
 - Sempre `DB_PREFIX`; sempre escape (`(int)`, `$this->db->escape()`); preferir bindings no driver PDO;
 - Retornos padronizados: `row` (1 registro), `rows` (lista), `bool` em operações de escrita quando fizer sentido;
-- Nomes de método: `get*`, `get*List`/`get*s`, `add*`, `edit*`, `delete*`, `getTotal*`.
+- Nomes de método: `get*`, `get*List`/`get*s`, `add*`, `edit*`, `delete*`, `getTotal*`;
+- Segredo que vai para o banco (token, senha, chave de assinatura): `$this->secrets()->seal($valor, $lugar)` ao gravar e `->open($gravado, $lugar)` só no ponto de uso, com um nome de lugar próprio (`tabela.coluna` ou `SecretBox::settingContext($chave)`). Valor que não abre (`->locked()`) conta como ausente e nunca é enviado para fora. Configuração nova que seja segredo entra em `SecretBox::SETTING_KEYS` (ADR 0094).
 
 ## 3. Controller
 
@@ -76,7 +77,7 @@ public function getProject(int $project_id): array {
 - [ ] Saída escapada (autoescape Twig intacto)
 - [ ] CSRF token em formulário novo
 - [ ] Upload só via `upload_security.php`
-- [ ] Sem secrets no código (config/env)
+- [ ] Sem secrets no código (config/env); segredo no banco só cifrado (`$this->secrets()`, ADR 0094); nenhuma tela devolve segredo gravado
 - [ ] Permissão checada (admin: rota na ACL do grupo)
 - [ ] Sem `<script>` embutido sem nonce, sem `on*=`, sem `eval` / `new Function`; recurso de outro site só com entrada na política (`Security\Csp`, ADR 0093)
 

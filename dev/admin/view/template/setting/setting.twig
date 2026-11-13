@@ -73,6 +73,32 @@
       <div class="col-12 col-lg-6"><form method="post" action="{{ clear_cache }}" class="card border-0 shadow-sm h-100"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3"><div><h2 class="h6 mb-1">{{ fieldset_cache }}</h2><p class="small text-body-secondary mb-0">{{ help_cache_engine }}</p></div><button class="btn btn-outline-secondary" type="submit"><i class="bi bi-trash3 me-1" aria-hidden="true"></i>{{ button_clear_cache }}</button></div></form></div>
     </div>
     {% endif %}
+
+    {# ADR 0094 (S9): cifra dos segredos guardados no banco #}
+    {% if secret_panel %}
+    <section class="card border-0 shadow-sm mt-3" id="secret-protection" data-rms-secret-status="{{ secret_status }}">
+      <div class="card-body">
+        <h2 class="h5 mb-1"><i class="bi bi-shield-lock me-2" aria-hidden="true"></i>{{ fieldset_secrets }}</h2>
+        <p class="small text-body-secondary">{{ help_secrets }}</p>
+        <div class="alert alert-{{ secret_status_class }} mb-3" role="status">{{ secret_status_text }}</div>
+        {% if secret_locked_text %}<div class="alert alert-danger mb-3" role="alert" data-rms-secret-locked="count"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ secret_locked_text }}</div>{% endif %}
+        {% if secret_key_line %}
+        <label class="form-label" for="secret-key-line">{{ text_secret_key_line }}</label>
+        <input class="form-control font-monospace" type="text" id="secret-key-line" value="{{ secret_key_line }}" readonly spellcheck="false" autocomplete="off">
+        <div class="form-text mb-3">{{ text_secret_key_note }}</div>
+        {% endif %}
+        {% if secret_rows %}
+        <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+          <thead><tr><th scope="col">{{ column_secret_item }}</th><th scope="col" class="text-end">{{ column_secret_sealed }}</th><th scope="col" class="text-end">{{ column_secret_clear }}</th><th scope="col" class="text-end">{{ column_secret_old }}</th><th scope="col" class="text-end">{{ column_secret_locked }}</th></tr></thead>
+          <tbody>{% for row in secret_rows %}<tr><td>{{ row.label }}</td><td class="text-end">{{ row.sealed }}</td><td class="text-end{{ row.clear ? ' text-warning fw-semibold' : '' }}">{{ row.clear }}</td><td class="text-end">{{ row.old }}</td><td class="text-end{{ row.locked ? ' text-danger fw-semibold' : '' }}">{{ row.locked }}</td></tr>{% endfor %}</tbody>
+        </table></div>
+        {% else %}<p class="text-body-secondary mb-0">{{ text_secret_none }}</p>{% endif %}
+      </div>
+      {% if can_modify and secret_can_protect %}
+      <form method="post" action="{{ protect_secrets }}" class="card-footer bg-body d-flex justify-content-end"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-primary"><i class="bi bi-shield-check me-1" aria-hidden="true"></i>{{ button_protect_secrets }}</button></form>
+      {% endif %}
+    </section>
+    {% endif %}
   </div>
 </main>
 {{ footer|raw }}

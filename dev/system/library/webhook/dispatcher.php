@@ -62,7 +62,7 @@ class Dispatcher {
      *
      * @param string               $event  ex.: order_add
      * @param array<string,mixed>  $data   payload de domínio
-     * @param array<int,array{webhook_id:int,url:string,secret:string}> $hooks
+     * @param array<int,array<string,mixed>> $hooks webhook_id, url, secret e, opcional, secret_locked
      * @return array<int,array{webhook_id:int,delivery:string,payload:string,
      *                         http_code:int,duration:float,attempt:int}>
      */
@@ -81,6 +81,24 @@ class Dispatcher {
                 'timestamp'   => time(),
                 'data'        => $data,
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}';
+
+            // ADR 0094 (S9): segredo gravado que não abre (chave do config.php
+            // trocada ou ausente). Assinar com segredo vazio entregaria um
+            // evento que o receptor não tem como conferir: não envia, e a
+            // tentativa fica no log de entregas com código 0.
+            if (!empty($hook['secret_locked'])) {
+                $this->log->write('webhook dispatcher: segredo do endpoint #' . $wid . ' não abre com a REAMUR_SECRET_KEY do config.php; evento ' . self::printable($event) . ' não enviado');
+                $results[] = [
+                    'webhook_id' => $wid,
+                    'delivery'   => $deliver,
+                    'payload'    => $body,
+                    'http_code'  => 0,
+                    'duration'   => 0.0,
+                    'attempt'    => 1,
+                ];
+
+                continue;
+            }
 
             $signature = hash_hmac('sha256', $body, $secret);
 

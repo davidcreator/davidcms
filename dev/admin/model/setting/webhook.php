@@ -17,6 +17,11 @@ namespace Reamur\Admin\Model\Setting;
 
 class Webhook extends \Reamur\System\Engine\Model {
 
+    /** 64 caracteres de até 4 bytes, cifrados e em base64, cabem com folga (ADR 0094). */
+    public const SECRET_COLUMN_SIZE = 512;
+
+    private ?bool $secretColumnWide = null;
+
     /**
      * Endpoints filtrados e paginados, agrupados por trigger.
      * @param array<string, mixed> $filter_data
@@ -88,7 +93,7 @@ class Webhook extends \Reamur\System\Engine\Model {
             "INSERT INTO `" . $this->t('webhook') . "` SET
                 `trigger`     = '" . $this->db->escape((string)$data['trigger']) . "',
                 `url`         = '" . $this->db->escape((string)$data['url']) . "',
-                `secret`      = '" . $this->db->escape((string)$data['secret']) . "',
+                `secret`      = '" . $this->db->escape($this->sealSecret((string)$data['secret'])) . "',
                 `description` = '" . $this->db->escape((string)$data['description']) . "',
                 `status`      = '" . (int)(!empty($data['status']) ? 1 : 0) . "',
                 `date_added`  = NOW()"
@@ -98,18 +103,77 @@ class Webhook extends \Reamur\System\Engine\Model {
     }
 
     /**
-     * @param array<string, mixed> $data Payload normalizado do controller
+     * @param array<string, mixed> $data Payload normalizado do controller.
+     *        `secret` = null mantém o segredo gravado (ADR 0094: a tela não
+     *        recebe mais o valor para devolvê-lo).
      */
     public function editWebhook(int $webhook_id, array $data): void {
+        $secretSql = ($data['secret'] ?? null) === null
+            ? ''
+            : "`secret`      = '" . $this->db->escape($this->sealSecret((string)$data['secret'])) . "',";
+
         $this->db->query(
             "UPDATE `" . $this->t('webhook') . "` SET
                 `trigger`     = '" . $this->db->escape((string)$data['trigger']) . "',
                 `url`         = '" . $this->db->escape((string)$data['url']) . "',
-                `secret`      = '" . $this->db->escape((string)$data['secret']) . "',
+                " . $secretSql . "
                 `description` = '" . $this->db->escape((string)$data['description']) . "',
                 `status`      = '" . (int)(!empty($data['status']) ? 1 : 0) . "'
              WHERE `webhook_id` = '" . $webhook_id . "'"
         );
+    }
+
+    /**
+     * ADR 0094 (S9): o segredo vai cifrado para o banco. O texto cifrado não
+     * cabe nos 64 caracteres originais da coluna; se ela ainda não foi
+     * alargada (e não der para alargar agora), o segredo segue legível, como
+     * antes, em vez de ser cortado.
+     */
+    private function sealSecret(string $secret): string {
+        if ($secret === '' || !$this->secrets()->canSeal() || !$this->secretColumnReady()) {
+            return $secret;
+        }
+
+        return $this->secrets()->seal($secret, \Reamur\System\Library\Security\SecretBox::CTX_WEBHOOK);
+    }
+
+    /**
+     * A coluna `secret` comporta o valor cifrado (VARCHAR(512))? Com $widen,
+     * tenta alargar na hora; sem permissão de ALTER, devolve false e o
+     * arquivo install/sql/upgrade_s9_webhook_secret.sql faz o mesmo à mão.
+     */
+    public function secretColumnReady(bool $widen = true): bool {
+        if ($this->secretColumnWide === true) {
+            return true;
+        }
+
+        try {
+            $query = $this->db->query("SHOW COLUMNS FROM `" . $this->t('webhook') . "` LIKE 'secret'");
+            $type  = ($query instanceof \stdClass && !empty($query->row)) ? strtolower((string)(((array)$query->row)['Type'] ?? '')) : '';
+
+            if (str_contains($type, 'text') || (preg_match('/^varchar\((\d+)\)/', $type, $m) === 1 && (int)$m[1] >= self::SECRET_COLUMN_SIZE)) {
+                return $this->secretColumnWide = true;
+            }
+
+            if ($type === '' || !$widen) {
+                return false;
+            }
+
+            $this->db->query(
+                "ALTER TABLE `" . $this->t('webhook') . "` MODIFY `secret` VARCHAR(" . self::SECRET_COLUMN_SIZE . ") NOT NULL
+                 COMMENT 'segredo HMAC por endpoint, cifrado (ADR 0094)'"
+            );
+
+            return $this->secretColumnWide = true;
+        } catch (\Throwable $e) {
+            $log = $this->registry->get('log');
+
+            if ($log instanceof \Reamur\System\Library\Log) {
+                $log->write('setting/webhook: não foi possível alargar a coluna secret (rode install/sql/upgrade_s9_webhook_secret.sql): ' . $e->getMessage());
+            }
+
+            return false;
+        }
     }
 
     /** Cascata manual (sem FK): endpoint + TODAS as suas entregas */
@@ -182,7 +246,7 @@ class Webhook extends \Reamur\System\Engine\Model {
      * (`order_*` casa `order_edit`; `*`→`%`, `?`→`_`). Espelho do
      * método homônimo do catalog/setting/webhook.
      *
-     * @return array<int, array{webhook_id:int,url:string,secret:string}>
+     * @return array<int, array<string, mixed>> webhook_id, url, secret (aberto), secret_locked
      */
     public function getHooksForEvent(string $event): array {
         $query = $this->db->query(
@@ -194,7 +258,22 @@ class Webhook extends \Reamur\System\Engine\Model {
               ORDER BY `webhook_id` ASC"
         );
 
-        return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+        $rows = ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+
+        // ADR 0094 (S9): o segredo sai cifrado do banco e é aberto aqui, para
+        // assinar. `secret_locked` = gravado, mas a chave do config.php não
+        // abre: o Dispatcher não envia (não assina com segredo vazio).
+        $box = $this->secrets();
+
+        return array_map(static function ($row) use ($box): array {
+            $row    = (array)$row;
+            $stored = (string)($row['secret'] ?? '');
+
+            $row['secret_locked'] = $box->locked($stored, \Reamur\System\Library\Security\SecretBox::CTX_WEBHOOK);
+            $row['secret']        = $box->open($stored, \Reamur\System\Library\Security\SecretBox::CTX_WEBHOOK);
+
+            return $row;
+        }, $rows);
     }
 
     /** 1 linha por tentativa de entrega (delivery estável nos retries) */

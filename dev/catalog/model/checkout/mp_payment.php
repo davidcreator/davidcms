@@ -134,23 +134,47 @@ class Mp_payment extends \Reamur\System\Engine\Model {
               ORDER BY `mp_seller_id` ASC"
         );
 
-        return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+        $rows = ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+
+        return array_map(fn ($row): array => $this->openSeller((array)$row), $rows);
     }
 
     public function getSellerByMpUserId(int $mp_user_id): array {
-        return $this->row(
+        return $this->openSeller($this->row(
             "SELECT `mp_seller_id`, `mp_user_id`, `nickname`, `access_token`
                FROM `" . $this->t('mp_seller') . "`
               WHERE `mp_user_id` = '" . (int)$mp_user_id . "' AND `status` = 1"
-        );
+        ));
     }
 
     public function getSellerById(int $mp_seller_id): array {
-        return $this->row(
+        return $this->openSeller($this->row(
             "SELECT `mp_seller_id`, `mp_user_id`, `nickname`, `access_token`
                FROM `" . $this->t('mp_seller') . "`
               WHERE `mp_seller_id` = '" . (int)$mp_seller_id . "'"
-        );
+        ));
+    }
+
+    /**
+     * ADR 0094 (S9): o access_token sai do banco cifrado e chega aqui pronto
+     * para uso. `token_locked` = há token gravado que a chave do config.php
+     * do catálogo não abre; o token vem VAZIO (nunca o texto cifrado).
+     *
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private function openSeller(array $row): array {
+        if ($row === []) {
+            return [];
+        }
+
+        $stored = (string)($row['access_token'] ?? '');
+        $box    = $this->secrets();
+
+        $row['token_locked'] = $box->locked($stored, \Reamur\System\Library\Security\SecretBox::CTX_MP_ACCESS);
+        $row['access_token'] = $box->open($stored, \Reamur\System\Library\Security\SecretBox::CTX_MP_ACCESS);
+
+        return $row;
     }
 
     private function row(string $sql): array {

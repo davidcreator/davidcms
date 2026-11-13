@@ -179,6 +179,7 @@ Checklist de segurança do CMS (hardening):
 **Credenciais**
 - [ ] Chaves (Mercado Pago, SMTP, webhooks) em config fora do Git / variáveis de ambiente
 - [ ] Segredo HMAC por endpoint de webhook ([Webhooks §5](../integracoes/Webhooks.md#5-segurança))
+- [ ] Segredos do banco cifrados (ADR 0094): `REAMUR_SECRET_KEY` igual em `catalog/config.php` e `admin/config.php`, *Configurações → Proteção dos segredos* sem pendência, e a linha da chave guardada junto do backup do banco
 
 ---
 

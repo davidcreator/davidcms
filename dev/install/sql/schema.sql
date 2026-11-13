@@ -322,7 +322,7 @@ CREATE TABLE IF NOT EXISTS `rms_webhook` (
   `webhook_id`  INT          NOT NULL AUTO_INCREMENT,
   `trigger`     VARCHAR(64)  NOT NULL COMMENT 'ex.: order_add, product_*',
   `url`         VARCHAR(255) NOT NULL COMMENT 'HTTPS obrigatório',
-  `secret`      VARCHAR(64)  NOT NULL COMMENT 'segredo HMAC por endpoint',
+  `secret`      VARCHAR(512) NOT NULL COMMENT 'segredo HMAC por endpoint, cifrado (ADR 0094)',
   `description` VARCHAR(255) NOT NULL,
   `status`      TINYINT(1)   NOT NULL DEFAULT '1',
   `date_added`  DATETIME     NOT NULL,

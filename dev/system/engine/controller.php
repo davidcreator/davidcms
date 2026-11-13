@@ -17,6 +17,7 @@ namespace Reamur\System\Engine;
  * @property \Reamur\System\Library\Request $request
  * @property \Reamur\System\Library\Session $session
  * @property \Reamur\System\Library\Security\Csp $csp
+ * @property \Reamur\System\Library\Security\SecretBox $secret_box
  */
 class Controller {
     public function __construct(protected Registry $registry) {}
@@ -24,6 +25,18 @@ class Controller {
     /** Acesso preguiçoso a qualquer serviço registrado (load, request, model_*...) */
     public function __get(string $key): mixed {
         return $this->registry->get($key);
+    }
+
+    /**
+     * Cifra dos segredos do banco (ADR 0094). Num Registry sem o serviço
+     * (testes, instalador) devolve uma instância sem chave: grava e lê como antes.
+     */
+    protected function secrets(): \Reamur\System\Library\Security\SecretBox {
+        $box = $this->registry->get('secret_box');
+
+        return $box instanceof \Reamur\System\Library\Security\SecretBox
+            ? $box
+            : new \Reamur\System\Library\Security\SecretBox();
     }
 
     /** Valida o token CSRF enviado via POST contra a sessão atual. */

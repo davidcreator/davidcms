@@ -97,3 +97,11 @@ $_['warning_proxy_unconfigured']  = 'A conexão chegou de %s trazendo cabeçalho
 $_['warning_proxy_untrusted_peer']= 'A conexão chegou de %s, que não está em REAMUR_TRUSTED_PROXIES. Os cabeçalhos de proxy foram ignorados. Se esse endereço é da sua CDN, acrescente-o à lista nos dois arquivos config.php.';
 $_['warning_proxy_invalid']       = 'REAMUR_TRUSTED_PROXIES tem entradas que não são endereço nem faixa e foram ignoradas: %s';
 $_['warning_proxy_hops_direct']   = 'REAMUR_TRUSTED_PROXY_HOPS vale %d, mas esta conexão chegou sem X-Forwarded-For. Se o servidor pode ser acessado por fora do proxy, o IP do visitante pode ser forjado: prefira REAMUR_TRUSTED_PROXIES com os endereços do proxy.';
+
+// ADR 0094 (S9): segredos cifrados no banco
+$_['warning_secret_missing'] = 'Há segredos legíveis no banco (tokens, segredos de webhook ou senha SMTP) e a chave que os protege ainda não está no config.php. Abra Configurações, seção "Proteção dos segredos", e siga as instruções.';
+$_['warning_secret_invalid'] = 'A REAMUR_SECRET_KEY do config.php não é uma chave válida; por isso os segredos estão sendo gravados legíveis no banco. Abra Configurações, seção "Proteção dos segredos".';
+$_['warning_secret_unavailable'] = 'Há segredos legíveis no banco e o PHP desta hospedagem está sem a extensão OpenSSL para cifrá-los. Abra Configurações, seção "Proteção dos segredos".';
+$_['warning_secret_peer'] = 'A chave dos segredos do admin/config.php e a do catalog/config.php não são iguais (ou o segundo arquivo não pôde ser conferido). Até as duas serem iguais, nada é cifrado. Abra Configurações, seção "Proteção dos segredos".';
+$_['warning_secret_pending'] = 'A chave dos segredos está configurada, mas ainda há segredos no banco legíveis ou cifrados com a chave anterior. Abra Configurações e use "Proteger segredos".';
+$_['warning_secret_locked'] = 'Há segredos cifrados que a chave do config.php não abre: pagamentos, webhooks ou e-mail podem estar parados. Abra Configurações, seção "Proteção dos segredos".';

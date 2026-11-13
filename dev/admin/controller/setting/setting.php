@@ -121,6 +121,9 @@ class Setting extends \Reamur\System\Engine\Controller {
         $data['text_mail_test_hint'] = $this->language->get('text_mail_test_hint');
         $data['button_back']        = $this->language->get('button_back');
 
+        // ADR 0094 (S9): situação da cifra dos segredos guardados no banco.
+        $data = array_merge($data, $this->secretPanel());
+
         $data['action']      = $this->url->link('setting/setting');
         $data['clear_cache'] = $this->url->link('setting/setting.clearCache');
         $data['test_mail']   = $this->url->link('setting/setting.testMail');
@@ -165,6 +168,65 @@ class Setting extends \Reamur\System\Engine\Controller {
         $this->cache->clear();
 
         $this->session->data['flash'] = ['type' => 'success', 'text' => $this->language->get('text_cache_cleared')];
+
+        $this->response->redirect($this->url->link('setting/setting'));
+    }
+
+    /**
+     * POST dedicado (ADR 0094, S9): cifra os segredos que ainda estão legíveis
+     * no banco e regrava com a chave atual os que usam a chave anterior. Pode
+     * ser repetido sem dano. Herda a ACL de setting/setting (modify).
+     */
+    public function protectSecrets(): void {
+        $this->load->language('setting/setting');
+
+        if ($this->request->server['REQUEST_METHOD'] !== 'POST') {
+            $this->response->redirect($this->url->link('setting/setting'));
+
+            return;
+        }
+
+        if (!$this->user->hasPermission('modify', 'setting/setting')) {
+            $this->response->redirect($this->url->link('error/permission'));
+
+            return;
+        }
+
+        if (!$this->csrfValid()) {
+            $this->session->data['flash'] = ['type' => 'error', 'text' => $this->language->get('error_csrf')];
+            $this->response->redirect($this->url->link('setting/setting'));
+
+            return;
+        }
+
+        if (!$this->secrets()->canSeal()) {
+            $this->session->data['flash'] = ['type' => 'error', 'text' => $this->language->get('error_secrets_not_ready')];
+            $this->response->redirect($this->url->link('setting/setting'));
+
+            return;
+        }
+
+        try {
+            $this->load->model('setting/secret');
+            $this->load->model('setting/webhook');
+
+            $result = $this->model_setting_secret->protect($this->model_setting_webhook->secretColumnReady());
+
+            $text = $result['converted'] > 0
+                ? sprintf($this->language->get('text_secrets_protected'), $result['converted'])
+                : $this->language->get('text_secrets_nothing');
+
+            if ($result['skipped_webhook'] > 0) {
+                $text .= ' ' . sprintf($this->language->get('text_secrets_webhook_column'), $result['skipped_webhook']);
+            }
+
+            $this->session->data['flash'] = ['type' => $result['skipped_webhook'] > 0 ? 'warning' : 'success', 'text' => $text];
+        } catch (\Throwable $e) {
+            // A mensagem do banco pode carregar o SQL (com o valor): só vai para o log, resumida.
+            $this->log->write('setting/setting.protectSecrets falhou: ' . get_class($e));
+
+            $this->session->data['flash'] = ['type' => 'error', 'text' => $this->language->get('error_secrets_not_ready')];
+        }
 
         $this->response->redirect($this->url->link('setting/setting'));
     }
@@ -293,6 +355,66 @@ class Setting extends \Reamur\System\Engine\Controller {
             'three_portfolio_enabled' => $str('three_portfolio_enabled', 1),
             'three_portfolio_frame_limit' => $str('three_portfolio_frame_limit', 16),
             'three_tools_enabled' => $str('three_tools_enabled', 1),
+        ];
+    }
+
+    /**
+     * Seção "Proteção dos segredos" (ADR 0094, S9): situação da chave, contagem
+     * por tipo de segredo e, quando falta a chave, uma linha pronta para colar
+     * no config.php. Nunca traz o conteúdo de um segredo nem a chave em uso.
+     *
+     * @return array<string, mixed>
+     */
+    private function secretPanel(): array {
+        $lang = fn (string $key): string => (string)$this->language->get($key);
+
+        try {
+            $this->load->model('setting/secret');
+            $status = $this->model_setting_secret->status();
+        } catch (\Throwable $e) {
+            $this->log->write('setting/setting: inventário de segredos indisponível: ' . get_class($e));
+
+            return ['secret_panel' => false];
+        }
+
+        $rows = [];
+
+        foreach ((array)$status['groups'] as $group => $counts) {
+            $rows[] = ['label' => $lang('text_secret_group_' . $group)] + (array)$counts;
+        }
+
+        $code = (string)$status['code'];
+
+        return [
+            'secret_panel'           => true,
+            'secret_status'          => $code,
+            'secret_status_text'     => $lang('text_secret_status_' . $code),
+            'secret_status_class'    => match ($code) {
+                'ok'      => 'success',
+                'pending' => 'info',
+                'locked'  => 'danger',
+                default   => 'warning',
+            },
+            'secret_rows'            => $rows,
+            'secret_locked_text'     => (int)$status['locked'] > 0 ? sprintf($lang('text_secret_locked_count'), (int)$status['locked']) : '',
+            'secret_can_protect'     => (bool)$status['can_protect'],
+            // Linha nova só quando a chave do admin falta ou é inválida: é uma
+            // sugestão recém-gerada, ainda sem uso. A chave em uso nunca é exibida.
+            'secret_key_line'        => in_array($code, ['missing', 'invalid'], true) && $this->user->hasPermission('modify', 'setting/setting')
+                ? "define('REAMUR_SECRET_KEY', '" . \Reamur\System\Library\Security\SecretBox::generateKey() . "');"
+                : '',
+            'protect_secrets'        => $this->url->link('setting/setting.protectSecrets'),
+            'fieldset_secrets'       => $lang('fieldset_secrets'),
+            'help_secrets'           => $lang('help_secrets'),
+            'text_secret_key_line'   => $lang('text_secret_key_line'),
+            'text_secret_key_note'   => $lang('text_secret_key_note'),
+            'text_secret_none'       => $lang('text_secret_none'),
+            'column_secret_item'     => $lang('column_secret_item'),
+            'column_secret_sealed'   => $lang('column_secret_sealed'),
+            'column_secret_clear'    => $lang('column_secret_clear'),
+            'column_secret_old'      => $lang('column_secret_old'),
+            'column_secret_locked'   => $lang('column_secret_locked'),
+            'button_protect_secrets' => $lang('button_protect_secrets'),
         ];
     }
 

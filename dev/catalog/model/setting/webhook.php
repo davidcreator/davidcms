@@ -24,7 +24,7 @@ class Webhook extends \Reamur\System\Engine\Model {
     /**
      * Endpoints ativos cujo trigger casa o evento (wildcard-aware).
      *
-     * @return array<int, array{webhook_id:int,url:string,secret:string}>
+     * @return array<int, array<string, mixed>> webhook_id, url, secret (aberto), secret_locked
      */
     public function getHooksForEvent(string $event): array {
         $query = $this->db->query(
@@ -36,7 +36,22 @@ class Webhook extends \Reamur\System\Engine\Model {
               ORDER BY `webhook_id` ASC"
         );
 
-        return ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+        $rows = ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+
+        // ADR 0094 (S9): o segredo sai cifrado do banco e é aberto aqui, para
+        // assinar. `secret_locked` = gravado, mas a chave do config.php não
+        // abre: o Dispatcher não envia (não assina com segredo vazio).
+        $box = $this->secrets();
+
+        return array_map(static function ($row) use ($box): array {
+            $row    = (array)$row;
+            $stored = (string)($row['secret'] ?? '');
+
+            $row['secret_locked'] = $box->locked($stored, \Reamur\System\Library\Security\SecretBox::CTX_WEBHOOK);
+            $row['secret']        = $box->open($stored, \Reamur\System\Library\Security\SecretBox::CTX_WEBHOOK);
+
+            return $row;
+        }, $rows);
     }
 
     /**

@@ -449,6 +449,9 @@ class Step_3 extends \Reamur\System\Engine\Controller {
             }
         }
 
+        // ADR 0094 (S9): uma chave por instalação, a MESMA nos dois arquivos.
+        $secretKey = \Reamur\System\Library\Security\SecretBox::generateKey();
+
         foreach (['catalog', 'admin'] as $app) {
             $output = strtr($tpl, [
                 '{{HTTP_SERVER}}'  => self::escapePhpStringLiteral($app === 'admin' ? $adminUrl : $base),
@@ -462,6 +465,7 @@ class Step_3 extends \Reamur\System\Engine\Controller {
                 '{{DB_DATABASE}}'  => self::escapePhpStringLiteral((string)$db['db_database']),
                 '{{DB_PORT}}'      => self::escapePhpStringLiteral((string)$db['db_port']),
                 '{{DB_PREFIX}}'    => self::escapePhpStringLiteral($prefix),
+                '{{SECRET_KEY}}'   => $secretKey, // base64: sem aspas nem barra invertida
             ]);
 
             $target = $dir_dev . $app . '/config.php';
