@@ -28,7 +28,7 @@
   {% endfor %}
   {% if has_3d|default(false) %}
   {# Slot WebGL (F3-02, ADR 0020): import map ANTES do módulo; apenas em rotas com has_3d #}
-  <script type="importmap">
+  <script type="importmap"{% if csp_nonce|default('') %} nonce="{{ csp_nonce }}"{% endif %}>
   {
     "imports": {
       "three": "{{ three_runtime_base }}three.module.js",

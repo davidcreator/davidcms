@@ -984,7 +984,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $this->response->addHeader('Content-Type: image/svg+xml; charset=utf-8');
         $this->response->addHeader('Cache-Control: no-store');
         $this->response->addHeader('X-Content-Type-Options: nosniff');
-        $this->response->addHeader("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'");
+        $this->response->setHeader("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'");
         $this->response->addHeader('Content-Disposition: inline; filename="theme-scene.svg"');
         $registry=$this->three_scene_preset;
         if (!$this->user->hasPermission('access','design/theme')) {
@@ -1008,7 +1008,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $this->response->addHeader('Content-Type: image/svg+xml; charset=utf-8');
         $this->response->addHeader('Cache-Control: no-store');
         $this->response->addHeader('X-Content-Type-Options: nosniff');
-        $this->response->addHeader("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'");
+        $this->response->setHeader("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'");
         $this->response->addHeader('Content-Disposition: inline; filename="theme-component.svg"');
         $registry=$this->theme_component_registry;
         if (!$this->user->hasPermission('access','design/theme')) {
@@ -1028,7 +1028,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $this->response->addHeader('Content-Type: image/svg+xml; charset=utf-8');
         $this->response->addHeader('Cache-Control: no-store');
         $this->response->addHeader('X-Content-Type-Options: nosniff');
-        $this->response->addHeader("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'");
+        $this->response->setHeader("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'");
         $this->response->addHeader('Content-Disposition: inline; filename="theme-media.svg"');
         $registry=$this->theme_media;
         if (!$this->user->hasPermission('access','design/theme')) {

@@ -245,10 +245,12 @@ $twig->addFilter(new \Twig\TwigFilter('whatsapp', fn(string $phone): string =>
 - **Dados para JavaScript:** sempre `json_encode`:
 
 ```twig
-<script>
+<script nonce="{{ csp_nonce }}">
   window.portfolioData = {{ projects|json_encode|raw }};
 </script>
 ```
+
+- **Script embutido precisa de nonce** (ADR 0093): o navegador só executa `<script>` escrito na página quando ele traz o nonce da resposta. O controller entrega com `$data['csp_nonce'] = $this->csp->nonce();`. Atributos `onclick=`, `onsubmit=` e afins não rodam: ponha o comportamento em um arquivo `.js`. Fonte de tema não recebe o nonce.
 
 - **Atributos:** o autoescape já cobre; em URLs, prefira `|url_encode` para parâmetros manuais.
 - Não concatenar HTML em controller para burlar o template — se precisa de HTML custom, crie um bloco/partial.

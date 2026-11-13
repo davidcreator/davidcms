@@ -1,5 +1,20 @@
 # Changelog
 
+## Segurança S8 — política de conteúdo aplicada e HTTPS obrigatório no navegador (2026-11-13)
+- ADR 0093. Achado da análise, reproduzido antes da correção com navegador real: a política do site estava em modo de relato e, mesmo aplicada, aceitaria script embutido, `eval` e script de qualquer site. Um ataque simulado na página inicial executava os quatro testes; agora os quatro são bloqueados.
+- **Corrigido:** `Content-Security-Policy` aplicada no site público e no admin. O navegador só executa scripts do próprio site e os blocos que o servidor marcou com um código sorteado a cada página (nonce). Sem `eval`. Estilos embutidos continuam permitidos.
+- **Corrigido:** `Strict-Transport-Security` de 180 dias, só para o domínio do site, enviado quando o `HTTP_SERVER` do `config.php` começa com `https://`. Nunca em `localhost`.
+- **Admin:** as 5 confirmações que ficavam em `onsubmit` / `onclick` passam por `data-rms-confirm` (`admin.js`). A tela do editor antigo de posts (CKEditor 4) é a única que mantém a regra de script frouxa, e só quando o editor antigo abre; ele deixou de consultar `cke4.ckeditor.com`.
+- **Configuração nova, opcional, no `config.php`** (exemplos comentados em `install/config.php.tpl`):
+  - `define('REAMUR_CSP_MODE', 'report');` chave de emergência: a política só relata no console do navegador. `'off'` desliga. O painel do admin avisa enquanto a linha existir.
+  - `define('REAMUR_CSP_SOURCES', ['script-src' => 'https://cdn.exemplo.com']);` libera um serviço de fora no site público. Só endereços `https://` de site.
+  - `define('REAMUR_HSTS_MAX_AGE', 15552000);` prazo do HSTS em segundos; `0` desliga.
+- **Atenção ao atualizar:** se o site público carrega algo de outro endereço (estatística, fonte, mapa, chat), declare em `REAMUR_CSP_SOURCES` antes de publicar; sem isso o navegador bloqueia e registra no console (F12).
+- **Atenção ao HSTS:** depois de recebido, o navegador recusa `http://` no domínio por 180 dias, mesmo com certificado vencido. Subdomínios não são afetados.
+- **Para quem escreve template:** `<script>` embutido leva `nonce="{{ csp_nonce }}"` e o controller entrega `$data['csp_nonce'] = $this->csp->nonce();`. Atributos `on*=` não rodam. Regra em `agents-ia/regras/02-padroes-de-codigo.md`.
+- `tools/check_producao.sh`, check 17 (novo): política aplicada com nonce no site e no login do admin; HSTS em alvo https (aviso). O script passa a ter 17 checks.
+- **Sem** tabela, coluna, migration ou rota nova. Instalador sem alteração de comportamento.
+
 ## Segurança S10 + S11 — build de produção sem PHPUnit / PHPStan; aviso em dependência (2026-11-13)
 - ADR 0092. Achados da análise, reproduzidos antes da correção: `tools/build_prod.sh` executado como estava e `composer audit` sobre o `composer.lock`.
 - **Corrigido (S10):** a build copiava o `vendor/` de `dev/` inteiro. `prod/` levava 27 pacotes de desenvolvimento (PHPUnit, PHPStan e dependentes) e o servidor incluía 3 arquivos deles a cada requisição. Agora o Composer remove da cópia tudo que é `require-dev` e refaz o autoload. `prod/` passa de 132 MB para 97 MB; o `vendor/` de produção, de 47 para 20 pacotes.

@@ -35,7 +35,7 @@
               {% if can_modify %}<td class="text-end text-nowrap">
                 <a class="btn btn-sm btn-outline-primary" href="{{ group.edit }}"><i class="bi bi-pencil me-1" aria-hidden="true"></i>{{ button_edit }}</a>
                 {% if group.total_users == 0 %}
-                <form method="post" action="{{ group.delete }}" class="d-inline" onsubmit="return confirm('{{ text_confirm_delete|e('js') }}');">
+                <form method="post" action="{{ group.delete }}" class="d-inline" data-rms-confirm="{{ text_confirm_delete }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                   <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash me-1" aria-hidden="true"></i>{{ button_delete }}</button>
                 </form>

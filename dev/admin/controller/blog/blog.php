@@ -640,7 +640,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->response->addHeader('X-Content-Type-Options: nosniff');
         $this->response->addHeader('X-Frame-Options: DENY');
         $this->response->addHeader('Referrer-Policy: no-referrer');
-        $this->response->addHeader("Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; img-src 'self' data: https: {$origin}; style-src 'self' 'unsafe-inline' {$origin}; script-src 'self' {$origin}; font-src 'self' data: {$origin}; media-src 'self' data: {$origin}; connect-src 'self' {$origin}; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com");
+        $this->response->setHeader("Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; img-src 'self' data: https: {$origin}; style-src 'self' 'unsafe-inline' {$origin}; script-src 'self' {$origin}; font-src 'self' data: {$origin}; media-src 'self' data: {$origin}; connect-src 'self' {$origin}; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com");
     }
 
     private function blogPreviewAssetOrigin(string $assetBase): string {
@@ -1303,6 +1303,20 @@ class Blog extends \Reamur\System\Engine\Controller {
         $data['status']         = isset($posted['status']) ? '1' : ($isPost ? '0' : (string)(int)($post['status'] ?? 0));
 
         $data['cancel'] = $this->url->link('blog/blog');
+
+        // ADR 0093 (S8): o CKEditor 4 monta a própria interface com atributos on*,
+        // que a política de conteúdo recusa. Só quando esta tela vai mesmo abrir
+        // o editor antigo (textarea[data-rte]: post não convertido em blocos, ou
+        // editor de blocos indisponível) a resposta sai com a regra de script frouxa.
+        $legacyEditor = !$data['block_editor_available'];
+        foreach ($data['languages'] as $languageRow) {
+            if (($languageRow['block_mode'] ?? '') === 'legacy') $legacyEditor = true;
+        }
+        $data['legacy_editor'] = $legacyEditor;
+        if ($legacyEditor) {
+            $this->csp->allowInlineScripts();
+            $this->response->setHeader($this->csp->header());
+        }
 
         return $data;
     }

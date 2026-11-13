@@ -27,6 +27,30 @@ final class Response {
         }
     }
 
+    /**
+     * Define um cabeçalho de valor único: remove as linhas anteriores com o
+     * mesmo nome e acrescenta esta. Use quando um controller precisa trocar
+     * um cabeçalho que o framework já pôs (ADR 0093: Content-Security-Policy).
+     * Linha vazia ou sem nome é ignorada.
+     */
+    public function setHeader(string $header): void {
+        $clean = trim(str_replace(["\r", "\n", "\0"], '', $header));
+        $colon = strpos($clean, ':');
+
+        if ($colon === false || $colon === 0) {
+            return;
+        }
+
+        $name = strtolower(trim(substr($clean, 0, $colon)));
+
+        $this->headers = array_values(array_filter(
+            $this->headers,
+            static fn (string $line): bool => strtolower(trim((string)strstr($line . ':', ':', true))) !== $name
+        ));
+
+        $this->headers[] = $clean;
+    }
+
     /** @return array<int, string> */
     public function getHeaders(): array {
         return $this->headers;

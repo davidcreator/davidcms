@@ -171,6 +171,9 @@ class Header extends \Reamur\System\Engine\Controller {
             $data['hreflang_default'] = $canonical;
         }
 
+        // ADR 0093 (S8): nonce da política de conteúdo para os <script> embutidos do cabeçalho.
+        $data['csp_nonce'] = $this->csp->nonce();
+
         return $this->load->view('common/header', $data);
     }
 

@@ -204,6 +204,21 @@ foreach ((array)$config->get('response_header', []) as $header) {
     $response->addHeader((string)$header);
 }
 
+// ADR 0093 (S8): política de conteúdo aplicada, com nonce por requisição, e HSTS.
+// Um controller que envia a própria Content-Security-Policy (prévias do admin)
+// substitui esta: o PHP mantém uma linha por nome de cabeçalho.
+$csp = new \Reamur\System\Library\Security\Csp(
+    defined('APPLICATION') ? (string)APPLICATION : '',
+    $config->get('csp_mode', 'enforce'),
+    $config->get('csp_sources', [])
+);
+$registry->set('csp', $csp);
+$response->setHeader($csp->header());
+$response->setHeader(\Reamur\System\Library\Security\Csp::hsts(
+    defined('HTTP_SERVER') ? (string)HTTP_SERVER : '',
+    $config->get('hsts_max_age', \Reamur\System\Library\Security\Csp::HSTS_DEFAULT_MAX_AGE)
+));
+
 $response->setCompression((int)$config->get('response_compression', 0));
 $registry->set('response', $response);
 

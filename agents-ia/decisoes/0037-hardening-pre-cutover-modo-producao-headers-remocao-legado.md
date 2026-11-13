@@ -5,6 +5,10 @@
   `config/catalog.php` e `config/admin.php` fixavam `error_display = true`
   por cima do `default.php`. Corrigido na
   [ADR 0088](0088-seguranca-modo-producao-e-erro-500.md).
+- **Revisão (2026-11-13):** a `Content-Security-Policy-Report-Only` de
+  transição do item 2 foi substituída por uma política aplicada, com nonce
+  por requisição, e o HSTS passou a ser enviado. Ver
+  [ADR 0093](0093-seguranca-politica-de-conteudo-aplicada-e-hsts.md).
 - **Contexto:** Plano da Análise §Fase 6: *hardening (HTTPS, headers,
   `error_display=false`), composer validate verde no CI, redirects e
   cutover*. O item CI já estava sanado (`working-directory` do

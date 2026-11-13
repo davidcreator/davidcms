@@ -7,7 +7,7 @@
   <meta name="csrf-token" content="{{ csrf_token }}">
   <meta name="appearance-mode-url" content="{{ appearance_mode_url }}">
   <title>{{ title ?: 'ReamurCMS Admin' }}</title>
-  <script>
+  <script nonce="{{ csp_nonce }}">
     /* anti-flash (F8-V, ADR 0047): modo vem do servidor; quando mode=system,
        o cliente decide por prefers-color-scheme antes do primeiro paint.
        localStorage legado segue como fast-path apenas se pref=system. */
@@ -50,7 +50,7 @@
   {% for src in scripts_deferred %}
   <script src="{{ src }}" defer></script>
   {% endfor %}
-  <script>window.__rmsAppearanceMode = '{{ theme_mode }}';</script>
+  <script nonce="{{ csp_nonce }}">window.__rmsAppearanceMode = '{{ theme_mode }}';</script>
 </head>
 <body class="admin-shell {{ logged ? '' : 'auth-layout' }} {{ body_class }}">
 

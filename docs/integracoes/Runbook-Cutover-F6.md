@@ -164,11 +164,12 @@ nunca no ar.
 bash tools/check_producao.sh https://davidalmeida.xyz
 ```
 
-16 checks remotos read-only (todos de fora): catálogo + TLS, força HTTPS,
+17 checks remotos read-only (todos de fora): catálogo + TLS, força HTTPS,
 raiz→catalog, aliases, SEO, os 301s, sitemap, robots, admin protegido,
 system/ e logs selados, erro sem stack, headers, **ausência de dev-only
-no ar**, TTFB e flags do cookie de sessão (`Secure`, `HttpOnly`,
-`SameSite`). Resultado: `16 pass / 0 fail` = ✅ go. A lista manual
+no ar**, TTFB, flags do cookie de sessão (`Secure`, `HttpOnly`,
+`SameSite`) e política de conteúdo aplicada + HSTS (ADR 0093).
+Resultado: `17 pass / 0 fail` = ✅ go. A lista manual
 abaixo fica como *diagnóstico* de qualquer FAIL específico.
 
 **Lista manual (diagnóstico)** — rode em qualquer máquina (ajuste `DOMINIO`):
@@ -206,7 +207,7 @@ curl -s -X POST "https://DOMINIO/catalog/index.php?route=checkout/payment.notify
 | Semanal | Webhooks entregando | Admin → Webhooks → entregas recentes 2xx |
 | Contínuo | Uptime | UptimeRobot (grátis) monitorando a home 5/5 min, alerta no seu e-mail |
 | Uma vez | SEO | Google Search Console: enviar o **sitemap novo** (`…/catalog/index.php?route=common/sitemap`), acompanhar cobertura/trocas de URL (os 301 consolida em ~2-4 semanas) |
-| Uma vez | Observação CSP | com 30 dias de `Content-Security-Policy-Report-Only` em produção, me devolve os relatos → transformamos em CSP enforce (dívida ADR 0037) |
+| Uma vez | Política de conteúdo | já sai aplicada (ADR 0093). Navegue pelo site e pelo admin com o console do navegador aberto (F12): linha vermelha com `Content Security Policy` = algo de fora que precisa entrar em `REAMUR_CSP_SOURCES`. Se algo essencial parar, `define('REAMUR_CSP_MODE', 'report');` nos dois `config.php` devolve o site ao modo que só relata; o painel do admin avisa enquanto a linha estiver lá |
 
 ## 7. Rollback (botão de emergência)
 

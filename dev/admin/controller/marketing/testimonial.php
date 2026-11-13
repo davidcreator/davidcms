@@ -142,6 +142,7 @@ class Testimonial extends \Reamur\System\Engine\Controller {
 
         $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
+        $data['csp_nonce'] = $this->csp->nonce(); // ADR 0093: autoriza o <script> embutido da tela
         $this->response->setOutput($this->load->view('marketing/testimonial_form', $data));
     }
 
@@ -194,6 +195,7 @@ class Testimonial extends \Reamur\System\Engine\Controller {
 
         $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, 'rms-dash');
 
+        $data['csp_nonce'] = $this->csp->nonce(); // ADR 0093: autoriza o <script> embutido da tela
         $this->response->setOutput($this->load->view('marketing/testimonial_form', $data));
     }
 

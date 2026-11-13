@@ -379,7 +379,7 @@ class Page extends \Reamur\System\Engine\Controller {
         $assetBase = $this->catalogAssetUrl();
         $assetOrigin = $this->pageCatalogAssetOrigin($assetBase);
         $originSource = $assetOrigin !== '' ? ' ' . $assetOrigin : '';
-        $this->response->addHeader("Content-Security-Policy: default-src 'none'; img-src 'self' data:" . $originSource . "; style-src 'self' 'unsafe-inline'" . $originSource . "; script-src 'self'" . $originSource . "; font-src 'self' data:" . $originSource . "; media-src 'self'" . $originSource . "; frame-src https://www.youtube-nocookie.com https://player.vimeo.com; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'none'");
+        $this->response->setHeader("Content-Security-Policy: default-src 'none'; img-src 'self' data:" . $originSource . "; style-src 'self' 'unsafe-inline'" . $originSource . "; script-src 'self'" . $originSource . "; font-src 'self' data:" . $originSource . "; media-src 'self'" . $originSource . "; frame-src https://www.youtube-nocookie.com https://player.vimeo.com; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'none'");
 
         if (!$this->user->hasPermission('modify', 'cms/page')) {
             $this->renderPagePreviewError($this->language->get('error_page_preview_permission'));

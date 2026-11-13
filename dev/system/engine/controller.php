@@ -16,6 +16,7 @@ namespace Reamur\System\Engine;
  * @property \Reamur\System\Engine\Config  $config
  * @property \Reamur\System\Library\Request $request
  * @property \Reamur\System\Library\Session $session
+ * @property \Reamur\System\Library\Security\Csp $csp
  */
 class Controller {
     public function __construct(protected Registry $registry) {}

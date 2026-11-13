@@ -59,7 +59,8 @@ public function getProject(int $project_id): array {
 - Todo texto: `{{ text_* }}` / `{{ heading_title }}` vindos da language;
 - Dados p/ JS: `{{ var|json_encode|raw }}` — único `|raw` permitido sem justificativa;
 - Herança: páginas estendem `layout/base.twig`; sem bloco novo sem atualizar o `docs/guias/Guia-Twig.md`;
-- Partials com `{% include ... with { ... } only %}`.
+- Partials com `{% include ... with { ... } only %}`;
+- `<script>` embutido: sempre `<script nonce="{{ csp_nonce }}">`, com o controller entregando `$data['csp_nonce'] = $this->csp->nonce();`. Sem atributo `on*=` e sem `href="javascript:"`: a política de conteúdo recusa (ADR 0093). Confirmação antes de enviar: `data-rms-confirm="mensagem"` no formulário ou no botão. O nonce nunca vai para template que o tema pode redefinir.
 
 ## 5. JavaScript / Three.js
 
@@ -77,6 +78,7 @@ public function getProject(int $project_id): array {
 - [ ] Upload só via `upload_security.php`
 - [ ] Sem secrets no código (config/env)
 - [ ] Permissão checada (admin: rota na ACL do grupo)
+- [ ] Sem `<script>` embutido sem nonce, sem `on*=`, sem `eval` / `new Function`; recurso de outro site só com entrada na política (`Security\Csp`, ADR 0093)
 
 ## 7. Qualidade antes de entregar
 

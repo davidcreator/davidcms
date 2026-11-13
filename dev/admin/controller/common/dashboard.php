@@ -43,6 +43,14 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ? $this->language->get('warning_install_folder')
             : '';
 
+        // ADR 0093 (S8): a chave de emergência da política de conteúdo não pode
+        // ficar esquecida. O painel lê o config.php do admin; o do site público
+        // é um arquivo separado, e o aviso lembra de conferir os dois.
+        $cspMode = $this->csp->getMode();
+        $data['warning_csp'] = $cspMode === \Reamur\System\Library\Security\Csp::MODE_ENFORCE
+            ? ''
+            : $this->language->get('warning_csp_' . $cspMode);
+
         // ADR 0089 (S5): o que o servidor enxerga da conexão e avisos de proxy.
         $data = array_merge($data, $this->connectionData());
 

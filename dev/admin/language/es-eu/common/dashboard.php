@@ -74,6 +74,8 @@ $_['action_import_wp']   = 'Importar de WordPress';
 // ADR 0088 (S3)
 $_['warning_error_display'] = 'La visualización de errores está activada en esta instalación: si algo falla, los detalles técnicos (archivo, línea, SQL) se muestran en pantalla a cualquier visitante. En producción, define REAMUR_ERROR_DISPLAY como false en los archivos config.php de catalog/ y admin/.';
 $_['warning_install_folder'] = 'La carpeta install sigue en el servidor. El instalador está bloqueado y responde 403, pero la carpeta no tiene uso después de la instalación: bórrela del servidor.';
+$_['warning_csp_report'] = 'La política de contenido está en modo de informe (REAMUR_CSP_MODE = report): el navegador solo registra en la consola lo que se bloquearía y no se impide nada. Es el interruptor de emergencia; cuando el problema esté resuelto, elimine la línea de los archivos config.php de catalog/ y admin/.';
+$_['warning_csp_off'] = 'La política de contenido está desactivada (REAMUR_CSP_MODE = off): el navegador no bloquea un script inyectado en la página. Es el interruptor de emergencia; cuando el problema esté resuelto, elimine la línea de los archivos config.php de catalog/ y admin/.';
 
 // ADR 0089 (S5): conexão, proxy e CDN
 $_['text_conn_heading']           = 'Conexión';

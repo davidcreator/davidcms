@@ -27,6 +27,23 @@ define('REAMUR_ERROR_DISPLAY', true);
 // Sem nenhuma das duas linhas, vale o IP de quem conectou. Use os mesmos
 // valores em catalog/config.php e admin/config.php.
 
+// Política de conteúdo e HTTPS obrigatório (ADR 0093). Sem nenhuma linha, o
+// site já sai protegido: o navegador só executa scripts do próprio site, e,
+// quando o endereço acima é https://, guarda por 180 dias que este domínio só
+// abre por HTTPS. Use as linhas abaixo apenas se precisar:
+//   - algo parou de funcionar depois de uma atualização? Volte ao modo que só
+//     relata no console do navegador (ou 'off' para desligar) enquanto investiga:
+//       define('REAMUR_CSP_MODE', 'report');
+//   - o site público usa um serviço de fora (fonte, estatística, vídeo, mapa)?
+//     Libere o endereço https dele, por tipo de recurso (catalog/config.php):
+//       define('REAMUR_CSP_SOURCES', [
+//           'script-src'  => 'https://cdn.exemplo.com',
+//           'connect-src' => 'https://api.exemplo.com',
+//           'frame-src'   => 'https://www.google.com',
+//       ]);
+//   - prazo do HTTPS obrigatório, em segundos (0 desliga):
+//       define('REAMUR_HSTS_MAX_AGE', 15552000);
+
 // DIR (raízes calculadas a partir de DIR_REAMUR — ver §1.1)
 define('DIR_REAMUR', '{{DIR_REAMUR}}');
 define('DIR_APPLICATION', DIR_REAMUR . 'dev/{{APP_DIR}}/');

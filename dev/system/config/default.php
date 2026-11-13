@@ -87,12 +87,26 @@ $_['response_header']      = [
     'X-Frame-Options: SAMEORIGIN',
     'Referrer-Policy: strict-origin-when-cross-origin',
     // F6-01 (ADR 0037 §2): minimização de superfície sem quebrar jornadas —
-    // desliga sensores que o CMS não usa; CSP em Report-Only (observar antes
-    // de endurecer: hero 3D, fontes externas e scripts inline do tema atual
-    // precisam de exceções — por isso NÃO é enforce ainda).
+    // desliga sensores que o CMS não usa.
     'Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()',
-    "Content-Security-Policy-Report-Only: default-src 'self' https:; img-src * data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; font-src 'self' https: data:; connect-src 'self' https:; frame-ancestors 'self'",
+    // Content-Security-Policy e Strict-Transport-Security NÃO ficam nesta
+    // lista: são montados por requisição no framework.php (ADR 0093, S8),
+    // com os valores de csp_mode / csp_sources / hsts_max_age logo abaixo.
 ];
+
+// Content-Security-Policy e HSTS (ADR 0093, S8)
+// A política é aplicada por padrão: scripts só do próprio site e dos blocos
+// que o servidor marcou com nonce; sem eval. O config.php da instalação pode:
+//   REAMUR_CSP_MODE      'report' = só relata no console do navegador, nada é bloqueado
+//                        'off'    = nenhum cabeçalho de política
+//                        (qualquer outro valor, ou ausente = aplicada)
+//   REAMUR_CSP_SOURCES   sites de fora liberados no site público, por diretiva. Só https://site:
+//                        ['font-src' => 'https://fonts.gstatic.com', 'style-src' => 'https://fonts.googleapis.com']
+//   REAMUR_HSTS_MAX_AGE  prazo do HSTS em segundos (padrão 15552000 = 180 dias); 0 desliga.
+//                        Só sai quando o endereço do site é https; nunca em localhost.
+$_['csp_mode']             = defined('REAMUR_CSP_MODE') ? REAMUR_CSP_MODE : 'enforce';
+$_['csp_sources']          = (defined('REAMUR_CSP_SOURCES') && is_array(REAMUR_CSP_SOURCES)) ? REAMUR_CSP_SOURCES : [];
+$_['hsts_max_age']         = (defined('REAMUR_HSTS_MAX_AGE') && is_numeric(REAMUR_HSTS_MAX_AGE)) ? (int)REAMUR_HSTS_MAX_AGE : 15552000;
 $_['response_compression'] = 0;
 
 // Autoload Configs

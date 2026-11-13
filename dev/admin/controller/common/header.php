@@ -121,6 +121,9 @@ class Header extends \Reamur\System\Engine\Controller {
         $data['csrf_token']      = \Reamur\System\Library\Security\Csrf::token($this->session);
         $data['appearance_mode_url'] = $this->url->link('setting/appearance.saveMode');
 
+        // ADR 0093 (S8): nonce da política de conteúdo para os <script> embutidos do cabeçalho.
+        $data['csp_nonce'] = $this->csp->nonce();
+
         return $this->load->view('common/header', $data);
     }
 

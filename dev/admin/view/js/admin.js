@@ -189,6 +189,23 @@
     });
 })();
 
+/* Confirmação nativa sem atributo on* (ADR 0093, S8): a política de conteúdo
+   recusa onsubmit="..."/onclick="..." escritos no HTML. Marque o formulário
+   ou o botão de envio com data-rms-confirm="mensagem". */
+(function () {
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!form || typeof form.getAttribute !== 'function' || !form.hasAttribute('data-rms-confirm')) { return; }
+        if (!window.confirm(form.getAttribute('data-rms-confirm') || '')) { e.preventDefault(); }
+    });
+    document.addEventListener('click', function (e) {
+        var target = e.target;
+        var button = target && typeof target.closest === 'function' ? target.closest('button[data-rms-confirm], input[data-rms-confirm]') : null;
+        if (!button) { return; }
+        if (!window.confirm(button.getAttribute('data-rms-confirm') || '')) { e.preventDefault(); }
+    });
+})();
+
 /* Confirmação de delete via modal Bootstrap (fallback: confirm nativo) */
 (function () {
     var forms = document.querySelectorAll('form[data-rms-confirm-delete]');
@@ -262,6 +279,8 @@
                 // Não carregar config.js legado: depende de jQuery e plugins fora do contrato do Blog.
                 customConfig: '',
                 extraPlugins: '',
+                // ADR 0093 (S8): sem a consulta de versão a cke4.ckeditor.com a cada abertura.
+                versionCheck: false,
                 language: editorLanguage,
                 autoUpdateElement: true,
                 htmlEncodeOutput: false,

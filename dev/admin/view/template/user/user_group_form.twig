@@ -33,7 +33,7 @@
     </form>
   </div>
 </main>
-<script>
+<script nonce="{{ csp_nonce }}">
 document.querySelectorAll('.js-select-all').forEach(function (toggle) {
   toggle.addEventListener('change', function () {
     document.querySelectorAll('input[name="' + toggle.dataset.permission + '[]"]').forEach(function (box) { box.checked = toggle.checked; });
