@@ -1,0 +1,4 @@
+# ReamurCMS — extension/: código e descrição das extensões, jamais acessíveis
+# pela web (sob Apache). EX-01 / ADR 0095. Em outro servidor (nginx, etc.),
+# bloqueie esta pasta na configuração dele, como a pasta system/.
+Require all denied

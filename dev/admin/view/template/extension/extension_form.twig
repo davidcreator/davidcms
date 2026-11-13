@@ -1,0 +1,48 @@
+{# EX-01 (ADR 0095) — configuração de uma extensão. Os campos vêm do extension.json; segredo nunca volta para a tela. #}
+{{ header|raw }}
+<main class="rms-main" id="content">
+  <div class="container-fluid py-3 px-3 px-lg-4">
+    <div class="mb-3"><h1 class="h3 mb-1"><i class="bi bi-puzzle me-2" aria-hidden="true"></i>{{ name }} <span class="badge text-bg-light border fw-normal fs-6">{{ version }}</span></h1><p class="text-body-secondary mb-0">{{ description ?: text_form }}</p></div>
+    {% if error %}<div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ error }}</div>{% endif %}
+    {% if has_secret and not can_seal %}<div class="alert alert-warning" role="alert"><i class="bi bi-key me-1" aria-hidden="true"></i>{{ text_secret_no_key }}</div>{% endif %}
+
+    <form method="post" action="{{ action }}" class="card border-0 shadow-sm" data-rms-extension-form="{{ code }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <fieldset {{ not can_modify ? 'disabled' : '' }}>
+        <div class="card-body"><div class="row g-3">
+          {% for f in fields %}
+          <div class="col-12 col-lg-8">
+            {% if f.type == 'checkbox' %}
+              <div class="form-check"><input class="form-check-input" type="checkbox" name="{{ f.key }}" id="input-{{ f.key }}" value="1"{{ f.value ? ' checked' : '' }}><label class="form-check-label" for="input-{{ f.key }}">{{ f.label }}</label></div>
+            {% else %}
+              <label class="form-label" for="input-{{ f.key }}">{{ f.label }}{% if f.required %} <span class="text-danger" title="{{ text_required }}">*</span>{% endif %}</label>
+              {% if f.type == 'textarea' %}
+                <textarea class="form-control{{ f.error ? ' is-invalid' : '' }}" name="{{ f.key }}" id="input-{{ f.key }}" rows="4" maxlength="{{ f.max }}" placeholder="{{ f.placeholder }}"{{ f.required ? ' required' : '' }}>{{ f.value }}</textarea>
+              {% elseif f.type == 'select' %}
+                <select class="form-select{{ f.error ? ' is-invalid' : '' }}" name="{{ f.key }}" id="input-{{ f.key }}"{{ f.required ? ' required' : '' }}>
+                  {% if not f.required %}<option value="">{{ text_select_none }}</option>{% endif %}
+                  {% for o in f.options %}<option value="{{ o.value }}"{{ o.value == f.value ? ' selected' : '' }}>{{ o.label }}</option>{% endfor %}
+                </select>
+              {% elseif f.type == 'secret' %}
+                <input class="form-control{{ f.error ? ' is-invalid' : '' }}" type="password" name="{{ f.key }}" id="input-{{ f.key }}" value="" maxlength="{{ f.max }}" autocomplete="new-password" placeholder="{{ f.secret_set ? '••••••••••••' : '' }}"{{ f.required and not f.secret_set ? ' required' : '' }}>
+              {% else %}
+                <input class="form-control{{ f.error ? ' is-invalid' : '' }}" type="text" name="{{ f.key }}" id="input-{{ f.key }}" value="{{ f.value }}" maxlength="{{ f.max }}" placeholder="{{ f.placeholder }}" autocomplete="off"{{ f.required ? ' required' : '' }}>
+              {% endif %}
+              {% if f.error %}<div class="invalid-feedback d-block" data-rms-field-error="{{ f.key }}">{{ f.error }}</div>{% endif %}
+            {% endif %}
+            {% if f.help %}<div class="form-text">{{ f.help }}</div>{% endif %}
+            {% if f.type == 'secret' %}
+              <div class="form-text">{{ text_secret_hint }}</div>
+              <div class="mt-1"><span class="badge text-bg-{{ f.secret_set ? 'success' : 'secondary' }}">{{ f.secret_set ? text_secret_set : text_secret_unset }}</span></div>
+              {% if f.secret_locked %}<div class="small text-danger mt-1" data-rms-secret-locked="extension"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ text_secret_locked }}</div>{% endif %}
+              {% if f.secret_set %}<div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="{{ f.key }}__clear" id="input-{{ f.key }}-clear" value="1"><label class="form-check-label" for="input-{{ f.key }}-clear">{{ text_secret_clear }}</label><div class="form-text">{{ text_secret_clear_help }}</div></div>{% endif %}
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div></div>
+        <div class="card-footer bg-body d-flex justify-content-end gap-2"><a class="btn btn-outline-secondary" href="{{ cancel }}">{{ button_cancel }}</a>{% if can_modify %}<button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1" aria-hidden="true"></i>{{ button_save }}</button>{% endif %}</div>
+      </fieldset>
+    </form>
+  </div>
+</main>
+{{ footer|raw }}

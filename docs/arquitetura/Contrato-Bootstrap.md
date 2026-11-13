@@ -25,7 +25,7 @@
 | `DIR_TEMPLATE` | `{DIR_APPLICATION}view/template/` | Templates da aplicação |
 | `DIR_CONFIG` | `{DIR_SYSTEM}config/` | Arquivos `$_[]` de configuração |
 | `DIR_STORAGE` | `{DIR_SYSTEM}storage/` | Dados voláteis (cache, logs, session, vendor) |
-| `DIR_EXTENSION` | `{DIR_REAMUR}dev/extension/` | Extensões instaláveis |
+| `DIR_EXTENSION` | `{DIR_REAMUR}dev/extension/` | Uma pasta por extensão (`extension.json` + `extension.php`), fechada ao navegador (ADR 0095) |
 | `DB_DRIVER` | `mysqli` | Driver ativo (espelha `db_engine`) |
 | `DB_HOSTNAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE`, `DB_PORT` | — | Credenciais (nunca no Git) |
 | `DB_PREFIX` | `rms_` | Prefixo de tabelas |
@@ -42,6 +42,7 @@
 | `REAMUR_HSTS_MAX_AGE` | `15552000` | Prazo, em segundos, do `Strict-Transport-Security`. Ausente = 180 dias; `0` desliga. O cabeçalho só sai quando `HTTP_SERVER` começa com `https://` (ADR 0093) |
 | `REAMUR_SECRET_KEY` | linha gerada pelo instalador ou por *Configurações → Proteção dos segredos* | Chave que cifra os segredos gravados no banco (tokens do Mercado Pago, segredos de webhook, senha SMTP). 32 bytes aleatórios em base64, escritos como texto, **iguais nos dois arquivos**. Ausente = segredos gravados legíveis e aviso no painel. Guarde uma cópia com o backup: sem ela o banco restaurado não abre os segredos (ADR 0094) |
 | `REAMUR_SECRET_KEY_OLD` | a chave anterior | Só durante uma troca de chave: abre o que a chave anterior cifrou, nunca grava. Sai depois de "Proteger segredos" (ADR 0094) |
+| `REAMUR_EXTENSIONS` | `false` | Chave de emergência das extensões. `false` = nenhuma extensão é carregada, no site e no admin, sem alterar o que está gravado como ligado; a tela *Extensões* avisa e continua utilizável. Ausente = extensões ligadas rodam (ADR 0095) |
 
 > **Regra:** `config.php` é gerado pelo wizard (`install/`) e **nunca** versionado (entra no `.gitignore`). O instalador deve validar e recusar escrever credenciais vazias em produção.
 
@@ -119,7 +120,7 @@ Depois do passo 5, o fluxo é o documentado em [Arquitetura-MVCL §4](Arquitetur
 | `APPLICATION` | `'Catalog'` | `'Admin'` | `'Install'` |
 | Config carregado depois do `default.php` | `config/catalog.php` | `config/admin.php` | `config/install.php` |
 | Sessão | visitante (`RMSSESSION`) | admin (+ token ACL) | efêmera do wizard |
-| Pré-ações típicas | `startup/seo_url`, `startup/language`, `startup/session` | `startup/login`, `startup/permission` | `startup/requirements` |
+| Pré-ações típicas | `startup/seo_url`, `startup/language`, `startup/session`, … `startup/extension` (a última) | `startup/login`, `startup/permission`, … `startup/extension` (a última; só com usuário logado) | `startup/requirements` |
 | Rota padrão | `common/home` | `common/dashboard` (após login) | `install/step_1` |
 | Sem config.php | → redireciona p/ install | → redireciona p/ install | prossegue |
 

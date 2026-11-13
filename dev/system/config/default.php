@@ -107,6 +107,13 @@ $_['response_header']      = [
 $_['csp_mode']             = defined('REAMUR_CSP_MODE') ? REAMUR_CSP_MODE : 'enforce';
 $_['csp_sources']          = (defined('REAMUR_CSP_SOURCES') && is_array(REAMUR_CSP_SOURCES)) ? REAMUR_CSP_SOURCES : [];
 $_['hsts_max_age']         = (defined('REAMUR_HSTS_MAX_AGE') && is_numeric(REAMUR_HSTS_MAX_AGE)) ? (int)REAMUR_HSTS_MAX_AGE : 15552000;
+
+// EX-01 (ADR 0095): extensões (dev/extension/). Saída de emergência: se uma
+// extensão ligada quebrar o site ou o admin, esta linha no config.php desliga
+// TODAS de uma vez, sem tocar no banco (o que estava ligado volta ao tirar a linha):
+//   define('REAMUR_EXTENSIONS', false);
+$_['extension_off']        = defined('REAMUR_EXTENSIONS') && \Reamur\System\Library\Extension\Manager::switchedOff(REAMUR_EXTENSIONS);
+
 $_['response_compression'] = 0;
 
 // Autoload Configs

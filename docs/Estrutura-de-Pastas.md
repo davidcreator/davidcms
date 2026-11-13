@@ -39,6 +39,7 @@ davidcms/
 └── dev/                        # Código-fonte (multi-aplicação MVCL)
     ├── admin/                  # Aplicação 1 — painel administrativo
     ├── catalog/                # Aplicação 2 — site público
+    ├── extension/              # Extensões: uma pasta por extensão, fechada ao navegador (ADR 0095, guias/Guia-Extensoes.md)
     ├── install/                # Aplicação 3 — wizard de instalação/upgrade
     └── system/                 # Núcleo compartilhado do framework
 ```
@@ -59,7 +60,7 @@ Tudo que é gestão fica aqui. Grupos de controllers/models:
 | `design/` | Temas e layouts do Catalog (ferramenta Temas em implementação nesta fase) |
 | `error/` | Páginas de erro do admin (404/permissão) |
 | `event/` | Gestão de eventos do sistema (listar/remover listeners) |
-| `extension/` | Instalar/configurar extensões |
+| `extension/` | Tela **Extensões**: listar, ligar / desligar e configurar o que está em `dev/extension/` (ADR 0095) |
 | `localization/` | Idiomas, moedas, países, zonas, impostos |
 | `mail/` | Templates e fila de e-mails |
 | `marketing/` | Campanhas, cupons, afiliados → **também depoimentos/logos de clientes** |
@@ -172,6 +173,7 @@ system/
 │   ├── cart/{cart, currency, customer, user, tax, length, weight}.php
 │   ├── googleshopping/ openbay/ squareup/   # integrações legadas portadas
 │   ├── security/upload_security.php
+│   ├── extension/{manifest, store, manager, page_output, extension}.php   # extensões (ADR 0095)
 │   ├── three/                  # serviço/config + runtime Three.js canônico self-hosted
 │   │   ├── scene_config.php    # política declarativa allowlisted
 │   │   ├── asset_manifest.php  # allowlist de módulos servidos pelo Catalog

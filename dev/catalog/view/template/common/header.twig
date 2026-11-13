@@ -41,8 +41,13 @@
   {% for src in scripts %}
   <script src="{{ src }}" defer></script>
   {% endfor %}
+{# EX-01 (ADR 0095): meta tags e scripts pedidos pelas extensões ligadas. O HTML é
+   montado por Extension\PageOutput::render() (escape + nonce), nunca pela extensão.
+   Sem recuo de propósito: sem extensão ligada, estas linhas não deixam nem um espaço. #}
+{% if extension_head|default('') %}{{ extension_head|raw }}{% endif %}
 </head>
 <body class="{{ body_class }}{% for c in theme.classes|default([]) %} {{ c|e('html_attr') }}{% endfor %}" data-theme-rules="{{ theme.matched|default([])|join(',')|e('html_attr') }}" style="--theme-primary: {{ theme_primary|default('#6d28d9') }}; --theme-surface: {{ theme_surface|default('#ffffff') }}; {{ theme_token_css|default('')|e('html_attr') }}">
+{% if extension_body_start|default('') %}{{ extension_body_start|raw }}{% endif %}
 {# A barra visual é customizável; importmap/scripts permanecem neste shell confiável.
    ADR 0087: theme_partial() entrega a barra pelo sandbox quando o tema a redefine
    e passa SÓ estas variáveis (equivale ao antigo `include ... with {...} only`).

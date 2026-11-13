@@ -417,6 +417,11 @@ class Controller {
      * Despacha evento de webhook para os endpoints ativos e persiste logs sem
      * propagar exceções para o fluxo de negócio.
      *
+     * EX-01 (ADR 0095): o mesmo evento, com o mesmo nome e os mesmos dados,
+     * chega depois às extensões que o declararam no manifesto. A extensão
+     * recebe uma cópia: não altera o que os webhooks enviam. Os dados são
+     * montados uma vez só, e só se houver webhook ou extensão para recebê-los.
+     *
      * @param array<string, mixed>|\Closure(): array<string, mixed> $payload
      */
     protected function dispatchWebhookEvent(string $event, array|\Closure $payload, string $contextLabel = ''): void {
@@ -427,44 +432,79 @@ class Controller {
             return;
         }
 
+        $built   = false;
+        $data    = null;
+        $resolve = static function () use (&$built, &$data, $payload): ?array {
+            if (!$built) {
+                $built = true;
+                $value = $payload instanceof \Closure ? $payload() : $payload;
+                $data  = is_array($value) ? $value : null;
+            }
+
+            return $data;
+        };
+
+        $suffix = $contextLabel !== '' ? " ({$contextLabel})" : '';
+
         try {
-            $load->model('setting/webhook');
+            $this->deliverWebhooks($event, $resolve, $load, $log);
+        } catch (\Throwable $e) {
+            $log->write("webhook {$event}{$suffix} falhou e foi isolado: " . $e->getMessage());
+        }
 
-            $webhookModel = $this->registry->get('model_setting_webhook');
-            if (!is_object($webhookModel)) {
-                return;
-            }
+        try {
+            $events = $this->registry->get('event');
 
-            $getHooks = [$webhookModel, 'getHooksForEvent'];
-            $addLog   = [$webhookModel, 'addLog'];
-            if (!is_callable($getHooks) || !is_callable($addLog)) {
-                return;
-            }
+            if ($events instanceof Event && $events->has($event)) {
+                $payloadData = $resolve();
 
-            $hooks = $getHooks($event);
-            if (!is_array($hooks) || $hooks === []) {
-                return;
-            }
-
-            $payloadData = $payload instanceof \Closure ? $payload() : $payload;
-            if (!is_array($payloadData)) {
-                return;
-            }
-
-            $dispatcher = new \Reamur\System\Library\Webhook\Dispatcher($log);
-            foreach ($dispatcher->dispatch($event, $payloadData, $hooks) as $r) {
-                $addLog(
-                    (int)$r['webhook_id'],
-                    (string)$r['delivery'],
-                    (string)$r['payload'],
-                    (int)$r['http_code'],
-                    (float)$r['duration'],
-                    (int)$r['attempt']
-                );
+                if ($payloadData !== null) {
+                    $args = [$payloadData, $event];
+                    $events->trigger($event, $args);
+                }
             }
         } catch (\Throwable $e) {
-            $suffix = $contextLabel !== '' ? " ({$contextLabel})" : '';
-            $log->write("webhook {$event}{$suffix} falhou e foi isolado: " . $e->getMessage());
+            $log->write("evento {$event}{$suffix} para extensões falhou e foi isolado: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * @param \Closure(): (array<string, mixed>|null) $resolve
+     */
+    private function deliverWebhooks(string $event, \Closure $resolve, Loader $load, \Reamur\System\Library\Log $log): void {
+        $load->model('setting/webhook');
+
+        $webhookModel = $this->registry->get('model_setting_webhook');
+        if (!is_object($webhookModel)) {
+            return;
+        }
+
+        $getHooks = [$webhookModel, 'getHooksForEvent'];
+        $addLog   = [$webhookModel, 'addLog'];
+        if (!is_callable($getHooks) || !is_callable($addLog)) {
+            return;
+        }
+
+        $hooks = $getHooks($event);
+        if (!is_array($hooks) || $hooks === []) {
+            return;
+        }
+
+        $payloadData = $resolve();
+        if ($payloadData === null) {
+            return;
+        }
+
+        $dispatcher = new \Reamur\System\Library\Webhook\Dispatcher($log);
+        foreach ($dispatcher->dispatch($event, $payloadData, $hooks) as $r) {
+            $addLog(
+                (int)$r['webhook_id'],
+                (string)$r['delivery'],
+                (string)$r['payload'],
+                (int)$r['http_code'],
+                (float)$r['duration'],
+                (int)$r['attempt']
+            );
         }
     }
 }

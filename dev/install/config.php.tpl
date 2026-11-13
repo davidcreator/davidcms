@@ -55,6 +55,13 @@ define('REAMUR_ERROR_DISPLAY', true);
 //       define('REAMUR_SECRET_KEY_OLD', 'chave-anterior');
 define('REAMUR_SECRET_KEY', '{{SECRET_KEY}}');
 
+// Extensões (ADR 0095). Ficam em dev/extension/ e são ligadas uma a uma em
+// admin > Extensões. Saída de emergência: se uma extensão ligada quebrar o
+// site ou o admin, a linha abaixo desliga TODAS de uma vez, sem tocar no banco
+// (ao tirar a linha, volta a valer o que estava ligado). Ponha-a em
+// catalog/config.php e em admin/config.php:
+//   define('REAMUR_EXTENSIONS', false);
+
 // DIR (raízes calculadas a partir de DIR_REAMUR — ver §1.1)
 define('DIR_REAMUR', '{{DIR_REAMUR}}');
 define('DIR_APPLICATION', DIR_REAMUR . 'dev/{{APP_DIR}}/');

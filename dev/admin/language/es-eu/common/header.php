@@ -40,6 +40,7 @@ $_['text_menu_testimonials'] = 'Testimonios';
 $_['text_menu_client_logos'] = 'Logos de Clientes';
 $_['text_menu_messages']     = 'Mensajes';
 $_['text_menu_marketplace']  = 'Marketplace';
+$_['text_menu_extensions']   = 'Extensiones'; // EX-01 (ADR 0095)
 $_['text_menu_settings']     = 'Configuración';
 $_['text_menu_site_info']    = 'Información del Sitio';
 $_['text_menu_webhooks']     = 'Webhooks';

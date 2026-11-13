@@ -43,6 +43,7 @@
 - [guias/Guia-PHP8.md](guias/Guia-PHP8.md) — PHP 8+ no núcleo e extensões obrigatórias
 - [guias/Guia-Composer.md](guias/Guia-Composer.md) — Composer, autoload, dependências e CI
 - [guias/Guia-Twig.md](guias/Guia-Twig.md) — Twig 3, herança de templates e adaptadores
+- [guias/Guia-Extensoes.md](guias/Guia-Extensoes.md) — extensões: instalar, ligar, escrever (`extension.json`, eventos, saída na página, segredos)
 - [guias/BLOG_MEDIA_UPLOAD.md](guias/BLOG_MEDIA_UPLOAD.md) — upload e segurança de mídia no Blog
 - [guias/IMPORT_FORMATS.md](guias/IMPORT_FORMATS.md) — formatos aceitos pelo importador do Blog
 

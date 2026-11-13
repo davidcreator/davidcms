@@ -134,6 +134,7 @@ $_['text_secret_group_webhook'] = 'Segredos de webhook';
 $_['text_secret_group_mp_client_secret'] = 'Segredo do aplicativo Mercado Pago';
 $_['text_secret_group_mp_webhook_secret'] = 'Segredo das notificações do Mercado Pago';
 $_['text_secret_group_mail_smtp_password'] = 'Senha SMTP';
+$_['text_secret_group_extension'] = 'Segredos de extensões'; // EX-01 (ADR 0095)
 $_['text_secret_none'] = 'Nenhum segredo gravado ainda.';
 $_['button_protect_secrets'] = 'Proteger segredos';
 $_['text_secrets_protected'] = '%d valor(es) cifrado(s).';

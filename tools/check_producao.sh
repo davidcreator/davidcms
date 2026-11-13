@@ -8,7 +8,7 @@
 # Uso:   bash tools/check_producao.sh https://davidalmeida.xyz
 #        DOMAIN=https://outro.dominio PROJ=jwa bash tools/check_producao.sh
 #
-# Checks (18):
+# Checks (19):
 #   1 Catálogo no ar (TLS válido quando https)
 #   2 Força HTTPS (HTTP aberto servindo site = FAIL; sem :80 = warn)
 #   3 Raiz   → 302 → catalog (index.php de atalho)   e segue 200
@@ -35,6 +35,8 @@
 #  18 Chave dos segredos fora do alcance do navegador (ADR 0094): nenhum
 #     config.php, nenhuma cópia dele (.bak, .old, ~ …) e nem o cache de
 #     configurações são entregues como texto
+#  19 Pasta das extensões fechada ao navegador (ADR 0095): o extension.json
+#     de uma extensão não é entregue (a pasta responde 403/404)
 # ════════════════════════════════════════════════════════════════════
 set -u
 DOMAIN="${1:-${DOMAIN:-https://davidalmeida.xyz}}"
@@ -253,6 +255,16 @@ if body "$DOMAIN/system/storage/cache/cache.setting.config" | grep -qaE "mail_en
   RC=1; echo "   ↳ /system/storage/cache/cache.setting.config é entregue — a pasta system/ está aberta (ver check 10)"
 fi
 ck 18 $RC "chave-dos-segredos"
+
+echo '── 19 — pasta das extensões fechada ao navegador (ADR 0095) ──'
+# extension/ guarda o código e a descrição das extensões; o .htaccess da pasta
+# a fecha sob Apache. Em outro servidor (nginx) o bloqueio é da configuração
+# dele. Reprova quando o conteúdo de um extension.json aparece.
+RC=0
+if body "$DOMAIN/extension/site_verification/extension.json" | grep -qaE '"code"[[:space:]]*:[[:space:]]*"site_verification"'; then
+  RC=1; echo "   ↳ /extension/site_verification/extension.json é entregue — feche a pasta extension/ no servidor (como a pasta system/)"
+fi
+ck 19 $RC "extensoes-fechadas"
 
 echo
 echo "════════ summary: $PASS pass / $FAIL fail / $WARN avisos ════════"

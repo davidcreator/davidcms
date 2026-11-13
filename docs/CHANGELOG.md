@@ -1,5 +1,26 @@
 # Changelog
 
+## Extensões EX-01 — base: pasta, descrição conferida, eventos e saída controlada (2026-11-13)
+- ADR 0095. Guia: [`docs/guias/Guia-Extensoes.md`](guias/Guia-Extensoes.md). Primeira etapa da frente de extensões; aviso de cookies (EX-02) e meio de pagamento (EX-03) vêm depois.
+- **Novo:** uma extensão é uma pasta em `dev/extension/<código>/` com `extension.json` (nome, versão, versão mínima do CMS, campos de configuração, eventos, endereços de fora) e `extension.php`. Chega por FTP ou deploy; não há envio de ZIP pelo admin.
+- **Novo no admin:** tela **Extensões** (menu, rota `extension/extension`): lista com a situação de cada uma e o que ela declara, ligar / desligar, formulário de configuração gerado, remover dados. Descrição inválida ou versão incompatível aparece com o motivo e não pode ser ligada. Textos em `en-us`, `pt-br` e `es-eu`.
+- **Garantias:** extensão desligada não tem nenhum código executado, e a tela nunca executa código de extensão. Erro em uma extensão vai para o log e a página abre. Sem extensão ligada, a página pública sai idêntica à de antes.
+- **Página pública:** a extensão não escreve HTML. Ela pede meta tag, script por endereço ou script embutido, e o CMS escreve a tag com escape e nonce. Script de endereço não declarado é recusado e registrado no log.
+- **Política de conteúdo (ADR 0093):** os endereços declarados em `csp` valem só com a extensão ligada e só no site público. A política do admin não muda. Continua sem script embutido livre e sem `eval`.
+- **Segredos (ADR 0094):** campo do tipo `secret` é gravado cifrado, não volta para a tela e entra em *Configurações → Proteção dos segredos*.
+- **Eventos para extensões:** `page/output` (cabeçalho do site público) e `order_add`, `order_edit`, `order_history_edit` (os mesmos dados dos webhooks, entregues depois deles). `Engine\Event` ganha prioridade.
+- **Extensão de exemplo:** "Verificação de site" (`site_verification`), com as meta tags de verificação do Google, Bing, Pinterest e Meta. Vem desligada.
+- **Atenção ao atualizar um site instalado:**
+  1. suba a pasta `extension/` junto com o resto;
+  2. para a tela aparecer, rode `install/sql/upgrade_ex01_extension_grant.sql` no phpMyAdmin (pode rodar mais de uma vez; `rollback_ex01_extension_grant.sql` desfaz), ou marque `extension/extension` em *Usuários → Grupos de usuários*;
+  3. em nginx, feche a pasta `extension/` na configuração do servidor (sob Apache o `.htaccess` da pasta já fecha).
+- **Configuração nova, opcional, no `config.php`:** `define('REAMUR_EXTENSIONS', false);` nos dois arquivos desliga todas as extensões de uma vez, sem tocar no banco. Para o caso de uma extensão quebrar o site.
+- **Banco:** nenhuma tabela ou coluna nova. O estado fica em `rms_setting` (`code = 'extension'`).
+- **Limite:** uma extensão ligada é código PHP com o mesmo alcance do CMS (banco, arquivos, configurações). A descrição mostra o que ela pretende e limita o que sai na página; não isola o código. Ligue só extensão de origem conhecida. Erro fatal que o PHP não deixa capturar (falta de memória, `exit`) derruba a página até a extensão ser desligada.
+- **Para quem escreve código:** regra em `agents-ia/regras/02-padroes-de-codigo.md`; os exemplos do guia são executados por `tests/Unit/Extension/GuideTest.php`.
+- Admin: `ASSET_V` de `8.1.2` para `8.1.3`.
+- `tools/check_producao.sh`, check 19 (novo): o `extension.json` de uma extensão não é entregue ao navegador. O script passa a ter 19 checks.
+
 ## Segurança S9 — segredos cifrados no banco (2026-11-13)
 - ADR 0094. Achado da análise, reproduzido antes da correção: tokens do Mercado Pago, segredo do aplicativo, chave de assinatura das notificações, senha SMTP e segredos de webhook estavam legíveis no banco. Um token copiado do banco foi aceito pelo Mercado Pago de teste. Revisa o item 6 da ADR 0034.
 - **Corrigido:** os seis valores passam a ser gravados cifrados (AES-256-GCM) e abertos só no ponto de uso. Cada valor fica preso à coluna dele; valor alterado ou movido não abre. As telas continuam sem mostrar segredo, e o cache das configurações deixa de guardá-lo legível.

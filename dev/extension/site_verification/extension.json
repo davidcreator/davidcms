@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "code": "site_verification",
+  "name": {
+    "en-us": "Site verification",
+    "pt-br": "Verificação de site",
+    "es-eu": "Verificación del sitio"
+  },
+  "description": {
+    "en-us": "Adds the ownership verification meta tags of Google Search Console, Bing Webmaster Tools, Pinterest and Meta to every public page. No script, no cookie, no request to another site.",
+    "pt-br": "Põe em todas as páginas públicas as meta tags de verificação de propriedade do Google Search Console, Bing Webmaster Tools, Pinterest e Meta. Sem script, sem cookie, sem pedido a outro site.",
+    "es-eu": "Añade a todas las páginas públicas las metaetiquetas de verificación de propiedad de Google Search Console, Bing Webmaster Tools, Pinterest y Meta. Sin script, sin cookie, sin petición a otro sitio."
+  },
+  "version": "1.0.0",
+  "author": "ReamurCMS",
+  "link": "https://reamurcms.com",
+  "requires": {
+    "reamur": ">=1.0.0",
+    "php": ">=8.2"
+  },
+  "apps": ["catalog"],
+  "settings": [
+    {
+      "key": "google",
+      "type": "text",
+      "label": "Google Search Console",
+      "help": {
+        "en-us": "Only the code: the content=\"...\" value of the google-site-verification tag, not the whole tag.",
+        "pt-br": "Só o código: o valor de content=\"...\" da tag google-site-verification, não a tag inteira.",
+        "es-eu": "Solo el código: el valor de content=\"...\" de la etiqueta google-site-verification, no la etiqueta entera."
+      },
+      "max": 128,
+      "pattern": "[A-Za-z0-9_-]{8,128}"
+    },
+    {
+      "key": "bing",
+      "type": "text",
+      "label": "Bing Webmaster Tools",
+      "help": {
+        "en-us": "Only the code: the content=\"...\" value of the msvalidate.01 tag.",
+        "pt-br": "Só o código: o valor de content=\"...\" da tag msvalidate.01.",
+        "es-eu": "Solo el código: el valor de content=\"...\" de la etiqueta msvalidate.01."
+      },
+      "max": 128,
+      "pattern": "[A-Za-z0-9_-]{8,128}"
+    },
+    {
+      "key": "pinterest",
+      "type": "text",
+      "label": "Pinterest",
+      "help": {
+        "en-us": "Only the code: the content=\"...\" value of the p:domain_verify tag.",
+        "pt-br": "Só o código: o valor de content=\"...\" da tag p:domain_verify.",
+        "es-eu": "Solo el código: el valor de content=\"...\" de la etiqueta p:domain_verify."
+      },
+      "max": 128,
+      "pattern": "[A-Za-z0-9_-]{8,128}"
+    },
+    {
+      "key": "meta",
+      "type": "text",
+      "label": "Meta (Facebook / Instagram)",
+      "help": {
+        "en-us": "Only the code: the content=\"...\" value of the facebook-domain-verification tag.",
+        "pt-br": "Só o código: o valor de content=\"...\" da tag facebook-domain-verification.",
+        "es-eu": "Solo el código: el valor de content=\"...\" de la etiqueta facebook-domain-verification."
+      },
+      "max": 128,
+      "pattern": "[A-Za-z0-9_-]{8,128}"
+    }
+  ],
+  "events": [
+    { "trigger": "page/output", "handler": "onPageOutput" }
+  ]
+}

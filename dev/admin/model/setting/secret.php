@@ -163,6 +163,32 @@ class Secret extends \Reamur\System\Engine\Model {
             }
         }
 
+        // EX-01 (ADR 0095): campos-segredo das extensões, gravados em rms_setting
+        // com code 'extension' e chave '<código>.secret.<campo>'. Entram no mesmo
+        // inventário: "Proteger segredos" os cifra e a troca de chave os regrava.
+        if ($this->hasTable('setting')) {
+            foreach ($this->rows(
+                "SELECT `setting_id`, `key`, `value` FROM `" . $this->t('setting') . "`
+                  WHERE `code` = 'extension' AND `value` <> '' AND `key` LIKE '%.secret.%'"
+            ) as $row) {
+                $parts = explode('.', (string)$row['key'], 3);
+
+                if (count($parts) !== 3 || $parts[1] !== 'secret' || $parts[0] === '' || $parts[2] === '') {
+                    continue;
+                }
+
+                $out[] = [
+                    'group'     => 'extension',
+                    'table'     => 'setting',
+                    'column'    => 'value',
+                    'id_column' => 'setting_id',
+                    'id'        => (string)$row['setting_id'],
+                    'context'   => SecretBox::extensionContext($parts[0], $parts[2]),
+                    'value'     => (string)$row['value'],
+                ];
+            }
+        }
+
         if ($this->hasTable('mp_seller')) {
             foreach ($this->rows(
                 "SELECT `mp_seller_id`, `access_token`, `refresh_token` FROM `" . $this->t('mp_seller') . "`"

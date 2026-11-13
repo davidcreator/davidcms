@@ -132,6 +132,88 @@ final class Csp {
         return $clean;
     }
 
+    /**
+     * O endereço `$url` está coberto pela origem `$source` (uma das aceitas por
+     * sources())? Segue a regra do navegador: mesmo esquema https, mesmo host
+     * (`*.site` cobre qualquer subdomínio, não o próprio `site`), mesma porta
+     * e, se a origem tem caminho, caminho igual — ou começando por ele quando
+     * a origem termina em `/`. Usado para recusar, já no servidor, um script
+     * de extensão cujo endereço ela não declarou (EX-01, ADR 0095).
+     */
+    public static function covers(string $source, string $url): bool {
+        $s = parse_url($source);
+        $u = parse_url($url);
+
+        if (!is_array($s) || !is_array($u)
+            || strtolower((string)($s['scheme'] ?? '')) !== 'https' || strtolower((string)($u['scheme'] ?? '')) !== 'https'
+            || isset($u['user']) || isset($u['pass'])) {
+            return false;
+        }
+
+        $sourceHost = strtolower((string)($s['host'] ?? ''));
+        $urlHost    = strtolower((string)($u['host'] ?? ''));
+
+        if ($sourceHost === '' || $urlHost === '') {
+            return false;
+        }
+
+        if (str_starts_with($sourceHost, '*.')) {
+            if (!str_ends_with($urlHost, substr($sourceHost, 1))) {
+                return false;
+            }
+        } elseif ($sourceHost !== $urlHost) {
+            return false;
+        }
+
+        if ((int)($s['port'] ?? 443) !== (int)($u['port'] ?? 443)) {
+            return false;
+        }
+
+        $sourcePath = (string)($s['path'] ?? '');
+
+        if ($sourcePath === '' || $sourcePath === '/') {
+            return true;
+        }
+
+        $urlPath = (string)($u['path'] ?? '/');
+
+        // Caminho com "sobe um nível" não é comparado: o navegador o resolveria de outro jeito.
+        if (str_contains($urlPath, '..') || str_contains(strtolower($urlPath), '%2e')) {
+            return false;
+        }
+
+        return str_ends_with($sourcePath, '/') ? str_starts_with($urlPath, $sourcePath) : $urlPath === $sourcePath;
+    }
+
+    /**
+     * Acrescenta origens depois da montagem (EX-01, ADR 0095): as que uma
+     * extensão LIGADA declarou no manifesto. Passam pela mesma conferência de
+     * sources() — só endereço https de um site, nunca palavra-chave — e, como
+     * as do config.php, valem só no site público: no admin a chamada não faz
+     * nada. Depois de chamar, reenvie o cabeçalho:
+     * `$this->response->setHeader($this->csp->header())`.
+     *
+     * @return array<string, list<string>> o que foi de fato acrescentado
+     */
+    public function addSources(mixed $raw): array {
+        if ($this->app !== 'catalog') {
+            return [];
+        }
+
+        $added = [];
+
+        foreach (self::sources($raw) as $directive => $sources) {
+            foreach ($sources as $source) {
+                if (!in_array($source, $this->extra[$directive] ?? [], true)) {
+                    $this->extra[$directive][] = $source;
+                    $added[$directive][]       = $source;
+                }
+            }
+        }
+
+        return $added;
+    }
+
     /** Nonce desta resposta, para `<script nonce="...">`. Gerado uma vez por requisição. */
     public function nonce(): string {
         if ($this->nonce === null) {

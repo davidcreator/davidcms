@@ -47,6 +47,7 @@ public function getProject(int $project_id): array {
 - Retornos padronizados: `row` (1 registro), `rows` (lista), `bool` em operações de escrita quando fizer sentido;
 - Nomes de método: `get*`, `get*List`/`get*s`, `add*`, `edit*`, `delete*`, `getTotal*`;
 - Segredo que vai para o banco (token, senha, chave de assinatura): `$this->secrets()->seal($valor, $lugar)` ao gravar e `->open($gravado, $lugar)` só no ponto de uso, com um nome de lugar próprio (`tabela.coluna` ou `SecretBox::settingContext($chave)`). Valor que não abre (`->locked()`) conta como ausente e nunca é enviado para fora. Configuração nova que seja segredo entra em `SecretBox::SETTING_KEYS` (ADR 0094).
+- Extensões (ADR 0095): código de terceiros ou opcional mora em `dev/extension/<código>/`, nunca no núcleo. O núcleo oferece um ponto novo com `$events->has('gatilho')` + `trigger()`. Saída de extensão na página pública passa por `Extension\PageOutput`; nenhum template ganha `|raw` novo para isso, e o admin nunca imprime saída de extensão. A tela *Extensões* nunca inclui o PHP de uma extensão.
 
 ## 3. Controller
 

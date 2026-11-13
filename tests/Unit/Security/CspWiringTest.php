@@ -215,7 +215,8 @@ final class CspWiringTest extends TestCase {
             $uses += preg_match_all('/\sdata-rms-confirm="/', $source);
         }
 
-        self::assertSame(5, $uses);
+        // EX-01 (ADR 0095): +2 na tela de extensoes (ligar e remover dados).
+        self::assertSame(7, $uses);
     }
 
     public function testControllersWithTheirOwnPolicyReplaceTheGlobalOne(): void {

@@ -174,6 +174,34 @@ class Header extends \Reamur\System\Engine\Controller {
         // ADR 0093 (S8): nonce da política de conteúdo para os <script> embutidos do cabeçalho.
         $data['csp_nonce'] = $this->csp->nonce();
 
+        // EX-01 (ADR 0095): o que as extensões ligadas pedem para sair na
+        // página. Elas não escrevem HTML: pedem meta tags e scripts ao
+        // PageOutput, e as tags saem daqui, com escape e com o nonce. Fica
+        // neste cabeçalho porque ele é o único trecho que o tema não redefine
+        // (um nonce nunca pode chegar a um template de tema — ADR 0093).
+        $data['extension_head']       = '';
+        $data['extension_body_start'] = '';
+
+        $events = $this->registry->get('event');
+
+        if ($events instanceof \Reamur\System\Engine\Event
+            && $events->has(\Reamur\System\Library\Extension\Manager::EVENT_PAGE_OUTPUT)) {
+            $page = new \Reamur\System\Library\Extension\PageOutput(
+                (string)$this->config->get('_route', ''),
+                (string)$data['locale']
+            );
+
+            $args = [$page];
+            $events->trigger(\Reamur\System\Library\Extension\Manager::EVENT_PAGE_OUTPUT, $args);
+
+            $data['extension_head']       = $page->render($page::HEAD, (string)$data['csp_nonce']);
+            $data['extension_body_start'] = $page->render($page::BODY_START, (string)$data['csp_nonce']);
+
+            foreach ($page->rejected() as $line) {
+                \Reamur\System\Library\Extension\Manager::log($this->registry, 'extension output refused, ' . $line);
+            }
+        }
+
         return $this->load->view('common/header', $data);
     }
 

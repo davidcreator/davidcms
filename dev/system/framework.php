@@ -25,9 +25,14 @@ $autoloader = new Autoloader();
 $autoloader->register('Reamur\\' . APPLICATION, DIR_APPLICATION);
 $autoloader->register('Reamur\\System', DIR_SYSTEM);
 
-if (defined('DIR_EXTENSION')) {
-    $autoloader->register('Reamur\\Extension', DIR_EXTENSION);
-}
+// EX-01 (ADR 0095): pasta das extensões. Um config.php antigo, sem a linha
+// DIR_EXTENSION, usa a pasta vizinha de system/ (o lugar que o instalador e a
+// build de produção já usam).
+$extensionDirectory = defined('DIR_EXTENSION')
+    ? (string)DIR_EXTENSION
+    : dirname(rtrim((string)DIR_SYSTEM, '/\\')) . '/extension/';
+
+$autoloader->register('Reamur\\Extension', $extensionDirectory);
 
 // 2. Composer (Twig e demais libs — Contrato §3: ponte única)
 require_once(DIR_SYSTEM . 'vendor.php');
@@ -233,6 +238,15 @@ $registry->set('secret_box', new \Reamur\System\Library\Security\SecretBox(
     (defined('APPLICATION') && strtolower((string)APPLICATION) === 'admin' && defined('DIR_APPLICATION'))
         ? dirname(rtrim((string)DIR_APPLICATION, '/\\')) . '/catalog/config.php'
         : null
+));
+
+// EX-01 (ADR 0095): extensões. Aqui o serviço só é criado; nada da pasta é
+// lido. Quem põe as extensões ligadas para rodar é a pré-ação startup/extension,
+// depois das configurações (e, no admin, depois do login).
+$registry->set('extensions', new \Reamur\System\Library\Extension\Manager(
+    $registry,
+    $extensionDirectory,
+    defined('REAMUR_VERSION') ? (string)REAMUR_VERSION : '0.0.0'
 ));
 
 // 8. DB — somente quando a app pede via db_autostart (install fica off deliberadamente)

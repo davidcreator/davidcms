@@ -18,7 +18,7 @@ namespace Reamur\Admin\Controller\Common;
 class Header extends \Reamur\System\Engine\Controller {
 
     /** Versão dos assets self-hosted (cache-bust por query string) */
-    public const ASSET_V = '8.1.2';
+    public const ASSET_V = '8.1.3';
 
     /**
      * @param array<string, mixed> $data Dados passados pelo controller chamador
@@ -193,6 +193,7 @@ class Header extends \Reamur\System\Engine\Controller {
                 'title' => $this->language->get('text_group_extensions'),
                 'items' => [
                     ['route' => 'setting/marketplace', 'icon' => 'bi bi-shop',            'key' => 'text_menu_marketplace'],
+                    ['route' => 'extension/extension', 'icon' => 'bi bi-puzzle',          'key' => 'text_menu_extensions'], // EX-01 (ADR 0095)
                 ],
             ],
             [

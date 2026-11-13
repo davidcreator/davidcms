@@ -1,0 +1,54 @@
+{# EX-01 (ADR 0095) — extensões da pasta dev/extension/: ligar, desligar, configurar. Só o extension.json é lido aqui. #}
+{{ header|raw }}
+<main class="rms-main" id="content">
+  <div class="container-fluid py-3 px-3 px-lg-4">
+    {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">{{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ text_close }}"></button></div>{% endif %}
+    <div class="mb-3"><h1 class="h3 mb-1"><i class="bi bi-puzzle me-2" aria-hidden="true"></i>{{ heading_title }}</h1><p class="text-body-secondary mb-0">{{ text_list }}</p></div>
+
+    {% if off %}<div class="alert alert-warning" role="alert" data-rms-extensions-off="1"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ text_off_by_config }}</div>{% endif %}
+    {% if not folder_ok %}<div class="alert alert-warning" role="alert"><i class="bi bi-folder-x me-1" aria-hidden="true"></i>{{ text_no_folder }} <code>{{ folder }}</code></div>{% endif %}
+
+    <section class="card border-0 shadow-sm mb-3"><div class="card-body small text-body-secondary">
+      <p class="mb-1"><i class="bi bi-folder2-open me-1" aria-hidden="true"></i>{{ text_install_hint }} <code>{{ folder }}</code></p>
+      <p class="mb-0"><i class="bi bi-shield-exclamation me-1" aria-hidden="true"></i>{{ text_trust_hint }}</p>
+    </div></section>
+
+    <section class="card border-0 shadow-sm">
+      <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th scope="col">{{ column_extension }}</th><th scope="col">{{ column_status }}</th>{% if can_modify %}<th scope="col" class="text-end">{{ column_action }}</th>{% endif %}</tr></thead><tbody>
+        {% for ext in extensions %}<tr data-rms-extension="{{ ext.code }}" data-rms-extension-status="{{ ext.status }}{{ ext.enabled and ext.status != 'enabled' ? ' on' : '' }}">
+          <td>
+            <div class="fw-semibold">{{ ext.name }}{% if ext.version %} <span class="badge text-bg-light border fw-normal">{{ text_version }} {{ ext.version }}</span>{% endif %}</div>
+            <div class="small text-body-secondary"><code>{{ ext.code }}</code>{% if ext.author %} · {{ text_author }}: {% if ext.link %}<a href="{{ ext.link }}" target="_blank" rel="noopener noreferrer">{{ ext.author }}</a>{% else %}{{ ext.author }}{% endif %}{% endif %}</div>
+            {% if ext.description %}<div class="mt-1">{{ ext.description }}</div>{% endif %}
+            {% if ext.missing %}<div class="small text-danger mt-1"><i class="bi bi-folder-x me-1" aria-hidden="true"></i>{{ text_folder_missing_hint }}</div>{% endif %}
+            {% if ext.problems %}<div class="small text-danger mt-2"><div class="fw-semibold">{{ text_problems }}</div><ul class="mb-0 ps-3">{% for p in ext.problems %}<li><code>{{ p }}</code></li>{% endfor %}</ul></div>{% endif %}
+            {% if ext.blockers %}<div class="small text-warning-emphasis mt-2"><div class="fw-semibold">{{ text_blockers }}</div><ul class="mb-0 ps-3">{% for b in ext.blockers %}<li><code>{{ b }}</code></li>{% endfor %}</ul></div>{% endif %}
+            {% if ext.locked %}<div class="small text-danger mt-1" data-rms-secret-locked="extension"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ text_secret_locked }}</div>{% endif %}
+            {% if ext.apps %}<details class="small mt-2"><summary class="text-body-secondary">{{ text_details }}</summary>
+              <dl class="row mb-0 mt-1">
+                <dt class="col-sm-3 fw-normal text-body-secondary">{{ text_runs_in }}</dt><dd class="col-sm-9 mb-1">{% for app in ext.apps %}{{ app == 'admin' ? text_app_admin : text_app_catalog }}{{ not loop.last ? ', ' : '' }}{% endfor %}</dd>
+                <dt class="col-sm-3 fw-normal text-body-secondary">{{ text_events }}</dt><dd class="col-sm-9 mb-1">{% for e in ext.events %}<code>{{ e }}</code>{{ not loop.last ? ', ' : '' }}{% else %}{{ text_no_events }}{% endfor %}</dd>
+                <dt class="col-sm-3 fw-normal text-body-secondary">{{ text_sources }}</dt><dd class="col-sm-9 mb-0">{% for s in ext.sources %}<div><code>{{ s }}</code></div>{% else %}{{ text_no_sources }}{% endfor %}</dd>
+              </dl>
+            </details>{% endif %}
+          </td>
+          <td class="text-nowrap">
+            {% if ext.status == 'enabled' %}<span class="badge text-bg-success">{{ text_enabled }}</span>
+            {% elseif ext.status == 'disabled' %}<span class="badge text-bg-secondary">{{ text_disabled }}</span>
+            {% elseif ext.status == 'incompatible' %}<span class="badge text-bg-warning">{{ text_incompatible }}</span>
+            {% elseif ext.status == 'missing' %}<span class="badge text-bg-danger">{{ text_folder_missing }}</span>
+            {% else %}<span class="badge text-bg-danger">{{ text_invalid }}</span>{% endif %}
+            {% if ext.enabled and ext.status != 'enabled' %}<div class="small text-danger mt-1">{{ text_enabled }}</div>{% endif %}
+          </td>
+          {% if can_modify %}<td class="text-end text-nowrap">
+            {% if ext.has_settings and ext.edit %}<a class="btn btn-sm btn-outline-primary" href="{{ ext.edit }}"><i class="bi bi-sliders me-1" aria-hidden="true"></i>{{ button_configure }}</a>{% endif %}
+            {% if ext.enabled and ext.disable %}<form method="post" action="{{ ext.disable }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-toggle-off me-1" aria-hidden="true"></i>{{ button_disable }}</button></form>
+            {% elseif ext.can_enable and ext.enable %}<form method="post" action="{{ ext.enable }}" class="d-inline" data-rms-confirm="{{ text_confirm_enable }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-sm btn-success"><i class="bi bi-toggle-on me-1" aria-hidden="true"></i>{{ button_enable }}</button></form>{% endif %}
+            {% if not ext.enabled and ext.has_data and ext.purge %}<form method="post" action="{{ ext.purge }}" class="d-inline" data-rms-confirm="{{ text_confirm_purge }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash me-1" aria-hidden="true"></i>{{ button_purge }}</button></form>{% endif %}
+          </td>{% endif %}
+        </tr>{% else %}<tr><td colspan="{{ can_modify ? 3 : 2 }}" class="text-center text-body-secondary py-4">{{ text_no_results }}</td></tr>{% endfor %}
+      </tbody></table></div>
+    </section>
+  </div>
+</main>
+{{ footer|raw }}

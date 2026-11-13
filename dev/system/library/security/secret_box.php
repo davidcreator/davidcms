@@ -141,6 +141,14 @@ final class SecretBox {
         return 'setting.' . $key;
     }
 
+    /**
+     * Contexto do campo-segredo de uma extensão (EX-01, ADR 0095). Como nos
+     * demais, um valor cifrado copiado para outro campo ou outra extensão não abre.
+     */
+    public static function extensionContext(string $code, string $field): string {
+        return 'extension.' . $code . '.' . $field;
+    }
+
     public static function isSealed(string $value): bool {
         return str_starts_with($value, self::PREFIX);
     }

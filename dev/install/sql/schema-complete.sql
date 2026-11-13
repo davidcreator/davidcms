@@ -946,7 +946,8 @@ DROP TEMPORARY TABLE `tmp_f10_catalog_page`;
 --     JSON_SEARCH(permission,'one',X,NULL,'$.access') era silenciosamente
 --     ineficaz em MariaDB ≥10.4 (4º arg de path com escape NULL);
 --   • Em instalação NOVA o grupo Administrator é semeado pelo wizard (passo 3)
---     já com as 12 rotas canônicas — este bloco serve para base EXISTENTE.
+--     já com as rotas de `$seedRoutes` (install/model/install/install.php)
+--     — este bloco serve para base EXISTENTE.
 -- ============================================================================
 
 -- Hygiene F8-01: sanea "user\/user" (backslash literal) gravado por wizard que
@@ -1143,6 +1144,17 @@ UPDATE `rms_user_group`
 SET `permission` = JSON_ARRAY_APPEND(`permission`, '$.modify', 'custom_field/definition')
 WHERE (`name` = 'Administrator' OR `user_group_id` = 1)
   AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.modify'), 'one', 'custom_field/definition') IS NULL;
+
+-- extension/extension (EX-01, ADR 0095 — tela de extensões; mesmo conteúdo de
+-- upgrade_ex01_extension_grant.sql)
+UPDATE `rms_user_group`
+SET `permission` = JSON_ARRAY_APPEND(`permission`, '$.access', 'extension/extension')
+WHERE (`name` = 'Administrator' OR `user_group_id` = 1)
+  AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.access'), 'one', 'extension/extension') IS NULL;
+UPDATE `rms_user_group`
+SET `permission` = JSON_ARRAY_APPEND(`permission`, '$.modify', 'extension/extension')
+WHERE (`name` = 'Administrator' OR `user_group_id` = 1)
+  AND JSON_SEARCH(JSON_EXTRACT(`permission`, '$.modify'), 'one', 'extension/extension') IS NULL;
 
 -- F10-02 — Catalog Themes (same definitions as upgrade_f10_02_design_themes.sql).
 CREATE TABLE IF NOT EXISTS `rms_design_theme` (
