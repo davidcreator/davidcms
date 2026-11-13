@@ -29,6 +29,12 @@
  * vindos do servidor e valores validados aqui) e o render do servidor confirma
  * em seguida. Esta e a UNICA escrita no documento do quadro.
  *
+ * KZ-05 (ADR 0098) — atributos do elemento. O bloco "Elemento" ganha o
+ * destino do link (`href`), "abrir em nova aba", o texto alternativo de imagem
+ * (`alt`) e o rotulo para leitor de tela (`aria-label`). As regras de escrita
+ * ficam em kaz-element-attrs.js (window.KazElementAttrs); aqui fica so o
+ * painel. Esses campos nao escrevem no documento do quadro.
+ *
  * Independente de kaz-theme-editor.js: os dois conversam somente pelo evento
  * `kaz:module` e pelo atributo `data-kaz-active-module` do shell.
  */
@@ -84,6 +90,9 @@
   /* KZ-04 (ADR 0086): elemento dentro de um trecho. */
   var EL_ATTR = 'data-kz-el', EL_REF = /^([a-z0-9_\/-]{1,64}):(\d{1,5})$/;
   var TEXT_MAX = 2000, SOURCE_MAX = 131072, TEXT_LIST_MAX = 80, WS = ' \t\r\n\f';
+  /* KZ-05 (ADR 0098): regras de atributo. Sem o arquivo, os campos nao aparecem. */
+  var ATTRS = window.KazElementAttrs && typeof window.KazElementAttrs.setValue === 'function' ? window.KazElementAttrs : null;
+  var ATTR_FIELDS = ['href', 'alt', 'aria-label'];
 
   var view = { x: PAD, y: PAD + LABEL_H, k: 1 };
   var frames = {};          // id -> { el, iframe, label, device, on, height }
@@ -559,22 +568,187 @@
        e um espaco no fim nao se acumula a cada tecla. */
     var parts = trimWs(src.slice(it[4], it[5])), enc = trimWs(encodeText(t.value)).body;
     var next = src.slice(0, it[4]) + parts.lead + enc + parts.trail + src.slice(it[5]);
-    if (next.length > SOURCE_MAX) return;
+    /* KZ-05: fonte cheia avisa em vez de ignorar a tecla em silencio. */
+    if (next.length > SOURCE_MAX) { if (warn) { warn.hidden = false; warn.textContent = label('el_full', ''); } return; }
     var delta = next.length - src.length;
     /* O mapa local acompanha a escrita: a proxima tecla nao espera o servidor. */
     for (var j = n + 1; j < map.items.length; j++) {
       for (var k = 2; k <= 5; k++) if (map.items[j][k] >= 0) map.items[j][k] += delta;
+      /* KZ-05: os atributos dos elementos seguintes ficam depois deste texto. */
+      var later = map.items[j][7];
+      if (Array.isArray(later)) for (var a = 0; a < later.length; a++) for (k = 2; k <= 5; k++) later[a][k] += delta;
     }
     it[5] += delta;
     it[1] = trimWs(enc).body === '' ? 'empty' : 'fixed';
-    map.sig = sigOf(next);
-    picked.sig = map.sig;
     liveText = { key: key, n: n, text: String(t.value).slice(0, TEXT_MAX) };
     visibleFrames().forEach(function (f) { setElementText(frameDoc(f), key, n, liveText.text); });
+    commitSource(key, map, next);
+  }
+  /** A fonte de um trecho foi reescrita pelo painel: mapa, codigo a vista e campo real acompanham. */
+  function commitSource(key, map, next) {
+    map.sig = sigOf(next);
+    if (picked && picked.key === key) picked.sig = map.sig;
     var code = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-code]') : null;
     if (code && code.getAttribute('data-kaz-canvas-code') === key) code.value = next;
     writeSource(key, next);
     paintMarks();
+  }
+
+  /* ---------------- KZ-05: atributos do elemento ---------------- */
+  /** Valor de atributo do codigo -> valor como o navegador o le (entidades resolvidas). */
+  function decodeAttr(raw) {
+    raw = String(raw);
+    var q = raw.indexOf('"') === -1 ? '"' : "'";
+    if (raw.indexOf(q) !== -1 || typeof window.DOMParser !== 'function') return raw;
+    try {
+      /* Documento inerte: nada dele e executado, carregado ou mostrado. */
+      var doc = new window.DOMParser().parseFromString('<!doctype html><body><i title=' + q + raw + q + '></i>', 'text/html');
+      var el = doc.body ? doc.body.firstElementChild : null;
+      return el && el.localName === 'i' && el.getAttribute('title') !== null ? String(el.getAttribute('title')) : raw;
+    } catch (e) { return raw; }
+  }
+  function attrWarn(name, labelKey) {
+    var warn = inspectorEl && ATTR_FIELDS.concat(['newtab']).indexOf(name) !== -1 ? inspectorEl.querySelector('[data-kaz-canvas-attr-warn="' + name + '"]') : null;
+    if (!warn) return;
+    warn.hidden = !labelKey;
+    warn.textContent = labelKey ? label(labelKey, '') : '';
+  }
+  /** O que a fonte do tema tem agora, e o mapa dela, se os dois ainda combinam. */
+  function attrTarget() {
+    if (!picked || !ATTRS) return null;
+    var map = elements[picked.key], field = sourceField(picked.key);
+    if (!map || !field || field.value === '') return null;
+    return { key: picked.key, n: picked.n, map: map, src: field.value, fresh: map.sig === sigOf(field.value) };
+  }
+  /** Um campo de atributo mudou: reescreve so aquele valor na fonte do tema. */
+  function onAttrInput(t) {
+    var name = t.getAttribute('data-kaz-canvas-attr'), at = attrTarget();
+    if (!at || ATTR_FIELDS.indexOf(name) === -1) return;
+    if (!at.fresh) { attrWarn(name, 'el_stale'); return; }
+    var res = ATTRS.setValue(at.src, at.map, at.n, name, t.value);
+    if (res.error === 'link') { attrWarn(name, 'el_link_bad'); return; }
+    if (res.error === 'long') { attrWarn(name, 'el_full'); return; }
+    if (res.error || typeof res.src !== 'string') { attrWarn(name, 'el_stale'); return; }
+    attrWarn(name, '');
+    commitSource(at.key, at.map, res.src);
+  }
+  /** A caixa "abrir em nova aba" mudou: escreve ou retira `target` e `rel`. */
+  function onNewTab(t) {
+    var at = attrTarget(), res = at && at.fresh ? ATTRS.setNewTab(at.src, at.map, at.n, !!t.checked) : null;
+    if (!res || res.error || typeof res.src !== 'string') {
+      /* Nada foi escrito: a caixa volta a mostrar o que o codigo tem. */
+      t.checked = at ? ATTRS.newTab(at.src, at.map, at.n).on : false;
+      attrWarn('newtab', res && res.error === 'long' ? 'el_full' : 'el_stale');
+      return;
+    }
+    attrWarn('newtab', '');
+    commitSource(at.key, at.map, res.src);
+  }
+  function attrHelp(host, labelKey, expr) {
+    var p = make('p', 'kaz-canvas__sidehelp', label(labelKey, '') + (expr ? ' ' : ''));
+    if (expr) p.appendChild(make('code', 'kaz-canvas__expr', expr));
+    host.appendChild(p);
+    return p;
+  }
+  /** Campos de atributo do elemento escolhido. */
+  function paintAttrs(key, host, it, own, fresh) {
+    if (!ATTRS) return;
+    var tag = it[0], list = it[7], src = elementSource(key), shown = false;
+    if (!Array.isArray(list)) {
+      /* Tag que o servidor nao soube ler com seguranca: so avisa onde faria diferenca. */
+      if (tag === 'a' || tag === 'img') attrHelp(host, 'el_attr_locked', '');
+      return;
+    }
+    function warnLine(name) {
+      var warn = make('p', 'kaz-canvas__sidehelp kaz-canvas__sidehelp--warn', '');
+      warn.setAttribute('data-kaz-canvas-attr-warn', name);
+      warn.setAttribute('role', 'status');
+      warn.hidden = fresh;
+      if (!fresh) warn.textContent = label('el_stale', '');
+      host.appendChild(warn);
+    }
+    /* Um campo de texto para o valor de um atributo, ou a frase que explica por que nao ha campo. */
+    function valueField(name, title, help, fromData) {
+      var a = ATTRS.find(it, name);
+      if (!a) return false;
+      if (a[1] === 'variable') {
+        attrHelp(host, fromData, a[6] !== '' ? '{{ ' + a[6] + ' }}' : (fresh ? src.slice(a[2], a[3]).slice(0, 120) : ''))
+          .setAttribute('data-kaz-canvas-attr-from', name);
+        attrHelp(host, 'el_attr_variable_help', '');
+        return true;
+      }
+      if (a[1] !== 'fixed') { attrHelp(host, 'el_attr_locked', ''); return true; }
+      var id = 'kaz-canvas-el-attr-' + name;
+      var lab = make('label', 'kaz-canvas__fieldname', label(title, ''));
+      lab.setAttribute('for', id);
+      host.appendChild(lab);
+      var box = make('input', 'kaz-canvas__input');
+      box.type = 'text';
+      box.id = id;
+      box.maxLength = name === 'href' ? ATTRS.LINK_MAX : ATTRS.LABEL_MAX;
+      box.setAttribute('data-kaz-canvas-attr', name);
+      box.setAttribute('autocomplete', 'off');
+      if (name === 'href') {
+        box.setAttribute('inputmode', 'url');
+        box.setAttribute('spellcheck', 'false');
+        box.setAttribute('autocapitalize', 'off');
+      }
+      box.value = fresh ? decodeAttr(src.slice(a[2], a[3])) : '';
+      box.readOnly = !own || !fresh;
+      host.appendChild(box);
+      warnLine(name);
+      attrHelp(host, help, '');
+      shown = true;
+      return true;
+    }
+
+    if (valueField('href', 'el_link', 'el_link_help', 'el_link_variable') && tag === 'a') {
+      /* "Abrir em nova aba" fica logo abaixo do destino do link. */
+      var state = fresh ? ATTRS.newTab(src, { items: [it] }, 0) : { can: false, on: false };
+      var row = make('label', 'kaz-canvas__check');
+      var tick = make('input', '');
+      tick.type = 'checkbox';
+      tick.setAttribute('data-kaz-canvas-newtab', '');
+      tick.checked = state.on;
+      tick.disabled = !own || !fresh || !state.can;
+      row.appendChild(tick);
+      row.appendChild(make('span', '', label('el_newtab', '')));
+      host.appendChild(row);
+      warnLine('newtab');
+      attrHelp(host, fresh && !state.can ? 'el_newtab_locked' : 'el_newtab_help', '');
+      shown = true;
+    }
+    if (!valueField('alt', 'el_alt', 'el_alt_help', 'el_alt_variable') && tag === 'img') attrHelp(host, 'el_alt_missing', '');
+    valueField('aria-label', 'el_label', 'el_label_help', 'el_label_variable');
+    if (shown && !own) attrHelp(host, 'el_attr_need_customize', '');
+  }
+  /** Lista "Links deste trecho": caminho por teclado ate cada link de destino fixo. */
+  function paintLinkList(key, host) {
+    var map = elements[key];
+    if (!ATTRS || !map || !mapFresh(key)) return;
+    var src = elementSource(key), rows = [], total = 0;
+    map.items.forEach(function (it, n) {
+      var a = it[0] === 'a' ? ATTRS.find(it, 'href') : null;
+      if (!a || a[1] !== 'fixed') return;
+      total++;
+      if (rows.length < TEXT_LIST_MAX) rows.push([n, decodeAttr(src.slice(a[2], a[3]))]);
+    });
+    if (!rows.length) return;
+    host.appendChild(make('h5', 'kaz-canvas__sidesub', label('el_links', '')));
+    host.appendChild(make('p', 'kaz-canvas__sidehelp', label('el_links_help', '')));
+    var ul = make('ul', 'kaz-canvas__textlist');
+    rows.forEach(function (r) {
+      var li = make('li', ''), b = make('button', 'kaz-canvas__textrow', '');
+      b.type = 'button';
+      b.setAttribute('data-kaz-canvas-el', String(r[0]));
+      b.setAttribute('data-kaz-canvas-focus', 'href');
+      b.appendChild(make('code', 'kaz-canvas__texttag', 'a'));
+      b.appendChild(make('span', 'kaz-canvas__textsnip', r[1].length > 90 ? r[1].slice(0, 90) + '…' : r[1]));
+      li.appendChild(b);
+      ul.appendChild(li);
+    });
+    host.appendChild(ul);
+    if (total > rows.length) host.appendChild(make('p', 'kaz-canvas__sidehelp', label('el_links_more', '').replace('%s', String(total - rows.length))));
   }
   /** Mostra, no codigo do trecho, a tag de abertura do elemento escolhido. */
   function showInCode() {
@@ -646,6 +820,23 @@
       host.appendChild(make('p', 'kaz-canvas__sidehelp', label(kind === 'mixed' ? 'el_mixed' : (kind === 'void' ? 'el_void' : 'el_group'), '')));
     }
 
+    paintAttrs(key, host, it, own, fresh);
+    /* KZ-05: o clique costuma cair no texto ou no icone DENTRO do link; o link fica a um passo. */
+    if (ATTRS && it[0] !== 'a') {
+      for (var up = chain.length - 2; up >= 0; up--) {
+        var upItem = elementItem(key, chain[up]);
+        if (!upItem || upItem[0] !== 'a') continue;
+        var inLink = make('p', 'kaz-canvas__sidehelp', label('el_in_link', '') + ' ');
+        var go = make('button', 'kaz-canvas__crumb', label('el_go_link', ''));
+        go.type = 'button';
+        go.setAttribute('data-kaz-canvas-el', String(chain[up]));
+        go.setAttribute('data-kaz-canvas-focus', 'href');
+        inLink.appendChild(go);
+        host.appendChild(inLink);
+        break;
+      }
+    }
+
     var bar = make('div', 'kaz-canvas__actions');
     var show = make('button', 'kaz-btn kaz-btn--ghost', label('el_show_code', ''));
     show.type = 'button';
@@ -690,9 +881,11 @@
     var host = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-elbox]') : null, key = keyOf(selected);
     if (!host) return;
     clear(host);
+    /* O valor diz de que elemento e o bloco (vazio = lista do trecho). */
+    host.setAttribute('data-kaz-canvas-elbox', picked && key && picked.key === key ? picked.key + ':' + picked.n : '');
     if (!key) return;
     if (picked && picked.key === key) paintElement(key, host);
-    else paintTextList(key, host);
+    else { paintTextList(key, host); paintLinkList(key, host); }
   }
   /** Roda fn sem deixar o controle em uso (anchor) sair do lugar na rolagem do painel. */
   function steady(anchor, fn) {
@@ -703,11 +896,15 @@
   }
   /** O campo "Texto" esta em uso e o painel nao e reconstruido: so o aviso acompanha o mapa. */
   function syncElement() {
-    var warn = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-el-warn]') : null;
-    if (!warn || !picked) return;
+    if (!inspectorEl || !picked) return;
     var fresh = mapFresh(picked.key);
-    warn.hidden = fresh;
-    if (!fresh) warn.textContent = label('el_stale', '');
+    var warn = inspectorEl.querySelector('[data-kaz-canvas-el-warn]');
+    if (warn) {
+      warn.hidden = fresh;
+      if (!fresh) warn.textContent = label('el_stale', '');
+    }
+    /* KZ-05: com o mapa defasado, cada campo de atributo avisa; em dia, o aviso de destino recusado fica. */
+    if (!fresh) ATTR_FIELDS.concat(['newtab']).forEach(function (name) { attrWarn(name, 'el_stale'); });
   }
   /* ---------------- KZ-02: estrutura ---------------- */
   function make(tag, cls, text) {
@@ -818,6 +1015,14 @@
     /* Digitando no texto do mesmo elemento: idem. */
     var typing = inspectorEl.querySelector('[data-kaz-canvas-text]');
     if (typing && document.activeElement === typing && picked && typing.getAttribute('data-kaz-canvas-text') === picked.key + ':' + picked.n) {
+      paintSizes();
+      syncElement();
+      return;
+    }
+    /* KZ-05: num campo de atributo ou na caixa "nova aba" do mesmo elemento: idem. */
+    var using = document.activeElement, usingBox = using && using.closest ? using.closest('[data-kaz-canvas-elbox]') : null;
+    if (usingBox && inspectorEl.contains(usingBox) && picked && usingBox.getAttribute('data-kaz-canvas-elbox') === picked.key + ':' + picked.n &&
+        (using.getAttribute('data-kaz-canvas-attr') !== null || using.getAttribute('data-kaz-canvas-newtab') !== null)) {
       paintSizes();
       syncElement();
       return;
@@ -1426,6 +1631,8 @@
             [2, 3, 4, 5].every(function (k) { return typeof it[k] === 'number' && isFinite(it[k]); });
         });
         if (items.length !== m.items.length) return;
+        /* KZ-05: atributos conferidos; fora do formato, a tag fica sem campos de atributo. */
+        items.forEach(function (it) { it[7] = ATTRS ? ATTRS.clean(it[7]) : null; });
         var now = sigOf(elementSource(key)), old = elements[key];
         maps[key] = (old && old.sig === now && m.sig !== now) ? old : { sig: m.sig, items: items };
       });
@@ -1525,8 +1732,12 @@
         cur = up.node.parentElement;
       }
       pick({ key: elKey, n: want, inst: inst }, selected, true);
-      /* O foco segue: campo de texto editavel, senao o item atual do caminho. */
-      var again = inspectorEl ? (inspectorEl.querySelector('[data-kaz-canvas-text]:not([readonly])') ||
+      /* O foco segue: o campo pedido por quem chamou (lista de links), senao o primeiro campo
+         editavel, senao o item atual do caminho. */
+      var wantField = t.getAttribute('data-kaz-canvas-focus');
+      var asked = inspectorEl && ATTR_FIELDS.indexOf(wantField) !== -1
+        ? inspectorEl.querySelector('[data-kaz-canvas-attr="' + wantField + '"]:not([readonly])') : null;
+      var again = asked ? asked : inspectorEl ? (inspectorEl.querySelector('[data-kaz-canvas-text]:not([readonly]),[data-kaz-canvas-attr]:not([readonly])') ||
         inspectorEl.querySelector('[data-kaz-canvas-el][aria-current="true"]')) : null;
       if (again) again.focus();
       return;
@@ -1588,6 +1799,8 @@
     if (!t || !t.getAttribute) return;
     if (designEl && designEl.contains(t)) { onDesignInput(t); return; }
     if (t.getAttribute('data-kaz-canvas-text') !== null) { if (!t.readOnly) onTextInput(t); return; }
+    if (t.getAttribute('data-kaz-canvas-attr') !== null) { if (!t.readOnly) onAttrInput(t); return; }
+    if (t.getAttribute('data-kaz-canvas-newtab') !== null) { if (!t.disabled) onNewTab(t); return; }
     var key = t.getAttribute('data-kaz-canvas-code');
     if (!key || t.readOnly) return;
     writeSource(key, t.value);

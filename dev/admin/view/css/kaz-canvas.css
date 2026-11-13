@@ -223,6 +223,17 @@
 .kaz-canvas__texttag { flex: none; min-width: 34px; color: #c4b5fd; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; }
 .kaz-canvas__textsnip { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kaz-canvas__crumb:focus-visible, .kaz-canvas__text:focus-visible, .kaz-canvas__textrow:focus-visible { outline: 2px solid #31efb8; outline-offset: -1px; }
+/* KZ-05 (ADR 0098): atributos do elemento. */
+.kaz-canvas__input { display: block; width: 100%; margin: 4px 0; padding: 7px 8px; border: 1px solid #3f3f46; border-radius: 6px;
+  background: #121216; color: #f4f4f5; font: inherit; font-size: 13px; line-height: 1.45; }
+.kaz-canvas__input[readonly] { color: #a1a1aa; background: #18181b; }
+.kaz-canvas__input:focus-visible { outline: 2px solid #31efb8; outline-offset: -1px; }
+/* `.admin-content label` (admin.css) vence uma classe sozinha: por isso o seletor com o painel na frente. */
+.kaz-canvas .kaz-canvas__check { display: flex; align-items: center; gap: 8px; margin: 8px 0 2px; font-size: 12px; font-weight: 400; color: #d4d4d8; cursor: pointer; }
+.kaz-canvas__check input { flex: none; width: 16px; height: 16px; margin: 0; accent-color: #31efb8; }
+.kaz-canvas__check input:focus-visible { outline: 2px solid #31efb8; outline-offset: 2px; }
+.kaz-canvas__check input:disabled + span { color: #8b8b94; cursor: default; }
+.kaz-canvas__elbox .kaz-canvas__fieldname { display: block; margin-top: 10px; }
 .kaz-canvas__viewport { cursor: default; }
 .kaz-canvas__viewport[data-kaz-canvas-panning="1"] { cursor: grabbing; }
 

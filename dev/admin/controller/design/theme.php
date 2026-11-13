@@ -213,7 +213,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
         $data['kaz_scene_saved']=$savedScene!==null;
         $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
-        $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-aj-am';
+        $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz05';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAJ);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAJ);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
@@ -391,7 +391,12 @@ class Theme extends \Reamur\System\Engine\Controller {
                  'form_invalid','design_general','design_theme_vars','design_theme_vars_help','design_colors','design_sizes','design_unused',
                  'design_unused_help','design_dark_only','design_contrast','design_contrast_fail','design_no_vars','design_stale',
                  'el_title','el_path','el_text','el_text_help','el_empty','el_variable','el_variable_help','el_mixed','el_group','el_void',
-                 'el_repeats','el_need_customize','el_stale','el_show_code','el_whole_piece','el_texts','el_texts_help','el_more'] as $canvasKey) {
+                 'el_repeats','el_need_customize','el_stale','el_show_code','el_whole_piece','el_texts','el_texts_help','el_more',
+                 // KZ-05 (ADR 0098): atributos do elemento.
+                 'el_link','el_link_help','el_link_bad','el_link_variable','el_newtab','el_newtab_help','el_newtab_locked',
+                 'el_alt','el_alt_help','el_alt_variable','el_alt_missing','el_label','el_label_help','el_label_variable',
+                 'el_attr_variable_help','el_attr_locked','el_attr_need_customize','el_links','el_links_help','el_links_more',
+                 'el_in_link','el_go_link','el_full'] as $canvasKey) {
             $canvasLabels[$canvasKey]=$this->language->get('text_canvas_'.$canvasKey);
         }
         // KZ-02 (ADR 0084): nome legivel de cada fonte allowlistada (rota ou parte).
@@ -419,8 +424,10 @@ class Theme extends \Reamur\System\Engine\Controller {
             $canvasTokens['pairs'][$canvasPair['code']]=str_starts_with($canvasPairName,'text_canvas_')?$canvasPair['code']:$canvasPairName;
         }
         $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels,'parts'=>$canvasParts,'tokens'=>$canvasTokens],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
-        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz04';
+        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz05';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-canvas.css?v=' . $canvasAssetV);
+        // KZ-05 (ADR 0098): as regras de atributo vem antes do painel que as usa (os dois sao `defer`, na ordem).
+        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-element-attrs.js?v=' . $canvasAssetV);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-canvas.js?v=' . $canvasAssetV);
 
         $data=array_replace($this->language->all(),$data);

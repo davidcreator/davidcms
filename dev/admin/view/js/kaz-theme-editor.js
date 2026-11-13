@@ -952,6 +952,31 @@
     if (ev.target && ev.target.name && ev.target.name !== 'kaz_scene_json') formTouched = true;
     paintDirty();
   });
+  /* KZ-05 (ADR 0098): campo SEM `name` e controle so de tela (tamanho da tela, X/Y/W/H do objeto,
+     numeros da cena 3D) e nunca vai ao servidor. A validacao nativa do navegador contava com eles:
+     altura 540 com passo 8 a partir de 240 e "invalida", e como o campo estava escondido o navegador
+     barrava o envio sem mostrar nada. Salvar e Publicar nao enviavam o formulario.
+     Agora a conferencia e feita aqui, so nos campos COM nome (os que o servidor recebe). */
+  if (form) {
+    form.noValidate = true;
+    form.addEventListener('submit', function (ev) {
+      if (ev.submitter && ev.submitter.formNoValidate) return;
+      var bad = null, els = form.elements, i;
+      for (i = 0; i < els.length; i++) {
+        if (els[i].name && els[i].willValidate && !els[i].checkValidity()) { bad = els[i]; break; }
+      }
+      if (!bad) return;
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      /* O campo recusado precisa estar a vista para o navegador apontar o motivo. */
+      var panel = bad.closest ? bad.closest('[data-kaz-module-panel]') : null;
+      if (panel && panel.hidden) setModule(panel.getAttribute('data-kaz-module-panel'));
+      for (var up = bad.parentElement; up && up !== form; up = up.parentElement) {
+        if (up.tagName === 'DETAILS') up.open = true;
+      }
+      if (typeof bad.reportValidity === 'function') bad.reportValidity();
+    });
+  }
   if (form) form.addEventListener('submit', function () {
     syncField(); baseline = copy(scene);
     formBaseline = formSnapshot(); formTouched = false;

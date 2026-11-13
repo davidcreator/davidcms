@@ -21,6 +21,13 @@
  *    chave allowlistada e N inteiro. Nenhum texto do tema entra nele.
  *  - O atributo e informativo, nao uma barreira: o autor do tema pode escrever
  *    um igual no proprio codigo. O editor confere chave, indice e tag.
+ *
+ * KZ-05 (ADR 0098) — atributos do elemento. Para cada tag mapeada, a classe
+ * diz onde estao os VALORES de alguns atributos (href, target e rel de <a>;
+ * alt de <img>; aria-label de qualquer tag) e se cada valor e fixo ou vem de
+ * Twig. Quando a tag nao pode ser lida com seguranca (Twig solto entre os
+ * atributos, atributo repetido, aspa fora de lugar), `attrs` e null e o editor
+ * nao oferece nenhum campo de atributo para ela.
  */
 namespace Reamur\System\Library\Theme;
 
@@ -39,6 +46,18 @@ final class ThemeSourceMap {
 
     /** Tags sem conteudo. */
     private const VOID = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
+
+    /**
+     * Atributos cujo valor o editor conhece. `*` vale para qualquer tag.
+     * Lista fechada: nenhum outro atributo viaja para o navegador.
+     */
+    private const ATTRS = [
+        'a'   => ['href', 'target', 'rel'],
+        'img' => ['alt'],
+        '*'   => ['aria-label'],
+    ];
+
+    private const SPACE = " \t\n\r\f";
 
     /** Tags cujo conteudo e texto cru: nada dentro delas e tag. */
     private const RAW = ['style', 'script', 'textarea', 'title'];
@@ -61,7 +80,10 @@ final class ThemeSourceMap {
      * mixed (texto com Twig), empty (sem conteudo), void (tag sem conteudo
      * possivel) ou group (tem outros elementos dentro).
      *
-     * @return list<array{n:int,tag:string,at:int,open:array{0:int,1:int},text:?array{0:int,1:int},kind:string,expr:string}>
+     * `attrs` (KZ-05): atributos conhecidos escritos na tag, ou null quando a
+     * tag nao pode ser lida com seguranca. Ver attributes().
+     *
+     * @return list<array{n:int,tag:string,at:int,open:array{0:int,1:int},text:?array{0:int,1:int},kind:string,expr:string,attrs:?list<array{name:string,kind:string,value:array{0:int,1:int},span:array{0:int,1:int},expr:string}>}>
      */
     public static function scan(string $source): array {
         $len = strlen($source);
@@ -117,6 +139,7 @@ final class ThemeSourceMap {
                     if ($current >= 0) {
                         $tag = $out[$current]['tag'];
                         $out[$current]['open'][1] = $i + 1;
+                        $out[$current]['attrs'] = self::attributes($source, $out[$current]['at'], $i, $tag);
                         if ($last === '/' || in_array($tag, self::VOID, true)) {
                             $out[$current]['kind'] = 'void';
                         } elseif (in_array($tag, self::RAW, true)) {
@@ -172,7 +195,7 @@ final class ThemeSourceMap {
             // Nome de tag montado com Twig (<h{{ n }}>): nao da para apontar com seguranca.
             $dynamic = $after + 1 < $len && $source[$after] === '{' && ($source[$after + 1] === '{' || $source[$after + 1] === '%' || $source[$after + 1] === '#');
             if (!$dynamic && $svg === 0 && !in_array($name, self::SKIP, true) && count($out) < self::MAX_ELEMENTS) {
-                $out[] = ['n' => count($out), 'tag' => $name, 'at' => $after, 'open' => [$i, $after], 'text' => null, 'kind' => 'group', 'expr' => ''];
+                $out[] = ['n' => count($out), 'tag' => $name, 'at' => $after, 'open' => [$i, $after], 'text' => null, 'kind' => 'group', 'expr' => '', 'attrs' => null];
                 $current = count($out) - 1;
             } elseif (!$dynamic && in_array($name, self::RAW, true)) {
                 // <style>/<script>/<title> nao viram elemento, mas o conteudo deles e pulado.
@@ -213,17 +236,24 @@ final class ThemeSourceMap {
      * JavaScript) sobre a fonte com quebras `\n`. `sig` identifica a fonte
      * medida: o editor so escreve quando o campo tem exatamente este conteudo.
      *
-     * Cada item: [tag, kind, abre_ini, abre_fim, texto_ini, texto_fim, expr]
+     * Cada item: [tag, kind, abre_ini, abre_fim, texto_ini, texto_fim, expr, atributos]
      * (texto_ini/texto_fim = -1 quando o elemento nao e folha).
      *
-     * @param list<array{n:int,tag:string,at:int,open:array{0:int,1:int},text:?array{0:int,1:int},kind:string,expr:string}> $elements
-     * @return array{sig:string,items:list<array{0:string,1:string,2:int,3:int,4:int,5:int,6:string}>}
+     * `atributos` (KZ-05) e null quando a tag nao pode ser lida com seguranca,
+     * ou uma lista de [nome, kind, valor_ini, valor_fim, atributo_ini, atributo_fim, expr].
+     *
+     * @param list<array<string,mixed>> $elements resultado de scan() sobre a MESMA fonte
+     * @return array{sig:string,items:list<array{0:string,1:string,2:int,3:int,4:int,5:int,6:string,7:?list<array{0:string,1:string,2:int,3:int,4:int,5:int,6:string}>}>}
      */
     public static function describe(string $source, array $elements): array {
         $wanted = [];
         foreach ($elements as $el) {
             $wanted[$el['open'][0]] = 0; $wanted[$el['open'][1]] = 0;
             if ($el['text'] !== null) { $wanted[$el['text'][0]] = 0; $wanted[$el['text'][1]] = 0; }
+            foreach ($el['attrs'] ?? [] as $attr) {
+                $wanted[$attr['value'][0]] = 0; $wanted[$attr['value'][1]] = 0;
+                $wanted[$attr['span'][0]] = 0; $wanted[$attr['span'][1]] = 0;
+            }
         }
         ksort($wanted);
         $ascii = preg_match('/[\x80-\xff]/', $source) !== 1;
@@ -235,11 +265,24 @@ final class ThemeSourceMap {
         }
         $items = [];
         foreach ($elements as $el) {
+            $attrs = null;
+            if (is_array($el['attrs'] ?? null)) {
+                $attrs = [];
+                foreach ($el['attrs'] as $attr) {
+                    $attrs[] = [
+                        $attr['name'], $attr['kind'],
+                        $wanted[$attr['value'][0]], $wanted[$attr['value'][1]],
+                        $wanted[$attr['span'][0]], $wanted[$attr['span'][1]],
+                        $attr['expr'],
+                    ];
+                }
+            }
             $items[] = [
                 $el['tag'], $el['kind'], $wanted[$el['open'][0]], $wanted[$el['open'][1]],
                 $el['text'] !== null ? $wanted[$el['text'][0]] : -1,
                 $el['text'] !== null ? $wanted[$el['text'][1]] : -1,
                 $el['expr'],
+                $attrs,
             ];
         }
         return ['sig' => self::signature($source), 'items' => $items];
@@ -273,14 +316,111 @@ final class ThemeSourceMap {
         $el['kind'] = 'mixed';
         if (count($twigIn) !== 1) return;
         [$a, $b] = $twigIn[0];
-        $piece = substr($source, $a, $b - $a);
         if (trim(substr($source, $start, $a - $start) . substr($source, $b, $end - $b)) !== '') return;
-        if (preg_match('/^\{\{-?~?\s*(.*?)\s*~?-?\}\}$/Ds', $piece, $m) !== 1) return;
+        $expr = self::printed(substr($source, $a, $b - $a));
+        if ($expr === null) return;
         $el['kind'] = 'variable';
+        $el['expr'] = $expr;
+    }
+
+    /** Expressao de um `{{ ... }}` sozinho, pronta para mostrar; null se o trecho nao e isso. */
+    private static function printed(string $piece): ?string {
+        if (preg_match('/^\{\{-?~?\s*(.*?)\s*~?-?\}\}$/Ds', $piece, $m) !== 1) return null;
         $expr = (string)preg_replace('/\s+/', ' ', $m[1]);
-        $el['expr'] = strlen($expr) > self::MAX_EXPR ? substr($expr, 0, self::MAX_EXPR) : $expr;
+        if (strlen($expr) > self::MAX_EXPR) $expr = substr($expr, 0, self::MAX_EXPR);
         // Corte no meio de um caractere multibyte nao pode virar JSON invalido.
-        if (preg_match('//u', $el['expr']) !== 1) $el['expr'] = '';
+        return preg_match('//u', $expr) === 1 ? $expr : '';
+    }
+
+    /**
+     * Atributos conhecidos de UMA tag de abertura, entre o nome da tag ($i) e o
+     * `>` que a fecha ($end, exclusivo). Posicoes em bytes na fonte.
+     *
+     * Cada item: `value` e o intervalo do valor (sem as aspas) e `span` vai do
+     * nome do atributo ate depois da aspa final. `kind`:
+     *  - fixed:    valor entre aspas, sem Twig;
+     *  - variable: valor entre aspas com Twig (`expr` quando e um `{{ ... }}` so);
+     *  - bare:     atributo sem valor ou com valor sem aspas (nao editavel).
+     *
+     * Devolve null (tag fechada para o editor) quando ha Twig solto entre os
+     * atributos, um nome repetido, aspa fora do inicio de um valor, atributo
+     * colado no anterior ou valor sem fim: em qualquer desses casos o que esta
+     * escrito nao diz com certeza qual atributo a pagina vai ter.
+     *
+     * @return ?list<array{name:string,kind:string,value:array{0:int,1:int},span:array{0:int,1:int},expr:string}>
+     */
+    private static function attributes(string $source, int $i, int $end, string $tag): ?array {
+        $wanted = array_merge(self::ATTRS[$tag] ?? [], self::ATTRS['*']);
+        $found = [];
+        $seen = [];
+        while (true) {
+            $gap = strspn($source, self::SPACE, $i, $end - $i);
+            $i += $gap;
+            if ($i >= $end) break;
+            $c = $source[$i];
+            if ($c === '/') { $i++; continue; }
+            if ($gap === 0) return null;
+            $nameLen = strcspn($source, self::SPACE . "=/>\"'<{", $i, $end - $i);
+            if ($nameLen === 0) return null;
+            $name = strtolower(substr($source, $i, $nameLen));
+            if (isset($seen[$name])) return null;
+            $seen[$name] = true;
+            $start = $i;
+            $i += $nameLen;
+
+            $kind = 'bare';
+            $value = [$i, $i];
+            $expr = '';
+            $j = $i + strspn($source, self::SPACE, $i, $end - $i);
+            if ($j < $end && $source[$j] === '=') {
+                $j++;
+                $j += strspn($source, self::SPACE, $j, $end - $j);
+                if ($j >= $end) return null;
+                $q = $source[$j];
+                if ($q === '"' || $q === "'") {
+                    $k = $j + 1;
+                    $twig = [];
+                    while ($k < $end && $source[$k] !== $q) {
+                        if (self::twigAt($source, $k, $end)) {
+                            $stop = self::twigEnd($source, $k, $end);
+                            $twig[] = [$k, $stop];
+                            $k = $stop;
+                            continue;
+                        }
+                        $k++;
+                    }
+                    if ($k >= $end) return null;
+                    $value = [$j + 1, $k];
+                    $kind = 'fixed';
+                    if ($twig !== []) {
+                        $kind = 'variable';
+                        if (count($twig) === 1 && trim(substr($source, $j + 1, $twig[0][0] - $j - 1) . substr($source, $twig[0][1], $k - $twig[0][1])) === '') {
+                            $expr = (string)self::printed(substr($source, $twig[0][0], $twig[0][1] - $twig[0][0]));
+                        }
+                    }
+                    $i = $k + 1;
+                } else {
+                    $k = $j;
+                    while ($k < $end && strpos(self::SPACE, $source[$k]) === false) {
+                        if ($source[$k] === '"' || $source[$k] === "'") return null;
+                        if (self::twigAt($source, $k, $end)) { $k = self::twigEnd($source, $k, $end); continue; }
+                        $k++;
+                    }
+                    if ($k > $end) return null;
+                    $value = [$j, $k];
+                    $i = $k;
+                }
+            }
+            if (in_array($name, $wanted, true)) {
+                $found[] = ['name' => $name, 'kind' => $kind, 'value' => $value, 'span' => [$start, $i], 'expr' => $expr];
+            }
+        }
+        return $found;
+    }
+
+    /** Ha um delimitador de abertura do Twig em $i? */
+    private static function twigAt(string $source, int $i, int $len): bool {
+        return $source[$i] === '{' && $i + 1 < $len && ($source[$i + 1] === '{' || $source[$i + 1] === '%' || $source[$i + 1] === '#');
     }
 
     /** Fim (exclusivo) do trecho Twig que comeca em $i. Sem fechamento: vai ate o fim da fonte. */

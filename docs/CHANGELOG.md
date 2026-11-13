@@ -1,5 +1,21 @@
 # Changelog
 
+## KZ-05 — KAZEditor-Theme: editar link, texto alternativo e rótulo do elemento (2026-11-13)
+- ADR 0098. Quinta etapa do caminho B do editor de tema; cor e tamanho por elemento (KZ-06) vêm depois.
+- **Novo no painel Elemento:** **Destino do link** (`href` de links), **Texto alternativo** (`alt` de imagens) e **Rótulo para leitor de tela** (`aria-label` de qualquer elemento). Cada campo troca só o valor entre as aspas em `templates[chave]`; o resto do código fica byte a byte igual. Nada é gravado até salvar o rascunho.
+- **Abrir em nova aba:** a caixa escreve `target="_blank"` e `rel="noopener"` na tag do link, e retira ao desmarcar. Um `rel` do autor (por exemplo `noopener me`) é mantido.
+- **Destinos aceitos:** caminho do site (`/contato`), âncora (`#secao`), consulta (`?pagina=2`), `https://`, `http://`, `mailto:` e `tel:`. O resto (`javascript:`, `data:`, `//site`, endereço com `usuario@`) é recusado com aviso, e o código continua com o destino anterior.
+- **Valor que vem do conteúdo do site** (`href="{{ … }}"`) mostra a expressão de origem e não é editado ali. Imagem sem `alt` no código recebe um aviso. Trecho padrão do sistema pede **Personalizar este trecho** antes de editar.
+- **Chegar ao link:** quando o clique cai no texto ou no ícone dentro do link, o painel oferece **Editar o link**. Com o trecho inteiro selecionado, a lista **Links deste trecho** leva a cada link pelo teclado.
+- **Correção: o botão Salvar do editor de tema não enviava o formulário.** Controles só de tela (altura da tela, X/Y/W/H do objeto, números da cena 3D) ficavam fora do passo configurado neles e o navegador barrava o envio sem mostrar nada; **Publicar** usa o mesmo formulário. Medido em Chromium nos seis pacotes: nenhum salvava. Agora só os campos que vão ao servidor são conferidos antes do envio. O defeito é anterior a esta etapa.
+- **Correção:** o padrão do campo `slug` era ignorado pelo navegador (expressão inválida). Slug fora do padrão passa a ser apontado no campo antes do envio; a regra do servidor é a mesma.
+- **Atenção ao atualizar um site instalado:** suba os arquivos. Não há SQL, linha nova no `config.php` nem configuração. Os endereços dos scripts do editor mudaram de versão (`-kaz-canvas-kz05`, `-kaz-theme-editor-kz05`); não é preciso limpar o cache do navegador.
+- **Banco e dados salvos:** nenhuma tabela, coluna, rota ou campo novo no `POST`. Nenhum controle novo tem `name`.
+- **Para quem escreve código:** `Theme\ThemeSourceMap` devolve os atributos de cada tag (oitavo campo de cada item de `elements`); as regras de escrita ficam em `admin/view/js/kaz-element-attrs.js`, sem acesso a página, rede ou armazenamento, e são conferidas por `node tests/check_kaz_element_attrs.js` (chamado também pelo PHPUnit).
+- **Limites:** o painel não cria nem apaga `href`, `alt` ou `aria-label`; só troca o valor de um que já existe e esteja escrito entre aspas, sem Twig. Nenhum dos seis pacotes tem `alt` fixo: esse campo foi provado com um pacote de teste. O destino aceito não é conferido contra as páginas do site.
+- **Conferido:** 1564 testes em PHP 8.2 e 8.3; no Chromium, os seis pacotes de `docs/temas` e um pacote de prova, com salvar e reabrir. Outros navegadores não foram testados.
+- **Achado, não corrigido:** o pacote `David-Universe-3D` traz um desenho SVG com um código de cor no meio do traçado (`M40 24h80v84#eb767e40z`), em quatro trechos; o selo não é desenhado. Ver ADR 0098.
+
 ## Extensões EX-03 — contrato de meio de pagamento (2026-11-13)
 - ADR 0097. Terceira etapa da frente de extensões. Não acrescenta meio de pagamento, tela, tabela nem configuração.
 - **Para quem usa o site: nada muda.** Mesmos endereços (`checkout/payment.pay|<chave>`, `checkout/payment.notify`), mesma tela *Mercado Pago*, mesmo botão na lista de pedidos, mesmas respostas ao Mercado Pago, mesmos avisos na tela e mesmas linhas de log. Links já enviados a clientes e avisos de cobranças antigas continuam valendo.
