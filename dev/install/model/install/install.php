@@ -29,9 +29,24 @@ class Install extends \Reamur\System\Engine\Model {
      *
      * @param array{db_driver: string, db_hostname: string, db_username: string, db_password: string, db_database: string, db_port: int|string} $data
      */
-    public function connect(array $data): bool {
+    public function connect(array $data, int $timeout = 60): bool {
         $this->handle = null;
         $this->error  = '';
+
+        // ADR 0091: sem limite, um destino que aceita a conexão e não responde
+        // prendia o PHP (o padrão do mysqlnd para leitura é 86400 s). O limite
+        // de leitura é fixado na abertura da conexão; os valores do ini voltam
+        // ao que eram logo depois.
+        $timeout  = max(1, $timeout);
+        $previous = [];
+
+        foreach (['mysqlnd.net_read_timeout', 'default_socket_timeout'] as $key) {
+            $old = @ini_set($key, (string)$timeout);
+
+            if (is_string($old)) {
+                $previous[$key] = $old;
+            }
+        }
 
         try {
             if ($data['db_driver'] === 'mysqli') {
@@ -56,13 +71,17 @@ class Install extends \Reamur\System\Engine\Model {
                     ),
                     (string)$data['db_username'],
                     (string)$data['db_password'],
-                    [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]
+                    [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION, \PDO::ATTR_TIMEOUT => $timeout]
                 );
             }
         } catch (\mysqli_sql_exception|\PDOException $e) {
             $this->error = $e->getMessage();
 
             return false;
+        } finally {
+            foreach ($previous as $key => $old) {
+                @ini_set($key, $old);
+            }
         }
 
         return true;

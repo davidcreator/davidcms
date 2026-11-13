@@ -24,6 +24,7 @@
 #     mostra detalhe de erro (error_display off — ADR 0037 / 0088)
 #  13 Headers de segurança (ADR 0037): nosniff + frame + referrer
 #  14 Ausências dev-only: /install /tests /agents-ia /docs /.git /prod ≠ 200
+#     (warn: /install/ presente e travado, respondendo 403 — ADR 0091)
 #  15 TTFB (warn apenas, não reprova)
 #  16 Cookie de sessão: HttpOnly + SameSite sempre, e Secure quando o
 #     alvo é https (ADR 0089: atrás de CDN o PHP pode não enxergar o HTTPS)
@@ -156,6 +157,11 @@ for p in install/ tests/ agents-ia/ docs/ .git/config prod/ planejamento/ \
   st=$(code "$DOMAIN/$p")
   case "$st" in 200|301|302) RC=1; echo "   ↳ /$p visível ($st) — apague do servidor!";; esac
 done
+# ADR 0091 (S12): o instalador do CMS, travado, responde 403 e passa no laço
+# acima. A pasta não tem uso depois da instalação e não deveria estar no ar.
+if curl -sk -m 15 "$DOMAIN/install/" | head -c 800 | grep -q "Install locked"; then
+  wn "/install/ presente no servidor (instalador travado, responde 403) — apague a pasta"
+fi
 ck 14 $RC "ausencias-devonly"
 
 echo '── 15 — TTFB ──'

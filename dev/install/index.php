@@ -56,19 +56,20 @@ if (!defined('DIR_APPLICATION')) {
     define('HTTPS_SERVER', HTTP_SERVER);
 }
 
-// 5. Trava pós-instalação (F2-18, ADR 0018): o passo 4 (Concluído) grava
-//    system/storage/install.lock; depois disso o wizard fica SELADO e todo
-//    acesso recebe 403. Para reinstalar: apague install.lock + os config.php.
-if (is_file(DIR_STORAGE . 'install.lock')) {
+// 5. Trava pós-instalação (F2-18, ADR 0018; ADR 0091): o instalador se recusa
+//    (403) quando existe system/storage/install.lock OU um config.php do site.
+//    A trava sozinha não bastava: ela faltava quando o assistente era
+//    interrompido, quando a pasta storage não aceitava escrita e quando o
+//    config.php era criado à mão. Decidido ANTES de subir o núcleo.
+//    Para reinstalar: apague install.lock + os dois config.php.
+require_once(dirname(__DIR__) . '/system/library/security/install_seal.php');
+
+if (\Reamur\System\Library\Security\InstallSeal::isSealed(DIR_STORAGE, dirname(__DIR__))) {
     http_response_code(403);
     header('Content-Type: text/html; charset=utf-8');
     header('X-Content-Type-Options: nosniff');
-    echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>ReamurCMS — Install locked</title></head>'
-        . '<body style="font-family:sans-serif;max-width:640px;margin:64px auto;text-align:center;">'
-        . '<h1>Installation locked</h1>'
-        . '<p>This ReamurCMS is already installed and the installer is sealed.</p>'
-        . '<p>To reinstall, delete <code>dev/system/storage/install.lock</code> and the generated <code>catalog/config.php</code> and <code>admin/config.php</code>.</p>'
-        . '</body></html>';
+    header('Cache-Control: no-store');
+    echo \Reamur\System\Library\Security\InstallSeal::lockedPage();
     exit();
 }
 

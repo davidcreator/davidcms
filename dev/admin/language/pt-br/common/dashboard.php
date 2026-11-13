@@ -73,6 +73,7 @@ $_['action_import_wp']   = 'Importar do WordPress';
 
 // ADR 0088 (S3)
 $_['warning_error_display'] = 'A exibição de erros está ligada nesta instalação: se algo falhar, detalhes técnicos (arquivo, linha, SQL) aparecem na tela para qualquer visitante. Em produção, defina REAMUR_ERROR_DISPLAY como false nos arquivos config.php de catalog/ e admin/.';
+$_['warning_install_folder'] = 'A pasta install ainda está no servidor. O instalador está travado e responde 403, mas a pasta não tem uso depois da instalação: apague-a do servidor.';
 
 // ADR 0089 (S5): conexão, proxy e CDN
 $_['text_conn_heading']           = 'Conexão';

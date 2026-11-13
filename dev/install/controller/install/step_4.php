@@ -8,6 +8,8 @@
  *
  * Wizard — Passo 4: Concluído (ADR 0007). Só exibe quando ESTA sessão
  * concluiu a instalação (session install_done gravada pelo passo 3).
+ * Desde a ADR 0091 é chamado pelo passo 3 (mesma resposta); pela URL, com o
+ * site instalado, a rota responde o 403 da trava como todo o instalador.
  * Conteúdo exclusivo do ReamurCMS público (módulos blog/chat/mooc, loja de
  * extensões, promotion) NÃO faz parte deste projeto — decisão do mantenedor.
  */
@@ -23,11 +25,10 @@ class Step_4 extends \Reamur\System\Engine\Controller {
             return;
         }
 
-        // F2-18 (ADR 0018): sela o installer — a partir desta página concluída,
-        // todo acesso a install/ recebe 403 até install.lock ser removido.
-        if (defined('DIR_STORAGE')) {
-            @file_put_contents(DIR_STORAGE . 'install.lock', "installed " . date('c') . "\n");
-        }
+        // ADR 0091 (S12): a trava (install.lock) é gravada pelo passo 3, junto
+        // com a instalação, e não mais aqui. Antes ela dependia de esta página
+        // ser aberta e de a gravação dar certo, sem aviso quando falhava.
+        // Esta página é renderizada pelo próprio passo 3, na mesma resposta.
 
         $this->load->language('install/step_4');
 

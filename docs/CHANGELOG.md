@@ -1,5 +1,17 @@
 # Changelog
 
+## Segurança S12 — instalador fechado pelo estado real da instalação (2026-11-12)
+- ADR 0091. Achado da análise, reproduzido na instalação de teste antes da correção.
+- **Corrigido:** o instalador só se fechava com o arquivo `install.lock`, gravado ao abrir a página do passo 4. Com o site instalado e a trava ausente (assistente interrompido, pasta `storage` sem permissão de escrita, `config.php` criado à mão), qualquer visitante refazia a instalação com um banco dele: os `config.php` eram regravados, o dono perdia o login e o visitante entrava no admin. Agora o instalador responde 403 quando existe `install.lock` **ou** um `config.php` do site, antes de subir o núcleo.
+- **Passo 3:** a trava é gravada junto com a instalação. Se ela não puder ser gravada, nada é instalado e o erro aparece no formulário (antes, a página dizia "Instalação concluída" e a falha passava em silêncio). Se a gravação de um `config.php` ou a importação do banco falhar, o que foi gravado em disco é desfeito.
+- **Página de conclusão:** sai na resposta do passo 3. Recarregá-la mostra "Installation locked".
+- **"Testar conexão":** limite de 5 s (antes, um destino que aceita a conexão e não responde prendia o PHP) e recusa de `;`, `=` e espaço no servidor do banco.
+- **Painel inicial do admin:** aviso enquanto a pasta `install/` existir no servidor. Em `pt-br`, `en-us` e `es-eu`.
+- `tools/check_producao.sh`, check 14: avisa quando `/install/` está no servidor com o instalador travado (respondia 403 e passava como ausente).
+- **Efeito em site existente:** nenhum para quem tem `install.lock`. Para reinstalar, apague `install.lock` e os dois `config.php`; apagar só a trava deixa de bastar.
+- Nova classe pura `Security\InstallSeal`. Sem tabela, coluna, migration, rota, configuração ou dependência nova.
+- **Site antigo em produção:** o `/install/` que responde 200 em `davidalmeida.xyz` é o instalador do site antigo, fora deste repositório. Apague a pasta `install` do servidor.
+
 ## Segurança S6 + S7 — requisições de saída usam o IP conferido (2026-11-12)
 - ADR 0090. Achados da análise, reproduzidos antes da correção em uma rede isolada com DNS, "site público" e "serviço interno" de teste.
 - **Corrigido (S7):** a guarda contra SSRF consultava o DNS e o cURL consultava de novo. Um nome que responde um IP público na primeira consulta e `127.0.0.1` na segunda fazia o importador de blog ler um serviço interno do servidor (página de posts, redirecionamento e imagem de capa) e fazia o webhook abrir conexão nele. Agora o cURL conecta só nos endereços que a guarda conferiu (`CURLOPT_RESOLVE`), no webhook a cada tentativa e no importador a cada redirecionamento.

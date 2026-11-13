@@ -45,23 +45,9 @@ class Step_3 extends \Reamur\System\Engine\Controller {
                     // Banco não vazio: aborta (protege instalação existente)
                     $data['error']['database'] = $this->language->get('error_db_exists');
                 } else {
-                    $error_config = '';
+                    $data['error'] = $this->install($db, $prefix);
 
-                    if (!$this->writeConfigs($db, $prefix, $error_config)) {
-                        $data['error']['config'] = $this->language->get('error_config') . ' ' . $error_config;
-                    } else {
-                        $this->model_install_install->importSchema($prefix);
-
-                        // Grupo Administrator já nasce com access+modify em
-                        // 'user/user' e 'user/user_group' (Adendo F2-6 do ADR 0005)
-                        $this->model_install_install->createAdministrator([
-                            'username'  => trim($this->postScalar('username')),
-                            'firstname' => trim($this->postScalar('firstname')),
-                            'lastname'  => trim($this->postScalar('lastname')),
-                            'email'     => trim($this->postScalar('email')),
-                            'password'  => $this->postScalar('password'),
-                        ], $prefix);
-
+                    if ($data['error'] === []) {
                         // URLs públicas REAIS vêm da entrada do usuário (site_url) —
                         // jamais de SCRIPT_NAME/PATH_INFO (armadilha SAPI corrigida na F2-5).
                         $this->session->data['install_done']  = true;
@@ -70,7 +56,10 @@ class Step_3 extends \Reamur\System\Engine\Controller {
 
                         unset($this->session->data['install_db']); // legado do fluxo s3/s4 separado
 
-                        $this->response->redirect($this->url->link('install/step_4'));
+                        // ADR 0091 (S12): a conclusão sai NESTA resposta. O
+                        // instalador já está travado; um redirect para o
+                        // passo 4 receberia o 403 da trava.
+                        $this->load->controller('install/step_4');
 
                         return;
                     }
@@ -103,13 +92,102 @@ class Step_3 extends \Reamur\System\Engine\Controller {
 
         $db = $this->dbCredentials();
 
+        // ADR 0091: nome de servidor/banco fora do padrão nem chega ao driver,
+        // e o teste desiste em poucos segundos (um destino que aceita a
+        // conexão e fica calado prendia o PHP por tempo indeterminado).
+        if (!self::isDbHost($db['db_hostname']) || !self::isDbName($db['db_database']) || !ctype_digit($db['db_port']) || strlen($db['db_port']) > 5) {
+            $this->jsonResponse([
+                'success' => false,
+                'error'   => $this->language->get('error_db_hostname'),
+            ], 200, true);
+
+            return;
+        }
+
         $ok = in_array($db['db_driver'], ['mysqli', 'pdo'], true)
-            && $this->model_install_install->connect($db);
+            && $this->model_install_install->connect($db, self::TEST_TIMEOUT);
 
         $this->jsonResponse([
             'success' => $ok,
             'error'   => $ok ? '' : $this->model_install_install->getError(),
         ], 200, true);
+    }
+
+    /** Segundos de espera do botão "Testar conexão". */
+    private const TEST_TIMEOUT = 5;
+
+    /**
+     * Servidor do banco: nome, IP, "nome:porta", "p:nome" (mysqli persistente)
+     * ou caminho de socket. Sem ';', '=', espaço nem controle: no PDO o valor
+     * entra no DSN, e "x;unix_socket=..." trocaria o destino.
+     */
+    public static function isDbHost(string $host): bool {
+        return preg_match('#^[A-Za-z0-9._:/\[\]-]{1,255}$#D', $host) === 1;
+    }
+
+    /** Nome do banco: livre, menos o que quebra o DSN (';') e bytes de controle. */
+    public static function isDbName(string $name): bool {
+        return $name !== '' && strlen($name) <= 64 && preg_match('/[\x00-\x1f\x7f;]/', $name) !== 1;
+    }
+
+    /**
+     * Executa a instalação (ADR 0091, S12). Ordem: trava → config.php → banco.
+     *
+     * A trava vem primeiro: se ela não puder ser gravada, nada foi alterado e
+     * o erro aparece na tela. Se uma etapa seguinte falhar, o que esta
+     * tentativa gravou em disco é desfeito, para permitir nova tentativa.
+     *
+     * @param array<string, mixed> $db
+     *
+     * @return array<string, string> Erros por campo (vazio = instalado)
+     */
+    private function install(array $db, string $prefix): array {
+        $seal = \Reamur\System\Library\Security\InstallSeal::class;
+
+        if (!$seal::seal(DIR_STORAGE)) {
+            return ['config' => $this->language->get('error_lock') . ' ' . DIR_STORAGE . $seal::LOCK];
+        }
+
+        $error_config = '';
+
+        if (!$this->writeConfigs($db, $prefix, $error_config)) {
+            $this->undoInstall();
+
+            return ['config' => $this->language->get('error_config') . ' ' . $error_config];
+        }
+
+        try {
+            $this->model_install_install->importSchema($prefix);
+
+            // Grupo Administrator já nasce com access+modify em
+            // 'user/user' e 'user/user_group' (Adendo F2-6 do ADR 0005)
+            $this->model_install_install->createAdministrator([
+                'username'  => trim($this->postScalar('username')),
+                'firstname' => trim($this->postScalar('firstname')),
+                'lastname'  => trim($this->postScalar('lastname')),
+                'email'     => trim($this->postScalar('email')),
+                'password'  => $this->postScalar('password'),
+            ], $prefix);
+        } catch (\Throwable $e) {
+            $this->undoInstall();
+
+            return ['database' => $this->language->get('error_import') . ' ' . $e->getMessage()];
+        }
+
+        return [];
+    }
+
+    /** Desfaz o que a tentativa gravou em disco: os dois config.php e a trava. */
+    private function undoInstall(): void {
+        $seal = \Reamur\System\Library\Security\InstallSeal::class;
+
+        foreach ($seal::configFiles(dirname(__DIR__, 3)) as $file) {
+            if (is_file($file)) {
+                @unlink($file);
+            }
+        }
+
+        $seal::unseal(DIR_STORAGE);
     }
 
     // ─── internos ────────────────────────────────────────────────────────
@@ -205,6 +283,14 @@ class Step_3 extends \Reamur\System\Engine\Controller {
             if (trim($this->postScalar($field)) === '') {
                 $error[$field] = $this->language->get('error_required');
             }
+        }
+
+        if (!isset($error['db_hostname']) && !self::isDbHost(trim($this->postScalar('db_hostname')))) {
+            $error['db_hostname'] = $this->language->get('error_db_hostname');
+        }
+
+        if (!isset($error['db_database']) && !self::isDbName(trim($this->postScalar('db_database')))) {
+            $error['db_database'] = $this->language->get('error_db_database');
         }
 
         if (!preg_match('/^[a-z][a-z0-9_]{0,19}$/', $this->postScalar('db_prefix'))) {
@@ -352,6 +438,16 @@ class Step_3 extends \Reamur\System\Engine\Controller {
         $tpl      = (string)file_get_contents($template);
         $base     = rtrim($this->postScalar('http_server'), '/') . '/';
         $adminUrl = $this->adminUrl($base); // irmão da loja (catalog/ → admin/) — ver método
+
+        // As duas pastas são conferidas antes de gravar a primeira: falha na
+        // segunda deixaria o site com meio config.php.
+        foreach (['catalog', 'admin'] as $app) {
+            if (!is_writable($dir_dev . $app)) {
+                $error = $dir_dev . $app . '/config.php';
+
+                return false;
+            }
+        }
 
         foreach (['catalog', 'admin'] as $app) {
             $output = strtr($tpl, [

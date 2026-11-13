@@ -36,6 +36,13 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ? $this->language->get('warning_error_display')
             : '';
 
+        // ADR 0091 (S12): a pasta install/ não tem uso depois da instalação.
+        // Com o site instalado ela responde 403, mas continua sendo código de
+        // instalação ao alcance da web; o painel avisa enquanto ela existir.
+        $data['warning_install_folder'] = \Reamur\System\Library\Security\InstallSeal::installerPresent(dirname(rtrim(DIR_APPLICATION, '/')))
+            ? $this->language->get('warning_install_folder')
+            : '';
+
         // ADR 0089 (S5): o que o servidor enxerga da conexão e avisos de proxy.
         $data = array_merge($data, $this->connectionData());
 

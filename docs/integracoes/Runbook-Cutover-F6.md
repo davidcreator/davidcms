@@ -110,6 +110,9 @@ nunca no ar.
      cole no phpMyAdmin da hospedagem;
   4. importar todos os `upgrade_*.sql` **em ordem alfabética** (são
      idempotentes; os grants só funcionam depois do passo 3).
+- [ ] **4.2b** Confirme que a pasta `install/` **não** foi enviada ao servidor
+  (ADR 0091). Se foi, apague-a: com o site instalado ela responde 403, e o
+  painel inicial do admin mostra um aviso enquanto ela existir.
 - [ ] **4.3** Configs: na raiz pública, renomeie `catalog/config.php.EXEMPLO`
        → `config.php` e `admin/config.php.EXEMPLO` → `config.php`, editando
        os `{{...}}` reais. ⚠ `HTTP_SERVER`/`HTTPS_SERVER` **terminam com**
