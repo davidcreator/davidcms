@@ -1,5 +1,21 @@
 # Changelog
 
+## KZ-07 — KAZEditor-Theme: descrever imagens e desenhos que estão sem texto (2026-11-14)
+- ADR 0100. Sétima etapa do caminho B do editor de tema.
+- **Novo no painel da esquerda: "Imagens e desenhos sem descrição".** Lista, para a página inteira e agrupada por trecho, cada imagem (`<img>`) e cada desenho (`<svg>`) que o leitor de tela não consegue anunciar. Cada linha mostra o texto que está perto do elemento; clicar leva até ele e põe o foco no campo a preencher. A lista é refeita a cada mudança.
+- **O painel Elemento cria o texto que falta.** Em imagem sem `alt`, o campo **Texto alternativo** escreve o atributo. Em desenho sem descrição, o campo **Descrição do desenho** escreve `role="img"` e `aria-label`. Nada é gravado até salvar o rascunho.
+- **Botão "É só enfeite":** marca a imagem com `alt=""` ou o desenho com `aria-hidden="true"`, para o leitor de tela pular. **"Não é enfeite"** desfaz.
+- **Rótulo para leitor de tela em elemento que ainda não tem:** o campo passa a criar o `aria-label` em links, botões, desenhos e blocos de navegação ou de seção. Em parágrafo, título, `div` e `span` sem `role` ele não é oferecido, porque ali o rótulo seria ignorado ou esconderia o texto visível.
+- **Desfazer devolve o código ao que era:** retirar a descrição ou a marca de enfeite devolve o trecho byte a byte, incluindo o `role="img"` que o editor escreveu.
+- **O que não entra na lista:** elemento que já tem `alt`, `aria-label`, `aria-labelledby` ou `<title>`; elemento escondido com `aria-hidden="true"` ou `role="presentation"`; elemento cujo texto vem do conteúdo do site (`alt="{{ titulo }}"`). Tag que o editor não consegue ler com segurança (Twig entre os atributos, atributo repetido, atributos colados) é contada à parte, como "não conferida".
+- **Nos pacotes de `docs/temas`:** nenhuma imagem sem `alt`; 38 desenhos sem descrição (13 em Atlas-Studio, 13 em Atlas-Studio-3D, 12 em David-Creator). Os arquivos dos pacotes não foram alterados: descrever ou marcar cada desenho é feito no editor.
+- **Valor sem aspas:** `aria-hidden=true`, `role=presentation` e `alt` sem valor são lidos como o navegador lê. Quando o editor precisa trocar um deles, reescreve com aspas.
+- **Atenção ao atualizar um site instalado:** suba os arquivos. Não há SQL, linha nova no `config.php` nem configuração. O endereço do script do canvas mudou de versão (`-kaz-canvas-kz07`); não é preciso limpar o cache do navegador.
+- **Banco e dados salvos:** nenhuma tabela, coluna, rota ou campo novo no `POST`. Nenhum controle novo tem `name`.
+- **Para quem escreve código:** `Theme\ThemeSourceMap` passa a localizar `aria-hidden`, `aria-labelledby` e `role` em qualquer tag, e cada `<svg>` do mapa ganha um nono campo (1 quando há `<title>` dentro dele). As regras ficam em `admin/view/js/kaz-element-attrs.js` (`a11y`, `pending`, `canLabel`, `putAttr`, `decorate`, `dropLabel`), conferidas por `node tests/check_kaz_element_a11y.js` (chamado também pelo PHPUnit).
+- **Limites:** o editor confere se há descrição, não se ela é boa. Só `<img>` e `<svg>` do código do tema: imagem de fundo em CSS, `<picture>`, `<video>` e imagem que vem do conteúdo do site ficam de fora. Elemento em laço é uma linha só, e a descrição vale para todas as repetições. A lista mostra até 60 linhas.
+- **Conferido:** 1587 testes em PHP 8.2 e 8.3; no Chromium, um pacote de prova e os seis pacotes de `docs/temas`, com salvar, reabrir, desfazer e salvar de novo. Não foi testado com leitor de tela nem em outros navegadores.
+
 ## KZ-06 — KAZEditor-Theme: cor e tamanho por elemento (2026-11-14)
 - ADR 0099. Sexta etapa do caminho B do editor de tema.
 - **Novo no painel Elemento, seção "Cor e tamanho":** **Cor do texto**, **Cor de fundo** e **Tamanho do texto (px)** do elemento selecionado. O painel escreve `color`, `background-color` e `font-size` no atributo `style` da própria tag, em `templates[chave]`. Nada é gravado até salvar o rascunho.

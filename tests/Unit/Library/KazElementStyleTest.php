@@ -211,7 +211,7 @@ final class KazElementStyleTest extends TestCase {
         $controller = $this->repo('dev/admin/controller/design/theme.php');
         $canvas = $this->repo('dev/admin/view/js/kaz-canvas.js');
 
-        self::assertStringContainsString("'-kaz-canvas-kz06'", $controller);
+        self::assertMatchesRegularExpression("/'-kaz-canvas-kz\\d{2}'/", $controller);
         self::assertSame(1, preg_match('/\$canvasLabels=\[\];\s*foreach\(\[(.*?)\] as \$canvasKey\)/s', $controller, $m));
         preg_match_all("/'([a-z0-9_]+)'/", $m[1], $listed);
         foreach (self::KEYS as $key) {
@@ -253,7 +253,7 @@ final class KazElementStyleTest extends TestCase {
         // As regras: tres propriedades, faixa do tamanho e gramatica fechada dos valores.
         self::assertStringContainsString("var STYLE_PROPS = ['color', 'background-color', 'font-size'];", $rules);
         self::assertStringContainsString('var SIZE_MIN = 6, SIZE_MAX = 400;', $rules);
-        self::assertStringContainsString("var NAMES = ['href', 'target', 'rel', 'alt', 'aria-label', 'style'];", $rules);
+        self::assertStringContainsString("var NAMES = ['href', 'target', 'rel', 'alt', 'aria-label', 'style', 'aria-hidden', 'aria-labelledby', 'role'];", $rules);
         foreach (['colorOk', 'sizeOk', 'styleParse', 'styleOf', 'setStyle'] as $export) {
             self::assertStringContainsString($export . ': ' . $export, $rules, $export);
         }
@@ -274,7 +274,8 @@ final class KazElementStyleTest extends TestCase {
         self::assertSame(131072, ThemeSandbox::MAX_SOURCE);
         self::assertStringContainsString('var SOURCE_MAX = 131072;', $rules);
         self::assertStringContainsString('tooLong: tooLong', $rules);
-        self::assertSame(3, substr_count($rules, 'if (tooLong(next)) return'));
+        // Tres pontos da KZ-05/KZ-06 e dois da KZ-07 (atributo novo logo depois do nome da tag; atributo sem aspas reescrito).
+        self::assertSame(5, substr_count($rules, 'if (tooLong(next)) return'));
         self::assertStringNotContainsString('.length > SOURCE_MAX', (string)preg_replace('~function tooLong\(s\) \{.*?\n  \}~s', '', $rules));
         // O canvas pergunta ao arquivo de regras nos dois pontos em que ele mesmo escreve.
         self::assertStringContainsString("return ATTRS && typeof ATTRS.tooLong === 'function' ? ATTRS.tooLong(s) : s.length > SOURCE_MAX;", $canvas);

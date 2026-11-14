@@ -38,6 +38,23 @@
  *  - `style` com Twig, com aspas, entidades, comentario ou chaves dentro, ou
  *    com a mesma propriedade duas vezes: o editor nao escreve.
  *
+ * KZ-07 (ADR 0100) — imagem sem texto alternativo e desenho (<svg>) sem
+ * descricao: dizer quais estao pendentes e criar o que falta.
+ *
+ * Regras:
+ *  - Pendente e a <img> sem `alt` e o <svg> sem nome (`aria-label`,
+ *    `aria-labelledby` ou <title> dentro) e sem marca de enfeite
+ *    (`aria-hidden="true"`, `role="presentation"` ou `role="none"`).
+ *  - Criar: `alt="..."` na imagem; `aria-label="..."` no desenho (com
+ *    `role="img"` quando a tag nao tem `role`) e nos elementos em que o rotulo
+ *    e anunciado (link, botao, blocos de navegacao e secao). Em outras tags o
+ *    editor nao cria rotulo.
+ *  - Enfeite: `alt=""` na imagem, `aria-hidden="true"` no desenho. So quando
+ *    o elemento esta pendente: uma descricao que ja existe nunca e apagada
+ *    por esse caminho.
+ *  - O atributo novo entra logo depois do nome da tag. Retirar devolve a
+ *    fonte ao que era, caractere por caractere.
+ *
  * Testes: tests/check_kaz_element_attrs.js e tests/check_kaz_element_style.js
  * (Node, sem navegador).
  */
@@ -48,7 +65,7 @@
   var LABEL_MAX = 300;     // caracteres de alt e aria-label
   var SOURCE_MAX = 131072; // o mesmo teto do formulario do tema
   var WS = ' \t\n\r\f';
-  var NAMES = ['href', 'target', 'rel', 'alt', 'aria-label', 'style'];
+  var NAMES = ['href', 'target', 'rel', 'alt', 'aria-label', 'style', 'aria-hidden', 'aria-labelledby', 'role'];
   var KINDS = ['fixed', 'variable', 'bare'];
   /* Que tag pode ter cada atributo editavel ('' = qualquer uma). */
   var EDITABLE = { href: 'a', alt: 'img', 'aria-label': '' };
@@ -201,6 +218,8 @@
     var from = a[4];
     while (from > 0 && WS.indexOf(src.charAt(from - 1)) !== -1) from--;
     if (from === a[4]) return null;
+    /* Colado no atributo seguinte (`a="x"b="y"`): tirar este juntaria o vizinho ao que vem antes. */
+    if (a[5] >= src.length || (WS + '/>').indexOf(src.charAt(a[5])) === -1) return null;
     var list = map.items[n][7];
     list.splice(list.indexOf(a), 1);
     shift(map, n, a[5], from - a[5], null);
@@ -468,11 +487,214 @@
     return next === null ? { error: 'long' } : { src: next };
   }
 
+  /* ---------------- KZ-07 (ADR 0100): texto alternativo e rotulo que faltam ---------------- */
+  /* Tags e papeis em que o leitor de tela anuncia o `aria-label`. Lista fechada. */
+  var LABEL_TAGS = ['a', 'button', 'svg', 'nav', 'section', 'aside', 'form', 'header', 'footer', 'main'];
+  var LABEL_ROLES = ['button', 'link', 'img', 'navigation', 'region', 'complementary', 'banner', 'contentinfo', 'main', 'form', 'search', 'dialog', 'group'];
+  var DECOR_ROLES = ['presentation', 'none'];
+
+  function tokens(raw) {
+    var t = trim(String(raw)).toLowerCase();
+    return t === '' ? [] : t.split(/[ \t\n\r\f]+/);
+  }
+
+  /**
+   * Situacao de uma <img> ou de um <svg> para quem nao ve a pagina.
+   * Devolve { kind, state, via }:
+   *  - kind:  'img', 'svg' ou '' (outra tag; state 'none');
+   *  - state: 'missing' (pendente), 'named' (tem nome), 'decorative' (imagem
+   *    com `alt` vazio), 'hidden' (escondida do leitor de tela), 'data' (a
+   *    resposta vem de dado do site) ou 'unknown' (a tag nao pode ser lida);
+   *  - via:   o atributo que decidiu ('alt', 'aria-hidden', 'role',
+   *    'aria-label', 'aria-labelledby', 'title').
+   */
+  /** O atributo ainda esta onde o mapa diz? Com aspas, vale `matches`; sem aspas (ou sem valor), o nome e o fim do trecho. */
+  function present(src, a) {
+    if (a[1] !== 'bare') return matches(src, a);
+    if (src.slice(a[4], a[4] + a[0].length).toLowerCase() !== a[0] || /["'<>]/.test(src.slice(a[4], a[5]))) return false;
+    return a[5] === a[3] && (WS + '/>').indexOf(src.charAt(a[5])) !== -1;
+  }
+  /** Valor que so se conhece com a pagina montada (Twig), com ou sem aspas. */
+  function dynamic(src, a) {
+    return a[1] === 'variable' || (a[1] === 'bare' && /\{[{%#]/.test(src.slice(a[2], a[3])));
+  }
+  /** Troca o atributo sem aspas (ou sem valor) por nome="valor" e acerta o registro dele no mapa. */
+  function requote(src, map, n, a, raw) {
+    var text = a[0] + '="' + raw + '"', next = src.slice(0, a[4]) + text + src.slice(a[5]);
+    if (tooLong(next)) return null;
+    shift(map, n, a[5], text.length - (a[5] - a[4]), a);
+    a[1] = 'fixed';
+    a[2] = a[4] + a[0].length + 2;
+    a[3] = a[2] + raw.length;
+    a[5] = a[3] + 1;
+    return next;
+  }
+  function a11y(src, map, n) {
+    var it = map && Array.isArray(map.items) ? map.items[n] : null, out = { kind: '', state: 'none', via: '' };
+    if (!it || (it[0] !== 'img' && it[0] !== 'svg')) return out;
+    out.kind = it[0];
+    out.state = 'unknown';
+    if (!Array.isArray(it[7])) return out;
+    src = String(src);
+    if (tagAt(src, it) === -1) return out;
+    var hid = find(it, 'aria-hidden'), role = find(it, 'role'), lab = find(it, 'aria-label'), by = find(it, 'aria-labelledby');
+    var alt = it[0] === 'img' ? find(it, 'alt') : null, all = [hid, role, lab, by, alt], i;
+    for (i = 0; i < all.length; i++) if (all[i] && all[i][1] !== 'variable' && !present(src, all[i])) return out;
+    function is(state, via) { out.state = state; out.via = via; return out; }
+
+    /* O valor sem aspas (`aria-hidden=true`) e lido como o navegador le; sem valor nenhum, vale vazio. */
+    if (hid) {
+      if (dynamic(src, hid)) return is('data', 'aria-hidden');
+      if (trim(src.slice(hid[2], hid[3])).toLowerCase() === 'true') return is('hidden', 'aria-hidden');
+    }
+    if (role) {
+      if (dynamic(src, role)) return is('data', 'role');
+      var roles = tokens(src.slice(role[2], role[3]));
+      for (i = 0; i < roles.length; i++) if (DECOR_ROLES.indexOf(roles[i]) !== -1) return is('hidden', 'role');
+    }
+    if (lab) {
+      if (dynamic(src, lab)) return is('data', 'aria-label');
+      if (trim(src.slice(lab[2], lab[3])) !== '') return is('named', 'aria-label');
+    }
+    if (by) {
+      if (dynamic(src, by)) return is('data', 'aria-labelledby');
+      if (trim(src.slice(by[2], by[3])) !== '') return is('named', 'aria-labelledby');
+    }
+    if (it[0] === 'img') {
+      if (!alt) return is('missing', '');
+      if (dynamic(src, alt)) return is('data', 'alt');
+      return is(trim(src.slice(alt[2], alt[3])) === '' ? 'decorative' : 'named', 'alt');
+    }
+    return it[8] === 1 ? is('named', 'title') : is('missing', '');
+  }
+
+  /**
+   * Pendencias de um trecho: { missing: [indices das <img>/<svg> pendentes, na
+   * ordem do codigo], unknown: quantas <img>/<svg> nao puderam ser conferidas }.
+   */
+  function pending(src, map) {
+    var out = { missing: [], unknown: 0 }, items = map && Array.isArray(map.items) ? map.items : [];
+    for (var n = 0; n < items.length; n++) {
+      var st = a11y(src, map, n).state;
+      if (st === 'missing') out.missing.push(n);
+      else if (st === 'unknown') out.unknown++;
+    }
+    return out;
+  }
+
+  /** O editor pode criar `aria-label` neste elemento? (tag ou `role` da lista fechada) */
+  function canLabel(src, map, n) {
+    var it = map && Array.isArray(map.items) ? map.items[n] : null;
+    if (!it || !Array.isArray(it[7]) || it[0] === 'img') return false;
+    if (LABEL_TAGS.indexOf(it[0]) !== -1) return true;
+    var role = find(it, 'role');
+    if (!role || role[1] !== 'fixed' || !matches(String(src), role)) return false;
+    var roles = tokens(String(src).slice(role[2], role[3]));
+    for (var i = 0; i < roles.length; i++) if (LABEL_ROLES.indexOf(roles[i]) !== -1) return true;
+    return false;
+  }
+
+  /**
+   * Escreve atributos novos (` nome="valor"`, valor ja codificado) logo depois
+   * do nome da tag, na ordem dada. Devolve { src } ou { error: 'long' }.
+   */
+  function insertAtTag(src, map, n, at, pairs) {
+    var text = '', i;
+    for (i = 0; i < pairs.length; i++) text += ' ' + pairs[i][0] + '="' + pairs[i][1] + '"';
+    var next = src.slice(0, at) + text + src.slice(at);
+    if (tooLong(next)) return { error: 'long' };
+    shift(map, n, at, text.length, null);
+    var pos = at;
+    for (i = 0; i < pairs.length; i++) {
+      var v0 = pos + pairs[i][0].length + 3, v1 = v0 + pairs[i][1].length;
+      map.items[n][7].push([pairs[i][0], 'fixed', v0, v1, pos + 1, v1 + 1, '']);
+      pos = v1 + 1;
+    }
+    return { src: next };
+  }
+
+  /**
+   * Texto alternativo (`alt`, so em <img>) ou rotulo (`aria-label`): troca o
+   * valor quando o atributo existe (como setValue) e CRIA o atributo quando
+   * falta e ha texto. Rotulo novo so onde canLabel() deixa; num <svg> sem
+   * `role`, vai junto `role="img"`.
+   * Devolve { src } ou { error } (`locked`, `stale`, `long`).
+   */
+  function putAttr(src, map, n, name, value) {
+    var it = map && Array.isArray(map.items) ? map.items[n] : null;
+    if (!it || !Array.isArray(it[7]) || (name !== 'alt' && name !== 'aria-label')) return { error: 'locked' };
+    if (name === 'alt' && it[0] !== 'img') return { error: 'locked' };
+    if (find(it, name)) return setValue(src, map, n, name, value);
+    src = String(src);
+    if (name === 'aria-label' && !canLabel(src, map, n)) return { error: 'locked' };
+    var at = tagAt(src, it);
+    if (at === -1) return { error: 'stale' };
+    var v = trim(String(value)).slice(0, LABEL_MAX);
+    /* Campo vazio em atributo que nao existe: nada a criar. `alt=""` e decisao de decorate(). */
+    if (v === '') return { src: src };
+    var pairs = [[name, encode(v)]];
+    if (name === 'aria-label' && it[0] === 'svg' && !find(it, 'role')) pairs.unshift(['role', 'img']);
+    return insertAtTag(src, map, n, at, pairs);
+  }
+
+  /**
+   * Marca (on) ou desmarca (off) uma imagem ou um desenho como enfeite.
+   *  - Marcar so vale para elemento pendente: `alt=""` na <img>;
+   *    `aria-hidden="true"` no <svg> (troca o valor se o atributo ja existe).
+   *  - Desmarcar retira so a marca que o editor escreve: o `alt` vazio da
+   *    <img>, o `aria-hidden="true"` do <svg>. Em outra situacao nada muda.
+   * Devolve { src } ou { error } (`locked`, `stale`, `long`).
+   */
+  function decorate(src, map, n, on) {
+    var it = map && Array.isArray(map.items) ? map.items[n] : null;
+    if (!it || !Array.isArray(it[7]) || (it[0] !== 'img' && it[0] !== 'svg')) return { error: 'locked' };
+    src = String(src);
+    var at = tagAt(src, it), st = a11y(src, map, n), name = it[0] === 'img' ? 'alt' : 'aria-hidden', a = find(it, name), next;
+    /* 'unknown' aqui e o mapa que nao combina com a fonte (tag em outro lugar ou aspas trocadas). */
+    if (st.state === 'unknown') return { error: 'stale' };
+    if (on) {
+      if (st.state !== 'missing') return { error: 'locked' };
+      if (!a) return insertAtTag(src, map, n, at, [[name, it[0] === 'img' ? '' : 'true']]);
+      /* So chega aqui o <svg> com um `aria-hidden` que nao esconde (por exemplo "false", ou sem valor). */
+      next = a[1] === 'fixed' ? replaceValue(src, map, n, a, 'true') : requote(src, map, n, a, 'true');
+      return next === null ? { error: 'long' } : { src: next };
+    }
+    if (!a || st.via !== name || (st.state !== 'decorative' && st.state !== 'hidden')) return { src: src };
+    next = removeAttr(src, map, n, a);
+    return next === null ? { error: 'stale' } : { src: next };
+  }
+
+  /**
+   * Retira o `aria-label` fixo de um elemento. Num <svg>, o `role="img"` sai
+   * junto (e o par que o editor escreve); outro `role` fica.
+   * Devolve { src } ou { error } (`locked`, `stale`).
+   */
+  function dropLabel(src, map, n) {
+    var it = map && Array.isArray(map.items) ? map.items[n] : null;
+    if (!it || !Array.isArray(it[7])) return { error: 'locked' };
+    src = String(src);
+    if (!find(it, 'aria-label')) return { src: src };
+    /* Dois passos: trabalha numa copia do mapa e so troca no fim. */
+    var work = { items: JSON.parse(JSON.stringify(map.items)) }, wit = work.items[n];
+    var a = find(wit, 'aria-label'), role = find(wit, 'role'), next;
+    if (a[1] !== 'fixed') return { error: 'locked' };
+    if (tagAt(src, wit) === -1 || !matches(src, a) || (role && role[1] === 'fixed' && !matches(src, role))) return { error: 'stale' };
+    next = removeAttr(src, work, n, a);
+    if (next !== null && wit[0] === 'svg' && role && role[1] === 'fixed' && trim(next.slice(role[2], role[3])).toLowerCase() === 'img') {
+      next = removeAttr(next, work, n, role);
+    }
+    if (next === null) return { error: 'stale' };
+    map.items = work.items;
+    return { src: next };
+  }
+
   root.KazElementAttrs = {
     LINK_MAX: LINK_MAX, LABEL_MAX: LABEL_MAX, SOURCE_MAX: SOURCE_MAX,
     clean: clean, find: find, linkOk: linkOk, encode: encode, tooLong: tooLong,
     setValue: setValue, newTab: newTab, setNewTab: setNewTab,
     STYLE_PROPS: STYLE_PROPS.slice(), SIZE_MIN: SIZE_MIN, SIZE_MAX: SIZE_MAX,
-    colorOk: colorOk, sizeOk: sizeOk, styleParse: styleParse, styleOf: styleOf, setStyle: setStyle
+    colorOk: colorOk, sizeOk: sizeOk, styleParse: styleParse, styleOf: styleOf, setStyle: setStyle,
+    LABEL_TAGS: LABEL_TAGS.slice(), LABEL_ROLES: LABEL_ROLES.slice(),
+    a11y: a11y, pending: pending, canLabel: canLabel, putAttr: putAttr, decorate: decorate, dropLabel: dropLabel
   };
 })(typeof window !== 'undefined' ? window : globalThis);

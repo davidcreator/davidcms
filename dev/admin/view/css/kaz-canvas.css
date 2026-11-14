@@ -212,6 +212,16 @@
 .kaz-canvas__text[readonly] { color: #a1a1aa; background: #18181b; }
 .kaz-canvas__sidehelp--warn { color: #fcd34d; }
 .kaz-canvas__sidehelp--warn[hidden] { display: none; }
+/* KZ-07 (ADR 0100): imagens e desenhos sem descricao. */
+.kaz-canvas__a11y { margin-top: 6px; padding-top: 2px; border-top: 1px solid #2c2c33; }
+.kaz-canvas__a11y[hidden] { display: none; }
+.kaz-canvas__badge--warn { background: #3a2f16; color: #fcd34d; }
+.kaz-canvas__a11ylist { list-style: none; margin: 0 0 8px; padding: 0; border: 1px solid #2c2c33; border-radius: 8px; overflow: hidden; }
+.kaz-canvas__a11ylist li:last-child .kaz-canvas__textrow { border-bottom: 0; }
+.kaz-canvas__a11ystate { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 8px; }
+.kaz-canvas__a11ystate:empty { display: none; }
+.kaz-canvas__a11ystate .kaz-canvas__sidehelp { flex: 1 1 100%; margin: 0; }
+.kaz-canvas__a11yact:disabled { opacity: .5; cursor: not-allowed; }
 .kaz-canvas__expr { padding: 1px 5px; border-radius: 4px; background: #121216; color: #a7f3d0;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; overflow-wrap: anywhere; }
 .kaz-canvas__textlist { list-style: none; margin: 0 0 8px; padding: 0; max-height: 220px; overflow: auto;

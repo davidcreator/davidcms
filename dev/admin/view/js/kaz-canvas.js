@@ -58,6 +58,7 @@
 
   var treeEl = root.querySelector('[data-kaz-canvas-tree]');
   var hiddenEl = root.querySelector('[data-kaz-canvas-hidden]');
+  var a11yEl = root.querySelector('[data-kaz-canvas-a11y]');
   var inspectorEl = root.querySelector('[data-kaz-canvas-inspector-body]');
   var designEl = root.querySelector('[data-kaz-canvas-design-body]');
   var config = { routes: [], devices: [], labels: {}, parts: {}, tokens: { fields: {}, groups: [], general: {}, pairs: {} } };
@@ -97,7 +98,10 @@
   var ATTR_FIELDS = ['href', 'alt', 'aria-label'];
   /* KZ-06 (ADR 0099): cor do texto, cor de fundo e tamanho do texto do elemento. */
   var STYLE_FIELDS = ['color', 'background-color', 'font-size'];
-  var WARN_NAMES = ATTR_FIELDS.concat(['newtab'], STYLE_FIELDS);
+  var WARN_NAMES = ATTR_FIELDS.concat(['newtab'], STYLE_FIELDS, ['a11y']);
+  /* KZ-07 (ADR 0100): lista de imagens e desenhos sem descricao, da pagina inteira. */
+  var A11Y_LIST_MAX = 60, A11Y_SNIP_MAX = 60, A11Y_NEAR_MAX = 40, A11Y_NEAR_HOPS = 3;
+  var A11Y_OK = !!ATTRS && typeof ATTRS.a11y === 'function' && typeof ATTRS.pending === 'function';
   var STYLE_LIST_MAX = 60, VAR_SCAN_MAX = 600;
 
   var view = { x: PAD, y: PAD + LABEL_H, k: 1 };
@@ -598,6 +602,7 @@
     if (code && code.getAttribute('data-kaz-canvas-code') === key) code.value = next;
     writeSource(key, next);
     paintMarks();
+    paintA11y();
   }
 
   /* ---------------- KZ-05: atributos do elemento ---------------- */
@@ -631,12 +636,141 @@
     var name = t.getAttribute('data-kaz-canvas-attr'), at = attrTarget();
     if (!at || ATTR_FIELDS.indexOf(name) === -1) return;
     if (!at.fresh) { attrWarn(name, 'el_stale'); return; }
-    var res = ATTRS.setValue(at.src, at.map, at.n, name, t.value);
+    /* KZ-07: `alt` e `aria-label` sao criados quando faltam; `href` so e trocado. */
+    var res = A11Y_OK && name !== 'href' ? ATTRS.putAttr(at.src, at.map, at.n, name, t.value) : ATTRS.setValue(at.src, at.map, at.n, name, t.value);
     if (res.error === 'link') { attrWarn(name, 'el_link_bad'); return; }
     if (res.error === 'long') { attrWarn(name, 'el_full'); return; }
     if (res.error || typeof res.src !== 'string') { attrWarn(name, 'el_stale'); return; }
     attrWarn(name, '');
+    if (res.src === at.src) return;
     commitSource(at.key, at.map, res.src);
+    paintA11yState();
+  }
+  /* ---------------- KZ-07: texto alternativo e descricao que faltam ---------------- */
+  /** Frase e botoes sobre a situacao do elemento escolhido para quem nao ve a pagina. */
+  function paintA11yState() {
+    var host = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-a11y-state]') : null;
+    if (!host) return;
+    clear(host);
+    var it = picked ? elementItem(picked.key, picked.n) : null;
+    if (!A11Y_OK || !it || !mapFresh(picked.key)) return;
+    var field = sourceField(picked.key), own = !!(field && field.value !== '');
+    var st = ATTRS.a11y(elementSource(picked.key), elements[picked.key], picked.n), lab = ATTRS.find(it, 'aria-label');
+    function note(labelKey, warn) {
+      var p = make('p', 'kaz-canvas__sidehelp' + (warn ? ' kaz-canvas__sidehelp--warn' : ''), label(labelKey, ''));
+      p.setAttribute('data-kaz-canvas-a11y-note', labelKey);
+      host.appendChild(p);
+    }
+    function act(name, labelKey) {
+      var b = make('button', 'kaz-btn kaz-btn--ghost kaz-canvas__a11yact', label(labelKey, ''));
+      b.type = 'button';
+      b.setAttribute('data-kaz-canvas-a11y-act', name);
+      b.disabled = !own;
+      host.appendChild(b);
+    }
+    if (st.state === 'missing') { note(st.kind === 'img' ? 'el_alt_missing' : 'el_svg_missing', true); act('decor', 'el_decor'); }
+    else if (st.state === 'decorative' || (st.state === 'hidden' && st.kind === 'svg' && st.via === 'aria-hidden')) { note('el_decor_on', false); act('undecor', 'el_decor_undo'); }
+    else if (st.state === 'hidden') note('el_a11y_hidden', false);
+    else if (st.state === 'named' && st.via === 'title') note('el_svg_titled', false);
+    else if (st.state === 'named' && st.via === 'aria-labelledby') note('el_a11y_labelledby', false);
+    else if (st.state === 'data' && (st.via === 'aria-hidden' || st.via === 'role')) note('el_a11y_data', false);
+    if (lab && lab[1] === 'fixed') act('unlabel', st.kind === 'svg' ? 'el_svg_unlabel' : 'el_unlabel');
+  }
+  /** Botoes "E so enfeite", "Nao e enfeite" e "Retirar": escrevem ou retiram a marca na fonte do tema. */
+  function onA11yAct(name) {
+    var at = attrTarget(), slot = name === 'unlabel' ? 'aria-label' : 'a11y';
+    if (!A11Y_OK || !at) return;
+    if (!at.fresh) { attrWarn(slot, 'el_stale'); return; }
+    var res = name === 'unlabel' ? ATTRS.dropLabel(at.src, at.map, at.n) : ATTRS.decorate(at.src, at.map, at.n, name === 'decor');
+    if (res.error === 'long') { attrWarn(slot, 'el_full'); return; }
+    if (res.error || typeof res.src !== 'string') { attrWarn(slot, 'el_stale'); return; }
+    if (res.src !== at.src) commitSource(at.key, at.map, res.src);
+    paintElementBlock();
+    /* O foco fica no bloco: no botao que desfaz, senao no campo a preencher, senao no caminho. */
+    var next = inspectorEl.querySelector(name === 'decor' ? '[data-kaz-canvas-a11y-act="undecor"]'
+      : '[data-kaz-canvas-attr="alt"]:not([readonly]),[data-kaz-canvas-attr="aria-label"]:not([readonly])') ||
+      inspectorEl.querySelector('[data-kaz-canvas-a11y-act]:not([disabled])') || inspectorEl.querySelector('[data-kaz-canvas-el][aria-current="true"]');
+    if (next) next.focus();
+  }
+  /** Texto visivel mais proximo do elemento na pagina (so leitura do quadro): ajuda a reconhecer um icone. */
+  function a11yNear(key, n) {
+    var f = leadFrame(), node = f ? elementNodes(frameDoc(f), key, n)[0] : null;
+    for (var hops = 0; node && hops < A11Y_NEAR_HOPS; hops++) {
+      node = node.parentElement;
+      /* innerText separa os blocos como a pagina os mostra; textContent e a reserva. */
+      var text = node ? String(typeof node.innerText === 'string' ? node.innerText : (node.textContent || '')).replace(/\s+/g, ' ').replace(/^ | $/g, '') : '';
+      if (text !== '') return text.length > A11Y_NEAR_MAX ? text.slice(0, A11Y_NEAR_MAX) + '…' : text;
+    }
+    return '';
+  }
+  /** Lista da pagina: imagens sem texto alternativo e desenhos sem descricao, por trecho. */
+  function paintA11y() {
+    if (!a11yEl) return;
+    var using = document.activeElement && a11yEl.contains(document.activeElement) ? document.activeElement.getAttribute('data-kaz-canvas-a11y-go') : null;
+    clear(a11yEl);
+    var f = leadFrame();
+    a11yEl.hidden = !A11Y_OK || !f || !f.regions.length;
+    if (a11yEl.hidden) return;
+    var groups = [], seen = {}, total = 0, unknown = 0, shown = 0;
+    f.regions.forEach(function (r) {
+      if (seen[r.key]) return;
+      seen[r.key] = true;
+      var map = elements[r.key];
+      if (!map || !mapFresh(r.key)) return;
+      var src = elementSource(r.key), found = ATTRS.pending(src, map);
+      unknown += found.unknown;
+      total += found.missing.length;
+      if (found.missing.length) groups.push({ key: r.key, src: src, map: map, rows: found.missing });
+    });
+    var head = make('h5', 'kaz-canvas__sidesub', label('a11y_title', '') + ' ');
+    var count = make('span', 'kaz-canvas__badge' + (total ? ' kaz-canvas__badge--warn' : ''), String(total));
+    count.setAttribute('data-kaz-canvas-a11y-count', String(total));
+    head.appendChild(count);
+    a11yEl.appendChild(head);
+    a11yEl.appendChild(make('p', 'kaz-canvas__sidehelp', label(total ? 'a11y_help' : 'a11y_none', '')));
+    groups.forEach(function (g) {
+      if (shown >= A11Y_LIST_MAX) return;
+      a11yEl.appendChild(make('h6', 'kaz-canvas__sidesub2', partLabel(g.key)));
+      var ul = make('ul', 'kaz-canvas__a11ylist');
+      g.rows.forEach(function (n) {
+        if (shown >= A11Y_LIST_MAX) return;
+        shown++;
+        var it = g.map.items[n], li = make('li', ''), b = make('button', 'kaz-canvas__textrow', '');
+        /* O que ajuda a reconhecer: o texto ao lado, na pagina; sem ele, os atributos da tag, como estao no codigo. */
+        var near = a11yNear(g.key, n);
+        var snip = near !== '' ? label('a11y_near', '').replace('%s', near)
+          : g.src.slice(it[2] + 1 + it[0].length, it[3]).replace(/\/?>$/, '').replace(/\s+/g, ' ').replace(/^ | $/g, '');
+        b.type = 'button';
+        b.setAttribute('data-kaz-canvas-a11y-go', g.key + ':' + n);
+        b.appendChild(make('code', 'kaz-canvas__texttag', it[0]));
+        b.appendChild(make('span', 'kaz-canvas__textsnip', label(it[0] === 'img' ? 'a11y_img' : 'a11y_svg', '') +
+          (snip !== '' ? ' · ' + (snip.length > A11Y_SNIP_MAX ? snip.slice(0, A11Y_SNIP_MAX) + '…' : snip) : '')));
+        li.appendChild(b);
+        ul.appendChild(li);
+      });
+      a11yEl.appendChild(ul);
+    });
+    if (total > shown) a11yEl.appendChild(make('p', 'kaz-canvas__sidehelp', label('a11y_more', '').replace('%s', String(total - shown))));
+    if (unknown) {
+      var skipped = make('p', 'kaz-canvas__sidehelp', label('a11y_unknown', '').replace('%s', String(unknown)));
+      skipped.setAttribute('data-kaz-canvas-a11y-unknown', String(unknown));
+      a11yEl.appendChild(skipped);
+    }
+    /* Quem estava na lista pelo teclado continua nela depois de um redesenho. */
+    if (using !== null) {
+      var again = a11yEl.querySelector('[data-kaz-canvas-a11y-go="' + using + '"]') || a11yEl.querySelector('[data-kaz-canvas-a11y-go]');
+      if (again) again.focus();
+    }
+  }
+  /** Linha da lista -> elemento na pagina e no painel. */
+  function goA11y(ref) {
+    var m = EL_REF.exec(ref || ''), uid = m ? regionFor(m[1], -1, -1) : '';
+    if (!m || !uid || !elementItem(m[1], Number(m[2]))) return;
+    if (tab !== 'piece' || !panels.inspector) { tab = 'piece'; panels.inspector = true; paintPanels(); savePrefs(); }
+    pick({ key: m[1], n: Number(m[2]), inst: 0 }, uid, true);
+    var next = inspectorEl ? (inspectorEl.querySelector('[data-kaz-canvas-attr="alt"]:not([readonly]),[data-kaz-canvas-attr="aria-label"]:not([readonly])') ||
+      inspectorEl.querySelector('[data-kaz-canvas-a11y-act]:not([disabled])') || inspectorEl.querySelector('[data-kaz-canvas-el][aria-current="true"]')) : null;
+    if (next) next.focus();
   }
   /** A caixa "abrir em nova aba" mudou: escreve ou retira `target` e `rel`. */
   function onNewTab(t) {
@@ -670,22 +804,25 @@
     if (!ATTRS) return false;
     var tag = it[0], list = it[7], src = elementSource(key), shown = false;
     if (!Array.isArray(list)) {
-      /* Tag que o servidor nao soube ler com seguranca: so avisa onde faria diferenca. */
+      /* Tag que o servidor nao soube ler com seguranca: so avisa onde faria diferenca.
+         No <svg> (e nas outras tags com cor e tamanho), quem avisa e paintStyle: uma frase so. */
       if (tag === 'a' || tag === 'img') attrHelp(host, 'el_attr_locked', '');
       return false;
     }
+    /* KZ-07: o que falta para quem nao ve a pagina; com o mapa defasado, nada e criado. */
+    var a11y = A11Y_OK && fresh ? ATTRS.a11y(src, { items: [it] }, 0) : null;
     function warnLine(name) { warnSlot(host, name, fresh); }
     /* Um campo de texto para o valor de um atributo, ou a frase que explica por que nao ha campo. */
-    function valueField(name, title, help, fromData) {
+    function valueField(name, title, help, fromData, create) {
       var a = ATTRS.find(it, name);
-      if (!a) return false;
-      if (a[1] === 'variable') {
+      if (!a && !create) return false;
+      if (a && a[1] === 'variable') {
         attrHelp(host, fromData, a[6] !== '' ? '{{ ' + a[6] + ' }}' : (fresh ? src.slice(a[2], a[3]).slice(0, 120) : ''))
           .setAttribute('data-kaz-canvas-attr-from', name);
         attrHelp(host, 'el_attr_variable_help', '');
         return true;
       }
-      if (a[1] !== 'fixed') { attrHelp(host, 'el_attr_locked', ''); return true; }
+      if (a && a[1] !== 'fixed') { attrHelp(host, 'el_attr_locked', ''); return true; }
       var id = 'kaz-canvas-el-attr-' + name;
       var lab = make('label', 'kaz-canvas__fieldname', label(title, ''));
       lab.setAttribute('for', id);
@@ -701,7 +838,7 @@
         box.setAttribute('spellcheck', 'false');
         box.setAttribute('autocapitalize', 'off');
       }
-      box.value = fresh ? decodeAttr(src.slice(a[2], a[3])) : '';
+      box.value = a && fresh ? decodeAttr(src.slice(a[2], a[3])) : '';
       box.readOnly = !own || !fresh;
       host.appendChild(box);
       warnLine(name);
@@ -726,8 +863,20 @@
       attrHelp(host, fresh && !state.can ? 'el_newtab_locked' : 'el_newtab_help', '');
       shown = true;
     }
-    if (!valueField('alt', 'el_alt', 'el_alt_help', 'el_alt_variable') && tag === 'img') attrHelp(host, 'el_alt_missing', '');
-    valueField('aria-label', 'el_label', 'el_label_help', 'el_label_variable');
+    /* KZ-07: imagem pendente ganha o campo do `alt` que ainda nao existe. */
+    valueField('alt', 'el_alt', 'el_alt_help', 'el_alt_variable', !!a11y && a11y.kind === 'img' && a11y.state === 'missing');
+    /* Rotulo novo: no desenho pendente e nos elementos em que o leitor de tela o anuncia. */
+    var hasLabel = !!ATTRS.find(it, 'aria-label');
+    var newLabel = !!a11y && !hasLabel && (tag === 'svg' ? a11y.state === 'missing' : ATTRS.canLabel(src, { items: [it] }, 0));
+    valueField('aria-label', tag === 'svg' ? 'el_svg_label' : 'el_label',
+      tag === 'svg' ? 'el_svg_label_help' : (hasLabel ? 'el_label_help' : 'el_label_new_help'), 'el_label_variable', newLabel);
+    if (A11Y_OK) {
+      var state = make('div', 'kaz-canvas__a11ystate');
+      state.setAttribute('data-kaz-canvas-a11y-state', '');
+      host.appendChild(state);
+      if (tag === 'img' || tag === 'svg') warnLine('a11y');
+      paintA11yState();
+    } else if (tag === 'img' && !ATTRS.find(it, 'alt')) attrHelp(host, 'el_alt_missing', '');
     return shown;
   }
 
@@ -1217,6 +1366,7 @@
     });
     paintHiddenSections();
     paintMarks();
+    paintA11y();
   }
 
   /* ---------------- KZ-02: secoes da pagina inicial (modulo Secoes) ---------------- */
@@ -1308,7 +1458,7 @@
     var using = document.activeElement, usingBox = using && using.closest ? using.closest('[data-kaz-canvas-elbox]') : null;
     if (usingBox && inspectorEl.contains(usingBox) && picked && usingBox.getAttribute('data-kaz-canvas-elbox') === picked.key + ':' + picked.n &&
         (using.getAttribute('data-kaz-canvas-attr') !== null || using.getAttribute('data-kaz-canvas-newtab') !== null ||
-         using.getAttribute('data-kaz-canvas-style') !== null)) {
+         using.getAttribute('data-kaz-canvas-style') !== null || using.getAttribute('data-kaz-canvas-a11y-act') !== null)) {
       paintSizes();
       syncElement();
       return;
@@ -1980,8 +2130,14 @@
     var t = ev.target && ev.target.closest ? ev.target.closest(
       '[data-kaz-canvas-act],[data-kaz-canvas-device],[data-kaz-canvas-panel],[data-kaz-canvas-uid],' +
       '[data-kaz-canvas-tab],[data-kaz-canvas-scheme],[data-kaz-canvas-el],[data-kaz-canvas-el-act],' +
-      '[data-kaz-canvas-section],[data-kaz-canvas-show-section],[data-kaz-canvas-source]') : null;
+      '[data-kaz-canvas-section],[data-kaz-canvas-show-section],[data-kaz-canvas-source],' +
+      '[data-kaz-canvas-a11y-go],[data-kaz-canvas-a11y-act]') : null;
     if (!t || !root.contains(t)) return;
+    /* KZ-07: lista de pendencias e botoes de enfeite / retirar descricao. */
+    var a11yGo = t.getAttribute('data-kaz-canvas-a11y-go');
+    if (a11yGo !== null) { goA11y(a11yGo); return; }
+    var a11yAct = t.getAttribute('data-kaz-canvas-a11y-act');
+    if (a11yAct === 'decor' || a11yAct === 'undecor' || a11yAct === 'unlabel') { if (!t.disabled) onA11yAct(a11yAct); return; }
     var panel = t.getAttribute('data-kaz-canvas-panel');
     if (panel === 'structure' || panel === 'inspector') {
       panels[panel] = !panels[panel];
@@ -2114,6 +2270,18 @@
       var t = ev.target && ev.target.closest ? ev.target.closest('[data-kaz-canvas-uid]') : null;
       if (t) setHover(t.getAttribute('data-kaz-canvas-uid'));
     });
+  }
+  if (a11yEl) {
+    /* KZ-07: passar por uma linha da lista mostra, na pagina, de que elemento ela fala. */
+    var a11yHover = function (ev) {
+      var t = ev.target && ev.target.closest ? ev.target.closest('[data-kaz-canvas-a11y-go]') : null;
+      var m = t ? EL_REF.exec(t.getAttribute('data-kaz-canvas-a11y-go') || '') : null, it = m ? elementItem(m[1], Number(m[2])) : null;
+      setHoverElement(it ? { key: m[1], n: Number(m[2]), inst: 0, tag: it[0] } : null);
+    };
+    a11yEl.addEventListener('mouseover', a11yHover);
+    a11yEl.addEventListener('focusin', a11yHover);
+    a11yEl.addEventListener('mouseleave', function () { setHoverElement(null); });
+    a11yEl.addEventListener('focusout', function () { setHoverElement(null); });
   }
   if (routeSel) routeSel.addEventListener('change', function () { savePrefs(); picked = null; liveText = null; select('', false); refresh(); });
   if (langSel) langSel.addEventListener('change', function () { refresh(); });

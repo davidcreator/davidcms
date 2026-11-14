@@ -33,6 +33,12 @@
  * tag entra na mesma lista, com as mesmas regras. O que esta escrito DENTRO do
  * valor (as declaracoes CSS) nao e lido aqui: quem le e escreve e
  * admin/view/js/kaz-element-attrs.js, no navegador.
+ *
+ * KZ-07 (ADR 0100) — imagens e desenhos sem descricao. Para o editor saber se
+ * uma <img> ou um <svg> ja tem nome ou ja esta marcado como enfeite, a lista
+ * de atributos lidos ganha `aria-hidden`, `aria-labelledby` e `role` (em
+ * qualquer tag), e cada <svg> mapeado diz se ha um <title> dentro dele. Aqui
+ * so se LE; decidir e escrever continua no navegador.
  */
 namespace Reamur\System\Library\Theme;
 
@@ -59,7 +65,7 @@ final class ThemeSourceMap {
     private const ATTRS = [
         'a'   => ['href', 'target', 'rel'],
         'img' => ['alt'],
-        '*'   => ['aria-label', 'style'],
+        '*'   => ['aria-label', 'style', 'aria-hidden', 'aria-labelledby', 'role'],
     ];
 
     private const SPACE = " \t\n\r\f";
@@ -88,7 +94,10 @@ final class ThemeSourceMap {
      * `attrs` (KZ-05): atributos conhecidos escritos na tag, ou null quando a
      * tag nao pode ser lida com seguranca. Ver attributes().
      *
-     * @return list<array{n:int,tag:string,at:int,open:array{0:int,1:int},text:?array{0:int,1:int},kind:string,expr:string,attrs:?list<array{name:string,kind:string,value:array{0:int,1:int},span:array{0:int,1:int},expr:string}>}>
+     * `titled` (KZ-07): so em <svg>; true quando ha um <title> dentro dele
+     * (em qualquer profundidade), que e de onde vem o nome do desenho.
+     *
+     * @return list<array{n:int,tag:string,at:int,open:array{0:int,1:int},text:?array{0:int,1:int},kind:string,expr:string,attrs:?list<array{name:string,kind:string,value:array{0:int,1:int},span:array{0:int,1:int},expr:string}>,titled?:bool}>
      */
     public static function scan(string $source): array {
         $len = strlen($source);
@@ -97,6 +106,7 @@ final class ThemeSourceMap {
         $quote = '';       // aspa aberta dentro de uma tag
         $rawName = '';     // tag de texto cru em andamento
         $svg = 0;          // profundidade dentro de <svg>
+        $svgRoot = -1;     // <svg> mapeado em que a leitura esta (KZ-07)
         $current = -1;     // elemento cuja tag de abertura esta sendo lida
         $closing = '';     // nome da tag de fechamento sendo lida
         $last = '';        // ultimo caractere util da tag em leitura (para `/>`)
@@ -150,11 +160,11 @@ final class ThemeSourceMap {
                         } elseif (in_array($tag, self::RAW, true)) {
                             $state = 'raw'; $rawName = $tag;
                         } else {
-                            if ($tag === 'svg') $svg++;
+                            if ($tag === 'svg') { $svg++; $svgRoot = $current; }
                             $pending = $current; $twigIn = [];
                         }
                     } elseif ($closing !== '') {
-                        if ($closing === 'svg' && $svg > 0) $svg--;
+                        if ($closing === 'svg' && $svg > 0 && --$svg === 0) $svgRoot = -1;
                     }
                     $current = -1; $closing = '';
                 } elseif ($c !== ' ' && $c !== "\n" && $c !== "\t") {
@@ -202,8 +212,10 @@ final class ThemeSourceMap {
             if (!$dynamic && $svg === 0 && !in_array($name, self::SKIP, true) && count($out) < self::MAX_ELEMENTS) {
                 $out[] = ['n' => count($out), 'tag' => $name, 'at' => $after, 'open' => [$i, $after], 'text' => null, 'kind' => 'group', 'expr' => '', 'attrs' => null];
                 $current = count($out) - 1;
+                if ($name === 'svg') $out[$current]['titled'] = false;
             } elseif (!$dynamic && in_array($name, self::RAW, true)) {
                 // <style>/<script>/<title> nao viram elemento, mas o conteudo deles e pulado.
+                if ($name === 'title' && $svgRoot >= 0) $out[$svgRoot]['titled'] = true;
                 $rawName = $name;
                 $end = self::tagEnd($source, $after, $len);
                 $state = 'raw';
@@ -247,8 +259,10 @@ final class ThemeSourceMap {
      * `atributos` (KZ-05) e null quando a tag nao pode ser lida com seguranca,
      * ou uma lista de [nome, kind, valor_ini, valor_fim, atributo_ini, atributo_fim, expr].
      *
+     * So em <svg> (KZ-07) ha um nono campo: 1 quando ha um <title> dentro dele, senao 0.
+     *
      * @param list<array<string,mixed>> $elements resultado de scan() sobre a MESMA fonte
-     * @return array{sig:string,items:list<array{0:string,1:string,2:int,3:int,4:int,5:int,6:string,7:?list<array{0:string,1:string,2:int,3:int,4:int,5:int,6:string}>}>}
+     * @return array{sig:string,items:list<array{0:string,1:string,2:int,3:int,4:int,5:int,6:string,7:?list<array{0:string,1:string,2:int,3:int,4:int,5:int,6:string}>,8?:int}>}
      */
     public static function describe(string $source, array $elements): array {
         $wanted = [];
@@ -282,13 +296,15 @@ final class ThemeSourceMap {
                     ];
                 }
             }
-            $items[] = [
+            $item = [
                 $el['tag'], $el['kind'], $wanted[$el['open'][0]], $wanted[$el['open'][1]],
                 $el['text'] !== null ? $wanted[$el['text'][0]] : -1,
                 $el['text'] !== null ? $wanted[$el['text'][1]] : -1,
                 $el['expr'],
                 $attrs,
             ];
+            if ($el['tag'] === 'svg') $item[] = ($el['titled'] ?? false) === true ? 1 : 0;
+            $items[] = $item;
         }
         return ['sig' => self::signature($source), 'items' => $items];
     }

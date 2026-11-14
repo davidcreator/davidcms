@@ -326,6 +326,8 @@
               <p class="kaz-canvas__sidehelp">{{ text_canvas_structure_help }}</p>
               <ol class="kaz-canvas__tree" data-kaz-canvas-tree></ol>
               <div class="kaz-canvas__hiddenlist" data-kaz-canvas-hidden hidden></div>
+              {# KZ-07 (ADR 0100): imagens e desenhos sem descricao, da pagina inteira. Preenchido por kaz-canvas.js; nada aqui tem `name`. #}
+              <div class="kaz-canvas__a11y" data-kaz-canvas-a11y hidden></div>
             </aside>
             <div class="kaz-canvas__viewport" data-kaz-canvas-viewport tabindex="0" aria-label="{{ text_canvas_title|e('html_attr') }} — {{ text_canvas_sub|e('html_attr') }}">
               <div class="kaz-canvas__world" data-kaz-canvas-world></div>

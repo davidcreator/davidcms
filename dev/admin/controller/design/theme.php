@@ -399,7 +399,11 @@ class Theme extends \Reamur\System\Engine\Controller {
                  'el_in_link','el_go_link','el_full',
                  // KZ-06 (ADR 0099): cor e tamanho do texto do elemento.
                  'el_style_title','el_color','el_bg','el_size','el_style_auto','el_style_theme','el_style_custom','el_style_written',
-                 'el_style_help','el_style_variable','el_style_locked','el_size_bad','el_color_bad','el_style_forced'] as $canvasKey) {
+                 'el_style_help','el_style_variable','el_style_locked','el_size_bad','el_color_bad','el_style_forced',
+                 // KZ-07 (ADR 0100): texto alternativo e descricao que faltam; lista da pagina.
+                 'el_svg_missing','el_svg_label','el_svg_label_help','el_label_new_help','el_decor','el_decor_on','el_decor_undo',
+                 'el_a11y_hidden','el_svg_titled','el_a11y_labelledby','el_a11y_data','el_unlabel','el_svg_unlabel',
+                 'a11y_title','a11y_help','a11y_none','a11y_more','a11y_unknown','a11y_img','a11y_svg','a11y_near'] as $canvasKey) {
             $canvasLabels[$canvasKey]=$this->language->get('text_canvas_'.$canvasKey);
         }
         // KZ-02 (ADR 0084): nome legivel de cada fonte allowlistada (rota ou parte).
@@ -427,7 +431,7 @@ class Theme extends \Reamur\System\Engine\Controller {
             $canvasTokens['pairs'][$canvasPair['code']]=str_starts_with($canvasPairName,'text_canvas_')?$canvasPair['code']:$canvasPairName;
         }
         $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels,'parts'=>$canvasParts,'tokens'=>$canvasTokens],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
-        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz06';
+        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz07';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-canvas.css?v=' . $canvasAssetV);
         // KZ-05 (ADR 0098): as regras de atributo vem antes do painel que as usa (os dois sao `defer`, na ordem).
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-element-attrs.js?v=' . $canvasAssetV);
