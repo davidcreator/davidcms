@@ -260,3 +260,9 @@
 @media (max-width: 760px) {
   .kaz-canvas__hint { display: none; }
 }
+/* KZ-06 (ADR 0099): cor e tamanho do texto do elemento. */
+.kaz-canvas__stylerow { display: flex; width: 100%; margin: 4px 0; }
+.kaz-canvas__stylerow .kaz-canvas__select { flex: 1 1 auto; min-width: 0; max-width: none; height: 30px; }
+.kaz-canvas__stylerow .kaz-canvas__swatch { flex: none; height: 30px; }
+.kaz-canvas__stylerow :disabled { opacity: .55; cursor: default; }
+.kaz-canvas__input--short { width: 96px; }

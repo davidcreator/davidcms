@@ -90,7 +90,7 @@ const BLOCKED = /<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*
 /* ---------- conferencia do que vem do servidor ---------- */
 same(A.clean([['href', 'fixed', 9, 11, 3, 12, '']]), [['href', 'fixed', 9, 11, 3, 12, '']], 'lista valida passa');
 same(A.clean([]), [], 'lista vazia e uma tag sem atributos conhecidos');
-[null, undefined, 'x', {}, [['href']], [['style', 'fixed', 9, 11, 3, 12, '']], [['constructor', 'fixed', 9, 11, 3, 12, '']], [['href', 'outro', 9, 11, 3, 12, '']],
+[null, undefined, 'x', {}, [['href']], [['class', 'fixed', 9, 11, 3, 12, '']], [['constructor', 'fixed', 9, 11, 3, 12, '']], [['href', 'outro', 9, 11, 3, 12, '']],
  [['href', 'fixed', '9', 11, 3, 12, '']], [['href', 'fixed', 9.5, 11, 3, 12, '']], [['href', 'fixed', -1, 11, 3, 12, '']], [['href', 'fixed', 9, 11, 3, 12, 5]],
  [['href', 'fixed', 9, 11, 3, 12, ''], ['href', 'fixed', 20, 21, 14, 22, '']], [['href', 'fixed', 9, 8, 3, 12, '']], [['href', 'fixed', 9, 11, 10, 12, '']],
  [['href', 'fixed', 9, 11, 3, 10, '']], [['href', 'fixed', 9, 11, 3, Infinity, '']], [['href', 'fixed', 9, 11, 3, NaN, '']], [[1, 'fixed', 9, 11, 3, 12, '']]

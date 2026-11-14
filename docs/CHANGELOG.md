@@ -1,5 +1,21 @@
 # Changelog
 
+## KZ-06 — KAZEditor-Theme: cor e tamanho por elemento (2026-11-14)
+- ADR 0099. Sexta etapa do caminho B do editor de tema.
+- **Novo no painel Elemento, seção "Cor e tamanho":** **Cor do texto**, **Cor de fundo** e **Tamanho do texto (px)** do elemento selecionado. O painel escreve `color`, `background-color` e `font-size` no atributo `style` da própria tag, em `templates[chave]`. Nada é gravado até salvar o rascunho.
+- **Cores do tema ou cor própria:** a lista traz as cores que o tema declara (por exemplo `--dj-primary`), cada uma com o valor atual; escolher uma escreve `var(--nome)`, e o elemento acompanha se o tema mudar a cor. "Cor própria" abre o seletor de cor do navegador e escreve o código `#rrggbb`.
+- **A mudança aparece na hora** nos três quadros (celular, tablet, computador), enquanto o servidor redesenha a página.
+- **O que já está no `style` é mantido:** `margin`, `display` e as outras declarações ficam byte a byte iguais. "Como o tema define" retira só aquela declaração; se não sobrar nenhuma, o atributo `style` sai e o código volta ao que era.
+- **Valores aceitos:** cor `#rgb` / `#rrggbb` ou `var(--nome)`; tamanho de 6 a 400 px. O resto é recusado com aviso e o código continua com o valor anterior. Valor do autor em outro formato (`rgba(…)`, `1.2rem`) aparece como "Escrito no código" e só muda se outro for escolhido.
+- **Aviso quando o tema vence:** se uma regra do tema marcada `!important` ganha do que foi escrito, o painel diz "A página mostra outro valor neste elemento". O painel não escreve `!important`.
+- **Sem campos, com explicação:** `style` que vem do conteúdo do site (`style="color: {{ cor }}"`), `style` que o editor não lê com segurança (mesma propriedade duas vezes, por exemplo), imagens e vídeos. Trecho padrão do sistema pede **Personalizar este trecho** antes de editar.
+- **Correção: limite de tamanho do código.** O servidor aceita 131 072 bytes por trecho (letra acentuada e quebra de linha valem dois); o editor contava caracteres. Perto do limite, uma mudança passava no painel e era recusada pelo servidor em seguida. O editor passa a contar como o servidor, nos campos de atributo, cor, tamanho, texto e no painel Design. O defeito é anterior a esta etapa.
+- **Atenção ao atualizar um site instalado:** suba os arquivos. Não há SQL, linha nova no `config.php` nem configuração. O endereço do script do canvas mudou de versão (`-kaz-canvas-kz06`); não é preciso limpar o cache do navegador.
+- **Banco e dados salvos:** nenhuma tabela, coluna, rota ou campo novo no `POST`. Nenhum controle novo tem `name`.
+- **Para quem escreve código:** `Theme\ThemeSourceMap` passa a localizar `style` em qualquer tag; ler e escrever as declarações fica em `admin/view/js/kaz-element-attrs.js` (`styleOf`, `setStyle`, `tooLong`), conferido por `node tests/check_kaz_element_style.js` (chamado também pelo PHPUnit).
+- **Limites:** só essas três propriedades (largura, margem, borda, fonte e posição ficam de fora). A mudança vale para todas as larguras de tela e para todas as repetições de um elemento em laço. Regra `!important` do tema continua vencendo. O painel não confere contraste entre texto e fundo.
+- **Conferido:** 1576 testes em PHP 8.2 e 8.3; no Chromium, um pacote de prova e os seis pacotes de `docs/temas`, com salvar, reabrir, desfazer e salvar de novo. Outros navegadores não foram testados.
+
 ## KZ-05 — KAZEditor-Theme: editar link, texto alternativo e rótulo do elemento (2026-11-13)
 - ADR 0098. Quinta etapa do caminho B do editor de tema; cor e tamanho por elemento (KZ-06) vêm depois.
 - **Novo no painel Elemento:** **Destino do link** (`href` de links), **Texto alternativo** (`alt` de imagens) e **Rótulo para leitor de tela** (`aria-label` de qualquer elemento). Cada campo troca só o valor entre as aspas em `templates[chave]`; o resto do código fica byte a byte igual. Nada é gravado até salvar o rascunho.

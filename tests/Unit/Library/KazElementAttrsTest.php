@@ -209,7 +209,8 @@ final class KazElementAttrsTest extends TestCase {
         self::assertIsInt($rules);
         self::assertIsInt($canvas);
         self::assertLessThan($canvas, $rules, 'as regras precisam existir quando o canvas inicia');
-        self::assertStringContainsString("'-kaz-canvas-kz05'", $controller);
+        // A versao no endereco muda a cada etapa que mexe no canvas (KZ-06 foi a ultima).
+        self::assertSame(1, preg_match("/'-kaz-canvas-kz\\d{2}'/", $controller));
 
         // Todo rotulo que o canvas pede existe na lista do controller e nos tres idiomas.
         self::assertSame(1, preg_match('/\$canvasLabels=\[\];\s*foreach\(\[(.*?)\] as \$canvasKey\)/s', $controller, $m));

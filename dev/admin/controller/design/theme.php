@@ -396,7 +396,10 @@ class Theme extends \Reamur\System\Engine\Controller {
                  'el_link','el_link_help','el_link_bad','el_link_variable','el_newtab','el_newtab_help','el_newtab_locked',
                  'el_alt','el_alt_help','el_alt_variable','el_alt_missing','el_label','el_label_help','el_label_variable',
                  'el_attr_variable_help','el_attr_locked','el_attr_need_customize','el_links','el_links_help','el_links_more',
-                 'el_in_link','el_go_link','el_full'] as $canvasKey) {
+                 'el_in_link','el_go_link','el_full',
+                 // KZ-06 (ADR 0099): cor e tamanho do texto do elemento.
+                 'el_style_title','el_color','el_bg','el_size','el_style_auto','el_style_theme','el_style_custom','el_style_written',
+                 'el_style_help','el_style_variable','el_style_locked','el_size_bad','el_color_bad','el_style_forced'] as $canvasKey) {
             $canvasLabels[$canvasKey]=$this->language->get('text_canvas_'.$canvasKey);
         }
         // KZ-02 (ADR 0084): nome legivel de cada fonte allowlistada (rota ou parte).
@@ -424,7 +427,7 @@ class Theme extends \Reamur\System\Engine\Controller {
             $canvasTokens['pairs'][$canvasPair['code']]=str_starts_with($canvasPairName,'text_canvas_')?$canvasPair['code']:$canvasPairName;
         }
         $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels,'parts'=>$canvasParts,'tokens'=>$canvasTokens],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
-        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz05';
+        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz06';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-canvas.css?v=' . $canvasAssetV);
         // KZ-05 (ADR 0098): as regras de atributo vem antes do painel que as usa (os dois sao `defer`, na ordem).
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-element-attrs.js?v=' . $canvasAssetV);

@@ -92,7 +92,13 @@
   var TEXT_MAX = 2000, SOURCE_MAX = 131072, TEXT_LIST_MAX = 80, WS = ' \t\r\n\f';
   /* KZ-05 (ADR 0098): regras de atributo. Sem o arquivo, os campos nao aparecem. */
   var ATTRS = window.KazElementAttrs && typeof window.KazElementAttrs.setValue === 'function' ? window.KazElementAttrs : null;
+  /* KZ-06: o teto do servidor e em bytes; a conta fica no arquivo de regras. */
+  function overLimit(s) { return ATTRS && typeof ATTRS.tooLong === 'function' ? ATTRS.tooLong(s) : s.length > SOURCE_MAX; }
   var ATTR_FIELDS = ['href', 'alt', 'aria-label'];
+  /* KZ-06 (ADR 0099): cor do texto, cor de fundo e tamanho do texto do elemento. */
+  var STYLE_FIELDS = ['color', 'background-color', 'font-size'];
+  var WARN_NAMES = ATTR_FIELDS.concat(['newtab'], STYLE_FIELDS);
+  var STYLE_LIST_MAX = 60, VAR_SCAN_MAX = 600;
 
   var view = { x: PAD, y: PAD + LABEL_H, k: 1 };
   var frames = {};          // id -> { el, iframe, label, device, on, height }
@@ -569,7 +575,7 @@
     var parts = trimWs(src.slice(it[4], it[5])), enc = trimWs(encodeText(t.value)).body;
     var next = src.slice(0, it[4]) + parts.lead + enc + parts.trail + src.slice(it[5]);
     /* KZ-05: fonte cheia avisa em vez de ignorar a tecla em silencio. */
-    if (next.length > SOURCE_MAX) { if (warn) { warn.hidden = false; warn.textContent = label('el_full', ''); } return; }
+    if (overLimit(next)) { if (warn) { warn.hidden = false; warn.textContent = label('el_full', ''); } return; }
     var delta = next.length - src.length;
     /* O mapa local acompanha a escrita: a proxima tecla nao espera o servidor. */
     for (var j = n + 1; j < map.items.length; j++) {
@@ -608,7 +614,7 @@
     } catch (e) { return raw; }
   }
   function attrWarn(name, labelKey) {
-    var warn = inspectorEl && ATTR_FIELDS.concat(['newtab']).indexOf(name) !== -1 ? inspectorEl.querySelector('[data-kaz-canvas-attr-warn="' + name + '"]') : null;
+    var warn = inspectorEl && WARN_NAMES.indexOf(name) !== -1 ? inspectorEl.querySelector('[data-kaz-canvas-attr-warn="' + name + '"]') : null;
     if (!warn) return;
     warn.hidden = !labelKey;
     warn.textContent = labelKey ? label(labelKey, '') : '';
@@ -650,23 +656,25 @@
     host.appendChild(p);
     return p;
   }
-  /** Campos de atributo do elemento escolhido. */
+  /** Linha de aviso de um campo do elemento: vazia e escondida enquanto o mapa esta em dia. */
+  function warnSlot(host, name, fresh) {
+    var warn = make('p', 'kaz-canvas__sidehelp kaz-canvas__sidehelp--warn', '');
+    warn.setAttribute('data-kaz-canvas-attr-warn', name);
+    warn.setAttribute('role', 'status');
+    warn.hidden = fresh;
+    if (!fresh) warn.textContent = label('el_stale', '');
+    host.appendChild(warn);
+  }
+  /** Campos de atributo do elemento escolhido. Devolve true quando mostrou algum campo. */
   function paintAttrs(key, host, it, own, fresh) {
-    if (!ATTRS) return;
+    if (!ATTRS) return false;
     var tag = it[0], list = it[7], src = elementSource(key), shown = false;
     if (!Array.isArray(list)) {
       /* Tag que o servidor nao soube ler com seguranca: so avisa onde faria diferenca. */
       if (tag === 'a' || tag === 'img') attrHelp(host, 'el_attr_locked', '');
-      return;
+      return false;
     }
-    function warnLine(name) {
-      var warn = make('p', 'kaz-canvas__sidehelp kaz-canvas__sidehelp--warn', '');
-      warn.setAttribute('data-kaz-canvas-attr-warn', name);
-      warn.setAttribute('role', 'status');
-      warn.hidden = fresh;
-      if (!fresh) warn.textContent = label('el_stale', '');
-      host.appendChild(warn);
-    }
+    function warnLine(name) { warnSlot(host, name, fresh); }
     /* Um campo de texto para o valor de um atributo, ou a frase que explica por que nao ha campo. */
     function valueField(name, title, help, fromData) {
       var a = ATTRS.find(it, name);
@@ -720,7 +728,278 @@
     }
     if (!valueField('alt', 'el_alt', 'el_alt_help', 'el_alt_variable') && tag === 'img') attrHelp(host, 'el_alt_missing', '');
     valueField('aria-label', 'el_label', 'el_label_help', 'el_label_variable');
-    if (shown && !own) attrHelp(host, 'el_attr_need_customize', '');
+    return shown;
+  }
+
+  /* ---------------- KZ-06: cor e tamanho do texto ---------------- */
+  var varCache = { doc: null, names: [] };
+  /**
+   * Nomes das variaveis CSS que as folhas de estilo da pagina declaram.
+   * Somente leitura do quadro. A ultima folha vem primeiro: e a do proprio
+   * tema, escrita depois das folhas de base do sistema.
+   */
+  function pageVarNames(doc) {
+    if (!doc) return [];
+    if (varCache.doc === doc) return varCache.names;
+    var names = [], seen = {}, count = 0;
+    function walk(list, into) {
+      for (var i = 0; list && i < list.length && count < VAR_SCAN_MAX; i++) {
+        var st = list[i].style;
+        for (var j = 0; st && j < st.length && count < VAR_SCAN_MAX; j++) {
+          var name = String(st[j]);
+          if (!CSS_VAR.test(name) || seen[name]) continue;
+          seen[name] = true;
+          into.push(name);
+          count++;
+        }
+        if (list[i].cssRules) walk(list[i].cssRules, into);
+      }
+    }
+    for (var s = doc.styleSheets.length - 1; s >= 0; s--) {
+      var sheet = [];
+      try { walk(doc.styleSheets[s].cssRules, sheet); } catch (e) { /* folha inacessivel */ }
+      names = names.concat(sheet);
+    }
+    varCache = { doc: doc, names: names };
+    return names;
+  }
+  /** Estilo calculado de um no do quadro, ou null. Somente leitura. */
+  function computedOf(node) {
+    try {
+      var view = node && node.ownerDocument ? node.ownerDocument.defaultView : null;
+      return view ? view.getComputedStyle(node) : null;
+    } catch (e) { return null; }
+  }
+  /**
+   * Cores do tema que valem para este elemento: variaveis que a pagina declara
+   * (mais as do painel Design) e cujo valor, neste elemento, e uma cor.
+   */
+  function themeColors(node) {
+    var cs = computedOf(node), out = [], seen = {};
+    if (!cs) return out;
+    var view = node.ownerDocument.defaultView, names = pageVarNames(node.ownerDocument).slice(), T = config.tokens;
+    Object.keys(T.general || {}).forEach(function (k) { names.push(String(T.general[k]['var'])); });
+    Object.keys(T.fields || {}).forEach(function (k) { if (T.fields[k].kind === 'color') names.push(String(T.fields[k]['var'])); });
+    for (var i = 0; i < names.length && out.length < STYLE_LIST_MAX; i++) {
+      var name = names[i];
+      if (seen[name] || !CSS_VAR.test(name)) continue;
+      seen[name] = true;
+      var value = String(cs.getPropertyValue(name)).replace(/^\s+|\s+$/g, ''), ok = HEX.test(value);
+      if (!ok && value !== '' && value.length <= 64) {
+        try { ok = !!(view.CSS && view.CSS.supports('color', value)); } catch (e) { ok = false; }
+      }
+      if (ok) out.push({ name: name, value: value });
+    }
+    return out;
+  }
+  /** `#rgb` ou `#rrggbb` -> `#rrggbb` em minusculas; outra coisa -> ''. */
+  function hex6(value) {
+    var v = String(value).toLowerCase();
+    if (/^#[0-9a-f]{3}$/.test(v)) return '#' + v.charAt(1) + v.charAt(1) + v.charAt(2) + v.charAt(2) + v.charAt(3) + v.charAt(3);
+    return HEX.test(v) ? v : '';
+  }
+  /** `rgb(r, g, b)` do estilo calculado -> `#rrggbb`; transparente ou outra coisa -> ''. */
+  function rgbToHex(text) {
+    var m = /^rgba?\(\s*(\d{1,3})[,\s]+(\d{1,3})[,\s]+(\d{1,3})(?:[,\s\/]+([\d.]+))?/.exec(String(text)), out = '#';
+    if (!m || (m[4] !== undefined && Number(m[4]) === 0)) return '';
+    for (var k = 1; k <= 3; k++) {
+      var h = Math.min(255, Number(m[k])).toString(16);
+      out += h.length < 2 ? '0' + h : h;
+    }
+    return out;
+  }
+  /** Cor que a pagina mostra hoje para `prop` neste no. Fundo transparente: o fundo do que esta atras dele. */
+  function shownColor(node, prop) {
+    for (var hops = 0; node && node.nodeType === 1 && hops < 40; hops++) {
+      var cs = computedOf(node), hex = cs ? rgbToHex(cs.getPropertyValue(prop)) : '';
+      if (hex !== '' || prop !== 'background-color') return hex;
+      node = node.parentElement;
+    }
+    return '';
+  }
+  /** Previa imediata: a mesma declaracao, nas ocorrencias do elemento em cada quadro. */
+  function previewStyle(key, n, prop, value) {
+    if (STYLE_FIELDS.indexOf(prop) === -1) return;
+    visibleFrames().forEach(function (f) {
+      var list = elementNodes(frameDoc(f), key, n);
+      for (var i = 0; i < list.length; i++) {
+        if (!list[i].style) continue;
+        if (value === '') list[i].style.removeProperty(prop);
+        else list[i].style.setProperty(prop, value);
+      }
+    });
+  }
+  /** Um campo de cor ou de tamanho mudou: reescreve so aquela declaracao no `style` da tag. */
+  function onStyleInput(t) {
+    var prop = t.getAttribute('data-kaz-canvas-style'), at = attrTarget();
+    if (!at || STYLE_FIELDS.indexOf(prop) === -1) return;
+    if (!at.fresh) { attrWarn(prop, 'el_stale'); return; }
+    var value = String(t.value), row = t.parentNode, isList = String(t.tagName).toLowerCase() === 'select';
+    if (prop === 'font-size') {
+      /* Numero pela metade ("1e") chega vazio: nao e um pedido para retirar o tamanho. */
+      if (t.validity && t.validity.badInput) { attrWarn(prop, 'el_size_bad'); return; }
+      if (value !== '') value += 'px';
+    } else if (isList) {
+      if (value === '=') return;
+      if (value === '#') {
+        var own = row ? row.querySelector('input[type="color"]') : null;
+        if (!own) return;
+        value = own.value;
+      }
+    }
+    var res = ATTRS.setStyle(at.src, at.map, at.n, prop, value);
+    if (res.error === 'value') { attrWarn(prop, prop === 'font-size' ? 'el_size_bad' : 'el_color_bad'); return; }
+    if (res.error === 'long') { attrWarn(prop, 'el_full'); return; }
+    if (res.error || typeof res.src !== 'string') { attrWarn(prop, 'el_stale'); return; }
+    attrWarn(prop, '');
+    /* O aviso "a pagina mostra outro valor" era do valor antigo: sai, e volta no proximo redesenho se ainda valer. */
+    var forced = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-style-forced="' + prop + '"]') : null;
+    if (forced) forced.parentNode.removeChild(forced);
+    /* O que ficou escrito no codigo, lido de volta: e isso que a previa mostra. */
+    var now = ATTRS.styleOf(res.src, at.map, at.n).values[prop] || '';
+    if (prop !== 'font-size' && row) {
+      var list = row.querySelector('select'), written = list ? list.querySelector('option[value="="]') : null;
+      if (written) written.parentNode.removeChild(written);
+      if (list && !isList) list.value = '#';
+    }
+    if (prop === 'font-size' && inspectorEl) {
+      var note = inspectorEl.querySelector('[data-kaz-canvas-style-written]');
+      if (note) note.hidden = true;
+    }
+    previewStyle(at.key, at.n, prop, now);
+    commitSource(at.key, at.map, res.src);
+  }
+  /** No da pagina (primeiro quadro com trechos lidos) que corresponde ao elemento escolhido. */
+  function pickedNode() {
+    var f = picked ? leadFrame() : null, nodes = f ? elementNodes(frameDoc(f), picked.key, picked.n) : [];
+    return nodes.length ? nodes[Math.min(picked.inst || 0, nodes.length - 1)] : null;
+  }
+  /**
+   * Propriedades em que a pagina mostra outro valor que o escrito na tag do
+   * elemento escolhido: uma regra do tema (com !important, por exemplo) esta
+   * vencendo. So compara o que da para comparar com certeza: cor em hex (ou
+   * variavel que vale um hex) e tamanho em px.
+   */
+  function styleForced(key, it, node) {
+    var out = [], cs = computedOf(node);
+    if (!cs || !ATTRS || !mapFresh(key)) return out;
+    var st = ATTRS.styleOf(elementSource(key), { items: [it] }, 0);
+    if (st.state !== 'fixed') return out;
+    ['color', 'background-color'].forEach(function (prop) {
+      var cur = st.values[prop] || '', want = hex6(cur), got = rgbToHex(cs.getPropertyValue(prop));
+      if (want === '' && cur.slice(0, 6) === 'var(--') want = hex6(String(cs.getPropertyValue(cur.slice(4, -1))).replace(/^\s+|\s+$/g, ''));
+      if (want !== '' && got !== '' && got !== want) out.push(prop);
+    });
+    var px = /^(\d{1,3}(?:\.\d{1,2})?)px$/i.exec(st.values['font-size'] || ''), live = parseFloat(cs.getPropertyValue('font-size'));
+    if (px && isFinite(live) && Math.abs(live - Number(px[1])) > 0.05) out.push('font-size');
+    return out;
+  }
+  /** Poe ou tira, sob cada campo, o aviso "a pagina mostra outro valor". Nao reconstroi o painel. */
+  function syncForced() {
+    var box = inspectorEl && picked ? inspectorEl.querySelector('[data-kaz-canvas-elbox]') : null, it = picked ? elementItem(picked.key, picked.n) : null;
+    if (!box || !it) return;
+    var list = styleForced(picked.key, it, pickedNode());
+    STYLE_FIELDS.forEach(function (prop) {
+      var slot = box.querySelector('[data-kaz-canvas-attr-warn="' + prop + '"]'), note = box.querySelector('[data-kaz-canvas-style-forced="' + prop + '"]');
+      var need = list.indexOf(prop) !== -1;
+      if (note && !need) note.parentNode.removeChild(note);
+      if (note || !need || !slot) return;
+      note = make('p', 'kaz-canvas__sidehelp kaz-canvas__sidehelp--warn', label('el_style_forced', ''));
+      note.setAttribute('data-kaz-canvas-style-forced', prop);
+      slot.parentNode.insertBefore(note, slot.nextSibling);
+    });
+  }
+  /** Campos de cor e tamanho do elemento escolhido. Devolve true quando mostrou os campos. */
+  function paintStyle(key, host, it, own, fresh) {
+    if (!ATTRS || typeof ATTRS.styleOf !== 'function') return false;
+    /* A mesma pergunta com uma tag vazia: so diz se estes campos se aplicam a este tipo de tag. */
+    if (ATTRS.styleOf('', { items: [[it[0], 'group', 0, 0, -1, -1, '', []]] }, 0).state === 'skip') return false;
+    if (!Array.isArray(it[7])) {
+      if (it[0] !== 'a') attrHelp(host, 'el_attr_locked', '');
+      return false;
+    }
+    var src = elementSource(key), st = fresh ? ATTRS.styleOf(src, { items: [it] }, 0) : { state: 'none', values: {} };
+    host.appendChild(make('h6', 'kaz-canvas__sidesub2', label('el_style_title', '')));
+    if (st.state === 'variable') {
+      var a = ATTRS.find(it, 'style');
+      attrHelp(host, 'el_style_variable', a[6] !== '' ? '{{ ' + a[6] + ' }}' : src.slice(a[2], a[3]).slice(0, 120)).setAttribute('data-kaz-canvas-attr-from', 'style');
+      attrHelp(host, 'el_attr_variable_help', '');
+      return false;
+    }
+    if (st.state !== 'none' && st.state !== 'fixed') {
+      attrHelp(host, 'el_style_locked', '').setAttribute('data-kaz-canvas-style-locked', '');
+      return false;
+    }
+    var node = pickedNode(), cs = computedOf(node), colors = themeColors(node), off = !own || !fresh;
+
+    [['color', 'el_color'], ['background-color', 'el_bg']].forEach(function (p) {
+      var prop = p[0], cur = st.values[prop] || '', id = 'kaz-canvas-el-style-' + prop;
+      var lab = make('label', 'kaz-canvas__fieldname', label(p[1], ''));
+      lab.setAttribute('for', id);
+      host.appendChild(lab);
+      var row = make('span', 'kaz-canvas__control kaz-canvas__stylerow');
+      var list = make('select', 'kaz-canvas__select');
+      list.id = id;
+      list.setAttribute('data-kaz-canvas-style', prop);
+      function option(parent, value, text) {
+        var o = make('option', '', text);
+        o.value = value;
+        parent.appendChild(o);
+      }
+      option(list, '', label('el_style_auto', ''));
+      var known = cur === '' || hex6(cur) !== '', group = null;
+      colors.forEach(function (c) {
+        if (!group) {
+          group = document.createElement('optgroup');
+          group.label = label('el_style_theme', '');
+          list.appendChild(group);
+        }
+        option(group, 'var(' + c.name + ')', c.name + ' · ' + c.value);
+        if (cur === 'var(' + c.name + ')') known = true;
+      });
+      option(list, '#', label('el_style_custom', ''));
+      /* Valor que o editor nao escreveria (rgba, nome de cor...): aparece como esta, e so sai se outro for escolhido. */
+      if (!known) option(list, '=', label('el_style_written', '') + ' ' + cur.slice(0, 60));
+      list.value = cur === '' ? '' : (!known ? '=' : (hex6(cur) !== '' ? '#' : cur));
+      list.disabled = off;
+      row.appendChild(list);
+      var own2 = make('input', 'kaz-canvas__swatch');
+      own2.type = 'color';
+      own2.value = hex6(cur) || shownColor(node, prop) || (prop === 'color' ? '#000000' : '#ffffff');
+      own2.setAttribute('data-kaz-canvas-style', prop);
+      own2.setAttribute('aria-label', label(p[1], '') + ': ' + label('el_style_custom', ''));
+      own2.disabled = off;
+      row.appendChild(own2);
+      host.appendChild(row);
+      warnSlot(host, prop, fresh);
+    });
+
+    var size = st.values['font-size'] || '', px = /^(\d{1,3}(?:\.\d{1,2})?)px$/i.exec(size);
+    var sizeLab = make('label', 'kaz-canvas__fieldname', label('el_size', ''));
+    sizeLab.setAttribute('for', 'kaz-canvas-el-style-font-size');
+    host.appendChild(sizeLab);
+    var num = make('input', 'kaz-canvas__input kaz-canvas__input--short');
+    num.type = 'number';
+    num.id = 'kaz-canvas-el-style-font-size';
+    num.min = String(ATTRS.SIZE_MIN);
+    num.max = String(ATTRS.SIZE_MAX);
+    num.step = 'any';
+    num.setAttribute('inputmode', 'decimal');
+    num.setAttribute('data-kaz-canvas-style', 'font-size');
+    num.value = px ? String(Number(px[1])) : '';
+    /* O tamanho que a pagina usa hoje, como referencia. */
+    var live = cs ? parseFloat(cs.getPropertyValue('font-size')) : NaN;
+    if (isFinite(live) && live > 0) num.placeholder = String(Math.round(live * 100) / 100);
+    num.readOnly = off;
+    host.appendChild(num);
+    if (size !== '' && !px) {
+      var note = attrHelp(host, 'el_style_written', size.slice(0, 60));
+      note.setAttribute('data-kaz-canvas-style-written', 'font-size');
+    }
+    warnSlot(host, 'font-size', fresh);
+    attrHelp(host, 'el_style_help', '');
+    syncForced();
+    return true;
   }
   /** Lista "Links deste trecho": caminho por teclado ate cada link de destino fixo. */
   function paintLinkList(key, host) {
@@ -820,7 +1099,7 @@
       host.appendChild(make('p', 'kaz-canvas__sidehelp', label(kind === 'mixed' ? 'el_mixed' : (kind === 'void' ? 'el_void' : 'el_group'), '')));
     }
 
-    paintAttrs(key, host, it, own, fresh);
+    var hasFields = paintAttrs(key, host, it, own, fresh);
     /* KZ-05: o clique costuma cair no texto ou no icone DENTRO do link; o link fica a um passo. */
     if (ATTRS && it[0] !== 'a') {
       for (var up = chain.length - 2; up >= 0; up--) {
@@ -836,6 +1115,10 @@
         break;
       }
     }
+
+    /* KZ-06: cor e tamanho ficam depois dos atributos. */
+    if (paintStyle(key, host, it, own, fresh)) hasFields = true;
+    if (hasFields && !own) attrHelp(host, 'el_attr_need_customize', '');
 
     var bar = make('div', 'kaz-canvas__actions');
     var show = make('button', 'kaz-btn kaz-btn--ghost', label('el_show_code', ''));
@@ -904,7 +1187,9 @@
       if (!fresh) warn.textContent = label('el_stale', '');
     }
     /* KZ-05: com o mapa defasado, cada campo de atributo avisa; em dia, o aviso de destino recusado fica. */
-    if (!fresh) ATTR_FIELDS.concat(['newtab']).forEach(function (name) { attrWarn(name, 'el_stale'); });
+    if (!fresh) WARN_NAMES.forEach(function (name) { attrWarn(name, 'el_stale'); });
+    /* KZ-06: o quadro foi redesenhado; o aviso de valor forcado pelo tema acompanha. */
+    syncForced();
   }
   /* ---------------- KZ-02: estrutura ---------------- */
   function make(tag, cls, text) {
@@ -1022,7 +1307,8 @@
     /* KZ-05: num campo de atributo ou na caixa "nova aba" do mesmo elemento: idem. */
     var using = document.activeElement, usingBox = using && using.closest ? using.closest('[data-kaz-canvas-elbox]') : null;
     if (usingBox && inspectorEl.contains(usingBox) && picked && usingBox.getAttribute('data-kaz-canvas-elbox') === picked.key + ':' + picked.n &&
-        (using.getAttribute('data-kaz-canvas-attr') !== null || using.getAttribute('data-kaz-canvas-newtab') !== null)) {
+        (using.getAttribute('data-kaz-canvas-attr') !== null || using.getAttribute('data-kaz-canvas-newtab') !== null ||
+         using.getAttribute('data-kaz-canvas-style') !== null)) {
       paintSizes();
       syncElement();
       return;
@@ -1412,7 +1698,7 @@
       if (next === null) return true;
       var src = sourceField(v.template);
       var rewritten = src ? rewriteVar(src.value, v.name, v.index, next) : null;
-      if (rewritten === null || rewritten.length > 131072) {
+      if (rewritten === null || overLimit(rewritten)) {
         notes([{ kind: 'warn', text: label('design_stale', '') }]);
         return true;
       }
@@ -1801,6 +2087,7 @@
     if (t.getAttribute('data-kaz-canvas-text') !== null) { if (!t.readOnly) onTextInput(t); return; }
     if (t.getAttribute('data-kaz-canvas-attr') !== null) { if (!t.readOnly) onAttrInput(t); return; }
     if (t.getAttribute('data-kaz-canvas-newtab') !== null) { if (!t.disabled) onNewTab(t); return; }
+    if (t.getAttribute('data-kaz-canvas-style') !== null) { if (!t.disabled && !t.readOnly) onStyleInput(t); return; }
     var key = t.getAttribute('data-kaz-canvas-code');
     if (!key || t.readOnly) return;
     writeSource(key, t.value);

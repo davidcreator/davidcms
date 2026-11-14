@@ -28,6 +28,11 @@
  * Twig. Quando a tag nao pode ser lida com seguranca (Twig solto entre os
  * atributos, atributo repetido, aspa fora de lugar), `attrs` e null e o editor
  * nao oferece nenhum campo de atributo para ela.
+ *
+ * KZ-06 (ADR 0099) — cor e tamanho do texto. O atributo `style` de qualquer
+ * tag entra na mesma lista, com as mesmas regras. O que esta escrito DENTRO do
+ * valor (as declaracoes CSS) nao e lido aqui: quem le e escreve e
+ * admin/view/js/kaz-element-attrs.js, no navegador.
  */
 namespace Reamur\System\Library\Theme;
 
@@ -54,7 +59,7 @@ final class ThemeSourceMap {
     private const ATTRS = [
         'a'   => ['href', 'target', 'rel'],
         'img' => ['alt'],
-        '*'   => ['aria-label'],
+        '*'   => ['aria-label', 'style'],
     ];
 
     private const SPACE = " \t\n\r\f";
