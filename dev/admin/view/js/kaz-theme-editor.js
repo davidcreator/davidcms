@@ -487,6 +487,9 @@ window.KazEditorText = (function () {
   function setFullscreenLocal(on) {
     fullscreenLocal = !!on;
     root.setAttribute('data-kaz-fullscreen', fullscreenLocal ? '1' : '0');
+    /* KZ-12 (ADR 0105): com esta classe a folha do editor tira o menu, a barra e o rodape do
+       Admin da tela e do caminho do Tab enquanto o editor cobre a janela. */
+    if (document.body) document.body.classList.toggle('kaz-tab-fullscreen', fullscreenLocal);
     var d = document.documentElement || document.body;
     try {
       if (fullscreenLocal && d && d.requestFullscreen) d.requestFullscreen();

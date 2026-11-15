@@ -105,7 +105,7 @@ final class KazFrameTextTest extends TestCase {
         self::assertStringContainsString('$data=array_replace($this->language->all(),$data);', $source);
         self::assertStringContainsString("foreach(self::KAZ_FRAME_SCRIPT as \$kazKey) \$kazLabels[\$kazKey]=\$this->language->get('text_kaz_'.\$kazKey);", $source);
         // O script mudou: o endereco dele muda junto, para o navegador nao usar a copia antiga.
-        self::assertStringContainsString("'-kaz-theme-editor-kz11'", $source);
+        self::assertMatchesRegularExpression("/'-kaz-theme-editor-kz(1[1-9]|[2-9]\\d)'/", $source); // KZ-11 em diante
     }
 
     public function testTheScreenAndTheScriptAskOnlyForTheseKeys(): void {

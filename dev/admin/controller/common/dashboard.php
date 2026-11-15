@@ -43,6 +43,18 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             ? $this->language->get('warning_install_folder')
             : '';
 
+        // ADR 0093 (S8): a chave de emergência da política de conteúdo não pode
+        // ficar esquecida. O painel lê o config.php do admin; o do site público
+        // é um arquivo separado, e o aviso lembra de conferir os dois.
+        $cspMode = $this->csp->getMode();
+        $data['warning_csp'] = $cspMode === \Reamur\System\Library\Security\Csp::MODE_ENFORCE
+            ? ''
+            : $this->language->get('warning_csp_' . $cspMode);
+
+        // ADR 0094 (S9): segredos legíveis no banco, chave ausente/errada ou
+        // valores que não abrem. Sem segredo gravado e sem problema, nada aparece.
+        $data['warnings_secret'] = $this->secretWarnings();
+
         // ADR 0089 (S5): o que o servidor enxerga da conexão e avisos de proxy.
         $data = array_merge($data, $this->connectionData());
 
@@ -258,5 +270,40 @@ class Dashboard extends \Reamur\System\Engine\Controller {
         $thousands = $locale === 'en-us' ? ',' : '.';
 
         return number_format($n, 0, $locale === 'en-us' ? '.' : ',', $thousands);
+    }
+
+    /**
+     * Avisos da cifra dos segredos (ADR 0094, S9). O inventário só conta
+     * estados; nenhum conteúdo de segredo passa por aqui.
+     *
+     * @return list<string>
+     */
+    private function secretWarnings(): array {
+        try {
+            $this->load->model('setting/secret');
+            $status = $this->model_setting_secret->status();
+        } catch (\Throwable $e) {
+            return [];
+        }
+
+        $code     = (string)$status['code'];
+        $warnings = [];
+
+        if (in_array($code, ['missing', 'unavailable'], true)) {
+            // Sem nada legível gravado não há o que proteger ainda.
+            if ((int)$status['clear'] > 0) {
+                $warnings[] = $this->language->get('warning_secret_' . $code);
+            }
+        } elseif (in_array($code, ['peer_missing', 'peer_different', 'peer_unreadable'], true)) {
+            $warnings[] = $this->language->get('warning_secret_peer');
+        } elseif (in_array($code, ['invalid', 'pending'], true)) {
+            $warnings[] = $this->language->get('warning_secret_' . $code);
+        }
+
+        if ((int)$status['locked'] > 0) {
+            $warnings[] = $this->language->get('warning_secret_locked');
+        }
+
+        return $warnings;
     }
 }

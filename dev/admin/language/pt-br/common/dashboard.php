@@ -74,6 +74,8 @@ $_['action_import_wp']   = 'Importar do WordPress';
 // ADR 0088 (S3)
 $_['warning_error_display'] = 'A exibição de erros está ligada nesta instalação: se algo falhar, detalhes técnicos (arquivo, linha, SQL) aparecem na tela para qualquer visitante. Em produção, defina REAMUR_ERROR_DISPLAY como false nos arquivos config.php de catalog/ e admin/.';
 $_['warning_install_folder'] = 'A pasta install ainda está no servidor. O instalador está travado e responde 403, mas a pasta não tem uso depois da instalação: apague-a do servidor.';
+$_['warning_csp_report'] = 'A política de conteúdo está em modo de relato (REAMUR_CSP_MODE = report): o navegador só registra no console o que seria bloqueado e nada é impedido. É a chave de emergência; depois de resolver o problema, remova a linha dos arquivos config.php de catalog/ e admin/.';
+$_['warning_csp_off'] = 'A política de conteúdo está desligada (REAMUR_CSP_MODE = off): um script injetado na página não é bloqueado pelo navegador. É a chave de emergência; depois de resolver o problema, remova a linha dos arquivos config.php de catalog/ e admin/.';
 
 // ADR 0089 (S5): conexão, proxy e CDN
 $_['text_conn_heading']           = 'Conexão';
@@ -95,3 +97,11 @@ $_['warning_proxy_unconfigured']  = 'A conexão chegou de %s trazendo cabeçalho
 $_['warning_proxy_untrusted_peer']= 'A conexão chegou de %s, que não está em REAMUR_TRUSTED_PROXIES. Os cabeçalhos de proxy foram ignorados. Se esse endereço é da sua CDN, acrescente-o à lista nos dois arquivos config.php.';
 $_['warning_proxy_invalid']       = 'REAMUR_TRUSTED_PROXIES tem entradas que não são endereço nem faixa e foram ignoradas: %s';
 $_['warning_proxy_hops_direct']   = 'REAMUR_TRUSTED_PROXY_HOPS vale %d, mas esta conexão chegou sem X-Forwarded-For. Se o servidor pode ser acessado por fora do proxy, o IP do visitante pode ser forjado: prefira REAMUR_TRUSTED_PROXIES com os endereços do proxy.';
+
+// ADR 0094 (S9): segredos cifrados no banco
+$_['warning_secret_missing'] = 'Há segredos legíveis no banco (tokens, segredos de webhook ou senha SMTP) e a chave que os protege ainda não está no config.php. Abra Configurações, seção "Proteção dos segredos", e siga as instruções.';
+$_['warning_secret_invalid'] = 'A REAMUR_SECRET_KEY do config.php não é uma chave válida; por isso os segredos estão sendo gravados legíveis no banco. Abra Configurações, seção "Proteção dos segredos".';
+$_['warning_secret_unavailable'] = 'Há segredos legíveis no banco e o PHP desta hospedagem está sem a extensão OpenSSL para cifrá-los. Abra Configurações, seção "Proteção dos segredos".';
+$_['warning_secret_peer'] = 'A chave dos segredos do admin/config.php e a do catalog/config.php não são iguais (ou o segundo arquivo não pôde ser conferido). Até as duas serem iguais, nada é cifrado. Abra Configurações, seção "Proteção dos segredos".';
+$_['warning_secret_pending'] = 'A chave dos segredos está configurada, mas ainda há segredos no banco legíveis ou cifrados com a chave anterior. Abra Configurações e use "Proteger segredos".';
+$_['warning_secret_locked'] = 'Há segredos cifrados que a chave do config.php não abre: pagamentos, webhooks ou e-mail podem estar parados. Abra Configurações, seção "Proteção dos segredos".';

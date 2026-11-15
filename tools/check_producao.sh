@@ -8,7 +8,7 @@
 # Uso:   bash tools/check_producao.sh https://davidalmeida.xyz
 #        DOMAIN=https://outro.dominio PROJ=jwa bash tools/check_producao.sh
 #
-# Checks (16):
+# Checks (19):
 #   1 Catálogo no ar (TLS válido quando https)
 #   2 Força HTTPS (HTTP aberto servindo site = FAIL; sem :80 = warn)
 #   3 Raiz   → 302 → catalog (index.php de atalho)   e segue 200
@@ -28,6 +28,15 @@
 #  15 TTFB (warn apenas, não reprova)
 #  16 Cookie de sessão: HttpOnly + SameSite sempre, e Secure quando o
 #     alvo é https (ADR 0089: atrás de CDN o PHP pode não enxergar o HTTPS)
+#  17 Política de conteúdo aplicada (ADR 0093): site e login do admin com
+#     Content-Security-Policy de script por nonce, sem 'unsafe-eval' e sem
+#     'unsafe-inline' para script (só relato ou ausente = FAIL);
+#     Strict-Transport-Security em alvo https (ausente = warn)
+#  18 Chave dos segredos fora do alcance do navegador (ADR 0094): nenhum
+#     config.php, nenhuma cópia dele (.bak, .old, ~ …) e nem o cache de
+#     configurações são entregues como texto
+#  19 Pasta das extensões fechada ao navegador (ADR 0095): o extension.json
+#     de uma extensão não é entregue (a pasta responde 403/404)
 # ════════════════════════════════════════════════════════════════════
 set -u
 DOMAIN="${1:-${DOMAIN:-https://davidalmeida.xyz}}"
@@ -195,6 +204,67 @@ done
 [ "$SEEN" = "0" ] && wn "nenhum cookie de sessão veio nas respostas (página em cache na CDN?) — confira no navegador"
 [ "$SCHEME" = "https" ] || wn "alvo em http: a flag Secure não foi cobrada"
 ck 16 $RC "cookie-sessao"
+
+echo '── 17 — política de conteúdo e HTTPS obrigatório (ADR 0093) ──'
+# A CDN pode acrescentar uma linha própria (ex.: upgrade-insecure-requests):
+# vale a linha do CMS, a que traz script-src.
+RC=0
+for u in "$C/" "$DOMAIN/admin/index.php?route=common/login"; do
+  H=$(hdrs "$u")
+  P=$(echo "$H" | grep -E "^content-security-policy: .*script-src " | head -1)
+  if [ -z "$P" ]; then
+    RC=1
+    if echo "$H" | grep -q "^content-security-policy-report-only: "; then
+      echo "   ↳ $u: política só em modo de relato — remova REAMUR_CSP_MODE do config.php"
+    else
+      echo "   ↳ $u: sem Content-Security-Policy — REAMUR_CSP_MODE = 'off' no config.php, ou build anterior à ADR 0093"
+    fi
+    continue
+  fi
+  S=$(echo "$P" | sed -E "s/.*script-src ([^;]*).*/\1/")
+  echo "$S" | grep -q "'nonce-" || { RC=1; echo "   ↳ $u: script-src sem nonce ($S)"; }
+  echo "$S" | grep -q "'unsafe-inline'" && { RC=1; echo "   ↳ $u: script-src com 'unsafe-inline'"; }
+  echo "$P" | grep -q "'unsafe-eval'" && { RC=1; echo "   ↳ $u: política com 'unsafe-eval'"; }
+  echo "$P" | grep -q "object-src 'none'" || { RC=1; echo "   ↳ $u: sem object-src 'none'"; }
+done
+if [ "$SCHEME" = "https" ]; then
+  T=$(hdrs "$C/" | grep -E "^strict-transport-security: " | head -1)
+  if echo "$T" | grep -qE "max-age=[1-9][0-9]*"; then echo "   $T"
+  else wn "Strict-Transport-Security ausente — o HTTP_SERVER do config.php começa com https://? (REAMUR_HSTS_MAX_AGE = 0 também desliga)"; fi
+else
+  wn "alvo em http: Strict-Transport-Security não foi cobrado"
+fi
+ck 17 $RC "politica-de-conteudo"
+
+echo '── 18 — chave dos segredos fora do alcance do navegador (ADR 0094) ──'
+# O config.php guarda a senha do banco e a REAMUR_SECRET_KEY. Executado pelo
+# PHP ele responde vazio; o risco é o servidor entregá-lo como texto, ou uma
+# cópia deixada por um editor (config.php.bak, config.php~) ser baixada.
+# Só reprova quando o conteúdo aparece: status 200 sozinho pode ser a página
+# de "não encontrado" de uma CDN.
+RC=0
+body(){ curl -sk -m 15 "$1" | head -c 20000; }
+for app in catalog admin; do
+  for f in config.php config.php.bak config.php.old config.php.save config.php.txt config.php~ .config.php.swp; do
+    if body "$DOMAIN/$app/$f" | grep -qaE "REAMUR_SECRET_KEY|DB_PASSWORD|DB_USERNAME"; then
+      RC=1; echo "   ↳ /$app/$f entrega o conteúdo do config.php — apague a cópia (ou corrija o PHP do servidor) e TROQUE a senha do banco e a chave dos segredos"
+    fi
+  done
+done
+if body "$DOMAIN/system/storage/cache/cache.setting.config" | grep -qaE "mail_engine|config_name|mp_client_secret"; then
+  RC=1; echo "   ↳ /system/storage/cache/cache.setting.config é entregue — a pasta system/ está aberta (ver check 10)"
+fi
+ck 18 $RC "chave-dos-segredos"
+
+echo '── 19 — pasta das extensões fechada ao navegador (ADR 0095) ──'
+# extension/ guarda o código e a descrição das extensões; o .htaccess da pasta
+# a fecha sob Apache. Em outro servidor (nginx) o bloqueio é da configuração
+# dele. Reprova quando o conteúdo de um extension.json aparece.
+RC=0
+if body "$DOMAIN/extension/site_verification/extension.json" | grep -qaE '"code"[[:space:]]*:[[:space:]]*"site_verification"'; then
+  RC=1; echo "   ↳ /extension/site_verification/extension.json é entregue — feche a pasta extension/ no servidor (como a pasta system/)"
+fi
+ck 19 $RC "extensoes-fechadas"
 
 echo
 echo "════════ summary: $PASS pass / $FAIL fail / $WARN avisos ════════"

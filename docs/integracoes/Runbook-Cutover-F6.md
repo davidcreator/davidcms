@@ -62,6 +62,12 @@ A seção 7 (rollback) é o botão de emergência — leia **antes** de começar
        com seus orçamentos). Pode dropar o banco de teste depois.
 - [ ] **2.4** Anote onde os backups ficaram (pasta/pen drive/nuvem) — o
        rollback (§7) depende deles.
+- [ ] **2.5 Chave dos segredos (ADR 0094):** a linha
+       `define('REAMUR_SECRET_KEY', '…')` do `config.php` precisa estar
+       guardada junto do backup do banco. Banco restaurado sem ela não abre
+       tokens do Mercado Pago, senha SMTP nem segredos de webhook. Não
+       deixe cópias do `config.php` dentro da pasta do site
+       (`config.php.bak`, `config.php~`): o check 18 reprova.
 
 ## 3. O que sobe para o servidor (modelo build → deploy, ADR 0039 — **decidido**)
 
@@ -73,11 +79,17 @@ gerada com 1 comando a partir da sua pasta local (XAMPP):
 ```
 
 Isso recria `~/davidcms/prod/` com **somente o runtime** (`catalog/`,
-`admin/`, `system/`, `.htaccess`, `index.php`, `index.html`, `robots.txt`)
+`admin/`, `system/`, `extension/`, `.htaccess`, `index.php`, `index.html`,
+`robots.txt`)
 — e **sem**: `install/` (o wizard nunca vai ao ar), `tests/`,
-planejamento/agentes/docs, configs reais, phpstan/composer, logs e sessões
-antigas. O script termina com um veredito automático (algo obrigatório
-faltando ou algo proibido presente = ele acusa). `agents-ia/`, `docs/`,
+planejamento/agentes/docs, configs reais, PHPUnit/PHPStan e os manifestos
+do Composer, logs e sessões antigas. O script termina com um veredito
+automático (algo obrigatório faltando ou algo proibido presente = ele acusa).
+
+**O script precisa do Composer** (ADR 0092): é ele que tira PHPUnit e
+PHPStan da cópia que vai para `prod/`. Se aparecer "Composer não
+encontrado", a build parou antes de copiar; rode de novo apontando o
+executável: `COMPOSER_BIN="php /caminho/composer.phar" bash tools/build_prod.sh`. `agents-ia/`, `docs/`,
 `tools/`, `dev/` inteiro: **ficam só na sua máquina** (e no git privado),
 nunca no ar.
 
@@ -97,8 +109,9 @@ nunca no ar.
 
 - [ ] **4.1** Subir o **conteúdo de `prod/`** para a raiz pública do
        domínio (FTP/cPanel ou zip do 3.2 + "Extract" no cPanel). O resultado
-       SEMPRE é: `public_html/{catalog,admin,system,index.php,index.html,
-       robots.txt,.htaccess}` (sem nenhuma pasta `prod/` ou `dev/` no meio).
+       SEMPRE é: `public_html/{catalog,admin,system,extension,index.php,
+       index.html,robots.txt,.htaccess}` (sem nenhuma pasta `prod/` ou
+       `dev/` no meio).
 - [ ] **4.2** Banco de produção **via SQL, sem wizard** (install/ não foi
        ao ar). No phpMyAdmin do painel da hospedagem, nessa ordem:
   1. criar o banco vazio (utf8mb4);
@@ -123,6 +136,13 @@ nunca no ar.
        commite esses configs no git.
 - [ ] **4.4** Permissões: `system/storage/` (e subpastas cache/ logs/
        session/ temp/) gravável pelo PHP do servidor.
+- [ ] **4.4b** Extensões (ADR 0095): a pasta `extension/` sobe com o
+       próprio `.htaccess`, que a fecha sob Apache / LiteSpeed. Em nginx,
+       bloqueie `extension/` na configuração do servidor, como `system/`
+       (o check 19 do §5 acusa se ficar aberta). Nenhuma extensão vem
+       ligada. Se uma extensão quebrar o site: `define('REAMUR_EXTENSIONS',
+       false);` nos dois `config.php` desliga todas
+       ([Guia-Extensoes §3](../guias/Guia-Extensoes.md#3-se-uma-extensão-quebrar-o-site)).
 - [ ] **4.5** HTTPS: emitir/ativar o certificado do domínio (painel da
        hospedagem, geralmente 1 clique). **Só depois** do cert válido:
   - [ ] forçar HTTPS (opção "Force HTTPS" do painel);
@@ -159,11 +179,14 @@ nunca no ar.
 bash tools/check_producao.sh https://davidalmeida.xyz
 ```
 
-16 checks remotos read-only (todos de fora): catálogo + TLS, força HTTPS,
+19 checks remotos read-only (todos de fora): catálogo + TLS, força HTTPS,
 raiz→catalog, aliases, SEO, os 301s, sitemap, robots, admin protegido,
 system/ e logs selados, erro sem stack, headers, **ausência de dev-only
-no ar**, TTFB e flags do cookie de sessão (`Secure`, `HttpOnly`,
-`SameSite`). Resultado: `16 pass / 0 fail` = ✅ go. A lista manual
+no ar**, TTFB, flags do cookie de sessão (`Secure`, `HttpOnly`,
+`SameSite`), política de conteúdo aplicada + HSTS (ADR 0093), `config.php`
+(com a chave dos segredos) fora do alcance do navegador (ADR 0094) e pasta
+`extension/` fechada ao navegador (ADR 0095).
+Resultado: `19 pass / 0 fail` = ✅ go. A lista manual
 abaixo fica como *diagnóstico* de qualquer FAIL específico.
 
 **Lista manual (diagnóstico)** — rode em qualquer máquina (ajuste `DOMINIO`):
@@ -201,7 +224,7 @@ curl -s -X POST "https://DOMINIO/catalog/index.php?route=checkout/payment.notify
 | Semanal | Webhooks entregando | Admin → Webhooks → entregas recentes 2xx |
 | Contínuo | Uptime | UptimeRobot (grátis) monitorando a home 5/5 min, alerta no seu e-mail |
 | Uma vez | SEO | Google Search Console: enviar o **sitemap novo** (`…/catalog/index.php?route=common/sitemap`), acompanhar cobertura/trocas de URL (os 301 consolida em ~2-4 semanas) |
-| Uma vez | Observação CSP | com 30 dias de `Content-Security-Policy-Report-Only` em produção, me devolve os relatos → transformamos em CSP enforce (dívida ADR 0037) |
+| Uma vez | Política de conteúdo | já sai aplicada (ADR 0093). Navegue pelo site e pelo admin com o console do navegador aberto (F12): linha vermelha com `Content Security Policy` = algo de fora que precisa entrar em `REAMUR_CSP_SOURCES`. Se algo essencial parar, `define('REAMUR_CSP_MODE', 'report');` nos dois `config.php` devolve o site ao modo que só relata; o painel do admin avisa enquanto a linha estiver lá |
 
 ## 7. Rollback (botão de emergência)
 

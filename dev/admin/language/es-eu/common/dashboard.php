@@ -74,6 +74,8 @@ $_['action_import_wp']   = 'Importar de WordPress';
 // ADR 0088 (S3)
 $_['warning_error_display'] = 'La visualización de errores está activada en esta instalación: si algo falla, los detalles técnicos (archivo, línea, SQL) se muestran en pantalla a cualquier visitante. En producción, define REAMUR_ERROR_DISPLAY como false en los archivos config.php de catalog/ y admin/.';
 $_['warning_install_folder'] = 'La carpeta install sigue en el servidor. El instalador está bloqueado y responde 403, pero la carpeta no tiene uso después de la instalación: bórrela del servidor.';
+$_['warning_csp_report'] = 'La política de contenido está en modo de informe (REAMUR_CSP_MODE = report): el navegador solo registra en la consola lo que se bloquearía y no se impide nada. Es el interruptor de emergencia; cuando el problema esté resuelto, elimine la línea de los archivos config.php de catalog/ y admin/.';
+$_['warning_csp_off'] = 'La política de contenido está desactivada (REAMUR_CSP_MODE = off): el navegador no bloquea un script inyectado en la página. Es el interruptor de emergencia; cuando el problema esté resuelto, elimine la línea de los archivos config.php de catalog/ y admin/.';
 
 // ADR 0089 (S5): conexão, proxy e CDN
 $_['text_conn_heading']           = 'Conexión';
@@ -95,3 +97,11 @@ $_['warning_proxy_unconfigured']  = 'La conexión llegó desde %s con cabeceras 
 $_['warning_proxy_untrusted_peer']= 'La conexión llegó desde %s, que no está en REAMUR_TRUSTED_PROXIES. Las cabeceras de proxy se ignoraron. Si esa dirección es de tu CDN, añádela a la lista en los dos archivos config.php.';
 $_['warning_proxy_invalid']       = 'REAMUR_TRUSTED_PROXIES tiene entradas que no son dirección ni rango y se ignoraron: %s';
 $_['warning_proxy_hops_direct']   = 'REAMUR_TRUSTED_PROXY_HOPS vale %d, pero esta conexión llegó sin X-Forwarded-For. Si se puede acceder al servidor sin pasar por el proxy, la IP del visitante se puede falsificar: usa REAMUR_TRUSTED_PROXIES con las direcciones del proxy.';
+
+// ADR 0094 (S9): segredos cifrados no banco
+$_['warning_secret_missing'] = 'Hay secretos legibles en la base de datos (tokens, secretos de webhook o contraseña SMTP) y la clave que los protege todavía no está en config.php. Abre Configuración, sección "Protección de los secretos", y sigue las instrucciones.';
+$_['warning_secret_invalid'] = 'La REAMUR_SECRET_KEY de config.php no es una clave válida; por eso los secretos se están guardando legibles en la base de datos. Abre Configuración, sección "Protección de los secretos".';
+$_['warning_secret_unavailable'] = 'Hay secretos legibles en la base de datos y el PHP de este servidor no tiene la extensión OpenSSL para cifrarlos. Abre Configuración, sección "Protección de los secretos".';
+$_['warning_secret_peer'] = 'La clave de los secretos de admin/config.php y la de catalog/config.php no son iguales (o el segundo archivo no se pudo comprobar). Hasta que coincidan, no se cifra nada. Abre Configuración, sección "Protección de los secretos".';
+$_['warning_secret_pending'] = 'La clave de los secretos está configurada, pero todavía hay secretos en la base de datos legibles o cifrados con la clave anterior. Abre Configuración y usa "Proteger secretos".';
+$_['warning_secret_locked'] = 'Hay secretos cifrados que la clave de config.php no abre: los pagos, los webhooks o el correo pueden estar detenidos. Abre Configuración, sección "Protección de los secretos".';

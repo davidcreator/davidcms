@@ -74,6 +74,8 @@ $_['action_import_wp']   = 'Import from WordPress';
 // ADR 0088 (S3)
 $_['warning_error_display'] = 'Error display is on for this installation: if something fails, technical details (file, line, SQL) are shown on screen to any visitor. In production, set REAMUR_ERROR_DISPLAY to false in the config.php files of catalog/ and admin/.';
 $_['warning_install_folder'] = 'The install folder is still on the server. The installer is locked and answers 403, but the folder has no use after installation: delete it from the server.';
+$_['warning_csp_report'] = 'The content policy is in report mode (REAMUR_CSP_MODE = report): the browser only logs to the console what would be blocked and nothing is stopped. This is the emergency switch; once the problem is solved, remove the line from the config.php files of catalog/ and admin/.';
+$_['warning_csp_off'] = 'The content policy is off (REAMUR_CSP_MODE = off): a script injected into the page is not blocked by the browser. This is the emergency switch; once the problem is solved, remove the line from the config.php files of catalog/ and admin/.';
 
 // ADR 0089 (S5): conexão, proxy e CDN
 $_['text_conn_heading']           = 'Connection';
@@ -95,3 +97,11 @@ $_['warning_proxy_unconfigured']  = 'The connection came from %s carrying proxy 
 $_['warning_proxy_untrusted_peer']= 'The connection came from %s, which is not in REAMUR_TRUSTED_PROXIES. The proxy headers were ignored. If that address belongs to your CDN, add it to the list in both config.php files.';
 $_['warning_proxy_invalid']       = 'REAMUR_TRUSTED_PROXIES has entries that are neither an address nor a range and were ignored: %s';
 $_['warning_proxy_hops_direct']   = 'REAMUR_TRUSTED_PROXY_HOPS is %d, but this connection arrived without X-Forwarded-For. If the server can be reached without going through the proxy, the visitor IP can be forged: prefer REAMUR_TRUSTED_PROXIES with the proxy addresses.';
+
+// ADR 0094 (S9): segredos cifrados no banco
+$_['warning_secret_missing'] = 'There are readable secrets in the database (tokens, webhook secrets or the SMTP password) and the key that protects them is not in config.php yet. Open Settings, section "Secret protection", and follow the instructions.';
+$_['warning_secret_invalid'] = 'REAMUR_SECRET_KEY in config.php is not a valid key, so secrets are being stored readable in the database. Open Settings, section "Secret protection".';
+$_['warning_secret_unavailable'] = 'There are readable secrets in the database and PHP on this server has no OpenSSL extension to encrypt them. Open Settings, section "Secret protection".';
+$_['warning_secret_peer'] = 'The secret key in admin/config.php and the one in catalog/config.php are not the same (or the second file could not be checked). Until both match, nothing is encrypted. Open Settings, section "Secret protection".';
+$_['warning_secret_pending'] = 'The secret key is set, but there are still secrets in the database that are readable or encrypted with the previous key. Open Settings and use "Protect secrets".';
+$_['warning_secret_locked'] = 'There are encrypted secrets that the key in config.php cannot open: payments, webhooks or e-mail may be stopped. Open Settings, section "Secret protection".';

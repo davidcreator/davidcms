@@ -404,13 +404,26 @@
   margin: 0; border-radius: 0; border: 0; height: 100vh; width: 100vw; }
 .kaz-shell[data-kaz-fullscreen="1"] .kaz-workspace { height: calc(100vh - 128px); }
 
-/* tela cheia em OUTRA pagina (controller omite header/footer do Admin) */
+/* tela cheia em OUTRA pagina (kaz_fullscreen=1; o <body> recebe a classe kaz-page-fullscreen) */
 .kaz-shell[data-kaz-page-mode="fullscreen"] { position: fixed; inset: 0; z-index: 9999;
   margin: 0; border-radius: 0; border: 0; height: 100vh; width: 100vw; }
 .kaz-shell[data-kaz-page-mode="fullscreen"] .kaz-workspace { height: calc(100vh - 168px); }
 .kaz-shell[data-kaz-page-mode="fullscreen"] .kaz-extra,
 .kaz-shell[data-kaz-page-mode="fullscreen"] .kaz-io { max-height: 28vh; overflow: auto; }
 body:has(.kaz-shell[data-kaz-page-mode="fullscreen"]) { overflow: hidden; background: #18181b; }
+/* KZ-12 (ADR 0105): nas duas telas cheias o editor ocupa a janela inteira. A regra
+   ".kaz-shell.kaz-card { height: calc(100dvh - 104px) }", mais abaixo, tem o mesmo peso das duas
+   regras acima e vem depois delas: sobrava no pe da janela uma faixa de 104px com o Admin.
+   Estas tem um seletor a mais e ganham em qualquer ordem e em qualquer largura. */
+.kaz-shell.kaz-card[data-kaz-fullscreen="1"],
+.kaz-shell.kaz-card[data-kaz-page-mode="fullscreen"] { height: 100vh; height: 100dvh; }
+/* O menu, a barra e o rodape do Admin ficam atras do editor: saem da tela e do caminho do Tab.
+   A classe vem do servidor (pagina cheia) ou do script (tela cheia nesta aba). */
+body.kaz-page-fullscreen, body.kaz-tab-fullscreen { overflow: hidden; background: #18181b; }
+body.kaz-page-fullscreen .admin-sidebar, body.kaz-tab-fullscreen .admin-sidebar,
+body.kaz-page-fullscreen .admin-topbar, body.kaz-tab-fullscreen .admin-topbar,
+body.kaz-page-fullscreen .site-footer, body.kaz-tab-fullscreen .site-footer,
+body.kaz-page-fullscreen .sidebar-backdrop, body.kaz-tab-fullscreen .sidebar-backdrop { display: none; }
 
 @media (max-width: 1100px) {
   .kaz-screenbar { gap: 4px; }

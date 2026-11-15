@@ -222,7 +222,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
         $data['kaz_scene_saved']=$savedScene!==null;
         $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
-        $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz11';
+        $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz12';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAJ);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAJ);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
@@ -469,7 +469,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         $ahScene=(new \Reamur\System\Library\Theme\ThemeSceneCss())->compile($config['kaz_scene']??null);
         $data['kaz_release']=\Reamur\System\Library\Theme\ThemeReleaseProbe::summarize(
             $config,$pubCfg,$ahState,$ahScene,(int)($theme['status']??0)===1,$kazAssetAJ);
-        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V); $this->response->setOutput($this->load->view('design/theme_form',$data));
+        // KZ-12 (ADR 0105): a pagina cheia tambem leva cabecalho e rodape (sao eles que carregam estilo e script);
+        // a classe no <body> faz a folha do editor esconder o menu, a barra e o rodape do Admin.
+        $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V, $data['kaz_fullscreen_page'] ? 'kaz-page-fullscreen' : null); $this->response->setOutput($this->load->view('design/theme_form',$data));
     }
     /**
      * F13-E: exporta o tema como pacote JSON versionado (rascunho por padrao,

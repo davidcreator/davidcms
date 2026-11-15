@@ -1,3 +1,7 @@
-{% if not kaz_fullscreen_page %}{{ header|raw }}{% endif %}
+{# KZ-12 (ADR 0105): o cabecalho e o rodape do Admin entram SEMPRE. Sao eles que abrem o documento e
+   carregam as folhas de estilo e os scripts; sem eles a "tela cheia em nova pagina" abria sem estilo
+   e o editor nao iniciava. Nessa pagina o <body> recebe a classe kaz-page-fullscreen, e a folha do
+   editor tira da tela o menu, a barra e o rodape do Admin. #}
+{{ header|raw }}
 {% include 'design/kaz_theme_editor.twig' %}
-{% if not kaz_fullscreen_page %}{{ footer|raw }}{% endif %}
+{{ footer|raw }}
