@@ -134,7 +134,7 @@ final class KazElementSpaceTest extends TestCase {
                     // Todo desenho entregue e enfeite ao lado de um texto visivel: o leitor de tela o pula.
                     self::assertSame('true', $marks['aria-hidden'] ?? '', $where);
                     $hidden[$name]++;
-                    // Achado registrado na ADR 0101, nao corrigido: marca de enfeite junto com um nome que nunca e lido.
+                    // Marca de enfeite junto com um nome que nunca e lido: achado da ADR 0101, corrigido no KZ-09 (ADR 0102).
                     if (count($marks) > 1) $named[$name]++;
                     // Onde decorate() escreve a marca: logo depois de `<svg`.
                     if (substr($source, $el['open'][0], 23) === '<svg aria-hidden="true"') $first[$name]++;
@@ -142,7 +142,7 @@ final class KazElementSpaceTest extends TestCase {
             }
         }
         self::assertSame([15, 15, 12, 30, 0, 0], array_map(static fn (string $name): int => $hidden[$name], self::ORDER));
-        self::assertSame([0, 0, 0, 30, 0, 0], array_map(static fn (string $name): int => $named[$name], self::ORDER));
+        self::assertSame([0, 0, 0, 0, 0, 0], array_map(static fn (string $name): int => $named[$name], self::ORDER));
         // Os 38 marcados nesta etapa (13, 13 e 12) tem a marca no lugar em que o editor a poe.
         self::assertSame([13, 13, 12, 0, 0, 0], array_map(static fn (string $name): int => $first[$name], self::ORDER));
     }
@@ -167,7 +167,7 @@ final class KazElementSpaceTest extends TestCase {
         $canvas = $this->repo('dev/admin/view/js/kaz-canvas.js');
 
         // O navegador busca o canvas novo: a versao no endereco e a desta etapa.
-        self::assertStringContainsString("'-kaz-canvas-kz08'", $controller);
+        self::assertStringContainsString("'-kaz-canvas-kz09'", $controller);
         self::assertSame(1, preg_match('/\$canvasLabels=\[\];\s*foreach\(\[(.*?)\] as \$canvasKey\)/s', $controller, $m));
         preg_match_all("/'([a-z0-9_]+)'/", $m[1], $listed);
         self::assertSame(count($listed[1]), count(array_unique($listed[1])));

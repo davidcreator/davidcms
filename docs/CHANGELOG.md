@@ -1,5 +1,23 @@
 # Changelog
 
+## KZ-09 — KAZEditor-Theme: link e botão sem nome; os 30 selos do David-Universe-3D viram só enfeite (2026-11-15)
+- ADR 0102. Nona etapa do caminho B do editor de tema.
+- **A lista da página passa a se chamar "Sem descrição ou sem nome"** e mostra também cada link (`<a href>`) e cada botão (`<button>`) do código do tema em que o leitor de tela não tem o que anunciar: só um ícone, só um "×", nada dentro. A linha diz **Link sem nome** com o destino (`destino “/contato”`) ou **Botão sem nome** com o texto que está perto. Clicar leva até o elemento e põe o foco no campo do rótulo.
+- **O conserto é o campo "Rótulo para leitor de tela"**, que já existia: ele escreve `aria-label` na tag. Nada novo é escrito no tema, e nada é gravado até salvar o rascunho. Escrito o rótulo, a linha sai da lista na hora.
+- **O que conta como nome:** texto dentro do elemento, imagem com `alt`, desenho com descrição, `aria-label`, `aria-labelledby` e, por último, a dica (`title`). Com nome só pela dica, o painel sugere escrever o rótulo.
+- **O que não é acusado:** elemento cujo texto vem do conteúdo do site (`{{ titulo }}`); `<a>` sem `href`; link ou botão escondido do leitor de tela com `aria-hidden="true"` (o painel avisa que o teclado ainda chega nele). O que o editor não consegue ler é contado à parte, em "Não conferidos".
+- **Texto escondido não dá nome:** `<a href="/x"><span aria-hidden="true">×</span></a>` entra na lista.
+- **Link com imagem ou desenho pendente dentro:** continua aparecendo só a imagem, como antes. Se ela for marcada como enfeite, o link fica sem nome e entra na lista no lugar dela.
+- **Link e botão não têm "É só enfeite":** o teclado continuaria parando neles.
+- **Pacote `David-Universe-3D`: os 30 selos ficam só como enfeite.** Cada desenho tinha `aria-hidden="true"` e, na mesma tag, `role="img"` com `aria-label="Selo do projeto"`; o rótulo nunca era lido. Saíram o `role` e o `aria-label`. Para quem usa leitor de tela nada muda. O `checksum` do pacote foi recalculado, e um teste impede a volta. Era o achado deixado na KZ-08.
+- **Nos seis pacotes de `docs/temas`:** 422 links e 3 botões no código, nenhum sem nome.
+- **Atenção ao atualizar um site instalado:** suba os arquivos. Não há SQL, linha nova no `config.php` nem configuração. O endereço do script do canvas mudou de versão (`-kaz-canvas-kz09`); não é preciso limpar o cache do navegador. **Um tema que já existe pode abrir com linhas novas na lista:** são os links e botões sem nome que ele já tinha. **Tema já importado do `David-Universe-3D` não muda sozinho:** importar o arquivo de novo grava a correção como rascunho; ela vale no site depois de publicar.
+- **Banco e dados salvos:** nenhuma tabela, coluna, rota ou campo novo no `POST`. Nenhum controle novo tem `name`. Nenhuma regra de CSS nova.
+- **Para quem escreve código:** `Theme\ThemeSourceMap` passa a ler `title` em `<a>` e `<button>`, e cada um deles ganha no mapa um nono campo: uma lista com a soma das marcas `INNER_TEXT`, `INNER_TWIG`, `INNER_HIDDEN` e `INNER_UNSURE`, seguida dos índices dos elementos de dentro. A regra fica em `admin/view/js/kaz-element-attrs.js` (`holder`, chamada por `a11y` e `pending`), conferida por `node tests/check_kaz_element_name.js` (chamado também pelo PHPUnit).
+- **Limites:** só `<a href>` e `<button>` do código do tema (bloco com `role="button"`, `<input type="submit">` e links do conteúdo do site ficam de fora). O editor confere se há nome, não se o nome é bom. Texto posto por CSS (`content:` em `::before`) não conta. Em laço, o rótulo vale para todas as repetições.
+- **Achado, não corrigido:** a pasta `tema/` tem duas cópias antigas do `David-Universe-3D` (`david_universe_3d_bo.reamurtheme.json` e `bo_config.json`), ainda com os 30 selos nas duas marcas. Nenhum documento cita esses arquivos.
+- **Conferido:** 1606 testes em PHP 8.2 e 8.3; no Chromium, um pacote de prova e os seis pacotes de `docs/temas`, comparando a lista do editor com o que o navegador entrega ao leitor de tela, com salvar, reabrir e desfazer. Não foi testado com leitor de tela nem em outros navegadores.
+
 ## KZ-08 — KAZEditor-Theme: alinhamento e espaçamento por elemento; pacotes sem desenho pendente (2026-11-14)
 - ADR 0101. Oitava etapa do caminho B do editor de tema.
 - **Novo no painel Elemento, seção "Alinhamento e espaçamento":** **Alinhamento do texto** (à esquerda, centralizado, à direita, justificado), **Margem: espaço por fora** e **Espaço interno: por dentro**, cada um com os quatro lados (acima, direita, abaixo, esquerda), em px. O painel escreve `text-align`, `margin-*` e `padding-*` no atributo `style` da própria tag, em `templates[chave]`. Nada é gravado até salvar o rascunho.

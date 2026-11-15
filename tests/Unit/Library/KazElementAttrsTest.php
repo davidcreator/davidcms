@@ -70,9 +70,11 @@ final class KazElementAttrsTest extends TestCase {
 
     public function testOnlyTheClosedListOfNamesPerTagIsReported(): void {
         // href so em <a>, alt so em <img>, aria-label em qualquer tag; o resto nao entra.
+        // KZ-09 (ADR 0102): `title` e lido em <a> e <button> (pode ser o unico nome do elemento); nas outras tags, nao.
         self::assertSame([], $this->first('<p alt="não é imagem" href="/x" title="t">x</p>')['attrs']);
         self::assertSame([], $this->first('<img src="a.png" href="/x" title="t">')['attrs']);
-        self::assertSame(['href'], array_column((array)$this->first('<a href="/x" alt="y" title="t" class="c" data-href="/z">x</a>')['attrs'], 'name'));
+        self::assertSame(['href', 'title'], array_column((array)$this->first('<a href="/x" alt="y" title="t" class="c" data-href="/z">x</a>')['attrs'], 'name'));
+        self::assertSame(['title'], array_column((array)$this->first('<button type="button" title="t" class="c">x</button>')['attrs'], 'name'));
         self::assertSame(['aria-label'], array_column((array)$this->first('<button type="button" aria-label="Fechar">x</button>')['attrs'], 'name'));
         self::assertSame(['aria-label', 'href'], array_column((array)$this->first('<a aria-label="Início" href="/">x</a>')['attrs'], 'name'));
         // Nome em maiusculas e o mesmo atributo; o trecho devolvido e o que esta escrito.
@@ -128,9 +130,11 @@ final class KazElementAttrsTest extends TestCase {
     public function testQuoteInsideAnotherAttributeDoesNotShiftThePositions(): void {
         $source = "<a title='it\"s > here' href=\"/x\" data-j='{\"a\":1}' aria-label=\"Olá\">x</a>";
         $attrs = $this->first($source)['attrs'];
-        self::assertSame(['href', 'aria-label'], array_column((array)$attrs, 'name'));
-        self::assertSame('/x', $this->cut($source, $attrs[0], 'value'));
-        self::assertSame('Olá', $this->cut($source, $attrs[1], 'value'));
+        // KZ-09: o `title` do link tambem e lido, com as aspas e o `>` que tem dentro.
+        self::assertSame(['title', 'href', 'aria-label'], array_column((array)$attrs, 'name'));
+        self::assertSame('it"s > here', $this->cut($source, $attrs[0], 'value'));
+        self::assertSame('/x', $this->cut($source, $attrs[1], 'value'));
+        self::assertSame('Olá', $this->cut($source, $attrs[2], 'value'));
     }
 
     public function testDescribeDeliversAttributesInEditorOffsets(): void {
@@ -196,7 +200,8 @@ final class KazElementAttrsTest extends TestCase {
         self::assertSame([45, 3], $seen['David-Universe-3D']['href']);
         self::assertSame([0, 18], $seen['Reamur-Reference']['href']);
         self::assertSame([0, 4], $seen['Reamur-ThreeJS-Reference']['href']);
-        self::assertSame([50, 2], $seen['David-Universe-3D']['aria-label']);
+        // KZ-09 (ADR 0102): eram [50, 2]; os 30 selos escondidos do leitor de tela perderam o rotulo que nunca era lido.
+        self::assertSame([20, 2], $seen['David-Universe-3D']['aria-label']);
         // Nenhum pacote entregue tem `alt` escrito a mao: so vindo do conteudo.
         self::assertSame(0, array_sum(array_map(static fn (array $c): int => $c['alt'][0], $seen)));
         self::assertSame([0, 11], $seen['Reamur-Reference']['alt']);

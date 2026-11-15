@@ -117,6 +117,10 @@
   var WARN_NAMES = ATTR_FIELDS.concat(['newtab'], STYLE_SLOTS, ['a11y']);
   /* KZ-07 (ADR 0100): lista de imagens e desenhos sem descricao, da pagina inteira. */
   var A11Y_LIST_MAX = 60, A11Y_SNIP_MAX = 60, A11Y_NEAR_MAX = 40, A11Y_NEAR_HOPS = 3;
+  /* KZ-09 (ADR 0102): a mesma lista mostra link e botao sem nome. Rotulo de cada linha, por tag. */
+  var A11Y_ROWS = { img: 'a11y_img', svg: 'a11y_svg', a: 'a11y_link', button: 'a11y_button' };
+  /* Frase do painel para o link ou o botao pendente. */
+  var A11Y_NONAME = { link: 'el_link_noname', button: 'el_button_noname' };
   var A11Y_OK = !!ATTRS && typeof ATTRS.a11y === 'function' && typeof ATTRS.pending === 'function';
   var STYLE_LIST_MAX = 60, VAR_SCAN_MAX = 600;
 
@@ -609,6 +613,8 @@
     liveText = { key: key, n: n, text: String(t.value).slice(0, TEXT_MAX) };
     visibleFrames().forEach(function (f) { setElementText(frameDoc(f), key, n, liveText.text); });
     commitSource(key, map, next);
+    /* KZ-09: o texto apagado de um link deixa o link sem nome; a frase do painel acompanha. */
+    paintA11yState();
   }
   /** A fonte de um trecho foi reescrita pelo painel: mapa, codigo a vista e campo real acompanham. */
   function commitSource(key, map, next) {
@@ -684,7 +690,15 @@
       b.disabled = !own;
       host.appendChild(b);
     }
-    if (st.state === 'missing') { note(st.kind === 'img' ? 'el_alt_missing' : 'el_svg_missing', true); act('decor', 'el_decor'); }
+    /* KZ-09: link e botao tem frases proprias e nenhum botao de enfeite (quem resolve e o rotulo, acima). */
+    if (Object.prototype.hasOwnProperty.call(A11Y_NONAME, st.kind)) {
+      if (st.state === 'missing') note(A11Y_NONAME[st.kind], true);
+      else if (st.state === 'waiting') note('el_name_waiting', true);
+      else if (st.state === 'hidden') note('el_name_hidden', false);
+      else if (st.state === 'named' && st.via === 'title') note('el_name_title', false);
+      else if (st.state === 'named' && st.via === 'aria-labelledby') note('el_a11y_labelledby', false);
+    }
+    else if (st.state === 'missing') { note(st.kind === 'img' ? 'el_alt_missing' : 'el_svg_missing', true); act('decor', 'el_decor'); }
     else if (st.state === 'decorative' || (st.state === 'hidden' && st.kind === 'svg' && st.via === 'aria-hidden')) { note('el_decor_on', false); act('undecor', 'el_decor_undo'); }
     else if (st.state === 'hidden') note('el_a11y_hidden', false);
     else if (st.state === 'named' && st.via === 'title') note('el_svg_titled', false);
@@ -719,7 +733,7 @@
     }
     return '';
   }
-  /** Lista da pagina: imagens sem texto alternativo e desenhos sem descricao, por trecho. */
+  /** Lista da pagina: imagens sem texto alternativo, desenhos sem descricao e (KZ-09) links e botoes sem nome, por trecho. */
   function paintA11y() {
     if (!a11yEl) return;
     var using = document.activeElement && a11yEl.contains(document.activeElement) ? document.activeElement.getAttribute('data-kaz-canvas-a11y-go') : null;
@@ -753,13 +767,18 @@
         shown++;
         var it = g.map.items[n], li = make('li', ''), b = make('button', 'kaz-canvas__textrow', '');
         /* O que ajuda a reconhecer: o texto ao lado, na pagina; sem ele, os atributos da tag, como estao no codigo. */
-        var near = a11yNear(g.key, n);
-        var snip = near !== '' ? label('a11y_near', '').replace('%s', near)
+        /* KZ-09: o link e reconhecido pelo destino, do jeito que esta no codigo. */
+        var to = it[0] === 'a' ? ATTRS.find(it, 'href') : null;
+        var dest = to && to[1] !== 'bare' ? g.src.slice(to[2], to[3]).replace(/\s+/g, ' ').replace(/^ | $/g, '') : '';
+        if (dest.length > A11Y_NEAR_MAX) dest = dest.slice(0, A11Y_NEAR_MAX) + '…';
+        var near = dest === '' ? a11yNear(g.key, n) : '';
+        var snip = dest !== '' ? label('a11y_to', '').replace('%s', function () { return dest; })
+          : near !== '' ? label('a11y_near', '').replace('%s', near)
           : g.src.slice(it[2] + 1 + it[0].length, it[3]).replace(/\/?>$/, '').replace(/\s+/g, ' ').replace(/^ | $/g, '');
         b.type = 'button';
         b.setAttribute('data-kaz-canvas-a11y-go', g.key + ':' + n);
         b.appendChild(make('code', 'kaz-canvas__texttag', it[0]));
-        b.appendChild(make('span', 'kaz-canvas__textsnip', label(it[0] === 'img' ? 'a11y_img' : 'a11y_svg', '') +
+        b.appendChild(make('span', 'kaz-canvas__textsnip', label(A11Y_ROWS[it[0]] || 'a11y_svg', '') +
           (snip !== '' ? ' · ' + (snip.length > A11Y_SNIP_MAX ? snip.slice(0, A11Y_SNIP_MAX) + '…' : snip) : '')));
         li.appendChild(b);
         ul.appendChild(li);
@@ -883,9 +902,12 @@
     valueField('alt', 'el_alt', 'el_alt_help', 'el_alt_variable', !!a11y && a11y.kind === 'img' && a11y.state === 'missing');
     /* Rotulo novo: no desenho pendente e nos elementos em que o leitor de tela o anuncia. */
     var hasLabel = !!ATTRS.find(it, 'aria-label');
+    /* KZ-09: no link ou botao sem nome o rotulo nao e "opcional". O nome depende do que ha dentro: mapa inteiro. */
+    var named = a11y && picked && picked.key === key && (tag === 'a' || tag === 'button') ? ATTRS.a11y(src, elements[key], picked.n) : null;
+    var nameless = !!named && (named.state === 'missing' || named.state === 'waiting');
     var newLabel = !!a11y && !hasLabel && (tag === 'svg' ? a11y.state === 'missing' : ATTRS.canLabel(src, { items: [it] }, 0));
     valueField('aria-label', tag === 'svg' ? 'el_svg_label' : 'el_label',
-      tag === 'svg' ? 'el_svg_label_help' : (hasLabel ? 'el_label_help' : 'el_label_new_help'), 'el_label_variable', newLabel);
+      tag === 'svg' ? 'el_svg_label_help' : (hasLabel || nameless ? 'el_label_help' : 'el_label_new_help'), 'el_label_variable', newLabel);
     if (A11Y_OK) {
       var state = make('div', 'kaz-canvas__a11ystate');
       state.setAttribute('data-kaz-canvas-a11y-state', '');

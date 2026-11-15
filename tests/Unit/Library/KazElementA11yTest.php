@@ -314,7 +314,7 @@ final class KazElementA11yTest extends TestCase {
         self::assertStringNotContainsString(".name = '", $canvas);
 
         // As regras: listas fechadas, nomes lidos e o que o arquivo oferece.
-        self::assertStringContainsString("var NAMES = ['href', 'target', 'rel', 'alt', 'aria-label', 'style', 'aria-hidden', 'aria-labelledby', 'role'];", $rules);
+        self::assertStringContainsString("var NAMES = ['href', 'target', 'rel', 'alt', 'aria-label', 'style', 'aria-hidden', 'aria-labelledby', 'role', 'title'];", $rules);
         self::assertStringContainsString("var LABEL_TAGS = ['a', 'button', 'svg', 'nav', 'section', 'aside', 'form', 'header', 'footer', 'main'];", $rules);
         self::assertStringContainsString("var DECOR_ROLES = ['presentation', 'none'];", $rules);
         self::assertStringContainsString("if (!it || !Array.isArray(it[7]) || (name !== 'alt' && name !== 'aria-label')) return { error: 'locked' };", $rules);

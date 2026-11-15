@@ -69,9 +69,25 @@
  *  - Alinhamento so nas tags em que cor e tamanho se aplicam, menos <svg> e
  *    <hr>; espacamento tambem em imagem, video e afins.
  *
+ * KZ-09 (ADR 0102) — link e botao sem nome: o <a href> e o <button> em que o
+ * leitor de tela nao tem o que anunciar.
+ *
+ * Regras:
+ *  - O nome vem, nesta ordem, de `aria-labelledby`, de `aria-label`, do que
+ *    ha dentro (texto, imagem com `alt`, desenho com nome) e de `title`.
+ *  - Pendente e so o que o editor consegue afirmar: nada disso existe e nada
+ *    depende de dado do site. Twig dentro do elemento, tag ilegivel ou
+ *    fechamento em outro trecho: o editor nao acusa.
+ *  - Elemento escondido do leitor de tela (`aria-hidden="true"` nele ou em
+ *    volta dele) nao e pendente; o que esta escondido dentro dele nao da nome.
+ *  - Imagem ou desenho pendente dentro dele: quem aparece na lista e a imagem
+ *    (uma pendencia, um conserto). Marcada como enfeite, o link passa a ser o
+ *    pendente.
+ *  - Nada novo e escrito: o rotulo e o `aria-label` que o KZ-07 ja cria.
+ *
  * Testes: tests/check_kaz_element_attrs.js, tests/check_kaz_element_style.js,
- * tests/check_kaz_element_a11y.js e tests/check_kaz_element_space.js (Node,
- * sem navegador).
+ * tests/check_kaz_element_a11y.js, tests/check_kaz_element_space.js e
+ * tests/check_kaz_element_name.js (Node, sem navegador).
  */
 (function (root) {
   'use strict';
@@ -80,7 +96,7 @@
   var LABEL_MAX = 300;     // caracteres de alt e aria-label
   var SOURCE_MAX = 131072; // o mesmo teto do formulario do tema
   var WS = ' \t\n\r\f';
-  var NAMES = ['href', 'target', 'rel', 'alt', 'aria-label', 'style', 'aria-hidden', 'aria-labelledby', 'role'];
+  var NAMES = ['href', 'target', 'rel', 'alt', 'aria-label', 'style', 'aria-hidden', 'aria-labelledby', 'role', 'title'];
   var KINDS = ['fixed', 'variable', 'bare'];
   /* Que tag pode ter cada atributo editavel ('' = qualquer uma). */
   var EDITABLE = { href: 'a', alt: 'img', 'aria-label': '' };
@@ -654,6 +670,7 @@
   }
   function a11y(src, map, n) {
     var it = map && Array.isArray(map.items) ? map.items[n] : null, out = { kind: '', state: 'none', via: '' };
+    if (it && HOLDER_TAGS.indexOf(it[0]) !== -1) return holder(String(src), map, n, out);
     if (!it || (it[0] !== 'img' && it[0] !== 'svg')) return out;
     out.kind = it[0];
     out.state = 'unknown';
@@ -691,9 +708,114 @@
     return it[8] === 1 ? is('named', 'title') : is('missing', '');
   }
 
+  /* ---------------- KZ-09 (ADR 0102): link e botao sem nome ---------------- */
+  var HOLDER_TAGS = ['a', 'button'];
+  /* As marcas de ThemeSourceMap::INNER_*. */
+  var INNER_TEXT = 1, INNER_TWIG = 2, INNER_HIDDEN = 4, INNER_UNSURE = 8;
+
   /**
-   * Pendencias de um trecho: { missing: [indices das <img>/<svg> pendentes, na
-   * ordem do codigo], unknown: quantas <img>/<svg> nao puderam ser conferidas }.
+   * Resumo do que ha dentro de um <a>/<button>, conferido: { flags, list } ou
+   * null. O servidor manda [marcas, indices...]; os indices sao de elementos
+   * que vem DEPOIS dele no mapa, em ordem crescente.
+   */
+  function innerOf(items, n) {
+    var raw = items[n][8];
+    if (!Array.isArray(raw) || raw.length < 1) return null;
+    var flags = raw[0], list = [], prev = n;
+    if (typeof flags !== 'number' || Math.floor(flags) !== flags || flags < 0 || flags > 15) return null;
+    for (var i = 1; i < raw.length; i++) {
+      var c = raw[i];
+      if (typeof c !== 'number' || Math.floor(c) !== c || c <= prev || c >= items.length || !Array.isArray(items[c])) return null;
+      list.push(c);
+      prev = c;
+    }
+    return { flags: flags, list: list };
+  }
+  /** Texto de um elemento-folha: 'named' (tem algo escrito), 'data' (vem de Twig) ou '' (nada). */
+  function leafText(src, it) {
+    if (it[1] === 'variable' || it[1] === 'mixed') return 'data';
+    if (it[1] !== 'fixed' || it[4] < 0 || it[5] < it[4] || it[5] > src.length) return '';
+    return trim(src.slice(it[4], it[5])) !== '' ? 'named' : '';
+  }
+
+  /**
+   * Situacao de um <a href> ou de um <button> para quem nao ve a pagina.
+   * Devolve { kind, state, via }, como a11y():
+   *  - kind:  'link' ou 'button' ('' e state 'none' no <a> sem `href`);
+   *  - state: 'missing' (pendente), 'named', 'hidden', 'data', 'unknown' ou
+   *    'waiting' (o nome depende de uma imagem ou de um desenho de dentro que
+   *    esta pendente: quem entra na lista e ela);
+   *  - via:   'aria-hidden', 'inside' (escondido por um elemento em volta),
+   *    'aria-labelledby', 'aria-label', 'text', 'image', 'content' ou 'title'.
+   */
+  function holder(src, map, n, out) {
+    var items = map.items, it = items[n], i;
+    out.kind = it[0] === 'a' ? 'link' : 'button';
+    out.state = 'unknown';
+    if (!Array.isArray(it[7])) return out;
+    /* <a> sem `href` nao e link para o leitor de tela: nada a conferir. */
+    if (it[0] === 'a' && !find(it, 'href')) { out.kind = ''; out.state = 'none'; return out; }
+    if (tagAt(src, it) === -1) return out;
+    var hid = find(it, 'aria-hidden'), lab = find(it, 'aria-label'), by = find(it, 'aria-labelledby'), tip = find(it, 'title');
+    var all = [hid, lab, by, tip];
+    for (i = 0; i < all.length; i++) if (all[i] && all[i][1] !== 'variable' && !present(src, all[i])) return out;
+    function is(state, via) { out.state = state; out.via = via; return out; }
+    function filled(a) { return trim(src.slice(a[2], a[3])) !== ''; }
+
+    if (hid) {
+      if (dynamic(src, hid)) return is('data', 'aria-hidden');
+      if (trim(src.slice(hid[2], hid[3])).toLowerCase() === 'true') return is('hidden', 'aria-hidden');
+    }
+    var inner = innerOf(items, n);
+    if (!inner) return out;
+    if (inner.flags & INNER_HIDDEN) return is('hidden', 'inside');
+    if (inner.flags & INNER_UNSURE) return out;
+    if (by) {
+      if (dynamic(src, by)) return is('data', 'aria-labelledby');
+      if (filled(by)) return is('named', 'aria-labelledby');
+    }
+    if (lab) {
+      if (dynamic(src, lab)) return is('data', 'aria-label');
+      if (filled(lab)) return is('named', 'aria-label');
+    }
+    /* O que ha dentro. Vale o achado mais forte: nome certo, depois dado do site, depois "nao sei". */
+    var own = leafText(src, it), named = own === 'named' || (inner.flags & INNER_TEXT) ? 'text' : '';
+    var data = own === 'data' || !!(inner.flags & INNER_TWIG), blind = false, waiting = false;
+    for (i = 0; i < inner.list.length && named === ''; i++) {
+      var c = inner.list[i], ct = items[c];
+      if (ct[0] === 'img' || ct[0] === 'svg') {
+        var st = a11y(src, map, c).state;
+        if (st === 'named') named = 'image';
+        else if (st === 'data') data = true;
+        else if (st === 'unknown') blind = true;
+        else if (st === 'missing') waiting = true;
+        continue;
+      }
+      var text = leafText(src, ct);
+      if (text === 'named') { named = 'text'; continue; }
+      if (text === 'data') data = true;
+      /* Rotulo num elemento de dentro tambem entra na conta do nome. */
+      if (!Array.isArray(ct[7])) { blind = true; continue; }
+      var sub = find(ct, 'aria-label');
+      if (!sub) continue;
+      if (dynamic(src, sub)) data = true;
+      else if (!present(src, sub)) blind = true;
+      else if (filled(sub)) named = 'text';
+    }
+    if (named !== '') return is('named', named);
+    if (data) return is('data', 'content');
+    if (tip) {
+      if (dynamic(src, tip)) return is('data', 'title');
+      if (filled(tip)) return is('named', 'title');
+    }
+    if (blind) return out;
+    return waiting ? is('waiting', 'image') : is('missing', '');
+  }
+
+  /**
+   * Pendencias de um trecho: { missing: [indices pendentes, na ordem do
+   * codigo], unknown: quantos nao puderam ser conferidos }. Entram <img>,
+   * <svg> e, desde o KZ-09, <a href> e <button>.
    */
   function pending(src, map) {
     var out = { missing: [], unknown: 0 }, items = map && Array.isArray(map.items) ? map.items : [];
@@ -819,7 +941,7 @@
     colorOk: colorOk, sizeOk: sizeOk, styleParse: styleParse, styleOf: styleOf, setStyle: setStyle,
     SPACE_PROPS: SPACE_PROPS.slice(), ALIGN_VALUES: ALIGN_VALUES.slice(), SPACE_MIN: SPACE_MIN, SPACE_MAX: SPACE_MAX,
     spaceOk: spaceOk, pxOf: pxOf, layoutOf: layoutOf,
-    LABEL_TAGS: LABEL_TAGS.slice(), LABEL_ROLES: LABEL_ROLES.slice(),
+    LABEL_TAGS: LABEL_TAGS.slice(), LABEL_ROLES: LABEL_ROLES.slice(), HOLDER_TAGS: HOLDER_TAGS.slice(),
     a11y: a11y, pending: pending, canLabel: canLabel, putAttr: putAttr, decorate: decorate, dropLabel: dropLabel
   };
 })(typeof window !== 'undefined' ? window : globalThis);

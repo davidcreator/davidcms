@@ -6,6 +6,9 @@
  * O mapa de cada caso vem de um leitor de tags minimo, no formato de
  * ThemeSourceMap::describe() (o que esta dentro de <svg> nao vira item; um
  * <title> la dentro marca o nono campo do <svg>).
+ * O leitor daqui e o do KZ-07: nao monta o resumo do que ha dentro de <a> e
+ * <button> (KZ-09). Com um mapa assim o link fica "por conferir", nunca
+ * pendente; as regras do KZ-09 estao em tests/check_kaz_element_name.js.
  */
 global.window = {};
 require('../dev/admin/view/js/kaz-element-attrs.js');
@@ -151,7 +154,9 @@ for (const [src, want] of [
   ['<img src="a.png" alt={{t}}>', 'img/data/alt'],
   ['<img src="a.png" alt={#t#}>', 'img/data/alt'],
   ['<p>texto</p>', '/none/'],
-  ['<a href="/x">x</a>', '/none/'],
+  ['<a href="/x">x</a>', 'link/unknown/'],
+  ['<a name="x">x</a>', '/none/'],
+  ['<button>x</button>', 'button/unknown/'],
   ['<picture></picture>', '/none/'],
 ]) same(state(src), want, 'situacao de ' + src);
 same(state('<p>a</p><img src="b"><svg><title>t</title></svg><svg></svg>', 1), 'img/missing/', 'indice 1');
@@ -185,10 +190,11 @@ same(state('<p>a</p>', 5), '/none/', 'indice que nao existe');
     '<svg aria-hidden="true"><path/></svg><svg><title>Seta</title></svg><p>texto</p><img src="{{ f }}" alt="{{ t }}"><svg viewBox="0 0 1 1"/></header>';
   const map = mapOf(src);
   same(map.items.map(it => it[0]), ['header', 'a', 'svg', 'img', 'img', 'img', 'svg', 'svg', 'p', 'img', 'svg'], 'itens do caso');
-  same(A.pending(src, map), { missing: [2, 3, 10], unknown: 0 }, 'pendentes na ordem do codigo');
+  /* O <a> entra em "por conferir": este mapa nao traz o resumo do KZ-09. */
+  same(A.pending(src, map), { missing: [2, 3, 10], unknown: 1 }, 'pendentes na ordem do codigo');
   map.items[4][7] = null; map.items[6][7] = null; map.items[8][7] = null;
-  same(A.pending(src, map), { missing: [2, 3, 10], unknown: 2 }, 'tags fechadas para o editor sao contadas a parte (so imagem e desenho)');
-  same(A.pending('<p>' + src, map), { missing: [], unknown: 8 }, 'mapa defasado: nada e dado como pendente, as oito ficam por conferir');
+  same(A.pending(src, map), { missing: [2, 3, 10], unknown: 3 }, 'tags fechadas para o editor sao contadas a parte (o <p> nao conta)');
+  same(A.pending('<p>' + src, map), { missing: [], unknown: 9 }, 'mapa defasado: nada e dado como pendente, as nove ficam por conferir');
   same(A.pending('<p>x</p>', mapOf('<p>x</p>')), { missing: [], unknown: 0 }, 'trecho sem imagem nem desenho');
   same(A.pending('', null), { missing: [], unknown: 0 }, 'sem mapa');
   same(A.pending('', { items: 'x' }), { missing: [], unknown: 0 }, 'mapa fora do formato');
@@ -196,7 +202,7 @@ same(state('<p>a</p>', 5), '/none/', 'indice que nao existe');
   let s2 = src; const m2 = mapOf(src);
   s2 = A.decorate(s2, m2, 2, true).src; same(A.pending(s2, m2).missing, [3, 10], 'depois de marcar o logo como enfeite');
   s2 = A.putAttr(s2, m2, 3, 'alt', 'Foto').src; same(A.pending(s2, m2).missing, [10], 'depois de descrever a imagem');
-  s2 = A.putAttr(s2, m2, 10, 'aria-label', 'Selo').src; same(A.pending(s2, m2), { missing: [], unknown: 0 }, 'depois de descrever o desenho');
+  s2 = A.putAttr(s2, m2, 10, 'aria-label', 'Selo').src; same(A.pending(s2, m2), { missing: [], unknown: 1 }, 'depois de descrever o desenho');
   s2 = A.dropLabel(s2, m2, 10).src; same(A.pending(s2, m2).missing, [10], 'retirar a descricao devolve a pendencia');
   s2 = A.decorate(s2, m2, 2, false).src; s2 = A.putAttr(s2, m2, 3, 'alt', '').src; s2 = A.decorate(s2, m2, 3, false).src;
   same(s2, src, 'tudo desfeito: fonte original');
@@ -417,7 +423,7 @@ for (const [src, text] of [['<svg viewBox="0 0 1 1"><path/></svg>', 'Selo'], ['<
 
 // --- 7. o que o servidor manda e conferido ---------------------------------------
 same(A.clean([['aria-hidden', 'fixed', 5, 9, 1, 10, ''], ['role', 'fixed', 17, 20, 11, 21, ''], ['aria-labelledby', 'bare', 40, 40, 25, 40, '']]).length, 3, 'os tres nomes novos sao aceitos');
-check(A.clean([['title', 'fixed', 5, 9, 1, 10, '']]) === null, 'title continua fora da lista');
+same(A.clean([['title', 'fixed', 5, 9, 1, 10, '']]), [['title', 'fixed', 5, 9, 1, 10, '']], 'title entra na lista no KZ-09 (so para ler)');
 check(A.clean([['class', 'fixed', 5, 9, 1, 10, '']]) === null, 'class continua fora da lista');
 check(A.clean([['role', 'fixed', 5, 9, 1, 10, ''], ['role', 'fixed', 15, 19, 11, 20, '']]) === null, 'nome repetido fecha a tag');
 

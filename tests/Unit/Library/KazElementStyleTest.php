@@ -255,7 +255,7 @@ final class KazElementStyleTest extends TestCase {
         // As regras: tres propriedades, faixa do tamanho e gramatica fechada dos valores.
         self::assertStringContainsString("var STYLE_PROPS = ['color', 'background-color', 'font-size'];", $rules);
         self::assertStringContainsString('var SIZE_MIN = 6, SIZE_MAX = 400;', $rules);
-        self::assertStringContainsString("var NAMES = ['href', 'target', 'rel', 'alt', 'aria-label', 'style', 'aria-hidden', 'aria-labelledby', 'role'];", $rules);
+        self::assertStringContainsString("var NAMES = ['href', 'target', 'rel', 'alt', 'aria-label', 'style', 'aria-hidden', 'aria-labelledby', 'role', 'title'];", $rules);
         foreach (['colorOk', 'sizeOk', 'styleParse', 'styleOf', 'setStyle'] as $export) {
             self::assertStringContainsString($export . ': ' . $export, $rules, $export);
         }

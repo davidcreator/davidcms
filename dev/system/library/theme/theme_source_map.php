@@ -39,6 +39,14 @@
  * de atributos lidos ganha `aria-hidden`, `aria-labelledby` e `role` (em
  * qualquer tag), e cada <svg> mapeado diz se ha um <title> dentro dele. Aqui
  * so se LE; decidir e escrever continua no navegador.
+ *
+ * KZ-09 (ADR 0102) — link e botao sem nome. Para o editor saber se um <a> ou
+ * um <button> tem algo que o leitor de tela possa anunciar, cada um deles leva
+ * um resumo do que ha DENTRO dele (`inner`): se ha texto solto, se ha Twig, e
+ * quais elementos mapeados estao la dentro. O `title` dessas duas tags entra
+ * na lista de atributos lidos. O que esta dentro de um elemento marcado com
+ * `aria-hidden="true"` nao conta. Decidir continua no navegador, que junta o
+ * resumo com o que cada elemento de dentro tem naquele momento.
  */
 namespace Reamur\System\Library\Theme;
 
@@ -63,10 +71,28 @@ final class ThemeSourceMap {
      * Lista fechada: nenhum outro atributo viaja para o navegador.
      */
     private const ATTRS = [
-        'a'   => ['href', 'target', 'rel'],
-        'img' => ['alt'],
-        '*'   => ['aria-label', 'style', 'aria-hidden', 'aria-labelledby', 'role'],
+        'a'      => ['href', 'target', 'rel', 'title'],
+        'button' => ['title'],
+        'img'    => ['alt'],
+        '*'      => ['aria-label', 'style', 'aria-hidden', 'aria-labelledby', 'role'],
     ];
+
+    /** KZ-09: tags cujo nome para o leitor de tela o editor confere. */
+    private const HOLDERS = ['a', 'button'];
+
+    /** KZ-09: `inner[0]` e a soma destas marcas. */
+    public const INNER_TEXT = 1;      // ha texto solto dentro (fora de um elemento-folha)
+    public const INNER_TWIG = 2;      // ha `{{ }}` ou `{% %}` solto dentro
+    public const INNER_HIDDEN = 4;    // o elemento esta dentro de outro com aria-hidden="true"
+    public const INNER_UNSURE = 8;    // nao da para concluir: o fechamento nao esta nesta fonte, ou ha dentro um trecho escondido de fim incerto
+
+    /**
+     * KZ-09: tags cujo fechamento o HTML deixa omitir. Com `aria-hidden="true"`
+     * numa delas nao da para saber onde o trecho escondido termina: o <a> ou o
+     * <button> que esta aberto em volta fica como INNER_UNSURE (o editor nao
+     * afirma nada sobre ele).
+     */
+    private const LOOSE_END = ['p', 'li', 'dt', 'dd', 'td', 'th', 'tr', 'option', 'optgroup', 'thead', 'tbody', 'tfoot', 'colgroup', 'caption', 'rt', 'rp'];
 
     private const SPACE = " \t\n\r\f";
 
@@ -97,7 +123,13 @@ final class ThemeSourceMap {
      * `titled` (KZ-07): so em <svg>; true quando ha um <title> dentro dele
      * (em qualquer profundidade), que e de onde vem o nome do desenho.
      *
-     * @return list<array{n:int,tag:string,at:int,open:array{0:int,1:int},text:?array{0:int,1:int},kind:string,expr:string,attrs:?list<array{name:string,kind:string,value:array{0:int,1:int},span:array{0:int,1:int},expr:string}>,titled?:bool}>
+     * `inner` (KZ-09): so em <a> e <button>; lista cujo primeiro item e a soma
+     * das marcas INNER_* e os seguintes sao os `n` dos elementos mapeados de
+     * dentro (em qualquer profundidade), menos os escondidos por
+     * `aria-hidden="true"`. <img> e <svg> entram mesmo escondidos por marca
+     * propria: essa marca o painel escreve e retira, e quem a le e o navegador.
+     *
+     * @return list<array{n:int,tag:string,at:int,open:array{0:int,1:int},text:?array{0:int,1:int},kind:string,expr:string,attrs:?list<array{name:string,kind:string,value:array{0:int,1:int},span:array{0:int,1:int},expr:string}>,titled?:bool,inner?:list<int>}>
      */
     public static function scan(string $source): array {
         $len = strlen($source);
@@ -112,6 +144,12 @@ final class ThemeSourceMap {
         $last = '';        // ultimo caractere util da tag em leitura (para `/>`)
         $pending = -1;     // elemento a espera de saber se e uma folha
         $twigIn = [];      // trechos Twig dentro do conteudo do elemento pendente
+        $holders = [];     // KZ-09: <a>/<button> abertos, de fora para dentro: [indice, tag]
+        $hide = '';        // KZ-09: tag com aria-hidden="true" cujo conteudo esta sendo lido
+        $hideDepth = 0;    // quantas tags com esse nome estao abertas dentro dela (com ela)
+        $hideAt = 0;       // quantos <a>/<button> estavam abertos quando ela abriu
+        $text = false;     // houve texto desde a ultima tag?
+        $twig = false;     // houve `{{ }}` ou `{% %}` desde a ultima tag?
         $i = 0;
 
         while ($i < $len) {
@@ -121,6 +159,8 @@ final class ThemeSourceMap {
             if ($c === '{' && $i + 1 < $len && ($source[$i + 1] === '{' || $source[$i + 1] === '%' || $source[$i + 1] === '#')) {
                 $end = self::twigEnd($source, $i, $len);
                 if ($pending >= 0 && $state === 'data') $twigIn[] = [$i, $end];
+                // KZ-09: comentario Twig nao produz nada na pagina; dentro de <svg> quem responde e o desenho.
+                if ($state === 'data' && $svg === 0 && $source[$i + 1] !== '#') $twig = true;
                 $last = '}';
                 $i = $end;
                 continue;
@@ -155,9 +195,29 @@ final class ThemeSourceMap {
                         $tag = $out[$current]['tag'];
                         $out[$current]['open'][1] = $i + 1;
                         $out[$current]['attrs'] = self::attributes($source, $out[$current]['at'], $i, $tag);
-                        if ($last === '/' || in_array($tag, self::VOID, true)) {
+                        $void = $last === '/' || in_array($tag, self::VOID, true);
+                        $raw = !$void && in_array($tag, self::RAW, true);
+                        // KZ-09: o que este elemento significa para os <a>/<button> que estao abertos.
+                        if ($hide !== '') {
+                            if (isset($out[$current]['inner'])) $out[$current]['inner'][0] |= self::INNER_HIDDEN;
+                            if (!$void && $tag === $hide) $hideDepth++;
+                        } else {
+                            $hidden = self::hides($source, $out[$current]['attrs']);
+                            // Imagem e desenho entram sempre: a marca de enfeite deles muda no painel, e quem a le e o navegador.
+                            if (!$hidden || $tag === 'img' || $tag === 'svg') {
+                                foreach ($holders as $holder) $out[$holder[0]]['inner'][] = $current;
+                            }
+                            if (!$void && isset($out[$current]['inner'])) $holders[] = [$current, $tag];
+                            if ($hidden && !$void && !$raw && $tag !== 'svg') {
+                                if (in_array($tag, self::LOOSE_END, true)) {
+                                    foreach ($holders as $holder) $out[$holder[0]]['inner'][0] |= self::INNER_UNSURE;
+                                }
+                                $hide = $tag; $hideDepth = 1; $hideAt = count($holders);
+                            }
+                        }
+                        if ($void) {
                             $out[$current]['kind'] = 'void';
-                        } elseif (in_array($tag, self::RAW, true)) {
+                        } elseif ($raw) {
                             $state = 'raw'; $rawName = $tag;
                         } else {
                             if ($tag === 'svg') { $svg++; $svgRoot = $current; }
@@ -174,45 +234,75 @@ final class ThemeSourceMap {
                 continue;
             }
 
-            // 2. Texto: so interessa o inicio de uma tag.
-            if ($c !== '<' || $i + 1 >= $len) { $i++; continue; }
+            // 2. Texto: so interessa o inicio de uma tag (e, dentro de <a>/<button>, se ha algo escrito).
+            if ($c !== '<' || $i + 1 >= $len) {
+                if (!$text && $holders !== [] && $svg === 0 && strpos(self::SPACE, $c) === false) $text = true;
+                $i++;
+                continue;
+            }
             $next = $source[$i + 1];
 
             if ($next === '!' && substr_compare($source, '<!--', $i, 4) === 0) {
                 $pending = -1;
+                self::stray($out, $holders, $hide !== '', $text, $twig);
                 $state = 'comment'; $i += 4;
                 continue;
             }
             if ($next === '!' || $next === '?') {
                 $pending = -1;
+                self::stray($out, $holders, $hide !== '', $text, $twig);
                 $state = 'tag'; $quote = ''; $last = ''; $current = -1; $closing = ''; $i += 2;
                 continue;
             }
             if ($next === '/') {
                 $nameLen = strspn($source, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:-', $i + 2);
-                if ($nameLen === 0) { $i++; continue; }
+                if ($nameLen === 0) { $text = $text || ($holders !== [] && $svg === 0); $i++; continue; }
                 $name = strtolower(substr($source, $i + 2, $nameLen));
+                $leaf = false;
                 if ($pending >= 0) {
-                    if ($out[$pending]['tag'] === $name) self::closeLeaf($out[$pending], $source, $i, $twigIn);
+                    if ($out[$pending]['tag'] === $name) { self::closeLeaf($out[$pending], $source, $i, $twigIn); $leaf = true; }
                     $pending = -1;
+                }
+                // KZ-09: o texto de um elemento-folha e dele (o `kind` responde); o resto e texto solto.
+                if ($leaf) { $text = false; $twig = false; } else self::stray($out, $holders, $hide !== '', $text, $twig);
+                // Dentro de <svg> ha <a> proprio do desenho: o fechamento dele nao e o do link em volta.
+                if ($svg === 0) {
+                    if ($hide !== '' && $name === $hide && --$hideDepth === 0) $hide = '';
+                    if (in_array($name, self::HOLDERS, true)) {
+                        for ($h = count($holders) - 1; $h >= 0; $h--) if ($holders[$h][1] === $name) break;
+                        if ($h >= 0) {
+                            // <a><button></a>: o de dentro ficou sem fechamento.
+                            for ($k = count($holders) - 1; $k > $h; $k--) $out[$holders[$k][0]]['inner'][0] |= self::INNER_UNSURE;
+                            array_splice($holders, $h);
+                            // Um trecho escondido aberto dentro deste elemento termina com ele.
+                            if ($hide !== '' && count($holders) < $hideAt) { $hide = ''; $hideDepth = 0; }
+                        }
+                    }
                 }
                 $state = 'tag'; $quote = ''; $last = ''; $current = -1; $closing = $name;
                 $i += 2 + $nameLen;
                 continue;
             }
-            if (!ctype_alpha($next)) { $i++; continue; }
+            if (!ctype_alpha($next)) { $text = $text || ($holders !== [] && $svg === 0); $i++; continue; }
 
             $nameLen = strspn($source, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:-', $i + 1);
             $name = strtolower(substr($source, $i + 1, $nameLen));
             $after = $i + 1 + $nameLen;
             $pending = -1;
+            self::stray($out, $holders, $hide !== '', $text, $twig);
             $state = 'tag'; $quote = ''; $last = ''; $closing = ''; $current = -1;
             // Nome de tag montado com Twig (<h{{ n }}>): nao da para apontar com seguranca.
             $dynamic = $after + 1 < $len && $source[$after] === '{' && ($source[$after + 1] === '{' || $source[$after + 1] === '%' || $source[$after + 1] === '#');
+            // KZ-09: elemento que nao entra no mapa (nome montado com Twig, ou alem do limite) dentro de um
+            // <a>/<button>: pode ser dele que vem o nome, e o editor nao tem como olhar.
+            if ($svg === 0 && $holders !== [] && ($dynamic || (!in_array($name, self::SKIP, true) && count($out) >= self::MAX_ELEMENTS))) {
+                foreach ($holders as $holder) $out[$holder[0]]['inner'][0] |= self::INNER_UNSURE;
+            }
             if (!$dynamic && $svg === 0 && !in_array($name, self::SKIP, true) && count($out) < self::MAX_ELEMENTS) {
                 $out[] = ['n' => count($out), 'tag' => $name, 'at' => $after, 'open' => [$i, $after], 'text' => null, 'kind' => 'group', 'expr' => '', 'attrs' => null];
                 $current = count($out) - 1;
                 if ($name === 'svg') $out[$current]['titled'] = false;
+                if (in_array($name, self::HOLDERS, true)) $out[$current]['inner'] = [0];
             } elseif (!$dynamic && in_array($name, self::RAW, true)) {
                 // <style>/<script>/<title> nao viram elemento, mas o conteudo deles e pulado.
                 if ($name === 'title' && $svgRoot >= 0) $out[$svgRoot]['titled'] = true;
@@ -226,7 +316,41 @@ final class ThemeSourceMap {
             }
             $i = $after;
         }
+        // KZ-09: <a>/<button> que nao fecha nesta fonte: o editor nao conclui nada sobre ele.
+        foreach ($holders as $holder) $out[$holder[0]]['inner'][0] |= self::INNER_UNSURE;
         return $out;
+    }
+
+    /**
+     * KZ-09: junta o texto solto visto desde a ultima tag aos <a>/<button>
+     * abertos (menos quando esta dentro de um trecho escondido) e zera a conta.
+     *
+     * @param list<array<string,mixed>> $out
+     * @param list<array{0:int,1:string}> $holders
+     */
+    private static function stray(array &$out, array $holders, bool $hidden, bool &$text, bool &$twig): void {
+        $mask = ($text ? self::INNER_TEXT : 0) | ($twig ? self::INNER_TWIG : 0);
+        if ($mask !== 0 && !$hidden) {
+            foreach ($holders as $holder) $out[$holder[0]]['inner'][0] |= $mask;
+        }
+        $text = false;
+        $twig = false;
+    }
+
+    /**
+     * KZ-09: a tag diz, com valor fixo, `aria-hidden="true"`? Valor que vem de
+     * Twig nao esconde (nao da para saber), e tag ilegivel tambem nao.
+     *
+     * @param ?list<array{name:string,kind:string,value:array{0:int,1:int},span:array{0:int,1:int},expr:string}> $attrs
+     */
+    private static function hides(string $source, ?array $attrs): bool {
+        foreach ($attrs ?? [] as $attr) {
+            if ($attr['name'] !== 'aria-hidden') continue;
+            if ($attr['kind'] === 'variable') return false;
+            $value = substr($source, $attr['value'][0], $attr['value'][1] - $attr['value'][0]);
+            return strtolower(trim($value, self::SPACE)) === 'true';
+        }
+        return false;
     }
 
     /**
@@ -260,9 +384,11 @@ final class ThemeSourceMap {
      * ou uma lista de [nome, kind, valor_ini, valor_fim, atributo_ini, atributo_fim, expr].
      *
      * So em <svg> (KZ-07) ha um nono campo: 1 quando ha um <title> dentro dele, senao 0.
+     * Em <a> e <button> (KZ-09) o nono campo e uma lista: a soma das marcas
+     * INNER_* e, em seguida, os indices dos elementos mapeados de dentro.
      *
      * @param list<array<string,mixed>> $elements resultado de scan() sobre a MESMA fonte
-     * @return array{sig:string,items:list<array{0:string,1:string,2:int,3:int,4:int,5:int,6:string,7:?list<array{0:string,1:string,2:int,3:int,4:int,5:int,6:string}>,8?:int}>}
+     * @return array{sig:string,items:list<array{0:string,1:string,2:int,3:int,4:int,5:int,6:string,7:?list<array{0:string,1:string,2:int,3:int,4:int,5:int,6:string}>,8?:int|list<int>}>}
      */
     public static function describe(string $source, array $elements): array {
         $wanted = [];
@@ -304,6 +430,8 @@ final class ThemeSourceMap {
                 $attrs,
             ];
             if ($el['tag'] === 'svg') $item[] = ($el['titled'] ?? false) === true ? 1 : 0;
+            // KZ-09: [marcas, indices dos elementos de dentro...] (so numeros; nenhuma posicao a deslocar).
+            if (isset($el['inner']) && is_array($el['inner'])) $item[] = array_values(array_map('intval', $el['inner']));
             $items[] = $item;
         }
         return ['sig' => self::signature($source), 'items' => $items];
