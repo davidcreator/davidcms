@@ -12,8 +12,24 @@
    tamanhos de tela, densidade de colunas e modo tela cheia (nesta aba e em
    outra pagina). Screen/densidade/fullscreen sao estado LOCAL descartavel:
    nao entram em kaz_scene_json, no baseline ou em armazenamento. */
+/* KZ-11 (ADR 0104): textos da moldura no idioma do admin. O servidor entrega as frases em
+   data-kaz-labels (no elemento #kaz-theme-editor); se faltar uma, ou o atributo inteiro, vale o
+   texto em portugues escrito no ponto de uso. `%s`, quando existe, recebe o terceiro argumento.
+   A leitura e feita no primeiro uso, porque este arquivo pode rodar antes de o <body> existir. */
+window.KazEditorText = (function () {
+  var map = null;
+  return function (key, fallback, value) {
+    if (!map) {
+      var host = document.getElementById('kaz-theme-editor');
+      if (host) { try { map = JSON.parse(host.getAttribute('data-kaz-labels') || '{}') || {}; } catch (e) { map = {}; } }
+    }
+    var text = map && typeof map[key] === 'string' && map[key] !== '' ? map[key] : fallback;
+    return value === undefined ? text : text.replace('%s', function () { return String(value); });
+  };
+})();
 (function (document, window) {
   'use strict';
+  var TXT = window.KazEditorText;
   /* Frente AD — BOOT RESILIENTE.
      header.twig emite a tag script no <head> sem defer. A IIFE rodava antes
      do <body>, getElementById devolvia null e o 'if (!root) return;' saia
@@ -299,7 +315,9 @@
       n.setAttribute('aria-pressed', on ? 'true' : 'false');
     }
     var lab = root.querySelector('.kaz-statusbar__module');
-    if (lab) lab.textContent = modulesMap[stateModule] || 'Design';
+    /* KZ-11: o nome vem do botao do modulo, que ja esta no idioma do admin. */
+    var cur = root.querySelector('.kaz-module-link[data-kaz-module="' + stateModule + '"]');
+    if (lab) lab.textContent = (cur && cur.getAttribute('data-kaz-tablabel')) || modulesMap[stateModule] || 'Design';
     paintNav();
   }
   function paintDirty() {
@@ -311,7 +329,7 @@
     if (fbadge) fbadge.hidden = !formDirty();
     /* Penpot #20: file status acompanha o estado de gravacao. */
     var ok = root.querySelector('[data-kaz-file-status]');
-    if (ok) { ok.hidden = on; ok.textContent = on ? 'Não salvo' : 'Salvo'; }
+    if (ok) { ok.hidden = on; ok.textContent = on ? TXT('not_saved', 'Não salvo') : TXT('saved', 'Salvo'); }
   }
 
   function commit() {
@@ -337,7 +355,7 @@
     clear(canvas);
     canvas.setAttribute('viewBox', '0 0 ' + scene.canvas.w + ' ' + scene.canvas.h);
     canvas.setAttribute('role', 'img');
-    canvas.setAttribute('aria-label', 'KAZTheme-Editor canvas');
+    canvas.setAttribute('aria-label', TXT('canvas_label', 'Canvas KAZEditor-Theme'));
     var defs = svg('defs', {});
     var pat = svg('pattern', { id: 'kaz-grid', width: GRID, height: GRID, patternUnits: 'userSpaceOnUse' });
     pat.appendChild(svg('path', { d: 'M ' + GRID + ' 0 L 0 0 0 ' + GRID, fill: 'none', stroke: '#e2e8f0', 'stroke-width': '1' }));
@@ -434,7 +452,7 @@
     var wi = root.querySelector('[data-kaz-screen-w]'), hi = root.querySelector('[data-kaz-screen-h]');
     if (wi && screenId !== 'custom') wi.value = String(screenSize.w);
     if (hi && screenId !== 'custom') hi.value = String(screenSize.h);
-    var label = screenId === 'tema' ? 'Tema' : (screenId === 'custom' ? 'Personalizado' : screenId);
+    var label = screenId === 'tema' ? TXT('theme_word', 'Tema') : (screenId === 'custom' ? TXT('screen_custom', 'Personalizado') : screenId);
     var txt = label + ' · ' + screenSize.w + ' × ' + screenSize.h;
     var size = root.querySelector('[data-kaz-screen-size]');
     if (size) size.textContent = screenSize.w + ' × ' + screenSize.h;
@@ -1100,6 +1118,10 @@
                  large: 'amplo' };
   var FOLDS = ['toolbar', 'tabs', 'status'];
   var FOLD_LABELS = { toolbar: 'Ícones', tabs: 'Abas', status: 'Status' };
+  /* KZ-11 (ADR 0104): os nomes acima sao o texto de reserva; o do idioma do admin vem de KazEditorText. */
+  var TXT = window.KazEditorText;
+  function scaleLabel(k) { return TXT('scale_' + k, LABELS[k] || k); }
+  function foldLabel(f) { return TXT('fold_' + f, FOLD_LABELS[f]); }
   var root = null, scale = 'normal', folded = {}, buttons = {}, statusEl = null;
   var allBtn = null, select = null;
 
@@ -1151,7 +1173,7 @@
     });
     if (allBtn) {
       allBtn.setAttribute('aria-pressed', v.length === FOLDS.length ? 'true' : 'false');
-      allBtn.textContent = v.length ? 'Expandir tudo' : 'Recolher tudo';
+      allBtn.textContent = v.length ? TXT('unfold_all', 'Expandir tudo') : TXT('fold_all', 'Recolher tudo');
     }
     say();
   }
@@ -1168,8 +1190,8 @@
   function say() {
     if (!statusEl) return;
     var n = activeFolds().length;
-    statusEl.textContent = 'Elementos: ' + (LABELS[scale] || scale) +
-      ' · ' + (n ? n + ' grupo(s) recolhido(s)' : 'ferramentas visíveis');
+    statusEl.textContent = TXT('scale', 'Elementos') + ': ' + scaleLabel(scale) +
+      ' · ' + (n ? TXT('folded_count', '%s grupo(s) recolhido(s)', n) : TXT('tools_visible', 'ferramentas visíveis'));
   }
   function buildControls(bar) {
     if (!bar) return;
@@ -1178,16 +1200,16 @@
     wrap.appendChild(el('span', 'kaz-screenbar__sep'));
     wrap.firstChild.setAttribute('aria-hidden', 'true');
 
-    var label = el('label', 'kaz-ergo__label', 'Elementos');
+    var label = el('label', 'kaz-ergo__label', TXT('scale', 'Elementos'));
     label.setAttribute('for', 'kaz-ergo-scale');
     wrap.appendChild(label);
 
     select = el('select', 'kaz-screenbar__select');
     select.setAttribute('id', 'kaz-ergo-scale');
     select.setAttribute('data-kaz-ui-scale', '');
-    select.setAttribute('aria-label', 'Tamanho de todos os elementos');
+    select.setAttribute('aria-label', TXT('scale_hint', 'Tamanho de todos os elementos'));
     ['compact', 'normal', 'comfortable', 'large'].forEach(function (k) {
-      var o = el('option', null, LABELS[k]);
+      var o = el('option', null, scaleLabel(k));
       o.value = k;
       select.appendChild(o);
     });
@@ -1198,22 +1220,22 @@
     wrap.appendChild(el('span', 'kaz-screenbar__sep'));
 
     FOLDS.forEach(function (f) {
-      var b = el('button', 'kaz-btn kaz-btn--ghost', FOLD_LABELS[f]);
+      var b = el('button', 'kaz-btn kaz-btn--ghost', foldLabel(f));
       b.setAttribute('type', 'button');
       b.setAttribute('data-kaz-ergo-fold', f);
       b.setAttribute('aria-pressed', 'false');
-      b.setAttribute('aria-label', 'Recolher ou expandir ' + FOLD_LABELS[f]);
-      b.title = 'Recolher / expandir ' + FOLD_LABELS[f];
+      b.setAttribute('aria-label', TXT('fold_one', 'Recolher ou expandir %s', foldLabel(f)));
+      b.title = TXT('fold_one_hint', 'Recolher / expandir %s', foldLabel(f));
       b.addEventListener('click', function () { toggleFold(f); });
       buttons[f] = b;
       wrap.appendChild(b);
     });
 
-    allBtn = el('button', 'kaz-btn kaz-btn--ghost', 'Recolher tudo');
+    allBtn = el('button', 'kaz-btn kaz-btn--ghost', TXT('fold_all', 'Recolher tudo'));
     allBtn.setAttribute('type', 'button');
     allBtn.setAttribute('data-kaz-ergo-fold', 'all');
     allBtn.setAttribute('aria-pressed', 'false');
-    allBtn.setAttribute('aria-label', 'Recolher ou expandir todas as ferramentas');
+    allBtn.setAttribute('aria-label', TXT('fold_all_label', 'Recolher ou expandir todas as ferramentas'));
     allBtn.addEventListener('click', function () { toggleFold('all'); });
     wrap.appendChild(allBtn);
 
@@ -1318,9 +1340,10 @@
       g.setAttribute('role', 'separator');
       g.setAttribute('tabindex', '0');
       g.setAttribute('aria-orientation', 'vertical');
-      g.setAttribute('aria-label', 'Redimensionar painel ' +
-        (side === 'left' ? 'esquerdo' : 'direito'));
-      g.title = 'Arraste para redimensionar · duplo clique restaura';
+      g.setAttribute('aria-label', side === 'left'
+        ? window.KazEditorText('grip_left', 'Redimensionar painel esquerdo')
+        : window.KazEditorText('grip_right', 'Redimensionar painel direito'));
+      g.title = window.KazEditorText('grip_hint', 'Arraste para redimensionar · duplo clique restaura');
       bindGrip(g, side);
       ws.appendChild(g);
       grips[side] = g;

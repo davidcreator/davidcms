@@ -281,7 +281,7 @@ final class KazElementAttrsTest extends TestCase {
         // A conferencia antes do envio olha so campos com `name` (os que o servidor recebe).
         self::assertStringContainsString('form.noValidate = true;', $editor);
         self::assertStringContainsString('els[i].name && els[i].willValidate && !els[i].checkValidity()', $editor);
-        self::assertStringContainsString("'-kaz-theme-editor-kz05'", $this->repo('dev/admin/controller/design/theme.php'));
+        self::assertMatchesRegularExpression("/'-kaz-theme-editor-kz\\d{2}'/", $this->repo('dev/admin/controller/design/theme.php')); // a KZ-11 trocou de novo: vale qualquer etapa
         // Os controles que travavam o envio continuam sem `name`: nunca viajam no POST.
         self::assertSame(1, preg_match('/<input[^>]*id="kaz-screen-h"[^>]*>/', $twig, $m));
         self::assertStringNotContainsString('name=', $m[0]);

@@ -3,6 +3,15 @@
  * F13-T: sonda/prévia coerentes com o ID estável da política publicada (R/S). */
 namespace Reamur\Admin\Controller\Design;
 class Theme extends \Reamur\System\Engine\Controller {
+    // KZ-11 (ADR 0104): textos da moldura do editor (barra de cima, barra da tela, abas, navegacao dos
+    // modulos, rodape) que o script kaz-theme-editor.js tambem escreve na tela. Cada nome e a chave
+    // `text_kaz_<nome>` dos arquivos de idioma; as frases vao para o script em data-kaz-labels.
+    // (O Twig recebe todas as chaves do idioma em edit(), por `$this->language->all()`.)
+    private const KAZ_FRAME_SCRIPT = [
+        'saved', 'not_saved', 'screen_custom', 'theme_word', 'canvas_label', 'scale', 'scale_hint', 'scale_compact', 'scale_normal',
+        'scale_comfortable', 'scale_large', 'fold_toolbar', 'fold_tabs', 'fold_status', 'fold_one', 'fold_one_hint',
+        'fold_all', 'unfold_all', 'fold_all_label', 'folded_count', 'tools_visible', 'grip_left', 'grip_right', 'grip_hint',
+    ];
     // F13-E: allowlist unica em ThemePackage::TEMPLATE_KEYS (sem duplicacao).
     public function index(): void {
         if (!$this->user->hasPermission('access','design/theme')) { $this->response->redirect($this->url->link('error/permission')); return; }
@@ -213,7 +222,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
         $data['kaz_scene_saved']=$savedScene!==null;
         $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
-        $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz05';
+        $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz11';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAJ);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAJ);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
@@ -436,6 +445,10 @@ class Theme extends \Reamur\System\Engine\Controller {
             $canvasPairName=$this->language->get('text_canvas_pair_'.$canvasPair['code']);
             $canvasTokens['pairs'][$canvasPair['code']]=str_starts_with($canvasPairName,'text_canvas_')?$canvasPair['code']:$canvasPairName;
         }
+        // KZ-11 (ADR 0104): frases da moldura que o script escreve, no idioma do admin.
+        $kazLabels=[];
+        foreach(self::KAZ_FRAME_SCRIPT as $kazKey) $kazLabels[$kazKey]=$this->language->get('text_kaz_'.$kazKey);
+        $data['kaz_labels_json']=json_encode($kazLabels,JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
         $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels,'parts'=>$canvasParts,'tokens'=>$canvasTokens],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
         $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz09';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-canvas.css?v=' . $canvasAssetV);
