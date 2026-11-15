@@ -178,7 +178,6 @@ class Install extends \Reamur\System\Engine\Model {
             'setting/setting', 'setting/site_info', 'setting/appearance', 'setting/marketplace',
             'localization/language', 'blog/blog', 'blog/import',
             'custom_field/definition', 'design/theme',
-            'extension/extension', // EX-01 (ADR 0095): tela de extensões
         ]; // Todas as rotas administrativas consolidadas em schema-complete.sql
         // F8-01 (ADR 0045 §bugfix-escape-ACL): UNESCAPED_SLASHES impede que
         // real_escape_string dobre o '\' produzido pelo json_encode padrão —

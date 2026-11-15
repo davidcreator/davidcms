@@ -12,12 +12,6 @@
   {% if warning_install_folder %}
   <div class="alert alert-warning" role="alert" data-rms-warning="install-folder"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ warning_install_folder }}</div>
   {% endif %}
-  {% if warning_csp %}
-  <div class="alert alert-warning" role="alert" data-rms-warning="csp"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ warning_csp }}</div>
-  {% endif %}
-  {% for warning in warnings_secret %}
-  <div class="alert alert-warning" role="alert" data-rms-warning="secret"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ warning }}</div>
-  {% endfor %}
   {% for warning in warnings_proxy %}
   <div class="alert alert-warning" role="alert" data-rms-warning="proxy"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ warning }}</div>
   {% endfor %}
