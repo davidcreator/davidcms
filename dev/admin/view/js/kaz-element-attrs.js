@@ -55,8 +55,23 @@
  *  - O atributo novo entra logo depois do nome da tag. Retirar devolve a
  *    fonte ao que era, caractere por caractere.
  *
- * Testes: tests/check_kaz_element_attrs.js e tests/check_kaz_element_style.js
- * (Node, sem navegador).
+ * KZ-08 (ADR 0101) — espacamento e alinhamento de um elemento, tambem no
+ * atributo `style` da propria tag.
+ *
+ * Regras:
+ *  - Nove propriedades: os quatro lados de `margin` e de `padding`, cada um
+ *    em `Npx` (de 0 a 400), e `text-align` (`left`, `center`, `right` ou
+ *    `justify`). Valor negativo, `auto` ou outra unidade so pelo codigo.
+ *  - O editor nunca escreve nem reescreve a forma curta (`margin: 0 auto`):
+ *    o lado pedido entra no fim do `style`, onde vale por cima dela.
+ *  - Um lado escrito ANTES de uma forma curta do mesmo grupo e anulado por
+ *    ela: o editor nao mexe nesse lado.
+ *  - Alinhamento so nas tags em que cor e tamanho se aplicam, menos <svg> e
+ *    <hr>; espacamento tambem em imagem, video e afins.
+ *
+ * Testes: tests/check_kaz_element_attrs.js, tests/check_kaz_element_style.js,
+ * tests/check_kaz_element_a11y.js e tests/check_kaz_element_space.js (Node,
+ * sem navegador).
  */
 (function (root) {
   'use strict';
@@ -327,6 +342,15 @@
   var SIZE_MIN = 6, SIZE_MAX = 400; // px
   /* Tags em que cor e tamanho de texto nao tem o que mudar: o painel nao oferece os campos. */
   var STYLE_SKIP = ['br', 'wbr', 'source', 'track', 'param', 'area', 'map', 'col', 'embed', 'img', 'picture', 'iframe', 'object', 'video', 'audio', 'canvas'];
+  /* KZ-08 (ADR 0101): os quatro lados de margem e de espaco interno, e o alinhamento do texto. */
+  var SPACE_PROPS = ['margin-top', 'margin-right', 'margin-bottom', 'margin-left', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left'];
+  var ALIGN_VALUES = ['left', 'center', 'right', 'justify'];
+  var LAYOUT_PROPS = SPACE_PROPS.concat(['text-align']);
+  var SPACE_MIN = 0, SPACE_MAX = 400; // px
+  /* Tags sem caixa propria: nem espacamento. As outras de STYLE_SKIP (imagem, video...) tem caixa. */
+  var SPACE_SKIP = ['br', 'wbr', 'source', 'track', 'param', 'area', 'map', 'col'];
+  /* Tags com cor e tamanho, mas sem texto para alinhar. */
+  var ALIGN_SKIP = ['svg', 'hr'];
 
   /** Cor aceita: `#rgb`, `#rrggbb` ou uma variavel do tema, `var(--nome)`. */
   function colorOk(value) {
@@ -346,6 +370,14 @@
     if (prop === 'font-size') {
       v = v.toLowerCase();
       return sizeOk(v) ? String(Number(v.slice(0, -2))) + 'px' : null;
+    }
+    if (SPACE_PROPS.indexOf(prop) !== -1) {
+      v = v.toLowerCase();
+      return spaceOk(v) ? String(Number(v.slice(0, -2))) + 'px' : null;
+    }
+    if (prop === 'text-align') {
+      v = v.toLowerCase();
+      return ALIGN_VALUES.indexOf(v) !== -1 ? v : null;
     }
     if (v.charAt(0) === '#') v = v.toLowerCase();
     return colorOk(v) ? v : null;
@@ -384,12 +416,16 @@
     return out;
   }
 
-  /** Declaracoes de um `style` fixo; null se nao da para ler ou se uma das tres propriedades esta repetida. */
-  function styleList(raw) {
+  /**
+   * Declaracoes de um `style` fixo; null se nao da para ler ou se uma das
+   * propriedades de `props` esta repetida (sem `props`: as tres da KZ-06).
+   */
+  function styleList(raw, props) {
     var list = styleParse(raw), seen = [];
+    props = props || STYLE_PROPS;
     if (!list) return null;
     for (var i = 0; i < list.length; i++) {
-      if (STYLE_PROPS.indexOf(list[i].prop) === -1) continue;
+      if (props.indexOf(list[i].prop) === -1) continue;
       if (seen.indexOf(list[i].prop) !== -1) return null;
       seen.push(list[i].prop);
     }
@@ -430,15 +466,18 @@
   }
 
   /**
-   * Escreve, troca ou retira (`value` vazio) uma das tres propriedades no
-   * `style` do elemento `n`. Devolve { src } com a fonte nova (o mapa ja
-   * acompanha), ou { error }: `locked` (o editor nao escreve neste `style`),
-   * `stale` (o mapa nao e desta fonte), `value` (valor fora da gramatica) ou
-   * `long` (a fonte passaria do teto). Com erro, nem a fonte nem o mapa mudam.
+   * Escreve, troca ou retira (`value` vazio) uma propriedade no `style` do
+   * elemento `n`: uma das tres da KZ-06 ou uma das nove da KZ-08. Devolve
+   * { src } com a fonte nova (o mapa ja acompanha), ou { error }: `locked` (o
+   * editor nao escreve neste `style`), `stale` (o mapa nao e desta fonte),
+   * `value` (valor fora da gramatica) ou `long` (a fonte passaria do teto).
+   * Com erro, nem a fonte nem o mapa mudam.
    */
   function setStyle(src, map, n, prop, value) {
     var it = map && Array.isArray(map.items) ? map.items[n] : null;
-    if (!it || !Array.isArray(it[7]) || STYLE_PROPS.indexOf(prop) === -1 || STYLE_SKIP.indexOf(it[0]) !== -1) return { error: 'locked' };
+    /* Cada familia so se trava com a repeticao das suas proprias propriedades. */
+    var family = STYLE_PROPS.indexOf(prop) !== -1 ? STYLE_PROPS : LAYOUT_PROPS;
+    if (!it || !Array.isArray(it[7]) || !applies(it[0], prop)) return { error: 'locked' };
     var v = trim(String(value));
     if (v !== '') {
       v = styleValue(prop, v);
@@ -460,8 +499,10 @@
 
     if (a[1] !== 'fixed') return { error: 'locked' };
     if (!matches(src, a)) return { error: 'stale' };
-    var raw = src.slice(a[2], a[3]), list = styleList(raw), hit = null, body;
+    var raw = src.slice(a[2], a[3]), list = styleList(raw, family), hit = null, body;
     if (!list) return { error: 'locked' };
+    /* Lado anulado por uma forma curta que vem depois: trocar ou retirar nao mudaria a pagina. */
+    if (layoutScan(list).blocked.indexOf(prop) !== -1) return { error: 'locked' };
     for (var i = 0; i < list.length; i++) if (list[i].prop === prop) hit = list[i];
 
     if (v !== '') {
@@ -485,6 +526,88 @@
     }
     next = replaceValue(src, map, n, a, body);
     return next === null ? { error: 'long' } : { src: next };
+  }
+
+  /* ---------------- KZ-08 (ADR 0101): espacamento e alinhamento ---------------- */
+  /** A propriedade `prop` e uma das que o editor escreve, e vale para uma tag `tag`? */
+  function applies(tag, prop) {
+    if (SPACE_PROPS.indexOf(prop) !== -1) return SPACE_SKIP.indexOf(tag) === -1;
+    if (prop === 'text-align') return STYLE_SKIP.indexOf(tag) === -1 && ALIGN_SKIP.indexOf(tag) === -1;
+    return STYLE_PROPS.indexOf(prop) !== -1 && STYLE_SKIP.indexOf(tag) === -1;
+  }
+
+  /** Espacamento aceito: `Npx`, de SPACE_MIN a SPACE_MAX, com ate duas casas. */
+  function spaceOk(value) {
+    var m = /^(\d{1,3}(?:\.\d{1,2})?)px$/.exec(String(value));
+    return !!m && Number(m[1]) >= SPACE_MIN && Number(m[1]) <= SPACE_MAX;
+  }
+
+  /**
+   * Valor escrito no codigo -> numero de px que o campo mostra, ou null quando
+   * o campo nao sabe mostrar (negativo, `auto`, outra unidade, `!important`).
+   * `0` sem unidade e zero px.
+   */
+  function pxOf(value) {
+    var v = trim(String(value)).toLowerCase();
+    if (v === '0') return 0;
+    return spaceOk(v) ? Number(v.slice(0, -2)) : null;
+  }
+
+  /** `margin` ou `padding` quando a declaracao mexe em mais de um lado de uma vez (forma curta ou logica); senao ''. */
+  function coverOf(prop) {
+    var m = /^(margin|padding)(?:-(?:block|inline)(?:-(?:start|end))?)?$/.exec(prop);
+    return m ? m[1] : '';
+  }
+
+  /**
+   * Das declaracoes de um `style`: o que esta escrito em cada uma das nove
+   * propriedades (`values`), as formas curtas de cada grupo (`cover`) e os
+   * lados escritos antes de uma forma curta do mesmo grupo (`blocked`).
+   */
+  function layoutScan(list) {
+    var out = { values: {}, cover: { margin: [], padding: [] }, blocked: [] }, last = { margin: -1, padding: -1 }, i, g;
+    for (i = 0; i < list.length; i++) {
+      g = coverOf(list[i].prop);
+      if (g === '') continue;
+      last[g] = i;
+      out.cover[g].push(list[i].prop + ': ' + list[i].value);
+    }
+    for (i = 0; i < list.length; i++) {
+      if (LAYOUT_PROPS.indexOf(list[i].prop) === -1) continue;
+      out.values[list[i].prop] = list[i].value;
+      g = list[i].prop.slice(0, list[i].prop.indexOf('-'));
+      if ((g === 'margin' || g === 'padding') && i < last[g]) out.blocked.push(list[i].prop);
+    }
+    return out;
+  }
+
+  /**
+   * O que o `style` do elemento `n` diz sobre espacamento e alinhamento.
+   * `state` como em styleOf (`skip` aqui e a tag sem caixa propria). Com
+   * `fixed`: `values`, `cover` e `blocked` de layoutScan. `align` diz se o
+   * alinhamento se aplica a esta tag.
+   */
+  function layoutOf(src, map, n) {
+    var it = map && Array.isArray(map.items) ? map.items[n] : null;
+    var out = { state: 'closed', values: {}, cover: { margin: [], padding: [] }, blocked: [], align: false };
+    if (!it || !Array.isArray(it[7])) return out;
+    if (SPACE_SKIP.indexOf(it[0]) !== -1) { out.state = 'skip'; return out; }
+    out.align = applies(it[0], 'text-align');
+    var a = find(it, 'style');
+    if (!a) { out.state = 'none'; return out; }
+    if (a[1] === 'variable') { out.state = 'variable'; return out; }
+    out.state = 'locked';
+    src = String(src);
+    if (a[1] !== 'fixed' || !matches(src, a)) return out;
+    var list = styleList(src.slice(a[2], a[3]), LAYOUT_PROPS);
+    if (!list) return out;
+    var scan = layoutScan(list);
+    if (!out.align) delete scan.values['text-align'];
+    out.values = scan.values;
+    out.cover = scan.cover;
+    out.blocked = scan.blocked;
+    out.state = 'fixed';
+    return out;
   }
 
   /* ---------------- KZ-07 (ADR 0100): texto alternativo e rotulo que faltam ---------------- */
@@ -694,6 +817,8 @@
     setValue: setValue, newTab: newTab, setNewTab: setNewTab,
     STYLE_PROPS: STYLE_PROPS.slice(), SIZE_MIN: SIZE_MIN, SIZE_MAX: SIZE_MAX,
     colorOk: colorOk, sizeOk: sizeOk, styleParse: styleParse, styleOf: styleOf, setStyle: setStyle,
+    SPACE_PROPS: SPACE_PROPS.slice(), ALIGN_VALUES: ALIGN_VALUES.slice(), SPACE_MIN: SPACE_MIN, SPACE_MAX: SPACE_MAX,
+    spaceOk: spaceOk, pxOf: pxOf, layoutOf: layoutOf,
     LABEL_TAGS: LABEL_TAGS.slice(), LABEL_ROLES: LABEL_ROLES.slice(),
     a11y: a11y, pending: pending, canLabel: canLabel, putAttr: putAttr, decorate: decorate, dropLabel: dropLabel
   };

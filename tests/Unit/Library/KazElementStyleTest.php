@@ -238,14 +238,16 @@ final class KazElementStyleTest extends TestCase {
         $rules = $this->repo('dev/admin/view/js/kaz-element-attrs.js');
 
         self::assertSame(1, substr_count($canvas, 'ATTRS.setStyle('));
-        // O canvas nao monta `style="..."` nem mexe no atributo por conta propria.
+        // O canvas nao monta `style="..."` por conta propria.
         self::assertStringNotContainsString('style="', $canvas);
-        self::assertStringNotContainsString("setAttribute('style'", $canvas);
         self::assertStringNotContainsString('.cssText', $canvas);
-        // A previa no quadro so toca as tres propriedades, com o valor lido de volta do codigo.
+        self::assertStringNotContainsString('.style.setProperty(prop', $canvas);
         self::assertStringContainsString("var STYLE_FIELDS = ['color', 'background-color', 'font-size'];", $canvas);
-        self::assertStringContainsString("if (STYLE_FIELDS.indexOf(prop) === -1) return;\n    visibleFrames()", $canvas);
-        self::assertStringContainsString('previewStyle(at.key, at.n, prop, now);', $canvas);
+        // KZ-08 (ADR 0101): a previa no quadro copia o `style` inteiro, lido de volta do codigo que as regras
+        // escreveram (antes, mexia em uma propriedade so e errava quando a tag tinha forma curta).
+        self::assertSame(1, substr_count($canvas, "setAttribute('style'"));
+        self::assertStringContainsString("else list[i].setAttribute('style', raw);", $canvas);
+        self::assertStringContainsString("if (!kept || kept[1] === 'fixed') previewStyle(at.key, at.n, kept ? res.src.slice(kept[2], kept[3]) : null);", $canvas);
         // A lista de cores do tema tem teto: no maximo 60 linhas, lendo no maximo 600 variaveis da pagina.
         self::assertStringContainsString('var STYLE_LIST_MAX = 60, VAR_SCAN_MAX = 600;', $canvas);
         self::assertStringContainsString('i < names.length && out.length < STYLE_LIST_MAX; i++', $canvas);

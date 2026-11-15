@@ -98,7 +98,23 @@
   var ATTR_FIELDS = ['href', 'alt', 'aria-label'];
   /* KZ-06 (ADR 0099): cor do texto, cor de fundo e tamanho do texto do elemento. */
   var STYLE_FIELDS = ['color', 'background-color', 'font-size'];
-  var WARN_NAMES = ATTR_FIELDS.concat(['newtab'], STYLE_FIELDS, ['a11y']);
+  /* KZ-08 (ADR 0101): alinhamento do texto e os quatro lados de margem e de espaco interno. */
+  var SPACE_GROUPS = ['margin', 'padding'], SPACE_SIDES = ['top', 'right', 'bottom', 'left'];
+  var LAYOUT_FIELDS = ['text-align'];
+  SPACE_GROUPS.forEach(function (g) { SPACE_SIDES.forEach(function (side) { LAYOUT_FIELDS.push(g + '-' + side); }); });
+  /* Rotulo de cada opcao de alinhamento ('' = retirar), de cada lado e de cada grupo. */
+  var ALIGN_LABELS = { '': 'el_style_auto', left: 'el_align_left', center: 'el_align_center', right: 'el_align_right', justify: 'el_align_justify' };
+  var SIDE_LABELS = { top: 'el_side_top', right: 'el_side_right', bottom: 'el_side_bottom', left: 'el_side_left' };
+  var GROUP_LABELS = { margin: 'el_margin', padding: 'el_padding' };
+  /* Em elemento que corre dentro da linha do texto, estas tres nao mudam nada. */
+  var INLINE_DEAD = ['text-align', 'margin-top', 'margin-bottom'];
+  /* Um aviso por campo; nos quatro lados de um grupo, um aviso so para o grupo. */
+  var STYLE_SLOTS = STYLE_FIELDS.concat(['text-align'], SPACE_GROUPS);
+  function slotOf(prop) {
+    var g = String(prop).split('-')[0];
+    return SPACE_GROUPS.indexOf(g) !== -1 ? g : prop;
+  }
+  var WARN_NAMES = ATTR_FIELDS.concat(['newtab'], STYLE_SLOTS, ['a11y']);
   /* KZ-07 (ADR 0100): lista de imagens e desenhos sem descricao, da pagina inteira. */
   var A11Y_LIST_MAX = 60, A11Y_SNIP_MAX = 60, A11Y_NEAR_MAX = 40, A11Y_NEAR_HOPS = 3;
   var A11Y_OK = !!ATTRS && typeof ATTRS.a11y === 'function' && typeof ATTRS.pending === 'function';
@@ -966,27 +982,51 @@
     }
     return '';
   }
-  /** Previa imediata: a mesma declaracao, nas ocorrencias do elemento em cada quadro. */
-  function previewStyle(key, n, prop, value) {
-    if (STYLE_FIELDS.indexOf(prop) === -1) return;
+  /**
+   * Previa imediata: o `style` que ficou escrito no codigo (`raw`; null quando
+   * o atributo saiu), copiado como esta para as ocorrencias do elemento em
+   * cada quadro. KZ-08: copiar o atributo inteiro, em vez de mexer em uma
+   * propriedade so, mostra o que a pagina publicada vai mostrar tambem quando
+   * a tag tem forma curta (`margin: 0 auto`, `background: ...`): retirar um
+   * lado faz a forma curta voltar a valer.
+   */
+  function previewStyle(key, n, raw) {
     visibleFrames().forEach(function (f) {
       var list = elementNodes(frameDoc(f), key, n);
       for (var i = 0; i < list.length; i++) {
-        if (!list[i].style) continue;
-        if (value === '') list[i].style.removeProperty(prop);
-        else list[i].style.setProperty(prop, value);
+        if (raw === null) list[i].removeAttribute('style');
+        else list[i].setAttribute('style', raw);
       }
     });
   }
-  /** Um campo de cor ou de tamanho mudou: reescreve so aquela declaracao no `style` da tag. */
+  /** Lados de um grupo escritos de um jeito que o campo nao mostra (negativo, `auto`, outra unidade), como estao no codigo. */
+  function spaceWritten(lay, g) {
+    var out = [];
+    SPACE_SIDES.forEach(function (side) {
+      var v = lay.values[g + '-' + side];
+      if (v !== undefined && ATTRS.pxOf(v) === null) out.push(g + '-' + side + ': ' + v);
+    });
+    return out.join('; ').slice(0, 120);
+  }
+  /** A linha "Escrito no codigo" de um grupo acompanha o que o codigo tem agora. */
+  function syncSpaceNote(g, lay) {
+    var note = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-style-written="' + g + '"]') : null;
+    if (!note) return;
+    var text = spaceWritten(lay, g), code = note.querySelector('code');
+    if (code) code.textContent = text;
+    note.hidden = text === '';
+  }
+  /** Um campo de estilo mudou (cor, tamanho, alinhamento ou um lado): reescreve so aquela declaracao no `style` da tag. */
   function onStyleInput(t) {
-    var prop = t.getAttribute('data-kaz-canvas-style'), at = attrTarget();
-    if (!at || STYLE_FIELDS.indexOf(prop) === -1) return;
-    if (!at.fresh) { attrWarn(prop, 'el_stale'); return; }
+    var prop = t.getAttribute('data-kaz-canvas-style'), at = attrTarget(), layout = LAYOUT_FIELDS.indexOf(prop) !== -1, slot = slotOf(prop);
+    if (!at || (STYLE_FIELDS.indexOf(prop) === -1 && !layout)) return;
+    if (!at.fresh) { attrWarn(slot, 'el_stale'); return; }
     var value = String(t.value), row = t.parentNode, isList = String(t.tagName).toLowerCase() === 'select';
-    if (prop === 'font-size') {
-      /* Numero pela metade ("1e") chega vazio: nao e um pedido para retirar o tamanho. */
-      if (t.validity && t.validity.badInput) { attrWarn(prop, 'el_size_bad'); return; }
+    /* Campos de numero: o tamanho do texto e os oito lados. */
+    var px = prop === 'font-size' || (layout && prop !== 'text-align'), bad = prop === 'font-size' ? 'el_size_bad' : (px ? 'el_space_bad' : 'el_color_bad');
+    if (px) {
+      /* Numero pela metade ("1e") chega vazio: nao e um pedido para retirar o valor. */
+      if (t.validity && t.validity.badInput) { attrWarn(slot, bad); return; }
       if (value !== '') value += 'px';
     } else if (isList) {
       if (value === '=') return;
@@ -997,25 +1037,28 @@
       }
     }
     var res = ATTRS.setStyle(at.src, at.map, at.n, prop, value);
-    if (res.error === 'value') { attrWarn(prop, prop === 'font-size' ? 'el_size_bad' : 'el_color_bad'); return; }
-    if (res.error === 'long') { attrWarn(prop, 'el_full'); return; }
-    if (res.error || typeof res.src !== 'string') { attrWarn(prop, 'el_stale'); return; }
-    attrWarn(prop, '');
+    /* O alinhamento vem de uma lista fechada: valor recusado ali e sinal de codigo defasado, nao de digitacao. */
+    if (res.error === 'value' && prop !== 'text-align') { attrWarn(slot, bad); return; }
+    if (res.error === 'long') { attrWarn(slot, 'el_full'); return; }
+    if (res.error || typeof res.src !== 'string') { attrWarn(slot, 'el_stale'); return; }
+    attrWarn(slot, '');
     /* O aviso "a pagina mostra outro valor" era do valor antigo: sai, e volta no proximo redesenho se ainda valer. */
-    var forced = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-style-forced="' + prop + '"]') : null;
+    var forced = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-style-forced="' + slot + '"]') : null;
     if (forced) forced.parentNode.removeChild(forced);
-    /* O que ficou escrito no codigo, lido de volta: e isso que a previa mostra. */
-    var now = ATTRS.styleOf(res.src, at.map, at.n).values[prop] || '';
-    if (prop !== 'font-size' && row) {
+    var lay = layout ? ATTRS.layoutOf(res.src, at.map, at.n) : null;
+    if (!px && row) {
       var list = row.querySelector('select'), written = list ? list.querySelector('option[value="="]') : null;
       if (written) written.parentNode.removeChild(written);
       if (list && !isList) list.value = '#';
     }
     if (prop === 'font-size' && inspectorEl) {
-      var note = inspectorEl.querySelector('[data-kaz-canvas-style-written]');
+      var note = inspectorEl.querySelector('[data-kaz-canvas-style-written="font-size"]');
       if (note) note.hidden = true;
     }
-    previewStyle(at.key, at.n, prop, now);
+    if (lay && slot !== prop) syncSpaceNote(slot, lay);
+    /* O que ficou escrito no codigo, lido de volta: e isso que a previa mostra. */
+    var kept = ATTRS.find(at.map.items[at.n], 'style');
+    if (!kept || kept[1] === 'fixed') previewStyle(at.key, at.n, kept ? res.src.slice(kept[2], kept[3]) : null);
     commitSource(at.key, at.map, res.src);
   }
   /** No da pagina (primeiro quadro com trechos lidos) que corresponde ao elemento escolhido. */
@@ -1033,22 +1076,35 @@
     var out = [], cs = computedOf(node);
     if (!cs || !ATTRS || !mapFresh(key)) return out;
     var st = ATTRS.styleOf(elementSource(key), { items: [it] }, 0);
-    if (st.state !== 'fixed') return out;
-    ['color', 'background-color'].forEach(function (prop) {
-      var cur = st.values[prop] || '', want = hex6(cur), got = rgbToHex(cs.getPropertyValue(prop));
-      if (want === '' && cur.slice(0, 6) === 'var(--') want = hex6(String(cs.getPropertyValue(cur.slice(4, -1))).replace(/^\s+|\s+$/g, ''));
-      if (want !== '' && got !== '' && got !== want) out.push(prop);
+    if (st.state === 'fixed') {
+      ['color', 'background-color'].forEach(function (prop) {
+        var cur = st.values[prop] || '', want = hex6(cur), got = rgbToHex(cs.getPropertyValue(prop));
+        if (want === '' && cur.slice(0, 6) === 'var(--') want = hex6(String(cs.getPropertyValue(cur.slice(4, -1))).replace(/^\s+|\s+$/g, ''));
+        if (want !== '' && got !== '' && got !== want) out.push(prop);
+      });
+      var px = /^(\d{1,3}(?:\.\d{1,2})?)px$/i.exec(st.values['font-size'] || ''), live = parseFloat(cs.getPropertyValue('font-size'));
+      if (px && isFinite(live) && Math.abs(live - Number(px[1])) > 0.05) out.push('font-size');
+    }
+    /* KZ-08: o mesmo para o alinhamento e para cada lado escrito em px. */
+    var lay = typeof ATTRS.layoutOf === 'function' ? ATTRS.layoutOf(elementSource(key), { items: [it] }, 0) : null;
+    if (lay && lay.state === 'fixed') LAYOUT_FIELDS.forEach(function (prop) {
+      var cur = lay.values[prop], shown = String(cs.getPropertyValue(prop)).replace(/^\s+|\s+$/g, '');
+      if (cur === undefined || shown === '') return;
+      if (prop === 'text-align') {
+        if (ATTRS.ALIGN_VALUES.indexOf(cur.toLowerCase()) !== -1 && shown !== cur.toLowerCase()) out.push(prop);
+        return;
+      }
+      var want = ATTRS.pxOf(cur), got = parseFloat(shown);
+      if (want !== null && isFinite(got) && Math.abs(got - want) > 0.05) out.push(prop);
     });
-    var px = /^(\d{1,3}(?:\.\d{1,2})?)px$/i.exec(st.values['font-size'] || ''), live = parseFloat(cs.getPropertyValue('font-size'));
-    if (px && isFinite(live) && Math.abs(live - Number(px[1])) > 0.05) out.push('font-size');
     return out;
   }
   /** Poe ou tira, sob cada campo, o aviso "a pagina mostra outro valor". Nao reconstroi o painel. */
   function syncForced() {
     var box = inspectorEl && picked ? inspectorEl.querySelector('[data-kaz-canvas-elbox]') : null, it = picked ? elementItem(picked.key, picked.n) : null;
     if (!box || !it) return;
-    var list = styleForced(picked.key, it, pickedNode());
-    STYLE_FIELDS.forEach(function (prop) {
+    var list = styleForced(picked.key, it, pickedNode()).map(slotOf);
+    STYLE_SLOTS.forEach(function (prop) {
       var slot = box.querySelector('[data-kaz-canvas-attr-warn="' + prop + '"]'), note = box.querySelector('[data-kaz-canvas-style-forced="' + prop + '"]');
       var need = list.indexOf(prop) !== -1;
       if (note && !need) note.parentNode.removeChild(note);
@@ -1147,6 +1203,108 @@
     }
     warnSlot(host, 'font-size', fresh);
     attrHelp(host, 'el_style_help', '');
+    syncForced();
+    return true;
+  }
+  /** Campos de alinhamento e de espacamento do elemento escolhido (KZ-08). Devolve true quando mostrou os campos. */
+  function paintSpace(key, host, it, own, fresh) {
+    if (!ATTRS || typeof ATTRS.layoutOf !== 'function') return false;
+    /* A mesma pergunta com uma tag vazia: ha caixa para afastar? o alinhamento se aplica? cor e tamanho se aplicam? */
+    var blank = { items: [[it[0], 'group', 0, 0, -1, -1, '', []]] }, kind = ATTRS.layoutOf('', blank, 0);
+    var styled = ATTRS.styleOf('', blank, 0).state !== 'skip';
+    if (kind.state === 'skip') return false;
+    if (!Array.isArray(it[7])) {
+      /* Link e imagem ja avisaram em paintAttrs; as tags com cor e tamanho, em paintStyle. */
+      if (!styled && it[0] !== 'img') attrHelp(host, 'el_attr_locked', '');
+      return false;
+    }
+    var src = elementSource(key), lay = fresh ? ATTRS.layoutOf(src, { items: [it] }, 0) : kind;
+    var open = lay.state === 'none' || lay.state === 'fixed';
+    /* Com cor e tamanho na mesma tag, paintStyle ja disse que o `style` vem do site ou nao pode ser lido. */
+    var text = styled && fresh ? ATTRS.styleOf(src, { items: [it] }, 0).state : 'none';
+    if (!open && (text === 'variable' || text === 'locked')) return false;
+    host.appendChild(make('h6', 'kaz-canvas__sidesub2', label('el_space_title', '')));
+    if (lay.state === 'variable') {
+      var a = ATTRS.find(it, 'style');
+      attrHelp(host, 'el_style_variable', a[6] !== '' ? '{{ ' + a[6] + ' }}' : src.slice(a[2], a[3]).slice(0, 120)).setAttribute('data-kaz-canvas-attr-from', 'style');
+      attrHelp(host, 'el_attr_variable_help', '');
+      return false;
+    }
+    if (!open) {
+      attrHelp(host, 'el_style_locked', '').setAttribute('data-kaz-canvas-style-locked', 'space');
+      return false;
+    }
+    var node = pickedNode(), cs = computedOf(node), off = !own || !fresh;
+    /* Texto corrido (span, link, negrito...): so o que ja esta escrito pode ser mexido nos tres campos sem efeito. */
+    var inline = styled && it[0] !== 'svg' && !!cs && cs.getPropertyValue('display') === 'inline';
+    function dead(prop) { return inline && INLINE_DEAD.indexOf(prop) !== -1 && lay.values[prop] === undefined; }
+    if (inline) attrHelp(host, 'el_space_inline', '').setAttribute('data-kaz-canvas-space-inline', '');
+
+    if (kind.align) {
+      var cur = lay.values['text-align'] || '', low = cur.toLowerCase(), known = cur === '' || ATTRS.ALIGN_VALUES.indexOf(low) !== -1;
+      var alignLab = make('label', 'kaz-canvas__fieldname', label('el_align', ''));
+      alignLab.setAttribute('for', 'kaz-canvas-el-style-text-align');
+      host.appendChild(alignLab);
+      var row = make('span', 'kaz-canvas__control kaz-canvas__stylerow'), list = make('select', 'kaz-canvas__select');
+      list.id = 'kaz-canvas-el-style-text-align';
+      list.setAttribute('data-kaz-canvas-style', 'text-align');
+      [''].concat(ATTRS.ALIGN_VALUES).forEach(function (v) {
+        var o = make('option', '', label(ALIGN_LABELS[v], ''));
+        o.value = v;
+        list.appendChild(o);
+      });
+      /* Valor que o editor nao escreveria (start, inherit...): aparece como esta, e so sai se outro for escolhido. */
+      if (!known) {
+        var kept = make('option', '', label('el_style_written', '') + ' ' + cur.slice(0, 60));
+        kept.value = '=';
+        list.appendChild(kept);
+      }
+      list.value = known ? low : '=';
+      list.disabled = off || dead('text-align');
+      row.appendChild(list);
+      host.appendChild(row);
+      warnSlot(host, 'text-align', fresh);
+    }
+
+    SPACE_GROUPS.forEach(function (g) {
+      var set = make('fieldset', 'kaz-canvas__space');
+      set.setAttribute('data-kaz-canvas-space', g);
+      set.appendChild(make('legend', 'kaz-canvas__fieldname', label(GROUP_LABELS[g], '')));
+      SPACE_SIDES.forEach(function (side) {
+        var prop = g + '-' + side, id = 'kaz-canvas-el-style-' + prop, cell = make('span', 'kaz-canvas__spacecell');
+        var lab = make('label', 'kaz-canvas__spacename', label(SIDE_LABELS[side], ''));
+        lab.setAttribute('for', id);
+        cell.appendChild(lab);
+        var num = make('input', 'kaz-canvas__input');
+        num.type = 'number';
+        num.id = id;
+        num.min = String(ATTRS.SPACE_MIN);
+        num.max = String(ATTRS.SPACE_MAX);
+        num.step = 'any';
+        num.setAttribute('inputmode', 'decimal');
+        num.setAttribute('data-kaz-canvas-style', prop);
+        var px = lay.values[prop] === undefined ? null : ATTRS.pxOf(lay.values[prop]);
+        num.value = px === null ? '' : String(px);
+        /* O que a pagina usa hoje neste lado, como referencia. */
+        var live = cs ? parseFloat(cs.getPropertyValue(prop)) : NaN;
+        if (isFinite(live)) num.placeholder = String(Math.round(live * 100) / 100);
+        num.readOnly = off || lay.blocked.indexOf(prop) !== -1 || dead(prop);
+        cell.appendChild(num);
+        set.appendChild(cell);
+      });
+      host.appendChild(set);
+      var kept = spaceWritten(lay, g), note = attrHelp(host, 'el_style_written', kept || ' ');
+      note.setAttribute('data-kaz-canvas-style-written', g);
+      if (kept === '') { note.querySelector('code').textContent = ''; note.hidden = true; }
+      if (lay.cover[g].length) attrHelp(host, 'el_space_cover', lay.cover[g].join('; ').slice(0, 120)).setAttribute('data-kaz-canvas-space-cover', g);
+      for (var b = 0; b < lay.blocked.length; b++) {
+        if (slotOf(lay.blocked[b]) !== g) continue;
+        attrHelp(host, 'el_space_blocked', '').setAttribute('data-kaz-canvas-space-blocked', g);
+        break;
+      }
+      warnSlot(host, g, fresh);
+    });
+    attrHelp(host, 'el_space_help', '');
     syncForced();
     return true;
   }
@@ -1265,8 +1423,9 @@
       }
     }
 
-    /* KZ-06: cor e tamanho ficam depois dos atributos. */
+    /* KZ-06: cor e tamanho ficam depois dos atributos. KZ-08: alinhamento e espacamento, depois deles. */
     if (paintStyle(key, host, it, own, fresh)) hasFields = true;
+    if (paintSpace(key, host, it, own, fresh)) hasFields = true;
     if (hasFields && !own) attrHelp(host, 'el_attr_need_customize', '');
 
     var bar = make('div', 'kaz-canvas__actions');

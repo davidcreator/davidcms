@@ -154,7 +154,7 @@ wrote(S, 1, 'color', 'var(--at-ink)', S.replace('var(--at-muted)', 'var(--at-ink
 wrote(S, 1, 'font-size', '20px', S.replace('26px">', '26px;font-size:20px">'), 'propriedade nova entra no fim, com ponto e virgula');
 wrote(S, 1, 'color', '', S.replace('color:var(--at-muted);', ''), 'retirar a primeira leva o ponto e virgula dela');
 wrote(S, 2, 'color', '#000', S.replace('margin-top:18px"', 'margin-top:18px;color:#000"'), 'acrescentar em style de uma declaracao so');
-refused(S, 2, 'margin-top', '', 'locked', 'propriedade fora das tres nao e retirada');
+refused(S, 1, 'max-width', '', 'locked', 'propriedade fora da lista do editor nao e retirada');
 wrote(S, 3, 'color', '#00f', S.replace('color: red ;', 'color: #00f ;'), 'os espacos em volta do valor ficam');
 wrote(S, 3, 'background-color', '#eee', S.replace('color: red ;"', 'color: red ;background-color:#eee"'), 'style que termina em ponto e virgula nao ganha outro');
 wrote(S, 3, 'color', '', S.replace('<b style="color: red ;">', '<b>'), 'retirar a unica: o atributo sai inteiro');

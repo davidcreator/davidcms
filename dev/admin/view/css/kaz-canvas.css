@@ -276,3 +276,12 @@
 .kaz-canvas__stylerow .kaz-canvas__swatch { flex: none; height: 30px; }
 .kaz-canvas__stylerow :disabled { opacity: .55; cursor: default; }
 .kaz-canvas__input--short { width: 96px; }
+/* KZ-08 (ADR 0101): alinhamento e espacamento do elemento. */
+.kaz-canvas__space { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 6px; min-width: 0; margin: 0; padding: 0; border: 0; }
+/* O titulo do grupo com a mesma cara dos nomes de campo do painel (que sao <label>). */
+.kaz-canvas .kaz-canvas__space legend { float: none; width: auto; margin: 10px 0 0; padding: 0; font-size: .85rem; font-weight: 600; line-height: 1.45; }
+.kaz-canvas__spacecell { display: block; min-width: 0; }
+/* `.admin-content label` (admin.css) vence uma classe sozinha: por isso o seletor com o painel na frente. */
+.kaz-canvas .kaz-canvas__spacename { display: block; margin: 6px 0 0; font-size: 11px; font-weight: 400; color: #a1a1aa; }
+.kaz-canvas__space .kaz-canvas__input { margin: 2px 0 4px; padding: 5px 6px; font-variant-numeric: tabular-nums; }
+.kaz-canvas__stylerow select:disabled { cursor: not-allowed; }

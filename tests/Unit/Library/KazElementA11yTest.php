@@ -225,8 +225,9 @@ final class KazElementA11yTest extends TestCase {
 
         self::assertSame([0, 0, 0, 0, 11, 10], $column('img'));
         self::assertSame([15, 15, 12, 30, 0, 0], $column('svg'));
-        // O que a lista do editor mostra hoje: so desenhos, em tres pacotes.
-        self::assertSame([13, 13, 12, 0, 0, 0], $column('missing'));
+        // KZ-08 (ADR 0101): os 38 desenhos que a lista mostrava (13, 13 e 12) sao icones ao lado de um
+        // titulo ou texto visivel e foram marcados como enfeite. Pacote entregue sai sem pendencia.
+        self::assertSame([0, 0, 0, 0, 0, 0], $column('missing'));
         // Nenhuma imagem ou desenho entregue fica sem conferir, e nenhum usa <title>.
         self::assertSame([0, 0, 0, 0, 0, 0], $column('unknown'));
         self::assertSame([0, 0, 0, 0, 0, 0], $column('titled'));
@@ -255,7 +256,7 @@ final class KazElementA11yTest extends TestCase {
         $controller = $this->repo('dev/admin/controller/design/theme.php');
         $canvas = $this->repo('dev/admin/view/js/kaz-canvas.js');
 
-        self::assertStringContainsString("'-kaz-canvas-kz07'", $controller);
+        self::assertMatchesRegularExpression("/'-kaz-canvas-kz\\d{2}'/", $controller);
         self::assertSame(1, preg_match('/\$canvasLabels=\[\];\s*foreach\(\[(.*?)\] as \$canvasKey\)/s', $controller, $m));
         preg_match_all("/'([a-z0-9_]+)'/", $m[1], $listed);
         self::assertSame(count($listed[1]), count(array_unique($listed[1])));
