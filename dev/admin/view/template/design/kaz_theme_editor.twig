@@ -105,7 +105,7 @@
       <span class="kaz-topbar__state">{{ theme_state == 'published' ? text_state_published : text_state_draft }}</span>
       <button class="kaz-btn kaz-btn--primary kaz-nav-save" type="submit" form="kaz-theme-form" data-kaz-save {% if not can_modify %}disabled{% endif %}>{{ button_save }}</button>
       <details class="kaz-publish">
-        <summary class="kaz-btn kaz-btn--publish" title="Publica o rascunho no catalogo">Publicar</summary>
+        <summary class="kaz-btn" title="Publica o rascunho no catalogo">Publicar</summary>
         <div class="kaz-publish__box">
           <p>Torna este tema o ativo do catálogo. A cena e os tokens passam a aparecer no site publicado.</p>
           <button class="kaz-btn kaz-btn--primary" type="submit" form="kaz-theme-form"
@@ -205,7 +205,7 @@
       <section class="kaz-panel" data-kaz-panel="assets" hidden>
         <p class="kaz-panel__title">Biblioteca de blocos</p>
         <div class="kaz-assets">
-          <button class="kaz-asset" type="button" data-kaz-block="hero" title="Faixa de destaque com título e botão"><span class="kaz-asset__thumb kaz-asset__thumb--hero" aria-hidden="true"></span>Hero</button>
+          <button class="kaz-asset" type="button" data-kaz-block="hero" title="Faixa de destaque com título e botão"><span class="kaz-asset__thumb" aria-hidden="true"></span>Hero</button>
           <button class="kaz-asset" type="button" data-kaz-block="card" title="Cartão com texto"><span class="kaz-asset__thumb kaz-asset__thumb--card" aria-hidden="true"></span>Cartão</button>
           <button class="kaz-asset" type="button" data-kaz-block="banner" title="Faixa larga com chamada"><span class="kaz-asset__thumb kaz-asset__thumb--banner" aria-hidden="true"></span>Faixa</button>
           <button class="kaz-asset" type="button" data-kaz-block="titulo" title="Título com linha de destaque"><span class="kaz-asset__thumb kaz-asset__thumb--titulo" aria-hidden="true"></span>Título</button>
@@ -325,7 +325,7 @@
               <h4 class="kaz-canvas__sidetitle">{{ text_canvas_structure }}</h4>
               <p class="kaz-canvas__sidehelp">{{ text_canvas_structure_help }}</p>
               <ol class="kaz-canvas__tree" data-kaz-canvas-tree></ol>
-              <div class="kaz-canvas__hiddenlist" data-kaz-canvas-hidden hidden></div>
+              <div data-kaz-canvas-hidden hidden></div>
               {# KZ-07 (ADR 0100): imagens e desenhos sem descricao, da pagina inteira. Preenchido por kaz-canvas.js; nada aqui tem `name`. #}
               <div class="kaz-canvas__a11y" data-kaz-canvas-a11y hidden></div>
             </aside>
@@ -680,7 +680,7 @@
   <details class="kaz-advanced" data-kaz-advanced>
     <summary>Avançado · cena JSON e exportação</summary>
   <div class="kaz-io">
-    <p class="kaz-note kaz-note--state">
+    <p class="kaz-note">
       {% if kaz_scene_saved %}<strong>Cena salva neste tema.</strong> Ela volta ao abrir a página e viaja com o pacote exportado.{% else %}<strong>Cena derivada do config.</strong> Este tema ainda não tem cena própria; salve o formulário para gravá-la.{% endif %}
     </p>
     <label class="kaz-panel__title" for="kaz-json">Cena kaztheme-scene/v1 — campo salvo com o tema</label>

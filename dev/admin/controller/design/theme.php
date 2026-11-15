@@ -185,7 +185,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $builderLabels=[];
         foreach($labelMap as $jsKey=>$langKey) { $builderLabels[$jsKey]=$this->language->get($langKey); $data[$langKey]=$builderLabels[$jsKey]; }
         $data['builder_labels_json']=json_encode($builderLabels,$jsonFlags) ?: '{}';
-        $builderAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-builder-a';
+        $builderAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-builder-b';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/theme-condition-builder.css?v=' . $builderAssetV);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-condition-builder.js?v=' . $builderAssetV);
         // F13-D: editor de cena (presets + miniatura ao vivo).

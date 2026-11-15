@@ -293,7 +293,10 @@
       var head = el('div', { 'class': 'tcb-rule__head' });
       head.appendChild(el('span', { 'class': 'tcb-handle', text: '⋮⋮', title: L('drag', 'arrastar') }));
       var idInput = input(rule.id || '', function () { rule.id = idInput.value; sync(false); }, 'text', 'form-control form-control-sm tcb-rule__id');
-      idInput.setAttribute('pattern', '[a-z0-9_-]{1,48}');
+      // KZ-10 (ADR 0103): o navegador compila o `pattern` com a flag `v`, que nao aceita hifen solto dentro
+      // de colchetes. Sem a barra o atributo inteiro era descartado ("not a valid regular expression") e o
+      // campo aceitava qualquer coisa. E a mesma regra do servidor (ConditionEngine: /^[a-z0-9_-]+$/, ate 48).
+      idInput.setAttribute('pattern', '[a-z0-9_\\-]{1,48}');
       head.appendChild(labelRow(L('rule_id', 'ID'), idInput));
       head.appendChild(btn('↑', 'btn btn-sm btn-outline-secondary tcb-x', function () { moveRule(index, index - 1); }, L('up', 'subir')));
       head.appendChild(btn('↓', 'btn btn-sm btn-outline-secondary tcb-x', function () { moveRule(index, index + 1); }, L('down', 'descer')));

@@ -63,7 +63,7 @@ node tools/verify-bo.cjs .                 # a partir da raiz deste pacote
 ## 3. Importar o tema
 
 1. Admin → **Temas** → **Importar tema**.
-2. Envie `tema/david_universe_3d_bo.reamurtheme.json` (91.504 bytes).
+2. Envie `tema/david_universe_3d_bo.reamurtheme.json` (90.215 bytes).
 3. Confira `validateConfig=[]` e `decode ok=true`.
 4. **Ative** o tema. O slug é novo (`david_universe_3d_bo`), então não sobrescreve o BN. Se quiser substituir, desative/exclua o `david_universe_3d` antes.
 5. No editor de temas, a cena **`David Universe (nave + orbes)`** aparece no dropdown e o preset **`universe`** mostra a miniatura da nave.

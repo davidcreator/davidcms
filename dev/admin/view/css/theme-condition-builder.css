@@ -16,6 +16,9 @@
 .tcb-handle { cursor: grab; color: var(--bs-secondary-color); user-select: none;
   padding: .25rem .35rem; font-size: 1rem; line-height: 1; }
 .tcb-rule__id { max-width: 260px; }
+/* KZ-10 (ADR 0103): ID fora do formato que o servidor aceita (minusculas, numeros, _ e -, ate 48).
+   O seletor e longo de proposito: precisa ganhar da borda de foco do editor (.kaz-module .form-control:focus). */
+.tcb-rule__head .tcb-rule__id.form-control:invalid { border-color: var(--bs-danger); box-shadow: 0 0 0 1px var(--bs-danger); }
 .tcb-rule__section { margin-top: .5rem; }
 .tcb-x { padding: .1rem .45rem; line-height: 1.2; }
 
