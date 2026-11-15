@@ -399,7 +399,7 @@ window.KazEditorText = (function () {
       b.setAttribute('type', 'button');
       b.setAttribute('data-kaz-select', l.id);
       li.appendChild(b);
-      var flags = el('span', 'kaz-layer__flags', (l.visible ? '' : 'oculto ') + (l.locked ? 'bloqueado' : ''));
+      var flags = el('span', 'kaz-layer__flags', (l.visible ? '' : TXT('flag_hidden', 'oculto') + ' ') + (l.locked ? TXT('flag_locked', 'bloqueado') : ''));
       li.appendChild(flags);
       layerList.appendChild(li);
     });
@@ -416,7 +416,7 @@ window.KazEditorText = (function () {
       else f.value = String(l[key]);
     });
     var hint = root.querySelector('[data-kaz-hint]');
-    if (hint) hint.textContent = l ? l.id : 'nenhuma camada';
+    if (hint) hint.textContent = l ? l.id : TXT('no_layer', 'nenhuma camada');
   }
 
   /* Frente V: o textarea e um campo REAL do formulario. Mantem o JSON da
@@ -467,7 +467,7 @@ window.KazEditorText = (function () {
   function setDensity(d) {
     if (!Object.prototype.hasOwnProperty.call(DENSITY, d)) return false;
     density = d; root.setAttribute('data-kaz-density', d);
-    say('layout ' + d + ' · ' + DENSITY[d][0] + 'px / ' + DENSITY[d][1] + 'px');
+    say(TXT('msg_layout', 'layout %s', d + ' · ' + DENSITY[d][0] + 'px / ' + DENSITY[d][1] + 'px'));
     return true;
   }
   function togglePanel(side) {
@@ -481,7 +481,8 @@ window.KazEditorText = (function () {
     /* AC: em telas pequenas as sidebars sao overlay controladas por este
        mesmo atributo; sem isto o toggle nao tinha efeito visual no mobile. */
     root.setAttribute('data-kaz-mobile-open', collapsed[side] ? '' : side);
-    say('painel ' + side + (collapsed[side] ? ' oculto' : ' visível'));
+    var sideName = side === 'left' ? TXT('side_left', 'esquerdo') : TXT('side_right', 'direito');
+    say(collapsed[side] ? TXT('msg_panel_hidden', 'painel %s oculto', sideName) : TXT('msg_panel_shown', 'painel %s visível', sideName));
     return true;
   }
   function setFullscreenLocal(on) {
@@ -495,14 +496,14 @@ window.KazEditorText = (function () {
       if (fullscreenLocal && d && d.requestFullscreen) d.requestFullscreen();
       else if (!fullscreenLocal && document.exitFullscreen && document.fullscreenElement) document.exitFullscreen();
     } catch (e) { /* sem Fullscreen API: permanece apenas o modo CSS */ }
-    say(fullscreenLocal ? 'tela cheia nesta aba' : 'tela cheia encerrada');
+    say(fullscreenLocal ? TXT('msg_full_on', 'tela cheia nesta aba') : TXT('msg_full_off', 'tela cheia encerrada'));
     return fullscreenLocal;
   }
   function revertScene() {
     scene = copy(baseline);
     selected = scene.layers.length ? scene.layers[0].id : '';
     history = [copy(scene)]; cursor = 0;
-    render(); say('alteracoes da cena descartadas'); return true;
+    render(); say(TXT('msg_reverted', 'alterações da cena descartadas')); return true;
   }
   function applyColor(c) {
     if (!hex(c) || !selected) return false;
@@ -541,7 +542,7 @@ window.KazEditorText = (function () {
        escalado caiba no viewport (0.25 deixava 720px em 710px). */
     zoom = clamp(Math.floor(z * 20) / 20, ZOOM_MIN, ZOOM_MAX);
     panX = 0; panY = 0; paintZoom();
-    say('zoom ajustado ' + Math.round(zoom * 100) + '%'); return zoom;
+    say(TXT('msg_zoom_fit', 'zoom ajustado %s', Math.round(zoom * 100) + '%')); return zoom;
   }
   function setPan(x, y) {
     panX = clamp(Number(x) || 0, -4000, 4000);
@@ -554,7 +555,7 @@ window.KazEditorText = (function () {
     root.querySelectorAll('[data-kaz-tool]').forEach(function (b) {
       b.setAttribute('class', 'kaz-tool' + (b.getAttribute('data-kaz-tool') === t ? ' kaz-tool--on' : ''));
     });
-    say(t === 'hand' ? 'ferramenta mão: arraste o canvas' : 'ferramenta mover');
+    say(t === 'hand' ? TXT('msg_tool_hand', 'ferramenta mão: arraste o canvas') : TXT('msg_tool_move', 'ferramenta mover'));
     return true;
   }
   function setTab(name) {
@@ -588,7 +589,7 @@ window.KazEditorText = (function () {
     if (!historyList) return;
     clear(historyList);
     for (var i = 0; i < history.length; i++) {
-      var li = el('li', '', (i + 1) + '. ' + history[i].layers.length + ' camadas' + (i === cursor ? ' · atual' : ''));
+      var li = el('li', '', (i + 1) + '. ' + TXT('n_layers', '%s camadas', history[i].layers.length) + (i === cursor ? ' · ' + TXT('history_current', 'atual') : ''));
       if (i === cursor) li.setAttribute('data-kaz-current', '1');
       historyList.appendChild(li);
     }
@@ -596,7 +597,7 @@ window.KazEditorText = (function () {
   function paintInspect() {
     if (!inspectBox) return;
     var l = layer(selected);
-    if (!l) { inspectBox.textContent = '// nenhuma camada selecionada'; return; }
+    if (!l) { inspectBox.textContent = '// ' + TXT('no_layer_selected', 'nenhuma camada selecionada'); return; }
     var css = '.' + l.id + ' {\n'
       + '  position: absolute;\n  left: ' + l.x + 'px;\n  top: ' + l.y + 'px;\n'
       + '  width: ' + l.w + 'px;\n  height: ' + l.h + 'px;\n'
@@ -609,7 +610,7 @@ window.KazEditorText = (function () {
       var s = el('button', 'kaz-swatch');
       s.setAttribute('type', 'button');
       s.setAttribute('data-kaz-swatch', c);
-      s.setAttribute('title', 'Aplicar ' + c + ' na camada selecionada');
+      s.setAttribute('title', TXT('swatch_hint', 'Aplicar %s na camada selecionada', c));
       s.style.background = c; swatches.appendChild(s);
     });
   }
@@ -625,7 +626,7 @@ window.KazEditorText = (function () {
   function paintChrome() {
     paintZoom(); paintTabs(); paintRulers(); paintHistory(); paintInspect();
     paintSwatches(); paintTokens(); paintModules();
-    if (count) count.textContent = scene.layers.length + ' camadas';
+    if (count) count.textContent = TXT('n_layers', '%s camadas', scene.layers.length);
     var l = layer(selected);
     if (coords) coords.textContent = l ? 'X ' + l.x + ' · Y ' + l.y : 'X 0 · Y 0';
     var bs = root.querySelector('[data-kaz-board-size]');
@@ -694,7 +695,7 @@ window.KazEditorText = (function () {
       visible: true, locked: false, bindId: ''
     };
     scene.layers.push(l); selected = l.id; commit(); render();
-    say('camada adicionada: ' + l.id);
+    say(TXT('msg_layer_added', 'camada adicionada: %s', l.id));
     return l.id;
   }
   /* Frente X — insere um bloco allowlistado como camadas REAIS da cena.
@@ -707,9 +708,9 @@ window.KazEditorText = (function () {
   }
   function insertBlock(blockId) {
     var b = Object.prototype.hasOwnProperty.call(BLOCKS, blockId) ? BLOCKS[blockId] : null;
-    if (!b) { say('bloco desconhecido'); return false; }
+    if (!b) { say(TXT('msg_block_unknown', 'bloco desconhecido')); return false; }
     if (scene.layers.length + b.layers.length > MAX_LAYERS) {
-      say('limite de ' + MAX_LAYERS + ' camadas atingido'); return false;
+      say(TXT('msg_layer_limit', 'limite de %s camadas atingido', MAX_LAYERS)); return false;
     }
     var o = nextOrigin(), added = [];
     b.layers.forEach(function (tpl) {
@@ -724,7 +725,9 @@ window.KazEditorText = (function () {
       scene.layers.push(l); added.push(l.id);
     });
     selected = added[0]; commit(); render();
-    say('bloco ' + blockId + ' inserido · ' + added.length + ' camadas');
+    /* KZ-13 (ADR 0106): a mensagem usa o nome do bloco como esta no botao (ja no idioma do admin). */
+    var blockButton = root.querySelector('[data-kaz-block="' + blockId + '"]');
+    say(TXT('msg_block_added', 'bloco %s inserido', blockButton ? blockButton.textContent.trim() : blockId) + ' · ' + TXT('n_layers', '%s camadas', added.length));
     return true;
   }
   function remove(id) {
@@ -792,16 +795,16 @@ window.KazEditorText = (function () {
         if (window.URL.revokeObjectURL) window.URL.revokeObjectURL(url);
       }
     } catch (e) { /* navegador sem download: o textarea continua sendo a fonte */ }
-    say('cena exportada (' + scene.layers.length + ' camadas)');
+    say(TXT('msg_exported', 'cena exportada (%s)', TXT('n_layers', '%s camadas', scene.layers.length)));
     return s;
   }
   function importScene(raw) {
     var s;
-    try { s = JSON.parse(String(raw)); } catch (e) { say('import inválido: JSON'); return false; }
-    if (!validScene(s)) { say('import inválido: contrato kaztheme-scene/v1'); return false; }
+    try { s = JSON.parse(String(raw)); } catch (e) { say(TXT('msg_import_json', 'import inválido: JSON')); return false; }
+    if (!validScene(s)) { say(TXT('msg_import_contract', 'import inválido: contrato kaztheme-scene/v1')); return false; }
     scene = s; selected = scene.layers.length ? scene.layers[0].id : '';
     history = [copy(scene)]; cursor = 0;
-    render(); applyBindings(); say('cena importada'); return true;
+    render(); applyBindings(); say(TXT('msg_imported', 'cena importada')); return true;
   }
 
   /* ---- Eventos reais de mouse (drag / resize) --------------------------- */
@@ -904,13 +907,13 @@ window.KazEditorText = (function () {
     else if (act === 'down') reorder(selected, 1);
     else if (act === 'export') exportScene();
     else if (act === 'import') importScene(jsonBox.value);
-    else if (act === 'bind') { applyBindings(); say('camadas aplicadas ao tema'); }
+    else if (act === 'bind') { applyBindings(); say(TXT('msg_bound', 'camadas aplicadas ao tema')); }
     else if (act === 'visible') set(selected, 'visible', !(layer(selected) || {}).visible);
     else if (act === 'lock') set(selected, 'locked', !(layer(selected) || {}).locked);
-    else if (act === 'pages') { setTab('pages'); setModule('design'); say('painel de paginas aberto'); }
-    else if (act === 'users') say('1 editor local · sessão Admin · sem colaboração em tempo real');
+    else if (act === 'pages') { setTab('pages'); setModule('design'); say(TXT('msg_pages_open', 'painel de páginas aberto')); }
+    else if (act === 'users') say(TXT('msg_users', '1 editor local · sessão Admin · sem colaboração em tempo real'));
     else if (act === 'revert') revertScene();
-    else if (act === 'goto-board') { setModule('design'); setTab('layers'); fitZoom(); say('board em foco'); }
+    else if (act === 'goto-board') { setModule('design'); setTab('layers'); fitZoom(); say(TXT('msg_board_focus', 'board em foco')); }
     else if (act === 'add-text') add('text');
     else if (act === 'screen-apply') {
       var sel = root.querySelector('[data-kaz-screen]');
@@ -1069,8 +1072,8 @@ window.KazEditorText = (function () {
      estado server-side 'aguardando' para 'pronto' sem exigir console. */
   bootComplete = true;
   markAcceptance(true, acceptanceDetail(true, scene.layers.length));
-  say('KAZTheme-Editor pronto · ' + scene.layers.length + ' camadas · '
-      + (root.getAttribute('data-kaz-saved') === '1' ? 'cena salva no tema' : 'cena derivada, salve para persistir'));
+  say(TXT('msg_ready', 'KAZTheme-Editor pronto') + ' · ' + TXT('n_layers', '%s camadas', scene.layers.length) + ' · '
+      + (root.getAttribute('data-kaz-saved') === '1' ? TXT('msg_scene_saved', 'cena salva no tema') : TXT('msg_scene_derived', 'cena derivada, salve para persistir')));
   }
   /* Decide pela PRESENCA DO ELEMENTO, nao por readyState: jsdom (eval
      sincrono) reporta 'loading' mesmo com o DOM ja montado. */

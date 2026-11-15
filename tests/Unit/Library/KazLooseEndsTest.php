@@ -271,7 +271,8 @@ final class KazLooseEndsTest extends TestCase {
         self::assertSame(1, substr_count($twig, '<div data-kaz-canvas-hidden hidden></div>'));
         // KZ-11 (ADR 0104): o texto do botao passou a vir do idioma; a classe continua so `kaz-btn`.
         self::assertSame(1, substr_count($twig, '<summary class="kaz-btn" title="{{ text_kaz_publish_hint|e(\'html_attr\') }}">{{ text_kaz_publish }}</summary>'));
-        self::assertSame(1, substr_count($twig, 'data-kaz-block="hero" title="Faixa de destaque com título e botão"><span class="kaz-asset__thumb" aria-hidden="true"></span>Hero</button>'));
+        // KZ-13 (ADR 0106): o nome e a dica do bloco passaram a vir do idioma; a classe da miniatura continua a mesma.
+        self::assertSame(1, substr_count($twig, 'data-kaz-block="hero" title="{{ text_kaz_block_hero_hint|e(\'html_attr\') }}"><span class="kaz-asset__thumb" aria-hidden="true"></span>{{ text_kaz_block_hero }}</button>'));
         self::assertStringContainsString("root.querySelector('[data-kaz-canvas-hidden]')", $this->repo('dev/admin/view/js/kaz-canvas.js'));
     }
 }

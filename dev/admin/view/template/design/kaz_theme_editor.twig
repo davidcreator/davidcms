@@ -181,56 +181,56 @@
       </div>
 
       <section class="kaz-panel" data-kaz-panel="pages" hidden>
-        <p class="kaz-panel__title">Páginas</p>
+        <p class="kaz-panel__title">{{ text_kaz_tab_pages }}</p>
         <ul class="kaz-pages">
-          <li class="kaz-pages__item kaz-pages__item--on"><span class="kaz-page-ico" aria-hidden="true"></span>Página 1 <span class="kaz-panel__count">1 board</span></li>
+          <li class="kaz-pages__item kaz-pages__item--on"><span class="kaz-page-ico" aria-hidden="true"></span>{{ text_kaz_page_one }} <span class="kaz-panel__count">{{ text_kaz_one_board }}</span></li>
         </ul>
-        <button class="kaz-btn kaz-btn--primary kaz-btn--wide" type="button" data-kaz-action="goto-board">Ir para o board</button>
-        <p class="kaz-panel__note">Uma página por tema. A cena <code>kaztheme-scene/v1</code> é o board desta página. O botão volta ao canvas e ajusta o zoom.</p>
+        <button class="kaz-btn kaz-btn--primary kaz-btn--wide" type="button" data-kaz-action="goto-board">{{ text_kaz_goto_board }}</button>
+        <p class="kaz-panel__note">{% set kz = text_kaz_pages_note|split('%s') %}{{ kz[0] }}<code>kaztheme-scene/v1</code>{{ kz[1] }}</p>
       </section>
 
       <section class="kaz-panel" data-kaz-panel="layers">
         <div class="kaz-panel__head">
-          <p class="kaz-panel__title mb-0">Camadas</p>
+          <p class="kaz-panel__title mb-0">{{ text_kaz_tab_layers }}</p>
           <span class="kaz-panel__count" data-kaz-count>0</span>
         </div>
         <ul class="kaz-layer-list" data-kaz-layer-list></ul>
         <div class="kaz-panel__foot">
           <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-action="up">↑</button>
           <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-action="down">↓</button>
-          <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-action="visible">Ocultar</button>
-          <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-action="lock">Bloquear</button>
+          <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-action="visible">{{ text_kaz_layer_hide }}</button>
+          <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-action="lock">{{ text_kaz_layer_lock }}</button>
         </div>
       </section>
 
       <section class="kaz-panel" data-kaz-panel="assets" hidden>
-        <p class="kaz-panel__title">Biblioteca de blocos</p>
+        <p class="kaz-panel__title">{{ text_kaz_blocks_title }}</p>
         <div class="kaz-assets">
-          <button class="kaz-asset" type="button" data-kaz-block="hero" title="Faixa de destaque com título e botão"><span class="kaz-asset__thumb" aria-hidden="true"></span>Hero</button>
-          <button class="kaz-asset" type="button" data-kaz-block="card" title="Cartão com texto"><span class="kaz-asset__thumb kaz-asset__thumb--card" aria-hidden="true"></span>Cartão</button>
-          <button class="kaz-asset" type="button" data-kaz-block="banner" title="Faixa larga com chamada"><span class="kaz-asset__thumb kaz-asset__thumb--banner" aria-hidden="true"></span>Faixa</button>
-          <button class="kaz-asset" type="button" data-kaz-block="titulo" title="Título com linha de destaque"><span class="kaz-asset__thumb kaz-asset__thumb--titulo" aria-hidden="true"></span>Título</button>
-          <button class="kaz-asset" type="button" data-kaz-block="galeria" title="Três molduras lado a lado"><span class="kaz-asset__thumb kaz-asset__thumb--galeria" aria-hidden="true"></span>Galeria</button>
-          <button class="kaz-asset" type="button" data-kaz-block="cta" title="Seção com botão de ação"><span class="kaz-asset__thumb kaz-asset__thumb--cta" aria-hidden="true"></span>CTA</button>
+          <button class="kaz-asset" type="button" data-kaz-block="hero" title="{{ text_kaz_block_hero_hint|e('html_attr') }}"><span class="kaz-asset__thumb" aria-hidden="true"></span>{{ text_kaz_block_hero }}</button>
+          <button class="kaz-asset" type="button" data-kaz-block="card" title="{{ text_kaz_block_card_hint|e('html_attr') }}"><span class="kaz-asset__thumb kaz-asset__thumb--card" aria-hidden="true"></span>{{ text_kaz_tool_card }}</button>
+          <button class="kaz-asset" type="button" data-kaz-block="banner" title="{{ text_kaz_block_banner_hint|e('html_attr') }}"><span class="kaz-asset__thumb kaz-asset__thumb--banner" aria-hidden="true"></span>{{ text_kaz_block_banner }}</button>
+          <button class="kaz-asset" type="button" data-kaz-block="titulo" title="{{ text_kaz_block_title_hint|e('html_attr') }}"><span class="kaz-asset__thumb kaz-asset__thumb--titulo" aria-hidden="true"></span>{{ text_kaz_block_title }}</button>
+          <button class="kaz-asset" type="button" data-kaz-block="galeria" title="{{ text_kaz_block_gallery_hint|e('html_attr') }}"><span class="kaz-asset__thumb kaz-asset__thumb--galeria" aria-hidden="true"></span>{{ text_kaz_block_gallery }}</button>
+          <button class="kaz-asset" type="button" data-kaz-block="cta" title="{{ text_kaz_block_cta_hint|e('html_attr') }}"><span class="kaz-asset__thumb kaz-asset__thumb--cta" aria-hidden="true"></span>CTA</button>
         </div>
-        <p class="kaz-panel__title kaz-panel__title--spaced">Paleta de cores</p>
+        <p class="kaz-panel__title kaz-panel__title--spaced">{{ text_kaz_palette_title }}</p>
         <div class="kaz-swatches" data-kaz-swatches></div>
-        <p class="kaz-panel__title kaz-panel__title--spaced">Tipografia</p>
-        <button class="kaz-type-sample kaz-linkbtn" type="button" data-kaz-action="add-text" title="Inserir camada de texto"><span class="kaz-type-sample__aa">Aa</span><span>Título · system-ui</span></button>
-        <p class="kaz-panel__note">Os 6 blocos inserem camadas reais, allowlistadas e validadas no contrato <code>kaztheme-scene/v1</code>. Nenhum bloco altera o formulário sozinho.</p>
+        <p class="kaz-panel__title kaz-panel__title--spaced">{{ text_kaz_type_title }}</p>
+        <button class="kaz-type-sample kaz-linkbtn" type="button" data-kaz-action="add-text" title="{{ text_kaz_add_text_hint|e('html_attr') }}"><span class="kaz-type-sample__aa" translate="no">Aa</span><span>{{ text_kaz_block_title }} · system-ui</span></button>
+        <p class="kaz-panel__note">{% set kz = text_kaz_assets_note|split('%s') %}{{ kz[0] }}<code>kaztheme-scene/v1</code>{{ kz[1] }}</p>
       </section>
 
       <section class="kaz-panel" data-kaz-panel="tokens" hidden>
-        <p class="kaz-panel__title">Design tokens</p>
-        <button class="kaz-token kaz-linkbtn" type="button" data-kaz-token-apply="primary" title="Aplicar primary à camada selecionada"><span class="kaz-token__dot" data-kaz-token="primary"></span><span>primary</span><code data-kaz-token-value="primary"></code></button>
-        <button class="kaz-token kaz-linkbtn" type="button" data-kaz-token-apply="surface" title="Aplicar surface à camada selecionada"><span class="kaz-token__dot" data-kaz-token="surface"></span><span>surface</span><code data-kaz-token-value="surface"></code></button>
-        <p class="kaz-panel__note">Tokens espelham os campos allowlistados do tema. Alterar o papel de uma camada para <code>primary</code> ou <code>surface</code> continua escrevendo nesses campos.</p>
+        <p class="kaz-panel__title">{{ text_kaz_tokens_title }}</p>
+        <button class="kaz-token kaz-linkbtn" type="button" data-kaz-token-apply="primary" title="{{ text_kaz_token_apply_hint|replace({'%s': 'primary'})|e('html_attr') }}"><span class="kaz-token__dot" data-kaz-token="primary"></span><span translate="no">primary</span><code data-kaz-token-value="primary"></code></button>
+        <button class="kaz-token kaz-linkbtn" type="button" data-kaz-token-apply="surface" title="{{ text_kaz_token_apply_hint|replace({'%s': 'surface'})|e('html_attr') }}"><span class="kaz-token__dot" data-kaz-token="surface"></span><span translate="no">surface</span><code data-kaz-token-value="surface"></code></button>
+        <p class="kaz-panel__note">{% set kz = text_kaz_tokens_note|split('%s') %}{{ kz[0] }}<code>primary</code>{{ kz[1] }}<code>surface</code>{{ kz[2] }}</p>
       </section>
 
       <section class="kaz-panel" data-kaz-panel="history" hidden>
-        <p class="kaz-panel__title">Histórico</p>
+        <p class="kaz-panel__title">{{ text_kaz_tab_history }}</p>
         <ol class="kaz-history" data-kaz-history-list></ol>
-        <p class="kaz-panel__note">Até 60 estados locais. Desfazer/refazer caminham por esta lista; ela não é gravada no servidor.</p>
+        <p class="kaz-panel__note">{{ text_kaz_history_note }}</p>
       </section>
 </aside>
 
@@ -600,61 +600,61 @@
       </div>
 
       <section class="kaz-panel" data-kaz-panel="design">
-        <div class="kaz-panel__head"><p class="kaz-panel__title mb-0">Seleção</p><span class="kaz-hint" data-kaz-hint>nenhuma camada</span></div>
+        <div class="kaz-panel__head"><p class="kaz-panel__title mb-0">{{ text_kaz_selection_title }}</p><span class="kaz-hint" data-kaz-hint>{{ text_kaz_no_layer }}</span></div>
 
         <div class="kaz-section">
-          <p class="kaz-section__title">Layout <span class="kaz-section__meta">X · Y · W · H</span></p>
+          <p class="kaz-section__title">{{ text_kaz_layout }} <span class="kaz-section__meta" translate="no">X · Y · W · H</span></p>
           <div class="kaz-grid2">
-            <div class="kaz-field"><label for="kaz-x">X</label><input id="kaz-x" type="number" step="8" data-kaz-field="x"></div>
-            <div class="kaz-field"><label for="kaz-y">Y</label><input id="kaz-y" type="number" step="8" data-kaz-field="y"></div>
-            <div class="kaz-field"><label for="kaz-w">W</label><input id="kaz-w" type="number" step="8" data-kaz-field="w"></div>
-            <div class="kaz-field"><label for="kaz-h">H</label><input id="kaz-h" type="number" step="8" data-kaz-field="h"></div>
+            <div class="kaz-field"><label for="kaz-x" translate="no">X</label><input id="kaz-x" type="number" step="8" data-kaz-field="x"></div>
+            <div class="kaz-field"><label for="kaz-y" translate="no">Y</label><input id="kaz-y" type="number" step="8" data-kaz-field="y"></div>
+            <div class="kaz-field"><label for="kaz-w" translate="no">W</label><input id="kaz-w" type="number" step="8" data-kaz-field="w"></div>
+            <div class="kaz-field"><label for="kaz-h" translate="no">H</label><input id="kaz-h" type="number" step="8" data-kaz-field="h"></div>
           </div>
         </div>
 
         <div class="kaz-section">
-          <p class="kaz-section__title">Aparência</p>
-          <div class="kaz-field"><label for="kaz-fill">Preenchimento (hex)</label><input id="kaz-fill" type="text" maxlength="7" data-kaz-field="fill"></div>
+          <p class="kaz-section__title">{{ text_kaz_appearance_title }}</p>
+          <div class="kaz-field"><label for="kaz-fill">{{ text_kaz_fill_label }}</label><input id="kaz-fill" type="text" maxlength="7" data-kaz-field="fill"></div>
           <div class="kaz-grid2">
-            <div class="kaz-field"><label for="kaz-radius">Raio</label><input id="kaz-radius" type="number" min="0" max="64" data-kaz-field="radius"></div>
-            <div class="kaz-field"><label for="kaz-size">Fonte</label><input id="kaz-size" type="number" min="8" max="72" data-kaz-field="fontSize"></div>
+            <div class="kaz-field"><label for="kaz-radius">{{ text_kaz_radius_label }}</label><input id="kaz-radius" type="number" min="0" max="64" data-kaz-field="radius"></div>
+            <div class="kaz-field"><label for="kaz-size">{{ text_kaz_font_label }}</label><input id="kaz-size" type="number" min="8" max="72" data-kaz-field="fontSize"></div>
           </div>
         </div>
 
         <div class="kaz-section">
-          <p class="kaz-section__title">Tipografia</p>
-          <div class="kaz-field"><label for="kaz-text">Texto</label><input id="kaz-text" type="text" maxlength="80" data-kaz-field="text"></div>
+          <p class="kaz-section__title">{{ text_kaz_type_title }}</p>
+          <div class="kaz-field"><label for="kaz-text">{{ text_kaz_tool_text }}</label><input id="kaz-text" type="text" maxlength="80" data-kaz-field="text"></div>
         </div>
 
         <div class="kaz-section">
-          <p class="kaz-section__title">Elemento</p>
-          <div class="kaz-field"><label for="kaz-kind">Tipo</label><select id="kaz-kind" data-kaz-field="kind"><option value="rect">rect</option><option value="text">text</option><option value="button">button</option><option value="card">card</option><option value="section">section</option></select></div>
-          <div class="kaz-field"><label for="kaz-role">Papel no tema</label><select id="kaz-role" data-kaz-field="role"><option value="none">none</option><option value="primary">primary</option><option value="surface">surface</option><option value="section">section</option><option value="component">component</option></select></div>
-          <div class="kaz-field"><label for="kaz-bind">ID allowlistado</label><input id="kaz-bind" type="text" maxlength="48" data-kaz-field="bindId"></div>
+          <p class="kaz-section__title">{{ text_kaz_element_title }}</p>
+          <div class="kaz-field"><label for="kaz-kind">{{ text_kaz_kind_label }}</label><select id="kaz-kind" data-kaz-field="kind" translate="no"><option value="rect">rect</option><option value="text">text</option><option value="button">button</option><option value="card">card</option><option value="section">section</option></select></div>
+          <div class="kaz-field"><label for="kaz-role">{{ text_kaz_role_label }}</label><select id="kaz-role" data-kaz-field="role" translate="no"><option value="none">none</option><option value="primary">primary</option><option value="surface">surface</option><option value="section">section</option><option value="component">component</option></select></div>
+          <div class="kaz-field"><label for="kaz-bind">{{ text_kaz_bind_label }}</label><input id="kaz-bind" type="text" maxlength="48" data-kaz-field="bindId"></div>
         </div>
 
         <div class="kaz-section">
-          <p class="kaz-section__title">Tema</p>
-          <button class="kaz-btn kaz-btn--primary kaz-btn--wide" type="button" data-kaz-action="bind">Aplicar ao tema</button>
-          <p class="kaz-panel__note mb-0">Propagação aditiva: marca seções/componentes sem desmarcar os já salvos. O servidor continua soberano.</p>
+          <p class="kaz-section__title">{{ text_kaz_theme_word }}</p>
+          <button class="kaz-btn kaz-btn--primary kaz-btn--wide" type="button" data-kaz-action="bind">{{ text_kaz_apply_theme }}</button>
+          <p class="kaz-panel__note mb-0">{{ text_kaz_apply_note }}</p>
         </div>
       </section>
 
       <section class="kaz-panel" data-kaz-panel="prototype" hidden>
-        <p class="kaz-panel__title">Protótipo</p>
-        <p class="kaz-panel__note">O KAZEditor-Theme edita a <strong>cena do tema</strong>, não um protótipo navegável. Não há interações, fluxos ou View mode: a cena é dado de edição e versionamento (<code>kaz_scene</code>), não renderização no site público.</p>
-        <p class="kaz-panel__note">Na frente Z o editor é o <strong>dono absoluto</strong> da página: os 14 módulos do formulário de tema (Geral, Herança, Tokens, Three.js, Cena 3D, Seções, Agenda, Mídia, Modelos, Sites, Componentes, Condições, Prévia e Templates) ficam na sidebar esquerda, além do pacote, do iframe de prévia e do histórico de revisões. Todos os <code>name=</code> originais foram preservados.</p>
+        <p class="kaz-panel__title">{{ text_kaz_tab_prototype }}</p>
+        <p class="kaz-panel__note">{% set kz = text_kaz_proto_note1|split('%s') %}{{ kz[0] }}<strong>{{ text_kaz_proto_scene }}</strong>{{ kz[1] }}<code>kaz_scene</code>{{ kz[2] }}</p>
+        <p class="kaz-panel__note">{% set kz = text_kaz_proto_note2|split('%s') %}{{ kz[0] }}<strong>{{ text_kaz_proto_owner }}</strong>{{ kz[1] }}<code>name=</code>{{ kz[2] }}</p>
         <div class="kaz-panel__actions">
-          <button class="kaz-btn kaz-btn--primary kaz-btn--wide" type="button" data-kaz-module="comparar">Ir para a prévia do tema</button>
-          <button class="kaz-btn kaz-btn--wide" type="button" data-kaz-zoom="fit">Ajustar zoom à tela</button>
-          <button class="kaz-btn kaz-btn--wide" type="button" data-kaz-action="fullscreen-local">Tela cheia nesta aba</button>
+          <button class="kaz-btn kaz-btn--primary kaz-btn--wide" type="button" data-kaz-module="comparar">{{ text_kaz_goto_preview }}</button>
+          <button class="kaz-btn kaz-btn--wide" type="button" data-kaz-zoom="fit">{{ text_kaz_fit_screen_hint }}</button>
+          <button class="kaz-btn kaz-btn--wide" type="button" data-kaz-action="fullscreen-local">{{ text_kaz_full_tab }}</button>
         </div>
-        <p class="kaz-panel__note">Para conferir o resultado no Admin, use a prévia de tema já existente. As abas <em>Protótipo</em> e <em>Inspecionar</em> existem para manter o layout de trabalho familiar de um editor de design.</p>
+        <p class="kaz-panel__note">{% set kz = text_kaz_proto_note3|split('%s') %}{{ kz[0] }}<em>{{ text_kaz_tab_prototype }}</em>{{ kz[1] }}<em>{{ text_kaz_tab_inspect }}</em>{{ kz[2] }}</p>
       </section>
 
       <section class="kaz-panel" data-kaz-panel="inspect" hidden>
-        <p class="kaz-panel__title">Inspecionar</p>
-        <p class="kaz-panel__note">Especificações somente-leitura da camada selecionada.</p>
+        <p class="kaz-panel__title">{{ text_kaz_tab_inspect }}</p>
+        <p class="kaz-panel__note">{{ text_kaz_inspect_note }}</p>
         <pre class="kaz-code" data-kaz-inspect></pre>
       </section>
     </aside>

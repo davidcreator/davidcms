@@ -11,6 +11,12 @@ class Theme extends \Reamur\System\Engine\Controller {
         'saved', 'not_saved', 'screen_custom', 'theme_word', 'canvas_label', 'scale', 'scale_hint', 'scale_compact', 'scale_normal',
         'scale_comfortable', 'scale_large', 'fold_toolbar', 'fold_tabs', 'fold_status', 'fold_one', 'fold_one_hint',
         'fold_all', 'unfold_all', 'fold_all_label', 'folded_count', 'tools_visible', 'grip_left', 'grip_right', 'grip_hint',
+        // KZ-13 (ADR 0106): paineis laterais e mensagens de acao.
+        'no_layer', 'n_layers', 'flag_hidden', 'flag_locked', 'history_current', 'no_layer_selected', 'swatch_hint',
+        'msg_layout', 'msg_panel_hidden', 'msg_panel_shown', 'side_left', 'side_right', 'msg_full_on', 'msg_full_off',
+        'msg_reverted', 'msg_zoom_fit', 'msg_tool_hand', 'msg_tool_move', 'msg_layer_added', 'msg_block_unknown',
+        'msg_layer_limit', 'msg_block_added', 'msg_exported', 'msg_import_json', 'msg_import_contract', 'msg_imported',
+        'msg_bound', 'msg_pages_open', 'msg_users', 'msg_board_focus', 'msg_ready', 'msg_scene_saved', 'msg_scene_derived',
     ];
     // F13-E: allowlist unica em ThemePackage::TEMPLATE_KEYS (sem duplicacao).
     public function index(): void {
@@ -222,7 +228,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
         $data['kaz_scene_saved']=$savedScene!==null;
         $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
-        $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz12';
+        $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz13';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAJ);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAJ);
         if ($this->request->server['REQUEST_METHOD']==='POST') {

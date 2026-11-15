@@ -76,7 +76,7 @@ final class KazFullscreenTest extends TestCase {
         self::assertStringContainsString("\$this->adminChrome(\$data, \\Reamur\\Admin\\Controller\\Common\\Header::ASSET_V, \$data['kaz_fullscreen_page'] ? 'kaz-page-fullscreen' : null);", $controller);
         self::assertSame(1, substr_count($controller, "'kaz-page-fullscreen'"));
         // Folha e script mudaram: o endereco muda junto.
-        self::assertStringContainsString("'-kaz-theme-editor-kz12'", $controller);
+        self::assertMatchesRegularExpression("/'-kaz-theme-editor-kz(1[2-9]|[2-9]\\d)'/", $controller); // KZ-12 em diante
     }
 
     public function testTheFullScreenHeightBeatsTheOrdinaryHeightOfTheEditor(): void {

@@ -18,6 +18,16 @@
  *   4. a funcao KazEditorText se comporta como o combinado (reserva quando
  *      falta a frase, `%s`, leitura so quando o elemento ja existe).
  *
+ * KZ-13 (ADR 0106) — entram o conteudo dos dois paineis laterais e as
+ * mensagens que o script escreve no rodape depois de cada acao:
+ *   5. os paineis laterais sao mais duas regioes do item 1. Nome tecnico fica
+ *      fora da conta quando esta em `<code>` ou em elemento com
+ *      `translate="no"` (valores do contrato da cena: rect, primary, X, Y);
+ *   6. frase com trecho marcado (`<code>`, `<strong>`) e cortada no Twig em
+ *      `%s` com `|split('%s')`; todas as partes precisam ser impressas;
+ *   7. toda mensagem de `say(...)` vem de uma chave, e as frases dos paineis
+ *      nao voltam a ser escritas direto pelo script.
+ *
  *   node tests/check_kaz_frame_text.js          confere
  *   node tests/check_kaz_frame_text.js --list   imprime o que achou (JSON)
  */
@@ -39,7 +49,8 @@ const SAME_EVERYWHERE = [
   'Ctrl+Shift+Z', 'Ctrl+Z', 'Ctrl+D', '(Delete)',
   '(V)', '(H)', '(R)', '(T)', '(B)', '(C)', '(S)', '(F)',
   'Desktop', 'Laptop', 'Tablet', 'Mobile', 'Widescreen',
-  'X 0 · Y 0'
+  'X 0 · Y 0',
+  'CTA', 'system-ui' // KZ-13: sigla do bloco e nome da fonte
 ];
 const HINTS = ['title', 'aria-label', 'placeholder', 'alt', 'data-kaz-tablabel'];
 
@@ -50,6 +61,9 @@ const REGIONS = [
   ['abas do painel esquerdo', '<aside class="kaz-sidebar kaz-sidebar--left"', '</div>'],
   ['navegacao dos modulos e palco', '<div class="kaz-modules-nav', '<div class="kaz-modules" data-kaz-modules'],
   ['abas do painel direito', '<aside class="kaz-sidebar kaz-sidebar--right"', '</div>'],
+  // KZ-13: o conteudo dos paineis (cada regiao vai do primeiro painel ate o fim da coluna)
+  ['paineis do lado esquerdo', '<section class="kaz-panel" data-kaz-panel="pages"', '</aside>'],
+  ['paineis do lado direito', '<section class="kaz-panel" data-kaz-panel="design"', '</aside>'],
   ['rodape', '<footer class="kaz-statusbar">', '</footer>']
 ];
 
@@ -68,7 +82,10 @@ function withoutTwig(piece) {
     .replace(/\{#[\s\S]*?#\}/g, '')
     .replace(/\{\{[\s\S]*?\}\}/g, '')
     .replace(/\{%[\s\S]*?%\}/g, '')
-    .replace(/(<svg\b[^>]*>)[\s\S]*?<\/svg>/g, '$1</svg>');
+    .replace(/(<svg\b[^>]*>)[\s\S]*?<\/svg>/g, '$1</svg>')
+    // KZ-13: nome tecnico (igual em qualquer idioma) vai em <code> ou em elemento marcado com translate="no"
+    .replace(/(<code\b[^>]*>)[\s\S]*?<\/code>/g, '$1</code>')
+    .replace(/(<([a-z]+)\b[^>]*\stranslate="no"[^>]*>)[\s\S]*?<\/\2>/g, '$1</$2>');
 }
 function withoutSame(text) {
   let out = text;
@@ -138,6 +155,30 @@ links.forEach(function (tag) {
 check(fixedTexts('<button title="Mover (V)" aria-label="{{ a }}">{{ b }}</button>').join('|') === 'title="Mover (V)"', 'detector: dica fixa');
 check(fixedTexts('<span>Salvo</span><b>{{ x }} ↺</b><i>Desktop · 1440 × 900</i>').join('|') === 'Salvo', 'detector: texto fixo');
 check(fixedTexts('<svg aria-label="Desenho"><title>Dentro</title></svg>').join('|') === 'aria-label="Desenho"', 'detector: so a etiqueta do svg conta');
+check(fixedTexts('<p>{{ a }}<code>kaz_scene</code>{{ b }}</p><label translate="no">X</label><label>Y</label>').join('|') === 'Y', 'detector: <code> e translate="no" ficam fora, o resto conta');
+check(fixedTexts('<select translate="no" title="Tipo"><option>rect</option></select><option>card</option>').join('|') === 'title="Tipo"|card', 'detector: translate="no" vale so para o conteudo do proprio elemento');
+// KZ-13: o que fica marcado como nome tecnico e pouco e conhecido (a marca nao pode virar atalho para texto fixo)
+const technical = [];
+twig.replace(/\{#[\s\S]*?#\}/g, '').replace(/<([a-z]+)\b[^>]*\stranslate="no"[^>]*>([\s\S]*?)<\/\1>/g, function (all, tag, inner) {
+  inner.replace(/<[^>]*>/g, '\u0000').split('\u0000').forEach(function (t) { if (t.trim() !== '') technical.push(t.trim()); });
+  return all;
+});
+report.technical = technical;
+const TECHNICAL = ['Aa', 'primary', 'surface', 'X · Y · W · H', 'X', 'Y', 'W', 'H', 'rect', 'text', 'button', 'card', 'section', 'none', 'component'];
+technical.forEach(function (t) { check(TECHNICAL.indexOf(t) !== -1, 'translate="no" em texto que nao e nome tecnico: "' + t + '"'); });
+check(technical.length === 18, 'esperava 18 nomes tecnicos marcados com translate="no", achei ' + technical.length);
+// KZ-13: frase cortada em %s — cada parte e impressa uma vez, na ordem
+const cuts = twig.match(/\{% set kz = text_kaz_[a-z0-9_]+\|split\('%s'\) %\}[^\n]*/g) || [];
+check(cuts.length === 6, 'esperava 6 frases cortadas com split, achei ' + cuts.length);
+cuts.forEach(function (line) {
+  const key = /text_kaz_([a-z0-9_]+)\|split/.exec(line)[1];
+  const piece = line.slice(0, line.indexOf('</p>') === -1 ? line.length : line.indexOf('</p>'));
+  const used = (piece.match(/\{\{ kz\[(\d+)\] \}\}/g) || []).map(function (x) { return +/\d+/.exec(x)[0]; });
+  const holes = (String(pt[key]).match(/%s/g) || []).length;
+  check(holes >= 1, 'a frase "' + key + '" e cortada no Twig mas nao tem %s');
+  check(used.join(',') === Array.from({ length: holes + 1 }, function (v, i) { return i; }).join(','), 'a frase "' + key + '" tem ' + holes + ' %s; o Twig imprime as partes ' + used.join(','));
+});
+check((twig.replace(/\{#[\s\S]*?#\}/g, '').match(/\|\s*raw\b/g) || []).length === 0, 'o Twig do editor nao usa |raw');
 
 // ---- 2. chaves do Twig e da lista
 const twigKeys = Array.from(new Set((twig.match(/\btext_kaz_[a-z0-9_]+/g) || []).map(function (k) { return k.slice(9); }))).sort();
@@ -182,6 +223,26 @@ Object.keys(calls).forEach(function (k) {
 scriptKeys.forEach(function (k) { check(k in calls, 'o controller manda "' + k + '", que o script nao usa'); });
 check((script.match(/(?:\bTXT|window\.KazEditorText)\(/g) || []).length >= Object.keys(calls).length - 5, 'chamadas de texto no script');
 check(!/textContent = on \? 'N/.test(script) && !/'Expandir tudo' : 'Recolher tudo';/.test(script.replace(/TXT\([^)]*\)/g, '')), 'o script nao escreve mais a frase direto na tela');
+
+// ---- 3b. KZ-13: mensagens de acao e frases dos paineis
+const body = script.replace(/\/\*[\s\S]*?\*\//g, '');
+const says = [];
+body.replace(/(?<!function )\bsay\(([^;]*)\);/g, function (all, arg) { if (arg.trim() !== '') says.push(arg); return all; });
+report.says = says.length;
+check(says.length >= 20, 'esperava ao menos 20 chamadas de mensagem de acao, achei ' + says.length);
+function withoutCalls(source) { return source.replace(/(?:\bTXT|window\.KazEditorText)\('[a-z0-9_]+',\s*'(?:[^'\\]|\\.)*'/g, 'TXT('); }
+says.forEach(function (arg) {
+  if (/^'zoom ' \+ Math\.round\(zoom \* 100\) \+ '%'$/.test(arg.trim())) return; // "zoom 75%": igual em qualquer idioma
+  check(arg.indexOf('TXT(') !== -1, 'mensagem de acao sem chave: say(' + arg.slice(0, 60) + ')');
+  const loose = (withoutCalls(arg).match(/'(?:[^'\\]|\\.)*'/g) || []).filter(function (q) { return /\p{L}{3,}/u.test(q) && ['\'left\'', '\'hand\'', '\'data-kaz-saved\''].indexOf(q) === -1; });
+  check(loose.length === 0, 'mensagem de acao com texto fixo: ' + loose.join(' '));
+});
+const stripped = withoutCalls(body);
+// (' camadas · liberação ' pertence ao aviso "Aceitação", que nao entrou nesta etapa: por isso ' camadas' so vale no fim da frase)
+[/' camadas\)?'/, /'[^'\n]*nenhuma camada[^'\n]*'/, /'[^'\n]*oculto[^'\n]*'/, /'[^'\n]*bloqueado[^'\n]*'/, /'[^'\n]* · atual'/, /'[^'\n]*camada selecionada'/, /'painel [^'\n]*'/, /'Aplicar [^'\n]*'/].forEach(function (piece) {
+  check(!piece.test(stripped), 'o script voltou a escrever direto: ' + piece);
+});
+check(withoutCalls("say('camada adicionada: ' + l.id); x = TXT('a', 'nenhuma camada');").indexOf('nenhuma') === -1, 'detector: o texto de reserva sai da conta');
 
 // ---- 4. a funcao KazEditorText
 const start = script.indexOf('window.KazEditorText = (function () {');
