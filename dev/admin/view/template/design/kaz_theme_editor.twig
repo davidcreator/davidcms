@@ -21,7 +21,7 @@
     <strong>KAZEditor-Theme · {{ text_kaz_rel_title }}</strong>
     <span class="badge bg-secondary ms-2">{% if kv == 'PUBLICADO' %}{{ text_kaz_rel_published }}{% elseif kv == 'RASCUNHO_PENDENTE' %}{{ text_kaz_rel_pending }}{% else %}{{ text_kaz_rel_none }}{% endif %}</span>
     <span class="small ms-2">{% if kv == 'PUBLICADO' %}{{ text_kaz_rel_published_hint }}{% elseif kv == 'RASCUNHO_PENDENTE' %}{{ text_kaz_rel_pending_hint }}{% elseif kv == 'SEM_TEMA_ATIVO' %}{{ text_kaz_rel_none_hint }}{% endif %}</span>
-    <span class="small text-muted ms-2">CSS: {{ text_kaz_rel_parts|replace({'%s': (kr.css_parts|default(0)) ~ '/6'}) }} · {{ kr.css_bytes|default(0) }} bytes · {{ text_kaz_n_layers|replace({'%s': (kr.scene_layers|default(0)) ~ ''}) }}</span>
+    <span class="small text-muted ms-2">CSS: {{ text_kaz_rel_parts|replace({'%s': (kr.css_parts|default(0)) ~ '/6'}) }} · {{ kr.css_bytes|default(0) }} bytes · {% if kr.scene_layers|default(0) == 1 %}{{ text_kaz_one_layer }}{% else %}{{ text_kaz_n_layers|replace({'%s': (kr.scene_layers|default(0)) ~ ''}) }}{% endif %}</span>
     {% if kr.pending_keys|default('') %}<div class="small mt-1">{{ text_kaz_rel_pending_keys }} <code>{{ kr.pending_keys }}</code></div>{% endif %}
   </div>
 </section>

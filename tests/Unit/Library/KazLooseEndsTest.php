@@ -212,7 +212,8 @@ final class KazLooseEndsTest extends TestCase {
             '.tcb-rule__head .tcb-rule__id.form-control:invalid { border-color: var(--bs-danger); box-shadow: 0 0 0 1px var(--bs-danger); }'
         ));
         $controller = $this->repo('dev/admin/controller/design/theme.php');
-        self::assertSame(1, substr_count($controller, "Header::ASSET_V . '-theme-builder-b';"));
+        // KZ-15 (ADR 0108): o script mudou de novo (rotulos ligados aos campos); a versao passou de `b` para `c`.
+        self::assertSame(1, preg_match("/Header::ASSET_V \\. '-theme-builder-([b-z])';/", $controller));
         self::assertStringNotContainsString('-theme-builder-a', $controller);
         self::assertStringContainsString("'view/css/theme-condition-builder.css?v=' . \$builderAssetV", $controller);
         self::assertStringContainsString("'view/js/theme-condition-builder.js?v=' . \$builderAssetV", $controller);

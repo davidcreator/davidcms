@@ -23,7 +23,9 @@ if (!class_exists(ThemePreviewState::class, false)) {
 }
 
 final class ThemeReleaseProbe {
-    public const ASSET_MARK = '-kaz-theme-editor-aj';
+    /** KZ-15 (ADR 0108): so o trecho que nao muda de etapa para etapa. A marca antiga, `-kaz-theme-editor-aj`,
+     *  deixou de existir na KZ-11 e `asset_ok` passou a valer sempre 0. */
+    public const ASSET_MARK = '-kaz-theme-editor-';
     private const CSS_PARTS = ['token_css','component_css','schedule_css','media_css','site_css','scene_css'];
 
     /** @param array<string,mixed> $draft      draft_config decodificado

@@ -36,6 +36,12 @@
  *      imprime mais o rotulo em portugues que vem de ThemeReleaseProbe;
  *  10. o aviso "Aceitacao" e os textos de exemplo dos blocos vem de chaves.
  *
+ * KZ-15 (ADR 0108) — pendencias:
+ *  11. a contagem de camadas tem singular ("1 camada"): no script, so a funcao
+ *      `layersText` escreve a contagem; no Twig, o aviso "Liberacao" escolhe a
+ *      chave pelo numero;
+ *  12. nenhuma frase manda abrir um arquivo de `tools/` que nao existe.
+ *
  *   node tests/check_kaz_frame_text.js          confere
  *   node tests/check_kaz_frame_text.js --list   imprime o que achou (JSON)
  */
@@ -298,6 +304,27 @@ check(samples.length === 14, 'esperava 14 camadas nos blocos prontos, achei ' + 
 check((blocks[1].match(/\btext:/g) || []).length === samples.length, 'todo texto de camada dos blocos e um literal vazio ou uma chave');
 samples.forEach(function (t) { check(t === "text: ''" || /^text: TXT\('sample_[a-z_]+', /.test(t), 'texto de exemplo de bloco sem chave: ' + t); });
 check(samples.filter(function (t) { return t !== "text: ''"; }).length === 6, 'seis textos de exemplo nos blocos prontos');
+
+// KZ-15: contagem de camadas com singular
+const layersFn = /function layersText\(n\) \{ return n === 1 \? TXT\('one_layer', '[^']*'\) : TXT\('n_layers', '[^']*', n\); \}/.exec(body);
+check(layersFn !== null, 'layersText escolhe entre one_layer e n_layers');
+check((body.match(/TXT\('n_layers'/g) || []).length === 1 && (body.match(/TXT\('one_layer'/g) || []).length === 1, 'so layersText escreve a contagem de camadas');
+check((body.match(/\blayersText\(/g) || []).length === 7, 'a funcao e seis usos de layersText');
+const layersText = vm.runInNewContext('(function (TXT) { ' + layersFn[0] + ' return layersText; })', {})(function (key, fallback, value) {
+  const text = { one_layer: '1 layer', n_layers: '%s layers' }[key];
+  return value === undefined ? text : text.replace('%s', String(value));
+});
+check(layersText(1) === '1 layer', 'uma camada: singular');
+check(layersText(0) === '0 layers' && layersText(2) === '2 layers' && layersText(11) === '11 layers' && layersText(48) === '48 layers', 'zero, duas ou mais camadas: plural');
+check(twigCode.indexOf("{% if kr.scene_layers|default(0) == 1 %}{{ text_kaz_one_layer }}{% else %}{{ text_kaz_n_layers|replace({'%s': (kr.scene_layers|default(0)) ~ ''}) }}{% endif %}") !== -1, 'o aviso "Liberacao" usa o singular com uma camada');
+check((twigCode.match(/text_kaz_n_layers/g) || []).length === 1, 'o Twig escreve a contagem de camadas num lugar so');
+// KZ-15: nenhuma frase aponta para um arquivo de tools/ que nao existe
+const toolPaths = [];
+Object.keys(pt).forEach(function (key) { (pt[key].match(/\btools\/[A-Za-z0-9_.\/-]+/g) || []).forEach(function (t) { toolPaths.push([key, t.replace(/[.,;:]+$/, '')]); }); });
+(body.match(/\btools\/[A-Za-z0-9_.\/-]+/g) || []).forEach(function (t) { toolPaths.push(['script', t.replace(/[.,;:]+$/, '')]); });
+report.toolPaths = toolPaths;
+toolPaths.forEach(function (t) { check(fs.existsSync(path.join(ROOT, t[1])), 'a frase ' + t[0] + ' cita ' + t[1] + ', que nao existe no repositorio'); });
+check('Execute tools/nao-existe.js no console.'.match(/\btools\/[A-Za-z0-9_.\/-]+/g)[0].replace(/[.,;:]+$/, '') === 'tools/nao-existe.js', 'detector: caminho de tools/ dentro de uma frase');
 
 // ---- 4. a funcao KazEditorText
 const start = script.indexOf('window.KazEditorText = (function () {');

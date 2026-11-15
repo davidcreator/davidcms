@@ -30,6 +30,8 @@ window.KazEditorText = (function () {
 (function (document, window) {
   'use strict';
   var TXT = window.KazEditorText;
+  /* KZ-15 (ADR 0108): com uma camada so, a contagem sai no singular. */
+  function layersText(n) { return n === 1 ? TXT('one_layer', '1 camada') : TXT('n_layers', '%s camadas', n); }
   /* Frente AD — BOOT RESILIENTE.
      header.twig emite a tag script no <head> sem defer. A IIFE rodava antes
      do <body>, getElementById devolvia null e o 'if (!root) return;' saia
@@ -72,7 +74,7 @@ window.KazEditorText = (function () {
     /* KZ-14 (ADR 0107): o estado da liberacao aparece com o nome que o aviso de cima mostra (ja no idioma do admin). */
     var badge = rel ? rel.querySelector('.badge') : null;
     var verdictName = badge && badge.textContent.trim() !== '' ? badge.textContent.trim() : verdict;
-    return TXT('acc_boot_ok', 'Boot OK') + ' · asset ' + asset + ' · ' + TXT('acc_modules', '%s módulos', modules) + ' · ' + TXT('n_layers', '%s camadas', layerCount)
+    return TXT('acc_boot_ok', 'Boot OK') + ' · asset ' + asset + ' · ' + TXT('acc_modules', '%s módulos', modules) + ' · ' + layersText(layerCount)
       + ' · ' + TXT('acc_release', 'liberação: %s', verdictName) + ' (' + TXT('acc_pending', 'pendente=%s', pending) + ')'
       + ' · ' + (verdict === 'PUBLICADO' ? TXT('acc_same', 'prévia e catálogo usam o mesmo tema') : TXT('acc_publish', 'use Publicar para aplicar no catálogo'));
   }
@@ -588,7 +590,7 @@ window.KazEditorText = (function () {
     if (!historyList) return;
     clear(historyList);
     for (var i = 0; i < history.length; i++) {
-      var li = el('li', '', (i + 1) + '. ' + TXT('n_layers', '%s camadas', history[i].layers.length) + (i === cursor ? ' · ' + TXT('history_current', 'atual') : ''));
+      var li = el('li', '', (i + 1) + '. ' + layersText(history[i].layers.length) + (i === cursor ? ' · ' + TXT('history_current', 'atual') : ''));
       if (i === cursor) li.setAttribute('data-kaz-current', '1');
       historyList.appendChild(li);
     }
@@ -625,7 +627,7 @@ window.KazEditorText = (function () {
   function paintChrome() {
     paintZoom(); paintTabs(); paintRulers(); paintHistory(); paintInspect();
     paintSwatches(); paintTokens(); paintModules();
-    if (count) count.textContent = TXT('n_layers', '%s camadas', scene.layers.length);
+    if (count) count.textContent = layersText(scene.layers.length);
     var l = layer(selected);
     if (coords) coords.textContent = l ? 'X ' + l.x + ' · Y ' + l.y : 'X 0 · Y 0';
     var bs = root.querySelector('[data-kaz-board-size]');
@@ -726,7 +728,7 @@ window.KazEditorText = (function () {
     selected = added[0]; commit(); render();
     /* KZ-13 (ADR 0106): a mensagem usa o nome do bloco como esta no botao (ja no idioma do admin). */
     var blockButton = root.querySelector('[data-kaz-block="' + blockId + '"]');
-    say(TXT('msg_block_added', 'bloco %s inserido', blockButton ? blockButton.textContent.trim() : blockId) + ' · ' + TXT('n_layers', '%s camadas', added.length));
+    say(TXT('msg_block_added', 'bloco %s inserido', blockButton ? blockButton.textContent.trim() : blockId) + ' · ' + layersText(added.length));
     return true;
   }
   function remove(id) {
@@ -794,7 +796,7 @@ window.KazEditorText = (function () {
         if (window.URL.revokeObjectURL) window.URL.revokeObjectURL(url);
       }
     } catch (e) { /* navegador sem download: o textarea continua sendo a fonte */ }
-    say(TXT('msg_exported', 'cena exportada (%s)', TXT('n_layers', '%s camadas', scene.layers.length)));
+    say(TXT('msg_exported', 'cena exportada (%s)', layersText(scene.layers.length)));
     return s;
   }
   function importScene(raw) {
@@ -1071,7 +1073,7 @@ window.KazEditorText = (function () {
      estado server-side 'aguardando' para 'pronto' sem exigir console. */
   bootComplete = true;
   markAcceptance(true, acceptanceDetail(true, scene.layers.length));
-  say(TXT('msg_ready', 'KAZTheme-Editor pronto') + ' · ' + TXT('n_layers', '%s camadas', scene.layers.length) + ' · '
+  say(TXT('msg_ready', 'KAZTheme-Editor pronto') + ' · ' + layersText(scene.layers.length) + ' · '
       + (root.getAttribute('data-kaz-saved') === '1' ? TXT('msg_scene_saved', 'cena salva no tema') : TXT('msg_scene_derived', 'cena derivada, salve para persistir')));
   }
   /* Decide pela PRESENCA DO ELEMENTO, nao por readyState: jsdom (eval
@@ -1100,7 +1102,7 @@ window.KazEditorText = (function () {
       'position:fixed;left:16px;right:16px;bottom:16px;z-index:2147483000;'
       + 'padding:12px 16px;border-radius:10px;background:#7f1d1d;color:#fff;'
       + 'font:600 14px/1.45 system-ui,sans-serif;box-shadow:0 8px 28px #0007');
-    note.textContent = TXT('boot_warning', 'KAZTheme-Editor não inicializou: o editor existe na página, mas o JavaScript não concluiu o boot. Verifique se o asset kaz-theme-editor.js foi servido (HTTP 200), se o header.twig ativo contém o loop scripts_deferred e se um cache/proxy não entrega uma versão antiga. Execute tools/kaz-theme-editor-health.js no console para o diagnóstico.');
+    note.textContent = TXT('boot_warning', 'KAZTheme-Editor não inicializou: o editor existe na página, mas o JavaScript não concluiu o boot. Verifique se o asset kaz-theme-editor.js foi servido (HTTP 200), se o header.twig ativo contém o loop scripts_deferred e se um cache/proxy não entrega uma versão antiga.');
     document.body.appendChild(note);
     markAcceptance(false, acceptanceDetail(false, 0));
   }, 500);

@@ -3,6 +3,9 @@
 
 .tcb-field { display: flex; flex-direction: column; gap: .25rem; min-width: 0; }
 .tcb-field__label { font-size: .75rem; margin: 0; color: var(--bs-secondary-color); }
+/* KZ-15 (ADR 0108): titulo de uma caixa de varios campos. E um <span>, nao um <label>; repete o que
+   `.admin-content label` (admin.css) da aos rotulos, para a tela ficar igual. */
+.admin-content .tcb-field__label--group { display: block; font-size: .85rem; font-weight: 600; margin-bottom: 5px; cursor: default; }
 .tcb-muted { color: var(--bs-secondary-color); font-size: .8rem; }
 .tcb-section-title { font-size: .75rem; font-weight: 600; text-transform: uppercase;
   letter-spacing: .04em; color: var(--bs-secondary-color); margin-bottom: .4rem; }

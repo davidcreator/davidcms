@@ -99,10 +99,22 @@
   }
   function isGroup(n) { return !!(n && typeof n === 'object' && groupKind(n)); }
   function needsValue(op) { return noValueOps.indexOf(op) === -1; }
+  // KZ-15 (ADR 0108): o rotulo fica ligado ao que ele nomeia. Com um campo so (input, select, textarea),
+  // `for` + `id`. Com uma caixa de varios campos (variaveis, tokens, Three.js) nao ha um campo para apontar:
+  // o titulo vira <span> e a caixa vira um grupo com esse nome. O `id` e so de tela; o campo segue sem `name`.
+  var fieldSeq = 0;
   function labelRow(text, control) {
-    return el('div', { 'class': 'tcb-field' }, [
-      el('label', { 'class': 'form-label tcb-field__label', text: text }), control
-    ]);
+    var id = 'tcb-f' + (++fieldSeq);
+    var label;
+    if (/^(INPUT|SELECT|TEXTAREA)$/.test(control.tagName)) {
+      if (!control.id) control.id = id;
+      label = el('label', { 'class': 'form-label tcb-field__label', 'for': control.id, text: text });
+    } else {
+      label = el('span', { 'class': 'form-label tcb-field__label tcb-field__label--group', id: id, text: text });
+      control.setAttribute('role', 'group');
+      control.setAttribute('aria-labelledby', id);
+    }
+    return el('div', { 'class': 'tcb-field' }, [label, control]);
   }
 
   // ---------------------------------------------------------------- serializacao

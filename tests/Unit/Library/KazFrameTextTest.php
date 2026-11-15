@@ -58,7 +58,7 @@ final class KazFrameTextTest extends TestCase {
 
     public function testTheThreeLanguagesHaveTheSameFrameKeysAllFilled(): void {
         $pt = $this->frame('pt-br');
-        self::assertCount(241, $pt, 'a quantidade so muda junto com o Twig e os tres idiomas'); // 109 da KZ-11 + 75 da KZ-13 + 57 da KZ-14
+        self::assertCount(242, $pt, 'a quantidade so muda junto com o Twig e os tres idiomas'); // 109 da KZ-11 + 75 da KZ-13 + 57 da KZ-14 + 1 da KZ-15
         foreach (self::LANGUAGES as $code) {
             $texts = $this->frame($code);
             self::assertSame(array_keys($pt), array_keys($texts), $code . ': mesmas chaves, na mesma ordem');
@@ -102,7 +102,7 @@ final class KazFrameTextTest extends TestCase {
     public function testTheScriptReceivesOnlyKeysThatExist(): void {
         $keys = array_keys($this->frame('pt-br'));
         $script = $this->keys('KAZ_FRAME_SCRIPT');
-        self::assertCount(73, $script); // 24 da KZ-11 + 33 da KZ-13 + 16 da KZ-14
+        self::assertCount(74, $script); // 24 da KZ-11 + 33 da KZ-13 + 16 da KZ-14 + 1 da KZ-15
         self::assertSame(array_values(array_unique($script)), $script, 'sem chave repetida');
         self::assertSame([], array_values(array_diff($script, $keys)), 'o script so recebe chaves que existem nos idiomas');
         self::assertSame(array_values(array_intersect($keys, $script)), $script, 'KAZ_FRAME_SCRIPT na mesma ordem dos arquivos de idioma');
@@ -123,6 +123,6 @@ final class KazFrameTextTest extends TestCase {
         exec(escapeshellarg($node) . ' ' . escapeshellarg(DIR_REAMUR . self::CHECKER) . ' 2>&1', $output, $status);
         $last = (string)end($output);
         self::assertSame(0, $status, implode("\n", array_slice($output, 0, 12)));
-        self::assertMatchesRegularExpression('/^Frame text checker: \d{3,} PASS \(241 chaves, 73 no script, 174 no Twig\)$/', $last);
+        self::assertMatchesRegularExpression('/^Frame text checker: \d{3,} PASS \(242 chaves, 74 no script, 175 no Twig\)$/', $last);
     }
 }
