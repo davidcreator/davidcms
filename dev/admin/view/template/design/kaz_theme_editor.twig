@@ -5,9 +5,12 @@
    REAL do formulário: salvar o tema persiste a cena (kaztheme-scene/v1). #}
 {# Frente AH — estado da liberacao. HTML PURO do servidor: aparece MESMO
    se o JS do editor nao inicializar (o cenario silencioso de AD/AE).
-   Sem |raw, sem name=, sem data-kaz-module, sem chave de traducao nova.
-   Irmao do .kaz-shell: nao altera os filhos de #kaz-theme-form (frente AC). #}
+   Sem |raw, sem name=, sem data-kaz-module.
+   Irmao do .kaz-shell: nao altera os filhos de #kaz-theme-form (frente AC).
+   KZ-14 (ADR 0107): os textos vem do arquivo de idioma; o veredito escolhe a frase aqui,
+   e nao mais em ThemeReleaseProbe::label()/hint(). #}
 {% set kr = kaz_release|default({}) %}
+{% set kv = kr.verdict|default('') %}
 <section id="kaz-release-status" class="mb-3" role="status" aria-live="polite"
          data-kaz-release-verdict="{{ kr.verdict|default('SEM_TEMA_ATIVO')|e('html_attr') }}"
          data-kaz-release-pending="{{ kr.pending|default(0)|e('html_attr') }}"
@@ -15,25 +18,25 @@
          data-kaz-release-layers="{{ kr.scene_layers|default(0)|e('html_attr') }}"
          data-kaz-release-asset="{{ kr.asset_ok|default(0)|e('html_attr') }}">
   <div class="alert {% if kr.pending|default(0) %}alert-warning{% else %}alert-success{% endif %} py-2 px-3 mb-0">
-    <strong>KAZEditor-Theme · Liberação</strong>
-    <span class="badge bg-secondary ms-2">{{ kr.verdict_label|default('Nenhum tema ativo') }}</span>
-    <span class="small ms-2">{{ kr.hint|default('') }}</span>
-    <span class="small text-muted ms-2">CSS: {{ kr.css_parts|default(0) }}/6 partes · {{ kr.css_bytes|default(0) }} bytes · {{ kr.scene_layers|default(0) }} camadas</span>
-    {% if kr.pending_keys|default('') %}<div class="small mt-1">Pendente: <code>{{ kr.pending_keys }}</code></div>{% endif %}
+    <strong>KAZEditor-Theme · {{ text_kaz_rel_title }}</strong>
+    <span class="badge bg-secondary ms-2">{% if kv == 'PUBLICADO' %}{{ text_kaz_rel_published }}{% elseif kv == 'RASCUNHO_PENDENTE' %}{{ text_kaz_rel_pending }}{% else %}{{ text_kaz_rel_none }}{% endif %}</span>
+    <span class="small ms-2">{% if kv == 'PUBLICADO' %}{{ text_kaz_rel_published_hint }}{% elseif kv == 'RASCUNHO_PENDENTE' %}{{ text_kaz_rel_pending_hint }}{% elseif kv == 'SEM_TEMA_ATIVO' %}{{ text_kaz_rel_none_hint }}{% endif %}</span>
+    <span class="small text-muted ms-2">CSS: {{ text_kaz_rel_parts|replace({'%s': (kr.css_parts|default(0)) ~ '/6'}) }} · {{ kr.css_bytes|default(0) }} bytes · {{ text_kaz_n_layers|replace({'%s': (kr.scene_layers|default(0)) ~ ''}) }}</span>
+    {% if kr.pending_keys|default('') %}<div class="small mt-1">{{ text_kaz_rel_pending_keys }} <code>{{ kr.pending_keys }}</code></div>{% endif %}
   </div>
 </section>
 {# Frente AJ — aceitacao VISIVEL sem console. O estado 'aguardando' e
    HTML PURO do servidor: se o JS nao inicializar, permanece na tela e o
    motivo aparece sem abrir o DevTools. Sem |raw, sem name=, sem
-   data-kaz-module, sem chave de traducao nova. Irmao do .kaz-shell: a
-   arvore medida pela AC nao muda. #}
+   data-kaz-module. Irmao do .kaz-shell: a arvore medida pela AC nao muda.
+   KZ-14 (ADR 0107): os textos vem do arquivo de idioma. #}
 <section id="kaz-acceptance" class="mb-3" role="status" aria-live="polite"
          data-kaz-acceptance="aguardando">
   <div class="alert alert-warning py-2 px-3 mb-0">
-    <strong>KAZEditor-Theme · Aceitação</strong>
-    <span class="badge bg-secondary ms-2" data-kaz-acceptance-state>Aguardando o editor</span>
-    <span class="small ms-2" data-kaz-acceptance-detail>Este aviso muda quando o editor inicializa. Se permanecer, o JavaScript não carregou — não é erro de tema nem de banco.</span>
-    <noscript><div class="small mt-1"><strong>JavaScript desabilitado:</strong> o editor não pode inicializar; os painéis desta página continuam sendo HTML do servidor.</div></noscript>
+    <strong>KAZEditor-Theme · {{ text_kaz_acc_title }}</strong>
+    <span class="badge bg-secondary ms-2" data-kaz-acceptance-state>{{ text_kaz_acc_waiting }}</span>
+    <span class="small ms-2" data-kaz-acceptance-detail>{{ text_kaz_acc_waiting_detail }}</span>
+    <noscript><div class="small mt-1"><strong>{{ text_kaz_acc_nojs }}</strong> {{ text_kaz_acc_nojs_detail }}</div></noscript>
   </div>
 </section>
 <div class="kaz-shell card mb-4 kaz-card" id="kaz-theme-editor" data-kaz-owner="1"
@@ -351,8 +354,8 @@
           <p class="kaz-canvas__hint">{{ text_canvas_hint }}</p>
         </section>
         <section class="kaz-module" data-kaz-module-panel="geral" hidden aria-label="{{ text_kaz_mod_geral|e('html_attr') }}">
-          <div class="kaz-module__head"><h3>Geral</h3><span>Nome, slug, cores e cena</span>
-            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+          <div class="kaz-module__head"><h3>{{ text_kaz_mod_geral }}</h3><span>{{ text_kaz_sub_geral }}</span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">{{ text_kaz_back_canvas }}</button></div>
           <div class="card mb-4"><div class="card-body">
 <div class="mb-3"><label class="form-label">{{ text_name }}</label><input class="form-control" name="name" required maxlength="120" value="{{ name }}"></div>
 <div class="mb-3"><label class="form-label">{{ text_slug }}</label><input class="form-control" name="slug" required pattern="[a-z0-9_\-]{1,48}" value="{{ slug }}"><div class="form-text">{{ text_slug_help }}</div></div>
@@ -361,8 +364,8 @@
 <button class="btn btn-primary" {% if not can_modify %}disabled{% endif %}>{{ button_save }}</button> <a class="btn btn-outline-secondary" href="{{ cancel }}">{{ button_back }}</a></div></div>
         </section>
         <section class="kaz-module" data-kaz-module-panel="heranca" hidden aria-label="{{ text_kaz_mod_heranca|e('html_attr') }}">
-          <div class="kaz-module__head"><h3>Herança</h3><span>Tema pai</span>
-            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+          <div class="kaz-module__head"><h3>{{ text_kaz_mod_heranca }}</h3><span>{{ text_kaz_sub_heranca }}</span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">{{ text_kaz_back_canvas }}</button></div>
           <div class="card mb-4" id="theme-inheritance"><div class="card-header"><h2 class="h5 mb-0">{{ text_package_parent }}</h2><p class="mb-0 text-muted">{{ text_package_parent_help }}</p></div><div class="card-body">
 <label class="form-label" for="parent_theme">{{ text_package_parent }}</label>
 <select class="form-select" name="parent_theme" id="parent_theme"><option value="">{{ text_package_parent_none }}</option>{% for p in theme_parents %}<option value="{{ p.slug }}"{% if parent_theme == p.slug %} selected{% endif %}>{{ p.name }} ({{ p.slug }})</option>{% endfor %}</select>
@@ -370,8 +373,8 @@
 </div></div>
         </section>
         <section class="kaz-module" data-kaz-module-panel="tokens" hidden aria-label="{{ text_kaz_mod_tokens|e('html_attr') }}">
-          <div class="kaz-module__head"><h3>Tokens</h3><span>Tokens e contraste</span>
-            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+          <div class="kaz-module__head"><h3>{{ text_kaz_mod_tokens }}</h3><span>{{ text_kaz_sub_tokens }}</span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">{{ text_kaz_back_canvas }}</button></div>
           <div class="card mb-4"><div class="card-header"><h2 class="h5 mb-0">{{ text_tokens }}</h2><p class="mb-0 text-muted">{{ text_tokens_help }}</p></div><div class="card-body">
 {% for group in token_groups %}<fieldset class="mb-3"><legend class="h6">{{ _context['text_token_group_' ~ group] }}</legend><div class="row">
 {% for f in token_fields %}{% if f.group == group %}<div class="col-md-3 mb-2"><label class="form-label">{{ f.label }}{% if f.unit %} <small class="text-muted">({{ f.unit }})</small>{% endif %}</label>
@@ -383,8 +386,8 @@
 </div></div>
         </section>
         <section class="kaz-module" data-kaz-module-panel="three" hidden aria-label="Three.js">
-          <div class="kaz-module__head"><h3>Three.js</h3><span>Cena 3D</span>
-            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+          <div class="kaz-module__head"><h3>Three.js</h3><span>{{ text_kaz_mod_cena3d }}</span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">{{ text_kaz_back_canvas }}</button></div>
           <div class="card mb-4"><div class="card-header"><h2 class="h5 mb-0">{{ text_three }}</h2><p class="mb-0 text-muted">{{ text_three_help }}</p></div><div class="card-body">
 <div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="three_enabled" name="three_enabled" value="1"{% if three.enabled %} checked{% endif %}><label class="form-check-label" for="three_enabled">{{ text_three_enabled }}</label></div>
 <div class="row">
@@ -398,8 +401,8 @@
 </div></div>
         </section>
         <section class="kaz-module" data-kaz-module-panel="cena3d" hidden aria-label="{{ text_kaz_mod_cena3d|e('html_attr') }}">
-          <div class="kaz-module__head"><h3>Cena 3D</h3><span>Presets e miniatura</span>
-            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+          <div class="kaz-module__head"><h3>{{ text_kaz_mod_cena3d }}</h3><span>{{ text_kaz_sub_cena3d }}</span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">{{ text_kaz_back_canvas }}</button></div>
           <div class="card mb-4" id="theme-scene-editor" data-url="{{ scene_thumb_base|e('html_attr') }}"><div class="card-header"><h2 class="h5 mb-0">{{ text_scene_editor }}</h2><p class="mb-0 text-muted">{{ text_scene_editor_help }}</p></div><div class="card-body">
 <div class="row g-3"><div class="col-md-4">
 <h3 class="h6">{{ text_scene_thumb }}</h3>
@@ -419,8 +422,8 @@
 </div></div>
         </section>
         <section class="kaz-module" data-kaz-module-panel="secoes" hidden aria-label="{{ text_kaz_mod_secoes|e('html_attr') }}">
-          <div class="kaz-module__head"><h3>Seções</h3><span>Section builder</span>
-            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+          <div class="kaz-module__head"><h3>{{ text_kaz_mod_secoes }}</h3><span>{{ text_kaz_sub_secoes }}</span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">{{ text_kaz_back_canvas }}</button></div>
           <div class="card mb-4" id="theme-section-builder"><div class="card-header"><h2 class="h5 mb-0">{{ text_sections }}</h2><p class="mb-0 text-muted">{{ text_sections_help }}</p></div><div class="card-body">
 <p class="tsb-legend">{{ text_sections_active }}: <strong data-section-count>{{ section_active_count }}</strong>{% if not sections_defined %} · {{ text_section_legacy }}{% endif %}</p>
 <ol class="tsb-list" id="theme-section-list">
@@ -435,8 +438,8 @@
 </div></div>
         </section>
         <section class="kaz-module" data-kaz-module-panel="agenda" hidden aria-label="{{ text_kaz_mod_agenda|e('html_attr') }}">
-          <div class="kaz-module__head"><h3>Agendamento</h3><span>Rollout e probe</span>
-            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+          <div class="kaz-module__head"><h3>{{ text_kaz_mod_agenda }}</h3><span>{{ text_kaz_sub_agenda }}</span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">{{ text_kaz_back_canvas }}</button></div>
           <div class="card mb-4" id="theme-schedule" data-schedule-card><div class="card-header"><h2 class="h5 mb-0">{{ text_schedule }}</h2><p class="mb-0 text-muted">{{ text_schedule_help }}</p></div><div class="card-body">
 <div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="schedule[enabled]" value="1" id="schedule-enabled" data-schedule-enabled{% if schedule.enabled %} checked{% endif %}><label class="form-check-label" for="schedule-enabled"><strong>{{ text_schedule_enabled }}</strong></label></div>
 <div class="row g-2" data-schedule-fields>
@@ -459,8 +462,8 @@
 </div></div>
         </section>
         <section class="kaz-module" data-kaz-module-panel="midia" hidden aria-label="{{ text_kaz_mod_midia|e('html_attr') }}">
-          <div class="kaz-module__head"><h3>Mídia</h3><span>Mídia por template</span>
-            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+          <div class="kaz-module__head"><h3>{{ text_kaz_mod_midia }}</h3><span>{{ text_kaz_sub_midia }}</span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">{{ text_kaz_back_canvas }}</button></div>
           <div class="card mb-4" id="theme-media" data-thumb-base="{{ media_thumb_base|e('html_attr') }}" data-snippets="{{ media_snippets_json|e('html_attr') }}"><div class="card-header"><h2 class="h5 mb-0">{{ text_media }}</h2><p class="mb-0 text-muted">{{ text_media_help }}</p></div><div class="card-body">
 <div class="row g-2 align-items-end mb-3"><div class="col-md-9"><label class="form-label" for="media-target">{{ text_media_target }}</label><select class="form-select form-select-sm" id="media-target" data-media-target>{% for k in template_keys %}<option value="{{ k }}"{% if k == 'common/home' %} selected{% endif %}>{{ k }}.twig</option>{% endfor %}</select></div><div class="col-md-3"><span class="tmm-status" data-media-status aria-live="polite"></span></div></div>
 <div class="tmm-grid">
@@ -476,8 +479,8 @@
 </div></div>
         </section>
         <section class="kaz-module" data-kaz-module-panel="modelos" hidden aria-label="{{ text_kaz_mod_modelos|e('html_attr') }}">
-          <div class="kaz-module__head"><h3>Modelos</h3><span>Page models</span>
-            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+          <div class="kaz-module__head"><h3>{{ text_kaz_mod_modelos }}</h3><span>{{ text_kaz_sub_modelos }}</span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">{{ text_kaz_back_canvas }}</button></div>
           <div class="card mb-4" id="theme-page-models" data-models="{{ page_models_json|e('html_attr') }}"><div class="card-header"><h2 class="h5 mb-0">{{ text_models }}</h2><p class="mb-0 text-muted">{{ text_models_help }}</p></div><div class="card-body">
 <div class="tmm-models">{% for mdl in page_models %}<button type="button" class="tmm-model" data-model-apply="{{ mdl.id }}"><img src="{{ mdl.thumb|e('html_attr') }}" alt="" width="160" height="100" loading="lazy"><strong>{{ mdl.label }}</strong><small>{{ mdl.help }}</small><span class="badge text-bg-light">{{ mdl.section_count }} / {{ mdl.component_count }} / {{ mdl.media_count }}</span></button>{% endfor %}</div>
 <div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="model-confirm" data-model-confirm><label class="form-check-label" for="model-confirm">{{ text_models_confirm }}</label></div>
@@ -486,8 +489,8 @@
 </div></div>
         </section>
         <section class="kaz-module" data-kaz-module-panel="sites" hidden aria-label="{{ text_kaz_mod_sites|e('html_attr') }}">
-          <div class="kaz-module__head"><h3>Sites</h3><span>Mapa de sites</span>
-            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+          <div class="kaz-module__head"><h3>{{ text_kaz_mod_sites }}</h3><span>{{ text_kaz_sub_sites }}</span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">{{ text_kaz_back_canvas }}</button></div>
           <div class="card mb-4" id="theme-sites" data-sites="{{ sites_json|e('html_attr') }}" data-sites-published="{{ sites_published_json|e('html_attr') }}" data-site-unknown="{{ text_sites_probe_unknown|e('html_attr') }}"><div class="card-header"><h2 class="h5 mb-0">{{ text_sites }}</h2><p class="mb-0 text-muted">{{ text_sites_help }}</p>
 {% if site_active_language != '' %}<p class="mb-0 mt-1"><span class="badge text-bg-info">{{ text_sites_language }}: {{ site_active_language }}</span> <span class="badge text-bg-light">{{ site_active_id }}</span></p>{% endif %}</div><div class="card-body">
 <div class="tms-grid">
@@ -506,8 +509,8 @@
 </div></div>
         </section>
         <section class="kaz-module" data-kaz-module-panel="componentes" hidden aria-label="{{ text_kaz_mod_componentes|e('html_attr') }}">
-          <div class="kaz-module__head"><h3>Componentes</h3><span>Biblioteca de componentes</span>
-            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+          <div class="kaz-module__head"><h3>{{ text_kaz_mod_componentes }}</h3><span>{{ text_kaz_sub_componentes }}</span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">{{ text_kaz_back_canvas }}</button></div>
           <div class="card mb-4" id="theme-component-library" data-thumb-base="{{ component_thumb_base|e('html_attr') }}" data-snippets="{{ component_snippets_json|e('html_attr') }}"><div class="card-header"><h2 class="h5 mb-0">{{ text_components }}</h2><p class="mb-0 text-muted">{{ text_components_help }}</p></div><div class="card-body">
 <div class="row g-2 align-items-end mb-3"><div class="col-md-9"><label class="form-label" for="component-target">{{ text_component_target }}</label><select class="form-select form-select-sm" id="component-target" data-component-target>{% for k in template_keys %}<option value="{{ k }}"{% if k == 'common/home' %} selected{% endif %}>{{ k }}.twig</option>{% endfor %}</select></div><div class="col-md-3"><span class="tcl-status" data-component-status aria-live="polite"></span></div></div>
 <div class="tcl-grid">
@@ -523,8 +526,8 @@
 </div></div>
         </section>
         <section class="kaz-module" data-kaz-module-panel="condicoes" hidden aria-label="{{ text_kaz_mod_condicoes|e('html_attr') }}">
-          <div class="kaz-module__head"><h3>Condições</h3><span>Condition builder</span>
-            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+          <div class="kaz-module__head"><h3>{{ text_kaz_mod_condicoes }}</h3><span>{{ text_kaz_sub_condicoes }}</span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">{{ text_kaz_back_canvas }}</button></div>
           <div class="card mb-4"><div class="card-header"><h2 class="h5 mb-0">{{ text_conditions }}</h2><p class="mb-0 text-muted">{{ text_conditions_help }}</p></div><div class="card-body">
 <ul class="nav nav-tabs mb-3" role="tablist">
 <li class="nav-item"><button type="button" class="nav-link active" data-tcb-tab="visual">{{ text_builder_visual }}</button></li>
@@ -563,8 +566,8 @@
 </div></div>
         </section>
         <section class="kaz-module" data-kaz-module-panel="comparar" hidden aria-label="{{ text_kaz_mod_comparar|e('html_attr') }}">
-          <div class="kaz-module__head"><h3>Prévia</h3><span>Comparar e prévia</span>
-            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+          <div class="kaz-module__head"><h3>{{ text_kaz_mod_comparar }}</h3><span>{{ text_kaz_sub_comparar }}</span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">{{ text_kaz_back_canvas }}</button></div>
           <div class="card mb-4" id="theme-compare"><div class="card-header d-flex justify-content-between align-items-center"><div><h2 class="h5 mb-0">{{ text_compare }}</h2><p class="mb-0 text-muted">{{ text_compare_help }}</p></div><span class="badge {{ theme_state == 'published' ? 'text-bg-success' : 'text-bg-secondary' }}">{{ theme_state == 'published' ? text_state_published : text_state_draft }}</span></div><div class="card-body">
 <p class="mb-2"><span class="badge {{ has_unpublished_changes ? 'text-bg-warning' : 'text-bg-success' }}">{{ has_unpublished_changes ? text_state_changed : text_state_clean }}</span></p>
 <div class="row g-2">
@@ -580,13 +583,13 @@
 </div></div>
         </section>
         <section class="kaz-module" data-kaz-module-panel="templates" hidden aria-label="{{ text_kaz_mod_templates|e('html_attr') }}">
-          <div class="kaz-module__head"><h3>Templates</h3><span>25 templates Twig</span>
-            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">Voltar ao canvas</button></div>
+          <div class="kaz-module__head"><h3>{{ text_kaz_mod_templates }}</h3><span>{{ text_kaz_sub_templates }}</span>
+            <button class="kaz-btn kaz-btn--ghost" type="button" data-kaz-module="design">{{ text_kaz_back_canvas }}</button></div>
           <div class="card"><div class="card-header"><h2 class="h5 mb-0">{{ text_template_editor }}</h2><p class="mb-0 text-muted">{{ text_template_help }}</p></div><div class="card-body">
 {% for key in template_keys %}<details class="mb-3"{% if key == focus_template %} open{% endif %}><summary><code>{{ key }}.twig</code></summary><textarea class="form-control font-monospace mt-2" name="templates[{{ key }}]" rows="14" maxlength="131072" spellcheck="false">{{ template_sources[key] ?? '' }}</textarea><a class="btn btn-sm btn-outline-secondary mt-2" href="{{ preview_links[key] }}" target="theme-preview">{{ text_preview }}</a></details>{% endfor %}
 </div></div>
         </section>
-        <p class="kaz-modules__noscript">Com JavaScript desativado, todos os módulos são exibidos empilhados — nenhum campo fica inacessível.</p>
+        <p class="kaz-modules__noscript">{{ text_kaz_mods_nojs }}</p>
       </div>
       </div>{# /kaz-stage #}
     </div>
@@ -679,23 +682,23 @@
 
   {# ---------- IO: campo REAL do formulário (persistência da V) ---------- #}
   <details class="kaz-advanced" data-kaz-advanced>
-    <summary>Avançado · cena JSON e exportação</summary>
+    <summary>{{ text_kaz_adv_summary }}</summary>
   <div class="kaz-io">
     <p class="kaz-note">
-      {% if kaz_scene_saved %}<strong>Cena salva neste tema.</strong> Ela volta ao abrir a página e viaja com o pacote exportado.{% else %}<strong>Cena derivada do config.</strong> Este tema ainda não tem cena própria; salve o formulário para gravá-la.{% endif %}
+      {% if kaz_scene_saved %}<strong>{{ text_kaz_adv_saved }}</strong> {{ text_kaz_adv_saved_note }}{% else %}<strong>{{ text_kaz_adv_derived }}</strong> {{ text_kaz_adv_derived_note }}{% endif %}
     </p>
-    <label class="kaz-panel__title" for="kaz-json">Cena kaztheme-scene/v1 — campo salvo com o tema</label>
-    <textarea id="kaz-json" name="kaz_scene_json" data-kaz-json spellcheck="false" aria-label="JSON da cena">{{ kaz_scene_json }}</textarea>
+    <label class="kaz-panel__title" for="kaz-json">{{ text_kaz_adv_field|replace({'%s': 'kaztheme-scene/v1'}) }}</label>
+    <textarea id="kaz-json" name="kaz_scene_json" data-kaz-json spellcheck="false" aria-label="{{ text_kaz_adv_json_label|e('html_attr') }}">{{ kaz_scene_json }}</textarea>
     <div class="kaz-io__actions">
-      <button class="kaz-btn" type="button" data-kaz-action="export">Exportar cena</button>
-      <button class="kaz-btn" type="button" data-kaz-action="import">Importar cena</button>
+      <button class="kaz-btn" type="button" data-kaz-action="export">{{ text_kaz_adv_export }}</button>
+      <button class="kaz-btn" type="button" data-kaz-action="import">{{ text_kaz_adv_import }}</button>
     </div>
-    <p class="kaz-note">O selo <strong>Alterações não salvas</strong> e o <strong>status do arquivo</strong> aparecem quando a cena difere da última gravação e desaparecem ao salvar (ou ao desfazer até o estado carregado). A cena é gravada na chave allowlistada <code>kaz_scene</code> do config ao salvar o tema, validada no servidor (fail-closed), preservada no pacote exportado/importado e substituída integralmente na herança de child-theme. Sem migration, schema, coluna, upload, <code>custom_js</code> ou chave de tradução nova.</p>
+    <p class="kaz-note">{% set kz = text_kaz_adv_note|split('%s') %}{{ kz[0] }}<strong>{{ text_kaz_unsaved }}</strong>{{ kz[1] }}<strong>{{ text_kaz_adv_file_status }}</strong>{{ kz[2] }}<code>kaz_scene</code>{{ kz[3] }}<code>custom_js</code>{{ kz[4] }}</p>
   </div>
   </details>
   </form>
   <details class="kaz-advanced kaz-advanced--extra" data-kaz-advanced-extra>
-    <summary>Pacote, prévia isolada e revisões</summary>
+    <summary>{{ text_kaz_extra_summary }}</summary>
   <div class="kaz-extra" data-kaz-extra>
 
 <div class="card mb-4" id="theme-package"><div class="card-header"><h2 class="h5 mb-0">{{ text_package }}</h2><p class="mb-0 text-muted">{{ text_package_help }}</p></div><div class="card-body">

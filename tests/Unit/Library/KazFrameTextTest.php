@@ -58,7 +58,7 @@ final class KazFrameTextTest extends TestCase {
 
     public function testTheThreeLanguagesHaveTheSameFrameKeysAllFilled(): void {
         $pt = $this->frame('pt-br');
-        self::assertCount(184, $pt, 'a quantidade so muda junto com o Twig e os tres idiomas'); // 109 da KZ-11 + 75 da KZ-13
+        self::assertCount(241, $pt, 'a quantidade so muda junto com o Twig e os tres idiomas'); // 109 da KZ-11 + 75 da KZ-13 + 57 da KZ-14
         foreach (self::LANGUAGES as $code) {
             $texts = $this->frame($code);
             self::assertSame(array_keys($pt), array_keys($texts), $code . ': mesmas chaves, na mesma ordem');
@@ -77,9 +77,11 @@ final class KazFrameTextTest extends TestCase {
         // Palavras que so existem em portugues: nao podem sobrar nas outras linguas.
         $portuguese = '/\b(não|salvo|tela|camadas|ativos|histórico|protótipo|herança|condições|prévia|seções|mídia|agendamento|recolher|painel|botão|cartão|mão|retângulo|excluir|desfazer|refazer|largura|amplo'
             // KZ-13: palavras dos paineis laterais e das mensagens de acao
-            . '|cena|camada|nenhuma|seleção|aparência|preenchimento|raio|fonte|papel|blocos?|cores|inserir|ferramenta|encerrada|esquerdo|direito|aberto|pronto|atual|sessão|alterações|faixa|três)\b/iu';
+            . '|cena|camada|nenhuma|seleção|aparência|preenchimento|raio|fonte|papel|blocos?|cores|inserir|ferramenta|encerrada|esquerdo|direito|aberto|pronto|atual|sessão|alterações|faixa|três'
+            // KZ-14: avisos do topo, cabecalhos dos modulos, secao Avancado e textos de exemplo dos blocos
+            . '|liberação|rascunho|nenhum|aguardando|desabilitado|desativado|avançado|exportação|voltar|gravação|pacote|revisões|começar|saiba|pai|arquivo|selo|chamada|conteúdo)\b/iu';
         // Palavras que o espanhol tambem usa: so nao podem sobrar no ingles.
-        $notEnglish = '/\b(ocultar|oculto|bloquear|bloqueado|aplicar|página|contrato|inválido|elemento|tipo|tema|galeria|biblioteca|título)\b/iu';
+        $notEnglish = '/\b(ocultar|oculto|bloquear|bloqueado|aplicar|página|contrato|inválido|elemento|tipo|tema|galeria|biblioteca|título|publicado|pendente|módulos|partes|componentes|comparar|catálogo|editor pronto|usar?|exportar|importar|aviso|miniatura)\b/iu';
         foreach (['en-us', 'es-eu'] as $code) {
             $texts = $this->frame($code);
             $same = 0;
@@ -90,7 +92,7 @@ final class KazFrameTextTest extends TestCase {
                 if ($code === 'en-us') self::assertSame(0, preg_match($notEnglish, $text), $code . ' ' . $key . ': "' . $text . '" ficou em portugues');
             }
             // Algumas palavras sao iguais de verdade (Tokens, Normal, Mover...), mas nunca a maioria.
-            self::assertLessThan($code === 'en-us' ? 16 : 40, $same, $code . ': frases iguais as do pt-br');
+            self::assertLessThan($code === 'en-us' ? 20 : 40, $same, $code . ': frases iguais as do pt-br');
         }
         self::assertSame('Saved', $this->frame('en-us')['saved']);
         self::assertSame('Guardado', $this->frame('es-eu')['saved']);
@@ -100,7 +102,7 @@ final class KazFrameTextTest extends TestCase {
     public function testTheScriptReceivesOnlyKeysThatExist(): void {
         $keys = array_keys($this->frame('pt-br'));
         $script = $this->keys('KAZ_FRAME_SCRIPT');
-        self::assertCount(57, $script); // 24 da KZ-11 + 33 da KZ-13
+        self::assertCount(73, $script); // 24 da KZ-11 + 33 da KZ-13 + 16 da KZ-14
         self::assertSame(array_values(array_unique($script)), $script, 'sem chave repetida');
         self::assertSame([], array_values(array_diff($script, $keys)), 'o script so recebe chaves que existem nos idiomas');
         self::assertSame(array_values(array_intersect($keys, $script)), $script, 'KAZ_FRAME_SCRIPT na mesma ordem dos arquivos de idioma');
@@ -121,6 +123,6 @@ final class KazFrameTextTest extends TestCase {
         exec(escapeshellarg($node) . ' ' . escapeshellarg(DIR_REAMUR . self::CHECKER) . ' 2>&1', $output, $status);
         $last = (string)end($output);
         self::assertSame(0, $status, implode("\n", array_slice($output, 0, 12)));
-        self::assertMatchesRegularExpression('/^Frame text checker: \d{3,} PASS \(184 chaves, 57 no script, 132 no Twig\)$/', $last);
+        self::assertMatchesRegularExpression('/^Frame text checker: \d{3,} PASS \(241 chaves, 73 no script, 174 no Twig\)$/', $last);
     }
 }

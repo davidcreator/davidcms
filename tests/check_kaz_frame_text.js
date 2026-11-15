@@ -28,6 +28,14 @@
  *   7. toda mensagem de `say(...)` vem de uma chave, e as frases dos paineis
  *      nao voltam a ser escritas direto pelo script.
  *
+ * KZ-14 (ADR 0107) — entram os avisos "Liberacao" e "Aceitacao", os cabecalhos
+ * dos modulos, a secao "Avancado" e os textos de exemplo dos blocos prontos:
+ *   8. o arquivo Twig INTEIRO passa pela conferencia do item 1 (nao so as
+ *      regioes): o que sobra de texto fixo e uma lista curta e conhecida;
+ *   9. o aviso "Liberacao" escolhe a frase pelo veredito, no Twig, e nao
+ *      imprime mais o rotulo em portugues que vem de ThemeReleaseProbe;
+ *  10. o aviso "Aceitacao" e os textos de exemplo dos blocos vem de chaves.
+ *
  *   node tests/check_kaz_frame_text.js          confere
  *   node tests/check_kaz_frame_text.js --list   imprime o que achou (JSON)
  */
@@ -53,6 +61,13 @@ const SAME_EVERYWHERE = [
   'CTA', 'system-ui' // KZ-13: sigla do bloco e nome da fonte
 ];
 const HINTS = ['title', 'aria-label', 'placeholder', 'alt', 'data-kaz-tablabel'];
+/* KZ-14: o que mais pode ficar fixo quando a conferencia olha o arquivo inteiro (fora das regioes acima). */
+const SAME_IN_FILE = SAME_EVERYWHERE.concat([
+  'CSS:', 'bytes',                    // aviso "Liberacao": sigla e unidade
+  '.twig', 'query.*:', 'site:',       // nome de arquivo e nomes de campo das condicoes
+  'loja.exemplo.com', 'exemplo.com',  // exemplos de dominio (placeholder)
+  '{&quot;format&quot;:&quot;reamurcms-theme&quot;,...}' // exemplo de pacote (placeholder)
+]);
 
 /* Regioes da moldura: [nome, onde comeca, onde termina (primeira ocorrencia depois do comeco)]. */
 const REGIONS = [
@@ -83,29 +98,30 @@ function withoutTwig(piece) {
     .replace(/\{\{[\s\S]*?\}\}/g, '')
     .replace(/\{%[\s\S]*?%\}/g, '')
     .replace(/(<svg\b[^>]*>)[\s\S]*?<\/svg>/g, '$1</svg>')
+    .replace(/(<style\b[^>]*>)[\s\S]*?<\/style>/g, '$1</style>') // KZ-14: regra de CSS nao e texto
     // KZ-13: nome tecnico (igual em qualquer idioma) vai em <code> ou em elemento marcado com translate="no"
     .replace(/(<code\b[^>]*>)[\s\S]*?<\/code>/g, '$1</code>')
     .replace(/(<([a-z]+)\b[^>]*\stranslate="no"[^>]*>)[\s\S]*?<\/\2>/g, '$1</$2>');
 }
-function withoutSame(text) {
+function withoutSame(text, same) {
   let out = text;
-  SAME_EVERYWHERE.forEach(function (word) { out = out.split(word).join(' '); });
+  (same || SAME_EVERYWHERE).forEach(function (word) { out = out.split(word).join(' '); });
   return out;
 }
-/* Textos fixos com letras em um trecho ja sem Twig. */
-function fixedTexts(piece) {
+/* Textos fixos com letras em um trecho ja sem Twig. `same`: lista do que pode ficar igual (por omissao, SAME_EVERYWHERE). */
+function fixedTexts(piece, same) {
   const found = [];
   const clean = withoutTwig(piece);
   clean.replace(/<[a-zA-Z][^>]*>/g, function (tag) {
     HINTS.forEach(function (attr) {
       const m = new RegExp('\\s' + attr + '="([^"]*)"').exec(tag);
-      if (m && /\p{L}/u.test(withoutSame(m[1]))) found.push(attr + '="' + m[1] + '"');
+      if (m && /\p{L}/u.test(withoutSame(m[1], same))) found.push(attr + '="' + m[1] + '"');
     });
     return tag;
   });
   clean.replace(/<[^>]*>/g, '\u0000').split('\u0000').forEach(function (text) {
     const t = text.replace(/\s+/g, ' ').trim();
-    if (t !== '' && /\p{L}/u.test(withoutSame(t))) found.push(t);
+    if (t !== '' && /\p{L}/u.test(withoutSame(t, same))) found.push(t);
   });
   return found;
 }
@@ -157,6 +173,29 @@ check(fixedTexts('<span>Salvo</span><b>{{ x }} ↺</b><i>Desktop · 1440 × 900<
 check(fixedTexts('<svg aria-label="Desenho"><title>Dentro</title></svg>').join('|') === 'aria-label="Desenho"', 'detector: so a etiqueta do svg conta');
 check(fixedTexts('<p>{{ a }}<code>kaz_scene</code>{{ b }}</p><label translate="no">X</label><label>Y</label>').join('|') === 'Y', 'detector: <code> e translate="no" ficam fora, o resto conta');
 check(fixedTexts('<select translate="no" title="Tipo"><option>rect</option></select><option>card</option>').join('|') === 'title="Tipo"|card', 'detector: translate="no" vale so para o conteudo do proprio elemento');
+// KZ-14: o arquivo inteiro. Fora das regioes vale a lista SAME_IN_FILE; dentro delas continua valendo a lista curta.
+// (o "v" solto e o de `{{ package_format }} v{{ package_version }}`)
+const fixedInFile = fixedTexts(twig, SAME_IN_FILE).filter(function (t) { return t !== 'v'; });
+report.regions['arquivo inteiro'] = fixedInFile;
+check(fixedInFile.length === 0, 'texto fixo no Twig do editor: ' + JSON.stringify(fixedInFile.slice(0, 5)));
+check(fixedTexts('<p>CSS: 3/6 · 10 bytes</p><input placeholder="exemplo.com"><style>.a{color:red}</style><b>Pendente:</b>', SAME_IN_FILE).join('|') === 'Pendente:', 'detector: lista do arquivo inteiro');
+check(fixedTexts('<p>CSS: 3/6 · 10 bytes</p>').length === 1, 'detector: a lista do arquivo inteiro nao vale dentro das regioes');
+// KZ-14: cabecalho de cada modulo — titulo e subtitulo vem do idioma, e o botao de volta tambem
+const heads = twig.match(/<div class="kaz-module__head">[^\n]*/g) || [];
+check(heads.length === 14, 'esperava 14 cabecalhos de modulo, achei ' + heads.length);
+heads.forEach(function (line) {
+  check(/^<div class="kaz-module__head"><h3>(\{\{ text_kaz_mod_[a-z0-9]+ \}\}|Three\.js)<\/h3><span>\{\{ text_kaz_(sub|mod)_[a-z0-9]+ \}\}<\/span>$/.test(line), 'cabecalho de modulo com texto fixo: ' + line.slice(0, 90));
+});
+check((twig.match(/data-kaz-module="design">\{\{ text_kaz_back_canvas \}\}<\/button><\/div>/g) || []).length === 14, 'os 14 modulos tem o botao de volta com texto do idioma');
+// KZ-14: aviso "Liberacao" — a frase e escolhida aqui pelo veredito; o rotulo pronto de ThemeReleaseProbe (em portugues) nao e impresso
+const twigCode = twig.replace(/\{#[\s\S]*?#\}/g, '');
+check(twigCode.indexOf('kr.verdict_label') === -1 && twigCode.indexOf('kr.hint') === -1, 'o Twig nao imprime verdict_label nem hint de ThemeReleaseProbe');
+check(twigCode.indexOf("{% set kv = kr.verdict|default('') %}") !== -1, 'o veredito e lido uma vez (kv)');
+check(twigCode.indexOf("{% if kv == 'PUBLICADO' %}{{ text_kaz_rel_published }}{% elseif kv == 'RASCUNHO_PENDENTE' %}{{ text_kaz_rel_pending }}{% else %}{{ text_kaz_rel_none }}{% endif %}") !== -1, 'nome do estado da liberacao pelo veredito');
+check(twigCode.indexOf("{% if kv == 'PUBLICADO' %}{{ text_kaz_rel_published_hint }}{% elseif kv == 'RASCUNHO_PENDENTE' %}{{ text_kaz_rel_pending_hint }}{% elseif kv == 'SEM_TEMA_ATIVO' %}{{ text_kaz_rel_none_hint }}{% endif %}") !== -1, 'orientacao da liberacao pelo veredito');
+const probe = read('dev/system/library/theme/theme_release_probe.php');
+['PUBLICADO', 'RASCUNHO_PENDENTE', 'SEM_TEMA_ATIVO'].forEach(function (v) { check(probe.indexOf("'" + v + "'") !== -1, 'ThemeReleaseProbe ainda usa o veredito ' + v); });
+check(/\$verdict = !\$active \? 'SEM_TEMA_ATIVO'\s*: \(\$pending \? 'RASCUNHO_PENDENTE' : 'PUBLICADO'\);/.test(probe), 'ThemeReleaseProbe tem exatamente estes tres vereditos');
 // KZ-13: o que fica marcado como nome tecnico e pouco e conhecido (a marca nao pode virar atalho para texto fixo)
 const technical = [];
 twig.replace(/\{#[\s\S]*?#\}/g, '').replace(/<([a-z]+)\b[^>]*\stranslate="no"[^>]*>([\s\S]*?)<\/\1>/g, function (all, tag, inner) {
@@ -169,7 +208,7 @@ technical.forEach(function (t) { check(TECHNICAL.indexOf(t) !== -1, 'translate="
 check(technical.length === 18, 'esperava 18 nomes tecnicos marcados com translate="no", achei ' + technical.length);
 // KZ-13: frase cortada em %s — cada parte e impressa uma vez, na ordem
 const cuts = twig.match(/\{% set kz = text_kaz_[a-z0-9_]+\|split\('%s'\) %\}[^\n]*/g) || [];
-check(cuts.length === 6, 'esperava 6 frases cortadas com split, achei ' + cuts.length);
+check(cuts.length === 7, 'esperava 7 frases cortadas com split, achei ' + cuts.length);
 cuts.forEach(function (line) {
   const key = /text_kaz_([a-z0-9_]+)\|split/.exec(line)[1];
   const piece = line.slice(0, line.indexOf('</p>') === -1 ? line.length : line.indexOf('</p>'));
@@ -238,11 +277,27 @@ says.forEach(function (arg) {
   check(loose.length === 0, 'mensagem de acao com texto fixo: ' + loose.join(' '));
 });
 const stripped = withoutCalls(body);
-// (' camadas · liberação ' pertence ao aviso "Aceitação", que nao entrou nesta etapa: por isso ' camadas' so vale no fim da frase)
-[/' camadas\)?'/, /'[^'\n]*nenhuma camada[^'\n]*'/, /'[^'\n]*oculto[^'\n]*'/, /'[^'\n]*bloqueado[^'\n]*'/, /'[^'\n]* · atual'/, /'[^'\n]*camada selecionada'/, /'painel [^'\n]*'/, /'Aplicar [^'\n]*'/].forEach(function (piece) {
+[/' camadas[^'\n]*'/, /'[^'\n]*nenhuma camada[^'\n]*'/, /'[^'\n]*oculto[^'\n]*'/, /'[^'\n]*bloqueado[^'\n]*'/, /'[^'\n]* · atual'/, /'[^'\n]*camada selecionada'/, /'painel [^'\n]*'/, /'Aplicar [^'\n]*'/].forEach(function (piece) {
   check(!piece.test(stripped), 'o script voltou a escrever direto: ' + piece);
 });
 check(withoutCalls("say('camada adicionada: ' + l.id); x = TXT('a', 'nenhuma camada');").indexOf('nenhuma') === -1, 'detector: o texto de reserva sai da conta');
+
+// ---- 3c. KZ-14: aviso "Aceitacao" e textos de exemplo dos blocos
+[/'Editor pronto'/, /'Editor n[^'\n]*'/, /'Boot OK[^'\n]*'/, /'[^'\n]*m[oó]dulos[^'\n]*'/, /'[^'\n]*libera[cç][aã]o[^'\n]*'/, /'[^'\n]*pendente[^'\n]*'/, /'[^'\n]*cat[aá]logo[^'\n]*'/, /'O JavaScript [^'\n]*'/].forEach(function (piece) {
+  check(!piece.test(stripped), 'o aviso "Aceitacao" voltou a ter frase direta no script: ' + piece);
+});
+check(/state\.textContent = ok \? TXT\('acc_ready', '[^']*'\) : TXT\('acc_failed', '[^']*'\);/.test(body), 'estado do aviso "Aceitacao" vem de acc_ready / acc_failed');
+check(/if \(!ok\) return TXT\('acc_fail_detail', /.test(body), 'detalhe da falha vem de acc_fail_detail');
+check(/note\.textContent = TXT\('boot_warning', /.test(body), 'aviso vermelho de quando o editor nao inicia vem de boot_warning');
+check(!/'KAZTheme-Editor n[^'\n]*'/.test(stripped), 'o aviso de quando o editor nao inicia voltou a ser frase direta');
+const blocks = /var BLOCKS = \{([\s\S]*?)\n  \};/.exec(body);
+check(blocks !== null, 'biblioteca de blocos (BLOCKS) encontrada no script');
+const samples = blocks[1].match(/\btext: (?:'(?:[^'\\]|\\.)*'|TXT\('[a-z0-9_]+', '(?:[^'\\]|\\.)*'\))/g) || [];
+report.samples = samples.length;
+check(samples.length === 14, 'esperava 14 camadas nos blocos prontos, achei ' + samples.length);
+check((blocks[1].match(/\btext:/g) || []).length === samples.length, 'todo texto de camada dos blocos e um literal vazio ou uma chave');
+samples.forEach(function (t) { check(t === "text: ''" || /^text: TXT\('sample_[a-z_]+', /.test(t), 'texto de exemplo de bloco sem chave: ' + t); });
+check(samples.filter(function (t) { return t !== "text: ''"; }).length === 6, 'seis textos de exemplo nos blocos prontos');
 
 // ---- 4. a funcao KazEditorText
 const start = script.indexOf('window.KazEditorText = (function () {');

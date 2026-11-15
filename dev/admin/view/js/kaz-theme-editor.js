@@ -53,7 +53,7 @@ window.KazEditorText = (function () {
     panel.setAttribute('data-kaz-acceptance', ok ? 'pronto' : 'falhou');
     if (box) box.className = ok ? 'alert alert-success py-2 px-3 mb-0'
                                 : 'alert alert-danger py-2 px-3 mb-0';
-    if (state) state.textContent = ok ? 'Editor pronto' : 'Editor não inicializou';
+    if (state) state.textContent = ok ? TXT('acc_ready', 'Editor pronto') : TXT('acc_failed', 'Editor não inicializou');
     if (text) text.textContent = detail;
   }
   function acceptanceDetail(ok, layerCount) {
@@ -68,14 +68,13 @@ window.KazEditorText = (function () {
     var rel = document.getElementById('kaz-release-status');
     var verdict = rel ? (rel.getAttribute('data-kaz-release-verdict') || 'indisponivel') : 'indisponivel';
     var pending = rel ? (rel.getAttribute('data-kaz-release-pending') || '?') : '?';
-    if (!ok) return 'O JavaScript não concluiu o boot. Confira o asset '
-      + 'kaz-theme-editor.js (HTTP 200), o loop scripts_deferred do header.twig '
-      + 'e o cache/proxy. Nenhum erro no console é esperado neste cenário.';
-    return 'Boot OK · asset ' + asset + ' · ' + modules + ' módulos · ' + layerCount
-      + ' camadas · liberação ' + verdict + ' (pendente=' + pending + ')'
-      + (verdict === 'PUBLICADO'
-          ? ' · prévia e catálogo usam o mesmo tema'
-          : ' · use Publicar para aplicar no catálogo');
+    if (!ok) return TXT('acc_fail_detail', 'O JavaScript não concluiu o boot. Confira o asset kaz-theme-editor.js (HTTP 200), o loop scripts_deferred do header.twig e o cache/proxy. Nenhum erro no console é esperado neste cenário.');
+    /* KZ-14 (ADR 0107): o estado da liberacao aparece com o nome que o aviso de cima mostra (ja no idioma do admin). */
+    var badge = rel ? rel.querySelector('.badge') : null;
+    var verdictName = badge && badge.textContent.trim() !== '' ? badge.textContent.trim() : verdict;
+    return TXT('acc_boot_ok', 'Boot OK') + ' · asset ' + asset + ' · ' + TXT('acc_modules', '%s módulos', modules) + ' · ' + TXT('n_layers', '%s camadas', layerCount)
+      + ' · ' + TXT('acc_release', 'liberação: %s', verdictName) + ' (' + TXT('acc_pending', 'pendente=%s', pending) + ')'
+      + ' · ' + (verdict === 'PUBLICADO' ? TXT('acc_same', 'prévia e catálogo usam o mesmo tema') : TXT('acc_publish', 'use Publicar para aplicar no catálogo'));
   }
   function boot() {
     if (bootDone) return;
@@ -102,24 +101,24 @@ window.KazEditorText = (function () {
   var RIGHT_TABS = ['design', 'prototype', 'inspect'];
 
   /* Frente X — biblioteca de blocos. Presets DECLARATIVOS: nenhum texto do
-     usuario entra aqui. Cada template gera uma camada valida do contrato
+     usuario entra aqui. KZ-14 (ADR 0107): o texto de exemplo vem do idioma do admin. Cada template gera uma camada valida do contrato
      kaztheme-scene/v1; dx/dy sao relativos a uma origem calculada no canvas. */
   var BLOCKS = {
     hero: { label: 'Hero', layers: [
       { kind: 'rect', w: 560, h: 200, fill: '#e2e8f0', radius: 12, text: '', fontSize: 16, dx: 0, dy: 0 },
-      { kind: 'text', w: 480, h: 80, fill: '#0f172a', radius: 0, text: 'Titulo do hero', fontSize: 32, dx: 24, dy: 32 },
-      { kind: 'button', w: 160, h: 56, fill: '#2563eb', radius: 12, text: 'Saiba mais', fontSize: 16, dx: 24, dy: 120 }
+      { kind: 'text', w: 480, h: 80, fill: '#0f172a', radius: 0, text: TXT('sample_hero_title', 'Título do hero'), fontSize: 32, dx: 24, dy: 32 },
+      { kind: 'button', w: 160, h: 56, fill: '#2563eb', radius: 12, text: TXT('sample_more', 'Saiba mais'), fontSize: 16, dx: 24, dy: 120 }
     ] },
     card: { label: 'Cartao', layers: [
       { kind: 'card', w: 280, h: 176, fill: '#ffffff', radius: 12, text: '', fontSize: 16, dx: 0, dy: 0 },
-      { kind: 'text', w: 240, h: 64, fill: '#0f172a', radius: 0, text: 'Cartao de conteudo', fontSize: 20, dx: 16, dy: 24 }
+      { kind: 'text', w: 240, h: 64, fill: '#0f172a', radius: 0, text: TXT('sample_card', 'Cartão de conteúdo'), fontSize: 20, dx: 16, dy: 24 }
     ] },
     banner: { label: 'Faixa', layers: [
       { kind: 'rect', w: 720, h: 96, fill: '#1e3a8a', radius: 8, text: '', fontSize: 16, dx: 0, dy: 0 },
-      { kind: 'text', w: 640, h: 48, fill: '#ffffff', radius: 0, text: 'Aviso ou chamada', fontSize: 24, dx: 24, dy: 24 }
+      { kind: 'text', w: 640, h: 48, fill: '#ffffff', radius: 0, text: TXT('sample_banner', 'Aviso ou chamada'), fontSize: 24, dx: 24, dy: 24 }
     ] },
     titulo: { label: 'Titulo', layers: [
-      { kind: 'text', w: 480, h: 64, fill: '#0f172a', radius: 0, text: 'Novo titulo', fontSize: 40, dx: 0, dy: 0 },
+      { kind: 'text', w: 480, h: 64, fill: '#0f172a', radius: 0, text: TXT('sample_title', 'Novo título'), fontSize: 40, dx: 0, dy: 0 },
       { kind: 'rect', w: 480, h: 8, fill: '#38bdf8', radius: 0, text: '', fontSize: 16, dx: 0, dy: 72 }
     ] },
     galeria: { label: 'Galeria', layers: [
@@ -129,7 +128,7 @@ window.KazEditorText = (function () {
     ] },
     cta: { label: 'CTA', layers: [
       { kind: 'section', w: 480, h: 120, fill: '#f1f5f9', radius: 8, text: '', fontSize: 16, dx: 0, dy: 0 },
-      { kind: 'button', w: 160, h: 56, fill: '#2563eb', radius: 12, text: 'Comecar', fontSize: 16, dx: 24, dy: 32 }
+      { kind: 'button', w: 160, h: 56, fill: '#2563eb', radius: 12, text: TXT('sample_start', 'Começar'), fontSize: 16, dx: 24, dy: 32 }
     ] }
   };
 
@@ -1101,11 +1100,7 @@ window.KazEditorText = (function () {
       'position:fixed;left:16px;right:16px;bottom:16px;z-index:2147483000;'
       + 'padding:12px 16px;border-radius:10px;background:#7f1d1d;color:#fff;'
       + 'font:600 14px/1.45 system-ui,sans-serif;box-shadow:0 8px 28px #0007');
-    note.textContent = 'KAZTheme-Editor nao inicializou: o editor existe na pagina, '
-      + 'mas o JavaScript nao concluiu o boot. Verifique se o asset '
-      + 'kaz-theme-editor.js foi servido (HTTP 200), se o header.twig ativo contem '
-      + 'o loop scripts_deferred e se um cache/proxy nao entrega uma versao antiga. '
-      + 'Execute tools/kaz-theme-editor-health.js no console para o diagnostico.';
+    note.textContent = TXT('boot_warning', 'KAZTheme-Editor não inicializou: o editor existe na página, mas o JavaScript não concluiu o boot. Verifique se o asset kaz-theme-editor.js foi servido (HTTP 200), se o header.twig ativo contém o loop scripts_deferred e se um cache/proxy não entrega uma versão antiga. Execute tools/kaz-theme-editor-health.js no console para o diagnóstico.');
     document.body.appendChild(note);
     markAcceptance(false, acceptanceDetail(false, 0));
   }, 500);

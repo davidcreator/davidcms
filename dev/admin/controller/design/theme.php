@@ -17,6 +17,10 @@ class Theme extends \Reamur\System\Engine\Controller {
         'msg_reverted', 'msg_zoom_fit', 'msg_tool_hand', 'msg_tool_move', 'msg_layer_added', 'msg_block_unknown',
         'msg_layer_limit', 'msg_block_added', 'msg_exported', 'msg_import_json', 'msg_import_contract', 'msg_imported',
         'msg_bound', 'msg_pages_open', 'msg_users', 'msg_board_focus', 'msg_ready', 'msg_scene_saved', 'msg_scene_derived',
+        // KZ-14 (ADR 0107): aviso "Aceitacao" e textos de exemplo dos blocos prontos.
+        'acc_ready', 'acc_failed', 'acc_fail_detail', 'acc_boot_ok', 'acc_modules', 'acc_release', 'acc_pending',
+        'acc_same', 'acc_publish', 'boot_warning', 'sample_hero_title', 'sample_more', 'sample_card', 'sample_banner', 'sample_title',
+        'sample_start',
     ];
     // F13-E: allowlist unica em ThemePackage::TEMPLATE_KEYS (sem duplicacao).
     public function index(): void {
@@ -228,7 +232,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
         $data['kaz_scene_saved']=$savedScene!==null;
         $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
-        $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz13';
+        $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz14';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAJ);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAJ);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
