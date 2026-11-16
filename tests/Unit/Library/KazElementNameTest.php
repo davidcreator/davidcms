@@ -238,11 +238,14 @@ final class KazElementNameTest extends TestCase {
         self::assertSame(self::ORDER, array_values(array_intersect(self::ORDER, array_keys($seen))));
         $column = static fn (string $what): array => array_map(static fn (string $name): int => $seen[$name][$what], self::ORDER);
 
-        self::assertSame([103, 103, 146, 48, 18, 4], $column('link'));
-        self::assertSame([0, 0, 0, 3, 0, 0], $column('button'));
+        self::assertSame([103, 103, 146, 54, 18, 4], $column('link'));
+        // KZ-20 (ADR 0113): os 3 botoes do David Universe 3D eram dos formularios do tema; agora o formulario e o do sistema.
+        self::assertSame([0, 0, 0, 0, 0, 0], $column('button'));
         // Nome escrito no tema (texto ou rotulo) e nome que vem de dado do site.
-        self::assertSame([90, 90, 140, 49, 0, 0], $column('named'));
-        self::assertSame([13, 13, 6, 2, 18, 4], $column('data'));
+        // KZ-20 (ADR 0113): o David Universe 3D nao tem mais nome escrito num idioma so (eram 49): todos vem dos
+        // textos do tema ou do conteudo do site.
+        self::assertSame([90, 90, 140, 0, 0, 0], $column('named'));
+        self::assertSame([13, 13, 6, 54, 18, 4], $column('data'));
         // Pacote entregue sai sem link ou botao pendente, e sem nenhum que o editor nao consiga conferir.
         self::assertSame([0, 0, 0, 0, 0, 0], $column('missing'));
         self::assertSame([0, 0, 0, 0, 0, 0], $column('waiting'));
@@ -271,7 +274,9 @@ final class KazElementNameTest extends TestCase {
             }
         }
         ksort($seen);
-        self::assertSame(['common/home' => 15, 'partial/news' => 6, 'partial/portfolio' => 9], $seen);
+        // KZ-20 (ADR 0113): os 30 selos de projetos escritos no tema deram lugar a seis capas de reserva em cada
+        // lista de projetos (so aparecem quando o projeto nao tem imagem).
+        self::assertSame(['catalog/project_list' => 6, 'partial/portfolio' => 6], $seen);
     }
 
     public function testWhatTheEditorWritesPassesTheThemePolicy(): void {

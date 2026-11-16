@@ -182,14 +182,14 @@ final class KazElementStyleTest extends TestCase {
             }
         }
         self::assertCount(6, $seen);
-        self::assertSame([26, 26, 23, 31, 0, 0], array_column([
+        self::assertSame([26, 26, 23, 24, 0, 0], array_column([
             $seen['Atlas-Studio'], $seen['Atlas-Studio-3D'], $seen['David-Creator'], $seen['David-Universe-3D'],
             $seen['Reamur-Reference'], $seen['Reamur-ThreeJS-Reference'],
         ], 'fixed'));
         // Nenhum pacote entregue tem `style` com Twig.
         self::assertSame(0, array_sum(array_column($seen, 'other')));
         self::assertSame(7, array_sum(array_column($seen, 'color')));
-        self::assertSame(2, array_sum(array_column($seen, 'font-size')));
+        self::assertSame(1, array_sum(array_column($seen, 'font-size')));
         self::assertSame(0, array_sum(array_column($seen, 'background-color')));
     }
 

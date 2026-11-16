@@ -108,6 +108,17 @@ const PHASES = [
   'SERVIÇOS', 'CATÁLOGO', 'DEPOIMENTOS', 'CONTATO',
 ];
 
+/**
+ * KZ-20 (ADR 0113): texto que o TEMA escreve num atributo data-*, no idioma do
+ * visitante. Sem o atributo (tema antigo), vale o texto fixo de antes. Lido por
+ * getAttribute e usado so em textContent: nunca vira HTML.
+ */
+function themeText(node, name, fallback) {
+  const raw = node && typeof node.getAttribute === 'function' ? node.getAttribute(name) : null;
+  const text = typeof raw === 'string' ? raw.trim() : '';
+  return text !== '' && text.length <= 120 ? text : fallback;
+}
+
 registerScene('david-universe', ({ scene, camera, renderer, container, config }) => {
   // ── Câmera: o runner cria uma PerspectiveCamera genérica; ajustamos aqui.
   camera.near = 0.1;
@@ -465,8 +476,12 @@ registerScene('david-universe', ({ scene, camera, renderer, container, config })
     if (hud.distancia) hud.distancia.textContent = txt;
     hud.hints.forEach((node) => { node.textContent = txt; });
   }
-  function setFase(n) {
-    if (hud.fase) hud.fase.textContent = `FASE ${String(n).padStart(2, '0')} — ${PHASES[n] || PHASES[0]}`;
+  function setFase(n, section) {
+    if (!hud.fase) return;
+    // Rotulo ("FASE") no proprio marcador do HUD; nome da fase na secao que entrou na tela.
+    const label = themeText(hud.fase, 'data-du-rotulo', 'FASE');
+    const name = themeText(section, 'data-du-fase-nome', PHASES[n] || PHASES[0]);
+    hud.fase.textContent = `${label} ${String(n).padStart(2, '0')} — ${name}`;
   }
   function setProgresso(p) {
     if (hud.progresso) hud.progresso.style.width = `${(p * 100).toFixed(1)}%`;
@@ -500,7 +515,7 @@ registerScene('david-universe', ({ scene, camera, renderer, container, config })
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
           const n = parseInt(String(entry.target.id).replace('fase-', ''), 10);
-          if (Number.isFinite(n) && n >= 0 && n < PHASES.length) setFase(n);
+          if (Number.isFinite(n) && n >= 0 && n < PHASES.length) setFase(n, entry.target);
         });
       }, { threshold: 0.15 });
       sections.forEach((s) => phaseObserver.observe(s));
@@ -532,8 +547,8 @@ registerScene('david-universe', ({ scene, camera, renderer, container, config })
     bursts.push({ mesh: ring, t0: state.time });
     setOrbes(state.collected, orbs.length);
     toast(state.collected === orbs.length
-      ? 'Todos os orbes coletados'
-      : `Orbe coletado ${state.collected}/${orbs.length}`);
+      ? themeText(toastEl, 'data-du-msg-todos', 'Todos os orbes coletados')
+      : `${themeText(toastEl, 'data-du-msg-orbe', 'Orbe coletado')} ${state.collected}/${orbs.length}`);
   }
 
   // Gancho de diagnóstico (desligado em produção; theme-scene.twig não o emite).
@@ -567,7 +582,7 @@ registerScene('david-universe', ({ scene, camera, renderer, container, config })
 
   setOrbes(0, orbs.length);
   setDistancia(0);
-  setFase(0);
+  setFase(0, document.getElementById('fase-00'));
   setProgresso(0);
 
   return {
@@ -715,7 +730,7 @@ registerScene('david-universe', ({ scene, camera, renderer, container, config })
       setProgresso(state.progress);
       if (!state.readyFired) {
         state.readyFired = true;
-        toast('Mova o mouse para pilotar · Role para voar');
+        toast(themeText(toastEl, 'data-du-msg-inicio', 'Mova o mouse para pilotar · Role para voar'));
       }
     },
 

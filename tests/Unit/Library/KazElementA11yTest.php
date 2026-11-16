@@ -223,8 +223,10 @@ final class KazElementA11yTest extends TestCase {
         $order = ['Atlas-Studio', 'Atlas-Studio-3D', 'David-Creator', 'David-Universe-3D', 'Reamur-Reference', 'Reamur-ThreeJS-Reference'];
         $column = static fn (string $what): array => array_map(static fn (string $name): int => $seen[$name][$what], $order);
 
-        self::assertSame([0, 0, 0, 0, 11, 10], $column('img'));
-        self::assertSame([15, 15, 12, 30, 0, 0], $column('svg'));
+        // KZ-20 (ADR 0113): o David Universe 3D passou a mostrar a capa de cada projeto, o logo de cada cliente e a
+        // imagem de cada post (7 <img>, todos com `alt`); dos 30 selos fixos ficaram 12 capas de reserva.
+        self::assertSame([0, 0, 0, 7, 11, 10], $column('img'));
+        self::assertSame([15, 15, 12, 12, 0, 0], $column('svg'));
         // KZ-08 (ADR 0101): os 38 desenhos que a lista mostrava (13, 13 e 12) sao icones ao lado de um
         // titulo ou texto visivel e foram marcados como enfeite. Pacote entregue sai sem pendencia.
         self::assertSame([0, 0, 0, 0, 0, 0], $column('missing'));

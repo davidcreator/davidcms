@@ -197,11 +197,13 @@ final class KazElementAttrsTest extends TestCase {
         self::assertSame([17, 86], $seen['Atlas-Studio']['href']);
         self::assertSame([17, 86], $seen['Atlas-Studio-3D']['href']);
         self::assertSame([95, 51], $seen['David-Creator']['href']);
-        self::assertSame([45, 3], $seen['David-Universe-3D']['href']);
+        // KZ-20 (ADR 0113): eram [45, 3]; os enderecos do David Universe 3D passaram a vir do sistema.
+        self::assertSame([5, 49], $seen['David-Universe-3D']['href']);
         self::assertSame([0, 18], $seen['Reamur-Reference']['href']);
         self::assertSame([0, 4], $seen['Reamur-ThreeJS-Reference']['href']);
         // KZ-09 (ADR 0102): eram [50, 2]; os 30 selos escondidos do leitor de tela perderam o rotulo que nunca era lido.
-        self::assertSame([20, 2], $seen['David-Universe-3D']['aria-label']);
+        // KZ-20 (ADR 0113): eram [20, 2]; nenhum rotulo ficou escrito num idioma so — os 9 vem dos textos do tema.
+        self::assertSame([0, 9], $seen['David-Universe-3D']['aria-label']);
         // Nenhum pacote entregue tem `alt` escrito a mao: so vindo do conteudo.
         self::assertSame(0, array_sum(array_map(static fn (array $c): int => $c['alt'][0], $seen)));
         self::assertSame([0, 11], $seen['Reamur-Reference']['alt']);

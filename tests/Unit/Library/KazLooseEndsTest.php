@@ -107,7 +107,8 @@ final class KazLooseEndsTest extends TestCase {
             }
         }
         // Contagem fixa: se o leitor acima deixar de enxergar os desenhos, o teste nao passa calado.
-        self::assertSame(133, $paths);
+        // KZ-20 (ADR 0113): eram 133; os selos de projetos fixos sairam dos tres arquivos do David Universe 3D.
+        self::assertSame(85, $paths);
     }
 
     public function testEnvelopeBadgeIsAClosedRectangleAgain(): void {
@@ -121,7 +122,8 @@ final class KazLooseEndsTest extends TestCase {
                 self::assertSame($n, substr_count($source, 'M40 24h80v84'), $file . ' ' . $key);
             }
             ksort($seen);
-            self::assertSame(['common/home' => 2, 'partial/news' => 1, 'partial/portfolio' => 1], $seen, $file);
+            // KZ-20 (ADR 0113): o desenho ficou entre as seis capas de reserva das duas listas de projetos.
+            self::assertSame(['catalog/project_list' => 1, 'partial/portfolio' => 1], $seen, $file);
         }
     }
 
@@ -142,13 +144,14 @@ final class KazLooseEndsTest extends TestCase {
                 }
             }
             ksort($seen);
-            self::assertSame(['common/home' => 15, 'partial/news' => 6, 'partial/portfolio' => 9], $seen, $file);
+            self::assertSame(['catalog/project_list' => 6, 'partial/portfolio' => 6], $seen, $file);
         }
     }
 
-    public function testTheTwoThemesCarryTheSameThirtyBadges(): void {
+    public function testTheTwoThemesCarryTheSameTwelveBadges(): void {
+        // KZ-20 (ADR 0113): eram 30 selos de projetos fixos; ficaram 12 capas de reserva (6 em cada lista).
         $universe = $this->badges(self::UNIVERSE);
-        self::assertCount(30, $universe);
+        self::assertCount(12, $universe);
         self::assertSame($universe, $this->badges(self::BO_PACKAGE));
         self::assertSame($universe, $this->badges(self::BO_CONFIG));
         foreach ($universe as $where => $badge) self::assertStringStartsWith(self::BADGE, $badge, $where);

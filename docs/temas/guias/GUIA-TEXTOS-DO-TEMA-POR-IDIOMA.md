@@ -68,3 +68,24 @@ Guardar o arquivo exportado ou um dump do banco guarda os textos dos três idiom
 ## Tema filho
 
 O filho herda os textos do pai. Uma chave repetida no filho substitui a do pai inteira, em todos os idiomas.
+
+## Um tema convertido: David Universe 3D
+
+O David Universe 3D (ADR 0113) é o primeiro tema entregue que usa o dicionário. Serve de modelo para converter outro tema. A regra seguida foi separar cada frase em um de três lugares:
+
+| A frase é… | Vem de | Exemplo na fonte |
+| --- | --- | --- |
+| conteúdo do site (projeto, depoimento, serviço, post) | variável do sistema, a mesma do modelo padrão | `{{ p.name }}`, `{{ p.summary }}` |
+| texto do sistema (título de seção, botão, rótulo de formulário) | chave de idioma do Catalog | `{{ heading_title }}`, `{{ button_back_home }}` |
+| texto que só este tema tem | `config.strings` | `{{ theme_text.catalog_title }}` |
+
+O que ajudou na conversão:
+
+- **Formulário:** incluir o parcial do sistema (`{% include 'partial/cms-contact-form.twig' %}`) dentro de uma moldura do tema, em vez de desenhar os campos de novo. Os rótulos e as mensagens já vêm traduzidos.
+- **Texto com número:** a fonte junta as partes. `{{ theme_text.level }} 03` imprime "Nível 03", "Level 03" ou "Nivel 03".
+- **Recuo para lista vazia ou campo vazio:** `{{ p.summary|default(theme_text.catalog_card) }}`.
+- **Atributos lidos em voz alta:** `aria-label="{{ theme_text.nav_label }}"`. Em imagem, `alt` vindo do conteúdo (`alt="{{ p.name }}"`).
+- **Texto para uma cena:** o tema escreve o texto num atributo `data-*` e a cena lê. No David Universe 3D: `data-du-rotulo`, `data-du-fase-nome`, `data-du-msg-inicio`, `data-du-msg-orbe`, `data-du-msg-todos`.
+- **Maiúsculas pelo desenho, não pelo texto:** o dicionário guarda "Orbes"; a fonte usa `|upper` ou o CSS usa `text-transform`.
+
+Para conferir que não sobrou frase num idioma só, o teste `DavidUniverseLanguageTest` tira das fontes as variáveis, as tags, a folha de estilo e os desenhos, e compara as palavras que restam com uma lista curta do que é igual em qualquer idioma (`DA`, `KM`, `LVL`, `OK`, `Power-up`).

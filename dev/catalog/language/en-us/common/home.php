@@ -78,6 +78,7 @@ $_['text_identity_attraction_text']  = 'Attracting the right audience and increa
 $_['text_skills_kicker']     = 'My Skills';
 $_['text_skills_title']      = 'I can create websites, apps, logos and other amazing digital media';
 $_['text_skills_lead']       = 'Some of the skills developed with years of dedication and experience to always deliver the best results.';
+$_['text_skill_chips']       = 'Developer|Brand Design|Visual Identity|Product Design|Illustrations|Brand Action';
 $_['text_skill_tech']        = 'Tech';
 $_['text_skill_platforms']   = 'Platforms';
 $_['text_skill_programs']    = 'Programs';

@@ -99,7 +99,7 @@ final class KazElementSpaceTest extends TestCase {
         self::assertCount(6, $seen);
         $column = static fn (string $what): array => array_map(static fn (string $name): int => $seen[$name][$what], self::ORDER);
 
-        self::assertSame([22, 22, 11, 20, 0, 0], $column('side'));
+        self::assertSame([22, 22, 11, 13, 0, 0], $column('side'));
         self::assertSame([3, 3, 2, 1, 0, 0], $column('short'));
         self::assertSame([1, 1, 1, 0, 0, 0], $column('align'));
     }
@@ -141,7 +141,7 @@ final class KazElementSpaceTest extends TestCase {
                 }
             }
         }
-        self::assertSame([15, 15, 12, 30, 0, 0], array_map(static fn (string $name): int => $hidden[$name], self::ORDER));
+        self::assertSame([15, 15, 12, 12, 0, 0], array_map(static fn (string $name): int => $hidden[$name], self::ORDER));
         self::assertSame([0, 0, 0, 0, 0, 0], array_map(static fn (string $name): int => $named[$name], self::ORDER));
         // Os 38 marcados nesta etapa (13, 13 e 12) tem a marca no lugar em que o editor a poe.
         self::assertSame([13, 13, 12, 0, 0, 0], array_map(static fn (string $name): int => $first[$name], self::ORDER));

@@ -13,7 +13,7 @@
 // Hero
 $_['heading_title'] = 'David Almeida';
 $_['text_tagline'] = 'Desarrollador Creativo';
-$_['text_hero_kicker']       = "I'm";
+$_['text_hero_kicker']       = 'Soy';
 $_['text_hero_lead'] = 'Identidad de marca, diseño web y desarrollo — todo en un solo lugar, con ReamurCMS.';
 $_['text_socials_title'] = 'Encuéntrame en';
 
@@ -78,6 +78,7 @@ $_['text_identity_attraction_text'] = 'Atraer al público adecuado y aumentar el
 $_['text_skills_kicker'] = 'Mis Habilidades';
 $_['text_skills_title'] = 'Puedo crear sitios web, apps, logos y otros medios digitales increíbles';
 $_['text_skills_lead'] = 'Algunas de las habilidades desarrolladas con años de dedicación y experiencia para entregar siempre los mejores resultados.';
+$_['text_skill_chips'] = 'Desarrollador|Diseño de Marca|Identidad Visual|Diseño de Producto|Ilustraciones|Acción de Marca';
 $_['text_skill_tech'] = 'Tech';
 $_['text_skill_platforms'] = 'Plataformas';
 $_['text_skill_programs'] = 'Programas';
@@ -116,10 +117,10 @@ $_['text_tools_lead'] = 'Accede a recursos del ecosistema DavidCreator para acel
 $_['text_tool_open'] = 'Abrir';
 
 // Contact
-$_['text_contact_kicker']   = "Let's have a chat?";
+$_['text_contact_kicker']   = '¿Hablamos?';
 $_['text_contact_title'] = 'Puedo ayudarte a promover tu negocio';
 $_['text_contact_lead'] = 'Cuéntame sobre tu proyecto — respondo normalmente en un día hábil.';
-$_['text_contact_address'] = 'Home and Office: São Paulo, Brasil';
+$_['text_contact_address'] = 'Casa y Oficina: São Paulo, Brasil';
 $_['text_contact_email'] = 'contato@davidalmeida.xyz';
 $_['text_contact_whatsapp'] = '+55 11 98393-8347';
 

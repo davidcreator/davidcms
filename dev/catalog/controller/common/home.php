@@ -282,10 +282,16 @@ class Home extends \Reamur\System\Engine\Controller {
             $this->language->get('text_about_p3'),
         ];
 
-        $data['skill_chips'] = [
-            'Developer', 'Brand Design', 'Visual Identity',
-            'Product Design', 'Illustrations', 'Brand Action',
-        ];
+        // KZ-20 (ADR 0113): os chips eram fixos em ingles aqui. Agora vem do idioma,
+        // separados por "|", como os itens de servico. Sem a chave (arquivo de idioma
+        // antigo), language->get() devolve o proprio nome da chave: vale a lista de antes.
+        $skillChips = (string)$this->language->get('text_skill_chips');
+
+        if ($skillChips === '' || $skillChips === 'text_skill_chips') {
+            $skillChips = 'Developer|Brand Design|Visual Identity|Product Design|Illustrations|Brand Action';
+        }
+
+        $data['skill_chips'] = array_values(array_filter(array_map('trim', explode('|', $skillChips)), static fn (string $chip): bool => $chip !== ''));
 
         $data['skill_groups'] = [
             [

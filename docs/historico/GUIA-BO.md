@@ -63,12 +63,14 @@ node tools/verify-bo.cjs .                 # a partir da raiz deste pacote
 ## 3. Importar o tema
 
 1. Admin → **Temas** → **Importar tema**.
-2. Envie `tema/david_universe_3d_bo.reamurtheme.json` (90.215 bytes).
+2. Envie `tema/david_universe_3d_bo.reamurtheme.json` (86.203 bytes).
 3. Confira `validateConfig=[]` e `decode ok=true`.
 4. **Ative** o tema. O slug é novo (`david_universe_3d_bo`), então não sobrescreve o BN. Se quiser substituir, desative/exclua o `david_universe_3d` antes.
 5. No editor de temas, a cena **`David Universe (nave + orbes)`** aparece no dropdown e o preset **`universe`** mostra a miniatura da nave.
 
 O HUD do tema expõe `data-du-orbes`, `data-du-fase`, `data-du-distancia`, `data-du-progresso`, `data-du-toast` e `data-du-hint-distancia`. A cena procura esses ganchos e cai para seletores de classe se eles não existirem.
+
+Desde a KZ-20 (ADR 0113) o tema também entrega à cena as palavras do HUD, no idioma da página: `data-du-rotulo` (a palavra "Fase", no elemento `data-du-fase`), `data-du-fase-nome` (o nome da fase, em cada seção `fase-NN`) e `data-du-msg-inicio`, `data-du-msg-orbe`, `data-du-msg-todos` (os avisos, no elemento `data-du-toast`). Sem esses atributos a cena mostra o texto em português de antes.
 
 ## 4. Testar a prévia sem o CMS (opcional)
 
