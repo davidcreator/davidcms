@@ -35,6 +35,12 @@
  * ficam em kaz-element-attrs.js (window.KazElementAttrs); aqui fica so o
  * painel. Esses campos nao escrevem no documento do quadro.
  *
+ * KZ-18 (ADR 0111) — texto editado direto na pagina. Dois cliques em um texto
+ * fixo (ou Enter, com o elemento escolhido) abrem uma caixa de edicao sobre o
+ * proprio texto. A caixa fica NESTE documento, por cima do quadro: a pagina
+ * continua sem script e sem receber eventos. A escrita e a mesma do campo
+ * "Texto" do painel. No quadro, so a pintura do texto em edicao muda.
+ *
  * Independente de kaz-theme-editor.js: os dois conversam somente pelo evento
  * `kaz:module` e pelo atributo `data-kaz-active-module` do shell.
  */
@@ -153,6 +159,8 @@
   var picked = null;        // elemento selecionado: { key, n, inst, tag, sig }
   var hoverEl = null;       // elemento sob o ponteiro: { key, n, inst }
   var liveText = null;      // texto digitado que o servidor ainda nao devolveu: { key, n, text }
+  var inline = null;        // KZ-18: texto em edicao na pagina (ver inlineStart)
+  var hintEl = null, hintTimer = 0;
 
   function label(key, fallback) {
     var v = config.labels[key];
@@ -302,6 +310,9 @@
     paintMarks();
     paintTree();
     paintInspector();
+    /* KZ-18: o quadro foi redesenhado com a caixa de edicao aberta; ela acompanha o elemento novo. */
+    f.busy = false;
+    if (inline && inline.frame === f) inlinePlace();
     scheduleProbe();
     if (!fitted && active) { fitted = true; fitInitial(); }
   }
@@ -585,21 +596,25 @@
       list[i].textContent = text;
     }
   }
-  /** O campo "Texto" mudou: reescreve so aquele texto na fonte do tema. */
+  /**
+   * O campo "Texto" mudou: reescreve so aquele texto na fonte do tema.
+   * KZ-18: a caixa de edicao na pagina escreve por aqui tambem (`t` so precisa de `value`). Quando a
+   * escrita e recusada, devolve a chave do aviso; quando entra, nao devolve nada.
+   */
   function onTextInput(t) {
-    if (!picked) return;
+    if (!picked) return 'el_stale';
     var key = picked.key, n = picked.n, map = elements[key], it = elementItem(key, n), field = sourceField(key);
     var warn = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-el-warn]') : null;
-    if (!map || !it || !field || field.value === '' || (it[1] !== 'fixed' && it[1] !== 'empty') || it[4] < 0) return;
+    if (!map || !it || !field || field.value === '' || (it[1] !== 'fixed' && it[1] !== 'empty') || it[4] < 0) return 'el_stale';
     var src = field.value;
-    if (map.sig !== sigOf(src)) { if (warn) { warn.hidden = false; warn.textContent = label('el_stale', ''); } return; }
+    if (map.sig !== sigOf(src)) { if (warn) { warn.hidden = false; warn.textContent = label('el_stale', ''); } return 'el_stale'; }
     if (warn) warn.hidden = true;
     /* As pontas digitadas nao entram: o recuo original do codigo e mantido
        e um espaco no fim nao se acumula a cada tecla. */
     var parts = trimWs(src.slice(it[4], it[5])), enc = trimWs(encodeText(t.value)).body;
     var next = src.slice(0, it[4]) + parts.lead + enc + parts.trail + src.slice(it[5]);
     /* KZ-05: fonte cheia avisa em vez de ignorar a tecla em silencio. */
-    if (overLimit(next)) { if (warn) { warn.hidden = false; warn.textContent = label('el_full', ''); } return; }
+    if (overLimit(next)) { if (warn) { warn.hidden = false; warn.textContent = label('el_full', ''); } return 'el_full'; }
     var delta = next.length - src.length;
     /* O mapa local acompanha a escrita: a proxima tecla nao espera o servidor. */
     for (var j = n + 1; j < map.items.length; j++) {
@@ -625,6 +640,355 @@
     writeSource(key, next);
     paintMarks();
     paintA11y();
+  }
+
+  /* ---------------- KZ-18 (ADR 0111): texto editado direto na pagina ---------------- */
+  var INLINE_MIN_PX = 12, INLINE_BOX_W = 280, INLINE_HINT_MS = 5000, INLINE_EDGE = 24;
+  /* Elementos em que o texto ocupa a largura do proprio elemento e segue `text-align`. */
+  var INLINE_BLOCK = ['block', 'list-item', 'inline-block', 'table-cell', 'flow-root'];
+  /* As duas unicas propriedades que a edicao poe no elemento do quadro: o texto deixa de ser pintado enquanto a caixa o cobre. */
+  var INLINE_HIDE = [['-webkit-text-fill-color', 'transparent'], ['text-shadow', 'none']];
+  /* O que faz a caixa escrever com a mesma letra do elemento. */
+  var INLINE_FONT = ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'fontStretch', 'fontVariant', 'fontKerning',
+    'fontFeatureSettings', 'letterSpacing', 'wordSpacing', 'lineHeight', 'textTransform', 'textAlign', 'textIndent', 'direction'];
+  /**
+   * Por que o texto de um elemento nao abre para edicao na pagina: '' = abre; uma chave de
+   * aviso = e um texto, mas nao se edita aqui; null = nao e um texto (vale o gesto antigo).
+   */
+  function inlineWhy(it, own, fresh, leaf) {
+    if (!it) return null;
+    if (it[1] === 'variable') return 'inline_variable';
+    if (it[1] === 'mixed') return 'el_mixed';
+    if ((it[1] !== 'fixed' && it[1] !== 'empty') || it[4] < 0 || !leaf) return null;
+    if (!own) return 'inline_need_customize';
+    return fresh ? '' : 'el_stale';
+  }
+  /** No codigo o texto de um elemento e uma linha so: quebra de linha e tabulacao viram um espaco. */
+  function inlineClean(value) { return String(value).replace(/[\r\n\t\f\v]+/g, ' ').slice(0, TEXT_MAX); }
+  /** 'place' = a caixa fica sobre o texto; 'box' = caixa propria ao lado do elemento, quando nao da para imitar o texto. */
+  function inlineMode(m) {
+    if (m.webfont || m.transformed || m.vertical || m.rtl || m.hollow) return 'box';
+    /* Link que quebra de linha, ou texto de varias linhas com conteudo posto pelo CSS (::before, ::after) no meio. */
+    if ((m.display === 'inline' || m.pseudo) && m.lines > 1) return 'box';
+    return 'place';
+  }
+  /**
+   * Lugar da caixa sobre o texto, em coordenadas do quadro. `m`: medidas do elemento e das linhas do texto;
+   * `m.lineH`, `m.lineOff` e `m.lineArea` (altura de uma linha, distancia do topo da linha ao topo do texto e
+   * altura da letra) vem de inlineLine.
+   */
+  function inlineGeometry(m) {
+    var lh = m.lineH > 0 ? m.lineH : m.fontSize * 1.2, off = isFinite(m.lineOff) ? Number(m.lineOff) : 0, g;   /* linha mais baixa que a letra: `off` e negativo */
+    var top = m.lines ? m.textTop - off : m.contentTop, height = Math.max(1, m.lines) * lh;
+    /* Sem texto ainda: a caixa ocupa o lugar do elemento. Bloco, ou texto que quebra de linha: a largura e a do
+       elemento, e a caixa quebra as linhas nos mesmos pontos. Linha unica fora de bloco (ou em bloco que nao quebra
+       linha, ou que tem conteudo do CSS antes do texto): comeca onde o texto comeca. */
+    if (!m.lines) g = { left: m.contentLeft, top: top, width: Math.max(m.contentWidth, m.fontSize * 2), height: height, nowrap: true };
+    else if ((INLINE_BLOCK.indexOf(m.display) !== -1 && !m.pseudo && !m.nowrap) || m.lines > 1) g = { left: m.contentLeft, top: top, width: m.contentWidth, height: height, nowrap: false };
+    else g = { left: m.textLeft, top: top, width: m.textRight - m.textLeft + m.fontSize, height: height, nowrap: true };
+    g.left = clamp(g.left, 0, Math.max(0, m.frameWidth - 8));
+    g.width = clamp(g.width, 8, Math.max(8, m.frameWidth - g.left));
+    g.height = Math.max(g.height, 4);
+    /* Linha mais baixa que a letra: a letra passa da linha em cima e embaixo. A caixa ganha essa sobra como
+       margem interna (e sobe o mesmo tanto), para nao cortar a letra; o texto fica no mesmo lugar. */
+    var area = m.lineArea > 0 ? Number(m.lineArea) : 0;
+    g.padTop = Math.max(0, -off);
+    g.padBottom = Math.max(0, off + area - lh);
+    g.top -= g.padTop;
+    return g;
+  }
+  /**
+   * Altura de uma linha e distancia do topo da linha ao topo do retangulo do texto, com a letra da caixa.
+   * Medido NESTE documento, fora da tela: o navegador faz aqui a mesma conta (e o mesmo arredondamento) que fez no quadro.
+   */
+  function inlineLine(box) {
+    var probe = document.createElement('div'), out = { h: 0, off: 0, area: 0 };
+    probe.className = 'kaz-canvas__inlineprobe';
+    probe.setAttribute('aria-hidden', 'true');
+    INLINE_FONT.forEach(function (prop) { probe.style[prop] = box.style[prop]; });
+    probe.style.textIndent = '0';
+    probe.textContent = 'Hg';
+    document.body.appendChild(probe);
+    try {
+      var range = document.createRange();
+      range.selectNodeContents(probe);
+      var t = range.getClientRects()[0], b = probe.getBoundingClientRect();
+      if (t && b.height > 0) out = { h: b.height, off: t.top - b.top, area: t.height };
+    } catch (e) { out = { h: 0, off: 0, area: 0 }; }
+    document.body.removeChild(probe);
+    return out;
+  }
+  /** O elemento tem conteudo posto pelo CSS (::before ou ::after) na mesma linha do texto? */
+  function inlinePseudo(doc, node) {
+    var win = doc.defaultView, found = false;
+    if (!win || typeof win.getComputedStyle !== 'function') return false;
+    ['::before', '::after'].forEach(function (which) {
+      var p = null;
+      try { p = win.getComputedStyle(node, which); } catch (e) { p = null; }
+      if (!p) return;
+      var content = String(p.content || 'none'), where = String(p.position || 'static');
+      if (content !== 'none' && content !== 'normal' && String(p.display) !== 'none' && where !== 'absolute' && where !== 'fixed') found = true;
+    });
+    return found;
+  }
+  /** A letra do elemento e uma fonte que o proprio tema carrega (@font-face)? Este documento nao a tem. */
+  function inlineWebFont(doc, family) {
+    var names = [], want = String(family).toLowerCase();
+    try { doc.fonts.forEach(function (face) { names.push(String(face.family).replace(/["']/g, '').toLowerCase()); }); } catch (e) { return false; }
+    return names.some(function (name) { return name !== '' && want.indexOf(name) !== -1; });
+  }
+  /**
+   * Cor com que o texto e pintado; '' quando a letra e vazada (degrade recortado no texto, cor transparente).
+   * `opacity` (do elemento e dos que o contem) entra na cor, e nao na caixa: o contorno da caixa continua inteiro.
+   */
+  function inlineInk(fill, color, opacity) {
+    var clear = function (c) { return c === '' || c === 'transparent' || /[,\/]\s*0\)$/.test(c); };
+    var ink = String(fill || ''), op = Number(opacity);
+    if (ink === '' || ink === 'currentcolor') ink = String(color || '');
+    if (clear(ink)) return '';
+    if (!(op >= 0 && op < 1)) return ink;
+    var m = /^rgba?\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)\s*(?:,\s*(\d*\.?\d+)\s*)?\)$/.exec(ink);
+    if (!m) return ink;
+    return 'rgba(' + m[1] + ', ' + m[2] + ', ' + m[3] + ', ' + (Math.round((m[4] === undefined ? 1 : Number(m[4])) * op * 1000) / 1000) + ')';
+  }
+  /** Medidas do elemento e das linhas do seu texto. Somente leitura do documento do quadro. */
+  function inlineMeasure(f, node) {
+    var doc = frameDoc(f), cs = computedOf(node);
+    if (!doc || !cs) return null;
+    var px = function (v) { var x = parseFloat(v); return isFinite(x) ? x : 0; };
+    var b = node.getBoundingClientRect(), list = [], i, up = node, turned = false, opacity = 1;
+    try { var range = doc.createRange(); range.selectNodeContents(node); list = range.getClientRects(); } catch (e) { list = []; }
+    var m = { display: String(cs.display), fontSize: px(cs.fontSize), frameWidth: f.device.w, lines: 0, lineH: 0, lineOff: 0,
+      contentLeft: b.left + px(cs.borderLeftWidth) + px(cs.paddingLeft), contentTop: b.top + px(cs.borderTopWidth) + px(cs.paddingTop),
+      contentWidth: b.width - px(cs.borderLeftWidth) - px(cs.borderRightWidth) - px(cs.paddingLeft) - px(cs.paddingRight),
+      textLeft: 0, textTop: 0, textRight: 0, textBottom: 0, box: { left: b.left, top: b.top, right: b.right, bottom: b.bottom },
+      vertical: !!cs.writingMode && String(cs.writingMode).indexOf('vertical') === 0, webfont: inlineWebFont(doc, cs.fontFamily), transformed: false,
+      rtl: String(cs.direction) === 'rtl', hollow: false, ink: '', nowrap: /^(nowrap|pre)$/.test(String(cs.whiteSpace)), pseudo: inlinePseudo(doc, node) };
+    for (i = 0; i < list.length; i++) {
+      var r = list[i];
+      if (r.width <= 0 && r.height <= 0) continue;
+      if (!m.lines) { m.textLeft = r.left; m.textTop = r.top; m.textRight = r.right; m.textBottom = r.bottom; m.lines = 1; continue; }
+      /* Um retangulo que comeca abaixo do meio da linha anterior e outra linha. */
+      if (r.top > m.textBottom - r.height / 2) m.lines++;
+      m.textLeft = Math.min(m.textLeft, r.left); m.textRight = Math.max(m.textRight, r.right);
+      m.textTop = Math.min(m.textTop, r.top); m.textBottom = Math.max(m.textBottom, r.bottom);
+    }
+    while (up && up.nodeType === 1) {
+      var ucs = computedOf(up), uop = ucs ? parseFloat(ucs.opacity) : 1;
+      if (ucs && String(ucs.transform || 'none') !== 'none') turned = true;
+      if (isFinite(uop)) opacity *= clamp(uop, 0, 1);
+      up = up.parentElement;
+    }
+    m.transformed = turned;
+    m.ink = inlineInk(cs.webkitTextFillColor, cs.color, opacity);
+    m.hollow = m.ink === '';
+    return m;
+  }
+  /** Aviso curto sobre o canvas (por que um texto nao abre, ou por que a tecla nao entrou). */
+  function hint(key) {
+    var text = label(key, '');
+    if (!hintEl || text === '') return;
+    hintEl.setAttribute('data-kaz-canvas-toast', key);
+    hintEl.textContent = text;
+    hintEl.hidden = false;
+    window.clearTimeout(hintTimer);
+    hintTimer = window.setTimeout(function () { hintEl.hidden = true; }, INLINE_HINT_MS);
+  }
+  /** Motivo (ver inlineWhy) para o elemento `sel`, lido no quadro `f`. */
+  function inlineReason(sel, f) {
+    var it = elementItem(sel.key, sel.n), field = sourceField(sel.key), node = f ? elementNode(f, sel) : null;
+    return inlineWhy(it, !!(field && field.value !== ''), mapFresh(sel.key), !!node && !node.firstElementChild);
+  }
+  /** Quadro visivel em que o elemento aparece (o primeiro), para abrir a edicao pelo teclado. */
+  function inlineFrame(sel) {
+    var list = visibleFrames();
+    for (var i = 0; i < list.length; i++) { var r = elementRect(list[i], sel); if (r && r.shown) return list[i]; }
+    return null;
+  }
+  /** Poe a caixa no lugar do texto (ou ao lado do elemento) e esconde a pintura do texto que ela cobre. */
+  function inlinePlace() {
+    if (!inline) return;
+    var st = inline, f = st.frame;
+    /* O quadro saiu de cena ou a escolha foi solta (a fonte mudou por outro caminho): a edicao termina como esta. */
+    if (!f.on || !sameElement(picked, st)) { inlineStop(true); return; }
+    /* Quadro recarregando: a caixa fica onde esta; measure() chama de novo quando a pagina nova chegar. */
+    if (f.busy) return;
+    var node = elementNode(f, st);
+    if (!node) { inlineStop(true); return; }
+    var m = inlineMeasure(f, node);
+    if (!m) { inlineStop(true); return; }
+    var box = st.box, cs = computedOf(node);
+    if (node !== st.node) {
+      /* Elemento novo (primeira vez, ou o quadro foi redesenhado): le a letra ANTES de esconder o texto. */
+      st.node = node;
+      st.mode = inlineMode(m);
+      st.fontSize = m.fontSize;
+      box.classList.toggle('kaz-canvas__inline--box', st.mode === 'box');
+      if (st.mode === 'place') {
+        INLINE_FONT.forEach(function (prop) { box.style[prop] = cs[prop]; });
+        st.ink = m.ink;
+        box.style.color = st.ink;
+        st.line = inlineLine(box);
+        /* Unica escrita no quadro: o texto deixa de ser pintado enquanto a caixa esta por cima. O fundo,
+           a borda e o tamanho do elemento continuam os da pagina. */
+        st.paint = INLINE_HIDE.map(function (pair) { return [pair[0], node.style.getPropertyValue(pair[0]), node.style.getPropertyPriority(pair[0])]; });
+        INLINE_HIDE.forEach(function (pair) { node.style.setProperty(pair[0], pair[1], 'important'); });
+      } else {
+        /* Caixa propria: a letra e a de tela (CSS); nada do elemento fica na caixa. */
+        INLINE_FONT.forEach(function (prop) { box.style[prop] = ''; });
+        box.style.color = ''; box.style.whiteSpace = ''; box.style.paddingTop = ''; box.style.paddingBottom = '';
+        st.paint = [];
+      }
+    }
+    if (st.mode === 'place') {
+      m.lineH = st.line.h; m.lineOff = st.line.off; m.lineArea = st.line.area;
+      var g = inlineGeometry(m);
+      box.style.left = g.left + 'px'; box.style.top = g.top + 'px';
+      box.style.width = g.width + 'px'; box.style.height = g.height + 'px';
+      box.style.paddingTop = g.padTop + 'px'; box.style.paddingBottom = g.padBottom + 'px';
+      box.style.whiteSpace = g.nowrap ? 'pre' : 'pre-wrap';
+      /* Linha unica: a caixa comeca onde o texto comeca, entao o alinhamento do elemento ja esta na posicao. */
+      if (g.nowrap) { box.style.textAlign = 'left'; box.style.textIndent = '0'; }
+      else { box.style.textAlign = cs.textAlign; box.style.textIndent = cs.textIndent; }
+      /* O que precisa ficar a vista e o texto, nao a largura toda de um bloco. */
+      var low = g.top + g.padTop + g.height + g.padBottom;
+      st.spot = m.lines ? { left: m.textLeft, top: g.top, right: m.textRight, bottom: low } : { left: g.left, top: g.top, right: g.left + g.width, bottom: low };
+    } else {
+      /* Caixa propria: logo abaixo do elemento (acima, se nao couber), com letra de tela. */
+      var bw = Math.min(f.device.w, Math.max(m.box.right - m.box.left, INLINE_BOX_W / view.k));
+      box.style.left = clamp(m.box.left, 0, Math.max(0, f.device.w - bw)) + 'px';
+      box.style.width = bw + 'px';
+      box.style.height = 'auto';
+      box.style.height = Math.max(box.scrollHeight, 8) + 'px';
+      var bh = box.offsetHeight, gap = 6 / view.k;
+      box.style.top = (m.box.bottom + gap + bh <= f.height ? m.box.bottom + gap : Math.max(0, m.box.top - gap - bh)) + 'px';
+      st.spot = { left: box.offsetLeft, top: box.offsetTop, right: box.offsetLeft + box.offsetWidth, bottom: box.offsetTop + box.offsetHeight };
+    }
+    /* O navegador rola o que for preciso para mostrar o cursor; aqui quem mostra e a camera. */
+    f.body.scrollTop = 0; f.body.scrollLeft = 0; viewport.scrollTop = 0; viewport.scrollLeft = 0;
+    if (st.mode === 'place') { box.scrollTop = 0; box.scrollLeft = 0; }
+    inlineReveal();
+  }
+  /**
+   * Quanto mover a camera em um eixo para o trecho [a, b] ficar dentro de [lo, hi] com folga `edge`.
+   * Trecho maior que a area: o comeco dele vai para a borda. Ja a vista: zero.
+   */
+  function inlineShift(a, b, lo, hi, edge) {
+    if (b - a <= hi - lo - 2 * edge) {
+      if (a < lo + edge) return lo + edge - a;
+      return b > hi - edge ? hi - edge - b : 0;
+    }
+    return (a > lo + edge || b < lo + 3 * edge) ? lo + edge - a : 0;
+  }
+  /** Traz o texto em edicao para dentro da area visivel quando ele esta fora (sem mudar o zoom). */
+  function inlineReveal() {
+    if (!inline || !inline.spot) return;
+    var vr = viewport.getBoundingClientRect(), fr = inline.frame.body.getBoundingClientRect(), sp = inline.spot, k = view.k;
+    /* A area visivel termina onde a janela termina, mesmo que o canvas continue abaixo dela. */
+    var hi = Math.min(vr.bottom, window.innerHeight || vr.bottom), wide = Math.min(vr.right, window.innerWidth || vr.right);
+    var dx = inlineShift(fr.left + sp.left * k, fr.left + sp.right * k, vr.left, wide, INLINE_EDGE);
+    var dy = inlineShift(fr.top + sp.top * k, fr.top + sp.bottom * k, vr.top, hi, INLINE_EDGE);
+    if (!dx && !dy) return;
+    view.x += dx; view.y += dy;
+    apply();
+  }
+  /** Abre a edicao do texto do elemento `sel` no quadro `f`. `all`: comeca com o texto todo selecionado. */
+  function inlineStart(sel, f, all) {
+    if (inline) inlineStop(true);
+    var it = elementItem(sel.key, sel.n), field = sourceField(sel.key), r = f ? elementRect(f, sel) : null;
+    if (!it || !field || !r || !r.shown) return false;
+    if (!sameElement(picked, sel)) pick(sel, regionFor(sel.key, -1, -1), false);
+    if (!sameElement(picked, sel) || inlineReason(sel, f) !== '') return false;
+    var box = document.createElement('textarea'), text = decodeText(field.value.slice(it[4], it[5]));
+    box.className = 'kaz-canvas__inline';
+    box.setAttribute('data-kaz-canvas-inline', sel.key + ':' + sel.n);
+    box.setAttribute('aria-label', label('inline_label', ''));
+    box.setAttribute('rows', '1');
+    box.setAttribute('autocomplete', 'off');
+    box.maxLength = TEXT_MAX;
+    box.value = text;
+    /* `src` e `map` guardam a fonte e o mapa de antes: Esc devolve os dois, byte a byte. */
+    inline = { key: sel.key, n: sel.n, inst: picked.inst, frame: f, box: box, node: null, mode: '', paint: [], fontSize: 0, ink: '', line: { h: 0, off: 0, area: 0 }, spot: null,
+      text: text, last: text, src: field.value, map: JSON.parse(JSON.stringify(elements[sel.key])), changed: false, back: null };
+    box.addEventListener('input', inlineInput);
+    box.addEventListener('keydown', inlineKey);
+    box.addEventListener('blur', function () { if (inline && inline.box === box) inlineStop(true); });
+    /* Os gestos dentro da caixa sao dela: o canvas nao arrasta, nao escolhe outro elemento nem enquadra. */
+    ['pointerdown', 'pointerup', 'mousedown', 'click', 'dblclick'].forEach(function (name) {
+      box.addEventListener(name, function (ev) { ev.stopPropagation(); });
+    });
+    f.body.appendChild(box);
+    root.setAttribute('data-kaz-canvas-inline', '1');
+    if (hintEl) hintEl.hidden = true;
+    inlinePlace();
+    if (!inline) return false;
+    /* Letra pequena demais na tela para digitar: aproxima ate dar para ler, com o elemento no mesmo ponto. */
+    if (inline.mode === 'place' && inline.fontSize > 0 && inline.fontSize * view.k < INLINE_MIN_PX) {
+      inline.back = { x: view.x, y: view.y, k: view.k, to: 0 };
+      zoomAt(INLINE_MIN_PX / inline.fontSize, view.x + (f.left + r.x + r.w / 2) * view.k, view.y + (r.y + r.h / 2) * view.k);
+      inlinePlace();
+      if (inline) inline.back.to = view.k;
+    }
+    if (!inline) return false;
+    try { box.focus({ preventScroll: true }); } catch (e) { box.focus(); }
+    if (all) box.select(); else box.setSelectionRange(box.value.length, box.value.length);
+    return true;
+  }
+  /** Tecla dentro da caixa: nada chega aos atalhos do canvas. Enter conclui; Esc desfaz. */
+  function inlineKey(ev) {
+    ev.stopPropagation();
+    if (ev.isComposing || ev.keyCode === 229) return;
+    if (ev.key === 'Enter') { ev.preventDefault(); inlineStop(true, true); }
+    else if (ev.key === 'Escape') { ev.preventDefault(); inlineStop(false, true); }
+  }
+  /** Cada tecla escreve na fonte do tema pelo mesmo caminho do campo "Texto" do painel. */
+  function inlineInput() {
+    if (!inline) return;
+    var st = inline, box = st.box, value = inlineClean(box.value);
+    if (value !== box.value) { var at = Math.min(box.selectionStart, value.length); box.value = value; box.setSelectionRange(at, at); }
+    var why = sameElement(picked, st) ? onTextInput({ value: value }) : 'el_stale';
+    if (why) {
+      /* Recusada (codigo defasado ou fonte cheia): a caixa volta ao ultimo texto que entrou e o aviso diz por que. */
+      box.value = st.last;
+      hint(why);
+    } else {
+      st.last = value;
+      st.changed = true;
+      var mirror = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-text]') : null;
+      if (mirror && mirror.getAttribute('data-kaz-canvas-text') === st.key + ':' + st.n) mirror.value = value;
+    }
+    inlinePlace();
+  }
+  /**
+   * Fecha a edicao. `keep` = fica o que foi digitado; senao a fonte e o mapa voltam ao que eram ao abrir.
+   * `byKey` = fechada pelo teclado: se a abertura aproximou a camera e o zoom nao foi mexido, ela volta.
+   * (Fechada por um clique fora, a camera fica: o clique precisa cair onde foi dado.)
+   */
+  function inlineStop(keep, byKey) {
+    if (!inline) return;
+    var st = inline, had = document.activeElement === st.box;
+    inline = null;
+    /* A pintura do texto volta ao que era, propriedade por propriedade. */
+    if (st.node && st.mode === 'place') st.paint.forEach(function (was) {
+      if (was[1] === '') st.node.style.removeProperty(was[0]); else st.node.style.setProperty(was[0], was[1], was[2]);
+    });
+    if (!keep && st.changed) {
+      var field = sourceField(st.key);
+      if (field && field.value !== st.src) {
+        elements[st.key] = st.map;
+        liveText = { key: st.key, n: st.n, text: st.text };
+        visibleFrames().forEach(function (f) { setElementText(frameDoc(f), st.key, st.n, st.text); });
+        commitSource(st.key, st.map, st.src);
+        var mirror = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-text]') : null;
+        if (mirror && mirror.getAttribute('data-kaz-canvas-text') === st.key + ':' + st.n) mirror.value = st.text;
+        paintA11yState();
+      }
+    }
+    if (st.box.parentNode) st.box.parentNode.removeChild(st.box);
+    root.setAttribute('data-kaz-canvas-inline', '0');
+    if (byKey && st.back && st.back.to === view.k) { view.x = st.back.x; view.y = st.back.y; view.k = st.back.k; apply(); }
+    if (had) { try { viewport.focus({ preventScroll: true }); } catch (e) { viewport.focus(); } }
+    paintMarks();
   }
 
   /* ---------------- KZ-05: atributos do elemento ---------------- */
@@ -1419,6 +1783,8 @@
       if (!fresh) warn.textContent = label('el_stale', '');
       host.appendChild(warn);
       host.appendChild(make('p', 'kaz-canvas__sidehelp', label(own ? 'el_text_help' : 'el_need_customize', '')));
+      /* KZ-18: o mesmo texto abre para edicao na propria pagina. */
+      if (own && fresh) host.appendChild(make('p', 'kaz-canvas__sidehelp', label('inline_help', '')));
     } else if (kind === 'variable') {
       var p = make('p', 'kaz-canvas__sidehelp', label('el_variable', '') + ' ');
       p.appendChild(make('code', 'kaz-canvas__expr', '{{ ' + String(it[6] || '') + ' }}'));
@@ -2122,7 +2488,8 @@
 
   function setDocument(doc) {
     html = doc;
-    Object.keys(frames).forEach(function (id) { frames[id].iframe.srcdoc = doc; });
+    /* KZ-18: `busy` vale ate o quadro terminar de carregar; a caixa de edicao espera sem se mexer. */
+    Object.keys(frames).forEach(function (id) { frames[id].busy = true; frames[id].iframe.srcdoc = doc; });
   }
 
   /* ---------------- camera ---------------- */
@@ -2564,6 +2931,12 @@
     visibleFrames().forEach(function (f) {
       if (wx >= f.left && wx <= f.left + f.device.w && wy >= -LABEL_H / view.k && wy <= f.height) hit = f;
     });
+    /* KZ-18 (ADR 0111): dois cliques em um texto abrem a edicao ali mesmo. Texto que nao se edita
+       na pagina diz por que. Fora de um texto (rotulo do quadro, imagem, espaco vazio) vale o
+       gesto antigo: enquadrar o quadro. */
+    var onEl = hit && wy >= 0 ? elementAt(wx, wy) : null, why = onEl ? inlineReason(onEl, hit) : null;
+    if (why === '' && inlineStart(onEl, hit, false)) return;
+    if (why) { hint(why); return; }
     if (hit) focusFrame(hit); else fitAll();
   });
 
@@ -2582,6 +2955,11 @@
     else if (ev.key === 'PageUp' || (ev.key === ' ' && ev.shiftKey)) { view.y += viewport.clientHeight * 0.8; apply(); }
     else if (ev.key === 'Home') { view.y = PAD + LABEL_H; apply(); }
     else if (ev.key.toLowerCase() === 'r' && !ctrl) refresh();
+    else if ((ev.key === 'Enter' || ev.key === 'F2') && !ctrl && picked) {
+      /* KZ-18: o caminho de teclado da edicao na pagina. */
+      var inFrame = inlineFrame(picked), reason = inFrame ? inlineReason(picked, inFrame) : null;
+      if (reason === '') inlineStart(picked, inFrame, true); else if (reason) hint(reason); else used = false;
+    }
     else if (ev.key === 'Escape' && picked) { picked = null; select(selected, false); }
     else if (ev.key === 'Escape' && selected) select('', false);
     else used = false;
@@ -2613,6 +2991,13 @@
   window.addEventListener('resize', function () { if (active && !fitted) fitInitial(); });
 
   buildFrames();
+  /* KZ-18: aviso curto sobre o canvas. */
+  hintEl = make('div', 'kaz-canvas__toast', '');
+  hintEl.setAttribute('role', 'status');
+  hintEl.setAttribute('data-kaz-canvas-toast', '');
+  hintEl.hidden = true;
+  viewport.appendChild(hintEl);
+  root.setAttribute('data-kaz-canvas-inline', '0');
   apply();
   root.setAttribute('data-kaz-canvas-ready', '1');
   setActive(shell.getAttribute('data-kaz-active-module') === 'pagina');

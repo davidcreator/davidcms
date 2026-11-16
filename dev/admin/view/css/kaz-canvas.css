@@ -247,6 +247,32 @@
 .kaz-canvas__viewport { cursor: default; }
 .kaz-canvas__viewport[data-kaz-canvas-panning="1"] { cursor: grabbing; }
 
+/* ================= KZ-18 (ADR 0111): texto editado direto na pagina ================= */
+/* A caixa fica sobre o quadro, em coordenadas do quadro, e cresce e encolhe com o zoom como a pagina.
+   Sobre o texto ela nao tem fundo nem borda: a letra vem do elemento (posta pelo script) e o fundo e o da pagina. */
+.kaz-canvas .kaz-canvas__inline { position: absolute; box-sizing: content-box; display: block; margin: 0; padding: 0; border: 0; border-radius: 0;
+  min-width: 0; min-height: 0; max-width: none; background: transparent; box-shadow: none; resize: none; overflow: hidden;
+  appearance: none; -webkit-appearance: none; cursor: text; user-select: text; -webkit-user-select: text; caret-color: currentColor;
+  outline: calc(2px / var(--kaz-canvas-k, 1)) solid #a78bfa; outline-offset: calc(4px / var(--kaz-canvas-k, 1)); }
+/* O contorno de foco geral do admin (.admin-shell :focus-visible) nao troca o da caixa. */
+.kaz-canvas .kaz-canvas__inline:focus, .kaz-canvas .kaz-canvas__inline:focus-visible { outline: calc(2px / var(--kaz-canvas-k, 1)) solid #a78bfa; outline-offset: calc(4px / var(--kaz-canvas-k, 1)); box-shadow: none; border: 0; }
+.kaz-canvas .kaz-canvas__inline--box:focus, .kaz-canvas .kaz-canvas__inline--box:focus-visible { outline-offset: 0; box-shadow: 0 calc(6px / var(--kaz-canvas-k, 1)) calc(18px / var(--kaz-canvas-k, 1)) rgba(0, 0, 0, .45); }
+/* Regua da caixa: mede a linha com a letra do elemento, fora da tela. */
+.kaz-canvas__inlineprobe { position: fixed; left: -99999px; top: 0; margin: 0; padding: 0; border: 0; white-space: pre; visibility: hidden; pointer-events: none; }
+/* Quando nao da para imitar o texto (fonte que so a pagina tem, texto girado, link que quebra de linha),
+   a caixa e propria: fica ao lado do elemento, com letra de tela, e a pagina mostra o texto mudando. */
+.kaz-canvas .kaz-canvas__inline--box { box-sizing: border-box; padding: calc(6px / var(--kaz-canvas-k, 1)) calc(8px / var(--kaz-canvas-k, 1));
+  border-radius: calc(6px / var(--kaz-canvas-k, 1)); background: #18181b; color: #f4f4f5; white-space: pre-wrap;
+  font: 400 calc(13px / var(--kaz-canvas-k, 1))/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; outline-offset: 0;
+  box-shadow: 0 calc(6px / var(--kaz-canvas-k, 1)) calc(18px / var(--kaz-canvas-k, 1)) rgba(0, 0, 0, .45); }
+/* Com a caixa aberta, o contorno do elemento escolhido sai: o da caixa basta. */
+[data-kaz-canvas-inline="1"] .kaz-canvas__mark--el, [data-kaz-canvas-inline="1"] .kaz-canvas__mark--elhover { display: none; }
+/* Aviso curto sobre o canvas: tamanho de leitura fixo, nao acompanha o zoom e nao recebe clique. */
+.kaz-canvas__toast { position: absolute; left: 50%; top: 14px; z-index: 3; transform: translateX(-50%); width: max-content; max-width: min(560px, calc(100% - 32px));
+  padding: 8px 12px; border: 1px solid #a78bfa; border-radius: 8px; background: #18181b; color: #f4f4f5;
+  font-size: 12.5px; line-height: 1.4; pointer-events: none; box-shadow: 0 8px 24px rgba(0, 0, 0, .45); }
+.kaz-canvas__toast[hidden] { display: none !important; }
+
 @media (max-width: 900px) {
   .kaz-canvas__body,
   .kaz-canvas[data-kaz-canvas-show-structure="0"] .kaz-canvas__body,

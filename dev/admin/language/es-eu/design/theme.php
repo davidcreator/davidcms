@@ -551,14 +551,14 @@ $_['text_canvas_fit'] = 'Ver todo';
 $_['text_canvas_zoom_in'] = 'Acercar';
 $_['text_canvas_zoom_out'] = 'Alejar';
 $_['text_canvas_zoom_reset'] = 'Zoom al 100%';
-$_['text_canvas_hint'] = 'Haz clic en un elemento para seleccionarlo · Arrastra para mover · Desplaza para recorrer la página · Ctrl + rueda o pellizco para zoom · Doble clic enfoca un marco · 1 muestra todo · 0 vuelve al 100% · Esc limpia la selección';
+$_['text_canvas_hint'] = 'Haz clic para seleccionar · Arrastra para mover · Desplaza para recorrer la página · Ctrl + rueda o pellizco: zoom · Doble clic edita un texto o enfoca un marco · 1 muestra todo · 0 vuelve al 100% · Esc limpia la selección';
 $_['text_canvas_loading'] = 'Renderizando el borrador…';
 $_['text_canvas_ready'] = 'Borrador renderizado';
 $_['text_canvas_error'] = 'No se pudo renderizar la página.';
 $_['text_canvas_saved_draft'] = 'El formulario tiene un error de validación: se muestra el último borrador guardado.';
 $_['text_canvas_template_errors'] = 'Errores de plantilla';
 $_['text_canvas_default_source'] = 'La plantilla predeterminada se muestra en su lugar.';
-$_['text_canvas_frame_hint'] = 'Doble clic para enfocar';
+$_['text_canvas_frame_hint'] = 'Doble clic para enfocar el marco; en un texto, para editarlo';
 $_['text_canvas_empty'] = 'Ningún dispositivo seleccionado.';
 $_['text_canvas_noscript'] = 'El canvas necesita JavaScript. Los módulos del tema de abajo siguen funcionando sin él.';
 $_['text_canvas_scene'] = 'Escena decorativa';
@@ -751,6 +751,11 @@ $_['text_canvas_el_name_title'] = 'El nombre de este elemento viene solo de la s
 $_['text_canvas_a11y_link'] = 'Enlace sin nombre';
 $_['text_canvas_a11y_button'] = 'Botón sin nombre';
 $_['text_canvas_a11y_to'] = 'destino “%s”';
+// KZ-18 (ADR 0111): texto editado direto na pagina.
+$_['text_canvas_inline_help'] = 'Hacer doble clic en el texto, en la propia página, también abre la edición. Intro termina; Esc deshace.';
+$_['text_canvas_inline_label'] = 'Texto del elemento, editado en la página. Intro termina; Esc deshace.';
+$_['text_canvas_inline_variable'] = 'Este texto viene de los datos del sitio (contenido o idioma) y no se edita aquí.';
+$_['text_canvas_inline_need_customize'] = 'Este fragmento todavía usa el estándar del sistema. Usa "Personalizar este fragmento", en el panel, para editar el texto.';
 
 // KZ-11 (ADR 0104): moldura do editor de tema (barra de cima, barra da tela, abas, navegacao dos modulos, rodape).
 $_['text_kaz_page_open'] = 'Abrir el panel de páginas';

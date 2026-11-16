@@ -454,7 +454,9 @@ class Theme extends \Reamur\System\Engine\Controller {
                  'el_side_top','el_side_right','el_side_bottom','el_side_left','el_space_bad','el_space_cover','el_space_blocked',
                  'el_space_inline','el_space_help',
                  // KZ-09 (ADR 0102): link e botao sem nome.
-                 'el_link_noname','el_button_noname','el_name_waiting','el_name_hidden','el_name_title','a11y_link','a11y_button','a11y_to'] as $canvasKey) {
+                 'el_link_noname','el_button_noname','el_name_waiting','el_name_hidden','el_name_title','a11y_link','a11y_button','a11y_to',
+                 // KZ-18 (ADR 0111): texto editado direto na pagina.
+                 'inline_help','inline_label','inline_variable','inline_need_customize'] as $canvasKey) {
             $canvasLabels[$canvasKey]=$this->language->get('text_canvas_'.$canvasKey);
         }
         // KZ-02 (ADR 0084): nome legivel de cada fonte allowlistada (rota ou parte).
@@ -486,7 +488,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         foreach(self::KAZ_FRAME_SCRIPT as $kazKey) $kazLabels[$kazKey]=$this->language->get('text_kaz_'.$kazKey);
         $data['kaz_labels_json']=json_encode($kazLabels,JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
         $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels,'parts'=>$canvasParts,'tokens'=>$canvasTokens],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
-        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz16';
+        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz18';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-canvas.css?v=' . $canvasAssetV);
         // KZ-05 (ADR 0098): as regras de atributo vem antes do painel que as usa (os dois sao `defer`, na ordem).
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-element-attrs.js?v=' . $canvasAssetV);

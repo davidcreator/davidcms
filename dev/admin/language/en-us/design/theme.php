@@ -551,14 +551,14 @@ $_['text_canvas_fit'] = 'Fit all';
 $_['text_canvas_zoom_in'] = 'Zoom in';
 $_['text_canvas_zoom_out'] = 'Zoom out';
 $_['text_canvas_zoom_reset'] = 'Zoom to 100%';
-$_['text_canvas_hint'] = 'Click an element to select it · Drag to move · Scroll to walk the page · Ctrl + scroll or pinch to zoom · Double-click focuses a frame · 1 shows everything · 0 returns to 100% · Esc clears the selection';
+$_['text_canvas_hint'] = 'Click to select · Drag to move · Scroll to walk the page · Ctrl + scroll or pinch: zoom · Double-click edits a text or focuses a frame · 1 shows everything · 0 returns to 100% · Esc clears the selection';
 $_['text_canvas_loading'] = 'Rendering the draft…';
 $_['text_canvas_ready'] = 'Draft rendered';
 $_['text_canvas_error'] = 'The page could not be rendered.';
 $_['text_canvas_saved_draft'] = 'The form has a validation error: showing the last saved draft.';
 $_['text_canvas_template_errors'] = 'Template errors';
 $_['text_canvas_default_source'] = 'The default template is shown in its place.';
-$_['text_canvas_frame_hint'] = 'Double-click to focus';
+$_['text_canvas_frame_hint'] = 'Double-click to focus the frame; on a text, to edit it';
 $_['text_canvas_empty'] = 'No device selected.';
 $_['text_canvas_noscript'] = 'The canvas needs JavaScript. The theme modules below still work without it.';
 $_['text_canvas_scene'] = 'Decorative scene';
@@ -751,6 +751,11 @@ $_['text_canvas_el_name_title'] = 'The name of this element comes only from the 
 $_['text_canvas_a11y_link'] = 'Link without a name';
 $_['text_canvas_a11y_button'] = 'Button without a name';
 $_['text_canvas_a11y_to'] = 'goes to “%s”';
+// KZ-18 (ADR 0111): texto editado direto na pagina.
+$_['text_canvas_inline_help'] = 'Double-clicking the text on the page itself also opens it for editing. Enter finishes; Esc undoes.';
+$_['text_canvas_inline_label'] = 'Text of the element, edited on the page. Enter finishes; Esc undoes.';
+$_['text_canvas_inline_variable'] = 'This text comes from the site data (content or language) and is not edited here.';
+$_['text_canvas_inline_need_customize'] = 'This piece still uses the system default. Use "Customize this piece", in the panel, to edit the text.';
 
 // KZ-11 (ADR 0104): moldura do editor de tema (barra de cima, barra da tela, abas, navegacao dos modulos, rodape).
 $_['text_kaz_page_open'] = 'Open the pages panel';
