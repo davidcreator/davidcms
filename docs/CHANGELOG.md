@@ -1,5 +1,20 @@
 # Changelog
 
+## KZ-21 — KAZEditor-Theme: o texto do tema é editado na página, no idioma do canvas (2026-11-16)
+- ADR 0114. Fecha o que a KZ-20 deixou para trás: depois que o David Universe 3D passou a acompanhar o idioma, quase nenhum texto dele podia ser editado na página.
+- **Dois cliques num texto do tema abrem a edição.** Vale para o elemento que só imprime `{{ theme_text.chave }}` (com `|upper` ou `|lower`, se houver): títulos, itens do menu, rótulos, botões. Também abre com `Enter` ou `F2` e pelo campo "Texto do tema" do painel. Antes aparecia "Este texto vem dos dados do site".
+- **O texto é gravado no idioma que o canvas mostra.** O seletor "Idioma" decide; o rótulo do campo diz qual é ("Texto do tema em pt-br"). Para traduzir uma frase nos três idiomas, troque o seletor e edite de novo.
+- **O que se digita vai para os textos do tema, não para a fonte.** O script troca uma linha do JSON do bloco "Textos do tema por idioma"; o resto do JSON e as fontes do tema ficam como estavam. "Salvar rascunho" grava, como sempre.
+- **Idioma sem tradução:** o campo mostra o texto que o site mostra (o de `en-us`) e diz de onde ele vem. Digitar cria a tradução que faltava.
+- **Uma chave usada em vários lugares muda em todos** (por exemplo "Sobre", no menu e no rótulo da seção).
+- **O painel do trecho lista os "Textos do tema neste trecho"**, no idioma do canvas.
+- **`Esc` devolve o JSON como estava ao abrir.** Texto vazio não é gravado. Texto com quebra de linha e JSON inválido deixam o campo em modo leitura, com aviso que aponta o bloco do JSON.
+- **Não muda:** o servidor (a validação é a mesma da KZ-19), os pacotes dos temas e a edição de texto fixo da KZ-18. Variável de conteúdo continua sem edição na página.
+- **Fica para o bloco do JSON:** texto do tema dentro de atributo (`aria-label`, `placeholder`, os avisos e a palavra "Fase" que a cena lê) e texto com quebra de linha.
+- **Testes novos:** `tests/fixtures/kaz_theme_text.json` (uma tabela de casos rodada dos dois lados), `tests/check_kaz_theme_text.js` e `KazThemeTextTest.php`.
+- **Conferido:** 1720 testes em PHP 8.2 e 8.3 e PHPStan sem erro; verificador novo em Node com 311 conferências e 17 estragos acusados. Na bancada (Chromium): 175 conferências no editor, com o painel nos três idiomas; sete estragos no script, todos acusados pelo roteiro; uma prova que salva, reabre, exporta e publica (20 conferências), com a tabela de temas devolvida ao fim; e os 79 roteiros das etapas anteriores, dos quais três precisaram de uma segunda rodada (dois por conferirem a versão antiga do script, um por tempo de espera).
+- **Depois de aplicar:** nada a migrar. Recarregue a tela do editor (a versão do script mudou para `-kaz-canvas-kz21`).
+
 ## KZ-20 — Temas: o David Universe 3D acompanha o idioma do site (menu, HUD, fases, páginas internas e avisos da cena em `en-us`, `pt-br` e `es-eu`) (2026-11-16)
 - ADR 0113. Segunda etapa do alinhamento dos temas com os três idiomas do site, e o primeiro tema a usar os textos por idioma da KZ-19.
 - **O tema inteiro sai no idioma do visitante.** Vale para os dois pacotes: `docs/temas/David-Universe-3D.reamurtheme.json` e `tema/david_universe_3d_bo.reamurtheme.json` (cena real), mais `tema/bo_config.json`. Antes, tudo o que o tema escrevia saía em português nos três idiomas.

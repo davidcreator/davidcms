@@ -73,7 +73,7 @@ Uma folha "KZ-20" no fim do `<style>` do cabeçalho do tema veste o que agora ve
 ## Limites conhecidos
 
 - **O que é dado continua no idioma em que foi cadastrado.** Depoimentos, descrições de projeto e de ferramenta, nomes dos filtros do portfólio, nomes das páginas legais e o endereço (configuração do site) aparecem como estão no banco. Se só existem em inglês, saem em inglês nos três idiomas.
-- **O texto do tema é editado como JSON** no bloco "Textos do tema por idioma" do editor (ADR 0112). A edição direta na página não escreve nesses textos.
+- **O texto do tema é editado como JSON** no bloco "Textos do tema por idioma" do editor (ADR 0112). A edição direta na página não escreve nesses textos. *(Mudou na KZ-21: pela ADR 0114, o elemento que só imprime um texto do tema é editado na página, no idioma do canvas.)*
 - **As traduções para inglês e espanhol não passaram por revisão de um falante nativo.**
 - **O nome da fase no HUD troca com pequeno atraso em relação à rolagem**, como antes desta etapa.
 - **Só o David Universe 3D foi convertido.** Atlas Studio, Atlas Studio 3D e David Creator continuam com texto fixo.

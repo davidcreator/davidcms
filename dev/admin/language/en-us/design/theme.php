@@ -756,6 +756,16 @@ $_['text_canvas_inline_help'] = 'Double-clicking the text on the page itself als
 $_['text_canvas_inline_label'] = 'Text of the element, edited on the page. Enter finishes; Esc undoes.';
 $_['text_canvas_inline_variable'] = 'This text comes from the site data (content or language) and is not edited here.';
 $_['text_canvas_inline_need_customize'] = 'This piece still uses the system default. Use "Customize this piece", in the panel, to edit the text.';
+// KZ-21 (ADR 0114): texto do tema editado por idioma.
+$_['text_canvas_theme_text'] = 'Theme text in %s';
+$_['text_canvas_theme_text_help'] = 'Text owned by the theme, stored per language. What you type applies to the canvas language, everywhere the theme uses the key';
+$_['text_canvas_theme_fallback'] = 'No translation in this language: the site shows the %s text. Type to create the translation.';
+$_['text_canvas_theme_bad_json'] = 'The theme texts JSON is invalid. Fix it in the "Theme texts per language" block to edit this text.';
+$_['text_canvas_theme_empty'] = 'The theme text cannot be empty. The last text was kept.';
+$_['text_canvas_theme_lines'] = 'This text has a line break. Edit it in the "Theme texts per language" block.';
+$_['text_canvas_theme_full'] = 'The theme texts reached the limit. This text was not saved.';
+$_['text_canvas_theme_texts'] = 'Theme texts in this piece (%s)';
+$_['text_canvas_theme_texts_help'] = 'Texts owned by the theme, in the canvas language. Choose one to edit it.';
 
 // KZ-11 (ADR 0104): moldura do editor de tema (barra de cima, barra da tela, abas, navegacao dos modulos, rodape).
 $_['text_kaz_page_open'] = 'Open the pages panel';

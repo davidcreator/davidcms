@@ -33,6 +33,8 @@ Regra prática: se o texto já existe no sistema ou no conteúdo, use a variáve
 
 Se o JSON estiver fora do formato, nada é salvo, a tela avisa e o que foi digitado continua no campo.
 
+Para trocar uma frase que aparece na página, não é preciso mexer no JSON: veja [Editar na própria página](#editar-na-própria-página-kz-21-adr-0114), no fim deste guia.
+
 ## Como usar na fonte
 
 ```twig
@@ -89,3 +91,24 @@ O que ajudou na conversão:
 - **Maiúsculas pelo desenho, não pelo texto:** o dicionário guarda "Orbes"; a fonte usa `|upper` ou o CSS usa `text-transform`.
 
 Para conferir que não sobrou frase num idioma só, o teste `DavidUniverseLanguageTest` tira das fontes as variáveis, as tags, a folha de estilo e os desenhos, e compara as palavras que restam com uma lista curta do que é igual em qualquer idioma (`DA`, `KM`, `LVL`, `OK`, `Power-up`).
+
+## Editar na própria página (KZ-21, ADR 0114)
+
+Não é preciso abrir o JSON para trocar uma frase.
+
+1. No editor do tema, aba **Página**, escolha no seletor **Idioma** o idioma que quer editar.
+2. Dê dois cliques no texto, na própria página. Ou clique nele e use o campo **"Texto do tema em <idioma>"** do painel.
+3. Digite. `Enter` conclui; `Esc` desfaz.
+4. Para os outros idiomas, troque o seletor **Idioma** e repita.
+5. **Salvar rascunho** grava. Antes disso, nada vai para o banco.
+
+O que é digitado troca uma linha do JSON deste bloco: a daquela chave, naquele idioma. O resto fica como estava.
+
+Bom saber:
+
+- **A mesma chave pode aparecer em mais de um lugar.** Editar um troca todos. A ajuda do campo mostra a chave.
+- **"Sem tradução neste idioma"** quer dizer que o site está mostrando o texto de outro idioma (em geral `en-us`). Digitar cria a tradução.
+- **Com o trecho escolhido e nenhum elemento marcado**, o painel lista os "Textos do tema neste trecho".
+- **Abre na página** o elemento que só imprime `{{ theme_text.chave }}`, com `|upper` ou `|lower` se houver.
+- **Continua no JSON:** texto do tema dentro de atributo (`aria-label`, `placeholder`, `data-…`), texto com quebra de linha, e apagar uma tradução.
+- Se o campo estiver em modo leitura, o aviso logo abaixo diz por quê (JSON inválido, texto com quebra de linha, página ainda carregando o idioma novo).

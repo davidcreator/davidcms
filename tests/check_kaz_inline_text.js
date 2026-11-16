@@ -144,7 +144,7 @@ good.forEach(c => check(c[0], c[1]));
 const flat = block.replace(/\/\*[\s\S]*?\*\//g, '');
 check(source.split("document.createElement('textarea')").length - 1 >= 1 && /var box = document\.createElement\('textarea'\), text = decodeText\(field\.value\.slice\(it\[4\], it\[5\]\)\);/.test(block), 'a caixa e um <textarea> que abre com o texto decodificado da fonte');
 check(!/contenteditable|contentEditable|designMode/.test(source), 'nada de contenteditable no canvas');
-check(flat.split('onTextInput(').length - 1 === 1 && /var why = sameElement\(picked, st\) \? onTextInput\(\{ value: value \}\) : 'el_stale';/.test(block), 'a caixa escreve pelo mesmo caminho do campo "Texto" do painel, em um ponto so');
+check(flat.split('onTextInput(').length - 1 === 1 && flat.split('onThemeInput(').length - 1 === 1 && block.indexOf("var why = !sameElement(picked, st) ? 'el_stale' : (st.theme ? onThemeInput({ value: value }) : onTextInput({ value: value }));") > 0, 'a caixa escreve pelo mesmo caminho do campo "Texto" do painel, em um ponto so');
 check(!/writeSource\(|encodeText\(|sourceField\([^)]*\)\.value\s*=[^=]/.test(flat), 'a caixa nao escreve na fonte por conta propria nem codifica texto');
 check(flat.split('commitSource(').length - 1 === 1 && /commitSource\(st\.key, st\.map, st\.src\);/.test(block), 'a unica escrita direta e a devolucao da fonte guardada (Esc)');
 check(/src: field\.value, map: JSON\.parse\(JSON\.stringify\(elements\[sel\.key\]\)\)/.test(block), 'ao abrir, a fonte e uma copia do mapa sao guardadas para o Esc');

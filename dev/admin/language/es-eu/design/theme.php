@@ -756,6 +756,16 @@ $_['text_canvas_inline_help'] = 'Hacer doble clic en el texto, en la propia pág
 $_['text_canvas_inline_label'] = 'Texto del elemento, editado en la página. Intro termina; Esc deshace.';
 $_['text_canvas_inline_variable'] = 'Este texto viene de los datos del sitio (contenido o idioma) y no se edita aquí.';
 $_['text_canvas_inline_need_customize'] = 'Este fragmento todavía usa el estándar del sistema. Usa "Personalizar este fragmento", en el panel, para editar el texto.';
+// KZ-21 (ADR 0114): texto do tema editado por idioma.
+$_['text_canvas_theme_text'] = 'Texto del tema en %s';
+$_['text_canvas_theme_text_help'] = 'Texto propio del tema, guardado por idioma. Lo que escribas vale para el idioma del canvas, en todos los lugares que usan la clave';
+$_['text_canvas_theme_fallback'] = 'Sin traducción en este idioma: el sitio muestra el texto de %s. Escribe para crear la traducción.';
+$_['text_canvas_theme_bad_json'] = 'El JSON de los textos del tema no es válido. Corrígelo en el bloque "Textos del tema por idioma" para editar este texto.';
+$_['text_canvas_theme_empty'] = 'El texto del tema no puede quedar vacío. Se mantuvo el último texto.';
+$_['text_canvas_theme_lines'] = 'Este texto tiene un salto de línea. Edítalo en el bloque "Textos del tema por idioma".';
+$_['text_canvas_theme_full'] = 'Los textos del tema llegaron al límite. Este texto no se guardó.';
+$_['text_canvas_theme_texts'] = 'Textos del tema en este fragmento (%s)';
+$_['text_canvas_theme_texts_help'] = 'Textos propios del tema, en el idioma del canvas. Elige uno para editarlo.';
 
 // KZ-11 (ADR 0104): moldura do editor de tema (barra de cima, barra da tela, abas, navegacao dos modulos, rodape).
 $_['text_kaz_page_open'] = 'Abrir el panel de páginas';

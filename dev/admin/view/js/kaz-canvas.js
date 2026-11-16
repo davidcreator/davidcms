@@ -35,6 +35,11 @@
  * ficam em kaz-element-attrs.js (window.KazElementAttrs); aqui fica so o
  * painel. Esses campos nao escrevem no documento do quadro.
  *
+ * KZ-21 (ADR 0114) — texto do tema editado por idioma. Um elemento que so imprime
+ * `{{ theme_text.chave }}` abre para edicao como um texto fixo (campo do painel e
+ * dois cliques na pagina); o que e digitado vai para o JSON dos textos do tema, no
+ * idioma que o canvas mostra. A fonte do tema nao muda.
+ *
  * KZ-18 (ADR 0111) — texto editado direto na pagina. Dois cliques em um texto
  * fixo (ou Enter, com o elemento escolhido) abrem uma caixa de edicao sobre o
  * proprio texto. A caixa fica NESTE documento, por cima do quadro: a pagina
@@ -159,6 +164,9 @@
   var picked = null;        // elemento selecionado: { key, n, inst, tag, sig }
   var hoverEl = null;       // elemento sob o ponteiro: { key, n, inst }
   var liveText = null;      // texto digitado que o servidor ainda nao devolveu: { key, n, text }
+  var liveTheme = null;     // KZ-21: texto do tema digitado que o servidor ainda nao devolveu: { key, text, after }
+  var shownLang = '';       // KZ-21: idioma da pagina que os quadros mostram ('' = ainda nenhuma, ou rascunho salvo)
+  var themeWriting = false; // KZ-21: o proprio canvas esta escrevendo no JSON dos textos
   var inline = null;        // KZ-18: texto em edicao na pagina (ver inlineStart)
   var hintEl = null, hintTimer = 0;
 
@@ -307,6 +315,7 @@
     paintCaption(f);
     readRegions(f, doc);
     if (liveText) setElementText(doc, liveText.key, liveText.n, liveText.text);
+    if (liveTheme) setThemeText(doc, liveTheme.key, liveTheme.text);
     paintMarks();
     paintTree();
     paintInspector();
@@ -642,6 +651,228 @@
     paintA11y();
   }
 
+  /* ---------------- KZ-21 (ADR 0114): texto do tema editado por idioma ---------------- */
+  /* Um elemento que so imprime `{{ theme_text.chave }}` (com, no maximo, um filtro de caixa) mostra um texto do
+     dicionario do tema (ADR 0112). O campo do painel e a caixa de edicao na pagina escrevem esse texto no JSON
+     dos textos (`strings_json`), no idioma que o canvas esta mostrando. A fonte do tema nao muda. */
+  var THEME_REF = /^theme_text\.([a-z][a-z0-9_]{0,63})(?: ?\| ?(upper|lower))?$/;
+  var THEME_KEY = /^[a-z][a-z0-9_]{0,63}$/, THEME_LANG = /^[a-z]{2}-[a-z]{2}$/, THEME_FALLBACK = 'en-us';
+  var THEME_KEYS_MAX = 600, THEME_LANGS_MAX = 12, THEME_TEXT_MAX = 2000, THEME_JSON_MAX = 262144;
+  /* O que o servidor recusa em um texto do tema (ThemeStrings::isText): caractere de controle, menos a quebra de linha. */
+  var THEME_CTRL = /[\u0000-\u0009\u000B-\u001F\u007F]/;
+  /** Chave (e filtro de caixa) do elemento que so imprime um texto do tema; null quando o elemento nao e isso. */
+  function themeRef(it) {
+    if (!it || it[1] !== 'variable') return null;
+    var m = THEME_REF.exec(String(it[6] || ''));
+    return m ? { key: m[1], filter: m[2] || '' } : null;
+  }
+  /** O JSON dos textos como mapa chave -> idioma -> texto; null quando nao e um objeto de objetos. */
+  function themeParse(raw) {
+    var map;
+    try { map = JSON.parse(String(raw).trim() === '' ? '{}' : String(raw)); } catch (e) { return null; }
+    if (!map || typeof map !== 'object' || Array.isArray(map)) return null;
+    var keys = Object.keys(map);
+    for (var i = 0; i < keys.length; i++) {
+      var by = map[keys[i]];
+      if (!by || typeof by !== 'object' || Array.isArray(by)) return null;
+    }
+    return map;
+  }
+  /** Texto que o servidor aceita: nao vazio, sem caractere de controle, ate 2000 caracteres (um emoji conta um). */
+  function themeIsText(v) {
+    return typeof v === 'string' && v !== '' && !THEME_CTRL.test(v) && v.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '_').length <= THEME_TEXT_MAX;
+  }
+  /** Tamanho em bytes UTF-8, como o formulario envia: o teto do campo, no servidor, e em bytes, e cada
+      quebra de linha de um <textarea> viaja como dois bytes (CR LF). */
+  function themeBytes(s) {
+    var n = 0;
+    for (var i = 0; i < s.length; i++) {
+      var c = s.charCodeAt(i);
+      n += c === 0x0A ? 2 : (c < 0x80 ? 1 : (c < 0x800 ? 2 : (c >= 0xD800 && c <= 0xDFFF ? 2 : 3)));
+    }
+    return n;
+  }
+  /**
+   * Texto que o site mostra para a chave no idioma, na mesma ordem do servidor (ThemeStrings::resolve):
+   * o do idioma; sem ele, o de en-us; sem esse, o primeiro idioma preenchido. `from` diz de qual idioma veio.
+   */
+  function themeRead(map, key, lang) {
+    var has = Object.prototype.hasOwnProperty, by = map && has.call(map, key) ? map[key] : null, i;
+    if (!by) return { text: '', from: '' };
+    var order = [lang, THEME_FALLBACK];
+    for (i = 0; i < order.length; i++) if (has.call(by, order[i]) && themeIsText(by[order[i]])) return { text: by[order[i]], from: order[i] };
+    var codes = Object.keys(by);
+    for (i = 0; i < codes.length; i++) if (THEME_LANG.test(codes[i]) && themeIsText(by[codes[i]])) return { text: by[codes[i]], from: codes[i] };
+    return { text: '', from: '' };
+  }
+  /**
+   * Escreve o texto de uma chave em um idioma. Devolve { json } (o JSON novo, no formato em que o servidor o mostra)
+   * ou { why } (a chave do aviso). So aquela chave e aquele idioma mudam; as outras chaves e a ordem delas ficam.
+   */
+  function themeWrite(raw, key, lang, text) {
+    var map = themeParse(raw), has = Object.prototype.hasOwnProperty;
+    if (!map) return { why: 'theme_bad_json' };
+    if (!THEME_KEY.test(String(key)) || !THEME_LANG.test(String(lang))) return { why: 'el_stale' };
+    text = String(text);
+    if (text.trim() === '') return { why: 'theme_empty' };
+    if (!themeIsText(text)) return { why: 'theme_full' };
+    if (!has.call(map, key)) {
+      if (Object.keys(map).length >= THEME_KEYS_MAX) return { why: 'theme_full' };
+      map[key] = {};
+    }
+    if (!has.call(map[key], lang) && Object.keys(map[key]).length >= THEME_LANGS_MAX) return { why: 'theme_full' };
+    map[key][lang] = text;
+    var json = JSON.stringify(map, null, 4);
+    if (themeBytes(json) > THEME_JSON_MAX) return { why: 'theme_full' };
+    return { json: json };
+  }
+  /** Como o filtro da fonte mostra o texto no quadro, ate o servidor redesenhar a pagina. */
+  function themeShown(text, filter) {
+    if (filter === 'upper') return String(text).toUpperCase();
+    if (filter === 'lower') return String(text).toLowerCase();
+    return String(text);
+  }
+  /**
+   * Por que um texto do tema nao abre para edicao: '' = abre; senao a chave do aviso.
+   * `st`: { ok: o JSON dos textos e legivel; lang: idioma escolhido no canvas; shown: idioma que os quadros mostram; text }.
+   */
+  function themeWhy(own, fresh, leaf, st) {
+    if (!leaf) return 'inline_variable';
+    if (!own) return 'inline_need_customize';
+    if (!st || !st.ok) return 'theme_bad_json';
+    /* Mapa defasado, ou o quadro ainda mostra outro idioma (a troca de idioma esta a caminho). */
+    if (!fresh || st.lang !== st.shown) return 'el_stale';
+    if (String(st.text).indexOf('\n') !== -1) return 'theme_lines';
+    return '';
+  }
+  /** Uma linha so, sem caractere de controle: o texto como vai para o dicionario. */
+  function themeClean(value) { return inlineClean(value).replace(/[\u0000-\u001F\u007F]/g, ''); }
+  function themeField() {
+    var el = form.elements['strings_json'];
+    return el && el.tagName === 'TEXTAREA' ? el : null;
+  }
+  /** O texto de uma chave agora: o JSON e legivel? em que idioma o canvas esta? que texto o site mostra e de que idioma ele vem? */
+  function themeState(key) {
+    var field = themeField(), map = field ? themeParse(field.value) : null, lang = langSel ? String(langSel.value) : THEME_FALLBACK;
+    var got = map ? themeRead(map, key, lang) : { text: '', from: '' };
+    return { ok: !!map, lang: lang, shown: shownLang, text: got.text, from: got.from };
+  }
+  /** Previa imediata: mostra o texto em todos os elementos do documento que so imprimem aquela chave. */
+  function setThemeText(doc, themeKey, text) {
+    Object.keys(elements).forEach(function (key) {
+      var items = elements[key] && elements[key].items;
+      if (!Array.isArray(items)) return;
+      for (var n = 0; n < items.length; n++) {
+        var ref = themeRef(items[n]);
+        if (ref && ref.key === themeKey) setElementText(doc, key, n, themeShown(text, ref.filter));
+      }
+    });
+  }
+  function themeWarn(why) {
+    var warn = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-theme-warn]') : null;
+    if (!warn) return;
+    warn.hidden = !why;
+    warn.textContent = why ? label(why, '') : '';
+  }
+  /** Grava o JSON novo no campo REAL do formulario: marca o formulario como alterado e agenda o render. */
+  function themeCommit(field, json) {
+    themeWriting = true;
+    field.value = json;
+    try { field.dispatchEvent(new Event('input', { bubbles: true })); } finally { themeWriting = false; }
+  }
+  /**
+   * O campo "Texto do tema" do painel (ou a caixa na pagina) mudou: escreve no JSON dos textos, no idioma do canvas.
+   * Devolve a chave do aviso quando a escrita e recusada. Texto vazio nao e gravado (fica o ultimo) e nao e recusa:
+   * quem digita pode apagar tudo antes de escrever de novo.
+   */
+  function onThemeInput(t) {
+    var it = picked ? elementItem(picked.key, picked.n) : null, ref = themeRef(it), field = themeField();
+    if (!ref || !field) return 'el_stale';
+    var st = themeState(ref.key), why = themeWhy(true, mapFresh(picked.key), true, st);
+    if (why) { themeWarn(why); return why; }
+    var value = themeClean(t.value);
+    if (value.trim() === '') { themeWarn('theme_empty'); return; }
+    var res = themeWrite(field.value, ref.key, st.lang, value);
+    if (res.why) { themeWarn(res.why); return res.why; }
+    themeWarn('');
+    /* `after`: so uma resposta pedida DEPOIS desta tecla ja traz o texto novo. */
+    liveTheme = { key: ref.key, text: value, after: seq };
+    visibleFrames().forEach(function (f) { setThemeText(frameDoc(f), ref.key, value); });
+    themeCommit(field, res.json);
+    var from = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-theme-from]') : null;
+    if (from) from.hidden = true;
+  }
+  /** A caixa na pagina fechou sobre um texto do tema: Esc devolve o JSON dos textos de antes, byte a byte. */
+  function themeInlineStop(st, keep) {
+    var field = themeField();
+    if (!keep && st.changed && field && field.value !== st.theme.raw) {
+      liveTheme = { key: st.theme.key, text: st.text, after: seq };
+      visibleFrames().forEach(function (f) { setThemeText(frameDoc(f), st.theme.key, st.text); });
+      themeCommit(field, st.theme.raw);
+    } else if (keep && st.changed && st.last.trim() === '') hint('theme_empty');
+    /* O campo do painel mostra o texto que ficou (o de antes, ou o ultimo gravado). */
+    var mirror = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-theme-text]') : null;
+    if (mirror && mirror.getAttribute('data-kaz-canvas-theme-text') === st.theme.key) { mirror.value = themeState(st.theme.key).text; themeWarn(''); }
+  }
+  /** Lista dos textos do tema que o trecho imprime, no idioma do canvas. Cada linha escolhe o elemento. */
+  function paintThemeList(key, host) {
+    var map = elements[key], field = themeField(), dict = field ? themeParse(field.value) : null;
+    if (!map || !mapFresh(key) || !dict) return;
+    var lang = langSel ? String(langSel.value) : THEME_FALLBACK, rows = [], total = 0;
+    map.items.forEach(function (it, n) {
+      var ref = themeRef(it);
+      if (!ref) return;
+      total++;
+      /* Chave ainda sem texto em idioma nenhum: a linha mostra a chave. */
+      if (rows.length < TEXT_LIST_MAX) rows.push([n, it[0], themeRead(dict, ref.key, lang).text || ref.key]);
+    });
+    if (!rows.length) return;
+    host.appendChild(make('h5', 'kaz-canvas__sidesub', label('theme_texts', '').replace('%s', lang)));
+    host.appendChild(make('p', 'kaz-canvas__sidehelp', label('theme_texts_help', '')));
+    var ul = make('ul', 'kaz-canvas__textlist');
+    ul.setAttribute('data-kaz-canvas-theme-list', lang);
+    rows.forEach(function (r) {
+      var li = make('li', ''), b = make('button', 'kaz-canvas__textrow', '');
+      b.type = 'button';
+      b.setAttribute('data-kaz-canvas-el', String(r[0]));
+      b.appendChild(make('code', 'kaz-canvas__texttag', r[1]));
+      b.appendChild(make('span', 'kaz-canvas__textsnip', r[2].length > 90 ? r[2].slice(0, 90) + '…' : r[2]));
+      li.appendChild(b);
+      ul.appendChild(li);
+    });
+    host.appendChild(ul);
+    if (total > rows.length) host.appendChild(make('p', 'kaz-canvas__sidehelp', label('el_more', '').replace('%s', String(total - rows.length))));
+  }
+  /** Bloco do painel "Elemento" para um texto do tema: campo, aviso, de que idioma o texto vem e a chave. */
+  function paintThemeText(host, it, own, fresh) {
+    var ref = themeRef(it), st = themeState(ref.key), why = themeWhy(own, fresh, true, st), id = 'kaz-canvas-el-theme-text';
+    var lab = make('label', 'kaz-canvas__fieldname', label('theme_text', '').replace('%s', st.lang));
+    lab.setAttribute('for', id);
+    host.appendChild(lab);
+    var box = make('textarea', 'kaz-canvas__text');
+    box.id = id;
+    box.rows = 3;
+    box.maxLength = THEME_TEXT_MAX;
+    box.setAttribute('data-kaz-canvas-theme-text', ref.key);
+    box.setAttribute('placeholder', label('el_empty', ''));
+    box.value = st.ok ? st.text : '';
+    box.readOnly = why !== '';
+    host.appendChild(box);
+    var warn = make('p', 'kaz-canvas__sidehelp kaz-canvas__sidehelp--warn', why ? label(why, '') : '');
+    warn.setAttribute('data-kaz-canvas-theme-warn', '');
+    warn.setAttribute('role', 'status');
+    warn.hidden = why === '';
+    host.appendChild(warn);
+    var from = make('p', 'kaz-canvas__sidehelp', label('theme_fallback', '').replace('%s', st.from));
+    from.setAttribute('data-kaz-canvas-theme-from', '');
+    from.hidden = !(st.ok && st.from !== '' && st.from !== st.lang);
+    host.appendChild(from);
+    var help = make('p', 'kaz-canvas__sidehelp', label('theme_text_help', '') + ' ');
+    help.appendChild(make('code', 'kaz-canvas__expr', ref.key));
+    host.appendChild(help);
+    if (why === '') host.appendChild(make('p', 'kaz-canvas__sidehelp', label('inline_help', '')));
+  }
+
   /* ---------------- KZ-18 (ADR 0111): texto editado direto na pagina ---------------- */
   var INLINE_MIN_PX = 12, INLINE_BOX_W = 280, INLINE_HINT_MS = 5000, INLINE_EDGE = 24;
   /* Elementos em que o texto ocupa a largura do proprio elemento e segue `text-align`. */
@@ -797,7 +1028,10 @@
   /** Motivo (ver inlineWhy) para o elemento `sel`, lido no quadro `f`. */
   function inlineReason(sel, f) {
     var it = elementItem(sel.key, sel.n), field = sourceField(sel.key), node = f ? elementNode(f, sel) : null;
-    return inlineWhy(it, !!(field && field.value !== ''), mapFresh(sel.key), !!node && !node.firstElementChild);
+    var own = !!(field && field.value !== ''), leaf = !!node && !node.firstElementChild, ref = themeRef(it);
+    /* KZ-21: texto do dicionario do tema abre para edicao no idioma do canvas. */
+    if (ref) return themeWhy(own, mapFresh(sel.key), leaf, themeState(ref.key));
+    return inlineWhy(it, own, mapFresh(sel.key), leaf);
   }
   /** Quadro visivel em que o elemento aparece (o primeiro), para abrir a edicao pelo teclado. */
   function inlineFrame(sel) {
@@ -821,7 +1055,8 @@
     if (node !== st.node) {
       /* Elemento novo (primeira vez, ou o quadro foi redesenhado): le a letra ANTES de esconder o texto. */
       st.node = node;
-      st.mode = inlineMode(m);
+      /* KZ-21: com filtro de caixa na fonte (|upper), o que se ve nao e o que esta guardado: caixa propria, com o texto guardado. */
+      st.mode = st.theme && st.theme.filter ? 'box' : inlineMode(m);
       st.fontSize = m.fontSize;
       box.classList.toggle('kaz-canvas__inline--box', st.mode === 'box');
       if (st.mode === 'place') {
@@ -899,7 +1134,11 @@
     if (!it || !field || !r || !r.shown) return false;
     if (!sameElement(picked, sel)) pick(sel, regionFor(sel.key, -1, -1), false);
     if (!sameElement(picked, sel) || inlineReason(sel, f) !== '') return false;
+    /* KZ-21: `theme` guarda a chave e o JSON dos textos de antes: Esc devolve o JSON, byte a byte. */
+    var ref = themeRef(it), tfield = ref ? themeField() : null, tstate = ref ? themeState(ref.key) : null;
+    if (ref && !tfield) return false;
     var box = document.createElement('textarea'), text = decodeText(field.value.slice(it[4], it[5]));
+    if (ref) text = tstate.text;
     box.className = 'kaz-canvas__inline';
     box.setAttribute('data-kaz-canvas-inline', sel.key + ':' + sel.n);
     box.setAttribute('aria-label', label('inline_label', ''));
@@ -909,7 +1148,8 @@
     box.value = text;
     /* `src` e `map` guardam a fonte e o mapa de antes: Esc devolve os dois, byte a byte. */
     inline = { key: sel.key, n: sel.n, inst: picked.inst, frame: f, box: box, node: null, mode: '', paint: [], fontSize: 0, ink: '', line: { h: 0, off: 0, area: 0 }, spot: null,
-      text: text, last: text, src: field.value, map: JSON.parse(JSON.stringify(elements[sel.key])), changed: false, back: null };
+      text: text, last: text, src: field.value, map: JSON.parse(JSON.stringify(elements[sel.key])), changed: false, back: null,
+      theme: ref ? { key: ref.key, filter: ref.filter, raw: tfield.value } : null };
     box.addEventListener('input', inlineInput);
     box.addEventListener('keydown', inlineKey);
     box.addEventListener('blur', function () { if (inline && inline.box === box) inlineStop(true); });
@@ -946,7 +1186,7 @@
     if (!inline) return;
     var st = inline, box = st.box, value = inlineClean(box.value);
     if (value !== box.value) { var at = Math.min(box.selectionStart, value.length); box.value = value; box.setSelectionRange(at, at); }
-    var why = sameElement(picked, st) ? onTextInput({ value: value }) : 'el_stale';
+    var why = !sameElement(picked, st) ? 'el_stale' : (st.theme ? onThemeInput({ value: value }) : onTextInput({ value: value }));
     if (why) {
       /* Recusada (codigo defasado ou fonte cheia): a caixa volta ao ultimo texto que entrou e o aviso diz por que. */
       box.value = st.last;
@@ -954,8 +1194,8 @@
     } else {
       st.last = value;
       st.changed = true;
-      var mirror = inspectorEl ? inspectorEl.querySelector('[data-kaz-canvas-text]') : null;
-      if (mirror && mirror.getAttribute('data-kaz-canvas-text') === st.key + ':' + st.n) mirror.value = value;
+      var mirror = inspectorEl ? inspectorEl.querySelector(st.theme ? '[data-kaz-canvas-theme-text]' : '[data-kaz-canvas-text]') : null;
+      if (mirror && (st.theme ? mirror.getAttribute('data-kaz-canvas-theme-text') === st.theme.key : mirror.getAttribute('data-kaz-canvas-text') === st.key + ':' + st.n)) mirror.value = value;
     }
     inlinePlace();
   }
@@ -972,7 +1212,9 @@
     if (st.node && st.mode === 'place') st.paint.forEach(function (was) {
       if (was[1] === '') st.node.style.removeProperty(was[0]); else st.node.style.setProperty(was[0], was[1], was[2]);
     });
-    if (!keep && st.changed) {
+    /* KZ-21: a caixa de um texto do tema devolve o JSON dos textos, nao a fonte. */
+    if (st.theme) themeInlineStop(st, keep);
+    else if (!keep && st.changed) {
       var field = sourceField(st.key);
       if (field && field.value !== st.src) {
         elements[st.key] = st.map;
@@ -1785,6 +2027,9 @@
       host.appendChild(make('p', 'kaz-canvas__sidehelp', label(own ? 'el_text_help' : 'el_need_customize', '')));
       /* KZ-18: o mesmo texto abre para edicao na propria pagina. */
       if (own && fresh) host.appendChild(make('p', 'kaz-canvas__sidehelp', label('inline_help', '')));
+    } else if (kind === 'variable' && themeRef(it)) {
+      /* KZ-21: texto do dicionario do tema, editado no idioma do canvas. */
+      paintThemeText(host, it, own, fresh);
     } else if (kind === 'variable') {
       var p = make('p', 'kaz-canvas__sidehelp', label('el_variable', '') + ' ');
       p.appendChild(make('code', 'kaz-canvas__expr', '{{ ' + String(it[6] || '') + ' }}'));
@@ -1864,7 +2109,7 @@
     host.setAttribute('data-kaz-canvas-elbox', picked && key && picked.key === key ? picked.key + ':' + picked.n : '');
     if (!key) return;
     if (picked && picked.key === key) paintElement(key, host);
-    else { paintTextList(key, host); paintLinkList(key, host); }
+    else { paintTextList(key, host); paintThemeList(key, host); paintLinkList(key, host); }
   }
   /** Roda fn sem deixar o controle em uso (anchor) sair do lugar na rolagem do painel. */
   function steady(anchor, fn) {
@@ -2577,7 +2822,8 @@
     body.forEach(function (value, key) { if (typeof value !== 'string') drop.push(key); });
     drop.forEach(function (key) { body.delete(key); });
     body.set('canvas_route', routeSel ? routeSel.value : 'common/home');
-    body.set('canvas_language', langSel ? langSel.value : 'en-us');
+    var asked = langSel ? String(langSel.value) : 'en-us';
+    body.set('canvas_language', asked);
     body.set('canvas_scheme', scheme);
 
     if (controller) { try { controller.abort(); } catch (e) { /* ja terminou */ } }
@@ -2630,6 +2876,10 @@
         var served = json.elements && json.elements[liveText.key], local = elements[liveText.key];
         if (!local || (served && served.sig === local.sig)) liveText = null;
       }
+      /* KZ-21: a resposta pedida depois da ultima tecla ja traz o texto do tema novo. Com o formulario
+         invalido o servidor desenha o rascunho salvo: o que se ve nao e o que esta nos campos. */
+      if (liveTheme && mine > liveTheme.after) liveTheme = null;
+      shownLang = json.source === 'saved' ? '' : asked;
       if (picked) {
         /* A fonte mudou por outro caminho (codigo, Templates, voltar ao padrao):
            os numeros dos elementos podem ter mudado, entao a escolha e solta. */
@@ -2794,6 +3044,7 @@
     if (!t || !t.getAttribute) return;
     if (designEl && designEl.contains(t)) { onDesignInput(t); return; }
     if (t.getAttribute('data-kaz-canvas-text') !== null) { if (!t.readOnly) onTextInput(t); return; }
+    if (t.getAttribute('data-kaz-canvas-theme-text') !== null) { if (!t.readOnly) onThemeInput(t); return; }
     if (t.getAttribute('data-kaz-canvas-attr') !== null) { if (!t.readOnly) onAttrInput(t); return; }
     if (t.getAttribute('data-kaz-canvas-newtab') !== null) { if (!t.disabled) onNewTab(t); return; }
     if (t.getAttribute('data-kaz-canvas-style') !== null) { if (!t.disabled && !t.readOnly) onStyleInput(t); return; }
@@ -2837,7 +3088,14 @@
     a11yEl.addEventListener('focusout', function () { setHoverElement(null); });
   }
   if (routeSel) routeSel.addEventListener('change', function () { savePrefs(); picked = null; liveText = null; select('', false); refresh(); });
-  if (langSel) langSel.addEventListener('change', function () { refresh(); });
+  if (langSel) langSel.addEventListener('change', function () {
+    /* KZ-21: o idioma do canvas e o idioma em que o texto do tema e gravado. A caixa aberta sobre um texto do
+       tema fecha como esta (o que ela mostra e do idioma antigo) e o campo do painel espera a pagina nova. */
+    if (inline && inline.theme) inlineStop(true);
+    liveTheme = null;
+    if (!picked || themeRef(elementItem(picked.key, picked.n))) paintElementBlock();
+    refresh();
+  });
 
   /* ---------------- gestos: roda, arrasto, pinca, teclado ---------------- */
   viewport.addEventListener('wheel', function (ev) {
@@ -2984,6 +3242,14 @@
   });
   form.addEventListener('input', function (ev) { if (ev.target && ev.target.name) schedule(); });
   form.addEventListener('change', function (ev) { if (ev.target && ev.target.name) schedule(); });
+  /* KZ-21: o JSON dos textos mudou por outro caminho (digitado no bloco "Textos do tema por idioma"):
+     a edicao na pagina termina como esta e o campo do painel acompanha. */
+  form.addEventListener('input', function (ev) {
+    if (themeWriting || !ev.target || ev.target.name !== 'strings_json') return;
+    liveTheme = null;
+    if (inline && inline.theme) inlineStop(true);
+    if (!picked || themeRef(elementItem(picked.key, picked.n))) paintElementBlock();
+  });
   /* Os botoes ↑/↓ do modulo Secoes mudam a ordem sem disparar input/change. */
   form.addEventListener('click', function (ev) {
     if (ev.target && ev.target.closest && ev.target.closest('[data-section-move]')) schedule();

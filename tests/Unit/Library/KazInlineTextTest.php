@@ -112,7 +112,9 @@ final class KazInlineTextTest extends TestCase {
         $script = $this->repo(self::SCRIPT);
         $block = $this->block();
         self::assertSame(1, substr_count($block, 'onTextInput('));
-        self::assertStringContainsString("var why = sameElement(picked, st) ? onTextInput({ value: value }) : 'el_stale';", $block);
+        // KZ-21 (ADR 0114): texto do tema vai para o JSON dos textos, pelo caminho do campo "Texto do tema".
+        self::assertSame(1, substr_count($block, 'onThemeInput('));
+        self::assertStringContainsString("var why = !sameElement(picked, st) ? 'el_stale' : (st.theme ? onThemeInput({ value: value }) : onTextInput({ value: value }));", $block);
         self::assertDoesNotMatchRegularExpression('/writeSource\(|encodeText\(|trimWs\(|overLimit\(/', $block);
         // A unica escrita direta e a devolucao da fonte guardada ao abrir (Esc), com o mapa daquela fonte.
         self::assertSame(1, substr_count($block, 'commitSource('));
