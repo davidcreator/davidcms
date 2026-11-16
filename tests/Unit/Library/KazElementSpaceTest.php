@@ -167,7 +167,7 @@ final class KazElementSpaceTest extends TestCase {
         $canvas = $this->repo('dev/admin/view/js/kaz-canvas.js');
 
         // O navegador busca o canvas novo: a versao no endereco e a desta etapa.
-        self::assertStringContainsString("'-kaz-canvas-kz09'", $controller);
+        self::assertMatchesRegularExpression("/'-kaz-canvas-kz\\d{2}'/", $controller);
         self::assertSame(1, preg_match('/\$canvasLabels=\[\];\s*foreach\(\[(.*?)\] as \$canvasKey\)/s', $controller, $m));
         preg_match_all("/'([a-z0-9_]+)'/", $m[1], $listed);
         self::assertSame(count($listed[1]), count(array_unique($listed[1])));

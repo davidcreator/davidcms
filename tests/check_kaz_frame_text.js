@@ -295,7 +295,7 @@ check(withoutCalls("say('camada adicionada: ' + l.id); x = TXT('a', 'nenhuma cam
 check(/state\.textContent = ok \? TXT\('acc_ready', '[^']*'\) : TXT\('acc_failed', '[^']*'\);/.test(body), 'estado do aviso "Aceitacao" vem de acc_ready / acc_failed');
 check(/if \(!ok\) return TXT\('acc_fail_detail', /.test(body), 'detalhe da falha vem de acc_fail_detail');
 check(/note\.textContent = TXT\('boot_warning', /.test(body), 'aviso vermelho de quando o editor nao inicia vem de boot_warning');
-check(!/'KAZTheme-Editor n[^'\n]*'/.test(stripped), 'o aviso de quando o editor nao inicia voltou a ser frase direta');
+check(!/'KAZ(?:Theme-Editor|Editor-Theme) n[^'\n]*'/.test(stripped), 'o aviso de quando o editor nao inicia voltou a ser frase direta');
 const blocks = /var BLOCKS = \{([\s\S]*?)\n  \};/.exec(body);
 check(blocks !== null, 'biblioteca de blocos (BLOCKS) encontrada no script');
 const samples = blocks[1].match(/\btext: (?:'(?:[^'\\]|\\.)*'|TXT\('[a-z0-9_]+', '(?:[^'\\]|\\.)*'\))/g) || [];

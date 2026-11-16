@@ -199,12 +199,20 @@ class Theme extends \Reamur\System\Engine\Controller {
             'hour'=>'text_builder_hour',
             'logged'=>'text_builder_logged',
             'query'=>'text_builder_query',
-            'json_invalid'=>'text_builder_json_invalid'
+            'json_invalid'=>'text_builder_json_invalid',
+            'cond_group'=>'text_builder_cond_group',
+            'cond_field'=>'text_builder_cond_field',
+            'cond_op'=>'text_builder_cond_op',
+            'cond_value'=>'text_builder_cond_value',
+            'cond_from'=>'text_builder_cond_from',
+            'cond_to'=>'text_builder_cond_to',
+            'var_name'=>'text_builder_var_name',
+            'var_value'=>'text_builder_var_value'
         ];
         $builderLabels=[];
         foreach($labelMap as $jsKey=>$langKey) { $builderLabels[$jsKey]=$this->language->get($langKey); $data[$langKey]=$builderLabels[$jsKey]; }
         $data['builder_labels_json']=json_encode($builderLabels,$jsonFlags) ?: '{}';
-        $builderAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-builder-c';
+        $builderAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-builder-d';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/theme-condition-builder.css?v=' . $builderAssetV);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-condition-builder.js?v=' . $builderAssetV);
         // F13-D: editor de cena (presets + miniatura ao vivo).
@@ -232,7 +240,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
         $data['kaz_scene_saved']=$savedScene!==null;
         $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
-        $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz15';
+        $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz16';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAJ);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAJ);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
@@ -460,7 +468,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         foreach(self::KAZ_FRAME_SCRIPT as $kazKey) $kazLabels[$kazKey]=$this->language->get('text_kaz_'.$kazKey);
         $data['kaz_labels_json']=json_encode($kazLabels,JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
         $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels,'parts'=>$canvasParts,'tokens'=>$canvasTokens],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
-        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz09';
+        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz16';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-canvas.css?v=' . $canvasAssetV);
         // KZ-05 (ADR 0098): as regras de atributo vem antes do painel que as usa (os dois sao `defer`, na ordem).
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-element-attrs.js?v=' . $canvasAssetV);

@@ -1073,7 +1073,7 @@ window.KazEditorText = (function () {
      estado server-side 'aguardando' para 'pronto' sem exigir console. */
   bootComplete = true;
   markAcceptance(true, acceptanceDetail(true, scene.layers.length));
-  say(TXT('msg_ready', 'KAZTheme-Editor pronto') + ' · ' + layersText(scene.layers.length) + ' · '
+  say(TXT('msg_ready', 'KAZEditor-Theme pronto') + ' · ' + layersText(scene.layers.length) + ' · '
       + (root.getAttribute('data-kaz-saved') === '1' ? TXT('msg_scene_saved', 'cena salva no tema') : TXT('msg_scene_derived', 'cena derivada, salve para persistir')));
   }
   /* Decide pela PRESENCA DO ELEMENTO, nao por readyState: jsdom (eval
@@ -1102,7 +1102,7 @@ window.KazEditorText = (function () {
       'position:fixed;left:16px;right:16px;bottom:16px;z-index:2147483000;'
       + 'padding:12px 16px;border-radius:10px;background:#7f1d1d;color:#fff;'
       + 'font:600 14px/1.45 system-ui,sans-serif;box-shadow:0 8px 28px #0007');
-    note.textContent = TXT('boot_warning', 'KAZTheme-Editor não inicializou: o editor existe na página, mas o JavaScript não concluiu o boot. Verifique se o asset kaz-theme-editor.js foi servido (HTTP 200), se o header.twig ativo contém o loop scripts_deferred e se um cache/proxy não entrega uma versão antiga.');
+    note.textContent = TXT('boot_warning', 'KAZEditor-Theme não inicializou: o editor existe na página, mas o JavaScript não concluiu o boot. Verifique se o asset kaz-theme-editor.js foi servido (HTTP 200), se o header.twig ativo contém o loop scripts_deferred e se um cache/proxy não entrega uma versão antiga.');
     document.body.appendChild(note);
     markAcceptance(false, acceptanceDetail(false, 0));
   }, 500);

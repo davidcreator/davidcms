@@ -76,6 +76,9 @@
     if (onChange) s.addEventListener('change', function () { onChange(s.value); });
     return s;
   }
+  // KZ-16: campo sem rotulo visivel (listas e valores da parte "Quando", par de
+  // uma variavel) recebe o nome por aria-label.
+  function named(node, text) { node.setAttribute('aria-label', text); return node; }
   function btn(label, cls, onClick, title) {
     var b = el('button', { type: 'button', 'class': cls, text: label, title: title || label });
     b.addEventListener('click', function (e) { e.preventDefault(); onClick(); });
@@ -139,11 +142,12 @@
       var b = Array.isArray(node.value) ? node.value[1] : '';
       var ia = input(a, function () { node.value = [ia.value, ib.value]; sync(false); }, 'number');
       var ib = input(b, function () { node.value = [ia.value, ib.value]; sync(false); }, 'number');
+      named(ia, L('cond_from', 'Valor inicial')); named(ib, L('cond_to', 'Valor final'));
       host.appendChild(el('div', { 'class': 'tcb-pair' }, [ia, el('span', { text: '…' }), ib]));
       return;
     }
     if (node.field === 'site' && siteIds.length && op !== 'in' && op !== 'not_in') {
-      host.appendChild(sel(siteIds, node.value || siteIds[0], function (v) { node.value = v; sync(false); }, 'form-select form-select-sm tcb-cond__value'));
+      host.appendChild(named(sel(siteIds, node.value || siteIds[0], function (v) { node.value = v; sync(false); }, 'form-select form-select-sm tcb-cond__value'), L('cond_value', 'Valor')));
       return;
     }
     if (op === 'in' || op === 'not_in') {
@@ -153,11 +157,11 @@
         sync(false);
       });
       il.setAttribute('placeholder', L('list_hint', 'um, dois, tres'));
-      host.appendChild(il);
+      host.appendChild(named(il, L('cond_value', 'Valor')));
       return;
     }
     var iv = input(node.value, function () { node.value = iv.value; sync(false); });
-    host.appendChild(iv);
+    host.appendChild(named(iv, L('cond_value', 'Valor')));
   }
 
   function renderNode(node, host, depth, onRemove) {
@@ -167,12 +171,12 @@
       node[kind] = children;
       var wrap = el('div', { 'class': 'tcb-group tcb-group--' + kind });
       var bar = el('div', { 'class': 'tcb-group__bar' });
-      bar.appendChild(sel(groups, kind, function (v) {
+      bar.appendChild(named(sel(groups, kind, function (v) {
         var kids = node[kind];
         delete node[kind];
         node[v] = kids;
         sync(true);
-      }, 'form-select form-select-sm tcb-group__kind'));
+      }, 'form-select form-select-sm tcb-group__kind'), L('cond_group', 'Tipo de grupo')));
       bar.appendChild(el('span', { 'class': 'tcb-group__badge', text: L('group_' + kind, kind.toUpperCase()) }));
       bar.appendChild(btn('+ ' + L('add_condition', 'condicao'), 'btn btn-sm btn-outline-secondary', function () {
         children.push({ field: 'route', op: 'eq', value: '' });
@@ -200,14 +204,14 @@
     }
 
     var row = el('div', { 'class': 'tcb-cond' });
-    row.appendChild(sel(fieldOptions(), node.field || 'route', function (v) { node.field = v; sync(false); }, 'form-select form-select-sm tcb-cond__field'));
-    row.appendChild(sel(operators, node.op || 'eq', function (v) {
+    row.appendChild(named(sel(fieldOptions(), node.field || 'route', function (v) { node.field = v; sync(false); }, 'form-select form-select-sm tcb-cond__field'), L('cond_field', 'Campo')));
+    row.appendChild(named(sel(operators, node.op || 'eq', function (v) {
       node.op = v;
       if (!needsValue(v)) delete node.value;
       else if (!Array.isArray(node.value) && v !== 'in' && v !== 'not_in' && v !== 'between') { /* mantem */ }
       else node.value = Array.isArray(node.value) ? node.value : '';
       sync(true);
-    }, 'form-select form-select-sm tcb-cond__op'));
+    }, 'form-select form-select-sm tcb-cond__op'), L('cond_op', 'Operador')));
     var valueHost = el('div', { 'class': 'tcb-cond__value' });
     renderValue(node, valueHost);
     row.appendChild(valueHost);
@@ -236,7 +240,8 @@
         const old = vars[k]; delete vars[k]; vars[this.value] = old; sync(false);
       });
       const vv = input(vars[k], function () { vars[k] = vv.value; sync(false); });
-      varsHost.appendChild(el('div', { 'class': 'tcb-pair' }, [vk, vv, btn('×', 'btn btn-sm btn-outline-danger tcb-x', function () { delete vars[k]; if (Object.keys(vars).length === 0) delete then.vars; sync(true); })]));
+      named(vk, L('var_name', 'Nome da variavel')); named(vv, L('var_value', 'Valor da variavel'));
+      varsHost.appendChild(el('div', { 'class': 'tcb-pair' }, [vk, vv, btn('×', 'btn btn-sm btn-outline-danger tcb-x', function () { delete vars[k]; if (Object.keys(vars).length === 0) delete then.vars; sync(true); }, L('remove', 'remover'))]));
     });
     varsHost.appendChild(btn('+ ' + L('add_var', 'variavel'), 'btn btn-sm btn-outline-secondary', function () {
       if (!then.vars || typeof then.vars !== 'object') then.vars = {};

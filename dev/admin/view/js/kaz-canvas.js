@@ -1881,6 +1881,11 @@
     if (input) {
       input.id = 'kaz-canvas-ctl-' + (++row.n);
       name.htmlFor = input.id;
+      // KZ-16: o rotulo aponta para o primeiro campo (a barra); o campo de numero
+      // que vem junto recebe o mesmo nome por aria-labelledby.
+      name.id = 'kaz-canvas-lbl-' + row.n;
+      var twins = node.querySelectorAll('input,select');
+      for (var t = 1; t < twins.length; t++) twins[t].setAttribute('aria-labelledby', name.id);
     }
     if (extra) name.appendChild(make('small', 'kaz-canvas__scope', extra));
     var badge = make('span', 'kaz-canvas__badge kaz-canvas__badge--off', label('design_unused', ''));

@@ -17,6 +17,16 @@
  *   3. nenhum `id` se repete, nem depois de redesenhar as regras;
  *   4. os campos continuam sem `name` (sao controles de tela: ADR 0098).
  *
+ * KZ-16 (ADR 0109) — os campos que nao tem rotulo visivel tambem tem nome.
+ * Na parte "Quando" de cada regra (lista do tipo de grupo, lista do campo,
+ * lista do operador, valor) e no par de cada variavel nao ha `<label>`: o
+ * nome vai em `aria-label`. O conferidor exige:
+ *   5. todo input/select/textarea da arvore tem nome: `<label for>`, um
+ *      `<label>` em volta, `aria-label` ou `aria-labelledby` de um no com texto;
+ *   6. todo botao cujo texto e so um simbolo ("×") tem `title` com letras;
+ *   7. o nome vem dos textos enviados pela tela (`data-labels`), com o
+ *      portugues como reserva.
+ *
  *   node tests/check_condition_builder_labels.js          confere
  *   node tests/check_condition_builder_labels.js --list   imprime o que achou (JSON)
  */
@@ -60,7 +70,7 @@ function page(conditions) {
   root.dataset = {
     spec: JSON.stringify({ fields: ['route', 'language', 'site', 'device', 'hour'], query_keys: ['utm_source'], site_ids: ['primary', 'loja'],
       operators: ['eq', 'neq', 'in', 'not_in', 'between', 'exists'], scenes: ['', 'particles'], slots: ['hero', 'background'], groups: ['all', 'any', 'not'], max_depth: 5, max_rules: 40 }),
-    labels: JSON.stringify({ rule_id: 'ID da regra', primary: 'Primária', vars: 'Variáveis', tokens: 'Tokens', three: 'Three.js' }),
+    labels: JSON.stringify({ rule_id: 'ID da regra', primary: 'Primária', vars: 'Variáveis', tokens: 'Tokens', three: 'Three.js', cond_field: 'Campo (da tela)', var_name: 'Nome (da tela)' }),
     routes: '["common/home","blog/blog_list"]', languages: '["pt-br","en-us"]', devices: '["desktop","mobile"]', url: '', csrf: ''
   };
   const textarea = make('textarea'); textarea.setAttribute('name', 'conditions'); textarea.value = JSON.stringify(conditions);
@@ -87,7 +97,7 @@ function page(conditions) {
 const RULES = { version: 1, rules: [
   { id: 'campanha', when: { all: [{ field: 'route', op: 'eq', value: 'common/home' }, { any: [{ field: 'hour', op: 'between', value: [9, 18] }, { field: 'site', op: 'in', value: ['loja'] }] }] },
     then: { primary: '#112233', flags: ['a'], vars: { cor: 'azul', lado: 'esq' }, tokens: { radius: 4 }, three: { enabled: true, scene: 'particles', slot: 'hero', count: 200 } } },
-  { id: 'noite', when: { not: [{ field: 'device', op: 'exists' }] }, then: {} }
+  { id: 'noite', when: { not: [{ field: 'device', op: 'exists' }, { field: 'site', op: 'eq', value: 'loja' }] }, then: {} }
 ] };
 const FIELD = /^(INPUT|SELECT|TEXTAREA)$/;
 
@@ -159,6 +169,70 @@ inspect(full, 'depois de sincronizar');
 check(JSON.stringify(JSON.parse(full.textarea.value)) === JSON.stringify(JSON.parse(before)), 'o JSON enviado no campo conditions e o mesmo');
 check(JSON.stringify(JSON.parse(full.textarea.value)) === JSON.stringify(RULES), 'o JSON enviado e o que foi carregado');
 
+// ---- KZ-16: todo campo tem nome, com ou sem rotulo visivel
+const LETTER = /[0-9A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF]/;
+function names(p, what) {
+  const nodes = p.body.all();
+  const byId = {};
+  nodes.forEach(function (n) { if (n.id) byId[n.id] = n; });
+  const labelled = {};
+  nodes.forEach(function (n) { if (n.tagName === 'LABEL' && n.getAttribute('for')) labelled[n.getAttribute('for')] = true; });
+  const tally = {};
+  let fields = 0, symbolButtons = 0;
+  nodes.forEach(function (n) {
+    if (FIELD.test(n.tagName) && n.getAttribute('name') !== 'conditions') {
+      fields++;
+      let wrapped = false;
+      for (let up = n.parent; up; up = up.parent) if (up.tagName === 'LABEL') wrapped = true;
+      const aria = n.getAttribute('aria-label');
+      const ref = n.getAttribute('aria-labelledby');
+      const byRef = ref !== null && byId[ref] !== undefined && LETTER.test(byId[ref].textContent);
+      check((n.id !== '' && labelled[n.id] === true) || wrapped || (aria !== null && LETTER.test(aria)) || byRef,
+        what + ': campo sem nome (' + n.tagName.toLowerCase() + ' ' + n.className + ')');
+      if (aria !== null) {
+        check(!(n.id !== '' && labelled[n.id] === true) && !wrapped, what + ': "' + aria + '" nao repete o nome de um campo que ja tem rotulo');
+        tally[aria] = (tally[aria] || 0) + 1;
+      }
+    }
+    if (n.tagName === 'BUTTON' && n.textContent !== '' && !LETTER.test(n.textContent)) {
+      symbolButtons++;
+      const title = n.getAttribute('aria-label') || n.getAttribute('title') || '';
+      check(LETTER.test(title), what + ': o botao "' + n.textContent + '" tem nome com letras ("' + title + '")');
+    }
+  });
+  // Dentro de um par (os dois numeros de "between", nome + valor de uma variavel) a ordem dos nomes importa.
+  const pairs = nodes.filter(function (n) { return /(^| )tcb-pair( |$)/.test(n.className); }).map(function (pair) {
+    return pair.children.filter(function (c) { return c.tagName === 'INPUT'; }).map(function (c) { return c.getAttribute('aria-label'); });
+  });
+  return { fields: fields, symbolButtons: symbolButtons, tally: tally, pairs: pairs };
+}
+const en = names(empty, 'sem regras');
+check(en.fields === 8 && Object.keys(en.tally).length === 0, 'sem regras: os 8 campos do simulador tem nome pelo rotulo (' + JSON.stringify(en) + ')');
+const fn = names(full, 'duas regras');
+// "Quando" das duas regras: 3 grupos (all, any, not), 5 condicoes (campo + operador), valores: rota (campo de texto),
+// hora "between" (inicial e final), site "in" (lista), site "eq" (lista de sites); "exists" nao tem valor.
+// Variaveis da primeira regra: dois pares nome + valor.
+const WANT = { 'Tipo de grupo': 3, 'Campo (da tela)': 5, 'Operador': 5, 'Valor': 3, 'Valor inicial': 1, 'Valor final': 1, 'Nome (da tela)': 2, 'Valor da variavel': 2 };
+check(JSON.stringify(Object.keys(fn.tally).sort()) === JSON.stringify(Object.keys(WANT).sort()), 'duas regras: os nomes dados por aria-label sao estes: ' + JSON.stringify(fn.tally));
+Object.keys(WANT).forEach(function (k) { check(fn.tally[k] === WANT[k], 'duas regras: ' + WANT[k] + ' campo(s) com o nome "' + k + '" (' + fn.tally[k] + ')'); });
+// botoes so com simbolo: 3 por regra (subir, descer, remover), 5 de remover condicao, 1 de remover o grupo "any",
+// 2 de remover variavel
+check(fn.symbolButtons === 2 * 3 + 5 + 1 + 2, 'duas regras: os 14 botoes so com simbolo foram olhados (' + fn.symbolButtons + ')');
+check(JSON.stringify(fn.pairs) === JSON.stringify([['Valor inicial', 'Valor final'], ['Nome (da tela)', 'Valor da variavel'], ['Nome (da tela)', 'Valor da variavel']]),
+  'duas regras: em cada par, o primeiro campo e o inicial (ou o nome) e o segundo e o final (ou o valor): ' + JSON.stringify(fn.pairs));
+full.root.__tcb.renderAll();
+const fn2 = names(full, 'depois de redesenhar');
+check(JSON.stringify(fn2.tally) === JSON.stringify(fn.tally) && fn2.fields === fn.fields, 'depois de redesenhar: os mesmos nomes');
+// o detector acusa um campo sem nome e um botao so com simbolo
+const bare = { body: new Node('body') }; const bareInput = new Node('input'); bareInput.className = 'tcb-cond__value'; bare.body.appendChild(bareInput);
+let bareCaught = '';
+try { names(bare, 'detector'); } catch (err) { bareCaught = String(err.message); }
+check(bareCaught.indexOf('campo sem nome') !== -1, 'detector: campo sem rotulo e sem aria-label e acusado');
+const times = { body: new Node('body') }; const x = new Node('button'); x.textContent = '×'; x.setAttribute('title', '×'); times.body.appendChild(x);
+let timesCaught = '';
+try { names(times, 'detector'); } catch (err) { timesCaught = String(err.message); }
+check(timesCaught.indexOf('tem nome com letras') !== -1, 'detector: botao "×" com title "×" e acusado');
+
 // ---- o detector acusa o defeito antigo
 function oldDefect() {
   const source = fs.readFileSync(path.join(ROOT, SCRIPT), 'utf8');
@@ -174,5 +248,5 @@ let caught = '';
 try { inspect(holder, 'detector'); } catch (err) { caught = String(err.message); }
 check(caught.indexOf('sem `for` tem o campo dentro dele') !== -1, 'detector: <label> solto ao lado do campo e acusado');
 
-if (process.argv.indexOf('--list') !== -1) console.log(JSON.stringify({ semRegras: e, duasRegras: f, depois: again }, null, 2));
+if (process.argv.indexOf('--list') !== -1) console.log(JSON.stringify({ semRegras: e, duasRegras: f, depois: again, nomes: fn }, null, 2));
 else console.log('Condition builder labels checker: ' + checks + ' PASS');
