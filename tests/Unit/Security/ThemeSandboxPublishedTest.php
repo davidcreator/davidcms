@@ -472,7 +472,8 @@ final class ThemeSandboxPublishedTest extends TestCase {
 
         self::assertSame(1, $model->saves);
         self::assertSame([], $load->data, 'save aceito redireciona, nao renderiza o formulario');
-        self::assertContains('Location: https://example.test/admin/index.php?route=design/theme', $response->getHeaders());
+        // KZ-17 (ADR 0110): salvar continua no editor do tema, com o aviso de rascunho salvo.
+        self::assertContains('Location: https://example.test/admin/index.php?route=design/theme.edit|1&saved=1', $response->getHeaders());
 
         // GET nao reflete POST nenhum: mostra o que esta salvo.
         $request->server['REQUEST_METHOD'] = 'GET';

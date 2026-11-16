@@ -27,6 +27,14 @@
  *   7. o nome vem dos textos enviados pela tela (`data-labels`), com o
  *      portugues como reserva.
  *
+ * KZ-17 (ADR 0110) — as listas da parte "Quando" (tipo de grupo, campo,
+ * operador) mostram o nome no idioma do admin. O conferidor exige:
+ *   8. o valor de cada opcao continua o tecnico (`all`, `route`, `eq`): e o
+ *      que vai para o JSON da regra;
+ *   9. o texto de cada opcao vem dos textos enviados pela tela; sem texto
+ *      para um item, a opcao mostra o valor tecnico;
+ *  10. o selo ao lado da lista do grupo, que repetia o nome, nao existe mais.
+ *
  *   node tests/check_condition_builder_labels.js          confere
  *   node tests/check_condition_builder_labels.js --list   imprime o que achou (JSON)
  */
@@ -62,7 +70,7 @@ Node.prototype.querySelectorAll = function (selector) {
 };
 Node.prototype.querySelector = function (selector) { return this.querySelectorAll(selector)[0] || null; };
 
-function page(conditions) {
+function page(conditions, extraLabels) {
   const body = new Node('body');
   const byId = {};
   function make(tag, id) { const n = new Node(tag); if (id) { n.id = id; byId[id] = n; } body.appendChild(n); return n; }
@@ -70,7 +78,7 @@ function page(conditions) {
   root.dataset = {
     spec: JSON.stringify({ fields: ['route', 'language', 'site', 'device', 'hour'], query_keys: ['utm_source'], site_ids: ['primary', 'loja'],
       operators: ['eq', 'neq', 'in', 'not_in', 'between', 'exists'], scenes: ['', 'particles'], slots: ['hero', 'background'], groups: ['all', 'any', 'not'], max_depth: 5, max_rules: 40 }),
-    labels: JSON.stringify({ rule_id: 'ID da regra', primary: 'Primária', vars: 'Variáveis', tokens: 'Tokens', three: 'Three.js', cond_field: 'Campo (da tela)', var_name: 'Nome (da tela)' }),
+    labels: JSON.stringify(Object.assign({ rule_id: 'ID da regra', primary: 'Primária', vars: 'Variáveis', tokens: 'Tokens', three: 'Three.js', cond_field: 'Campo (da tela)', var_name: 'Nome (da tela)' }, extraLabels || {})),
     routes: '["common/home","blog/blog_list"]', languages: '["pt-br","en-us"]', devices: '["desktop","mobile"]', url: '', csrf: ''
   };
   const textarea = make('textarea'); textarea.setAttribute('name', 'conditions'); textarea.value = JSON.stringify(conditions);
@@ -232,6 +240,51 @@ const times = { body: new Node('body') }; const x = new Node('button'); x.textCo
 let timesCaught = '';
 try { names(times, 'detector'); } catch (err) { timesCaught = String(err.message); }
 check(timesCaught.indexOf('tem nome com letras') !== -1, 'detector: botao "×" com title "×" e acusado');
+
+// ---- KZ-17: as listas da parte "Quando" mostram o nome que a tela enviou; o valor continua o tecnico
+function lists(p, cls) {
+  return p.body.all().filter(function (n) { return n.tagName === 'SELECT' && (' ' + n.className + ' ').indexOf(' ' + cls + ' ') !== -1; }).map(function (sel) {
+    const options = sel.children.filter(function (c) { return c.tagName === 'OPTION'; });
+    const chosen = options.filter(function (o) { return o.selected === true; });
+    return { values: options.map(function (o) { return o.value; }), texts: options.map(function (o) { return o.textContent; }), chosen: chosen.map(function (o) { return o.value; }) };
+  });
+}
+const NAMES = { group_all: 'E (da tela)', group_any: 'OU (da tela)', field_route: 'Rota (da tela)', field_site: 'Site (da tela)', field_hour: 'Hora (da tela)', field_query_key: 'Parametro %s (da tela)',
+  op_eq: 'igual (da tela)', op_between: 'entre (da tela)', op_in: 'na lista (da tela)' };
+const named = page(RULES, NAMES);
+const kinds = lists(named, 'tcb-group__kind'), fieldLists = lists(named, 'tcb-cond__field'), opLists = lists(named, 'tcb-cond__op');
+check(kinds.length === 3 && fieldLists.length === 5 && opLists.length === 5, 'listas da parte "Quando": 3 de grupo, 5 de campo, 5 de operador');
+kinds.forEach(function (k) {
+  check(JSON.stringify(k.values) === '["all","any","not"]', 'lista do grupo: os valores sao os tecnicos (' + k.values.join(',') + ')');
+  check(JSON.stringify(k.texts) === JSON.stringify(['E (da tela)', 'OU (da tela)', 'not']), 'lista do grupo: o texto vem da tela; sem texto, mostra o valor (' + k.texts.join(' | ') + ')');
+  check(k.chosen.length === 1, 'lista do grupo: uma opcao escolhida');
+});
+check(JSON.stringify(kinds.map(function (k) { return k.chosen[0]; })) === '["all","any","not"]', 'lista do grupo: a opcao escolhida e o tipo de cada grupo das regras');
+fieldLists.forEach(function (k) {
+  check(JSON.stringify(k.values) === JSON.stringify(['route', 'language', 'site', 'device', 'hour', 'query.utm_source']), 'lista do campo: os valores sao os tecnicos (' + k.values.join(',') + ')');
+  check(JSON.stringify(k.texts) === JSON.stringify(['Rota (da tela)', 'language', 'Site (da tela)', 'device', 'Hora (da tela)', 'Parametro utm_source (da tela)']),
+    'lista do campo: o texto vem da tela; sem texto, mostra o valor (' + k.texts.join(' | ') + ')');
+});
+check(JSON.stringify(fieldLists.map(function (k) { return k.chosen[0]; })) === '["route","hour","site","device","site"]', 'lista do campo: a opcao escolhida e o campo de cada condicao');
+opLists.forEach(function (k) {
+  check(JSON.stringify(k.values) === JSON.stringify(['eq', 'neq', 'in', 'not_in', 'between', 'exists']), 'lista do operador: os valores sao os tecnicos (' + k.values.join(',') + ')');
+  check(JSON.stringify(k.texts) === JSON.stringify(['igual (da tela)', 'neq', 'na lista (da tela)', 'not_in', 'entre (da tela)', 'exists']),
+    'lista do operador: o texto vem da tela; sem texto, mostra o valor (' + k.texts.join(' | ') + ')');
+});
+check(JSON.stringify(opLists.map(function (k) { return k.chosen[0]; })) === '["eq","between","in","exists","eq"]', 'lista do operador: a opcao escolhida e o operador de cada condicao');
+check(JSON.stringify(JSON.parse(named.textarea.value)) === JSON.stringify(RULES), 'com os nomes da tela, o JSON enviado continua o que foi carregado');
+// sem nenhum texto da tela (idioma sem as chaves): as listas mostram os valores, como antes
+const plain = lists(full, 'tcb-cond__field')[0];
+check(JSON.stringify(plain.texts) === JSON.stringify(plain.values) && plain.values.length === 6, 'sem texto da tela: a lista do campo mostra os valores');
+check(JSON.stringify(lists(full, 'tcb-cond__op')[0].texts) === JSON.stringify(lists(full, 'tcb-cond__op')[0].values), 'sem texto da tela: a lista do operador mostra os valores');
+check(JSON.stringify(lists(full, 'tcb-group__kind')[0].texts) === '["all","any","not"]', 'sem texto da tela: a lista do grupo mostra os valores');
+// o selo que repetia o tipo do grupo saiu
+[full, named].forEach(function (p) {
+  check(p.body.all().filter(function (n) { return /tcb-group__badge/.test(n.className); }).length === 0, 'nao ha selo ao lado da lista do grupo');
+});
+// as outras listas (site, cena, slot, simulador) nao ganharam texto por engano
+const siteValue = named.body.all().filter(function (n) { return n.tagName === 'SELECT' && / tcb-cond__value$/.test(n.className); });
+check(siteValue.length === 1 && JSON.stringify(siteValue[0].children.map(function (o) { return o.textContent; })) === '["primary","loja"]', 'a lista de sites do valor mostra os IDs dos sites');
 
 // ---- o detector acusa o defeito antigo
 function oldDefect() {

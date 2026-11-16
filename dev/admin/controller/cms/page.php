@@ -1122,7 +1122,7 @@ class Page extends \Reamur\System\Engine\Controller {
                 $version = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-threejs-49-media-accessibility';
                 $catalogAssetBase = $this->catalogAssetUrl();
                 $this->document->addStyle($site . 'view/css/blog-block-editor.css?v=' . $version);
-                $kazBdreAsset = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-bdre-ap';
+                $kazBdreAsset = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-bdre-kz17';
                 $this->document->addStyle($site . 'view/css/blog-block-editor-kaz.css?v=' . $kazBdreAsset);
                 $this->document->addScriptDeferred($site . 'view/js/blog-block-editor-kaz.js?v=' . $kazBdreAsset);
                 $this->document->addStyle($catalogAssetBase . 'view/css/threejs-thumb.css?v=' . $version);

@@ -1131,7 +1131,7 @@ class Blog extends \Reamur\System\Engine\Controller {
             $catalogAssetBase = $this->catalogAssetUrl();
             $catalogViewBase = $catalogAssetBase . 'view/';
             $this->document->addStyle($assetBase . 'css/blog-block-editor.css?v=' . $assetVersion);
-        $kazBdreAsset = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-bdre-ap';
+        $kazBdreAsset = \Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-bdre-kz17';
         $this->document->addStyle($assetBase . 'css/blog-block-editor-kaz.css?v=' . $kazBdreAsset);
         $this->document->addScriptDeferred($assetBase . 'js/blog-block-editor-kaz.js?v=' . $kazBdreAsset);
             $this->document->addStyle($catalogViewBase . 'css/threejs-thumb.css?v=' . $assetVersion);

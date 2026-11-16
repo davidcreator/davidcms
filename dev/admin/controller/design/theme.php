@@ -121,6 +121,8 @@ class Theme extends \Reamur\System\Engine\Controller {
         $impErr=$this->queryValue('import_error');
         if ($this->queryValue('import_ok')==='1') $data['notice']=$this->language->get('text_import_ok');
         elseif ($impErr!=='') $data['error']=$this->language->get('text_import_error').' ('.(in_array($impErr,$codes,true)?$impErr:'unknown').')';
+        // KZ-17 (ADR 0110): aviso de quem acabou de salvar. So em GET: um POST recusado nao diz "salvo".
+        elseif ($this->queryValue('saved')==='1' && ($this->request->server['REQUEST_METHOD']??'')!=='POST') $data['notice']=$this->language->get('text_saved_ok');
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-package.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         // F13-D: presets allowlistados + miniatura SVG deterministica.
@@ -211,8 +213,14 @@ class Theme extends \Reamur\System\Engine\Controller {
         ];
         $builderLabels=[];
         foreach($labelMap as $jsKey=>$langKey) { $builderLabels[$jsKey]=$this->language->get($langKey); $data[$langKey]=$builderLabels[$jsKey]; }
+        // KZ-17 (ADR 0110): nome de cada campo e operador da parte "Quando" no idioma do admin. As listas vem
+        // do motor (ConditionEngine::spec()); idioma sem o texto fica fora do mapa e a tela mostra o valor tecnico.
+        $builderNames=['field_query_key'=>'text_builder_field_query_key'];
+        foreach($spec['fields'] as $f) $builderNames['field_'.$f]='text_builder_field_'.$f;
+        foreach($spec['operators'] as $o) $builderNames['op_'.$o]='text_builder_op_'.$o;
+        foreach($builderNames as $jsKey=>$langKey) { $text=$this->language->get($langKey); if ($text!==$langKey && $text!=='') $builderLabels[$jsKey]=$text; }
         $data['builder_labels_json']=json_encode($builderLabels,$jsonFlags) ?: '{}';
-        $builderAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-builder-d';
+        $builderAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-builder-e';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/theme-condition-builder.css?v=' . $builderAssetV);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-condition-builder.js?v=' . $builderAssetV);
         // F13-D: editor de cena (presets + miniatura ao vivo).
@@ -240,7 +248,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
         $data['kaz_scene_saved']=$savedScene!==null;
         $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
-        $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz16';
+        $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz17';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAJ);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAJ);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
@@ -259,7 +267,17 @@ class Theme extends \Reamur\System\Engine\Controller {
                 }
                 else {
                     $saved=$this->model_design_theme->save($id,['name'=>$built['name'],'slug'=>$built['slug'],'config'=>$built['config']],(int)$this->user->getUserId());
-                    if ($saved) { $this->response->redirect($this->url->link('design/theme')); return; }
+                    if ($saved) {
+                        // KZ-17 (ADR 0110): salvar continua no editor, no mesmo modulo e na mesma tela (normal ou
+                        // pagina cheia). O destino e montado aqui; do pedido so entram o modulo, se for um nome
+                        // simples, e o sinal de pagina cheia.
+                        $back=$this->url->link('design/theme.edit|'.(int)$saved); $sep=str_contains($back,'?')?'&':'?';
+                        $module=$this->queryValue('kaz_module');
+                        $this->response->redirect($back.$sep.'saved=1'
+                            .(preg_match('/^[a-z]{1,24}$/D',$module)===1?'&kaz_module='.$module:'')
+                            .($this->queryValue('kaz_fullscreen')==='1'?'&kaz_fullscreen=1':''));
+                        return;
+                    }
                     $data['error']=$this->language->get('error_validation');
                 }
             }
@@ -478,6 +496,9 @@ class Theme extends \Reamur\System\Engine\Controller {
         // Frente AA: modo pagina cheia em OUTRA pagina (sem chrome do Admin).
         // Apenas leitura de GET; nenhuma rota, migration ou chave nova.
         $data['kaz_fullscreen_page']=($this->queryValue('kaz_fullscreen')==='1');
+        // KZ-17 (ADR 0110): modulo em que o editor abre (vem do endereco depois de salvar); vazio = pagina.
+        $startModule=$this->queryValue('kaz_module');
+        $data['kaz_start_module']=preg_match('/^[a-z]{1,24}$/D',$startModule)===1?$startModule:'';
         /* Frente AH: estado da LIBERACAO visivel no proprio Admin. HTML
            server-side: aparece mesmo se o JS nao inicializar (AD/AE). Puro,
            sem rota/coluna/traducao nova e sem nenhuma escrita. */

@@ -111,7 +111,7 @@ window.KazEditorText = (function () {
       { kind: 'text', w: 480, h: 80, fill: '#0f172a', radius: 0, text: TXT('sample_hero_title', 'Título do hero'), fontSize: 32, dx: 24, dy: 32 },
       { kind: 'button', w: 160, h: 56, fill: '#2563eb', radius: 12, text: TXT('sample_more', 'Saiba mais'), fontSize: 16, dx: 24, dy: 120 }
     ] },
-    card: { label: 'Cartao', layers: [
+    card: { label: 'Cartão', layers: [
       { kind: 'card', w: 280, h: 176, fill: '#ffffff', radius: 12, text: '', fontSize: 16, dx: 0, dy: 0 },
       { kind: 'text', w: 240, h: 64, fill: '#0f172a', radius: 0, text: TXT('sample_card', 'Cartão de conteúdo'), fontSize: 20, dx: 16, dy: 24 }
     ] },
@@ -119,7 +119,7 @@ window.KazEditorText = (function () {
       { kind: 'rect', w: 720, h: 96, fill: '#1e3a8a', radius: 8, text: '', fontSize: 16, dx: 0, dy: 0 },
       { kind: 'text', w: 640, h: 48, fill: '#ffffff', radius: 0, text: TXT('sample_banner', 'Aviso ou chamada'), fontSize: 24, dx: 24, dy: 24 }
     ] },
-    titulo: { label: 'Titulo', layers: [
+    titulo: { label: 'Título', layers: [
       { kind: 'text', w: 480, h: 64, fill: '#0f172a', radius: 0, text: TXT('sample_title', 'Novo título'), fontSize: 40, dx: 0, dy: 0 },
       { kind: 'rect', w: 480, h: 8, fill: '#38bdf8', radius: 0, text: '', fontSize: 16, dx: 0, dy: 72 }
     ] },
@@ -1002,13 +1002,19 @@ window.KazEditorText = (function () {
       if (typeof bad.reportValidity === 'function') bad.reportValidity();
     });
   }
+  /* KZ-17 (ADR 0110): o endereco do salvar leva o modulo aberto; depois de gravar, o servidor reabre o
+     editor nele. Publicar e comparar usam `formaction` proprio e nao passam por este endereco. */
+  var saveAction = form && typeof form.getAttribute === 'function' ? (form.getAttribute('action') || '') : '';
   if (form) form.addEventListener('submit', function () {
+    if (saveAction) form.setAttribute('action', saveAction + (saveAction.indexOf('?') < 0 ? '?' : '&') + 'kaz_module=' + encodeURIComponent(stateModule));
     syncField(); baseline = copy(scene);
     formBaseline = formSnapshot(); formTouched = false;
     paintDirty();
   });
-  /* KZ-01 (ADR 0083): a pagina real do rascunho e a vista de abertura. */
-  if (root.querySelector('[data-kaz-module-panel="pagina"]')) setModule('pagina');
+  /* KZ-01 (ADR 0083): a pagina real do rascunho e a vista de abertura.
+     KZ-17 (ADR 0110): depois de salvar, a tela reabre no modulo em que a pessoa estava. */
+  var startModule = root.getAttribute('data-kaz-start-module') || '';
+  if (!(startModule && setModule(startModule)) && root.querySelector('[data-kaz-module-panel="pagina"]')) setModule('pagina');
   root.setAttribute('data-kaz-ready','1');
   /* AC: no mobile as duas sidebars comecam recolhidas (overlay), senao o
      grid de 3 colunas espremia o centro a 0px. matchMedia e opcional para

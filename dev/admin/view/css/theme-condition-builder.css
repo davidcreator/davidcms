@@ -31,14 +31,15 @@
 .tcb-group--not { border-left-color: var(--bs-danger); }
 .tcb-group__bar { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; margin-bottom: .45rem; }
 .tcb-group__kind { width: auto; min-width: 5.5rem; }
-.tcb-group__badge { font-size: .7rem; font-weight: 700; letter-spacing: .05em;
-  color: var(--bs-secondary-color); }
 .tcb-group__kids { display: flex; flex-direction: column; gap: .4rem; padding-left: .4rem; }
 
-.tcb-cond { display: grid; grid-template-columns: minmax(120px, 1.1fr) minmax(110px, .9fr) minmax(140px, 1.4fr) auto;
-  gap: .4rem; align-items: center; background: var(--bs-body-bg);
+/* KZ-17 (ADR 0110): as listas de campo e de operador mostram o nome no idioma do admin, e o nome nao cabia
+   em coluna de largura fixa. Cada lista tem a largura do seu texto mais comprido; o valor ocupa o resto da
+   linha e, quando nao cabe, desce para a linha de baixo. */
+.tcb-cond { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; background: var(--bs-body-bg);
   border: 1px solid var(--bs-border-color); border-radius: .35rem; padding: .4rem; }
-.tcb-cond__value { min-width: 0; }
+.tcb-cond__field, .tcb-cond__op { width: auto; max-width: 100%; flex: 0 1 auto; }
+.tcb-cond__value { min-width: 0; flex: 1 1 140px; }
 .tcb-cond__value input, .tcb-cond__value select { width: 100%; }
 .tcb-pair { display: flex; align-items: center; gap: .35rem; }
 .tcb-pair input { min-width: 0; flex: 1 1 auto; }
@@ -62,7 +63,7 @@
 .tcb-override span { word-break: break-word; }
 
 @media (max-width: 767.98px) {
-  .tcb-cond { grid-template-columns: 1fr; }
+  .tcb-cond__field, .tcb-cond__op { flex: 1 1 100%; }
   .tcb-three .tcb-field { grid-template-columns: 1fr; }
 }
 

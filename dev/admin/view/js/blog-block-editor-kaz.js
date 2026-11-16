@@ -83,13 +83,13 @@
     });
     bar.appendChild(all);
 
-    var st = make('span', 'kaz-bdre-status', 'Padrão KAZTheme-Editor ativo');
+    var st = make('span', 'kaz-bdre-status', 'Padrão KAZEditor-Theme ativo');
     st.setAttribute('role', 'status');
     st.setAttribute('aria-live', 'polite');
     bar.appendChild(st);
 
     host.insertBefore(bar, host.firstChild);
-    status(host, 'Padrão KAZTheme-Editor ativo');
+    status(host, 'Padrão KAZEditor-Theme ativo');
   }
   function boot() {
     hosts = Array.prototype.slice.call(document.querySelectorAll('[data-blog-block-editor]'));

@@ -90,11 +90,15 @@
     if (onChange) i.addEventListener('change', onChange);
     return i;
   }
+  // KZ-17 (ADR 0110): as listas da parte "Quando" mostram o nome no idioma do admin. O valor de cada
+  // opcao (o que vai para o JSON da regra) continua o tecnico; sem texto para um item, a lista mostra o valor.
   function fieldOptions() {
-    var out = fields.map(function (f) { return { value: f, label: f }; });
-    queryKeys.forEach(function (k) { out.push({ value: 'query.' + k, label: 'query.' + k }); });
+    var out = fields.map(function (f) { return { value: f, label: L('field_' + f, f) }; });
+    queryKeys.forEach(function (k) { out.push({ value: 'query.' + k, label: L('field_query_key', 'query.%s').replace('%s', k) }); });
     return out;
   }
+  function groupOptions() { return groups.map(function (g) { return { value: g, label: L('group_' + g, g) }; }); }
+  function opOptions() { return operators.map(function (o) { return { value: o, label: L('op_' + o, o) }; }); }
   function clear(n) { while (n.firstChild) n.removeChild(n.firstChild); }
   function groupKind(n) {
     for (var i = 0; i < groups.length; i++) if (Object.prototype.hasOwnProperty.call(n, groups[i])) return groups[i];
@@ -171,13 +175,12 @@
       node[kind] = children;
       var wrap = el('div', { 'class': 'tcb-group tcb-group--' + kind });
       var bar = el('div', { 'class': 'tcb-group__bar' });
-      bar.appendChild(named(sel(groups, kind, function (v) {
+      bar.appendChild(named(sel(groupOptions(), kind, function (v) {
         var kids = node[kind];
         delete node[kind];
         node[v] = kids;
         sync(true);
       }, 'form-select form-select-sm tcb-group__kind'), L('cond_group', 'Tipo de grupo')));
-      bar.appendChild(el('span', { 'class': 'tcb-group__badge', text: L('group_' + kind, kind.toUpperCase()) }));
       bar.appendChild(btn('+ ' + L('add_condition', 'condicao'), 'btn btn-sm btn-outline-secondary', function () {
         children.push({ field: 'route', op: 'eq', value: '' });
         sync(true);
@@ -205,7 +208,7 @@
 
     var row = el('div', { 'class': 'tcb-cond' });
     row.appendChild(named(sel(fieldOptions(), node.field || 'route', function (v) { node.field = v; sync(false); }, 'form-select form-select-sm tcb-cond__field'), L('cond_field', 'Campo')));
-    row.appendChild(named(sel(operators, node.op || 'eq', function (v) {
+    row.appendChild(named(sel(opOptions(), node.op || 'eq', function (v) {
       node.op = v;
       if (!needsValue(v)) delete node.value;
       else if (!Array.isArray(node.value) && v !== 'in' && v !== 'not_in' && v !== 'between') { /* mantem */ }

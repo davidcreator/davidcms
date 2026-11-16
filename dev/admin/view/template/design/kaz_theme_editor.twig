@@ -48,8 +48,9 @@
      data-kaz-dirty="0"
      data-kaz-version="2"
      data-kaz-page-mode="{{ kaz_fullscreen_page ? 'fullscreen' : 'normal' }}"
+     data-kaz-start-module="{{ kaz_start_module|e('html_attr') }}"
      data-kaz-density="normal">
-  <form id="kaz-theme-form" method="post" action="{{ action }}">
+  <form id="kaz-theme-form" method="post" action="{{ action }}{% if kaz_fullscreen_page %}&amp;kaz_fullscreen=1{% endif %}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   {# ---------- NAVBAR (Penpot: main menu, toolbar, history, users, status) ---------- #}
   <header class="kaz-topbar">
