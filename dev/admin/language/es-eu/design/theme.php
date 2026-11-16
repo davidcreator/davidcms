@@ -1002,3 +1002,10 @@ $_['text_kaz_sample_card'] = 'Tarjeta de contenido';
 $_['text_kaz_sample_banner'] = 'Aviso o llamada';
 $_['text_kaz_sample_title'] = 'Nuevo título';
 $_['text_kaz_sample_start'] = 'Empezar';
+// KZ-19 (ADR 0112): textos do tema por idioma
+$_['error_theme_strings'] = 'Los textos del tema por idioma no son válidos. Use un JSON con el formato clave → idioma → texto, con claves en minúsculas (a-z, 0-9, _), idiomas como pt-br y texto simple de hasta 2000 caracteres. No se guardó ningún cambio.';
+$_['text_kaz_strings_summary'] = 'Textos del tema por idioma';
+$_['text_kaz_strings_note'] = 'Cada texto propio del tema está aquí, una vez por idioma. En la fuente, imprímalo con %s. Si falta el texto en el idioma del visitante, se muestra el de %s. Es texto simple: el HTML no se interpreta.';
+$_['text_kaz_strings_key'] = 'clave';
+$_['text_kaz_strings_missing'] = 'Textos que faltan por idioma:';
+$_['text_kaz_strings_field'] = 'JSON de los textos del tema';

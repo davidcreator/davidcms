@@ -9,6 +9,9 @@
  */
 namespace Reamur\System\Library\Theme;
 
+if (!class_exists(ThemeStrings::class, false)) {
+    require_once __DIR__ . '/theme_strings.php';
+}
 final class ThemeSnapshot {
     private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found', 'david-universe'];
     private ConditionEngine $engine;
@@ -80,6 +83,7 @@ final class ThemeSnapshot {
         }
 
         $templates = isset($config['templates']) && is_array($config['templates']) ? $config['templates'] : [];
+        $language = ThemeStrings::isLanguage($context['language'] ?? null) ? (string)$context['language'] : ThemeStrings::FALLBACK;
 
         // F13-F: composicao declarativa da home. Ausente => null (layout legado
         // do CMS); presente => lista validada, inclusive [] (nenhuma secao).
@@ -136,6 +140,9 @@ final class ThemeSnapshot {
             'matched'    => $r['matched'],
             'ignored'    => $r['ignored'],
             'templates'  => $templates,
+            // KZ-19 (ADR 0112): textos do tema ja resolvidos para o idioma do contexto.
+            'language'   => $language,
+            'strings'    => ThemeStrings::resolve($config['strings'] ?? null, $language),
             'sections'   => $sections,
             'sections_defined' => ($sections !== null),
             'section_bars' => $sectionBars,

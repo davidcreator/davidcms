@@ -17,6 +17,9 @@
  */
 namespace Reamur\System\Library\Theme;
 
+if (!class_exists(ThemeStrings::class, false)) {
+    require_once __DIR__ . '/theme_strings.php';
+}
 final class ThemePreviewState {
     /** Mesma ordem de dev/catalog/controller/common/header.php. */
     private const CSS_PARTS = ['token_css','component_css','schedule_css','media_css','site_css','scene_css'];
@@ -78,6 +81,15 @@ final class ThemePreviewState {
         $out['theme_primary'] = $primary;
         $out['theme_surface'] = $surface;
         $out['theme_classes'] = self::bodyClasses($state);
+        /* KZ-19 (ADR 0112): textos do tema no idioma da previa. Passam pelo
+           contrato de ThemeStrings (nao por flat(), que corta em 256 bytes). */
+        $text = [];
+        foreach ((is_array($state['strings'] ?? null) ? $state['strings'] : []) as $key => $value) {
+            if (count($text) >= ThemeStrings::MAX_KEYS) break;
+            if (ThemeStrings::isKey($key) && ThemeStrings::isText($value)) $text[$key] = $value;
+        }
+        $out[ThemeStrings::GLOBAL] = $text;
+        $out[ThemeStrings::GLOBAL_LANGUAGE] = ThemeStrings::isLanguage($state['language'] ?? null) ? (string)$state['language'] : ThemeStrings::FALLBACK;
         /* Nao expor theme_scene_view: renderSandboxPreview() ja define essa
            chave no contexto com previewSceneView() (AF), sanitizado. */
         return $out;

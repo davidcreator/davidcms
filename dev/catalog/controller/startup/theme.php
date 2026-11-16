@@ -180,6 +180,8 @@ class Theme extends \Reamur\System\Engine\Controller {
         // Globais primeiro: setThemeTemplates() reconstrói o Environment e
         // reaplica estes mesmos valores (implementado no adaptador Twig).
         if (method_exists($this->template, 'setThemeGlobals')) $this->template->setThemeGlobals($snapshot['globals']);
+        // KZ-19 (ADR 0112): textos proprios do tema no idioma ja negociado acima.
+        if (method_exists($this->template, 'setThemeStrings')) $this->template->setThemeStrings((array)($snapshot['strings'] ?? []), (string)($snapshot['language'] ?? ''));
         // ADR 0087 (S2): as fontes do tema rodam em Twig Sandbox tambem aqui.
         if (method_exists($this->template, 'setThemeTemplates')) $this->template->setThemeTemplates($snapshot['templates'], $this->themeSourceReporter());
     }

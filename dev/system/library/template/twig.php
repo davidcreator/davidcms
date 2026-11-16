@@ -26,6 +26,9 @@ if (!class_exists(\Reamur\System\Library\Theme\ThemePreviewState::class, false))
 if (!class_exists(ThemeSandbox::class, false)) {
     require_once __DIR__ . '/theme_sandbox.php';
 }
+if (!class_exists(\Reamur\System\Library\Theme\ThemeStrings::class, false)) {
+    require_once __DIR__ . '/../theme/theme_strings.php';
+}
 
 final class Twig {
     /** Fixed Catalog source keys editable through Themes; arbitrary paths, script tags and raw filters are rejected. */
@@ -43,6 +46,9 @@ final class Twig {
     private string $directory;
     /** @var array<string, mixed> Globais seguros publicados pelo tema (F12-01). */
     private array $themeGlobals = [];
+    /** @var array<string, string> KZ-19 (ADR 0112): textos do tema no idioma da requisicao. */
+    private array $themeText = [];
+    private string $themeLang = \Reamur\System\Library\Theme\ThemeStrings::FALLBACK;
     /** S2 (ADR 0087): fontes do tema publicado, sempre em sandbox. null = tema sem fontes. */
     private ?ThemeSandbox $themeSandbox = null;
 
@@ -122,11 +128,38 @@ final class Twig {
         }
         $this->themeGlobals = $safe;
         $this->applyThemeGlobals($this->twig);
-        if ($this->themeSandbox !== null) $this->themeSandbox->setGlobals($safe);
+        if ($this->themeSandbox !== null) $this->themeSandbox->setGlobals($this->sandboxGlobals());
+    }
+
+    /**
+     * KZ-19 (ADR 0112): textos proprios do tema, ja resolvidos para UM idioma
+     * por ThemeStrings::resolve(). Canal separado de setThemeGlobals() porque
+     * la valem os limites de variavel de regra (64 itens, 256 bytes); um
+     * paragrafo do tema e maior do que isso. Aqui valem os limites do
+     * contrato de textos. Texto simples: a fonte do tema escapa na saida.
+     * @param array<mixed, mixed> $strings chave => texto
+     */
+    public function setThemeStrings(array $strings, string $language = ''): void {
+        $S = \Reamur\System\Library\Theme\ThemeStrings::class;
+        $safe = [];
+        foreach ($strings as $key => $text) {
+            if (count($safe) >= $S::MAX_KEYS) break;
+            if ($S::isKey($key) && $S::isText($text)) $safe[$key] = $text;
+        }
+        $this->themeText = $safe;
+        $this->themeLang = $S::isLanguage($language) ? $language : $S::FALLBACK;
+        $this->applyThemeGlobals($this->twig);
+        if ($this->themeSandbox !== null) $this->themeSandbox->setGlobals($this->sandboxGlobals());
+    }
+
+    /** @return array<string, mixed> globais das regras + textos e idioma do tema */
+    private function sandboxGlobals(): array {
+        $S = \Reamur\System\Library\Theme\ThemeStrings::class;
+        return array_replace($this->themeGlobals, [$S::GLOBAL => $this->themeText, $S::GLOBAL_LANGUAGE => $this->themeLang]);
     }
 
     private function applyThemeGlobals(\Twig\Environment $env): void {
-        foreach ($this->themeGlobals as $name => $value) $env->addGlobal($name, $value);
+        foreach ($this->sandboxGlobals() as $name => $value) $env->addGlobal($name, $value);
     }
 
     /**
@@ -149,7 +182,7 @@ final class Twig {
         if ($this->cacheEnabled && !is_dir($cacheDir)) mkdir($cacheDir, 0755, true);
         $sandbox = new ThemeSandbox(
             $templates, self::THEME_TEMPLATE_KEYS, $this->templatePaths(),
-            $this->cacheEnabled ? $cacheDir : false, $this->themeGlobals, $report
+            $this->cacheEnabled ? $cacheDir : false, $this->sandboxGlobals(), $report
         );
         $this->themeSandbox = $sandbox->isEmpty() ? null : $sandbox;
     }
@@ -177,7 +210,7 @@ final class Twig {
         // admin qualquer Twig que a regex deixasse passar.
         $paths = [DIR_SYSTEM . '../catalog/view/template/'];
         $env = new \Twig\Environment(new \Twig\Loader\FilesystemLoader($paths), ['autoescape'=>'html','cache'=>false,'auto_reload'=>true]);
-        $themed = new ThemeSandbox($templates, self::THEME_TEMPLATE_KEYS, $paths, false, $this->themeGlobals);
+        $themed = new ThemeSandbox($templates, self::THEME_TEMPLATE_KEYS, $paths, false, $this->sandboxGlobals());
         $this->addThemePartial($env, static fn (string $key, array $data): string => $themed->render($key, $data, $env));
         $this->applyThemeGlobals($env);
         $headerHtml = $env->render('common/header.twig', $headerData);

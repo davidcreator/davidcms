@@ -12,6 +12,9 @@
  */
 namespace Reamur\System\Library\Theme;
 
+if (!class_exists(ThemeStrings::class, false)) {
+    require_once __DIR__ . '/theme_strings.php';
+}
 final class ThemePackage {
     public const FORMAT = 'reamurcms-theme';
     public const VERSION = 1;
@@ -28,7 +31,7 @@ final class ThemePackage {
     ];
     // Frente V: `kaz_scene` e dado de EDICAO/versionamento (kaztheme-scene/v1).
     // Nao participa de decide(), nao e global de runtime e nao exige migration.
-    private const CONFIG_KEYS = ['primary','surface','scene','templates','conditions','three','tokens','parent','sections','components','schedule','media','sites','kaz_scene'];
+    private const CONFIG_KEYS = ['primary','surface','scene','templates','conditions','three','tokens','parent','sections','components','schedule','media','sites','kaz_scene','strings'];
     public const SCENE_VERSION = 1;
     public const SCENE_KINDS = ['rect','text','button','card','section'];
     public const SCENE_ROLES = ['none','primary','surface','section','component'];
@@ -37,7 +40,7 @@ final class ThemePackage {
     // F13-H: `schedule` e substituido integralmente na heranca (como `conditions`),
     // NAO mesclado por chave: um filho nunca herda metade de uma janela.
     private const SCENES = ['', 'hero-particles', 'portfolio-3d', 'tools-3d', 'not-found', 'david-universe'];
-    private const MAP_KEYS = ['tokens','templates','three','components','media'];
+    private const MAP_KEYS = ['tokens','templates','three','components','media','strings'];
 
     private ConditionEngine $engine;
     private TokenRegistry $tokens;
@@ -73,7 +76,8 @@ final class ThemePackage {
                 'media_ids'=>$this->media->ids(),'model_ids'=>$this->media->modelIds(),
                 'site_ids'=>$this->sites->ids(),'site_languages'=>$this->sites->languages(),
                 'kaz_scene_version'=>self::SCENE_VERSION,'kaz_scene_kinds'=>self::SCENE_KINDS,
-                'kaz_scene_roles'=>self::SCENE_ROLES,'kaz_scene_max_layers'=>self::SCENE_MAX_LAYERS];
+                'kaz_scene_roles'=>self::SCENE_ROLES,'kaz_scene_max_layers'=>self::SCENE_MAX_LAYERS,
+                'strings'=>ThemeStrings::spec()];
     }
 
     /** @return array<string,mixed> */
@@ -108,6 +112,8 @@ final class ThemePackage {
         if (isset($out['sites']) && !is_array($out['sites'])) unset($out['sites']);
         // Frente V: cena e sempre um array validado (nunca string/objeto).
         if (isset($out['kaz_scene']) && !is_array($out['kaz_scene'])) unset($out['kaz_scene']);
+        // KZ-19 (ADR 0112): textos do tema por idioma; sempre um mapa.
+        if (isset($out['strings']) && !is_array($out['strings'])) unset($out['strings']);
         return $out;
     }
 
@@ -167,6 +173,8 @@ final class ThemePackage {
         if (array_key_exists('kaz_scene',$config)) {
             if (!is_array($config['kaz_scene']) || self::validateScene($config['kaz_scene'])!==[]) $e[]='kaz_scene_invalid';
         }
+        // KZ-19 (ADR 0112): chave ausente e valida (temas anteriores); presente exige contrato.
+        if (array_key_exists('strings',$config) && ThemeStrings::validate($config['strings'])!==[]) $e[]='strings_invalid';
         return array_values(array_unique($e));
     }
 

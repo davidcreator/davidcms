@@ -58,7 +58,7 @@ final class KazFrameTextTest extends TestCase {
 
     public function testTheThreeLanguagesHaveTheSameFrameKeysAllFilled(): void {
         $pt = $this->frame('pt-br');
-        self::assertCount(242, $pt, 'a quantidade so muda junto com o Twig e os tres idiomas'); // 109 da KZ-11 + 75 da KZ-13 + 57 da KZ-14 + 1 da KZ-15
+        self::assertCount(247, $pt, 'a quantidade so muda junto com o Twig e os tres idiomas'); // 109 da KZ-11 + 75 da KZ-13 + 57 da KZ-14 + 1 da KZ-15 + 5 da KZ-19
         foreach (self::LANGUAGES as $code) {
             $texts = $this->frame($code);
             self::assertSame(array_keys($pt), array_keys($texts), $code . ': mesmas chaves, na mesma ordem');
@@ -123,6 +123,6 @@ final class KazFrameTextTest extends TestCase {
         exec(escapeshellarg($node) . ' ' . escapeshellarg(DIR_REAMUR . self::CHECKER) . ' 2>&1', $output, $status);
         $last = (string)end($output);
         self::assertSame(0, $status, implode("\n", array_slice($output, 0, 12)));
-        self::assertMatchesRegularExpression('/^Frame text checker: \d{3,} PASS \(242 chaves, 74 no script, 175 no Twig\)$/', $last);
+        self::assertMatchesRegularExpression('/^Frame text checker: \d{3,} PASS \(247 chaves, 74 no script, 180 no Twig\)$/', $last);
     }
 }

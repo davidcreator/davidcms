@@ -60,3 +60,4 @@
 | Idioma por Site | [guias/GUIA-IDIOMA-POR-SITE.md](guias/GUIA-IDIOMA-POR-SITE.md) |
 | Idioma Efetivo | [guias/GUIA-IDIOMA-EFETIVO.md](guias/GUIA-IDIOMA-EFETIVO.md) |
 | Idioma Efetivo por Config | [guias/GUIA-IDIOMA-EFETIVO-POR-CONFIG.md](guias/GUIA-IDIOMA-EFETIVO-POR-CONFIG.md) |
+| Textos do tema por idioma | [guias/GUIA-TEXTOS-DO-TEMA-POR-IDIOMA.md](guias/GUIA-TEXTOS-DO-TEMA-POR-IDIOMA.md) |

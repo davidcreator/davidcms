@@ -697,6 +697,17 @@
     <p class="kaz-note">{% set kz = text_kaz_adv_note|split('%s') %}{{ kz[0] }}<strong>{{ text_kaz_unsaved }}</strong>{{ kz[1] }}<strong>{{ text_kaz_adv_file_status }}</strong>{{ kz[2] }}<code>kaz_scene</code>{{ kz[3] }}<code>custom_js</code>{{ kz[4] }}</p>
   </div>
   </details>
+
+  {# ---------- KZ-19 (ADR 0112): textos do tema por idioma. Campo REAL do formulário. ---------- #}
+  <details class="kaz-advanced" data-kaz-strings>
+    <summary>{{ text_kaz_strings_summary }} ({{ strings_count }})</summary>
+  <div class="kaz-io">
+    <p class="kaz-note">{% set ks = text_kaz_strings_note|split('%s') %}{{ ks[0] }}<code>{{ '{{ theme_text.' }}<em>{{ text_kaz_strings_key }}</em>{{ ' }}' }}</code>{{ ks[1] }}<code>en-us</code>{{ ks[2] }}</p>
+    {% if strings_count %}<p class="kaz-note" data-kaz-strings-missing>{{ text_kaz_strings_missing }}{% for m in strings_missing %} <code>{{ m.code }}</code> {{ m.count }}{% if not loop.last %} ·{% endif %}{% endfor %}</p>{% endif %}
+    <label class="kaz-panel__title" for="kaz-strings-json">{{ text_kaz_strings_field }}</label>
+    <textarea id="kaz-strings-json" name="strings_json" data-kaz-strings-json rows="16" spellcheck="false" aria-label="{{ text_kaz_strings_field|e('html_attr') }}">{{ strings_json }}</textarea>
+  </div>
+  </details>
   </form>
   <details class="kaz-advanced kaz-advanced--extra" data-kaz-advanced-extra>
     <summary>{{ text_kaz_extra_summary }}</summary>

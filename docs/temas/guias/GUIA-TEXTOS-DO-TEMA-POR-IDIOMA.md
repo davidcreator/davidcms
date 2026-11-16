@@ -1,0 +1,70 @@
+# Guia — Textos do tema por idioma (KZ-19, ADR 0112)
+
+Um tema tem três tipos de texto. Cada um tem o seu lugar, e os três mudam com o idioma do visitante (`en-us`, `pt-br`, `es-eu`).
+
+| Tipo de texto | Exemplo | Onde fica | Como a fonte do tema imprime |
+| --- | --- | --- | --- |
+| Texto do sistema | "Enviar", "Ler mais", título de uma seção padrão | `dev/catalog/language/<idioma>/<rota>.php` | `{{ button_send }}`, `{{ text_about_title }}` |
+| Conteúdo | projeto, post, página, depoimento | banco, tabelas `*_description` (uma linha por idioma) | `{{ project.name }}`, `{% for post in posts %}` |
+| **Texto próprio do tema** | "Iniciar missão", "Fase 01" | **`config.strings` do tema** | **`{{ theme_text.hero_start }}`** |
+
+Regra prática: se o texto já existe no sistema ou no conteúdo, use a variável dele. Só o que é do tema vai para o dicionário. **Texto digitado direto na fonte fica num idioma só.**
+
+## O dicionário
+
+```json
+{
+  "hero_start": { "en-us": "Start mission", "pt-br": "Iniciar missão", "es-eu": "Iniciar misión" },
+  "phase_label": { "en-us": "Phase", "pt-br": "Fase", "es-eu": "Fase" }
+}
+```
+
+- **Chave:** letras minúsculas, números e `_`, começando por letra, até 64 caracteres.
+- **Idioma:** o código do idioma do Catalog (`en-us`, `pt-br`, `es-eu`).
+- **Texto:** simples, até 2000 caracteres. Quebra de linha é aceita; HTML aparece como texto.
+- Até 600 chaves por tema.
+
+## Como preencher
+
+1. Admin → Temas → abra o tema.
+2. No fim do formulário, abra **"Textos do tema por idioma"**.
+3. Cole ou edite o JSON no campo e salve o rascunho.
+4. O bloco mostra quantos textos existem e quantos faltam em cada idioma.
+
+Se o JSON estiver fora do formato, nada é salvo, a tela avisa e o que foi digitado continua no campo.
+
+## Como usar na fonte
+
+```twig
+<a class="btn" href="#fase-01">{{ theme_text.hero_start }}</a>
+<span>{{ theme_text.phase_label }} 01</span>
+<nav aria-label="{{ theme_text.nav_label }}">…</nav>
+<p lang="{{ theme_lang }}">…</p>
+```
+
+- `theme_lang` é o idioma efetivo da página.
+- Para um texto opcional: `{{ theme_text.extra|default('') }}`.
+- Para quebrar linhas de um texto: `{{ theme_text.intro|nl2br }}`.
+
+## O que o visitante vê quando falta tradução
+
+1. O texto no idioma dele.
+2. Se não houver: o texto em `en-us`.
+3. Se também não houver: o primeiro idioma preenchido.
+
+## Conferir antes de publicar
+
+No canvas do editor, troque o seletor **"Idioma"**: a página é redesenhada com os textos daquele idioma, inclusive os que ainda não foram salvos.
+
+## Cópia de segurança
+
+Os textos fazem parte do tema. Estão:
+
+- no banco, na linha do tema (rascunho e publicado) e na revisão que cada save guarda;
+- no arquivo `.reamurtheme.json` do botão **"Exportar"**.
+
+Guardar o arquivo exportado ou um dump do banco guarda os textos dos três idiomas. Importar o arquivo os traz de volta; arquivo alterado à mão é recusado pela soma de conferência.
+
+## Tema filho
+
+O filho herda os textos do pai. Uma chave repetida no filho substitui a do pai inteira, em todos os idiomas.

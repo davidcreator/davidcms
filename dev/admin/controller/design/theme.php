@@ -248,6 +248,17 @@ class Theme extends \Reamur\System\Engine\Controller {
         $savedScene=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($config['kaz_scene'] ?? null);
         $data['kaz_scene_saved']=$savedScene!==null;
         $data['kaz_scene_json']=json_encode($savedScene ?? self::kazScene($config),$jsonFlags) ?: '{}';
+        // KZ-19 (ADR 0112): textos proprios do tema por idioma. O campo e um JSON
+        // unico (uma variavel de formulario), nao uma grade de inputs: 250 textos
+        // em 3 idiomas passariam do limite `max_input_vars` do PHP e seriam
+        // cortados em silencio.
+        $themeStrings='\Reamur\System\Library\Theme\ThemeStrings';
+        $savedStrings=$themeStrings::normalize($config['strings'] ?? []) ?? [];
+        $data['strings_json']=$savedStrings===[]?'{}':(json_encode($savedStrings,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}');
+        $data['strings_count']=count($savedStrings);
+        $stringsMissing=[];
+        foreach($themeStrings::missing($savedStrings,['en-us','pt-br','es-eu']) as $code=>$keys) $stringsMissing[]=['code'=>$code,'count'=>count($keys)];
+        $data['strings_missing']=$stringsMissing;
         $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz17';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAJ);
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAJ);
@@ -266,6 +277,9 @@ class Theme extends \Reamur\System\Engine\Controller {
                     $data['error']=($slugErr!=='error_slug_exists') ? $slugErr : $this->language->get('error_validation');
                 }
                 else {
+                    // KZ-19 (ADR 0112): um formulario sem o campo `strings_json` (integracao
+                    // antiga) nao apaga os textos do tema: valem os ja gravados.
+                    if (!array_key_exists('strings_json',$post) && $savedStrings!==[]) $built['config']['strings']=$savedStrings;
                     $saved=$this->model_design_theme->save($id,['name'=>$built['name'],'slug'=>$built['slug'],'config'=>$built['config']],(int)$this->user->getUserId());
                     if ($saved) {
                         // KZ-17 (ADR 0110): salvar continua no editor, no mesmo modulo e na mesma tela (normal ou
@@ -284,6 +298,7 @@ class Theme extends \Reamur\System\Engine\Controller {
             foreach(['name','slug','primary','surface','scene'] as $k) $data[$k]=(string)($post[$k]??$data[$k]);
             // Frente V: reflete a cena enviada mesmo quando o save falha.
             $data['kaz_scene_json']=(string)($post['kaz_scene_json']??$data['kaz_scene_json']);
+            if (is_string($post['strings_json']??null)) $data['strings_json']=$post['strings_json'];
             $data['conditions_json']=(string)($post['conditions']??$data['conditions_json']);
             $this->applyTokenFormData($data,(array)($post['tokens']??[]));
             $data['three']=[
@@ -807,6 +822,18 @@ class Theme extends \Reamur\System\Engine\Controller {
             $kazSceneOverride=\Reamur\System\Library\Theme\ThemePackage::normalizeScene($rawKazScene);
             if ($kazSceneOverride===null) return $bad($this->language->get('error_validation'));
         }
+        // KZ-19 (ADR 0112): textos do tema por idioma, validados NO SERVIDOR.
+        // Campo ausente ou vazio (`{}`) nao grava a chave.
+        $stringsOverride=null;
+        if (array_key_exists('strings_json',$post)) {
+            $rawStrings=is_string($post['strings_json'])?trim($post['strings_json']):null;
+            if ($rawStrings===null || strlen($rawStrings)>\Reamur\System\Library\Theme\ThemeStrings::MAX_JSON_BYTES) return $bad($this->language->get('error_theme_strings'));
+            if ($rawStrings!=='') {
+                $decodedStrings=json_decode($rawStrings,true);
+                $stringsOverride=is_array($decodedStrings)?\Reamur\System\Library\Theme\ThemeStrings::normalize($decodedStrings):null;
+                if ($stringsOverride===null) return $bad($this->language->get('error_theme_strings'));
+            }
+        }
         $normalized=$engine->normalize($conditions);
         $sceneChoice=$scalarStr($post['scene']??'');
         $out=['primary'=>$primary,'surface'=>$surface,
@@ -820,6 +847,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         if ($mediaOverride!==null) $out['media']=$mediaOverride;
         if ($sitesOverride!==null) $out['sites']=$sitesOverride;
         if ($kazSceneOverride!==null) $out['kaz_scene']=$kazSceneOverride;
+        if ($stringsOverride!==null && $stringsOverride!==[]) $out['strings']=$stringsOverride;
         return ['name'=>$name,'slug'=>$slug,'error'=>'','config'=>$out];
     }
 
