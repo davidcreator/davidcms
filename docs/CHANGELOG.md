@@ -1,8 +1,8 @@
 # Changelog
 
-## KZ-32 — Versões na página Ferramentas + ferramentas novas JOW-payments e Dracaunos-Security (2026-11-17)
-- `dev/admin/model/tool/internal-tools.json`: BDREditor-Content `1.0.0 → 1.0.1` (F918-06 Twig\Markup + regressões + CI verde) e KAZEditor-Theme `1.0.0 → 2.0.0` (KZ-23/KZ-24 tema em atributos/quebra de linha; KZ-25..KZ-31 David Universe 3D com ThreeJS nativo fullscreen; correções de ruído visual), ambos com `updated_at=2026-11-17` e notas — exibidos na página Ferramentas (Frente AY).
-- Novas ferramentas cadastradas: **JOW-payments** (`jow-payments`, vendor JOW, 1.0.0) e **Dracaunos-Security** (`dracaunos-security`, vendor Dracaunos, 1.0.0).
+## KZ-33 — Ferramentas novas elaboradas: JOW-payments e Dracaunos-Security (2026-11-17)
+- Cadastro completo no banco via `tools/upgrade_kz33_novas_ferramentas.sql`: linhas em `rms_tool` (vendor JOW / Dracaunos, status=1) e `rms_tool_description` nos 3 idiomas (en-us, pt-br, es-eu) — aparecem publicadas na pagina Ferramentas.
+- `internal-tools.json`: notas das duas ferramentas atualizadas (versao 1.0.0, 2026-11-17).
 
 ## KZ-31 — David Universe 3D: remove fallback pontilhado do hero e preenchimento sólido da fase 00 (2026-11-17)
 - O slot `hero` (fixo fullscreen) herdava o `.theme-scene__fallback` pontilhado e o fundo do container — "ruído" sobre a cena. Agora: `background:transparent` e `fallback{display:none}` no hero.

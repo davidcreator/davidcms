@@ -37,7 +37,8 @@
       "version": "1.0.0",
       "updated_at": "2026-11-17",
       "notes": [
-        "Ferramenta nova aberta nesta sessao: modulo de pagamentos JOW-payments (cadastro inicial na pagina Ferramentas)."
+        "Modulo de pagamentos: cobrancas, PIX e rapporte de recebimentos (cadastro completo em rms_tool + rms_tool_description, 3 idiomas).",
+        "Status publicado (status=1) na pagina Ferramentas do admin e do catalogo."
       ]
     },
     {
@@ -48,7 +49,8 @@
       "version": "1.0.0",
       "updated_at": "2026-11-17",
       "notes": [
-        "Ferramenta nova aberta nesta sessao: modulo de seguranca Dracaunos-Security (cadastro inicial na pagina Ferramentas)."
+        "Modulo de seguranca: firewall, ACL e auditoria de acessos do admin (cadastro completo em rms_tool + rms_tool_description, 3 idiomas).",
+        "Status publicado (status=1) na pagina Ferramentas do admin e do catalogo."
       ]
     }
   ]
