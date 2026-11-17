@@ -127,10 +127,10 @@ function cases(K) {
   t(K.themeWhy(true, false, true, st({ ok: false })) === 'theme_bad_json', 'JSON ilegivel vem antes de mapa defasado');
   t(K.themeWhy(true, false, true, st()) === 'el_stale', 'mapa defasado: espera');
   t(K.themeWhy(true, true, true, st({ shown: 'en-us' })) === 'el_stale' && K.themeWhy(true, true, true, st({ shown: '' })) === 'el_stale', 'pagina ainda em outro idioma (ou rascunho salvo): espera');
-  t(K.themeWhy(true, true, true, st({ text: 'a\nb' })) === 'theme_lines', 'texto com quebra de linha: so no bloco do JSON');
+  t(K.themeWhy(true, true, true, st({ text: 'a\nb' })) === '', 'KZ-24: texto com quebra de linha abre para edicao');
   t(K.themeWhy(true, true, true, st({ text: '' })) === '', 'chave ainda sem texto: abre (digitar cria o texto)');
   /* themeClean */
-  t(K.themeClean('a\r\nb\tc') === 'a b c' && K.themeClean('a\u0007b\u007fc\u0000') === 'abc', 'digitado: quebra de linha e tabulacao viram um espaco; caractere de controle sai');
+  t(K.themeClean('a\r\nb\tc') === 'a\nb c' && K.themeClean('a\u0007b\u007fc\u0000') === 'abc', 'KZ-24: CRLF vira LF (preservado), tab vira espaco, controle sai');
   t(K.themeClean(rep('x', 2500)).length === 2000, 'digitado: corta em 2000');
   /* constantes */
   t(K.C.keys === 600 && K.C.langs === 12 && K.C.text === 2000 && K.C.json === 262144 && K.C.fallback === 'en-us', 'limites: 600 chaves, 12 idiomas, 2000 caracteres, 262144 bytes, recuo en-us');
@@ -144,7 +144,7 @@ check(FIX.read.length >= 11 && FIX.write.length >= 18 && FIX.limits.length >= 14
 /* ---------- a fonte ---------- */
 /* um so ponto escreve no campo do formulario, e so no JSON dos textos */
 check(flat.split('field.value = ').length - 1 === 1 && /function themeCommit\(field, json\) \{\n    themeWriting = true;\n    field\.value = json;\n    try \{ field\.dispatchEvent\(new Event\('input', \{ bubbles: true \}\)\); \} finally \{ themeWriting = false; \}\n  \}/.test(block), 'um so ponto escreve no campo, e avisa o formulario com o evento input');
-check(source.split('themeCommit(').length - 1 === 3 && flat.split('themeCommit(field, res.json);').length === 2 && flat.split('themeCommit(field, st.theme.raw);').length === 2, 'themeCommit e chamado em dois pontos: o texto digitado e a devolucao do Esc');
+check(source.split('themeCommit(').length - 1 === 4 && flat.split('themeCommit(field, res.json);').length === 3 && flat.split('themeCommit(field, st.theme.raw);').length === 2, 'themeCommit e chamado em tres pontos: texto digitado, atributo (KZ-23) e a devolucao do Esc');
 check(/function themeField\(\) \{\n    var el = form\.elements\['strings_json'\];\n    return el && el\.tagName === 'TEXTAREA' \? el : null;\n  \}/.test(block), 'o campo e o <textarea name="strings_json"> do formulario do tema');
 check(!/writeSource\(|commitSource\(|encodeText\(|sourceField\(|templates\[/.test(flat), 'o bloco nao le nem escreve a fonte do tema');
 check(!/innerHTML|insertAdjacent|outerHTML|document\.write|createElement\('(script|style|iframe)'|contenteditable|eval\(|new Function/.test(flat), 'nada de HTML montado a mao nem de codigo avaliado');
@@ -157,7 +157,7 @@ check(kz18.indexOf('if (ref) return themeWhy(own, mapFresh(sel.key), leaf, theme
 check(kz18.indexOf("theme: ref ? { key: ref.key, filter: ref.filter, raw: tfield.value } : null };") > 0 && kz18.indexOf('if (ref) text = tstate.text;') > 0, 'ao abrir, a caixa guarda o JSON de antes e mostra o texto guardado');
 check(kz18.indexOf('if (st.theme) themeInlineStop(st, keep);\n    else if (!keep && st.changed) {') > 0, 'ao fechar, a caixa de um texto do tema devolve o JSON, nao a fonte');
 check(/function themeInlineStop\(st, keep\) \{\n    var field = themeField\(\);\n    if \(!keep && st\.changed && field && field\.value !== st\.theme\.raw\) \{/.test(block), 'Esc: so devolve quando algo mudou');
-check(kz18.indexOf("st.mode = st.theme && st.theme.filter ? 'box' : inlineMode(m);") > 0, 'fonte com filtro de caixa: caixa propria');
+check(kz18.indexOf("st.mode = st.theme && (st.theme.filter || String(st.text).indexOf('\\n') !== -1) ? 'box' : inlineMode(m);") > 0, 'fonte com filtro de caixa ou quebra de linha (KZ-24): caixa propria');
 check(source.indexOf("} else if (kind === 'variable' && themeRef(it)) {\n      /* KZ-21: texto do dicionario do tema, editado no idioma do canvas. */\n      paintThemeText(host, it, own, fresh);\n    } else if (kind === 'variable') {") > 0, 'painel: texto do tema ganha campo; as outras variaveis continuam so informadas');
 /* o servidor alcanca o que foi digitado; idioma; JSON mudado por fora */
 check(source.indexOf("if (liveTheme && mine > liveTheme.after) liveTheme = null;\n      shownLang = json.source === 'saved' ? '' : asked;") > 0, 'so uma resposta pedida depois da ultima tecla apaga a previa local; rascunho salvo nao conta como idioma mostrado');
@@ -177,15 +177,15 @@ check(listFn.indexOf("ul.setAttribute('data-kaz-canvas-theme-list', lang);") > 0
 /* ---------- rotulos ---------- */
 const list = /\$canvasLabels=\[\];\s*foreach\(\[([\s\S]*?)\] as \$canvasKey\)/.exec(controller);
 check(list !== null, 'a lista de rotulos do canvas foi encontrada no controller');
-const NEW = ['theme_text', 'theme_text_help', 'theme_fallback', 'theme_bad_json', 'theme_empty', 'theme_lines', 'theme_full', 'theme_texts', 'theme_texts_help'];
-const WITH_LANG = ['theme_text', 'theme_fallback', 'theme_texts'];
+const NEW = ['theme_text', 'theme_text_help', 'theme_fallback', 'theme_bad_json', 'theme_empty', 'theme_lines', 'theme_full', 'theme_texts', 'theme_texts_help', 'theme_attr', 'theme_attr_help', 'theme_lines_help'];
+const WITH_LANG = ['theme_text', 'theme_fallback', 'theme_texts', 'theme_attr'];
 NEW.forEach(k => check(list[1].split("'" + k + "'").length === 2, 'rotulo ' + k + ' na lista do controller, uma vez'));
 const used = {}; let m; const re = /\b(?:label|hint|themeWarn)\('([a-z0-9_]+)'/g;
 while ((m = re.exec(block))) used[m[1]] = true;
 const whys = {}; const rw = /(?:return|why:) '([a-z_]+)'/g;
 while ((m = rw.exec(pieces.themeWhy + pieces.themeWrite))) whys[m[1]] = true;
 check(Object.keys(used).length >= 6 && Object.keys(used).concat(Object.keys(whys)).every(k => list[1].indexOf("'" + k + "'") >= 0), 'todo rotulo e todo aviso do bloco esta na lista do controller');
-check(same(Object.keys(whys).sort(), ['el_stale', 'inline_need_customize', 'inline_variable', 'theme_bad_json', 'theme_empty', 'theme_full', 'theme_lines']), 'os avisos que themeWhy e themeWrite devolvem');
+check(same(Object.keys(whys).sort(), ['el_stale', 'inline_need_customize', 'inline_variable', 'theme_bad_json', 'theme_empty', 'theme_full']), 'os avisos que themeWhy e themeWrite devolvem (KZ-24: theme_lines saiu)');
 const v = /'-kaz-canvas-kz(\d{2})'/.exec(controller);
 check(v !== null && Number(v[1]) >= 21, 'a versao dos arquivos do canvas foi trocada nesta etapa');
 const texts = {};
@@ -206,7 +206,7 @@ NEW.forEach(k => check(texts['pt-br'][k] !== texts['en-us'][k] && texts['pt-br']
 
 /* ---------- o conferidor acusa quando o codigo e estragado ---------- */
 const BROKEN = [
-  [["(?: ?\\| ?(upper|lower))?$/;", "(?: ?\\| ?(upper|lower))?/;"], 'expressao "theme_text.a.b": nao e texto do tema'],
+  [["(?: ?\\| ?(upper|lower|nl2br))?$/;", "(?: ?\\| ?(upper|lower))?/;"], 'expressao "theme_text.a.b": nao e texto do tema'],
   [["if (!it || it[1] !== 'variable') return null;", 'if (!it) return null;'], 'elemento mixed nunca e texto do tema, mesmo com a expressao certa'],
   [["var order = [lang, THEME_FALLBACK];", 'var order = [lang];'], 'leitura: sem o idioma: en-us vem antes do primeiro preenchido'],
   [["if (THEME_LANG.test(codes[i]) && themeIsText(by[codes[i]]))", 'if (themeIsText(by[codes[i]]))'], 'leitura: codigo de idioma invalido e pulado'],
@@ -220,7 +220,6 @@ const BROKEN = [
   [["if (!by || typeof by !== 'object' || Array.isArray(by)) return null;", ''], 'escrita recusada (theme_bad_json): JSON invalido: chave com valor que nao e objeto'],
   [["var json = JSON.stringify(map, null, 4);", 'var json = JSON.stringify(map, null, 2);'], 'escrita: troca o texto de um idioma; a ordem das chaves fica'],
   [["if (!fresh || st.lang !== st.shown) return 'el_stale';", "if (!fresh) return 'el_stale';"], 'pagina ainda em outro idioma (ou rascunho salvo): espera'],
-  [["if (String(st.text).indexOf('\\n') !== -1) return 'theme_lines';", ''], 'texto com quebra de linha: so no bloco do JSON'],
   [["if (!own) return 'inline_need_customize';", ''], 'padrao do sistema: manda personalizar'],
   [["if (filter === 'upper') return String(text).toUpperCase();", ''], 'previa: o filtro de caixa da fonte e aplicado ao texto guardado'],
 ];

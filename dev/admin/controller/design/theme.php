@@ -476,7 +476,8 @@ class Theme extends \Reamur\System\Engine\Controller {
                  'inline_help','inline_label','inline_variable','inline_need_customize',
                  // KZ-21 (ADR 0114): texto do tema editado por idioma.
                  'theme_text','theme_text_help','theme_fallback','theme_bad_json','theme_empty','theme_lines','theme_full',
-                 'theme_texts','theme_texts_help'] as $canvasKey) {
+                 'theme_texts','theme_texts_help',
+                 /* KZ-23/KZ-24: */ 'theme_attr','theme_attr_help','theme_lines_help'] as $canvasKey) {
             $canvasLabels[$canvasKey]=$this->language->get('text_canvas_'.$canvasKey);
         }
         // KZ-02 (ADR 0084): nome legivel de cada fonte allowlistada (rota ou parte).
