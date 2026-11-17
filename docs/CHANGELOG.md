@@ -1,5 +1,10 @@
 # Changelog
 
+## KZ-25 — David Universe 3D: home rodando a cena david-universe (ThreeJS nativo) (2026-11-17)
+- A cena `david-universe` (nave, orbes, voo por scroll — porta da amostra https://davidalmeida.xyz/threejs/) ja existia no runtime e no allowlist, mas o tema apontava a home para `hero-particles`.
+- **Correcao:** `docs/temas/David-Universe-3D.reamurtheme.json` passa a usar `scene`/`three.scene` = `david-universe` (base e regra da rota `common/home`, slot `hero`, count 520, cor `#5cc6d0`, speed 0.06 — preset `universe`); `du_mobile_lite` continua `hero-particles`. Checksum do pacote recalculado.
+- **Runtime:** o Admin/Catalogo leem a tabela `rms_design_theme`; aplicar `tools/upgrade_kz25_david_universe_home.sql` no MySQL para espelhar a mudanca no banco.
+
 ## Hotfix F918-06 (P1) — blog público: block_html entregue como Twig\Markup (2026-11-17)
 - O template `blog_info.twig` imprime `post.block_html` sem `|raw`; o controller entregava string, e o Twig escapava o HTML do BlockRenderer — o conteúdo do post saía como texto puro na página pública.
 - **Correção:** `dev/catalog/controller/blog/blog.php` agora entrega `new \Twig\Markup($blockHtml, 'UTF-8')` (o HTML vem do renderer allowlistado/sanitizado; o template continua sem `|raw`).
