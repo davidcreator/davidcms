@@ -129,6 +129,7 @@ registerScene('david-universe', ({ scene, camera, renderer, container, config })
   camera.updateProjectionMatrix();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   scene.fog = new THREE.FogExp2(BG, 0.0072);
+  scene.background = new THREE.Color(BG); // KZ-29: fundo opaco — o renderer nasce com alpha:true e o fallback CSS vazava pelo canvas
 
   const reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);

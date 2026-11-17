@@ -1,5 +1,9 @@
 # Changelog
 
+## KZ-29 — Cena david-universe com fundo opaco (fallback não vaza mais) (2026-11-17)
+- O renderer nasce com `alpha:true` (scene-runner) e a cena nunca setava `scene.background`, só o `fog` — o canvas ficava transparente e o fallback CSS pontilhado aparecia por cima ("poluição" visual).
+- **Correção:** `dev/system/library/three/runtime/three/scenes/david-universe.js` agora define `scene.background = new THREE.Color(BG)` (#121516), como na referência.
+
 ## KZ-26 — David Universe 3D: cena david-universe como fundo fixo fullscreen atrás do conteúdo (2026-11-17)
 - A cena `david-universe` é scroll-driven na página inteira, mas o tema a renderizava como faixa inline de 320px no slot `hero` — a nave parecia "à frente" do conteúdo e o voo não correspondia à referência.
 - **Correção (CSS do tema em `partial/site_header`):** `.theme-scene--hero` passa a `position:fixed;inset:0;z-index:-1;min-height:100vh;pointer-events:none` e `.du` fica com `background:transparent` — o canvas WebGL (que já pinta o fundo escuro próprio) fica atrás de todo o conteúdo, como em davidalmeida.xyz/threejs/.
