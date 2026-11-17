@@ -252,7 +252,7 @@ final class KazThemeTextTest extends TestCase {
         $block = $this->block();
         self::assertSame(1, substr_count($block, 'field.value = '));
         self::assertStringContainsString("    themeWriting = true;\n    field.value = json;\n    try { field.dispatchEvent(new Event('input', { bubbles: true })); } finally { themeWriting = false; }", $block);
-        self::assertSame(3, substr_count($script, 'themeCommit('));
+        self::assertSame(4, substr_count($script, 'themeCommit(')); // KZ-23 adicionou a chamada do atributo
         self::assertStringContainsString('themeCommit(field, res.json);', $block);
         self::assertStringContainsString('themeCommit(field, st.theme.raw);', $block);
         self::assertDoesNotMatchRegularExpression('/writeSource\(|commitSource\(|encodeText\(|sourceField\(|templates\[/', $block);
@@ -289,7 +289,7 @@ final class KazThemeTextTest extends TestCase {
         // JSON mudado no bloco proprio: a caixa fecha como esta; o que o canvas escreve nao dispara isso.
         self::assertStringContainsString("if (themeWriting || !ev.target || ev.target.name !== 'strings_json') return;", $script);
         // Fonte com filtro de caixa: caixa propria, com o texto guardado.
-        self::assertStringContainsString("st.mode = st.theme && st.theme.filter ? 'box' : inlineMode(m);", $script);
+        self::assertStringContainsString("st.mode = st.theme && (st.theme.filter || String(st.text).indexOf('\\n') !== -1) ? 'box' : inlineMode(m);", $script); // KZ-24: quebra de linha tambem usa caixa propria
     }
 
     public function testLabelsExistInTheControllerAndInThreeLanguages(): void {
