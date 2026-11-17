@@ -1,0 +1,53 @@
+<?php
+/**
+ * @package   ReamurCMS
+ * @author    David L. Almeida
+ * @copyright Copyright (c) 2025, ReamurCMS (https://reamurcms.com)
+ * @license   https://opensource.org/licenses/GPL-3.0
+ * @link      https://reamurcms.com
+ *
+ * security/dracaunos — Dracaunos-Security (ferramenta interna, KZ-34).
+ */
+
+$_['heading_title']        = 'Dracaunos-Security';
+$_['text_home']            = 'Início';
+$_['text_internal_note']   = 'Ferramenta INTERNA do ReamurCMS: visível somente no admin, nunca no catálogo público.';
+$_['text_password_policy']  = 'Política de senhas';
+$_['entry_min_length']     = 'Tamanho mínimo';
+$_['entry_max_age']        = 'Validade máxima (dias, 0 = sem expiração)';
+$_['entry_require_upper']  = 'Exigir letra maiúscula';
+$_['entry_require_digit']  = 'Exigir número';
+$_['entry_require_symbol'] = 'Exigir símbolo';
+$_['text_admin_route']     = 'Rota do admin';
+$_['help_admin_route']     = 'Slug da pasta do painel (aplicado na próxima Implantação/rewrite do servidor).';
+$_['text_2fa']            = 'Verificação em duas etapas (2FA)';
+$_['text_2fa_enabled_state'] = '2FA ativo nesta conta.';
+$_['help_2fa']             = 'Gere um segredo, adicione no app autenticador (Google Authenticator, Authy, 1Password) e confirme com o código de 6 dígitos.';
+$_['entry_2fa_secret']     = 'Segredo (base32)';
+$_['placeholder_2fa_secret'] = 'Ex.: JBSWY3DPEHPK3PXP';
+$_['entry_2fa_code']       = 'Código de verificação (6 dígitos)';
+$_['button_2fa_enable']    = 'Ativar 2FA';
+$_['button_2fa_disable']   = 'Desativar 2FA';
+$_['text_login_log']       = 'Log de logins (últimos 30)';
+$_['text_recovery']        = 'Recuperação de senha / conta / verificação (pendentes)';
+$_['text_ip_rules']        = 'Regras de IP (verificação de IP)';
+$_['text_users']           = 'Usuários e perfil';
+$_['help_users']           = 'Gerencie logins no módulo Usuários; aqui a lista rápida com link para o perfil de cada conta.';
+$_['col_date']  = 'Data'; $_['col_user'] = 'Usuário'; $_['col_result'] = 'Resultado';
+$_['col_email'] = 'E-mail'; $_['col_type'] = 'Tipo'; $_['col_action'] = 'Ação';
+$_['col_scope'] = 'Escopo'; $_['col_note'] = 'Nota'; $_['col_status'] = 'Status';
+$_['text_ok'] = 'OK'; $_['text_fail'] = 'FALHOU'; $_['text_empty'] = 'Nenhum registro.';
+$_['text_enabled'] = 'Ativo'; $_['text_disabled'] = 'Inativo';
+$_['opt_deny'] = 'Bloquear'; $_['opt_allow'] = 'Permitir';
+$_['entry_note'] = 'Nota';
+$_['button_save'] = 'Salvar'; $_['button_add'] = 'Adicionar'; $_['button_delete'] = 'Excluir';
+$_['button_approve'] = 'Aprovar'; $_['button_deny'] = 'Negar'; $_['button_edit_profile'] = 'Perfil';
+$_['text_policy_saved'] = 'Política de senhas salva.';
+$_['text_route_saved']  = 'Rota do admin salva.';
+$_['text_2fa_enabled']   = '2FA ativado nesta conta.';
+$_['text_2fa_disabled']  = '2FA desativado.';
+$_['text_recovery_handled'] = 'Solicitação atualizada.';
+$_['text_ip_saved']      = 'Regra de IP salva.';
+$_['text_ip_deleted']    = 'Regra de IP removida.';
+$_['error_route_invalid'] = 'Rota inválida (use letras minúsculas, números e hífen).';
+$_['error_2fa_code']      = 'Código de 6 dígitos inválido para o segredo informado.';

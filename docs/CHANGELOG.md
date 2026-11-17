@@ -1,8 +1,9 @@
 # Changelog
 
-## KZ-33 — Ferramentas novas elaboradas: JOW-payments e Dracaunos-Security (2026-11-17)
-- Cadastro completo no banco via `tools/upgrade_kz33_novas_ferramentas.sql`: linhas em `rms_tool` (vendor JOW / Dracaunos, status=1) e `rms_tool_description` nos 3 idiomas (en-us, pt-br, es-eu) — aparecem publicadas na pagina Ferramentas.
-- `internal-tools.json`: notas das duas ferramentas atualizadas (versao 1.0.0, 2026-11-17).
+## KZ-34 — Dracaunos-Security: painel interno de segurança + ferramentas internas fora do catálogo (2026-11-17)
+- Novo módulo admin `security/dracaunos` (ACL access/modify, menu em Sistema): política de senhas, log de logins, 2FA TOTP (RFC 6238) com app autenticador, ajuste da rota do admin, recuperação/verificação de conta e regras de IP (allow/deny + CIDR), lista de usuários com link ao perfil.
+- Migração `tools/upgrade_kz34_dracaunos_security.sql`: tabelas `dracaunos_login_log`, `dracaunos_2fa`, `dracaunos_recovery`, `dracaunos_ip_rule`, settings (code `dracaunos`) e permissão do grupo admin — **e remove JOW/Dracaunos de `rms_tool`** (ferramentas internas não ficam expostas no catálogo público; permanecem no `internal-tools.json` do admin).
+- Idiomas pt-br/en-us/es-eu. Dracaunos-Security sobe para 1.1.0 no internal-tools.json.
 
 ## KZ-31 — David Universe 3D: remove fallback pontilhado do hero e preenchimento sólido da fase 00 (2026-11-17)
 - O slot `hero` (fixo fullscreen) herdava o `.theme-scene__fallback` pontilhado e o fundo do container — "ruído" sobre a cena. Agora: `background:transparent` e `fallback{display:none}` no hero.

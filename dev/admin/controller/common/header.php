@@ -206,6 +206,7 @@ class Header extends \Reamur\System\Engine\Controller {
                     ['route' => 'localization/language','icon' => 'bi bi-translate',      'key' => 'text_menu_languages'],
                     ['route' => 'user/user',            'icon' => 'bi bi-people',         'key' => 'text_menu_users'],
                     ['route' => 'user/user_group',      'icon' => 'bi bi-person-lock',    'key' => 'text_menu_user_groups'],
+                    ['route' => 'security/dracaunos',   'icon' => 'bi bi-shield-lock',    'key' => 'text_menu_security'],
                 ],
             ],
         ];

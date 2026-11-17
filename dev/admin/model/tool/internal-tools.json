@@ -46,11 +46,13 @@
       "name": "Dracaunos-Security",
       "legacy_name": "",
       "vendor": "Dracaunos",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "updated_at": "2026-11-17",
       "notes": [
-        "Modulo de seguranca: firewall, ACL e auditoria de acessos do admin (cadastro completo em rms_tool + rms_tool_description, 3 idiomas).",
-        "Status publicado (status=1) na pagina Ferramentas do admin e do catalogo."
+        "Painel interno security/dracaunos (somente admin, ACL access/modify): política de senhas, log de logins, 2FA TOTP (RFC 6238) com app de celular, ajuste da rota do admin, recuperação/verificação de conta e regras de IP (allow/deny, CIDR).",
+        "Tabelas novas: dracaunos_login_log, dracaunos_2fa, dracaunos_recovery, dracaunos_ip_rule + settings em rms_setting (code 'dracaunos').",
+        "Removida a exposição pública: JOW-payments e Dracaunos-Security saem de rms_tool (ficam só no internal-tools.json, visíveis só no admin).",
+        "Idiomas pt-br/en-us/es-eu + item de menu em Sistema."
       ]
     }
   ]

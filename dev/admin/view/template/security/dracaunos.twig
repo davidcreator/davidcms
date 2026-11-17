@@ -1,0 +1,119 @@
+{{ header }}
+<div class="container-fluid py-3">
+  <nav aria-label="breadcrumb"><ol class="breadcrumb">{% for b in breadcrumbs %}<li class="breadcrumb-item"><a href="{{ b.href }}">{{ b.text }}</a></li>{% endfor %}</ol></nav>
+  <h1 class="h3 mb-3"><i class="bi bi-shield-lock"></i> {{ heading_title }}</h1>
+  <p class="text-body-secondary small">{{ text_internal_note }}</p>
+
+  {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+  {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+
+  <div class="row g-3">
+    {# ── Política de senhas ── #}
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 card-title">{{ text_password_policy }}</h2>
+      <form method="post" action="{{ action }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="password_policy">
+        <div class="mb-2"><label class="form-label">{{ entry_min_length }}</label>
+          <input class="form-control" type="number" name="policy[min_length]" value="{{ policy.min_length }}" min="8" max="64"{% if not can_modify %} disabled{% endif %}></div>
+        <div class="mb-2"><label class="form-label">{{ entry_max_age }}</label>
+          <input class="form-control" type="number" name="policy[max_age_days]" value="{{ policy.max_age_days }}" min="0" max="365"{% if not can_modify %} disabled{% endif %}></div>
+        <div class="form-check"><input class="form-check-input" type="checkbox" name="policy[require_upper]" value="1" id="pu"{% if policy.require_upper %} checked{% endif %}{% if not can_modify %} disabled{% endif %}><label class="form-check-label" for="pu">{{ entry_require_upper }}</label></div>
+        <div class="form-check"><input class="form-check-input" type="checkbox" name="policy[require_digit]" value="1" id="pd"{% if policy.require_digit %} checked{% endif %}{% if not can_modify %} disabled{% endif %}><label class="form-check-label" for="pd">{{ entry_require_digit }}</label></div>
+        <div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="policy[require_symbol]" value="1" id="ps"{% if policy.require_symbol %} checked{% endif %}{% if not can_modify %} disabled{% endif %}><label class="form-check-label" for="ps">{{ entry_require_symbol }}</label></div>
+        {% if can_modify %}<button class="btn btn-primary btn-sm">{{ button_save }}</button>{% endif %}
+      </form>
+    </div></div></div>
+
+    {# ── Rota do admin ── #}
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 card-title">{{ text_admin_route }}</h2>
+      <form method="post" action="{{ action }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="admin_route">
+        <div class="input-group mb-2"><span class="input-group-text">/</span>
+          <input class="form-control" name="admin_route" value="{{ admin_route }}" maxlength="32" pattern="[a-z0-9][a-z0-9-]{0,31}"{% if not can_modify %} disabled{% endif %}></div>
+        <p class="text-body-secondary small">{{ help_admin_route }}</p>
+        {% if can_modify %}<button class="btn btn-primary btn-sm">{{ button_save }}</button>{% endif %}
+      </form>
+    </div></div></div>
+
+    {# ── 2FA ── #}
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 card-title">{{ text_2fa }}</h2>
+      {% if twofa.enabled %}
+        <p class="text-success small">{{ text_2fa_enabled_state }}</p>
+        <form method="post" action="{{ action }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="twofa_disable">
+          {% if can_modify %}<button class="btn btn-outline-danger btn-sm">{{ button_2fa_disable }}</button>{% endif %}</form>
+      {% else %}
+        <p class="text-body-secondary small">{{ help_2fa }}</p>
+        <form method="post" action="{{ action }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="twofa_enable">
+          <div class="mb-2"><label class="form-label">{{ entry_2fa_secret }}</label>
+            <input class="form-control font-monospace" name="secret" value="{{ twofa.secret ?: '' }}" placeholder="{{ placeholder_2fa_secret }}"{% if not can_modify %} disabled{% endif %}></div>
+          <div class="mb-2"><label class="form-label">{{ entry_2fa_code }}</label>
+            <input class="form-control" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000"{% if not can_modify %} disabled{% endif %}></div>
+          {% if can_modify %}<button class="btn btn-primary btn-sm">{{ button_2fa_enable }}</button>{% endif %}
+        </form>
+      {% endif %}
+    </div></div></div>
+
+    {# ── Log de logins ── #}
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 card-title">{{ text_login_log }}</h2>
+      <div class="table-responsive"><table class="table table-sm small">
+        <thead><tr><th>{{ col_date }}</th><th>{{ col_user }}</th><th>IP</th><th>{{ col_result }}</th></tr></thead>
+        <tbody>{% for l in logins %}<tr class="{{ l.success ? '' : 'table-danger' }}">
+          <td>{{ l.date_added }}</td><td>{{ l.username|e }}</td><td>{{ l.ip|e }}</td><td>{{ l.success ? text_ok : text_fail }}</td>
+        </tr>{% else %}<tr><td colspan="4" class="text-body-secondary">{{ text_empty }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div></div></div>
+
+    {# ── Recuperação / verificação ── #}
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 card-title">{{ text_recovery }}</h2>
+      <div class="table-responsive"><table class="table table-sm small">
+        <thead><tr><th>{{ col_date }}</th><th>{{ col_email }}</th><th>{{ col_type }}</th><th>IP</th><th></th></tr></thead>
+        <tbody>{% for r in recovery %}<tr>
+          <td>{{ r.date_added }}</td><td>{{ r.email|e }}</td><td>{{ r.type|e }}</td><td>{{ r.ip|e }}</td>
+          <td>{% if can_modify %}<form method="post" action="{{ action }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="recovery_handle"><input type="hidden" name="recovery_id" value="{{ r.recovery_id }}">
+            <button name="status" value="approved" class="btn btn-success btn-sm">{{ button_approve }}</button>
+            <button name="status" value="denied" class="btn btn-outline-danger btn-sm">{{ button_deny }}</button></form>{% endif %}</td>
+        </tr>{% else %}<tr><td colspan="5" class="text-body-secondary">{{ text_empty }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div></div></div>
+
+    {# ── Regras de IP ── #}
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 card-title">{{ text_ip_rules }}</h2>
+      {% if can_modify %}<form method="post" action="{{ action }}" class="row g-2 mb-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="ip_add">
+        <div class="col"><input class="form-control form-control-sm" name="ip" placeholder="192.168.0.0/24" required></div>
+        <div class="col-auto"><select class="form-select form-select-sm" name="ip_action"><option value="deny">{{ opt_deny }}</option><option value="allow">{{ opt_allow }}</option></select></div>
+        <div class="col-auto"><select class="form-select form-select-sm" name="scope"><option value="admin">admin</option><option value="catalog">catalog</option></select></div>
+        <div class="col"><input class="form-control form-control-sm" name="note" maxlength="128" placeholder="{{ entry_note }}"></div>
+        <div class="col-auto"><button class="btn btn-primary btn-sm">{{ button_add }}</button></div>
+      </form>{% endif %}
+      <div class="table-responsive"><table class="table table-sm small">
+        <thead><tr><th>IP/CIDR</th><th>{{ col_action }}</th><th>{{ col_scope }}</th><th>{{ col_note }}</th><th></th></tr></thead>
+        <tbody>{% for r in ip_rules %}<tr>
+          <td>{{ r.ip|e }}</td><td>{{ r.action == 'deny' ? opt_deny : opt_allow }}</td><td>{{ r.scope|e }}</td><td>{{ r.note|e }}</td>
+          <td>{% if can_modify %}<form method="post" action="{{ action }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="ip_delete"><input type="hidden" name="rule_id" value="{{ r.rule_id }}"><button class="btn btn-outline-danger btn-sm">{{ button_delete }}</button></form>{% endif %}</td>
+        </tr>{% else %}<tr><td colspan="5" class="text-body-secondary">{{ text_empty }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div></div></div>
+
+    {# ── Usuários / perfil ── #}
+    <div class="col-12"><div class="card"><div class="card-body">
+      <h2 class="h6 card-title">{{ text_users }}</h2>
+      <p class="text-body-secondary small">{{ help_users }}</p>
+      <div class="table-responsive"><table class="table table-sm small">
+        <thead><tr><th>#</th><th>{{ col_user }}</th><th>{{ col_email }}</th><th>{{ col_status }}</th><th></th></tr></thead>
+        <tbody>{% for u in users %}<tr>
+          <td>{{ u.user_id }}</td><td>{{ u.username|e }}</td><td>{{ u.email|e }}</td><td>{{ u.status ? text_enabled : text_disabled }}</td>
+          <td><a class="btn btn-outline-secondary btn-sm" href="{{ user_edit }}|{{ u.user_id }}">{{ button_edit_profile }}</a></td>
+        </tr>{% else %}<tr><td colspan="5" class="text-body-secondary">{{ text_empty }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div></div></div>
+  </div>
+</div>
+{{ footer }}
