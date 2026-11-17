@@ -1,5 +1,10 @@
 # Changelog
 
+## KZ-26 — David Universe 3D: cena david-universe como fundo fixo fullscreen atrás do conteúdo (2026-11-17)
+- A cena `david-universe` é scroll-driven na página inteira, mas o tema a renderizava como faixa inline de 320px no slot `hero` — a nave parecia "à frente" do conteúdo e o voo não correspondia à referência.
+- **Correção (CSS do tema em `partial/site_header`):** `.theme-scene--hero` passa a `position:fixed;inset:0;z-index:-1;min-height:100vh;pointer-events:none` e `.du` fica com `background:transparent` — o canvas WebGL (que já pinta o fundo escuro próprio) fica atrás de todo o conteúdo, como em davidalmeida.xyz/threejs/.
+- **Banco:** `tools/upgrade_kz26_universe_background.sql` aplica os mesmos dois trechos via REPLACE em `rms_design_theme` (`config` e `published_config`). Checksum do pacote de tema recalculado.
+
 ## KZ-25 — David Universe 3D: home rodando a cena david-universe (ThreeJS nativo) (2026-11-17)
 - A cena `david-universe` (nave, orbes, voo por scroll — porta da amostra https://davidalmeida.xyz/threejs/) ja existia no runtime e no allowlist, mas o tema apontava a home para `hero-particles`.
 - **Correcao:** `docs/temas/David-Universe-3D.reamurtheme.json` passa a usar `scene`/`three.scene` = `david-universe` (base e regra da rota `common/home`, slot `hero`, count 520, cor `#5cc6d0`, speed 0.06 — preset `universe`); `du_mobile_lite` continua `hero-particles`. Checksum do pacote recalculado.
