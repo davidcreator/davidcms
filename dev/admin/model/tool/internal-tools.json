@@ -6,18 +6,50 @@
       "name": "BDREditor-Content",
       "legacy_name": "BDREditor",
       "vendor": "ReamurCMS",
-      "version": "1.0.0",
-      "updated_at": "2026-11-06",
-      "notes": []
+      "version": "1.0.1",
+      "updated_at": "2026-11-17",
+      "notes": [
+        "F918-06 (P1) resolvido: block_html do blog entregue como Twig\\Markup no catalogo publico (conteudo nao sai mais escapado).",
+        "Testes de regressao novos: BlogBlockHtmlMarkupTest + fixture f918_regressions.json + e2e_f919_static.cjs.",
+        "CI do composer restaurado a 7/7 verde apos hotfixes dos checkers KZ-23/KZ-24."
+      ]
     },
     {
       "id": "kazeditor-theme",
       "name": "KAZEditor-Theme",
       "legacy_name": "KAZTheme-Editor",
       "vendor": "ReamurCMS",
+      "version": "2.0.0",
+      "updated_at": "2026-11-17",
+      "notes": [
+        "KZ-23/KZ-24: texto do tema em atributos (theme_attr) e quebra de linha preservada (nl2br, CRLF->LF).",
+        "KZ-25..KZ-31: tema David Universe 3D rodando ThreeJS nativo (cena david-universe fullscreen atras do conteudo, nave/orbes/voo por scroll).",
+        "Correcoes de ruido visual: fallback pontilhado desligado no hero, fase 00 transparente, fundo opaco da cena.",
+        "Bugs reais corrigidos: labels theme_attr/theme_attr_help/theme_lines_help no controller + checkers JS/PHP atualizados (342 PASS / 182 PASS).",
+        "Tema agora exibe a versao na pagina Ferramentas com data e notas."
+      ]
+    },
+    {
+      "id": "jow-payments",
+      "name": "JOW-payments",
+      "legacy_name": "",
+      "vendor": "JOW",
       "version": "1.0.0",
-      "updated_at": "2026-11-06",
-      "notes": []
+      "updated_at": "2026-11-17",
+      "notes": [
+        "Ferramenta nova aberta nesta sessao: modulo de pagamentos JOW-payments (cadastro inicial na pagina Ferramentas)."
+      ]
+    },
+    {
+      "id": "dracaunos-security",
+      "name": "Dracaunos-Security",
+      "legacy_name": "",
+      "vendor": "Dracaunos",
+      "version": "1.0.0",
+      "updated_at": "2026-11-17",
+      "notes": [
+        "Ferramenta nova aberta nesta sessao: modulo de seguranca Dracaunos-Security (cadastro inicial na pagina Ferramentas)."
+      ]
     }
   ]
 }
