@@ -1,9 +1,9 @@
 # Changelog
 
-## KZ-30 — Tema David Universe 3D sincronizado de ponta a ponta (cena + CSS + fundo opaco) (2026-11-17)
-- **KZ-25/26/28 no banco:** `tools/upgrade_kz30_overwrite_theme.sql` sobrescreve `config`/`published_config`/`draft_config` do tema ativo com o JSON corrigido do repo (runtime le `published_config`) — os REPLACE por trecho nao casavam com o conteudo instalado.
-- **KZ-29 no codigo:** cena `david-universe.js` com `scene.background` opaco (fallback nao vaza mais).
-- Cena na home: `david-universe` (slot hero fixo fullscreen atras do conteudo, body transparente).
+## KZ-31 — David Universe 3D: remove fallback pontilhado do hero e preenchimento sólido da fase 00 (2026-11-17)
+- O slot `hero` (fixo fullscreen) herdava o `.theme-scene__fallback` pontilhado e o fundo do container — "ruído" sobre a cena. Agora: `background:transparent` e `fallback{display:none}` no hero.
+- A fase 00 (`.du-hero`) tinha `background:...var(--du-bg)` sólido, escondendo a cena atrás da caixa do conteúdo — removido (só os brilhos translúcidos ficam).
+- `tools/upgrade_kz31_overwrite_theme.sql` sobrescreve as 3 colunas do tema ativo com o config corrigido.
 
 ## KZ-26 — David Universe 3D: cena david-universe como fundo fixo fullscreen atrás do conteúdo (2026-11-17)
 - A cena `david-universe` é scroll-driven na página inteira, mas o tema a renderizava como faixa inline de 320px no slot `hero` — a nave parecia "à frente" do conteúdo e o voo não correspondia à referência.
