@@ -167,7 +167,9 @@ final class KazInlineTextTest extends TestCase {
         self::assertStringContainsString("else if ((ev.key === 'Enter' || ev.key === 'F2') && !ctrl && picked) {", $script);
         self::assertSame(1, preg_match('/  function inlineKey\(ev\) \{\n    ev\.stopPropagation\(\);\n.*?\n  \}\n/s', $script, $key));
         self::assertStringContainsString('if (ev.isComposing || ev.keyCode === 229) return;', $key[0]);
-        self::assertStringContainsString("if (ev.key === 'Enter') { ev.preventDefault(); inlineStop(true, true); }", $key[0]);
+        // KZ-24: em texto do tema, Enter puro quebra linha; Ctrl/Cmd+Enter conclui; Esc desfaz.
+        self::assertStringContainsString("if (inline && inline.theme && !ev.ctrlKey && !ev.metaKey) return;", $key[0]);
+        self::assertStringContainsString("ev.preventDefault(); inlineStop(true, true);", $key[0]);
         self::assertStringContainsString("else if (ev.key === 'Escape') { ev.preventDefault(); inlineStop(false, true); }", $key[0]);
         self::assertStringContainsString("['pointerdown', 'pointerup', 'mousedown', 'click', 'dblclick'].forEach(function (name) {", $script);
         self::assertStringContainsString("box.addEventListener('blur', function () { if (inline && inline.box === box) inlineStop(true); });", $script);

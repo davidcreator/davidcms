@@ -141,7 +141,7 @@ final class KazThemeTextTest extends TestCase {
         self::assertStringContainsString('var THEME_KEY = ' . substr($key, 0, -1) . ', THEME_LANG = ' . substr($language, 0, -1) . ',', $block);
         // A variavel que as fontes imprimem, e a mesma chave dentro da expressao.
         self::assertSame('theme_text', ThemeStrings::GLOBAL);
-        self::assertStringContainsString('var THEME_REF = /^' . ThemeStrings::GLOBAL . '\.([a-z][a-z0-9_]{0,63})(?: ?\| ?(upper|lower))?$/;', $block);
+        self::assertStringContainsString('var THEME_REF = /^' . ThemeStrings::GLOBAL . '\.([a-z][a-z0-9_]{0,63})(?: ?\| ?(upper|lower|nl2br))?$/;', $block); // KZ-24: nl2br aceito
         // A expressao mais longa que o script aceita cabe inteira no mapa: uma expressao cortada pelo
         // servidor tem exatamente MAX_EXPR caracteres e, por isso, nunca e lida como outra chave.
         $longest = strlen(ThemeStrings::GLOBAL . '.' . str_repeat('k', 64) . ' | upper');
