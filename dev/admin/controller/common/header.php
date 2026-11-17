@@ -174,6 +174,7 @@ class Header extends \Reamur\System\Engine\Controller {
                 'title' => $this->language->get('text_group_sales'),
                 'items' => [
                     ['route' => 'sale/order',         'icon' => 'bi bi-cart3',             'key' => 'text_menu_orders'],
+                    ['route' => 'payments/jow',       'icon' => 'bi bi-credit-card',       'key' => 'text_menu_payments'],
                 ],
             ],
             [

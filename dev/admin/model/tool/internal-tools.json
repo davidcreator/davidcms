@@ -34,11 +34,12 @@
       "name": "JOW-payments",
       "legacy_name": "",
       "vendor": "JOW",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "updated_at": "2026-11-17",
       "notes": [
-        "Modulo de pagamentos: cobrancas, PIX e rapporte de recebimentos (cadastro completo em rms_tool + rms_tool_description, 3 idiomas).",
-        "Status publicado (status=1) na pagina Ferramentas do admin e do catalogo."
+        "Painel interno payments/jow (somente admin, ACL access/modify): cobranças (PIX/cartão/boleto) com BR Code EMV gerado em PHP puro (CRC16 validado), chaves PIX, relatório de recebimentos por status/método e dados do recebedor.",
+        "Tabelas novas: jow_charge, jow_pix_key + settings em rms_setting (code 'jow'). Ferramenta interna: não aparece no catálogo público.",
+        "Idiomas pt-br/en-us/es-eu + item de menu em Vendas."
       ]
     },
     {

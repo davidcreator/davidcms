@@ -1,5 +1,10 @@
 # Changelog
 
+## KZ-35 — JOW-payments: painel interno de pagamentos (cobranças, PIX, relatório) (2026-11-17)
+- Novo módulo admin `payments/jow` (menu Vendas, ACL access/modify): criar cobranças (PIX/cartão/boleto), geração do **BR Code EMV (PIX Copia e Cola)** em PHP puro com CRC16-CCITT validado contra vetor oficial, cadastro de chaves PIX, relatório de recebimentos por status/método e dados do recebedor (nome/cidade/MCC).
+- Migração `tools/upgrade_kz35_jow_payments.sql`: tabelas `jow_charge` e `jow_pix_key`, settings (code `jow`), permissão do grupo admin e chave PIX aleatória inicial. Ferramenta interna: permanece fora do catálogo público (só no `internal-tools.json`).
+- Idiomas pt-br/en-us/es-eu. JOW-payments sobe para 1.1.0 no internal-tools.json.
+
 ## KZ-34 — Dracaunos-Security: painel interno de segurança + ferramentas internas fora do catálogo (2026-11-17)
 - Novo módulo admin `security/dracaunos` (ACL access/modify, menu em Sistema): política de senhas, log de logins, 2FA TOTP (RFC 6238) com app autenticador, ajuste da rota do admin, recuperação/verificação de conta e regras de IP (allow/deny + CIDR), lista de usuários com link ao perfil.
 - Migração `tools/upgrade_kz34_dracaunos_security.sql`: tabelas `dracaunos_login_log`, `dracaunos_2fa`, `dracaunos_recovery`, `dracaunos_ip_rule`, settings (code `dracaunos`) e permissão do grupo admin — **e remove JOW/Dracaunos de `rms_tool`** (ferramentas internas não ficam expostas no catálogo público; permanecem no `internal-tools.json` do admin).

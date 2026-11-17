@@ -36,6 +36,7 @@ $_['text_menu_tools']        = 'Herramientas';
 $_['text_menu_projects']     = 'Proyectos';
 $_['text_menu_categories']   = 'Categorías';
 $_['text_menu_orders']       = 'Pedidos y Presupuestos';
+$_['text_menu_payments']     = 'Pagos (JOW)';
 $_['text_menu_testimonials'] = 'Testimonios';
 $_['text_menu_client_logos'] = 'Logos de Clientes';
 $_['text_menu_messages']     = 'Mensajes';
