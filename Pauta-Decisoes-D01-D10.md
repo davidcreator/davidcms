@@ -101,3 +101,22 @@
 Ci verde (7/7), health local, PROBE e Chromium headless **não significam release aprovada**.
 `release_approved: false` · F9-27 `BLOCKED_NOT_RUN` · F9-18 `release_ready: false` · F9-25 `PROPOSAL_PENDING`.
 Sem escrita do agente no GitHub.
+
+---
+
+## Resultado do voto — 2026-11-17 (responsável: David L. Almeida)
+
+`status_counts` agora: **0 `PENDING_DECISION` / 10 `DECIDED`** em `tools/decision-matrix.json`.
+
+| ID | Decisão | Destino |
+| --- | --- | --- |
+| D01 | **A** | marcadores de `e2e_bdre_hierarchical_reordering_static.cjs` atualizados (allowPageMedia opcional; 27 PASS) |
+| D02 | **A** | marcador de `e2e_bdre_spacer_static.cjs` atualizado (spacerInspectorCopy + escala fixa; 36 PASS) |
+| D03 | **B** | achado F918-05 (P2) no F9-18-Risk-Register.json — ACL catálogo de áudio |
+| D04 | **A** | marcador de `check_threejs_native_admin.cjs` atualizado (runtime($threeSettings) equivalente) |
+| D05 | **A** | F9-25 reconhece fetch de histórico de revisões (não autosave; proibição mantida) |
+| D06 | **A** | F9-14 atualizado para a evolução (fetch no editor); checker de segurança intacto |
+| D07 | **B** | achado F918-06 (P1) — block_html/description sem \|raw no Twig público |
+| D08 | **B** | achado F918-07 (P2) — contrato F9-25 segue PROPOSAL_PENDING |
+| D09 | **B** | achado F918-08 (P2) — schema.sql vs checker histórico |
+| D10 | **B** | achado F918-09 (P2) — drift de metadados; SHA não atualizado |

@@ -5,9 +5,9 @@ const js=fs.readFileSync(path.join(root,'dev/admin/view/js/blog-block-editor.js'
 const controller=fs.readFileSync(path.join(root,'dev/admin/controller/blog/blog.php'),'utf8');
 const fixture=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/hierarchy_move.json'),'utf8')).document;
 ok(fixture.format_version===2,'hierarchy fixture uses document v2');
-ok(/function moveBlockAcrossHierarchy\(document, nodeId, direction\)/.test(js),'pure hierarchy move helper is present');
-ok(/!validateDocument\(document\)\.valid/.test(js),'original document is validated before move');
-ok(/!validateDocument\(next\)\.valid/.test(js),'full destination document is validated before commit');
+ok(/function moveBlockAcrossHierarchy\(document, nodeId, direction(, allowPageMedia)?\)/.test(js),'pure hierarchy move helper is present (D01=A 2026-11-17: allowPageMedia opcional)');
+ok(/!validateDocument\(document[^)]*\)\.valid/.test(js),'original document is validated before move (D01=A 2026-11-17: allowPageMedia opcional, default preserva comportamento)');
+ok(/!validateDocument\(next[^)]*\)\.valid/.test(js),'full destination document is validated before commit (D01=A 2026-11-17)');
 ok(/core\/table-row','core\/table-cell/.test(js),'table structure block types are excluded');
 ok(/this\.commit\(result\.document, result\.focusId\)/.test(js),'successful move commits as a single history transaction');
 ok(/this\.focusNode\(result\.focusId\)/.test(js),'focus is restored by preserved block ID');

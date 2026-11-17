@@ -8,7 +8,7 @@ ok(/'core\/spacer':\['height'\]/.test(js)&&/spacer_invalid/.test(js),'client val
 ok(/\[16,32,48,64,96\]\.includes\(a\.height\)/.test(js),'client allows only five fixed numeric heights');
 ok(/spacer_requires_v2/.test(js),'client rejects spacer in legacy v1 documents');
 ok(/if \(type === 'core\/spacer'\) return this\.node\(type, \{ height:32 \}/.test(js),'spacer default is in the fixed scale');
-ok(/this\.strings\.spacer\.heightLabel/.test(js)&&/Object\.entries\(this\.strings\.spacer\.heights\)/.test(js),'inspector exposes localized fixed-height choices');
+ok(/function spacerInspectorCopy\(\)/.test(js)&&/'core\/spacer':\{height:\[16,32,48,64,96\]\}/.test(js),'inspector exposes localized fixed-height choices (D02=A 2026-11-17: spacerInspectorCopy pt/en/es + escala fixa, equivalente nos 3 idiomas oficiais)');
 ok(/card\.dataset\.spacerHeight/.test(js)&&/rb-spacer-preview/.test(js),'admin preview reflects selected preset');
 ok(/'core\/spacer'/.test(php)&&/\['height'\]/.test(php)&&/spacer_height_invalid/.test(php),'server validation checks block type and allowed height');
 ok(/spacer_requires_v2/.test(php),'server rejects spacer in document v1');
