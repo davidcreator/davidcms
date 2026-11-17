@@ -45,6 +45,12 @@
  * campo de texto do tema no painel "Elemento"; o digitado vai para o JSON dos textos
  * no idioma do canvas e a fonte nao muda. A previa troca so o atributo no quadro.
  *
+ * KZ-24 (ADR 0117) — texto do tema com quebra de linha. O texto do tema passa a aceitar
+ * `\n` (o servidor ja aceitava): o campo do painel grava quebras e a caixa na pagina abre
+ * em caixa propria (modo "box"), com Enter quebrando linha e Ctrl+Enter concluindo. A
+ * previa mostra a quebra com `white-space: pre-line`; no site ela aparece onde a fonte
+ * usar o filtro `nl2br`, que tambem passa a ser reconhecido.
+ *
  * KZ-18 (ADR 0111) — texto editado direto na pagina. Dois cliques em um texto
  * fixo (ou Enter, com o elemento escolhido) abrem uma caixa de edicao sobre o
  * proprio texto. A caixa fica NESTE documento, por cima do quadro: a pagina
@@ -603,11 +609,14 @@
   }
   /** Previa imediata: troca so o texto das ocorrencias do elemento em um documento. */
   function setElementText(doc, key, n, text) {
-    var list = elementNodes(doc, key, n);
+    var list = elementNodes(doc, key, n), nl = String(text).indexOf('\n') !== -1;
     for (var i = 0; i < list.length; i++) {
       /* So folhas: um elemento com filhos nunca e sobrescrito. */
       if (list[i].firstElementChild) continue;
       list[i].textContent = text;
+      /* KZ-24: na previa, texto do tema com quebra de linha mostra a quebra (pre-line). No site,
+         a quebra aparece onde a fonte usar o filtro nl2br. */
+      if (nl) list[i].style.setProperty('white-space', 'pre-line'); else list[i].style.removeProperty('white-space');
     }
   }
   /**
@@ -660,7 +669,7 @@
   /* Um elemento que so imprime `{{ theme_text.chave }}` (com, no maximo, um filtro de caixa) mostra um texto do
      dicionario do tema (ADR 0112). O campo do painel e a caixa de edicao na pagina escrevem esse texto no JSON
      dos textos (`strings_json`), no idioma que o canvas esta mostrando. A fonte do tema nao muda. */
-  var THEME_REF = /^theme_text\.([a-z][a-z0-9_]{0,63})(?: ?\| ?(upper|lower))?$/;
+  var THEME_REF = /^theme_text\.([a-z][a-z0-9_]{0,63})(?: ?\| ?(upper|lower|nl2br))?$/;
   var THEME_KEY = /^[a-z][a-z0-9_]{0,63}$/, THEME_LANG = /^[a-z]{2}-[a-z]{2}$/, THEME_FALLBACK = 'en-us';
   var THEME_KEYS_MAX = 600, THEME_LANGS_MAX = 12, THEME_TEXT_MAX = 2000, THEME_JSON_MAX = 262144;
   /* O que o servidor recusa em um texto do tema (ThemeStrings::isText): caractere de controle, menos a quebra de linha. */
@@ -747,11 +756,11 @@
     if (!st || !st.ok) return 'theme_bad_json';
     /* Mapa defasado, ou o quadro ainda mostra outro idioma (a troca de idioma esta a caminho). */
     if (!fresh || st.lang !== st.shown) return 'el_stale';
-    if (String(st.text).indexOf('\n') !== -1) return 'theme_lines';
     return '';
   }
-  /** Uma linha so, sem caractere de controle: o texto como vai para o dicionario. */
-  function themeClean(value) { return inlineClean(value).replace(/[\u0000-\u001F\u007F]/g, ''); }
+  /** KZ-24: o texto do tema aceita quebra de linha (o servidor ja aceitava): CRLF vira \n,
+      controles (menos \n) saem, e o teto e o mesmo de 2000 caracteres. */
+  function themeClean(value) { return String(value).replace(/\r\n?/g, '\n').replace(/\t/g, ' ').replace(/[\u0000-\u0008\u000B-\u001F\u007F]/g, '').slice(0, THEME_TEXT_MAX); }
   function themeField() {
     var el = form.elements['strings_json'];
     return el && el.tagName === 'TEXTAREA' ? el : null;
@@ -1137,7 +1146,7 @@
       /* Elemento novo (primeira vez, ou o quadro foi redesenhado): le a letra ANTES de esconder o texto. */
       st.node = node;
       /* KZ-21: com filtro de caixa na fonte (|upper), o que se ve nao e o que esta guardado: caixa propria, com o texto guardado. */
-      st.mode = st.theme && st.theme.filter ? 'box' : inlineMode(m);
+      st.mode = st.theme && (st.theme.filter || String(st.text).indexOf('\n') !== -1) ? 'box' : inlineMode(m);
       st.fontSize = m.fontSize;
       box.classList.toggle('kaz-canvas__inline--box', st.mode === 'box');
       if (st.mode === 'place') {
@@ -1259,13 +1268,24 @@
   function inlineKey(ev) {
     ev.stopPropagation();
     if (ev.isComposing || ev.keyCode === 229) return;
-    if (ev.key === 'Enter') { ev.preventDefault(); inlineStop(true, true); }
+    if (ev.key === 'Enter') {
+      /* KZ-24: em texto do tema, Enter puro quebra linha; Ctrl/Cmd+Enter conclui. */
+      if (inline && inline.theme && !ev.ctrlKey && !ev.metaKey) return;
+      ev.preventDefault(); inlineStop(true, true);
+    }
     else if (ev.key === 'Escape') { ev.preventDefault(); inlineStop(false, true); }
   }
   /** Cada tecla escreve na fonte do tema pelo mesmo caminho do campo "Texto" do painel. */
   function inlineInput() {
     if (!inline) return;
-    var st = inline, box = st.box, value = inlineClean(box.value);
+    var st = inline, box = st.box, value = st.theme ? themeClean(box.value) : inlineClean(box.value);
+    /* KZ-24: texto do tema que ganhou quebra de linha durante a edicao passa para caixa propria. */
+    if (st.theme && st.mode === 'place' && value.indexOf('\n') !== -1) {
+      st.mode = 'box';
+      box.classList.add('kaz-canvas__inline--box');
+      st.paint.forEach(function (was) { if (was[1] === '') st.node.style.removeProperty(was[0]); else st.node.style.setProperty(was[0], was[1], was[2]); });
+      st.paint = [];
+    }
     if (value !== box.value) { var at = Math.min(box.selectionStart, value.length); box.value = value; box.setSelectionRange(at, at); }
     var why = !sameElement(picked, st) ? 'el_stale' : (st.theme ? onThemeInput({ value: value }) : onTextInput({ value: value }));
     if (why) {

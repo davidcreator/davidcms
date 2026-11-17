@@ -763,6 +763,7 @@ $_['text_canvas_theme_fallback'] = 'No translation in this language: the site sh
 $_['text_canvas_theme_bad_json'] = 'The theme texts JSON is invalid. Fix it in the "Theme texts per language" block to edit this text.';
 $_['text_canvas_theme_empty'] = 'The theme text cannot be empty. The last text was kept.';
 $_['text_canvas_theme_lines'] = 'This text has a line break. Edit it in the "Theme texts per language" block.';
+$_['text_canvas_theme_lines_help'] = 'Line breaks are accepted in this text. On the site, the break shows where the template uses the nl2br filter.';
 $_['text_canvas_theme_full'] = 'The theme texts reached the limit. This text was not saved.';
 $_['text_canvas_theme_texts'] = 'Theme texts in this piece (%s)';
 $_['text_canvas_theme_texts_help'] = 'Texts owned by the theme, in the canvas language. Choose one to edit it.';

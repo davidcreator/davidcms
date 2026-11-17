@@ -763,6 +763,7 @@ $_['text_canvas_theme_fallback'] = 'Sem tradução neste idioma: o site mostra o
 $_['text_canvas_theme_bad_json'] = 'O JSON dos textos do tema está inválido. Corrija-o no bloco "Textos do tema por idioma" para editar este texto.';
 $_['text_canvas_theme_empty'] = 'O texto do tema não pode ficar vazio. O último texto foi mantido.';
 $_['text_canvas_theme_lines'] = 'Este texto tem quebra de linha. Edite-o no bloco "Textos do tema por idioma".';
+$_['text_canvas_theme_lines_help'] = 'Quebras de linha são aceitas neste texto. No site, a quebra aparece onde a fonte usar o filtro nl2br.';
 $_['text_canvas_theme_full'] = 'Os textos do tema chegaram ao limite. Este texto não foi gravado.';
 $_['text_canvas_theme_texts'] = 'Textos do tema neste trecho (%s)';
 $_['text_canvas_theme_texts_help'] = 'Textos próprios do tema, no idioma do canvas. Escolha um para editar.';

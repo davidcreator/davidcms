@@ -763,6 +763,7 @@ $_['text_canvas_theme_fallback'] = 'Sin traducción en este idioma: el sitio mue
 $_['text_canvas_theme_bad_json'] = 'El JSON de los textos del tema no es válido. Corrígelo en el bloque "Textos del tema por idioma" para editar este texto.';
 $_['text_canvas_theme_empty'] = 'El texto del tema no puede quedar vacío. Se mantuvo el último texto.';
 $_['text_canvas_theme_lines'] = 'Este texto tiene un salto de línea. Edítalo en el bloque "Textos del tema por idioma".';
+$_['text_canvas_theme_lines_help'] = 'Este texto admite saltos de línea. En el sitio, el salto aparece donde la plantilla use el filtro nl2br.';
 $_['text_canvas_theme_full'] = 'Los textos del tema llegaron al límite. Este texto no se guardó.';
 $_['text_canvas_theme_texts'] = 'Textos del tema en este fragmento (%s)';
 $_['text_canvas_theme_texts_help'] = 'Textos propios del tema, en el idioma del canvas. Elige uno para editarlo.';

@@ -1,5 +1,20 @@
 # Changelog
 
+## KZ-24 — KAZEditor-Theme: texto do tema com quebra de linha (2026-11-17)
+- ADR 0117. Fecha a segunda pendência da KZ-21: o servidor já aceitava `
+` em `ThemeStrings`, mas o editor recusava (`theme_lines`) e colava a quebra em espaço. Agora o texto do tema aceita quebra de linha.
+- **`themeClean` preserva `
+`**: CRLF/CR viram `
+`, tab vira espaço, demais controles saem, teto de 2000 caracteres (igual ao servidor).
+- **Painel:** o campo "Texto do tema" grava quebras no JSON (`strings_json`), no idioma do canvas, pelo mesmo ponto único da KZ-21.
+- **Caixa na página:** texto do tema com `
+` abre em caixa própria (modo `box`); se a quebra entra durante a edição, a caixa vira `box` na hora. **Enter quebra linha, Ctrl/Cmd+Enter conclui**, Esc devolve o JSON byte a byte.
+- **Filtro `nl2br` reconhecido** em `THEME_REF` (junto de `upper`/`lower`): no site a quebra aparece onde a fonte usar `|nl2br`; na prévia do quadro, `setElementText` aplica `white-space: pre-line` enquanto houver `
+`.
+- **Idiomas:** chave nova `text_canvas_theme_lines_help` em `en-us`, `pt-br`, `es-eu` (sem revisão de nativo). A chave antiga `theme_lines` segue definida, sem uso.
+- **Testes:** `tests/fixtures/kaz_theme_lines.json` + `tests/check_kaz_theme_lines.js` (40 conferências Node, com estrago proposital) + `tests/Unit/Library/KazThemeLinesTest.php` (servidor + contrato estático PHP). Conferidores anteriores (KZ-21/KZ-23) continuam passando.
+- **Banco e dados salvos:** nenhuma tabela, coluna, rota ou chave nova; nenhuma migration; o servidor não mudou.
+
 ## KZ-23 — KAZEditor-Theme: texto do tema dentro de atributo editável no painel (alt, aria-label, placeholder, data-du-*) (2026-11-17)
 - ADR 0116. Fecha a pendência que a KZ-21 deixou anotada: um atributo cujo valor é só `{{ theme_text.chave }}` (com filtro de caixa opcional) passa a ter campo próprio no painel "Elemento".
 - **Atributos cobertos:** `alt`, `aria-label`, `placeholder` e qualquer `data-du-*` (os que a cena 3D do David Universe 3D lê: avisos da cena e a palavra "Fase" do HUD). Regra pura em `kaz-element-attrs.js` (`themeAttrName`/`themeAttr`).
