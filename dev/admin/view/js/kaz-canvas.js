@@ -40,6 +40,11 @@
  * dois cliques na pagina); o que e digitado vai para o JSON dos textos do tema, no
  * idioma que o canvas mostra. A fonte do tema nao muda.
  *
+ * KZ-23 (ADR 0116) — texto do tema dentro de atributo. Um atributo cujo valor e so
+ * `{{ theme_text.chave }}` (`alt`, `aria-label`, `placeholder`, `data-du-*`) ganha um
+ * campo de texto do tema no painel "Elemento"; o digitado vai para o JSON dos textos
+ * no idioma do canvas e a fonte nao muda. A previa troca so o atributo no quadro.
+ *
  * KZ-18 (ADR 0111) — texto editado direto na pagina. Dois cliques em um texto
  * fixo (ou Enter, com o elemento escolhido) abrem uma caixa de edicao sobre o
  * proprio texto. A caixa fica NESTE documento, por cima do quadro: a pagina
@@ -125,7 +130,7 @@
     var g = String(prop).split('-')[0];
     return SPACE_GROUPS.indexOf(g) !== -1 ? g : prop;
   }
-  var WARN_NAMES = ATTR_FIELDS.concat(['newtab'], STYLE_SLOTS, ['a11y']);
+  var WARN_NAMES = ATTR_FIELDS.concat(['newtab'], STYLE_SLOTS, ['a11y', 'themeattr']);
   /* KZ-07 (ADR 0100): lista de imagens e desenhos sem descricao, da pagina inteira. */
   var A11Y_LIST_MAX = 60, A11Y_SNIP_MAX = 60, A11Y_NEAR_MAX = 40, A11Y_NEAR_HOPS = 3;
   /* KZ-09 (ADR 0102): a mesma lista mostra link e botao sem nome. Rotulo de cada linha, por tag. */
@@ -873,6 +878,82 @@
     if (why === '') host.appendChild(make('p', 'kaz-canvas__sidehelp', label('inline_help', '')));
   }
 
+  /* ---------------- KZ-23 (ADR 0116): texto do tema dentro de atributo ---------------- */
+  /* Um atributo cujo valor e so `{{ theme_text.chave }}` (alt, aria-label, placeholder, data-du-*): o painel
+     "Elemento" mostra um campo de texto do tema como o da KZ-21; o que e digitado vai para o JSON dos textos
+     (`strings_json`), no idioma que o canvas mostra. A fonte do tema nao muda; a previa troca so o atributo. */
+  /** Atributos do item que sao so um texto do tema: [{ name, key, filter }]. */
+  function attrThemeRefs(it) {
+    var out = [], list = it && Array.isArray(it[7]) ? it[7] : [];
+    for (var i = 0; i < list.length; i++) {
+      var r = ATTRS && ATTRS.themeAttr ? ATTRS.themeAttr(list[i]) : null;
+      if (r) out.push(r);
+    }
+    return out;
+  }
+  /** Previa imediata: troca o atributo em todos os elementos do documento que usam aquela chave. */
+  function setThemeAttr(doc, themeKey, attrName, text) {
+    Object.keys(elements).forEach(function (key) {
+      var items = elements[key] && elements[key].items;
+      if (!Array.isArray(items)) return;
+      for (var n = 0; n < items.length; n++) {
+        var refs = attrThemeRefs(items[n]);
+        for (var i = 0; i < refs.length; i++) {
+          if (refs[i].key !== themeKey || refs[i].name !== attrName) continue;
+          var nodes = elementNodes(doc, key, n);
+          for (var j = 0; j < nodes.length; j++) nodes[j].setAttribute(refs[i].name, themeShown(text, refs[i].filter));
+        }
+      }
+    });
+  }
+  /** O campo de um atributo-texto-do-tema mudou: grava no JSON dos textos, no idioma do canvas. */
+  function onThemeAttrInput(t) {
+    var name = t.getAttribute('data-kaz-canvas-theme-attr'), themeKey = t.getAttribute('data-kaz-canvas-theme-key');
+    var field = themeField();
+    if (!name || !themeKey || !field || !picked) return 'el_stale';
+    var st = themeState(themeKey), why = themeWhy(true, mapFresh(picked.key), true, st);
+    if (why) { attrWarn('themeattr', why); return why; }
+    var value = themeClean(t.value);
+    if (value.trim() === '') { attrWarn('themeattr', 'theme_empty'); return; }
+    var res = themeWrite(field.value, themeKey, st.lang, value);
+    if (res.why) { attrWarn('themeattr', res.why); return res.why; }
+    attrWarn('themeattr', '');
+    liveTheme = { key: themeKey, text: value, after: seq };
+    visibleFrames().forEach(function (f) { setThemeAttr(frameDoc(f), themeKey, name, value); });
+    themeCommit(field, res.json);
+  }
+  /** Campo do painel para um atributo que e so um texto do tema. */
+  function paintThemeAttrField(host, it, a, fresh) {
+    var ref = ATTRS.themeAttr(a);
+    if (!ref) return false;
+    var st = themeState(ref.key), why = themeWhy(true, fresh, true, st);
+    var id = 'kaz-canvas-el-theme-attr-' + ref.name.replace(/[^a-z0-9-]/gi, '');
+    var lab = make('label', 'kaz-canvas__fieldname', label('theme_attr', '').replace('%s', st.lang) + ' ');
+    lab.appendChild(make('code', 'kaz-canvas__expr', ref.name));
+    lab.setAttribute('for', id);
+    host.appendChild(lab);
+    var box = make('input', 'kaz-canvas__input');
+    box.type = 'text';
+    box.id = id;
+    box.maxLength = THEME_TEXT_MAX;
+    box.setAttribute('data-kaz-canvas-theme-attr', ref.name);
+    box.setAttribute('data-kaz-canvas-theme-key', ref.key);
+    box.setAttribute('autocomplete', 'off');
+    box.value = st.ok ? st.text : '';
+    box.readOnly = why !== '' || !fresh;
+    host.appendChild(box);
+    var warn = make('p', 'kaz-canvas__sidehelp kaz-canvas__sidehelp--warn', why ? label(why, '') : '');
+    warn.setAttribute('data-kaz-canvas-attr-warn', 'themeattr');
+    warn.setAttribute('role', 'status');
+    warn.hidden = why === '';
+    host.appendChild(warn);
+    var from = make('p', 'kaz-canvas__sidehelp', label('theme_fallback', '').replace('%s', st.from));
+    from.hidden = !(st.ok && st.from !== '' && st.from !== st.lang);
+    host.appendChild(from);
+    attrHelp(host, 'theme_attr_help', '{{ theme_text.' + ref.key + (ref.filter ? '|' + ref.filter : '') + ' }}');
+    return true;
+  }
+
   /* ---------------- KZ-18 (ADR 0111): texto editado direto na pagina ---------------- */
   var INLINE_MIN_PX = 12, INLINE_BOX_W = 280, INLINE_HINT_MS = 5000, INLINE_EDGE = 24;
   /* Elementos em que o texto ocupa a largura do proprio elemento e segue `text-align`. */
@@ -1458,6 +1539,8 @@
       var a = ATTRS.find(it, name);
       if (!a && !create) return false;
       if (a && a[1] === 'variable') {
+        /* KZ-23: atributo que e so um texto do tema abre campo proprio, gravando no JSON dos textos. */
+        if (ATTRS.themeAttr(a)) { paintThemeAttrField(host, it, a, fresh); shown = true; return true; }
         attrHelp(host, fromData, a[6] !== '' ? '{{ ' + a[6] + ' }}' : (fresh ? src.slice(a[2], a[3]).slice(0, 120) : ''))
           .setAttribute('data-kaz-canvas-attr-from', name);
         attrHelp(host, 'el_attr_variable_help', '');
@@ -1514,6 +1597,13 @@
     var newLabel = !!a11y && !hasLabel && (tag === 'svg' ? a11y.state === 'missing' : ATTRS.canLabel(src, { items: [it] }, 0));
     valueField('aria-label', tag === 'svg' ? 'el_svg_label' : 'el_label',
       tag === 'svg' ? 'el_svg_label_help' : (hasLabel || nameless ? 'el_label_help' : 'el_label_new_help'), 'el_label_variable', newLabel);
+    /* KZ-23: placeholder e data-du-* que sao so texto do tema tambem ganham campo (alt/aria-label ja foram acima). */
+    if (fresh && Array.isArray(list)) {
+      attrThemeRefs(it).forEach(function (r) {
+        if (r.name === 'alt' || r.name === 'aria-label' || r.name === 'href') return;
+        if (paintThemeAttrField(host, it, ATTRS.find(it, r.name), fresh)) shown = true;
+      });
+    }
     if (A11Y_OK) {
       var state = make('div', 'kaz-canvas__a11ystate');
       state.setAttribute('data-kaz-canvas-a11y-state', '');
@@ -3045,6 +3135,7 @@
     if (designEl && designEl.contains(t)) { onDesignInput(t); return; }
     if (t.getAttribute('data-kaz-canvas-text') !== null) { if (!t.readOnly) onTextInput(t); return; }
     if (t.getAttribute('data-kaz-canvas-theme-text') !== null) { if (!t.readOnly) onThemeInput(t); return; }
+    if (t.getAttribute('data-kaz-canvas-theme-attr') !== null) { if (!t.readOnly) onThemeAttrInput(t); return; }
     if (t.getAttribute('data-kaz-canvas-attr') !== null) { if (!t.readOnly) onAttrInput(t); return; }
     if (t.getAttribute('data-kaz-canvas-newtab') !== null) { if (!t.disabled) onNewTab(t); return; }
     if (t.getAttribute('data-kaz-canvas-style') !== null) { if (!t.disabled && !t.readOnly) onStyleInput(t); return; }

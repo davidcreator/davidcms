@@ -1,5 +1,16 @@
 # Changelog
 
+## KZ-23 — KAZEditor-Theme: texto do tema dentro de atributo editável no painel (alt, aria-label, placeholder, data-du-*) (2026-11-17)
+- ADR 0116. Fecha a pendência que a KZ-21 deixou anotada: um atributo cujo valor é só `{{ theme_text.chave }}` (com filtro de caixa opcional) passa a ter campo próprio no painel "Elemento".
+- **Atributos cobertos:** `alt`, `aria-label`, `placeholder` e qualquer `data-du-*` (os que a cena 3D do David Universe 3D lê: avisos da cena e a palavra "Fase" do HUD). Regra pura em `kaz-element-attrs.js` (`themeAttrName`/`themeAttr`).
+- **O que se digita vai para o JSON dos textos (`strings_json`), no idioma do canvas** — mesmo ponto único de escrita da KZ-21 (`themeWrite` + `themeCommit`). A fonte do tema não muda; o formulário é marcado como alterado.
+- **Prévia imediata:** só o atributo troca no quadro (`setAttribute` com o filtro de caixa aplicado), em todos os elementos que usam a chave, nos três quadros.
+- **Atributo com outra variável** continua aviso-only ("vem de dado do site"); texto com quebra de linha continua recusado (`theme_lines`).
+- **Idiomas:** chaves novas `text_canvas_theme_attr` e `text_canvas_theme_attr_help` em `en-us`, `pt-br` e `es-eu` (traduções sem revisão de nativo, como nas etapas anteriores).
+- **Segurança:** nenhuma escrita na fonte do tema; o valor é texto simples gravado como dado em `strings` e escapado na saída. O quadro continua sem script.
+- **Testes:** `tests/fixtures/kaz_theme_attr.json` + `tests/check_kaz_theme_attr.js` (47 conferências em Node, incluindo dois estragos propositalais) e `tests/Unit/Library/KazThemeAttrTest.php` (contrato estático em PHP). `node --check` OK nos três JS.
+- **Banco e dados salvos:** nenhuma tabela, coluna, rota ou chave nova; nenhuma migration.
+
 ## KZ-22 — KAZEditor-Theme: salvar o tema não troca mais o fim de linha das fontes (o pacote não cresce e o limite de tamanho vale para o que é guardado) (2026-11-16)
 - ADR 0115. Corrige o que a prova que salva da KZ-21 mostrou: salvar um tema pelo formulário, sem mexer em nada, regravava as 25 fontes com um byte a mais por linha.
 - **Causa:** o navegador envia cada quebra de linha de um `<textarea>` como `CR LF`, e o formulário guardava a fonte como chegava. No "David Universe 3D — Cena Real" são 617 linhas: o pacote exportado ia de 89.758 para 90.992 bytes, com outro checksum, só por ter sido salvo.

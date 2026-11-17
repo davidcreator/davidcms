@@ -935,6 +935,29 @@
     return { src: next };
   }
 
+
+  /* ---------------- KZ-23 (ADR 0116): texto do tema dentro de atributo ---------------- */
+  /* Um atributo cujo valor e so `{{ theme_text.chave }}` (com, no maximo, um filtro de caixa) pode ser editado
+     pelo painel como texto do tema: o que e digitado vai para o JSON dos textos (`strings_json`), no idioma do
+     canvas, e a fonte do tema nao muda. So estes atributos entram: `alt`, `aria-label`, `placeholder` e os
+     `data-du-*` que a cena 3D le. */
+  var THEME_ATTR_RE = /^theme_text\.([a-z][a-z0-9_]{0,63})(?: ?\| ?(upper|lower))?$/;
+  var THEME_ATTR_NAMES = ['alt', 'aria-label', 'placeholder'];
+  var THEME_ATTR_PREFIX = 'data-du-';
+  var THEME_ATTR_DU_RE = /^data-du-[a-z0-9-]+$/;
+  /** O atributo `name` e um dos que podem ser texto do tema? */
+  function themeAttrName(name) {
+    name = String(name);
+    return THEME_ATTR_NAMES.indexOf(name) !== -1 || THEME_ATTR_DU_RE.test(name);
+  }
+  /** Atributo do mapa que e so um texto do tema: { name, key, filter }; null quando nao e. */
+  function themeAttr(a) {
+    if (!a || a[1] !== 'variable') return null;
+    if (!themeAttrName(a[0])) return null;
+    var m = THEME_ATTR_RE.exec(String(a[6] || ''));
+    return m ? { name: String(a[0]), key: m[1], filter: m[2] || '' } : null;
+  }
+
   root.KazElementAttrs = {
     LINK_MAX: LINK_MAX, LABEL_MAX: LABEL_MAX, SOURCE_MAX: SOURCE_MAX,
     clean: clean, find: find, linkOk: linkOk, encode: encode, tooLong: tooLong,
@@ -944,6 +967,7 @@
     SPACE_PROPS: SPACE_PROPS.slice(), ALIGN_VALUES: ALIGN_VALUES.slice(), SPACE_MIN: SPACE_MIN, SPACE_MAX: SPACE_MAX,
     spaceOk: spaceOk, pxOf: pxOf, layoutOf: layoutOf,
     LABEL_TAGS: LABEL_TAGS.slice(), LABEL_ROLES: LABEL_ROLES.slice(), HOLDER_TAGS: HOLDER_TAGS.slice(),
-    a11y: a11y, pending: pending, canLabel: canLabel, putAttr: putAttr, decorate: decorate, dropLabel: dropLabel
+    a11y: a11y, pending: pending, canLabel: canLabel, putAttr: putAttr, decorate: decorate, dropLabel: dropLabel,
+    THEME_ATTR_NAMES: THEME_ATTR_NAMES.slice(), THEME_ATTR_PREFIX: THEME_ATTR_PREFIX, themeAttrName: themeAttrName, themeAttr: themeAttr
   };
 })(typeof window !== 'undefined' ? window : globalThis);

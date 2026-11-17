@@ -766,6 +766,8 @@ $_['text_canvas_theme_lines'] = 'Este texto tem quebra de linha. Edite-o no bloc
 $_['text_canvas_theme_full'] = 'Os textos do tema chegaram ao limite. Este texto não foi gravado.';
 $_['text_canvas_theme_texts'] = 'Textos do tema neste trecho (%s)';
 $_['text_canvas_theme_texts_help'] = 'Textos próprios do tema, no idioma do canvas. Escolha um para editar.';
+$_['text_canvas_theme_attr'] = 'Texto do tema em %s';
+$_['text_canvas_theme_attr_help'] = 'Este atributo imprime um texto próprio do tema. O que for digitado vale para o idioma do canvas, em todos os lugares que usam a chave';
 
 // KZ-11 (ADR 0104): moldura do editor de tema (barra de cima, barra da tela, abas, navegacao dos modulos, rodape).
 $_['text_kaz_page_open'] = 'Abrir painel de páginas';
