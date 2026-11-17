@@ -1,5 +1,12 @@
 # Changelog
 
+## Hotfix F918-06 (P1) — blog público: block_html entregue como Twig\Markup (2026-11-17)
+- O template `blog_info.twig` imprime `post.block_html` sem `|raw`; o controller entregava string, e o Twig escapava o HTML do BlockRenderer — o conteúdo do post saía como texto puro na página pública.
+- **Correção:** `dev/catalog/controller/blog/blog.php` agora entrega `new \Twig\Markup($blockHtml, 'UTF-8')` (o HTML vem do renderer allowlistado/sanitizado; o template continua sem `|raw`).
+- **Risk register:** F918-06 → `resolved`; F918-01/F918-02 → `mitigated` (já cobertos por `tests/fixtures/f918_regressions.json` + `e2e_f919_static.cjs`).
+- **Teste novo:** `tests/Unit/Security/BlogBlockHtmlMarkupTest.php` (controller entrega Markup; template sem `|raw`; fixture F918 presente).
+- CHECKSUMS.txt recalculado para o CHANGELOG neste mesmo pacote.
+
 ## KZ-24 — KAZEditor-Theme: texto do tema com quebra de linha (2026-11-17)
 - ADR 0117. Fecha a segunda pendência da KZ-21: o servidor já aceitava `
 ` em `ThemeStrings`, mas o editor recusava (`theme_lines`) e colava a quebra em espaço. Agora o texto do tema aceita quebra de linha.

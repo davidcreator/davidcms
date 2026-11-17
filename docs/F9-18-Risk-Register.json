@@ -18,21 +18,21 @@
   {
    "id": "F918-01",
    "severity": "P1",
-   "status": "open",
+   "status": "mitigated",
    "area": "public_catalog_sidecar_detection",
    "path": "dev/catalog/model/blog/blog.php",
    "lines": "110-124",
-   "summary": "Metadata lookup exceptions are cached as table absence, enabling the public legacy description|raw branch when sidecar detection actually failed.",
+   "summary": "Metadata lookup exceptions are cached as table absence, enabling the public legacy description|raw branch when sidecar detection actually failed. MITIGADO no HEAD: coberto por tests/fixtures/f918_regressions.json + tools/e2e/e2e_f919_static.cjs.",
    "required_action": "Use tri-state detection; only a successful lookup proving absence may select legacy fallback. Errors must fail closed."
   },
   {
    "id": "F918-02",
    "severity": "P1",
-   "status": "open",
+   "status": "mitigated",
    "area": "public_image_url_resolution",
    "path": "dev/system/library/blog/block_renderer.php",
    "lines": "62-66",
-   "summary": "Allowlisted view/image/blog/... paths are emitted unchanged; relative URLs can resolve incorrectly on nested SEO routes or subdirectory installs.",
+   "summary": "Allowlisted view/image/blog/... paths are emitted unchanged; relative URLs can resolve incorrectly on nested SEO routes or subdirectory installs. MITIGADO no HEAD: coberto por tests/fixtures/f918_regressions.json + tools/e2e/e2e_f919_static.cjs.",
    "required_action": "Resolve local assets against a trusted catalog base while preserving scheme/host rejection."
   },
   {
@@ -68,11 +68,11 @@
   {
    "id": "F918-06",
    "severity": "P1",
-   "status": "open",
+   "status": "resolved",
    "area": "public_blog_block_html_escape (D07)",
    "path": "dev/catalog/view/template/blog/blog_info.twig",
    "lines": "7",
-   "summary": "post.block_html e post.description impressos sem |raw; se nao forem Twig\\Markup, o conteudo sai escapado no blog publico (regressao funcional).",
+   "summary": "post.block_html e post.description impressos sem |raw; se nao forem Twig\\Markup, o conteudo sai escapado no blog publico (regressao funcional). RESOLVIDO 2026-11-17: controller entrega Twig\\Markup (tests/Unit/Security/BlogBlockHtmlMarkupTest.php).",
    "required_action": "Confirmar se o controller entrega Twig\\Markup; se nao, corrigir o controller. Decisao D07=B registrada em 2026-11-17."
   },
   {

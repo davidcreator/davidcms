@@ -14,6 +14,8 @@
  */
 namespace Reamur\Catalog\Controller\Blog;
 
+use Twig\Markup;
+
 class Blog extends \Reamur\System\Engine\Controller {
 
     /** Lista pública de posts publicados (mais novos primeiro) */
@@ -130,7 +132,8 @@ class Blog extends \Reamur\System\Engine\Controller {
             'description'  => (string)$post['description'],
             'content_mode' => $contentMode,
             'content_valid' => $contentValid,
-            'block_html'   => $blockHtml,
+            /* F918-06: o HTML vem do BlockRenderer allowlistado/sanitizado; entregue como Twig\Markup para o template imprimir sem escape (sem |raw). */
+            'block_html'   => $blockHtml !== '' ? new Markup($blockHtml, 'UTF-8') : '',
             'image'        => $this->absoluteImage((string)$post['image'], $base),
             'date'         => $this->formatDate((string)$post['date_published']),
         ];
