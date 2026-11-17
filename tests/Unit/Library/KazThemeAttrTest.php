@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
  * e as chaves novas de idioma existem nos tres idiomas do admin.
  */
 final class KazThemeAttrTest extends TestCase {
-    private const ROOT = __DIR__ . '/../../../..';
+    private const ROOT = __DIR__ . '/../../..';
 
     private function read(string $rel): string {
         $p = self::ROOT . '/' . $rel;

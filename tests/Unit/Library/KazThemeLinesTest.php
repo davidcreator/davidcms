@@ -15,7 +15,7 @@ use Reamur\System\Library\Theme\ThemeStrings;
  * nao recusa mais, pre-line na previa, Enter quebra na caixa).
  */
 final class KazThemeLinesTest extends TestCase {
-    private const ROOT = __DIR__ . '/../../../..';
+    private const ROOT = __DIR__ . '/../../..';
 
     private function read(string $rel): string {
         $p = self::ROOT . '/' . $rel;
