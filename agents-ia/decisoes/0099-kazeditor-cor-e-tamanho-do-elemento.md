@@ -47,7 +47,7 @@ Esta ADR decide a **sexta etapa** do caminho B: **o painel Elemento ganha a seç
 
 Achado ao provar esta etapa; o defeito é anterior a ela (KZ-03).
 
-O servidor aceita até 131 072 **bytes** por trecho, medidos como o formulário chega: letra acentuada vale dois bytes (UTF-8) e cada quebra de linha vale dois (CR LF). O editor comparava o número de **caracteres**. Um trecho com acentos ou muitas linhas, perto do limite, passava na conta do editor e era recusado pelo servidor logo depois ("a fonte passa do tamanho permitido"), com a página voltando ao último rascunho salvo.
+O servidor aceita até 131 072 **bytes** por trecho, medidos como o formulário chega: letra acentuada vale dois bytes (UTF-8) e cada quebra de linha vale dois (CR LF). O editor comparava o número de **caracteres**. Um trecho com acentos ou muitas linhas, perto do limite, passava na conta do editor e era recusado pelo servidor logo depois ("a fonte passa do tamanho permitido"), com a página voltando ao último rascunho salvo. *(Mudou na KZ-22: pela ADR 0115, o servidor guarda a fonte com `\n` e mede depois disso; cada quebra de linha vale um byte, no servidor e no editor. A conta em bytes continua.)*
 
 A conta passa a ser feita em um lugar só (`KazElementAttrs.tooLong`), do jeito do servidor, e vale para os campos de atributo, de cor e tamanho, o campo Texto e os campos de cor e medida do painel Design. Medido em Chromium: com o trecho a 3 bytes do limite, a mudança que não cabe é recusada no painel com o aviso "esta mudança não foi gravada", e a que cabe é aceita pelo servidor.
 

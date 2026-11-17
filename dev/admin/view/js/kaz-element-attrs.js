@@ -200,25 +200,27 @@
   }
 
   /**
-   * KZ-06: o servidor mede o teto em bytes, do jeito que o formulario chega:
-   * UTF-8 (`strlen`) e cada quebra de linha como CR LF. Contar caracteres aqui
-   * deixava passar uma fonte com acentos ou muitas linhas que o servidor
-   * recusava em seguida. Meio par substituto conta como U+FFFD (3 bytes).
+   * KZ-06: o servidor mede o teto em bytes UTF-8 (`strlen`). Contar caracteres
+   * aqui deixava passar uma fonte com acentos que o servidor recusava em
+   * seguida. Meio par substituto conta como U+FFFD (3 bytes).
+   *
+   * KZ-22 (ADR 0115): o servidor guarda a fonte com quebra de linha `\n` e
+   * mede depois disso. Cada quebra de linha (LF, CR LF ou CR solto) vale UM
+   * byte; antes valia dois, porque a fonte era medida como o formulario chega.
    */
   function tooLong(s) {
     var n = s.length, i, c, bytes = 0;
-    if (n > SOURCE_MAX) return true;
     if (n * 3 <= SOURCE_MAX) return false;
     for (i = 0; i < n; i++) {
       c = s.charCodeAt(i);
-      if (c === 13) { bytes += 2; if (i + 1 < n && s.charCodeAt(i + 1) === 10) i++; }
-      else if (c === 10) bytes += 2;
+      if (c === 13) { bytes += 1; if (i + 1 < n && s.charCodeAt(i + 1) === 10) i++; }
       else if (c < 0x80) bytes += 1;
       else if (c < 0x800) bytes += 2;
       else if (c >= 0xD800 && c <= 0xDBFF && i + 1 < n && s.charCodeAt(i + 1) >= 0xDC00 && s.charCodeAt(i + 1) <= 0xDFFF) { bytes += 4; i++; }
       else bytes += 3;
+      if (bytes > SOURCE_MAX) return true;
     }
-    return bytes > SOURCE_MAX;
+    return false;
   }
 
   /** Troca o valor (ja codificado) de um atributo. Fonte nova, ou null se passar do teto. */

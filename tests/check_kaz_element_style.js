@@ -234,22 +234,29 @@ same(A.setStyle(S, { items: [['p', 'fixed', 0, 3, 3, 4, '', null]] }, 0, 'color'
   const fits = '<p>' + pad + '</p>';
   same(A.setStyle(fits, mapOf(fits), 0, 'color', '#fff').src.length, A.SOURCE_MAX, 'cabe exatamente no teto');
   refused(fits, 0, 'color', '#ffffff', 'long', 'um caractere acima do teto (atributo novo)');
-  // o teto e em bytes, como o servidor recebe: UTF-8 e quebra de linha em CR LF
+  // KZ-22: o teto e em bytes UTF-8 da fonte como o servidor a guarda; cada quebra de linha vale um byte
   const M = A.SOURCE_MAX, fill = (unit, bytes, total) => unit.repeat(Math.floor(total / bytes)) + 'x'.repeat(total % bytes);
-  for (const [nome, unit, bytes] of [['ascii', 'x', 1], ['acento', '\u00e9', 2], ['tres bytes', '\u20ac', 3], ['emoji', '\ud83d\ude00', 4], ['quebra LF', '\n', 2], ['quebra CR LF', '\r\n', 2], ['CR solto', '\r', 2], ['meio par', '\ud83d', 3], ['meio par baixo', '\ude00', 3]]) {
+  for (const [nome, unit, bytes] of [['ascii', 'x', 1], ['acento', '\u00e9', 2], ['tres bytes', '\u20ac', 3], ['emoji', '\ud83d\ude00', 4], ['quebra LF', '\n', 1], ['CR solto', '\r', 1], ['meio par', '\ud83d', 3], ['meio par baixo', '\ude00', 3]]) {
     check(A.tooLong(fill(unit, bytes, M)) === false, 'teto em bytes: ' + nome + ' cabendo exatamente');
     check(A.tooLong(fill(unit, bytes, M) + 'x') === true, 'teto em bytes: ' + nome + ' com um byte a mais');
   }
   check(A.tooLong('') === false && A.tooLong('x'.repeat(M + 1)) === true && A.tooLong('\u00e9'.repeat(M / 2 - 1) + '\u20ac') === true, 'teto em bytes: vazio, longo e mistura');
   check(Buffer.byteLength(fill('\u00e9', 2, M)) === M && Buffer.byteLength(fill('\ud83d\ude00', 4, M)) === M, 'a conta confere com a do Node');
+  check(A.tooLong('\r\n'.repeat(M)) === false && A.tooLong('\r\n'.repeat(M) + 'x') === true && A.tooLong('\r\n'.repeat(M) + '\n') === true && A.tooLong('\r\n'.repeat(M) + '\r') === true, 'CR LF e uma quebra so: um byte');
+  check(A.tooLong('\r\r\n'.repeat(M / 2)) === false && A.tooLong('\r\r\n'.repeat(M / 2) + 'x') === true && A.tooLong('\n\r'.repeat(M)) === true && A.tooLong('x\n\rx'.repeat(M / 4)) === false && A.tooLong('x\n\rx'.repeat(M / 4) + 'x') === true, 'CR CR LF e LF CR sao duas quebras cada');
+  check(A.tooLong('x'.repeat(M - 1) + '\r\n') === false && A.tooLong('x'.repeat(M) + '\r\n') === true && A.tooLong('x'.repeat(M - 1) + '\r') === false, 'quebra no fim da fonte');
   {
     const acc = '<p>' + '\u00e9'.repeat((M - 7 - 19) / 2 | 0) + 'x'.repeat((M - 7 - 19) % 2) + '</p>';
     check(acc.length < M / 2 + 30 && A.setStyle(acc, mapOf(acc), 0, 'color', '#fff').src !== undefined, 'fonte com acentos: escrita que cabe em bytes passa');
     same(A.setStyle(acc, mapOf(acc), 0, 'color', '#ffff00'), { error: 'long' }, 'fonte com acentos: passa do teto em bytes mesmo com metade dos caracteres');
     same(A.setStyle(acc, mapOf(acc), 0, 'font-size', '12px'), { error: 'long' }, 'idem no tamanho');
-    const st = '<p style="color:#fff">' + '\n'.repeat((M - 26) / 2) + '</p>';
-    check(A.tooLong(st) === false, 'fonte com quebras montada no teto');
-    same(A.setStyle(st, mapOf(st), 0, 'background-color', '#000'), { error: 'long' }, 'declaracao nova nao cabe: quebras contam dois bytes');
+    const st = '<p style="color:#fff">' + '\n'.repeat(M - 26) + '</p>';
+    check(st.length === M && A.tooLong(st) === false, 'fonte com quebras montada no teto');
+    same(A.setStyle(st, mapOf(st), 0, 'background-color', '#000'), { error: 'long' }, 'declaracao nova nao cabe');
+    // KZ-22: metade do teto em quebras de linha enchia a fonte quando cada quebra valia dois bytes
+    const half = '<p style="color:#fff">' + '\n'.repeat((M - 26) / 2) + '</p>';
+    const wrote = A.setStyle(half, mapOf(half), 0, 'background-color', '#000');
+    check(wrote.error === undefined && wrote.src.length === half.length + ';background-color:#000'.length && wrote.src.indexOf('background-color:#000') !== -1, 'fonte com muitas linhas e folga: a declaracao nova entra');
     same(A.setStyle(st, mapOf(st), 0, 'color', '#ffff00'), { error: 'long' }, 'valor maior nao cabe');
     check(A.setStyle(st, mapOf(st), 0, 'color', '#000').src.length === st.length, 'valor do mesmo tamanho cabe');
   }
@@ -284,6 +291,26 @@ const BLOCKED = /<\s*(script|iframe|object|embed)\b|javascript\s*:|\bon[a-z]+\s*
   same(r.src, '<a class="b" href="/novo-destino" target="_blank" rel="noopener" style="color:#000;font-size:18px">Ir</a><p style="color:#333">x</p>', 'link, nova aba e estilo com o mesmo mapa');
   mapHolds(r.src, map, 'link, nova aba e estilo');
   same(A.clean([['style', 'fixed', 9, 11, 3, 12, '']]), [['style', 'fixed', 9, 11, 3, 12, '']], 'style e um nome aceito na lista do servidor');
+})();
+
+/* KZ-22 (ADR 0115): a tabela de tamanhos que o servidor tambem confere (KazSourceLineEndingsTest) */
+(function () {
+  const fx = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, 'fixtures', 'kaz_source_size.json'), 'utf8'));
+  same(fx.max, A.SOURCE_MAX, 'o teto da tabela e o do script');
+  check(fx.cases.length === 20, 'tabela de tamanhos inteira');
+  const seen = { true: 0, false: 0, old: 0 };
+  for (const c of fx.cases) {
+    const typed = c.unit.repeat(c.times) + c.tail;
+    const sent = typed.replace(/\r\n|\r|\n/g, '\r\n'), stored = typed.replace(/\r\n|\r/g, '\n');
+    same(Buffer.byteLength(stored), c.bytes, c.name + ': bytes guardados');
+    same(Buffer.byteLength(sent), c.bytes_sent, c.name + ': bytes como o formulario envia');
+    same(c.bytes <= fx.max, c.ok, c.name + ': a tabela e coerente');
+    // do jeito que foi montada, do jeito que o campo a guarda e do jeito que o formulario a envia: a mesma resposta
+    for (const [how, s] of [['montada', typed], ['no campo', stored], ['enviada', sent]]) same(A.tooLong(s), !c.ok, c.name + ' (' + how + ')');
+    seen[c.ok]++;
+    if (c.ok && c.bytes_sent > fx.max) seen.old++;
+  }
+  same(seen, { true: 11, false: 9, old: 6 }, 'casos que cabem, que nao cabem e que a regra antiga recusava');
 })();
 
 console.log('Kaz element style checker: ' + checks + ' PASS');

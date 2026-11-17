@@ -1,5 +1,19 @@
 # Changelog
 
+## KZ-22 — KAZEditor-Theme: salvar o tema não troca mais o fim de linha das fontes (o pacote não cresce e o limite de tamanho vale para o que é guardado) (2026-11-16)
+- ADR 0115. Corrige o que a prova que salva da KZ-21 mostrou: salvar um tema pelo formulário, sem mexer em nada, regravava as 25 fontes com um byte a mais por linha.
+- **Causa:** o navegador envia cada quebra de linha de um `<textarea>` como `CR LF`, e o formulário guardava a fonte como chegava. No "David Universe 3D — Cena Real" são 617 linhas: o pacote exportado ia de 89.758 para 90.992 bytes, com outro checksum, só por ter sido salvo.
+- **Agora a fonte é guardada com `\n`**, nos quatro caminhos: salvar o rascunho, as prévias, importar um pacote e exportar. Salvar sem mexer não muda um byte; salvar duas vezes dá o mesmo pacote; importar e salvar dão o mesmo resultado.
+- **O limite de 131.072 bytes por fonte vale para o que é guardado.** Cada quebra de linha conta um byte (contava dois). O número não mudou e nada que cabia deixa de caber; uma fonte com muitas linhas ganha de volta um byte por linha. Formulário, importação e a conta do editor usam a mesma medida.
+- **Tema que já foi salvo pelo formulário:** nada a fazer. O site mostra a mesma página. Exportar já entrega o pacote limpo; o primeiro "Salvar rascunho" limpa o rascunho, e a publicação seguinte limpa a versão publicada. Não há migração no banco.
+- **Pacote exportado por uma versão anterior** (fontes com `CR LF`): é importado normalmente e guardado com `\n`.
+- **Não muda:** o conteúdo das fontes, o HTML do site, o formato do pacote, o banco e os sete pacotes do repositório (nenhum tem `CR`; o checksum de cada um continua valendo). O limite do campo "Textos do tema por idioma" continua medido como antes.
+- **Um pacote exportado antes e outro depois desta etapa, do mesmo tema salvo pelo formulário, têm checksums diferentes.** O conteúdo é o mesmo.
+- **Arquivos:** `dev/admin/controller/design/theme.php`, `dev/system/library/theme/theme_package.php` (`normalizeTemplates()`), `dev/admin/view/js/kaz-element-attrs.js` (`tooLong()`).
+- **Testes novos:** `tests/fixtures/kaz_source_size.json` (20 casos de tamanho, rodados em PHP e em Node) e `KazSourceLineEndingsTest.php`. Atualizados: `check_kaz_element_style.js` e `KazElementStyleTest.php`, que conferiam a regra antiga.
+- **Conferido:** 1725 testes em PHP 8.2 e 8.3 e PHPStan sem erro; onze estragos de propósito no código, todos acusados pelos testes. Na bancada (Chromium): uma prova que salva de verdade (28 conferências: salvar sem mexer, salvar duas vezes, tema antigo com `CR LF`, fonte no limite e um byte acima, pacote da versão anterior), com a tabela de temas devolvida ao fim; as provas da KZ-21 e da KZ-20; e os 79 roteiros das etapas KZ-05 a KZ-19 (três pararam na rodada em lote ao procurar um elemento ainda não desenhado e passaram em seguida, sozinhos). Depois da regressão, os sete temas da bancada que tinham `CR LF` ficaram sem nenhum, com o mesmo conteúdo.
+- **Depois de aplicar:** nada a migrar. Recarregue a tela do editor (a versão do script mudou para `-kaz-canvas-kz22`).
+
 ## KZ-21 — KAZEditor-Theme: o texto do tema é editado na página, no idioma do canvas (2026-11-16)
 - ADR 0114. Fecha o que a KZ-20 deixou para trás: depois que o David Universe 3D passou a acompanhar o idioma, quase nenhum texto dele podia ser editado na página.
 - **Dois cliques num texto do tema abrem a edição.** Vale para o elemento que só imprime `{{ theme_text.chave }}` (com `|upper` ou `|lower`, se houver): títulos, itens do menu, rótulos, botões. Também abre com `Enter` ou `F2` e pelo campo "Texto do tema" do painel. Antes aparecia "Este texto vem dos dados do site".

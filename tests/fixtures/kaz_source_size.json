@@ -1,0 +1,186 @@
+{
+    "description": "KZ-22 (ADR 0115): tamanho da fonte de um tema. A fonte e guardada com quebra de linha LF e o teto de 131072 bytes e medido depois disso. Cada caso e a receita unit * times + tail; `bytes` e o tamanho guardado, `bytes_sent` o tamanho como o formulario envia (CR LF), que deixou de contar. Rodado em PHP (KazSourceLineEndingsTest) e em node (check_kaz_element_style.js).",
+    "max": 131072,
+    "cases": [
+        {
+            "name": "ascii no teto",
+            "unit": "x",
+            "times": 131072,
+            "tail": "",
+            "bytes": 131072,
+            "bytes_sent": 131072,
+            "ok": true
+        },
+        {
+            "name": "ascii com um byte a mais",
+            "unit": "x",
+            "times": 131072,
+            "tail": "x",
+            "bytes": 131073,
+            "bytes_sent": 131073,
+            "ok": false
+        },
+        {
+            "name": "acento (2 bytes) no teto",
+            "unit": "é",
+            "times": 65536,
+            "tail": "",
+            "bytes": 131072,
+            "bytes_sent": 131072,
+            "ok": true
+        },
+        {
+            "name": "acento com um byte a mais",
+            "unit": "é",
+            "times": 65536,
+            "tail": "x",
+            "bytes": 131073,
+            "bytes_sent": 131073,
+            "ok": false
+        },
+        {
+            "name": "tres bytes no teto",
+            "unit": "€",
+            "times": 43690,
+            "tail": "xx",
+            "bytes": 131072,
+            "bytes_sent": 131072,
+            "ok": true
+        },
+        {
+            "name": "tres bytes com um byte a mais",
+            "unit": "€",
+            "times": 43690,
+            "tail": "xxx",
+            "bytes": 131073,
+            "bytes_sent": 131073,
+            "ok": false
+        },
+        {
+            "name": "emoji (4 bytes) no teto",
+            "unit": "😀",
+            "times": 32768,
+            "tail": "",
+            "bytes": 131072,
+            "bytes_sent": 131072,
+            "ok": true
+        },
+        {
+            "name": "emoji com um byte a mais",
+            "unit": "😀",
+            "times": 32768,
+            "tail": "x",
+            "bytes": 131073,
+            "bytes_sent": 131073,
+            "ok": false
+        },
+        {
+            "name": "so quebras LF no teto",
+            "unit": "\n",
+            "times": 131072,
+            "tail": "",
+            "bytes": 131072,
+            "bytes_sent": 262144,
+            "ok": true
+        },
+        {
+            "name": "so quebras LF com um byte a mais",
+            "unit": "\n",
+            "times": 131072,
+            "tail": "x",
+            "bytes": 131073,
+            "bytes_sent": 262145,
+            "ok": false
+        },
+        {
+            "name": "so quebras CR LF no teto: cada uma vale um byte",
+            "unit": "\r\n",
+            "times": 131072,
+            "tail": "",
+            "bytes": 131072,
+            "bytes_sent": 262144,
+            "ok": true
+        },
+        {
+            "name": "so quebras CR LF com uma quebra a mais",
+            "unit": "\r\n",
+            "times": 131072,
+            "tail": "\n",
+            "bytes": 131073,
+            "bytes_sent": 262146,
+            "ok": false
+        },
+        {
+            "name": "so CR solto no teto",
+            "unit": "\r",
+            "times": 131072,
+            "tail": "",
+            "bytes": 131072,
+            "bytes_sent": 262144,
+            "ok": true
+        },
+        {
+            "name": "so CR solto com um byte a mais",
+            "unit": "\r",
+            "times": 131072,
+            "tail": "x",
+            "bytes": 131073,
+            "bytes_sent": 262145,
+            "ok": false
+        },
+        {
+            "name": "linhas de texto com acento, no teto",
+            "unit": "<p>é</p>\n",
+            "times": 13107,
+            "tail": "xx",
+            "bytes": 131072,
+            "bytes_sent": 144179,
+            "ok": true
+        },
+        {
+            "name": "linhas de texto com acento, um byte a mais",
+            "unit": "<p>é</p>\n",
+            "times": 13107,
+            "tail": "xxx",
+            "bytes": 131073,
+            "bytes_sent": 144180,
+            "ok": false
+        },
+        {
+            "name": "antes recusada: cabia so se a quebra valesse um byte",
+            "unit": "é",
+            "times": 65534,
+            "tail": "\nabc",
+            "bytes": 131072,
+            "bytes_sent": 131073,
+            "ok": true
+        },
+        {
+            "name": "a mesma com um byte a mais",
+            "unit": "é",
+            "times": 65534,
+            "tail": "\nabcd",
+            "bytes": 131073,
+            "bytes_sent": 131074,
+            "ok": false
+        },
+        {
+            "name": "antes recusada: metade do teto em linhas curtas",
+            "unit": "ab\n",
+            "times": 43690,
+            "tail": "xx",
+            "bytes": 131072,
+            "bytes_sent": 174762,
+            "ok": true
+        },
+        {
+            "name": "fonte vazia",
+            "unit": "x",
+            "times": 0,
+            "tail": "",
+            "bytes": 0,
+            "bytes_sent": 0,
+            "ok": true
+        }
+    ]
+}

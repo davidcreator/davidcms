@@ -86,7 +86,7 @@ Um elemento que só imprime um texto do tema passa a ser editado como um texto f
 - **Um idioma criado pela edição entra no fim da chave** no JSON. Ao salvar, o servidor reordena chaves e idiomas, como já fazia.
 - **Depois de concluir, não há desfazer.** `Esc` desfaz enquanto a caixa está aberta. Sair da tela sem salvar descarta tudo.
 - **Só o David Universe 3D usa textos do tema.** Nos outros temas nada muda.
-- **Visto na prova que salva, e anterior a esta etapa:** salvar o tema pelo formulário regrava as 25 fontes com fim de linha `CR LF` (é como o navegador envia um `<textarea>`). O conteúdo é o mesmo; o pacote exportado fica alguns bytes maior. Não foi alterado aqui.
+- **Visto na prova que salva, e anterior a esta etapa:** salvar o tema pelo formulário regrava as 25 fontes com fim de linha `CR LF` (é como o navegador envia um `<textarea>`). O conteúdo é o mesmo; o pacote exportado fica alguns bytes maior. Não foi alterado aqui. *(Corrigido na KZ-22: pela ADR 0115, a fonte é guardada com `\n` e salvar sem mexer não muda um byte.)*
 - **Os roteiros de navegador das etapas KZ-05 a KZ-18** continuam rodando contra o pacote antigo do David Universe, mantido como peça de teste da bancada.
 
 ## Verificação

@@ -286,11 +286,15 @@ final class KazElementStyleTest extends TestCase {
         self::assertSame(1, substr_count($canvas, '.length > SOURCE_MAX'));
         self::assertStringNotContainsString('.length > 131072', $canvas);
 
-        // A mesma fonte, do jeito que o formulario a entrega: no teto passa, um byte acima nao.
-        $fill = str_repeat("\u{e9}", 65534) . "\r\n";
-        self::assertSame(131070, strlen($fill));
-        self::assertFalse(ThemeSandbox::blocked($fill . 'ab'));
-        self::assertTrue(ThemeSandbox::blocked($fill . 'abc'));
+        // KZ-22 (ADR 0115): a fonte e medida como e guardada (quebra de linha `\n`), nao como o
+        // formulario a entrega. No teto passa, um byte acima nao; a tabela inteira esta em
+        // KazSourceLineEndingsTest e no checker.
+        $fill = \Reamur\System\Library\Theme\ThemeSourceMap::normalize(str_repeat("\u{e9}", 65534) . "\r\n");
+        self::assertSame(131069, strlen($fill));
+        self::assertFalse(ThemeSandbox::blocked($fill . 'abc'));
+        self::assertTrue(ThemeSandbox::blocked($fill . 'abcd'));
+        self::assertStringContainsString("if (c === 13) { bytes += 1; if (i + 1 < n && s.charCodeAt(i + 1) === 10) i++; }", $rules);
+        self::assertStringNotContainsString('c === 10', $rules);
     }
 
     public function testNodeCheckerOfTheStyleRulesPasses(): void {

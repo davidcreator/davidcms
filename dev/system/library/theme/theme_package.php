@@ -92,6 +92,19 @@ final class ThemePackage {
         return hash('sha256', (string)json_encode($this->canonical($config), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE));
     }
 
+    /**
+     * KZ-22 (ADR 0115): quebra de linha `\n` em cada fonte (CR LF e CR solto viram LF).
+     * O que nao e texto fica como esta: quem recusa e validateConfig().
+     * @param array<array-key, mixed> $templates
+     * @return array<array-key, mixed>
+     */
+    public static function normalizeTemplates(array $templates): array {
+        foreach ($templates as $key=>$source) {
+            if (is_string($source)) $templates[$key]=ThemeSourceMap::normalize($source);
+        }
+        return $templates;
+    }
+
     /** Remove chaves fora da allowlist e normaliza tipos basicos. */
     public function sanitizeConfig(array $config): array {
         $out=[];
@@ -101,6 +114,9 @@ final class ThemePackage {
         }
         if (isset($out['parent']) && !is_string($out['parent'])) unset($out['parent']);
         if (isset($out['templates']) && !is_array($out['templates'])) unset($out['templates']);
+        // KZ-22 (ADR 0115): fonte sempre com quebra de linha `\n`, ao importar (depois de conferido o
+        // checksum do arquivo) e ao exportar (antes de calcular o checksum do pacote).
+        if (isset($out['templates'])) $out['templates']=self::normalizeTemplates($out['templates']);
         if (isset($out['tokens']) && !is_array($out['tokens'])) unset($out['tokens']);
         if (isset($out['three']) && !is_array($out['three'])) unset($out['three']);
         if (isset($out['conditions']) && !is_array($out['conditions'])) unset($out['conditions']);
@@ -270,6 +286,9 @@ final class ThemePackage {
         if (!is_array($config)) return $fail('config_invalid');
         $sum=(string)($pkg['checksum']??'');
         if (preg_match('/^[0-9a-f]{64}$/D',$sum)!==1 || !hash_equals($this->checksum($config),$sum)) return $fail('checksum_invalid');
+        // KZ-22 (ADR 0115): o checksum acima vale para o arquivo como foi escrito; daqui em diante a
+        // fonte tem quebra de linha `\n`, e o tamanho e conferido assim: a mesma medida do formulario.
+        if (is_array($config['templates']??null)) $config['templates']=self::normalizeTemplates($config['templates']);
         $errors=$this->validateConfig($config);
         if ($errors!==[]) return ['ok'=>false,'errors'=>$errors,'name'=>$name,'slug'=>$slug,'parent'=>(string)($config['parent']??''),'config'=>[]];
         return ['ok'=>true,'errors'=>[],'name'=>$name,'slug'=>$slug,'parent'=>(string)($config['parent']??''),'config'=>$this->sanitizeConfig($config)];

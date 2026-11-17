@@ -330,6 +330,8 @@ class Theme extends \Reamur\System\Engine\Controller {
             if (($data['error']??'')!=='' && is_array($post['templates']??null)) {
                 foreach(\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS as $templateKey) {
                     $posted=$post['templates'][$templateKey]??null;
+                    // KZ-22 (ADR 0115): mesma medida do salvar (quebra de linha `\n`, um byte).
+                    if (is_string($posted)) $posted=\Reamur\System\Library\Theme\ThemeSourceMap::normalize($posted);
                     if (is_string($posted) && strlen($posted)<=131072) $data['templates'][$templateKey]=$posted;
                 }
             }
@@ -506,7 +508,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         foreach(self::KAZ_FRAME_SCRIPT as $kazKey) $kazLabels[$kazKey]=$this->language->get('text_kaz_'.$kazKey);
         $data['kaz_labels_json']=json_encode($kazLabels,JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
         $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels,'parts'=>$canvasParts,'tokens'=>$canvasTokens],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
-        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz21';
+        $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz22';
         $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-canvas.css?v=' . $canvasAssetV);
         // KZ-05 (ADR 0098): as regras de atributo vem antes do painel que as usa (os dois sao `defer`, na ordem).
         $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-element-attrs.js?v=' . $canvasAssetV);
@@ -668,6 +670,10 @@ class Theme extends \Reamur\System\Engine\Controller {
         $templates=is_array($post['templates']??null)?$post['templates']:[]; $safeTemplates=[]; $invalidTemplateSource=false; $templateSourceDetail='';
         foreach($templates as $templateKey=>$source) {
             if (!in_array((string)$templateKey,\Reamur\System\Library\Theme\ThemePackage::TEMPLATE_KEYS,true) || !is_string($source)) { $invalidTemplateSource=true; continue; }
+            // KZ-22 (ADR 0115): o navegador envia cada quebra de linha de um <textarea> como CR LF.
+            // A fonte e guardada com `\n`, e o tamanho e medido depois disso: salvar sem mexer em nada
+            // nao muda um byte do tema, e o que o pacote aceita ao importar o formulario aceita ao salvar.
+            $source=\Reamur\System\Library\Theme\ThemeSourceMap::normalize($source);
             // ADR 0087 (S2): tamanho e camada de HTML valem sempre (como antes). Ao
             // salvar, a fonte tambem e conferida pelo parser do Twig contra a politica
             // do sandbox: o que nao renderiza no site publicado nao e salvo, e o erro
