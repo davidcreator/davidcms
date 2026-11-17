@@ -149,7 +149,7 @@ check(!/writeSource\(|encodeText\(|sourceField\([^)]*\)\.value\s*=[^=]/.test(fla
 check(flat.split('commitSource(').length - 1 === 1 && /commitSource\(st\.key, st\.map, st\.src\);/.test(block), 'a unica escrita direta e a devolucao da fonte guardada (Esc)');
 check(/src: field\.value, map: JSON\.parse\(JSON\.stringify\(elements\[sel\.key\]\)\)/.test(block), 'ao abrir, a fonte e uma copia do mapa sao guardadas para o Esc');
 /* o que a caixa poe no quadro */
-check(flat.split('.style.setProperty(').length - 1 === 2 && flat.split('.style.removeProperty(').length - 1 === 1, 'tres pontos tocam no estilo do elemento do quadro: por, devolver e retirar');
+check(flat.split('.style.setProperty(').length - 1 === 3 && flat.split('.style.removeProperty(').length - 1 === 2, 'quatro pontos tocam no estilo do elemento do quadro: por, devolver, retirar e devolver de novo ao virar caixa propria (KZ-24)');
 check(/INLINE_HIDE\.forEach\(function \(pair\) \{ node\.style\.setProperty\(pair\[0\], pair\[1\], 'important'\); \}\);/.test(block), 'o que e posto no elemento vem da lista INLINE_HIDE');
 check(/if \(was\[1\] === ''\) st\.node\.style\.removeProperty\(was\[0\]\); else st\.node\.style\.setProperty\(was\[0\], was\[1\], was\[2\]\);/.test(block), 'ao fechar, cada propriedade volta ao valor que tinha');
 check(!/setAttribute\('style'|removeAttribute\('style'|\.cssText|innerHTML|insertAdjacent|\.textContent = [^';]*node|createElement\('(script|style|iframe)'/.test(flat), 'a caixa nao reescreve atributo, HTML nem cria script ou estilo');
@@ -158,7 +158,7 @@ check(flat.split('appendChild(').length - 1 === 2 && /f\.body\.appendChild\(box\
 const key = cut('inlineKey');
 check(/^  function inlineKey\(ev\) \{\n    ev\.stopPropagation\(\);/.test(key), 'toda tecla dentro da caixa para na caixa');
 check(/if \(ev\.isComposing \|\| ev\.keyCode === 229\) return;/.test(key), 'tecla de composicao (acento, IME) nao conclui');
-check(/if \(ev\.key === 'Enter'\) \{ ev\.preventDefault\(\); inlineStop\(true, true\); \}\n    else if \(ev\.key === 'Escape'\) \{ ev\.preventDefault\(\); inlineStop\(false, true\); \}/.test(key), 'Enter conclui e Esc desfaz');
+check(/if \(ev\.key === 'Enter'\) \{[\s\S]*?inlineStop\(true, true\);[\s\S]*?else if \(ev\.key === 'Escape'\)/.test(key) && key.indexOf('inline.theme && !ev.ctrlKey && !ev.metaKey') > 0, 'KZ-24: Enter quebra linha em texto do tema, Ctrl+Enter conclui, Esc desfaz');
 check(/\['pointerdown', 'pointerup', 'mousedown', 'click', 'dblclick'\]\.forEach\(function \(name\) \{\n      box\.addEventListener\(name, function \(ev\) \{ ev\.stopPropagation\(\); \}\);/.test(block), 'os gestos dentro da caixa nao chegam ao canvas');
 check(/box\.addEventListener\('blur', function \(\) \{ if \(inline && inline\.box === box\) inlineStop\(true\); \}\);/.test(block), 'sair da caixa conclui com o que foi digitado');
 check(/if \(byKey && st\.back && st\.back\.to === view\.k\)/.test(block), 'a camera so volta quando a caixa foi fechada pelo teclado e o zoom nao foi mexido');

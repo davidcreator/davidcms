@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
  * Twig\Markup (o HTML vem do BlockRenderer allowlistado) e o template NAO usa |raw.
  */
 final class BlogBlockHtmlMarkupTest extends TestCase {
-    private const ROOT = __DIR__ . '/../../../..';
+    private const ROOT = __DIR__ . '/../../..';
 
     private function read(string $rel): string {
         $p = self::ROOT . '/' . $rel;
