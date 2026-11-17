@@ -97,8 +97,9 @@ final class KazInlineTextTest extends TestCase {
         $script = $this->repo(self::SCRIPT);
         $block = $this->block();
         self::assertStringContainsString("var INLINE_HIDE = [['-webkit-text-fill-color', 'transparent'], ['text-shadow', 'none']];", $script);
-        self::assertSame(2, substr_count($block, '.style.setProperty('));
-        self::assertSame(1, substr_count($block, '.style.removeProperty('));
+        // KZ-24: ao virar para caixa propria no meio da edicao, a pintura tambem e devolvida (3 set / 2 remove).
+        self::assertSame(3, substr_count($block, '.style.setProperty('));
+        self::assertSame(2, substr_count($block, '.style.removeProperty('));
         // Antes de esconder, o valor e a prioridade que o elemento tinha sao guardados...
         self::assertStringContainsString('st.paint = INLINE_HIDE.map(function (pair) { return [pair[0], node.style.getPropertyValue(pair[0]), node.style.getPropertyPriority(pair[0])]; });', $block);
         self::assertStringContainsString("INLINE_HIDE.forEach(function (pair) { node.style.setProperty(pair[0], pair[1], 'important'); });", $block);
