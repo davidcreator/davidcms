@@ -1,5 +1,10 @@
 # Changelog
 
+## KZ-40 — Dracaunos-Security Fase C: checker estático + decision-matrix (2026-11-18)
+- Novo `tests/check_dracaunos_security.js` (52 verificações, PASS local e `node --check` no CI): pré-ação `startup/dracaunos` na ordem certa do admin, IP em todas as rotas, 1 única leitura de `request->ip()` no login (ProxyWiringTest), SQL portátil sem `ADD COLUMN IF NOT EXISTS`, ferramenta interna fora de `rms_tool`, conta do cliente (KZ-38) com CSRF + paridade de idiomas, `password_changed_at` na troca de senha e templates sem script inline/on*.
+- `tools/decision-matrix.json`: entrada **KZ-39** (DECIDED, David L. Almeida, 2026-11-18) congelando os 19 artefatos da Fase B/Fase A do Dracaunos (hashes SHA-256 em `frozen_artifacts_sha256`).
+
+
 ## KZ-39 — Dracaunos-Security Fase B: IP em todas as rotas do admin, auditoria, expiração de senha, rota real aplicada (2026-11-18)
 - Novo pré-ação `startup/dracaunos` (config admin, antes de `startup/login`): regras de IP (`dracaunos_ip_rule`, escopo admin) passam a valer para **todas** as rotas do painel (403 + log), não só no POST de login.
 - **Auditoria do admin**: tabela `dracaunos_audit` — toda requisição autenticada do painel é registrada (usuário, rota, método, IP, user agent), com retenção `dracaunos_audit_days` (30). Nova seção no painel `security/dracaunos`.

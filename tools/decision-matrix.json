@@ -1,11 +1,11 @@
 {
  "task": "F11-11",
- "head": "5a6cb33",
+ "head": "8421bc70",
  "description": "Matriz de decisao dos 10 MARKER_OR_FINDING mantidos pelo F11-09",
  "policy": "Nenhuma decisao tomada por inferencia. Contratos congelados ate registro explicito de status=DECIDED.",
  "status_counts": {
   "PENDING_DECISION": 0,
-  "DECIDED": 10
+  "DECIDED": 11
  },
  "frozen_artifacts_sha256": {
   "docs/F9-14-Contrato-Editor-MVP.json": "c4a8b91d18ab9bad64ea9a698bca0e945c9024be477df1cbffa14b3f8288e4e7",
@@ -18,7 +18,26 @@
   "docs/F9-05-Contrato-Definicoes-Campos.json": "8f90ee3bbb7bb8112a84dbde796c4e3cc7f0d448700d5836601d0fd466673f78",
   "docs/F9-18-Risk-Register.json": "a5a3df0ac25a1bf195957bf881aac2c1d8965a2c2e9968f92f815d0c846759f3",
   "dev/install/sql/schema.sql": "c9dd1ec27af95d7506b8aff6af06133f75b288c2db31e5537fb7fbac2e1f67a5",
-  "docs/PROJECT-HANDOFF.md": "5f65d408d5b9831b0999d09ace2fbb1248bd4695282fe75fa6fde0859aeb6c84"
+  "docs/PROJECT-HANDOFF.md": "5f65d408d5b9831b0999d09ace2fbb1248bd4695282fe75fa6fde0859aeb6c84",
+  "dev/admin/controller/startup/dracaunos.php": "b245004d86dec8388e9ce6808b1c2ba65d5016dd372bdf2d54d745bae38cd7d7",
+  "dev/admin/controller/common/login.php": "550e6a803f480f108856159d0a1e01d46a22358e8db853a6783b02bad4f2eac4",
+  "dev/admin/controller/security/dracaunos.php": "62c045fd901d7363f6a0a5c68e18ab0b5e5bfc8b38d62bcdeccf47394b297470",
+  "dev/admin/controller/user/profile.php": "5631d2d8c6aa041fa5e2d5c906ed0d4b32432a3d91c3a7c3b971c381afd635a6",
+  "dev/admin/model/security/dracaunos.php": "44585785e0597179a05002400dea0c68d1ca4a1590606697f2649ebdac2368b1",
+  "dev/admin/model/user/user.php": "c392b402d1eb25e134e9eecec373a352d64d038450751a8c3206a50980dadeb4",
+  "dev/admin/model/tool/internal-tools.json": "d9331dc6baac1691ba6a184ae146ed972068bb9775924e15c6388b8b31e56053",
+  "dev/admin/view/template/security/dracaunos.twig": "14dc3dacb258b7269cec90ef9c417089736bf254b96e752a4d30b9d7044eeb0c",
+  "dev/admin/view/template/user/profile.twig": "2ccbb355d5f96e1fc56c663bcfa1433404a5fe9c1a22efedb8a411af1710f7b3",
+  "dev/system/config/admin.php": "70fb7804aa7a18506c2e83aebf724ab870caac61605f00b2b65d55126d48fb7d",
+  "tools/upgrade_kz39_dracaunos_fase_b.sql": "786aaed860e208b1b4d3d6378b598834daccc62b1549b63c46b57815a2e15329",
+  "dev/catalog/controller/account/login.php": "8f0ceb96a9dc4a11d7f90bb7241b2e366c50ec152337570e9fa7bf4e70ff8216",
+  "dev/catalog/controller/account/logout.php": "a747a5aaf11601db9945c97ab7cb2068a5852a182d95fcf82c076c8823cee732",
+  "dev/catalog/controller/account/register.php": "bafc94a442b0ed1b2d17d9ecee6d9f3ae7a9aec086e8b412e757cbf2773ec6a1",
+  "dev/catalog/controller/account/verify.php": "9ad836ac6a49e308604dcb5f23191e10463f0a52cdbb7e13e616bfe4e6a3bbc9",
+  "dev/catalog/controller/account/forgotten.php": "3786ea7fceb7373e934e14e6a20d3b7533ed13c95ad462de0189dae655806495",
+  "dev/catalog/controller/account/reset.php": "0438632c06bd91a39befb8c4f6ddd47872015a107ff8b6468e4dbfbb486f6506",
+  "dev/catalog/controller/account/account.php": "31fc007351a11b8c83d28b117fad496b6de064fb775e97f31858f2a3f51e4edd",
+  "dev/catalog/model/account/dracaunos.php": "0663cb02ce4f4e73ef09b1611b78526ca84f69c07f48e0dbc15336aefd3bc772"
  },
  "decisions": [
   {
@@ -304,8 +323,55 @@
    "decision_date": "2026-11-17",
    "decision": "B",
    "evidence_ref": "tools/e2e/e2e_f927_static.cjs; base_head 3d481ecf != HEAD 5a6cb33; SHA nao atualizado sem autorizacao"
+  },
+  {
+   "id": "KZ-39",
+   "checker": "tests/check_dracaunos_security.js",
+   "phase": "KZ-34/36/38/39 (Dracaunos-Security)",
+   "nature": "FERRAMENTA_INTERNA",
+   "status": "DECIDED",
+   "evidence": "Fase B entregue e no main (8421bc70): startup/dracaunos aplica IP em todas as rotas do admin + auditoria (dracaunos_audit) + expiracao de senha (password_changed_at) + rota real do admin; conta do cliente no catalogo (KZ-38). CI 7/7 verde. Dracaunos/JOW siguen internos (fora de rms_tool).",
+   "options": [
+    {
+     "id": "A",
+     "label": "Registrar a entrega da Fase B com os artefatos congelados abaixo",
+     "requires": "autorizacao explicita do responsavel"
+    },
+    {
+     "id": "B",
+     "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+     "requires": "decisao do responsavel"
+    }
+   ],
+   "recommendation": "A",
+   "recommended_action": "Congelar os artefatos da Fase B; qualquer alteracao neles passa a exigir decisao explicita registrada aqui",
+   "frozen_artifacts": [
+    "dev/admin/controller/startup/dracaunos.php",
+    "dev/admin/controller/common/login.php",
+    "dev/admin/controller/security/dracaunos.php",
+    "dev/admin/controller/user/profile.php",
+    "dev/admin/model/security/dracaunos.php",
+    "dev/admin/model/user/user.php",
+    "dev/admin/model/tool/internal-tools.json",
+    "dev/admin/view/template/security/dracaunos.twig",
+    "dev/admin/view/template/user/profile.twig",
+    "dev/system/config/admin.php",
+    "tools/upgrade_kz39_dracaunos_fase_b.sql",
+    "dev/catalog/controller/account/login.php",
+    "dev/catalog/controller/account/logout.php",
+    "dev/catalog/controller/account/register.php",
+    "dev/catalog/controller/account/verify.php",
+    "dev/catalog/controller/account/forgotten.php",
+    "dev/catalog/controller/account/reset.php",
+    "dev/catalog/controller/account/account.php",
+    "dev/catalog/model/account/dracaunos.php"
+   ],
+   "decided_by": "David L. Almeida (responsavel)",
+   "decision_date": "2026-11-18",
+   "decision": "A",
+   "evidence_ref": "run 44313021370 (7/7 success) @ 8421bc70; node tests/check_dracaunos_security.js -> PASS (52 verificacoes)"
   }
  ],
  "retified_in": "F11-14",
- "ci_status": "7/7 success (runs 41483802295 / 41504039830); docs-links 0.13 min com --offline desde F11-12"
+ "ci_status": "7/7 success (run 44313021370 @ 8421bc70); tests/check_dracaunos_security.js PASS (52 verificacoes)"
 }
