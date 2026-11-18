@@ -24,7 +24,8 @@ class Login extends \Reamur\System\Engine\Controller {
             $pass  = $this->postScalar('password');
             $data['email'] = $email;
 
-            $drac = $this->load->model('account/dracaunos');
+            $this->load->model('account/dracaunos');
+            $drac = $this->model_account_dracaunos;
             $ip   = (string)$this->request->ip();
             $ua   = (string)($this->request->server['HTTP_USER_AGENT'] ?? '');
 

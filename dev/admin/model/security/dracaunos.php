@@ -226,4 +226,24 @@ class Dracaunos extends \Reamur\System\Engine\Model {
     public function getAuditLogs(int $limit = 50): array {
         return $this->db->query("SELECT * FROM `" . DB_PREFIX . "dracaunos_audit` ORDER BY `audit_id` DESC LIMIT " . (int)$limit)->rows;
     }
+
+    // ── Exportação CSV + limpeza por retenção (KZ-42) ───────────────────
+    public function exportAuditLogs(int $limit = 10000): array {
+        return $this->db->query("SELECT `user_id`,`username`,`route`,`method`,`ip`,`user_agent`,`date_added` FROM `" . DB_PREFIX . "dracaunos_audit` ORDER BY `audit_id` DESC LIMIT " . (int)$limit)->rows;
+    }
+    public function exportLoginLogs(int $limit = 10000): array {
+        return $this->db->query("SELECT `user_id`,`username`,`ip`,`user_agent`,`success`,`date_added` FROM `" . DB_PREFIX . "dracaunos_login_log` ORDER BY `log_id` DESC LIMIT " . (int)$limit)->rows;
+    }
+    /** apaga auditoria mais antiga que dracaunos_audit_days; devolve quantos removeu */
+    public function pruneAudit(): int {
+        $days = max(1, (int)($this->config->get('dracaunos_audit_days') ?: 30));
+        $this->db->query("DELETE FROM `" . DB_PREFIX . "dracaunos_audit` WHERE `date_added` < NOW() - INTERVAL " . $days . " DAY");
+        return $this->db->countAffected();
+    }
+    /** apaga log de logins mais antigo que dracaunos_login_log_days; devolve quantos removeu */
+    public function pruneLoginLogs(): int {
+        $days = max(1, (int)($this->config->get('dracaunos_login_log_days') ?: 30));
+        $this->db->query("DELETE FROM `" . DB_PREFIX . "dracaunos_login_log` WHERE `date_added` < NOW() - INTERVAL " . $days . " DAY");
+        return $this->db->countAffected();
+    }
 }

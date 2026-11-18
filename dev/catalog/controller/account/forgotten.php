@@ -20,7 +20,8 @@ class Forgotten extends \Reamur\System\Engine\Controller {
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $data['error'] = $this->language->get('error_email');
             } else {
-                $drac = $this->load->model('account/dracaunos');
+                $this->load->model('account/dracaunos');
+                $drac = $this->model_account_dracaunos;
                 $c = $drac->getCustomerByEmail($email);
                 if ($c) {
                     $token = $drac->addRecovery((int)$c['customer_id'], $email, 'password', (string)$this->request->ip());

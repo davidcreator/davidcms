@@ -125,4 +125,36 @@ for (const l of langs) {
   check(read('dev/admin/language/' + l + '/security/dracaunos.php').includes("text_force_2fa"), 'idioma ' + l + ' tem text_force_2fa');
 }
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41)');
+// 10) KZ-42: exportação CSV e limpeza por retenção no painel
+check(dracModel.includes('function exportAuditLogs(') && dracModel.includes('function exportLoginLogs('), 'model exporta auditoria e log de logins');
+check(dracModel.includes('function pruneAudit(') && dracModel.includes('function pruneLoginLogs('), 'model tem limpeza por retenção');
+check(dracCtrl.includes('function exportAudit(') && dracCtrl.includes('function exportLogins('), 'controller tem rotas de exportação CSV');
+check(dracCtrl.includes("case 'prune'"), 'controller tem ação de limpeza (POST+CSRF)');
+check(dracCtrl.includes('Content-Disposition: attachment'), 'exportação responde como download CSV');
+check(dracTwig.includes('export_audit') && dracTwig.includes('export_logins'), 'twig tem botões/links de exportação');
+check(dracTwig.includes('button_prune'), 'twig tem botão de limpeza por retenção');
+for (const l of langs) {
+  const ls = read('dev/admin/language/' + l + '/security/dracaunos.php');
+  check(ls.includes('button_export_csv') && ls.includes('text_pruned'), 'idioma ' + l + ' tem chaves do KZ-42');
+}
+
+// 11) Hotfix KZ-43: load->model() devolve void — o model vive no registry
+//     (model_<rota>). "= $this->load->model(...)" deixava null e fatal no
+//     runtime ("Call to a member function ipAllowed() on null" no login).
+{
+  const skip = ['node_modules', 'vendor', 'storage', '.git'];
+  const offenders = [];
+  (function walk(dir) {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) { if (!skip.includes(e.name)) walk(full); continue; }
+      if (!/\.php$/.test(e.name)) continue;
+      if (/=\s*\$this->load->model\(/.test(fs.readFileSync(full, 'utf8'))) {
+        offenders.push(path.relative(ROOT, full).split(path.sep).join('/'));
+      }
+    }
+  })(path.join(ROOT, 'dev'));
+  check(offenders.length === 0, 'nenhum "= $this->load->model(...)" em dev/ (retorno é void): ' + offenders.join(', '));
+}
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42 + hotfix KZ-43)');

@@ -75,6 +75,7 @@
           <td>{{ l.date_added }}</td><td>{{ l.username|e }}</td><td>{{ l.ip|e }}</td><td>{{ l.success ? text_ok : text_fail }}</td>
         </tr>{% else %}<tr><td colspan="4" class="text-body-secondary">{{ text_empty }}</td></tr>{% endfor %}</tbody>
       </table></div>
+      <div class="mt-2"><a class="btn btn-outline-secondary btn-sm" href="{{ export_logins }}">{{ button_export_csv }}</a></div>
     </div></div></div>
 
     {# ── Auditoria do admin (KZ-39) ── #}
@@ -87,6 +88,14 @@
           <td>{{ a.date_added }}</td><td>{{ a.username|e }}</td><td>{{ a.route|e }}</td><td>{{ a.method|e }}</td><td>{{ a.ip|e }}</td>
         </tr>{% else %}<tr><td colspan="5" class="text-body-secondary">{{ text_empty }}</td></tr>{% endfor %}</tbody>
       </table></div>
+      <div class="mt-2 d-flex gap-2 flex-wrap">
+        <a class="btn btn-outline-secondary btn-sm" href="{{ export_audit }}">{{ button_export_csv }}</a>
+        {% if can_modify %}<form method="post" action="{{ action }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="prune">
+          <button class="btn btn-outline-danger btn-sm">{{ button_prune }}</button>
+        </form>{% endif %}
+        <span class="text-body-secondary small align-self-center">{{ help_prune }}</span>
+      </div>
     </div></div></div>
 
     {# ── Recuperação / verificação ── #}

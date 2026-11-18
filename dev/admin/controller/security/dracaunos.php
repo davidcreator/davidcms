@@ -37,6 +37,9 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
         );
         $data['recovery']    = $this->model_security_dracaunos->getRecovery('pending', 30);
         $data['audit']       = $this->model_security_dracaunos->getAuditLogs(50);
+        // KZ-42: links de exportação CSV das seções de auditoria e log de logins
+        $data['export_audit']  = $this->url->link('security/dracaunos.exportAudit');
+        $data['export_logins'] = $this->url->link('security/dracaunos.exportLogins');
         $data['ip_rules']    = $this->model_security_dracaunos->getIpRules();
         $data['users']       = $this->model_security_dracaunos->getUsers(30);
         $data['user_edit']   = $this->url->link('user/user.edit');
@@ -103,7 +106,53 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
                 $this->model_security_dracaunos->deleteIpRule((int)($post['rule_id'] ?? 0));
                 $this->session->data['success'] = $this->language->get('text_ip_deleted');
                 break;
+            case 'prune':
+                // KZ-42: limpeza por retencao (auditoria + log de logins)
+                $n1 = $this->model_security_dracaunos->pruneAudit();
+                $n2 = $this->model_security_dracaunos->pruneLoginLogs();
+                $this->session->data['success'] = sprintf($this->language->get('text_pruned'), $n1, $n2);
+                break;
         }
         $this->response->redirect($this->url->link('security/dracaunos'));
+    }
+
+    // ── KZ-42: exportación CSV (GET, sem estado; exige ACL access) ──────
+    public function exportAudit(): void {
+        $this->load->language('security/dracaunos');
+        $this->load->model('security/dracaunos');
+        if (!$this->user->hasPermission('access', 'security/dracaunos')) {
+            $this->response->redirect($this->url->link('error/permission'));
+            return;
+        }
+        $header = ['user_id', 'username', 'route', 'method', 'ip', 'user_agent', 'date_added'];
+        $this->csvDownload('dracaunos-audit-' . date('Ymd-His') . '.csv', $header, $this->model_security_dracaunos->exportAuditLogs());
+    }
+
+    public function exportLogins(): void {
+        $this->load->language('security/dracaunos');
+        $this->load->model('security/dracaunos');
+        if (!$this->user->hasPermission('access', 'security/dracaunos')) {
+            $this->response->redirect($this->url->link('error/permission'));
+            return;
+        }
+        $header = ['user_id', 'username', 'ip', 'user_agent', 'success', 'date_added'];
+        $this->csvDownload('dracaunos-login-log-' . date('Ymd-His') . '.csv', $header, $this->model_security_dracaunos->exportLoginLogs());
+    }
+
+    /** CSV com BOM (Excel abre em UTF-8) e separador ; — padrao pt-BR */
+    private function csvDownload(string $filename, array $header, array $rows): void {
+        $out = "\xEF\xBB\xBF" . implode(';', $header) . "\r\n";
+        foreach ($rows as $r) {
+            $line = [];
+            foreach ($header as $col) {
+                $line[] = '"' . str_replace('"', '""', (string)($r[$col] ?? '')) . '"';
+            }
+            $out .= implode(';', $line) . "\r\n";
+        }
+        $this->response->addHeader('Content-Type: text/csv; charset=utf-8');
+        $this->response->addHeader('Cache-Control: no-store');
+        $this->response->addHeader('X-Content-Type-Options: nosniff');
+        $this->response->addHeader('Content-Disposition: attachment; filename="' . $filename . '"');
+        $this->response->setOutput($out);
     }
 }

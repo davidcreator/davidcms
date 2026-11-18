@@ -62,3 +62,9 @@ $_['text_force_2fa'] = 'Policy requires 2FA: enable two-factor verification on t
 $_['entry_2fa_required'] = 'Require 2FA for all admin users';
 $_['help_2fa_required'] = 'When enabled, users without 2FA configured can only reach this screen (to enable it) and logout.';
 $_['text_2fa_required_saved'] = '2FA requirement updated.';
+
+// KZ-42 — CSV export and retention cleanup
+$_['button_export_csv'] = 'Export CSV';
+$_['button_prune']      = 'Prune old records';
+$_['help_prune']        = 'Deletes audit and login logs older than the configured retention (dracaunos_audit_days / dracaunos_login_log_days).';
+$_['text_pruned']       = 'Cleanup done: %d audit record(s) and %d login log record(s) removed.';

@@ -6,7 +6,8 @@ class Account extends \Reamur\System\Engine\Controller {
 
     private function requireCustomer(): array {
         $id = (int)($this->session->data['customer_id'] ?? 0);
-        $drac = $this->load->model('account/dracaunos');
+        $this->load->model('account/dracaunos');
+        $drac = $this->model_account_dracaunos;
         $c = $id > 0 ? $drac->getCustomer($id) : [];
         if (!$c) {
             $this->response->redirect($this->url->link('account/login'));
@@ -40,7 +41,8 @@ class Account extends \Reamur\System\Engine\Controller {
             if (!$this->csrfValid()) {
                 $data['errors'][] = $this->language->get('error_csrf');
             } else {
-                $drac = $this->load->model('account/dracaunos');
+                $this->load->model('account/dracaunos');
+        $drac = $this->model_account_dracaunos;
                 $drac->updateCustomer((int)$c['customer_id'], $this->request->post);
                 $data['success'] = true;
             }
@@ -69,7 +71,8 @@ class Account extends \Reamur\System\Engine\Controller {
             } elseif (strlen($new) < 8) {
                 $data['error'] = $this->language->get('error_password');
             } else {
-                $drac = $this->load->model('account/dracaunos');
+                $this->load->model('account/dracaunos');
+        $drac = $this->model_account_dracaunos;
                 $drac->setPassword((int)$c['customer_id'], $new);
                 $data['success'] = true;
             }

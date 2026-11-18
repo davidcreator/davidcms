@@ -1,5 +1,16 @@
 # Changelog
 
+## Hotfix KZ-43 — model carregado via registry, não pelo retorno de load->model() (2026-11-18)
+- `Loader::model()` devolve `void` (registra um Proxy em `model_<rota>`); o login do admin e os controllers `account/*` do catálogo atribuíam o retorno (`$drac = $this->load->model(...)`) → `null` e fatal `Call to a member function ipAllowed() on null` em `/admin/login`. Corrigido para `$this->load->model(...)` + `$this->model_security_dracaunos` / `$this->model_account_dracaunos` nos 8 arquivos.
+- Checker `tests/check_dracaunos_security.js` ganha verificação de regressão: nenhum `= $this->load->model(` em `dev/` (75 verificações, PASS).
+
+
+## KZ-42 — Dracaunos-Security: exportação CSV e limpeza por retenção (2026-11-18)
+- Novas rotas `security/dracaunos.exportAudit` e `security/dracaunos.exportLogins` (GET, exigem ACL access): download CSV (BOM UTF-8, separador `;`) da auditoria do admin e do log de logins.
+- Ação `prune` no painel (POST + CSRF + modify): remove registros de auditoria e de log de logins mais antigos que a retenção (`dracaunos_audit_days` / `dracaunos_login_log_days`), com mensagem de quantos foram removidos.
+- Dracaunos-Security sobe para **1.4.0**; checker `tests/check_dracaunos_security.js` vai a 74 verificações (PASS). Idiomas pt-br/en-us/es-eu.
+
+
 ## KZ-41 — Dracaunos-Security: 2FA obrigatório no admin (dracaunos_2fa_required) (2026-11-18)
 - O setting `dracaunos_2fa_required` (já existente) passa a valer: com `1`, o `startup/dracaunos` bloqueia **todas** as rotas do admin para quem não tem 2FA ativo — só `security/dracaunos` (para ativar) e `common/logout` ficam liberados (fail-closed, mesmo padrão da expiração de senha). No login, a conta é redirecionada direto para o painel Dracaunos nesse caso.
 - Painel `security/dracaunos`: checkbox "exigir 2FA para todos os usuários do admin" + banner de bloqueio enquanto a conta não tiver 2FA. Ativar o 2FA limpa o flag.

@@ -10,7 +10,8 @@ class Verify extends \Reamur\System\Engine\Controller {
 
         $token = trim((string)($this->request->get['token'] ?? ''));
         if ($token !== '') {
-            $drac = $this->load->model('account/dracaunos');
+            $this->load->model('account/dracaunos');
+            $drac = $this->model_account_dracaunos;
             $r = $drac->getRecoveryByToken($token);
             if ($r && $r['type'] === 'verification' && (int)$r['user_id'] > 0) {
                 $drac->activateCustomer((int)$r['user_id']);

@@ -11,7 +11,8 @@ class Reset extends \Reamur\System\Engine\Controller {
         $data['done']  = false;
         $data['token'] = trim((string)($this->request->get['token'] ?? ''));
 
-        $drac  = $this->load->model('account/dracaunos');
+        $this->load->model('account/dracaunos');
+        $drac = $this->model_account_dracaunos;
         $row   = $data['token'] !== '' ? $drac->getRecoveryByToken($data['token']) : [];
         if (!$row || $row['type'] !== 'password') $data['error'] = $this->language->get('error_token');
 

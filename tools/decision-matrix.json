@@ -1,11 +1,11 @@
 {
  "task": "F11-11",
- "head": "69a9d65d",
+ "head": "e935eedc",
  "description": "Matriz de decisao dos 10 MARKER_OR_FINDING mantidos pelo F11-09",
  "policy": "Nenhuma decisao tomada por inferencia. Contratos congelados ate registro explicito de status=DECIDED.",
  "status_counts": {
   "PENDING_DECISION": 0,
-  "DECIDED": 12
+  "DECIDED": 14
  },
  "frozen_artifacts_sha256": {
   "docs/F9-14-Contrato-Editor-MVP.json": "c4a8b91d18ab9bad64ea9a698bca0e945c9024be477df1cbffa14b3f8288e4e7",
@@ -20,23 +20,23 @@
   "dev/install/sql/schema.sql": "c9dd1ec27af95d7506b8aff6af06133f75b288c2db31e5537fb7fbac2e1f67a5",
   "docs/PROJECT-HANDOFF.md": "5f65d408d5b9831b0999d09ace2fbb1248bd4695282fe75fa6fde0859aeb6c84",
   "dev/admin/controller/startup/dracaunos.php": "e9e906e3504988c2d6d84069d19f8da5ca31899e34be3c908a4a7fd973ac71ff",
-  "dev/admin/controller/common/login.php": "82817c7fb0d54e1959253abde30d4a4ff8bd162f6f0ac6f248cfd08c55ed58e3",
-  "dev/admin/controller/security/dracaunos.php": "112c766d4573aa46ba5886de94b75a01055d93b09372a1237bb16b71f6e5dc19",
+  "dev/admin/controller/common/login.php": "426db95fe5d1f00402dc6117a3fcf3edf1d9c97126cf5a8b78ec155f747d3f36",
+  "dev/admin/controller/security/dracaunos.php": "ddef5d30f0dedfd0bb5e2895e6a7c6492ae6572c7a8256999ed1f737850a7221",
   "dev/admin/controller/user/profile.php": "5631d2d8c6aa041fa5e2d5c906ed0d4b32432a3d91c3a7c3b971c381afd635a6",
-  "dev/admin/model/security/dracaunos.php": "ecdf73d9a2a0dad121d671c8c048cabb8ff76c3d267ee374ed166ca8f65d22cb",
+  "dev/admin/model/security/dracaunos.php": "84ea75299384a7eb56819134d5686e8ba1722d5da48c2d1b00c4e7791e3e7e62",
   "dev/admin/model/user/user.php": "c392b402d1eb25e134e9eecec373a352d64d038450751a8c3206a50980dadeb4",
-  "dev/admin/model/tool/internal-tools.json": "58be56940ce40dc67b1357d18f1e0b4f0447ef59fc9279e181b9b3a53fd3b23f",
-  "dev/admin/view/template/security/dracaunos.twig": "e54e178fd477f6754e0d97218a5176dd06b66e4548a7ca3042a058dcd13fba97",
+  "dev/admin/model/tool/internal-tools.json": "3e786a9b18a5dc582431a9ab802a3e842c01d438d2e77992549933f03424adc9",
+  "dev/admin/view/template/security/dracaunos.twig": "cf1255d2591ba43bb910612bf8a9ba46b4eb721a85ae77f3b72d0a82bcfb8db7",
   "dev/admin/view/template/user/profile.twig": "2ccbb355d5f96e1fc56c663bcfa1433404a5fe9c1a22efedb8a411af1710f7b3",
   "dev/system/config/admin.php": "70fb7804aa7a18506c2e83aebf724ab870caac61605f00b2b65d55126d48fb7d",
   "tools/upgrade_kz39_dracaunos_fase_b.sql": "786aaed860e208b1b4d3d6378b598834daccc62b1549b63c46b57815a2e15329",
-  "dev/catalog/controller/account/login.php": "8f0ceb96a9dc4a11d7f90bb7241b2e366c50ec152337570e9fa7bf4e70ff8216",
+  "dev/catalog/controller/account/login.php": "717a9b170d45204d63c54c42d9bb1f3eb1bc06acafb8d13d1e1ff6956d560b3f",
   "dev/catalog/controller/account/logout.php": "a747a5aaf11601db9945c97ab7cb2068a5852a182d95fcf82c076c8823cee732",
-  "dev/catalog/controller/account/register.php": "bafc94a442b0ed1b2d17d9ecee6d9f3ae7a9aec086e8b412e757cbf2773ec6a1",
-  "dev/catalog/controller/account/verify.php": "9ad836ac6a49e308604dcb5f23191e10463f0a52cdbb7e13e616bfe4e6a3bbc9",
-  "dev/catalog/controller/account/forgotten.php": "3786ea7fceb7373e934e14e6a20d3b7533ed13c95ad462de0189dae655806495",
-  "dev/catalog/controller/account/reset.php": "0438632c06bd91a39befb8c4f6ddd47872015a107ff8b6468e4dbfbb486f6506",
-  "dev/catalog/controller/account/account.php": "31fc007351a11b8c83d28b117fad496b6de064fb775e97f31858f2a3f51e4edd",
+  "dev/catalog/controller/account/register.php": "4d5c5492d7649e209f04bda3cc0c3a9ea6aabfb41b56cbc1233be055111e3828",
+  "dev/catalog/controller/account/verify.php": "b2ae0f175588e7f23543616c19aa32f974408c87c64e067cdf9d03f5632a7cc4",
+  "dev/catalog/controller/account/forgotten.php": "f4b11181c100e5e9449e7f6628315a0e66051d952d9305d11bd3592b3e339084",
+  "dev/catalog/controller/account/reset.php": "80c9b39dbab6520e18361753b8d404696fc8990a408066cc76fed955295fae83",
+  "dev/catalog/controller/account/account.php": "4651939965acb778e5f802ccfbf87a460cdba8c2176cf67ca28b3a076d9a00e2",
   "dev/catalog/model/account/dracaunos.php": "0663cb02ce4f4e73ef09b1611b78526ca84f69c07f48e0dbc15336aefd3bc772"
  },
  "decisions": [
@@ -404,6 +404,73 @@
    "decision_date": "2026-11-18",
    "decision": "A",
    "evidence_ref": "node tests/check_dracaunos_security.js -> PASS (64 verificacoes)"
+  },
+  {
+   "id": "KZ-42",
+   "checker": "tests/check_dracaunos_security.js",
+   "phase": "KZ-42 (Dracaunos-Security)",
+   "nature": "FERRAMENTA_INTERNA",
+   "status": "DECIDED",
+   "evidence": "Exportação CSV (auditoria + log de logins) via security/dracaunos.exportAudit/.exportLogins e limpeza por retenção via ação prune no painel. Checker a 74 verificacoes PASS.",
+   "options": [
+    {
+     "id": "A",
+     "label": "Registrar a entrega do KZ-42 e atualizar os hashes dos artefatos congelados alterados",
+     "requires": "autorizacao explicita do responsavel"
+    },
+    {
+     "id": "B",
+     "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+     "requires": "decisao do responsavel"
+    }
+   ],
+   "recommendation": "A",
+   "recommended_action": "Atualizar frozen_artifacts_sha256 dos 4 artefatos modificados pelo KZ-42 (já feito neste commit)",
+   "frozen_artifacts": [
+    "dev/admin/controller/security/dracaunos.php",
+    "dev/admin/model/security/dracaunos.php",
+    "dev/admin/model/tool/internal-tools.json",
+    "dev/admin/view/template/security/dracaunos.twig"
+   ],
+   "decided_by": "David L. Almeida (responsavel)",
+   "decision_date": "2026-11-18",
+   "decision": "A",
+   "evidence_ref": "node tests/check_dracaunos_security.js -> PASS (74 verificacoes)"
+  },
+  {
+   "id": "KZ-43",
+   "checker": "tests/check_dracaunos_security.js",
+   "phase": "hotfix (Dracaunos-Security)",
+   "nature": "FERRAMENTA_INTERNA",
+   "status": "DECIDED",
+   "evidence": "Bug de runtime no main: $drac = $this->load->model(...) retornava null (Loader::model é void) → fatal ipAllowed() on null em /admin/login. Corrigido nos 8 controllers (login admin + account/* do catálogo) usando model_<rota> do registry; checker ganha regressao (75 verificacoes PASS).",
+   "options": [
+    {
+     "id": "A",
+     "label": "Registrar o hotfix e atualizar os hashes dos artefatos congelados alterados",
+     "requires": "autorizacao explicita do responsavel"
+    },
+    {
+     "id": "B",
+     "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+     "requires": "decisao do responsavel"
+    }
+   ],
+   "recommendation": "A",
+   "recommended_action": "Atualizar frozen_artifacts_sha256 dos 7 artefatos corrigidos (já feito neste commit)",
+   "frozen_artifacts": [
+    "dev/admin/controller/common/login.php",
+    "dev/catalog/controller/account/login.php",
+    "dev/catalog/controller/account/forgotten.php",
+    "dev/catalog/controller/account/register.php",
+    "dev/catalog/controller/account/reset.php",
+    "dev/catalog/controller/account/verify.php",
+    "dev/catalog/controller/account/account.php"
+   ],
+   "decided_by": "David L. Almeida (responsavel)",
+   "decision_date": "2026-11-18",
+   "decision": "A",
+   "evidence_ref": "log local WAMP: \"Call to a member function ipAllowed() on null ... login.php:62\"; node tests/check_dracaunos_security.js -> PASS (75)"
   }
  ],
  "retified_in": "F11-14",

@@ -62,3 +62,9 @@ $_['text_force_2fa'] = 'La política exige 2FA: activa la verificación en dos p
 $_['entry_2fa_required'] = 'Exigir 2FA a todos los usuarios del admin';
 $_['help_2fa_required'] = 'Con esto activo, quien aún no tiene 2FA configurado solo accede a esta pantalla (para activarlo) y a salir.';
 $_['text_2fa_required_saved'] = 'Obligatoriedad de 2FA actualizada.';
+
+// KZ-42 — exportación CSV y limpieza por retención
+$_['button_export_csv'] = 'Exportar CSV';
+$_['button_prune']      = 'Limpiar registros antiguos';
+$_['help_prune']        = 'Elimina auditoría y log de logins más antiguos que la retención configurada (dracaunos_audit_days / dracaunos_login_log_days).';
+$_['text_pruned']       = 'Limpieza hecha: %d registro(s) de auditoría y %d de log de logins eliminados.';

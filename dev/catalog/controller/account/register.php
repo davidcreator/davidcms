@@ -15,7 +15,8 @@ class Register extends \Reamur\System\Engine\Controller {
         $data['old'] = ['firstname' => '', 'lastname' => '', 'email' => '', 'telephone' => ''];
 
         if ($this->request->server['REQUEST_METHOD'] === 'POST') {
-            $drac = $this->load->model('account/dracaunos');
+            $this->load->model('account/dracaunos');
+            $drac = $this->model_account_dracaunos;
             $post = $this->request->post;
             $data['old'] = array_map('strval', $post);
 

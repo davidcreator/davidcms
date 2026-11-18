@@ -53,7 +53,8 @@ class Login extends \Reamur\System\Engine\Controller {
             }
 
             // KZ-36 (Dracaunos-Security): verificação de IP, log de tentativas e 2FA no login.
-            $drac = $this->load->model('security/dracaunos');
+            $this->load->model('security/dracaunos');
+            $drac = $this->model_security_dracaunos;
             $ua   = (string)($this->request->server['HTTP_USER_AGENT'] ?? '');
             $logAttempt = function (int $uid, bool $ok) use ($drac, $username, $ip, $ua) {
                 $drac->addLoginLog($uid, $username, $ip, $ua, $ok);
