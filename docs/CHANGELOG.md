@@ -1,5 +1,10 @@
 # Changelog
 
+## KZ-63 — D09=A: explicitar escopo de F9-05 frente ao schema compartilhado (2026-11-17)
+- Decisão explícita do responsável: **D09=A**, substitui o B anterior. A auditoria F11-16 concluiu que `dev/install/sql/schema.sql` é artefato compartilhado com adições posteriores (incluindo F9-25), não entrega da fase F9-05; o instalador atual importa `schema-complete.sql`.
+- F9-05 agora documenta a fronteira: Model de definições + ACL dormente, sem entregar `schema.sql`. `e2e_f905.cjs` não exige mais a ausência de um arquivo global e valida o escopo declarado. Nenhum arquivo SQL/schema foi alterado. F918-08 passa a `resolved`.
+- Limitação preservada e registrada: a execução integral de `e2e_f905.cjs` ainda para na asserção preexistente sobre `declare(strict_types=1)`, inclusive no checker original; essa divergência separada não foi alterada por D09. As verificações específicas de escopo passaram. D10/F918-09 e `release_ready` não foram alterados.
+
 ## KZ-62 — D08=A: alinhar F9-25 e checker à persistência já implementada (2026-11-17)
 - Decisão explícita do responsável: **D08=A**, substitui a decisão anterior B. Escopo autorizado: atualizar contrato/checker para descrever o comportamento existente; **nenhuma feature, endpoint, armazenamento ou mudança de schema** foi adicionada.
 - F9-25 agora documenta: biblioteca de padrões privada por usuário (`rms_cms_block_pattern`, rotas same-origin, ACL dedicada `cms/block_pattern`, CSRF em writes); notas/presets em `localStorage`; recuperação temporária de rascunho em `sessionStorage` (24h, confirmação para restaurar, sem gravação/publicação no servidor); histórico de revisões segue D05=A e explícito por clique.

@@ -1,11 +1,11 @@
 {
  "task": "F11-11",
- "head": "52e1dade",
+ "head": "1f864b80",
  "description": "Matriz de decisao dos 10 MARKER_OR_FINDING mantidos pelo F11-09",
  "policy": "Nenhuma decisao tomada por inferencia. Contratos congelados ate registro explicito de status=DECIDED.",
  "status_counts": {
   "PENDING_DECISION": 0,
-  "DECIDED": 33
+  "DECIDED": 34
  },
  "frozen_artifacts_sha256": {
   "docs/F9-14-Contrato-Editor-MVP.json": "c4a8b91d18ab9bad64ea9a698bca0e945c9024be477df1cbffa14b3f8288e4e7",
@@ -15,8 +15,8 @@
   "docs/F9-27-Status.json": "15172d9a7946e6285befd647f41b1a0759b4b999ec8d8b5feb3ff9de2d0e2715",
   "docs/F9-27-Base-Hashes.json": "f6c599e26e05040fecd41197a06a06d460653556391bbc549d29d6de51e25d29",
   "docs/F9-27-Preflight-Status.json": "e3a2cdab33258dde056e3f05dd816a6f810da830757bdc21f6c5b1c222704d16",
-  "docs/F9-05-Contrato-Definicoes-Campos.json": "8f90ee3bbb7bb8112a84dbde796c4e3cc7f0d448700d5836601d0fd466673f78",
-  "docs/F9-18-Risk-Register.json": "bbf0c2b1bafe7a9af9e7368182c72bd81df80d7bd0b60b54831ffc35d52e6c0f",
+  "docs/F9-05-Contrato-Definicoes-Campos.json": "032fae433fed24c4c2955f90a04c0488bb9c483f57991092e1920c72702bfa72",
+  "docs/F9-18-Risk-Register.json": "038fa08926c9624a42a7ca4d13980db2d1504e63bcddd295147e8c8e04b15ac8",
   "dev/install/sql/schema.sql": "c9dd1ec27af95d7506b8aff6af06133f75b288c2db31e5537fb7fbac2e1f67a5",
   "docs/PROJECT-HANDOFF.md": "5f65d408d5b9831b0999d09ace2fbb1248bd4695282fe75fa6fde0859aeb6c84",
   "dev/admin/controller/startup/dracaunos.php": "e9e906e3504988c2d6d84069d19f8da5ca31899e34be3c908a4a7fd973ac71ff",
@@ -268,9 +268,9 @@
    "id": "D09",
    "checker": "e2e_f905.cjs",
    "phase": "F9/F11",
-   "nature": "ACHADO_REAL_GOVERNANCA",
+   "nature": "GATE_HISTORICO_SOBREPOSTO",
    "status": "DECIDED",
-   "evidence": "dev/install/sql/schema.sql existe (22.495 bytes) e o checker o proibe",
+   "evidence": "Auditoria F11-16: dev/install/sql/schema.sql é artefato compartilhado/base com adições de fases posteriores, incluindo a seção F9-25 rms_cms_block_pattern; não é entrega F9-05. O instalador atual importa schema-complete.sql. O contrato F9-05 agora explicita a fronteira, e o checker não exige ausência do arquivo.",
    "options": [
     {
      "id": "A",
@@ -283,16 +283,17 @@
      "requires": "decisao do responsavel; checker permanece falhando"
     }
    ],
-   "recommendation": "B",
-   "recommended_action": "Decidir se o arquivo e legitimo de outra fase e se o checker historico deve ser aposentado",
+   "recommendation": "A",
+   "recommended_action": "Atualizar o contrato F9-05 e substituir a asserção de ausência por verificação do escopo da fase; nenhum SQL alterado.",
    "frozen_artifacts": [
     "docs/F9-05-Contrato-Definicoes-Campos.json",
     "dev/install/sql/schema.sql"
    ],
    "decided_by": "David L. Almeida (responsavel)",
    "decision_date": "2026-11-17",
-   "decision": "B",
-   "evidence_ref": "tools/e2e/e2e_f905.cjs; dev/install/sql/schema.sql (22542 bytes) existe e o checker historico proibe"
+   "decision": "A",
+   "evidence_ref": "tools/contract-drift-audit.json (D09, INVESTIGATED_F11_16); docs/F9-05-Contrato-Definicoes-Campos.json; targeted D09 check PASS",
+   "supersedes": "D09=B de 2026-11-17 (achado de governança herdado)"
   },
   {
    "id": "D10",
@@ -1042,8 +1043,38 @@
    "decision_date": "2026-11-17",
    "decision": "A",
    "evidence_ref": "node tools/e2e/e2e_f925_static.cjs . -> PASS; F918-07 resolved"
+  },
+  {
+   "id": "KZ-63",
+   "checker": "tools/e2e/e2e_f905.cjs",
+   "phase": "KZ-63 — D09 / F918-08",
+   "nature": "ALINHAMENTO_DE_CONTRATO",
+   "status": "DECIDED",
+   "evidence": "D09=A explicitamente aprovado pelo responsável. A auditoria F11-16 confirma que schema.sql é artefato compartilhado com contribuição posterior F9-25, não entrega de F9-05; o instalador atual usa schema-complete.sql. Contrato e checker agora validam fronteira de fase em vez de ausência do arquivo. Nenhum SQL alterado; F918-08 resolvido. Limitação separada: o checker completo ainda falha na asserção preexistente de strict_types, fora do D09.",
+   "options": [
+    {
+     "id": "A",
+     "label": "Atualizar o contrato da fase para reconhecer o schema compartilhado posterior",
+     "requires": "autorização explícita do responsável (recebida)"
+    },
+    {
+     "id": "B",
+     "label": "Manter F9-05 sem registrar o contexto e conservar a falha do gate",
+     "requires": "decisão do responsável"
+    }
+   ],
+   "recommendation": "A",
+   "recommended_action": "Registrar D09=A; preservar o schema global e limitar o checker ao escopo de F9-05.",
+   "frozen_artifacts": [
+    "docs/F9-05-Contrato-Definicoes-Campos.json",
+    "docs/F9-18-Risk-Register.json"
+   ],
+   "decided_by": "David L. Almeida (responsavel)",
+   "decision_date": "2026-11-17",
+   "decision": "A",
+   "evidence_ref": "node targeted D09 scope assertions -> PASS; F918-08 resolved; full e2e_f905 reports independent strict_types assertion"
   }
  ],
  "retified_in": "F11-14",
- "ci_status": "GitHub CI success: run 44384799727 @ 52e1dade (pre-KZ-62 baseline); F9-25 static checker also passes locally in KZ-62."
+ "ci_status": "GitHub CI success: run 44391064511 @ 1f864b80 (pre-KZ-63 baseline); D09 schema-scope check verified locally. Full e2e_f905 still stops at its separate strict_types assertion."
 }

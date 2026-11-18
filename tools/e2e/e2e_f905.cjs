@@ -45,6 +45,13 @@ assert(contract.route.admin_route === 'custom_field/definition', 'rota ACL incor
 assert(contract.route.controller_available === false && contract.route.ui_available === false, 'F9-05 não deveria entregar controller/UI');
 assert(contract.model.creates_values === false && contract.model.hard_deletes_values === false, 'model deveria ser somente definições');
 assert(contract.public_exposure.allowed === false, 'exposição pública deve permanecer desligada');
+// D09=A: schema.sql is a shared repository artifact with later-phase additions,
+// not a file delivered by F9-05. Validate the phase boundary, not repository-wide absence.
+assert(contract.repository_schema_scope && contract.repository_schema_scope.path === 'dev/install/sql/schema.sql', 'contrato deve identificar o schema compartilhado do repositório');
+assert(String(contract.repository_schema_scope.decision).includes('D09=A'), 'contrato deve registrar a decisão explícita D09=A');
+assert(contract.repository_schema_scope.f9_05_delivers_schema_file === false, 'F9-05 não deve declarar schema.sql como entrega própria');
+assert(contract.repository_schema_scope.current_installer_input === 'dev/install/sql/schema-complete.sql', 'contrato deve distinguir o schema usado atualmente pelo instalador');
+assert(String(contract.repository_schema_scope.later_phase_example).includes('F9-25'), 'contrato deve registrar adições de fases posteriores no schema compartilhado');
 
 assert(/declare\s*\(strict_types=1\)/.test(model) === false, 'model deve seguir padrão atual sem declare strict_types no topo');
 assert(model.includes('namespace Reamur\\Admin\\Model\\Custom_field;'), 'namespace do model incorreto');
@@ -101,9 +108,8 @@ assert(!/DROP\s+TABLE|TRUNCATE|CREATE\s+TABLE/i.test(rollback), 'rollback não d
 
 assert(installer.includes("'custom_field/definition'"), 'seed do wizard sem rota dormente');
 assert((installer.match(/custom_field\/definition/g) || []).length === 1, 'rota dormente deve aparecer uma única vez no seed');
-assert(!fs.existsSync(path.join(root, 'dev/install/sql/schema.sql')), 'F9-05 não deve entregar schema.sql');
 // F9-05 was a backend-only delivery. Do not assert later F9-06 controller/UI
 // paths are absent: this same gate is also part of the integrated F9-10 suite.
 assert(contract.route.controller_available === false && contract.route.ui_available === false, 'contrato histórico F9-05 deve continuar parcial');
 
-ok('model de definições e ACL dormente aprovados; nenhum valor/público/UI executado');
+ok('model de definições, ACL dormente e escopo do schema compartilhado aprovados; nenhum valor/público/UI executado');

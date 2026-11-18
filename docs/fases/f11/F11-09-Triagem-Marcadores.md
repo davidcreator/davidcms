@@ -28,7 +28,7 @@ Nenhuma das quatro altera `--accept`, exclusões, `fail`/`failIfEmpty`, contrato
 
 > **Revertido:** `e2e_bdre_hierarchical_reordering_static.cjs` teve o 1º marcador corrigido (`moveBlockAcrossHierarchy` ganhou `allowPageMedia`), mas a execução seguinte revelou uma **cadeia** de outros marcadores desatualizados (`!validateDocument(document).valid`, `indent.disabled = …`, etc.). Corrigi-lo exigiria reescrever o checker — fora do escopo. O patch foi **revertido** e o arquivo volta intacto ao inventário.
 
-## 3. Os 10 mantidos (e por quê)
+## 3. Os 10 inicialmente mantidos (e por quê)
 
 | Checker | Evidência no código-alvo | Veredito |
 | --- | --- | --- |
@@ -40,10 +40,10 @@ Nenhuma das quatro altera `--accept`, exclusões, `fail`/`failIfEmpty`, contrato
 | `e2e_f914.cjs` | `await fetch(url, options)` real no editor (L3243) | Contrato **F9-14 MVP** proibia rede; check de segurança |
 | `e2e_f915.cjs` | Twig usa `{{ post.block_html }}` / `{{ post.description }}` **sem `\|raw`** | Pode ser endurecimento anti-XSS **ou** regressão de render; exige decisão |
 | `e2e_f925_static.cjs` | `localStorage`/`sessionStorage` e `fetch` reais (notas, presets, recuperação local, APIs); a string `XMLHttpRequest` é somente o valor do header `X-Requested-With`, não uso da API XHR; contrato dizia `PROPOSAL_PENDING` | Divergência real de contrato — **resolvida por KZ-62/D08=A**: contrato e checker distinguem os mecanismos existentes; sem liberar server autosave ou feature nova. |
-| `e2e_f905.cjs` | `dev/install/sql/schema.sql` **existe** (HTTP 200) e o checker o proíbe | Achado real de governança |
+| `e2e_f905.cjs` | `schema.sql` é artefato compartilhado do repositório, com adição posterior F9-25; F9-05 entrega Model + ACL; o checker antigo exigia ausência do arquivo | **D09=A / resolvido em KZ-63**: contrato esclarece o escopo e o checker valida o limite da fase, sem editar SQL. O checker completo ainda para em outra asserção (`declare(strict_types=1)`), fora de F918-08. |
 | `e2e_f927_static.cjs` | `hashes.head = 448dd61f…` ≠ `status.base_head = 3d481ecf…` | Drift de metadados do gate; atualizar exigiria declarar prontidão |
 
-**Nenhum desses 10 foi editado.** Registrá-los como `PASS` seria mascarar divergências possivelmente genuínas — exatamente o que o F11-07 se propôs a evitar.
+**Na triagem original (2026-11-02), nenhum desses 10 havia sido editado.** Depois, D08 foi resolvido em KZ-62 e D09 em KZ-63, com limites e ressalvas registrados nas linhas correspondentes. As outras oito linhas continuam sem mudanças; as que ainda falham não devem ser classificadas como `PASS`.
 
 ## 4. Inventário e guard
 
@@ -71,4 +71,11 @@ Nenhuma das quatro altera `--accept`, exclusões, `fail`/`failIfEmpty`, contrato
 
 ## 6. Próximo passo sugerido
 
-Levar a tabela da seção 3 ao responsável: cada uma das 10 linhas precisa de uma decisão explícita — **atualizar o contrato da fase** (se a mudança foi intencional) ou **registrar como achado P1/P2** no `F9-18-Risk-Register.json` (se não foi). Sem essa decisão, não há base segura para editar checks de segurança.
+D08 e D09 receberam autorização explícita e foram alinhados em KZ-62/KZ-63. Para os demais itens, preservam-se as decisões e achados já registrados; nenhuma outra mudança fica autorizada por este adendo. D10 continua B/owner-locked e fora do escopo — não alterar F9-27 nem hashes de release sem autorização separada.
+
+
+## 7. Atualização KZ-63 — D09=A
+
+A decisão explícita D09=A substitui o B anterior. A investigação F11-16 concluiu que a proibição do `schema.sql` no checker F9-05 era uma sobreposição de escopo: o arquivo é um artefato compartilhado do repositório, recebeu conteúdo de fases posteriores (incluindo F9-25) e não foi entregue pela fase F9-05. O instalador atual importa `schema-complete.sql`.
+
+O contrato F9-05 agora declara essa fronteira; `e2e_f905.cjs` deixou de exigir que o arquivo global esteja ausente e valida o escopo documentado. Nenhum SQL foi alterado. As verificações específicas de D09 passaram. O checker integral ainda falha na asserção preexistente sobre `declare(strict_types=1)` — confirmada também no checker original e não alterada por D09. F918-08 foi resolvido; `release_ready` permanece `false`, e D10 não foi tocado.

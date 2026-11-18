@@ -14,6 +14,15 @@
     "upgrade_sql": "dev/install/sql/upgrade_f9_05_custom_field_definition_grant.sql",
     "rollback_sql": "dev/install/sql/rollback_f9_05_custom_field_definition_grant.sql"
   },
+  "repository_schema_scope": {
+    "path": "dev/install/sql/schema.sql",
+    "decision": "D09=A (explicit owner approval): document the existing repository boundary; no SQL change is authorized by this update.",
+    "role": "Repository-level base schema artifact; later phases may contribute tables or grants.",
+    "f9_05_delivers_schema_file": false,
+    "f9_05_scope": "F9-05 delivers only the definitions model and dormant ACL grant. The presence or later-phase contents of the shared schema.sql are not an F9-05 delivery or violation.",
+    "later_phase_example": "The schema.sql section for rms_cms_block_pattern is marked F9-25.",
+    "current_installer_input": "dev/install/sql/schema-complete.sql"
+  },
   "model": {
     "path": "dev/admin/model/custom_field/definition.php",
     "namespace": "Reamur\\Admin\\Model\\Custom_field",

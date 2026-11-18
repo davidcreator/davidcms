@@ -3,7 +3,7 @@
  "review_type": "static_source_readiness_review",
  "repository": "https://github.com/davidcreator/davidcms",
  "branch": "main",
- "head": "52e1dade",
+ "head": "1f864b80",
  "release_ready": false,
  "execution": {
   "php": false,
@@ -123,17 +123,18 @@
   {
    "id": "F918-08",
    "severity": "P2",
-   "status": "open",
+   "status": "resolved",
    "area": "install_schema_sql_governance (D09)",
    "path": "dev/install/sql/schema.sql",
    "lines": "-",
-   "summary": "Arquivo schema.sql (22.542 bytes) existe em dev/install/sql e o checker historico e2e_f905.cjs o proibe.",
-   "required_action": "Decidir se o arquivo e legitimo de outra fase e se o checker historico deve ser aposentado. Decisao D09=B registrada em 2026-11-17.",
+   "summary": "O checker histórico F9-05 confundia a presença de dev/install/sql/schema.sql no repositório com entrega da fase F9-05. A auditoria F11-16 confirma que o arquivo é um artefato compartilhado/base com adições posteriores, incluindo a seção F9-25 rms_cms_block_pattern; o instalador atual importa schema-complete.sql. RESOLVIDO em KZ-63 (D09=A): o contrato agora delimita F9-05 (Model + ACL dormente) e o checker valida esse escopo, sem exigir ausência do schema global. Nenhum SQL foi alterado. A execução integral de e2e_f905.cjs ainda encontra a asserção independente sobre declare(strict_types=1), presente também no checker original; não é parte deste achado.",
+   "required_action": "Fechado por decisão explícita D09=A: registrar que schema.sql é artefato compartilhado e posterior à entrega F9-05; validar o limite da fase sem editar schema.sql/schema-complete.sql. A divergência independente strict_types do checker não foi alterada neste escopo.",
    "remediation_plan": {
-    "plan": "Decidir se dev/install/sql/schema.sql é legítimo de outra fase e se o checker histórico e2e_f905.cjs deve ser aposentado (D09=B, 2026-11-17).",
+    "plan": "D09=A: atualizar F9-05 para separar a entrega histórica (Model + ACL) do artefato compartilhado dev/install/sql/schema.sql; remover do checker a exigência de ausência do arquivo e verificar a declaração de escopo. Não alterar SQL nem gate de release.",
     "owner": "David L. Almeida",
-    "target": "decisão D09 — pendente",
-    "gate": "P2 — travado por decisão do responsável"
+    "target": "KZ-63 — alinhar contrato/checker e resolver F918-08",
+    "gate": "P2 — sobreposição de escopo resolvida; sem declaração de prontidão do release",
+    "status": "resolvido em KZ-63 — D09=A; schema global e migrations inalterados"
    },
    "plan_registered_at": "2026-11-18"
   },
