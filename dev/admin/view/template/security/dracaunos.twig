@@ -36,6 +36,24 @@
       </form>
     </div></div></div>
 
+    {# ── Configurações da ferramenta (KZ-49) ── #}
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 card-title">{{ text_settings }}</h2>
+      <form method="post" action="{{ action }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="retention">
+        <div class="mb-2">
+          <label class="form-label small" for="input-audit-days">{{ entry_audit_days }}</label>
+          <input type="number" class="form-control form-control-sm" id="input-audit-days" name="audit_days" min="1" max="3650" value="{{ retention.audit_days }}"{% if not can_modify %} disabled{% endif %}>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small" for="input-login-days">{{ entry_login_log_days }}</label>
+          <input type="number" class="form-control form-control-sm" id="input-login-days" name="login_log_days" min="1" max="3650" value="{{ retention.login_log_days }}"{% if not can_modify %} disabled{% endif %}>
+        </div>
+        <p class="text-body-secondary small">{{ help_retention }}</p>
+        {% if can_modify %}<button class="btn btn-primary btn-sm">{{ button_save }}</button>{% endif %}
+      </form>
+    </div></div></div>
+
     {# ── 2FA ── #}
     <div class="col-lg-6"><div class="card h-100"><div class="card-body">
       <h2 class="h6 card-title">{{ text_2fa }}</h2>

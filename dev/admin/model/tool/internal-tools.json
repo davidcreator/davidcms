@@ -47,9 +47,10 @@
       "name": "Dracaunos-Security",
       "legacy_name": "",
       "vendor": "Dracaunos",
-      "version": "1.7.0",
+      "version": "1.8.0",
       "updated_at": "2026-11-18",
       "notes": [
+        "KZ-49: página de Configurações dentro do próprio painel Dracaunos — retenção (dias) do log de auditoria e do log de logins editável via painel (acao retention, min 1 / max 3650), alimentando o prune existente.",
         "KZ-46: testador de regras de IP no painel (explainIp mostra a regra que casou e a decisão allow/deny) + matcher de IP agora suporta IPv6/CIDRv6 via inet_pton (as regras de IP passam a valer para IPv6 também).",
         "KZ-45: gestão de sessões ativas do admin no painel (lista a partir de rms_session com user_id na sessão; botão encerrar sessão remota com CSRF+modify, nunca a sessão atual).",
         "KZ-44: recuperação de senha do próprio admin — rotas públicas common/forgotten + common/reset, token type admin_password em dracaunos_recovery, aprovação no painel mostra o link de reset uma vez; reset consome o token, aplica a política de senhas e renova password_changed_at. Rate limit por IP nas duas rotas.",

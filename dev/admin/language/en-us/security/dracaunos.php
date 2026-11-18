@@ -85,3 +85,10 @@ $_['scope_catalog']       = 'Catalog';
 $_['text_ip_test_allow']  = 'Result: ALLOWED';
 $_['text_ip_test_deny']   = 'Result: BLOCKED by rule';
 $_['text_ip_test_invalid']= 'Invalid IP (use a valid IPv4 or IPv6).';
+
+// KZ-49 — tool settings page
+$_['text_settings']        = 'Settings';
+$_['entry_audit_days']     = 'Audit log retention (days)';
+$_['entry_login_log_days'] = 'Login log retention (days)';
+$_['help_retention']       = 'Records older than this are removed by the prune action. Min 1, max 3650 days.';
+$_['text_retention_saved'] = 'Retention saved.';

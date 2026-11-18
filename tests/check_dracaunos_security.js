@@ -196,4 +196,13 @@ for (const l of langs) {
   check(read('dev/admin/language/' + l + '/security/dracaunos.php').includes('button_test_ip'), 'idioma ' + l + ' tem o testador de IP');
 }
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46 + hotfix KZ-43)');
+// 15) KZ-49: página de configurações (retenção) dentro do próprio painel
+check(dracModel.includes('function getRetention(') && dracModel.includes('function saveRetention('), 'model lê e salva a retenção configurável');
+check(dracCtrl.includes("case 'retention'"), 'controller tem ação retention (POST+CSRF+modify)');
+check(dracCtrl.includes('$data[\'retention\']'), 'controller passa a retenção atual para a view');
+check(dracTwig.includes('text_settings') && dracTwig.includes('audit_days') && dracTwig.includes('login_log_days'), 'twig tem o card de configurações com os dois campos');
+for (const l of langs) {
+  check(read('dev/admin/language/' + l + '/security/dracaunos.php').includes('text_settings'), 'idioma ' + l + ' tem a página de configurações');
+}
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49 + hotfix KZ-43)');

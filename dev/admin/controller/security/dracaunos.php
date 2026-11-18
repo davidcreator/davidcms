@@ -44,6 +44,7 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
         $data['export_audit']  = $this->url->link('security/dracaunos.exportAudit');
         $data['export_logins'] = $this->url->link('security/dracaunos.exportLogins');
         $data['ip_rules']    = $this->model_security_dracaunos->getIpRules();
+        $data['retention']   = $this->model_security_dracaunos->getRetention(); // KZ-49: página de configurações
         $data['users']       = $this->model_security_dracaunos->getUsers(30);
         $data['user_edit']   = $this->url->link('user/user.edit');
         $data['error']       = $this->session->data['error'] ?? '';
@@ -130,6 +131,12 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
                     $this->model_security_dracaunos->destroySession($sid);
                 }
                 $this->session->data['success'] = $this->language->get('text_session_killed');
+                break;
+            case 'retention':
+                // KZ-49: página de configurações — retenção de auditoria e log de logins
+                $this->model_security_dracaunos->saveRetention(
+                    (int)($post['audit_days'] ?? 30), (int)($post['login_log_days'] ?? 30));
+                $this->session->data['success'] = $this->language->get('text_retention_saved');
                 break;
             case 'prune':
                 // KZ-42: limpeza por retencao (auditoria + log de logins)

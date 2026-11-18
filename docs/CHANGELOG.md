@@ -1,5 +1,11 @@
 # Changelog
 
+## KZ-49 — Dracaunos-Security: página de Configurações dentro do painel (2026-11-18)
+- Novo card **Configurações** no painel Dracaunos: retenção em dias do **log de auditoria** e do **log de logins**, editável direto na página (ação `retention`, POST + CSRF + modify, min 1 / máx 3650). Alimenta o `prune` existente — antes os dias eram só o default 30, sem UI.
+- Model: `getRetention()` / `saveRetention()` (tabela `setting`, padrão do Dracaunos). Idiomas pt-br/en-us/es-eu.
+- Dracaunos-Security sobe para **1.8.0**; checker `tests/check_dracaunos_security.js` a 112 verificações (PASS). Sem SQL novo.
+
+
 ## KZ-48 — F918-04 (P2): atomicidade total do deletePost no blog admin (2026-11-18)
 - `deletePost()` já envolvia post/description/SEO/content em transação, mas o delete de `bdre_revision` ficava **depois do COMMIT** — se falhasse, deixava revisões órfãs. Agora o delete de revisões acontece **dentro da mesma transação**, antes do COMMIT (rollback cobre tudo).
 - Novo checker `tests/check_blog_delete_atomicity.js` (regressão: revision delete antes do COMMIT) → PASS.

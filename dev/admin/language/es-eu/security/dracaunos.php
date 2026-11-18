@@ -85,3 +85,10 @@ $_['scope_catalog']       = 'Catálogo';
 $_['text_ip_test_allow']  = 'Resultado: PERMITIDO';
 $_['text_ip_test_deny']   = 'Resultado: BLOQUEADO por la regla';
 $_['text_ip_test_invalid']= 'IP inválida (usa IPv4 o IPv6 válida).';
+
+// KZ-49 — página de configuración de la herramienta
+$_['text_settings']        = 'Configuración';
+$_['entry_audit_days']     = 'Retención del registro de auditoría (días)';
+$_['entry_login_log_days'] = 'Retención del registro de logins (días)';
+$_['help_retention']       = 'Los registros más antiguos se eliminan con la acción de poda (prune). Mín. 1, máx. 3650 días.';
+$_['text_retention_saved'] = 'Retención guardada.';

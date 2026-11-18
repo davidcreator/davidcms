@@ -296,6 +296,22 @@ class Dracaunos extends \Reamur\System\Engine\Model {
         return $this->db->countAffected();
     }
 
+    // ── Configurações da ferramenta (KZ-49) ─────────────────────────────
+    /** retenção (dias) configurável no painel: auditoria e log de logins */
+    public function getRetention(): array {
+        return [
+            'audit_days'      => max(1, (int)($this->config->get('dracaunos_audit_days') ?: 30)),
+            'login_log_days'  => max(1, (int)($this->config->get('dracaunos_login_log_days') ?: 30)),
+        ];
+    }
+    public function saveRetention(int $auditDays, int $loginLogDays): void {
+        $audit = max(1, min(3650, $auditDays));
+        $login = max(1, min(3650, $loginLogDays));
+        foreach (['dracaunos_audit_days' => $audit, 'dracaunos_login_log_days' => $login] as $key => $val) {
+            $this->db->query("INSERT INTO `" . DB_PREFIX . "setting` (`code`,`key`,`value`,`serialized`) VALUES ('dracaunos','" . $key . "','" . $val . "',0) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+        }
+    }
+
     // ── Sessões ativas do admin (KZ-45) ──────────────────────────────────
     /** sessões vigentes com user_id na sessão (só admin logado), mais recentes primeiro */
     public function getAdminSessions(int $limit = 50): array {
