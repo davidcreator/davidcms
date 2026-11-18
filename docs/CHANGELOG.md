@@ -1,5 +1,11 @@
 # Changelog
 
+## KZ-62 — D08=A: alinhar F9-25 e checker à persistência já implementada (2026-11-17)
+- Decisão explícita do responsável: **D08=A**, substitui a decisão anterior B. Escopo autorizado: atualizar contrato/checker para descrever o comportamento existente; **nenhuma feature, endpoint, armazenamento ou mudança de schema** foi adicionada.
+- F9-25 agora documenta: biblioteca de padrões privada por usuário (`rms_cms_block_pattern`, rotas same-origin, ACL dedicada `cms/block_pattern`, CSRF em writes); notas/presets em `localStorage`; recuperação temporária de rascunho em `sessionStorage` (24h, confirmação para restaurar, sem gravação/publicação no servidor); histórico de revisões segue D05=A e explícito por clique.
+- A distinção de segurança fica explícita: a recuperação local captura rascunhos durante edição, mas **server autosave, background submit e publicação automática continuam fora de escopo**; o submit explícito continua autoritativo. Sem novas alterações de produto/schema.
+- `tools/e2e/e2e_f925_static.cjs`: substituída a proibição genérica de `localStorage/sessionStorage/fetch/XMLHttpRequest` por verificações específicas de escopo, dono/ACL, CSRF, same-origin, limites, recuperação local e ausência de `new XMLHttpRequest`. F918-07 passa de `open` para `resolved`.
+
 ## KZ-61 — F918-03: seleção de idioma do sidecar active-language-first (2026-11-18)
 - Causa: `COALESCE(NULLIF(pd.description,''), pd_en...)` tratava description vazia do idioma ativo como ausente e caía no conteúdo inglês — um snapshot vazio intencional era substituído pelo sidecar EN.
 - Correção em `getPostList`/`getPost` (catalog blog): `COALESCE(pd.x, pd_en.x)` sem NULLIF — linha do idioma ativo **ausente (NULL)** usa fallback EN; **vazia (''), preserva**. `content_language_id` segue a mesma regra.

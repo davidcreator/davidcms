@@ -39,7 +39,7 @@ Nenhuma das quatro altera `--accept`, exclusões, `fail`/`failIfEmpty`, contrato
 | `e2e_bdre_unsaved_changes_static.cjs` | `fetch(...)` real no init, para **histórico de revisões** disparado por clique (L233) — não é autosave | Evolução intencional; check de rede |
 | `e2e_f914.cjs` | `await fetch(url, options)` real no editor (L3243) | Contrato **F9-14 MVP** proibia rede; check de segurança |
 | `e2e_f915.cjs` | Twig usa `{{ post.block_html }}` / `{{ post.description }}` **sem `\|raw`** | Pode ser endurecimento anti-XSS **ou** regressão de render; exige decisão |
-| `e2e_f925_static.cjs` | `localStorage`, `sessionStorage`, `fetch(`, `XMLHttpRequest` **reais** (notas, presets, rascunho, upload); contrato diz `PROPOSAL_PENDING` | Divergência real de contrato |
+| `e2e_f925_static.cjs` | `localStorage`/`sessionStorage` e `fetch` reais (notas, presets, recuperação local, APIs); a string `XMLHttpRequest` é somente o valor do header `X-Requested-With`, não uso da API XHR; contrato dizia `PROPOSAL_PENDING` | Divergência real de contrato — **resolvida por KZ-62/D08=A**: contrato e checker distinguem os mecanismos existentes; sem liberar server autosave ou feature nova. |
 | `e2e_f905.cjs` | `dev/install/sql/schema.sql` **existe** (HTTP 200) e o checker o proíbe | Achado real de governança |
 | `e2e_f927_static.cjs` | `hashes.head = 448dd61f…` ≠ `status.base_head = 3d481ecf…` | Drift de metadados do gate; atualizar exigiria declarar prontidão |
 

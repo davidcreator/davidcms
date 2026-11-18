@@ -16,19 +16,29 @@
   },
   "unsaved_changes": {
    "scope": "Form fields and valid block editor changes in the current page instance.",
-   "signal": "Browser beforeunload confirmation; no custom text and no autosave.",
+   "signal": "Browser beforeunload confirmation remains. Valid editor changes are also captured locally in sessionStorage for optional draft recovery; this is not a server autosave or background form submission.",
    "submit": "Guard is bypassed only for a normal form submit when all block editor hosts validate. Invalid editor submission remains guarded.",
-   "persistence": "The existing explicit Blog form save remains authoritative.",
-   "revision_history_fetch": "D05=A (2026-11-17, David L. Almeida): fetch real no init para historico de revisoes, disparado por clique; nao e autosave. Proibicao de autosave mantida."
+   "persistence": "The explicit Blog/Page form submit remains authoritative. Session recovery is browser-local, per user and record, expires after 24 hours, and is restored only after user confirmation; it never saves or publishes to the server.",
+   "revision_history_fetch": "D05=A (2026-11-17, David L. Almeida): same-origin POST/fetch for revision-list and item reads occurs only after an explicit, click-triggered user action. A chosen snapshot is restored in editor memory and still requires the explicit Blog/Page form Save; it is not an autosave.",
+   "client_draft_recovery": {
+    "status": "IMPLEMENTED_EXISTING",
+    "storage": "sessionStorage",
+    "scope": "Per authenticated admin user + editor context + post/page ID.",
+    "capture": "Valid editor changes only; recovery record plus up to five bounded temporary snapshots.",
+    "retention": "24 hours; user confirmation required to restore.",
+    "server_write": false,
+    "explicit_save_remains_authoritative": true
+   }
   }
  },
  "patterns_persistence": {
-  "status": "PROPOSAL_PENDING",
-  "user_choice": "Prepare design proposal; do not implement persistent storage in this increment.",
-  "scope_recommended": "Private per-admin-user patterns, not global/shared by default.",
-  "authorization": "Do not infer write permission from the Blog post modify ACL. Request a dedicated ACL decision or explicit mapping from the owner before endpoints/storage.",
-  "schema": "Not included; obtain install-agent review and migration/schema approval before any persistence implementation.",
-  "storage_or_endpoint": "None implemented. Built-in patterns remain local insertion patterns from F9-24."
+  "status": "IMPLEMENTED_EXISTING",
+  "decision": "D08=A (explicit owner approval, superseding the prior B): document the existing behavior only; no new feature, endpoint, storage, or schema change authorized by this update.",
+  "scope": "Private per-admin-user patterns, not global/shared by default. Available in the Blog and CMS page editor contexts.",
+  "authorization": "Dedicated cms/block_pattern ACL is required. Reads require access to cms/block_pattern plus modify on the current context (blog/blog or cms/page); writes additionally require modify on cms/block_pattern. Owner ID comes from the authenticated session, not request data. Write endpoints require CSRF.",
+  "schema": "Existing rms_cms_block_pattern table is defined in dev/install/sql/schema-complete.sql (and schema.sql). Runtime checks table availability; no dedicated incremental upgrade script or schema change is added by KZ-62.",
+  "storage_or_endpoint": "Existing same-origin cms/block_pattern routes: list/get/save/rename/delete for Blog and CMS pages. Save validates/canonicalizes the document, rejects custom_js, limits documents to 4 MiB and 50 patterns per user; ownership is enforced by owner_user_id.",
+  "new_changes_authorized": false
  },
  "catalog_context_preview": {
   "status": "DESIGN_GATE_PENDING",
@@ -36,13 +46,31 @@
   "next_design": "Review a same-origin, authenticated, CSRF-protected preview path that invokes the server allowlisted renderer on validated draft JSON without writing a post or exposing a public bearer URL. Confirm ACL, origin and expiration rules first."
  },
  "not_in_scope": [
-  "autosave",
-  "revisions",
-  "database migration",
-  "shared pattern API",
+  "server-side autosave, background form submission, or automatic publish",
+  "new draft-recovery storage or endpoints beyond the existing sessionStorage behavior documented above",
+  "new pattern endpoints, shared/global pattern storage, or new schema/migration changes",
+  "new revision writes; revision history reads and restore-to-editor remain explicit user actions and still require the explicit Blog/Page form save",
   "GitHub write",
   "deploy",
   "database access"
  ],
- "runtime_tests_executed": false
+ "runtime_tests_executed": false,
+ "browser_local_storage": {
+  "status": "IMPLEMENTED_EXISTING",
+  "storage": "localStorage",
+  "features": {
+   "editor_notes": "Per admin user and saved post/page; browser-local notes, not sent to the server.",
+   "style_presets": "Per admin user and editor context; browser-local presets, not shared or sent to the server."
+  },
+  "server_write": false
+ },
+ "decision_history": [
+  {
+   "id": "D08",
+   "decision": "A",
+   "decided_by": "David L. Almeida (responsavel)",
+   "decision_date": "2026-11-17",
+   "scope": "Document existing F9-25 persistence behavior; no product code or schema feature added."
+  }
+ ]
 }
