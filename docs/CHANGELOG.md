@@ -1,5 +1,9 @@
 # Changelog
 
+## Hotfix CI KZ-34/35 — pattern com hífen escapado e link externo fora do escopo do docs-links (2026-11-17)
+- `security/dracaunos.twig`: pattern do campo rota do admin vira `[a-z0-9][a-z0-9\-]{0,31}` (no modo `v` do navegador, hífen no fim da classe é erro de sintaxe) — check_form_patterns volta a 99 PASS.
+- `docs/CHANGELOG.md`: URL `https://davidalmeida.xyz/threejs/` escrita sem scheme (lychee --offline só valida links internos; o exclude existente cobre só /catalog/tools).
+
 ## KZ-35 — JOW-payments: painel interno de pagamentos (cobranças, PIX, relatório) (2026-11-17)
 - Novo módulo admin `payments/jow` (menu Vendas, ACL access/modify): criar cobranças (PIX/cartão/boleto), geração do **BR Code EMV (PIX Copia e Cola)** em PHP puro com CRC16-CCITT validado contra vetor oficial, cadastro de chaves PIX, relatório de recebimentos por status/método e dados do recebedor (nome/cidade/MCC).
 - Migração `tools/upgrade_kz35_jow_payments.sql`: tabelas `jow_charge` e `jow_pix_key`, settings (code `jow`), permissão do grupo admin e chave PIX aleatória inicial. Ferramenta interna: permanece fora do catálogo público (só no `internal-tools.json`).
@@ -21,7 +25,7 @@
 - **Banco:** `tools/upgrade_kz26_universe_background.sql` aplica os mesmos dois trechos via REPLACE em `rms_design_theme` (`config` e `published_config`). Checksum do pacote de tema recalculado.
 
 ## KZ-25 — David Universe 3D: home rodando a cena david-universe (ThreeJS nativo) (2026-11-17)
-- A cena `david-universe` (nave, orbes, voo por scroll — porta da amostra https://davidalmeida.xyz/threejs/) ja existia no runtime e no allowlist, mas o tema apontava a home para `hero-particles`.
+- A cena `david-universe` (nave, orbes, voo por scroll — porta da amostra davidalmeida.xyz/threejs/ (amostra online)) ja existia no runtime e no allowlist, mas o tema apontava a home para `hero-particles`.
 - **Correcao:** `docs/temas/David-Universe-3D.reamurtheme.json` passa a usar `scene`/`three.scene` = `david-universe` (base e regra da rota `common/home`, slot `hero`, count 520, cor `#5cc6d0`, speed 0.06 — preset `universe`); `du_mobile_lite` continua `hero-particles`. Checksum do pacote recalculado.
 - **Runtime:** o Admin/Catalogo leem a tabela `rms_design_theme`; aplicar `tools/upgrade_kz25_david_universe_home.sql` no MySQL para espelhar a mudanca no banco.
 

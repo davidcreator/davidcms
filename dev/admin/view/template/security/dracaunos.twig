@@ -30,7 +30,7 @@
       <form method="post" action="{{ action }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="admin_route">
         <div class="input-group mb-2"><span class="input-group-text">/</span>
-          <input class="form-control" name="admin_route" value="{{ admin_route }}" maxlength="32" pattern="[a-z0-9][a-z0-9-]{0,31}"{% if not can_modify %} disabled{% endif %}></div>
+          <input class="form-control" name="admin_route" value="{{ admin_route }}" maxlength="32" pattern="[a-z0-9][a-z0-9\-]{0,31}"{% if not can_modify %} disabled{% endif %}></div>
         <p class="text-body-secondary small">{{ help_admin_route }}</p>
         {% if can_modify %}<button class="btn btn-primary btn-sm">{{ button_save }}</button>{% endif %}
       </form>
