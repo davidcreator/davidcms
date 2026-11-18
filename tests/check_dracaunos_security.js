@@ -205,4 +205,15 @@ for (const l of langs) {
   check(read('dev/admin/language/' + l + '/security/dracaunos.php').includes('text_settings'), 'idioma ' + l + ' tem a página de configurações');
 }
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49 + hotfix KZ-43)');
+// 16) KZ-50 hotfix: User::getId() não existe (o método é getUserId) — varre dev/ inteiro
+const userIdMisuse = [];
+(function walk(dir) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = dir + '/' + e.name;
+    if (e.isDirectory()) walk(p);
+    else if (e.name.endsWith('.php') && fs.readFileSync(p, 'utf8').includes('->user->getId()')) userIdMisuse.push(p);
+  }
+})('dev');
+check(userIdMisuse.length === 0, 'nenhum ->user->getId() em dev/ (User só tem getUserId) — ' + (userIdMisuse.join(',') || 'limpo'));
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50 + hotfix KZ-43)');

@@ -1,5 +1,11 @@
 # Changelog
 
+## KZ-50 — Hotfix: `User::getId()` não existe (método correto: `getUserId`) (2026-11-18)
+- Fatal no WAMP (`Call to undefined method ...User::getId()` em `security/dracaunos.php:31`): 4 chamadas usavam `getId()`; a classe `User` só tem `getUserId()`.
+- Corrigido em `dev/admin/controller/security/dracaunos.php` (3 usos: twofa get/save) e `dev/admin/controller/common/login.php` (2 usos no log de login).
+- Regressão no checker: varredura de `dev/` inteiro falha se achar `->user->getId()` → checker a 113 verificações (PASS).
+
+
 ## KZ-49 — Dracaunos-Security: página de Configurações dentro do painel (2026-11-18)
 - Novo card **Configurações** no painel Dracaunos: retenção em dias do **log de auditoria** e do **log de logins**, editável direto na página (ação `retention`, POST + CSRF + modify, min 1 / máx 3650). Alimenta o `prune` existente — antes os dias eram só o default 30, sem UI.
 - Model: `getRetention()` / `saveRetention()` (tabela `setting`, padrão do Dracaunos). Idiomas pt-br/en-us/es-eu.

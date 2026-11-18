@@ -87,12 +87,12 @@ class Login extends \Reamur\System\Engine\Controller {
                     $data['show_2fa']  = true;
                 } elseif ($this->user->login($username, $password)) {
                     // Previna session fixation: novo id pós-login (o token CSRF muda junto)
-                    $logAttempt((int)$this->user->getId(), true);
+                    $logAttempt((int)$this->user->getUserId(), true);
                     $this->session->regenerateId();
 
                     // KZ-39: senha vencida (max_age_days) → troca obrigatória no perfil.
                     // KZ-41: 2FA obrigatório e ainda não ativado → ativar no painel Dracaunos.
-                    $uid = (int)$this->user->getId();
+                    $uid = (int)$this->user->getUserId();
                     if ($drac->passwordExpired($uid)) {
                         $this->response->redirect($this->url->link('user/profile'));
                     } elseif ($drac->is2faRequired() && !$drac->userHas2fa($uid)) {

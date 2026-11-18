@@ -28,7 +28,7 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
         $data['policy']      = $this->model_security_dracaunos->getPasswordPolicy();
         $data['logins']      = $this->model_security_dracaunos->getLoginLogs(30);
         $data['admin_route'] = $this->model_security_dracaunos->getAdminRoute();
-        $data['twofa']       = $this->model_security_dracaunos->get2fa((int)$this->user->getId());
+        $data['twofa']       = $this->model_security_dracaunos->get2fa((int)$this->user->getUserId());
         // KZ-41: 2FA obrigatório — estado global e flag de bloqueio da conta atual
         $data['2fa_required'] = $this->model_security_dracaunos->is2faRequired();
         $data['force_2fa']    = !empty($this->session->data['dracaunos_2fa_required_pending']);
@@ -81,7 +81,7 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
                 $secret = trim((string)($post['secret'] ?? ''));
                 $code   = (string)($post['code'] ?? '');
                 if ($this->model_security_dracaunos->verifyTotp($secret, $code)) {
-                    $this->model_security_dracaunos->save2fa((int)$this->user->getId(), $secret, true);
+                    $this->model_security_dracaunos->save2fa((int)$this->user->getUserId(), $secret, true);
                     unset($this->session->data['dracaunos_2fa_required_pending']); // KZ-41: 2FA ativo desbloqueia o painel
                     $this->session->data['success'] = $this->language->get('text_2fa_enabled');
                 } else {
@@ -93,7 +93,7 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
                 $this->session->data['success'] = $this->language->get('text_2fa_required_saved');
                 break;
             case 'twofa_disable':
-                $this->model_security_dracaunos->save2fa((int)$this->user->getId(), '', false);
+                $this->model_security_dracaunos->save2fa((int)$this->user->getUserId(), '', false);
                 $this->session->data['success'] = $this->language->get('text_2fa_disabled');
                 break;
             case 'recovery_handle':
