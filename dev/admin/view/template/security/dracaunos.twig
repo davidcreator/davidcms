@@ -76,7 +76,7 @@
       <form method="post" action="{{ action }}" class="mt-3 pt-2 border-top">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="2fa_required">
         <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="dracaunos-2fa-required" name="2fa_required" value="1"{% if 2fa_required %} checked{% endif %}{% if not can_modify %} disabled{% endif %}>
+          <input class="form-check-input" type="checkbox" id="dracaunos-2fa-required" name="2fa_required" value="1"{% if twofa_required %} checked{% endif %}{% if not can_modify %} disabled{% endif %}>
           <label class="form-check-label small" for="dracaunos-2fa-required">{{ entry_2fa_required }}</label>
           <div class="form-text">{{ help_2fa_required }}</div>
         </div>

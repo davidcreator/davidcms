@@ -1,5 +1,11 @@
 # Changelog
 
+## KZ-51 — Hotfix: Twig rejeita variável que começa com dígito (`2fa_required`) (2026-11-18)
+- Fatal no WAMP (`Twig\Error\SyntaxError ... "fa_required"` em `security/dracaunos.twig:79`): `{% if 2fa_required %}` — identificador Twig não pode começar com número.
+- Corrigido: variável do template renomeada para `twofa_required` (controller + twig). O campo POST `name="2fa_required"` continua igual (nome de formulário HTML não é identificador Twig).
+- Regressão no checker: varredura de todos os `.twig` em `dev/` contra `{{ <dígito>... }}` / `{% if <dígito>... %}` → checker a 115 verificações (PASS).
+
+
 ## KZ-50 — Hotfix: `User::getId()` não existe (método correto: `getUserId`) (2026-11-18)
 - Fatal no WAMP (`Call to undefined method ...User::getId()` em `security/dracaunos.php:31`): 4 chamadas usavam `getId()`; a classe `User` só tem `getUserId()`.
 - Corrigido em `dev/admin/controller/security/dracaunos.php` (3 usos: twofa get/save) e `dev/admin/controller/common/login.php` (2 usos no log de login).

@@ -30,7 +30,7 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
         $data['admin_route'] = $this->model_security_dracaunos->getAdminRoute();
         $data['twofa']       = $this->model_security_dracaunos->get2fa((int)$this->user->getUserId());
         // KZ-41: 2FA obrigatório — estado global e flag de bloqueio da conta atual
-        $data['2fa_required'] = $this->model_security_dracaunos->is2faRequired();
+        $data['twofa_required'] = $this->model_security_dracaunos->is2faRequired();
         $data['force_2fa']    = !empty($this->session->data['dracaunos_2fa_required_pending']);
         $data['totp_now']    = $this->model_security_dracaunos->totp(
             !empty($data['twofa']['secret']) ? $data['twofa']['secret'] : $this->model_security_dracaunos->generateSecret()

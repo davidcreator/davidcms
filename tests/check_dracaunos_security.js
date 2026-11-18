@@ -216,4 +216,19 @@ const userIdMisuse = [];
 })('dev');
 check(userIdMisuse.length === 0, 'nenhum ->user->getId() em dev/ (User só tem getUserId) — ' + (userIdMisuse.join(',') || 'limpo'));
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50 + hotfix KZ-43)');
+// 17) KZ-51 hotfix: Twig não aceita variável começando com dígito (2fa_required)
+const twigDigitVar = [];
+(function walk(dir) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = dir + '/' + e.name;
+    if (e.isDirectory()) walk(p);
+    else if (e.name.endsWith('.twig')) {
+      const c = fs.readFileSync(p, 'utf8');
+      if (/\{\{\s*\d/.test(c) || /\{%\s*(if|elseif)\s+\d/.test(c)) twigDigitVar.push(p);
+    }
+  }
+})('dev');
+check(twigDigitVar.length === 0, 'nenhum .twig usa variável começando com dígito ({{ 2fa... }} / {% if 2... %}) — ' + (twigDigitVar.join(',') || 'limpo'));
+check(dracTwig.includes('{% if twofa_required %}'), 'toggle 2FA do painel usa twofa_required (variável válida)');
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51 + hotfix KZ-43)');

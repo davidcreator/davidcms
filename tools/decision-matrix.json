@@ -1,11 +1,11 @@
 {
  "task": "F11-11",
- "head": "6090391b",
+ "head": "1c32f551",
  "description": "Matriz de decisao dos 10 MARKER_OR_FINDING mantidos pelo F11-09",
  "policy": "Nenhuma decisao tomada por inferencia. Contratos congelados ate registro explicito de status=DECIDED.",
  "status_counts": {
   "PENDING_DECISION": 0,
-  "DECIDED": 21
+  "DECIDED": 22
  },
  "frozen_artifacts_sha256": {
   "docs/F9-14-Contrato-Editor-MVP.json": "c4a8b91d18ab9bad64ea9a698bca0e945c9024be477df1cbffa14b3f8288e4e7",
@@ -21,7 +21,7 @@
   "docs/PROJECT-HANDOFF.md": "5f65d408d5b9831b0999d09ace2fbb1248bd4695282fe75fa6fde0859aeb6c84",
   "dev/admin/controller/startup/dracaunos.php": "e9e906e3504988c2d6d84069d19f8da5ca31899e34be3c908a4a7fd973ac71ff",
   "dev/admin/controller/common/login.php": "35def3cebbf2ec47ffdc93ffc11595eb303a50ef05244a5288ffcd939f37c9ee",
-  "dev/admin/controller/security/dracaunos.php": "9b593ba47020180bde56a2807709f13490d7acd01e988638ba836489d7462cc4",
+  "dev/admin/controller/security/dracaunos.php": "8e62a0997332cac463e52571253c94687b32685132d6435179668590012212fb",
   "dev/admin/controller/user/profile.php": "5631d2d8c6aa041fa5e2d5c906ed0d4b32432a3d91c3a7c3b971c381afd635a6",
   "dev/admin/model/security/dracaunos.php": "e1c2f0be1bf71d21b2da823eac00aa31c043411ba6a77904d15d2ea3e3fe26c6",
   "dev/admin/model/user/user.php": "c392b402d1eb25e134e9eecec373a352d64d038450751a8c3206a50980dadeb4",
@@ -681,6 +681,35 @@
    "recommended_action": "Atualizar frozen_artifacts_sha256 dos 2 artefatos do hotfix (já feito)",
    "frozen_artifacts": [
     "dev/admin/controller/common/login.php",
+    "dev/admin/controller/security/dracaunos.php"
+   ],
+   "decided_by": "David L. Almeida (responsavel)",
+   "decision_date": "2026-11-18",
+   "decision": "A",
+   "evidence_ref": "node tests/check_dracaunos_security.js -> PASS"
+  },
+  {
+   "id": "KZ-51",
+   "checker": "tests/check_dracaunos_security.js",
+   "phase": "KZ-51 hotfix",
+   "nature": "HOTFIX",
+   "status": "DECIDED",
+   "evidence": "Twig SyntaxError por {% if 2fa_required %} (identificador não pode começar com dígito). Variável renomeada para twofa_required no controller+twig; checker varre .twig contra variáveis com dígito inicial.",
+   "options": [
+    {
+     "id": "A",
+     "label": "Registrar o hotfix e atualizar o hash do artefato alterado",
+     "requires": "autorizacao explicita do responsavel"
+    },
+    {
+     "id": "B",
+     "label": "Registrar como achado P1 no F9-18-Risk-Register.json",
+     "requires": "decisao do responsavel"
+    }
+   ],
+   "recommendation": "A",
+   "recommended_action": "Atualizar frozen_artifacts_sha256 de dev/admin/controller/security/dracaunos.php (já feito)",
+   "frozen_artifacts": [
     "dev/admin/controller/security/dracaunos.php"
    ],
    "decided_by": "David L. Almeida (responsavel)",
