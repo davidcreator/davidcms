@@ -2,7 +2,7 @@
 
 ## Hotfix CI KZ-34/35 — pattern com hífen escapado e link externo fora do escopo do docs-links (2026-11-17)
 - `security/dracaunos.twig`: pattern do campo rota do admin vira `[a-z0-9][a-z0-9\-]{0,31}` (no modo `v` do navegador, hífen no fim da classe é erro de sintaxe) — check_form_patterns volta a 99 PASS.
-- `docs/CHANGELOG.md`: URL `https://davidalmeida.xyz/threejs/` escrita sem scheme (lychee --offline só valida links internos; o exclude existente cobre só /catalog/tools).
+- `docs/CHANGELOG.md`: URL da amostra online escrita sem scheme (lychee --offline só valida links internos; o exclude existente cobre só /catalog/tools).
 
 ## KZ-35 — JOW-payments: painel interno de pagamentos (cobranças, PIX, relatório) (2026-11-17)
 - Novo módulo admin `payments/jow` (menu Vendas, ACL access/modify): criar cobranças (PIX/cartão/boleto), geração do **BR Code EMV (PIX Copia e Cola)** em PHP puro com CRC16-CCITT validado contra vetor oficial, cadastro de chaves PIX, relatório de recebimentos por status/método e dados do recebedor (nome/cidade/MCC).
