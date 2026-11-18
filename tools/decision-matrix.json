@@ -1,11 +1,11 @@
 {
  "task": "F11-11",
- "head": "8cb35052",
+ "head": "266ea238",
  "description": "Matriz de decisao dos 10 MARKER_OR_FINDING mantidos pelo F11-09",
  "policy": "Nenhuma decisao tomada por inferencia. Contratos congelados ate registro explicito de status=DECIDED.",
  "status_counts": {
   "PENDING_DECISION": 0,
-  "DECIDED": 16
+  "DECIDED": 17
  },
  "frozen_artifacts_sha256": {
   "docs/F9-14-Contrato-Editor-MVP.json": "c4a8b91d18ab9bad64ea9a698bca0e945c9024be477df1cbffa14b3f8288e4e7",
@@ -21,12 +21,12 @@
   "docs/PROJECT-HANDOFF.md": "5f65d408d5b9831b0999d09ace2fbb1248bd4695282fe75fa6fde0859aeb6c84",
   "dev/admin/controller/startup/dracaunos.php": "e9e906e3504988c2d6d84069d19f8da5ca31899e34be3c908a4a7fd973ac71ff",
   "dev/admin/controller/common/login.php": "adb01b76c832d4dff98d17a3b54a6ea602257271d07c03c3a2aa3a07bfff1a98",
-  "dev/admin/controller/security/dracaunos.php": "b2016d2f5d1737fa238c8d2308fec00e3e3e19cd8ea9125ab4d26d12fa285f83",
+  "dev/admin/controller/security/dracaunos.php": "4d4270df6e4cac06941725b31ee350bddf7323cd90db35a92deffc0d607c968f",
   "dev/admin/controller/user/profile.php": "5631d2d8c6aa041fa5e2d5c906ed0d4b32432a3d91c3a7c3b971c381afd635a6",
-  "dev/admin/model/security/dracaunos.php": "f420df48b819aa8f553cd02c876d7da15fa8f35c44992ed181319ae8fe556690",
+  "dev/admin/model/security/dracaunos.php": "f169faa0c00d5fb80ca19b9764ceb44a4044f1424f29ecb81a37d9b9f61de332",
   "dev/admin/model/user/user.php": "c392b402d1eb25e134e9eecec373a352d64d038450751a8c3206a50980dadeb4",
-  "dev/admin/model/tool/internal-tools.json": "3fb999d3b6ef8fd82948796da7960c3a0638a4386e24cd1c94e31ea20dceaae7",
-  "dev/admin/view/template/security/dracaunos.twig": "9b558a1dc8084bf468236bdb40e08dfa0fa869fd353b9a3d5d52ccdb274d3d81",
+  "dev/admin/model/tool/internal-tools.json": "ddeb59175b5dd301047b4d07b11c7f32e9a8e160b55e95aa970a043dfe9f648d",
+  "dev/admin/view/template/security/dracaunos.twig": "e53138e4deef68ab1c485165086219277dc88ae01c0edc2ae896abc9f16c984c",
   "dev/admin/view/template/user/profile.twig": "2ccbb355d5f96e1fc56c663bcfa1433404a5fe9c1a22efedb8a411af1710f7b3",
   "dev/system/config/admin.php": "70fb7804aa7a18506c2e83aebf724ab870caac61605f00b2b65d55126d48fb7d",
   "tools/upgrade_kz39_dracaunos_fase_b.sql": "786aaed860e208b1b4d3d6378b598834daccc62b1549b63c46b57815a2e15329",
@@ -525,6 +525,38 @@
    ],
    "recommendation": "A",
    "recommended_action": "Atualizar frozen_artifacts_sha256 dos 4 artefatos modificados pelo KZ-45 (já feito neste commit)",
+   "frozen_artifacts": [
+    "dev/admin/controller/security/dracaunos.php",
+    "dev/admin/model/security/dracaunos.php",
+    "dev/admin/model/tool/internal-tools.json",
+    "dev/admin/view/template/security/dracaunos.twig"
+   ],
+   "decided_by": "David L. Almeida (responsavel)",
+   "decision_date": "2026-11-18",
+   "decision": "A",
+   "evidence_ref": "node tests/check_dracaunos_security.js -> PASS"
+  },
+  {
+   "id": "KZ-46",
+   "checker": "tests/check_dracaunos_security.js",
+   "phase": "KZ-46 (Dracaunos-Security)",
+   "nature": "FERRAMENTA_INTERNA",
+   "status": "DECIDED",
+   "evidence": "Testador de regras de IP no painel (explainIp: decisão + regra que casou, escrow admin/catálogo) e matcher com inet_pton — CIDR passa a valer para IPv6 também. Sem SQL novo.",
+   "options": [
+    {
+     "id": "A",
+     "label": "Registrar a entrega do KZ-46 e atualizar os hashes dos artefatos congelados alterados",
+     "requires": "autorizacao explicita do responsavel"
+    },
+    {
+     "id": "B",
+     "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+     "requires": "decisao do responsavel"
+    }
+   ],
+   "recommendation": "A",
+   "recommended_action": "Atualizar frozen_artifacts_sha256 dos 4 artefatos modificados pelo KZ-46 (já feito neste commit)",
    "frozen_artifacts": [
     "dev/admin/controller/security/dracaunos.php",
     "dev/admin/model/security/dracaunos.php",

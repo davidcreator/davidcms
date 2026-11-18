@@ -1,5 +1,11 @@
 # Changelog
 
+## KZ-46 — Dracaunos-Security: testador de regras de IP + suporte a IPv6 (2026-11-18)
+- Novo **testador de regras de IP** no painel (escopo admin/catálogo): informa um IP e o painel mostra a decisão final (PERMITIDO/BLOQUEADO), a regra que casou e aceita IPv4 e IPv6.
+- Matcher de IP reescrito com `inet_pton`: CIDR agora funciona para **IPv6 também** (`2001:db8::/32`), não só IPv4 — as regras de IP passam a valer para ambos. Família incompatível (IPv4 vs IPv6) não casa.
+- Dracaunos-Security sobe para **1.7.0**; checker `tests/check_dracaunos_security.js` a 105 verificações (PASS). Idiomas pt-br/en-us/es-eu. Sem SQL novo.
+
+
 ## KZ-45 — Dracaunos-Security: gestão de sessões ativas do admin (2026-11-18)
 - Nova seção **Sessões ativas do admin** no painel Dracaunos: lista as sessões vigentes de `rms_session` que têm `user_id` (só admin logado), com usuário, id da sessão e expiração.
 - Botão **Encerrar** (POST + CSRF + modify) apaga a sessão na hora; a sessão atual nunca pode ser encerrada por ali (fail-safe no controller).

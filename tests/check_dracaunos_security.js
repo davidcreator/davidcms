@@ -186,4 +186,14 @@ for (const l of langs) {
   check(read('dev/admin/language/' + l + '/security/dracaunos.php').includes('text_sessions'), 'idioma ' + l + ' tem a seção de sessões');
 }
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45 + hotfix KZ-43)');
+// 14) KZ-46: testador de regras de IP + IPv6
+check(dracModel.includes('function explainIp('), 'model tem explainIp (testador de IP)');
+check(dracModel.includes('inet_pton'), 'matcher de IP usa inet_pton (suporta IPv6/CIDRv6)');
+check(dracCtrl.includes("case 'ip_test'"), 'controller tem ação ip_test');
+check(dracCtrl.includes('ip_test_result'), 'controller passa o resultado do teste para a view (flash)');
+check(dracTwig.includes('button_test_ip') && dracTwig.includes('text_ip_test_deny'), 'twig tem o formulário e os resultados do testador');
+for (const l of langs) {
+  check(read('dev/admin/language/' + l + '/security/dracaunos.php').includes('button_test_ip'), 'idioma ' + l + ' tem o testador de IP');
+}
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46 + hotfix KZ-43)');

@@ -157,11 +157,44 @@ class Dracaunos extends \Reamur\System\Engine\Model {
     }
     private function ipMatches(string $ip, string $rule): bool {
         if ($rule === $ip) return true;
-        if (strpos($rule, '/') !== false) { // CIDR (IPv4)
-            list($sub, $mask) = explode('/', $rule);
-            return (ip2long($ip) & ~((1 << (32 - (int)$mask)) - 1)) === (ip2long($sub) & ~((1 << (32 - (int)$mask)) - 1));
+        if (strpos($rule, '/') !== false) { // CIDR
+            [$sub, $mask] = explode('/', $rule, 2);
+            $a = @inet_pton($ip); $b = @inet_pton($sub);
+            if ($a === false || $b === false) return false;
+            $len = strlen($a);
+            if (strlen($b) !== $len) return false; // família diferente (IPv4 vs IPv6)
+            $bits = $len * 8;
+            $mask = max(0, min($bits, (int)$mask));
+            $full = intdiv($mask, 8); $rem = $mask % 8;
+            if ($full && substr($a, 0, $full) !== substr($b, 0, $full)) return false;
+            if ($rem) {
+                $m = chr((0xFF << (8 - $rem)) & 0xFF);
+                return (ord($a[$full]) & ord($m)) === (ord($b[$full]) & ord($m));
+            }
+            return true;
         }
         return false;
+    }
+
+    // ── Testador de regras de IP (KZ-46) ─────────────────────────────────
+    /** explica a decisão para um IP em um escopo: qual regra casou e o resultado final */
+    public function explainIp(string $ip, string $scope = 'admin'): array {
+        if (@inet_pton($ip) === false) return ['valid' => false, 'decision' => null, 'rule' => null];
+        $rows = $this->getIpRules();
+        $denyHit = null; $allowHit = null;
+        foreach ($rows as $r) {
+            if ((int)$r['status'] !== 1 || $r['scope'] !== $scope) continue;
+            if ($this->ipMatches($ip, (string)$r['ip'])) {
+                if ($r['action'] === 'deny') { $denyHit = $r; break; }
+                $allowHit = $allowHit ?: $r;
+            }
+        }
+        $hit = $denyHit ?: $allowHit;
+        return [
+            'valid'    => true,
+            'decision' => $denyHit ? 'deny' : 'allow',
+            'rule'     => $hit ? ['ip' => (string)$hit['ip'], 'action' => (string)$hit['action'], 'scope' => (string)$hit['scope']] : null,
+        ];
     }
 
     // ── Política de senhas ───────────────────────────────────────────────

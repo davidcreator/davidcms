@@ -132,6 +132,28 @@
     {# ── Regras de IP ── #}
     <div class="col-lg-6"><div class="card h-100"><div class="card-body">
       <h2 class="h6 card-title">{{ text_ip_rules }}</h2>
+      {# KZ-46: testador de regras de IP #}
+      <form method="post" action="{{ action }}" class="d-flex gap-2 mb-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="action" value="ip_test">
+        <input type="text" name="test_ip" class="form-control form-control-sm" placeholder="{{ ph_test_ip }}" value="">
+        <select name="test_scope" class="form-select form-select-sm w-auto">
+          <option value="admin" selected>{{ scope_admin }}</option>
+          <option value="catalog">{{ scope_catalog }}</option>
+        </select>
+        <button class="btn btn-outline-secondary btn-sm">{{ button_test_ip }}</button>
+      </form>
+      {% if ip_test %}
+        {% if ip_test.valid %}
+          {% if ip_test.decision == 'deny' %}
+          <div class="alert alert-danger py-1 small mb-3">{{ text_ip_test_deny }} <code>{{ ip_test.rule.ip }}</code></div>
+          {% else %}
+          <div class="alert alert-success py-1 small mb-3">{{ text_ip_test_allow }}{% if ip_test.rule %} <code>{{ ip_test.rule.ip }}</code>{% endif %}</div>
+          {% endif %}
+        {% else %}
+          <div class="alert alert-warning py-1 small mb-3">{{ text_ip_test_invalid }}</div>
+        {% endif %}
+      {% endif %}
       {% if can_modify %}<form method="post" action="{{ action }}" class="row g-2 mb-3">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="ip_add">
         <div class="col"><input class="form-control form-control-sm" name="ip" placeholder="192.168.0.0/24" required></div>

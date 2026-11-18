@@ -76,3 +76,12 @@ $_['col_session']          = 'Sessão'; $_['col_expire'] = 'Expira';
 $_['button_kill_session']  = 'Encerrar';
 $_['text_own_session']     = 'sua sessão';
 $_['text_session_killed']  = 'Sessão encerrada.';
+
+// KZ-46 — testador de regras de IP
+$_['ph_test_ip']          = 'Ex.: 203.0.113.10 ou 2001:db8::1 (IPv4/IPv6)';
+$_['button_test_ip']      = 'Testar';
+$_['scope_admin']         = 'Painel (admin)';
+$_['scope_catalog']       = 'Catálogo';
+$_['text_ip_test_allow']  = 'Resultado: PERMITIDO';
+$_['text_ip_test_deny']   = 'Resultado: BLOQUEADO pela regra';
+$_['text_ip_test_invalid']= 'IP inválido (use IPv4 ou IPv6 válido).';

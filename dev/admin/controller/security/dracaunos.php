@@ -117,6 +117,12 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
                 $this->model_security_dracaunos->deleteIpRule((int)($post['rule_id'] ?? 0));
                 $this->session->data['success'] = $this->language->get('text_ip_deleted');
                 break;
+            case 'ip_test':
+                // KZ-46: simula a decisão de uma regra para um IP informado
+                $ip = trim($this->postScalar('test_ip'));
+                $scope = (string)($post['test_scope'] ?? 'admin');
+                $this->session->data['ip_test_result'] = $this->model_security_dracaunos->explainIp($ip, $scope);
+                break;
             case 'session_kill':
                 // KZ-45: encerra sessão remota; nunca a sessão atual (fail-safe)
                 $sid = (string)($post['session_id'] ?? '');
