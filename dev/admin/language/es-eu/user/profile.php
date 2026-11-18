@@ -46,3 +46,6 @@ $_['button_back'] = 'Volver';
 
 $_['error_csrf'] = 'El formulario ha caducado o no se pudo verificar. Recarga la página e inténtalo de nuevo.';
 $_['text_close'] = 'Cerrar';
+
+// KZ-39 — caducidad de contraseña (Dracaunos Fase B)
+$_['text_password_expired'] = 'Tu contraseña ha caducado (edad máxima de la política de contraseñas). Define una nueva contraseña abajo para seguir usando el panel.';

@@ -45,15 +45,15 @@ class Login extends \Reamur\System\Engine\Controller {
 
             $limitOk = true;
 
+            $ip = (string)$this->request->ip();
+
             if ($csrfOk) {
                 $limiter = new \Reamur\System\Library\Security\RateLimit($this->db);
-
-                $limitOk = $limiter->allow('login', $this->request->ip(), 6, 900);
+                $limitOk = $limiter->allow('login', $ip, 6, 900);
             }
 
             // KZ-36 (Dracaunos-Security): verificação de IP, log de tentativas e 2FA no login.
             $drac = $this->load->model('security/dracaunos');
-            $ip   = (string)$this->request->ip();
             $ua   = (string)($this->request->server['HTTP_USER_AGENT'] ?? '');
             $logAttempt = function (int $uid, bool $ok) use ($drac, $username, $ip, $ua) {
                 $drac->addLoginLog($uid, $username, $ip, $ua, $ok);
@@ -89,7 +89,9 @@ class Login extends \Reamur\System\Engine\Controller {
                     $logAttempt((int)$this->user->getId(), true);
                     $this->session->regenerateId();
 
-                    $this->response->redirect($this->url->link('common/dashboard'));
+                    // KZ-39: senha vencida (max_age_days) → troca obrigatória no perfil
+                    $this->response->redirect($drac->passwordExpired((int)$this->user->getId())
+                        ? $this->url->link('user/profile') : $this->url->link('common/dashboard'));
 
                     return;
                 } else {

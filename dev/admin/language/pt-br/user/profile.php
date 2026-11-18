@@ -46,3 +46,6 @@ $_['button_back'] = 'Voltar';
 
 $_['error_csrf'] = 'O formulário expirou ou não pôde ser verificado. Recarregue a página e tente novamente.';
 $_['text_close'] = 'Fechar';
+
+// KZ-39 — expiração de senha (Dracaunos Fase B)
+$_['text_password_expired'] = 'Sua senha expirou (validade máxima da política de senhas). Defina uma nova senha abaixo para continuar usando o painel.';

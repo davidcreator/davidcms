@@ -48,6 +48,11 @@ class Profile extends \Reamur\System\Engine\Controller {
             if ($errors === []) {
                 $this->model_user_user->editProfile($user_id, $post);
 
+                // KZ-39: troca de senha concluída → limpa o flag de expiração (o model grava password_changed_at)
+                if ((string)($post['password_new'] ?? '') !== '') {
+                    unset($this->session->data['dracaunos_password_expired']);
+                }
+
                 $this->setFlash($this->language->get('text_success'));
 
                 $this->response->redirect($this->url->link('user/profile'));

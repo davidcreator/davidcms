@@ -67,6 +67,18 @@
       </table></div>
     </div></div></div>
 
+    {# ── Auditoria do admin (KZ-39) ── #}
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 card-title">{{ text_audit }}</h2>
+      <p class="text-body-secondary small">{{ help_audit }}</p>
+      <div class="table-responsive"><table class="table table-sm small">
+        <thead><tr><th>{{ col_date }}</th><th>{{ col_user }}</th><th>{{ col_route }}</th><th>{{ col_method }}</th><th>IP</th></tr></thead>
+        <tbody>{% for a in audit %}<tr>
+          <td>{{ a.date_added }}</td><td>{{ a.username|e }}</td><td>{{ a.route|e }}</td><td>{{ a.method|e }}</td><td>{{ a.ip|e }}</td>
+        </tr>{% else %}<tr><td colspan="5" class="text-body-secondary">{{ text_empty }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div></div></div>
+
     {# ── Recuperação / verificação ── #}
     <div class="col-lg-6"><div class="card h-100"><div class="card-body">
       <h2 class="h6 card-title">{{ text_recovery }}</h2>

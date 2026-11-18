@@ -28,7 +28,8 @@ class User extends \Reamur\System\Engine\Model {
                 `lastname`      = '" . $this->db->escape((string)$data['lastname']) . "',
                 `image`         = '',
                 `status`        = '" . (int)(!empty($data['status']) ? 1 : 0) . "',
-                `date_added`    = NOW()"
+                `date_added`    = NOW(),
+                `password_changed_at` = NOW()"
         );
 
         return (int)$this->db->getLastId();
@@ -49,7 +50,8 @@ class User extends \Reamur\System\Engine\Model {
                 `status`        = '" . (int)(!empty($data['status']) ? 1 : 0) . "'";
 
         if (!empty($data['password'])) {
-            $sql .= ", `password` = '" . $this->db->escape(password_hash((string)$data['password'], PASSWORD_DEFAULT)) . "'";
+            // KZ-39: troca de senha pelo admin também renova o carimbo de expiração
+            $sql .= ", `password` = '" . $this->db->escape(password_hash((string)$data['password'], PASSWORD_DEFAULT)) . "', `password_changed_at` = NOW()";
         }
 
         $sql .= " WHERE `user_id` = '" . $user_id . "'";
@@ -71,7 +73,8 @@ class User extends \Reamur\System\Engine\Model {
                     `lastname`  = '" . $this->db->escape((string)$data['lastname']) . "'";
 
         if ((string)$data['password_new'] !== '') {
-            $sql .= ", `password` = '" . $this->db->escape(password_hash((string)$data['password_new'], PASSWORD_DEFAULT)) . "'";
+            // KZ-39: troca de senha renova o carimbo de expiração (dracaunos_password_policy.max_age_days)
+            $sql .= ", `password` = '" . $this->db->escape(password_hash((string)$data['password_new'], PASSWORD_DEFAULT)) . "', `password_changed_at` = NOW()";
         }
 
         $sql .= " WHERE `user_id` = '" . $user_id . "'";

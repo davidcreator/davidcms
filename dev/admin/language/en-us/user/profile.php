@@ -46,3 +46,6 @@ $_['button_back'] = 'Back';
 
 $_['error_csrf'] = 'This form expired or could not be verified. Reload the page and try again.';
 $_['text_close'] = 'Close';
+
+// KZ-39 — password expiry (Dracaunos Phase B)
+$_['text_password_expired'] = 'Your password has expired (password policy maximum age). Set a new password below to keep using the panel.';

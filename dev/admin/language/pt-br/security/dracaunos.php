@@ -51,3 +51,8 @@ $_['text_ip_saved']      = 'Regra de IP salva.';
 $_['text_ip_deleted']    = 'Regra de IP removida.';
 $_['error_route_invalid'] = 'Rota inválida (use letras minúsculas, números e hífen).';
 $_['error_2fa_code']      = 'Código de 6 dígitos inválido para o segredo informado.';
+
+// KZ-39 — Fase B: auditoria do admin
+$_['text_audit']   = 'Auditoria do admin (últimos 50)';
+$_['help_audit']   = 'Toda requisição autenticada do painel é registrada (usuário, rota, método, IP). Regras de IP valem para TODAS as rotas do admin, e a rota configurada acima é aplicada de verdade (a pasta física /admin/ é recusada com 403 quando há rota custom).';
+$_['col_route']    = 'Rota'; $_['col_method'] = 'Método';

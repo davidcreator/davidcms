@@ -5,6 +5,7 @@
     {% if text_flash.text %}<div class="alert alert-{{ text_flash.type == 'error' ? 'danger' : text_flash.type }} alert-dismissible fade show" role="alert">{{ text_flash.text }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ text_close }}"></button></div>{% endif %}
     <div class="mb-3"><h1 class="h3 mb-1"><i class="bi bi-person-circle me-2" aria-hidden="true"></i>{{ heading_title }}</h1><p class="text-body-secondary mb-0">{{ text_profile }}</p></div>
     {% if error %}<div class="alert alert-danger" role="alert"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ error|nl2br }}</div>{% endif %}
+    {% if password_expired %}<div class="alert alert-warning" role="alert"><i class="bi bi-shield-lock me-1" aria-hidden="true"></i>{{ text_password_expired }}</div>{% endif %}
 
     <form method="post" action="{{ action }}" class="card border-0 shadow-sm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

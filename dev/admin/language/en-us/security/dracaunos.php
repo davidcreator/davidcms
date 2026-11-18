@@ -51,3 +51,8 @@ $_['text_ip_saved']      = 'IP rule saved.';
 $_['text_ip_deleted']    = 'IP rule removed.';
 $_['error_route_invalid'] = 'Invalid route (lowercase letters, digits and hyphen only).';
 $_['error_2fa_code']      = 'Invalid 6-digit code for the given secret.';
+
+// KZ-39 — Phase B: admin audit log
+$_['text_audit']   = 'Admin audit log (last 50)';
+$_['help_audit']   = 'Every authenticated admin request is recorded (user, route, method, IP). IP rules apply to ALL admin routes, and the route configured above is enforced for real (the physical /admin/ folder is refused with 403 when a custom route is set).';
+$_['col_route']    = 'Route'; $_['col_method'] = 'Method';

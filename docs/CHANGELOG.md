@@ -1,5 +1,13 @@
 # Changelog
 
+## KZ-39 — Dracaunos-Security Fase B: IP em todas as rotas do admin, auditoria, expiração de senha, rota real aplicada (2026-11-18)
+- Novo pré-ação `startup/dracaunos` (config admin, antes de `startup/login`): regras de IP (`dracaunos_ip_rule`, escopo admin) passam a valer para **todas** as rotas do painel (403 + log), não só no POST de login.
+- **Auditoria do admin**: tabela `dracaunos_audit` — toda requisição autenticada do painel é registrada (usuário, rota, método, IP, user agent), com retenção `dracaunos_audit_days` (30). Nova seção no painel `security/dracaunos`.
+- **Expiração de senha**: `rms_user.password_changed_at` (SQL novo, backfill = `date_added`); política `max_age_days` agora é aplicada — login com senha vencida redireciona para `user/profile` e o `startup/dracaunos` bloqueia as demais rotas até a troca (fail-closed). Troca de senha (perfil ou admin) grava `password_changed_at = NOW()`.
+- **Rota real do admin aplicada**: com rota custom em `dracaunos_admin_route`, o acesso pela pasta física `/admin/` é recusado com 403 (o servidor reescreve `/rota/ → admin/` — snippet no SQL).
+- Dracaunos-Security sobe para **1.2.0** no `internal-tools.json`. Idiomas pt-br/en-us/es-eu.
+
+
 ## KZ-38 — Dracaunos-Security no catálogo: conta do cliente completa (Fase A) (2026-11-18)
 - Novas rotas públicas em `account/`: **login/logout** (com verificação de IP escopo catalog e log em `dracaunos_login_log`), **register** com verificação de e-mail (token em `dracaunos_recovery`), **verify**, **forgotten** (recuperar senha por token) e **reset**, **account** (perfil) + **edit** + **password**.
 - Model `account/dracaunos` (catálogo) reusa as tabelas do Dracaunos; views Twig e idiomas pt-br/en-us/es-eu. Sem SQL novo.

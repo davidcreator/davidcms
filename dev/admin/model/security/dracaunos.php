@@ -182,4 +182,34 @@ class Dracaunos extends \Reamur\System\Engine\Model {
     public function getUsers(int $limit = 50): array {
         return $this->db->query("SELECT `user_id`,`username`,`email`,`firstname`,`lastname`,`status` FROM `" . DB_PREFIX . "user` ORDER BY `user_id` LIMIT " . (int)$limit)->rows;
     }
+
+    // ── Expiração de senha (KZ-39, Fase B) ───────────────────────────────
+    /** true se a política define max_age_days > 0 e a senha do usuário venceu (NULL = venceu: fail-closed). */
+    public function passwordExpired(int $userId): bool {
+        $p = $this->getPasswordPolicy();
+        $maxAge = (int)($p['max_age_days'] ?? 0);
+        if ($maxAge <= 0) return false;
+
+        $q = $this->db->query("SELECT `password_changed_at` FROM `" . DB_PREFIX . "user` WHERE `user_id` = " . (int)$userId . " LIMIT 1");
+        $changedAt = (string)($q->row['password_changed_at'] ?? '');
+        if ($changedAt === '') return true; // sem carimbo = venceu (fail-closed)
+
+        $limit = date('Y-m-d H:i:s', time() - $maxAge * 86400);
+        return $changedAt < $limit;
+    }
+    // ── Auditoria do admin (KZ-39, Fase B) ────────────────────────────────
+    public function addAudit(int $userId, string $route, string $method, string $ip, string $ua): void {
+        $u = $this->db->query("SELECT `username` FROM `" . DB_PREFIX . "user` WHERE `user_id` = " . (int)$userId . " LIMIT 1");
+        $username = $this->db->escape((string)($u->row['username'] ?? ''));
+        $this->db->query("INSERT INTO `" . DB_PREFIX . "dracaunos_audit` (`user_id`,`username`,`route`,`method`,`ip`,`user_agent`,`date_added`) VALUES ("
+            . (int)$userId . ",'" . $username . "','" . $this->db->escape(mb_substr($route, 0, 128)) . "','"
+            . $this->db->escape(mb_substr($method, 0, 10)) . "','" . $this->db->escape($ip) . "','"
+            . $this->db->escape(mb_substr($ua, 0, 255)) . "', NOW())");
+        // retenção: poda registros mais antigos que dracaunos_audit_days
+        $days = max(1, (int)($this->config->get('dracaunos_audit_days') ?: 30));
+        $this->db->query("DELETE FROM `" . DB_PREFIX . "dracaunos_audit` WHERE `date_added` < NOW() - INTERVAL " . $days . " DAY");
+    }
+    public function getAuditLogs(int $limit = 50): array {
+        return $this->db->query("SELECT * FROM `" . DB_PREFIX . "dracaunos_audit` ORDER BY `audit_id` DESC LIMIT " . (int)$limit)->rows;
+    }
 }

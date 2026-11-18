@@ -33,6 +33,7 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
             !empty($data['twofa']['secret']) ? $data['twofa']['secret'] : $this->model_security_dracaunos->generateSecret()
         );
         $data['recovery']    = $this->model_security_dracaunos->getRecovery('pending', 30);
+        $data['audit']       = $this->model_security_dracaunos->getAuditLogs(50);
         $data['ip_rules']    = $this->model_security_dracaunos->getIpRules();
         $data['users']       = $this->model_security_dracaunos->getUsers(30);
         $data['user_edit']   = $this->url->link('user/user.edit');
