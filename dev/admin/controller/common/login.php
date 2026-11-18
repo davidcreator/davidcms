@@ -89,9 +89,17 @@ class Login extends \Reamur\System\Engine\Controller {
                     $logAttempt((int)$this->user->getId(), true);
                     $this->session->regenerateId();
 
-                    // KZ-39: senha vencida (max_age_days) → troca obrigatória no perfil
-                    $this->response->redirect($drac->passwordExpired((int)$this->user->getId())
-                        ? $this->url->link('user/profile') : $this->url->link('common/dashboard'));
+                    // KZ-39: senha vencida (max_age_days) → troca obrigatória no perfil.
+                    // KZ-41: 2FA obrigatório e ainda não ativado → ativar no painel Dracaunos.
+                    $uid = (int)$this->user->getId();
+                    if ($drac->passwordExpired($uid)) {
+                        $this->response->redirect($this->url->link('user/profile'));
+                    } elseif ($drac->is2faRequired() && !$drac->userHas2fa($uid)) {
+                        $this->session->data['dracaunos_2fa_required_pending'] = true;
+                        $this->response->redirect($this->url->link('security/dracaunos'));
+                    } else {
+                        $this->response->redirect($this->url->link('common/dashboard'));
+                    }
 
                     return;
                 } else {

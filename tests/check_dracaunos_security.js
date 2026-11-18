@@ -69,7 +69,7 @@ check(/DELETE FROM `rms_tool` WHERE `vendor` IN \('JOW','Dracaunos'\)/.test(kz34
 const tools = JSON.parse(read('dev/admin/model/tool/internal-tools.json'));
 const drac = tools.tools.find(t => t.id === 'dracaunos-security');
 check(!!drac, 'dracaunos-security presente no internal-tools.json');
-check(drac.version === '1.2.0', 'dracaunos-security na versao 1.2.0 (Fase B aplicada)');
+check(/^1\.[2-9]\./.test(drac.version), 'dracaunos-security na versao 1.x com Fase B aplicada (atual: ' + drac.version + ')');
 
 // 6) conta do cliente no catalogo (KZ-38)
 const accountControllers = ['login', 'logout', 'register', 'verify', 'forgotten', 'reset', 'account'];
@@ -109,4 +109,20 @@ const dracTwig = read('dev/admin/view/template/security/dracaunos.twig');
 check(dracTwig.includes('text_audit'), 'painel Dracaunos com a secao de auditoria');
 check(!/<script\b/i.test(dracTwig), 'dracaunos.twig sem <script> inline');
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39)');
+// 9) 2FA obrigatório no admin (KZ-41): dracaunos_2fa_required=1 bloqueia o painel
+const dracModel = read('dev/admin/model/security/dracaunos.php');
+check(dracModel.includes('function is2faRequired('), 'model lê dracaunos_2fa_required');
+check(dracModel.includes('function save2faRequired('), 'model grava dracaunos_2fa_required');
+check(dracModel.includes('function userHas2fa('), 'model sabe se o usuário tem 2FA ativo');
+check(startup.includes('is2faRequired()') && startup.includes('userHas2fa('), 'startup/dracaunos enforceia o 2FA obrigatório');
+check(startup.includes("'security/dracaunos'"), 'rota do painel Dracaunos liberada para ativar o 2FA');
+check(login.includes('is2faRequired()'), 'login redireciona para ativar 2FA quando obrigatório');
+const dracCtrl = read('dev/admin/controller/security/dracaunos.php');
+check(dracCtrl.includes("case '2fa_required'"), 'painel Dracaunos salva a obrigatoriedade de 2FA');
+check(dracCtrl.includes('force_2fa'), 'painel Dracaunos mostra o aviso de 2FA obrigatório');
+check(dracTwig.includes('text_force_2fa'), 'twig do painel tem o banner de 2FA obrigatório');
+for (const l of langs) {
+  check(read('dev/admin/language/' + l + '/security/dracaunos.php').includes("text_force_2fa"), 'idioma ' + l + ' tem text_force_2fa');
+}
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41)');

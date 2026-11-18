@@ -56,3 +56,9 @@ $_['error_2fa_code']      = 'Código de 6 dígitos inválido para o segredo info
 $_['text_audit']   = 'Auditoria do admin (últimos 50)';
 $_['help_audit']   = 'Toda requisição autenticada do painel é registrada (usuário, rota, método, IP). Regras de IP valem para TODAS as rotas do admin, e a rota configurada acima é aplicada de verdade (a pasta física /admin/ é recusada com 403 quando há rota custom).';
 $_['col_route']    = 'Rota'; $_['col_method'] = 'Método';
+
+// KZ-41 — 2FA obrigatório no admin
+$_['text_force_2fa'] = 'A política exige 2FA: ative a verificação em duas etapas nesta conta para continuar usando o painel.';
+$_['entry_2fa_required'] = 'Exigir 2FA para todos os usuários do admin';
+$_['help_2fa_required'] = 'Com isto ativo, quem ainda não tem 2FA configurado só acessa esta tela (para ativar) e a saída.';
+$_['text_2fa_required_saved'] = 'Obrigatoriedade de 2FA atualizada.';

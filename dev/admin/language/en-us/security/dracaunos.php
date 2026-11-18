@@ -56,3 +56,9 @@ $_['error_2fa_code']      = 'Invalid 6-digit code for the given secret.';
 $_['text_audit']   = 'Admin audit log (last 50)';
 $_['help_audit']   = 'Every authenticated admin request is recorded (user, route, method, IP). IP rules apply to ALL admin routes, and the route configured above is enforced for real (the physical /admin/ folder is refused with 403 when a custom route is set).';
 $_['col_route']    = 'Route'; $_['col_method'] = 'Method';
+
+// KZ-41 — mandatory 2FA in the admin
+$_['text_force_2fa'] = 'Policy requires 2FA: enable two-factor verification on this account to keep using the panel.';
+$_['entry_2fa_required'] = 'Require 2FA for all admin users';
+$_['help_2fa_required'] = 'When enabled, users without 2FA configured can only reach this screen (to enable it) and logout.';
+$_['text_2fa_required_saved'] = '2FA requirement updated.';

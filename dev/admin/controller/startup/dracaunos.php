@@ -63,6 +63,14 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
                 $this->session->data['dracaunos_password_expired'] = true;
                 $this->response->redirect($this->url->link('user/profile'));
             }
+
+            // 5) 2FA obrigatório (KZ-41): com dracaunos_2fa_required=1, quem não tem
+            //    2FA ativo só acessa security/dracaunos (para ativar) e common/logout.
+            if ($drac->is2faRequired() && !$drac->userHas2fa($uid)
+                && !in_array($route, ['security/dracaunos', 'common/logout'], true)) {
+                $this->session->data['dracaunos_2fa_required_pending'] = true;
+                $this->response->redirect($this->url->link('security/dracaunos'));
+            }
         }
     }
 }

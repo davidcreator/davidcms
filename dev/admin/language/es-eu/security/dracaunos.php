@@ -56,3 +56,9 @@ $_['error_2fa_code']      = 'Código de 6 dígitos inválido para el secreto ind
 $_['text_audit']   = 'Auditoría del admin (últimos 50)';
 $_['help_audit']   = 'Toda petición autenticada del panel se registra (usuario, ruta, método, IP). Las reglas de IP valen para TODAS las rutas del admin, y la ruta configurada arriba se aplica de verdad (la carpeta física /admin/ se rechaza con 403 cuando hay una ruta personalizada).';
 $_['col_route']    = 'Ruta'; $_['col_method'] = 'Método';
+
+// KZ-41 — 2FA obligatorio en el admin
+$_['text_force_2fa'] = 'La política exige 2FA: activa la verificación en dos pasos en esta cuenta para seguir usando el panel.';
+$_['entry_2fa_required'] = 'Exigir 2FA a todos los usuarios del admin';
+$_['help_2fa_required'] = 'Con esto activo, quien aún no tiene 2FA configurado solo accede a esta pantalla (para activarlo) y a salir.';
+$_['text_2fa_required_saved'] = 'Obligatoriedad de 2FA actualizada.';

@@ -1,5 +1,11 @@
 # Changelog
 
+## KZ-41 — Dracaunos-Security: 2FA obrigatório no admin (dracaunos_2fa_required) (2026-11-18)
+- O setting `dracaunos_2fa_required` (já existente) passa a valer: com `1`, o `startup/dracaunos` bloqueia **todas** as rotas do admin para quem não tem 2FA ativo — só `security/dracaunos` (para ativar) e `common/logout` ficam liberados (fail-closed, mesmo padrão da expiração de senha). No login, a conta é redirecionada direto para o painel Dracaunos nesse caso.
+- Painel `security/dracaunos`: checkbox "exigir 2FA para todos os usuários do admin" + banner de bloqueio enquanto a conta não tiver 2FA. Ativar o 2FA limpa o flag.
+- Dracaunos-Security sobe para **1.3.0** no `internal-tools.json`; checker `tests/check_dracaunos_security.js` vai a 64 verificações (PASS). Idiomas pt-br/en-us/es-eu.
+
+
 ## KZ-40 — Dracaunos-Security Fase C: checker estático + decision-matrix (2026-11-18)
 - Novo `tests/check_dracaunos_security.js` (52 verificações, PASS local e `node --check` no CI): pré-ação `startup/dracaunos` na ordem certa do admin, IP em todas as rotas, 1 única leitura de `request->ip()` no login (ProxyWiringTest), SQL portátil sem `ADD COLUMN IF NOT EXISTS`, ferramenta interna fora de `rms_tool`, conta do cliente (KZ-38) com CSRF + paridade de idiomas, `password_changed_at` na troca de senha e templates sem script inline/on*.
 - `tools/decision-matrix.json`: entrada **KZ-39** (DECIDED, David L. Almeida, 2026-11-18) congelando os 19 artefatos da Fase B/Fase A do Dracaunos (hashes SHA-256 em `frozen_artifacts_sha256`).

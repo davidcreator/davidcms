@@ -73,6 +73,20 @@ class Dracaunos extends \Reamur\System\Engine\Model {
             . " ON DUPLICATE KEY UPDATE `secret` = VALUES(`secret`), `enabled` = VALUES(`enabled`)");
     }
 
+    // ── 2FA obrigatório no admin (KZ-41, Fase B+) ───────────────────────
+    /** true quando dracaunos_2fa_required = '1' (setting code 'dracaunos') */
+    public function is2faRequired(): bool {
+        return (string)$this->config->get('dracaunos_2fa_required') === '1';
+    }
+    public function save2faRequired(bool $required): void {
+        $this->db->query("INSERT INTO `" . DB_PREFIX . "setting` (`code`,`key`,`value`,`serialized`) VALUES ('dracaunos','dracaunos_2fa_required','"
+            . ($required ? '1' : '0') . "',0) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)");
+    }
+    public function userHas2fa(int $userId): bool {
+        $row = $this->get2fa($userId);
+        return is_array($row) && !empty($row['enabled']);
+    }
+
     // ── Log de logins ────────────────────────────────────────────────────
     public function addLoginLog(int $userId, string $username, string $ip, string $ua, bool $success): void {
         $this->db->query("INSERT INTO `" . DB_PREFIX . "dracaunos_login_log` (`user_id`,`username`,`ip`,`user_agent`,`success`,`date_added`) VALUES ("

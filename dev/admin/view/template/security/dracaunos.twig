@@ -39,6 +39,7 @@
     {# ── 2FA ── #}
     <div class="col-lg-6"><div class="card h-100"><div class="card-body">
       <h2 class="h6 card-title">{{ text_2fa }}</h2>
+      {% if force_2fa %}<div class="alert alert-warning small" role="alert"><i class="bi bi-shield-lock me-1" aria-hidden="true"></i>{{ text_force_2fa }}</div>{% endif %}
       {% if twofa.enabled %}
         <p class="text-success small">{{ text_2fa_enabled_state }}</p>
         <form method="post" action="{{ action }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="twofa_disable">
@@ -54,6 +55,15 @@
           {% if can_modify %}<button class="btn btn-primary btn-sm">{{ button_2fa_enable }}</button>{% endif %}
         </form>
       {% endif %}
+      <form method="post" action="{{ action }}" class="mt-3 pt-2 border-top">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="2fa_required">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="dracaunos-2fa-required" name="2fa_required" value="1"{% if 2fa_required %} checked{% endif %}{% if not can_modify %} disabled{% endif %}>
+          <label class="form-check-label small" for="dracaunos-2fa-required">{{ entry_2fa_required }}</label>
+          <div class="form-text">{{ help_2fa_required }}</div>
+        </div>
+        {% if can_modify %}<button class="btn btn-outline-primary btn-sm mt-2">{{ button_save }}</button>{% endif %}
+      </form>
     </div></div></div>
 
     {# ── Log de logins ── #}
