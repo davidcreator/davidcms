@@ -245,4 +245,17 @@ const escapedShell = [];
 })('dev/admin/view/template'); // admin tem autoescape ligado; catálogo não
 check(escapedShell.length === 0, 'nenhum .twig do ADMIN usa {{ header }}/{{ footer }} sem |raw (CSS quebra) — ' + (escapedShell.join(',') || 'limpo'));
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51/52 + hotfix KZ-43)');
+// 19) KZ-53 hotfix: assets do admin devem usar base admin/ (adminAssetUrl), não site_url cru
+const badAssetRefs = [];
+(function walk(dir) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = dir + '/' + e.name;
+    if (e.isDirectory()) walk(p);
+    else if (e.name.endsWith('.twig') && /\{\{\s*site_url\s*\}\}view\//.test(fs.readFileSync(p, 'utf8'))) badAssetRefs.push(p + ' (twig)');
+    else if (e.name.endsWith('.php') && /site_url'[^)]*\)\s*\.\s*'view\//.test(fs.readFileSync(p, 'utf8'))) badAssetRefs.push(p + ' (php)');
+  }
+})('dev/admin');
+check(badAssetRefs.length === 0, 'admin não usa site_url+view/ para assets (CSS/JS 404) — ' + (badAssetRefs.join(',') || 'limpo'));
+check(read('dev/system/engine/controller.php').includes('function adminAssetUrl('), 'base Controller tem adminAssetUrl()');
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51/52/53 + hotfix KZ-43)');

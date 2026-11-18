@@ -28,14 +28,14 @@
       } catch (e) { /* modo privado — light padrão */ }
     })();
   </script>
-  <link rel="stylesheet" href="{{ site_url }}view/css/bootstrap.css?v={{ asset_v }}">
-  <link rel="stylesheet" href="{{ site_url }}view/css/bootstrap-icons.css?v={{ asset_v }}">
-  <link rel="stylesheet" href="{{ site_url }}view/css/reamurcms.css?v={{ asset_v }}">
+  <link rel="stylesheet" href="{{ asset_url }}view/css/bootstrap.css?v={{ asset_v }}">
+  <link rel="stylesheet" href="{{ asset_url }}view/css/bootstrap-icons.css?v={{ asset_v }}">
+  <link rel="stylesheet" href="{{ asset_url }}view/css/reamurcms.css?v={{ asset_v }}">
   {% for href, rel in styles %}
   <link rel="{{ rel }}" href="{{ href }}">
   {% endfor %}
   {# Carregar a skin depois do admin.css: a skin redefine tokens RMS e precisa vencer os defaults/fallbacks. #}
-  <link rel="stylesheet" href="{{ site_url }}view/css/themes/{{ theme_skin }}.css?v={{ asset_v }}" id="rms-skin-css">
+  <link rel="stylesheet" href="{{ asset_url }}view/css/themes/{{ theme_skin }}.css?v={{ asset_v }}" id="rms-skin-css">
   {% if theme_accent_light %}
   <style id="rms-accent-custom">
     :root { --rms-accent: {{ theme_accent_light }}; --rms-accent-contrast: {{ theme_accent_light_contrast }}; }
@@ -58,7 +58,7 @@
 <div class="admin-layout">
   <aside class="admin-sidebar" id="adminSidebar" aria-label="{{ text_menu }}">
     <div class="brand">
-      <img src="{{ site_url }}view/image/reamurcms.png" alt="ReamurCMS" width="160" height="32">
+      <img src="{{ asset_url }}view/image/reamurcms.png" alt="ReamurCMS" width="160" height="32">
       <span class="visually-hidden">ReamurCMS</span>
     </div>
     <nav aria-label="{{ text_menu }}">
@@ -85,7 +85,7 @@
         <i class="bi bi-list" aria-hidden="true"></i>
       </button>
       <a class="brand-mini" href="{{ home }}" aria-label="ReamurCMS">
-        <img src="{{ site_url }}view/image/reamurcms.png" alt="ReamurCMS" width="120" height="24">
+        <img src="{{ asset_url }}view/image/reamurcms.png" alt="ReamurCMS" width="120" height="24">
       </a>
       <div class="topbar-spacer"></div>
       <button type="button" class="icon-btn" id="rmsThemeToggle" aria-label="{{ text_toggle_theme }}" aria-pressed="false">

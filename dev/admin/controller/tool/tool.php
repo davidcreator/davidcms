@@ -238,7 +238,7 @@ class Tool extends \Reamur\System\Engine\Controller {
             $data[$key] = $this->language->get($key);
         }
 
-        $this->document->addScript($this->config->get('site_url') . 'view/js/connected-tools.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+        $this->document->addScript($this->adminAssetUrl() . 'view/js/connected-tools.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $data['error']      = '';
         $data['text_flash'] = '';

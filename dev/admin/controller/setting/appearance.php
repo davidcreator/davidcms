@@ -25,6 +25,7 @@ class Appearance extends \Reamur\System\Engine\Controller {
         $this->load->model('setting/appearance');
 
         $data = $this->baseData();
+        $data['asset_url']  = $this->adminAssetUrl(); // KZ-53
         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
         $data['can_edit_global'] = $this->user->hasPermission('modify', 'setting/appearance');
 

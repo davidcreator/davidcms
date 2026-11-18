@@ -213,6 +213,21 @@ class Controller {
         return rtrim($base, '/') . '/catalog/';
     }
 
+    /** KZ-53: base pública da pasta admin/ (converte sufixo catalog/ ou raiz dev/ para admin/). */
+    protected function adminAssetUrl(): string {
+        $config = $this->registry->get('config');
+        $base = ($config instanceof Config) ? (string)$config->get('site_url', '') : '';
+
+        if (str_ends_with($base, 'admin/')) {
+            return $base;
+        }
+        if (str_ends_with($base, 'catalog/')) {
+            return substr($base, 0, -strlen('catalog/')) . 'admin/';
+        }
+
+        return rtrim($base, '/') . '/admin/';
+    }
+
     /**
      * Emite resposta JSON UTF-8 padronizada no objeto Response.
      *
@@ -248,7 +263,7 @@ class Controller {
         $suffix  = $assetVersion !== '' ? ('?v=' . $assetVersion) : '';
 
         if ($document instanceof \Reamur\System\Library\Document) {
-            $document->addStyle($siteUrl . 'view/css/admin.css' . $suffix);
+            $document->addStyle($this->adminAssetUrl() . 'view/css/admin.css' . $suffix); // KZ-53: base admin/, não site_url cru
         }
 
         if ($bodyClass !== null && $bodyClass !== '') {

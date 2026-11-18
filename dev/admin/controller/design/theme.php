@@ -45,7 +45,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['error']=$err==='import'?$this->language->get('text_import_error').' ('.(in_array($code,$codes,true)?$code:'unknown').')':($err==='delete'?$this->language->get('text_delete_error'):'');
         $data['import_open']=$this->queryValue('import')!=='';
         foreach($data['themes'] as &$theme) { $id=(int)$theme['theme_id']; $theme['edit']=$this->url->link('design/theme.edit|'.$id); $theme['activate']=$this->url->link('design/theme.activate|'.$id); $theme['deactivate']=$this->url->link('design/theme.deactivate|'.$id); $theme['delete']=$this->url->link('design/theme.delete|'.$id); } unset($theme);
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-package.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+        $this->document->addScriptDeferred($this->adminAssetUrl() . 'view/js/theme-package.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $this->adminChrome($data, \Reamur\Admin\Controller\Common\Header::ASSET_V); $this->response->setOutput($this->load->view('design/theme_list',$data));
     }
     /** Frente U — KAZTheme-Editor: cena inicial kaztheme-scene/v1 derivada
@@ -123,7 +123,7 @@ class Theme extends \Reamur\System\Engine\Controller {
         elseif ($impErr!=='') $data['error']=$this->language->get('text_import_error').' ('.(in_array($impErr,$codes,true)?$impErr:'unknown').')';
         // KZ-17 (ADR 0110): aviso de quem acabou de salvar. So em GET: um POST recusado nao diz "salvo".
         elseif ($this->queryValue('saved')==='1' && ($this->request->server['REQUEST_METHOD']??'')!=='POST') $data['notice']=$this->language->get('text_saved_ok');
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-package.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+        $this->document->addScriptDeferred($this->adminAssetUrl() . 'view/js/theme-package.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         // F13-D: presets allowlistados + miniatura SVG deterministica.
         $presets=[];
@@ -221,10 +221,10 @@ class Theme extends \Reamur\System\Engine\Controller {
         foreach($builderNames as $jsKey=>$langKey) { $text=$this->language->get($langKey); if ($text!==$langKey && $text!=='') $builderLabels[$jsKey]=$text; }
         $data['builder_labels_json']=json_encode($builderLabels,$jsonFlags) ?: '{}';
         $builderAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-builder-e';
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/theme-condition-builder.css?v=' . $builderAssetV);
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-condition-builder.js?v=' . $builderAssetV);
+        $this->document->addStyle($this->adminAssetUrl() . 'view/css/theme-condition-builder.css?v=' . $builderAssetV);
+        $this->document->addScriptDeferred($this->adminAssetUrl() . 'view/js/theme-condition-builder.js?v=' . $builderAssetV);
         // F13-D: editor de cena (presets + miniatura ao vivo).
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-scene-editor.js?v=' . $builderAssetV);
+        $this->document->addScriptDeferred($this->adminAssetUrl() . 'view/js/theme-scene-editor.js?v=' . $builderAssetV);
         // F13-F: section builder. Sem `sections` no config, o formulario
         // comeca com o layout padrao do CMS e avisa que o override nao existe.
         $sectionSelected=(array_key_exists('sections',$config)&&is_array($config['sections']))
@@ -234,14 +234,14 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['section_active_count']=count(array_filter($data['section_rows'],static fn(array $r):bool=>(bool)$r['enabled']));
         $data['sections_defined']=array_key_exists('sections',$config);
         foreach(['text_sections','text_sections_help','text_sections_active','text_section_up','text_section_down','text_section_partial','text_section_legacy','text_section_hint','error_sections','text_section_group_opening','text_section_group_content','text_section_group_proof','text_section_group_catalog','text_section_group_closing','text_section_kind_static','text_section_kind_dynamic','text_section_kind_editorial'] as $k) $data[$k]=$this->language->get($k);
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-section-builder.js?v=' . $builderAssetV);
+        $this->document->addScriptDeferred($this->adminAssetUrl() . 'view/js/theme-section-builder.js?v=' . $builderAssetV);
         // F13-G: biblioteca de componentes (galeria, opcoes e snippets Twig).
         $componentRaw=(array_key_exists('components',$config)&&is_array($config['components']))?$config['components']:null;
         $data['component_rows']=$this->componentRows($componentRaw);
         $data['component_snippets_json']=json_encode($this->theme_component_registry->snippets(),$jsonFlags) ?: '{}';
         $data['component_thumb_base']=$this->url->link('design/theme.componentThumb');
         foreach(['text_components','text_components_help','text_component_target','text_component_variant','text_component_tone','text_component_insert','text_component_inserted','text_component_enabled','text_component_none','error_components','text_component_group_action','text_component_group_display','text_component_group_feedback'] as $k) $data[$k]=$this->language->get($k);
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-component-library.js?v=' . $builderAssetV);
+        $this->document->addScriptDeferred($this->adminAssetUrl() . 'view/js/theme-component-library.js?v=' . $builderAssetV);
         // Frente V — cena PERSISTENTE: usa a cena salva e validada do config;
         // temas A-U (sem a chave) continuam recebendo a cena derivada da U.
         // Zero migration: ausencia nao e erro, apenas estado "nao salvo".
@@ -260,8 +260,8 @@ class Theme extends \Reamur\System\Engine\Controller {
         foreach($themeStrings::missing($savedStrings,['en-us','pt-br','es-eu']) as $code=>$keys) $stringsMissing[]=['code'=>$code,'count'=>count($keys)];
         $data['strings_missing']=$stringsMissing;
         $kazAssetAJ=\Reamur\Admin\Controller\Common\Header::ASSET_V . '-kaz-theme-editor-kz17';
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAJ);
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAJ);
+        $this->document->addStyle($this->adminAssetUrl() . 'view/css/kaz-theme-editor.css?v=' . $kazAssetAJ);
+        $this->document->addScriptDeferred($this->adminAssetUrl() . 'view/js/kaz-theme-editor.js?v=' . $kazAssetAJ);
         if ($this->request->server['REQUEST_METHOD']==='POST') {
             $post=$this->request->post;
             if (!$data['can_modify']) { $data['error']=$this->language->get('error_permission'); }
@@ -350,7 +350,7 @@ class Theme extends \Reamur\System\Engine\Controller {
                  'text_schedule_scope_logged_in','text_schedule_scope_anonymous','text_schedule_note',
                  'text_schedule_probe','text_schedule_probe_now','text_schedule_probe_visitor',
                  'text_schedule_probe_logged','text_schedule_probe_button','error_schedule'] as $k) $data[$k]=$this->language->get($k);
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-schedule.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-schedule-h');
+        $this->document->addScriptDeferred($this->adminAssetUrl() . 'view/js/theme-schedule.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-schedule-h');
         // F13-I: midia vetorial declarativa + modelos de pagina.
         $data['media_rows']=$this->mediaRows((isset($config['media'])&&is_array($config['media']))?$config['media']:[]);
         $data['media_snippets_json']=json_encode($this->theme_media->snippets(),$jsonFlags) ?: '{}';
@@ -365,7 +365,7 @@ class Theme extends \Reamur\System\Engine\Controller {
                  'text_media_insert','text_media_inserted','text_media_enabled','text_media_none','error_media',
                  'text_models','text_models_help','text_models_apply','text_models_confirm','text_models_applied',
                  'text_models_sections','text_models_components','text_models_media','error_models'] as $k) $data[$k]=$this->language->get($k);
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-media.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-media-i');
+        $this->document->addScriptDeferred($this->adminAssetUrl() . 'view/js/theme-media.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-media-i');
         // F13-J: mapa declarativo de sites/hosts -> temas por slug.
         // F13-T: a política PUBLICADA é a fonte do ID estável (frente R),
         // inclusive para o badge do card e para a sonda local. Nenhuma
@@ -410,7 +410,7 @@ class Theme extends \Reamur\System\Engine\Controller {
                  'text_sites_enabled','text_sites_active','text_sites_default','text_sites_probe',
                  'text_sites_probe_help','text_sites_probe_button','text_sites_probe_unknown',
                  'text_sites_note','text_sites_empty','text_sites_fallback','error_sites'] as $k) $data[$k]=$this->language->get($k);
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/theme-sites.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-sites-w');
+        $this->document->addScriptDeferred($this->adminAssetUrl() . 'view/js/theme-sites.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-theme-sites-w');
         // F13-C: estado real de publicacao e dados do comparador.
         $draftNorm=json_encode(json_decode((string)($theme['draft_config']??$theme['config']??'{}'),true) ?: new \stdClass());
         $pubNorm=json_encode(json_decode((string)($theme['published_config']??'{}'),true) ?: new \stdClass());
@@ -510,10 +510,10 @@ class Theme extends \Reamur\System\Engine\Controller {
         $data['kaz_labels_json']=json_encode($kazLabels,JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
         $data['canvas_config_json']=json_encode(['routes'=>$canvasRoutes,'devices'=>$canvasDevices,'labels'=>$canvasLabels,'parts'=>$canvasParts,'tokens'=>$canvasTokens],JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?: '{}';
         $canvasAssetV=\Reamur\Admin\Controller\Common\Header::ASSET_V.'-kaz-canvas-kz22';
-        $this->document->addStyle($this->config->get('site_url') . 'view/css/kaz-canvas.css?v=' . $canvasAssetV);
+        $this->document->addStyle($this->adminAssetUrl() . 'view/css/kaz-canvas.css?v=' . $canvasAssetV);
         // KZ-05 (ADR 0098): as regras de atributo vem antes do painel que as usa (os dois sao `defer`, na ordem).
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-element-attrs.js?v=' . $canvasAssetV);
-        $this->document->addScriptDeferred($this->config->get('site_url') . 'view/js/kaz-canvas.js?v=' . $canvasAssetV);
+        $this->document->addScriptDeferred($this->adminAssetUrl() . 'view/js/kaz-element-attrs.js?v=' . $canvasAssetV);
+        $this->document->addScriptDeferred($this->adminAssetUrl() . 'view/js/kaz-canvas.js?v=' . $canvasAssetV);
 
         $data=array_replace($this->language->all(),$data);
         // Frente AA: modo pagina cheia em OUTRA pagina (sem chrome do Admin).

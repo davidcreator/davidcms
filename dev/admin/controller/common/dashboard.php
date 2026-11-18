@@ -155,7 +155,7 @@ class Dashboard extends \Reamur\System\Engine\Controller {
             : '';
 
         // Chrome compartilhado (F8-01)
-        $this->document->addStyle((string)$this->config->get('site_url', '') . 'view/css/admin.css?v=' . Header::ASSET_V);
+        $this->document->addStyle($this->adminAssetUrl() . 'view/css/admin.css?v=' . Header::ASSET_V);
 
         $data['body_class'] = '';
         $data['header']     = $this->load->controller('common/header', $data);

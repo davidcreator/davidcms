@@ -31,7 +31,7 @@ class Permission extends \Reamur\System\Engine\Controller {
         $data['back'] = $this->url->link('common/dashboard');
 
         // Chrome compartilhado (F2-4)
-        $this->document->addStyle((string)$this->config->get('site_url', '') . 'view/css/admin.css');
+        $this->document->addStyle($this->adminAssetUrl() . 'view/css/admin.css'); // KZ-53
 
         $data['body_class'] = 'rms-404';
         $data['header']     = $this->load->controller('common/header', $data);

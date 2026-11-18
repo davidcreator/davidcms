@@ -35,6 +35,7 @@ class Header extends \Reamur\System\Engine\Controller {
 
         $data['home']           = (string)$this->config->get('site_url', '');
         $data['site_url']       = (string)$this->config->get('site_url', '');
+        $data['asset_url']      = $this->adminAssetUrl(); // KZ-53: base admin/ para CSS/imagens
         $data['asset_v']        = self::ASSET_V;
         $data['text_languages'] = $this->language->get('text_languages');
         $data['body_class']     = (string)($data['body_class'] ?? '');

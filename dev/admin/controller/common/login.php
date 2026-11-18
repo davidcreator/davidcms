@@ -114,10 +114,11 @@ class Login extends \Reamur\System\Engine\Controller {
 
         $data['action']     = $this->url->link('common/login');
         $data['forgotten']  = $this->url->link('common/forgotten'); // KZ-44: recuperação de senha do admin
+        $data['asset_url']  = $this->adminAssetUrl(); // KZ-53
         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
 
         // Chrome compartilhado (F2-4)
-        $this->document->addStyle((string)$this->config->get('site_url', '') . 'view/css/admin.css');
+        $this->document->addStyle($this->adminAssetUrl() . 'view/css/admin.css'); // KZ-53
 
         $data['body_class'] = 'rms-login';
         $data['header']     = $this->load->controller('common/header', $data);

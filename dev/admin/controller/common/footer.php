@@ -25,6 +25,7 @@ class Footer extends \Reamur\System\Engine\Controller {
         // dados do shell (F8-01) — necessários se logado OU não (scripts do auth)
         $data['logged']   = $this->user instanceof \Reamur\System\Library\User && $this->user->isLogged();
         $data['site_url'] = (string)$this->config->get('site_url', '');
+        $data['asset_url'] = $this->adminAssetUrl(); // KZ-53
         $data['asset_v']  = \Reamur\Admin\Controller\Common\Header::ASSET_V;
 
         return $this->load->view('common/footer', $data);

@@ -1,5 +1,11 @@
 # Changelog
 
+## KZ-53 — Hotfix: CSS/JS do admin com 404 (site_url não apontava para admin/) (2026-11-18)
+- Sintoma: painel renderizava sem estilo no WAMP. Causa: templates e controllers do admin montavam assets com `site_url + 'view/...'`; se o `site_url` salvo na instalação não termina em `admin/`, o caminho cai fora de `dev/admin/view/` e o CSS 404.
+- Novo helper `adminAssetUrl()` no Controller base (espelho de `catalogAssetUrl()`): garante base terminando em `admin/` (converte `catalog/` ou raiz). Aplicado em `header/footer/login/forgotten/reset/appearance.twig` (12 refs `{{ site_url }}view/` → `{{ asset_url }}view/`), `adminChrome()`, login/permission/not_found e controllers tool/design/cms/catalog/blog.
+- Regressão no checker: varredura de `dev/admin/` contra `site_url + 'view/'` em twig/php → checker a 118 verificações (PASS).
+
+
 ## KZ-52 — Hotfix: página do Dracaunos/JOW sem CSS (`{{ header }}` escapado) (2026-11-18)
 - A página carregava mas sem estilo: `security/dracaunos.twig` (e `payments/jow.twig`) usavam `{{ header }}` / `{{ footer }}` **sem `|raw`** — no admin o autoescape escapava o HTML do header, incluindo os `<link>` de CSS.
 - Corrigido para `{{ header|raw }}` / `{{ footer|raw }}` nos dois templates (convenção do restante do admin). Catálogo não é afetado (autoescape desligado lá).

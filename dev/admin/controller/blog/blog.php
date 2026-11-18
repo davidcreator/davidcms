@@ -28,7 +28,7 @@ class Blog extends \Reamur\System\Engine\Controller {
         $this->load->model('blog/blog');
 
         // F9-UI: reutiliza o JS generico de Quick Edit de cms/page (sem duplicar).
-        $this->document->addScript($this->config->get('site_url') . 'view/js/cms-page-quick-edit.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-f9-ui-blog-quick-edit');
+        $this->document->addScript($this->adminAssetUrl() . 'view/js/cms-page-quick-edit.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-f9-ui-blog-quick-edit');
 
         $data['heading_title']        = $this->language->get('heading_title');
         $data['text_list']            = $this->language->get('text_list');
@@ -1116,9 +1116,9 @@ class Blog extends \Reamur\System\Engine\Controller {
         ];
 
         // CKEditor 4 (assets locais, ADR 0046): init fica no admin.js (textarea[data-rte])
-        $this->document->addScript($this->config->get('site_url') . 'view/js/ckeditor/ckeditor.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-        $this->document->addScript($this->config->get('site_url') . 'view/js/blog-media.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-        $this->document->addScript($this->config->get('site_url') . 'view/js/bdre-concurrency.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+        $this->document->addScript($this->adminAssetUrl() . 'view/js/ckeditor/ckeditor.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+        $this->document->addScript($this->adminAssetUrl() . 'view/js/blog-media.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+        $this->document->addScript($this->adminAssetUrl() . 'view/js/bdre-concurrency.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         $data['seo_base'] = $this->siteRootUrl();
         $data['catalog_base'] = $this->catalogAssetUrl();

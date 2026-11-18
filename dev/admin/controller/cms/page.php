@@ -24,7 +24,7 @@ class Page extends \Reamur\System\Engine\Controller {
         $this->load->language('cms/page');
         $this->document->setTitle($this->language->get('heading_title'));
         $this->load->model('cms/page');
-        $this->document->addScript($this->config->get('site_url') . 'view/js/cms-page-quick-edit.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-f9-88-page-quick-edit');
+        $this->document->addScript($this->adminAssetUrl() . 'view/js/cms-page-quick-edit.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V . '-f9-88-page-quick-edit');
 
         foreach ([
             'heading_title', 'text_list', 'text_no_results', 'text_confirm_delete',
@@ -955,8 +955,8 @@ class Page extends \Reamur\System\Engine\Controller {
             $data[$key] = $this->language->get($key);
         }
 
-        $this->document->addScript($this->config->get('site_url') . 'view/js/cms-page.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
-        $this->document->addScript($this->config->get('site_url') . 'view/js/bdre-concurrency.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+        $this->document->addScript($this->adminAssetUrl() . 'view/js/cms-page.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
+        $this->document->addScript($this->adminAssetUrl() . 'view/js/bdre-concurrency.js?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
 
         if ($includeEditor) {
             $this->load->language('blog/blog');

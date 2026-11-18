@@ -43,6 +43,7 @@ class Forgotten extends \Reamur\System\Engine\Controller {
 
         $data['action']     = $this->url->link('common/forgotten');
         $data['login']      = $this->url->link('common/login');
+        $data['asset_url']  = $this->adminAssetUrl(); // KZ-53
         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
         $data['header']     = $this->load->controller('common/header', $data);
         $data['footer']     = $this->load->controller('common/footer', $data);
