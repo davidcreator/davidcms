@@ -1,11 +1,11 @@
 {
  "task": "F11-11",
- "head": "266ea238",
+ "head": "99255ac1",
  "description": "Matriz de decisao dos 10 MARKER_OR_FINDING mantidos pelo F11-09",
  "policy": "Nenhuma decisao tomada por inferencia. Contratos congelados ate registro explicito de status=DECIDED.",
  "status_counts": {
   "PENDING_DECISION": 0,
-  "DECIDED": 17
+  "DECIDED": 18
  },
  "frozen_artifacts_sha256": {
   "docs/F9-14-Contrato-Editor-MVP.json": "c4a8b91d18ab9bad64ea9a698bca0e945c9024be477df1cbffa14b3f8288e4e7",
@@ -16,7 +16,7 @@
   "docs/F9-27-Base-Hashes.json": "f6c599e26e05040fecd41197a06a06d460653556391bbc549d29d6de51e25d29",
   "docs/F9-27-Preflight-Status.json": "e3a2cdab33258dde056e3f05dd816a6f810da830757bdc21f6c5b1c222704d16",
   "docs/F9-05-Contrato-Definicoes-Campos.json": "8f90ee3bbb7bb8112a84dbde796c4e3cc7f0d448700d5836601d0fd466673f78",
-  "docs/F9-18-Risk-Register.json": "a5a3df0ac25a1bf195957bf881aac2c1d8965a2c2e9968f92f815d0c846759f3",
+  "docs/F9-18-Risk-Register.json": "d8070332bb0e78a45b70c7bf4d8fb05908e4e1128f2d25ac132deacf25ecd4a1",
   "dev/install/sql/schema.sql": "c9dd1ec27af95d7506b8aff6af06133f75b288c2db31e5537fb7fbac2e1f67a5",
   "docs/PROJECT-HANDOFF.md": "5f65d408d5b9831b0999d09ace2fbb1248bd4695282fe75fa6fde0859aeb6c84",
   "dev/admin/controller/startup/dracaunos.php": "e9e906e3504988c2d6d84069d19f8da5ca31899e34be3c908a4a7fd973ac71ff",
@@ -567,6 +567,35 @@
    "decision_date": "2026-11-18",
    "decision": "A",
    "evidence_ref": "node tests/check_dracaunos_security.js -> PASS"
+  },
+  {
+   "id": "KZ-47",
+   "checker": "n/a (governança documental)",
+   "phase": "KZ-47 (governança F9-18)",
+   "nature": "GOVERNANCA",
+   "status": "DECIDED",
+   "evidence": "F9-18-Risk-Register.json atualizado no head 99255ac1: 6 P2 abertos com remediation_plan, ciclo Dracaunos-Security (KZ-38..KZ-46) registrado como CLOSED. release_ready permanece false (decisão de release do responsável, não por inferência).",
+   "options": [
+    {
+     "id": "A",
+     "label": "Registrar a atualização do register e o fechamento do ciclo Dracaunos no head atual",
+     "requires": "autorizacao explicita do responsavel"
+    },
+    {
+     "id": "B",
+     "label": "Marcar release_ready=true agora",
+     "requires": "decisao explicita do responsavel — NAO tomada por inferencia"
+    }
+   ],
+   "recommendation": "A",
+   "recommended_action": "Atualizar hash congelado de docs/F9-18-Risk-Register.json (já feito) e manter release_ready=false",
+   "frozen_artifacts": [
+    "docs/F9-18-Risk-Register.json"
+   ],
+   "decided_by": "David L. Almeida (responsavel)",
+   "decision_date": "2026-11-18",
+   "decision": "A",
+   "evidence_ref": "docs/F9-18-Risk-Register.json @ 99255ac1"
   }
  ],
  "retified_in": "F11-14",

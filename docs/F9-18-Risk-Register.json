@@ -3,7 +3,7 @@
  "review_type": "static_source_readiness_review",
  "repository": "https://github.com/davidcreator/davidcms",
  "branch": "main",
- "head": "72a8b927c0d2b96b7d3df41114969aa620bb9602",
+ "head": "99255ac1",
  "release_ready": false,
  "execution": {
   "php": false,
@@ -43,7 +43,14 @@
    "path": "dev/catalog/model/blog/blog.php",
    "lines": "68-79",
    "summary": "Public block language is selected from nonempty legacy HTML description; an intentionally empty snapshot can cause English sidecar content to replace the active-language document.",
-   "required_action": "Define sidecar-aware active-language-first selection and explicit English fallback behavior."
+   "required_action": "Define sidecar-aware active-language-first selection and explicit English fallback behavior.",
+   "remediation_plan": {
+    "plan": "Definir seleção sidecar-aware active-language-first com fallback explícito para inglês; cobrir com fixture em tests/fixtures/f918_regressions.json.",
+    "owner": "David L. Almeida",
+    "target": "frente F9-19 (blog público)",
+    "gate": "P2 — não bloqueia release, exige decisão documentada"
+   },
+   "plan_registered_at": "2026-11-18"
   },
   {
    "id": "F918-04",
@@ -53,7 +60,14 @@
    "path": "dev/admin/model/blog/blog.php",
    "lines": "300-309",
    "summary": "Sidecar/post/descriptions/SEO deletion is a sequence without a transaction and the migration has no foreign-key cascade.",
-   "required_action": "Wrap deletion in an InnoDB transaction with rollback or accept documented partial deletion risk."
+   "required_action": "Wrap deletion in an InnoDB transaction with rollback or accept documented partial deletion risk.",
+   "remediation_plan": {
+    "plan": "Envelopar a exclusão sidecar/post/descriptions/SEO em transação InnoDB com rollback (ou documentar risco de exclusão parcial aceita).",
+    "owner": "David L. Almeida",
+    "target": "frente admin blog",
+    "gate": "P2 — decision gate do readiness_gate (deletion semantics)"
+   },
+   "plan_registered_at": "2026-11-18"
   },
   {
    "id": "F918-05",
@@ -63,7 +77,14 @@
    "path": "dev/admin/view/template/cms/page_form.twig",
    "lines": "54",
    "summary": "Template usa apenas can_modify para data-audio-picker; can_use_audio_catalog ausente no Twig. Possivel relaxamento de ACL no catalogo de audio.",
-   "required_action": "Confirmar o ACL pretendido com o responsavel; nao relaxar o checker check_audio_catalog.cjs. Decisao D03=B registrada em 2026-11-17."
+   "required_action": "Confirmar o ACL pretendido com o responsavel; nao relaxar o checker check_audio_catalog.cjs. Decisao D03=B registrada em 2026-11-17.",
+   "remediation_plan": {
+    "plan": "Confirmar ACL pretendido do catálogo de áudio com o responsável; não relaxar check_audio_catalog.cjs (D03=B, 2026-11-17).",
+    "owner": "David L. Almeida",
+    "target": "decisão D03 — pendente de confirmação explícita",
+    "gate": "P2 — travado por decisão do responsável"
+   },
+   "plan_registered_at": "2026-11-18"
   },
   {
    "id": "F918-06",
@@ -83,7 +104,14 @@
    "path": "dev/admin/view/js/blog-block-editor.js",
    "lines": "-",
    "summary": "localStorage/sessionStorage/fetch/XMLHttpRequest reais no editor enquanto o contrato F9-25 mantem patterns_persistence como PROPOSAL_PENDING.",
-   "required_action": "Contrato segue pendente ate aprovacao explicita das features; nao atualizar contrato por inferencia. Decisao D08=B registrada em 2026-11-17."
+   "required_action": "Contrato segue pendente ate aprovacao explicita das features; nao atualizar contrato por inferencia. Decisao D08=B registrada em 2026-11-17.",
+   "remediation_plan": {
+    "plan": "Contrato F9-25 segue PROPOSAL_PENDING até aprovação explícita das features de persistência; não atualizar por inferência (D08=B, 2026-11-17).",
+    "owner": "David L. Almeida",
+    "target": "decisão D08 — pendente de aprovação explícita",
+    "gate": "P2 — travado por contrato pendente"
+   },
+   "plan_registered_at": "2026-11-18"
   },
   {
    "id": "F918-08",
@@ -93,7 +121,14 @@
    "path": "dev/install/sql/schema.sql",
    "lines": "-",
    "summary": "Arquivo schema.sql (22.542 bytes) existe em dev/install/sql e o checker historico e2e_f905.cjs o proibe.",
-   "required_action": "Decidir se o arquivo e legitimo de outra fase e se o checker historico deve ser aposentado. Decisao D09=B registrada em 2026-11-17."
+   "required_action": "Decidir se o arquivo e legitimo de outra fase e se o checker historico deve ser aposentado. Decisao D09=B registrada em 2026-11-17.",
+   "remediation_plan": {
+    "plan": "Decidir se dev/install/sql/schema.sql é legítimo de outra fase e se o checker histórico e2e_f905.cjs deve ser aposentado (D09=B, 2026-11-17).",
+    "owner": "David L. Almeida",
+    "target": "decisão D09 — pendente",
+    "gate": "P2 — travado por decisão do responsável"
+   },
+   "plan_registered_at": "2026-11-18"
   },
   {
    "id": "F918-09",
@@ -103,12 +138,41 @@
    "path": "docs/F9-27-Status.json",
    "lines": "-",
    "summary": "base_head 3d481ecf difere do HEAD atual 5a6cb33; drift de metadados por avanco normal do projeto.",
-   "required_action": "Nao atualizar SHA/hashes sem autorizacao explicita (equivaleria a declarar prontidao do gate). Decisao D10=B registrada em 2026-11-17."
+   "required_action": "Nao atualizar SHA/hashes sem autorizacao explicita (equivaleria a declarar prontidao do gate). Decisao D10=B registrada em 2026-11-17.",
+   "remediation_plan": {
+    "plan": "Não atualizar SHA/hashes de release sem autorização explícita (equivaleria a declarar prontidão do gate) (D10=B, 2026-11-17).",
+    "owner": "David L. Almeida",
+    "target": "decisão D10 — travada por governança",
+    "gate": "P2 — travado por governança de release"
+   },
+   "plan_registered_at": "2026-11-18"
   }
  ],
  "readiness_gate": [
   "Resolve both P1 findings before release.",
   "Decide and cover P2 language and deletion semantics.",
   "Run explicitly authorized E2E only in an isolated disposable environment after owner-managed F9-12 migration."
- ]
+ ],
+ "governance_cycle": {
+  "registered_at": "2026-11-18",
+  "registered_by": "David L. Almeida (responsavel)",
+  "cycle": "KZ-47 — abertura do F9-18 e registro dos planos de remediação",
+  "dracaunos_cycle_closure": {
+   "status": "CLOSED",
+   "fronts": [
+    "KZ-38/39 (fundação + Fase B)",
+    "KZ-40 (Fase C)",
+    "KZ-41 (2FA opcional, toggle no painel, padrão off)",
+    "KZ-42 (export CSV + prune)",
+    "KZ-43 hotfix (load->model void)",
+    "KZ-44 (recuperação de senha do admin)",
+    "KZ-45 (sessões ativas do admin)",
+    "KZ-46 (testador de IP + IPv6)"
+   ],
+   "heads": "ate 99255ac1 (CI success)",
+   "checker": "tests/check_dracaunos_security.js PASS 105 verificacoes",
+   "version": "Dracaunos-Security 1.7.0 (interno, nunca rms_tool público)"
+  },
+  "open_findings_summary": "6 P2 abertos, todos com remediation_plan registrado; 2 P1 mitigated + 1 P1 resolved. release_ready permanece false — decisão de release cabe ao responsável e não foi tomada por inferência."
+ }
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## KZ-47 — Governança: F9-18 Risk-Register atualizado no HEAD atual (2026-11-18)
+- `docs/F9-18-Risk-Register.json`: head atualizado para `99255ac1`; os 6 achados P2 abertos receberam `remediation_plan` (plano, responsável, frente alvo e gate) — F918-03/04/05/07/08/09.
+- Registrado o **fechamento do ciclo Dracaunos-Security** (KZ-38…KZ-46, versão 1.7.0, checker PASS 105, CI success até `99255ac1`). Ferramenta segue interna, nunca `rms_tool` público.
+- `release_ready` permanece **false**: P1s estão mitigated/resolved, P2s têm plano, mas a decisão de release não foi tomada por inferência.
+
+
 ## KZ-46 — Dracaunos-Security: testador de regras de IP + suporte a IPv6 (2026-11-18)
 - Novo **testador de regras de IP** no painel (escopo admin/catálogo): informa um IP e o painel mostra a decisão final (PERMITIDO/BLOQUEADO), a regra que casou e aceita IPv4 e IPv6.
 - Matcher de IP reescrito com `inet_pton`: CIDR agora funciona para **IPv6 também** (`2001:db8::/32`), não só IPv4 — as regras de IP passam a valer para ambos. Família incompatível (IPv4 vs IPv6) não casa.
