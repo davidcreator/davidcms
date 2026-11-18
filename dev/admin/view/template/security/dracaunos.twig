@@ -1,272 +1,316 @@
 {{ header|raw }}
+{# KZ-56 — dashboard de segurança estilo painel executivo. Sem scripts inline (CSP);
+   as abas usam o bootstrap.bundle já carregado no footer (data-bs-toggle). O bloco
+   <style> abaixo é inline de CSS, permitido pelo CSP (style-src 'unsafe-inline'). #}
+<style>
+.drac-stat{border:0;border-radius:.75rem;box-shadow:0 1px 3px rgba(16,24,40,.08);transition:transform .12s ease,box-shadow .12s ease}
+.drac-stat:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(16,24,40,.12)}
+.drac-stat .tile{width:46px;height:46px;border-radius:.65rem;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.25rem;flex:none}
+.drac-stat .num{font-size:1.6rem;font-weight:700;line-height:1.1}
+.drac-stat .lbl{font-size:.78rem;color:var(--bs-secondary-color);text-transform:uppercase;letter-spacing:.04em}
+.drac-card{border:0;border-radius:.75rem;box-shadow:0 1px 3px rgba(16,24,40,.08)}
+.drac-card .card-header{background:transparent;border-bottom:1px solid var(--bs-border-color);border-radius:.75rem .75rem 0 0;padding:.9rem 1.1rem}
+.drac-card .card-header .ic{width:30px;height:30px;border-radius:.5rem;background:var(--bs-primary-bg-subtle);color:var(--bs-primary);display:inline-flex;align-items:center;justify-content:center;margin-right:.5rem}
+.drac-card .card-body{padding:1.1rem}
+.drac-tabs .nav-link{border-radius:.5rem;color:var(--bs-secondary-color);font-weight:600;font-size:.85rem}
+.drac-tabs .nav-link.active{background:var(--bs-primary);color:#fff}
+.drac-tabs .nav-link:not(.active):hover{background:var(--bs-tertiary-bg)}
+.drac-table-wrap{border:1px solid var(--bs-border-color);border-radius:.6rem;overflow:hidden}
+.drac-table-wrap table{margin-bottom:0}
+.drac-table-wrap thead th{background:var(--bs-tertiary-bg);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:var(--bs-secondary-color);border-bottom:1px solid var(--bs-border-color)}
+</style>
+
 <div class="container-fluid py-4">
   <nav aria-label="breadcrumb"><ol class="breadcrumb small">{% for b in breadcrumbs %}<li class="breadcrumb-item"><a href="{{ b.href }}">{{ b.text }}</a></li>{% endfor %}</ol></nav>
 
-  <div class="d-flex flex-wrap align-items-center gap-3 mb-1">
-    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width:44px;height:44px;">
-      <i class="bi bi-shield-lock fs-4" aria-hidden="true"></i>
+  <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+    <div class="rounded-3 text-white d-flex align-items-center justify-content-center" style="width:52px;height:52px;background:linear-gradient(135deg,#4f6ef7,#7b3ff2);">
+      <i class="bi bi-shield-lock-fill fs-3" aria-hidden="true"></i>
     </div>
     <div>
-      <h1 class="h4 mb-0">{{ heading_title }}</h1>
+      <h1 class="h4 mb-0 fw-bold">{{ heading_title }}</h1>
       <p class="text-body-secondary small mb-0">{{ text_internal_note }}</p>
     </div>
   </div>
 
-  {% if error %}<div class="alert alert-danger mt-3">{{ error }}</div>{% endif %}
-  {% if success %}<div class="alert alert-success mt-3">{{ success }}</div>{% endif %}
+  {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+  {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
 
-  <div class="row g-4 mt-1">
-    {# ── Política de senhas ── #}
-    <div class="col-lg-6"><div class="card h-100 shadow-sm border-0">
-      <div class="card-header bg-transparent border-0 pb-0">
-        <h2 class="h6 card-title mb-1"><i class="bi bi-key me-1 text-primary" aria-hidden="true"></i>{{ text_password_policy }}</h2>
-      </div>
-      <div class="card-body pt-2">
-      <form method="post" action="{{ action }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="password_policy">
-        <div class="row g-2 mb-2">
-          <div class="col-sm-6"><label class="form-label small fw-semibold" for="pp-min">{{ entry_min_length }}</label>
-            <input class="form-control" type="number" id="pp-min" name="policy[min_length]" value="{{ policy.min_length }}" min="8" max="64"{% if not can_modify %} disabled{% endif %}></div>
-          <div class="col-sm-6"><label class="form-label small fw-semibold" for="pp-age">{{ entry_max_age }}</label>
-            <input class="form-control" type="number" id="pp-age" name="policy[max_age_days]" value="{{ policy.max_age_days }}" min="0" max="365"{% if not can_modify %} disabled{% endif %}></div>
-        </div>
-        <div class="d-flex flex-wrap gap-3 mb-3">
-          <div class="form-check"><input class="form-check-input" type="checkbox" name="policy[require_upper]" value="1" id="pu"{% if policy.require_upper %} checked{% endif %}{% if not can_modify %} disabled{% endif %}><label class="form-check-label small" for="pu">{{ entry_require_upper }}</label></div>
-          <div class="form-check"><input class="form-check-input" type="checkbox" name="policy[require_digit]" value="1" id="pd"{% if policy.require_digit %} checked{% endif %}{% if not can_modify %} disabled{% endif %}><label class="form-check-label small" for="pd">{{ entry_require_digit }}</label></div>
-          <div class="form-check"><input class="form-check-input" type="checkbox" name="policy[require_symbol]" value="1" id="ps"{% if policy.require_symbol %} checked{% endif %}{% if not can_modify %} disabled{% endif %}><label class="form-check-label small" for="ps">{{ entry_require_symbol }}</label></div>
-        </div>
-        {% if can_modify %}<button class="btn btn-primary btn-sm px-3">{{ button_save }}</button>{% endif %}
-      </form>
-      </div>
-    </div></div>
+  {# ── Cartões de estatísticas ── #}
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-xl-2"><div class="card drac-stat h-100"><div class="card-body d-flex align-items-center gap-3">
+      <div class="tile" style="background:linear-gradient(135deg,#4f6ef7,#6ea8fe);"><i class="bi bi-door-open" aria-hidden="true"></i></div>
+      <div><div class="num">{{ stats.logins_total }}</div><div class="lbl">{{ stat_logins }}</div></div>
+    </div></div></div>
+    <div class="col-6 col-md-4 col-xl-2"><div class="card drac-stat h-100"><div class="card-body d-flex align-items-center gap-3">
+      <div class="tile" style="background:linear-gradient(135deg,#e5484d,#f76b6b);"><i class="bi bi-x-octagon" aria-hidden="true"></i></div>
+      <div><div class="num">{{ stats.logins_fail }}</div><div class="lbl">{{ stat_failures }}</div></div>
+    </div></div></div>
+    <div class="col-6 col-md-4 col-xl-2"><div class="card drac-stat h-100"><div class="card-body d-flex align-items-center gap-3">
+      <div class="tile" style="background:linear-gradient(135deg,#12a594,#3ddc97);"><i class="bi bi-people" aria-hidden="true"></i></div>
+      <div><div class="num">{{ stats.sessions }}</div><div class="lbl">{{ stat_sessions }}</div></div>
+    </div></div></div>
+    <div class="col-6 col-md-4 col-xl-2"><div class="card drac-stat h-100"><div class="card-body d-flex align-items-center gap-3">
+      <div class="tile" style="background:linear-gradient(135deg,#f76b15,#ffb224);"><i class="bi bi-envelope-exclamation" aria-hidden="true"></i></div>
+      <div><div class="num">{{ stats.recovery }}</div><div class="lbl">{{ stat_recovery }}</div></div>
+    </div></div></div>
+    <div class="col-6 col-md-4 col-xl-2"><div class="card drac-stat h-100"><div class="card-body d-flex align-items-center gap-3">
+      <div class="tile" style="background:linear-gradient(135deg,#8e4ec6,#d66ee0);"><i class="bi bi-globe" aria-hidden="true"></i></div>
+      <div><div class="num">{{ stats.ip_rules }}</div><div class="lbl">{{ stat_ip_rules }}</div></div>
+    </div></div></div>
+    <div class="col-6 col-md-4 col-xl-2"><div class="card drac-stat h-100"><div class="card-body d-flex align-items-center gap-3">
+      <div class="tile" style="background:linear-gradient(135deg,#5c7cfa,#91a7ff);"><i class="bi bi-person-gear" aria-hidden="true"></i></div>
+      <div><div class="num">{{ stats.users }}</div><div class="lbl">{{ stat_users }}</div></div>
+    </div></div></div>
+  </div>
 
-    {# ── Rota do admin ── #}
-    <div class="col-lg-6"><div class="card h-100 shadow-sm border-0">
-      <div class="card-header bg-transparent border-0 pb-0">
-        <h2 class="h6 card-title mb-1"><i class="bi bi-signpost-split me-1 text-primary" aria-hidden="true"></i>{{ text_admin_route }}</h2>
-      </div>
-      <div class="card-body pt-2">
-      <form method="post" action="{{ action }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="admin_route">
-        <label class="form-label small fw-semibold" for="ar-route">{{ entry_admin_route }}</label>
-        <div class="input-group mb-2"><span class="input-group-text bg-body-tertiary">/</span>
-          <input class="form-control font-monospace" id="ar-route" name="admin_route" value="{{ admin_route }}" maxlength="32" pattern="[a-z0-9][a-z0-9\-]{0,31}"{% if not can_modify %} disabled{% endif %}></div>
-        <p class="form-text">{{ help_admin_route }}</p>
-        {% if can_modify %}<button class="btn btn-primary btn-sm px-3">{{ button_save }}</button>{% endif %}
-      </form>
-      </div>
-    </div></div>
+  {# ── Abas ── #}
+  <ul class="nav nav-pills drac-tabs gap-1 mb-3" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button" role="tab"><i class="bi bi-speedometer2 me-1" aria-hidden="true"></i>{{ tab_overview }}</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-access" type="button" role="tab"><i class="bi bi-key me-1" aria-hidden="true"></i>{{ tab_access }}</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ip" type="button" role="tab"><i class="bi bi-globe me-1" aria-hidden="true"></i>{{ tab_ip }}</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-people" type="button" role="tab"><i class="bi bi-people me-1" aria-hidden="true"></i>{{ tab_people }}</button></li>
+  </ul>
 
-    {# ── Configurações da ferramenta (KZ-49) ── #}
-    <div class="col-lg-6"><div class="card h-100 shadow-sm border-0">
-      <div class="card-header bg-transparent border-0 pb-0">
-        <h2 class="h6 card-title mb-1"><i class="bi bi-gear me-1 text-primary" aria-hidden="true"></i>{{ text_settings }}</h2>
-      </div>
-      <div class="card-body pt-2">
-      <form method="post" action="{{ action }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="retention">
-        <div class="row g-2 mb-2">
-          <div class="col-sm-6">
-            <label class="form-label small fw-semibold" for="input-audit-days">{{ entry_audit_days }}</label>
-            <div class="input-group input-group-sm"><input type="number" class="form-control" id="input-audit-days" name="audit_days" min="1" max="3650" value="{{ retention.audit_days }}"{% if not can_modify %} disabled{% endif %}><span class="input-group-text">dias</span></div>
+  <div class="tab-content">
+    {# ── Aba: visão geral ── #}
+    <div class="tab-pane fade show active" id="tab-overview" role="tabpanel">
+      <div class="row g-4">
+        <div class="col-lg-6"><div class="card drac-card h-100">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <h2 class="h6 mb-0"><span class="ic"><i class="bi bi-door-open" aria-hidden="true"></i></span>{{ text_login_log }}</h2>
+            <a class="btn btn-outline-secondary btn-sm" href="{{ export_logins }}"><i class="bi bi-download me-1" aria-hidden="true"></i>{{ button_export_csv }}</a>
           </div>
-          <div class="col-sm-6">
-            <label class="form-label small fw-semibold" for="input-login-days">{{ entry_login_log_days }}</label>
-            <div class="input-group input-group-sm"><input type="number" class="form-control" id="input-login-days" name="login_log_days" min="1" max="3650" value="{{ retention.login_log_days }}"{% if not can_modify %} disabled{% endif %}><span class="input-group-text">dias</span></div>
+          <div class="card-body">
+            <div class="drac-table-wrap"><table class="table table-sm table-hover align-middle small">
+              <thead><tr><th>{{ col_date }}</th><th>{{ col_user }}</th><th>IP</th><th>{{ col_result }}</th></tr></thead>
+              <tbody>{% for l in logins %}<tr class="{{ l.success ? '' : 'table-danger' }}">
+                <td class="text-nowrap">{{ l.date_added }}</td><td>{{ l.username|e }}</td><td><code>{{ l.ip|e }}</code></td>
+                <td>{% if l.success %}<span class="badge text-bg-success">{{ text_ok }}</span>{% else %}<span class="badge text-bg-danger">{{ text_fail }}</span>{% endif %}</td>
+              </tr>{% else %}<tr><td colspan="4" class="text-body-secondary text-center py-3">{{ text_empty }}</td></tr>{% endfor %}</tbody>
+            </table></div>
           </div>
-        </div>
-        <p class="form-text">{{ help_retention }}</p>
-        {% if can_modify %}<button class="btn btn-primary btn-sm px-3">{{ button_save }}</button>{% endif %}
-      </form>
-      </div>
-    </div></div>
+        </div></div>
 
-    {# ── 2FA ── #}
-    <div class="col-lg-6"><div class="card h-100 shadow-sm border-0">
-      <div class="card-header bg-transparent border-0 pb-0">
-        <h2 class="h6 card-title mb-1"><i class="bi bi-phone-lock me-1 text-primary" aria-hidden="true"></i>{{ text_2fa }}</h2>
+        <div class="col-lg-6"><div class="card drac-card h-100">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <h2 class="h6 mb-0"><span class="ic"><i class="bi bi-journal-text" aria-hidden="true"></i></span>{{ text_audit }}</h2>
+            <a class="btn btn-outline-secondary btn-sm" href="{{ export_audit }}"><i class="bi bi-download me-1" aria-hidden="true"></i>{{ button_export_csv }}</a>
+          </div>
+          <div class="card-body">
+            <p class="form-text">{{ help_audit }}</p>
+            <div class="drac-table-wrap"><table class="table table-sm table-hover align-middle small">
+              <thead><tr><th>{{ col_date }}</th><th>{{ col_user }}</th><th>{{ col_route }}</th><th>{{ col_method }}</th><th>IP</th></tr></thead>
+              <tbody>{% for a in audit %}<tr>
+                <td class="text-nowrap">{{ a.date_added }}</td><td>{{ a.username|e }}</td><td><code>{{ a.route|e }}</code></td>
+                <td><span class="badge {{ a.method == 'POST' ? 'text-bg-primary' : 'text-bg-secondary' }}">{{ a.method|e }}</span></td><td><code>{{ a.ip|e }}</code></td>
+              </tr>{% else %}<tr><td colspan="5" class="text-body-secondary text-center py-3">{{ text_empty }}</td></tr>{% endfor %}</tbody>
+            </table></div>
+            <div class="mt-3 d-flex gap-2 flex-wrap align-items-center">
+              {% if can_modify %}<form method="post" action="{{ action }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="prune">
+                <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1" aria-hidden="true"></i>{{ button_prune }}</button>
+              </form>{% endif %}
+              <span class="form-text">{{ help_prune }}</span>
+            </div>
+          </div>
+        </div></div>
       </div>
-      <div class="card-body pt-2">
-      {% if force_2fa %}<div class="alert alert-warning small py-2" role="alert"><i class="bi bi-shield-lock me-1" aria-hidden="true"></i>{{ text_force_2fa }}</div>{% endif %}
-      {% if twofa.enabled %}
-        <p class="text-success small mb-3"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>{{ text_2fa_enabled_state }}</p>
-        <form method="post" action="{{ action }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="twofa_disable">
-          {% if can_modify %}<button class="btn btn-outline-danger btn-sm">{{ button_2fa_disable }}</button>{% endif %}</form>
-      {% else %}
-        <p class="form-text">{{ help_2fa }}</p>
-        <form method="post" action="{{ action }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="twofa_enable">
-          <div class="mb-2"><label class="form-label small fw-semibold" for="tw-secret">{{ entry_2fa_secret }}</label>
-            <input class="form-control font-monospace" id="tw-secret" name="secret" value="{{ twofa.secret ?: '' }}" placeholder="{{ placeholder_2fa_secret }}"{% if not can_modify %} disabled{% endif %}></div>
-          <div class="mb-3"><label class="form-label small fw-semibold" for="tw-code">{{ entry_2fa_code }}</label>
-            <input class="form-control" id="tw-code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000" style="max-width:140px;"{% if not can_modify %} disabled{% endif %}></div>
-          {% if can_modify %}<button class="btn btn-primary btn-sm px-3">{{ button_2fa_enable }}</button>{% endif %}
-        </form>
-      {% endif %}
-      <form method="post" action="{{ action }}" class="mt-3 pt-3 border-top">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="2fa_required">
-        <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" role="switch" id="dracaunos-2fa-required" name="2fa_required" value="1"{% if twofa_required %} checked{% endif %}{% if not can_modify %} disabled{% endif %}>
-          <label class="form-check-label small" for="dracaunos-2fa-required">{{ entry_2fa_required }}</label>
-        </div>
-        <div class="form-text ms-4">{{ help_2fa_required }}</div>
-        {% if can_modify %}<button class="btn btn-outline-primary btn-sm mt-2 ms-4">{{ button_save }}</button>{% endif %}
-      </form>
-      </div>
-    </div></div>
+    </div>
 
-    {# ── Log de logins ── #}
-    <div class="col-lg-6"><div class="card h-100 shadow-sm border-0">
-      <div class="card-header bg-transparent border-0 pb-0 d-flex align-items-center justify-content-between">
-        <h2 class="h6 card-title mb-1"><i class="bi bi-door-open me-1 text-primary" aria-hidden="true"></i>{{ text_login_log }}</h2>
-        <a class="btn btn-outline-secondary btn-sm" href="{{ export_logins }}"><i class="bi bi-download me-1" aria-hidden="true"></i>{{ button_export_csv }}</a>
-      </div>
-      <div class="card-body pt-2">
-      <div class="table-responsive rounded border">
-      <table class="table table-sm table-hover align-middle small mb-0">
-        <thead class="table-light"><tr><th>{{ col_date }}</th><th>{{ col_user }}</th><th>IP</th><th>{{ col_result }}</th></tr></thead>
-        <tbody>{% for l in logins %}<tr class="{{ l.success ? '' : 'table-danger' }}">
-          <td class="text-nowrap">{{ l.date_added }}</td><td>{{ l.username|e }}</td><td><code>{{ l.ip|e }}</code></td>
-          <td>{% if l.success %}<span class="badge text-bg-success">{{ text_ok }}</span>{% else %}<span class="badge text-bg-danger">{{ text_fail }}</span>{% endif %}</td>
-        </tr>{% else %}<tr><td colspan="4" class="text-body-secondary text-center py-3">{{ text_empty }}</td></tr>{% endfor %}</tbody>
-      </table></div>
-      </div>
-    </div></div>
+    {# ── Aba: acesso (senha, rota, 2FA, configurações) ── #}
+    <div class="tab-pane fade" id="tab-access" role="tabpanel">
+      <div class="row g-4">
+        <div class="col-lg-6"><div class="card drac-card h-100">
+          <div class="card-header"><h2 class="h6 mb-0"><span class="ic"><i class="bi bi-key" aria-hidden="true"></i></span>{{ text_password_policy }}</h2></div>
+          <div class="card-body">
+            <form method="post" action="{{ action }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="password_policy">
+              <div class="row g-2 mb-3">
+                <div class="col-sm-6"><label class="form-label small fw-semibold" for="pp-min">{{ entry_min_length }}</label>
+                  <input class="form-control" type="number" id="pp-min" name="policy[min_length]" value="{{ policy.min_length }}" min="8" max="64"{% if not can_modify %} disabled{% endif %}></div>
+                <div class="col-sm-6"><label class="form-label small fw-semibold" for="pp-age">{{ entry_max_age }}</label>
+                  <input class="form-control" type="number" id="pp-age" name="policy[max_age_days]" value="{{ policy.max_age_days }}" min="0" max="365"{% if not can_modify %} disabled{% endif %}></div>
+              </div>
+              <div class="d-flex flex-wrap gap-3 mb-3">
+                <div class="form-check"><input class="form-check-input" type="checkbox" name="policy[require_upper]" value="1" id="pu"{% if policy.require_upper %} checked{% endif %}{% if not can_modify %} disabled{% endif %}><label class="form-check-label small" for="pu">{{ entry_require_upper }}</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" name="policy[require_digit]" value="1" id="pd"{% if policy.require_digit %} checked{% endif %}{% if not can_modify %} disabled{% endif %}><label class="form-check-label small" for="pd">{{ entry_require_digit }}</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" name="policy[require_symbol]" value="1" id="ps"{% if policy.require_symbol %} checked{% endif %}{% if not can_modify %} disabled{% endif %}><label class="form-check-label small" for="ps">{{ entry_require_symbol }}</label></div>
+              </div>
+              {% if can_modify %}<button class="btn btn-primary btn-sm px-3">{{ button_save }}</button>{% endif %}
+            </form>
+          </div>
+        </div></div>
 
-    {# ── Auditoria do admin (KZ-39) ── #}
-    <div class="col-lg-6"><div class="card h-100 shadow-sm border-0">
-      <div class="card-header bg-transparent border-0 pb-0 d-flex align-items-center justify-content-between">
-        <h2 class="h6 card-title mb-1"><i class="bi bi-journal-text me-1 text-primary" aria-hidden="true"></i>{{ text_audit }}</h2>
-        <a class="btn btn-outline-secondary btn-sm" href="{{ export_audit }}"><i class="bi bi-download me-1" aria-hidden="true"></i>{{ button_export_csv }}</a>
-      </div>
-      <div class="card-body pt-2">
-      <p class="form-text">{{ help_audit }}</p>
-      <div class="table-responsive rounded border">
-      <table class="table table-sm table-hover align-middle small mb-0">
-        <thead class="table-light"><tr><th>{{ col_date }}</th><th>{{ col_user }}</th><th>{{ col_route }}</th><th>{{ col_method }}</th><th>IP</th></tr></thead>
-        <tbody>{% for a in audit %}<tr>
-          <td class="text-nowrap">{{ a.date_added }}</td><td>{{ a.username|e }}</td><td><code>{{ a.route|e }}</code></td>
-          <td><span class="badge {{ a.method == 'POST' ? 'text-bg-primary' : 'text-bg-secondary' }}">{{ a.method|e }}</span></td><td><code>{{ a.ip|e }}</code></td>
-        </tr>{% else %}<tr><td colspan="5" class="text-body-secondary text-center py-3">{{ text_empty }}</td></tr>{% endfor %}</tbody>
-      </table></div>
-      <div class="mt-2 d-flex gap-2 flex-wrap align-items-center">
-        {% if can_modify %}<form method="post" action="{{ action }}" class="d-inline">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="prune">
-          <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash me-1" aria-hidden="true"></i>{{ button_prune }}</button>
-        </form>{% endif %}
-        <span class="form-text">{{ help_prune }}</span>
-      </div>
-      </div>
-    </div></div>
+        <div class="col-lg-6"><div class="card drac-card h-100">
+          <div class="card-header"><h2 class="h6 mb-0"><span class="ic"><i class="bi bi-phone-lock" aria-hidden="true"></i></span>{{ text_2fa }}</h2></div>
+          <div class="card-body">
+            {% if force_2fa %}<div class="alert alert-warning small py-2" role="alert"><i class="bi bi-shield-lock me-1" aria-hidden="true"></i>{{ text_force_2fa }}</div>{% endif %}
+            {% if twofa.enabled %}
+              <p class="text-success small"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>{{ text_2fa_enabled_state }}</p>
+              <form method="post" action="{{ action }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="twofa_disable">
+                {% if can_modify %}<button class="btn btn-outline-danger btn-sm">{{ button_2fa_disable }}</button>{% endif %}</form>
+            {% else %}
+              <p class="form-text">{{ help_2fa }}</p>
+              <form method="post" action="{{ action }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="twofa_enable">
+                <div class="mb-2"><label class="form-label small fw-semibold" for="tw-secret">{{ entry_2fa_secret }}</label>
+                  <input class="form-control font-monospace" id="tw-secret" name="secret" value="{{ twofa.secret ?: '' }}" placeholder="{{ placeholder_2fa_secret }}"{% if not can_modify %} disabled{% endif %}></div>
+                <div class="mb-3"><label class="form-label small fw-semibold" for="tw-code">{{ entry_2fa_code }}</label>
+                  <input class="form-control" id="tw-code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000" style="max-width:140px;"{% if not can_modify %} disabled{% endif %}></div>
+                {% if can_modify %}<button class="btn btn-primary btn-sm px-3">{{ button_2fa_enable }}</button>{% endif %}
+              </form>
+            {% endif %}
+            <form method="post" action="{{ action }}" class="mt-3 pt-3 border-top">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="2fa_required">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="dracaunos-2fa-required" name="2fa_required" value="1"{% if twofa_required %} checked{% endif %}{% if not can_modify %} disabled{% endif %}>
+                <label class="form-check-label small" for="dracaunos-2fa-required">{{ entry_2fa_required }}</label>
+              </div>
+              <div class="form-text ms-4">{{ help_2fa_required }}</div>
+              {% if can_modify %}<button class="btn btn-outline-primary btn-sm mt-2 ms-4">{{ button_save }}</button>{% endif %}
+            </form>
+          </div>
+        </div></div>
 
-    {# ── Sessões ativas do admin (KZ-45) ── #}
-    <div class="col-lg-6"><div class="card h-100 shadow-sm border-0">
-      <div class="card-header bg-transparent border-0 pb-0">
-        <h2 class="h6 card-title mb-1"><i class="bi bi-people me-1 text-primary" aria-hidden="true"></i>{{ text_sessions }}</h2>
-      </div>
-      <div class="card-body pt-2">
-      <p class="form-text">{{ help_sessions }}</p>
-      <div class="table-responsive rounded border">
-      <table class="table table-sm table-hover align-middle small mb-0">
-        <thead class="table-light"><tr><th>{{ col_user }}</th><th>{{ col_session }}</th><th>{{ col_expire }}</th><th></th></tr></thead>
-        <tbody>{% for s in sessions %}<tr>
-          <td>{{ s.username|e }}</td><td><code>{{ s.session_id|slice(0, 12) }}…</code></td><td class="text-nowrap">{{ s.expire }}</td>
-          <td>{% if can_modify and s.session_id != current_sid %}<form method="post" action="{{ action }}" class="d-inline">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="session_kill"><input type="hidden" name="session_id" value="{{ s.session_id }}">
-            <button class="btn btn-outline-danger btn-sm">{{ button_kill_session }}</button>
-          </form>{% else %}<span class="badge text-bg-light border">{{ text_own_session }}</span>{% endif %}</td>
-        </tr>{% else %}<tr><td colspan="4" class="text-body-secondary text-center py-3">{{ text_empty }}</td></tr>{% endfor %}</tbody>
-      </table></div>
-      </div>
-    </div></div>
+        <div class="col-lg-6"><div class="card drac-card h-100">
+          <div class="card-header"><h2 class="h6 mb-0"><span class="ic"><i class="bi bi-signpost-split" aria-hidden="true"></i></span>{{ text_admin_route }}</h2></div>
+          <div class="card-body">
+            <form method="post" action="{{ action }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="admin_route">
+              <label class="form-label small fw-semibold" for="ar-route">{{ entry_admin_route }}</label>
+              <div class="input-group mb-2"><span class="input-group-text bg-body-tertiary">/</span>
+                <input class="form-control font-monospace" id="ar-route" name="admin_route" value="{{ admin_route }}" maxlength="32" pattern="[a-z0-9][a-z0-9\-]{0,31}"{% if not can_modify %} disabled{% endif %}></div>
+              <p class="form-text">{{ help_admin_route }}</p>
+              {% if can_modify %}<button class="btn btn-primary btn-sm px-3">{{ button_save }}</button>{% endif %}
+            </form>
+          </div>
+        </div></div>
 
-    {# ── Recuperação / verificação ── #}
-    <div class="col-lg-6"><div class="card h-100 shadow-sm border-0">
-      <div class="card-header bg-transparent border-0 pb-0">
-        <h2 class="h6 card-title mb-1"><i class="bi bi-envelope-exclamation me-1 text-primary" aria-hidden="true"></i>{{ text_recovery }}</h2>
+        <div class="col-lg-6"><div class="card drac-card h-100">
+          <div class="card-header"><h2 class="h6 mb-0"><span class="ic"><i class="bi bi-gear" aria-hidden="true"></i></span>{{ text_settings }}</h2></div>
+          <div class="card-body">
+            <form method="post" action="{{ action }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="retention">
+              <div class="row g-2 mb-2">
+                <div class="col-sm-6">
+                  <label class="form-label small fw-semibold" for="input-audit-days">{{ entry_audit_days }}</label>
+                  <div class="input-group input-group-sm"><input type="number" class="form-control" id="input-audit-days" name="audit_days" min="1" max="3650" value="{{ retention.audit_days }}"{% if not can_modify %} disabled{% endif %}><span class="input-group-text">dias</span></div>
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label small fw-semibold" for="input-login-days">{{ entry_login_log_days }}</label>
+                  <div class="input-group input-group-sm"><input type="number" class="form-control" id="input-login-days" name="login_log_days" min="1" max="3650" value="{{ retention.login_log_days }}"{% if not can_modify %} disabled{% endif %}><span class="input-group-text">dias</span></div>
+                </div>
+              </div>
+              <p class="form-text">{{ help_retention }}</p>
+              {% if can_modify %}<button class="btn btn-primary btn-sm px-3">{{ button_save }}</button>{% endif %}
+            </form>
+          </div>
+        </div></div>
       </div>
-      <div class="card-body pt-2">
-      <div class="table-responsive rounded border">
-      <table class="table table-sm table-hover align-middle small mb-0">
-        <thead class="table-light"><tr><th>{{ col_date }}</th><th>{{ col_email }}</th><th>{{ col_type }}</th><th>IP</th><th></th></tr></thead>
-        <tbody>{% for r in recovery %}<tr>
-          <td class="text-nowrap">{{ r.date_added }}</td><td>{{ r.email|e }}</td><td><span class="badge text-bg-light border">{{ r.type|e }}</span></td><td><code>{{ r.ip|e }}</code></td>
-          <td class="text-nowrap">{% if can_modify %}<form method="post" action="{{ action }}" class="d-inline-flex gap-1">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="recovery_handle"><input type="hidden" name="recovery_id" value="{{ r.recovery_id }}">
-            <button name="status" value="approved" class="btn btn-success btn-sm">{{ button_approve }}</button>
-            <button name="status" value="denied" class="btn btn-outline-danger btn-sm">{{ button_deny }}</button></form>{% endif %}</td>
-        </tr>{% else %}<tr><td colspan="5" class="text-body-secondary text-center py-3">{{ text_empty }}</td></tr>{% endfor %}</tbody>
-      </table></div>
-      </div>
-    </div></div>
+    </div>
 
-    {# ── Regras de IP ── #}
-    <div class="col-lg-6"><div class="card h-100 shadow-sm border-0">
-      <div class="card-header bg-transparent border-0 pb-0">
-        <h2 class="h6 card-title mb-1"><i class="bi bi-globe me-1 text-primary" aria-hidden="true"></i>{{ text_ip_rules }}</h2>
-      </div>
-      <div class="card-body pt-2">
-      {# KZ-46: testador de regras de IP #}
-      <form method="post" action="{{ action }}" class="d-flex gap-2 mb-2">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <input type="hidden" name="action" value="ip_test">
-        <input type="text" name="test_ip" class="form-control form-control-sm font-monospace" placeholder="{{ ph_test_ip }}" value="">
-        <select name="test_scope" class="form-select form-select-sm w-auto">
-          <option value="admin" selected>{{ scope_admin }}</option>
-          <option value="catalog">{{ scope_catalog }}</option>
-        </select>
-        <button class="btn btn-outline-primary btn-sm text-nowrap">{{ button_test_ip }}</button>
-      </form>
-      {% if ip_test %}
-        {% if ip_test.valid %}
-          {% if ip_test.decision == 'deny' %}
-          <div class="alert alert-danger py-2 small mb-3"><i class="bi bi-x-octagon me-1" aria-hidden="true"></i>{{ text_ip_test_deny }} <code>{{ ip_test.rule.ip }}</code></div>
-          {% else %}
-          <div class="alert alert-success py-2 small mb-3"><i class="bi bi-check-octagon me-1" aria-hidden="true"></i>{{ text_ip_test_allow }}{% if ip_test.rule %} <code>{{ ip_test.rule.ip }}</code>{% endif %}</div>
-          {% endif %}
-        {% else %}
-          <div class="alert alert-warning py-2 small mb-3"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ text_ip_test_invalid }}</div>
-        {% endif %}
-      {% endif %}
-      {% if can_modify %}<form method="post" action="{{ action }}" class="row g-2 align-items-center p-2 mb-3 rounded bg-body-tertiary">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="ip_add">
-        <div class="col-md-3"><input class="form-control form-control-sm font-monospace" name="ip" placeholder="192.168.0.0/24" required></div>
-        <div class="col-md-2"><select class="form-select form-select-sm" name="ip_action"><option value="deny">{{ opt_deny }}</option><option value="allow">{{ opt_allow }}</option></select></div>
-        <div class="col-md-2"><select class="form-select form-select-sm" name="scope"><option value="admin">admin</option><option value="catalog">catalog</option></select></div>
-        <div class="col-md-3"><input class="form-control form-control-sm" name="note" maxlength="128" placeholder="{{ entry_note }}"></div>
-        <div class="col-md-2"><button class="btn btn-primary btn-sm w-100">{{ button_add }}</button></div>
-      </form>{% endif %}
-      <div class="table-responsive rounded border">
-      <table class="table table-sm table-hover align-middle small mb-0">
-        <thead class="table-light"><tr><th>IP/CIDR</th><th>{{ col_action }}</th><th>{{ col_scope }}</th><th>{{ col_note }}</th><th></th></tr></thead>
-        <tbody>{% for r in ip_rules %}<tr>
-          <td><code>{{ r.ip|e }}</code></td>
-          <td>{% if r.action == 'deny' %}<span class="badge text-bg-danger">{{ opt_deny }}</span>{% else %}<span class="badge text-bg-success">{{ opt_allow }}</span>{% endif %}</td>
-          <td><span class="badge text-bg-light border">{{ r.scope|e }}</span></td><td>{{ r.note|e }}</td>
-          <td>{% if can_modify %}<form method="post" action="{{ action }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="ip_delete"><input type="hidden" name="rule_id" value="{{ r.rule_id }}"><button class="btn btn-outline-danger btn-sm" title="{{ button_delete }}"><i class="bi bi-trash" aria-hidden="true"></i></button></form>{% endif %}</td>
-        </tr>{% else %}<tr><td colspan="5" class="text-body-secondary text-center py-3">{{ text_empty }}</td></tr>{% endfor %}</tbody>
-      </table></div>
-      </div>
-    </div></div>
+    {# ── Aba: IP e sessões ── #}
+    <div class="tab-pane fade" id="tab-ip" role="tabpanel">
+      <div class="row g-4">
+        <div class="col-lg-7"><div class="card drac-card h-100">
+          <div class="card-header"><h2 class="h6 mb-0"><span class="ic"><i class="bi bi-globe" aria-hidden="true"></i></span>{{ text_ip_rules }}</h2></div>
+          <div class="card-body">
+            <form method="post" action="{{ action }}" class="d-flex gap-2 mb-2">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input type="hidden" name="action" value="ip_test">
+              <input type="text" name="test_ip" class="form-control form-control-sm font-monospace" placeholder="{{ ph_test_ip }}" value="">
+              <select name="test_scope" class="form-select form-select-sm w-auto">
+                <option value="admin" selected>{{ scope_admin }}</option>
+                <option value="catalog">{{ scope_catalog }}</option>
+              </select>
+              <button class="btn btn-outline-primary btn-sm text-nowrap">{{ button_test_ip }}</button>
+            </form>
+            {% if ip_test %}
+              {% if ip_test.valid %}
+                {% if ip_test.decision == 'deny' %}
+                <div class="alert alert-danger py-2 small mb-3"><i class="bi bi-x-octagon me-1" aria-hidden="true"></i>{{ text_ip_test_deny }} <code>{{ ip_test.rule.ip }}</code></div>
+                {% else %}
+                <div class="alert alert-success py-2 small mb-3"><i class="bi bi-check-octagon me-1" aria-hidden="true"></i>{{ text_ip_test_allow }}{% if ip_test.rule %} <code>{{ ip_test.rule.ip }}</code>{% endif %}</div>
+                {% endif %}
+              {% else %}
+                <div class="alert alert-warning py-2 small mb-3"><i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>{{ text_ip_test_invalid }}</div>
+              {% endif %}
+            {% endif %}
+            {% if can_modify %}<form method="post" action="{{ action }}" class="row g-2 align-items-center p-2 mb-3 rounded bg-body-tertiary">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="ip_add">
+              <div class="col-md-3"><input class="form-control form-control-sm font-monospace" name="ip" placeholder="192.168.0.0/24" required></div>
+              <div class="col-md-2"><select class="form-select form-select-sm" name="ip_action"><option value="deny">{{ opt_deny }}</option><option value="allow">{{ opt_allow }}</option></select></div>
+              <div class="col-md-2"><select class="form-select form-select-sm" name="scope"><option value="admin">admin</option><option value="catalog">catalog</option></select></div>
+              <div class="col-md-3"><input class="form-control form-control-sm" name="note" maxlength="128" placeholder="{{ entry_note }}"></div>
+              <div class="col-md-2"><button class="btn btn-primary btn-sm w-100">{{ button_add }}</button></div>
+            </form>{% endif %}
+            <div class="drac-table-wrap"><table class="table table-sm table-hover align-middle small">
+              <thead><tr><th>IP/CIDR</th><th>{{ col_action }}</th><th>{{ col_scope }}</th><th>{{ col_note }}</th><th></th></tr></thead>
+              <tbody>{% for r in ip_rules %}<tr>
+                <td><code>{{ r.ip|e }}</code></td>
+                <td>{% if r.action == 'deny' %}<span class="badge text-bg-danger">{{ opt_deny }}</span>{% else %}<span class="badge text-bg-success">{{ opt_allow }}</span>{% endif %}</td>
+                <td><span class="badge text-bg-light border">{{ r.scope|e }}</span></td><td>{{ r.note|e }}</td>
+                <td>{% if can_modify %}<form method="post" action="{{ action }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="ip_delete"><input type="hidden" name="rule_id" value="{{ r.rule_id }}"><button class="btn btn-outline-danger btn-sm" title="{{ button_delete }}"><i class="bi bi-trash" aria-hidden="true"></i></button></form>{% endif %}</td>
+              </tr>{% else %}<tr><td colspan="5" class="text-body-secondary text-center py-3">{{ text_empty }}</td></tr>{% endfor %}</tbody>
+            </table></div>
+          </div>
+        </div></div>
 
-    {# ── Usuários / perfil ── #}
-    <div class="col-12"><div class="card shadow-sm border-0">
-      <div class="card-header bg-transparent border-0 pb-0">
-        <h2 class="h6 card-title mb-1"><i class="bi bi-person-gear me-1 text-primary" aria-hidden="true"></i>{{ text_users }}</h2>
+        <div class="col-lg-5"><div class="card drac-card h-100">
+          <div class="card-header"><h2 class="h6 mb-0"><span class="ic"><i class="bi bi-people" aria-hidden="true"></i></span>{{ text_sessions }}</h2></div>
+          <div class="card-body">
+            <p class="form-text">{{ help_sessions }}</p>
+            <div class="drac-table-wrap"><table class="table table-sm table-hover align-middle small">
+              <thead><tr><th>{{ col_user }}</th><th>{{ col_session }}</th><th>{{ col_expire }}</th><th></th></tr></thead>
+              <tbody>{% for s in sessions %}<tr>
+                <td>{{ s.username|e }}</td><td><code>{{ s.session_id|slice(0, 12) }}…</code></td><td class="text-nowrap">{{ s.expire }}</td>
+                <td>{% if can_modify and s.session_id != current_sid %}<form method="post" action="{{ action }}" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="session_kill"><input type="hidden" name="session_id" value="{{ s.session_id }}">
+                  <button class="btn btn-outline-danger btn-sm">{{ button_kill_session }}</button>
+                </form>{% else %}<span class="badge text-bg-light border">{{ text_own_session }}</span>{% endif %}</td>
+              </tr>{% else %}<tr><td colspan="4" class="text-body-secondary text-center py-3">{{ text_empty }}</td></tr>{% endfor %}</tbody>
+            </table></div>
+          </div>
+        </div></div>
       </div>
-      <div class="card-body pt-2">
-      <p class="form-text">{{ help_users }}</p>
-      <div class="table-responsive rounded border">
-      <table class="table table-sm table-hover align-middle small mb-0">
-        <thead class="table-light"><tr><th>#</th><th>{{ col_user }}</th><th>{{ col_email }}</th><th>{{ col_status }}</th><th></th></tr></thead>
-        <tbody>{% for u in users %}<tr>
-          <td>{{ u.user_id }}</td><td class="fw-semibold">{{ u.username|e }}</td><td>{{ u.email|e }}</td>
-          <td>{% if u.status %}<span class="badge text-bg-success">{{ text_enabled }}</span>{% else %}<span class="badge text-bg-secondary">{{ text_disabled }}</span>{% endif %}</td>
-          <td><a class="btn btn-outline-secondary btn-sm" href="{{ user_edit }}|{{ u.user_id }}"><i class="bi bi-pencil me-1" aria-hidden="true"></i>{{ button_edit_profile }}</a></td>
-        </tr>{% else %}<tr><td colspan="5" class="text-body-secondary text-center py-3">{{ text_empty }}</td></tr>{% endfor %}</tbody>
-      </table></div>
+    </div>
+
+    {# ── Aba: pessoas (recuperação + usuários) ── #}
+    <div class="tab-pane fade" id="tab-people" role="tabpanel">
+      <div class="row g-4">
+        <div class="col-lg-6"><div class="card drac-card h-100">
+          <div class="card-header"><h2 class="h6 mb-0"><span class="ic"><i class="bi bi-envelope-exclamation" aria-hidden="true"></i></span>{{ text_recovery }}</h2></div>
+          <div class="card-body">
+            <div class="drac-table-wrap"><table class="table table-sm table-hover align-middle small">
+              <thead><tr><th>{{ col_date }}</th><th>{{ col_email }}</th><th>{{ col_type }}</th><th>IP</th><th></th></tr></thead>
+              <tbody>{% for r in recovery %}<tr>
+                <td class="text-nowrap">{{ r.date_added }}</td><td>{{ r.email|e }}</td><td><span class="badge text-bg-light border">{{ r.type|e }}</span></td><td><code>{{ r.ip|e }}</code></td>
+                <td class="text-nowrap">{% if can_modify %}<form method="post" action="{{ action }}" class="d-inline-flex gap-1">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="recovery_handle"><input type="hidden" name="recovery_id" value="{{ r.recovery_id }}">
+                  <button name="status" value="approved" class="btn btn-success btn-sm">{{ button_approve }}</button>
+                  <button name="status" value="denied" class="btn btn-outline-danger btn-sm">{{ button_deny }}</button></form>{% endif %}</td>
+              </tr>{% else %}<tr><td colspan="5" class="text-body-secondary text-center py-3">{{ text_empty }}</td></tr>{% endfor %}</tbody>
+            </table></div>
+          </div>
+        </div></div>
+
+        <div class="col-lg-6"><div class="card drac-card h-100">
+          <div class="card-header"><h2 class="h6 mb-0"><span class="ic"><i class="bi bi-person-gear" aria-hidden="true"></i></span>{{ text_users }}</h2></div>
+          <div class="card-body">
+            <p class="form-text">{{ help_users }}</p>
+            <div class="drac-table-wrap"><table class="table table-sm table-hover align-middle small">
+              <thead><tr><th>#</th><th>{{ col_user }}</th><th>{{ col_email }}</th><th>{{ col_status }}</th><th></th></tr></thead>
+              <tbody>{% for u in users %}<tr>
+                <td>{{ u.user_id }}</td><td class="fw-semibold">{{ u.username|e }}</td><td>{{ u.email|e }}</td>
+                <td>{% if u.status %}<span class="badge text-bg-success">{{ text_enabled }}</span>{% else %}<span class="badge text-bg-secondary">{{ text_disabled }}</span>{% endif %}</td>
+                <td><a class="btn btn-outline-secondary btn-sm" href="{{ user_edit }}|{{ u.user_id }}"><i class="bi bi-pencil me-1" aria-hidden="true"></i>{{ button_edit_profile }}</a></td>
+              </tr>{% else %}<tr><td colspan="5" class="text-body-secondary text-center py-3">{{ text_empty }}</td></tr>{% endfor %}</tbody>
+            </table></div>
+          </div>
+        </div></div>
       </div>
-    </div></div>
+    </div>
   </div>
 </div>
 {{ footer|raw }}

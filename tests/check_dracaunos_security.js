@@ -69,7 +69,7 @@ check(/DELETE FROM `rms_tool` WHERE `vendor` IN \('JOW','Dracaunos'\)/.test(kz34
 const tools = JSON.parse(read('dev/admin/model/tool/internal-tools.json'));
 const drac = tools.tools.find(t => t.id === 'dracaunos-security');
 check(!!drac, 'dracaunos-security presente no internal-tools.json');
-check(/^1\.[2-9]\./.test(drac.version), 'dracaunos-security na versao 1.x com Fase B aplicada (atual: ' + drac.version + ')');
+check(/^1\.\d+\./.test(drac.version) && !/^1\.[01]\./.test(drac.version), 'dracaunos-security na versao 1.x com Fase B aplicada (atual: ' + drac.version + ')');
 
 // 6) conta do cliente no catalogo (KZ-38)
 const accountControllers = ['login', 'logout', 'register', 'verify', 'forgotten', 'reset', 'account'];
@@ -278,4 +278,15 @@ for (const a of ['password_policy','admin_route','retention','twofa_enable','two
   check(dracTwig.includes('value="' + a + '"'), 'ação preservada no novo layout: ' + a);
 }
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51/52/53/54/55 + hotfix KZ-43)');
+// 22) KZ-56: dashboard visual — CSP (sem script inline/on*), stats e abas preservando ações
+check(!/<script|\son[a-z]+\s*=/i.test(dracTwig), 'dashboard sem <script> inline nem on* (CSP) — abas usam bootstrap.bundle do footer');
+check(dracTwig.includes('stats.logins_total') && dracTwig.includes('data-bs-toggle="tab"'), 'dashboard tem cartões de stats e abas');
+for (const a of ['password_policy','admin_route','retention','twofa_enable','twofa_disable','2fa_required','session_kill','recovery_handle','ip_test','ip_add','ip_delete','prune']) {
+  check(dracTwig.includes('value="' + a + '"'), 'ação preservada no dashboard: ' + a);
+}
+check(dracCtrl.includes("$data['stats']"), 'controller calcula stats para os cartões');
+for (const l of langs) {
+  check(read('dev/admin/language/' + l + '/security/dracaunos.php').includes('tab_overview'), 'idioma ' + l + ' tem as abas do dashboard');
+}
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51/52/53/54/55/56 + hotfix KZ-43)');

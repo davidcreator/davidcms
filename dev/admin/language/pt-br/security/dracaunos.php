@@ -95,3 +95,15 @@ $_['text_retention_saved'] = 'Retenção salva.';
 
 // KZ-55 — UI da página
 $_['entry_admin_route']    = 'Slug da rota do painel';
+
+// KZ-56 — dashboard de segurança
+$_['stat_logins']    = 'Logins (30d)';
+$_['stat_failures']  = 'Falhas';
+$_['stat_sessions']  = 'Sessões ativas';
+$_['stat_recovery']  = 'Recuperação pend.';
+$_['stat_ip_rules']  = 'Regras de IP';
+$_['stat_users']     = 'Usuários';
+$_['tab_overview']   = 'Visão geral';
+$_['tab_access']     = 'Acesso';
+$_['tab_ip']         = 'IP e sessões';
+$_['tab_people']     = 'Pessoas';

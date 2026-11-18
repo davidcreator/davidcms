@@ -47,9 +47,10 @@
       "name": "Dracaunos-Security",
       "legacy_name": "",
       "vendor": "Dracaunos",
-      "version": "1.9.0",
+      "version": "1.10.0",
       "updated_at": "2026-11-18",
       "notes": [
+        "KZ-56: dashboard estilo painel executivo (AdminLTE-like) na página do Dracaunos — cartões de estatísticas, abas (bootstrap.bundle já no footer), estilos com escopo próprio em <style> (permitido pelo CSP; zero script inline).",
         "KZ-55: reformulação visual da página do painel Dracaunos-Security — cabeçalho com ícone, cards com sombra/ícones, formulários com labels e input-groups, tabelas com badges (sucesso/erro/allow/deny) e botões com ícones. Nenhuma lógica alterada; mesma CSP (sem script inline).",
         "KZ-49: página de Configurações dentro do próprio painel Dracaunos — retenção (dias) do log de auditoria e do log de logins editável via painel (acao retention, min 1 / max 3650), alimentando o prune existente.",
         "KZ-46: testador de regras de IP no painel (explainIp mostra a regra que casou e a decisão allow/deny) + matcher de IP agora suporta IPv6/CIDRv6 via inet_pton (as regras de IP passam a valer para IPv6 também).",

@@ -1,11 +1,11 @@
 {
  "task": "F11-11",
- "head": "d28ff660",
+ "head": "a6579e5f",
  "description": "Matriz de decisao dos 10 MARKER_OR_FINDING mantidos pelo F11-09",
  "policy": "Nenhuma decisao tomada por inferencia. Contratos congelados ate registro explicito de status=DECIDED.",
  "status_counts": {
   "PENDING_DECISION": 0,
-  "DECIDED": 26
+  "DECIDED": 27
  },
  "frozen_artifacts_sha256": {
   "docs/F9-14-Contrato-Editor-MVP.json": "c4a8b91d18ab9bad64ea9a698bca0e945c9024be477df1cbffa14b3f8288e4e7",
@@ -21,12 +21,12 @@
   "docs/PROJECT-HANDOFF.md": "5f65d408d5b9831b0999d09ace2fbb1248bd4695282fe75fa6fde0859aeb6c84",
   "dev/admin/controller/startup/dracaunos.php": "e9e906e3504988c2d6d84069d19f8da5ca31899e34be3c908a4a7fd973ac71ff",
   "dev/admin/controller/common/login.php": "35def3cebbf2ec47ffdc93ffc11595eb303a50ef05244a5288ffcd939f37c9ee",
-  "dev/admin/controller/security/dracaunos.php": "16073eeeb47b9195615ed5014043f0996446a90c492c1dba8b4f642662808e57",
+  "dev/admin/controller/security/dracaunos.php": "e1b544f5317ac78855329ff064ae4bf0a2ff3d8d0d7d38d71120906d723c4ea1",
   "dev/admin/controller/user/profile.php": "5631d2d8c6aa041fa5e2d5c906ed0d4b32432a3d91c3a7c3b971c381afd635a6",
   "dev/admin/model/security/dracaunos.php": "e1c2f0be1bf71d21b2da823eac00aa31c043411ba6a77904d15d2ea3e3fe26c6",
   "dev/admin/model/user/user.php": "c392b402d1eb25e134e9eecec373a352d64d038450751a8c3206a50980dadeb4",
-  "dev/admin/model/tool/internal-tools.json": "91a1e9d6d65a8a7819693bd285414d172eeac15d29ab94e8a1990947fc33e4f6",
-  "dev/admin/view/template/security/dracaunos.twig": "367f9afb3190f78f3eff223c2eab8df18b0d7f299016a230f9e6cc9da941751b",
+  "dev/admin/model/tool/internal-tools.json": "07e26aff1d35cf4ad6f01a8f8e096dd833653fbe3e204db2dc6f5aaa164d1d65",
+  "dev/admin/view/template/security/dracaunos.twig": "71dd10e380389173815232cdcee50ce215700f8f6d8293a599df5b0cc4e16eac",
   "dev/admin/view/template/user/profile.twig": "2ccbb355d5f96e1fc56c663bcfa1433404a5fe9c1a22efedb8a411af1710f7b3",
   "dev/system/config/admin.php": "70fb7804aa7a18506c2e83aebf724ab870caac61605f00b2b65d55126d48fb7d",
   "tools/upgrade_kz39_dracaunos_fase_b.sql": "786aaed860e208b1b4d3d6378b598834daccc62b1549b63c46b57815a2e15329",
@@ -831,6 +831,37 @@
    "decision_date": "2026-11-18",
    "decision": "A",
    "evidence_ref": "node tests/check_dracaunos_security.js -> PASS"
+  },
+  {
+   "id": "KZ-56",
+   "checker": "tests/check_dracaunos_security.js",
+   "phase": "KZ-56 (Dracaunos-Security dashboard)",
+   "nature": "FERRAMENTA_INTERNA",
+   "status": "DECIDED",
+   "evidence": "Dashboard estilo painel executivo: 6 stat cards + 4 abas (bootstrap.bundle do footer, sem script novo), CSS com escopo em <style> (CSP permite style inline, proíbe script inline — checker valida). Todas as ações POST preservadas. Versão 1.10.0.",
+   "options": [
+    {
+     "id": "A",
+     "label": "Registrar a entrega do KZ-56 e atualizar os hashes",
+     "requires": "autorizacao explicita do responsavel"
+    },
+    {
+     "id": "B",
+     "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+     "requires": "decisao do responsavel"
+    }
+   ],
+   "recommendation": "A",
+   "recommended_action": "Atualizar frozen_artifacts_sha256 dos 3 artefatos (já feito)",
+   "frozen_artifacts": [
+    "dev/admin/view/template/security/dracaunos.twig",
+    "dev/admin/controller/security/dracaunos.php",
+    "dev/admin/model/tool/internal-tools.json"
+   ],
+   "decided_by": "David L. Almeida (responsavel)",
+   "decision_date": "2026-11-18",
+   "decision": "A",
+   "evidence_ref": "node tests/check_dracaunos_security.js -> PASS (150)"
   }
  ],
  "retified_in": "F11-14",

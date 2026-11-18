@@ -1,5 +1,12 @@
 # Changelog
 
+## KZ-56 — Dracaunos-Security: dashboard visual estilo painel executivo (2026-11-18)
+- Página virou dashboard de segurança: **6 cartões de estatísticas** (logins, falhas, sessões ativas, recuperação pendente, regras de IP, usuários) com tiles em gradiente, e **4 abas** (Visão geral / Acesso / IP e sessões / Pessoas) usando o `bootstrap.bundle` já carregado no footer — nenhum script novo injetado.
+- Estilos com escopo próprio em bloco `<style>` da página (permitido pelo CSP `style-src 'unsafe-inline'`; script inline continua proibido e o checker valida). Tabelas com cabeçalho uppercase e badges.
+- Controller passa `stats` calculados dos dados já carregados; todas as ações POST preservadas (checker). Idiomas pt-br/en-us/es-eu. Regex de versão do checker ajustada para 1.10+.
+- Dracaunos-Security **1.10.0**; checker a 150 verificações (PASS).
+
+
 ## KZ-55 — Dracaunos-Security: reformulação visual da página (2026-11-18)
 - `security/dracaunos.twig` reescrito: cabeçalho com ícone e descrição, cards com sombra e títulos com ícones, formulários com labels + input-groups, switch para 2FA obrigatório, tabelas com badges (ok/fail, allow/deny, POST/GET) e botões com ícones. KZ-54 (admin.css) também incluso neste pacote.
 - Nenhuma lógica alterada: todas as ações POST preservadas (checker). CSP mantida (sem script inline/on*). Nova chave `entry_admin_route` nos 3 idiomas.

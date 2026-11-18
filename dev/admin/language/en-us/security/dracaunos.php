@@ -95,3 +95,15 @@ $_['text_retention_saved'] = 'Retention saved.';
 
 // KZ-55 — page UI
 $_['entry_admin_route']    = 'Panel route slug';
+
+// KZ-56 — security dashboard
+$_['stat_logins']    = 'Logins (30d)';
+$_['stat_failures']  = 'Failures';
+$_['stat_sessions']  = 'Active sessions';
+$_['stat_recovery']  = 'Pending recovery';
+$_['stat_ip_rules']  = 'IP rules';
+$_['stat_users']     = 'Users';
+$_['tab_overview']   = 'Overview';
+$_['tab_access']     = 'Access';
+$_['tab_ip']         = 'IP & sessions';
+$_['tab_people']     = 'People';

@@ -51,6 +51,18 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
         $data['success']     = $this->session->data['success'] ?? '';
         unset($this->session->data['error'], $this->session->data['success']);
 
+        // KZ-56: cartões de estatísticas do dashboard (calculados dos dados já carregados)
+        $fails = 0;
+        foreach ($data['logins'] as $l) { if (empty($l['success'])) $fails++; }
+        $data['stats'] = [
+            'logins_total'   => count($data['logins']),
+            'logins_fail'    => $fails,
+            'sessions'       => count($data['sessions']),
+            'recovery'       => count($data['recovery']),
+            'ip_rules'       => count($data['ip_rules']),
+            'users'          => count($data['users']),
+        ];
+
         // KZ-54: admin.css é o layout do shell (sidebar/topbar); sem ele a página quebra
         $this->document->addStyle($this->adminAssetUrl() . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $data['header'] = $this->load->controller('common/header');
