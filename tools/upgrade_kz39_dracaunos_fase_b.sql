@@ -22,9 +22,16 @@ CREATE TABLE IF NOT EXISTS `rms_dracaunos_audit` (
   PRIMARY KEY (`audit_id`), KEY `user_id` (`user_id`), KEY `date_added` (`date_added`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 2) Carimbo de troca de senha (expiração; backfill = date_added):
-ALTER TABLE `rms_user`
-  ADD COLUMN IF NOT EXISTS `password_changed_at` DATETIME NULL AFTER `password`;
+-- 2) Carimbo de troca de senha (expiração; backfill = date_added).
+--    Idempotente e portátil (MySQL 8 não aceita ADD COLUMN IF NOT EXISTS):
+--    só altera se a coluna ainda não existir.
+SET @col := (SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'rms_user' AND COLUMN_NAME = 'password_changed_at');
+SET @ddl := IF(@col = 0,
+  'ALTER TABLE `rms_user` ADD COLUMN `password_changed_at` DATETIME NULL AFTER `password`',
+  'SELECT ''password_changed_at já existe'' AS info');
+PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
 UPDATE `rms_user` SET `password_changed_at` = `date_added` WHERE `password_changed_at` IS NULL;
 
 -- 3) Retenção da auditoria (dias):
