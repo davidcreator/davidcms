@@ -1,5 +1,13 @@
 # Changelog
 
+## KZ-60 — F918-05 (D03): ACL do catálogo de áudio = can_use_audio_catalog (2026-11-18)
+- Decisão D03 tomada pelo responsável: **`can_use_audio_catalog`**.
+- `cms/page_form.twig`: `data-audio-picker` agora exige `can_modify and can_use_audio_catalog` (antes só can_modify — relaxamento de ACL corrigido).
+- `cms/page.php`: passa `can_use_audio_catalog` = hasPermission('access'|'modify', 'catalog/audio').
+- `check_audio_catalog.cjs` intocado (não relaxado); mesmo resultado de antes (8/11, falhas pré-existentes).
+- `docs/F9-18-Risk-Register.json`: F918-05 `open` → `resolved`.
+
+
 ## KZ-59 — Dracaunos-Security: verificação do sistema sob demanda (2026-11-18)
 - Novo card **"Verificação do sistema"** na aba Defesa: botão "Executar verificação" roda na hora e devolve relatório item a item (OK/falha): toggles de defesa ativos, auto-bloqueio de força bruta, estado do 2FA, arquivos sensíveis na webroot (.env, config.php...), storage com index.html, **integridade dos arquivos do CHECKSUMS** e varredura de scripts maliciosos.
 - `runChecks()` na library `security/defense.php`; model admin delega; ação `verify_run` no painel.

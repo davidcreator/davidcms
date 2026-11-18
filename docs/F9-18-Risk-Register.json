@@ -3,7 +3,7 @@
  "review_type": "static_source_readiness_review",
  "repository": "https://github.com/davidcreator/davidcms",
  "branch": "main",
- "head": "db777963",
+ "head": "8f1540bc",
  "release_ready": false,
  "execution": {
   "php": false,
@@ -74,19 +74,21 @@
   {
    "id": "F918-05",
    "severity": "P2",
-   "status": "open",
+   "status": "resolved",
    "area": "admin_audio_catalog_acl (D03)",
    "path": "dev/admin/view/template/cms/page_form.twig",
    "lines": "54",
-   "summary": "Template usa apenas can_modify para data-audio-picker; can_use_audio_catalog ausente no Twig. Possivel relaxamento de ACL no catalogo de audio.",
+   "summary": "Template usa apenas can_modify para data-audio-picker; can_use_audio_catalog ausente no Twig. Possivel relaxamento de ACL no catalogo de audio. RESOLVIDO em KZ-60 (2026-11-18): D03 decidido pelo responsável = can_use_audio_catalog. O picker de áudio em cms/page_form.twig agora exige `can_modify and can_use_audio_catalog` (data-audio-picker), e o controller passa can_use_audio_catalog via hasPermission(access|modify, catalog/audio). check_audio_catalog.cjs não foi relaxado (mesmos 8/11 pré-existentes).",
    "required_action": "Confirmar o ACL pretendido com o responsavel; nao relaxar o checker check_audio_catalog.cjs. Decisao D03=B registrada em 2026-11-17.",
    "remediation_plan": {
     "plan": "Confirmar ACL pretendido do catálogo de áudio com o responsável; não relaxar check_audio_catalog.cjs (D03=B, 2026-11-17).",
     "owner": "David L. Almeida",
     "target": "decisão D03 — pendente de confirmação explícita",
-    "gate": "P2 — travado por decisão do responsável"
+    "gate": "P2 — travado por decisão do responsável",
+    "status": "implementado em KZ-60 — D03 = can_use_audio_catalog (decisão do responsável)"
    },
-   "plan_registered_at": "2026-11-18"
+   "plan_registered_at": "2026-11-18",
+   "resolved_at": "2026-11-18"
   },
   {
    "id": "F918-06",

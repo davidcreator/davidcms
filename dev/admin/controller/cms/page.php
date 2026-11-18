@@ -39,6 +39,8 @@ class Page extends \Reamur\System\Engine\Controller {
 
         $data['text_flash'] = $this->flash();
         $data['can_modify'] = $this->user->hasPermission('modify', 'cms/page');
+        // KZ-60 / F918-05 (D03 decidido: can_use_audio_catalog): ACL do picker de áudio
+        $data['can_use_audio_catalog'] = $this->user->hasPermission('access', 'catalog/audio') || $this->user->hasPermission('modify', 'catalog/audio');
         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
 
         $title = $this->request->get['filter_title'] ?? '';
@@ -943,6 +945,8 @@ class Page extends \Reamur\System\Engine\Controller {
     private function formData(array $page, bool $includeEditor = false): array {
         $this->load->language('cms/page');
         $data['can_modify'] = $this->user->hasPermission('modify', 'cms/page');
+        // KZ-60 / F918-05 (D03 decidido: can_use_audio_catalog): ACL do picker de áudio
+        $data['can_use_audio_catalog'] = $this->user->hasPermission('access', 'catalog/audio') || $this->user->hasPermission('modify', 'catalog/audio');
 
         foreach ([
             'heading_title', 'text_edit', 'text_add', 'text_general', 'text_data',
