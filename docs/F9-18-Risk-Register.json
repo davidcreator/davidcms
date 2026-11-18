@@ -3,7 +3,7 @@
  "review_type": "static_source_readiness_review",
  "repository": "https://github.com/davidcreator/davidcms",
  "branch": "main",
- "head": "99255ac1",
+ "head": "db777963",
  "release_ready": false,
  "execution": {
   "php": false,
@@ -55,19 +55,21 @@
   {
    "id": "F918-04",
    "severity": "P2",
-   "status": "open",
+   "status": "mitigated",
    "area": "admin_post_delete_atomicity",
    "path": "dev/admin/model/blog/blog.php",
    "lines": "300-309",
-   "summary": "Sidecar/post/descriptions/SEO deletion is a sequence without a transaction and the migration has no foreign-key cascade.",
+   "summary": "Sidecar/post/descriptions/SEO deletion is a sequence without a transaction and the migration has no foreign-key cascade. MITIGADO em KZ-48 (2026-11-18, head db777963+): o delete de bdre_revision foi movido para DENTRO da transação do deletePost (antes ficava após o COMMIT e podia deixar revisões órfãs). Coberto por tests/check_blog_delete_atomicity.js.",
    "required_action": "Wrap deletion in an InnoDB transaction with rollback or accept documented partial deletion risk.",
    "remediation_plan": {
     "plan": "Envelopar a exclusão sidecar/post/descriptions/SEO em transação InnoDB com rollback (ou documentar risco de exclusão parcial aceita).",
     "owner": "David L. Almeida",
     "target": "frente admin blog",
-    "gate": "P2 — decision gate do readiness_gate (deletion semantics)"
+    "gate": "P2 — decision gate do readiness_gate (deletion semantics)",
+    "status": "implementado em KZ-48"
    },
-   "plan_registered_at": "2026-11-18"
+   "plan_registered_at": "2026-11-18",
+   "mitigated_at": "2026-11-18"
   },
   {
    "id": "F918-05",

@@ -326,12 +326,14 @@ class Blog extends \Reamur\System\Engine\Model {
             $this->db->query("DELETE FROM `" . $this->t('blog_post') . "` WHERE `post_id` = '" . $post_id . "'");
             $this->db->query("DELETE FROM `" . $this->t('blog_post_description') . "` WHERE `post_id` = '" . $post_id . "'");
             $this->db->query("DELETE FROM `" . $this->t('seo_url') . "` WHERE `key` = 'blog_id=" . $post_id . "'");
+            // KZ-48 (F918-04): revisions dentro da MESMA transação — antes ficavam
+            // órfãs se o delete de bdre_revision falhasse após o COMMIT do post.
+            if ($this->bdreRevisionTableExists()) $this->db->query("DELETE FROM `" . $this->t('bdre_revision') . "` WHERE `entity_type`='blog' AND `entity_id`='" . $post_id . "'");
             if ($this->db->query('COMMIT') !== true) throw new \RuntimeException('blog_delete_transaction_commit_failed');
         } catch (\Throwable $e) {
             try { $this->db->query('ROLLBACK'); } catch (\Throwable $rollbackError) { /* preserve original exception */ }
             throw $e;
         }
-        if ($this->bdreRevisionTableExists()) $this->db->query("DELETE FROM `" . $this->t('bdre_revision') . "` WHERE `entity_type`='blog' AND `entity_id`='" . $post_id . "'");
     }
 
     // ─── internos ────────────────────────────────────────────────────────

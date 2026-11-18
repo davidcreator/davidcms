@@ -1,5 +1,11 @@
 # Changelog
 
+## KZ-48 — F918-04 (P2): atomicidade total do deletePost no blog admin (2026-11-18)
+- `deletePost()` já envolvia post/description/SEO/content em transação, mas o delete de `bdre_revision` ficava **depois do COMMIT** — se falhasse, deixava revisões órfãs. Agora o delete de revisões acontece **dentro da mesma transação**, antes do COMMIT (rollback cobre tudo).
+- Novo checker `tests/check_blog_delete_atomicity.js` (regressão: revision delete antes do COMMIT) → PASS.
+- `docs/F9-18-Risk-Register.json`: F918-04 pasa de `open` para `mitigated`. Hash congelado atualizado na decision-matrix (KZ-48 DECIDED).
+
+
 ## KZ-47 — Governança: F9-18 Risk-Register atualizado no HEAD atual (2026-11-18)
 - `docs/F9-18-Risk-Register.json`: head atualizado para `99255ac1`; os 6 achados P2 abertos receberam `remediation_plan` (plano, responsável, frente alvo e gate) — F918-03/04/05/07/08/09.
 - Registrado o **fechamento do ciclo Dracaunos-Security** (KZ-38…KZ-46, versão 1.7.0, checker PASS 105, CI success até `99255ac1`). Ferramenta segue interna, nunca `rms_tool` público.
