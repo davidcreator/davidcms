@@ -1,5 +1,11 @@
 # Changelog
 
+## KZ-45 — Dracaunos-Security: gestão de sessões ativas do admin (2026-11-18)
+- Nova seção **Sessões ativas do admin** no painel Dracaunos: lista as sessões vigentes de `rms_session` que têm `user_id` (só admin logado), com usuário, id da sessão e expiração.
+- Botão **Encerrar** (POST + CSRF + modify) apaga a sessão na hora; a sessão atual nunca pode ser encerrada por ali (fail-safe no controller).
+- Dracaunos-Security sobe para **1.6.0**; checker `tests/check_dracaunos_security.js` a 97 verificações (PASS). Idiomas pt-br/en-us/es-eu. Sem SQL novo.
+
+
 ## KZ-44 — Dracaunos-Security: recuperação de senha do próprio admin (2026-11-18)
 - Novas rotas públicas do admin `common/forgotten` + `common/reset` (liberadas na muralha `startup/login`): o usuário informa o username, grava token `type='admin_password'` em `dracaunos_recovery` (resposta genérica, sem revelar se existe) e tem rate limit por IP (6/15min).
 - Aprovação no painel Dracaunos: aprovar um pedido `admin_password` mostra o link de reset **uma vez** (flash). O reset valida o token pendente, aplica a política de senhas (`passwordMeetsPolicy`), grava a nova senha com `password_changed_at = NOW()`, consome o token (`used`) e registra no log de logins.

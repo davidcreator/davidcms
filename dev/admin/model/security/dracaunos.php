@@ -262,4 +262,29 @@ class Dracaunos extends \Reamur\System\Engine\Model {
         $this->db->query("DELETE FROM `" . DB_PREFIX . "dracaunos_login_log` WHERE `date_added` < NOW() - INTERVAL " . $days . " DAY");
         return $this->db->countAffected();
     }
+
+    // ── Sessões ativas do admin (KZ-45) ──────────────────────────────────
+    /** sessões vigentes com user_id na sessão (só admin logado), mais recentes primeiro */
+    public function getAdminSessions(int $limit = 50): array {
+        $rows = $this->db->query("SELECT `session_id`,`data`,`expire` FROM `" . DB_PREFIX . "session` WHERE `expire` > NOW() ORDER BY `expire` DESC LIMIT " . (int)$limit)->rows;
+        $out = [];
+        foreach ($rows as $r) {
+            if (!preg_match('/user_id\|i:(\d+)/', (string)$r['data'], $m)) continue; // sem login = não é sessão de admin
+            $uid = (int)$m[1];
+            $u = $this->db->query("SELECT `username` FROM `" . DB_PREFIX . "user` WHERE `user_id` = " . $uid . " LIMIT 1");
+            $out[] = [
+                'session_id' => (string)$r['session_id'],
+                'user_id'    => $uid,
+                'username'   => (string)($u->row['username'] ?? ''),
+                'expire'     => (string)$r['expire'],
+            ];
+        }
+        return $out;
+    }
+    /** encerra uma sessão pelo id (valida o formato antes) */
+    public function destroySession(string $sessionId): bool {
+        if (!preg_match('/^[a-zA-Z0-9,-]{1,64}$/', $sessionId)) return false;
+        $this->db->query("DELETE FROM `" . DB_PREFIX . "session` WHERE `session_id` = '" . $this->db->escape($sessionId) . "'");
+        return $this->db->countAffected() > 0;
+    }
 }

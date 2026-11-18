@@ -176,4 +176,14 @@ for (const l of langs) {
   check(read('dev/admin/language/' + l + '/common/login.php').includes('text_forgotten'), 'idioma ' + l + ' tem text_forgotten no login');
 }
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44 + hotfix KZ-43)');
+// 13) KZ-45: gestão de sessões ativas do admin
+check(dracModel.includes('function getAdminSessions(') && dracModel.includes('function destroySession('), 'model lista e encerra sessões do admin');
+check(dracModel.includes('user_id\\|i:'), 'model só lista sessões com login (user_id na sessão)');
+check(dracCtrl.includes("case 'session_kill'"), 'controller tem ação de encerrar sessão');
+check(dracCtrl.includes('$this->session->getId()'), 'controller protege a sessão atual (não mata a própria)');
+check(dracTwig.includes('text_sessions') && dracTwig.includes('session_kill'), 'twig tem a seção de sessões com botão de encerrar');
+for (const l of langs) {
+  check(read('dev/admin/language/' + l + '/security/dracaunos.php').includes('text_sessions'), 'idioma ' + l + ' tem a seção de sessões');
+}
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45 + hotfix KZ-43)');

@@ -68,3 +68,11 @@ $_['button_export_csv'] = 'Exportar CSV';
 $_['button_prune']      = 'Limpiar registros antiguos';
 $_['help_prune']        = 'Elimina auditoría y log de logins más antiguos que la retención configurada (dracaunos_audit_days / dracaunos_login_log_days).';
 $_['text_pruned']       = 'Limpieza hecha: %d registro(s) de auditoría y %d de log de logins eliminados.';
+
+// KZ-45 — sesiones activas del admin
+$_['text_sessions']        = 'Sesiones activas del admin';
+$_['help_sessions']        = 'Sesiones del panel con login activo. Cerrar una echa ese acceso al instante (tu propia sesión no se puede cerrar desde aquí).';
+$_['col_session']          = 'Sesión'; $_['col_expire'] = 'Expira';
+$_['button_kill_session']  = 'Cerrar';
+$_['text_own_session']     = 'tu sesión';
+$_['text_session_killed']  = 'Sesión cerrada.';

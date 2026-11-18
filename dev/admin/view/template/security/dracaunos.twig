@@ -98,6 +98,22 @@
       </div>
     </div></div></div>
 
+    {# ── Sessões ativas do admin (KZ-45) ── #}
+    <div class="col-lg-6"><div class="card h-100"><div class="card-body">
+      <h2 class="h6 card-title">{{ text_sessions }}</h2>
+      <p class="text-body-secondary small">{{ help_sessions }}</p>
+      <div class="table-responsive"><table class="table table-sm small">
+        <thead><tr><th>{{ col_user }}</th><th>{{ col_session }}</th><th>{{ col_expire }}</th><th></th></tr></thead>
+        <tbody>{% for s in sessions %}<tr>
+          <td>{{ s.username|e }}</td><td><code>{{ s.session_id|slice(0, 12) }}…</code></td><td>{{ s.expire }}</td>
+          <td>{% if can_modify and s.session_id != current_sid %}<form method="post" action="{{ action }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="session_kill"><input type="hidden" name="session_id" value="{{ s.session_id }}">
+            <button class="btn btn-outline-danger btn-sm">{{ button_kill_session }}</button>
+          </form>{% else %}<span class="text-body-secondary small">{{ text_own_session }}</span>{% endif %}</td>
+        </tr>{% else %}<tr><td colspan="4" class="text-body-secondary">{{ text_empty }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div></div></div>
+
     {# ── Recuperação / verificação ── #}
     <div class="col-lg-6"><div class="card h-100"><div class="card-body">
       <h2 class="h6 card-title">{{ text_recovery }}</h2>

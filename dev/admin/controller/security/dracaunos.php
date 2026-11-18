@@ -37,6 +37,9 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
         );
         $data['recovery']    = $this->model_security_dracaunos->getRecovery('pending', 30);
         $data['audit']       = $this->model_security_dracaunos->getAuditLogs(50);
+        // KZ-45: sessões ativas do admin (a própria sessão fica marcada)
+        $data['sessions']    = $this->model_security_dracaunos->getAdminSessions(50);
+        $data['current_sid'] = $this->session->getId();
         // KZ-42: links de exportação CSV das seções de auditoria e log de logins
         $data['export_audit']  = $this->url->link('security/dracaunos.exportAudit');
         $data['export_logins'] = $this->url->link('security/dracaunos.exportLogins');
@@ -113,6 +116,14 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
             case 'ip_delete':
                 $this->model_security_dracaunos->deleteIpRule((int)($post['rule_id'] ?? 0));
                 $this->session->data['success'] = $this->language->get('text_ip_deleted');
+                break;
+            case 'session_kill':
+                // KZ-45: encerra sessão remota; nunca a sessão atual (fail-safe)
+                $sid = (string)($post['session_id'] ?? '');
+                if ($sid !== '' && $sid !== $this->session->getId()) {
+                    $this->model_security_dracaunos->destroySession($sid);
+                }
+                $this->session->data['success'] = $this->language->get('text_session_killed');
                 break;
             case 'prune':
                 // KZ-42: limpeza por retencao (auditoria + log de logins)
