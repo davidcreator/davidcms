@@ -1,5 +1,11 @@
 # Changelog
 
+## KZ-52 — Hotfix: página do Dracaunos/JOW sem CSS (`{{ header }}` escapado) (2026-11-18)
+- A página carregava mas sem estilo: `security/dracaunos.twig` (e `payments/jow.twig`) usavam `{{ header }}` / `{{ footer }}` **sem `|raw`** — no admin o autoescape escapava o HTML do header, incluindo os `<link>` de CSS.
+- Corrigido para `{{ header|raw }}` / `{{ footer|raw }}` nos dois templates (convenção do restante do admin). Catálogo não é afetado (autoescape desligado lá).
+- Regressão no checker: varredura dos `.twig` de `dev/admin/` contra `{{ header }}`/`{{ footer }}` sem `|raw` → checker a 116 verificações (PASS).
+
+
 ## KZ-51 — Hotfix: Twig rejeita variável que começa com dígito (`2fa_required`) (2026-11-18)
 - Fatal no WAMP (`Twig\Error\SyntaxError ... "fa_required"` em `security/dracaunos.twig:79`): `{% if 2fa_required %}` — identificador Twig não pode começar com número.
 - Corrigido: variável do template renomeada para `twofa_required` (controller + twig). O campo POST `name="2fa_required"` continua igual (nome de formulário HTML não é identificador Twig).

@@ -1,4 +1,4 @@
-{{ header }}
+{{ header|raw }}
 <div class="container-fluid py-3">
   <nav aria-label="breadcrumb"><ol class="breadcrumb">{% for b in breadcrumbs %}<li class="breadcrumb-item"><a href="{{ b.href }}">{{ b.text }}</a></li>{% endfor %}</ol></nav>
   <h1 class="h3 mb-3"><i class="bi bi-credit-card"></i> {{ heading_title }}</h1>
@@ -103,4 +103,4 @@
     </div></div></div>
   </div>
 </div>
-{{ footer }}
+{{ footer|raw }}

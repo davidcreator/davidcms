@@ -231,4 +231,18 @@ const twigDigitVar = [];
 check(twigDigitVar.length === 0, 'nenhum .twig usa variável começando com dígito ({{ 2fa... }} / {% if 2... %}) — ' + (twigDigitVar.join(',') || 'limpo'));
 check(dracTwig.includes('{% if twofa_required %}'), 'toggle 2FA do painel usa twofa_required (variável válida)');
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51 + hotfix KZ-43)');
+// 18) KZ-52 hotfix: header/footer DEVEM ser {{ header|raw }} — escapado quebra o CSS da página
+const escapedShell = [];
+(function walk(dir) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = dir + '/' + e.name;
+    if (e.isDirectory()) walk(p);
+    else if (e.name.endsWith('.twig')) {
+      const c = fs.readFileSync(p, 'utf8');
+      if (/\{\{\s*(header|footer)\s*\}\}/.test(c)) escapedShell.push(p);
+    }
+  }
+})('dev/admin/view/template'); // admin tem autoescape ligado; catálogo não
+check(escapedShell.length === 0, 'nenhum .twig do ADMIN usa {{ header }}/{{ footer }} sem |raw (CSS quebra) — ' + (escapedShell.join(',') || 'limpo'));
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51/52 + hotfix KZ-43)');

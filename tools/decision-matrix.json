@@ -1,11 +1,11 @@
 {
  "task": "F11-11",
- "head": "1c32f551",
+ "head": "528869f2",
  "description": "Matriz de decisao dos 10 MARKER_OR_FINDING mantidos pelo F11-09",
  "policy": "Nenhuma decisao tomada por inferencia. Contratos congelados ate registro explicito de status=DECIDED.",
  "status_counts": {
   "PENDING_DECISION": 0,
-  "DECIDED": 22
+  "DECIDED": 23
  },
  "frozen_artifacts_sha256": {
   "docs/F9-14-Contrato-Editor-MVP.json": "c4a8b91d18ab9bad64ea9a698bca0e945c9024be477df1cbffa14b3f8288e4e7",
@@ -716,6 +716,33 @@
    "decision_date": "2026-11-18",
    "decision": "A",
    "evidence_ref": "node tests/check_dracaunos_security.js -> PASS"
+  },
+  {
+   "id": "KZ-52",
+   "checker": "tests/check_dracaunos_security.js",
+   "phase": "KZ-52 hotfix",
+   "nature": "HOTFIX",
+   "status": "DECIDED",
+   "evidence": "dracaunos.twig e jow.twig usavam {{ header }}/{{ footer }} sem |raw → HTML escapado, página sem CSS no admin. Corrigido para |raw; checker varre .twig do admin contra o padrão.",
+   "options": [
+    {
+     "id": "A",
+     "label": "Registrar o hotfix",
+     "requires": "autorizacao explicita do responsavel"
+    },
+    {
+     "id": "B",
+     "label": "Registrar como achado P1 no F9-18-Risk-Register.json",
+     "requires": "decisao do responsavel"
+    }
+   ],
+   "recommendation": "A",
+   "recommended_action": "Hotfix registrado",
+   "frozen_artifacts": [],
+   "decided_by": "David L. Almeida (responsavel)",
+   "decision_date": "2026-11-18",
+   "decision": "A",
+   "evidence_ref": "node tests/check_dracaunos_security.js -> PASS (116)"
   }
  ],
  "retified_in": "F11-14",
