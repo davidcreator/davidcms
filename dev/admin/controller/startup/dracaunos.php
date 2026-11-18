@@ -33,6 +33,12 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
         $ua = (string)($this->request->server['HTTP_USER_AGENT'] ?? '');
         $route = (string)$this->config->get('_route', '');
 
+        // 0) KZ-58: defesa — DDoS suspeito, sonda em path padrão e UA de scanner (antes de tudo)
+        $uri = (string)($this->request->server['REQUEST_URI'] ?? '');
+        $drac->detectDdos($ip, $route);
+        $drac->detectProbe($uri, $ip, $route);
+        $drac->detectScannerUa($ua, $ip, $route);
+
         // 1) Regras de IP em todas as rotas do admin (escopo 'admin').
         if (!$drac->ipAllowed($ip, 'admin')) {
             $drac->addLoginLog(0, '', $ip, $ua, false);

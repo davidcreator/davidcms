@@ -107,3 +107,26 @@ $_['tab_overview']   = 'Overview';
 $_['tab_access']     = 'Access';
 $_['tab_ip']         = 'IP & sessions';
 $_['tab_people']     = 'People';
+
+// KZ-58 — Defense tab
+$_['tab_defense']          = 'Defense';
+$_['text_incidents']       = 'Security incidents';
+$_['text_defense_settings'] = 'Automatic defense';
+$_['text_scan']            = 'Malicious script scan';
+$_['help_scan']            = 'Looks for suspicious patterns (eval+base64, shell_exec, webshell, remote include) in dev/ PHP files. Bundled libs are exempt.';
+$_['button_scan']          = 'Run scan';
+$_['text_scan_done']       = 'Scan finished: %d findings.';
+$_['text_scan_clean']      = 'No suspicious patterns found.';
+$_['text_scan_found']      = 'Suspicious patterns found:';
+$_['col_type']             = 'Type'; $_['col_severity'] = 'Severity'; $_['col_detail'] = 'Detail'; $_['col_status'] = 'Status';
+$_['sev_critical']         = 'Critical'; $_['sev_high'] = 'High'; $_['sev_medium'] = 'Medium'; $_['sev_total_open'] = 'Open incidents';
+$_['text_open']            = 'open'; $_['text_handled'] = 'handled'; $_['text_no_incidents'] = 'No incidents recorded.';
+$_['button_handle']        = 'Handle';
+$_['text_incident_handled'] = 'Incident marked as handled.';
+$_['text_defense_saved']   = 'Defense saved.';
+$_['entry_bf_max']         = 'Failed logins to block';
+$_['entry_bf_window']      = 'Window (min)';
+$_['entry_ddos_limit']     = 'Request limit (DDoS)';
+$_['entry_auto_block']     = 'Auto-block IP on brute force';
+$_['entry_probe_detect']   = 'Detect probes on standard paths (.env, /wp-login, /phpmyadmin...)';
+$_['entry_scanner_ua']     = 'Detect scanner user-agents (sqlmap, nikto, nmap...)';

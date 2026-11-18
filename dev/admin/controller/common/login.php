@@ -63,6 +63,7 @@ class Login extends \Reamur\System\Engine\Controller {
 
             if (!$drac->ipAllowed($ip, 'admin')) {
                 $logAttempt(0, false);
+                $drac->detectBruteForce($ip); // KZ-58: força bruta → incidente + auto-bloqueio
                 $data['error'] = $this->language->get('error_ip_blocked');
             } elseif (!$csrfOk) {
                 $data['error'] = $this->language->get('error_csrf');
@@ -84,6 +85,7 @@ class Login extends \Reamur\System\Engine\Controller {
                         return;
                     }
                     $logAttempt((int)$urow['user_id'], false);
+                    $drac->detectBruteForce($ip); // KZ-58
                     $data['error']     = $this->language->get('error_2fa');
                     $data['show_2fa']  = true;
                 } elseif ($this->user->login($username, $password)) {

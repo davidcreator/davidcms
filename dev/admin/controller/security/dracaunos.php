@@ -47,6 +47,12 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
         $data['ip_rules']    = $this->model_security_dracaunos->getIpRules();
         $data['retention']   = $this->model_security_dracaunos->getRetention(); // KZ-49: página de configurações
         $data['users']       = $this->model_security_dracaunos->getUsers(30);
+        // KZ-58: aba Defesa — incidentes, stats e toggles
+        $data['incidents']   = $this->model_security_dracaunos->getIncidents(50);
+        $data['incident_stats'] = $this->model_security_dracaunos->getIncidentStats();
+        $data['defense']     = $this->model_security_dracaunos->getDefense();
+        $data['scan_result'] = $this->session->data['dracaunos_scan_result'] ?? null;
+        unset($this->session->data['dracaunos_scan_result']);
         $data['user_edit']   = $this->url->link('user/user.edit');
         $data['error']       = $this->session->data['error'] ?? '';
         $data['success']     = $this->session->data['success'] ?? '';
@@ -152,6 +158,27 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
                 $this->model_security_dracaunos->saveRetention(
                     (int)($post['audit_days'] ?? 30), (int)($post['login_log_days'] ?? 30));
                 $this->session->data['success'] = $this->language->get('text_retention_saved');
+                break;
+            case 'defense_save':
+                // KZ-58: toggles de defesa (brute force, DDoS, sonda, scanner UA)
+                $this->model_security_dracaunos->saveDefense($post['defense'] ?? []);
+                $this->session->data['success'] = $this->language->get('text_defense_saved');
+                break;
+            case 'incident_handle':
+                $this->model_security_dracaunos->setIncidentStatus((int)($post['incident_id'] ?? 0), (string)($post['status'] ?? 'handled'));
+                $this->session->data['success'] = $this->language->get('text_incident_handled');
+                break;
+            case 'scan_run':
+                // KZ-58: varredura estática de scripts maliciosos em dev/
+                $findings = $this->model_security_dracaunos->scanFiles(dirname(__DIR__, 3));
+                $this->session->data['dracaunos_scan_result'] = [
+                    'count' => count($findings), 'findings' => array_slice($findings, 0, 30),
+                ];
+                $this->session->data['success'] = sprintf($this->language->get('text_scan_done'), count($findings));
+                if ($findings) {
+                    $this->model_security_dracaunos->logIncident('malicious_script', (string)$this->request->ip(), 'security/dracaunos.scan',
+                        count($findings) . ' padrões suspeitos na varredura', 'critical');
+                }
                 break;
             case 'prune':
                 // KZ-42: limpeza por retencao (auditoria + log de logins)

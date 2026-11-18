@@ -296,6 +296,23 @@ class Dracaunos extends \Reamur\System\Engine\Model {
         return $this->db->countAffected();
     }
 
+    // ── Camada de defesa / incidentes (KZ-58) — lógica em system/library/security/defense.php
+    private ?\Reamur\System\Library\Security\Defense $defenseLib = null;
+    private function defense(): \Reamur\System\Library\Security\Defense {
+        return $this->defenseLib ??= new \Reamur\System\Library\Security\Defense($this->db, $this->config);
+    }
+    public function logIncident(string $t, string $ip, string $r, string $d, string $sev = 'medium'): void { $this->defense()->logIncident($t, $ip, $r, $d, $sev); }
+    public function getIncidents(int $limit = 50): array { return $this->defense()->getIncidents($limit); }
+    public function getIncidentStats(): array { return $this->defense()->getIncidentStats(); }
+    public function setIncidentStatus(int $id, string $status): void { $this->defense()->setIncidentStatus($id, $status); }
+    public function getDefense(): array { return $this->defense()->getDefense(); }
+    public function saveDefense(array $d): void { $this->defense()->saveDefense($d); }
+    public function detectBruteForce(string $ip, string $route = 'common/login'): bool { return $this->defense()->detectBruteForce($ip, $route); }
+    public function detectDdos(string $ip, string $route): bool { return $this->defense()->detectDdos($ip, $route); }
+    public function detectProbe(string $uri, string $ip, string $route): bool { return $this->defense()->detectProbe($uri, $ip, $route); }
+    public function detectScannerUa(string $ua, string $ip, string $route): bool { return $this->defense()->detectScannerUa($ua, $ip, $route); }
+    public function scanFiles(string $baseDir): array { return $this->defense()->scanFiles($baseDir); }
+
     // ── Configurações da ferramenta (KZ-49) ─────────────────────────────
     /** retenção (dias) configurável no painel: auditoria e log de logins */
     public function getRetention(): array {

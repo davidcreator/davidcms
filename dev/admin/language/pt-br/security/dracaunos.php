@@ -107,3 +107,26 @@ $_['tab_overview']   = 'Visão geral';
 $_['tab_access']     = 'Acesso';
 $_['tab_ip']         = 'IP e sessões';
 $_['tab_people']     = 'Pessoas';
+
+// KZ-58 — aba Defesa
+$_['tab_defense']          = 'Defesa';
+$_['text_incidents']       = 'Incidentes de segurança';
+$_['text_defense_settings'] = 'Defesa automática';
+$_['text_scan']            = 'Varredura de scripts maliciosos';
+$_['help_scan']            = 'Procura padrões suspeitos (eval+base64, shell_exec, webshell, include remoto) nos arquivos PHP de dev/.libs empacotadas são isentas.';
+$_['button_scan']          = 'Executar varredura';
+$_['text_scan_done']       = 'Varredura concluída: %d achados.';
+$_['text_scan_clean']      = 'Nenhum padrão suspeito encontrado.';
+$_['text_scan_found']      = 'Padrões suspeitos encontrados:';
+$_['col_type']             = 'Tipo'; $_['col_severity'] = 'Gravidade'; $_['col_detail'] = 'Detalhe'; $_['col_status'] = 'Status';
+$_['sev_critical']         = 'Crítico'; $_['sev_high'] = 'Alto'; $_['sev_medium'] = 'Médio'; $_['sev_total_open'] = 'Incidentes abertos';
+$_['text_open']            = 'aberto'; $_['text_handled'] = 'tratado'; $_['text_no_incidents'] = 'Nenhum incidente registrado.';
+$_['button_handle']        = 'Tratar';
+$_['text_incident_handled'] = 'Incidente marcado como tratado.';
+$_['text_defense_saved']   = 'Defesa salva.';
+$_['entry_bf_max']         = 'Falhas de login p/ bloqueio';
+$_['entry_bf_window']      = 'Janela (min)';
+$_['entry_ddos_limit']     = 'Limite de requisições (DDoS)';
+$_['entry_auto_block']     = 'Bloquear IP automaticamente em força bruta';
+$_['entry_probe_detect']   = 'Detectar sondas em paths padrão (.env, /wp-login, /phpmyadmin...)';
+$_['entry_scanner_ua']     = 'Detectar user-agents de scanners (sqlmap, nikto, nmap...)';

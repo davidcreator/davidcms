@@ -1,5 +1,14 @@
 # Changelog
 
+## KZ-58 — Dracaunos-Security: camada de defesa ativa (2026-11-18)
+- **Nova aba "Defesa"** no painel: stats de incidentes por gravidade (crítico/alto/médio/total) + tabela de incidentes com badge de severidade e botão "tratar".
+- **Detecções automáticas** (tabela `dracaunos_incident`, criada em runtime): força bruta no login (N falhas na janela → incidente alto + **auto-bloqueio do IP** nos escopos admin e catálogo, toggle), DDoS suspeito (req/min por IP via rate_limit), sondas em paths padrão (`/.env`, `/.git`, `/wp-login`, `/phpmyadmin`...), e user-agents de scanners (sqlmap, nikto, nmap...).
+- **Varredura de scripts maliciosos**: ação no painel que examina os PHP de `dev/` atrás de eval+base64, shell_exec/passthru/system, webshell por `$_GET/POST`, include remoto — libs empacotadas isentas; achados viram incidente `malicious_script`.
+- **Face pública protegida**: nova `startup/dracaunos` no catálogo (registrada em `action_pre_action`) aplica regras de IP escopo catalog + as mismas detecções.
+- Lógica compartilhada em `dev/system/library/security/defense.php` (admin e catálogo). Toggles de defesa na aba (auto-bloqueio, limites, detecções). Idiomas pt-br/en-us/es-eu.
+- Dracaunos-Security **1.11.0**; checker a 168 verificações (PASS). Sem alteração em CHECKSUMS além do CHANGELOG.
+
+
 ## KZ-57 — Hotfix: rótulos de idioma não apareciam nas páginas do Dracaunos/JOW/login (2026-11-18)
 - Causa: o controller chamava `load->language(...)` (que só preenche o serviço) mas **não mesclava as chaves no `$data`** — o Twig renderizava `{{ chave }}` vazio. Conveniente do codebase (ex.: dashboard) é copiar as chaves para o `$data`.
 - Corrigido em `security/dracaunos`, `payments/jow`, `common/login`, `common/forgotten`, `common/reset`: `$data = array_merge($this->load->language(...), $data ?? [])`.

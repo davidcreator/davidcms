@@ -295,4 +295,20 @@ for (const c of ['dev/admin/controller/security/dracaunos.php','dev/admin/contro
   check(read(c).includes('array_merge($this->load->language'), 'idioma mesclado no $data: ' + c);
 }
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51/52/53/54/55/56/57 + hotfix KZ-43)');
+// 24) KZ-58: camada de defesa (incidentes, brute force, DDoS, sondas, scan)
+const defLib = read('dev/system/library/security/defense.php');
+check(defLib.includes('function logIncident(') && defLib.includes('dracaunos_incident'), 'library Defense com tabela de incidentes');
+check(defLib.includes('function detectBruteForce(') && defLib.includes('auto_block_bruteforce'), 'defesa: brute force com auto-bloqueio');
+check(defLib.includes('function detectDdos(') && defLib.includes('function detectProbe(') && defLib.includes('function detectScannerUa('), 'defesa: DDoS + sondas em paths + UA de scanner');
+check(defLib.includes('function scanFiles(') && defLib.includes('shell_exec'), 'defesa: varredura de scripts maliciosos');
+check(dracModel.includes('function detectBruteForce(') && dracModel.includes('Security\\Defense'), 'model admin delega para a library Defense');
+check(read('dev/admin/controller/startup/dracaunos.php').includes('detectDdos') && read('dev/admin/controller/startup/dracaunos.php').includes('detectProbe'), 'startup admin chama defesa (DDoS/sonda/scanner)');
+check(read('dev/catalog/controller/startup/dracaunos.php').includes('detectProbe') && read('dev/system/config/catalog.php').includes('startup/dracaunos'), 'catálogo com startup de defesa registrada');
+check(read('dev/admin/controller/common/login.php').includes('detectBruteForce'), 'falha de login dispara detección de força bruta');
+check(dracCtrl.includes("case 'defense_save'") && dracCtrl.includes("case 'incident_handle'") && dracCtrl.includes("case 'scan_run'"), 'painel tem ações defense_save/incident_handle/scan_run');
+check(dracTwig.includes('tab-defense') && dracTwig.includes('incident_stats.critical'), 'painel tem aba Defesa com stats e incidentes');
+for (const l of langs) {
+  check(read('dev/admin/language/' + l + '/security/dracaunos.php').includes('tab_defense'), 'idioma ' + l + ' tem a aba Defesa');
+}
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51/52/53/54/55/56/57/58 + hotfix KZ-43)');

@@ -70,6 +70,7 @@
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-access" type="button" role="tab"><i class="bi bi-key me-1" aria-hidden="true"></i>{{ tab_access }}</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ip" type="button" role="tab"><i class="bi bi-globe me-1" aria-hidden="true"></i>{{ tab_ip }}</button></li>
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-people" type="button" role="tab"><i class="bi bi-people me-1" aria-hidden="true"></i>{{ tab_people }}</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-defense" type="button" role="tab"><i class="bi bi-bug me-1" aria-hidden="true"></i>{{ tab_defense }}{% if incident_stats.total > 0 %} <span class="badge text-bg-danger ms-1">{{ incident_stats.total }}</span>{% endif %}</button></li>
   </ul>
 
   <div class="tab-content">
@@ -273,6 +274,102 @@
             </table></div>
           </div>
         </div></div>
+      </div>
+    </div>
+
+    {# ── Aba: defesa / incidentes (KZ-58) ── #}
+    <div class="tab-pane fade" id="tab-defense" role="tabpanel">
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><div class="card drac-stat"><div class="card-body d-flex align-items-center gap-3">
+          <div class="tile" style="background:linear-gradient(135deg,#8b0000,#e5484d);"><i class="bi bi-exclamation-octagon" aria-hidden="true"></i></div>
+          <div><div class="num">{{ incident_stats.critical }}</div><div class="lbl">{{ sev_critical }}</div></div>
+        </div></div></div>
+        <div class="col-6 col-md-3"><div class="card drac-stat"><div class="card-body d-flex align-items-center gap-3">
+          <div class="tile" style="background:linear-gradient(135deg,#f76b15,#ffb224);"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i></div>
+          <div><div class="num">{{ incident_stats.high }}</div><div class="lbl">{{ sev_high }}</div></div>
+        </div></div></div>
+        <div class="col-6 col-md-3"><div class="card drac-stat"><div class="card-body d-flex align-items-center gap-3">
+          <div class="tile" style="background:linear-gradient(135deg,#b08800,#ffd43b);"><i class="bi bi-flag" aria-hidden="true"></i></div>
+          <div><div class="num">{{ incident_stats.medium }}</div><div class="lbl">{{ sev_medium }}</div></div>
+        </div></div></div>
+        <div class="col-6 col-md-3"><div class="card drac-stat"><div class="card-body d-flex align-items-center gap-3">
+          <div class="tile" style="background:linear-gradient(135deg,#4f6ef7,#91a7ff);"><i class="bi bi-list-ul" aria-hidden="true"></i></div>
+          <div><div class="num">{{ incident_stats.total }}</div><div class="lbl">{{ sev_total_open }}</div></div>
+        </div></div></div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-7"><div class="card drac-card h-100">
+          <div class="card-header"><h2 class="h6 mb-0"><span class="ic"><i class="bi bi-bug" aria-hidden="true"></i></span>{{ text_incidents }}</h2></div>
+          <div class="card-body">
+            <div class="drac-table-wrap"><table class="table table-sm table-hover align-middle small">
+              <thead><tr><th>{{ col_date }}</th><th>{{ col_type }}</th><th>{{ col_severity }}</th><th>IP</th><th>{{ col_detail }}</th><th>{{ col_status }}</th><th></th></tr></thead>
+              <tbody>{% for i in incidents %}<tr>
+                <td class="text-nowrap">{{ i.date_added }}</td>
+                <td><span class="badge text-bg-light border">{{ i.type|e }}</span></td>
+                <td>{% if i.severity == 'critical' %}<span class="badge text-bg-danger">{{ sev_critical }}</span>
+                    {% elseif i.severity == 'high' %}<span class="badge text-bg-warning">{{ sev_high }}</span>
+                    {% else %}<span class="badge text-bg-secondary">{{ i.severity|e }}</span>{% endif %}</td>
+                <td><code>{{ i.ip|e }}</code></td><td>{{ i.detail|e }}</td>
+                <td>{% if i.status == 'open' %}<span class="badge text-bg-danger">{{ text_open }}</span>{% else %}<span class="badge text-bg-success">{{ text_handled }}</span>{% endif %}</td>
+                <td>{% if can_modify and i.status == 'open' %}<form method="post" action="{{ action }}" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="incident_handle"><input type="hidden" name="incident_id" value="{{ i.incident_id }}"><input type="hidden" name="status" value="handled">
+                  <button class="btn btn-outline-success btn-sm">{{ button_handle }}</button></form>{% endif %}</td>
+              </tr>{% else %}<tr><td colspan="7" class="text-body-secondary text-center py-3">{{ text_no_incidents }}</td></tr>{% endfor %}</tbody>
+            </table></div>
+          </div>
+        </div></div>
+
+        <div class="col-lg-5">
+          <div class="card drac-card mb-4">
+            <div class="card-header"><h2 class="h6 mb-0"><span class="ic"><i class="bi bi-shield-check" aria-hidden="true"></i></span>{{ text_defense_settings }}</h2></div>
+            <div class="card-body">
+              <form method="post" action="{{ action }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="defense_save">
+                <div class="row g-2 mb-2">
+                  <div class="col-sm-6"><label class="form-label small fw-semibold" for="df-bf-max">{{ entry_bf_max }}</label>
+                    <input type="number" class="form-control form-control-sm" id="df-bf-max" name="defense[bruteforce_max]" min="3" max="50" value="{{ defense.bruteforce_max }}"{% if not can_modify %} disabled{% endif %}></div>
+                  <div class="col-sm-6"><label class="form-label small fw-semibold" for="df-bf-win">{{ entry_bf_window }}</label>
+                    <input type="number" class="form-control form-control-sm" id="df-bf-win" name="defense[bruteforce_window_min]" min="1" max="60" value="{{ defense.bruteforce_window_min }}"{% if not can_modify %} disabled{% endif %}></div>
+                </div>
+                <div class="mb-2"><label class="form-label small fw-semibold" for="df-ddos">{{ entry_ddos_limit }}</label>
+                  <div class="input-group input-group-sm"><input type="number" class="form-control" id="df-ddos" name="defense[ddos_max_req_min]" min="30" max="2000" value="{{ defense.ddos_max_req_min }}"{% if not can_modify %} disabled{% endif %}><span class="input-group-text">req/min</span></div></div>
+                <div class="form-check form-switch mb-1">
+                  <input class="form-check-input" type="checkbox" role="switch" id="df-autoblock" name="defense[auto_block_bruteforce]" value="1"{% if defense.auto_block_bruteforce %} checked{% endif %}{% if not can_modify %} disabled{% endif %}>
+                  <label class="form-check-label small" for="df-autoblock">{{ entry_auto_block }}</label>
+                </div>
+                <div class="form-check form-switch mb-1">
+                  <input class="form-check-input" type="checkbox" role="switch" id="df-probe" name="defense[probe_detect]" value="1"{% if defense.probe_detect %} checked{% endif %}{% if not can_modify %} disabled{% endif %}>
+                  <label class="form-check-label small" for="df-probe">{{ entry_probe_detect }}</label>
+                </div>
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" role="switch" id="df-ua" name="defense[scanner_ua_detect]" value="1"{% if defense.scanner_ua_detect %} checked{% endif %}{% if not can_modify %} disabled{% endif %}>
+                  <label class="form-check-label small" for="df-ua">{{ entry_scanner_ua }}</label>
+                </div>
+                {% if can_modify %}<button class="btn btn-primary btn-sm px-3">{{ button_save }}</button>{% endif %}
+              </form>
+            </div>
+          </div>
+
+          <div class="card drac-card">
+            <div class="card-header"><h2 class="h6 mb-0"><span class="ic"><i class="bi bi-search" aria-hidden="true"></i></span>{{ text_scan }}</h2></div>
+            <div class="card-body">
+              <p class="form-text">{{ help_scan }}</p>
+              {% if can_modify %}<form method="post" action="{{ action }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="scan_run">
+                <button class="btn btn-outline-primary btn-sm"><i class="bi bi-search me-1" aria-hidden="true"></i>{{ button_scan }}</button>
+              </form>{% endif %}
+              {% if scan_result %}
+                {% if scan_result.count == 0 %}
+                  <div class="alert alert-success py-2 small mt-3 mb-0"><i class="bi bi-check-octagon me-1" aria-hidden="true"></i>{{ text_scan_clean }}</div>
+                {% else %}
+                  <div class="alert alert-danger py-2 small mt-3">{{ text_scan_found }} {{ scan_result.count }}</div>
+                  <ul class="small mt-2 mb-0">{% for f in scan_result.findings %}<li><code>{{ f.file }}:{{ f.line }}</code> — {{ f.pattern }}</li>{% endfor %}</ul>
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
