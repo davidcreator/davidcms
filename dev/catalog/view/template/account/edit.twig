@@ -1,0 +1,16 @@
+{{ header }}
+<main class="container py-5" style="max-width:520px">
+  <h1 class="h3 mb-3">{{ heading_edit }}</h1>
+  {% if success %}<div class="alert alert-success">{{ text_saved }}</div>{% endif %}
+  {% for e in errors %}<div class="alert alert-danger">{{ e }}</div>{% endfor %}
+  <form method="post" action="{{ action }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="row g-2 mb-3">
+      <div class="col"><input class="form-control" name="firstname" value="{{ old.firstname }}" required></div>
+      <div class="col"><input class="form-control" name="lastname" value="{{ old.lastname }}" required></div>
+    </div>
+    <div class="mb-3"><input class="form-control" name="telephone" value="{{ old.telephone }}"></div>
+    <button class="btn btn-primary">{{ button_save }}</button> <a class="btn btn-link" href="{{ back }}">{{ text_back }}</a>
+  </form>
+</main>
+{{ footer }}

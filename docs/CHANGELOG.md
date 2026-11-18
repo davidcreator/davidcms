@@ -1,7 +1,8 @@
 # Changelog
 
-## KZ-37 — Menu do Dracaunos-Security com rótulo curto "Dracaunos" (2026-11-18)
-- `text_menu_security` nos 3 idiomas (pt-br/en-us/es-eu) passa a ser apenas **Dracaunos**; o ícone `bi-shield-lock` (escudo) já estava no item de menu.
+## KZ-38 — Dracaunos-Security no catálogo: conta do cliente completa (Fase A) (2026-11-18)
+- Novas rotas públicas em `account/`: **login/logout** (com verificação de IP escopo catalog e log em `dracaunos_login_log`), **register** com verificação de e-mail (token em `dracaunos_recovery`), **verify**, **forgotten** (recuperar senha por token) e **reset**, **account** (perfil) + **edit** + **password**.
+- Model `account/dracaunos` (catálogo) reusa as tabelas do Dracaunos; views Twig e idiomas pt-br/en-us/es-eu. Sem SQL novo.
 
 ## Hotfix CI KZ-34/35 — pattern com hífen escapado e link externo fora do escopo do docs-links (2026-11-17)
 - `security/dracaunos.twig`: pattern do campo rota do admin vira `[a-z0-9][a-z0-9\-]{0,31}` (no modo `v` do navegador, hífen no fim da classe é erro de sintaxe) — check_form_patterns volta a 99 PASS.

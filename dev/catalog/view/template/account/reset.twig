@@ -1,0 +1,14 @@
+{{ header }}
+<main class="container py-5" style="max-width:480px">
+  <h1 class="h3 mb-3">{{ heading_reset }}</h1>
+  {% if done %}<div class="alert alert-success">{{ text_done }}</div><p><a href="{{ login }}">{{ text_login }}</a></p>
+  {% else %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+    {% if not error %}<form method="post" action="{{ action }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="mb-3"><input class="form-control" type="password" name="password" placeholder="{{ entry_password_new }}" minlength="8" required></div>
+      <button class="btn btn-primary">{{ button_reset }}</button>
+    </form>{% endif %}
+  {% endif %}
+</main>
+{{ footer }}

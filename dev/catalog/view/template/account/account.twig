@@ -1,0 +1,12 @@
+{{ header }}
+<main class="container py-5" style="max-width:640px">
+  <h1 class="h3 mb-3">{{ heading_title }}</h1>
+  <div class="card"><div class="card-body">
+    <p><strong>{{ customer.firstname }} {{ customer.lastname }}</strong></p>
+    <p class="text-body-secondary">{{ customer.email }}{% if customer.telephone %} · {{ customer.telephone }}{% endif %}</p>
+    <p class="mb-0"><a class="btn btn-outline-primary btn-sm" href="{{ edit }}">{{ button_edit }}</a>
+       <a class="btn btn-outline-secondary btn-sm" href="{{ password }}">{{ button_password }}</a>
+       <a class="btn btn-outline-danger btn-sm" href="{{ logout }}">{{ button_logout }}</a></p>
+  </div></div>
+</main>
+{{ footer }}

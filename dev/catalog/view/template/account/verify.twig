@@ -1,0 +1,7 @@
+{{ header }}
+<main class="container py-5" style="max-width:480px">
+  <h1 class="h3 mb-3">{{ heading_verify }}</h1>
+  {% if ok %}<div class="alert alert-success">{{ text_verified }}</div><p><a href="{{ login }}">{{ text_login }}</a></p>
+  {% else %}<div class="alert alert-danger">{{ text_invalid }}</div>{% endif %}
+</main>
+{{ footer }}

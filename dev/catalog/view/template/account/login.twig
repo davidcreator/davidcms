@@ -1,0 +1,15 @@
+{{ header }}
+<main class="container py-5" style="max-width:480px">
+  <h1 class="h3 mb-3">{{ heading_title }}</h1>
+  {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+  <form method="post" action="{{ action }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="mb-3"><label class="form-label" for="in-email">{{ entry_email }}</label>
+      <input class="form-control" type="email" id="in-email" name="email" value="{{ email }}" required></div>
+    <div class="mb-3"><label class="form-label" for="in-pass">{{ entry_password }}</label>
+      <input class="form-control" type="password" id="in-pass" name="password" required></div>
+    <button class="btn btn-primary">{{ button_login }}</button>
+  </form>
+  <p class="mt-3 small"><a href="{{ register }}">{{ text_register }}</a> · <a href="{{ forgotten }}">{{ text_forgotten }}</a></p>
+</main>
+{{ footer }}
