@@ -1,0 +1,25 @@
+{# dev/admin/view/template/common/reset.twig — nova senha do admin com token (KZ-44) #}
+{{ header|raw }}
+<main class="auth-card" role="main">
+  <img class="auth-brand" src="{{ site_url }}view/image/reamurcms.png" alt="ReamurCMS" width="181" height="36">
+  <h1>{{ heading_reset }}</h1>
+
+  {% if error %}
+  <div class="alert error">{{ error }}</div>
+  <p class="mt-3"><a href="{{ login }}">{{ text_back_login }}</a></p>
+  {% elseif done %}
+  <div class="alert success">{{ text_done }}</div>
+  <p class="mt-3"><a href="{{ login }}">{{ text_back_login }}</a></p>
+  {% else %}
+  <form method="post" action="{{ action }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="field">
+      <label for="input-password">{{ entry_password_new }}</label>
+      <input type="password" name="password" id="input-password" class="form-control" autocomplete="new-password" required autofocus>
+      <p class="text-body-secondary small">{{ help_password }}</p>
+    </div>
+    <button type="submit" class="btn primary btn-submit">{{ button_reset }}</button>
+  </form>
+  {% endif %}
+</main>
+{{ footer|raw }}

@@ -32,3 +32,6 @@ $_['error_ip_blocked'] = 'Access blocked for this IP (Dracaunos-Security rule).'
 $_['error_2fa']        = 'Invalid verification code.';
 $_['entry_code_2fa']   = 'Verification code (2FA)';
 $_['help_2fa_login']   = 'Open your authenticator app and enter the 6-digit code.';
+
+// KZ-44 — admin password recovery
+$_['text_forgotten'] = 'Forgot my password';

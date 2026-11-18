@@ -47,9 +47,10 @@
       "name": "Dracaunos-Security",
       "legacy_name": "",
       "vendor": "Dracaunos",
-      "version": "1.4.0",
+      "version": "1.5.0",
       "updated_at": "2026-11-18",
       "notes": [
+        "KZ-44: recuperação de senha do próprio admin — rotas públicas common/forgotten + common/reset, token type admin_password em dracaunos_recovery, aprovação no painel mostra o link de reset uma vez; reset consome o token, aplica a política de senhas e renova password_changed_at. Rate limit por IP nas duas rotas.",
         "KZ-42: exportação CSV da auditoria e do log de logins (security/dracaunos.exportAudit / .exportLogins) e limpeza por retenção via painel (pruneAudit/pruneLoginLogs com dracaunos_audit_days e dracaunos_login_log_days).",
         "KZ-41: 2FA obrigatório no admin (dracaunos_2fa_required=1) — startup/dracaunos bloqueia todas as rotas até ativar o 2FA na conta (só security/dracaunos e logout liberados); login redireciona direto para o painel Dracaunos nesse caso.",
         "KZ-39 Fase B: regras de IP aplicadas em TODAS as rotas do admin (startup/dracaunos, antes da muralha de login), auditoria do admin (tabela dracaunos_audit), expiração de senha (rms_user.password_changed_at + política max_age_days, troca obrigatória em user/profile) e rota real do admin aplicada (acesso pela pasta física /admin/ recusado com 403 quando há rota custom).",

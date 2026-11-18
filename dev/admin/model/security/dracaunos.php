@@ -105,6 +105,22 @@ class Dracaunos extends \Reamur\System\Engine\Model {
             . $this->db->escape($ip) . "','pending', NOW())");
         return $token;
     }
+    // ── Recuperação de senha do ADMIN (KZ-44) ────────────────────────────
+    public function getRecoveryById(int $id): array {
+        $q = $this->db->query("SELECT * FROM `" . DB_PREFIX . "dracaunos_recovery` WHERE `recovery_id` = " . (int)$id . " LIMIT 1");
+        return (array)($q->row ?? []);
+    }
+    public function getRecoveryByToken(string $token): array {
+        $q = $this->db->query("SELECT * FROM `" . DB_PREFIX . "dracaunos_recovery` WHERE `token` = '" . $this->db->escape($token) . "' AND `status` = 'pending' LIMIT 1");
+        return (array)($q->row ?? []);
+    }
+    /** nova senha do admin: hash + carimbo de expiração renovado */
+    public function setUserPassword(int $userId, string $password): void {
+        $this->db->query("UPDATE `" . DB_PREFIX . "user` SET `password` = '"
+            . $this->db->escape(password_hash($password, PASSWORD_DEFAULT))
+            . "', `password_changed_at` = NOW() WHERE `user_id` = " . (int)$userId);
+    }
+
     public function getRecovery(string $status = 'pending', int $limit = 50): array {
         return $this->db->query("SELECT * FROM `" . DB_PREFIX . "dracaunos_recovery` WHERE `status` = '" . $this->db->escape($status)
             . "' ORDER BY `recovery_id` DESC LIMIT " . (int)$limit)->rows;

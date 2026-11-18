@@ -157,4 +157,23 @@ for (const l of langs) {
   check(offenders.length === 0, 'nenhum "= $this->load->model(...)" em dev/ (retorno é void): ' + offenders.join(', '));
 }
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42 + hotfix KZ-43)');
+// 12) KZ-44: recuperação de senha do admin (rotas públicas token-gated)
+const loginWall = read('dev/admin/controller/startup/login.php');
+check(loginWall.includes("'common/forgotten'") && loginWall.includes("'common/reset'"), 'rotas públicas de recuperação liberadas na muralha de login');
+const adminForgotten = read('dev/admin/controller/common/forgotten.php');
+check(adminForgotten.includes("'admin_password'"), 'token de recuperação do admin usa type admin_password');
+check(adminForgotten.includes('RateLimit'), 'forgotten do admin tem rate limit por IP');
+check(!/=\s*\$this->load->model\(/.test(adminForgotten), 'forgotten do admin carrega model via registry');
+const adminReset = read('dev/admin/controller/common/reset.php');
+check(adminReset.includes("'admin_password'") && adminReset.includes('passwordMeetsPolicy'), 'reset do admin valida token e aplica a política de senhas');
+check(adminReset.includes('setUserPassword'), 'reset do admin grava a nova senha');
+check(dracModel.includes('function getRecoveryByToken(') && dracModel.includes('function setUserPassword('), 'model tem getRecoveryByToken e setUserPassword');
+const loginTwig = read('dev/admin/view/template/common/login.twig');
+check(loginTwig.includes('{{ forgotten }}'), 'tela de login do admin tem link de recuperação');
+for (const l of langs) {
+  const lf = read('dev/admin/language/' + l + '/common/forgotten.php');
+  check(lf.includes('heading_title') && lf.includes('error_token'), 'idioma ' + l + ' tem common/forgotten completo');
+  check(read('dev/admin/language/' + l + '/common/login.php').includes('text_forgotten'), 'idioma ' + l + ' tem text_forgotten no login');
+}
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44 + hotfix KZ-43)');

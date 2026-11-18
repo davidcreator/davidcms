@@ -113,6 +113,7 @@ class Login extends \Reamur\System\Engine\Controller {
         }
 
         $data['action']     = $this->url->link('common/login');
+        $data['forgotten']  = $this->url->link('common/forgotten'); // KZ-44: recuperação de senha do admin
         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
 
         // Chrome compartilhado (F2-4)

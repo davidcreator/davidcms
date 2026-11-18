@@ -31,3 +31,6 @@ $_['error_ip_blocked'] = 'Acesso bloqueado para este IP (regra Dracaunos-Securit
 $_['error_2fa']        = 'Código de verificação inválido.';
 $_['entry_code_2fa']   = 'Código de verificação (2FA)';
 $_['help_2fa_login']   = 'Abra seu app autenticador e informe o código de 6 dígitos.';
+
+// KZ-44 — recuperação de senha do admin
+$_['text_forgotten'] = 'Esqueci minha senha';

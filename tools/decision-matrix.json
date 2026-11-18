@@ -1,11 +1,11 @@
 {
  "task": "F11-11",
- "head": "e935eedc",
+ "head": "340eb12f",
  "description": "Matriz de decisao dos 10 MARKER_OR_FINDING mantidos pelo F11-09",
  "policy": "Nenhuma decisao tomada por inferencia. Contratos congelados ate registro explicito de status=DECIDED.",
  "status_counts": {
   "PENDING_DECISION": 0,
-  "DECIDED": 14
+  "DECIDED": 15
  },
  "frozen_artifacts_sha256": {
   "docs/F9-14-Contrato-Editor-MVP.json": "c4a8b91d18ab9bad64ea9a698bca0e945c9024be477df1cbffa14b3f8288e4e7",
@@ -20,12 +20,12 @@
   "dev/install/sql/schema.sql": "c9dd1ec27af95d7506b8aff6af06133f75b288c2db31e5537fb7fbac2e1f67a5",
   "docs/PROJECT-HANDOFF.md": "5f65d408d5b9831b0999d09ace2fbb1248bd4695282fe75fa6fde0859aeb6c84",
   "dev/admin/controller/startup/dracaunos.php": "e9e906e3504988c2d6d84069d19f8da5ca31899e34be3c908a4a7fd973ac71ff",
-  "dev/admin/controller/common/login.php": "426db95fe5d1f00402dc6117a3fcf3edf1d9c97126cf5a8b78ec155f747d3f36",
-  "dev/admin/controller/security/dracaunos.php": "ddef5d30f0dedfd0bb5e2895e6a7c6492ae6572c7a8256999ed1f737850a7221",
+  "dev/admin/controller/common/login.php": "adb01b76c832d4dff98d17a3b54a6ea602257271d07c03c3a2aa3a07bfff1a98",
+  "dev/admin/controller/security/dracaunos.php": "3a74f9110112f5a601daa869140a4963bd47329ad45850b904a07602b17b1ba8",
   "dev/admin/controller/user/profile.php": "5631d2d8c6aa041fa5e2d5c906ed0d4b32432a3d91c3a7c3b971c381afd635a6",
-  "dev/admin/model/security/dracaunos.php": "84ea75299384a7eb56819134d5686e8ba1722d5da48c2d1b00c4e7791e3e7e62",
+  "dev/admin/model/security/dracaunos.php": "112484eb28cf426ee6925a50ee2bd135f31e77e9b9664cf94a2d70c71d8c5024",
   "dev/admin/model/user/user.php": "c392b402d1eb25e134e9eecec373a352d64d038450751a8c3206a50980dadeb4",
-  "dev/admin/model/tool/internal-tools.json": "3e786a9b18a5dc582431a9ab802a3e842c01d438d2e77992549933f03424adc9",
+  "dev/admin/model/tool/internal-tools.json": "d9970676dd170b89eb40633cb355381bbe093ca7544a652b4d60bba2889a10c8",
   "dev/admin/view/template/security/dracaunos.twig": "cf1255d2591ba43bb910612bf8a9ba46b4eb721a85ae77f3b72d0a82bcfb8db7",
   "dev/admin/view/template/user/profile.twig": "2ccbb355d5f96e1fc56c663bcfa1433404a5fe9c1a22efedb8a411af1710f7b3",
   "dev/system/config/admin.php": "70fb7804aa7a18506c2e83aebf724ab870caac61605f00b2b65d55126d48fb7d",
@@ -471,6 +471,38 @@
    "decision_date": "2026-11-18",
    "decision": "A",
    "evidence_ref": "log local WAMP: \"Call to a member function ipAllowed() on null ... login.php:62\"; node tests/check_dracaunos_security.js -> PASS (75)"
+  },
+  {
+   "id": "KZ-44",
+   "checker": "tests/check_dracaunos_security.js",
+   "phase": "KZ-44 (Dracaunos-Security)",
+   "nature": "FERRAMENTA_INTERNA",
+   "status": "DECIDED",
+   "evidence": "Recuperação de senha do admin: rotas públicas common/forgotten + common/reset com token admin_password em dracaunos_recovery, aprovação no painel mostra link de reset uma vez, reset aplica política de senhas e renova password_changed_at. Rate limit por IP. Checker PASS (89 verificacoes). Sem SQL novo.",
+   "options": [
+    {
+     "id": "A",
+     "label": "Registrar a entrega do KZ-44 e atualizar os hashes dos artefatos congelados alterados",
+     "requires": "autorizacao explicita do responsavel"
+    },
+    {
+     "id": "B",
+     "label": "Registrar como achado P1/P2 no F9-18-Risk-Register.json",
+     "requires": "decisao do responsavel"
+    }
+   ],
+   "recommendation": "A",
+   "recommended_action": "Atualizar frozen_artifacts_sha256 dos 4 artefatos modificados pelo KZ-44 (já feito neste commit)",
+   "frozen_artifacts": [
+    "dev/admin/controller/common/login.php",
+    "dev/admin/controller/security/dracaunos.php",
+    "dev/admin/model/security/dracaunos.php",
+    "dev/admin/model/tool/internal-tools.json"
+   ],
+   "decided_by": "David L. Almeida (responsavel)",
+   "decision_date": "2026-11-18",
+   "decision": "A",
+   "evidence_ref": "node tests/check_dracaunos_security.js -> PASS (89 verificacoes)"
   }
  ],
  "retified_in": "F11-14",

@@ -93,8 +93,16 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
                 $this->session->data['success'] = $this->language->get('text_2fa_disabled');
                 break;
             case 'recovery_handle':
-                $this->model_security_dracaunos->setRecoveryStatus((int)($post['recovery_id'] ?? 0), (string)($post['status'] ?? 'pending'));
-                $this->session->data['success'] = $this->language->get('text_recovery_handled');
+                $rid = (int)($post['recovery_id'] ?? 0);
+                $row = $this->model_security_dracaunos->getRecoveryById($rid);
+                $this->model_security_dracaunos->setRecoveryStatus($rid, (string)($post['status'] ?? 'pending'));
+                // KZ-44: aprovar pedido de reset do ADMIN mostra o link de reset uma vez
+                if ($row && $row['type'] === 'admin_password' && (string)($post['status'] ?? '') === 'approved') {
+                    $this->session->data['success'] = $this->language->get('text_recovery_handled')
+                        . ' ' . $this->url->link('common/reset') . '&token=' . $row['token'];
+                } else {
+                    $this->session->data['success'] = $this->language->get('text_recovery_handled');
+                }
                 break;
             case 'ip_add':
                 $this->model_security_dracaunos->addIpRule(

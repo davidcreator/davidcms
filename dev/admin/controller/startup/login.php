@@ -15,8 +15,8 @@ namespace Reamur\Admin\Controller\Startup;
 
 class Login extends \Reamur\System\Engine\Controller {
 
-    /** Rotas que não exigem sessão ativa */
-    private const PUBLIC_ROUTES = ['common/login', 'common/logout'];
+    /** Rotas que não exigem sessão ativa (KZ-44: recuperação de senha do admin) */
+    private const PUBLIC_ROUTES = ['common/login', 'common/logout', 'common/forgotten', 'common/reset'];
 
     /** Muralha: sem sessão válida → common/login (redireciona e encerra) */
     public function index(): void {

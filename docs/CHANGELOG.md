@@ -1,5 +1,12 @@
 # Changelog
 
+## KZ-44 — Dracaunos-Security: recuperação de senha do próprio admin (2026-11-18)
+- Novas rotas públicas do admin `common/forgotten` + `common/reset` (liberadas na muralha `startup/login`): o usuário informa o username, grava token `type='admin_password'` em `dracaunos_recovery` (resposta genérica, sem revelar se existe) e tem rate limit por IP (6/15min).
+- Aprovação no painel Dracaunos: aprovar um pedido `admin_password` mostra o link de reset **uma vez** (flash). O reset valida o token pendente, aplica a política de senhas (`passwordMeetsPolicy`), grava a nova senha com `password_changed_at = NOW()`, consome o token (`used`) e registra no log de logins.
+- Link "Esqueci minha senha" na tela de login do admin. Idiomas pt-br/en-us/es-eu (novo `common/forgotten.php`).
+- Dracaunos-Security sobe para **1.5.0**; checker `tests/check_dracaunos_security.js` passa a 89 verificações (PASS). Sem SQL novo (reusa `dracaunos_recovery`).
+
+
 ## Hotfix KZ-43 — model carregado via registry, não pelo retorno de load->model() (2026-11-18)
 - `Loader::model()` devolve `void` (registra um Proxy em `model_<rota>`); o login do admin e os controllers `account/*` do catálogo atribuíam o retorno (`$drac = $this->load->model(...)`) → `null` e fatal `Call to a member function ipAllowed() on null` em `/admin/login`. Corrigido para `$this->load->model(...)` + `$this->model_security_dracaunos` / `$this->model_account_dracaunos` nos 8 arquivos.
 - Checker `tests/check_dracaunos_security.js` ganha verificação de regressão: nenhum `= $this->load->model(` em `dev/` (75 verificações, PASS).
