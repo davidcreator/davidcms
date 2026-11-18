@@ -24,6 +24,7 @@ class Login extends \Reamur\System\Engine\Controller {
         }
 
         $this->load->language('common/login');
+        $data = array_merge($this->load->language('common/login'), $data ?? []); // KZ-57
 
         $this->document->setTitle($this->language->get('heading_title'));
 

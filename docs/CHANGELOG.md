@@ -1,5 +1,11 @@
 # Changelog
 
+## KZ-57 — Hotfix: rótulos de idioma não apareciam nas páginas do Dracaunos/JOW/login (2026-11-18)
+- Causa: o controller chamava `load->language(...)` (que só preenche o serviço) mas **não mesclava as chaves no `$data`** — o Twig renderizava `{{ chave }}` vazio. Conveniente do codebase (ex.: dashboard) é copiar as chaves para o `$data`.
+- Corrigido em `security/dracaunos`, `payments/jow`, `common/login`, `common/forgotten`, `common/reset`: `$data = array_merge($this->load->language(...), $data ?? [])`.
+- Regressão no checker: esses 5 controllers devem conter o merge de idioma → 155 verificações (PASS).
+
+
 ## KZ-56 — Dracaunos-Security: dashboard visual estilo painel executivo (2026-11-18)
 - Página virou dashboard de segurança: **6 cartões de estatísticas** (logins, falhas, sessões ativas, recuperação pendente, regras de IP, usuários) com tiles em gradiente, e **4 abas** (Visão geral / Acesso / IP e sessões / Pessoas) usando o `bootstrap.bundle` já carregado no footer — nenhum script novo injetado.
 - Estilos com escopo próprio em bloco `<style>` da página (permitido pelo CSP `style-src 'unsafe-inline'`; script inline continua proibido e o checker valida). Tabelas com cabeçalho uppercase e badges.

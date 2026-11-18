@@ -12,6 +12,7 @@ class Forgotten extends \Reamur\System\Engine\Controller {
 
     public function index(): void {
         $this->load->language('common/forgotten');
+        $data = array_merge($this->load->language('common/forgotten'), $data ?? []); // KZ-57
         $this->document->setTitle($this->language->get('heading_title'));
 
         $data['error'] = '';

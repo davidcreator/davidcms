@@ -289,4 +289,10 @@ for (const l of langs) {
   check(read('dev/admin/language/' + l + '/security/dracaunos.php').includes('tab_overview'), 'idioma ' + l + ' tem as abas do dashboard');
 }
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51/52/53/54/55/56 + hotfix KZ-43)');
+// 23) KZ-57: controllers que renderizam twig com {{ chave_de_idioma }} devem mesclar o idioma no $data
+for (const c of ['dev/admin/controller/security/dracaunos.php','dev/admin/controller/payments/jow.php',
+                 'dev/admin/controller/common/login.php','dev/admin/controller/common/forgotten.php','dev/admin/controller/common/reset.php']) {
+  check(read(c).includes('array_merge($this->load->language'), 'idioma mesclado no $data: ' + c);
+}
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51/52/53/54/55/56/57 + hotfix KZ-43)');

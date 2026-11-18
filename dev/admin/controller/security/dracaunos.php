@@ -12,6 +12,7 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
 
     public function index(): void {
         $this->load->language('security/dracaunos');
+        $data = array_merge($this->load->language('security/dracaunos'), $data ?? []); // KZ-57: idioma entra no $data (twig usa {{ chave }})
         $this->load->model('security/dracaunos');
         $this->document->setTitle($this->language->get('heading_title'));
 
