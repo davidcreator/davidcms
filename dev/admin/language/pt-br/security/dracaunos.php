@@ -92,3 +92,6 @@ $_['entry_audit_days']     = 'Retenção do log de auditoria (dias)';
 $_['entry_login_log_days'] = 'Retenção do log de logins (dias)';
 $_['help_retention']       = 'Registros mais antigos que isso são removidos pela ação de poda (prune). Mínimo 1, máximo 3650 dias.';
 $_['text_retention_saved'] = 'Retenção salva.';
+
+// KZ-55 — UI da página
+$_['entry_admin_route']    = 'Slug da rota do painel';

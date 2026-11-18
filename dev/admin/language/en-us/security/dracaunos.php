@@ -92,3 +92,6 @@ $_['entry_audit_days']     = 'Audit log retention (days)';
 $_['entry_login_log_days'] = 'Login log retention (days)';
 $_['help_retention']       = 'Records older than this are removed by the prune action. Min 1, max 3650 days.';
 $_['text_retention_saved'] = 'Retention saved.';
+
+// KZ-55 — page UI
+$_['entry_admin_route']    = 'Panel route slug';

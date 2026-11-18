@@ -51,6 +51,8 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
         $data['success']     = $this->session->data['success'] ?? '';
         unset($this->session->data['error'], $this->session->data['success']);
 
+        // KZ-54: admin.css é o layout do shell (sidebar/topbar); sem ele a página quebra
+        $this->document->addStyle($this->adminAssetUrl() . 'view/css/admin.css?v=' . \Reamur\Admin\Controller\Common\Header::ASSET_V);
         $data['header'] = $this->load->controller('common/header');
         $data['footer'] = $this->load->controller('common/footer');
         $this->response->setOutput($this->load->view('security/dracaunos', $data));

@@ -1,5 +1,17 @@
 # Changelog
 
+## KZ-55 — Dracaunos-Security: reformulação visual da página (2026-11-18)
+- `security/dracaunos.twig` reescrito: cabeçalho com ícone e descrição, cards com sombra e títulos com ícones, formulários com labels + input-groups, switch para 2FA obrigatório, tabelas com badges (ok/fail, allow/deny, POST/GET) e botões com ícones. KZ-54 (admin.css) também incluso neste pacote.
+- Nenhuma lógica alterada: todas as ações POST preservadas (checker). CSP mantida (sem script inline/on*). Nova chave `entry_admin_route` nos 3 idiomas.
+- Dracaunos-Security **1.9.0**; checker a 132 verificações (PASS).
+
+
+## KZ-55 — Dracaunos-Security: reformulação visual da página (2026-11-18)
+- `security/dracaunos.twig` reescrito: cabeçalho com ícone e descrição, cards com sombra e títulos com ícones, formulários com labels semibold + input-groups ("dias", "/rota"), checkbox de 2FA-obrigatório como switch, tabelas com `table-hover` + badges coloridos (ok/fail, allow/deny, status, método POST/GET) e botões com ícones.
+- Nenhuma lógica alterada: todas as ações POST (`password_policy`, `admin_route`, `retention`, `twofa_*`, `2fa_required`, `session_kill`, `recovery_handle`, `ip_*`, `prune`) preservadas — coberto por checker. CSP mantida (sem script inline/on*).
+- Nova chave de idioma `entry_admin_route` (pt-br/en-us/es-eu). Dracaunos-Security **1.9.0**; checker a 132 verificações (PASS).
+
+
 ## KZ-53 — Hotfix: CSS/JS do admin com 404 (site_url não apontava para admin/) (2026-11-18)
 - Sintoma: painel renderizava sem estilo no WAMP. Causa: templates e controllers do admin montavam assets com `site_url + 'view/...'`; se o `site_url` salvo na instalação não termina em `admin/`, o caminho cai fora de `dev/admin/view/` e o CSS 404.
 - Novo helper `adminAssetUrl()` no Controller base (espelho de `catalogAssetUrl()`): garante base terminando em `admin/` (converte `catalog/` ou raiz). Aplicado em `header/footer/login/forgotten/reset/appearance.twig` (12 refs `{{ site_url }}view/` → `{{ asset_url }}view/`), `adminChrome()`, login/permission/not_found e controllers tool/design/cms/catalog/blog.

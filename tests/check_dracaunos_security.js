@@ -258,4 +258,24 @@ const badAssetRefs = [];
 check(badAssetRefs.length === 0, 'admin não usa site_url+view/ para assets (CSS/JS 404) — ' + (badAssetRefs.join(',') || 'limpo'));
 check(read('dev/system/engine/controller.php').includes('function adminAssetUrl('), 'base Controller tem adminAssetUrl()');
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51/52/53 + hotfix KZ-43)');
+// 20) KZ-54 hotfix: página que renderiza header/footer precisa do admin.css (layout do shell)
+(function walk(dir) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = dir + '/' + e.name;
+    if (e.isDirectory()) { walk(p); continue; }
+    if (!e.name.endsWith('.php')) continue;
+    const c = fs.readFileSync(p, 'utf8');
+    if (c.includes("load->controller('common/header')") && !c.includes('admin.css')) {
+      check(false, 'controller do admin sem admin.css quebra o layout: ' + p);
+    }
+  }
+})('dev/admin/controller');
+checks++;
+
+// 21) KZ-55: UI reformulada — sem script inline/on* (CSP) e ações de formulário preservadas
+check(!/<script|\son[a-z]+\s*=/i.test(dracTwig), 'dracaunos.twig sem <script> inline nem on* (CSP)');
+for (const a of ['password_policy','admin_route','retention','twofa_enable','twofa_disable','2fa_required','session_kill','recovery_handle','ip_test','ip_add','ip_delete','prune']) {
+  check(dracTwig.includes('value="' + a + '"'), 'ação preservada no novo layout: ' + a);
+}
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51/52/53/54/55 + hotfix KZ-43)');
