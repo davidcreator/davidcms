@@ -53,6 +53,8 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
         $data['defense']     = $this->model_security_dracaunos->getDefense();
         $data['scan_result'] = $this->session->data['dracaunos_scan_result'] ?? null;
         unset($this->session->data['dracaunos_scan_result']);
+        $data['verify_result'] = $this->session->data['dracaunos_verify_result'] ?? null;
+        unset($this->session->data['dracaunos_verify_result']);
         $data['user_edit']   = $this->url->link('user/user.edit');
         $data['error']       = $this->session->data['error'] ?? '';
         $data['success']     = $this->session->data['success'] ?? '';
@@ -179,6 +181,13 @@ class Dracaunos extends \Reamur\System\Engine\Controller {
                     $this->model_security_dracaunos->logIncident('malicious_script', (string)$this->request->ip(), 'security/dracaunos.scan',
                         count($findings) . ' padrões suspeitos na varredura', 'critical');
                 }
+                break;
+            case 'verify_run':
+                // KZ-59: rotina de verificação do sistema sob demanda
+                $checks = $this->model_security_dracaunos->runChecks(dirname(__DIR__, 3));
+                $fails = count(array_filter($checks, fn($c) => !$c['ok']));
+                $this->session->data['dracaunos_verify_result'] = ['checks' => $checks, 'fails' => $fails];
+                $this->session->data['success'] = sprintf($this->language->get('text_verify_done'), count($checks), $fails);
                 break;
             case 'prune':
                 // KZ-42: limpeza por retencao (auditoria + log de logins)

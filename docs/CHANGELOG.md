@@ -1,5 +1,12 @@
 # Changelog
 
+## KZ-59 — Dracaunos-Security: verificação do sistema sob demanda (2026-11-18)
+- Novo card **"Verificação do sistema"** na aba Defesa: botão "Executar verificação" roda na hora e devolve relatório item a item (OK/falha): toggles de defesa ativos, auto-bloqueio de força bruta, estado do 2FA, arquivos sensíveis na webroot (.env, config.php...), storage com index.html, **integridade dos arquivos do CHECKSUMS** e varredura de scripts maliciosos.
+- `runChecks()` na library `security/defense.php`; model admin delega; ação `verify_run` no painel.
+- **Nome da ferramenta preservado**: id `dracaunos-security` e título "Dracaunos-Security" inalterados (checker valida).
+- Dracaunos-Security **1.12.0**; checker a 176 verificações (PASS); idiomas pt-br/en-us/es-eu.
+
+
 ## KZ-58 — Dracaunos-Security: camada de defesa ativa (2026-11-18)
 - **Nova aba "Defesa"** no painel: stats de incidentes por gravidade (crítico/alto/médio/total) + tabela de incidentes com badge de severidade e botão "tratar".
 - **Detecções automáticas** (tabela `dracaunos_incident`, criada em runtime): força bruta no login (N falhas na janela → incidente alto + **auto-bloqueio do IP** nos escopos admin e catálogo, toggle), DDoS suspeito (req/min por IP via rate_limit), sondas em paths padrão (`/.env`, `/.git`, `/wp-login`, `/phpmyadmin`...), e user-agents de scanners (sqlmap, nikto, nmap...).

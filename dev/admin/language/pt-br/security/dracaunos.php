@@ -130,3 +130,11 @@ $_['entry_ddos_limit']     = 'Limite de requisições (DDoS)';
 $_['entry_auto_block']     = 'Bloquear IP automaticamente em força bruta';
 $_['entry_probe_detect']   = 'Detectar sondas em paths padrão (.env, /wp-login, /phpmyadmin...)';
 $_['entry_scanner_ua']     = 'Detectar user-agents de scanners (sqlmap, nikto, nmap...)';
+
+// KZ-59 — verificação sob demanda
+$_['text_verify']        = 'Verificação do sistema';
+$_['help_verify']        = 'Roda na hora: toggles de defesa, arquivos sensíveis na webroot, storage protegido, integridade do CHECKSUMS e varredura de scripts maliciosos.';
+$_['button_verify']      = 'Executar verificação';
+$_['text_verify_done']   = 'Verificação concluída: %d itens, %d falhas.';
+$_['text_verify_fails']  = 'Falhas encontradas:';
+$_['text_verify_all_ok'] = 'Todos os itens OK.';

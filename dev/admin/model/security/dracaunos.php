@@ -312,6 +312,7 @@ class Dracaunos extends \Reamur\System\Engine\Model {
     public function detectProbe(string $uri, string $ip, string $route): bool { return $this->defense()->detectProbe($uri, $ip, $route); }
     public function detectScannerUa(string $ua, string $ip, string $route): bool { return $this->defense()->detectScannerUa($ua, $ip, $route); }
     public function scanFiles(string $baseDir): array { return $this->defense()->scanFiles($baseDir); }
+    public function runChecks(string $baseDir): array { return $this->defense()->runChecks($baseDir); }
 
     // ── Configurações da ferramenta (KZ-49) ─────────────────────────────
     /** retenção (dias) configurável no painel: auditoria e log de logins */

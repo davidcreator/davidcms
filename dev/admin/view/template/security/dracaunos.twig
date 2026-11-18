@@ -351,6 +351,27 @@
             </div>
           </div>
 
+          <div class="card drac-card mb-4">
+            <div class="card-header"><h2 class="h6 mb-0"><span class="ic"><i class="bi bi-clipboard2-pulse" aria-hidden="true"></i></span>{{ text_verify }}</h2></div>
+            <div class="card-body">
+              <p class="form-text">{{ help_verify }}</p>
+              {% if can_modify %}<form method="post" action="{{ action }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="verify_run">
+                <button class="btn btn-outline-primary btn-sm"><i class="bi bi-clipboard2-pulse me-1" aria-hidden="true"></i>{{ button_verify }}</button>
+              </form>{% endif %}
+              {% if verify_result %}
+                <ul class="list-group list-group-flush small mt-3">
+                  {% for c in verify_result.checks %}<li class="list-group-item d-flex gap-2 align-items-start px-0">
+                    {% if c.ok %}<span class="badge text-bg-success mt-1">{{ text_ok }}</span>{% else %}<span class="badge text-bg-danger mt-1">{{ text_fail }}</span>{% endif %}
+                    <span><strong>{{ c.label }}</strong><br><span class="text-body-secondary">{{ c.detail }}</span></span>
+                  </li>{% endfor %}
+                </ul>
+                {% if verify_result.fails > 0 %}<div class="alert alert-danger py-2 small mt-2 mb-0">{{ text_verify_fails }} {{ verify_result.fails }}</div>
+                {% else %}<div class="alert alert-success py-2 small mt-2 mb-0">{{ text_verify_all_ok }}</div>{% endif %}
+              {% endif %}
+            </div>
+          </div>
+
           <div class="card drac-card">
             <div class="card-header"><h2 class="h6 mb-0"><span class="ic"><i class="bi bi-search" aria-hidden="true"></i></span>{{ text_scan }}</h2></div>
             <div class="card-body">

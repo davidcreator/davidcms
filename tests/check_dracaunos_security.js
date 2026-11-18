@@ -311,4 +311,16 @@ for (const l of langs) {
   check(read('dev/admin/language/' + l + '/security/dracaunos.php').includes('tab_defense'), 'idioma ' + l + ' tem a aba Defesa');
 }
 
-console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51/52/53/54/55/56/57/58 + hotfix KZ-43)');
+// 25) KZ-59: verificação sob demanda + nome da ferramenta preservado
+check(defLib.includes('function runChecks('), 'library Defense tem runChecks (verificação sob demanda)');
+check(dracCtrl.includes("case 'verify_run'"), 'painel tem ação verify_run');
+check(dracTwig.includes('verify_result') && dracTwig.includes('button_verify'), 'aba Defesa tem card de verificação com resultados');
+const tools2 = JSON.parse(read('dev/admin/model/tool/internal-tools.json'));
+const dracTool = tools2.tools.find(t => t.id === 'dracaunos-security');
+check(!!dracTool && dracTool.version === '1.12.0', 'nome/id da ferramenta preservado: dracaunos-security @1.12.0');
+check(read('dev/admin/language/pt-br/security/dracaunos.php').includes("Dracaunos-Security"), 'título Dracaunos-Security preservado no idioma');
+for (const l of langs) {
+  check(read('dev/admin/language/' + l + '/security/dracaunos.php').includes('button_verify'), 'idioma ' + l + ' tem a verificação');
+}
+
+console.log('PASS  check_dracaunos_security: ' + checks + ' verificacoes (KZ-34/36/38/39/41/42/44/45/46/49/50/51/52/53/54/55/56/57/58/59 + hotfix KZ-43)');

@@ -143,6 +143,59 @@ final class Defense {
         return false;
     }
 
+    /**
+     * KZ-59: rotina de verificação do sistema sob demanda.
+     * Devolve lista de ['label','ok','detail'] — usado pelo painel (botão "Verificar").
+     */
+    public function runChecks(string $baseDir): array {
+        $out = [];
+        $d = $this->getDefense();
+
+        // 1) toggles de defesa ativos
+        $defOk = !empty($d['probe_detect']) && !empty($d['scanner_ua_detect']);
+        $out[] = ['label' => 'Detecção de sondas e scanners ativa', 'ok' => $defOk, 'detail' => $defOk ? 'probe + scanner_ua ligados' : 'verifique os toggles na aba Defesa'];
+
+        // 2) auto-bloqueio de força bruta
+        $out[] = ['label' => 'Auto-bloqueio em força bruta', 'ok' => !empty($d['auto_block_bruteforce']), 'detail' => 'limite ' . (int)$d['bruteforce_max'] . ' falhas em ' . (int)$d['bruteforce_window_min'] . ' min'];
+
+        // 3) 2FA obrigatório (estado atual — informational mas ok=true sempre, detail mostra estado)
+        $req = (string)$this->config->get('dracaunos_2fa_required', '0');
+        $out[] = ['label' => '2FA obrigatório no painel', 'ok' => true, 'detail' => $req === '1' ? 'ATIVADO' : 'desativado (toggle no painel, padrão off)'];
+
+        // 4) arquivos sensíveis não existem na webroot
+        $sensitive = ['/.env', '/config.php', '/.git/config', '/composer.json'];
+        $exposed = [];
+        foreach ($sensitive as $rel) { if (file_exists($baseDir . $rel)) $exposed[] = $rel; }
+        $out[] = ['label' => 'Arquivos sensíveis fora da webroot', 'ok' => $exposed === [], 'detail' => $exposed ? 'EXPOSTOS: ' . implode(', ', $exposed) : 'nenhum arquivo sensível na raiz web'];
+
+        // 5) storage protegido por index.html
+        $out[] = ['label' => 'Diretório storage com index.html', 'ok' => file_exists($baseDir . '/system/storage/index.html') || file_exists($baseDir . '/storage/index.html'), 'detail' => 'impede listagem de arquivos'];
+
+        // 6) integridade dos arquivos do manifesto CHECKSUMS.txt
+        $manifest = @file_get_contents($baseDir . '/CHECKSUMS.txt');
+        if ($manifest === false) {
+            $out[] = ['label' => 'Integridade (CHECKSUMS.txt)', 'ok' => false, 'detail' => 'manifesto não encontrado'];
+        } else {
+            $bad = 0; $n = 0;
+            foreach (preg_split('/\r?\n/', trim($manifest)) as $ln) {
+                $parts = preg_split('/\s+/', trim($ln));
+                if (count($parts) < 4) continue;
+                $file = $parts[3];
+                if (!str_starts_with($file, 'docs/') && !str_starts_with($file, 'tools/')) continue;
+                $n++;
+                $data = @file_get_contents($baseDir . '/' . $file);
+                if ($data === false || !hash_equals($parts[1], hash('sha256', $data))) $bad++;
+            }
+            $out[] = ['label' => 'Integridade dos arquivos (CHECKSUMS)', 'ok' => $bad === 0, 'detail' => $n . ' arquivos, ' . $bad . ' alterados'];
+        }
+
+        // 7) varredura de scripts maliciosos
+        $findings = $this->scanFiles($baseDir);
+        $out[] = ['label' => 'Scripts maliciosos em dev/', 'ok' => $findings === [], 'detail' => count($findings) . ' achados'];
+
+        return $out;
+    }
+
     /** varredura estática de arquivos PHP atrás de scripts maliciosos */
     public function scanFiles(string $baseDir): array {
         $patterns = [

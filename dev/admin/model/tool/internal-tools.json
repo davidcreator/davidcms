@@ -47,9 +47,10 @@
       "name": "Dracaunos-Security",
       "legacy_name": "",
       "vendor": "Dracaunos",
-      "version": "1.11.0",
+      "version": "1.12.0",
       "updated_at": "2026-11-18",
       "notes": [
+        "KZ-59: verificação sob demanda no painel (botão Verificar na aba Defesa): toggles de defesa, arquivos sensíveis na webroot, storage com index.html, integridade CHECKSUMS e varredura de scripts maliciosos — relatório item a item com OK/falha. Nome da ferramenta inalterado (dracaunos-security).",
         "KZ-58: camada de defesa — incidentes (brute force com auto-bloqueio, DDoS suspeito por req/min, sondas em paths padrão, UA de scanner), nova aba Defesa no painel com stats por gravidade + tabela de incidentes, varredura estática de scripts maliciosos em dev/, defesa também no catálogo (startup/dracaunos público). Tabela dracaunos_incident criada em runtime. Lógica em system/library/security/defense.php (compartilhada admin+catálogo).",
         "KZ-56: dashboard estilo painel executivo (AdminLTE-like) na página do Dracaunos — cartões de estatísticas, abas (bootstrap.bundle já no footer), estilos com escopo próprio em <style> (permitido pelo CSP; zero script inline).",
         "KZ-55: reformulação visual da página do painel Dracaunos-Security — cabeçalho com ícone, cards com sombra/ícones, formulários com labels e input-groups, tabelas com badges (sucesso/erro/allow/deny) e botões com ícones. Nenhuma lógica alterada; mesma CSP (sem script inline).",
