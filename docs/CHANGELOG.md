@@ -1,8 +1,7 @@
 # Changelog
 
-## KZ-36 — Dracaunos-Security ligado ao fluxo real de login (IP + log + 2FA) (2026-11-18)
-- `common/login.php` agora: (1) bloqueia o IP se houver regra deny ativa (`dracaunos_ip_rule`, escopo admin); (2) grava TODA tentativa em `dracaunos_login_log` (sucesso/falha, IP, user-agent); (3) se a conta tem 2FA ativo, a senha so vale com o código TOTP de 6 dígitos (campo extra no formulário, `autocomplete="one-time-code"`).
-- Model ganhou `getUserByUsername()`; view de login mostra o campo 2FA só quando exigido; idiomas pt-br/en-us/es-eu com `error_ip_blocked`, `error_2fa`, `entry_code_2fa`, `help_2fa_login`.
+## KZ-37 — Menu do Dracaunos-Security com rótulo curto "Dracaunos" (2026-11-18)
+- `text_menu_security` nos 3 idiomas (pt-br/en-us/es-eu) passa a ser apenas **Dracaunos**; o ícone `bi-shield-lock` (escudo) já estava no item de menu.
 
 ## Hotfix CI KZ-34/35 — pattern com hífen escapado e link externo fora do escopo do docs-links (2026-11-17)
 - `security/dracaunos.twig`: pattern do campo rota do admin vira `[a-z0-9][a-z0-9\-]{0,31}` (no modo `v` do navegador, hífen no fim da classe é erro de sintaxe) — check_form_patterns volta a 99 PASS.
