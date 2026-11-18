@@ -3,7 +3,7 @@
  "review_type": "static_source_readiness_review",
  "repository": "https://github.com/davidcreator/davidcms",
  "branch": "main",
- "head": "8f1540bc",
+ "head": "a7ccf96b",
  "release_ready": false,
  "execution": {
   "php": false,
@@ -38,19 +38,21 @@
   {
    "id": "F918-03",
    "severity": "P2",
-   "status": "open",
+   "status": "mitigated",
    "area": "language_sidecar_selection",
    "path": "dev/catalog/model/blog/blog.php",
    "lines": "68-79",
-   "summary": "Public block language is selected from nonempty legacy HTML description; an intentionally empty snapshot can cause English sidecar content to replace the active-language document.",
+   "summary": "Public block language is selected from nonempty legacy HTML description; an intentionally empty snapshot can cause English sidecar content to replace the active-language document. MITIGADO em KZ-61 (2026-11-18): seleção active-language-first — COALESCE sem NULLIF: linha do idioma ativo AUSENTE (NULL) cai no fallback EN; description vazio intencional (string vazia) é preservado. Aplicado em getPostList e getPost. Coberto pelas fixtures tests/fixtures/f918_regressions.json.",
    "required_action": "Define sidecar-aware active-language-first selection and explicit English fallback behavior.",
    "remediation_plan": {
     "plan": "Definir seleção sidecar-aware active-language-first com fallback explícito para inglês; cobrir com fixture em tests/fixtures/f918_regressions.json.",
     "owner": "David L. Almeida",
     "target": "frente F9-19 (blog público)",
-    "gate": "P2 — não bloqueia release, exige decisão documentada"
+    "gate": "P2 — não bloqueia release, exige decisão documentada",
+    "status": "implementado em KZ-61"
    },
-   "plan_registered_at": "2026-11-18"
+   "plan_registered_at": "2026-11-18",
+   "mitigated_at": "2026-11-18"
   },
   {
    "id": "F918-04",

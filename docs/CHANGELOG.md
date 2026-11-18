@@ -1,5 +1,12 @@
 # Changelog
 
+## KZ-61 — F918-03: seleção de idioma do sidecar active-language-first (2026-11-18)
+- Causa: `COALESCE(NULLIF(pd.description,''), pd_en...)` tratava description vazia do idioma ativo como ausente e caía no conteúdo inglês — um snapshot vazio intencional era substituído pelo sidecar EN.
+- Correção em `getPostList`/`getPost` (catalog blog): `COALESCE(pd.x, pd_en.x)` sem NULLIF — linha do idioma ativo **ausente (NULL)** usa fallback EN; **vazia (''), preserva**. `content_language_id` segue a mesma regra.
+- Coberto pelas fixtures `tests/fixtures/f918_regressions.json` (active-language-empty-sidecar / active-missing-english-present).
+- `docs/F9-18-Risk-Register.json`: F918-03 `open` → `mitigated`.
+
+
 ## KZ-60 — F918-05 (D03): ACL do catálogo de áudio = can_use_audio_catalog (2026-11-18)
 - Decisão D03 tomada pelo responsável: **`can_use_audio_catalog`**.
 - `cms/page_form.twig`: `data-audio-picker` agora exige `can_modify and can_use_audio_catalog` (antes só can_modify — relaxamento de ACL corrigido).

@@ -31,8 +31,8 @@ class Blog extends \Reamur\System\Engine\Model {
 
         $query = $this->db->query(
             "SELECT p.`post_id`, p.`image`, p.`date_published`,
-                    COALESCE(NULLIF(pd.`title`, ''), pd_en.`title`, '')           AS `title`,
-                    COALESCE(NULLIF(pd.`description`, ''), pd_en.`description`, '') AS `description`
+                    COALESCE(pd.`title`, pd_en.`title`, '')           AS `title`,
+                    COALESCE(pd.`description`, pd_en.`description`, '') AS `description`
                FROM `" . $this->t('blog_post') . "` p
           LEFT JOIN `" . $this->t('blog_post_description') . "` pd
                  ON pd.`post_id` = p.`post_id` AND pd.`language_id` = '" . $lang . "'
@@ -66,12 +66,12 @@ class Blog extends \Reamur\System\Engine\Model {
 
         $query = $this->db->query(
             "SELECT p.`post_id`, p.`image`, p.`date_published`, p.`date_modified`,
-                    COALESCE(NULLIF(pd.`title`, ''), pd_en.`title`, '')                 AS `title`,
-                    COALESCE(NULLIF(pd.`description`, ''), pd_en.`description`, '')     AS `description`,
-                    COALESCE(NULLIF(pd.`meta_title`, ''), pd_en.`meta_title`, '')       AS `meta_title`,
-                    COALESCE(NULLIF(pd.`meta_description`, ''), pd_en.`meta_description`, '') AS `meta_description`,
+                    COALESCE(pd.`title`, pd_en.`title`, '')                 AS `title`,
+                    COALESCE(pd.`description`, pd_en.`description`, '')     AS `description`,
+                    COALESCE(pd.`meta_title`, pd_en.`meta_title`, '')       AS `meta_title`,
+                    COALESCE(pd.`meta_description`, pd_en.`meta_description`, '') AS `meta_description`,
                     '" . $lang . "' AS `active_language_id`,
-                    CASE WHEN NULLIF(pd.`description`, '') IS NOT NULL THEN pd.`language_id` ELSE pd_en.`language_id` END AS `content_language_id`
+                    CASE WHEN pd.`description` IS NOT NULL THEN pd.`language_id` ELSE pd_en.`language_id` END AS `content_language_id`
                FROM `" . $this->t('blog_post') . "` p
           LEFT JOIN `" . $this->t('blog_post_description') . "` pd
                  ON pd.`post_id` = p.`post_id` AND pd.`language_id` = '" . $lang . "'

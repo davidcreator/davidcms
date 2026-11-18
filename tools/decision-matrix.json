@@ -1,11 +1,11 @@
 {
  "task": "F11-11",
- "head": "8f1540bc",
+ "head": "a7ccf96b",
  "description": "Matriz de decisao dos 10 MARKER_OR_FINDING mantidos pelo F11-09",
  "policy": "Nenhuma decisao tomada por inferencia. Contratos congelados ate registro explicito de status=DECIDED.",
  "status_counts": {
   "PENDING_DECISION": 0,
-  "DECIDED": 31
+  "DECIDED": 32
  },
  "frozen_artifacts_sha256": {
   "docs/F9-14-Contrato-Editor-MVP.json": "c4a8b91d18ab9bad64ea9a698bca0e945c9024be477df1cbffa14b3f8288e4e7",
@@ -16,7 +16,7 @@
   "docs/F9-27-Base-Hashes.json": "f6c599e26e05040fecd41197a06a06d460653556391bbc549d29d6de51e25d29",
   "docs/F9-27-Preflight-Status.json": "e3a2cdab33258dde056e3f05dd816a6f810da830757bdc21f6c5b1c222704d16",
   "docs/F9-05-Contrato-Definicoes-Campos.json": "8f90ee3bbb7bb8112a84dbde796c4e3cc7f0d448700d5836601d0fd466673f78",
-  "docs/F9-18-Risk-Register.json": "8391a0b8198c364e4e9bbaf2a2c44ca1b48ff73034ead2c7c294d5c1bb620fbf",
+  "docs/F9-18-Risk-Register.json": "0081fb19504c59393e9acba5280480959e8c719e1b4ac52b50d94bb7e863b413",
   "dev/install/sql/schema.sql": "c9dd1ec27af95d7506b8aff6af06133f75b288c2db31e5537fb7fbac2e1f67a5",
   "docs/PROJECT-HANDOFF.md": "5f65d408d5b9831b0999d09ace2fbb1248bd4695282fe75fa6fde0859aeb6c84",
   "dev/admin/controller/startup/dracaunos.php": "e9e906e3504988c2d6d84069d19f8da5ca31899e34be3c908a4a7fd973ac71ff",
@@ -982,6 +982,35 @@
    "decision_date": "2026-11-18",
    "decision": "A",
    "evidence_ref": "tools/e2e/check_audio_catalog.cjs inalterado; F9-18 F918-05 resolved"
+  },
+  {
+   "id": "KZ-61",
+   "checker": "tools/e2e/e2e_f919_static.cjs + tests/fixtures/f918_regressions.json",
+   "phase": "KZ-61 (F918-03)",
+   "nature": "REMEDIACAO_RISCO",
+   "status": "DECIDED",
+   "evidence": "Seleção active-language-first no blog público: COALESCE sem NULLIF em getPostList/getPost — idioma ativo ausente (NULL) → fallback EN; vazio intencional → preservado. Fixtures f918 cobrem os dois cenários. F918-03 mitigated.",
+   "options": [
+    {
+     "id": "A",
+     "label": "Aplicar active-language-first e marcar F918-03 mitigated",
+     "requires": "autorizacao explicita do responsavel"
+    },
+    {
+     "id": "B",
+     "label": "Manter fallback por conteúdo não-vazio",
+     "requires": "decisao do responsavel"
+    }
+   ],
+   "recommendation": "A",
+   "recommended_action": "Hash do register atualizado (já feito)",
+   "frozen_artifacts": [
+    "docs/F9-18-Risk-Register.json"
+   ],
+   "decided_by": "David L. Almeida (responsavel)",
+   "decision_date": "2026-11-18",
+   "decision": "A",
+   "evidence_ref": "fixtures f918_regressions.json (active-language-empty-sidecar, active-missing-english-present)"
   }
  ],
  "retified_in": "F11-14",
