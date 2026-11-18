@@ -27,3 +27,7 @@ $_['error_match']   = 'Usuário e/ou senha não encontrados.';
 
 $_['error_csrf']       = 'Falha na verificação de segurança — entre novamente.';
 $_['error_rate_limit'] = 'Muitas tentativas de login. Aguarde 15 minutos e tente novamente.';
+$_['error_ip_blocked'] = 'Acesso bloqueado para este IP (regra Dracaunos-Security).';
+$_['error_2fa']        = 'Código de verificação inválido.';
+$_['entry_code_2fa']   = 'Código de verificação (2FA)';
+$_['help_2fa_login']   = 'Abra seu app autenticador e informe o código de 6 dígitos.';

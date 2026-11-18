@@ -18,6 +18,13 @@
       <label for="input-password">{{ entry_password }}</label>
       <input type="password" name="password" id="input-password" class="form-control" autocomplete="current-password" required>
     </div>
+    {% if show_2fa|default(false) %}
+    <div class="field">
+      <label for="input-code-2fa">{{ entry_code_2fa }}</label>
+      <input type="text" name="code_2fa" id="input-code-2fa" class="form-control" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000" required autofocus>
+      <p class="text-body-secondary small">{{ help_2fa_login }}</p>
+    </div>
+    {% endif %}
     <button type="submit" class="btn primary btn-submit">{{ button_login }}</button>
   </form>
 

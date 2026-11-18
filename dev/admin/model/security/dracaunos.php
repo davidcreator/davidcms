@@ -172,6 +172,12 @@ class Dracaunos extends \Reamur\System\Engine\Model {
         return true;
     }
 
+    /** usuário por username (para o fluxo de login com 2FA) */
+    public function getUserByUsername(string $username): array {
+        $q = $this->db->query("SELECT `user_id`,`username`,`password`,`status` FROM `" . DB_PREFIX . "user` WHERE `username` = '" . $this->db->escape($username) . "' LIMIT 1");
+        return (array)($q->row ?? []);
+    }
+
     // ── Usuários (gestão de login / perfil) ──────────────────────────────
     public function getUsers(int $limit = 50): array {
         return $this->db->query("SELECT `user_id`,`username`,`email`,`firstname`,`lastname`,`status` FROM `" . DB_PREFIX . "user` ORDER BY `user_id` LIMIT " . (int)$limit)->rows;
