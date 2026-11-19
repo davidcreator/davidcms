@@ -12,6 +12,7 @@ final class GatewayPaymentRequest {
     public readonly string $title;
     public readonly string $returnUrl;
     public readonly string $notificationUrl;
+    public readonly string $payerEmail;
 
     public function __construct(
         string $sourceType,
@@ -23,6 +24,7 @@ final class GatewayPaymentRequest {
         string $title,
         string $returnUrl,
         string $notificationUrl,
+        string $payerEmail = '',
     ) {
         if (!in_array($sourceType, ['order', 'jow_charge'], true) || $sourceId <= 0) {
             throw new \InvalidArgumentException('gateway payment request: invalid source');
@@ -45,6 +47,10 @@ final class GatewayPaymentRequest {
 
         self::assertHttpsUrl($returnUrl);
         self::assertHttpsUrl($notificationUrl);
+        $payerEmail = trim($payerEmail);
+        if ($payerEmail !== '' && (strlen($payerEmail) > 96 || filter_var($payerEmail, FILTER_VALIDATE_EMAIL) === false)) {
+            throw new \InvalidArgumentException('gateway payment request: invalid payer email');
+        }
 
         $this->sourceType = $sourceType;
         $this->sourceId = $sourceId;
@@ -55,6 +61,7 @@ final class GatewayPaymentRequest {
         $this->title = $title;
         $this->returnUrl = $returnUrl;
         $this->notificationUrl = $notificationUrl;
+        $this->payerEmail = $payerEmail;
     }
 
     private static function assertHttpsUrl(string $url): void {

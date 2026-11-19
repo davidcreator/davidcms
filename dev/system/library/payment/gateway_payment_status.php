@@ -10,12 +10,14 @@ final class GatewayPaymentStatus {
     public const CANCELLED = 'cancelled';
     public const EXPIRED = 'expired';
     public const REFUNDED = 'refunded';
+    public const PARTIALLY_REFUNDED = 'partially_refunded';
     public const DISPUTED = 'disputed';
 
     public static function isKnown(string $status): bool {
         return in_array($status, [
             self::PENDING, self::REQUIRES_ACTION, self::AUTHORIZED, self::PAID,
-            self::FAILED, self::CANCELLED, self::EXPIRED, self::REFUNDED, self::DISPUTED,
+            self::FAILED, self::CANCELLED, self::EXPIRED, self::REFUNDED,
+            self::PARTIALLY_REFUNDED, self::DISPUTED,
         ], true);
     }
 
@@ -33,8 +35,9 @@ final class GatewayPaymentStatus {
             self::PENDING => [self::REQUIRES_ACTION, self::AUTHORIZED, self::PAID, self::FAILED, self::CANCELLED, self::EXPIRED, self::DISPUTED],
             self::REQUIRES_ACTION => [self::AUTHORIZED, self::PAID, self::FAILED, self::CANCELLED, self::EXPIRED],
             self::AUTHORIZED => [self::PAID, self::CANCELLED, self::EXPIRED, self::DISPUTED],
-            self::PAID => [self::REFUNDED, self::DISPUTED],
-            self::DISPUTED => [self::PAID, self::REFUNDED],
+            self::PAID => [self::REFUNDED, self::PARTIALLY_REFUNDED, self::DISPUTED],
+            self::PARTIALLY_REFUNDED => [self::REFUNDED, self::DISPUTED],
+            self::DISPUTED => [self::PAID, self::REFUNDED, self::PARTIALLY_REFUNDED],
             self::FAILED => [],
             self::CANCELLED => [],
             self::EXPIRED => [],

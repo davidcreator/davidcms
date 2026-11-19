@@ -60,12 +60,40 @@ class Jow extends \Reamur\System\Engine\Model {
         $this->db->query("UPDATE `" . DB_PREFIX . "jow_charge` SET `pix_payload` = '" . $this->db->escape($payload) . "' WHERE `charge_id` = " . (int)$chargeId);
     }
 
+    public function getCharge(int $chargeId): array {
+        if ($chargeId <= 0) {
+            return [];
+        }
+
+        $query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "jow_charge` WHERE `charge_id` = " . (int)$chargeId . " LIMIT 1");
+
+        return ($query instanceof \stdClass && !empty($query->row)) ? (array)$query->row : [];
+    }
+
     public function getCharges(int $limit = 50): array {
         return $this->db->query("SELECT * FROM `" . DB_PREFIX . "jow_charge` ORDER BY `charge_id` DESC LIMIT " . (int)$limit)->rows;
     }
 
+    /** The core migration is optional; legacy PIX/manual JOW must still render without it. */
+    public function gatewaySchemaReady(): bool {
+        return $this->hasTable('jow_gateway')
+            && $this->hasTable('payment_transaction')
+            && $this->hasTable('payment_gateway_event');
+    }
+
+    /** Locate the single JOW platform-owned Mercado Pago account, if configured. */
+    public function getPlatformGatewayId(): int {
+        $query = $this->db->query(
+            "SELECT `gateway_id` FROM `" . DB_PREFIX . "jow_gateway`"
+            . " WHERE `provider_code` = 'mp' AND `account_label` = 'JOW platform'"
+            . " ORDER BY `gateway_id` ASC LIMIT 1"
+        );
+
+        return ($query instanceof \stdClass && !empty($query->row)) ? (int)$query->row['gateway_id'] : 0;
+    }
+
     public function setChargeStatus(int $chargeId, string $status): void {
-        $allowed = ['pending', 'paid', 'expired', 'refunded', 'canceled'];
+        $allowed = ['pending', 'paid', 'expired', 'refunded', 'canceled', 'partial', 'disputed'];
         if (!in_array($status, $allowed, true)) return;
         $paidAt = $status === 'paid' ? ", `paid_at` = NOW()" : "";
         $this->db->query("UPDATE `" . DB_PREFIX . "jow_charge` SET `status` = '" . $status . "'" . $paidAt . " WHERE `charge_id` = " . (int)$chargeId);
@@ -73,7 +101,7 @@ class Jow extends \Reamur\System\Engine\Model {
 
     /** Relatório de recebimentos por status/método. */
     public function report(): array {
-        $q = $this->db->query("SELECT `status`, `method`, COUNT(*) AS n, SUM(`amount`) AS total FROM `" . DB_PREFIX . "jow_charge` GROUP BY `status`, `method` ORDER BY `status`, `method)");
+        $q = $this->db->query("SELECT `status`, `method`, COUNT(*) AS n, SUM(`amount`) AS total FROM `" . DB_PREFIX . "jow_charge` GROUP BY `status`, `method` ORDER BY `status`, `method`");
         return $q->rows;
     }
 

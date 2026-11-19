@@ -199,6 +199,10 @@ final class DbGatewayLedger implements GatewayLedger {
             throw new \OutOfBoundsException('gateway ledger: verified event references an unknown payment');
         }
 
+        if ($event->chargeAmount !== null && !$record->chargeAmount->equals($event->chargeAmount)) {
+            throw new \RuntimeException('gateway ledger: provider event amount does not match the recorded attempt');
+        }
+
         if ($event->providerPaymentId !== '' && $record->providerPaymentId !== ''
             && $event->providerPaymentId !== $record->providerPaymentId) {
             throw new \RuntimeException('gateway ledger: provider payment ID does not match the recorded attempt');

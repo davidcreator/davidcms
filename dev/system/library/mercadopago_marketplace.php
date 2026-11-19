@@ -222,6 +222,72 @@ class MercadopagoMarketplace {
     }
 
     /**
+     * Cria um pedido Checkout Pro pela Orders API. Essa API exige uma chave
+     * de idempotência e devolve checkout_url; o fluxo Marketplace legado
+     * continua usando createPreference() com o token OAuth do vendedor.
+     *
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    public function createOrder(array $payload, string $accessToken, string $idempotencyKey): array {
+        if (trim($accessToken) === '' || preg_match('/^[A-Za-z0-9._:-]{1,128}$/D', $idempotencyKey) !== 1) {
+            return ['_http_status' => 0, '_curl_error' => 'invalid order credentials or idempotency key'];
+        }
+
+        $request = $this->request(
+            $this->apiUrl() . '/v1/orders',
+            json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            [
+                'accept: application/json',
+                'content-type: application/json',
+                'authorization: Bearer ' . trim($accessToken),
+                'X-Idempotency-Key: ' . $idempotencyKey,
+            ]
+        );
+
+        $data = json_decode($request['body'], true);
+
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        $data['_http_status'] = $request['status'];
+        $data['_curl_error']  = $request['error'];
+
+        return $data;
+    }
+
+    /**
+     * Consulta uma ordem Checkout Pro pela Orders API. A ordem é a fonte da
+     * verdade do webhook; o payload recebido nunca determina o status aplicado.
+     *
+     * @return array<string, mixed>
+     */
+    public function getOrder(string $orderId, string $accessToken): array {
+        if (trim($accessToken) === '' || preg_match('/^[A-Za-z0-9_-]{1,128}$/D', $orderId) !== 1) {
+            return ['_http_status' => 0, '_curl_error' => 'invalid order ID or credentials'];
+        }
+
+        $request = $this->request(
+            $this->apiUrl() . '/v1/orders/' . rawurlencode($orderId),
+            '',
+            ['accept: application/json', 'authorization: Bearer ' . trim($accessToken)],
+            'GET'
+        );
+
+        $data = json_decode($request['body'], true);
+
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        $data['_http_status'] = $request['status'];
+        $data['_curl_error']  = $request['error'];
+
+        return $data;
+    }
+
+    /**
      * Dados públicos do vendedor recém-conectado (nickname/email para a
      * grade admin). Falha aqui NÃO invalida a conexão — o caller segue com
      * campos vazios (o token já foi concedido). Nunca lança exceção.

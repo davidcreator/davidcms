@@ -132,6 +132,23 @@ final class DbGatewayLedgerCoreTest extends TestCase {
         $ledger->applyVerifiedEvent(7, $event);
     }
 
+    public function testProviderEventAmountMustMatchThePersistedChargeExactly(): void {
+        $db = new GatewayLedgerTestDb();
+        $db->rows[] = $this->row(GatewayPaymentStatus::PENDING);
+        $ledger = new DbGatewayLedger($db, 'rms_');
+        $event = GatewayWebhookResult::verified(
+            'evt-wrong-amount',
+            'ref-10',
+            'pay-10',
+            GatewayPaymentStatus::PAID,
+            '',
+            new Money('25.01', 'BRL', 2)
+        );
+
+        $this->expectException(\RuntimeException::class);
+        $ledger->applyVerifiedEvent(7, $event);
+    }
+
     public function testLookupRehydratesExactFxQuoteAndStoredCustomerAction(): void {
         $db = new GatewayLedgerTestDb();
         $row = $this->row(GatewayPaymentStatus::PENDING);

@@ -15,6 +15,7 @@ final class GatewayWebhookResult {
         public readonly string $providerPaymentId = '',
         public readonly string $status = '',
         public readonly string $eventSha256 = '',
+        public readonly ?Money $chargeAmount = null,
     ) {}
 
     public static function ignored(string $reasonCode): self {
@@ -34,22 +35,31 @@ final class GatewayWebhookResult {
         string $providerReference,
         string $providerPaymentId,
         string $status,
-        string $eventSha256 = ''
+        string $eventSha256 = '',
+        ?Money $chargeAmount = null
     ): self {
         if (trim($eventId) === '' || strlen($eventId) > 128 || preg_match('/[\r\n\0]/', $eventId) === 1
             || trim($providerReference) === '' || strlen($providerReference) > 128 || preg_match('/[\r\n\0]/', $providerReference) === 1
             || strlen($providerPaymentId) > 128 || preg_match('/[\r\n\0]/', $providerPaymentId) === 1
-            || !GatewayPaymentStatus::isKnown($status)) {
+            || !GatewayPaymentStatus::isKnown($status)
+            || ($chargeAmount !== null && !$chargeAmount->isPositive())) {
             throw new \InvalidArgumentException('gateway webhook result: verified event is incomplete');
         }
 
         if ($eventSha256 === '') {
-            $eventSha256 = hash('sha256', implode("\0", [$eventId, $providerReference, $providerPaymentId, $status]));
+            $eventSha256 = hash('sha256', implode("\0", [
+                $eventId,
+                $providerReference,
+                $providerPaymentId,
+                $status,
+                $chargeAmount?->currency ?? '',
+                $chargeAmount?->amount() ?? '',
+            ]));
         } elseif (preg_match('/^[a-f0-9]{64}$/D', $eventSha256) !== 1) {
             throw new \InvalidArgumentException('gateway webhook result: event digest must be a lowercase SHA-256 hex string');
         }
 
-        return new self(self::VERIFIED, '', trim($eventId), trim($providerReference), trim($providerPaymentId), $status, $eventSha256);
+        return new self(self::VERIFIED, '', trim($eventId), trim($providerReference), trim($providerPaymentId), $status, $eventSha256, $chargeAmount);
     }
 
     private static function safeCode(string $code): string {
