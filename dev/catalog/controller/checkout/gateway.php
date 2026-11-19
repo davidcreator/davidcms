@@ -8,7 +8,7 @@ use Reamur\System\Library\Payment\GatewayCredentialVault;
 use Reamur\System\Library\Payment\GatewayRegistry;
 use Reamur\System\Library\Payment\GatewayWebhookResult;
 use Reamur\System\Library\Payment\GatewayWebhookService;
-use Reamur\System\Library\Payment\MercadoPagoGatewayAdapter;
+use Reamur\System\Library\Payment\InstalledGatewayAdapters;
 use Reamur\System\Library\Payment\Notification;
 
 class Gateway extends \Reamur\System\Engine\Controller {
@@ -16,7 +16,7 @@ class Gateway extends \Reamur\System\Engine\Controller {
         (new \Reamur\System\Engine\Action('error/not_found'))->execute($this->registry);
     }
 
-    /** Mercado Pago Orders API webhook. The legacy Marketplace endpoint is untouched. */
+    /** Platform-owned gateway webhooks (Mercado Pago Orders, Stripe Checkout, PayPal Orders). */
     public function notify(): void {
         $this->response->addHeader('Content-Type: text/plain; charset=utf-8');
 
@@ -30,7 +30,7 @@ class Gateway extends \Reamur\System\Engine\Controller {
         }
 
         try {
-            $registry = new GatewayRegistry([new MercadoPagoGatewayAdapter()]);
+            $registry = InstalledGatewayAdapters::registry();
             $store = new DbGatewayAccountStore(
                 $this->db,
                 DB_PREFIX,
@@ -39,7 +39,15 @@ class Gateway extends \Reamur\System\Engine\Controller {
             );
             $account = $store->find($gatewayId);
 
-            if ($account === null || $account->providerCode !== 'mp') {
+            if ($account === null) {
+                $this->response->setOutput('ok');
+                return;
+            }
+
+            try {
+                $registry->get($account->providerCode);
+            } catch (\OutOfBoundsException) {
+                // Unknown provider: nothing this deployment can reconcile.
                 $this->response->setOutput('ok');
                 return;
             }
@@ -78,7 +86,7 @@ class Gateway extends \Reamur\System\Engine\Controller {
             // get 200; transient provider/storage failures alone request retry.
             $this->response->setOutput('ok');
         } catch (\Throwable $e) {
-            $this->safeLog('JOW Mercado Pago Orders API webhook failed: ' . $e->getMessage());
+            $this->safeLog('JOW platform gateway webhook failed: ' . $e->getMessage());
             $this->retryResponse();
         }
     }

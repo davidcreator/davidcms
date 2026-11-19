@@ -81,11 +81,15 @@ class Jow extends \Reamur\System\Engine\Model {
             && $this->hasTable('payment_gateway_event');
     }
 
-    /** Locate the single JOW platform-owned Mercado Pago account, if configured. */
-    public function getPlatformGatewayId(): int {
+    /** Locate the single JOW platform-owned account for a provider, if configured. */
+    public function getPlatformGatewayId(string $providerCode): int {
+        if (preg_match('/^[a-z][a-z0-9_]{0,31}$/D', $providerCode) !== 1) {
+            return 0;
+        }
+
         $query = $this->db->query(
             "SELECT `gateway_id` FROM `" . DB_PREFIX . "jow_gateway`"
-            . " WHERE `provider_code` = 'mp' AND `account_label` = 'JOW platform'"
+            . " WHERE `provider_code` = '" . $this->db->escape($providerCode) . "' AND `account_label` = 'JOW platform'"
             . " ORDER BY `gateway_id` ASC LIMIT 1"
         );
 

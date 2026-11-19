@@ -391,7 +391,7 @@ final class UrlGuardPinTest extends TestCase {
             }
         }
 
-        self::assertSame(2, $seen, 'webhook e importador de blog');
+        self::assertSame(3, $seen, 'webhook, importador de blog e client HTTP dos gateways');
         self::assertSame([], $offenders, 'quem chama curl_init usa UrlGuard::inspect() + UrlGuard::curlOptions()');
     }
 

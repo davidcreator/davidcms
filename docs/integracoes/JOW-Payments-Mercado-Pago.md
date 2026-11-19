@@ -1,6 +1,6 @@
 # JOW-Payments + Mercado Pago
 
-**Estado:** integração implementada em patch, ainda não aplicada à base. Nenhuma migração ou cobrança foi executada.
+**Estado:** integração publicada no GitHub do projeto. A validação Sandbox operacional continua pendente; veja também `JOW-Payments-MultiGateway-Adapters.md` para os adapters Stripe/PayPal da mesma fundação.
 
 ## Dois fluxos, credenciais separadas
 

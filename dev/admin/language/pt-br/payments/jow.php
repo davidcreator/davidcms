@@ -6,7 +6,7 @@
  * @license   https://opensource.org/licenses/GPL-3.0
  * @link      https://reamurcms.com
  *
- * payments/jow — JOW-payments (ferramenta interna, KZ-35).
+ * payments/jow — JOW-payments (ferramenta interna, KZ-35) + contas próprias multi-gateway.
  */
 
 $_['heading_title']      = 'JOW-payments';
@@ -34,43 +34,57 @@ $_['text_pix_saved']='Chave PIX salva.'; $_['text_pix_deleted']='Chave PIX remov
 $_['text_store_saved']='Dados do recebedor salvos.';
 $_['error_amount']='Informe um valor BRL maior que zero, com até duas casas decimais.'; $_['error_pix_invalid']='Chave PIX inválida.';
 
-// Integração aditiva Mercado Pago Checkout Pro via JOW-Payments MultiGateway.
+// Integração aditiva de gateways via JOW-Payments MultiGateway (Mercado Pago, Stripe, PayPal).
 $_['entry_provider'] = 'Provedor';
 $_['opt_manual'] = 'Manual / local (fluxo atual)';
-$_['opt_mercadopago_checkout'] = 'Mercado Pago Checkout Pro';
-$_['help_provider'] = 'No Checkout Pro, o pagador escolhe PIX, cartão ou boleto no Mercado Pago. As cobranças manuais e o PIX local continuam disponíveis.';
-$_['text_mp_gateway_config'] = 'Mercado Pago — conta própria da plataforma/Reamur';
-$_['help_mp_account_isolation'] = 'Estas credenciais pertencem à conta própria do JOW. Não são os tokens OAuth dos vendedores usados no checkout Marketplace público.';
-$_['text_mp_not_configured'] = 'Conta ainda não configurada';
-$_['text_mp_enabled'] = 'Ativo';
-$_['text_mp_disabled'] = 'Desativado';
-$_['entry_mp_environment'] = 'Ambiente';
+$_['help_provider'] = 'No checkout hospedado (Mercado Pago, Stripe ou PayPal), o pagador escolhe o meio de pagamento na página do provedor. As cobranças manuais e o PIX local continuam disponíveis.';
+$_['text_gateway_config'] = 'Gateways — contas próprias da plataforma/Reamur';
+$_['help_gateway_account_isolation'] = 'Estas credenciais pertencem às contas próprias do JOW. Não são os tokens OAuth dos vendedores usados no checkout Marketplace público.';
+$_['text_gateway_not_configured'] = 'Conta ainda não configurada';
+$_['text_gateway_enabled'] = 'Ativo';
+$_['text_gateway_disabled'] = 'Desativado';
+$_['entry_gateway_environment'] = 'Ambiente';
 $_['text_sandbox'] = 'Sandbox / teste';
 $_['text_live'] = 'Produção';
-$_['entry_mp_access_token'] = 'Access Token da conta própria';
-$_['help_mp_access_token'] = 'O token fica cifrado no banco. Em Sandbox, use a credencial da conta de vendedor de teste (tokens TEST- não são aceitos pela Orders API); se informar e-mail do pagador, use um endereço @testuser.com. Nunca use a credencial da conta real no ambiente Sandbox. Deixe em branco para manter o valor atual.';
-$_['entry_mp_access_token_clear'] = 'Remover o Access Token gravado';
-$_['entry_mp_gateway_webhook_secret'] = 'Segredo de assinatura Webhooks — Orders API';
-$_['help_mp_gateway_webhook_secret'] = 'Segredo da aplicação que envia eventos Order do Checkout Pro Orders API. É independente de mp_webhook_secret e dos tokens dos vendedores.';
-$_['entry_mp_gateway_webhook_secret_clear'] = 'Remover o segredo de webhook gravado';
-$_['entry_mp_enabled'] = 'Habilitar a conta para novas cobranças JOW';
-$_['text_mp_webhook_url'] = 'URL pública para configurar no app Mercado Pago (evento Order)';
+$_['entry_secret_clear'] = 'Remover o valor gravado';
+$_['entry_gateway_enabled'] = 'Habilitar a conta para novas cobranças JOW';
+$_['text_gateway_webhook_url'] = 'URL pública para configurar no app do provedor';
 $_['text_gateway_migration_required'] = 'A fundação MultiGateway ainda não está instalada neste banco. Aplique, com autorização, tools/upgrade_jow_payments_multigateway_core.sql; esta integração não executa migrações automaticamente.';
 $_['text_gateway_load_error'] = 'Não foi possível carregar a configuração MultiGateway. Verifique o log e a instalação do SQL aditivo.';
-$_['text_mp_credentials_locked'] = 'As credenciais gravadas não podem ser abertas com a chave atual do config.php. Restaure a chave correta ou informe novamente os segredos.';
+$_['text_gateway_credentials_locked'] = 'As credenciais gravadas não podem ser abertas com a chave atual do config.php. Restaure a chave correta ou informe novamente os segredos.';
 $_['text_live_gate_blocked'] = 'Produção está bloqueada pelo padrão seguro. Para permitir cobranças reais, configure explicitamente REAMUR_PAYMENTS_ALLOW_LIVE=true no config.php.';
-$_['text_mp_account_saved'] = 'Configuração Mercado Pago salva; novas cobranças continuam desativadas.';
-$_['text_mp_account_enabled'] = 'Conta própria Mercado Pago habilitada para novas cobranças JOW.';
-$_['text_mp_link_ready'] = 'Link do Mercado Pago criado ou reutilizado. Consulte a coluna Checkout nas cobranças.';
+$_['text_gateway_account_saved'] = 'Configuração do gateway salva; novas cobranças continuam desativadas.';
+$_['text_gateway_account_enabled'] = 'Conta do gateway habilitada para novas cobranças JOW.';
+$_['text_gateway_link_ready'] = 'Link de checkout criado ou reutilizado. Consulte a coluna Checkout nas cobranças.';
 $_['text_open_checkout'] = 'Abrir link';
 $_['text_no_checkout'] = 'Link ainda não gerado';
-$_['col_checkout'] = 'Checkout MP';
-$_['button_mp_link'] = 'Gerar / reutilizar link';
+$_['col_checkout'] = 'Checkout';
+$_['button_gateway_link'] = 'Gerar / reutilizar link';
 $_['error_description'] = 'Informe a descrição da cobrança.';
 $_['error_method'] = 'Provedor ou método de pagamento inválido.';
 $_['error_payer_email'] = 'Informe um e-mail válido para o pagador.';
-$_['error_mp_credentials'] = 'Access Token ou segredo de webhook inválido; confira o tamanho e remova espaços/caracteres de controle.';
-$_['error_mp_credentials_required'] = 'Para habilitar a conta, informe um Access Token e o segredo de assinatura do webhook.';
-$_['error_mp_account_save'] = 'Não foi possível salvar a conta Mercado Pago. A configuração ficou desativada; confira o log, a chave de criptografia e o SQL.';
-$_['error_gateway_migration'] = 'A fundação MultiGateway não está instalada. Nenhuma cobrança Mercado Pago foi criada.';
-$_['error_mp_link_failed'] = 'Não foi possível gerar o checkout Mercado Pago. Verifique a conta, o ambiente, a URL HTTPS e a configuração do Orders webhook; a cobrança JOW permanece disponível para nova tentativa.';
+$_['error_gateway_credentials'] = 'Segredo inválido; confira o tamanho e remova espaços/caracteres de controle.';
+$_['error_gateway_credentials_required'] = 'Para habilitar a conta, informe todos os campos de credencial do provedor.';
+$_['error_gateway_account_save'] = 'Não foi possível salvar a conta do gateway. A configuração ficou desativada; confira o log, a chave de criptografia e o SQL.';
+$_['error_gateway_migration'] = 'A fundação MultiGateway não está instalada. Nenhuma cobrança de gateway foi criada.';
+$_['error_gateway_link_failed'] = 'Não foi possível gerar o checkout no provedor. Verifique a conta, o ambiente, a URL HTTPS e a configuração do webhook; a cobrança JOW permanece disponível para nova tentativa.';
+
+// Mercado Pago (Orders API, conta própria).
+$_['entry_mp_access_token'] = 'Access Token da conta própria';
+$_['help_mp_access_token'] = 'O token fica cifrado no banco. Em Sandbox, use a credencial da conta de vendedor de teste (tokens TEST- não são aceitos pela Orders API); se informar e-mail do pagador, use um endereço @testuser.com. Nunca use a credencial da conta real no ambiente Sandbox. Deixe em branco para manter o valor atual.';
+$_['entry_mp_gateway_webhook_secret'] = 'Segredo de assinatura Webhooks — Orders API';
+$_['help_mp_gateway_webhook_secret'] = 'Segredo da aplicação que envia eventos Order do Checkout Pro Orders API. É independente de mp_webhook_secret e dos tokens dos vendedores.';
+
+// Stripe (Checkout Session hospedado, conta própria).
+$_['entry_stripe_secret_key'] = 'Secret Key da conta própria';
+$_['help_stripe_secret_key'] = 'Chave secreta sk_... (recomenda-se restricted key com permissão de Checkout). Fica cifrada no banco; deixe em branco para manter o valor atual.';
+$_['entry_stripe_webhook_secret'] = 'Segredo de assinatura Webhooks (whsec_...)';
+$_['help_stripe_webhook_secret'] = 'Segredo do endpoint que recebe os eventos checkout.session.* e charge.refunded. Independente dos conectores Stripe Connect do Marketplace.';
+
+// PayPal (Orders API v2, conta própria).
+$_['entry_paypal_client_id'] = 'Client ID da conta própria';
+$_['help_paypal_client_id'] = 'Client ID das credenciais REST do app. Fica cifrado no banco; deixe em branco para manter o valor atual.';
+$_['entry_paypal_client_secret'] = 'Client Secret da conta própria';
+$_['help_paypal_client_secret'] = 'Secret das credenciais REST do app, usado para obter o token OAuth2. Fica cifrado no banco.';
+$_['entry_paypal_webhook_id'] = 'Webhook ID do app';
+$_['help_paypal_webhook_id'] = 'Identificador do webhook cadastrado no app PayPal; a verificação da assinatura usa este ID. Fica cifrado no banco.';

@@ -25,7 +25,8 @@
         </div>
         <div class="mb-2"><label class="form-label">{{ entry_provider }}</label>
           <select class="form-select" name="provider"{% if not can_modify %} disabled{% endif %}>
-            <option value="manual">{{ opt_manual }}</option><option value="mp">{{ opt_mercadopago_checkout }}</option>
+            <option value="manual">{{ opt_manual }}</option>
+            {% for p in gateway_providers %}<option value="{{ p.code|e }}">{{ p.label|e }}</option>{% endfor %}
           </select><div class="form-text">{{ help_provider }}</div></div>
         <div class="row g-2 mb-3">
           <div class="col"><label class="form-label">{{ entry_payer_email }}</label>
@@ -55,43 +56,47 @@
       </form>
     </div></div></div>
 
-    {# ── Conta própria Mercado Pago do JOW, isolada do OAuth dos sellers Marketplace ── #}
+    {# ── Contas próprias do JOW por gateway, isoladas do OAuth dos sellers Marketplace ── #}
     <div class="col-12"><div class="card"><div class="card-body">
       <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
-        <div><h2 class="h6 card-title mb-1">{{ text_mp_gateway_config }}</h2><p class="small text-body-secondary mb-0">{{ help_mp_account_isolation }}</p></div>
-        {% if gateway.configured %}<span class="badge text-bg-{{ gateway.enabled ? 'success' : 'secondary' }}">{{ gateway.enabled ? text_mp_enabled : text_mp_disabled }}</span>{% else %}<span class="badge text-bg-secondary">{{ text_mp_not_configured }}</span>{% endif %}
+        <div><h2 class="h6 card-title mb-1">{{ text_gateway_config }}</h2><p class="small text-body-secondary mb-0">{{ help_gateway_account_isolation }}</p></div>
       </div>
       {% if not gateway_schema_ready %}
         <div class="alert alert-warning mb-0">{{ text_gateway_migration_required }}</div>
       {% else %}
         {% if gateway_error %}<div class="alert alert-danger">{{ text_gateway_load_error }}</div>{% endif %}
-        {% if gateway.credentials_locked %}<div class="alert alert-danger">{{ text_mp_credentials_locked }}</div>{% endif %}
-        {% if gateway.environment == 'live' and not live_payments_allowed %}<div class="alert alert-warning">{{ text_live_gate_blocked }}</div>{% endif %}
-        {% if gateway_webhook_url %}<div class="small mb-3"><span class="fw-semibold">{{ text_mp_webhook_url }}:</span> <code class="user-select-all">{{ gateway_webhook_url|e }}</code></div>{% endif %}
-        <form method="post" action="{{ action }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="mp_account_save">
-          <fieldset{% if not can_modify %} disabled{% endif %}>
-            <div class="row g-3">
-              <div class="col-12 col-md-4"><label class="form-label" for="mp-environment">{{ entry_mp_environment }}</label>
-                <select class="form-select" name="mp_environment" id="mp-environment"><option value="sandbox"{{ gateway.environment == 'sandbox' ? ' selected' : '' }}>{{ text_sandbox }}</option><option value="live"{{ gateway.environment == 'live' ? ' selected' : '' }}>{{ text_live }}</option></select></div>
-              <div class="col-12 col-md-8"><label class="form-label" for="mp-access-token">{{ entry_mp_access_token }}</label>
-                <input class="form-control" type="password" name="mp_access_token" id="mp-access-token" value="" autocomplete="new-password" placeholder="{{ gateway.access_token_set ? '••••••••••••' : '' }}">
-                <div class="form-text">{{ help_mp_access_token }}</div>
-                {% if gateway.access_token_set %}<div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="mp_access_token_clear" id="mp-access-token-clear" value="1"><label class="form-check-label" for="mp-access-token-clear">{{ entry_mp_access_token_clear }}</label></div>{% endif %}
+        {% for code, g in gateways %}
+        <div class="border rounded p-3 mb-3">
+          <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+            <h3 class="h6 mb-0">{{ g.label|e }}</h3>
+            {% if g.configured %}<span class="badge text-bg-{{ g.enabled ? 'success' : 'secondary' }}">{{ g.enabled ? text_gateway_enabled : text_gateway_disabled }}</span>{% else %}<span class="badge text-bg-secondary">{{ text_gateway_not_configured }}</span>{% endif %}
+          </div>
+          {% if g.credentials_locked %}<div class="alert alert-danger">{{ text_gateway_credentials_locked }}</div>{% endif %}
+          {% if g.environment == 'live' and not live_payments_allowed %}<div class="alert alert-warning">{{ text_live_gate_blocked }}</div>{% endif %}
+          {% if g.webhook_url %}<div class="small mb-3"><span class="fw-semibold">{{ text_gateway_webhook_url }}:</span> <code class="user-select-all">{{ g.webhook_url|e }}</code></div>{% endif %}
+          <form method="post" action="{{ action }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="gateway_account_save"><input type="hidden" name="gateway_provider" value="{{ code|e }}">
+            <fieldset{% if not can_modify %} disabled{% endif %}>
+              <div class="row g-3">
+                <div class="col-12 col-md-4"><label class="form-label" for="gw-{{ code|e }}-environment">{{ entry_gateway_environment }}</label>
+                  <select class="form-select" name="gateway_environment" id="gw-{{ code|e }}-environment"><option value="sandbox"{{ g.environment == 'sandbox' ? ' selected' : '' }}>{{ text_sandbox }}</option><option value="live"{{ g.environment == 'live' ? ' selected' : '' }}>{{ text_live }}</option></select></div>
+                {% for f in g.fields %}
+                <div class="col-12 col-md-8"><label class="form-label" for="gw-{{ code|e }}-{{ f.name|e }}">{{ f.entry }}</label>
+                  <input class="form-control" type="password" name="secret_{{ f.name|e }}" id="gw-{{ code|e }}-{{ f.name|e }}" value="" maxlength="{{ f.maxlength }}" autocomplete="new-password" placeholder="{{ f.set ? '••••••••••••' : '' }}">
+                  {% if f.help %}<div class="form-text">{{ f.help }}</div>{% endif %}
+                  {% if f.set %}<div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="secret_{{ f.name|e }}_clear" id="gw-{{ code|e }}-{{ f.name|e }}-clear" value="1"><label class="form-check-label" for="gw-{{ code|e }}-{{ f.name|e }}-clear">{{ entry_secret_clear }}</label></div>{% endif %}
+                </div>
+                {% endfor %}
+                <div class="col-12 col-md-4 d-flex align-items-end"><div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="gateway_enabled" id="gw-{{ code|e }}-enabled" value="1"{{ g.enabled ? ' checked' : '' }}>
+                  <label class="form-check-label" for="gw-{{ code|e }}-enabled">{{ entry_gateway_enabled }}</label>
+                </div></div>
               </div>
-              <div class="col-12 col-md-8"><label class="form-label" for="mp-gateway-webhook-secret">{{ entry_mp_gateway_webhook_secret }}</label>
-                <input class="form-control" type="password" name="mp_gateway_webhook_secret" id="mp-gateway-webhook-secret" value="" maxlength="255" autocomplete="new-password" placeholder="{{ gateway.webhook_secret_set ? '••••••••••••' : '' }}">
-                <div class="form-text">{{ help_mp_gateway_webhook_secret }}</div>
-                {% if gateway.webhook_secret_set %}<div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="mp_gateway_webhook_secret_clear" id="mp-gateway-webhook-secret-clear" value="1"><label class="form-check-label" for="mp-gateway-webhook-secret-clear">{{ entry_mp_gateway_webhook_secret_clear }}</label></div>{% endif %}
-              </div>
-              <div class="col-12 col-md-4 d-flex align-items-end"><div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" name="mp_enabled" id="mp-enabled" value="1"{{ gateway.enabled ? ' checked' : '' }}>
-                <label class="form-check-label" for="mp-enabled">{{ entry_mp_enabled }}</label>
-              </div></div>
-            </div>
-            {% if can_modify %}<div class="d-flex justify-content-end mt-3"><button class="btn btn-primary btn-sm">{{ button_save }}</button></div>{% endif %}
-          </fieldset>
-        </form>
+              {% if can_modify %}<div class="d-flex justify-content-end mt-3"><button class="btn btn-primary btn-sm">{{ button_save }}</button></div>{% endif %}
+            </fieldset>
+          </form>
+        </div>
+        {% endfor %}
       {% endif %}
     </div></div></div>
 
@@ -137,8 +142,8 @@
           <td>{{ c.amount|number_format(2, ',', '.') }}</td><td>{{ c.method|e }}</td><td>{{ (c.gateway_status ?: c.status)|e }}</td>
           <td class="font-monospace small" style="max-width:260px;overflow:hidden;text-overflow:ellipsis">{{ c.pix_payload|e }}</td>
           <td>
-            {% if c.method == 'mp' and c.payment_url %}<a href="{{ c.payment_url|e }}" target="_blank" rel="noopener noreferrer">{{ text_open_checkout }}</a>{% elseif c.method == 'mp' %}<span class="text-body-secondary">{{ text_no_checkout }}</span>{% endif %}
-            {% if c.method == 'mp' and gateway_schema_ready and can_modify and c.status not in ['paid','partial','refunded','disputed'] and c.gateway_status not in ['paid','partially_refunded','refunded','disputed'] %}<form method="post" action="{{ action }}" class="d-inline ms-1"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="charge_mp_link"><input type="hidden" name="charge_id" value="{{ c.charge_id }}"><button class="btn btn-link btn-sm p-0">{{ button_mp_link }}</button></form>{% endif %}
+            {% if c.is_gateway and c.payment_url %}<a href="{{ c.payment_url|e }}" target="_blank" rel="noopener noreferrer">{{ text_open_checkout }}</a>{% elseif c.is_gateway %}<span class="text-body-secondary">{{ text_no_checkout }}</span>{% endif %}
+            {% if c.is_gateway and gateway_schema_ready and can_modify and c.status not in ['paid','partial','refunded','disputed'] and c.gateway_status not in ['paid','partially_refunded','refunded','disputed'] %}<form method="post" action="{{ action }}" class="d-inline ms-1"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="charge_gateway_link"><input type="hidden" name="provider" value="{{ c.method|e }}"><input type="hidden" name="charge_id" value="{{ c.charge_id }}"><button class="btn btn-link btn-sm p-0">{{ button_gateway_link }}</button></form>{% endif %}
           </td>
           <td>{{ c.date_added }}</td>
           <td>{% if can_modify %}<form method="post" action="{{ action }}" class="d-inline">
