@@ -1,0 +1,3786 @@
+diff --git a/dev/admin/controller/payments/jow.php b/dev/admin/controller/payments/jow.php
+index be9fe02..e39eac1 100644
+--- a/dev/admin/controller/payments/jow.php
++++ b/dev/admin/controller/payments/jow.php
+@@ -3,6 +3,8 @@
+  * JOW-payments — painel interno de pagamentos do ReamurCMS (KZ-35).
+  * Rota: payments/jow (somente admin; ACL access/modify via user_group).
+  * Seções: cobranças, chaves PIX, relatório de recebimentos e config da loja.
++ * Contas próprias multi-gateway (Mercado Pago, Stripe, PayPal) isoladas do
++ * checkout público Marketplace OAuth/split.
+  */
+ namespace Reamur\Admin\Controller\Payments;
+ 
+@@ -15,11 +17,45 @@ use Reamur\System\Library\Payment\GatewayPaymentRecord;
+ use Reamur\System\Library\Payment\GatewayPaymentRequest;
+ use Reamur\System\Library\Payment\GatewayPaymentService;
+ use Reamur\System\Library\Payment\GatewayRegistry;
+-use Reamur\System\Library\Payment\MercadoPagoGatewayAdapter;
++use Reamur\System\Library\Payment\InstalledGatewayAdapters;
+ use Reamur\System\Library\Payment\Money;
+ 
+ class Jow extends \Reamur\System\Engine\Controller {
+     private const PLATFORM_ACCOUNT_LABEL = 'JOW platform';
++    private const MANUAL_METHODS = ['pix', 'card', 'boleto'];
++
++    /**
++     * Encrypted credential fields per installed provider. A provider only
++     * enables its account when every listed field is present and openable.
++     *
++     * @var array<string, array<string, int>>
++     */
++    private const PROVIDER_SECRET_FIELDS = [
++        'mp' => ['access_token' => 8192, 'webhook_secret' => 255],
++        'stripe' => ['secret_key' => 8192, 'webhook_secret' => 255],
++        'paypal' => ['client_id' => 8192, 'client_secret' => 8192, 'webhook_id' => 255],
++    ];
++
++    /**
++     * Language keys for each provider's credential fields.
++     *
++     * @var array<string, array<string, array{entry: string, help: string}>>
++     */
++    private const PROVIDER_FIELD_TEXTS = [
++        'mp' => [
++            'access_token' => ['entry' => 'entry_mp_access_token', 'help' => 'help_mp_access_token'],
++            'webhook_secret' => ['entry' => 'entry_mp_gateway_webhook_secret', 'help' => 'help_mp_gateway_webhook_secret'],
++        ],
++        'stripe' => [
++            'secret_key' => ['entry' => 'entry_stripe_secret_key', 'help' => 'help_stripe_secret_key'],
++            'webhook_secret' => ['entry' => 'entry_stripe_webhook_secret', 'help' => 'help_stripe_webhook_secret'],
++        ],
++        'paypal' => [
++            'client_id' => ['entry' => 'entry_paypal_client_id', 'help' => 'help_paypal_client_id'],
++            'client_secret' => ['entry' => 'entry_paypal_client_secret', 'help' => 'help_paypal_client_secret'],
++            'webhook_id' => ['entry' => 'entry_paypal_webhook_id', 'help' => 'help_paypal_webhook_id'],
++        ],
++    ];
+ 
+     public function index(): void {
+         $this->load->language('payments/jow');
+@@ -44,15 +80,8 @@ class Jow extends \Reamur\System\Engine\Controller {
+             'jow_merchant_category' => (string)$this->config->get('jow_merchant_category'),
+         ];
+         $data['gateway_schema_ready'] = $this->model_payments_jow->gatewaySchemaReady();
+-        $data['gateway'] = [
+-            'configured' => false,
+-            'enabled' => false,
+-            'environment' => 'sandbox',
+-            'access_token_set' => false,
+-            'webhook_secret_set' => false,
+-            'credentials_locked' => false,
+-        ];
+-        $data['gateway_webhook_url'] = '';
++        $data['gateway_providers'] = [];
++        $data['gateways'] = [];
+         $data['live_payments_allowed'] = $this->livePaymentsAllowed();
+         $data['gateway_error'] = false;
+ 
+@@ -60,38 +89,21 @@ class Jow extends \Reamur\System\Engine\Controller {
+             try {
+                 $registry = $this->gatewayRegistry();
+                 $store = $this->gatewayAccountStore($registry);
+-                $gatewayId = $this->model_payments_jow->getPlatformGatewayId();
+-
+-                if ($gatewayId > 0) {
+-                    $account = $store->find($gatewayId);
+-
+-                    if ($account !== null && $account->providerCode === 'mp') {
+-                        $data['gateway'] = [
+-                            'configured' => true,
+-                            'enabled' => $account->enabled,
+-                            'environment' => $account->environment,
+-                            'access_token_set' => false,
+-                            'webhook_secret_set' => false,
+-                            'credentials_locked' => false,
+-                        ];
+-                        $data['gateway_webhook_url'] = $this->catalogRouteUrl('checkout/gateway.notify&gateway_id=' . $gatewayId);
+-
+-                        try {
+-                            $credentials = $store->credentials($gatewayId);
+-                            $data['gateway']['access_token_set'] = $credentials->has('access_token');
+-                            $data['gateway']['webhook_secret_set'] = $credentials->has('webhook_secret');
+-                        } catch (\Throwable) {
+-                            $data['gateway']['credentials_locked'] = true;
+-                        }
+-                    }
++
++                foreach ($registry->all() as $adapter) {
++                    $code = $adapter->code();
++                    $data['gateway_providers'][] = ['code' => $code, 'label' => $adapter->label()];
++                    $data['gateways'][$code] = $this->gatewayState($store, $code) + ['label' => $adapter->label()];
+                 }
+ 
++                $gatewayCodes = array_keys($data['gateways']);
+                 $ledger = new DbGatewayLedger($this->db, DB_PREFIX);
+                 foreach ($data['charges'] as &$charge) {
+                     $charge['gateway_status'] = '';
+                     $charge['payment_url'] = '';
++                    $charge['is_gateway'] = in_array((string)($charge['method'] ?? ''), $gatewayCodes, true);
+ 
+-                    if ((string)($charge['method'] ?? '') !== 'mp') {
++                    if (!$charge['is_gateway']) {
+                         continue;
+                     }
+ 
+@@ -104,7 +116,11 @@ class Jow extends \Reamur\System\Engine\Controller {
+                 unset($charge);
+             } catch (\Throwable $e) {
+                 $data['gateway_error'] = true;
+-                $this->safeLog('JOW Mercado Pago account/ledger could not be loaded: ' . $e->getMessage());
++                $this->safeLog('JOW gateway account/ledger could not be loaded: ' . $e->getMessage());
++            }
++        } else {
++            foreach ($this->gatewayRegistry()->all() as $adapter) {
++                $data['gateway_providers'][] = ['code' => $adapter->code(), 'label' => $adapter->label()];
+             }
+         }
+ 
+@@ -138,7 +154,9 @@ class Jow extends \Reamur\System\Engine\Controller {
+                 $description = trim($this->postScalar('description'));
+                 $payerEmail = trim($this->postScalar('payer_email'));
+                 $dueDate = trim($this->postScalar('due_date'));
+-                $method = $provider === 'mp' ? 'mp' : $this->postScalar('method', 'pix');
++                $gatewayCodes = InstalledGatewayAdapters::codes();
++                $isGateway = in_array($provider, $gatewayCodes, true);
++                $method = $isGateway ? $provider : $this->postScalar('method', 'pix');
+ 
+                 if (preg_match('/^\d{1,8}(?:\.\d{1,2})?$/D', $amountText) !== 1
+                     || (float)$amountText <= 0.0 || !is_finite((float)$amountText)) {
+@@ -151,8 +169,8 @@ class Jow extends \Reamur\System\Engine\Controller {
+                     break;
+                 }
+ 
+-                if (!in_array($provider, ['manual', 'mp'], true)
+-                    || ($provider === 'manual' && !in_array($method, ['pix', 'card', 'boleto'], true))) {
++                if (!in_array($provider, array_merge(['manual'], $gatewayCodes), true)
++                    || ($provider === 'manual' && !in_array($method, self::MANUAL_METHODS, true))) {
+                     $this->session->data['error'] = $this->language->get('error_method');
+                     break;
+                 }
+@@ -170,13 +188,13 @@ class Jow extends \Reamur\System\Engine\Controller {
+                     $dueDate !== '' ? $dueDate : null
+                 );
+ 
+-                if ($provider === 'mp') {
++                if ($isGateway) {
+                     try {
+-                        $this->createMercadoPagoLink($id);
+-                        $this->session->data['success'] = $this->language->get('text_mp_link_ready');
++                        $this->createGatewayLink($id, $provider);
++                        $this->session->data['success'] = $this->language->get('text_gateway_link_ready');
+                     } catch (\Throwable $e) {
+-                        $this->safeLog('JOW Mercado Pago checkout creation failed: ' . $e->getMessage());
+-                        $this->session->data['error'] = $this->language->get('error_mp_link_failed');
++                        $this->safeLog('JOW gateway checkout creation failed: ' . $e->getMessage());
++                        $this->session->data['error'] = $this->language->get('error_gateway_link_failed');
+                     }
+                     break;
+                 }
+@@ -194,13 +212,18 @@ class Jow extends \Reamur\System\Engine\Controller {
+                 $this->session->data['success'] = $this->language->get('text_charge_added');
+                 break;
+ 
+-            case 'charge_mp_link':
++            case 'charge_gateway_link':
++            case 'charge_mp_link': // compatibilidade com posts antigos da página
++                $provider = $action === 'charge_mp_link'
++                    ? 'mp'
++                    : $this->postScalar('provider', '');
++
+                 try {
+-                    $this->createMercadoPagoLink((int)$this->postScalar('charge_id'));
+-                    $this->session->data['success'] = $this->language->get('text_mp_link_ready');
++                    $this->createGatewayLink((int)$this->postScalar('charge_id'), $provider);
++                    $this->session->data['success'] = $this->language->get('text_gateway_link_ready');
+                 } catch (\Throwable $e) {
+-                    $this->safeLog('JOW Mercado Pago checkout retry failed: ' . $e->getMessage());
+-                    $this->session->data['error'] = $this->language->get('error_mp_link_failed');
++                    $this->safeLog('JOW gateway checkout retry failed: ' . $e->getMessage());
++                    $this->session->data['error'] = $this->language->get('error_gateway_link_failed');
+                 }
+                 break;
+ 
+@@ -212,8 +235,12 @@ class Jow extends \Reamur\System\Engine\Controller {
+                 $this->session->data['success'] = $this->language->get('text_charge_updated');
+                 break;
+ 
+-            case 'mp_account_save':
+-                $this->saveMercadoPagoAccount();
++            case 'mp_account_save': // compatibilidade com posts antigos da página
++            case 'gateway_account_save':
++                $provider = $action === 'mp_account_save'
++                    ? 'mp'
++                    : $this->postScalar('gateway_provider', '');
++                $this->saveGatewayAccount($provider);
+                 break;
+ 
+             case 'pix_add':
+@@ -239,56 +266,58 @@ class Jow extends \Reamur\System\Engine\Controller {
+         $this->response->redirect($this->url->link('payments/jow'));
+     }
+ 
+-    private function saveMercadoPagoAccount(): void {
+-        if (!$this->model_payments_jow->gatewaySchemaReady()) {
+-            $this->session->data['error'] = $this->language->get('error_gateway_migration');
++    private function saveGatewayAccount(string $provider): void {
++        if (!InstalledGatewayAdapters::isInstalled($provider)) {
++            $this->session->data['error'] = $this->language->get('error_gateway_account_save');
+             return;
+         }
+ 
+-        $environment = $this->postScalar('mp_environment', 'sandbox');
+-        if (!in_array($environment, ['sandbox', 'live'], true)) {
+-            $this->session->data['error'] = $this->language->get('error_mp_account_save');
++        if (!$this->model_payments_jow->gatewaySchemaReady()) {
++            $this->session->data['error'] = $this->language->get('error_gateway_migration');
+             return;
+         }
+ 
+-        $accessToken = trim($this->postScalar('mp_access_token'));
+-        $webhookSecret = trim($this->postScalar('mp_gateway_webhook_secret'));
+-        $clearAccessToken = $this->postScalar('mp_access_token_clear') === '1';
+-        $clearWebhookSecret = $this->postScalar('mp_gateway_webhook_secret_clear') === '1';
+-        $enabled = $this->postScalar('mp_enabled') === '1';
+-
+-        if (($accessToken !== '' && (strlen($accessToken) < 16 || strlen($accessToken) > 8192 || preg_match('/[\x00-\x20\x7f]/', $accessToken) === 1))
+-            || ($webhookSecret !== '' && (strlen($webhookSecret) < 16 || strlen($webhookSecret) > 255 || preg_match('/[\x00-\x20\x7f]/', $webhookSecret) === 1))) {
+-            $this->session->data['error'] = $this->language->get('error_mp_credentials');
++        $environment = $this->postScalar('gateway_environment', 'sandbox');
++        if (!in_array($environment, ['sandbox', 'live'], true)) {
++            $this->session->data['error'] = $this->language->get('error_gateway_account_save');
+             return;
+         }
+ 
++        $enabled = $this->postScalar('gateway_enabled') === '1';
+         $secretUpdates = [];
+         $clearFields = [];
+-        if ($accessToken !== '') {
+-            $secretUpdates['access_token'] = $accessToken;
+-        } elseif ($clearAccessToken) {
+-            $clearFields[] = 'access_token';
+-        }
+-        if ($webhookSecret !== '') {
+-            $secretUpdates['webhook_secret'] = $webhookSecret;
+-        } elseif ($clearWebhookSecret) {
+-            $clearFields[] = 'webhook_secret';
++
++        foreach (self::PROVIDER_SECRET_FIELDS[$provider] ?? [] as $field => $maxLength) {
++            $value = trim($this->postScalar('secret_' . $field));
++            $clear = $this->postScalar('secret_' . $field . '_clear') === '1';
++
++            if ($value !== ''
++                && (strlen($value) < 16 || strlen($value) > $maxLength
++                    || preg_match('/[\x00-\x20\x7f]/', $value) === 1)) {
++                $this->session->data['error'] = $this->language->get('error_gateway_credentials');
++                return;
++            }
++
++            if ($value !== '') {
++                $secretUpdates[$field] = $value;
++            } elseif ($clear) {
++                $clearFields[] = $field;
++            }
+         }
+ 
+         try {
+             $registry = $this->gatewayRegistry();
+             $store = $this->gatewayAccountStore($registry);
+-            $gatewayId = $this->model_payments_jow->getPlatformGatewayId();
++            $gatewayId = $this->model_payments_jow->getPlatformGatewayId($provider);
+             $publicConfig = ['flow' => 'jow_internal'];
+ 
+             if ($gatewayId <= 0) {
+-                $account = $store->create('mp', self::PLATFORM_ACCOUNT_LABEL, $environment, false, $publicConfig, []);
++                $account = $store->create($provider, self::PLATFORM_ACCOUNT_LABEL, $environment, false, $publicConfig, []);
+                 $gatewayId = $account->gatewayId;
+             }
+ 
+             // Save all changes with the account disabled first. It can only be
+-            // re-enabled after both required secrets can be opened successfully.
++            // re-enabled after every required secret can be opened successfully.
+             $store->update(
+                 $gatewayId,
+                 self::PLATFORM_ACCOUNT_LABEL,
+@@ -301,53 +330,69 @@ class Jow extends \Reamur\System\Engine\Controller {
+ 
+             if ($enabled) {
+                 $credentials = $store->credentials($gatewayId);
+-                if (!$credentials->has('access_token') || !$credentials->has('webhook_secret')) {
+-                    $this->session->data['error'] = $this->language->get('error_mp_credentials_required');
+-                    return;
++                foreach (self::PROVIDER_SECRET_FIELDS[$provider] ?? [] as $field => $maxLength) {
++                    if (!$credentials->has($field)) {
++                        $this->session->data['error'] = $this->language->get('error_gateway_credentials_required');
++                        return;
++                    }
+                 }
+ 
+                 $store->update($gatewayId, self::PLATFORM_ACCOUNT_LABEL, $environment, true, $publicConfig);
+             }
+ 
+-            $this->session->data['success'] = $this->language->get($enabled ? 'text_mp_account_enabled' : 'text_mp_account_saved');
++            $this->session->data['success'] = $this->language->get($enabled ? 'text_gateway_account_enabled' : 'text_gateway_account_saved');
+         } catch (\Throwable $e) {
+-            $this->safeLog('JOW Mercado Pago account settings could not be saved: ' . $e->getMessage());
+-            $this->session->data['error'] = $this->language->get('error_mp_account_save');
++            $this->safeLog('JOW gateway account settings could not be saved: ' . $e->getMessage());
++            $this->session->data['error'] = $this->language->get('error_gateway_account_save');
+         }
+     }
+ 
+-    private function createMercadoPagoLink(int $chargeId): GatewayPaymentRecord {
++    private function createGatewayLink(int $chargeId, string $provider): GatewayPaymentRecord {
++        if (!InstalledGatewayAdapters::isInstalled($provider)) {
++            throw new \OutOfBoundsException('JOW gateway provider is not installed');
++        }
++
+         if (!$this->model_payments_jow->gatewaySchemaReady()) {
+             throw new \RuntimeException('JOW-Payments core migration is not installed');
+         }
+ 
+         $charge = $this->model_payments_jow->getCharge($chargeId);
+-        if ($charge === [] || (string)($charge['method'] ?? '') !== 'mp') {
+-            throw new \OutOfBoundsException('JOW Mercado Pago charge was not found');
++        if ($charge === [] || (string)($charge['method'] ?? '') !== $provider) {
++            throw new \OutOfBoundsException('JOW gateway charge was not found for this provider');
+         }
+ 
+         $chargeStatus = (string)($charge['status'] ?? '');
+         if (!in_array($chargeStatus, ['pending', 'canceled', 'expired'], true)) {
+-            throw new \DomainException('JOW Mercado Pago checkout cannot be created for a settled charge');
++            throw new \DomainException('JOW gateway checkout cannot be created for a settled charge');
+         }
+ 
+         $registry = $this->gatewayRegistry();
+         $store = $this->gatewayAccountStore($registry);
+-        $gatewayId = $this->model_payments_jow->getPlatformGatewayId();
++        $gatewayId = $this->model_payments_jow->getPlatformGatewayId($provider);
+         $account = $gatewayId > 0 ? $store->find($gatewayId) : null;
+ 
+-        if (!$account instanceof GatewayAccount || $account->providerCode !== 'mp' || !$account->enabled) {
+-            throw new \RuntimeException('JOW Mercado Pago platform account is not enabled');
++        if (!$account instanceof GatewayAccount || $account->providerCode !== $provider || !$account->enabled) {
++            throw new \RuntimeException('JOW ' . $provider . ' platform account is not enabled');
+         }
+ 
+         $credentials = $store->credentials($gatewayId);
+-        if (!$credentials->has('access_token') || !$credentials->has('webhook_secret')) {
+-            throw new \RuntimeException('JOW Mercado Pago platform credentials are incomplete');
++        foreach (self::PROVIDER_SECRET_FIELDS[$provider] ?? [] as $field => $maxLength) {
++            if (!$credentials->has($field)) {
++                throw new \RuntimeException('JOW ' . $provider . ' platform credentials are incomplete');
++            }
++        }
++
++        $adapter = $registry->get($provider);
++        $methods = array_keys($adapter->capabilities()->methods());
++        $method = $methods[0] ?? '';
++
++        if (preg_match('/^[a-z][a-z0-9_]{0,31}$/D', $method) !== 1) {
++            throw new \LogicException('JOW ' . $provider . ' adapter exposes no payment method');
+         }
+ 
+         $ledger = new DbGatewayLedger($this->db, DB_PREFIX);
+         $latest = $ledger->latestForSource('jow_charge', $chargeId);
+-        $idempotencyKey = $this->nextIdempotencyKey($chargeId, $latest);
++        $idempotencyKey = $this->nextIdempotencyKey($provider, $chargeId, $latest);
+         $amount = new Money((string)$charge['amount'], 'BRL', 2);
+         $title = trim((string)($charge['description'] ?? ''));
+         if ($title === '') {
+@@ -359,7 +404,7 @@ class Jow extends \Reamur\System\Engine\Controller {
+             $chargeId,
+             $amount,
+             'BRL',
+-            'checkout_pro',
++            $method,
+             $idempotencyKey,
+             mb_substr($title, 0, 255),
+             $this->catalogRouteUrl('common/home'),
+@@ -377,36 +422,40 @@ class Jow extends \Reamur\System\Engine\Controller {
+         return $service->createPayment($account, $request, $credentials);
+     }
+ 
+-    private function nextIdempotencyKey(int $chargeId, ?GatewayPaymentRecord $latest): string {
++    private function nextIdempotencyKey(string $provider, int $chargeId, ?GatewayPaymentRecord $latest): string {
+         if ($latest === null) {
+-            return self::orderIdempotencyUuid('charge:' . $chargeId . ':initial');
++            return self::orderIdempotencyUuid($provider, 'charge:' . $chargeId . ':initial');
+         }
+ 
+         if (!in_array($latest->status, ['failed', 'cancelled', 'expired'], true)) {
+             if (!in_array($latest->status, ['pending', 'requires_action', 'authorized'], true)) {
+-                throw new \DomainException('JOW Mercado Pago charge is already settled or under dispute');
++                throw new \DomainException('JOW gateway charge is already settled or under dispute');
+             }
+ 
+             if (preg_match('/^[A-Za-z0-9._:-]{16,128}$/D', $latest->idempotencyKey) !== 1) {
+-                throw new \LogicException('JOW Mercado Pago attempt has an unexpected idempotency key');
++                throw new \LogicException('JOW gateway attempt has an unexpected idempotency key');
+             }
+ 
+             return $latest->idempotencyKey;
+         }
+ 
+         // Derive a stable UUID v5 from the previous persisted transaction. If
+-        // the provider created an order but DB persistence failed, a retry sees
+-        // the same prior transaction and reuses exactly the same key.
+-        return self::orderIdempotencyUuid('charge:' . $chargeId . ':after:' . $latest->transactionId);
++        // the provider created a payment but DB persistence failed, a retry
++        // sees the same prior transaction and reuses exactly the same key.
++        return self::orderIdempotencyUuid($provider, 'charge:' . $chargeId . ':after:' . $latest->transactionId);
+     }
+ 
+-    private static function orderIdempotencyUuid(string $name): string {
++    private static function orderIdempotencyUuid(string $provider, string $name): string {
+         $namespace = hex2bin('6ba7b8109dad11d180b400c04fd430c8'); // RFC 4122 DNS namespace
+         if ($namespace === false) {
+-            throw new \LogicException('JOW Mercado Pago could not create an idempotency UUID');
++            throw new \LogicException('JOW gateway could not create an idempotency UUID');
+         }
+ 
+-        $hex = substr(sha1($namespace . 'reamurcms:jow:mercadopago:' . $name), 0, 32);
++        // Mercado Pago keys keep their released derivation; new providers get
++        // their own namespace so existing in-flight attempts stay reconcilable.
++        $salt = $provider === 'mp' ? 'reamurcms:jow:mercadopago:' : 'reamurcms:jow:gateway:' . $provider . ':';
++
++        $hex = substr(sha1($namespace . $salt . $name), 0, 32);
+         $hex[12] = '5';
+         $hex[16] = dechex((hexdec($hex[16]) & 0x03) | 0x08);
+ 
+@@ -414,8 +463,58 @@ class Jow extends \Reamur\System\Engine\Controller {
+             . '-' . substr($hex, 16, 4) . '-' . substr($hex, 20, 12);
+     }
+ 
++    private function gatewayState(DbGatewayAccountStore $store, string $code): array {
++        $state = [
++            'configured' => false,
++            'enabled' => false,
++            'environment' => 'sandbox',
++            'credentials_locked' => false,
++            'webhook_url' => '',
++            'fields' => [],
++        ];
++
++        $fieldTexts = self::PROVIDER_FIELD_TEXTS[$code] ?? [];
++
++        foreach (self::PROVIDER_SECRET_FIELDS[$code] ?? [] as $field => $maxLength) {
++            $texts = $fieldTexts[$field] ?? ['entry' => '', 'help' => ''];
++            $state['fields'][] = [
++                'name' => $field,
++                'entry' => $texts['entry'] !== '' ? (string)$this->language->get($texts['entry']) : $field,
++                'help' => $texts['help'] !== '' ? (string)$this->language->get($texts['help']) : '',
++                'maxlength' => $maxLength,
++                'set' => false,
++            ];
++        }
++
++        $gatewayId = $this->model_payments_jow->getPlatformGatewayId($code);
++
++        if ($gatewayId > 0) {
++            $account = $store->find($gatewayId);
++
++            if ($account !== null && $account->providerCode === $code) {
++                $state['configured'] = true;
++                $state['enabled'] = $account->enabled;
++                $state['environment'] = $account->environment;
++                $state['webhook_url'] = $this->catalogRouteUrl('checkout/gateway.notify&gateway_id=' . $gatewayId);
++
++                try {
++                    $credentials = $store->credentials($gatewayId);
++
++                    foreach ($state['fields'] as &$field) {
++                        $field['set'] = $credentials->has($field['name']);
++                    }
++                    unset($field);
++                } catch (\Throwable) {
++                    $state['credentials_locked'] = true;
++                }
++            }
++        }
++
++        return $state;
++    }
++
+     private function gatewayRegistry(): GatewayRegistry {
+-        return new GatewayRegistry([new MercadoPagoGatewayAdapter()]);
++        return InstalledGatewayAdapters::registry();
+     }
+ 
+     private function gatewayAccountStore(GatewayRegistry $registry): DbGatewayAccountStore {
+diff --git a/dev/admin/language/en-us/payments/jow.php b/dev/admin/language/en-us/payments/jow.php
+index 1330b12..11557b5 100644
+--- a/dev/admin/language/en-us/payments/jow.php
++++ b/dev/admin/language/en-us/payments/jow.php
+@@ -6,7 +6,7 @@
+  * @license   https://opensource.org/licenses/GPL-3.0
+  * @link      https://reamurcms.com
+  *
+- * payments/jow — JOW-payments (ferramenta interna, KZ-35).
++ * payments/jow — JOW-payments (internal tool, KZ-35) + platform-owned multi-gateway accounts.
+  */
+ 
+ $_['heading_title']      = 'JOW-payments';
+@@ -34,43 +34,57 @@ $_['text_pix_saved']='PIX key saved.'; $_['text_pix_deleted']='PIX key removed.'
+ $_['text_store_saved']='Payee data saved.';
+ $_['error_amount']='Enter a BRL amount greater than zero with at most two decimal places.'; $_['error_pix_invalid']='Invalid PIX key.';
+ 
+-// Additive Mercado Pago Checkout Pro integration through JOW-Payments MultiGateway.
++// Additive gateway integration through JOW-Payments MultiGateway (Mercado Pago, Stripe, PayPal).
+ $_['entry_provider'] = 'Provider';
+ $_['opt_manual'] = 'Manual / local (existing flow)';
+-$_['opt_mercadopago_checkout'] = 'Mercado Pago Checkout Pro';
+-$_['help_provider'] = 'With Checkout Pro, the payer chooses PIX, card, or boleto at Mercado Pago. Manual charges and local PIX remain available.';
+-$_['text_mp_gateway_config'] = 'Mercado Pago — Reamur/platform-owned account';
+-$_['help_mp_account_isolation'] = 'These credentials belong to JOW’s own platform account. They are not the seller OAuth tokens used by the public Marketplace checkout.';
+-$_['text_mp_not_configured'] = 'Account not configured';
+-$_['text_mp_enabled'] = 'Enabled';
+-$_['text_mp_disabled'] = 'Disabled';
+-$_['entry_mp_environment'] = 'Environment';
++$_['help_provider'] = 'With hosted checkout (Mercado Pago, Stripe, or PayPal), the payer chooses the payment method on the provider page. Manual charges and local PIX remain available.';
++$_['text_gateway_config'] = 'Gateways — Reamur/platform-owned accounts';
++$_['help_gateway_account_isolation'] = 'These credentials belong to JOW’s own platform accounts. They are not the seller OAuth tokens used by the public Marketplace checkout.';
++$_['text_gateway_not_configured'] = 'Account not configured';
++$_['text_gateway_enabled'] = 'Enabled';
++$_['text_gateway_disabled'] = 'Disabled';
++$_['entry_gateway_environment'] = 'Environment';
+ $_['text_sandbox'] = 'Sandbox / test';
+ $_['text_live'] = 'Production';
+-$_['entry_mp_access_token'] = 'Platform account Access Token';
+-$_['help_mp_access_token'] = 'The token is encrypted at rest. For Sandbox, use the Access Token of a test seller account (TEST- credentials are not accepted by the Orders API); if you enter a payer email, use an @testuser.com address. Never use the real account token in Sandbox. Leave blank to keep the current value.';
+-$_['entry_mp_access_token_clear'] = 'Remove the stored Access Token';
+-$_['entry_mp_gateway_webhook_secret'] = 'Webhook signature secret — Orders API';
+-$_['help_mp_gateway_webhook_secret'] = 'Secret for the application that sends Checkout Pro Orders API Order events. It is separate from mp_webhook_secret and seller tokens.';
+-$_['entry_mp_gateway_webhook_secret_clear'] = 'Remove the stored webhook secret';
+-$_['entry_mp_enabled'] = 'Enable this account for new JOW charges';
+-$_['text_mp_webhook_url'] = 'Public URL to configure in the Mercado Pago app (Order event)';
++$_['entry_secret_clear'] = 'Remove the stored value';
++$_['entry_gateway_enabled'] = 'Enable this account for new JOW charges';
++$_['text_gateway_webhook_url'] = 'Public URL to configure in the provider app';
+ $_['text_gateway_migration_required'] = 'The MultiGateway foundation is not installed in this database. Apply tools/upgrade_jow_payments_multigateway_core.sql with authorization; this integration never runs migrations automatically.';
+ $_['text_gateway_load_error'] = 'Could not load the MultiGateway configuration. Check the log and the additive SQL installation.';
+-$_['text_mp_credentials_locked'] = 'Stored credentials cannot be opened with the current config.php key. Restore the correct key or enter the secrets again.';
++$_['text_gateway_credentials_locked'] = 'Stored credentials cannot be opened with the current config.php key. Restore the correct key or enter the secrets again.';
+ $_['text_live_gate_blocked'] = 'Production is blocked by default. To allow real charges, explicitly set REAMUR_PAYMENTS_ALLOW_LIVE=true in config.php.';
+-$_['text_mp_account_saved'] = 'Mercado Pago configuration saved; new charges remain disabled.';
+-$_['text_mp_account_enabled'] = 'The platform-owned Mercado Pago account is enabled for new JOW charges.';
+-$_['text_mp_link_ready'] = 'Mercado Pago checkout link created or reused. See the Checkout column in the charges list.';
++$_['text_gateway_account_saved'] = 'Gateway configuration saved; new charges remain disabled.';
++$_['text_gateway_account_enabled'] = 'The gateway account is enabled for new JOW charges.';
++$_['text_gateway_link_ready'] = 'Checkout link created or reused. See the Checkout column in the charges list.';
+ $_['text_open_checkout'] = 'Open link';
+ $_['text_no_checkout'] = 'Link not generated yet';
+-$_['col_checkout'] = 'MP checkout';
+-$_['button_mp_link'] = 'Generate / reuse link';
++$_['col_checkout'] = 'Checkout';
++$_['button_gateway_link'] = 'Generate / reuse link';
+ $_['error_description'] = 'Enter a charge description.';
+ $_['error_method'] = 'Invalid provider or payment method.';
+ $_['error_payer_email'] = 'Enter a valid payer email.';
+-$_['error_mp_credentials'] = 'Invalid Access Token or webhook secret; check its length and remove spaces/control characters.';
+-$_['error_mp_credentials_required'] = 'Enter both an Access Token and the webhook signature secret before enabling the account.';
+-$_['error_mp_account_save'] = 'Could not save the Mercado Pago account. It remains disabled; check the log, encryption key, and SQL.';
+-$_['error_gateway_migration'] = 'The MultiGateway foundation is not installed. No Mercado Pago charge was created.';
+-$_['error_mp_link_failed'] = 'Could not create the Mercado Pago checkout. Check the account, environment, HTTPS URL, and Orders webhook configuration; the JOW charge is available to retry.';
++$_['error_gateway_credentials'] = 'Invalid secret; check its length and remove spaces/control characters.';
++$_['error_gateway_credentials_required'] = 'Enter every provider credential field before enabling the account.';
++$_['error_gateway_account_save'] = 'Could not save the gateway account. It remains disabled; check the log, encryption key, and SQL.';
++$_['error_gateway_migration'] = 'The MultiGateway foundation is not installed. No gateway charge was created.';
++$_['error_gateway_link_failed'] = 'Could not create the provider checkout. Check the account, environment, HTTPS URL, and webhook configuration; the JOW charge is available to retry.';
++
++// Mercado Pago (Orders API, platform-owned account).
++$_['entry_mp_access_token'] = 'Platform account Access Token';
++$_['help_mp_access_token'] = 'The token is encrypted at rest. For Sandbox, use the Access Token of a test seller account (TEST- credentials are not accepted by the Orders API); if you enter a payer email, use an @testuser.com address. Never use the real account token in Sandbox. Leave blank to keep the current value.';
++$_['entry_mp_gateway_webhook_secret'] = 'Webhook signature secret — Orders API';
++$_['help_mp_gateway_webhook_secret'] = 'Secret for the application that sends Checkout Pro Orders API Order events. It is separate from mp_webhook_secret and seller tokens.';
++
++// Stripe (hosted Checkout Session, platform-owned account).
++$_['entry_stripe_secret_key'] = 'Platform account Secret Key';
++$_['help_stripe_secret_key'] = 'Secret key sk_... (a restricted key with Checkout permission is recommended). Encrypted at rest; leave blank to keep the current value.';
++$_['entry_stripe_webhook_secret'] = 'Webhook signature secret (whsec_...)';
++$_['help_stripe_webhook_secret'] = 'Secret of the endpoint that receives checkout.session.* and charge.refunded events. Separate from the Marketplace Stripe Connect credentials.';
++
++// PayPal (Orders API v2, platform-owned account).
++$_['entry_paypal_client_id'] = 'Platform account Client ID';
++$_['help_paypal_client_id'] = 'Client ID of the app REST credentials. Encrypted at rest; leave blank to keep the current value.';
++$_['entry_paypal_client_secret'] = 'Platform account Client Secret';
++$_['help_paypal_client_secret'] = 'Secret of the app REST credentials, used to obtain the OAuth2 token. Encrypted at rest.';
++$_['entry_paypal_webhook_id'] = 'App Webhook ID';
++$_['help_paypal_webhook_id'] = 'Identifier of the webhook registered in the PayPal app; signature verification uses this ID. Encrypted at rest.';
+diff --git a/dev/admin/language/es-eu/payments/jow.php b/dev/admin/language/es-eu/payments/jow.php
+index a1d94c9..6876eb4 100644
+--- a/dev/admin/language/es-eu/payments/jow.php
++++ b/dev/admin/language/es-eu/payments/jow.php
+@@ -6,7 +6,7 @@
+  * @license   https://opensource.org/licenses/GPL-3.0
+  * @link      https://reamurcms.com
+  *
+- * payments/jow — JOW-payments (ferramenta interna, KZ-35).
++ * payments/jow — JOW-payments (herramienta interna, KZ-35) + cuentas propias multi-gateway.
+  */
+ 
+ $_['heading_title']      = 'JOW-payments';
+@@ -34,43 +34,57 @@ $_['text_pix_saved']='Clave PIX guardada.'; $_['text_pix_deleted']='Clave PIX el
+ $_['text_store_saved']='Datos del beneficiario guardados.';
+ $_['error_amount']='Indica un importe BRL mayor que cero, con hasta dos decimales.'; $_['error_pix_invalid']='Clave PIX inválida.';
+ 
+-// Integración aditiva Mercado Pago Checkout Pro mediante JOW-Payments MultiGateway.
++// Integración aditiva de gateways mediante JOW-Payments MultiGateway (Mercado Pago, Stripe, PayPal).
+ $_['entry_provider'] = 'Proveedor';
+ $_['opt_manual'] = 'Manual / local (flujo actual)';
+-$_['opt_mercadopago_checkout'] = 'Mercado Pago Checkout Pro';
+-$_['help_provider'] = 'En Checkout Pro, el pagador elige PIX, tarjeta o boleto en Mercado Pago. Los cobros manuales y el PIX local siguen disponibles.';
+-$_['text_mp_gateway_config'] = 'Mercado Pago — cuenta propia de la plataforma/Reamur';
+-$_['help_mp_account_isolation'] = 'Estas credenciales pertenecen a la cuenta propia de JOW. No son los tokens OAuth de los vendedores del checkout Marketplace público.';
+-$_['text_mp_not_configured'] = 'Cuenta sin configurar';
+-$_['text_mp_enabled'] = 'Activa';
+-$_['text_mp_disabled'] = 'Desactivada';
+-$_['entry_mp_environment'] = 'Entorno';
++$_['help_provider'] = 'Con el checkout hospedado (Mercado Pago, Stripe o PayPal), el pagador elige el medio de pago en la página del proveedor. Los cobros manuales y el PIX local siguen disponibles.';
++$_['text_gateway_config'] = 'Gateways — cuentas propias de la plataforma/Reamur';
++$_['help_gateway_account_isolation'] = 'Estas credenciales pertenecen a las cuentas propias de JOW. No son los tokens OAuth de los vendedores del checkout Marketplace público.';
++$_['text_gateway_not_configured'] = 'Cuenta sin configurar';
++$_['text_gateway_enabled'] = 'Activa';
++$_['text_gateway_disabled'] = 'Desactivada';
++$_['entry_gateway_environment'] = 'Entorno';
+ $_['text_sandbox'] = 'Sandbox / pruebas';
+ $_['text_live'] = 'Producción';
+-$_['entry_mp_access_token'] = 'Access Token de la cuenta propia';
+-$_['help_mp_access_token'] = 'El token se cifra en la base de datos. En Sandbox, use la credencial de una cuenta de vendedor de prueba (la Orders API no acepta tokens TEST-); si indica el correo del pagador, use una dirección @testuser.com. Nunca use en Sandbox el token de la cuenta real. Déjelo vacío para conservar el valor actual.';
+-$_['entry_mp_access_token_clear'] = 'Eliminar el Access Token guardado';
+-$_['entry_mp_gateway_webhook_secret'] = 'Secreto de firma Webhooks — Orders API';
+-$_['help_mp_gateway_webhook_secret'] = 'Secreto de la aplicación que envía eventos Order de Checkout Pro Orders API. Es independiente de mp_webhook_secret y de los tokens de vendedores.';
+-$_['entry_mp_gateway_webhook_secret_clear'] = 'Eliminar el secreto de webhook guardado';
+-$_['entry_mp_enabled'] = 'Habilitar la cuenta para nuevos cobros JOW';
+-$_['text_mp_webhook_url'] = 'URL pública para configurar en la app Mercado Pago (evento Order)';
++$_['entry_secret_clear'] = 'Eliminar el valor guardado';
++$_['entry_gateway_enabled'] = 'Habilitar la cuenta para nuevos cobros JOW';
++$_['text_gateway_webhook_url'] = 'URL pública para configurar en la app del proveedor';
+ $_['text_gateway_migration_required'] = 'La fundación MultiGateway aún no está instalada en esta base de datos. Aplique, con autorización, tools/upgrade_jow_payments_multigateway_core.sql; esta integración no ejecuta migraciones automáticamente.';
+ $_['text_gateway_load_error'] = 'No se pudo cargar la configuración MultiGateway. Revise el log y la instalación del SQL aditivo.';
+-$_['text_mp_credentials_locked'] = 'No se pueden abrir las credenciales guardadas con la clave actual de config.php. Restaure la clave correcta o vuelva a introducir los secretos.';
++$_['text_gateway_credentials_locked'] = 'No se pueden abrir las credenciales guardadas con la clave actual de config.php. Restaure la clave correcta o vuelva a introducir los secretos.';
+ $_['text_live_gate_blocked'] = 'Producción está bloqueada por defecto. Para permitir cobros reales, configure explícitamente REAMUR_PAYMENTS_ALLOW_LIVE=true en config.php.';
+-$_['text_mp_account_saved'] = 'Configuración de Mercado Pago guardada; los nuevos cobros siguen desactivados.';
+-$_['text_mp_account_enabled'] = 'Cuenta propia de Mercado Pago habilitada para nuevos cobros JOW.';
+-$_['text_mp_link_ready'] = 'Enlace de Mercado Pago creado o reutilizado. Consulte la columna Checkout de los cobros.';
++$_['text_gateway_account_saved'] = 'Configuración del gateway guardada; los nuevos cobros siguen desactivados.';
++$_['text_gateway_account_enabled'] = 'Cuenta del gateway habilitada para nuevos cobros JOW.';
++$_['text_gateway_link_ready'] = 'Enlace de checkout creado o reutilizado. Consulte la columna Checkout de los cobros.';
+ $_['text_open_checkout'] = 'Abrir enlace';
+ $_['text_no_checkout'] = 'Enlace aún no generado';
+-$_['col_checkout'] = 'Checkout MP';
+-$_['button_mp_link'] = 'Generar / reutilizar enlace';
++$_['col_checkout'] = 'Checkout';
++$_['button_gateway_link'] = 'Generar / reutilizar enlace';
+ $_['error_description'] = 'Indique la descripción del cobro.';
+ $_['error_method'] = 'Proveedor o método de pago no válido.';
+ $_['error_payer_email'] = 'Indique un correo válido para el pagador.';
+-$_['error_mp_credentials'] = 'Access Token o secreto de webhook no válido; revise la longitud y elimine espacios/caracteres de control.';
+-$_['error_mp_credentials_required'] = 'Para habilitar la cuenta, introduzca un Access Token y el secreto de firma del webhook.';
+-$_['error_mp_account_save'] = 'No se pudo guardar la cuenta de Mercado Pago. Quedó desactivada; revise el log, la clave de cifrado y el SQL.';
+-$_['error_gateway_migration'] = 'La fundación MultiGateway no está instalada. No se creó ningún cobro de Mercado Pago.';
+-$_['error_mp_link_failed'] = 'No se pudo generar el checkout de Mercado Pago. Revise la cuenta, el entorno, la URL HTTPS y el webhook Orders; el cobro JOW queda disponible para reintentar.';
++$_['error_gateway_credentials'] = 'Secreto no válido; revise la longitud y elimine espacios/caracteres de control.';
++$_['error_gateway_credentials_required'] = 'Para habilitar la cuenta, introduzca todos los campos de credencial del proveedor.';
++$_['error_gateway_account_save'] = 'No se pudo guardar la cuenta del gateway. Quedó desactivada; revise el log, la clave de cifrado y el SQL.';
++$_['error_gateway_migration'] = 'La fundación MultiGateway no está instalada. No se creó ningún cobro de gateway.';
++$_['error_gateway_link_failed'] = 'No se pudo generar el checkout del proveedor. Revise la cuenta, el entorno, la URL HTTPS y el webhook; el cobro JOW queda disponible para reintentar.';
++
++// Mercado Pago (Orders API, cuenta propia).
++$_['entry_mp_access_token'] = 'Access Token de la cuenta propia';
++$_['help_mp_access_token'] = 'El token se cifra en la base de datos. En Sandbox, use la credencial de una cuenta de vendedor de prueba (la Orders API no acepta tokens TEST-); si indica el correo del pagador, use una dirección @testuser.com. Nunca use en Sandbox el token de la cuenta real. Déjelo vacío para conservar el valor actual.';
++$_['entry_mp_gateway_webhook_secret'] = 'Secreto de firma Webhooks — Orders API';
++$_['help_mp_gateway_webhook_secret'] = 'Secreto de la aplicación que envía eventos Order de Checkout Pro Orders API. Es independiente de mp_webhook_secret y de los tokens de vendedores.';
++
++// Stripe (Checkout Session hospedado, cuenta propia).
++$_['entry_stripe_secret_key'] = 'Secret Key de la cuenta propia';
++$_['help_stripe_secret_key'] = 'Clave secreta sk_... (se recomienda una restricted key con permiso de Checkout). Se cifra en la base de datos; déjela vacía para conservar el valor actual.';
++$_['entry_stripe_webhook_secret'] = 'Secreto de firma Webhooks (whsec_...)';
++$_['help_stripe_webhook_secret'] = 'Secreto del endpoint que recibe los eventos checkout.session.* y charge.refunded. Es independiente de las credenciales Stripe Connect del Marketplace.';
++
++// PayPal (Orders API v2, cuenta propia).
++$_['entry_paypal_client_id'] = 'Client ID de la cuenta propia';
++$_['help_paypal_client_id'] = 'Client ID de las credenciales REST del app. Se cifra en la base de datos; déjelo vacío para conservar el valor actual.';
++$_['entry_paypal_client_secret'] = 'Client Secret de la cuenta propia';
++$_['help_paypal_client_secret'] = 'Secret de las credenciales REST del app, usado para obtener el token OAuth2. Se cifra en la base de datos.';
++$_['entry_paypal_webhook_id'] = 'Webhook ID del app';
++$_['help_paypal_webhook_id'] = 'Identificador del webhook registrado en el app PayPal; la verificación de firma usa este ID. Se cifra en la base de datos.';
+diff --git a/dev/admin/language/pt-br/payments/jow.php b/dev/admin/language/pt-br/payments/jow.php
+index 79b5781..a62fc7f 100644
+--- a/dev/admin/language/pt-br/payments/jow.php
++++ b/dev/admin/language/pt-br/payments/jow.php
+@@ -6,7 +6,7 @@
+  * @license   https://opensource.org/licenses/GPL-3.0
+  * @link      https://reamurcms.com
+  *
+- * payments/jow — JOW-payments (ferramenta interna, KZ-35).
++ * payments/jow — JOW-payments (ferramenta interna, KZ-35) + contas próprias multi-gateway.
+  */
+ 
+ $_['heading_title']      = 'JOW-payments';
+@@ -34,43 +34,57 @@ $_['text_pix_saved']='Chave PIX salva.'; $_['text_pix_deleted']='Chave PIX remov
+ $_['text_store_saved']='Dados do recebedor salvos.';
+ $_['error_amount']='Informe um valor BRL maior que zero, com até duas casas decimais.'; $_['error_pix_invalid']='Chave PIX inválida.';
+ 
+-// Integração aditiva Mercado Pago Checkout Pro via JOW-Payments MultiGateway.
++// Integração aditiva de gateways via JOW-Payments MultiGateway (Mercado Pago, Stripe, PayPal).
+ $_['entry_provider'] = 'Provedor';
+ $_['opt_manual'] = 'Manual / local (fluxo atual)';
+-$_['opt_mercadopago_checkout'] = 'Mercado Pago Checkout Pro';
+-$_['help_provider'] = 'No Checkout Pro, o pagador escolhe PIX, cartão ou boleto no Mercado Pago. As cobranças manuais e o PIX local continuam disponíveis.';
+-$_['text_mp_gateway_config'] = 'Mercado Pago — conta própria da plataforma/Reamur';
+-$_['help_mp_account_isolation'] = 'Estas credenciais pertencem à conta própria do JOW. Não são os tokens OAuth dos vendedores usados no checkout Marketplace público.';
+-$_['text_mp_not_configured'] = 'Conta ainda não configurada';
+-$_['text_mp_enabled'] = 'Ativo';
+-$_['text_mp_disabled'] = 'Desativado';
+-$_['entry_mp_environment'] = 'Ambiente';
++$_['help_provider'] = 'No checkout hospedado (Mercado Pago, Stripe ou PayPal), o pagador escolhe o meio de pagamento na página do provedor. As cobranças manuais e o PIX local continuam disponíveis.';
++$_['text_gateway_config'] = 'Gateways — contas próprias da plataforma/Reamur';
++$_['help_gateway_account_isolation'] = 'Estas credenciais pertencem às contas próprias do JOW. Não são os tokens OAuth dos vendedores usados no checkout Marketplace público.';
++$_['text_gateway_not_configured'] = 'Conta ainda não configurada';
++$_['text_gateway_enabled'] = 'Ativo';
++$_['text_gateway_disabled'] = 'Desativado';
++$_['entry_gateway_environment'] = 'Ambiente';
+ $_['text_sandbox'] = 'Sandbox / teste';
+ $_['text_live'] = 'Produção';
+-$_['entry_mp_access_token'] = 'Access Token da conta própria';
+-$_['help_mp_access_token'] = 'O token fica cifrado no banco. Em Sandbox, use a credencial da conta de vendedor de teste (tokens TEST- não são aceitos pela Orders API); se informar e-mail do pagador, use um endereço @testuser.com. Nunca use a credencial da conta real no ambiente Sandbox. Deixe em branco para manter o valor atual.';
+-$_['entry_mp_access_token_clear'] = 'Remover o Access Token gravado';
+-$_['entry_mp_gateway_webhook_secret'] = 'Segredo de assinatura Webhooks — Orders API';
+-$_['help_mp_gateway_webhook_secret'] = 'Segredo da aplicação que envia eventos Order do Checkout Pro Orders API. É independente de mp_webhook_secret e dos tokens dos vendedores.';
+-$_['entry_mp_gateway_webhook_secret_clear'] = 'Remover o segredo de webhook gravado';
+-$_['entry_mp_enabled'] = 'Habilitar a conta para novas cobranças JOW';
+-$_['text_mp_webhook_url'] = 'URL pública para configurar no app Mercado Pago (evento Order)';
++$_['entry_secret_clear'] = 'Remover o valor gravado';
++$_['entry_gateway_enabled'] = 'Habilitar a conta para novas cobranças JOW';
++$_['text_gateway_webhook_url'] = 'URL pública para configurar no app do provedor';
+ $_['text_gateway_migration_required'] = 'A fundação MultiGateway ainda não está instalada neste banco. Aplique, com autorização, tools/upgrade_jow_payments_multigateway_core.sql; esta integração não executa migrações automaticamente.';
+ $_['text_gateway_load_error'] = 'Não foi possível carregar a configuração MultiGateway. Verifique o log e a instalação do SQL aditivo.';
+-$_['text_mp_credentials_locked'] = 'As credenciais gravadas não podem ser abertas com a chave atual do config.php. Restaure a chave correta ou informe novamente os segredos.';
++$_['text_gateway_credentials_locked'] = 'As credenciais gravadas não podem ser abertas com a chave atual do config.php. Restaure a chave correta ou informe novamente os segredos.';
+ $_['text_live_gate_blocked'] = 'Produção está bloqueada pelo padrão seguro. Para permitir cobranças reais, configure explicitamente REAMUR_PAYMENTS_ALLOW_LIVE=true no config.php.';
+-$_['text_mp_account_saved'] = 'Configuração Mercado Pago salva; novas cobranças continuam desativadas.';
+-$_['text_mp_account_enabled'] = 'Conta própria Mercado Pago habilitada para novas cobranças JOW.';
+-$_['text_mp_link_ready'] = 'Link do Mercado Pago criado ou reutilizado. Consulte a coluna Checkout nas cobranças.';
++$_['text_gateway_account_saved'] = 'Configuração do gateway salva; novas cobranças continuam desativadas.';
++$_['text_gateway_account_enabled'] = 'Conta do gateway habilitada para novas cobranças JOW.';
++$_['text_gateway_link_ready'] = 'Link de checkout criado ou reutilizado. Consulte a coluna Checkout nas cobranças.';
+ $_['text_open_checkout'] = 'Abrir link';
+ $_['text_no_checkout'] = 'Link ainda não gerado';
+-$_['col_checkout'] = 'Checkout MP';
+-$_['button_mp_link'] = 'Gerar / reutilizar link';
++$_['col_checkout'] = 'Checkout';
++$_['button_gateway_link'] = 'Gerar / reutilizar link';
+ $_['error_description'] = 'Informe a descrição da cobrança.';
+ $_['error_method'] = 'Provedor ou método de pagamento inválido.';
+ $_['error_payer_email'] = 'Informe um e-mail válido para o pagador.';
+-$_['error_mp_credentials'] = 'Access Token ou segredo de webhook inválido; confira o tamanho e remova espaços/caracteres de controle.';
+-$_['error_mp_credentials_required'] = 'Para habilitar a conta, informe um Access Token e o segredo de assinatura do webhook.';
+-$_['error_mp_account_save'] = 'Não foi possível salvar a conta Mercado Pago. A configuração ficou desativada; confira o log, a chave de criptografia e o SQL.';
+-$_['error_gateway_migration'] = 'A fundação MultiGateway não está instalada. Nenhuma cobrança Mercado Pago foi criada.';
+-$_['error_mp_link_failed'] = 'Não foi possível gerar o checkout Mercado Pago. Verifique a conta, o ambiente, a URL HTTPS e a configuração do Orders webhook; a cobrança JOW permanece disponível para nova tentativa.';
++$_['error_gateway_credentials'] = 'Segredo inválido; confira o tamanho e remova espaços/caracteres de controle.';
++$_['error_gateway_credentials_required'] = 'Para habilitar a conta, informe todos os campos de credencial do provedor.';
++$_['error_gateway_account_save'] = 'Não foi possível salvar a conta do gateway. A configuração ficou desativada; confira o log, a chave de criptografia e o SQL.';
++$_['error_gateway_migration'] = 'A fundação MultiGateway não está instalada. Nenhuma cobrança de gateway foi criada.';
++$_['error_gateway_link_failed'] = 'Não foi possível gerar o checkout no provedor. Verifique a conta, o ambiente, a URL HTTPS e a configuração do webhook; a cobrança JOW permanece disponível para nova tentativa.';
++
++// Mercado Pago (Orders API, conta própria).
++$_['entry_mp_access_token'] = 'Access Token da conta própria';
++$_['help_mp_access_token'] = 'O token fica cifrado no banco. Em Sandbox, use a credencial da conta de vendedor de teste (tokens TEST- não são aceitos pela Orders API); se informar e-mail do pagador, use um endereço @testuser.com. Nunca use a credencial da conta real no ambiente Sandbox. Deixe em branco para manter o valor atual.';
++$_['entry_mp_gateway_webhook_secret'] = 'Segredo de assinatura Webhooks — Orders API';
++$_['help_mp_gateway_webhook_secret'] = 'Segredo da aplicação que envia eventos Order do Checkout Pro Orders API. É independente de mp_webhook_secret e dos tokens dos vendedores.';
++
++// Stripe (Checkout Session hospedado, conta própria).
++$_['entry_stripe_secret_key'] = 'Secret Key da conta própria';
++$_['help_stripe_secret_key'] = 'Chave secreta sk_... (recomenda-se restricted key com permissão de Checkout). Fica cifrada no banco; deixe em branco para manter o valor atual.';
++$_['entry_stripe_webhook_secret'] = 'Segredo de assinatura Webhooks (whsec_...)';
++$_['help_stripe_webhook_secret'] = 'Segredo do endpoint que recebe os eventos checkout.session.* e charge.refunded. Independente dos conectores Stripe Connect do Marketplace.';
++
++// PayPal (Orders API v2, conta própria).
++$_['entry_paypal_client_id'] = 'Client ID da conta própria';
++$_['help_paypal_client_id'] = 'Client ID das credenciais REST do app. Fica cifrado no banco; deixe em branco para manter o valor atual.';
++$_['entry_paypal_client_secret'] = 'Client Secret da conta própria';
++$_['help_paypal_client_secret'] = 'Secret das credenciais REST do app, usado para obter o token OAuth2. Fica cifrado no banco.';
++$_['entry_paypal_webhook_id'] = 'Webhook ID do app';
++$_['help_paypal_webhook_id'] = 'Identificador do webhook cadastrado no app PayPal; a verificação da assinatura usa este ID. Fica cifrado no banco.';
+diff --git a/dev/admin/model/payments/jow.php b/dev/admin/model/payments/jow.php
+index 2cdcb91..49b8f43 100644
+--- a/dev/admin/model/payments/jow.php
++++ b/dev/admin/model/payments/jow.php
+@@ -81,11 +81,15 @@ class Jow extends \Reamur\System\Engine\Model {
+             && $this->hasTable('payment_gateway_event');
+     }
+ 
+-    /** Locate the single JOW platform-owned Mercado Pago account, if configured. */
+-    public function getPlatformGatewayId(): int {
++    /** Locate the single JOW platform-owned account for a provider, if configured. */
++    public function getPlatformGatewayId(string $providerCode): int {
++        if (preg_match('/^[a-z][a-z0-9_]{0,31}$/D', $providerCode) !== 1) {
++            return 0;
++        }
++
+         $query = $this->db->query(
+             "SELECT `gateway_id` FROM `" . DB_PREFIX . "jow_gateway`"
+-            . " WHERE `provider_code` = 'mp' AND `account_label` = 'JOW platform'"
++            . " WHERE `provider_code` = '" . $this->db->escape($providerCode) . "' AND `account_label` = 'JOW platform'"
+             . " ORDER BY `gateway_id` ASC LIMIT 1"
+         );
+ 
+diff --git a/dev/admin/view/template/payments/jow.twig b/dev/admin/view/template/payments/jow.twig
+index 980c056..717f832 100644
+--- a/dev/admin/view/template/payments/jow.twig
++++ b/dev/admin/view/template/payments/jow.twig
+@@ -25,7 +25,8 @@
+         </div>
+         <div class="mb-2"><label class="form-label">{{ entry_provider }}</label>
+           <select class="form-select" name="provider"{% if not can_modify %} disabled{% endif %}>
+-            <option value="manual">{{ opt_manual }}</option><option value="mp">{{ opt_mercadopago_checkout }}</option>
++            <option value="manual">{{ opt_manual }}</option>
++            {% for p in gateway_providers %}<option value="{{ p.code|e }}">{{ p.label|e }}</option>{% endfor %}
+           </select><div class="form-text">{{ help_provider }}</div></div>
+         <div class="row g-2 mb-3">
+           <div class="col"><label class="form-label">{{ entry_payer_email }}</label>
+@@ -55,43 +56,47 @@
+       </form>
+     </div></div></div>
+ 
+-    {# ── Conta própria Mercado Pago do JOW, isolada do OAuth dos sellers Marketplace ── #}
++    {# ── Contas próprias do JOW por gateway, isoladas do OAuth dos sellers Marketplace ── #}
+     <div class="col-12"><div class="card"><div class="card-body">
+       <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+-        <div><h2 class="h6 card-title mb-1">{{ text_mp_gateway_config }}</h2><p class="small text-body-secondary mb-0">{{ help_mp_account_isolation }}</p></div>
+-        {% if gateway.configured %}<span class="badge text-bg-{{ gateway.enabled ? 'success' : 'secondary' }}">{{ gateway.enabled ? text_mp_enabled : text_mp_disabled }}</span>{% else %}<span class="badge text-bg-secondary">{{ text_mp_not_configured }}</span>{% endif %}
++        <div><h2 class="h6 card-title mb-1">{{ text_gateway_config }}</h2><p class="small text-body-secondary mb-0">{{ help_gateway_account_isolation }}</p></div>
+       </div>
+       {% if not gateway_schema_ready %}
+         <div class="alert alert-warning mb-0">{{ text_gateway_migration_required }}</div>
+       {% else %}
+         {% if gateway_error %}<div class="alert alert-danger">{{ text_gateway_load_error }}</div>{% endif %}
+-        {% if gateway.credentials_locked %}<div class="alert alert-danger">{{ text_mp_credentials_locked }}</div>{% endif %}
+-        {% if gateway.environment == 'live' and not live_payments_allowed %}<div class="alert alert-warning">{{ text_live_gate_blocked }}</div>{% endif %}
+-        {% if gateway_webhook_url %}<div class="small mb-3"><span class="fw-semibold">{{ text_mp_webhook_url }}:</span> <code class="user-select-all">{{ gateway_webhook_url|e }}</code></div>{% endif %}
+-        <form method="post" action="{{ action }}">
+-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="mp_account_save">
+-          <fieldset{% if not can_modify %} disabled{% endif %}>
+-            <div class="row g-3">
+-              <div class="col-12 col-md-4"><label class="form-label" for="mp-environment">{{ entry_mp_environment }}</label>
+-                <select class="form-select" name="mp_environment" id="mp-environment"><option value="sandbox"{{ gateway.environment == 'sandbox' ? ' selected' : '' }}>{{ text_sandbox }}</option><option value="live"{{ gateway.environment == 'live' ? ' selected' : '' }}>{{ text_live }}</option></select></div>
+-              <div class="col-12 col-md-8"><label class="form-label" for="mp-access-token">{{ entry_mp_access_token }}</label>
+-                <input class="form-control" type="password" name="mp_access_token" id="mp-access-token" value="" autocomplete="new-password" placeholder="{{ gateway.access_token_set ? '••••••••••••' : '' }}">
+-                <div class="form-text">{{ help_mp_access_token }}</div>
+-                {% if gateway.access_token_set %}<div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="mp_access_token_clear" id="mp-access-token-clear" value="1"><label class="form-check-label" for="mp-access-token-clear">{{ entry_mp_access_token_clear }}</label></div>{% endif %}
++        {% for code, g in gateways %}
++        <div class="border rounded p-3 mb-3">
++          <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
++            <h3 class="h6 mb-0">{{ g.label|e }}</h3>
++            {% if g.configured %}<span class="badge text-bg-{{ g.enabled ? 'success' : 'secondary' }}">{{ g.enabled ? text_gateway_enabled : text_gateway_disabled }}</span>{% else %}<span class="badge text-bg-secondary">{{ text_gateway_not_configured }}</span>{% endif %}
++          </div>
++          {% if g.credentials_locked %}<div class="alert alert-danger">{{ text_gateway_credentials_locked }}</div>{% endif %}
++          {% if g.environment == 'live' and not live_payments_allowed %}<div class="alert alert-warning">{{ text_live_gate_blocked }}</div>{% endif %}
++          {% if g.webhook_url %}<div class="small mb-3"><span class="fw-semibold">{{ text_gateway_webhook_url }}:</span> <code class="user-select-all">{{ g.webhook_url|e }}</code></div>{% endif %}
++          <form method="post" action="{{ action }}">
++            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="gateway_account_save"><input type="hidden" name="gateway_provider" value="{{ code|e }}">
++            <fieldset{% if not can_modify %} disabled{% endif %}>
++              <div class="row g-3">
++                <div class="col-12 col-md-4"><label class="form-label" for="gw-{{ code|e }}-environment">{{ entry_gateway_environment }}</label>
++                  <select class="form-select" name="gateway_environment" id="gw-{{ code|e }}-environment"><option value="sandbox"{{ g.environment == 'sandbox' ? ' selected' : '' }}>{{ text_sandbox }}</option><option value="live"{{ g.environment == 'live' ? ' selected' : '' }}>{{ text_live }}</option></select></div>
++                {% for f in g.fields %}
++                <div class="col-12 col-md-8"><label class="form-label" for="gw-{{ code|e }}-{{ f.name|e }}">{{ f.entry }}</label>
++                  <input class="form-control" type="password" name="secret_{{ f.name|e }}" id="gw-{{ code|e }}-{{ f.name|e }}" value="" maxlength="{{ f.maxlength }}" autocomplete="new-password" placeholder="{{ f.set ? '••••••••••••' : '' }}">
++                  {% if f.help %}<div class="form-text">{{ f.help }}</div>{% endif %}
++                  {% if f.set %}<div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="secret_{{ f.name|e }}_clear" id="gw-{{ code|e }}-{{ f.name|e }}-clear" value="1"><label class="form-check-label" for="gw-{{ code|e }}-{{ f.name|e }}-clear">{{ entry_secret_clear }}</label></div>{% endif %}
++                </div>
++                {% endfor %}
++                <div class="col-12 col-md-4 d-flex align-items-end"><div class="form-check mb-2">
++                  <input class="form-check-input" type="checkbox" name="gateway_enabled" id="gw-{{ code|e }}-enabled" value="1"{{ g.enabled ? ' checked' : '' }}>
++                  <label class="form-check-label" for="gw-{{ code|e }}-enabled">{{ entry_gateway_enabled }}</label>
++                </div></div>
+               </div>
+-              <div class="col-12 col-md-8"><label class="form-label" for="mp-gateway-webhook-secret">{{ entry_mp_gateway_webhook_secret }}</label>
+-                <input class="form-control" type="password" name="mp_gateway_webhook_secret" id="mp-gateway-webhook-secret" value="" maxlength="255" autocomplete="new-password" placeholder="{{ gateway.webhook_secret_set ? '••••••••••••' : '' }}">
+-                <div class="form-text">{{ help_mp_gateway_webhook_secret }}</div>
+-                {% if gateway.webhook_secret_set %}<div class="form-check mt-2"><input class="form-check-input" type="checkbox" name="mp_gateway_webhook_secret_clear" id="mp-gateway-webhook-secret-clear" value="1"><label class="form-check-label" for="mp-gateway-webhook-secret-clear">{{ entry_mp_gateway_webhook_secret_clear }}</label></div>{% endif %}
+-              </div>
+-              <div class="col-12 col-md-4 d-flex align-items-end"><div class="form-check mb-2">
+-                <input class="form-check-input" type="checkbox" name="mp_enabled" id="mp-enabled" value="1"{{ gateway.enabled ? ' checked' : '' }}>
+-                <label class="form-check-label" for="mp-enabled">{{ entry_mp_enabled }}</label>
+-              </div></div>
+-            </div>
+-            {% if can_modify %}<div class="d-flex justify-content-end mt-3"><button class="btn btn-primary btn-sm">{{ button_save }}</button></div>{% endif %}
+-          </fieldset>
+-        </form>
++              {% if can_modify %}<div class="d-flex justify-content-end mt-3"><button class="btn btn-primary btn-sm">{{ button_save }}</button></div>{% endif %}
++            </fieldset>
++          </form>
++        </div>
++        {% endfor %}
+       {% endif %}
+     </div></div></div>
+ 
+@@ -137,8 +142,8 @@
+           <td>{{ c.amount|number_format(2, ',', '.') }}</td><td>{{ c.method|e }}</td><td>{{ (c.gateway_status ?: c.status)|e }}</td>
+           <td class="font-monospace small" style="max-width:260px;overflow:hidden;text-overflow:ellipsis">{{ c.pix_payload|e }}</td>
+           <td>
+-            {% if c.method == 'mp' and c.payment_url %}<a href="{{ c.payment_url|e }}" target="_blank" rel="noopener noreferrer">{{ text_open_checkout }}</a>{% elseif c.method == 'mp' %}<span class="text-body-secondary">{{ text_no_checkout }}</span>{% endif %}
+-            {% if c.method == 'mp' and gateway_schema_ready and can_modify and c.status not in ['paid','partial','refunded','disputed'] and c.gateway_status not in ['paid','partially_refunded','refunded','disputed'] %}<form method="post" action="{{ action }}" class="d-inline ms-1"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="charge_mp_link"><input type="hidden" name="charge_id" value="{{ c.charge_id }}"><button class="btn btn-link btn-sm p-0">{{ button_mp_link }}</button></form>{% endif %}
++            {% if c.is_gateway and c.payment_url %}<a href="{{ c.payment_url|e }}" target="_blank" rel="noopener noreferrer">{{ text_open_checkout }}</a>{% elseif c.is_gateway %}<span class="text-body-secondary">{{ text_no_checkout }}</span>{% endif %}
++            {% if c.is_gateway and gateway_schema_ready and can_modify and c.status not in ['paid','partial','refunded','disputed'] and c.gateway_status not in ['paid','partially_refunded','refunded','disputed'] %}<form method="post" action="{{ action }}" class="d-inline ms-1"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="charge_gateway_link"><input type="hidden" name="provider" value="{{ c.method|e }}"><input type="hidden" name="charge_id" value="{{ c.charge_id }}"><button class="btn btn-link btn-sm p-0">{{ button_gateway_link }}</button></form>{% endif %}
+           </td>
+           <td>{{ c.date_added }}</td>
+           <td>{% if can_modify %}<form method="post" action="{{ action }}" class="d-inline">
+diff --git a/dev/catalog/controller/checkout/gateway.php b/dev/catalog/controller/checkout/gateway.php
+index 287d077..c30e8fd 100644
+--- a/dev/catalog/controller/checkout/gateway.php
++++ b/dev/catalog/controller/checkout/gateway.php
+@@ -8,7 +8,7 @@ use Reamur\System\Library\Payment\GatewayCredentialVault;
+ use Reamur\System\Library\Payment\GatewayRegistry;
+ use Reamur\System\Library\Payment\GatewayWebhookResult;
+ use Reamur\System\Library\Payment\GatewayWebhookService;
+-use Reamur\System\Library\Payment\MercadoPagoGatewayAdapter;
++use Reamur\System\Library\Payment\InstalledGatewayAdapters;
+ use Reamur\System\Library\Payment\Notification;
+ 
+ class Gateway extends \Reamur\System\Engine\Controller {
+@@ -16,7 +16,7 @@ class Gateway extends \Reamur\System\Engine\Controller {
+         (new \Reamur\System\Engine\Action('error/not_found'))->execute($this->registry);
+     }
+ 
+-    /** Mercado Pago Orders API webhook. The legacy Marketplace endpoint is untouched. */
++    /** Platform-owned gateway webhooks (Mercado Pago Orders, Stripe Checkout, PayPal Orders). */
+     public function notify(): void {
+         $this->response->addHeader('Content-Type: text/plain; charset=utf-8');
+ 
+@@ -30,7 +30,7 @@ class Gateway extends \Reamur\System\Engine\Controller {
+         }
+ 
+         try {
+-            $registry = new GatewayRegistry([new MercadoPagoGatewayAdapter()]);
++            $registry = InstalledGatewayAdapters::registry();
+             $store = new DbGatewayAccountStore(
+                 $this->db,
+                 DB_PREFIX,
+@@ -39,7 +39,15 @@ class Gateway extends \Reamur\System\Engine\Controller {
+             );
+             $account = $store->find($gatewayId);
+ 
+-            if ($account === null || $account->providerCode !== 'mp') {
++            if ($account === null) {
++                $this->response->setOutput('ok');
++                return;
++            }
++
++            try {
++                $registry->get($account->providerCode);
++            } catch (\OutOfBoundsException) {
++                // Unknown provider: nothing this deployment can reconcile.
+                 $this->response->setOutput('ok');
+                 return;
+             }
+@@ -78,7 +86,7 @@ class Gateway extends \Reamur\System\Engine\Controller {
+             // get 200; transient provider/storage failures alone request retry.
+             $this->response->setOutput('ok');
+         } catch (\Throwable $e) {
+-            $this->safeLog('JOW Mercado Pago Orders API webhook failed: ' . $e->getMessage());
++            $this->safeLog('JOW platform gateway webhook failed: ' . $e->getMessage());
+             $this->retryResponse();
+         }
+     }
+diff --git a/dev/system/library/payment/gateway_http_client.php b/dev/system/library/payment/gateway_http_client.php
+new file mode 100644
+index 0000000..684428c
+--- /dev/null
++++ b/dev/system/library/payment/gateway_http_client.php
+@@ -0,0 +1,105 @@
++<?php declare(strict_types=1);
++namespace Reamur\System\Library\Payment;
++
++use Reamur\System\Library\Security\UrlGuard;
++
++/**
++ * Shared cURL transport for JOW gateway adapters (Mercado Pago, Stripe, PayPal).
++ * Provider clients may inject their own transport callable in tests; production
++ * always goes through here: UrlGuard-pinned target, TLS verification and no
++ * redirect following.
++ */
++final class GatewayHttpClient {
++    /**
++     * @param list<string> $headers
++     * @return array{status: int, body: string, error: string}
++     */
++    public function request(string $url, string $body, array $headers = [], string $method = 'POST'): array {
++        if (!function_exists('curl_init') || !self::isHttpUrl($url)) {
++            return ['status' => 0, 'body' => '', 'error' => 'Invalid or unsupported cURL request target.'];
++        }
++
++        $target = UrlGuard::inspect($url, true);
++
++        if ($target === null) {
++            return ['status' => 0, 'body' => '', 'error' => 'Request target rejected by UrlGuard.'];
++        }
++
++        $ch = curl_init($url);
++        if ($ch === false) {
++            return ['status' => 0, 'body' => '', 'error' => 'Failed to initialize cURL session.'];
++        }
++
++        $ca_bundle = self::caBundlePath();
++
++        curl_setopt_array($ch, UrlGuard::curlOptions($target) + [
++            CURLOPT_RETURNTRANSFER => true,
++            CURLOPT_CONNECTTIMEOUT => 15,
++            CURLOPT_TIMEOUT => 30,
++            CURLOPT_CUSTOMREQUEST => $method,
++            CURLOPT_SSL_VERIFYPEER => true,
++            CURLOPT_SSL_VERIFYHOST => 2,
++            CURLOPT_USERAGENT => 'ReamurCMS JOW-Payments/1.0',
++        ]);
++
++        if ($ca_bundle !== '') {
++            curl_setopt($ch, CURLOPT_CAINFO, $ca_bundle);
++        }
++
++        if ($method !== 'GET') {
++            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
++        }
++
++        if ($headers) {
++            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
++        }
++
++        $response = curl_exec($ch);
++        $error = curl_error($ch);
++        $status = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
++        curl_close($ch);
++
++        return [
++            'status' => $status,
++            'body' => is_string($response) ? $response : '',
++            'error' => $error ?: '',
++        ];
++    }
++
++    /**
++     * Validate the EXACT string received: no trim() here, otherwise a
++     * space/CR/LF/NUL at the edges would pass the check and continue raw.
++     */
++    public static function isHttpUrl(string $url): bool {
++        if ($url === '' || preg_match('/[\x00-\x20\x7f]/', $url) === 1) {
++            return false;
++        }
++
++        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
++            return false;
++        }
++
++        $scheme = strtolower((string)parse_url($url, PHP_URL_SCHEME));
++
++        return in_array($scheme, ['http', 'https'], true);
++    }
++
++    private static function caBundlePath(): string {
++        $candidates = array_filter([
++            getenv('REAMUR_CURL_CAINFO') ?: '',
++            getenv('CURL_CA_BUNDLE') ?: '',
++            (string)ini_get('curl.cainfo'),
++            (string)ini_get('openssl.cafile'),
++            defined('DIR_STORAGE') ? rtrim((string)DIR_STORAGE, '/\\') . '/certs/cacert.pem' : '',
++            defined('DIR_SYSTEM') ? rtrim((string)DIR_SYSTEM, '/\\') . '/storage/certs/cacert.pem' : '',
++        ]);
++
++        foreach ($candidates as $candidate) {
++            if ($candidate !== '' && is_file($candidate) && is_readable($candidate)) {
++                return $candidate;
++            }
++        }
++
++        return '';
++    }
++}
+diff --git a/dev/system/library/payment/installed_gateway_adapters.php b/dev/system/library/payment/installed_gateway_adapters.php
+new file mode 100644
+index 0000000..eb53dca
+--- /dev/null
++++ b/dev/system/library/payment/installed_gateway_adapters.php
+@@ -0,0 +1,42 @@
++<?php declare(strict_types=1);
++namespace Reamur\System\Library\Payment;
++
++/**
++ * The explicit allowlist of gateway adapters installed in this deployment.
++ *
++ * DB values never become class names: every controller/store/service resolves
++ * providers through this registry. Adding a gateway means implementing
++ * GatewayAdapter, listing it here and shipping its capability matrix and
++ * tests — nothing else in the core changes.
++ */
++final class InstalledGatewayAdapters {
++    /** @return GatewayRegistry Registry with every installed adapter. */
++    public static function registry(): GatewayRegistry {
++        return new GatewayRegistry([
++            new MercadoPagoGatewayAdapter(),
++            new StripeCheckoutAdapter(),
++            new PaypalOrdersAdapter(),
++        ]);
++    }
++
++    /** @return list<string> Installed provider codes in display order. */
++    public static function codes(): array {
++        $codes = [];
++
++        foreach (self::registry()->all() as $adapter) {
++            $codes[] = $adapter->code();
++        }
++
++        return $codes;
++    }
++
++    public static function isInstalled(string $code): bool {
++        try {
++            self::registry()->get($code);
++
++            return true;
++        } catch (\OutOfBoundsException) {
++            return false;
++        }
++    }
++}
+diff --git a/dev/system/library/payment/paypal_orders_adapter.php b/dev/system/library/payment/paypal_orders_adapter.php
+new file mode 100644
+index 0000000..84f8232
+--- /dev/null
++++ b/dev/system/library/payment/paypal_orders_adapter.php
+@@ -0,0 +1,546 @@
++<?php declare(strict_types=1);
++namespace Reamur\System\Library\Payment;
++
++/**
++ * PayPal Orders API v2 adapter for JOW's platform-owned account.
++ *
++ * The payer approves on a PayPal-hosted page; CHECKOUT.ORDER.APPROVED is
++ * completed server-side with an idempotent capture. State is applied only
++ * after the signed webhook is verified against
++ * POST /v1/notifications/verify-webhook-signature and the order is queried
++ * from GET /v2/checkout/orders/{id}. The order is the source of truth.
++ */
++final class PaypalOrdersAdapter implements GatewayAdapter {
++    private ?PaypalOrdersClient $client;
++
++    /** @var array<string, mixed> */
++    private array $config;
++
++    /** @param array<string, mixed> $config */
++    public function __construct(?PaypalOrdersClient $client = null, array $config = []) {
++        $this->client = $client;
++        $this->config = $config;
++    }
++
++    public function code(): string {
++        return 'paypal';
++    }
++
++    public function label(): string {
++        return 'PayPal';
++    }
++
++    public function capabilities(): GatewayCapabilities {
++        return new GatewayCapabilities(
++            ['checkout_orders' => ['BRL', 'USD', 'EUR']],
++            ['BRL' => 2, 'USD' => 2, 'EUR' => 2]
++        );
++    }
++
++    public function quote(Money $sourceAmount, string $chargeCurrency, GatewayAccount $account, GatewayCredentials $credentials): ?FxQuote {
++        if ($sourceAmount->currency !== $chargeCurrency) {
++            throw new \DomainException('PayPal JOW account does not provide foreign-exchange quotes');
++        }
++
++        return null;
++    }
++
++    public function createPayment(
++        GatewayPaymentRequest $request,
++        GatewayAccount $account,
++        GatewayCredentials $credentials,
++        ?FxQuote $quote
++    ): GatewayPaymentResult {
++        if ($account->providerCode !== $this->code() || $request->paymentMethod !== 'checkout_orders'
++            || $quote !== null || !in_array($request->chargeCurrency, ['BRL', 'USD', 'EUR'], true)
++            || $request->sourceAmount->currency !== $request->chargeCurrency) {
++            throw new \DomainException('PayPal JOW account received an unsupported payment request');
++        }
++
++        $clientId = $credentials->get('client_id');
++        $clientSecret = $credentials->get('client_secret');
++
++        if ($clientId === '' || $clientSecret === '') {
++            throw new \RuntimeException('PayPal JOW platform client credentials are not configured');
++        }
++
++        // PayPal limits invoice_id to 127 characters and custom_id to 256.
++        if (strlen($request->idempotencyKey) > 127) {
++            throw new \DomainException('PayPal JOW idempotency key exceeds the Orders API reference limit');
++        }
++
++        $baseUrl = PaypalOrdersClient::baseUrlFor($account->environment, $this->config);
++        $token = $this->client()->oauthToken($baseUrl, $clientId, $clientSecret);
++        $http = (int)($token['_http_status'] ?? 0);
++        $accessToken = self::scalarString($token['access_token'] ?? null);
++
++        if ($http < 200 || $http >= 300 || $accessToken === '') {
++            throw new \RuntimeException('PayPal OAuth token request failed (HTTP ' . $http . ')');
++        }
++
++        $currency = $request->chargeCurrency;
++        $payload = [
++            'intent' => 'CAPTURE',
++            'purchase_units' => [[
++                'custom_id' => $request->idempotencyKey,
++                'invoice_id' => $request->idempotencyKey,
++                'description' => mb_substr($request->title, 0, 127),
++                'amount' => [
++                    'currency_code' => $currency,
++                    'value' => $request->sourceAmount->amount(),
++                ],
++            ]],
++            'payment_source' => [
++                'paypal' => [
++                    'experience_context' => [
++                        'user_action' => 'PAY_NOW',
++                        'payment_method_preference' => 'IMMEDIATE_PAYMENT_REQUIRED',
++                        'shipping_preference' => 'NO_SHIPPING',
++                        'landing_page' => 'NO_PREFERENCE',
++                        'return_url' => $request->returnUrl,
++                        'cancel_url' => $request->returnUrl,
++                    ],
++                ],
++            ],
++        ];
++
++        if ($request->payerEmail !== '') {
++            $payload['payer'] = ['email_address' => $request->payerEmail];
++        }
++
++        $order = $this->client()->createOrder($baseUrl, $accessToken, $payload, $request->idempotencyKey);
++        $http = (int)($order['_http_status'] ?? 0);
++
++        if ($http < 200 || $http >= 300) {
++            // Provider response details may contain private customer or account data.
++            throw new \RuntimeException('PayPal Orders API did not create the order (HTTP ' . $http . ')');
++        }
++
++        $orderId = self::scalarString($order['id'] ?? null);
++        $customId = self::firstCustomId($order);
++        $checkoutUrl = self::payerActionUrl($order);
++        $returnedCurrency = self::scalarString(
++            $order['purchase_units'][0]['amount']['currency_code'] ?? null
++        );
++        $returnedValue = self::scalarString($order['purchase_units'][0]['amount']['value'] ?? null);
++
++        if (preg_match('/^[A-Za-z0-9_-]{6,64}$/D', $orderId) !== 1
++            || !hash_equals($request->idempotencyKey, $customId)
++            || $returnedCurrency !== $currency
++            || !self::sameAmount($returnedValue, $request->sourceAmount->amount())
++            || !self::isHttps($checkoutUrl)) {
++            throw new \RuntimeException('PayPal Orders API returned an incomplete or mismatched order');
++        }
++
++        $status = self::normalizeOrderStatus(self::scalarString($order['status'] ?? null));
++
++        if ($status === null) {
++            throw new \RuntimeException('PayPal Orders API returned an unsupported order status');
++        }
++
++        return new GatewayPaymentResult(
++            $request->idempotencyKey,
++            GatewayCustomerAction::redirect($checkoutUrl),
++            $request->sourceAmount,
++            $status,
++            null,
++            ''
++        );
++    }
++
++    public function verifyNotification(
++        Notification $notification,
++        GatewayAccount $account,
++        GatewayCredentials $credentials
++    ): GatewayWebhookResult {
++        if ($account->providerCode !== $this->code()) {
++            return GatewayWebhookResult::ignored('wrong_provider');
++        }
++
++        $clientId = $credentials->get('client_id');
++        $clientSecret = $credentials->get('client_secret');
++        $webhookId = $credentials->get('webhook_id');
++
++        if ($clientId === '' || $clientSecret === '' || strlen($webhookId) < 8 || strlen($webhookId) > 255) {
++            return GatewayWebhookResult::retry('credentials_missing');
++        }
++
++        $event = self::decodeBody($notification->body);
++
++        if ($event === [] || !is_string($event['id'] ?? null)) {
++            return GatewayWebhookResult::ignored('malformed_event_body');
++        }
++
++        $baseUrl = PaypalOrdersClient::baseUrlFor($account->environment, $this->config);
++        $accessToken = $this->token($baseUrl, $clientId, $clientSecret);
++        $verificationStatus = $this->verifySignature($baseUrl, $accessToken, $webhookId, $notification, $event);
++
++        if ($verificationStatus === 'FAILURE') {
++            return GatewayWebhookResult::ignored('signature_rejected');
++        }
++
++        if ($verificationStatus !== 'SUCCESS') {
++            return GatewayWebhookResult::retry('verification_inconclusive');
++        }
++
++        $eventType = self::scalarString($event['event_type'] ?? null);
++
++        try {
++            return match ($eventType) {
++                'CHECKOUT.ORDER.APPROVED',
++                'CHECKOUT.ORDER.COMPLETED' => $this->verifyOrderEvent($event, $baseUrl, $accessToken, $eventType),
++                'PAYMENT.CAPTURE.COMPLETED',
++                'PAYMENT.CAPTURE.DENIED',
++                'PAYMENT.CAPTURE.REFUNDED',
++                'PAYMENT.CAPTURE.REVERSED' => $this->verifyCaptureEvent($event, $baseUrl, $accessToken),
++                default => GatewayWebhookResult::ignored('unhandled_event_type'),
++            };
++        } catch (\RuntimeException) {
++            return GatewayWebhookResult::retry('provider_unavailable');
++        } catch (\UnexpectedValueException) {
++            return GatewayWebhookResult::retry('invalid_provider_amount');
++        }
++    }
++
++    private function verifyOrderEvent(array $event, string $baseUrl, string $accessToken, string $eventType): GatewayWebhookResult {
++        $orderId = self::scalarString($event['resource']['id'] ?? null);
++
++        if (preg_match('/^[A-Za-z0-9_-]{6,64}$/D', $orderId) !== 1) {
++            return GatewayWebhookResult::ignored('invalid_order_id');
++        }
++
++        // An approved order is completed server-side with an idempotent
++        // capture before anything is reconciled.
++        if ($eventType === 'CHECKOUT.ORDER.APPROVED') {
++            $captureRequestId = self::captureRequestId(
++                self::scalarString($event['resource']['purchase_units'][0]['custom_id'] ?? null)
++            );
++
++            if ($captureRequestId === '') {
++                return GatewayWebhookResult::ignored('order_not_reconciled');
++            }
++
++            $this->client()->captureOrder($baseUrl, $accessToken, $orderId, $captureRequestId);
++        }
++
++        $order = $this->client()->getOrder($baseUrl, $accessToken, $orderId);
++        $http = (int)($order['_http_status'] ?? 0);
++
++        if ($http < 200 || $http >= 300) {
++            return GatewayWebhookResult::retry('provider_unavailable');
++        }
++
++        return $this->reconcileOrder($order, $orderId);
++    }
++
++    private function verifyCaptureEvent(array $event, string $baseUrl, string $accessToken): GatewayWebhookResult {
++        $resource = $event['resource'] ?? [];
++
++        if (!is_array($resource)) {
++            return GatewayWebhookResult::ignored('malformed_event_object');
++        }
++
++        $orderId = self::captureEventOrderId($resource);
++
++        if ($orderId === '') {
++            return GatewayWebhookResult::ignored('capture_without_order');
++        }
++
++        $order = $this->client()->getOrder($baseUrl, $accessToken, $orderId);
++        $http = (int)($order['_http_status'] ?? 0);
++
++        if ($http < 200 || $http >= 300) {
++            return GatewayWebhookResult::retry('provider_unavailable');
++        }
++
++        return $this->reconcileOrder($order, $orderId);
++    }
++
++    private function reconcileOrder(array $order, string $orderId): GatewayWebhookResult {
++        $confirmedId = self::scalarString($order['id'] ?? null);
++        $reference = self::firstCustomId($order);
++        $unitAmount = $order['purchase_units'][0]['amount'] ?? [];
++
++        if (!hash_equals($orderId, $confirmedId)
++            || preg_match('/^[A-Za-z0-9._:-]{16,128}$/D', $reference) !== 1
++            || !is_array($unitAmount)) {
++            return GatewayWebhookResult::ignored('order_not_reconciled');
++        }
++
++        $currency = self::scalarString($unitAmount['currency_code'] ?? null);
++
++        if (!in_array($currency, ['BRL', 'USD', 'EUR'], true)) {
++            return GatewayWebhookResult::ignored('order_not_reconciled');
++        }
++
++        try {
++            $amount = self::decimalMoney($unitAmount['value'] ?? null, $currency);
++        } catch (\UnexpectedValueException) {
++            return GatewayWebhookResult::retry('invalid_provider_amount');
++        }
++
++        $orderStatus = self::scalarString($order['status'] ?? null);
++        $capture = self::firstCapture($order);
++        $captureId = $capture === [] ? '' : self::scalarString($capture['id'] ?? null);
++        $status = self::normalizeOrderStatus($orderStatus);
++
++        // The capture inside the queried order is authoritative: a completed
++        // order whose capture is refunded/partially refunded must map to the
++        // refund state, not to paid.
++        if ($capture !== []) {
++            $captureStatus = self::normalizeCaptureStatus(self::scalarString($capture['status'] ?? null));
++
++            if ($captureStatus !== null) {
++                $status = $captureStatus;
++            }
++        }
++
++        if ($status === null) {
++            return GatewayWebhookResult::retry('unknown_provider_status');
++        }
++
++        $eventDigest = self::orderDigest($orderId, $order, $status, $amount, $captureId);
++        $eventId = 'pp-order-' . substr(hash('sha256', $orderId . "\0" . $eventDigest), 0, 52);
++
++        return GatewayWebhookResult::verified($eventId, $reference, $captureId, $status, $eventDigest, $amount);
++    }
++
++    private function token(string $baseUrl, string $clientId, string $clientSecret): string {
++        $token = $this->client()->oauthToken($baseUrl, $clientId, $clientSecret);
++        $http = (int)($token['_http_status'] ?? 0);
++        $accessToken = self::scalarString($token['access_token'] ?? null);
++
++        if ($http < 200 || $http >= 300 || $accessToken === '') {
++            throw new \RuntimeException('PayPal OAuth token request failed (HTTP ' . $http . ')');
++        }
++
++        return $accessToken;
++    }
++
++    /** @param array<string, mixed> $event */
++    private function verifySignature(
++        string $baseUrl,
++        string $accessToken,
++        string $webhookId,
++        Notification $notification,
++        array $event
++    ): string {
++        $transmissionId = $notification->header('paypal-transmission-id');
++        $transmissionTime = $notification->header('paypal-transmission-time');
++        $transmissionSig = $notification->header('paypal-transmission-sig');
++        $certUrl = $notification->header('paypal-cert-url');
++        $authAlgo = $notification->header('paypal-auth-algo');
++
++        if ($transmissionId === '' || $transmissionTime === '' || $transmissionSig === ''
++            || $certUrl === '' || $authAlgo === ''
++            || preg_match('/[\r\n\0]/', $transmissionId . $transmissionTime . $transmissionSig . $certUrl . $authAlgo) === 1
++            || !PaypalOrdersClient::validBaseUrl($certUrl)) {
++            return 'FAILURE';
++        }
++
++        $response = $this->client()->verifyWebhookSignature($baseUrl, $accessToken, [
++            'auth_algo' => $authAlgo,
++            'cert_url' => $certUrl,
++            'transmission_id' => $transmissionId,
++            'transmission_sig' => $transmissionSig,
++            'transmission_time' => $transmissionTime,
++            'webhook_id' => $webhookId,
++            'webhook_event' => $event,
++        ]);
++        $http = (int)($response['_http_status'] ?? 0);
++
++        if ($http < 200 || $http >= 300) {
++            return 'INCONCLUSIVE';
++        }
++
++        $status = self::scalarString($response['verification_status'] ?? null);
++
++        if ($status !== 'SUCCESS' && $status !== 'FAILURE') {
++            return 'INCONCLUSIVE';
++        }
++
++        return $status;
++    }
++
++    private function client(): PaypalOrdersClient {
++        return $this->client ??= new PaypalOrdersClient();
++    }
++
++    private static function normalizeOrderStatus(string $status): ?string {
++        return match (strtoupper($status)) {
++            'CREATED', 'SAVED' => GatewayPaymentStatus::REQUIRES_ACTION,
++            'APPROVED' => GatewayPaymentStatus::AUTHORIZED,
++            'COMPLETED' => GatewayPaymentStatus::PAID,
++            'VOIDED' => GatewayPaymentStatus::CANCELLED,
++            default => null,
++        };
++    }
++
++    private static function normalizeCaptureStatus(string $status): ?string {
++        return match (strtoupper($status)) {
++            'COMPLETED' => GatewayPaymentStatus::PAID,
++            'PENDING' => GatewayPaymentStatus::AUTHORIZED,
++            'PARTIALLY_REFUNDED' => GatewayPaymentStatus::PARTIALLY_REFUNDED,
++            'REFUNDED' => GatewayPaymentStatus::REFUNDED,
++            'DECLINED' => GatewayPaymentStatus::FAILED,
++            'VOIDED' => GatewayPaymentStatus::CANCELLED,
++            default => null,
++        };
++    }
++
++    /** @param array<string, mixed> $order */
++    private static function firstCustomId(array $order): string {
++        $units = $order['purchase_units'] ?? null;
++
++        if (!is_array($units) || !isset($units[0]) || !is_array($units[0])) {
++            return '';
++        }
++
++        return self::scalarString($units[0]['custom_id'] ?? null);
++    }
++
++    /** @param array<string, mixed> $order */
++    private static function firstCapture(array $order): array {
++        $payments = $order['purchase_units'][0]['payments'] ?? null;
++
++        if (!is_array($payments) || !is_array($payments['captures'] ?? null) || !isset($payments['captures'][0])
++            || !is_array($payments['captures'][0])) {
++            return [];
++        }
++
++        return $payments['captures'][0];
++    }
++
++    /** @param array<string, mixed> $resource */
++    private static function captureEventOrderId(array $resource): string {
++        $related = $resource['supplementary_data']['related_ids']['order_id'] ?? null;
++
++        if (is_scalar($related)) {
++            $orderId = trim((string)$related);
++
++            if (preg_match('/^[A-Za-z0-9_-]{6,64}$/D', $orderId) === 1) {
++                return $orderId;
++            }
++        }
++
++        // Fall back to the "up" link that points at the parent order.
++        $links = $resource['links'] ?? [];
++
++        if (!is_array($links)) {
++            return '';
++        }
++
++        foreach ($links as $link) {
++            if (!is_array($link) || strtolower(self::scalarString($link['rel'] ?? null)) !== 'up') {
++                continue;
++            }
++
++            $href = self::scalarString($link['href'] ?? null);
++            $path = (string)parse_url($href, PHP_URL_PATH);
++
++            if (preg_match('#/v2/checkout/orders/([A-Za-z0-9_-]{6,64})$#D', $path, $m) === 1) {
++                return $m[1];
++            }
++        }
++
++        return '';
++    }
++
++    private static function captureRequestId(string $customId): string {
++        if (preg_match('/^[A-Za-z0-9._:-]{16,128}$/D', $customId) !== 1) {
++            return '';
++        }
++
++        return $customId . ':capture';
++    }
++
++    /** @param array<string, mixed> $order */
++    private static function payerActionUrl(array $order): string {
++        $links = $order['links'] ?? [];
++
++        if (!is_array($links)) {
++            return '';
++        }
++
++        foreach (['payer-action', 'payer_action', 'approve'] as $rel) {
++            foreach ($links as $link) {
++                if (is_array($link) && strtolower(self::scalarString($link['rel'] ?? null)) === $rel) {
++                    $href = self::scalarString($link['href'] ?? null);
++
++                    if (self::isHttps($href)) {
++                        return $href;
++                    }
++                }
++            }
++        }
++
++        return '';
++    }
++
++    private static function sameAmount(string $left, string $right): bool {
++        // Pure string normalization: no bcmath dependency. Two amounts are
++        // equal when their digits match after trimming insignificant zeros.
++        $normalize = static function (string $value): string {
++            if ($value === '' || preg_match('/^\d+(?:\.\d+)?$/D', $value) !== 1) {
++                return '';
++            }
++
++            [$whole, $fraction] = array_pad(explode('.', $value, 2), 2, '');
++            $whole = ltrim($whole, '0');
++            $fraction = rtrim($fraction, '0');
++
++            return ($whole === '' ? '0' : $whole) . ($fraction !== '' ? '.' . $fraction : '');
++        };
++
++        $left = $normalize($left);
++        $right = $normalize($right);
++
++        return $left !== '' && $right !== '' && $left === $right;
++    }
++
++    /** @param array<string, mixed> $order */
++    private static function orderDigest(string $orderId, array $order, string $normalizedStatus, Money $amount, string $captureId): string {
++        $material = [
++            'order_id' => $orderId,
++            'status' => self::scalarString($order['status'] ?? null),
++            'normalized_status' => $normalizedStatus,
++            'currency' => $amount->currency,
++            'amount' => $amount->amount(),
++            'capture_id' => $captureId,
++            'capture_status' => self::scalarString($order['purchase_units'][0]['payments']['captures'][0]['status'] ?? null),
++        ];
++
++        return hash('sha256', json_encode($material, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
++    }
++
++    private static function decimalMoney(mixed $amount, string $currency): Money {
++        if (!is_string($amount) && !is_int($amount) && !is_float($amount)) {
++            throw new \UnexpectedValueException('PayPal amount is missing');
++        }
++
++        return new Money((string)$amount, $currency, 2);
++    }
++
++    private static function isHttps(string $url): bool {
++        if ($url === '' || preg_match('/[\r\n\0]/', $url) === 1 || filter_var($url, FILTER_VALIDATE_URL) === false) {
++            return false;
++        }
++
++        return strtolower((string)parse_url($url, PHP_URL_SCHEME)) === 'https';
++    }
++
++    /** @return array<string, mixed> */
++    private static function decodeBody(string $body): array {
++        if ($body === '') {
++            return [];
++        }
++
++        $decoded = json_decode($body, true);
++
++        return is_array($decoded) ? $decoded : [];
++    }
++
++    private static function scalarString(mixed $value): string {
++        return is_scalar($value) ? trim((string)$value) : '';
++    }
++}
+diff --git a/dev/system/library/payment/paypal_orders_client.php b/dev/system/library/payment/paypal_orders_client.php
+new file mode 100644
+index 0000000..40f32e1
+--- /dev/null
++++ b/dev/system/library/payment/paypal_orders_client.php
+@@ -0,0 +1,157 @@
++<?php declare(strict_types=1);
++namespace Reamur\System\Library\Payment;
++
++/**
++ * PayPal Orders API v2 client for JOW's platform-owned account.
++ *
++ * OAuth2 client-credentials token, PayPal-Request-Id idempotency and the
++ * webhook-signature verification endpoint. The transport is injectable for
++ * tests; production defaults to the shared GatewayHttpClient.
++ */
++class PaypalOrdersClient {
++    public const SANDBOX_API_URL = 'https://api-m.sandbox.paypal.com';
++    public const LIVE_API_URL = 'https://api-m.paypal.com';
++
++    /** @var callable(string, string, list<string>, string): array{status: int, body: string, error: string} */
++    private $transport;
++
++    /** @var array<string, mixed> */
++    private array $config;
++
++    /** @param array<string, mixed> $config */
++    public function __construct(?callable $transport = null, array $config = []) {
++        $this->transport = $transport ?? (new GatewayHttpClient())->request(...);
++        $this->config = $config;
++    }
++
++    /** @return array<string, mixed> decoded token response + _http_status/_curl_error */
++    public function oauthToken(string $baseUrl, string $clientId, string $clientSecret): array {
++        if (!self::validBaseUrl($baseUrl) || trim($clientId) === '' || trim($clientSecret) === '') {
++            return ['_http_status' => 0, '_curl_error' => 'invalid token credentials or base URL'];
++        }
++
++        return $this->send(
++            $baseUrl . '/v1/oauth2/token',
++            http_build_query(['grant_type' => 'client_credentials'], '', '&', PHP_QUERY_RFC1738),
++            [
++                'accept: application/json',
++                'authorization: Basic ' . base64_encode(trim($clientId) . ':' . trim($clientSecret)),
++                'content-type: application/x-www-form-urlencoded',
++            ],
++            'POST'
++        );
++    }
++
++    /**
++     * @param array<string, mixed> $payload
++     * @return array<string, mixed>
++     */
++    public function createOrder(string $baseUrl, string $accessToken, array $payload, string $requestId): array {
++        if (!self::validBaseUrl($baseUrl) || trim($accessToken) === ''
++            || preg_match('/^[A-Za-z0-9._:-]{1,128}$/D', $requestId) !== 1) {
++            return ['_http_status' => 0, '_curl_error' => 'invalid order credentials or request ID'];
++        }
++
++        return $this->send(
++            $baseUrl . '/v2/checkout/orders',
++            json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
++            self::orderHeaders($accessToken, $requestId),
++            'POST'
++        );
++    }
++
++    /** @return array<string, mixed> */
++    public function getOrder(string $baseUrl, string $accessToken, string $orderId): array {
++        if (!self::validBaseUrl($baseUrl) || trim($accessToken) === ''
++            || preg_match('/^[A-Za-z0-9_-]{1,32}$/D', $orderId) !== 1) {
++            return ['_http_status' => 0, '_curl_error' => 'invalid order ID or credentials'];
++        }
++
++        return $this->send(
++            $baseUrl . '/v2/checkout/orders/' . rawurlencode($orderId),
++            '',
++            ['accept: application/json', 'authorization: Bearer ' . trim($accessToken)],
++            'GET'
++        );
++    }
++
++    /** @return array<string, mixed> */
++    public function captureOrder(string $baseUrl, string $accessToken, string $orderId, string $requestId): array {
++        if (!self::validBaseUrl($baseUrl) || trim($accessToken) === ''
++            || preg_match('/^[A-Za-z0-9_-]{1,32}$/D', $orderId) !== 1
++            || preg_match('/^[A-Za-z0-9._:-]{1,128}$/D', $requestId) !== 1) {
++            return ['_http_status' => 0, '_curl_error' => 'invalid capture credentials or request ID'];
++        }
++
++        return $this->send(
++            $baseUrl . '/v2/checkout/orders/' . rawurlencode($orderId) . '/capture',
++            '',
++            self::orderHeaders($accessToken, $requestId),
++            'POST'
++        );
++    }
++
++    /**
++     * @param array<string, mixed> $verification payload for /v1/notifications/verify-webhook-signature
++     * @return array<string, mixed>
++     */
++    public function verifyWebhookSignature(string $baseUrl, string $accessToken, array $verification): array {
++        if (!self::validBaseUrl($baseUrl) || trim($accessToken) === '') {
++            return ['_http_status' => 0, '_curl_error' => 'invalid verification credentials or base URL'];
++        }
++
++        return $this->send(
++            $baseUrl . '/v1/notifications/verify-webhook-signature',
++            json_encode($verification, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES),
++            ['accept: application/json', 'authorization: Bearer ' . trim($accessToken), 'content-type: application/json'],
++            'POST'
++        );
++    }
++
++    /** Environment seam for e2e batteries: the default is always an official host. */
++    public static function baseUrlFor(string $environment, array $config = []): string {
++        $override = trim((string)($config['api_url'] ?? ''));
++
++        if (GatewayHttpClient::isHttpUrl($override)) {
++            return rtrim($override, '/');
++        }
++
++        return $environment === 'live' ? self::LIVE_API_URL : self::SANDBOX_API_URL;
++    }
++
++    public static function validBaseUrl(string $url): bool {
++        if (!GatewayHttpClient::isHttpUrl($url)) {
++            return false;
++        }
++
++        return strtolower((string)parse_url($url, PHP_URL_SCHEME)) === 'https';
++    }
++
++    /** @return list<string> */
++    private static function orderHeaders(string $accessToken, string $requestId): array {
++        return [
++            'accept: application/json',
++            'authorization: Bearer ' . trim($accessToken),
++            'content-type: application/json',
++            'PayPal-Request-Id: ' . $requestId,
++        ];
++    }
++
++    /**
++     * @param list<string> $headers
++     * @return array<string, mixed>
++     */
++    private function send(string $url, string $body, array $headers, string $method): array {
++        $response = ($this->transport)($url, $body, $headers, $method);
++        $data = json_decode((string)($response['body'] ?? ''), true);
++
++        if (!is_array($data)) {
++            $data = [];
++        }
++
++        $data['_http_status'] = (int)($response['status'] ?? 0);
++        $data['_curl_error'] = (string)($response['error'] ?? '');
++
++        return $data;
++    }
++}
+diff --git a/dev/system/library/payment/stripe_checkout_adapter.php b/dev/system/library/payment/stripe_checkout_adapter.php
+new file mode 100644
+index 0000000..ae38926
+--- /dev/null
++++ b/dev/system/library/payment/stripe_checkout_adapter.php
+@@ -0,0 +1,414 @@
++<?php declare(strict_types=1);
++namespace Reamur\System\Library\Payment;
++
++/**
++ * Stripe hosted Checkout Session adapter for JOW's platform-owned account.
++ *
++ * The payer is redirected to a Stripe-hosted page (mode=payment). Completion
++ * is decided ONLY by the signed webhook reconciled against
++ * GET /v1/checkout/sessions/{id} (or /v1/charges/{id} for refunds); the
++ * success_url and the webhook body alone never settle a payment.
++ */
++final class StripeCheckoutAdapter implements GatewayAdapter {
++    /** Signature age tolerance in seconds (Stripe SDK default). */
++    private const SIGNATURE_TOLERANCE_SECONDS = 300;
++
++    private ?StripeCheckoutClient $client;
++
++    public function __construct(?StripeCheckoutClient $client = null) {
++        $this->client = $client;
++    }
++
++    public function code(): string {
++        return 'stripe';
++    }
++
++    public function label(): string {
++        return 'Stripe';
++    }
++
++    public function capabilities(): GatewayCapabilities {
++        return new GatewayCapabilities(
++            ['checkout_session' => ['BRL', 'USD', 'EUR']],
++            ['BRL' => 2, 'USD' => 2, 'EUR' => 2]
++        );
++    }
++
++    public function quote(Money $sourceAmount, string $chargeCurrency, GatewayAccount $account, GatewayCredentials $credentials): ?FxQuote {
++        if ($sourceAmount->currency !== $chargeCurrency) {
++            throw new \DomainException('Stripe JOW account does not provide foreign-exchange quotes');
++        }
++
++        return null;
++    }
++
++    public function createPayment(
++        GatewayPaymentRequest $request,
++        GatewayAccount $account,
++        GatewayCredentials $credentials,
++        ?FxQuote $quote
++    ): GatewayPaymentResult {
++        if ($account->providerCode !== $this->code() || $request->paymentMethod !== 'checkout_session'
++            || $quote !== null || !in_array($request->chargeCurrency, ['BRL', 'USD', 'EUR'], true)
++            || $request->sourceAmount->currency !== $request->chargeCurrency) {
++            throw new \DomainException('Stripe JOW account received an unsupported payment request');
++        }
++
++        $secretKey = $credentials->get('secret_key');
++
++        if ($secretKey === '') {
++            throw new \RuntimeException('Stripe JOW platform secret key is not configured');
++        }
++
++        $currency = strtolower($request->chargeCurrency);
++        $form = [
++            'mode' => 'payment',
++            'success_url' => $request->returnUrl,
++            'cancel_url' => $request->returnUrl,
++            'client_reference_id' => $request->idempotencyKey,
++            'metadata[jow_source_type]' => $request->sourceType,
++            'metadata[jow_source_id]' => (string)$request->sourceId,
++            'metadata[jow_reference]' => $request->idempotencyKey,
++            'line_items[0][quantity]' => '1',
++            'line_items[0][price_data][currency]' => $currency,
++            'line_items[0][price_data][unit_amount]' => $request->sourceAmount->minorUnits(),
++            'line_items[0][price_data][product_data][name]' => mb_substr($request->title, 0, 500),
++        ];
++
++        if ($request->payerEmail !== '') {
++            $form['customer_email'] = $request->payerEmail;
++        }
++
++        $session = $this->client()->createSession($form, $secretKey, $request->idempotencyKey);
++        $http = (int)($session['_http_status'] ?? 0);
++
++        if ($http < 200 || $http >= 300) {
++            // Provider response details may contain private customer or account data.
++            throw new \RuntimeException('Stripe Checkout API did not create the session (HTTP ' . $http . ')');
++        }
++
++        $sessionId = self::scalarString($session['id'] ?? null);
++        $sessionUrl = self::scalarString($session['url'] ?? null);
++        $reference = self::scalarString($session['client_reference_id'] ?? null);
++        $currencyReturned = self::scalarString($session['currency'] ?? null);
++
++        if (preg_match('/^[A-Za-z0-9_-]{1,128}$/D', $sessionId) !== 1
++            || !hash_equals($request->idempotencyKey, $reference)
++            || strtolower($currencyReturned) !== $currency
++            || !self::isHttps($sessionUrl)) {
++            throw new \RuntimeException('Stripe Checkout API returned an incomplete or mismatched session');
++        }
++
++        $amount = self::minorMoney($session['amount_total'] ?? null, strtoupper($currencyReturned));
++
++        if (!$amount->equals($request->sourceAmount)) {
++            throw new \RuntimeException('Stripe Checkout API returned a session amount different from the requested amount');
++        }
++
++        $status = self::normalizeSessionStatus(
++            self::scalarString($session['status'] ?? null),
++            self::scalarString($session['payment_status'] ?? null)
++        );
++
++        if ($status === null) {
++            throw new \RuntimeException('Stripe Checkout API returned an unsupported session status');
++        }
++
++        // The ledger reference is the client_reference_id (our idempotency
++        // key) so webhook events reconcile with the persisted attempt; the
++        // session ID is validated but only travels inside event digests.
++        return new GatewayPaymentResult(
++            $request->idempotencyKey,
++            GatewayCustomerAction::redirect($sessionUrl),
++            $amount,
++            $status,
++            null,
++            self::scalarString($session['payment_intent'] ?? null)
++        );
++    }
++
++    public function verifyNotification(
++        Notification $notification,
++        GatewayAccount $account,
++        GatewayCredentials $credentials
++    ): GatewayWebhookResult {
++        if ($account->providerCode !== $this->code()) {
++            return GatewayWebhookResult::ignored('wrong_provider');
++        }
++
++        $secretKey = $credentials->get('secret_key');
++        $webhookSecret = $credentials->get('webhook_secret');
++
++        if ($secretKey === '' || strlen($webhookSecret) < 16 || strlen($webhookSecret) > 255) {
++            return GatewayWebhookResult::retry('credentials_missing');
++        }
++
++        $body = $notification->body;
++        $event = self::decodeBody($body);
++
++        if ($event === [] || !self::signatureValid($webhookSecret, $body, $notification->header('stripe-signature'), time())) {
++            return GatewayWebhookResult::ignored('signature_rejected');
++        }
++
++        $eventType = self::scalarString($event['type'] ?? null);
++        $object = $event['data']['object'] ?? [];
++
++        if (!is_array($object)) {
++            return GatewayWebhookResult::ignored('malformed_event_object');
++        }
++
++        try {
++            return match ($eventType) {
++                'checkout.session.completed',
++                'checkout.session.async_payment_succeeded',
++                'checkout.session.async_payment_failed',
++                'checkout.session.expired' => $this->verifySessionEvent($object, $eventType, $secretKey),
++                'charge.refunded' => $this->verifyRefundEvent($object, $secretKey),
++                default => GatewayWebhookResult::ignored('unhandled_event_type'),
++            };
++        } catch (\RuntimeException $e) {
++            return GatewayWebhookResult::retry('provider_unavailable');
++        } catch (\UnexpectedValueException) {
++            return GatewayWebhookResult::retry('invalid_provider_amount');
++        }
++    }
++
++    /**
++     * Validate the Stripe-Signature header (t=…,v1=…) over "{t}.{body}".
++     * The webhook secret's whsec_ scheme prefix is stripped before HMAC.
++     */
++    public static function signatureValid(string $secret, string $body, string $signatureHeader, int $now, int $tolerance = self::SIGNATURE_TOLERANCE_SECONDS): bool {
++        if ($secret === '' || $body === '' || $tolerance < 0) {
++            return false;
++        }
++
++        if (str_starts_with($secret, 'whsec_')) {
++            $secret = substr($secret, 6);
++        }
++
++        $timestamp = '';
++        $signatures = [];
++
++        foreach (explode(',', $signatureHeader) as $part) {
++            $part = trim($part);
++            $key = self::prefixOf($part);
++            $value = $key === '' ? '' : substr($part, strlen($key) + 1);
++
++            if ($key === 't') {
++                if ($timestamp !== '') {
++                    return false;
++                }
++                $timestamp = $value;
++            } elseif ($key === 'v1' && $value !== '' && count($signatures) < 8) {
++                $signatures[] = $value;
++            }
++        }
++
++        if ($timestamp === '' || !ctype_digit($timestamp) || $signatures === [] || abs($now - (int)$timestamp) > $tolerance) {
++            return false;
++        }
++
++        $expected = hash_hmac('sha256', $timestamp . '.' . $body, $secret);
++        $matched = false;
++
++        foreach ($signatures as $signature) {
++            if (strlen($signature) === 64 && ctype_xdigit($signature)
++                && hash_equals($expected, strtolower($signature))) {
++                $matched = true;
++            }
++        }
++
++        return $matched;
++    }
++
++    private function verifySessionEvent(array $object, string $eventType, string $secretKey): GatewayWebhookResult {
++        $sessionId = self::scalarString($object['id'] ?? null);
++
++        if (preg_match('/^[A-Za-z0-9_-]{1,128}$/D', $sessionId) !== 1) {
++            return GatewayWebhookResult::ignored('invalid_session_id');
++        }
++
++        // The session queried from the API is the source of truth; the event
++        // body alone never settles a payment.
++        $session = $this->client()->getSession($sessionId, $secretKey);
++        $http = (int)($session['_http_status'] ?? 0);
++
++        if ($http < 200 || $http >= 300) {
++            return GatewayWebhookResult::retry('provider_unavailable');
++        }
++
++        $confirmedId = self::scalarString($session['id'] ?? null);
++        $reference = self::scalarString($session['client_reference_id'] ?? null);
++        $currency = strtoupper(self::scalarString($session['currency'] ?? null));
++
++        if (!hash_equals($sessionId, $confirmedId)
++            || preg_match('/^[A-Za-z0-9._:-]{16,128}$/D', $reference) !== 1
++            || !in_array($currency, ['BRL', 'USD', 'EUR'], true)) {
++            return GatewayWebhookResult::ignored('session_not_reconciled');
++        }
++
++        try {
++            $amount = self::minorMoney($session['amount_total'] ?? null, $currency);
++        } catch (\UnexpectedValueException) {
++            return GatewayWebhookResult::retry('invalid_provider_amount');
++        }
++
++        $status = self::normalizeSessionStatus(
++            self::scalarString($session['status'] ?? null),
++            self::scalarString($session['payment_status'] ?? null)
++        );
++
++        // The failed async event maps to failed even when the queried session
++        // still reports the generic unpaid state.
++        if ($status === null) {
++            return GatewayWebhookResult::retry('unknown_provider_status');
++        }
++
++        if ($eventType === 'checkout.session.async_payment_failed') {
++            $status = GatewayPaymentStatus::FAILED;
++        }
++
++        $paymentIntent = self::scalarString($session['payment_intent'] ?? null);
++        $eventDigest = self::sessionDigest($sessionId, $session, $status, $amount);
++        $eventId = 'stripe-session-' . substr(hash('sha256', $sessionId . "\0" . $eventDigest), 0, 52);
++
++        return GatewayWebhookResult::verified($eventId, $reference, $paymentIntent, $status, $eventDigest, $amount);
++    }
++
++    private function verifyRefundEvent(array $object, string $secretKey): GatewayWebhookResult {
++        $chargeId = self::scalarString($object['id'] ?? null);
++
++        if (preg_match('/^[A-Za-z0-9_-]{1,128}$/D', $chargeId) !== 1) {
++            return GatewayWebhookResult::ignored('invalid_charge_id');
++        }
++
++        $charge = $this->client()->getCharge($chargeId, $secretKey);
++        $http = (int)($charge['_http_status'] ?? 0);
++
++        if ($http < 200 || $http >= 300) {
++            return GatewayWebhookResult::retry('provider_unavailable');
++        }
++
++        $confirmedId = self::scalarString($charge['id'] ?? null);
++        $reference = self::scalarString($charge['metadata']['jow_reference'] ?? null);
++        $currency = strtoupper(self::scalarString($charge['currency'] ?? null));
++
++        if (!hash_equals($chargeId, $confirmedId)
++            || preg_match('/^[A-Za-z0-9._:-]{16,128}$/D', $reference) !== 1
++            || !in_array($currency, ['BRL', 'USD', 'EUR'], true)) {
++            return GatewayWebhookResult::ignored('charge_not_reconciled');
++        }
++
++        try {
++            $amount = self::minorMoney($charge['amount'] ?? null, $currency);
++            $refunded = self::minorMoney($charge['amount_refunded'] ?? null, $currency);
++        } catch (\UnexpectedValueException) {
++            return GatewayWebhookResult::retry('invalid_provider_amount');
++        }
++
++        if ($refunded->compareTo($amount) > 0) {
++            return GatewayWebhookResult::ignored('refund_amount_exceeds_charge');
++        }
++
++        $status = $refunded->compareTo($amount) === 0
++            ? GatewayPaymentStatus::REFUNDED
++            : GatewayPaymentStatus::PARTIALLY_REFUNDED;
++
++        $eventDigest = self::refundDigest($chargeId, $charge, $status, $refunded);
++        $eventId = 'stripe-charge-' . substr(hash('sha256', $chargeId . "\0" . $eventDigest), 0, 52);
++
++        return GatewayWebhookResult::verified(
++            $eventId,
++            $reference,
++            self::scalarString($charge['payment_intent'] ?? null),
++            $status,
++            $eventDigest,
++            $amount
++        );
++    }
++
++    private function client(): StripeCheckoutClient {
++        return $this->client ??= new StripeCheckoutClient();
++    }
++
++    private static function normalizeSessionStatus(string $status, string $paymentStatus): ?string {
++        return match (strtolower($status)) {
++            'open' => GatewayPaymentStatus::REQUIRES_ACTION,
++            'complete' => strtolower($paymentStatus) === 'paid'
++                ? GatewayPaymentStatus::PAID
++                : GatewayPaymentStatus::REQUIRES_ACTION,
++            'expired' => GatewayPaymentStatus::EXPIRED,
++            default => null,
++        };
++    }
++
++    /** @param array<string, mixed> $session */
++    private static function sessionDigest(string $sessionId, array $session, string $normalizedStatus, Money $amount): string {
++        $material = [
++            'session_id' => $sessionId,
++            'status' => self::scalarString($session['status'] ?? null),
++            'payment_status' => self::scalarString($session['payment_status'] ?? null),
++            'normalized_status' => $normalizedStatus,
++            'currency' => $amount->currency,
++            'amount_total' => $amount->amount(),
++            'payment_intent' => self::scalarString($session['payment_intent'] ?? null),
++        ];
++
++        return hash('sha256', json_encode($material, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
++    }
++
++    /** @param array<string, mixed> $charge */
++    private static function refundDigest(string $chargeId, array $charge, string $normalizedStatus, Money $refunded): string {
++        $material = [
++            'charge_id' => $chargeId,
++            'amount' => self::scalarString($charge['amount'] ?? null),
++            'amount_refunded' => $refunded->amount(),
++            'normalized_status' => $normalizedStatus,
++            'currency' => $refunded->currency,
++            'payment_intent' => self::scalarString($charge['payment_intent'] ?? null),
++        ];
++
++        return hash('sha256', json_encode($material, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
++    }
++
++    private static function minorMoney(mixed $minorAmount, string $currency): Money {
++        if (!is_int($minorAmount) && (!is_string($minorAmount) || preg_match('/^\d+$/D', $minorAmount) !== 1)) {
++            throw new \UnexpectedValueException('Stripe amount is missing or malformed');
++        }
++
++        return Money::fromMinorUnits((string)$minorAmount, $currency, 2);
++    }
++
++    private static function isHttps(string $url): bool {
++        if ($url === '' || preg_match('/[\r\n\0]/', $url) === 1 || filter_var($url, FILTER_VALIDATE_URL) === false) {
++            return false;
++        }
++
++        return strtolower((string)parse_url($url, PHP_URL_SCHEME)) === 'https';
++    }
++
++    private static function prefixOf(string $part): string {
++        foreach (['t', 'v1'] as $key) {
++            if (str_starts_with($part, $key . '=')) {
++                return $key;
++            }
++        }
++
++        return '';
++    }
++
++    /** @return array<string, mixed> */
++    private static function decodeBody(string $body): array {
++        if ($body === '') {
++            return [];
++        }
++
++        $decoded = json_decode($body, true);
++
++        return is_array($decoded) ? $decoded : [];
++    }
++
++    private static function scalarString(mixed $value): string {
++        return is_scalar($value) ? trim((string)$value) : '';
++    }
++}
+diff --git a/dev/system/library/payment/stripe_checkout_client.php b/dev/system/library/payment/stripe_checkout_client.php
+new file mode 100644
+index 0000000..df77b60
+--- /dev/null
++++ b/dev/system/library/payment/stripe_checkout_client.php
+@@ -0,0 +1,100 @@
++<?php declare(strict_types=1);
++namespace Reamur\System\Library\Payment;
++
++/**
++ * Stripe API client for hosted Checkout Sessions (REST, form-encoded).
++ *
++ * The transport is injectable for tests; production defaults to the shared
++ * GatewayHttpClient. Every method returns the decoded response plus
++ * _http_status/_curl_error, mirroring the Mercado Pago client contract.
++ */
++class StripeCheckoutClient {
++    private const DEFAULT_API_URL = 'https://api.stripe.com';
++
++    /** @var callable(string, string, list<string>, string): array{status: int, body: string, error: string} */
++    private $transport;
++
++    /** @var array<string, mixed> */
++    private array $config;
++
++    /** @param array<string, mixed> $config */
++    public function __construct(?callable $transport = null, array $config = []) {
++        $this->transport = $transport ?? (new GatewayHttpClient())->request(...);
++        $this->config = $config;
++    }
++
++    /**
++     * @param array<string, mixed> $form
++     * @return array<string, mixed>
++     */
++    public function createSession(array $form, string $secretKey, string $idempotencyKey): array {
++        if (trim($secretKey) === '' || preg_match('/^[A-Za-z0-9._:-]{1,128}$/D', $idempotencyKey) !== 1) {
++            return ['_http_status' => 0, '_curl_error' => 'invalid session credentials or idempotency key'];
++        }
++
++        return $this->send(
++            $this->apiUrl() . '/v1/checkout/sessions',
++            http_build_query($form, '', '&', PHP_QUERY_RFC1738),
++            [
++                'accept: application/json',
++                'content-type: application/x-www-form-urlencoded',
++                'authorization: Bearer ' . trim($secretKey),
++                'Idempotency-Key: ' . $idempotencyKey,
++            ],
++            'POST'
++        );
++    }
++
++    /** @return array<string, mixed> */
++    public function getSession(string $sessionId, string $secretKey): array {
++        if (trim($secretKey) === '' || preg_match('/^[A-Za-z0-9_-]{1,128}$/D', $sessionId) !== 1) {
++            return ['_http_status' => 0, '_curl_error' => 'invalid session ID or credentials'];
++        }
++
++        return $this->send(
++            $this->apiUrl() . '/v1/checkout/sessions/' . rawurlencode($sessionId),
++            '',
++            ['accept: application/json', 'authorization: Bearer ' . trim($secretKey)],
++            'GET'
++        );
++    }
++
++    /** @return array<string, mixed> */
++    public function getCharge(string $chargeId, string $secretKey): array {
++        if (trim($secretKey) === '' || preg_match('/^[A-Za-z0-9_-]{1,128}$/D', $chargeId) !== 1) {
++            return ['_http_status' => 0, '_curl_error' => 'invalid charge ID or credentials'];
++        }
++
++        return $this->send(
++            $this->apiUrl() . '/v1/charges/' . rawurlencode($chargeId),
++            '',
++            ['accept: application/json', 'authorization: Bearer ' . trim($secretKey)],
++            'GET'
++        );
++    }
++
++    /** Environment seam for e2e batteries: default is always the official endpoint. */
++    private function apiUrl(): string {
++        $override = trim((string)($this->config['api_url'] ?? ''));
++
++        return GatewayHttpClient::isHttpUrl($override) ? rtrim($override, '/') : self::DEFAULT_API_URL;
++    }
++
++    /**
++     * @param list<string> $headers
++     * @return array<string, mixed>
++     */
++    private function send(string $url, string $body, array $headers, string $method): array {
++        $response = ($this->transport)($url, $body, $headers, $method);
++        $data = json_decode((string)($response['body'] ?? ''), true);
++
++        if (!is_array($data)) {
++            $data = [];
++        }
++
++        $data['_http_status'] = (int)($response['status'] ?? 0);
++        $data['_curl_error'] = (string)($response['error'] ?? '');
++
++        return $data;
++    }
++}
+diff --git a/docs/integracoes/JOW-Payments-Mercado-Pago.md b/docs/integracoes/JOW-Payments-Mercado-Pago.md
+index d9f9a35..8082d69 100644
+--- a/docs/integracoes/JOW-Payments-Mercado-Pago.md
++++ b/docs/integracoes/JOW-Payments-Mercado-Pago.md
+@@ -1,6 +1,6 @@
+ # JOW-Payments + Mercado Pago
+ 
+-**Estado:** integração implementada em patch, ainda não aplicada à base. Nenhuma migração ou cobrança foi executada.
++**Estado:** integração publicada no GitHub do projeto. A validação Sandbox operacional continua pendente; veja também `JOW-Payments-MultiGateway-Adapters.md` para os adapters Stripe/PayPal da mesma fundação.
+ 
+ ## Dois fluxos, credenciais separadas
+ 
+diff --git a/docs/integracoes/JOW-Payments-MultiGateway-Adapters.md b/docs/integracoes/JOW-Payments-MultiGateway-Adapters.md
+new file mode 100644
+index 0000000..7cf290e
+--- /dev/null
++++ b/docs/integracoes/JOW-Payments-MultiGateway-Adapters.md
+@@ -0,0 +1,53 @@
++# JOW-Payments — adapters multi-gateway (Mercado Pago, Stripe, PayPal)
++
++**Estado:** implementado em patch, para aplicação autorizada na base. Nenhuma migração, cobrança real ou chamada a provedor foi executada pela automação.
++
++## Contas próprias por provedor
++
++O painel **Admin → payments/jow** passa a manter **uma conta própria por gateway**, todas com rótulo `JOW platform` na tabela `rms_jow_gateway` (uma linha por `provider_code`), credenciais cifradas por campo e ambiente `sandbox|live` independente:
++
++| Provider | Método | Moedas | Credenciais (cifradas) | Webhook assinado | Conciliação |
++|---|---|---|---|---|---|
++| `mp` | `checkout_pro` | BRL | `access_token`, `webhook_secret` | `x-signature` (HMAC `id;request-id;ts`) | `GET /v1/orders/{id}` |
++| `stripe` | `checkout_session` | BRL, USD, EUR | `secret_key`, `webhook_secret` | `Stripe-Signature` (`t=…,v1=…`, tolerância 300 s, esquema `whsec_` removido antes do HMAC) | `GET /v1/checkout/sessions/{id}`; reembolsos por `GET /v1/charges/{id}` |
++| `paypal` | `checkout_orders` | BRL, USD, EUR | `client_id`, `client_secret`, `webhook_id` | `POST /v1/notifications/verify-webhook-signature` (API oficial) | `GET /v2/checkout/orders/{id}`; capture server-side idempotente em `CHECKOUT.ORDER.APPROVED` |
++
++Nenhum adapter lê tokens OAuth de sellers nem envia split (`marketplace_fee`, `application_fee_amount`, `transfer_data`, `payee`). O checkout público Marketplace permanece intocado.
++
++## Fluxo por provedor
++
++- **Mercado Pago** — igual ao patch anterior: `POST /v1/orders` com `X-Idempotency-Key` e `external_reference` (≤64), `checkout_url` para redirect; estado só pela ordem consultada.
++- **Stripe** — `POST /v1/checkout/sessions` (form-encoded) com `Idempotency-Key`, `mode=payment`, `client_reference_id` e `metadata[jow_reference]` iguais à chave idempotente; o pagador é redirecionado para `session.url`. Eventos tratados: `checkout.session.completed`, `checkout.session.async_payment_succeeded/failed`, `checkout.session.expired`, `charge.refunded` (parcial → `partially_refunded`, total → `refunded`). A referência persistida no ledger é o `client_reference_id` (a chave), não o id da sessão.
++- **PayPal** — OAuth2 client-credentials, `POST /v2/checkout/orders` com `PayPal-Request-Id` (a chave idempotente; `custom_id`/`invoice_id` também recebem a chave), `intent=CAPTURE`, `user_action=PAY_NOW`, `shipping_preference=NO_SHIPPING`. O pagador é redirecionado para o link `payer-action`. No webhook `CHECKOUT.ORDER.APPROVED`, o adapter executa `POST …/capture` com `PayPal-Request-Id = chave + ':capture'` e concilia pela ordem consultada: `captures[0].status` `COMPLETED→paid`, `PARTIALLY_REFUNDED→partial`, `REFUNDED→refunded`, `DECLINED→failed`, `PENDING→authorized`. Eventos `PAYMENT.CAPTURE.*` resolvem a ordem via `supplementary_data.related_ids.order_id` (ou link `up`). Disputas (`CUSTOMER.DISPUTE.*`) ainda não são mapeadas — chegam como `ignored` e ficam para uma fase futura.
++
++Reembolso parcial e total e estados `failed/expired/cancelled` são normalizados pelo mesmo conjunto `GatewayPaymentStatus` das outras gateways; transições fora de ordem não regridem estado.
++
++## Idempotência
++
++A mesma política do patch Mercado Pago, agora por provedor: UUID v5 determinístico por cobrança na tentativa inicial; tentativas abertas reutilizam a chave persistida; após falha/cancelamento/expiração, chave nova derivada da cobrança + transação anterior. O salt do MP permanece `reamurcms:jow:mercadopago:` (compatibilidade com tentativas em voo); Stripe e PayPal usam `reamurcms:jow:gateway:<provider>:`. Limites por provedor: MP `external_reference` ≤ 64; PayPal `invoice_id` ≤ 127; Stripe `Idempotency-Key` ≤ 255.
++
++## Segurança
++
++- Corpo do webhook lido com limite de 65.536 bytes; respostas `200 ok` para evento ignorado/assinatura inválida e `503 + Retry-After: 60` apenas para falha transitória.
++- Nenhum segredo entra em `public_config_json`; os campos de credencial por provedor são fixados no controller (`PROVIDER_SECRET_FIELDS`) e cifrados pelo `GatewayCredentialVault`.
++- A conta só é habilitada quando **todos** os campos do provedor abrem com a chave atual; detalhes do provedor nunca aparecem em logs/erros.
++- `REAMUR_PAYMENTS_ALLOW_LIVE=true` continua obrigatório para `environment=live` (todos os provedores).
++- Sandboxes: Mercado Pago exige vendedor de teste e pagador `@testuser.com`; Stripe usa chaves `sk_test_`/`whsec_` do modo test; PayPal usa credenciais de sandbox (`api-m.sandbox.paypal.com`) sem restrição de e-mail.
++
++## Como adicionar um novo gateway (preparação para o futuro)
++
++O núcleo já é provider-agnostic; novo gateway exige apenas:
++
++1. Implementar `GatewayAdapter` (`code()`, `label()`, `capabilities()`, `quote()`, `createPayment()`, `verifyNotification()`) num novo arquivo em `dev/system/library/payment/`, sem ler tokens de sellers nem enviar split.
++2. Declarar a matriz de métodos/moedas/dígitos em `GatewayCapabilities` — par não listado falha fechado.
++3. Registrar o adapter em **um único ponto**: `InstalledGatewayAdapters::registry()` (allowlist explícita; valores do banco nunca viram nomes de classe).
++4. Adicionar os campos de credencial em `PROVIDER_SECRET_FIELDS`/`PROVIDER_FIELD_TEXTS` no controller admin e as entradas de idioma nas três línguas.
++5. Escrever testes com client fake injetado (como `StripeCheckoutAdapterTest`/`PaypalOrdersAdapterTest`).
++
++Migrations novas normalmente **não** são necessárias: `rms_jow_gateway.provider_code`, `rms_payment_transaction.provider_code` e `rms_jow_charge.method` já comportam os códigos (`method` VARCHAR(8) aceita `stripe`/`paypal`).
++
++## Verificação
++
++- Testes: 26 testes novos (126 assertions) para os dois adapters, mais os 55 existentes do núcleo Mercado Pago/ledger — todos com fakes em memória, sem chamada real a provedor.
++- `composer analyse` sem erros; suíte completa verde.
++- Nenhuma migração foi aplicada, nenhum pagamento real foi tentado e F9-27 não foi executada.
+diff --git a/tests/Unit/Payment/JowMultiGatewayWiringTest.php b/tests/Unit/Payment/JowMultiGatewayWiringTest.php
+new file mode 100644
+index 0000000..15462cf
+--- /dev/null
++++ b/tests/Unit/Payment/JowMultiGatewayWiringTest.php
+@@ -0,0 +1,494 @@
++<?php declare(strict_types=1);
++
++namespace Reamur\Tests\Unit\Payment;
++
++use PHPUnit\Framework\TestCase;
++use Reamur\Admin\Controller\Payments\Jow as AdminJowController;
++use Reamur\Admin\Model\Payments\Jow as AdminJowModel;
++use Reamur\Catalog\Controller\Checkout\Gateway as CatalogGatewayController;
++use Reamur\System\Engine\Config;
++use Reamur\System\Engine\Registry;
++use Reamur\System\Library\Request;
++use Reamur\System\Library\Response;
++use Reamur\System\Library\Security\Csrf;
++use Reamur\System\Library\Security\SecretBox;
++use Reamur\System\Library\Session;
++
++/**
++ * Wiring dos fluxos multi-gateway nos controllers reais (admin payments/jow e
++ * webhook público checkout/gateway.notify), com banco falso e NENHUMA chamada
++ * de rede: os caminhos de provedor falham/decidem sempre antes do transporte.
++ */
++final class JowMultiGatewayWiringTest extends TestCase {
++    private const SITE_URL = 'https://loja.example/admin/';
++
++    // ── banco falso roteado por tabela/intenção ─────────────────────────────
++
++    /** @return object Banco de mentira com estado de gateways e cobranças. */
++    private function db(array $options = []): object {
++        return new class($options) {
++            /** @var list<string> */
++            public array $queries = [];
++            /** @var list<string> */
++            public array $chargeInserts = [];
++            /** @var array<int, string> gateway_id => credencial cifrada entregue ao store */
++            public array $credentialsByGateway = [];
++            /** @var array<string, int> provider_code => gateway_id configurado */
++            public array $platformIds;
++            /** @var array<int, array{provider_code: string, status: int, environment: string}> */
++            public array $accounts;
++            public int $nextGatewayId = 7;
++            public int $chargeLastId = 42;
++            public string $chargeMethod = '';
++            /** @var list<int> */
++            public array $createdGatewayIds = [];
++
++            public function __construct(private array $options) {
++                $this->platformIds = $options['platformIds'] ?? [];
++                $this->accounts = $options['accounts'] ?? [];
++                $this->credentialsByGateway = $options['credentials'] ?? [];
++            }
++
++            public function escape(string $value): string {
++                return str_replace(['\\', "'"], ['\\\\', "\\'"], $value);
++            }
++
++            public function getLastId(): int {
++                return $this->chargeMethod !== '' ? $this->chargeLastId : $this->nextGatewayId;
++            }
++
++            public function query(string $sql): \stdClass|bool {
++                $this->queries[] = $sql;
++
++                if (str_starts_with($sql, 'SHOW TABLES')) {
++                    return $this->result([['t' => 'x']]);
++                }
++
++                if (str_starts_with($sql, 'INSERT INTO `rms_jow_gateway`')) {
++                    $id = $this->nextGatewayId;
++                    $this->createdGatewayIds[] = $id;
++                    $provider = '';
++                    $environment = 'sandbox';
++
++                    if (preg_match("/`provider_code` = '([a-z0-9_]+)'/", $sql, $m) === 1) {
++                        $provider = $m[1];
++                    }
++
++                    if (preg_match("/`environment` = '([a-z]+)'/", $sql, $m) === 1) {
++                        $environment = $m[1];
++                    }
++
++                    $this->accounts[$id] = ['provider_code' => $provider, 'status' => 0, 'environment' => $environment];
++
++                    return true;
++                }
++
++                if (str_starts_with($sql, 'UPDATE `rms_jow_gateway`')) {
++                    if (preg_match("/`credentials_encrypted_json` = '((?:\\\\'|[^'])*)'/", $sql, $m) === 1) {
++                        $id = $this->createdGatewayIds ? end($this->createdGatewayIds) : (int)($this->options['firstAccountId'] ?? 7);
++                        $this->credentialsByGateway[$id] = str_replace("\\'", "'", $m[1]);
++                    }
++
++                    return true;
++                }
++
++                if (str_starts_with($sql, 'INSERT INTO `rms_jow_charge`')) {
++                    $this->chargeInserts[] = $sql;
++
++                    if (preg_match("/VALUES \('(?:[^']*)',[\d.]+,'([a-z0-9_]+)'/", $sql, $m) === 1) {
++                        $this->chargeMethod = $m[1];
++                    }
++
++                    return true;
++                }
++
++                if (str_starts_with($sql, 'SELECT')) {
++                    if (str_contains($sql, 'public_config_json')) {
++                        // DbGatewayAccountStore::find()
++                        $id = $this->intParam($sql);
++                        $account = $this->accounts[$id] ?? null;
++
++                        return $account === null
++                            ? $this->result([])
++                            : $this->result([[
++                                'gateway_id' => $id,
++                                'provider_code' => $account['provider_code'],
++                                'account_label' => 'JOW platform',
++                                'environment' => $account['environment'],
++                                'status' => $account['status'],
++                                'public_config_json' => '{"flow":"jow_internal"}',
++                            ]]);
++                    }
++
++                    if (str_contains($sql, 'credentials_encrypted_json')) {
++                        // DbGatewayAccountStore::credentials()
++                        $id = $this->intParam($sql);
++
++                        return isset($this->credentialsByGateway[$id])
++                            ? $this->result([[
++                                'provider_code' => $this->accounts[$id]['provider_code'] ?? 'stripe',
++                                'credentials_encrypted_json' => $this->credentialsByGateway[$id],
++                            ]])
++                            : $this->result([]);
++                    }
++
++                    if (str_contains($sql, '`provider_code` =') && str_contains($sql, 'rms_jow_gateway')) {
++                        // Model::getPlatformGatewayId()
++                        $provider = '';
++
++                        if (preg_match("/`provider_code` = '([a-z0-9_]+)'/", $sql, $m) === 1) {
++                            $provider = $m[1];
++                        }
++
++                        return isset($this->platformIds[$provider])
++                            ? $this->result([['gateway_id' => $this->platformIds[$provider]]])
++                            : $this->result([]);
++                    }
++
++                    if (str_contains($sql, 'rms_jow_charge') && str_contains($sql, 'WHERE')) {
++                        // Model::getCharge()
++                        return $this->chargeMethod === ''
++                            ? $this->result([])
++                            : $this->result([[
++                                'charge_id' => $this->chargeLastId,
++                                'description' => 'Cobrança wiring',
++                                'amount' => '100.00',
++                                'currency' => 'BRL',
++                                'method' => $this->chargeMethod,
++                                'status' => 'pending',
++                                'payer_email' => '',
++                                'pix_payload' => null,
++                                'date_added' => '2026-11-19 00:00:00',
++                            ]]);
++                    }
++
++                    return $this->result([]); // ledger, PIX, relatório
++                }
++
++                return true;
++            }
++
++            private function intParam(string $sql): int {
++                return preg_match("/`gateway_id` = '(\d+)'/", $sql, $m) === 1 ? (int)$m[1] : 0;
++            }
++
++            /** @param list<array<string, mixed>> $rows */
++            private function result(array $rows): \stdClass {
++                $query = new \stdClass();
++                $query->rows = $rows;
++                $query->row = $rows[0] ?? [];
++                $query->num_rows = count($rows);
++
++                return $query;
++            }
++        };
++    }
++
++    // ── harness do controller admin ─────────────────────────────────────────
++
++    /** @param array<string, mixed> $post */
++    private function admin(object $db, array $post, ?SecretBox $box = null): array {
++        $harness = $this->adminHarness($db, $post, $box);
++        (new AdminJowController($harness['registry']))->save();
++
++        return [$harness['response'], $harness['session'], $db];
++    }
++
++    private function adminHarness(object $db, array $post, ?SecretBox $box = null): array {
++        $session = (new \ReflectionClass(Session::class))->newInstanceWithoutConstructor();
++        $session->data = [];
++
++        $request = new Request();
++        $request->server = ['REQUEST_METHOD' => 'POST'];
++        $request->post = ['csrf_token' => Csrf::token($session)] + $post;
++        $request->get = [];
++
++        $response = new Response();
++        $config = new Config();
++        $config->set('site_url', self::SITE_URL);
++
++        $registry = new Registry();
++        $registry->set('db', $db);
++        $registry->set('request', $request);
++        $registry->set('response', $response);
++        $registry->set('session', $session);
++        $registry->set('config', $config);
++        $registry->set('log', new class {
++            /** @var list<string> */
++            public array $lines = [];
++            public function write(string $m): void { $this->lines[] = $m; }
++        });
++        $registry->set('url', new class {
++            public function link(string $route): string { return 'https://loja.example/admin/?route=' . $route; }
++        });
++        $registry->set('user', new class($registry) {
++            public function __construct(private Registry $registry) {}
++            public function hasPermission(string $type, string $route): bool { return $type === 'modify' && $route === 'payments/jow'; }
++            public function csrfValid(): bool {
++                $session = $this->registry->get('session');
++                $request = $this->registry->get('request');
++                $token = ($request instanceof Request) ? (string)($request->post['csrf_token'] ?? '') : '';
++
++                return Csrf::check($session, $token);
++            }
++        });
++        $registry->set('language', new class {
++            public function get(string $key): string { return $key . ' [%s]'; }
++        });
++        $registry->set('secret_box', $box ?? new SecretBox(SecretBox::generateKey()));
++        $registry->set('load', new class($registry) {
++            public function __construct(private Registry $registry) {}
++            public function language(string $route): void {}
++            public function model(string $route): void {
++                if ($route === 'payments/jow') {
++                    $this->registry->set('model_payments_jow', new AdminJowModel($this->registry));
++                }
++            }
++        });
++
++        return ['registry' => $registry, 'response' => $response, 'session' => $session];
++    }
++
++    // ── admin: cobranças ─────────────────────────────────────────────────────
++
++    public function testChargeWithUnknownProviderIsRejectedWithoutInserting(): void {
++        $db = $this->db();
++
++        [, $session, $db] = $this->admin($db, [
++            'action' => 'charge_add',
++            'provider' => 'unknown_gw',
++            'description' => 'Cobrança',
++            'amount' => '100.00',
++        ]);
++
++        self::assertSame([], $db->chargeInserts, 'provedor inválido não pode gravar cobrança');
++        self::assertStringStartsWith('error_method', $session->data['error'] ?? '');
++    }
++
++    public function testStripeChargeIsPersistedThenFailsClosedOnDisabledAccount(): void {
++        $db = $this->db([
++            'platformIds' => ['stripe' => 7],
++            'accounts' => [7 => ['provider_code' => 'stripe', 'status' => 0, 'environment' => 'sandbox']],
++        ]);
++
++        [$response, $session, $db] = $this->admin($db, [
++            'action' => 'charge_add',
++            'provider' => 'stripe',
++            'description' => 'Cobrança wiring',
++            'amount' => '100.00',
++        ]);
++
++        self::assertCount(1, $db->chargeInserts, 'a cobrança JOW é gravada antes do gateway');
++        self::assertStringContainsString(",'stripe',", $db->chargeInserts[0]);
++        self::assertStringStartsWith('error_gateway_link_failed', $session->data['error'] ?? '');
++        self::assertStringContainsString('Location: https://loja.example/admin/?route=payments/jow', implode("\n", $response->getHeaders()));
++    }
++
++    public function testStripeChargeFailsClosedOnLockedCredentials(): void {
++        $vault = new \Reamur\System\Library\Payment\GatewayCredentialVault(new SecretBox(SecretBox::generateKey()));
++        $locked = $vault->sealAll(7, 'stripe', ['secret_key' => 'locked', 'webhook_secret' => 'locked']);
++
++        $db = $this->db([
++            'platformIds' => ['stripe' => 7],
++            'accounts' => [7 => ['provider_code' => 'stripe', 'status' => 1, 'environment' => 'sandbox']],
++            'credentials' => [7 => $locked],
++        ]);
++
++        [, $session, $db] = $this->admin($db, [
++            'action' => 'charge_add',
++            'provider' => 'stripe',
++            'description' => 'Cobrança wiring',
++            'amount' => '100.00',
++        ]);
++
++        self::assertCount(1, $db->chargeInserts);
++        self::assertStringStartsWith('error_gateway_link_failed', $session->data['error'] ?? '');
++        self::assertSame([], array_filter($db->queries, static fn ($q) => str_contains($q, 'api.stripe.com')));
++    }
++
++    public function testLegacyChargeMpLinkActionStillRoutesToMercadoPago(): void {
++        $db = $this->db(['platformIds' => ['mp' => 0]]);
++
++        [, $session, $db] = $this->admin($db, [
++            'action' => 'charge_mp_link',
++            'charge_id' => '42',
++        ]);
++
++        self::assertStringStartsWith('error_gateway_link_failed', $session->data['error'] ?? '');
++        self::assertSame([], array_filter($db->queries, static fn ($q) => str_contains($q, 'mercadopago')));
++    }
++
++    // ── admin: contas por provedor ───────────────────────────────────────────
++
++    public function testGatewayAccountSaveCreatesStripeAccountAndEnablesWithAllSecrets(): void {
++        $db = $this->db(['platformIds' => []]);
++
++        [, $session, $db] = $this->admin($db, [
++            'action' => 'gateway_account_save',
++            'gateway_provider' => 'stripe',
++            'gateway_environment' => 'sandbox',
++            'gateway_enabled' => '1',
++            'secret_secret_key' => 'sk_test_0123456789abcdef',
++            'secret_webhook_secret' => 'whsec_0123456789abcdef',
++        ]);
++
++        $allSql = implode("\n", $db->queries);
++
++        self::assertStringStartsWith('text_gateway_account_enabled', $session->data['success'] ?? '');
++        self::assertStringNotContainsString('sk_test_0123456789abcdef', $allSql, 'segredo nunca vai para o SQL em plaintext');
++        self::assertStringNotContainsString('whsec_0123456789abcdef', $allSql);
++        self::assertSame([7], $db->createdGatewayIds);
++        self::assertStringContainsString('rmsenc:v1:', $db->credentialsByGateway[7] ?? '');
++    }
++
++    public function testPaypalAccountCannotBeEnabledWithoutAllSecrets(): void {
++        $db = $this->db(['platformIds' => []]);
++
++        [, $session, $db] = $this->admin($db, [
++            'action' => 'gateway_account_save',
++            'gateway_provider' => 'paypal',
++            'gateway_environment' => 'sandbox',
++            'gateway_enabled' => '1',
++            'secret_client_id' => 'Ae0123456789abcdefCLIENTID',
++        ]);
++
++        self::assertStringStartsWith('error_gateway_credentials_required', $session->data['error'] ?? '');
++
++        $updates = array_values(array_filter($db->queries, static fn ($q) => str_starts_with($q, 'UPDATE `rms_jow_gateway`')));
++        self::assertNotEmpty($updates);
++        self::assertStringContainsString("`status` = '0'", end($updates), 'a conta permanece desativada');
++    }
++
++    public function testLegacyMpActionStillCreatesTheMercadoPagoAccount(): void {
++        $db = $this->db(['platformIds' => []]);
++
++        [, $session, $db] = $this->admin($db, [
++            'action' => 'mp_account_save',
++            'gateway_environment' => 'sandbox',
++            'gateway_enabled' => '0',
++            'secret_access_token' => 'APP_USR_0123456789abcdef',
++            'secret_webhook_secret' => 'mp-secret-0123456789',
++        ]);
++
++        self::assertStringStartsWith('text_gateway_account_saved', $session->data['success'] ?? '');
++        self::assertSame([7], $db->createdGatewayIds);
++        $inserts = array_values(array_filter($db->queries, static fn ($q) => str_starts_with($q, 'INSERT INTO `rms_jow_gateway`')));
++        self::assertStringContainsString("'mp'", $inserts[0] ?? '');
++    }
++
++    public function testUnknownGatewayProviderIsRejected(): void {
++        $db = $this->db();
++
++        [, $session, $db] = $this->admin($db, [
++            'action' => 'gateway_account_save',
++            'gateway_provider' => 'arbitrary_class',
++            'gateway_enabled' => '1',
++        ]);
++
++        self::assertStringStartsWith('error_gateway_account_save', $session->data['error'] ?? '');
++        self::assertSame([], $db->createdGatewayIds);
++    }
++
++    // ── webhook público ──────────────────────────────────────────────────────
++
++    /** @param array<string, mixed> $get */
++    private function catalog(object $db, array $get, array $server = [], string $body = '', ?SecretBox $box = null): array {
++        $request = new Request();
++        $request->get = $get;
++        $request->post = [];
++        $request->server = $server;
++
++        $response = new Response();
++        $registry = new Registry();
++        $registry->set('db', $db);
++        $registry->set('request', $request);
++        $registry->set('response', $response);
++        $registry->set('log', new class {
++            /** @var list<string> */
++            public array $lines = [];
++            public function write(string $m): void { $this->lines[] = $m; }
++        });
++        $registry->set('secret_box', $box ?? new SecretBox(SecretBox::generateKey()));
++        $registry->set('load', new class {
++            public function model(string $route): void {}
++        });
++
++        (new CatalogGatewayController($registry))->notify();
++
++        return [$response, $db];
++    }
++
++    public function testNotifyWithoutGatewayIdAnswersOkWithoutTouchingTheDatabase(): void {
++        $db = $this->db();
++
++        [$response, $db] = $this->catalog($db, []);
++
++        self::assertSame('ok', $response->getOutput());
++        self::assertSame([], $db->queries);
++    }
++
++    public function testNotifyForAnUnknownAccountAnswersOk(): void {
++        $db = $this->db();
++
++        [$response, $db] = $this->catalog($db, ['gateway_id' => '99']);
++
++        self::assertSame('ok', $response->getOutput());
++        self::assertSame([], array_filter($db->queries, static fn ($q) => str_contains($q, 'rms_payment_gateway_event')));
++    }
++
++    public function testNotifyForAnUninstalledProviderAnswersOk(): void {
++        $db = $this->db([
++            'accounts' => [9 => ['provider_code' => 'removed_provider', 'status' => 1, 'environment' => 'sandbox']],
++        ]);
++
++        [$response, $db] = $this->catalog($db, ['gateway_id' => '9']);
++
++        self::assertSame('ok', $response->getOutput());
++        self::assertSame([], array_filter($db->queries, static fn ($q) => str_contains($q, 'rms_payment_gateway_event')));
++    }
++
++    public function testUnsignedStripeBodyIsIgnoredWithoutAnyProviderCall(): void {
++        $box = new SecretBox(SecretBox::generateKey());
++        $db = $this->db([
++            'platformIds' => ['stripe' => 11],
++            'accounts' => [11 => ['provider_code' => 'stripe', 'status' => 1, 'environment' => 'sandbox']],
++            'credentials' => [11 => (new \Reamur\System\Library\Payment\GatewayCredentialVault($box))
++                ->sealAll(11, 'stripe', ['secret_key' => 'sk_test_0123456789abcdef', 'webhook_secret' => 'whsec_0123456789abcdef'])],
++        ]);
++
++        [$response, $db] = $this->catalog(
++            $db,
++            ['gateway_id' => '11'],
++            [],
++            (string)json_encode(['type' => 'checkout.session.completed', 'data' => ['object' => ['id' => 'cs_test_x']]]),
++            $box
++        );
++
++        self::assertSame('ok', $response->getOutput());
++        self::assertNotContains('HTTP/1.1 503 Service Unavailable', $response->getHeaders());
++        self::assertSame([], array_filter($db->queries, static fn ($q) => str_contains($q, 'api.stripe.com')));
++        self::assertSame([], array_filter($db->queries, static fn ($q) => str_contains($q, 'rms_payment_gateway_event')));
++    }
++
++    public function testMissingWebhookSecretRequestsRetry(): void {
++        $box = new SecretBox(SecretBox::generateKey());
++        $db = $this->db([
++            'platformIds' => ['stripe' => 12],
++            'accounts' => [12 => ['provider_code' => 'stripe', 'status' => 1, 'environment' => 'sandbox']],
++            'credentials' => [12 => (new \Reamur\System\Library\Payment\GatewayCredentialVault($box))
++                ->sealAll(12, 'stripe', ['secret_key' => 'sk_test_0123456789abcdef'])],
++        ]);
++
++        [$response, $db] = $this->catalog(
++            $db,
++            ['gateway_id' => '12'],
++            [],
++            (string)json_encode(['type' => 'checkout.session.completed', 'data' => ['object' => ['id' => 'cs_test_x']]]),
++            $box
++        );
++
++        self::assertSame('retry', $response->getOutput());
++        self::assertContains('HTTP/1.1 503 Service Unavailable', $response->getHeaders());
++        self::assertContains('Retry-After: 60', $response->getHeaders());
++    }
++}
+diff --git a/tests/Unit/Payment/PaypalOrdersAdapterTest.php b/tests/Unit/Payment/PaypalOrdersAdapterTest.php
+new file mode 100644
+index 0000000..4563427
+--- /dev/null
++++ b/tests/Unit/Payment/PaypalOrdersAdapterTest.php
+@@ -0,0 +1,398 @@
++<?php declare(strict_types=1);
++
++namespace Reamur\Tests\Unit\Payment;
++
++use PHPUnit\Framework\TestCase;
++use Reamur\System\Library\Payment\GatewayAccount;
++use Reamur\System\Library\Payment\GatewayCredentials;
++use Reamur\System\Library\Payment\GatewayCustomerAction;
++use Reamur\System\Library\Payment\GatewayPaymentRequest;
++use Reamur\System\Library\Payment\GatewayPaymentStatus;
++use Reamur\System\Library\Payment\GatewayWebhookResult;
++use Reamur\System\Library\Payment\Money;
++use Reamur\System\Library\Payment\Notification;
++use Reamur\System\Library\Payment\PaypalOrdersAdapter;
++use Reamur\System\Library\Payment\PaypalOrdersClient;
++
++final class PaypalOrdersAdapterTest extends TestCase {
++    private const ORDER_ID = '8GB552690W583102V';
++    private const CAPTURE_ID = '8XA123456T987012L';
++    private const IDEMPOTENCY = '81e3f12c-6b0c-5ac5-9b83-d1d43c90d0c7';
++    private const CLIENT_ID = 'AeXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX1';
++    private const CLIENT_SECRET = 'EXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXQ';
++    private const WEBHOOK_ID = 'WEBHOOK-ID-1A2B3C4D5E6F';
++
++    private function account(string $environment = 'sandbox'): GatewayAccount {
++        return new GatewayAccount(9, 'paypal', 'JOW platform', $environment, true, ['flow' => 'jow_internal']);
++    }
++
++    private function credentials(array $values = []): GatewayCredentials {
++        return new GatewayCredentials($values + [
++            'client_id' => self::CLIENT_ID,
++            'client_secret' => self::CLIENT_SECRET,
++            'webhook_id' => self::WEBHOOK_ID,
++        ]);
++    }
++
++    private function request(
++        string $currency = 'USD',
++        string $idempotencyKey = self::IDEMPOTENCY,
++        string $payerEmail = 'sb-buyer@personal.example.com'
++    ): GatewayPaymentRequest {
++        return new GatewayPaymentRequest(
++            'jow_charge',
++            42,
++            new Money('125.50', $currency, 2),
++            $currency,
++            'checkout_orders',
++            $idempotencyKey,
++            'JOW internal charge 42',
++            'https://loja.example/catalog/index.php?route=common/home',
++            'https://loja.example/catalog/index.php?route=checkout/gateway.notify&gateway_id=9',
++            $payerEmail
++        );
++    }
++
++    /** Fake client: all provider traffic is intercepted and stays local. */
++    private function client(array $token = [], array $created = [], array $orders = [], array $captures = [], array $verifications = []): PaypalOrdersClient {
++        return new class($token, $created, $orders, $captures, $verifications) extends PaypalOrdersClient {
++            public array $tokenCalls = [];
++            public array $createCalls = [];
++            public array $getOrderCalls = [];
++            public array $captureCalls = [];
++            public array $verifyCalls = [];
++
++            public function __construct(
++                private array $token,
++                private array $createdOrders,
++                private array $orders,
++                private array $captures,
++                private array $verifications
++            ) {
++                parent::__construct(null, []);
++            }
++
++            public function oauthToken(string $baseUrl, string $clientId, string $clientSecret): array {
++                $this->tokenCalls[] = [$baseUrl, $clientId, $clientSecret];
++                return $this->token ?: ['_http_status' => 401];
++            }
++
++            public function createOrder(string $baseUrl, string $accessToken, array $payload, string $requestId): array {
++                $this->createCalls[] = [$baseUrl, $accessToken, $payload, $requestId];
++                return $this->createdOrders;
++            }
++
++            public function getOrder(string $baseUrl, string $accessToken, string $orderId): array {
++                $this->getOrderCalls[] = [$baseUrl, $accessToken, $orderId];
++                return $this->orders[$orderId] ?? ['_http_status' => 404];
++            }
++
++            public function captureOrder(string $baseUrl, string $accessToken, string $orderId, string $requestId): array {
++                $this->captureCalls[] = [$baseUrl, $accessToken, $orderId, $requestId];
++                return $this->captures[$orderId] ?? ['_http_status' => 400];
++            }
++
++            public function verifyWebhookSignature(string $baseUrl, string $accessToken, array $verification): array {
++                $this->verifyCalls[] = [$baseUrl, $accessToken, $verification];
++                return $this->verifications;
++            }
++        };
++    }
++
++    private function createdOrder(array $overrides = [], string $currency = 'USD'): array {
++        return $overrides + [
++            '_http_status' => 201,
++            'id' => self::ORDER_ID,
++            'status' => 'CREATED',
++            'purchase_units' => [[
++                'custom_id' => self::IDEMPOTENCY,
++                'invoice_id' => self::IDEMPOTENCY,
++                'amount' => ['currency_code' => $currency, 'value' => '125.50'],
++            ]],
++            'links' => [
++                ['rel' => 'self', 'href' => 'https://api-m.sandbox.paypal.com/v2/checkout/orders/' . self::ORDER_ID],
++                ['rel' => 'payer-action', 'href' => 'https://www.sandbox.paypal.com/checkoutnow?token=' . self::ORDER_ID],
++            ],
++        ];
++    }
++
++    private function completedOrder(string $orderId, string $captureStatus = 'COMPLETED', string $customId = self::IDEMPOTENCY): array {
++        return [
++            '_http_status' => 200,
++            'id' => $orderId,
++            'status' => 'COMPLETED',
++            'purchase_units' => [[
++                'custom_id' => $customId,
++                'invoice_id' => $customId,
++                'amount' => ['currency_code' => 'USD', 'value' => '125.50'],
++                'payments' => ['captures' => [[
++                    'id' => self::CAPTURE_ID,
++                    'status' => $captureStatus,
++                    'amount' => ['currency_code' => 'USD', 'value' => '125.50'],
++                ]]],
++            ]],
++        ];
++    }
++
++    public function testCapabilitiesCoverCheckoutOrdersInThreeCurrencies(): void {
++        $capabilities = (new PaypalOrdersAdapter())->capabilities();
++
++        self::assertTrue($capabilities->supports('checkout_orders', 'BRL'));
++        self::assertTrue($capabilities->supports('checkout_orders', 'USD'));
++        self::assertTrue($capabilities->supports('checkout_orders', 'EUR'));
++        self::assertFalse($capabilities->supports('checkout_session', 'USD'));
++        self::assertSame(2, $capabilities->fractionDigits('BRL'));
++        self::assertSame(2, $capabilities->fractionDigits('EUR'));
++    }
++
++    public function testBaseUrlFollowsTheAccountEnvironment(): void {
++        self::assertSame(PaypalOrdersClient::SANDBOX_API_URL, PaypalOrdersClient::baseUrlFor('sandbox'));
++        self::assertSame(PaypalOrdersClient::LIVE_API_URL, PaypalOrdersClient::baseUrlFor('live'));
++    }
++
++    public function testCreatesAnIdempotentPaypalOrderOnThePlatformAccount(): void {
++        $client = $this->client(['_http_status' => 200, 'access_token' => 'A21TOKEN123'], $this->createdOrder());
++        $adapter = new PaypalOrdersAdapter($client);
++
++        $result = $adapter->createPayment($this->request(), $this->account(), $this->credentials(), null);
++
++        self::assertSame(self::IDEMPOTENCY, $result->providerReference);
++        self::assertSame('', $result->providerPaymentId);
++        self::assertSame(GatewayPaymentStatus::REQUIRES_ACTION, $result->status);
++        self::assertSame(GatewayCustomerAction::REDIRECT, $result->customerAction->kind);
++        self::assertSame('125.50', $result->chargeAmount->amount());
++        self::assertCount(1, $client->tokenCalls);
++        self::assertSame([PaypalOrdersClient::SANDBOX_API_URL, self::CLIENT_ID, self::CLIENT_SECRET], $client->tokenCalls[0]);
++        self::assertCount(1, $client->createCalls);
++
++        [$baseUrl, $accessToken, $payload, $requestId] = $client->createCalls[0];
++        self::assertSame(PaypalOrdersClient::SANDBOX_API_URL, $baseUrl);
++        self::assertSame('A21TOKEN123', $accessToken);
++        self::assertSame(self::IDEMPOTENCY, $requestId);
++        self::assertSame('CAPTURE', $payload['intent']);
++        self::assertSame(self::IDEMPOTENCY, $payload['purchase_units'][0]['custom_id']);
++        self::assertSame(self::IDEMPOTENCY, $payload['purchase_units'][0]['invoice_id']);
++        self::assertSame('125.50', $payload['purchase_units'][0]['amount']['value']);
++        self::assertSame('USD', $payload['purchase_units'][0]['amount']['currency_code']);
++        self::assertSame('PAY_NOW', $payload['payment_source']['paypal']['experience_context']['user_action']);
++        self::assertSame('sb-buyer@personal.example.com', $payload['payer']['email_address']);
++        self::assertArrayNotHasKey('payee', $payload['purchase_units'][0], 'JOW charges use the Reamur platform account, not a seller payee');
++    }
++
++    public function testRejectsAResponseForAnotherReferenceOrAmount(): void {
++        $bads = [
++            'other custom_id' => $this->createdOrder(['purchase_units' => [['custom_id' => 'other', 'invoice_id' => 'other', 'amount' => ['currency_code' => 'USD', 'value' => '125.50']]]]),
++            'other amount' => $this->createdOrder(['purchase_units' => [['custom_id' => self::IDEMPOTENCY, 'invoice_id' => self::IDEMPOTENCY, 'amount' => ['currency_code' => 'USD', 'value' => '125.51']]]]),
++            'other currency' => $this->createdOrder([], 'EUR'),
++        ];
++
++        foreach ($bads as $label => $bad) {
++            $rejected = null;
++
++            try {
++                (new PaypalOrdersAdapter($this->client(['_http_status' => 200, 'access_token' => 'T1'], $bad)))
++                    ->createPayment($this->request(), $this->account(), $this->credentials(), null);
++            } catch (\RuntimeException $e) {
++                $rejected = $e;
++            }
++
++            self::assertNotNull($rejected, 'PayPal must reject a mismatched order: ' . $label);
++        }
++    }
++
++    public function testMissingClientCredentialsFailsClosedWithoutCallingTheProvider(): void {
++        $client = $this->client(['_http_status' => 200, 'access_token' => 'T1'], $this->createdOrder());
++
++        try {
++            (new PaypalOrdersAdapter($client))->createPayment(
++                $this->request(),
++                $this->account(),
++                new GatewayCredentials(['webhook_id' => self::WEBHOOK_ID]),
++                null
++            );
++            self::fail('Expected missing client credentials to fail closed');
++        } catch (\RuntimeException $e) {
++            self::assertStringNotContainsString(self::CLIENT_SECRET, $e->getMessage());
++        }
++
++        self::assertSame([], $client->tokenCalls);
++        self::assertSame([], $client->createCalls);
++    }
++
++    public function testCrossCurrencyQuoteIsRejected(): void {
++        $client = $this->client();
++
++        $this->expectException(\DomainException::class);
++        (new PaypalOrdersAdapter($client))->quote(new Money('1.00', 'BRL', 2), 'USD', $this->account(), $this->credentials());
++    }
++
++    public function testApprovedOrderIsCapturedAndReconciledFromTheOrdersApi(): void {
++        $orderId = self::ORDER_ID;
++        $client = $this->client(
++            ['_http_status' => 200, 'access_token' => 'A21TOKEN123'],
++            [],
++            [$orderId => $this->completedOrder($orderId)],
++            [$orderId => ['_http_status' => 201, 'id' => self::CAPTURE_ID, 'status' => 'COMPLETED']],
++            ['_http_status' => 200, 'verification_status' => 'SUCCESS']
++        );
++        $adapter = new PaypalOrdersAdapter($client);
++
++        $event = $adapter->verifyNotification(
++            $this->orderNotification($orderId, self::IDEMPOTENCY, 'CHECKOUT.ORDER.APPROVED'),
++            $this->account(),
++            $this->credentials()
++        );
++
++        self::assertSame(GatewayWebhookResult::VERIFIED, $event->kind);
++        self::assertSame(self::IDEMPOTENCY, $event->providerReference);
++        self::assertSame(self::CAPTURE_ID, $event->providerPaymentId);
++        self::assertSame(GatewayPaymentStatus::PAID, $event->status);
++        self::assertSame('125.50', $event->chargeAmount?->amount());
++        self::assertCount(1, $client->verifyCalls);
++        self::assertCount(1, $client->captureCalls);
++        self::assertSame([PaypalOrdersClient::SANDBOX_API_URL, 'A21TOKEN123', $orderId, self::IDEMPOTENCY . ':capture'], $client->captureCalls[0]);
++        self::assertSame([PaypalOrdersClient::SANDBOX_API_URL, 'A21TOKEN123', $orderId], $client->getOrderCalls[0]);
++    }
++
++    public function testCaptureEventsReconcileThroughTheParentOrder(): void {
++        $orderId = self::ORDER_ID;
++        $partial = $this->completedOrder($orderId, 'PARTIALLY_REFUNDED');
++        $client = $this->client(
++            ['_http_status' => 200, 'access_token' => 'A21TOKEN123'],
++            [],
++            [$orderId => $partial],
++            [],
++            ['_http_status' => 200, 'verification_status' => 'SUCCESS']
++        );
++
++        $body = json_encode([
++            'id' => 'WH-REFUND-1',
++            'event_type' => 'PAYMENT.CAPTURE.REFUNDED',
++            'resource' => [
++                'id' => self::CAPTURE_ID,
++                'amount' => ['currency_code' => 'USD', 'value' => '50.00'],
++                'supplementary_data' => ['related_ids' => ['order_id' => $orderId]],
++            ],
++        ], JSON_THROW_ON_ERROR);
++
++        $event = (new PaypalOrdersAdapter($client))->verifyNotification(
++            $this->signedNotification($body),
++            $this->account(),
++            $this->credentials()
++        );
++
++        self::assertSame(GatewayWebhookResult::VERIFIED, $event->kind);
++        self::assertSame(GatewayPaymentStatus::PARTIALLY_REFUNDED, $event->status);
++        self::assertSame(self::CAPTURE_ID, $event->providerPaymentId);
++    }
++
++    public function testRejectedSignatureIsIgnoredWithoutCapturing(): void {
++        $orderId = self::ORDER_ID;
++        $client = $this->client(
++            ['_http_status' => 200, 'access_token' => 'A21TOKEN123'],
++            [],
++            [$orderId => $this->completedOrder($orderId)],
++            [],
++            ['_http_status' => 200, 'verification_status' => 'FAILURE']
++        );
++
++        $event = (new PaypalOrdersAdapter($client))->verifyNotification(
++            $this->orderNotification($orderId, self::IDEMPOTENCY, 'CHECKOUT.ORDER.APPROVED'),
++            $this->account(),
++            $this->credentials()
++        );
++
++        self::assertSame(GatewayWebhookResult::IGNORED, $event->kind);
++        self::assertSame('signature_rejected', $event->reasonCode);
++        self::assertSame([], $client->captureCalls);
++        self::assertSame([], $client->getOrderCalls);
++    }
++
++    public function testInconclusiveVerificationOrOutageRequestsRetry(): void {
++        $orderId = self::ORDER_ID;
++        $adapter = new PaypalOrdersAdapter($this->client(
++            ['_http_status' => 200, 'access_token' => 'A21TOKEN123'],
++            [],
++            [$orderId => $this->completedOrder($orderId)],
++            [],
++            ['_http_status' => 503]
++        ));
++
++        $inconclusive = $adapter->verifyNotification(
++            $this->orderNotification($orderId, self::IDEMPOTENCY, 'CHECKOUT.ORDER.APPROVED'),
++            $this->account(),
++            $this->credentials()
++        );
++        self::assertSame(GatewayWebhookResult::RETRY, $inconclusive->kind);
++        self::assertSame('verification_inconclusive', $inconclusive->reasonCode);
++
++        $outage = (new PaypalOrdersAdapter($this->client(
++            ['_http_status' => 200, 'access_token' => 'A21TOKEN123'],
++            [],
++            [$orderId => ['_http_status' => 500]],
++            [],
++            ['_http_status' => 200, 'verification_status' => 'SUCCESS']
++        )))->verifyNotification(
++            $this->orderNotification($orderId, self::IDEMPOTENCY, 'CHECKOUT.ORDER.COMPLETED'),
++            $this->account(),
++            $this->credentials()
++        );
++        self::assertSame(GatewayWebhookResult::RETRY, $outage->kind);
++        self::assertSame('provider_unavailable', $outage->reasonCode);
++    }
++
++    public function testMissingWebhookIdRequestsRetryWithoutApiCalls(): void {
++        $client = $this->client(['_http_status' => 200, 'access_token' => 'A21TOKEN123']);
++
++        $event = (new PaypalOrdersAdapter($client))->verifyNotification(
++            $this->orderNotification(self::ORDER_ID, self::IDEMPOTENCY, 'CHECKOUT.ORDER.APPROVED'),
++            $this->account(),
++            new GatewayCredentials(['client_id' => self::CLIENT_ID, 'client_secret' => self::CLIENT_SECRET])
++        );
++
++        self::assertSame(GatewayWebhookResult::RETRY, $event->kind);
++        self::assertSame('credentials_missing', $event->reasonCode);
++        self::assertSame([], $client->verifyCalls);
++        self::assertSame([], $client->captureCalls);
++    }
++
++    public function testUnhandledEventTypeIsIgnored(): void {
++        $client = $this->client(['_http_status' => 200, 'access_token' => 'A21TOKEN123'], [], [], [], ['_http_status' => 200, 'verification_status' => 'SUCCESS']);
++
++        $body = json_encode(['id' => 'WH-CUSTOM-1', 'event_type' => 'CUSTOMER.DISPUTE.CREATED', 'resource' => ['dispute_id' => 'PP-D-1']], JSON_THROW_ON_ERROR);
++
++        $event = (new PaypalOrdersAdapter($client))->verifyNotification(
++            $this->signedNotification($body),
++            $this->account(),
++            $this->credentials()
++        );
++
++        self::assertSame(GatewayWebhookResult::IGNORED, $event->kind);
++        self::assertSame('unhandled_event_type', $event->reasonCode);
++    }
++
++    /** A signed, well-formed approved-order webhook. */
++    private function orderNotification(string $orderId, string $customId, string $eventType): Notification {
++        $body = json_encode([
++            'id' => 'WH-ORDER-1',
++            'event_type' => $eventType,
++            'resource' => [
++                'id' => $orderId,
++                'status' => 'APPROVED',
++                'purchase_units' => [['custom_id' => $customId]],
++            ],
++        ], JSON_THROW_ON_ERROR);
++
++        return $this->signedNotification($body);
++    }
++
++    private function signedNotification(string $body): Notification {
++        return new Notification([], [], [
++            'HTTP_PAYPAL_TRANSMISSION_ID' => 'a1b2c3d4-e5f6-7890-abcd-ef0123456789',
++            'HTTP_PAYPAL_TRANSMISSION_TIME' => '2026-11-19T17:00:00Z',
++            'HTTP_PAYPAL_TRANSMISSION_SIG' => str_repeat('a', 64),
++            'HTTP_PAYPAL_CERT_URL' => 'https://api.paypal.com/v1/notifications/certs/CERT-1',
++            'HTTP_PAYPAL_AUTH_ALGO' => 'SHA256withRSA',
++        ], $body);
++    }
++}
+diff --git a/tests/Unit/Payment/StripeCheckoutAdapterTest.php b/tests/Unit/Payment/StripeCheckoutAdapterTest.php
+new file mode 100644
+index 0000000..f55ba4c
+--- /dev/null
++++ b/tests/Unit/Payment/StripeCheckoutAdapterTest.php
+@@ -0,0 +1,403 @@
++<?php declare(strict_types=1);
++
++namespace Reamur\Tests\Unit\Payment;
++
++use PHPUnit\Framework\TestCase;
++use Reamur\System\Library\Payment\GatewayAccount;
++use Reamur\System\Library\Payment\GatewayCredentials;
++use Reamur\System\Library\Payment\GatewayCustomerAction;
++use Reamur\System\Library\Payment\GatewayPaymentRequest;
++use Reamur\System\Library\Payment\GatewayPaymentStatus;
++use Reamur\System\Library\Payment\GatewayWebhookResult;
++use Reamur\System\Library\Payment\Money;
++use Reamur\System\Library\Payment\Notification;
++use Reamur\System\Library\Payment\StripeCheckoutAdapter;
++use Reamur\System\Library\Payment\StripeCheckoutClient;
++
++final class StripeCheckoutAdapterTest extends TestCase {
++    private const SESSION_ID = 'cs_test_a1b2c3d4e5f6g7h8';
++    private const PAYMENT_INTENT = 'pi_test_1a2b3c4d5e6f';
++    private const IDEMPOTENCY = '71e3f12c-6b0c-5ac5-9b83-d1d43c90d0c9';
++    private const SECRET_KEY = 'sk_test_platform_restricted_key_0001';
++    private const WEBHOOK_SECRET = 'whsec_platform-webhook-secret-123456';
++
++    private function account(string $environment = 'sandbox'): GatewayAccount {
++        return new GatewayAccount(11, 'stripe', 'JOW platform', $environment, true, ['flow' => 'jow_internal']);
++    }
++
++    private function credentials(array $values = []): GatewayCredentials {
++        return new GatewayCredentials($values + [
++            'secret_key' => self::SECRET_KEY,
++            'webhook_secret' => self::WEBHOOK_SECRET,
++        ]);
++    }
++
++    private function request(
++        string $currency = 'USD',
++        string $idempotencyKey = self::IDEMPOTENCY,
++        string $payerEmail = 'buyer@example.com'
++    ): GatewayPaymentRequest {
++        return new GatewayPaymentRequest(
++            'jow_charge',
++            42,
++            new Money('125.50', $currency, 2),
++            $currency,
++            'checkout_session',
++            $idempotencyKey,
++            'JOW internal charge 42',
++            'https://loja.example/catalog/index.php?route=common/home',
++            'https://loja.example/catalog/index.php?route=checkout/gateway.notify&gateway_id=11',
++            $payerEmail
++        );
++    }
++
++    /** Fake client: all provider traffic is intercepted and stays local. */
++    private function client(array $session = [], array $charges = [], array $sessions = []): StripeCheckoutClient {
++        return new class($session, $charges, $sessions) extends StripeCheckoutClient {
++            public array $createCalls = [];
++            public array $getSessionCalls = [];
++            public array $getChargeCalls = [];
++
++            public function __construct(
++                private array $createdSession,
++                private array $charges,
++                private array $sessions
++            ) {
++                parent::__construct(null, []);
++            }
++
++            public function createSession(array $form, string $secretKey, string $idempotencyKey): array {
++                $this->createCalls[] = [$form, $secretKey, $idempotencyKey];
++                return $this->createdSession;
++            }
++
++            public function getSession(string $sessionId, string $secretKey): array {
++                $this->getSessionCalls[] = [$sessionId, $secretKey];
++                return $this->sessions[$sessionId] ?? ['_http_status' => 404];
++            }
++
++            public function getCharge(string $chargeId, string $secretKey): array {
++                $this->getChargeCalls[] = [$chargeId, $secretKey];
++                return $this->charges[$chargeId] ?? ['_http_status' => 404];
++            }
++        };
++    }
++
++    private function createdSession(array $overrides = [], string $currency = 'usd'): array {
++        return $overrides + [
++            '_http_status' => 200,
++            'id' => self::SESSION_ID,
++            'object' => 'checkout.session',
++            'client_reference_id' => self::IDEMPOTENCY,
++            'payment_intent' => self::PAYMENT_INTENT,
++            'url' => 'https://checkout.stripe.com/c/pay/' . self::SESSION_ID,
++            'amount_total' => 12550,
++            'currency' => $currency,
++            'status' => 'open',
++            'payment_status' => 'unpaid',
++        ];
++    }
++
++    public function testCapabilitiesCoverCheckoutSessionInThreeCurrencies(): void {
++        $capabilities = (new StripeCheckoutAdapter())->capabilities();
++
++        self::assertTrue($capabilities->supports('checkout_session', 'BRL'));
++        self::assertTrue($capabilities->supports('checkout_session', 'USD'));
++        self::assertTrue($capabilities->supports('checkout_session', 'EUR'));
++        self::assertFalse($capabilities->supports('payment_intent', 'USD'));
++        self::assertFalse($capabilities->supports('checkout_session', 'JPY'));
++        self::assertSame(2, $capabilities->fractionDigits('BRL'));
++        self::assertSame(2, $capabilities->fractionDigits('USD'));
++        self::assertSame(2, $capabilities->fractionDigits('EUR'));
++    }
++
++    public function testCreatesAnIdempotentHostedSessionOnThePlatformAccount(): void {
++        $client = $this->client($this->createdSession());
++        $adapter = new StripeCheckoutAdapter($client);
++
++        $result = $adapter->createPayment($this->request(), $this->account(), $this->credentials(), null);
++
++        self::assertSame(self::IDEMPOTENCY, $result->providerReference);
++        self::assertSame(self::PAYMENT_INTENT, $result->providerPaymentId);
++        self::assertSame(GatewayPaymentStatus::REQUIRES_ACTION, $result->status);
++        self::assertSame(GatewayCustomerAction::REDIRECT, $result->customerAction->kind);
++        self::assertSame('125.50', $result->chargeAmount->amount());
++        self::assertCount(1, $client->createCalls);
++
++        [$form, $secretKey, $idempotencyKey] = $client->createCalls[0];
++        self::assertSame(self::SECRET_KEY, $secretKey);
++        self::assertSame(self::IDEMPOTENCY, $idempotencyKey);
++        self::assertSame('payment', $form['mode']);
++        self::assertSame('usd', $form['line_items[0][price_data][currency]']);
++        self::assertSame('12550', $form['line_items[0][price_data][unit_amount]']);
++        self::assertSame('1', $form['line_items[0][quantity]']);
++        self::assertSame(self::IDEMPOTENCY, $form['client_reference_id']);
++        self::assertSame(self::IDEMPOTENCY, $form['metadata[jow_reference]']);
++        self::assertSame('jow_charge', $form['metadata[jow_source_type]']);
++        self::assertSame('42', $form['metadata[jow_source_id]']);
++        self::assertSame('buyer@example.com', $form['customer_email']);
++        self::assertArrayNotHasKey('application_fee_amount', $form, 'JOW charges use the Reamur platform account, not a Connect split');
++        self::assertArrayNotHasKey('transfer_data', $form);
++    }
++
++    public function testOmitsCustomerEmailWhenNotProvided(): void {
++        $client = $this->client($this->createdSession());
++
++        (new StripeCheckoutAdapter($client))->createPayment(
++            $this->request(payerEmail: ''),
++            $this->account(),
++            $this->credentials(),
++            null
++        );
++
++        self::assertArrayNotHasKey('customer_email', $client->createCalls[0][0]);
++    }
++
++    public function testRejectsAResponseForAnotherReferenceOrAmount(): void {
++        $bads = [
++            'other reference' => $this->createdSession(['client_reference_id' => 'some-other-request']),
++            'other amount' => $this->createdSession(['amount_total' => 12551]),
++            'other currency' => $this->createdSession(['currency' => 'eur']),
++        ];
++
++        foreach ($bads as $label => $bad) {
++            $rejected = null;
++
++            try {
++                (new StripeCheckoutAdapter($this->client($bad)))->createPayment($this->request(), $this->account(), $this->credentials(), null);
++            } catch (\RuntimeException $e) {
++                $rejected = $e;
++            }
++
++            self::assertNotNull($rejected, 'Stripe must reject a mismatched session: ' . $label);
++        }
++    }
++
++    public function testMissingSecretKeyFailsClosedWithoutCallingTheProvider(): void {
++        $client = $this->client($this->createdSession());
++
++        try {
++            (new StripeCheckoutAdapter($client))->createPayment(
++                $this->request(),
++                $this->account(),
++                new GatewayCredentials(['webhook_secret' => self::WEBHOOK_SECRET]),
++                null
++            );
++            self::fail('Expected missing secret key to fail closed');
++        } catch (\RuntimeException $e) {
++            self::assertStringNotContainsString(self::SECRET_KEY, $e->getMessage());
++        }
++
++        self::assertSame([], $client->createCalls);
++    }
++
++    public function testUnsupportedRequestsAreRejectedBeforeAnyProviderCall(): void {
++        $client = $this->client($this->createdSession());
++        $adapter = new StripeCheckoutAdapter($client);
++        $account = $this->account();
++        $credentials = $this->credentials();
++
++        $this->expectException(\DomainException::class);
++        try {
++            $adapter->quote(new Money('1.00', 'BRL', 2), 'USD', $account, $credentials);
++        } finally {
++            self::assertSame([], $client->createCalls);
++        }
++    }
++
++    public function testCompletedWebhookIsSignedFetchedAndReconciledFromTheApi(): void {
++        $queried = $this->createdSession(['status' => 'complete', 'payment_status' => 'paid']);
++        $client = $this->client([], [], [self::SESSION_ID => $queried]);
++        $adapter = new StripeCheckoutAdapter($client);
++        $notification = $this->sessionNotification(self::SESSION_ID, 'checkout.session.completed', self::WEBHOOK_SECRET);
++
++        $event = $adapter->verifyNotification($notification, $this->account(), $this->credentials());
++
++        self::assertSame(GatewayWebhookResult::VERIFIED, $event->kind);
++        self::assertSame(self::IDEMPOTENCY, $event->providerReference);
++        self::assertSame(self::PAYMENT_INTENT, $event->providerPaymentId);
++        self::assertSame(GatewayPaymentStatus::PAID, $event->status);
++        self::assertSame('125.50', $event->chargeAmount?->amount());
++        self::assertSame([[self::SESSION_ID, self::SECRET_KEY]], $client->getSessionCalls);
++    }
++
++    public function testExpiredAndFailedAsyncSessionsMapToLedgerStatuses(): void {
++        $expired = $this->createdSession(['status' => 'expired']);
++        $client = $this->client([], [], [self::SESSION_ID => $expired]);
++        $adapter = new StripeCheckoutAdapter($client);
++
++        $expiredEvent = $adapter->verifyNotification(
++            $this->sessionNotification(self::SESSION_ID, 'checkout.session.expired', self::WEBHOOK_SECRET),
++            $this->account(),
++            $this->credentials()
++        );
++        self::assertSame(GatewayPaymentStatus::EXPIRED, $expiredEvent->status);
++
++        $failedEvent = $adapter->verifyNotification(
++            $this->sessionNotification(self::SESSION_ID, 'checkout.session.async_payment_failed', self::WEBHOOK_SECRET),
++            $this->account(),
++            $this->credentials()
++        );
++        self::assertSame(GatewayPaymentStatus::FAILED, $failedEvent->status);
++    }
++
++    public function testPartialRefundComesFromTheChargesApiMetadata(): void {
++        $charge = [
++            '_http_status' => 200,
++            'id' => 'ch_test_1a2b3c',
++            'metadata' => ['jow_reference' => self::IDEMPOTENCY],
++            'currency' => 'usd',
++            'amount' => 12550,
++            'amount_refunded' => 5050,
++            'payment_intent' => self::PAYMENT_INTENT,
++        ];
++        $client = $this->client([], [$charge['id'] => $charge], []);
++        $adapter = new StripeCheckoutAdapter($client);
++
++        $event = $adapter->verifyNotification(
++            $this->chargeNotification($charge['id'], self::WEBHOOK_SECRET),
++            $this->account(),
++            $this->credentials()
++        );
++
++        self::assertSame(GatewayWebhookResult::VERIFIED, $event->kind);
++        self::assertSame(self::IDEMPOTENCY, $event->providerReference);
++        self::assertSame(GatewayPaymentStatus::PARTIALLY_REFUNDED, $event->status);
++        self::assertSame([[ $charge['id'], self::SECRET_KEY ]], $client->getChargeCalls);
++    }
++
++    public function testFullRefundMapsToRefunded(): void {
++        $charge = [
++            '_http_status' => 200,
++            'id' => 'ch_test_9z8y7x',
++            'metadata' => ['jow_reference' => self::IDEMPOTENCY],
++            'currency' => 'usd',
++            'amount' => 12550,
++            'amount_refunded' => 12550,
++            'payment_intent' => self::PAYMENT_INTENT,
++        ];
++        $client = $this->client([], [$charge['id'] => $charge], []);
++
++        $event = (new StripeCheckoutAdapter($client))->verifyNotification(
++            $this->chargeNotification($charge['id'], self::WEBHOOK_SECRET),
++            $this->account(),
++            $this->credentials()
++        );
++
++        self::assertSame(GatewayPaymentStatus::REFUNDED, $event->status);
++    }
++
++    public function testSignatureChecksTimestampToleranceAndRejectsTampering(): void {
++        $body = '{"type":"checkout.session.completed","data":{"object":{"id":"' . self::SESSION_ID . '"}}}';
++        $timestamp = (string)time();
++        $rawSecret = 'platform-webhook-secret-123456';
++        $signature = hash_hmac('sha256', $timestamp . '.' . $body, $rawSecret);
++
++        self::assertTrue(StripeCheckoutAdapter::signatureValid(
++            'whsec_' . $rawSecret,
++            $body,
++            't=' . $timestamp . ',v1=' . $signature,
++            time()
++        ));
++        self::assertTrue(StripeCheckoutAdapter::signatureValid(
++            $rawSecret,
++            $body,
++            't=' . $timestamp . ',v1=' . str_repeat('0', 64) . ',v1=' . $signature,
++            time()
++        ));
++        self::assertFalse(StripeCheckoutAdapter::signatureValid(
++            $rawSecret,
++            $body,
++            't=' . $timestamp . ',v1=' . $signature,
++            time() + 600
++        ), 'a stale timestamp must be rejected');
++        self::assertFalse(StripeCheckoutAdapter::signatureValid(
++            $rawSecret,
++            $body . ' ',
++            't=' . $timestamp . ',v1=' . $signature,
++            time()
++        ), 'the signature must cover the exact raw body');
++        self::assertFalse(StripeCheckoutAdapter::signatureValid($rawSecret, $body, 't=' . $timestamp . ',v1=' . str_repeat('0', 64), time()));
++        self::assertFalse(StripeCheckoutAdapter::signatureValid($rawSecret, $body, 't=' . $timestamp, time()));
++    }
++
++    public function testInvalidSignatureDoesNotQueryTheApi(): void {
++        $client = $this->client([], [], [self::SESSION_ID => $this->createdSession()]);
++        $body = json_encode(['type' => 'checkout.session.completed', 'data' => ['object' => ['id' => self::SESSION_ID]]], JSON_THROW_ON_ERROR);
++        $timestamp = (string)time();
++
++        $event = (new StripeCheckoutAdapter($client))->verifyNotification(
++            new Notification([], [], ['HTTP_STRIPE_SIGNATURE' => 't=' . $timestamp . ',v1=' . str_repeat('0', 64)], $body),
++            $this->account(),
++            $this->credentials()
++        );
++
++        self::assertSame(GatewayWebhookResult::IGNORED, $event->kind);
++        self::assertSame('signature_rejected', $event->reasonCode);
++        self::assertSame([], $client->getSessionCalls);
++    }
++
++    public function testUnhandledEventTypeIsIgnoredWithoutAnApiCall(): void {
++        $client = $this->client([], [], []);
++        $body = json_encode(['type' => 'invoice.paid', 'data' => ['object' => ['id' => 'in_1']]], JSON_THROW_ON_ERROR);
++        $timestamp = (string)time();
++        $secret = substr(self::WEBHOOK_SECRET, 6);
++        $signature = hash_hmac('sha256', $timestamp . '.' . $body, $secret);
++
++        $event = (new StripeCheckoutAdapter($client))->verifyNotification(
++            new Notification([], [], ['HTTP_STRIPE_SIGNATURE' => 't=' . $timestamp . ',v1=' . $signature], $body),
++            $this->account(),
++            $this->credentials()
++        );
++
++        self::assertSame(GatewayWebhookResult::IGNORED, $event->kind);
++        self::assertSame('unhandled_event_type', $event->reasonCode);
++        self::assertSame([], $client->getSessionCalls);
++        self::assertSame([], $client->getChargeCalls);
++    }
++
++    public function testMissingCredentialsOrProviderOutageRequestsRetry(): void {
++        $client = $this->client([], [], []);
++        $adapter = new StripeCheckoutAdapter($client);
++        $notification = $this->sessionNotification(self::SESSION_ID, 'checkout.session.completed', self::WEBHOOK_SECRET);
++
++        $missing = $adapter->verifyNotification(
++            $notification,
++            $this->account(),
++            new GatewayCredentials(['secret_key' => self::SECRET_KEY])
++        );
++        self::assertSame(GatewayWebhookResult::RETRY, $missing->kind);
++        self::assertSame('credentials_missing', $missing->reasonCode);
++        self::assertSame([], $client->getSessionCalls);
++
++        $outage = (new StripeCheckoutAdapter($this->client([], [], [self::SESSION_ID => ['_http_status' => 503]])))->verifyNotification(
++            $notification,
++            $this->account(),
++            $this->credentials()
++        );
++        self::assertSame(GatewayWebhookResult::RETRY, $outage->kind);
++        self::assertSame('provider_unavailable', $outage->reasonCode);
++    }
++
++    private function sessionNotification(string $sessionId, string $eventType, string $secret): Notification {
++        $body = json_encode(
++            ['id' => 'evt_test_1', 'type' => $eventType, 'data' => ['object' => ['id' => $sessionId]]],
++            JSON_THROW_ON_ERROR
++        );
++        $timestamp = (string)time();
++        $signature = hash_hmac('sha256', $timestamp . '.' . $body, substr($secret, 6));
++
++        return new Notification([], [], ['HTTP_STRIPE_SIGNATURE' => 't=' . $timestamp . ',v1=' . $signature], $body);
++    }
++
++    private function chargeNotification(string $chargeId, string $secret): Notification {
++        $body = json_encode(
++            ['id' => 'evt_test_2', 'type' => 'charge.refunded', 'data' => ['object' => ['id' => $chargeId]]],
++            JSON_THROW_ON_ERROR
++        );
++        $timestamp = (string)time();
++        $signature = hash_hmac('sha256', $timestamp . '.' . $body, substr($secret, 6));
++
++        return new Notification([], [], ['HTTP_STRIPE_SIGNATURE' => 't=' . $timestamp . ',v1=' . $signature], $body);
++    }
++}
+diff --git a/tests/Unit/Security/UrlGuardPinTest.php b/tests/Unit/Security/UrlGuardPinTest.php
+index f027b48..e12ad92 100644
+--- a/tests/Unit/Security/UrlGuardPinTest.php
++++ b/tests/Unit/Security/UrlGuardPinTest.php
+@@ -391,7 +391,7 @@ final class UrlGuardPinTest extends TestCase {
+             }
+         }
+ 
+-        self::assertSame(2, $seen, 'webhook e importador de blog');
++        self::assertSame(3, $seen, 'webhook, importador de blog e client HTTP dos gateways');
+         self::assertSame([], $offenders, 'quem chama curl_init usa UrlGuard::inspect() + UrlGuard::curlOptions()');
+     }
+ 
