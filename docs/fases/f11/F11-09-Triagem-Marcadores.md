@@ -79,3 +79,9 @@ D08 e D09 receberam autorização explícita e foram alinhados em KZ-62/KZ-63. P
 A decisão explícita D09=A substitui o B anterior. A investigação F11-16 concluiu que a proibição do `schema.sql` no checker F9-05 era uma sobreposição de escopo: o arquivo é um artefato compartilhado do repositório, recebeu conteúdo de fases posteriores (incluindo F9-25) e não foi entregue pela fase F9-05. O instalador atual importa `schema-complete.sql`.
 
 O contrato F9-05 agora declara essa fronteira; `e2e_f905.cjs` deixou de exigir que o arquivo global esteja ausente e valida o escopo documentado. Nenhum SQL foi alterado. As verificações específicas de D09 passaram. O checker integral ainda falha na asserção preexistente sobre `declare(strict_types=1)` — confirmada também no checker original e não alterada por D09. F918-08 foi resolvido; `release_ready` permanece `false`, e D10 não foi tocado.
+
+## 8. Atualização D10=A — alinhamento estático dos metadados F9-27
+
+O responsável autorizou explicitamente D10=A em 2026-11-17. Os campos `F9-27-Status.base_head`, `F9-27-Base-Hashes.head` e `F9-27-Preflight-Status.base_head` foram alinhados ao snapshot inspecionado `9fcc6e5a78fc246a0f8743ffa37658e365b65027`; os sete Git blob SHA-1s das fontes pontuais foram recalculados. F918-09 foi resolvido como drift de metadados, não como falha funcional.
+
+O gate continua `BLOCKED_NOT_RUN`; F9-12 permanece `UNKNOWN_NOT_CONFIRMED`; runtime, DB, migration, aprovação de release e deploy permanecem falsos. Nenhum teste de staging/runtime, escrita no GitHub, deploy, arquivo F9-26 ou SQL/schema foi alterado/executado.

@@ -1,8 +1,8 @@
 {
   "task": "F9-27",
-  "base_head": "3d481ecf65c124c17d61e1c5fa7ec6c031f1027b",
+  "base_head": "9fcc6e5a78fc246a0f8743ffa37658e365b65027",
   "status": "BLOCKED_NOT_RUN",
-  "reason": "Static preflight refreshed for the current HEAD; runtime remains blocked because explicit staging authorization is absent and F9-12 status is unknown.",
+  "reason": "D10=A aligned the F9-27 metadata/hash references to the inspected main snapshot 9fcc6e5a78fc246a0f8743ffa37658e365b65027; this static baseline does not change the gate. Runtime remains blocked because explicit staging authorization is absent and F9-12 status is unknown.",
   "f9_12_status": "UNKNOWN_NOT_CONFIRMED",
   "database_accessed": false,
   "migration_applied": false,

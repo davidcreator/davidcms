@@ -141,19 +141,21 @@
   {
    "id": "F918-09",
    "severity": "P2",
-   "status": "open",
+   "status": "resolved",
    "area": "release_metadata_drift (D10)",
    "path": "docs/F9-27-Status.json",
    "lines": "-",
-   "summary": "base_head 3d481ecf difere do HEAD atual 5a6cb33; drift de metadados por avanco normal do projeto.",
-   "required_action": "Nao atualizar SHA/hashes sem autorizacao explicita (equivaleria a declarar prontidao do gate). Decisao D10=B registrada em 2026-11-17.",
+   "summary": "F9-27 metadata drift: Status, Base-Hashes and Preflight referenced different baselines, and the seven point-source Git blob SHA-1 values did not match the inspected main snapshot. RESOLVED by explicit D10=A (2026-11-17): all three metadata heads and the seven blob IDs were aligned to inspected main HEAD 9fcc6e5a78fc246a0f8743ffa37658e365b65027. This is a static metadata baseline only; F9-27 remains BLOCKED_NOT_RUN, F9-12 remains UNKNOWN_NOT_CONFIRMED, and runtime/DB/migration/release/deploy flags remain false.",
+   "required_action": "Fechado por decisão explícita D10=A (2026-11-17): alinhar Status.base_head, Base-Hashes.head, Preflight-Status.base_head e os Git blob SHA-1s das fontes pontuais ao snapshot inspecionado 9fcc6e5a78fc246a0f8743ffa37658e365b65027. A atualização é somente metadado; manter BLOCKED_NOT_RUN, F9-12 UNKNOWN_NOT_CONFIRMED e sem autorização/teste runtime, DB, migration, release ou deploy.",
    "remediation_plan": {
-    "plan": "Não atualizar SHA/hashes de release sem autorização explícita (equivaleria a declarar prontidão do gate) (D10=B, 2026-11-17).",
+    "plan": "D10=A: sincronizar os três heads F9-27 e recalcular os sete Git blob SHA-1s no snapshot 9fcc6e5a78fc246a0f8743ffa37658e365b65027; não alterar código de produto nem converter o refresh estático em aprovação de release.",
     "owner": "David L. Almeida",
-    "target": "decisão D10 — travada por governança",
-    "gate": "P2 — travado por governança de release"
+    "target": "D10=A — atualização estática dos metadados F9-27",
+    "gate": "P2 — drift de metadados resolvido; F9-27 continua BLOCKED_NOT_RUN e release_ready=false.",
+    "status": "resolvido por D10=A; baseline estático alinhado, sem alteração de prontidão ou execução."
    },
-   "plan_registered_at": "2026-11-18"
+   "plan_registered_at": "2026-11-18",
+   "resolved_at": "2026-11-17"
   }
  ],
  "readiness_gate": [
@@ -181,6 +183,6 @@
    "checker": "tests/check_dracaunos_security.js PASS 105 verificacoes",
    "version": "Dracaunos-Security 1.7.0 (interno, nunca rms_tool público)"
   },
-  "open_findings_summary": "6 P2 abertos, todos com remediation_plan registrado; 2 P1 mitigated + 1 P1 resolved. release_ready permanece false — decisão de release cabe ao responsável e não foi tomada por inferência."
+  "open_findings_summary": "0 P2 abertos (2 mitigados, 4 resolvidos); 2 P1 mitigados + 1 P1 resolvido. release_ready permanece false — decisão de release cabe ao responsável e não foi tomada por inferência."
  }
 }

@@ -2,7 +2,9 @@
 
 **Situação: BLOQUEADO / NOT RUN.** F9-27 é a etapa de testes funcionais de release; não executar até autorização explícita para o ambiente descartável. Os limites atuais da conversa proíbem PHP, SQL, navegador, app e E2E runtime, então este pacote não os tenta contornar.
 
-**HEAD consultado:** `448dd61f467e8ce2b4a0d5bce481345dace4ca77` (F9-26, 2026-10-25). **Base F9-12:** não confirmada; não houve acesso ao banco. O roadmap exige confirmar F9-12 antes de E2E DB. Não marque `ready` por inferência.
+**HEAD consultado na versão original do plano:** `448dd61f467e8ce2b4a0d5bce481345dace4ca77` (F9-26, 2026-10-25). **Base F9-12:** não confirmada; não houve acesso ao banco. O roadmap exige confirmar F9-12 antes de E2E DB. Não marque `ready` por inferência.
+
+**Adendo D10=A (2026-11-17):** o baseline estático de F9-27 foi alinhado ao HEAD inspecionado `9fcc6e5a78fc246a0f8743ffa37658e365b65027` nos arquivos `F9-27-Status.json`, `F9-27-Base-Hashes.json` e `F9-27-Preflight-Status.json`; os sete Git blob SHA-1s das fontes pontuais foram recalculados. Esse SHA identifica apenas o snapshot de código examinado — não confirma commit instalado em staging nem prontidão de release. O gate permanece `BLOCKED_NOT_RUN`; F9-12 continua desconhecida e nenhum teste runtime, DB, migration, release ou deploy foi autorizado/executado.
 
 ## Condições para abrir o gate
 

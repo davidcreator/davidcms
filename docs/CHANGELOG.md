@@ -1,5 +1,11 @@
 # Changelog
 
+## D10=A — alinhar metadados e hashes F9-27 (2026-11-17)
+- Autorização explícita do responsável: **D10=A**, substituindo a decisão anterior D10=B para este escopo documental.
+- `F9-27-Status.base_head`, `F9-27-Base-Hashes.head` e `F9-27-Preflight-Status.base_head` foram sincronizados ao snapshot inspecionado `9fcc6e5a78fc246a0f8743ffa37658e365b65027`; sete Git blob SHA-1s foram recalculados. F918-09 passa a `resolved` como drift de metadados.
+- Segurança/gate preservados: `BLOCKED_NOT_RUN`, F9-12 `UNKNOWN_NOT_CONFIRMED`, runtime/DB/migration/release/deploy flags false e `release_ready=false`. Nenhum F9-26, SQL/schema, staging/runtime, GitHub write ou deploy foi tocado/executado.
+- Validação estática executada: checker F9-27, JSON, conferência dos sete blobs, checksums e `git diff --check`; não é evidência de prontidão de release.
+
 ## KZ-63 — D09=A: explicitar escopo de F9-05 frente ao schema compartilhado (2026-11-17)
 - Decisão explícita do responsável: **D09=A**, substitui o B anterior. A auditoria F11-16 concluiu que `dev/install/sql/schema.sql` é artefato compartilhado com adições posteriores (incluindo F9-25), não entrega da fase F9-05; o instalador atual importa `schema-complete.sql`.
 - F9-05 agora documenta a fronteira: Model de definições + ACL dormente, sem entregar `schema.sql`. `e2e_f905.cjs` não exige mais a ausência de um arquivo global e valida o escopo declarado. Nenhum arquivo SQL/schema foi alterado. F918-08 passa a `resolved`.
