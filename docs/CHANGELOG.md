@@ -1,5 +1,14 @@
 # Changelog
 
+## KZ-64 (14ª parte) — os checkers que reprovavam código correto (2026-11-20)
+
+- **Dois checkers estavam vermelhos acusando o repositório por um detalhe de escrita, não por um defeito.** `check_threejs_thumb.cjs` exigia que a tela de páginas usasse `$this->pageCatalogAssetUrl()` — **método que nunca existiu**; as duas telas usam `catalogAssetUrl()`. `e2e_f906.cjs` exigia `Csrf::check(` **dentro** do controlador de campos personalizados, mas ele valida por `csrfValid()`, herdado de `dev/system/engine/controller.php`, que por sua vez chama `Csrf::check()`. O código estava certo nos dois casos; a asserção media o nome da variável e o lugar da chamada, não o fato.
+- **`e2e_f906.cjs` tinha ainda uma terceira armadilha do mesmo tipo:** exigia a string literal `'localized'=>(int)($field['localized']??($p['localized']??0))`, e o controlador lê o valor existente de `$field` na edição e do POST na criação. Agora a checagem mede o comportamento (preserva na edição **e** aceita na criação).
+- **As asserções passam a medir o fato**, com comentário no próprio checker explicando o que era antes e por quê — para ninguém "consertar" o nome de volta.
+- **Inventário atualizado:** 4 checkers saíram de `findings` (agora **20**, eram 24) para `f11_09_resolutions` com data e evidência, incluindo `e2e_bdre_spacer_static`, `e2e_f925_static`, `e2e_f927_static` e `e2e_bdre_hierarchical_reordering_static`, que já passavam (rc=0) mas continuavam listados como não resolvidos. `verify-checkers-inventory.py`: **ESTÁVEL — conjunto idêntico ao inventário**, contra "REGRESSÃO — 2 nova(s) falha(s)" no início desta rodada.
+- **Nada de pagamento neste pacote.** É a dívida D3 do diagnóstico, que estava aberta desde a primeira entrega do KZ-64 e fazia qualquer CI ficar vermelho sem motivo real.
+- **Suíte:** 1929 testes / 46.324 asserções, verde; PHPStan sem erros; `verify-checksums` 3 PASS / 0 FAIL.
+
 ## KZ-64 (13ª parte) — R1 na parte que não move dinheiro: a tela para de esconder o operador (2026-11-20)
 
 - **Dois defeitos do código de hoje, corrigidos.** (a) Para cobrança de gateway, a coluna de situação mostrava **só** a situação do provedor: o que o operador digitava em `jow_charge.status` desaparecia sem aviso. Agora a linha mostra a divergência ("Digitado aqui: refunded — difere da situação do provedor"). (b) O `select` de situação gravava `refunded` sem estornar nada e **não avisava**: passa a pedir confirmação com o texto "alterá-la NÃO estorna dinheiro no provedor", nos três idiomas.

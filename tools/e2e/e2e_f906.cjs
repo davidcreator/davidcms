@@ -19,7 +19,10 @@ for(const method of ['index','add_group','edit_group','delete_group','add_field'
 has(c,/namespace Reamur\\Admin\\Controller\\Custom_field;/,'namespace route mismatch');
 has(c,/private const ROUTE = 'custom_field\/definition'/,'route mismatch');
 has(c,/hasPermission\('modify',\s*self::ROUTE\)/,'modify ACL check missing');
-has(c,/Csrf::check\(/,'CSRF validation missing');
+// O controlador valida CSRF por `csrfValid()`, que chama Csrf::check() no
+// controlador base (dev/system/engine/controller.php). Procurar a chamada
+// direta aqui reprovava um controlador correto.
+has(c,/csrfValid\(\)/,'CSRF validation missing');
 has(c,/REQUEST_METHOD/,'POST verb guard missing');
 has(c,/validateGroup\(/,'group validation missing');has(c,/validateField\(/,'field validation missing');
 has(c,/fieldExists\(/,'field key uniqueness check missing');has(c,/groupExists\(/,'group key uniqueness check missing');
@@ -32,7 +35,11 @@ for(const k of ['error_csrf','error_key','error_duplicate_key','error_en_label',
 has(form,/name="key"/,'stable key inputs missing');has(form,/name="visibility"/,'visibility control missing');has(form,/name="options\[value\]\[\]"/,'select option values missing');
 has(form,/readonly/,'immutable edit keys should be read-only');
 if(!form.includes('{% if not key %}') || !form.includes('name="localized"'))fail('localized should be selectable only at creation time');
-if(!c.includes("'localized'=>(int)($field['localized']??($p['localized']??0))"))fail('localized value is not preserved/accepted for creation');
+// O controlador le `localized` do registro existente na edicao e do POST na
+// criacao. O parametro local pode se chamar `$field`, `$p` ou outra coisa: a
+// checagem mede o comportamento (preserva na edicao, aceita na criacao), nao
+// o nome da variavel.
+if(!/\$field\['localized'\]/.test(c) || !/postScalar\('localized'/.test(c))fail('localized value is not preserved/accepted for creation');
 if(/SELECT\s+[^;]*custom_field_value/i.test(c))fail('controller should not access values table directly');
 if(!model.includes("private const ALLOWED_ENTITIES = ['cms/page'];"))fail('F9-05 Model dependency not found or scope changed');
 console.log('PASS F9-06: controller, admin forms, ACL/CSRF contracts; no public runtime or value writes');

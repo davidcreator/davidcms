@@ -24,7 +24,7 @@ f5d8ebc5  81f19064c17fa92daef8b7cef0eb7e5a9e5f63f2bf3cfb19079b3191b422e501  1559
 f261d162  592038465c7c0c904ee439f60ec254ee204573cedc7b4a14fe9a9302dd6ed2d9  2498  dev/system/library/payment/charge_status_concordance.php
 7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
 fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
-60f25ac8  5bb8caccef8fed9bc90596094f624071e617423fa4e8a5e52145fd4f11d55ab2  191475  docs/CHANGELOG.md
+55f2bbe7  ba8e7924c0eab214d8f9a63128940a7b00dc245087ddf9c3b1a84e7ccbf42302  193421  docs/CHANGELOG.md
 675b1723  ddf884f56fcb08b9a5a84b3e3f19e64d0850585005cf34a3eb00969297628f14  16729  docs/Estrutura-de-Pastas.md
 61660a6e  d7515650f0c01bc118c3bd75c5df94bf2d6049bcdc7775ed267367360f210351  10948  docs/README.md
 2cd4aea9  48c6bf0ae2c1ccf1d471ea99bd205d3af3b3c3fe769a67dcc7c005cf6420714e  29473  docs/arquitetura/Dicionario-de-Dados.md
@@ -45,7 +45,10 @@ e40562bb  790eae5e1bb74cfeede500ec8fa009f833b3fcedc39ebaf57e7a5b9a7bff8ab4  7581
 1ac45edc  590b8945002421d56f3d3e0b06ed3a10d253f4d0ed453b27656be361c36d0ad6  12537  tests/Unit/Security/CspWiringTest.php
 b3e33030  0f93d7ce63776b592ce9b9639f8db3142f822a70c120588159ed4f44a2bf04aa  8622  tools/build_prod.sh
 944451ba  d3df9c5ed56ec4c43791b9ca5d79643d5e16bf8b29e4a0c0d1c2313f4da05ebb  14670  tools/check_producao.sh
+a8e16980  eb03d5ec1522643a9a8e436cdf22c3a0f2728322a35e5e8b2c537043ba4893c6  21159  tools/checkers-inventory.json
 88e72464  897782ddba228af41ee32aba980ca71ec3a5871e13f9c12fd220d5cff5c7b976  1941  tools/e2e/README.md
+732a4a04  8926bf80ce8ff87ab07c06b6845911f5349e55b570bbf7c9d7fb3d472975af1f  10421  tools/e2e/check_threejs_thumb.cjs
+2b62c79d  30fa1dc3ccc9be470a91cbcc2217cf50c095475c0dc6918e45c19ad8fe6a0519  4163  tools/e2e/e2e_f906.cjs
 a3a8258b  3fc56d5744ebdfe603454d99ed369d709e6e37e87076e435683f63103e25a9e8  1352  tools/e2e/lib/load-playwright.cjs
 4634972a  80385df43c72523cf9110c172fa3980495e786089aa8c920377b9578dcd0336e  6949  tools/e2e/threejs_admin_preview_sandbox_isolated.cjs
 7589e5ed  97cac2985b4705f4bbb33f62f0fde7109c1e94e80e515dd330ad87b50196b392  7488  tools/e2e/threejs_cms_playwright.cjs

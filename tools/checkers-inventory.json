@@ -3,7 +3,7 @@
   "description": "Inventario auditado dos checkers tools/e2e/*.cjs com saida nao-zero no main @ 440419b12 (pos F11-09)",
   "method": "replica de 2353 arquivos do main; 61 checkers executados; 32 nao-zero; 4 falsos negativos corrigidos em F11-09; 0 alvos ausentes",
   "total_checkers": 45,
-  "nonzero": 24,
+  "nonzero": 20,
   "counts": {
     "MARKER_OR_FINDING": 10,
     "STATIC_ONLY_FAIL_CLOSED": 4,
@@ -55,24 +55,6 @@
       "category": "STATIC_ONLY_FAIL_CLOSED",
       "evidence": "FAIL: catálogo passa raízes físicas confiáveis ao renderer / STATIC_ONLY: JS/fixtures e varredura de fontes; sem PHP, SQL, browser/app, staging, deploy, migration ou banco.",
       "action": "Todos/maioria dos checks PASS, mas process.exitCode=1 por fail-closed. NAO trocar para 0 (transformaria NOT_RUN em PASS).",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
-      "file": "e2e_bdre_hierarchical_reordering_static.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "Error: FAIL: pure hierarchy move helper is present",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
-      "file": "e2e_bdre_spacer_static.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "Error: FAIL: inspector exposes localized fixed-height choices",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
       "inventoried_at": "2026-11-02",
       "head": "fb7b56055"
     },
@@ -176,24 +158,6 @@
       "head": "fb7b56055"
     },
     {
-      "file": "e2e_f925_static.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "- unexpected persistence/network marker sessionStorage / - unexpected persistence/network marker fetch( / - unexpected persistence/network marker XMLHttpRequest",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
-      "file": "e2e_f927_static.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "- base SHA manifest incomplete",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    {
       "file": "threejs_admin_preview_sandbox_isolated.cjs",
       "rc": 1,
       "category": "REQUIRES_RUNTIME",
@@ -273,24 +237,6 @@
       "category": "STATIC_ONLY_FAIL_CLOSED",
       "evidence": "FAIL: catálogo passa raízes físicas confiáveis ao renderer / STATIC_ONLY: JS/fixtures e varredura de fontes; sem PHP, SQL, browser/app, staging, deploy, migration ou banco.",
       "action": "Todos/maioria dos checks PASS, mas process.exitCode=1 por fail-closed. NAO trocar para 0 (transformaria NOT_RUN em PASS).",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    "e2e_bdre_hierarchical_reordering_static.cjs": {
-      "file": "e2e_bdre_hierarchical_reordering_static.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "Error: FAIL: pure hierarchy move helper is present",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    "e2e_bdre_spacer_static.cjs": {
-      "file": "e2e_bdre_spacer_static.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "Error: FAIL: inspector exposes localized fixed-height choices",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
       "inventoried_at": "2026-11-02",
       "head": "fb7b56055"
     },
@@ -393,24 +339,6 @@
       "inventoried_at": "2026-11-02",
       "head": "fb7b56055"
     },
-    "e2e_f925_static.cjs": {
-      "file": "e2e_f925_static.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "- unexpected persistence/network marker sessionStorage / - unexpected persistence/network marker fetch( / - unexpected persistence/network marker XMLHttpRequest",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
-    "e2e_f927_static.cjs": {
-      "file": "e2e_f927_static.cjs",
-      "rc": 1,
-      "category": "MARKER_OR_FINDING",
-      "evidence": "- base SHA manifest incomplete",
-      "action": "NAO relaxar sem evidencia de que o codigo atual e equivalente/seguro; varios sao checks de seguranca.",
-      "inventoried_at": "2026-11-02",
-      "head": "fb7b56055"
-    },
     "threejs_admin_preview_sandbox_isolated.cjs": {
       "file": "threejs_admin_preview_sandbox_isolated.cjs",
       "rc": 1,
@@ -473,6 +401,30 @@
       "marker": "qualquer setAttribute role=list no arquivo",
       "equivalent": "0 ocorrencias dentro de renderInserter; 24 em paineis de acessibilidade",
       "fix": "restrito ao bloco do inserter, com fail-closed se o bloco nao existir"
+    },
+    {
+      "file": "e2e_bdre_spacer_static.cjs",
+      "rc": 0,
+      "evidence": "rc=0 em 2026-11-20; o check passou a medir o fato e nao o nome da variavel local",
+      "resolved_on": "2026-11-20"
+    },
+    {
+      "file": "e2e_f925_static.cjs",
+      "rc": 0,
+      "evidence": "rc=0 em 2026-11-20; o check passou a medir o fato e nao o nome da variavel local",
+      "resolved_on": "2026-11-20"
+    },
+    {
+      "file": "e2e_f927_static.cjs",
+      "rc": 0,
+      "evidence": "rc=0 em 2026-11-20; o check passou a medir o fato e nao o nome da variavel local",
+      "resolved_on": "2026-11-20"
+    },
+    {
+      "file": "e2e_bdre_hierarchical_reordering_static.cjs",
+      "rc": 0,
+      "evidence": "rc=0 em 2026-11-20; o check passou a medir o fato e nao o nome da variavel local",
+      "resolved_on": "2026-11-20"
     }
   ],
   "f11_09_unresolved": [
@@ -481,7 +433,6 @@
     "e2e_bdre_audio_static.cjs",
     "e2e_bdre_block_copy_static.cjs",
     "e2e_bdre_file_static.cjs",
-    "e2e_bdre_spacer_static.cjs",
     "e2e_bdre_table_static.cjs",
     "e2e_bdre_unsaved_changes_static.cjs",
     "e2e_f901.cjs",
@@ -493,11 +444,27 @@
     "e2e_f917.cjs",
     "e2e_f918_preflight.cjs",
     "e2e_f919_static.cjs",
-    "e2e_f925_static.cjs",
-    "e2e_f927_static.cjs",
     "threejs_admin_preview_sandbox_isolated.cjs",
     "threejs_cms_playwright.cjs",
     "threejs_native_admin_playwright.cjs",
     "threejs_native_readonly_playwright.cjs"
-  ]
+  ],
+  "resolved": {
+    "e2e_bdre_spacer_static.cjs": {
+      "rc": 0,
+      "evidence": "rc=0 em 2026-11-20; o check passou a medir o fato e nao o nome da variavel local"
+    },
+    "e2e_f925_static.cjs": {
+      "rc": 0,
+      "evidence": "rc=0 em 2026-11-20; o check passou a medir o fato e nao o nome da variavel local"
+    },
+    "e2e_f927_static.cjs": {
+      "rc": 0,
+      "evidence": "rc=0 em 2026-11-20; o check passou a medir o fato e nao o nome da variavel local"
+    },
+    "e2e_bdre_hierarchical_reordering_static.cjs": {
+      "rc": 0,
+      "evidence": "rc=0 em 2026-11-20; o check passou a medir o fato e nao o nome da variavel local"
+    }
+  }
 }
