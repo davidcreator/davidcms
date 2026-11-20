@@ -36,7 +36,7 @@ f261d162  592038465c7c0c904ee439f60ec254ee204573cedc7b4a14fe9a9302dd6ed2d9  2498
 08942fda  5b20d74f3a5e2e32ab1e0294ac4af5fd76c638a0017fc5cc9d73735238f0bd53  4795  dev/system/library/payment/legacy_webhook_forwarder.php
 7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
 fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
-445a4cb1  ead32b989e688ed25e5f50572e941579f96f3ec3e40d298083ee2652f3420bb3  198834  docs/CHANGELOG.md
+7e54facd  9a23869cdb243dde7f969d38aecc9301922932c8a3c6427870bb8a3ddf2f9337  200040  docs/CHANGELOG.md
 675b1723  ddf884f56fcb08b9a5a84b3e3f19e64d0850585005cf34a3eb00969297628f14  16729  docs/Estrutura-de-Pastas.md
 61660a6e  d7515650f0c01bc118c3bd75c5df94bf2d6049bcdc7775ed267367360f210351  10948  docs/README.md
 2cd4aea9  48c6bf0ae2c1ccf1d471ea99bd205d3af3b3c3fe769a67dcc7c005cf6420714e  29473  docs/arquitetura/Dicionario-de-Dados.md
@@ -49,7 +49,7 @@ fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532 
 46cb5caa  0277f55d2f88d36b923442334d4379f6e777c12572d2244b794f71ab1f7ce2de  11286  docs/integracoes/JOW-Payments-MultiGateway-Core.md
 8eaa342e  0af350b7ea4d7f900f8040206c8c9ad0db0be41e604cd9e41bd63a40d4dacf9a  5920  docs/integracoes/JOW-Payments-Reconciliacao-Operacao.md
 5b6c625d  6f9a6ffb87a1eec7db2a23c029f15a8475deacffd216abb550ec3959f7559df9  10309  docs/integracoes/JOW-Payments-Reconciliacao.md
-aaa65127  74e734b79d4ac83af43ae758501c2412f0dfbe0cc67c511e1aa930515e3c7d17  6187  docs/integracoes/JOW-Payments-Testes-Antes-da-Producao.md
+8578256b  3558982f9cd52c2d7165ac0dd9e004964106b5f72c1bcc7263266f9a2d6e60ae  6516  docs/integracoes/JOW-Payments-Testes-Antes-da-Producao.md
 f35d6814  483d47bc11f6f801a820eda71e36dbdff951ca7ce5e6e47b13b5942f02575852  6026  docs/threejs/THREEJS_CMS_E2E.md
 6d633bf4  2d18595e9099dfb90bf35d37195fc2e3f754c397396b37625720de78edf801e1  3083  tests/Unit/Payment/ChargeStatusConcordanceTest.php
 18f7253c  822e9186b49f7ef9ca95e44eb678dca43553709623c9cd886e69714ae6d50427  20629  tests/Unit/Payment/ControllerWiringTest.php
@@ -57,6 +57,7 @@ c1cf981f  adb6097186e21f316b200403d3f89a2fca48c87cf7dfd6eaab7c557822e32993  2739
 db6821b8  99b2e3e3b1ab7e92b966742003201ac53b1310f4e121ca8ceda91bb76660242e  3038  tests/Unit/Payment/LegacyPaymentDrainTest.php
 faaa9df6  b70360d4afdcae1c4198a0ce7723e03abbcb2bcd50567a7f3b814cb04cf90007  10645  tests/Unit/Payment/LegacyWebhookForwarderTest.php
 e40562bb  790eae5e1bb74cfeede500ec8fa009f833b3fcedc39ebaf57e7a5b9a7bff8ab4  7581  tests/Unit/Payment/PaymentSchemaDriftTest.php
+89c8c083  e220694e9d378e287baaea1c4ac13f0622423e236ed73539b2695a6808224f58  9348  tests/Unit/Payment/WebhookChainToPaidTest.php
 1ac45edc  590b8945002421d56f3d3e0b06ed3a10d253f4d0ed453b27656be361c36d0ad6  12537  tests/Unit/Security/CspWiringTest.php
 b3e33030  0f93d7ce63776b592ce9b9639f8db3142f822a70c120588159ed4f44a2bf04aa  8622  tools/build_prod.sh
 944451ba  d3df9c5ed56ec4c43791b9ca5d79643d5e16bf8b29e4a0c0d1c2313f4da05ebb  14670  tools/check_producao.sh

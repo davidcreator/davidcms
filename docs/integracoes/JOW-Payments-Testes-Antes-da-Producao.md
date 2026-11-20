@@ -27,7 +27,7 @@ dali em diante mede a instalação errada.
 | Teste | O que prova | Credencial necessária |
 | --- | --- | --- |
 | **A** | a tentativa nasce no provedor (`provider_reference`, endereço de pagamento) | conta sandbox |
-| **B** | webhook assinado aplica `paid` no ledger **e** sincroniza a cobrança do JOW (P0-a) | conta sandbox + webhook configurado |
+| **B** | webhook assinado aplica `paid` no ledger **e** sincroniza a cobrança do JOW (P0-a). **Já provado sem credencial:** a cadeia assinatura → leitura no provedor → `GatewayEventApplier` → linha `paid` (`WebhookChainToPaidTest`, 3 testes), incluindo assinatura adulterada e valor divergente. **Falta provar em sandbox:** que o provedor assina do jeito que o código espera, e que a URL publicada recebe o aviso | conta sandbox + webhook configurado |
 | **C** | reenvio do mesmo aviso não duplica evento nem regride estado | idem |
 | **D** | recusa vira `failed`/`canceled` e não volta atrás | cartão de recusa |
 | **E** | **pagamento com webhook perdido é recuperado pelo cron** (P0-b) | idem + `REAMUR_RECONCILE_TOKEN` |

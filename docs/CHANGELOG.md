@@ -1,5 +1,12 @@
 # Changelog
 
+## KZ-64 (17ª parte) — o meio da cadeia do teste B, provado antes da credencial (2026-11-20)
+
+- **Faltava um elo, e ele foi encontrado por inspeção, não por falha:** `MercadoPagoGatewayAdapterTest` prova que a assinatura é verificada e que o estado normaliza para `paid`; `GatewayWebhookServiceTest` prova as regras pós-verificação **com um evento já pronto**. Ninguém provava que os dois se encaixam.
+- **`WebhookChainToPaidTest` (novo, 3 testes):** aviso assinado com HMAC de verdade → leitura no provedor com o token da conta certa → `GatewayEventApplier` → linha `paid` no ledger. Mais dois casos que são onde o dinheiro erra: **assinatura adulterada** não chega ao ledger nem consulta o provedor, e **valor divergente** do cobrado nunca vira `paid`.
+- **Isto não substitui o sandbox** e o documento de testes diz isso na própria linha do teste B: aqui o provedor é um dublê. O que ele elimina é a classe de erro mais cara de descobrir tarde — a de **fiação**, em que cada peça funciona sozinha e o conjunto grava o estado errado.
+- **Nenhuma mudança de comportamento:** só teste e documentação. Suíte **1940 testes / 46.371 asserções**, verde; PHPStan sem erros.
+
 ## KZ-64 (16ª parte) — as três fases da dívida D2 executadas (2026-11-20)
 
 **F1 — o link de vendedor deixou de ser oferecido.** O botão estava na **lista de pedidos** (`sale/order`), não na tela do marketplace: `can_mp_paylink` passa a `false`; a ação `paylink` **recusa com aviso** nos três idiomas, **depois** de permissão e CSRF (um POST forjado não deve nem aprender que a ação existe); a lista mostra uma faixa explicando por que o botão não está lá. O código de `paylink` **fica no lugar** — caminho fechado, não removido: reabrir é uma linha. Os **8 testes** que davam cobertura fina ao caminho aposentado (pedido pago, link pendente, sem vendedor, token que não abre, valor zero, recusa do provedor, pedido inexistente, POST+CSRF) foram **convertidos, não apagados**: agora provam que a recusa vale em todos eles e que nenhum grava nada.
