@@ -24,16 +24,23 @@
  *   php tools/payment-schema-drift.php --config=system/config.php --quiet
  *
  *   Compatibilidade: sem `--config`, as variáveis de ambiente REAMUR_CONFIG,
- *   REAMUR_DB_PREFIX e REAMUR_SKIP_DB são aceitas.
+ *   REAMUR_DB_PREFIX, REAMUR_SKIP_DB e REAMUR_ASSUME_TABLES são aceitas.
  *
- * SAÍDA: 0 = tudo certo ou só falta aplicar (nada divergente)
- *        1 = divergência de prefixo (tabela do núcleo existe com outro prefixo)
+ *   `--tables=a,b,c` injeta a lista de tabelas (CI/teste, sem banco). É o que
+ *   permite exercitar a matriz de veredictos sem uma instalação quebrada.
+ *
+ * SAÍDA: 0 = tudo certo ou só falta aplicar a migração
+ *        1 = divergência de prefixo, ou configuração suspeita (a tabela de pedidos
+ *            não existe com o prefixo do config.php)
  *        2 = erro de uso/conexão
  *
  * Não altera, não cria e não apaga nada. Não imprime senha nem DSN.
  */
 
 const PAYMENT_CORE_TABLES = ['jow_gateway', 'payment_transaction', 'payment_gateway_event'];
+
+/** Tabela obrigatória para o fluxo do pedido; faltando, a instalação/config está errada. */
+const REQUIRED_TABLES = ['order'];
 const EXPECTED_PREFIX = 'rms_';
 
 /** @return array{path: string, prefix: string} */
@@ -151,8 +158,38 @@ if (!$loaded) {
     fwrite(STDERR, "aviso: sem config.php — o prefixo vem de REAMUR_DB_PREFIX\n");
 }
 
+/**
+ * Lista de tabelas injetada por `--tables=`/REAMUR_ASSUME_TABLES. Existe para
+ * exercitar a matriz de veredictos em CI e em teste, sem banco: sem isso, o
+ * caminho `config_mismatch` só seria alcançável numa instalação quebrada.
+ *
+ * @return list<string>
+ */
+function assumed_tables(array $argv): array {
+    $raw = '';
+
+    foreach ($argv as $arg) {
+        if (str_starts_with($arg, '--tables=')) {
+            $raw = substr($arg, strlen('--tables='));
+        }
+    }
+
+    if ($raw === '') {
+        $raw = (string)(getenv('REAMUR_ASSUME_TABLES') ?: '');
+    }
+
+    return array_values(array_filter(array_map('trim', explode(',', $raw)), static fn(string $t): bool => $t !== ''));
+}
+
 $db = db_connect();
-$tables = $db === null ? [] : table_names($db);
+$assumed = assumed_tables($argv);
+$connected = $db !== null;
+
+if ($connected) {
+    $tables = table_names($db);
+} else {
+    $tables = $assumed;
+}
 
 $report = [
     'prefix' => $prefix,
@@ -160,10 +197,14 @@ $report = [
     'tables_found' => [],
     'tables_missing' => [],
     'tables_wrong_prefix' => [],
+    'required_missing' => [],
     'verdict' => 'ok',
 ];
 
-foreach (PAYMENT_CORE_TABLES as $bare) {
+$evaluateRequired = $connected || $assumed !== [];
+
+foreach (array_merge(PAYMENT_CORE_TABLES, $evaluateRequired ? REQUIRED_TABLES : []) as $bare) {
+    $isRequired = in_array($bare, REQUIRED_TABLES, true);
     $want = $prefix . $bare;
     $found = null;
 
@@ -182,7 +223,11 @@ foreach (PAYMENT_CORE_TABLES as $bare) {
         continue;
     }
 
-    $report['tables_missing'][] = $want;
+    if ($isRequired) {
+        $report['required_missing'][] = $want;
+    } else {
+        $report['tables_missing'][] = $want;
+    }
 
     if ($found !== null && prefix_of($found, $bare) !== null) {
         $report['tables_wrong_prefix'][] = ['expected' => $want, 'found' => $found];
@@ -191,6 +236,12 @@ foreach (PAYMENT_CORE_TABLES as $bare) {
 
 if ($report['tables_wrong_prefix'] !== []) {
     $report['verdict'] = 'prefix_mismatch';
+} elseif ($report['required_missing'] !== []) {
+    // Faltar a tabela de pedidos não é "falta aplicar o núcleo novo": é o
+    // config.php apontando para outro banco (ou outro prefixo). Confundir os
+    // dois manda o operador aplicar o script no lugar errado — foi o que
+    // aconteceu com as tabelas criadas e depois "não encontradas".
+    $report['verdict'] = 'config_mismatch';
 } elseif ($report['tables_missing'] !== []) {
     $report['verdict'] = 'migration_pending';
 }
@@ -205,12 +256,20 @@ if ($json) {
         echo "  ok         {$table}\n";
     }
 
+    foreach ($report['required_missing'] as $table) {
+        echo "  AUSENTE    {$table}  (obrigatória — configuração/instalação)\n";
+    }
+
     foreach ($report['tables_missing'] as $table) {
         echo "  ausente    {$table}\n";
     }
 
     foreach ($report['tables_wrong_prefix'] as $row) {
         echo "  DIVERGENTE esperado {$row['expected']} — encontrado {$row['found']}\n";
+    }
+
+    if (!$connected && $assumed === []) {
+        echo "\n  (sem banco: a existência das tabelas não foi verificada — só o prefixo)\n";
     }
 
     echo "\n";
@@ -221,6 +280,7 @@ if ($json) {
 $verdictLine = match ($report['verdict']) {
     'ok' => 'veredito: as três tabelas do núcleo novo existem com o prefixo do config.php',
     'migration_pending' => "veredito: migração PENDENTE (nada divergente) — aplique o núcleo novo no prefixo `{$prefix}`",
+    'config_mismatch' => 'veredito: CONFIGURAÇÃO SUSPEITA — a tabela de pedidos não existe com este prefixo; o config.php aponta para outro banco?',
     default => 'veredito: DIVERGÊNCIA DE PREFIXO — existe tabela do núcleo com prefixo diferente do config.php',
 };
 
@@ -228,4 +288,4 @@ if (!$json) {
     echo $verdictLine, "\n";
 }
 
-exit($report['verdict'] === 'prefix_mismatch' ? 1 : 0);
+exit(in_array($report['verdict'], ['prefix_mismatch', 'config_mismatch'], true) ? 1 : 0);

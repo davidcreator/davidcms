@@ -51,9 +51,22 @@ prefixo que os SQL do repositório escrevem: rms_
 veredito: DIVERGÊNCIA DE PREFIXO — ...
 ```
 
-Códigos de saída: **0** = tudo certo ou só migração pendente (nada divergente), **1** = divergência de
-prefixo, **2** = erro de uso/conexão. `--json` devolve o relatório em JSON para uso em script;
-`REAMUR_SKIP_DB=1` roda a análise sem banco (útil em CI).
+Quatro veredictos, e a distinção entre eles é o ponto:
+
+| Veredicto | Significa | Código |
+| --- | --- | --- |
+| `ok` | as três tabelas do núcleo existem com o prefixo do `config.php` | 0 |
+| `migration_pending` | nada divergente; só falta aplicar a migração | 0 |
+| `config_mismatch` | a **tabela de pedidos** não existe com esse prefixo — o `config.php` aponta para outro banco (ou o prefixo está errado) | 1 |
+| `prefix_mismatch` | existe tabela do núcleo com prefixo diferente do `config.php` — script aplicado no lugar errado | 1 |
+
+`config_mismatch` foi acrescentado depois de um caso real: as três tabelas do núcleo apareceram `ok`
+e a tabela de pedidos não existia naquele banco. Sem separar as duas coisas, o relatório dizia "tudo
+certo" numa instalação em que o `config.php` apontava para outro banco — e o operador continuaria
+aplicando script no lugar errado.
+
+`--json` devolve o relatório em JSON; `REAMUR_SKIP_DB=1` roda sem banco; `--tables=a,b,c` injeta a
+lista de tabelas (é o que permite exercitar os quatro veredictos em CI, sem uma instalação quebrada).
 
 ## Link de pagamento de pedido (ADR 0119)
 

@@ -125,4 +125,36 @@ final class PaymentSchemaDriftTest extends TestCase {
 
         return str_ends_with($table, '_' . $bare) ? substr($table, 0, -strlen($bare)) : null;
     }
+
+    /**
+     * Caso real que motivou esta parte: as três tabelas do núcleo apareceram
+     * "ok" e a tabela de pedidos não existia naquele banco. Sem separar as duas
+     * coisas, o relatório diz "tudo certo" numa instalação em que o
+     * `config.php` aponta para outro banco — e o operador segue aplicando
+     * script no lugar errado.
+     */
+    public function testMissingRequiredTableIsConfigMismatchNotMigrationPending(): void {
+        $result = $this->executeVerifier(
+            ['REAMUR_DB_PREFIX' => 'rms_', 'REAMUR_SKIP_DB' => '1'],
+            ['--json', '--tables=rms_jow_gateway,rms_payment_transaction,rms_payment_gateway_event']
+        );
+
+        $report = json_decode($result['out'], true);
+        self::assertIsArray($report);
+        self::assertContains('rms_order', $report['required_missing'], 'a tabela de pedidos precisa aparecer separada');
+        self::assertNotContains('rms_order', $report['tables_missing']);
+        self::assertSame('config_mismatch', $report['verdict']);
+        self::assertSame(1, $result['code'], 'configuração suspeita tem de sair com 1, não com 0');
+    }
+
+    public function testEveryVerdictHasItsOwnExitCode(): void {
+        $source = (string)file_get_contents(__DIR__ . '/../../../tools/payment-schema-drift.php');
+
+        foreach (['ok', 'migration_pending', 'prefix_mismatch', 'config_mismatch'] as $verdict) {
+            self::assertStringContainsString("'{$verdict}'", $source, 'veredicto ausente: ' . $verdict);
+        }
+
+        $esperado = 'in_array($report[' . "'verdict'" . '], [' . "'prefix_mismatch', 'config_mismatch'" . '], true) ? 1 : 0';
+        self::assertStringContainsString($esperado, $source);
+    }
 }
