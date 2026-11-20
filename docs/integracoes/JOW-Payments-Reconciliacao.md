@@ -150,6 +150,11 @@ O relatório nunca carrega payload do provedor, credencial, e-mail ou token. Mot
 
 `GatewayWebhookService::process()` passou a delegar a aplicação a `GatewayEventApplier`: **uma** implementação das regras, usada pelos dois caminhos. Era exatamente onde o bug do `method = 'mp'` nasceu — regra duplicada diverge.
 
+> **Antes de ligar em produção:** rode o roteiro
+> [KZ-64-Validacao-Sandbox.md](KZ-64-Validacao-Sandbox.md) — ele cobre criação de
+> tentativa, webhook assinado, deduplicação, recusa, **webhook perdido recuperado
+> pelo cron** e as guardas da rota (403/400/503).
+
 ## Limites conhecidos
 
 - **Stripe não reconcilia reembolso.** O estado vem da sessão; `charge.refunded` continua sendo a fonte. Um reembolso cujo webhook se perdeu só aparece na próxima notificação. Próxima fase: enriquecer com `GET /v1/payment_intents/{id}` → `latest_charge`.

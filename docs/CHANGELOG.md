@@ -1,5 +1,12 @@
 # Changelog
 
+## KZ-64 (3ª parte) — roteiro de validação em sandbox e `repo-guards` de volta ao verde (2026-11-20)
+
+- **`docs/integracoes/KZ-64-Validacao-Sandbox.md`** (novo): roteiro executável para provar em ambiente de teste o que os testes unitários não provam — criação de tentativa, webhook assinado aplicando no ledger **e** sincronizando `jow_charge` (P0-a), reenvio sem duplicar, recusa, **pagamento com webhook perdido recuperado pelo cron** (P0-b), guardas da rota `cron/reconcile` (403/400/200/503) e a âncora `provider_checkout_id` (Stripe/PayPal com e sem migração). Inclui SQL de conferência, tabela de interpretação de `reason`, critérios de aceite e triagem em quatro passos.
+- **Correção do P0-a agora verificável em uma query:** a consulta "tentativa `paid` com a cobrança ainda em aberto" tem de voltar vazia; é o retrato do bug corrigido no `03a69212`.
+- **`repo-guards` de volta ao verde:** o `CHECKSUMS-PACOTE.txt` (manifesto do pacote de entrega, com 35 caminhos que só existem dentro do ZIP) tinha voltado à raiz na consolidação do commit `3fcaaac8` e o guard `tools/verify-checksums.sh` o lia como manifesto do projeto — 35 divergências. Removido de vez.
+- **Verificação:** `tools/verify-checksums.sh` 3 PASS / 0 FAIL, `tools/verify-ci-workflow.sh` 35 PASS, `tools/verify-deps-layout.sh` sem falha; links relativos do roteiro resolvem (`docs-links --offline`).
+
 ## KZ-64 (2ª parte) — Dicionário de Dados cobre pagamentos (2026-11-20)
 
 - **§9 Pagamentos no `docs/arquitetura/Dicionario-de-Dados.md`** (seção nova, com renumeração de 9→10 … 12→13 abaixo dela): `jow_gateway`, `payment_transaction` (inclusive a coluna aditiva `provider_checkout_id`), `payment_gateway_event`, `jow_charge`, `jow_pix_key`, `mp_payment` e `mp_seller` — colunas, tipos, índices e o dono de cada tabela. Fecha a divergência que a ADR 0118 havia declarado no checklist do PR (`Diverge → ADR obrigatório`).
