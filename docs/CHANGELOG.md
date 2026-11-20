@@ -1,5 +1,14 @@
 # Changelog
 
+## KZ-64 (10ª parte) — ADR 0120 aceita: a plataforma cobra só o que é dela (2026-11-20)
+
+- **Decisão do dono do produto:** "A plataforma não irá fechar com pedidos de vendedores terceiros, somente conteúdo da plataforma e serviços." A ADR 0120 passa de **proposta** a **aceita**, com a opção **A**.
+- **Consequência direta:** o comportamento que a ADR 0119 deixou implantado — cobrar na conta da plataforma, valor integral, sem `marketplace_fee` — **é o comportamento correto**, não um atalho. **Nada a implementar**: sem `seller_ref`, sem conta de vendedor por pedido, sem repasse, sem coluna nova.
+- **Opções B e C ficam registradas como recusadas**, com custo e motivo (B: 6 a 10 arquivos; C: *merchant of record*, com implicação fiscal e chargeback). Se o modelo de negócio mudar, o desenho está escrito — não se começa do zero.
+- **Único código da etapa:** o rótulo de apoio da tela `payments/jow` passa a dizer que a conta configurada **recebe o valor integral** e que o JOW não divide pagamentos nem cobra em nome de terceiros. Nos três idiomas. É o que transforma a decisão em informação visível para quem habilita a conta.
+- **Pendências que saem de cena:** **P1** (split) encerra; o escopo do estorno (**P2/D01**) encolhe — sem split, um estorno mexe em uma conta só. Continuam abertos **P2**, **P3** (crontab) e **P4** (credenciais e bateria A–M).
+- **Documentado em:** `agents-ia/decisoes/0120-...md` (aceita) e `docs/integracoes/JOW-Payments-Testes-Antes-da-Producao.md` §4.1, que deixa de ser decisão pendente.
+
 ## KZ-64 (9ª parte) — ADR 0120, proposta: para onde vai o dinheiro do pedido (2026-11-20)
 
 - **ADR 0120 escrita como proposta, não como decisão.** O ponto que a ADR 0119 deixou implícito: o núcleo novo cobra na **conta da plataforma** e não envia `marketplace_fee`. Isso está **certo** para pedido da plataforma e **errado** para pedido de vendedor — e ninguém tinha decidido qual dos dois o CMS atende.

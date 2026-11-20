@@ -537,4 +537,22 @@ final class JowMultiGatewayWiringTest extends TestCase {
         self::assertStringContainsString("'payments/jow'", $header);
         self::assertStringContainsString("'text_menu_payments'", $header);
     }
+
+    /**
+     * ADR 0120 (opção A): a conta configurada recebe o valor integral.
+     * O texto NÃO pode voltar a falar de token de vendedor no fluxo novo —
+     * quem habilita uma conta precisa saber que o dinheiro não é dividido.
+     */
+    public function testTheGatewayAccountHelpSaysTheAccountReceivesTheFullAmount(): void {
+        foreach (['en-us', 'es-eu', 'pt-br'] as $language) {
+            $file = __DIR__ . '/../../../dev/admin/language/' . $language . '/payments/jow.php';
+            $strings = (string)file_get_contents($file);
+
+            self::assertMatchesRegularExpression(
+                "/help_gateway_account_isolation'\]\s*=\s*'[^']*(valor integral|full amount|importe íntegro)[^']*';/",
+                $strings,
+                $language . ' precisa dizer que a conta recebe o valor integral'
+            );
+        }
+    }
 }

@@ -49,24 +49,27 @@ Roteiro em `MIGRACAO-ORDER.md` e no pacote `roteiro-teste-pedido.md`.
 
 ---
 
-## 4. Três decisões de produto que precisam estar tomadas **antes** de `live`
+## 4. Decisões de produto antes de `live` — uma tomada, duas em aberto
 
-### 4.1 Para onde vai o dinheiro do pedido (split)
+### 4.1 Para onde vai o dinheiro do pedido — **decidido** (ADR 0120)
 
-O núcleo novo usa a **conta da plataforma** e **não** aplica `marketplace_fee`. O fluxo legado usava o
-token do **vendedor** com taxa de 10%.
+**Decisão: o CMS cobra apenas o que é da plataforma.** A plataforma não fecha com pedidos de vendedores
+terceiros — só conteúdo próprio e serviços. Portanto:
 
-| | Legado | Núcleo novo |
+| | Legado (checkout Marketplace) | Núcleo novo (ADR 0119) |
 | --- | --- | --- |
 | Token | vendedor (OAuth) | conta da plataforma |
-| Taxa da plataforma | 10% (configurável) | nenhuma |
-| Quem recebe | vendedor | plataforma, integral |
+| Taxa da plataforma | 10% (`mp_marketplace_fee_percent`) | **nenhuma** |
+| Quem recebe | vendedor | **plataforma, valor integral** |
 
-- Pedido **da plataforma** (consultoria, orçamento próprio): correto como está.
-- Pedido **de vendedor**: o caminho novo ainda **não** serve — falta "conta de vendedor por pedido"
-  (ADR 0120, não escrita).
+O comportamento do núcleo novo é o **correto**, não um atalho: não existe pedido de terceiro a dividir.
+Nada a implementar.
 
-**Decisão pendente — bloqueia `live`, não bloqueia sandbox.**
+- **Consequência para o teste:** nenhum teste de split, de repasse ou de conta de vendedor precisa
+  existir. A bateria A–M continua valendo como está.
+- **Consequência para o estorno (§4.2):** fica **mais simples** do que o estimado — um estorno mexe em
+  uma conta só.
+- **Se o modelo mudar:** a ADR 0120 registra o caminho (B1/B2) e o custo, para não começar do zero.
 
 ### 4.2 Estorno
 
@@ -92,7 +95,7 @@ aparece quando o provedor reenviar.
 3. Teste **E** com o webhook desligado de propósito (`min_age=1`) — prova o P0-b.
 4. Testes **D** e **F** (cartão de recusa, guardas da rota).
 5. Teste **J** por último: é o único que exige o caminho completo de pagamento.
-6. Só depois de 1–5: decidir 4.1 e 4.2, configurar o crontab e reavaliar `live`.
+6. Só depois de 1–5: decidir o **4.2** (estorno), configurar o crontab (4.3) e reavaliar `live`. O **4.1** já está decidido pela ADR 0120 e não bloqueia mais nada.
 
 ---
 
