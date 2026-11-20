@@ -166,7 +166,7 @@ Há um script pronto no pacote (`cron-testes.sh`) que roda as seis primeiras e i
 
 **Com a migração aplicada:**
 - Stripe: crie a cobrança, pague com `4242 4242 4242 4242` (qualquer validade futura) → `provider_checkout_id` passa a ser preenchido (`cs_test_…`) e a reconciliação deixa de pular essas tentativas. Cartão de recusa: `4000 0000 0000 0002`.
-- PayPal: use a conta **pessoal de sandbox** (sem cartão). Ordem **aprovada e não capturada** fica `authorized` — e **continua** `authorized` depois do cron: a reconciliação é read-only por contrato e não captura (ADR 0118). Se ela capturar, é bug.
+- PayPal: use a conta **pessoal de sandbox** (sem cartão). Pelo caminho normal (aviso assinado), a aprovação é **capturada** e a tentativa vira `paid`. O caso que o teste olha é o do aviso perdido: a ordem fica `authorized` e **continua** `authorized` depois do cron — a reconciliação é read-only por contrato e não captura (ADR 0118). Se o cron capturar, é bug; se a captura do webhook não acontecer, o relatório aponta `authorized`.
 
 ---
 

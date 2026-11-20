@@ -316,7 +316,7 @@ Uma linha por aviso recebido. Existe para que reenvio do provedor não aplique o
 
 | Onde | Valores | Definido em |
 | --- | --- | --- |
-| `payment_transaction.status` | `pending`, `requires_action`, `authorized`, `paid`, `failed`, `cancelled`, `expired`, `refunded`, `partially_refunded`, `disputed` | `GatewayPaymentStatus` (transição monotônica por `canTransition()`: `paid` não volta para `failed`; `failed`/`cancelled`/`expired`/`refunded` são finais) |
+| `payment_transaction.status` | `pending`, `requires_action`, `authorized` *(aprovado no provedor e **não capturado** — no PayPal é o que sobra quando o aviso de aprovação se perde, porque a reconciliação não captura)*, `paid`, `failed`, `cancelled`, `expired`, `refunded`, `partially_refunded`, `disputed` | `GatewayPaymentStatus` (transição monotônica por `canTransition()`: `paid` não volta para `failed`; `failed`/`cancelled`/`expired`/`refunded` são finais) |
 | `jow_charge.status` | `pending`, `paid`, `partial`, `canceled`, `expired`, `refunded`, `disputed` | mapa de `GatewayPayment::syncJowChargeStatus()` |
 | `mp_payment.status` | status do MP: `pending`, `approved`, `rejected`, `cancelled`, `refunded` | resposta do Mercado Pago |
 

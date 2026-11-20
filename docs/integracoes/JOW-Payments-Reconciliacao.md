@@ -55,7 +55,14 @@ Quem não implementa a interface simplesmente não é reconciliável — o relat
 | --- | --- | --- | --- |
 | `mp` | `provider_reference` (id da ordem) ou `provider_checkout_id` | `GET /v1/orders/{id}` | Funciona com o dado já existente, **sem migração**. Reaproveita `reconcileOrderById()` do webhook |
 | `stripe` | `provider_checkout_id` (id da sessão) | `GET /v1/checkout/sessions/{id}` | Sem âncora → `missing_provider_anchor`. Reembolso continua dependendo de `charge.refunded` |
-| `paypal` | `provider_checkout_id` (id da ordem) | `GET /v2/checkout/orders/{id}` | Sem captura. Estados de captura (`REFUNDED`, `PARTIALLY_REFUNDED`) vêm na própria ordem |
+| `paypal` | `provider_checkout_id` (id da ordem) | `GET /v2/checkout/orders/{id}` | **Sem captura na reconciliação** (a captura existe, no caminho do webhook — ver nota abaixo). Estados de captura (`REFUNDED`, `PARTIALLY_REFUNDED`) vêm na própria ordem |
+
+> **Onde a captura do PayPal acontece.** No caminho do **webhook assinado**, uma ordem
+> `CHECKOUT.ORDER.APPROVED` é completada com uma captura **idempotente** (`PayPal-Request-Id`
+> derivado do nosso `custom_id`) e só então o estado é lido da ordem — por isso o resultado
+> normal é `paid`. A reconciliação **não** captura: se o aviso de aprovação se perdeu, a ordem
+> segue `authorized` e é isso que o relatório mostra. É a diferença entre reagir a um ato do
+> comprador (o aviso assinado) e decidir sozinho, num cron, mover dinheiro.
 
 ## Migração (opcional, mas recomendada)
 
