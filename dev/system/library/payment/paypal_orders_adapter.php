@@ -249,7 +249,79 @@ final class PaypalOrdersAdapter implements GatewayAdapter, ReconcilableGatewayAd
             return GatewayWebhookResult::retry('provider_unavailable');
         }
 
-        return $this->reconcileOrder($order, $orderId);
+        // ADR 0125: a resposta da ordem pode vir SEM o bloco `payments` — a
+        // captura e um recurso separado, e ha caso em que a ordem completa nao
+        // o traz. Ainda assim a ordem pode estar REFUNDED, e nesse caso o id da
+        // captura esta na link `up` da propria ordem. Sem isto, a tentativa paga
+        // voltaria `pago` para sempre e o estorno so viria pelo aviso.
+        $orderResult = $this->reconcileOrder($order, $orderId);
+
+        if ($orderResult->kind === GatewayWebhookResult::VERIFIED
+            && $orderResult->status === GatewayPaymentStatus::PAID
+            && self::firstCapture($order) === []) {
+            $captureId = self::linkedCaptureId($order);
+
+            if ($captureId !== '') {
+                try {
+                    $capture = $this->client()->getCapture($baseUrl, $accessToken, $captureId);
+                } catch (\RuntimeException) {
+                    return GatewayWebhookResult::retry('provider_unavailable');
+                }
+
+                $captureHttp = (int)($capture['_http_status'] ?? 0);
+
+                if ($captureHttp < 200 || $captureHttp >= 300) {
+                    return GatewayWebhookResult::retry('provider_unavailable');
+                }
+
+                return $this->reconcileCapture($capture, $captureId, $orderResult);
+            }
+        }
+
+        return $orderResult;
+    }
+
+    /**
+     * Veredicto a partir de uma captura lida na API (ADR 0125).
+     *
+     * A captura manda no estado de estorno; a ordem ja respondeu o resto. So o
+     * estorno e aceito daqui — `COMPLETED` da captura nao reescreve a ordem.
+     */
+    private function reconcileCapture(array $capture, string $expectedId, GatewayWebhookResult $orderResult): GatewayWebhookResult {
+        $confirmedId = self::scalarString($capture['id'] ?? null);
+
+        if (preg_match('/^[A-Za-z0-9_-]{1,64}$/D', $expectedId) !== 1 || !hash_equals($expectedId, $confirmedId)) {
+            return GatewayWebhookResult::ignored('capture_not_reconciled');
+        }
+
+        $status = self::normalizeCaptureStatus(self::scalarString($capture['status'] ?? null));
+
+        if ($status === null) {
+            return GatewayWebhookResult::ignored('unknown_capture_status');
+        }
+
+        if (!in_array($status, [GatewayPaymentStatus::REFUNDED, GatewayPaymentStatus::PARTIALLY_REFUNDED], true)) {
+            // Sem estorno, a ordem continua sendo o veredicto — e a tentativa nao
+            // aparece como "ignorada" a cada ciclo so porque ninguem estornou.
+            return $orderResult;
+        }
+
+        $amount = $orderResult->chargeAmount;
+        $eventDigest = hash('sha256', json_encode([
+            'capture_id' => $confirmedId,
+            'status' => $status,
+            'order_event' => $orderResult->providerEventId,
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES));
+        $eventId = 'pp-capture-' . substr(hash('sha256', $confirmedId . "\0" . $eventDigest), 0, 52);
+
+        return GatewayWebhookResult::verified(
+            $eventId,
+            $orderResult->providerReference,
+            $confirmedId,
+            $status,
+            $eventDigest,
+            $amount
+        );
     }
 
     private function verifyOrderEvent(array $event, string $baseUrl, string $accessToken, string $eventType): GatewayWebhookResult {
@@ -447,6 +519,36 @@ final class PaypalOrdersAdapter implements GatewayAdapter, ReconcilableGatewayAd
         }
 
         return self::scalarString($units[0]['custom_id'] ?? null);
+    }
+
+    /**
+     * Id da captura a partir da link `up` da ordem (ADR 0125).
+     *
+     * Usado quando a resposta consultada nao traz o bloco `payments`: a ordem
+     * completa aponta para a captura por link em vez de embutir o objeto.
+     *
+     * @param array<string, mixed> $order
+     */
+    private static function linkedCaptureId(array $order): string {
+        $links = $order['links'] ?? [];
+
+        if (!is_array($links)) {
+            return '';
+        }
+
+        foreach ($links as $link) {
+            if (!is_array($link) || strtolower(self::scalarString($link['rel'] ?? null)) !== 'up') {
+                continue;
+            }
+
+            $href = self::scalarString($link['href'] ?? null);
+
+            if (preg_match('#/v2/payments/captures/([A-Za-z0-9_-]{1,64})/?$#D', $href, $m) === 1) {
+                return $m[1];
+            }
+        }
+
+        return '';
     }
 
     /** @param array<string, mixed> $order */

@@ -75,6 +75,25 @@ class PaypalOrdersClient {
         );
     }
 
+    /**
+     * Leitura da captura (ADR 0125). GET puro: nao captura, nao estorna.
+     *
+     * @return array<string, mixed>
+     */
+    public function getCapture(string $baseUrl, string $accessToken, string $captureId): array {
+        if (!self::validBaseUrl($baseUrl) || trim($accessToken) === ''
+            || preg_match('/^[A-Za-z0-9_-]{1,64}$/D', $captureId) !== 1) {
+            return ['_http_status' => 0, '_curl_error' => 'invalid capture ID or credentials'];
+        }
+
+        return $this->send(
+            $baseUrl . '/v2/payments/captures/' . rawurlencode($captureId),
+            '',
+            ['accept: application/json', 'authorization: Bearer ' . trim($accessToken)],
+            'GET'
+        );
+    }
+
     /** @return array<string, mixed> */
     public function captureOrder(string $baseUrl, string $accessToken, string $orderId, string $requestId): array {
         if (!self::validBaseUrl($baseUrl) || trim($accessToken) === ''

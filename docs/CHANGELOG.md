@@ -1,5 +1,15 @@
 # Changelog
 
+## KZ-64 (20ª parte) — o PayPal também é lido pela captura (2026-11-20)
+
+- **Fui revisar os três provedores para dizer "leitura de estorno está completa" e o PayPal não estava.** `reconcileOrder()` só descobria estorno pelo bloco `purchase_units[0].payments.captures[]` **embutido na resposta da ordem**. Quando a resposta vem **sem** esse bloco, a ordem `COMPLETED` normaliza para `paid`, a varredura de pagas conclui "está tudo pago" e a tentativa fica assim **para sempre** — o estorno voltando a depender do aviso `PAYMENT.CAPTURE.REFUNDED`, que é exatamente o que se perde.
+- **A captura é recurso separado.** `/v2/payments/captures/{id}` é consultável por id próprio, e a ordem aponta para ela por **link** (`rel: up`) em vez de embutir o objeto. `getCapture()` (novo, GET puro) entra no cliente; `linkedCaptureId()` lê a link; `reconcile()` usa os dois quando a ordem está paga e sem captura embutida.
+- **Só o estorno é aceito vindo da captura.** `REFUNDED` e `PARTIALLY_REFUNDED` viram veredicto; `COMPLETED` **não** reescreve o que a ordem já disse — a captura existe para descobrir o que a ordem não contou, não para dar segunda opinião sobre "pago". Sem isso, toda tentativa paga apareceria como `ignorado` a cada ciclo (o mesmo erro que a ADR 0124 evitou no Stripe).
+- **Nenhum caminho novo de dinheiro.** `getCapture()` é GET; a rota POST de captura continua sendo chamada **apenas** no fluxo de webhook de ordem aprovada. Capturar a partir de cron continua fora de escopo por decisão (ADR 0118).
+- **O Mercado Pago não precisou de nada, e isso está dito na ADR:** a Order API dele carrega o estado de pagamento na própria ordem — não existe segunda chamada a fazer. Conferi o código antes de afirmar.
+- **Um teste que passava por entregar tudo pronto:** o que já existia montava a ordem **com** o bloco de captura embutido. Um dublê que sempre entrega o caso feliz não distingue "o código sabe ler a captura" de "o dublê entregou tudo mastigado". Os 7 testes novos entregam a ordem **sem** o bloco — o formato que o provedor devolve e que o código não sabia tratar.
+- **Prova:** identidade da captura conferida (`capture_not_reconciled`), ordem sem link não gasta chamada, ordem não paga não gasta chamada, captura `COMPLETED` mantém o veredicto da ordem, e provedor fora do ar pede `retry`. Suíte **1964 testes / 46.429 asserções**, verde; PHPStan sem erros.
+
 ## KZ-64 (19ª parte) — o Stripe deixa de ser cego para estorno (2026-11-20)
 
 - **O buraco estava dito na ADR 0123 e agora está fechado.** `StripeCheckoutAdapter::reconcile()` lia a **sessão** de Checkout, e a sessão **não muda quando há estorno**: `payment_status` fica `paid` para sempre. Varrer a tentativa paga do Stripe, como a varredura de pagas passou a fazer, era perguntar a cada ciclo a um objeto que só sabe responder "pago" — o estorno continuava dependendo do aviso assinado, que é justamente o que se perde.

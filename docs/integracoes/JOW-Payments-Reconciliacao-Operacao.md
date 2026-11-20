@@ -116,9 +116,11 @@ ao CMS se o provedor reenviasse o aviso. As duas passam pelo mesmo caminho de ap
 qual lista de tentativas é oferecida ao ciclo.
 
 - Estorno é **lido**, nunca executado. Nenhum código desta rota estorna dinheiro.
-- O **Stripe é alcançado desde a ADR 0124**, mas por dois passos: a sessão diz se está **paga**;
-  estando paga, a reconciliação lê a **cobrança** (`payment_intent` já gravado) para ver `amount_refunded`.
-  Sessão aberta não gasta a segunda chamada.
+- **Stripe (ADR 0124), em dois passos:** a sessão diz se está **paga**; estando paga, a reconciliação lê a
+  **cobrança** (`payment_intent` já gravado) para ver `amount_refunded`. Sessão aberta não gasta a segunda chamada.
+- **PayPal (ADR 0125), idem:** a ordem diz se está **paga**; se a resposta vier **sem** o bloco de capturas
+  embutido, a reconciliação segue a link `up` e lê a **captura** para ver o estado de estorno.
+- **Mercado Pago:** nada extra — a Order API carrega o estado de pagamento na própria ordem.
 - `limit` é **compartilhado** pelas duas varreduras. Se houver muitas tentativas abertas, a varredura de pagas
   pode não chegar a rodar no ciclo — é o primeiro lugar a olhar se um estorno passar despercebido.
 - Quem quiser desligar a varredura de pagas sem perder a proteção contra aviso perdido usa `settled_lookback=1`.

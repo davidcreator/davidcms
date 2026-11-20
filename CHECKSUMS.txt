@@ -11,7 +11,7 @@ fd44e234  18375f1335684016ac6d40ad16b7210f108c24d8b2ffc2f34cf8b2c7f2b1eda0  1014
 a8a6df61  aa797e5b110388eba56abc84415eb9306ee6a09181c0d7c5dc57a162a3ee45c4  11181  agents-ia/decisoes/0121-pagamentos-estorno-escopo-do-primeiro-passo.md
 ef85842c  1c5c16a8f47cc4e7217e97ab88ece63839ccaf91b8d3ed661928fda1cb2de88f  10585  agents-ia/decisoes/0122-pagamentos-divida-d2-caminho-legado.md
 5ac129b8  6e38d2ca327c6a4a09080b9f0bb04e8be494c319e6a2557010ad52eec7f83d71  8550  agents-ia/decisoes/0123-pagamentos-r1-varredura-de-pagas.md
-a8153fe2  b73571271b67114c7a47c0d2045686a8f793e02b11ef3e7f8b2c16647a5a79b0  31109  agents-ia/decisoes/README.md
+b7c3c688  9959884b2d2069c5b642c2efa6f39e6ea70fc6d837b69639e3920ef4a0a7ac60  32213  agents-ia/decisoes/README.md
 12feea24  b6d93cb1839df0c424777ac809ffeb7b87fc94852ebaea6549f3456bbaa78610  7050  agents-ia/regras/00-contexto-global.md
 03422cd4  77c4f51df2a46c30bf45f39b703e55ce474c2d706048be2f3f8c31bbb992fd60  7429  agents-ia/regras/02-padroes-de-codigo.md
 a1baaf1a  1d45ba3648a1beb30c8bac1897ee5663e3a1c13f301e5efae0d1d19beae22417  28679  dev/admin/controller/payments/jow.php
@@ -37,7 +37,7 @@ f261d162  592038465c7c0c904ee439f60ec254ee204573cedc7b4a14fe9a9302dd6ed2d9  2498
 08942fda  5b20d74f3a5e2e32ab1e0294ac4af5fd76c638a0017fc5cc9d73735238f0bd53  4795  dev/system/library/payment/legacy_webhook_forwarder.php
 7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
 fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
-8c32ac28  35de91aec2b9aaa4c943da19ab86cdf6818b3b108dbe7896c4f066993c374b75  206646  docs/CHANGELOG.md
+8e8f3481  561e66bbedd18e9ddd44192a8c806d408d991154abebf19a24105b2d460357a2  209075  docs/CHANGELOG.md
 675b1723  ddf884f56fcb08b9a5a84b3e3f19e64d0850585005cf34a3eb00969297628f14  16729  docs/Estrutura-de-Pastas.md
 61660a6e  d7515650f0c01bc118c3bd75c5df94bf2d6049bcdc7775ed267367360f210351  10948  docs/README.md
 2cd4aea9  48c6bf0ae2c1ccf1d471ea99bd205d3af3b3c3fe769a67dcc7c005cf6420714e  29473  docs/arquitetura/Dicionario-de-Dados.md
@@ -48,7 +48,7 @@ fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532 
 329e8df0  083f970e3b68e426bb3485aa85ad8085c18e7fc98db1ca272e4dcbf668a491e3  12023  docs/historico/KZ-64-Relatorio.md
 97071476  6383c819cf31cad18eb11fa80718446da5a40877cb0579761331cd8de4353389  4848  docs/integracoes/JOW-Payments-Mercado-Pago.md
 46cb5caa  0277f55d2f88d36b923442334d4379f6e777c12572d2244b794f71ab1f7ce2de  11286  docs/integracoes/JOW-Payments-MultiGateway-Core.md
-884ce8a0  895be44f3c692009f8b7fecd96c113b9c80bbf3503d0d5e34e0c4ddd41a97774  7443  docs/integracoes/JOW-Payments-Reconciliacao-Operacao.md
+7a67b994  165faa43263fd19578346c3f92fdf961d1750787b511cd4bf460321f8d50acc8  7717  docs/integracoes/JOW-Payments-Reconciliacao-Operacao.md
 5b6c625d  6f9a6ffb87a1eec7db2a23c029f15a8475deacffd216abb550ec3959f7559df9  10309  docs/integracoes/JOW-Payments-Reconciliacao.md
 8578256b  3558982f9cd52c2d7165ac0dd9e004964106b5f72c1bcc7263266f9a2d6e60ae  6516  docs/integracoes/JOW-Payments-Testes-Antes-da-Producao.md
 f35d6814  483d47bc11f6f801a820eda71e36dbdff951ca7ce5e6e47b13b5942f02575852  6026  docs/threejs/THREEJS_CMS_E2E.md

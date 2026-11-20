@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Reamur\System\Library\Payment\GatewayAccount;
 use Reamur\System\Library\Payment\GatewayCredentials;
 use Reamur\System\Library\Payment\GatewayCustomerAction;
+use Reamur\System\Library\Payment\GatewayPaymentRecord;
 use Reamur\System\Library\Payment\GatewayPaymentRequest;
 use Reamur\System\Library\Payment\GatewayPaymentStatus;
 use Reamur\System\Library\Payment\GatewayWebhookResult;
@@ -54,12 +55,20 @@ final class PaypalOrdersAdapterTest extends TestCase {
     }
 
     /** Fake client: all provider traffic is intercepted and stays local. */
-    private function client(array $token = [], array $created = [], array $orders = [], array $captures = [], array $verifications = []): PaypalOrdersClient {
-        return new class($token, $created, $orders, $captures, $verifications) extends PaypalOrdersClient {
+    private function client(
+        array $token = [],
+        array $created = [],
+        array $orders = [],
+        array $captures = [],
+        array $verifications = [],
+        array $captureReads = []
+    ): PaypalOrdersClient {
+        return new class($token, $created, $orders, $captures, $verifications, $captureReads) extends PaypalOrdersClient {
             public array $tokenCalls = [];
             public array $createCalls = [];
             public array $getOrderCalls = [];
             public array $captureCalls = [];
+            public array $getCaptureCalls = [];
             public array $verifyCalls = [];
 
             public function __construct(
@@ -67,7 +76,8 @@ final class PaypalOrdersAdapterTest extends TestCase {
                 private array $createdOrders,
                 private array $orders,
                 private array $captures,
-                private array $verifications
+                private array $verifications,
+                private array $captureReads
             ) {
                 parent::__construct(null, []);
             }
@@ -85,6 +95,12 @@ final class PaypalOrdersAdapterTest extends TestCase {
             public function getOrder(string $baseUrl, string $accessToken, string $orderId): array {
                 $this->getOrderCalls[] = [$baseUrl, $accessToken, $orderId];
                 return $this->orders[$orderId] ?? ['_http_status' => 404];
+            }
+
+            public function getCapture(string $baseUrl, string $accessToken, string $captureId): array {
+                $this->getCaptureCalls[] = [$baseUrl, $accessToken, $captureId];
+
+                return $this->captureReads[$captureId] ?? ['_http_status' => 404];
             }
 
             public function captureOrder(string $baseUrl, string $accessToken, string $orderId, string $requestId): array {
@@ -284,6 +300,177 @@ final class PaypalOrdersAdapterTest extends TestCase {
         self::assertSame(GatewayWebhookResult::VERIFIED, $event->kind);
         self::assertSame(GatewayPaymentStatus::PARTIALLY_REFUNDED, $event->status);
         self::assertSame(self::CAPTURE_ID, $event->providerPaymentId);
+    }
+
+    /** Ordem paga cuja resposta não traz o bloco `payments`, mas aponta a captura. */
+    private function paidOrderWithoutPayments(string $orderId, string $captureId = self::CAPTURE_ID): array {
+        return [
+            '_http_status' => 200,
+            'id' => $orderId,
+            'status' => 'COMPLETED',
+            'purchase_units' => [[
+                'custom_id' => self::IDEMPOTENCY,
+                'invoice_id' => self::IDEMPOTENCY,
+                'amount' => ['currency_code' => 'USD', 'value' => '125.50'],
+            ]],
+            'links' => [
+                ['rel' => 'self', 'href' => 'https://api-m.sandbox.paypal.com/v2/checkout/orders/' . $orderId],
+                ['rel' => 'up', 'href' => 'https://api-m.sandbox.paypal.com/v2/payments/captures/' . $captureId],
+            ],
+        ];
+    }
+
+    private function capture(string $id = self::CAPTURE_ID, string $status = 'REFUNDED'): array {
+        return [
+            '_http_status' => 200,
+            'id' => $id,
+            'status' => $status,
+            'amount' => ['currency_code' => 'USD', 'value' => '125.50'],
+            'supplementary_data' => ['related_ids' => ['order_id' => self::ORDER_ID]],
+        ];
+    }
+
+    private function record(string $status = GatewayPaymentStatus::PAID, string $anchor = self::ORDER_ID, string $paymentId = self::CAPTURE_ID): GatewayPaymentRecord {
+        return new GatewayPaymentRecord(
+            41,
+            9,
+            'jow_charge',
+            42,
+            'paypal',
+            'checkout_orders',
+            new Money('125.50', 'USD', 2),
+            new Money('125.50', 'USD', 2),
+            str_repeat('e', 48),
+            self::IDEMPOTENCY,
+            $status,
+            self::IDEMPOTENCY,
+            $paymentId,
+            GatewayCustomerAction::redirect('https://www.sandbox.paypal.com/checkoutnow?token=' . self::ORDER_ID),
+            null,
+            $anchor
+        );
+    }
+
+    /**
+     * ADR 0125: a resposta da ordem pode não trazer o bloco `payments`. Sem ler a
+     * captura pela link `up`, a tentativa paga voltaria "pago" para sempre e o
+     * estorno dependeria do aviso — justamente o que se perde.
+     */
+    public function testARefundIsFoundThroughTheLinkedCapture(): void {
+        $client = $this->client(
+            ['_http_status' => 200, 'access_token' => 'A21AA_access_token'],
+            [],
+            [self::ORDER_ID => $this->paidOrderWithoutPayments(self::ORDER_ID)],
+            [],
+            [],
+            [self::CAPTURE_ID => $this->capture()]
+        );
+
+        $event = (new PaypalOrdersAdapter($client))->reconcile(
+            $this->record(),
+            $this->account(),
+            $this->credentials()
+        );
+
+        self::assertSame(GatewayWebhookResult::VERIFIED, $event->kind);
+        self::assertSame(GatewayPaymentStatus::REFUNDED, $event->status);
+        self::assertSame(self::IDEMPOTENCY, $event->providerReference);
+        self::assertSame(self::CAPTURE_ID, $event->providerPaymentId);
+        self::assertSame([[PaypalOrdersClient::baseUrlFor('sandbox', []), 'A21AA_access_token', self::CAPTURE_ID]], $client->getCaptureCalls);
+    }
+
+    public function testAPartialRefundOnTheCaptureIsSeenAsPartial(): void {
+        $client = $this->client(
+            ['_http_status' => 200, 'access_token' => 'A21AA_access_token'],
+            [],
+            [self::ORDER_ID => $this->paidOrderWithoutPayments(self::ORDER_ID)],
+            [],
+            [],
+            [self::CAPTURE_ID => $this->capture(self::CAPTURE_ID, 'PARTIALLY_REFUNDED')]
+        );
+
+        $event = (new PaypalOrdersAdapter($client))->reconcile($this->record(), $this->account(), $this->credentials());
+
+        self::assertSame(GatewayPaymentStatus::PARTIALLY_REFUNDED, $event->status);
+    }
+
+    /** Captura sem estorno: o veredicto continua sendo o da ordem. */
+    public function testACaptureWithoutRefundKeepsTheOrderVerdict(): void {
+        $client = $this->client(
+            ['_http_status' => 200, 'access_token' => 'A21AA_access_token'],
+            [],
+            [self::ORDER_ID => $this->paidOrderWithoutPayments(self::ORDER_ID)],
+            [],
+            [],
+            [self::CAPTURE_ID => $this->capture(self::CAPTURE_ID, 'COMPLETED')]
+        );
+
+        $event = (new PaypalOrdersAdapter($client))->reconcile($this->record(), $this->account(), $this->credentials());
+
+        self::assertSame(GatewayWebhookResult::VERIFIED, $event->kind);
+        self::assertSame(GatewayPaymentStatus::PAID, $event->status);
+    }
+
+    /** Ordem paga sem captura na resposta e sem link: vale o que a ordem disse. */
+    public function testAPaidOrderWithoutAnyCaptureAnchorStaysPaid(): void {
+        $order = $this->paidOrderWithoutPayments(self::ORDER_ID);
+        unset($order['links']);
+        $client = $this->client(
+            ['_http_status' => 200, 'access_token' => 'A21AA_access_token'],
+            [],
+            [self::ORDER_ID => $order]
+        );
+
+        $event = (new PaypalOrdersAdapter($client))->reconcile($this->record(), $this->account(), $this->credentials());
+
+        self::assertSame(GatewayPaymentStatus::PAID, $event->status);
+        self::assertSame([], $client->getCaptureCalls, 'sem âncora não se inventa id de captura');
+    }
+
+    /** Ordem ainda não paga não gasta chamada de captura. */
+    public function testAnUnpaidOrderDoesNotQueryTheCapture(): void {
+        $client = $this->client(
+            ['_http_status' => 200, 'access_token' => 'A21AA_access_token'],
+            [],
+            [self::ORDER_ID => $this->createdOrder(['id' => self::ORDER_ID])]
+        );
+
+        (new PaypalOrdersAdapter($client))->reconcile($this->record(GatewayPaymentStatus::PENDING), $this->account(), $this->credentials());
+
+        self::assertSame([], $client->getCaptureCalls);
+    }
+
+    /** Captura de outra cobrança não vira veredicto sobre esta. */
+    public function testACaptureForAnotherPaymentIsRefused(): void {
+        $client = $this->client(
+            ['_http_status' => 200, 'access_token' => 'A21AA_access_token'],
+            [],
+            [self::ORDER_ID => $this->paidOrderWithoutPayments(self::ORDER_ID)],
+            [],
+            [],
+            [self::CAPTURE_ID => $this->capture('8XA9999OUTRA00000L')]
+        );
+
+        $event = (new PaypalOrdersAdapter($client))->reconcile($this->record(), $this->account(), $this->credentials());
+
+        self::assertSame(GatewayWebhookResult::IGNORED, $event->kind);
+        self::assertSame('capture_not_reconciled', $event->reasonCode);
+    }
+
+    /** Provedor fora do ar na leitura da captura pede retry. */
+    public function testACaptureOutageAsksForRetry(): void {
+        $client = $this->client(
+            ['_http_status' => 200, 'access_token' => 'A21AA_access_token'],
+            [],
+            [self::ORDER_ID => $this->paidOrderWithoutPayments(self::ORDER_ID)],
+            [],
+            [],
+            [self::CAPTURE_ID => ['_http_status' => 503]]
+        );
+
+        $event = (new PaypalOrdersAdapter($client))->reconcile($this->record(), $this->account(), $this->credentials());
+
+        self::assertSame(GatewayWebhookResult::RETRY, $event->kind);
     }
 
     public function testRejectedSignatureIsIgnoredWithoutCapturing(): void {
