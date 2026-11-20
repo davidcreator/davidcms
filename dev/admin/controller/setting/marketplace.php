@@ -478,11 +478,25 @@ class Marketplace extends \Reamur\System\Engine\Controller {
             $this->response->redirect($this->url->link('error/permission'));
             return;
         }
+
         if (!$this->csrfValid()) {
             $this->session->data['flash'] = ['type' => 'danger', 'text' => $this->language->get('error_csrf')];
             $this->response->redirect($this->url->link('setting/marketplace'));
             return;
         }
+
+        // ADR 0122 (F1): a plataforma nao cobra em nome de terceiro (ADR 0120),
+        // entao gerar link de vendedor com marketplace_fee deixou de ser uma
+        // operacao valida. Esta guarda vem DEPOIS de permissao e CSRF: um POST
+        // forjado nao deve nem aprender que a acao existe. O codigo abaixo
+        // continua no lugar de proposito — reabrir e uma linha, nao uma reescrita.
+        $this->session->data['flash'] = [
+            'type' => 'warning',
+            'text' => $this->language->get('error_seller_paylink_retired'),
+        ];
+        $this->response->redirect($this->url->link('setting/marketplace'));
+
+        return;
 
         $this->load->model('sale/order');
         $this->load->model('setting/setting');

@@ -26,6 +26,10 @@ use Reamur\System\Library\Payment\DbLedger;
 use Reamur\System\Library\Payment\GatewayCredentialVault;
 use Reamur\System\Library\Payment\GatewayEventApplier;
 use Reamur\System\Library\Payment\InstalledGatewayAdapters;
+use Reamur\System\Library\Payment\LegacyWebhookForwarder;
+use Reamur\System\Library\Payment\GatewayAccount;
+use Reamur\System\Library\Payment\GatewayWebhookResult;
+use Reamur\System\Library\Payment\GatewayWebhookService;
 use Reamur\System\Library\Payment\Mercadopago;
 use Reamur\System\Library\Payment\Method;
 use Reamur\System\Library\Payment\Notification;
@@ -68,6 +72,19 @@ class Payment extends \Reamur\System\Engine\Controller {
                 file_get_contents('php://input') ?: ''
             );
 
+            // ADR 0122 (F2): este endereco continua sendo o que o Mercado Pago
+            // tem configurado. Quando existe conta de gateway do provedor, o
+            // aviso entra pelo nucleo novo (mesma verificacao de assinatura,
+            // mesmo GatewayEventApplier); sem conta, cai no caminho legado
+            // abaixo, que continua cobrindo o checkout de vendedor.
+            $forwarded = $this->forwardToGatewayCore($notification);
+
+            if ($forwarded !== null) {
+                $this->respondForwarded($forwarded['result']);
+
+                return;
+            }
+
             $reply = $this->checkout()->notify(
                 $this->method(),
                 $notification,
@@ -109,6 +126,80 @@ class Payment extends \Reamur\System\Engine\Controller {
         }
 
         $this->response->setOutput($reply->body);
+    }
+
+    /**
+     * ADR 0122 (F2): entrega o aviso ao nucleo novo quando ha conta de gateway.
+     * Devolve null quando nao ha nada que o nucleo possa fazer com ele — nesse
+     * caso o caminho legado responde, para nao mudar o contrato HTTP.
+     */
+    /** @return array{account: GatewayAccount, result: GatewayWebhookResult}|null */
+    private function forwardToGatewayCore(Notification $notification): ?array {
+        try {
+            if (!$this->gatewaySchemaReady()) {
+                return null;
+            }
+
+            $registry = InstalledGatewayAdapters::registry();
+            $accounts = new DbGatewayAccountStore(
+                $this->db,
+                DB_PREFIX,
+                $registry,
+                new GatewayCredentialVault($this->secrets())
+            );
+            $ledger = new DbGatewayLedger($this->db, DB_PREFIX);
+            $forwarder = new LegacyWebhookForwarder(
+                $accounts,
+                $ledger,
+                new GatewayWebhookService($registry, $ledger)
+            );
+
+            $forwarded = $forwarder->forward($notification);
+
+            if ($forwarded === null) {
+                return null;
+            }
+
+            // Cobranca interna do JOW sincronizada pelo codigo do provedor
+            // verificado, como no webhook novo.
+            $account = $forwarded['account'] ?? null;
+            $result = $forwarded['result'] ?? null;
+
+            if (!$account instanceof GatewayAccount || !$result instanceof GatewayWebhookResult) {
+                return null;
+            }
+
+            if ($result->kind === GatewayWebhookResult::VERIFIED) {
+                $record = $ledger->byProviderReference($account->gatewayId, $result->providerReference);
+
+                if ($record !== null && $record->sourceType === 'jow_charge') {
+                    $this->load->model('checkout/gateway_payment');
+                    $this->model_checkout_gateway_payment->syncJowChargeStatus(
+                        $record->sourceId,
+                        $record->status,
+                        $record->providerCode
+                    );
+                }
+            }
+
+            return $forwarded;
+        } catch (\Throwable $e) {
+            $this->log->write('mp notify (nucleo novo) falhou e foi isolado: ' . $e->getMessage());
+
+            return null;
+        }
+    }
+
+    private function respondForwarded(GatewayWebhookResult $result): void {
+        if ($result->kind === GatewayWebhookResult::RETRY) {
+            $this->response->addHeader('HTTP/1.1 503 Service Unavailable');
+            $this->response->addHeader('Retry-After: 60');
+            $this->response->setOutput('retry');
+
+            return;
+        }
+
+        $this->response->setOutput('ok');
     }
 
     /**

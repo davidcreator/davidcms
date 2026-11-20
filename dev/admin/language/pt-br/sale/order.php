@@ -71,6 +71,7 @@ $_['button_add']          = 'Adicionar';
 $_['button_edit']         = 'Editar';
 $_['button_delete']       = 'Excluir';
 $_['button_mp_paylink'] = '💳 Link de pagamento MP'; // F5-03 (ADR 0035)
+$_['text_mp_paylink_disabled'] = 'O link de pagamento de vendedor foi aposentado. O JOW cobra na conta da plataforma; veja JOW Payments.';
 $_['button_save']         = 'Salvar';
 $_['button_cancel']       = 'Cancelar';
 $_['button_add_product']  = 'Adicionar Item';

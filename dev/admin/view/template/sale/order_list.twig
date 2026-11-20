@@ -55,6 +55,7 @@
         <h2 class="h6 mb-0">{{ text_list }}</h2>
         {% if showing %}<span class="small text-body-secondary">{{ showing }}</span>{% endif %}
       </div>
+      {% if not can_mp_paylink and text_mp_paylink_disabled %}<div class="alert alert-secondary small mx-3 mt-3 mb-0" role="status">{{ text_mp_paylink_disabled }}</div>{% endif %}
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
           <thead><tr>

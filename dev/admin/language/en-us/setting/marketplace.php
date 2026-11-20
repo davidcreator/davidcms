@@ -54,6 +54,7 @@ $_['column_pay_link']      = 'Link';
 $_['button_copy']          = 'Copy';
 $_['error_already_paid']   = 'Order #%s already has an approved payment — link not regenerated.';
 $_['error_no_seller']      = 'No active connected seller. Connect a seller first.';
+$_['error_seller_paylink_retired'] = 'JOW charges on the platform account and never on behalf of third parties (ADR 0120). The seller payment link has been retired: use JOW Payments to charge platform orders.';
 $_['error_no_total']       = 'Order #%s has zero total. Set the price in Sales → Orders → Edit first.';
 $_['error_preference']     = 'Could not create the payment preference: %s';
 

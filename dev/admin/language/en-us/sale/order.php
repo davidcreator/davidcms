@@ -71,6 +71,7 @@ $_['button_add']          = 'Add New';
 $_['button_edit']         = 'Edit';
 $_['button_delete']       = 'Delete';
 $_['button_mp_paylink'] = '💳 MP payment link'; // F5-03 (ADR 0035)
+$_['text_mp_paylink_disabled'] = 'The seller payment link has been retired. JOW charges on the platform account; see JOW Payments.';
 $_['button_save']         = 'Save';
 $_['button_cancel']       = 'Cancel';
 $_['button_add_product']  = 'Add Item';

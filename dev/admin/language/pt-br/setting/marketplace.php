@@ -54,6 +54,7 @@ $_['column_pay_link']      = 'Link';
 $_['button_copy']          = 'Copiar';
 $_['error_already_paid']   = 'O pedido nº %s já tem pagamento aprovado — link não regenerado.';
 $_['error_no_seller']      = 'Nenhum vendedor conectado ativo. Conecte um vendedor primeiro.';
+$_['error_seller_paylink_retired'] = 'O JOW cobra na conta da plataforma e não em nome de terceiros (ADR 0120). O link de pagamento de vendedor foi aposentado: use JOW Payments para cobrar pedidos da plataforma.';
 $_['error_no_total']       = 'O pedido nº %s está com total zero. Defina o preço em Vendas → Pedidos → Editar antes.';
 $_['error_preference']     = 'Não foi possível criar a preference de pagamento: %s';
 

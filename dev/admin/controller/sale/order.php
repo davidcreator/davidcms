@@ -38,7 +38,12 @@ class Order extends \Reamur\System\Engine\Controller {
         $data['text_flash'] = $this->flash();
         $data['csrf_token'] = \Reamur\System\Library\Security\Csrf::token($this->session);
         $data['can_modify'] = $this->user->hasPermission('modify', 'sale/order');
-        $data['can_mp_paylink'] = $this->user->hasPermission('modify', 'setting/marketplace');
+        // ADR 0122 (F1): a plataforma nao cobra em nome de terceiro (ADR 0120).
+        // O link de vendedor do Checkout Pro deixa de ser oferecido; o codigo
+        // continua no lugar (caminho fechado, nao removido), para que reabrir
+        // seja uma linha e nao uma reescrita.
+        $data['can_mp_paylink'] = false;
+        $data['text_mp_paylink_disabled'] = $this->language->get('text_mp_paylink_disabled');
 
         $filter_order_id = $this->queryValue('filter_order_id');
         if ($filter_order_id !== '' && !ctype_digit($filter_order_id)) {

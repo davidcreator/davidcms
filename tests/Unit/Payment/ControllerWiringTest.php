@@ -215,67 +215,53 @@ final class ControllerWiringTest extends TestCase {
     private const SELLER = ['mp_seller_id' => 1, 'mp_user_id' => 902901, 'access_token' => 'TOKEN-A', 'token_locked' => false];
     private const BACK   = 'Location: https://loja.example/admin/?route=setting/marketplace';
 
-    public function testPaidOrderShowsTheAlreadyPaidWarning(): void {
-        [$response, $session, $db] = $this->paylink(self::ORDER, ['status' => 'approved'] + self::CHARGE, [self::SELLER]);
+    /**
+     * ADR 0122 (F1): o link de vendedor do Checkout Pro foi aposentado porque a
+     * plataforma nao cobra em nome de terceiro (ADR 0120).
+     *
+     * Os oito testes que existiam aqui davam cobertura fina a um caminho que
+     * deixou de ser oferecido (pago, link pendente, sem vendedor, token que nao
+     * abre, valor zero, recusa do provedor, pedido inexistente, POST+CSRF).
+     * Foram convertidos em vez de apagados: o que importa agora e que a recusa
+     * valha em TODOS esses casos, e que nenhum deles gere cobranca.
+     */
+    public function testTheSellerPaylinkIsRefusedWhateverTheOrderLooksLike(): void {
+        $cenarios = [
+            'pedido pago'        => [['status' => 'approved'] + self::CHARGE, [self::SELLER], []],
+            'link pendente'      => [self::CHARGE, [], []],
+            'sem vendedor'       => [[], [], []],
+            'token que nao abre' => [[], [['access_token' => '', 'token_locked' => true] + self::SELLER], []],
+            'pedido sem valor'   => [[], [self::SELLER], []],
+            'provedor recusou'   => [[], [self::SELLER], ['mp_api_url' => 'http://127.0.0.1:1']],
+        ];
 
-        self::assertSame(['type' => 'warning', 'text' => 'error_already_paid [41]'], $session->data['flash']);
-        self::assertContains(self::BACK, $response->getHeaders());
-        self::assertStringNotContainsString('INSERT', implode("\n", $db->sql));
-    }
+        foreach ($cenarios as $nome => [$charge, $sellers, $settings]) {
+            [$response, $session, $db] = $this->paylink(self::ORDER, $charge, $sellers, 'POST', true, true, $settings);
 
-    public function testPendingLinkIsShownAgainWithThePublicAddressOfTheSite(): void {
-        [$response, $session, $db] = $this->paylink(self::ORDER, self::CHARGE, []);
-
-        self::assertSame(
-            ['type' => 'info', 'text' => 'text_paylink_reused [https://loja.example/catalog/index.php?route=checkout/payment.pay|chave-do-link]'],
-            $session->data['flash']
-        );
-        self::assertContains(self::BACK, $response->getHeaders());
-        self::assertStringNotContainsString('INSERT', implode("\n", $db->sql));
-    }
-
-    public function testWithoutSellerTheWarningIsTheOneOfBefore(): void {
-        [, $session] = $this->paylink(self::ORDER, [], []);
-
-        self::assertSame(['type' => 'warning', 'text' => 'error_no_seller [%s]'], $session->data['flash']);
-    }
-
-    public function testSellerWhoseTokenDoesNotOpenShowsTheKeyError(): void {
-        [, $session, $db] = $this->paylink(self::ORDER, [], [['access_token' => '', 'token_locked' => true] + self::SELLER]);
-
-        self::assertSame(['type' => 'danger', 'text' => 'error_token_locked [%s]'], $session->data['flash']);
-        self::assertStringNotContainsString('INSERT', implode("\n", $db->sql));
-    }
-
-    public function testOrderWithoutValueShowsTheZeroTotalWarning(): void {
-        [, $session] = $this->paylink(['order_id' => 41, 'total' => '0.0000'], [], [self::SELLER]);
-
-        self::assertSame(['type' => 'warning', 'text' => 'error_no_total [41]'], $session->data['flash']);
-    }
-
-    public function testRefusalFromMercadoPagoShowsTheErrorAndStoresNothing(): void {
-        if (!function_exists('curl_init')) {
-            self::markTestSkipped('sem a extensao curl');
+            self::assertSame(
+                ['type' => 'warning', 'text' => 'error_seller_paylink_retired [%s]'],
+                $session->data['flash'],
+                $nome . ': a recusa tem de ser a mesma, com o motivo certo'
+            );
+            self::assertContains(self::BACK, $response->getHeaders(), $nome);
+            self::assertStringNotContainsString('INSERT', implode("\n", $db->sql), $nome . ': nada e gravado');
+            self::assertStringNotContainsString('UPDATE', implode("\n", $db->sql), $nome);
         }
-
-        // Porta fechada nesta maquina: a chamada falha na hora e nada sai para a internet.
-        [$response, $session, $db] = $this->paylink(self::ORDER, [], [self::SELLER], 'POST', true, true, ['mp_api_url' => 'http://127.0.0.1:1']);
-
-        self::assertSame('danger', $session->data['flash']['type']);
-        self::assertStringStartsWith('error_preference [Mercado Pago OAuth request failed:', $session->data['flash']['text']);
-        self::assertContains(self::BACK, $response->getHeaders());
-        self::assertStringNotContainsString('INSERT', implode("\n", $db->sql));
     }
 
-    public function testOrderThatDoesNotExistGoesToNotFound(): void {
+    public function testTheSellerPaylinkIsRefusedEvenForAnOrderThatDoesNotExist(): void {
+        // A guarda vem antes de carregar pedido: nao existe motivo para o fluxo
+        // tocar o banco para descobrir que o caminho nao existe mais.
         [$response, $session, $db] = $this->paylink([], [], [self::SELLER]);
 
-        self::assertContains('Location: https://loja.example/admin/?route=error/not_found', $response->getHeaders());
-        self::assertArrayNotHasKey('flash', $session->data);
+        self::assertSame(['type' => 'warning', 'text' => 'error_seller_paylink_retired [%s]'], $session->data['flash']);
+        self::assertContains(self::BACK, $response->getHeaders());
         self::assertSame([], $db->sql);
     }
 
-    public function testLinkIsOnlyGeneratedByPostWithPermissionAndFormToken(): void {
+    public function testTheRetiredPaylinkKeepsThePostPermissionAndTokenGuards(): void {
+        // Aposentar nao e abrir: GET, sem permissao e sem token continuam indo
+        // para a tela de permissao, sem gravar nada.
         [$response, , $db] = $this->paylink(self::ORDER, [], [self::SELLER], 'GET');
         self::assertContains('Location: https://loja.example/admin/?route=error/permission', $response->getHeaders());
         self::assertSame([], $db->sql);
@@ -288,6 +274,18 @@ final class ControllerWiringTest extends TestCase {
         self::assertContains(self::BACK, $response->getHeaders());
         self::assertSame(['type' => 'danger', 'text' => 'error_csrf [%s]'], $session->data['flash']);
         self::assertSame([], $db->sql);
+    }
+
+    public function testTheRetirementMessageExistsInEveryLanguage(): void {
+        // O aviso e o unico sinal que o operador tem: se faltar em um idioma, a
+        // tela mostra a chave crua.
+        foreach (['en-us', 'es-eu', 'pt-br'] as $language) {
+            $strings = (string)file_get_contents(
+                __DIR__ . '/../../../dev/admin/language/' . $language . '/setting/marketplace.php'
+            );
+
+            self::assertStringContainsString('error_seller_paylink_retired', $strings, $language);
+        }
     }
 
     // ── vendedores: a mesma resposta nas duas aplicacoes ────────────────────
