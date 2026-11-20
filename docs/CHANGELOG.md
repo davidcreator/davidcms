@@ -1,5 +1,17 @@
 # Changelog
 
+## KZ-64 (19ª parte) — o Stripe deixa de ser cego para estorno (2026-11-20)
+
+- **O buraco estava dito na ADR 0123 e agora está fechado.** `StripeCheckoutAdapter::reconcile()` lia a **sessão** de Checkout, e a sessão **não muda quando há estorno**: `payment_status` fica `paid` para sempre. Varrer a tentativa paga do Stripe, como a varredura de pagas passou a fazer, era perguntar a cada ciclo a um objeto que só sabe responder "pago" — o estorno continuava dependendo do aviso assinado, que é justamente o que se perde.
+- **A âncora já existia.** O `payment_intent` sempre esteve guardado (`createPayment()` devolve, o ledger grava em `provider_payment_id`, a sessão informa a cada leitura), e o adaptador **já sabia** ler `GET /v1/charges/{id}` com `amount` e `amount_refunded`, porque é assim que o aviso `charge.refunded` é verificado. Faltava juntar as duas coisas na varredura: sessão paga → `payment_intent` → cobrança.
+- **Um só caminho de estorno.** O veredicto da cobrança saiu para `reconcileCharge()`, usado pelo aviso assinado **e** pela varredura — duas origens, mesma leitura, mesma conclusão.
+- **Sem estorno, o veredicto continua sendo o da sessão.** A cobrança é consultada para descobrir o que a sessão não sabe, não para reescrever o que ela já disse; devolver `ignorado` aqui faria toda tentativa paga do Stripe aparecer como ignorada a cada ciclo.
+- **O segundo caso, que só aparece ao varrer pagas:** o estorno **total** que chega antes de o CMS registrar o `paid` (dinheiro entrou e voltou no mesmo dia — teste de cartão, cobrança duplicada cancelada). A tentativa está em `requires_action`, o provedor afirma `refunded`, e `canTransition` recusava — deixando a tentativa na fila **para sempre**. `GatewayTerminalStatus` abre **só** `pending|requires_action|authorized → refunded`, nos **dois lados** (applier e escrita); se as duas checagens divergissem, o applier aprovaria e a gravação estouraria em produção.
+- **O que continua recusado, de propósito:** `partially_refunded` sem `paid` (não há valor registrado contra o que conciliar) e qualquer coisa saindo de `refunded` (terminal).
+- **Leitura pura.** Nenhuma captura, nenhum estorno, nenhuma migração, nenhuma coluna — o `payment_intent` já estava gravado. R2/R3 (D01) continuam abertos.
+- **Prova:** 13 testes novos, incluindo a ponta a ponta (varredura → Stripe → applier → `status_before=paid` / `status_after=partially_refunded`), o estorno total antes do `paid` gravado no ledger, e os quatro casos de recusa. Suíte **1957 testes / 46.415 asserções**, verde; PHPStan sem erros.
+- **Um tropeço de dublê, o terceiro desta série:** o cliente falso de `GatewayAdapterReconcileTest` não implementava `getCharge()` e passou a **herdar o real** — a chamada sairia para a rede. Agora responde uma cobrança sem estorno. É a mesma lição: quando o adaptador cresce, os dublês dos testes que já existiam precisam acompanhar.
+
 ## KZ-64 (18ª parte) — R1 completo: a reconciliação passa a olhar a tentativa que já foi paga (2026-11-20)
 
 - **O buraco estava medido e nomeado na ADR 0121, e agora está fechado:** `pendingAttempts()` filtra `pending`/`requires_action`/`authorized`. Uma tentativa que chega a `paid` **sai da fila para sempre**, e o cron nunca mais olha para ela. Estorno feito no painel do Mercado Pago ou do PayPal só chegava ao CMS se o provedor **reenviasse** o webhook — e o reconciledor de avisos perdidos, por construção, também não olhava para pagas.

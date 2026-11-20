@@ -316,7 +316,7 @@ final class DbGatewayLedger implements GatewayReconcilableLedger, GatewayAddress
             throw new \RuntimeException('gateway ledger: provider payment ID does not match the recorded attempt');
         }
 
-        if (!GatewayPaymentStatus::canTransition($record->status, $event->status)) {
+        if (!GatewayTerminalStatus::canTransition($record->status, $event->status)) {
             throw new \DomainException('gateway ledger: unsafe payment status transition');
         }
 

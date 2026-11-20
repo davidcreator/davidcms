@@ -284,7 +284,49 @@ final class StripeCheckoutAdapter implements GatewayAdapter, ReconcilableGateway
             return GatewayWebhookResult::retry('provider_unavailable');
         }
 
-        return $this->reconcileSession($session, $sessionId);
+        // ADR 0124: a sessao NAO muda quando ha estorno — `payment_status`
+        // continua 'paid', e varrer a tentativa paga do Stripe consultaria para
+        // sempre um objeto que responde "pago". Quem sabe do estorno e a
+        // cobranca, e a propria sessao informa o payment_intent dela.
+        $sessionResult = $this->reconcileSession($session, $sessionId);
+
+        if ($sessionResult->kind !== GatewayWebhookResult::VERIFIED
+            || !in_array($sessionResult->status, [GatewayPaymentStatus::PAID, GatewayPaymentStatus::PARTIALLY_REFUNDED], true)) {
+            return $sessionResult;
+        }
+
+        $paymentIntent = $sessionResult->providerPaymentId;
+
+        if (preg_match('/^[A-Za-z0-9_-]{1,128}$/D', $paymentIntent) !== 1) {
+            // Sessao paga sem payment_intent consultavel: o estado da sessao e o
+            // que existe. Nao se inventa id de provedor.
+            return $sessionResult;
+        }
+
+        try {
+            $charge = $this->client()->getCharge($paymentIntent, $secretKey);
+        } catch (\RuntimeException) {
+            return GatewayWebhookResult::retry('provider_unavailable');
+        }
+
+        $chargeHttp = (int)($charge['_http_status'] ?? 0);
+
+        if ($chargeHttp < 200 || $chargeHttp >= 300) {
+            return GatewayWebhookResult::retry('provider_unavailable');
+        }
+
+        $chargeResult = $this->reconcileCharge($charge, $paymentIntent);
+
+        if ($chargeResult->kind === GatewayWebhookResult::IGNORED
+            && $chargeResult->reasonCode === 'charge_not_refunded') {
+            // A cobranca so foi consultada para descobrir o que a sessao nao
+            // sabe (estorno). Sem estorno, o veredicto continua sendo o da
+            // sessao — e a tentativa nao aparece como "ignorada" no relatorio
+            // a cada ciclo so porque ninguem estornou nada.
+            return $sessionResult;
+        }
+
+        return $chargeResult;
     }
 
     /** Shared by the signed webhook path and by reconciliation. */
@@ -341,11 +383,25 @@ final class StripeCheckoutAdapter implements GatewayAdapter, ReconcilableGateway
             return GatewayWebhookResult::retry('provider_unavailable');
         }
 
+        return $this->reconcileCharge($charge, $chargeId);
+    }
+
+    /**
+     * Veredicto a partir de uma cobranca lida na API. Um so caminho para o
+     * estorno — o aviso assinado (`charge.refunded`) e a varredura leem o mesmo
+     * objeto e concluem a mesma coisa (ADR 0124).
+     *
+     * `$expectedId` e o id que se pediu: a cobranca devolvida tem de ser a mesma,
+     * senao um id reaproveitado no caminho viraria veredicto sobre outro
+     * pagamento.
+     */
+    private function reconcileCharge(array $charge, string $expectedId): GatewayWebhookResult {
         $confirmedId = self::scalarString($charge['id'] ?? null);
         $reference = self::scalarString($charge['metadata']['jow_reference'] ?? null);
         $currency = strtoupper(self::scalarString($charge['currency'] ?? null));
 
-        if (!hash_equals($chargeId, $confirmedId)
+        if (preg_match('/^[A-Za-z0-9_-]{1,128}$/D', $expectedId) !== 1
+            || !hash_equals($expectedId, $confirmedId)
             || preg_match('/^[A-Za-z0-9._:-]{16,128}$/D', $reference) !== 1
             || !in_array($currency, ['BRL', 'USD', 'EUR'], true)) {
             return GatewayWebhookResult::ignored('charge_not_reconciled');
@@ -362,12 +418,19 @@ final class StripeCheckoutAdapter implements GatewayAdapter, ReconcilableGateway
             return GatewayWebhookResult::ignored('refund_amount_exceeds_charge');
         }
 
+        // Sem estorno a cobranca nao tem veredicto a dar: quem decide "pago" e a
+        // sessao. Devolver `paid` daqui seria reescrever o mesmo fato por outra
+        // fonte e apagar a diferenca entre as duas.
+        if (!$refunded->isPositive()) {
+            return GatewayWebhookResult::ignored('charge_not_refunded');
+        }
+
         $status = $refunded->compareTo($amount) === 0
             ? GatewayPaymentStatus::REFUNDED
             : GatewayPaymentStatus::PARTIALLY_REFUNDED;
 
-        $eventDigest = self::refundDigest($chargeId, $charge, $status, $refunded);
-        $eventId = 'stripe-charge-' . substr(hash('sha256', $chargeId . "\0" . $eventDigest), 0, 52);
+        $eventDigest = self::refundDigest($confirmedId, $charge, $status, $refunded);
+        $eventId = 'stripe-charge-' . substr(hash('sha256', $confirmedId . "\0" . $eventDigest), 0, 52);
 
         return GatewayWebhookResult::verified(
             $eventId,

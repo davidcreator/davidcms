@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Reamur\System\Library\Payment\GatewayAccount;
 use Reamur\System\Library\Payment\GatewayCredentials;
 use Reamur\System\Library\Payment\GatewayCustomerAction;
+use Reamur\System\Library\Payment\GatewayPaymentRecord;
 use Reamur\System\Library\Payment\GatewayPaymentRequest;
 use Reamur\System\Library\Payment\GatewayPaymentStatus;
 use Reamur\System\Library\Payment\GatewayWebhookResult;
@@ -377,6 +378,148 @@ final class StripeCheckoutAdapterTest extends TestCase {
         );
         self::assertSame(GatewayWebhookResult::RETRY, $outage->kind);
         self::assertSame('provider_unavailable', $outage->reasonCode);
+    }
+
+    /** Sessão paga como a API devolve depois de um pagamento aprovado. */
+    private function paidSession(): array {
+        return $this->createdSession([
+            'status' => 'complete',
+            'payment_status' => 'paid',
+        ]);
+    }
+
+    /** Cobrança com estorno, indexada pelo id que a reconciliação vai pedir. */
+    private function charge(string $id = self::PAYMENT_INTENT, int $amountRefunded = 0, int $amount = 12550): array {
+        return [
+            '_http_status' => 200,
+            'id' => $id,
+            'object' => 'charge',
+            'metadata' => ['jow_reference' => self::IDEMPOTENCY],
+            'currency' => 'usd',
+            'amount' => $amount,
+            'amount_refunded' => $amountRefunded,
+            'payment_intent' => self::PAYMENT_INTENT,
+        ];
+    }
+
+    private function record(string $status = GatewayPaymentStatus::PAID): GatewayPaymentRecord {
+        return new GatewayPaymentRecord(
+            41,
+            11,
+            'jow_charge',
+            42,
+            'stripe',
+            'checkout_session',
+            new Money('125.50', 'USD', 2),
+            new Money('125.50', 'USD', 2),
+            str_repeat('b', 48),
+            self::IDEMPOTENCY,
+            $status,
+            self::IDEMPOTENCY,
+            self::PAYMENT_INTENT,
+            GatewayCustomerAction::redirect('https://checkout.stripe.com/c/pay/' . self::SESSION_ID),
+            null,
+            self::SESSION_ID
+        );
+    }
+
+    /**
+     * ADR 0124 — o buraco que a ADR 0123 deixou dito: a sessão de Checkout não
+     * muda quando há estorno (`payment_status` continua 'paid'). Varrer a
+     * tentativa paga sem olhar a cobrança consultaria para sempre um objeto que
+     * responde "pago", e o estorno só chegaria pelo aviso assinado.
+     */
+    public function testReconciliationSeesARefundThatTheSessionCannotShow(): void {
+        $client = $this->client([], [self::PAYMENT_INTENT => $this->charge(amountRefunded: 5050)], [
+            self::SESSION_ID => $this->paidSession(),
+        ]);
+
+        $event = (new StripeCheckoutAdapter($client))->reconcile(
+            $this->record(),
+            $this->account(),
+            $this->credentials()
+        );
+
+        self::assertSame(GatewayWebhookResult::VERIFIED, $event->kind);
+        self::assertSame(GatewayPaymentStatus::PARTIALLY_REFUNDED, $event->status);
+        self::assertSame(self::IDEMPOTENCY, $event->providerReference);
+        self::assertSame([[self::SESSION_ID, self::SECRET_KEY]], $client->getSessionCalls);
+        self::assertSame([[self::PAYMENT_INTENT, self::SECRET_KEY]], $client->getChargeCalls, 'a cobrança foi lida com o id que a sessão informou');
+    }
+
+    public function testReconciliationSeesAFullRefundAsRefunded(): void {
+        $client = $this->client([], [self::PAYMENT_INTENT => $this->charge(amountRefunded: 12550)], [
+            self::SESSION_ID => $this->paidSession(),
+        ]);
+
+        $event = (new StripeCheckoutAdapter($client))->reconcile($this->record(), $this->account(), $this->credentials());
+
+        self::assertSame(GatewayWebhookResult::VERIFIED, $event->kind);
+        self::assertSame(GatewayPaymentStatus::REFUNDED, $event->status);
+    }
+
+    /** Sem estorno, o veredicto é o da sessão — e não um "ignorado" a cada ciclo. */
+    public function testReconciliationWithoutARefundKeepsTheSessionVerdict(): void {
+        $client = $this->client([], [self::PAYMENT_INTENT => $this->charge(amountRefunded: 0)], [
+            self::SESSION_ID => $this->paidSession(),
+        ]);
+
+        $event = (new StripeCheckoutAdapter($client))->reconcile($this->record(), $this->account(), $this->credentials());
+
+        self::assertSame(GatewayWebhookResult::VERIFIED, $event->kind);
+        self::assertSame(GatewayPaymentStatus::PAID, $event->status);
+        self::assertSame([[self::PAYMENT_INTENT, self::SECRET_KEY]], $client->getChargeCalls, 'a cobrança chegou a ser consultada');
+    }
+
+    /** Sessão ainda aberta não gasta chamada de cobrança. */
+    public function testAnUnpaidSessionDoesNotQueryTheCharge(): void {
+        $client = $this->client([], [], [self::SESSION_ID => $this->createdSession()]);
+
+        $event = (new StripeCheckoutAdapter($client))->reconcile(
+            $this->record(GatewayPaymentStatus::PENDING),
+            $this->account(),
+            $this->credentials()
+        );
+
+        self::assertSame(GatewayPaymentStatus::REQUIRES_ACTION, $event->status);
+        self::assertSame([], $client->getChargeCalls);
+    }
+
+    /** Cobrança de outro pagamento não vira veredicto sobre este. */
+    public function testAChargeForAnotherPaymentIsRefused(): void {
+        $client = $this->client([], [self::PAYMENT_INTENT => $this->charge('ch_de_outro_pagamento', 5050)], [
+            self::SESSION_ID => $this->paidSession(),
+        ]);
+
+        $event = (new StripeCheckoutAdapter($client))->reconcile($this->record(), $this->account(), $this->credentials());
+
+        self::assertSame(GatewayWebhookResult::IGNORED, $event->kind);
+        self::assertSame('charge_not_reconciled', $event->reasonCode);
+    }
+
+    /** Provedor fora do ar na leitura da cobrança pede retry, não grava nada. */
+    public function testAChargeOutageAsksForRetry(): void {
+        $client = $this->client([], [self::PAYMENT_INTENT => ['_http_status' => 503]], [
+            self::SESSION_ID => $this->paidSession(),
+        ]);
+
+        $event = (new StripeCheckoutAdapter($client))->reconcile($this->record(), $this->account(), $this->credentials());
+
+        self::assertSame(GatewayWebhookResult::RETRY, $event->kind);
+        self::assertSame('provider_unavailable', $event->reasonCode);
+    }
+
+    /** Sessão paga sem payment_intent consultável: nada de inventar id. */
+    public function testAPaidSessionWithoutAPaymentIntentFallsBackToTheSessionState(): void {
+        $client = $this->client([], [], [
+            self::SESSION_ID => $this->createdSession(['status' => 'complete', 'payment_status' => 'paid', 'payment_intent' => null]),
+        ]);
+
+        $event = (new StripeCheckoutAdapter($client))->reconcile($this->record(), $this->account(), $this->credentials());
+
+        self::assertSame(GatewayWebhookResult::VERIFIED, $event->kind);
+        self::assertSame(GatewayPaymentStatus::PAID, $event->status);
+        self::assertSame([], $client->getChargeCalls);
     }
 
     private function sessionNotification(string $sessionId, string $eventType, string $secret): Notification {

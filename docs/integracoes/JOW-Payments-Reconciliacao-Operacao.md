@@ -116,7 +116,9 @@ ao CMS se o provedor reenviasse o aviso. As duas passam pelo mesmo caminho de ap
 qual lista de tentativas é oferecida ao ciclo.
 
 - Estorno é **lido**, nunca executado. Nenhum código desta rota estorna dinheiro.
-- O **Stripe não é alcançado**: a reconciliação dele lê a *sessão* de checkout, que não muda com estorno.
+- O **Stripe é alcançado desde a ADR 0124**, mas por dois passos: a sessão diz se está **paga**;
+  estando paga, a reconciliação lê a **cobrança** (`payment_intent` já gravado) para ver `amount_refunded`.
+  Sessão aberta não gasta a segunda chamada.
 - `limit` é **compartilhado** pelas duas varreduras. Se houver muitas tentativas abertas, a varredura de pagas
   pode não chegar a rodar no ciclo — é o primeiro lugar a olhar se um estorno passar despercebido.
 - Quem quiser desligar a varredura de pagas sem perder a proteção contra aviso perdido usa `settled_lookback=1`.

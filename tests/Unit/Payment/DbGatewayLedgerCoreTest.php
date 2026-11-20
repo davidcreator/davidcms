@@ -132,6 +132,34 @@ final class DbGatewayLedgerCoreTest extends TestCase {
         $ledger->applyVerifiedEvent(7, $event);
     }
 
+    /**
+     * ADR 0124, do lado da escrita: o ledger tem de aceitar o mesmo estorno
+     * total que o applier aceitou. Se as duas checagens divergirem, o applier
+     * aprova e a gravação estoura — erro em produção, não em teste.
+     */
+    public function testAFullRefundIsWrittenWhenPaidWasNeverRecorded(): void {
+        $db = new GatewayLedgerTestDb();
+        $db->rows[] = $this->row(GatewayPaymentStatus::REQUIRES_ACTION);
+        $db->affected = 1;
+        $ledger = new DbGatewayLedger($db, 'rms_');
+        $event = GatewayWebhookResult::verified('evt-refund', 'ref-10', 'pay-10', GatewayPaymentStatus::REFUNDED);
+
+        $ledger->applyVerifiedEvent(7, $event);
+
+        self::assertStringContainsString("`status` = 'refunded'", $db->queries[1]);
+        self::assertStringContainsString("`status` = 'processed'", $db->queries[2]);
+    }
+
+    public function testAPartialRefundWithoutRecordedPaymentIsStillRefusedOnWrite(): void {
+        $db = new GatewayLedgerTestDb();
+        $db->rows[] = $this->row(GatewayPaymentStatus::REQUIRES_ACTION);
+        $ledger = new DbGatewayLedger($db, 'rms_');
+        $event = GatewayWebhookResult::verified('evt-partial', 'ref-10', 'pay-10', GatewayPaymentStatus::PARTIALLY_REFUNDED);
+
+        $this->expectException(\DomainException::class);
+        $ledger->applyVerifiedEvent(7, $event);
+    }
+
     public function testProviderEventAmountMustMatchThePersistedChargeExactly(): void {
         $db = new GatewayLedgerTestDb();
         $db->rows[] = $this->row(GatewayPaymentStatus::PENDING);

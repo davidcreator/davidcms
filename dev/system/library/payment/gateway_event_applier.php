@@ -34,8 +34,10 @@ final class GatewayEventApplier {
             return GatewayWebhookResult::ignored('payment_id_mismatch');
         }
 
-        if (!GatewayPaymentStatus::canTransition($record->status, $event->status)) {
+        if (!GatewayTerminalStatus::canTransition($record->status, $event->status)) {
             // Out-of-order notifications must not roll a settled payment back.
+            // (ADR 0124: um estorno total já executado no provedor é aceito
+            // mesmo quando o ledger não registrou o `paid` intermediário.)
             return GatewayWebhookResult::ignored('unsafe_status_transition');
         }
 

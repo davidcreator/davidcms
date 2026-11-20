@@ -141,6 +141,61 @@ final class GatewayReconciliationServiceTest extends TestCase {
         $this->assertSame('2026-11-13 12:00:00', $ledger->pendingCalls[0][2], 'e com lookback de 7 dias');
     }
 
+    /**
+     * ADR 0124 — a ponta que faltava entre a varredura de pagas (ADR 0123) e o
+     * Stripe: a sessão de Checkout não muda quando há estorno, então a varredura
+     * sozinha não veria nada. Aqui a leitura da cobrança fecha o caminho e a
+     * tentativa paga vira `partially_refunded` no ledger.
+     */
+    public function testAStripeRefundIsDiscoveredByTheSettledScan(): void {
+        $sessionId = 'cs_test_a1b2c3d4e5f6g7h8';
+        $paymentIntent = 'pi_test_1a2b3c4d5e6f';
+        $reference = '71e3f12c-6b0c-5ac5-9b83-d1d43c90d0c9';
+
+        $client = new class(
+            ['_http_status' => 200, 'id' => $sessionId, 'client_reference_id' => $reference, 'currency' => 'usd',
+             'amount_total' => 12550, 'status' => 'complete', 'payment_status' => 'paid', 'payment_intent' => $paymentIntent],
+            ['_http_status' => 200, 'id' => $paymentIntent, 'metadata' => ['jow_reference' => $reference],
+             'currency' => 'usd', 'amount' => 12550, 'amount_refunded' => 5050, 'payment_intent' => $paymentIntent]
+        ) extends \Reamur\System\Library\Payment\StripeCheckoutClient {
+            public function __construct(private array $session, private array $charge) {
+                parent::__construct(null, []);
+            }
+
+            public function getSession(string $sessionId, string $secretKey): array {
+                return $this->session;
+            }
+
+            public function getCharge(string $chargeId, string $secretKey): array {
+                return $this->charge;
+            }
+        };
+
+        $ledger = new ReconciliationTestLedger();
+        $ledger->settled[] = new GatewayPaymentRecord(
+            41, 11, 'jow_charge', 42, 'stripe', 'checkout_session',
+            new Money('125.50', 'USD', 2), new Money('125.50', 'USD', 2),
+            str_repeat('c', 48), $reference, GatewayPaymentStatus::PAID,
+            $reference, $paymentIntent,
+            GatewayCustomerAction::redirect('https://checkout.stripe.com/c/pay/' . $sessionId),
+            null, $sessionId
+        );
+
+        $report = new GatewayReconciliationService(
+            new GatewayRegistry([new \Reamur\System\Library\Payment\StripeCheckoutAdapter($client)]),
+            $ledger,
+            new GatewayEventApplier($ledger),
+            static fn(): \DateTimeImmutable => new \DateTimeImmutable(self::NOW, new \DateTimeZone('UTC'))
+        )->reconcileAccount(
+            new GatewayAccount(11, 'stripe', 'JOW platform', 'sandbox', true, ['flow' => 'jow_internal']),
+            new GatewayCredentials(['secret_key' => 'sk_test_platform_restricted_key_0001'])
+        );
+
+        $this->assertSame(GatewayPaymentStatus::PAID, $report->details[0]['status_before']);
+        $this->assertSame(GatewayPaymentStatus::PARTIALLY_REFUNDED, $report->details[0]['status_after']);
+        $this->assertSame(1, $report->applied);
+    }
+
     public function testASettledLookbackBeyondTheProviderWindowIsRefused(): void {
         $ledger = new ReconciliationTestLedger();
         $adapter = new ReconcilableTestAdapter($this->verified(GatewayPaymentStatus::PAID));

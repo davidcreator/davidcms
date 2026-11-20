@@ -30,6 +30,11 @@ final class GatewayAdapterReconcileTest extends TestCase {
     private const PAYPAL_ORDER_ID = '5O190127TN364715T';
     private const IDEMPOTENCY = '51e3f12c-6b0c-5ac5-9b83-d1d43c90d0c1';
 
+    /** Constante exposta para o cliente anônimo (classe anônima não herda a externa). */
+    public static function reference(): string {
+        return self::IDEMPOTENCY;
+    }
+
     private function account(string $provider): GatewayAccount {
         return new GatewayAccount(7, $provider, 'JOW platform', 'sandbox', true, ['flow' => 'jow_internal']);
     }
@@ -167,14 +172,40 @@ final class GatewayAdapterReconcileTest extends TestCase {
             /** @var list<string> */
             public array $sessionCalls = [];
 
+            /** @var list<string> */
+            public array $chargeCalls = [];
+
+            private string $reference;
+
             public function __construct(private array $sessions) {
                 parent::__construct(null, []);
+
+                $this->reference = \Reamur\Tests\Unit\Payment\GatewayAdapterReconcileTest::reference();
             }
 
             public function getSession(string $sessionId, string $secretKey): array {
                 $this->sessionCalls[] = $sessionId;
 
                 return $this->sessions[$sessionId] ?? ['_http_status' => 404];
+            }
+
+            /**
+             * ADR 0124: estes testes olham a SESSÃO. A cobrança é consultada
+             * depois dela, então o dublê responde uma cobrança sem estorno —
+             * herdando o client real, a chamada sairia para a rede.
+             */
+            public function getCharge(string $chargeId, string $secretKey): array {
+                $this->chargeCalls[] = $chargeId;
+
+                return [
+                    '_http_status' => 200,
+                    'id' => $chargeId,
+                    'metadata' => ['jow_reference' => $this->reference],
+                    'currency' => 'brl',
+                    'amount' => 12550,
+                    'amount_refunded' => 0,
+                    'payment_intent' => $chargeId,
+                ];
             }
         };
     }

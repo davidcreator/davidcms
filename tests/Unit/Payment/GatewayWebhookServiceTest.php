@@ -119,6 +119,48 @@ final class GatewayWebhookServiceTest extends TestCase {
         self::assertSame(0, $ledger->applyCount);
     }
 
+    /**
+     * ADR 0124: o dinheiro entrou e voltou dentro da janela de reconciliação. O
+     * ledger nunca registrou o `paid` intermediário, mas o estorno total é fato
+     * consumado no provedor — recusar aqui deixaria a tentativa em
+     * `requires_action` para sempre, com a fila perguntando a cada ciclo.
+     */
+    public function testAFullRefundIsAppliedEvenWhenPaidWasNeverRecorded(): void {
+        $event = GatewayWebhookResult::verified('event-refund', 'order-ref-42', '', GatewayPaymentStatus::REFUNDED);
+        $ledger = new WebhookServiceTestLedger($this->record(GatewayPaymentStatus::REQUIRES_ACTION));
+
+        $result = $this->service(new WebhookServiceTestAdapter($event), $ledger)
+            ->process($this->account(), new GatewayCredentials([]), new Notification());
+
+        self::assertSame(GatewayWebhookResult::VERIFIED, $result->kind);
+        self::assertSame(1, $ledger->recordCount);
+        self::assertSame(1, $ledger->applyCount);
+    }
+
+    /** Parcial continua exigindo `paid`: sem o valor registrado não há o que conciliar. */
+    public function testAPartialRefundStillRequiresThePaymentToBeRecorded(): void {
+        $event = GatewayWebhookResult::verified('event-partial', 'order-ref-42', '', GatewayPaymentStatus::PARTIALLY_REFUNDED);
+        $ledger = new WebhookServiceTestLedger($this->record(GatewayPaymentStatus::REQUIRES_ACTION));
+
+        $result = $this->service(new WebhookServiceTestAdapter($event), $ledger)
+            ->process($this->account(), new GatewayCredentials([]), new Notification());
+
+        self::assertSame('unsafe_status_transition', $result->reasonCode);
+        self::assertSame(0, $ledger->applyCount);
+    }
+
+    /** Estorno não reabre pagamento: `refunded` é terminal. */
+    public function testARefundedAttemptIsTerminal(): void {
+        $event = GatewayWebhookResult::verified('event-paid-after-refund', 'order-ref-42', '', GatewayPaymentStatus::PAID);
+        $ledger = new WebhookServiceTestLedger($this->record(GatewayPaymentStatus::REFUNDED));
+
+        $result = $this->service(new WebhookServiceTestAdapter($event), $ledger)
+            ->process($this->account(), new GatewayCredentials([]), new Notification());
+
+        self::assertSame('unsafe_status_transition', $result->reasonCode);
+        self::assertSame(0, $ledger->applyCount);
+    }
+
     public function testPartialRefundIsAValidForwardTransition(): void {
         self::assertTrue(GatewayPaymentStatus::canTransition(GatewayPaymentStatus::PAID, GatewayPaymentStatus::PARTIALLY_REFUNDED));
         self::assertTrue(GatewayPaymentStatus::canTransition(GatewayPaymentStatus::PARTIALLY_REFUNDED, GatewayPaymentStatus::REFUNDED));
