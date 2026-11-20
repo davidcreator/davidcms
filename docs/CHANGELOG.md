@@ -1,5 +1,13 @@
 # Changelog
 
+## KZ-64 (9ª parte) — ADR 0120, proposta: para onde vai o dinheiro do pedido (2026-11-20)
+
+- **ADR 0120 escrita como proposta, não como decisão.** O ponto que a ADR 0119 deixou implícito: o núcleo novo cobra na **conta da plataforma** e não envia `marketplace_fee`. Isso está **certo** para pedido da plataforma e **errado** para pedido de vendedor — e ninguém tinha decidido qual dos dois o CMS atende.
+- **Fatos levantados no código**, não supostos: `rms_order`/`rms_order_product` não têm coluna de vendedor; `GatewayPaymentRequest`, `GatewayAccount` e `GatewayCredentials` não carregam recebedor (a conta é escolhida por `gateway_id`); o legado decidia por `rms_mp_payment.mp_seller_id` (`NOT NULL`) + `mp_marketplace_fee_percent` (padrão 10) + token OAuth do vendedor.
+- **Fatos do provedor** (documentação oficial conferida): split **exige o token do vendedor** — a conta da plataforma não divide nada; na Orders API o campo é `marketplace_fee`, em **valor absoluto**; a comissão do Mercado Pago é descontada **antes** da do marketplace; o modelo 1:1 exige conta com KYC e aplicativo de marketplace.
+- **Três opções registradas:** **A** só pedido da plataforma (custo zero, encerra a pendência), **B** conta de vendedor por pedido em duas fases (B1 identidade do recebedor: `seller_ref` aditivo no ledger, `fail closed` quando há vendedor sem conta habilitada; B2 o dinheiro, com taxa calculada no servidor), **C** receber na plataforma e repassar por fora (vira merchant of record — não recomendada).
+- **Recomendação: B**, condicionada a três perguntas do dono do produto. **Nenhum código, nenhuma migração, nenhuma coluna nesta etapa** — a proposta existe para a decisão ser registrada antes do código.
+
 ## KZ-64 (8ª parte) — nome do menu, e o que falta testar antes de produção (2026-11-20)
 
 - **Menu corrigido:** o item da barra lateral do admin dizia **"Payments (JOW)"** em inglês, **"Pagamentos (JOW)"** em português e **"Pagos (JOW)"** em espanhol. Passa a ser **"JOW Payments"** nos três idiomas — o nome original, que não deve ser traduzido porque é o nome do produto. O título da tela (`heading_title`) também: `JOW-payments` → `JOW Payments`. Uma referência de caminho na documentação do Mercado Pago (`Admin → JOW-payments`) foi atualizada.

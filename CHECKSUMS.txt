@@ -7,7 +7,8 @@ b2ae11cf  b0ec1ce139370c3f1d008e1d1dffc42353c0b372f8b35fcbe4f05c908ea91cbb  2455
 956a0f9c  77f0fd12e9f39ced35111bcf16802a5a5c2f08722fdb30b38c401898cfa55aba  14181  README.md
 54e8d62d  5019e3c67f81e5d9c21b0d60fe5e8566b2ce3bcd76248fbeab5eb404bce9065c  5387  agents-ia/decisoes/0081-dependencias-node-em-system-storage-e-ci.md
 b3f88bf5  d07103140a2f867d043ad39e97d402d562b12a7fa3650b81ee173b205b88a1f5  9248  agents-ia/decisoes/0119-pagamentos-fluxo-do-pedido-no-ledger-novo.md
-4d13df22  84081c4e1820c41db4f1935991f4937582de0d1d4a03981a64f08250b0735ce5  24806  agents-ia/decisoes/README.md
+1907af72  3a9839f7f55aec3c0418a439a7ae7764f08ea71167bb83b54018e6f942cabe8d  8096  agents-ia/decisoes/0120-pagamentos-destino-do-dinheiro-do-pedido.md
+fe388a89  213dfe1a4a16b24c6e59e36bc43427e552c934ecaeb86e01f06dd2526f01a0a1  25949  agents-ia/decisoes/README.md
 12feea24  b6d93cb1839df0c424777ac809ffeb7b87fc94852ebaea6549f3456bbaa78610  7050  agents-ia/regras/00-contexto-global.md
 03422cd4  77c4f51df2a46c30bf45f39b703e55ce474c2d706048be2f3f8c31bbb992fd60  7429  agents-ia/regras/02-padroes-de-codigo.md
 bebb191c  00a755dc23d6e2420d4263a52c35ac03ce3d9b643936218595cc7df06c38231b  2143  dev/admin/language/en-us/common/header.php
@@ -19,7 +20,7 @@ ae62ee30  90a5d1b142c511aba2d9cd7aa7c669e8e449dd7760027126bc72bf6aa8827939  2232
 39e1dff4  337fd885ee97e0c1321169076eeedaa4d2b92bded2268de9c465d4f7b164319b  43279  dev/system/library/blog/block_document.php
 7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
 fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
-8676de8e  5b1c1131d907b4b8acfa873fee7b6868ea115107e6d80870dded10d83ec46a7c  182413  docs/CHANGELOG.md
+2701a6e9  55f95f941e512db2d5781e740a0d9d8a3ae399963b0c088df878ab215dc5ac9f  184172  docs/CHANGELOG.md
 675b1723  ddf884f56fcb08b9a5a84b3e3f19e64d0850585005cf34a3eb00969297628f14  16729  docs/Estrutura-de-Pastas.md
 61660a6e  d7515650f0c01bc118c3bd75c5df94bf2d6049bcdc7775ed267367360f210351  10948  docs/README.md
 2cd4aea9  48c6bf0ae2c1ccf1d471ea99bd205d3af3b3c3fe769a67dcc7c005cf6420714e  29473  docs/arquitetura/Dicionario-de-Dados.md
