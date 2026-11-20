@@ -20,7 +20,7 @@ ae62ee30  90a5d1b142c511aba2d9cd7aa7c669e8e449dd7760027126bc72bf6aa8827939  2232
 39e1dff4  337fd885ee97e0c1321169076eeedaa4d2b92bded2268de9c465d4f7b164319b  43279  dev/system/library/blog/block_document.php
 7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
 fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
-2bd25775  64c89173589a6535eff74f9cf644586b5e227a107c26a5ec648639423723214f  185745  docs/CHANGELOG.md
+bb88de9e  c9515b6b3d0e9f5129b6fadbc3602f10964bbdc2c29a689f18d8859d952a8b72  187359  docs/CHANGELOG.md
 675b1723  ddf884f56fcb08b9a5a84b3e3f19e64d0850585005cf34a3eb00969297628f14  16729  docs/Estrutura-de-Pastas.md
 61660a6e  d7515650f0c01bc118c3bd75c5df94bf2d6049bcdc7775ed267367360f210351  10948  docs/README.md
 2cd4aea9  48c6bf0ae2c1ccf1d471ea99bd205d3af3b3c3fe769a67dcc7c005cf6420714e  29473  docs/arquitetura/Dicionario-de-Dados.md
@@ -31,8 +31,9 @@ fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532 
 329e8df0  083f970e3b68e426bb3485aa85ad8085c18e7fc98db1ca272e4dcbf668a491e3  12023  docs/historico/KZ-64-Relatorio.md
 97071476  6383c819cf31cad18eb11fa80718446da5a40877cb0579761331cd8de4353389  4848  docs/integracoes/JOW-Payments-Mercado-Pago.md
 46cb5caa  0277f55d2f88d36b923442334d4379f6e777c12572d2244b794f71ab1f7ce2de  11286  docs/integracoes/JOW-Payments-MultiGateway-Core.md
+8eaa342e  0af350b7ea4d7f900f8040206c8c9ad0db0be41e604cd9e41bd63a40d4dacf9a  5920  docs/integracoes/JOW-Payments-Reconciliacao-Operacao.md
 5b6c625d  6f9a6ffb87a1eec7db2a23c029f15a8475deacffd216abb550ec3959f7559df9  10309  docs/integracoes/JOW-Payments-Reconciliacao.md
-d9ddf578  698ea981078d829a595a634efd6ee0c1f6260fa75d970d0e47288e14d97a1040  6063  docs/integracoes/JOW-Payments-Testes-Antes-da-Producao.md
+aaa65127  74e734b79d4ac83af43ae758501c2412f0dfbe0cc67c511e1aa930515e3c7d17  6187  docs/integracoes/JOW-Payments-Testes-Antes-da-Producao.md
 f35d6814  483d47bc11f6f801a820eda71e36dbdff951ca7ce5e6e47b13b5942f02575852  6026  docs/threejs/THREEJS_CMS_E2E.md
 8c499114  b21cfdc6d71d3073a8a4d7c1e6236f6b1009736271c71adb661fc58000d3b529  25685  tests/Unit/Payment/JowMultiGatewayWiringTest.php
 e40562bb  790eae5e1bb74cfeede500ec8fa009f833b3fcedc39ebaf57e7a5b9a7bff8ab4  7581  tests/Unit/Payment/PaymentSchemaDriftTest.php

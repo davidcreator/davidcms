@@ -1,5 +1,14 @@
 # Changelog
 
+## KZ-64 (11ª parte) — runbook da reconciliação: como ligar sem abrir buraco (2026-11-20)
+
+- **`docs/integracoes/JOW-Payments-Reconciliacao-Operacao.md` (novo).** O que faltava entre "a rota existe" e "a rota roda de verdade": como gerar o `REAMUR_RECONCILE_TOKEN` (32+ caracteres, `random_bytes`), a linha de crontab recomendada, e **por que `curl -f`** — sem ele um 403 passa como sucesso silencioso, que é exatamente o modo de falha que deixa pagamento perdido por semanas.
+- **Teste de fumaça de três `curl`**, com leitura do que cada código quer dizer: token válido → 200; token errado → **403** (se der 200, a guarda não está ativa e o cron não deve ser configurado); sem token → 403. É o teste **F** do roteiro, agora executável por quem opera e não só por quem programa.
+- **Como saber que está funcionando sem abrir log todo dia:** `curl -f` só escreve quando falha (log vazio = boa notícia), a contagem semanal de "recuperados", e o **teste E** como a única prova real — desligar o webhook de propósito e ver a tentativa sair de `pending` para `paid` **pela reconciliação**.
+- **Tabela de erros comuns** com causa: 403 (token curto ou `Authorization` comido por proxy), 400 (parâmetro fora da faixa), 200 com relatório vazio (nenhuma conta habilitada ou nada pendente na janela), 503 (credencial inutilizável — a mesma causa que bloqueia o link novo).
+- **Nenhuma mudança de código.** O controller já faz o que precisa e é fail closed; o que faltava era o procedimento escrito.
+- **Referência cruzada** no §4.3 de `JOW-Payments-Testes-Antes-da-Producao.md`.
+
 ## KZ-64 (10ª parte) — ADR 0120 aceita: a plataforma cobra só o que é dela (2026-11-20)
 
 - **Decisão do dono do produto:** "A plataforma não irá fechar com pedidos de vendedores terceiros, somente conteúdo da plataforma e serviços." A ADR 0120 passa de **proposta** a **aceita**, com a opção **A**.

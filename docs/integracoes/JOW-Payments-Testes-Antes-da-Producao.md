@@ -84,7 +84,8 @@ O cron de reconciliação é rede de segurança, **não** gatilho. Ele exige `RE
 (32+ caracteres) e um crontab do sistema chamando a rota. Sem isso, pagamento com aviso perdido só
 aparece quando o provedor reenviar.
 
-**Decisão operacional pendente — precisa de crontab configurado antes de `live`.**
+**Decisão operacional pendente — precisa de crontab configurado antes de `live`.** Como ligar, testar e
+monitorar está em [`JOW-Payments-Reconciliacao-Operacao.md`](JOW-Payments-Reconciliacao-Operacao.md).
 
 ---
 
