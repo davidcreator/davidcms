@@ -1,5 +1,21 @@
 # Changelog
 
+## KZ-64 (8ª parte) — nome do menu, e o que falta testar antes de produção (2026-11-20)
+
+- **Menu corrigido:** o item da barra lateral do admin dizia **"Payments (JOW)"** em inglês, **"Pagamentos (JOW)"** em português e **"Pagos (JOW)"** em espanhol. Passa a ser **"JOW Payments"** nos três idiomas — o nome original, que não deve ser traduzido porque é o nome do produto. O título da tela (`heading_title`) também: `JOW-payments` → `JOW Payments`. Uma referência de caminho na documentação do Mercado Pago (`Admin → JOW-payments`) foi atualizada.
+- **`docs/integracoes/JOW-Payments-Testes-Antes-da-Producao.md` (novo):** consolida o que falta para `live`, em ordem executável — 4 verificações de dez segundos (schema, guards, manifesto de pacote, conta habilitada), os **7 testes de gateway** (A–G) e os **6 do fluxo de pedido** (H–M), com a credencial que cada um exige.
+- **Três decisões de produto registradas como bloqueio de `live`** (e não de sandbox): **split** (o núcleo novo usa a conta da plataforma e não aplica `marketplace_fee`, enquanto o fluxo legado usava token de vendedor com 10% — pedido de vendedor não é atendido pelo caminho novo até a ADR 0120), **estorno** (D01 ainda sem resposta) e **crontab** da reconciliação (sem ele, aviso perdido só volta quando o provedor reenviar).
+- **O que já está provado** aparece separado do que falta: 1910 testes / 46.278 asserções verdes, PHPStan limpo, três guards, migração confirmada. Conversa real com provedor, assinatura real de webhook e cron rodando de verdade são exatamente o que as credenciais destravam — e nada disso é coberto por teste automatizado.
+- **Referências cruzadas:** o guia do núcleo e o relatório KZ-64 apontam para o documento novo.
+
+## KZ-64 (7ª parte) — o manifesto do pacote sai do caminho do `repo-guards` (2026-11-20)
+
+- **Causa raiz encontrada (e é a terceira vez que o mesmo arquivo derruba o CI):** `CHECKSUMS-PACOTE.txt` — o manifesto do **pacote de entrega**, que lista arquivos existentes só dentro do ZIP — foi **commitado no repositório** em `03a6921` e voltou em `99cbfc3`. `tools/verify-checksums.sh` lê todo `CHECKSUMS*.txt` da raiz como manifesto do projeto, então o job `repo-guards` acusou 13 divergências (35 na versão anterior do arquivo) sem que houvesse nada errado no projeto. Como o arquivo não estava no `.gitignore`, ele também não aparecia no `git status` — o vermelho parecia inexplicável.
+- **Guard:** passa a **ignorar** o manifesto de pacote, com **aviso** na saída (pular em silêncio trocaria um falso vermelho por uma sujeira invisível). O `CHECKSUMS.txt` do projeto continua sendo conferido linha a linha.
+- **`.gitignore`:** `/CHECKSUMS-PACOTE.txt` bloqueado na raiz, com o motivo escrito. O pacote é montado **fora** do repositório; o manifesto fica ao lado de `patches/` e `arquivos/`, nunca na árvore.
+- **Documentação:** emenda na F11-05 registrando o comportamento novo e o histórico de `03a6921` / `99cbfc3` — o guard foi projetado para achar divergência de conteúdo, não para punir um artefato de entrega.
+- **Verificação:** manifesto de pacote sujo na raiz → `3 PASS / 0 FAIL` + aviso; árvore limpa → `3 PASS / 0 FAIL` (43 arquivos). `verify-ci-workflow` 35 PASS, `verify-deps-layout` 17 PASS / 1 WARN (pré-existente).
+
 ## KZ-64 (6ª parte) — o prefixo do banco deixa de ser uma armadilha silenciosa (2026-11-20)
 
 - **Sintoma que motivou:** `#1109 Tabela '<prefixo>_payment_transaction' desconhecida` no phpMyAdmin. Não era erro de sintaxe: os scripts `tools/upgrade_*.sql` escrevem **`rms_` fixo** no texto, enquanto o código PHP monta todo nome com `DB_PREFIX`. Numa instalação com outro prefixo, o operador ou cria tabela que o código não encontra, ou recebe `#1109` ao colar uma consulta de conferência — e a mensagem parece erro de digitação.

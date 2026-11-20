@@ -30,8 +30,19 @@ for g in tools/verify-deps-layout.sh tools/verify-checksums.sh tools/verify-ci-w
 done
 
 echo "-- 1. Manifestos CHECKSUMS*.txt --"
+# KZ-64: `CHECKSUMS-PACOTE.txt` é o manifesto do PACOTE DE ENTREGA (lista os
+# arquivos do ZIP, muitos dos quais nao existem na arvore do projeto). Ele nao
+# pertence a raiz do repositorio: quando entra por engano — e ele ja entrou, em
+# 03a6921 e de novo em 99cbfc3 — este guard acusava 13 a 35 divergencias e o
+# `repo-guards` ficava vermelho sem que houvesse nada errado no projeto.
+# Pulamos aqui **e** alertamos, para o engano nao passar em silencio.
+IGNORAR='CHECKSUMS-PACOTE.txt'
 for m in CHECKSUMS*.txt; do
   [ -f "$m" ] || continue
+  if [ "$m" = "$IGNORAR" ]; then
+    printf '  AVISO %s na raiz: manifesto do pacote de entrega, ignorado (remova-o do repo)\n' "$m"
+    continue
+  fi
   MANIFESTS=$((MANIFESTS+1)); ok=0; bad=0
   while read -r crc sha size path; do
     case "$crc" in ''|\#*) continue ;; esac

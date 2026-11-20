@@ -46,6 +46,30 @@ Verificação de integridade do restante: **11/11 entradas** do `CHECKSUMS-F11-0
 
 ---
 
+## 3.1 Emenda KZ-64 — o manifesto do PACOTE não é manifesto do projeto
+
+`tools/verify-checksums.sh` passou a **ignorar** `CHECKSUMS-PACOTE.txt` na raiz, com
+aviso explícito na saída, e o `.gitignore` passou a bloquear o arquivo.
+
+Motivo: o `CHECKSUMS-PACOTE.txt` é o manifesto do **pacote de entrega** — ele lista os arquivos
+que existem dentro do ZIP, muitos dos quais não existem na árvore do projeto (patches, `LEIA-ME`,
+scripts de apoio). Ele entrou na raiz do repositório em `03a6921` e voltou em `99cbfc3`, e nas duas
+vezes o job `repo-guards` ficou vermelho acusando de 13 a 35 divergências — sem que houvesse **nada
+errado no projeto**. Pior: como o arquivo não estava no `.gitignore`, ele não aparecia no
+`git status`, e o vermelho parecia misterioso.
+
+Comportamento novo:
+
+```
+  AVISO CHECKSUMS-PACOTE.txt na raiz: manifesto do pacote de entrega, ignorado (remova-o do repo)
+  CHECKSUMS.txt                43 OK / 0 divergente(s)
+== resumo: 3 PASS / 0 FAIL | 1 manifesto(s), 43 arquivo(s) conferidos ==
+```
+
+O aviso é deliberado: pular em silêncio trocaria um falso vermelho por uma sujeira invisível. O
+`CHECKSUMS.txt` do projeto continua sendo conferido linha a linha, e é ele que falha quando um
+arquivo é alterado sem atualizar o manifesto.
+
 ## 4. Validações executadas
 
 | Verificação | Resultado |

@@ -56,3 +56,10 @@ Thumbs.db
 
 # Lock local de instalacao (nao versionar)
 dev/system/storage/install.lock
+
+# Manifesto DO PACOTE DE ENTREGA (KZ-64) — lista os arquivos do ZIP, nao os do
+# projeto. Nao pertence a arvore: entrou por engano em 03a6921 e 99cbfc3 e
+# deixou o job repo-guards vermelho (tools/verify-checksums.sh o lia como
+# manifesto do projeto). O pacote e montado FORA do repositorio; o manifesto
+# fica ao lado de patches/ e arquivos/, nunca aqui.
+/CHECKSUMS-PACOTE.txt

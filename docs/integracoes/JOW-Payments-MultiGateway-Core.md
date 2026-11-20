@@ -21,6 +21,11 @@
 - `GatewayLedger` / `DbGatewayLedger`: armazenamento neutro para `order` e `jow_charge`, tentativas com chave idempotente, token público aleatório, instrução de pagamento permitida por lista e eventos webhook deduplicados. Reaplicação de evento é segura e transições que regridem de `paid` para `failed` são recusadas.
 - `GatewayWebhookResult`: só o resultado autenticado e reconciliado pelo adapter pode chegar ao ledger. O ledger guarda hash do evento, não corpo bruto.
 
+## Validação antes de produção
+
+O roteiro de aceite, e as decisões de produto que bloqueiam `live`, estão em
+[`JOW-Payments-Testes-Antes-da-Producao.md`](JOW-Payments-Testes-Antes-da-Producao.md).
+
 ## Antes de aplicar o SQL: o prefixo
 
 Os scripts de `tools/upgrade_*.sql` escrevem **`rms_` fixo** no texto. O código PHP, esse, monta todo

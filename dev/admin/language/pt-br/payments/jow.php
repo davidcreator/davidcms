@@ -9,7 +9,7 @@
  * payments/jow — JOW-payments (ferramenta interna, KZ-35) + contas próprias multi-gateway.
  */
 
-$_['heading_title']      = 'JOW-payments';
+$_['heading_title']      = 'JOW Payments';
 $_['text_home']          = 'Início';
 $_['text_internal_note'] = 'Ferramenta INTERNA do ReamurCMS: visível somente no admin, nunca no catálogo público.';
 $_['text_new_charge']   = 'Nova cobrança';

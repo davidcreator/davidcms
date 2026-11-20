@@ -9,7 +9,7 @@
  * payments/jow — JOW-payments (internal tool, KZ-35) + platform-owned multi-gateway accounts.
  */
 
-$_['heading_title']      = 'JOW-payments';
+$_['heading_title']      = 'JOW Payments';
 $_['text_home']          = 'Home';
 $_['text_internal_note'] = 'INTERNAL ReamurCMS tool: admin-only, never shown in the public catalog.';
 $_['text_new_charge']   = 'New charge';

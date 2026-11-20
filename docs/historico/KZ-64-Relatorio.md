@@ -145,6 +145,13 @@ Sobre a rota do cron: dois testes usam `#[RunInSeparateProcess]` porque `Model::
 4. Validação sandbox real de Mercado Pago (vendedor de teste + pagador `@testuser.com`) — único elo nunca exercitado contra o mundo real.
 5. ~~`import` das tabelas de pagamento no `Dicionario-de-Dados.md`~~ — **feito** (KZ-64, 2ª parte: §9 do dicionário).
 
+## 6.1 Validação antes de produção
+
+O que falta para `live` — e o que já está provado — está consolidado em
+[`docs/integracoes/JOW-Payments-Testes-Antes-da-Producao.md`](../integracoes/JOW-Payments-Testes-Antes-da-Producao.md):
+quatro verificações de dez segundos, os sete testes de gateway, os seis do fluxo de pedido e as três
+decisões de produto que precisam estar tomadas antes de cobrar de verdade (split, estorno, crontab).
+
 ## 7. Como reverter
 
 - Sem push: `git reset --hard 536a7f4`.

@@ -518,4 +518,23 @@ final class JowMultiGatewayWiringTest extends TestCase {
             }
         }
     }
+
+    /**
+     * KZ-64 (8ª parte): o item de menu é o nome do produto e não se traduz.
+     * Já esteve "Payments (JOW)", "Pagamentos (JOW)" e "Pagos (JOW)" — três
+     * grafias para a mesma tela, dependendo do idioma do admin.
+     */
+    public function testTheMenuEntryIsTheProductNameInEveryLanguage(): void {
+        foreach (['en-us', 'es-eu', 'pt-br'] as $language) {
+            $file = __DIR__ . '/../../../dev/admin/language/' . $language . '/common/header.php';
+            $strings = (string)file_get_contents($file);
+
+            self::assertStringContainsString("text_menu_payments'", $strings, $language);
+            self::assertStringContainsString("= 'JOW Payments';", $strings, $language . ' tem de usar o nome do produto');
+        }
+
+        $header = (string)file_get_contents(__DIR__ . '/../../../dev/admin/controller/common/header.php');
+        self::assertStringContainsString("'payments/jow'", $header);
+        self::assertStringContainsString("'text_menu_payments'", $header);
+    }
 }
