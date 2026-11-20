@@ -61,7 +61,7 @@ O ReamurCMS é um monólito **multi-aplicação**: cada pasta de `dev/` é uma a
 | **Catalog** | `dev/catalog/` | O site público — portfólio, serviços, ferramentas, contato, conta do cliente |
 | **Admin** | `dev/admin/` | Painel administrativo — gestão de conteúdo, clientes, pedidos, configurações |
 | **Install** | `dev/install/` | Wizard de instalação/upgrade + schema SQL |
-| **Webhook** | `dev/system/webhook/` | Endpoint/rotina de disparo de webhooks (pedidos, produtos) |
+| ~~**Webhook**~~ | ~~antiga pasta de dispatcher~~ | **Não é aplicação.** A pasta dev/system/webhook/ foi removida na ADR 0037; o disparo vive em `dev/system/library/webhook/dispatcher.php` e o cadastro em `setting/webhook` (Admin) |
 
 Cada aplicação define a constante `APPLICATION` (ex.: `'Catalog'`), carrega seu `config/{aplicacao}.php` e registra seu namespace no autoloader:
 
@@ -302,7 +302,7 @@ $data['heading_title'] = $this->language->get('heading_title');
 
 Idiomas previstos: **`en-us`** (padrão — [ADR 0001](../../agents-ia/decisoes/0001-idioma-padrao-en-us.md)), **pt-br**, **es-eu**.
 
-> ✅ **Decidido (ADR 0001):** o `default.php` declara `language_code = 'en-gb'`; será padronizado para `en-us` na Fase 1 do núcleo. Até lá, nenhum agente "corrige" por conta própria (regra de quirks — `agents-ia/regras/00`).
+> ✅ **Decidido (ADR 0001):** o `default.php` declara `language_code = 'en-gb'`; será padronizado para `en-us` na Fase 1 do núcleo. Até lá, nenhum agente "corrige" por conta própria (regra de quirks — `agents-ia/regras/00-contexto-global.md`).
 
 ---
 

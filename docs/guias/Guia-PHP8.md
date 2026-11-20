@@ -272,7 +272,7 @@ curl -L -o phpDocumentor.phar https://github.com/phpDocumentor/phpDocumentor/rel
 composer docs -- --title="ReamurCMS Core API"
 ```
 
-Como os docblocks do núcleo já seguem padrão (`@package`, `@param`, `@return`), a saída fica navegável imediatamente. Publicar `docs/api/` fora do Git (já está no `.gitignore`).
+Como os docblocks do núcleo já seguem padrão (`@package`, `@param`, `@return`), a saída fica navegável imediatamente. Publicar a documentação gerada em docs/api/ fora do Git (já está no `.gitignore`, e é gerado: não existe no repositório).
 
 ---
 

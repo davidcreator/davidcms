@@ -43,9 +43,9 @@ if (!hash_equals($esperado, $_SERVER['HTTP_X_REAMUR_SIGNATURE'] ?? '')) { http_r
 ## Sumário
 
 1. [Visão geral](#1-visão-geral)
-2. [A engine (`system/engine/webhook.php`)](#2-a-engine-systemenginewebhookphp)
+2. [A engine do CMS — `Event`](#2-a-engine--hoje-é-o-event)
 3. [Estrutura de pastas](#3-estrutura-de-pastas)
-4. [Controllers existentes](#4-controllers-existentes)
+4. [Como um evento é disparado](#4-como-um-evento-é-disparado)
 5. [Segurança](#5-segurança)
 6. [Criando um novo webhook](#6-criando-um-novo-webhook)
 7. [Confiabilidade: retries, filas e logs](#7-confiabilidade-retries-filas-e-logs)
@@ -68,164 +68,71 @@ Webhooks são **notificações HTTP** que o ReamurCMS dispara para sistemas exte
 O sistema tem duas metades:
 
 1. **Engine** (`Reamur\System\Engine\Webhook`) — registry de triggers com prioridade e suporte a wildcards.
-2. **Módulo dispatcher** (`dev/system/webhook/`) — controllers que consultam os hooks cadastrados (banco) e despacham as requisições HTTP.
+2. **Transporte de saída** (`dev/system/library/webhook/dispatcher.php`) — entrega HTTP do envelope, com HMAC e retries. A antiga pasta do dispatcher (dev/system/webhook) foi **removida na ADR 0037**; o cadastro de endpoints é a tela `setting/webhook` (Admin).
 
 > Diferença crucial: **Events** agem *dentro* do CMS; **Webhooks** avisam o mundo *lá fora*.
 
 ---
 
-## 2. A engine (`system/engine/webhook.php`)
+## 2. A engine — hoje é o `Event`
 
-Implementação real do repositório (trechos comentados):
+> **`system/engine/webhook.php` não existe mais.** A classe `Webhook` (registry em memória, com
+> `register/trigger/unregister`) foi substituída pelo **`Event`** do núcleo, e a pasta
+> A antiga pasta do dispatcher (dev/system/webhook) foi removida na ADR 0037. Nenhum código registrava naquela classe.
 
-```php
-namespace Reamur\System\Engine;
+O registry real é `Reamur\System\Engine\Event` (`dev/system/engine/event.php`):
 
-class Webhook {
-    protected $registry;
-    protected array $data = [];
-
-    public function __construct(object $registry) {
-        $this->registry = $registry;
-    }
-
-    /** Registra um webhook (trigger, ação, prioridade) */
-    public function register(string $trigger, object $action, int $priority = 0): void {
-        $this->data[] = [
-            'trigger'  => $trigger,
-            'action'   => $action,
-            'priority' => $priority
-        ];
-
-        // Menor prioridade executa primeiro
-        usort($this->data, fn($a, $b) => $a['priority'] <=> $b['priority']); // arrow fn (PHP 8)
-    }
-
-    /** Dispara um webhook pelo nome do evento (suporta * e ?) */
-    public function trigger(string $event, array $args = []): mixed {
-        foreach ($this->data as $value) {
-            if (preg_match('/^' . str_replace(['\*', '\?'], ['.*', '.'], preg_quote($value['trigger'], '/')) . '/', $event)) {
-                $result = $value['action']->execute($this->registry, $args);
-
-                // Primeiro resultado válido (não-nulo, não-Exception) interrompe a cadeia
-                if ($result !== null && !($result instanceof \Exception)) {
-                    return $result;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /** Remove um webhook específico pela rota da ação */
-    public function unregister(string $trigger, string $route): void { ... }
-}
-```
-
-### API de referência
-
-| Método | Assinatura | Descrição |
+| Método | Assinatura | O que faz |
 | --- | --- | --- |
-| `register()` | `register(string $trigger, object $action, int $priority = 0): void` | Associa um trigger (com wildcards `*`/`?`) a uma Action, ordenada por prioridade |
-| `trigger()` | `trigger(string $event, array $args = []): mixed` | Executa as ações cujo trigger casa com o evento; retorna o primeiro resultado válido |
-| `unregister()` | `unregister(string $trigger, string $route): void` | Remove o registro de um hook específico |
+| `register()` | `register(string $trigger, callable $action, int $priority = 0): void` | registra uma ação para um evento, com prioridade |
+| `has()` | `has(string $trigger): bool` | diz se há ação registrada |
+| `trigger()` | `trigger(string $trigger, array &$args = []): void` | executa as ações do evento |
 
-**Wildcards:** `order_*` casa com `order_add`, `order_edit`; `order_?dd` casa com `order_add`.
+Isso é o **evento interno** do CMS. O webhook de saída (avisar um sistema de fora) é outra coisa e está
+descrito em §3: `Library\Webhook\Dispatcher`, chamado por `dispatchWebhookEvent()`.
 
 ---
 
 ## 3. Estrutura de pastas
 
 ```text
-dev/system/webhook/
-├── controller/
-│   ├── catalog/
-│   │   └── product.php        # triggers de produto/portfólio
-│   └── sale/
-│       └── order.php          # triggers de pedido/orçamento
-└── model/
-    └── advanced/
-        └── webhook.php        # consulta os hooks cadastrados (tabela `webhook`)
+dev/system/library/webhook/
+└── dispatcher.php          # transporte: envelope JSON, HMAC, 3 tentativas
 ```
 
-Os controllers seguem o estilo ponte legado OpenCart (`ControllerWebhookSaleOrder extends Controller`) e usam `$this->load->modelWebhook()` para carregar o model `advanced/webhook`.
+**A pasta dev/system/webhook/ foi removida na ADR 0037.** Ela continha controllers no estilo ponte
+legado que consultavam as tabelas `webhook_client` e `webhook_request_history` — **nenhuma das duas
+existe no schema**. Era código que nunca rodou.
+
+| Peça | Onde está hoje | Papel |
+| --- | --- | --- |
+| cadastro de endpoints | `dev/admin/controller/setting/webhook.php` + model | CRUD de `rms_webhook`, log em `rms_webhook_log` |
+| disparo | `dispatchWebhookEvent()` em `dev/system/engine/controller.php` | monta o payload sob demanda e chama o dispatcher; **falha de webhook nunca derruba o fluxo** que a originou |
+| transporte | `dev/system/library/webhook/dispatcher.php` | `POST`, `X-Reamur-Signature` (HMAC do corpo), 3 tentativas síncronas |
+| eventos que disparam | ex.: `order_add` em `dev/catalog/controller/checkout/quote.php` | o ponto de chamada é o próprio controller do fluxo |
 
 ---
 
-## 4. Controllers existentes
+## 4. Como um evento é disparado
 
-### 4.1 `sale/order.php` — pedidos
+Não existe controller de webhook. O disparo é uma chamada no ponto do fluxo que gera o evento:
 
 ```php
-class ControllerWebhookSaleOrder extends Controller {
-
-    // Chamado quando um pedido é CRIADO
-    public function add($router, $args, $order_id) {
-        try {
-            $this->load->modelWebhook('advanced/webhook');
-            $hooks = $this->model_webhook_advanced_webhook->getHooks('order_add');
-
-            $data = [
-                'order_id'  => (int)$order_id,
-                'action'    => 'order_add',
-                'timestamp' => time()
-            ];
-
-            $this->dispatchRequests('order_add', $hooks, $data);
-        } catch (\Exception $e) {
-            $this->log->write('Webhook Error (add): ' . $e->getMessage());
-        }
-    }
-
-    // Chamado quando um pedido é EDITADO
-    public function edit($router, $args) {
-        try {
-            $order_id = (int)$args[0];
-            $this->load->modelWebhook('advanced/webhook');
-            $hooks = $this->model_webhook_advanced_webhook->getHooks('order_edit');
-
-            $data = [
-                'order_id'  => $order_id,
-                'action'    => 'order_edit',
-                'timestamp' => time()
-            ];
-
-            $this->dispatchRequests('order_edit', $hooks, $data);
-        } catch (\Exception $e) {
-            $this->log->write('Webhook Error (edit): ' . $e->getMessage());
-        }
-    }
-}
+// dev/catalog/controller/checkout/quote.php — depois de gravar o pedido
+$this->dispatchWebhookEvent('order_add', function () use ($order_id): array {
+    return $this->webhookOrderPayload((int)$order_id);
+}, 'pedido #' . (int)$order_id);
 ```
 
-### Payload padrão
+`dispatchWebhookEvent()` (em `dev/system/engine/controller.php`) faz três coisas, nesta ordem:
 
-```json
-{
-  "order_id": 123,
-  "action": "order_add",
-  "timestamp": 1760461200
-}
-```
+1. monta o payload **só se houver endpoint interessado** (o `Closure` existe para isso: sem interessado,
+   nenhuma consulta extra ao banco);
+2. entrega pelo `Dispatcher`, que assina e tenta até 3 vezes;
+3. isola a falha: exceção de webhook vira linha de log e o fluxo de pedido continua.
 
-> **Recomendação (Fase 5):** enriquecer o payload com dados públicos do pedido (status, total, itens resumidos) — nunca dados sensíveis (cartão, senha, endereço completo) — e adicionar `event_id` único para idempotência no receptor.
-
-### 4.2 Tabela de hooks (sugerida)
-
-O model `advanced/webhook` lê os hooks de uma tabela própria. Schema sugerido para o instalador:
-
-```sql
-CREATE TABLE `rms_webhook` (
-  `webhook_id`  INT AUTO_INCREMENT PRIMARY KEY,
-  `trigger`     VARCHAR(64)  NOT NULL,           -- order_add, order_edit, product_*
-  `url`         VARCHAR(255) NOT NULL,           -- endpoint receptor (HTTPS)
-  `secret`      VARCHAR(512) NOT NULL,           -- segredo HMAC por endpoint, cifrado (ADR 0094)
-  `description` VARCHAR(255) NOT NULL DEFAULT '',
-  `status`      TINYINT(1)   NOT NULL DEFAULT 1, -- 1 = ativo
-  `date_added`  DATETIME     NOT NULL,
-  KEY `trigger_status` (`trigger`, `status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-```
+Também dispara os **eventos internos** do CMS (engine `Event`), que são coisa diferente: eventos agem
+dentro do CMS, webhooks avisam o mundo lá fora.
 
 ---
 
@@ -266,49 +173,23 @@ $valid = hash_equals(
 
 ## 6. Criando um novo webhook
 
-Exemplo completo: **`order_delete`** (pedido excluído → avisar o financeiro — Fluxa!).
+Não se cria controller. Duas coisas, e só:
 
-**Passo 1 — Controller** (`dev/system/webhook/controller/sale/order.php`):
-
-```php
-public function delete($router, $args) {
-    try {
-        $order_id = (int)$args[0];
-
-        $this->load->modelWebhook('advanced/webhook');
-        $hooks = $this->model_webhook_advanced_webhook->getHooks('order_delete');
-
-        $data = [
-            'order_id'  => $order_id,
-            'action'    => 'order_delete',
-            'timestamp' => time()
-        ];
-
-        $this->dispatchRequests('order_delete', $hooks, $data);
-    } catch (\Exception $e) {
-        $this->log->write('Webhook Error (delete): ' . $e->getMessage());
-    }
-}
-```
-
-**Passo 2 — Amarrar ao evento do model de pedidos** (registro no admin, conceito `admin/model/sale/order/deleteOrder/after`):
+**Passo 1 — disparar o evento no ponto do fluxo.**
 
 ```php
-// admin/controller/startup/ (ou via admin → Design > Eventos)
-$this->event->register(
-    'admin/model/sale/order/deleteOrder/after',
-    new \Reamur\System\Engine\Action('webhook/sale/order.delete')
-);
+// no controller do fluxo, depois de concluir a ação
+$this->dispatchWebhookEvent('order_delete', ['order_id' => (int)$order_id], 'pedido #' . (int)$order_id);
 ```
 
-**Passo 3 — Cadastrar o hook receptor** no banco:
+O nome do evento é livre, mas por convenção segue `<entidade>_<ação>` (`order_add`, `order_edit`,
+`order_delete`), porque o cadastro do endpoint usa **wildcard**: `order_*` casa com os três.
 
-```sql
-INSERT INTO `rms_webhook` (`trigger`, `url`, `secret`, `description`, `status`)
-VALUES ('order_delete', 'https://fluxa.exemplo.com/hooks/reamur', 'SEGREDO_FORTE_AQUI', 'Fluxa — baixa financeira', 1);
-```
+**Passo 2 — cadastrar o endpoint na tela.** Admin → `setting/webhook` → *Adicionar*: URL (só HTTPS, sem IP
+privado — ADR 0090 confere de novo no envio), segredo (cifrado, ADR 0094) e o trigger com wildcard.
 
-**Pronto:** ao excluir um pedido, o dispatcher assina o payload com HMAC e faz POST para a URL cadastrada.
+O receptor recebe o envelope de §1 e deve tratar `X-Reamur-Delivery` como chave de idempotência: a mesma
+entrega pode chegar mais de uma vez quando há retry.
 
 ---
 

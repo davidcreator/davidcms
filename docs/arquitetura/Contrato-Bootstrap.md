@@ -144,4 +144,4 @@ A montagem de "config por aplicação" **já existe** no framework: `$config->lo
 - [Arquitetura-MVCL.md](Arquitetura-MVCL.md) — o que acontece depois do bootstrap
 - [Estrutura-de-Pastas.md](../Estrutura-de-Pastas.md) — onde vive cada arquivo
 - [Auditoria-Fundacao.md](Auditoria-Fundacao.md) — lacuna L1 que este contrato fecha
-- `agents-ia/regras/01` §4 — regras do núcleo compartilhado
+- `agents-ia/regras/01-arquitetura-e-convencoes.md` §4 — regras do núcleo compartilhado

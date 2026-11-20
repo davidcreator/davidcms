@@ -195,7 +195,7 @@ Decisão registrada: **manter a estrutura base com o nome ReamurCMS** em vez de 
 - [ ] Alinhar `config/default.php` para `en-us` conforme ADR 0001
 - [ ] Schema do banco conforme [Dicionário de Dados](../arquitetura/Dicionario-de-Dados.md) (alimenta a Fase 2)
 - [ ] Limpeza do vendor versionado (`git rm -r --cached`) — ADR 0003
-- [ ] Ativar PHPStan (`composer analyse`) e PHPUnit em `dev/tests/` — ADR 0004
+- [x] Ativar PHPStan (`composer analyse`) e PHPUnit — ADR 0004 *(feito; os testes vivem em tests/, não em dev/tests/)*
 
 **Fase 2 — Instalador**
 - [ ] Passos do wizard: licença → requisitos → banco → admin → concluir

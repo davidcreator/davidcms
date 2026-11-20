@@ -14,7 +14,7 @@
 4. [dev/install — instalador](#4-devinstall--instalador)
 5. [dev/system — núcleo](#5-devsystem--núcleo)
 6. [dev/system/storage — dados voláteis](#6-devsystemstorage--dados-voláteis)
-7. [dev/system/webhook — webhooks](#7-devsystemwebhook--webhooks)
+7. [dev/system/library/webhook — webhooks](#7-devsystemlibrarywebhook--webhooks-de-saída)
 8. [Arquivos de configuração](#8-arquivos-de-configuração)
 9. [Onde criar o quê (guia rápido)](#9-onde-criar-o-quê-guia-rápido)
 
@@ -224,20 +224,24 @@ storage/
 
 ---
 
-## 7. `dev/system/webhook/` — Webhooks
+## 7. `dev/system/library/webhook/` — Webhooks de saída
+
+> **Este diretório mudou de lugar.** A pasta dev/system/webhook/ (controllers que consultavam
+> `webhook_client`/`webhook_request_history`, tabelas que nunca existiram no schema) foi **removida**
+> na ADR 0037. O que existe hoje:
 
 ```text
-webhook/
-├── controller/
-│   ├── catalog/product.php    # product_add / product_edit / ...
-│   └── sale/order.php         # order_add / order_edit (+ order_delete planejado)
-└── model/
-    └── advanced/webhook.php   # getHooks($trigger) → lê tabela rms_webhook
+dev/system/library/webhook/
+└── dispatcher.php          # transporte puro: HMAC, retries síncronos, sem banco
 ```
 
-Documentação completa: [Webhooks.md](integracoes/Webhooks.md).
+| Peça | Onde fica | Papel |
+| --- | --- | --- |
+| transporte | `dev/system/library/webhook/dispatcher.php` | entrega HTTP do envelope JSON, assinatura `X-Reamur-Signature`, 3 tentativas |
+| cadastro de endpoints | `dev/admin/controller/setting/webhook.php` (+ model) | CRUD de `rms_webhook` e log de entregas |
+| disparo | `dev/catalog/controller/checkout/quote.php` e afins | chama o dispatcher no evento (`order_add`, …) |
 
----
+Detalhe completo em [Webhooks](integracoes/Webhooks.md) e nas ADRs 0016 (CRUD) e 0033 (transporte).
 
 ## 8. Arquivos de configuração
 

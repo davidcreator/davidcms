@@ -233,3 +233,9 @@ jobs:
 
     - name: Contrato do proprio workflow (actions, runner, guards)
       run: bash tools/verify-ci-workflow.sh
+
+    # ADR 0126: ADR sem linha no indice passa em revisao de codigo porque
+    # ninguem abre o indice para conferir. Caminho citado em documento
+    # operacional que nao existe e pior: a instrucao parece precisa.
+    - name: Indice de ADRs e caminhos citados nos documentos
+      run: php tools/verify-docs-index.php --strict

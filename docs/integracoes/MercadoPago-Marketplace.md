@@ -57,9 +57,23 @@ Config: `rms_setting` chaves `mp_app_id`, `mp_client_secret`, `mp_env`, `mp_redi
 
 ## 5. Testes e2e (mock do MP, sem credenciais reais)
 
-`tools/e2e/e2e_f502.sh` sobe um **mock local** do MP em `/var/www/html/hookmock.php` e grava overrides `mp_token_url` / `mp_users_me_url` no banco de teste (costuras do ADR 0034 §4 — em produção essas chaves não existem e os endpoints oficiais são usados). A bateria faz 10 checks: schema, seeds, tela, validações do save, `authorize` com state, `callback` rejeitando state forjado, fluxo OAuth completo contra o mock com **upsert**, refresh rotacionando expiração e delete local.
+> **O script e2e_f502.sh citado aqui não existe mais no repositório** (a bateria e2e do
+> Marketplace saiu junto com o cutover, ADR 0037). O que **existe** e continua valendo é a **costura de
+> ambiente** que ele usava: as chaves `mp_token_url` / `mp_users_me_url` (ADR 0034 §4) desviam OAuth e
+> `/users/me` para um mock, e em produção essas chaves não existem — os endpoints oficiais são usados.
 
-Rode com o ambiente padrão: `bash tools/e2e/e2e_f502.sh` (precisa do Apache + banco `reamur_test` ativos).
+O que dá para provar sem credencial hoje, e onde:
+
+| O que | Onde |
+| --- | --- |
+| cliente OAuth, rotação de refresh, upsert de vendedor | testes de unidade do cliente Mercado Pago |
+| regras do link de vendedor **recusado** (ADR 0122/F1) | `sale/order` — a ação responde aviso depois de permissão e CSRF |
+| fluxo de pagamento da plataforma (sem split) | baterias de pagamento em `tests/Unit/Payment/` |
+
+**O que continua dependendo de sandbox:** conversa OAuth de verdade com o MP. Está na bateria A–M
+(`JOW-Payments-Testes-Antes-da-Producao.md`).
+
+---
 
 ## 6. Checkout com split (F5-03)
 

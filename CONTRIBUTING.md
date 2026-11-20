@@ -23,7 +23,7 @@ Obrigado pelo interesse! Este guia vale para contribuidores humanos **e** para a
 
 - Nunca gere arquivo "de cabeça": copie o esqueleto correspondente em [`agents-ia/modelos/`](agents-ia/modelos/);
 - Textos de interface: somente camada **Language**; idioma padrão **`en-us`** (ADR 0001), com pt-BR/es-EU quando possível;
-- Nenhuma pasta de primeiro nível nova sem ADR (a única exceção aprovada é `dev/tests/`).
+- Nenhuma pasta de primeiro nível nova sem ADR (a exceção aprovada foi a antiga pasta de testes, registrada na ADR 0004; os testes automatizados vivem em tests/).
 
 ## Reportar bugs
 

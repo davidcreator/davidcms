@@ -40,7 +40,7 @@ Copiar para o novo arquivo `NNNN-titulo-curto.md`:
 
 ## Documentos atualizados
 
-- `docs/...` · `agents-ia/regras/...`
+- `docs/…` · `agents-ia/regras/NN-…md` (ex.: `01-arquitetura-e-convencoes.md`)
 ```
 
 ## Índice
@@ -51,8 +51,73 @@ Copiar para o novo arquivo `NNNN-titulo-curto.md`:
 | [0002](0002-blog-hibrido.md) | Blog híbrido (externo no lançamento, interno depois) | ✅ aceita | 2026-10-15 |
 | [0003](0003-ci-e-gitignore.md) | Correção do CI e do `.gitignore` | ✅ aceita | 2026-10-15 |
 | [0004](0004-contratos-qualidade-e-modelos.md) | Contratos de fundação e infra de qualidade (L1–L10) | ✅ aceita | 2026-10-15 |
+| [0005](0005-login-e-acl-fase2.md) | Sessão, login e ACL do painel (Fase 2, Tarefa F2-2) | ✅ aceita | 2026-10-16 |
+| [0006](0006-roteamento-e-urls-limpas.md) | Roteamento e URLs limpas (Fase 2, Tarefa F2-5) | ✅ aceita | 2026-10-17 |
+| [0007](0007-interface-do-instalador-paridade-reamurcms.md) | Interface do instalador em paridade com o ReamurCMS público | ✅ aceita | 2026-10-17 |
+| [0008](0008-modulo-portfolio-padrao-crud-admin.md) | Módulo Portfólio no admin: o padrão-ouro dos CRUDs (F2 Tarefa 8) | ✅ aceita | 2026-10-18 |
+| [0009](0009-crud-categorias-do-portfolio.md) | CRUD de Categorias do portfólio (F2 Tarefa 9) | ✅ aceita | 2026-10-18 |
+| [0010](0010-modulo-paginas-cms.md) | Módulo de Páginas CMS (`cms/page`, F2 Tarefa 10) | ✅ aceita | 2026-10-18 |
+| [0011](0011-componente-upload-e-depoimentos.md) | Componente de upload (regra dos três) + CRUD Depoimentos (F2 Tarefa 11) | ✅ aceita | 2026-10-18 |
+| [0012](0012-crud-logos-de-clientes.md) | CRUD de Logos de Clientes (`marketing/client_logo`, F2 Tarefa 12) | ✅ aceita | 2026-10-18 |
+| [0013](0013-crud-ferramentas-conectadas.md) | CRUD de Ferramentas Conectadas (`tool/tool`, F2 Tarefa 13) | ✅ aceita | 2026-10-18 |
+| [0014](0014-crud-pedidos-orcamentos.md) | CRUD de Pedidos/Orçamentos (`sale/order`, F2 Tarefa 14) | ✅ aceita | 2026-10-18 |
+| [0015](0015-inbox-mensagens-contato.md) | Inbox de Mensagens de Contato (`communication/contact_message`, F2 Tarefa 15) | ✅ aceita | 2026-10-18 |
+| [0016](0016-crud-webhooks-log-entregas.md) | CRUD de Webhooks + Log de Entregas (`setting/webhook`, F2 Tarefa 16) | ✅ aceita | 2026-10-18 |
+| [0017](0017-publicacao-site-catalogo-one-page-seo-e-formularios-publicos.md) | Publicação do site — catálogo one-page, SEO URLs e formulários públicos (contato + orçamento) | ✅ aceita | 2026-10-18 |
+| [0018](0018-hardening-csrf-rate-limit-headers-lock-install-e-auditoria-null-coalesce.md) | Hardening — CSRF, rate limit, headers de segurança, selo do install e auditoria `??` | ✅ aceita | 2026-10-18 |
+| [0019](0019-tema-base-catalog-home-composta-e-seed-de-conteudo-real-davidalmeida.md) | Tema base do catalog, home composta em 10 partials Twig e seed de conteúdo real (davidalmeida.xyz) | ✅ aceita | 2026-10-18 |
+| [0020](0020-hero-threejs-cena-1-particulas-parallax-e-slot-webgl-no-chrome.md) | Hero Three.js (Cena 1 — partículas + parallax) e slot WebGL condicional no chrome do catalog | ✅ aceita | 2026-10-19 |
+| [0021](0021-portfolio-com-seo-real-tilt-css-nos-cards-e-404-com-fog-de-particulas.md) | Portfólio com SEO real, tilt CSS nos cards (Cena 3.1) e 404 com fog de partículas (Cena 4) | ✅ aceita | 2026-10-19 |
+| [0022](0022-paginas-publicas-das-ferramentas-com-keywords-seo-e-grade-tematica.md) | Páginas públicas das ferramentas (Fluxa, Quotia, Vertex, Solis) com keywords seo_url tool_id=* e grade temática | ✅ aceita | 2026-10-19 |
+| [0023](0023-latest-news-do-blog-externo-com-cache-e-degradacao-silenciosa.md) | "Latest News" do blog externo na home com cache compartilhado e degradação silenciosa | ✅ aceita | 2026-10-19 |
+| [0024](0024-configuracoes-operacionais-do-painel-setting-setting.md) | Configurações operacionais do painel — `setting/setting` unificado | ✅ aceita | 2026-10-19 |
+| [0025](0025-gestao-de-idiomas-pelo-painel.md) | Gestão de idiomas pelo painel (localization/language) | ✅ aceita | 2026-10-19 |
+| [0026](0026-gestao-de-informacoes-do-site-setting-site-info.md) | Gestão de informações do site (setting/site_info) | ✅ aceita | 2026-10-19 |
+| [0027](0027-auto-perfil-grupos-e-guardas-de-auto-trava-usuarios.md) | Auto-perfil, delete de grupos e guardas de auto-trava em usuários | ✅ aceita | 2026-10-19 |
+| [0028](0028-restauracao-das-injecoes-f4-02-e-f4-03-pos-refator.md) | Restauração das injeções/settings e do módulo Site Info após refator manual | ✅ aceita | 2026-10-19 |
+| [0029](0029-envio-de-e-mail-ativo-factory-notificacao-e-teste.md) | Envio de e-mail ativo: factory, notificação do contato e teste no painel | ✅ aceita | 2026-10-20 |
+| [0030](0030-cache-efetivo-pelo-painel-boot-le-rms-setting-e-fallback.md) | Cache efetivo pelo painel: boot lê rms_setting, fallback File e guardas | ✅ aceita | 2026-10-20 |
+| [0031](0031-seo-publico-sitemap-dinamico-robots-estatico-e-opengraph.md) | SEO público: sitemap dinâmico, robots estático e Open Graph no head | ✅ aceita | 2026-10-20 |
+| [0032](0032-historico-legado-fonte-sem-pedidos-e-maquinaria-de-importacao-pronta.md) | Histórico legado: fonte sem pedidos, spam não migra, maquinaria pronta | ✅ aceita | 2026-10-20 |
+| [0033](0033-webhooks-de-pedido-hmac-retries-sincronos-e-isolamento-do-fluxo.md) | Webhooks de pedido: HMAC, retries síncronos e isolamento do fluxo | ✅ aceita | 2026-10-20 |
+| [0034](0034-mercadopago-marketplace-foundation-oauth-sellers.md) | Mercado Pago Marketplace: fundação OAuth de vendedores (config fora do git, costuras de ambiente) | ✅ aceita | 2026-10-20 |
+| [0035](0035-mercadopago-checkout-split-marketplace-fee-notificacao.md) | Checkout com split (marketplace_fee) e notificação de pagamento: a verdade é a API, nunca o POST | ✅ aceita | 2026-10-20 |
+| [0036](0036-google-shopping-openbay-nao-aplicaveis.md) | Google Shopping e OpenBay: não aplicáveis ao modelo do projeto (sem código) | ✅ aceita | 2026-10-20 |
+| [0037](0037-hardening-pre-cutover-modo-producao-headers-remocao-legado.md) | Hardening pré-cutover: modo produção de erros, headers extras e remoção do legado morto | ✅ aceita | 2026-10-21 |
+| [0038](0038-mapa-301-legado-htaccess-cirurgico-cmsbase-dinamico.md) | Mapa 301 do legado: regras cirúrgicas no catalog/.htaccess com base dinâmica (CMSBASE) | ✅ aceita | 2026-10-21 |
+| [0039](0039-build-producao-runtime-only-e-instalacao-sem-wizard.md) | Build de produção runtime-only (`prod/`) e instalação sem wizard | ✅ aceita | 2026-10-21 |
+| [0040](0040-verificacao-remota-producao-check-producao-e-ciclo-pos-hibernacao.md) | Verificação remota de produção (`check_producao.sh`) e ciclo pós-hibernação | ✅ aceita | 2026-10-21 |
+| [0041](0041-silenciamento-404-assets-estaticos-e-log-diagnostico-com-uri.md) | Silenciamento de 404 de assets estáticos e log de rota com REQUEST_URI | ✅ aceita | 2026-10-21 |
+| [0042](0042-blog-interno-antecipado-base-e-admin-crud.md) | Blog interno antecipado: base de dados + admin CRUD (revoga parcial da ADR 0002) | ✅ aceita | 2026-10-21 |
+| [0043](0043-frente-publica-blog-latest-news-interna.md) | Frente pública do blog interno e Latest News migrada do feed WP externo | ✅ aceita | 2026-10-21 |
+| [0044](0044-importador-wordpress-blog-interno-e-mapa-301.md) | Importador WordPress do blog interno (F7-03) e mapa 301 | ✅ aceita | 2026-10-21 |
+| [0045](0045-f8-01-admin-shell-dashboard-e-tres-bugs-latentes.md) | F8-01: Shell visual admin (sidebar+topbar), dashboard com contadores reais e três bugs latentes corrigidos | ✅ aceita | 2026-10-22 |
+| [0046](0046-f8-02-blog-no-shell-filtros-paginacao-ckeditor-e-import-reestilizado.md) | F8-02: Blog migrado para o shell admin — filtros server-side, paginação, CKEditor local, importador reestilizado | ✅ aceita | 2026-10-22 |
+| [0047](0047-f8-v-aparencia-do-painel-skins-wcag-trava-contraste-e-dupla-camada-de-persistencia.md) | F8-V: Aparência do Painel — skins WCAG curadas, trava de contraste 4.5:1 e persistência em dupla camada | ✅ aceita | 2026-10-22 |
 | [0048](0048-f8-04-sale-marketing-filtros-paginacao-csrf.md) | F8-04: sale/marketing, filtros, paginação e CSRF | ✅ aceita | 2026-10-22 |
 | [0049](0049-f8-05-blog-media-library.md) | F8-05: biblioteca de mídia para capas do Blog | ✅ aceita | 2026-10-22 |
+| [0050](0050-f8-06-paginas-cms-no-shell.md) | F8-06: Páginas CMS no shell administrativo | ✅ aceita | 2026-10-23 |
+| [0051](0051-f8-07-categorias-portfolio-no-shell.md) | F8-07: Categorias do portfólio no shell | ✅ aceita | 2026-10-23 |
+| [0052](0052-f8-08-projetos-portfolio-no-shell.md) | F8-08: Projetos do portfólio no shell | ✅ aceita | 2026-10-23 |
+| [0053](0053-f8-09-ferramentas-conectadas-no-shell.md) | F8-09: Ferramentas conectadas no shell | ✅ aceita | 2026-10-23 |
+| [0054](0054-f8-10-mensagens-contato-no-shell.md) | F8-10: Mensagens de contato no shell e Ler POST protegido | ✅ aceita | 2026-10-23 |
+| [0055](0055-f8-11-idiomas-no-painel.md) | F8-11: Tela de Idiomas no shell | ✅ aceita | 2026-10-23 |
+| [0056](0056-f8-12-consolidacao-validacao-painel.md) | F8-12: Consolidação e validação integrada do painel | ✅ aceita | 2026-10-23 |
+| [0057](0057-f9-01-proposta-campos-personalizados.md) | F9-01: Inventário e proposta de campos personalizados | ✅ aceita | 2026-10-23 |
+| [0058](0058-f9-02-desenho-campos-personalizados.md) | F9-02: Desenho físico dos campos personalizados | ✅ aceita | 2026-10-23 |
+| [0059](0059-f9-03-auditoria-banco-davidalmeida.md) | F9-03: Auditoria segura do dump `bd-davidalmeida.sql` | ✅ aceita | 2026-10-23 |
+| [0060](0060-f9-04-plano-dryrun-davidalmeida.md) | F9-04: Fonte privada e dry-run para o legado davidalmeida.xyz | ✅ aceita | 2026-10-23 |
+| [0061](0061-f9-05-modelo-definicoes-campos.md) | F9-05: Model de definições e ACL dormente de campos personalizados | ✅ aceita | 2026-10-23 |
+| [0062](0062-f9-06-ui-admin-campos-personalizados.md) | F9-06: UI administrativa para definições de campos personalizados | ✅ aceita | 2026-10-24 |
+| [0063](0063-f9-07-valores-campos-cms-page.md) | F9-07: Persistência administrativa de valores de campos em CMS/page | ✅ aceita | 2026-10-24 |
+| [0064](0064-f9-08-exibicao-publica-campos-cms-page.md) | F9-08: Exposição pública opt-in de custom fields em páginas CMS | ✅ aceita | 2026-10-24 |
+| [0065](0065-f9-09-navegacao-campos-personalizados.md) | F9-09: Entrada ACL-driven no menu para custom field definitions | ✅ aceita | 2026-10-24 |
+| [0066](0066-f9-10-dicionario-preflight-integrado.md) | F9-10: Dicionário canônico e preflight integrado de custom fields | ✅ aceita | 2026-10-24 |
+| [0067](0067-f9-11-editor-de-blocos-blog-contrato.md) | F9-11: Contrato de editor próprio em blocos para o Blog | ✅ aceita | 2026-10-24 |
+| [0068](0068-f9-12-blog-block-content-sidecar.md) | F9-12: sidecar versionado para conteúdo de blocos do Blog | ✅ aceita | 2026-10-24 |
+| [0069](0069-f9-13-blog-conversor-legado.md) | F9-13: conversão HTML do Blog fail-closed | ✅ aceita | 2026-10-24 |
+| [0070](0070-f9-14-editor-canvas-mvp.md) | F9-14: UI de blocos isolada até o save seguro | ✅ aceita | 2026-10-24 |
+| [0071](0071-f9-15-renderer-blog-allowlist.md) | F9-15: renderer Blog de blocos allowlisted | ✅ aceita | 2026-10-24 |
 | [0072](0072-threejs-scenes-admin-system.md) | Configuração declarativa das cenas Three.js nativas via System e Admin | ✅ aceita | 2026-10-26 |
 | [0073](0073-threejs-runtime-system-asset-gateway.md) | Runtime Three.js canônico no System com entrega allowlisted pelo Catalog | 🟡 aprovada para implementação incremental | 2026-10-26 |
 | [0074](0074-threejs-shared-scene-runner.md) | Ciclo de vida compartilhado para cenas Three.js e thumbs declarativas | 🟡 aceita para implementação incremental | 2026-10-26 |
@@ -107,3 +172,4 @@ Copiar para o novo arquivo `NNNN-titulo-curto.md`:
 | [0123](0123-pagamentos-r1-varredura-de-pagas.md) | Pagamentos: **R1** — a reconciliação passa a varrer tentativas já pagas. `pendingAttempts()` filtra estado aberto, então uma tentativa que chegou a `paid` **saía da fila para sempre** e o cron nunca mais olhava para ela: estorno feito no painel do provedor só chegava ao CMS se o provedor reenviasse o webhook. A varredura é **separada**, não um alargamento do filtro (pergunta e custo diferentes): `settledAttempts()` com `paid` + `partially_refunded` (o segundo estorno parcial vai de `partially_refunded` para `refunded`), janela própria de **30 dias** com teto **180** (a janela de estorno do MP), `settled_lookback` no cron (1..180, 400 fora da faixa). Mesmo `reconcileRecord()`, mesma máquina de estados, **nenhuma linha que mova dinheiro** — o ledger já aceitava `paid → refunded` desde antes; faltava alimentá-lo. Fora e dito: Stripe continua cego (a reconciliação lê a *sessão*, que não muda com estorno), a divergência `rms_jow_charge` × `rms_payment_transaction` continua sem comparação, R2/R3 (D01) seguem abertos, e o `limit` é compartilhado pelas duas varreduras. Prova: suíte 1944/46.383 verde, PHPStan limpo, 4 testes novos. | ✅ executada | 2026-11-20 |
 | [0124](0124-pagamentos-stripe-estorno-e-transicao-terminal.md) | Pagamentos: **o Stripe deixa de ser cego para estorno**, e o estorno total que chega antes do `paid`. A sessão de Checkout **não muda** quando há estorno (`payment_status` fica `paid` para sempre), então varrer a tentativa paga do Stripe, como a ADR 0123 passou a fazer, era perguntar a um objeto que só sabe responder "pago". O `payment_intent` já estava gravado desde sempre; agora `reconcile()` o usa para ler `GET /v1/charges/{id}` e olhar `amount_refunded` — **um só caminho de estorno**, o mesmo `reconcileCharge()` do aviso `charge.refunded`. Sem estorno, o veredicto continua sendo o da sessão (senão toda paga viraria `ignorado` a cada ciclo). De passagem, o caso que só aparece ao varrer pagas: estorno **total** que chega antes de o CMS registrar o `paid` — `GatewayTerminalStatus` abre **só** `pending|requires_action|authorized → refunded`, nos dois lados (applier e escrita); `partially_refunded` continua exigindo `paid`, e `refunded` continua terminal. Leitura pura: **nada estorna**. R2/R3 (D01) seguem abertos. Suíte 1957/46.415 verde, PHPStan limpo, 13 testes novos. | ✅ executada | 2026-11-20 |
 | [0125](0125-pagamentos-paypal-leitura-de-captura.md) | Pagamentos: **o PayPal também é lido pela captura, não só pela ordem**. `reconcileOrder()` só descobria estorno pelo bloco `purchase_units[0].payments.captures[]` **embutido** na resposta da ordem; quando o bloco não vem, a ordem `COMPLETED` normaliza para `paid` e a varredura conclui "está pago" — para sempre, dependendo do aviso `PAYMENT.CAPTURE.REFUNDED` que é justamente o que se perde. A captura é recurso separado e a ordem aponta para ela por link (`rel: up`). Agora, ordem paga **sem** bloco embutido → `GET /v2/payments/captures/{id}` (novo `getCapture()`), e só o **estorno** é aceito vindo dela: `COMPLETED` não reescreve o que a ordem disse, senão toda paga apareceria como `ignorado` a cada ciclo. Identidade da captura conferida (`capture_not_reconciled`). **Leitura pura** — a rota POST de captura continua só no fluxo de webhook. O Mercado Pago não precisou de nada: a Order API dele carrega o estado na própria ordem. Suíte 1964/46.429 verde, PHPStan limpo, 7 testes novos. | ✅ executada | 2026-11-20 |
+| [0126](0126-indice-de-adrs-e-caminhos-citados.md) | Documentação: **o índice de ADRs completo e o documento que não manda rodar o que não existe**. **65 das 125 ADRs estavam fora do índice** — inclusive a 0033, a 0034 e a 0037, que as ADRs de pagamento citam como base: quem procurasse "webhooks" ou "marketplace" não achava nada. O índice foi completado (título/status/data lidos de cada arquivo, tabela ordenada). E **nove caminhos citados em documentos operacionais não existiam** — o pior era `Webhooks.md`, com **quatro seções** ensinando a criar um controller `ControllerWebhookSaleOrder` que a ADR 0037 removeu; reescrito para o mecanismo real (`Event`, `dispatchWebhookEvent()`, cadastro na tela). `tools/verify-docs-index.php` (novo) passa a impedir as duas coisas no CI: ADR sem linha no índice e caminho citado inexistente (`--strict`). Documento histórico fica de fora — ali arquivo removido é registro, não defeito. **Limite declarado:** o guarda não valida se o conteúdo ainda é verdade; isso só a leitura pega, e foi ela que achou. Suíte 1975/46.458 verde. | ✅ executada | 2026-11-20 |

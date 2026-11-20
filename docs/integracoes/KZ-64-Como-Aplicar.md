@@ -132,7 +132,7 @@ conferência.
 > Sem a migração nada quebra: Mercado Pago reconcilia pelo id da ordem que já
 > existe; Stripe e PayPal reportam `missing_provider_anchor` no relatório.
 
-2. **Token** em `dev/system/config/config.php` (ou equivalente), 32+ caracteres:
+2. **Token** em `catalog/config.php` (ou `admin/config.php`; no repositório o lugar do arquivo é `dev/system/config/`), 32+ caracteres:
 
 ```php
 define('REAMUR_RECONCILE_TOKEN', 'gere-um-segredo-aleatorio-de-32-ou-mais-caracteres');

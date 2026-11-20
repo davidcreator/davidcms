@@ -87,7 +87,10 @@
 
 ### Campos personalizados — Fase 9 / CMS page (ADR 0058, migração F9-02)
 
-As cinco tabelas abaixo são criadas por `dev/install/sql/upgrade_f9_02_custom_fields_schema.sql`; migration separada e manual, sem FKs. O primeiro alvo implementado é `entity_type='cms/page'`. Chaves de grupo/campo são estáveis; renomear ou mudar tipo exige migração nova. Valores compartilhados usam `language_id=0`; valores localizados usam o ID real de idioma.
+As cinco tabelas abaixo estão no **schema completo** (`dev/install/sql/schema-complete.sql`, bloco
+`custom_field_*`), instalado pelo wizard; em instalação que já existia, a migração é manual e sem FKs.
+*(O arquivo `upgrade_f9_02_custom_fields_schema.sql` citado aqui antes não existe no repositório: as
+tabelas nasceram no schema, não em migração separada.)* O primeiro alvo implementado é `entity_type='cms/page'`. Chaves de grupo/campo são estáveis; renomear ou mudar tipo exige migração nova. Valores compartilhados usam `language_id=0`; valores localizados usam o ID real de idioma.
 
 #### `custom_field_group`
 `group_id` INT PK AI · `entity_type` VARCHAR(32) · `key` VARCHAR(64) · `name` VARCHAR(128) · `status` TINYINT(1) DEFAULT 0 · `sort_order` INT · `date_added`,`date_modified` DATETIME · UNIQUE(`entity_type`,`key`) · índice (`entity_type`,`status`,`sort_order`).
