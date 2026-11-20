@@ -44,6 +44,41 @@ final class DbGatewayAccountStore implements GatewayAccountStore {
         );
     }
 
+    /** @return list<GatewayAccount> */
+    public function all(): array {
+        $query = $this->query(
+            "SELECT `gateway_id`, `provider_code`, `account_label`, `environment`, `status`, `public_config_json`"
+            . " FROM `" . $this->table() . "` ORDER BY `gateway_id` ASC"
+        );
+        $rows = ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+        $accounts = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $code = (string)($row['provider_code'] ?? '');
+
+            // One unreadable row must not hide the healthy accounts from
+            // reconciliation; invalid metadata is simply not listed.
+            try {
+                $accounts[] = new GatewayAccount(
+                    (int)($row['gateway_id'] ?? 0),
+                    $code,
+                    (string)($row['account_label'] ?? ''),
+                    (string)($row['environment'] ?? ''),
+                    (int)($row['status'] ?? 0) === 1,
+                    $this->decodePublicConfig((string)($row['public_config_json'] ?? ''))
+                );
+            } catch (\InvalidArgumentException | \RuntimeException) {
+                continue;
+            }
+        }
+
+        return $accounts;
+    }
+
     public function credentials(int $gatewayId): GatewayCredentials {
         if ($gatewayId <= 0) {
             throw new \InvalidArgumentException('gateway account store: invalid gateway ID');

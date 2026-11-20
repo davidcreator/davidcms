@@ -77,7 +77,8 @@ class Gateway extends \Reamur\System\Engine\Controller {
                     $this->load->model('checkout/gateway_payment');
                     $this->model_checkout_gateway_payment->syncJowChargeStatus(
                         $record->sourceId,
-                        $record->status
+                        $record->status,
+                        $record->providerCode
                     );
                 }
             }

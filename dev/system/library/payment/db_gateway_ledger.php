@@ -6,11 +6,53 @@ use DateTimeZone;
 use JsonException;
 
 /** MySQL/MariaDB implementation for the additive JOW multi-gateway ledger. */
-final class DbGatewayLedger implements GatewayLedger {
+final class DbGatewayLedger implements GatewayReconcilableLedger {
+    /** Upper bound for one reconciliation page; mirrors the service ceiling. */
+    private const MAX_PENDING_LIMIT = 200;
+
+    /** null = not probed yet; see supportsProviderCheckoutId(). */
+    private ?bool $checkoutIdColumn = null;
+
     public function __construct(private readonly object $db, private readonly string $prefix) {
         if ($prefix !== '' && preg_match('/^[A-Za-z0-9_]+$/D', $prefix) !== 1) {
             throw new \InvalidArgumentException('gateway ledger: invalid table prefix');
         }
+    }
+
+    /** @return list<GatewayPaymentRecord> */
+    public function pendingAttempts(
+        int $gatewayId,
+        string $modifiedBeforeUtc,
+        string $createdAfterUtc,
+        int $limit
+    ): array {
+        if ($gatewayId <= 0 || $limit < 1 || $limit > self::MAX_PENDING_LIMIT) {
+            throw new \InvalidArgumentException('gateway ledger: invalid pending attempt page');
+        }
+
+        self::assertUtc($modifiedBeforeUtc);
+        self::assertUtc($createdAfterUtc);
+
+        $query = $this->query(
+            "SELECT * FROM `" . $this->table('payment_transaction') . "`"
+            . " WHERE `gateway_id` = '" . $gatewayId . "'"
+            . " AND `status` IN ('pending', 'requires_action', 'authorized')"
+            . " AND `date_modified` <= '" . $this->escape($modifiedBeforeUtc) . "'"
+            . " AND `date_added` >= '" . $this->escape($createdAfterUtc) . "'"
+            . " ORDER BY `date_modified` ASC, `transaction_id` ASC LIMIT " . $limit
+        );
+        $rows = ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+        $records = [];
+
+        foreach ($rows as $row) {
+            if (is_array($row)) {
+                // A malformed ledger row is an integrity problem: it must not be
+                // skipped silently, otherwise a payment would look "settled".
+                $records[] = $this->recordFromRow($row);
+            }
+        }
+
+        return $records;
     }
 
     public function latestForSource(string $sourceType, int $sourceId): ?GatewayPaymentRecord {
@@ -79,6 +121,12 @@ final class DbGatewayLedger implements GatewayLedger {
         $actionJson = json_encode($result->customerAction->toSafeArray(), JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
         $checkoutUrl = $result->customerAction->url;
         $providerPaymentId = $result->providerPaymentId;
+        // Additive column: present only after tools/upgrade_jow_payments_reconcile.sql.
+        // Without it the attempt is still recorded, it just cannot be polled back.
+        $checkoutId = $result->providerCheckoutId;
+        $checkoutSql = ($checkoutId !== '' && $this->supportsProviderCheckoutId())
+            ? " `provider_checkout_id` = '" . $this->escape($checkoutId) . "',"
+            : '';
         $quoteRef = $quote?->reference;
         $quoteProvider = $quote?->providerCode ?? '';
         $quoteRate = $quote?->rate;
@@ -105,6 +153,7 @@ final class DbGatewayLedger implements GatewayLedger {
             . " `fx_expires_at` = " . $this->nullableEscaped($expiresAt) . ","
             . " `provider_reference` = '" . $this->escape($result->providerReference) . "',"
             . " `provider_payment_id` = " . $this->nullableEscaped($providerPaymentId) . ","
+            . $checkoutSql
             . " `checkout_url` = " . $this->nullableEscaped($checkoutUrl) . ","
             . " `customer_action_json` = '" . $this->escape($actionJson) . "',"
             . " `public_token` = '" . $token . "',"
@@ -132,7 +181,9 @@ final class DbGatewayLedger implements GatewayLedger {
                 $result->providerReference,
                 $result->providerPaymentId,
                 $result->customerAction,
-                $quote
+                $quote,
+                // Only report the anchor when it was actually persisted.
+                $checkoutSql !== '' ? $result->providerCheckoutId : ''
             );
         }
 
@@ -356,7 +407,8 @@ final class DbGatewayLedger implements GatewayLedger {
             (string)($row['provider_reference'] ?? ''),
             (string)($row['provider_payment_id'] ?? ''),
             $action,
-            $quote
+            $quote,
+            (string)($row['provider_checkout_id'] ?? '')
         );
     }
 
@@ -385,6 +437,32 @@ final class DbGatewayLedger implements GatewayLedger {
     private static function assertSource(string $sourceType, int $sourceId): void {
         if (!in_array($sourceType, ['order', 'jow_charge'], true) || $sourceId <= 0) {
             throw new \InvalidArgumentException('gateway ledger: invalid source reference');
+        }
+    }
+
+    /**
+     * Additive-column detection, cached per ledger instance: older installs keep
+     * working untouched, and a deploy that applies the migration is seen by the
+     * next request instead of being masked by a process-wide cache.
+     */
+    private function supportsProviderCheckoutId(): bool {
+        if ($this->checkoutIdColumn !== null) {
+            return $this->checkoutIdColumn;
+        }
+
+        $query = $this->query(
+            "SHOW COLUMNS FROM `" . $this->table('payment_transaction') . "` LIKE 'provider_checkout_id'"
+        );
+        $this->checkoutIdColumn = $query instanceof \stdClass && (int)($query->num_rows ?? 0) > 0;
+
+        return $this->checkoutIdColumn;
+    }
+
+    private static function assertUtc(string $value): void {
+        $date = \DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $value, new DateTimeZone('UTC'));
+
+        if (!$date instanceof \DateTimeImmutable || $date->format('Y-m-d H:i:s') !== $value) {
+            throw new \InvalidArgumentException('gateway ledger: timestamps must be UTC Y-m-d H:i:s');
         }
     }
 

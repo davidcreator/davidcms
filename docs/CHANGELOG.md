@@ -1,5 +1,17 @@
 # Changelog
 
+## KZ-64 — JOW-Payments: reconciliação ativa e status por provedor (2026-11-20)
+
+- **P0-a (bug de dinheiro):** `syncJowChargeStatus()` filtrava `method = 'mp'` fixo, então uma cobrança paga por **Stripe ou PayPal** nunca saía de `pending` em `rms_jow_charge` — painel e relatório de recebimentos mentiam. O `WHERE` agora usa o `provider_code` do registro verificado no ledger (`GatewayPayment::syncJowChargeStatus(int, string, string)`); cobrança manual (`pix`/`card`/`boleto`) continua intocada porque o código do provedor não bate. Regressão coberta por `tests/Unit/Payment/JowChargeStatusSyncTest.php`.
+- **P0-b (rede de segurança):** reconciliação ativa para webhook perdido. Rota `cron/reconcile` protegida por `REAMUR_RECONCILE_TOKEN` (mínimo 32 caracteres, fail closed); varre as tentativas abertas com janela (`min_age` padrão 15 min, `lookback` padrão 7 dias) e **pergunta ao provedor** o estado real.
+- **Read-only por contrato:** `ReconcilableGatewayAdapter::reconcile()` — nenhum adapter cria, captura ou reembolsa. Ordem PayPal aprovada e não capturada fica `authorized` e aparece no relatório.
+- **Uma regra só:** `GatewayEventApplier` concentra as checagens pós-verificação (valor exato, `provider_payment_id` imutável, transição monotônica, deduplicação). `GatewayWebhookService` e a reconciliação usam o mesmo caminho — era a duplicação dessa regra que produziu o P0-a.
+- **Migração aditiva e opcional:** `tools/upgrade_jow_payments_reconcile.sql` acrescenta `provider_checkout_id` (+ índice) em `rms_payment_transaction`, idempotente via `information_schema`. Sem ela o sistema funciona: Mercado Pago reconcilia pelo id da ordem que já existe; Stripe/PayPal reportam `missing_provider_anchor`.
+- **Ledger:** nova capacidade `GatewayReconcilableLedger::pendingAttempts()` (interface separada, nenhum implementador existente quebra) e detecção da coluna aditiva por instância.
+- **Contrato de provedor:** `GatewayPaymentResult`/`GatewayPaymentRecord` ganham `providerCheckoutId` (último parâmetro, com default — sem quebra de chamadas existentes).
+- **Guia:** [`integracoes/JOW-Payments-Reconciliacao.md`](integracoes/JOW-Payments-Reconciliacao.md) — ativação, crontab, parâmetros, respostas HTTP, limites.
+- **Verificação:** 53 testes novos (5 do P0-a + 48 da reconciliação), suíte completa verde (1881 testes), PHPStan sem erros, `php -l` em todos os arquivos tocados. Nenhuma migração aplicada, nenhuma chamada real a provedor, nenhum pagamento executado.
+
 ## D10=A — alinhar metadados e hashes F9-27 (2026-11-17)
 - Autorização explícita do responsável: **D10=A**, substituindo a decisão anterior D10=B para este escopo documental.
 - `F9-27-Status.base_head`, `F9-27-Base-Hashes.head` e `F9-27-Preflight-Status.base_head` foram sincronizados ao snapshot inspecionado `9fcc6e5a78fc246a0f8743ffa37658e365b65027`; sete Git blob SHA-1s foram recalculados. F918-09 passa a `resolved` como drift de metadados.

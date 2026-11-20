@@ -10,7 +10,7 @@ use Reamur\System\Library\MercadopagoMarketplace;
  * marketplace_fee. Public seller checkout remains on the legacy OAuth
  * Marketplace adapter until its separate migration/cutover is approved.
  */
-final class MercadoPagoGatewayAdapter implements GatewayAdapter {
+final class MercadoPagoGatewayAdapter implements GatewayAdapter, ReconcilableGatewayAdapter {
     private ?MercadopagoMarketplace $api;
 
     public function __construct(?MercadopagoMarketplace $api = null) {
@@ -142,7 +142,8 @@ final class MercadoPagoGatewayAdapter implements GatewayAdapter {
             $request->sourceAmount,
             $status,
             null,
-            ''
+            '',
+            $orderId
         );
     }
 
@@ -188,6 +189,46 @@ final class MercadoPagoGatewayAdapter implements GatewayAdapter {
             return GatewayWebhookResult::ignored('signature_rejected');
         }
 
+        return $this->reconcileOrderById($orderId, $accessToken);
+    }
+
+    /**
+     * Read-only reconciliation: query the Orders API and normalize its state.
+     * No charge is created, captured or refunded here.
+     */
+    public function reconcile(
+        GatewayPaymentRecord $record,
+        GatewayAccount $account,
+        GatewayCredentials $credentials
+    ): GatewayWebhookResult {
+        if ($account->providerCode !== $this->code() || $record->providerCode !== $this->code()) {
+            return GatewayWebhookResult::ignored('wrong_provider');
+        }
+
+        // The ledger reference has always been the Orders API id for this
+        // provider, so attempts created before reconciliation existed are
+        // queryable without any backfill.
+        $orderId = $record->providerCheckoutId !== '' ? $record->providerCheckoutId : $record->providerReference;
+
+        if (preg_match('/^[A-Za-z0-9_-]{1,128}$/D', $orderId) !== 1) {
+            return GatewayWebhookResult::ignored('invalid_order_id');
+        }
+
+        $accessToken = $credentials->get('access_token');
+
+        if ($accessToken === '') {
+            return GatewayWebhookResult::retry('credentials_missing');
+        }
+
+        try {
+            return $this->reconcileOrderById($orderId, $accessToken);
+        } catch (\RuntimeException) {
+            return GatewayWebhookResult::retry('provider_unavailable');
+        }
+    }
+
+    /** Shared by the signed webhook path and by reconciliation. */
+    private function reconcileOrderById(string $orderId, string $accessToken): GatewayWebhookResult {
         $order = $this->api()->getOrder($orderId, $accessToken);
         $http = (int)($order['_http_status'] ?? 0);
 

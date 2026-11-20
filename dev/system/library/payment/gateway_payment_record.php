@@ -19,6 +19,8 @@ final class GatewayPaymentRecord {
         public readonly string $providerPaymentId,
         public readonly GatewayCustomerAction $customerAction,
         public readonly ?FxQuote $fxQuote,
+        /** Provider-side id queryable by reconciliation; '' when unknown. */
+        public readonly string $providerCheckoutId = '',
     ) {
         if ($transactionId <= 0 || $gatewayId <= 0 || $sourceId <= 0
             || !in_array($sourceType, ['order', 'jow_charge'], true)
@@ -28,7 +30,8 @@ final class GatewayPaymentRecord {
             || preg_match('/^[A-Za-z0-9._:-]{16,128}$/D', $idempotencyKey) !== 1
             || !GatewayPaymentStatus::isKnown($status)
             || trim($providerReference) === '' || strlen($providerReference) > 128
-            || strlen($providerPaymentId) > 128) {
+            || strlen($providerPaymentId) > 128 || strlen($providerCheckoutId) > 128
+            || preg_match('/[\r\n\0]/', $providerCheckoutId) === 1) {
             throw new \InvalidArgumentException('payment record: invalid persisted fields');
         }
 
@@ -62,6 +65,7 @@ final class GatewayPaymentRecord {
             'status' => $this->status,
             'has_public_token' => $this->publicToken !== '',
             'has_provider_action' => true,
+            'has_provider_checkout_id' => $this->providerCheckoutId !== '',
         ];
     }
 

@@ -10,7 +10,7 @@ namespace Reamur\System\Library\Payment;
  * POST /v1/notifications/verify-webhook-signature and the order is queried
  * from GET /v2/checkout/orders/{id}. The order is the source of truth.
  */
-final class PaypalOrdersAdapter implements GatewayAdapter {
+final class PaypalOrdersAdapter implements GatewayAdapter, ReconcilableGatewayAdapter {
     private ?PaypalOrdersClient $client;
 
     /** @var array<string, mixed> */
@@ -144,7 +144,8 @@ final class PaypalOrdersAdapter implements GatewayAdapter {
             $request->sourceAmount,
             $status,
             null,
-            ''
+            '',
+            $orderId
         );
     }
 
@@ -200,6 +201,55 @@ final class PaypalOrdersAdapter implements GatewayAdapter {
         } catch (\UnexpectedValueException) {
             return GatewayWebhookResult::retry('invalid_provider_amount');
         }
+    }
+
+    /**
+     * Read-only reconciliation by PayPal order id.
+     *
+     * Deliberately NO capture here: an APPROVED order whose webhook was lost
+     * stays `authorized` and is reported as such. Moving money from a polling
+     * cron is a product decision, not a safety net.
+     */
+    public function reconcile(
+        GatewayPaymentRecord $record,
+        GatewayAccount $account,
+        GatewayCredentials $credentials
+    ): GatewayWebhookResult {
+        if ($account->providerCode !== $this->code() || $record->providerCode !== $this->code()) {
+            return GatewayWebhookResult::ignored('wrong_provider');
+        }
+
+        $orderId = $record->providerCheckoutId;
+
+        if (preg_match('/^[A-Za-z0-9_-]{6,64}$/D', $orderId) !== 1) {
+            // Attempts created before the reconciliation release kept only the
+            // custom_id (our idempotency key); PayPal cannot be queried by it.
+            return GatewayWebhookResult::ignored($orderId === '' ? 'missing_provider_anchor' : 'invalid_order_id');
+        }
+
+        $clientId = $credentials->get('client_id');
+        $clientSecret = $credentials->get('client_secret');
+
+        if ($clientId === '' || $clientSecret === '') {
+            return GatewayWebhookResult::retry('credentials_missing');
+        }
+
+        $baseUrl = PaypalOrdersClient::baseUrlFor($account->environment, $this->config);
+
+        try {
+            $accessToken = $this->token($baseUrl, $clientId, $clientSecret);
+            $order = $this->client()->getOrder($baseUrl, $accessToken, $orderId);
+        } catch (\RuntimeException) {
+            return GatewayWebhookResult::retry('provider_unavailable');
+        }
+
+        $http = (int)($order['_http_status'] ?? 0);
+
+        if ($http < 200 || $http >= 300) {
+            return GatewayWebhookResult::retry('provider_unavailable');
+        }
+
+        return $this->reconcileOrder($order, $orderId);
     }
 
     private function verifyOrderEvent(array $event, string $baseUrl, string $accessToken, string $eventType): GatewayWebhookResult {

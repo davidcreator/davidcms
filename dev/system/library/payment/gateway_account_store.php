@@ -5,6 +5,15 @@ namespace Reamur\System\Library\Payment;
 interface GatewayAccountStore {
     public function find(int $gatewayId): ?GatewayAccount;
 
+    /**
+     * Every configured account, including disabled ones: an account that was
+     * switched off may still have payments in flight that a provider will
+     * settle (the same rule the public webhook already follows).
+     *
+     * @return list<GatewayAccount>
+     */
+    public function all(): array;
+
     public function credentials(int $gatewayId): GatewayCredentials;
 
     /** @param array<string, mixed> $publicConfig @param array<string, string> $secretFields */

@@ -34,9 +34,11 @@
       "name": "JOW-payments",
       "legacy_name": "",
       "vendor": "JOW",
-      "version": "1.1.0",
-      "updated_at": "2026-11-17",
+      "version": "1.2.0",
+      "updated_at": "2026-11-20",
       "notes": [
+        "KZ-64: reconciliação ativa (rota cron/reconcile, token obrigatório) para webhook perdido — varre tentativas abertas e pergunta o estado real ao provedor; read-only por contrato (não cria, não captura, não reembolsa).",
+        "KZ-64: corrigido o status por provedor — cobrança paga por Stripe/PayPal não ficava mais presa em 'pending' em rms_jow_charge (o WHERE era fixo em method='mp').",
         "Painel interno payments/jow (somente admin, ACL access/modify): cobranças (PIX/cartão/boleto) com BR Code EMV gerado em PHP puro (CRC16 validado), chaves PIX, relatório de recebimentos por status/método e dados do recebedor.",
         "Tabelas novas: jow_charge, jow_pix_key + settings em rms_setting (code 'jow'). Ferramenta interna: não aparece no catálogo público.",
         "Idiomas pt-br/en-us/es-eu + item de menu em Vendas."

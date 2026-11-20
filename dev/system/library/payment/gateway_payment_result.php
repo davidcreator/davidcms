@@ -5,6 +5,8 @@ namespace Reamur\System\Library\Payment;
 final class GatewayPaymentResult {
     public readonly string $providerReference;
     public readonly string $providerPaymentId;
+    /** Provider-side id used to query the attempt back (read-only reconciliation). */
+    public readonly string $providerCheckoutId;
     public readonly GatewayCustomerAction $customerAction;
     public readonly Money $chargeAmount;
     public readonly string $status;
@@ -17,11 +19,14 @@ final class GatewayPaymentResult {
         string $status,
         ?FxQuote $quote = null,
         string $providerPaymentId = '',
+        string $providerCheckoutId = '',
     ) {
         $providerReference = trim($providerReference);
 
         if ($providerReference === '' || strlen($providerReference) > 128 || strlen($providerPaymentId) > 128
-            || preg_match('/[\r\n\0]/', $providerReference) === 1 || preg_match('/[\r\n\0]/', $providerPaymentId) === 1) {
+            || strlen($providerCheckoutId) > 128
+            || preg_match('/[\r\n\0]/', $providerReference) === 1 || preg_match('/[\r\n\0]/', $providerPaymentId) === 1
+            || preg_match('/[\r\n\0]/', $providerCheckoutId) === 1) {
             throw new \InvalidArgumentException('gateway payment result: provider reference is invalid');
         }
 
@@ -35,6 +40,7 @@ final class GatewayPaymentResult {
 
         $this->providerReference = $providerReference;
         $this->providerPaymentId = trim($providerPaymentId);
+        $this->providerCheckoutId = trim($providerCheckoutId);
         $this->customerAction = $customerAction;
         $this->chargeAmount = $chargeAmount;
         $this->status = $status;

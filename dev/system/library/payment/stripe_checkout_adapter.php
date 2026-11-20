@@ -9,7 +9,7 @@ namespace Reamur\System\Library\Payment;
  * GET /v1/checkout/sessions/{id} (or /v1/charges/{id} for refunds); the
  * success_url and the webhook body alone never settle a payment.
  */
-final class StripeCheckoutAdapter implements GatewayAdapter {
+final class StripeCheckoutAdapter implements GatewayAdapter, ReconcilableGatewayAdapter {
     /** Signature age tolerance in seconds (Stripe SDK default). */
     private const SIGNATURE_TOLERANCE_SECONDS = 300;
 
@@ -123,7 +123,8 @@ final class StripeCheckoutAdapter implements GatewayAdapter {
             $amount,
             $status,
             null,
-            self::scalarString($session['payment_intent'] ?? null)
+            self::scalarString($session['payment_intent'] ?? null),
+            $sessionId
         );
     }
 
@@ -237,6 +238,57 @@ final class StripeCheckoutAdapter implements GatewayAdapter {
             return GatewayWebhookResult::retry('provider_unavailable');
         }
 
+        return $this->reconcileSession(
+            $session,
+            $sessionId,
+            $eventType === 'checkout.session.async_payment_failed' ? GatewayPaymentStatus::FAILED : null
+        );
+    }
+
+    /**
+     * Read-only reconciliation by session id. No session, charge or refund is
+     * created here; refunds still depend on the signed charge.refunded event.
+     */
+    public function reconcile(
+        GatewayPaymentRecord $record,
+        GatewayAccount $account,
+        GatewayCredentials $credentials
+    ): GatewayWebhookResult {
+        if ($account->providerCode !== $this->code() || $record->providerCode !== $this->code()) {
+            return GatewayWebhookResult::ignored('wrong_provider');
+        }
+
+        $sessionId = $record->providerCheckoutId;
+
+        if (preg_match('/^[A-Za-z0-9_-]{1,128}$/D', $sessionId) !== 1) {
+            // Attempts created before the reconciliation release kept only the
+            // client_reference_id, which Stripe cannot be queried by.
+            return GatewayWebhookResult::ignored($sessionId === '' ? 'missing_provider_anchor' : 'invalid_session_id');
+        }
+
+        $secretKey = $credentials->get('secret_key');
+
+        if ($secretKey === '') {
+            return GatewayWebhookResult::retry('credentials_missing');
+        }
+
+        try {
+            $session = $this->client()->getSession($sessionId, $secretKey);
+        } catch (\RuntimeException) {
+            return GatewayWebhookResult::retry('provider_unavailable');
+        }
+
+        $http = (int)($session['_http_status'] ?? 0);
+
+        if ($http < 200 || $http >= 300) {
+            return GatewayWebhookResult::retry('provider_unavailable');
+        }
+
+        return $this->reconcileSession($session, $sessionId);
+    }
+
+    /** Shared by the signed webhook path and by reconciliation. */
+    private function reconcileSession(array $session, string $sessionId, ?string $forcedStatus = null): GatewayWebhookResult {
         $confirmedId = self::scalarString($session['id'] ?? null);
         $reference = self::scalarString($session['client_reference_id'] ?? null);
         $currency = strtoupper(self::scalarString($session['currency'] ?? null));
@@ -264,8 +316,8 @@ final class StripeCheckoutAdapter implements GatewayAdapter {
             return GatewayWebhookResult::retry('unknown_provider_status');
         }
 
-        if ($eventType === 'checkout.session.async_payment_failed') {
-            $status = GatewayPaymentStatus::FAILED;
+        if ($forcedStatus !== null) {
+            $status = $forcedStatus;
         }
 
         $paymentIntent = self::scalarString($session['payment_intent'] ?? null);
