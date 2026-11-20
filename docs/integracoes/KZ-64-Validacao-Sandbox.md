@@ -5,7 +5,8 @@
 | **Status** | ✅ aceita — roteiro operacional (KZ-64) |
 | **Data** | 2026-11-20 |
 | **Escopo** | Mercado Pago (Orders), Stripe (Checkout) e PayPal (Orders) em **ambiente de teste** |
-| **Pré-requisitos de código** | commit `03a69212` (núcleo + reconciliação) na `main` |
+| **Pré-requisitos de código** | `main` atual (núcleo + reconciliação + leitura de estorno, ADRs 0123/0124/0125) |
+| **Antes de começar** | `php tools/payment-piloto.php --config=catalog/config.php --url=https://SEU-SITE/catalog/index.php` |
 | **Relacionados** | [JOW-Payments-Reconciliacao.md](JOW-Payments-Reconciliacao.md) (ativação do cron e parâmetros), [ADR 0118](../../agents-ia/decisoes/0118-pagamentos-multigateway-e-reconciliacao-ativa.md), [Dicionário de Dados §9](../arquitetura/Dicionario-de-Dados.md) |
 
 > **Regra de ouro:** este roteiro roda **só com credenciais de teste** (`TEST-…`,
@@ -19,7 +20,9 @@
 
 **Prova:** que uma tentativa é criada no provedor, que a notificação assinada é verificada e aplicada no ledger, que a cobrança da ferramenta interna sai de `pending` (o P0-a), que a notificação repetida não aplica duas vezes, que a **reconciliação devolve um pagamento cujo webhook se perdeu** (o P0-b) e que as guardas da rota `cron/reconcile` respondem 403/400/200 como documentado.
 
-**Não prova:** valor divergente e transição proibida (só o teste unitário consegue forjar isso), reembolso (não implementado — ver ADR 0118 § limites), captura de ordem PayPal (decisão de produto: não existe), câmbio real, e nada sobre o fluxo `order` público (ainda no contrato da ADR 0097).
+**Prova também (desde as ADRs 0123/0124/0125):** que um **estorno feito no painel do provedor** chega ao CMS pela varredura de pagas, sem depender do aviso — nos três provedores (teste N da bateria).
+
+**Não prova:** valor divergente e transição proibida (só o teste unitário consegue forjar isso), **estorno executado pelo CMS** (não existe: o R1 é leitura, R2/R3 dependem da D01), captura de ordem PayPal pelo cron (decisão de produto: não existe), câmbio real, e nada sobre o fluxo `order` público (ainda no contrato da ADR 0097).
 
 ---
 
@@ -135,6 +138,12 @@ curl -sS -H "Authorization: Bearer $REAMUR_RECONCILE_TOKEN" \
 
 **Esperado no JSON:** `scanned >= 1`, `applied = 1`, e no detalhe `status_before: "pending" → status_after: "paid"`; `jow_charge` vira `paid` e uma linha nova aparece em `payment_gateway_event` com `result_code='applied'`.
 
+> **Desde a ADR 0123 o cron faz duas varreduras** por conta: a **aberta** (`min_age`/`lookback`, padrão 7
+> dias) e a de tentativas **já pagas** (`settled_lookback`, padrão 30 dias), onde se procura estorno. O
+> `scanned` do relatório soma as duas. Para este teste o que importa é a transição `pending → paid`; a
+> segunda varredura pode trazer linhas `unchanged` de tentativas pagas de testes anteriores — não é erro.
+> Se quiser silêncio absoluto, rode com `settled_lookback=1`.
+
 5. Rode **de novo**: agora `applied = 0` e `unchanged = 1` (nada a fazer). Se vier `applied = 1` de novo, o ledger não está sendo lido como fonte da verdade — pare e me avise.
 6. **Religue o webhook** no painel do MP.
 
@@ -149,7 +158,7 @@ curl -sS -H "Authorization: Bearer $REAMUR_RECONCILE_TOKEN" \
 | sem token | `403 forbidden` (e **nenhuma** query ao banco) |
 | token com 31 caracteres | `403 forbidden` |
 | token errado | `403 forbidden` |
-| `limit=0`, `limit=201`, `min_age=0`, `lookback=0` | `400` com `error` descritivo |
+| `limit=0`, `limit=201`, `min_age=0`, `lookback=0`, `settled_lookback=0`, `settled_lookback=181` | `400` (`invalid parameters`) |
 | `format=text` | relatório legível, uma linha por tentativa |
 | `format=json` | JSON com `scanned/applied/unchanged/skipped/retry/failed/details` |
 | provedor fora do ar | `503` + `Retry-After: 60` |
@@ -167,6 +176,9 @@ Há um script pronto no pacote (`cron-testes.sh`) que roda as seis primeiras e i
 **Com a migração aplicada:**
 - Stripe: crie a cobrança, pague com `4242 4242 4242 4242` (qualquer validade futura) → `provider_checkout_id` passa a ser preenchido (`cs_test_…`) e a reconciliação deixa de pular essas tentativas. Cartão de recusa: `4000 0000 0000 0002`.
 - PayPal: use a conta **pessoal de sandbox** (sem cartão). Pelo caminho normal (aviso assinado), a aprovação é **capturada** e a tentativa vira `paid`. O caso que o teste olha é o do aviso perdido: a ordem fica `authorized` e **continua** `authorized` depois do cron — a reconciliação é read-only por contrato e não captura (ADR 0118). Se o cron capturar, é bug; se a captura do webhook não acontecer, o relatório aponta `authorized`.
+- PayPal, com a ADR 0125: quando a ordem está **paga** e a resposta **não** traz o bloco de capturas, o cron
+  segue a link `up` e lê a **captura** (`GET /v2/payments/captures/{id}`) para ver o estado de estorno. Isso
+  é uma requisição a mais, só nesse caso. Ordem com capturas embutidas não gasta nada.
 
 ---
 
@@ -193,6 +205,19 @@ SELECT result_code, status, COUNT(*) FROM rms_payment_gateway_event GROUP BY res
 
 A consulta **1** tem que voltar vazia depois dos testes.
 
+```sql
+-- 4) desde a ADR 0123: o que a varredura de PAGAS vai consultar (janela de 30 dias)
+SELECT provider_code, status, COUNT(*) AS total, MIN(date_modified) AS mais_antiga
+FROM rms_payment_transaction
+WHERE status IN ('paid','partially_refunded')
+  AND date_added >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)
+GROUP BY provider_code, status;
+```
+
+A consulta **4** é o que explica um `scanned` maior do que o número de tentativas que você criou: a
+varredura de pagas entra nela. Depois do teste **N**, a tentativa estornada aparece como
+`status = 'refunded'` e sai dessa lista.
+
 ---
 
 ## 11. Interpretando o `reason` do relatório
@@ -209,6 +234,16 @@ A consulta **1** tem que voltar vazia depois dos testes.
 | `unsafe_status_transition` | notificação atrasada tentando voltar estado | esperado; ignorar |
 | `payment_not_found` | evento de tentativa que não é desta instalação | conferir `gateway_id` na URL do webhook |
 | `provider_not_reconcilable` | adapter sem `reconcile()` | só aparece se um adapter novo esquecer o contrato |
+| `charge_not_reconciled` | a cobrança devolvida pelo Stripe não é a que se pediu | não é esperado; guardar o relatório (ADR 0124) |
+| `charge_not_refunded` | Stripe: cobrança lida sem estorno | interno; a varredura devolve o estado da sessão, este código não aparece no relatório |
+| `refund_amount_exceeds_charge` | Stripe: `amount_refunded` > `amount` | **não é esperado**; é sinal de leitura errada do provedor. Pare |
+| `capture_not_reconciled` | PayPal: a captura devolvida não é a que se pediu | não é esperado (ADR 0125) |
+| `unknown_capture_status` | PayPal: captura com estado que o código não conhece | vocabulário novo no provedor; atualizar o adapter |
+| `capture_without_order` | PayPal: aviso de captura sem vínculo com ordem | evento fora do nosso fluxo; ignorar |
+| `order_id_mismatch` / `order_not_reconciled` | MP/PayPal: ordem devolvida ≠ pedida, ou moeda fora de BRL/USD/EUR | não é esperado; guardar o relatório |
+| `verification_inconclusive` | PayPal: a verificação de assinatura não respondeu SUCCESS | provedor instável; o aviso é reenviado |
+| `unhandled_event_type` | aviso de tipo que não tratamos | esperado (o provedor manda outros tipos) |
+| `invalid_provider_amount` | valor do provedor ilegível no formato esperado | investigar; nunca "ajustar" valor no banco |
 
 ---
 
@@ -220,6 +255,7 @@ A consulta **1** tem que voltar vazia depois dos testes.
 - [ ] Teste D: recusa vira `failed`/`canceled` e não é revertida;
 - [ ] Teste E: cron recupera pagamento com webhook perdido (`applied=1`) e é idempotente na segunda execução;
 - [ ] Teste F: 403/400/200 e mensagem de erro conferem;
+- [ ] Teste N: estorno feito no painel do provedor sai de `paid` para `refunded`/`partially_refunded` **pelo cron**, sem `payment_gateway_event` nova, e a segunda execução dá `applied=0`;
 - [ ] §10 consulta 1 volta vazia;
 - [ ] (se feito) §9: `missing_provider_anchor` antes da migração e reconciliação depois; PayPal continua `authorized`;
 - [ ] conta de sandbox **desligada** ao fim (`UPDATE rms_jow_gateway SET status = 0 WHERE environment = 'sandbox';`), para o cron não bater no provedor de teste à toa.

@@ -37,7 +37,7 @@ f261d162  592038465c7c0c904ee439f60ec254ee204573cedc7b4a14fe9a9302dd6ed2d9  2498
 08942fda  5b20d74f3a5e2e32ab1e0294ac4af5fd76c638a0017fc5cc9d73735238f0bd53  4795  dev/system/library/payment/legacy_webhook_forwarder.php
 7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
 fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
-8e8f3481  561e66bbedd18e9ddd44192a8c806d408d991154abebf19a24105b2d460357a2  209075  docs/CHANGELOG.md
+fffa2905  10a91c28e0bb3ea9d961e1a1396a433362a52be193455566067207fd6922f695  211687  docs/CHANGELOG.md
 675b1723  ddf884f56fcb08b9a5a84b3e3f19e64d0850585005cf34a3eb00969297628f14  16729  docs/Estrutura-de-Pastas.md
 61660a6e  d7515650f0c01bc118c3bd75c5df94bf2d6049bcdc7775ed267367360f210351  10948  docs/README.md
 2cd4aea9  48c6bf0ae2c1ccf1d471ea99bd205d3af3b3c3fe769a67dcc7c005cf6420714e  29473  docs/arquitetura/Dicionario-de-Dados.md
@@ -50,7 +50,7 @@ fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532 
 46cb5caa  0277f55d2f88d36b923442334d4379f6e777c12572d2244b794f71ab1f7ce2de  11286  docs/integracoes/JOW-Payments-MultiGateway-Core.md
 7a67b994  165faa43263fd19578346c3f92fdf961d1750787b511cd4bf460321f8d50acc8  7717  docs/integracoes/JOW-Payments-Reconciliacao-Operacao.md
 5b6c625d  6f9a6ffb87a1eec7db2a23c029f15a8475deacffd216abb550ec3959f7559df9  10309  docs/integracoes/JOW-Payments-Reconciliacao.md
-8578256b  3558982f9cd52c2d7165ac0dd9e004964106b5f72c1bcc7263266f9a2d6e60ae  6516  docs/integracoes/JOW-Payments-Testes-Antes-da-Producao.md
+a09bee56  0b1542235f35535cb1249487bea4ccb69f188f6a126b8c242f80c33beafb2619  12221  docs/integracoes/JOW-Payments-Testes-Antes-da-Producao.md
 f35d6814  483d47bc11f6f801a820eda71e36dbdff951ca7ce5e6e47b13b5942f02575852  6026  docs/threejs/THREEJS_CMS_E2E.md
 6d633bf4  2d18595e9099dfb90bf35d37195fc2e3f754c397396b37625720de78edf801e1  3083  tests/Unit/Payment/ChargeStatusConcordanceTest.php
 18f7253c  822e9186b49f7ef9ca95e44eb678dca43553709623c9cd886e69714ae6d50427  20629  tests/Unit/Payment/ControllerWiringTest.php
