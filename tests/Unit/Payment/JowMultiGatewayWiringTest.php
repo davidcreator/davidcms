@@ -491,4 +491,31 @@ final class JowMultiGatewayWiringTest extends TestCase {
         self::assertContains('HTTP/1.1 503 Service Unavailable', $response->getHeaders());
         self::assertContains('Retry-After: 60', $response->getHeaders());
     }
+
+    /**
+     * ADR 0119: a tela do JOW ganhou a seção de link de PEDIDO. Ela depende da
+     * ação `order_gateway_link` existir no controller e das três chaves novas
+     * estarem nos três idiomas — chave faltando vira literal na tela do
+     * operador, e ação faltando vira POST sem efeito (o pior dos dois).
+     */
+    public function testOrderGatewayLinkSectionIsWiredInViewLanguagesAndAction(): void {
+        $controller = (string)file_get_contents(__DIR__ . '/../../../dev/admin/controller/payments/jow.php');
+        self::assertStringContainsString("case 'order_gateway_link':", $controller);
+        self::assertStringContainsString('createOrderGatewayLink(', $controller);
+        self::assertStringContainsString('OrderPaymentLink(', $controller);
+
+        $view = (string)file_get_contents(__DIR__ . '/../../../dev/admin/view/template/payments/jow.twig');
+        self::assertStringContainsString('value="order_gateway_link"', $view);
+        self::assertStringContainsString('{{ text_order_gateway_link }}', $view);
+
+        foreach (['en-us', 'es-eu', 'pt-br'] as $language) {
+            $file = __DIR__ . '/../../../dev/admin/language/' . $language . '/payments/jow.php';
+            $strings = (string)file_get_contents($file);
+
+            foreach (['text_order_gateway_link', 'help_order_gateway_link', 'text_no_orders',
+                      'text_gateway_link_reused', 'text_order_already_paid', 'error_order_without_total'] as $key) {
+                self::assertStringContainsString('$_[' . "'" . $key . "'" . ']', $strings, $language . ' missing ' . $key);
+            }
+        }
+    }
 }

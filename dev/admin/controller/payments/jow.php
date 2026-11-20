@@ -15,7 +15,11 @@ use Reamur\System\Library\Payment\GatewayCredentialVault;
 use Reamur\System\Library\Payment\GatewayCredentials;
 use Reamur\System\Library\Payment\GatewayPaymentRecord;
 use Reamur\System\Library\Payment\GatewayPaymentRequest;
+use Reamur\System\Library\Payment\DbLedger;
 use Reamur\System\Library\Payment\GatewayPaymentService;
+use Reamur\System\Library\Payment\Link;
+use Reamur\System\Library\Payment\OrderGatewayLedger;
+use Reamur\System\Library\Payment\OrderPaymentLink;
 use Reamur\System\Library\Payment\GatewayRegistry;
 use Reamur\System\Library\Payment\InstalledGatewayAdapters;
 use Reamur\System\Library\Payment\Money;
@@ -80,6 +84,9 @@ class Jow extends \Reamur\System\Engine\Controller {
             'jow_merchant_category' => (string)$this->config->get('jow_merchant_category'),
         ];
         $data['gateway_schema_ready'] = $this->model_payments_jow->gatewaySchemaReady();
+        // ADR 0119: o link de pedido nasce no ledger novo, então a tela precisa
+        // de um ponto de entrada próprio. Sem a migração, a seção não aparece.
+        $data['recent_orders'] = $data['gateway_schema_ready'] ? $this->model_payments_jow->getRecentOrdersForGatewayLink(10) : [];
         $data['gateway_providers'] = [];
         $data['gateways'] = [];
         $data['live_payments_allowed'] = $this->livePaymentsAllowed();
@@ -227,6 +234,29 @@ class Jow extends \Reamur\System\Engine\Controller {
                 }
                 break;
 
+            case 'order_gateway_link':
+                // ADR 0119: o link de um PEDIDO nasce no ledger novo. A ação é
+                // separada de `charge_gateway_link` de propósito: pedido e
+                // cobrança interna têm ledgers e telas diferentes, e misturar
+                // os dois tornaria impossível saber qual registro foi criado.
+                $orderId = (int)$this->postScalar('order_id');
+                $provider = $this->postScalar('provider', '');
+
+                try {
+                    $link = $this->createOrderGatewayLink($orderId, $provider);
+                    $this->session->data['success'] = match ($link->state) {
+                        Link::CREATED => $this->language->get('text_gateway_link_ready'),
+                        Link::REUSED  => $this->language->get('text_gateway_link_reused'),
+                        Link::PAID    => $this->language->get('text_order_already_paid'),
+                        Link::NO_TOTAL => $this->language->get('error_order_without_total'),
+                        default        => $this->language->get('error_gateway_link_failed'),
+                    };
+                } catch (\Throwable $e) {
+                    $this->safeLog('JOW order gateway link failed: ' . $e->getMessage());
+                    $this->session->data['error'] = $this->language->get('error_gateway_link_failed');
+                }
+                break;
+
             case 'charge_status':
                 $this->model_payments_jow->setChargeStatus(
                     (int)$this->postScalar('charge_id'),
@@ -345,6 +375,49 @@ class Jow extends \Reamur\System\Engine\Controller {
             $this->safeLog('JOW gateway account settings could not be saved: ' . $e->getMessage());
             $this->session->data['error'] = $this->language->get('error_gateway_account_save');
         }
+    }
+
+    /**
+     * Link de pagamento de um PEDIDO no ledger novo (ADR 0119).
+     *
+     * Regras de dinheiro (conta habilitada, valor, tipo de tentativa) ficam no
+     * `OrderPaymentLink`; aqui só se monta o endereço público de retorno e de
+     * aviso e se confere o que a tela pode pedir.
+     */
+    private function createOrderGatewayLink(int $orderId, string $provider): Link {
+        if ($orderId <= 0 || !InstalledGatewayAdapters::isInstalled($provider)) {
+            throw new \OutOfBoundsException('JOW order gateway link: invalid order or provider');
+        }
+
+        if (!$this->model_payments_jow->orderGatewaySchemaReady()) {
+            throw new \RuntimeException('JOW-Payments core migration is not installed');
+        }
+
+        $order = $this->model_payments_jow->getOrderForGatewayLink($orderId);
+
+        if ($order === []) {
+            throw new \OutOfBoundsException('JOW order gateway link: order was not found');
+        }
+
+        $registry = $this->gatewayRegistry();
+        $legacy = new DbLedger($this->db, DB_PREFIX);
+
+        $linker = new OrderPaymentLink(
+            $registry,
+            $this->gatewayAccountStore($registry),
+            new OrderGatewayLedger(new DbGatewayLedger($this->db, DB_PREFIX), $legacy),
+            $this->livePaymentsAllowed()
+        );
+
+        return $linker->link(
+            $provider,
+            $orderId,
+            (float)($order['total'] ?? 0),
+            (string)($order['title'] ?? ''),
+            $this->catalogRouteUrl('checkout/gateway.notify&gateway_id=' . $this->model_payments_jow->getPlatformGatewayId($provider)),
+            $this->catalogRouteUrl('checkout/payment.pay'),
+            (string)($order['email'] ?? '')
+        );
     }
 
     private function createGatewayLink(int $chargeId, string $provider): GatewayPaymentRecord {

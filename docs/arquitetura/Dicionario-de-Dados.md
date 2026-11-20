@@ -209,7 +209,7 @@ Duas camadas de pagamento convivem no sistema (ADR 0118) e **nenhuma coluna é r
 
 | Camada | Contrato | Tabela principal | Quem escreve |
 | --- | --- | --- | --- |
-| Pedido público do site | ADR 0097 (`Method` → `Checkout` → `DbLedger`) | `mp_payment` | `catalog/model/checkout/mp_payment.php` |
+| Pedido público do site | ADR 0119 (`OrderPaymentLink` → `GatewayPaymentService` → `GatewayLedger`); links antigos e pagamento manual seguem na ADR 0097 | `payment_transaction` (novo) · `mp_payment` (legado) | `system/library/payment/order_payment_link.php`, `order_flow_ledger.php` |
 | Tentativa por provedor (núcleo novo) | `GatewayAdapter` → `GatewayPaymentService` → `GatewayLedger` | `payment_transaction` | `system/library/payment/`, `admin/model/payments/jow`, `catalog/controller/checkout/gateway` |
 | Cobrança da ferramenta interna JOW | contrato simples, anterior ao núcleo | `jow_charge` | `admin/model/payments/jow.php`; o `status` é sincronizado por `catalog/model/checkout/gateway_payment.php` |
 
@@ -243,7 +243,7 @@ Uma linha por **tentativa** de cobrança num provedor (não por pedido: o mesmo 
 | Coluna | Tipo | Notas |
 | --- | --- | --- |
 | `transaction_id` | BIGINT UNSIGNED PK AI | |
-| `source_type` | VARCHAR(24) | `order` \| `jow_charge` (lista fechada, validada no Model) |
+| `source_type` | VARCHAR(24) | `order` \| `jow_charge` (lista fechada, validada no Model). **Desde a ADR 0119**, `order` é populado pelo link de pagamento do pedido (`OrderPaymentLink`); antes só `jow_charge` chegava aqui |
 | `source_id` | BIGINT UNSIGNED | id na tabela de origem (`order_id` ou `charge_id`) |
 | `gateway_id` | INT UNSIGNED | FK lógica → `jow_gateway` |
 | `provider_code` | VARCHAR(32) | cópia do código do provedor no momento da tentativa |
@@ -306,7 +306,9 @@ Uma linha por aviso recebido. Existe para que reenvio do provedor não aplique o
 ### `jow_pix_key` — chaves Pix da ferramenta
 `key_id` INT PK AI · `type` VARCHAR(16) *(ex.: `random`)* · `key` VARCHAR(128) UNIQUE · `holder` VARCHAR(128) DEFAULT `''` · `status` TINYINT(1) DEFAULT 1 · `date_added` DATETIME.
 
-### `mp_payment` — pedido público (ADR 0097)
+### `mp_payment` — pedido público (ADR 0097) — **legado desde a ADR 0119**
+**Somente leitura pelo código novo:** pedidos novos nascem em `payment_transaction` (`source_type = 'order'`) e esta tabela permanece para (a) links emitidos antes do deploy, que precisam continuar abrindo, e (b) pagamentos manuais (`pix`/`card`/`boleto`). Drenagem — e remoção — é etapa posterior, com conferência linha a linha.
+
 `mp_payment_id` INT UNSIGNED PK · `order_id` INT *(pedido dono)* · `mp_seller_id` INT UNSIGNED *(vendedor que recebe o líquido)* · `preference_id` VARCHAR(64) UNIQUE *(id da preference no MP, único por tentativa)* · `payment_id` BIGINT DEFAULT 0 *(0 = ainda sem aviso)* · `public_token` CHAR(48) UNIQUE · `amount` DECIMAL(15,4) · `marketplace_fee` DECIMAL(15,2) · `currency_id` CHAR(3) DEFAULT `BRL` · `status` VARCHAR(32) DEFAULT `pending` *(status do MP: `pending`/`approved`/`rejected`/`cancelled`/`refunded`)* · `init_point` TEXT · `date_added`,`date_modified`. Índices: PK, UNIQUE(`preference_id`), UNIQUE(`public_token`), KEY(`order_id`), KEY(`mp_seller_id`), KEY(`payment_id`), KEY(`status`).
 
 ### `mp_seller` — vendedor conectado via OAuth (ADR 0034/0035)

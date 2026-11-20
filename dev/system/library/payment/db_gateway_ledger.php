@@ -6,7 +6,7 @@ use DateTimeZone;
 use JsonException;
 
 /** MySQL/MariaDB implementation for the additive JOW multi-gateway ledger. */
-final class DbGatewayLedger implements GatewayReconcilableLedger {
+final class DbGatewayLedger implements GatewayReconcilableLedger, GatewayAddressableLedger {
     /** Upper bound for one reconciliation page; mirrors the service ceiling. */
     private const MAX_PENDING_LIMIT = 200;
 
@@ -73,6 +73,24 @@ final class DbGatewayLedger implements GatewayReconcilableLedger {
         return $this->findOne(
             "SELECT * FROM `" . $this->table('payment_transaction') . "`"
             . " WHERE `public_token` = '" . $this->escape($token) . "' LIMIT 1"
+        );
+    }
+
+    /**
+     * Tentativa pelo `transaction_id` (ADR 0119).
+     *
+     * Necessário porque o contrato antigo (`Ledger::record()`) endereça a
+     * cobrança pelo `id` que ele mesmo devolveu, e no ledger novo esse id é o
+     * `transaction_id` — não a referência do provedor.
+     */
+    public function byTransactionId(int $transactionId): ?GatewayPaymentRecord {
+        if ($transactionId <= 0) {
+            return null;
+        }
+
+        return $this->findOne(
+            "SELECT * FROM `" . $this->table('payment_transaction') . "`"
+                . " WHERE `transaction_id` = '" . $transactionId . "' LIMIT 1"
         );
     }
 

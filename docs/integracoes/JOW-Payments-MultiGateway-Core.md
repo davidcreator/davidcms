@@ -1,6 +1,6 @@
 # JOW-Payments — fundação multi-gateway
 
-**Marco:** núcleo comum para cobranças internas (`jow_charge`) e pagamentos de pedidos (`order`), antes de ligar provedores novos ou trocar os fluxos existentes. O JOW continua sendo ferramenta interna/admin. Nenhuma integração real é ativada nesta etapa.
+**Marco:** núcleo comum para cobranças internas (`jow_charge`) e pagamentos de pedidos (`order`). O JOW continua sendo ferramenta interna/admin. **Atualizado pela ADR 0119:** o fluxo do pedido deixou de ser "antes de ligar" e passou a nascer neste núcleo — ver *Link de pagamento de pedido* abaixo.
 
 ## Estado encontrado no repositório
 
@@ -20,6 +20,40 @@
 - `GatewayPaymentService`: valida conta ativa, bloqueia ambiente live por padrão, confere capacidade método/moeda, precisão, par cambial, cotação válida do próprio adapter e igualdade exata do valor cobrado. Uma cotação expirada ou incompatível falha; não há conversão local ou fallback silencioso.
 - `GatewayLedger` / `DbGatewayLedger`: armazenamento neutro para `order` e `jow_charge`, tentativas com chave idempotente, token público aleatório, instrução de pagamento permitida por lista e eventos webhook deduplicados. Reaplicação de evento é segura e transições que regridem de `paid` para `failed` são recusadas.
 - `GatewayWebhookResult`: só o resultado autenticado e reconciliado pelo adapter pode chegar ao ledger. O ledger guarda hash do evento, não corpo bruto.
+
+## Link de pagamento de pedido (ADR 0119)
+
+O pedido deixou de ser território só do Mercado Pago. O caminho é:
+
+```
+OrderPaymentLink::link(provider, orderId, total, título, notifyUrl, returnUrl)
+        │
+        ├─ conta de gateway habilitada (a de menor gateway_id daquele provedor)
+        ├─ GatewayPaymentService::createPayment()   ← mesmas travas do JOW:
+        │     · moeda/método conferidos por capabilities
+        │     · valor exato exigido de volta do provedor
+        │     · chave de idempotência derivada do pedido e da tentativa
+        │     · trava de ambiente `live`
+        └─ GatewayPaymentRequest com source_type = 'order'
+```
+
+Cinco resultados, os mesmos da ADR 0097 (`Link`), para que a tela não precise de tradução nova:
+
+| Resultado | Quando |
+| --- | --- |
+| `created` | tentativa nova gravada em `rms_payment_transaction`; o `token` é a chave do link |
+| `reused` | já havia tentativa viva com endereço de pagamento — **nenhuma cobrança nova** |
+| `paid` | pedido já pago; não se cria outro link |
+| `blocked` | provedor sem conta habilitada (`no_gateway_account`) |
+| `no_total` / `failed` | pedido sem valor / provedor não devolveu para onde mandar o cliente |
+
+**Chave de idempotência.** `order:<32 hex>` derivada por `sha1('reamurcms:order:<id>:attempt:<n>')`. Estável enquanto a tentativa está viva, nova depois de `failed`/`cancelled`/`expired` — e o número do pedido **não** aparece na chave que vai ao provedor.
+
+**Quem escreve onde.** Tentativa de gateway → somente `rms_payment_transaction`. Pagamento manual (`pix`/`card`/`boleto`) → somente `rms_mp_payment`, pelo `DbLedger` legado. `OrderFlowLedger::record()` escolhe **um** destino por chamada; a invariante da ADR 0118 (nada escreve nos dois) é estrutural, não uma convenção.
+
+**Link emitido antes do deploy.** `target()` e `Checkout::latestForOrder()` leem o ledger novo primeiro e caem para `rms_mp_payment` quando não há linha nova. `rms_mp_payment` passa a ser **somente leitura** pelo código novo: sem essa compatibilidade, todo link já enviado ao cliente viraria "página não encontrada" no momento do pagamento.
+
+**O que continua fora:** escolha de conta por site/pedido, estorno (ver `DECISAO-REEMBOLSO.md`) e a remoção de `rms_mp_payment` (drenagem, etapa posterior).
 
 ## Moeda e conversão
 

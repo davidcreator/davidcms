@@ -49,6 +49,12 @@ interface ReconcilableGatewayAdapter {
 
 Quem não implementa a interface simplesmente não é reconciliável — o relatório diz `provider_not_reconcilable` em vez de fingir que a fila estava vazia.
 
+> **Fila desde a ADR 0119.** A varredura não escolhe fonte: qualquer tentativa aberta em
+> `rms_payment_transaction` entra na fila, inclusive as de **pedido** (`source_type = 'order'`), que
+> passaram a nascer no ledger novo. Pedido pago por gateway com aviso perdido é recuperado pelo
+> mesmo cron que já recupera cobrança interna. `rms_mp_payment` **não** entra na fila: os links
+> antigos que ainda estão lá só são encerrados pelo aviso do provedor ou pelo próprio cliente.
+
 ## Como cada provedor é consultado
 
 | Provider | Âncora | Chamada | Observações |

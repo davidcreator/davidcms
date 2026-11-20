@@ -20,11 +20,26 @@
 namespace Reamur\Catalog\Controller\Checkout;
 
 use Reamur\System\Library\Payment\Checkout;
+use Reamur\System\Library\Payment\DbGatewayAccountStore;
+use Reamur\System\Library\Payment\DbGatewayLedger;
 use Reamur\System\Library\Payment\DbLedger;
+use Reamur\System\Library\Payment\GatewayCredentialVault;
+use Reamur\System\Library\Payment\GatewayEventApplier;
+use Reamur\System\Library\Payment\InstalledGatewayAdapters;
 use Reamur\System\Library\Payment\Mercadopago;
 use Reamur\System\Library\Payment\Method;
 use Reamur\System\Library\Payment\Notification;
+use Reamur\System\Library\Payment\OrderFlowLedger;
+use Reamur\System\Library\Payment\OrderGatewayLedger;
 
+/**
+ * ADR 0119: o `notify()` continua no contrato da ADR 0097 (é o aviso do
+ * Mercado Pago pelo formato antigo, um só meio), mas a leitura das cobranças
+ * passa a enxergar o ledger novo primeiro — o aviso de um pedido criado pelo
+ * caminho novo não pode ser descartado como "sem lançamento local".
+ *
+ * O link de pedido novo não nasce aqui: ver `OrderPaymentLink`.
+ */
 class Payment extends \Reamur\System\Engine\Controller {
 
     public function index(): void {
@@ -107,12 +122,31 @@ class Payment extends \Reamur\System\Engine\Controller {
     // ── internos ──────────────────────────────────────────────────────────
 
     private function checkout(): Checkout {
+        $legacy = new DbLedger($this->db, DB_PREFIX);
+        $gateway = new DbGatewayLedger($this->db, DB_PREFIX);
+
+        // Aplicador só existe quando a migração do núcleo novo foi aplicada:
+        // sem as tabelas, `record()` de uma linha de gateway precisa falhar
+        // alto em vez de escrever pela metade.
+        $applier = $this->gatewaySchemaReady() ? new GatewayEventApplier($gateway) : null;
+
         return new Checkout(
-            new DbLedger($this->db, DB_PREFIX),
+            new OrderFlowLedger(new OrderGatewayLedger($gateway, $legacy), $legacy, $applier, $gateway),
             function (string $line): void {
                 $this->log->write($line);
             }
         );
+    }
+
+    /** As três tabelas do núcleo novo, sem cache: a migração é aplicada à mão. */
+    private function gatewaySchemaReady(): bool {
+        try {
+            $this->load->model('checkout/gateway_payment');
+
+            return $this->model_checkout_gateway_payment->gatewaySchemaReady();
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /** Meio de pagamento deste endereço. Hoje há um só: Mercado Pago. */

@@ -346,4 +346,76 @@ final class ControllerWiringTest extends TestCase {
             self::assertSame([], $model->getSellerByMpUserId(1), $class);
         }
     }
+
+    /**
+     * ADR 0119: o link de um pedido criado pelo caminho novo vive em
+     * `rms_payment_transaction`. O `pay()` precisa encontrá-lo **sem** tocar em
+     * `rms_mp_payment` — se ele só olhasse o legado, o cliente que recebeu o
+     * link cairia em "página não encontrada" exatamente na hora de pagar.
+     */
+    public function testCustomerLinkOfTheNewLedgerRedirectsWithoutTouchingTheLegacyTable(): void {
+        $db = new class {
+            /** @var list<string> */ public array $sql = [];
+            public function escape(string $v): string { return addslashes($v); }
+            public function getLastId(): int { return 0; }
+            public function query(string $sql): \stdClass {
+                $this->sql[] = $sql;
+                $res = new \stdClass();
+                $res->rows = []; $res->row = []; $res->num_rows = 0;
+
+                if (str_contains($sql, 'payment_transaction')) {
+                    $res->rows = [[
+                        'transaction_id' => '901',
+                        'source_type' => 'order',
+                        'source_id' => '41',
+                        'gateway_id' => '7',
+                        'provider_code' => 'stripe',
+                        'method_code' => 'card',
+                        'source_currency' => 'BRL',
+                        'source_fraction_digits' => '2',
+                        'source_amount' => '120.00',
+                        'charge_currency' => 'BRL',
+                        'charge_fraction_digits' => '2',
+                        'charge_amount' => '120.00',
+                        'provider_reference' => 'cs_test_901',
+                        'provider_payment_id' => '',
+                        'checkout_url' => 'https://checkout.stripe.com/c/pay/cs_test_901',
+                        'customer_action_json' => json_encode([
+                            'kind' => 'redirect',
+                            'url' => 'https://checkout.stripe.com/c/pay/cs_test_901',
+                        ]),
+                        'public_token' => str_repeat('b', 48),
+                        'idempotency_key' => 'order-41-attempt-01',
+                        'status' => 'requires_action',
+                        'date_added' => '2026-11-20 12:00:00',
+                        'date_modified' => '2026-11-20 12:00:00',
+                    ]];
+                    $res->row = $res->rows[0];
+                    $res->num_rows = 1;
+                }
+
+                return $res;
+            }
+        };
+
+        $response = new Response();
+        $registry = new Registry();
+        $registry->set('db', $db);
+        $registry->set('request', new Request());
+        $registry->set('response', $response);
+        $registry->set('log', $this->log());
+        $registry->set('config', new Config());
+        $registry->set('load', new class {
+            public function language(string $route): void {}
+            public function model(string $route): void {}
+        });
+
+        (new CatalogPaymentController($registry))->pay(str_repeat('b', 48));
+
+        self::assertContains('Location: https://checkout.stripe.com/c/pay/cs_test_901', $response->getHeaders());
+        self::assertStringContainsString('payment_transaction', $db->sql[0]);
+        foreach ($db->sql as $sql) {
+            self::assertStringNotContainsString('mp_payment', $sql, 'o ledger legado não deve ser consultado quando o novo responde');
+        }
+    }
 }

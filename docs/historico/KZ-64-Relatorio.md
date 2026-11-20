@@ -140,7 +140,7 @@ Sobre a rota do cron: dois testes usam `#[RunInSeparateProcess]` porque `Model::
 
 1. **ADR 0118** registrando a frente multi-gateway + reconciliação, e destravar o `decision-matrix.json` (parado em `1f864b80`). É o único item do DoD que este pacote não fecha.
 2. **`refund()` no contrato** + botão no painel (P1 do relatório).
-3. **Levar `order` para o ledger novo** — o público ainda está no contrato legado `Payment\Method`/`rms_mp_payment`; é a dívida arquitetural central.
+3. ~~**Levar `order` para o ledger novo**~~ — **feito** (KZ-64, 5ª parte: ADR 0119, `OrderPaymentLink` + `OrderFlowLedger`; `rms_mp_payment` fica somente leitura para links antigos e pagamento manual).
 4. Validação sandbox real de Mercado Pago (vendedor de teste + pagador `@testuser.com`) — único elo nunca exercitado contra o mundo real.
 5. ~~`import` das tabelas de pagamento no `Dicionario-de-Dados.md`~~ — **feito** (KZ-64, 2ª parte: §9 do dicionário).
 

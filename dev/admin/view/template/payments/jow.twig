@@ -56,6 +56,28 @@
       </form>
     </div></div></div>
 
+    {# ── Link de pagamento de PEDIDO (ledger novo, ADR 0119) ── #}
+    {% if gateway_schema_ready %}
+    <div class="col-12"><div class="card"><div class="card-body">
+      <h2 class="h6 card-title">{{ text_order_gateway_link }}</h2>
+      <p class="small text-body-secondary">{{ help_order_gateway_link }}</p>
+      {% if recent_orders %}
+      <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+        <thead><tr><th>#</th><th>{{ entry_payer_email }}</th><th>{{ col_amount }}</th><th>{{ col_status }}</th><th>{{ col_date }}</th><th></th></tr></thead>
+        <tbody>{% for o in recent_orders %}<tr>
+          <td>{{ o.order_id }}</td><td class="small">{{ o.email|e }}</td>
+          <td>{{ o.total|number_format(2, ',', '.') }}</td><td class="small">{{ o.status_name|e }}</td>
+          <td class="small">{{ o.date_added }}</td>
+          <td>{% if can_modify and gateway_providers %}<form method="post" action="{{ action }}" class="d-flex gap-1">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="order_gateway_link"><input type="hidden" name="order_id" value="{{ o.order_id }}">
+            <select name="provider" class="form-select form-select-sm w-auto">{% for p in gateway_providers %}<option value="{{ p.code|e }}">{{ p.label|e }}</option>{% endfor %}</select>
+            <button class="btn btn-outline-primary btn-sm">{{ button_gateway_link }}</button></form>{% endif %}</td>
+        </tr>{% endfor %}</tbody>
+      </table></div>
+      {% else %}<p class="text-body-secondary small mb-0">{{ text_no_orders }}</p>{% endif %}
+    </div></div></div>
+    {% endif %}
+
     {# ── Contas próprias do JOW por gateway, isoladas do OAuth dos sellers Marketplace ── #}
     <div class="col-12"><div class="card"><div class="card-body">
       <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">

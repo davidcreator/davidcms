@@ -81,6 +81,84 @@ class Jow extends \Reamur\System\Engine\Model {
             && $this->hasTable('payment_gateway_event');
     }
 
+    /**
+     * Pedidos recentes que ainda podem receber um link de pagamento (ADR 0119).
+     * Só o suficiente para a lista da tela; nenhum dado de pagamento aqui.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function getRecentOrdersForGatewayLink(int $limit = 10): array {
+        $limit = max(1, min(50, $limit));
+
+        $query = $this->db->query(
+            "SELECT o.`order_id`, o.`email`, o.`total`, o.`date_added`, os.`name` AS `status_name`"
+            . " FROM `" . DB_PREFIX . "order` o"
+            . " LEFT JOIN `" . DB_PREFIX . "order_status` os ON os.`order_status_id` = o.`order_status_id`"
+            . " WHERE o.`total` > 0 ORDER BY o.`order_id` DESC LIMIT " . $limit
+        );
+
+        $rows = ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+
+        return array_map(static fn($row): array => (array)$row, $rows);
+    }
+
+    /**
+     * O mesmo "schema pronto" para o link de PEDIDO (ADR 0119). A checagem é a
+     * das três tabelas do núcleo novo: sem elas o link falha com mensagem
+     * clara em vez de gravar pela metade.
+     */
+    public function orderGatewaySchemaReady(): bool {
+        return $this->gatewaySchemaReady();
+    }
+
+    /**
+     * Dados do pedido que o link de pagamento precisa (ADR 0119): total, e-mail
+     * do cliente e um título legível. O título é montado a partir dos itens —
+     * um pedido sem descrição apareceria como "Pedido #12" genérico no extrato
+     * do cliente.
+     *
+     * @return array<string, mixed>
+     */
+    public function getOrderForGatewayLink(int $orderId): array {
+        if ($orderId <= 0) {
+            return [];
+        }
+
+        $query = $this->db->query(
+            "SELECT `order_id`, `email`, `total` FROM `" . DB_PREFIX . "order`"
+            . " WHERE `order_id` = " . (int)$orderId . " LIMIT 1"
+        );
+
+        if (!($query instanceof \stdClass) || empty($query->row)) {
+            return [];
+        }
+
+        $order = (array)$query->row;
+
+        $items = $this->db->query(
+            "SELECT `name` FROM `" . DB_PREFIX . "order_product`"
+            . " WHERE `order_id` = " . (int)$orderId . " ORDER BY `order_product_id` ASC LIMIT 3"
+        );
+
+        $names = [];
+
+        if ($items instanceof \stdClass && !empty($items->rows)) {
+            foreach ((array)$items->rows as $row) {
+                $name = trim((string)(((array)$row)['name'] ?? ''));
+
+                if ($name !== '') {
+                    $names[] = $name;
+                }
+            }
+        }
+
+        $order['title'] = $names === []
+            ? ('Pedido #' . (int)$orderId)
+            : ('Pedido #' . (int)$orderId . ' — ' . implode(', ', $names));
+
+        return $order;
+    }
+
     /** Locate the single JOW platform-owned account for a provider, if configured. */
     public function getPlatformGatewayId(string $providerCode): int {
         if (preg_match('/^[a-z][a-z0-9_]{0,31}$/D', $providerCode) !== 1) {
