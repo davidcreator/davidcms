@@ -1,5 +1,14 @@
 # Changelog
 
+## KZ-64 (12ª parte) — ADR 0121, proposta: estorno, com o custo corrigido (2026-11-20)
+
+- **Correção de uma estimativa que estava otimista.** O documento anterior de decisão dava o caminho mais barato do estorno em ~3 arquivos, apoiado em duas suposições. **Nenhuma das duas se confirmou no código:** `DbGatewayLedger::pendingAttempts()` filtra `pending`/`requires_action`/`authorized`, então a reconciliação **nunca revisita tentativa paga** — não descobre estorno de Mercado Pago nem de PayPal, só o webhook descobre; e o Stripe é pior que os outros, porque `StripeCheckoutAdapter::reconcile()` lê a **sessão**, que não muda quando há estorno. Custo real do R1: **~7 arquivos**, não 3.
+- **O que continua verdadeiro e a favor:** o ledger **já aceita** `paid → refunded`/`partially_refunded` (nenhuma mudança na máquina de estados, nenhum toque no `GatewayEventApplier`); as três âncoras do estorno já estão guardadas (`provider_reference` no MP, `provider_payment_id` no Stripe e no PayPal) — **nenhuma migração de dados**; e os endpoints dos três provedores estão confirmados na documentação oficial.
+- **Dois dos três problemas do R1 são defeitos de hoje, não ausência de recurso:** o painel aceita gravar `refunded` **sem estorno nenhum** (`setChargeStatus` na lista + `<select>` na tela) — o relatório de recebimentos pode mentir; e não existe comparação entre `rms_jow_charge.status` (operador) e `rms_payment_transaction.status` (provedor), então as duas fontes divergem em silêncio.
+- **Três opções com custo refeito:** R1 (estorno no painel do provedor, CMS passa a enxergar) ~7 arquivos, **risco de dinheiro nulo**; R2 (estorno total pela tela, com idempotência de graça pelo `provider_event_id`) ~11–12; R3 (parcial, exige `payment_refund` + migração aditiva) ~17–18.
+- **Recomendação:** R1 agora, R2 quando o volume justificar, R3 só se parcial for necessidade real de negócio. Uma resposta basta para começar: **R1 e a janela da varredura de pagos (D07, decisão nova)**.
+- **Nenhum código de estorno escrito.** A ADR registra fatos e custo; mover dinheiro é decisão do dono do produto, e R2/R3 teriam release própria com estorno de teste executado de verdade.
+
 ## KZ-64 (11ª parte) — runbook da reconciliação: como ligar sem abrir buraco (2026-11-20)
 
 - **`docs/integracoes/JOW-Payments-Reconciliacao-Operacao.md` (novo).** O que faltava entre "a rota existe" e "a rota roda de verdade": como gerar o `REAMUR_RECONCILE_TOKEN` (32+ caracteres, `random_bytes`), a linha de crontab recomendada, e **por que `curl -f`** — sem ele um 403 passa como sucesso silencioso, que é exatamente o modo de falha que deixa pagamento perdido por semanas.

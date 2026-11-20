@@ -8,7 +8,8 @@ b2ae11cf  b0ec1ce139370c3f1d008e1d1dffc42353c0b372f8b35fcbe4f05c908ea91cbb  2455
 54e8d62d  5019e3c67f81e5d9c21b0d60fe5e8566b2ce3bcd76248fbeab5eb404bce9065c  5387  agents-ia/decisoes/0081-dependencias-node-em-system-storage-e-ci.md
 b3f88bf5  d07103140a2f867d043ad39e97d402d562b12a7fa3650b81ee173b205b88a1f5  9248  agents-ia/decisoes/0119-pagamentos-fluxo-do-pedido-no-ledger-novo.md
 fd44e234  18375f1335684016ac6d40ad16b7210f108c24d8b2ffc2f34cf8b2c7f2b1eda0  10142  agents-ia/decisoes/0120-pagamentos-destino-do-dinheiro-do-pedido.md
-e703519f  fb214ff374ec180affac0e35dc8c7e1d4f4eb89172ee811478bd98b80ad5d8c5  26387  agents-ia/decisoes/README.md
+59d2991f  6e48e00dc96bbc37dd958c9d90b58eb10dc9e134d3f0fdf2a02360224056af96  9333  agents-ia/decisoes/0121-pagamentos-estorno-escopo-do-primeiro-passo.md
+5db98b21  9aebd5e2ad9a8b59a371c4fc06373c15ccced3e6b66ed63a43bf9cc8f4c6de20  27641  agents-ia/decisoes/README.md
 12feea24  b6d93cb1839df0c424777ac809ffeb7b87fc94852ebaea6549f3456bbaa78610  7050  agents-ia/regras/00-contexto-global.md
 03422cd4  77c4f51df2a46c30bf45f39b703e55ce474c2d706048be2f3f8c31bbb992fd60  7429  agents-ia/regras/02-padroes-de-codigo.md
 bebb191c  00a755dc23d6e2420d4263a52c35ac03ce3d9b643936218595cc7df06c38231b  2143  dev/admin/language/en-us/common/header.php
@@ -20,7 +21,7 @@ ae62ee30  90a5d1b142c511aba2d9cd7aa7c669e8e449dd7760027126bc72bf6aa8827939  2232
 39e1dff4  337fd885ee97e0c1321169076eeedaa4d2b92bded2268de9c465d4f7b164319b  43279  dev/system/library/blog/block_document.php
 7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
 fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
-bb88de9e  c9515b6b3d0e9f5129b6fadbc3602f10964bbdc2c29a689f18d8859d952a8b72  187359  docs/CHANGELOG.md
+a28ae222  190bbdd2ba26db69674eb69fa46f3d28e5994908a3c5e3332c6c0ab19825034f  189606  docs/CHANGELOG.md
 675b1723  ddf884f56fcb08b9a5a84b3e3f19e64d0850585005cf34a3eb00969297628f14  16729  docs/Estrutura-de-Pastas.md
 61660a6e  d7515650f0c01bc118c3bd75c5df94bf2d6049bcdc7775ed267367360f210351  10948  docs/README.md
 2cd4aea9  48c6bf0ae2c1ccf1d471ea99bd205d3af3b3c3fe769a67dcc7c005cf6420714e  29473  docs/arquitetura/Dicionario-de-Dados.md
