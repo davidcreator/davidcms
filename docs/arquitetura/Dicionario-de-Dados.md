@@ -37,6 +37,9 @@
 | `testimonial`, `testimonial_description` · `client_logo` | `marketing/` | home |
 | `tool`, `tool_description` | `tool/` | catalog `tool/` |
 | `order`, `order_product`, `order_status`, `order_history` | `sale/` | catalog `checkout/`, webhooks |
+| `jow_gateway`, `payment_transaction`, `payment_gateway_event` | `payments/jow` (núcleo em `system/library/payment/`) | catalog `checkout/gateway`, rota `cron/reconcile`, webhooks de provedor |
+| `jow_charge`, `jow_pix_key` | `payments/jow` | painel *Pagamentos › JOW*; `status` sincronizado pelo checklist de pagamento |
+| `mp_payment`, `mp_seller` | `setting/marketplace` | catalog `checkout/mp_payment` (pedido público), notificação MP |
 | `contact_message` | `communication/` | formulário de contato |
 | `webhook`, `webhook_log` | `marketing/` ou `setting/` | `system/webhook/` |
 | `seo_url` | `design/` | todas as rotas amigáveis |
@@ -200,14 +203,133 @@ Uma linha representa um documento por post e idioma. `blog_post_description.desc
 
 ---
 
-## 9. Comunicação
+## 9. Pagamentos
+
+Duas camadas de pagamento convivem no sistema (ADR 0118) e **nenhuma coluna é repetida entre elas** — o que decide qual ler é o que se está olhando:
+
+| Camada | Contrato | Tabela principal | Quem escreve |
+| --- | --- | --- | --- |
+| Pedido público do site | ADR 0097 (`Method` → `Checkout` → `DbLedger`) | `mp_payment` | `catalog/model/checkout/mp_payment.php` |
+| Tentativa por provedor (núcleo novo) | `GatewayAdapter` → `GatewayPaymentService` → `GatewayLedger` | `payment_transaction` | `system/library/payment/`, `admin/model/payments/jow`, `catalog/controller/checkout/gateway` |
+| Cobrança da ferramenta interna JOW | contrato simples, anterior ao núcleo | `jow_charge` | `admin/model/payments/jow.php`; o `status` é sincronizado por `catalog/model/checkout/gateway_payment.php` |
+
+Regras que valem para **todas** as tabelas desta seção:
+
+1. **Sem FK declarada** — a integridade é mantida pelos Models (padrão do projeto, §1);
+2. **Datas em UTC**, `DATETIME NOT NULL`; `date_added`/`date_modified` em toda entidade editável;
+3. **Migração manual e separada**, nunca edição retroativa do `schema-complete.sql`: `tools/upgrade_kz35_jow_payments.sql` (`jow_charge`, `jow_pix_key`), `tools/upgrade_jow_payments_multigateway_core.sql` (`jow_gateway`, `payment_transaction`, `payment_gateway_event`) e `tools/upgrade_jow_payments_reconcile.sql` (coluna `provider_checkout_id`, opcional);
+4. **Nenhum segredo em texto claro**: credencial de provedor só em `jow_gateway.credentials_encrypted_json`, valor a valor cifrado por `Security\SecretBox` (ADR 0094).
+
+### `jow_gateway` — contas de provedor instaladas
+
+Uma linha por provedor × rótulo de conta × ambiente. Sem nenhuma linha, nenhum provedor está instalado; a tela *Pagamentos › JOW* e o `GatewayRegistry` leem daqui.
+
+| Coluna | Tipo | Notas |
+| --- | --- | --- |
+| `gateway_id` | INT UNSIGNED PK AI | |
+| `provider_code` | VARCHAR(32) | código fixo do adapter (`mp`, `stripe`, `paypal`); **nunca** nome de classe livre |
+| `account_label` | VARCHAR(64) DEFAULT `''` | rótulo humano da conta |
+| `environment` | VARCHAR(8) DEFAULT `sandbox` | `sandbox` \| `live` |
+| `status` | TINYINT(1) DEFAULT 0 | 0 desligado / 1 ligado. Conta desligada **continua sendo varrida** pela reconciliação: pode ter pagamento em voo |
+| `public_config_json` | LONGTEXT NULL | só configuração não secreta (ex.: publishable key, modo) |
+| `credentials_encrypted_json` | LONGTEXT NULL | JSON em que **cada valor** é cifrado (ADR 0094); nenhum segredo em texto claro |
+| `date_added`,`date_modified` | DATETIME | |
+| **Índices** | UNIQUE(`provider_code`,`account_label`,`environment`) · KEY(`provider_code`,`status`) | |
+
+### `payment_transaction` — ledger neutro das tentativas
+
+Uma linha por **tentativa** de cobrança num provedor (não por pedido: o mesmo pedido pode ter várias). É a fonte da verdade do núcleo novo.
+
+| Coluna | Tipo | Notas |
+| --- | --- | --- |
+| `transaction_id` | BIGINT UNSIGNED PK AI | |
+| `source_type` | VARCHAR(24) | `order` \| `jow_charge` (lista fechada, validada no Model) |
+| `source_id` | BIGINT UNSIGNED | id na tabela de origem (`order_id` ou `charge_id`) |
+| `gateway_id` | INT UNSIGNED | FK lógica → `jow_gateway` |
+| `provider_code` | VARCHAR(32) | cópia do código do provedor no momento da tentativa |
+| `method_code` | VARCHAR(32) | forma de cobrança **do adapter**, validada por `GatewayCapabilities::supports()`: `checkout_pro` (Mercado Pago), `checkout_session` (Stripe), `checkout_orders` (PayPal) |
+| `source_currency` | CHAR(3) | moeda de origem (ISO-4217) |
+| `source_fraction_digits` | TINYINT UNSIGNED | casas decimais da moeda de origem |
+| `source_amount` | DECIMAL(28,8) | valor na moeda de origem, em unidade maior |
+| `charge_currency` | CHAR(3) | moeda efetivamente cobrada |
+| `charge_fraction_digits` | TINYINT UNSIGNED | casas da moeda cobrada |
+| `charge_amount` | DECIMAL(28,8) | valor cobrado; **é comparado ao centavo** contra o aviso do provedor |
+| `fx_provider_code` | VARCHAR(32) DEFAULT `''` | provedor de câmbio usado, quando há |
+| `fx_quote_reference` | VARCHAR(128) NULL | `utf8mb4_bin` — referência da cotação |
+| `fx_rate` | DECIMAL(36,18) NULL | taxa aplicada |
+| `fx_quoted_at`,`fx_expires_at` | DATETIME NULL | validade da cotação |
+| `provider_reference` | VARCHAR(128) NULL | `utf8mb4_bin` — referência que **nós** enviamos ao provedor. No Mercado Pago é o id da ordem (consultável: é o que a reconciliação usa); no Stripe e no PayPal é a nossa chave de idempotência (não consultável) |
+| `provider_checkout_id` | VARCHAR(128) NULL | **aditivo e opcional** (`upgrade_jow_payments_reconcile.sql`): id do recurso consultável no provedor — sessão do Stripe, ordem do PayPal. Sem a migração a coluna não existe e essas duas tentativas ficam `missing_provider_anchor` no relatório |
+| `provider_payment_id` | VARCHAR(128) NULL | id do pagamento no provedor; **imutável** depois de gravado |
+| `checkout_url` | TEXT NULL | link para o cliente concluir |
+| `customer_action_json` | TEXT NOT NULL | só instrução segura para o cliente; **nunca** resposta bruta do provedor |
+| `public_token` | CHAR(48) `ascii_bin` UNIQUE | token bearer do link público; não registrar em log |
+| `idempotency_key` | VARCHAR(128) `ascii_bin` | nossa chave; entra em UNIQUE com origem e gateway |
+| `status` | VARCHAR(24) DEFAULT `pending` | vocabulário de `GatewayPaymentStatus` (ver abaixo) |
+| `date_added`,`date_modified` | DATETIME | `date_modified` muda **quando o estado muda** — é o que a janela da reconciliação usa |
+| **Índices** | UNIQUE(`public_token`) · UNIQUE(`source_type`,`source_id`,`gateway_id`,`idempotency_key`) · UNIQUE(`gateway_id`,`provider_reference`) · KEY(`source_type`,`source_id`,`transaction_id`) · KEY(`gateway_id`,`provider_payment_id`) · KEY(`gateway_id`,`provider_checkout_id`) · KEY(`status`,`date_added`) | |
+
+### `payment_gateway_event` — deduplicação de avisos do provedor
+
+Uma linha por aviso recebido. Existe para que reenvio do provedor não aplique o mesmo evento duas vezes; **o corpo do aviso não é guardado** — só o hash.
+
+| Coluna | Tipo | Notas |
+| --- | --- | --- |
+| `gateway_event_id` | BIGINT UNSIGNED PK AI | |
+| `gateway_id` | INT UNSIGNED | FK lógica → `jow_gateway` |
+| `provider_event_id` | VARCHAR(128) `utf8mb4_bin` | id do evento no provedor; UNIQUE junto com o gateway |
+| `event_type` | VARCHAR(64) DEFAULT `''` | tipo normalizado |
+| `event_sha256` | CHAR(64) | SHA-256 do corpo bruto ou do evento normalizado; `payload` não é armazenado |
+| `result_code` | VARCHAR(64) DEFAULT `''` | veredito da aplicação (ex.: `applied`, `duplicate`, `amount_mismatch`) |
+| `status` | VARCHAR(16) DEFAULT `received` | `received` \| `processed` \| `ignored` \| `failed` |
+| `received_at` | DATETIME | |
+| `processed_at` | DATETIME NULL | |
+| **Índices** | UNIQUE(`gateway_id`,`provider_event_id`) · KEY(`status`,`received_at`) | |
+
+### `jow_charge` — cobrança da ferramenta interna (KZ-35)
+
+| Coluna | Tipo | Notas |
+| --- | --- | --- |
+| `charge_id` | INT PK AI | |
+| `description` | VARCHAR(128) | |
+| `amount` | DECIMAL(10,2) | moeda maior, 2 casas |
+| `currency` | VARCHAR(3) DEFAULT `BRL` | |
+| `method` | VARCHAR(8) DEFAULT `pix` | **duas naturezas**: método manual (`pix`, `card`, `boleto`) quando a cobrança é manual, ou o **código do provedor** (`mp`, `stripe`, `paypal`) quando foi criada por gateway. É esse campo que `syncJowChargeStatus()` usa como filtro |
+| `status` | VARCHAR(16) DEFAULT `pending` | vocabulário legado (ver abaixo) |
+| `pix_payload` | TEXT NULL | BR Code copia-e-cola da cobrança Pix |
+| `payer_email` | VARCHAR(96) DEFAULT `''` | |
+| `due_date` | DATE NULL | |
+| `paid_at` | DATETIME NULL | preenchido no primeiro estado liquidado (`COALESCE`) |
+| `date_added` | DATETIME | |
+| **Índices** | PK(`charge_id`) · KEY(`status`) · KEY(`date_added`) | |
+
+### `jow_pix_key` — chaves Pix da ferramenta
+`key_id` INT PK AI · `type` VARCHAR(16) *(ex.: `random`)* · `key` VARCHAR(128) UNIQUE · `holder` VARCHAR(128) DEFAULT `''` · `status` TINYINT(1) DEFAULT 1 · `date_added` DATETIME.
+
+### `mp_payment` — pedido público (ADR 0097)
+`mp_payment_id` INT UNSIGNED PK · `order_id` INT *(pedido dono)* · `mp_seller_id` INT UNSIGNED *(vendedor que recebe o líquido)* · `preference_id` VARCHAR(64) UNIQUE *(id da preference no MP, único por tentativa)* · `payment_id` BIGINT DEFAULT 0 *(0 = ainda sem aviso)* · `public_token` CHAR(48) UNIQUE · `amount` DECIMAL(15,4) · `marketplace_fee` DECIMAL(15,2) · `currency_id` CHAR(3) DEFAULT `BRL` · `status` VARCHAR(32) DEFAULT `pending` *(status do MP: `pending`/`approved`/`rejected`/`cancelled`/`refunded`)* · `init_point` TEXT · `date_added`,`date_modified`. Índices: PK, UNIQUE(`preference_id`), UNIQUE(`public_token`), KEY(`order_id`), KEY(`mp_seller_id`), KEY(`payment_id`), KEY(`status`).
+
+### `mp_seller` — vendedor conectado via OAuth (ADR 0034/0035)
+`mp_seller_id` INT UNSIGNED PK · `mp_user_id` BIGINT UNIQUE *(user_id no Mercado Pago)* · `nickname` VARCHAR(190) · `email` VARCHAR(190) · `access_token` TEXT **cifrado** (ADR 0094) · `refresh_token` TEXT **cifrado** · `scope` VARCHAR(255) · `token_expires_at` DATETIME · `status` TINYINT(1) DEFAULT 1 *(1 = conexão utilizável)* · `date_added`,`date_modified`.
+
+### Vocabulários de `status` — e a pegadinha do `cancelled`
+
+| Onde | Valores | Definido em |
+| --- | --- | --- |
+| `payment_transaction.status` | `pending`, `requires_action`, `authorized`, `paid`, `failed`, `cancelled`, `expired`, `refunded`, `partially_refunded`, `disputed` | `GatewayPaymentStatus` (transição monotônica por `canTransition()`: `paid` não volta para `failed`; `failed`/`cancelled`/`expired`/`refunded` são finais) |
+| `jow_charge.status` | `pending`, `paid`, `partial`, `canceled`, `expired`, `refunded`, `disputed` | mapa de `GatewayPayment::syncJowChargeStatus()` |
+| `mp_payment.status` | status do MP: `pending`, `approved`, `rejected`, `cancelled`, `refunded` | resposta do Mercado Pago |
+
+⚠️ **`cancelled` (duas consoantes) no ledger × `canceled` (uma) em `jow_charge`.** Não é erro de digitação: são vocabulários diferentes, e o mapa entre eles está em `syncJowChargeStatus()`. Model novo que escreva em `jow_charge` deve usar `canceled`; o que escreve em `payment_transaction` usa a constante de `GatewayPaymentStatus`.
+
+## 10. Comunicação
 
 ### `contact_message` — formulário "Let's have a chat?"
 `contact_message_id` PK · `name` VARCHAR(128) · `email` VARCHAR(96) · `telephone` VARCHAR(32) · `subject` VARCHAR(128) · `message` TEXT · `ip` VARCHAR(40) · `status` TINYINT *(0 novo, 1 lido, 2 respondido)* · `date_added`
 
 ---
 
-## 10. Webhooks
+## 11. Webhooks
 
 ### `webhook`
 `webhook_id` PK · `trigger` VARCHAR(64) *(ex.: `order_add`, `product_*`)* · `url` VARCHAR(255) *(HTTPS obrigatório)* · `secret` VARCHAR(64) *(HMAC)* · `description` VARCHAR(255) · `status` · `date_added` · índice UNIQUE(`trigger`,`url`)
@@ -217,7 +339,7 @@ Uma linha representa um documento por post e idioma. `blog_post_description.desc
 
 ---
 
-## 11. Infra
+## 12. Infra
 
 ### `seo_url`
 `seo_url_id` PK · `key` VARCHAR(64) *(rota/parâmetro, ex.: `project_id=7`)* · `value` VARCHAR(255) *(keyword, ex.: `jwa`)* · `language_id` FK · `sort_order` · UNIQUE(`key`,`language_id`) · UNIQUE(`value`,`language_id`)
@@ -231,13 +353,13 @@ Uso: bloco INSERT do dump legado é colado pelo usuário nesta tabela; `upgrade_
 
 ---
 
-## 12. Regras de uso para os agentes
+## 13. Regras de uso para os agentes
 
 1. **Antes de escrever qualquer SQL ou Model**, conferir aqui: nome da tabela, nome exato da coluna e a `*_description` correspondente;
 2. Entidade nova/Coluna nova → **ADR + atualização deste doc + migração SQL** (fluxo do `agente-install`), nunca direto no Model;
 3. Nomes "oficiais" destacados (`image` = capa, `name` = título de projeto) existem para acabar com a divergência `name`×`title`, `image`×`cover`;
 4. As tabelas F9 de custom fields seguem migração/versionamento próprios; não modificar migration F9-02 já aplicada.
-5. Este dicionário cobre o **núcleo do lançamento**; e-commerce completo (produtos vendáveis, estoque, impostos) entra por ADR futuro, se o escopo crescer.
+5. Este dicionário cobre o **núcleo do lançamento**, incluindo pagamentos (§9 — duas camadas, ADR 0097 e ADR 0118); e-commerce completo (produtos vendáveis, estoque, impostos) entra por ADR futuro, se o escopo crescer.
 
 ---
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## KZ-64 (2ª parte) — Dicionário de Dados cobre pagamentos (2026-11-20)
+
+- **§9 Pagamentos no `docs/arquitetura/Dicionario-de-Dados.md`** (seção nova, com renumeração de 9→10 … 12→13 abaixo dela): `jow_gateway`, `payment_transaction` (inclusive a coluna aditiva `provider_checkout_id`), `payment_gateway_event`, `jow_charge`, `jow_pix_key`, `mp_payment` e `mp_seller` — colunas, tipos, índices e o dono de cada tabela. Fecha a divergência que a ADR 0118 havia declarado no checklist do PR (`Diverge → ADR obrigatório`).
+- **Duas armadilhas documentadas de propósito:** `jow_charge.method` guarda **método manual ou código de provedor** (é o campo que o filtro de `syncJowChargeStatus()` usa), e o vocabulário do ledger tem `cancelled` (duas consoantes) enquanto `jow_charge` usa `canceled` (uma) — não é erro de digitação, e o mapa entre os dois está no Model.
+- **Tabela nova de vocabulários de `status`** (ledger × `jow_charge` × `mp_payment`), para que nenhum agente invente um valor.
+- `docs/historico/KZ-64-Relatorio.md`: item de próximo passo marcado como feito; ADR 0118 atualizada para refletir a importação.
+- **Verificação:** `bash tools/verify-checksums.sh` (manifestos recalculados), `tools/verify-ci-workflow.sh`, `tools/verify-deps-layout.sh`; links relativos do dicionário e da ADR resolvem.
+
+## KZ-64 (pós-merge) — `repo-guards` verde, documentos do pacote e ADR 0118 (2026-11-20)
+
+- **Correção de CI:** o `CHECKSUMS-PACOTE.txt` do pacote de entrega entrou na raiz do repositório e o guard `tools/verify-checksums.sh` (job `repo-guards`) passou a varrê-lo como manifesto — 35 entradas apontando para arquivos que só existem dentro do ZIP, deixando o `repo-guards` vermelho na `main`. O arquivo saiu: é manifesto do pacote, não do repositório. Mesma classe de problema já registrada na limpeza de pacotes anteriores.
+- **Documentos realocados:** `LEIA-ME.md` → `docs/integracoes/KZ-64-Como-Aplicar.md` e `RELATORIO-KZ64.md` → `docs/historico/KZ-64-Relatorio.md`, com nota de contexto e ligações entre si e com a ADR.
+- **ADR 0118** — *Pagamentos multi-gateway: núcleo novo por tentativa e reconciliação ativa*: registra a convivência declarada dos dois contratos de pagamento (ADR 0097 × núcleo novo), o `GatewayEventApplier` como ponto único das checagens pós-verificação, o contrato read-only da reconciliação, a rota `cron/reconcile` com token e fail closed, a coluna aditiva `provider_checkout_id` e a correção do status pelo provedor verificado. Índice de ADRs atualizado — 0116, 0117 e 0118 (as duas primeiras estavam faltando no índice).
+- **Verificação:** `bash tools/verify-checksums.sh` 3 PASS / 0 FAIL (33 arquivos); `tools/verify-deps-layout.sh` e `tools/verify-ci-workflow.sh` sem falha; os links relativos dos três documentos resolvem (`docs-links` offline).
+
 ## KZ-64 — JOW-Payments: reconciliação ativa e status por provedor (2026-11-20)
 
 - **P0-a (bug de dinheiro):** `syncJowChargeStatus()` filtrava `method = 'mp'` fixo, então uma cobrança paga por **Stripe ou PayPal** nunca saía de `pending` em `rms_jow_charge` — painel e relatório de recebimentos mentiam. O `WHERE` agora usa o `provider_code` do registro verificado no ledger (`GatewayPayment::syncJowChargeStatus(int, string, string)`); cobrança manual (`pix`/`card`/`boleto`) continua intocada porque o código do provedor não bate. Regressão coberta por `tests/Unit/Payment/JowChargeStatusSyncTest.php`.
