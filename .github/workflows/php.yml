@@ -237,5 +237,12 @@ jobs:
     # ADR 0126: ADR sem linha no indice passa em revisao de codigo porque
     # ninguem abre o indice para conferir. Caminho citado em documento
     # operacional que nao existe e pior: a instrucao parece precisa.
+    #
+    # ADR 0127: quais documentos sao "operacionais" e DERIVADO das pastas por
+    # tools/verify-docs-index.js (node) -- a lista escrita a mao da ADR 0126
+    # ficou incompleta em duas semanas (handoff e 20 guias de tema fora).
+    # node ja faz parte do runner; sem ele o verificador reprova com codigo 2.
     - name: Indice de ADRs e caminhos citados nos documentos
-      run: php tools/verify-docs-index.php --strict
+      run: |
+        node tools/verify-docs-index.js --json > /dev/null
+        php tools/verify-docs-index.php --strict

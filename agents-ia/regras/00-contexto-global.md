@@ -87,7 +87,7 @@ Dentro de Controller/Model, via `$this->`:
 | **0002** | Blog híbrido: externo (davidcreator.com) no lançamento; migração interna pós-lançamento — **não criar módulo de blog agora** |
 | **0003** | CI corrigido (`working-directory` + `php -l` + links); `.gitignore` cobre vendor; limpeza do histórico na Fase 1 |
 | **0081** | Dependências Node em `dev/system/storage/` e correção do CI (sem `defaults.run` global; PHPStan verde) |
-| **0004** | Contratos de fundação aprovados: `docs/arquitetura/Contrato-Bootstrap.md`, `docs/arquitetura/Dicionario-de-Dados.md`, `agents-ia/modelos/`, PHPStan/PHPUnit (`require-dev`), `dev/tests/` (única pasta de 1º nível autorizada), `.editorconfig`, PR template |
+| **0004** | Contratos de fundação aprovados: `docs/arquitetura/Contrato-Bootstrap.md`, `docs/arquitetura/Dicionario-de-Dados.md`, `agents-ia/modelos/`, PHPStan/PHPUnit (`require-dev`), uma pasta de testes de 1º nível (a ADR 0004 a autorizou dentro de `dev/`; **na prática a suíte vive em `tests/`, na raiz** — é o caminho a usar), `.editorconfig`, PR template |
 
 ## 8. Peculiaridades intencionais (NÃO "corrigir" sem ADR)
 

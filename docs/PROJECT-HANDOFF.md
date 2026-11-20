@@ -4,13 +4,13 @@ Use this as a starter brief in a future Arena.ai Agent Mode conversation. This i
 
 ## Copy/paste starter
 
-> Continue work on the ReamurCMS codebase. First read `docs/BDREditor-Complete-Reference-and-Closure.md` and inspect the current workspace and relevant GitHub branch. The BDREditor project is paused/closed at F9-103 by user request. **Do not continue BDREditor or add features unless I explicitly reopen it.** My new task is: [state the new task here].
+> Continue work on the ReamurCMS codebase. First read `docs/fases/f9/BDREditor-Complete-Reference-and-Closure.md` (nota de lugar: o arquivo vive em `docs/fases/f9/`, não na raiz de `docs/`; se você o procurou na raiz, era este o defeito — ADR 0127) and inspect the current workspace and relevant GitHub branch. The BDREditor project is paused/closed at F9-103 by user request. **Do not continue BDREditor or add features unless I explicitly reopen it.** My new task is: [state the new task here].
 >
-> Follow the project’s standing constraints: keep Pages and Blog independent; preserve existing files, blocks and behavior; no database/schema/migration/staging/GitHub/deployment writes without explicit authorization; do not execute `custom_js` or arbitrary HTML; F9-12 is deferred; do not investigate its environments/databases. Check GitHub for existing work before proposing a duplicate. If browser or PHP CLI validation is unavailable, say so and do not claim runtime validation. For requested code changes, run relevant smoke scripts, all available `tools/*smoke.js` regressions and `tools/f9-57-static-battery.py`, then deliver complete files in a CRC-verified ZIP under `entregas/` rather than patches.
+> Follow the project’s standing constraints: keep Pages and Blog independent; preserve existing files, blocks and behavior; no database/schema/migration/staging/GitHub/deployment writes without explicit authorization; do not execute `custom_js` or arbitrary HTML; F9-12 is deferred; do not investigate its environments/databases. Check GitHub for existing work before proposing a duplicate. If browser or PHP CLI validation is unavailable, say so and do not claim runtime validation. For requested code changes, run the relevant checks under `tools/e2e/` (`e2e_f9*_static.cjs` e `e2e_bdre_*_static.cjs`) — os antigos `tools/f9-57-static-battery.py` e `tools/*smoke.js` **não existem neste repositório** (as pastas `tools/` e `dev/tests/` foram reorganizadas; confirme com `git ls-files tools/`) — then deliver complete files in a CRC-verified ZIP under `entregas/` rather than patches.
 
 ## Handoff facts
 
-- Closure reference: `docs/BDREditor-Complete-Reference-and-Closure.md`.
+- Closure reference: `docs/fases/f9/BDREditor-Complete-Reference-and-Closure.md`.
 - Last completed BDREditor feature: **F9-103 — Media Accessibility Audit**.
 - Last feature archive: `entregas/BDREditor-F9-103-Media-Accessibility-Audit.zip`.
 - Last checked source cache suffix: `threejs-49-media-accessibility` in Page and Blog controllers.

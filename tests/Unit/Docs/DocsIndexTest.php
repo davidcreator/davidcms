@@ -71,7 +71,9 @@ final class DocsIndexTest extends TestCase {
         $json = json_decode($out, true, 512, JSON_THROW_ON_ERROR);
 
         self::assertSame([], $json['caminhos_citados_inexistentes']);
-        self::assertGreaterThan(10, count($json['documentos_verificados']), 'a varredura tem de olhar um conjunto real de documentos');
+        self::assertGreaterThan(80, count($json['documentos_verificados']), 'a varredura tem de olhar TODO documento operacional, não uma amostra escolhida a dedo');
+        self::assertArrayHasKey('documentos_historicos', $json);
+        self::assertArrayHasKey('caminhos_gerados', $json);
     }
 
     /**
@@ -107,6 +109,118 @@ final class DocsIndexTest extends TestCase {
         [$code] = self::execute(['--strict']);
 
         self::assertSame(0, $code);
+    }
+
+    /**
+     * ADR 0127 — o escopo é DERIVADO, não escrito à mão.
+     *
+     * O guarda da ADR 0126 tinha uma lista de 27 documentos escolhidos a dedo.
+     * Em duas semanas ela já estava incompleta: `docs/PROJECT-HANDOFF.md` e os
+     * vinte guias de tema nunca foram verificados. O teste que vem abaixo fixa
+     * o sintoma: se alguém voltar a enumerar arquivos, estes dois deixam de
+     * estar no escopo e o teste falha.
+     */
+    public function testOperationalScopeIsDerivedAndNotAHandWrittenList(): void {
+        $escopo = self::escopo();
+
+        self::assertContains('docs/PROJECT-HANDOFF.md', $escopo['operacionais'], 'handoff é instrução: um caminho errado ali manda a próxima sessão pelo lugar errado');
+        self::assertContains('docs/temas/guias/GUIA-TEMAS-CONDICOES-THREEJS.md', $escopo['operacionais'], 'guia de tema é instrução');
+        self::assertContains('agents-ia/decisoes/0126-indice-de-adrs-e-caminhos-citados.md', $escopo['historicos'], 'ADR é registro: caminho removido ali está correto');
+        self::assertContains('docs/fases/f9/BDREditor-Complete-Reference-and-Closure.md', $escopo['historicos'], 'fase é registro');
+        self::assertContains('RELATORIO-KZ64.md', $escopo['historicos'], 'relatório datado da raiz é registro');
+
+        self::assertGreaterThan(250, count($escopo['historicos']) + count($escopo['operacionais']), 'a classificação tem de cobrir todo .md versionado');
+    }
+
+    /**
+     * Toda página em `docs/` é alcançável a partir do índice `docs/README.md`
+     * (um salto, ou dois quando passa por um `README.md` de pasta).
+     *
+     * Foi assim que a documentação de pagamento envelheceu: nove documentos
+     * existiam, estavam corretos e **não estavam no índice** — ninguém os lia
+     * para notar que descreviam o fluxo antigo. Um documento que ninguém acha é
+     * um documento que ninguém corrige.
+     */
+    public function testEveryPageUnderDocsIsReachableFromTheDocsIndex(): void {
+        $escopo = self::escopo();
+        $paginas = array_values(array_filter(
+            array_merge($escopo['operacionais'], $escopo['historicos']),
+            static fn (string $p): bool => str_starts_with($p, 'docs/') && $p !== 'docs/README.md'
+        ));
+
+        $alcancaveis = self::alcancaveis('docs/README.md');
+        $fora = array_values(array_filter($paginas, static fn (string $p): bool => !isset($alcancaveis[$p])));
+
+        self::assertGreaterThan(90, count($paginas), 'o índice tem de ser conferido contra a árvore real');
+        self::assertSame([], $fora, 'página em docs/ fora do índice: ' . implode(', ', $fora));
+    }
+
+    /** @return array<string, true> páginas alcançáveis, normalizadas como caminho from-root */
+    private static function alcancaveis(string $indice): array {
+        $alcance = [];
+        $fila = [$indice];
+
+        while ($fila !== []) {
+            $atual = array_pop($fila);
+
+            if (isset($alcance[$atual]) || !is_file(self::ROOT . '/' . $atual)) {
+                continue;
+            }
+
+            $alcance[$atual] = true;
+            $texto = (string)file_get_contents(self::ROOT . '/' . $atual);
+
+            preg_match_all('/\]\(([^)#]+\.md)\)/', $texto, $m);
+
+            foreach ($m[1] as $alvo) {
+                $destino = self::normaliza(dirname($atual) . '/' . $alvo);
+
+                // Só segue por README de pasta: guia não é índice de guia.
+                if (basename($destino) === 'README.md') {
+                    $fila[] = $destino;
+                } else {
+                    $alcance[$destino] = true;
+                }
+            }
+        }
+
+        return $alcance;
+    }
+
+    private static function normaliza(string $caminho): string {
+        $partes = [];
+
+        foreach (explode('/', $caminho) as $parte) {
+            if ($parte === '..') {
+                array_pop($partes);
+            } elseif ($parte !== '.' && $parte !== '') {
+                $partes[] = $parte;
+            }
+        }
+
+        return implode('/', $partes);
+    }
+
+    /** @return array{operacionais: list<string>, historicos: list<string>, caminhos_gerados: list<string>} */
+    private static function escopo(): array {
+        $command = 'node ' . escapeshellarg(self::ROOT . '/tools/verify-docs-index.js') . ' --json';
+        $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $process = proc_open($command, $descriptors, $pipes, self::ROOT);
+
+        if (!is_resource($process)) {
+            self::fail('não foi possível executar a classificação de documentos');
+        }
+
+        $out = (string)stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        proc_close($process);
+
+        $dados = json_decode($out, true);
+
+        self::assertIsArray($dados, 'tools/verify-docs-index.js --json devolveu saída inválida');
+
+        return $dados;
     }
 
     /** @return array{int, string} */

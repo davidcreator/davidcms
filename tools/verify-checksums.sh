@@ -25,7 +25,7 @@ ck(){ if [ "$1" -eq 0 ]; then printf '  PASS  %s\n' "$2"; PASS=$((PASS+1)); else
 echo "== F11-05 — integridade e presenca dos guardas ($ROOT) =="
 
 echo "-- 0. Auditores exigidos pelo job repo-guards --"
-for g in tools/verify-deps-layout.sh tools/verify-checksums.sh tools/verify-ci-workflow.sh tools/verify-docs-index.php; do
+for g in tools/verify-deps-layout.sh tools/verify-checksums.sh tools/verify-ci-workflow.sh tools/verify-docs-index.php tools/verify-docs-index.js; do
   [ -f "$g" ]; ck $? "$g presente (evita exit 127 no CI)"
 done
 

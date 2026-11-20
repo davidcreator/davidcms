@@ -13,6 +13,13 @@
  * Este verificador checa as DUAS tanto no estado atual quanto no que o `git`
  * deixou registrado: ADR nova sem linha no índice reprova antes do commit.
  *
+ * ADR 0127 — QUAIS documentos entram na checagem 2 não é uma lista escrita à
+ * mão. A classificação vem de `tools/verify-docs-index.js`, derivada das pastas
+ * (`agents-ia/decisoes/`, `docs/historico/`, `docs/fases/` e os relatórios
+ * datados da raiz são histórico; o resto é operacional). A lista anterior
+ * ficou incompleta em duas semanas — `docs/PROJECT-HANDOFF.md` e vinte guias de
+ * tema nunca foram verificados. Documento novo entra sozinho.
+ *
  * Uso:
  *   php tools/verify-docs-index.php            # checa e imprime
  *   php tools/verify-docs-index.php --json
@@ -28,22 +35,6 @@
 
 const DIR_ADR = 'agents-ia/decisoes';
 const INDICE = 'agents-ia/decisoes/README.md';
-
-/**
- * Documentos em que um caminho citado é INSTRUÇÃO (o leitor vai executar).
- * Fora desta lista ficam históricos, fases e relatórios: ali um caminho de
- * arquivo que existiu e foi removido é registro, não defeito.
- */
-const DOCS_OPERACIONAIS = [
-    'LEIA-ME.md',
-    'README.md',
-    'CONTRIBUTING.md',
-    'docs/Estrutura-de-Pastas.md',
-    'docs/arquitetura/',
-    'docs/integracoes/',
-    'docs/guias/',
-    'tools/README.md',
-];
 
 /**
  * Caminhos que o Git NÃO versiona e que só existem depois de instalar
@@ -119,33 +110,32 @@ function entradasQuebradas(): array
     return $quebradas;
 }
 
-function ehOperacional(string $caminho): bool
+/**
+ * Escopo derivado, nunca enumerado: a tabela vem de `tools/verify-docs-index.js`,
+ * para o guarda e os testes unitários concordarem por construção (ADR 0127).
+ *
+ * @return array{operacionais: list<string>, historicos: list<string>, caminhos_gerados: list<string>}
+ */
+function escopoDocumentos(): array
 {
-    foreach (DOCS_OPERACIONAIS as $permitido) {
-        if (str_ends_with($permitido, '/') ? str_starts_with($caminho, $permitido) : $caminho === $permitido) {
-            return true;
-        }
+    $script = __DIR__ . '/verify-docs-index.js';
+    $cmd = 'node ' . escapeshellarg($script) . ' --json 2>/dev/null';
+    $saida = @shell_exec($cmd);
+
+    if (!is_string($saida) || trim($saida) === '') {
+        fwrite(STDERR, "erro: não foi possível classificar os documentos (node tools/verify-docs-index.js).\n");
+        fwrite(STDERR, "      Node é necessário: a classificação operacional/histórico é derivada, não escrita à mão.\n");
+        exit(2);
     }
 
-    return false;
-}
+    $dados = json_decode($saida, true);
 
-/** @return list<string> */
-function documentosOperacionais(): array
-{
-    $encontrados = [];
-
-    foreach (DOCS_OPERACIONAIS as $alvo) {
-        if (str_ends_with($alvo, '/')) {
-            $arqs = glob($alvo . '*.md') ?: [];
-            sort($arqs);
-            $encontrados = array_merge($encontrados, $arqs);
-        } elseif (is_file($alvo)) {
-            $encontrados[] = $alvo;
-        }
+    if (!is_array($dados) || !isset($dados['operacionais'], $dados['historicos'])) {
+        fwrite(STDERR, "erro: saída inválida de tools/verify-docs-index.js --json.\n");
+        exit(2);
     }
 
-    return array_values(array_unique($encontrados));
+    return $dados;
 }
 
 /**
@@ -156,14 +146,25 @@ function documentosOperacionais(): array
  * `agents-ia/` e que tenham extensão ou barra final: isso descarta nome de
  * classe, constante e rota, que aparecem entre crases com o mesmo formato.
  *
+ * Linha de CITAÇÃO (começa com `>`) é registro, não instrução: ali o documento
+ * está transcrevendo — uma retificação que reproduz a frase errada, um trecho
+ * de depoimento. Cobrar que a citação aponte para arquivo existente obrigaria a
+ * falsificar o original. ADR 0127.
+ *
  * @return list<array{doc: string, ref: string}>
  */
-function caminhosQuebrados(): array
+function caminhosQuebrados(array $documentos): array
 {
     $quebrados = [];
 
-    foreach (documentosOperacionais() as $doc) {
+    foreach ($documentos as $doc) {
         $conteudo = (string)file_get_contents($doc);
+
+        // Citação não é instrução: `>` transcreve o que se disse, inclusive o erro.
+        $conteudo = implode("\n", array_filter(
+            explode("\n", $conteudo),
+            static fn (string $linha): bool => !str_starts_with(ltrim($linha), '>')
+        ));
 
         if (preg_match_all('/`((?:tools|tests|dev|docs|agents-ia)\/[A-Za-z0-9_.\/-]+)`/', $conteudo, $m) === false) {
             continue;
@@ -206,11 +207,12 @@ function main(array $argv): int
         return 0;
     }
 
+    $escopo = escopoDocumentos();
     $total = count(adrsNoDisco());
     $fora = adrsForaDoIndice();
     $quebradas = entradasQuebradas();
-    $caminhos = caminhosQuebrados();
-    $docs = documentosOperacionais();
+    $docs = $escopo['operacionais'];
+    $caminhos = caminhosQuebrados($docs);
 
     $falha = $fora !== [] || $quebradas !== [] || ($strict && $caminhos !== []);
 
@@ -221,6 +223,8 @@ function main(array $argv): int
             'entradas_do_indice_quebradas' => $quebradas,
             'caminhos_citados_inexistentes' => $caminhos,
             'documentos_verificados' => $docs,
+            'documentos_historicos' => $escopo['historicos'],
+            'caminhos_gerados' => $escopo['caminhos_gerados'],
             'strict' => $strict,
             'veredicto' => $falha ? 'falha' : 'ok',
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n";
@@ -232,7 +236,8 @@ function main(array $argv): int
     echo 'ADRs no disco:            ' . $total . "\n";
     echo 'ADRs fora do índice:      ' . count($fora) . ($fora === [] ? '' : ' — ' . implode(', ', $fora)) . "\n";
     echo 'Entradas do índice quebradas: ' . count($quebradas) . ($quebradas === [] ? '' : ' — ' . implode(', ', $quebradas)) . "\n";
-    echo 'Documentos operacionais verificados: ' . count($docs) . "\n\n";
+    echo 'Documentos operacionais verificados: ' . count($docs)
+        . ' (históricos ignorados: ' . count($escopo['historicos']) . ")\n\n";
 
     if ($caminhos === []) {
         echo "Caminhos citados nos documentos operacionais: todos existem.\n\n";

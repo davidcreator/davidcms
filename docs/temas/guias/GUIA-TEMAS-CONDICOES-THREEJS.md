@@ -4,8 +4,9 @@ Guia do recurso entregue nesta frente. O motor de templates continua sendo **Twi
 padrão** (`dev/system/config/default.php` → `template_engine = twig`). Three.js **não**
 virou um "engine de template": ele produz canvas, não HTML. Ele entra como uma
 **camada declarativa de cena** acoplada ao tema, reaproveitando o runtime self-hosted
-já aprovado (`dev/system/library/three/`). O adapter multi-engine
-(`dev/system/library/template.php`) permanece intacto.
+já aprovado (`dev/system/library/three/`). O carregamento de template
+(`dev/system/framework.php`, que instancia `library/template/<engine>.php` a partir de `template_engine`)
+permanece intacto.
 
 ---
 

@@ -13,7 +13,7 @@
 | [`guias/`](#guias-técnicos) | Análise de migração, Guia CMS, PHP 8+, Composer, Twig, Upload de mídia e Formatos de importação |
 | [`temas/`](#temas-design-system-e-frentes-at) | Presets `.reamurtheme.json`, guias principais de temas e `guias/` (21 guias das Frentes A–T) |
 | [`threejs/`](#threejs-e-cenas-3d) | Guias, runtime nativo, thumbs, admin preview, E2E 3D e especificação de cena |
-| [`integracoes/`](#integrações-e-operação) | Webhooks, Mercado Pago Marketplace e Runbook de cutover (F6) |
+| [`integracoes/`](#integrações-e-operação) | Webhooks, pagamentos (JOW Payments: núcleo, adapters, reconciliação, testes), Mercado Pago Marketplace, KZ-64 (aplicação e validação em sandbox) e Runbook de cutover (F6) |
 | [`fases/`](#fases-do-projeto) | Registros, planos e contratos das fases [`f7-f8/`](#fases-7-e-8-painel-e-snippets), [`f9/`](#fase-9-bdr-editor-e-campos-personalizados) e [`f11/`](#fase-11-ci-dependências-e-governança) |
 | [`historico/`](#histórico-e-consolidados-legados) | Relatórios consolidados e pacotes antigos preservados para consulta |
 
@@ -71,6 +71,18 @@ Veja o índice dedicado em **[temas/README.md](temas/README.md)** com os 6 prese
 ## Integrações e Operação
 
 - [integracoes/Webhooks.md](integracoes/Webhooks.md) — engine de webhooks (pedidos e produtos) e assinatura HMAC
+
+**Pagamentos (JOW Payments)** — núcleo próprio, ledger novo; `rms_mp_payment` fica como legado somente-leitura (ADRs 0119–0126):
+
+- [integracoes/JOW-Payments-MultiGateway-Core.md](integracoes/JOW-Payments-MultiGateway-Core.md) — fundação multi-gateway, cobrança interna (`jow_charge`) e pagamento de pedido
+- [integracoes/JOW-Payments-MultiGateway-Adapters.md](integracoes/JOW-Payments-MultiGateway-Adapters.md) — adapters Mercado Pago, Stripe e PayPal: contas próprias por provedor
+- [integracoes/JOW-Payments-Mercado-Pago.md](integracoes/JOW-Payments-Mercado-Pago.md) — integração Mercado Pago: dois fluxos, credenciais separadas
+- [integracoes/JOW-Payments-Reconciliacao.md](integracoes/JOW-Payments-Reconciliacao.md) — reconciliação ativa: descobre o pagamento quando o webhook não chega
+- [integracoes/JOW-Payments-Reconciliacao-Operacao.md](integracoes/JOW-Payments-Reconciliacao-Operacao.md) — como ligar a reconciliação e o que checar
+- [integracoes/JOW-Payments-Testes-Antes-da-Producao.md](integracoes/JOW-Payments-Testes-Antes-da-Producao.md) — o que precisa ser provado antes de produção (bateria A–M, teste N)
+- [integracoes/KZ-64-Como-Aplicar.md](integracoes/KZ-64-Como-Aplicar.md) — aplicação do pacote KZ-64 (status por provedor + reconciliação)
+- [integracoes/KZ-64-Validacao-Sandbox.md](integracoes/KZ-64-Validacao-Sandbox.md) — roteiro de validação em sandbox, com os 22 códigos de `reason`
+
 - [integracoes/MercadoPago-Marketplace.md](integracoes/MercadoPago-Marketplace.md) — fundação OAuth e splits Mercado Pago
 - [integracoes/Runbook-Cutover-F6.md](integracoes/Runbook-Cutover-F6.md) — runbook de cutover e verificação em produção
 
@@ -118,6 +130,7 @@ Documentos de registro histórico e pacotes consolidados anteriores:
 - [historico/FRENTES-CONSOLIDADO.md](historico/FRENTES-CONSOLIDADO.md) — consolidado histórico de frentes
 - [historico/RELATORIO-GERAL.md](historico/RELATORIO-GERAL.md) — relatório geral de entrega anterior
 - [historico/GUIA-BO.md](historico/GUIA-BO.md) — guia resumido de back-office do pacote legado
+- [historico/KZ-64-Relatorio.md](historico/KZ-64-Relatorio.md) — relatório de entrega do KZ-64 (status por provedor + reconciliação)
 
 ---
 
