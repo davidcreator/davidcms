@@ -8,6 +8,7 @@
  */
 namespace Reamur\Admin\Controller\Payments;
 
+use Reamur\System\Library\Payment\ChargeStatusConcordance;
 use Reamur\System\Library\Payment\DbGatewayAccountStore;
 use Reamur\System\Library\Payment\DbGatewayLedger;
 use Reamur\System\Library\Payment\GatewayAccount;
@@ -27,6 +28,7 @@ use Reamur\System\Library\Payment\Money;
 class Jow extends \Reamur\System\Engine\Controller {
     private const PLATFORM_ACCOUNT_LABEL = 'JOW platform';
     private const MANUAL_METHODS = ['pix', 'card', 'boleto'];
+
 
     /**
      * Encrypted credential fields per installed provider. A provider only
@@ -119,6 +121,13 @@ class Jow extends \Reamur\System\Engine\Controller {
                         $charge['gateway_status'] = $record->status;
                         $charge['payment_url'] = $record->customerAction->url;
                     }
+
+                    // ADR 0121 (R1): as duas fontes de situação divergem em
+                    // silêncio — a do operador (`jow_charge.status`) e a do
+                    // provedor (ledger). A tela mostrava só a do provedor para
+                    // cobrança de gateway, então o que o operador digitava
+                    // desaparecia. Aqui a divergência fica visível.
+                    $charge['status_mismatch'] = ChargeStatusConcordance::diverges((string)($charge['status'] ?? ''), (string)($charge['gateway_status'] ?? ''));
                 }
                 unset($charge);
             } catch (\Throwable $e) {

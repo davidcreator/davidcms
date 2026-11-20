@@ -1,5 +1,13 @@
 # Changelog
 
+## KZ-64 (13ª parte) — R1 na parte que não move dinheiro: a tela para de esconder o operador (2026-11-20)
+
+- **Dois defeitos do código de hoje, corrigidos.** (a) Para cobrança de gateway, a coluna de situação mostrava **só** a situação do provedor: o que o operador digitava em `jow_charge.status` desaparecia sem aviso. Agora a linha mostra a divergência ("Digitado aqui: refunded — difere da situação do provedor"). (b) O `select` de situação gravava `refunded` sem estornar nada e **não avisava**: passa a pedir confirmação com o texto "alterá-la NÃO estorna dinheiro no provedor", nos três idiomas.
+- **`ChargeStatusConcordance` (nova classe pura, `dev/system/library/payment/`)**: compara o vocabulário do painel (`paid`/`partial`/`canceled`) com o do provedor (`paid`/`partially_refunded`/`cancelled`) e responde apenas "podem descrever o mesmo fato?". Lista **fechada** de propósito — situação desconhecida no provedor nunca "concorda", então vocabulário novo aparece como divergência em vez de passar calado. Nada nela move dinheiro ou escreve em banco.
+- **A confirmação usa `data-rms-confirm`, não `onclick`** — o projeto recusa atributo de evento por política de CSP, e o `CspWiringTest` reprovou na primeira tentativa. O mecanismo do admin já existia; a contagem de usos subiu de 7 para 8 com a justificativa no teste.
+- **Testes:** 16 novos em `ChargeStatusConcordanceTest` (concordâncias, divergências reais, ausência de um dos lados, vocabulário desconhecido) e 2 de fiação na tela. Suíte **1929 testes / 46.324 asserções**, verde; PHPStan sem erros.
+- **Não feito, de propósito:** varrer tentativas pagas e ler o `payment_intent` no Stripe. As duas mexem em chamada de API por ciclo, e ninguém pode observar o comportamento sem credencial — é a próxima peça, com a janela (D07) escolhida antes.
+
 ## KZ-64 (12ª parte) — ADR 0121, proposta: estorno, com o custo corrigido (2026-11-20)
 
 - **Correção de uma estimativa que estava otimista.** O documento anterior de decisão dava o caminho mais barato do estorno em ~3 arquivos, apoiado em duas suposições. **Nenhuma das duas se confirmou no código:** `DbGatewayLedger::pendingAttempts()` filtra `pending`/`requires_action`/`authorized`, então a reconciliação **nunca revisita tentativa paga** — não descobre estorno de Mercado Pago nem de PayPal, só o webhook descobre; e o Stripe é pior que os outros, porque `StripeCheckoutAdapter::reconcile()` lê a **sessão**, que não muda quando há estorno. Custo real do R1: **~7 arquivos**, não 3.

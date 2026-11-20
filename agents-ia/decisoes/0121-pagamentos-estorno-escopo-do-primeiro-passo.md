@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| **Status** | 📝 proposta (KZ-64, 2026-11-20) — aguarda decisão do dono do produto |
+| **Status** | 🟡 proposta, **parcialmente executada** (KZ-64, 2026-11-20) — o R1 foi implementado na parte que não move dinheiro e que conserta defeito existente; a decisão D01 sobre R2/R3 continua aberta |
 | **Data** | 2026-11-20 |
 | **Agente proponente** | system |
 | **Contexto** | A ADR 0118 deixou reembolso fora do escopo, e a ADR 0119 migrou o fluxo do pedido sem tocar nele. Hoje **nenhum** código do CMS estorna dinheiro — e a estimativa anterior (`DECISAO-REEMBOLSO.md`, fora do repositório) dava o caminho mais barato em ~3 arquivos, apoiada em duas suposições que **não se confirmaram** no código atual: (a) que a reconciliação traria o estorno de Mercado Pago e PayPal; (b) que o Stripe era o único ponto cego. Verificado no código desta data: a reconciliação **nunca revisita tentativa paga**, então ela não traz estorno de provedor nenhum. O custo real do primeiro passo é maior, e a diferença importa porque é dinheiro. |
@@ -122,7 +122,33 @@ Uma resposta basta para começar: **R1, e qual janela (D07)**.
 - ⚠️ Com a ADR 0120 (sem split), um estorno mexe em **uma conta só**: a estimativa de risco caiu, mas a
   de trabalho não.
 
-## Nada foi implementado
+## O que foi executado em 2026-11-20 (R1, na parte que não move dinheiro)
+
+O R1 tem quatro itens; **dois** deles são defeitos do código de hoje e foram corrigidos. Os outros dois
+— varrer tentativas pagas e ler o `payment_intent` no Stripe — **mexem em chamada de API por ciclo** e
+ficam para quando houver credencial para observar o comportamento em sandbox.
+
+**Feito:**
+
+1. **A tela deixou de esconder a situação digitada pelo operador.** Para cobrança de gateway a coluna
+   mostrava só `gateway_status`; o que o operador escrevia em `jow_charge.status` desaparecia. Agora a
+   divergência aparece na própria linha ("Digitado aqui: refunded — difere da situação do provedor").
+   A comparação vive em `ChargeStatusConcordance` (classe pura, 16 testes), com lista **fechada** de
+   concordância: vocabulário novo do provedor nunca passa como "concorda".
+2. **O `select` avisa que não estorna dinheiro.** O formulário da situação ganhou `data-rms-confirm`
+   com o texto "alterá-la NÃO estorna dinheiro no provedor" — nos três idiomas. O projeto recusa
+   `onclick` (política de CSP), então o aviso usa o mecanismo que o admin já tem.
+
+**Não feito, de propósito:** a varredura de tentativas pagas e a leitura de estorno no Stripe. Fazer
+isso agora seria escrever chamada de provedor que ninguém pode observar — e a janela (D07) muda o custo.
+Quando houver credencial, é a próxima peça.
+
+**O que continua sendo decisão sua:** `D01` (R1 completo, R2 ou R3) e `D07` (janela da varredura).
+
+## Nada de estorno foi implementado
+
+Nenhuma chamada de estorno em provedor, nenhuma tabela, nenhuma migração. O que foi escrito **conserta o
+que já estava errado** e **avisa antes de gravar** — não move dinheiro.
 
 Nenhuma linha de código de estorno, nenhuma tabela, nenhuma migração. Esta proposta existe para a decisão
 ser registrada antes do código — e para corrigir, com número, uma estimativa que estava otimista.

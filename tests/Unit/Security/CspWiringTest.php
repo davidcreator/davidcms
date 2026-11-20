@@ -216,7 +216,9 @@ final class CspWiringTest extends TestCase {
         }
 
         // EX-01 (ADR 0095): +2 na tela de extensoes (ligar e remover dados).
-        self::assertSame(7, $uses);
+        // ADR 0121 (R1): +1 na situacao da cobranca do JOW, que gravava
+        // `refunded` sem estornar dinheiro e agora avisa antes de gravar.
+        self::assertSame(8, $uses);
     }
 
     public function testControllersWithTheirOwnPolicyReplaceTheGlobalOne(): void {

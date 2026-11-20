@@ -161,18 +161,20 @@
         <thead><tr><th>#</th><th>{{ col_description }}</th><th>{{ col_amount }}</th><th>{{ col_method }}</th><th>{{ col_status }}</th><th>PIX</th><th>{{ col_checkout }}</th><th>{{ col_date }}</th><th></th></tr></thead>
         <tbody>{% for c in charges %}<tr>
           <td>{{ c.charge_id }}</td><td>{{ c.description|e }}</td>
-          <td>{{ c.amount|number_format(2, ',', '.') }}</td><td>{{ c.method|e }}</td><td>{{ (c.gateway_status ?: c.status)|e }}</td>
+          <td>{{ c.amount|number_format(2, ',', '.') }}</td><td>{{ c.method|e }}</td>
+          <td>{{ (c.gateway_status ?: c.status)|e }}{% if c.status_mismatch %}<div class="small text-warning-emphasis">{{ text_status_mismatch|format(c.status)|e }}</div>{% endif %}</td>
           <td class="font-monospace small" style="max-width:260px;overflow:hidden;text-overflow:ellipsis">{{ c.pix_payload|e }}</td>
           <td>
             {% if c.is_gateway and c.payment_url %}<a href="{{ c.payment_url|e }}" target="_blank" rel="noopener noreferrer">{{ text_open_checkout }}</a>{% elseif c.is_gateway %}<span class="text-body-secondary">{{ text_no_checkout }}</span>{% endif %}
             {% if c.is_gateway and gateway_schema_ready and can_modify and c.status not in ['paid','partial','refunded','disputed'] and c.gateway_status not in ['paid','partially_refunded','refunded','disputed'] %}<form method="post" action="{{ action }}" class="d-inline ms-1"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="charge_gateway_link"><input type="hidden" name="provider" value="{{ c.method|e }}"><input type="hidden" name="charge_id" value="{{ c.charge_id }}"><button class="btn btn-link btn-sm p-0">{{ button_gateway_link }}</button></form>{% endif %}
           </td>
           <td>{{ c.date_added }}</td>
-          <td>{% if can_modify %}<form method="post" action="{{ action }}" class="d-inline">
+          <td>{% if can_modify %}<form method="post" action="{{ action }}" class="d-inline" data-rms-confirm="{{ help_charge_status_no_refund|e }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="charge_status"><input type="hidden" name="charge_id" value="{{ c.charge_id }}">
-            <select name="status" class="form-select form-select-sm d-inline-block w-auto">
+            <select name="status" class="form-select form-select-sm d-inline-block w-auto" title="{{ help_charge_status_no_refund|e }}">
               {% for s in ['pending','paid','expired','refunded','canceled','partial','disputed'] %}<option value="{{ s }}"{% if c.status == s %} selected{% endif %}>{{ s }}</option>{% endfor %}
-            </select> <button class="btn btn-outline-primary btn-sm">{{ button_update }}</button></form>{% endif %}</td>
+            </select> <button class="btn btn-outline-primary btn-sm" >{{ button_update }}</button>
+            <div class="small text-body-secondary">{{ help_charge_status_no_refund }}</div></form>{% endif %}</td>
         </tr>{% else %}<tr><td colspan="9" class="text-body-secondary">{{ text_empty }}</td></tr>{% endfor %}</tbody>
       </table></div>
     </div></div></div>

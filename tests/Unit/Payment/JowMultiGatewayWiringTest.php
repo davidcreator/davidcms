@@ -555,4 +555,37 @@ final class JowMultiGatewayWiringTest extends TestCase {
             );
         }
     }
+
+    /**
+     * ADR 0121 (R1): para cobrança de gateway a tela mostrava só a situação do
+     * provedor, então o que o operador digitava desaparecia em silêncio.
+     */
+    public function testTheChargeRowShowsTheOperatorStatusWhenItDiverges(): void {
+        $twig = (string)file_get_contents(__DIR__ . '/../../../dev/admin/view/template/payments/jow.twig');
+
+        self::assertStringContainsString('c.status_mismatch', $twig);
+        self::assertStringContainsString('text_status_mismatch', $twig);
+
+        foreach (['en-us', 'es-eu', 'pt-br'] as $language) {
+            $strings = (string)file_get_contents(
+                __DIR__ . '/../../../dev/admin/language/' . $language . '/payments/jow.php'
+            );
+            self::assertStringContainsString('text_status_mismatch', $strings, $language);
+            self::assertStringContainsString('help_charge_status_no_refund', $strings, $language);
+        }
+    }
+
+    /**
+     * ADR 0121 (R1): o select de situação não pode deixar o operador acreditar
+     * que gravar `refunded` estorna dinheiro. O aviso tem de estar na tela.
+     */
+    public function testTheStatusSelectSaysItDoesNotRefundMoney(): void {
+        $twig = (string)file_get_contents(__DIR__ . '/../../../dev/admin/view/template/payments/jow.twig');
+
+        // A confirmação usa o mecanismo do projeto (`data-rms-confirm`), nunca
+        // `onclick` — atributo de evento é recusado pela política de CSP.
+        self::assertStringContainsString('help_charge_status_no_refund', $twig);
+        self::assertStringContainsString('data-rms-confirm="{{ help_charge_status_no_refund', $twig);
+        self::assertStringNotContainsString('onclick=', $twig);
+    }
 }
