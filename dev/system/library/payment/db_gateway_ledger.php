@@ -55,6 +55,45 @@ final class DbGatewayLedger implements GatewayReconcilableLedger, GatewayAddress
         return $records;
     }
 
+    /**
+     * ADR 0123 (R1): tentativas que JÁ foram pagas. Mesmo contrato de
+     * `pendingAttempts()`, estados e motivo diferentes — aqui se procura
+     * estorno e disputa, isto é, o mundo mudou depois do pagamento.
+     */
+    public function settledAttempts(
+        int $gatewayId,
+        string $modifiedBeforeUtc,
+        string $createdAfterUtc,
+        int $limit
+    ): array {
+        if ($gatewayId <= 0 || $limit < 1 || $limit > self::MAX_PENDING_LIMIT) {
+            throw new \InvalidArgumentException('gateway ledger: invalid settled attempt page');
+        }
+
+        self::assertUtc($modifiedBeforeUtc);
+        self::assertUtc($createdAfterUtc);
+
+        $query = $this->query(
+            "SELECT * FROM `" . $this->table('payment_transaction') . "`"
+            . " WHERE `gateway_id` = '" . $gatewayId . "'"
+            . " AND `status` IN ('paid', 'partially_refunded')"
+            . " AND `date_modified` <= '" . $this->escape($modifiedBeforeUtc) . "'"
+            . " AND `date_added` >= '" . $this->escape($createdAfterUtc) . "'"
+            . " ORDER BY `date_modified` ASC, `transaction_id` ASC LIMIT " . $limit
+        );
+        $rows = ($query instanceof \stdClass && !empty($query->rows)) ? (array)$query->rows : [];
+        $records = [];
+
+        foreach ($rows as $row) {
+            if (is_array($row)) {
+                // Idem: linha malformada não pode parecer "nada a estornar".
+                $records[] = $this->recordFromRow($row);
+            }
+        }
+
+        return $records;
+    }
+
     public function latestForSource(string $sourceType, int $sourceId): ?GatewayPaymentRecord {
         self::assertSource($sourceType, $sourceId);
 

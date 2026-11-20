@@ -47,6 +47,13 @@ final class ReconcileCronControllerTest extends TestCase {
                 }
 
                 if (str_starts_with($sql, 'SELECT') && str_contains($sql, 'rms_payment_transaction')) {
+                    // ADR 0123: duas varreduras na mesma tabela. Sem distinguir
+                    // pelo filtro de status, as duas leem a mesma lista e
+                    // `scanned` dobra.
+                    if (str_contains($sql, "IN ('paid', 'partially_refunded')")) {
+                        return $this->result($this->options['settled'] ?? []);
+                    }
+
                     return $this->result($this->options['pending'] ?? []);
                 }
 

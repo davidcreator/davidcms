@@ -102,6 +102,25 @@ gravar errado.
 O que ela **não faz**: capturar ordem autorizada do PayPal (fica `authorized`, de propósito), reembolsar,
 ou criar cobrança. A ADR 0118 fixa isso por contrato.
 
+### 4.1 As duas varreduras (ADR 0123)
+
+O ciclo faz **duas** perguntas ao banco, com janelas diferentes:
+
+| Varredura | Estados | Janela padrão | O que procura |
+| --- | --- | --- | --- |
+| aberta (`limit`/`min_age`/`lookback`) | `pending`, `requires_action`, `authorized` | 7 dias | aviso perdido — pagamento que não entrou |
+| **pagas** (`settled_lookback`) | `paid`, `partially_refunded` | **30 dias** (teto **180**) | **estorno e disputa** — o mundo mudou depois de pago |
+
+Sem a segunda, uma tentativa paga **nunca mais é consultada**: estorno feito no painel do provedor só chegaria
+ao CMS se o provedor reenviasse o aviso. As duas passam pelo mesmo caminho de aplicação; a única diferença é
+qual lista de tentativas é oferecida ao ciclo.
+
+- Estorno é **lido**, nunca executado. Nenhum código desta rota estorna dinheiro.
+- O **Stripe não é alcançado**: a reconciliação dele lê a *sessão* de checkout, que não muda com estorno.
+- `limit` é **compartilhado** pelas duas varreduras. Se houver muitas tentativas abertas, a varredura de pagas
+  pode não chegar a rodar no ciclo — é o primeiro lugar a olhar se um estorno passar despercebido.
+- Quem quiser desligar a varredura de pagas sem perder a proteção contra aviso perdido usa `settled_lookback=1`.
+
 ---
 
 ## 5. Como saber que ela está funcionando sem abrir o log todo dia
@@ -123,8 +142,8 @@ Três sinais, do mais barato ao mais confiável:
 | Sintoma | Causa |
 | --- | --- |
 | Tudo `403` | token ausente, com menos de 32 caracteres, ou `Authorization` comido por proxy (o Apache às vezes descarta o header — use `?token=`) |
-| `400` | parâmetro fora da faixa (`limit` 1..200, `min_age` 1..10080, `lookback` 1..90) |
-| Relatório vazio, `200` | nenhuma conta de gateway habilitada, ou nenhuma tentativa pendente na janela (`lookback`, padrão 7 dias) |
+| `400` | parâmetro fora da faixa (`limit` 1..200, `min_age` 1..10080, `lookback` 1..90, `settled_lookback` 1..180) |
+| Relatório vazio, `200` | nenhuma conta de gateway habilitada, ou nenhuma tentativa aberta na janela (`lookback`, padrão 7 dias) nem paga na janela de estorno (`settled_lookback`, padrão 30) |
 | `503` | sem credencial utilizável na conta — a mesma causa que bloqueia o link novo |
 | Nada acontece, cron "roda" | `curl` sem `-f`: o 403 passou como sucesso. Coloque `-f` |
 

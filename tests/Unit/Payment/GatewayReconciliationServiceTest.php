@@ -88,6 +88,68 @@ final class GatewayReconciliationServiceTest extends TestCase {
         );
     }
 
+    /**
+     * ADR 0123 (R1): o buraco que a ADR 0121 mediu. `pendingAttempts()` filtra
+     * estado aberto, então a tentativa paga nunca era revisitada: um estorno
+     * feito no painel do provedor só chegava ao CMS se o provedor reenviasse o
+     * webhook.
+     */
+    public function testARefundMadeInTheProviderDashboardIsDiscoveredByTheSettledScan(): void {
+        $ledger = new ReconciliationTestLedger();
+        // A tentativa NAO esta na fila aberta: ela ja foi paga.
+        $ledger->settled[] = $this->record(41, GatewayPaymentStatus::PAID);
+        $adapter = new ReconcilableTestAdapter($this->verified(GatewayPaymentStatus::REFUNDED));
+
+        $report = $this->service($adapter, $ledger)->reconcileAccount($this->account(), $this->credentials());
+
+        $this->assertSame(1, $report->scanned, 'a varredura de pagas varreu a tentativa');
+        $this->assertSame(1, $report->applied);
+        $this->assertSame(GatewayPaymentStatus::REFUNDED, $report->details[0]['status_after']);
+        $this->assertCount(1, $ledger->pendingCalls, 'a fila aberta foi consultada');
+        $this->assertCount(1, $ledger->settledCalls, 'e a varredura de pagas foi consultada uma vez');
+    }
+
+    /**
+     * O segundo estorno parcial leva de `partially_refunded` para `refunded`.
+     * Varrer so `paid` deixaria esse caso invisivel a partir do primeiro.
+     */
+    public function testASecondPartialRefundIsStillSeenBecausePartiallyRefundedStaysInTheScan(): void {
+        $ledger = new ReconciliationTestLedger();
+        $ledger->settled[] = $this->record(41, GatewayPaymentStatus::PARTIALLY_REFUNDED);
+        $adapter = new ReconcilableTestAdapter($this->verified(GatewayPaymentStatus::REFUNDED));
+
+        $report = $this->service($adapter, $ledger)->reconcileAccount($this->account(), $this->credentials());
+
+        $this->assertSame(1, $report->applied);
+        $this->assertSame(GatewayPaymentStatus::PARTIALLY_REFUNDED, $report->details[0]['status_before']);
+        $this->assertSame(GatewayPaymentStatus::REFUNDED, $report->details[0]['status_after']);
+    }
+
+    /**
+     * D07: a janela das pagas e propria e maior. Com NOW 2026-11-20 12:00:00 e
+     * o padrao de 30 dias, o corte enviado ao banco e 2026-10-21 12:00:00 —
+     * independente da janela da fila aberta (7 dias).
+     */
+    public function testTheSettledScanUsesItsOwnThirtyDayWindow(): void {
+        $ledger = new ReconciliationTestLedger();
+        $adapter = new ReconcilableTestAdapter($this->verified(GatewayPaymentStatus::PAID));
+
+        $this->service($adapter, $ledger)->reconcileAccount($this->account(), $this->credentials());
+
+        $this->assertSame('2026-10-21 12:00:00', $ledger->settledCalls[0][2]);
+        $this->assertSame('2026-11-20 11:45:00', $ledger->pendingCalls[0][1], 'a fila aberta continua com min_age 15 min');
+        $this->assertSame('2026-11-13 12:00:00', $ledger->pendingCalls[0][2], 'e com lookback de 7 dias');
+    }
+
+    public function testASettledLookbackBeyondTheProviderWindowIsRefused(): void {
+        $ledger = new ReconciliationTestLedger();
+        $adapter = new ReconcilableTestAdapter($this->verified(GatewayPaymentStatus::PAID));
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->service($adapter, $ledger)->reconcileAccount($this->account(), $this->credentials(), 25, 15, 7, 181);
+    }
+
     public function testLostWebhookIsAppliedFromTheProviderState(): void {
         $ledger = new ReconciliationTestLedger();
         $ledger->records[] = $this->record();
@@ -339,11 +401,24 @@ final class ReconciliationTestLedger implements GatewayReconcilableLedger {
     public bool $failOnApply = false;
     public bool $failOnRecord = false;
 
+    /** @var list<GatewayPaymentRecord> ADR 0123 (R1): tentativas já pagas. */
+    public array $settled = [];
+
+    /** @var list<array{0: int, 1: string, 2: string, 3: int}> */
+    public array $settledCalls = [];
+
     /** @return list<GatewayPaymentRecord> */
     public function pendingAttempts(int $gatewayId, string $modifiedBeforeUtc, string $createdAfterUtc, int $limit): array {
         $this->pendingCalls[] = [$gatewayId, $modifiedBeforeUtc, $createdAfterUtc, $limit];
 
         return array_slice($this->records, 0, $limit);
+    }
+
+    /** @return list<GatewayPaymentRecord> */
+    public function settledAttempts(int $gatewayId, string $modifiedBeforeUtc, string $createdAfterUtc, int $limit): array {
+        $this->settledCalls[] = [$gatewayId, $modifiedBeforeUtc, $createdAfterUtc, $limit];
+
+        return array_slice($this->settled, 0, $limit);
     }
 
     public function latestForSource(string $sourceType, int $sourceId): ?GatewayPaymentRecord {
@@ -355,7 +430,10 @@ final class ReconciliationTestLedger implements GatewayReconcilableLedger {
     }
 
     public function byProviderReference(int $gatewayId, string $providerReference): ?GatewayPaymentRecord {
-        foreach ($this->records as $record) {
+        // No banco real esta busca e por indice e NAO filtra estado nem janela:
+        // por isso olha as duas listas, senao a varredura de pagas nao acha a
+        // propria tentativa que acabou de listar.
+        foreach (array_merge($this->records, $this->settled) as $record) {
             if ($record->gatewayId === $gatewayId && $record->providerReference === $providerReference) {
                 return $record;
             }

@@ -8,7 +8,9 @@
  *   Authorization: Bearer SEU_TOKEN
  *
  * Parâmetros opcionais: limit (1..200, padrão 25), min_age (minutos, 1..10080,
- * padrão 15), lookback (dias, 1..90, padrão 7), format (text|json).
+ * padrão 15), lookback (dias, 1..90, padrão 7), settled_lookback (dias, 1..180,
+ * padrão 30 — ADR 0123/R1: tentativas já pagas, onde se procura estorno),
+ * format (text|json).
  *
  * O token é REAMUR_RECONCILE_TOKEN no config.php (mínimo 32 caracteres).
  * Sem token definido a rota responde 403 e não faz nada: falha fechada.
@@ -46,6 +48,9 @@ class Reconcile extends \Reamur\System\Engine\Controller {
             $limit = $this->intParam('limit', 25);
             $minAge = $this->intParam('min_age', 15);
             $lookback = $this->intParam('lookback', 7);
+            // ADR 0123 (R1/D07): janela própria para a varredura de tentativas
+            // já pagas, onde o que se procura é estorno e não aviso perdido.
+            $settledLookback = $this->intParam('settled_lookback', 30);
             $format = (string)($this->request->get['format'] ?? 'text');
         } catch (\InvalidArgumentException) {
             $this->response->addHeader('HTTP/1.1 400 Bad Request');
@@ -53,7 +58,8 @@ class Reconcile extends \Reamur\System\Engine\Controller {
             return;
         }
 
-        if ($limit < 1 || $limit > 200 || $minAge < 1 || $minAge > 10080 || $lookback < 1 || $lookback > 90) {
+        if ($limit < 1 || $limit > 200 || $minAge < 1 || $minAge > 10080 || $lookback < 1 || $lookback > 90
+            || $settledLookback < 1 || $settledLookback > 180) {
             $this->response->addHeader('HTTP/1.1 400 Bad Request');
             $this->response->setOutput("invalid parameters\n");
             return;
@@ -84,7 +90,7 @@ class Reconcile extends \Reamur\System\Engine\Controller {
                 new GatewayEventApplier($ledger)
             );
 
-            $report = $service->reconcileAccountList($store, $limit, $minAge, $lookback);
+            $report = $service->reconcileAccountList($store, $limit, $minAge, $lookback, $settledLookback);
         } catch (\Throwable $e) {
             $this->safeLog('JOW reconciliation failed: ' . GatewayReconciliationReport::safeReason($e->getMessage()));
             $this->response->addHeader('HTTP/1.1 503 Service Unavailable');

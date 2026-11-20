@@ -10,7 +10,8 @@ b3f88bf5  d07103140a2f867d043ad39e97d402d562b12a7fa3650b81ee173b205b88a1f5  9248
 fd44e234  18375f1335684016ac6d40ad16b7210f108c24d8b2ffc2f34cf8b2c7f2b1eda0  10142  agents-ia/decisoes/0120-pagamentos-destino-do-dinheiro-do-pedido.md
 a8a6df61  aa797e5b110388eba56abc84415eb9306ee6a09181c0d7c5dc57a162a3ee45c4  11181  agents-ia/decisoes/0121-pagamentos-estorno-escopo-do-primeiro-passo.md
 ef85842c  1c5c16a8f47cc4e7217e97ab88ece63839ccaf91b8d3ed661928fda1cb2de88f  10585  agents-ia/decisoes/0122-pagamentos-divida-d2-caminho-legado.md
-f13d810b  40aa1069a2c20ff961beaf6ab413fb87a893731e453abb1afc1aa12a5bbba294  28653  agents-ia/decisoes/README.md
+5ac129b8  6e38d2ca327c6a4a09080b9f0bb04e8be494c319e6a2557010ad52eec7f83d71  8550  agents-ia/decisoes/0123-pagamentos-r1-varredura-de-pagas.md
+138e5abc  a72b1047935389704c7d659ed9f687890fa783d2e07449560edc19dbea79332f  29907  agents-ia/decisoes/README.md
 12feea24  b6d93cb1839df0c424777ac809ffeb7b87fc94852ebaea6549f3456bbaa78610  7050  agents-ia/regras/00-contexto-global.md
 03422cd4  77c4f51df2a46c30bf45f39b703e55ce474c2d706048be2f3f8c31bbb992fd60  7429  agents-ia/regras/02-padroes-de-codigo.md
 a1baaf1a  1d45ba3648a1beb30c8bac1897ee5663e3a1c13f301e5efae0d1d19beae22417  28679  dev/admin/controller/payments/jow.php
@@ -36,7 +37,7 @@ f261d162  592038465c7c0c904ee439f60ec254ee204573cedc7b4a14fe9a9302dd6ed2d9  2498
 08942fda  5b20d74f3a5e2e32ab1e0294ac4af5fd76c638a0017fc5cc9d73735238f0bd53  4795  dev/system/library/payment/legacy_webhook_forwarder.php
 7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
 fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
-7e54facd  9a23869cdb243dde7f969d38aecc9301922932c8a3c6427870bb8a3ddf2f9337  200040  docs/CHANGELOG.md
+dd6b3bf5  e31ce7adcd67a2725dd38cff99973cbafd25f40ae29c3fd21620e1ed229ddb27  203665  docs/CHANGELOG.md
 675b1723  ddf884f56fcb08b9a5a84b3e3f19e64d0850585005cf34a3eb00969297628f14  16729  docs/Estrutura-de-Pastas.md
 61660a6e  d7515650f0c01bc118c3bd75c5df94bf2d6049bcdc7775ed267367360f210351  10948  docs/README.md
 2cd4aea9  48c6bf0ae2c1ccf1d471ea99bd205d3af3b3c3fe769a67dcc7c005cf6420714e  29473  docs/arquitetura/Dicionario-de-Dados.md
@@ -47,7 +48,7 @@ fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532 
 329e8df0  083f970e3b68e426bb3485aa85ad8085c18e7fc98db1ca272e4dcbf668a491e3  12023  docs/historico/KZ-64-Relatorio.md
 97071476  6383c819cf31cad18eb11fa80718446da5a40877cb0579761331cd8de4353389  4848  docs/integracoes/JOW-Payments-Mercado-Pago.md
 46cb5caa  0277f55d2f88d36b923442334d4379f6e777c12572d2244b794f71ab1f7ce2de  11286  docs/integracoes/JOW-Payments-MultiGateway-Core.md
-8eaa342e  0af350b7ea4d7f900f8040206c8c9ad0db0be41e604cd9e41bd63a40d4dacf9a  5920  docs/integracoes/JOW-Payments-Reconciliacao-Operacao.md
+04491885  3338a31629f9a120ca2dc1f482eda1badc357a15374a47dc5e36b9f3f6e420bb  7296  docs/integracoes/JOW-Payments-Reconciliacao-Operacao.md
 5b6c625d  6f9a6ffb87a1eec7db2a23c029f15a8475deacffd216abb550ec3959f7559df9  10309  docs/integracoes/JOW-Payments-Reconciliacao.md
 8578256b  3558982f9cd52c2d7165ac0dd9e004964106b5f72c1bcc7263266f9a2d6e60ae  6516  docs/integracoes/JOW-Payments-Testes-Antes-da-Producao.md
 f35d6814  483d47bc11f6f801a820eda71e36dbdff951ca7ce5e6e47b13b5942f02575852  6026  docs/threejs/THREEJS_CMS_E2E.md
@@ -57,7 +58,7 @@ c1cf981f  adb6097186e21f316b200403d3f89a2fca48c87cf7dfd6eaab7c557822e32993  2739
 db6821b8  99b2e3e3b1ab7e92b966742003201ac53b1310f4e121ca8ceda91bb76660242e  3038  tests/Unit/Payment/LegacyPaymentDrainTest.php
 faaa9df6  b70360d4afdcae1c4198a0ce7723e03abbcb2bcd50567a7f3b814cb04cf90007  10645  tests/Unit/Payment/LegacyWebhookForwarderTest.php
 e40562bb  790eae5e1bb74cfeede500ec8fa009f833b3fcedc39ebaf57e7a5b9a7bff8ab4  7581  tests/Unit/Payment/PaymentSchemaDriftTest.php
-89c8c083  e220694e9d378e287baaea1c4ac13f0622423e236ed73539b2695a6808224f58  9348  tests/Unit/Payment/WebhookChainToPaidTest.php
+b661b6d9  cd3f4206a0abe320fb634a208dbb4efd16e4d3f58d55fc567724d16b2312cea4  9499  tests/Unit/Payment/WebhookChainToPaidTest.php
 1ac45edc  590b8945002421d56f3d3e0b06ed3a10d253f4d0ed453b27656be361c36d0ad6  12537  tests/Unit/Security/CspWiringTest.php
 b3e33030  0f93d7ce63776b592ce9b9639f8db3142f822a70c120588159ed4f44a2bf04aa  8622  tools/build_prod.sh
 944451ba  d3df9c5ed56ec4c43791b9ca5d79643d5e16bf8b29e4a0c0d1c2313f4da05ebb  14670  tools/check_producao.sh

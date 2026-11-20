@@ -177,6 +177,10 @@ final class ChainLedger implements \Reamur\System\Library\Payment\GatewayReconci
         return [];
     }
 
+    public function settledAttempts(int $gatewayId, string $modifiedBeforeUtc, string $createdAfterUtc, int $limit): array {
+        return [];
+    }
+
     public function latestForSource(string $sourceType, int $sourceId): ?\Reamur\System\Library\Payment\GatewayPaymentRecord {
         return null;
     }

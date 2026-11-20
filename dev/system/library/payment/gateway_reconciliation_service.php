@@ -25,6 +25,15 @@ final class GatewayReconciliationService {
     private const MAX_MIN_AGE_MINUTES = 10080; // 7 days
     private const MAX_LOOKBACK_DAYS = 90;
 
+    /**
+     * ADR 0123 (R1/D07): janela da varredura de tentativas pagas. 30 dias é o
+     * padrão porque cobre o caso real (estorno semanas depois) sem varrer o
+     * histórico inteiro a cada ciclo. O teto acompanha a janela de estorno do
+     * Mercado Pago, que é de 180 dias.
+     */
+    private const DEFAULT_SETTLED_LOOKBACK_DAYS = 30;
+    private const MAX_SETTLED_LOOKBACK_DAYS = 180;
+
     /** @var Closure(): DateTimeImmutable */
     private readonly Closure $clock;
 
@@ -42,7 +51,8 @@ final class GatewayReconciliationService {
         GatewayCredentials $credentials,
         int $limit = 25,
         int $minAgeMinutes = 15,
-        int $lookbackDays = 7
+        int $lookbackDays = 7,
+        int $settledLookbackDays = self::DEFAULT_SETTLED_LOOKBACK_DAYS
     ): GatewayReconciliationReport {
         if ($limit < 1 || $limit > self::MAX_LIMIT) {
             throw new \InvalidArgumentException('gateway reconciliation: limit is out of range');
@@ -54,6 +64,13 @@ final class GatewayReconciliationService {
 
         if ($lookbackDays < 1 || $lookbackDays > self::MAX_LOOKBACK_DAYS) {
             throw new \InvalidArgumentException('gateway reconciliation: lookback window is out of range');
+        }
+
+        // ADR 0123 (R1/D07): a janela das pagas é própria e maior, porque o que
+        // se procura ali é estorno (que acontece semanas depois do pagamento),
+        // não aviso perdido (que se resolve em minutos).
+        if ($settledLookbackDays < 1 || $settledLookbackDays > self::MAX_SETTLED_LOOKBACK_DAYS) {
+            throw new \InvalidArgumentException('gateway reconciliation: settled lookback window is out of range');
         }
 
         if ($account->gatewayId <= 0) {
@@ -96,6 +113,23 @@ final class GatewayReconciliationService {
             $report = $report->merge($this->reconcileRecord($adapter, $account, $credentials, $record));
         }
 
+        // ADR 0123 (R1): sem esta varredura, um estorno feito no painel do
+        // provedor nunca chega ao CMS — `pendingAttempts()` filtra estado aberto.
+        // Ela é separada de propósito: mesma consulta ao provedor, janela
+        // diferente e motivo diferente.
+        $settledAfter = $now->sub(new \DateInterval('P' . $settledLookbackDays . 'D'));
+
+        $settled = $this->ledger->settledAttempts(
+            $account->gatewayId,
+            self::utc($modifiedBefore),
+            self::utc($settledAfter),
+            $limit
+        );
+
+        foreach ($settled as $record) {
+            $report = $report->merge($this->reconcileRecord($adapter, $account, $credentials, $record));
+        }
+
         return $report;
     }
 
@@ -104,7 +138,8 @@ final class GatewayReconciliationService {
         GatewayAccountStore $store,
         int $limit = 25,
         int $minAgeMinutes = 15,
-        int $lookbackDays = 7
+        int $lookbackDays = 7,
+        int $settledLookbackDays = self::DEFAULT_SETTLED_LOOKBACK_DAYS
     ): GatewayReconciliationReport {
         $report = GatewayReconciliationReport::empty();
 
@@ -124,7 +159,7 @@ final class GatewayReconciliationService {
             }
 
             $report = $report->merge(
-                $this->reconcileAccount($account, $credentials, $limit, $minAgeMinutes, $lookbackDays)
+                $this->reconcileAccount($account, $credentials, $limit, $minAgeMinutes, $lookbackDays, $settledLookbackDays)
             );
         }
 
