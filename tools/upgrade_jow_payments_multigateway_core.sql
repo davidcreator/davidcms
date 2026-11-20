@@ -1,6 +1,11 @@
 -- JOW-Payments — fundação multi-gateway (aditiva; NÃO executar sem autorização de migração)
 -- Cria configuração segura de gateways, ledger neutro e deduplicação de eventos.
--- Se a instalação usa outro DB_PREFIX, substitua o prefixo rms_ antes de aplicar.
+-- ⚠ PREFIXO: este script escreve `rms_` fixo no texto. Confira o DB_PREFIX REAL da
+-- instalação antes de aplicar (catalog/config.php ou system/config.php). Se for outro,
+-- substitua `rms_` em TODO o arquivo — ou use a versão que monta o nome pelo prefixo.
+-- Verificação sem abrir o config: php tools/payment-schema-drift.php --config=catalog/config.php
+-- (0 = tudo certo ou só migração pendente; 1 = divergência de prefixo; 2 = erro de uso).
+-- Alternativa rápida: se a instalação usa outro DB_PREFIX, substitua o prefixo rms_ antes de aplicar.
 -- Datas são UTC. Não altera nem migra rms_mp_payment ou rms_jow_charge nesta etapa.
 
 CREATE TABLE IF NOT EXISTS `rms_jow_gateway` (

@@ -135,6 +135,7 @@ Sobre a rota do cron: dois testes usam `#[RunInSeparateProcess]` porque `Model::
 3. **Sem throttle por transação.** `date_modified` só muda quando o estado muda, então a tentativa mais antiga da janela é reconsultada em toda execução (o `limit` contém o custo). Se a fila aberta passar de algumas centenas, avaliar `last_checked_at`.
 4. **Sem lock entre execuções concorrentes.** Duas execuções simultâneas podem consultar a mesma tentativa; a aplicação é idempotente pelo ledger, então o efeito é chamada duplicada ao provedor.
 5. **Ordem PayPal aprovada sem captura** fica `authorized` e visível. Se virar rotina, o certo é uma ação explícita no admin, não um cron.
+6. **Os SQL de migração escrevem `rms_` fixo** — numa instalação com outro `DB_PREFIX`, aplicar sem trocar cria tabela que o código não encontra, e colar uma consulta de conferência devolve `#1109 Tabela desconhecida` (que parece erro de sintaxe e não é). Desde a 5ª parte existe `tools/payment-schema-drift.php` para detectar isso antes, com três veredictos distintos (`ok`, `migration_pending`, `prefix_mismatch`). A correção definitiva — SQL gerado a partir do prefixo — não entrou: exigiria mexer em script já publicado.
 
 ## 6. Próximos passos sugeridos (na ordem)
 

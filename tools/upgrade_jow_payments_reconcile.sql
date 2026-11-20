@@ -17,7 +17,12 @@
 -- Aplicar esta migração habilita a reconciliação de Stripe e PayPal para as
 -- tentativas criadas A PARTIR de então.
 --
--- Se a instalação usa outro DB_PREFIX, troque `rms_` abaixo.
+-- ⚠ PREFIXO: este script escreve `rms_` fixo no texto. Confira o DB_PREFIX REAL da
+-- instalação antes de aplicar (catalog/config.php ou system/config.php). Se for outro,
+-- substitua `rms_` em TODO o arquivo — ou use a versão que monta o nome pelo prefixo.
+-- Verificação sem abrir o config: php tools/payment-schema-drift.php --config=catalog/config.php
+-- (0 = tudo certo ou só migração pendente; 1 = divergência de prefixo; 2 = erro de uso).
+-- Alternativa rápida: se a instalação usa outro DB_PREFIX, troque `rms_` abaixo.
 -- Datas/execução: manual, no momento aprovado pelo operador. O código não
 -- executa migração automaticamente.
 -- ════════════════════════════════════════════════════════════════════════════

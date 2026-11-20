@@ -13,15 +13,15 @@ b3f88bf5  d07103140a2f867d043ad39e97d402d562b12a7fa3650b81ee173b205b88a1f5  9248
 39e1dff4  337fd885ee97e0c1321169076eeedaa4d2b92bded2268de9c465d4f7b164319b  43279  dev/system/library/blog/block_document.php
 7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
 fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
-9638e27b  295fdfa0893742fe205efd2d922ad82de3e7f223317601360a9693087550440f  176579  docs/CHANGELOG.md
+1b8c66bd  92197a1e3ff62533dd9504e23f74f8999922486dd0a2348dfe9c9d04a9c766c2  178587  docs/CHANGELOG.md
 675b1723  ddf884f56fcb08b9a5a84b3e3f19e64d0850585005cf34a3eb00969297628f14  16729  docs/Estrutura-de-Pastas.md
 61660a6e  d7515650f0c01bc118c3bd75c5df94bf2d6049bcdc7775ed267367360f210351  10948  docs/README.md
 2cd4aea9  48c6bf0ae2c1ccf1d471ea99bd205d3af3b3c3fe769a67dcc7c005cf6420714e  29473  docs/arquitetura/Dicionario-de-Dados.md
 8cf915e5  7e59282a72e074a6aa6a909b482fc87696f25e32c1c67699e1cc8ccee6f46fd4  10077  docs/fases/f11/F11-01-CI-e-Dependencias.md
 945670b3  1ee53b4a8f5978afe13f260d8eb425a21f537d2df2d6b8df0ca65e60b5d6cf69  7884  docs/fases/f11/F11-02-Verificacao-Dependencias.md
 05ffbcdf  3a9e0c3e9c3b0129e29041c1417f84190ae827119de0a84a90ae3f689b1b6674  12917  docs/guias/Guia-Composer.md
-42c4f706  7ee22eaa9f8c4ae4e36e57cf5fab57c1d111ed1fd1716faadacf7ce8aadfbc20  10795  docs/historico/KZ-64-Relatorio.md
-d76f3b53  45875258911f442da5d81be9b70a27cc175be5354454275b1b86aaa861640f01  8904  docs/integracoes/JOW-Payments-MultiGateway-Core.md
+ea78b276  cd2d4fc06692abe7a26cccb70b46651e831c0a01a67974f944bf8098aa5d28da  11341  docs/historico/KZ-64-Relatorio.md
+d51ce650  f1479a501dc7407c4caa1bdfdd97470be93cb689775064624caf43651f70ba39  10246  docs/integracoes/JOW-Payments-MultiGateway-Core.md
 5b6c625d  6f9a6ffb87a1eec7db2a23c029f15a8475deacffd216abb550ec3959f7559df9  10309  docs/integracoes/JOW-Payments-Reconciliacao.md
 f35d6814  483d47bc11f6f801a820eda71e36dbdff951ca7ce5e6e47b13b5942f02575852  6026  docs/threejs/THREEJS_CMS_E2E.md
 b3e33030  0f93d7ce63776b592ce9b9639f8db3142f822a70c120588159ed4f44a2bf04aa  8622  tools/build_prod.sh
@@ -36,5 +36,7 @@ f1c22bad  2da7c2b7dbb61161e1a5ebf281d6add70bc11c5ab7f0dc9ec1015674dd1179be  1695
 ef1994c8  a00b0870367986b4619a0a6d31dfcb6f4e3644c08437fc6b31d4258e7c7747dc  4139  tools/staging/batteries/e2e.cjs
 0f44769b  07648ee53f67edbc0f9aa80172368ee9fe5951842635a219185889eb3f6ae209  4541  tools/staging/lib/config.cjs
 05c31bb4  de9cb8e3a1ef156cde6d338b6304d6954ee9a7fbece0742f1c32a9447a08bbf0  11470  tools/staging/staging.ps1
+330f40bb  063e9b3fc25d71715c792eb4be214009f0d8f09fa6ab5552a7334782fd2e46ee  5009  tools/upgrade_jow_payments_multigateway_core.sql
+461278c6  2fd45dc51d038ef216ec311e37f220fe741933a074f664a11e95c364f2fee6f6  3933  tools/upgrade_jow_payments_reconcile.sql
 8a98269f  b8bc63709efd73c339dd96501cd049e5e44634242743ee1273c2b2db91ad3dbe  4983  tools/verify-deps-layout.sh
 0d4510ad  8fd470990b5b60fe34d6960ccce68e5d5397bc6db4f2dc9ab345aa6249e55264  6976  tools/verify-f11-01.sh

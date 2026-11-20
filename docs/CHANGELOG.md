@@ -1,5 +1,14 @@
 # Changelog
 
+## KZ-64 (6ª parte) — o prefixo do banco deixa de ser uma armadilha silenciosa (2026-11-20)
+
+- **Sintoma que motivou:** `#1109 Tabela '<prefixo>_payment_transaction' desconhecida` no phpMyAdmin. Não era erro de sintaxe: os scripts `tools/upgrade_*.sql` escrevem **`rms_` fixo** no texto, enquanto o código PHP monta todo nome com `DB_PREFIX`. Numa instalação com outro prefixo, o operador ou cria tabela que o código não encontra, ou recebe `#1109` ao colar uma consulta de conferência — e a mensagem parece erro de digitação.
+- **`tools/payment-schema-drift.php` (novo):** só lê o banco e diz o veredicto por tabela do núcleo novo — `ok`, `migration_pending` (nada divergente) ou `prefix_mismatch` (tabela existe com prefixo diferente do `config.php`). Códigos de saída 0/1/2, `--json` para script, `REAMUR_SKIP_DB=1` para rodar sem banco. Nunca imprime senha e não executa DDL.
+- **Os dois SQL oficiais ganharam aviso ativo** no cabeçalho: "este script escreve `rms_` fixo; confira o prefixo antes de aplicar", com o comando de verificação. O texto antes era passivo ("se a instalação usa outro DB_PREFIX…") e foi exatamente o que passou batido.
+- **`docs/integracoes/JOW-Payments-MultiGateway-Core.md`:** seção *Antes de aplicar o SQL: o prefixo*, com os dois sintomas lado a lado e a saída esperada do verificador.
+- **Testes:** 6 novos (`PaymentSchemaDriftTest`) — falha fechada sem prefixo (2), config inexistente é erro de uso e não passa silencioso (2), migração pendente **não** é divergência (0), relatório nomeia o prefixo que o SQL escreve, regra de casamento de tabela nos quatro formatos relevantes, e a garantia de que o verificador não imprime a senha. Suíte completa verde.
+- **Limite declarado:** a correção definitiva (gerar o SQL a partir do prefixo) não entrou nesta parte — mexe em script já publicado e exige decidir o formato de distribuição. O verificador fecha o risco prático: descobre a divergência **antes** da aplicação.
+
 ## KZ-64 (5ª parte) — o fluxo do pedido nasce no ledger novo (2026-11-20)
 
 - **ADR 0119** — *Pagamentos: o fluxo do pedido passa a nascer no ledger novo*: o link de pagamento de um pedido deixa de ser exclusividade do Mercado Pago. `OrderPaymentLink` resolve a conta habilitada do provedor escolhido, monta a `GatewayPaymentRequest` com fonte `order`, chama o `GatewayPaymentService` (mesmas travas do JOW: método/moeda por `capabilities`, valor exato exigido de volta, chave de idempotência derivada, trava de ambiente `live`) e devolve o `Link` da ADR 0097 — `created`/`reused`/`paid`/`blocked`/`no_total`/`failed` — para que a tela não precise de tradução nova.

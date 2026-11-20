@@ -21,6 +21,40 @@
 - `GatewayLedger` / `DbGatewayLedger`: armazenamento neutro para `order` e `jow_charge`, tentativas com chave idempotente, token público aleatório, instrução de pagamento permitida por lista e eventos webhook deduplicados. Reaplicação de evento é segura e transições que regridem de `paid` para `failed` são recusadas.
 - `GatewayWebhookResult`: só o resultado autenticado e reconciliado pelo adapter pode chegar ao ledger. O ledger guarda hash do evento, não corpo bruto.
 
+## Antes de aplicar o SQL: o prefixo
+
+Os scripts de `tools/upgrade_*.sql` escrevem **`rms_` fixo** no texto. O código PHP, esse, monta todo
+nome com `DB_PREFIX`. Numa instalação que não usa `rms_` isso produce dois sintomas — e o segundo não
+parece ter a mesma causa que o primeiro:
+
+| Sintoma | O que está acontecendo |
+| --- | --- |
+| `#1109 Tabela '<prefixo>_payment_transaction' desconhecida` | a consulta foi colada com `rms_`, mas o banco usa outro prefixo — **não** é erro de sintaxe |
+| Tabela criada com nome que o código não acha | o script foi aplicado sem trocar o `rms_` |
+
+Confira antes de aplicar, sem precisar abrir o `config.php`:
+
+```bash
+php tools/payment-schema-drift.php --config=catalog/config.php
+```
+
+Saída (só leitura, não cria nem altera nada):
+
+```
+prefixo do banco (config.php): oc_
+prefixo que os SQL do repositório escrevem: rms_
+
+  ok         oc_jow_gateway
+  ausente    oc_payment_transaction
+  DIVERGENTE esperado oc_payment_transaction — encontrado rms_payment_transaction
+
+veredito: DIVERGÊNCIA DE PREFIXO — ...
+```
+
+Códigos de saída: **0** = tudo certo ou só migração pendente (nada divergente), **1** = divergência de
+prefixo, **2** = erro de uso/conexão. `--json` devolve o relatório em JSON para uso em script;
+`REAMUR_SKIP_DB=1` roda a análise sem banco (útil em CI).
+
 ## Link de pagamento de pedido (ADR 0119)
 
 O pedido deixou de ser território só do Mercado Pago. O caminho é:
