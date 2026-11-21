@@ -8,7 +8,7 @@
   "DECIDED": 34
  },
  "frozen_artifacts_sha256": {
-  "docs/F9-14-Contrato-Editor-MVP.json": "c4a8b91d18ab9bad64ea9a698bca0e945c9024be477df1cbffa14b3f8288e4e7",
+  "docs/F9-14-Contrato-Editor-MVP.json": "13dfd11baac4d60ed408a35da7fb793baa6b56156e57342d375e857b52be134e",
   "docs/F9-15-Contrato-Renderer-Publico.json": "26a701aaef93e65d6f19f0bbd80ee621d9eb531aecd590736b1b9eb455fd6839",
   "docs/F9-25-Contrato-Editor-Editorial.json": "e574bf3f1815fb7884e0f141696b26629b9de8a80cddd49c7895be99436cd3f4",
   "docs/F9-26-Contrato-A11y-Performance.json": "da362c3d6a4f16a982f708a9f0e55991e1295534b4b31c40a3c3bc81bc600354",
@@ -17,15 +17,15 @@
   "docs/F9-27-Preflight-Status.json": "93bb296c9de23a8265eee8e144e6ac28fb9d06d075e0abea1f37bf26b09498f5",
   "docs/F9-05-Contrato-Definicoes-Campos.json": "032fae433fed24c4c2955f90a04c0488bb9c483f57991092e1920c72702bfa72",
   "docs/F9-18-Risk-Register.json": "790ff7eed68b86ea680a08bab3642ed809f4727688d08f32326808ca2943b5ee",
-  "dev/install/sql/schema.sql": "c9dd1ec27af95d7506b8aff6af06133f75b288c2db31e5537fb7fbac2e1f67a5",
-  "docs/PROJECT-HANDOFF.md": "5f65d408d5b9831b0999d09ace2fbb1248bd4695282fe75fa6fde0859aeb6c84",
-  "dev/admin/controller/startup/dracaunos.php": "e9e906e3504988c2d6d84069d19f8da5ca31899e34be3c908a4a7fd973ac71ff",
-  "dev/admin/controller/common/login.php": "35def3cebbf2ec47ffdc93ffc11595eb303a50ef05244a5288ffcd939f37c9ee",
+  "dev/install/sql/schema.sql": "d6f7962c4f6c1c5e1b9edb2bb91b0b3315dafbfbb899ecf167715f5a6c9f76d7",
+  "docs/PROJECT-HANDOFF.md": "9cb104ab55f12c90cfb0b1f2104e2d9b351b4f2b2749a80ccfcfe5b1cce61419",
+  "dev/admin/controller/startup/dracaunos.php": "246a80b790807ad7592a34ff34298a4752cee13cd1a5d3e51d5712def45591a1",
+  "dev/admin/controller/common/login.php": "5d28d3fce1227e083763891d877eff33e047090fcf318e6f3d60805b70231cc3",
   "dev/admin/controller/security/dracaunos.php": "74312c96f490b97c096dc2584137c4e8556fb79c141004fe2fd5300239b11d61",
   "dev/admin/controller/user/profile.php": "5631d2d8c6aa041fa5e2d5c906ed0d4b32432a3d91c3a7c3b971c381afd635a6",
   "dev/admin/model/security/dracaunos.php": "136a79efcdc52482010f41a7395d0d55f84df0384adebac52893c52cbbcc61c1",
   "dev/admin/model/user/user.php": "c392b402d1eb25e134e9eecec373a352d64d038450751a8c3206a50980dadeb4",
-  "dev/admin/model/tool/internal-tools.json": "8ecb7e95ab9216fb83d923f2d8a8f20a3899eba5186fc4488c0f62ba1270bb97",
+  "dev/admin/model/tool/internal-tools.json": "796032d8df5402a52649bff38f7271963f7fdf15a90a918a9259bb88be219c86",
   "dev/admin/view/template/security/dracaunos.twig": "a89bea34fb8f2840630cbe1b4fedac3e9e6b8867e0d7f513a6464a473b1e8f4f",
   "dev/admin/view/template/user/profile.twig": "2ccbb355d5f96e1fc56c663bcfa1433404a5fe9c1a22efedb8a411af1710f7b3",
   "dev/system/config/admin.php": "70fb7804aa7a18506c2e83aebf724ab870caac61605f00b2b65d55126d48fb7d",
@@ -1077,5 +1077,42 @@
   }
  ],
  "retified_in": "F11-14",
- "ci_status": "GitHub CI success: run 44391064511 @ 1f864b80 (pre-KZ-63 baseline); D09 schema-scope check verified locally. Full e2e_f905 still stops at its separate strict_types assertion."
+ "ci_status": "GitHub CI success: run 44391064511 @ 1f864b80 (pre-KZ-63 baseline); D09 schema-scope check verified locally. Full e2e_f905 still stops at its separate strict_types assertion.",
+ "revalidated_by": "pendente de confirmacao do responsavel (ADR 0128)",
+ "revalidated_at": "2026-11-20",
+ "lacunas_conhecidas": [
+  {
+   "arquivo": "agents-ia/regras/00-contexto-global.md",
+   "motivo": "regra que todo agente le antes da tarefa; descrevia pasta de testes que nao existe (ADR 0127)",
+   "coberto_em": "ADR 0127",
+   "sha256": "94aa18412a0751a313f70dd46ce05f9b675d53b4bfa20665d3cb2e5dcd874561",
+   "motivo_cobertura": "ADR 0127 §5 — a regra citava dev/tests/, pasta que nao existe; a suite vive em tests/"
+  }
+ ],
+ "reemissao": {
+  "dev/admin/controller/common/login.php": {
+   "reissued": "a2e1ced5 (18/11) — camada de defesa ativa KZ-58 em Dracaunos; decisões KZ-39/41/43/44/50 já registradas como A",
+   "sha256_pre_reemissao": "35def3cebbf2ec47ffdc93ffc11595eb303a50ef05244a5288ffcd939f37c9ee"
+  },
+  "dev/admin/controller/startup/dracaunos.php": {
+   "reissued": "a2e1ced5 (18/11) — KZ-58; decisões KZ-39/41 registradas como A",
+   "sha256_pre_reemissao": "e9e906e3504988c2d6d84069d19f8da5ca31899e34be3c908a4a7fd973ac71ff"
+  },
+  "dev/admin/model/tool/internal-tools.json": {
+   "reissued": "03a69212 (20/11) — verbete 1.2.0 do KZ-64 (reconciliação + status por provedor); decisões KZ-39…KZ-59 A",
+   "sha256_pre_reemissao": "8ecb7e95ab9216fb83d923f2d8a8f20a3899eba5186fc4488c0f62ba1270bb97"
+  },
+  "dev/install/sql/schema.sql": {
+   "reissued": "f36e400c (13/11) — cifragem de segredos no banco (ADR 0094); decisão D09 registrada como A",
+   "sha256_pre_reemissao": "c9dd1ec27af95d7506b8aff6af06133f75b288c2db31e5537fb7fbac2e1f67a5"
+  },
+  "docs/F9-14-Contrato-Editor-MVP.json": {
+   "reissued": "a9e8ab70 (17/11) — fechamento das 10 decisões F11-11, contrato reemitido; decisão D06 A",
+   "sha256_pre_reemissao": "c4a8b91d18ab9bad64ea9a698bca0e945c9024be477df1cbffa14b3f8288e4e7"
+  },
+  "docs/PROJECT-HANDOFF.md": {
+   "reissued": "(20/11) — ADR 0127: caminho de fechamento do BDREditor e passo de verificação que mandava rodar ferramenta inexistente; sem decisão dona, hash reemitido e reconhecido na ADR 0128 §5",
+   "sha256_pre_reemissao": "5f65d408d5b9831b0999d09ace2fbb1248bd4695282fe75fa6fde0859aeb6c84"
+  }
+ }
 }

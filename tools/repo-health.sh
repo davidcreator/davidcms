@@ -25,6 +25,8 @@ GUARDS=(
   'bash|tools/verify-ci-workflow.sh|'
   'bash|tools/verify-f11-01.sh|'
   'python|tools/verify-contract-freeze.py|py'
+  'python|tools/verify-checkers-inventory.py|py'
+  'python|tools/verify-evidence-refs.py|py'
   'bash|tools/release-readiness-report.sh|py'
 )
 

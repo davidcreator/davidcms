@@ -7,9 +7,16 @@ Guard READ-ONLY da fronteira entre diagnostico e decisao.
   python3 tools/verify-contract-freeze.py
 
 * Recalcula o SHA-256 dos artefatos congelados em decision-matrix.json.
-* Reprova (exit 1) qualquer alteracao de contrato enquanto a decisao
-  correspondente ainda estiver PENDING_DECISION — impede que um contrato
-  seja reemitido "por inferencia".
+* ADR 0128 (F1): reprova (exit 1) qualquer artefato cujo hash NAO esteja
+  registrado na matriz -- seja porque o arquivo mudou depois da gravacao, seja
+  porque o artefato nao tinha hash nenhum (o caso do PROJECT-HANDOFF.md, fora
+  da matriz desde o F11-14 e por isso nunca comparado).
+* A regra antiga era mais fraca do que parecia: so reprovava quando o dono
+  estava PENDING_DECISION. Com as 34 decisoes DECIDED ela imprimia DIVERGENTE
+  e nao bloqueava nada de verdade.
+* Reemitir hash e ato HUMANO e datado: `reissued` diz por que o hash mudou,
+  `revalidated_by` quem conferiu. Inferir isso de um `git log` e exatamente o
+  erro que esta ADR corrige.
 * Fail-closed: artefato ausente ou matriz invalida tambem sao exit 1.
 
 Nao escreve, nao acessa rede, nao altera contratos, checkers, codigo,
@@ -47,7 +54,12 @@ def main():
         print('FAIL  matriz invalida: %s' % exc)
         return 1
 
-    divergentes, ausentes, ok = [], [], 0
+    lacunas = m.get('lacunas_conhecidas', []) or []
+    lacunas_por_arquivo = {}
+    for item in lacunas:
+        lacunas_por_arquivo[item['arquivo']] = item
+
+    divergentes, ausentes, sem_hash, ok, aceitos = [], [], [], 0, []
     for rel, esperado in sorted(frozen.items()):
         p = os.path.join(ROOT, rel)
         if not os.path.isfile(p):
@@ -58,9 +70,23 @@ def main():
         else:
             ok += 1
 
-    print('== F11-11 — congelamento de contratos (%d artefatos) ==' % len(frozen))
-    print('   %d/%d hashes coerentes | %d pendentes de decisao' %
-          (ok, len(frozen), sum(1 for d in decisions if d.get('status') == 'PENDING_DECISION')))
+    # ADR 0128: artefato que a matriz nem menciona era invisivel para o guarda.
+    for rel in sorted(lacunas_por_arquivo):
+        p = os.path.join(ROOT, rel)
+        if not os.path.isfile(p):
+            ausentes.append(rel)
+            continue
+        item = lacunas_por_arquivo[rel]
+        if sha256(p) == item['sha256']:
+            aceitos.append(rel)
+        else:
+            sem_hash.append(rel)
+
+    print('== F11-11 — congelamento de contratos (%d artefatos + %d lacuna(s) conhecida(s)) ==' %
+          (len(frozen), len(lacunas_por_arquivo)))
+    print('   %d/%d hashes coerentes | %d pendentes de decisao | %d/%d lacunas cobertas' %
+          (ok, len(frozen), sum(1 for d in decisions if d.get('status') == 'PENDING_DECISION'),
+           len(aceitos), len(lacunas_por_arquivo)))
     for rel in ausentes:
         print('   AUSENTE   %s (fail-closed)' % rel)
     for rel in divergentes:
@@ -70,13 +96,16 @@ def main():
         if donos:
             print('   REGRA     %s mudou sem decisao registrada (%s)' % (rel, ', '.join(donos)))
         else:
-            print('   DIVERGENTE %s' % rel)
+            print('   DIVERGENTE %s — decisao ja registrada, mas o hash nao foi reemitido' % rel)
+    for rel in sem_hash:
+        print('   SEM_HASH  %s mudou depois da cobertura registrada; reemita com decisao' % rel)
 
-    if ausentes or divergentes:
-        print('\n== RESULTADO: BLOQUEADO — registre a decisao em decision-matrix.json antes de alterar contratos ==')
+    if ausentes or divergentes or sem_hash:
+        print('\n== RESULTADO: BLOQUEADO — reemita o hash em tools/decision-matrix.json '
+              '(reissued + revalidated_by) ou reverta o contrato ==')
         return 1
-    print('\n== RESULTADO: COERENTE — nenhum contrato alterado sem decisao ==')
-    print('   Lembrando: decisoes pendentes NAO sao aprovacao. F9-27 segue BLOCKED_NOT_RUN.')
+    print('\n== RESULTADO: COERENTE — nenhum contrato alterado fora de decisao registrada ==')
+    print('   Lembrando: decisao registrada NAO e aprovacao de release. F9-27 segue BLOCKED_NOT_RUN.')
     return 0
 
 
