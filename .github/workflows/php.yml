@@ -14,6 +14,17 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# ADR 0129: o PISO DE SINTAXE do repositorio mora aqui, em um unico lugar.
+# Antes, cada job repetia '8.2' e so o job composer + o static-analysis
+# enxergavam o codigo inteiro; o php-lint varria apenas dev/. Um arquivo de
+# teste escrito com `new X(...)->m()` (parenteses obrigatorios so a partir do
+# 8.4) passou no lint, passou no PHPStan do proprio job, e derrubou o CI em
+# 255 dentro do PHPUnit — sem nome de arquivo nem linha no log do job.
+# Regra: todo job que liga PHP usa esta variavel, e o lint varre todo PHP do
+# repo (dev/, tests/, tools/). Mudar o piso = mudar uma linha.
+env:
+  CI_PHP_VERSION: '8.2'
+
 # ─────────────────────────────────────────────────────────────────────────────
 # F11-01 / ADR 0081 — NAO usar `defaults.run` global.
 # O composer.json/lock + vendor vivem em dev/system/storage/; o
@@ -46,7 +57,7 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
+        php-version: ${{ env.CI_PHP_VERSION }}
         extensions: mbstring, curl, gd, zip, intl
 
     - name: Validate composer.json and composer.lock
@@ -87,24 +98,32 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
+        php-version: ${{ env.CI_PHP_VERSION }}
 
-    - name: PHP syntax check (dev/, exceto dependencias)
+    - name: PHP syntax check (dev/, tests/ e tools/ — exceto dependencias)
       # Roda na RAIZ do repositorio: sem working-directory (F11-01).
+      # ADR 0129: tests/ e tools/ entraram na varredura. O `for dir` com
+      # contagem POR DIRETORIO existe para o mesmo defeito das duas pontas:
+      # se um diretorio for renomeado, o find devolve vazio e o job fica
+      # VERDE sem lintar nada — 'lint vazio' e FAIL, nao aprovacao.
+      # O `php -l` usa o mesmo PHP do job composer (env.CI_PHP_VERSION):
+      # lintar em versão diferente da que roda os testes nao prova nada.
       run: |
         set -euo pipefail
-        COUNT=$(find dev -type f -name '*.php' \
-          -not -path '*/storage/vendor/*' \
-          -not -path '*/storage/node_modules/*' | wc -l)
-        if [ "$COUNT" -eq 0 ]; then
-          echo "ERRO: nenhum arquivo PHP encontrado; lint vazio nao e aprovacao." >&2
-          exit 1
-        fi
-        echo "Lintando $COUNT arquivo(s) PHP..."
-        find dev -type f -name '*.php' \
-          -not -path '*/storage/vendor/*' \
-          -not -path '*/storage/node_modules/*' -print0 \
-          | xargs -0 -r -n1 -P4 php -l -d display_errors=0
+        for dir in dev tests tools; do
+          COUNT=$(find "$dir" -type f -name '*.php' \
+            -not -path '*/storage/vendor/*' \
+            -not -path '*/storage/node_modules/*' | wc -l)
+          if [ "$COUNT" -eq 0 ]; then
+            echo "ERRO: nenhum arquivo PHP em $dir/; lint vazio nao e aprovacao." >&2
+            exit 1
+          fi
+          echo "Lintando $COUNT arquivo(s) PHP em $dir/ (PHP ${{ env.CI_PHP_VERSION }})..."
+          find "$dir" -type f -name '*.php' \
+            -not -path '*/storage/vendor/*' \
+            -not -path '*/storage/node_modules/*' -print0 \
+            | xargs -0 -r -n1 -P4 php -l -d display_errors=0
+        done
 
   docs-links:
     runs-on: ubuntu-24.04
@@ -153,7 +172,7 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
+        php-version: ${{ env.CI_PHP_VERSION }}
         extensions: mbstring, curl, gd, zip, intl
 
     - name: Cache Composer packages
@@ -246,3 +265,14 @@ jobs:
       run: |
         node tools/verify-docs-index.js --json > /dev/null
         php tools/verify-docs-index.php --strict
+
+    # ADR 0128: tres guardas existiam, funcionavam e NAO rodavam no CI. Um deles
+    # (contract-freeze) estava vermelho ha dias com o CI verde em cima.
+    - name: Congelamento de contratos (matriz de decisao)
+      run: python3 tools/verify-contract-freeze.py
+
+    - name: Estabilidade do conjunto de checkers
+      run: python3 tools/verify-checkers-inventory.py
+
+    - name: Integridade de evidencia (decision-evidence.json)
+      run: python3 tools/verify-evidence-refs.py

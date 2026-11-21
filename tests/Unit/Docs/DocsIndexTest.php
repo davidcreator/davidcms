@@ -224,6 +224,65 @@ final class DocsIndexTest extends TestCase {
     }
 
     /** @return array{int, string} */
+    /**
+     * ADR 0129 — a tabela do índice tem quatro colunas (ADR, Resumo, Status,
+     * Data), e uma linha fora disso é ADR que só existe para quem já sabe o
+     * número do arquivo. Prova do estado do repositório: 0106 e 0124 estavam
+     * quebradas por cano dentro do resumo, 0127 e 0128 sem Status e sem Data.
+     */
+    public function testEveryIndexRowHasTheFourColumnsOfTheTable(): void {
+        $quebradas = [];
+
+        foreach (explode("\n", self::indice()) as $linha) {
+            if (preg_match('/^\|\s*\[(\d{4})\]\(/', $linha) !== 1) {
+                continue;
+            }
+
+            // `\|` dentro da célula é texto; não separa coluna.
+            $celulas = array_map('trim', preg_split('/(?<!\\\\)\|/', trim($linha, '|')));
+
+            if (count($celulas) !== 4 || $celulas[2] === '' || $celulas[3] === '') {
+                $quebradas[] = $celulas[0] . ' → ' . count($celulas) . ' colunas (a tabela tem 4)';
+            }
+        }
+
+        self::assertSame([], $quebradas, 'linha do índice fora da tabela: ' . implode('; ', $quebradas));
+    }
+
+    /**
+     * ADR 0129 — o verificador trata `\|` como conteúdo e reprova linha com
+     * Status vazio. Executado contra um índice candidato, porque o do
+     * repositório está certo: um guarda que só sabe aprovar o estado atual não
+     * está medindo nada.
+     */
+    public function testTheVerifierSeparatesColumnsOnlyOnUnescapedPipes(): void {
+        $candidato = tempnam(sys_get_temp_dir(), 'indice-adr-') . '.md';
+        file_put_contents($candidato, implode("\n", [
+            '| ADR | Resumo | Status | Data |',
+            '| --- | --- | --- | --- |',
+            '| [0001](0001-idioma-padrao-en-us.md) | Idioma com cano escapado `a\|b\|c` no resumo | ✅ aceita | 2026-10-15 |',
+            '| [0002](0002-blog-hibrido.md) | Resumo sem Status nem Data',
+        ]) . "\n");
+
+        try {
+            [$code, $out] = self::execute(['--json', $candidato]);
+            $dados = json_decode($out, true);
+
+            self::assertIsArray($dados, 'verificador não devolveu JSON para o índice candidato');
+            self::assertSame(
+                ['0002 → 2 colunas (a tabela tem 4: ADR, Resumo, Status, Data)'],
+                $dados['entradas_do_indice_malformadas'],
+                'linha com cano escapado não pode ser contada como quebra, e linha sem Status/Data tem de ser'
+            );
+            self::assertSame(1, $code, 'índice com linha fora da tabela tem de reprovar');
+        } finally {
+            @unlink($candidato);
+        }
+    }
+
+    /**
+     * Executa o verificador do repositório.
+     */
     private static function execute(array $args): array {
         $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(self::ROOT . '/tools/verify-docs-index.php');
 

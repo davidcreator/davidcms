@@ -181,12 +181,16 @@ final class GatewayReconciliationServiceTest extends TestCase {
             null, $sessionId
         );
 
-        $report = new GatewayReconciliationService(
+        // Parenteses no 'new': `new X(...)->m()` sem parênteses so e
+        // sintaxe valida a partir do PHP 8.4. O piso do CI e o PHP declarado
+        // em env.CI_PHP_VERSION (8.2), e la o arquivo nem parsesava
+        // (ADR 0129).
+        $report = (new GatewayReconciliationService(
             new GatewayRegistry([new \Reamur\System\Library\Payment\StripeCheckoutAdapter($client)]),
             $ledger,
             new GatewayEventApplier($ledger),
             static fn(): \DateTimeImmutable => new \DateTimeImmutable(self::NOW, new \DateTimeZone('UTC'))
-        )->reconcileAccount(
+        ))->reconcileAccount(
             new GatewayAccount(11, 'stripe', 'JOW platform', 'sandbox', true, ['flow' => 'jow_internal']),
             new GatewayCredentials(['secret_key' => 'sk_test_platform_restricted_key_0001'])
         );

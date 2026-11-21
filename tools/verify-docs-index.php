@@ -75,9 +75,9 @@ function adrsNoDisco(): array
 }
 
 /** @return list<string> */
-function adrsForaDoIndice(): array
+function adrsForaDoIndice(string $caminhoDoIndice = INDICE): array
 {
-    $indice = is_file(INDICE) ? (string)file_get_contents(INDICE) : '';
+    $indice = is_file($caminhoDoIndice) ? (string)file_get_contents($caminhoDoIndice) : '';
     $fora = [];
 
     foreach (adrsNoDisco() as $arquivo) {
@@ -92,9 +92,9 @@ function adrsForaDoIndice(): array
 }
 
 /** Linhas do índice que apontam para arquivo que não existe. @return list<string> */
-function entradasQuebradas(): array
+function entradasQuebradas(string $caminhoDoIndice = INDICE): array
 {
-    $indice = is_file(INDICE) ? (string)file_get_contents(INDICE) : '';
+    $indice = is_file($caminhoDoIndice) ? (string)file_get_contents($caminhoDoIndice) : '';
     $quebradas = [];
 
     if (preg_match_all('/\[(\d{4})\]\(([^)]+)\)/', $indice, $m, PREG_SET_ORDER) === false) {
@@ -108,6 +108,46 @@ function entradasQuebradas(): array
     }
 
     return $quebradas;
+}
+
+/**
+ * A tabela do índice é `| ADR | Resumo | Status | Data |`. Uma linha com outra
+ * contagem de colunas existe: `0106` foi escrita sem status e sem data, e a
+ * `0124` tem `pending|requires_action|authorized` no texto — o pipe dentro do
+ * célula quebra a linha em seis colunas e o Markdown renderiza a data no lugar
+ * do resumo. Ninguem lê uma tabela quebrada, e a ADR passa a existir só para
+ * quem souber o número do arquivo (ADR 0129).
+ *
+ * @return list<string>
+ */
+function linhasMalformadas(string $caminhoDoIndice = INDICE): array
+{
+    $indice = is_file($caminhoDoIndice) ? (string)file_get_contents($caminhoDoIndice) : '';
+    $malformadas = [];
+
+    foreach (explode("\n", $indice) as $linha) {
+        if (preg_match('/^\|\s*\[(\d{4})\]\(/', $linha, $m) !== 1) {
+            continue;
+        }
+
+        // `\|` dentro da celula e texto (barra em `pending\|requires_action`);
+        // so separa celula o pipe nao escapado. Contar todo pipe reprovava
+        // linha correta e incentivava encurtar o resumo em vez de escapar.
+        $celulas = array_map('trim', preg_split('/(?<!\\\\)\|/', trim($linha, '|')));
+
+        if (count($celulas) !== 4) {
+            $malformadas[] = $m[1] . ' → ' . count($celulas) . ' colunas (a tabela tem 4: ADR, Resumo, Status, Data)';
+            continue;
+        }
+
+        foreach (['Status' => 2, 'Data' => 3] as $nome => $i) {
+            if ($celulas[$i] === '') {
+                $malformadas[] = $m[1] . ' → célula de ' . $nome . ' vazia';
+            }
+        }
+    }
+
+    return $malformadas;
 }
 
 /**
@@ -201,26 +241,39 @@ function main(array $argv): int
     $strict = in_array('--strict', $argv, true);
 
     if (in_array('--help', $argv, true) || in_array('-h', $argv, true)) {
-        echo "uso: php tools/verify-docs-index.php [--json] [--strict]\n";
+        echo "uso: php tools/verify-docs-index.php [--json] [--strict] [caminho-do-indice]\n";
         echo "  0 tudo certo · 1 ADR fora do índice (ou caminho inexistente com --strict) · 2 uso\n";
 
         return 0;
     }
 
+    // Caminho opcional do indice candidato — mesmo convenio do auditor do
+    // workflow (tools/verify-ci-workflow.sh [caminho-do-workflow]): permite
+    // auditar um README proposto sem tocar no do repositorio.
+    $indiceArg = INDICE;
+    foreach (array_slice($argv, 1) as $arg) {
+        if (strncmp($arg, '--', 2) !== 0) {
+            $indiceArg = $arg;
+        }
+    }
+
     $escopo = escopoDocumentos();
     $total = count(adrsNoDisco());
-    $fora = adrsForaDoIndice();
-    $quebradas = entradasQuebradas();
+    $fora = adrsForaDoIndice($indiceArg);
+    $quebradas = entradasQuebradas($indiceArg);
+    $malformadas = linhasMalformadas($indiceArg);
     $docs = $escopo['operacionais'];
     $caminhos = caminhosQuebrados($docs);
 
-    $falha = $fora !== [] || $quebradas !== [] || ($strict && $caminhos !== []);
+    $falha = $fora !== [] || $quebradas !== [] || $malformadas !== []
+        || ($strict && $caminhos !== []);
 
     if ($json) {
         echo json_encode([
             'adrs_no_disco' => $total,
             'adrs_fora_do_indice' => $fora,
             'entradas_do_indice_quebradas' => $quebradas,
+            'entradas_do_indice_malformadas' => $malformadas,
             'caminhos_citados_inexistentes' => $caminhos,
             'documentos_verificados' => $docs,
             'documentos_historicos' => $escopo['historicos'],
@@ -236,6 +289,7 @@ function main(array $argv): int
     echo 'ADRs no disco:            ' . $total . "\n";
     echo 'ADRs fora do índice:      ' . count($fora) . ($fora === [] ? '' : ' — ' . implode(', ', $fora)) . "\n";
     echo 'Entradas do índice quebradas: ' . count($quebradas) . ($quebradas === [] ? '' : ' — ' . implode(', ', $quebradas)) . "\n";
+    echo 'Entradas do índice malformadas: ' . count($malformadas) . ($malformadas === [] ? '' : ' — ' . implode('; ', $malformadas)) . "\n";
     echo 'Documentos operacionais verificados: ' . count($docs)
         . ' (históricos ignorados: ' . count($escopo['historicos']) . ")\n\n";
 
@@ -255,13 +309,17 @@ function main(array $argv): int
 
     if ($falha) {
         echo "VEREDICTO: FALHA. ";
-        echo $fora !== [] ? 'ADR fora do índice (a decisão existiria só para quem já sabia).' : 'Há caminho citado inexistente (instrução que parece precisa e não funciona).';
+        echo $fora !== []
+            ? 'ADR fora do índice (a decisão existiria só para quem já sabia).'
+            : ($malformadas !== []
+                ? 'Linha do índice fora do formato da tabela (Status e Data não aparecem).'
+                : 'Há caminho citado inexistente (instrução que parece precisa e não funciona).');
         echo "\n";
 
         return 1;
     }
 
-    echo "VEREDICTO: OK. Toda ADR tem linha no índice e nenhuma entrada aponta para arquivo ausente.\n";
+    echo "VEREDICTO: OK. Toda ADR tem linha no índice, toda linha tem as 4 colunas da tabela e nenhuma entrada aponta para arquivo ausente.\n";
 
     return 0;
 }

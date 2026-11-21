@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ════════════════════════════════════════════════════════════════════════
-# verify-ci-workflow.sh — F11-04 / ADR 0082 (reforcado em F11-05, F11-08, F11-12
-# e ADR 0092)
+# verify-ci-workflow.sh — F11-04 / ADR 0082 (reforcado em F11-05, F11-08, F11-12,
+# ADR 0092 e ADR 0129 — piso de sintaxe)
 # Auditor READ-ONLY do contrato do proprio CI (.github/workflows/php.yml).
 #
 #   bash tools/verify-ci-workflow.sh [caminho-do-workflow]
@@ -55,6 +55,16 @@ done
 grep -q 'fail-fast: false' "$WF" && grep -q "node-version: \['20', '22'\]" "$WF"
 ck $? "matrix Node 20 + 22 com fail-fast: false"
 
+echo "-- 4b. Paridade CI x repo-health (ADR 0128) --"
+# Um guarda que existe, funciona e NAO roda no CI e o pior tipo de cobertura:
+# parece protegido. O verify-contract-freeze ficou vermelho por dias com o CI
+# verde em cima dele. Todo guarda do repo-health tem de rodar no repo-guards.
+for g in tools/verify-contract-freeze.py tools/verify-checkers-inventory.py tools/verify-evidence-refs.py; do
+  grep -qF "$g" "$WF"; ck $? "repo-guards executa $g"
+  grep -qF "$g" tools/repo-health.sh; ck $? "$g tambem em repo-health.sh (paridade)"
+  [ -f "$g" ]; ck $? "$g existe no disco"
+done
+
 echo "-- 5. Guardas referenciados existem no disco (F11-05) --"
 # F11-05: o workflow citava tools/verify-checksums.sh sem que o arquivo
 # existisse no repo (exit 127). Conferir so o YAML nao bastava.
@@ -95,6 +105,32 @@ grep -qE '^[[:space:]]+run: bash \.\./\.\./\.\./tools/verify-build-prod\.sh$' "$
 [ -f tools/verify-build-prod.sh ]; ck $? "tools/verify-build-prod.sh existe no disco"
 [ "$(grep -cE '^[[:space:]]+run: composer audit' "$WF")" -eq 1 ]; ck $? "composer audit roda no CI (1 passo)"
 grep -E '^[[:space:]]+run: composer audit' "$WF" | grep -qF '|| echo "::warning'; ck $? "composer audit so avisa, nao reprova (decisao do mantenedor, ADR 0092)"
+
+echo "-- 10. Piso de sintaxe: um so PHP declarado, lint em todo o PHP do repo (ADR 0129) --"
+# O CI esteve vermelho por 5 runs seguidos (528-532) com o repo-guards VERDE.
+# Um teste usava `new X(...)->m()`, que so o PHP 8.4 aceita como expressao; o
+# runner roda 8.2. O php-lint nao viu o arquivo porque varria apenas dev/, o
+# PHPStan nao o analisa, e o PHPUnit morreu em 255 antes de rodar o primeiro
+# teste — no log do job, só "An error occurred inside PHPUnit".
+grep -qE '^env:' "$WF"; ck $? "env: declarado no topo do workflow"
+NENV=$(grep -cE '^[[:space:]]+CI_PHP_VERSION: ' "$WF")
+[ "$NENV" -eq 1 ]; ck $? "CI_PHP_VERSION declarado exatamente 1 vez (piso unico)"
+NPHPV=$(grep -c 'php-version:' "$WF")
+NREF=$(grep -cE 'php-version: \$\{\{ env\.CI_PHP_VERSION \}\}' "$WF")
+[ "$NPHPV" -gt 0 ] && [ "$NPHPV" -eq "$NREF" ]; ck $? "os $NPHPV jobs com PHP usam o piso unico"
+! grep -qE "php-version: '[0-9]" "$WF"; ck $? "nenhuma versao de PHP literal no workflow (deriva impossivel)"
+NSETUP=$(grep -c 'shivammathur/setup-php@v2' "$WF")
+[ "$NSETUP" -eq "$NPHPV" ]; ck $? "todo setup-php declara php-version ($NSETUP/$NPHPV; nada herda a versao do runner)"
+grep -qE 'for dir in dev tests tools' "$WF"; ck $? "php-lint varre dev/, tests/ e tools/"
+grep -qE 'lint vazio nao e aprovacao' "$WF"; ck $? "php-lint reprova diretorio sem arquivo PHP (lint vazio != aprovacao)"
+# Fixar a lista de diretorios no YAML e silencioso: diretorio novo, ou
+# renomeado, sai do lint sem avisar ninguem. A lista tem de bater com a arvore.
+DIRS_WF=$(grep -oE 'for dir in [a-z ]+' "$WF" | head -1 | sed 's/for dir in //;s/[[:space:]]*$//' | tr ' ' '\n' | sort -u | tr '\n' ' ')
+DIRS_TREE=$(find . -type f -name '*.php' \
+  -not -path './dev/system/storage/vendor/*' -not -path '*/node_modules/*' \
+  -not -path './.git/*' -not -path './prod/*' | cut -d/ -f2 | sort -u | tr '\n' ' ')
+[ -n "$DIRS_TREE" ] && [ "$DIRS_WF" = "$DIRS_TREE" ]
+ck $? "diretorios do lint ($DIRS_WF) = diretorios com PHP na arvore ($DIRS_TREE)"
 
 echo
 echo "== resumo: $PASS PASS / $FAIL FAIL =="
