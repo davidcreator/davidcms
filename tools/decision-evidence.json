@@ -3,7 +3,7 @@
   "head": "1908213b5",
   "matrix": "tools/decision-matrix.json",
   "description": "Evidencia tecnica estatica dos 10 MARKER_OR_FINDING. Complementa, NAO substitui, a matriz de decisao.",
-  "policy": "Nenhuma decisao tomada. As 10 continuam PENDING_DECISION em decision-matrix.json. Recomendacoes exigem registro explicito.",
+  "policy": "Nenhuma decisao tomada por este arquivo. O status de cada decisao e lido de decision-matrix.json, nunca repetido aqui (ADR 0130). Recomendacoes exigem registro explicito.",
   "counts": {
     "entries": 10,
     "investigated": 3,

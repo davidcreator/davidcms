@@ -102,5 +102,5 @@ node tools/verify-david-theme.cjs <raiz>
 
 CI verde, validação WASM, Chromium e guardas estáticos **não significam
 release aprovada**. `release_approved: false` · F9-27 `BLOCKED_NOT_RUN` ·
-F9-18 `release_ready: false` · 10 `PENDING_DECISION`. Nenhuma migration,
+F9-18 `release_ready: false` · decisoes: ver `tools/decision-matrix.json`. Nenhuma migration,
 schema, contrato ou escrita do agente no GitHub.

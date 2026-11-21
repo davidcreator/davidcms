@@ -4,7 +4,7 @@
   "supersedes": "F11-15 (consolida a evidencia das 10 decisoes)",
   "description": "Auditoria das 7 decisoes herdadas. Consolida as 10 em uma unica fonte de evidencia, no formato aceito por tools/verify-evidence-refs.py.",
   "finding": "5 dos 10 marcadores (D01,D05,D06,D08,D09) sao contratos/gates de incremento congelados no tempo, nao defeitos do produto.",
-  "policy": "Nenhuma decisao tomada. decision-matrix.json segue com 10 PENDING_DECISION; 11 contratos congelados.",
+  "policy": "Nenhuma decisao tomada por este arquivo. Status de decisao e numero de contratos congelados sao lidos de decision-matrix.json, nunca repetidos aqui (ADR 0130).",
   "counts": {
     "entries": 10,
     "investigated_f11_15": 3,

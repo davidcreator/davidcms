@@ -86,7 +86,7 @@ node tools/verify-reference-theme.cjs <raiz>
 ```
 
 `release_approved: false` · F9-27 `BLOCKED_NOT_RUN` · F9-18
-`release_ready: false` · 10 `PENDING_DECISION`. CI verde, validação WASM e
+`release_ready: false` · decisoes: ver `tools/decision-matrix.json`. CI verde, validação WASM e
 guardas estáticos **não significam release aprovada**. Este tema **não é** uma
 declaração de release, não altera migration/schema/contratos e não foi
 escrito no GitHub pelo agente.

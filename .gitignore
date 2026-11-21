@@ -63,3 +63,7 @@ dev/system/storage/install.lock
 # manifesto do projeto). O pacote e montado FORA do repositorio; o manifesto
 # fica ao lado de patches/ e arquivos/, nunca aqui.
 /CHECKSUMS-PACOTE.txt
+
+# Bytecode de guardas Python: ja entrou duas vezes no indice (tools/__pycache__).
+__pycache__/
+*.pyc

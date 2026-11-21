@@ -2,7 +2,7 @@
 # Formato: CRC32  SHA256  tamanho(bytes)  caminho
 1bb3b164  8d0c5534adfc5442f08083fa72ca1cbaf37a69fa533ec49f8f6196cc2850879e  2080  .github/pull_request_template.md
 76e5cc97  acb8d2647f9537f86fcf05d9edd8acaf580b08d1633c8c5c99364b0632fdc2ab  11500  .github/workflows/php.yml
-b2ae11cf  b0ec1ce139370c3f1d008e1d1dffc42353c0b372f8b35fcbe4f05c908ea91cbb  2455  .gitignore
+4b380b71  8767ecc8e4050604aa47d4d9a40c592161d5513c52984661ff422d42bfd5ff27  2557  .gitignore
 193b23f4  9823081bfe9dc2b302e86cf2cd38683ee269ab67dcab86ce401d5a268b4b4ba9  2192  CONTRIBUTING.md
 956a0f9c  77f0fd12e9f39ced35111bcf16802a5a5c2f08722fdb30b38c401898cfa55aba  14181  README.md
 54e8d62d  5019e3c67f81e5d9c21b0d60fe5e8566b2ce3bcd76248fbeab5eb404bce9065c  5387  agents-ia/decisoes/0081-dependencias-node-em-system-storage-e-ci.md
@@ -13,7 +13,7 @@ ef85842c  1c5c16a8f47cc4e7217e97ab88ece63839ccaf91b8d3ed661928fda1cb2de88f  1058
 5ac129b8  6e38d2ca327c6a4a09080b9f0bb04e8be494c319e6a2557010ad52eec7f83d71  8550  agents-ia/decisoes/0123-pagamentos-r1-varredura-de-pagas.md
 7f52f34c  cb5375583ecbfcd7710571c3f9edb7428c0df9868f249fdff10b2202971474b3  8892  agents-ia/decisoes/0127-escopo-de-documentos-derivado.md
 24bf8e91  68ae72e2680b71baa9f58d37e528c65f09b51056c7984db9f9ccab0a750674b6  7661  agents-ia/decisoes/0128-reemissao-de-contrato-e-guardas-no-ci.md
-cb16337e  69061b967d709137ea574e17331c2e98a8a16b974ffe5c9450f9274a813c9006  46719  agents-ia/decisoes/README.md
+a1c62dda  ed56cc9ba9e6296737e0d8655c4e516d162072247eab99ef097c465dd736272a  48125  agents-ia/decisoes/README.md
 21296d76  94aa18412a0751a313f70dd46ce05f9b675d53b4bfa20665d3cb2e5dcd874561  7149  agents-ia/regras/00-contexto-global.md
 03422cd4  77c4f51df2a46c30bf45f39b703e55ce474c2d706048be2f3f8c31bbb992fd60  7429  agents-ia/regras/02-padroes-de-codigo.md
 a1baaf1a  1d45ba3648a1beb30c8bac1897ee5663e3a1c13f301e5efae0d1d19beae22417  28679  dev/admin/controller/payments/jow.php
@@ -39,7 +39,7 @@ f261d162  592038465c7c0c904ee439f60ec254ee204573cedc7b4a14fe9a9302dd6ed2d9  2498
 08942fda  5b20d74f3a5e2e32ab1e0294ac4af5fd76c638a0017fc5cc9d73735238f0bd53  4795  dev/system/library/payment/legacy_webhook_forwarder.php
 7705bacd  041de0e5103d3d80523b10b16ae1ecd0126ffed845accd36f8f0a93fa79515bc  1289  dev/system/storage/package-lock.json
 fca856a6  c822a36efffa2d08fd87fd6886486bf2fcb0195c4a3385351417a5c78d908f14  532  dev/system/storage/package.json
-66904b89  321e5bc1b9537571c2e59d1d64d63773262b2913da3d05db55950f661911bddc  229425  docs/CHANGELOG.md
+7a5e8d84  dfcbf4946f91aaabf0c13ad707f3100257451089a8973ae304f5d2d655bf8075  233068  docs/CHANGELOG.md
 f5def5b3  f054a8a0e29696f677f2b43f4296460b52613b58a99de10490f5485d9710ecfc  17283  docs/Estrutura-de-Pastas.md
 2179f1a9  4aef753843c8c3335fdbdd3b3fb881f9392a3f04341522693f99d5171e2e70cd  12659  docs/README.md
 2bdde019  3391a18864f6c9962dcf46029d96b8e7ba84c1727a4aa2e42b47a7078fb9c1a9  29707  docs/arquitetura/Dicionario-de-Dados.md
